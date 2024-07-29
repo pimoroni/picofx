@@ -62,8 +62,7 @@ jobs:
       matrix:
         include:
           - name: TinyFX
-            shortname: tinyfx
-            shortundername: tiny_fx
+            shortname: tiny_fx
             board: PIMORONI_TINYFX
 
     env:
@@ -72,7 +71,7 @@ jobs:
       FIRMWARE_DIR: "$GITHUB_WORKSPACE/picofx/boards"
       ROOT_DIR: "$GITHUB_WORKSPACE/picofx"
       BOARD_DIR: "$GITHUB_WORKSPACE/picofx/boards/${{matrix.board}}"
-      EXAMPLES_DIR: "$GITHUB_WORKSPACE/picofx/examples/${{matrix.shortundername}}"
+      EXAMPLES_DIR: "$GITHUB_WORKSPACE/picofx/examples/${{matrix.shortname}}"
 
     steps:
     - name: Compiler Cache
