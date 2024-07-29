@@ -9,11 +9,11 @@
 //       SHOULD ONLY CONSIST OF PREPROCESSOR DIRECTIVES
 // -----------------------------------------------------
 
-#ifndef _BOARDS_PIMORONI_TINYFX_4MB_H
-#define _BOARDS_PIMORONI_TINYFX_4MB_H
+#ifndef _BOARDS_PIMORONI_TINYFX_H
+#define _BOARDS_PIMORONI_TINYFX_H
 
 // For board detection
-#define PIMORONI_PICOLIPO_4MB
+#define PIMORONI_TINYFX
 
 // --- UART ---
 #ifndef PICO_DEFAULT_UART

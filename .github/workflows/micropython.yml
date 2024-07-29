@@ -63,6 +63,7 @@ jobs:
         include:
           - name: TinyFX
             shortname: tinyfx
+            shortundername: tiny_fx
             board: PIMORONI_TINYFX
 
     env:
@@ -70,7 +71,7 @@ jobs:
       RELEASE_FILE_WITH_OS: pimoroni-${{matrix.shortname}}-${{github.event.release.tag_name || github.sha}}-micropython-with-examples.uf2
       FIRMWARE_DIR: "$GITHUB_WORKSPACE/picofx/boards"
       BOARD_DIR: "$GITHUB_WORKSPACE/picofx/boards/${{matrix.board}}"
-      EXAMPLES_DIR: "$GITHUB_WORKSPACE/picofx/examples"
+      EXAMPLES_DIR: "$GITHUB_WORKSPACE/picofx/examples/${{matrix.shortundername}}"
 
     steps:
     - name: Compiler Cache
