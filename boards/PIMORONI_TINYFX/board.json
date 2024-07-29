@@ -1,0 +1,18 @@
+{
+    "deploy": [
+        "../deploy.md"
+    ],
+    "docs": "",
+    "features": [
+        "USB Type-C"
+    ],
+    "id": "pimoroni-tinyfx",
+    "images": [
+        "pimoroni-tinyfx.jpg"
+    ],
+    "mcu": "rp2040",
+    "product": "Pimoroni TinyFX",
+    "thumbnail": "",
+    "url": "https://shop.pimoroni.com/products/tinyfx",
+    "vendor": "Pimoroni"
+}
