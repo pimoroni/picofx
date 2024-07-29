@@ -143,23 +143,45 @@ class Button:
 
 
 class RGBLED:
-    def __init__(self, r, g, b, invert=True):
-        self.invert = invert
-        self.led_r = PWM(Pin(r))
-        self.led_r.freq(1000)
-        self.led_g = PWM(Pin(g))
-        self.led_g.freq(1000)
-        self.led_b = PWM(Pin(b))
-        self.led_b.freq(1000)
+    def __init__(self, r, g, b, invert=True, gamma=1):
+        self._gamma = gamma
+        self.led_r = PWM(Pin(r), freq=1000, duty_u16=0, invert=invert)
+        self.led_g = PWM(Pin(g), freq=1000, duty_u16=0, invert=invert)
+        self.led_b = PWM(Pin(b), freq=1000, duty_u16=0, invert=invert)
+
+    def _rgb(self, r, g, b):
+        self.led_r.duty_u16(int(pow(r, self._gamma) * 65535 + 0.5))
+        self.led_g.duty_u16(int(pow(g, self._gamma) * 65535 + 0.5))
+        self.led_b.duty_u16(int(pow(b, self._gamma) * 65535 + 0.5))
 
     def set_rgb(self, r, g, b):
-        if self.invert:
-            r = 255 - r
-            g = 255 - g
-            b = 255 - b
-        self.led_r.duty_u16(int((r * 65535) / 255))
-        self.led_g.duty_u16(int((g * 65535) / 255))
-        self.led_b.duty_u16(int((b * 65535) / 255))
+        r = min(255, max(0, r))
+        g = min(255, max(0, g))
+        b = min(255, max(0, b))
+        self._rgb(r / 255, g / 255, b / 255)
+
+    def set_hsv(self, h, s, v):
+        if s == 0.0:
+            self._rgb(v, v, v)
+        else:
+            i = int(h * 6.0)
+            f = (h * 6.0) - i
+            p, q, t = v * (1.0 - s), v * (1.0 - s * f), v * (1.0 - s * (1.0 - f))
+
+            i = i % 6
+            if i == 0:
+                self._rgb(v, t, p)
+            elif i == 1:
+                self._rgb(q, v, p)
+            elif i == 2:
+                self._rgb(p, v, t)
+            elif i == 3:
+                self._rgb(p, q, v)
+            elif i == 4:
+                self._rgb(t, p, v)
+            elif i == 5:
+                self._rgb(v, p, q)
+
 
 
 # A simple class for handling Proportional, Integral & Derivative (PID) control calculations
@@ -230,19 +252,14 @@ class ShiftRegister:
 # A basic wrapper for PWM with regular on/off and toggle functions from Pin
 # Intended to be used for driving LEDs with brightness control & compatibility with Pin
 class PWMLED:
-    def __init__(self, pin, invert=False):
-        self._invert = invert
-        self._led = PWM(Pin(pin, Pin.OUT))
-        self._led.freq(1000)
-        self._brightness = 0
-        self.brightness(0)
+    def __init__(self, pin, invert=False, gamma=1):
+        self._gamma = gamma
+        self._led = PWM(Pin(pin), freq=1000, duty_u16=0, invert=invert)
 
     def brightness(self, brightness):
         brightness = min(1.0, max(0.0, brightness))
         self._brightness = brightness
-        if self._invert:
-            brightness = 1.0 - brightness
-        self._led.duty_u16(int(65535 * brightness))
+        self._led.duty_u16(int(pow(brightness, self._gamma) * 65535 + 0.5))
 
     def on(self):
         self.brightness(1)
