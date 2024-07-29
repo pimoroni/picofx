@@ -2,4 +2,4 @@ include("$(PORT_DIR)/boards/manifest.py")
 
 freeze("lib/")
 
-freeze("../../picofx")
+package("picofx", base_path="../../")
