@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: MIT
 
 from machine import ADC, Pin
-from pimoroni import PWMLED, RGBLED
 from pimoroni_i2c import PimoroniI2C
+from picofx import PWMLED, RGBLED
 
 
 class TinyFX:
