@@ -61,13 +61,9 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: TinyFX 2MB
-            shortname: tinyfx_2m
+          - name: TinyFX
+            shortname: tinyfx
             board: PIMORONI_TINYFX
-          - name: TinyFX 4MB
-            shortname: tinyfx_4m
-            board: PIMORONI_TINYFX
-            variant: FLASH_4MB
 
     env:
       RELEASE_FILE: pimoroni-${{matrix.shortname}}-${{github.event.release.tag_name || github.sha}}-micropython.uf2
@@ -121,12 +117,11 @@ jobs:
         ref: v0.0.5
         path: dir2uf2
 
-    - name: "HACK: MicroPython out of tree board pins.csv & variants patches"
+    - name: "HACK: MicroPython out of tree board pins.csv patch"
       shell: bash
       working-directory: micropython
       run: |
         git apply "${{env.FIRMWARE_DIR}}/932f76c6ba64c5a3e68de3324556d9979f09303b.patch"
-        git apply "${{env.FIRMWARE_DIR}}/5dff78f38edc0354e854e6c73af61c5064afe9d3.patch"
 
     # Install apt packages
     - name: Install CCache & Compiler
@@ -139,7 +134,7 @@ jobs:
       shell: bash
       working-directory: micropython/ports/rp2
       run: |
-        cmake -S . -B build -DPICO_BUILD_DOCS=0 -DUSER_C_MODULES=${{env.BOARD_DIR}}/micropython.cmake -DMICROPY_BOARD_DIR=${{env.BOARD_DIR}} -DMICROPY_BOARD=${{env.BOARD}} -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DMICROPY_BOARD_VARIANT=${{env.VARIANT}} -DPICO_BOARD_HEADER_DIRS=${{env.BOARD_DIR}}
+        cmake -S . -B build -DPICO_BUILD_DOCS=0 -DUSER_C_MODULES=${{env.BOARD_DIR}}/micropython.cmake -DMICROPY_BOARD_DIR=${{env.BOARD_DIR}} -DMICROPY_BOARD=${{env.BOARD}} -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DPICO_BOARD_HEADER_DIRS=${{env.BOARD_DIR}}
 
     - name: Build MicroPython
       shell: bash
