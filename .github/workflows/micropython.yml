@@ -62,16 +62,16 @@ jobs:
       matrix:
         include:
           - name: TinyFX
-            shortname: tinyfx
-            shortundername: tiny_fx
+            shortname: tiny_fx
             board: PIMORONI_TINYFX
 
     env:
       RELEASE_FILE: pimoroni-${{matrix.shortname}}-${{github.event.release.tag_name || github.sha}}-micropython.uf2
       RELEASE_FILE_WITH_OS: pimoroni-${{matrix.shortname}}-${{github.event.release.tag_name || github.sha}}-micropython-with-examples.uf2
       FIRMWARE_DIR: "$GITHUB_WORKSPACE/picofx/boards"
+      ROOT_DIR: "$GITHUB_WORKSPACE/picofx"
       BOARD_DIR: "$GITHUB_WORKSPACE/picofx/boards/${{matrix.board}}"
-      EXAMPLES_DIR: "$GITHUB_WORKSPACE/picofx/examples/${{matrix.shortundername}}"
+      EXAMPLES_DIR: "$GITHUB_WORKSPACE/picofx/examples/${{matrix.shortname}}"
 
     steps:
     - name: Compiler Cache
@@ -115,7 +115,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         repository: gadgetoid/dir2uf2
-        ref: v0.0.5
+        ref: v0.0.6
         path: dir2uf2
 
     - name: "HACK: MicroPython out of tree board pins.csv patch"
@@ -123,12 +123,15 @@ jobs:
       working-directory: micropython
       run: |
         git apply "${{env.FIRMWARE_DIR}}/932f76c6ba64c5a3e68de3324556d9979f09303b.patch"
-
-    # Install apt packages
-    - name: Install CCache & Compiler
-      shell: bash
-      run:
-        sudo apt update && sudo apt install ccache gcc-arm-none-eabi
+    
+    - name: Install Arm GNU Toolchain (arm-none-eabi-gcc)
+      uses: carlosperate/arm-none-eabi-gcc-action@v1
+      with:
+        release: '9-2020-q2'
+  
+    - name: Install CCache
+      run: |
+        sudo apt update && sudo apt install ccache
 
     # Build firmware
     - name: Configure MicroPython
@@ -155,6 +158,12 @@ jobs:
       shell: bash
       run: |
         python3 py_decl/py_decl.py --to-json --verify micropython/ports/rp2/build/${{ env.RELEASE_FILE }}
+
+    - name: "HACK: Mangle PicoFX Lib into user filesystem"
+      shell: bash
+      run: |
+        mkdir -p ${{env.EXAMPLES_DIR}}/lib
+        cp -v -r ${{env.ROOT_DIR}}/picofx ${{env.EXAMPLES_DIR}}/lib
 
     - name: Append Filesystem
       shell: bash

@@ -1,0 +1,61 @@
+name: Zip Files
+
+on:
+  push:
+  pull_request:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    name: Build ${{matrix.name}}
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        include:
+          - name: TinyFX
+            shortname: tiny_fx
+            board: PIMORONI_TINYFX
+
+    env:
+      RELEASE_FILE: ${{matrix.shortname}}-${{github.event.release.tag_name || github.sha}}
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+        path: picofx
+
+    - name: Libs .zip artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{env.RELEASE_FILE}}-libs-only
+        path: picofx/picofx
+
+    - name:  Examples .zip artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{env.RELEASE_FILE}}-examples-only
+        path: "picofx/examples/${{matrix.shortname}}"
+
+    - name: Libs .zip release asset
+      if: github.event_name == 'release'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      with:
+        asset_path: picofx/picofx
+        upload_url: ${{github.event.release.upload_url}}
+        asset_name: ${{env.RELEASE_FILE}}-libs-only
+        asset_content_type: application/octet-stream
+
+    - name: Examples .zip release asset
+      if: github.event_name == 'release'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      with:
+        asset_path: "picofx/examples/${{matrix.shortname}}"
+        upload_url: ${{github.event.release.upload_url}}
+        asset_name: ${{env.RELEASE_FILE}}-examples-only
+        asset_content_type: application/octet-stream

@@ -1,1 +1,8 @@
 main.py
+examples/*.py
+examples/effects/*.py
+examples/showcase/*.py
+lib/*.py
+lib/picofx/*.py
+lib/picofx/colour/*.py
+lib/picofx/mono/*.py

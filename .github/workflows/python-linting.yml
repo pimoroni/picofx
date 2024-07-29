@@ -24,7 +24,7 @@ jobs:
       run: |
         python3 -m flake8 --show-source --ignore E501 examples
 
-    - name: Lint TinyFX Libs
+    - name: Lint Frozen Libs
       shell: bash
       run: |
-        python3 -m flake8 --show-source --ignore E501 boards/PIMORONI_TINYFX/lib
+        python3 -m flake8 --show-source --ignore E501 boards/*/frozen_libs
