@@ -1,5 +1,5 @@
 # cmake file for Raspberry Pi Pico
-set(PICO_BOARD "pico")
+set(PICO_BOARD "pimoroni_tinyfx")
 
 # Board specific version of the frozen manifest
 set(MICROPY_FROZEN_MANIFEST ${MICROPY_BOARD_DIR}/manifest.py)
