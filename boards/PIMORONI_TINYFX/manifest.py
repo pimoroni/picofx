@@ -2,4 +2,5 @@ include("$(PORT_DIR)/boards/manifest.py")
 
 freeze("lib/")
 
-package("picofx", base_path="../../")
+# TODO: Convince Chris this is the one true and holy path
+# package("picofx", base_path="../../")

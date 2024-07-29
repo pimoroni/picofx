@@ -1,3 +1,6 @@
 main.py
 effects/*.py
 showcase/*.py
+lib/picofx/*.py
+lib/picofx/colour/*.py
+lib/picofx/mono/*.py
