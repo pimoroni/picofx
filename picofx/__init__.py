@@ -9,13 +9,12 @@ from machine import Pin, PWM, Timer
 # Intended to be used for driving LEDs with brightness control & compatibility with Pin
 class PWMLED:
     def __init__(self, pin, invert=False, gamma=1):
-        self._gamma = gamma
-        self._led = PWM(Pin(pin), freq=1000, duty_u16=0, invert=invert)
+        self.__gamma = gamma
+        self.__led = PWM(Pin(pin), freq=1000, duty_u16=0, invert=invert)
 
     def brightness(self, brightness):
-        brightness = min(1.0, max(0.0, brightness))
-        self._brightness = brightness
-        self._led.duty_u16(int(pow(brightness, self._gamma) * 65535 + 0.5))
+        self.__brightness = min(1.0, max(0.0, brightness))
+        self.__led.duty_u16(int(pow(self.__brightness, self.__gamma) * 65535 + 0.5))
 
     def on(self):
         self.brightness(1)
@@ -24,30 +23,26 @@ class PWMLED:
         self.brightness(0)
 
     def toggle(self):
-        self.brightness(1 - self._brightness)
+        self.brightness(1 - self.__brightness)
 
 
 class RGBLED:
     def __init__(self, r, g, b, invert=True, gamma=1):
-        self._gamma = gamma
-        self.led_r = PWM(Pin(r), freq=1000, duty_u16=0, invert=invert)
-        self.led_g = PWM(Pin(g), freq=1000, duty_u16=0, invert=invert)
-        self.led_b = PWM(Pin(b), freq=1000, duty_u16=0, invert=invert)
+        self.led_r = r if isinstance(r, PWMLED) else PWMLED(r, invert=invert, gamma=gamma)
+        self.led_g = g if isinstance(g, PWMLED) else PWMLED(g, invert=invert, gamma=gamma)
+        self.led_b = b if isinstance(b, PWMLED) else PWMLED(b, invert=invert, gamma=gamma)
 
-    def _rgb(self, r, g, b):
-        self.led_r.duty_u16(int(pow(r, self._gamma) * 65535 + 0.5))
-        self.led_g.duty_u16(int(pow(g, self._gamma) * 65535 + 0.5))
-        self.led_b.duty_u16(int(pow(b, self._gamma) * 65535 + 0.5))
+    def __rgb(self, r, g, b):
+        self.led_r.brightness(r)
+        self.led_g.brightness(g)
+        self.led_b.brightness(b)
 
     def set_rgb(self, r, g, b):
-        r = min(255, max(0, r))
-        g = min(255, max(0, g))
-        b = min(255, max(0, b))
-        self._rgb(r / 255, g / 255, b / 255)
+        self.__rgb(r / 255, g / 255, b / 255)
 
     def set_hsv(self, h, s, v):
         if s == 0.0:
-            self._rgb(v, v, v)
+            self.__rgb(v, v, v)
         else:
             i = int(h * 6.0)
             f = (h * 6.0) - i
@@ -55,17 +50,17 @@ class RGBLED:
 
             i = i % 6
             if i == 0:
-                self._rgb(v, t, p)
+                self.__rgb(v, t, p)
             elif i == 1:
-                self._rgb(q, v, p)
+                self.__rgb(q, v, p)
             elif i == 2:
-                self._rgb(p, v, t)
+                self.__rgb(p, v, t)
             elif i == 3:
-                self._rgb(p, q, v)
+                self.__rgb(p, q, v)
             elif i == 4:
-                self._rgb(t, p, v)
+                self.__rgb(t, p, v)
             elif i == 5:
-                self._rgb(v, p, q)
+                self.__rgb(v, p, q)
 
 
 class Updatable:
