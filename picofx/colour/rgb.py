@@ -10,5 +10,5 @@ class RGBFX:
 
     def __call__(self):
         return max(min(self.red, 255), 0), \
-               max(min(self.green, 255), 0), \
-               max(min(self.blue, 255), 0)
+            max(min(self.green, 255), 0), \
+            max(min(self.blue, 255), 0)

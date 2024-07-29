@@ -11,7 +11,7 @@ Press "Boot" to exit the program.
 # Variables
 tiny = TinyFX()                        # Create a new TinyFX object to interact with the board
 player = MonoPlayer(tiny.outputs)      # Create a new effect player to control TinyFX's mono outputs
-    
+
 # Effects
 wave = WaveSequenceFX(1, 6)            # Create a WaveSequenceFX effect
 
@@ -36,6 +36,6 @@ try:
         pass
 
 # Stop any running effects and turn off all the outputs
-finally:    
+finally:
     player.stop()
     tiny.clear()

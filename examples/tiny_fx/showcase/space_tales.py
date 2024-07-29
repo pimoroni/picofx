@@ -11,7 +11,7 @@ Press "Boot" to exit the program.
 # Variables
 tiny = TinyFX()                     # Create a new TinyFX object
 player = MonoPlayer(tiny.outputs)   # Create a new effect player to control TinyFX's mono outputs
-    
+
 # Set up the effects to play
 player.effects = [
     PulseFX(0.2),
@@ -32,6 +32,6 @@ try:
         pass
 
 # Stop any running effects and turn off all the outputs
-finally:    
+finally:
     player.stop()
     tiny.clear()

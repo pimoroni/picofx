@@ -52,6 +52,6 @@ try:
                 tiny.clear()
 
 # Stop any running effects and turn off all the outputs
-finally:    
+finally:
     player.stop()
     tiny.clear()

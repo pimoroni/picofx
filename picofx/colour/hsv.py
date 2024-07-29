@@ -23,8 +23,8 @@ def rgb_from_hsv(h, s, v):
             return t, p, v
         elif i == 5:
             return v, p, q
-            
-            
+
+
 class HSVFX:
     def __init__(self, hue=0.0, sat=1.0, val=1.0):
         self.hue = hue

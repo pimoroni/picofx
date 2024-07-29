@@ -183,7 +183,6 @@ class RGBLED:
                 self._rgb(v, p, q)
 
 
-
 # A simple class for handling Proportional, Integral & Derivative (PID) control calculations
 class PID:
     def __init__(self, kp, ki, kd, sample_rate):

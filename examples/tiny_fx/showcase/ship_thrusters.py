@@ -48,7 +48,7 @@ player.effects = [
     left,
     left,
     left_centre,
-    right_centre,    
+    right_centre,
     right,
     right
 ]
@@ -71,6 +71,6 @@ try:
         pass
 
 # Stop any running effects and turn off all the outputs
-finally:    
+finally:
     player.stop()
     tiny.clear()

@@ -4,6 +4,7 @@
 
 from picofx import Updatable
 
+
 class PelicanLightFX(Updatable):
     def __init__(self, speed=1):
         self.speed = speed
@@ -29,7 +30,7 @@ class PelicanLightFX(Updatable):
             def fx():
                 return self.__current[1]
             return self, fx
-        
+
         if light == "green":
             def fx():
                 return self.__current[2]
@@ -45,14 +46,14 @@ class PelicanLightFX(Updatable):
             self.__index = (self.__index + 1) % len(self.__states)
             self.__state = list(self.__states[self.__index][0])
             self.__dur = self.__states[self.__index][1]
-            
+
         cycle_time = 0.25
         # Handle special case for Amber state (flashing)
         if self.__index == 1 and ((self.__time / 1000) % cycle_time) >= (cycle_time / 2):
             self.__state[1] = 0
         else:
             self.__state[1] = self.__states[self.__index][0][1]
-            
+
         for i in range(len(self.__current)):
             if self.__current[i] < self.__state[i]:
                 self.__current[i] = min(self.__current[i] + delta_ms * self.speed * 0.01, self.__state[i])

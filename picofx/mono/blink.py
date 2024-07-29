@@ -4,6 +4,7 @@
 
 from picofx import Cycling
 
+
 class BlinkFX(Cycling):
     def __init__(self, speed=1, phase=0.0, duty=0.5):
         super().__init__(speed)
@@ -28,4 +29,3 @@ class BlinkSequenceFX(Cycling):
             percent = (self.__offset + phase) % 1.0
             return 1.0 if percent < self.duty else 0.0
         return self, fx
-

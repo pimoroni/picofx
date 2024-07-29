@@ -13,7 +13,7 @@ Press "Boot" to exit the program.
 tiny = TinyFX()                        # Create a new TinyFX object to interact with the board
 player = MonoPlayer(tiny.outputs)      # Create a new effect player to control TinyFX's mono outputs
 rgb_player = ColourPlayer(tiny.rgb)    # Create a new effect player to control TinyFX's RGB output
-    
+
 # Effects
 traffic = PelicanLightFX(1)            # Create a PelicanLight effect
 
@@ -39,6 +39,6 @@ try:
         pass
 
 # Stop any running effects and turn off all the outputs
-finally:    
+finally:
     player.stop()
     tiny.clear()

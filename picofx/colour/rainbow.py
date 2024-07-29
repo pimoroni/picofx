@@ -5,6 +5,7 @@
 from picofx import Cycling
 from .hsv import rgb_from_hsv
 
+
 class RainbowFX(Cycling):
     def __init__(self, speed=1.0, sat=1.0, val=1.0):
         Cycling.__init__(self, speed)

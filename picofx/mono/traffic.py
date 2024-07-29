@@ -4,6 +4,7 @@
 
 from picofx import Updatable
 
+
 class TrafficLightFX(Updatable):
     def __init__(self, speed=1):
         self.speed = speed
@@ -29,7 +30,7 @@ class TrafficLightFX(Updatable):
             def fx():
                 return self.__current[1]
             return self, fx
-        
+
         if light == "green":
             def fx():
                 return self.__current[2]
@@ -45,7 +46,7 @@ class TrafficLightFX(Updatable):
             self.__index = (self.__index + 1) % len(self.__states)
             self.__state = self.__states[self.__index][0]
             self.__dur = self.__states[self.__index][1]
-            
+
         for i in range(len(self.__current)):
             if self.__current[i] < self.__state[i]:
                 self.__current[i] = min(self.__current[i] + delta_ms * self.speed * 0.002, self.__state[i])

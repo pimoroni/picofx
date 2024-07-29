@@ -5,6 +5,7 @@
 import math
 from picofx import Cycling
 
+
 class WaveSequenceFX(Cycling):
     def __init__(self, speed=1, size=1):
         super().__init__(speed)
