@@ -1,0 +1,12 @@
+{
+    "urls": [
+        ["picofx/__init__.py", "github:org/pimoroni/picofx/picofx/__init__.py"],
+        ["picofx/colour/__init__.py", "github:org/pimoroni/picofx/colour/__init__.py"],
+        ["picofx/colour/hsv.py", "github:org/pimoroni/picofx/colour/hsv.py"],
+        ["picofx/colour/rainbow.py", "github:org/pimoroni/picofx/colour/rainbow.py"],
+        ["picofx/colour/rainbow_wave.py", "github:org/pimoroni/picofx/colour/rainbow_wave.py"],
+        ["picofx/colour/rgb.py", "github:org/pimoroni/picofx/colour/rgb.py"],
+        ["picofx/mono/__init__.py", "github:org/pimoroni/picofx/mono/__init__.py"]
+    ],
+    "version": "0.1"
+}
