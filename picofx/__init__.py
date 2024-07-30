@@ -214,12 +214,9 @@ class MonoPlayer(EffectPlayer):
         super().__init__(mono_leds)
 
     def __show(self):
-        try:
-            for i in range(self.__num_leds):
-                if self.__effects[i] is not None:
-                    self.__leds[i].brightness(self.__effects[i](*self.__data[i]))
-        except Exception:
-            raise TypeError("Incorrect effect setup for this MonoPlayer")
+        for i in range(self.__num_leds):
+            if self.__effects[i] is not None:
+                self.__leds[i].brightness(self.__effects[i](*self.__data[i]))
 
 
 class ColourPlayer(EffectPlayer):
@@ -227,16 +224,13 @@ class ColourPlayer(EffectPlayer):
         super().__init__(rgb_leds)
 
     def __show(self):
-        try:
-            for i in range(self.__num_leds):
-                if self.__effects[i] is not None:
-                    colours = self.__effects[i](*self.__data[i])
-                    if not isinstance(colours, tuple):
-                        colours = [int(colours * 255)] * 3
+        for i in range(self.__num_leds):
+            if self.__effects[i] is not None:
+                colours = self.__effects[i](*self.__data[i])
+                if not isinstance(colours, tuple):
+                    colours = [int(colours * 255)] * 3
 
-                    self.__leds[i].set_rgb(*colours)
-        except Exception:
-            raise TypeError("Incorrect effect setup for this ColourPlayer")
+                self.__leds[i].set_rgb(*colours)
 
 
 class StripPlayer(EffectPlayer):
@@ -244,13 +238,10 @@ class StripPlayer(EffectPlayer):
         super().__init__(rgb_leds, num_leds)
 
     def __show(self):
-        try:
-            for i in range(self.__num_leds):
-                if self.__effects[i] is not None:
-                    colours = self.__effects[i](*self.__data[i])
-                    if not isinstance(colours, tuple):
-                        colours = [int(colours * 255)] * 3
+        for i in range(self.__num_leds):
+            if self.__effects[i] is not None:
+                colours = self.__effects[i](*self.__data[i])
+                if not isinstance(colours, tuple):
+                    colours = [int(colours * 255)] * 3
 
-                    self.__leds.set_rgb(i, *colours)
-        except Exception:
-            raise TypeError("Incorrect effect setup for this StripPlayer")
+                self.__leds.set_rgb(i, *colours)
