@@ -4,6 +4,8 @@ These are micropython examples for the Pimoroni [TinyFX](https://shop.pimoroni.c
 
 - [Function Examples](#function-examples)
 - [Effect Examples](#effect-examples)
+  - [Single Blink](#single-blink)
+  - [Blink Wave](#blink-wave)
   - [Binary Counter](#binary-counter)
   - [Traffic Light](#traffic-light)
   - [Wave Sequence](#wave-sequence)
@@ -19,6 +21,18 @@ These are micropython examples for the Pimoroni [TinyFX](https://shop.pimoroni.c
 
 
 ## Effect Examples
+
+### Single Blink
+[effects/single_blink.py](effects/single_blink.py)
+
+Play a blinking effect on one of TinyFX's outputs.
+
+
+### Blink Wave
+[effects/blink_wave.py](effects/blink_wave.py)
+
+Play a wave of blinks on TinyFX's outputs.
+
 
 ### Binary Counter
 [effects/binary_counter.py](effects/binary_counter.py)
