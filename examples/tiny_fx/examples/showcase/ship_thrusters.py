@@ -10,10 +10,10 @@ Press "Boot" to exit the program.
 """
 
 # Constants
-MIN_LOCKOUT = 0.2                       # The minimum amount of time the thrusters will be at full brightness for (in seconds)
 CENTRAL_BRIGHTNESS = 1.0                # The brightness of the central thrusters (from 0.0 to 1.0)
 SIDE_BRIGHTNESS = 0.3                   # The brightness of the side thrusters (from 0.0 to 1.0)
 DIMNESS_PERCENT = 0.1                   # How much to dim the thuster brightness by (from 0.0 to 1.0)
+MIN_BRIGHTNESS_DURATION = 0.2           # The minimum amount of time the thrusters will be at full brightness for (in seconds)
 
 PLANETSHINE_HUE = 0.5                   # The colour of the planetshine (from 0.0 to 1.0)
 PLANETSHINE_SATURATION = 0.5            # The saturation/intensity of the planetshine (from 0.0 to 1.0)
@@ -26,21 +26,21 @@ player = MonoPlayer(tiny.outputs)       # Create a new effect player to control 
 rgb_player = ColourPlayer(tiny.rgb)     # Create a new effect player to control TinyFX's RGB output
 
 # Set up the effects for the thruster banks
-left_centre = FlickerFX(lockout_min=MIN_LOCKOUT,
-                        brightness=CENTRAL_BRIGHTNESS,
-                        dimness=DIMNESS_PERCENT)
+left_centre = FlickerFX(brightness=CENTRAL_BRIGHTNESS,
+                        dimness=DIMNESS_PERCENT,
+                        bright_min=MIN_BRIGHTNESS_DURATION)
 
-right_centre = FlickerFX(lockout_min=MIN_LOCKOUT,
-                         brightness=CENTRAL_BRIGHTNESS,
-                         dimness=DIMNESS_PERCENT)
+right_centre = FlickerFX(brightness=CENTRAL_BRIGHTNESS,
+                         dimness=DIMNESS_PERCENT,
+                         bright_min=MIN_BRIGHTNESS_DURATION)
 
-left = FlickerFX(lockout_min=MIN_LOCKOUT,
-                 brightness=SIDE_BRIGHTNESS,
-                 dimness=DIMNESS_PERCENT)
+left = FlickerFX(brightness=SIDE_BRIGHTNESS,
+                 dimness=DIMNESS_PERCENT,
+                 bright_min=MIN_BRIGHTNESS_DURATION)
 
-right = FlickerFX(lockout_min=MIN_LOCKOUT,
-                  brightness=SIDE_BRIGHTNESS,
-                  dimness=DIMNESS_PERCENT)
+right = FlickerFX(brightness=SIDE_BRIGHTNESS,
+                  dimness=DIMNESS_PERCENT,
+                  bright_min=MIN_BRIGHTNESS_DURATION)
 
 # Set up the mono effects to play
 # Both left and right LEDs are close together on the ship, so it looks better if they share the same flicker
