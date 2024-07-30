@@ -3,10 +3,10 @@
 # SPDX-License-Identifier: MIT
 
 import random
-from picofx import Updatable
+from picofx import Updateable
 
 
-class FlickerFX(Updatable):
+class FlickerFX(Updateable):
     def __init__(self, dim_min=0.02, dim_max=0.04, lockout_min=0.05, lockout_max=0.1, brightness=1.0, dimness=0.5):
         self.dim_min = dim_min
         self.dim_max = dim_max

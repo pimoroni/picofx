@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: MIT
 
-from picofx import Updatable
+from picofx import Updateable
 
 
-class TrafficLightFX(Updatable):
+class TrafficLightFX(Updateable):
     def __init__(self, speed=1):
         self.speed = speed
         self.__states = [

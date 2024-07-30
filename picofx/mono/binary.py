@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: MIT
 
-from picofx import Updatable
+from picofx import Updateable
 
 
-class BinarySequenceFX(Updatable):
+class BinarySequenceFX(Updateable):
 
     def __init__(self, period=0.1):
         self.period = period

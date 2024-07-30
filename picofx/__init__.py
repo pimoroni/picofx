@@ -63,7 +63,7 @@ class RGBLED:
                 self.__rgb(v, p, q)
 
 
-class Updatable:
+class Updateable:
     def __init__(self, speed):
         self.speed = speed
 
@@ -74,7 +74,7 @@ class Updatable:
         pass
 
 
-class Cycling(Updatable):
+class Cycling(Updateable):
     def __init__(self, speed):
         super().__init__(speed)
         self.__offset_ms = 0
@@ -98,7 +98,7 @@ class EffectPlayer:
 
         self.__effects = [None] * self.__num_leds
         self.__data = [()] * self.__num_leds
-        self.__updatables = set()
+        self.__updateables = set()
 
         self.__period = 1000
         self.__timer = Timer()
@@ -120,7 +120,7 @@ class EffectPlayer:
         self.__timer.deinit()
         self.__running = False
         if reset_fx:
-            for ufx in self.__updatables:
+            for ufx in self.__updateables:
                 ufx.reset()
 
     def is_running(self):
@@ -133,7 +133,7 @@ class EffectPlayer:
         self.__paired = player
 
     def __update(self, timer):
-        for ufx in self.__updatables:
+        for ufx in self.__updateables:
             ufx.tick(self.__period)
 
         try:
@@ -156,7 +156,7 @@ class EffectPlayer:
         if len(effect_list) > self.__num_leds:
             raise ValueError(f"`effect_list` must have a length less or equal to {self.__num_leds}")
 
-        self.__updatables = set()
+        self.__updateables = set()
         for i, item in enumerate(effect_list):
             self.__effects[i] = None
             self.__data[i] = ()
@@ -170,17 +170,17 @@ class EffectPlayer:
                 # It must therefore be an effect function
                 self.__effects[i] = item
 
-                # Is the effect an Updatable class too?
-                if isinstance(item, Updatable):
-                    self.__updatables.add(item)     # Add it to the updatables set
+                # Is the effect an Updateable class too?
+                if isinstance(item, Updateable):
+                    self.__updateables.add(item)    # Add it to the updateables set
 
             # Is the item a tuple?
             elif isinstance(item, tuple):
                 first, *rest = item
 
-                # Is the first element an Updatable class?
-                if isinstance(first, Updatable):
-                    self.__updatables.add(first)    # Add it to the updatables set
+                # Is the first element an Updateable class?
+                if isinstance(first, Updateable):
+                    self.__updateables.add(first)   # Add it to the updateables set
 
                     # Are there are other elements, and is the second element callable?
                     if rest and callable(rest[0]):
@@ -226,7 +226,11 @@ class ColourPlayer(EffectPlayer):
         try:
             for i in range(self.__num_leds):
                 if self.__effects[i] is not None:
-                    self.__leds[i].set_rgb(*self.__effects[i](*self.__data[i]))
+                    colours = self.__effects[i](*self.__data[i])
+                    if not isinstance(colours, tuple):
+                        colours = [int(colours * 255)] * 3
+
+                    self.__leds[i].set_rgb(*colours)
         except Exception:
             raise TypeError("Incorrect effect setup for this ColourPlayer")
 

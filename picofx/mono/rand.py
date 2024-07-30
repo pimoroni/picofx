@@ -3,10 +3,10 @@
 # SPDX-License-Identifier: MIT
 
 import random
-from picofx import Updatable
+from picofx import Updateable
 
 
-class RandomFX(Updatable):
+class RandomFX(Updateable):
     def __init__(self, period=0.05, low=0.0, high=1.0):
         self.period = period
         self.low = low
