@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-from .binary import BinarySequenceFX
+from .binary import BinaryCounterFX
 from .blink import BlinkFX, BlinkSequenceFX
 from .emergency import EmergencyFX
 from .flicker import FlickerFX
@@ -14,7 +14,7 @@ from .traffic import TrafficLightFX
 from .wave import WaveSequenceFX
 
 MONO_EFFECTS = [
-    BinarySequenceFX,
+    BinaryCounterFX,
     BlinkFX,
     BlinkSequenceFX,
     EmergencyFX,

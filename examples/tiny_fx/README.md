@@ -4,6 +4,7 @@ These are micropython examples for the Pimoroni [TinyFX](https://shop.pimoroni.c
 
 - [Function Examples](#function-examples)
 - [Effect Examples](#effect-examples)
+  - [Binary Counter](#binary-counter)
   - [Traffic Light](#traffic-light)
   - [Wave Sequence](#wave-sequence)
 - [Audio Examples](#audio-examples)
@@ -18,6 +19,12 @@ These are micropython examples for the Pimoroni [TinyFX](https://shop.pimoroni.c
 
 
 ## Effect Examples
+
+### Binary Counter
+[effects/binary_counter.py](effects/binary_counter.py)
+
+Play an incrementing binary counter on TinyFX's outputs.
+
 
 ### Traffic Light
 [effects/traffic_light.py](effects/traffic_light.py)
