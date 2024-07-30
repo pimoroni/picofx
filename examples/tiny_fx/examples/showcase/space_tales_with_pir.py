@@ -24,10 +24,10 @@ pir = Pin(tiny.SENSOR_PIN, Pin.IN, Pin.PULL_UP)
 
 # Set up the effects to play
 player.effects = [
-    PulseFX(0.2),
-    RandomFX(0.01, 0.5, 1.0),
-    StaticFX(0.5),
-    BlinkFX(0.5),
+    PulseFX(speed=0.2),
+    RandomFX(interval=0.01, brightness_min=0.5, brightness_max=1.0),
+    StaticFX(brightness=0.5),
+    BlinkFX(speed=0.5),
     None,
     None
 ]
