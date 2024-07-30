@@ -19,7 +19,7 @@ wave = PulseWaveFX(speed=1.0,           # The speed to blink at, with 1.0 being 
                    phase=0.0)           # How far through the blink to start the effect (from 0.0 to 1.0)
 
 
-# Set up the wave effect to play. Each output has a different popsition
+# Set up the wave effect to play. Each output has a different position
 # along the wave, with the value being related to the effect's size
 player.effects = [
     wave(0),

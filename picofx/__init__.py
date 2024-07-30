@@ -133,10 +133,10 @@ class EffectPlayer:
         self.__paired = player
 
     def __update(self, timer):
-        for ufx in self.__updateables:
-            ufx.tick(self.__period)
-
         try:
+            for ufx in self.__updateables:
+                ufx.tick(self.__period)
+
             self.__show()
 
             if self.__paired is not None:
