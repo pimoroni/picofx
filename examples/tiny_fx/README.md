@@ -7,6 +7,8 @@ These are micropython examples for the Pimoroni [TinyFX](https://shop.pimoroni.c
   - [Single Blink](#single-blink)
   - [Blink Wave](#blink-wave)
   - [Binary Counter](#binary-counter)
+  - [Single Pulse](#single-pulse)
+  - [Pulse Wave](#pulse-wave)
   - [Traffic Light](#traffic-light)
   - [Wave Sequence](#wave-sequence)
 - [Audio Examples](#audio-examples)
@@ -38,6 +40,18 @@ Play a wave of blinks on TinyFX's outputs.
 [effects/binary_counter.py](effects/binary_counter.py)
 
 Play an incrementing binary counter on TinyFX's outputs.
+
+
+### Single Pulse
+[effects/single_pulse.py](effects/single_pulse.py)
+
+Play a pulsing effect on one of TinyFX's outputs.
+
+
+### Pulse Wave
+[effects/pulse_wave.py](effects/pulse_wave.py)
+
+Play a wave of pulses on TinyFX's outputs.
 
 
 ### Traffic Light

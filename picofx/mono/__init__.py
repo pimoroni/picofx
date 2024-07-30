@@ -7,11 +7,10 @@ from .blink import BlinkFX, BlinkWaveFX
 from .emergency import EmergencyFX
 from .flicker import FlickerFX
 from .pelican import PelicanLightFX
-from .pulse import PulseFX
+from .pulse import PulseFX, PulseWaveFX
 from .rand import RandomFX
 from .static import StaticFX
 from .traffic import TrafficLightFX
-from .wave import WaveSequenceFX
 
 MONO_EFFECTS = [
     BinaryCounterFX,
@@ -21,8 +20,8 @@ MONO_EFFECTS = [
     FlickerFX,
     PelicanLightFX,
     PulseFX,
+    PulseWaveFX,
     RandomFX,
     StaticFX,
     TrafficLightFX,
-    WaveSequenceFX
 ]

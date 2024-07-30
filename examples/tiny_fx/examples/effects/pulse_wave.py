@@ -1,9 +1,9 @@
 from tiny_fx import TinyFX
 from picofx import MonoPlayer
-from picofx.mono import BlinkWaveFX
+from picofx.mono import PulseWaveFX
 
 """
-Play a wave of blinks on TinyFX's outputs.
+Play a wave of pulses on TinyFX's outputs.
 
 Press "Boot" to exit the program.
 """
@@ -13,11 +13,10 @@ tiny = TinyFX()                         # Create a new TinyFX object to interact
 player = MonoPlayer(tiny.outputs)       # Create a new effect player to control TinyFX's mono outputs
 
 
-# Create a BlinkWaveFX effect
-wave = BlinkWaveFX(speed=1.0,           # The speed to blink at, with 1.0 being 1 second
+# Create a PulseWaveFX effect
+wave = PulseWaveFX(speed=1.0,           # The speed to blink at, with 1.0 being 1 second
                    size=6.0,            # The size the effect spans, in this case the number of outputs (6)
-                   phase=0.0,           # How far through the blink to start the effect (from 0.0 to 1.0)
-                   duty=0.5)            # How long the blink is on for (from 0.0 to 1.0)
+                   phase=0.0)           # How far through the blink to start the effect (from 0.0 to 1.0)
 
 
 # Set up the wave effect to play. Each output has a different popsition
