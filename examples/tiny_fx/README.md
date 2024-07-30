@@ -3,6 +3,9 @@
 These are micropython examples for the Pimoroni [TinyFX](https://shop.pimoroni.com/products/tiny_fx), a stamp-sized light and sound effects controller board for model making, construction kits, and dioramas.
 
 - [Function Examples](#function-examples)
+  - [Read Button](#read-button)
+  - [Sensor Meter](#sensor-meter)
+  - [Voltage Meter](#voltage-meter)
 - [Mono Effect Examples](#mono-effect-examples)
   - [Single Blink](#single-blink)
   - [Single Flashing](#single-flashing)
@@ -19,9 +22,6 @@ These are micropython examples for the Pimoroni [TinyFX](https://shop.pimoroni.c
   - [Random](#random)
   - [Hue Step](#hue-step)
 - [Audio Examples](#audio-examples)
-  - [Read Button](#read-button)
-  - [Sensor Meter](#sensor-meter)
-  - [Voltage Meter](#voltage-meter)
 - [Showcase Examples](#showcase-examples)
   - [Rescue Vehicle](#rescue-vehicle)
   - [Sensor Wave](#sensor-wave)
@@ -32,6 +32,22 @@ These are micropython examples for the Pimoroni [TinyFX](https://shop.pimoroni.c
 
 ## Function Examples
 
+### Read Button
+[function/read_button.py](function/read_button.py)
+
+Show the state of TinyFX's Boot button on its RGB output.
+
+
+### Sensor Meter
+[function/sensor_meter.py](function/sensor_meter.py)
+
+Use TinyFX's mono outputs as a bargraph to show the voltage measured from a sensor attached to the sensor connector.
+
+
+### Voltage Meter
+[function/voltage_meter.py](function/voltage_meter.py)
+
+Use TinyFX's mono outputs as a bargraph to show the voltage that is powering the board.
 
 
 ## Mono Effect Examples
@@ -117,23 +133,6 @@ Play a stepped hue effect on TinyFX's RGB output.
 
 
 ## Audio Examples
-
-### Read Button
-[function/read_button.py](function/read_button.py)
-
-Show the state of TinyFX's Boot button on its RGB output.
-
-
-### Sensor Meter
-[function/sensor_meter.py](function/sensor_meter.py)
-
-Use TinyFX's mono outputs as a bargraph to show the voltage measured from a sensor attached to the sensor connector.
-
-
-### Voltage Meter
-[function/voltage_meter.py](function/voltage_meter.py)
-
-Use TinyFX's mono outputs as a bargraph to show the voltage that is powering the board.
 
 
 ## Showcase Examples
