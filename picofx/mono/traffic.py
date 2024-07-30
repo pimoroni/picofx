@@ -58,7 +58,6 @@ class TrafficLightFX(Updateable):
             else:
                 self.__state[1] = self.__states[self.__index][0][1]
 
-
         # Add a fading effect to the outputs
         for i in range(len(self.__current)):
             if self.__current[i] < self.__state[i]:

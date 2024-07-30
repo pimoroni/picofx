@@ -19,8 +19,12 @@ These are micropython examples for the Pimoroni [TinyFX](https://shop.pimoroni.c
   - [Random](#random)
   - [Hue Step](#hue-step)
 - [Audio Examples](#audio-examples)
+  - [Read Button](#read-button)
+  - [Sensor Meter](#sensor-meter)
+  - [Voltage Meter](#voltage-meter)
 - [Showcase Examples](#showcase-examples)
   - [Rescue Vehicle](#rescue-vehicle)
+  - [Sensor Wave](#sensor-wave)
   - [Ship Thrusters](#ship-thrusters)
   - [Space Tales](#space-tales)
   - [Space Tales with PIR Sensor](#space-tales-with-pir-sensor)
@@ -114,6 +118,22 @@ Play a stepped hue effect on TinyFX's RGB output.
 
 ## Audio Examples
 
+### Read Button
+[function/read_button.py](function/read_button.py)
+
+Show the state of TinyFX's Boot button on its RGB output.
+
+
+### Sensor Meter
+[function/sensor_meter.py](function/sensor_meter.py)
+
+Use TinyFX's mono outputs as a bargraph to show the voltage measured from a sensor attached to the sensor connector.
+
+
+### Voltage Meter
+[function/voltage_meter.py](function/voltage_meter.py)
+
+Use TinyFX's mono outputs as a bargraph to show the voltage that is powering the board.
 
 
 ## Showcase Examples
@@ -122,6 +142,12 @@ Play a stepped hue effect on TinyFX's RGB output.
 [showcase/rescue_vehicle.py](showcase/rescue_vehicle.py)
 
 Play an alternating flashing sequence on two of TinyFX's outputs, recreating the effect of rescue vehicle beacons. The other outputs are static for illuminated head and tail lights.
+
+
+### Sensor Wave
+[showcase/sensor_wave.py](showcase/sensor_wave.py)
+
+Play a wave of pulses on TinyFX's outputs, who's speed is controlled by a sensor.
 
 
 ### Ship Thrusters

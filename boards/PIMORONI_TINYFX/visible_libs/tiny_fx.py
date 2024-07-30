@@ -47,7 +47,7 @@ class TinyFX:
     def boot_pressed(self):
         return self.__switch.value() == 0
 
-    def voltage(self, samples=1):
+    def read_voltage(self, samples=1):
         val = 0
         for _ in range(samples):
             val += self.__v_sense.read_u16()

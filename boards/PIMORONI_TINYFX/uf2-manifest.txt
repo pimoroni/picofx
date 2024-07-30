@@ -3,6 +3,7 @@ examples/*.py
 examples/effects/*.py
 examples/effects/mono/*.py
 examples/effects/colour/*.py
+examples/function/*.py
 examples/showcase/*.py
 lib/*.py
 lib/picofx/*.py
