@@ -14,6 +14,71 @@ https://github.com/miketeachman/micropython-i2s-examples/blob/master/examples/wa
 """
 
 
+class WavReader:
+    def __init__(self, file):
+        self.wav_file = open(file, "rb")
+        self._parse(self.wav_file)
+
+    def _parse(self, wav_file):
+        chunk_ID = wav_file.read(4)
+        if chunk_ID != b"RIFF":
+            raise ValueError("WAV chunk ID invalid")
+        _ = wav_file.read(4)                            # chunk_size
+        if wav_file.read(4) != b"WAVE":
+            raise ValueError("WAV format invalid")
+        sub_chunk1_ID = wav_file.read(4)
+        if sub_chunk1_ID != b"fmt ":
+            raise ValueError("WAV sub chunk 1 ID invalid")
+        _ = wav_file.read(4)                            # sub_chunk1_size
+        _ = struct.unpack("<H", wav_file.read(2))[0]    # audio_format
+        num_channels = struct.unpack("<H", wav_file.read(2))[0]
+
+        if num_channels == 1:
+            self.format = I2S.MONO
+        else:
+            self.format = I2S.STEREO
+
+        self.sample_rate = struct.unpack("<I", wav_file.read(4))[0]
+        # if sample_rate != 44_100 and sample_rate != 48_000:
+        #    raise ValueError(f"WAV sample rate of {sample_rate} invalid. Only 44.1KHz or 48KHz audio are supported")
+
+        _ = struct.unpack("<I", wav_file.read(4))[0]    # byte_rate
+        _ = struct.unpack("<H", wav_file.read(2))[0]    # block_align
+        self.bits_per_sample = struct.unpack("<H", wav_file.read(2))[0]
+
+        # usually the sub chunk2 ID ("data") comes next, but
+        # some online MP3->WAV converters add
+        # binary data before "data".  So, read a fairly large
+        # block of bytes and search for "data".
+
+        binary_block = wav_file.read(200)
+        offset = binary_block.find(b"data")
+        if offset == -1:
+            raise ValueError("WAV sub chunk 2 ID not found")
+
+        self.offset = offset + 44
+        self.size = int(self.sample_rate * self.bits_per_sample / 8)
+
+        wav_file.seek(40)
+        self.sub_chunk2_size = struct.unpack("<I", wav_file.read(4))[0]
+
+        wav_file.seek(self.offset)
+
+    def seek(self, pos):
+        self.wav_file.seek(pos + self.offset)
+
+    def tell(self):
+        return self.wav_file.tell()
+
+    def readinto(self, buf):
+        max_bytes = self.size - (self.wav_file.tell() - self.offset)
+        max_bytes = min(len(buf), max_bytes)
+        return self.wav_file.readinto(buf[:max_bytes])
+
+    def close(self):
+        self.wav_file.close()
+
+
 class WavPlayer:
     # Internal states
     PLAY = 0
@@ -26,9 +91,9 @@ class WavPlayer:
     MODE_TONE = 1
 
     # Default buffer length
-    SILENCE_BUFFER_LENGTH = 1000
-    WAV_BUFFER_LENGTH = 10000
-    INTERNAL_BUFFER_LENGTH = 20000
+    SILENCE_BUFFER_LENGTH = 1024
+    WAV_BUFFER_LENGTH = 1024
+    INTERNAL_BUFFER_LENGTH = WAV_BUFFER_LENGTH * 2
 
     TONE_SAMPLE_RATE = 44_100
     TONE_BITS_PER_SAMPLE = 16
@@ -52,7 +117,6 @@ class WavPlayer:
         self.__mode = WavPlayer.MODE_WAV
         self.__wav_file = None
         self.__loop_wav = False
-        self.__first_sample_offset = None
         self.__flush_count = 0
         self.__audio_out = None
 
@@ -77,18 +141,14 @@ class WavPlayer:
 
         self.__wav_file = open(self.__root + wav_file, "rb")    # Open the chosen WAV file in read-only, binary mode
         self.__loop_wav = loop                                  # Record if the user wants the file to loop
+        self._loop_count = 0                                    # Count loops for debugging purposes
 
         # Parse the WAV file, returning the necessary parameters to initialise I2S communication
-        format, sample_rate, bits_per_sample, self.__first_sample_offset, self.sample_size = WavPlayer.__parse_wav(self.__wav_file)
+        self.__wav_file = WavReader(self.__root + wav_file)
 
-        # Keep a track of total bytes read from WAV File
-        self.total_bytes_read = 0
-
-        self.__wav_file.seek(self.__first_sample_offset)        # Advance to first byte of sample data
-
-        self.__start_i2s(bits=bits_per_sample,
-                         format=format,
-                         rate=sample_rate,
+        self.__start_i2s(bits=self.__wav_file.bits_per_sample,
+                         format=self.__wav_file.format,
+                         rate=self.__wav_file.sample_rate,
                          state=WavPlayer.PLAY,
                          mode=WavPlayer.MODE_WAV)
 
@@ -191,22 +251,30 @@ class WavPlayer:
         # PLAY
         if self.__state == WavPlayer.PLAY:
             if self.__mode == WavPlayer.MODE_WAV:
-                num_read = self.__wav_file.readinto(self.__wav_samples_mv)      # Read the next section of the WAV file
-                self.total_bytes_read += num_read
-                # Have we reached the end of the file?
-                if num_read == 0:
-                    # Do we want to loop the WAV playback?
-                    if self.__loop_wav:
-                        _ = self.__wav_file.seek(self.__first_sample_offset)    # Play again, so advance to first byte of sample data
+                if self.__loop_wav:  # Looped playback
+                    loop_read = 0
+                    while loop_read < self.WAV_BUFFER_LENGTH:
+                        num_read = self.__wav_file.readinto(self.__wav_samples_mv[loop_read:])      # Read the next section of the WAV file
+                        loop_read += num_read
+                        if num_read == 0:
+                            _ = self.__wav_file.seek(0)    # Play again, so advance to first byte of sample data
+                            self._loop_count += 1
+                    self.__audio_out.write(self.__wav_samples_mv)
+
+                else:  # Single shot playback
+                    num_read = self.__wav_file.readinto(self.__wav_samples_mv)
+
+                    if num_read:
+                        self.__audio_out.write(self.__wav_samples_mv[: num_read])   # We are within the file, so write out the next audio samples
                     else:
+                        self.__audio_out.write(self.__silence_samples)              # In both cases play silence to end this callback
+
+                    # Have we reached the end of the file? (num_read is either 0 or a short read)
+                    if num_read < self.WAV_BUFFER_LENGTH:
+                        # Do we want to loop the WAV playback?
                         self.__wav_file.close()                                 # Stop playing, so close the file
                         self.__state = WavPlayer.FLUSH                          # and enter the flush state on the next callback
 
-                    self.__audio_out.write(self.__silence_samples)              # In both cases play silence to end this callback
-                else:
-                    if num_read > 0 and num_read < self.WAV_BUFFER_LENGTH:
-                        num_read = num_read - (self.total_bytes_read - self.sample_size)
-                    self.__audio_out.write(self.__wav_samples_mv[: num_read])   # We are within the file, so write out the next audio samples
             else:
                 if self.__queued_samples is not None:
                     self.__tone_samples = self.__queued_samples
@@ -230,47 +298,3 @@ class WavPlayer:
         # NONE
         elif self.__state == WavPlayer.NONE:
             pass
-
-    @staticmethod
-    def __parse_wav(wav_file):
-        chunk_ID = wav_file.read(4)
-        if chunk_ID != b"RIFF":
-            raise ValueError("WAV chunk ID invalid")
-        _ = wav_file.read(4)                            # chunk_size
-        format = wav_file.read(4)
-        if format != b"WAVE":
-            raise ValueError("WAV format invalid")
-        sub_chunk1_ID = wav_file.read(4)
-        if sub_chunk1_ID != b"fmt ":
-            raise ValueError("WAV sub chunk 1 ID invalid")
-        _ = wav_file.read(4)                            # sub_chunk1_size
-        _ = struct.unpack("<H", wav_file.read(2))[0]    # audio_format
-        num_channels = struct.unpack("<H", wav_file.read(2))[0]
-
-        if num_channels == 1:
-            format = I2S.MONO
-        else:
-            format = I2S.STEREO
-
-        sample_rate = struct.unpack("<I", wav_file.read(4))[0]
-        # if sample_rate != 44_100 and sample_rate != 48_000:
-        #    raise ValueError(f"WAV sample rate of {sample_rate} invalid. Only 44.1KHz or 48KHz audio are supported")
-
-        _ = struct.unpack("<I", wav_file.read(4))[0]    # byte_rate
-        _ = struct.unpack("<H", wav_file.read(2))[0]    # block_align
-        bits_per_sample = struct.unpack("<H", wav_file.read(2))[0]
-
-        # usually the sub chunk2 ID ("data") comes next, but
-        # some online MP3->WAV converters add
-        # binary data before "data".  So, read a fairly large
-        # block of bytes and search for "data".
-
-        binary_block = wav_file.read(200)
-        offset = binary_block.find(b"data")
-        if offset == -1:
-            raise ValueError("WAV sub chunk 2 ID not found")
-
-        wav_file.seek(40)
-        sub_chunk2_size = struct.unpack("<I", wav_file.read(4))[0]
-
-        return (format, sample_rate, bits_per_sample, 44 + offset, sub_chunk2_size)
