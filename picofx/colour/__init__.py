@@ -4,10 +4,12 @@
 
 from .colour import RGBFX, HSVFX
 from .rainbow import RainbowFX, RainbowWaveFX
+from .step import HueStepFX
 
 COLOUR_EFFECTS = [
     RGBFX,
     HSVFX,
     RainbowFX,
-    RainbowWaveFX
+    RainbowWaveFX,
+    HueStepFX
 ]

@@ -20,7 +20,7 @@ class RandomFX(Updateable):
     def tick(self, delta_ms):
         self.__time += delta_ms
 
-        # Check if the dim duration has elapsed
+        # Check if the interval has elapsed
         if self.__time >= (self.interval * 1000):
             self.__time -= (self.interval * 1000)
 

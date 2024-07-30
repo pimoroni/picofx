@@ -6,7 +6,6 @@ from picofx import Updateable
 
 
 class BinaryCounterFX(Updateable):
-
     def __init__(self, interval=0.1, count=0, step=1):
         self.interval = interval
         self.counter = count

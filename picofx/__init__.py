@@ -68,8 +68,8 @@ class RGBLED:
 
 
 class Updateable:
-    def __init__(self, speed):
-        self.speed = speed
+    def __init__(self):
+        pass
 
     def tick(self, delta_ms):
         pass
@@ -80,7 +80,7 @@ class Updateable:
 
 class Cycling(Updateable):
     def __init__(self, speed):
-        super().__init__(speed)
+        self.speed = speed
         self.__offset_ms = 0
         self.__offset = 0
 
