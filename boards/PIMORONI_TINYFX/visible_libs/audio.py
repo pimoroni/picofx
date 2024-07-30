@@ -204,6 +204,9 @@ class WavPlayer:
             else:
                 self.__state = WavPlayer.STOP
 
+    def deinit(self):
+        self.__stop_i2s()
+
     def is_playing(self):
         return self.__state != WavPlayer.NONE and self.__state != WavPlayer.STOP
 
