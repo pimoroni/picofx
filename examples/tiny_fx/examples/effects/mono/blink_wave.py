@@ -15,13 +15,13 @@ player = MonoPlayer(tiny.outputs)       # Create a new effect player to control 
 
 # Create a BlinkWaveFX effect
 wave = BlinkWaveFX(speed=1.0,           # The speed to blink at, with 1.0 being 1 second
-                   size=6.0,            # The size the effect spans, in this case the number of outputs (6)
+                   length=6.0,          # The length of the wave before positions repeat. Usually the number of outputs (6)
                    phase=0.0,           # How far through the blink to start the effect (from 0.0 to 1.0)
                    duty=0.5)            # How long the blink is on for (from 0.0 to 1.0)
 
 
 # Set up the wave effect to play. Each output has a different position
-# along the wave, with the value being related to the effect's size
+# along the wave, with the value being related to the effect's length
 player.effects = [
     wave(0),
     wave(1),

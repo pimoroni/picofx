@@ -33,9 +33,9 @@ class FlashFX(Cycling):
 
 
 class FlashSequenceFX(Cycling):
-    def __init__(self, speed=1, size=1, flashes=1, window=1, phase=0.0, duty=0.5):
+    def __init__(self, speed=1, length=1, flashes=1, window=1, phase=0.0, duty=0.5):
         super().__init__(speed)
-        self.size = size
+        self.length = length
         self.flashes = flashes
         self.window = window
         self.phase = phase
@@ -55,7 +55,7 @@ class FlashSequenceFX(Cycling):
     def __call__(self, pos):
         def fx():
             nonlocal pos
-            phase = pos / self.size
+            phase = pos / self.length
             offset = (self.__offset + self.phase + phase) % 1.0
             if offset < self.window:
                 percent = ((offset * self.__flashes) / self.window) % 1.0

@@ -5,6 +5,29 @@
 from machine import Pin, PWM, Timer
 
 
+def rgb_from_hsv(h, s, v):
+    if s == 0.0:
+        return v, v, v
+    else:
+        i = int(h * 6.0)
+        f = (h * 6.0) - i
+        p, q, t = v * (1.0 - s), v * (1.0 - s * f), v * (1.0 - s * (1.0 - f))
+
+        i = i % 6
+        if i == 0:
+            return v, t, p
+        elif i == 1:
+            return q, v, p
+        elif i == 2:
+            return p, v, t
+        elif i == 3:
+            return p, q, v
+        elif i == 4:
+            return t, p, v
+        elif i == 5:
+            return v, p, q
+
+
 # A basic wrapper for PWM with regular on/off and toggle functions from Pin
 # Intended to be used for driving LEDs with brightness control & compatibility with Pin
 class PWMLED:
@@ -41,26 +64,7 @@ class RGBLED:
         self.__rgb(r / 255, g / 255, b / 255)
 
     def set_hsv(self, h, s, v):
-        if s == 0.0:
-            self.__rgb(v, v, v)
-        else:
-            i = int(h * 6.0)
-            f = (h * 6.0) - i
-            p, q, t = v * (1.0 - s), v * (1.0 - s * f), v * (1.0 - s * (1.0 - f))
-
-            i = i % 6
-            if i == 0:
-                self.__rgb(v, t, p)
-            elif i == 1:
-                self.__rgb(q, v, p)
-            elif i == 2:
-                self.__rgb(p, v, t)
-            elif i == 3:
-                self.__rgb(p, q, v)
-            elif i == 4:
-                self.__rgb(t, p, v)
-            elif i == 5:
-                self.__rgb(v, p, q)
+        self.__rgb(*rgb_from_hsv(h, s, v))
 
 
 class Updateable:
