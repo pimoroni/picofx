@@ -57,22 +57,21 @@ class WavReader:
             raise ValueError("WAV sub chunk 2 ID not found")
 
         self.offset = offset + 44
-        self.size = int(self.sample_rate * self.bits_per_sample / 8)
 
-        wav_file.seek(40)
-        self.sub_chunk2_size = struct.unpack("<I", wav_file.read(4))[0]
+        wav_file.seek(offset + 40)
+        self.size = struct.unpack("<I", wav_file.read(4))[0]
 
         wav_file.seek(self.offset)
 
     def seek(self, pos):
-        self.wav_file.seek(pos + self.offset)
+        return self.wav_file.seek(pos + self.offset)
 
     def tell(self):
-        return self.wav_file.tell()
+        return self.wav_file.tell() - self.offset
 
     def readinto(self, buf):
-        max_bytes = self.size - (self.wav_file.tell() - self.offset)
-        max_bytes = min(len(buf), max_bytes)
+        max_bytes = self.size - self.tell()
+        max_bytes = max(0, min(len(buf), max_bytes))
         return self.wav_file.readinto(buf[:max_bytes])
 
     def close(self):
@@ -141,12 +140,12 @@ class WavPlayer:
         self.__root = root.rstrip("/") + "/"
 
     def play_wav(self, wav_file, loop=False):
-        if os.listdir(self.__root).count(wav_file) == 0:
-            raise ValueError(f"'{wav_file}' not found")
-
         self.__stop_i2s()                                       # Stop any active playback and terminate the I2S instance
 
-        self.__wav_file = open(self.__root + wav_file, "rb")    # Open the chosen WAV file in read-only, binary mode
+        try:
+            self.__wav_file = open(self.__root + wav_file, "rb")    # Open the chosen WAV file in read-only, binary mode
+        except OSError:
+            raise ValueError(f"'{wav_file}' not found")
         self.__loop_wav = loop                                  # Record if the user wants the file to loop
         self._loop_count = 0                                    # Count loops for debugging purposes
 
@@ -294,7 +293,7 @@ class WavPlayer:
                     if num_read:
                         self.__audio_out.write(self.__wav_samples_mv[: num_read])   # We are within the file, so write out the next audio samples
                     else:
-                        self.__audio_out.write(self.__silence_samples)              # In both cases play silence to end this callback
+                        self.__audio_out.write(self.__silence_samples)              # Play silence to end this callback
 
                     # Have we reached the end of the file? (num_read is either 0 or a short read)
                     if num_read < self.WAV_BUFFER_LENGTH:
