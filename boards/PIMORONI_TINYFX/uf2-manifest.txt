@@ -2,6 +2,8 @@ main.py
 examples/*.py
 examples/effects/*.py
 examples/showcase/*.py
+examples/audio/race_start.py
+examples/audio/fair_use_encounters.py
 lib/*.py
 lib/picofx/*.py
 lib/picofx/colour/*.py
