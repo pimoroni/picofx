@@ -166,7 +166,8 @@ class WavPlayer:
         if amplitude < 0.0 or amplitude > 1.0:
             raise ValueError("amplitude out of range. Expected 0.0 to 1.0")
 
-        amplitude *= self.__amplitude_scale[shape]
+        if not isinstance(shape, (list, tuple)):
+            shape = (shape, )
 
         # Create a buffer containing the pure tone samples
         samples_per_cycle = self.TONE_SAMPLE_RATE // frequency
@@ -178,13 +179,21 @@ class WavPlayer:
 
         # Populate the buffer with multiple cycles to avoid it completing too quickly and causing drop outs
         for i in range(samples_per_cycle * self.TONE_FULL_WAVES):
-            if shape == self.TONE_TRIANGLE:
-                sample = (i % samples_per_cycle) - (samples_per_cycle // 2)
-                sample /= samples_per_cycle
-            if shape == self.TONE_SINE:
-                sample = math.sin(2 * math.pi * i / samples_per_cycle)
-            if shape == self.TONE_SQUARE:
-                sample = 1 if (i % samples_per_cycle) < (samples_per_cycle // 2) else -1
+            sample = 0
+            if self.TONE_TRIANGLE in shape:
+                triangle = (i % samples_per_cycle) - (samples_per_cycle // 2)
+                triangle /= samples_per_cycle
+                triangle *= self.__amplitude_scale[self.TONE_TRIANGLE]
+                sample += triangle
+            if self.TONE_SINE in shape:
+                sine = math.sin(2 * math.pi * i / samples_per_cycle)
+                sine *= self.__amplitude_scale[self.TONE_SINE]
+                sample += sine
+            if self.TONE_SQUARE in shape:
+                square = 1 if (i % samples_per_cycle ) < (samples_per_cycle // 2) else -1
+                square *= self.__amplitude_scale[self.TONE_SQUARE]
+                sample += square
+            sample = max(-1, min(1, sample))
             struct.pack_into(format, samples, i * sample_size_in_bytes, int(sample * maximum))
 
         # Are we not already playing tones?
