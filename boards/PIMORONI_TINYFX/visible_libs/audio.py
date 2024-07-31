@@ -90,6 +90,10 @@ class WavPlayer:
     MODE_WAV = 0
     MODE_TONE = 1
 
+    TONE_SINE = 0
+    TONE_SQUARE = 1
+    TONE_TRIANGLE = 2
+
     # Default buffer length
     SILENCE_BUFFER_LENGTH = 1024
     WAV_BUFFER_LENGTH = 1024
@@ -106,6 +110,9 @@ class WavPlayer:
         self.__sd_pin = sd_pin
         self.__ibuf_len = ibuf_len
         self.__enable = None
+
+        # Manually tweak the tone amplitude for equal loudness of sine/square/triangle
+        self.__amplitude_scale = [1.0, 0.2, 0.5]
 
         if amp_enable is not None:
             self.__enable = Pin(amp_enable, Pin.OUT)
@@ -152,25 +159,33 @@ class WavPlayer:
                          state=WavPlayer.PLAY,
                          mode=WavPlayer.MODE_WAV)
 
-    def play_tone(self, frequency, amplitude):
+    def play_tone(self, frequency, amplitude, shape=TONE_SINE):
         if frequency < 20.0 or frequency > 20_000:
             raise ValueError("frequency out of range. Expected between 20Hz and 20KHz")
 
         if amplitude < 0.0 or amplitude > 1.0:
             raise ValueError("amplitude out of range. Expected 0.0 to 1.0")
 
+        amplitude *= self.__amplitude_scale[shape]
+
         # Create a buffer containing the pure tone samples
         samples_per_cycle = self.TONE_SAMPLE_RATE // frequency
         sample_size_in_bytes = self.TONE_BITS_PER_SAMPLE // 8
         samples = bytearray(self.TONE_FULL_WAVES * samples_per_cycle * sample_size_in_bytes)
-        range = pow(2, self.TONE_BITS_PER_SAMPLE) // 2
+        maximum = (pow(2, self.TONE_BITS_PER_SAMPLE) // 2 - 1) * amplitude
 
         format = "<h" if self.TONE_BITS_PER_SAMPLE == 16 else "<l"
 
         # Populate the buffer with multiple cycles to avoid it completing too quickly and causing drop outs
         for i in range(samples_per_cycle * self.TONE_FULL_WAVES):
-            sample = int((range - 1) * (math.sin(2 * math.pi * i / samples_per_cycle)) * amplitude)
-            struct.pack_into(format, samples, i * sample_size_in_bytes, sample)
+            if shape == self.TONE_TRIANGLE:
+                sample = (i % samples_per_cycle) - (samples_per_cycle // 2)
+                sample /= samples_per_cycle
+            if shape == self.TONE_SINE:
+                sample = math.sin(2 * math.pi * i / samples_per_cycle)
+            if shape == self.TONE_SQUARE:
+                sample = 1 if (i % samples_per_cycle) < (samples_per_cycle // 2) else -1
+            struct.pack_into(format, samples, i * sample_size_in_bytes, int(sample * maximum))
 
         # Are we not already playing tones?
         if not (self.__mode == WavPlayer.MODE_TONE and (self.__state == WavPlayer.PLAY or self.__state == WavPlayer.PAUSE)):
