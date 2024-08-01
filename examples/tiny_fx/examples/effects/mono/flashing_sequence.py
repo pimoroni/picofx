@@ -45,4 +45,4 @@ try:
 # Stop any running effects and turn off all the outputs
 finally:
     player.stop()
-    tiny.clear()
+    tiny.shutdown()

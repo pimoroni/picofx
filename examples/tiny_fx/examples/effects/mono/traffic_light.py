@@ -13,12 +13,12 @@ tiny = TinyFX()                        # Create a new TinyFX object to interact 
 player = MonoPlayer(tiny.outputs)      # Create a new effect player to control TinyFX's mono outputs
 
 # Effects
-traffic = TrafficLightFX(red_interval=10,       # The time (in seconds) to stay on Red
-                         red_amber_interval=5,  # The time (in seconds) to stay on Red+Ambler (or Amber Flashing if enabled)
-                         green_interval=10,     # The time (in seconds) to stay on Green
-                         amber_interval=5,      # The time (in seconds) to stay on Amber
-                         fade_rate=0.01,        # How quickly the lights respond to changes. Low values are more like bulbs
-                         amber_flashing=False)  # Whether to have Amber be flashing rather than Red+Amber, as some traffic lights use
+traffic = TrafficLightFX(red_interval=5,            # The time (in seconds) to stay on Red
+                         red_amber_interval=2.5,    # The time (in seconds) to stay on Red+Amber (or Amber Flashing if enabled)
+                         green_interval=5,          # The time (in seconds) to stay on Green
+                         amber_interval=2.5,        # The time (in seconds) to stay on Amber
+                         fade_rate=0.01,            # How quickly the lights respond to changes. Low values are more like bulbs
+                         amber_flashing=False)      # Whether to have Amber be flashing rather than Red+Amber, as some traffic lights use
 
 
 # Set up the traffic light effect to play.
@@ -46,4 +46,4 @@ try:
 # Stop any running effects and turn off all the outputs
 finally:
     player.stop()
-    tiny.clear()
+    tiny.shutdown()

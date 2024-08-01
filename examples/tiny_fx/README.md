@@ -22,6 +22,9 @@ These are micropython examples for the Pimoroni [TinyFX](https://shop.pimoroni.c
   - [Random](#random)
   - [Hue Step](#hue-step)
 - [Audio Examples](#audio-examples)
+  - [Race Start](#race-start)
+  - [Encounters](#encounters)
+  - [Photon Sword](#photon-sword)
 - [Showcase Examples](#showcase-examples)
   - [Rescue Vehicle](#rescue-vehicle)
   - [Sensor Wave](#sensor-wave)
@@ -133,6 +136,28 @@ Play a stepped hue effect on TinyFX's RGB output.
 
 
 ## Audio Examples
+
+### Race Start
+[audio/race_start.py](audio/race_start.py)
+
+Plays a simple boop, boop, boop, beeep countdown sound effect when
+you press Boot on TinyFx. Great for counting down to a race start.
+
+
+### Encounters
+[audio/fair_use_encounters.py](audio/fair_use_encounters.py)
+
+Play an evocative musical melody with accompanying lights on TinyFX.
+Any resemblance to music you might have heard elsewhere is purely coincidental.
+
+
+### Photon Sword
+[audio/photon_sword.py](audio/photon_sword.py)
+
+Play sounds that react to motion with a TinyFX.
+Grab yourself an MSA301 and attach it to the Qw/St connector.
+
+This example needs the directory `photon_sword` copied over to your TinyFX.
 
 
 ## Showcase Examples

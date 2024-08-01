@@ -42,4 +42,4 @@ try:
 
 # Turn off all the outputs
 finally:
-    tiny.clear()
+    tiny.shutdown()

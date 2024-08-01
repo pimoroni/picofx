@@ -1,45 +1,56 @@
 import time
 from tiny_fx import TinyFX
-from audio import WavPlayer
+from picofx.colour import WHITE
 
 """
 Plays a simple boop, boop, boop, beeep countdown sound effect when
-you presss BOOT. Great for counting down to a race start.
+you press Boot on TinyFx. Great for counting down to a race start.
 
 Plug a red LED into port 1 and a green LED into port 2.
 """
 
-tiny = TinyFX()
-wav = WavPlayer(0, tiny.I2S_BCLK, tiny.I2S_LRCLK, tiny.I2S_DATA, tiny.AMP_EN_PIN)
+# Constants
+TONES = (440, 440, 440, 880, 0)         # The tones to play in order (0 means silence)
+DURATIONS = (0.5, 0.5, 0.5, 1.5, 2.0)   # The duration of each tone (in seconds)
+OUTPUTS = (1, 1, 1, 2, 0)               # Which output to light with each tone
 
-tones = [440, 440, 440, 880, 0]
-durations = [0.5, 0.5, 0.5, 1.5, 2.0]
-leds = [1, 1, 1, 2, 0]
+# Variables
+tiny = TinyFX()                 # Create a new TinyFX object to interact with the board
 
-n = 0
-
+# Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
+    # Loop forever
     while True:
+        tiny.rgb.set_rgb(*WHITE)    # Show that the program is ready
+
+        # Wait for the Boot button to be pressed
         while not tiny.boot_pressed():
             pass
+        tiny.clear()                # Show that the program is running
 
-        for n in range(len(tones)):
-            tone = tones[n]
-            duration = durations[n]
-            led = leds[n]
+        # Loop through all the tones
+        for i in range(len(TONES)):
+            tone = TONES[i]
+            duration = DURATIONS[i]
+            output = OUTPUTS[i]
+
+            # Play the next tone
             if tone:
-                wav.play_tone(tone, 1.0, wav.TONE_SQUARE)
+                tiny.wav.play_tone(tone, 1.0, tiny.wav.TONE_SQUARE)
 
+            # Turn on just the output for the next tone
             tiny.clear()
-            if led:
-                tiny.outputs[led - 1].on()
+            if output:
+                tiny.outputs[output - 1].on()
 
+            # Wait for the tone's duration before stopping
             time.sleep(duration)
-            wav.stop()
+            tiny.wav.stop()
 
+            # Pause between each tone if not silence
             if tone:
                 time.sleep(0.1)
 
+# Turn off all the outputs and audio
 finally:
-    tiny.clear()
-    wav.deinit()
+    tiny.shutdown()
