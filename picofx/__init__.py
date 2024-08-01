@@ -5,6 +5,9 @@
 from machine import Pin, PWM, Timer
 
 
+PICOFX_VERSION = "1.0.0"
+
+
 def rgb_from_hsv(h, s, v):
     if s == 0.0:
         return v, v, v
