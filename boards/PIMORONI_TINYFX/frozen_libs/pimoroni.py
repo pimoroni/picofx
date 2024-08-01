@@ -23,14 +23,19 @@ class Analog:
         self.offset = offset
         self.pin = ADC(pin)
 
-    def read_voltage(self):
-        return max((((self.pin.read_u16() * 3.3) / 65535) + self.offset) / self.gain, 0.0)
+    def read_voltage(self, samples=1):
+        val = 0
+        for _ in range(samples):
+            val += self.pin.read_u16()
+        val /= samples
 
-    def read_current(self):
+        return max((((val * 3.3) / 65535) + self.offset) / self.gain, 0.0)
+
+    def read_current(self, samples=1):
         if self.resistor > 0:
-            return self.read_voltage() / self.resistor
+            return self.read_voltage(samples) / self.resistor
         else:
-            return self.read_voltage()
+            return self.read_voltage(samples)
 
 
 class AnalogMux:

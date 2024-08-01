@@ -5,6 +5,29 @@
 from machine import Pin, PWM, Timer
 
 
+def rgb_from_hsv(h, s, v):
+    if s == 0.0:
+        return v, v, v
+    else:
+        i = int(h * 6.0)
+        f = (h * 6.0) - i
+        p, q, t = v * (1.0 - s), v * (1.0 - s * f), v * (1.0 - s * (1.0 - f))
+
+        i = i % 6
+        if i == 0:
+            return v, t, p
+        elif i == 1:
+            return q, v, p
+        elif i == 2:
+            return p, v, t
+        elif i == 3:
+            return p, q, v
+        elif i == 4:
+            return t, p, v
+        elif i == 5:
+            return v, p, q
+
+
 # A basic wrapper for PWM with regular on/off and toggle functions from Pin
 # Intended to be used for driving LEDs with brightness control & compatibility with Pin
 class PWMLED:
@@ -41,31 +64,12 @@ class RGBLED:
         self.__rgb(r / 255, g / 255, b / 255)
 
     def set_hsv(self, h, s, v):
-        if s == 0.0:
-            self.__rgb(v, v, v)
-        else:
-            i = int(h * 6.0)
-            f = (h * 6.0) - i
-            p, q, t = v * (1.0 - s), v * (1.0 - s * f), v * (1.0 - s * (1.0 - f))
-
-            i = i % 6
-            if i == 0:
-                self.__rgb(v, t, p)
-            elif i == 1:
-                self.__rgb(q, v, p)
-            elif i == 2:
-                self.__rgb(p, v, t)
-            elif i == 3:
-                self.__rgb(p, q, v)
-            elif i == 4:
-                self.__rgb(t, p, v)
-            elif i == 5:
-                self.__rgb(v, p, q)
+        self.__rgb(*rgb_from_hsv(h, s, v))
 
 
 class Updateable:
-    def __init__(self, speed):
-        self.speed = speed
+    def __init__(self):
+        pass
 
     def tick(self, delta_ms):
         pass
@@ -76,7 +80,7 @@ class Updateable:
 
 class Cycling(Updateable):
     def __init__(self, speed):
-        super().__init__(speed)
+        self.speed = speed
         self.__offset_ms = 0
         self.__offset = 0
 
@@ -133,10 +137,10 @@ class EffectPlayer:
         self.__paired = player
 
     def __update(self, timer):
-        for ufx in self.__updateables:
-            ufx.tick(self.__period)
-
         try:
+            for ufx in self.__updateables:
+                ufx.tick(self.__period)
+
             self.__show()
 
             if self.__paired is not None:
@@ -210,12 +214,9 @@ class MonoPlayer(EffectPlayer):
         super().__init__(mono_leds)
 
     def __show(self):
-        try:
-            for i in range(self.__num_leds):
-                if self.__effects[i] is not None:
-                    self.__leds[i].brightness(self.__effects[i](*self.__data[i]))
-        except Exception:
-            raise TypeError("Incorrect effect setup for this MonoPlayer")
+        for i in range(self.__num_leds):
+            if self.__effects[i] is not None:
+                self.__leds[i].brightness(self.__effects[i](*self.__data[i]))
 
 
 class ColourPlayer(EffectPlayer):
@@ -223,16 +224,13 @@ class ColourPlayer(EffectPlayer):
         super().__init__(rgb_leds)
 
     def __show(self):
-        try:
-            for i in range(self.__num_leds):
-                if self.__effects[i] is not None:
-                    colours = self.__effects[i](*self.__data[i])
-                    if not isinstance(colours, tuple):
-                        colours = [int(colours * 255)] * 3
+        for i in range(self.__num_leds):
+            if self.__effects[i] is not None:
+                colours = self.__effects[i](*self.__data[i])
+                if not isinstance(colours, tuple):
+                    colours = [int(colours * 255)] * 3
 
-                    self.__leds[i].set_rgb(*colours)
-        except Exception:
-            raise TypeError("Incorrect effect setup for this ColourPlayer")
+                self.__leds[i].set_rgb(*colours)
 
 
 class StripPlayer(EffectPlayer):
@@ -240,13 +238,10 @@ class StripPlayer(EffectPlayer):
         super().__init__(rgb_leds, num_leds)
 
     def __show(self):
-        try:
-            for i in range(self.__num_leds):
-                if self.__effects[i] is not None:
-                    colours = self.__effects[i](*self.__data[i])
-                    if not isinstance(colours, tuple):
-                        colours = [int(colours * 255)] * 3
+        for i in range(self.__num_leds):
+            if self.__effects[i] is not None:
+                colours = self.__effects[i](*self.__data[i])
+                if not isinstance(colours, tuple):
+                    colours = [int(colours * 255)] * 3
 
-                    self.__leds.set_rgb(i, *colours)
-        except Exception:
-            raise TypeError("Incorrect effect setup for this StripPlayer")
+                self.__leds.set_rgb(i, *colours)

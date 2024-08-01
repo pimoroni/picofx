@@ -1,6 +1,9 @@
 main.py
 examples/*.py
 examples/effects/*.py
+examples/effects/mono/*.py
+examples/effects/colour/*.py
+examples/function/*.py
 examples/showcase/*.py
 examples/audio/race_start.py
 examples/audio/fair_use_encounters.py

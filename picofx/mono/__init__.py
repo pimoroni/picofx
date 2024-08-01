@@ -2,27 +2,25 @@
 #
 # SPDX-License-Identifier: MIT
 
-from .binary import BinarySequenceFX
-from .blink import BlinkFX, BlinkSequenceFX
-from .emergency import EmergencyFX
+from .binary import BinaryCounterFX
+from .blink import BlinkFX, BlinkWaveFX
+from .flash import FlashFX, FlashSequenceFX
 from .flicker import FlickerFX
-from .pelican import PelicanLightFX
-from .pulse import PulseFX
+from .pulse import PulseFX, PulseWaveFX
 from .rand import RandomFX
 from .static import StaticFX
 from .traffic import TrafficLightFX
-from .wave import WaveSequenceFX
 
 MONO_EFFECTS = [
-    BinarySequenceFX,
+    BinaryCounterFX,
     BlinkFX,
-    BlinkSequenceFX,
-    EmergencyFX,
+    BlinkWaveFX,
+    FlashFX,
+    FlashSequenceFX,
     FlickerFX,
-    PelicanLightFX,
     PulseFX,
+    PulseWaveFX,
     RandomFX,
     StaticFX,
     TrafficLightFX,
-    WaveSequenceFX
 ]
