@@ -9,14 +9,14 @@ Press "Boot" to exit the program.
 """
 
 # Variables
-tiny = TinyFX()                         # Create a new TinyFX object to interact with the board
-player = MonoPlayer(tiny.outputs)       # Create a new effect player to control TinyFX's mono outputs
+tiny = TinyFX()                     # Create a new TinyFX object to interact with the board
+player = MonoPlayer(tiny.outputs)   # Create a new effect player to control TinyFX's mono outputs
 
 
 # Create and set up a blink effect to play
 player.effects = [
-    PulseFX(speed=1.0,             # The speed to pulse at, with 1.0 being 1 second
-            phase=0.0),            # How far through the blink to start the effect (from 0.0 to 1.0)
+    PulseFX(speed=1.0,              # The speed to pulse at, with 1.0 being 1 second
+            phase=0.0),             # How far through the blink to start the effect (from 0.0 to 1.0)
 
     # No effects played on the rest of the outputs (unnecessary to list, but show for clarity)
     None,

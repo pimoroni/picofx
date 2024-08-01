@@ -12,11 +12,12 @@ Press "Boot" to exit the program.
 """
 
 # Constants
-MIN_VOLTAGE = 0             # The min voltage, in volts, the sensor returns
-MAX_VOLTAGE = 3.3           # The max voltage, in volts, the sensor returns
-MAX_SPEED = 2               # The max speed to play the wave effect at, in either direction
-SAMPLES = 50                # The number of measurements to take per reading, to reduce noise
-SLEEP = 0.1                 # The time to sleep between each voltage measurement
+MIN_VOLTAGE = 0     # The min voltage, in volts, the sensor returns
+MAX_VOLTAGE = 3.3   # The max voltage, in volts, the sensor returns
+MAX_SPEED = 2       # The max speed to play the wave effect at, in either direction
+SAMPLES = 50        # The number of measurements to take per reading, to reduce noise
+SLEEP = 0.1         # The time to sleep between each voltage measurement
+
 
 # Variables
 tiny = TinyFX()                         # Create a new TinyFX object to interact with the board

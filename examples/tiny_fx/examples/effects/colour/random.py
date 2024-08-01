@@ -13,6 +13,7 @@ INTERVAL = 0.2                          # The time (in seconds) between each ran
 BRIGHTNESS_MIN = 0.0                    # The min brightness to randomly go down to
 BRIGHTNESS_MAX = 1.0                    # The max brightness to randomly go up to
 
+
 # Variables
 tiny = TinyFX()                         # Create a new TinyFX object to interact with the board
 player = MonoPlayer([tiny.rgb.led_r,    # Create a new effect player to control TinyFX's RGB output as mono outputs

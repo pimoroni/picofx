@@ -9,15 +9,15 @@ Press "Boot" to exit the program.
 """
 
 # Variables
-tiny = TinyFX()                         # Create a new TinyFX object to interact with the board
-player = MonoPlayer(tiny.outputs)       # Create a new effect player to control TinyFX's mono outputs
+tiny = TinyFX()                     # Create a new TinyFX object to interact with the board
+player = MonoPlayer(tiny.outputs)   # Create a new effect player to control TinyFX's mono outputs
 
 
 # Create and set up a blink effect to play
 player.effects = [
-    RandomFX(interval=0.05,             # The time (in seconds) between each random brightness
-             brightness_min=0.0,        # The min brightness to randomly go down to
-             brightness_max=1.0),       # The max brightness to randomly go up to
+    RandomFX(interval=0.05,         # The time (in seconds) between each random brightness
+             brightness_min=0.0,    # The min brightness to randomly go down to
+             brightness_max=1.0),   # The max brightness to randomly go up to
 
     # No effects played on the rest of the outputs (unnecessary to list, but show for clarity)
     None,

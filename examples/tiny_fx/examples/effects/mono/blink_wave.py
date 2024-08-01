@@ -9,15 +9,15 @@ Press "Boot" to exit the program.
 """
 
 # Variables
-tiny = TinyFX()                         # Create a new TinyFX object to interact with the board
-player = MonoPlayer(tiny.outputs)       # Create a new effect player to control TinyFX's mono outputs
+tiny = TinyFX()                     # Create a new TinyFX object to interact with the board
+player = MonoPlayer(tiny.outputs)   # Create a new effect player to control TinyFX's mono outputs
 
 
 # Create a BlinkWaveFX effect
-wave = BlinkWaveFX(speed=1.0,           # The speed to blink at, with 1.0 being 1 second
-                   length=6.0,          # The length of the wave before positions repeat. Usually the number of outputs (6)
-                   phase=0.0,           # How far through the blink to start the effect (from 0.0 to 1.0)
-                   duty=0.5)            # How long the blink is on for (from 0.0 to 1.0)
+wave = BlinkWaveFX(speed=1.0,       # The speed to blink at, with 1.0 being 1 second
+                   length=6.0,      # The length of the wave before positions repeat. Usually the number of outputs (6)
+                   phase=0.0,       # How far through the blink to start the effect (from 0.0 to 1.0)
+                   duty=0.5)        # How long the blink is on for (from 0.0 to 1.0)
 
 
 # Set up the wave effect to play. Each output has a different position

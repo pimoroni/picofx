@@ -9,8 +9,9 @@ Press "Boot" to exit the program.
 """
 
 # Variables
-tiny = TinyFX()                        # Create a new TinyFX object to interact with the board
-player = MonoPlayer(tiny.outputs)      # Create a new effect player to control TinyFX's mono outputs
+tiny = TinyFX()                                     # Create a new TinyFX object to interact with the board
+player = MonoPlayer(tiny.outputs)                   # Create a new effect player to control TinyFX's mono outputs
+
 
 # Effects
 traffic = TrafficLightFX(red_interval=5,            # The time (in seconds) to stay on Red

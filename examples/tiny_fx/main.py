@@ -17,6 +17,7 @@ RAINBOW_SPEED = 0.1                     # The speed to cycle through colours at,
 RAINBOW_SATURATION = 1.0                # The saturation/intensity of the colour (from 0.0 to 1.0)
 RAINBOW_VALUE = 1.0                     # The value/brightness of the colour (from 0.0 to 1.0)
 
+
 # Variables
 tiny = TinyFX()                         # Create a new TinyFX object to interact with the board
 player = MonoPlayer(tiny.outputs)       # Create a new effect player to control TinyFX's mono outputs
