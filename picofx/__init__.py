@@ -97,8 +97,12 @@ class EffectPlayer:
     DEFAULT_FPS = 100
 
     def __init__(self, leds, num_leds=None):
-        self.__leds = leds if isinstance(leds, (tuple, list)) else [leds]
-        self.__num_leds = len(self.__leds) if num_leds is None else num_leds
+        if num_leds is None:
+            self.__leds = leds if isinstance(leds, (tuple, list)) else [leds]
+            self.__num_leds = len(self.__leds)
+        else:
+            self.__leds = leds
+            self.__num_leds = num_leds
 
         self.__effects = [None] * self.__num_leds
         self.__data = [()] * self.__num_leds
@@ -145,7 +149,7 @@ class EffectPlayer:
 
             if self.__paired is not None:
                 self.__paired.__update(timer)
-        except Exception as e:
+        except BaseException as e:
             self.stop()
             raise e
 
@@ -234,8 +238,8 @@ class ColourPlayer(EffectPlayer):
 
 
 class StripPlayer(EffectPlayer):
-    def __init__(self, rgb_leds, num_leds=60):
-        super().__init__(rgb_leds, num_leds)
+    def __init__(self, led_strip, num_leds=60):
+        super().__init__(led_strip, num_leds)
 
     def __show(self):
         for i in range(self.__num_leds):
