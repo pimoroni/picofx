@@ -1,15 +1,16 @@
 from tiny_fx import TinyFX
+from picofx.colour import RED, GREEN
 
 """
 Show the state of TinyFX's Boot button on its RGB output.
 """
 
 # Constants
-PRESSED_COLOUR = (0, 255, 0)        # The colour (R, G, B) to show when the boot button is pressed
-RELEASED_COLOUR = (255, 0, 0)     # The colour (R, G, B) to show when the boot button is released
+PRESSED_COLOUR = RED        # The colour to show when the boot button is pressed
+RELEASED_COLOUR = GREEN     # The colour to show when the boot button is released
 
 # Variables
-tiny = TinyFX()                         # Create a new TinyFX object to interact with the board
+tiny = TinyFX()             # Create a new TinyFX object to interact with the board
 
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
