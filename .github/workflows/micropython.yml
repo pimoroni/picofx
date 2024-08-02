@@ -7,9 +7,10 @@ on:
     types: [created]
 
 env:
-  MICROPYTHON_VERSION: v1.23.0
+  MICROPYTHON_VERSION: patch-i2s-deinit-all
+  MICROPYTHON_SOURCE: pimoroni
   PIMORONI_PICO_VERSION: v1.23.0-1
-  WORKFLOW_VERSION: v3
+  WORKFLOW_VERSION: v4
 
 jobs:
   deps:
@@ -21,16 +22,16 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{runner.workspace}}
-        key: workspace-micropython-${{env.MICROPYTHON_VERSION}}-${{env.WORKFLOW_VERSION}}
+        key: workspace-micropython-${{env.MICROPYTHON_SOURCE}}-${{env.MICROPYTHON_VERSION}}-${{env.WORKFLOW_VERSION}}
         restore-keys: |
-          workspace-micropython-${{env.MICROPYTHON_VERSION}}-${{env.WORKFLOW_VERSION}}
+          workspace-micropython-${{env.MICROPYTHON_SOURCE}}-${{env.MICROPYTHON_VERSION}}-${{env.WORKFLOW_VERSION}}
 
     # Check out MicroPython
     - name: Checkout MicroPython
       if: steps.cache.outputs.cache-hit != 'true'
       uses: actions/checkout@v4
       with:
-        repository: micropython/micropython
+        repository: ${{env.MICROPYTHON_SOURCE}}/micropython
         ref: ${{env.MICROPYTHON_VERSION}}
         submodules: false  # MicroPython submodules are hideously broken
         path: micropython
@@ -89,9 +90,9 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{runner.workspace}}
-        key: workspace-micropython-${{env.MICROPYTHON_VERSION}}-${{env.WORKFLOW_VERSION}}
+        key: workspace-micropython-${{env.MICROPYTHON_SOURCE}}-${{env.MICROPYTHON_VERSION}}-${{env.WORKFLOW_VERSION}}
         restore-keys: |
-          workspace-micropython-${{env.MICROPYTHON_VERSION}}-${{env.WORKFLOW_VERSION}}
+          workspace-micropython-${{env.MICROPYTHON_SOURCE}}-${{env.MICROPYTHON_VERSION}}-${{env.WORKFLOW_VERSION}}
 
     - uses: actions/checkout@v4
       with:
@@ -119,12 +120,6 @@ jobs:
         repository: gadgetoid/dir2uf2
         ref: v0.0.6
         path: dir2uf2
-
-    - name: "HACK: MicroPython out of tree board pins.csv patch"
-      shell: bash
-      working-directory: micropython
-      run: |
-        git apply "${{env.FIRMWARE_DIR}}/932f76c6ba64c5a3e68de3324556d9979f09303b.patch"
 
     - name: Install Arm GNU Toolchain (arm-none-eabi-gcc)
       uses: carlosperate/arm-none-eabi-gcc-action@v1
