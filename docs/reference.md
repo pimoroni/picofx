@@ -46,8 +46,8 @@ state_boot = tiny.boot_pressed()
 Tiny FX has six outputs for controlling chains of mono LEDs, labelled **1**, **2**, **3**, **4**, **5**, and **6**. These can be accessed either through the `outputs` list, or by individual properties, which return `PWMLED` objects:
 
 ```python
-one = tinyfx.outputs[0]
-also_one = tinyfx.one
+one = tiny.outputs[0]
+also_one = tiny.one
 ```
 
 These `PWMLED` objects offer several functions to control their associated outputs. They can be turned `on()`, turned `off()`, inverted via `toggle()` and have their brightness directly set via `brightness()`, which accepts a value from `0.0` to `1.0`.
@@ -75,7 +75,7 @@ time.sleep(1)
 Tiny FX has a single RGB output for controlling chains of RGB LEDs, labelled **RGB**. This can be accessed through the `rgb` variable, which returns a `RGBLED` object:
 
 ```python
-rgb = tinyfx.rgb
+rgb = tiny.rgb
 ```
 
 This `RGBLED` object offers two functions to control its associated output, `set_rgb()` which accepts `r`, `g`, and `b` values from `0` to `255`, and `set_hsv()` which accepts `h`, `s`, and `v` values from `0.0` to `1.0`.
