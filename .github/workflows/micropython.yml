@@ -131,6 +131,12 @@ jobs:
       run: |
         git apply "${{env.FIRMWARE_DIR}}/932f76c6ba64c5a3e68de3324556d9979f09303b.patch"
 
+    - name: "HACK: MicroPython RP2 board variant patch"
+      shell: bash
+      working-directory: micropython
+      run: |
+        git apply "${{env.FIRMWARE_DIR}}/5dff78f38edc0354e854e6c73af61c5064afe9d3.patch"
+
     - name: Install Arm GNU Toolchain (arm-none-eabi-gcc)
       uses: carlosperate/arm-none-eabi-gcc-action@v1
       with:
