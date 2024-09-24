@@ -1,0 +1,30 @@
+From 11becbe22321ca1d7bd631144976f246175730ce Mon Sep 17 00:00:00 2001
+From: Phil Howard <phil@gadgetoid.com>
+Date: Wed, 3 Jul 2024 15:15:16 +0100
+Subject: [PATCH] rp2/CMakeLists.txt: Add MICROPY_DEF_BOARD to compile
+ definitions.
+
+Add MICROPY_DEF_BOARD as per esp32 port, allows board variants to override
+the board name with:
+
+    list(APPEND MICROPY_DEF_BOARD
+        MICROPY_HW_BOARD_NAME="New Board Name"
+    )
+
+Signed-off-by: Phil Howard <phil@gadgetoid.com>
+---
+ ports/rp2/CMakeLists.txt | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/ports/rp2/CMakeLists.txt b/ports/rp2/CMakeLists.txt
+index 8fff4251487f..904925ae3f5e 100644
+--- a/ports/rp2/CMakeLists.txt
++++ b/ports/rp2/CMakeLists.txt
+@@ -493,6 +493,7 @@ set_source_files_properties(
+ )
+ 
+ target_compile_definitions(${MICROPY_TARGET} PRIVATE
++    ${MICROPY_DEF_BOARD}
+     FFCONF_H=\"${MICROPY_OOFATFS_DIR}/ffconf.h\"
+     LFS1_NO_MALLOC LFS1_NO_DEBUG LFS1_NO_WARN LFS1_NO_ERROR LFS1_NO_ASSERT
+     LFS2_NO_MALLOC LFS2_NO_DEBUG LFS2_NO_WARN LFS2_NO_ERROR LFS2_NO_ASSERT
