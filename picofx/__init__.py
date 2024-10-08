@@ -5,7 +5,7 @@
 from machine import Pin, PWM, Timer
 
 
-PICOFX_VERSION = "1.0.0"
+PICOFX_VERSION = "1.0.1"
 
 
 def rgb_from_hsv(h, s, v):
@@ -89,6 +89,34 @@ class Cycling(Updateable):
 
     def tick(self, delta_ms):
         self.__offset_ms = (self.__offset_ms + int(delta_ms * self.speed)) % 1000
+        self.__offset = self.__offset_ms / 1000
+
+    def reset(self):
+        self.__offset_ms = 0
+        self.__offset = 0
+
+
+class CyclingAction(Updateable):
+    def __init__(self, speed):
+        self.speed = speed
+        self.__offset_ms = 0
+        self.__offset = 0
+
+    def next(self):
+        pass
+
+    def prev(self):
+        pass
+
+    def tick(self, delta_ms):
+        self.__offset_ms += int(delta_ms * self.speed)
+        if self.__offset_ms >= 1000:
+            self.__offset_ms -= 1000
+            self.next()
+        elif self.__offset_ms < 0:
+            self.__offset_ms += 1000
+            self.prev()
+
         self.__offset = self.__offset_ms / 1000
 
     def reset(self):
