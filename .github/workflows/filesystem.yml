@@ -16,12 +16,14 @@ jobs:
           - name: TinyFX
             shortname: tiny_fx
             board: PIMORONI_TINYFX
+          - name: TinyFX W
+            shortname: tiny_fx_w
+            board: PIMORONI_TINYFX
 
     env:
       RELEASE_FILE: ${{matrix.shortname}}-${{github.event.release.tag_name || github.sha}}
       ROOT_DIR: "picofx"
       BOARD_DIR: "picofx/boards/${{matrix.board}}"
-      EXAMPLES_DIR: "picofx/examples/${{matrix.shortname}}"
       LIBS_DIR: "picofx/lib_temp"
       EX_DIR: "picofx/ex_temp"
 
@@ -42,26 +44,34 @@ jobs:
     - name: "Assemble example content"
       shell: bash
       run: |
-        mkdir -p ${{env.EXAMPLES_DIR}}
-        cp -v -r ${{env.EXAMPLES_DIR}}/. ${{env.EX_DIR}}
+        mkdir -p ${{env.EX_DIR}}
+        cp -v -r picofx/examples/tiny_fx/. ${{env.EX_DIR}}
         rm -v ${{env.EX_DIR}}/README.md
         rm -v -r ${{env.EX_DIR}}/examples/audio/photon_sword
         rm -v ${{env.EX_DIR}}/examples/audio/photon_sword.py
 
+    - name: "Append W example content"
+      if: matrix.shortname == 'tiny_fx_w'
+      shell: bash
+      run: |
+        cp -v -r picofx/examples/tiny_fx_w/. ${{env.EX_DIR}}
+        rm -v ${{env.EX_DIR}}/README.md
+
     - name: Libs .zip artifact
+      if: matrix.shortname == 'tiny_fx'
       uses: actions/upload-artifact@v4
       with:
         name: ${{env.RELEASE_FILE}}-libraries-only
         path: picofx/lib_temp
 
-    - name:  Examples .zip artifact
+    - name: Examples .zip artifact
       uses: actions/upload-artifact@v4
       with:
         name: ${{env.RELEASE_FILE}}-examples-only
         path: "picofx/ex_temp"
 
     - name: Libs .zip release asset
-      if: github.event_name == 'release'
+      if: github.event_name == 'release' && matrix.shortname == 'tiny_fx'
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
