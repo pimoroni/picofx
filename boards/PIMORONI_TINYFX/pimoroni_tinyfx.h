@@ -60,6 +60,23 @@
 #define PICO_DEFAULT_SPI_CSN_PIN 17
 #endif
 
+// -- CYW43 Wireless --
+#ifndef CYW43_PIN_WL_HOST_WAKE
+#define CYW43_PIN_WL_HOST_WAKE 24
+#endif
+
+#ifndef CYW43_PIN_WL_REG_ON
+#define CYW43_PIN_WL_REG_ON 23
+#endif
+
+#ifndef CYW43_WL_GPIO_COUNT
+#define CYW43_WL_GPIO_COUNT 3
+#endif
+
+#ifndef CYW43_WL_GPIO_LED_PIN
+#define CYW43_WL_GPIO_LED_PIN 0
+#endif
+
 // --- FLASH ---
 #define PICO_BOOT_STAGE2_CHOOSE_W25Q080 1
 

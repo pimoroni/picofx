@@ -64,16 +64,21 @@ jobs:
           - name: TinyFX
             shortname: tiny_fx
             board: PIMORONI_TINYFX
+          - name: TinyFX W
+            shortname: tiny_fx_w
+            board: PIMORONI_TINYFX
+            variant: w
 
     env:
       RELEASE_FILE: pimoroni-${{matrix.shortname}}-${{github.event.release.tag_name || github.sha}}-micropython
       FIRMWARE_DIR: "$GITHUB_WORKSPACE/picofx/boards"
       ROOT_DIR: "$GITHUB_WORKSPACE/picofx"
       BOARD_DIR: "$GITHUB_WORKSPACE/picofx/boards/${{matrix.board}}"
-      EXAMPLES_DIR: "$GITHUB_WORKSPACE/picofx/examples/${{matrix.shortname}}"
+      EXAMPLES_DIR: "$GITHUB_WORKSPACE/picofx/examples/tiny_fx"
       FILESYSTEM_DIR: "$GITHUB_WORKSPACE/picofx/temp"
       FILESYSTEM_SUFFIX: "with-libs-and-examples"
       BOARD: "PIMORONI_TINYFX"
+      BOARD_VARIANT: ${{ matrix.variant }}
 
     steps:
     - name: Compiler Cache
@@ -126,6 +131,18 @@ jobs:
       run: |
         git apply "${{env.FIRMWARE_DIR}}/932f76c6ba64c5a3e68de3324556d9979f09303b.patch"
 
+    - name: "HACK: MicroPython RP2 board variant patch"
+      shell: bash
+      working-directory: micropython
+      run: |
+        git apply "${{env.FIRMWARE_DIR}}/5dff78f38edc0354e854e6c73af61c5064afe9d3.patch"
+
+    - name: "HACK: MicroPython RP2 MICROPY_DEF_BOARD patch"
+      shell: bash
+      working-directory: micropython
+      run: |
+        git apply "${{env.FIRMWARE_DIR}}/11becbe22321ca1d7bd631144976f246175730ce.patch"
+
     - name: Install Arm GNU Toolchain (arm-none-eabi-gcc)
       uses: carlosperate/arm-none-eabi-gcc-action@v1
       with:
@@ -140,7 +157,7 @@ jobs:
       shell: bash
       working-directory: micropython/ports/rp2
       run: |
-        cmake -S . -B build -DPICO_BUILD_DOCS=0 -DUSER_C_MODULES=${{env.BOARD_DIR}}/micropython.cmake -DMICROPY_BOARD_DIR=${{env.BOARD_DIR}} -DMICROPY_BOARD=${{env.BOARD}} -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DPICO_BOARD_HEADER_DIRS=${{env.BOARD_DIR}}
+        cmake -S . -B build -DPICO_BUILD_DOCS=0 -DUSER_C_MODULES=${{env.BOARD_DIR}}/micropython.cmake -DMICROPY_BOARD_DIR=${{env.BOARD_DIR}} -DMICROPY_BOARD=${{env.BOARD}} -DMICROPY_BOARD_VARIANT=${{env.BOARD_VARIANT}} -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DPICO_BOARD_HEADER_DIRS=${{env.BOARD_DIR}}
 
     - name: Build MicroPython
       shell: bash
