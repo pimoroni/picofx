@@ -7,6 +7,7 @@ These are micropython examples for the Pimoroni [TinyFX](https://shop.pimoroni.c
   - [Sensor Meter](#sensor-meter)
   - [Voltage Meter](#voltage-meter)
 - [Mono Effect Examples](#mono-effect-examples)
+  - [Static Brightness](#static-brightness)
   - [Single Blink](#single-blink)
   - [Single Flashing](#single-flashing)
   - [Single Flicker](#single-flicker)
@@ -18,6 +19,9 @@ These are micropython examples for the Pimoroni [TinyFX](https://shop.pimoroni.c
   - [Binary Counter](#binary-counter)
   - [Traffic Light](#traffic-light)
 - [Colour Effect Examples](#colour-effect-examples)
+  - [Static RGB](#static-rgb)
+  - [Static HSV](#static-hsv)
+  - [Blink](#blink)
   - [Rainbow](#rainbow)
   - [Random](#random)
   - [Hue Step](#hue-step)
@@ -54,6 +58,12 @@ Use TinyFX's mono outputs as a bargraph to show the voltage that is powering the
 
 
 ## Mono Effect Examples
+
+### Static Brightness
+[effects/mono/static_brightness.py](examples/effects/mono/static_brightness.py)
+
+Show a static brightness on one of TinyFX's outputs.
+
 
 ### Single Blink
 [effects/mono/single_blink.py](examples/effects/mono/single_blink.py)
@@ -116,6 +126,23 @@ Play a traffic light sequence on TinyFX's outputs.
 
 
 ## Colour Effect Examples
+
+### Static RGB
+[effects/colour/static_rgb.py](examples/effects/colour/static_rgb.py)
+
+Show a static colour on TinyFX's RGB output.
+
+
+### Static HSV
+[effects/colour/static_hsv.py](examples/effects/colour/static_hsv.py)
+
+Show a static colour on TinyFX's RGB output, using HSV.
+
+
+### Blink
+[effects/colour/blink.py](examples/effects/colour/blink.py)
+Play a blinking sequence effect on TinyFX's RGB output. Each blink in the sequence can be a different colour.
+
 
 ### Rainbow
 [effects/colour/rainbow.py](examples/effects/colour/rainbow.py)
