@@ -1,4 +1,5 @@
 main.py
+secrets.py
 examples/*.py
 examples/effects/*.py
 examples/effects/mono/*.py
@@ -7,6 +8,7 @@ examples/function/*.py
 examples/showcase/*.py
 examples/audio/race_start.py
 examples/audio/fair_use_encounters.py
+examples/wifi/*.py
 lib/*.py
 lib/picofx/*.py
 lib/picofx/colour/*.py

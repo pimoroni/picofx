@@ -64,10 +64,12 @@ jobs:
           - name: TinyFX
             shortname: tiny_fx
             board: PIMORONI_TINYFX
+            manifest: uf2-manifest
           - name: TinyFX W
             shortname: tiny_fx_w
             board: PIMORONI_TINYFX
             variant: w
+            manifest: uf2-manifest-w
 
     env:
       RELEASE_FILE: pimoroni-${{matrix.shortname}}-${{github.event.release.tag_name || github.sha}}-micropython
@@ -197,7 +199,7 @@ jobs:
       shell: bash
       run: |
         python3 -m pip install littlefs-python==0.12.0
-        ./dir2uf2/dir2uf2 --fs-compact --append-to micropython/ports/rp2/build/${{env.RELEASE_FILE}}.uf2 --manifest ${{env.BOARD_DIR}}/uf2-manifest.txt --filename ${{env.FILESYSTEM_SUFFIX}}.uf2 ${{env.FILESYSTEM_DIR}}/
+        ./dir2uf2/dir2uf2 --fs-compact --append-to micropython/ports/rp2/build/${{env.RELEASE_FILE}}.uf2 --manifest ${{env.BOARD_DIR}}/${{matrix.manifest}}.txt --filename ${{env.FILESYSTEM_SUFFIX}}.uf2 ${{env.FILESYSTEM_DIR}}/
 
     - name: Store .uf2 as artifact
       uses: actions/upload-artifact@v4
