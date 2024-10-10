@@ -14,9 +14,10 @@ Press "Boot" to exit the program.
 
 try:
     from secrets import WIFI_SSID, WIFI_PASSWORD
+    if len(WIFI_SSID) == 0:
+        raise ValueError("no WiFi network set. Open the 'secrets.py' file on your device to add your WiFi credentials")
 except ImportError:
-    print("Create secrets.py with your WiFi credentials")
-    raise
+    raise ImportError("no module named 'secrets'. Create a 'secrets.py' file on your device with your WiFi credentials")
 
 
 # Constants
@@ -33,6 +34,7 @@ wlan = network.WLAN(network.STA_IF)     # Create a new network object for intera
 try:
     # Connect to WLAN
     wlan.active(True)
+    print(f"Connecting to network '{WIFI_SSID}'")
     wlan.connect(WIFI_SSID, WIFI_PASSWORD)
 
     # Wait until the connection is established
