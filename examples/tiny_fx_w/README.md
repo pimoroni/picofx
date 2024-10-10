@@ -4,13 +4,19 @@ These are micropython examples for the wireless functionality of the Pimoroni [T
 
 For examples that show off the rest of the board's functions, refer to the regular [TinyFX Micropython Examples](../tiny_fx/README.md)
 
-- [WiFi Examples](#wifi-examples)
-  - [Random Colour](#random-colour)
+- [Wireless Examples](#wireless-examples)
+  - [Random](#random)
 
 
-## WiFi Examples
+## Wireless Examples
 
-### Random Colour
-[wifi/random_colour.py](examples/wifi/random_colour.py)
+These examples requires a `secrets.py` file to be on your board's file system with the credentials of your WiFi network.
+
+### Random
+[wireless/random.py](examples/wireless/random.py)
 
 Show the state of TinyFX's Boot button on its RGB output.
+Show random colours and patterns obtained from the internet on TinyFX's outputs.
+
+
+
