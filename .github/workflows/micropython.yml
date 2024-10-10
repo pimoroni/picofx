@@ -64,10 +64,12 @@ jobs:
           - name: TinyFX
             shortname: tiny_fx
             board: PIMORONI_TINYFX
+            manifest: uf2-manifest
           - name: TinyFX W
             shortname: tiny_fx_w
             board: PIMORONI_TINYFX
             variant: w
+            manifest: uf2-manifest-w
 
     env:
       RELEASE_FILE: pimoroni-${{matrix.shortname}}-${{github.event.release.tag_name || github.sha}}-micropython
@@ -75,6 +77,7 @@ jobs:
       ROOT_DIR: "$GITHUB_WORKSPACE/picofx"
       BOARD_DIR: "$GITHUB_WORKSPACE/picofx/boards/${{matrix.board}}"
       EXAMPLES_DIR: "$GITHUB_WORKSPACE/picofx/examples/tiny_fx"
+      EXAMPLES_W_DIR: "$GITHUB_WORKSPACE/picofx/examples/tiny_fx_w"
       FILESYSTEM_DIR: "$GITHUB_WORKSPACE/picofx/temp"
       FILESYSTEM_SUFFIX: "with-libs-and-examples"
       BOARD: "PIMORONI_TINYFX"
@@ -186,12 +189,17 @@ jobs:
         cp -v -r ${{env.BOARD_DIR}}/visible_libs/. ${{env.FILESYSTEM_DIR}}/lib
         cp -v -r ${{env.EXAMPLES_DIR}}/. ${{env.FILESYSTEM_DIR}}
 
+    - name: "HACK: Mangle W examples into user filesystem"
+      if: matrix.shortname == 'tiny_fx_w'
+      shell: bash
+      run: |
+        cp -v -r ${{env.EXAMPLES_W_DIR}}/. ${{env.FILESYSTEM_DIR}}
+
     - name: Append Filesystem
       shell: bash
       run: |
         python3 -m pip install littlefs-python==0.12.0
-        ./dir2uf2/dir2uf2 --fs-compact --append-to micropython/ports/rp2/build/${{env.RELEASE_FILE}}.uf2 --manifest ${{env.BOARD_DIR}}/uf2-manifest.txt --filename ${{env.FILESYSTEM_SUFFIX}}.uf2 ${{env.FILESYSTEM_DIR}}/
-
+        ./dir2uf2/dir2uf2 --fs-compact --append-to micropython/ports/rp2/build/${{env.RELEASE_FILE}}.uf2 --manifest ${{env.BOARD_DIR}}/${{matrix.manifest}}.txt --filename ${{env.FILESYSTEM_SUFFIX}}.uf2 ${{env.FILESYSTEM_DIR}}/
 
     - name: Store .uf2 as artifact
       uses: actions/upload-artifact@v4
