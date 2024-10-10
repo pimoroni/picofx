@@ -4,7 +4,8 @@ import requests
 from tiny_fx import TinyFX
 
 """
-Show random colours and patterns obtained from the internet on TinyFX's outputs.
+Obtain the current CheerLights colour from the internet and show it on TinyFX's RGB output.
+For more information about CheerLights, visit: https://cheerlights.com/
 
 This example requires a secrets.py file to be on your board's file system with the credentials of your WiFi network.
 
@@ -19,7 +20,6 @@ except ImportError:
 
 
 # Constants
-MONO_NAMES = ("One", "Two", "Three", "Four", "Five", "Six")
 COLOUR_NAMES = ("R", "G", "B")
 CONNECTION_INTERVAL = 1.0               # The time to sleep between each connection check
 REQUEST_INTERVAL = 5.0                  # The time to sleep between each internet request
@@ -45,21 +45,13 @@ try:
 
     # Loop forever
     while True:
-        # Get two colours from the internet
-        req = requests.get("https://random-flat-colors.vercel.app/api/random?count=2")
+        # Get the current CheerLights colour from the internet
+        req = requests.get("http://api.thingspeak.com/channels/1417/field/2/last.json")
         json = req.json()
         req.close()
 
-        # Use the first to get brightness values for the six mono outputs
-        mono = tuple(int(json['colors'][0][i:i + 1], 16) / 15 for i in range(1, 7))
-
         # Use the second to get the colour components for the RGB output
-        colour = tuple(int(json['colors'][1][i:i + 2], 16) for i in (1, 3, 5))
-
-        # Set the mono outputs, and print the values
-        for i in range(len(tiny.outputs)):
-            tiny.outputs[i].brightness(mono[i])
-            print(f"{MONO_NAMES[i]} = {round(mono[i], 2)}", end=", ")
+        colour = tuple(int(json['field2'][i:i + 2], 16) for i in (1, 3, 5))
 
         # Set the colour output, and print the values
         tiny.rgb.set_rgb(*colour)

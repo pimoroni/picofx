@@ -6,6 +6,7 @@ For examples that show off the rest of the board's functions, refer to the regul
 
 - [Wireless Examples](#wireless-examples)
   - [Random](#random)
+  - [CheerLights](#cheerlights)
 
 
 ## Wireless Examples
@@ -19,4 +20,8 @@ Show the state of TinyFX's Boot button on its RGB output.
 Show random colours and patterns obtained from the internet on TinyFX's outputs.
 
 
+### CheerLights
+[wireless/cheerlights.py](examples/wireless/cheerlights.py)
 
+Obtain the current CheerLights colour from the internet and show it on TinyFX's RGB output.
+For more information about CheerLights, visit: [https://cheerlights.com/](https://cheerlights.com/)
