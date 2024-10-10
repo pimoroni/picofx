@@ -8,7 +8,7 @@ examples/function/*.py
 examples/showcase/*.py
 examples/audio/race_start.py
 examples/audio/fair_use_encounters.py
-examples/wifi/*.py
+examples/wireless/*.py
 lib/*.py
 lib/picofx/*.py
 lib/picofx/colour/*.py
