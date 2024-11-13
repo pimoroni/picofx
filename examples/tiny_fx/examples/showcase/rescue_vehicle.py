@@ -1,19 +1,15 @@
-from tiny_fx import TinyFX
-from picofx import MonoPlayer
-from picofx.mono import FlashSequenceFX, StaticFX
 
-"""
-Play an alternating flashing sequence on two of TinyFX's outputs,
-recreating the effect of rescue vehicle beacons.
-The other outputs are static for illuminated head and tail lights.
-
-Press "Boot" to exit the program.
-"""
-
-# Variables
 tiny = TinyFX()                         # Create a new TinyFX object to interact with the board
-player = MonoPlayer(tiny.outputs)       # Create a new effect player to control TinyFX's mono outputs
+player = ColourPlayer(tiny.rgb)         # Create a new effect player to control TinyFX's RGB output
+monoplayer = MonoPlayer(tiny.outputs)
 
+# Create and set up an red blue flashing effect to play
+player.effects = [
+    RGBBlinkFX(colour=COLOURS,          # The colour (or colours to blink in sequence)
+                            phase=0.0,
+                            speed=EMERGENCY_BLINK_SPEED, # The speed to cycle through colours at, with 1.0 being 1 second (1/T)
+                            duty=0.5) 	# Amount of the cycle to be "on"
+]
 
 # Create a FlashSequenceFX effect for the beacon lights
 flashing = FlashSequenceFX(speed=1.0,   # The speed to flash at, with 1.0 being 1 second
@@ -27,7 +23,7 @@ taillights = StaticFX(brightness=0.5)
 
 
 # Set up the mono effects to play. The first two are flashing, the rest are static
-player.effects = [
+monoplayer.effects = [
     flashing(0),
     flashing(1),
     headlights,
@@ -36,6 +32,7 @@ player.effects = [
     taillights
 ]
 
+player.pair(monoplayer)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
