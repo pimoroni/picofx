@@ -82,23 +82,23 @@ This `RGBLED` object offers two functions to control its associated output, `set
 
 ```python
 # Turn the rgb output to red
-tiny.set_rgb(255, 0, 0)
-# tiny.set_hsv(0, 1, 1)
+tiny.rgb.set_rgb(255, 0, 0)
+# tiny.rgb.set_hsv(0, 1, 1)
 time.sleep(1)
 
 # Turn the rgb output to green
-tiny.set_rgb(0, 255, 0)
-# tiny.set_hsv(0.333, 1, 1)
+tiny.rgb.set_rgb(0, 255, 0)
+# tiny.rgb.set_hsv(0.333, 1, 1)
 time.sleep(1)
 
 # Turn the rgb output to blue
-tiny.set_rgb(0, 0, 255)
-# tiny.set_hsv(0.666, 1, 1)
+tiny.rgb.set_rgb(0, 0, 255)
+# tiny.rgb.set_hsv(0.666, 1, 1)
 time.sleep(1)
 
 # Turn the rgb output to white
-tiny.set_rgb(255, 255, 255)
-# tiny.set_hsv(0, 0, 1)
+tiny.rgb.set_rgb(255, 255, 255)
+# tiny.rgb.set_hsv(0, 0, 1)
 time.sleep(1)
 ```
 
