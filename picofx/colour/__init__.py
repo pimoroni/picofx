@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 from .blink import RGBBlinkFX
+from .flicker import RGBFlickerFX
 from .colour import RGBFX, HSVFX
 from .rainbow import RainbowFX, RainbowWaveFX
 from .step import HueStepFX
@@ -22,5 +23,6 @@ COLOUR_EFFECTS = [
     RainbowFX,
     RainbowWaveFX,
     HueStepFX,
-    RGBBlinkFX
+    RGBBlinkFX,
+    RGBFlickerFX
 ]
