@@ -17,7 +17,7 @@ jobs:
     - name: Lint PicoFX
       shell: bash
       run: |
-        python3 -m flake8 --show-source --ignore E501 picofx
+        python3 -m flake8 --show-source --ignore E501,F824 picofx
 
     - name: Lint Examples
       shell: bash
