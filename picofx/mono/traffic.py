@@ -8,7 +8,7 @@ from picofx import Updateable
 class TrafficLightFX(Updateable):
     AMBER_FLASHING_CYCLE = 0.25
 
-    def __init__(self, red_interval=10, red_amber_interval=5, green_interval=10, amber_interval=5, fade_rate=0.01, amber_flashing=False):
+    def __init__(self, red_interval=10, red_amber_interval=5, green_interval=10, amber_interval=5, fade_rate=0.01, amber_flashing=False, brightness=1.0):
         # Have the red be on with amber if amber isn't flashing
         r = 0 if amber_flashing else 1
         self.__states = [
@@ -24,20 +24,21 @@ class TrafficLightFX(Updateable):
         self.__current = [0, 0, 0]
         self.fade_rate = fade_rate
         self.__amber_flashing = amber_flashing
+        self.brightness = brightness
 
     def red(self):
         def fx():
-            return self.__current[0]
+            return self.__current[0] * self.brightness
         return self, fx
 
     def amber(self):
         def fx():
-            return self.__current[1]
+            return self.__current[1] * self.brightness
         return self, fx
 
     def green(self):
         def fx():
-            return self.__current[2]
+            return self.__current[2] * self.brightness
         return self, fx
 
     def tick(self, delta_ms):
