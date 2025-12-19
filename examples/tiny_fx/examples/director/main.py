@@ -11,11 +11,11 @@ Press "Boot" to exit the program.
 """
 
 # Variables
-tiny = TinyFX()                               # Create a new TinyFX object to interact with the board
-monoplayer = MonoPlayer(tiny.outputs)         # Create a new effect player to control TinyFX's mono outputs
-rgbplayer = ColourPlayer(tiny.rgb)            # Create a new effect player to control TinyFX's RGB output
-mono_effects = EffectPackage(tiny, "Mono", 6) # Create a new EffectPackage to take care of all the different effect settings for each mono channel.
-rgb_effects = EffectPackage(tiny, "RGB", 1)   # Create a new EffectPackage to take care of all the different effect settings for the RGB channel.
+tiny = TinyFX()                          # Create a new TinyFX object to interact with the board
+monoplayer = MonoPlayer(tiny.outputs)    # Create a new effect player to control TinyFX's mono outputs
+rgbplayer = ColourPlayer(tiny.rgb)       # Create a new effect player to control TinyFX's RGB output
+mono_effects = EffectPackage("Mono", 6)  # Create a new EffectPackage to take care of all the different effect settings for each mono channel.
+rgb_effects = EffectPackage("RGB", 1)    # Create a new EffectPackage to take care of all the different effect settings for the RGB channel.
 mono_channel = 1
 run_mode = 0
 
@@ -26,17 +26,19 @@ class Mode:
     RGB = 2
 
 
-def select_channel(dir, repeat):
-    # Selecting a channel just involves incrementing or decrementing the selected_channel variable,
-    # looping it round if it goes above the total number of channels or below zero.
-
+def rotate(dir, repeat):
+    # If the TinyFX is just running this button doesn't do anything.
     if run_mode == Mode.Running:
         return
-    
+
+    # However, if we're in RGB editing mode then we're altering the hue.
     if run_mode == Mode.RGB:
         rgb_effects.alter_hue(0, dir * 5)
         rgb_effects.update_effects_list(rgbplayer)
-        
+
+    # And if we're in mono editing mode this selects the channel.
+    # Selecting a channel just involves incrementing or decrementing the selected_channel variable,
+    # looping it round if it goes above the total number of channels or below zero.
     elif run_mode == Mode.Mono and not repeat:
         global mono_channel
 
@@ -46,7 +48,7 @@ def select_channel(dir, repeat):
         if mono_channel < 1:
             mono_channel = len(mono_effects.channel_settings)
 
-        # Otherwise we just loop through each channel and undim it if it's the selected
+        # Then we just loop through each channel and undim it if it's the selected
         # channel or dim it if it's not.
         for i in range(len(mono_effects.channel_settings)):
             effect = mono_effects.channel_settings[i]
@@ -55,7 +57,7 @@ def select_channel(dir, repeat):
             else:
                 effect.dim()
 
-        # This is important when any changes are made. It takes the settings data from the
+        # Calling this is important when any changes are made. It takes the settings data from the
         # channel settings and actually applies them to the player class.
         mono_effects.update_effects_list(monoplayer)
 
@@ -64,11 +66,11 @@ def toggle_mono(channel=0):
     # This controls the quick mute for each channel. It goes straight into the
     # player and sets the brightness to zero, or to whatever's in the
     # settings for that channel if it's already at zero.
-    
+
     if channel > 0:
         effect = monoplayer.effects[channel - 1]
         old_brightness = mono_effects.channel_settings[channel - 1].brightness
-        
+
     else:
         effect = rgbplayer.effects[0]
         old_brightness = rgb_effects.channel_settings[channel - 1].brightness
@@ -82,22 +84,31 @@ def toggle_mono(channel=0):
         brightness = old_brightness
         effect.brightness = brightness
 
+
 def saving_handler():
     # Saving is simpler than loading, first we put in a bit of text directing the user to the instructions:
     text = "# SETTINGS FILE\n#\n# For instructions, check readme.txt\n#\n"
 
+    # Then add in each channel's settings.
     text += mono_effects.save_settings()
     text += rgb_effects.save_settings()
+
     # Finally save the file.
     with open("settings.txt", "w") as settingsfile:
         settingsfile.write(text)
-    
+
+
 def mode_handler():
+    # Here we're just switching between the running mode, mono editing mode and
+    # RGB editing mode.
     global run_mode
 
     run_mode += 1
     if run_mode > 2:
         run_mode = 0
+
+    # That's the actual switch done, the rest just dims or brightens LEDs
+    # appropriately for the current mode.
     if run_mode == Mode.Running:
         for i in range(len(mono_effects.channel_settings)):
             mono_effects.channel_settings[i].undim()
@@ -118,6 +129,7 @@ def mode_handler():
     mono_effects.update_effects_list(monoplayer)
     rgb_effects.update_effects_list(rgbplayer)
 
+
 def common_handler(button):
     # This handles presses on the buttons common to all effect types.
     # It gets passed which button was pressed and depending on which it was,
@@ -130,12 +142,12 @@ def common_handler(button):
 
     if run_mode == Mode.Running:
         return
-    
+
     if run_mode == Mode.Mono:
         player = monoplayer
         effects = mono_effects
         selected_channel = mono_channel
-        
+
     if run_mode == Mode.RGB:
         player = rgbplayer
         effects = rgb_effects
@@ -172,7 +184,7 @@ def number_handler(number_button, repeat):
         selected_channel = mono_channel
         effects = mono_effects
         effect = effects.channel_settings[selected_channel - 1]
-        
+
     elif run_mode == Mode.RGB:
         player = rgbplayer
         selected_channel = 0
@@ -225,7 +237,7 @@ def number_handler(number_button, repeat):
     elif number_button == 9:
         if effect.type in (3, 9) and not repeat:
             effects.alter_flashes(selected_channel, 1)
-            
+
     elif number_button == 0:
         if effect.type == 10:
             effects.alter_hue2(0, 5)
@@ -243,8 +255,8 @@ receiver = NECReceiver(TinyFX.SENSOR_PIN, 1, 0)
 # This binds functions to each of the Pimoroni remote's buttons for what happens when they're pressed, and when they're held.
 # For the most part they're set to pass to a handler for the reasons mentioned above.
 remote = PimoroniRemote()
-remote.bind("CLOCKWISE", (select_channel, 1,False), on_repeat=(select_channel, 1,True))
-remote.bind("ANTICLOCK", (select_channel, -1, False), on_repeat=(select_channel, -1,True))
+remote.bind("CLOCKWISE", (rotate, 1, False), on_repeat=(rotate, 1, True))
+remote.bind("ANTICLOCK", (rotate, -1, False), on_repeat=(rotate, -1, True))
 remote.bind("MENU/ACTION", (mode_handler), on_repeat=None)
 remote.bind("1/RED", (number_handler, 1, False), on_repeat=(number_handler, 1, True))
 remote.bind("2/GREEN", (number_handler, 2, False), on_repeat=(number_handler, 2, True))

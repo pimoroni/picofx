@@ -6,7 +6,7 @@ from picofx import Cycling
 
 
 class BlinkFX(Cycling):
-    def __init__(self, speed=1, phase=0.0, duty=0.5, brightness = 1.0):
+    def __init__(self, speed=1, phase=0.0, duty=0.5, brightness=1.0):
         super().__init__(speed)
         self.phase = phase
         self.duty = duty

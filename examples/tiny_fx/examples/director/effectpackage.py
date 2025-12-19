@@ -2,19 +2,22 @@ from effectsettings import EffectSettings
 from picofx.mono import StaticFX, BlinkFX, FlashFX, FlickerFX, PulseFX, RandomFX, NoneFX
 from picofx.colour import StaticRGBFX, BlinkRGBFX, FlashRGBFX, FlickerRGBFX, PulseRGBFX, RandomRGBFX
 
+
 class EffectPackage:
     # The EffectPackage class mainly keeps all the methods all together which adjust the effect.
     # It holds a list of EffectSettings objects, one for each channel, and this should
     # initialise to have one member for each output on the device.
-    def __init__(self, board, colour, num_outputs):
+
+    def __init__(self, colour, num_outputs):
         # First we load in everything from the settings file.
         self.colour = colour
         loaded_settings = self.load_settings()
+
         # Then we create a new entry for each output on the board,
         # using the imported settings if they're there and making a
         # fresh new EffectSettings with default values if not.
         self.channel_settings = []
-        
+
         for i in range(num_outputs):
             if len(loaded_settings) > 0:
                 new_effect = loaded_settings.pop(0)
@@ -24,6 +27,7 @@ class EffectPackage:
 
     def load_settings(self):
         new_settings = []
+
         # To load the settings we first open the file...
         with open("settings.txt", "r") as settingsfile:
             # ...then loop through reading each line in turn.
@@ -38,7 +42,7 @@ class EffectPackage:
                 # If the line begins with "Mono" or "RGB" as specified in the colour
                 # parameter, then we start a new internal loop to
                 # populate values into a new instance of EffectSettings.
-                
+
                 if line.split(" ")[0] == self.colour:
                     type = EffectSettings.default_values["type"]
                     brightness = EffectSettings.default_values["brightness"]
@@ -278,12 +282,14 @@ class EffectPackage:
         # To change effect within a provided channel, we just
         # pull the right EffectSettings from the list, get its current type
         # and add one, looping around to zero if necessary.
-        # Then write that new effect type to the EffectSettings.
+        # The while loop will skip over any that aren't marked as
+        # valid effects for the channel type.
+        # Then we write that new effect type to the EffectSettings.
         if self.colour == "Mono":
             valid_effects = (0, 1, 2, 3, 4, 5, 6)
         elif self.colour == "RGB":
             valid_effects = (0, 7, 8, 9, 10, 11, 12)
-        
+
         effect = self.channel_settings[channel - 1]
         old_effect_type = effect.type
         new_effect_type = (old_effect_type + 1) % 13
@@ -485,17 +491,24 @@ class EffectPackage:
         effect.bright_max_time = new_bmax
         effect.dim_min_time = new_dmin
         effect.dim_max_time = new_dmax
-        
+
     def alter_hue(self, channel, amount):
+        # Changing hue is basically a little state machine. To go round the colour
+        # wheel starting with red for example, we need to keep red at 100%
+        # and slowly increase green. When it hits 100% we've got yellow, and then green
+        # stays at 100% as red decreases. Once red is at zero we've got just green, then
+        # we start increasing blue and so on and so on.
+
         effect = self.channel_settings[channel - 1]
 
         if effect.type in (0, 1, 2, 3, 4, 5, 6):
             return
-        
+
         red = effect.red
         green = effect.green
         blue = effect.blue
-        
+
+        # These checks are what determine which colour value we should be increasing or decreasing.
         if red == 255 and not green == 255 and blue == 0:
             green += amount
         elif not red == 0 and green == 255 and blue == 0:
@@ -508,19 +521,23 @@ class EffectPackage:
             red += amount
         elif red == 255 and green == 0 and not blue == 0:
             blue -= amount
-            
+
         effect.red = self.clamp(red, 0, 255)
         effect.green = self.clamp(green, 0, 255)
         effect.blue = self.clamp(blue, 0, 255)
-        
+
         print(effect.red, effect.green, effect.blue)
-        
+
     def alter_hue2(self, channel, amount):
+        # This is just for the dimmer hue on the FlickerRGB effect.
+        # It works just the same as the hue above. If there's no second colour set,
+        # it defaults to starting at the hue of the main colour.
+
         effect = self.channel_settings[channel - 1]
 
         if effect.type in (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12):
             return
-        
+
         if None in (effect.red2, effect.green2, effect.blue2):
             red = effect.red
             green = effect.green
@@ -529,7 +546,7 @@ class EffectPackage:
             red = effect.red2
             green = effect.green2
             blue = effect.blue2
-        
+
         if red == 255 and not green == 255 and blue == 0:
             green += amount
         elif not red == 0 and green == 255 and blue == 0:
@@ -542,9 +559,9 @@ class EffectPackage:
             red += amount
         elif red == 255 and green == 0 and not blue == 0:
             blue -= amount
-            
+
         effect.red2 = self.clamp(red, 0, 255)
         effect.green2 = self.clamp(green, 0, 255)
         effect.blue2 = self.clamp(blue, 0, 255)
-        
+
         print(effect.red2, effect.green2, effect.blue2)

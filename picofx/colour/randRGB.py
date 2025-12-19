@@ -21,7 +21,7 @@ class RandomRGBFX(Updateable):
         r = self.red * self.__brightness
         g = self.green * self.__brightness
         b = self.blue * self.__brightness
-        
+
         return max(min(r, 255), 0), \
             max(min(g, 255), 0), \
             max(min(b, 255), 0)

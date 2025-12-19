@@ -42,7 +42,7 @@ class FlickerRGBFX(Updateable):
             r = self.red1 * self.brightness
             g = self.green1 * self.brightness
             b = self.blue1 * self.brightness
-        
+
         return max(min(r, 255), 0), \
             max(min(g, 255), 0), \
             max(min(b, 255), 0)
