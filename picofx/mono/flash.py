@@ -6,12 +6,13 @@ from picofx import Cycling
 
 
 class FlashFX(Cycling):
-    def __init__(self, speed=1, flashes=2, window=0.5, phase=0.0, duty=0.5):
+    def __init__(self, speed=1, flashes=2, window=0.5, phase=0.0, duty=0.5, brightness=1.0):
         super().__init__(speed)
         self.flashes = flashes
         self.window = window
         self.phase = phase
         self.duty = duty
+        self.brightness = brightness
 
     @property
     def flashes(self):
@@ -28,7 +29,7 @@ class FlashFX(Cycling):
         offset = (self.__offset + self.phase) % 1.0
         if offset < self.window:
             percent = ((offset * self.__flashes) / self.window) % 1.0
-            return 1.0 if percent < self.duty else 0.0
+            return self.brightness if percent < self.duty else 0.0
         return 0.0
 
 
