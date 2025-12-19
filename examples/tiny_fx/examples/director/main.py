@@ -179,70 +179,71 @@ def number_handler(number_button, repeat):
             toggle_mono(number_button)
             return
 
-    elif run_mode == Mode.Mono:
-        player = monoplayer
-        selected_channel = mono_channel
-        effects = mono_effects
-        effect = effects.channel_settings[selected_channel - 1]
+    else:
+        if run_mode == Mode.Mono:
+            player = monoplayer
+            selected_channel = mono_channel
+            effects = mono_effects
+            effect = effects.channel_settings[selected_channel - 1]
 
-    elif run_mode == Mode.RGB:
-        player = rgbplayer
-        selected_channel = 0
-        effects = rgb_effects
-        effect = effects.channel_settings[0]
+        elif run_mode == Mode.RGB:
+            player = rgbplayer
+            selected_channel = 0
+            effects = rgb_effects
+            effect = effects.channel_settings[0]
 
-    if effect.type in (0, 1, 7):
-        return
+        if effect.type in (0, 1, 7):
+            return
 
-    elif number_button == 1:
-        if effect.type in (2, 3, 5, 8, 9, 11):
-            effects.alter_phase(selected_channel, 0.03)
-        elif effect.type in (4, 10):
-            effects.alter_chaos(selected_channel, 0.03)
-        elif effect.type in (6, 12):
-            effects.alter_dimness(selected_channel, 0.03)
+        elif number_button == 1:
+            if effect.type in (2, 3, 5, 8, 9, 11):
+                effects.alter_phase(selected_channel, 0.03)
+            elif effect.type in (4, 10):
+                effects.alter_chaos(selected_channel, 0.03)
+            elif effect.type in (6, 12):
+                effects.alter_dimness(selected_channel, 0.03)
 
-    elif number_button == 2:
-        if effect.type in (2, 3, 4, 8, 9, 10):
-            effects.alter_duty(selected_channel, 0.03)
+        elif number_button == 2:
+            if effect.type in (2, 3, 4, 8, 9, 10):
+                effects.alter_duty(selected_channel, 0.03)
 
-    elif number_button == 3:
-        if effect.type in (3, 9):
-            effects.alter_window(selected_channel, 0.03)
-        elif effect.type in (4, 10):
-            effects.alter_dimness(selected_channel, 0.03)
+        elif number_button == 3:
+            if effect.type in (3, 9):
+                effects.alter_window(selected_channel, 0.03)
+            elif effect.type in (4, 10):
+                effects.alter_dimness(selected_channel, 0.03)
 
-    elif number_button == 4:
-        if effect.type in (2, 3, 5, 8, 9, 11):
-            effects.alter_phase(selected_channel, -0.03)
-        elif effect.type in (4, 10):
-            effects.alter_chaos(selected_channel, -0.03)
-        elif effect.type in (5, 11):
-            effects.alter_dimness(selected_channel, -0.03)
+        elif number_button == 4:
+            if effect.type in (2, 3, 5, 8, 9, 11):
+                effects.alter_phase(selected_channel, -0.03)
+            elif effect.type in (4, 10):
+                effects.alter_chaos(selected_channel, -0.03)
+            elif effect.type in (5, 11):
+                effects.alter_dimness(selected_channel, -0.03)
 
-    elif number_button == 5:
-        if effect.type in (2, 3, 4, 8, 9, 10):
-            effects.alter_duty(selected_channel, -0.03)
+        elif number_button == 5:
+            if effect.type in (2, 3, 4, 8, 9, 10):
+                effects.alter_duty(selected_channel, -0.03)
 
-    elif number_button == 6:
-        if effect.type in (3, 9):
-            effects.alter_window(selected_channel, -0.03)
-        elif effect.type in (4, 10):
-            effects.alter_dimness(selected_channel, -0.03)
+        elif number_button == 6:
+            if effect.type in (3, 9):
+                effects.alter_window(selected_channel, -0.03)
+            elif effect.type in (4, 10):
+                effects.alter_dimness(selected_channel, -0.03)
 
-    elif number_button == 7:
-        if effect.type in (3, 9) and not repeat:
-            effects.alter_flashes(selected_channel, -1)
+        elif number_button == 7:
+            if effect.type in (3, 9) and not repeat:
+                effects.alter_flashes(selected_channel, -1)
 
-    elif number_button == 9:
-        if effect.type in (3, 9) and not repeat:
-            effects.alter_flashes(selected_channel, 1)
+        elif number_button == 9:
+            if effect.type in (3, 9) and not repeat:
+                effects.alter_flashes(selected_channel, 1)
 
-    elif number_button == 0:
-        if effect.type == 10:
-            effects.alter_hue2(0, 5)
+        elif number_button == 0:
+            if effect.type == 10:
+                effects.alter_hue2(0, 5)
 
-    effects.update_effects_list(player)
+        effects.update_effects_list(player)
 
 
 # Now we've defined all of the methods we're passing all our settings to the player for the first time.
