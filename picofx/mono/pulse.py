@@ -18,15 +18,16 @@ class PulseFX(Cycling):
 
 
 class PulseWaveFX(Cycling):
-    def __init__(self, speed=1, length=1, phase=0.0):
+    def __init__(self, speed=1, length=1, phase=0.0, brightness=1.0):
         super().__init__(speed)
         self.length = length
         self.phase = phase
+        self.brightness = brightness
 
     def __call__(self, pos):
         def fx():
             nonlocal pos
             phase = pos / self.length
             angle = (self.__offset + self.phase + phase) * math.pi * 2
-            return (math.sin(angle) + 1) / 2.0
+            return ((math.sin(angle) + 1) / 2.0) * self.brightness
         return self, fx

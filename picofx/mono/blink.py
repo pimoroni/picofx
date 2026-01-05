@@ -18,16 +18,17 @@ class BlinkFX(Cycling):
 
 
 class BlinkWaveFX(Cycling):
-    def __init__(self, speed=1, length=1, phase=0.0, duty=0.5):
+    def __init__(self, speed=1, length=1, phase=0.0, duty=0.5, brightness=1.0):
         super().__init__(speed)
         self.length = length
         self.phase = phase
         self.duty = duty
+        self.brightness = brightness
 
     def __call__(self, pos):
         def fx():
             nonlocal pos
             phase = (pos / self.length)
             percent = (self.__offset + self.phase + phase) % 1.0
-            return 1.0 if percent < self.duty else 0.0
+            return self.brightness if percent < self.duty else 0.0
         return self, fx
