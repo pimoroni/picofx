@@ -1,0 +1,42 @@
+# SETTINGS FILE
+#
+# For instructions, check readme.txt
+#
+Mono 1
+type: static
+brightness: 1.0
+#
+Mono 2
+type: static
+brightness: 1.0
+#
+Mono 3
+type: static
+brightness: 1.0
+#
+Mono 4
+type: static
+brightness: 1.0
+#
+Mono 5
+type: static
+brightness: 1.0
+#
+Mono 6
+type: static
+brightness: 1.0
+#
+RGB 1
+type: flickerRGB
+brightness: 1.0
+bright_min_time: 0.05
+bright_max_time: 0.1
+dim_min_time: 0.02
+dim_max_time: 0.04
+red: 0
+green: 255
+blue: 0
+red2: None
+green2: None
+blue2: None
+#
