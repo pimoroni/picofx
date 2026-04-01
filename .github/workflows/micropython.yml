@@ -7,13 +7,13 @@ on:
     types: [created]
 
 env:
-  MICROPYTHON_VERSION: v1.23.0
-  PIMORONI_PICO_VERSION: v1.23.0-1
+  MICROPYTHON_VERSION: v1.26.1
+  PIMORONI_PICO_VERSION: v1.25.0
   WORKFLOW_VERSION: v3
 
 jobs:
   deps:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     name: Dependencies
     steps:
     - name: Workspace Cache
@@ -57,7 +57,7 @@ jobs:
   build:
     needs: deps
     name: Build ${{matrix.name}}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         include:
@@ -127,24 +127,6 @@ jobs:
         repository: gadgetoid/dir2uf2
         ref: v0.0.6
         path: dir2uf2
-
-    - name: "HACK: MicroPython out of tree board pins.csv patch"
-      shell: bash
-      working-directory: micropython
-      run: |
-        git apply "${{env.FIRMWARE_DIR}}/932f76c6ba64c5a3e68de3324556d9979f09303b.patch"
-
-    - name: "HACK: MicroPython RP2 board variant patch"
-      shell: bash
-      working-directory: micropython
-      run: |
-        git apply "${{env.FIRMWARE_DIR}}/5dff78f38edc0354e854e6c73af61c5064afe9d3.patch"
-
-    - name: "HACK: MicroPython RP2 MICROPY_DEF_BOARD patch"
-      shell: bash
-      working-directory: micropython
-      run: |
-        git apply "${{env.FIRMWARE_DIR}}/11becbe22321ca1d7bd631144976f246175730ce.patch"
 
     - name: Install Arm GNU Toolchain (arm-none-eabi-gcc)
       uses: carlosperate/arm-none-eabi-gcc-action@v1
