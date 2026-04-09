@@ -15,24 +15,37 @@ class PimoroniRemote(RemoteDescriptor):
         "UP": 0x46,
         "CLOCKWISE": 0x47,
         "LEFT": 0x44,
-        "OK/STOP": 0x40,
+        "OK_STOP": 0x40,
         "RIGHT": 0x43,
-        "RETURN/UNDO": 0x07,
+        "RETURN_UNDO": 0x07,
         "DOWN": 0x15,
-        "MENU/ACTION": 0x09,
-        "1/RED": 0x16,
-        "2/GREEN": 0x19,
-        "3/BLUE": 0x0d,
-        "4/CYAN": 0x0c,
-        "5/MAGENTA": 0x18,
-        "6/YELLOW": 0x5e,
-        "7/WARM": 0x08,
-        "8/WHITE": 0x1c,
-        "9/COOL": 0x5a,
+        "MENU_ACTION": 0x09,
+        "1_RED": 0x16,
+        "2_GREEN": 0x19,
+        "3_BLUE": 0x0d,
+        "4_CYAN": 0x0c,
+        "5_MAGENTA": 0x18,
+        "6_YELLOW": 0x5e,
+        "7_WARM": 0x08,
+        "8_WHITE": 0x1c,
+        "9_COOL": 0x5a,
         "RECORD": 0x42,
-        "0/RAINBOW": 0x52,
+        "0_RAINBOW": 0x52,
         "PLAY/PAUSE": 0x4a
-        }
+    }
+
+    NUMBERS = {
+        "0_RAINBOW": 0,
+        "1_RED": 1,
+        "2_GREEN": 2,
+        "3_BLUE": 3,
+        "4_CYAN": 4,
+        "5_MAGENTA": 5,
+        "6_YELLOW": 6,
+        "7_WARM": 7,
+        "8_WHITE": 8,
+        "9_COOL": 9,
+    }
 
     def __init__(self):
         super().__init__()

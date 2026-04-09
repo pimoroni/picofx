@@ -15,11 +15,22 @@ from .remotes import KNOWN_REMOTES
 
 # Function for performing callbacks with parameters and optional arguments
 def perform_callback(callback, *args):
+    # Extract the callback function and any parameters for it
     if isinstance(callback, (tuple, list)):
-        params = callback[1:]
-        callback[0](*params, *args)
+        func, *params = callback
     else:
-        callback(*args)
+        func, params = callback, []
+
+    try:
+        # Attempt to call the function with additional args
+        return func(*params, *args)
+    except TypeError as e:
+        # Ignore the TypeError if it was caused by the additional args
+        if not str(e).startswith("function takes "):
+            raise
+
+    # Fall back to calling the function without additional args
+    return func(*params)
 
 
 class NECReceiver(PulseReceiver):
@@ -41,8 +52,8 @@ class NECReceiver(PulseReceiver):
         self.__debug_error_pin = DebugPin(debug_error_pin, Pin.OUT)
 
     def bind(self, on_press, on_repeat=True, on_release=None):
-        self.__press_callback = on_press,
-        self.__repeat_callback = on_press if on_repeat is True else on_repeat,
+        self.__press_callback = on_press
+        self.__repeat_callback = on_press if on_repeat is True else on_repeat
         self.__release_callback = on_release
 
     def start(self):
@@ -149,7 +160,7 @@ class NECReceiver(PulseReceiver):
 
             logging.info(f"Code received, 0x{code:08x}")
 
-            # Perform the general press action for the last code, if any
+            # Perform the general press action for the new code, if any
             self.__on_press(code, self.__received_ms, self.__last_code_ms)
 
             # Update the last variables
@@ -158,19 +169,19 @@ class NECReceiver(PulseReceiver):
 
     def __on_release(self, code, ms, last_press_ms):
         if self.__release_callback is not None:
-            perform_callback(self.__release_callback, ms, last_press_ms)
+            perform_callback((self.__release_callback, code), ms, last_press_ms)
 
     def __on_repeat(self, code, ms, last_press_ms):
         if self.__repeat_callback is not None:
-            perform_callback(self.__repeat_callback, ms, last_press_ms)
+            perform_callback((self.__repeat_callback, code), ms, last_press_ms)
 
     def __on_press(self, code, ms, last_press_ms):
         if self.__press_callback is not None:
-            perform_callback(self.__press_callback, ms, last_press_ms)
+            perform_callback((self.__press_callback, code), ms, last_press_ms)
 
 
 class NECRemoteReceiver(NECReceiver):
-    SHORT_PRESS_MS = 250
+    SHORT_RELEASE_MS = 250
 
     def __init__(self, pin_num, pio, sm, extended_addresses=False,
                  debug_pin_base=None, debug_blip_pin=None, debug_error_pin=None,
@@ -193,7 +204,7 @@ class NECRemoteReceiver(NECReceiver):
 
     def __on_release(self, code, ms, last_press_ms):
         if len(self.__short_callbacks) > 0:
-            # Perform the short press actions of the last command, if any
+            # Perform the short release actions of the last command, if any
             for callback in self.__short_callbacks:
                 perform_callback(callback, ms, last_press_ms)
         else:
@@ -208,8 +219,8 @@ class NECRemoteReceiver(NECReceiver):
 
     def __on_repeat(self, code, ms, last_press_ms):
         if len(self.__short_callbacks) == 0 or \
-           time.ticks_diff(ms, last_press_ms) > self.SHORT_PRESS_MS:
-            # A repeat was encountered so clear out any short press callbacks
+           time.ticks_diff(ms, last_press_ms) > self.SHORT_RELEASE_MS:
+            # A repeat was encountered so clear out any short release callbacks
             self.__short_callbacks.clear()
 
             # Perform the repeat actions of the last command, if any
@@ -272,7 +283,7 @@ class NECRemoteReceiver(NECReceiver):
                     if button.on_release is not None:
                         self.__release_callbacks.append(button.on_release)
 
-                    # Queue up the short press action of the bound button, if present
+                    # Queue up the short release action of the bound button, if present
                     if button.on_short is not None:
                         self.__short_callbacks.append(button.on_short)
 

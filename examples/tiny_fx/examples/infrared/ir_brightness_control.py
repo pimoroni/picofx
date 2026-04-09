@@ -28,15 +28,13 @@ player.effects = [
 ]
 
 
-def toggle_mono(channel, ms, v):
-    print(ms)
+def toggle_mono(channel):
     fx = player.effects[channel - 1]
     if fx is not None:
         fx.brightness = 0.0 if fx.brightness > 0.0 else BRIGHTNESS
 
 
-def fade_mono(channel, ms, v):
-    print(ms)
+def fade_mono(channel):
     fx = player.effects[channel - 1]
     if fx is not None:
         fx.brightness = (fx.brightness + 0.02) % 1.0
@@ -44,12 +42,12 @@ def fade_mono(channel, ms, v):
 
 # Bind functions to each of the Pimoroni remote's buttons.
 remote = PimoroniRemote()
-remote.bind("1/RED", on_press=None, on_repeat=(fade_mono, 1), on_short=(toggle_mono, 1))
-remote.bind("2/GREEN", on_press=None, on_repeat=(fade_mono, 2), on_short=(toggle_mono, 2), )
-remote.bind("3/BLUE", on_press=None, on_repeat=(fade_mono, 3), on_short=(toggle_mono, 3))
-remote.bind("4/CYAN", on_press=None, on_repeat=(fade_mono, 4), on_short=(toggle_mono, 4))
-remote.bind("5/MAGENTA", on_press=None, on_repeat=(fade_mono, 5), on_short=(toggle_mono, 5))
-remote.bind("6/YELLOW", on_press=None, on_repeat=(fade_mono, 6), on_short=(toggle_mono, 6))
+remote.bind("1_RED", on_press=None, on_repeat=(fade_mono, 1), on_short=(toggle_mono, 1))
+remote.bind("2_GREEN", on_press=None, on_repeat=(fade_mono, 2), on_short=(toggle_mono, 2), )
+remote.bind("3_BLUE", on_press=None, on_repeat=(fade_mono, 3), on_short=(toggle_mono, 3))
+remote.bind("4_CYAN", on_press=None, on_repeat=(fade_mono, 4), on_short=(toggle_mono, 4))
+remote.bind("5_MAGENTA", on_press=None, on_repeat=(fade_mono, 5), on_short=(toggle_mono, 5))
+remote.bind("6_YELLOW", on_press=None, on_repeat=(fade_mono, 6), on_short=(toggle_mono, 6))
 
 # Set up the IR receiver on GP26, using PIO 1 and SM 0
 receiver = NECRemoteReceiver(TinyFX.SENSOR_PIN, 1, 0, debug_pin_base=TinyFX.RGB_PINS[0])

@@ -38,7 +38,20 @@ class LGRemote(RemoteDescriptor):
         "EIGHT": 0x18,
         "NINE": 0x19,
         "SETTINGS": 0x43,
-        }
+    }
+
+    NUMBERS = {
+        "ZERO": 0,
+        "ONE": 1,
+        "TWO": 2,
+        "THREE": 3,
+        "FOUR": 4,
+        "FIVE": 5,
+        "SIX": 6,
+        "SEVEN": 7,
+        "EIGHT": 8,
+        "NINE": 9,
+    }
 
     def __init__(self):
         super().__init__()
