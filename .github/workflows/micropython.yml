@@ -62,26 +62,33 @@ jobs:
       matrix:
         include:
           - name: TinyFX
+            basename: tiny_fx
             shortname: tiny_fx
             board: PIMORONI_TINYFX
             manifest: uf2-manifest
           - name: TinyFX W
+            basename: tiny_fx
             shortname: tiny_fx_w
             board: PIMORONI_TINYFX
             variant: w
             manifest: uf2-manifest-w
+          - name: MightyFX
+            basename: mighty_fx
+            shortname: mighty_fx
+            board: PIMORONI_MIGHTYFX
+            manifest: uf2-manifest
 
     env:
       RELEASE_FILE: pimoroni-${{matrix.shortname}}-${{github.event.release.tag_name || github.sha}}-micropython
       FIRMWARE_DIR: "$GITHUB_WORKSPACE/picofx/boards"
       ROOT_DIR: "$GITHUB_WORKSPACE/picofx"
       BOARD_DIR: "$GITHUB_WORKSPACE/picofx/boards/${{matrix.board}}"
-      EXAMPLES_DIR: "$GITHUB_WORKSPACE/picofx/examples/tiny_fx"
-      EXAMPLES_W_DIR: "$GITHUB_WORKSPACE/picofx/examples/tiny_fx_w"
+      EXAMPLES_DIR: "$GITHUB_WORKSPACE/picofx/examples/${{matrix.basename}}"
+      EXAMPLES_W_DIR: "$GITHUB_WORKSPACE/picofx/examples/${{matrix.basename}}_w"
       FILESYSTEM_DIR: "$GITHUB_WORKSPACE/picofx/temp"
       FILESYSTEM_SUFFIX: "with-libs-and-examples"
-      BOARD: "PIMORONI_TINYFX"
-      BOARD_VARIANT: ${{ matrix.variant }}
+      BOARD: "{{matrix.board}}"
+      BOARD_VARIANT: ${{matrix.variant}}
 
     steps:
     - name: Compiler Cache
@@ -131,7 +138,7 @@ jobs:
     - name: Install Arm GNU Toolchain (arm-none-eabi-gcc)
       uses: carlosperate/arm-none-eabi-gcc-action@v1
       with:
-        release: '9-2020-q2'
+        release: '13.3.Rel1'
  
     - name: Install CCache
       run: |
