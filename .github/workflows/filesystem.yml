@@ -57,23 +57,23 @@ jobs:
         cp -v -r ${{env.ROOT_DIR}}/picofx ${{env.LIBS_DIR}}/lib
         cp -v -r ${{env.BOARD_DIR}}/visible_libs/. ${{env.LIBS_DIR}}/lib
         cp -v -r ${{env.ROOT_DIR}}/../aye_arr/aye_arr ${{env.LIBS_DIR}}/lib
-        find ${{env.LIBS_DIR}} -type f -name '*.md' -exec rm -v {} \;
+        rm -v -f ${{env.LIBS_DIR}}/lib/picofx/README.md
 
     - name: "Assemble example content"
       shell: bash
       run: |
         mkdir -p ${{env.EX_DIR}}
         cp -v -r picofx/examples/${{matrix.basename}}/. ${{env.EX_DIR}}
-        rm -v ${{env.EX_DIR}}/README.md
-        rm -v -r ${{env.EX_DIR}}/examples/audio/photon_sword
-        rm -v ${{env.EX_DIR}}/examples/audio/photon_sword.py
+        rm -v -f ${{env.EX_DIR}}/README.md
+        rm -v -r -f ${{env.EX_DIR}}/examples/audio/photon_sword
+        rm -v -f ${{env.EX_DIR}}/examples/audio/photon_sword.py
 
     - name: "Append W example content"
       if: matrix.shortname == 'tiny_fx_w'
       shell: bash
       run: |
         cp -v -r picofx/examples/tiny_fx_w/. ${{env.EX_DIR}}
-        rm -v ${{env.EX_DIR}}/README.md
+        rm -v -f ${{env.EX_DIR}}/README.md
 
     - name: Libs .zip artifact
       if: matrix.shortname != 'tiny_fx_w'
