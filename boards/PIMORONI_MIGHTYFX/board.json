@@ -1,0 +1,18 @@
+{
+    "deploy": [
+        "../deploy.md"
+    ],
+    "docs": "",
+    "features": [
+        "USB Type-C"
+    ],
+    "id": "pimoroni-mightyfx",
+    "images": [
+        "pimoroni-mightyfx.jpg"
+    ],
+    "mcu": "rp2040",
+    "product": "Pimoroni MightyFX",
+    "thumbnail": "",
+    "url": "https://shop.pimoroni.com/products/mightyfx",
+    "vendor": "Pimoroni"
+}
