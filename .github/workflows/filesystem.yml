@@ -5,9 +5,12 @@ on:
   pull_request:
   release:
     types: [published]
+<<<<<<< HEAD
 
 env:
   PIMORONI_AYE_ARR_VERSION: patch/examples
+=======
+>>>>>>> 416607d (CI: Update MightyFX tooling.)
 
 jobs:
   build:

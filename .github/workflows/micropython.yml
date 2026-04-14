@@ -15,20 +15,15 @@ jobs:
       matrix:
         include:
           - name: TinyFX
-            basename: tiny_fx
             shortname: tiny_fx
             board: PIMORONI_TINYFX
           - name: TinyFX W
-            basename: tiny_fx
             shortname: tiny_fx_w
             board: PIMORONI_TINYFX
             variant: w
-            manifest: uf2-manifest-w
           - name: MightyFX
-            basename: mighty_fx
             shortname: mighty_fx
             board: PIMORONI_MIGHTYFX
-            manifest: uf2-manifest
 
     env:
       # MicroPython version will be contained in github.event.release.tag_name for releases

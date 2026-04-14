@@ -50,7 +50,6 @@ lint.select = [
 # RET505 - "unnecessary `else` after `return` statement". Yolo.
 # SLF001 - "private member accessed".
 
-
 lint.ignore = [
     "E501",
     "E402",
