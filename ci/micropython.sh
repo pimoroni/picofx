@@ -99,10 +99,6 @@ function ci_cmake_configure {
         BUILD_DIR="$CI_BUILD_ROOT/build-$BOARD-$VARIANT"
     fi
 
-    # Must be created before the configure, or the check for the build dir
-    # existing before enabling the dir2uf2 build step will fail.
-    mkdir -p "$BUILD_DIR/filesystem"
-
     cmake -S $CI_BUILD_ROOT/micropython/ports/rp2 -B "$BUILD_DIR" \
     -DPICOTOOL_FORCE_FETCH_FROM_GIT=1 \
     -DPICO_BUILD_DOCS=0 \
@@ -133,11 +129,6 @@ function ci_cmake_build {
     else
         BUILD_DIR="$CI_BUILD_ROOT/build-$BOARD-$VARIANT"
     fi
-
-    # Prepare LittleFS filesystem
-    cp -v -r "$CI_PROJECT_ROOT/picofx/." "$BUILD_DIR/filesystem"
-    cp -v -r "$MICROPY_BOARD_DIR/visible_libs/." "$BUILD_DIR/filesystem"
-    cp -v -r "$CI_PROJECT_ROOT/examples/." "$BUILD_DIR/filesystem"
 
     ccache --zero-stats || true
     cmake --build $BUILD_DIR -j 2
