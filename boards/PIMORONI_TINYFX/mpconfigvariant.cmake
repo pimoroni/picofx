@@ -1,0 +1,3 @@
+set(PIMORONI_UF2_MANIFEST ${CMAKE_CURRENT_LIST_DIR}/uf2-manifest.txt)
+set(PIMORONI_UF2_DIR ${CMAKE_CURRENT_BINARY_DIR}/filesystem)
+include(${CMAKE_CURRENT_LIST_DIR}/../common.cmake)
