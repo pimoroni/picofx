@@ -1,5 +1,7 @@
-set(PIMORONI_PICO_PATH ../../../../pimoroni-pico)
-include(${CMAKE_CURRENT_LIST_DIR}/../pimoroni_pico_import.cmake)
+if(NOT DEFINED PIMORONI_PICO_PATH)
+message(FATAL_ERROR "PIMORONI_PICO_PATH must be set!")
+endif()
+include(${PIMORONI_PICO_PATH}/pimoroni_pico_import.cmake)
 
 include_directories(${PIMORONI_PICO_PATH}/micropython)
 
