@@ -44,6 +44,8 @@ lint.select = [
 # RET503 - "add explicit `return` statement". Yolo.
 # RET505 - "unnecessary `else` after `return` statement". Yolo.
 # SLF001 - "private member accessed".
+# F821 - PIO commands and `const` wreak havok with linting
+
 
 lint.ignore = [
     "E501",
@@ -51,5 +53,6 @@ lint.ignore = [
     "COM812",
     "RET503",
     "RET505",
-    "SLF001"
+    "SLF001",
+    "F821"
 ]

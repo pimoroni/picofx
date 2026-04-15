@@ -202,7 +202,7 @@ class NECRemoteReceiver(NECReceiver):
         else:
             self.__remotes[addr] = [remote_descriptor]
 
-    def __on_release(self, code, ms, last_press_ms):
+    def __on_release(self, _, ms, last_press_ms):
         if len(self.__short_callbacks) > 0:
             # Perform the short release actions of the last command, if any
             for callback in self.__short_callbacks:
@@ -217,7 +217,7 @@ class NECRemoteReceiver(NECReceiver):
         self.__release_callbacks.clear()
         self.__short_callbacks.clear()
 
-    def __on_repeat(self, code, ms, last_press_ms):
+    def __on_repeat(self, _, ms, last_press_ms):
         if len(self.__short_callbacks) == 0 or \
            time.ticks_diff(ms, last_press_ms) > self.SHORT_RELEASE_MS:
             # A repeat was encountered so clear out any short release callbacks
