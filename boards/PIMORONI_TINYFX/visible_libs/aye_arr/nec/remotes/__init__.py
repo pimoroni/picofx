@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-from .descriptor import RemoteDescriptor
+from .descriptor import RemoteDescriptor    # noqa: F401
 from .argon import ArgonRemote
 from .pimoroni import PimoroniRemote
 from .lg import LGRemote

@@ -43,7 +43,7 @@ def fade_mono(channel):
 # Bind functions to each of the Pimoroni remote's buttons.
 remote = PimoroniRemote()
 remote.bind("1_RED", on_press=None, on_repeat=(fade_mono, 1), on_short=(toggle_mono, 1))
-remote.bind("2_GREEN", on_press=None, on_repeat=(fade_mono, 2), on_short=(toggle_mono, 2), )
+remote.bind("2_GREEN", on_press=None, on_repeat=(fade_mono, 2), on_short=(toggle_mono, 2))
 remote.bind("3_BLUE", on_press=None, on_repeat=(fade_mono, 3), on_short=(toggle_mono, 3))
 remote.bind("4_CYAN", on_press=None, on_repeat=(fade_mono, 4), on_short=(toggle_mono, 4))
 remote.bind("5_MAGENTA", on_press=None, on_repeat=(fade_mono, 5), on_short=(toggle_mono, 5))

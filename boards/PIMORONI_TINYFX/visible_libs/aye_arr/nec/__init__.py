@@ -2,5 +2,5 @@
 #
 # SPDX-License-Identifier: MIT
 
-from .send import NECSender
-from .receive import NECReceiver, NECRemoteReceiver
+from .send import NECSender     # noqa: F401
+from .receive import NECReceiver, NECRemoteReceiver     # noqa: F401
