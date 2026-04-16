@@ -14,10 +14,4 @@ cp -r -v "$SCRIPT_PATH/visible_libs/." "$TARGET/lib"
 cp -r -v "$SCRIPT_PATH/../../../aye_arr/aye_arr" "$TARGET/lib"
 
 # Remove any markdown files
-find "$TARGET" -type f -name '*.md' -exec sh -c '
-  if rm -- "$1"; then
-    printf "%s deleted\n" "$1"
-  else
-    printf "%s failed to delete\n" "$1" >&2
-  fi
-' sh {} \;
+find "$TARGET" -type f -name '*.md' -exec rm -v {} \;
