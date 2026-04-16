@@ -6,6 +6,9 @@ MICROPYTHON_VERSION="v1.27.0"
 PIMORONI_PICO_FLAVOUR="pimoroni"
 PIMORONI_PICO_VERSION="main"
 
+PIMORONI_AYE_ARR_FLAVOUR="pimoroni"
+PIMORONI_AYE_ARR_VERSION="patch/examples"
+
 PY_DECL_VERSION="v0.0.5"
 DIR2UF2_VERSION="v0.1.0"
 
@@ -28,6 +31,14 @@ function ci_pimoroni_pico_clone {
     cd "$CI_BUILD_ROOT/pimoroni-pico" || return 1
     git checkout $PIMORONI_PICO_VERSION
     git submodule update --init
+    cd "$CI_BUILD_ROOT"
+}
+
+function ci_pimoroni_aye_arr_clone {
+    log_inform "Using Pimoroni Aye Arr $PIMORONI_AYE_ARR_FLAVOUR/$PIMORONI_AYE_ARR_VERSION"
+    git clone https://github.com/$PIMORONI_AYE_ARR_FLAVOUR/aye_arr "$CI_BUILD_ROOT/aye_arr"
+    cd "$CI_BUILD_ROOT/aye_arr" || return 1
+    git checkout $PIMORONI_AYE_ARR_VERSION
     cd "$CI_BUILD_ROOT"
 }
 
@@ -69,6 +80,7 @@ function ci_prepare_all {
     ci_tools_clone
     ci_micropython_clone
     ci_pimoroni_pico_clone
+    ci_pimoroni_aye_arr_clone
     ci_micropython_build_mpy_cross
 }
 
