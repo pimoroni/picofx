@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: MIT
 
-import os
 import math
 import struct
 from machine import I2S, Pin
@@ -145,7 +144,7 @@ class WavPlayer:
         try:
             self.__wav_file = open(self.__root + wav_file, "rb")    # Open the chosen WAV file in read-only, binary mode
         except OSError:
-            raise ValueError(f"'{wav_file}' not found")
+            raise ValueError(f"'{wav_file}' not found") from None
         self.__loop_wav = loop                                  # Record if the user wants the file to loop
         self._loop_count = 0                                    # Count loops for debugging purposes
 
@@ -271,9 +270,9 @@ class WavPlayer:
         if self.__audio_out is not None:
             self.__audio_out.deinit()   # Deinit any active I2S comms
 
-        self.__state == WavPlayer.NONE  # Return to the none state
+        self.__state = WavPlayer.NONE   # Return to the none state
 
-    def __i2s_callback(self, arg):
+    def __i2s_callback(self, _):
         # PLAY
         if self.__state == WavPlayer.PLAY:
             if self.__mode == WavPlayer.MODE_WAV:

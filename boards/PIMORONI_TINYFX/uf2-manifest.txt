@@ -7,7 +7,13 @@ examples/function/*.py
 examples/showcase/*.py
 examples/audio/race_start.py
 examples/audio/fair_use_encounters.py
+examples/infrared/*.py
 lib/*.py
 lib/picofx/*.py
 lib/picofx/colour/*.py
 lib/picofx/mono/*.py
+lib/aye_arr/*.py
+lib/aye_arr/nec/*.py
+lib/aye_arr/nec/remotes/*.py
+lib/aye_arr/pulse/*.py
+lib/aye_arr/pulse/pio/*.py

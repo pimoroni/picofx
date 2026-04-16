@@ -36,3 +36,7 @@ set(MICROPY_FROZEN_MANIFEST ${MICROPY_BOARD_DIR}/manifest_w.py)
 
 set(PICO_BOARD "pimoroni_tinyfx")
 set(PICO_BOARD_HEADER_DIRS ${CMAKE_CURRENT_LIST_DIR})
+
+set(UF2_STAGING_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/uf2-copyfiles-w.sh)
+set(PIMORONI_UF2_MANIFEST ${CMAKE_CURRENT_LIST_DIR}/uf2-manifest-w.txt)
+include(${CMAKE_CURRENT_LIST_DIR}/../common.cmake)

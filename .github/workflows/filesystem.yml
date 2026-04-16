@@ -4,7 +4,10 @@ on:
   push:
   pull_request:
   release:
-    types: [created]
+    types: [published]
+
+env:
+  PIMORONI_AYE_ARR_VERSION: patch/examples
 
 jobs:
   build:
@@ -33,13 +36,22 @@ jobs:
         submodules: true
         path: picofx
 
+    # Check out Pimoroni Aye Arr
+    - uses: actions/checkout@v4
+      with:
+        repository: pimoroni/aye_arr
+        ref: ${{env.PIMORONI_AYE_ARR_VERSION}}
+        submodules: false
+        path: aye_arr
+
     - name: "Assemble lib content"
       shell: bash
       run: |
         mkdir -p ${{env.LIBS_DIR}}/lib
         cp -v -r ${{env.ROOT_DIR}}/picofx ${{env.LIBS_DIR}}/lib
         cp -v -r ${{env.BOARD_DIR}}/visible_libs/. ${{env.LIBS_DIR}}/lib
-        rm -v ${{env.LIBS_DIR}}/lib/picofx/README.md
+        cp -v -r ${{env.ROOT_DIR}}/../aye_arr/aye_arr ${{env.LIBS_DIR}}/lib
+        find ${{env.LIBS_DIR}} -type f -name '*.md' -exec rm -v {} \;
 
     - name: "Assemble example content"
       shell: bash

@@ -17,7 +17,7 @@ try:
     if len(WIFI_SSID) == 0:
         raise ValueError("no WiFi network set. Open the 'secrets.py' file on your device to add your WiFi credentials")
 except ImportError:
-    raise ImportError("no module named 'secrets'. Create a 'secrets.py' file on your device with your WiFi credentials")
+    raise ImportError("no module named 'secrets'. Create a 'secrets.py' file on your device with your WiFi credentials") from None
 
 
 # Constants
@@ -39,11 +39,11 @@ try:
 
     # Wait until the connection is established
     while not wlan.isconnected():
-        print('Waiting for connection...')
+        print("Waiting for connection...")
         time.sleep(CONNECTION_INTERVAL)
 
     # Print out our IP address
-    print(f'Connected on {wlan.ifconfig()[0]}')
+    print(f"Connected on {wlan.ifconfig()[0]}")
 
     # Loop forever
     while True:
@@ -53,7 +53,7 @@ try:
         req.close()
 
         # Use the second to get the colour components for the RGB output
-        colour = tuple(int(json['field2'][i:i + 2], 16) for i in (1, 3, 5))
+        colour = tuple(int(json["field2"][i:i + 2], 16) for i in (1, 3, 5))
 
         # Set the colour output, and print the values
         tiny.rgb.set_rgb(*colour)
