@@ -249,13 +249,13 @@ class NECRemoteReceiver(NECReceiver):
             for remote in self.__remotes[addr]:
                 # Perform the general callback for any command received
                 if remote.on_any is not None:
-                    known = True if remote.on_any(cmd, ms, last_press_ms) else known
+                    known = True if perform_callback((remote.on_any, cmd), ms, last_press_ms) else known
 
                 # Perform the callback only for known commands that are received
                 if remote.on_known is not None:
                     for key, val in remote.BUTTON_CODES.items():
                         if val == cmd:
-                            known = True if remote.on_known(key, ms, last_press_ms) else known
+                            known = True if perform_callback((remote.on_known, key), ms, last_press_ms) else known
                             break
 
                 try:

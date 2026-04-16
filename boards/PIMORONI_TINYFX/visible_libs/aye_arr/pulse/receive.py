@@ -25,12 +25,19 @@ class PulseReceiver:
         # Set up the pin used to receive pulse signals
         pin = Pin(pin_num, Pin.IN, Pin.PULL_UP)
 
+        # For the RP2350, shift the gpio_base of this PIO if the pin is above 32
+        base = 16 if pin_num >= 32 else 0
+        rp2.PIO(pio).gpio_base(base)
+
         # Load either the regular or debug program into the chosen StateMachine
         if debug_pin_base is None:
             self.__sm = rp2.StateMachine(sm + (pio * 4), pulsereader,
                                          freq=FREQUENCY, in_base=pin,
                                          jmp_pin=pin)
         else:
+            if debug_pin_base < base or debug_pin_base > base + 30:    # 30 because the debug PIO uses two sideset pins
+                raise ValueError(f"'debug_pin_base' is outside the GPIO base of 'pin_num'.\
+                                 Choose a 'debug_pin_base' between {base} and {base + 30}") from None
             self.__sm = rp2.StateMachine(sm + (pio * 4), pulsereader_debug,
                                          freq=FREQUENCY, in_base=pin,
                                          sideset_base=Pin(debug_pin_base),
