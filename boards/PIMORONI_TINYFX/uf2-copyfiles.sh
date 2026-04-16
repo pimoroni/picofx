@@ -12,5 +12,7 @@ cp -r -v "$SCRIPT_PATH/../../picofx" "$TARGET/lib"
 #cp -r -v "$SCRIPT_PATH/visible_libs/." "$TARGET/lib"
 cp -r -v "$SCRIPT_PATH/../../../aye_arr/aye_arr" "$TARGET/lib"
 
-rm -f "$TARGET/lib/picofx/README.md"
-rm -f "$TARGET/README.md"
+find "$TARGET" -type f -name '*.md' -print
+#rm -f "$TARGET/lib/picofx/README.md"
+#rm -f "$TARGET/lib/aye_arr/pulse/reference.md"
+#rm -f "$TARGET/README.md"
