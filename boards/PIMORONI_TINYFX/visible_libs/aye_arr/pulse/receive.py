@@ -2,13 +2,13 @@
 #
 # SPDX-License-Identifier: MIT
 
+from collections import deque
+
 import rp2
 from machine import Pin
-from collections import deque
-from .pio.rx import pulsereader, pulsereader_debug, FREQUENCY, \
-                    count_to_burst_us, count_to_idle_us, TIMEOUT_REACHED
-from .common import Pulse, DebugPin
 
+from .common import DebugPin, Pulse
+from .pio.rx import FREQUENCY, TIMEOUT_REACHED, count_to_burst_us, count_to_idle_us, pulsereader, pulsereader_debug
 
 # Constants
 MAX_BUFFER = const(1024)

@@ -2,11 +2,11 @@
 #
 # SPDX-License-Identifier: MIT
 
-from rp2 import StateMachine
 from machine import Pin, mem32
-from .pio.tx import pulsesender, pulsesender_debug, CLOCKS_PER_CYCLE
-from .common import DebugPin
+from rp2 import StateMachine
 
+from .common import DebugPin
+from .pio.tx import CLOCKS_PER_CYCLE, pulsesender, pulsesender_debug
 
 # RP2 Register Constants
 PIO_BASE = (0x50200000,

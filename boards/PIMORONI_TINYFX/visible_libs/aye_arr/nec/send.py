@@ -3,10 +3,9 @@
 # SPDX-License-Identifier: MIT
 
 import aye_arr.logging as logging
+
 from ..pulse.send import PulseSender
-from .common import NEC_FREQUENCY, NEC_START_BURST_US, NEC_START_DATA_US, \
-                    NEC_START_REPEAT_US, NEC_DATA_BURST_US, NEC_DATA_ZERO_US, \
-                    NEC_DATA_ONE_US, NEC_DATA_LOCKOUT_US
+from .common import NEC_DATA_BURST_US, NEC_DATA_LOCKOUT_US, NEC_DATA_ONE_US, NEC_DATA_ZERO_US, NEC_FREQUENCY, NEC_START_BURST_US, NEC_START_DATA_US, NEC_START_REPEAT_US
 
 
 class NECSender(PulseSender):

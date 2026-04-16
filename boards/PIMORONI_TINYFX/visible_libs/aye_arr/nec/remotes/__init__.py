@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: MIT
 
-from .descriptor import RemoteDescriptor    # noqa: F401
 from .argon import ArgonRemote
-from .pimoroni import PimoroniRemote
+from .descriptor import RemoteDescriptor  # noqa: F401
 from .lg import LGRemote
+from .pimoroni import PimoroniRemote
 
 KNOWN_REMOTES = (
     ArgonRemote,

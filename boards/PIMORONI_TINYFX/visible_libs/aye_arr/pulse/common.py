@@ -2,8 +2,9 @@
 #
 # SPDX-License-Identifier: MIT
 
-from machine import Pin
 from collections import namedtuple
+
+from machine import Pin
 
 # Tuple for storing pulse parameters
 Pulse = namedtuple("Pulse", ("burst", "idle"))

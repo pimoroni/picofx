@@ -3,13 +3,14 @@
 # SPDX-License-Identifier: MIT
 
 import time
+
 from machine import Pin
+
 import aye_arr.logging as logging
+
 from ..pulse.common import DebugPin
-from ..pulse.receive import PulseReceiver, DEFAULT_FILTER_THRESHOLD
-from .common import pulse_us_valid, NEC_REPEAT, NEC_REPEAT_TIMEOUT_MS, \
-                    NEC_START_BURST_US, NEC_START_REPEAT_US, NEC_START_DATA_US, \
-                    NEC_DATA_BURST_US, NEC_DATA_ZERO_US, NEC_DATA_ONE_US
+from ..pulse.receive import DEFAULT_FILTER_THRESHOLD, PulseReceiver
+from .common import NEC_DATA_BURST_US, NEC_DATA_ONE_US, NEC_DATA_ZERO_US, NEC_REPEAT, NEC_REPEAT_TIMEOUT_MS, NEC_START_BURST_US, NEC_START_DATA_US, NEC_START_REPEAT_US, pulse_us_valid
 from .remotes import KNOWN_REMOTES
 
 
