@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: MIT
 
+# ruff: noqa: F821 - @asm_pio decorator adds names to function scope
+
 import rp2
 
 # Constants

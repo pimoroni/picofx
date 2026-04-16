@@ -6,6 +6,8 @@
 # It features improved timing accuracy and reduces counters to 16 bits,allowing both low (burst) and high (idle)
 # phases to be sent together, which along with a joined RX FIFO gives more time for the main program to handle data.
 
+# ruff: noqa: F821 - @asm_pio decorator adds names to function scope
+
 import rp2
 
 # Constants
