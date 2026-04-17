@@ -68,6 +68,8 @@ class MightyFX:
         # Set up the mono and RGB LED outputs
         self.outputs = [RGBLED(*out, invert=False, gamma=self.RGB_GAMMA) for out in self.OUT_PINS]
 
+        self.screen_a = None
+        self.motors_a = None
         if spce_a in [SPCE.SCREEN_114, SPCE.SCREEN_154, SPCE.SCREEN_200, SPCE.SCREEN_280]:
             spibus_a = SPIBus(cs=self.SPCE_A_CS_PIN, dc=self.SPCE_A_DC_PIN,
                               sck=self.SPCE_A_SCK_PIN, mosi=self.SPCE_A_MOSI_PIN)
@@ -83,9 +85,15 @@ class MightyFX:
         elif spce_a == SPCE.MOTOR_DRIVER:
             MOTOR_A_PINS = [(self.SPCE_A_DC_PIN, self.SPCE_A_CS_PIN), \
                             (self.SPCE_A_SCK_PIN, self.SPCE_A_MOSI_PIN)]
-            self.motors_a = [Motor(MOTOR_A_PINS), Motor(MOTOR_A_PINS)]
-            # Need to add some handling for LED conflicts
+            self.motors_a = [Motor(pins) for pins in MOTOR_A_PINS]
+            self.motors_a_en = Pin(self.SPCE_A_BL_PIN, Pin.OUT, value=True)
+            # Need to add some better handling for LED conflicts, to avoid output LEDs lighting
+            _ = Pin(40, Pin.IN)
+            _ = Pin(41, Pin.IN)
+            _ = Pin(42, Pin.IN)
 
+        self.screen_b = None
+        self.motors_b = None
         if spce_b in [SPCE.SCREEN_114, SPCE.SCREEN_154, SPCE.SCREEN_200, SPCE.SCREEN_280]:
             spibus_b = SPIBus(cs=self.SPCE_B_CS_PIN, dc=self.SPCE_B_DC_PIN,
                               sck=self.SPCE_B_SCK_PIN, mosi=self.SPCE_B_MOSI_PIN)
@@ -101,8 +109,13 @@ class MightyFX:
         elif spce_b == SPCE.MOTOR_DRIVER:
             MOTOR_B_PINS = [(self.SPCE_B_DC_PIN, self.SPCE_B_CS_PIN), \
                             (self.SPCE_B_SCK_PIN, self.SPCE_B_MOSI_PIN)]
-            self.motors_b = [Motor(MOTOR_B_PINS), Motor(MOTOR_B_PINS)]
-            # Need to add some handling for LED conflicts
+            self.motors_b = [Motor(pins) for pins in MOTOR_B_PINS]
+            self.motors_b_en = Pin(self.SPCE_B_BL_PIN, Pin.OUT, value=True)
+            # Need to add some better handling for LED conflicts, to avoid output LEDs lighting
+            _ = Pin(8, Pin.IN)
+            _ = Pin(9, Pin.IN)
+            _ = Pin(10, Pin.IN)
+            _ = Pin(11, Pin.IN)
 
         # Set up the i2c for Qw/st, if the user wants
         if init_i2c:
@@ -173,4 +186,21 @@ class MightyFX:
     def shutdown(self):
         self.clear()
         self.disable_servo_strips()
+
+        if self.screen_a:
+            self.bl_a.off()
+
+        if self.screen_b:
+            self.bl_b.off()
+
+        if self.motors_a:
+            self.motors_a_en.off()
+            for motor in self.motors_a:
+                motor.disable()
+
+        if self.motors_b:
+            self.motors_b_en.off()
+            for motor in self.motors_b:
+                motor.disable()
+
         self.wav.deinit()

@@ -9,6 +9,8 @@ examples/showcase/*.py
 examples/audio/*.py
 examples/screens/*.py
 examples/strips/*.py
+examples/motors/*.py
+examples/infrared/*.py
 examples/wireless/*.py
 lib/*.py
 lib/picofx/*.py

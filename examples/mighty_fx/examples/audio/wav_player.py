@@ -7,7 +7,7 @@ Press Boot to power up, and press Boot to power down
 """
 
 # Constants
-WAV_FILE = "My Pet Coelacanth.wav"
+WAV_FILE = "My_File.wav"
 WAV_ROOT = "/"
 
 # Variables
