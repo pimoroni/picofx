@@ -56,6 +56,7 @@ jobs:
         mkdir -p ${{env.LIBS_DIR}}/lib
         cp -v -r ${{env.ROOT_DIR}}/picofx ${{env.LIBS_DIR}}/lib
         cp -v -r ${{env.BOARD_DIR}}/visible_libs/. ${{env.LIBS_DIR}}/lib
+        cp -v -r ${{env.BOARD_DIR}}/../visible_libs/. ${{env.LIBS_DIR}}/lib
         cp -v -r ${{env.ROOT_DIR}}/../aye_arr/aye_arr ${{env.LIBS_DIR}}/lib
         find ${{env.LIBS_DIR}} -type f -name '*.md' -exec rm -v {} \;
 
