@@ -5,12 +5,9 @@ on:
   pull_request:
   release:
     types: [published]
-<<<<<<< HEAD
 
 env:
   PIMORONI_AYE_ARR_VERSION: patch/examples
-=======
->>>>>>> 416607d (CI: Update MightyFX tooling.)
 
 jobs:
   build:
@@ -60,7 +57,7 @@ jobs:
         cp -v -r ${{env.ROOT_DIR}}/picofx ${{env.LIBS_DIR}}/lib
         cp -v -r ${{env.BOARD_DIR}}/visible_libs/. ${{env.LIBS_DIR}}/lib
         cp -v -r ${{env.ROOT_DIR}}/../aye_arr/aye_arr ${{env.LIBS_DIR}}/lib
-        rm -v -f ${{env.LIBS_DIR}}/lib/picofx/README.md
+        find ${{env.LIBS_DIR}} -type f -name '*.md' -exec rm -v {} \;
 
     - name: "Assemble example content"
       shell: bash
