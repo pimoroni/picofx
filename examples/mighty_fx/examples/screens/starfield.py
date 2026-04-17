@@ -28,7 +28,7 @@ stars = [new_star() for _ in range(NUMBER_OF_STARS)]
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
-    while True:
+    while not mighty.boot_pressed():
         screen.set_pen(BLACK)
         screen.clear()
         screen.set_pen(WHITE)

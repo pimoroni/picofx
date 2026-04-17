@@ -24,7 +24,7 @@ t = 0
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
-    while True:
+    while not mighty.boot_pressed():
         screen.set_pen(BLACK)
         screen.clear()
         for i in range(0, 360, 360 // NUMBER_OF_LINES):

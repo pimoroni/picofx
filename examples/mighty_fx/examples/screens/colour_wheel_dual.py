@@ -20,7 +20,7 @@ t = 0
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
-    while True:
+    while not mighty.boot_pressed():
         for screen in screens:
             BLACK = screen.create_pen(0, 0, 0)
             WIDTH, HEIGHT = screen.get_bounds()

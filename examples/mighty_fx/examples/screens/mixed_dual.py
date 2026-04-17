@@ -96,7 +96,7 @@ scenes = [ColourWheel(mighty.screen_a), Starfield(mighty.screen_b)]
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
-    while True:
+    while not mighty.boot_pressed():
         for scene in scenes:
             scene.draw()
 
