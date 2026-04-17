@@ -3,9 +3,20 @@
 # SPDX-License-Identifier: MIT
 
 from machine import ADC, Pin
+from pimoroni_bus import SPIBus
 from pimoroni_i2c import PimoroniI2C
+from picographics import PicoGraphics, DISPLAY_LCD_240X240, DISPLAY_PICO_DISPLAY, DISPLAY_PICO_DISPLAY_2, PEN_RGB565
+from motor import Motor
 from picofx import RGBLED
 from audio import WavPlayer
+
+
+class SPCE:
+    SCREEN_114 = 0
+    SCREEN_154 = 1
+    SCREEN_200 = 2
+    SCREEN_280 = 3
+    MOTOR_DRIVER = 4
 
 
 class MightyFX:
@@ -53,9 +64,45 @@ class MightyFX:
 
     RGB_GAMMA = 2.2
 
-    def __init__(self, init_i2c=True, init_wav=True, wav_root="/"):
+    def __init__(self, spce_a=None, spce_b=None, init_i2c=True, init_wav=True, wav_root="/"):
         # Set up the mono and RGB LED outputs
         self.outputs = [RGBLED(*out, invert=False, gamma=self.RGB_GAMMA) for out in self.OUT_PINS]
+
+        if spce_a in [SPCE.SCREEN_114, SPCE.SCREEN_154, SPCE.SCREEN_200, SPCE.SCREEN_280]:
+            spibus_a = SPIBus(cs=self.SPCE_A_CS_PIN, dc=self.SPCE_A_DC_PIN,
+                              sck=self.SPCE_A_SCK_PIN, mosi=self.SPCE_A_MOSI_PIN)
+            # bl=self.SPCE_A_BL_PIN)
+            display = DISPLAY_PICO_DISPLAY if spce_a == SPCE.SCREEN_114 else \
+                DISPLAY_LCD_240X240 if spce_a == SPCE.SCREEN_154 else \
+                DISPLAY_PICO_DISPLAY_2
+            self.screen_a = PicoGraphics(display, bus=spibus_a, pen_type=PEN_RGB565, rotate=0)
+            # self.screen_a.set_backlight(1.0)
+            self.bl_a = Pin(self.SPCE_A_BL_PIN, Pin.OUT, value=True)
+            # Need to add some handling for LED conflicts
+
+        elif spce_a == SPCE.MOTOR_DRIVER:
+            MOTOR_A_PINS = [(self.SPCE_A_DC_PIN, self.SPCE_A_CS_PIN), \
+                            (self.SPCE_A_SCK_PIN, self.SPCE_A_MOSI_PIN)]
+            self.motors_a = [Motor(MOTOR_A_PINS), Motor(MOTOR_A_PINS)]
+            # Need to add some handling for LED conflicts
+
+        if spce_b in [SPCE.SCREEN_114, SPCE.SCREEN_154, SPCE.SCREEN_200, SPCE.SCREEN_280]:
+            spibus_b = SPIBus(cs=self.SPCE_B_CS_PIN, dc=self.SPCE_B_DC_PIN,
+                              sck=self.SPCE_B_SCK_PIN, mosi=self.SPCE_B_MOSI_PIN)
+            # bl=self.SPCE_B_BL_PIN)
+            display = DISPLAY_PICO_DISPLAY if spce_b == SPCE.SCREEN_114 else \
+                DISPLAY_LCD_240X240 if spce_b == SPCE.SCREEN_154 else \
+                DISPLAY_PICO_DISPLAY_2
+            self.screen_b = PicoGraphics(display, bus=spibus_b, pen_type=PEN_RGB565, rotate=0)
+            # self.screen_b.set_backlight(1.0)
+            self.bl_b = Pin(self.SPCE_B_BL_PIN, Pin.OUT, value=True)
+            # Need to add some handling for LED conflicts
+
+        elif spce_b == SPCE.MOTOR_DRIVER:
+            MOTOR_B_PINS = [(self.SPCE_B_DC_PIN, self.SPCE_B_CS_PIN), \
+                            (self.SPCE_B_SCK_PIN, self.SPCE_B_MOSI_PIN)]
+            self.motors_b = [Motor(MOTOR_B_PINS), Motor(MOTOR_B_PINS)]
+            # Need to add some handling for LED conflicts
 
         # Set up the i2c for Qw/st, if the user wants
         if init_i2c:

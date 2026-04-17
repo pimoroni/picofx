@@ -7,6 +7,8 @@ examples/effects/colour/*.py
 examples/function/*.py
 examples/showcase/*.py
 examples/audio/*.py
+examples/screens/*.py
+examples/strips/*.py
 examples/wireless/*.py
 lib/*.py
 lib/picofx/*.py
