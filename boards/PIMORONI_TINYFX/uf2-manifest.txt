@@ -8,6 +8,8 @@ examples/showcase/*.py
 examples/audio/race_start.py
 examples/audio/fair_use_encounters.py
 examples/infrared/*.py
+examples/infrared/mono/*.py
+examples/infrared/colour/*.py
 lib/*.py
 lib/picofx/*.py
 lib/picofx/colour/*.py

@@ -29,6 +29,12 @@ These are micropython examples for the Pimoroni [TinyFX](https://shop.pimoroni.c
   - [Race Start](#race-start)
   - [Encounters](#encounters)
   - [Photon Sword](#photon-sword)
+- [Infrared Examples (Colour)](#infrared-examples-colour)
+  - [Control RGB (Direct)](#control-rgb-direct)
+  - [Control RGB (FX)](#control-rgb-fx)
+  - [Control HSV (Direct)](#control-hsv-direct)
+  - [Control HSV (FX)](#control-hsv-fx)
+  - [Control Rainbow](#control-rainbow)
 - [Showcase Examples](#showcase-examples)
   - [Rescue Vehicle](#rescue-vehicle)
   - [Sensor Wave](#sensor-wave)
@@ -185,6 +191,38 @@ Play sounds that react to motion with a TinyFX.
 Grab yourself an MSA301 and attach it to the Qw/St connector.
 
 This example needs the directory `photon_sword` copied over to your TinyFX.
+
+
+## Infrared Examples (Colour)
+
+### Control RGB (Direct)
+[infrared/colour/control_rgb_direct.py](examples/infrared/colour/control_rgb_direct.py)
+
+Set the colour of Tiny FX's onboard RGB LED using the number buttons on the Pimoroni Aye Arr Remote. This version interacts with the LED directly.
+
+### Control RGB (FX)
+[infrared/colour/control_rgb_fx.py](examples/infrared/colour/control_rgb_fx.py)
+
+Set the colour of Tiny FX's onboard RGB LED using the number buttons on the Pimoroni Aye Arr Remote. This version uses the effects system to interact with the LED.
+
+
+### Control HSV (Direct)
+[infrared/colour/control_hsv_direct.py](examples/infrared/colour/control_hsv_direct.py)
+
+Set the colour of Tiny FX's onboard RGB LED using the number buttons on the Pimoroni Aye Arr Remote, and change its hue, saturation, and value using the directional buttons. This version interacts with the LED directly.
+
+
+### Control HSV (FX)
+[infrared/colour/control_hsv_fx.py](examples/infrared/colour/control_hsv_fx.py)
+
+Set the colour of Tiny FX's onboard RGB LED using the number buttons on the Pimoroni Aye Arr Remote, and change its hue, saturation, and value using the directional buttons. This version uses the effects system to interact with the LED.
+
+
+### Control Rainbow
+[infrared/colour/control_rainbow.py](examples/infrared/colour/control_rainbow.py)
+
+Play a rainbow effect on TinyFX's RGB output that is controllable
+by the directional buttons on a Pimoroni Aye Arr Remote.
 
 
 ## Showcase Examples
