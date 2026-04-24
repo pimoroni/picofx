@@ -2,7 +2,6 @@ from tiny_fx import TinyFX
 from picofx import MonoPlayer
 from picofx.mono import StaticFX
 
-import aye_arr.logging as logging
 from aye_arr.nec import NECRemoteReceiver
 from aye_arr.nec.remotes import PimoroniRemote
 
@@ -66,7 +65,7 @@ remote.bind("5_MAGENTA", on_press=None, on_short=(toggle_mono, 5), on_repeat=(fa
 remote.bind("6_YELLOW", on_press=None, on_short=(toggle_mono, 6), on_repeat=(fade_mono, 6))
 
 # Set up a receiver on Tiny FX's sensor pin, using PIO 1 and SM 0, and bind the remote to it.
-receiver = NECRemoteReceiver(TinyFX.SENSOR_PIN, 1, 0, logging_level=logging.LOG_NONE)
+receiver = NECRemoteReceiver(TinyFX.SENSOR_PIN, 1, 0)
 receiver.bind(remote)
 
 

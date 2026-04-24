@@ -1,7 +1,6 @@
 from tiny_fx import TinyFX
 from picofx.colour import RED, GREEN, BLUE, CYAN, MAGENTA, YELLOW, WARM, WHITE, COOL, BLACK
 
-import aye_arr.logging as logging
 from aye_arr.nec import NECRemoteReceiver
 from aye_arr.nec.remotes import PimoroniRemote
 
@@ -43,7 +42,7 @@ remote.bind("9_COOL", (set_led, COOL))
 remote.bind("OK_STOP", (set_led, BLACK))
 
 # Set up a receiver on the RX pin, using PIO 1 and SM 0, and bind the remote to it.
-receiver = NECRemoteReceiver(TinyFX.SENSOR_PIN, 1, 0, logging_level=logging.LOG_NONE)
+receiver = NECRemoteReceiver(TinyFX.SENSOR_PIN, 1, 0)
 receiver.bind(remote)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
