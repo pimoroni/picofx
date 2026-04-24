@@ -29,6 +29,10 @@ These are micropython examples for the Pimoroni [TinyFX](https://shop.pimoroni.c
   - [Race Start](#race-start)
   - [Encounters](#encounters)
   - [Photon Sword](#photon-sword)
+- [Infrared Examples (Mono)](#infrared-examples-mono)
+  - [Control Channels](#control-channels)
+- [Control Pulse Wave](#control-pulse-wave)
+- [Toggle Effects](#toggle-effects)
 - [Infrared Examples (Colour)](#infrared-examples-colour)
   - [Control RGB (Direct)](#control-rgb-direct)
   - [Control RGB (FX)](#control-rgb-fx)
@@ -191,6 +195,28 @@ Play sounds that react to motion with a TinyFX.
 Grab yourself an MSA301 and attach it to the Qw/St connector.
 
 This example needs the directory `photon_sword` copied over to your TinyFX.
+
+
+## Infrared Examples (Mono)
+
+### Control Channels
+[infrared/mono/control_channels.py](examples/infrared/mono/control_channels.py)
+
+Turn each of Tiny FX's mono outputs on and off by pressing the number buttons
+on the Pimoroni Aye Arr Remote, and hold to adjust their brightness.
+
+
+## Control Pulse Wave
+[infrared/mono/control_pulse_wave.py](examples/infrared/mono/control_pulse_wave.py)
+
+Play a wave of pulses on TinyFX's outputs that is controllable
+by the directional buttons on a Pimoroni Aye Arr Remote.
+
+
+## Toggle Effects
+[infrared/mono/toggle_effects.py](examples/infrared/mono/toggle_effects.py)
+
+Play effects for each "postcard" on the Tales Of The Space Age set, and turn them on and off by pressing the number buttons on the Pimoroni Aye Arr Remote.
 
 
 ## Infrared Examples (Colour)

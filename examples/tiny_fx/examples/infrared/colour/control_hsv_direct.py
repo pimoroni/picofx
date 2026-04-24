@@ -1,5 +1,4 @@
 from tiny_fx import TinyFX
-from picofx import rgb_from_hsv
 from picofx.colour import H_RED, H_GREEN, H_BLUE, H_CYAN, H_MAGENTA, H_YELLOW, H_WARM, H_WHITE, H_COOL, H_BLACK
 
 import aye_arr.logging as logging
@@ -43,40 +42,31 @@ val = 0
 def set_hsv(colour):
     global hue, sat, val
     hue, sat, val = colour
-
-    red, green, blue = [int(x * 255) for x in rgb_from_hsv(hue, sat, val)]
-    led.set_rgb(red, green, blue)
-    print(f"Colour = #{red:02x}{green:02x}{blue:02x}")
+    led.set_hsv(hue, sat, val)
+    print(f"H = {hue:.2}, S = {sat:.2}, V = {val:.2}")
 
 
 # Function called to change the hue of the colour
 def cycle_hue(amount):
     global hue
-    hue += amount % 1.0
-
-    red, green, blue = [int(x * 255) for x in rgb_from_hsv(hue, sat, val)]
-    led.set_rgb(red, green, blue)
-    print(f"Colour = #{red:02x}{green:02x}{blue:02x}")
-
+    hue = (hue + amount) % 1.0
+    led.set_hsv(hue, sat, val)
+    print(f"H = {hue:.2}, S = {sat:.2}, V = {val:.2}")
 
 # Function called to change the saturation of the colour
 def adjust_sat(amount):
     global sat
     sat = max(min(sat + amount, 1.0), 0.0)
-
-    red, green, blue = [int(x * 255) for x in rgb_from_hsv(hue, sat, val)]
-    led.set_rgb(red, green, blue)
-    print(f"Colour = #{red:02x}{green:02x}{blue:02x}")
+    led.set_hsv(hue, sat, val)
+    print(f"H = {hue:.2}, S = {sat:.2}, V = {val:.2}")
 
 
 # Function called to change the value (brightness) of the colour
 def adjust_val(amount):
     global val
     val = max(min(val + amount, 1.0), 0.0)
-
-    red, green, blue = [int(x * 255) for x in rgb_from_hsv(hue, sat, val)]
-    led.set_rgb(red, green, blue)
-    print(f"Colour = #{red:02x}{green:02x}{blue:02x}")
+    led.set_hsv(hue, sat, val)
+    print(f"H = {hue:.2}, S = {sat:.2}, V = {val:.2}")
 
 
 # Create the remote and setup up what each of the buttons will do

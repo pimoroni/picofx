@@ -6,6 +6,7 @@ from .binary import BinaryCounterFX
 from .blink import BlinkFX, BlinkWaveFX
 from .flash import FlashFX, FlashSequenceFX
 from .flicker import FlickerFX
+from .none import NoneFX
 from .pulse import PulseFX, PulseWaveFX
 from .rand import RandomFX
 from .static import StaticFX
@@ -18,6 +19,7 @@ MONO_EFFECTS = [
     FlashFX,
     FlashSequenceFX,
     FlickerFX,
+    NoneFX,
     PulseFX,
     PulseWaveFX,
     RandomFX,

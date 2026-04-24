@@ -45,7 +45,7 @@ def set_hsv(colour):
 # Function called to change the hue of the colour
 def cycle_hue(amount):
     global hsv
-    hsv.hue += amount % 1.0
+    hsv.hue = (hsv.hue + amount) % 1.0
     print(f"H = {hsv.hue:.2}, S = {hsv.sat:.2}, V = {hsv.val:.2}")
 
 
