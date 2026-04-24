@@ -7,7 +7,7 @@ on:
     types: [published]
 
 env:
-  PIMORONI_AYE_ARR_VERSION: patch/examples
+  PIMORONI_AYE_ARR_VERSION: v1.0.0
 
 jobs:
   build:
