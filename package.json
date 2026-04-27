@@ -8,5 +8,5 @@
         ["picofx/colour/rgb.py", "github:org/pimoroni/picofx/colour/rgb.py"],
         ["picofx/mono/__init__.py", "github:org/pimoroni/picofx/mono/__init__.py"]
     ],
-    "version": "1.1"
+    "version": "1.1.1"
 }
