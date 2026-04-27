@@ -1,9 +1,9 @@
-from tiny_fx import TinyFX
-from picofx import ColourPlayer
-from picofx.colour import RGBFX, RED, GREEN, BLUE, CYAN, MAGENTA, YELLOW, WARM, WHITE, COOL, BLACK
-
 from aye_arr.nec import NECRemoteReceiver
 from aye_arr.nec.remotes import PimoroniRemote
+from tiny_fx import TinyFX
+
+from picofx import ColourPlayer
+from picofx.colour import BLACK, BLUE, COOL, CYAN, GREEN, MAGENTA, RED, RGBFX, WARM, WHITE, YELLOW
 
 """
 Set the colour of Tiny FX's onboard RGB LED using the number buttons

@@ -1,9 +1,10 @@
 import time
-from tiny_fx import TinyFX
-from picofx.colour import RED, YELLOW, GREEN, CYAN, BLUE, BLACK
+
 from machine import Pin
 from pimoroni import Analog
+from tiny_fx import TinyFX
 
+from picofx.colour import BLACK, BLUE, CYAN, GREEN, RED, YELLOW
 
 """
 Play an evocative musical melody with accompanying lights on TinyFX.

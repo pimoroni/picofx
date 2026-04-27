@@ -1,7 +1,8 @@
 from tiny_fx import TinyFX
-from picofx import MonoPlayer, ColourPlayer
-from picofx.mono import FlickerFX
+
+from picofx import ColourPlayer, MonoPlayer
 from picofx.colour import HSVFX
+from picofx.mono import FlickerFX
 
 """
 Play a set of flickering thruster effects on a model spaceship, with an RGB light used for planetshine underglow.

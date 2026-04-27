@@ -2,8 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
-from machine import Pin, PWM, Timer
-
+from machine import PWM, Pin, Timer
 
 PICOFX_VERSION = "1.1.1"
 

@@ -2,10 +2,11 @@
 #
 # SPDX-License-Identifier: MIT
 
+from audio import WavPlayer
 from machine import ADC, Pin
 from pimoroni_i2c import PimoroniI2C
+
 from picofx import PWMLED, RGBLED
-from audio import WavPlayer
 
 
 class TinyFX:

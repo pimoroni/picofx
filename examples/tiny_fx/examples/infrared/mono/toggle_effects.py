@@ -1,9 +1,9 @@
-from tiny_fx import TinyFX
-from picofx import MonoPlayer
-from picofx.mono import PulseFX, RandomFX, StaticFX, BlinkFX, NoneFX
-
 from aye_arr.nec import NECRemoteReceiver
 from aye_arr.nec.remotes import PimoroniRemote
+from tiny_fx import TinyFX
+
+from picofx import MonoPlayer
+from picofx.mono import BlinkFX, NoneFX, PulseFX, RandomFX, StaticFX
 
 """
 Play effects for each "postcard" on the Tales Of The Space Age set,

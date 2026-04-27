@@ -1,9 +1,9 @@
-from tiny_fx import TinyFX
-from picofx import MonoPlayer
-from picofx.mono import PulseWaveFX
-
 from aye_arr.nec import NECRemoteReceiver
 from aye_arr.nec.remotes import PimoroniRemote
+from tiny_fx import TinyFX
+
+from picofx import MonoPlayer
+from picofx.mono import PulseWaveFX
 
 """
 Play a wave of pulses on TinyFX's outputs that is controllable

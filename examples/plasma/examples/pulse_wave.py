@@ -1,8 +1,9 @@
 import plasma
+from pimoroni import Button
 from plasma import plasma2040
+
 from picofx import StripPlayer
 from picofx.mono import PulseWaveFX
-from pimoroni import Button
 
 """
 Play a wave of pulses on Plasma 2040's strip output.

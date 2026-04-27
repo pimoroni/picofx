@@ -1,5 +1,7 @@
 import time
+
 from tiny_fx import TinyFX
+
 from picofx.colour import WHITE
 
 """

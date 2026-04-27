@@ -1,9 +1,11 @@
 import time
-from tiny_fx import TinyFX
-from picofx import MonoPlayer
-from picofx.mono import PulseWaveFX
+
 from machine import Pin
 from pimoroni import Analog
+from tiny_fx import TinyFX
+
+from picofx import MonoPlayer
+from picofx.mono import PulseWaveFX
 
 """
 Play a wave of pulses on TinyFX's outputs, who's speed is controlled by a sensor.

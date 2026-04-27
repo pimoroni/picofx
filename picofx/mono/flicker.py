@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 import random
+
 from picofx import Updateable
 
 

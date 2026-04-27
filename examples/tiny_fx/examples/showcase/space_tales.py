@@ -1,6 +1,7 @@
 from tiny_fx import TinyFX
+
 from picofx import MonoPlayer
-from picofx.mono import PulseFX, RandomFX, StaticFX, BlinkFX
+from picofx.mono import BlinkFX, PulseFX, RandomFX, StaticFX
 
 """
 Play effects for each space themed "postcard".

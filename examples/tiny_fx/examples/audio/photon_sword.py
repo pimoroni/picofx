@@ -1,7 +1,9 @@
 import time
-from tiny_fx import TinyFX
-from picofx.colour import WHITE
+
 from breakout_msa301 import BreakoutMSA301
+from tiny_fx import TinyFX
+
+from picofx.colour import WHITE
 
 """
 Play sounds that react to motion with a TinyFX.

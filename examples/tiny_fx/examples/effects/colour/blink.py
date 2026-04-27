@@ -1,6 +1,7 @@
 from tiny_fx import TinyFX
+
 from picofx import ColourPlayer
-from picofx.colour import RGBBlinkFX, RED, YELLOW, GREEN, CYAN, BLUE, MAGENTA
+from picofx.colour import BLUE, CYAN, GREEN, MAGENTA, RED, YELLOW, RGBBlinkFX
 
 """
 Play a blinking sequence effect on TinyFX's RGB output. Each blink in the sequence can be a different colour.
