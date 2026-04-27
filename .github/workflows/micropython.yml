@@ -33,7 +33,7 @@ jobs:
     - name: Compiler Cache Fixup
       run: |
         mkdir -p /home/runner/.ccache
-  
+
     - name: "CCache: Restore saved cache"
       uses: actions/cache@v5
       with:
@@ -80,7 +80,7 @@ jobs:
       with:
         name: ${{ env.CI_RELEASE_FILENAME }}.uf2
         path: ${{ env.CI_BUILD_ROOT }}/${{ env.CI_RELEASE_FILENAME }}.uf2
-        
+
     - name: "Artifacts: Upload .uf2 (With Filesystem)"
       uses: actions/upload-artifact@v7
       with:

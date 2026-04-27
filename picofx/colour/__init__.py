@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 from .blink import RGBBlinkFX
-from .colour import RGBFX, HSVFX
+from .colour import HSVFX, RGBFX
 from .rainbow import RainbowFX, RainbowWaveFX
 from .step import HueStepFX
 

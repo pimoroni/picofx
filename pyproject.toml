@@ -1,0 +1,84 @@
+[build-system]
+requires = ["hatchling", "hatch-fancy-pypi-readme"]
+build-backend = "hatchling.build"
+
+[project]
+name = "picofx"
+version = "1.1.1"
+dynamic = ["readme"]
+authors = [
+    { name = "Chris P", email = "chris@pimoroni.com" },
+]
+maintainers = [
+    { name = "Chris P", email = "chris@pimoroni.com" },
+]
+description = "PicoFX: A RGB and Mono LED effects system for MicroPython"
+classifiers = [
+    "License :: OSI Approved :: MIT License"
+]
+
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+content-type = "text/markdown"
+fragments = [
+  { path = "README.md" },
+  { text = "\n" },
+  { path = "CHANGELOG.md" }
+]
+
+[tool.hatch.build]
+include = [
+    "picofx/*.py",
+    "picofx/colour/*.py",
+    "picofx/mono/*.py",
+    "docs/*.md",
+    "/README.md",
+    "/CHANGELOG.md",
+    "/LICENSE.txt"
+]
+
+[tool.hatch.build.targets.wheel]
+sources = ["src"]
+
+[tool.ruff]
+exclude = [
+    '.tox',
+    '.egg',
+    '.git',
+    '__pycache__',
+    'build',
+    'dist'
+]
+line-length = 200
+
+[tool.codespell]
+skip = """
+./.tox,\
+./.egg,\
+./.git,\
+./__pycache__,\
+./build,\
+./dist.\
+"""
+
+[tool.isort]
+line_length = 200
+
+[tool.check-manifest]
+ignore = [
+    'check.sh',
+    'Makefile',
+    'tox.ini',
+    'tests/**',
+    'build/**',
+    'boards/**',
+    'examples/**',
+    'ci/**',
+    'tools/**',
+    'requirements-dev.txt',
+    'package.json',
+    'picofx/README.md'
+]
+
+[project.urls]
+GitHub = "https://www.github.com/pimoroni/picofx"
+Homepage = "https://www.pimoroni.com"

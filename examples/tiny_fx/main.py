@@ -1,7 +1,8 @@
 from tiny_fx import TinyFX
-from picofx import MonoPlayer, ColourPlayer
-from picofx.mono import PulseWaveFX
+
+from picofx import ColourPlayer, MonoPlayer
 from picofx.colour import RainbowFX
+from picofx.mono import PulseWaveFX
 
 """
 Play a wave animation on TinyFX's mono outputs, and a rainbow on its RGB output.

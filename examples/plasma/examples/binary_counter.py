@@ -1,8 +1,9 @@
 import plasma
+from pimoroni import Button
 from plasma import plasma2040
+
 from picofx import StripPlayer
 from picofx.mono import BinaryCounterFX
-from pimoroni import Button
 
 """
 Play a binary counter effect on Plasma 2040's strip output.

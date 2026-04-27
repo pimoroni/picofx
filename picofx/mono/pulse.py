@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 import math
+
 from picofx import Cycling
 
 

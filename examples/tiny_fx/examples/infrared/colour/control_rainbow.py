@@ -1,9 +1,9 @@
-from tiny_fx import TinyFX
-from picofx import ColourPlayer
-from picofx.colour import RainbowFX
-
 from aye_arr.nec import NECRemoteReceiver
 from aye_arr.nec.remotes import PimoroniRemote
+from tiny_fx import TinyFX
+
+from picofx import ColourPlayer
+from picofx.colour import RainbowFX
 
 """
 Play a rainbow effect on TinyFX's RGB output that is controllable

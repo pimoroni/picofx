@@ -1,7 +1,8 @@
 import time
-from tiny_fx import TinyFX
+
 from machine import Pin
 from pimoroni import Analog
+from tiny_fx import TinyFX
 
 """
 Use TinyFX's mono outputs as a bargraph to show the voltage

@@ -1,4 +1,5 @@
 import time
+
 import network
 import requests
 from tiny_fx import TinyFX
@@ -13,7 +14,7 @@ Press "Boot" to exit the program.
 """
 
 try:
-    from secrets import WIFI_SSID, WIFI_PASSWORD
+    from secrets import WIFI_PASSWORD, WIFI_SSID
     if len(WIFI_SSID) == 0:
         raise ValueError("no WiFi network set. Open the 'secrets.py' file on your device to add your WiFi credentials")
 except ImportError:

@@ -1,10 +1,9 @@
-from tiny_fx import TinyFX
-from picofx import MonoPlayer
-from picofx.mono import StaticFX
-
 from aye_arr.nec import NECRemoteReceiver
 from aye_arr.nec.remotes import PimoroniRemote
+from tiny_fx import TinyFX
 
+from picofx import MonoPlayer
+from picofx.mono import StaticFX
 
 """
 Turn each of Tiny FX's mono outputs on and off by pressing the number buttons
