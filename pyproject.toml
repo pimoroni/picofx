@@ -31,9 +31,9 @@ include = [
     "picofx/colour/*.py",
     "picofx/mono/*.py",
     "docs/*.md",
-    "README.md",
-    "CHANGELOG.md",
-    "LICENSE.txt"
+    "/README.md",
+    "/CHANGELOG.md",
+    "/LICENSE.txt"
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -75,7 +75,8 @@ ignore = [
     'ci/**',
     'tools/**',
     'requirements-dev.txt',
-    'package.json'
+    'package.json',
+    'picofx/README.md'
 ]
 
 [project.urls]
