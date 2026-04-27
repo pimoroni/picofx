@@ -20,7 +20,7 @@ OUTPUTS = (2, 3, 1, 6, 4, 0)                    # Which output to light with eac
 RGBS = (CYAN, BLUE, GREEN, RED, YELLOW, BLACK)  # Which R, G, B colours to show for each tone
 
 USE_SENSOR = False              # Whether to use an analog sensor to control the speed of the melody
-MAX_SPEED = 20                  # The maximum speed multipler that the melody will play at
+MAX_SPEED = 20                  # The maximum speed multiplier that the melody will play at
 SAMPLES = 5                     # The number of measurements to take of the analog sensor, to reduce noise
 
 # Variables
