@@ -1,10 +1,11 @@
-# SPDX-FileCopyrightText: 2024 Christopher Parrott for Pimoroni Ltd
+# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
 #
 # SPDX-License-Identifier: MIT
 
+import time
 from machine import PWM, Pin, Timer
 
-PICOFX_VERSION = "1.1.1"
+PICOFX_VERSION = "1.1.2"
 
 
 def rgb_from_hsv(h, s, v):
@@ -36,6 +37,7 @@ class PWMLED:
     def __init__(self, pin, invert=False, gamma=1):
         self.__gamma = gamma
         self.__led = PWM(Pin(pin), freq=1000, duty_u16=0, invert=invert)
+        self.__brightness = 0
 
     def brightness(self, brightness):
         self.__brightness = min(1.0, max(0.0, brightness))
@@ -142,6 +144,8 @@ class EffectPlayer:
         self.__timer = Timer()
         self.__paired = None
         self.__running = False
+        self.__last = time.ticks_ms()
+        self.__measured = 0
 
     def start(self, fps=DEFAULT_FPS, force=False):
         if not self.is_running() or force:
@@ -151,6 +155,7 @@ class EffectPlayer:
             if self.__paired is not None:
                 self.__paired.__period = self.__period
 
+            self.__last = time.ticks_ms()
             self.__timer.init(mode=Timer.PERIODIC, period=self.__period, callback=self.__update)
             self.__running = True
 
@@ -170,6 +175,18 @@ class EffectPlayer:
     def pair(self, player):
         self.__paired = player
 
+    def target_ms(self):
+        return self.__period
+
+    def measured_ms(self):
+        return self.__measured
+
+    def target_fps(self):
+        return 1000 / self.__period
+
+    def measured_fps(self):
+        return 1000 / self.__measured if self.__measured > 0 else float("inf")
+
     def __update(self, timer):
         try:
             for ufx in self.__updateables:
@@ -182,6 +199,10 @@ class EffectPlayer:
         except BaseException as e:
             self.stop()
             raise e
+
+        now = time.ticks_ms()
+        self.__measured = time.ticks_diff(now, self.__last)
+        self.__last = now
 
     @property
     def effects(self):
