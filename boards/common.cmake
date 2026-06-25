@@ -37,7 +37,7 @@ if (EXISTS "${PIMORONI_TOOLS_DIR}/dir2uf2/dir2uf2" AND EXISTS "${PIMORONI_UF2_MA
 
     # Add a target to prep the staging filesystem
     add_custom_target("${MICROPY_TARGET}-staging" ALL
-        COMMAND bash "${UF2_STAGING_SCRIPT}" "${UF2_STAGING_DIR}"
+        COMMAND CI_BUILD_ROOT=${CI_BUILD_ROOT} bash "${UF2_STAGING_SCRIPT}" "${UF2_STAGING_DIR}"
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "dir2uf2: Preparing staging filesystem."
         DEPENDS ${MICROPY_TARGET}

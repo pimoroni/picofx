@@ -9,6 +9,8 @@ PIMORONI_PICO_VERSION="main"
 PIMORONI_AYE_ARR_FLAVOUR="pimoroni"
 PIMORONI_AYE_ARR_VERSION="v1.0.0"
 
+PIMORONI_PICOVECTOR_VERSION="main"
+
 PY_DECL_VERSION="v0.0.5"
 DIR2UF2_VERSION="v0.1.0"
 
@@ -32,6 +34,12 @@ function ci_pimoroni_pico_clone {
     git checkout $PIMORONI_PICO_VERSION
     git submodule update --init
     cd "$CI_BUILD_ROOT"
+}
+
+function ci_pimoroni_picovector_clone {
+    log_inform "Using Pimoroni PicoVector pimoroni/$PIMORONI_PICOVECTOR_VERSION"
+    git clone https://github.com/pimoroni/picovector "$CI_BUILD_ROOT/picovector"
+    git -C "$CI_BUILD_ROOT/picovector" checkout $PIMORONI_PICOVECTOR_VERSION
 }
 
 function ci_pimoroni_aye_arr_clone {
@@ -80,6 +88,7 @@ function ci_prepare_all {
     ci_tools_clone
     ci_micropython_clone
     ci_pimoroni_pico_clone
+    ci_pimoroni_picovector_clone
     ci_pimoroni_aye_arr_clone
     ci_micropython_build_mpy_cross
 }
@@ -117,6 +126,8 @@ function ci_cmake_configure {
     -DPICO_NO_COPRO_DIS=1 \
     -DPICOTOOL_FETCH_FROM_GIT_PATH="$TOOLS_DIR/picotool" \
     -DPIMORONI_PICO_PATH="$CI_BUILD_ROOT/pimoroni-pico" \
+    -DPICOVECTOR_DIR="$CI_BUILD_ROOT/picovector" \
+    -DCI_BUILD_ROOT="$CI_BUILD_ROOT" \
     -DPIMORONI_TOOLS_DIR="$TOOLS_DIR" \
     -DUSER_C_MODULES="$MICROPY_BOARD_DIR/micropython.cmake" \
     -DMICROPY_BOARD_DIR="$MICROPY_BOARD_DIR" \

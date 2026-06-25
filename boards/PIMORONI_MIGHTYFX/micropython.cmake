@@ -12,20 +12,30 @@ list(APPEND CMAKE_MODULE_PATH "${PIMORONI_PICO_PATH}/micropython/modules")
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
-include(micropython-common)
-enable_ulab()
+# PicoVector and supporting libs
+find_package(PICOVECTOR CONFIG REQUIRED)
+
+# Build picovector with Tufty 2350 settings
+target_compile_definitions(usermod_picovector INTERFACE TUFTY=1)
+
+# Essential
+include(pimoroni_i2c/micropython)
+
+# QR Code Library
+include(qrcode/micropython/micropython)
+
+# Sensors & Breakouts
+include(micropython-common-breakouts)
+
+# Utility
+include(adcfft/micropython)
 
 # C++ Magic Memory
 include(cppmem/micropython)
 
 # Disable build-busting C++ exceptions
-# TODO: Defer to micropython-disable-exceptions.cmake when we bump pimoroni pico
-# Do not include stack unwinding & exception handling for C++ user modules
-target_compile_definitions(usermod INTERFACE PICO_CXX_ENABLE_EXCEPTIONS=0)
-target_compile_options(usermod INTERFACE $<$<COMPILE_LANGUAGE:CXX>:
-    -fno-exceptions
-    -fno-unwind-tables
-    -fno-rtti
-    -fno-use-cxa-atexit
->)
-target_link_options(usermod INTERFACE -specs=nano.specs)
+include(micropython-disable-exceptions)
+
+# Must call `enable_ulab()` to enable
+include(micropython-common-ulab)
+enable_ulab()
