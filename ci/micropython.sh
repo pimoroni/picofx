@@ -167,6 +167,9 @@ function ci_cmake_build {
     if [ -f "$BUILD_DIR/firmware-with-libs-and-examples.uf2" ]; then
         log_inform "Copying -with-libs-and-examples .uf2 to $(pwd)/$CI_RELEASE_FILENAME-with-libs-and-examples.uf2"
         cp "$BUILD_DIR/firmware-with-libs-and-examples.uf2" $CI_RELEASE_FILENAME-with-libs-and-examples.uf2
+    elif [ -f "$BUILD_DIR/firmware-romfs-with-libs-and-examples.uf2" ]; then
+        log_inform "Copying -romfs-with-libs-and-examples .uf2 to $(pwd)/$CI_RELEASE_FILENAME-with-libs-and-examples.uf2"
+        cp "$BUILD_DIR/firmware-romfs-with-libs-and-examples.uf2" $CI_RELEASE_FILENAME-with-libs-and-examples.uf2
     fi
 }
 

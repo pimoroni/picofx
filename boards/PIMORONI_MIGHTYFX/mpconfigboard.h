@@ -7,6 +7,7 @@
 // We need space for networking firmware on network builds
 // 1536 * 1024 = 1.5MB
 #define FIRMWARE_SIZE_BYTES                     (2 * 1024 * 1024)
+#define MICROPY_HW_ROMFS_BYTES                  (1 * 1024 * 1024)
 
 // CYW43 driver configuration.
 #define CYW43_USE_SPI                           (1)
@@ -14,7 +15,7 @@
 #define CYW43_GPIO                              (0)
 #define CYW43_SPI_PIO                           (1)
 
-#define MICROPY_HW_FLASH_STORAGE_BYTES          (PICO_FLASH_SIZE_BYTES - FIRMWARE_SIZE_BYTES)
+#define MICROPY_HW_FLASH_STORAGE_BYTES          (PICO_FLASH_SIZE_BYTES - FIRMWARE_SIZE_BYTES - MICROPY_HW_ROMFS_BYTES)
 
 // PSRAM Settings
 #define MICROPY_HW_ENABLE_PSRAM                 (1)
