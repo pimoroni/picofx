@@ -27,6 +27,15 @@ include(qrcode/micropython/micropython)
 # Sensors & Breakouts
 include(micropython-common-breakouts)
 
+# LEDs & Matrices
+include(plasma/micropython)
+
+# Servos & Motors
+include(pwm/micropython)
+include(servo/micropython)
+include(encoder/micropython)
+include(motor/micropython)
+
 # Utility
 include(adcfft/micropython)
 
