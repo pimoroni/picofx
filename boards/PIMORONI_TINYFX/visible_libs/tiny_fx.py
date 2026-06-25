@@ -31,14 +31,14 @@ class TinyFX:
     OUTPUT_GAMMA = 2.8
     RGB_GAMMA = 2.2
 
-    def __init__(self, init_i2c=True, init_wav=True, wav_root="/"):
+    def __init__(self, init_i2c=True, i2c_freq=100000, init_wav=True, wav_root="/"):
         # Set up the mono and RGB LED outputs
         self.outputs = [PWMLED(out, gamma=self.OUTPUT_GAMMA) for out in self.OUT_PINS]
         self.rgb = RGBLED(*self.RGB_PINS, invert=False, gamma=self.RGB_GAMMA)
 
         # Set up the i2c for Qw/st, if the user wants
         if init_i2c:
-            self.i2c = PimoroniI2C(self.I2C_SDA_PIN, self.I2C_SCL_PIN, 100000)
+            self.i2c = PimoroniI2C(self.I2C_SDA_PIN, self.I2C_SCL_PIN, i2c_freq)
 
         # Set up the user switch
         self.__switch = Pin(self.USER_SW_PIN, Pin.IN, Pin.PULL_UP)
@@ -47,6 +47,7 @@ class TinyFX:
         self.__v_sense = ADC(Pin(self.V_SENSE_PIN))
 
         # Set up the wav (and tone) player, if the user wants
+        self.wav = None
         if init_wav:
             self.wav = WavPlayer(0, self.I2S_BCLK_PIN, self.I2S_LRCLK_PIN, self.I2S_DATA_PIN, self.AMP_EN_PIN, root=wav_root)
 
@@ -93,4 +94,5 @@ class TinyFX:
 
     def shutdown(self):
         self.clear()
-        self.wav.deinit()
+        if self.wav:
+            self.wav.deinit()

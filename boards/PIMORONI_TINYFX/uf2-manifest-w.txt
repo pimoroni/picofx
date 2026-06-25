@@ -1,4 +1,5 @@
 main.py
+i2c_target.py
 secrets.py
 examples/*.py
 examples/effects/*.py
@@ -11,8 +12,10 @@ examples/audio/fair_use_encounters.py
 examples/infrared/*.py
 examples/infrared/mono/*.py
 examples/infrared/colour/*.py
+examples/comms/*.py
 examples/wireless/*.py
 lib/*.py
+lib/comms/*.py
 lib/picofx/*.py
 lib/picofx/colour/*.py
 lib/picofx/mono/*.py
