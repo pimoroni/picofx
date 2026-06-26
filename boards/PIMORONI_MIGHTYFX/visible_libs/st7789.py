@@ -48,6 +48,51 @@ def rgba8888_to_rgb565(dst: ptr8, src: ptr8, size: int):
         dst[i * 2 + 1] = rgb565 & 0xff
 
 
+@micropython.viper
+def rgba8888_to_rgb565_mirror_y(dst: ptr8, src: ptr8, width: int, height: int):
+    for x in range(width):
+        for y in range(height):
+            si = ((y * width) + x) * 4
+            r = src[si + 0] >> 3
+            g = src[si + 1] >> 2
+            b = src[si + 2] >> 3
+            rgb565 = (r << 11) | (g << 5) | b
+
+            di = (((height - y - 1) * width) + x) * 2
+            dst[di + 0] = (rgb565 >> 8) & 0xff
+            dst[di + 1] = rgb565 & 0xff
+
+
+@micropython.viper
+def rgba8888_to_rgb565_mirror_x(dst: ptr8, src: ptr8, width: int, height: int):
+    for x in range(width):
+        for y in range(height):
+            si = ((y * width) + x) * 4
+            r = src[si + 0] >> 3
+            g = src[si + 1] >> 2
+            b = src[si + 2] >> 3
+            rgb565 = (r << 11) | (g << 5) | b
+
+            di = ((y * width) + (width - x - 1)) * 2
+            dst[di + 0] = (rgb565 >> 8) & 0xff
+            dst[di + 1] = rgb565 & 0xff
+
+
+@micropython.viper
+def rgba8888_to_rgb565_rotate_180(dst: ptr8, src: ptr8, width: int, height: int):
+    for x in range(width):
+        for y in range(height):
+            si = ((y * width) + x) * 4
+            r = src[si + 0] >> 3
+            g = src[si + 1] >> 2
+            b = src[si + 2] >> 3
+            rgb565 = (r << 11) | (g << 5) | b
+
+            di = (((height - y - 1) * width) + (width - x - 1)) * 2
+            dst[di + 0] = (rgb565 >> 8) & 0xff
+            dst[di + 1] = rgb565 & 0xff
+
+
 class ST7789:
     def __init__(self, spi, cs, dc, bl, width=240, height=240):
         self.spi = spi
@@ -135,8 +180,17 @@ class ST7789:
         self.CS.high()
 
     @micropython.native
-    def update(self, image):
-        rgba8888_to_rgb565(memoryview(self.BUFFER), memoryview(image), self._width * self._height)
+    def update(self, image, mirror_x=False, mirror_y=False):
+        if mirror_x:
+            if mirror_y:
+                rgba8888_to_rgb565_rotate_180(memoryview(self.BUFFER), memoryview(image), self._width, self._height)
+            else:
+                rgba8888_to_rgb565_mirror_x(memoryview(self.BUFFER), memoryview(image), self._width, self._height)
+        else:
+            if mirror_y:
+                rgba8888_to_rgb565_mirror_y(memoryview(self.BUFFER), memoryview(image), self._width, self._height)
+            else:
+                rgba8888_to_rgb565(memoryview(self.BUFFER), memoryview(image), self._width * self._height)
 
         self.DC.low()
         self.CS.low()
