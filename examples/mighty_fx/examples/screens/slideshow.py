@@ -1,0 +1,62 @@
+import os
+import time
+from mighty_fx import MightyFX, SPCE
+from picovector import image, color, rect
+
+"""
+Plays a slideshow of .PNG images from a folder
+"""
+
+# Constants
+IMAGE_FOLDER = "/images"     # The folder on your Mighty FX that the images are stored in
+SLIDESHOW_DURATION = 3      # How long each image is displayed for, in seconds
+
+# Create a MightyFX object with a screen set on SP/CE port A
+mighty = MightyFX(spce_a=SPCE.SCREEN_280)
+screen = mighty.screen_a
+
+# Access the screen and create a canvas to draw to
+canvas = image(screen.width, screen.height)
+
+
+# Attempt to load all images in the given folder
+images = []
+for i, file in enumerate(os.listdir(IMAGE_FOLDER)):
+    file = file.rsplit("/", 1)[-1]
+    try:
+        name, ext = file.rsplit(".", 1)
+        if ext == "png":
+            images.append(image.load(f"{IMAGE_FOLDER}/{name}.png"))
+    except Exception:
+        pass
+
+if len(images) == 0:
+    raise RuntimeError(f"No images found! Copy your PNGs to your '{IMAGE_FOLDER}' folder (create it if missing)")
+
+
+index = -1  # Start with -1 so that the first image gets shown
+
+# Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
+try:
+    while not mighty.boot_pressed():
+
+        # Move along to the next image index, and wrap it into the range of available images
+        index = (index + 1) % len(images)
+        img = images[index]
+
+        # Clear the canvas to black
+        canvas.pen = color.black
+        canvas.clear()
+
+        # Draw the selected image
+        canvas.blit(img, rect(0, 0, img.width, img.height), rect(0, 0, screen.width, screen.height))
+
+        # Update the screen with the latest canvas
+        screen.update(canvas)
+
+        # Have the image shown for a short time
+        time.sleep(SLIDESHOW_DURATION)
+
+# Stop any running effects and turn off all the outputs
+finally:
+    mighty.shutdown()
