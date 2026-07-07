@@ -8,12 +8,20 @@ from motor import Motor
 from picofx import RGBLED
 from audio import WavPlayer
 from st7789 import ST7789
+from collections import namedtuple
 
 
 class SPCE:
     SCREEN_154 = 0
     SCREEN_280 = 1
     MOTOR_DRIVER = 2
+
+
+ScreenDef = namedtuple("ScreenDef", ("baud", "bits", "fps", "width", "height"))
+screen_defs = {
+    SPCE.SCREEN_154: ScreenDef(40_000_000, 12, 40, 240, 240),
+    SPCE.SCREEN_280: ScreenDef(40_000_000, 12, 40, 240, 320),
+}
 
 
 class MightyFX:
@@ -68,16 +76,12 @@ class MightyFX:
         self.screen_a = None
         self.motors_a = None
         if spce_a in [SPCE.SCREEN_154, SPCE.SCREEN_280]:
-            spi_a = SPI(id=0, baudrate=40_000_000, sck=Pin.board.SPCE_A_SCK, mosi=Pin.board.SPCE_A_MOSI)
+            sdef = screen_defs[spce_a]
+            spi_a = SPI(id=0, baudrate=sdef.baud, sck=Pin.board.SPCE_A_SCK, mosi=Pin.board.SPCE_A_MOSI)
 
             self.bl_a = Pin.board.SPCE_A_BL
 
-            if spce_a == SPCE.SCREEN_280:
-                width, height = 240, 320
-            else:
-                width, height = 240, 240
-
-            self.screen_a = ST7789(spi_a, Pin.board.SPCE_A_CS, Pin.board.SPCE_A_DC, self.bl_a, width, height)
+            self.screen_a = ST7789(spi_a, Pin.board.SPCE_A_CS, Pin.board.SPCE_A_DC, self.bl_a, sdef.width, sdef.height, sdef.bits, sdef.fps)
             # Need to add some handling for LED conflicts
 
         elif spce_a == SPCE.MOTOR_DRIVER:
@@ -93,16 +97,12 @@ class MightyFX:
         self.screen_b = None
         self.motors_b = None
         if spce_b in [SPCE.SCREEN_154, SPCE.SCREEN_280]:
+            sdef = screen_defs[spce_b]
             spi_b = SPI(id=1, baudrate=40_000_000, sck=Pin.board.SPCE_B_SCK, mosi=Pin.board.SPCE_B_MOSI)
 
             self.bl_b = Pin.board.SPCE_B_BL
 
-            if spce_b == SPCE.SCREEN_280:
-                width, height = 240, 320
-            else:
-                width, height = 240, 240
-
-            self.screen_b = ST7789(spi_b, Pin.board.SPCE_B_CS, Pin.board.SPCE_B_DC, self.bl_b, width, height)
+            self.screen_b = ST7789(spi_b, Pin.board.SPCE_B_CS, Pin.board.SPCE_B_DC, self.bl_b, sdef.width, sdef.height, sdef.bits, sdef.fps)
             # Need to add some handling for LED conflicts
 
         elif spce_b == SPCE.MOTOR_DRIVER:
