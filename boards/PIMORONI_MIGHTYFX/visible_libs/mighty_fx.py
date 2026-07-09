@@ -19,8 +19,8 @@ class SPCE:
 
 ScreenDef = namedtuple("ScreenDef", ("baud", "bits", "fps", "width", "height"))
 screen_defs = {
-    SPCE.SCREEN_154: ScreenDef(40_000_000, 12, 40, 240, 240),
-    SPCE.SCREEN_280: ScreenDef(40_000_000, 12, 40, 240, 320),
+    SPCE.SCREEN_154: ScreenDef(25_000_000, 12, 48, 240, 240),
+    SPCE.SCREEN_280: ScreenDef(25_000_000, 12, 42, 240, 320),
 }
 
 

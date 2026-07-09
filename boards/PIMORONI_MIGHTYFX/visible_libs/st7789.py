@@ -1,6 +1,8 @@
 import time
 import struct
 import machine
+from collections import OrderedDict
+import picovector
 
 MADCTL_ROW_ORDER   = const(0b10000000)
 MADCTL_COL_ORDER   = const(0b01000000)
@@ -37,43 +39,54 @@ REG_CASET     = const(0x2A)
 REG_RASET     = const(0x2B)
 REG_PWMFRSEL  = const(0xCC)
 
-#FR_119HZ      = const(0x00)
-#FR_111HZ      = const(0x01)
-#FR_105HZ      = const(0x02)
-#FR_99HZ       = const(0x03)
-#FR_94HZ       = const(0x04)
-FR_90HZ       = const(0x05)
-#FR_86HZ       = const(0x06)
-#FR_82HZ       = const(0x07)
-#FR_78HZ       = const(0x08)
-FR_75HZ       = const(0x09)
-#FR_72HZ       = const(0x0A)
-#FR_69HZ       = const(0x0B)
-#FR_67HZ       = const(0x0C)
-#FR_64HZ       = const(0x0D)
-#FR_62HZ       = const(0x0E)
-FR_60HZ       = const(0x0F)
-#FR_58HZ       = const(0x10)
-#FR_57HZ       = const(0x11)
-#FR_55HZ       = const(0x12)
-#FR_53HZ       = const(0x13)
-#FR_52HZ       = const(0x14)
-FR_50HZ       = const(0x15)
-#FR_49HZ       = const(0x16)
-#FR_48HZ       = const(0x17)
-#FR_46HZ       = const(0x18)
-#FR_45HZ       = const(0x19)
-#FR_44HZ       = const(0x1A)
-#FR_43HZ       = const(0x1B)
-#FR_42HZ       = const(0x1C)
-#FR_41HZ       = const(0x1D)
-FR_40HZ       = const(0x1E)
-#FR_39HZ       = const(0x1F)
+# Codes for setting screen frame rate
+FRAME_RATE_CONTROL = OrderedDict({
+    119: 0x00,
+    111: 0x01,
+    105: 0x02,
+    99: 0x03,
+    94: 0x04,
+    90: 0x05,
+    86: 0x06,
+    82: 0x07,
+    78: 0x08,
+    75: 0x09,
+    72: 0x0A,
+    69: 0x0B,
+    67: 0x0C,
+    64: 0x0D,
+    62: 0x0E,
+    60: 0x0F,
+    58: 0x10,
+    57: 0x11,
+    55: 0x12,
+    53: 0x13,
+    52: 0x14,
+    50: 0x15,
+    49: 0x16,
+    48: 0x17,
+    46: 0x18,
+    45: 0x19,
+    44: 0x1A,
+    43: 0x1B,
+    42: 0x1C,
+    41: 0x1D,
+    40: 0x1E,
+    39: 0x1F
+})
+
+# Codes for setting screen bit depth
+PIXEL_FORMAT = OrderedDict({
+    12: 0x03,   # 12 bits per pixel RGB444
+    16: 0x05    # 16 bits per pixel RGB565
+    # 18: 0x06    # 18 bits per pixel RGB666 (not implemented)
+})
+
 
 @micropython.viper
 def rgba8888_to_rgb565(dst: ptr8, src: ptr8, size: int):
     """
-    # Original implmentation: 74ms
+    # Original implmentation: 74ms (measured with 320x240)
     for i in range(size):
         r = src[i * 4 + 0] >> 3
         g = src[i * 4 + 1] >> 2
@@ -83,7 +96,7 @@ def rgba8888_to_rgb565(dst: ptr8, src: ptr8, size: int):
         dst[i * 2 + 1] = rgb565 & 0xff
     """
 
-    # Fastest implementation so far: 59.2ms
+    # Fastest implementation so far: 59.2ms (measured with 320x240)
     di = 0
     for si in range(0, size << 2, 4):
         g = src[si + 1]
@@ -94,7 +107,7 @@ def rgba8888_to_rgb565(dst: ptr8, src: ptr8, size: int):
 @micropython.viper
 def rgba8888_to_rgb565_mirror_y(dst: ptr8, src: ptr8, width: int, height: int):
     """
-    # Original implmentation: 93.8ms
+    # Original implmentation: 93.8ms (measured with 320x240)
     for x in range(width):
         for y in range(height):
             si = ((y * width) + x) * 4
@@ -108,7 +121,7 @@ def rgba8888_to_rgb565_mirror_y(dst: ptr8, src: ptr8, width: int, height: int):
             dst[di + 1] = rgb565 & 0xff
     """
 
-    # Fastest implementation so far: 62.4ms
+    # Fastest implementation so far: 62.4ms (measured with 320x240)
     for y in range(height):
         si = (y * width) << 2
         di = ((height - y - 1) * width) << 1
@@ -124,7 +137,7 @@ def rgba8888_to_rgb565_mirror_y(dst: ptr8, src: ptr8, width: int, height: int):
 @micropython.viper
 def rgba8888_to_rgb565_mirror_x(dst: ptr8, src: ptr8, width: int, height: int):
     """
-    # Original implmentation: 94.4ms
+    # Original implmentation: 94.4ms (measured with 320x240)
     for x in range(width):
         for y in range(height):
             si = ((y * width) + x) * 4
@@ -138,7 +151,7 @@ def rgba8888_to_rgb565_mirror_x(dst: ptr8, src: ptr8, width: int, height: int):
             dst[di + 1] = rgb565 & 0xff
     """
 
-    # Fastest implementation so far: 62.4ms
+    # Fastest implementation so far: 62.4ms (measured with 320x240)
     for y in range(height):
         si = ((y * width) + (width - 1)) << 2
         di = (y * width) << 1
@@ -154,7 +167,7 @@ def rgba8888_to_rgb565_mirror_x(dst: ptr8, src: ptr8, width: int, height: int):
 @micropython.viper
 def rgba8888_to_rgb565_rotate_180(dst: ptr8, src: ptr8, width: int, height: int):
     """
-    # Original implmentation: 97.9ms
+    # Original implmentation: 97.9ms (measured with 320x240)
     for x in range(width):
         for y in range(height):
             si = ((y * width) + x) * 4
@@ -168,7 +181,7 @@ def rgba8888_to_rgb565_rotate_180(dst: ptr8, src: ptr8, width: int, height: int)
             dst[di + 1] = rgb565 & 0xff
     """
 
-    # Fastest implementation so far: 62.4ms
+    # Fastest implementation so far: 62.4ms (measured with 320x240)
     for y in range(height):
         si = ((y * width) + (width - 1)) << 2
         di = ((height - y - 1) * width) << 1
@@ -181,95 +194,346 @@ def rgba8888_to_rgb565_rotate_180(dst: ptr8, src: ptr8, width: int, height: int)
             si -= 4
             di += 2
 
+
+"""
 @micropython.viper
-def rgba8888_to_rgb444(dst: ptr8, src: ptr8, size: int):
-    """
-    # Original implmentation: 75ms
-    for i in range(0, size, 2):
-        i2 = i + 1
+def rgb444_padding(dst: ptr8, length: int, di: int, d0: int, d1: int, d2: int) -> int:
+    # Usage:  di = int(rgb444_padding(dst, y_padding_w_width, 0, 0xf0, 0xff, 0xff))
+    # Note:   Not using it because function calls add overhead
+    for _ in range(0, length, 2):
+        # Convert the two pixels into RGB444 packed into 3 bytes
+        dst[di] = d0
+        dst[di + 1] = d1
+        dst[di + 2] = d2
 
-        r1 = src[i * 4 + 0] >> 4
-        g1 = src[i * 4 + 1] >> 4
-        b1 = src[i * 4 + 2] >> 4
-        r2 = src[i2 * 4 + 0] >> 4
-        g2 = src[i2 * 4 + 1] >> 4
-        b2 = src[i2 * 4 + 2] >> 4
+        di += 3     # Move along to the next pixel pair
+    return di
+"""
 
-        rgb444_a = (r1 << 8) | (g1 << 4) | b1
-        rgb444_b = (r2 << 8) | (g2 << 4) | b2
-        i_2 = (i * 3) // 2
-        dst[i_2 + 0] = (rgb444_a >> 4) & 0xff
-        dst[i_2 + 1] = ((rgb444_a & 0xff) << 4) | (rgb444_b >> 8) & 0xff
-        dst[i_2 + 2] = rgb444_b & 0xff
-    """
-
-    # Fastest implementation so far: 45.9ms
-    di = 0
-    for si in range(0, size << 2, 8):
-        dst[di] = (src[si] & 0xf0) | (src[si + 1] >> 4)             # R1 | G1
-        dst[di + 1] = (src[si + 2] & 0xf0) | (src[si + 4] >> 4)     # B1 | R2
-        dst[di + 2] = (src[si + 5] & 0xf0) | (src[si + 6] >> 4)     # G2 | B2
-        di += 3
 
 @micropython.viper
-def rgba8888_to_rgb444_mirror_y(dst: ptr8, src: ptr8, width: int, height: int):
-    # Fastest implementation so far: 47.6ms
-    for y in range(height):
-        si = (y * width) << 2
-        di = ((height - y - 1) * width) // 2 * 3
+def rgba8888_to_rgb444_normal(dst: ptr8, src: ptr8, dst_width: int, dst_height: int, src_width: int, src_height: int, bg: int, flip_y: int):
+    # Fastest implementation so far: 49.6ms (measured with 320x240)
 
-        for _ in range(0, width, 2):
-            dst[di] = (src[si] & 0xf0) | (src[si + 1] >> 4)             # R1 | G1
-            dst[di + 1] = (src[si + 2] & 0xf0) | (src[si + 4] >> 4)     # B1 | R2
-            dst[di + 2] = (src[si + 5] & 0xf0) | (src[si + 6] >> 4)     # G2 | B2
+    di = 0          # Index of the pixel pair being worked on
 
-            si += 8
-            di += 3
+    # The padding to apply around the image to centre it
+    y_padding = (dst_height - src_height) >> 1
+    x_padding = (dst_width - src_width) >> 1
+
+    start_y = -y_padding if y_padding < 0 else 0
+    end_y = src_height - start_y
+
+    src_width <<= 2     # Scale the width up by the number of bytes per src pixel, to save some computation
+
+    start_x = -(x_padding << 2) if x_padding < 0 else 0
+    end_x = src_width - start_x
+
+    # Calculate the rgb444 background colour
+    bg0 = (bg & 0xf0) | ((bg >> 12) & 0x0f)         # R1 | G1
+    bg1 = ((bg >> 16) & 0xf0) | ((bg >> 4) & 0x0f)  # B1 | R2
+    bg2 = ((bg >> 8) & 0xf0) | ((bg >> 20) & 0x0f)  # G2 | B2
+
+    # Pre-padding rows
+    y_padding_w_width = y_padding * dst_width
+    for _ in range(0, y_padding_w_width, 2):
+        dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+    if flip_y == 0:
+        for y in range(start_y, end_y):
+            y_width = y * src_width
+
+            # Pre-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+            for x in range(start_x, end_x, 8):
+                # Calc the two pixel coordinates to sample
+                p0 = y_width + x
+                p1 = p0 + 4         # Next pixel
+
+                # Convert the two pixels into RGB444 packed into 3 bytes
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | (src[p1] >> 4)         # B1 | R2
+                dst[di + 2] = (src[p1 + 1] & 0xf0) | (src[p1 + 2] >> 4)     # G2 | B2
+
+                di += 3     # Move along to the next pixel pair
+
+            # Post-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+    else:
+        for y in range(end_y - 1, start_y - 1, -1):
+            y_width = y * src_width
+
+            # Pre-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+            for x in range(start_x, end_x, 8):
+                # Calc the two pixel coordinates to sample
+                p0 = y_width + x
+                p1 = p0 + 4         # Next pixel
+
+                # Convert the two pixels into RGB444 packed into 3 bytes
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | (src[p1] >> 4)         # B1 | R2
+                dst[di + 2] = (src[p1 + 1] & 0xf0) | (src[p1 + 2] >> 4)     # G2 | B2
+
+                di += 3     # Move along to the next pixel pair
+
+            # Post-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+    # Post-padding rows
+    for _ in range(0, y_padding_w_width, 2):
+        dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
 
 @micropython.viper
-def rgba8888_to_rgb444_mirror_x(dst: ptr8, src: ptr8, width: int, height: int):
-    # Fastest implementation so far: 55.5ms
-    for y in range(height):
-        y_width = y * width
-        di = (y_width) // 2 * 3
+def rgba8888_to_rgb444_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_height: int, src_width: int, src_height: int, bg: int, flip_y: int):
+    # Fastest implementation so far: 49.6ms (measured with 320x240)
 
-        for x in range(0, width, 2):
-            x0 = width - 1 - x
-            x1 = x0 - 1
+    di = 0          # Index of the pixel pair being worked on
 
-            b0 = ((y_width + x0) << 2)
-            b1 = ((y_width + x1) << 2)
+    # The padding to apply around the image to centre it
+    y_padding = (dst_height - src_height) >> 1
+    x_padding = (dst_width - src_width) >> 1
 
-            dst[di] = (src[b0] & 0xf0) | (src[b0 + 1] >> 4)             # R1 | G1
-            dst[di + 1] = (src[b0 + 2] & 0xf0) | (src[b1] >> 4)         # B1 | R2
-            dst[di + 2] = (src[b1 + 1] & 0xf0) | (src[b1 + 2] >> 4)     # G2 | B2
+    start_y = -y_padding if y_padding < 0 else 0
+    end_y = src_height - start_y
 
-            di += 3
+    src_width <<= 2     # Scale the width up by the number of bytes per src pixel, to save some computation
+
+    start_x = -(x_padding << 2) if x_padding < 0 else 0
+    end_x = src_width - start_x
+
+    # Calculate the rgb444 background colour
+    bg0 = (bg & 0xf0) | ((bg >> 12) & 0x0f)         # R1 | G1
+    bg1 = ((bg >> 16) & 0xf0) | ((bg >> 4) & 0x0f)  # B1 | R2
+    bg2 = ((bg >> 8) & 0xf0) | ((bg >> 20) & 0x0f)  # G2 | B2
+
+    # Pre-padding rows
+    y_padding_w_width = y_padding * dst_width
+    for _ in range(0, y_padding_w_width, 2):
+        dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+    if flip_y == 0:
+        for y in range(start_y, end_y):
+            y_width = y * src_width
+
+            # Pre-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+            for x in range(end_x - 4, start_x - 4, -8):
+                # Calc the two pixel coordinates to sample
+                p0 = y_width + x
+                p1 = p0 - 4     # Prev pixel
+
+                # Convert the two pixels into RGB444 packed into 3 bytes
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | (src[p1] >> 4)         # B1 | R2
+                dst[di + 2] = (src[p1 + 1] & 0xf0) | (src[p1 + 2] >> 4)     # G2 | B2
+
+                di += 3     # Move along to the next pixel pair
+
+            # Post-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+    else:
+        for y in range(end_y - 1, start_y - 1, -1):
+            y_width = y * src_width
+
+            # Pre-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+            for x in range(end_x - 4, start_x - 4, -8):
+                # Calc the two pixel coordinates to sample
+                p0 = y_width + x
+                p1 = p0 - 4     # Prev pixel
+
+                # Convert the two pixels into RGB444 packed into 3 bytes
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | (src[p1] >> 4)         # B1 | R2
+                dst[di + 2] = (src[p1 + 1] & 0xf0) | (src[p1 + 2] >> 4)     # G2 | B2
+
+                di += 3     # Move along to the next pixel pair
+
+            # Post-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+    # Post-padding rows
+    for _ in range(0, y_padding_w_width, 2):
+        dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
 
 @micropython.viper
-def rgba8888_to_rgb444_rotate_180(dst: ptr8, src: ptr8, width: int, height: int):
-    # Fastest implementation so far: 55.6ms
-    for y in range(height):
-        src_y = height - 1 - y
-        di = (y * width) // 2 * 3
-        src_y_width = src_y * width
+def rgba8888_to_rgb444_rotate(dst: ptr8, src: ptr8, dst_width: int, dst_height: int, src_width: int, src_height: int, bg: int, flip_y: int):
+    # Fastest implementation so far: 60.0ms (measured with 320x240)
 
-        for x in range(0, width, 2):
-            x0 = width - 1 - x
-            x1 = x0 - 1
+    di = 0          # Index of the pixel pair being worked on
 
-            b0 = ((src_y_width + x0) << 2)
-            b1 = ((src_y_width + x1) << 2)
+    # The padding to apply around the image to centre it
+    y_padding = (dst_height - src_width) >> 1
+    x_padding = (dst_width - src_height) >> 1
 
-            dst[di] =     (src[b0] & 0xf0)     | (src[b0 + 1] >> 4)
-            dst[di + 1] = (src[b0 + 2] & 0xf0) | (src[b1] >> 4)
-            dst[di + 2] = (src[b1 + 1] & 0xf0) | (src[b1 + 2] >> 4)
+    src_width <<= 2     # Scale the width up by the number of bytes per src pixel, to save some computation
 
-            di += 3
+    # We're rotated 90 degrees, so height is width and width is height!
+    start_y = -(y_padding << 2) if y_padding < 0 else 0
+    end_y = src_width - start_y
+
+    start_x = -x_padding if x_padding < 0 else 0
+    end_x = src_height - start_x
+
+    # Calculate the rgb444 background colour
+    bg0 = (bg & 0xf0) | ((bg >> 12) & 0x0f)         # R1 | G1
+    bg1 = ((bg >> 16) & 0xf0) | ((bg >> 4) & 0x0f)  # B1 | R2
+    bg2 = ((bg >> 8) & 0xf0) | ((bg >> 20) & 0x0f)  # G2 | B2
+
+    # Pre-padding rows
+    y_padding_w_width = y_padding * dst_width
+    for _ in range(0, y_padding_w_width, 2):
+        dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+    if flip_y == 0:
+        for y in range(start_y, end_y, 4):
+            # Pre-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+            for x in range(end_x - 1, start_x - 1, -2):
+                # Calc the two pixel coordinates to sample
+                p0 = (x * src_width) + y
+                p1 = p0 - src_width     # Prev pixel
+
+                # Convert the two pixels into RGB444 packed into 3 bytes
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | (src[p1] >> 4)         # B1 | R2
+                dst[di + 2] = (src[p1 + 1] & 0xf0) | (src[p1 + 2] >> 4)     # G2 | B2
+
+                di += 3     # Move along to the next pixel pair
+
+            # Post-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+    else:
+        for y in range(end_y - 4, start_y - 4, -4):
+            # Pre-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+            for x in range(end_x - 1, start_x - 1, -2):
+                # Calc the two pixel coordinates to sample
+                p0 = (x * src_width) + y
+                p1 = p0 - src_width     # Prev pixel
+
+                # Convert the two pixels into RGB444 packed into 3 bytes
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | (src[p1] >> 4)         # B1 | R2
+                dst[di + 2] = (src[p1 + 1] & 0xf0) | (src[p1 + 2] >> 4)     # G2 | B2
+
+                di += 3     # Move along to the next pixel pair
+
+            # Post-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+    # Post-padding rows
+    for _ in range(0, y_padding_w_width, 2):
+        dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+
+@micropython.viper
+def rgba8888_to_rgb444_rotate_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_height: int, src_width: int, src_height: int, bg: int, flip_y: int):
+    # Fastest implementation so far: 60.0ms (measured with 320x240)
+
+    di = 0          # Index of the pixel pair being worked on
+
+    # The padding to apply around the image to centre it
+    y_padding = (dst_height - src_width) >> 1
+    x_padding = (dst_width - src_height) >> 1
+
+    src_width <<= 2     # Scale the width up by the number of bytes per src pixel, to save some computation
+
+    # We're rotated 90 degrees, so height is width and width is height!
+    start_y = -(y_padding << 2) if y_padding < 0 else 0
+    end_y = src_width - start_y
+
+    start_x = -x_padding if x_padding < 0 else 0
+    end_x = src_height - start_x
+
+    # Calculate the rgb444 background colour
+    bg0 = (bg & 0xf0) | ((bg >> 12) & 0x0f)         # R1 | G1
+    bg1 = ((bg >> 16) & 0xf0) | ((bg >> 4) & 0x0f)  # B1 | R2
+    bg2 = ((bg >> 8) & 0xf0) | ((bg >> 20) & 0x0f)  # G2 | B2
+
+    # Pre-padding rows
+    y_padding_w_width = y_padding * dst_width
+    for _ in range(0, y_padding_w_width, 2):
+        dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+    if flip_y == 0:
+        for y in range(start_y, end_y, 4):
+            # Pre-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+            for x in range(start_x, end_x, 2):
+                # Calc the two pixel coordinates to sample
+                p0 = (x * src_width) + y
+                p1 = p0 + src_width     # Next pixel
+
+                # Convert the two pixels into RGB444 packed into 3 bytes
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | (src[p1] >> 4)         # B1 | R2
+                dst[di + 2] = (src[p1 + 1] & 0xf0) | (src[p1 + 2] >> 4)     # G2 | B2
+
+                di += 3     # Move along to the next pixel pair
+
+            # Post-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+    else:
+        for y in range(end_y - 4, start_y - 4, -4):
+            # Pre-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+            for x in range(start_x, end_x, 2):
+                # Calc the two pixel coordinates to sample
+                p0 = (x * src_width) + y
+                p1 = p0 + src_width     # Next pixel
+
+                # Convert the two pixels into RGB444 packed into 3 bytes
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | (src[p1] >> 4)         # B1 | R2
+                dst[di + 2] = (src[p1 + 1] & 0xf0) | (src[p1 + 2] >> 4)     # G2 | B2
+
+                di += 3     # Move along to the next pixel pair
+
+            # Post-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+    # Post-padding rows
+    for _ in range(0, y_padding_w_width, 2):
+        dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+
+PIXEL_FUNCTIONS = {
+    12: (rgba8888_to_rgb444_normal, rgba8888_to_rgb444_mirror, rgba8888_to_rgb444_rotate, rgba8888_to_rgb444_rotate_mirror),
+    16: (rgba8888_to_rgb565, rgba8888_to_rgb565_mirror_x, rgba8888_to_rgb565_mirror_y, rgba8888_to_rgb565_rotate_180, None)
+}
 
 
 class ST7789:
-    def __init__(self, spi, cs, dc, bl, width=240, height=240, bitdepth=16, framerate=40):
+    def __init__(self, spi, cs, dc, bl, width=240, height=240, bitdepth=16, framerate=60):
         self.spi = spi
         self.CS = cs
         self.CS.init(machine.Pin.OUT)
@@ -283,33 +547,24 @@ class ST7789:
         self._width = width
         self._height = height
 
-        if bitdepth == 12:
-            bd_code = 0x03
-            self.BUFFER = bytes(self._width * self._height * 3 // 2)    # * 2 for 16 bit
-            self.__rgb_copy = rgba8888_to_rgb444
-            self.__rgb_mirror_x = rgba8888_to_rgb444_mirror_x
-            self.__rgb_mirror_y = rgba8888_to_rgb444_mirror_y
-            self.__rgb_rotate_180 = rgba8888_to_rgb444_rotate_180
-        else:
-            bd_code = 0x05
-            self.BUFFER = bytes(self._width * self._height * 2)     # 16 bit
-            self.__rgb_copy = rgba8888_to_rgb565
-            self.__rgb_mirror_x = rgba8888_to_rgb565_mirror_x
-            self.__rgb_mirror_y = rgba8888_to_rgb565_mirror_y
-            self.__rgb_rotate_180 = rgba8888_to_rgb565_rotate_180
-
-        rates = {
-            90: FR_90HZ,
-            75: FR_75HZ,
-            60: FR_60HZ,
-            50: FR_50HZ,
-            40: FR_40HZ
-        }
-
+        # Check the selected bit depth is valid, get the code and conversion functions, and create the buffer
         try:
-            fr_code = rates[framerate]
+            bd_code = PIXEL_FORMAT[bitdepth]
+            self.__normal, self.__mirror, self.__rotate, self.__rotate_mirror = PIXEL_FUNCTIONS[bitdepth]
+            self.BUFFER = bytes((self._width * self._height * bitdepth) // 8)
+
         except KeyError as e:
-            raise ValueError("{framerate} is not a valid framerate. Expected, 40, 50, 60, 75, or 90") from e
+            items = [str(bd) for bd in PIXEL_FORMAT]
+            expected = items[0] if len(items) == 1 else ", ".join(items[:-1]) + f", or {items[-1]}"
+            raise ValueError(f"{bitdepth} is not a valid bit depth. Expected {expected}.") from e
+
+        # Check the selected frame rate is valid, and get the code
+        try:
+            fr_code = FRAME_RATE_CONTROL[framerate]
+        except KeyError as e:
+            items = [str(fr) for fr in FRAME_RATE_CONTROL]
+            expected = items[0] if len(items) == 1 else ", ".join(items[:-1]) + f", or {items[-1]}"
+            raise ValueError(f"{framerate} is not a valid frame rate. Expected {expected}.") from e
 
         self.setup(bd_code, fr_code)
 
@@ -337,7 +592,7 @@ class ST7789:
         self.command(REG_FRCTRL2, fr_code)      # Framerate control
         self.command(REG_RAMCTRL, b"\x00\xc0")
 
-        if self.width == 320 or self.height == 320:
+        if self._width == 320 or self._height == 320:
             # 320 x 240
             self.command(REG_GCTRL, b"\x35")
             self.command(REG_VCOMS, b"\x1f")
@@ -382,29 +637,41 @@ class ST7789:
         self.CS.high()
 
     @micropython.native
-    def update(self, image, mirror_x=False, mirror_y=False, v_sync=False):
-        if mirror_x:
-            if mirror_y:
-                # start = time.ticks_us()
-                self.__rgb_rotate_180(memoryview(self.BUFFER), memoryview(image), self._width, self._height)
-                # dt = time.ticks_diff(time.ticks_us(), start)
-                # print("rgba8888_to_rgb444_rotate_180:", dt)
+    def update(self, image, rotation=0, mirror=False, v_sync=False, bg_color=picovector.color.black):
+        bg = bg_color.p & 0xffffffff
+
+        r_index = rotation // 90
+        if r_index < 0 or r_index > 3 or rotation % 90:     # Modulo check ensures rotation is exactly a multipe of 90
+            raise ValueError(f"{rotation} is not a valid angle. Expected 0, 90, 180, or 270.")
+
+        r_half = r_index >> 1          # Zero for 0 or 90. One for 180 or 270
+
+        if r_index & 0x1:     # Is the rotation 90 or 270 degrees?
+            flip_x = r_half
+            flip_y = (1 - r_half) if mirror else r_half
+
+            # start = time.ticks_us()
+            if flip_x:
+                self.__rotate_mirror(memoryview(self.BUFFER), memoryview(image),
+                                     self._width, self._height, image.width, image.height, bg, flip_y)
             else:
-                # start = time.ticks_us()
-                self.__rgb_mirror_x(memoryview(self.BUFFER), memoryview(image), self._width, self._height)
-                # dt = time.ticks_diff(time.ticks_us(), start)
-                # print("rgba8888_to_rgb444_mirror_x:", dt)
+                self.__rotate(memoryview(self.BUFFER), memoryview(image),
+                              self._width, self._height, image.width, image.height, bg, flip_y)
+            # dt = time.ticks_diff(time.ticks_us(), start)
+            # print("rgba8888_to_rgb444_rotate_90:", dt)
         else:
-            if mirror_y:
-                # start = time.ticks_us()
-                self.__rgb_mirror_y(memoryview(self.BUFFER), memoryview(image), self._width, self._height)
-                # dt = time.ticks_diff(time.ticks_us(), start)
-                # print("rgba8888_to_rgb444_mirror_y:", dt)
+            flip_x = (1 - r_half) if mirror else r_half
+            flip_y = r_half
+
+            # start = time.ticks_us()
+            if flip_x:
+                self.__mirror(memoryview(self.BUFFER), memoryview(image),
+                              self._width, self._height, image.width, image.height, bg, flip_y)
             else:
-                # start = time.ticks_us()
-                self.__rgb_copy(memoryview(self.BUFFER), memoryview(image), self._width * self._height)
-                # dt = time.ticks_diff(time.ticks_us(), start)
-                # print("rgba8888_to_rgb444:", dt)
+                self.__normal(memoryview(self.BUFFER), memoryview(image),
+                              self._width, self._height, image.width, image.height, bg, flip_y)
+            # dt = time.ticks_diff(time.ticks_us(), start)
+            # print("rgba8888_to_rgb444_rotate_90:", dt)
 
         if v_sync:
             self.DC.init(machine.Pin.IN)

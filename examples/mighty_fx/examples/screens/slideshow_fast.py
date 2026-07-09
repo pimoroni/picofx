@@ -5,7 +5,6 @@ from picovector import image, color, rect
 
 """
 Plays a slideshow of .PNG images from a folder very fast by passing images directly to the screen.
-Images must be the same resolution as the screen
 """
 
 # Constants
@@ -36,13 +35,13 @@ index = -1  # Start with -1 so that the first image gets shown
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        
+
         # Move along to the next image index, and wrap it into the range of available images
         index = (index + 1) % len(images)
         img = images[index]
 
-        # Update the screen with the latest canvas
-        screen.update(img, mirror_x=True, mirror_y=True, v_sync=True)
+        # Update the screen with the latest image
+        screen.update(img, v_sync=True)
 
 # Stop any running effects and turn off all the outputs
 finally:

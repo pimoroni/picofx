@@ -52,7 +52,7 @@ try:
 
         # Update both screens with the latest canvas
         screens[0].update(canvas)
-        screens[1].update(canvas, mirror_x=True, mirror_y=False)
+        screens[1].update(canvas, mirror=True)
 
         # Advance both the rotation and the hue
         r += ROTATION_SPEED
