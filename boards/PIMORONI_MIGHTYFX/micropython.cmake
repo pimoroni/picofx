@@ -15,9 +15,6 @@ set(CMAKE_CXX_STANDARD 17)
 # PicoVector and supporting libs
 find_package(PICOVECTOR CONFIG REQUIRED)
 
-# Build picovector with Tufty 2350 settings
-target_compile_definitions(usermod_picovector INTERFACE TUFTY=1)
-
 # Essential
 include(pimoroni_i2c/micropython)
 
