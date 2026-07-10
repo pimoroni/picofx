@@ -260,7 +260,7 @@ def rgba8888_to_rgb444_normal(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
     else:
@@ -284,7 +284,7 @@ def rgba8888_to_rgb444_normal(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
     # Post-padding rows
@@ -341,7 +341,7 @@ def rgba8888_to_rgb444_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
     else:
         for y in range(end_y - 1, start_y - 1, -1):
@@ -364,7 +364,7 @@ def rgba8888_to_rgb444_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
     # Post-padding rows
@@ -420,7 +420,7 @@ def rgba8888_to_rgb444_rotate(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
     else:
         for y in range(end_y - 4, start_y - 4, -4):
@@ -441,7 +441,7 @@ def rgba8888_to_rgb444_rotate(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
     # Post-padding rows
@@ -497,7 +497,7 @@ def rgba8888_to_rgb444_rotate_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_h
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
     else:
         for y in range(end_y - 4, start_y - 4, -4):
@@ -518,7 +518,7 @@ def rgba8888_to_rgb444_rotate_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_h
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
     # Post-padding rows
