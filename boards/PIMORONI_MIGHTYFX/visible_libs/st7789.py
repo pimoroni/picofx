@@ -293,6 +293,87 @@ def rgba8888_to_rgb444_normal(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
 
 
 @micropython.viper
+def rgba8888_to_rgb444_double_normal(dst: ptr8, src: ptr8, dst_width: int, dst_height: int, src_width: int, src_height: int, bg: int, flip_y: int):
+    # Fastest implementation so far: 49.6ms (measured with 320x240)
+
+    di = 0          # Index of the pixel pair being worked on
+
+    # The padding to apply around the image to centre it
+    y_padding = (dst_height - (src_height << 1)) >> 1
+    x_padding = (dst_width - (src_width << 1)) >> 1
+
+    start_y = -y_padding if y_padding < 0 else 0
+    end_y = (src_height << 1) - start_y
+
+    # src_width <<= 2     # Removed as it causes numbers to go out of bounds later
+
+    start_x = -(x_padding) if x_padding < 0 else 0
+    end_x = (src_width << 1) - start_x
+    start_x >>= 1
+    end_x >>= 1
+
+    # Calculate the rgb444 background colour
+    bg0 = (bg & 0xf0) | ((bg >> 12) & 0x0f)         # R1 | G1
+    bg1 = ((bg >> 16) & 0xf0) | ((bg >> 4) & 0x0f)  # B1 | R2
+    bg2 = ((bg >> 8) & 0xf0) | ((bg >> 20) & 0x0f)  # G2 | B2
+
+    # Pre-padding rows
+    y_padding_w_width = y_padding * dst_width
+    for _ in range(0, y_padding_w_width, 2):
+        dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+    if flip_y == 0:
+        for y in range(start_y, end_y):
+            y_width = (y >> 1) * src_width
+
+            # Pre-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+            for x in range(start_x, end_x, 1):
+                # Calc the pixel coordinate to sample
+                p0 = (y_width + x) << 2
+
+                # Convert the pixel into 2 x RGB444 packed into 3 bytes
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | (src[p0] >> 4)         # B1 | R2
+                dst[di + 2] = (src[p0 + 1] & 0xf0) | (src[p0 + 2] >> 4)     # G2 | B2
+
+                di += 3     # Move along to the next pixel pair
+
+            # Post-padding columns
+            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+    else:
+        for y in range(end_y - 1, start_y - 1, -1):
+            y_width = (y >> 1) * src_width
+
+            # Pre-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+            for x in range(start_x, end_x, 1):
+                # Calc the pixel coordinate to sample
+                p0 = (y_width + x) << 2
+
+                # Convert the pixel into 2 x RGB444 packed into 3 bytes
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | (src[p0] >> 4)         # B1 | R2
+                dst[di + 2] = (src[p0 + 1] & 0xf0) | (src[p0 + 2] >> 4)     # G2 | B2
+
+                di += 3     # Move along to the next pixel pair
+
+            # Post-padding columns
+            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+    # Post-padding row
+    for _ in range(0, y_padding_w_width, 2):
+        dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+
+@micropython.viper
 def rgba8888_to_rgb444_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_height: int, src_width: int, src_height: int, bg: int, flip_y: int):
     # Fastest implementation so far: 49.6ms (measured with 320x240)
 
@@ -360,6 +441,86 @@ def rgba8888_to_rgb444_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
                 dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
                 dst[di + 1] = (src[p0 + 2] & 0xf0) | (src[p1] >> 4)         # B1 | R2
                 dst[di + 2] = (src[p1 + 1] & 0xf0) | (src[p1 + 2] >> 4)     # G2 | B2
+
+                di += 3     # Move along to the next pixel pair
+
+            # Post-padding columns
+            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+    # Post-padding rows
+    for _ in range(0, y_padding_w_width, 2):
+        dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+
+@micropython.viper
+def rgba8888_to_rgb444_double_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_height: int, src_width: int, src_height: int, bg: int, flip_y: int):
+    # Fastest implementation so far: 49.6ms (measured with 320x240)
+
+    di = 0          # Index of the pixel pair being worked on
+
+    # The padding to apply around the image to centre it
+    y_padding = (dst_height - (src_height << 1)) >> 1
+    x_padding = (dst_width - (src_width << 1)) >> 1
+
+    start_y = -y_padding if y_padding < 0 else 0
+    end_y = (src_height << 1) - start_y
+
+    # src_width <<= 2     # Removed as it causes numbers to go out of bounds later
+
+    start_x = -(x_padding) if x_padding < 0 else 0
+    end_x = (src_width << 1) - start_x
+    start_x >>= 1
+    end_x >>= 1
+
+    # Calculate the rgb444 background colour
+    bg0 = (bg & 0xf0) | ((bg >> 12) & 0x0f)         # R1 | G1
+    bg1 = ((bg >> 16) & 0xf0) | ((bg >> 4) & 0x0f)  # B1 | R2
+    bg2 = ((bg >> 8) & 0xf0) | ((bg >> 20) & 0x0f)  # G2 | B2
+
+    # Pre-padding rows
+    y_padding_w_width = y_padding * dst_width
+    for _ in range(0, y_padding_w_width, 2):
+        dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+    if flip_y == 0:
+        for y in range(start_y, end_y):
+            y_width = (y >> 1) * src_width
+
+            # Pre-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+            for x in range(end_x - 1, start_x - 1, -1):
+                # Calc the pixel coordinate to sample
+                p0 = (y_width + x) << 2
+
+                # Convert the pixel into 2 x RGB444 packed into 3 bytes
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | (src[p0] >> 4)         # B1 | R2
+                dst[di + 2] = (src[p0 + 1] & 0xf0) | (src[p0 + 2] >> 4)     # G2 | B2
+
+                di += 3     # Move along to the next pixel pair
+
+            # Post-padding columns
+            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+    else:
+        for y in range(end_y - 1, start_y - 1, -1):
+            y_width = (y >> 1) * src_width
+
+            # Pre-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+            for x in range(end_x - 1, start_x - 1, -1):
+                # Calc the pixel coordinate to sample
+                p0 = (y_width + x) << 2
+
+                # Convert the pixel into 2 x RGB444 packed into 3 bytes
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | (src[p0] >> 4)         # B1 | R2
+                dst[di + 2] = (src[p0 + 1] & 0xf0) | (src[p0 + 2] >> 4)     # G2 | B2
 
                 di += 3     # Move along to the next pixel pair
 
@@ -450,6 +611,83 @@ def rgba8888_to_rgb444_rotate(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
 
 
 @micropython.viper
+def rgba8888_to_rgb444_double_rotate(dst: ptr8, src: ptr8, dst_width: int, dst_height: int, src_width: int, src_height: int, bg: int, flip_y: int):
+    # Fastest implementation so far: 60.0ms (measured with 320x240)
+
+    di = 0          # Index of the pixel pair being worked on
+
+    # The padding to apply around the image to centre it
+    y_padding = (dst_height - (src_width << 1)) >> 1
+    x_padding = (dst_width - (src_height << 1)) >> 1
+
+    # src_width <<= 2     # Removed as it causes numbers to go out of bounds later
+
+    # We're rotated 90 degrees, so height is width and width is height!
+    start_y = -(y_padding) if y_padding < 0 else 0
+    end_y = (src_width << 1) - start_y
+
+    start_x = -x_padding if x_padding < 0 else 0
+    end_x = (src_height << 1) - start_x
+    start_x >>= 1
+    end_x >>= 1
+
+    # Calculate the rgb444 background colour
+    bg0 = (bg & 0xf0) | ((bg >> 12) & 0x0f)         # R1 | G1
+    bg1 = ((bg >> 16) & 0xf0) | ((bg >> 4) & 0x0f)  # B1 | R2
+    bg2 = ((bg >> 8) & 0xf0) | ((bg >> 20) & 0x0f)  # G2 | B2
+
+    # Pre-padding rows
+    y_padding_w_width = y_padding * dst_width
+    for _ in range(0, y_padding_w_width, 2):
+        dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+    if flip_y == 0:
+        for y in range(start_y, end_y):
+            # Pre-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+            for x in range(end_x - 1, start_x - 1, -1):
+                # Calc the pixel coordinate to sample
+                p0 = ((x * src_width) + (y >> 1)) << 2
+
+                # Convert the pixel into 2 x RGB444 packed into 3 bytes
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | (src[p0] >> 4)         # B1 | R2
+                dst[di + 2] = (src[p0 + 1] & 0xf0) | (src[p0 + 2] >> 4)     # G2 | B2
+
+                di += 3     # Move along to the next pixel pair
+
+            # Post-padding columns
+            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+    else:
+        for y in range(end_y - 1, start_y - 1, -1):
+            # Pre-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+            for x in range(end_x - 1, start_x - 1, -1):
+                # Calc the pixel coordinate to sample
+                p0 = ((x * src_width) + (y >> 1)) << 2
+
+                # Convert the pixel into 2 x RGB444 packed into 3 bytes
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | (src[p0] >> 4)         # B1 | R2
+                dst[di + 2] = (src[p0 + 1] & 0xf0) | (src[p0 + 2] >> 4)     # G2 | B2
+
+                di += 3     # Move along to the next pixel pair
+
+            # Post-padding columns
+            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+    # Post-padding rows
+    for _ in range(0, y_padding_w_width, 2):
+        dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+
+@micropython.viper
 def rgba8888_to_rgb444_rotate_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_height: int, src_width: int, src_height: int, bg: int, flip_y: int):
     # Fastest implementation so far: 60.0ms (measured with 320x240)
 
@@ -526,10 +764,93 @@ def rgba8888_to_rgb444_rotate_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_h
         dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
 
+@micropython.viper
+def rgba8888_to_rgb444_double_rotate_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_height: int, src_width: int, src_height: int, bg: int, flip_y: int):
+    # Fastest implementation so far: 60.0ms (measured with 320x240)
+
+    di = 0          # Index of the pixel pair being worked on
+
+    # The padding to apply around the image to centre it
+    y_padding = (dst_height - (src_width << 1)) >> 1
+    x_padding = (dst_width - (src_height << 1)) >> 1
+
+    # src_width <<= 2     # Removed as it causes numbers to go out of bounds later
+
+    # We're rotated 90 degrees, so height is width and width is height!
+    start_y = -(y_padding) if y_padding < 0 else 0
+    end_y = (src_width << 1) - start_y
+
+    start_x = -x_padding if x_padding < 0 else 0
+    end_x = (src_height << 1) - start_x
+    start_x >>= 1
+    end_x >>= 1
+
+    # Calculate the rgb444 background colour
+    bg0 = (bg & 0xf0) | ((bg >> 12) & 0x0f)         # R1 | G1
+    bg1 = ((bg >> 16) & 0xf0) | ((bg >> 4) & 0x0f)  # B1 | R2
+    bg2 = ((bg >> 8) & 0xf0) | ((bg >> 20) & 0x0f)  # G2 | B2
+
+    # Pre-padding rows
+    y_padding_w_width = y_padding * dst_width
+    for _ in range(0, y_padding_w_width, 2):
+        dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+    if flip_y == 0:
+        for y in range(start_y, end_y):
+            # Pre-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+            for x in range(start_x, end_x):
+                # Calc the pixel coordinate to sample
+                p0 = ((x * src_width) + (y >> 1)) << 2
+
+                # Convert the pixel into 2 x RGB444 packed into 3 bytes
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | (src[p0] >> 4)         # B1 | R2
+                dst[di + 2] = (src[p0 + 1] & 0xf0) | (src[p0 + 2] >> 4)     # G2 | B2
+
+                di += 3     # Move along to the next pixel pair
+
+            # Post-padding columns
+            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+    else:
+        for y in range(end_y - 1, start_y - 1, -1):
+            # Pre-padding columns
+            for _ in range(0, x_padding, 2):
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+            for x in range(start_x, end_x):
+                # Calc the pixel coordinate to sample
+                p0 = ((x * src_width) + (y >> 1)) << 2
+
+                # Convert the pixel into 2 x RGB444 packed into 3 bytes
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | (src[p0] >> 4)         # B1 | R2
+                dst[di + 2] = (src[p0 + 1] & 0xf0) | (src[p0 + 2] >> 4)     # G2 | B2
+
+                di += 3     # Move along to the next pixel pair
+
+            # Post-padding columns
+            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+                dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+    # Post-padding rows
+    for _ in range(0, y_padding_w_width, 2):
+        dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
+
+
 PIXEL_FUNCTIONS = {
     12: (rgba8888_to_rgb444_normal, rgba8888_to_rgb444_mirror, rgba8888_to_rgb444_rotate, rgba8888_to_rgb444_rotate_mirror),
-    16: (rgba8888_to_rgb565, rgba8888_to_rgb565_mirror_x, rgba8888_to_rgb565_mirror_y, rgba8888_to_rgb565_rotate_180, None)
+    16: (None, None, None, None)
 }
+
+PIXEL_DOUBLE_FUNCTIONS = {
+    12: (rgba8888_to_rgb444_double_normal, rgba8888_to_rgb444_double_mirror, rgba8888_to_rgb444_double_rotate, rgba8888_to_rgb444_double_rotate_mirror),
+    16: (None, None, None, None)
+}
+
 
 
 class ST7789:
@@ -551,6 +872,7 @@ class ST7789:
         try:
             bd_code = PIXEL_FORMAT[bitdepth]
             self.__normal, self.__mirror, self.__rotate, self.__rotate_mirror = PIXEL_FUNCTIONS[bitdepth]
+            self.__dbl_normal, self.__dbl_mirror, self.__dbl_rotate, self.__dbl_rotate_mirror = PIXEL_DOUBLE_FUNCTIONS[bitdepth]
             self.BUFFER = bytes((self._width * self._height * bitdepth) // 8)
 
         except KeyError as e:
@@ -637,7 +959,7 @@ class ST7789:
         self.CS.high()
 
     @micropython.native
-    def update(self, image, rotation=0, mirror=False, v_sync=False, bg_color=picovector.color.black):
+    def update(self, image, rotation=0, mirror=False, v_sync=False, bg_color=picovector.color.black, pixel_double=False):
         bg = bg_color.p & 0xffffffff
 
         r_index = rotation // 90
@@ -652,11 +974,19 @@ class ST7789:
 
             # start = time.ticks_us()
             if flip_x:
-                self.__rotate_mirror(memoryview(self.BUFFER), memoryview(image),
-                                     self._width, self._height, image.width, image.height, bg, flip_y)
+                if pixel_double:
+                    self.__dbl_rotate_mirror(memoryview(self.BUFFER), memoryview(image),
+                                             self._width, self._height, image.width, image.height, bg, flip_y)
+                else:
+                    self.__rotate_mirror(memoryview(self.BUFFER), memoryview(image),
+                                         self._width, self._height, image.width, image.height, bg, flip_y)
             else:
-                self.__rotate(memoryview(self.BUFFER), memoryview(image),
-                              self._width, self._height, image.width, image.height, bg, flip_y)
+                if pixel_double:
+                    self.__dbl_rotate(memoryview(self.BUFFER), memoryview(image),
+                                      self._width, self._height, image.width, image.height, bg, flip_y)
+                else:
+                    self.__rotate(memoryview(self.BUFFER), memoryview(image),
+                                  self._width, self._height, image.width, image.height, bg, flip_y)
             # dt = time.ticks_diff(time.ticks_us(), start)
             # print("rgba8888_to_rgb444_rotate_90:", dt)
         else:
@@ -665,11 +995,19 @@ class ST7789:
 
             # start = time.ticks_us()
             if flip_x:
-                self.__mirror(memoryview(self.BUFFER), memoryview(image),
-                              self._width, self._height, image.width, image.height, bg, flip_y)
+                if pixel_double:
+                    self.__dbl_mirror(memoryview(self.BUFFER), memoryview(image),
+                                      self._width, self._height, image.width, image.height, bg, flip_y)
+                else:
+                    self.__mirror(memoryview(self.BUFFER), memoryview(image),
+                                  self._width, self._height, image.width, image.height, bg, flip_y)
             else:
-                self.__normal(memoryview(self.BUFFER), memoryview(image),
-                              self._width, self._height, image.width, image.height, bg, flip_y)
+                if pixel_double:
+                    self.__dbl_normal(memoryview(self.BUFFER), memoryview(image),
+                                      self._width, self._height, image.width, image.height, bg, flip_y)
+                else:
+                    self.__normal(memoryview(self.BUFFER), memoryview(image),
+                                  self._width, self._height, image.width, image.height, bg, flip_y)
             # dt = time.ticks_diff(time.ticks_us(), start)
             # print("rgba8888_to_rgb444_rotate_90:", dt)
 
