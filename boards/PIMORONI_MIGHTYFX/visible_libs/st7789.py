@@ -229,14 +229,18 @@ def rgba8888_to_rgb444_normal(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
     start_x = -(x_padding << 2) if x_padding < 0 else 0
     end_x = src_width - start_x
 
+    #  Calculate padding for images smaller than the screen
+    y_padding_pairs = y_padding * (dst_width >> 1)  # dst_width / 2
+    x_pad_left_pairs = (x_padding + 1) >> 1         # ceil(x_padding / 2)
+    x_pad_right_pairs = x_padding >> 1              # floor(x_padding / 2)
+
     # Calculate the rgb444 background colour
     bg0 = (bg & 0xf0) | ((bg >> 12) & 0x0f)         # R1 | G1
     bg1 = ((bg >> 16) & 0xf0) | ((bg >> 4) & 0x0f)  # B1 | R2
     bg2 = ((bg >> 8) & 0xf0) | ((bg >> 20) & 0x0f)  # G2 | B2
 
     # Pre-padding rows
-    y_padding_w_width = y_padding * dst_width
-    for _ in range(0, y_padding_w_width, 2):
+    for _ in range(y_padding_pairs):
         dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
     if flip_y == 0:
@@ -244,7 +248,7 @@ def rgba8888_to_rgb444_normal(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
             y_width = y * src_width
 
             # Pre-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
             for x in range(start_x, end_x, 8):
@@ -260,7 +264,7 @@ def rgba8888_to_rgb444_normal(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+            for _ in range(x_pad_right_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
     else:
@@ -268,7 +272,7 @@ def rgba8888_to_rgb444_normal(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
             y_width = y * src_width
 
             # Pre-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
             for x in range(start_x, end_x, 8):
@@ -284,11 +288,11 @@ def rgba8888_to_rgb444_normal(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+            for _ in range(x_pad_right_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
     # Post-padding rows
-    for _ in range(0, y_padding_w_width, 2):
+    for _ in range(y_padding_pairs):
         dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
 
@@ -312,14 +316,18 @@ def rgba8888_to_rgb444_double_normal(dst: ptr8, src: ptr8, dst_width: int, dst_h
     start_x >>= 1
     end_x >>= 1
 
+    #  Calculate padding for images smaller than the screen
+    y_padding_pairs = y_padding * (dst_width >> 1)  # dst_width / 2
+    x_pad_left_pairs = (x_padding + 1) >> 1         # ceil(x_padding / 2)
+    x_pad_right_pairs = x_padding >> 1              # floor(x_padding / 2)
+
     # Calculate the rgb444 background colour
     bg0 = (bg & 0xf0) | ((bg >> 12) & 0x0f)         # R1 | G1
     bg1 = ((bg >> 16) & 0xf0) | ((bg >> 4) & 0x0f)  # B1 | R2
     bg2 = ((bg >> 8) & 0xf0) | ((bg >> 20) & 0x0f)  # G2 | B2
 
     # Pre-padding rows
-    y_padding_w_width = y_padding * dst_width
-    for _ in range(0, y_padding_w_width, 2):
+    for _ in range(y_padding_pairs):
         dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
     if flip_y == 0:
@@ -327,7 +335,7 @@ def rgba8888_to_rgb444_double_normal(dst: ptr8, src: ptr8, dst_width: int, dst_h
             y_width = (y >> 1) * src_width
 
             # Pre-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
             for x in range(start_x, end_x, 1):
@@ -342,7 +350,7 @@ def rgba8888_to_rgb444_double_normal(dst: ptr8, src: ptr8, dst_width: int, dst_h
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+            for _ in range(x_pad_right_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
     else:
@@ -350,7 +358,7 @@ def rgba8888_to_rgb444_double_normal(dst: ptr8, src: ptr8, dst_width: int, dst_h
             y_width = (y >> 1) * src_width
 
             # Pre-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
             for x in range(start_x, end_x, 1):
@@ -365,11 +373,11 @@ def rgba8888_to_rgb444_double_normal(dst: ptr8, src: ptr8, dst_width: int, dst_h
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+            for _ in range(x_pad_right_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
     # Post-padding row
-    for _ in range(0, y_padding_w_width, 2):
+    for _ in range(y_padding_pairs):
         dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
 
@@ -391,14 +399,18 @@ def rgba8888_to_rgb444_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
     start_x = -(x_padding << 2) if x_padding < 0 else 0
     end_x = src_width - start_x
 
+    #  Calculate padding for images smaller than the screen
+    y_padding_pairs = y_padding * (dst_width >> 1)  # dst_width / 2
+    x_pad_left_pairs = (x_padding + 1) >> 1         # ceil(x_padding / 2)
+    x_pad_right_pairs = x_padding >> 1              # floor(x_padding / 2)
+
     # Calculate the rgb444 background colour
     bg0 = (bg & 0xf0) | ((bg >> 12) & 0x0f)         # R1 | G1
     bg1 = ((bg >> 16) & 0xf0) | ((bg >> 4) & 0x0f)  # B1 | R2
     bg2 = ((bg >> 8) & 0xf0) | ((bg >> 20) & 0x0f)  # G2 | B2
 
     # Pre-padding rows
-    y_padding_w_width = y_padding * dst_width
-    for _ in range(0, y_padding_w_width, 2):
+    for _ in range(y_padding_pairs):
         dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
     if flip_y == 0:
@@ -406,7 +418,7 @@ def rgba8888_to_rgb444_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
             y_width = y * src_width
 
             # Pre-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
             for x in range(end_x - 4, start_x - 4, -8):
@@ -422,14 +434,14 @@ def rgba8888_to_rgb444_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+            for _ in range(x_pad_right_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
     else:
         for y in range(end_y - 1, start_y - 1, -1):
             y_width = y * src_width
 
             # Pre-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
             for x in range(end_x - 4, start_x - 4, -8):
@@ -445,11 +457,11 @@ def rgba8888_to_rgb444_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+            for _ in range(x_pad_right_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
     # Post-padding rows
-    for _ in range(0, y_padding_w_width, 2):
+    for _ in range(y_padding_pairs):
         dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
 
@@ -473,14 +485,18 @@ def rgba8888_to_rgb444_double_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_h
     start_x >>= 1
     end_x >>= 1
 
+    #  Calculate padding for images smaller than the screen
+    y_padding_pairs = y_padding * (dst_width >> 1)  # dst_width / 2
+    x_pad_left_pairs = (x_padding + 1) >> 1         # ceil(x_padding / 2)
+    x_pad_right_pairs = x_padding >> 1              # floor(x_padding / 2)
+
     # Calculate the rgb444 background colour
     bg0 = (bg & 0xf0) | ((bg >> 12) & 0x0f)         # R1 | G1
     bg1 = ((bg >> 16) & 0xf0) | ((bg >> 4) & 0x0f)  # B1 | R2
     bg2 = ((bg >> 8) & 0xf0) | ((bg >> 20) & 0x0f)  # G2 | B2
 
     # Pre-padding rows
-    y_padding_w_width = y_padding * dst_width
-    for _ in range(0, y_padding_w_width, 2):
+    for _ in range(y_padding_pairs):
         dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
     if flip_y == 0:
@@ -488,7 +504,7 @@ def rgba8888_to_rgb444_double_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_h
             y_width = (y >> 1) * src_width
 
             # Pre-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
             for x in range(end_x - 1, start_x - 1, -1):
@@ -503,14 +519,14 @@ def rgba8888_to_rgb444_double_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_h
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+            for _ in range(x_pad_right_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
     else:
         for y in range(end_y - 1, start_y - 1, -1):
             y_width = (y >> 1) * src_width
 
             # Pre-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
             for x in range(end_x - 1, start_x - 1, -1):
@@ -525,11 +541,11 @@ def rgba8888_to_rgb444_double_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_h
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+            for _ in range(x_pad_right_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
     # Post-padding rows
-    for _ in range(0, y_padding_w_width, 2):
+    for _ in range(y_padding_pairs):
         dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
 
@@ -552,20 +568,24 @@ def rgba8888_to_rgb444_rotate(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
     start_x = -x_padding if x_padding < 0 else 0
     end_x = src_height - start_x
 
+    #  Calculate padding for images smaller than the screen
+    y_padding_pairs = y_padding * (dst_width >> 1)  # dst_width / 2
+    x_pad_left_pairs = (x_padding + 1) >> 1         # ceil(x_padding / 2)
+    x_pad_right_pairs = x_padding >> 1              # floor(x_padding / 2)
+
     # Calculate the rgb444 background colour
     bg0 = (bg & 0xf0) | ((bg >> 12) & 0x0f)         # R1 | G1
     bg1 = ((bg >> 16) & 0xf0) | ((bg >> 4) & 0x0f)  # B1 | R2
     bg2 = ((bg >> 8) & 0xf0) | ((bg >> 20) & 0x0f)  # G2 | B2
 
     # Pre-padding rows
-    y_padding_w_width = y_padding * dst_width
-    for _ in range(0, y_padding_w_width, 2):
+    for _ in range(y_padding_pairs):
         dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
     if flip_y == 0:
         for y in range(start_y, end_y, 4):
             # Pre-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
             for x in range(end_x - 1, start_x - 1, -2):
@@ -581,12 +601,12 @@ def rgba8888_to_rgb444_rotate(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+            for _ in range(x_pad_right_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
     else:
         for y in range(end_y - 4, start_y - 4, -4):
             # Pre-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
             for x in range(end_x - 1, start_x - 1, -2):
@@ -602,11 +622,11 @@ def rgba8888_to_rgb444_rotate(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+            for _ in range(x_pad_right_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
     # Post-padding rows
-    for _ in range(0, y_padding_w_width, 2):
+    for _ in range(y_padding_pairs):
         dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
 
@@ -631,20 +651,24 @@ def rgba8888_to_rgb444_double_rotate(dst: ptr8, src: ptr8, dst_width: int, dst_h
     start_x >>= 1
     end_x >>= 1
 
+    #  Calculate padding for images smaller than the screen
+    y_padding_pairs = y_padding * (dst_width >> 1)  # dst_width / 2
+    x_pad_left_pairs = (x_padding + 1) >> 1         # ceil(x_padding / 2)
+    x_pad_right_pairs = x_padding >> 1              # floor(x_padding / 2)
+
     # Calculate the rgb444 background colour
     bg0 = (bg & 0xf0) | ((bg >> 12) & 0x0f)         # R1 | G1
     bg1 = ((bg >> 16) & 0xf0) | ((bg >> 4) & 0x0f)  # B1 | R2
     bg2 = ((bg >> 8) & 0xf0) | ((bg >> 20) & 0x0f)  # G2 | B2
 
     # Pre-padding rows
-    y_padding_w_width = y_padding * dst_width
-    for _ in range(0, y_padding_w_width, 2):
+    for _ in range(y_padding_pairs):
         dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
     if flip_y == 0:
         for y in range(start_y, end_y):
             # Pre-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
             for x in range(end_x - 1, start_x - 1, -1):
@@ -659,12 +683,12 @@ def rgba8888_to_rgb444_double_rotate(dst: ptr8, src: ptr8, dst_width: int, dst_h
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+            for _ in range(x_pad_right_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
     else:
         for y in range(end_y - 1, start_y - 1, -1):
             # Pre-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
             for x in range(end_x - 1, start_x - 1, -1):
@@ -679,11 +703,11 @@ def rgba8888_to_rgb444_double_rotate(dst: ptr8, src: ptr8, dst_width: int, dst_h
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+            for _ in range(x_pad_right_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
     # Post-padding rows
-    for _ in range(0, y_padding_w_width, 2):
+    for _ in range(y_padding_pairs):
         dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
 
@@ -706,20 +730,24 @@ def rgba8888_to_rgb444_rotate_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_h
     start_x = -x_padding if x_padding < 0 else 0
     end_x = src_height - start_x
 
+    #  Calculate padding for images smaller than the screen
+    y_padding_pairs = y_padding * (dst_width >> 1)  # dst_width / 2
+    x_pad_left_pairs = (x_padding + 1) >> 1         # ceil(x_padding / 2)
+    x_pad_right_pairs = x_padding >> 1              # floor(x_padding / 2)
+
     # Calculate the rgb444 background colour
     bg0 = (bg & 0xf0) | ((bg >> 12) & 0x0f)         # R1 | G1
     bg1 = ((bg >> 16) & 0xf0) | ((bg >> 4) & 0x0f)  # B1 | R2
     bg2 = ((bg >> 8) & 0xf0) | ((bg >> 20) & 0x0f)  # G2 | B2
 
     # Pre-padding rows
-    y_padding_w_width = y_padding * dst_width
-    for _ in range(0, y_padding_w_width, 2):
+    for _ in range(y_padding_pairs):
         dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
     if flip_y == 0:
         for y in range(start_y, end_y, 4):
             # Pre-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
             for x in range(start_x, end_x, 2):
@@ -735,12 +763,12 @@ def rgba8888_to_rgb444_rotate_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_h
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+            for _ in range(x_pad_right_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
     else:
         for y in range(end_y - 4, start_y - 4, -4):
             # Pre-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
             for x in range(start_x, end_x, 2):
@@ -756,11 +784,11 @@ def rgba8888_to_rgb444_rotate_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_h
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+            for _ in range(x_pad_right_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
     # Post-padding rows
-    for _ in range(0, y_padding_w_width, 2):
+    for _ in range(y_padding_pairs):
         dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
 
@@ -785,20 +813,24 @@ def rgba8888_to_rgb444_double_rotate_mirror(dst: ptr8, src: ptr8, dst_width: int
     start_x >>= 1
     end_x >>= 1
 
+    #  Calculate padding for images smaller than the screen
+    y_padding_pairs = y_padding * (dst_width >> 1)  # dst_width / 2
+    x_pad_left_pairs = (x_padding + 1) >> 1         # ceil(x_padding / 2)
+    x_pad_right_pairs = x_padding >> 1              # floor(x_padding / 2)
+
     # Calculate the rgb444 background colour
     bg0 = (bg & 0xf0) | ((bg >> 12) & 0x0f)         # R1 | G1
     bg1 = ((bg >> 16) & 0xf0) | ((bg >> 4) & 0x0f)  # B1 | R2
     bg2 = ((bg >> 8) & 0xf0) | ((bg >> 20) & 0x0f)  # G2 | B2
 
     # Pre-padding rows
-    y_padding_w_width = y_padding * dst_width
-    for _ in range(0, y_padding_w_width, 2):
+    for _ in range(y_padding_pairs):
         dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
     if flip_y == 0:
         for y in range(start_y, end_y):
             # Pre-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
             for x in range(start_x, end_x):
@@ -813,12 +845,12 @@ def rgba8888_to_rgb444_double_rotate_mirror(dst: ptr8, src: ptr8, dst_width: int
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+            for _ in range(x_pad_right_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
     else:
         for y in range(end_y - 1, start_y - 1, -1):
             # Pre-padding columns
-            for _ in range(0, x_padding, 2):
+            for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
             for x in range(start_x, end_x):
@@ -833,11 +865,11 @@ def rgba8888_to_rgb444_double_rotate_mirror(dst: ptr8, src: ptr8, dst_width: int
                 di += 3     # Move along to the next pixel pair
 
             # Post-padding columns
-            for _ in range(0, x_padding - 1, 2):    # Minus 1 seems to fix a shearing issue. Not sure why
+            for _ in range(x_pad_right_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
     # Post-padding rows
-    for _ in range(0, y_padding_w_width, 2):
+    for _ in range(y_padding_pairs):
         dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
 
