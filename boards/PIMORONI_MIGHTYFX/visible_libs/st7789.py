@@ -228,6 +228,7 @@ def rgba8888_to_rgb444_normal(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
 
     start_x = -(x_padding << 2) if x_padding < 0 else 0
     end_x = src_width - start_x
+    row_bytes = end_x - start_x     # This is not always src_width
 
     #  Calculate padding for images smaller than the screen
     y_padding_pairs = y_padding * (dst_width >> 1)  # dst_width / 2
@@ -251,7 +252,7 @@ def rgba8888_to_rgb444_normal(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
             for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
-            for x in range(start_x, end_x, 8):
+            for x in range(start_x, end_x - 4, 8):  # Sub 4 so we can handle the last pixel separately, if src is odd width
                 # Calc the two pixel coordinates to sample
                 p0 = y_width + x
                 p1 = p0 + 4         # Next pixel
@@ -262,6 +263,16 @@ def rgba8888_to_rgb444_normal(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
                 dst[di + 2] = (src[p1 + 1] & 0xf0) | (src[p1 + 2] >> 4)     # G2 | B2
 
                 di += 3     # Move along to the next pixel pair
+
+            # Handle the last pixel if src has an odd width
+            if row_bytes & 0x04:
+                p0 = y_width + (end_x - 4)
+
+                # P0 from src, P1 from bg
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | ((bg >> 4) & 0x0f)     # B1 | R2(bg)
+                dst[di + 2] = bg2                                           # G2(bg) | B2(bg)
+                di += 3
 
             # Post-padding columns
             for _ in range(x_pad_right_pairs):
@@ -275,7 +286,7 @@ def rgba8888_to_rgb444_normal(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
             for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
-            for x in range(start_x, end_x, 8):
+            for x in range(start_x, end_x - 4, 8):  # Sub 4 so we can handle the last pixel separately, if src is odd width
                 # Calc the two pixel coordinates to sample
                 p0 = y_width + x
                 p1 = p0 + 4         # Next pixel
@@ -286,6 +297,16 @@ def rgba8888_to_rgb444_normal(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
                 dst[di + 2] = (src[p1 + 1] & 0xf0) | (src[p1 + 2] >> 4)     # G2 | B2
 
                 di += 3     # Move along to the next pixel pair
+
+            # Handle the last pixel if src has an odd width
+            if row_bytes & 0x04:
+                p0 = y_width + (end_x - 4)
+
+                # P0 from src, P1 from bg
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | ((bg >> 4) & 0x0f)     # B1 | R2(bg)
+                dst[di + 2] = bg2                                           # G2(bg) | B2(bg)
+                di += 3
 
             # Post-padding columns
             for _ in range(x_pad_right_pairs):
@@ -398,6 +419,7 @@ def rgba8888_to_rgb444_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
 
     start_x = -(x_padding << 2) if x_padding < 0 else 0
     end_x = src_width - start_x
+    row_bytes = end_x - start_x     # This is not always src_width
 
     #  Calculate padding for images smaller than the screen
     y_padding_pairs = y_padding * (dst_width >> 1)  # dst_width / 2
@@ -421,7 +443,7 @@ def rgba8888_to_rgb444_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
             for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
-            for x in range(end_x - 4, start_x - 4, -8):
+            for x in range(end_x - 4, start_x - 4 + 4, -8):  # Add 4 so we can handle the last pixel separately, if src is odd width
                 # Calc the two pixel coordinates to sample
                 p0 = y_width + x
                 p1 = p0 - 4     # Prev pixel
@@ -432,6 +454,16 @@ def rgba8888_to_rgb444_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
                 dst[di + 2] = (src[p1 + 1] & 0xf0) | (src[p1 + 2] >> 4)     # G2 | B2
 
                 di += 3     # Move along to the next pixel pair
+
+            # Handle the last pixel if src has an odd width
+            if row_bytes & 0x04:
+                p0 = y_width + start_x
+
+                # P0 from src, P1 from bg
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | ((bg >> 4) & 0x0f)     # B1 | R2(bg)
+                dst[di + 2] = bg2                                           # G2(bg) | B2(bg)
+                di += 3
 
             # Post-padding columns
             for _ in range(x_pad_right_pairs):
@@ -444,7 +476,7 @@ def rgba8888_to_rgb444_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
             for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
-            for x in range(end_x - 4, start_x - 4, -8):
+            for x in range(end_x - 4, start_x - 4 + 4, -8):  # Add 4 so we can handle the last pixel separately, if src is odd width
                 # Calc the two pixel coordinates to sample
                 p0 = y_width + x
                 p1 = p0 - 4     # Prev pixel
@@ -455,6 +487,16 @@ def rgba8888_to_rgb444_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
                 dst[di + 2] = (src[p1 + 1] & 0xf0) | (src[p1 + 2] >> 4)     # G2 | B2
 
                 di += 3     # Move along to the next pixel pair
+
+            # Handle the last pixel if src has an odd width
+            if row_bytes & 0x04:
+                p0 = y_width + start_x
+
+                # P0 from src, P1 from bg
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | ((bg >> 4) & 0x0f)     # B1 | R2(bg)
+                dst[di + 2] = bg2                                           # G2(bg) | B2(bg)
+                di += 3
 
             # Post-padding columns
             for _ in range(x_pad_right_pairs):
@@ -567,6 +609,7 @@ def rgba8888_to_rgb444_rotate(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
 
     start_x = -x_padding if x_padding < 0 else 0
     end_x = src_height - start_x
+    row_pixels = end_x - start_x     # This is not always src_height
 
     #  Calculate padding for images smaller than the screen
     y_padding_pairs = y_padding * (dst_width >> 1)  # dst_width / 2
@@ -588,7 +631,7 @@ def rgba8888_to_rgb444_rotate(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
             for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
-            for x in range(end_x - 1, start_x - 1, -2):
+            for x in range(end_x - 1, start_x - 1 + 1, -2):  # Add 1 so we can handle the last pixel separately, if src is odd width
                 # Calc the two pixel coordinates to sample
                 p0 = (x * src_width) + y
                 p1 = p0 - src_width     # Prev pixel
@@ -599,6 +642,16 @@ def rgba8888_to_rgb444_rotate(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
                 dst[di + 2] = (src[p1 + 1] & 0xf0) | (src[p1 + 2] >> 4)     # G2 | B2
 
                 di += 3     # Move along to the next pixel pair
+
+            # Handle the last pixel if src has an odd width
+            if row_pixels & 0x01:
+                p0 = (start_x * src_width) + y
+
+                # P0 from src, P1 from bg
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | ((bg >> 4) & 0x0f)     # B1 | R2(bg)
+                dst[di + 2] = bg2                                           # G2(bg) | B2(bg)
+                di += 3
 
             # Post-padding columns
             for _ in range(x_pad_right_pairs):
@@ -609,7 +662,7 @@ def rgba8888_to_rgb444_rotate(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
             for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
-            for x in range(end_x - 1, start_x - 1, -2):
+            for x in range(end_x - 1, start_x - 1 + 1, -2):  # Add 1 so we can handle the last pixel separately, if src is odd width
                 # Calc the two pixel coordinates to sample
                 p0 = (x * src_width) + y
                 p1 = p0 - src_width     # Prev pixel
@@ -620,6 +673,16 @@ def rgba8888_to_rgb444_rotate(dst: ptr8, src: ptr8, dst_width: int, dst_height: 
                 dst[di + 2] = (src[p1 + 1] & 0xf0) | (src[p1 + 2] >> 4)     # G2 | B2
 
                 di += 3     # Move along to the next pixel pair
+
+            # Handle the last pixel if src has an odd width
+            if row_pixels & 0x01:
+                p0 = (start_x * src_width) + y
+
+                # P0 from src, P1 from bg
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | ((bg >> 4) & 0x0f)     # B1 | R2(bg)
+                dst[di + 2] = bg2                                           # G2(bg) | B2(bg)
+                di += 3
 
             # Post-padding columns
             for _ in range(x_pad_right_pairs):
@@ -729,6 +792,7 @@ def rgba8888_to_rgb444_rotate_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_h
 
     start_x = -x_padding if x_padding < 0 else 0
     end_x = src_height - start_x
+    row_pixels = end_x - start_x     # This is not always src_height
 
     #  Calculate padding for images smaller than the screen
     y_padding_pairs = y_padding * (dst_width >> 1)  # dst_width / 2
@@ -750,7 +814,7 @@ def rgba8888_to_rgb444_rotate_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_h
             for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
-            for x in range(start_x, end_x, 2):
+            for x in range(start_x, end_x - 1, 2):  # Sub 1 so we can handle the last pixel separately, if src is odd width
                 # Calc the two pixel coordinates to sample
                 p0 = (x * src_width) + y
                 p1 = p0 + src_width     # Next pixel
@@ -761,6 +825,16 @@ def rgba8888_to_rgb444_rotate_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_h
                 dst[di + 2] = (src[p1 + 1] & 0xf0) | (src[p1 + 2] >> 4)     # G2 | B2
 
                 di += 3     # Move along to the next pixel pair
+
+            # Handle the last pixel if src has an odd width
+            if row_pixels & 0x01:
+                p0 = ((end_x - 1) * src_width) + y
+
+                # P0 from src, P1 from bg
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | ((bg >> 4) & 0x0f)     # B1 | R2(bg)
+                dst[di + 2] = bg2                                           # G2(bg) | B2(bg)
+                di += 3
 
             # Post-padding columns
             for _ in range(x_pad_right_pairs):
@@ -771,7 +845,7 @@ def rgba8888_to_rgb444_rotate_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_h
             for _ in range(x_pad_left_pairs):
                 dst[di] = bg0; dst[di + 1] = bg1; dst[di + 2] = bg2; di += 3
 
-            for x in range(start_x, end_x, 2):
+            for x in range(start_x, end_x - 1, 2):  # Sub 1 so we can handle the last pixel separately, if src is odd width
                 # Calc the two pixel coordinates to sample
                 p0 = (x * src_width) + y
                 p1 = p0 + src_width     # Next pixel
@@ -782,6 +856,16 @@ def rgba8888_to_rgb444_rotate_mirror(dst: ptr8, src: ptr8, dst_width: int, dst_h
                 dst[di + 2] = (src[p1 + 1] & 0xf0) | (src[p1 + 2] >> 4)     # G2 | B2
 
                 di += 3     # Move along to the next pixel pair
+
+            # Handle the last pixel if src has an odd width
+            if row_pixels & 0x01:
+                p0 = ((end_x - 1) * src_width) + y
+
+                # P0 from src, P1 from bg
+                dst[di] = (src[p0] & 0xf0) | (src[p0 + 1] >> 4)             # R1 | G1
+                dst[di + 1] = (src[p0 + 2] & 0xf0) | ((bg >> 4) & 0x0f)     # B1 | R2(bg)
+                dst[di + 2] = bg2                                           # G2(bg) | B2(bg)
+                di += 3
 
             # Post-padding columns
             for _ in range(x_pad_right_pairs):
