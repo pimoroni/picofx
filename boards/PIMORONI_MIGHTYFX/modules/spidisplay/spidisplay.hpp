@@ -41,8 +41,6 @@ public:
 
 private:
     void te_wait();
-    void dma_start(const uint8_t *buf, size_t len);
-    void dma_wait();
 
     spi_inst_t *spi;
     uint cs_pin;

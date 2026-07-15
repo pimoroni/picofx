@@ -57,7 +57,14 @@ SPIDisplay::SPIDisplay(uint spi_index, uint sck, uint mosi, uint cs, uint dc,
 }
 
 SPIDisplay::~SPIDisplay() {
-    dma_channel_unclaim(dma_chan);
+    // Runs from the __del__ finaliser, including gc_sweep_all() on soft reset.
+    // Abort any transfer and release the channel so re-runs do not exhaust DMA.
+    // Guarded so a double call (explicit __del__ then finaliser) is a no-op.
+    if (dma_chan >= 0) {
+        dma_channel_abort(dma_chan);
+        dma_channel_unclaim(dma_chan);
+        dma_chan = -1;
+    }
 }
 
 void SPIDisplay::command(const uint8_t *cmd, size_t cmd_len,
@@ -85,15 +92,6 @@ void SPIDisplay::te_wait() {
     if (te_pin < 0) {
         gpio_set_dir(dc_pin, GPIO_OUT);
     }
-}
-
-void SPIDisplay::dma_start(const uint8_t *buf, size_t len) {
-    dma_channel_set_read_addr(dma_chan, buf, false);
-    dma_channel_set_trans_count(dma_chan, len, true);  // true triggers the transfer
-}
-
-void SPIDisplay::dma_wait() {
-    dma_channel_wait_for_finish_blocking(dma_chan);
 }
 
 void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
@@ -129,21 +127,34 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     spi_write_blocking(spi, &ram_write_cmd, 1);
     gpio_put(dc_pin, 1);
 
+    // Every band is this size except a possibly-shorter final one. The count
+    // still has to be reloaded per band: the channel decrements TRANS_COUNT to
+    // zero as it runs, and read_addr advances past the buffer.
+    const size_t full_band_bytes = (size_t)band_rows * d.dst_row_bytes;
+
     // Convert the first band, then overlap each conversion with the previous
     // band's in-flight DMA.
     convert(d, front, 0, band_rows);
-    dma_start(front, (size_t)band_rows * d.dst_row_bytes);
+    dma_channel_set_read_addr(dma_chan, front, false);
+    dma_channel_set_trans_count(dma_chan, full_band_bytes, true);  // true starts it
 
     int row = band_rows;
     while (row < dst_h) {
         int rows = dst_h - row < band_rows ? dst_h - row : band_rows;
         convert(d, back, row, rows);
-        dma_wait();
-        dma_start(back, (size_t)rows * d.dst_row_bytes);
+        dma_channel_wait_for_finish_blocking(dma_chan);
+        dma_channel_set_read_addr(dma_chan, back, false);
+        size_t bytes = rows == band_rows ? full_band_bytes : (size_t)rows * d.dst_row_bytes;
+        dma_channel_set_trans_count(dma_chan, bytes, true);
         std::swap(front, back);
         row += rows;
     }
-    dma_wait();
+    dma_channel_wait_for_finish_blocking(dma_chan);
+    // The DMA finishes when the last bytes reach the SPI TX FIFO, not when they
+    // leave the wire. Drain the FIFO before releasing CS or the final few pixels
+    // (up to the 8-entry FIFO) are truncated.
+    while (spi_is_busy(spi)) {
+    }
     gpio_put(cs_pin, 1);
 }
 
@@ -153,9 +164,12 @@ extern "C" {
 
 #include "py/runtime.h"
 
+// The C++ object lives inline in the mp_obj (not a separate m_new block), so the
+// __del__ finaliser can never dereference a block already freed earlier in the
+// same gc_sweep_all() pass.
 typedef struct _SPIDisplay_obj_t {
     mp_obj_base_t base;
-    spidisplay::SPIDisplay *display;
+    spidisplay::SPIDisplay display;
 } SPIDisplay_obj_t;
 
 static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
@@ -182,7 +196,7 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
 
     SPIDisplay_obj_t *self = mp_obj_malloc_with_finaliser(SPIDisplay_obj_t,
                                                           (mp_obj_type_t *)type);
-    self->display = new (m_new(spidisplay::SPIDisplay, 1)) spidisplay::SPIDisplay(
+    new (&self->display) spidisplay::SPIDisplay(
         (uint)args[ARG_spi].u_int, (uint)args[ARG_sck].u_int,
         (uint)args[ARG_mosi].u_int, (uint)args[ARG_cs].u_int,
         (uint)args[ARG_dc].u_int, (uint)args[ARG_baudrate].u_int, te,
@@ -192,10 +206,7 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
 
 static mp_obj_t SPIDisplay___del__(mp_obj_t self_in) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
-    if (self->display) {
-        self->display->~SPIDisplay();
-        self->display = nullptr;
-    }
+    self->display.~SPIDisplay();  // idempotent: the destructor guards on dma_chan
     return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay___del___obj, SPIDisplay___del__);
@@ -233,7 +244,7 @@ static mp_obj_t SPIDisplay_command(size_t n_args, const mp_obj_t *args) {
         }
     }
 
-    self->display->command(cmd, cmd_len, data, data_len);
+    self->display.command(cmd, cmd_len, data, data_len);
     return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(SPIDisplay_command_obj, 2, 3, SPIDisplay_command);
@@ -288,7 +299,7 @@ static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_ma
         off_y = mp_obj_get_int(items[1]);
     }
 
-    self->display->update((const uint8_t *)buf.buf, src_w, src_h,
+    self->display.update((const uint8_t *)buf.buf, src_w, src_h,
                           args[ARG_width].u_int, args[ARG_height].u_int,
                           args[ARG_bitdepth].u_int, args[ARG_rotation].u_int,
                           args[ARG_mirror].u_int, args[ARG_pixel_double].u_int,
