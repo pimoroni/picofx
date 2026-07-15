@@ -20,4 +20,6 @@
 // PSRAM Settings
 #define MICROPY_HW_ENABLE_PSRAM                 (1)
 #define MICROPY_HW_PSRAM_CS_PIN                 PIMORONI_MIGHTYFX_PSRAM_CS_PIN
-#define MICROPY_GC_SPLIT_HEAP                   (1)
+// GC heap lives entirely in PSRAM, freeing the linker's SRAM heap region for
+// the display to use as a fast staging/backing buffer (see spidisplay module).
+#define MICROPY_GC_SPLIT_HEAP                   (0)

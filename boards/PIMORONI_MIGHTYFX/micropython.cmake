@@ -36,6 +36,9 @@ include(motor/micropython)
 # Utility
 include(adcfft/micropython)
 
+# Display transform + DMA transport
+include(${CMAKE_CURRENT_LIST_DIR}/modules/spidisplay/micropython.cmake)
+
 # C++ Magic Memory
 include(cppmem/micropython)
 

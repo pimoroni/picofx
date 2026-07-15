@@ -970,26 +970,34 @@ PIXEL_DOUBLE_FUNCTIONS = {
 
 
 class ST7789:
-    def __init__(self, spi, cs, dc, bl, width=240, height=240, bitdepth=16, framerate=60):
+    def __init__(self, spi, cs, dc, bl, width=240, height=240, bitdepth=16, framerate=60, display=None):
+        # When display is a spidisplay.SPIDisplay it owns the SPI bus and the
+        # CS/DC pins, and the transform and transfer run in C. Otherwise the
+        # Viper path drives a machine.SPI directly.
+        self._display = display
+
         self.spi = spi
         self.CS = cs
-        self.CS.init(machine.Pin.OUT)
-
         self.DC = dc
-        self.DC.init(machine.Pin.OUT)
+        if display is None:
+            self.CS.init(machine.Pin.OUT)
+            self.DC.init(machine.Pin.OUT)
 
         self.BL = bl
         self.BL.init(machine.Pin.OUT, value=False)
 
         self._width = width
         self._height = height
+        self._bitdepth = bitdepth
 
-        # Check the selected bit depth is valid, get the code and conversion functions, and create the buffer
+        # Check the selected bit depth is valid and get the code. The Viper path
+        # also needs the conversion functions and a full-frame buffer.
         try:
             bd_code = PIXEL_FORMAT[bitdepth]
-            self.__normal, self.__mirror, self.__rotate, self.__rotate_mirror = PIXEL_FUNCTIONS[bitdepth]
-            self.__dbl_normal, self.__dbl_mirror, self.__dbl_rotate, self.__dbl_rotate_mirror = PIXEL_DOUBLE_FUNCTIONS[bitdepth]
-            self.BUFFER = bytes((self._width * self._height * bitdepth) // 8)
+            if display is None:
+                self.__normal, self.__mirror, self.__rotate, self.__rotate_mirror = PIXEL_FUNCTIONS[bitdepth]
+                self.__dbl_normal, self.__dbl_mirror, self.__dbl_rotate, self.__dbl_rotate_mirror = PIXEL_DOUBLE_FUNCTIONS[bitdepth]
+                self.BUFFER = bytes((self._width * self._height * bitdepth) // 8)
 
         except KeyError as e:
             items = [str(bd) for bd in PIXEL_FORMAT]
@@ -1058,6 +1066,10 @@ class ST7789:
         self.command(REG_MADCTL, MADCTL_HORIZ_ORDER)
 
     def command(self, command, data=None):
+        if self._display is not None:
+            self._display.command(command, data)
+            return
+
         self.DC.low()
         self.CS.low()
 
@@ -1081,6 +1093,16 @@ class ST7789:
         r_index = rotation // 90
         if r_index < 0 or r_index > 3 or rotation % 90:     # Modulo check ensures rotation is exactly a multipe of 90
             raise ValueError(f"{rotation} is not a valid angle. Expected 0, 90, 180, or 270.")
+
+        # Native path: the C module handles the transform, transfer, and TE wait
+        if self._display is not None:
+            self._display.update(image, self._width, self._height,
+                                 bitdepth=self._bitdepth, rotation=rotation,
+                                 mirror=1 if mirror else 0,
+                                 pixel_double=1 if pixel_double else 0,
+                                 bg=bg, ram_write=REG_RAMWR, v_sync=v_sync)
+            self.BL.on()
+            return
 
         r_half = r_index >> 1          # Zero for 0 or 90. One for 180 or 270
 
