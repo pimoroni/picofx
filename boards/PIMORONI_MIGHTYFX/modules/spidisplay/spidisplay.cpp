@@ -164,9 +164,8 @@ extern "C" {
 
 #include "py/runtime.h"
 
-// The C++ object lives inline in the mp_obj (not a separate m_new block), so the
-// __del__ finaliser can never dereference a block already freed earlier in the
-// same gc_sweep_all() pass.
+// The C++ object lives inline in the mp_obj rather than a separate m_new block:
+// one fewer allocation and a single lifetime to manage.
 typedef struct _SPIDisplay_obj_t {
     mp_obj_base_t base;
     spidisplay::SPIDisplay display;
