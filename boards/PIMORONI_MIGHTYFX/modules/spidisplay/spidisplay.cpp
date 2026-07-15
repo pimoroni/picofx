@@ -18,10 +18,10 @@ namespace spidisplay {
 
 // Two static SRAM band buffers: one is streamed by DMA while the CPU converts
 // the next into the other. Each holds update()'s band_rows = BAND_BYTES /
-// dst_row_bytes: ~21 rows at the widest in-scope panel (240px, 480 bytes/row at
+// dst_row_bytes: 6 rows at the widest in-scope panel (240px, 480 bytes/row at
 // RGB565). SRAM is required: the RP2350 M33 has no SRAM data cache, so DMA sees
 // CPU writes without maintenance.
-static constexpr size_t BAND_BYTES = 10240;
+static constexpr size_t BAND_BYTES = 2880; // 2880 is divisible both by 240 * 3 and 120 * 2
 static uint8_t band_a[BAND_BYTES] __attribute__((aligned(4)));
 static uint8_t band_b[BAND_BYTES] __attribute__((aligned(4)));
 
