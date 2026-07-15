@@ -1100,7 +1100,7 @@ class ST7789:
                                  bitdepth=self._bitdepth, rotation=rotation,
                                  mirror=1 if mirror else 0,
                                  pixel_double=1 if pixel_double else 0,
-                                 bg=bg, ram_write=REG_RAMWR, v_sync=v_sync)
+                                 bg=bg, v_sync=v_sync)
             self.BL.on()
             return
 
