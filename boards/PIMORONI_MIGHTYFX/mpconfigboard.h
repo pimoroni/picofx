@@ -23,3 +23,6 @@
 // GC heap lives entirely in PSRAM, freeing the linker's SRAM heap region for
 // the display to use as a fast staging/backing buffer (see spidisplay module).
 #define MICROPY_GC_SPLIT_HEAP                   (0)
+
+// Threading / core1 use will conflict badly with PicoVector's DUAL_CORE blit/rasterisation
+#define MICROPY_PY_THREAD                       (0)

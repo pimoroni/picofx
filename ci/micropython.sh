@@ -38,8 +38,9 @@ function ci_pimoroni_pico_clone {
 
 function ci_pimoroni_picovector_clone {
     log_inform "Using Pimoroni PicoVector pimoroni/$PIMORONI_PICOVECTOR_VERSION"
-    git clone https://github.com/pimoroni/picovector "$CI_BUILD_ROOT/picovector"
-    git -C "$CI_BUILD_ROOT/picovector" checkout $PIMORONI_PICOVECTOR_VERSION
+    git clone https://github.com/pimoroni/picovector-micropython "$CI_BUILD_ROOT/picovector-micropython"
+    git -C "$CI_BUILD_ROOT/picovector-micropython" checkout $PIMORONI_PICOVECTOR_VERSION
+    git -C "$CI_BUILD_ROOT/picovector-micropython" submodule update --init
 }
 
 function ci_pimoroni_aye_arr_clone {
@@ -126,6 +127,7 @@ function ci_cmake_configure {
     -DPICO_NO_COPRO_DIS=1 \
     -DPICOTOOL_FETCH_FROM_GIT_PATH="$TOOLS_DIR/picotool" \
     -DPIMORONI_PICO_PATH="$CI_BUILD_ROOT/pimoroni-pico" \
+    -DPICOVECTOR_MICROPYTHON_DIR="$CI_BUILD_ROOT/picovector-micropython" \
     -DPICOVECTOR_DIR="$CI_BUILD_ROOT/picovector" \
     -DCI_BUILD_ROOT="$CI_BUILD_ROOT" \
     -DPIMORONI_TOOLS_DIR="$TOOLS_DIR" \
@@ -154,7 +156,7 @@ function ci_cmake_build {
     fi
 
     ccache --zero-stats || true
-    cmake --build $BUILD_DIR -j 2
+    cmake --build $BUILD_DIR -j 2 || return $?
     ccache --show-stats || true
 
     if [ -z ${CI_RELEASE_FILENAME+x} ]; then

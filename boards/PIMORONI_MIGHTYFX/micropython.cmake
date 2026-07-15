@@ -12,8 +12,13 @@ list(APPEND CMAKE_MODULE_PATH "${PIMORONI_PICO_PATH}/micropython/modules")
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
-# PicoVector and supporting libs
-find_package(PICOVECTOR CONFIG REQUIRED)
+# PicoVector & MicroPython bindings
+# Rasterise/blur on core1 (PV_DUAL_CORE is off by default in picovector-micropython).
+set(PV_DUAL_CORE ON)
+find_package(PICOVECTOR_MICROPYTHON CONFIG REQUIRED)
+
+# Build picovector for Tufty 2350
+target_compile_definitions(usermod_picovector INTERFACE TUFTY=1 m_malloc_no_scan=m_malloc)
 
 # Essential
 include(pimoroni_i2c/micropython)
