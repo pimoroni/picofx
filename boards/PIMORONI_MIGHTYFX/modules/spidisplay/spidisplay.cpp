@@ -6,6 +6,7 @@
 // spidisplay_bindings.c.
 
 #include <new>
+#include <utility>
 
 #include "hardware/gpio.h"
 #include "hardware/spi.h"
@@ -15,12 +16,14 @@
 
 namespace spidisplay {
 
-// Single shared static SRAM buffer, split into two band buffers per update.
-// Sized for the worst case in scope (320-wide RGB565, 16-row bands): DMA reads
-// from it while the CPU converts the next band. Must be SRAM: the RP2350 M33
-// has no SRAM data cache, so DMA sees CPU writes coherently.
-static constexpr size_t BAND_BUFFER_BYTES = 20480;
-static uint8_t band_buffer[BAND_BUFFER_BYTES] __attribute__((aligned(4)));
+// Two static SRAM band buffers: one is streamed by DMA while the CPU converts
+// the next into the other. Each holds update()'s band_rows = BAND_BYTES /
+// dst_row_bytes: ~21 rows at the widest in-scope panel (240px, 480 bytes/row at
+// RGB565). SRAM is required: the RP2350 M33 has no SRAM data cache, so DMA sees
+// CPU writes without maintenance.
+static constexpr size_t BAND_BYTES = 10240;
+static uint8_t band_a[BAND_BYTES] __attribute__((aligned(4)));
+static uint8_t band_b[BAND_BYTES] __attribute__((aligned(4)));
 
 SPIDisplay::SPIDisplay(uint spi_index, uint sck, uint mosi, uint cs, uint dc,
                        uint baudrate, int te)
@@ -104,10 +107,10 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     Descriptor d = make_descriptor(src, src_w, src_h, dst_w, dst_h, t, dbl, bg, fmt);
     ConvertFn convert = select_convert(fmt, t, dbl);
 
-    const size_t half = BAND_BUFFER_BYTES / 2;
-    uint8_t *buf[2] = {band_buffer, band_buffer + half};
+    uint8_t *front = band_a;   // converted, DMA in flight
+    uint8_t *back = band_b;    // converted next, while front streams
 
-    int band_rows = (int)(half / (size_t)d.dst_row_bytes);
+    int band_rows = (int)(BAND_BYTES / (size_t)d.dst_row_bytes);
     if (band_rows < 1) {
         band_rows = 1;
     }
@@ -127,18 +130,17 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
 
     // Convert the first band, then overlap each conversion with the previous
     // band's in-flight DMA.
-    convert(d, buf[0], 0, band_rows);
-    dma_start(buf[0], (size_t)band_rows * d.dst_row_bytes);
+    convert(d, front, 0, band_rows);
+    dma_start(front, (size_t)band_rows * d.dst_row_bytes);
 
     int row = band_rows;
-    int parity = 1;
     while (row < dst_h) {
         int rows = dst_h - row < band_rows ? dst_h - row : band_rows;
-        convert(d, buf[parity], row, rows);
+        convert(d, back, row, rows);
         dma_wait();
-        dma_start(buf[parity], (size_t)rows * d.dst_row_bytes);
+        dma_start(back, (size_t)rows * d.dst_row_bytes);
+        std::swap(front, back);
         row += rows;
-        parity ^= 1;
     }
     dma_wait();
     gpio_put(cs_pin, 1);
