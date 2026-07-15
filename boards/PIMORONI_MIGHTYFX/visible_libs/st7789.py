@@ -1087,7 +1087,7 @@ class ST7789:
         self.CS.high()
 
     @micropython.native
-    def update(self, image, rotation=0, mirror=False, v_sync=False, bg_color=picovector.color.black, pixel_double=False):
+    def update(self, image, rotation=0, mirror=False, v_sync=False, bg_color=picovector.color.black, pixel_double=False, offset=None):
         bg = bg_color.p & 0xffffffff
 
         r_index = rotation // 90
@@ -1100,7 +1100,7 @@ class ST7789:
                                  bitdepth=self._bitdepth, rotation=rotation,
                                  mirror=1 if mirror else 0,
                                  pixel_double=1 if pixel_double else 0,
-                                 bg=bg, v_sync=v_sync)
+                                 bg=bg, offset=offset, v_sync=v_sync)
             self.BL.on()
             return
 

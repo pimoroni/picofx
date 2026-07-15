@@ -99,12 +99,13 @@ void SPIDisplay::dma_wait() {
 void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
                         int dst_w, int dst_h, int bitdepth,
                         int rotation, int mirror, int pixel_double,
-                        uint32_t bg, bool v_sync) {
+                        uint32_t bg, bool centred, int off_x, int off_y, bool v_sync) {
     int fmt = bitdepth == 12 ? FORMAT_RGB444 : FORMAT_RGB565;
     bool dbl = pixel_double != 0;
 
     Transform t = map_transform(rotation, mirror);
-    Descriptor d = make_descriptor(src, src_w, src_h, dst_w, dst_h, t, dbl, bg, fmt);
+    Descriptor d = make_descriptor(src, src_w, src_h, dst_w, dst_h, t, dbl, bg, fmt,
+                                   centred, off_x, off_y);
     ConvertFn convert = select_convert(fmt, t, dbl);
 
     uint8_t *front = band_a;   // converted, DMA in flight
@@ -239,7 +240,7 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(SPIDisplay_command_obj, 2, 3, SPIDisp
 
 static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     enum { ARG_self, ARG_image, ARG_width, ARG_height, ARG_bitdepth,
-           ARG_rotation, ARG_mirror, ARG_pixel_double, ARG_bg, ARG_v_sync };
+           ARG_rotation, ARG_mirror, ARG_pixel_double, ARG_bg, ARG_offset, ARG_v_sync };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_image, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = mp_const_none} },
@@ -250,6 +251,7 @@ static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_ma
         { MP_QSTR_mirror, MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_pixel_double, MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_bg, MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_offset, MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_v_sync, MP_ARG_BOOL, {.u_bool = false} },
     };
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
@@ -270,11 +272,27 @@ static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_ma
         bg = (uint32_t)mp_obj_get_int_truncated(args[ARG_bg].u_obj);
     }
 
+    // offset=None centres the source; an (x, y) pair places its top-left.
+    bool centred = true;
+    int off_x = 0;
+    int off_y = 0;
+    if (args[ARG_offset].u_obj != mp_const_none) {
+        size_t len;
+        mp_obj_t *items;
+        mp_obj_get_array(args[ARG_offset].u_obj, &len, &items);
+        if (len != 2) {
+            mp_raise_ValueError(MP_ERROR_TEXT("offset must be an (x, y) pair"));
+        }
+        centred = false;
+        off_x = mp_obj_get_int(items[0]);
+        off_y = mp_obj_get_int(items[1]);
+    }
+
     self->display->update((const uint8_t *)buf.buf, src_w, src_h,
                           args[ARG_width].u_int, args[ARG_height].u_int,
                           args[ARG_bitdepth].u_int, args[ARG_rotation].u_int,
                           args[ARG_mirror].u_int, args[ARG_pixel_double].u_int,
-                          bg, args[ARG_v_sync].u_bool);
+                          bg, centred, off_x, off_y, args[ARG_v_sync].u_bool);
     return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_KW(SPIDisplay_update_obj, 4, SPIDisplay_update);

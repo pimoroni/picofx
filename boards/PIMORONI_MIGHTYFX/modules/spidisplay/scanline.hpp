@@ -188,10 +188,13 @@ inline ConvertFn select_convert(int fmt, const Transform &t, bool dbl) {
     return select_rotate<RGB565>(t.rotate, t.mirror, t.flip, dbl);
 }
 
-// Fill a descriptor for a whole-frame conversion (centred placement).
+// Fill a descriptor for a whole-frame conversion. When centred, the source is
+// placed in the middle of the destination; otherwise off_x/off_y are its
+// top-left, before any whole-frame flip.
 inline Descriptor make_descriptor(const uint8_t *src, int src_w, int src_h,
                                   int dst_w, int dst_h, const Transform &t,
-                                  bool dbl, uint32_t bg, int fmt) {
+                                  bool dbl, uint32_t bg, int fmt,
+                                  bool centred, int off_x, int off_y) {
     int scale = dbl ? 2 : 1;
     int base_w = t.rotate ? src_h : src_w;
     int base_h = t.rotate ? src_w : src_h;
@@ -204,8 +207,8 @@ inline Descriptor make_descriptor(const uint8_t *src, int src_w, int src_h,
     d.dst_h = dst_h;
     d.region_w = base_w * scale;
     d.region_h = base_h * scale;
-    d.off_x = (dst_w - d.region_w) >> 1;
-    d.off_y = (dst_h - d.region_h) >> 1;
+    d.off_x = centred ? ((dst_w - d.region_w) >> 1) : off_x;
+    d.off_y = centred ? ((dst_h - d.region_h) >> 1) : off_y;
     d.dst_row_bytes = (fmt == FORMAT_RGB444) ? (dst_w * 3 / 2) : (dst_w * 2);
     d.bg_r = bg & 0xff;
     d.bg_g = (bg >> 8) & 0xff;

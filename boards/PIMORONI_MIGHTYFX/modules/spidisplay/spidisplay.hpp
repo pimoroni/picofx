@@ -31,11 +31,13 @@ public:
                  const uint8_t *data, size_t data_len);
 
     // Convert and stream a whole frame. src is RGBA8888; bitdepth is 12 (RGB444)
-    // or 16 (RGB565). Blocks until the frame has left over SPI.
+    // or 16 (RGB565). centred places the source in the middle of the panel,
+    // otherwise off_x/off_y are its top-left. Blocks until the frame has left
+    // over SPI.
     void update(const uint8_t *src, int src_w, int src_h,
                 int dst_w, int dst_h, int bitdepth,
                 int rotation, int mirror, int pixel_double,
-                uint32_t bg, bool v_sync);
+                uint32_t bg, bool centred, int off_x, int off_y, bool v_sync);
 
 private:
     void te_wait();
