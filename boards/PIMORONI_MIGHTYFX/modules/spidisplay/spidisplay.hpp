@@ -21,8 +21,11 @@ public:
     // te < 0 means the tearing-effect signal shares the DC line (MightyFX);
     // otherwise te is a dedicated input GPIO. ram_write is the panel's
     // memory-write opcode. bitdepth is the panel's 12 (RGB444) or 16 (RGB565).
+    // band_lines is destination rows per DMA band: larger bands amortise the
+    // per-band setup overhead (tune up as SPI frequency rises), clamped to the
+    // static buffer's capacity.
     SPIDisplay(uint spi_index, uint sck, uint mosi, uint cs, uint dc,
-               uint baudrate, int te, uint8_t ram_write, int bitdepth);
+               uint baudrate, int te, uint8_t ram_write, int bitdepth, int band_lines);
     ~SPIDisplay();
 
     // Blocking raw register write: DC low, CS low, command, DC high, data,
@@ -47,6 +50,7 @@ private:
     int te_pin;
     uint8_t ram_write_cmd;
     int fmt;             // Destination packer tag (RGB444::format / RGB565::format)
+    int band_lines;      // Destination rows per DMA band
     int dma_chan;
 };
 

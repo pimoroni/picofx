@@ -17,18 +17,23 @@
 namespace spidisplay {
 
 // Two static SRAM band buffers: one is streamed by DMA while the CPU converts
-// the next into the other. Each holds update()'s band_rows = BAND_BYTES /
-// dst_row_bytes: 6 rows at the widest in-scope panel (240px, 480 bytes/row at
-// RGB565). SRAM is required: the RP2350 M33 has no SRAM data cache, so DMA sees
-// CPU writes without maintenance.
-static constexpr size_t BAND_BYTES = 2880; // 2880 is divisible both by 240 * 3 and 120 * 2
+// the next into the other. Sized to the tunable upper bound MAX_BAND_LINES rows
+// at the widest in-scope panel (240px, 480 bytes/row at RGB565); the actual
+// band height is SPIDisplay's band_lines, clamped to this. SRAM is required:
+// the RP2350 M33 has no SRAM data cache, so DMA sees CPU writes without
+// maintenance.
+static constexpr int MAX_BAND_LINES = 64;
+static constexpr size_t MAX_ROW_BYTES = 240 * 2;
+static constexpr size_t BAND_BYTES = MAX_BAND_LINES * MAX_ROW_BYTES;
 static uint8_t band_a[BAND_BYTES] __attribute__((aligned(4)));
 static uint8_t band_b[BAND_BYTES] __attribute__((aligned(4)));
 
 SPIDisplay::SPIDisplay(uint spi_index, uint sck, uint mosi, uint cs, uint dc,
-                       uint baudrate, int te, uint8_t ram_write, int bitdepth)
+                       uint baudrate, int te, uint8_t ram_write, int bitdepth,
+                       int band_lines)
     : cs_pin(cs), dc_pin(dc), te_pin(te), ram_write_cmd(ram_write),
-      fmt(bitdepth == 12 ? RGB444::format : RGB565::format) {
+      fmt(bitdepth == 12 ? RGB444::format : RGB565::format),
+      band_lines(band_lines < 1 ? 1 : (band_lines > MAX_BAND_LINES ? MAX_BAND_LINES : band_lines)) {
     spi = spi_index == 0 ? spi0 : spi1;
     spi_init(spi, baudrate);
     spi_set_format(spi, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
@@ -109,13 +114,7 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     uint8_t *front = band_a;   // converted, DMA in flight
     uint8_t *back = band_b;    // converted next, while front streams
 
-    int band_rows = (int)(BAND_BYTES / (size_t)d.dst_row_bytes);
-    if (band_rows < 1) {
-        band_rows = 1;
-    }
-    if (band_rows > dst_h) {
-        band_rows = dst_h;
-    }
+    int band_rows = band_lines > dst_h ? dst_h : band_lines;
 
     gpio_set_dir(dc_pin, GPIO_OUT);
     if (v_sync) {
@@ -174,7 +173,7 @@ typedef struct _SPIDisplay_obj_t {
 static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
                                     size_t n_kw, const mp_obj_t *all_args) {
     enum { ARG_spi, ARG_sck, ARG_mosi, ARG_cs, ARG_dc, ARG_baudrate, ARG_te,
-           ARG_ram_write, ARG_bitdepth };
+           ARG_ram_write, ARG_bitdepth, ARG_band_lines };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_spi, MP_ARG_REQUIRED | MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_sck, MP_ARG_REQUIRED | MP_ARG_INT, {.u_int = 0} },
@@ -185,6 +184,7 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
         { MP_QSTR_te, MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_ram_write, MP_ARG_INT, {.u_int = 0x2C} },
         { MP_QSTR_bitdepth, MP_ARG_INT, {.u_int = 16} },
+        { MP_QSTR_band_lines, MP_ARG_INT, {.u_int = 16} },
     };
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all_kw_array(n_args, n_kw, all_args,
@@ -201,7 +201,8 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
         (uint)args[ARG_spi].u_int, (uint)args[ARG_sck].u_int,
         (uint)args[ARG_mosi].u_int, (uint)args[ARG_cs].u_int,
         (uint)args[ARG_dc].u_int, (uint)args[ARG_baudrate].u_int, te,
-        (uint8_t)args[ARG_ram_write].u_int, args[ARG_bitdepth].u_int);
+        (uint8_t)args[ARG_ram_write].u_int, args[ARG_bitdepth].u_int,
+        args[ARG_band_lines].u_int);
     return MP_OBJ_FROM_PTR(self);
 }
 
