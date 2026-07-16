@@ -23,7 +23,7 @@ namespace spidisplay {
 // band height is SPIDisplay's band_lines, clamped to this. SRAM is required:
 // the RP2350 M33 has no SRAM data cache, so DMA sees CPU writes without
 // maintenance.
-static constexpr int MAX_BAND_LINES = 64;
+static constexpr int MAX_BAND_LINES = 128;
 static constexpr size_t MAX_ROW_BYTES = 240 * 2;
 static constexpr size_t BAND_BYTES = MAX_BAND_LINES * MAX_ROW_BYTES;
 static uint8_t band_a[BAND_BYTES] __attribute__((aligned(4)));
@@ -118,6 +118,18 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
 
     int band_rows = band_lines > dst_h ? dst_h : band_lines;
 
+    // Every band is this size except a possibly-shorter final one. The count
+    // still has to be reloaded per band: the channel decrements TRANS_COUNT to
+    // zero as it runs, and read_addr advances past the buffer.
+    const size_t full_band_bytes = (size_t)band_rows * d.dst_row_bytes;
+
+    uint32_t t_conv = time_us_32();
+    // Convert the first band, then overlap each conversion with the previous
+    // band's in-flight DMA.
+    convert(d, front, 0, band_rows);
+
+    last_convert_us = time_us_32() - t_conv;
+
     gpio_set_dir(dc_pin, GPIO_OUT);
     uint32_t t_te = time_us_32();
     if (v_sync) {
@@ -131,14 +143,7 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     spi_write_blocking(spi, &ram_write_cmd, 1);
     gpio_put(dc_pin, 1);
 
-    // Every band is this size except a possibly-shorter final one. The count
-    // still has to be reloaded per band: the channel decrements TRANS_COUNT to
-    // zero as it runs, and read_addr advances past the buffer.
-    const size_t full_band_bytes = (size_t)band_rows * d.dst_row_bytes;
-
-    // Convert the first band, then overlap each conversion with the previous
-    // band's in-flight DMA.
-    convert(d, front, 0, band_rows);
+    // Dispatch the first band
     dma_channel_set_read_addr(dma_chan, front, false);
     dma_channel_set_trans_count(dma_chan, full_band_bytes, true);  // true starts it
 
@@ -322,14 +327,15 @@ static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_ma
 }
 static MP_DEFINE_CONST_FUN_OBJ_KW(SPIDisplay_update_obj, 4, SPIDisplay_update);
 
-// (te_wait_us, frame_us) from the most recent update().
+// (convert_us, te_wait_us, frame_us) from the most recent update().
 static mp_obj_t SPIDisplay_profile(mp_obj_t self_in) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
-    mp_obj_t items[2] = {
+    mp_obj_t items[3] = {
+        mp_obj_new_int_from_uint(self->display.convert_us()),
         mp_obj_new_int_from_uint(self->display.te_wait_us()),
         mp_obj_new_int_from_uint(self->display.frame_us()),
     };
-    return mp_obj_new_tuple(2, items);
+    return mp_obj_new_tuple(3, items);
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_profile_obj, SPIDisplay_profile);
 
