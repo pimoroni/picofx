@@ -26,8 +26,9 @@ static uint8_t band_a[BAND_BYTES] __attribute__((aligned(4)));
 static uint8_t band_b[BAND_BYTES] __attribute__((aligned(4)));
 
 SPIDisplay::SPIDisplay(uint spi_index, uint sck, uint mosi, uint cs, uint dc,
-                       uint baudrate, int te, uint8_t ram_write)
-    : cs_pin(cs), dc_pin(dc), te_pin(te), ram_write_cmd(ram_write) {
+                       uint baudrate, int te, uint8_t ram_write, int bitdepth)
+    : cs_pin(cs), dc_pin(dc), te_pin(te), ram_write_cmd(ram_write),
+      fmt(bitdepth == 12 ? RGB444::format : RGB565::format) {
     spi = spi_index == 0 ? spi0 : spi1;
     spi_init(spi, baudrate);
     spi_set_format(spi, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
@@ -95,10 +96,9 @@ void SPIDisplay::te_wait() {
 }
 
 void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
-                        int dst_w, int dst_h, int bitdepth,
+                        int dst_w, int dst_h,
                         int rotation, int mirror, int pixel_double,
                         uint32_t bg, bool centred, int off_x, int off_y, bool v_sync) {
-    int fmt = bitdepth == 12 ? FORMAT_RGB444 : FORMAT_RGB565;
     bool dbl = pixel_double != 0;
 
     Transform t = map_transform(rotation, mirror);
@@ -173,7 +173,8 @@ typedef struct _SPIDisplay_obj_t {
 
 static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
                                     size_t n_kw, const mp_obj_t *all_args) {
-    enum { ARG_spi, ARG_sck, ARG_mosi, ARG_cs, ARG_dc, ARG_baudrate, ARG_te, ARG_ram_write };
+    enum { ARG_spi, ARG_sck, ARG_mosi, ARG_cs, ARG_dc, ARG_baudrate, ARG_te,
+           ARG_ram_write, ARG_bitdepth };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_spi, MP_ARG_REQUIRED | MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_sck, MP_ARG_REQUIRED | MP_ARG_INT, {.u_int = 0} },
@@ -183,6 +184,7 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
         { MP_QSTR_baudrate, MP_ARG_INT, {.u_int = 25000000} },
         { MP_QSTR_te, MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_ram_write, MP_ARG_INT, {.u_int = 0x2C} },
+        { MP_QSTR_bitdepth, MP_ARG_INT, {.u_int = 16} },
     };
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all_kw_array(n_args, n_kw, all_args,
@@ -199,7 +201,7 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
         (uint)args[ARG_spi].u_int, (uint)args[ARG_sck].u_int,
         (uint)args[ARG_mosi].u_int, (uint)args[ARG_cs].u_int,
         (uint)args[ARG_dc].u_int, (uint)args[ARG_baudrate].u_int, te,
-        (uint8_t)args[ARG_ram_write].u_int);
+        (uint8_t)args[ARG_ram_write].u_int, args[ARG_bitdepth].u_int);
     return MP_OBJ_FROM_PTR(self);
 }
 
@@ -249,14 +251,13 @@ static mp_obj_t SPIDisplay_command(size_t n_args, const mp_obj_t *args) {
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(SPIDisplay_command_obj, 2, 3, SPIDisplay_command);
 
 static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
-    enum { ARG_self, ARG_image, ARG_width, ARG_height, ARG_bitdepth,
+    enum { ARG_self, ARG_image, ARG_width, ARG_height,
            ARG_rotation, ARG_mirror, ARG_pixel_double, ARG_bg, ARG_offset, ARG_v_sync };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_image, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_width, MP_ARG_REQUIRED | MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_height, MP_ARG_REQUIRED | MP_ARG_INT, {.u_int = 0} },
-        { MP_QSTR_bitdepth, MP_ARG_INT, {.u_int = 16} },
         { MP_QSTR_rotation, MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_mirror, MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_pixel_double, MP_ARG_INT, {.u_int = 0} },
@@ -300,7 +301,7 @@ static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_ma
 
     self->display.update((const uint8_t *)buf.buf, src_w, src_h,
                           args[ARG_width].u_int, args[ARG_height].u_int,
-                          args[ARG_bitdepth].u_int, args[ARG_rotation].u_int,
+                          args[ARG_rotation].u_int,
                           args[ARG_mirror].u_int, args[ARG_pixel_double].u_int,
                           bg, centred, off_x, off_y, args[ARG_v_sync].u_bool);
     return mp_const_none;

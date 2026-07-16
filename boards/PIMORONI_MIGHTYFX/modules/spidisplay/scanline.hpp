@@ -45,8 +45,10 @@ struct RGBA8888 {
 };
 
 // Destination packers. RGB444 packs two pixels into three bytes; RGB565 packs
-// one pixel into two big-endian bytes.
+// one pixel into two big-endian bytes. format is the runtime tag carried
+// through the pipeline (also the panel bit depth: 444 = 12-bit, 565 = 16-bit).
 struct RGB444 {
+    static constexpr int format = 444;
     static constexpr bool pairs = true;
 
     static inline void pack2(uint8_t *out,
@@ -59,6 +61,7 @@ struct RGB444 {
 };
 
 struct RGB565 {
+    static constexpr int format = 565;
     static constexpr bool pairs = false;
 
     static inline void pack1(uint8_t *out, uint8_t r, uint8_t g, uint8_t b) {
@@ -129,10 +132,6 @@ void convert_band(const Descriptor &d, uint8_t *dst_band, int row0, int nrows) {
     }
 }
 
-// Panel bit depths carried through the pipeline.
-constexpr int FORMAT_RGB444 = 444;
-constexpr int FORMAT_RGB565 = 565;
-
 // Runtime transform, decomposed into the kernel's compile-time axes. Maps
 // (rotation, mirror) exactly as reference.py's _TRANSFORM table.
 struct Transform {
@@ -158,14 +157,16 @@ inline Transform map_transform(int rotation, int mirror) {
 // A selected kernel instantiation: converts nrows destination rows from row0.
 using ConvertFn = void (*)(const Descriptor &, uint8_t *, int, int);
 
+template <class Dst, bool Rotate, bool Mirror, bool Flip>
+inline ConvertFn select_dbl(bool dbl) {
+    return dbl ? &convert_band<RGBA8888, Dst, Mirror, Flip, Rotate, true>
+               : &convert_band<RGBA8888, Dst, Mirror, Flip, Rotate, false>;
+}
+
 template <class Dst, bool Rotate, bool Mirror>
 inline ConvertFn select_flip(bool flip, bool dbl) {
-    if (flip) {
-        return dbl ? &convert_band<RGBA8888, Dst, Mirror, true, Rotate, true>
-                   : &convert_band<RGBA8888, Dst, Mirror, true, Rotate, false>;
-    }
-    return dbl ? &convert_band<RGBA8888, Dst, Mirror, false, Rotate, true>
-               : &convert_band<RGBA8888, Dst, Mirror, false, Rotate, false>;
+    return flip ? select_dbl<Dst, Rotate, Mirror, true>(dbl)
+                : select_dbl<Dst, Rotate, Mirror, false>(dbl);
 }
 
 template <class Dst, bool Rotate>
@@ -182,7 +183,7 @@ inline ConvertFn select_rotate(bool rotate, bool mirror, bool flip, bool dbl) {
 
 // Resolve the runtime (format, transform, double) to a kernel instantiation.
 inline ConvertFn select_convert(int fmt, const Transform &t, bool dbl) {
-    if (fmt == FORMAT_RGB444) {
+    if (fmt == RGB444::format) {
         return select_rotate<RGB444>(t.rotate, t.mirror, t.flip, dbl);
     }
     return select_rotate<RGB565>(t.rotate, t.mirror, t.flip, dbl);
@@ -209,7 +210,7 @@ inline Descriptor make_descriptor(const uint8_t *src, int src_w, int src_h,
     d.region_h = base_h * scale;
     d.off_x = centred ? ((dst_w - d.region_w) >> 1) : off_x;
     d.off_y = centred ? ((dst_h - d.region_h) >> 1) : off_y;
-    d.dst_row_bytes = (fmt == FORMAT_RGB444) ? (dst_w * 3 / 2) : (dst_w * 2);
+    d.dst_row_bytes = (fmt == RGB444::format) ? (dst_w * 3 / 2) : (dst_w * 2);
     d.bg_r = bg & 0xff;
     d.bg_g = (bg >> 8) & 0xff;
     d.bg_b = (bg >> 16) & 0xff;

@@ -20,9 +20,9 @@ class SPIDisplay {
 public:
     // te < 0 means the tearing-effect signal shares the DC line (MightyFX);
     // otherwise te is a dedicated input GPIO. ram_write is the panel's
-    // memory-write opcode, issued before each pixel stream.
+    // memory-write opcode. bitdepth is the panel's 12 (RGB444) or 16 (RGB565).
     SPIDisplay(uint spi_index, uint sck, uint mosi, uint cs, uint dc,
-               uint baudrate, int te, uint8_t ram_write);
+               uint baudrate, int te, uint8_t ram_write, int bitdepth);
     ~SPIDisplay();
 
     // Blocking raw register write: DC low, CS low, command, DC high, data,
@@ -30,12 +30,11 @@ public:
     void command(const uint8_t *cmd, size_t cmd_len,
                  const uint8_t *data, size_t data_len);
 
-    // Convert and stream a whole frame. src is RGBA8888; bitdepth is 12 (RGB444)
-    // or 16 (RGB565). centred places the source in the middle of the panel,
-    // otherwise off_x/off_y are its top-left. Blocks until the frame has left
-    // over SPI.
+    // Convert and stream a whole frame. src is RGBA8888. centred places the
+    // source in the middle of the panel, otherwise off_x/off_y are its top-left.
+    // Blocks until the frame has left over SPI.
     void update(const uint8_t *src, int src_w, int src_h,
-                int dst_w, int dst_h, int bitdepth,
+                int dst_w, int dst_h,
                 int rotation, int mirror, int pixel_double,
                 uint32_t bg, bool centred, int off_x, int off_y, bool v_sync);
 
@@ -47,6 +46,7 @@ private:
     uint dc_pin;
     int te_pin;
     uint8_t ram_write_cmd;
+    int fmt;             // Destination packer tag (RGB444::format / RGB565::format)
     int dma_chan;
 };
 

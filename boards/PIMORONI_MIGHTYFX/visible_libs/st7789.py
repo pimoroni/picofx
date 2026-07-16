@@ -1097,7 +1097,7 @@ class ST7789:
         # Native path: the C module handles the transform, transfer, and TE wait
         if self._display is not None:
             self._display.update(image, self._width, self._height,
-                                 bitdepth=self._bitdepth, rotation=rotation,
+                                 rotation=rotation,
                                  mirror=1 if mirror else 0,
                                  pixel_double=1 if pixel_double else 0,
                                  bg=bg, offset=offset, v_sync=v_sync)
