@@ -33,13 +33,14 @@ public:
     void command(const uint8_t *cmd, size_t cmd_len,
                  const uint8_t *data, size_t data_len);
 
-    // Convert and stream a whole frame. src is RGBA8888. centred places the
-    // source in the middle of the panel, otherwise off_x/off_y are its top-left.
-    // Blocks until the frame has left over SPI.
+    // Convert and stream a whole frame. src is RGBA8888. Each axis is centred,
+    // or placed by its off_x/off_y top-left. Blocks until the frame has left
+    // over SPI.
     void update(const uint8_t *src, int src_w, int src_h,
                 int dst_w, int dst_h,
                 int rotation, int mirror, int pixel_double,
-                uint32_t bg, bool centred, int off_x, int off_y, bool v_sync);
+                uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
+                bool v_sync);
 
     // Microsecond timings from the most recent update(): the TE/vsync wait, and
     // the whole frame emit (DC low before RAMWR to CS high after the stream).
