@@ -10,6 +10,7 @@
 
 #include "hardware/gpio.h"
 #include "hardware/spi.h"
+#include "pico/time.h"
 
 #include "scanline.hpp"
 #include "spidisplay.hpp"
@@ -117,10 +118,13 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     int band_rows = band_lines > dst_h ? dst_h : band_lines;
 
     gpio_set_dir(dc_pin, GPIO_OUT);
+    uint32_t t_te = time_us_32();
     if (v_sync) {
         te_wait();
     }
+    last_te_wait_us = time_us_32() - t_te;
 
+    uint32_t t_frame = time_us_32();
     gpio_put(dc_pin, 0);
     gpio_put(cs_pin, 0);
     spi_write_blocking(spi, &ram_write_cmd, 1);
@@ -155,6 +159,7 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     while (spi_is_busy(spi)) {
     }
     gpio_put(cs_pin, 1);
+    last_frame_us = time_us_32() - t_frame;
 }
 
 }  // namespace spidisplay
@@ -309,10 +314,22 @@ static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_ma
 }
 static MP_DEFINE_CONST_FUN_OBJ_KW(SPIDisplay_update_obj, 4, SPIDisplay_update);
 
+// (te_wait_us, frame_us) from the most recent update().
+static mp_obj_t SPIDisplay_profile(mp_obj_t self_in) {
+    SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
+    mp_obj_t items[2] = {
+        mp_obj_new_int_from_uint(self->display.te_wait_us()),
+        mp_obj_new_int_from_uint(self->display.frame_us()),
+    };
+    return mp_obj_new_tuple(2, items);
+}
+static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_profile_obj, SPIDisplay_profile);
+
 static const mp_rom_map_elem_t SPIDisplay_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&SPIDisplay___del___obj) },
     { MP_ROM_QSTR(MP_QSTR_command), MP_ROM_PTR(&SPIDisplay_command_obj) },
     { MP_ROM_QSTR(MP_QSTR_update), MP_ROM_PTR(&SPIDisplay_update_obj) },
+    { MP_ROM_QSTR(MP_QSTR_profile), MP_ROM_PTR(&SPIDisplay_profile_obj) },
 };
 static MP_DEFINE_CONST_DICT(SPIDisplay_locals_dict, SPIDisplay_locals_dict_table);
 

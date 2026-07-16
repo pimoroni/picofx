@@ -41,6 +41,11 @@ public:
                 int rotation, int mirror, int pixel_double,
                 uint32_t bg, bool centred, int off_x, int off_y, bool v_sync);
 
+    // Microsecond timings from the most recent update(): the TE/vsync wait, and
+    // the whole frame emit (DC low before RAMWR to CS high after the stream).
+    uint32_t te_wait_us() const { return last_te_wait_us; }
+    uint32_t frame_us() const { return last_frame_us; }
+
 private:
     void te_wait();
 
@@ -52,6 +57,8 @@ private:
     int fmt;             // Destination packer tag (RGB444::format / RGB565::format)
     int band_lines;      // Destination rows per DMA band
     int dma_chan;
+    uint32_t last_te_wait_us = 0;
+    uint32_t last_frame_us = 0;
 };
 
 }  // namespace spidisplay
