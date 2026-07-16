@@ -23,10 +23,10 @@ struct Descriptor {
     int src_h;
     int dst_w;
     int dst_h;
-    int off_x;          // Source top-left placement, before any whole-frame flip
+    int off_x;          // Source top-left in the upright canvas (pre-rotation)
     int off_y;
-    int region_w;       // Placed source extent in destination pixels (scaled)
-    int region_h;
+    int region_w;       // Source extent in canvas pixels (src_w * scale)
+    int region_h;       // Source extent in canvas pixels (src_h * scale)
     int dst_row_bytes;  // Packed bytes per destination row
     uint8_t bg_r;
     uint8_t bg_g;
@@ -71,17 +71,35 @@ struct RGB565 {
     }
 };
 
-// Resolve one destination pixel to its (r, g, b), sampling the source or the
-// background. The whole-frame flips are applied as an inverse coordinate
-// transform so destination rows are still produced in scan order.
-template <class Src, bool Mirror, bool Flip, bool Rotate, bool Double>
+// Resolve one destination pixel to its (r, g, b). The source is composed at its
+// offset in an upright canvas, then the whole screen is rotated clockwise and
+// mirror-flipped; here we invert that (un-mirror, inverse-rotate the output
+// pixel back to the canvas) so destination rows are still produced in scan
+// order and the origin corner tracks the transform.
+template <class Src, int Rotation, bool Mirror, bool Double>
 inline void sample(const Descriptor &d, int dst_x, int dst_y,
                    uint8_t &r, uint8_t &g, uint8_t &b) {
-    int bx = Mirror ? (d.dst_w - 1 - dst_x) : dst_x;
-    int by = Flip ? (d.dst_h - 1 - dst_y) : dst_y;
+    int mx = Mirror ? (d.dst_w - 1 - dst_x) : dst_x;
+    int my = dst_y;
 
-    int u = bx - d.off_x;
-    int v = by - d.off_y;
+    int cx;
+    int cy;
+    if constexpr (Rotation == 90) {
+        cx = my;
+        cy = d.dst_w - 1 - mx;
+    } else if constexpr (Rotation == 180) {
+        cx = d.dst_w - 1 - mx;
+        cy = d.dst_h - 1 - my;
+    } else if constexpr (Rotation == 270) {
+        cx = d.dst_h - 1 - my;
+        cy = mx;
+    } else {
+        cx = mx;
+        cy = my;
+    }
+
+    int u = cx - d.off_x;
+    int v = cy - d.off_y;
     if (u < 0 || u >= d.region_w || v < 0 || v >= d.region_h) {
         r = d.bg_r;
         g = d.bg_g;
@@ -89,25 +107,14 @@ inline void sample(const Descriptor &d, int dst_x, int dst_y,
         return;
     }
 
-    int a = Double ? (u >> 1) : u;
-    int c = Double ? (v >> 1) : v;
-
-    int src_x;
-    int src_y;
-    if constexpr (Rotate) {
-        src_x = c;
-        src_y = d.src_h - 1 - a;
-    } else {
-        src_x = a;
-        src_y = c;
-    }
-
-    Src::load(d.src + (src_y * d.src_w + src_x) * Src::bytes, r, g, b);
+    int sx = Double ? (u >> 1) : u;
+    int sy = Double ? (v >> 1) : v;
+    Src::load(d.src + (sy * d.src_w + sx) * Src::bytes, r, g, b);
 }
 
 // Convert a band of nrows destination rows, starting at row0, into dst_band
 // (packed, one destination row per dst_row_bytes).
-template <class Src, class Dst, bool Mirror, bool Flip, bool Rotate, bool Double>
+template <class Src, class Dst, int Rotation, bool Mirror, bool Double>
 void convert_band(const Descriptor &d, uint8_t *dst_band, int row0, int nrows) {
     for (int row = 0; row < nrows; ++row) {
         int dst_y = row0 + row;
@@ -116,15 +123,15 @@ void convert_band(const Descriptor &d, uint8_t *dst_band, int row0, int nrows) {
         if constexpr (Dst::pairs) {
             for (int dst_x = 0; dst_x < d.dst_w; dst_x += 2) {
                 uint8_t r0, g0, b0, r1, g1, b1;
-                sample<Src, Mirror, Flip, Rotate, Double>(d, dst_x, dst_y, r0, g0, b0);
-                sample<Src, Mirror, Flip, Rotate, Double>(d, dst_x + 1, dst_y, r1, g1, b1);
+                sample<Src, Rotation, Mirror, Double>(d, dst_x, dst_y, r0, g0, b0);
+                sample<Src, Rotation, Mirror, Double>(d, dst_x + 1, dst_y, r1, g1, b1);
                 Dst::pack2(out, r0, g0, b0, r1, g1, b1);
                 out += 3;
             }
         } else {
             for (int dst_x = 0; dst_x < d.dst_w; ++dst_x) {
                 uint8_t r, g, b;
-                sample<Src, Mirror, Flip, Rotate, Double>(d, dst_x, dst_y, r, g, b);
+                sample<Src, Rotation, Mirror, Double>(d, dst_x, dst_y, r, g, b);
                 Dst::pack1(out, r, g, b);
                 out += 2;
             }
@@ -132,61 +139,52 @@ void convert_band(const Descriptor &d, uint8_t *dst_band, int row0, int nrows) {
     }
 }
 
-// Runtime transform, decomposed into the kernel's compile-time axes. Maps
-// (rotation, mirror) exactly as reference.py's _TRANSFORM table.
+// Runtime transform: clockwise rotation (0/90/180/270) then a horizontal
+// mirror of the output.
 struct Transform {
-    bool rotate;  // 90 / 270: swap source axes
-    bool mirror;  // horizontal whole-frame flip
-    bool flip;    // vertical whole-frame flip
+    int rotation;
+    bool mirror;
 };
 
 inline Transform map_transform(int rotation, int mirror) {
-    bool m = mirror != 0;
-    switch (rotation) {
-        case 90:
-            return {true, false, m};
-        case 180:
-            return {false, !m, true};
-        case 270:
-            return {true, true, !m};
-        default:  // 0
-            return {false, m, false};
-    }
+    return {rotation, mirror != 0};
 }
 
 // A selected kernel instantiation: converts nrows destination rows from row0.
 using ConvertFn = void (*)(const Descriptor &, uint8_t *, int, int);
 
-template <class Dst, bool Rotate, bool Mirror, bool Flip>
+template <class Src, class Dst, int Rotation, bool Mirror>
 inline ConvertFn select_dbl(bool dbl) {
-    return dbl ? &convert_band<RGBA8888, Dst, Mirror, Flip, Rotate, true>
-               : &convert_band<RGBA8888, Dst, Mirror, Flip, Rotate, false>;
+    return dbl ? &convert_band<Src, Dst, Rotation, Mirror, true>
+               : &convert_band<Src, Dst, Rotation, Mirror, false>;
 }
 
-template <class Dst, bool Rotate, bool Mirror>
-inline ConvertFn select_flip(bool flip, bool dbl) {
-    return flip ? select_dbl<Dst, Rotate, Mirror, true>(dbl)
-                : select_dbl<Dst, Rotate, Mirror, false>(dbl);
+template <class Src, class Dst, int Rotation>
+inline ConvertFn select_mirror(bool mirror, bool dbl) {
+    return mirror ? select_dbl<Src, Dst, Rotation, true>(dbl)
+                  : select_dbl<Src, Dst, Rotation, false>(dbl);
 }
 
-template <class Dst, bool Rotate>
-inline ConvertFn select_mirror(bool mirror, bool flip, bool dbl) {
-    return mirror ? select_flip<Dst, Rotate, true>(flip, dbl)
-                  : select_flip<Dst, Rotate, false>(flip, dbl);
-}
-
-template <class Dst>
-inline ConvertFn select_rotate(bool rotate, bool mirror, bool flip, bool dbl) {
-    return rotate ? select_mirror<Dst, true>(mirror, flip, dbl)
-                  : select_mirror<Dst, false>(mirror, flip, dbl);
+template <class Src, class Dst>
+inline ConvertFn select_rotation(int rotation, bool mirror, bool dbl) {
+    switch (rotation) {
+        case 90:
+            return select_mirror<Src, Dst, 90>(mirror, dbl);
+        case 180:
+            return select_mirror<Src, Dst, 180>(mirror, dbl);
+        case 270:
+            return select_mirror<Src, Dst, 270>(mirror, dbl);
+        default:
+            return select_mirror<Src, Dst, 0>(mirror, dbl);
+    }
 }
 
 // Resolve the runtime (format, transform, double) to a kernel instantiation.
 inline ConvertFn select_convert(int fmt, const Transform &t, bool dbl) {
     if (fmt == RGB444::format) {
-        return select_rotate<RGB444>(t.rotate, t.mirror, t.flip, dbl);
+        return select_rotation<RGBA8888, RGB444>(t.rotation, t.mirror, dbl);
     }
-    return select_rotate<RGB565>(t.rotate, t.mirror, t.flip, dbl);
+    return select_rotation<RGBA8888, RGB565>(t.rotation, t.mirror, dbl);
 }
 
 // Fill a descriptor for a whole-frame conversion. Each axis is centred, or
@@ -196,8 +194,12 @@ inline Descriptor make_descriptor(const uint8_t *src, int src_w, int src_h,
                                   bool dbl, uint32_t bg, int fmt,
                                   bool centred_x, int off_x, bool centred_y, int off_y) {
     int scale = dbl ? 2 : 1;
-    int base_w = t.rotate ? src_h : src_w;
-    int base_h = t.rotate ? src_w : src_h;
+    // Upright canvas: rotating it clockwise yields the dst_w x dst_h output, so
+    // for 90/270 the canvas dimensions are swapped. The offset centres the
+    // source's own extent within that canvas.
+    bool swap = t.rotation == 90 || t.rotation == 270;
+    int canvas_w = swap ? dst_h : dst_w;
+    int canvas_h = swap ? dst_w : dst_h;
 
     Descriptor d;
     d.src = src;
@@ -205,10 +207,10 @@ inline Descriptor make_descriptor(const uint8_t *src, int src_w, int src_h,
     d.src_h = src_h;
     d.dst_w = dst_w;
     d.dst_h = dst_h;
-    d.region_w = base_w * scale;
-    d.region_h = base_h * scale;
-    d.off_x = centred_x ? ((dst_w - d.region_w) >> 1) : off_x;
-    d.off_y = centred_y ? ((dst_h - d.region_h) >> 1) : off_y;
+    d.region_w = src_w * scale;
+    d.region_h = src_h * scale;
+    d.off_x = centred_x ? ((canvas_w - d.region_w) >> 1) : off_x;
+    d.off_y = centred_y ? ((canvas_h - d.region_h) >> 1) : off_y;
     d.dst_row_bytes = (fmt == RGB444::format) ? (dst_w * 3 / 2) : (dst_w * 2);
     d.bg_r = bg & 0xff;
     d.bg_g = (bg >> 8) & 0xff;
