@@ -117,12 +117,12 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     // reuse from the XIP cache's 8-byte line fills, and its fills evict flash
     // code and dirty heap lines. When the source is in the cached PSRAM window,
     // read it through the no-allocate alias: shorter QMI bursts, cache untouched.
-    constexpr uintptr_t PSRAM_WINDOW = 0x01000000;  // 16 MB XIP window per chip select
-    constexpr uintptr_t PSRAM_CACHED_BASE = XIP_BASE + PSRAM_WINDOW;  // CS1
-    if ((uintptr_t)d.src - PSRAM_CACHED_BASE < PSRAM_WINDOW
-        && d.step_x != RGBA8888::bytes && d.step_x != -RGBA8888::bytes) {
-        d.src += XIP_NOCACHE_NOALLOC_BASE - XIP_BASE;
-    }
+    // constexpr uintptr_t PSRAM_WINDOW = 0x01000000;  // 16 MB XIP window per chip select
+    // constexpr uintptr_t PSRAM_CACHED_BASE = XIP_BASE + PSRAM_WINDOW;  // CS1
+    // if ((uintptr_t)d.src - PSRAM_CACHED_BASE < PSRAM_WINDOW
+    //    && d.step_x != RGBA8888::bytes && d.step_x != -RGBA8888::bytes) {
+    //    d.src += XIP_NOCACHE_NOALLOC_BASE - XIP_BASE;
+    //}
 
     ConvertFn convert = select_convert(fmt, dbl);
 
@@ -136,10 +136,65 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     // zero as it runs, and read_addr advances past the buffer.
     const size_t full_band_bytes = (size_t)band_rows * d.dst_row_bytes;
 
+     // --- NEW: Fast SRAM Row Buffer for Mirroring/Rotation ---
+    // Sized to the widest possible panel in bytes (240px * 4 bytes for RGBA8888)
+    static uint8_t sram_row_buffer[240 * 4] __attribute__((aligned(4)));
+
+    uintptr_t src_addr = (uintptr_t)d.src;
+
+    constexpr uintptr_t PSRAM_WINDOW = 0x01000000;         // 16 MB window per CS
+    constexpr uintptr_t PSRAM_CACHED_BASE = XIP_BASE + PSRAM_WINDOW; // Start of PSRAM (0x11000000)
+
+    // Check if the source address sits anywhere inside the 16MB hardware window for CS1
+    bool src_in_psram = (src_addr >= PSRAM_CACHED_BASE && 
+                         src_addr < PSRAM_CACHED_BASE + PSRAM_WINDOW);
+    // ------------------------------------------------------------
+
     uint32_t t_conv = time_us_32();
-    // Convert the first band, then overlap each conversion with the previous
-    // band's in-flight DMA.
-    convert(d, front, 0, band_rows);
+
+    // Helper lambda to process a band row-by-row to intercept with our SRAM buffer
+    auto convert_band_optimized = [&](Descriptor &desc, uint8_t *dest_band, int start_row, int num_rows) {
+        // 1. Must be resident in physical PSRAM space
+        // 2. ONLY run for 180 degrees without mirror OR 0 degrees with mirror.
+        // (All other layouts: 0° no mirror, 180° with mirror, 90°, and 270° fall back to native convert)
+        bool target_optimization_mode = ((rotation == 180 && !mirror) || (rotation == 0 && mirror));
+
+        if (src_in_psram && target_optimization_mode) {
+            // Process row by row to take advantage of contiguous SRAM row streaming
+            uint8_t *current_dest = dest_band;
+            const uint8_t *original_src_base = desc.src;
+
+            for (int r = 0; r < num_rows; ++r) {
+                int absolute_row = start_row + r;
+
+                // Calculate where the current sequential source row starts in PSRAM
+                // Note: Make sure desc.src_row_bytes reflects your true raw source stride.
+                const uint8_t *psram_row_ptr = original_src_base + (absolute_row * desc.src_row_bytes);
+
+                // 1. Fire a fast contiguous copy over the QSPI bus into zero-wait-state SRAM
+                // This maximizes the RP2350 QMI burst logic.
+                std::memcpy(sram_row_buffer, psram_row_ptr, src_w * RGBA8888::bytes);
+
+                // 2. Temporarily redirect the descriptor to pull from our flat SRAM buffer
+                // We offset it so that the internal descriptor math aligns with 'absolute_row'
+                desc.src = sram_row_buffer - (absolute_row * desc.src_row_bytes);
+
+                // 3. Process just this single row using your original ultra-optimized convert logic
+                convert(desc, current_dest, absolute_row, 1);
+
+                // Advance the destination pointer to the next line in the band
+                current_dest += desc.dst_row_bytes;
+            }
+            // Restore original descriptor source pointer
+            desc.src = original_src_base;
+        } else {
+            // Fallback to original logic if it's already in SRAM or needs no translation
+            convert(desc, dest_band, start_row, num_rows);
+        }
+    };
+
+    // Convert the first band using our optimized row-interception
+    convert_band_optimized(d, front, 0, band_rows);
 
     last_convert_us = time_us_32() - t_conv;
 
@@ -163,7 +218,10 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     int row = band_rows;
     while (row < dst_h) {
         int rows = dst_h - row < band_rows ? dst_h - row : band_rows;
-        convert(d, back, row, rows);
+
+        // Convert the subsequent bands using the SRAM row optimization
+        convert_band_optimized(d, back, row, rows);
+
         dma_channel_wait_for_finish_blocking(dma_chan);
         dma_channel_set_read_addr(dma_chan, back, false);
         size_t bytes = rows == band_rows ? full_band_bytes : (size_t)rows * d.dst_row_bytes;
