@@ -111,7 +111,7 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     Transform t = map_transform(rotation, mirror);
     Descriptor d = make_descriptor(src, src_w, src_h, dst_w, dst_h, t, dbl, bg, fmt,
                                    centred_x, off_x, centred_y, off_y);
-    ConvertFn convert = select_convert(fmt, t, dbl);
+    ConvertFn convert = select_convert(fmt, dbl);
 
     uint8_t *front = band_a;   // converted, DMA in flight
     uint8_t *back = band_b;    // converted next, while front streams

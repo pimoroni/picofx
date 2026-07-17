@@ -4,10 +4,13 @@
 // display pipeline. Header-only so the host test harness compiles the same code
 // the firmware runs (see boards/PIMORONI_MIGHTYFX/DISPLAY_PIPELINE_PLAN.md).
 //
-// The hot axes (packer, mirror, flip, rotate, pixel-double) are template
-// parameters so each combination compiles to a branch-free, constant-folded
-// loop. The loop-invariant fields (dimensions, offset, background, geometry)
-// live in the runtime Descriptor. Output must match tests/reference.py
+// Geometry is resolved once per frame into a Descriptor: the source position in
+// the destination reduces to an affine map, so the covered destination box and a
+// pair of source pointer strides are computed up front. The inner loop then just
+// walks a source pointer, with no per-pixel coordinate maths, multiply, or
+// bounds branch across the covered span. Only the axes that change the loop body
+// (destination packer, pixel-double) are template parameters; rotation and
+// mirror are carried as runtime strides. Output must match tests/reference.py
 // byte-for-byte.
 
 #pragma once
@@ -15,23 +18,6 @@
 #include <cstdint>
 
 namespace spidisplay {
-
-// Runtime, loop-invariant conversion parameters. Computed once per frame.
-struct Descriptor {
-    const uint8_t *src;
-    int src_w;
-    int src_h;
-    int dst_w;
-    int dst_h;
-    int off_x;          // Source top-left in the upright canvas (pre-rotation)
-    int off_y;
-    int region_w;       // Source extent in canvas pixels (src_w * scale)
-    int region_h;       // Source extent in canvas pixels (src_h * scale)
-    int dst_row_bytes;  // Packed bytes per destination row
-    uint8_t bg_r;
-    uint8_t bg_g;
-    uint8_t bg_b;
-};
 
 // Source format trait.
 struct RGBA8888 {
@@ -71,67 +57,97 @@ struct RGB565 {
     }
 };
 
-// Resolve one destination pixel to its (r, g, b). The source is composed at its
-// offset in an upright canvas, then the whole screen is rotated clockwise and
-// mirror-flipped; here we invert that (un-mirror, inverse-rotate the output
-// pixel back to the canvas) so destination rows are still produced in scan
-// order and the origin corner tracks the transform.
-template <class Src, int Rotation, bool Mirror, bool Double>
-inline void sample(const Descriptor &d, int dst_x, int dst_y,
-                   uint8_t &r, uint8_t &g, uint8_t &b) {
-    int mx = Mirror ? (d.dst_w - 1 - dst_x) : dst_x;
-    int my = dst_y;
+// Runtime, loop-invariant conversion parameters. Computed once per frame by
+// make_descriptor.
+//
+// The source is composed at its offset in an upright canvas, the whole screen is
+// then rotated clockwise and mirror-flipped. Inverting that, each destination
+// pixel maps to a canvas coordinate that is affine in (dst_x, dst_y):
+//
+//   u = ua*dst_x + ub*dst_y + uc   (source column, before pixel-double)
+//   v = va*dst_x + vb*dst_y + vc   (source row,    before pixel-double)
+//
+// One of u, v varies with dst_x and the other with dst_y (rotation swaps which),
+// so the region the source covers is an axis-aligned destination box
+// [dx0, dx1) x [dy0, dy1), and along a row the source pointer advances by the
+// constant step_x per pixel.
+struct Descriptor {
+    const uint8_t *src;
+    int dst_w;
+    int dst_h;
+    int dx0, dx1;        // Covered destination columns [dx0, dx1)
+    int dy0, dy1;        // Covered destination rows [dy0, dy1)
+    int ua, ub, uc;      // Canvas u = ua*dst_x + ub*dst_y + uc
+    int va, vb, vc;      // Canvas v = va*dst_x + vb*dst_y + vc
+    int src_row_bytes;   // src_w * source bytes/pixel
+    int step_x;          // Source pointer advance (bytes) per source pixel along a row
+    bool x_uses_u;       // The row walk varies u (else v)
+    bool x_adv;          // Advance parity for the row walk (pixel-double only)
+    int dst_row_bytes;   // Packed bytes per destination row
+    uint8_t bg_r;
+    uint8_t bg_g;
+    uint8_t bg_b;
+};
 
-    int cx;
-    int cy;
-    if constexpr (Rotation == 90) {
-        cx = my;
-        cy = d.dst_w - 1 - mx;
-    } else if constexpr (Rotation == 180) {
-        cx = d.dst_w - 1 - mx;
-        cy = d.dst_h - 1 - my;
-    } else if constexpr (Rotation == 270) {
-        cx = d.dst_h - 1 - my;
-        cy = mx;
-    } else {
-        cx = mx;
-        cy = my;
-    }
-
-    int u = cx - d.off_x;
-    int v = cy - d.off_y;
-    if (u < 0 || u >= d.region_w || v < 0 || v >= d.region_h) {
-        r = d.bg_r;
-        g = d.bg_g;
-        b = d.bg_b;
-        return;
-    }
-
-    int sx = Double ? (u >> 1) : u;
-    int sy = Double ? (v >> 1) : v;
-    Src::load(d.src + (sy * d.src_w + sx) * Src::bytes, r, g, b);
-}
-
-// Convert a band of nrows destination rows, starting at row0, into dst_band
-// (packed, one destination row per dst_row_bytes).
-template <class Src, class Dst, int Rotation, bool Mirror, bool Double>
+// Convert nrows destination rows starting at row0 into dst_band (packed, one
+// destination row per dst_row_bytes). Rows outside the covered box, and the
+// uncovered ends of covered rows, are filled with the background.
+template <class Src, class Dst, bool Double>
 void convert_band(const Descriptor &d, uint8_t *dst_band, int row0, int nrows) {
     for (int row = 0; row < nrows; ++row) {
         int dst_y = row0 + row;
         uint8_t *out = dst_band + row * d.dst_row_bytes;
+        bool row_covered = (dst_y >= d.dy0 && dst_y < d.dy1);
+
+        // Seed the row walk at the first covered column (dst_x == dx0). The
+        // pointer is only read and advanced inside the covered span, so seeding
+        // it here and stepping from there tracks the affine map exactly.
+        const uint8_t *sp = d.src;
+        int xpar = 0;
+        if (row_covered) {
+            int u0 = d.ua * d.dx0 + d.ub * dst_y + d.uc;
+            int v0 = d.va * d.dx0 + d.vb * dst_y + d.vc;
+            int col = Double ? (u0 >> 1) : u0;
+            int srow = Double ? (v0 >> 1) : v0;
+            sp = d.src + (long)srow * d.src_row_bytes + (long)col * Src::bytes;
+            if constexpr (Double) {
+                xpar = (d.x_uses_u ? u0 : v0) & 1;
+            }
+        }
+
+        // Fetch one destination pixel: the source sample inside the covered span,
+        // background outside it. Pixel-double advances the source every second
+        // pixel, phased so clipping and mirroring stay aligned.
+        auto fetch = [&](int dst_x, uint8_t &r, uint8_t &g, uint8_t &b) {
+            if (row_covered && (unsigned)(dst_x - d.dx0) < (unsigned)(d.dx1 - d.dx0)) {
+                Src::load(sp, r, g, b);
+                if constexpr (Double) {
+                    if (xpar == (int)d.x_adv) {
+                        sp += d.step_x;
+                    }
+                    xpar ^= 1;
+                } else {
+                    sp += d.step_x;
+                }
+            } else {
+                r = d.bg_r;
+                g = d.bg_g;
+                b = d.bg_b;
+            }
+        };
 
         if constexpr (Dst::pairs) {
             for (int dst_x = 0; dst_x < d.dst_w; dst_x += 2) {
                 uint8_t r0, g0, b0, r1, g1, b1;
-                sample<Src, Rotation, Mirror, Double>(d, dst_x, dst_y, r0, g0, b0);
-                sample<Src, Rotation, Mirror, Double>(d, dst_x + 1, dst_y, r1, g1, b1);
+                fetch(dst_x, r0, g0, b0);
+                fetch(dst_x + 1, r1, g1, b1);
                 Dst::pack2(out, r0, g0, b0, r1, g1, b1);
                 out += 3;
             }
         } else {
             for (int dst_x = 0; dst_x < d.dst_w; ++dst_x) {
                 uint8_t r, g, b;
-                sample<Src, Rotation, Mirror, Double>(d, dst_x, dst_y, r, g, b);
+                fetch(dst_x, r, g, b);
                 Dst::pack1(out, r, g, b);
                 out += 2;
             }
@@ -153,64 +169,111 @@ inline Transform map_transform(int rotation, int mirror) {
 // A selected kernel instantiation: converts nrows destination rows from row0.
 using ConvertFn = void (*)(const Descriptor &, uint8_t *, int, int);
 
-template <class Src, class Dst, int Rotation, bool Mirror>
-inline ConvertFn select_dbl(bool dbl) {
-    return dbl ? &convert_band<Src, Dst, Rotation, Mirror, true>
-               : &convert_band<Src, Dst, Rotation, Mirror, false>;
-}
-
-template <class Src, class Dst, int Rotation>
-inline ConvertFn select_mirror(bool mirror, bool dbl) {
-    return mirror ? select_dbl<Src, Dst, Rotation, true>(dbl)
-                  : select_dbl<Src, Dst, Rotation, false>(dbl);
-}
-
 template <class Src, class Dst>
-inline ConvertFn select_rotation(int rotation, bool mirror, bool dbl) {
-    switch (rotation) {
-        case 90:
-            return select_mirror<Src, Dst, 90>(mirror, dbl);
-        case 180:
-            return select_mirror<Src, Dst, 180>(mirror, dbl);
-        case 270:
-            return select_mirror<Src, Dst, 270>(mirror, dbl);
-        default:
-            return select_mirror<Src, Dst, 0>(mirror, dbl);
-    }
+inline ConvertFn select_dbl(bool dbl) {
+    return dbl ? &convert_band<Src, Dst, true>
+               : &convert_band<Src, Dst, false>;
 }
 
-// Resolve the runtime (format, transform, double) to a kernel instantiation.
-inline ConvertFn select_convert(int fmt, const Transform &t, bool dbl) {
+// Resolve the runtime format to a kernel instantiation. Rotation and mirror are
+// runtime strides in the descriptor, so they are not part of the selection.
+inline ConvertFn select_convert(int fmt, bool dbl) {
     if (fmt == RGB444::format) {
-        return select_rotation<RGBA8888, RGB444>(t.rotation, t.mirror, dbl);
+        return select_dbl<RGBA8888, RGB444>(dbl);
     }
-    return select_rotation<RGBA8888, RGB565>(t.rotation, t.mirror, dbl);
+    return select_dbl<RGBA8888, RGB565>(dbl);
 }
 
 // Fill a descriptor for a whole-frame conversion. Each axis is centred, or
-// placed by its off_x/off_y top-left (before any whole-frame flip).
+// placed by its off_x/off_y top-left in the upright canvas.
 inline Descriptor make_descriptor(const uint8_t *src, int src_w, int src_h,
                                   int dst_w, int dst_h, const Transform &t,
                                   bool dbl, uint32_t bg, int fmt,
                                   bool centred_x, int off_x, bool centred_y, int off_y) {
     int scale = dbl ? 2 : 1;
+    int region_w = src_w * scale;   // Source extent in canvas pixels
+    int region_h = src_h * scale;
+    int W = dst_w;
+    int H = dst_h;
+
     // Upright canvas: rotating it clockwise yields the dst_w x dst_h output, so
     // for 90/270 the canvas dimensions are swapped. The offset centres the
     // source's own extent within that canvas.
-    bool swap = t.rotation == 90 || t.rotation == 270;
+    bool swap = (t.rotation == 90 || t.rotation == 270);
     int canvas_w = swap ? dst_h : dst_w;
     int canvas_h = swap ? dst_w : dst_h;
+    int off_x_r = centred_x ? ((canvas_w - region_w) >> 1) : off_x;
+    int off_y_r = centred_y ? ((canvas_h - region_h) >> 1) : off_y;
+
+    // mx = m*dst_x + k folds the output mirror into the coefficients below.
+    int m = t.mirror ? -1 : 1;
+    int k = t.mirror ? (W - 1) : 0;
+
+    // Canvas coordinates as affine functions of the destination pixel. cx/cy are
+    // the inverse-rotated (un-mirrored) destination pixel; u/v subtract the
+    // source offset. Exactly one of u, v varies with dst_x, the other with dst_y.
+    int ua, ub, uc, va, vb, vc;
+    switch (t.rotation) {
+        case 90:   // cx = dst_y ; cy = (W-1) - mx
+            ua = 0;  ub = 1;  uc = -off_x_r;
+            va = -m; vb = 0;  vc = (W - 1 - k) - off_y_r;
+            break;
+        case 180:  // cx = (W-1) - mx ; cy = (H-1) - dst_y
+            ua = -m; ub = 0;  uc = (W - 1 - k) - off_x_r;
+            va = 0;  vb = -1; vc = (H - 1) - off_y_r;
+            break;
+        case 270:  // cx = (H-1) - dst_y ; cy = mx
+            ua = 0;  ub = -1; uc = (H - 1) - off_x_r;
+            va = m;  vb = 0;  vc = k - off_y_r;
+            break;
+        default:   // 0: cx = mx ; cy = dst_y
+            ua = m;  ub = 0;  uc = k - off_x_r;
+            va = 0;  vb = 1;  vc = -off_y_r;
+            break;
+    }
+
+    // Solve 0 <= a*t + c < lim for integer t (a is +/-1), then clamp to the
+    // destination extent. Yields the covered span on one destination axis.
+    auto range = [](int a, int c, int lim, int dst_lim, int &lo, int &hi) {
+        if (a > 0) {
+            lo = -c;
+            hi = lim - c;
+        } else {
+            lo = c - lim + 1;
+            hi = c + 1;
+        }
+        if (lo < 0) lo = 0;
+        if (hi > dst_lim) hi = dst_lim;
+        if (hi < lo) hi = lo;
+    };
 
     Descriptor d;
     d.src = src;
-    d.src_w = src_w;
-    d.src_h = src_h;
     d.dst_w = dst_w;
     d.dst_h = dst_h;
-    d.region_w = src_w * scale;
-    d.region_h = src_h * scale;
-    d.off_x = centred_x ? ((canvas_w - d.region_w) >> 1) : off_x;
-    d.off_y = centred_y ? ((canvas_h - d.region_h) >> 1) : off_y;
+    d.ua = ua; d.ub = ub; d.uc = uc;
+    d.va = va; d.vb = vb; d.vc = vc;
+    d.src_row_bytes = src_w * RGBA8888::bytes;
+
+    // dst_x is bound by whichever coordinate varies with it, and supplies the
+    // per-pixel source stride; dst_y is bound by the other coordinate.
+    if (ua != 0) {
+        range(ua, uc, region_w, W, d.dx0, d.dx1);
+        d.x_uses_u = true;
+        d.step_x = (ua > 0 ? 1 : -1) * RGBA8888::bytes;
+        d.x_adv = (ua > 0);
+    } else {
+        range(va, vc, region_h, W, d.dx0, d.dx1);
+        d.x_uses_u = false;
+        d.step_x = (va > 0 ? 1 : -1) * d.src_row_bytes;
+        d.x_adv = (va > 0);
+    }
+    if (ub != 0) {
+        range(ub, uc, region_w, H, d.dy0, d.dy1);
+    } else {
+        range(vb, vc, region_h, H, d.dy0, d.dy1);
+    }
+
     d.dst_row_bytes = (fmt == RGB444::format) ? (dst_w * 3 / 2) : (dst_w * 2);
     d.bg_r = bg & 0xff;
     d.bg_g = (bg >> 8) & 0xff;
