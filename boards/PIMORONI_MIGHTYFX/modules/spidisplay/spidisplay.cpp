@@ -9,6 +9,7 @@
 #include <utility>
 
 #include "hardware/gpio.h"
+#include "hardware/regs/addressmap.h"
 #include "hardware/spi.h"
 #include "pico/time.h"
 
@@ -111,6 +112,18 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     Transform t = map_transform(rotation, mirror);
     Descriptor d = make_descriptor(src, src_w, src_h, dst_w, dst_h, t, dbl, bg, fmt,
                                    centred_x, off_x, centred_y, off_y);
+
+    // A strided row walk (rotation 90/270: step_x is a whole source row) gets no
+    // reuse from the XIP cache's 8-byte line fills, and its fills evict flash
+    // code and dirty heap lines. When the source is in the cached PSRAM window,
+    // read it through the no-allocate alias: shorter QMI bursts, cache untouched.
+    constexpr uintptr_t PSRAM_WINDOW = 0x01000000;  // 16 MB XIP window per chip select
+    constexpr uintptr_t PSRAM_CACHED_BASE = XIP_BASE + PSRAM_WINDOW;  // CS1
+    if ((uintptr_t)d.src - PSRAM_CACHED_BASE < PSRAM_WINDOW
+        && d.step_x != RGBA8888::bytes && d.step_x != -RGBA8888::bytes) {
+        d.src += XIP_NOCACHE_NOALLOC_BASE - XIP_BASE;
+    }
+
     ConvertFn convert = select_convert(fmt, dbl);
 
     uint8_t *front = band_a;   // converted, DMA in flight
