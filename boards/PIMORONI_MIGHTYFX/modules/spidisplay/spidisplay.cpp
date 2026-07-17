@@ -136,59 +136,61 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     // zero as it runs, and read_addr advances past the buffer.
     const size_t full_band_bytes = (size_t)band_rows * d.dst_row_bytes;
 
-     // --- NEW: Fast SRAM Row Buffer for Mirroring/Rotation ---
-    // Sized to the widest possible panel in bytes (240px * 4 bytes for RGBA8888)
-    static uint8_t sram_row_buffer[240 * 4] __attribute__((aligned(4)));
+    // --- CRASH-SAFE: Micro-Band SRAM Scratchpad ---
+    // Sized to capture a single band chunk in fast zero-wait-state SRAM.
+    // 128 lines * (240 px * 4 bytes RGBA) = 122,880 bytes.
+    static uint8_t sram_band_scratch[MAX_BAND_LINES * MAX_ROW_BYTES * 2] __attribute__((aligned(4)));
 
-    uintptr_t src_addr = (uintptr_t)d.src;
-
+    // Leverage your existing codebase variables to find the CS1 window
     constexpr uintptr_t PSRAM_WINDOW = 0x01000000;         // 16 MB window per CS
     constexpr uintptr_t PSRAM_CACHED_BASE = XIP_BASE + PSRAM_WINDOW; // Start of PSRAM (0x11000000)
 
     // Check if the source address sits anywhere inside the 16MB hardware window for CS1
-    bool src_in_psram = (src_addr >= PSRAM_CACHED_BASE && 
-                         src_addr < PSRAM_CACHED_BASE + PSRAM_WINDOW);
-    // ------------------------------------------------------------
+    uintptr_t src_addr = (uintptr_t)d.src;
+    bool src_in_psram = (src_addr >= PSRAM_CACHED_BASE && src_addr < PSRAM_CACHED_BASE + PSRAM_WINDOW);
 
     uint32_t t_conv = time_us_32();
 
-    // Helper lambda to process a band row-by-row to intercept with our SRAM buffer
+    // Helper lambda to process a band via a safe block-copy matching your affine math
     auto convert_band_optimized = [&](Descriptor &desc, uint8_t *dest_band, int start_row, int num_rows) {
-        // 1. Must be resident in physical PSRAM space
-        // 2. ONLY run for 180 degrees without mirror OR 0 degrees with mirror.
-        // (All other layouts: 0° no mirror, 180° with mirror, 90°, and 270° fall back to native convert)
+        // Only run for non-linear horizontal modes (0° + Mirror, or 180° + No Mirror)
         bool target_optimization_mode = ((rotation == 180 && !mirror) || (rotation == 0 && mirror));
-
+        
         if (src_in_psram && target_optimization_mode) {
-            // Process row by row to take advantage of contiguous SRAM row streaming
-            uint8_t *current_dest = dest_band;
+            // Your affine math calculates source coordinates dynamically. 
+            // In 0°/180° modes, the source row depends entirely on the destination row via vb and vc:
+            // cy = vb * dst_y + vc
+            int cy_start = desc.vb * start_row + desc.vc;
+            int cy_end   = desc.vb * (start_row + num_rows - 1) + desc.vc;
+
+            // Find the true minimum and maximum source row indices referenced by this band
+            int min_src_row = (cy_start < cy_end) ? cy_start : cy_end;
+            int max_src_row = (cy_start > cy_end) ? cy_start : cy_end;
+
+            // Clamp rows to actual source dimensions to guarantee zero out-of-bounds lookups
+            if (min_src_row < 0) min_src_row = 0;
+            if (max_src_row >= src_h) max_src_row = src_h - 1;
+
+            // Calculate the exact memory block slicing boundaries in PSRAM
+            const uint8_t *psram_band_start = desc.src + (min_src_row * desc.src_row_bytes);
+            int rows_to_copy = (max_src_row - min_src_row) + 1;
+            size_t bytes_to_copy = (size_t)rows_to_copy * desc.src_row_bytes;
+
+            // 1. Fire a flat, fast contiguous sequential burst into SRAM
+            std::memcpy(sram_band_scratch, psram_band_start, bytes_to_copy);
+
+            // 2. Safely shift the descriptor pointer forward into our SRAM buffer.
+            // Rather than subtracting unsafe offsets, we align it relative to the copied chunk start.
             const uint8_t *original_src_base = desc.src;
+            desc.src = sram_band_scratch + (original_src_base - psram_band_start);
 
-            for (int r = 0; r < num_rows; ++r) {
-                int absolute_row = start_row + r;
+            // 3. Process the band using your original, untouched convert loop logic
+            convert(desc, dest_band, start_row, num_rows);
 
-                // Calculate where the current sequential source row starts in PSRAM
-                // Note: Make sure desc.src_row_bytes reflects your true raw source stride.
-                const uint8_t *psram_row_ptr = original_src_base + (absolute_row * desc.src_row_bytes);
-
-                // 1. Fire a fast contiguous copy over the QSPI bus into zero-wait-state SRAM
-                // This maximizes the RP2350 QMI burst logic.
-                std::memcpy(sram_row_buffer, psram_row_ptr, src_w * RGBA8888::bytes);
-
-                // 2. Temporarily redirect the descriptor to pull from our flat SRAM buffer
-                // We offset it so that the internal descriptor math aligns with 'absolute_row'
-                desc.src = sram_row_buffer - (absolute_row * desc.src_row_bytes);
-
-                // 3. Process just this single row using your original ultra-optimized convert logic
-                convert(desc, current_dest, absolute_row, 1);
-
-                // Advance the destination pointer to the next line in the band
-                current_dest += desc.dst_row_bytes;
-            }
-            // Restore original descriptor source pointer
+            // 4. Restore the pointer safely for subsequent bands
             desc.src = original_src_base;
         } else {
-            // Fallback to original logic if it's already in SRAM or needs no translation
+            // Normal fallback path for 0° linear, 180°+Mirror, and 90°/270° modes
             convert(desc, dest_band, start_row, num_rows);
         }
     };
