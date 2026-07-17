@@ -16,6 +16,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstring>
 
 namespace spidisplay {
 
@@ -92,65 +93,193 @@ struct Descriptor {
 // Convert nrows destination rows starting at row0 into dst_band (packed, one
 // destination row per dst_row_bytes). Rows outside the covered box, and the
 // uncovered ends of covered rows, are filled with the background.
+//
+// Fields read inside the pixel loops are copied to locals first: the output is
+// written through a uint8_t pointer, which may alias the descriptor, so field
+// reads would otherwise be repeated after every store. Each covered row is
+// emitted as background / covered span / background, keeping the bounds test
+// out of the covered loop; for pair formats a pair straddling an odd covered
+// boundary mixes source and background and is emitted separately.
 template <class Src, class Dst, bool Double>
 void convert_band(const Descriptor &d, uint8_t *dst_band, int row0, int nrows) {
+    const int dst_w = d.dst_w;
+    const int dx0 = d.dx0, dx1 = d.dx1;
+    const int step_x = d.step_x;
+    const int x_adv = d.x_adv ? 1 : 0;
+    const uint8_t bg_r = d.bg_r, bg_g = d.bg_g, bg_b = d.bg_b;
+
+    // Packed background: one pixel pair (three bytes) or one pixel (two bytes).
+    uint8_t bgp[3] = {0, 0, 0};
+    if constexpr (Dst::pairs) {
+        Dst::pack2(bgp, bg_r, bg_g, bg_b, bg_r, bg_g, bg_b);
+    } else {
+        Dst::pack1(bgp, bg_r, bg_g, bg_b);
+    }
+
+    // Fill n background pixels (n is even for pair formats) and return the
+    // advanced output pointer.
+    auto fill_bg = [&](uint8_t *o, int n) {
+        if constexpr (Dst::pairs) {
+            for (int i = 0; i < n; i += 2) {
+                o[0] = bgp[0]; o[1] = bgp[1]; o[2] = bgp[2];
+                o += 3;
+            }
+        } else {
+            const uint32_t pat = (uint32_t)bgp[0] | ((uint32_t)bgp[1] << 8)
+                               | ((uint32_t)bgp[0] << 16) | ((uint32_t)bgp[1] << 24);
+            int i = 0;
+            for (; i + 1 < n; i += 2) {
+                memcpy(o, &pat, 4);
+                o += 4;
+            }
+            if (i < n) {
+                o[0] = bgp[0]; o[1] = bgp[1];
+                o += 2;
+            }
+        }
+        return o;
+    };
+
     for (int row = 0; row < nrows; ++row) {
-        int dst_y = row0 + row;
+        const int dst_y = row0 + row;
         uint8_t *out = dst_band + row * d.dst_row_bytes;
-        bool row_covered = (dst_y >= d.dy0 && dst_y < d.dy1);
+
+        if (dst_y < d.dy0 || dst_y >= d.dy1 || dx0 >= dx1) {
+            fill_bg(out, dst_w);
+            continue;
+        }
 
         // Seed the row walk at the first covered column (dst_x == dx0). The
         // pointer is only read and advanced inside the covered span, so seeding
         // it here and stepping from there tracks the affine map exactly.
-        const uint8_t *sp = d.src;
+        const int u0 = d.ua * dx0 + d.ub * dst_y + d.uc;
+        const int v0 = d.va * dx0 + d.vb * dst_y + d.vc;
+        const int col = Double ? (u0 >> 1) : u0;
+        const int srow = Double ? (v0 >> 1) : v0;
+        const uint8_t *sp = d.src + (long)srow * d.src_row_bytes + (long)col * Src::bytes;
         int xpar = 0;
-        if (row_covered) {
-            int u0 = d.ua * d.dx0 + d.ub * dst_y + d.uc;
-            int v0 = d.va * d.dx0 + d.vb * dst_y + d.vc;
-            int col = Double ? (u0 >> 1) : u0;
-            int srow = Double ? (v0 >> 1) : v0;
-            sp = d.src + (long)srow * d.src_row_bytes + (long)col * Src::bytes;
-            if constexpr (Double) {
-                xpar = (d.x_uses_u ? u0 : v0) & 1;
-            }
+        if constexpr (Double) {
+            xpar = (d.x_uses_u ? u0 : v0) & 1;
         }
 
-        // Fetch one destination pixel: the source sample inside the covered span,
-        // background outside it. Pixel-double advances the source every second
-        // pixel, phased so clipping and mirroring stay aligned.
-        auto fetch = [&](int dst_x, uint8_t &r, uint8_t &g, uint8_t &b) {
-            if (row_covered && (unsigned)(dst_x - d.dx0) < (unsigned)(d.dx1 - d.dx0)) {
-                Src::load(sp, r, g, b);
-                if constexpr (Double) {
-                    if (xpar == (int)d.x_adv) {
-                        sp += d.step_x;
-                    }
-                    xpar ^= 1;
-                } else {
-                    sp += d.step_x;
+        if constexpr (!Dst::pairs) {
+            out = fill_bg(out, dx0);
+            uint8_t r, g, b;
+            if constexpr (Double) {
+                // The source advances once per two destination pixels, when
+                // xpar == x_adv. A leading pixel where that lands first aligns
+                // the walk so each remaining source pixel is emitted twice.
+                int x = dx0;
+                if (xpar == x_adv) {
+                    Src::load(sp, r, g, b);
+                    sp += step_x;
+                    Dst::pack1(out, r, g, b);
+                    out += 2;
+                    ++x;
+                }
+                for (; x + 1 < dx1; x += 2) {
+                    Src::load(sp, r, g, b);
+                    sp += step_x;
+                    Dst::pack1(out, r, g, b);
+                    Dst::pack1(out + 2, r, g, b);
+                    out += 4;
+                }
+                if (x < dx1) {
+                    Src::load(sp, r, g, b);
+                    Dst::pack1(out, r, g, b);
+                    out += 2;
                 }
             } else {
-                r = d.bg_r;
-                g = d.bg_g;
-                b = d.bg_b;
+                for (int x = dx0; x < dx1; ++x) {
+                    Src::load(sp, r, g, b);
+                    sp += step_x;
+                    Dst::pack1(out, r, g, b);
+                    out += 2;
+                }
             }
-        };
+            fill_bg(out, dst_w - dx1);
+        } else {
+            // Pair-aligned bounds of the covered span. The pairs at a and b - 2
+            // are mixed when the boundary is odd; pairs between them are fully
+            // covered.
+            const int a = dx0 & ~1;
+            const int b = (dx1 + 1) & ~1;
+            out = fill_bg(out, a);
 
-        if constexpr (Dst::pairs) {
-            for (int dst_x = 0; dst_x < d.dst_w; dst_x += 2) {
+            // Emit one mixed pair with a per-pixel bounds test. Pixel-double
+            // advances the source every second covered pixel, phased so
+            // clipping and mirroring stay aligned; xpar tracks that phase
+            // across the whole covered span.
+            auto fetch = [&](int x, uint8_t &r, uint8_t &g, uint8_t &b) {
+                if ((unsigned)(x - dx0) < (unsigned)(dx1 - dx0)) {
+                    Src::load(sp, r, g, b);
+                    if constexpr (Double) {
+                        if (xpar == x_adv) {
+                            sp += step_x;
+                        }
+                        xpar ^= 1;
+                    } else {
+                        sp += step_x;
+                    }
+                } else {
+                    r = bg_r;
+                    g = bg_g;
+                    b = bg_b;
+                }
+            };
+            auto mixed_pair = [&](int x) {
                 uint8_t r0, g0, b0, r1, g1, b1;
-                fetch(dst_x, r0, g0, b0);
-                fetch(dst_x + 1, r1, g1, b1);
+                fetch(x, r0, g0, b0);
+                fetch(x + 1, r1, g1, b1);
                 Dst::pack2(out, r0, g0, b0, r1, g1, b1);
                 out += 3;
+            };
+
+            int p = a;
+            if (dx0 & 1) {
+                mixed_pair(p);
+                p += 2;
             }
-        } else {
-            for (int dst_x = 0; dst_x < d.dst_w; ++dst_x) {
+            const int ie = (dx1 & 1) ? b - 2 : b;
+            if constexpr (Double) {
+                // One source advance per pair. Whole pairs leave xpar
+                // unchanged, so the phase holds across the loop.
                 uint8_t r, g, b;
-                fetch(dst_x, r, g, b);
-                Dst::pack1(out, r, g, b);
-                out += 2;
+                if (xpar == x_adv) {
+                    // The advance lands after the first pixel: a pair spans two
+                    // adjacent source pixels, and doubling straddles pairs.
+                    for (; p < ie; p += 2) {
+                        uint8_t r1, g1, b1;
+                        Src::load(sp, r, g, b);
+                        sp += step_x;
+                        Src::load(sp, r1, g1, b1);
+                        Dst::pack2(out, r, g, b, r1, g1, b1);
+                        out += 3;
+                    }
+                } else {
+                    // Pair-aligned doubling: both pixels repeat one source pixel.
+                    for (; p < ie; p += 2) {
+                        Src::load(sp, r, g, b);
+                        sp += step_x;
+                        Dst::pack2(out, r, g, b, r, g, b);
+                        out += 3;
+                    }
+                }
+            } else {
+                for (; p < ie; p += 2) {
+                    uint8_t r0, g0, b0, r1, g1, b1;
+                    Src::load(sp, r0, g0, b0);
+                    sp += step_x;
+                    Src::load(sp, r1, g1, b1);
+                    sp += step_x;
+                    Dst::pack2(out, r0, g0, b0, r1, g1, b1);
+                    out += 3;
+                }
             }
+            if ((dx1 & 1) && p < b) {
+                mixed_pair(p);
+            }
+            fill_bg(out, dst_w - b);
         }
     }
 }
