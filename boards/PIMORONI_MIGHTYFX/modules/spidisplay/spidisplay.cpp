@@ -7,6 +7,7 @@
 
 #include <new>
 #include <utility>
+#include <algorithm>
 
 #include "hardware/gpio.h"
 #include "hardware/regs/addressmap.h"
@@ -24,7 +25,7 @@ namespace spidisplay {
 // band height is SPIDisplay's band_lines, clamped to this. SRAM is required:
 // the RP2350 M33 has no SRAM data cache, so DMA sees CPU writes without
 // maintenance.
-static constexpr int MAX_BAND_LINES = 128;
+static constexpr int MAX_BAND_LINES = 32;
 static constexpr size_t MAX_ROW_BYTES = 240 * 2;
 static constexpr size_t BAND_BYTES = MAX_BAND_LINES * MAX_ROW_BYTES;
 static uint8_t band_a[BAND_BYTES] __attribute__((aligned(4)));
@@ -136,10 +137,10 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     // zero as it runs, and read_addr advances past the buffer.
     const size_t full_band_bytes = (size_t)band_rows * d.dst_row_bytes;
 
-    // --- CRASH-SAFE: Micro-Band SRAM Scratchpad ---
-    // Sized to capture a single band chunk in fast zero-wait-state SRAM.
-    // 128 lines * (240 px * 4 bytes RGBA) = 122,880 bytes.
-    static uint8_t sram_band_scratch[MAX_BAND_LINES * MAX_ROW_BYTES * 2] __attribute__((aligned(4)));
+    // 16 columns wide * 240 source rows tall * 4 bytes per pixel = 15,360 bytes.
+    // This fits easily into SRAM, handles 16 pixels at a time, and keeps step_x = 16 * 4 = 64 bytes!
+    constexpr int CACHE_COLS = MAX_BAND_LINES;
+    static uint32_t vertical_sram_cache[BAND_BYTES * 2] __attribute__((aligned(4)));
 
     // Leverage your existing codebase variables to find the CS1 window
     constexpr uintptr_t PSRAM_WINDOW = 0x01000000;         // 16 MB window per CS
@@ -151,47 +152,76 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
 
     uint32_t t_conv = time_us_32();
 
-    // Helper lambda to process a band via a safe block-copy matching your affine math
-    auto convert_band_optimized = [&](Descriptor &desc, uint8_t *dest_band, int start_row, int num_rows) {
-        // Only run for non-linear horizontal modes (0° + Mirror, or 180° + No Mirror)
-        bool target_optimization_mode = ((rotation == 180 && !mirror) || (rotation == 0 && mirror));
-        
-        if (src_in_psram && target_optimization_mode) {
-            // Your affine math calculates source coordinates dynamically. 
-            // In 0°/180° modes, the source row depends entirely on the destination row via vb and vc:
-            // cy = vb * dst_y + vc
-            int cy_start = desc.vb * start_row + desc.vc;
-            int cy_end   = desc.vb * (start_row + num_rows - 1) + desc.vc;
+    // Optimized lambda that cleanly intercepts the pipeline
+    auto convert_band_optimized = [&](Descriptor &d, uint8_t *dst_band, int row0, int nrows) {
+        if (src_in_psram && (rotation == 90 || rotation == 270)) {
 
-            // Find the true minimum and maximum source row indices referenced by this band
-            int min_src_row = (cy_start < cy_end) ? cy_start : cy_end;
-            int max_src_row = (cy_start > cy_end) ? cy_start : cy_end;
+            // 1. CALCULATE ACTIVE COLUMN BOUNDS (u plane)
+            // Find which source columns are active for this specific band slice
+            int col_start_edge = d.ub * row0 + d.uc;
+            int col_end_edge   = d.ub * (row0 + nrows - 1) + d.uc;
 
-            // Clamp rows to actual source dimensions to guarantee zero out-of-bounds lookups
-            if (min_src_row < 0) min_src_row = 0;
-            if (max_src_row >= src_h) max_src_row = src_h - 1;
+            int col_min = std::min(col_start_edge, col_end_edge);
+            int col_max = std::max(col_start_edge, col_end_edge);
 
-            // Calculate the exact memory block slicing boundaries in PSRAM
-            const uint8_t *psram_band_start = desc.src + (min_src_row * desc.src_row_bytes);
-            int rows_to_copy = (max_src_row - min_src_row) + 1;
-            size_t bytes_to_copy = (size_t)rows_to_copy * desc.src_row_bytes;
+            col_min = std::max(0, col_min);
+            col_max = std::min(src_w - 1, col_max);
+            int actual_cols = (col_max - col_min) + 1;
 
-            // 1. Fire a flat, fast contiguous sequential burst into SRAM
-            std::memcpy(sram_band_scratch, psram_band_start, bytes_to_copy);
+            if (actual_cols > CACHE_COLS) {
+                actual_cols = CACHE_COLS;
+            }
 
-            // 2. Safely shift the descriptor pointer forward into our SRAM buffer.
-            // Rather than subtracting unsafe offsets, we align it relative to the copied chunk start.
-            const uint8_t *original_src_base = desc.src;
-            desc.src = sram_band_scratch + (original_src_base - psram_band_start);
+            // 2. LINEAR BURST COPY FROM PSRAM TO ZERO-WAIT SRAM
+            // We loop through the exact destination rows this band iteration cares about
+            for (int row = 0; row < nrows; ++row) {
+                const int dst_y = row0 + row;
 
-            // 3. Process the band using your original, untouched convert loop logic
-            convert(desc, dest_band, start_row, num_rows);
+                if (dst_y < d.dy0 || dst_y >= d.dy1 || d.dx0 >= d.dx1) {
+                    continue;
+                }
 
-            // 4. Restore the pointer safely for subsequent bands
-            desc.src = original_src_base;
+                // Match the kernel's exact affine calculation to find the starting pixel in PSRAM
+                const int u0 = d.ub * dst_y;
+                const int v0 = d.va * d.dx0 + d.vb * dst_y + d.vc;
+                const int col = u0;
+                const int srow = v0;
+
+                // This is the absolute starting point in PSRAM for the current destination line
+                const uint8_t *sp = d.src + (long)srow * d.src_row_bytes + (long)col * sizeof(uint32_t);
+
+                // Calculate where to place this row's cache line in SRAM.
+                // We use CACHE_COLS (16) to ensure each row gets a predictable, fixed-width stride.
+                uint32_t *sram_row = &vertical_sram_cache[row * nrows];
+
+                // --- THE MEMCPY CORRECTION ---
+                // Because step_x is -1280, the pixel walk moves *backwards* vertically through rows.
+                // To safely cache the vertical window, we need to grab the source pixels starting from 
+                // the highest row down to the lowest row. 
+                // Since 'sp' points to the first pixel (the bottom of our column walk), we calculate the 
+                // top-most row address by subtracting the span width.
+                const uint8_t *psram_block_start = sp + ((long)(actual_cols - 1) * d.step_x);
+
+                // Execute a high-speed sequential horizontal burst from PSRAM into SRAM
+                std::memcpy(sram_row, psram_block_start, actual_cols * sizeof(uint32_t));
+            }
+
+            // 3. APPLY VIRTUAL POINTER CORRECTION
+            Descriptor local_d = d;
+            local_d.src_row_bytes = nrows * sizeof(uint32_t); 
+            local_d.step_x = -((int)local_d.src_row_bytes); // Matches your simulation validation (-64)
+
+            // Reset the virtual base pointer so that when the kernel recalculates 'sp', 
+            // the math lands precisely at the beginning of our row chunk inside vertical_sram_cache
+            local_d.src = (const uint8_t*)vertical_sram_cache; 
+
+            // Clear global translation factors since our loop already isolated the exact row slices
+            local_d.vc = 0; 
+            local_d.uc = 0;
+
+            convert(local_d, dst_band, row0, nrows);
         } else {
-            // Normal fallback path for 0° linear, 180°+Mirror, and 90°/270° modes
-            convert(desc, dest_band, start_row, num_rows);
+            convert(d, dst_band, row0, nrows);
         }
     };
 
