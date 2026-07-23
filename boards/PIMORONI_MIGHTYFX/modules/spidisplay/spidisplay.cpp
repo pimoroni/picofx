@@ -139,7 +139,6 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
 
     // 16 columns wide * 240 source rows tall * 4 bytes per pixel = 15,360 bytes.
     // This fits easily into SRAM, handles 16 pixels at a time, and keeps step_x = 16 * 4 = 64 bytes!
-    constexpr int CACHE_COLS = MAX_BAND_LINES;
     static uint32_t vertical_sram_cache[BAND_BYTES * 2] __attribute__((aligned(4)));
 
     // Leverage your existing codebase variables to find the CS1 window
@@ -156,53 +155,36 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     auto convert_band_optimized = [&](Descriptor &d, uint8_t *dst_band, int row0, int nrows) {
         if (src_in_psram && (rotation == 90 || rotation == 270)) {
 
-            // 1. CALCULATE ACTIVE COLUMN BOUNDS (Source X plane)
-            int col_start_edge = d.ub * row0 + d.uc;
-            int col_end_edge   = d.ub * (row0 + nrows - 1) + d.uc;
+            // Each row in our local cache is exactly 'nrows' wide. 
+            // For a 2-row band, this is a fixed pitch of 8 bytes.
+            const size_t cache_row_pitch = nrows * sizeof(uint32_t);
 
-            int col_min = std::min(col_start_edge, col_end_edge);
-            int col_max = std::max(col_start_edge, col_end_edge);
+            // We sweep through every single possible source row. This removes all offset hazards.
+            for (int srow = 0; srow < src_h; ++srow) {
 
-            col_min = std::max(0, col_min);
-            col_max = std::min(src_w - 1, col_max);
-            int actual_cols = (col_max - col_min) + 1;
+                // Pointer lands perfectly inside our static cache grid
+                uint32_t *sram_row = (uint32_t*)((uint8_t*)vertical_sram_cache + (srow * cache_row_pitch));
 
-            if (actual_cols > CACHE_COLS) {
-                actual_cols = CACHE_COLS;
-            }
+                // Find the starting column in PSRAM for this band slice
+                int src_col_start = row0; 
 
-            // 2. LINEAR BURST COPY: DRIVE BY SOURCE ROWS, NOT DESTINATION ROWS
-            // Under 90 deg, convert_band steps through source rows from v_min to v_max 
-            // based on destination columns (d.dx0 to d.dx1). We must populate all of them.
-            int v_edge0 = d.va * d.dx0 + d.vc;
-            int v_edge1 = d.va * (d.dx1 - 1) + d.vc;
-            int v_min   = std::min(v_edge0, v_edge1);
-            int v_max   = std::max(v_edge0, v_edge1);
-
-            v_min = std::max(0, v_min);
-            v_max = std::min(src_h - 1, v_max);
-
-            // We populate the cache using the literal source row index 'srow'
-            for (int srow = v_min; srow <= v_max; ++srow) {
-                // The memory destination inside our SRAM cache corresponds directly to the source row index
-                uint32_t *sram_row = &vertical_sram_cache[srow * actual_cols];
-
-                // Point to the linear memory block starting at the minimum column
-                const uint8_t *psram_block_start = d.src + ((long)srow * d.src_row_bytes) + ((long)col_min * sizeof(uint32_t));
+                // Safely point to the contiguous block of 'nrows' pixels in original PSRAM
+                const uint8_t *psram_block_start = d.src + ((long)srow * d.src_row_bytes) + ((long)src_col_start * sizeof(uint32_t));
 
                 // Execute high-speed sequential burst copy into SRAM
-                std::memcpy(sram_row, psram_block_start, actual_cols * sizeof(uint32_t));
+                std::memcpy(sram_row, psram_block_start, cache_row_pitch);
             }
 
             // 3. APPLY VIRTUAL POINTER CORRECTION
             Descriptor local_d = d;
-            local_d.src_row_bytes = actual_cols * sizeof(uint32_t);
-            local_d.step_x = (d.step_x > 0 ? 1 : -1) * (int)local_d.src_row_bytes;
+            local_d.src_row_bytes = cache_row_pitch;
+            local_d.step_x = (d.step_x > 0 ? 1 : -1) * (int)cache_row_pitch;
 
             local_d.src = (const uint8_t*)vertical_sram_cache;
 
-            // Shift the coordinate space by col_min
-            local_d.uc = d.uc - col_min;
+            // Shift the column space down by row0 so that the columns [row0, row0 + nrows) 
+            // map cleanly to cache indices [0, nrows)
+            local_d.uc = d.uc - row0;
             local_d.vc = d.vc;
 
             convert(local_d, dst_band, row0, nrows);
