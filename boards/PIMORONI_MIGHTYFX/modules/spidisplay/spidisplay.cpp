@@ -156,8 +156,7 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     auto convert_band_optimized = [&](Descriptor &d, uint8_t *dst_band, int row0, int nrows) {
         if (src_in_psram && (rotation == 90 || rotation == 270)) {
 
-            // 1. CALCULATE ACTIVE COLUMN BOUNDS (u plane)
-            // Find which source columns are active for this specific band slice
+            // 1. CALCULATE ACTIVE COLUMN BOUNDS (Source X plane)
             int col_start_edge = d.ub * row0 + d.uc;
             int col_end_edge   = d.ub * (row0 + nrows - 1) + d.uc;
 
@@ -172,52 +171,39 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
                 actual_cols = CACHE_COLS;
             }
 
-            // 2. LINEAR BURST COPY FROM PSRAM TO ZERO-WAIT SRAM
-            // We loop through the exact destination rows this band iteration cares about
-            for (int row = 0; row < nrows; ++row) {
-                const int dst_y = row0 + row;
+            // 2. LINEAR BURST COPY: DRIVE BY SOURCE ROWS, NOT DESTINATION ROWS
+            // Under 90 deg, convert_band steps through source rows from v_min to v_max 
+            // based on destination columns (d.dx0 to d.dx1). We must populate all of them.
+            int v_edge0 = d.va * d.dx0 + d.vc;
+            int v_edge1 = d.va * (d.dx1 - 1) + d.vc;
+            int v_min   = std::min(v_edge0, v_edge1);
+            int v_max   = std::max(v_edge0, v_edge1);
 
-                if (dst_y < d.dy0 || dst_y >= d.dy1 || d.dx0 >= d.dx1) {
-                    continue;
-                }
+            v_min = std::max(0, v_min);
+            v_max = std::min(src_h - 1, v_max);
 
-                // Match the kernel's exact affine calculation to find the starting pixel in PSRAM
-                const int u0 = d.ub * dst_y;
-                const int v0 = d.va * d.dx0 + d.vb * dst_y + d.vc;
-                const int col = u0;
-                const int srow = v0;
+            // We populate the cache using the literal source row index 'srow'
+            for (int srow = v_min; srow <= v_max; ++srow) {
+                // The memory destination inside our SRAM cache corresponds directly to the source row index
+                uint32_t *sram_row = &vertical_sram_cache[srow * actual_cols];
 
-                // This is the absolute starting point in PSRAM for the current destination line
-                const uint8_t *sp = d.src + (long)srow * d.src_row_bytes + (long)col * sizeof(uint32_t);
+                // Point to the linear memory block starting at the minimum column
+                const uint8_t *psram_block_start = d.src + ((long)srow * d.src_row_bytes) + ((long)col_min * sizeof(uint32_t));
 
-                // Calculate where to place this row's cache line in SRAM.
-                // We use CACHE_COLS (16) to ensure each row gets a predictable, fixed-width stride.
-                uint32_t *sram_row = &vertical_sram_cache[row * nrows];
-
-                // --- THE MEMCPY CORRECTION ---
-                // Because step_x is -1280, the pixel walk moves *backwards* vertically through rows.
-                // To safely cache the vertical window, we need to grab the source pixels starting from 
-                // the highest row down to the lowest row. 
-                // Since 'sp' points to the first pixel (the bottom of our column walk), we calculate the 
-                // top-most row address by subtracting the span width.
-                const uint8_t *psram_block_start = sp + ((long)(actual_cols - 1) * d.step_x);
-
-                // Execute a high-speed sequential horizontal burst from PSRAM into SRAM
+                // Execute high-speed sequential burst copy into SRAM
                 std::memcpy(sram_row, psram_block_start, actual_cols * sizeof(uint32_t));
             }
 
             // 3. APPLY VIRTUAL POINTER CORRECTION
             Descriptor local_d = d;
-            local_d.src_row_bytes = nrows * sizeof(uint32_t); 
-            local_d.step_x = -((int)local_d.src_row_bytes); // Matches your simulation validation (-64)
+            local_d.src_row_bytes = actual_cols * sizeof(uint32_t);
+            local_d.step_x = (d.step_x > 0 ? 1 : -1) * (int)local_d.src_row_bytes;
 
-            // Reset the virtual base pointer so that when the kernel recalculates 'sp', 
-            // the math lands precisely at the beginning of our row chunk inside vertical_sram_cache
-            local_d.src = (const uint8_t*)vertical_sram_cache; 
+            local_d.src = (const uint8_t*)vertical_sram_cache;
 
-            // Clear global translation factors since our loop already isolated the exact row slices
-            local_d.vc = 0; 
-            local_d.uc = 0;
+            // Shift the coordinate space by col_min
+            local_d.uc = d.uc - col_min;
+            local_d.vc = d.vc;
 
             convert(local_d, dst_band, row0, nrows);
         } else {
