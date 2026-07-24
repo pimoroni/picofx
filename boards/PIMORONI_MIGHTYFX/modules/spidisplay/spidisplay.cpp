@@ -25,18 +25,33 @@ namespace spidisplay {
 // band height is SPIDisplay's band_lines, clamped to this. SRAM is required:
 // the RP2350 M33 has no SRAM data cache, so DMA sees CPU writes without
 // maintenance.
-static constexpr int MAX_BAND_LINES = 32;
+static constexpr int MAX_BAND_LINES = 128;
 static constexpr size_t MAX_ROW_BYTES = 240 * 2;
 static constexpr size_t BAND_BYTES = MAX_BAND_LINES * MAX_ROW_BYTES;
 static uint8_t band_a[BAND_BYTES] __attribute__((aligned(4)));
 static uint8_t band_b[BAND_BYTES] __attribute__((aligned(4)));
 
+// The display's maximum physical horisontal dimension (e.g. 240 or 320)
+static constexpr int MAX_CACHE_IMAGE_HEIGHT = 240;
+
+// The maximum width in pixels of the cache slice
+static constexpr int MAX_CACHE_COLS = 32; 
+
+// Only use the cache if there are at least this many columns to cache
+static constexpr int MIN_CACHE_COLS = 0;
+
+// Sized explicitly: Rows * Columns * 4 Bytes (RGBA8888)
+static constexpr size_t VERTICAL_CACHE_BYTES = MAX_CACHE_IMAGE_HEIGHT * MAX_CACHE_COLS * 4;
+static uint32_t vertical_sram_cache[VERTICAL_CACHE_BYTES / 4] __attribute__((aligned(4)));
+
+
 SPIDisplay::SPIDisplay(uint spi_index, uint sck, uint mosi, uint cs, uint dc,
                        uint baudrate, int te, uint8_t ram_write, int bitdepth,
-                       int band_lines)
+                       int band_lines, int cache_columns)
     : cs_pin(cs), dc_pin(dc), te_pin(te), ram_write_cmd(ram_write),
       fmt(bitdepth == 12 ? RGB444::format : RGB565::format),
-      band_lines(band_lines < 1 ? 1 : (band_lines > MAX_BAND_LINES ? MAX_BAND_LINES : band_lines)) {
+      band_lines(band_lines < 1 ? 1 : (band_lines > MAX_BAND_LINES ? MAX_BAND_LINES : band_lines)),
+      configured_cache_cols(cache_columns < 1 ? 1 : (cache_columns > MAX_CACHE_COLS ? MAX_CACHE_COLS : cache_columns)) {
     spi = spi_index == 0 ? spi0 : spi1;
     spi_init(spi, baudrate);
     spi_set_format(spi, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
@@ -137,10 +152,6 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     // zero as it runs, and read_addr advances past the buffer.
     const size_t full_band_bytes = (size_t)band_rows * d.dst_row_bytes;
 
-    // 16 columns wide * 240 source rows tall * 4 bytes per pixel = 15,360 bytes.
-    // This fits easily into SRAM, handles 16 pixels at a time, and keeps step_x = 16 * 4 = 64 bytes!
-    static uint32_t vertical_sram_cache[BAND_BYTES * 2] __attribute__((aligned(4)));
-
     // Leverage your existing codebase variables to find the CS1 window
     constexpr uintptr_t PSRAM_WINDOW = 0x01000000;         // 16 MB window per CS
     constexpr uintptr_t PSRAM_CACHED_BASE = XIP_BASE + PSRAM_WINDOW; // Start of PSRAM (0x11000000)
@@ -151,74 +162,121 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
 
     uint32_t t_conv = time_us_32();
 
-    // Optimized lambda that cleanly intercepts the pipeline
+    // Track the lifetime of our current macro-cache block
+    int cached_row_start = 0;
+    int cached_row_end = 0;
+    int cached_actual_cols = 0;
+    int cached_row_min = 0;
+
+    // Optimized lambda that reads from a persistent macro-cache
     auto convert_band_optimized = [&](Descriptor &d, uint8_t *dst_band, int row0, int nrows) {
         if (src_in_psram && (rotation == 90 || rotation == 270)) {
 
-            // 1. CALCULATE ACTUAL TRACKED TRANSFORMATION MATRIX LIMITS
-            // At 90/270 deg, stepping along destination rows (row0 to row0 + nrows - 1)
-            // moves along the source image's horizontal U axis (controlled by d.ub and d.uc).
-            int u_edge0 = d.ub * row0 + d.uc;
-            int u_edge1 = d.ub * (row0 + nrows - 1) + d.uc;
+            int rows_processed = 0;
+            while (rows_processed < nrows) {
+                // Determine the next target sub-band row to process
+                int current_row0 = row0 + rows_processed;
+                int remaining_rows = nrows - rows_processed;
 
-            int u_min = std::min(u_edge0, u_edge1);
-            int u_max = std::max(u_edge0, u_edge1);
+                // --- UNIFIED CACHE WINDOW EVALUATION ---
+                // If our current row is outside the active macro cache window, we refresh it.
+                if (current_row0 < cached_row_start || current_row0 >= cached_row_end) {
 
-            // Convert the raw affine accumulator values back into literal source column indices
-            int col_min = dbl ? (u_min >> 1) : u_min;
-            int col_max = dbl ? (u_max >> 1) : u_max;
+                    cached_row_start = current_row0;
 
-            // Clip strictly to the physical bounds of the source image to prevent memory faults
-            col_min = std::max(0, std::min(src_w - 1, col_min));
-            col_max = std::max(0, std::min(src_w - 1, col_max));
-            int actual_cols = (col_max - col_min) + 1;
+                    // Lookahead choice: If the total remaining band rows fit nicely into our physical 
+                    // cache limit, we pre-allocate up to MAX_CACHE_COLS to allow future small bands to 
+                    // reuse this data. Otherwise, we cleanly clamp to what our cache can hold right now.
+                    int lookahead_nrows = (remaining_rows <= configured_cache_cols) 
+                                        ? std::min(configured_cache_cols, dst_h - current_row0) 
+                                        : configured_cache_cols;
 
-            // Find the range of source rows (V axis) required by the destination X span [d.dx0, d.dx1)
-            int v_edge0 = d.va * d.dx0 + d.vc;
-            int v_edge1 = d.va * (d.dx1 - 1) + d.vc;
+                    cached_row_end = cached_row_start + lookahead_nrows;
 
-            int v_min = std::min(v_edge0, v_edge1);
-            int v_max = std::max(v_edge0, v_edge1);
+                    // 1. CALCULATE TRANSFORM LIMITS FOR THE ENTIRE MACRO BLOCK
+                    int u_edge0 = d.ub * cached_row_start + d.uc;
+                    int u_edge1 = d.ub * (cached_row_end - 1) + d.uc;
 
-            int row_min = dbl ? (v_min >> 1) : v_min;
-            int row_max = dbl ? (v_max >> 1) : v_max;
+                    int u_min = std::min(u_edge0, u_edge1);
+                    int u_max = std::max(u_edge0, u_edge1);
 
-            row_min = std::max(0, std::min(src_h - 1, row_min));
-            row_max = std::max(0, std::min(src_h - 1, row_max));
-            int actual_rows = (row_max - row_min) + 1;
+                    // Convert the raw affine accumulator values back into literal source column indices
+                    int col_min = dbl ? (u_min >> 1) : u_min;
+                    int col_max = dbl ? (u_max >> 1) : u_max;
 
-            // 2. POPULATE CACHE USING THE CORRECT BOUNDING BOX
-            // We normalize the cache storage path using row_min to keep the index compact and safe
-            for (int i = 0; i < actual_rows; ++i) {
-                int srow = row_min + i;
+                    // Clip strictly to the physical bounds of the source image to prevent memory faults
+                    col_min = std::max(0, std::min(src_w - 1, col_min));
+                    col_max = std::max(0, std::min(src_w - 1, col_max));
+                    cached_actual_cols = (col_max - col_min) + 1;
 
-                // Destination stride inside the static SRAM cache window
-                uint32_t *sram_row = &vertical_sram_cache[i * actual_cols];
+                    // Performance fallback for ultra-narrow macro-slices
+                    if (cached_actual_cols <= MIN_CACHE_COLS) {
+                        convert(d, dst_band + (rows_processed * d.dst_row_bytes), current_row0, remaining_rows);
 
-                // Direct pointer to the linear block in PSRAM starting at our calculated col_min
-                const uint8_t *psram_ptr = d.src + ((long)srow * d.src_row_bytes) + ((long)col_min * RGBA8888::bytes);
+                        // Force a total cache rewrite on the next incoming band
+                        cached_row_start = 0;
+                        cached_row_end = 0;
+                        return;
+                    }
 
-                // Fetch a completely safe contiguous row segment into fast SRAM
-                std::memcpy(sram_row, psram_ptr, actual_cols * RGBA8888::bytes);
+                    if (cached_actual_cols > configured_cache_cols) {
+                        cached_actual_cols = configured_cache_cols;
+                    }
+
+                    // Find vertical source rows required for this macro-span
+                    int v_edge0 = d.va * d.dx0 + d.vc;
+                    int v_edge1 = d.va * (d.dx1 - 1) + d.vc;
+
+                    int v_min = std::min(v_edge0, v_edge1);
+                    int v_max = std::max(v_edge0, v_edge1);
+
+                    int row_min = dbl ? (v_min >> 1) : v_min;
+                    int row_max = dbl ? (v_max >> 1) : v_max;
+
+                    cached_row_min = std::max(0, std::min(src_h - 1, row_min));
+                    int cached_row_max = std::max(0, std::min(src_h - 1, row_max));
+                    int actual_rows = (cached_row_max - cached_row_min) + 1;
+
+                    if (actual_rows > MAX_CACHE_IMAGE_HEIGHT) {
+                        actual_rows = MAX_CACHE_IMAGE_HEIGHT;
+                    }
+
+                // 2. POPULATE THE LARGE MACRO CACHE (Done once per 32 display lines)
+                    for (int i = 0; i < actual_rows; ++i) {
+                        int srow = cached_row_min + i;
+                        uint32_t *sram_row = &vertical_sram_cache[i * cached_actual_cols];
+                        const uint8_t *psram_ptr = d.src + ((long)srow * d.src_row_bytes) + ((long)col_min * RGBA8888::bytes);
+
+                        std::memcpy(sram_row, psram_ptr, cached_actual_cols * 4);
+                    }
+                }
+
+                // --- RENDER SLICE FROM CACHE ---
+                // Calculate how many lines we can safely process out of the current cache allocation window
+                int slice_nrows = std::min(remaining_rows, cached_row_end - current_row0);
+                uint8_t *slice_dst_band = dst_band + (rows_processed * d.dst_row_bytes);
+
+                int u_edge0_band = d.ub * current_row0 + d.uc;
+                int u_edge1_band = d.ub * (current_row0 + slice_nrows - 1) + d.uc;
+                int col_min_band = dbl ? (std::min(u_edge0_band, u_edge1_band) >> 1) : std::min(u_edge0_band, u_edge1_band);
+                col_min_band = std::max(0, std::min(src_w - 1, col_min_band));
+
+                Descriptor local_d = d;
+                local_d.src_row_bytes = cached_actual_cols * RGBA8888::bytes;
+                local_d.step_x = (d.step_x > 0 ? 1 : -1) * (int)local_d.src_row_bytes;
+                local_d.src = (const uint8_t*)vertical_sram_cache;
+
+                int u_shift = col_min_band << (dbl ? 1 : 0);
+                int v_shift = cached_row_min << (dbl ? 1 : 0);
+
+                local_d.uc = d.uc - u_shift;
+                local_d.vc = d.vc - v_shift;
+
+                // Render sub-band instantly using SRAM data
+                convert(local_d, slice_dst_band, current_row0, slice_nrows);
+
+                rows_processed += slice_nrows;
             }
-
-            // 3. COMPLETE DESCRIPTOR TRANSLATION VIA SCALED AFFINE CONVERSION
-            Descriptor local_d = d;
-
-            // Rewrite the internal row pitch and stepping rules to traverse the SRAM block instead of PSRAM
-            local_d.src_row_bytes = actual_cols * RGBA8888::bytes;
-            local_d.step_x = (d.step_x > 0 ? 1 : -1) * (int)local_d.src_row_bytes;
-            local_d.src = (const uint8_t*)vertical_sram_cache;
-
-            // Mathematically shift the origin of the transform matrix to align with the cache window.
-            // We must shift by the base coordinates (col_min, row_min) and account for Pixel-Double bit shifts.
-            int u_shift = col_min << (dbl ? 1 : 0);
-            int v_shift = row_min << (dbl ? 1 : 0);
-
-            local_d.uc = d.uc - u_shift;
-            local_d.vc = d.vc - v_shift;
-
-            convert(local_d, dst_band, row0, nrows);
         } else {
             convert(d, dst_band, row0, nrows);
         }
@@ -286,7 +344,7 @@ typedef struct _SPIDisplay_obj_t {
 static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
                                     size_t n_kw, const mp_obj_t *all_args) {
     enum { ARG_spi, ARG_sck, ARG_mosi, ARG_cs, ARG_dc, ARG_baudrate, ARG_te,
-           ARG_ram_write, ARG_bitdepth, ARG_band_lines };
+           ARG_ram_write, ARG_bitdepth, ARG_band_lines, ARG_cache_columns };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_spi, MP_ARG_REQUIRED | MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_sck, MP_ARG_REQUIRED | MP_ARG_INT, {.u_int = 0} },
@@ -298,6 +356,7 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
         { MP_QSTR_ram_write, MP_ARG_INT, {.u_int = 0x2C} },
         { MP_QSTR_bitdepth, MP_ARG_INT, {.u_int = 16} },
         { MP_QSTR_band_lines, MP_ARG_INT, {.u_int = 16} },
+        { MP_QSTR_cache_columns, MP_ARG_INT, {.u_int = 16} },
     };
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all_kw_array(n_args, n_kw, all_args,
@@ -315,7 +374,7 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
         (uint)args[ARG_mosi].u_int, (uint)args[ARG_cs].u_int,
         (uint)args[ARG_dc].u_int, (uint)args[ARG_baudrate].u_int, te,
         (uint8_t)args[ARG_ram_write].u_int, args[ARG_bitdepth].u_int,
-        args[ARG_band_lines].u_int);
+        args[ARG_band_lines].u_int, args[ARG_cache_columns].u_int);
     return MP_OBJ_FROM_PTR(self);
 }
 

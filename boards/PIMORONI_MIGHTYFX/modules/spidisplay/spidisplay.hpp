@@ -25,7 +25,8 @@ public:
     // per-band setup overhead (tune up as SPI frequency rises), clamped to the
     // static buffer's capacity.
     SPIDisplay(uint spi_index, uint sck, uint mosi, uint cs, uint dc,
-               uint baudrate, int te, uint8_t ram_write, int bitdepth, int band_lines);
+               uint baudrate, int te, uint8_t ram_write, int bitdepth,
+               int band_lines, int cache_columns);
     ~SPIDisplay();
 
     // Blocking raw register write: DC low, CS low, command, DC high, data,
@@ -58,6 +59,7 @@ private:
     uint8_t ram_write_cmd;
     int fmt;             // Destination packer tag (RGB444::format / RGB565::format)
     int band_lines;      // Destination rows per DMA band
+    int configured_cache_cols;
     int dma_chan;
     uint32_t last_convert_us = 0;
     uint32_t last_te_wait_us = 0;
