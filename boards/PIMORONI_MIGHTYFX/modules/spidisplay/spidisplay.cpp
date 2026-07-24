@@ -155,37 +155,68 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     auto convert_band_optimized = [&](Descriptor &d, uint8_t *dst_band, int row0, int nrows) {
         if (src_in_psram && (rotation == 90 || rotation == 270)) {
 
-            // Each row in our local cache is exactly 'nrows' wide. 
-            // For a 2-row band, this is a fixed pitch of 8 bytes.
-            const size_t cache_row_pitch = nrows * sizeof(uint32_t);
+            // 1. CALCULATE ACTUAL TRACKED TRANSFORMATION MATRIX LIMITS
+            // At 90/270 deg, stepping along destination rows (row0 to row0 + nrows - 1)
+            // moves along the source image's horizontal U axis (controlled by d.ub and d.uc).
+            int u_edge0 = d.ub * row0 + d.uc;
+            int u_edge1 = d.ub * (row0 + nrows - 1) + d.uc;
 
-            // We sweep through every single possible source row. This removes all offset hazards.
-            for (int srow = 0; srow < src_h; ++srow) {
+            int u_min = std::min(u_edge0, u_edge1);
+            int u_max = std::max(u_edge0, u_edge1);
 
-                // Pointer lands perfectly inside our static cache grid
-                uint32_t *sram_row = (uint32_t*)((uint8_t*)vertical_sram_cache + (srow * cache_row_pitch));
+            // Convert the raw affine accumulator values back into literal source column indices
+            int col_min = dbl ? (u_min >> 1) : u_min;
+            int col_max = dbl ? (u_max >> 1) : u_max;
 
-                // Find the starting column in PSRAM for this band slice
-                int src_col_start = row0; 
+            // Clip strictly to the physical bounds of the source image to prevent memory faults
+            col_min = std::max(0, std::min(src_w - 1, col_min));
+            col_max = std::max(0, std::min(src_w - 1, col_max));
+            int actual_cols = (col_max - col_min) + 1;
 
-                // Safely point to the contiguous block of 'nrows' pixels in original PSRAM
-                const uint8_t *psram_block_start = d.src + ((long)srow * d.src_row_bytes) + ((long)src_col_start * sizeof(uint32_t));
+            // Find the range of source rows (V axis) required by the destination X span [d.dx0, d.dx1)
+            int v_edge0 = d.va * d.dx0 + d.vc;
+            int v_edge1 = d.va * (d.dx1 - 1) + d.vc;
 
-                // Execute high-speed sequential burst copy into SRAM
-                std::memcpy(sram_row, psram_block_start, cache_row_pitch);
+            int v_min = std::min(v_edge0, v_edge1);
+            int v_max = std::max(v_edge0, v_edge1);
+
+            int row_min = dbl ? (v_min >> 1) : v_min;
+            int row_max = dbl ? (v_max >> 1) : v_max;
+
+            row_min = std::max(0, std::min(src_h - 1, row_min));
+            row_max = std::max(0, std::min(src_h - 1, row_max));
+            int actual_rows = (row_max - row_min) + 1;
+
+            // 2. POPULATE CACHE USING THE CORRECT BOUNDING BOX
+            // We normalize the cache storage path using row_min to keep the index compact and safe
+            for (int i = 0; i < actual_rows; ++i) {
+                int srow = row_min + i;
+
+                // Destination stride inside the static SRAM cache window
+                uint32_t *sram_row = &vertical_sram_cache[i * actual_cols];
+
+                // Direct pointer to the linear block in PSRAM starting at our calculated col_min
+                const uint8_t *psram_ptr = d.src + ((long)srow * d.src_row_bytes) + ((long)col_min * RGBA8888::bytes);
+
+                // Fetch a completely safe contiguous row segment into fast SRAM
+                std::memcpy(sram_row, psram_ptr, actual_cols * RGBA8888::bytes);
             }
 
-            // 3. APPLY VIRTUAL POINTER CORRECTION
+            // 3. COMPLETE DESCRIPTOR TRANSLATION VIA SCALED AFFINE CONVERSION
             Descriptor local_d = d;
-            local_d.src_row_bytes = cache_row_pitch;
-            local_d.step_x = (d.step_x > 0 ? 1 : -1) * (int)cache_row_pitch;
 
+            // Rewrite the internal row pitch and stepping rules to traverse the SRAM block instead of PSRAM
+            local_d.src_row_bytes = actual_cols * RGBA8888::bytes;
+            local_d.step_x = (d.step_x > 0 ? 1 : -1) * (int)local_d.src_row_bytes;
             local_d.src = (const uint8_t*)vertical_sram_cache;
 
-            // Shift the column space down by row0 so that the columns [row0, row0 + nrows) 
-            // map cleanly to cache indices [0, nrows)
-            local_d.uc = d.uc - row0;
-            local_d.vc = d.vc;
+            // Mathematically shift the origin of the transform matrix to align with the cache window.
+            // We must shift by the base coordinates (col_min, row_min) and account for Pixel-Double bit shifts.
+            int u_shift = col_min << (dbl ? 1 : 0);
+            int v_shift = row_min << (dbl ? 1 : 0);
+
+            local_d.uc = d.uc - u_shift;
+            local_d.vc = d.vc - v_shift;
 
             convert(local_d, dst_band, row0, nrows);
         } else {
