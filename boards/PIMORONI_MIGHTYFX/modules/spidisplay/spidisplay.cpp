@@ -262,10 +262,8 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
                 // Calculate how many lines we can safely process out of the current cache allocation window
                 int slice_nrows = std::min(remaining_rows, cached_row_end - current_row0);
 
-                // CRITICAL FIX: Offset the destination pointer backward by the row difference.
-                // This counters the fact that we force convert() to think it is starting from cached_row_start.
-                int skipped_rows_in_cache = current_row0 - cached_row_start;
-                uint8_t *slice_dst_band = dst_band + (rows_processed * d.dst_row_bytes) - (skipped_rows_in_cache * d.dst_row_bytes);
+                // NO MORE POINTER OFFSETS: Destination maps exactly to the current sub-band segment
+                uint8_t *slice_dst_band = dst_band + (rows_processed * d.dst_row_bytes);
 
                 Descriptor local_d = d;
                 local_d.src_row_bytes = cached_actual_cols * RGBA8888::bytes;
@@ -275,12 +273,15 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
                 int u_shift = cached_col_min << (dbl ? 1 : 0);
                 int v_shift = cached_row_min << (dbl ? 1 : 0);
 
-                local_d.uc = d.uc - u_shift;
-                local_d.vc = d.vc - v_shift;
+                // Calculate where this specific row slice lives relative to the top of our cache window
 
-                // CRITICAL FIX: Pass 'cached_row_start' instead of 'current_row0' to keep math locked to cache index 0.
-                // We compensate by adding skipped_rows_in_cache to the total row span count.
-                convert(local_d, slice_dst_band, cached_row_start, skipped_rows_in_cache + slice_nrows);
+                int absolute_u = d.ub * current_row0 + d.uc;
+                int absolute_v = d.vb * current_row0 + d.vc;
+
+                local_d.uc = absolute_u - u_shift;
+                local_d.vc = absolute_v - v_shift;
+
+                convert(local_d, slice_dst_band, 0, slice_nrows);
 
                 rows_processed += slice_nrows;
             }
