@@ -167,6 +167,7 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     int cached_row_end = 0;
     int cached_actual_cols = 0;
     int cached_row_min = 0;
+    int cached_col_min = 0;
 
     // Optimized lambda that reads from a persistent macro-cache
     auto convert_band_optimized = [&](Descriptor &d, uint8_t *dst_band, int row0, int nrows) {
@@ -209,14 +210,20 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
                     col_max = std::max(0, std::min(src_w - 1, col_max));
                     cached_actual_cols = (col_max - col_min) + 1;
 
+                    cached_col_min = col_min; 
+
                     // Performance fallback for ultra-narrow macro-slices
                     if (cached_actual_cols <= MIN_CACHE_COLS) {
-                        convert(d, dst_band + (rows_processed * d.dst_row_bytes), current_row0, remaining_rows);
+                        int slice_nrows = std::min(remaining_rows, cached_row_end - current_row0);
+                        convert(d, dst_band + (rows_processed * d.dst_row_bytes), current_row0, slice_nrows);
 
-                        // Force a total cache rewrite on the next incoming band
+                        // Clear cache state safely
                         cached_row_start = 0;
                         cached_row_end = 0;
-                        return;
+
+                        // Advance the loop instead of breaking/returning early
+                        rows_processed += slice_nrows;
+                        continue; 
                     }
 
                     if (cached_actual_cols > configured_cache_cols) {
@@ -241,11 +248,11 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
                         actual_rows = MAX_CACHE_IMAGE_HEIGHT;
                     }
 
-                // 2. POPULATE THE LARGE MACRO CACHE (Done once per 32 display lines)
+                    // 2. POPULATE THE LARGE MACRO CACHE
                     for (int i = 0; i < actual_rows; ++i) {
                         int srow = cached_row_min + i;
                         uint32_t *sram_row = &vertical_sram_cache[i * cached_actual_cols];
-                        const uint8_t *psram_ptr = d.src + ((long)srow * d.src_row_bytes) + ((long)col_min * RGBA8888::bytes);
+                        const uint8_t *psram_ptr = d.src + ((long)srow * d.src_row_bytes) + ((long)cached_col_min * RGBA8888::bytes);
 
                         std::memcpy(sram_row, psram_ptr, cached_actual_cols * 4);
                     }
@@ -254,26 +261,26 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
                 // --- RENDER SLICE FROM CACHE ---
                 // Calculate how many lines we can safely process out of the current cache allocation window
                 int slice_nrows = std::min(remaining_rows, cached_row_end - current_row0);
-                uint8_t *slice_dst_band = dst_band + (rows_processed * d.dst_row_bytes);
 
-                int u_edge0_band = d.ub * current_row0 + d.uc;
-                int u_edge1_band = d.ub * (current_row0 + slice_nrows - 1) + d.uc;
-                int col_min_band = dbl ? (std::min(u_edge0_band, u_edge1_band) >> 1) : std::min(u_edge0_band, u_edge1_band);
-                col_min_band = std::max(0, std::min(src_w - 1, col_min_band));
+                // CRITICAL FIX: Offset the destination pointer backward by the row difference.
+                // This counters the fact that we force convert() to think it is starting from cached_row_start.
+                int skipped_rows_in_cache = current_row0 - cached_row_start;
+                uint8_t *slice_dst_band = dst_band + (rows_processed * d.dst_row_bytes) - (skipped_rows_in_cache * d.dst_row_bytes);
 
                 Descriptor local_d = d;
                 local_d.src_row_bytes = cached_actual_cols * RGBA8888::bytes;
                 local_d.step_x = (d.step_x > 0 ? 1 : -1) * (int)local_d.src_row_bytes;
                 local_d.src = (const uint8_t*)vertical_sram_cache;
 
-                int u_shift = col_min_band << (dbl ? 1 : 0);
+                int u_shift = cached_col_min << (dbl ? 1 : 0);
                 int v_shift = cached_row_min << (dbl ? 1 : 0);
 
                 local_d.uc = d.uc - u_shift;
                 local_d.vc = d.vc - v_shift;
 
-                // Render sub-band instantly using SRAM data
-                convert(local_d, slice_dst_band, current_row0, slice_nrows);
+                // CRITICAL FIX: Pass 'cached_row_start' instead of 'current_row0' to keep math locked to cache index 0.
+                // We compensate by adding skipped_rows_in_cache to the total row span count.
+                convert(local_d, slice_dst_band, cached_row_start, skipped_rows_in_cache + slice_nrows);
 
                 rows_processed += slice_nrows;
             }
