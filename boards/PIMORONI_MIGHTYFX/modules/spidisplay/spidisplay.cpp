@@ -183,14 +183,12 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
                     int u_min = std::min(u_edge0, u_edge1);
                     int u_max = std::max(u_edge0, u_edge1);
 
-                    int col_min = dbl ? (u_min >> 1) : u_min;
+                    cache.raw_col_min = dbl ? (u_min >> 1) : u_min;
                     int col_max = dbl ? (u_max >> 1) : u_max;
 
-                    col_min = std::max(0, std::min(src_w - 1, col_min));
+                    cache.col_min = std::max(0, std::min(src_w - 1, cache.raw_col_min));
                     col_max = std::max(0, std::min(src_w - 1, col_max));
-                    cache.actual_cols = (col_max - col_min) + 1;
-
-                    cache.col_min = col_min;
+                    cache.actual_cols = (col_max - cache.col_min) + 1;
 
                     // Performance fallback for narrow bands
                     if (cache.actual_cols <= MIN_CACHE_COLUMNS) {
@@ -216,10 +214,10 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
                     int v_min = std::min(v_edge0, v_edge1);
                     int v_max = std::max(v_edge0, v_edge1);
 
-                    int row_min = dbl ? (v_min >> 1) : v_min;
+                    cache.raw_row_min = dbl ? (v_min >> 1) : v_min;
                     int row_max = dbl ? (v_max >> 1) : v_max;
 
-                    cache.row_min = std::max(0, std::min(src_h - 1, row_min));
+                    cache.row_min = std::max(0, std::min(src_h - 1, cache.raw_row_min));
                     int cached_row_max = std::max(0, std::min(src_h - 1, row_max));
                     int actual_rows = (cached_row_max - cache.row_min) + 1;
 
@@ -247,8 +245,8 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
                 local_d.step_x = (d.step_x > 0 ? 1 : -1) * (int)local_d.src_row_bytes;
                 local_d.src = (const uint8_t*)vertical_sram_cache;
 
-                int u_shift = cache.col_min << (dbl ? 1 : 0);
-                int v_shift = cache.row_min << (dbl ? 1 : 0);
+                int u_shift = cache.raw_col_min << (dbl ? 1 : 0);
+                int v_shift = cache.raw_row_min << (dbl ? 1 : 0);
 
                 // Calculate where this specific row slice lives relative to the top of our cache window
                 int absolute_u = d.ub * current_row0 + d.uc;

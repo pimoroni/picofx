@@ -22,6 +22,9 @@ struct CacheWindow {
     int actual_cols = 0;
     int row_min = 0;
     int col_min = 0;
+
+    int raw_col_min = 0; 
+    int raw_row_min = 0;
 };
 
 class SPIDisplay {
