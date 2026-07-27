@@ -18,7 +18,7 @@ set(PV_DUAL_CORE ON)
 find_package(PICOVECTOR_MICROPYTHON CONFIG REQUIRED)
 
 # Build picovector for Tufty 2350
-target_compile_definitions(usermod_picovector INTERFACE TUFTY=1 m_malloc_no_scan=m_malloc)
+target_compile_definitions(usermod_picovector INTERFACE m_malloc_no_scan=m_malloc)
 
 # Essential
 include(pimoroni_i2c/micropython)
