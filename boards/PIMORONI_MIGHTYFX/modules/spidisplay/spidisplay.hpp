@@ -16,17 +16,6 @@
 
 namespace spidisplay {
 
-struct CacheWindow {
-    int row_start = 0;
-    int row_end = 0;      // exclusive
-    int actual_cols = 0;
-    int row_min = 0;
-    int col_min = 0;
-
-    int raw_col_min = 0; 
-    int raw_row_min = 0;
-};
-
 class SPIDisplay {
 public:
     // te < 0 means the tearing-effect signal shares the DC line (MightyFX);
@@ -34,7 +23,8 @@ public:
     // memory-write opcode. bitdepth is the panel's 12 (RGB444) or 16 (RGB565).
     // band_lines is destination rows per DMA band: larger bands amortise the
     // per-band setup overhead (tune up as SPI frequency rises), clamped to the
-    // static buffer's capacity.
+    // static buffer's capacity. cache_columns is destination rows per column
+    // cache window (see column_cache.hpp); 0 disables the cache.
     SPIDisplay(uint spi_index, uint sck, uint mosi, uint cs, uint dc,
                uint baudrate, int te, uint8_t ram_write, int bitdepth,
                int band_lines, int cache_columns);
