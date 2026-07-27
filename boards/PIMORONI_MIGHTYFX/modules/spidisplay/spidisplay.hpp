@@ -16,6 +16,14 @@
 
 namespace spidisplay {
 
+struct CacheWindow {
+    int row_start = 0;
+    int row_end = 0;      // exclusive
+    int actual_cols = 0;
+    int row_min = 0;
+    int col_min = 0;
+};
+
 class SPIDisplay {
 public:
     // te < 0 means the tearing-effect signal shares the DC line (MightyFX);
@@ -45,6 +53,7 @@ public:
 
     // Microsecond timings from the most recent update(): the first convert, TE/vsync wait,
     // and the whole frame emit (DC low before RAMWR to CS high after the stream).
+    uint32_t pre_us() const { return last_pre_us; }
     uint32_t convert_us() const { return last_convert_us; }
     uint32_t te_wait_us() const { return last_te_wait_us; }
     uint32_t frame_us() const { return last_frame_us; }
@@ -59,8 +68,9 @@ private:
     uint8_t ram_write_cmd;
     int fmt;             // Destination packer tag (RGB444::format / RGB565::format)
     int band_lines;      // Destination rows per DMA band
-    int configured_cache_cols;
+    int cache_columns;
     int dma_chan;
+    uint32_t last_pre_us = 0;
     uint32_t last_convert_us = 0;
     uint32_t last_te_wait_us = 0;
     uint32_t last_frame_us = 0;
