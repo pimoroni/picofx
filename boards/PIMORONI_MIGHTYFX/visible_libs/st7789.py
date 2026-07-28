@@ -1022,6 +1022,21 @@ class ST7789:
     def height(self):
         return self._height
 
+    def canvas(self, offset=0):
+        """An SRAM-backed image sized to this screen.
+
+        The GC heap is PSRAM, so a plain image() is read over XIP and conversion
+        costs about twice as much per pixel. offset places the canvas within the
+        SRAM region, for a second buffer that has to coexist with the first.
+        """
+        if self._display is None:
+            raise RuntimeError("canvas() needs the native display path")
+
+        import spidisplay
+        nbytes = self._width * self._height * 4    # RGBA8888
+        return picovector.image(self._width, self._height,
+                                spidisplay.buffer(nbytes, offset))
+
     def setup(self, bd_code, fr_code):
         self.command(REG_SWRESET)
 

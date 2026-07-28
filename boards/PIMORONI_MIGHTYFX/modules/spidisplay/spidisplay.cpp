@@ -126,6 +126,12 @@ void SPIDisplay::te_wait() {
     }
 }
 
+bool SPIDisplay::row_fits(int dst_w) const {
+    size_t row_bytes = (fmt == RGB444::format) ? (size_t)(dst_w * 3 / 2)
+                                               : (size_t)(dst_w * 2);
+    return row_bytes > 0 && row_bytes <= MAX_ROW_BYTES;
+}
+
 TeProbe SPIDisplay::te_probe(uint32_t ms) {
     uint pin = te_pin >= 0 ? (uint)te_pin : dc_pin;
     if (te_pin < 0) {
@@ -193,7 +199,13 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     uint8_t *front = band_a;   // converted, DMA in flight
     uint8_t *back = band_b;    // converted next, while front streams
 
+    // A band has to fit the static buffer. The caller is expected to have
+    // checked the width with row_fits(), so this only bounds the row count.
     int band_rows = band_lines > dst_h ? dst_h : band_lines;
+    const int rows_that_fit = (int)(BAND_BYTES / (size_t)d.dst_row_bytes);
+    if (band_rows > rows_that_fit) {
+        band_rows = rows_that_fit < 1 ? 1 : rows_that_fit;
+    }
 
     // Every band is this size except a possibly-shorter final one
     const size_t full_band_bytes = (size_t)band_rows * d.dst_row_bytes;
@@ -320,7 +332,7 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
         { MP_QSTR_band_lines, MP_ARG_INT, {.u_int = 16} },
         { MP_QSTR_cache_columns, MP_ARG_INT, {.u_int = 16} },
         { MP_QSTR_cache_wide_double, MP_ARG_BOOL, {.u_bool = true} },
-        { MP_QSTR_spi_frame_bits, MP_ARG_INT, {.u_int = 8} },
+        { MP_QSTR_spi_frame_bits, MP_ARG_INT, {.u_int = 16} },
     };
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all_kw_array(n_args, n_kw, all_args,
@@ -408,6 +420,10 @@ static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_ma
                      MP_ARRAY_SIZE(allowed_args), allowed_args, args);
 
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[ARG_self].u_obj);
+
+    if (!self->display.row_fits(args[ARG_width].u_int)) {
+        mp_raise_ValueError(MP_ERROR_TEXT("width too wide for the band buffer at this bit depth"));
+    }
 
     mp_buffer_info_t buf;
     mp_get_buffer_raise(args[ARG_image].u_obj, &buf, MP_BUFFER_READ);

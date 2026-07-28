@@ -9,7 +9,6 @@
 #
 # Edit BAND_LINES and re-run to compare band sizes. Values above 16 are clamped.
 
-import spidisplay
 from mighty_fx import SPCE, MightyFX, screen_defs
 from picovector import color, image, mat3, shape
 
@@ -21,7 +20,6 @@ TE_PROBE_MS = 500
 
 BITS_PER_BYTE = 8
 UINT32 = 0xFFFFFFFF
-RGBA8888_BYTES = 4
 
 mighty = MightyFX(spce_a=SCREEN_A, spce_b=SCREEN_B, native_display=True, bands=BAND_LINES)
 screens = mighty.screen_a, mighty.screen_b
@@ -33,11 +31,9 @@ centre_x, centre_y = WIDTH / 2, HEIGHT / 2
 line = shape.line(40, 0, 0, 120, 2)
 
 # The GC heap is PSRAM-only on this board, so a plain image() lands in PSRAM.
-# buffer() hands out the SRAM region the GC never gets. Both canvases are made
-# up front because buffer() has no sub-allocator: every call aliases the same
-# address.
+# canvas() places one in the SRAM region the GC never gets.
 psram_canvas = image(WIDTH, HEIGHT)
-sram_canvas = image(WIDTH, HEIGHT, spidisplay.buffer(WIDTH * HEIGHT * RGBA8888_BYTES))
+sram_canvas = screens[0].canvas()
 
 
 def row_bytes(screen):

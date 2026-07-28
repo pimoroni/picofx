@@ -48,9 +48,10 @@ public:
     bool wide_double() const { return cache_wide_double; }
     void set_wide_double(bool value) { cache_wide_double = value; }
 
-    // SPI data frame width for the pixel stream. The PL022 spends about 1.5
-    // idle clocks between frames, so 16-bit frames halve that per byte pair;
-    // 8 is the reference. Commands are always 8-bit. Takes effect next update().
+    // SPI data frame width for the pixel stream. The PL022 spends exactly 1.5
+    // idle clocks between frames whatever their width, so 16-bit frames halve
+    // that per byte pair and cut frame time by 7.9%; 8 is the reference.
+    // Commands are always 8-bit. Takes effect on the next update().
     int frame_bits() const { return spi_frame_bits; }
     void set_frame_bits(int value) { spi_frame_bits = (value == 16) ? 16 : 8; }
 
@@ -58,6 +59,11 @@ public:
     // never toggles, so a panel that was never sent TEON reports rather than
     // hanging. Must not be called while a frame is streaming.
     TeProbe te_probe(uint32_t ms);
+
+    // Whether one packed destination row of this width fits a band buffer. The
+    // buffers are sized for the widest panel in scope at the shallower bit
+    // depth, so a wider or deeper destination has to be rejected.
+    bool row_fits(int dst_w) const;
 
     // Blocking raw register write: DC low, CS low, command, DC high, data,
     // CS high. Used for panel bringup from MicroPython.
