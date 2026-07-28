@@ -69,7 +69,7 @@ class MightyFX:
 
     RGB_GAMMA = 2.2
 
-    def __init__(self, spce_a=None, spce_b=None, init_i2c=True, init_wav=True, wav_root="/", native_display=False):
+    def __init__(self, spce_a=None, spce_b=None, init_i2c=True, init_wav=True, wav_root="/", native_display=False, bands=None):
         # Set up the mono and RGB LED outputs
         self.outputs = [RGBLED(*out, invert=False, gamma=self.RGB_GAMMA) for out in self.OUT_PINS]
 
@@ -83,7 +83,7 @@ class MightyFX:
                 from spidisplay import SPIDisplay
                 disp_a = SPIDisplay(spi=0, sck=self.SPCE_A_SCK_PIN, mosi=self.SPCE_A_MOSI_PIN,
                                     cs=self.SPCE_A_CS_PIN, dc=self.SPCE_A_DC_PIN, baudrate=sdef.baud,
-                                    bitdepth=sdef.bits, band_lines=sdef.bands)
+                                    bitdepth=sdef.bits, band_lines=sdef.bands if bands is None else bands)
                 self.screen_a = ST7789(None, None, None, self.bl_a, sdef.width, sdef.height, sdef.bits, sdef.fps, display=disp_a)
             else:
                 spi_a = SPI(id=0, baudrate=sdef.baud, sck=Pin.board.SPCE_A_SCK, mosi=Pin.board.SPCE_A_MOSI)
@@ -110,7 +110,7 @@ class MightyFX:
                 from spidisplay import SPIDisplay
                 disp_b = SPIDisplay(spi=1, sck=self.SPCE_B_SCK_PIN, mosi=self.SPCE_B_MOSI_PIN,
                                     cs=self.SPCE_B_CS_PIN, dc=self.SPCE_B_DC_PIN, baudrate=sdef.baud,
-                                    bitdepth=sdef.bits, band_lines=sdef.bands)
+                                    bitdepth=sdef.bits, band_lines=sdef.bands if bands is None else bands)
                 self.screen_b = ST7789(None, None, None, self.bl_b, sdef.width, sdef.height, sdef.bits, sdef.fps, display=disp_b)
             else:
                 spi_b = SPI(id=1, baudrate=40_000_000, sck=Pin.board.SPCE_B_SCK, mosi=Pin.board.SPCE_B_MOSI)

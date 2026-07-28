@@ -16,6 +16,17 @@
 
 namespace spidisplay {
 
+// Observed shape of a panel's tearing-effect signal. high_us is the mean time
+// the line spends asserted, which identifies the polarity: a short high against
+// the period is the vertical blanking pulse, so the falling edge is the start of
+// visible row 0. edges is the rising edges counted, for a sanity check against
+// the panel's configured frame rate.
+struct TeProbe {
+    uint32_t period_us;
+    uint32_t high_us;
+    uint32_t edges;
+};
+
 class SPIDisplay {
 public:
     // te < 0 means the tearing-effect signal shares the DC line (MightyFX);
@@ -34,6 +45,11 @@ public:
     // Toggle the pixel-doubled window depth between frames, for profiling.
     bool wide_double() const { return cache_wide_double; }
     void set_wide_double(bool value) { cache_wide_double = value; }
+
+    // Sample the TE line for ms milliseconds. Returns zeroed fields if the line
+    // never toggles, so a panel that was never sent TEON reports rather than
+    // hanging. Must not be called while a frame is streaming.
+    TeProbe te_probe(uint32_t ms);
 
     // Blocking raw register write: DC low, CS low, command, DC high, data,
     // CS high. Used for panel bringup from MicroPython.
@@ -56,6 +72,21 @@ public:
     uint32_t te_wait_us() const { return last_te_wait_us; }
     uint32_t frame_us() const { return last_frame_us; }
 
+    // Whole-frame instrumentation from the most recent update(). convert_total_us
+    // covers every band; stall_us is time spent waiting on DMA, so conversion is
+    // the constraint when it is near zero and the wire is when it dominates.
+    uint32_t convert_total_us() const { return last_convert_total_us; }
+    uint32_t stall_us() const { return last_stall_us; }
+    uint32_t bands() const { return last_bands; }
+
+    // time_us_32() at the RAMWR that opened the most recent frame. Absolute, so
+    // the gap between two displays is their write-start skew.
+    uint32_t write_start_us() const { return last_write_start_us; }
+
+    // What spi_init actually achieved: the divider only reaches clk_peri/(2*n),
+    // so a requested rate is rounded down, sometimes a long way.
+    uint32_t baudrate() const { return spi_get_baudrate(spi); }
+
 private:
     void te_wait();
 
@@ -73,6 +104,10 @@ private:
     uint32_t last_convert_us = 0;
     uint32_t last_te_wait_us = 0;
     uint32_t last_frame_us = 0;
+    uint32_t last_convert_total_us = 0;
+    uint32_t last_stall_us = 0;
+    uint32_t last_bands = 0;
+    uint32_t last_write_start_us = 0;
 };
 
 }  // namespace spidisplay

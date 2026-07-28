@@ -118,6 +118,53 @@ void SPIDisplay::te_wait() {
     }
 }
 
+TeProbe SPIDisplay::te_probe(uint32_t ms) {
+    uint pin = te_pin >= 0 ? (uint)te_pin : dc_pin;
+    if (te_pin < 0) {
+        gpio_set_dir(dc_pin, GPIO_IN);
+    }
+
+    const uint32_t t_start = time_us_32();
+    const uint32_t window_us = ms * 1000;
+    uint32_t rises = 0, pulses = 0;
+    uint32_t first_rise = 0, last_rise = 0, rise_at = 0;
+    uint32_t high_total = 0;
+    bool level = gpio_get(pin) != 0;
+
+    while (time_us_32() - t_start < window_us) {
+        bool now_level = gpio_get(pin) != 0;
+        if (now_level == level) {
+            continue;
+        }
+        uint32_t now = time_us_32();
+        level = now_level;
+        if (now_level) {
+            if (rises == 0) {
+                first_rise = now;
+            }
+            last_rise = now;
+            rise_at = now;
+            ++rises;
+        } else if (rises > 0) {
+            high_total += now - rise_at;
+            ++pulses;
+        }
+    }
+
+    if (te_pin < 0) {
+        gpio_set_dir(dc_pin, GPIO_OUT);
+    }
+
+    TeProbe p = {0, 0, rises};
+    if (rises > 1) {
+        p.period_us = (last_rise - first_rise) / (rises - 1);
+    }
+    if (pulses > 0) {
+        p.high_us = high_total / pulses;
+    }
+    return p;
+}
+
 void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
                         int dst_w, int dst_h,
                         int rotation, int mirror, int pixel_double,
@@ -161,6 +208,9 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     cache.convert(front, 0, band_rows);
 
     last_convert_us = time_us_32() - t_conv;
+    last_convert_total_us = last_convert_us;
+    last_stall_us = 0;
+    last_bands = 1;
 
     gpio_set_dir(dc_pin, GPIO_OUT);
     uint32_t t_te = time_us_32();
@@ -170,6 +220,7 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     last_te_wait_us = time_us_32() - t_te;
 
     uint32_t t_frame = time_us_32();
+    last_write_start_us = t_frame;
     gpio_put(dc_pin, 0);
     gpio_put(cs_pin, 0);
     spi_write_blocking(spi, &ram_write_cmd, 1);
@@ -183,15 +234,23 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     while (row < dst_h) {
         int rows = dst_h - row < band_rows ? dst_h - row : band_rows;
 
+        uint32_t t_band = time_us_32();
         cache.convert(back, row, rows);
+        uint32_t t_wait = time_us_32();
 
         dma_channel_wait_for_finish_blocking(dma_chan);
+        uint32_t t_kick = time_us_32();
+        last_convert_total_us += t_wait - t_band;
+        last_stall_us += t_kick - t_wait;
+        ++last_bands;
+
         dma_channel_set_read_addr(dma_chan, back, false);
         size_t bytes = rows == band_rows ? full_band_bytes : (size_t)rows * d.dst_row_bytes;
         dma_channel_set_trans_count(dma_chan, bytes, true);
         std::swap(front, back);
         row += rows;
     }
+    uint32_t t_last = time_us_32();
     dma_channel_wait_for_finish_blocking(dma_chan);
     // The DMA finishes when the last bytes reach the SPI TX FIFO, not when they
     // leave the wire. Drain the FIFO before releasing CS or the final few pixels
@@ -199,7 +258,9 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     while (spi_is_busy(spi)) {
     }
     gpio_put(cs_pin, 1);
-    last_frame_us = time_us_32() - t_frame;
+    uint32_t t_end = time_us_32();
+    last_stall_us += t_end - t_last;
+    last_frame_us = t_end - t_frame;
 }
 
 }  // namespace spidisplay
@@ -377,7 +438,7 @@ static mp_obj_t SPIDisplay_cache_wide_double(size_t n_args, const mp_obj_t *args
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(SPIDisplay_cache_wide_double_obj, 1, 2,
                                            SPIDisplay_cache_wide_double);
 
-// (convert_us, te_wait_us, frame_us) from the most recent update().
+// (pre_us, convert_us, te_wait_us, frame_us) from the most recent update().
 static mp_obj_t SPIDisplay_profile(mp_obj_t self_in) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
     mp_obj_t items[4] = {
@@ -390,12 +451,48 @@ static mp_obj_t SPIDisplay_profile(mp_obj_t self_in) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_profile_obj, SPIDisplay_profile);
 
+// (convert_total_us, stall_us, bands, write_start_us, baudrate). The first two
+// say whether a frame is convert-bound or wire-bound; write_start_us is absolute
+// so the gap between two displays is their write-start skew.
+static mp_obj_t SPIDisplay_stats(mp_obj_t self_in) {
+    SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
+    mp_obj_t items[5] = {
+        mp_obj_new_int_from_uint(self->display.convert_total_us()),
+        mp_obj_new_int_from_uint(self->display.stall_us()),
+        mp_obj_new_int_from_uint(self->display.bands()),
+        mp_obj_new_int_from_uint(self->display.write_start_us()),
+        mp_obj_new_int_from_uint(self->display.baudrate()),
+    };
+    return mp_obj_new_tuple(5, items);
+}
+static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_stats_obj, SPIDisplay_stats);
+
+// te_probe(ms=250) -> (period_us, high_us, edges). A short high against the
+// period means the asserted level is vertical blanking.
+static mp_obj_t SPIDisplay_te_probe(size_t n_args, const mp_obj_t *args) {
+    SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[0]);
+    mp_int_t ms = n_args > 1 ? mp_obj_get_int(args[1]) : 250;
+    if (ms < 1 || ms > 5000) {
+        mp_raise_ValueError(MP_ERROR_TEXT("ms must be 1..5000"));
+    }
+    spidisplay::TeProbe p = self->display.te_probe((uint32_t)ms);
+    mp_obj_t items[3] = {
+        mp_obj_new_int_from_uint(p.period_us),
+        mp_obj_new_int_from_uint(p.high_us),
+        mp_obj_new_int_from_uint(p.edges),
+    };
+    return mp_obj_new_tuple(3, items);
+}
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(SPIDisplay_te_probe_obj, 1, 2, SPIDisplay_te_probe);
+
 static const mp_rom_map_elem_t SPIDisplay_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&SPIDisplay___del___obj) },
     { MP_ROM_QSTR(MP_QSTR_command), MP_ROM_PTR(&SPIDisplay_command_obj) },
     { MP_ROM_QSTR(MP_QSTR_update), MP_ROM_PTR(&SPIDisplay_update_obj) },
     { MP_ROM_QSTR(MP_QSTR_cache_wide_double), MP_ROM_PTR(&SPIDisplay_cache_wide_double_obj) },
     { MP_ROM_QSTR(MP_QSTR_profile), MP_ROM_PTR(&SPIDisplay_profile_obj) },
+    { MP_ROM_QSTR(MP_QSTR_stats), MP_ROM_PTR(&SPIDisplay_stats_obj) },
+    { MP_ROM_QSTR(MP_QSTR_te_probe), MP_ROM_PTR(&SPIDisplay_te_probe_obj) },
 };
 static MP_DEFINE_CONST_DICT(SPIDisplay_locals_dict, SPIDisplay_locals_dict_table);
 
