@@ -46,11 +46,12 @@ static uint32_t column_cache_storage[CACHE_PIXELS] __attribute__((aligned(4)));
 
 SPIDisplay::SPIDisplay(uint spi_index, uint sck, uint mosi, uint cs, uint dc,
                        uint baudrate, int te, uint8_t ram_write, int bitdepth,
-                       int band_lines, int cache_columns)
+                       int band_lines, int cache_columns, bool cache_wide_double)
     : cs_pin(cs), dc_pin(dc), te_pin(te), ram_write_cmd(ram_write),
       fmt(bitdepth == 12 ? RGB444::format : RGB565::format),
       band_lines(band_lines < 1 ? 1 : (band_lines > MAX_BAND_LINES ? MAX_BAND_LINES : band_lines)),
-      cache_columns(cache_columns < 0 ? 0 : (cache_columns > MAX_CACHE_COLUMNS ? MAX_CACHE_COLUMNS : cache_columns)) {
+      cache_columns(cache_columns < 0 ? 0 : (cache_columns > MAX_CACHE_COLUMNS ? MAX_CACHE_COLUMNS : cache_columns)),
+      cache_wide_double(cache_wide_double) {
     spi = spi_index == 0 ? spi0 : spi1;
     spi_init(spi, baudrate);
     spi_set_format(spi, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
@@ -148,7 +149,7 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
 
     // The cache decides here whether it applies to this frame, and stays live
     // across bands so a window seeded by one band serves the next.
-    ColumnCache cache(column_cache_storage, CACHE_PIXELS, cache_columns);
+    ColumnCache cache(column_cache_storage, CACHE_PIXELS, cache_columns, cache_wide_double);
     cache.begin(d, convert, dbl, src_in_psram);
 
     last_pre_us = time_us_32() - t_pre;
@@ -217,7 +218,8 @@ typedef struct _SPIDisplay_obj_t {
 static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
                                     size_t n_kw, const mp_obj_t *all_args) {
     enum { ARG_spi, ARG_sck, ARG_mosi, ARG_cs, ARG_dc, ARG_baudrate, ARG_te,
-           ARG_ram_write, ARG_bitdepth, ARG_band_lines, ARG_cache_columns };
+           ARG_ram_write, ARG_bitdepth, ARG_band_lines, ARG_cache_columns,
+           ARG_cache_wide_double };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_spi, MP_ARG_REQUIRED | MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_sck, MP_ARG_REQUIRED | MP_ARG_INT, {.u_int = 0} },
@@ -230,6 +232,7 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
         { MP_QSTR_bitdepth, MP_ARG_INT, {.u_int = 16} },
         { MP_QSTR_band_lines, MP_ARG_INT, {.u_int = 16} },
         { MP_QSTR_cache_columns, MP_ARG_INT, {.u_int = 16} },
+        { MP_QSTR_cache_wide_double, MP_ARG_BOOL, {.u_bool = true} },
     };
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all_kw_array(n_args, n_kw, all_args,
@@ -247,7 +250,8 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
         (uint)args[ARG_mosi].u_int, (uint)args[ARG_cs].u_int,
         (uint)args[ARG_dc].u_int, (uint)args[ARG_baudrate].u_int, te,
         (uint8_t)args[ARG_ram_write].u_int, args[ARG_bitdepth].u_int,
-        args[ARG_band_lines].u_int, args[ARG_cache_columns].u_int);
+        args[ARG_band_lines].u_int, args[ARG_cache_columns].u_int,
+        args[ARG_cache_wide_double].u_bool);
     return MP_OBJ_FROM_PTR(self);
 }
 
@@ -361,6 +365,18 @@ static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_ma
 }
 static MP_DEFINE_CONST_FUN_OBJ_KW(SPIDisplay_update_obj, 4, SPIDisplay_update);
 
+// Read the pixel-doubled cache window depth, or set it with an argument. Takes
+// effect on the next update(), so a profiling loop can alternate frames.
+static mp_obj_t SPIDisplay_cache_wide_double(size_t n_args, const mp_obj_t *args) {
+    SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[0]);
+    if (n_args > 1) {
+        self->display.set_wide_double(mp_obj_is_true(args[1]));
+    }
+    return mp_obj_new_bool(self->display.wide_double());
+}
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(SPIDisplay_cache_wide_double_obj, 1, 2,
+                                           SPIDisplay_cache_wide_double);
+
 // (convert_us, te_wait_us, frame_us) from the most recent update().
 static mp_obj_t SPIDisplay_profile(mp_obj_t self_in) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
@@ -378,6 +394,7 @@ static const mp_rom_map_elem_t SPIDisplay_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&SPIDisplay___del___obj) },
     { MP_ROM_QSTR(MP_QSTR_command), MP_ROM_PTR(&SPIDisplay_command_obj) },
     { MP_ROM_QSTR(MP_QSTR_update), MP_ROM_PTR(&SPIDisplay_update_obj) },
+    { MP_ROM_QSTR(MP_QSTR_cache_wide_double), MP_ROM_PTR(&SPIDisplay_cache_wide_double_obj) },
     { MP_ROM_QSTR(MP_QSTR_profile), MP_ROM_PTR(&SPIDisplay_profile_obj) },
 };
 static MP_DEFINE_CONST_DICT(SPIDisplay_locals_dict, SPIDisplay_locals_dict_table);

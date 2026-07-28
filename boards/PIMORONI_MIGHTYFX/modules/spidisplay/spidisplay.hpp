@@ -23,12 +23,17 @@ public:
     // memory-write opcode. bitdepth is the panel's 12 (RGB444) or 16 (RGB565).
     // band_lines is destination rows per DMA band: larger bands amortise the
     // per-band setup overhead (tune up as SPI frequency rises), clamped to the
-    // static buffer's capacity. cache_columns is destination rows per column
-    // cache window (see column_cache.hpp); 0 disables the cache.
+    // static buffer's capacity. cache_columns is source columns per column cache
+    // window (see column_cache.hpp); 0 disables the cache. cache_wide_double
+    // deepens the window so pixel-doubled frames still fill it.
     SPIDisplay(uint spi_index, uint sck, uint mosi, uint cs, uint dc,
                uint baudrate, int te, uint8_t ram_write, int bitdepth,
-               int band_lines, int cache_columns);
+               int band_lines, int cache_columns, bool cache_wide_double);
     ~SPIDisplay();
+
+    // Toggle the pixel-doubled window depth between frames, for profiling.
+    bool wide_double() const { return cache_wide_double; }
+    void set_wide_double(bool value) { cache_wide_double = value; }
 
     // Blocking raw register write: DC low, CS low, command, DC high, data,
     // CS high. Used for panel bringup from MicroPython.
@@ -62,6 +67,7 @@ private:
     int fmt;             // Destination packer tag (RGB444::format / RGB565::format)
     int band_lines;      // Destination rows per DMA band
     int cache_columns;
+    bool cache_wide_double;
     int dma_chan;
     uint32_t last_pre_us = 0;
     uint32_t last_convert_us = 0;
