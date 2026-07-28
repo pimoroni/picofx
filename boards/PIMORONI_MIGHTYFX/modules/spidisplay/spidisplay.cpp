@@ -46,12 +46,14 @@ static uint32_t column_cache_storage[CACHE_PIXELS] __attribute__((aligned(4)));
 
 SPIDisplay::SPIDisplay(uint spi_index, uint sck, uint mosi, uint cs, uint dc,
                        uint baudrate, int te, uint8_t ram_write, int bitdepth,
-                       int band_lines, int cache_columns, bool cache_wide_double)
+                       int band_lines, int cache_columns, bool cache_wide_double,
+                       int spi_frame_bits)
     : cs_pin(cs), dc_pin(dc), te_pin(te), ram_write_cmd(ram_write),
       fmt(bitdepth == 12 ? RGB444::format : RGB565::format),
       band_lines(band_lines < 1 ? 1 : (band_lines > MAX_BAND_LINES ? MAX_BAND_LINES : band_lines)),
       cache_columns(cache_columns < 0 ? 0 : (cache_columns > MAX_CACHE_COLUMNS ? MAX_CACHE_COLUMNS : cache_columns)),
-      cache_wide_double(cache_wide_double) {
+      cache_wide_double(cache_wide_double),
+      spi_frame_bits(spi_frame_bits == 16 ? 16 : 8) {
     spi = spi_index == 0 ? spi0 : spi1;
     spi_init(spi, baudrate);
     spi_set_format(spi, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
@@ -72,12 +74,18 @@ SPIDisplay::SPIDisplay(uint spi_index, uint sck, uint mosi, uint cs, uint dc,
     }
 
     dma_chan = dma_claim_unused_channel(true);
+    configure_dma(8);
+}
+
+void SPIDisplay::configure_dma(int bits) {
     dma_channel_config c = dma_channel_get_default_config(dma_chan);
-    channel_config_set_transfer_data_size(&c, DMA_SIZE_8);
+    channel_config_set_transfer_data_size(&c, bits == 16 ? DMA_SIZE_16 : DMA_SIZE_8);
     channel_config_set_dreq(&c, spi_get_dreq(spi, true));
     channel_config_set_read_increment(&c, true);
     channel_config_set_write_increment(&c, false);
+    channel_config_set_bswap(&c, bits == 16);
     dma_channel_configure(dma_chan, &c, &spi_get_hw(spi)->dr, nullptr, 0, false);
+    dma_frame_bits = bits;
 }
 
 SPIDisplay::~SPIDisplay() {
@@ -190,6 +198,14 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     // Every band is this size except a possibly-shorter final one
     const size_t full_band_bytes = (size_t)band_rows * d.dst_row_bytes;
 
+    // Wider SPI frames cut the PL022's per-frame idle time, but a transfer has to
+    // be a whole number of frames, which an odd packed row width does not give.
+    const bool wide_frames = spi_frame_bits == 16 && (d.dst_row_bytes % 2) == 0;
+    const int frame_shift = wide_frames ? 1 : 0;
+    if (dma_frame_bits != (wide_frames ? 16 : 8)) {
+        configure_dma(wide_frames ? 16 : 8);
+    }
+
     // Check if the source address sits anywhere inside the 16MB hardware window for CS1
     uintptr_t src_addr = (uintptr_t)d.src;
     bool src_in_psram = (src_addr >= PSRAM_CACHED_BASE && src_addr < PSRAM_CACHED_BASE + PSRAM_WINDOW);
@@ -226,9 +242,15 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     spi_write_blocking(spi, &ram_write_cmd, 1);
     gpio_put(dc_pin, 1);
 
+    // The command above returns with the shifter idle, so the frame width can
+    // change here without truncating it. Commands are always 8-bit.
+    if (wide_frames) {
+        spi_set_format(spi, 16, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
+    }
+
     // Dispatch the first band
     dma_channel_set_read_addr(dma_chan, front, false);
-    dma_channel_set_trans_count(dma_chan, full_band_bytes, true);  // true starts it
+    dma_channel_set_trans_count(dma_chan, full_band_bytes >> frame_shift, true);  // true starts it
 
     int row = band_rows;
     while (row < dst_h) {
@@ -246,7 +268,7 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
 
         dma_channel_set_read_addr(dma_chan, back, false);
         size_t bytes = rows == band_rows ? full_band_bytes : (size_t)rows * d.dst_row_bytes;
-        dma_channel_set_trans_count(dma_chan, bytes, true);
+        dma_channel_set_trans_count(dma_chan, bytes >> frame_shift, true);
         std::swap(front, back);
         row += rows;
     }
@@ -261,6 +283,10 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     uint32_t t_end = time_us_32();
     last_stall_us += t_end - t_last;
     last_frame_us = t_end - t_frame;
+
+    if (wide_frames) {
+        spi_set_format(spi, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
+    }
 }
 
 }  // namespace spidisplay
@@ -280,7 +306,7 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
                                     size_t n_kw, const mp_obj_t *all_args) {
     enum { ARG_spi, ARG_sck, ARG_mosi, ARG_cs, ARG_dc, ARG_baudrate, ARG_te,
            ARG_ram_write, ARG_bitdepth, ARG_band_lines, ARG_cache_columns,
-           ARG_cache_wide_double };
+           ARG_cache_wide_double, ARG_spi_frame_bits };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_spi, MP_ARG_REQUIRED | MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_sck, MP_ARG_REQUIRED | MP_ARG_INT, {.u_int = 0} },
@@ -294,6 +320,7 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
         { MP_QSTR_band_lines, MP_ARG_INT, {.u_int = 16} },
         { MP_QSTR_cache_columns, MP_ARG_INT, {.u_int = 16} },
         { MP_QSTR_cache_wide_double, MP_ARG_BOOL, {.u_bool = true} },
+        { MP_QSTR_spi_frame_bits, MP_ARG_INT, {.u_int = 8} },
     };
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all_kw_array(n_args, n_kw, all_args,
@@ -312,7 +339,7 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
         (uint)args[ARG_dc].u_int, (uint)args[ARG_baudrate].u_int, te,
         (uint8_t)args[ARG_ram_write].u_int, args[ARG_bitdepth].u_int,
         args[ARG_band_lines].u_int, args[ARG_cache_columns].u_int,
-        args[ARG_cache_wide_double].u_bool);
+        args[ARG_cache_wide_double].u_bool, args[ARG_spi_frame_bits].u_int);
     return MP_OBJ_FROM_PTR(self);
 }
 
@@ -438,6 +465,22 @@ static mp_obj_t SPIDisplay_cache_wide_double(size_t n_args, const mp_obj_t *args
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(SPIDisplay_cache_wide_double_obj, 1, 2,
                                            SPIDisplay_cache_wide_double);
 
+// Read the SPI data frame width for the pixel stream, or set it with an
+// argument. 8 or 16; takes effect on the next update().
+static mp_obj_t SPIDisplay_spi_frame_bits(size_t n_args, const mp_obj_t *args) {
+    SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[0]);
+    if (n_args > 1) {
+        mp_int_t bits = mp_obj_get_int(args[1]);
+        if (bits != 8 && bits != 16) {
+            mp_raise_ValueError(MP_ERROR_TEXT("spi_frame_bits must be 8 or 16"));
+        }
+        self->display.set_frame_bits((int)bits);
+    }
+    return mp_obj_new_int(self->display.frame_bits());
+}
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(SPIDisplay_spi_frame_bits_obj, 1, 2,
+                                           SPIDisplay_spi_frame_bits);
+
 // (pre_us, convert_us, te_wait_us, frame_us) from the most recent update().
 static mp_obj_t SPIDisplay_profile(mp_obj_t self_in) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
@@ -490,6 +533,7 @@ static const mp_rom_map_elem_t SPIDisplay_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_command), MP_ROM_PTR(&SPIDisplay_command_obj) },
     { MP_ROM_QSTR(MP_QSTR_update), MP_ROM_PTR(&SPIDisplay_update_obj) },
     { MP_ROM_QSTR(MP_QSTR_cache_wide_double), MP_ROM_PTR(&SPIDisplay_cache_wide_double_obj) },
+    { MP_ROM_QSTR(MP_QSTR_spi_frame_bits), MP_ROM_PTR(&SPIDisplay_spi_frame_bits_obj) },
     { MP_ROM_QSTR(MP_QSTR_profile), MP_ROM_PTR(&SPIDisplay_profile_obj) },
     { MP_ROM_QSTR(MP_QSTR_stats), MP_ROM_PTR(&SPIDisplay_stats_obj) },
     { MP_ROM_QSTR(MP_QSTR_te_probe), MP_ROM_PTR(&SPIDisplay_te_probe_obj) },

@@ -36,15 +36,23 @@ public:
     // per-band setup overhead (tune up as SPI frequency rises), clamped to the
     // static buffer's capacity. cache_columns is source columns per column cache
     // window (see column_cache.hpp); 0 disables the cache. cache_wide_double
-    // deepens the window so pixel-doubled frames still fill it.
+    // deepens the window so pixel-doubled frames still fill it. spi_frame_bits
+    // is the SPI data frame width used for the pixel stream, 8 or 16.
     SPIDisplay(uint spi_index, uint sck, uint mosi, uint cs, uint dc,
                uint baudrate, int te, uint8_t ram_write, int bitdepth,
-               int band_lines, int cache_columns, bool cache_wide_double);
+               int band_lines, int cache_columns, bool cache_wide_double,
+               int spi_frame_bits);
     ~SPIDisplay();
 
     // Toggle the pixel-doubled window depth between frames, for profiling.
     bool wide_double() const { return cache_wide_double; }
     void set_wide_double(bool value) { cache_wide_double = value; }
+
+    // SPI data frame width for the pixel stream. The PL022 spends about 1.5
+    // idle clocks between frames, so 16-bit frames halve that per byte pair;
+    // 8 is the reference. Commands are always 8-bit. Takes effect next update().
+    int frame_bits() const { return spi_frame_bits; }
+    void set_frame_bits(int value) { spi_frame_bits = (value == 16) ? 16 : 8; }
 
     // Sample the TE line for ms milliseconds. Returns zeroed fields if the line
     // never toggles, so a panel that was never sent TEON reports rather than
@@ -90,6 +98,11 @@ public:
 private:
     void te_wait();
 
+    // Point the DMA channel at the SPI data register for the given frame width.
+    // 16-bit frames go out most significant byte first, so the channel byte
+    // swaps to keep the packed order on the wire.
+    void configure_dma(int bits);
+
     spi_inst_t *spi;
     uint cs_pin;
     uint dc_pin;
@@ -99,6 +112,8 @@ private:
     int band_lines;      // Destination rows per DMA band
     int cache_columns;
     bool cache_wide_double;
+    int spi_frame_bits;  // SPI data frame width for pixels (8 or 16)
+    int dma_frame_bits;  // Width the DMA channel is currently configured for
     int dma_chan;
     uint32_t last_pre_us = 0;
     uint32_t last_convert_us = 0;

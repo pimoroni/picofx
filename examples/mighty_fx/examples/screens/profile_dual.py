@@ -59,8 +59,11 @@ def draw(canvas, t, r):
         canvas.shape(line)
 
 
-def run(canvas, rotation, v_sync):
+def run(canvas, rotation, v_sync, frame_bits):
     """Update both screens sequentially, keeping the worst case of FRAMES frames."""
+    for display in displays:
+        display.spi_frame_bits(frame_bits)
+
     worst = [{"convert": 0, "stall": 0, "frame": 0, "te": 0, "bands": 0} for _ in displays]
     worst_skew = 0
     t = r = 0
@@ -108,22 +111,24 @@ def report_te(index, display):
         print("  high is the visible scan, so the polarity is inverted and the tear analysis flips")
 
 
-def report_case(name, canvas, rotation, v_sync):
-    worst, skew = run(canvas, rotation, v_sync)
+def report_case(name, canvas, rotation, v_sync=False, frame_bits=8):
+    worst, skew = run(canvas, rotation, v_sync, frame_bits)
     rows = HEIGHT
     wire_us = row_wire_us(screens[0], displays[0].stats()[4])
 
-    print(f"\n{name}, rotation {rotation}, v_sync={v_sync}, worst of {FRAMES} frames:")
+    print(f"\n{name}, rotation {rotation}, {frame_bits}-bit frames, v_sync={v_sync},"
+          f" worst of {FRAMES} frames:")
     for index, w in enumerate(worst):
         print(f"  screen {index}: convert {w['convert']}us ({w['convert'] / rows:.1f}us/row),"
               f" stall {w['stall']}us, frame {w['frame']}us, te_wait {w['te']}us")
 
-    # The wall time per row is what a second display would have to hide inside,
-    # and it is longer than the wire time by the per-band restart cost.
+    # Wall time per row is what a second screen has to hide inside. It exceeds
+    # the arithmetic wire time by the SPI peripheral's per-frame idle.
     wall_us = max(w["frame"] for w in worst) / rows
     both_us = sum(w["convert"] for w in worst) / rows
-    print(f"  wire {wire_us:.1f}us/row computed, {wall_us:.1f}us/row measured"
-          f" ({wall_us - wire_us:+.1f}us per band restart)")
+    print(f"  wire {wire_us:.1f}us/row computed, {wall_us:.1f}us/row measured,"
+          f" ratio {wall_us / wire_us:.4f} ({wall_us / wire_us * frame_bits:.2f}"
+          f" clocks per {frame_bits}-bit frame)")
     verdict = "fits" if both_us < wall_us * 0.75 else "does not fit"
     print(f"  both screens convert {both_us:.1f}us/row against {wall_us:.1f}us"
           f" ({both_us / wall_us:.2f}x) - {verdict}")
@@ -145,18 +150,26 @@ try:
     # Rotation 0 walks the source sequentially and covers the whole destination,
     # so PSRAM against SRAM here is the clean measure of how much of the convert
     # cost is the source read.
-    report_case("psram source", psram_canvas, 0, False)
-    report_case("sram source", sram_canvas, 0, False)
+    report_case("psram source", psram_canvas, 0)
+    report_case("sram source", sram_canvas, 0)
+
+    # 16-bit frames should not change convert at all, and should cut wall time by
+    # halving the number of inter-frame gaps. Watch the clocks-per-frame figure:
+    # if the gap is what it looks like, it stays constant while the ratio drops.
+    # CHECK THE PANELS: wrong byte order shows up as scrambled colour, since the
+    # firmware cannot see what actually went out on the wire.
+    report_case("sram source", sram_canvas, 0, frame_bits=16)
+    report_case("psram source", psram_canvas, 0, frame_bits=16)
 
     # Rotation 90 walks a source column per destination row. The column cache
     # serves that, but only for a PSRAM source, and a portrait source into a
     # portrait destination covers less area here, so compare the two 90s to each
     # other and not to the 0s.
-    report_case("psram source", psram_canvas, 90, False)
-    report_case("sram source", sram_canvas, 90, False)
+    report_case("psram source", psram_canvas, 90)
+    report_case("sram source", sram_canvas, 90)
 
     # One v_sync pass for the skew a TE wait adds on top.
-    report_case("sram source", sram_canvas, 0, True)
+    report_case("sram source", sram_canvas, 0, v_sync=True, frame_bits=16)
 
 finally:
     mighty.shutdown()
