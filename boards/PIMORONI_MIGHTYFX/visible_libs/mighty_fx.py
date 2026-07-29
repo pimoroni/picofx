@@ -2,11 +2,12 @@
 #
 # SPDX-License-Identifier: MIT
 
-from machine import ADC, Pin, SPI
+from machine import ADC, Pin
 from pimoroni_i2c import PimoroniI2C
 from motor import Motor
 from picofx import RGBLED
 from audio import WavPlayer
+from spidisplay import SPIDisplay
 from st7789 import ST7789
 from collections import namedtuple
 
@@ -80,7 +81,7 @@ class MightyFX:
 
     RGB_GAMMA = 2.2
 
-    def __init__(self, spce_a=None, spce_b=None, init_i2c=True, init_wav=True, wav_root="/", native_display=False, sdef_a=None, sdef_b=None):
+    def __init__(self, spce_a=None, spce_b=None, init_i2c=True, init_wav=True, wav_root="/", sdef_a=None, sdef_b=None):
         # Set up the mono and RGB LED outputs
         self.outputs = [RGBLED(*out, invert=False, gamma=self.RGB_GAMMA) for out in self.OUT_PINS]
 
@@ -90,16 +91,11 @@ class MightyFX:
             sdef = screen_defs[spce_a] if sdef_a is None else sdef_a
             self.bl_a = Pin.board.SPCE_A_BL
 
-            if native_display:
-                from spidisplay import SPIDisplay
-                disp_a = SPIDisplay(spi=0, sck=self.SPCE_A_SCK_PIN, mosi=self.SPCE_A_MOSI_PIN,
-                                    cs=self.SPCE_A_CS_PIN, dc=self.SPCE_A_DC_PIN, baudrate=sdef.baud,
-                                    bitdepth=sdef.bits, band_lines=sdef.bands, cache_columns=sdef.columns,
-                                    spi_frame_bits=sdef.spi_bits)
-                self.screen_a = ST7789(None, None, None, self.bl_a, sdef.width, sdef.height, sdef.bits, sdef.fps, display=disp_a)
-            else:
-                spi_a = SPI(id=0, baudrate=sdef.baud, sck=Pin.board.SPCE_A_SCK, mosi=Pin.board.SPCE_A_MOSI)
-                self.screen_a = ST7789(spi_a, Pin.board.SPCE_A_CS, Pin.board.SPCE_A_DC, self.bl_a, sdef.width, sdef.height, sdef.bits, sdef.fps)
+            disp_a = SPIDisplay(spi=0, sck=self.SPCE_A_SCK_PIN, mosi=self.SPCE_A_MOSI_PIN,
+                                cs=self.SPCE_A_CS_PIN, dc=self.SPCE_A_DC_PIN, baudrate=sdef.baud,
+                                bitdepth=sdef.bits, band_lines=sdef.bands, cache_columns=sdef.columns,
+                                spi_frame_bits=sdef.spi_bits)
+            self.screen_a = ST7789(disp_a, self.bl_a, sdef.width, sdef.height, sdef.bits, sdef.fps)
             # Need to add some handling for LED conflicts
 
         elif spce_a == SPCE.MOTOR_DRIVER:
@@ -118,16 +114,11 @@ class MightyFX:
             sdef = screen_defs[spce_b] if sdef_b is None else sdef_b
             self.bl_b = Pin.board.SPCE_B_BL
 
-            if native_display:
-                from spidisplay import SPIDisplay
-                disp_b = SPIDisplay(spi=1, sck=self.SPCE_B_SCK_PIN, mosi=self.SPCE_B_MOSI_PIN,
-                                    cs=self.SPCE_B_CS_PIN, dc=self.SPCE_B_DC_PIN, baudrate=sdef.baud,
-                                    bitdepth=sdef.bits, band_lines=sdef.bands, cache_columns=sdef.columns,
-                                    spi_frame_bits=sdef.spi_bits)
-                self.screen_b = ST7789(None, None, None, self.bl_b, sdef.width, sdef.height, sdef.bits, sdef.fps, display=disp_b)
-            else:
-                spi_b = SPI(id=1, baudrate=sdef.baud, sck=Pin.board.SPCE_B_SCK, mosi=Pin.board.SPCE_B_MOSI)
-                self.screen_b = ST7789(spi_b, Pin.board.SPCE_B_CS, Pin.board.SPCE_B_DC, self.bl_b, sdef.width, sdef.height, sdef.bits, sdef.fps)
+            disp_b = SPIDisplay(spi=1, sck=self.SPCE_B_SCK_PIN, mosi=self.SPCE_B_MOSI_PIN,
+                                cs=self.SPCE_B_CS_PIN, dc=self.SPCE_B_DC_PIN, baudrate=sdef.baud,
+                                bitdepth=sdef.bits, band_lines=sdef.bands, cache_columns=sdef.columns,
+                                spi_frame_bits=sdef.spi_bits)
+            self.screen_b = ST7789(disp_b, self.bl_b, sdef.width, sdef.height, sdef.bits, sdef.fps)
             # Need to add some handling for LED conflicts
 
         elif spce_b == SPCE.MOTOR_DRIVER:
