@@ -462,8 +462,15 @@ static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_ma
     }
 
     // The kernel walks the source by the strides these dimensions imply, so a
-    // buffer shorter than they claim is read out of bounds. The source is RGBA8888
-    // only, and an image in a narrower format presents a buffer that fails here.
+    // buffer shorter than they claim is read out of bounds, and an empty one locks
+    // the board.
+    //
+    // This does not currently catch it. picovector reports an image's nominal size
+    // through the buffer protocol and discards the length of the buffer it wrapped,
+    // so buf.len is already src_w * src_h * 4 and the test compares a number with
+    // itself. It is kept because it costs one comparison and becomes effective as
+    // soon as a source reports a real length. The check belongs where both the
+    // dimensions and the buffer are in scope, which is picovector's image().
     size_t src_bytes = (size_t)src_w * (size_t)src_h * spidisplay::RGBA8888::bytes;
     if (buf.len < src_bytes) {
         mp_raise_ValueError(MP_ERROR_TEXT("image buffer is shorter than its dimensions at RGBA8888"));
