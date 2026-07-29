@@ -44,6 +44,7 @@ lint.select = [
 # E402 - "module level import not at top of file". Needs must!
 # COM812 - "Add trailing comma". These are a little obnoxious and weird.
 # ICN001 - "numpy should be imported as np". No. No it should not.
+# B905 - "zip() without strict=". MicroPython's zip has no such parameter.
 
 # Sloppy, we should probably fix at some point:
 # RET503 - "add explicit `return` statement". Yolo.
@@ -53,6 +54,7 @@ lint.select = [
 lint.ignore = [
     "E501",
     "E402",
+    "B905",
     "COM812",
     "RET503",
     "RET505",

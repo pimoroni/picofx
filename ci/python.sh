@@ -7,11 +7,11 @@ function qa_prepare_all {
 }
 
 function qa_check {
-    ruff check --config "$QA_SCRIPT_PATH/ruff.toml" "$1"
+    ruff check --config "$QA_SCRIPT_PATH/ruff.toml" "$@"
 }
 
 function qa_fix {
-    ruff check --config "$QA_SCRIPT_PATH/ruff.toml" --fix "$1"
+    ruff check --config "$QA_SCRIPT_PATH/ruff.toml" --fix "$@"
 }
 
 function qa_examples_check {

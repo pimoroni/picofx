@@ -1,4 +1,3 @@
-import os
 import time
 from mighty_fx import MightyFX, SPCE
 from picovector import image
@@ -24,8 +23,8 @@ screen = mighty.screen_a
 try:
     off_image = image.load(f"{IMAGE_FOLDER}/{OFF_IMAGE}")
     on_image = image.load(f"{IMAGE_FOLDER}/{ON_IMAGE}")
-except Exception:
-    raise RuntimeError(f"One or both images missing! Copy '{OFF_IMAGE}' and '{ON_IMAGE}' to your '{IMAGE_FOLDER}' folder (create it if missing)")
+except (ValueError, OSError):
+    raise RuntimeError(f"One or both images are missing or corrupt! Copy valid '{OFF_IMAGE}' and '{ON_IMAGE}' PNGs to your '{IMAGE_FOLDER}' folder (create it if missing)") from None
 
 on = False
 

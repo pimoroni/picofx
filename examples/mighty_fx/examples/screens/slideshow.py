@@ -26,17 +26,17 @@ try:
 except OSError:
     files = []
 
-for i, file in enumerate(files):
+for file in files:
     file = file.rsplit("/", 1)[-1]
     try:
         name, ext = file.rsplit(".", 1)
         if ext == "png":
             images.append(image.load(f"{IMAGE_FOLDER}/{name}.png"))
-    except Exception:
+    except (ValueError, OSError):
         pass
 
 if len(images) == 0:
-    raise RuntimeError(f"No images found! Copy your PNGs to your '{IMAGE_FOLDER}' folder (create it if missing)")
+    raise RuntimeError(f"No images loaded! Copy valid PNGs to your '{IMAGE_FOLDER}' folder (create it if missing)")
 
 
 index = -1  # Start with -1 so that the first image gets shown
