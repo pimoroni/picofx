@@ -96,6 +96,17 @@ SPIDisplay::~SPIDisplay() {
         dma_channel_abort(dma_chan);
         dma_channel_unclaim(dma_chan);
         dma_chan = -1;
+
+        // Leave the bus as the constructor found it, so the next instance is not
+        // holding a half-written frame open. The abort can land mid-transfer, so
+        // drain the shifter before releasing CS, and restore the 8-bit frame
+        // width a wide-frame update() may have left set.
+        while (spi_is_busy(spi)) {
+        }
+        gpio_put(cs_pin, 1);
+        gpio_set_dir(dc_pin, GPIO_OUT);
+        gpio_put(dc_pin, 1);
+        spi_set_format(spi, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
     }
 }
 
@@ -443,6 +454,20 @@ static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_ma
     mp_get_buffer_raise(args[ARG_image].u_obj, &buf, MP_BUFFER_READ);
     int src_w = mp_obj_get_int(mp_load_attr(args[ARG_image].u_obj, MP_QSTR_width));
     int src_h = mp_obj_get_int(mp_load_attr(args[ARG_image].u_obj, MP_QSTR_height));
+
+    // An empty or negative extent converts to a background-filled frame, since the
+    // covered box comes out empty and no source pixel is read. Report it instead.
+    if (src_w < 1 || src_h < 1) {
+        mp_raise_ValueError(MP_ERROR_TEXT("image width and height must be positive"));
+    }
+
+    // The kernel walks the source by the strides these dimensions imply, so a
+    // buffer shorter than they claim is read out of bounds. The source is RGBA8888
+    // only, and an image in a narrower format presents a buffer that fails here.
+    size_t src_bytes = (size_t)src_w * (size_t)src_h * spidisplay::RGBA8888::bytes;
+    if (buf.len < src_bytes) {
+        mp_raise_ValueError(MP_ERROR_TEXT("image buffer is shorter than its dimensions at RGBA8888"));
+    }
 
     // A packed colour carries alpha in the top byte, so it can exceed a signed
     // machine word; truncate to 32 bits (only the low 24 are used).
