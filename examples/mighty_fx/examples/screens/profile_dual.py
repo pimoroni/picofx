@@ -9,7 +9,7 @@
 #
 # Edit BAND_LINES and re-run to compare band sizes. Values above 16 are clamped.
 
-from mighty_fx import SPCE, MightyFX, screen_defs
+from mighty_fx import SPCE, MightyFX, ScreenDef, screen_defs
 from picovector import color, image, mat3, shape
 
 SCREEN_A = SPCE.SCREEN_280
@@ -21,10 +21,15 @@ TE_PROBE_MS = 500
 BITS_PER_BYTE = 8
 UINT32 = 0xFFFFFFFF
 
-mighty = MightyFX(spce_a=SCREEN_A, spce_b=SCREEN_B, native_display=True, bands=BAND_LINES)
+# MightyFX takes whole screen definitions, so the band size is swept by
+# overriding the shipped definition for each port.
+defs = [ScreenDef(d.baud, d.bits, d.fps, BAND_LINES, d.width, d.height, d.columns, d.spi_bits)
+        for d in (screen_defs[SCREEN_A], screen_defs[SCREEN_B])]
+
+mighty = MightyFX(spce_a=SCREEN_A, spce_b=SCREEN_B, native_display=True,
+                  sdef_a=defs[0], sdef_b=defs[1])
 screens = mighty.screen_a, mighty.screen_b
 displays = [s._display for s in screens]
-defs = screen_defs[SCREEN_A], screen_defs[SCREEN_B]
 
 WIDTH, HEIGHT = screens[0].width, screens[0].height
 centre_x, centre_y = WIDTH / 2, HEIGHT / 2
