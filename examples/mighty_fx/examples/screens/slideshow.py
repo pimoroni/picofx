@@ -21,7 +21,12 @@ canvas = image(screen.width, screen.height)
 
 # Attempt to load all images in the given folder
 images = []
-for i, file in enumerate(os.listdir(IMAGE_FOLDER)):
+try:
+    files = os.listdir(IMAGE_FOLDER)
+except OSError:
+    files = []
+
+for i, file in enumerate(files):
     file = file.rsplit("/", 1)[-1]
     try:
         name, ext = file.rsplit(".", 1)
