@@ -7,7 +7,9 @@
 # over XIP. It also reports the TE shape and the write-start skew that sequential
 # updates produce today.
 #
-# Edit BAND_LINES and re-run to compare band sizes. Values above 16 are clamped.
+# A diagnostic, not an example, so it is not copied to the board. Copy it across
+# to run it. Edit BAND_LINES and re-run to compare band sizes. Values above 16
+# are clamped.
 
 from mighty_fx import SPCE, MightyFX, ScreenDef, screen_defs
 from picovector import color, image, mat3, shape

@@ -27,6 +27,7 @@ function qa_libs_check {
     qa_check boards/visible_libs
     qa_check boards/*/visible_libs
     qa_check boards/*/reference
+    qa_check boards/*/tools
 }
 
 function qa_libs_fix {
@@ -34,6 +35,7 @@ function qa_libs_fix {
     qa_fix boards/visible_libs
     qa_fix boards/*/visible_libs
     qa_fix boards/*/reference
+    qa_fix boards/*/tools
 }
 
 function qa_picofx_check {

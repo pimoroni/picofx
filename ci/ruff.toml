@@ -58,3 +58,9 @@ lint.ignore = [
     "RET505",
     "SLF001"
 ]
+
+# Per file:
+# E702 - the RGB444 viper reference kernel writes each 3-byte background pixel pair
+#        on one line.
+
+lint.per-file-ignores = { "**/reference/st7789_viper_rgb444.py" = ["E702"] }
