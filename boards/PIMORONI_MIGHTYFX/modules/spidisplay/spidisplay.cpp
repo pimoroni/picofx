@@ -112,18 +112,31 @@ void SPIDisplay::command(const uint8_t *cmd, size_t cmd_len,
     gpio_put(cs_pin, 1);
 }
 
-void SPIDisplay::te_wait() {
-    uint pin = te_pin >= 0 ? (uint)te_pin : dc_pin;
+bool SPIDisplay::te_wait(uint32_t timeout_us) {
+    bool success = true;
+
+    uint pin = (te_pin >= 0) ? (uint)te_pin : dc_pin;
     if (te_pin < 0) {
         gpio_set_dir(dc_pin, GPIO_IN);
     }
-    while (gpio_get(pin) == 0) {
+
+    uint32_t start = time_us_32();
+
+    // Wait for the rising edge
+    while (success && gpio_get(pin) == 0) {
+        success = (time_us_32() - start < timeout_us);
     }
-    while (gpio_get(pin) != 0) {
+
+    // Wait for the falling edge, if the timeout has yet to be reached
+    while (success && gpio_get(pin) != 0) {
+        success = (time_us_32() - start < timeout_us);
     }
+
     if (te_pin < 0) {
         gpio_set_dir(dc_pin, GPIO_OUT);
     }
+
+    return success;
 }
 
 bool SPIDisplay::row_fits(int dst_w) const {
@@ -183,7 +196,7 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
                         int dst_w, int dst_h,
                         int rotation, int mirror, int pixel_double,
                         uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
-                        bool v_sync) {
+                        bool v_sync, uint32_t timeout_us) {
 
     // ----- DESCRIPTOR CREATION -----
     uint32_t t_pre = time_us_32();
@@ -243,7 +256,7 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     gpio_set_dir(dc_pin, GPIO_OUT);
     uint32_t t_te = time_us_32();
     if (v_sync) {
-        te_wait();
+        te_wait(timeout_us);
     }
     last_te_wait_us = time_us_32() - t_te;
 
@@ -402,7 +415,7 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(SPIDisplay_command_obj, 2, 3, SPIDisp
 
 static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     enum { ARG_self, ARG_image, ARG_width, ARG_height,
-           ARG_rotation, ARG_mirror, ARG_pixel_double, ARG_bg, ARG_offset, ARG_v_sync };
+           ARG_rotation, ARG_mirror, ARG_pixel_double, ARG_bg, ARG_offset, ARG_v_sync, ARG_timeout_us };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_image, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = mp_const_none} },
@@ -414,6 +427,7 @@ static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_ma
         { MP_QSTR_bg, MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_offset, MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_v_sync, MP_ARG_BOOL, {.u_bool = false} },
+        { MP_QSTR_timeout_us, MP_ARG_INT, {.u_int = 50000} },
     };
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all(n_args, pos_args, kw_args,
@@ -461,10 +475,11 @@ static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_ma
     }
 
     self->display.update((const uint8_t *)buf.buf, src_w, src_h,
-                          args[ARG_width].u_int, args[ARG_height].u_int,
-                          args[ARG_rotation].u_int,
-                          args[ARG_mirror].u_int, args[ARG_pixel_double].u_int,
-                          bg, centred_x, off_x, centred_y, off_y, args[ARG_v_sync].u_bool);
+        args[ARG_width].u_int, args[ARG_height].u_int,
+        args[ARG_rotation].u_int,
+        args[ARG_mirror].u_int, args[ARG_pixel_double].u_int,
+        bg, centred_x, off_x, centred_y, off_y,
+        args[ARG_v_sync].u_bool, args[ARG_timeout_us].u_int);
     return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_KW(SPIDisplay_update_obj, 4, SPIDisplay_update);

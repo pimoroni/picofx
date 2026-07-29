@@ -77,7 +77,7 @@ public:
                 int dst_w, int dst_h,
                 int rotation, int mirror, int pixel_double,
                 uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
-                bool v_sync);
+                bool v_sync, uint32_t timeout_us);
 
     // Microsecond timings from the most recent update(): the first convert, TE/vsync wait,
     // and the whole frame emit (DC low before RAMWR to CS high after the stream).
@@ -102,7 +102,7 @@ public:
     uint32_t baudrate() const { return spi_get_baudrate(spi); }
 
 private:
-    void te_wait();
+    bool te_wait(uint32_t timeout_us);
 
     // Point the DMA channel at the SPI data register for the given frame width.
     // 16-bit frames go out most significant byte first, so the channel byte
