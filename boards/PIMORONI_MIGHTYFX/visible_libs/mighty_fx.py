@@ -27,7 +27,7 @@ class SPCE:
 #
 # fps sets the panel's own refresh, and raising it tightens the tearing margin:
 # a frame must reach the bottom before the next scan does, which bounds fps to
-# about 42 on the 280 and 55 on the 154 at 24 MHz. See DUAL_DISPLAY_STATUS.md.
+# about 42 on the 280 and 55 on the 154 at 24 MHz.
 ScreenDef = namedtuple("ScreenDef", ("baud", "bits", "fps", "bands", "width", "height",
                                      "columns", "spi_bits"))
 screen_defs = {

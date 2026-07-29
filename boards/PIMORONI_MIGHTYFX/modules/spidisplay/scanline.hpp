@@ -2,7 +2,7 @@
 //
 // Templated RGBA8888 -> RGB444 / RGB565 scanline conversion for the MightyFX
 // display pipeline. Header-only so the host test harness compiles the same code
-// the firmware runs (see boards/PIMORONI_MIGHTYFX/DISPLAY_PIPELINE_PLAN.md).
+// the firmware runs.
 //
 // Geometry is resolved once per frame into a Descriptor: the source position in
 // the destination reduces to an affine map, so the covered destination box and a
@@ -10,8 +10,7 @@
 // walks a source pointer, with no per-pixel coordinate maths, multiply, or
 // bounds branch across the covered span. Only the axes that change the loop body
 // (destination packer, pixel-double) are template parameters; rotation and
-// mirror are carried as runtime strides. Output must match tests/reference.py
-// byte-for-byte.
+// mirror are carried as runtime strides.
 
 #pragma once
 

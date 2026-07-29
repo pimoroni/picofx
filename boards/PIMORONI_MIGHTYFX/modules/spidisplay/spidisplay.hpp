@@ -4,7 +4,6 @@
 // pipeline. It owns the SPI peripheral, the CS/DC (and optional TE) GPIOs, and
 // a DMA channel, and streams a converted frame band-by-band so conversion
 // overlaps the in-flight DMA. Panel bringup stays in MicroPython via command().
-// See boards/PIMORONI_MIGHTYFX/DISPLAY_PIPELINE_PLAN.md.
 
 #pragma once
 
