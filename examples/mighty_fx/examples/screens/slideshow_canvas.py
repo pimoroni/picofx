@@ -1,17 +1,23 @@
 import os
+import time
 from mighty_fx import MightyFX, SPCE
-from picovector import image
+from picovector import image, color, rect
 
 """
-Plays a slideshow of .PNG images from a folder very fast by passing images directly to the screen.
+Plays a slideshow of .PNG images from a folder, drawn through a canvas held in SRAM
 """
 
 # Constants
 IMAGE_FOLDER = "/images"     # The folder on your Mighty FX that the images are stored in
+SLIDESHOW_DURATION = 0.1     # How long each image is displayed for, in seconds
 
 # Create a MightyFX object with a screen set on SP/CE port A
 mighty = MightyFX(spce_a=SPCE.SCREEN_280)
 screen = mighty.screen_a
+
+# Access the screen and create a canvas to draw to. canvas() places it in SRAM,
+# which the screen converts from about twice as fast as the regular heap
+canvas = screen.canvas()
 
 
 # Attempt to load all images in the given folder
@@ -44,8 +50,18 @@ try:
         index = (index + 1) % len(images)
         img = images[index]
 
-        # Update the screen with the latest image
-        screen.update(img, v_sync=True)
+        # Clear the canvas to white
+        canvas.pen = color.white
+        canvas.clear()
+
+        # Draw the selected image, stretched to fill the canvas
+        canvas.blit(img, rect(0, 0, img.width, img.height), rect(0, 0, screen.width, screen.height))
+
+        # Update the screen with the latest canvas
+        screen.update(canvas, v_sync=True)
+
+        # Have the image shown for a short time
+        time.sleep(SLIDESHOW_DURATION)
 
 # Stop any running effects and turn off all the outputs
 finally:
