@@ -1,9 +1,19 @@
 // SPDX-License-Identifier: MIT
 //
 // SPIDisplay: a panel-agnostic SPI + DMA transport for the MightyFX display
-// pipeline. It owns the SPI peripheral, the CS/DC (and optional TE) GPIOs, and
+// pipeline. It holds an SPI peripheral, the CS/DC (and optional TE) GPIOs, and
 // a DMA channel, and streams a converted frame band-by-band so conversion
 // overlaps the in-flight DMA. Panel bringup stays in MicroPython via command().
+//
+// One instance per SPI port owns that bus; panel objects live above it in
+// MicroPython. It drives a single CS/DC pair, so it addresses one panel, or
+// several wired in parallel as one load. Both command() and update() block and
+// return with CS high and the shifter drained, so a multiplexer's select line can
+// be set immediately before either call and holds for its duration, and
+// set_baudrate() can re-rate the bus between calls.
+//
+// The band and column cache buffers are file-scope, so the instances on separate
+// ports share them and frames cannot overlap: one streams at a time.
 
 #pragma once
 
@@ -37,6 +47,18 @@ public:
     // window (see column_cache.hpp); 0 disables the cache. cache_wide_double
     // deepens the window so pixel-doubled frames still fill it. spi_frame_bits
     // is the SPI data frame width used for the pixel stream, 8 or 16.
+    //
+    // On the wiring side, panels sharing a bus need a unique cs each, since that
+    // is the only signal selecting one. dc may be shared by panels that never use
+    // v_sync, because a panel samples it only while its own cs is asserted. With
+    // te < 0 it cannot be: the DC GPIO becomes an input to read TE, and TE is
+    // free-running once the panel is sent TEON, so a shared line ties two panel
+    // outputs together and the read is meaningless. A dedicated te frees dc again
+    // for the same GPIO count, which only wins where some panels forgo v_sync.
+    //
+    // Behind a multiplexer, a dc line carrying TE has to pass both directions: an
+    // analog mux does, a demux or buffer does not, and the failure is quiet, as
+    // the wait times out and the frame still streams.
     SPIDisplay(uint spi_index, uint sck, uint mosi, uint cs, uint dc,
                uint baudrate, int te, uint8_t ram_write, int bitdepth,
                int band_lines, int cache_columns, bool cache_wide_double,
@@ -96,9 +118,14 @@ public:
     // the gap between two displays is their write-start skew.
     uint32_t write_start_us() const { return last_write_start_us; }
 
-    // What spi_init actually achieved: the divider only reaches clk_peri/(2*n),
-    // so a requested rate is rounded down, sometimes a long way.
-    uint32_t baudrate() const { return spi_get_baudrate(spi); }
+    // What the bus actually runs at: the divider only reaches clk_peri/(2*n), so
+    // a requested rate is rounded down, sometimes a long way.
+    uint32_t baudrate() const { return achieved_baudrate; }
+
+    // Re-rate the bus, for panels on one port that want different rates. Takes
+    // effect on the next transfer, so a driver sets it before command() or
+    // update(). Must not be called while a frame is streaming.
+    void set_baudrate(uint32_t value);
 
 private:
     bool te_wait(uint32_t timeout_us);
@@ -120,6 +147,7 @@ private:
     int spi_frame_bits;  // SPI data frame width for pixels (8 or 16)
     int dma_frame_bits;  // Width the DMA channel is currently configured for
     int dma_chan;
+    uint32_t achieved_baudrate;  // What the divider reached for the request
     uint32_t last_pre_us = 0;
     uint32_t last_convert_us = 0;
     uint32_t last_te_wait_us = 0;

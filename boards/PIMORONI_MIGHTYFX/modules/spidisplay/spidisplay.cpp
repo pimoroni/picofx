@@ -55,7 +55,7 @@ SPIDisplay::SPIDisplay(uint spi_index, uint sck, uint mosi, uint cs, uint dc,
       cache_wide_double(cache_wide_double),
       spi_frame_bits(spi_frame_bits == 16 ? 16 : 8) {
     spi = spi_index == 0 ? spi0 : spi1;
-    spi_init(spi, baudrate);
+    achieved_baudrate = spi_init(spi, baudrate);
     spi_set_format(spi, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
     gpio_set_function(sck, GPIO_FUNC_SPI);
     gpio_set_function(mosi, GPIO_FUNC_SPI);
@@ -75,6 +75,12 @@ SPIDisplay::SPIDisplay(uint spi_index, uint sck, uint mosi, uint cs, uint dc,
 
     dma_chan = dma_claim_unused_channel(true);
     configure_dma(8);
+}
+
+void SPIDisplay::set_baudrate(uint32_t value) {
+    // Takes effect on the next transfer. The divider only reaches
+    // clk_peri/(2*n), so the rate reached is rounded down from the request.
+    achieved_baudrate = spi_set_baudrate(spi, value);
 }
 
 void SPIDisplay::configure_dma(int bits) {
@@ -544,6 +550,23 @@ static mp_obj_t SPIDisplay_spi_frame_bits(size_t n_args, const mp_obj_t *args) {
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(SPIDisplay_spi_frame_bits_obj, 1, 2,
                                            SPIDisplay_spi_frame_bits);
 
+// Read what the bus runs at, or re-rate it with an argument. Panels on one port
+// that want different rates set this before their command() or update(); the
+// value read back is what the divider reached, not the request.
+static mp_obj_t SPIDisplay_baudrate(size_t n_args, const mp_obj_t *args) {
+    SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[0]);
+    if (n_args > 1) {
+        mp_int_t value = mp_obj_get_int(args[1]);
+        if (value < 1) {
+            mp_raise_ValueError(MP_ERROR_TEXT("baudrate must be positive"));
+        }
+        self->display.set_baudrate((uint32_t)value);
+    }
+    return mp_obj_new_int_from_uint(self->display.baudrate());
+}
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(SPIDisplay_baudrate_obj, 1, 2,
+                                           SPIDisplay_baudrate);
+
 // (pre_us, convert_us, te_wait_us, frame_us) from the most recent update().
 static mp_obj_t SPIDisplay_profile(mp_obj_t self_in) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
@@ -597,6 +620,7 @@ static const mp_rom_map_elem_t SPIDisplay_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_update), MP_ROM_PTR(&SPIDisplay_update_obj) },
     { MP_ROM_QSTR(MP_QSTR_cache_wide_double), MP_ROM_PTR(&SPIDisplay_cache_wide_double_obj) },
     { MP_ROM_QSTR(MP_QSTR_spi_frame_bits), MP_ROM_PTR(&SPIDisplay_spi_frame_bits_obj) },
+    { MP_ROM_QSTR(MP_QSTR_baudrate), MP_ROM_PTR(&SPIDisplay_baudrate_obj) },
     { MP_ROM_QSTR(MP_QSTR_profile), MP_ROM_PTR(&SPIDisplay_profile_obj) },
     { MP_ROM_QSTR(MP_QSTR_stats), MP_ROM_PTR(&SPIDisplay_stats_obj) },
     { MP_ROM_QSTR(MP_QSTR_te_probe), MP_ROM_PTR(&SPIDisplay_te_probe_obj) },
