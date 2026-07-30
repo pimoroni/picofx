@@ -43,9 +43,10 @@ import gc
 import time
 
 from mighty_fx import SPCE, MightyFX
+from screens import Screen280
 from picovector import color, image
 
-SCREEN = SPCE.SCREEN_280
+SCREEN = Screen280
 
 # A 2x2 grid keeps the arithmetic easy to read: a cell is half the parent's width,
 # so a contiguous walk lands in the neighbouring cell on every second row.
@@ -81,9 +82,9 @@ BAR_W = 20
 
 SECONDS_PER_VIEW = 4
 
-mighty = MightyFX(spce_a=SCREEN)
-screen = mighty.screen_a
-mighty.bl_a.on()
+mighty = MightyFX(spce_a=SPCE.SCREEN)
+screen = SCREEN(mighty.spce_a)
+screen.brightness = 1.0
 
 WIDTH, HEIGHT = screen.width, screen.height
 CELL_W, CELL_H = WIDTH // COLS, HEIGHT // ROWS
@@ -208,7 +209,7 @@ def show(name, view, looks_like):
     """Put a view on the panel, alongside what a correct frame looks like."""
     print(f"  {name}: correct is {looks_like}")
     try:
-        screen.update(view, rotation=0, v_sync=True, bg_color=color.rgb(40, 40, 40))
+        screen.update(view, rotation=0, bg_color=color.rgb(40, 40, 40))
     except BUILD_ERRORS as e:
         print(f"    rejected: {type(e).__name__}: {e}")
         return

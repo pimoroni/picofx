@@ -1,9 +1,7 @@
 # Reports the per-frame timings of a slideshow, to compare screen settings.
 #
-# profile() gives (pre_us, convert_us, te_wait_us, frame_us) for the last frame,
-# and stats() gives (convert_total_us, stall_us, bands, write_start_us, baudrate).
-# A stall near zero means conversion is the constraint; a stall that dominates
-# means the wire is.
+# stats() reports the last frame by field name. A stall near zero means conversion
+# is the constraint; a stall that dominates means the wire is.
 #
 # A diagnostic, not an example, so it is not copied to the board. Copy it across
 # to run it. Swap the SETTINGS line for one of the others to compare.
@@ -11,15 +9,21 @@
 import os
 import time
 import machine
-from mighty_fx import MightyFX, SPCE, ScreenDef
+from mighty_fx import MightyFX, SPCE
 from picovector import image, color
+from screens import Screen280
 
-# Panel window and baud rate pairs. 37.5MHz needs clk_peri at 150MHz, as the SPI
-# peripheral can only reach clk_peri / 2, so 24MHz is the ceiling at 48MHz.
-SETTINGS_240x320_24MHZ = ScreenDef(24_000_000, 12, 46, 5, 240, 320, 5, 16)
-SETTINGS_240x320_37MHZ = ScreenDef(37_500_000, 12, 57, 16, 240, 320, 16, 16)
-SETTINGS_240x240_24MHZ = ScreenDef(24_000_000, 12, 55, 5, 240, 240, 5, 16)
-SETTINGS_240x240_37MHZ = ScreenDef(37_500_000, 12, 67, 16, 240, 240, 16, 16)
+# Panel window and baud rate pairs, as keyword overrides for the screen class.
+# 37.5MHz needs clk_peri at 150MHz, since the SPI peripheral only reaches
+# clk_peri / 2, so 24MHz is the ceiling at 48MHz.
+SETTINGS_240x320_24MHZ = {"width": 240, "height": 320, "bitdepth": 12, "framerate": 46,
+                          "baudrate": 24_000_000, "band_lines": 5, "cache_columns": 5, "spi_frame_bits": 16}
+SETTINGS_240x320_37MHZ = {"width": 240, "height": 320, "bitdepth": 12, "framerate": 57,
+                          "baudrate": 37_500_000, "band_lines": 16, "cache_columns": 16, "spi_frame_bits": 16}
+SETTINGS_240x240_24MHZ = {"width": 240, "height": 240, "bitdepth": 12, "framerate": 55,
+                          "baudrate": 24_000_000, "band_lines": 5, "cache_columns": 5, "spi_frame_bits": 16}
+SETTINGS_240x240_37MHZ = {"width": 240, "height": 240, "bitdepth": 12, "framerate": 67,
+                          "baudrate": 37_500_000, "band_lines": 16, "cache_columns": 16, "spi_frame_bits": 16}
 
 SETTINGS = SETTINGS_240x240_37MHZ
 
@@ -30,9 +34,9 @@ SLEEP_DELAY = 0.1
 
 machine.freq(150_000_000, 150_000_000)
 
-mighty = MightyFX(spce_a=SPCE.SCREEN_280, sdef_a=SETTINGS)
-screen = mighty.screen_a
-display = screen._display
+mighty = MightyFX(spce_a=SPCE.SCREEN)
+screen = Screen280(mighty.spce_a, **SETTINGS)
+display = screen.display
 
 # Attempt to load all images in the given folder
 images = []
@@ -56,6 +60,10 @@ if len(images) == 0:
 index = -1  # Start with -1 so that the first image gets shown
 
 try:
+    # Both are fixed at construction, so they are reported once
+    print(f"{screen.width}x{screen.height}, {display.band_rows()} rows per band,"
+          f" baud {display.baudrate()}")
+
     while not mighty.boot_pressed():
 
         # Move along to the next image index, and wrap it into the range of available images
@@ -63,12 +71,11 @@ try:
         img = images[index]
 
         screen.update(img, rotation=ROTATION, mirror=MIRROR, pixel_double=False,
-                      v_sync=True, bg_color=color.white)
+                      bg_color=color.white)
 
-        pre_us, convert_us, te_wait_us, frame_us = display.profile()
-        convert_total_us, stall_us, bands, write_start_us, baudrate = display.stats()
-        print(f"pre={pre_us}us convert={convert_us}us te_wait={te_wait_us}us frame={frame_us}us "
-              f"convert_total={convert_total_us}us stall={stall_us}us bands={bands} baud={baudrate}")
+        s = display.stats()
+        print(f"pre={s.pre_us}us convert={s.convert_us}us te_wait={s.te_wait_us}us "
+              f"frame={s.frame_us}us convert_total={s.convert_total_us}us stall={s.stall_us}us")
 
         time.sleep(SLEEP_DELAY)
 

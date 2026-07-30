@@ -24,6 +24,7 @@ import os
 import time
 
 from mighty_fx import SPCE, MightyFX
+from screens import Screen280
 from picovector import color, image
 
 # Constants
@@ -35,9 +36,9 @@ SLEEP_DELAY_MS = 100        # How long each image is displayed for, in milliseco
 # Raised when picovector cannot read a file, or refuses the source.
 LOAD_ERRORS = (ValueError, TypeError, MemoryError, OSError)
 
-# Create a MightyFX object with a screen set on SP/CE port A
-mighty = MightyFX(spce_a=SPCE.SCREEN_280)
-screen = mighty.screen_a
+# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
+mighty = MightyFX(spce_a=SPCE.SCREEN)
+screen = Screen280(mighty.spce_a)
 
 
 # Attempt to find all images in the given folder, keeping only their paths
@@ -121,7 +122,7 @@ try:
         canvas.load_into(paths[index])
 
         # Update the screen with the latest image, doubling it back up to full size
-        screen.update(canvas, rotation=90, mirror=False, pixel_double=True, v_sync=True,
+        screen.update(canvas, rotation=90, mirror=False, pixel_double=True,
                       bg_color=color.white)
         frames += 1
 
@@ -140,10 +141,11 @@ finally:
               f" {per_frame:.1f} ms per frame against a {SLEEP_DELAY_MS} ms target")
         if per_frame > SLEEP_DELAY_MS:
             print("  Over the target, so the delay never fired and this is flat out.")
-        convert_us, stall_us, bands, _, baud = screen._display.stats()
-        print(f"  last update(): convert {convert_us / 1000:.1f} ms,"
-              f" stall {stall_us / 1000:.1f} ms, {bands} bands, {baud} Hz")
-        if stall_us > convert_us:
+        s = screen.display.stats()
+        print(f"  last update(): convert {s.convert_total_us / 1000:.1f} ms,"
+              f" stall {s.stall_us / 1000:.1f} ms, {screen.display.band_rows()} rows per band,"
+              f" {screen.display.baudrate()} Hz")
+        if s.stall_us > s.convert_total_us:
             print("  Stall exceeds convert, so the frame is bound by the wire and not"
                   " by conversion. Decode is whatever is left of the frame time.")
     mighty.shutdown()

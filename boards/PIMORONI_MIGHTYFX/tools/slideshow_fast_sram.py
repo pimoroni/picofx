@@ -13,11 +13,13 @@ import os
 import time
 import machine
 import spidisplay
-from mighty_fx import MightyFX, SPCE, ScreenDef
+from mighty_fx import MightyFX, SPCE
 from picovector import image, color
+from screens import Screen280
 
 # 37.5MHz needs clk_peri at 150MHz, as the SPI peripheral can only reach clk_peri / 2
-SETTINGS = ScreenDef(37_500_000, 12, 50, 16, 240, 320, 16, 16)
+SETTINGS = {"width": 240, "height": 320, "bitdepth": 12, "framerate": 50,
+            "baudrate": 37_500_000, "band_lines": 16, "cache_columns": 16, "spi_frame_bits": 16}
 
 IMAGE_FOLDER = "/images_r"
 CANVAS_WIDTH = 320
@@ -27,9 +29,9 @@ SLEEP_DELAY = 0.1
 
 machine.freq(150_000_000, 150_000_000)
 
-mighty = MightyFX(spce_a=SPCE.SCREEN_280, sdef_a=SETTINGS)
-screen = mighty.screen_a
-display = screen._display
+mighty = MightyFX(spce_a=SPCE.SCREEN)
+screen = Screen280(mighty.spce_a, **SETTINGS)
+display = screen.display
 
 # The images are landscape and the panel is portrait, so the canvas matches the
 # source and the rotation happens on the way out
@@ -60,6 +62,10 @@ if len(paths) == 0:
 index = -1  # Start with -1 so that the first image gets shown
 
 try:
+    # Both are fixed at construction, so they are reported once
+    print(f"{screen.width}x{screen.height}, {display.band_rows()} rows per band,"
+          f" baud {display.baudrate()}")
+
     while not mighty.boot_pressed():
 
         # Move along to the next image index, and wrap it into the range of available images
@@ -69,11 +75,11 @@ try:
         # canvas covers only its top left, leaving the rest of the last frame
         canvas.load_into(paths[index])
 
-        screen.update(canvas, rotation=ROTATION, mirror=False, v_sync=True,
+        screen.update(canvas, rotation=ROTATION, mirror=False,
                       bg_color=color.white)
 
-        convert_total_us, stall_us, bands, _, baudrate = display.stats()
-        print(f"convert_total={convert_total_us}us stall={stall_us}us bands={bands} baud={baudrate}")
+        s = display.stats()
+        print(f"convert_total={s.convert_total_us}us stall={s.stall_us}us")
 
         time.sleep(SLEEP_DELAY)
 

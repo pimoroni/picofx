@@ -28,9 +28,10 @@ import gc
 
 import spidisplay
 from mighty_fx import SPCE, MightyFX
+from screens import Screen280
 from picovector import color, image
 
-SCREEN = SPCE.SCREEN_280
+SCREEN = Screen280
 
 # Case names to skip, for stepping past one that locks an unguarded build.
 SKIP = ("empty buffer",)
@@ -42,9 +43,9 @@ BUILD_ERRORS = (ValueError, TypeError, MemoryError, OSError)
 # The preflight probe also tolerates an image type that exposes no buffer at all.
 PROBE_ERRORS = BUILD_ERRORS + (AttributeError,)
 
-mighty = MightyFX(spce_a=SCREEN)
-screen = mighty.screen_a
-mighty.bl_a.on()
+mighty = MightyFX(spce_a=SPCE.SCREEN)
+screen = SCREEN(mighty.spce_a)
+screen.brightness = 1.0
 
 WIDTH, HEIGHT = screen.width, screen.height
 EXACT_BYTES = WIDTH * HEIGHT * 4    # RGBA8888, the length update() infers

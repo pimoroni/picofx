@@ -11,11 +11,12 @@
 # to run it. Edit BAND_LINES and re-run to compare band sizes. Values above 16
 # are clamped.
 
-from mighty_fx import SPCE, MightyFX, ScreenDef, screen_defs
+from mighty_fx import SPCE, MightyFX
 from picovector import color, image, mat3, shape
+from screens import Screen280
 
-SCREEN_A = SPCE.SCREEN_280
-SCREEN_B = SPCE.SCREEN_280
+SCREEN_A = Screen280
+SCREEN_B = Screen280
 BAND_LINES = 1
 FRAMES = 30
 TE_PROBE_MS = 500
@@ -23,14 +24,13 @@ TE_PROBE_MS = 500
 BITS_PER_BYTE = 8
 UINT32 = 0xFFFFFFFF
 
-# MightyFX takes whole screen definitions, so the band size is swept by
-# overriding the shipped definition for each port.
-defs = [ScreenDef(d.baud, d.bits, d.fps, BAND_LINES, d.width, d.height, d.columns, d.spi_bits)
-        for d in (screen_defs[SCREEN_A], screen_defs[SCREEN_B])]
-
-mighty = MightyFX(spce_a=SCREEN_A, spce_b=SCREEN_B, sdef_a=defs[0], sdef_b=defs[1])
-screens = mighty.screen_a, mighty.screen_b
-displays = [s._display for s in screens]
+# A screen class carries its panel's settings, so the band size is swept by
+# overriding that one setting on each. v_sync is off so the timings are the
+# conversion and the wire alone, while te stays on so the TE shape can be probed.
+mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
+screens = (SCREEN_A(mighty.spce_a, band_lines=BAND_LINES, v_sync=False),
+           SCREEN_B(mighty.spce_b, band_lines=BAND_LINES, v_sync=False))
+displays = [s.display for s in screens]
 
 WIDTH, HEIGHT = screens[0].width, screens[0].height
 centre_x, centre_y = WIDTH / 2, HEIGHT / 2
@@ -44,7 +44,7 @@ sram_canvas = screens[0].canvas()
 
 def row_bytes(screen):
     # Matches make_descriptor: RGB444 packs two pixels into three bytes.
-    return screen.width * 3 // 2 if screen._bitdepth == 12 else screen.width * 2
+    return screen.width * 3 // 2 if screen.bitdepth == 12 else screen.width * 2
 
 
 def row_wire_us(screen, baudrate):
@@ -61,34 +61,31 @@ def draw(canvas, t, r):
         canvas.shape(line)
 
 
-def run(canvas, rotation, v_sync, frame_bits):
+def run(canvas, rotation, frame_bits):
     """Update both screens sequentially, keeping the worst case of FRAMES frames."""
     for display in displays:
         display.spi_frame_bits(frame_bits)
 
-    worst = [{"convert": 0, "stall": 0, "frame": 0, "te": 0, "bands": 0} for _ in displays]
+    worst = [{"convert": 0, "stall": 0, "frame": 0, "te": 0} for _ in displays]
     worst_skew = 0
     t = r = 0
 
     for _ in range(FRAMES):
         draw(canvas, t, r)
         for screen in screens:
-            screen.update(canvas, rotation=rotation, v_sync=v_sync)
+            screen.update(canvas, rotation=rotation)
 
         stats = [d.stats() for d in displays]
-        for i, display in enumerate(displays):
-            _, _, te_us, frame_us = display.profile()
-            convert_us, stall_us, bands, _, _ = stats[i]
+        for i, s in enumerate(stats):
             w = worst[i]
-            w["convert"] = max(w["convert"], convert_us)
-            w["stall"] = max(w["stall"], stall_us)
-            w["frame"] = max(w["frame"], frame_us)
-            w["te"] = max(w["te"], te_us)
-            w["bands"] = bands
+            w["convert"] = max(w["convert"], s.convert_total_us)
+            w["stall"] = max(w["stall"], s.stall_us)
+            w["frame"] = max(w["frame"], s.frame_us)
+            w["te"] = max(w["te"], s.te_wait_us)
 
         # write_start_us is absolute, so the difference between the two RAMWRs is
         # the skew. Screen A always goes first, and the mask covers timer wrap.
-        worst_skew = max(worst_skew, (stats[1][3] - stats[0][3]) & UINT32)
+        worst_skew = max(worst_skew, (stats[1].write_start_us - stats[0].write_start_us) & UINT32)
 
         t += 4
         r += 2
@@ -104,7 +101,7 @@ def report_te(index, display):
 
     fps = 1_000_000 / period_us
     duty = 100.0 * high_us / period_us
-    configured = defs[index].fps
+    configured = screens[index].framerate
     print(f"  TE: period {period_us}us ({fps:.1f}fps, {configured} configured),"
           f" high {high_us}us ({duty:.1f}% duty)")
     if high_us * 2 < period_us:
@@ -113,13 +110,13 @@ def report_te(index, display):
         print("  high is the visible scan, so the polarity is inverted and the tear analysis flips")
 
 
-def report_case(name, canvas, rotation, v_sync=False, frame_bits=8):
-    worst, skew = run(canvas, rotation, v_sync, frame_bits)
+def report_case(name, canvas, rotation, frame_bits=8):
+    worst, skew = run(canvas, rotation, frame_bits)
     rows = HEIGHT
-    wire_us = row_wire_us(screens[0], displays[0].stats()[4])
+    wire_us = row_wire_us(screens[0], displays[0].baudrate())
 
-    print(f"\n{name}, rotation {rotation}, {frame_bits}-bit frames, v_sync={v_sync},"
-          f" worst of {FRAMES} frames:")
+    print(f"\n{name}, rotation {rotation}, {frame_bits}-bit frames,"
+          f" v_sync={screens[0].v_sync}, worst of {FRAMES} frames:")
     for index, w in enumerate(worst):
         print(f"  screen {index}: convert {w['convert']}us ({w['convert'] / rows:.1f}us/row),"
               f" stall {w['stall']}us, frame {w['frame']}us, te_wait {w['te']}us")
@@ -140,11 +137,11 @@ def report_case(name, canvas, rotation, v_sync=False, frame_bits=8):
 
 try:
     print(f"screens: {WIDTH}x{HEIGHT} and {screens[1].width}x{screens[1].height},"
-          f" band_lines={BAND_LINES}")
+          f" band_lines={BAND_LINES} requested, {displays[0].band_rows()} rows per band")
 
     for index, (screen, display) in enumerate(zip(screens, displays)):
-        baud = display.stats()[4]
-        print(f"\nscreen {index}: baudrate {baud} ({defs[index].baud} requested)")
+        baud = display.baudrate()
+        print(f"\nscreen {index}: baudrate {baud} ({screen.requested_baudrate} requested)")
         print(f"  row is {row_bytes(screen)} bytes"
               f" = {row_wire_us(screen, baud):.1f}us on the wire")
         report_te(index, display)
@@ -169,9 +166,6 @@ try:
     # other and not to the 0s.
     report_case("psram source", psram_canvas, 90)
     report_case("sram source", sram_canvas, 90)
-
-    # One v_sync pass for the skew a TE wait adds on top.
-    report_case("sram source", sram_canvas, 0, v_sync=True, frame_bits=16)
 
 finally:
     mighty.shutdown()
