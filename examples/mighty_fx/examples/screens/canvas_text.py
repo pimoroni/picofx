@@ -1,4 +1,5 @@
 from mighty_fx import MightyFX, SPCE
+from screens import Screen280
 from picovector import color, font
 
 """
@@ -10,9 +11,9 @@ MARGIN = 10             # How far the text sits from the screen's left and top e
 LINE_GAP = 2            # The gap between each line of text, in pixels
 SCROLL_SPEED = 1.0      # How far the text scrolls up each frame, in pixels
 
-# Create a MightyFX object with a screen set on SP/CE port A
-mighty = MightyFX(spce_a=SPCE.SCREEN_280)
-screen = mighty.screen_a
+# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
+mighty = MightyFX(spce_a=SPCE.SCREEN)
+screen = Screen280(mighty.spce_a)
 
 # Access the screen and create a canvas to draw to. canvas() places it in SRAM,
 # which the screen converts from about twice as fast as the regular heap
@@ -53,7 +54,7 @@ try:
                 scroll_y = 0.0
 
         # Update the screen with the latest canvas
-        screen.update(canvas, v_sync=True)
+        screen.update(canvas)
 
 # Stop any running effects and turn off all the outputs
 finally:

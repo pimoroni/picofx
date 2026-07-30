@@ -1,6 +1,7 @@
 import os
 import time
 from mighty_fx import MightyFX, SPCE
+from screens import Screen280
 from picovector import image, color
 
 """
@@ -14,9 +15,9 @@ IMAGE_WIDTH = 320           # The width the images are stored at, in pixels
 IMAGE_HEIGHT = 240          # The height the images are stored at, in pixels
 SLEEP_DELAY_MS = 100        # How long each image is displayed for, in milliseconds
 
-# Create a MightyFX object with a screen set on SP/CE port A
-mighty = MightyFX(spce_a=SPCE.SCREEN_280)
-screen = mighty.screen_a
+# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
+mighty = MightyFX(spce_a=SPCE.SCREEN)
+screen = Screen280(mighty.spce_a)
 
 
 # Attempt to find all images in the given folder, keeping only their paths
@@ -53,7 +54,7 @@ try:
         img = image.load(paths[index], IMAGE_WIDTH // 2, IMAGE_HEIGHT // 2)
 
         # Update the screen with the latest image, doubling it back up to full size
-        screen.update(img, rotation=90, mirror=False, pixel_double=True, v_sync=True,
+        screen.update(img, rotation=90, mirror=False, pixel_double=True,
                       bg_color=color.white)
 
         # Have the image shown for the rest of its time, if any is left

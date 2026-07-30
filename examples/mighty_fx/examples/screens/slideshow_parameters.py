@@ -1,6 +1,7 @@
 import os
 import time
 from mighty_fx import MightyFX, SPCE
+from screens import Screen280
 from picovector import image, color
 
 """
@@ -10,9 +11,9 @@ Plays a slideshow of .PNG images from a folder with different rotations, mirrori
 # Constants
 IMAGE_FOLDER = "/images"     # The folder on your Mighty FX that the images are stored in
 
-# Create a MightyFX object with a screen set on SP/CE port A
-mighty = MightyFX(spce_a=SPCE.SCREEN_280)
-screen = mighty.screen_a
+# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
+mighty = MightyFX(spce_a=SPCE.SCREEN)
+screen = Screen280(mighty.spce_a)
 
 
 # Attempt to load all images in the given folder
@@ -51,7 +52,7 @@ try:
         hue %= 256
 
         # Update the screen with the latest canvas
-        screen.update(img, rotation=rotation, mirror=mirror, v_sync=True, bg_color=color.hsv(hue, 255, 255), pixel_double=dbl)
+        screen.update(img, rotation=rotation, mirror=mirror, bg_color=color.hsv(hue, 255, 255), pixel_double=dbl)
         time.sleep(0.25)
 
         rotation += 90

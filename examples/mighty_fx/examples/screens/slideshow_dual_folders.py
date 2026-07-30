@@ -1,6 +1,7 @@
 import os
 import time
 from mighty_fx import MightyFX, SPCE
+from screens import Screen280
 from picovector import image, color
 from collections import OrderedDict
 
@@ -26,9 +27,9 @@ LONG_PRESS_MS = 1000    # How long the boot button must be held to change folder
 
 FOLDERS = list(CONFIG.keys())
 
-# Create a MightyFX object with a screen set on SP/CE port A
-mighty = MightyFX(spce_a=SPCE.SCREEN_280)
-screen = mighty.screen_a
+# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
+mighty = MightyFX(spce_a=SPCE.SCREEN)
+screen = Screen280(mighty.spce_a)
 
 # Power the servo strip whilst loading, to show the board is busy
 mighty.enable_servo_strips()
@@ -113,7 +114,7 @@ try:
         img = images[index]
 
         # Update the screen with the latest image
-        screen.update(img, rotation=rotation, mirror=False, v_sync=True,
+        screen.update(img, rotation=rotation, mirror=False,
                       bg_color=color.white, offset=offset)
 
         # Have the image shown for the rest of its time, if any is left

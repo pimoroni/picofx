@@ -2,6 +2,7 @@
 
 import random
 from mighty_fx import MightyFX, SPCE
+from screens import Screen280
 from picovector import image, color, shape
 
 # Constants for drawing
@@ -9,9 +10,9 @@ NUMBER_OF_STARS = 50
 TRAVEL_SPEED = 1.2
 STAR_GROWTH = 0.12
 
-# Create a MightyFX object with a screen set on SP/CE port A
-mighty = MightyFX(spce_a=SPCE.SCREEN_280)
-screen = mighty.screen_a
+# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
+mighty = MightyFX(spce_a=SPCE.SCREEN)
+screen = Screen280(mighty.spce_a)
 
 # Access the screen and create a canvas to draw to
 canvas = image(screen.width, screen.height)

@@ -1,6 +1,7 @@
 import os
 import time
 from mighty_fx import MightyFX, SPCE
+from screens import Screen280
 from picovector import image, color, rect
 
 """
@@ -11,9 +12,9 @@ Plays a slideshow of .PNG images from a folder
 IMAGE_FOLDER = "/images"     # The folder on your Mighty FX that the images are stored in
 SLIDESHOW_DURATION = 3      # How long each image is displayed for, in seconds
 
-# Create a MightyFX object with a screen set on SP/CE port A
-mighty = MightyFX(spce_a=SPCE.SCREEN_280)
-screen = mighty.screen_a
+# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
+mighty = MightyFX(spce_a=SPCE.SCREEN)
+screen = Screen280(mighty.spce_a)
 
 # Access the screen and create a canvas to draw to
 canvas = image(screen.width, screen.height)

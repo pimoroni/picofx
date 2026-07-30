@@ -1,5 +1,6 @@
 import time
 from mighty_fx import MightyFX, SPCE
+from screens import Screen280
 from picovector import image
 
 """
@@ -14,9 +15,9 @@ ON_IMAGE = "test2.png"      # The name of the 'on' image
 OFF_DURATION = 1.5
 ON_DURATION = 0.5
 
-# Create a MightyFX object with a screen set on SP/CE port A
-mighty = MightyFX(spce_a=SPCE.SCREEN_280)
-screen = mighty.screen_a
+# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
+mighty = MightyFX(spce_a=SPCE.SCREEN)
+screen = Screen280(mighty.spce_a)
 
 
 # Attempt to load all images in the given folder
