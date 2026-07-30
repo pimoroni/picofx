@@ -1,27 +1,26 @@
 // SPDX-License-Identifier: MIT
 //
-// Module table and registration for the spidisplay C module. The SPIDisplay
-// type is defined in spidisplay.cpp (extern "C").
+// Module table and registration for the spidisplay C module. The SPIDisplayBus
+// and SPIDisplay types are defined in spidisplay.cpp (extern "C").
 
 #include "py/runtime.h"
 #include "py/objarray.h"
 
+extern const mp_obj_type_t SPIDisplayBus_type;
 extern const mp_obj_type_t SPIDisplay_type;
 
-// Linker symbols bounding the SRAM region the GC heap would occupy. With
-// MICROPY_GC_SPLIT_HEAP off the GC heap is PSRAM-only, so this region is free
-// for fast SRAM-backed framebuffers.
+// Linker symbols bounding the SRAM region the GC heap would occupy. The GC heap is
+// PSRAM-only here, so this region is free for fast SRAM-backed framebuffers.
 extern uint8_t __GcHeapStart[];
 extern uint8_t __GcHeapEnd[];
 
-// buffer(nbytes, offset=0) -> writable memoryview over the free SRAM region.
-// Pass it to picovector's image(width, height, buffer) so rendering and the
-// display conversion both run against SRAM instead of PSRAM, which halves the
-// conversion cost.
+// buffer(nbytes, offset=0) -> writable memoryview over the free SRAM region. Pass
+// it to picovector's image(width, height, buffer) so rendering and conversion both
+// run against SRAM instead of PSRAM, which halves the conversion cost.
 //
-// There is no allocator here: a view always starts at offset into the region, so
-// two buffers that must coexist need explicit non-overlapping offsets. Keeping it
-// stateless means a re-run of a script gets the same addresses back.
+// No allocator: a view always starts at offset, so two buffers that must coexist
+// need explicit non-overlapping offsets. Staying stateless means a re-run of a
+// script gets the same addresses back.
 static mp_obj_t spidisplay_buffer(size_t n_args, const mp_obj_t *args) {
     mp_int_t nbytes = mp_obj_get_int(args[0]);
     mp_int_t offset = n_args > 1 ? mp_obj_get_int(args[1]) : 0;
@@ -43,6 +42,7 @@ static MP_DEFINE_CONST_FUN_OBJ_0(spidisplay_buffer_size_obj, spidisplay_buffer_s
 
 static const mp_rom_map_elem_t spidisplay_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_spidisplay) },
+    { MP_ROM_QSTR(MP_QSTR_SPIDisplayBus), MP_ROM_PTR(&SPIDisplayBus_type) },
     { MP_ROM_QSTR(MP_QSTR_SPIDisplay), MP_ROM_PTR(&SPIDisplay_type) },
     { MP_ROM_QSTR(MP_QSTR_buffer), MP_ROM_PTR(&spidisplay_buffer_obj) },
     { MP_ROM_QSTR(MP_QSTR_buffer_size), MP_ROM_PTR(&spidisplay_buffer_size_obj) },
