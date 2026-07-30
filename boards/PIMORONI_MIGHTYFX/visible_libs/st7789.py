@@ -1,7 +1,9 @@
+# The ST7789 controller: its register codes, the tables a panel is tuned from, and
+# the bringup sequence. A screen class in screens.py names this module as its
+# CONTROLLER, so a second controller is a new module of the same shape.
+
 import time
-import machine
 from collections import OrderedDict
-import picovector
 
 MADCTL_ROW_ORDER   = const(0b10000000)
 MADCTL_COL_ORDER   = const(0b01000000)
@@ -37,6 +39,9 @@ REG_INVON     = const(0x21)
 REG_CASET     = const(0x2A)
 REG_RASET     = const(0x2B)
 REG_PWMFRSEL  = const(0xCC)
+
+# The memory-write opcode a frame is streamed behind
+RAM_WRITE = REG_RAMWR
 
 # Codes for setting screen frame rate
 FRAME_RATE_CONTROL = OrderedDict({
@@ -82,119 +87,55 @@ PIXEL_FORMAT = OrderedDict({
 })
 
 
-class ST7789:
-    def __init__(self, display, bl, width=240, height=240, bitdepth=16, framerate=60):
-        # display is a spidisplay.SPIDisplay. It owns the SPI bus and the CS/DC
-        # pins, and the transform and transfer run in C.
-        self._display = display
+def setup(screen, width, height, bitdepth_code, framerate_code, te=True):
+    """Bring a panel up, over anything offering a command() to reach it with.
 
-        self.BL = bl
-        self.BL.init(machine.Pin.OUT, value=False)
+    te sends TEON so the panel drives its tearing-effect line, which v_sync waits
+    on. Panels sharing a DC line take te=False and get TEOFF, since two panels
+    driving one line fight over it.
+    """
+    screen.command(REG_SWRESET)
 
-        self._width = width
-        self._height = height
-        self._bitdepth = bitdepth
+    time.sleep(0.5)
 
-        # Check the selected bit depth is valid and get the code
-        try:
-            bd_code = PIXEL_FORMAT[bitdepth]
-        except KeyError as e:
-            items = [str(bd) for bd in PIXEL_FORMAT]
-            expected = items[0] if len(items) == 1 else ", ".join(items[:-1]) + f", or {items[-1]}"
-            raise ValueError(f"{bitdepth} is not a valid bit depth. Expected {expected}.") from e
+    screen.command(REG_TEON if te else REG_TEOFF)
+    screen.command(REG_COLMOD, bitdepth_code)   # 03 = 12-bit, 05 = 16-bit, 06 = 18-bit
+    screen.command(REG_PORCTRL, b"\x0c\x0c\x00\x33\x33")
+    screen.command(REG_LCMCTRL, b"\x2c")
+    screen.command(REG_VDVVRHEN, b"\x01")
+    screen.command(REG_VRHS, b"\x12")
+    screen.command(REG_VDVS, b"\x20")
+    screen.command(REG_PWCTRL1, b"\xa4\xa1")
+    screen.command(REG_FRCTRL2, framerate_code)      # Framerate control
+    screen.command(REG_RAMCTRL, b"\x00\xc0")
 
-        # Check the selected frame rate is valid, and get the code
-        try:
-            fr_code = FRAME_RATE_CONTROL[framerate]
-        except KeyError as e:
-            items = [str(fr) for fr in FRAME_RATE_CONTROL]
-            expected = items[0] if len(items) == 1 else ", ".join(items[:-1]) + f", or {items[-1]}"
-            raise ValueError(f"{framerate} is not a valid frame rate. Expected {expected}.") from e
+    if width == 320 or height == 320:
+        # 320 x 240
+        screen.command(REG_GCTRL, b"\x35")
+        screen.command(REG_VCOMS, b"\x1f")
+        screen.command(REG_GMCTRP1, b"\xD0\x08\x11\x08\x0C\x15\x39\x33\x50\x36\x13\x14\x29\x2D")
+        screen.command(REG_GMCTRN1, b"\xD0\x08\x10\x08\x06\x06\x39\x44\x51\x0B\x16\x14\x2F\x31")
 
-        self.setup(bd_code, fr_code)
+    else:
+        # 240 x 240
+        screen.command(REG_GCTRL, b"\x35")
+        screen.command(REG_VCOMS, b"\x1f")
+        screen.command(REG_GMCTRP1, b"\xD0\x08\x11\x08\x0C\x15\x39\x33\x50\x36\x13\x14\x29\x2D")
+        screen.command(REG_GMCTRN1, b"\xD0\x08\x10\x08\x06\x06\x39\x44\x51\x0B\x16\x14\x2F\x31")
 
-    @property
-    def width(self):
-        return self._width
+    screen.command(REG_INVON)
+    screen.command(REG_SLPOUT)
+    screen.command(REG_DISPON)
 
-    @property
-    def height(self):
-        return self._height
+    # TODO: the 240 branch is off by one. These are inclusive end addresses, so
+    # a 240 pixel panel wants 0xEF for a 0-based last index of 239, as the 320
+    # branch correctly uses. Fix in step with
+    # reference/st7789_viper_common.py, which carries the same values.
+    if width == 320 or height == 320:
+        screen.command(REG_CASET, b"\x00\x00\x00\xEF")
+        screen.command(REG_RASET, b"\x00\x00\x01\x3F")
+    else:
+        screen.command(REG_CASET, b"\x00\x00\x00\xf0")
+        screen.command(REG_RASET, b"\x00\x00\x00\xf0")
 
-    def canvas(self, offset=0):
-        """An SRAM-backed image sized to this screen.
-
-        The GC heap is PSRAM, so a plain image() is read over XIP and conversion
-        costs about twice as much per pixel. offset places the canvas within the
-        SRAM region, for a second buffer that has to coexist with the first.
-        """
-        import spidisplay
-        nbytes = self._width * self._height * 4    # RGBA8888
-        return picovector.image(self._width, self._height,
-                                spidisplay.buffer(nbytes, offset))
-
-    def setup(self, bd_code, fr_code):
-        self.command(REG_SWRESET)
-
-        time.sleep(0.5)
-
-        self.command(REG_TEON)
-        self.command(REG_COLMOD, bd_code)   # 03 = 12-bit, 05 = 16-bit, 06 = 18-bit
-        self.command(REG_PORCTRL, b"\x0c\x0c\x00\x33\x33")
-        self.command(REG_LCMCTRL, b"\x2c")
-        self.command(REG_VDVVRHEN, b"\x01")
-        self.command(REG_VRHS, b"\x12")
-        self.command(REG_VDVS, b"\x20")
-        self.command(REG_PWCTRL1, b"\xa4\xa1")
-        self.command(REG_FRCTRL2, fr_code)      # Framerate control
-        self.command(REG_RAMCTRL, b"\x00\xc0")
-
-        if self._width == 320 or self._height == 320:
-            # 320 x 240
-            self.command(REG_GCTRL, b"\x35")
-            self.command(REG_VCOMS, b"\x1f")
-            self.command(REG_GMCTRP1, b"\xD0\x08\x11\x08\x0C\x15\x39\x33\x50\x36\x13\x14\x29\x2D")
-            self.command(REG_GMCTRN1, b"\xD0\x08\x10\x08\x06\x06\x39\x44\x51\x0B\x16\x14\x2F\x31")
-
-        else:
-            # 240 x 240
-            self.command(REG_GCTRL, b"\x35")
-            self.command(REG_VCOMS, b"\x1f")
-            self.command(REG_GMCTRP1, b"\xD0\x08\x11\x08\x0C\x15\x39\x33\x50\x36\x13\x14\x29\x2D")
-            self.command(REG_GMCTRN1, b"\xD0\x08\x10\x08\x06\x06\x39\x44\x51\x0B\x16\x14\x2F\x31")
-
-        self.command(REG_INVON)
-        self.command(REG_SLPOUT)
-        self.command(REG_DISPON)
-
-        # TODO: the 240 branch is off by one. These are inclusive end addresses, so
-        # a 240 pixel panel wants 0xEF for a 0-based last index of 239, as the 320
-        # branch correctly uses. Fix in step with
-        # reference/st7789_viper_common.py, which carries the same values.
-        if self.width == 320 or self.height == 320:
-            self.command(REG_CASET, b"\x00\x00\x00\xEF")
-            self.command(REG_RASET, b"\x00\x00\x01\x3F")
-        else:
-            self.command(REG_CASET, b"\x00\x00\x00\xf0")
-            self.command(REG_RASET, b"\x00\x00\x00\xf0")
-
-        self.command(REG_MADCTL, MADCTL_HORIZ_ORDER)
-
-    def command(self, command, data=None):
-        self._display.command(command, data)
-
-    @micropython.native
-    def update(self, image, rotation=0, mirror=False, v_sync=False, bg_color=picovector.color.black, pixel_double=False, offset=None):
-        bg = bg_color.p & 0xffffffff
-
-        r_index = rotation // 90
-        if r_index < 0 or r_index > 3 or rotation % 90:     # Modulo check ensures rotation is exactly a multipe of 90
-            raise ValueError(f"{rotation} is not a valid angle. Expected 0, 90, 180, or 270.")
-
-        # The C module handles the transform, transfer, and TE wait
-        self._display.update(image, self._width, self._height,
-                             rotation=rotation,
-                             mirror=1 if mirror else 0,
-                             pixel_double=1 if pixel_double else 0,
-                             bg=bg, offset=offset, v_sync=v_sync)
-        self.BL.on()
+    screen.command(REG_MADCTL, MADCTL_HORIZ_ORDER)

@@ -2,38 +2,237 @@
 #
 # SPDX-License-Identifier: MIT
 
-from machine import ADC, Pin
+from machine import ADC, PWM, Pin
 from pimoroni_i2c import PimoroniI2C
 from motor import Motor
 from picofx import RGBLED
 from audio import WavPlayer
-from spidisplay import SPIDisplay
-from st7789 import ST7789
-from collections import namedtuple
+from spidisplay import SPIDisplayBus
 
 
 class SPCE:
-    SCREEN_154 = 0
-    SCREEN_280 = 1
-    MOTOR_DRIVER = 2
+    SCREEN = 0
+    MOTOR_DRIVER = 1
+    GPIO = 2
 
 
-# baud is what the PL022 can actually reach: it divides clk_peri by an even
-# prescale, so 24 MHz is the ceiling while MicroPython leaves clk_peri at 48 MHz.
-# bands is destination rows per DMA band, capped at 16 by the band buffers; 16
-# keeps the DMA fed across a column cache refresh, which one-row bands cannot.
-# columns is the column cache width for 90/270 rotation, and spi_bits is the SPI
-# data frame width for the pixel stream.
-#
-# fps sets the panel's own refresh, and raising it tightens the tearing margin:
-# a frame must reach the bottom before the next scan does, which bounds fps to
-# about 42 on the 280 and 55 on the 154 at 24 MHz.
-ScreenDef = namedtuple("ScreenDef", ("baud", "bits", "fps", "bands", "width", "height",
-                                     "columns", "spi_bits"))
-screen_defs = {
-    SPCE.SCREEN_154: ScreenDef(24_000_000, 12, 48, 16, 240, 240, 16, 16),
-    SPCE.SCREEN_280: ScreenDef(24_000_000, 12, 42, 16, 240, 320, 16, 16),
-}
+class Backlight:
+    """A screen backlight on a PWM channel.
+
+    Dark from power-on until every screen sharing it has drawn a first frame, so no
+    panel shows its power-on contents. After that brightness is the user's, as a
+    duty from 0.0 to 1.0. Screens on one port share the line and so the setting.
+    """
+
+    FREQUENCY = 1000
+
+    def __init__(self, pin):
+        self.__pwm = PWM(pin, freq=self.FREQUENCY, duty_u16=0)
+        self.__brightness = 0.0
+        self.__screens = []
+        self.__drawn = set()
+        self.__lit = False
+
+    def register(self, screen):
+        self.__screens.append(screen)
+
+    def first_frame(self, screen):
+        """Note a screen's first frame, coming on once every screen has drawn."""
+        if self.__lit:
+            return
+
+        self.__drawn.add(screen)
+        if len(self.__drawn) >= len(self.__screens):
+            self.brightness = 1.0
+
+    @property
+    def brightness(self):
+        return self.__brightness
+
+    @brightness.setter
+    def brightness(self, value):
+        if not 0.0 <= value <= 1.0:
+            raise ValueError(f"{value} is not a valid brightness. Expected 0.0 to 1.0.")
+
+        self.__brightness = value
+        self.__lit = True
+        self.__pwm.duty_u16(int(value * 65535 + 0.5))
+
+    def off(self):
+        self.__pwm.duty_u16(0)
+        self.__brightness = 0.0
+
+
+class SPCEPort:
+    """One SP/CE connector: what it was declared as, the five GPIOs it carries, and
+    for a screen port the SPI bus and backlight its screens share.
+
+    A screen port hands out its own DC, CS and BL lines through the named
+    properties. A port declared SPCE.GPIO hands out all five through io instead, to
+    serve as further screens' CS and DC lines, or a multiplexer's select lines.
+    """
+
+    # The connector's GPIOs, in the order io reports them
+    IO_NAMES = ("dc", "cs", "sck", "mosi", "bl")
+
+    def __init__(self, name, mode, spi, pins):
+        if mode not in (None, SPCE.SCREEN, SPCE.MOTOR_DRIVER, SPCE.GPIO):
+            raise ValueError(f"{mode} is not a valid SP/CE mode. Expected SPCE.SCREEN, SPCE.MOTOR_DRIVER, SPCE.GPIO, or None.")
+
+        self.name = name
+        self.mode = mode
+
+        # A motor port's pins belong to its Motor objects, and an undeclared port is
+        # left alone, so neither offers them up
+        self.__pins = tuple(Pin(pin) for pin in pins) if mode in (SPCE.SCREEN, SPCE.GPIO) else None
+
+        self.__bus = SPIDisplayBus(spi=spi, sck=self.__pins[2], mosi=self.__pins[3]) if mode == SPCE.SCREEN else None
+        self.__backlight = None
+        self.__selector = None
+        self.__screens = []
+        self.__cs_claimed = []
+        self.__dc_claimed = []
+
+    @property
+    def io(self):
+        """The connector's five GPIOs, in the order DC, CS, SCK, MOSI, BL.
+
+        Only a port declared SPCE.GPIO offers them, so spending a connector on pins
+        is visible in the call that declared it.
+        """
+        if self.mode != SPCE.GPIO:
+            raise ValueError(f"SP/CE {self.name} is not declared SPCE.GPIO, so its pins are not free to borrow")
+
+        return self.__pins
+
+    def __line(self, index):
+        if self.mode != SPCE.SCREEN:
+            raise ValueError(f"SP/CE {self.name} is not a screen port, so it has no {self.IO_NAMES[index]} line")
+
+        return self.__pins[index]
+
+    @property
+    def dc(self):
+        return self.__line(0)
+
+    @property
+    def cs(self):
+        return self.__line(1)
+
+    @property
+    def sck(self):
+        return self.__line(2)
+
+    @property
+    def mosi(self):
+        return self.__line(3)
+
+    @property
+    def bl(self):
+        return self.__line(4)
+
+    @property
+    def bus(self):
+        """The SPIDisplayBus every screen on this port streams over."""
+        if self.__bus is None:
+            raise ValueError(f"SP/CE {self.name} is not a screen port, so it has no display bus")
+
+        return self.__bus
+
+    @property
+    def screens(self):
+        return tuple(self.__screens)
+
+    @property
+    def selector(self):
+        """The port's ScreenMux, if its screens are addressed by index."""
+        return self.__selector
+
+    @selector.setter
+    def selector(self, value):
+        if self.mode != SPCE.SCREEN:
+            raise ValueError(f"SP/CE {self.name} is not a screen port, so it cannot have a selector")
+
+        if self.__screens:
+            raise ValueError(f"SP/CE {self.name} already has screens, and a selector changes how they are addressed, so set it first")
+
+        self.__selector = value
+
+    def register(self, screen):
+        self.__screens.append(screen)
+
+    def next_index(self):
+        """The next selector channel, handed out in screen creation order."""
+        index = len(self.__screens)
+        if index >= self.__selector.count:
+            raise ValueError(f"SP/CE {self.name}'s selector has {self.__selector.count} channels, and all of them are taken")
+
+        return index
+
+    def claim_cs(self, pin=None):
+        """Register a screen's CS line and return it.
+
+        None takes the port's own, which is the first screen's to have. Every further
+        screen needs its own, since CS is the only signal selecting one panel, unless
+        a selector switches the port's single line between them.
+        """
+        switched = self.__selector is not None
+        if pin is None:
+            pin = self.cs
+
+        if not switched and pin in self.__cs_claimed:
+            raise ValueError(f"SP/CE {self.name} already has a screen on {pin}. Every further screen on a port needs a cs of its own.")
+
+        self.__cs_claimed.append(pin)
+        return pin
+
+    def claim_dc(self, pin=None, te=True):
+        """Register a screen's DC line and return it.
+
+        None takes the port's own, which is the first screen's to have. Pass this
+        port's dc to share that line deliberately, which panels using TE may not do:
+        TE travels back along DC, and two panels driving it fight over it.
+        """
+        switched = self.__selector is not None
+        if pin is None:
+            if self.__dc_claimed and not switched:
+                raise ValueError(f"SP/CE {self.name}'s own DC line is taken. Give this screen a dc, or pass the port's dc to share that line.")
+
+            pin = self.dc
+
+        if not switched:
+            for claimed, claimed_te in self.__dc_claimed:
+                if claimed is pin and (te or claimed_te):
+                    raise ValueError(f"{pin} is carrying TE for another screen. Screens sharing a DC line all need te=False.")
+
+        self.__dc_claimed.append((pin, te))
+        return pin
+
+    def claim_backlight(self):
+        """The port's backlight, created for the first screen to ask for it.
+
+        The connector carries one BL line, so every screen taking it shares the
+        setting. If no screen claims it the pin is left alone, free to be a CS or DC.
+        """
+        if self.__backlight is None:
+            self.__backlight = Backlight(self.bl)
+
+        return self.__backlight
+
+    def backlight_off(self):
+        if self.__backlight is not None:
+            self.__backlight.off()
+
+    def broadcast(self, *screens):
+        """A group driving several of this port's screens with one frame."""
+        if len(screens) < 2:
+            raise ValueError("a broadcast group needs at least two screens")
+
+        for screen in screens:
+            if screen.port is not self:
+                raise ValueError(f"that screen is not on SP/CE {self.name}, and two ports are two streams")
+
+        return screens[0].group_with(*screens[1:])
 
 
 class MightyFX:
@@ -69,6 +268,9 @@ class MightyFX:
     SPCE_B_MOSI_PIN = 27
     SPCE_B_BL_PIN = 37
 
+    SPCE_A_PINS = (SPCE_A_DC_PIN, SPCE_A_CS_PIN, SPCE_A_SCK_PIN, SPCE_A_MOSI_PIN, SPCE_A_BL_PIN)
+    SPCE_B_PINS = (SPCE_B_DC_PIN, SPCE_B_CS_PIN, SPCE_B_SCK_PIN, SPCE_B_MOSI_PIN, SPCE_B_BL_PIN)
+
     SERVO_STRIP_EN = 43
     SERVO_STRIP_A = 44
     SERVO_STRIP_B = 45
@@ -81,24 +283,17 @@ class MightyFX:
 
     RGB_GAMMA = 2.2
 
-    def __init__(self, spce_a=None, spce_b=None, init_i2c=True, init_wav=True, wav_root="/", sdef_a=None, sdef_b=None):
+    def __init__(self, spce_a=None, spce_b=None, init_i2c=True, init_wav=True, wav_root="/"):
         # Set up the mono and RGB LED outputs
         self.outputs = [RGBLED(*out, invert=False, gamma=self.RGB_GAMMA) for out in self.OUT_PINS]
 
-        self.screen_a = None
+        # Each port owns its bus and pins. Screens are the user's to create against
+        # them, from the classes in screens.py
+        self.spce_a = SPCEPort("A", spce_a, 0, self.SPCE_A_PINS)
+        self.spce_b = SPCEPort("B", spce_b, 1, self.SPCE_B_PINS)
+
         self.motors_a = None
-        if spce_a in [SPCE.SCREEN_154, SPCE.SCREEN_280]:
-            sdef = screen_defs[spce_a] if sdef_a is None else sdef_a
-            self.bl_a = Pin.board.SPCE_A_BL
-
-            disp_a = SPIDisplay(spi=0, sck=self.SPCE_A_SCK_PIN, mosi=self.SPCE_A_MOSI_PIN,
-                                cs=self.SPCE_A_CS_PIN, dc=self.SPCE_A_DC_PIN, baudrate=sdef.baud,
-                                bitdepth=sdef.bits, band_lines=sdef.bands, cache_columns=sdef.columns,
-                                spi_frame_bits=sdef.spi_bits)
-            self.screen_a = ST7789(disp_a, self.bl_a, sdef.width, sdef.height, sdef.bits, sdef.fps)
-            # Need to add some handling for LED conflicts
-
-        elif spce_a == SPCE.MOTOR_DRIVER:
+        if spce_a == SPCE.MOTOR_DRIVER:
             MOTOR_A_PINS = [(self.SPCE_A_DC_PIN, self.SPCE_A_CS_PIN), \
                             (self.SPCE_A_SCK_PIN, self.SPCE_A_MOSI_PIN)]
             self.motors_a = [Motor(pins) for pins in MOTOR_A_PINS]
@@ -108,20 +303,8 @@ class MightyFX:
             _ = Pin(41, Pin.IN)
             _ = Pin(42, Pin.IN)
 
-        self.screen_b = None
         self.motors_b = None
-        if spce_b in [SPCE.SCREEN_154, SPCE.SCREEN_280]:
-            sdef = screen_defs[spce_b] if sdef_b is None else sdef_b
-            self.bl_b = Pin.board.SPCE_B_BL
-
-            disp_b = SPIDisplay(spi=1, sck=self.SPCE_B_SCK_PIN, mosi=self.SPCE_B_MOSI_PIN,
-                                cs=self.SPCE_B_CS_PIN, dc=self.SPCE_B_DC_PIN, baudrate=sdef.baud,
-                                bitdepth=sdef.bits, band_lines=sdef.bands, cache_columns=sdef.columns,
-                                spi_frame_bits=sdef.spi_bits)
-            self.screen_b = ST7789(disp_b, self.bl_b, sdef.width, sdef.height, sdef.bits, sdef.fps)
-            # Need to add some handling for LED conflicts
-
-        elif spce_b == SPCE.MOTOR_DRIVER:
+        if spce_b == SPCE.MOTOR_DRIVER:
             MOTOR_B_PINS = [(self.SPCE_B_DC_PIN, self.SPCE_B_CS_PIN), \
                             (self.SPCE_B_SCK_PIN, self.SPCE_B_MOSI_PIN)]
             self.motors_b = [Motor(pins) for pins in MOTOR_B_PINS]
@@ -203,11 +386,8 @@ class MightyFX:
         self.clear()
         self.disable_servo_strips()
 
-        if self.screen_a:
-            self.bl_a.off()
-
-        if self.screen_b:
-            self.bl_b.off()
+        self.spce_a.backlight_off()
+        self.spce_b.backlight_off()
 
         if self.motors_a:
             self.motors_a_en.off()
