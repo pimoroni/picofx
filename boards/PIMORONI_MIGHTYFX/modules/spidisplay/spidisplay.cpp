@@ -117,14 +117,15 @@ SPIDisplay::SPIDisplay(SPIDisplayBus *bus, uint cs, uint dc, int te, uint8_t ram
     int requested = band_lines < 1 ? 1 : (band_lines > MAX_BAND_LINES ? MAX_BAND_LINES : band_lines);
     rows_per_band = requested > dst_h ? dst_h : requested;
 
-    // Value before direction, so the panel's first CS edge is the one selecting it
-    gpio_init_mask64(cs_mask);
-    gpio_set_mask64(cs_mask);
-    gpio_set_dir_out_masked64(cs_mask);
+    // One pin each here, since a group is built by copy and claims no GPIO. Value
+    // before direction, so the panel's first CS edge is the one selecting it.
+    gpio_init(cs);
+    gpio_put(cs, 1);
+    gpio_set_dir(cs, GPIO_OUT);
 
-    gpio_init_mask64(dc_mask);
-    gpio_set_mask64(dc_mask);
-    gpio_set_dir_out_masked64(dc_mask);
+    gpio_init(dc);
+    gpio_put(dc, 1);
+    gpio_set_dir(dc, GPIO_OUT);
 
     if (te_pin >= 0) {
         gpio_init((uint)te_pin);
