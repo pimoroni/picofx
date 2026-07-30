@@ -16,7 +16,7 @@ mighty = MightyFX(spce_a=SPCE.SCREEN_280)
 screen = mighty.screen_a
 
 # Power the servo strip whilst loading, to show the board is busy
-mighty.enable_servo_strip()
+mighty.enable_servo_strips()
 
 
 # Attempt to load all images in the given folder

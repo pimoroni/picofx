@@ -34,7 +34,7 @@ try:
             # Is nothing playing?
             if not mighty.wav.is_playing():
                 mighty.wav.play_wav(WAV_FILE)   # Play the file
-                mighty.enable_servo_strip()     # Turn on the servo/strip LED
+                mighty.enable_servo_strips()    # Turn on the servo/strip LED
                 print("Playing the WAV file")
             else:
                 mighty.wav.stop()               # Stop the file that is currently playing

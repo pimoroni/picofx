@@ -143,16 +143,17 @@ class MightyFX:
         self.__v_sense = ADC(Pin(self.V_SENSE_PIN))
 
         # Set up the wav (and tone) player, if the user wants
+        self.wav = None
         if init_wav:
             self.wav = WavPlayer(0, self.I2S_BCLK_PIN, self.I2S_LRCLK_PIN, self.I2S_DATA_PIN, self.AMP_EN_PIN, root=wav_root)
 
-        # Set up the user switch
+        # Set up the servo/strip enable
         self.__servo_strip_en = Pin(self.SERVO_STRIP_EN, Pin.OUT, value=False)
 
     def boot_pressed(self):
         return self.__switch.value() == 0
 
-    def enable_servo_strip(self):
+    def enable_servo_strips(self):
         self.__servo_strip_en.on()
 
     def disable_servo_strips(self):
@@ -218,4 +219,5 @@ class MightyFX:
             for motor in self.motors_b:
                 motor.disable()
 
-        self.wav.deinit()
+        if self.wav:
+            self.wav.deinit()
