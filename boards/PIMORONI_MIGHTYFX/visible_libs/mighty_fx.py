@@ -35,10 +35,10 @@ class Backlight:
         self.__drawn = set()
         self.__lit = False
 
-    def register(self, screen):
+    def __register(self, screen):
         self.__screens.append(screen)
 
-    def first_frame(self, screen):
+    def __first_frame(self, screen):
         """Note a screen's first frame, coming on once every screen has shown one."""
         if self.__lit:
             return
@@ -165,10 +165,13 @@ class SPCEPort:
 
         self.__selector = value
 
-    def register(self, screen):
+    # Construction-time bookkeeping, reached from screens.py as a screen is built. Not
+    # for a user to call: each records a claim the port validates later ones against,
+    # so a spurious call reserves a line, a channel or a first frame for no screen.
+    def __register(self, screen):
         self.__screens.append(screen)
 
-    def next_index(self):
+    def __next_index(self):
         """The next selector channel, handed out in screen creation order."""
         index = len(self.__screens)
         if index >= self.__selector.count:
@@ -176,7 +179,7 @@ class SPCEPort:
 
         return index
 
-    def claim_cs(self, pin=None):
+    def __claim_cs(self, pin=None):
         """Register a screen's CS line and return it.
 
         None takes the port's own, which is the first screen's to have. Every further
@@ -193,7 +196,7 @@ class SPCEPort:
         self.__cs_claimed.append(pin)
         return pin
 
-    def claim_dc(self, pin=None, te=True):
+    def __claim_dc(self, pin=None, te=True):
         """Register a screen's DC line and return it.
 
         None takes the port's own, which is the first screen's to have. Pass this
@@ -215,7 +218,7 @@ class SPCEPort:
         self.__dc_claimed.append((pin, te))
         return pin
 
-    def claim_backlight(self):
+    def __claim_backlight(self):
         """The port's backlight, created for the first screen to ask for it.
 
         The connector carries one BL line, so every screen taking it shares the

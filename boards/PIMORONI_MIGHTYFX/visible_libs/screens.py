@@ -163,7 +163,7 @@ class ScreenBase:
                 screen.drawn()
 
         elif self.__backlight is not None:
-            self.__backlight.first_frame(self)
+            self.__backlight.__first_frame(self)
 
     def __select(self):
         if self.__index is not None:
@@ -268,17 +268,17 @@ class Screen(ScreenBase):
             if te_used and not selector.switch_dc:
                 raise ValueError("a selector that leaves DC shared cannot carry TE, so its screens need te=False")
 
-            index = port.next_index()
+            index = port.__next_index()
         else:
             index = None
 
-        cs = port.claim_cs(cs)
-        dc = port.claim_dc(dc, te_used)
+        cs = port.__claim_cs(cs)
+        dc = port.__claim_dc(dc, te_used)
 
         backlight = None
         if bl:
-            backlight = port.claim_backlight()
-            backlight.register(self)
+            backlight = port.__claim_backlight()
+            backlight.__register(self)
 
         display = spidisplay.SPIDisplay(bus=port.bus, cs=cs, dc=dc, te=te_pin,
                                         width=width, height=height,
@@ -290,7 +290,7 @@ class Screen(ScreenBase):
 
         super().__init__(port, display, width, height, bitdepth, backlight, te_used, v_sync, index)
 
-        port.register(self)
+        port.__register(self)
 
         # Bringup goes through this screen's command(), so a selector is pointed at
         # the panel for every register write as well as every frame
