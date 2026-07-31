@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: MIT
 
+import time
+
 from machine import ADC, PWM, Pin
 from pimoroni_i2c import PimoroniI2C
 from motor import Motor
@@ -19,7 +21,7 @@ class SPCE:
 class Backlight:
     """A screen backlight on a PWM channel.
 
-    Dark from power-on until every screen sharing it has drawn a first frame, so no
+    Dark from power-on until every screen sharing it has shown a first frame, so no
     panel shows its power-on contents. After that brightness is the user's, as a
     duty from 0.0 to 1.0. Screens on one port share the line and so the setting.
     """
@@ -37,12 +39,17 @@ class Backlight:
         self.__screens.append(screen)
 
     def first_frame(self, screen):
-        """Note a screen's first frame, coming on once every screen has drawn."""
+        """Note a screen's first frame, coming on once every screen has shown one."""
         if self.__lit:
             return
 
         self.__drawn.add(screen)
         if len(self.__drawn) >= len(self.__screens):
+            # A finished transfer is not a presented frame: each row keeps what the
+            # scan last painted there, so the panel needs a full pass before the new
+            # frame is everywhere. The slowest member sets the wait.
+            slowest = min(member.framerate for member in self.__screens)
+            time.sleep_ms(1000 // slowest + 3)
             self.brightness = 1.0
 
     @property
@@ -191,14 +198,14 @@ class SPCEPort:
 
         None takes the port's own, which is the first screen's to have. Pass this
         port's dc to share that line deliberately, which panels using TE may not do:
-        TE travels back along DC, and two panels driving it fight over it.
+        TE travels back along DC through a series resistor on each breakout, so
+        panels sharing the line divide it and no asserted level survives.
         """
         switched = self.__selector is not None
         if pin is None:
-            if self.__dc_claimed and not switched:
-                raise ValueError(f"SP/CE {self.name}'s own DC line is taken. Give this screen a dc, or pass the port's dc to share that line.")
-
             pin = self.dc
+            if not switched and any(claimed is pin for claimed, _ in self.__dc_claimed):
+                raise ValueError(f"SP/CE {self.name}'s own DC line is taken. Give this screen a dc, or pass the port's dc to share that line.")
 
         if not switched:
             for claimed, claimed_te in self.__dc_claimed:

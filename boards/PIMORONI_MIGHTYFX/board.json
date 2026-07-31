@@ -10,7 +10,7 @@
     "images": [
         "pimoroni-mightyfx.jpg"
     ],
-    "mcu": "rp2040",
+    "mcu": "rp2350",
     "product": "Pimoroni MightyFX",
     "thumbnail": "",
     "url": "https://shop.pimoroni.com/products/mightyfx",

@@ -96,10 +96,11 @@ public:
     // deepens it so pixel-doubled frames still fill it.
     //
     // Wiring: cs must be unique per panel, being the only signal selecting one. dc
-    // may be shared, but not by panels using TE, since te < 0 turns that GPIO into
-    // an input and TE free-runs once TEON is sent. Behind a multiplexer a dc line
-    // carrying TE needs an analog mux to pass both directions; a demux or buffer
-    // fails quietly, the wait timing out while the frame still streams.
+    // may be shared, but not by panels using TE: each breakout ties TE to that line
+    // through a series resistor, so panels sharing it divide the line and the
+    // asserted level is lost. Behind a multiplexer a dc line carrying TE needs an
+    // analog mux to pass both directions; a demux or buffer fails quietly, the wait
+    // timing out while the frame still streams.
     SPIDisplay(SPIDisplayBus *bus, uint cs, uint dc, int te, uint8_t ram_write,
                int bitdepth, int width, int height, uint32_t baudrate,
                int band_lines, int cache_columns, bool cache_wide_double,

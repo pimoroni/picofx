@@ -91,8 +91,9 @@ def setup(screen, width, height, bitdepth_code, framerate_code, te=True):
     """Bring a panel up, over anything offering a command() to reach it with.
 
     te sends TEON so the panel drives its tearing-effect line, which v_sync waits
-    on. Panels sharing a DC line take te=False and get TEOFF, since two panels
-    driving one line fight over it.
+    on. Panels sharing a DC line take te=False: TEOFF still drives TE low through
+    the breakout's series resistor, so panels on one line divide it and the
+    asserted level never reaches the input threshold.
     """
     screen.command(REG_SWRESET)
 
@@ -127,15 +128,10 @@ def setup(screen, width, height, bitdepth_code, framerate_code, te=True):
     screen.command(REG_SLPOUT)
     screen.command(REG_DISPON)
 
-    # TODO: the 240 branch is off by one. These are inclusive end addresses, so
-    # a 240 pixel panel wants 0xEF for a 0-based last index of 239, as the 320
-    # branch correctly uses. Fix in step with
-    # reference/st7789_viper_common.py, which carries the same values.
-    if width == 320 or height == 320:
-        screen.command(REG_CASET, b"\x00\x00\x00\xEF")
-        screen.command(REG_RASET, b"\x00\x00\x01\x3F")
-    else:
-        screen.command(REG_CASET, b"\x00\x00\x00\xf0")
-        screen.command(REG_RASET, b"\x00\x00\x00\xf0")
+    # Inclusive end addresses, so each is one less than the dimension. A window
+    # shorter than the frame wraps to the top of the panel rather than erroring.
+    last_column, last_row = width - 1, height - 1
+    screen.command(REG_CASET, bytes((0, 0, last_column >> 8, last_column & 0xff)))
+    screen.command(REG_RASET, bytes((0, 0, last_row >> 8, last_row & 0xff)))
 
     screen.command(REG_MADCTL, MADCTL_HORIZ_ORDER)

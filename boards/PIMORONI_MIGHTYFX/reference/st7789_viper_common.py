@@ -136,15 +136,10 @@ def setup(display, colmod, framerate):
     display.command(REG_SLPOUT)
     display.command(REG_DISPON)
 
-    # TODO: the 240 branch is off by one. These are inclusive end addresses, so a
-    # 240 pixel panel wants 0xEF for a 0-based last index of 239, as the 320
-    # branch correctly uses. Fix in step with visible_libs/st7789.py, which
-    # carries the same values.
-    if display.width == 320 or display.height == 320:
-        display.command(REG_CASET, b"\x00\x00\x00\xEF")
-        display.command(REG_RASET, b"\x00\x00\x01\x3F")
-    else:
-        display.command(REG_CASET, b"\x00\x00\x00\xf0")
-        display.command(REG_RASET, b"\x00\x00\x00\xf0")
+    # Inclusive end addresses, so each is one less than the dimension. A window
+    # shorter than the frame wraps to the top of the panel rather than erroring.
+    last_column, last_row = display.width - 1, display.height - 1
+    display.command(REG_CASET, bytes((0, 0, last_column >> 8, last_column & 0xff)))
+    display.command(REG_RASET, bytes((0, 0, last_row >> 8, last_row & 0xff)))
 
     display.command(REG_MADCTL, MADCTL_HORIZ_ORDER)
