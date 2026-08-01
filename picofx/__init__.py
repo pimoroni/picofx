@@ -197,8 +197,8 @@ class EffectPlayer:
             self.__running = True
 
     def stop(self, reset_fx=False):
-        self.__timer.deinit()
         self.__running = False
+        self.__timer.deinit()
         if reset_fx:
             for ufx in self.__updateables:
                 ufx.reset()
@@ -225,6 +225,12 @@ class EffectPlayer:
         return 1000 / self.__measured if self.__measured > 0 else float("inf")
 
     def __update(self, timer):
+        # Timer callbacks arrive via the scheduler, so one already in-flight
+        # at deinit can still run after stop() and must not update the LEDs
+        if self.__running:
+            self.__tick(timer)
+
+    def __tick(self, timer):
         try:
             for ufx in self.__updateables:
                 ufx.tick(self.__period)
@@ -232,7 +238,7 @@ class EffectPlayer:
             self.__show()
 
             if self.__paired is not None:
-                self.__paired.__update(timer)
+                self.__paired.__tick(timer)
         except BaseException as e:
             self.stop()
             raise e
