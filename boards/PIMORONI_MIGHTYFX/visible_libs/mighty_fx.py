@@ -7,9 +7,19 @@ import time
 from machine import ADC, PWM, Pin
 from pimoroni_i2c import PimoroniI2C
 from motor import Motor
-from picofx import RGBLED
+from picofx import RGBLED, DisabledLED
 from audio import WavPlayer
 from spidisplay import SPIDisplayBus
+
+
+# The RP2350 shares its 24 PWM channels between GPIO pairs: pins 16 apart below
+# GPIO 32 and 8 apart above it drive the same channel, and both emit the same
+# signal whenever both select PWM. Used to keep LED outputs off channels that
+# an SP/CE role is driving.
+def __pwm_channel(gpio):
+    if gpio < 32:
+        return gpio % 16
+    return 16 + ((gpio - 32) % 8)
 
 
 class SPCE:
@@ -293,9 +303,31 @@ class MightyFX:
 
     RGB_GAMMA = 2.2
 
+    RGB_COLOUR_NAMES = ("red", "green", "blue")
+
     def __init__(self, spce_a=None, spce_b=None, init_i2c=True, init_wav=True, wav_root="/"):
-        # Set up the mono and RGB LED outputs
-        self.outputs = [RGBLED(*out, invert=False, gamma=self.RGB_GAMMA) for out in self.OUT_PINS]
+        # A motor role drives PWM on its DC, CS, SCK and MOSI lines, holding channels
+        # some LED outputs share. BL becomes a plain enable output, so it claims nothing.
+        claimed = {}
+        for port_name, mode, pins in (("A", spce_a, self.SPCE_A_PINS), ("B", spce_b, self.SPCE_B_PINS)):
+            if mode == SPCE.MOTOR_DRIVER:
+                for pin in pins[:4]:
+                    claimed[__pwm_channel(pin)] = (port_name, pin)
+
+        # Set up the mono and RGB LED outputs, standing in a DisabledLED for any
+        # channel a motor role holds, so lighting it reports instead of doing nothing
+        self.outputs = []
+        for index, rgb_pins in enumerate(self.OUT_PINS):
+            leds = []
+            for colour, pin in zip(self.RGB_COLOUR_NAMES, rgb_pins):
+                holder = claimed.get(__pwm_channel(pin))
+                if holder is None:
+                    leds.append(pin)
+                else:
+                    port_name, motor_pin = holder
+                    leds.append(DisabledLED(
+                        f"Output {index + 1}'s {colour} LED cannot light. GPIO {pin} shares a PWM channel with GPIO {motor_pin}, which SP/CE {port_name} is using to drive motors."))
+            self.outputs.append(RGBLED(*leds, invert=False, gamma=self.RGB_GAMMA))
 
         # Each port owns its bus and pins. Screens are the user's to create against
         # them, from the classes in screens.py
@@ -308,10 +340,6 @@ class MightyFX:
                             (self.SPCE_A_SCK_PIN, self.SPCE_A_MOSI_PIN)]
             self.motors_a = [Motor(pins) for pins in MOTOR_A_PINS]
             self.motors_a_en = Pin(self.SPCE_A_BL_PIN, Pin.OUT, value=True)
-            # Need to add some better handling for LED conflicts, to avoid output LEDs lighting
-            _ = Pin(40, Pin.IN)
-            _ = Pin(41, Pin.IN)
-            _ = Pin(42, Pin.IN)
 
         self.motors_b = None
         if spce_b == SPCE.MOTOR_DRIVER:
@@ -319,11 +347,6 @@ class MightyFX:
                             (self.SPCE_B_SCK_PIN, self.SPCE_B_MOSI_PIN)]
             self.motors_b = [Motor(pins) for pins in MOTOR_B_PINS]
             self.motors_b_en = Pin(self.SPCE_B_BL_PIN, Pin.OUT, value=True)
-            # Need to add some better handling for LED conflicts, to avoid output LEDs lighting
-            _ = Pin(8, Pin.IN)
-            _ = Pin(9, Pin.IN)
-            _ = Pin(10, Pin.IN)
-            _ = Pin(11, Pin.IN)
 
         # Set up the i2c for Qw/st, if the user wants
         if init_i2c:

@@ -33,6 +33,9 @@ def rgb_from_hsv(h, s, v):
 
 # A pseudo LED class for storing brightness. For use in comms
 class PseudoLED:
+    # None when the LED is free to light, otherwise the reason it cannot
+    in_use_by = None
+
     def __init__(self):
         self.__brightness = 0
 
@@ -69,6 +72,22 @@ class PWMLED(PseudoLED):
 
     def toggle(self):
         self.brightness(1 - self.__brightness)
+
+
+# A stand-in for an LED whose pin or PWM channel another function holds.
+# Turning it off works, so board-wide clear() and shutdown() pass through.
+# The first attempt to light it prints the reason; it stays dark throughout.
+class DisabledLED(PseudoLED):
+    def __init__(self, reason):
+        super().__init__()
+        self.in_use_by = reason
+        self.__warned = False
+
+    def brightness(self, brightness):
+        if brightness > 0 and not self.__warned:
+            print(self.in_use_by)
+            self.__warned = True
+        super().brightness(brightness)
 
 
 class RGBLED:
