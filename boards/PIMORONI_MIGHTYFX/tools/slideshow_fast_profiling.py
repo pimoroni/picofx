@@ -16,14 +16,17 @@ from screens import Screen280
 # Panel window and baud rate pairs, as keyword overrides for the screen class.
 # 37.5MHz needs clk_peri at 150MHz, since the SPI peripheral only reaches
 # clk_peri / 2, so 24MHz is the ceiling at 48MHz.
+#
+# These pin what the profiles would otherwise choose, so a run compares like with
+# like when a setting is deliberately moved off its measured winner.
 SETTINGS_240x320_24MHZ = {"width": 240, "height": 320, "bitdepth": 12, "framerate": 46,
-                          "baudrate": 24_000_000, "band_lines": 5, "cache_columns": 5, "spi_frame_bits": 16}
-SETTINGS_240x320_37MHZ = {"width": 240, "height": 320, "bitdepth": 12, "framerate": 57,
-                          "baudrate": 37_500_000, "band_lines": 16, "cache_columns": 16, "spi_frame_bits": 16}
-SETTINGS_240x240_24MHZ = {"width": 240, "height": 240, "bitdepth": 12, "framerate": 55,
-                          "baudrate": 24_000_000, "band_lines": 5, "cache_columns": 5, "spi_frame_bits": 16}
-SETTINGS_240x240_37MHZ = {"width": 240, "height": 240, "bitdepth": 12, "framerate": 67,
-                          "baudrate": 37_500_000, "band_lines": 16, "cache_columns": 16, "spi_frame_bits": 16}
+                          "baudrate": 24_000_000, "band_lines": 4, "cache_columns": 4}
+SETTINGS_240x320_37MHZ = {"width": 240, "height": 320, "bitdepth": 12, "framerate": 55,
+                          "baudrate": 37_500_000, "band_lines": 12, "cache_columns": 12}
+SETTINGS_240x240_24MHZ = {"width": 240, "height": 240, "bitdepth": 12, "framerate": 60,
+                          "baudrate": 24_000_000, "band_lines": 2, "cache_columns": 0}
+SETTINGS_240x240_37MHZ = {"width": 240, "height": 240, "bitdepth": 12, "framerate": 60,
+                          "baudrate": 37_500_000, "band_lines": 12, "cache_columns": 12}
 
 SETTINGS = SETTINGS_240x240_37MHZ
 

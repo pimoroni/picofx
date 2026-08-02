@@ -17,9 +17,11 @@ from mighty_fx import MightyFX, SPCE
 from picovector import image, color
 from screens import Screen280
 
-# 37.5MHz needs clk_peri at 150MHz, as the SPI peripheral can only reach clk_peri / 2
-SETTINGS = {"width": 240, "height": 320, "bitdepth": 12, "framerate": 50,
-            "baudrate": 37_500_000, "band_lines": 16, "cache_columns": 16, "spi_frame_bits": 16}
+# 37.5MHz needs clk_peri at 150MHz, as the SPI peripheral can only reach clk_peri / 2.
+# The baud rate alone lands on the profile's 12/12 tuning; this run pins the bit
+# depth, since the SRAM canvas below is what is being measured, not the colour.
+# The 12/12 claim plus this 320x240 canvas is the tightest fit the region carries.
+SETTINGS = {"bitdepth": 12, "baudrate": 37_500_000}
 
 IMAGE_FOLDER = "/images_r"
 CANVAS_WIDTH = 320

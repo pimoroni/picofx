@@ -26,11 +26,9 @@ SCREEN_A = Screen280
 SCREEN_B = Screen280
 OVERRIDES_B = {"height": 280, "framerate": 45}
 
-# Requested rows per DMA band. Values above 16 are clamped, which band_rows() is
-# what reports.
+# Requested rows per DMA band. The driver clamps only to the panel height, which
+# band_rows() is what reports, and the rows claim real SRAM per screen.
 BAND_LINES = 16
-
-MAX_BAND_LINES = 16
 
 tally = {"PASS": 0, "FAIL": 0}
 
@@ -52,10 +50,17 @@ def report(label, screen):
 
     # band_rows() is the request after clamping, so the band count follows from it
     # and the panel height
-    expected_rows = min(BAND_LINES, MAX_BAND_LINES, screen.height)
+    expected_rows = min(BAND_LINES, screen.height)
     check("band rows", expected_rows, display.band_rows())
     bands = (screen.height + display.band_rows() - 1) // display.band_rows()
     print(f"       {bands} bands of {display.band_rows()} rows for {screen.height} rows")
+
+    # The workspace claim is band pair plus cache, each rounded to 4 bytes, and
+    # sram_bytes() is what buffer_size() dropped by when the screen was built
+    row_bytes = screen.width * 3 // 2 if screen.bitdepth == 12 else screen.width * 2
+    band_bytes = (display.band_rows() * row_bytes + 3) & ~3
+    print(f"       claims {display.sram_bytes()} bytes of SRAM"
+          f" ({2 * band_bytes} band + {display.sram_bytes() - 2 * band_bytes} cache)")
 
     # The divider only reaches clk_peri/(2*n), so the rate is rounded down. Equal is
     # the happy case, above the request would be a fault
