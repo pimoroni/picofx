@@ -22,6 +22,9 @@
 #include "hardware/dma.h"
 #include "hardware/spi.h"
 
+#include "column_cache.hpp"
+#include "scanline.hpp"
+
 namespace spidisplay {
 
 // Observed shape of a panel's tearing-effect signal. A short high_us against the
@@ -99,7 +102,7 @@ public:
     // through a series resistor, so panels sharing it divide the line and the
     // asserted level is lost. Behind a multiplexer a dc line carrying TE needs an
     // analog mux to pass both directions; a demux or buffer fails quietly, the wait
-    // timing out while the frame still streams.
+    // timing out, te_timeouts() counting it, while the frame still streams.
     SPIDisplay(SPIDisplayBus *bus, uint cs, uint dc, int te, uint8_t ram_write,
                int bitdepth, int width, int height, uint32_t baudrate,
                int band_lines, int cache_columns);
@@ -112,6 +115,7 @@ public:
     SPIDisplay(const SPIDisplay &member) {
         *this = member;
         owns_sram_claim = false;
+        state = FrameState::IDLE;  // A group never inherits a member's staged frame
     }
 
     ~SPIDisplay();
@@ -120,6 +124,9 @@ public:
     // agreement on everything the stream depends on. Register state bringup put in
     // the panel is not compared, so a group can carry a differing MADCTL.
     bool compatible_with(const SPIDisplay &other) const;
+
+    // Interleaved displays need a bus each; a shared one is broadcast territory.
+    bool shares_bus_with(const SPIDisplay &other) const { return bus == other.bus; }
 
     // Fold another member's CS and DC bits into this group's masks. Only
     // meaningful on a copy; check compatible_with() first.
@@ -150,6 +157,62 @@ public:
                 uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
                 bool v_sync, uint32_t timeout_us);
 
+    // The resumable steps update() composes, exposed so an interleaver can drive
+    // several displays through a frame concurrently: prepare(), arm(), poll_te()
+    // until it fires, start_stream(), then step() until done(). Displays being
+    // interleaved must sit on different buses; each call touches only its own.
+    enum class FrameState : uint8_t { IDLE, PREPARED, ARMED, STREAMING };
+    FrameState frame_state() const { return state; }
+
+    // Descriptor, cache seeding and the first band's conversion. Sets the bus
+    // rate and DMA frame width, sends nothing, never waits.
+    void prepare(const uint8_t *src, int src_w, int src_h,
+                 int rotation, int mirror, int pixel_double,
+                 uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y);
+
+    // Begin the TE wait without blocking: the TE line to input, the stale level
+    // recorded, the timeout started. Without v_sync the wait is already fired.
+    void arm(bool v_sync, uint32_t timeout_us);
+
+    // One non-blocking sample of the rising-then-falling wait. True once the
+    // frame may start, whether the edge arrived or the timeout expired;
+    // te_timeouts() counts the expiries. step() may convert ahead meanwhile.
+    bool poll_te();
+
+    // RAMWR and the first band's DMA kick, timestamped for write-start skew.
+    void start_stream();
+
+    // Convert at most max_rows into the back band and kick it when it is full
+    // and the channel is free; raise CS once everything has drained. Never
+    // blocks. max_rows < 1 kicks and finishes only. True when anything advanced,
+    // so an interleaver can tell progress from spinning.
+    bool step(int max_rows);
+
+    // Whether a convert slice would find room: rows remain and the back band is
+    // not already full and waiting on the channel.
+    bool wants_convert() const {
+        if (state != FrameState::ARMED && state != FrameState::STREAMING) {
+            return false;
+        }
+        return rows_converted < dst_h && band_fill < band_capacity();
+    }
+
+    bool busy() const { return dma_channel_is_busy(bus->dma_chan); }
+    bool done() const { return state == FrameState::IDLE; }
+
+    // Rough microseconds until the in-flight transfer drains, 0 when the channel
+    // is free: the interleaver gives its convert slice to the nearest deadline.
+    uint32_t deadline_us() const;
+
+    // Abandon a staged or streaming frame: DMA aborted, FIFO drained, CS raised,
+    // DC returned to an output. The panel holds its GRAM pointer, so the next
+    // full frame recovers the glass.
+    void abort_frame();
+
+    // The interleaver's no-progress hook, for the host harness to advance mock
+    // time.
+    void idle_wait() const {}
+
     // Whether the bus has given its DMA channel back, which shutdown() does so a
     // long-lived program can rebuild screens without exhausting the 16 channels.
     // Every transfer needs the channel, so both command() and update() are refused
@@ -167,12 +230,26 @@ public:
     // Instrumentation from the most recent update().
     FrameStats stats() const { return last; }
 
+    // Frames since construction that began without their TE edge, the wait having
+    // hit its timeout. Cumulative, so not part of the frame snapshot. A frame still
+    // goes out, so this is the only sign v_sync did not hold.
+    uint32_t te_timeouts() const { return te_timeout_count; }
+
     // What this panel's rate reached: the divider only gets to clk_peri/(2*n), so
     // a request is rounded down, sometimes a long way. Fixed at construction.
     uint32_t baudrate() const { return achieved_baudrate; }
 
 private:
-    bool te_wait(uint32_t timeout_us);
+    // Rows the band being filled can hold: a full band, or the shorter last one.
+    int band_capacity() const {
+        int cap = dst_h - (rows_converted - band_fill);
+        return cap > rows_per_band ? rows_per_band : cap;
+    }
+
+    void te_fire(uint32_t now);
+    bool step_convert(int max_rows);
+    bool try_kick();
+    bool finish_if_drained();
 
     SPIDisplay &operator=(const SPIDisplay &) = default;
 
@@ -208,6 +285,29 @@ private:
     uint32_t requested_baudrate;
     uint32_t achieved_baudrate;
     FrameStats last = {};
+    uint32_t te_timeout_count = 0;
+
+    // The staged frame, living from prepare() until the stream drains. The
+    // pointers rebase into sram_claim each prepare().
+    FrameState state = FrameState::IDLE;
+    Descriptor desc = {};
+    ColumnCache cache{nullptr, 0, 0};
+    uint8_t *front = nullptr;
+    uint8_t *back = nullptr;
+    size_t full_band_bytes = 0;
+    bool wide_frames = false;
+    int frame_shift = 0;
+    int rows_converted = 0;   // Destination rows converted, front band included
+    int band_fill = 0;        // Rows sitting in back, not yet kicked
+    int rows_kicked = 0;      // Rows handed to the DMA channel
+    uint32_t frame_started_us = 0;
+    bool te_fired = false;
+    bool te_high_seen = false;
+    bool te_raw_prev = false;
+    uint32_t te_started_us = 0;
+    uint32_t te_timeout_budget_us = 0;
+    bool stall_pending = false;
+    uint32_t stall_started_us = 0;
 };
 
 }  // namespace spidisplay

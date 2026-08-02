@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 //
 // SPIDisplayBus and SPIDisplay implementation and their MicroPython bindings. The
-// C++ classes own the SPI/DMA/GPIO and the overlapped band pump; the extern "C"
-// block wraps them as types. Module registration is in spidisplay_bindings.c.
+// C++ classes own the SPI/DMA/GPIO and the overlapped band streaming; the extern
+// "C" block wraps them as types. Module registration is in spidisplay_bindings.c.
 
 #include <new>
 #include <utility>
@@ -13,6 +13,7 @@
 #include "pico/time.h"
 
 #include "column_cache.hpp"
+#include "interleaver.hpp"
 #include "scanline.hpp"
 #include "spidisplay.hpp"
 #include "sram_allocator.hpp"
@@ -193,31 +194,66 @@ void SPIDisplay::command(const uint8_t *cmd, size_t cmd_len,
     gpio_set_mask64(cs_mask);
 }
 
-bool SPIDisplay::te_wait(uint32_t timeout_us) {
-    bool success = true;
-
-    uint pin = (te_pin >= 0) ? (uint)te_pin : dc_pin;
-    if (te_pin < 0) {
-        gpio_set_dir(dc_pin, GPIO_IN);
+void SPIDisplay::arm(bool v_sync, uint32_t timeout_us) {
+    if (state != FrameState::PREPARED) {
+        return;
     }
-
-    uint32_t start = time_us_32();
-
-    // Wait for the rising edge
-    while (success && gpio_get(pin) == 0) {
-        success = (time_us_32() - start < timeout_us);
+    gpio_set_dir_masked64(dc_mask, dc_mask);
+    te_started_us = time_us_32();
+    te_timeout_budget_us = timeout_us;
+    te_fired = !v_sync;
+    te_high_seen = false;
+    if (v_sync) {
+        uint pin = (te_pin >= 0) ? (uint)te_pin : dc_pin;
+        if (te_pin < 0) {
+            gpio_set_dir(dc_pin, GPIO_IN);
+        }
+        te_raw_prev = gpio_get(pin) != 0;
+    } else {
+        last.te_wait_us = 0;
     }
+    state = FrameState::ARMED;
+}
 
-    // Wait for the falling edge, if the timeout has yet to be reached
-    while (success && gpio_get(pin) != 0) {
-        success = (time_us_32() - start < timeout_us);
-    }
-
+void SPIDisplay::te_fire(uint32_t now) {
     if (te_pin < 0) {
         gpio_set_dir(dc_pin, GPIO_OUT);
     }
+    last.te_wait_us = now - te_started_us;
+    te_fired = true;
+}
 
-    return success;
+bool SPIDisplay::poll_te() {
+    if (state != FrameState::ARMED) {
+        return false;
+    }
+    if (te_fired) {
+        return true;
+    }
+
+    uint32_t now = time_us_32();
+    uint pin = (te_pin >= 0) ? (uint)te_pin : dc_pin;
+    bool level = gpio_get(pin) != 0;
+
+    // TE shares the DC node, so the level right after the direction flip can
+    // still be settling: an edge counts only when two consecutive samples agree.
+    bool settled = level == te_raw_prev;
+    te_raw_prev = level;
+    if (settled) {
+        if (level) {
+            te_high_seen = true;
+        } else if (te_high_seen) {
+            te_fire(now);
+            return true;
+        }
+    }
+
+    if (now - te_started_us >= te_timeout_budget_us) {
+        ++te_timeout_count;
+        te_fire(now);
+        return true;
+    }
+    return false;
 }
 
 TeProbe SPIDisplay::te_probe(uint32_t ms) {
@@ -267,12 +303,9 @@ TeProbe SPIDisplay::te_probe(uint32_t ms) {
     return p;
 }
 
-void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
-                        int rotation, int mirror, int pixel_double,
-                        uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
-                        bool v_sync, uint32_t timeout_us) {
-
-    // ----- DESCRIPTOR CREATION -----
+void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h,
+                         int rotation, int mirror, int pixel_double,
+                         uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y) {
     uint32_t t_pre = time_us_32();
 
     use_baudrate();
@@ -280,107 +313,212 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
     bool dbl = pixel_double != 0;
 
     Transform t = map_transform(rotation, mirror);
-    Descriptor d = make_descriptor(src, src_w, src_h, dst_w, dst_h, t, dbl, bg, fmt,
-                                   centred_x, off_x, centred_y, off_y);
+    desc = make_descriptor(src, src_w, src_h, dst_w, dst_h, t, dbl, bg, fmt,
+                           centred_x, off_x, centred_y, off_y);
 
     ConvertFn convert = select_convert(fmt, dbl);
 
-    uint8_t *front = sram_claim;               // converted, DMA in flight
-    uint8_t *back = sram_claim + band_bytes;   // converted next, while front streams
-
-    const int band_rows = rows_per_band;
+    front = sram_claim;               // converted, DMA in flight
+    back = sram_claim + band_bytes;   // converted next, while front streams
 
     // Every band is this size except a possibly-shorter final one
-    const size_t full_band_bytes = (size_t)band_rows * d.dst_row_bytes;
+    full_band_bytes = (size_t)rows_per_band * desc.dst_row_bytes;
 
     // Wider SPI frames cut the PL022's per-frame idle time (1.5 clocks between
     // frames whatever their width, 7.9% of frame time at 8 bits), but a transfer
     // has to be a whole number of frames, so an odd packed row width - RGB444 at
     // half the possible widths - falls back to 8-bit frames by itself.
-    const bool wide_frames = (d.dst_row_bytes % 2) == 0;
-    const int frame_shift = wide_frames ? 1 : 0;
+    wide_frames = (desc.dst_row_bytes % 2) == 0;
+    frame_shift = wide_frames ? 1 : 0;
     bus->use_frame_bits(wide_frames ? 16 : 8);
-    const int dma_chan = bus->dma_chan;
-    spi_inst_t *spi = bus->spi;
 
     // Check if the source address sits anywhere inside the 16MB hardware window for CS1
-    uintptr_t src_addr = (uintptr_t)d.src;
+    uintptr_t src_addr = (uintptr_t)desc.src;
     bool src_in_psram = (src_addr >= PSRAM_CACHED_BASE && src_addr < PSRAM_CACHED_BASE + PSRAM_WINDOW);
 
     // The cache decides here whether it applies, and stays live across bands so a
     // window seeded by one serves the next.
-    ColumnCache cache((uint32_t *)(sram_claim + 2 * band_bytes), cache_capacity,
-                      cache_columns);
-    cache.begin(d, convert, dbl, src_in_psram);
+    cache = ColumnCache((uint32_t *)(sram_claim + 2 * band_bytes), cache_capacity,
+                        cache_columns);
+    cache.begin(desc, convert, dbl, src_in_psram);
 
     last.pre_us = time_us_32() - t_pre;
 
-
-    // ----- FIRST BAND CONVERSION -----
     uint32_t t_conv = time_us_32();
 
-    cache.convert(front, 0, band_rows);
+    cache.convert(front, 0, rows_per_band);
 
     last.convert_us = time_us_32() - t_conv;
     last.convert_total_us = last.convert_us;
     last.stall_us = 0;
 
-    gpio_set_dir_masked64(dc_mask, dc_mask);
-    uint32_t t_te = time_us_32();
-    if (v_sync) {
-        te_wait(timeout_us);
+    rows_converted = rows_per_band;
+    band_fill = 0;
+    rows_kicked = 0;
+    stall_pending = false;
+    state = FrameState::PREPARED;
+}
+
+void SPIDisplay::start_stream() {
+    if (state != FrameState::ARMED || !te_fired) {
+        return;
     }
-    last.te_wait_us = time_us_32() - t_te;
 
     uint32_t t_frame = time_us_32();
+    frame_started_us = t_frame;
     last.write_start_us = t_frame;
     gpio_put_masked64(dc_mask, 0);
     gpio_clr_mask64(cs_mask);
-    spi_write_blocking(spi, &ram_write_cmd, 1);
+    spi_write_blocking(bus->spi, &ram_write_cmd, 1);
     gpio_put_masked64(dc_mask, dc_mask);
 
     // RAMWR returned with the shifter idle, so widening here truncates nothing
     if (wide_frames) {
-        spi_set_format(spi, 16, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
+        spi_set_format(bus->spi, 16, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
     }
 
     // Dispatch the first band
-    dma_channel_set_read_addr(dma_chan, front, false);
-    dma_channel_set_trans_count(dma_chan, full_band_bytes >> frame_shift, true);  // true starts it
+    dma_channel_set_read_addr(bus->dma_chan, front, false);
+    dma_channel_set_trans_count(bus->dma_chan, full_band_bytes >> frame_shift, true);  // true starts it
+    rows_kicked = rows_per_band;
+    state = FrameState::STREAMING;
+}
 
-    int row = band_rows;
-    while (row < dst_h) {
-        int rows = dst_h - row < band_rows ? dst_h - row : band_rows;
-
-        uint32_t t_band = time_us_32();
-        cache.convert(back, row, rows);
-        uint32_t t_wait = time_us_32();
-
-        dma_channel_wait_for_finish_blocking(dma_chan);
-        uint32_t t_kick = time_us_32();
-        last.convert_total_us += t_wait - t_band;
-        last.stall_us += t_kick - t_wait;
-
-        dma_channel_set_read_addr(dma_chan, back, false);
-        size_t bytes = rows == band_rows ? full_band_bytes : (size_t)rows * d.dst_row_bytes;
-        dma_channel_set_trans_count(dma_chan, bytes >> frame_shift, true);
-        std::swap(front, back);
-        row += rows;
+bool SPIDisplay::step_convert(int max_rows) {
+    if (state != FrameState::ARMED && state != FrameState::STREAMING) {
+        return false;
     }
-    uint32_t t_last = time_us_32();
-    dma_channel_wait_for_finish_blocking(dma_chan);
+    if (max_rows < 1 || rows_converted >= dst_h) {
+        return false;
+    }
+    int room = band_capacity() - band_fill;
+    if (room < 1) {
+        return false;
+    }
+
+    int rows = max_rows < room ? max_rows : room;
+    uint32_t t_band = time_us_32();
+    cache.convert(back + (size_t)band_fill * desc.dst_row_bytes, rows_converted, rows);
+    last.convert_total_us += time_us_32() - t_band;
+    band_fill += rows;
+    rows_converted += rows;
+    return true;
+}
+
+bool SPIDisplay::try_kick() {
+    if (state != FrameState::STREAMING || band_fill < 1 || band_fill < band_capacity()) {
+        return false;
+    }
+
+    uint32_t now = time_us_32();
+    if (dma_channel_is_busy(bus->dma_chan)) {
+        // A full band waiting on the channel is the stall the budget arithmetic
+        // cares about; the clock runs from the first sighting to the kick.
+        if (!stall_pending) {
+            stall_pending = true;
+            stall_started_us = now;
+        }
+        return false;
+    }
+    if (stall_pending) {
+        last.stall_us += now - stall_started_us;
+        stall_pending = false;
+    }
+
+    dma_channel_set_read_addr(bus->dma_chan, back, false);
+    size_t bytes = band_fill == rows_per_band ? full_band_bytes
+                                              : (size_t)band_fill * desc.dst_row_bytes;
+    dma_channel_set_trans_count(bus->dma_chan, bytes >> frame_shift, true);
+    std::swap(front, back);
+    rows_kicked += band_fill;
+    band_fill = 0;
+    return true;
+}
+
+bool SPIDisplay::finish_if_drained() {
+    if (state != FrameState::STREAMING || rows_kicked < dst_h) {
+        return false;
+    }
+
+    uint32_t now = time_us_32();
     // The DMA finishes when the last bytes reach the SPI TX FIFO, not when they
     // leave the wire. Drain the FIFO before releasing CS or the final few pixels
     // (up to the 8-entry FIFO) are truncated.
-    while (spi_is_busy(spi)) {
+    if (dma_channel_is_busy(bus->dma_chan) || spi_is_busy(bus->spi)) {
+        if (!stall_pending) {
+            stall_pending = true;
+            stall_started_us = now;
+        }
+        return false;
     }
+
     gpio_set_mask64(cs_mask);
     uint32_t t_end = time_us_32();
-    last.stall_us += t_end - t_last;
-    last.frame_us = t_end - t_frame;
+    if (stall_pending) {
+        last.stall_us += t_end - stall_started_us;
+        stall_pending = false;
+    }
+    last.frame_us = t_end - frame_started_us;
 
     if (wide_frames) {
-        spi_set_format(spi, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
+        spi_set_format(bus->spi, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
+    }
+    state = FrameState::IDLE;
+    return true;
+}
+
+bool SPIDisplay::step(int max_rows) {
+    bool advanced = try_kick();
+    advanced |= step_convert(max_rows);
+    advanced |= try_kick();
+    advanced |= finish_if_drained();
+    return advanced;
+}
+
+uint32_t SPIDisplay::deadline_us() const {
+    if (state != FrameState::STREAMING || !dma_channel_is_busy(bus->dma_chan)) {
+        return 0;
+    }
+    uint32_t remaining = dma_channel_hw_addr(bus->dma_chan)->transfer_count;
+    uint32_t frame_bits = 8u << frame_shift;
+    return (uint32_t)(((uint64_t)remaining * frame_bits * 1000000u) / achieved_baudrate);
+}
+
+void SPIDisplay::abort_frame() {
+    if (state == FrameState::IDLE) {
+        return;
+    }
+    if (state == FrameState::STREAMING) {
+        dma_channel_abort(bus->dma_chan);
+        while (spi_is_busy(bus->spi)) {
+        }
+        if (wide_frames) {
+            spi_set_format(bus->spi, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
+        }
+    }
+    // An armed display's TE line is an input until the edge fires.
+    if (state == FrameState::ARMED && !te_fired && te_pin < 0) {
+        gpio_set_dir(dc_pin, GPIO_OUT);
+    }
+    gpio_set_mask64(cs_mask);
+    gpio_set_dir_masked64(dc_mask, dc_mask);
+    gpio_set_mask64(dc_mask);
+    stall_pending = false;
+    state = FrameState::IDLE;
+}
+
+void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
+                        int rotation, int mirror, int pixel_double,
+                        uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
+                        bool v_sync, uint32_t timeout_us) {
+    prepare(src, src_w, src_h, rotation, mirror, pixel_double,
+            bg, centred_x, off_x, centred_y, off_y);
+    arm(v_sync, timeout_us);
+    while (!poll_te()) {
+    }
+    start_stream();
+    while (state != FrameState::IDLE) {
+        step(rows_per_band);
     }
 }
 
@@ -408,10 +546,13 @@ typedef struct _SPIDisplayBus_obj_t {
 // bus_obj roots the bus against the GC, since the C++ object holds a bare pointer
 // into it. sram_owner_obj roots the member whose SRAM claim a broadcast group
 // shares, so the owner cannot be finalised under the group; none elsewhere.
+// staged_image roots a prepare()d frame's source: the staged Descriptor holds a
+// raw pointer and Python runs between prepare() and update_all().
 typedef struct _SPIDisplay_obj_t {
     mp_obj_base_t base;
     mp_obj_t bus_obj;
     mp_obj_t sram_owner_obj;
+    mp_obj_t staged_image;
     spidisplay::SPIDisplay display;
 } SPIDisplay_obj_t;
 
@@ -472,6 +613,7 @@ static mp_obj_t SPIDisplayBus_broadcast(size_t n_args, const mp_obj_t *args) {
     SPIDisplay_obj_t *first = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[1]);
     SPIDisplay_obj_t *group = mp_obj_malloc_with_finaliser(SPIDisplay_obj_t, &SPIDisplay_type);
     group->bus_obj = first->bus_obj;
+    group->staged_image = mp_const_none;
     // The copy shares the first member's SRAM claim, so root that member for the
     // group's lifetime. Explicitly deleting the member still dangles the group,
     // the same misuse as deleting the bus under a display.
@@ -550,6 +692,7 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
     SPIDisplay_obj_t *self = mp_obj_malloc_with_finaliser(SPIDisplay_obj_t, type);
     self->bus_obj = args[ARG_bus].u_obj;
     self->sram_owner_obj = mp_const_none;
+    self->staged_image = mp_const_none;
     new (&self->display) spidisplay::SPIDisplay(
         &bus->bus, cs, dc, te, (uint8_t)args[ARG_ram_write].u_int,
         args[ARG_bitdepth].u_int, args[ARG_width].u_int, args[ARG_height].u_int,
@@ -580,6 +723,10 @@ static mp_obj_t SPIDisplay_command(size_t n_args, const mp_obj_t *args) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[0]);
     if (self->display.released()) {
         mp_raise_ValueError(MP_ERROR_TEXT("this screen's bus has been released by shutdown()"));
+    }
+    // A staged or streaming frame owns DC, which a command would force low.
+    if (self->display.frame_state() != spidisplay::SPIDisplay::FrameState::IDLE) {
+        mp_raise_ValueError(MP_ERROR_TEXT("a frame is staged or streaming; update_all() or abort_frame() first"));
     }
 
     uint8_t cmd_byte;
@@ -617,7 +764,25 @@ static mp_obj_t SPIDisplay_command(size_t n_args, const mp_obj_t *args) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(SPIDisplay_command_obj, 2, 3, SPIDisplay_command);
 
-static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
+// update()'s arguments after parsing and validation, shared with prepare().
+typedef struct _FrameArgs {
+    SPIDisplay_obj_t *self;
+    mp_obj_t image;
+    mp_buffer_info_t buf;
+    int src_w, src_h;
+    mp_int_t rotation, mirror, pixel_double;
+    uint32_t bg;
+    bool centred_x, centred_y;
+    int off_x, off_y;
+    bool v_sync;
+    mp_int_t timeout_us;
+} FrameArgs;
+
+// with_sync parses the trailing v_sync and timeout_us; prepare() leaves them
+// out, since the TE wait belongs to update_all(), and they raise as unknown
+// keywords there.
+static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
+                                   mp_map_t *kw_args, bool with_sync, FrameArgs *out) {
     enum { ARG_self, ARG_image,
            ARG_rotation, ARG_mirror, ARG_pixel_double, ARG_bg, ARG_offset, ARG_v_sync, ARG_timeout_us };
     static const mp_arg_t allowed_args[] = {
@@ -631,9 +796,9 @@ static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_ma
         { MP_QSTR_v_sync, MP_ARG_BOOL, {.u_bool = false} },
         { MP_QSTR_timeout_us, MP_ARG_INT, {.u_int = 50000} },
     };
-    mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
-    mp_arg_parse_all(n_args, pos_args, kw_args,
-                     MP_ARRAY_SIZE(allowed_args), allowed_args, args);
+    mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)] = {};
+    size_t n_allowed = MP_ARRAY_SIZE(allowed_args) - (with_sync ? 0 : 2);
+    mp_arg_parse_all(n_args, pos_args, kw_args, n_allowed, allowed_args, args);
 
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[ARG_self].u_obj);
     if (self->display.released()) {
@@ -696,14 +861,122 @@ static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_ma
         }
     }
 
-    self->display.update((const uint8_t *)buf.buf, src_w, src_h,
-        args[ARG_rotation].u_int,
-        args[ARG_mirror].u_int, args[ARG_pixel_double].u_int,
-        bg, centred_x, off_x, centred_y, off_y,
-        args[ARG_v_sync].u_bool, args[ARG_timeout_us].u_int);
+    out->self = self;
+    out->image = args[ARG_image].u_obj;
+    out->buf = buf;
+    out->src_w = src_w;
+    out->src_h = src_h;
+    out->rotation = args[ARG_rotation].u_int;
+    out->mirror = args[ARG_mirror].u_int;
+    out->pixel_double = args[ARG_pixel_double].u_int;
+    out->bg = bg;
+    out->centred_x = centred_x;
+    out->centred_y = centred_y;
+    out->off_x = off_x;
+    out->off_y = off_y;
+    out->v_sync = with_sync ? args[ARG_v_sync].u_bool : false;
+    out->timeout_us = with_sync ? args[ARG_timeout_us].u_int : 0;
+}
+
+static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
+    FrameArgs a;
+    SPIDisplay_parse_frame(n_args, pos_args, kw_args, true, &a);
+    a.self->display.update((const uint8_t *)a.buf.buf, a.src_w, a.src_h,
+        a.rotation, a.mirror, a.pixel_double,
+        a.bg, a.centred_x, a.off_x, a.centred_y, a.off_y,
+        a.v_sync, a.timeout_us);
+    a.self->staged_image = mp_const_none;
     return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_KW(SPIDisplay_update_obj, 2, SPIDisplay_update);
+
+// prepare(image, ...) stages a frame for update_all(): descriptor, cache and
+// the first band's conversion, no bus traffic. The image is rooted on the
+// display until the stream completes or abort_frame(), since the staged
+// descriptor holds a raw pointer into it.
+static mp_obj_t SPIDisplay_prepare(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
+    FrameArgs a;
+    SPIDisplay_parse_frame(n_args, pos_args, kw_args, false, &a);
+    a.self->display.prepare((const uint8_t *)a.buf.buf, a.src_w, a.src_h,
+        a.rotation, a.mirror, a.pixel_double,
+        a.bg, a.centred_x, a.off_x, a.centred_y, a.off_y);
+    a.self->staged_image = a.image;
+    return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_KW(SPIDisplay_prepare_obj, 2, SPIDisplay_prepare);
+
+// Abandon a staged or streaming frame and release the image root. The panel
+// keeps its GRAM write pointer, so the next full frame recovers the glass.
+static mp_obj_t SPIDisplay_abort_frame(mp_obj_t self_in) {
+    SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
+    self->display.abort_frame();
+    self->staged_image = mp_const_none;
+    return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_abort_frame_obj, SPIDisplay_abort_frame);
+
+// update_all(*displays, v_sync=False, timeout_us=50000, slice_rows=4): stream
+// every prepared display's frame concurrently, each starting on its own TE
+// edge. The displays must sit on different buses; one bus driving several
+// panels is what broadcast() is for. slice_rows bounds the conversion done
+// between TE and channel checks, so smaller values cut the poll latency at
+// some per-call overhead.
+mp_obj_t spidisplay_update_all(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
+    enum { ARG_v_sync, ARG_timeout_us, ARG_slice_rows };
+    static const mp_arg_t allowed_args[] = {
+        { MP_QSTR_v_sync, MP_ARG_KW_ONLY | MP_ARG_BOOL, {.u_bool = false} },
+        { MP_QSTR_timeout_us, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 50000} },
+        { MP_QSTR_slice_rows, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 4} },
+    };
+    mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
+    mp_arg_parse_all(0, NULL, kw_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
+
+    if (n_args < 1 || n_args > 4) {
+        mp_raise_ValueError(MP_ERROR_TEXT("update_all takes 1 to 4 displays"));
+    }
+    if (args[ARG_slice_rows].u_int < 1) {
+        mp_raise_ValueError(MP_ERROR_TEXT("slice_rows must be positive"));
+    }
+
+    SPIDisplay_obj_t *objs[4];
+    spidisplay::SPIDisplay *displays[4];
+    for (size_t i = 0; i < n_args; ++i) {
+        if (!mp_obj_is_type(pos_args[i], &SPIDisplay_type)) {
+            mp_raise_TypeError(MP_ERROR_TEXT("update_all takes SPIDisplay objects"));
+        }
+        SPIDisplay_obj_t *obj = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(pos_args[i]);
+        if (obj->display.released()) {
+            mp_raise_ValueError(MP_ERROR_TEXT("this screen's bus has been released by shutdown()"));
+        }
+        if (obj->display.frame_state() != spidisplay::SPIDisplay::FrameState::PREPARED) {
+            mp_raise_ValueError(MP_ERROR_TEXT("prepare() every display before update_all()"));
+        }
+        for (size_t j = 0; j < i; ++j) {
+            if (obj == objs[j]) {
+                mp_raise_ValueError(MP_ERROR_TEXT("a display is listed twice"));
+            }
+            if (obj->display.shares_bus_with(objs[j]->display)) {
+                mp_raise_ValueError(MP_ERROR_TEXT("displays must be on different buses; broadcast() shares one"));
+            }
+        }
+        objs[i] = obj;
+        displays[i] = &obj->display;
+    }
+
+    // Everything that can raise has; the interleaver runs without the GC or NLR.
+    spidisplay::interleave(displays, (int)n_args, args[ARG_v_sync].u_bool,
+                           (uint32_t)args[ARG_timeout_us].u_int,
+                           (int)args[ARG_slice_rows].u_int);
+
+    for (size_t i = 0; i < n_args; ++i) {
+        objs[i]->staged_image = mp_const_none;
+    }
+    return mp_const_none;
+}
+// Declared extern first: a const object compiled as C++ takes internal linkage
+// otherwise, and spidisplay_bindings.c links against this name.
+extern const mp_obj_fun_builtin_var_t spidisplay_update_all_obj;
+MP_DEFINE_CONST_FUN_OBJ_KW(spidisplay_update_all_obj, 1, spidisplay_update_all);
 
 // The panel's own dimensions, fixed when it was built.
 static mp_obj_t SPIDisplay_size(mp_obj_t self_in) {
@@ -747,6 +1020,14 @@ static mp_obj_t SPIDisplay_stats(mp_obj_t self_in) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_stats_obj, SPIDisplay_stats);
 
+// Frames whose TE wait timed out. Zero is the only healthy value on a panel wired
+// for v_sync.
+static mp_obj_t SPIDisplay_te_timeouts(mp_obj_t self_in) {
+    SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
+    return mp_obj_new_int_from_uint(self->display.te_timeouts());
+}
+static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_te_timeouts_obj, SPIDisplay_te_timeouts);
+
 // Destination rows per DMA band, after the clamp the request went through, so the
 // band count is height over this. Fixed at construction.
 static mp_obj_t SPIDisplay_band_rows(mp_obj_t self_in) {
@@ -786,12 +1067,15 @@ static const mp_rom_map_elem_t SPIDisplay_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&SPIDisplay___del___obj) },
     { MP_ROM_QSTR(MP_QSTR_command), MP_ROM_PTR(&SPIDisplay_command_obj) },
     { MP_ROM_QSTR(MP_QSTR_update), MP_ROM_PTR(&SPIDisplay_update_obj) },
+    { MP_ROM_QSTR(MP_QSTR_prepare), MP_ROM_PTR(&SPIDisplay_prepare_obj) },
+    { MP_ROM_QSTR(MP_QSTR_abort_frame), MP_ROM_PTR(&SPIDisplay_abort_frame_obj) },
     { MP_ROM_QSTR(MP_QSTR_size), MP_ROM_PTR(&SPIDisplay_size_obj) },
     { MP_ROM_QSTR(MP_QSTR_band_rows), MP_ROM_PTR(&SPIDisplay_band_rows_obj) },
     { MP_ROM_QSTR(MP_QSTR_sram_bytes), MP_ROM_PTR(&SPIDisplay_sram_bytes_obj) },
     { MP_ROM_QSTR(MP_QSTR_baudrate), MP_ROM_PTR(&SPIDisplay_baudrate_obj) },
     { MP_ROM_QSTR(MP_QSTR_stats), MP_ROM_PTR(&SPIDisplay_stats_obj) },
     { MP_ROM_QSTR(MP_QSTR_te_probe), MP_ROM_PTR(&SPIDisplay_te_probe_obj) },
+    { MP_ROM_QSTR(MP_QSTR_te_timeouts), MP_ROM_PTR(&SPIDisplay_te_timeouts_obj) },
 };
 static MP_DEFINE_CONST_DICT(SPIDisplay_locals_dict, SPIDisplay_locals_dict_table);
 
