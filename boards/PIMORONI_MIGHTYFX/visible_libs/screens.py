@@ -371,8 +371,12 @@ class Screen154(Screen):
 class Screen280(Screen):
     WIDTH, HEIGHT = 240, 320
     # No 12-bit row at 75MHz, for the same beam-overtake reason as the 1.54"
+    # The 24MHz rate is 45, not the 46 the two-refresh budget nominally allows:
+    # panel oscillators run the set rate fast by up to ~1.5% (one measured unit
+    # scanned 46.35fps at setting 46, leaving 1.1ms of margin and a marginal
+    # tear), and the step down restores ~2ms of margin on a fast unit.
     PROFILES = {
-        (24_000_000, 12): {"band_lines": 4, "cache_columns": 4, "framerate": 46},
+        (24_000_000, 12): {"band_lines": 4, "cache_columns": 4, "framerate": 45},
         (37_500_000, 16): {"band_lines": 12, "cache_columns": 12, "framerate": 52},
         (37_500_000, 12): {"band_lines": 12, "cache_columns": 12, "framerate": 55},
         (75_000_000, 16): {"band_lines": 12, "cache_columns": 12, "framerate": 53},
