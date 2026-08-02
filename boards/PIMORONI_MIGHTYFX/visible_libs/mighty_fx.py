@@ -32,11 +32,18 @@ class Backlight:
     """A screen backlight on a PWM channel.
 
     Dark from power-on until every screen sharing it has shown a first frame, so no
-    panel shows its power-on contents. After that brightness is the user's, as a
-    duty from 0.0 to 1.0. Screens on one port share the line and so the setting.
+    panel shows its power-on contents. After that brightness is the user's, from 0.0
+    to 1.0 against perceived brightness rather than duty. Screens on one port share
+    the line and so the setting.
     """
 
     FREQUENCY = 1000
+
+    # Duty follows the setting raised to this, since perceived brightness goes as
+    # roughly the cube root of light output. Chosen on the panel against 2.2 and 3.0.
+    # The lowest settings are dark whatever this is, the driver having a floor that
+    # varies between panels, so the bottom of the range is not worth reclaiming.
+    GAMMA = 2.8
 
     def __init__(self, pin):
         self.__pwm = PWM(pin, freq=self.FREQUENCY, duty_u16=0)
@@ -73,7 +80,7 @@ class Backlight:
 
         self.__brightness = value
         self.__lit = True
-        self.__pwm.duty_u16(int(value * 65535 + 0.5))
+        self.__pwm.duty_u16(int(pow(value, self.GAMMA) * 65535 + 0.5))
 
     def off(self):
         self.__pwm.duty_u16(0)

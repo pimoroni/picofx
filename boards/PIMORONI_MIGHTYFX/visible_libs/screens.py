@@ -135,6 +135,11 @@ class ScreenBase:
 
     @property
     def brightness(self):
+        """How bright the backlight looks, from 0.0 to 1.0.
+
+        Against perceived brightness, so equal steps look equal. The lowest
+        settings are dark, the backlight driver having a floor of its own.
+        """
         if self.__backlight is None:
             raise ValueError("this screen has no backlight to set, so its brightness is whatever the assembly ties it to")
 
