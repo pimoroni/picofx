@@ -3,9 +3,11 @@
 # SPDX-License-Identifier: MIT
 #
 # The screens a MightyFX SP/CE port can drive. A screen type is a class carrying
-# its panel's settings, so a new size is a subclass setting four attributes and a
-# one-off is a keyword override. CONTROLLER names the module supplying the bringup
-# sequence, so the chip stays an independent axis from the panel size.
+# its panel's settings, so a new size is a subclass setting a few attributes and a
+# one-off is a keyword override. PROFILES carries the measured tuning per wire, so
+# a construction naming only a baud rate lands on settings profiling chose.
+# CONTROLLER names the module supplying the bringup sequence, so the chip stays an
+# independent axis from the panel size.
 
 from machine import Pin
 
@@ -215,8 +217,16 @@ class Screen(ScreenBase):
     v_sync follows te, and False keeps the signal without waiting on it. bl=False
     declines the port's backlight, for a panel whose own is tied on at the assembly.
 
-    Any class attribute can be overridden by keyword for a one-off, validated
-    against the controller's tables so a bad experiment fails where the mistake is.
+    Settings resolve as: explicit keyword, then the PROFILES row for the
+    (baudrate, bitdepth) pair, then the class constants. With no bitdepth named,
+    the first depth in DEPTHS that has a row for the baud wins, so higher rates
+    default to 16-bit colour and bitdepth=12 buys their last few frames per
+    second. Every resolved value is validated against the controller's tables, so
+    a bad experiment fails where the mistake is.
+
+    band_lines and cache_columns spend SRAM from the same region canvases come
+    from: 2 * band_lines * width * 2 + cache_columns * width * 4 bytes, claimed
+    for as long as the screen lives and reported by display.sram_bytes().
     """
 
     CONTROLLER = st7789      # bringup, framerate and bitdepth code tables, RAMWR
@@ -224,26 +234,43 @@ class Screen(ScreenBase):
     BITDEPTH = 16
     FRAMERATE = 60
     BAUDRATE = 24_000_000
-    BAND_LINES = 16
-    CACHE_COLUMNS = 16
-    CACHE_WIDE_DOUBLE = True
-    SPI_FRAME_BITS = 16
+    BAND_LINES = 12          # With CACHE_COLUMNS, the fallback tuning for a wire
+    CACHE_COLUMNS = 12       # PROFILES does not cover: the measured sweet spot
+    DEPTHS = (16, 12)        # Default bit depth preference, first row wins
+
+    # Measured tuning per (baudrate, bitdepth), from the 21,600-cell sweep in
+    # .claude/results/ANALYSIS.md "Full PSRAM rerun": the band and cache holding
+    # the rotation-90 floor, and the highest controller rate that floor sustains
+    # (capped at the useful 60fps).
+    PROFILES = {}
 
     def __init__(self, port, cs=None, dc=None, te=True, v_sync=None, bl=True,
                  width=None, height=None, bitdepth=None, framerate=None,
-                 baudrate=None, band_lines=None, cache_columns=None,
-                 cache_wide_double=None, spi_frame_bits=None):
+                 baudrate=None, band_lines=None, cache_columns=None):
 
         width = self.WIDTH if width is None else width
         height = self.HEIGHT if height is None else height
-        bitdepth = self.BITDEPTH if bitdepth is None else bitdepth
-        band_lines = self.BAND_LINES if band_lines is None else band_lines
-        cache_columns = self.CACHE_COLUMNS if cache_columns is None else cache_columns
-        cache_wide_double = self.CACHE_WIDE_DOUBLE if cache_wide_double is None else cache_wide_double
-        spi_frame_bits = self.SPI_FRAME_BITS if spi_frame_bits is None else spi_frame_bits
-
-        self.__framerate = self.FRAMERATE if framerate is None else framerate
         self.__baudrate = self.BAUDRATE if baudrate is None else baudrate
+
+        if bitdepth is None:
+            for depth in self.DEPTHS:
+                if (self.__baudrate, depth) in self.PROFILES:
+                    bitdepth = depth
+                    break
+            else:
+                bitdepth = self.BITDEPTH
+
+        # Off-table pairs fall back to the class constants, since profiling a new
+        # panel or wire has to be able to construct anything.
+        profile = self.PROFILES.get((self.__baudrate, bitdepth))
+        if profile is None:
+            profile = {"band_lines": self.BAND_LINES,
+                       "cache_columns": self.CACHE_COLUMNS,
+                       "framerate": self.FRAMERATE}
+
+        band_lines = profile["band_lines"] if band_lines is None else band_lines
+        cache_columns = profile["cache_columns"] if cache_columns is None else cache_columns
+        self.__framerate = profile["framerate"] if framerate is None else framerate
 
         if width is None or height is None:
             raise ValueError(f"{type(self).__name__} sets no WIDTH and HEIGHT. Subclass Screen and set them, or pass them here.")
@@ -284,9 +311,17 @@ class Screen(ScreenBase):
                                         width=width, height=height,
                                         ram_write=controller.RAM_WRITE,
                                         bitdepth=bitdepth, baudrate=self.__baudrate,
-                                        band_lines=band_lines, cache_columns=cache_columns,
-                                        cache_wide_double=cache_wide_double,
-                                        spi_frame_bits=spi_frame_bits)
+                                        band_lines=band_lines, cache_columns=cache_columns)
+
+        # The divider only reaches clk_peri/(2*n), so a request above what the
+        # clock affords comes back rounded down and the profile's tuning would
+        # drive a slower wire than it was measured on. Refuse rather than let a
+        # 37.5MHz row quietly run at 24.
+        achieved = display.baudrate()
+        if achieved < self.__baudrate:
+            raise ValueError(f"this wire reached {achieved} baud of the {self.__baudrate} requested."
+                             f" Raise clk_peri first, machine.freq(150_000_000, 150_000_000),"
+                             f" or request a rate the current clock reaches.")
 
         super().__init__(port, display, width, height, bitdepth, backlight, te_used, v_sync, index)
 
@@ -313,12 +348,30 @@ class Screen(ScreenBase):
 
 class Screen154(Screen):
     WIDTH, HEIGHT = 240, 240
-    BITDEPTH, FRAMERATE = 12, 48
+    # No 16-bit row at 24MHz: that frame outruns the controller's 39fps floor.
+    # This panel shows 240 of the controller's ~320 scan lines, so its tear
+    # budget is about 1.75 refreshes, not 2: at 24MHz the frame fits under
+    # 55.5fps, and 53 is the step below the visually confirmed onset at 55.
+    # No 12-bit row at 75MHz: that wire outruns the panel's scan during each
+    # cache window's run of rows, so the write overtakes the beam near the top
+    # of the frame and no band or cache choice avoids it.
+    PROFILES = {
+        (24_000_000, 12): {"band_lines": 2, "cache_columns": 0, "framerate": 53},
+        (37_500_000, 16): {"band_lines": 12, "cache_columns": 12, "framerate": 60},
+        (37_500_000, 12): {"band_lines": 12, "cache_columns": 12, "framerate": 60},
+        (75_000_000, 16): {"band_lines": 12, "cache_columns": 12, "framerate": 60},
+    }
 
 
 class Screen280(Screen):
     WIDTH, HEIGHT = 240, 320
-    BITDEPTH, FRAMERATE = 12, 42
+    # No 12-bit row at 75MHz, for the same beam-overtake reason as the 1.54"
+    PROFILES = {
+        (24_000_000, 12): {"band_lines": 4, "cache_columns": 4, "framerate": 46},
+        (37_500_000, 16): {"band_lines": 12, "cache_columns": 12, "framerate": 52},
+        (37_500_000, 12): {"band_lines": 12, "cache_columns": 12, "framerate": 55},
+        (75_000_000, 16): {"band_lines": 12, "cache_columns": 12, "framerate": 53},
+    }
 
 
 class Broadcast(ScreenBase):

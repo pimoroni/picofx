@@ -243,6 +243,24 @@ class SPCEPort:
         if self.__backlight is not None:
             self.__backlight.off()
 
+    def release(self):
+        """Hand back the bus's DMA channel and its screens' SRAM claims, which
+        nothing else gives up early.
+
+        There are 16 channels and the bus takes one until it is collected, so a
+        program that builds screens repeatedly runs out and the SDK panics; each
+        screen likewise holds its band and cache SRAM until collected, and the GC
+        heap is PSRAM so collection rarely comes. Screens on this port stop
+        working, reporting rather than transferring, and a second call does
+        nothing.
+        """
+        for screen in self.__screens:
+            screen.display.__del__()
+        self.__screens.clear()
+
+        if self.__bus is not None:
+            self.__bus.__del__()
+
     def broadcast(self, *screens):
         """A group driving several of this port's screens with one frame."""
         if len(screens) < 2:
@@ -421,6 +439,11 @@ class MightyFX:
 
         self.spce_a.backlight_off()
         self.spce_b.backlight_off()
+
+        # Give the DMA channels back rather than waiting for the GC, so a program
+        # that builds screens repeatedly does not exhaust the 16 the chip has
+        self.spce_a.release()
+        self.spce_b.release()
 
         if self.motors_a:
             self.motors_a_en.off()
