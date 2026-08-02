@@ -43,6 +43,13 @@ function ci_pimoroni_picovector_clone {
     git -C "$CI_BUILD_ROOT/picovector-micropython" submodule update --init
 }
 
+# Read from the board's own cmake so a new board needs no list here. An unknown
+# board answers yes, leaving ci_cmake_configure to report the bad name.
+function ci_board_uses_picovector {
+    BOARD_CMAKE="$CI_PROJECT_ROOT/boards/$1/micropython.cmake"
+    [ ! -f "$BOARD_CMAKE" ] || grep -qi picovector "$BOARD_CMAKE"
+}
+
 function ci_pimoroni_aye_arr_clone {
     log_inform "Using Pimoroni Aye Arr $PIMORONI_AYE_ARR_FLAVOUR/$PIMORONI_AYE_ARR_VERSION"
     git clone https://github.com/$PIMORONI_AYE_ARR_FLAVOUR/aye_arr "$CI_BUILD_ROOT/aye_arr"
@@ -85,11 +92,19 @@ function ci_apt_install_build_deps {
     sudo apt update && sudo apt install ccache
 }
 
+# Takes an optional board, which limits the clones to what that board builds
+# with. Without one every dependency is cloned, which is what a local build root
+# shared between boards wants.
 function ci_prepare_all {
+    BOARD=$1
     ci_tools_clone
     ci_micropython_clone
     ci_pimoroni_pico_clone
-    ci_pimoroni_picovector_clone
+    if [ -z "$BOARD" ] || ci_board_uses_picovector "$BOARD"; then
+        ci_pimoroni_picovector_clone
+    else
+        log_inform "Skipping PicoVector: $BOARD does not build with it"
+    fi
     ci_pimoroni_aye_arr_clone
     ci_micropython_build_mpy_cross
 }

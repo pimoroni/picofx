@@ -63,7 +63,7 @@ jobs:
         source $CI_PROJECT_ROOT/ci/micropython.sh
         mkdir -p $CI_BUILD_ROOT
         ci_apt_install_build_deps
-        ci_prepare_all
+        ci_prepare_all ${{ matrix.board }}
 
     - name: "MicroPython: Configure"
       shell: bash
