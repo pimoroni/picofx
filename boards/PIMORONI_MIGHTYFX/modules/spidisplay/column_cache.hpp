@@ -26,21 +26,12 @@ namespace spidisplay {
 
 class ColumnCache {
 public:
-    // Below this many columns per window the copy costs more than the strided
-    // reads it replaces.
-    static constexpr int MIN_COLUMNS = 4;
-
     // storage holds capacity RGBA8888 pixels of SRAM scratch. columns is the
     // source columns a window caches, and so the destination rows it serves.
-    //
-    // Pixel-doubling maps two destination rows to one source column, so a window
-    // of `columns` rows only spans half that many columns and leaves half the
-    // storage idle. wide_double instead makes the window deep enough to fill it,
-    // roughly halving the refreshes for a few percent more copied pixels (window
-    // edges overlap by a column); clear it to profile against the plain depth.
-    ColumnCache(uint32_t *storage, int capacity, int columns, bool wide_double)
-        : storage(storage), capacity(capacity), columns(columns),
-          wide_double(wide_double) {}
+    // A pixel-doubled frame's window spans half that many source columns and
+    // simply refreshes more often.
+    ColumnCache(uint32_t *storage, int capacity, int columns)
+        : storage(storage), capacity(capacity), columns(columns) {}
 
     // Per frame. The cache serves the rotations whose row walk strides by whole
     // source rows, and only pays for itself when the source is slower than SRAM.
@@ -52,14 +43,11 @@ public:
         pixel_shift = pixel_double ? 1 : 0;
         invalidate();
 
-        // Destination rows whose columns fit one window. Doubling halves the
-        // columns a row consumes, so 2n - 1 rows span exactly n columns: the row
-        // after the last would open an n + 1th.
-        window_depth = (pixel_double && wide_double) ? (columns * 2 - 1) : columns;
+        window_depth = columns;
 
         // x_uses_u false means the row walk varies v, the source row: rotation
         // 90 or 270, where u (the source column) varies with dst_y instead.
-        active = slow_source && !d.x_uses_u && columns >= MIN_COLUMNS
+        active = slow_source && !d.x_uses_u && columns >= 1
                  && d.dx0 < d.dx1 && d.dy0 < d.dy1;
         if (!active) {
             return;
@@ -145,7 +133,7 @@ private:
         const int col_min = u_lo >> pixel_shift;
         const int cols = (u_hi >> pixel_shift) - col_min + 1;
 
-        if (cols <= MIN_COLUMNS || src_rows * cols > capacity) {
+        if (src_rows * cols > capacity) {
             return false;
         }
 
@@ -168,7 +156,6 @@ private:
     uint32_t *storage;
     int capacity;         // storage size in RGBA8888 pixels
     int columns;          // Source columns per window
-    bool wide_double;     // Fill the window's columns when pixel-doubling
 
     Descriptor d = {};
     Descriptor cached_d = {};

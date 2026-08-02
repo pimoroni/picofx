@@ -15,34 +15,33 @@
 #include "column_cache.hpp"
 #include "scanline.hpp"
 #include "spidisplay.hpp"
+#include "sram_allocator.hpp"
+
+// The free SRAM the GC never receives, between these linker symbols; C linkage,
+// since spidisplay_bindings.c names the same pair.
+extern "C" {
+extern uint8_t __GcHeapStart[];
+extern uint8_t __GcHeapEnd[];
+}
 
 namespace spidisplay {
-
-// Two static SRAM band buffers: one is streamed by DMA while the CPU converts the
-// next into the other. Sized for MAX_BAND_LINES rows at the widest in-scope panel
-// (240px, 480 bytes/row at RGB565). SRAM is required, since the RP2350 M33 has no
-// SRAM data cache, so DMA sees CPU writes without maintenance.
-static constexpr int MAX_BAND_LINES = 16;
-static constexpr size_t MAX_ROW_BYTES = 240 * 2;
-static constexpr size_t BAND_BYTES = MAX_BAND_LINES * MAX_ROW_BYTES;
-static uint8_t band_a[BAND_BYTES] __attribute__((aligned(4)));
-static uint8_t band_b[BAND_BYTES] __attribute__((aligned(4)));
 
 static constexpr uintptr_t PSRAM_WINDOW = 0x01000000;                   // 16 MB window per CS
 static constexpr uintptr_t PSRAM_CACHED_BASE = XIP_BASE + PSRAM_WINDOW; // Start of PSRAM (0x11000000)
 
-// SRAM scratch for the column cache (see column_cache.hpp). The budget is a pixel
-// count, so a narrower window caches more rows. A destination wider than the
-// widest panel in scope falls back to converting from the source.
-static constexpr int MAX_CACHE_COLUMNS = 16;
-static constexpr int MAX_CACHE_ROWS = 240;
-static constexpr size_t CACHE_PIXELS = MAX_CACHE_ROWS * MAX_CACHE_COLUMNS;
-static uint32_t column_cache_storage[CACHE_PIXELS] __attribute__((aligned(4)));
+// Every display claims its two band buffers and column cache scratch from here at
+// construction. SRAM is required, since the RP2350 M33 has no SRAM data cache, so
+// DMA sees CPU writes without maintenance. Claims come from the top of the region,
+// so the module's buffer() views keep their bottom-up addresses.
+static SRAMAllocator sram;
+static bool sram_bound = false;
 
-
-bool row_fits(int dst_w, int bitdepth) {
-    size_t row_bytes = (bitdepth == 12) ? (size_t)(dst_w * 3 / 2) : (size_t)(dst_w * 2);
-    return dst_w > 0 && row_bytes <= MAX_ROW_BYTES;
+static SRAMAllocator &allocator() {
+    if (!sram_bound) {
+        sram.init(__GcHeapStart, __GcHeapEnd);
+        sram_bound = true;
+    }
+    return sram;
 }
 
 
@@ -101,21 +100,33 @@ void SPIDisplayBus::configure_dma(int bits) {
 
 SPIDisplay::SPIDisplay(SPIDisplayBus *bus, uint cs, uint dc, int te, uint8_t ram_write,
                        int bitdepth, int width, int height, uint32_t baudrate,
-                       int band_lines, int cache_columns, bool cache_wide_double,
-                       int spi_frame_bits)
+                       int band_lines, int cache_columns)
     : bus(bus), cs_mask(1ull << cs), dc_mask(1ull << dc), dc_pin(dc), te_pin(te),
       ram_write_cmd(ram_write),
       fmt(bitdepth == 12 ? RGB444::format : RGB565::format),
       dst_w(width), dst_h(height),
-      cache_columns(cache_columns < 0 ? 0 : (cache_columns > MAX_CACHE_COLUMNS ? MAX_CACHE_COLUMNS : cache_columns)),
-      cache_wide_double(cache_wide_double),
-      spi_frame_bits(spi_frame_bits == 16 ? 16 : 8),
+      cache_columns(cache_columns < 0 ? 0 : (cache_columns > width ? width : cache_columns)),
       requested_baudrate(baudrate) {
     // Banding is settled here, since it turns only on the request and the panel
-    // height. A band always fits a buffer: row_fits() bounds the row to
-    // MAX_ROW_BYTES, and BAND_BYTES is MAX_BAND_LINES of those.
-    int requested = band_lines < 1 ? 1 : (band_lines > MAX_BAND_LINES ? MAX_BAND_LINES : band_lines);
+    // height; the workspace claim below is sized for whatever it settles on.
+    int requested = band_lines < 1 ? 1 : band_lines;
     rows_per_band = requested > dst_h ? dst_h : requested;
+
+    // The two band buffers then the cache scratch, one claim. Rounding the band
+    // to 4 keeps the second buffer and the cache word-aligned. The cache is sized
+    // by width: a window caches up to dst_w source rows of its columns
+    // (column_cache.hpp), so height would under-provision a landscape panel.
+    band_bytes = (rows_per_band * packed_row_bytes(dst_w, bitdepth) + 3) & ~(size_t)3;
+    cache_capacity = this->cache_columns * dst_w;
+    sram_claim_bytes = 2 * band_bytes + (size_t)cache_capacity * 4;
+    sram_claim = allocator().claim(sram_claim_bytes);
+    owns_sram_claim = sram_claim != nullptr;
+    if (!owns_sram_claim) {
+        // The wrapper raises on has_sram(); no GPIO is configured, so the
+        // half-built object's destructor has nothing to undo but the claim.
+        achieved_baudrate = 0;
+        return;
+    }
 
     // One pin each here, since a group is built by copy and claims no GPIO. Value
     // before direction, so the panel's first CS edge is the one selecting it.
@@ -136,6 +147,15 @@ SPIDisplay::SPIDisplay(SPIDisplayBus *bus, uint cs, uint dc, int te, uint8_t ram
 }
 
 SPIDisplay::~SPIDisplay() {
+    // Give the workspace back, guarded so a second destruction is a no-op and a
+    // broadcast copy (which shares its member's claim) releases nothing. Both
+    // owner and sharer drop the pointer, so update() is refused afterwards.
+    if (owns_sram_claim) {
+        allocator().release(sram_claim);
+        owns_sram_claim = false;
+    }
+    sram_claim = nullptr;
+
     // Release CS so the panel is not left holding a half-written frame open. The
     // bus's finaliser may have run already, so this touches nothing but GPIO.
     gpio_set_mask64(cs_mask);
@@ -151,8 +171,7 @@ bool SPIDisplay::compatible_with(const SPIDisplay &other) const {
            && ram_write_cmd == other.ram_write_cmd
            && requested_baudrate == other.requested_baudrate
            && rows_per_band == other.rows_per_band
-           && cache_columns == other.cache_columns
-           && spi_frame_bits == other.spi_frame_bits;
+           && cache_columns == other.cache_columns;
 }
 
 void SPIDisplay::add(const SPIDisplay &other) {
@@ -266,17 +285,19 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
 
     ConvertFn convert = select_convert(fmt, dbl);
 
-    uint8_t *front = band_a;   // converted, DMA in flight
-    uint8_t *back = band_b;    // converted next, while front streams
+    uint8_t *front = sram_claim;               // converted, DMA in flight
+    uint8_t *back = sram_claim + band_bytes;   // converted next, while front streams
 
     const int band_rows = rows_per_band;
 
     // Every band is this size except a possibly-shorter final one
     const size_t full_band_bytes = (size_t)band_rows * d.dst_row_bytes;
 
-    // Wider SPI frames cut the PL022's per-frame idle time, but a transfer has to
-    // be a whole number of frames, which an odd packed row width does not give.
-    const bool wide_frames = spi_frame_bits == 16 && (d.dst_row_bytes % 2) == 0;
+    // Wider SPI frames cut the PL022's per-frame idle time (1.5 clocks between
+    // frames whatever their width, 7.9% of frame time at 8 bits), but a transfer
+    // has to be a whole number of frames, so an odd packed row width - RGB444 at
+    // half the possible widths - falls back to 8-bit frames by itself.
+    const bool wide_frames = (d.dst_row_bytes % 2) == 0;
     const int frame_shift = wide_frames ? 1 : 0;
     bus->use_frame_bits(wide_frames ? 16 : 8);
     const int dma_chan = bus->dma_chan;
@@ -288,7 +309,8 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
 
     // The cache decides here whether it applies, and stays live across bands so a
     // window seeded by one serves the next.
-    ColumnCache cache(column_cache_storage, CACHE_PIXELS, cache_columns, cache_wide_double);
+    ColumnCache cache((uint32_t *)(sram_claim + 2 * band_bytes), cache_capacity,
+                      cache_columns);
     cache.begin(d, convert, dbl, src_in_psram);
 
     last.pre_us = time_us_32() - t_pre;
@@ -370,6 +392,12 @@ extern "C" {
 #include "py/objtuple.h"
 #include "py/runtime.h"
 
+// What the module's buffer()/buffer_size() can offer: the region below the lowest
+// display claim. Defined here so spidisplay_bindings.c needs no C++ types.
+size_t spidisplay_sram_available(void) {
+    return spidisplay::allocator().available();
+}
+
 // The C++ objects live inline in their mp_objs: one fewer allocation and a single
 // lifetime to manage.
 typedef struct _SPIDisplayBus_obj_t {
@@ -378,10 +406,12 @@ typedef struct _SPIDisplayBus_obj_t {
 } SPIDisplayBus_obj_t;
 
 // bus_obj roots the bus against the GC, since the C++ object holds a bare pointer
-// into it.
+// into it. sram_owner_obj roots the member whose SRAM claim a broadcast group
+// shares, so the owner cannot be finalised under the group; none elsewhere.
 typedef struct _SPIDisplay_obj_t {
     mp_obj_base_t base;
     mp_obj_t bus_obj;
+    mp_obj_t sram_owner_obj;
     spidisplay::SPIDisplay display;
 } SPIDisplay_obj_t;
 
@@ -442,6 +472,10 @@ static mp_obj_t SPIDisplayBus_broadcast(size_t n_args, const mp_obj_t *args) {
     SPIDisplay_obj_t *first = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[1]);
     SPIDisplay_obj_t *group = mp_obj_malloc_with_finaliser(SPIDisplay_obj_t, &SPIDisplay_type);
     group->bus_obj = first->bus_obj;
+    // The copy shares the first member's SRAM claim, so root that member for the
+    // group's lifetime. Explicitly deleting the member still dangles the group,
+    // the same misuse as deleting the bus under a display.
+    group->sram_owner_obj = args[1];
     new (&group->display) spidisplay::SPIDisplay(first->display);
 
     for (size_t i = 2; i < n_args; ++i) {
@@ -472,8 +506,7 @@ MP_DEFINE_CONST_OBJ_TYPE(
 static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
                                     size_t n_kw, const mp_obj_t *all_args) {
     enum { ARG_bus, ARG_cs, ARG_dc, ARG_width, ARG_height, ARG_te, ARG_ram_write,
-           ARG_bitdepth, ARG_baudrate, ARG_band_lines, ARG_cache_columns,
-           ARG_cache_wide_double, ARG_spi_frame_bits };
+           ARG_bitdepth, ARG_baudrate, ARG_band_lines, ARG_cache_columns };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_bus, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_cs, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = mp_const_none} },
@@ -486,8 +519,6 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
         { MP_QSTR_baudrate, MP_ARG_INT, {.u_int = 24000000} },
         { MP_QSTR_band_lines, MP_ARG_INT, {.u_int = 16} },
         { MP_QSTR_cache_columns, MP_ARG_INT, {.u_int = 16} },
-        { MP_QSTR_cache_wide_double, MP_ARG_BOOL, {.u_bool = true} },
-        { MP_QSTR_spi_frame_bits, MP_ARG_INT, {.u_int = 16} },
     };
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all_kw_array(n_args, n_kw, all_args,
@@ -500,8 +531,8 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
     if (args[ARG_height].u_int < 1) {
         mp_raise_ValueError(MP_ERROR_TEXT("height must be positive"));
     }
-    if (!spidisplay::row_fits(args[ARG_width].u_int, args[ARG_bitdepth].u_int)) {
-        mp_raise_ValueError(MP_ERROR_TEXT("width too wide for the band buffer at this bit depth"));
+    if (args[ARG_width].u_int < 1) {
+        mp_raise_ValueError(MP_ERROR_TEXT("width must be positive"));
     }
     if (args[ARG_baudrate].u_int < 1) {
         mp_raise_ValueError(MP_ERROR_TEXT("baudrate must be positive"));
@@ -518,24 +549,38 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
     SPIDisplayBus_obj_t *bus = (SPIDisplayBus_obj_t *)MP_OBJ_TO_PTR(args[ARG_bus].u_obj);
     SPIDisplay_obj_t *self = mp_obj_malloc_with_finaliser(SPIDisplay_obj_t, type);
     self->bus_obj = args[ARG_bus].u_obj;
+    self->sram_owner_obj = mp_const_none;
     new (&self->display) spidisplay::SPIDisplay(
         &bus->bus, cs, dc, te, (uint8_t)args[ARG_ram_write].u_int,
         args[ARG_bitdepth].u_int, args[ARG_width].u_int, args[ARG_height].u_int,
         (uint32_t)args[ARG_baudrate].u_int, args[ARG_band_lines].u_int,
-        args[ARG_cache_columns].u_int, args[ARG_cache_wide_double].u_bool,
-        args[ARG_spi_frame_bits].u_int);
+        args[ARG_cache_columns].u_int);
+
+    // A failed claim configured no GPIO, so the orphan's finaliser has nothing to
+    // undo; raise with both sides of the shortfall.
+    if (!self->display.has_sram()) {
+        mp_raise_msg_varg(&mp_type_ValueError,
+            MP_ERROR_TEXT("display workspace needs %u bytes but only %u are free;"
+                          " release old screens (shutdown() then gc.collect())"
+                          " or reduce band_lines/cache_columns"),
+            (unsigned)self->display.sram_bytes(),
+            (unsigned)spidisplay::allocator().available());
+    }
     return MP_OBJ_FROM_PTR(self);
 }
 
 static mp_obj_t SPIDisplay___del__(mp_obj_t self_in) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
-    self->display.~SPIDisplay();  // idempotent: only releases GPIO
+    self->display.~SPIDisplay();  // idempotent: releases the SRAM claim and GPIO
     return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay___del___obj, SPIDisplay___del__);
 
 static mp_obj_t SPIDisplay_command(size_t n_args, const mp_obj_t *args) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[0]);
+    if (self->display.released()) {
+        mp_raise_ValueError(MP_ERROR_TEXT("this screen's bus has been released by shutdown()"));
+    }
 
     uint8_t cmd_byte;
     const uint8_t *cmd;
@@ -591,6 +636,12 @@ static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_ma
                      MP_ARRAY_SIZE(allowed_args), allowed_args, args);
 
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[ARG_self].u_obj);
+    if (self->display.released()) {
+        mp_raise_ValueError(MP_ERROR_TEXT("this screen's bus has been released by shutdown()"));
+    }
+    if (!self->display.has_sram()) {
+        mp_raise_ValueError(MP_ERROR_TEXT("this screen has been deleted and its SRAM released"));
+    }
 
     mp_buffer_info_t buf;
     mp_get_buffer_raise(args[ARG_image].u_obj, &buf, MP_BUFFER_READ);
@@ -665,34 +716,6 @@ static mp_obj_t SPIDisplay_size(mp_obj_t self_in) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_size_obj, SPIDisplay_size);
 
-// Read the pixel-doubled cache window depth, or set it with an argument. Takes
-// effect on the next update().
-static mp_obj_t SPIDisplay_cache_wide_double(size_t n_args, const mp_obj_t *args) {
-    SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[0]);
-    if (n_args > 1) {
-        self->display.set_wide_double(mp_obj_is_true(args[1]));
-    }
-    return mp_obj_new_bool(self->display.wide_double());
-}
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(SPIDisplay_cache_wide_double_obj, 1, 2,
-                                           SPIDisplay_cache_wide_double);
-
-// Read the SPI data frame width for the pixel stream, or set it with an
-// argument. 8 or 16; takes effect on the next update().
-static mp_obj_t SPIDisplay_spi_frame_bits(size_t n_args, const mp_obj_t *args) {
-    SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[0]);
-    if (n_args > 1) {
-        mp_int_t bits = mp_obj_get_int(args[1]);
-        if (bits != 8 && bits != 16) {
-            mp_raise_ValueError(MP_ERROR_TEXT("spi_frame_bits must be 8 or 16"));
-        }
-        self->display.set_frame_bits((int)bits);
-    }
-    return mp_obj_new_int(self->display.frame_bits());
-}
-static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(SPIDisplay_spi_frame_bits_obj, 1, 2,
-                                           SPIDisplay_spi_frame_bits);
-
 // What this panel's rate reached, which is not the request: the divider rounds
 // down. Panels on one port each carry their own.
 static mp_obj_t SPIDisplay_baudrate(mp_obj_t self_in) {
@@ -732,6 +755,15 @@ static mp_obj_t SPIDisplay_band_rows(mp_obj_t self_in) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_band_rows_obj, SPIDisplay_band_rows);
 
+// Bytes of SRAM this display claimed for its band and cache workspace, fixed at
+// construction: what buffer_size() dropped by when it was built. A broadcast
+// group reports its first member's shared claim.
+static mp_obj_t SPIDisplay_sram_bytes(mp_obj_t self_in) {
+    SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
+    return mp_obj_new_int_from_uint(self->display.sram_bytes());
+}
+static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_sram_bytes_obj, SPIDisplay_sram_bytes);
+
 // te_probe(ms=250) -> (period_us, high_us, edges). A short high against the
 // period means the asserted level is vertical blanking.
 static mp_obj_t SPIDisplay_te_probe(size_t n_args, const mp_obj_t *args) {
@@ -756,8 +788,7 @@ static const mp_rom_map_elem_t SPIDisplay_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_update), MP_ROM_PTR(&SPIDisplay_update_obj) },
     { MP_ROM_QSTR(MP_QSTR_size), MP_ROM_PTR(&SPIDisplay_size_obj) },
     { MP_ROM_QSTR(MP_QSTR_band_rows), MP_ROM_PTR(&SPIDisplay_band_rows_obj) },
-    { MP_ROM_QSTR(MP_QSTR_cache_wide_double), MP_ROM_PTR(&SPIDisplay_cache_wide_double_obj) },
-    { MP_ROM_QSTR(MP_QSTR_spi_frame_bits), MP_ROM_PTR(&SPIDisplay_spi_frame_bits_obj) },
+    { MP_ROM_QSTR(MP_QSTR_sram_bytes), MP_ROM_PTR(&SPIDisplay_sram_bytes_obj) },
     { MP_ROM_QSTR(MP_QSTR_baudrate), MP_ROM_PTR(&SPIDisplay_baudrate_obj) },
     { MP_ROM_QSTR(MP_QSTR_stats), MP_ROM_PTR(&SPIDisplay_stats_obj) },
     { MP_ROM_QSTR(MP_QSTR_te_probe), MP_ROM_PTR(&SPIDisplay_te_probe_obj) },

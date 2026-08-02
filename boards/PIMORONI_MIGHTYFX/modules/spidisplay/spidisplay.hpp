@@ -10,8 +10,9 @@
 //
 // command() and update() both block and return with CS high and the shifter
 // drained, so a multiplexer's select line can be set immediately before either.
-// The band and column cache buffers are file-scope, so only one frame streams at a
-// time even across ports.
+// Each display claims its own band and column cache SRAM at construction, so
+// ports share no buffers; update() still blocks, so a single-threaded caller
+// streams one frame at a time and no synchronisation is needed.
 
 #pragma once
 
@@ -45,11 +46,6 @@ struct FrameStats {
     uint32_t stall_us;           // Waiting on DMA
     uint32_t write_start_us;     // time_us_32() at the RAMWR that opened the frame
 };
-
-// Whether one packed destination row of this width fits a band buffer, which are
-// sized for the widest panel in scope. Checked when a display is built, since its
-// dimensions are fixed from then on.
-bool row_fits(int dst_w, int bitdepth);
 
 class SPIDisplay;
 
@@ -91,9 +87,12 @@ public:
     // it is a dedicated input GPIO. bitdepth is 12 (RGB444) or 16 (RGB565).
     // baudrate is this panel's own, asserted against the bus before every transfer,
     // so mixed panel types can share a port. band_lines is destination rows per DMA
-    // band, clamped to the band buffer. cache_columns is source columns per column
-    // cache window (see column_cache.hpp), 0 to disable, and cache_wide_double
-    // deepens it so pixel-doubled frames still fill it.
+    // band, clamped to [1, height]. cache_columns is source columns per column
+    // cache window (see column_cache.hpp), clamped to [0, width], 0 to disable.
+    //
+    // Construction claims 2 * band_lines * row_bytes + cache_columns * width * 4
+    // bytes of SRAM for the band and cache workspace; when the claim fails,
+    // has_sram() is false and the wrapper raises rather than configuring GPIO.
     //
     // Wiring: cs must be unique per panel, being the only signal selecting one. dc
     // may be shared, but not by panels using TE: each breakout ties TE to that line
@@ -103,13 +102,17 @@ public:
     // timing out while the frame still streams.
     SPIDisplay(SPIDisplayBus *bus, uint cs, uint dc, int te, uint8_t ram_write,
                int bitdepth, int width, int height, uint32_t baudrate,
-               int band_lines, int cache_columns, bool cache_wide_double,
-               int spi_frame_bits);
+               int band_lines, int cache_columns);
 
     // A broadcast group starts as a copy of one member and add()s the rest. The
     // copy claims no GPIO, since the members own theirs, and is a snapshot: a
-    // member that later re-rates itself moves only itself.
-    SPIDisplay(const SPIDisplay &member) = default;
+    // member that later re-rates itself moves only itself. It shares the member's
+    // SRAM claim rather than taking its own; only the member releases it, so the
+    // wrapper roots the member for the group's lifetime.
+    SPIDisplay(const SPIDisplay &member) {
+        *this = member;
+        owns_sram_claim = false;
+    }
 
     ~SPIDisplay();
 
@@ -129,16 +132,6 @@ public:
     // through. Fixed for the panel, so the band count is height() over this.
     int band_rows() const { return rows_per_band; }
 
-    // Toggle the pixel-doubled window depth between frames, for profiling.
-    bool wide_double() const { return cache_wide_double; }
-    void set_wide_double(bool value) { cache_wide_double = value; }
-
-    // SPI data frame width for the pixel stream, 8 or 16. The PL022 idles 1.5
-    // clocks between frames whatever their width, so 16-bit frames cut frame time
-    // by 7.9%. Commands are always 8-bit. Takes effect on the next update().
-    int frame_bits() const { return spi_frame_bits; }
-    void set_frame_bits(int value) { spi_frame_bits = (value == 16) ? 16 : 8; }
-
     // Sample the TE line for ms milliseconds, zeroed if it never toggles, so a
     // panel that was never sent TEON reports rather than hanging. Must not be
     // called while a frame is streaming.
@@ -157,6 +150,20 @@ public:
                 uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
                 bool v_sync, uint32_t timeout_us);
 
+    // Whether the bus has given its DMA channel back, which shutdown() does so a
+    // long-lived program can rebuild screens without exhausting the 16 channels.
+    // Every transfer needs the channel, so both command() and update() are refused
+    // once it is gone.
+    bool released() const { return bus->dma_chan < 0; }
+
+    // Whether this display still holds its SRAM claim, which its destructor gives
+    // back. update() needs the workspace, so it is refused once the claim is gone.
+    bool has_sram() const { return sram_claim != nullptr; }
+
+    // Bytes of SRAM this display claimed for its band and cache workspace, fixed
+    // at construction. A broadcast group reports its first member's shared claim.
+    size_t sram_bytes() const { return sram_claim_bytes; }
+
     // Instrumentation from the most recent update().
     FrameStats stats() const { return last; }
 
@@ -166,6 +173,13 @@ public:
 
 private:
     bool te_wait(uint32_t timeout_us);
+
+    SPIDisplay &operator=(const SPIDisplay &) = default;
+
+    // One packed destination row's bytes at this width and depth.
+    static size_t packed_row_bytes(int dst_w, int bitdepth) {
+        return (bitdepth == 12) ? (size_t)(dst_w * 3 / 2) : (size_t)(dst_w * 2);
+    }
 
     // Put the bus back on this panel's rate, which is one compare per transfer for
     // a panel that has the bus to itself.
@@ -186,8 +200,11 @@ private:
     int dst_h;
     int rows_per_band;   // Destination rows per DMA band, clamped at construction
     int cache_columns;
-    bool cache_wide_double;
-    int spi_frame_bits;  // SPI data frame width for pixels (8 or 16)
+    uint8_t *sram_claim = nullptr;  // Band pair then cache storage, one claim
+    size_t sram_claim_bytes = 0;
+    size_t band_bytes = 0;          // One band buffer, rounded up to 4
+    int cache_capacity = 0;         // Cache storage in RGBA8888 pixels
+    bool owns_sram_claim = false;   // Cleared on a broadcast copy, which shares
     uint32_t requested_baudrate;
     uint32_t achieved_baudrate;
     FrameStats last = {};
