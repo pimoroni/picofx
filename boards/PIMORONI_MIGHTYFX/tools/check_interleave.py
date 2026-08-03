@@ -10,10 +10,12 @@
 # background colour across the grid, and out-of-step panels show different
 # colours outright.
 #
-# The PSRAM phases run first, on screens staged 80 rows deep: that is what dual
-# PSRAM at rotation 0 measures wire-bound needing, and it cannot coexist with a
-# full SRAM canvas. The screens are then rebuilt unstaged before the canvas is
-# created, keeping the screens-before-canvas claim order.
+# The PSRAM phases run first, on screens staged as deep as each rotation
+# measures wire-bound needing: 80 rows for rotation 0, and 160 rows with
+# 12-column cache windows for rotation 90, whose conversion runs ~106us/row
+# against the 131.3us wire row. Neither claim can coexist with a full SRAM
+# canvas, so the screens are rebuilt unstaged before the canvas is created,
+# keeping the screens-before-canvas claim order.
 #
 # A diagnostic, not an example, so it is not copied to the board. Run it with
 # mpremote against a board carrying the update_all firmware.
@@ -30,6 +32,8 @@ PHASE_MS = 15_000
 GRID_PITCH = 20
 BACKGROUNDS = (color.rgb(127, 127, 127), color.rgb(34, 177, 76))
 PSRAM_STAGE_LINES = 80
+R90_STAGE_LINES = 160
+R90_CACHE_COLUMNS = 12
 UINT32 = 0xFFFFFFFF
 
 
@@ -48,10 +52,12 @@ def skew_us(a, b):
     return min(d, UINT32 + 1 - d)
 
 
-def build(stage_lines):
+def build(stage_lines, cache_columns=None):
     mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
-    screens = (Screen280(mighty.spce_a, stage_lines=stage_lines),
-               Screen280(mighty.spce_b, stage_lines=stage_lines))
+    screens = (Screen280(mighty.spce_a, stage_lines=stage_lines,
+                         cache_columns=cache_columns),
+               Screen280(mighty.spce_b, stage_lines=stage_lines,
+                         cache_columns=cache_columns))
     return mighty, screens
 
 
@@ -105,10 +111,32 @@ for bg in BACKGROUNDS:
     psram_canvases.append(c)
 
 
+psram_wide = []
+for bg in BACKGROUNDS:
+    c = image(HEIGHT, WIDTH)
+    draw(c, bg)
+    psram_wide.append(c)
+
+
 def sequential_psram(t):
     canvas = psram_canvases[t % 2]
     for screen in screens:
         screen.update(canvas, rotation=0)
+
+
+def sequential_psram_r90(t):
+    canvas = psram_wide[t % 2]
+    for screen in screens:
+        screen.update(canvas, rotation=90)
+
+
+def interleaved_psram_r90(t):
+    canvas = psram_wide[t % 2]
+    for d in displays:
+        d.prepare(canvas, rotation=90)
+    spidisplay.update_all(displays[0], displays[1], v_sync=True)
+    for s in screens:
+        s.drawn()
 
 
 def interleaved_psram(t):
@@ -126,6 +154,19 @@ run_phase("sequential PSRAM rot0: panels flip colours out of step (the fault)",
           screens, sequential_psram)
 run_phase("interleaved PSRAM rot0, staged {}: panels flip together; expect no"
           " tear band".format(PSRAM_STAGE_LINES), screens, interleaved_psram)
+
+# Rotation 90 needs the deeper recipe: rebuild before its phases.
+mighty.shutdown()
+del mighty, screens, displays
+gc.collect()
+mighty, screens = build(R90_STAGE_LINES, R90_CACHE_COLUMNS)
+displays = [s.display for s in screens]
+
+run_phase("sequential PSRAM rot90: tear-free reference, pronounced ping-pong",
+          screens, sequential_psram_r90)
+run_phase("interleaved PSRAM rot90, staged {} cache {}: panels flip together;"
+          " expect no tear band".format(R90_STAGE_LINES, R90_CACHE_COLUMNS),
+          screens, interleaved_psram_r90)
 
 # SRAM phase: unstaged screens rebuilt first, then the canvas, so the canvas
 # sits below the workspace claims.

@@ -235,8 +235,8 @@ class Screen(ScreenBase):
     stage_lines deepens the band buffers into a ring of that many rows, which
     prepare() converts up front so the wire starts with that much of a head
     start. About 80 rows keeps two update_all() screens wire-bound from a PSRAM
-    source at rotation 0; the rotation 90 pair stays conversion-bound at any
-    depth, so it trades a tear band for its higher rate.
+    source at rotation 0; the rotation 90 pair needs stage_lines=160 with
+    cache_columns=12, measured wire-bound at 70KB claimed per screen.
     """
 
     CONTROLLER = st7789      # bringup, framerate and bitdepth code tables, RAMWR
