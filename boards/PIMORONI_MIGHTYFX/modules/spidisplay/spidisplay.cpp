@@ -5,11 +5,13 @@
 // "C" block wraps them as types. Module registration is in spidisplay_bindings.c.
 
 #include <new>
-#include <utility>
 
 #include "hardware/gpio.h"
+#include "hardware/irq.h"
 #include "hardware/regs/addressmap.h"
 #include "hardware/spi.h"
+#include "hardware/sync.h"
+#include "pico/platform.h"
 #include "pico/time.h"
 
 #include "column_cache.hpp"
@@ -30,7 +32,7 @@ namespace spidisplay {
 static constexpr uintptr_t PSRAM_WINDOW = 0x01000000;                   // 16 MB window per CS
 static constexpr uintptr_t PSRAM_CACHED_BASE = XIP_BASE + PSRAM_WINDOW; // Start of PSRAM (0x11000000)
 
-// Every display claims its two band buffers and column cache scratch from here at
+// Every display claims its band ring and column cache scratch from here at
 // construction. SRAM is required, since the RP2350 M33 has no SRAM data cache, so
 // DMA sees CPU writes without maintenance. Claims come from the top of the region,
 // so the module's buffer() views keep their bottom-up addresses.
@@ -45,6 +47,35 @@ static SRAMAllocator &allocator() {
     return sram;
 }
 
+// Kicks are interrupt-driven on DMA_IRQ_2, a line nothing else in this
+// firmware touches (rp2.DMA, PWMCluster and I2S(0) share IRQ 0; I2S(1) has
+// IRQ 1), taken exclusively and refcounted by bus lifetimes. irq_owner maps a
+// channel to its display only while that display is streaming, so the owner
+// table, not FrameState, is what gates the handler. Priority sits above the
+// 0x80 everything else uses: this handler is a few microseconds, the I2S one
+// runs tens, and a kick must not wait behind audio.
+static_assert(NUM_DMA_IRQS > 2, "the interleaver's kicks need DMA_IRQ_2");
+static constexpr uint DMA_IRQ2_INDEX = 2;
+static constexpr uint8_t DMA_IRQ2_PRIORITY = 0x40;
+static SPIDisplay *volatile irq_owner[NUM_DMA_CHANNELS];
+static int irq2_handler_refcount = 0;
+
+// In RAM: flash shares the QMI bus with PSRAM, and an XIP miss during a PSRAM
+// conversion burst would cost the latency this handler exists to remove. Ack
+// before servicing, so a completion of the band kicked below latches fresh.
+static void __not_in_flash_func(dma_irq2_handler)(void) {
+    uint32_t ints = dma_hw->irq_ctrl[DMA_IRQ2_INDEX].ints;
+    dma_hw->irq_ctrl[DMA_IRQ2_INDEX].ints = ints;
+    while (ints != 0) {
+        uint channel = (uint)__builtin_ctz(ints);
+        ints &= ints - 1;
+        SPIDisplay *display = irq_owner[channel];
+        if (display != nullptr) {
+            display->kick_from_isr();
+        }
+    }
+}
+
 
 SPIDisplayBus::SPIDisplayBus(uint spi_index, uint sck, uint mosi, uint baudrate)
     : sck_pin(sck), mosi_pin(mosi), requested_baudrate(baudrate) {
@@ -56,6 +87,16 @@ SPIDisplayBus::SPIDisplayBus(uint spi_index, uint sck, uint mosi, uint baudrate)
 
     dma_chan = dma_claim_unused_channel(true);
     configure_dma(8);
+
+    // A freshly claimed channel can carry a stale completion latch from a
+    // previous owner (rp2.DMA user code, an earlier soft-reset epoch).
+    irq_owner[dma_chan] = nullptr;
+    dma_irqn_acknowledge_channel(DMA_IRQ2_INDEX, dma_chan);
+    if (irq2_handler_refcount++ == 0) {
+        irq_set_exclusive_handler(DMA_IRQ_2, dma_irq2_handler);
+        irq_set_priority(DMA_IRQ_2, DMA_IRQ2_PRIORITY);
+        irq_set_enabled(DMA_IRQ_2, true);
+    }
 }
 
 SPIDisplayBus::~SPIDisplayBus() {
@@ -63,7 +104,15 @@ SPIDisplayBus::~SPIDisplayBus() {
     // Release the channel so re-runs do not exhaust DMA, guarded so a double call
     // is a no-op.
     if (dma_chan >= 0) {
+        // Unroute and disown before the abort, so the handler cannot run for
+        // this channel once teardown starts; ack after, so a completion racing
+        // the abort cannot re-latch behind it.
+        uint32_t save = save_and_disable_interrupts();
+        dma_irqn_set_channel_enabled(DMA_IRQ2_INDEX, dma_chan, false);
+        irq_owner[dma_chan] = nullptr;
+        restore_interrupts_from_disabled(save);
         dma_channel_abort(dma_chan);
+        dma_irqn_acknowledge_channel(DMA_IRQ2_INDEX, dma_chan);
         dma_channel_unclaim(dma_chan);
         dma_chan = -1;
 
@@ -76,6 +125,11 @@ SPIDisplayBus::~SPIDisplayBus() {
         spi_set_format(spi, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
         gpio_init(sck_pin);
         gpio_init(mosi_pin);
+
+        if (--irq2_handler_refcount == 0) {
+            irq_set_enabled(DMA_IRQ_2, false);
+            irq_remove_handler(DMA_IRQ_2, dma_irq2_handler);
+        }
     }
 }
 
@@ -101,7 +155,7 @@ void SPIDisplayBus::configure_dma(int bits) {
 
 SPIDisplay::SPIDisplay(SPIDisplayBus *bus, uint cs, uint dc, int te, uint8_t ram_write,
                        int bitdepth, int width, int height, uint32_t baudrate,
-                       int band_lines, int cache_columns)
+                       int band_lines, int cache_columns, int stage_lines)
     : bus(bus), cs_mask(1ull << cs), dc_mask(1ull << dc), dc_pin(dc), te_pin(te),
       ram_write_cmd(ram_write),
       fmt(bitdepth == 12 ? RGB444::format : RGB565::format),
@@ -113,13 +167,25 @@ SPIDisplay::SPIDisplay(SPIDisplayBus *bus, uint cs, uint dc, int te, uint8_t ram
     int requested = band_lines < 1 ? 1 : band_lines;
     rows_per_band = requested > dst_h ? dst_h : requested;
 
-    // The two band buffers then the cache scratch, one claim. Rounding the band
-    // to 4 keeps the second buffer and the cache word-aligned. The cache is sized
-    // by width: a window caches up to dst_w source rows of its columns
-    // (column_cache.hpp), so height would under-provision a landscape panel.
+    // The staging depth in whole bands plus the reserved in-flight slot, at
+    // least the double buffer and no more than the frame plus that spare.
+    slot_count = stage_lines < 1
+        ? 2 : 1 + (stage_lines + rows_per_band - 1) / rows_per_band;
+    int frame_bands = (dst_h + rows_per_band - 1) / rows_per_band;
+    if (slot_count > frame_bands + 1) {
+        slot_count = frame_bands + 1;
+    }
+    if (slot_count < 2) {
+        slot_count = 2;
+    }
+
+    // The band ring then the cache scratch, one claim. Rounding the band to 4
+    // keeps every slot and the cache word-aligned. The cache is sized by width:
+    // a window caches up to dst_w source rows of its columns (column_cache.hpp),
+    // so height would under-provision a landscape panel.
     band_bytes = (rows_per_band * packed_row_bytes(dst_w, bitdepth) + 3) & ~(size_t)3;
     cache_capacity = this->cache_columns * dst_w;
-    sram_claim_bytes = 2 * band_bytes + (size_t)cache_capacity * 4;
+    sram_claim_bytes = (size_t)slot_count * band_bytes + (size_t)cache_capacity * 4;
     sram_claim = allocator().claim(sram_claim_bytes);
     owns_sram_claim = sram_claim != nullptr;
     if (!owns_sram_claim) {
@@ -148,6 +214,19 @@ SPIDisplay::SPIDisplay(SPIDisplayBus *bus, uint cs, uint dc, int te, uint8_t ram
 }
 
 SPIDisplay::~SPIDisplay() {
+    // A finaliser can run while a channel still names this display; scan by
+    // slot index, since the bus's own finaliser may already have taken it and
+    // this destructor never dereferences bus.
+    for (uint channel = 0; channel < NUM_DMA_CHANNELS; ++channel) {
+        if (irq_owner[channel] == this) {
+            uint32_t save = save_and_disable_interrupts();
+            dma_irqn_set_channel_enabled(DMA_IRQ2_INDEX, channel, false);
+            irq_owner[channel] = nullptr;
+            restore_interrupts_from_disabled(save);
+            dma_irqn_acknowledge_channel(DMA_IRQ2_INDEX, channel);
+        }
+    }
+
     // Give the workspace back, guarded so a second destruction is a no-op and a
     // broadcast copy (which shares its member's claim) releases nothing. Both
     // owner and sharer drop the pointer, so update() is refused afterwards.
@@ -172,7 +251,8 @@ bool SPIDisplay::compatible_with(const SPIDisplay &other) const {
            && ram_write_cmd == other.ram_write_cmd
            && requested_baudrate == other.requested_baudrate
            && rows_per_band == other.rows_per_band
-           && cache_columns == other.cache_columns;
+           && cache_columns == other.cache_columns
+           && slot_count == other.slot_count;
 }
 
 void SPIDisplay::add(const SPIDisplay &other) {
@@ -318,9 +398,6 @@ void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h,
 
     ConvertFn convert = select_convert(fmt, dbl);
 
-    front = sram_claim;               // converted, DMA in flight
-    back = sram_claim + band_bytes;   // converted next, while front streams
-
     // Every band is this size except a possibly-shorter final one
     full_band_bytes = (size_t)rows_per_band * desc.dst_row_bytes;
 
@@ -338,25 +415,29 @@ void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h,
 
     // The cache decides here whether it applies, and stays live across bands so a
     // window seeded by one serves the next.
-    cache = ColumnCache((uint32_t *)(sram_claim + 2 * band_bytes), cache_capacity,
-                        cache_columns);
+    cache = ColumnCache((uint32_t *)(sram_claim + (size_t)slot_count * band_bytes),
+                        cache_capacity, cache_columns);
     cache.begin(desc, convert, dbl, src_in_psram);
 
     last.pre_us = time_us_32() - t_pre;
-
-    uint32_t t_conv = time_us_32();
-
-    cache.convert(front, 0, rows_per_band);
-
-    last.convert_us = time_us_32() - t_conv;
-    last.convert_total_us = last.convert_us;
+    last.convert_total_us = 0;
     last.stall_us = 0;
 
-    rows_converted = rows_per_band;
-    band_fill = 0;
+    rows_converted = 0;
     rows_kicked = 0;
+    bands_kicked = 0;
     stall_pending = false;
     state = FrameState::PREPARED;
+
+    // The first band, then the whole ring: a staged display must carry its
+    // head start out of prepare(), since a TE edge landing right after arm()
+    // would otherwise start the stream with whatever the wait happened to
+    // allow. The ring room rule holds this to band 0 when stage_lines is 0.
+    uint32_t t_conv = time_us_32();
+    step_convert(rows_per_band);
+    last.convert_us = time_us_32() - t_conv;
+    while (step_convert(rows_per_band)) {
+    }
 }
 
 void SPIDisplay::start_stream() {
@@ -377,61 +458,110 @@ void SPIDisplay::start_stream() {
         spi_set_format(bus->spi, 16, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
     }
 
-    // Dispatch the first band
-    dma_channel_set_read_addr(bus->dma_chan, front, false);
-    dma_channel_set_trans_count(bus->dma_chan, full_band_bytes >> frame_shift, true);  // true starts it
+    // Own the channel, then route it, then dispatch the first band, with the
+    // counters and state settled before the trigger so a completion can never
+    // observe pre-kick values. The ack clears any latch a missed teardown left.
+    dma_irqn_acknowledge_channel(DMA_IRQ2_INDEX, bus->dma_chan);
+    irq_owner[bus->dma_chan] = this;
+    dma_irqn_set_channel_enabled(DMA_IRQ2_INDEX, bus->dma_chan, true);
     rows_kicked = rows_per_band;
+    bands_kicked = 1;
     state = FrameState::STREAMING;
+    dma_channel_set_read_addr(bus->dma_chan, slot_ptr(0), false);
+    dma_channel_set_trans_count(bus->dma_chan, full_band_bytes >> frame_shift, true);  // true starts it
+}
+
+// In RAM for the same QMI-contention reason as the handler. Busy means the
+// completion this entry answers was already serviced by a masked thread kick,
+// so touching the registers would corrupt the band in flight.
+void __not_in_flash_func(SPIDisplay::kick_from_isr)() {
+    if (dma_channel_is_busy(bus->dma_chan)) {
+        return;
+    }
+    if (rows_kicked >= dst_h) {
+        return;   // The final band's completion; the polled finish owns CS
+    }
+
+    int next = dst_h - rows_kicked < rows_per_band ? dst_h - rows_kicked
+                                                   : rows_per_band;
+    if (rows_converted - rows_kicked < next) {
+        // The wire is starving; the thread's next kick closes the clock.
+        if (!stall_pending) {
+            stall_pending = true;
+            stall_started_us = time_us_32();
+        }
+        return;
+    }
+
+    int band = bands_kicked;
+    rows_kicked = rows_kicked + next;
+    bands_kicked = band + 1;
+    dma_channel_set_read_addr(bus->dma_chan, slot_ptr(band), false);
+    size_t bytes = next == rows_per_band ? full_band_bytes
+                                         : (size_t)next * desc.dst_row_bytes;
+    dma_channel_set_trans_count(bus->dma_chan, bytes >> frame_shift, true);
 }
 
 bool SPIDisplay::step_convert(int max_rows) {
-    if (state != FrameState::ARMED && state != FrameState::STREAMING) {
+    if (state != FrameState::PREPARED && state != FrameState::ARMED
+        && state != FrameState::STREAMING) {
         return false;
     }
-    if (max_rows < 1 || rows_converted >= dst_h) {
+    if (max_rows < 1) {
         return false;
     }
-    int room = band_capacity() - band_fill;
+    int room = convert_room();
     if (room < 1) {
         return false;
     }
 
     int rows = max_rows < room ? max_rows : room;
+    int write_band = rows_converted / rows_per_band;
+    int fill = rows_converted - write_band * rows_per_band;
     uint32_t t_band = time_us_32();
-    cache.convert(back + (size_t)band_fill * desc.dst_row_bytes, rows_converted, rows);
+    cache.convert(slot_ptr(write_band) + (size_t)fill * desc.dst_row_bytes,
+                  rows_converted, rows);
     last.convert_total_us += time_us_32() - t_band;
-    band_fill += rows;
-    rows_converted += rows;
+    // The counter publishes these rows to the DMA_IRQ_2 handler, so the pixel
+    // stores must not be reordered past it.
+    __compiler_memory_barrier();
+    rows_converted = rows_converted + rows;
     return true;
 }
 
+// The thread-side kick, now the fallback for bands that finish converting
+// while the channel already sits idle; completions themselves kick from the
+// DMA_IRQ_2 handler. The check-ack-kick runs under PRIMASK so the handler
+// cannot interleave with it, and the ack retires the pended completion this
+// idleness came from so a stale handler entry finds nothing.
 bool SPIDisplay::try_kick() {
-    if (state != FrameState::STREAMING || band_fill < 1 || band_fill < band_capacity()) {
+    if (state != FrameState::STREAMING || rows_kicked >= dst_h) {
         return false;
     }
 
-    uint32_t now = time_us_32();
-    if (dma_channel_is_busy(bus->dma_chan)) {
-        // A full band waiting on the channel is the stall the budget arithmetic
-        // cares about; the clock runs from the first sighting to the kick.
-        if (!stall_pending) {
-            stall_pending = true;
-            stall_started_us = now;
-        }
+    uint32_t save = save_and_disable_interrupts();
+    int next = dst_h - rows_kicked < rows_per_band ? dst_h - rows_kicked
+                                                   : rows_per_band;
+    if (rows_converted - rows_kicked < next
+        || dma_channel_is_busy(bus->dma_chan)) {
+        restore_interrupts_from_disabled(save);
         return false;
     }
+    dma_irqn_acknowledge_channel(DMA_IRQ2_INDEX, bus->dma_chan);
+
     if (stall_pending) {
-        last.stall_us += now - stall_started_us;
+        last.stall_us += time_us_32() - stall_started_us;
         stall_pending = false;
     }
 
-    dma_channel_set_read_addr(bus->dma_chan, back, false);
-    size_t bytes = band_fill == rows_per_band ? full_band_bytes
-                                              : (size_t)band_fill * desc.dst_row_bytes;
+    int band = bands_kicked;
+    rows_kicked = rows_kicked + next;
+    bands_kicked = band + 1;
+    dma_channel_set_read_addr(bus->dma_chan, slot_ptr(band), false);
+    size_t bytes = next == rows_per_band ? full_band_bytes
+                                         : (size_t)next * desc.dst_row_bytes;
     dma_channel_set_trans_count(bus->dma_chan, bytes >> frame_shift, true);
-    std::swap(front, back);
-    rows_kicked += band_fill;
-    band_fill = 0;
+    restore_interrupts_from_disabled(save);
     return true;
 }
 
@@ -459,6 +589,14 @@ bool SPIDisplay::finish_if_drained() {
         stall_pending = false;
     }
     last.frame_us = t_end - frame_started_us;
+
+    // Unroute before going IDLE, so the final band's completion, if its
+    // handler entry is still pended, finds no status and no owner.
+    uint32_t save = save_and_disable_interrupts();
+    dma_irqn_set_channel_enabled(DMA_IRQ2_INDEX, bus->dma_chan, false);
+    irq_owner[bus->dma_chan] = nullptr;
+    dma_irqn_acknowledge_channel(DMA_IRQ2_INDEX, bus->dma_chan);
+    restore_interrupts_from_disabled(save);
 
     if (wide_frames) {
         spi_set_format(bus->spi, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
@@ -489,7 +627,14 @@ void SPIDisplay::abort_frame() {
         return;
     }
     if (state == FrameState::STREAMING) {
+        // Unroute and disown before the abort so the handler cannot kick into
+        // it; ack after, so a completion racing the abort cannot re-latch.
+        uint32_t save = save_and_disable_interrupts();
+        dma_irqn_set_channel_enabled(DMA_IRQ2_INDEX, bus->dma_chan, false);
+        irq_owner[bus->dma_chan] = nullptr;
+        restore_interrupts_from_disabled(save);
         dma_channel_abort(bus->dma_chan);
+        dma_irqn_acknowledge_channel(DMA_IRQ2_INDEX, bus->dma_chan);
         while (spi_is_busy(bus->spi)) {
         }
         if (wide_frames) {
@@ -648,7 +793,8 @@ MP_DEFINE_CONST_OBJ_TYPE(
 static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
                                     size_t n_kw, const mp_obj_t *all_args) {
     enum { ARG_bus, ARG_cs, ARG_dc, ARG_width, ARG_height, ARG_te, ARG_ram_write,
-           ARG_bitdepth, ARG_baudrate, ARG_band_lines, ARG_cache_columns };
+           ARG_bitdepth, ARG_baudrate, ARG_band_lines, ARG_cache_columns,
+           ARG_stage_lines };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_bus, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_cs, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = mp_const_none} },
@@ -661,6 +807,7 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
         { MP_QSTR_baudrate, MP_ARG_INT, {.u_int = 24000000} },
         { MP_QSTR_band_lines, MP_ARG_INT, {.u_int = 16} },
         { MP_QSTR_cache_columns, MP_ARG_INT, {.u_int = 16} },
+        { MP_QSTR_stage_lines, MP_ARG_INT, {.u_int = 0} },
     };
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all_kw_array(n_args, n_kw, all_args,
@@ -697,7 +844,7 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
         &bus->bus, cs, dc, te, (uint8_t)args[ARG_ram_write].u_int,
         args[ARG_bitdepth].u_int, args[ARG_width].u_int, args[ARG_height].u_int,
         (uint32_t)args[ARG_baudrate].u_int, args[ARG_band_lines].u_int,
-        args[ARG_cache_columns].u_int);
+        args[ARG_cache_columns].u_int, args[ARG_stage_lines].u_int);
 
     // A failed claim configured no GPIO, so the orphan's finaliser has nothing to
     // undo; raise with both sides of the shortfall.
@@ -915,18 +1062,19 @@ static mp_obj_t SPIDisplay_abort_frame(mp_obj_t self_in) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_abort_frame_obj, SPIDisplay_abort_frame);
 
-// update_all(*displays, v_sync=False, timeout_us=50000, slice_rows=4): stream
+// update_all(*displays, v_sync=False, timeout_us=50000, slice_rows=8): stream
 // every prepared display's frame concurrently, each starting on its own TE
 // edge. The displays must sit on different buses; one bus driving several
-// panels is what broadcast() is for. slice_rows bounds the conversion done
-// between TE and channel checks, so smaller values cut the poll latency at
-// some per-call overhead.
+// panels is what broadcast() is for. Kicks are interrupt-driven, so
+// slice_rows only bounds the TE poll latency; the default keeps one slice's
+// conversion under the TE pulse width so an edge cannot slip past, and
+// smaller values just spend more loop overhead.
 mp_obj_t spidisplay_update_all(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     enum { ARG_v_sync, ARG_timeout_us, ARG_slice_rows };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_v_sync, MP_ARG_KW_ONLY | MP_ARG_BOOL, {.u_bool = false} },
         { MP_QSTR_timeout_us, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 50000} },
-        { MP_QSTR_slice_rows, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 4} },
+        { MP_QSTR_slice_rows, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 8} },
     };
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all(0, NULL, kw_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);

@@ -36,9 +36,10 @@ struct TeProbe {
     uint32_t edges;
 };
 
-// One update()'s worth of instrumentation, all microseconds. convert_total_us
-// against stall_us says where the frame went: conversion is the constraint when the
-// stall is near zero, the wire when it dominates. write_start_us is absolute, so the
+// One update()'s worth of instrumentation, all microseconds. Kicks are
+// interrupt-driven, so stall_us measures the wire genuinely starving for
+// conversion: near zero means the frame was wire-bound, growth means the
+// conversion could not keep the ring fed. write_start_us is absolute, so the
 // gap between two displays is their skew.
 struct FrameStats {
     uint32_t pre_us;             // Descriptor setup
@@ -46,7 +47,8 @@ struct FrameStats {
     uint32_t te_wait_us;
     uint32_t frame_us;           // DC low before RAMWR to CS high after the stream
     uint32_t convert_total_us;   // Every band
-    uint32_t stall_us;           // Waiting on DMA
+    uint32_t stall_us;           // Wire idle: completions that found no band ready,
+                                 // to the recovering kick, plus the final drain
     uint32_t write_start_us;     // time_us_32() at the RAMWR that opened the frame
 };
 
@@ -93,9 +95,14 @@ public:
     // band, clamped to [1, height]. cache_columns is source columns per column
     // cache window (see column_cache.hpp), clamped to [0, width], 0 to disable.
     //
-    // Construction claims 2 * band_lines * row_bytes + cache_columns * width * 4
-    // bytes of SRAM for the band and cache workspace; when the claim fails,
-    // has_sram() is false and the wrapper raises rather than configuring GPIO.
+    // stage_lines is the staging depth: the band buffers form a ring of
+    // ceil(stage_lines / band_lines) slots, at least two, and conversion may run
+    // the whole ring ahead of the wire, which is what lets a slow source convert
+    // ahead during the TE wait and hold a head start against the wire's pace.
+    //
+    // Construction claims that many band slots plus cache_columns * width * 4
+    // bytes of SRAM for the workspace; when the claim fails, has_sram() is false
+    // and the wrapper raises rather than configuring GPIO.
     //
     // Wiring: cs must be unique per panel, being the only signal selecting one. dc
     // may be shared, but not by panels using TE: each breakout ties TE to that line
@@ -105,7 +112,7 @@ public:
     // timing out, te_timeouts() counting it, while the frame still streams.
     SPIDisplay(SPIDisplayBus *bus, uint cs, uint dc, int te, uint8_t ram_write,
                int bitdepth, int width, int height, uint32_t baudrate,
-               int band_lines, int cache_columns);
+               int band_lines, int cache_columns, int stage_lines);
 
     // A broadcast group starts as a copy of one member and add()s the rest. The
     // copy claims no GPIO, since the members own theirs, and is a snapshot: a
@@ -164,8 +171,10 @@ public:
     enum class FrameState : uint8_t { IDLE, PREPARED, ARMED, STREAMING };
     FrameState frame_state() const { return state; }
 
-    // Descriptor, cache seeding and the first band's conversion. Sets the bus
-    // rate and DMA frame width, sends nothing, never waits.
+    // Descriptor, cache seeding, and conversion of the first band plus the
+    // rest of the staged ring, so a staged display carries its head start out
+    // of here whatever the TE phase does. Sets the bus rate and DMA frame
+    // width, sends nothing, never waits on the bus.
     void prepare(const uint8_t *src, int src_w, int src_h,
                  int rotation, int mirror, int pixel_double,
                  uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y);
@@ -188,13 +197,13 @@ public:
     // so an interleaver can tell progress from spinning.
     bool step(int max_rows);
 
-    // Whether a convert slice would find room: rows remain and the back band is
-    // not already full and waiting on the channel.
+    // Whether a convert slice would find room: rows remain and the ring has a
+    // slot the wire is not still reading.
     bool wants_convert() const {
         if (state != FrameState::ARMED && state != FrameState::STREAMING) {
             return false;
         }
-        return rows_converted < dst_h && band_fill < band_capacity();
+        return convert_room() > 0;
     }
 
     bool busy() const { return dma_channel_is_busy(bus->dma_chan); }
@@ -208,6 +217,12 @@ public:
     // DC returned to an output. The panel holds its GRAM pointer, so the next
     // full frame recovers the glass.
     void abort_frame();
+
+    // The DMA_IRQ_2 handler's entry for this display: kick the next converted
+    // band, or timestamp the wire starving. ISR context only, gated by the
+    // channel owner table rather than by state, and it never touches state,
+    // stats or MicroPython.
+    void kick_from_isr();
 
     // The interleaver's no-progress hook, for the host harness to advance mock
     // time.
@@ -240,10 +255,29 @@ public:
     uint32_t baudrate() const { return achieved_baudrate; }
 
 private:
-    // Rows the band being filled can hold: a full band, or the shorter last one.
-    int band_capacity() const {
-        int cap = dst_h - (rows_converted - band_fill);
-        return cap > rows_per_band ? rows_per_band : cap;
+    // The ring slot a band index streams from.
+    uint8_t *slot_ptr(int band_index) const {
+        return sram_claim + (size_t)(band_index % slot_count) * band_bytes;
+    }
+
+    // Rows convertible into the current band right now. One slot stays reserved
+    // for the transfer in flight whether or not the channel is busy: reclaiming
+    // it on the live busy flag lets a whole-band conversion slip in at the very
+    // moment a transfer completes, ahead of the waiting kick, and the wire
+    // starves for that conversion (measured at 82us per band on an SRAM
+    // source, up to a full band's convert on PSRAM).
+    int convert_room() const {
+        if (rows_converted >= dst_h) {
+            return 0;
+        }
+        int write_band = rows_converted / rows_per_band;
+        if (write_band - bands_kicked > slot_count - 2) {
+            return 0;
+        }
+        int band_start = write_band * rows_per_band;
+        int band_size = dst_h - band_start < rows_per_band ? dst_h - band_start
+                                                           : rows_per_band;
+        return band_size - (rows_converted - band_start);
     }
 
     void te_fire(uint32_t now);
@@ -287,27 +321,29 @@ private:
     FrameStats last = {};
     uint32_t te_timeout_count = 0;
 
+    int slot_count = 2;       // Band ring depth, from stage_lines at construction
+
     // The staged frame, living from prepare() until the stream drains. The
-    // pointers rebase into sram_claim each prepare().
+    // volatile members are shared with the DMA_IRQ_2 handler; everything else
+    // is frozen from prepare() until IDLE, and state itself is thread-only
+    // (the handler is gated by the channel owner table instead).
     FrameState state = FrameState::IDLE;
     Descriptor desc = {};
     ColumnCache cache{nullptr, 0, 0};
-    uint8_t *front = nullptr;
-    uint8_t *back = nullptr;
     size_t full_band_bytes = 0;
     bool wide_frames = false;
     int frame_shift = 0;
-    int rows_converted = 0;   // Destination rows converted, front band included
-    int band_fill = 0;        // Rows sitting in back, not yet kicked
-    int rows_kicked = 0;      // Rows handed to the DMA channel
+    volatile int rows_converted = 0;  // Rows converted, published after the pixels
+    volatile int rows_kicked = 0;     // Rows handed to the DMA channel
+    volatile int bands_kicked = 0;    // Kicks so far, naming the next slot to send
     uint32_t frame_started_us = 0;
     bool te_fired = false;
     bool te_high_seen = false;
     bool te_raw_prev = false;
     uint32_t te_started_us = 0;
     uint32_t te_timeout_budget_us = 0;
-    bool stall_pending = false;
-    uint32_t stall_started_us = 0;
+    volatile bool stall_pending = false;      // Wire starving or draining
+    volatile uint32_t stall_started_us = 0;   // When the starvation was seen
 };
 
 }  // namespace spidisplay
