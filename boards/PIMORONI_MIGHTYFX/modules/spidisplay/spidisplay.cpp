@@ -205,6 +205,10 @@ SPIDisplay::SPIDisplay(SPIDisplayBus *bus, uint cs, uint dc, int te, uint8_t ram
     gpio_put(dc, 1);
     gpio_set_dir(dc, GPIO_OUT);
 
+    // A diode-fitted breakout cannot drive the shared line low, so reading TE off
+    // DC needs the pad to restore it. Harmless against an actively driven TE.
+    gpio_pull_down(dc);
+
     if (te_pin >= 0) {
         gpio_init((uint)te_pin);
         gpio_set_dir((uint)te_pin, GPIO_IN);
@@ -279,6 +283,11 @@ void SPIDisplay::arm(bool v_sync, uint32_t timeout_us) {
         return;
     }
     gpio_set_dir_masked64(dc_mask, dc_mask);
+    // Drive DC low before the release below: the data phase leaves it high, and a
+    // released line decaying through the pull-down reads as a completed blanking.
+    // This is also the level the RAMWR command phase needs, and CS is high here so
+    // no panel is listening.
+    gpio_put_masked64(dc_mask, 0);
     te_started_us = time_us_32();
     te_timeout_budget_us = timeout_us;
     te_fired = !v_sync;
@@ -339,6 +348,8 @@ bool SPIDisplay::poll_te() {
 TeProbe SPIDisplay::te_probe(uint32_t ms) {
     uint pin = te_pin >= 0 ? (uint)te_pin : dc_pin;
     if (te_pin < 0) {
+        // The probe starts from a genuine low for the same reason arm() does
+        gpio_put(dc_pin, 0);
         gpio_set_dir(dc_pin, GPIO_IN);
     }
 
