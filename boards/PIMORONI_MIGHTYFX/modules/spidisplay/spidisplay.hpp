@@ -229,6 +229,16 @@ public:
     // from a momentarily full ring, which wants_convert() conflates.
     bool convert_done() const { return rows_converted >= dst_h; }
 
+    // Conversion still owed for the staged frame, priced at the rate prepare()
+    // just measured on these pixels, so the estimate follows the rotation, source
+    // memory and cache width in front of it rather than a table. 0 before a frame
+    // is staged, or once every row is converted.
+    uint32_t convert_debt_us() const;
+
+    // Wall time the staged frame's rows take on the wire, the measured per-band
+    // overhead included.
+    uint32_t wire_window_us() const;
+
     bool busy() const { return dma_channel_is_busy(bus->dma_chan); }
     bool done() const { return state == FrameState::IDLE; }
 

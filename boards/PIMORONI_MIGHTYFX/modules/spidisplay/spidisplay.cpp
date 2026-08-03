@@ -633,6 +633,27 @@ uint32_t SPIDisplay::deadline_us() const {
     return (uint32_t)(((uint64_t)remaining * frame_bits * 1000000u) / achieved_baudrate);
 }
 
+uint32_t SPIDisplay::convert_debt_us() const {
+    int done = rows_converted;
+    int remaining = dst_h - done;
+    if (done <= 0 || remaining <= 0 || last.convert_total_us == 0) {
+        return 0;
+    }
+    return (uint32_t)(((uint64_t)last.convert_total_us * (uint64_t)remaining) / (uint64_t)done);
+}
+
+uint32_t SPIDisplay::wire_window_us() const {
+    if (desc.dst_row_bytes <= 0 || achieved_baudrate == 0) {
+        return 0;
+    }
+    uint64_t bits = (uint64_t)desc.dst_row_bytes * 8u * (uint64_t)dst_h;
+    uint64_t us = (bits * 1000000u) / achieved_baudrate;
+    // Plus the per-band overhead, measured the same on both panel sizes: a 320-row
+    // frame streams in 42,016us against 38,400 of pure bits, and a 240-row one in
+    // 31,512 against 28,800.
+    return (uint32_t)((us * 1094u) / 1000u);
+}
+
 void SPIDisplay::abort_frame() {
     if (state == FrameState::IDLE) {
         return;
@@ -686,10 +707,31 @@ extern "C" {
 #include "py/objtuple.h"
 #include "py/runtime.h"
 
-// What the module's buffer()/buffer_size() can offer: the region below the lowest
-// display claim. Defined here so spidisplay_bindings.c needs no C++ types.
+// What the module's buffer()/buffer_size() can offer: the span between the canvas
+// claims and the display claims. Defined here so spidisplay_bindings.c needs no
+// C++ types.
 size_t spidisplay_sram_available(void) {
     return spidisplay::allocator().available();
+}
+
+// Bytes from the region base to the lowest display claim, which an explicitly
+// placed view is measured against.
+size_t spidisplay_sram_headroom(void) {
+    return spidisplay::allocator().headroom();
+}
+
+// Claim a canvas from the bottom of the region, reporting its offset from the base
+// so the binding can build a view without a pointer. -1 when it does not fit.
+long long spidisplay_sram_claim_low(size_t bytes) {
+    uint8_t *base = spidisplay::allocator().claim_low(bytes);
+    if (base == nullptr) {
+        return -1;
+    }
+    return (long long)spidisplay::allocator().low_offset(base);
+}
+
+void spidisplay_sram_release_low(void) {
+    spidisplay::allocator().release_low();
 }
 
 // The C++ objects live inline in their mp_objs: one fewer allocation and a single
@@ -1123,6 +1165,26 @@ mp_obj_t spidisplay_update_all(size_t n_args, const mp_obj_t *pos_args, mp_map_t
         }
         objs[i] = obj;
         displays[i] = &obj->display;
+    }
+
+    // Will the conversion keep every wire fed? Each display prices its own
+    // remaining rows at the rate prepare() measured on them, so this follows the
+    // real rotation, source memory and cache rather than a table of constants. The
+    // longest wire window is the deadline, every row having to be converted by the
+    // time the last stream drains.
+    uint32_t debt_us = 0;
+    uint32_t window_us = 0;
+    for (size_t i = 0; i < n_args; ++i) {
+        debt_us += displays[i]->convert_debt_us();
+        uint32_t window = displays[i]->wire_window_us();
+        if (window > window_us) {
+            window_us = window;
+        }
+    }
+    if (window_us > 0 && debt_us > window_us) {
+        mp_raise_msg_varg(&mp_type_ValueError,
+                          MP_ERROR_TEXT("conversion cannot keep the wires fed: %u us still to convert against a %u us frame, so it would tear. Build the screens with a deeper stage_lines, or halve the source and pass pixel_double"),
+                          (unsigned)debt_us, (unsigned)window_us);
     }
 
     // Everything that can raise has; the interleaver runs without the GC or NLR.

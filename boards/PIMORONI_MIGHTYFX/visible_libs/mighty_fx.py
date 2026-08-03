@@ -9,7 +9,7 @@ from pimoroni_i2c import PimoroniI2C
 from motor import Motor
 from picofx import RGBLED, DisabledLED
 from audio import WavPlayer
-from spidisplay import SPIDisplayBus
+from spidisplay import SPIDisplayBus, release_buffers
 
 
 # The RP2350 shares its 24 PWM channels between GPIO pairs: pins 16 apart below
@@ -259,7 +259,8 @@ class SPCEPort:
         screen likewise holds its band and cache SRAM until collected, and the GC
         heap is PSRAM so collection rarely comes. Screens on this port stop
         working, reporting rather than transferring, and a second call does
-        nothing.
+        nothing. Canvases outlive this, since the other port's screens may still be
+        drawing to them; shutdown() is what gives them back.
         """
         for screen in self.__screens:
             screen.display.__del__()
@@ -451,6 +452,11 @@ class MightyFX:
         # that builds screens repeatedly does not exhaust the 16 the chip has
         self.spce_a.release()
         self.spce_b.release()
+
+        # Both ports are down, so no screen is drawing from a canvas any more and
+        # the SRAM they claimed can go back. A rebuilt screen then gets the same
+        # addresses instead of the region marching up.
+        release_buffers()
 
         if self.motors_a:
             self.motors_a_en.off()
