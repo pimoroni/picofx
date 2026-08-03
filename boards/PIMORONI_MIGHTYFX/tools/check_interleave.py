@@ -10,9 +10,15 @@
 # background colour across the grid, and out-of-step panels show different
 # colours outright.
 #
+# The PSRAM phases run first, on screens staged 80 rows deep: that is what dual
+# PSRAM at rotation 0 measures wire-bound needing, and it cannot coexist with a
+# full SRAM canvas. The screens are then rebuilt unstaged before the canvas is
+# created, keeping the screens-before-canvas claim order.
+#
 # A diagnostic, not an example, so it is not copied to the board. Run it with
 # mpremote against a board carrying the update_all firmware.
 
+import gc
 import time
 
 import spidisplay
@@ -23,13 +29,8 @@ from screens import Screen280
 PHASE_MS = 15_000
 GRID_PITCH = 20
 BACKGROUNDS = (color.rgb(127, 127, 127), color.rgb(34, 177, 76))
+PSRAM_STAGE_LINES = 80
 UINT32 = 0xFFFFFFFF
-
-mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
-screens = (Screen280(mighty.spce_a), Screen280(mighty.spce_b))
-displays = [s.display for s in screens]
-
-WIDTH, HEIGHT = screens[0].width, screens[0].height
 
 
 def draw(canvas, background):
@@ -42,53 +43,20 @@ def draw(canvas, background):
         canvas.rectangle(0, y, canvas.width, 1)
 
 
-# Rotation 90 swaps the axes, so the SRAM source is drawn turned to fill the
-# panel. SRAM holds one canvas only, so its backgrounds redraw per frame; the
-# PSRAM pair is pre-drawn, one canvas per background.
-sram_canvas = image(HEIGHT, WIDTH, spidisplay.buffer(HEIGHT * WIDTH * 4))
-psram_canvases = []
-for bg in BACKGROUNDS:
-    c = image(WIDTH, HEIGHT)
-    draw(c, bg)
-    psram_canvases.append(c)
-
-
 def skew_us(a, b):
     d = (b - a) & UINT32
     return min(d, UINT32 + 1 - d)
 
 
-def sequential_sram(t):
-    draw(sram_canvas, BACKGROUNDS[t % 2])
-    for screen in screens:
-        screen.update(sram_canvas, rotation=90)
+def build(stage_lines):
+    mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
+    screens = (Screen280(mighty.spce_a, stage_lines=stage_lines),
+               Screen280(mighty.spce_b, stage_lines=stage_lines))
+    return mighty, screens
 
 
-def interleaved_sram(t):
-    draw(sram_canvas, BACKGROUNDS[t % 2])
-    for d in displays:
-        d.prepare(sram_canvas, rotation=90)
-    spidisplay.update_all(displays[0], displays[1], v_sync=True)
-
-
-def interleaved_psram(t):
-    canvas = psram_canvases[t % 2]
-    for d in displays:
-        d.prepare(canvas, rotation=0)
-    spidisplay.update_all(displays[0], displays[1], v_sync=True)
-
-
-PHASES = (
-    ("sequential SRAM rot90: panels flip colours out of step (the fault)",
-     sequential_sram),
-    ("interleaved SRAM rot90: panels flip together; expect no tear band",
-     interleaved_sram),
-    ("interleaved PSRAM rot0: panels together; a wandering tear band is expected",
-     interleaved_psram),
-)
-
-
-def run_phase(label, step_fn):
+def run_phase(label, screens, step_fn):
+    displays = [s.display for s in screens]
     print(label)
     timeouts0 = [d.te_timeouts() for d in displays]
     worst = [{"convert": 0, "stall": 0, "frame": 0, "te": 0} for _ in displays]
@@ -117,6 +85,11 @@ def run_phase(label, step_fn):
     print()
 
 
+# PSRAM phases: staged screens, no SRAM canvas.
+mighty, screens = build(PSRAM_STAGE_LINES)
+displays = [s.display for s in screens]
+
+WIDTH, HEIGHT = screens[0].width, screens[0].height
 ROW_BYTES = WIDTH * 3 // 2 if screens[0].bitdepth == 12 else WIDTH * 2
 print("panels: {}x{} at {}bpp, band {} rows, baud {}".format(
     WIDTH, HEIGHT, screens[0].bitdepth, displays[0].band_rows(),
@@ -125,19 +98,65 @@ print("wire-bound frame: {}us".format(
     HEIGHT * ROW_BYTES * 8 * 1_000_000 // displays[0].baudrate()))
 print()
 
-for label, step_fn in PHASES:
-    run_phase(label, step_fn)
+psram_canvases = []
+for bg in BACKGROUNDS:
+    c = image(WIDTH, HEIGHT)
+    draw(c, bg)
+    psram_canvases.append(c)
+
+
+def sequential_psram(t):
+    canvas = psram_canvases[t % 2]
+    for screen in screens:
+        screen.update(canvas, rotation=0)
+
+
+def interleaved_psram(t):
+    canvas = psram_canvases[t % 2]
+    for d in displays:
+        d.prepare(canvas, rotation=0)
+    spidisplay.update_all(displays[0], displays[1], v_sync=True)
+    # update_all() bypasses ScreenBase.update(), whose drawn() is what lets
+    # the backlight turn on once real content is up.
+    for s in screens:
+        s.drawn()
+
+
+run_phase("sequential PSRAM rot0: panels flip colours out of step (the fault)",
+          screens, sequential_psram)
+run_phase("interleaved PSRAM rot0, staged {}: panels flip together; expect no"
+          " tear band".format(PSRAM_STAGE_LINES), screens, interleaved_psram)
+
+# SRAM phase: unstaged screens rebuilt first, then the canvas, so the canvas
+# sits below the workspace claims.
+mighty.shutdown()
+del mighty, screens, displays
+gc.collect()
+mighty, screens = build(0)
+displays = [s.display for s in screens]
+sram_canvas = image(HEIGHT, WIDTH, spidisplay.buffer(HEIGHT * WIDTH * 4))
+
+
+def interleaved_sram(t):
+    draw(sram_canvas, BACKGROUNDS[t % 2])
+    for d in displays:
+        d.prepare(sram_canvas, rotation=90)
+    spidisplay.update_all(displays[0], displays[1], v_sync=True)
+    for s in screens:
+        s.drawn()
+
+
+run_phase("interleaved SRAM rot90: panels flip together; expect no tear band",
+          screens, interleaved_sram)
 
 # command() refusal and abort_frame() recovery.
-displays[0].prepare(sram_canvas)
+displays[0].prepare(sram_canvas, rotation=90)
 try:
     displays[0].command(0x2C)
     print("command on staged frame: NOT refused (wrong)")
 except ValueError as e:
     print("command on staged frame refused:", e)
 displays[0].abort_frame()
-# The SRAM canvas is drawn turned, so the recovery frame names its rotation or
-# the panel shows a centred crop with background bands top and bottom.
 screens[0].update(sram_canvas, rotation=90)
 print("abort_frame then update: ok")
 print("done")

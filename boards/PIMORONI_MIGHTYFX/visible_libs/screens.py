@@ -230,8 +230,13 @@ class Screen(ScreenBase):
     a bad experiment fails where the mistake is.
 
     band_lines and cache_columns spend SRAM from the same region canvases come
-    from: 2 * band_lines * width * 2 + cache_columns * width * 4 bytes, claimed
+    from: at least two band buffers plus cache_columns * width * 4 bytes, claimed
     for as long as the screen lives and reported by display.sram_bytes().
+    stage_lines deepens the band buffers into a ring of that many rows, which
+    prepare() converts up front so the wire starts with that much of a head
+    start. About 80 rows keeps two update_all() screens wire-bound from a PSRAM
+    source at rotation 0; the rotation 90 pair stays conversion-bound at any
+    depth, so it trades a tear band for its higher rate.
     """
 
     CONTROLLER = st7789      # bringup, framerate and bitdepth code tables, RAMWR
@@ -251,7 +256,8 @@ class Screen(ScreenBase):
 
     def __init__(self, port, cs=None, dc=None, te=True, v_sync=None, bl=True,
                  width=None, height=None, bitdepth=None, framerate=None,
-                 baudrate=None, band_lines=None, cache_columns=None):
+                 baudrate=None, band_lines=None, cache_columns=None,
+                 stage_lines=0):
 
         width = self.WIDTH if width is None else width
         height = self.HEIGHT if height is None else height
@@ -316,7 +322,8 @@ class Screen(ScreenBase):
                                         width=width, height=height,
                                         ram_write=controller.RAM_WRITE,
                                         bitdepth=bitdepth, baudrate=self.__baudrate,
-                                        band_lines=band_lines, cache_columns=cache_columns)
+                                        band_lines=band_lines, cache_columns=cache_columns,
+                                        stage_lines=stage_lines)
 
         # The divider only reaches clk_peri/(2*n), so a request above what the
         # clock affords comes back rounded down and the profile's tuning would
