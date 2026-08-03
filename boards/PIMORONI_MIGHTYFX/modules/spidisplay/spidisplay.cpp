@@ -1073,19 +1073,22 @@ static mp_obj_t SPIDisplay_abort_frame(mp_obj_t self_in) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_abort_frame_obj, SPIDisplay_abort_frame);
 
-// update_all(*displays, v_sync=False, timeout_us=50000, slice_rows=8): stream
-// every prepared display's frame concurrently, each starting on its own TE
-// edge. The displays must sit on different buses; one bus driving several
-// panels is what broadcast() is for. Kicks are interrupt-driven, so
-// slice_rows only bounds the TE poll latency; the default keeps one slice's
-// conversion under the TE pulse width so an edge cannot slip past, and
-// smaller values just spend more loop overhead.
+// update_all(*displays, v_sync=False, timeout_us=50000, slice_rows=8,
+// hysteresis_rows=-1): stream every prepared display's frame concurrently,
+// each starting on its own TE edge. The displays must sit on different buses;
+// one bus driving several panels is what broadcast() is for. Kicks are
+// interrupt-driven, so slice_rows only bounds the TE poll latency; the
+// default keeps one slice's conversion under the TE pulse width so an edge
+// cannot slip past, and smaller values just spend more loop overhead.
+// hysteresis_rows is the free ring room a display needs to take the convert
+// burst from another (interleaver.hpp); negative selects half its ring.
 mp_obj_t spidisplay_update_all(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
-    enum { ARG_v_sync, ARG_timeout_us, ARG_slice_rows };
+    enum { ARG_v_sync, ARG_timeout_us, ARG_slice_rows, ARG_hysteresis_rows };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_v_sync, MP_ARG_KW_ONLY | MP_ARG_BOOL, {.u_bool = false} },
         { MP_QSTR_timeout_us, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 50000} },
         { MP_QSTR_slice_rows, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = 8} },
+        { MP_QSTR_hysteresis_rows, MP_ARG_KW_ONLY | MP_ARG_INT, {.u_int = -1} },
     };
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)];
     mp_arg_parse_all(0, NULL, kw_args, MP_ARRAY_SIZE(allowed_args), allowed_args, args);
@@ -1125,7 +1128,8 @@ mp_obj_t spidisplay_update_all(size_t n_args, const mp_obj_t *pos_args, mp_map_t
     // Everything that can raise has; the interleaver runs without the GC or NLR.
     spidisplay::interleave(displays, (int)n_args, args[ARG_v_sync].u_bool,
                            (uint32_t)args[ARG_timeout_us].u_int,
-                           (int)args[ARG_slice_rows].u_int);
+                           (int)args[ARG_slice_rows].u_int,
+                           (int)args[ARG_hysteresis_rows].u_int);
 
     for (size_t i = 0; i < n_args; ++i) {
         objs[i]->staged_image = mp_const_none;

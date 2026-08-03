@@ -206,6 +206,29 @@ public:
         return convert_room() > 0;
     }
 
+    // Converted rows the wire has not yet been handed: the margin a burst on
+    // another display drains at wire rate.
+    int staged_rows() const { return rows_converted - rows_kicked; }
+
+    // Rows the ring holds ahead of the wire when full, the reserved slot out.
+    int stage_capacity_rows() const { return (slot_count - 1) * rows_per_band; }
+
+    // Ring rows a conversion burst could fill right now. The kick count is
+    // read once, so a concurrent kick only understates the room.
+    int stage_free_rows() const {
+        int kicked = bands_kicked;
+        int free_rows = (kicked + slot_count - 1) * rows_per_band - rows_converted;
+        int remaining = dst_h - rows_converted;
+        if (free_rows > remaining) {
+            free_rows = remaining;
+        }
+        return free_rows < 0 ? 0 : free_rows;
+    }
+
+    // Whether every row has been converted, distinguishing a finished source
+    // from a momentarily full ring, which wants_convert() conflates.
+    bool convert_done() const { return rows_converted >= dst_h; }
+
     bool busy() const { return dma_channel_is_busy(bus->dma_chan); }
     bool done() const { return state == FrameState::IDLE; }
 
