@@ -16,6 +16,36 @@ import spidisplay
 import st7789
 
 
+def update_pair(first, second, v_sync=None):
+    """Stream a frame to two screens at once, each starting on its own TE edge.
+
+    Both screens must have prepare()d a frame, sit on different SP/CE ports since
+    one port is one stream, and agree on reserve. Presenting a pair this way takes
+    about the time one of them alone would, instead of the two in turn, and the
+    panels change together.
+
+    v_sync=None waits on the tearing-effect signal when both screens were built
+    for it.
+    """
+    if first is second:
+        raise ValueError("update_pair needs two different screens")
+    if first.port is second.port:
+        raise ValueError("update_pair needs a screen on each SP/CE port, since one port is one stream; broadcast() shares a port")
+    # One reservation is shared out across the pair, so it leaves both screens short
+    # rather than protecting the one that made it.
+    if first.reserve != second.reserve:
+        raise ValueError("update_pair needs both screens built with the same reserve, since a reservation is shared out across the pair: set it on both, or on neither")
+
+    if v_sync is None:
+        v_sync = first.v_sync and second.v_sync
+    elif v_sync and not (first.v_sync and second.v_sync):
+        raise ValueError("v_sync needs both screens created with te, since each waits on its own panel's tearing-effect signal")
+
+    spidisplay.update_all(first.display, second.display, v_sync=v_sync)
+    first.drawn()
+    second.drawn()
+
+
 def __code_for(table, value, what):
     """Look a panel setting up in one of the controller's code tables."""
     try:
@@ -24,6 +54,32 @@ def __code_for(table, value, what):
         items = [str(key) for key in table]
         expected = items[0] if len(items) == 1 else ", ".join(items[:-1]) + f", or {items[-1]}"
         raise ValueError(f"{value} is not a valid {what}. Expected {expected}.") from e
+
+
+class Reserve:
+    """What a screen sets its share of the fast SRAM aside for.
+
+    CANVAS_SPACE claims only what a frame needs, leaving the region for canvas().
+    FULL_SIZE_IMAGES claims enough for two screens to each convert their own
+    full-size image out of the GC heap at once, which is the one case that cannot
+    keep up otherwise; a full-size canvas no longer fits alongside it, half-size
+    ones still do. Drawing to canvas(), or halving an image and passing
+    pixel_double, needs neither.
+
+    It buys a frame that does not tear, not a faster one: the conversion moves into
+    prepare(), ahead of the frame, so the wire never starves but the pair takes
+    longer to come round. Measured on a 240x240 pair, 61ms a pair against 54ms
+    untorn at rotation 0, and 76ms against 66ms at rotation 90.
+
+    Both screens of a pair need the same value, which update_pair() checks: a
+    reservation is shared out across the pair, so one on its own leaves both short
+    rather than protecting the screen that made it.
+
+    FULL_SIZE_IMAGES is only available where a screen type has measured a recipe for
+    the wire, in its FULL_IMAGE_RESERVE, and refuses elsewhere rather than guessing.
+    """
+    CANVAS_SPACE = 0
+    FULL_SIZE_IMAGES = 1
 
 
 class ScreenMux:
@@ -86,7 +142,7 @@ class ScreenBase:
     Not built directly: construct a Screen subclass, or ask a port to broadcast().
     """
 
-    def __init__(self, port, display, width, height, bitdepth, backlight, te, v_sync, index, members=None):
+    def __init__(self, port, display, width, height, bitdepth, backlight, te, v_sync, index, reserve, members=None):
         self.__port = port
         self.__display = display
         self.__width = width
@@ -96,7 +152,9 @@ class ScreenBase:
         self.__te = te
         self.__v_sync = v_sync
         self.__index = index
+        self.__reserve = reserve
         self.__members = members
+        self.__canvases = {}
 
     @property
     def port(self):
@@ -134,6 +192,11 @@ class ScreenBase:
         return self.__v_sync
 
     @property
+    def reserve(self):
+        """What this screen's share of the fast SRAM was set aside for."""
+        return self.__reserve
+
+    @property
     def brightness(self):
         """How bright the backlight looks, from 0.0 to 1.0.
 
@@ -152,16 +215,34 @@ class ScreenBase:
 
         self.__backlight.brightness = value
 
-    def canvas(self, offset=0):
-        """An SRAM-backed image sized to this screen.
+    def canvas(self, width=None, height=None, offset=None):
+        """An SRAM-backed image, by default sized to this screen.
 
         The GC heap is PSRAM, so a plain image() is read over XIP and costs about
-        twice as much per pixel to convert. offset places the canvas within the SRAM
-        region, for a second buffer that has to coexist with the first.
+        twice as much per pixel to convert. Each size is claimed once from this
+        screen's own part of the region and handed back on every later call, so two
+        screens never share pixels.
+
+        Half the panel's width and height, drawn with pixel_double=True, is a
+        quarter of the bytes: two screens can hold one each where one full-size
+        canvas already fills the region. offset places a canvas by hand instead,
+        outside the claims.
         """
-        nbytes = self.__width * self.__height * 4    # RGBA8888
-        return picovector.image(self.__width, self.__height,
-                                spidisplay.buffer(nbytes, offset))
+        width = self.__width if width is None else width
+        height = self.__height if height is None else height
+        if width < 1 or height < 1:
+            raise ValueError("a canvas needs a positive width and height")
+
+        nbytes = width * height * 4    # RGBA8888
+        if offset is not None:
+            return picovector.image(width, height, spidisplay.buffer(nbytes, offset))
+
+        canvas = self.__canvases.get((width, height))
+        if canvas is None:
+            canvas = picovector.image(width, height, spidisplay.buffer(nbytes))
+            self.__canvases[(width, height)] = canvas
+
+        return canvas
 
     def drawn(self):
         """Note that a frame has landed, which the backlight waits for."""
@@ -180,6 +261,11 @@ class ScreenBase:
         self.__select()
         self.__display.command(command, data)
 
+    def __check_rotation(self, rotation):
+        r_index = rotation // 90
+        if r_index < 0 or r_index > 3 or rotation % 90:     # Modulo check ensures rotation is exactly a multipe of 90
+            raise ValueError(f"{rotation} is not a valid angle. Expected 0, 90, 180, or 270.")
+
     @micropython.native
     def update(self, image, rotation=0, mirror=False, v_sync=None, bg_color=picovector.color.black, pixel_double=False, offset=None):
         # v_sync=None follows the screen, so only a frame that differs says so
@@ -193,10 +279,7 @@ class ScreenBase:
 
         bg = bg_color.p & 0xffffffff
 
-        r_index = rotation // 90
-        if r_index < 0 or r_index > 3 or rotation % 90:     # Modulo check ensures rotation is exactly a multipe of 90
-            raise ValueError(f"{rotation} is not a valid angle. Expected 0, 90, 180, or 270.")
-
+        self.__check_rotation(rotation)
         self.__select()
 
         # The C module handles the transform, transfer, and TE wait
@@ -206,6 +289,25 @@ class ScreenBase:
                               pixel_double=1 if pixel_double else 0,
                               bg=bg, offset=offset, v_sync=v_sync)
         self.drawn()
+
+    @micropython.native
+    def prepare(self, image, rotation=0, mirror=False, bg_color=picovector.color.black, pixel_double=False, offset=None):
+        """Stage a frame for update_pair(), converting as far ahead as it can.
+
+        Placement is per screen, so a pair can differ in rotation, mirroring and
+        offset to suit how each panel is mounted. Nothing reaches the panel until
+        update_pair() runs, and a staged frame refuses command() until it does.
+        """
+        bg = bg_color.p & 0xffffffff
+
+        self.__check_rotation(rotation)
+        self.__select()
+
+        self.__display.prepare(image,
+                               rotation=rotation,
+                               mirror=1 if mirror else 0,
+                               pixel_double=1 if pixel_double else 0,
+                               bg=bg, offset=offset)
 
 
 class Screen(ScreenBase):
@@ -229,14 +331,18 @@ class Screen(ScreenBase):
     second. Every resolved value is validated against the controller's tables, so
     a bad experiment fails where the mistake is.
 
+    reserve says what the screen's share of the fast SRAM is for, and is the setting
+    to reach for rather than the three below: Reserve.FULL_SIZE_IMAGES buys the one
+    case that cannot keep up otherwise, two screens each converting their own
+    full-size image out of the GC heap through update_pair().
+
     band_lines and cache_columns spend SRAM from the same region canvases come
     from: at least two band buffers plus cache_columns * width * 4 bytes, claimed
     for as long as the screen lives and reported by display.sram_bytes().
     stage_lines deepens the band buffers into a ring of that many rows, which
-    prepare() converts up front so the wire starts with that much of a head
-    start. About 80 rows keeps two update_all() screens wire-bound from a PSRAM
-    source at rotation 0; the rotation 90 pair needs stage_lines=160 with
-    cache_columns=12, measured wire-bound at 70KB claimed per screen.
+    prepare() converts up front so the wire starts with that much of a head start.
+    Any of the three overrides what reserve chose, for profiling a new panel or
+    wire.
     """
 
     CONTROLLER = st7789      # bringup, framerate and bitdepth code tables, RAMWR
@@ -248,6 +354,14 @@ class Screen(ScreenBase):
     CACHE_COLUMNS = 12       # PROFILES does not cover: the measured sweet spot
     DEPTHS = (16, 12)        # Default bit depth preference, first row wins
 
+    # What Reserve.FULL_SIZE_IMAGES asks for, per (baudrate, bitdepth) as PROFILES
+    # is: the shallowest ring measured to hold a pair wire-bound while both convert
+    # a full-size heap image, and the cache width that ring needs. A wire with no
+    # row here refuses the reserve rather than guessing, since the sums move with
+    # the wire: a faster one shortens the row the conversion has to keep up with,
+    # so a deeper ring is not always the answer.
+    FULL_IMAGE_RESERVE = {}
+
     # Measured tuning per (baudrate, bitdepth), from the 21,600-cell sweep in
     # .claude/results/ANALYSIS.md "Full PSRAM rerun": the band and cache holding
     # the rotation-90 floor, and the highest controller rate that floor sustains
@@ -256,8 +370,8 @@ class Screen(ScreenBase):
 
     def __init__(self, port, cs=None, dc=None, te=True, v_sync=None, bl=True,
                  width=None, height=None, bitdepth=None, framerate=None,
-                 baudrate=None, band_lines=None, cache_columns=None,
-                 stage_lines=0):
+                 baudrate=None, reserve=Reserve.CANVAS_SPACE, band_lines=None,
+                 cache_columns=None, stage_lines=None):
 
         width = self.WIDTH if width is None else width
         height = self.HEIGHT if height is None else height
@@ -279,9 +393,24 @@ class Screen(ScreenBase):
                        "cache_columns": self.CACHE_COLUMNS,
                        "framerate": self.FRAMERATE}
 
+        # reserve picks the measured recipe; a named band, cache or stage still wins,
+        # so a profiling run can construct anything.
+        if reserve == Reserve.FULL_SIZE_IMAGES:
+            recipe = self.FULL_IMAGE_RESERVE.get((self.__baudrate, bitdepth))
+            if recipe is None:
+                raise ValueError(f"Reserve.FULL_SIZE_IMAGES has no measured recipe for {type(self).__name__} at {self.__baudrate}Hz {bitdepth}-bit. Measure one, or name stage_lines and cache_columns.")
+
+            if stage_lines is None:
+                stage_lines = recipe["stage_lines"]
+            if cache_columns is None:
+                cache_columns = recipe["cache_columns"]
+        elif reserve != Reserve.CANVAS_SPACE:
+            raise ValueError(f"{reserve} is not a valid reserve. Expected Reserve.CANVAS_SPACE, or Reserve.FULL_SIZE_IMAGES.")
+
         band_lines = profile["band_lines"] if band_lines is None else band_lines
         cache_columns = profile["cache_columns"] if cache_columns is None else cache_columns
         self.__framerate = profile["framerate"] if framerate is None else framerate
+        stage_lines = 0 if stage_lines is None else stage_lines
 
         if width is None or height is None:
             raise ValueError(f"{type(self).__name__} sets no WIDTH and HEIGHT. Subclass Screen and set them, or pass them here.")
@@ -335,7 +464,7 @@ class Screen(ScreenBase):
                              f" Raise clk_peri first, machine.freq(150_000_000, 150_000_000),"
                              f" or request a rate the current clock reaches.")
 
-        super().__init__(port, display, width, height, bitdepth, backlight, te_used, v_sync, index)
+        super().__init__(port, display, width, height, bitdepth, backlight, te_used, v_sync, index, reserve)
 
         port.__register(self)
 
@@ -374,6 +503,14 @@ class Screen154(Screen):
         (75_000_000, 16): {"band_lines": 12, "cache_columns": 12, "framerate": 60},
     }
 
+    # Measured on two of these panels: 120 rows is the shallowest ring holding a
+    # pair wire-bound at either rotation, 80 still starving rotation 90 by 5.8ms.
+    # No column cache, which changes the rotation-90 conversion by 4us a row and the
+    # frame not at all, so it is 11.5KB a screen for nothing here.
+    FULL_IMAGE_RESERVE = {
+        (24_000_000, 12): {"stage_lines": 120, "cache_columns": 0},
+    }
+
 
 class Screen280(Screen):
     WIDTH, HEIGHT = 240, 320
@@ -387,6 +524,18 @@ class Screen280(Screen):
         (37_500_000, 16): {"band_lines": 12, "cache_columns": 12, "framerate": 52},
         (37_500_000, 12): {"band_lines": 12, "cache_columns": 12, "framerate": 55},
         (75_000_000, 16): {"band_lines": 12, "cache_columns": 12, "framerate": 53},
+    }
+
+    # Measured on two of these panels: a pair converting full-size heap images runs
+    # 42.0ms wire-bound against 46.4ms unreserved, claiming 70,560B each. The cache
+    # width earns its space here, rotation 90 converting at 148us a row without one
+    # against a 131us wire row; 4 columns is the least that keeps up and 12 also buys
+    # 6% on the pair rate. The faster wires have no row because they are not merely
+    # unmeasured: shortening the wire row below the pair's conversion rate makes the
+    # frame conversion-bound whatever the ring holds, so those want their own answer
+    # rather than a deeper ring.
+    FULL_IMAGE_RESERVE = {
+        (24_000_000, 12): {"stage_lines": 160, "cache_columns": 12},
     }
 
 
@@ -420,4 +569,5 @@ class Broadcast(ScreenBase):
         # The backlight is the first member's, since screens on a port share the one
         # PWM. TE is never available, the members' scans being unsynchronised.
         super().__init__(port, display, first.width, first.height, first.bitdepth,
-                         first.backlight, False, False, None, members=tuple(screens))
+                         first.backlight, False, False, None, first.reserve,
+                         members=tuple(screens))
