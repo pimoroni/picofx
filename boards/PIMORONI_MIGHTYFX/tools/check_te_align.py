@@ -66,7 +66,11 @@ def restore_te(screen):
 
 
 def signed_mod(delta, period):
-    d = (delta & UINT32) % period
+    # The difference folds to signed 32 bits before the period reduction: 2**32 is
+    # not a multiple of a TE period, so reducing an unsigned wrap biases every
+    # negative skew by (2**32 % period), 130-odd lines at these rates.
+    d = ((delta + 0x80000000) & UINT32) - 0x80000000
+    d %= period
     if d > period // 2:
         d -= period
     return d
@@ -93,13 +97,14 @@ dither_hi = max(2, int(margin * DITHER_FRACTION))
 code_norm = st7789.FRAME_RATE_CONTROL[f_screen.framerate]
 code_slow = st7789.FRAME_RATE_CONTROL[f_screen.framerate - 1]
 
-# The rate quantum sets the steady skew floor: one slow-code frame retards
-# the follower by more lines than the whole TESCAN walk range holds.
+# The rate quantum sets the steady skew floor. A panel latches its frame length at
+# a frame boundary, so one slow-code frame retards the follower by the whole extra
+# period it ran for, and nothing finer is available to the loop.
 f_screen.command(st7789.REG_FRCTRL2, code_slow)
 time.sleep_ms(100)
 period_slow = f_disp.te_probe(500)[0]
 f_screen.command(st7789.REG_FRCTRL2, code_norm)
-quantum_lines = (period_slow - periods[fi]) * 2 / s_line
+quantum_lines = (period_slow - periods[fi]) / s_line
 
 print("leader {} period {}us, follower {} period {}us".format(
     labels[li], periods[li], labels[fi], periods[fi]))
