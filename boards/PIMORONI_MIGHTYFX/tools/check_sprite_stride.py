@@ -1,40 +1,38 @@
-# Checks whether update() honours a sub-view's row stride.
+# Reports the pitch of picovector's sub-views, and shows them on the glass.
 #
-# picovector's window() and sprite() return a view that shares the parent's pixels:
-# the bounds narrow to the sub-rect but the row stride stays the parent's, so
-# successive rows of the view are parent_width * 4 bytes apart. update() is not told
-# that. make_descriptor takes the width the object reports and computes
-# src_row_bytes = src_w * 4 (scanline.hpp:384), so it walks the view as if its rows
-# were contiguous and samples progressively further along the parent.
+# picovector's window(), and sprite() on the sheet that spritesheet() returns, give
+# back a view that shares the parent's pixels: the bounds narrow to the sub-rect but
+# the row stride stays the parent's, so successive rows of the view are
+# parent_width * 4 bytes apart. update() reads that pitch off the image, so a
+# narrowed view draws correctly; the byte-exact proof of that is
+# check_sheet_sources.py's ring readback, not anything here.
 #
-# It stays inside the parent's buffer, so this is a wrong picture rather than a
-# fault, and the length guard passes because the reported buffer size narrows to the
-# sub-rect the same way the dimensions do.
+# A cell whose width equals its parent's has a pitch that already matches a
+# contiguous walk, which is why the two full-width controls below must agree
+# whatever else does not.
 #
-# The arithmetic half is the verdict, and needs no screen and no eyes:
-# image(w, h, mv) over the view's own memoryview is exactly update()'s assumption, a
-# contiguous walk of the same bytes from the same origin. Reading it back through
-# picovector's own get() reports what the kernel would sample, and comparing that
-# against the view itself, which does honour the stride, needs no prediction about
-# what either one should contain.
+# The arithmetic half classifies each view, and needs no screen and no eyes:
+# image(w, h, mv) over the view's own memoryview is a contiguous walk of the same
+# bytes from the same origin, so comparing it against the view itself, which does
+# honour the stride, reports whether the view is strided and by how much. That is
+# a fact about window() and sprite(), not about update().
 #
-# The visual half is a demonstration, not the verdict, and how legible it is depends
-# entirely on the view's width.
+# The visual half shows what a stride error would look like, and how legible one
+# is depends entirely on the view's width.
 #
-# A half-width view drifts by exactly one row per row: model row r starts where true
-# row r/2 does, in one half of the parent or the other, so it reads two cells in
-# alternation at a one-row pitch. That is the defect, but at that pitch the panel
-# blends the pair into a flat colour: red against green reads as yellow, yellow
-# against blue reads as white. Easy to mistake for a solid frame, and it is the
-# reason the drift case below exists.
+# A stride error walks a half-width view one row per row into the neighbouring
+# cell, reading two cells in alternation at a one-row pitch, which the panel
+# blends into a flat colour: red against green reads as yellow, yellow against
+# blue reads as white. Easy to mistake for a solid frame, and it is the reason
+# the drift case below exists.
 #
-# The drift case is two pixels narrower than its parent, so each row starts two
-# pixels earlier and vertical bars visibly lean. That is the same defect at a pitch
-# the eye can resolve.
+# The drift case is two pixels narrower than its parent, so a stride error starts
+# each row two pixels early and vertical bars visibly lean: the same error at a
+# pitch the eye can resolve.
 #
-# A view as wide as its parent is the control: its stride already equals its width,
-# so it must come out clean whether or not the defect is present. If that one
-# disagrees too, the cause is not the stride.
+# A view as wide as its parent is the control: its pitch already equals a
+# contiguous walk's, so it must come out clean whatever else does not. If that
+# one is wrong too, the cause is not the stride.
 #
 # A diagnostic, not an example, so it is not copied to the board. Copy it across to
 # run it.
@@ -235,12 +233,26 @@ def views_of(sheet, bars):
     ]
 
     # sprite() is the same sub-view by another route, and the one a user reaches for.
+    # A sheet is its own object, so the grid comes back rather than being set on the
+    # image; take what it returns.
     try:
-        sheet.spritesheet(COLS, ROWS)
-        cases.append(("sprite (0, 0)", sheet.sprite(0, 0), True,
+        grid = sheet.spritesheet(COLS, ROWS)
+        cases.append(("sprite (0, 0)", grid.sprite(0, 0), True,
                       "solid red, as for cell (0, 0)"))
+        cases.append(("sprite (1, 1)", grid.sprite(1, 1), True,
+                      "solid yellow, as for cell (1, 1)"))
     except BUILD_ERRORS as e:
-        print(f"  sprite (0, 0): N/A  {type(e).__name__}: {e}")
+        print(f"  sprite: N/A  {type(e).__name__}: {e}")
+        tally["N/A"] += 1
+
+    # The second control, and the case a user can actually ship today: one column of
+    # full-width cells, so a cell's stride is its own width and the inference holds.
+    try:
+        stack = sheet.spritesheet(1, ROWS)
+        cases.append(("sprite, 1 column of full-width cells", stack.sprite(0, 0), False,
+                      "the sheet's top band, and this one must be right either way"))
+    except BUILD_ERRORS as e:
+        print(f"  sprite, 1 column: N/A  {type(e).__name__}: {e}")
         tally["N/A"] += 1
     return cases
 
@@ -271,7 +283,8 @@ elif tally["FAIL"]:
           " as described above before reading anything into the other cases.")
 else:
     print("The narrowed views disagree with a contiguous walk of their bytes and the"
-          " full-width control does not, which is the stride being inferred from the"
-          " width rather than read from the image.")
+          " full-width control does not, so window() and sprite() hand out strided"
+          " views. update() reads each view's pitch off the image; whether it then"
+          " converts the right bytes is check_sheet_sources.py's readback.")
 
 mighty.shutdown()

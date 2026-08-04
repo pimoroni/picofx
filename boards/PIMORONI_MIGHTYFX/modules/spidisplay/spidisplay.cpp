@@ -184,8 +184,8 @@ SPIDisplay::SPIDisplay(SPIDisplayBus *bus, uint cs, uint dc, int te, uint8_t ram
     // a window caches up to dst_w source rows of its columns (column_cache.hpp),
     // so height would under-provision a landscape panel.
     band_bytes = (rows_per_band * packed_row_bytes(dst_w, bitdepth) + 3) & ~(size_t)3;
-    cache_capacity = this->cache_columns * dst_w;
-    sram_claim_bytes = (size_t)slot_count * band_bytes + (size_t)cache_capacity * 4;
+    cache_capacity = this->cache_columns * dst_w * 4;
+    sram_claim_bytes = (size_t)slot_count * band_bytes + (size_t)cache_capacity;
     sram_claim = allocator().claim(sram_claim_bytes);
     owns_sram_claim = sram_claim != nullptr;
     if (!owns_sram_claim) {
@@ -505,7 +505,7 @@ TePhase SPIDisplay::te_phase(SPIDisplay &first, SPIDisplay &second,
     return result;
 }
 
-void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h,
+void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h, int src_stride,
                          int rotation, int mirror, int pixel_double,
                          uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y) {
     uint32_t t_pre = time_us_32();
@@ -516,7 +516,8 @@ void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h,
 
     Transform t = map_transform(rotation, mirror);
     desc = make_descriptor(src, src_w, src_h, dst_w, dst_h, t, dbl, bg, fmt,
-                           centred_x, off_x, centred_y, off_y);
+                           centred_x, off_x, centred_y, off_y,
+                           src_stride, RGBA8888::bytes);
 
     ConvertFn convert = select_convert(fmt, dbl);
 
@@ -795,11 +796,11 @@ void SPIDisplay::abort_frame() {
     state = FrameState::IDLE;
 }
 
-void SPIDisplay::update(const uint8_t *src, int src_w, int src_h,
+void SPIDisplay::update(const uint8_t *src, int src_w, int src_h, int src_stride,
                         int rotation, int mirror, int pixel_double,
                         uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
                         bool v_sync, uint32_t timeout_us) {
-    prepare(src, src_w, src_h, rotation, mirror, pixel_double,
+    prepare(src, src_w, src_h, src_stride, rotation, mirror, pixel_double,
             bg, centred_x, off_x, centred_y, off_y);
     arm(v_sync, timeout_us);
     while (!poll_te()) {
@@ -1080,7 +1081,7 @@ typedef struct _FrameArgs {
     SPIDisplay_obj_t *self;
     mp_obj_t image;
     mp_buffer_info_t buf;
-    int src_w, src_h;
+    int src_w, src_h, src_stride;
     mp_int_t rotation, mirror, pixel_double;
     uint32_t bg;
     bool centred_x, centred_y;
@@ -1123,21 +1124,29 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
     mp_get_buffer_raise(args[ARG_image].u_obj, &buf, MP_BUFFER_READ);
     int src_w = mp_obj_get_int(mp_load_attr(args[ARG_image].u_obj, MP_QSTR_width));
     int src_h = mp_obj_get_int(mp_load_attr(args[ARG_image].u_obj, MP_QSTR_height));
+    int src_stride = mp_obj_get_int(mp_load_attr(args[ARG_image].u_obj, MP_QSTR_stride));
 
     // An empty or negative extent converts to a background-filled frame, since the
     // covered box comes out empty and no source pixel is read. Report it instead.
     if (src_w < 1 || src_h < 1) {
         mp_raise_ValueError(MP_ERROR_TEXT("image width and height must be positive"));
     }
+    // A palettised source is one byte of palette index per pixel, which the
+    // kernel would read as RGBA8888. Name the cause before the stride and
+    // length checks reject it blaming the geometry.
+    if (mp_load_attr(args[ARG_image].u_obj, MP_QSTR_palette) != mp_const_none) {
+        mp_raise_ValueError(MP_ERROR_TEXT("palette images are not supported; load_into() an RGBA8888 image"));
+    }
 
-    // The kernel walks the source by the strides these dimensions imply, so a
-    // buffer shorter than they claim is read out of bounds and an empty one locks
-    // the board. Do not delete this as dead: it is inert only because picovector
-    // reports an image's nominal size and discards the length of the buffer it
-    // wrapped, so buf.len is already src_w * src_h * 4 and this compares a number
-    // with itself. It costs one comparison and works as soon as a source reports a
-    // real length.
-    size_t src_bytes = (size_t)src_w * (size_t)src_h * spidisplay::RGBA8888::bytes;
+    if (src_stride < src_w * spidisplay::RGBA8888::bytes) {
+        mp_raise_ValueError(MP_ERROR_TEXT("image stride is narrower than its width at RGBA8888"));
+    }
+
+    // The kernel walks src_h rows of the pitch the image reports, so a buffer
+    // shorter than that is read out of bounds and an empty one locks the board.
+    // The bound is exactly the extent a strided view reports for itself.
+    size_t src_bytes = (size_t)(src_h - 1) * (size_t)src_stride
+                     + (size_t)src_w * spidisplay::RGBA8888::bytes;
     if (buf.len < src_bytes) {
         mp_raise_ValueError(MP_ERROR_TEXT("image buffer is shorter than its dimensions at RGBA8888"));
     }
@@ -1177,6 +1186,7 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
     out->buf = buf;
     out->src_w = src_w;
     out->src_h = src_h;
+    out->src_stride = src_stride;
     out->rotation = args[ARG_rotation].u_int;
     out->mirror = args[ARG_mirror].u_int;
     out->pixel_double = args[ARG_pixel_double].u_int;
@@ -1192,7 +1202,7 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
 static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     FrameArgs a;
     SPIDisplay_parse_frame(n_args, pos_args, kw_args, true, &a);
-    a.self->display.update((const uint8_t *)a.buf.buf, a.src_w, a.src_h,
+    a.self->display.update((const uint8_t *)a.buf.buf, a.src_w, a.src_h, a.src_stride,
         a.rotation, a.mirror, a.pixel_double,
         a.bg, a.centred_x, a.off_x, a.centred_y, a.off_y,
         a.v_sync, a.timeout_us);
@@ -1208,7 +1218,7 @@ static MP_DEFINE_CONST_FUN_OBJ_KW(SPIDisplay_update_obj, 2, SPIDisplay_update);
 static mp_obj_t SPIDisplay_prepare(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     FrameArgs a;
     SPIDisplay_parse_frame(n_args, pos_args, kw_args, false, &a);
-    a.self->display.prepare((const uint8_t *)a.buf.buf, a.src_w, a.src_h,
+    a.self->display.prepare((const uint8_t *)a.buf.buf, a.src_w, a.src_h, a.src_stride,
         a.rotation, a.mirror, a.pixel_double,
         a.bg, a.centred_x, a.off_x, a.centred_y, a.off_y);
     a.self->staged_image = a.image;

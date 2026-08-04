@@ -26,12 +26,12 @@ namespace spidisplay {
 
 class ColumnCache {
 public:
-    // storage holds capacity RGBA8888 pixels of SRAM scratch. columns is the
-    // source columns a window caches, and so the destination rows it serves.
-    // A pixel-doubled frame's window spans half that many source columns and
+    // storage holds capacity_bytes of SRAM scratch. columns is the source
+    // columns a window caches, and so the destination rows it serves. A
+    // pixel-doubled frame's window spans half that many source columns and
     // simply refreshes more often.
-    ColumnCache(uint32_t *storage, int capacity, int columns)
-        : storage(storage), capacity(capacity), columns(columns) {}
+    ColumnCache(uint32_t *storage, int capacity_bytes, int columns)
+        : storage(storage), capacity_bytes(capacity_bytes), columns(columns) {}
 
     // Per frame. The cache serves the rotations whose row walk strides by whole
     // source rows, and only pays for itself when the source is slower than SRAM.
@@ -133,15 +133,16 @@ private:
         const int col_min = u_lo >> pixel_shift;
         const int cols = (u_hi >> pixel_shift) - col_min + 1;
 
-        if (src_rows * cols > capacity) {
+        const size_t row_bytes = (size_t)cols * d.src_bytes;
+        if ((size_t)src_rows * row_bytes > (size_t)capacity_bytes) {
             return false;
         }
 
-        const size_t row_bytes = (size_t)cols * RGBA8888::bytes;
         const uint8_t *src = d.src + (size_t)src_row_min * d.src_row_bytes
-                                   + (size_t)col_min * RGBA8888::bytes;
+                                   + (size_t)col_min * d.src_bytes;
+        uint8_t *dst = (uint8_t *)storage;
         for (int i = 0; i < src_rows; ++i) {
-            std::memcpy(&storage[(size_t)i * cols], src, row_bytes);
+            std::memcpy(dst + (size_t)i * row_bytes, src, row_bytes);
             src += d.src_row_bytes;
         }
 
@@ -154,7 +155,7 @@ private:
     }
 
     uint32_t *storage;
-    int capacity;         // storage size in RGBA8888 pixels
+    int capacity_bytes;   // storage size in bytes
     int columns;          // Source columns per window
 
     Descriptor d = {};

@@ -79,7 +79,8 @@ struct Descriptor {
     int dy0, dy1;        // Covered destination rows [dy0, dy1)
     int ua, ub, uc;      // Canvas u = ua*dst_x + ub*dst_y + uc
     int va, vb, vc;      // Canvas v = va*dst_x + vb*dst_y + vc
-    int src_row_bytes;   // src_w * source bytes/pixel
+    int src_row_bytes;   // Source pitch in bytes, row to row
+    int src_bytes;       // Source bytes per pixel
     int step_x;          // Source pointer advance (bytes) per source pixel along a row
     bool x_uses_u;       // The row walk varies u (else v)
     bool x_adv;          // Advance parity for the row walk (pixel-double only)
@@ -313,11 +314,14 @@ inline ConvertFn select_convert(int fmt, bool dbl) {
 }
 
 // Fill a descriptor for a whole-frame conversion. Each axis is centred, or
-// placed by its off_x/off_y top-left in the upright canvas.
+// placed by its off_x/off_y top-left in the upright canvas. src_row_bytes is
+// the source pitch, which exceeds src_w * src_bytes when the source is a
+// strided view into a wider image; 0 means contiguous.
 inline Descriptor make_descriptor(const uint8_t *src, int src_w, int src_h,
                                   int dst_w, int dst_h, const Transform &t,
                                   bool dbl, uint32_t bg, int fmt,
-                                  bool centred_x, int off_x, bool centred_y, int off_y) {
+                                  bool centred_x, int off_x, bool centred_y, int off_y,
+                                  int src_row_bytes, int src_bytes) {
     int scale = dbl ? 2 : 1;
     int region_w = src_w * scale;   // Source extent in canvas pixels
     int region_h = src_h * scale;
@@ -381,14 +385,15 @@ inline Descriptor make_descriptor(const uint8_t *src, int src_w, int src_h,
     d.dst_h = dst_h;
     d.ua = ua; d.ub = ub; d.uc = uc;
     d.va = va; d.vb = vb; d.vc = vc;
-    d.src_row_bytes = src_w * RGBA8888::bytes;
+    d.src_row_bytes = src_row_bytes > 0 ? src_row_bytes : src_w * src_bytes;
+    d.src_bytes = src_bytes;
 
     // dst_x is bound by whichever coordinate varies with it, and supplies the
     // per-pixel source stride; dst_y is bound by the other coordinate.
     if (ua != 0) {
         range(ua, uc, region_w, W, d.dx0, d.dx1);
         d.x_uses_u = true;
-        d.step_x = (ua > 0 ? 1 : -1) * RGBA8888::bytes;
+        d.step_x = (ua > 0 ? 1 : -1) * src_bytes;
         d.x_adv = (ua > 0);
     } else {
         range(va, vc, region_h, W, d.dx0, d.dx1);

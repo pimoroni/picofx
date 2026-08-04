@@ -174,10 +174,10 @@ public:
     void command(const uint8_t *cmd, size_t cmd_len,
                  const uint8_t *data, size_t data_len);
 
-    // Convert and stream a whole frame. src is RGBA8888. Each axis is centred,
-    // or placed by its off_x/off_y top-left. Blocks until the frame has left
-    // over SPI.
-    void update(const uint8_t *src, int src_w, int src_h,
+    // Convert and stream a whole frame. src is RGBA8888, src_stride its pitch
+    // in bytes (0 means contiguous). Each axis is centred, or placed by its
+    // off_x/off_y top-left. Blocks until the frame has left over SPI.
+    void update(const uint8_t *src, int src_w, int src_h, int src_stride,
                 int rotation, int mirror, int pixel_double,
                 uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
                 bool v_sync, uint32_t timeout_us);
@@ -193,7 +193,7 @@ public:
     // rest of the staged ring, so a staged display carries its head start out
     // of here whatever the TE phase does. Sets the bus rate and DMA frame
     // width, sends nothing, never waits on the bus.
-    void prepare(const uint8_t *src, int src_w, int src_h,
+    void prepare(const uint8_t *src, int src_w, int src_h, int src_stride,
                  int rotation, int mirror, int pixel_double,
                  uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y);
 
@@ -365,7 +365,7 @@ private:
     uint8_t *sram_claim = nullptr;  // Band pair then cache storage, one claim
     size_t sram_claim_bytes = 0;
     size_t band_bytes = 0;          // One band buffer, rounded up to 4
-    int cache_capacity = 0;         // Cache storage in RGBA8888 pixels
+    int cache_capacity = 0;         // Cache storage in bytes
     bool owns_sram_claim = false;   // Cleared on a broadcast copy, which shares
     uint32_t requested_baudrate;
     uint32_t achieved_baudrate;
