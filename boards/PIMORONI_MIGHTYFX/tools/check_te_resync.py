@@ -25,12 +25,16 @@
 #      TESCAN loop, so the settled skew and te_timeouts say whether resumption is
 #      clean. A resync is one measurement and one scheduled excursion, the cost an
 #      application would pay; the capture after it only reports where it landed.
+#   4  Recovery curve: the loop handed a deliberate error, either sign, counting the
+#      frames it needs to hide it. Measures the reach absorbable() only guesses at,
+#      and prices what a resync is worth against letting the loop cope.
 #
 # Both halves of a resync sit between frames. A staged frame owns DC, so command()
 # refuses while one is staged and the capture cannot read the TE lines either.
 #
-# A diagnostic, not an example, so it is not copied to the board. Run it with
-# mpremote, with eyes on both panels for phases 2 and 3.
+# Set SCREEN to the panel type on the ports. A diagnostic, not an example, so it is
+# not copied to the board. Run it with mpremote, with eyes on both panels for phases
+# 2 and 3.
 
 import time
 
@@ -38,9 +42,10 @@ import st7789
 from machine import Pin
 from mighty_fx import SPCE, MightyFX
 from picovector import color
-from screens import Screen280, update_pair
+from screens import Screen154, Screen280, update_pair
 
-LINE_SLOTS = 344            # scanned lines per refresh including porches
+SCREEN = Screen154          # or Screen280: the panel type on the ports
+LINE_SLOTS = 344            # the controller's scan slots per refresh, porches included
 DEPTHS = (1, 2, 4, 6)       # FRCTRL2 steps a panel moves from its nominal rate
 MAX_FRAMES = 3              # frames of excursion a plan may spend on one panel
 ACCURACY_LINES = 5          # close enough to hand over, so a plan stops paying for better
@@ -53,6 +58,23 @@ ALIGN_FRAMES = 15           # fine-loop frames before a trial's pause
 RESUME_FRAMES = 20          # fine-loop frames after a resync
 CAPTURE_EDGES = 2           # TE falls per panel per capture, so about two periods
 SCHEDULE_TIMEOUT_MS = 250   # a schedule spans at most MAX_FRAMES + 1 periods
+# Out to half a period either way, since what a resync is worth is the recovery it
+# replaces, and half a period is the worst a pause can leave.
+RECOVERY_LINES = (-170, -120, -80, -40, -25, -15, -8, -3, 0, 5, 12, 20, 30, 45, 80,
+                  120, 170)
+RECOVERY_CAP = 60           # frames to give the loop before calling it unsettled
+SETTLED_FACTOR = 1.5        # of the loop's own floor, which is where it lives anyway
+# A handover error the fine loop hides without looking worse than it usually does.
+# Its own worst frame is about 1,800us on both panel types, and the phase 4 curve has
+# recovery peaking at the error plus one frame of drift, so the bound is that worst
+# frame less the drift: about 22 lines either way rather than the 28 the peak alone
+# would suggest.
+ABSORB_US = 1430
+# Aim a little negative. Drift carries a negative error back through zero at about six
+# lines a frame and costs no correction, where the same error positive has drift
+# working against the walk: the phase 4 curve settles -7 lines in one frame and +7 in
+# five. This keeps the whole aim scatter on the cheap side of zero.
+TARGET_US = -300
 
 # The fine loop, as check_te_align.py measured it
 DEADBAND_LINES = 2
@@ -67,8 +89,10 @@ BACKGROUNDS = (color.rgb(127, 127, 127), color.rgb(34, 177, 76))
 UINT32 = 0xFFFFFFFF
 TICKS_MASK = 0x3FFFFFFF     # ticks_us range, for comparing against the stats clock
 
+assert SCREEN in (Screen154, Screen280)
+
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
-screens = (Screen280(mighty.spce_a), Screen280(mighty.spce_b))
+screens = (SCREEN(mighty.spce_a), SCREEN(mighty.spce_b))
 dc_pins = (Pin(MightyFX.SPCE_A_DC_PIN), Pin(MightyFX.SPCE_B_DC_PIN))
 labels = ("SP/CE A", "SP/CE B")
 for dc in dc_pins:
@@ -182,14 +206,15 @@ margin = LINE_SLOTS + HEIGHT - frames_us[fi] / s_line
 n_hi = max(4, int(margin * SLIP_FRACTION))
 dither_hi = max(2, int(margin * DITHER_FRACTION))
 nominal = RATES.index(f_screen.framerate)
-target_lines = n_hi // 2        # land inside the walk, so the fine loop has room either way
+target_lines = TARGET_US / s_line
 deepest = min(max(DEPTHS), nominal, len(RATES) - 1 - nominal)
 depths = tuple(d for d in DEPTHS if d <= deepest)
 
 print("leader {} period {}us, follower {} period {}us".format(
     labels[li], periods[li], labels[fi], periods[fi]))
-print("follower margin {:.1f} lines: walk resets at {}, resync targets {}".format(
-    margin, n_hi, target_lines))
+print("follower margin {:.1f} lines: walk resets at {}, resync targets {:+.1f},"
+      " handover bound +-{:.0f}".format(
+          margin, n_hi, target_lines, ABSORB_US / s_line))
 print("nominal rate {}fps, {} steps slower and {} faster available, testing depths {}".format(
     RATES[nominal], nominal, len(RATES) - 1 - nominal, depths))
 print()
@@ -201,13 +226,15 @@ def need_rate(p_follower, p_leader):
 
 
 def absorbable(need):
-    """Can the fine loop take it from here?
+    """Can the fine loop take it from here, without looking worse than it usually does?
 
-    TESCAN only delays, so the error has to be positive. The walk holds n_hi lines
-    and moves by MAX_STEP a frame, so anything inside their sum is gone in a frame
-    or two, which is where check_te_align.py's own corrected worst case sits.
+    From the phase 4 curve, recovery peaks at about the handover error, so an error
+    whose skew is inside the loop's own worst frame costs nothing visible. That bound
+    is symmetric: a negative error is the cheap one, closed by drift alone in
+    |error| / drift frames and needing no correction, where a positive one has drift
+    working against the walk.
     """
-    return 1 <= need <= n_hi + MAX_STEP
+    return abs(need) * s_line <= ABSORB_US
 
 
 def measure_need_pins():
@@ -302,17 +329,22 @@ def calibrate_periods():
     return settled
 
 
-def calibrate_shifts(natural):
+def calibrate_shifts(settled, natural):
     """Phase each panel moves for one and two of its own frames at each code.
 
     Both directions on both panels, since a pause leaves the error either sign and
     a slower panel only ever retards. Returns options[panel] as a list of
     (rate_index, frames, lines), the no-op included, ready for plan_excursion.
-    Measured rather than derived: the frame a code is written in may or may not be
-    one of the long ones, which the fitted offset absorbs.
+
+    A plan is priced from the two probed periods, `LINE_SLOTS * (P_code / P_nominal
+    - 1)` signed by which panel it is, since the follower retards on a slower code
+    and the leader on a faster one. The excursions here validate that rather than
+    feed it: the derivation tracks the one-frame measurement to about a line, where
+    a slope fitted across two of them differences two noisy numbers and doubles
+    their noise, which at one step is most of the quantum.
     """
     options = [[(nominal, 0, 0.0)], [(nominal, 0, 0.0)]]
-    print("  panel    code   1 frame   2 frames   per frame")
+    print("  panel    code   1 frame   2 frames   per frame   vs 1 frame")
     for i in range(2):
         for depth in depths:
             for rate_index in (nominal - depth, nominal + depth):
@@ -326,23 +358,34 @@ def calibrate_shifts(natural):
                     moved.append(result)
                 if len(moved) < 2:
                     continue
-                slope = moved[1] - moved[0]
-                offset = moved[0] - slope
+                # A longer period on the follower closes the error, on the leader it
+                # opens it, so the derivation carries the sign of the panel.
+                stretch = LINE_SLOTS * (settled[i][rate_index] / settled[i][nominal] - 1.0)
+                per_frame = -stretch if i == fi else stretch
                 for frames in range(1, MAX_FRAMES + 1):
-                    options[i].append((rate_index, frames, offset + slope * frames))
-                print("  {}  {:>4}fps  {:>+8.1f}  {:>+9.1f}  {:>+8.1f} lines".format(
-                    labels[i], RATES[rate_index], moved[0], moved[1], slope))
+                    options[i].append((rate_index, frames, per_frame * frames))
+                print("  {}  {:>4}fps  {:>+8.1f}  {:>+9.1f}  {:>+8.1f}  {:>+6.1f}"
+                      " lines".format(
+                          labels[i], RATES[rate_index], moved[0], moved[1],
+                          per_frame, per_frame - moved[0]))
     return options
 
 
-def plan_excursion(error, options):
+def plan_excursion(error, options, natural):
     """Frames of each panel's code to spend cancelling the error.
 
     Both panels count at once, so a plan costs the longer of the two. The cheapest
     plan landing within ACCURACY_LINES wins: the fine loop absorbs that much in a
     frame, so buying a closer landing with another period of held rate is waste.
     Failing that, the closest landing at any cost.
+
+    A plan is priced including the drift over its own execution: half a period
+    waiting for the first fall, that being the average wait, plus one per counted
+    frame. The calibrated shifts have drift removed, so without this term a longer
+    plan quietly lands short, by more on a faster-drifting pair. Charging a whole
+    period for the wait instead overshoots by the same measure.
     """
+    settling = natural * periods[fi]
     # Only codes pushing the way the error needs are worth pairing, which quarters
     # the search: it runs inside the resync, so its own cost is part of the answer.
     want_negative = error > 0
@@ -351,11 +394,11 @@ def plan_excursion(error, options):
               for i in range(2)]
 
     cheapest = None
-    closest = (abs(error), 0, [(nominal, 0), (nominal, 0)])
+    closest = (abs(error + settling * 0.5), 0, [(nominal, 0), (nominal, 0)])
     for f_index, f_frames, f_lines in usable[fi]:
         for l_index, l_frames, l_lines in usable[li]:
-            left = abs(error + f_lines + l_lines)
             cost = max(f_frames, l_frames)
+            left = abs(error + f_lines + l_lines + settling * (cost + 0.5))
             schedule = [None, None]
             schedule[fi] = (f_index, f_frames)
             schedule[li] = (l_index, l_frames)
@@ -421,9 +464,14 @@ def visibility(options):
     print()
 
 
-def fine_frames(count, walk):
-    """Real pair frames under the TESCAN loop. Returns the walk and the skews."""
-    slow_on = False
+def fine_frames(count, walk, slow_on):
+    """Real pair frames under the TESCAN loop.
+
+    The walk and the slow-code state are carried in and out, so a caller stepping
+    one frame at a time sees the same loop as one running a block: the slow code has
+    to stay on across a frame boundary to move any phase at all, the quantum being a
+    whole frame.
+    """
     skews = []
     for frame in range(count):
         draw_pair(frame)
@@ -437,9 +485,7 @@ def fine_frames(count, walk):
         if want_slow != slow_on:
             rate(fi, nominal - 1 if want_slow else nominal)
             slow_on = want_slow
-    if slow_on:
-        rate(fi, nominal)
-    return walk, skews
+    return walk, slow_on, skews
 
 
 def resync(options, natural):
@@ -459,7 +505,7 @@ def resync(options, natural):
         # The capture spans two periods, so the error is aged forward to now.
         aged = entry + natural * time.ticks_diff(time.ticks_us(), captured_at)
         t_plan = time.ticks_us()
-        schedule, frames = plan_excursion(aged - target_lines, options)
+        schedule, frames = plan_excursion(aged - target_lines, options, natural)
         plan_us = time.ticks_diff(time.ticks_us(), t_plan)
         run_schedule(schedule)
     handover = time.ticks_us()
@@ -471,29 +517,110 @@ def resync(options, natural):
     return entry, left, cost_us, capture_us, plan_us, frames
 
 
+def place_error(wanted, options, natural):
+    """Put the pair a chosen number of lines out, and report where it landed.
+
+    The same machinery a resync uses, aimed somewhere deliberate instead of at the
+    handover point, so the fine loop's reach can be measured rather than assumed.
+    """
+    need, captured_at = measure_need_pins()
+    if need is None:
+        return None
+    aged = need + natural * time.ticks_diff(time.ticks_us(), captured_at)
+    schedule, _ = plan_excursion(aged - wanted, options, natural)
+    run_schedule(schedule)
+    handover = time.ticks_us()
+
+    placed, placed_at = measure_need_pins()
+    if placed is not None:
+        placed -= natural * time.ticks_diff(placed_at, handover)
+    return placed
+
+
+def recovery_curve(options, natural):
+    """Frames the fine loop needs to hide a deliberate error, and how it looks.
+
+    absorbable() guesses the loop's reach as the walk plus one frame of MAX_STEP.
+    This measures it, and settles the lower bound: TESCAN cannot advance the
+    follower, but drift does, so a small negative error should cost about
+    |error| / drift and no correction at all.
+    """
+    print("phase 4: recovery curve. Watch each placement for how long it looks wrong")
+    walk, slow_on, skews = fine_frames(ALIGN_FRAMES, 0, False)
+    steady = sorted(skews[len(skews) // 2:])
+    floor_us = steady[len(steady) // 2]
+    limit_us = floor_us * SETTLED_FACTOR
+    print("  loop floor {:.0f}us, counting settled once a frame lands under {:.0f}us"
+          " ({:.1f} lines); drift {:+.1f} lines a period".format(
+              floor_us, limit_us, limit_us / s_line, natural * periods[fi]))
+    print("  wanted  placed   frames   peak skew   te_timeouts")
+    for wanted in RECOVERY_LINES:
+        walk, slow_on, _ = fine_frames(ALIGN_FRAMES, walk, slow_on)
+        if slow_on:
+            rate(fi, nominal)       # the schedule owns both rates from here
+            slow_on = False
+        tescan(f_screen, 0)         # the capture needs the wide V-porch pulse
+        walk = 0                    # and the loop rebuilds it from there
+        timeouts0 = [d.te_timeouts() for d in displays]
+
+        placed = place_error(wanted, options, natural)
+        if placed is None:
+            print("  {:>+6}  no capture".format(wanted))
+            continue
+
+        frames, peak = 0, 0
+        while frames < RECOVERY_CAP:
+            walk, slow_on, one = fine_frames(1, walk, slow_on)
+            frames += 1
+            peak = max(peak, one[0])
+            if one[0] <= limit_us:
+                break
+        timeouts = sum(d.te_timeouts() - t for d, t in zip(displays, timeouts0))
+        print("  {:>+6}  {:>+6.1f}   {:>6}   {:>7.0f}us   {:>11}".format(
+            wanted, placed,
+            frames if frames < RECOVERY_CAP else ">{}".format(RECOVERY_CAP),
+            peak, timeouts))
+    if slow_on:
+        rate(fi, nominal)
+    print()
+
+
 def closure_trials(options, natural):
     """Align, pause, resync, resume. The headline measurement."""
     print("phase 3: closure trials. Watch the resume instant for a stagger or a tear")
     absorbed = 0
     trials = 0
     worst_cost = 0
+    scatter = []
+    medians = []
+    worst_skew = 0
+    timeouts_seen = 0
     for repeat in range(TRIAL_REPEATS):
         print("  pass {} of {}".format(repeat + 1, TRIAL_REPEATS))
         for pause_ms in PAUSES_MS:
-            walk, _ = fine_frames(ALIGN_FRAMES, 0)
+            walk, slow_on, _ = fine_frames(ALIGN_FRAMES, 0, False)
+            if slow_on:
+                rate(fi, nominal)   # the resync owns both rates from here
+                slow_on = False
             tescan(f_screen, 0)     # the capture needs the wide V-porch pulse
+            walk = 0                # and the loop rebuilds it from there
             timeouts0 = [d.te_timeouts() for d in displays]
 
             time.sleep_ms(pause_ms)
             entry, left, cost_us, capture_us, plan_us, frames = resync(options, natural)
 
-            walk, skews = fine_frames(RESUME_FRAMES, walk)
+            walk, slow_on, skews = fine_frames(RESUME_FRAMES, walk, slow_on)
             steady = sorted(skews[len(skews) // 2:])
             timeouts = [d.te_timeouts() - t for d, t in zip(displays, timeouts0)]
             trials += 1
             worst_cost = max(worst_cost, cost_us)
-            if left is not None and absorbable(left):
-                absorbed += 1
+            medians.append(steady[len(steady) // 2])
+            worst_skew = max(worst_skew, max(skews))
+            timeouts_seen += sum(timeouts)
+            if left is not None:
+                scatter.append(abs(left - target_lines))
+                if absorbable(left):
+                    absorbed += 1
             print("    pause {:>5}ms: entered {:>+6.1f}, left {:>+5.1f} lines in"
                   " {} frame(s), {}".format(
                       pause_ms, entry if entry is not None else 0.0,
@@ -508,10 +635,23 @@ def closure_trials(options, natural):
                   " te_timeouts {}".format(
                       steady[len(steady) // 2], max(skews), timeouts))
     print()
-    print("  {} of {} trials landed inside the walk; worst resync {:.0f}us"
-          " ({:.1f} periods)".format(
-              absorbed, trials, worst_cost, worst_cost / periods[fi]))
+    # What the resync cost and how well it aimed, then what the fine loop made of
+    # where it was handed the pair. The second is the verdict: absorbable() is a
+    # conservative estimate of the loop's reach, so a landing outside it still
+    # resumes, just over another frame or two.
+    spread = sorted(scatter)
+    print("  aim: {:.1f} lines off target median, {:.1f} worst; {} of {} inside the"
+          " +-{:.0f} line handover bound".format(
+              spread[len(spread) // 2], spread[-1], absorbed, trials,
+              ABSORB_US / s_line))
+    print("  cost: worst resync {:.0f}us ({:.1f} periods)".format(
+        worst_cost, worst_cost / periods[fi]))
+    print("  resumed: settled skew {:.0f}us median across trials, {:.0f}us worst"
+          " frame, {} te_timeouts".format(
+              sorted(medians)[len(medians) // 2], worst_skew, timeouts_seen))
     print()
+    if slow_on:
+        rate(fi, nominal)
 
 
 try:
@@ -520,12 +660,13 @@ try:
     natural_drift = need_rate(settled_periods[fi][nominal], settled_periods[li][nominal])
     print("  natural drift {:+.2f} lines a period".format(
         natural_drift * settled_periods[fi][nominal]))
-    plan_options = calibrate_shifts(natural_drift)
+    plan_options = calibrate_shifts(settled_periods, natural_drift)
     print()
 
     cross_check(natural_drift)
     visibility(plan_options)
     closure_trials(plan_options, natural_drift)
+    recovery_curve(plan_options, natural_drift)
     print("done")
 finally:
     restore_te(f_screen)

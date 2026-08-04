@@ -15,8 +15,9 @@
 # skew under ~1ms with zero te_timeouts and wire-bound frames; raise PHASE_MS
 # to 120_000 for an acceptance run.
 #
-# A diagnostic, not an example, so it is not copied to the board. Run it with
-# mpremote against a board carrying the update_all firmware.
+# Set SCREEN to the panel type on the ports. A diagnostic, not an example, so it
+# is not copied to the board. Run it with mpremote against a board carrying the
+# update_all firmware.
 
 import time
 
@@ -24,8 +25,9 @@ import spidisplay
 import st7789
 from mighty_fx import SPCE, MightyFX
 from picovector import color, image
-from screens import Screen280
+from screens import Screen154, Screen280
 
+SCREEN = Screen280           # or Screen154: the panel type on the ports
 PHASE_MS = 30_000
 LINE_SLOTS = 344
 DEADBAND_LINES = 2
@@ -38,8 +40,10 @@ GRID_PITCH = 20
 BACKGROUNDS = (color.rgb(127, 127, 127), color.rgb(34, 177, 76))
 UINT32 = 0xFFFFFFFF
 
+assert SCREEN in (Screen154, Screen280)
+
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
-screens = (Screen280(mighty.spce_a), Screen280(mighty.spce_b))
+screens = (SCREEN(mighty.spce_a), SCREEN(mighty.spce_b))
 labels = ("SP/CE A", "SP/CE B")
 
 WIDTH, HEIGHT = screens[0].width, screens[0].height
