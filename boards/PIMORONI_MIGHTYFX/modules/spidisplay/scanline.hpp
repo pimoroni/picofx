@@ -19,15 +19,39 @@
 
 namespace spidisplay {
 
-// Source format trait.
+// Source format traits. Each carries a Loader, constructed once per band from
+// the descriptor's palette pointer: RGBA8888's is empty and compiles away, and
+// Indexed8's dereferences the colour table, whose words sit in memory as
+// R, G, B, A exactly like a direct pixel.
 struct RGBA8888 {
     static constexpr int bytes = 4;
 
-    static inline void load(const uint8_t *p, uint8_t &r, uint8_t &g, uint8_t &b) {
-        r = p[0];
-        g = p[1];
-        b = p[2];
-    }
+    struct Loader {
+        explicit Loader(const uint8_t *) {}
+
+        inline void load(const uint8_t *p, uint8_t &r, uint8_t &g, uint8_t &b) const {
+            r = p[0];
+            g = p[1];
+            b = p[2];
+        }
+    };
+};
+
+struct Indexed8 {
+    static constexpr int bytes = 1;
+
+    struct Loader {
+        explicit Loader(const uint8_t *palette) : pal(palette) {}
+
+        inline void load(const uint8_t *p, uint8_t &r, uint8_t &g, uint8_t &b) const {
+            const uint8_t *entry = pal + ((size_t)*p << 2);
+            r = entry[0];
+            g = entry[1];
+            b = entry[2];
+        }
+
+        const uint8_t *pal;
+    };
 };
 
 // Destination packers. RGB444 packs two pixels into three bytes; RGB565 packs
@@ -73,6 +97,7 @@ struct RGB565 {
 // constant step_x per pixel.
 struct Descriptor {
     const uint8_t *src;
+    const uint8_t *palette;   // 256 RGBA words for an indexed source, else null
     int dst_w;
     int dst_h;
     int dx0, dx1;        // Covered destination columns [dx0, dx1)
@@ -107,6 +132,7 @@ void convert_band(const Descriptor &d, uint8_t *dst_band, int row0, int nrows) {
     const int step_x = d.step_x;
     const int x_adv = d.x_adv ? 1 : 0;
     const uint8_t bg_r = d.bg_r, bg_g = d.bg_g, bg_b = d.bg_b;
+    const typename Src::Loader loader(d.palette);
 
     // Packed background: one pixel pair (three bytes) or one pixel (two bytes).
     uint8_t bgp[3] = {0, 0, 0};
@@ -171,27 +197,27 @@ void convert_band(const Descriptor &d, uint8_t *dst_band, int row0, int nrows) {
                 // the walk so each remaining source pixel is emitted twice.
                 int x = dx0;
                 if (xpar == x_adv) {
-                    Src::load(sp, r, g, b);
+                    loader.load(sp, r, g, b);
                     sp += step_x;
                     Dst::pack1(out, r, g, b);
                     out += 2;
                     ++x;
                 }
                 for (; x + 1 < dx1; x += 2) {
-                    Src::load(sp, r, g, b);
+                    loader.load(sp, r, g, b);
                     sp += step_x;
                     Dst::pack1(out, r, g, b);
                     Dst::pack1(out + 2, r, g, b);
                     out += 4;
                 }
                 if (x < dx1) {
-                    Src::load(sp, r, g, b);
+                    loader.load(sp, r, g, b);
                     Dst::pack1(out, r, g, b);
                     out += 2;
                 }
             } else {
                 for (int x = dx0; x < dx1; ++x) {
-                    Src::load(sp, r, g, b);
+                    loader.load(sp, r, g, b);
                     sp += step_x;
                     Dst::pack1(out, r, g, b);
                     out += 2;
@@ -212,7 +238,7 @@ void convert_band(const Descriptor &d, uint8_t *dst_band, int row0, int nrows) {
             // across the whole covered span.
             auto fetch = [&](int x, uint8_t &r, uint8_t &g, uint8_t &b) {
                 if ((unsigned)(x - dx0) < (unsigned)(dx1 - dx0)) {
-                    Src::load(sp, r, g, b);
+                    loader.load(sp, r, g, b);
                     if constexpr (Double) {
                         if (xpar == x_adv) {
                             sp += step_x;
@@ -250,16 +276,16 @@ void convert_band(const Descriptor &d, uint8_t *dst_band, int row0, int nrows) {
                     // adjacent source pixels, and doubling straddles pairs.
                     for (; p < ie; p += 2) {
                         uint8_t r1, g1, b1;
-                        Src::load(sp, r, g, b);
+                        loader.load(sp, r, g, b);
                         sp += step_x;
-                        Src::load(sp, r1, g1, b1);
+                        loader.load(sp, r1, g1, b1);
                         Dst::pack2(out, r, g, b, r1, g1, b1);
                         out += 3;
                     }
                 } else {
                     // Pair-aligned doubling: both pixels repeat one source pixel.
                     for (; p < ie; p += 2) {
-                        Src::load(sp, r, g, b);
+                        loader.load(sp, r, g, b);
                         sp += step_x;
                         Dst::pack2(out, r, g, b, r, g, b);
                         out += 3;
@@ -268,9 +294,9 @@ void convert_band(const Descriptor &d, uint8_t *dst_band, int row0, int nrows) {
             } else {
                 for (; p < ie; p += 2) {
                     uint8_t r0, g0, b0, r1, g1, b1;
-                    Src::load(sp, r0, g0, b0);
+                    loader.load(sp, r0, g0, b0);
                     sp += step_x;
-                    Src::load(sp, r1, g1, b1);
+                    loader.load(sp, r1, g1, b1);
                     sp += step_x;
                     Dst::pack2(out, r0, g0, b0, r1, g1, b1);
                     out += 3;
@@ -304,13 +330,17 @@ inline ConvertFn select_dbl(bool dbl) {
                : &convert_band<Src, Dst, false>;
 }
 
-// Resolve the runtime format to a kernel instantiation. Rotation and mirror are
-// runtime strides in the descriptor, so they are not part of the selection.
-inline ConvertFn select_convert(int fmt, bool dbl) {
+// Resolve the runtime formats to a kernel instantiation. Rotation and mirror
+// are runtime strides in the descriptor, so they are not part of the selection;
+// the source format is, because a per-pixel palette test in the loop body
+// cannot be hoisted and costs the direct path about 5% of its convert budget.
+inline ConvertFn select_convert(int fmt, bool dbl, bool indexed) {
     if (fmt == RGB444::format) {
-        return select_dbl<RGBA8888, RGB444>(dbl);
+        return indexed ? select_dbl<Indexed8, RGB444>(dbl)
+                       : select_dbl<RGBA8888, RGB444>(dbl);
     }
-    return select_dbl<RGBA8888, RGB565>(dbl);
+    return indexed ? select_dbl<Indexed8, RGB565>(dbl)
+                   : select_dbl<RGBA8888, RGB565>(dbl);
 }
 
 // Fill a descriptor for a whole-frame conversion. Each axis is centred, or
@@ -381,6 +411,7 @@ inline Descriptor make_descriptor(const uint8_t *src, int src_w, int src_h,
 
     Descriptor d;
     d.src = src;
+    d.palette = nullptr;   // An indexed caller points this at its colour table
     d.dst_w = dst_w;
     d.dst_h = dst_h;
     d.ua = ua; d.ub = ub; d.uc = uc;

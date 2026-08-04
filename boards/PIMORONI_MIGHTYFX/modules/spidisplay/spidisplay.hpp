@@ -174,10 +174,13 @@ public:
     void command(const uint8_t *cmd, size_t cmd_len,
                  const uint8_t *data, size_t data_len);
 
-    // Convert and stream a whole frame. src is RGBA8888, src_stride its pitch
-    // in bytes (0 means contiguous). Each axis is centred, or placed by its
-    // off_x/off_y top-left. Blocks until the frame has left over SPI.
+    // Convert and stream a whole frame. src is RGBA8888, or one palette index
+    // per pixel when palette is set; src_stride is its pitch in bytes (0 means
+    // contiguous). palette is up to palette_len bytes of RGBA words, copied out
+    // before this returns. Each axis is centred, or placed by its off_x/off_y
+    // top-left. Blocks until the frame has left over SPI.
     void update(const uint8_t *src, int src_w, int src_h, int src_stride,
+                const uint8_t *palette, size_t palette_len,
                 int rotation, int mirror, int pixel_double,
                 uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
                 bool v_sync, uint32_t timeout_us);
@@ -194,6 +197,7 @@ public:
     // of here whatever the TE phase does. Sets the bus rate and DMA frame
     // width, sends nothing, never waits on the bus.
     void prepare(const uint8_t *src, int src_w, int src_h, int src_stride,
+                 const uint8_t *palette, size_t palette_len,
                  int rotation, int mirror, int pixel_double,
                  uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y);
 
@@ -362,7 +366,13 @@ private:
     int dst_h;
     int rows_per_band;   // Destination rows per DMA band, clamped at construction
     int cache_columns;
-    uint8_t *sram_claim = nullptr;  // Band pair then cache storage, one claim
+    // The colour table for an indexed source, copied per frame into this
+    // display's own SRAM: per display because interleaving drives several
+    // through frames concurrently, and SRAM because a per-pixel indirection
+    // into PSRAM reintroduces the XIP miss the column cache exists to remove.
+    static constexpr size_t PALETTE_BYTES = 256 * 4;
+
+    uint8_t *sram_claim = nullptr;  // Band ring, cache storage, then palette, one claim
     size_t sram_claim_bytes = 0;
     size_t band_bytes = 0;          // One band buffer, rounded up to 4
     int cache_capacity = 0;         // Cache storage in bytes

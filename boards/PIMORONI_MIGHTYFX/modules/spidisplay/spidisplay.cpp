@@ -179,13 +179,13 @@ SPIDisplay::SPIDisplay(SPIDisplayBus *bus, uint cs, uint dc, int te, uint8_t ram
         slot_count = 2;
     }
 
-    // The band ring then the cache scratch, one claim. Rounding the band to 4
-    // keeps every slot and the cache word-aligned. The cache is sized by width:
-    // a window caches up to dst_w source rows of its columns (column_cache.hpp),
-    // so height would under-provision a landscape panel.
+    // The band ring, the cache scratch, then the palette, one claim. Rounding
+    // the band to 4 keeps every slot and the cache word-aligned. The cache is
+    // sized by width: a window caches up to dst_w source rows of its columns
+    // (column_cache.hpp), so height would under-provision a landscape panel.
     band_bytes = (rows_per_band * packed_row_bytes(dst_w, bitdepth) + 3) & ~(size_t)3;
     cache_capacity = this->cache_columns * dst_w * 4;
-    sram_claim_bytes = (size_t)slot_count * band_bytes + (size_t)cache_capacity;
+    sram_claim_bytes = (size_t)slot_count * band_bytes + (size_t)cache_capacity + PALETTE_BYTES;
     sram_claim = allocator().claim(sram_claim_bytes);
     owns_sram_claim = sram_claim != nullptr;
     if (!owns_sram_claim) {
@@ -506,6 +506,7 @@ TePhase SPIDisplay::te_phase(SPIDisplay &first, SPIDisplay &second,
 }
 
 void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h, int src_stride,
+                         const uint8_t *palette, size_t palette_len,
                          int rotation, int mirror, int pixel_double,
                          uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y) {
     uint32_t t_pre = time_us_32();
@@ -513,13 +514,29 @@ void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h, int src_strid
     use_baudrate();
 
     bool dbl = pixel_double != 0;
+    bool indexed = palette != nullptr;
 
     Transform t = map_transform(rotation, mirror);
     desc = make_descriptor(src, src_w, src_h, dst_w, dst_h, t, dbl, bg, fmt,
                            centred_x, off_x, centred_y, off_y,
-                           src_stride, RGBA8888::bytes);
+                           src_stride,
+                           indexed ? Indexed8::bytes : RGBA8888::bytes);
 
-    ConvertFn convert = select_convert(fmt, dbl);
+    // The table is copied out every frame, unconditionally: upstream assigns
+    // palette entries in place, so a cached copy would go stale silently, and
+    // the copy is 0.3% of a convert. Entries past the given length are zeroed,
+    // since an index byte reaches all 256 whatever the table's length.
+    if (indexed) {
+        uint8_t *table = sram_claim + (size_t)slot_count * band_bytes + (size_t)cache_capacity;
+        if (palette_len > PALETTE_BYTES) {
+            palette_len = PALETTE_BYTES;
+        }
+        memcpy(table, palette, palette_len);
+        memset(table + palette_len, 0, PALETTE_BYTES - palette_len);
+        desc.palette = table;
+    }
+
+    ConvertFn convert = select_convert(fmt, dbl, indexed);
 
     // Every band is this size except a possibly-shorter final one
     full_band_bytes = (size_t)rows_per_band * desc.dst_row_bytes;
@@ -797,10 +814,12 @@ void SPIDisplay::abort_frame() {
 }
 
 void SPIDisplay::update(const uint8_t *src, int src_w, int src_h, int src_stride,
+                        const uint8_t *palette, size_t palette_len,
                         int rotation, int mirror, int pixel_double,
                         uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
                         bool v_sync, uint32_t timeout_us) {
-    prepare(src, src_w, src_h, src_stride, rotation, mirror, pixel_double,
+    prepare(src, src_w, src_h, src_stride, palette, palette_len,
+            rotation, mirror, pixel_double,
             bg, centred_x, off_x, centred_y, off_y);
     arm(v_sync, timeout_us);
     while (!poll_te()) {
@@ -1082,6 +1101,8 @@ typedef struct _FrameArgs {
     mp_obj_t image;
     mp_buffer_info_t buf;
     int src_w, src_h, src_stride;
+    const uint8_t *palette;
+    size_t palette_len;
     mp_int_t rotation, mirror, pixel_double;
     uint32_t bg;
     bool centred_x, centred_y;
@@ -1131,24 +1152,32 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
     if (src_w < 1 || src_h < 1) {
         mp_raise_ValueError(MP_ERROR_TEXT("image width and height must be positive"));
     }
-    // A palettised source is one byte of palette index per pixel, which the
-    // kernel would read as RGBA8888. Name the cause before the stride and
-    // length checks reject it blaming the geometry.
-    if (mp_load_attr(args[ARG_image].u_obj, MP_QSTR_palette) != mp_const_none) {
-        mp_raise_ValueError(MP_ERROR_TEXT("palette images are not supported; load_into() an RGBA8888 image"));
+    // A palettised source is one index byte per pixel, drawn through its colour
+    // table; the table's bytes are reachable here by reference and are copied
+    // per frame into the display's own SRAM before this call returns.
+    mp_obj_t palette_obj = mp_load_attr(args[ARG_image].u_obj, MP_QSTR_palette);
+    const uint8_t *palette = NULL;
+    size_t palette_len = 0;
+    if (palette_obj != mp_const_none) {
+        mp_buffer_info_t pbuf;
+        mp_get_buffer_raise(palette_obj, &pbuf, MP_BUFFER_READ);
+        palette = (const uint8_t *)pbuf.buf;
+        palette_len = pbuf.len;
     }
+    int px_bytes = palette != NULL ? spidisplay::Indexed8::bytes
+                                   : spidisplay::RGBA8888::bytes;
 
-    if (src_stride < src_w * spidisplay::RGBA8888::bytes) {
-        mp_raise_ValueError(MP_ERROR_TEXT("image stride is narrower than its width at RGBA8888"));
+    if (src_stride < src_w * px_bytes) {
+        mp_raise_ValueError(MP_ERROR_TEXT("image stride is narrower than its width"));
     }
 
     // The kernel walks src_h rows of the pitch the image reports, so a buffer
     // shorter than that is read out of bounds and an empty one locks the board.
     // The bound is exactly the extent a strided view reports for itself.
     size_t src_bytes = (size_t)(src_h - 1) * (size_t)src_stride
-                     + (size_t)src_w * spidisplay::RGBA8888::bytes;
+                     + (size_t)src_w * px_bytes;
     if (buf.len < src_bytes) {
-        mp_raise_ValueError(MP_ERROR_TEXT("image buffer is shorter than its dimensions at RGBA8888"));
+        mp_raise_ValueError(MP_ERROR_TEXT("image buffer is shorter than its dimensions"));
     }
 
     // A packed colour carries alpha in the top byte, so it can exceed a signed
@@ -1187,6 +1216,8 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
     out->src_w = src_w;
     out->src_h = src_h;
     out->src_stride = src_stride;
+    out->palette = palette;
+    out->palette_len = palette_len;
     out->rotation = args[ARG_rotation].u_int;
     out->mirror = args[ARG_mirror].u_int;
     out->pixel_double = args[ARG_pixel_double].u_int;
@@ -1203,6 +1234,7 @@ static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_ma
     FrameArgs a;
     SPIDisplay_parse_frame(n_args, pos_args, kw_args, true, &a);
     a.self->display.update((const uint8_t *)a.buf.buf, a.src_w, a.src_h, a.src_stride,
+        a.palette, a.palette_len,
         a.rotation, a.mirror, a.pixel_double,
         a.bg, a.centred_x, a.off_x, a.centred_y, a.off_y,
         a.v_sync, a.timeout_us);
@@ -1219,6 +1251,7 @@ static mp_obj_t SPIDisplay_prepare(size_t n_args, const mp_obj_t *pos_args, mp_m
     FrameArgs a;
     SPIDisplay_parse_frame(n_args, pos_args, kw_args, false, &a);
     a.self->display.prepare((const uint8_t *)a.buf.buf, a.src_w, a.src_h, a.src_stride,
+        a.palette, a.palette_len,
         a.rotation, a.mirror, a.pixel_double,
         a.bg, a.centred_x, a.off_x, a.centred_y, a.off_y);
     a.self->staged_image = a.image;

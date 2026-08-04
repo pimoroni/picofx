@@ -1,10 +1,10 @@
 # Checks which sources update() accepts and which it rejects, readiness item 2.
 #
-# update() reads the source by the strides the image's own .width/.height imply,
-# at four bytes per pixel, so a buffer shorter than those dimensions claim is read
-# out of bounds. The guard should turn that into a ValueError. This checks both
-# halves: that it fires on every bad source, and that it stays out of the way of
-# the sources the shipped examples actually use.
+# update() walks src_h rows of the pitch the image reports, at four bytes per
+# pixel (one for a palettised source), so a buffer shorter than that extent is
+# read out of bounds. The guard should turn that into a ValueError. This checks
+# both halves: that it fires on every bad source, and that it stays out of the
+# way of the sources the shipped examples actually use.
 #
 # The preflight runs first because it decides what the rest of the run can mean. A
 # source that reports its nominal size rather than the length of the buffer it
@@ -192,6 +192,27 @@ case("buffer with 64 bytes spare", False, WIDTH, HEIGHT, EXACT_BYTES + 64)
 case("source smaller than the screen", False, WIDTH // 2, HEIGHT // 2,
      (WIDTH // 2) * (HEIGHT // 2) * 4)
 case("1x1 source", False, 1, 1, 4)
+
+
+# A palettised source draws through its colour table, so it must be accepted
+# like any other; built apart from ready_case, which would paint over it.
+def palettised_case(path="/images/anim_solid.gif"):
+    print("  animated GIF frame, palettised: ", end="")
+    gc.collect()
+    try:
+        frame = image.load(path).spritesheet().sprite(0, 0)
+    except BUILD_ERRORS as e:
+        verdict("N/A", f"could not load {path}: {type(e).__name__}: {e}")
+        return
+    try:
+        screen.update(frame, rotation=0)
+    except BUILD_ERRORS as e:
+        verdict("FAIL", f"rejected a palettised frame. {type(e).__name__}: {e}")
+        return
+    verdict("PASS", "drew")
+
+
+palettised_case()
 
 # Short sources, ordered least to most likely to fault on an unguarded build. The
 # one byte case is the bound itself: src_w * src_h * 4 is exact, because the

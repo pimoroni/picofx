@@ -156,18 +156,20 @@ try:
 
     base = spidisplay.buffer_size()
     claim = screen.display.sram_bytes()
-    ring = region[base:base + claim]
+    ring = region[base:base + FRAME_BYTES]
 
     print(f"screen {W}x{H} at 16-bit, arena {arena}, claim {claim} at {base}")
     print(f"band_rows {screen.display.band_rows()}, a row is {ROW_BYTES} bytes,"
           f" a frame is {FRAME_BYTES}")
 
     # Preflight. Each of these can void every verdict below, so they run first and
-    # say so plainly rather than being folded into a case.
+    # say so plainly rather than being folded into a case. The claim is the band
+    # ring first, then the display's other scratch (the palette table), so the
+    # ring is its first FRAME_BYTES and the claim may run longer.
     ring_usable = True
-    if claim != FRAME_BYTES:
-        print(f"PREFLIGHT: claim {claim} is not one frame ({FRAME_BYTES}), so the"
-              f" ring holds fewer rows than a frame. Converted-byte verdicts are N/A.")
+    if claim < FRAME_BYTES:
+        print(f"PREFLIGHT: claim {claim} is short of one frame ({FRAME_BYTES}), so"
+              f" the ring holds fewer rows than a frame. Converted-byte verdicts are N/A.")
         ring_usable = False
     if screen.display.band_rows() * 2 != H:
         print(f"PREFLIGHT: {screen.display.band_rows()} band rows is not half of"
@@ -324,62 +326,84 @@ try:
         tally["N/A"] += 1
         print(f"  N/A  {type(e).__name__}: {e}")
 
-    # The GIF. Palettised and a horizontal strip, so it fails for two reasons at
-    # once; the whole strip separates the palette half from the stride half.
-    print(f"\nGIF from {GIF_PATH}:")
-    gc.collect()
-    try:
-        gif = image.load(GIF_PATH)
-        sheet = gif.spritesheet()
-        print(f"  loaded {type(gif).__name__} {gif.width}x{gif.height},"
-              f" cols {sheet.cols} rows {sheet.rows} frames {sheet.frames},"
-              f" palette {gif.palette_size} entries,"
-              f" buffer {len(memoryview(gif))} bytes")
-        print(f"  intervals {sheet.interval()}, duration {sheet.duration}ms")
-        for label, view in (("whole strip", gif), ("frame 0", sheet.sprite(0, 0))):
-            try:
-                screen.update(view, rotation=0, offset=(0, 0))
-                tally["FAIL"] += 1
-                print(f"  {label}: FAIL  accepted a palettised source as RGBA8888")
-            except ValueError as e:
-                tally["PASS"] += 1
-                print(f"  {label}: PASS  refused: {e}")
-    except BUILD_ERRORS as e:
-        tally["N/A"] += 1
-        print(f"  N/A  {type(e).__name__}: {e}")
-        print(f"  generate it with .claude/assets/make_anim_gif.py and copy with"
-              f" 'mpr.ps1 fs cp anim_solid.gif :{GIF_PATH}'")
+    # The GIFs. Palettised horizontal strips, so a frame exercises the indexed
+    # path and the stride at once. Every frame is one solid colour, so the
+    # expected bytes are computable without a reference image: the view's own
+    # colours over its extent at (0, 0), background everywhere else.
+    def want_solid(c, cw, ch):
+        fg, bg = pack565(c), pack565(BAR_BG)
+        cw, ch = min(cw, W), min(ch, H)
+        cell_row = fg * cw + bg * (W - cw)
+        return cell_row * ch + bg * W * (H - ch)
 
-    # A wide strip. A cell of a 5-frames-or-wider strip reports a buffer extent
-    # past its nominal w*h*4, so a length check alone accepts it and the frame
-    # drawn is garbage; only a refusal that reads the palette catches it.
-    print(f"\nwide GIF from {GIF_WIDE_PATH}:")
-    gc.collect()
-    try:
-        wide = image.load(GIF_WIDE_PATH)
-        wide_sheet = wide.spritesheet()
-        print(f"  loaded {type(wide).__name__} {wide.width}x{wide.height},"
-              f" frames {wide_sheet.frames}, buffer {len(memoryview(wide))} bytes")
-        cell = wide_sheet.sprite(0, 0)
+    def gif_case(label, view, want):
+        gc.collect()
         try:
-            screen.update(cell, rotation=0, offset=(0, 0))
+            screen.update(view, rotation=0, offset=(0, 0))
+        except BUILD_ERRORS as e:
             tally["FAIL"] += 1
-            print("  frame 0: FAIL  accepted a palettised cell whose extent"
-                  " passes a nominal length check")
-        except ValueError as e:
+            print(f"  {label}: FAIL  refused: {type(e).__name__}: {e}")
+            return
+        if not ring_usable:
+            tally["N/A"] += 1
+            print(f"  {label}: N/A  the ring could not be trusted, see preflight")
+            return
+        count, at = first_diff(bytes(ring), want, ROW_BYTES)
+        if count == 0:
             tally["PASS"] += 1
-            print(f"  frame 0: PASS  refused: {e}")
-    except BUILD_ERRORS as e:
-        tally["N/A"] += 1
-        print(f"  N/A  {type(e).__name__}: {e}")
-        print(f"  generate it with 'make_anim_gif.py anim6.gif 64 6' and copy with"
-              f" 'mpr.ps1 fs cp anim6.gif :{GIF_WIDE_PATH}'")
+            print(f"  {label}: PASS  all {FRAME_BYTES} bytes match")
+        else:
+            tally["FAIL"] += 1
+            pct = count * 100 // FRAME_BYTES
+            print(f"  {label}: FAIL  {count} of {FRAME_BYTES} bytes differ ({pct}%),"
+                  f" first at row {at[0]} column {at[1]}")
+
+    def gif_run(path, hint):
+        print(f"\nGIF from {path}:")
+        gc.collect()
+        try:
+            gif = image.load(path)
+            sheet = gif.spritesheet()
+        except BUILD_ERRORS as e:
+            tally["N/A"] += 1
+            print(f"  N/A  {type(e).__name__}: {e}")
+            print(f"  generate it with '{hint}' and copy with"
+                  f" 'mpr.ps1 fs cp <out> :{path}' (fs cp, NOT -Stage)")
+            return
+        print(f"  loaded {type(gif).__name__} {gif.width}x{gif.height},"
+              f" frames {sheet.frames}, palette {gif.palette_size} entries,"
+              f" buffer {len(memoryview(gif))} bytes")
+
+        # The whole strip is a contiguous indexed source: its visible columns
+        # are the frames' colours side by side.
+        fw = gif.width // sheet.frames
+        vis = min(gif.width, W)
+        row = b"".join(pack565(CELL_COLORS[x // fw]) for x in range(vis))
+        row += pack565(BAR_BG) * (W - vis)
+        ch = min(gif.height, H)
+        gif_case("whole strip", gif,
+                 row * ch + pack565(BAR_BG) * W * (H - ch))
+
+        # First and last frames: strided indexed cells, the last one's origin
+        # deep in the strip and its extent ending exactly at the buffer's.
+        for i in (0, sheet.frames - 1):
+            gif_case(f"frame {i}", sheet.sprite(i, 0),
+                     want_solid(CELL_COLORS[i], fw, gif.height))
+
+    gif_run(GIF_PATH, "make_anim_gif.py anim_solid.gif")
+    # The wide strip: a cell of a 5-frames-or-wider strip reports a buffer
+    # extent past its nominal w*h*4, the shape that once slipped a nominal
+    # length check as an unconverted read.
+    gif_run(GIF_WIDE_PATH, "make_anim_gif.py anim6.gif 64 6")
 
     print(f"\n{tally['PASS']} passed, {tally['FAIL']} failed,"
           f" {tally['N/A']} inconclusive, {tally['SKIP']} skipped")
 
     if tally["N/A"] and not tally["PASS"]:
         print("Nothing was measured, so this run says nothing about any source.")
+    elif tally["N/A"] and not tally["FAIL"]:
+        print("No converted bytes disagreed, but the inconclusive cases above limit"
+              " what this run covers.")
     elif tally["FAIL"]:
         print("The failures are the point on a firmware that infers a cell's pitch"
               " from its width: every case whose cell is narrower than its parent"
