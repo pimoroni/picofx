@@ -394,6 +394,117 @@ TeProbe SPIDisplay::te_probe(uint32_t ms) {
     return p;
 }
 
+TePhase SPIDisplay::te_phase(SPIDisplay &first, SPIDisplay &second,
+                             uint32_t period_us, uint32_t edges, uint32_t timeout_ms) {
+    constexpr uint32_t MAX_EDGES = 8;
+    if (edges > MAX_EDGES) {
+        edges = MAX_EDGES;
+    }
+
+    SPIDisplay *displays[2] = {&first, &second};
+    uint pins[2];
+    for (int i = 0; i < 2; ++i) {
+        pins[i] = displays[i]->te_pin >= 0 ? (uint)displays[i]->te_pin : displays[i]->dc_pin;
+        if (displays[i]->te_pin < 0) {
+            // The capture starts from a genuine low for the same reason arm() does
+            gpio_put(displays[i]->dc_pin, 0);
+            gpio_set_dir(displays[i]->dc_pin, GPIO_IN);
+        }
+    }
+
+    uint32_t falls[2][MAX_EDGES];
+    uint32_t counts[2] = {0, 0};
+    bool levels[2], raw_prev[2];
+    bool high_seen[2] = {false, false};
+    for (int i = 0; i < 2; ++i) {
+        levels[i] = raw_prev[i] = gpio_get(pins[i]) != 0;
+    }
+
+    const uint32_t t_start = time_us_32();
+    const uint32_t budget_us = timeout_ms * 1000;
+    while (counts[0] < edges || counts[1] < edges) {
+        if (time_us_32() - t_start >= budget_us) {
+            break;
+        }
+        for (int i = 0; i < 2; ++i) {
+            if (counts[i] >= edges) {
+                continue;
+            }
+            bool raw = gpio_get(pins[i]) != 0;
+            // TE shares the DC node, so the level right after the direction flip
+            // can still be settling: an edge counts only when two consecutive
+            // samples agree, as poll_te() does, and only after a genuine high.
+            bool settled = raw == raw_prev[i];
+            raw_prev[i] = raw;
+            if (!settled || raw == levels[i]) {
+                continue;
+            }
+            levels[i] = raw;
+            if (raw) {
+                high_seen[i] = true;
+            } else if (high_seen[i]) {
+                falls[i][counts[i]++] = time_us_32();
+            }
+        }
+    }
+    const uint32_t finished = time_us_32();
+
+    for (int i = 0; i < 2; ++i) {
+        if (displays[i]->te_pin < 0) {
+            gpio_set_dir(displays[i]->dc_pin, GPIO_OUT);
+        }
+    }
+
+    TePhase result = {false, 0, 0};
+    if (counts[0] < 2 || counts[1] < 2) {
+        return result;
+    }
+
+    // Each line's falls fold onto one period against a shared reference, the
+    // median taken so a missed or doubled edge cannot swing the answer. The
+    // difference goes signed before the reduction: 2**32 is not a multiple of a
+    // TE period, so reducing an unsigned wrap would bias every fall that
+    // precedes the reference.
+    const uint32_t ref = falls[0][0];
+    uint32_t offsets[2];
+    for (int i = 0; i < 2; ++i) {
+        uint32_t values[MAX_EDGES];
+        for (uint32_t k = 0; k < counts[i]; ++k) {
+            int32_t folded = (int32_t)(falls[i][k] - ref) % (int32_t)period_us;
+            if (folded < 0) {
+                folded += period_us;
+            }
+            values[k] = (uint32_t)folded;
+        }
+        for (uint32_t k = 1; k < counts[i]; ++k) {
+            uint32_t value = values[k];
+            uint32_t j = k;
+            while (j > 0 && values[j - 1] > value) {
+                values[j] = values[j - 1];
+                --j;
+            }
+            values[j] = value;
+        }
+        offsets[i] = values[counts[i] / 2];
+    }
+
+    int64_t skew = ((int64_t)offsets[0] - (int64_t)offsets[1]) % (int64_t)period_us;
+    if (skew < 0) {
+        skew += period_us;
+    }
+    if (skew > (int64_t)(period_us / 2)) {
+        skew -= period_us;
+    }
+
+    const uint32_t last_a = falls[0][counts[0] - 1];
+    const uint32_t last_b = falls[1][counts[1] - 1];
+    const uint32_t newest = (int32_t)(last_a - last_b) >= 0 ? last_a : last_b;
+    result.ok = true;
+    result.skew_us = (int32_t)skew;
+    result.age_us = finished - newest;
+    return result;
+}
+
 void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h,
                          int rotation, int mirror, int pixel_double,
                          uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y) {
@@ -1202,6 +1313,53 @@ mp_obj_t spidisplay_update_all(size_t n_args, const mp_obj_t *pos_args, mp_map_t
 // otherwise, and spidisplay_bindings.c links against this name.
 extern const mp_obj_fun_builtin_var_t spidisplay_update_all_obj;
 MP_DEFINE_CONST_FUN_OBJ_KW(spidisplay_update_all_obj, 1, spidisplay_update_all);
+
+// te_phase(first, second, period_us, edges=2, timeout_ms=500) -> (skew_us, age_us),
+// or None when either TE line yields too few falls in time. The pair's phase
+// without writing a frame: skew_us is first's falling edge relative to second's,
+// folded to +-period_us/2, and age_us is how old the capture already is at
+// return, so a caller can price the drift since. Neither display may hold a
+// staged or streaming frame, a staged frame owning the DC lines TE is read from.
+mp_obj_t spidisplay_te_phase(size_t n_args, const mp_obj_t *args) {
+    if (!mp_obj_is_type(args[0], &SPIDisplay_type) || !mp_obj_is_type(args[1], &SPIDisplay_type)) {
+        mp_raise_TypeError(MP_ERROR_TEXT("te_phase takes two SPIDisplay objects"));
+    }
+    SPIDisplay_obj_t *first = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[0]);
+    SPIDisplay_obj_t *second = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[1]);
+    if (first == second) {
+        mp_raise_ValueError(MP_ERROR_TEXT("te_phase needs two different displays"));
+    }
+    if (first->display.frame_state() != spidisplay::SPIDisplay::FrameState::IDLE
+        || second->display.frame_state() != spidisplay::SPIDisplay::FrameState::IDLE) {
+        mp_raise_ValueError(MP_ERROR_TEXT("te_phase cannot run with a frame staged, since a staged frame owns the DC lines"));
+    }
+    mp_int_t period_us = mp_obj_get_int(args[2]);
+    if (period_us < 1000) {
+        mp_raise_ValueError(MP_ERROR_TEXT("period_us must be at least 1000"));
+    }
+    mp_int_t edges = n_args > 3 ? mp_obj_get_int(args[3]) : 2;
+    if (edges < 2 || edges > 8) {
+        mp_raise_ValueError(MP_ERROR_TEXT("edges must be 2..8"));
+    }
+    mp_int_t timeout_ms = n_args > 4 ? mp_obj_get_int(args[4]) : 500;
+    if (timeout_ms < 1 || timeout_ms > 5000) {
+        mp_raise_ValueError(MP_ERROR_TEXT("timeout_ms must be 1..5000"));
+    }
+
+    spidisplay::TePhase p = spidisplay::SPIDisplay::te_phase(
+        first->display, second->display,
+        (uint32_t)period_us, (uint32_t)edges, (uint32_t)timeout_ms);
+    if (!p.ok) {
+        return mp_const_none;
+    }
+    mp_obj_t items[2] = {
+        mp_obj_new_int(p.skew_us),
+        mp_obj_new_int_from_uint(p.age_us),
+    };
+    return mp_obj_new_tuple(2, items);
+}
+extern const mp_obj_fun_builtin_var_t spidisplay_te_phase_obj;
+MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(spidisplay_te_phase_obj, 3, 5, spidisplay_te_phase);
 
 // The panel's own dimensions, fixed when it was built.
 static mp_obj_t SPIDisplay_size(mp_obj_t self_in) {

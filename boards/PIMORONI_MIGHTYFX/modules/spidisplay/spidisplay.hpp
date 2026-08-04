@@ -36,6 +36,16 @@ struct TeProbe {
     uint32_t edges;
 };
 
+// The signed phase between two panels' TE falls, captured from both lines in one
+// loop so the edge sets share a clock. skew_us is the first panel's fall relative
+// to the second's, folded to +-period/2. age_us is how long before the capture
+// returned that its newest fall was seen, so a caller can price the drift since.
+struct TePhase {
+    bool ok;            // False when either line yielded too few falls in time
+    int32_t skew_us;
+    uint32_t age_us;
+};
+
 // One update()'s worth of instrumentation, all microseconds. Kicks are
 // interrupt-driven, so stall_us measures the wire genuinely starving for
 // conversion: near zero means the frame was wire-bound, growth means the
@@ -150,6 +160,14 @@ public:
     // panel that was never sent TEON reports rather than hanging. Must not be
     // called while a frame is streaming.
     TeProbe te_probe(uint32_t ms);
+
+    // Capture edges falling edges on both displays' TE lines from one loop and
+    // fold them onto period_us, so a pair's skew can be measured without writing
+    // a frame. Copes with the ~47us TESCAN-narrowed pulse, which a Python
+    // capture cannot. Neither display may hold a staged or streaming frame, a
+    // staged frame owning the DC lines TE is read from.
+    static TePhase te_phase(SPIDisplay &first, SPIDisplay &second,
+                            uint32_t period_us, uint32_t edges, uint32_t timeout_ms);
 
     // Blocking raw register write: DC low, CS low, command, DC high, data,
     // CS high. Used for panel bringup from MicroPython.

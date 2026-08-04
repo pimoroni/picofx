@@ -12,6 +12,10 @@ extern const mp_obj_type_t SPIDisplay_type;
 // update_all(*displays, ...): the cross-bus interleaver, defined in spidisplay.cpp.
 extern const mp_obj_fun_builtin_var_t spidisplay_update_all_obj;
 
+// te_phase(first, second, period_us, ...): a pair's signed TE skew without
+// writing a frame, defined in spidisplay.cpp.
+extern const mp_obj_fun_builtin_var_t spidisplay_te_phase_obj;
+
 // Linker symbols bounding the SRAM region the GC heap would occupy. The GC heap is
 // PSRAM-only here, so this region is free for fast SRAM-backed framebuffers.
 extern uint8_t __GcHeapStart[];
@@ -83,6 +87,7 @@ static const mp_rom_map_elem_t spidisplay_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_buffer_size), MP_ROM_PTR(&spidisplay_buffer_size_obj) },
     { MP_ROM_QSTR(MP_QSTR_release_buffers), MP_ROM_PTR(&spidisplay_release_buffers_obj) },
     { MP_ROM_QSTR(MP_QSTR_update_all), MP_ROM_PTR(&spidisplay_update_all_obj) },
+    { MP_ROM_QSTR(MP_QSTR_te_phase), MP_ROM_PTR(&spidisplay_te_phase_obj) },
 };
 static MP_DEFINE_CONST_DICT(spidisplay_globals, spidisplay_globals_table);
 
