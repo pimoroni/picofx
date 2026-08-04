@@ -44,6 +44,11 @@ REG_PWMFRSEL  = const(0xCC)
 # The memory-write opcode a frame is streamed behind
 RAM_WRITE = REG_RAMWR
 
+# Scan slots per refresh at the PORCTRL porches setup() writes: 320 rows plus 12
+# each of back and front porch. Converts a TE period to a line time whatever the
+# panel's visible rows.
+LINE_SLOTS = const(344)
+
 # Codes for setting screen frame rate
 FRAME_RATE_CONTROL = OrderedDict({
     119: 0x00,
