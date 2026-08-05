@@ -177,8 +177,10 @@ public:
     // Convert and stream a whole frame. src is RGBA8888, or one palette index
     // per pixel when palette is set; src_stride is its pitch in bytes (0 means
     // contiguous). palette is up to palette_len bytes of RGBA words, copied out
-    // before this returns. Each axis is centred, or placed by its off_x/off_y
-    // top-left. Blocks until the frame has left over SPI.
+    // before this returns, each composited over bg by its own alpha; an RGBA
+    // pixel's alpha is ignored. bg is also what the pixels the source does not
+    // cover take. Each axis is centred, or placed by its off_x/off_y top-left.
+    // Blocks until the frame has left over SPI.
     void update(const uint8_t *src, int src_w, int src_h, int src_stride,
                 const uint8_t *palette, size_t palette_len,
                 int rotation, int mirror, int pixel_double,
@@ -366,13 +368,13 @@ private:
     int dst_h;
     int rows_per_band;   // Destination rows per DMA band, clamped at construction
     int cache_columns;
-    // The colour table for an indexed source, copied per frame into this
-    // display's own SRAM: per display because interleaving drives several
-    // through frames concurrently, and SRAM because a per-pixel indirection
-    // into PSRAM reintroduces the XIP miss the column cache exists to remove.
-    static constexpr size_t PALETTE_BYTES = 256 * 4;
 
-    uint8_t *sram_claim = nullptr;  // Band ring, cache storage, then palette, one claim
+    // Band ring, cache storage, then the colour table an indexed source is drawn
+    // through (PALETTE_BYTES, scanline.hpp), one claim. The table is per display
+    // because interleaving drives several through frames concurrently, and in
+    // SRAM because a per-pixel indirection into PSRAM reintroduces the XIP miss
+    // the column cache exists to remove.
+    uint8_t *sram_claim = nullptr;
     size_t sram_claim_bytes = 0;
     size_t band_bytes = 0;          // One band buffer, rounded up to 4
     int cache_capacity = 0;         // Cache storage in bytes

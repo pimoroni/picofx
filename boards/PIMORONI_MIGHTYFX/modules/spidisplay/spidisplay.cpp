@@ -522,17 +522,13 @@ void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h, int src_strid
                            src_stride,
                            indexed ? Indexed8::bytes : RGBA8888::bytes);
 
-    // The table is copied out every frame, unconditionally: upstream assigns
-    // palette entries in place, so a cached copy would go stale silently, and
-    // the copy is 0.3% of a convert. Entries past the given length are zeroed,
-    // since an index byte reaches all 256 whatever the table's length.
+    // The table is built every frame, unconditionally: upstream assigns palette
+    // entries in place, so a cached copy would go stale silently, and the work is
+    // a fraction of a percent of a convert. Compositing the entries here is what
+    // makes an indexed source's transparency free per pixel.
     if (indexed) {
         uint8_t *table = sram_claim + (size_t)slot_count * band_bytes + (size_t)cache_capacity;
-        if (palette_len > PALETTE_BYTES) {
-            palette_len = PALETTE_BYTES;
-        }
-        memcpy(table, palette, palette_len);
-        memset(table + palette_len, 0, PALETTE_BYTES - palette_len);
+        prepare_palette(table, palette, palette_len, desc.bg_r, desc.bg_g, desc.bg_b);
         desc.palette = table;
     }
 
