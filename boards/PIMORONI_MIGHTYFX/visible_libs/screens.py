@@ -9,6 +9,7 @@
 # CONTROLLER names the module supplying the bringup sequence, so the chip stays an
 # independent axis from the panel size.
 
+import logging
 import time
 
 from machine import Pin
@@ -655,11 +656,11 @@ class ScreenPair:
     both panels while the stale content hides it, so resuming costs one late
     frame instead of seconds of visible catching up.
 
-    align defaults on and calibrates at construction, about three seconds of
-    period probes, from which the pair predicts the steady skew it can hold,
-    align_floor_us, and refuses a pair too mismatched to hold any. align=False
-    skips all of it and leaves the panels alone; setting align True later
-    calibrates then.
+    align defaults on and calibrates at construction, about four seconds of
+    period probes which it says it is doing, from which the pair predicts the
+    steady skew it can hold, align_floor_us, and refuses a pair too mismatched
+    to hold any. align=False skips all of it and leaves the panels alone;
+    setting align True later calibrates then.
 
     Alignment holds panel state on the following screen, a non-zero TESCAN and
     at times a slower rate code. Both are restored whenever that screen is
@@ -813,6 +814,11 @@ class ScreenPair:
         number. The nominal rate labels are not derivable from: they are not
         linear in the divider, so every code is probed.
         """
+        # Said at the default level: four seconds of a mute constructor reads as a hung
+        # board. The figure is fixed work, so unlike a folder of images it can be quoted.
+        logging.info("> Calibrating the screen pair, about four seconds ...")
+        started = time.ticks_ms()
+
         screens = self.__screens
         displays = tuple(screen.display for screen in screens)
 
@@ -922,6 +928,8 @@ class ScreenPair:
         self.__te_lines = tuple(screen.__te_line for screen in screens)
         self.__plans = plans
         self.__calibrated = True
+
+        logging.debug(f"> Calibrated in {time.ticks_diff(time.ticks_ms(), started)}ms, predicted skew floor {self.__floor_us:.0f}us")
 
     def __send_walk(self, walk):
         if walk != self.__walk_sent:
