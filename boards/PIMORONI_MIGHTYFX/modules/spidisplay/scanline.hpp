@@ -9,8 +9,8 @@
 // pair of source pointer strides are computed up front. The inner loop then just
 // walks a source pointer, with no per-pixel coordinate maths, multiply, or
 // bounds branch across the covered span. Only the axes that change the loop body
-// (destination packer, pixel-double) are template parameters; rotation and
-// mirror are carried as runtime strides.
+// (source format, destination packer) are template parameters; rotation, mirror
+// and pixel-double are carried in the Descriptor.
 
 #pragma once
 
@@ -108,6 +108,7 @@ struct Descriptor {
     int src_bytes;       // Source bytes per pixel
     int step_x;          // Source pointer advance (bytes) per source pixel along a row
     bool x_uses_u;       // The row walk varies u (else v)
+    bool pixel_double;   // Each source pixel covers a 2x2 destination block
     bool x_adv;          // Advance parity for the row walk (pixel-double only)
     int dst_row_bytes;   // Packed bytes per destination row
     uint8_t bg_r;
@@ -125,11 +126,12 @@ struct Descriptor {
 // emitted as background / covered span / background, keeping the bounds test
 // out of the covered loop; for pair formats a pair straddling an odd covered
 // boundary mixes source and background and is emitted separately.
-template <class Src, class Dst, bool Double>
+template <class Src, class Dst>
 void convert_band(const Descriptor &d, uint8_t *dst_band, int row0, int nrows) {
     const int dst_w = d.dst_w;
     const int dx0 = d.dx0, dx1 = d.dx1;
     const int step_x = d.step_x;
+    const bool dbl = d.pixel_double;
     const int x_adv = d.x_adv ? 1 : 0;
     const uint8_t bg_r = d.bg_r, bg_g = d.bg_g, bg_b = d.bg_b;
     const typename Src::Loader loader(d.palette);
@@ -180,18 +182,18 @@ void convert_band(const Descriptor &d, uint8_t *dst_band, int row0, int nrows) {
         // it here and stepping from there tracks the affine map exactly.
         const int u0 = d.ua * dx0 + d.ub * dst_y + d.uc;
         const int v0 = d.va * dx0 + d.vb * dst_y + d.vc;
-        const int col = Double ? (u0 >> 1) : u0;
-        const int srow = Double ? (v0 >> 1) : v0;
+        const int col = dbl ? (u0 >> 1) : u0;
+        const int srow = dbl ? (v0 >> 1) : v0;
         const uint8_t *sp = d.src + (long)srow * d.src_row_bytes + (long)col * Src::bytes;
         int xpar = 0;
-        if constexpr (Double) {
+        if (dbl) {
             xpar = (d.x_uses_u ? u0 : v0) & 1;
         }
 
         if constexpr (!Dst::pairs) {
             out = fill_bg(out, dx0);
             uint8_t r, g, b;
-            if constexpr (Double) {
+            if (dbl) {
                 // The source advances once per two destination pixels, when
                 // xpar == x_adv. A leading pixel where that lands first aligns
                 // the walk so each remaining source pixel is emitted twice.
@@ -239,7 +241,7 @@ void convert_band(const Descriptor &d, uint8_t *dst_band, int row0, int nrows) {
             auto fetch = [&](int x, uint8_t &r, uint8_t &g, uint8_t &b) {
                 if ((unsigned)(x - dx0) < (unsigned)(dx1 - dx0)) {
                     loader.load(sp, r, g, b);
-                    if constexpr (Double) {
+                    if (dbl) {
                         if (xpar == x_adv) {
                             sp += step_x;
                         }
@@ -267,7 +269,7 @@ void convert_band(const Descriptor &d, uint8_t *dst_band, int row0, int nrows) {
                 p += 2;
             }
             const int ie = (dx1 & 1) ? b - 2 : b;
-            if constexpr (Double) {
+            if (dbl) {
                 // One source advance per pair. Whole pairs leave xpar
                 // unchanged, so the phase holds across the loop.
                 uint8_t r, g, b;
@@ -324,23 +326,18 @@ inline Transform map_transform(int rotation, int mirror) {
 // A selected kernel instantiation: converts nrows destination rows from row0.
 using ConvertFn = void (*)(const Descriptor &, uint8_t *, int, int);
 
-template <class Src, class Dst>
-inline ConvertFn select_dbl(bool dbl) {
-    return dbl ? &convert_band<Src, Dst, true>
-               : &convert_band<Src, Dst, false>;
-}
-
-// Resolve the runtime formats to a kernel instantiation. Rotation and mirror
-// are runtime strides in the descriptor, so they are not part of the selection;
-// the source format is, because a per-pixel palette test in the loop body
-// cannot be hoisted and costs the direct path about 5% of its convert budget.
-inline ConvertFn select_convert(int fmt, bool dbl, bool indexed) {
+// Resolve the runtime formats to a kernel instantiation. Rotation, mirror and
+// pixel-double are carried in the descriptor, so they are not part of the
+// selection; the source format is, because a per-pixel palette test in the loop
+// body cannot be hoisted and costs the direct path about 5% of its convert
+// budget.
+inline ConvertFn select_convert(int fmt, bool indexed) {
     if (fmt == RGB444::format) {
-        return indexed ? select_dbl<Indexed8, RGB444>(dbl)
-                       : select_dbl<RGBA8888, RGB444>(dbl);
+        return indexed ? &convert_band<Indexed8, RGB444>
+                       : &convert_band<RGBA8888, RGB444>;
     }
-    return indexed ? select_dbl<Indexed8, RGB565>(dbl)
-                   : select_dbl<RGBA8888, RGB565>(dbl);
+    return indexed ? &convert_band<Indexed8, RGB565>
+                   : &convert_band<RGBA8888, RGB565>;
 }
 
 // Fill a descriptor for a whole-frame conversion. Each axis is centred, or
@@ -418,6 +415,7 @@ inline Descriptor make_descriptor(const uint8_t *src, int src_w, int src_h,
     d.va = va; d.vb = vb; d.vc = vc;
     d.src_row_bytes = src_row_bytes > 0 ? src_row_bytes : src_w * src_bytes;
     d.src_bytes = src_bytes;
+    d.pixel_double = dbl;
 
     // dst_x is bound by whichever coordinate varies with it, and supplies the
     // per-pixel source stride; dst_y is bound by the other coordinate.

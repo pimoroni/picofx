@@ -36,11 +36,10 @@ public:
     // Per frame. The cache serves the rotations whose row walk strides by whole
     // source rows, and only pays for itself when the source is slower than SRAM.
     // Anything else converts straight from the source.
-    void begin(const Descriptor &desc, ConvertFn convert, bool pixel_double,
-               bool slow_source) {
+    void begin(const Descriptor &desc, ConvertFn convert, bool slow_source) {
         d = desc;
         convert_fn = convert;
-        pixel_shift = pixel_double ? 1 : 0;
+        pixel_shift = d.pixel_double ? 1 : 0;
         invalidate();
 
         window_depth = columns;

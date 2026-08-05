@@ -536,7 +536,7 @@ void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h, int src_strid
         desc.palette = table;
     }
 
-    ConvertFn convert = select_convert(fmt, dbl, indexed);
+    ConvertFn convert = select_convert(fmt, indexed);
 
     // Every band is this size except a possibly-shorter final one
     full_band_bytes = (size_t)rows_per_band * desc.dst_row_bytes;
@@ -557,7 +557,7 @@ void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h, int src_strid
     // window seeded by one serves the next.
     cache = ColumnCache((uint32_t *)(sram_claim + (size_t)slot_count * band_bytes),
                         cache_capacity, cache_columns);
-    cache.begin(desc, convert, dbl, src_in_psram);
+    cache.begin(desc, convert, src_in_psram);
 
     last.pre_us = time_us_32() - t_pre;
     last.convert_total_us = 0;
