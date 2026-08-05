@@ -6,11 +6,17 @@
 # Phases: placement resolution asserted against the documented table, since wrong
 # disambiguation is silent; an aligned run reporting steady skew against the pair's
 # own predicted floor; a cadence run asserting normal animation never reaches the
-# resync trigger; pause-and-resume trials with eyes on the resume instant; and solo
-# updates on each screen, which must hand back the follower's panel state.
+# resync trigger; a paced run at a fixed interval near the pair's own frame time,
+# which is where a frame that overruns its slot starts without its TE edge and back
+# to back pushing does not look; pause-and-resume trials with eyes on the resume
+# instant; and solo updates on each screen, which must hand back the follower's
+# panel state.
 #
-# Set SCREEN to the panel type on the ports. A diagnostic, not an example, so it is
-# not copied to the board. Run it with mpremote, with eyes on both panels.
+# Set SCREEN to the panel type on the ports. Every phase runs the default reserve and
+# an SRAM canvas redrawn per frame, which is what the thresholds below were measured
+# against; a pair on Reserve.FULL_SIZE_IMAGES converting heap images is a dearer frame
+# and is not covered here. A diagnostic, not an example, so it is not copied to the
+# board. Run it with mpremote, with eyes on both panels.
 
 import time
 
@@ -22,6 +28,10 @@ from screens import Screen154, Screen280, ScreenPair
 SCREEN = Screen154          # or Screen280: the panel type on the ports
 ALIGN_MS = 30_000           # the aligned run; raise for an acceptance soak
 CADENCE_FRAMES = 200
+# A pair frame costs about 78ms on a 280, so 80ms is a slot it can only just fill and
+# the interval an animation is most likely to be authored at.
+PACE_MS = 80
+PACE_FRAMES = 120
 PAUSES_MS = (300, 500, 700, 1000, 1400, 2000)
 RESUME_FRAMES = 20
 # An update this late must have spent a resync. Measured on both pair types: the
@@ -129,6 +139,39 @@ def cadence_run():
     print()
 
 
+def paced_run():
+    """An animation's fixed interval, which is where a late frame loses its TE edge.
+
+    The cadence run above pushes back to back, so every frame starts as soon as the
+    last finished and none is ever due before it is ready. An animation instead asks
+    for one every PACE_MS, and a frame overrunning that slot leaves the next already
+    due, which begins it without waiting. Only te_timeouts reports that.
+    """
+    print("paced run: {} frames at {}ms, the interval an animation asks for".format(
+        PACE_FRAMES, PACE_MS))
+    timeouts0 = timeouts()
+    spans = []
+    start = time.ticks_ms()
+    showing = None
+    while len(spans) < PACE_FRAMES:
+        slot = time.ticks_diff(time.ticks_ms(), start) // PACE_MS
+        if slot != showing:
+            showing = slot
+            spans.append(pair_frame(slot) // 1000)
+
+    spans.sort()
+    over = sum(1 for span in spans if span > PACE_MS)
+    late = timeouts() - timeouts0
+    print("  median {}ms, p95 {}ms, worst {}ms, {} of {} overran the slot,"
+          " te_timeouts {}".format(
+              spans[len(spans) // 2], spans[(len(spans) * 95) // 100], spans[-1],
+              over, len(spans), late))
+    # Overrunning is allowed: the pair's frame time is what it is, and a caller driving
+    # from a clock skips rather than falling behind. Losing the edge is not.
+    assert late == 0, f"{late} frames began without their TE edge at a {PACE_MS}ms pace"
+    print()
+
+
 def pause_trials():
     print("pause and resume trials. Watch the resume instant for a stagger")
     frame = 0
@@ -183,6 +226,11 @@ try:
     pair = ScreenPair(*built)
     print("calibrated in {}ms, predicted floor {:.0f}us".format(
         time.ticks_diff(time.ticks_ms(), t0), pair.align_floor_us))
+    # Named, since the file now covers more than one configuration
+    first = pair.screens[0]
+    print("{} pair at {} baud, {}-bit, {}fps, {}B of SRAM a screen".format(
+        SCREEN.__name__, first.display.baudrate(), first.bitdepth, first.framerate,
+        first.display.sram_bytes()))
 
     check_resolution()
     try:
@@ -196,6 +244,7 @@ try:
 
     aligned_run()
     cadence_run()
+    paced_run()
     pause_trials()
     solo_updates()
     print("done")
