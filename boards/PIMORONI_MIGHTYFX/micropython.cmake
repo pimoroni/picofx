@@ -20,6 +20,12 @@ find_package(PICOVECTOR_MICROPYTHON CONFIG REQUIRED)
 # Build picovector for Tufty 2350
 target_compile_definitions(usermod_picovector INTERFACE m_malloc_no_scan=m_malloc)
 
+# A GIF composites to one indexed byte per pixel per frame, and picovector caps that
+# at 2MB by default. This board's heap is PSRAM, so a full-screen animation of a few
+# dozen frames is affordable: 6MB admits 320x320 over 60 frames and still leaves the
+# heap room to present them.
+target_compile_definitions(usermod_picovector INTERFACE PV_GIF_MAX_BYTES=6291456)
+
 # Essential
 include(pimoroni_i2c/micropython)
 
