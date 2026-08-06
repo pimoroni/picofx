@@ -59,6 +59,25 @@ def __code_for(table, value, what):
         raise ValueError(f"{value} is not a valid {what}. Expected {expected}.") from e
 
 
+def __for_cores(row, dual, required, what):
+    """A PROFILES or FULL_IMAGE_RESERVE row, taking its dual-core override if any.
+
+    A row's "dual" entry is the whole row again for a firmware that converts on
+    both cores, not the settings that differ from the single-core ones. So reading
+    one states its configuration outright, and changing a single-core value cannot
+    move the other case by accident. A row without one is used for both.
+    """
+    if not dual or "dual" not in row:
+        return row
+
+    override = row["dual"]
+    missing = [key for key in required if key not in override]
+    if missing:
+        raise ValueError(f"the dual-core {what} row names {', '.join(missing)} nowhere. It replaces the single-core row rather than amending it, so it needs every setting that row has.")
+
+    return override
+
+
 def __pair_values(value, name):
     """One value for both screens, or a 2-tuple giving one each."""
     if isinstance(value, (tuple, list)):
@@ -399,6 +418,14 @@ class Screen(ScreenBase):
     second. Every resolved value is validated against the controller's tables, so
     a bad experiment fails where the mistake is.
 
+    A row's "dual" entry, where it has one, replaces it on a firmware that converts
+    frames on both cores, some wires reaching a higher rate once one core is no
+    longer what the wire waits for. dual_profiles=True or False chooses that set by
+    hand, for measuring one against the other; by default the firmware decides, and
+    a build without a second core to convert on never sees the dual rows. Turning
+    spidisplay.dual_convert() off after a screen is built leaves it holding a rate
+    chosen for two cores, so that setting is for diagnostics.
+
     reserve says what the screen's share of the fast SRAM is for, and is the setting
     to reach for rather than the three below: Reserve.FULL_SIZE_IMAGES buys the one
     case that cannot keep up otherwise, two screens each converting their own
@@ -433,17 +460,24 @@ class Screen(ScreenBase):
     # Measured tuning per (baudrate, bitdepth), from the 21,600-cell sweep in
     # .claude/results/ANALYSIS.md "Full PSRAM rerun": the band and cache holding
     # the rotation-90 floor, and the highest controller rate that floor sustains
-    # (capped at the useful 60fps).
+    # (capped at the useful 60fps). A row may carry a "dual" replacement for a
+    # firmware converting on both cores, which is a rate its wire could not hold
+    # while one core was what it waited for.
     PROFILES = {}
 
     def __init__(self, port, cs=None, dc=None, te=True, v_sync=None, bl=True,
                  width=None, height=None, bitdepth=None, framerate=None,
                  baudrate=None, reserve=Reserve.CANVAS_SPACE, band_lines=None,
-                 cache_columns=None, stage_lines=None):
+                 cache_columns=None, stage_lines=None, dual_profiles=None):
 
         width = self.WIDTH if width is None else width
         height = self.HEIGHT if height is None else height
         self.__baudrate = self.BAUDRATE if baudrate is None else baudrate
+
+        # Which set of measured settings this wire gets. The firmware answers it:
+        # dual_convert() is off in any build without a second core to convert on.
+        if dual_profiles is None:
+            dual_profiles = spidisplay.dual_convert()
 
         if bitdepth is None:
             for depth in self.DEPTHS:
@@ -460,6 +494,10 @@ class Screen(ScreenBase):
             profile = {"band_lines": self.BAND_LINES,
                        "cache_columns": self.CACHE_COLUMNS,
                        "framerate": self.FRAMERATE}
+        else:
+            profile = __for_cores(profile, dual_profiles,
+                                  ("band_lines", "cache_columns", "framerate"),
+                                  "PROFILES")
 
         # reserve picks the measured recipe; a named band, cache or stage still wins,
         # so a profiling run can construct anything.
@@ -467,6 +505,10 @@ class Screen(ScreenBase):
             recipe = self.FULL_IMAGE_RESERVE.get((self.__baudrate, bitdepth))
             if recipe is None:
                 raise ValueError(f"Reserve.FULL_SIZE_IMAGES has no measured recipe for {type(self).__name__} at {self.__baudrate}Hz {bitdepth}-bit. Measure one, or name stage_lines and cache_columns.")
+
+            recipe = __for_cores(recipe, dual_profiles,
+                                 ("stage_lines", "cache_columns"),
+                                 "FULL_IMAGE_RESERVE")
 
             if stage_lines is None:
                 stage_lines = recipe["stage_lines"]

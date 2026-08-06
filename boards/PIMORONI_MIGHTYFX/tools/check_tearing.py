@@ -13,6 +13,7 @@ import gc
 import machine
 import time
 
+import spidisplay
 import st7789
 from mighty_fx import SPCE, MightyFX
 from picovector import color, image
@@ -44,9 +45,15 @@ STATS = ("convert_us", "te_wait_us", "frame_us")
 
 
 def offset_rate(screen_class, baud, depth):
-    """The profile's rate plus FPS_OFFSET, snapped to a controller step."""
-    base = screen_class.PROFILES[(baud, depth)]["framerate"]
-    wanted = base + FPS_OFFSET
+    """The profile's rate plus FPS_OFFSET, snapped to a controller step.
+
+    Read through the row's dual-core replacement where this firmware has one, since
+    a rate the shipped code no longer picks would prove nothing about the profiles.
+    """
+    row = screen_class.PROFILES[(baud, depth)]
+    if spidisplay.dual_convert() and "dual" in row:
+        row = row["dual"]
+    wanted = row["framerate"] + FPS_OFFSET
     return min(st7789.FRAME_RATE_CONTROL, key=lambda step: abs(step - wanted))
 
 
