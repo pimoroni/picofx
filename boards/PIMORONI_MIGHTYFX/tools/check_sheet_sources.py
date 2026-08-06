@@ -371,12 +371,12 @@ try:
                   f" 'mpr.ps1 fs cp <out> :{path}' (fs cp, NOT -Stage)")
             return
         print(f"  loaded {type(gif).__name__} {gif.width}x{gif.height},"
-              f" frames {sheet.frames}, palette {gif.palette_size} entries,"
+              f" frames {sheet.sprites}, palette {gif.palette_size} entries,"
               f" buffer {len(memoryview(gif))} bytes")
 
         # The whole strip is a contiguous indexed source: its visible columns
         # are the frames' colours side by side.
-        fw = gif.width // sheet.frames
+        fw = gif.width // sheet.sprites
         vis = min(gif.width, W)
         row = b"".join(pack565(CELL_COLORS[x // fw]) for x in range(vis))
         row += pack565(BAR_BG) * (W - vis)
@@ -386,7 +386,7 @@ try:
 
         # First and last frames: strided indexed cells, the last one's origin
         # deep in the strip and its extent ending exactly at the buffer's.
-        for i in (0, sheet.frames - 1):
+        for i in (0, sheet.sprites - 1):
             gif_case(f"frame {i}", sheet.sprite(i, 0),
                      want_solid(CELL_COLORS[i], fw, gif.height))
 

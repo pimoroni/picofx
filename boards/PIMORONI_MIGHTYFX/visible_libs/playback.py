@@ -401,9 +401,9 @@ class GIFPlayer(ImagePlayer):
         logging.debug(f"> Loading {path} ...")
         started = time.ticks_ms()
         self.__sheet = picovector.spritesheet.load(path)
-        logging.debug(f"> Loaded {self.__sheet.frames} frames in {time.ticks_diff(time.ticks_ms(), started)}ms")
+        logging.debug(f"> Loaded {self.__sheet.sprites} frames in {time.ticks_diff(time.ticks_ms(), started)}ms")
 
-        super().__init__(self.__sheet.frames, self.__sheet.timings, fps=fps, loop=loop,
+        super().__init__(self.__sheet.sprites, self.__sheet.timings, fps=fps, loop=loop,
                          ping_pong=ping_pong, hold=hold, paused=paused)
 
     def __image_for(self, frame):
