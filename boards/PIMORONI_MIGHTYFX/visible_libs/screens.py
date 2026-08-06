@@ -632,11 +632,20 @@ class Screen280(Screen):
     # panel oscillators run the set rate fast by up to ~1.5% (one measured unit
     # scanned 46.35fps at setting 46, leaving 1.1ms of margin and a marginal
     # tear), and the step down restores ~2ms of margin on a fast unit.
+    # The two dual rows are the wires one core could not keep fed: 60fps needs a
+    # 33,333us budget and one core spent 34,697us at 37.5MHz 12-bit, so those rates
+    # were never available before conversion ran on both cores. Both hold 2.5 to
+    # 2.8ms of margin, more than the 24MHz row runs clean on, and 62fps above them
+    # is clean too, so each ships a full controller step below anything measured
+    # marginal. 37.5MHz 16-bit gets no dual row: it reaches 53 by arithmetic but on
+    # 728us, which the panel oscillator's own ~1.5% spread can spend by itself.
     PROFILES = {
         (24_000_000, 12): {"band_lines": 4, "cache_columns": 4, "framerate": 45},
         (37_500_000, 16): {"band_lines": 12, "cache_columns": 12, "framerate": 52},
-        (37_500_000, 12): {"band_lines": 12, "cache_columns": 12, "framerate": 55},
-        (75_000_000, 16): {"band_lines": 12, "cache_columns": 12, "framerate": 53},
+        (37_500_000, 12): {"band_lines": 12, "cache_columns": 12, "framerate": 55,
+                           "dual": {"band_lines": 12, "cache_columns": 12, "framerate": 60}},
+        (75_000_000, 16): {"band_lines": 12, "cache_columns": 12, "framerate": 53,
+                           "dual": {"band_lines": 12, "cache_columns": 12, "framerate": 60}},
     }
 
     # Measured on two of these panels: a pair converting full-size heap images runs
