@@ -250,5 +250,5 @@ try:
     print("done")
 finally:
     if pair is not None:
-        pair.align = False
+        pair.stop_aligning()
     mighty.shutdown()

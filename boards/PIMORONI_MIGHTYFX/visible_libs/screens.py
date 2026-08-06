@@ -707,15 +707,17 @@ class ScreenPair:
     both panels while the stale content hides it, so resuming costs one late
     frame instead of seconds of visible catching up.
 
-    align defaults on and calibrates at construction, about four seconds of
-    period probes which it says it is doing, from which the pair predicts the
-    steady skew it can hold, align_floor_us, and refuses a pair too mismatched
-    to hold any. align=False skips all of it and leaves the panels alone;
-    setting align True later calibrates then.
+    align defaults to aligning where the pair can, calibrating at construction:
+    about four seconds of period probes which it says it is doing, from which the
+    pair predicts the steady skew it can hold, align_floor_us. A pair too
+    mismatched to hold any says why and runs unaligned, is_aligned() then
+    reporting False. align=True refuses such a pair instead, and align=False
+    leaves the panels alone; start_aligning() takes the four seconds later, and
+    stop_aligning() stops.
 
     Alignment holds panel state on the following screen, a non-zero TESCAN and
     at times a slower rate code. Both are restored whenever that screen is
-    updated outside its pair, and when align is set False. update_pair() stays
+    updated outside its pair, and by stop_aligning(). update_pair() stays
     underneath as the stateless entry, which is what the diagnostics use.
     """
 
@@ -739,7 +741,7 @@ class ScreenPair:
     CAPTURE_TIMEOUT_MS = 500
     SCHEDULE_TIMEOUT_MS = 250   # an excursion spans at most MAX_FRAMES + 1 periods
 
-    def __init__(self, first, second, align=True):
+    def __init__(self, first, second, align=None):
         if first is second:
             raise ValueError("a pair needs two different screens")
         if first.port is second.port:
@@ -757,39 +759,64 @@ class ScreenPair:
         self.__timeouts_seen = 0
         self.__n_hi = None
         self.__dither_hi = 0
-        self.align = align
+
+        if align is None:
+            # A request rather than a requirement: every reason a pair cannot hold
+            # alignment is a fact about the panels, so saying so and streaming
+            # unaligned still leaves the caller the interleaving, which is the larger
+            # part of what a pair buys. Nothing needs undoing on the way out, since
+            # start_aligning() raises before it changes anything and calibration hands
+            # both panels back their nominal rate whichever way it ends.
+            try:
+                self.start_aligning()
+            except ValueError as e:
+                logging.info(f"> Screen pair could not align: {e}")
+        elif align:
+            self.start_aligning()
 
     @property
     def screens(self):
         return self.__screens
 
-    @property
-    def align(self):
-        """Whether the pair holds its panels' TE phases together."""
+    def is_aligned(self):
+        """Whether the pair is holding its panels' TE phases together.
+
+        The state alignment reached rather than what was asked of it, so False
+        where a request went unmet and False again after stop_aligning().
+        """
         return self.__align
 
-    @align.setter
-    def align(self, value):
-        value = bool(value)
-        if value == self.__align:
+    def start_aligning(self):
+        """Start holding the panels' TE phases together, measuring them first.
+
+        The first call spends about four seconds probing both panels' periods,
+        which it says it is doing; later calls resume from those measurements.
+        Raises where this pair cannot hold alignment, saying which reason.
+        """
+        if self.__align:
             return
-        if value:
-            first, second = self.__screens
-            if not (first.v_sync and second.v_sync):
-                raise ValueError("align waits on both panels' tearing-effect signals, so it needs both screens created with te and v_sync")
-            if not self.__calibrated:
-                self.__calibrate()
-            self.__walk = 0
-            self.__slow_on = False
-            self.__timeouts_seen = self.__f_disp.te_timeouts() + self.__l_disp.te_timeouts()
-            self.__last_frame_ms = None
-            self.__f_screen.__pair = self
-            self.__align = True
-        else:
-            self.__align = False
-            if self.__calibrated:
-                self.__restore_panel()
-                self.__f_screen.__pair = None
+
+        first, second = self.__screens
+        if not (first.v_sync and second.v_sync):
+            raise ValueError("alignment waits on both panels' tearing-effect signals, so it needs both screens created with te and v_sync")
+        if not self.__calibrated:
+            self.__calibrate()
+        self.__walk = 0
+        self.__slow_on = False
+        self.__timeouts_seen = self.__f_disp.te_timeouts() + self.__l_disp.te_timeouts()
+        self.__last_frame_ms = None
+        self.__f_screen.__pair = self
+        self.__align = True
+
+    def stop_aligning(self):
+        """Stop correcting, handing the following panel its TESCAN and rate back."""
+        if not self.__align:
+            return
+
+        self.__align = False
+        if self.__calibrated:
+            self.__restore_panel()
+            self.__f_screen.__pair = None
 
     @property
     def align_floor_us(self):
@@ -834,7 +861,7 @@ class ScreenPair:
 
         if self.__align:
             if v_sync is False:
-                raise ValueError("an aligned pair waits on the tearing-effect signal every frame, since that is what alignment measures by. Set align False for free-running frames.")
+                raise ValueError("an aligned pair waits on the tearing-effect signal every frame, since that is what alignment measures by. Call stop_aligning() for free-running frames.")
 
             # A pause leaves the pair drifted apart. Once the expected error
             # passes what the fine loop can hide, spend a resync on it while
@@ -915,7 +942,7 @@ class ScreenPair:
             time.sleep_ms(100)
 
         if nominals[fi] - 1 not in sweep[fi]:
-            raise ValueError(f"the follower is already at {f_screen.framerate}fps, its controller's slowest rate, so alignment has no slower code to pull with")
+            raise ValueError(f"the faster panel is already at {f_screen.framerate}fps, the slowest rate it has, so alignment has no slower one to pull it with")
 
         # The rate quantum bounds what the loop can hold: one slow-code frame
         # removes quantum lines while every frame adds the drift, so a pair
@@ -923,8 +950,16 @@ class ScreenPair:
         natural = line_slots * (1.0 / periods[fi] - 1.0 / periods[li])  # lines per us
         drift = natural * periods[fi]                                   # lines per period
         quantum = line_slots * (sweep[fi][nominals[fi] - 1] / periods[fi] - 1.0)
+        logging.debug(f"> Pair drift {drift:.1f} lines a period, against {quantum:.1f} lines a one-step rate change buys back")
         if drift >= quantum:
-            raise ValueError(f"this pair drifts {drift:.1f} lines a period against a one-step rate quantum of {quantum:.1f}, so no slow-code duty can hold it aligned. Pair better-matched panels, or build with align=False.")
+            # Panels of different types take their rate from their own PROFILES and
+            # so can disagree on a wire where both are tuned well. That has a fix
+            # from here, unlike two panels already on one rate.
+            if screens[0].framerate != screens[1].framerate:
+                remedy = f"Set both screens to the same framerate, {screens[0].framerate}fps and {screens[1].framerate}fps being too far apart"
+            else:
+                remedy = "Pair better-matched panels"
+            raise ValueError(f"these panels' refreshes drift apart faster than alignment can pull them back. {remedy}, or create the pair with align=False.")
 
         # Excursion options per panel: the no-op, then each probed code held for
         # one to MAX_FRAMES of that panel's own frames. A slower follower or a
