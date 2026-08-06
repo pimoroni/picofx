@@ -164,10 +164,6 @@ class SPCEPort:
         return self.__bus
 
     @property
-    def screens(self):
-        return tuple(self.__screens)
-
-    @property
     def selector(self):
         """The port's ScreenMux, if its screens are addressed by index."""
         return self.__selector
@@ -268,17 +264,6 @@ class SPCEPort:
 
         if self.__bus is not None:
             self.__bus.__del__()
-
-    def broadcast(self, *screens):
-        """A group driving several of this port's screens with one frame."""
-        if len(screens) < 2:
-            raise ValueError("a broadcast group needs at least two screens")
-
-        for screen in screens:
-            if screen.port is not self:
-                raise ValueError(f"that screen is not on SP/CE {self.name}, and two ports are two streams")
-
-        return screens[0].group_with(*screens[1:])
 
 
 class MightyFX:

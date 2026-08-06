@@ -237,6 +237,8 @@ class ScreenBase:
         self.__members = members
         self.__canvases = {}
         self.__pair = None      # The ScreenPair holding panel state on this screen
+        self.__group = None     # The ScreenGroup this screen is a member of, if any
+        self.__subset_of = None  # The group a subset narrows, so it writes its members only
 
     @property
     def port(self):
@@ -349,7 +351,25 @@ class ScreenBase:
             raise ValueError(f"{rotation} is not a valid angle. Expected 0, 90, 180, or 270.")
 
     @micropython.native
-    def update(self, image, rotation=0, mirror=False, v_sync=None, bg_color=picovector.color.black, pixel_double=False, offset=None):
+    def __write_targets(self, to):
+        """The displays a write drives, or None for every one this object holds.
+
+        A subset narrows to its own members when the caller names none, which is
+        what makes front.update(image) write only the panels front stands for.
+        """
+        if to is None:
+            if self.__subset_of is None:
+                return None
+            to = self.__members
+
+        members = self.screens
+        for screen in to:
+            if screen not in members:
+                raise ValueError(f"{screen} is not one of these screens, so a frame cannot be sent to it")
+
+        return tuple(screen.display for screen in to)
+
+    def update(self, image, rotation=0, mirror=False, v_sync=None, bg_color=picovector.color.black, pixel_double=False, offset=None, to=None):
         # A frame outside the pair first hands back the panel state alignment
         # holds, since the narrowed TE pulse is only safe under the pair's poll
         if self.__pair is not None:
@@ -374,11 +394,12 @@ class ScreenBase:
                               rotation=rotation,
                               mirror=1 if mirror else 0,
                               pixel_double=1 if pixel_double else 0,
-                              bg=bg, offset=offset, v_sync=v_sync)
+                              bg=bg, offset=offset, v_sync=v_sync,
+                              to=self.__write_targets(to))
         self.drawn()
 
     @micropython.native
-    def prepare(self, image, rotation=0, mirror=False, bg_color=picovector.color.black, pixel_double=False, offset=None):
+    def prepare(self, image, rotation=0, mirror=False, bg_color=picovector.color.black, pixel_double=False, offset=None, to=None):
         """Stage a frame for update_pair(), converting as far ahead as it can.
 
         Placement is per screen, so a pair can differ in rotation, mirroring and
@@ -394,7 +415,8 @@ class ScreenBase:
                                rotation=rotation,
                                mirror=1 if mirror else 0,
                                pixel_double=1 if pixel_double else 0,
-                               bg=bg, offset=offset)
+                               bg=bg, offset=offset,
+                               to=self.__write_targets(to))
 
 
 class Screen(ScreenBase):
@@ -595,11 +617,6 @@ class Screen(ScreenBase):
         """The rate this panel asked for, against display.baudrate()'s achieved one."""
         return self.__baudrate
 
-    def group_with(self, *screens):
-        """A broadcast group over this screen and the others named."""
-        return Broadcast((self,) + screens)
-
-
 class Screen154(Screen):
     WIDTH, HEIGHT = 240, 240
     # No 16-bit row at 24MHz: that frame outruns the controller's 39fps floor.
@@ -661,20 +678,24 @@ class Screen280(Screen):
     }
 
 
-class Broadcast(ScreenBase):
+class ScreenGroup(ScreenBase):
     """Several of a port's screens driven as one, sharing a frame.
 
     One stream reaches every member, so a wall of panels renders in the time one of
     them takes. The members keep their identity, so each can still be brought up and
-    updated on its own, which is what lets a group carry differing MADCTL.
+    updated on its own.
 
-    Built by a port's broadcast(), and only over panels agreeing on bit depth,
-    dimensions, rate and tuning. Those are copied once, so a member that later
-    re-rates itself moves only itself.
+    Built directly over panels agreeing on bit depth, dimensions, rate and tuning.
+    Those are copied once, so a member that later re-rates itself moves only itself.
+    A screen belongs to one group at a time, which is what keeps ownership of the
+    panel state a group holds single.
+
+    subset() names fewer of the members over the same display, for a frame that
+    reaches only some of them. A subset owns nothing and costs no display.
     """
 
-    def __init__(self, screens):
-        if len(screens) < 2:
+    def __init__(self, *screens, parent=None):
+        if len(screens) < 2 and parent is None:
             raise ValueError("a broadcast group needs at least two screens")
 
         port = screens[0].port
@@ -685,6 +706,19 @@ class Broadcast(ScreenBase):
             if screen.port is not port:
                 raise ValueError("a broadcast group has to be on one port, since two ports are two streams")
 
+        # A subset is a member set over its parent's display, so it claims no
+        # members, builds no display, and leaves ownership where it is.
+        if parent is not None:
+            super().__init__(port, parent.display, parent.width, parent.height,
+                             parent.bitdepth, parent.backlight, False, False, None,
+                             parent.reserve, members=tuple(screens))
+            self.__subset_of = parent
+            return
+
+        for screen in screens:
+            if screen.__group is not None:
+                raise ValueError("a screen belongs to one group at a time, and one of these is already in another. Take a subset of the group it is in, or build a single group over every panel that shares a frame.")
+
         first = screens[0]
         display = port.bus.broadcast(*[screen.display for screen in screens])
 
@@ -693,6 +727,26 @@ class Broadcast(ScreenBase):
         super().__init__(port, display, first.width, first.height, first.bitdepth,
                          first.backlight, False, False, None, first.reserve,
                          members=tuple(screens))
+
+        for screen in screens:
+            screen.__group = self
+
+    def subset(self, *screens):
+        """A member set over this group's display, writing only what it names.
+
+        Cheap enough to make per frame: no display and no finaliser, just this
+        group's own with a narrower set of members. A subset of one is allowed, so
+        a loop over subsets does not break at the last.
+        """
+        if not screens:
+            raise ValueError("a subset needs at least one screen")
+
+        members = self.screens
+        for screen in screens:
+            if screen not in members:
+                raise ValueError(f"{screen} is not a member of this group, so it cannot be in a subset of it")
+
+        return ScreenGroup(*screens, parent=self.__subset_of or self)
 
 
 class ScreenPair:
