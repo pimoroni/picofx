@@ -528,8 +528,14 @@ TePhase SPIDisplay::te_phase(SPIDisplay &first, SPIDisplay &second,
 void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h, int src_stride,
                          const uint8_t *palette, size_t palette_len,
                          int rotation, int mirror, int pixel_double,
-                         uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y) {
+                         uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
+                         uint64_t target_cs, uint64_t target_dc) {
     uint32_t t_pre = time_us_32();
+
+    // This write owns its lines from here until IDLE clears them. A caller naming
+    // lines this display does not drive is refused at the binding.
+    target_cs_mask = target_cs;
+    target_dc_mask = target_dc;
 
     use_baudrate();
 
@@ -605,10 +611,10 @@ void SPIDisplay::start_stream() {
     uint32_t t_frame = time_us_32();
     frame_started_us = t_frame;
     last.write_start_us = t_frame;
-    gpio_put_masked64(dc_mask, 0);
-    gpio_clr_mask64(cs_mask);
+    gpio_put_masked64(write_dc(), 0);
+    gpio_clr_mask64(write_cs());
     spi_write_blocking(bus->spi, &ram_write_cmd, 1);
-    gpio_put_masked64(dc_mask, dc_mask);
+    gpio_put_masked64(write_dc(), write_dc());
 
     // RAMWR returned with the shifter idle, so widening here truncates nothing
     if (wide_frames) {
@@ -741,7 +747,7 @@ bool SPIDisplay::finish_if_drained() {
         return false;
     }
 
-    gpio_set_mask64(cs_mask);
+    gpio_set_mask64(write_cs());
     uint32_t t_end = time_us_32();
     if (stall_pending) {
         last.stall_us += t_end - stall_started_us;
@@ -760,6 +766,8 @@ bool SPIDisplay::finish_if_drained() {
     if (wide_frames) {
         spi_set_format(bus->spi, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
     }
+    target_cs_mask = 0;
+    target_dc_mask = 0;
     state = FrameState::IDLE;
     return true;
 }
@@ -825,10 +833,12 @@ void SPIDisplay::abort_frame() {
     if (state == FrameState::ARMED && !te_fired && te_pin < 0) {
         gpio_set_dir(dc_pin, GPIO_OUT);
     }
-    gpio_set_mask64(cs_mask);
-    gpio_set_dir_masked64(dc_mask, dc_mask);
-    gpio_set_mask64(dc_mask);
+    gpio_set_mask64(write_cs());
+    gpio_set_dir_masked64(write_dc(), write_dc());
+    gpio_set_mask64(write_dc());
     stall_pending = false;
+    target_cs_mask = 0;
+    target_dc_mask = 0;
     state = FrameState::IDLE;
 }
 
@@ -836,10 +846,11 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h, int src_stride
                         const uint8_t *palette, size_t palette_len,
                         int rotation, int mirror, int pixel_double,
                         uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
-                        bool v_sync, uint32_t timeout_us) {
+                        bool v_sync, uint32_t timeout_us,
+                        uint64_t target_cs, uint64_t target_dc) {
     prepare(src, src_w, src_h, src_stride, palette, palette_len,
             rotation, mirror, pixel_double,
-            bg, centred_x, off_x, centred_y, off_y);
+            bg, centred_x, off_x, centred_y, off_y, target_cs, target_dc);
     arm(v_sync, timeout_us);
     while (!poll_te()) {
     }
@@ -1144,6 +1155,7 @@ typedef struct _FrameArgs {
     int off_x, off_y;
     bool v_sync;
     mp_int_t timeout_us;
+    uint64_t target_cs, target_dc;    // 0 for every line this display drives
 } FrameArgs;
 
 // with_sync parses the trailing v_sync and timeout_us; prepare() leaves them
@@ -1152,7 +1164,8 @@ typedef struct _FrameArgs {
 static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
                                    mp_map_t *kw_args, bool with_sync, FrameArgs *out) {
     enum { ARG_self, ARG_image,
-           ARG_rotation, ARG_mirror, ARG_pixel_double, ARG_bg, ARG_offset, ARG_v_sync, ARG_timeout_us };
+           ARG_rotation, ARG_mirror, ARG_pixel_double, ARG_bg, ARG_offset, ARG_to,
+           ARG_v_sync, ARG_timeout_us };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_image, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = mp_const_none} },
@@ -1161,6 +1174,7 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
         { MP_QSTR_pixel_double, MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_bg, MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_offset, MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_to, MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_v_sync, MP_ARG_BOOL, {.u_bool = false} },
         { MP_QSTR_timeout_us, MP_ARG_INT, {.u_int = 50000} },
     };
@@ -1263,6 +1277,32 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
     out->off_y = off_y;
     out->v_sync = with_sync ? args[ARG_v_sync].u_bool : false;
     out->timeout_us = with_sync ? args[ARG_timeout_us].u_int : 0;
+
+    // to= narrows the write to some of a group's members, named as displays so
+    // the 64-bit masks never cross into Python. Each must be one of this
+    // display's own, which is what stops a subset writing a panel its group does
+    // not own, and the masks go no further than the staged frame.
+    out->target_cs = 0;
+    out->target_dc = 0;
+    if (args[ARG_to].u_obj != mp_const_none) {
+        size_t n_to;
+        mp_obj_t *members;
+        mp_obj_get_array(args[ARG_to].u_obj, &n_to, &members);
+        if (n_to == 0) {
+            mp_raise_ValueError(MP_ERROR_TEXT("to= names no displays, so there is nothing to write"));
+        }
+        for (size_t i = 0; i < n_to; ++i) {
+            if (!mp_obj_is_type(members[i], &SPIDisplay_type)) {
+                mp_raise_TypeError(MP_ERROR_TEXT("to= takes SPIDisplay objects"));
+            }
+            spidisplay::SPIDisplay &member = ((SPIDisplay_obj_t *)MP_OBJ_TO_PTR(members[i]))->display;
+            if (member.cs_lines() & ~self->display.cs_lines()) {
+                mp_raise_ValueError(MP_ERROR_TEXT("to= names a display this one does not drive, so it is not a member of this group"));
+            }
+            out->target_cs |= member.cs_lines();
+            out->target_dc |= member.dc_lines();
+        }
+    }
 }
 
 static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
@@ -1272,7 +1312,7 @@ static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_ma
         a.palette, a.palette_len,
         a.rotation, a.mirror, a.pixel_double,
         a.bg, a.centred_x, a.off_x, a.centred_y, a.off_y,
-        a.v_sync, a.timeout_us);
+        a.v_sync, a.timeout_us, a.target_cs, a.target_dc);
     a.self->staged_image = mp_const_none;
     return mp_const_none;
 }
@@ -1288,7 +1328,8 @@ static mp_obj_t SPIDisplay_prepare(size_t n_args, const mp_obj_t *pos_args, mp_m
     a.self->display.prepare((const uint8_t *)a.buf.buf, a.src_w, a.src_h, a.src_stride,
         a.palette, a.palette_len,
         a.rotation, a.mirror, a.pixel_double,
-        a.bg, a.centred_x, a.off_x, a.centred_y, a.off_y);
+        a.bg, a.centred_x, a.off_x, a.centred_y, a.off_y,
+        a.target_cs, a.target_dc);
     a.self->staged_image = a.image;
     return mp_const_none;
 }

@@ -138,13 +138,16 @@ public:
         *this = member;
         owns_sram_claim = false;
         state = FrameState::IDLE;  // A group never inherits a member's staged frame
+        target_cs_mask = 0;        // nor the lines that frame was narrowed to write
+        target_dc_mask = 0;
     }
 
     ~SPIDisplay();
 
     // Whether another display can share a frame with this one: the same bus, and
     // agreement on everything the stream depends on. Register state bringup put in
-    // the panel is not compared, so a group can carry a differing MADCTL.
+    // the panel is not compared, MADCTL included, which is not licence to vary it:
+    // the scan direction does not follow MADCTL, so a flipped panel tears.
     bool compatible_with(const SPIDisplay &other) const;
 
     // Interleaved displays need a bus each; a shared one is broadcast territory.
@@ -190,7 +193,8 @@ public:
                 const uint8_t *palette, size_t palette_len,
                 int rotation, int mirror, int pixel_double,
                 uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
-                bool v_sync, uint32_t timeout_us);
+                bool v_sync, uint32_t timeout_us,
+                uint64_t target_cs = 0, uint64_t target_dc = 0);
 
     // The resumable steps update() composes, exposed so an interleaver can drive
     // several displays through a frame concurrently: prepare(), arm(), poll_te()
@@ -203,10 +207,15 @@ public:
     // rest of the staged ring, so a staged display carries its head start out
     // of here whatever the TE phase does. Sets the bus rate and DMA frame
     // width, sends nothing, never waits on the bus.
+    // target_cs and target_dc narrow the write to a subset of a group's members, 0
+    // meaning every line this display drives. They are arguments and not settings:
+    // the frame carries them and going IDLE clears them, so no stale mask survives
+    // to write the wrong panels.
     void prepare(const uint8_t *src, int src_w, int src_h, int src_stride,
                  const uint8_t *palette, size_t palette_len,
                  int rotation, int mirror, int pixel_double,
-                 uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y);
+                 uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
+                 uint64_t target_cs = 0, uint64_t target_dc = 0);
 
     // Begin the TE wait without blocking: the TE line to input, the stale level
     // recorded, the timeout started. Without v_sync the wait is already fired.
@@ -316,6 +325,11 @@ public:
     // a request is rounded down, sometimes a long way. Fixed at construction.
     uint32_t baudrate() const { return achieved_baudrate; }
 
+    // The lines this display drives, so a caller can build a mask over a subset of
+    // a group's members and hand it back to prepare().
+    uint64_t cs_lines() const { return cs_mask; }
+    uint64_t dc_lines() const { return dc_mask; }
+
 private:
     // The ring slot a band index streams from.
     uint8_t *slot_ptr(int band_index) const {
@@ -397,6 +411,14 @@ private:
     // (the handler is gated by the channel owner table instead).
     FrameState state = FrameState::IDLE;
     Descriptor desc = {};
+
+    // The lines this write drives, 0 meaning every line the display owns. Only
+    // prepare() sets them and going IDLE clears them, so a narrowed write cannot
+    // leave a mask behind for the next one.
+    uint64_t target_cs_mask = 0;
+    uint64_t target_dc_mask = 0;
+    uint64_t write_cs() const { return target_cs_mask ? target_cs_mask : cs_mask; }
+    uint64_t write_dc() const { return target_dc_mask ? target_dc_mask : dc_mask; }
     ColumnCache cache{nullptr, 0, 0};
     size_t full_band_bytes = 0;
     bool wide_frames = false;
