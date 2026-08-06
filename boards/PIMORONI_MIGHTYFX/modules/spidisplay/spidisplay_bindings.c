@@ -28,6 +28,10 @@ extern size_t spidisplay_sram_headroom(void);
 extern long long spidisplay_sram_claim_low(size_t bytes);
 extern void spidisplay_sram_release_low(void);
 
+// The dual-core conversion setting (spidisplay.cpp).
+extern int spidisplay_dual_convert(void);
+extern void spidisplay_set_dual_convert(int enable);
+
 // buffer(nbytes) -> writable memoryview over the free SRAM region, claimed from the
 // bottom so two buffers never overlap. Pass it to picovector's
 // image(width, height, buffer) so rendering and conversion both run against SRAM
@@ -79,6 +83,19 @@ static mp_obj_t spidisplay_release_buffers(void) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_0(spidisplay_release_buffers_obj, spidisplay_release_buffers);
 
+// dual_convert() -> whether a frame's rows are halved across both cores;
+// dual_convert(enable) sets it and returns the new state. On by default: half of
+// each row range goes to the second core, which picovector's rasteriser shares.
+// Turning it off leaves conversion on one core, which is how a diagnostic times
+// the two against each other on one firmware.
+static mp_obj_t spidisplay_dual_convert_obj_fn(size_t n_args, const mp_obj_t *args) {
+    if (n_args > 0) {
+        spidisplay_set_dual_convert(mp_obj_is_true(args[0]) ? 1 : 0);
+    }
+    return mp_obj_new_bool(spidisplay_dual_convert());
+}
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(spidisplay_dual_convert_obj, 0, 1, spidisplay_dual_convert_obj_fn);
+
 static const mp_rom_map_elem_t spidisplay_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_spidisplay) },
     { MP_ROM_QSTR(MP_QSTR_SPIDisplayBus), MP_ROM_PTR(&SPIDisplayBus_type) },
@@ -86,6 +103,7 @@ static const mp_rom_map_elem_t spidisplay_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_buffer), MP_ROM_PTR(&spidisplay_buffer_obj) },
     { MP_ROM_QSTR(MP_QSTR_buffer_size), MP_ROM_PTR(&spidisplay_buffer_size_obj) },
     { MP_ROM_QSTR(MP_QSTR_release_buffers), MP_ROM_PTR(&spidisplay_release_buffers_obj) },
+    { MP_ROM_QSTR(MP_QSTR_dual_convert), MP_ROM_PTR(&spidisplay_dual_convert_obj) },
     { MP_ROM_QSTR(MP_QSTR_update_all), MP_ROM_PTR(&spidisplay_update_all_obj) },
     { MP_ROM_QSTR(MP_QSTR_te_phase), MP_ROM_PTR(&spidisplay_te_phase_obj) },
 };

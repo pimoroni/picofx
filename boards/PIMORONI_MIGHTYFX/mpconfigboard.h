@@ -24,5 +24,6 @@
 // the display to use as a fast staging/backing buffer (see spidisplay module).
 #define MICROPY_GC_SPLIT_HEAP                   (0)
 
-// Threading / core1 use will conflict badly with PicoVector's DUAL_CORE blit/rasterisation
+// core1 is a shared worker: PicoVector's DUAL_CORE blit/rasterisation dispatches to it, and so does
+// the spidisplay module's frame conversion. A Python thread would conflict badly with both.
 #define MICROPY_PY_THREAD                       (0)

@@ -39,6 +39,7 @@ public:
     void begin(const Descriptor &desc, ConvertFn convert, bool slow_source) {
         d = desc;
         convert_fn = convert;
+        this->slow_source = slow_source;
         pixel_shift = d.pixel_double ? 1 : 0;
         invalidate();
 
@@ -72,9 +73,14 @@ public:
     // Convert nrows destination rows from row0 into dst_band, refreshing the
     // window as the rows advance past it. Windows outlive a single call, so a
     // window seeded near the end of one band is reused by the next.
+    //
+    // Rows go out through emit_rows(), which hands half of a range to core1 when
+    // that range reads SRAM: a cached window always does, the source itself only
+    // when it is not the slow one. The window bookkeeping and fill() below stay
+    // on the calling core, so this sequencing is single-threaded regardless.
     void convert(uint8_t *dst_band, int row0, int nrows) {
         if (!active) {
-            convert_fn(d, dst_band, row0, nrows);
+            emit_rows(convert_fn, d, dst_band, row0, nrows, !slow_source);
             return;
         }
 
@@ -84,10 +90,10 @@ public:
             uint8_t *out = dst_band + (size_t)(row - row0) * d.dst_row_bytes;
 
             // Rows outside the covered box sample no source at all; the kernel
-            // fills them with the background.
+            // fills them with the background, so they always split.
             if (row < d.dy0 || row >= d.dy1) {
                 int rows = (row < d.dy0 ? std::min(end, d.dy0) : end) - row;
-                convert_fn(d, out, row, rows);
+                emit_rows(convert_fn, d, out, row, rows, true);
                 row += rows;
                 continue;
             }
@@ -98,14 +104,15 @@ public:
             if (row < window_start || row >= window_end) {
                 if (!fill(row, window_rows)) {
                     int rows = std::min(end, row + window_rows) - row;
-                    convert_fn(d, out, row, rows);
+                    emit_rows(convert_fn, d, out, row, rows, !slow_source);
                     row += rows;
                     continue;
                 }
             }
 
+            // The window is SRAM, so these rows split whatever the source is.
             int rows = std::min(end, window_end) - row;
-            convert_fn(cached_d, out, row, rows);
+            emit_rows(convert_fn, cached_d, out, row, rows, true);
             row += rows;
         }
     }
@@ -161,6 +168,7 @@ private:
     Descriptor cached_d = {};
     ConvertFn convert_fn = nullptr;
     bool active = false;
+    bool slow_source = false;   // Source reached over XIP, so its rows never split
     int pixel_shift = 0;  // u/v to source pixel: 1 when pixel-doubling
     int window_depth = 0; // Destination rows one window serves
     int src_row_min = 0;  // First source row a destination row samples

@@ -46,11 +46,14 @@ struct TePhase {
     uint32_t age_us;
 };
 
-// One update()'s worth of instrumentation, all microseconds. Kicks are
-// interrupt-driven, so stall_us measures the wire genuinely starving for
-// conversion: near zero means the frame was wire-bound, growth means the
+// One update()'s worth of instrumentation, microseconds but for the last field.
+// Kicks are interrupt-driven, so stall_us measures the wire genuinely starving
+// for conversion: near zero means the frame was wire-bound, growth means the
 // conversion could not keep the ring fed. write_start_us is absolute, so the
 // gap between two displays is their skew.
+//
+// The convert figures are wall time, which is what the wire competes against,
+// and not CPU time: half of a row range goes to core1 (scanline.hpp).
 struct FrameStats {
     uint32_t pre_us;             // Descriptor setup
     uint32_t convert_us;         // The first band alone
@@ -60,6 +63,8 @@ struct FrameStats {
     uint32_t stall_us;           // Wire idle: completions that found no band ready,
                                  // to the recovering kick, plus the final drain
     uint32_t write_start_us;     // time_us_32() at the RAMWR that opened the frame
+    uint32_t core1_rows;         // Rows of this frame core1 converted, 0 when the
+                                 // split was off or every range was too short
 };
 
 class SPIDisplay;

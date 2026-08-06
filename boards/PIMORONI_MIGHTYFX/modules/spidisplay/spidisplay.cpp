@@ -77,6 +77,25 @@ static void __not_in_flash_func(dma_irq2_handler)(void) {
 }
 
 
+#if SPIDISPLAY_PV_CORE1
+// The shared worker launches on its first job, and a multicore launch inside a
+// stream would starve the wire, so a display pays for it at construction.
+// picovector may have launched it already, leaving just the one handshake.
+static void core1_nop() {}
+
+static void warm_core1() {
+    static bool warmed = false;
+    if (!warmed) {
+        pv_core1_run(core1_nop);
+        pv_core1_join();
+        warmed = true;
+    }
+}
+#else
+static void warm_core1() {}
+#endif
+
+
 SPIDisplayBus::SPIDisplayBus(uint spi_index, uint sck, uint mosi, uint baudrate)
     : sck_pin(sck), mosi_pin(mosi), requested_baudrate(baudrate) {
     spi = spi_index == 0 ? spi0 : spi1;
@@ -215,6 +234,7 @@ SPIDisplay::SPIDisplay(SPIDisplayBus *bus, uint cs, uint dc, int te, uint8_t ram
     }
 
     achieved_baudrate = bus->set_baudrate(requested_baudrate);
+    warm_core1();
 }
 
 SPIDisplay::~SPIDisplay() {
@@ -558,6 +578,7 @@ void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h, int src_strid
     last.pre_us = time_us_32() - t_pre;
     last.convert_total_us = 0;
     last.stall_us = 0;
+    last.core1_rows = 0;
 
     rows_converted = 0;
     rows_kicked = 0;
@@ -655,9 +676,11 @@ bool SPIDisplay::step_convert(int max_rows) {
     int write_band = rows_converted / rows_per_band;
     int fill = rows_converted - write_band * rows_per_band;
     uint32_t t_band = time_us_32();
+    uint32_t core1_before = core1_rows_total;
     cache.convert(slot_ptr(write_band) + (size_t)fill * desc.dst_row_bytes,
                   rows_converted, rows);
     last.convert_total_us += time_us_32() - t_band;
+    last.core1_rows += core1_rows_total - core1_before;
     // The counter publishes these rows to the DMA_IRQ_2 handler, so the pixel
     // stores must not be reordered past it.
     __compiler_memory_barrier();
@@ -859,6 +882,22 @@ long long spidisplay_sram_claim_low(size_t bytes) {
 
 void spidisplay_sram_release_low(void) {
     spidisplay::allocator().release_low();
+}
+
+// Whether a conversion is halved across both cores, for the module's
+// dual_convert(). Reading it back is what a tool records alongside its timings, and
+// what tells a caller whether this firmware has a second core to convert on at all:
+// a build without the core1 worker always reports off.
+int spidisplay_dual_convert(void) {
+#if SPIDISPLAY_PV_CORE1
+    return spidisplay::dual_convert ? 1 : 0;
+#else
+    return 0;
+#endif
+}
+
+void spidisplay_set_dual_convert(int enable) {
+    spidisplay::dual_convert = enable != 0;
 }
 
 // The C++ objects live inline in their mp_objs: one fewer allocation and a single
@@ -1427,6 +1466,7 @@ static mp_obj_t SPIDisplay_stats(mp_obj_t self_in) {
     static const qstr fields[] = {
         MP_QSTR_pre_us, MP_QSTR_convert_us, MP_QSTR_te_wait_us, MP_QSTR_frame_us,
         MP_QSTR_convert_total_us, MP_QSTR_stall_us, MP_QSTR_write_start_us,
+        MP_QSTR_core1_rows,
     };
     spidisplay::FrameStats s = self->display.stats();
     mp_obj_t items[MP_ARRAY_SIZE(fields)] = {
@@ -1437,6 +1477,7 @@ static mp_obj_t SPIDisplay_stats(mp_obj_t self_in) {
         mp_obj_new_int_from_uint(s.convert_total_us),
         mp_obj_new_int_from_uint(s.stall_us),
         mp_obj_new_int_from_uint(s.write_start_us),
+        mp_obj_new_int_from_uint(s.core1_rows),
     };
     return mp_obj_new_attrtuple(fields, MP_ARRAY_SIZE(fields), items);
 }

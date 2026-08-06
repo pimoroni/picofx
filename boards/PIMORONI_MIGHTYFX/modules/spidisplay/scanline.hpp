@@ -399,6 +399,80 @@ inline ConvertFn select_convert(int fmt, bool indexed) {
                    : &convert_band<RGBA8888, RGB565>;
 }
 
+// Whether a conversion is halved across both cores. On by default; the module's
+// dual_convert() clears it so a tool can measure one core against two without a
+// second firmware. Read only where a split is compiled in, so a single-core build
+// ignores it entirely.
+inline bool dual_convert = true;
+
+// Rows core1 has converted since boot. Monotonic, and sampled either side of a
+// conversion so a frame can report its own share: a split that never engages
+// otherwise looks exactly like one that works.
+inline uint32_t core1_rows_total = 0;
+
+#if SPIDISPLAY_PV_CORE1
+// picovector's core1 worker, which its rasteriser, blit and blur filter also
+// dispatch to. Declared rather than included, as picovector's own blur filter
+// does for the same pair.
+extern "C" void pv_core1_run(void (*fn)());
+extern "C" void pv_core1_join();
+
+// The job core1 picks up. One is enough: the dispatch below is synchronous, so
+// the core0 caller holds the worker until the join and two can never be in
+// flight. The descriptor is held by pointer, which stays valid for the same
+// reason.
+struct ConvertJob {
+    ConvertFn convert;
+    const Descriptor *d;
+    uint8_t *out;
+    int row0;
+    int nrows;
+};
+inline ConvertJob convert_job = {};
+
+inline void convert_rows_on_core1() {
+    convert_job.convert(*convert_job.d, convert_job.out, convert_job.row0,
+                        convert_job.nrows);
+}
+#endif
+
+// Convert nrows destination rows from row0, halved across both cores. Rows are
+// independent and each half writes only its own, so neither locking nor a copy
+// is needed. Synchronous: this returns with both halves converted.
+//
+// sram_source says the rows read SRAM, and only those may be split. Halving a
+// range that reads PSRAM leaves the two cores at distant row offsets, and two
+// interleaved read streams cost the shared QMI more than the halved pixel work
+// saves: measured at 0.84x, a fifth slower than one core. A source in SRAM
+// reaches 1.60x, and so does a PSRAM source read through the column cache,
+// whose windows are SRAM.
+//
+// With neither define set this is one call, which is the single-core path a board
+// without the core1 worker wants. SPIDISPLAY_SPLIT_SERIAL runs the two halves in
+// sequence instead, which is how the host harness checks the split's arithmetic
+// against the reference with no second core to dispatch to.
+inline void emit_rows(ConvertFn convert, const Descriptor &d, uint8_t *out,
+                      int row0, int nrows, bool sram_source) {
+#if SPIDISPLAY_PV_CORE1 || SPIDISPLAY_SPLIT_SERIAL
+    if (dual_convert && sram_source && nrows >= 2) {
+        const int first = nrows / 2;
+        uint8_t *second = out + (size_t)first * d.dst_row_bytes;
+#if SPIDISPLAY_PV_CORE1
+        convert_job = {convert, &d, second, row0 + first, nrows - first};
+        pv_core1_run(convert_rows_on_core1);
+        convert(d, out, row0, first);
+        pv_core1_join();
+        core1_rows_total += (uint32_t)(nrows - first);
+#else
+        convert(d, out, row0, first);
+        convert(d, second, row0 + first, nrows - first);
+#endif
+        return;
+    }
+#endif
+    convert(d, out, row0, nrows);
+}
+
 // Fill a descriptor for a whole-frame conversion. Each axis is centred, or
 // placed by its off_x/off_y top-left in the upright canvas. src_row_bytes is
 // the source pitch, which exceeds src_w * src_bytes when the source is a
