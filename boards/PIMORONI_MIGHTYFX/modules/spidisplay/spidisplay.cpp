@@ -447,6 +447,53 @@ TeProbe SPIDisplay::te_probe(uint32_t ms) {
     return p;
 }
 
+TeCapture SPIDisplay::te_capture(uint32_t edges, uint32_t timeout_ms) {
+    if (edges > TeCapture::MAX_EDGES) {
+        edges = TeCapture::MAX_EDGES;
+    }
+
+    uint pin = te_line();
+    if (te_pin < 0) {
+        // The capture starts from a genuine low for the same reason arm() does
+        gpio_put(dc_pin, 0);
+        gpio_set_dir(dc_pin, GPIO_IN);
+    }
+
+    TeCapture out = {};
+    bool level = gpio_get(pin) != 0;
+    bool raw_prev = level;
+    bool high_seen = false;
+
+    const uint32_t t_start = time_us_32();
+    const uint32_t budget_us = timeout_ms * 1000;
+    while (out.count < edges) {
+        if (time_us_32() - t_start >= budget_us) {
+            break;
+        }
+        bool raw = gpio_get(pin) != 0;
+        // An edge counts only when two consecutive samples agree and only after a
+        // genuine high, as poll_te() does: the level right after the direction flip
+        // can still be settling on a shared node.
+        bool settled = raw == raw_prev;
+        raw_prev = raw;
+        if (!settled || raw == level) {
+            continue;
+        }
+        level = raw;
+        if (raw) {
+            high_seen = true;
+        } else if (high_seen) {
+            out.falls[out.count++] = time_us_32();
+        }
+    }
+    out.finished_us = time_us_32();
+
+    if (te_pin < 0) {
+        gpio_set_dir(dc_pin, GPIO_OUT);
+    }
+    return out;
+}
+
 TePhase SPIDisplay::te_phase(SPIDisplay &first, SPIDisplay &second,
                              uint32_t period_us, uint32_t edges, uint32_t timeout_ms) {
     constexpr uint32_t MAX_EDGES = 8;
@@ -1536,6 +1583,12 @@ mp_obj_t spidisplay_te_phase(size_t n_args, const mp_obj_t *args) {
     if (first == second) {
         mp_raise_ValueError(MP_ERROR_TEXT("te_phase needs two different displays"));
     }
+    // Two panels sharing a DC line resolve to one signal, so a capture from both
+    // reads the same edges and folds to a meaningless zero. Sweep them one at a
+    // time with te_capture() instead, ageing each fall by that panel's own period.
+    if (first->display.te_line() == second->display.te_line()) {
+        mp_raise_ValueError(MP_ERROR_TEXT("these displays read TE from one line, so there is no phase between them. Sweep them with te_capture(), one panel at TEON at a time"));
+    }
     if (first->display.frame_state() != spidisplay::SPIDisplay::FrameState::IDLE
         || second->display.frame_state() != spidisplay::SPIDisplay::FrameState::IDLE) {
         mp_raise_ValueError(MP_ERROR_TEXT("te_phase cannot run with a frame staged, since a staged frame owns the DC lines"));
@@ -1664,6 +1717,37 @@ static mp_obj_t SPIDisplay_te_probe(size_t n_args, const mp_obj_t *args) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(SPIDisplay_te_probe_obj, 1, 2, SPIDisplay_te_probe);
 
+// te_capture(edges=4, timeout_ms=250) -> (falls, finished_us), the fall timestamps
+// and the instant the capture stopped, both on the ticks_us clock. Fewer falls than
+// asked for means the timeout ran out. A shared DC line carries one panel's TE at a
+// time, so a hub is swept member by member and each fall aged by its own period to
+// bring the set onto one instant; te_probe() discards the timestamps and te_phase()
+// needs two lines.
+static mp_obj_t SPIDisplay_te_capture(size_t n_args, const mp_obj_t *args) {
+    SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[0]);
+    if (self->display.frame_state() != spidisplay::SPIDisplay::FrameState::IDLE) {
+        mp_raise_ValueError(MP_ERROR_TEXT("te_capture cannot run with a frame staged, since a staged frame owns the DC line"));
+    }
+    mp_int_t edges = n_args > 1 ? mp_obj_get_int(args[1]) : 4;
+    mp_int_t timeout_ms = n_args > 2 ? mp_obj_get_int(args[2]) : 250;
+    if (edges < 1) {
+        mp_raise_ValueError(MP_ERROR_TEXT("te_capture needs at least one edge"));
+    }
+
+    spidisplay::TeCapture c = self->display.te_capture((uint32_t)edges, (uint32_t)timeout_ms);
+    mp_obj_t falls = mp_obj_new_tuple(0, nullptr);
+    if (c.count > 0) {
+        mp_obj_t items[spidisplay::TeCapture::MAX_EDGES];
+        for (uint32_t i = 0; i < c.count; ++i) {
+            items[i] = mp_obj_new_int_from_uint(c.falls[i]);
+        }
+        falls = mp_obj_new_tuple(c.count, items);
+    }
+    mp_obj_t out[2] = {falls, mp_obj_new_int_from_uint(c.finished_us)};
+    return mp_obj_new_tuple(2, out);
+}
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(SPIDisplay_te_capture_obj, 1, 3, SPIDisplay_te_capture);
+
 static const mp_rom_map_elem_t SPIDisplay_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&SPIDisplay___del___obj) },
     { MP_ROM_QSTR(MP_QSTR_command), MP_ROM_PTR(&SPIDisplay_command_obj) },
@@ -1676,6 +1760,7 @@ static const mp_rom_map_elem_t SPIDisplay_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_baudrate), MP_ROM_PTR(&SPIDisplay_baudrate_obj) },
     { MP_ROM_QSTR(MP_QSTR_stats), MP_ROM_PTR(&SPIDisplay_stats_obj) },
     { MP_ROM_QSTR(MP_QSTR_te_probe), MP_ROM_PTR(&SPIDisplay_te_probe_obj) },
+    { MP_ROM_QSTR(MP_QSTR_te_capture), MP_ROM_PTR(&SPIDisplay_te_capture_obj) },
     { MP_ROM_QSTR(MP_QSTR_te_timeouts), MP_ROM_PTR(&SPIDisplay_te_timeouts_obj) },
     { MP_ROM_QSTR(MP_QSTR_te_short_waits), MP_ROM_PTR(&SPIDisplay_te_short_waits_obj) },
 };

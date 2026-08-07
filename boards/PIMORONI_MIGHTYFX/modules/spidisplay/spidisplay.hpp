@@ -46,6 +46,18 @@ struct TePhase {
     uint32_t age_us;
 };
 
+// Falling-edge timestamps from one panel's TE line, with the instant the capture
+// stopped, all on time_us_32(). Where te_phase() reduces two lines to a phase in
+// one loop, this keeps the raw edges of one, which is what a shared DC line needs:
+// only one panel may assert at a time, so a hub is swept member by member and each
+// fall is aged by that panel's own period to bring them onto a common instant.
+struct TeCapture {
+    static constexpr uint32_t MAX_EDGES = 8;
+    uint32_t falls[MAX_EDGES];
+    uint32_t count;
+    uint32_t finished_us;
+};
+
 // One update()'s worth of instrumentation, microseconds but for the last field.
 // Kicks are interrupt-driven, so stall_us measures the wire genuinely starving
 // for conversion: near zero means the frame was wire-bound, growth means the
@@ -176,6 +188,16 @@ public:
     // panel that was never sent TEON reports rather than hanging. Must not be
     // called while a frame is streaming.
     TeProbe te_probe(uint32_t ms);
+
+    // Falling edges on this display's TE line, up to TeCapture::MAX_EDGES of them,
+    // with the instant the capture stopped. Must not be called while a frame is
+    // staged or streaming, a staged frame owning the DC line TE is read from.
+    TeCapture te_capture(uint32_t edges, uint32_t timeout_ms);
+
+    // The GPIO this display's TE is read from: its own line where it has one, and
+    // the DC line otherwise. Two displays resolving to the same one cannot be
+    // phase-compared, there being one signal between them.
+    uint te_line() const { return te_pin >= 0 ? (uint)te_pin : dc_pin; }
 
     // Capture edges falling edges on both displays' TE lines from one loop and
     // fold them onto period_us, so a pair's skew can be measured without writing
