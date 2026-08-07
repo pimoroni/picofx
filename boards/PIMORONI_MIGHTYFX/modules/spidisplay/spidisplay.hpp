@@ -125,7 +125,13 @@ public:
     // asserted level is lost. Behind a multiplexer a dc line carrying TE needs an
     // analog mux to pass both directions; a demux or buffer fails quietly, the wait
     // timing out, te_timeouts() counting it, while the frame still streams.
+    //
+    // te_on and te_off are the controller's TEON and TEOFF opcodes, passed in for
+    // the same reason ram_write is: the frame path emits them while the controller
+    // module stays the authority on the values. te_mode is TEON's parameter byte,
+    // sent explicitly since TEON without one leaves the mode bit as it was.
     SPIDisplay(SPIDisplayBus *bus, uint cs, uint dc, int te, uint8_t ram_write,
+               uint8_t te_on, uint8_t te_off, uint8_t te_mode,
                int bitdepth, int width, int height, uint32_t baudrate,
                int band_lines, int cache_columns, int stage_lines);
 
@@ -140,6 +146,8 @@ public:
         state = FrameState::IDLE;  // A group never inherits a member's staged frame
         target_cs_mask = 0;        // nor the lines that frame was narrowed to write
         target_dc_mask = 0;
+        sync_cs_mask = 0;          // nor the member that frame waited on
+        sync_dc_mask = 0;
     }
 
     ~SPIDisplay();
@@ -194,7 +202,8 @@ public:
                 int rotation, int mirror, int pixel_double,
                 uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
                 bool v_sync, uint32_t timeout_us,
-                uint64_t target_cs = 0, uint64_t target_dc = 0);
+                uint64_t target_cs = 0, uint64_t target_dc = 0,
+                uint64_t sync_cs = 0, uint64_t sync_dc = 0);
 
     // The resumable steps update() composes, exposed so an interleaver can drive
     // several displays through a frame concurrently: prepare(), arm(), poll_te()
@@ -208,14 +217,21 @@ public:
     // of here whatever the TE phase does. Sets the bus rate and DMA frame
     // width, sends nothing, never waits on the bus.
     // target_cs and target_dc narrow the write to a subset of a group's members, 0
-    // meaning every line this display drives. They are arguments and not settings:
-    // the frame carries them and going IDLE clears them, so no stale mask survives
-    // to write the wrong panels.
+    // meaning every line this display drives. sync_cs and sync_dc name the one
+    // member whose TE this frame waits on, which a shared DC line allows only one
+    // of at a time. All four are arguments and not settings: the frame carries them
+    // and going IDLE clears them, so no stale mask survives to write or to sync on
+    // the wrong panel.
+    //
+    // A non-zero sync_cs also asks for the transient TE discipline: TEON to that
+    // member as the wait begins, TEOFF as the frame goes idle. Zero leaves TE
+    // alone, which is what a panel owning its own DC line wants.
     void prepare(const uint8_t *src, int src_w, int src_h, int src_stride,
                  const uint8_t *palette, size_t palette_len,
                  int rotation, int mirror, int pixel_double,
                  uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
-                 uint64_t target_cs = 0, uint64_t target_dc = 0);
+                 uint64_t target_cs = 0, uint64_t target_dc = 0,
+                 uint64_t sync_cs = 0, uint64_t sync_dc = 0);
 
     // Begin the TE wait without blocking: the TE line to input, the stale level
     // recorded, the timeout started. Without v_sync the wait is already fired.
@@ -321,6 +337,14 @@ public:
     // goes out, so this is the only sign v_sync did not hold.
     uint32_t te_timeouts() const { return te_timeout_count; }
 
+    // Frames whose wait ended on a pulse too short to be a blanking, cumulative.
+    // arm() releases the line from a driven low, so the first settled high always
+    // starts a fresh pulse and a short one is always a fault: a panel left in TE
+    // mode 2, whose H-sync pulses run to 500us, or two panels' blankings briefly
+    // overlapping on a shared line. Both look healthy to te_timeouts() while the
+    // panel tears, which is why this counter exists.
+    uint32_t te_short_waits() const { return te_short_wait_count; }
+
     // What this panel's rate reached: the divider only gets to clk_peri/(2*n), so
     // a request is rounded down, sometimes a long way. Fixed at construction.
     uint32_t baudrate() const { return achieved_baudrate; }
@@ -382,6 +406,9 @@ private:
     uint dc_pin;         // The single DC line TE is read from, when te_pin < 0
     int te_pin;
     uint8_t ram_write_cmd;
+    uint8_t te_on_cmd;
+    uint8_t te_off_cmd;
+    uint8_t te_mode_byte;
     int fmt;             // Destination packer tag (RGB444::format / RGB565::format)
     int dst_w;           // The panel's own dimensions, fixed for its lifetime
     int dst_h;
@@ -402,6 +429,12 @@ private:
     uint32_t achieved_baudrate;
     FrameStats last = {};
     uint32_t te_timeout_count = 0;
+    uint32_t te_short_wait_count = 0;
+
+    // Under this, the pulse the wait ended on was not a blanking. Above TE mode 2's
+    // 500us H-sync pulses and below the shortest measured blanking, 1,277us on the
+    // 1.54 and 1,536us on the 2.80 (SCREENS_HARDWARE_VERIFICATION.md).
+    static constexpr uint32_t SHORT_WAIT_US = 700;
 
     int slot_count = 2;       // Band ring depth, from stage_lines at construction
 
@@ -419,6 +452,13 @@ private:
     uint64_t target_dc_mask = 0;
     uint64_t write_cs() const { return target_cs_mask ? target_cs_mask : cs_mask; }
     uint64_t write_dc() const { return target_dc_mask ? target_dc_mask : dc_mask; }
+
+    // The one member this frame waits on, and the discipline that goes with it.
+    // Cleared alongside the target masks, so a TEON can never outlive the frame
+    // that asked for it and leave a second panel reaching the shared line.
+    uint64_t sync_cs_mask = 0;
+    uint64_t sync_dc_mask = 0;
+    void te_command(uint8_t opcode, const uint8_t *data, size_t data_len);
     ColumnCache cache{nullptr, 0, 0};
     size_t full_band_bytes = 0;
     bool wide_frames = false;
@@ -431,6 +471,7 @@ private:
     bool te_high_seen = false;
     bool te_raw_prev = false;
     uint32_t te_started_us = 0;
+    uint32_t te_high_started_us = 0;   // When the pulse the wait ends on began
     uint32_t te_timeout_budget_us = 0;
     volatile bool stall_pending = false;      // Wire starving or draining
     volatile uint32_t stall_started_us = 0;   // When the starvation was seen

@@ -173,10 +173,12 @@ void SPIDisplayBus::configure_dma(int bits) {
 
 
 SPIDisplay::SPIDisplay(SPIDisplayBus *bus, uint cs, uint dc, int te, uint8_t ram_write,
+                       uint8_t te_on, uint8_t te_off, uint8_t te_mode,
                        int bitdepth, int width, int height, uint32_t baudrate,
                        int band_lines, int cache_columns, int stage_lines)
     : bus(bus), cs_mask(1ull << cs), dc_mask(1ull << dc), dc_pin(dc), te_pin(te),
-      ram_write_cmd(ram_write),
+      ram_write_cmd(ram_write), te_on_cmd(te_on), te_off_cmd(te_off),
+      te_mode_byte(te_mode),
       fmt(bitdepth == 12 ? RGB444::format : RGB565::format),
       dst_w(width), dst_h(height),
       cache_columns(cache_columns < 0 ? 0 : (cache_columns > width ? width : cache_columns)),
@@ -298,10 +300,33 @@ void SPIDisplay::command(const uint8_t *cmd, size_t cmd_len,
     gpio_set_mask64(cs_mask);
 }
 
+// TEON and TEOFF reach the one member the sync masks name, not every line this
+// display drives: on a shared DC net a second panel at TEON adds its blanking to
+// the one being waited on, and the wait locks to whichever came first.
+void SPIDisplay::te_command(uint8_t opcode, const uint8_t *data, size_t data_len) {
+    use_baudrate();
+    gpio_set_dir_masked64(sync_dc_mask, sync_dc_mask);
+    gpio_put_masked64(sync_dc_mask, 0);
+    gpio_clr_mask64(sync_cs_mask);
+    spi_write_blocking(bus->spi, &opcode, 1);
+    if (data_len) {
+        gpio_put_masked64(sync_dc_mask, sync_dc_mask);
+        spi_write_blocking(bus->spi, data, data_len);
+    }
+    gpio_set_mask64(sync_cs_mask);
+}
+
 void SPIDisplay::arm(bool v_sync, uint32_t timeout_us) {
     if (state != FrameState::PREPARED) {
         return;
     }
+
+    // TEON before the line is released, since the command's data phase drives DC
+    // high and the wait would otherwise begin on a level this display just set.
+    if (sync_cs_mask != 0) {
+        te_command(te_on_cmd, &te_mode_byte, 1);
+    }
+
     gpio_set_dir_masked64(dc_mask, dc_mask);
     // Drive DC low before the release below: the data phase leaves it high, and a
     // released line decaying through the pull-down reads as a completed blanking.
@@ -350,8 +375,16 @@ bool SPIDisplay::poll_te() {
     te_raw_prev = level;
     if (settled) {
         if (level) {
+            if (!te_high_seen) {
+                te_high_started_us = now;
+            }
             te_high_seen = true;
         } else if (te_high_seen) {
+            // arm() released the line from a driven low, so this pulse began where
+            // it was timestamped and a short one is a fault rather than a late arm.
+            if (now - te_high_started_us < SHORT_WAIT_US) {
+                ++te_short_wait_count;
+            }
             te_fire(now);
             return true;
         }
@@ -529,13 +562,16 @@ void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h, int src_strid
                          const uint8_t *palette, size_t palette_len,
                          int rotation, int mirror, int pixel_double,
                          uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
-                         uint64_t target_cs, uint64_t target_dc) {
+                         uint64_t target_cs, uint64_t target_dc,
+                         uint64_t sync_cs, uint64_t sync_dc) {
     uint32_t t_pre = time_us_32();
 
     // This write owns its lines from here until IDLE clears them. A caller naming
     // lines this display does not drive is refused at the binding.
     target_cs_mask = target_cs;
     target_dc_mask = target_dc;
+    sync_cs_mask = sync_cs;
+    sync_dc_mask = sync_dc;
 
     use_baudrate();
 
@@ -766,8 +802,18 @@ bool SPIDisplay::finish_if_drained() {
     if (wide_frames) {
         spi_set_format(bus->spi, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
     }
+
+    // After the format is back to 8 bits, and before the masks are dropped. Every
+    // route out of a frame passes through here or abort_frame(), so a panel cannot
+    // be left reaching the shared line.
+    if (sync_cs_mask != 0) {
+        te_command(te_off_cmd, nullptr, 0);
+    }
+
     target_cs_mask = 0;
     target_dc_mask = 0;
+    sync_cs_mask = 0;
+    sync_dc_mask = 0;
     state = FrameState::IDLE;
     return true;
 }
@@ -836,9 +882,18 @@ void SPIDisplay::abort_frame() {
     gpio_set_mask64(write_cs());
     gpio_set_dir_masked64(write_dc(), write_dc());
     gpio_set_mask64(write_dc());
+
+    // Sent whether or not arm() reached TEON, a repeat costing one opcode where a
+    // panel left asserting costs the next wait its edge.
+    if (sync_cs_mask != 0 && !released()) {
+        te_command(te_off_cmd, nullptr, 0);
+    }
+
     stall_pending = false;
     target_cs_mask = 0;
     target_dc_mask = 0;
+    sync_cs_mask = 0;
+    sync_dc_mask = 0;
     state = FrameState::IDLE;
 }
 
@@ -847,10 +902,12 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h, int src_stride
                         int rotation, int mirror, int pixel_double,
                         uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
                         bool v_sync, uint32_t timeout_us,
-                        uint64_t target_cs, uint64_t target_dc) {
+                        uint64_t target_cs, uint64_t target_dc,
+                        uint64_t sync_cs, uint64_t sync_dc) {
     prepare(src, src_w, src_h, src_stride, palette, palette_len,
             rotation, mirror, pixel_double,
-            bg, centred_x, off_x, centred_y, off_y, target_cs, target_dc);
+            bg, centred_x, off_x, centred_y, off_y,
+            target_cs, target_dc, sync_cs, sync_dc);
     arm(v_sync, timeout_us);
     while (!poll_te()) {
     }
@@ -1023,6 +1080,7 @@ MP_DEFINE_CONST_OBJ_TYPE(
 static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
                                     size_t n_kw, const mp_obj_t *all_args) {
     enum { ARG_bus, ARG_cs, ARG_dc, ARG_width, ARG_height, ARG_te, ARG_ram_write,
+           ARG_te_on, ARG_te_off, ARG_te_mode,
            ARG_bitdepth, ARG_baudrate, ARG_band_lines, ARG_cache_columns,
            ARG_stage_lines };
     static const mp_arg_t allowed_args[] = {
@@ -1033,6 +1091,9 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
         { MP_QSTR_height, MP_ARG_REQUIRED | MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_te, MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_ram_write, MP_ARG_INT, {.u_int = 0x2C} },
+        { MP_QSTR_te_on, MP_ARG_INT, {.u_int = 0x35} },
+        { MP_QSTR_te_off, MP_ARG_INT, {.u_int = 0x34} },
+        { MP_QSTR_te_mode, MP_ARG_INT, {.u_int = 0x00} },
         { MP_QSTR_bitdepth, MP_ARG_INT, {.u_int = 16} },
         { MP_QSTR_baudrate, MP_ARG_INT, {.u_int = 24000000} },
         { MP_QSTR_band_lines, MP_ARG_INT, {.u_int = 16} },
@@ -1072,6 +1133,8 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
     self->staged_image = mp_const_none;
     new (&self->display) spidisplay::SPIDisplay(
         &bus->bus, cs, dc, te, (uint8_t)args[ARG_ram_write].u_int,
+        (uint8_t)args[ARG_te_on].u_int, (uint8_t)args[ARG_te_off].u_int,
+        (uint8_t)args[ARG_te_mode].u_int,
         args[ARG_bitdepth].u_int, args[ARG_width].u_int, args[ARG_height].u_int,
         (uint32_t)args[ARG_baudrate].u_int, args[ARG_band_lines].u_int,
         args[ARG_cache_columns].u_int, args[ARG_stage_lines].u_int);
@@ -1156,6 +1219,7 @@ typedef struct _FrameArgs {
     bool v_sync;
     mp_int_t timeout_us;
     uint64_t target_cs, target_dc;    // 0 for every line this display drives
+    uint64_t sync_cs, sync_dc;        // 0 to leave TE alone
 } FrameArgs;
 
 // with_sync parses the trailing v_sync and timeout_us; prepare() leaves them
@@ -1165,7 +1229,7 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
                                    mp_map_t *kw_args, bool with_sync, FrameArgs *out) {
     enum { ARG_self, ARG_image,
            ARG_rotation, ARG_mirror, ARG_pixel_double, ARG_bg, ARG_offset, ARG_to,
-           ARG_v_sync, ARG_timeout_us };
+           ARG_sync, ARG_v_sync, ARG_timeout_us };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_image, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = mp_const_none} },
@@ -1175,6 +1239,7 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
         { MP_QSTR_bg, MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_offset, MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_to, MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_sync, MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_v_sync, MP_ARG_BOOL, {.u_bool = false} },
         { MP_QSTR_timeout_us, MP_ARG_INT, {.u_int = 50000} },
     };
@@ -1303,6 +1368,29 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
             out->target_dc |= member.dc_lines();
         }
     }
+
+    // sync= names the one member whose TE this frame waits on, and with it asks for
+    // the transient TEON and TEOFF around the wait. One display and not a tuple: a
+    // shared DC line carries one panel's blanking at a time, which is the whole
+    // reason the discipline exists.
+    out->sync_cs = 0;
+    out->sync_dc = 0;
+    if (args[ARG_sync].u_obj != mp_const_none) {
+        if (!mp_obj_is_type(args[ARG_sync].u_obj, &SPIDisplay_type)) {
+            mp_raise_TypeError(MP_ERROR_TEXT("sync= takes one SPIDisplay"));
+        }
+        spidisplay::SPIDisplay &member =
+            ((SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[ARG_sync].u_obj))->display;
+        uint64_t lines = member.cs_lines();
+        if (lines & ~self->display.cs_lines()) {
+            mp_raise_ValueError(MP_ERROR_TEXT("sync= names a display this one does not drive, so it is not a member of this group"));
+        }
+        if (lines & (lines - 1)) {
+            mp_raise_ValueError(MP_ERROR_TEXT("sync= names one panel to wait on, and this one drives several"));
+        }
+        out->sync_cs = lines;
+        out->sync_dc = member.dc_lines();
+    }
 }
 
 static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
@@ -1312,7 +1400,7 @@ static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_ma
         a.palette, a.palette_len,
         a.rotation, a.mirror, a.pixel_double,
         a.bg, a.centred_x, a.off_x, a.centred_y, a.off_y,
-        a.v_sync, a.timeout_us, a.target_cs, a.target_dc);
+        a.v_sync, a.timeout_us, a.target_cs, a.target_dc, a.sync_cs, a.sync_dc);
     a.self->staged_image = mp_const_none;
     return mp_const_none;
 }
@@ -1329,7 +1417,7 @@ static mp_obj_t SPIDisplay_prepare(size_t n_args, const mp_obj_t *pos_args, mp_m
         a.palette, a.palette_len,
         a.rotation, a.mirror, a.pixel_double,
         a.bg, a.centred_x, a.off_x, a.centred_y, a.off_y,
-        a.target_cs, a.target_dc);
+        a.target_cs, a.target_dc, a.sync_cs, a.sync_dc);
     a.self->staged_image = a.image;
     return mp_const_none;
 }
@@ -1532,6 +1620,15 @@ static mp_obj_t SPIDisplay_te_timeouts(mp_obj_t self_in) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_te_timeouts_obj, SPIDisplay_te_timeouts);
 
+// Frames whose wait ended on a pulse too short to be a blanking: a panel left in
+// TE mode 2, or two panels' blankings overlapping on a shared line. Both read as
+// healthy through te_timeouts() while the panel tears.
+static mp_obj_t SPIDisplay_te_short_waits(mp_obj_t self_in) {
+    SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
+    return mp_obj_new_int_from_uint(self->display.te_short_waits());
+}
+static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_te_short_waits_obj, SPIDisplay_te_short_waits);
+
 // Destination rows per DMA band, after the clamp the request went through, so the
 // band count is height over this. Fixed at construction.
 static mp_obj_t SPIDisplay_band_rows(mp_obj_t self_in) {
@@ -1580,6 +1677,7 @@ static const mp_rom_map_elem_t SPIDisplay_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_stats), MP_ROM_PTR(&SPIDisplay_stats_obj) },
     { MP_ROM_QSTR(MP_QSTR_te_probe), MP_ROM_PTR(&SPIDisplay_te_probe_obj) },
     { MP_ROM_QSTR(MP_QSTR_te_timeouts), MP_ROM_PTR(&SPIDisplay_te_timeouts_obj) },
+    { MP_ROM_QSTR(MP_QSTR_te_short_waits), MP_ROM_PTR(&SPIDisplay_te_short_waits_obj) },
 };
 static MP_DEFINE_CONST_DICT(SPIDisplay_locals_dict, SPIDisplay_locals_dict_table);
 
