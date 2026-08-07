@@ -445,6 +445,8 @@ private:
     uint8_t *sram_claim = nullptr;
     size_t sram_claim_bytes = 0;
     size_t band_bytes = 0;          // One band buffer, rounded up to 4
+    size_t full_row_bytes = 0;      // A whole panel row packed, which prices a frame
+                                    // before one is staged
     int cache_capacity = 0;         // Cache storage in bytes
     bool owns_sram_claim = false;   // Cleared on a broadcast copy, which shares
     uint32_t requested_baudrate;

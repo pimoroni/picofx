@@ -204,7 +204,8 @@ SPIDisplay::SPIDisplay(SPIDisplayBus *bus, uint cs, uint dc, int te, uint8_t ram
     // the band to 4 keeps every slot and the cache word-aligned. The cache is
     // sized by width: a window caches up to dst_w source rows of its columns
     // (column_cache.hpp), so height would under-provision a landscape panel.
-    band_bytes = (rows_per_band * packed_row_bytes(dst_w, bitdepth) + 3) & ~(size_t)3;
+    full_row_bytes = packed_row_bytes(dst_w, bitdepth);
+    band_bytes = (rows_per_band * full_row_bytes + 3) & ~(size_t)3;
     cache_capacity = this->cache_columns * dst_w * 4;
     sram_claim_bytes = (size_t)slot_count * band_bytes + (size_t)cache_capacity + PALETTE_BYTES;
     sram_claim = allocator().claim(sram_claim_bytes);
@@ -892,10 +893,14 @@ uint32_t SPIDisplay::convert_debt_us() const {
 }
 
 uint32_t SPIDisplay::wire_window_us() const {
-    if (desc.dst_row_bytes <= 0 || achieved_baudrate == 0) {
+    if (achieved_baudrate == 0) {
         return 0;
     }
-    uint64_t bits = (uint64_t)desc.dst_row_bytes * 8u * (uint64_t)dst_h;
+    // A staged frame's own row width, or the whole panel's when nothing is staged,
+    // so a tearing margin can be priced at construction and not only after a frame.
+    uint64_t row_bytes = desc.dst_row_bytes > 0 ? (uint64_t)desc.dst_row_bytes
+                                                : (uint64_t)full_row_bytes;
+    uint64_t bits = row_bytes * 8u * (uint64_t)dst_h;
     uint64_t us = (bits * 1000000u) / achieved_baudrate;
     // Plus the per-band overhead, measured the same on both panel sizes: a 320-row
     // frame streams in 42,016us against 38,400 of pure bits, and a 240-row one in
@@ -1682,6 +1687,15 @@ static mp_obj_t SPIDisplay_te_short_waits(mp_obj_t self_in) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_te_short_waits_obj, SPIDisplay_te_short_waits);
 
+// What a full frame costs on this wire, the measured per-band overhead included, so
+// a tearing margin can be priced before any frame has gone out. stats().frame_us is
+// the same figure once one has.
+static mp_obj_t SPIDisplay_wire_window(mp_obj_t self_in) {
+    SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
+    return mp_obj_new_int_from_uint(self->display.wire_window_us());
+}
+static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_wire_window_obj, SPIDisplay_wire_window);
+
 // Destination rows per DMA band, after the clamp the request went through, so the
 // band count is height over this. Fixed at construction.
 static mp_obj_t SPIDisplay_band_rows(mp_obj_t self_in) {
@@ -1763,6 +1777,7 @@ static const mp_rom_map_elem_t SPIDisplay_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_te_capture), MP_ROM_PTR(&SPIDisplay_te_capture_obj) },
     { MP_ROM_QSTR(MP_QSTR_te_timeouts), MP_ROM_PTR(&SPIDisplay_te_timeouts_obj) },
     { MP_ROM_QSTR(MP_QSTR_te_short_waits), MP_ROM_PTR(&SPIDisplay_te_short_waits_obj) },
+    { MP_ROM_QSTR(MP_QSTR_wire_window_us), MP_ROM_PTR(&SPIDisplay_wire_window_obj) },
 };
 static MP_DEFINE_CONST_DICT(SPIDisplay_locals_dict, SPIDisplay_locals_dict_table);
 
