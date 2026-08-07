@@ -791,7 +791,18 @@ class ScreenGroup(ScreenBase):
     wait, so a frame goes out at once.
     """
 
-    def __init__(self, *screens, sync=None, parent=None):
+    # The first probe after bringup reads long and settles within a second, so each
+    # panel's first reading is discarded, as ScreenPair does. 300ms is about 13
+    # periods: at 100 a single miscounted edge moved a trim by three porch lines,
+    # which is more than the spread the trim exists to null.
+    PROBE_MS = 300
+    SETTLE_MS = 100
+
+    # Of the fastest member's margin, what the hold may spend. ScreenPair holds its
+    # dither to the same fraction and slips at 0.6.
+    DITHER_FRACTION = 0.4
+
+    def __init__(self, *screens, sync=None, align=None, parent=None):
         if len(screens) < 2 and parent is None:
             raise ValueError("a broadcast group needs at least two screens")
 
@@ -817,6 +828,11 @@ class ScreenGroup(ScreenBase):
                              nominated is not None, None, parent.reserve,
                              members=tuple(screens), sync=nominated)
             self.__subset_of = parent
+            # Alignment stays the parent's, so a subset reports it rather than
+            # owning it: its members are held whether or not this set writes them.
+            self.__aligned = parent.is_aligned
+            self.__reference = parent.reference
+            self.__floor_us = parent.align_floor_us
             return
 
         for screen in screens:
@@ -852,6 +868,129 @@ class ScreenGroup(ScreenBase):
 
         for screen in screens:
             screen.__group = self
+
+        self.__aligned = False
+        self.__reference = None
+        self.__floor_us = 0
+        if align is not False:
+            if nominated is None:
+                # The sync block above already said why there is no signal to hold
+                # these panels by, so only a required alignment speaks again.
+                if align is True:
+                    raise ValueError("align holds a group's panels in phase by their tearing-effect signal, so it needs every member built te=SHARED_DC")
+            else:
+                self.__calibrate(align is True)
+
+    def __calibrate(self, required):
+        """Probe every member's period, trim each toward the slowest, and price it.
+
+        The reference is the slowest member, so every trim lengthens a porch, which
+        is the direction that also adds margin to the panel with least of it. One
+        porch line is one line time, measured, so the quantum needs no probing: what
+        is probed is each member's own period, which no table gives.
+
+        required refuses where the members will not hold; otherwise an unmet request
+        says why and the group falls back to the member sync nominated, which is a
+        legitimate outcome and not a failure.
+        """
+        members = self.screens
+        logging.info(f"> Calibrating {len(members)} screens, about"
+                     f" {len(members) * self.PROBE_MS * 2 // 1000 + 1} seconds ...")
+
+        periods = []
+        for screen in members:
+            if screen.sync is None:
+                self.__unaligned(required, f"{screen} carries no tearing-effect signal a group can read, so build every member te=SHARED_DC")
+                return
+            period = self.__period_of(screen, settle=True)
+            if not period:
+                self.__unaligned(required, f"{screen} returned no period, so its tearing-effect signal is not reaching the shared line")
+                return
+            periods.append(period)
+
+        # Each panel's line time is its own and fixed by its oscillator; the porch
+        # moves how many of them a refresh spends, not how long one lasts.
+        line_us = [period / screen.line_slots for period, screen in zip(periods, members)]
+        slowest = periods.index(max(periods))
+        self.__reference = members[slowest]
+
+        frame_us = self.display.wire_window_us()
+        trims = [int(round((periods[slowest] - period) / line))
+                 for period, line in zip(periods, line_us)]
+
+        # The budget is the fastest member's, not the reference's: a written frame
+        # costs fixed microseconds while a fast panel's lines are shorter, so the
+        # same write eats more of them.
+        margins = [(screen.line_slots + trim + screen.height - frame_us / line)
+                   for screen, trim, line in zip(members, trims, line_us)]
+        tightest = margins.index(min(margins))
+        quanta = 2 * line_us[tightest]
+        margin_us = margins[tightest] * line_us[tightest]
+        reserve = self.DITHER_FRACTION * margin_us
+
+        if quanta + reserve > margin_us or margin_us <= 0:
+            self.__unaligned(required, f"{members[tightest]} keeps only {margin_us:.0f}us of tearing margin, and holding a group costs {quanta:.0f}us of granularity plus a reserve. Lengthen every member's porch, or drop the rate a step")
+            return
+
+        for screen, trim in zip(members, trims):
+            if trim:
+                back, front = screen.porch
+                screen.__set_porch(back + trim, front)
+
+        # One verify pass. A trim is priced from a single reading, and a reading that
+        # miscounts an edge lands whole porch lines out; measuring the trimmed panels
+        # and correcting the residual costs one probe each and leaves the static trim
+        # actually static, with only a fraction of a line for the hold to carry.
+        time.sleep_ms(self.SETTLE_MS)
+        held = [self.__period_of(screen) for screen in members]
+        if all(held):
+            target = max(held)
+            for screen, period, line in zip(members, held, line_us):
+                correction = int(round((target - period) / line))
+                if correction:
+                    back, front = screen.porch
+                    screen.__set_porch(back + correction, front)
+            logging.debug(f"screens: verified at {held}, spread {max(held) - min(held)}us")
+
+        self.__aligned = True
+        self.__floor_us = quanta
+        logging.info(f"screens: aligned on {self.__reference}, trims {trims} porch lines,"
+                     f" {margin_us:.0f}us of margin at the tightest member")
+
+    def __period_of(self, screen, settle=False):
+        """One member's refresh period, it alone asserting on the shared line.
+
+        settle discards a first reading, which a panel fresh from bringup needs: it
+        comes back about 3.4% long and settles within a second.
+        """
+        screen.command(screen.CONTROLLER.REG_TEON, b"\x00")
+        if settle:
+            screen.display.te_probe(self.PROBE_MS)
+        period = screen.display.te_probe(self.PROBE_MS)[0]
+        screen.command(screen.CONTROLLER.REG_TEOFF)
+        return period
+
+    def __unaligned(self, required, why):
+        """Refuse an alignment that was required, or say why one asked for is unmet."""
+        if required:
+            raise ValueError(why)
+
+        logging.info(f"screens: this group is not holding its panels in phase. {why}")
+
+    @property
+    def is_aligned(self):
+        """Whether the members are held in phase, against what align asked for."""
+        return self.__aligned
+
+    @property
+    def reference(self):
+        """The member every other is trimmed toward, which is the slowest of them."""
+        return self.__reference
+
+    @property
+    def align_floor_us(self):
+        """The skew the hold is predicted to settle within, in microseconds."""
+        return self.__floor_us
 
     def subset(self, *screens, sync=None):
         """A member set over this group's display, writing only what it names.
