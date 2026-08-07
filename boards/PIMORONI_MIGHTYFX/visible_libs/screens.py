@@ -802,7 +802,26 @@ class ScreenGroup(ScreenBase):
     # dither to the same fraction and slips at 0.6.
     DITHER_FRACTION = 0.4
 
-    def __init__(self, *screens, sync=None, align=None, parent=None):
+    # Frames one member holds the trim before it moves to the next. 30 is about two
+    # seconds at a group's frame rate, so six members come round in twelve.
+    TRIM_FRAMES = 30
+
+    # The most one correction moves a member. A stale calibration is worth whole
+    # lines, and applying them at once is a visible step where a line at a time is
+    # inside the sawtooth the hold carries anyway.
+    TRIM_LIMIT_LINES = 1
+
+    # Porch lines an acquisition excursion runs at. Only ever added, never taken: a
+    # longer porch delays a member and raises its margin while the excursion runs,
+    # where shortening one would advance it and spend margin the 1.54 has not got.
+    # So a member is always delayed into place, at worst a whole period of it.
+    EXCURSION_LINES = 8
+
+    # Sweeps allowed to bring the phases together before the group gives up. It
+    # converges in two and the third is noise, so more buys nothing.
+    ACQUIRE_TRIES = 3
+
+    def __init__(self, *screens, sync=None, align=None, trim=None, parent=None):
         if len(screens) < 2 and parent is None:
             raise ValueError("a broadcast group needs at least two screens")
 
@@ -833,6 +852,7 @@ class ScreenGroup(ScreenBase):
             self.__aligned = parent.is_aligned
             self.__reference = parent.reference
             self.__floor_us = parent.align_floor_us
+            self.__trim = parent.trim
             return
 
         for screen in screens:
@@ -866,12 +886,23 @@ class ScreenGroup(ScreenBase):
                          first.backlight, nominated is not None, nominated is not None,
                          None, first.reserve, members=tuple(screens), sync=nominated)
 
-        for screen in screens:
-            screen.__group = self
-
         self.__aligned = False
+        # Three states, not two. Nulling the members' rates stops them drifting apart
+        # quickly; an acquisition brings their scans together at one instant; only a
+        # hold keeps them there. The residual rate spread separates them again at 30
+        # to 90us a period, which is past the aim inside two of them, so an
+        # acquisition on its own is worth a tenth of a second.
+        self.__acquired_us = 0
+        self.__holding = False
         self.__reference = None
         self.__floor_us = 0
+        self.__target_us = 0
+        self.__margins = ()
+        self.__aim_us = 0
+        self.__line_us = ()
+        self.__trim_at = 0
+        self.__starts = []
+        self.__corrections = 0
         if align is not False:
             if nominated is None:
                 # The sync block above already said why there is no signal to hold
@@ -880,6 +911,31 @@ class ScreenGroup(ScreenBase):
                     raise ValueError("align holds a group's panels in phase by their tearing-effect signal, so it needs every member built te=SHARED_DC")
             else:
                 self.__calibrate(align is True)
+
+        # A trim holds members to the period calibration settled on, so a group with
+        # no settled period has nothing to correct toward and does not trim.
+        #
+        # None rotates only once the members are held in phase, which is what makes
+        # moving the wait target free: any member serves when they all fall together.
+        # Held to one rate but not one phase, rotating moves which panel comes out
+        # clean and jumps every other panel's tear with it, seen on the glass. So
+        # until phase is held, None is off and probe is the way to ask for freshness.
+        if trim not in (None, True, False, "rotate", "probe"):
+            raise ValueError(f"{trim} is not a valid trim. Expected None, False, 'rotate', or 'probe'.")
+
+        if not self.__target_us:
+            if trim not in (None, False):
+                logging.info("screens: this group holds no period for its members, so there is nothing for a trim to correct toward")
+            self.__trim = False
+        elif trim in (None, True):
+            self.__trim = "rotate" if self.__holding else False
+        else:
+            self.__trim = trim
+
+        # Last, so a construction that raised claims nothing: a member left holding a
+        # group that does not exist refuses every later attempt to group it.
+        for screen in screens:
+            screen.__group = self
 
     def __calibrate(self, required):
         """Probe every member's period, trim each toward the slowest, and price it.
@@ -912,8 +968,6 @@ class ScreenGroup(ScreenBase):
         # moves how many of them a refresh spends, not how long one lasts.
         line_us = [period / screen.line_slots for period, screen in zip(periods, members)]
         slowest = periods.index(max(periods))
-        self.__reference = members[slowest]
-
         frame_us = self.display.wire_window_us()
         trims = [int(round((periods[slowest] - period) / line))
                  for period, line in zip(periods, line_us)]
@@ -932,6 +986,9 @@ class ScreenGroup(ScreenBase):
             self.__unaligned(required, f"{members[tightest]} keeps only {margin_us:.0f}us of tearing margin, and holding a group costs {quanta:.0f}us of granularity plus a reserve. Lengthen every member's porch, or drop the rate a step")
             return
 
+        # Past the refusal, so nothing above has moved a panel: a group that declines
+        # to align leaves every porch where bringup left it and names no reference.
+        self.__reference = members[slowest]
         for screen, trim in zip(members, trims):
             if trim:
                 back, front = screen.porch
@@ -951,11 +1008,271 @@ class ScreenGroup(ScreenBase):
                     back, front = screen.porch
                     screen.__set_porch(back + correction, front)
             logging.debug(f"screens: verified at {held}, spread {max(held) - min(held)}us")
+            self.__target_us = max(held)
 
         self.__aligned = True
         self.__floor_us = quanta
+        self.__line_us = tuple(line_us)
+        # In microseconds, per member, so an acquisition can tell which of them can
+        # afford to be advanced and which has to be delayed the long way round.
+        self.__margins = tuple(margin * line for margin, line in zip(margins, line_us))
+
+        # What a phase spread has to fit inside. A member out of phase spends that
+        # much of its own tearing margin, so the aim is the tightest member's less
+        # the reserve the hold keeps, rather than a figure picked to suit a result.
+        self.__aim_us = (1.0 - self.DITHER_FRACTION) * margin_us
+
+        # One rate stops them drifting apart; this is what brings them together, and
+        # it needs the rate held first or every excursion aims at a moving target.
+        self.__acquire()
         logging.info(f"screens: aligned on {self.__reference}, trims {trims} porch lines,"
                      f" {margin_us:.0f}us of margin at the tightest member")
+
+    def __phases(self):
+        """Every member's phase at one instant, swept one at a time behind TEON.
+
+        A shared line carries one panel's signal at a time, so the captures do not
+        share a moment and ageing is what brings them onto one: each member's last
+        fall is carried forward by the period the group holds them all to. The
+        reference instant is the last capture's own end, so every member is aged
+        forward and none backward.
+
+        Returns the time since each member last fell, or None where one went silent.
+        """
+        # Two falls, which is the fewest that names one: the sweep serialises, so
+        # every extra fall ages the members swept before it by another period and the
+        # ageing error is what limits the aim. Four falls tripled the sweep and made
+        # the acquisition worse.
+        rows = []
+        for screen in self.screens:
+            screen.command(screen.CONTROLLER.REG_TEON, b"\x00")
+            falls, finished = screen.display.te_capture(2, 200)
+            screen.command(screen.CONTROLLER.REG_TEOFF)
+            if not falls:
+                return None
+            rows.append((falls[-1], finished))
+
+        # Aged by the period the group holds them all to, not by one read from this
+        # capture: a period from two adjacent falls carries the panel's own jitter,
+        # where the group's is averaged over a settled probe. The error left is the
+        # residual rate spread times the periods aged, so a tight trim is what makes
+        # a close aim possible.
+        reference = rows[-1][1]
+        return [((reference - fall) & 0xFFFFFFFF) % self.__target_us
+                for fall, _ in rows]
+
+    def __acquire(self):
+        """Bring the members' scans together, which one rate alone does not do.
+
+        A member is moved by running its porch long for a while: a period stretched
+        by EXCURSION_LINES for k of them delays that member by k times the stretch,
+        and the porch goes back afterwards. Only ever lengthened, so a member is
+        always delayed into place and its margin grows while it travels rather than
+        shrinking, which the 1.54 has no room for.
+
+        Sweeping serialises behind TEON and the members drift while it runs, so the
+        aim carries the sweep's own ageing error. That is what the retries are for.
+        """
+        members = self.screens
+        for attempt in range(self.ACQUIRE_TRIES):
+            phases = self.__phases()
+            if phases is None:
+                logging.info("screens: a member went silent during the phase sweep, so the group is not in phase")
+                return False
+
+            # Phases are modular, so the spread is taken on the circle: a member one
+            # step behind the reference reads a whole period ahead of it, and a plain
+            # max minus min calls a converged group maximally spread.
+            target = phases[members.index(self.__reference)]
+            errors = [self.__fold(phase - target) for phase in phases]
+            spread = max(errors) - min(errors)
+            if spread <= self.__aim_us:
+                self.__acquired_us = spread
+                logging.info(f"screens: members brought into phase, spread {spread}us"
+                             f" after {attempt} excursions. It decays at the residual"
+                             f" rate spread until a hold carries it")
+                return True
+
+            # Delay each member until its fall meets the reference's. A phase is the
+            # time since that member last fell, so one further through its frame than
+            # the reference has to wait the difference out.
+            plans = []
+            for index, screen in enumerate(members):
+                stretch = self.EXCURSION_LINES * self.__line_us[index]
+                # Advancing shortens the porch and spends margin while it runs, so it
+                # is taken only by a member with margin to spare. The rest go the long
+                # way round and are delayed into place, which always adds margin.
+                error = errors[index]
+                if error < 0 and self.__margins[index] <= stretch:
+                    error += self.__target_us
+                plans.append((int(round(error / stretch)), screen))
+
+            logging.debug(f"screens: errors {[int(e) for e in errors]},"
+                          f" spread {int(spread)}us,"
+                          f" excursions {[periods for periods, _ in plans]} periods")
+
+            for periods, screen in plans:
+                if periods:
+                    lines = self.EXCURSION_LINES if periods > 0 else -self.EXCURSION_LINES
+                    back, front = screen.porch
+                    screen.__set_porch(back + lines, front)
+
+            # Every excursion runs at once and each is lifted at its own count, so
+            # the whole acquisition costs the longest one and not their sum.
+            elapsed = 0
+            for periods, screen in sorted(plans, key=lambda plan: abs(plan[0])):
+                if not periods:
+                    continue
+                run = abs(periods)
+                time.sleep_ms(int((run - elapsed) * self.__target_us / 1000) + 1)
+                elapsed = run
+                lines = self.EXCURSION_LINES if periods > 0 else -self.EXCURSION_LINES
+                back, front = screen.porch
+                screen.__set_porch(back - lines, front)
+
+        spread = self.__phase_spread()
+        logging.info(f"screens: the members did not come into phase, spread {spread}us"
+                     f" against a {self.__aim_us:.0f}us aim, so each panel keeps its own")
+        return False
+
+    def __fold(self, error):
+        """A modular phase difference brought onto +-half a period."""
+        error %= self.__target_us
+        return error - self.__target_us if error > self.__target_us / 2 else error
+
+    def __phase_spread(self):
+        """How far apart the members' falls are, on the circle. 0 where unreadable."""
+        phases = self.__phases()
+        if phases is None:
+            return 0
+
+        target = phases[self.screens.index(self.__reference)]
+        errors = [self.__fold(phase - target) for phase in phases]
+        return int(max(errors) - min(errors))
+
+    def update(self, image, *args, **kwargs):
+        """Stream a frame to every member, then advance the trim.
+
+        Takes what ScreenBase.update() takes. The trim ticks here rather than on a
+        timer, since what it corrects is a period reading going stale and frames are
+        what age it; a group that is not writing is not drifting into anything.
+        """
+        super().update(image, *args, **kwargs)
+        owner = self.__subset_of or self
+        owner.__tick_trim()
+
+    def __tick_trim(self):
+        """Re-measure one member every TRIM_FRAMES and correct its porch by a line.
+
+        A calibration goes stale as the panels warm, and a stale period costs an
+        order of magnitude in what a prediction is worth, measured 2026-08-08. This
+        keeps the readings current without any single frame paying for a sweep.
+        """
+        if not self.__trim:
+            return
+
+        members = self.screens
+        if self.__trim == "rotate":
+            # Free: write_start_us is stamped at the RAMWR that opens each frame, and
+            # that instant is the synced member's own TE fall, so a run of them spans
+            # a whole number of its periods. Nothing is probed and no frame stalls.
+            self.__starts.append(self.display.stats().write_start_us)
+            if len(self.__starts) <= self.TRIM_FRAMES:
+                return
+
+            measured = self.__period_from(self.__starts)
+            self.__starts = []
+            self.__correct(self.__sync, measured)
+            # Any member serves as the wait target while the group is aligned, so the
+            # next one takes it and yields its own period over the frames that follow.
+            self.__trim_at = (members.index(self.__sync) + 1) % len(members)
+            self.__sync = members[self.__trim_at]
+            return
+
+        self.__starts.append(0)
+        if len(self.__starts) <= self.TRIM_FRAMES:
+            return
+
+        self.__starts = []
+        screen = members[self.__trim_at]
+        self.__trim_at = (self.__trim_at + 1) % len(members)
+        screen.command(screen.CONTROLLER.REG_TEON, b"\x00")
+        falls, _ = screen.display.te_capture(4, 200)
+        screen.command(screen.CONTROLLER.REG_TEOFF)
+        if len(falls) > 1:
+            self.__correct(screen, ((falls[-1] - falls[0]) & 0x3FFFFFFF) / (len(falls) - 1))
+
+    def __period_from(self, starts):
+        """A period from a run of write starts, each gap a whole number of them.
+
+        The count is summed gap by gap and never inferred from the whole span. A gap
+        is about two periods, so naming it takes a member to be within half a period
+        of the target; a span of sixty only tolerates a hundred and ninety
+        microseconds, and past that it rounds to the wrong count and reads a slow
+        panel as a fast one. Measured: a member three porch lines out came back as
+        22,266us against a true 22,626.
+        """
+        if not self.__target_us:
+            return 0
+
+        periods = 0
+        for index in range(1, len(starts)):
+            gap = (starts[index] - starts[index - 1]) & 0xFFFFFFFF
+            periods += int(round(gap / self.__target_us))
+
+        span = (starts[-1] - starts[0]) & 0xFFFFFFFF
+        return span / periods if periods else 0
+
+    def __correct(self, screen, measured):
+        """Move one member a line closer to the period the group holds."""
+        if not measured or screen not in self.screens:
+            return
+
+        line = self.__line_us[self.screens.index(screen)]
+        lines = int(round((self.__target_us - measured) / line))
+        if not lines:
+            return
+
+        limit = self.TRIM_LIMIT_LINES
+        lines = limit if lines > limit else (-limit if lines < -limit else lines)
+        back, front = screen.porch
+        if back + lines < 1:
+            return
+
+        screen.__set_porch(back + lines, front)
+        self.__corrections += 1
+        logging.debug(f"screens: trimmed member {self.screens.index(screen)} by"
+                      f" {lines:+} line to porch {screen.porch},"
+                      f" {measured:.0f}us against {self.__target_us:.0f}")
+
+    @property
+    def trim(self):
+        """How the group keeps its members' periods current: rotate, probe or False."""
+        return self.__trim
+
+    @trim.setter
+    def trim(self, value):
+        if value not in (None, True, False, "rotate", "probe"):
+            raise ValueError(f"{value} is not a valid trim. Expected None, False, 'rotate', or 'probe'.")
+
+        if not self.__target_us:
+            raise ValueError("this group holds no period for its members, so there is nothing for a trim to correct toward")
+
+        if value in (None, True):
+            value = "rotate" if self.__holding else False
+
+        if value == "rotate" and not self.__holding:
+            logging.info("screens: rotating the trim moves which member comes out clean, and these are held to one rate but not one phase, so every panel's tear moves with it")
+
+        # A run of write starts belongs to the mode that gathered it, and to the
+        # member that was synced at the time, so a change begins its own run.
+        self.__starts = []
+        self.__trim = value
+
+    @property
+    def corrections(self):
+        """Porch lines the trim has applied since construction, for a diagnostic."""
+        return self.__corrections
 
     def __period_of(self, screen, settle=False):
         """One member's refresh period, it alone asserting on the shared line.
@@ -979,17 +1296,51 @@ class ScreenGroup(ScreenBase):
 
     @property
     def is_aligned(self):
-        """Whether the members are held in phase, against what align asked for."""
+        """Whether the members are held to one refresh rate.
+
+        Their rates, not their phases: this stops them drifting apart, and on the
+        glass it slows a tear band rather than removing one. is_in_phase is the
+        state that makes a panel come out clean.
+        """
         return self.__aligned
 
     @property
+    def is_in_phase(self):
+        """Whether the members' scans are being held together, not merely their rates.
+
+        Held, not reached: acquisition brings them together at one instant and the
+        residual rate spread pulls them apart again inside two periods, so only a
+        hold makes this true for longer than a tenth of a second. It is what lets the
+        wait target move, which is why the trim rotates on it.
+        """
+        return self.__holding
+
+    @property
+    def acquired_us(self):
+        """The phase spread the last acquisition reached, or 0 where it did not.
+
+        A construction-time figure and not a running one: read is_in_phase for
+        whether the members are together now.
+        """
+        return self.__acquired_us
+
+    @property
     def reference(self):
-        """The member every other is trimmed toward, which is the slowest of them."""
+        """The member every other is trimmed toward, the slowest of them, or None.
+
+        None where the group is not aligned, since nothing was trimmed toward
+        anything. is_aligned says the same thing and is the one to read.
+        """
         return self.__reference
 
     @property
     def align_floor_us(self):
-        """The skew the hold is predicted to settle within, in microseconds."""
+        """The skew the hold is predicted to settle within, or 0 when not aligned.
+
+        An unmet align request is an outcome and not an error, so this reports zero
+        where ScreenPair raises: a group falls back to its nominated member and
+        carries on, and is_aligned is what distinguishes the two.
+        """
         return self.__floor_us
 
     def subset(self, *screens, sync=None):
