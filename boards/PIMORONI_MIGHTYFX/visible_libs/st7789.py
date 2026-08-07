@@ -44,6 +44,16 @@ REG_PWMFRSEL  = const(0xCC)
 # The memory-write opcode a frame is streamed behind
 RAM_WRITE = REG_RAMWR
 
+# The TE opcodes the frame path drives itself, for a screen sharing its DC line: one
+# panel at a time may assert TE there, so the driver sends TEON as a frame's wait
+# begins and TEOFF as it ends. TE_MODE is TEON's parameter, V-blank only, sent
+# explicitly since TEON without one leaves the mode bit as it was. Passed to the
+# display for the same reason RAM_WRITE is, so this module stays the only place the
+# opcodes live.
+TE_ON = REG_TEON
+TE_OFF = REG_TEOFF
+TE_MODE = 0x00
+
 # Scan slots per refresh at the PORCTRL porches setup() writes: 320 rows plus 12
 # each of back and front porch. Converts a TE period to a line time whatever the
 # panel's visible rows.

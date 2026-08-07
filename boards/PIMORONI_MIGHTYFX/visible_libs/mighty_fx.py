@@ -209,26 +209,30 @@ class SPCEPort:
         self.__cs_claimed.append(pin)
         return pin
 
-    def __claim_dc(self, pin=None, te=True):
+    def __claim_dc(self, pin=None, te=True, shared=False):
         """Register a screen's DC line and return it.
 
         None takes the port's own, which is the first screen's to have. Pass this
-        port's dc to share that line deliberately, which panels using TE may not do:
-        TE travels back along DC through a series resistor on each breakout, so
-        panels sharing the line divide it and no asserted level survives.
+        port's dc to share that line deliberately. Panels using TE may share it only
+        where every one of them is built te=SHARED_DC, which declares the diode that
+        stops each panel's TEOFF pulling the line down; without one they divide the
+        line through their series resistors and no asserted level survives. The
+        firmware cannot see a diode, so the declaration is the caller's.
         """
         switched = self.__selector is not None
         if pin is None:
             pin = self.dc
-            if not switched and any(claimed is pin for claimed, _ in self.__dc_claimed):
+            if not switched and any(claimed is pin for claimed, _, _ in self.__dc_claimed):
                 raise ValueError(f"SP/CE {self.name}'s own DC line is taken. Give this screen a dc, or pass the port's dc to share that line.")
 
         if not switched:
-            for claimed, claimed_te in self.__dc_claimed:
-                if claimed is pin and (te or claimed_te):
-                    raise ValueError(f"{pin} is carrying TE for another screen. Screens sharing a DC line all need te=False.")
+            for claimed, claimed_te, claimed_shared in self.__dc_claimed:
+                if claimed is not pin:
+                    continue
+                if (te and not shared) or (claimed_te and not claimed_shared):
+                    raise ValueError(f"{pin} is carrying TE for another screen. Screens sharing a DC line all need te=False, or te=SHARED_DC on every one of them, which needs a diode fitted to each breakout.")
 
-        self.__dc_claimed.append((pin, te))
+        self.__dc_claimed.append((pin, te, shared))
         return pin
 
     def __claim_backlight(self):

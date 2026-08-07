@@ -18,6 +18,14 @@ import picovector
 import spidisplay
 import st7789
 
+# te=SHARED_DC: the panel's tearing-effect signal arrives on a DC line other screens
+# share. That works only where every breakout on the line carries a diode, which
+# blocks each panel's TEOFF from pulling the line down; without one the screens
+# divide it and no asserted level survives. The firmware cannot see a diode, so
+# naming this is the caller declaring one is fitted. One panel at a time may assert,
+# so the driver sends TEON as a frame's wait begins and TEOFF as it ends.
+SHARED_DC = "shared_dc"
+
 
 def update_pair(first, second, v_sync=None):
     """Stream a frame to two screens at once, each starting on its own TE edge.
@@ -216,14 +224,16 @@ class ScreenMux:
 class ScreenBase:
     """The frame path shared by a single screen and a broadcast group.
 
-    te says whether the panel drives its tearing-effect line at all, and v_sync
-    whether a frame waits on it by default. members is the screens a broadcast
-    group stands for, and None for a screen standing for itself.
+    te says whether a tearing-effect signal is reachable at all, and v_sync whether a
+    frame waits on it by default. members is the screens a broadcast group stands
+    for, and None for a screen standing for itself. shared_te says the signal arrives
+    on a line other screens share, which is what makes the wait transient; sync names
+    the screen whose signal a frame waits on.
 
-    Not built directly: construct a Screen subclass, or ask a port to broadcast().
+    Not built directly: construct a Screen subclass or a ScreenGroup.
     """
 
-    def __init__(self, port, display, width, height, bitdepth, backlight, te, v_sync, index, reserve, members=None):
+    def __init__(self, port, display, width, height, bitdepth, backlight, te, v_sync, index, reserve, members=None, shared_te=False, sync=None):
         self.__port = port
         self.__display = display
         self.__width = width
@@ -239,6 +249,8 @@ class ScreenBase:
         self.__pair = None      # The ScreenPair holding panel state on this screen
         self.__group = None     # The ScreenGroup this screen is a member of, if any
         self.__subset_of = None  # The group a subset narrows, so it writes its members only
+        self.__shared_te = shared_te  # Whether this panel's TE reaches a line others share
+        self.__sync = sync      # The screen whose TE a frame waits on, None to leave TE alone
 
     @property
     def port(self):
@@ -274,6 +286,16 @@ class ScreenBase:
     def v_sync(self):
         """Whether a frame waits on the tearing-effect signal unless told otherwise."""
         return self.__v_sync
+
+    @property
+    def sync(self):
+        """The screen whose tearing-effect signal a frame waits on, or None.
+
+        A single screen syncs on itself. A group syncs on the one member it
+        nominated, the rest tearing, since panels on a hub scan independently and no
+        edge is safe for all of them.
+        """
+        return self.__sync
 
     @property
     def reserve(self):
@@ -369,6 +391,27 @@ class ScreenBase:
 
         return tuple(screen.display for screen in to)
 
+    def __sync_display(self, v_sync, to):
+        """The display whose TE this write waits on, or None to leave TE alone.
+
+        Only a screen sharing its DC line needs the transient discipline, a panel
+        owning its own line keeping TEON from bringup. Waiting on a member outside
+        the written set buys nothing, that panel being clean and not updated while
+        every panel that is written tears, so a narrowed write falls to a member of
+        its own set.
+        """
+        if not v_sync or self.__sync is None:
+            return None
+
+        written = self.screens if to is None else to
+        if self.__sync is self or self.__sync in written:
+            return self.__sync.display
+
+        for screen in written:
+            if screen.__shared_te:
+                return screen.display
+        return None
+
     def update(self, image, rotation=0, mirror=False, v_sync=None, bg_color=picovector.color.black, pixel_double=False, offset=None, to=None):
         # A frame outside the pair first hands back the panel state alignment
         # holds, since the narrowed TE pulse is only safe under the pair's poll
@@ -380,7 +423,7 @@ class ScreenBase:
             v_sync = self.__v_sync
         elif v_sync and not self.__te:
             if self.__members is not None:
-                raise ValueError("a broadcast group cannot v_sync: its panels' scans are unsynchronised, so no edge is safe for all of them")
+                raise ValueError("this broadcast group has no member to wait on: its panels' scans are unsynchronised, so build it with sync naming one of them, which needs every member built te=SHARED_DC")
 
             raise ValueError("v_sync needs a screen created with te, since it waits on the panel's tearing-effect signal")
 
@@ -395,7 +438,8 @@ class ScreenBase:
                               mirror=1 if mirror else 0,
                               pixel_double=1 if pixel_double else 0,
                               bg=bg, offset=offset, v_sync=v_sync,
-                              to=self.__write_targets(to))
+                              to=self.__write_targets(to),
+                              sync=self.__sync_display(v_sync, to))
         self.drawn()
 
     @micropython.native
@@ -416,7 +460,8 @@ class ScreenBase:
                                mirror=1 if mirror else 0,
                                pixel_double=1 if pixel_double else 0,
                                bg=bg, offset=offset,
-                               to=self.__write_targets(to))
+                               to=self.__write_targets(to),
+                               sync=self.__sync_display(self.__v_sync, to))
 
 
 class Screen(ScreenBase):
@@ -424,12 +469,14 @@ class Screen(ScreenBase):
 
     The first screen on a port names no pins and takes the port's own DC, CS and
     backlight. Every further screen names its cs, and its dc unless it is
-    deliberately sharing the port's, which only panels with te=False may do. With a
-    selector set on the port the screens name no pins and take a channel each, in
-    creation order.
+    deliberately sharing the port's, which panels take te=False or te=SHARED_DC to
+    do. With a selector set on the port the screens name no pins and take a channel
+    each, in creation order.
 
-    te reads the tearing-effect signal from the shared DC line, which is how
-    MightyFX wires it; pass a Pin for a dedicated input, or False to send TEOFF.
+    te reads the tearing-effect signal from this screen's own DC line, which is how
+    MightyFX wires one panel to a port; SHARED_DC reads it from a line other screens
+    share, which needs a diode on each breakout and asserts TE only for the frame
+    waiting on it; a Pin is a dedicated input; False sends TEOFF and never waits.
     v_sync follows te, and False keeps the signal without waiting on it. bl=False
     declines the port's backlight, for a panel whose own is tied on at the assembly.
 
@@ -551,8 +598,9 @@ class Screen(ScreenBase):
         bd_code = __code_for(controller.PIXEL_FORMAT, bitdepth, "bit depth")
         fr_code = __code_for(controller.FRAME_RATE_CONTROL, self.__framerate, "frame rate")
 
+        shared_te = te is SHARED_DC
         te_used = te is not False
-        te_pin = None if isinstance(te, bool) else te
+        te_pin = None if shared_te or isinstance(te, bool) else te
 
         if v_sync is None:
             v_sync = te_used
@@ -572,7 +620,7 @@ class Screen(ScreenBase):
             index = None
 
         cs = port.__claim_cs(cs)
-        dc = port.__claim_dc(dc, te_used)
+        dc = port.__claim_dc(dc, te_used, shared_te)
 
         # The line TE is read from, which a pair's excursion scheduler watches
         self.__te_line = (te_pin if te_pin is not None else dc) if te_used else None
@@ -585,6 +633,8 @@ class Screen(ScreenBase):
         display = spidisplay.SPIDisplay(bus=port.bus, cs=cs, dc=dc, te=te_pin,
                                         width=width, height=height,
                                         ram_write=controller.RAM_WRITE,
+                                        te_on=controller.TE_ON, te_off=controller.TE_OFF,
+                                        te_mode=controller.TE_MODE,
                                         bitdepth=bitdepth, baudrate=self.__baudrate,
                                         band_lines=band_lines, cache_columns=cache_columns,
                                         stage_lines=stage_lines)
@@ -599,13 +649,17 @@ class Screen(ScreenBase):
                              f" Raise clk_peri first, machine.freq(150_000_000, 150_000_000),"
                              f" or request a rate the current clock reaches.")
 
-        super().__init__(port, display, width, height, bitdepth, backlight, te_used, v_sync, index, reserve)
+        super().__init__(port, display, width, height, bitdepth, backlight, te_used,
+                         v_sync, index, reserve, shared_te=shared_te,
+                         sync=self if shared_te else None)
 
         port.__register(self)
 
         # Bringup goes through this screen's command(), so a selector is pointed at
-        # the panel for every register write as well as every frame
-        controller.setup(self, width, height, bd_code, fr_code, te_used)
+        # the panel for every register write as well as every frame. A shared line
+        # comes up at TEOFF: the driver asserts TE only for the frame that waits on
+        # it, since one panel at a time may reach the line.
+        controller.setup(self, width, height, bd_code, fr_code, te_used and not shared_te)
 
     @property
     def framerate(self):
@@ -692,9 +746,15 @@ class ScreenGroup(ScreenBase):
 
     subset() names fewer of the members over the same display, for a frame that
     reaches only some of them. A subset owns nothing and costs no display.
+
+    sync names the one member whose tearing-effect signal a frame waits on, which
+    needs every member built te=SHARED_DC. That panel comes out clean and the rest
+    tear, panels on a hub scanning independently with no edge safe for all of them.
+    None takes the first member that can, saying so if none can; False declines the
+    wait, so a frame goes out at once.
     """
 
-    def __init__(self, *screens, parent=None):
+    def __init__(self, *screens, sync=None, parent=None):
         if len(screens) < 2 and parent is None:
             raise ValueError("a broadcast group needs at least two screens")
 
@@ -709,9 +769,16 @@ class ScreenGroup(ScreenBase):
         # A subset is a member set over its parent's display, so it claims no
         # members, builds no display, and leaves ownership where it is.
         if parent is not None:
+            # A subset inherits its parent's nomination, since alignment and the
+            # panel state stay the parent's; sync=False declines the wait for this
+            # set alone. A nominated member outside the set is resolved per write.
+            nominated = parent.sync if sync is None else sync
+            if nominated is False:
+                nominated = None
             super().__init__(port, parent.display, parent.width, parent.height,
-                             parent.bitdepth, parent.backlight, False, False, None,
-                             parent.reserve, members=tuple(screens))
+                             parent.bitdepth, parent.backlight, nominated is not None,
+                             nominated is not None, None, parent.reserve,
+                             members=tuple(screens), sync=nominated)
             self.__subset_of = parent
             return
 
@@ -719,24 +786,46 @@ class ScreenGroup(ScreenBase):
             if screen.__group is not None:
                 raise ValueError("a screen belongs to one group at a time, and one of these is already in another. Take a subset of the group it is in, or build a single group over every panel that shares a frame.")
 
+        # One member's TE, not all of them: a hub's panels scan independently, so no
+        # edge is safe for every one and the nominated panel comes out clean while
+        # the rest tear. Naming a member is a request and refuses if it cannot be
+        # met; None takes the first that can, and False declines the wait outright.
+        nominated = None
+        if sync is not False:
+            shared = [screen for screen in screens if screen.__shared_te]
+            if sync is not None:
+                if sync not in screens:
+                    raise ValueError(f"{sync} is not a member of this group, so it cannot be the one its frames wait on")
+                if not sync.__shared_te:
+                    raise ValueError(f"{sync} was not built te=SHARED_DC, so its tearing-effect signal is not on the line this group's frames read. Build every member te=SHARED_DC, which needs the diode fitted.")
+                nominated = sync
+            elif shared:
+                nominated = shared[0]
+            else:
+                logging.info("screens: this group's panels carry no shared tearing-effect signal, so its frames will not wait and every panel may tear. Build the members te=SHARED_DC to nominate one.")
+
         first = screens[0]
         display = port.bus.broadcast(*[screen.display for screen in screens])
 
         # The backlight is the first member's, since screens on a port share the one
-        # PWM. TE is never available, the members' scans being unsynchronised.
+        # PWM.
         super().__init__(port, display, first.width, first.height, first.bitdepth,
-                         first.backlight, False, False, None, first.reserve,
-                         members=tuple(screens))
+                         first.backlight, nominated is not None, nominated is not None,
+                         None, first.reserve, members=tuple(screens), sync=nominated)
 
         for screen in screens:
             screen.__group = self
 
-    def subset(self, *screens):
+    def subset(self, *screens, sync=None):
         """A member set over this group's display, writing only what it names.
 
         Cheap enough to make per frame: no display and no finaliser, just this
         group's own with a narrower set of members. A subset of one is allowed, so
         a loop over subsets does not break at the last.
+
+        sync defaults to the group's own nomination, resolved per write since the
+        nominated member need not be in the set. sync=False declines the wait for
+        this set alone, leaving the group's nomination where it is.
         """
         if not screens:
             raise ValueError("a subset needs at least one screen")
@@ -746,7 +835,7 @@ class ScreenGroup(ScreenBase):
             if screen not in members:
                 raise ValueError(f"{screen} is not a member of this group, so it cannot be in a subset of it")
 
-        return ScreenGroup(*screens, parent=self.__subset_of or self)
+        return ScreenGroup(*screens, sync=sync, parent=self.__subset_of or self)
 
 
 class ScreenPair:
