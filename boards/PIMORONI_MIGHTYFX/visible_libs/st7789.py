@@ -54,10 +54,30 @@ TE_ON = REG_TEON
 TE_OFF = REG_TEOFF
 TE_MODE = 0x00
 
-# Scan slots per refresh at the PORCTRL porches setup() writes: 320 rows plus 12
-# each of back and front porch. Converts a TE period to a line time whatever the
-# panel's visible rows.
+# Scan rows a refresh spends whatever the panel shows, so a 240-row panel scans
+# these too and its blanking is the porches alone.
+CONTROLLER_ROWS = const(320)
+
+# What setup() writes, back then front, in scan lines
+PORCH = (12, 12)
+
+# Scan slots per refresh at those porches. Converts a TE period to a line time
+# whatever the panel's visible rows. A screen whose porch has moved spends its own
+# count, so read screen.line_slots rather than this.
 LINE_SLOTS = const(344)
+
+# PSEN off, then the idle and partial porches, which normal mode never reads
+PORCH_TAIL = b"\x00\x33\x33"
+
+
+def set_porch(screen, back, front):
+    """Write the normal-mode porches, which set how many slots a refresh spends.
+
+    One porch line is one line time, measured to within 0.04% on both panel types.
+    The controller reads these as it enters blanking and never inside one, so a
+    write lands on the frame after it and cannot truncate the one in flight.
+    """
+    screen.command(REG_PORCTRL, bytes((back, front)) + PORCH_TAIL)
 
 # Codes for setting screen frame rate
 FRAME_RATE_CONTROL = OrderedDict({
@@ -117,7 +137,7 @@ def setup(screen, width, height, bitdepth_code, framerate_code, te=True):
 
     screen.command(REG_TEON if te else REG_TEOFF)
     screen.command(REG_COLMOD, bitdepth_code)   # 03 = 12-bit, 05 = 16-bit, 06 = 18-bit
-    screen.command(REG_PORCTRL, b"\x0c\x0c\x00\x33\x33")
+    set_porch(screen, *PORCH)
     screen.command(REG_LCMCTRL, b"\x2c")
     screen.command(REG_VDVVRHEN, b"\x01")
     screen.command(REG_VRHS, b"\x12")

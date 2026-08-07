@@ -655,6 +655,11 @@ class Screen(ScreenBase):
 
         port.__register(self)
 
+        # What setup() is about to write, and the slots that porch spends. A group's
+        # trim moves both, so every margin sum reads them from the screen.
+        self.__porch = controller.PORCH
+        self.__line_slots = controller.LINE_SLOTS
+
         # Bringup goes through this screen's command(), so a selector is pointed at
         # the panel for every register write as well as every frame. A shared line
         # comes up at TEOFF: the driver asserts TE only for the frame that waits on
@@ -665,6 +670,38 @@ class Screen(ScreenBase):
     def framerate(self):
         """The panel's own refresh rate, which bounds the tearing margin."""
         return self.__framerate
+
+    @property
+    def line_slots(self):
+        """Scan slots this panel spends per refresh, porches included.
+
+        A TE period over this is the line time. The porch sets it, so a member a
+        group has trimmed reports its own count rather than the controller's
+        default, and every margin sum reads it from here.
+        """
+        return self.__line_slots
+
+    @property
+    def porch(self):
+        """The back and front porch, in scan lines, as PORCTRL holds them.
+
+        A group's trim owns this while it holds its members in phase, so setting it
+        by hand belongs to a diagnostic rather than to an application.
+        """
+        return self.__porch
+
+    def __set_porch(self, back, front):
+        """Move this panel's refresh period by whole scan lines.
+
+        One porch line is one line time. The setting a caller reaches for is the
+        group's align; this is the mechanism it moves a member with.
+        """
+        if back < 1 or front < 1:
+            raise ValueError(f"a porch of ({back}, {front}) has a side under one line, which the controller has no code for")
+
+        self.CONTROLLER.set_porch(self, back, front)
+        self.__porch = (back, front)
+        self.__line_slots = self.CONTROLLER.CONTROLLER_ROWS + back + front
 
     @property
     def requested_baudrate(self):
@@ -1056,7 +1093,9 @@ class ScreenPair:
         li = 1 - fi
         f_screen = screens[fi]
         controller = f_screen.CONTROLLER
-        line_slots = controller.LINE_SLOTS
+        # The faster panel's own slot count, not the controller's default: a screen
+        # whose porch has been moved spends a different number of them.
+        line_slots = f_screen.line_slots
         s_line = periods[fi] / line_slots
 
         # Per panel: the sorted rate table, the built rate's index, and a probed
