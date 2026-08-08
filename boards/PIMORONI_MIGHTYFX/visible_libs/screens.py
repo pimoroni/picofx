@@ -252,6 +252,7 @@ class ScreenBase:
         self.__shared_te = shared_te  # Whether this panel's TE reaches a line others share
         self.__sync = sync      # The screen whose TE a frame waits on, None to leave TE alone
         self.__synced_frame = None  # The screen the last frame's wait ended on, if any
+        self.__sync_delay_us = 0    # How long a write trails the wait, set by a holding group
 
     @property
     def port(self):
@@ -434,6 +435,7 @@ class ScreenBase:
         self.__select()
 
         synced = self.__sync_screen(v_sync, to)
+        delay = (self.__subset_of or self).__sync_delay_us
         # The C module handles the transform, transfer, and TE wait
         self.__display.update(image,
                               rotation=rotation,
@@ -441,14 +443,15 @@ class ScreenBase:
                               pixel_double=1 if pixel_double else 0,
                               bg=bg, offset=offset, v_sync=v_sync,
                               to=self.__write_targets(to),
-                              sync=None if synced is None else synced.display)
+                              sync=None if synced is None else synced.display,
+                              sync_delay_us=delay)
         self.__synced_frame = synced
         self.drawn()
 
         # A member updated on its own still scans, so its frames advance its
         # group's hold too; a run of them would otherwise walk the group apart.
         if self.__group is not None:
-            self.__group.__tick_hold(self.__display.stats(), synced)
+            self.__group.__tick_hold(self.__display.stats(), synced, delay)
 
     @micropython.native
     def prepare(self, image, rotation=0, mirror=False, bg_color=picovector.color.black, pixel_double=False, offset=None, to=None):
@@ -939,6 +942,7 @@ class ScreenGroup(ScreenBase):
         self.__anchor_dither = [0.0] * len(screens)
         self.__anchor_skip = [False] * len(screens)
         self.__fresh_hold = False
+        self.__centre_us = 0
         self.__held_stamp = 0
         self.__swept_at = 0
         self.__grid_at = 0
@@ -1064,6 +1068,12 @@ class ScreenGroup(ScreenBase):
         # much of its own tearing margin, so the aim is the tightest member's less
         # the reserve the hold keeps, rather than a figure picked to suit a result.
         self.__aim_us = (1.0 - self.DITHER_FRACTION) * margin_us
+
+        # Half the tightest member's margin, which is where a held group starts its
+        # writes: at the fall itself the synced member's own budget is whole but a
+        # member scanning later has none, and the constellation straddles that
+        # edge, so the write floats in the middle of the window instead.
+        self.__centre_us = int(margin_us / 2)
 
         # One rate stops them drifting apart; acquisition brings them together, and
         # the hold is what keeps them there, the residual rate spread passing the
@@ -1216,10 +1226,10 @@ class ScreenGroup(ScreenBase):
         super().update(image, *args, **kwargs)
         owner = self.__subset_of or self
         synced = self.__synced_frame
-        owner.__tick_hold(self.display.stats(), synced)
+        owner.__tick_hold(self.display.stats(), synced, owner.__sync_delay_us)
         owner.__tick_trim(synced)
 
-    def __tick_hold(self, stats, synced):
+    def __tick_hold(self, stats, synced, delay=0):
         """Hold each member where acquisition put it, one porch line at a time.
 
         Between frames each member's booked phase advances by its modelled rate
@@ -1237,7 +1247,12 @@ class ScreenGroup(ScreenBase):
         if not self.__holding:
             return
 
+        # The write trails the wait by the group's centring delay, and the stamp
+        # moves with it, so the delay comes back out: the clock and the grid are
+        # both fall-referenced, whichever path the frame took.
         stamp = stats.write_start_us
+        if synced is not None:
+            stamp = (stamp - delay) & 0xFFFFFFFF
         elapsed = (stamp - self.__held_stamp) & 0xFFFFFFFF
         self.__held_stamp = stamp
         if elapsed > self.HOLD_PAUSE_MS * 1000:
@@ -1302,8 +1317,11 @@ class ScreenGroup(ScreenBase):
         self.__anchor_dither = [0.0] * count
         self.__anchor_skip = [False] * count
         self.__held_stamp = self.__swept_at
+        self.__sync_delay_us = self.__centre_us
         self.__fresh_hold = True
         self.__holding = True
+        logging.debug(f"screens: writes start {self.__centre_us}us behind the tearing"
+                      f" edge, centred in the tightest member's margin")
 
     def __anchor(self, index, stamp):
         """Replace one member's booking with its measured fall, and learn its rate.
@@ -1376,6 +1394,9 @@ class ScreenGroup(ScreenBase):
                 back, front = screen.porch
                 screen.__set_porch(back - applied, front)
                 self.__dither[index] = 0
+        # Back to the fall itself: with the constellation loose only the nominated
+        # member comes out clean, and the fall is its own tuned phase.
+        self.__sync_delay_us = 0
         self.__holding = False
         logging.info(f"screens: a {elapsed // 1000}ms pause let the panels' scans drift apart, so they are no longer being held together")
         if self.__trim == "rotate":
