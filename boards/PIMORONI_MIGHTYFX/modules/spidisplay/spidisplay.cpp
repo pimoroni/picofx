@@ -953,7 +953,7 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h, int src_stride
                         const uint8_t *palette, size_t palette_len,
                         int rotation, int mirror, int pixel_double,
                         uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
-                        bool v_sync, uint32_t timeout_us,
+                        bool v_sync, uint32_t timeout_us, uint32_t sync_delay_us,
                         uint64_t target_cs, uint64_t target_dc,
                         uint64_t sync_cs, uint64_t sync_dc) {
     prepare(src, src_w, src_h, src_stride, palette, palette_len,
@@ -962,6 +962,11 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h, int src_stride
             target_cs, target_dc, sync_cs, sync_dc);
     arm(v_sync, timeout_us);
     while (!poll_te()) {
+    }
+    if (v_sync && sync_delay_us) {
+        const uint32_t released = time_us_32();
+        while (time_us_32() - released < sync_delay_us) {
+        }
     }
     start_stream();
     while (state != FrameState::IDLE) {
@@ -1270,18 +1275,19 @@ typedef struct _FrameArgs {
     int off_x, off_y;
     bool v_sync;
     mp_int_t timeout_us;
+    mp_int_t sync_delay_us;
     uint64_t target_cs, target_dc;    // 0 for every line this display drives
     uint64_t sync_cs, sync_dc;        // 0 to leave TE alone
 } FrameArgs;
 
-// with_sync parses the trailing v_sync and timeout_us; prepare() leaves them
-// out, since the TE wait belongs to update_all(), and they raise as unknown
-// keywords there.
+// with_sync parses the trailing v_sync, timeout_us and sync_delay_us; prepare()
+// leaves them out, since the TE wait belongs to update_all(), and they raise as
+// unknown keywords there.
 static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
                                    mp_map_t *kw_args, bool with_sync, FrameArgs *out) {
     enum { ARG_self, ARG_image,
            ARG_rotation, ARG_mirror, ARG_pixel_double, ARG_bg, ARG_offset, ARG_to,
-           ARG_sync, ARG_v_sync, ARG_timeout_us };
+           ARG_sync, ARG_v_sync, ARG_timeout_us, ARG_sync_delay_us };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_image, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = mp_const_none} },
@@ -1294,9 +1300,10 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
         { MP_QSTR_sync, MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_v_sync, MP_ARG_BOOL, {.u_bool = false} },
         { MP_QSTR_timeout_us, MP_ARG_INT, {.u_int = 50000} },
+        { MP_QSTR_sync_delay_us, MP_ARG_INT, {.u_int = 0} },
     };
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)] = {};
-    size_t n_allowed = MP_ARRAY_SIZE(allowed_args) - (with_sync ? 0 : 2);
+    size_t n_allowed = MP_ARRAY_SIZE(allowed_args) - (with_sync ? 0 : 3);
     mp_arg_parse_all(n_args, pos_args, kw_args, n_allowed, allowed_args, args);
 
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[ARG_self].u_obj);
@@ -1394,6 +1401,10 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
     out->off_y = off_y;
     out->v_sync = with_sync ? args[ARG_v_sync].u_bool : false;
     out->timeout_us = with_sync ? args[ARG_timeout_us].u_int : 0;
+    out->sync_delay_us = with_sync ? args[ARG_sync_delay_us].u_int : 0;
+    if (out->sync_delay_us < 0) {
+        mp_raise_ValueError(MP_ERROR_TEXT("sync_delay_us cannot be negative, since the wait cannot release before the tearing edge"));
+    }
 
     // to= narrows the write to some of a group's members, named as displays so
     // the 64-bit masks never cross into Python. Each must be one of this
@@ -1452,7 +1463,8 @@ static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_ma
         a.palette, a.palette_len,
         a.rotation, a.mirror, a.pixel_double,
         a.bg, a.centred_x, a.off_x, a.centred_y, a.off_y,
-        a.v_sync, a.timeout_us, a.target_cs, a.target_dc, a.sync_cs, a.sync_dc);
+        a.v_sync, a.timeout_us, (uint32_t)a.sync_delay_us,
+        a.target_cs, a.target_dc, a.sync_cs, a.sync_dc);
     a.self->staged_image = mp_const_none;
     return mp_const_none;
 }
