@@ -26,6 +26,12 @@ import st7789
 # so the driver sends TEON as a frame's wait begins and TEOFF as it ends.
 SHARED_DC = "shared_dc"
 
+# time.ticks_us() wraps at 2**30 where the C module's stamps wrap at 2**32, and
+# their low bits agree, so a group's hold reduces every stamp it keeps to 30 bits
+# and takes every difference there. That lets a frame's own stamp and a plain
+# clock reading serve the same arithmetic, and holds to about seventeen minutes.
+TICKS_MASK = 0x3FFFFFFF
+
 
 def update_pair(first, second, v_sync=None):
     """Stream a frame to two screens at once, each starting on its own TE edge.
@@ -451,7 +457,7 @@ class ScreenBase:
         # A member updated on its own still scans, so its frames advance its
         # group's hold too; a run of them would otherwise walk the group apart.
         if self.__group is not None:
-            self.__group.__tick_hold(self.__display.stats(), synced, delay)
+            self.__group.__frame_ticked(self.__display.stats(), synced, delay)
 
     @micropython.native
     def prepare(self, image, rotation=0, mirror=False, bg_color=picovector.color.black, pixel_double=False, offset=None, to=None):
@@ -835,19 +841,47 @@ class ScreenGroup(ScreenBase):
     # inside the sawtooth the hold carries anyway.
     TRIM_LIMIT_LINES = 1
 
-    # Porch lines an acquisition excursion runs at. Only ever added, never taken: a
-    # longer porch delays a member and raises its margin while the excursion runs,
-    # where shortening one would advance it and spend margin the 1.54 has not got.
-    # So a member is always delayed into place, at worst a whole period of it.
+    # Porch lines an acquisition's excursion rounds run at, and the depth the
+    # hold's dither reaches while walking a straggler back in behind flowing
+    # frames. Both move a member whichever way is nearer, since neither writes to
+    # the member while it travels: an acquisition runs between frames, and a
+    # walking member is held out of the write until it fits. Lengthening is
+    # measured usable to 56 blanking lines, and shortening stops at the porch
+    # floor, which the walk clamps to rather than overshooting.
     EXCURSION_LINES = 8
+    WALK_LINES = 24
+
+    # The shortest back porch a walk may leave. Blanking is the porch, so it is
+    # also the tearing pulse: with the 12-line front porch this holds the pulse
+    # above a millisecond on both panel types, clear of te_short_waits' 700us
+    # and of the controller's own minimum, so a walking member is still readable
+    # as the wait target and keeps taking its turn at being measured.
+    WALK_FLOOR_LINES = 8
+
+    # The longest a frame waits for the members to come together before it goes
+    # out regardless. update() presents on every member before it returns, so a
+    # straggler is waited for rather than dropped, and past this the frame is
+    # written and tears on whoever is still out: one spoiled frame beats a
+    # stalled wall. A pause long enough to need the whole budget is a pause the
+    # caller has already spent seconds on, so the wait costs nothing it notices.
+    WALK_WAIT_MS = 600
+
+    # How far past the window a member may sit before a frame waits for it. The
+    # write lands centre_us less the error into a member's scan, so an error
+    # just past the window tears a line at the extreme edge where one several
+    # milliseconds past tears a visible band. Stalling the wall for a line is
+    # the wrong trade, and the hold's own ripple lives inside this.
+    WAIT_SLACK_LINES = 8
 
     # Sweeps allowed to bring the phases together before the group gives up. It
     # converges in two and the third is noise, so more buys nothing.
     ACQUIRE_TRIES = 3
 
-    # The longest gap between frames the hold extrapolates across. A prediction
-    # from a fresh period is worth 418us at a 1s pause and 1,136us at 4s, measured
-    # 2026-08-08, so past this the phases are treated as lost rather than paid back.
+    # Past this gap between frames a rate reading is not trusted, the panels'
+    # rates wandering while nothing measures them, and a hold not yet fed its
+    # first frame reacquires outright. The bookings themselves survive any pause:
+    # an anchor resolves its measurement nearest the booking and phases are
+    # modular, so however far extrapolation drifted, the members walk back in.
     HOLD_PAUSE_MS = 1000
 
     def __init__(self, *screens, sync=None, align=None, trim=None, parent=None):
@@ -942,6 +976,7 @@ class ScreenGroup(ScreenBase):
         self.__anchor_dither = [0.0] * len(screens)
         self.__anchor_skip = [False] * len(screens)
         self.__fresh_hold = False
+        self.__walking = False
         self.__centre_us = 0
         self.__held_stamp = 0
         self.__swept_at = 0
@@ -1113,7 +1148,7 @@ class ScreenGroup(ScreenBase):
         # residual rate spread times the periods aged, so a tight trim is what makes
         # a close aim possible.
         reference = rows[-1][1]
-        self.__swept_at = reference
+        self.__swept_at = reference & TICKS_MASK
         return [((reference - fall) & 0xFFFFFFFF) % self.__target_us
                 for fall, _ in rows]
 
@@ -1127,12 +1162,15 @@ class ScreenGroup(ScreenBase):
         shrinking, which the 1.54 has no room for.
 
         Sweeping serialises behind TEON and the members drift while it runs, so the
-        aim carries the sweep's own ageing error. That is what the retries are for.
+        aim carries the sweep's own ageing error. That is what the retries are for,
+        and a group still past the aim when they run out is armed from its final
+        sweep regardless: any measured sweep is a working grid, and the hold walks
+        the remainder in at about a line time a frame, where refusing would leave
+        every panel but one tearing indefinitely. Only a member going silent fails.
         """
         members = self.screens
-        spread = 0
         # One more check than excursion rounds: the last round's outcome has to be
-        # measured, or a converged group is refused on the state before it.
+        # measured, or a converged group is judged on the state before it.
         for attempt in range(self.ACQUIRE_TRIES + 1):
             phases = self.__phases()
             if phases is None:
@@ -1145,58 +1183,73 @@ class ScreenGroup(ScreenBase):
             target = phases[members.index(self.__reference)]
             errors = [self.__fold(phase - target) for phase in phases]
             spread = max(errors) - min(errors)
-            if spread <= self.__aim_us:
+            settled = spread <= self.__aim_us
+            if settled or attempt == self.ACQUIRE_TRIES:
                 self.__acquired_us = spread
-                # The grid the hold measures against: each member's falls land at
-                # this sweep's phases plus whole periods, until a pause loses them.
+                # The grid the hold measures against is common: every member's
+                # ideal falls are the reference's, and the bookings are seeded
+                # with the offsets this sweep measured, so the hold walks every
+                # member onto the grid rather than holding it where it landed.
                 self.__grid_at = self.__swept_at
-                self.__grid_phases = tuple(phases)
-                logging.info(f"screens: members brought into phase, spread {spread}us"
-                             f" after {attempt} excursions. It decays at the residual"
-                             f" rate spread until a hold carries it")
+                self.__grid_phases = tuple([target] * len(members))
+                self.__phase_us = [-error for error in errors]
+                if settled:
+                    logging.info(f"screens: members brought into phase, spread {spread}us"
+                                 f" after {attempt} excursions. It decays at the residual"
+                                 f" rate spread until a hold carries it")
+                else:
+                    logging.info(f"screens: the members are still {int(spread)}us apart"
+                                 f" against a {self.__aim_us:.0f}us aim, so the hold"
+                                 f" walks the rest in, about a line time a frame")
                 return True
-
-            if attempt == self.ACQUIRE_TRIES:
-                break
 
             # Delay each member until its fall meets the reference's. A phase is the
             # time since that member last fell, so one further through its frame than
             # the reference has to wait the difference out.
-            plans = []
-            for index, screen in enumerate(members):
-                stretch = self.EXCURSION_LINES * self.__line_us[index]
-                # Each member takes whichever direction is nearer, which halves the
-                # worst case against delaying alone. Shortening a porch spends tearing
-                # margin while it runs and that costs nothing here: no frame is written
-                # during an excursion, so there is no write for the margin to protect.
-                plans.append((int(round(errors[index] / stretch)), screen))
+            self.__excurse(errors)
 
-            logging.debug(f"screens: errors {[int(e) for e in errors]},"
-                          f" spread {int(spread)}us,"
-                          f" excursions {[periods for periods, _ in plans]} periods")
+    def __excurse(self, errors):
+        """One concurrent excursion round cancelling the given phase errors.
 
-            for periods, screen in plans:
-                if periods:
-                    lines = self.EXCURSION_LINES if periods > 0 else -self.EXCURSION_LINES
-                    back, front = screen.porch
-                    screen.__set_porch(back + lines, front)
+        errors carry the sweep's sign, positive being a member ahead of the
+        reference, cancelled by delaying it that long: its porch runs long for
+        whole periods, EXCURSION_LINES at a time, and goes back after. Each
+        member takes whichever direction is nearer, which halves the worst case
+        against delaying alone. Shortening a porch spends tearing margin while
+        it runs, and that costs nothing here: no frame is written during an
+        excursion, so there is no write for the margin to protect. Every
+        excursion runs at once and each is lifted at its own count, so a round
+        costs the longest one and not their sum. Returns how far each member
+        moved, in microseconds, later being positive.
+        """
+        members = self.screens
+        plans = []
+        for index in range(len(members)):
+            stretch = self.EXCURSION_LINES * self.__line_us[index]
+            plans.append(int(round(errors[index] / stretch)))
 
-            # Every excursion runs at once and each is lifted at its own count, so
-            # the whole acquisition costs the longest one and not their sum.
-            elapsed = 0
-            for periods, screen in sorted(plans, key=lambda plan: abs(plan[0])):
-                if not periods:
-                    continue
-                run = abs(periods)
-                time.sleep_ms(int((run - elapsed) * self.__target_us / 1000) + 1)
-                elapsed = run
-                lines = self.EXCURSION_LINES if periods > 0 else -self.EXCURSION_LINES
+        logging.debug(f"screens: errors {[int(e) for e in errors]},"
+                      f" excursions {plans} periods")
+
+        for index, screen in enumerate(members):
+            if plans[index]:
+                lines = self.EXCURSION_LINES if plans[index] > 0 else -self.EXCURSION_LINES
                 back, front = screen.porch
-                screen.__set_porch(back - lines, front)
+                screen.__set_porch(back + lines, front)
 
-        logging.info(f"screens: the members did not come into phase, spread {int(spread)}us"
-                     f" against a {self.__aim_us:.0f}us aim, so each panel keeps its own")
-        return False
+        elapsed = 0
+        for index in sorted(range(len(members)), key=lambda i: abs(plans[i])):
+            if not plans[index]:
+                continue
+            run = abs(plans[index])
+            time.sleep_ms(int((run - elapsed) * self.__target_us / 1000) + 1)
+            elapsed = run
+            lines = self.EXCURSION_LINES if plans[index] > 0 else -self.EXCURSION_LINES
+            back, front = members[index].porch
+            members[index].__set_porch(back - lines, front)
+
+        return [plans[index] * self.EXCURSION_LINES * self.__line_us[index]
+                for index in range(len(members))]
 
     def __fold(self, error):
         """A modular phase difference brought onto +-half a period."""
@@ -1216,19 +1269,99 @@ class ScreenGroup(ScreenBase):
     def update(self, image, *args, **kwargs):
         """Stream a frame to every member, then advance the hold and the trim.
 
-        Takes what ScreenBase.update() takes. Both tick here rather than on a
-        timer, the windows between written frames being the only ones a register
-        write may sit in. A subset's frames tick its parent, since a member not
-        being written still scans and still drifts.
+        Takes what ScreenBase.update() takes. Every member the caller named is
+        written, whatever its phase: update() is a promise that the group has
+        presented by the time it returns, and a member held back to spare it a
+        tear breaks that promise where a tear only spoils one frame. A member
+        out of phase therefore tears until the hold walks it back, which takes a
+        few frames. Both ticks run here rather than on a timer, the windows
+        between written frames being the only ones a register write may sit in;
+        a subset's frames tick its parent, since a member not being written
+        still scans and still drifts.
         """
-        super().update(image, *args, **kwargs)
         owner = self.__subset_of or self
+        if owner.__holding:
+            to = args[6] if len(args) > 6 else kwargs.get("to")
+            owner.__walk_in(self.screens if to is None else to)
+        super().update(image, *args, **kwargs)
         synced = self.__synced_frame
-        owner.__tick_hold(self.display.stats(), synced, owner.__sync_delay_us)
+        owner.__frame_ticked(self.display.stats(), synced, owner.__sync_delay_us)
         owner.__tick_trim(synced)
 
-    def __tick_hold(self, stats, synced, delay=0):
-        """Hold each member where acquisition put it, one porch line at a time.
+    def __walk_in(self, written):
+        """Wait for the members to come together before a frame goes out.
+
+        Nothing is written while this runs, so the group presents in one piece
+        rather than in waves. The wait needs no measurement: a tick asks only
+        for an elapsed time and the rates the hold already carries, and over a
+        couple of hundred milliseconds a prediction stays within about a hundred
+        microseconds of the truth. Past WALK_WAIT_MS the frame goes out and
+        tears on whoever is still out, update() being a promise that the group
+        has presented by the time it returns.
+        """
+        if not self.__out_of_phase(written):
+            return
+
+        deadline = time.ticks_add(time.ticks_ms(), self.WALK_WAIT_MS)
+        nap = int(self.__target_us / 1000) + 1
+        waited = 0
+        while self.__out_of_phase(written):
+            if time.ticks_diff(deadline, time.ticks_ms()) <= 0:
+                logging.info("screens: some panels are still out of phase, so this frame goes out and tears on them rather than holding the group up any longer")
+                return
+            time.sleep_ms(nap)
+            self.__tick_hold(time.ticks_us() & TICKS_MASK, -1)
+            waited += 1
+        logging.debug(f"screens: held the frame {waited} periods for the members to come together")
+
+    def __out_of_phase(self, written):
+        """Whether a frame now would land outside some written member's budget.
+
+        The write starts centre_us into the synced member's scan, so that is how
+        far out of phase a member may be before it leaves its own tearing
+        margin. Bookings are carried to this instant, so the first frame after a
+        pause is judged on where the panels are and not where they were.
+        """
+        members = self.screens
+        synced = self.__sync
+        if synced is None or synced not in written:
+            return False
+
+        periods = ((time.ticks_us() - self.__held_stamp) & TICKS_MASK) / self.__target_us
+        phases = {}
+        for screen in written:
+            index = members.index(screen)
+            phases[screen] = self.__phase_us[index] + periods * (
+                self.__residual_us[index] + self.__dither[index] * self.__line_us[index])
+
+        base = phases[synced]
+        for screen, phase in phases.items():
+            slack = self.WAIT_SLACK_LINES * self.__line_us[members.index(screen)]
+            if abs(self.__fold(phase - base)) > self.__centre_us + slack:
+                return True
+        return False
+
+    def __frame_ticked(self, stats, synced, delay):
+        """Advance the hold from a written frame's own stamp."""
+        if not self.__holding:
+            return
+
+        # The write trails the wait by the group's centring delay and the stamp
+        # moves with it, so the delay comes back out: the clock and the grid are
+        # both fall-referenced, whichever path the frame took.
+        stamp = stats.write_start_us
+        members = self.screens
+        anchored = -1
+        if synced is not None:
+            stamp -= delay
+            # A stamp is a fall only where the frame waited and the wait did not
+            # time out, a timeout releasing at whatever phase its budget expired.
+            if synced in members and stats.te_wait_us < 2 * self.__target_us:
+                anchored = members.index(synced)
+        self.__tick_hold(stamp & TICKS_MASK, anchored)
+
+    def __tick_hold(self, stamp, anchored):
+        """Walk each member onto the group's grid and hold it, a porch line at a time.
 
         Between frames each member's booked phase advances by its modelled rate
         error, but the frame's own write stamp is the synced member's TE fall, so
@@ -1245,21 +1378,16 @@ class ScreenGroup(ScreenBase):
         if not self.__holding:
             return
 
-        # The write trails the wait by the group's centring delay, and the stamp
-        # moves with it, so the delay comes back out: the clock and the grid are
-        # both fall-referenced, whichever path the frame took.
-        stamp = stats.write_start_us
-        if synced is not None:
-            stamp = (stamp - delay) & 0xFFFFFFFF
-        elapsed = (stamp - self.__held_stamp) & 0xFFFFFFFF
+        elapsed = (stamp - self.__held_stamp) & TICKS_MASK
         self.__held_stamp = stamp
-        if elapsed > self.HOLD_PAUSE_MS * 1000:
-            # The gap between acquisition and a group's first frame can outrun the
-            # budget on its own, another group's construction being seconds, and
-            # nothing has drawn yet so the backlight is dark. The frame just
-            # written went out unaligned and the group reacquires in the gap
-            # behind it; a pause once frames are flowing releases instead.
-            if self.__fresh_hold and self.__acquire():
+        if elapsed > self.HOLD_PAUSE_MS * 1000 and self.__fresh_hold:
+            # A group's first frame can arrive seconds behind its acquisition,
+            # another group's construction being that long, and nothing has drawn
+            # yet so the backlight is dark: reacquire by sweeping behind the
+            # frame. Released only when the reacquisition itself fails. Any later
+            # pause is ridden out instead, the bookings extrapolating across it
+            # and the dither's deep end walking the stragglers back in.
+            if self.__acquire():
                 self.__arm_hold()
                 self.__fresh_hold = False
             else:
@@ -1269,11 +1397,6 @@ class ScreenGroup(ScreenBase):
 
         members = self.screens
         periods = elapsed / self.__target_us
-        # The stamp is a fall only when the frame waited and the wait did not time
-        # out, a timeout releasing at whatever phase its budget expired on.
-        anchored = -1
-        if synced is not None and stats.te_wait_us < 2 * self.__target_us:
-            anchored = members.index(synced)
         for index in range(len(members)):
             applied = self.__dither[index]
             if applied:
@@ -1286,6 +1409,7 @@ class ScreenGroup(ScreenBase):
         reference = members.index(self.__reference)
         anchor = self.__phase_us[reference]
         drift = self.__residual_us[reference] * periods
+        walking = False
         for index, screen in enumerate(members):
             if index == reference:
                 continue
@@ -1295,22 +1419,52 @@ class ScreenGroup(ScreenBase):
             # Folded: the whole group walks the grid as the panels warm, and the
             # anchor wraps each member's booking at half a period, so two members
             # either side of a wrap differ by a period while their scans do not.
+            back, front = screen.porch
             error = self.__fold(self.__phase_us[index] - anchor)
-            best, nearest = 0, None
-            for lines in (-1, 0, 1):
-                predicted = abs(error - drift + (residual + lines * line) * periods)
-                if nearest is None or predicted < nearest:
-                    best, nearest = lines, predicted
-            if best != applied:
-                back, front = screen.porch
-                if back + best - applied >= 1:
-                    screen.__set_porch(back + best - applied, front)
-                    self.__dither[index] = best
+            # The write starts centre_us into the synced member's scan, so a
+            # member further out than that has it outside its own budget and is
+            # tearing whatever happens: the walk runs deep, its margin no longer
+            # being worth protecting. Inside, one line a frame is all the ripple
+            # asks for.
+            if abs(error) <= self.__centre_us:
+                limit = 1
+            else:
+                limit = self.WALK_LINES
+                walking = True
+                # Advancing gives porch back and stops at the walk's floor, where
+                # delaying has the whole depth to spend. A member with little
+                # porch in hand therefore goes the long way round, which on these
+                # panels closes a half-period error sooner than crawling.
+                if error < 0:
+                    room = back - applied - self.WALK_FLOOR_LINES
+                    long_way = (self.__target_us + error) / (self.WALK_LINES * line)
+                    if room < 1 or -error / (room * line) > long_way:
+                        error += self.__target_us
+            lines = int(round(((drift - error) / periods - residual) / line))
+            lines = limit if lines > limit else (-limit if lines < -limit else lines)
+            # Shortening stops at the walk's porch floor, which keeps this
+            # member's tearing pulse readable while it travels. Clamp to it
+            # rather than skipping the write, which would stall a walk that has
+            # to advance.
+            floor_lines = self.WALK_FLOOR_LINES - back + applied
+            if lines < floor_lines:
+                lines = floor_lines
+            if abs(lines) > 1:
+                # A porch moving whole excursions lands with the same one-frame
+                # ambiguity a line does, several lines at a time: not a rate.
+                self.__anchor_skip[index] = True
+            if lines != applied:
+                screen.__set_porch(back + lines - applied, front)
+                self.__dither[index] = lines
+
+        if walking != self.__walking:
+            logging.debug(f"screens: walk {'engaged' if walking else 'done'},"
+                          f" dithers {self.__dither}")
+        self.__walking = walking
 
     def __arm_hold(self):
-        """Start holding from the sweep that just found the members in phase."""
+        """Start holding from the last sweep, whose grid and bookings acquisition set."""
         count = len(self.screens)
-        self.__phase_us = [0.0] * count
         self.__anchor_stamp = [0] * count
         self.__anchor_dither = [0.0] * count
         self.__anchor_skip = [False] * count
@@ -1333,7 +1487,7 @@ class ScreenGroup(ScreenBase):
         at a boundary only the panel knows, so the reading after one is discarded.
         """
         members = self.screens
-        gap = (stamp - self.__anchor_stamp[index]) & 0xFFFFFFFF
+        gap = (stamp - self.__anchor_stamp[index]) & TICKS_MASK
         if self.__anchor_stamp[index] and gap < self.HOLD_PAUSE_MS * 1000:
             if self.__anchor_skip[index]:
                 self.__anchor_skip[index] = False
@@ -1369,8 +1523,12 @@ class ScreenGroup(ScreenBase):
                     self.__residual_us[index] = residual
         self.__anchor_stamp[index] = stamp
         self.__anchor_dither[index] = 0.0
-        self.__phase_us[index] = self.__fold(
-            (((stamp - self.__grid_at) & 0xFFFFFFFF) + self.__grid_phases[index]) % self.__target_us)
+        # Resolved nearest the booking: phases are modular, so a measurement is
+        # only defined to within whole periods and the booking names which one.
+        # That is what lets the bookings ride out a pause of any length.
+        booked = self.__phase_us[index]
+        raw = (((stamp - self.__grid_at) & TICKS_MASK) + self.__grid_phases[index]) % self.__target_us
+        self.__phase_us[index] = booked + self.__fold(raw - booked)
 
     def __rebase(self, target, stamp):
         """Move the grid to a new period without disturbing the bookings.
@@ -1379,13 +1537,13 @@ class ScreenGroup(ScreenBase):
         at the new period from it, so every booked error carries over unchanged.
         """
         self.__grid_phases = tuple(
-            (((stamp - self.__grid_at) & 0xFFFFFFFF) + phase) % self.__target_us
+            (((stamp - self.__grid_at) & TICKS_MASK) + phase) % self.__target_us
             for phase in self.__grid_phases)
         self.__grid_at = stamp
         self.__target_us = target
 
     def __release_hold(self, elapsed):
-        """Stop holding the members' phases: a pause has outrun extrapolation."""
+        """Stop holding the members' phases: they could not be brought back."""
         for index, screen in enumerate(self.screens):
             applied = self.__dither[index]
             if applied:
@@ -1396,7 +1554,7 @@ class ScreenGroup(ScreenBase):
         # member comes out clean, and the fall is its own tuned phase.
         self.__sync_delay_us = 0
         self.__holding = False
-        logging.info(f"screens: a {elapsed // 1000}ms pause let the panels' scans drift apart, so they are no longer being held together")
+        logging.info(f"screens: the panels could not be brought back into phase after a {elapsed // 1000}ms pause, so they are no longer being held together")
         if self.__trim == "rotate":
             # Moving the wait target is only free while the members fall together,
             # so freshness falls back to measuring one panel between frames.
@@ -1420,6 +1578,11 @@ class ScreenGroup(ScreenBase):
         if self.__trim == "rotate":
             # A frame that waited on someone else, or not at all, measured nothing,
             # so the target stays for the next frame to anchor.
+            # Every member takes its turn, walking or not: the anchor is the only
+            # thing that measures a member, so skipping one leaves it drifting on
+            # a stale rate, which shows as a tear that walks. What a deep walk
+            # needs is a porch floor that keeps its pulse readable, not a turn
+            # missed.
             if synced is self.__sync:
                 self.__trim_at = (members.index(self.__sync) + 1) % len(members)
                 self.__sync = members[self.__trim_at]
