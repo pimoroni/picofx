@@ -1165,13 +1165,11 @@ class ScreenGroup(ScreenBase):
             plans = []
             for index, screen in enumerate(members):
                 stretch = self.EXCURSION_LINES * self.__line_us[index]
-                # Advancing shortens the porch and spends margin while it runs, so it
-                # is taken only by a member with margin to spare. The rest go the long
-                # way round and are delayed into place, which always adds margin.
-                error = errors[index]
-                if error < 0 and self.__margins[index] <= stretch:
-                    error += self.__target_us
-                plans.append((int(round(error / stretch)), screen))
+                # Each member takes whichever direction is nearer, which halves the
+                # worst case against delaying alone. Shortening a porch spends tearing
+                # margin while it runs and that costs nothing here: no frame is written
+                # during an excursion, so there is no write for the margin to protect.
+                plans.append((int(round(errors[index] / stretch)), screen))
 
             logging.debug(f"screens: errors {[int(e) for e in errors]},"
                           f" spread {int(spread)}us,"
