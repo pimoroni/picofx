@@ -1435,11 +1435,11 @@ class ScreenGroup(ScreenBase):
                 # delaying has the whole depth to spend. A member with little
                 # porch in hand therefore goes the long way round, which on these
                 # panels closes a half-period error sooner than crawling.
-                if error < 0:
+                if error > 0:
                     room = back - applied - self.WALK_FLOOR_LINES
-                    long_way = (self.__target_us + error) / (self.WALK_LINES * line)
-                    if room < 1 or -error / (room * line) > long_way:
-                        error += self.__target_us
+                    long_way = (self.__target_us - error) / (self.WALK_LINES * line)
+                    if room < 1 or error / (room * line) > long_way:
+                        error -= self.__target_us
             lines = int(round(((drift - error) / periods - residual) / line))
             lines = limit if lines > limit else (-limit if lines < -limit else lines)
             # Shortening stops at the walk's porch floor, which keeps this
