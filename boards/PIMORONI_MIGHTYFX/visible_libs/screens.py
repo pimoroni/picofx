@@ -972,6 +972,12 @@ class ScreenGroup(ScreenBase):
         self.__trim_at = 0
         self.__starts = []
         self.__corrections = 0
+        # Frames written with a member past its own tearing budget, and how far
+        # the worst of them was past it. A tear is brief and only shows where the
+        # content changed, so this is what a diagnostic reads instead of an eye.
+        self.__exposed_frames = 0
+        self.__worst_exposure_us = 0
+        self.__past_budget_us = 0
         # The hold's state, per member: the sub-line rate error calibration left,
         # the phase error that rate has built since acquisition, and the porch line
         # currently dithered on. Armed by a successful acquisition.
@@ -1306,25 +1312,27 @@ class ScreenGroup(ScreenBase):
         update() being a promise that the group has presented by the time it
         returns.
         """
-        if not self.__out_of_phase(written):
-            return
+        if self.__out_of_phase(written):
+            if ((time.ticks_us() - self.__held_stamp) & TICKS_MASK) > self.SWEEP_PAUSE_MS * 1000:
+                self.__reseed()
 
-        if ((time.ticks_us() - self.__held_stamp) & TICKS_MASK) > self.SWEEP_PAUSE_MS * 1000:
-            self.__reseed()
-            if not self.__out_of_phase(written):
-                return
+            deadline = time.ticks_add(time.ticks_ms(), self.WALK_WAIT_MS)
+            nap = int(self.__target_us / 1000) + 1
+            waited = 0
+            while self.__out_of_phase(written):
+                if time.ticks_diff(deadline, time.ticks_ms()) <= 0:
+                    logging.info("screens: some panels are still out of phase, so this frame goes out and tears on them rather than holding the group up any longer")
+                    break
+                time.sleep_ms(nap)
+                self.__tick_hold(time.ticks_us() & TICKS_MASK, -1)
+                waited += 1
+            if waited:
+                logging.debug(f"screens: held the frame {waited} periods for the members to come together")
 
-        deadline = time.ticks_add(time.ticks_ms(), self.WALK_WAIT_MS)
-        nap = int(self.__target_us / 1000) + 1
-        waited = 0
-        while self.__out_of_phase(written):
-            if time.ticks_diff(deadline, time.ticks_ms()) <= 0:
-                logging.info("screens: some panels are still out of phase, so this frame goes out and tears on them rather than holding the group up any longer")
-                return
-            time.sleep_ms(nap)
-            self.__tick_hold(time.ticks_us() & TICKS_MASK, -1)
-            waited += 1
-        logging.debug(f"screens: held the frame {waited} periods for the members to come together")
+        if self.__past_budget_us:
+            self.__exposed_frames += 1
+            if self.__past_budget_us > self.__worst_exposure_us:
+                self.__worst_exposure_us = int(self.__past_budget_us)
 
     def __reseed(self):
         """Replace the bookings with a fresh sweep, so a walk aims at the truth.
@@ -1352,17 +1360,21 @@ class ScreenGroup(ScreenBase):
                       f" {int(max(errors) - min(errors))}us for the walk to close")
 
     def __out_of_phase(self, written):
-        """Whether a frame now would land outside some written member's budget.
+        """How far the worst written member is past what a wait tolerates, 0 for none.
 
         The write starts centre_us into the synced member's scan, so that is how
         far out of phase a member may be before it leaves its own tearing
-        margin. Bookings are carried to this instant, so the first frame after a
-        pause is judged on where the panels are and not where they were.
+        margin, and WAIT_SLACK_LINES sits on top of that. Bookings are carried to
+        this instant, so the first frame after a pause is judged on where the
+        panels are and not where they were. __past_budget_us is left holding the
+        worst excess over the budget itself, which is what a frame written now
+        would risk on the glass.
         """
+        self.__past_budget_us = 0
         members = self.screens
         synced = self.__sync
         if synced is None or synced not in written:
-            return False
+            return 0
 
         periods = ((time.ticks_us() - self.__held_stamp) & TICKS_MASK) / self.__target_us
         phases = {}
@@ -1372,11 +1384,15 @@ class ScreenGroup(ScreenBase):
                 self.__residual_us[index] + self.__dither[index] * self.__line_us[index])
 
         base = phases[synced]
+        worst = 0
         for screen, phase in phases.items():
-            slack = self.WAIT_SLACK_LINES * self.__line_us[members.index(screen)]
-            if abs(self.__fold(phase - base)) > self.__centre_us + slack:
-                return True
-        return False
+            past = abs(self.__fold(phase - base)) - self.__centre_us
+            if past > self.__past_budget_us:
+                self.__past_budget_us = past
+            past -= self.WAIT_SLACK_LINES * self.__line_us[members.index(screen)]
+            if past > worst:
+                worst = past
+        return worst
 
     def __frame_ticked(self, stats, synced, delay):
         """Advance the hold from a written frame's own stamp."""
@@ -1709,6 +1725,26 @@ class ScreenGroup(ScreenBase):
     def corrections(self):
         """Porch lines the trim has applied since construction, for a diagnostic."""
         return self.__corrections
+
+    @property
+    def exposed_frames(self):
+        """Frames written with a member past its own tearing budget, for a diagnostic.
+
+        A frame counted here may show a seam on that member; whether it does
+        depends on how much the content changed. Only a held group counts, an
+        unheld one having no phase to be outside of.
+        """
+        return self.__exposed_frames
+
+    @property
+    def worst_exposure_us(self):
+        """How far past its budget the worst member of any exposed frame sat.
+
+        Read against the group's tearing margin: a few tens of microseconds puts
+        the seam within a line or two of an edge, where milliseconds put it in
+        the middle of the glass.
+        """
+        return self.__worst_exposure_us
 
     def __period_of(self, screen, settle=False):
         """One member's refresh period, it alone asserting on the shared line.
