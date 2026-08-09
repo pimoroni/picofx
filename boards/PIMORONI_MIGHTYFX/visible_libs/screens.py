@@ -884,6 +884,12 @@ class ScreenGroup(ScreenBase):
     # modular, so however far extrapolation drifted, the members walk back in.
     HOLD_PAUSE_MS = 1000
 
+    # Past this gap a resume sweeps the members' phases before walking them
+    # together, an extrapolation over it being worth less than a measurement:
+    # a 1s prediction spends 42% of the 280's margin and overruns the 154's,
+    # and a walk aimed from a stale booking arrives somewhere else.
+    SWEEP_PAUSE_MS = 1000
+
     def __init__(self, *screens, sync=None, align=None, trim=None, parent=None):
         if len(screens) < 2 and parent is None:
             raise ValueError("a broadcast group needs at least two screens")
@@ -1292,15 +1298,21 @@ class ScreenGroup(ScreenBase):
         """Wait for the members to come together before a frame goes out.
 
         Nothing is written while this runs, so the group presents in one piece
-        rather than in waves. The wait needs no measurement: a tick asks only
-        for an elapsed time and the rates the hold already carries, and over a
-        couple of hundred milliseconds a prediction stays within about a hundred
-        microseconds of the truth. Past WALK_WAIT_MS the frame goes out and
-        tears on whoever is still out, update() being a promise that the group
-        has presented by the time it returns.
+        rather than in waves. Over a frame or two of streaming the wait needs no
+        measurement, a tick asking only for an elapsed time and the rates the
+        hold already carries; past SWEEP_PAUSE_MS it sweeps first, an
+        extrapolation that far being worth less than what the panels say. Past
+        WALK_WAIT_MS the frame goes out and tears on whoever is still out,
+        update() being a promise that the group has presented by the time it
+        returns.
         """
         if not self.__out_of_phase(written):
             return
+
+        if ((time.ticks_us() - self.__held_stamp) & TICKS_MASK) > self.SWEEP_PAUSE_MS * 1000:
+            self.__reseed()
+            if not self.__out_of_phase(written):
+                return
 
         deadline = time.ticks_add(time.ticks_ms(), self.WALK_WAIT_MS)
         nap = int(self.__target_us / 1000) + 1
@@ -1313,6 +1325,31 @@ class ScreenGroup(ScreenBase):
             self.__tick_hold(time.ticks_us() & TICKS_MASK, -1)
             waited += 1
         logging.debug(f"screens: held the frame {waited} periods for the members to come together")
+
+    def __reseed(self):
+        """Replace the bookings with a fresh sweep, so a walk aims at the truth.
+
+        Every member drifts by its own residual while nothing measures it, which
+        after a few seconds is milliseconds apiece and independent between them,
+        so re-anchoring one member fixes only that one. The grid is rebuilt
+        around the sweep's own instant and the bookings carry the offsets it
+        measured, leaving the hold's dither to close what is left. A silent
+        member keeps the bookings, the walk then being the only recovery left.
+        """
+        phases = self.__phases()
+        if phases is None:
+            logging.debug("screens: a member did not answer the sweep, so the walk keeps its bookings")
+            return
+
+        members = self.screens
+        target = phases[members.index(self.__reference)]
+        errors = [self.__fold(phase - target) for phase in phases]
+        self.__grid_at = self.__swept_at
+        self.__grid_phases = tuple([target] * len(members))
+        self.__phase_us = [-error for error in errors]
+        self.__held_stamp = self.__swept_at
+        logging.debug(f"screens: swept the members after a pause, spread"
+                      f" {int(max(errors) - min(errors))}us for the walk to close")
 
     def __out_of_phase(self, written):
         """Whether a frame now would land outside some written member's budget.
