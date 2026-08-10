@@ -875,6 +875,12 @@ class ScreenGroup(ScreenBase):
     # mechanism cannot resolve.
     WAIT_SLACK_LINES = 2
 
+    # How far a capture's own two falls may span from a period before the phase it
+    # gives is counted as suspect. Eight lines sits between the two measured cases,
+    # 14us of spread across 25 settled captures and a blanking's 1,480us on the one
+    # that missed, so neither the panel's jitter nor a residual reaches it.
+    CAPTURE_TOLERANCE_LINES = 8
+
     # Sweeps allowed to bring the phases together before the group gives up. It
     # converges in two and the third is noise, so more buys nothing.
     ACQUIRE_TRIES = 3
@@ -980,6 +986,11 @@ class ScreenGroup(ScreenBase):
         self.__exposed_frames = 0
         self.__worst_exposure_us = 0
         self.__past_budget_us = 0
+        # Captures whose own two falls did not span a plausible period, and the
+        # worst miss. A phase comes from the last fall alone, so nothing else
+        # notices a spurious edge putting a member's booking milliseconds out.
+        self.__suspect_sweeps = 0
+        self.__worst_sweep_error_us = 0
         # The hold's state, per member: the sub-line rate error calibration left,
         # the phase error that rate has built since acquisition, and the porch line
         # currently dithered on. Armed by a successful acquisition.
@@ -1148,13 +1159,14 @@ class ScreenGroup(ScreenBase):
         # ageing error is what limits the aim. Four falls tripled the sweep and made
         # the acquisition worse.
         rows = []
-        for screen in self.screens:
+        for index, screen in enumerate(self.screens):
             screen.command(screen.CONTROLLER.REG_TEON, b"\x00")
             falls, finished = screen.display.te_capture(2, 200)
             screen.command(screen.CONTROLLER.REG_TEOFF)
             if not falls:
                 return None
             rows.append((falls[-1], finished))
+            self.__check_span(index, falls)
 
         # Aged by the period the group holds them all to, not by one read from this
         # capture: a period from two adjacent falls carries the panel's own jitter,
@@ -1264,6 +1276,28 @@ class ScreenGroup(ScreenBase):
 
         return [plans[index] * self.EXCURSION_LINES * self.__line_us[index]
                 for index in range(len(members))]
+
+    def __check_span(self, index, falls):
+        """Count a capture whose own two falls do not span a plausible period.
+
+        A phase is taken from the last fall alone, so a fall that lands on the wrong
+        edge reads as a real one and books that member wherever it fell. The pair
+        prices itself, and the two cases are far apart: 25 captures on a settled 2.80
+        spanned within 14us of each other and one came in 1,480us short, a blanking.
+        Counted only, the sweep still using what it measured.
+        """
+        if len(falls) < 2 or not self.__target_us:
+            return
+
+        spanned = (falls[-1] - falls[0]) & TICKS_MASK
+        error = spanned - self.__target_us
+        if abs(error) > self.CAPTURE_TOLERANCE_LINES * self.__line_us[index]:
+            self.__suspect_sweeps += 1
+            if abs(error) > abs(self.__worst_sweep_error_us):
+                self.__worst_sweep_error_us = error
+            logging.debug(f"screens: a capture spanned {spanned}us against a"
+                          f" {self.__target_us}us period, so the phase it gives"
+                          f" may not be this member's")
 
     def __fold(self, error):
         """A modular phase difference brought onto +-half a period."""
@@ -1768,6 +1802,21 @@ class ScreenGroup(ScreenBase):
         the middle of the glass.
         """
         return self.__worst_exposure_us
+
+    @property
+    def suspect_sweeps(self):
+        """Captures whose own two falls did not span a plausible period, cumulative.
+
+        Counted and not acted on. A sweep books a member from its last fall, so a
+        bad one puts that member out of phase while is_in_phase and exposed_frames,
+        which both price the bookings, go on reporting healthy.
+        """
+        return self.__suspect_sweeps
+
+    @property
+    def worst_sweep_error_us(self):
+        """How far the worst such capture's span missed the period, signed."""
+        return self.__worst_sweep_error_us
 
     def __period_of(self, screen, settle=False):
         """One member's refresh period, it alone asserting on the shared line.
