@@ -28,9 +28,9 @@
 # is the ring bytes; ignore the glass.
 #
 # A diagnostic, not an example, so it is not copied to the board. Copy it across to
-# run it. The GIF cases need an asset:
-#   python3 -B .claude/assets/make_anim_gif.py anim_solid.gif
-#   mpr.ps1 fs cp anim_solid.gif :/images/anim_solid.gif      (fs cp, NOT -Stage)
+# run it. The GIF cases need their own assets, each a strip of solid-colour frames in
+# the CELL_COLORS order: GIF_PATH panel sized, and GIF_WIDE_PATH 64 wide over 6
+# frames. Copy them onto the filesystem with 'mpremote fs cp'.
 
 import gc
 
@@ -367,8 +367,7 @@ try:
         except BUILD_ERRORS as e:
             tally["N/A"] += 1
             print(f"  N/A  {type(e).__name__}: {e}")
-            print(f"  generate it with '{hint}' and copy with"
-                  f" 'mpr.ps1 fs cp <out> :{path}' (fs cp, NOT -Stage)")
+            print(f"  make {hint} and copy it with 'mpremote fs cp <out> :{path}'")
             return
         print(f"  loaded {type(gif).__name__} {gif.width}x{gif.height},"
               f" frames {sheet.sprites}, palette {gif.palette_size} entries,"
@@ -390,11 +389,11 @@ try:
             gif_case(f"frame {i}", sheet.sprite(i, 0),
                      want_solid(CELL_COLORS[i], fw, gif.height))
 
-    gif_run(GIF_PATH, "make_anim_gif.py anim_solid.gif")
+    gif_run(GIF_PATH, "a panel-sized strip of solid CELL_COLORS frames")
     # The wide strip: a cell of a 5-frames-or-wider strip reports a buffer
     # extent past its nominal w*h*4, the shape that once slipped a nominal
     # length check as an unconverted read.
-    gif_run(GIF_WIDE_PATH, "make_anim_gif.py anim6.gif 64 6")
+    gif_run(GIF_WIDE_PATH, "a 64-wide strip of 6 solid CELL_COLORS frames")
 
     print(f"\n{tally['PASS']} passed, {tally['FAIL']} failed,"
           f" {tally['N/A']} inconclusive, {tally['SKIP']} skipped")

@@ -21,13 +21,11 @@
 #
 # What this cannot decide: an index byte reaching past the entries its image
 # supplied, since picovector will not build such an image. That zero-filled tail
-# is host-tested instead (test_indexed_short_palette_tail_is_transparent).
+# is covered by a host test instead.
 #
 # A diagnostic, not an example, so it is not copied to the board. Copy it across to
-# run it. The palettised case needs its asset, which is generated rather than
-# stored:
-#   python3 -B .claude/assets/make_transparent_indexed_png.py
-#   mpr.ps1 fs cp transparent_indexed.png :/images/   (fs cp, NOT -Stage)
+# run it. The palettised case needs an indexed PNG with the graded alpha described
+# above, at INDEXED_PATH, copied onto the filesystem with 'mpremote fs cp'.
 
 import gc
 

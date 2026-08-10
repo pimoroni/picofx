@@ -467,7 +467,7 @@ private:
 
     // Under this, the pulse the wait ended on was not a blanking. Above TE mode 2's
     // 500us H-sync pulses and below the shortest measured blanking, 1,277us on the
-    // 1.54 and 1,536us on the 2.80 (SCREENS_HARDWARE_VERIFICATION.md).
+    // 1.54 and 1,536us on the 2.80.
     static constexpr uint32_t SHORT_WAIT_US = 700;
 
     // A high settled this soon after the release was already up when the wait began.

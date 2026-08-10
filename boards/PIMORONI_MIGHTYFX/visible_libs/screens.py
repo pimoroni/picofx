@@ -544,12 +544,11 @@ class Screen(ScreenBase):
     # so a deeper ring is not always the answer.
     FULL_IMAGE_RESERVE = {}
 
-    # Measured tuning per (baudrate, bitdepth), from the 21,600-cell sweep in
-    # .claude/results/ANALYSIS.md "Full PSRAM rerun": the band and cache holding
-    # the rotation-90 floor, and the highest controller rate that floor sustains
-    # (capped at the useful 60fps). A row may carry a "dual" replacement for a
-    # firmware converting on both cores, which is a rate its wire could not hold
-    # while one core was what it waited for.
+    # Measured tuning per (baudrate, bitdepth), from a 21,600-cell sweep of the
+    # full-PSRAM case: the band and cache holding the rotation-90 floor, and the
+    # highest controller rate that floor sustains (capped at the useful 60fps). A
+    # row may carry a "dual" replacement for a firmware converting on both cores,
+    # which is a rate its wire could not hold while one core was what it waited for.
     PROFILES = {}
 
     def __init__(self, port, cs=None, dc=None, te=True, v_sync=None, bl=True,

@@ -2,8 +2,8 @@
 # porch, so it sets how many scan slots a refresh spends, and one porch line should
 # buy one line time against FRCTRL2's 8.5. setup() writes it once before DISPON, so
 # whether a panel honours a later change, latches it at a frame boundary and does it
-# without a visible glitch is what this answers. It is step 0 of
-# .claude/plans/broadcast-alignment-plan.md, whose margin table rests on it.
+# without a visible glitch is what this answers. A ScreenGroup's alignment rests on
+# the answer, since it trims and dithers a member's rate in porch lines.
 #
 # Experiments, all on the one panel named by UNDER_TEST:
 #   1  Sweep: the achieved period and TE pulse at each porch against the one-line
@@ -26,8 +26,7 @@
 # then goes to the one under test alone. A panel nobody built keeps whatever TE
 # state it was left in and would drive the shared line, and an unclaimed CS floats
 # low so it would take the frames as well. On a lone panel, leave HARNESS at one
-# entry. Diodes are what make the shared line readable at all, per
-# .claude/docs/DIODE_REVISION_SUMMARY.md.
+# entry. Diodes are what make the shared line readable at all.
 #
 # The short porches are the one part that could misbehave, a refresh below what the
 # panel's drive expects. The default is written back whatever happens.
@@ -36,7 +35,7 @@
 # at 53fps and (28, 28) takes it to about 48.5, under the roughly 50fps at which that
 # panel is known to pulse. So the sweep prints the achieved rate per row and names any
 # row that crosses PULSE_FPS, since a pulse there belongs to the rate and not to the
-# porch. The plan's own trims are five or six lines, nowhere near it.
+# porch. A group's own trims are five or six lines, nowhere near it.
 #
 # A diagnostic, not an example, so it is not copied to the board. Run it with
 # mpremote, with eyes on the panel under test for experiment 3.
@@ -49,7 +48,7 @@ from machine import Pin
 from mighty_fx import SPCE, MightyFX
 from picovector import color, image
 
-# The harness as harness_cs_map.py mapped it. SP/CE A's own CS comes first: that
+# The harness as it is wired. SP/CE A's own CS comes first: that
 # screen takes the port's own DC, and every later one shares it by name.
 HARNESS = (
     (33, screens.Screen280),
@@ -257,7 +256,7 @@ def sweep(s_line, frame_us):
     highs = [high for _, _, high in results]
     if highs:
         print(f"   TE high ran {min(highs)}us to {max(highs)}us over the sweep, against"
-              f" the 1,000 to 3,000us t3_hub_level_probe.py passes on")
+              f" the 1,000 to 3,000us a healthy shared line reads")
     if slow:
         print(f"   {slow} took the panel under {PULSE_FPS}fps, where a 1.54 pulses on"
               f" its own account. Read a flicker at those rows as the rate")
@@ -398,7 +397,7 @@ try:
     base_period, base_high, base_edges = display.te_probe(PROBE_MS)
     if base_edges < 2:
         raise ValueError(f"TE is silent on CS {UNDER_TEST}: {base_edges} edges."
-                         f" Check the diode and re-run harness_cs_map.py")
+                         f" Check the diode on that breakout and the HARNESS wiring")
 
     s_line = base_period / LINE_SLOTS
     print(f"  baseline: TE period {base_period}us, high {base_high}us,"
