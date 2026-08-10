@@ -1376,22 +1376,39 @@ class ScreenGroup(ScreenBase):
         if synced is None or synced not in written:
             return 0
 
-        periods = ((time.ticks_us() - self.__held_stamp) & TICKS_MASK) / self.__target_us
-        phases = {}
-        for screen in written:
-            index = members.index(screen)
-            phases[screen] = self.__phase_us[index] + periods * (
-                self.__residual_us[index] + self.__dither[index] * self.__line_us[index])
+        # Held against a local copy of each booking, and the fold written out: every
+        # written frame runs this, and a walk runs it again each period it waits.
+        phase_us = self.__phase_us
+        residual_us = self.__residual_us
+        dither = self.__dither
+        line_us = self.__line_us
+        target = self.__target_us
+        centre = self.__centre_us
+        slack = self.WAIT_SLACK_LINES
+        periods = ((time.ticks_us() - self.__held_stamp) & TICKS_MASK) / target
+        indices = (range(len(members)) if written is members
+                   else [members.index(screen) for screen in written])
 
-        base = phases[synced]
+        base_index = members.index(synced)
+        base = phase_us[base_index] + periods * (
+            residual_us[base_index] + dither[base_index] * line_us[base_index])
+
+        budget = 0
         worst = 0
-        for screen, phase in phases.items():
-            past = abs(self.__fold(phase - base)) - self.__centre_us
-            if past > self.__past_budget_us:
-                self.__past_budget_us = past
-            past -= self.WAIT_SLACK_LINES * self.__line_us[members.index(screen)]
+        for index in indices:
+            carried = phase_us[index] + periods * (
+                residual_us[index] + dither[index] * line_us[index])
+            error = (carried - base) % target
+            if error > target / 2:
+                error -= target
+            past = (error if error > 0 else -error) - centre
+            if past > budget:
+                budget = past
+            past -= slack * line_us[index]
             if past > worst:
                 worst = past
+
+        self.__past_budget_us = budget
         return worst
 
     def __frame_ticked(self, stats, synced, delay):
