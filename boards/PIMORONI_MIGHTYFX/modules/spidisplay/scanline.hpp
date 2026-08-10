@@ -1,17 +1,13 @@
 // SPDX-License-Identifier: MIT
 //
-// Templated RGBA8888 -> RGB444 / RGB565 scanline conversion for the MightyFX
-// display pipeline, an indexed source composited over the background colour
-// through its palette. Header-only so the host test harness compiles the same
-// code the firmware runs.
+// Templated RGBA8888 -> RGB444 / RGB565 scanline conversion. An indexed source is
+// composited over the background colour through its palette.
 //
-// Geometry is resolved once per frame into a Descriptor: the source position in
-// the destination reduces to an affine map, so the covered destination box and a
-// pair of source pointer strides are computed up front. The inner loop then just
-// walks a source pointer, with no per-pixel coordinate maths, multiply, or
-// bounds branch across the covered span. Only the axes that change the loop body
-// (source format, destination packer) are template parameters; rotation, mirror
-// and pixel-double are carried in the Descriptor.
+// Placement is calculated once per frame into a Descriptor, reducing to an affine
+// map. The inner loop then only walks a source pointer: no per-pixel coordinate
+// maths, multiply or bounds branch. Template parameters are the two axes that
+// change the loop body, source format and destination packer; rotation, mirror and
+// pixel-double sit in the Descriptor.
 
 #pragma once
 
@@ -20,52 +16,53 @@
 
 namespace spidisplay {
 
-// Runtime, loop-invariant conversion parameters. Computed once per frame by
+// Loop-invariant conversion parameters, calculated once per frame by
 // make_descriptor.
 //
-// The source is composed at its offset in an upright canvas, the whole screen is
-// then rotated clockwise and mirror-flipped. Inverting that, each destination
-// pixel maps to a canvas coordinate that is affine in (dst_x, dst_y):
+// The source sits at its offset in the canvas, which is the destination before
+// rotation. The canvas is then rotated clockwise and mirror-flipped. Inverting that
+// maps each destination pixel onto u and v, the source column and row before
+// pixel-double halving.
 //
-//   u = ua*dst_x + ub*dst_y + uc   (source column, before pixel-double)
-//   v = va*dst_x + vb*dst_y + vc   (source row,    before pixel-double)
+//   u = du_dx*dst_x + du_dy*dst_y + u_at_origin
+//   v = dv_dx*dst_x + dv_dy*dst_y + v_at_origin
 //
-// One of u, v varies with dst_x and the other with dst_y (rotation swaps which),
-// so the region the source covers is an axis-aligned destination box
-// [dx0, dx1) x [dy0, dy1), and along a row the source pointer advances by the
-// constant step_x per pixel.
+// One of u, v varies with dst_x and the other with dst_y, by rotation. So the
+// source covers an axis-aligned destination box, and a row walk advances the
+// source pointer by a constant step.
 struct Descriptor {
     const uint8_t *src;
     const uint8_t *palette;   // 256 RGBA words for an indexed source, else null
     int dst_w;
     int dst_h;
-    int dx0, dx1;        // Covered destination columns [dx0, dx1)
-    int dy0, dy1;        // Covered destination rows [dy0, dy1)
-    int ua, ub, uc;      // Canvas u = ua*dst_x + ub*dst_y + uc
-    int va, vb, vc;      // Canvas v = va*dst_x + vb*dst_y + vc
-    int src_row_bytes;   // Source pitch in bytes, row to row
-    int src_bytes;       // Source bytes per pixel
-    int step_x;          // Source pointer advance (bytes) per source pixel along a row
-    bool x_uses_u;       // The row walk varies u (else v)
-    bool pixel_double;   // Each source pixel covers a 2x2 destination block
-    bool x_adv;          // Advance parity for the row walk (pixel-double only)
-    int dst_row_bytes;   // Packed bytes per destination row
+    // The destination box the source covers, half-open on both axes.
+    int dst_x_start, dst_x_end;
+    int dst_y_start, dst_y_end;
+    int du_dx, du_dy, u_at_origin;
+    int dv_dx, dv_dy, v_at_origin;
+    int src_row_bytes;      // Source pitch in bytes, row to row
+    int src_pixel_bytes;    // Source bytes per pixel
+    int src_step_x;         // Source pointer advance in bytes, per pixel along a row
+    bool row_walks_src_columns;
+    bool pixel_double;      // Each source pixel covers a 2x2 destination block
+    // Which way the row walk moves through the source. Under pixel-double it also
+    // fixes when a source pixel is used up, the source index being the coordinate
+    // >> 1: a forward walk exhausts one on odd parity, a reverse walk on even.
+    bool row_walks_forward;
+    int dst_row_bytes;      // Packed bytes per destination row
     uint8_t bg_r;
     uint8_t bg_g;
     uint8_t bg_b;
 };
 
-// Source format traits. Each carries a Loader, built once per band from the
-// descriptor: RGBA8888's is empty and compiles away, and Indexed8's dereferences
-// the colour table, whose words sit in memory as R, G, B, A exactly like a direct
-// pixel.
+// Source format traits, each carrying a Loader built once per band. RGBA8888's is
+// empty and compiles away. Indexed8's reads the colour table, whose words sit in
+// memory as RGBA bytes like a direct pixel.
 //
-// Only an indexed source composites, because only its table can be composited
-// ahead of the pixel loop. A per-pixel blend was measured at 415ns per source
-// pixel, which roughly doubles the conversion of a panel-sized RGBA frame and
-// takes it off its wire bound, so an RGBA source's alpha byte is ignored. Its
-// colour is premultiplied, so a translucent pixel draws as if composited against
-// black.
+// Only an indexed source composites, its table being the one thing compositable
+// ahead of the pixel loop. So an RGBA source's alpha is ignored and its colour
+// taken as premultiplied. Blending per pixel was measured to roughly double a
+// panel-sized frame's conversion, taking it off its wire bound.
 struct RGBA8888 {
     static constexpr int bytes = 4;
 
@@ -84,7 +81,7 @@ struct Indexed8 {
     static constexpr int bytes = 1;
 
     struct Loader {
-        explicit Loader(const Descriptor &d) : pal(d.palette) {}
+        explicit Loader(const Descriptor &desc) : pal(desc.palette) {}
 
         inline void load(const uint8_t *p, uint8_t &r, uint8_t &g, uint8_t &b) const {
             const uint8_t *entry = pal + ((size_t)*p << 2);
@@ -97,25 +94,16 @@ struct Indexed8 {
     };
 };
 
-// One channel of a premultiplied source over the background. The panel holds no
-// destination pixels to read back, so the background an uncovered pixel already
-// takes is what a translucent one resolves against.
+// One channel of a premultiplied source over the background, the panel holding no
+// destination pixels to read back.
 //
-// picovector stores colour already multiplied by its own alpha, in palette
-// entries and in RGBA pixels alike, so the source is added rather than scaled.
-// Scaling it again would darken a translucent entry by up to a quarter of the
-// range.
+// picovector stores colour already multiplied by its alpha, so the source is added
+// and not scaled. Scaling again would darken a translucent entry by up to a quarter
+// of the range. The arithmetic matches its blend_over_premul() byte for byte,
+// rounding bias included.
 //
-// The arithmetic matches picovector's own blend_over_premul() byte for byte, so
-// compositing against bg here and blitting onto a canvas filled with bg give the
-// same pixels. That is what the endpoint tests and the rounding bias are for; the
-// bias alone moves 37% of channel values by one.
-//
-// The clamp is the one deliberate difference: picovector relies on its source
-// being premultiplied, while palette here is caller-supplied bytes, and an entry
-// claiming more colour than its alpha allows would otherwise carry into the next
-// channel. It never engages on a valid entry, and runs per entry rather than per
-// pixel.
+// The clamp never engages on a valid entry. It is here because palette is
+// caller-supplied, where an over-bright entry would carry into the next channel.
 inline uint8_t composite_over(int src, int bg, int alpha) {
     if (alpha == 0) {
         return (uint8_t)bg;
@@ -127,10 +115,8 @@ inline uint8_t composite_over(int src, int bg, int alpha) {
     return (uint8_t)(value > 255 ? 255 : value);
 }
 
-// The colour table an indexed source is drawn through, its RGBA words copied
-// into table and composited over the background. Entries past palette_len are
-// zeroed, so an index byte reaching past the source's own entries reads as
-// transparent; an index byte reaches all 256 whatever the table's length.
+// An index byte reaches all 256 entries whatever the source's table length, so
+// prepare_palette zeroes the rest and an index past the source reads transparent.
 static constexpr size_t PALETTE_BYTES = 256 * 4;
 
 inline void prepare_palette(uint8_t *table, const uint8_t *palette, size_t palette_len,
@@ -148,9 +134,8 @@ inline void prepare_palette(uint8_t *table, const uint8_t *palette, size_t palet
     }
 }
 
-// Destination packers. RGB444 packs two pixels into three bytes; RGB565 packs
-// one pixel into two big-endian bytes. format is the runtime tag carried
-// through the pipeline (also the panel bit depth: 444 = 12-bit, 565 = 16-bit).
+// Destination packers. RGB444 packs two pixels into three bytes; RGB565 packs one
+// into two big-endian bytes. format is the runtime tag, and the panel bit depth.
 struct RGB444 {
     static constexpr int format = 444;
     static constexpr bool pairs = true;
@@ -175,138 +160,143 @@ struct RGB565 {
     }
 };
 
-// Convert nrows destination rows starting at row0 into dst_band (packed, one
-// destination row per dst_row_bytes). Rows outside the covered box, and the
-// uncovered ends of covered rows, are filled with the background.
+// Convert row_count destination rows from first_row into dst_band, one packed row
+// per dst_row_bytes. Rows outside the covered box, and the uncovered ends of
+// covered rows, are filled with the background.
 //
-// Fields read inside the pixel loops are copied to locals first: the output is
-// written through a uint8_t pointer, which may alias the descriptor, so field
-// reads would otherwise be repeated after every store. Each covered row is
-// emitted as background / covered span / background, keeping the bounds test
-// out of the covered loop; for pair formats a pair straddling an odd covered
-// boundary mixes source and background and is emitted separately.
+// Each covered row goes out as background, covered span, background, keeping the
+// bounds test out of the covered loop. Fields read inside the pixel loops are
+// copied to locals first: the output pointer may alias the descriptor, so field
+// reads would otherwise repeat after every store.
 template <class Src, class Dst>
-void convert_band(const Descriptor &d, uint8_t *dst_band, int row0, int nrows) {
-    const int dst_w = d.dst_w;
-    const int dx0 = d.dx0, dx1 = d.dx1;
-    const int step_x = d.step_x;
-    const bool dbl = d.pixel_double;
-    const int x_adv = d.x_adv ? 1 : 0;
-    const uint8_t bg_r = d.bg_r, bg_g = d.bg_g, bg_b = d.bg_b;
-    const typename Src::Loader loader(d);
+void convert_band(const Descriptor &desc, uint8_t *dst_band, int first_row,
+                  int row_count) {
+    const int dst_w = desc.dst_w;
+    const int dst_x_start = desc.dst_x_start, dst_x_end = desc.dst_x_end;
+    const int src_step_x = desc.src_step_x;
+    const bool pixel_double = desc.pixel_double;
+    const int advance_at_parity = desc.row_walks_forward ? 1 : 0;
+    const uint8_t bg_r = desc.bg_r, bg_g = desc.bg_g, bg_b = desc.bg_b;
+    const typename Src::Loader loader(desc);
 
     // Packed background: one pixel pair (three bytes) or one pixel (two bytes).
-    uint8_t bgp[3] = {0, 0, 0};
+    uint8_t bg_packed[3] = {0, 0, 0};
     if constexpr (Dst::pairs) {
-        Dst::pack2(bgp, bg_r, bg_g, bg_b, bg_r, bg_g, bg_b);
+        Dst::pack2(bg_packed, bg_r, bg_g, bg_b, bg_r, bg_g, bg_b);
     } else {
-        Dst::pack1(bgp, bg_r, bg_g, bg_b);
+        Dst::pack1(bg_packed, bg_r, bg_g, bg_b);
     }
 
-    // Fill n background pixels (n is even for pair formats) and return the
-    // advanced output pointer.
-    auto fill_bg = [&](uint8_t *o, int n) {
+    // Fill that many background pixels and return the advanced output pointer.
+    // A pair format needs an even count, which every call site holds to.
+    auto fill_bg = [&](uint8_t *dst_ptr, int pixels) {
         if constexpr (Dst::pairs) {
-            for (int i = 0; i < n; i += 2) {
-                o[0] = bgp[0]; o[1] = bgp[1]; o[2] = bgp[2];
-                o += 3;
+            for (int i = 0; i < pixels; i += 2) {
+                dst_ptr[0] = bg_packed[0];
+                dst_ptr[1] = bg_packed[1];
+                dst_ptr[2] = bg_packed[2];
+                dst_ptr += 3;
             }
         } else {
-            const uint32_t pat = (uint32_t)bgp[0] | ((uint32_t)bgp[1] << 8)
-                               | ((uint32_t)bgp[0] << 16) | ((uint32_t)bgp[1] << 24);
+            const uint32_t bg_pair_pattern =
+                  (uint32_t)bg_packed[0] | ((uint32_t)bg_packed[1] << 8)
+                | ((uint32_t)bg_packed[0] << 16) | ((uint32_t)bg_packed[1] << 24);
             int i = 0;
-            for (; i + 1 < n; i += 2) {
-                memcpy(o, &pat, 4);
-                o += 4;
+            for (; i + 1 < pixels; i += 2) {
+                memcpy(dst_ptr, &bg_pair_pattern, 4);
+                dst_ptr += 4;
             }
-            if (i < n) {
-                o[0] = bgp[0]; o[1] = bgp[1];
-                o += 2;
+            if (i < pixels) {
+                dst_ptr[0] = bg_packed[0];
+                dst_ptr[1] = bg_packed[1];
+                dst_ptr += 2;
             }
         }
-        return o;
+        return dst_ptr;
     };
 
-    for (int row = 0; row < nrows; ++row) {
-        const int dst_y = row0 + row;
-        uint8_t *out = dst_band + row * d.dst_row_bytes;
+    for (int row = 0; row < row_count; ++row) {
+        const int dst_y = first_row + row;
+        uint8_t *out = dst_band + row * desc.dst_row_bytes;
 
-        if (dst_y < d.dy0 || dst_y >= d.dy1 || dx0 >= dx1) {
+        if (dst_y < desc.dst_y_start || dst_y >= desc.dst_y_end
+                || dst_x_start >= dst_x_end) {
             fill_bg(out, dst_w);
             continue;
         }
 
-        // Seed the row walk at the first covered column (dst_x == dx0). The
-        // pointer is only read and advanced inside the covered span, so seeding
-        // it here and stepping from there tracks the affine map exactly.
-        const int u0 = d.ua * dx0 + d.ub * dst_y + d.uc;
-        const int v0 = d.va * dx0 + d.vb * dst_y + d.vc;
-        const int col = dbl ? (u0 >> 1) : u0;
-        const int srow = dbl ? (v0 >> 1) : v0;
-        const uint8_t *sp = d.src + (long)srow * d.src_row_bytes + (long)col * Src::bytes;
-        int xpar = 0;
-        if (dbl) {
-            xpar = (d.x_uses_u ? u0 : v0) & 1;
+        // Seed the row walk at the first covered column. The pointer is only read
+        // inside the covered span, so stepping from here tracks the map exactly.
+        const int u_at_row_start =
+            desc.du_dx * dst_x_start + desc.du_dy * dst_y + desc.u_at_origin;
+        const int v_at_row_start =
+            desc.dv_dx * dst_x_start + desc.dv_dy * dst_y + desc.v_at_origin;
+        const int src_col = pixel_double ? (u_at_row_start >> 1) : u_at_row_start;
+        const int src_row = pixel_double ? (v_at_row_start >> 1) : v_at_row_start;
+        const uint8_t *src_ptr = desc.src + (long)src_row * desc.src_row_bytes
+                          + (long)src_col * Src::bytes;
+        int row_walk_parity = 0;
+        if (pixel_double) {
+            row_walk_parity =
+                (desc.row_walks_src_columns ? u_at_row_start : v_at_row_start) & 1;
         }
 
         if constexpr (!Dst::pairs) {
-            out = fill_bg(out, dx0);
+            out = fill_bg(out, dst_x_start);
             uint8_t r, g, b;
-            if (dbl) {
-                // The source advances once per two destination pixels, when
-                // xpar == x_adv. A leading pixel where that lands first aligns
-                // the walk so each remaining source pixel is emitted twice.
-                int x = dx0;
-                if (xpar == x_adv) {
-                    loader.load(sp, r, g, b);
-                    sp += step_x;
+            if (pixel_double) {
+                // The source advances once per two destination pixels. A leading
+                // pixel where that lands first aligns the walk, so each remaining
+                // source pixel is emitted twice.
+                int x = dst_x_start;
+                if (row_walk_parity == advance_at_parity) {
+                    loader.load(src_ptr, r, g, b);
+                    src_ptr += src_step_x;
                     Dst::pack1(out, r, g, b);
                     out += 2;
                     ++x;
                 }
-                for (; x + 1 < dx1; x += 2) {
-                    loader.load(sp, r, g, b);
-                    sp += step_x;
+                for (; x + 1 < dst_x_end; x += 2) {
+                    loader.load(src_ptr, r, g, b);
+                    src_ptr += src_step_x;
                     Dst::pack1(out, r, g, b);
                     Dst::pack1(out + 2, r, g, b);
                     out += 4;
                 }
-                if (x < dx1) {
-                    loader.load(sp, r, g, b);
+                if (x < dst_x_end) {
+                    loader.load(src_ptr, r, g, b);
                     Dst::pack1(out, r, g, b);
                     out += 2;
                 }
             } else {
-                for (int x = dx0; x < dx1; ++x) {
-                    loader.load(sp, r, g, b);
-                    sp += step_x;
+                for (int x = dst_x_start; x < dst_x_end; ++x) {
+                    loader.load(src_ptr, r, g, b);
+                    src_ptr += src_step_x;
                     Dst::pack1(out, r, g, b);
                     out += 2;
                 }
             }
-            fill_bg(out, dst_w - dx1);
+            fill_bg(out, dst_w - dst_x_end);
         } else {
-            // Pair-aligned bounds of the covered span. The pairs at a and b - 2
-            // are mixed when the boundary is odd; pairs between them are fully
-            // covered.
-            const int a = dx0 & ~1;
-            const int b = (dx1 + 1) & ~1;
-            out = fill_bg(out, a);
+            // Pair-aligned bounds of the covered span. An odd boundary makes the
+            // pair at that end mixed; pairs between are fully covered.
+            const int pair_start = dst_x_start & ~1;
+            const int pair_end = (dst_x_end + 1) & ~1;
+            out = fill_bg(out, pair_start);
 
-            // Emit one mixed pair with a per-pixel bounds test. Pixel-double
-            // advances the source every second covered pixel, phased so
-            // clipping and mirroring stay aligned; xpar tracks that phase
-            // across the whole covered span.
+            // Emit one mixed pair with a per-pixel bounds test. row_walk_parity
+            // carries which half of a doubled source pixel this is, across the
+            // whole span, so clipping and mirroring stay aligned.
             auto fetch = [&](int x, uint8_t &r, uint8_t &g, uint8_t &b) {
-                if ((unsigned)(x - dx0) < (unsigned)(dx1 - dx0)) {
-                    loader.load(sp, r, g, b);
-                    if (dbl) {
-                        if (xpar == x_adv) {
-                            sp += step_x;
+                if ((unsigned)(x - dst_x_start) < (unsigned)(dst_x_end - dst_x_start)) {
+                    loader.load(src_ptr, r, g, b);
+                    if (pixel_double) {
+                        if (row_walk_parity == advance_at_parity) {
+                            src_ptr += src_step_x;
                         }
-                        xpar ^= 1;
+                        row_walk_parity ^= 1;
                     } else {
-                        sp += step_x;
+                        src_ptr += src_step_x;
                     }
                 } else {
                     r = bg_r;
@@ -322,51 +312,51 @@ void convert_band(const Descriptor &d, uint8_t *dst_band, int row0, int nrows) {
                 out += 3;
             };
 
-            int p = a;
-            if (dx0 & 1) {
-                mixed_pair(p);
-                p += 2;
+            int pair_x = pair_start;
+            if (dst_x_start & 1) {
+                mixed_pair(pair_x);
+                pair_x += 2;
             }
-            const int ie = (dx1 & 1) ? b - 2 : b;
-            if (dbl) {
-                // One source advance per pair. Whole pairs leave xpar
-                // unchanged, so the phase holds across the loop.
+            const int whole_pairs_end = (dst_x_end & 1) ? pair_end - 2 : pair_end;
+            if (pixel_double) {
+                // One source advance per pair. Whole pairs leave row_walk_parity
+                // unchanged, so the parity holds across the loop.
                 uint8_t r, g, b;
-                if (xpar == x_adv) {
+                if (row_walk_parity == advance_at_parity) {
                     // The advance lands after the first pixel: a pair spans two
                     // adjacent source pixels, and doubling straddles pairs.
-                    for (; p < ie; p += 2) {
+                    for (; pair_x < whole_pairs_end; pair_x += 2) {
                         uint8_t r1, g1, b1;
-                        loader.load(sp, r, g, b);
-                        sp += step_x;
-                        loader.load(sp, r1, g1, b1);
+                        loader.load(src_ptr, r, g, b);
+                        src_ptr += src_step_x;
+                        loader.load(src_ptr, r1, g1, b1);
                         Dst::pack2(out, r, g, b, r1, g1, b1);
                         out += 3;
                     }
                 } else {
                     // Pair-aligned doubling: both pixels repeat one source pixel.
-                    for (; p < ie; p += 2) {
-                        loader.load(sp, r, g, b);
-                        sp += step_x;
+                    for (; pair_x < whole_pairs_end; pair_x += 2) {
+                        loader.load(src_ptr, r, g, b);
+                        src_ptr += src_step_x;
                         Dst::pack2(out, r, g, b, r, g, b);
                         out += 3;
                     }
                 }
             } else {
-                for (; p < ie; p += 2) {
+                for (; pair_x < whole_pairs_end; pair_x += 2) {
                     uint8_t r0, g0, b0, r1, g1, b1;
-                    loader.load(sp, r0, g0, b0);
-                    sp += step_x;
-                    loader.load(sp, r1, g1, b1);
-                    sp += step_x;
+                    loader.load(src_ptr, r0, g0, b0);
+                    src_ptr += src_step_x;
+                    loader.load(src_ptr, r1, g1, b1);
+                    src_ptr += src_step_x;
                     Dst::pack2(out, r0, g0, b0, r1, g1, b1);
                     out += 3;
                 }
             }
-            if ((dx1 & 1) && p < b) {
-                mixed_pair(p);
+            if ((dst_x_end & 1) && pair_x < pair_end) {
+                mixed_pair(pair_x);
             }
-            fill_bg(out, dst_w - b);
+            fill_bg(out, dst_w - pair_end);
         }
     }
 }
@@ -382,16 +372,15 @@ inline Transform map_transform(int rotation, int mirror) {
     return {rotation, mirror != 0};
 }
 
-// A selected kernel instantiation: converts nrows destination rows from row0.
+// A selected kernel instantiation: converts row_count destination rows from first_row.
 using ConvertFn = void (*)(const Descriptor &, uint8_t *, int, int);
 
-// Resolve the runtime formats to a kernel instantiation. Rotation, mirror and
-// pixel-double are carried in the descriptor, so they are not part of the
-// selection; the source format is, because a per-pixel palette test in the loop
-// body cannot be hoisted and costs the direct path about 5% of its convert
-// budget.
-inline ConvertFn select_convert(int fmt, bool indexed) {
-    if (fmt == RGB444::format) {
+// Resolve the runtime formats to a kernel instantiation. The descriptor carries
+// rotation, mirror and pixel-double, so only the source format selects: a
+// per-pixel palette test in the loop body cannot be hoisted, and costs the direct
+// path about 5% of its convert budget.
+inline ConvertFn select_convert(int format, bool indexed) {
+    if (format == RGB444::format) {
         return indexed ? &convert_band<Indexed8, RGB444>
                        : &convert_band<RGBA8888, RGB444>;
     }
@@ -399,10 +388,8 @@ inline ConvertFn select_convert(int fmt, bool indexed) {
                    : &convert_band<RGBA8888, RGB565>;
 }
 
-// Whether a conversion is halved across both cores. On by default; the module's
-// dual_convert() clears it so a tool can measure one core against two without a
-// second firmware. Read only where a split is compiled in, so a single-core build
-// ignores it entirely.
+// Whether a conversion is halved across both cores. The module's dual_convert()
+// binding clears it, so a tool can measure one core against two on one firmware.
 inline bool dual_convert = true;
 
 // Rows core1 has converted since boot. Monotonic, and sampled either side of a
@@ -423,157 +410,169 @@ extern "C" void pv_core1_join();
 // reason.
 struct ConvertJob {
     ConvertFn convert;
-    const Descriptor *d;
+    const Descriptor *desc;
     uint8_t *out;
-    int row0;
-    int nrows;
+    int first_row;
+    int row_count;
 };
 inline ConvertJob convert_job = {};
 
 inline void convert_rows_on_core1() {
-    convert_job.convert(*convert_job.d, convert_job.out, convert_job.row0,
-                        convert_job.nrows);
+    convert_job.convert(*convert_job.desc, convert_job.out, convert_job.first_row,
+                        convert_job.row_count);
 }
 #endif
 
-// Convert nrows destination rows from row0, halved across both cores. Rows are
-// independent and each half writes only its own, so neither locking nor a copy
-// is needed. Synchronous: this returns with both halves converted.
+// Convert row_count destination rows from first_row, halved across both cores.
+// Rows are independent and each half writes only its own, so neither locking nor
+// a copy is needed. Synchronous: this returns with both halves converted.
 //
-// sram_source says the rows read SRAM, and only those may be split. Halving a
-// range that reads PSRAM leaves the two cores at distant row offsets, and two
-// interleaved read streams cost the shared QMI more than the halved pixel work
-// saves: measured at 0.84x, a fifth slower than one core. A source in SRAM
-// reaches 1.60x, and so does a PSRAM source read through the column cache,
-// whose windows are SRAM.
+// Only rows that read SRAM may be split, which sram_source marks. Halving a PSRAM
+// range leaves the two cores at distant row offsets, where two interleaved read
+// streams cost the shared QMI more than the halved pixel work saves: 0.84x
+// against 1.60x from SRAM. The column cache reaches 1.60x on a PSRAM source too,
+// its windows being SRAM.
 //
-// With neither define set this is one call, which is the single-core path a board
-// without the core1 worker wants. SPIDISPLAY_SPLIT_SERIAL runs the two halves in
-// sequence instead, which is how the host harness checks the split's arithmetic
-// against the reference with no second core to dispatch to.
-inline void emit_rows(ConvertFn convert, const Descriptor &d, uint8_t *out,
-                      int row0, int nrows, bool sram_source) {
+// With neither define set this is one call, for a board carrying no core1 worker.
+// SPIDISPLAY_SPLIT_SERIAL runs the halves in sequence instead, so the split's
+// arithmetic can be checked with no second core to dispatch to.
+inline void emit_rows(ConvertFn convert, const Descriptor &desc, uint8_t *out,
+                      int first_row, int row_count, bool sram_source) {
 #if SPIDISPLAY_PV_CORE1 || SPIDISPLAY_SPLIT_SERIAL
-    if (dual_convert && sram_source && nrows >= 2) {
-        const int first = nrows / 2;
-        uint8_t *second = out + (size_t)first * d.dst_row_bytes;
+    if (dual_convert && sram_source && row_count >= 2) {
+        const int first_half_rows = row_count / 2;
+        uint8_t *second_half_out =
+            out + (size_t)first_half_rows * desc.dst_row_bytes;
 #if SPIDISPLAY_PV_CORE1
-        convert_job = {convert, &d, second, row0 + first, nrows - first};
+        convert_job = {convert, &desc, second_half_out,
+                       first_row + first_half_rows, row_count - first_half_rows};
         pv_core1_run(convert_rows_on_core1);
-        convert(d, out, row0, first);
+        convert(desc, out, first_row, first_half_rows);
         pv_core1_join();
-        core1_rows_total += (uint32_t)(nrows - first);
+        core1_rows_total += (uint32_t)(row_count - first_half_rows);
 #else
-        convert(d, out, row0, first);
-        convert(d, second, row0 + first, nrows - first);
+        convert(desc, out, first_row, first_half_rows);
+        convert(desc, second_half_out, first_row + first_half_rows,
+                row_count - first_half_rows);
 #endif
         return;
     }
 #endif
-    convert(d, out, row0, nrows);
+    convert(desc, out, first_row, row_count);
 }
 
-// Fill a descriptor for a whole-frame conversion. Each axis is centred, or
-// placed by its off_x/off_y top-left in the upright canvas. src_row_bytes is
-// the source pitch, which exceeds src_w * src_bytes when the source is a
-// strided view into a wider image; 0 means contiguous.
+// Fill a descriptor for a whole-frame conversion. Each axis is centred, or placed
+// by its off_x/off_y top-left in the canvas. src_row_bytes is the source pitch,
+// wider than a row on a strided view into a larger image; pass 0 to derive it
+// from src_w.
 inline Descriptor make_descriptor(const uint8_t *src, int src_w, int src_h,
-                                  int dst_w, int dst_h, const Transform &t,
-                                  bool dbl, uint32_t bg, int fmt,
+                                  int dst_w, int dst_h, const Transform &transform,
+                                  bool pixel_double, uint32_t bg, int format,
                                   bool centred_x, int off_x, bool centred_y, int off_y,
-                                  int src_row_bytes, int src_bytes) {
-    int scale = dbl ? 2 : 1;
-    int region_w = src_w * scale;   // Source extent in canvas pixels
-    int region_h = src_h * scale;
-    int W = dst_w;
-    int H = dst_h;
+                                  int src_row_bytes, int src_pixel_bytes) {
+    int scale = pixel_double ? 2 : 1;
+    int src_extent_w = src_w * scale;   // Source extent in canvas pixels
+    int src_extent_h = src_h * scale;
 
-    // Upright canvas: rotating it clockwise yields the dst_w x dst_h output, so
-    // for 90/270 the canvas dimensions are swapped. The offset centres the
-    // source's own extent within that canvas.
-    bool swap = (t.rotation == 90 || t.rotation == 270);
-    int canvas_w = swap ? dst_h : dst_w;
-    int canvas_h = swap ? dst_w : dst_h;
-    int off_x_r = centred_x ? ((canvas_w - region_w) >> 1) : off_x;
-    int off_y_r = centred_y ? ((canvas_h - region_h) >> 1) : off_y;
+    // Rotating the canvas clockwise yields the dst_w x dst_h output, so for 90/270
+    // its dimensions are the swapped ones.
+    bool swap_axes = (transform.rotation == 90 || transform.rotation == 270);
+    int canvas_w = swap_axes ? dst_h : dst_w;
+    int canvas_h = swap_axes ? dst_w : dst_h;
+    int place_x = centred_x ? ((canvas_w - src_extent_w) >> 1) : off_x;
+    int place_y = centred_y ? ((canvas_h - src_extent_h) >> 1) : off_y;
 
-    // mx = m*dst_x + k folds the output mirror into the coefficients below.
-    int m = t.mirror ? -1 : 1;
-    int k = t.mirror ? (W - 1) : 0;
+    // mx = mirror_step*dst_x + mirror_base folds the output mirror into the
+    // coefficients below.
+    int mirror_step = transform.mirror ? -1 : 1;
+    int mirror_base = transform.mirror ? (dst_w - 1) : 0;
 
     // Canvas coordinates as affine functions of the destination pixel. cx/cy are
     // the inverse-rotated (un-mirrored) destination pixel; u/v subtract the
     // source offset. Exactly one of u, v varies with dst_x, the other with dst_y.
-    int ua, ub, uc, va, vb, vc;
-    switch (t.rotation) {
-        case 90:   // cx = dst_y ; cy = (W-1) - mx
-            ua = 0;  ub = 1;  uc = -off_x_r;
-            va = -m; vb = 0;  vc = (W - 1 - k) - off_y_r;
+    int du_dx, du_dy, u_at_origin, dv_dx, dv_dy, v_at_origin;
+    switch (transform.rotation) {
+        case 90:   // cx = dst_y, cy = (dst_w-1) - mx
+            du_dx = 0;             du_dy = 1;
+            dv_dx = -mirror_step;  dv_dy = 0;
+            u_at_origin = -place_x;
+            v_at_origin = (dst_w - 1 - mirror_base) - place_y;
             break;
-        case 180:  // cx = (W-1) - mx ; cy = (H-1) - dst_y
-            ua = -m; ub = 0;  uc = (W - 1 - k) - off_x_r;
-            va = 0;  vb = -1; vc = (H - 1) - off_y_r;
+        case 180:  // cx = (dst_w-1) - mx, cy = (dst_h-1) - dst_y
+            du_dx = -mirror_step;  du_dy = 0;
+            dv_dx = 0;             dv_dy = -1;
+            u_at_origin = (dst_w - 1 - mirror_base) - place_x;
+            v_at_origin = (dst_h - 1) - place_y;
             break;
-        case 270:  // cx = (H-1) - dst_y ; cy = mx
-            ua = 0;  ub = -1; uc = (H - 1) - off_x_r;
-            va = m;  vb = 0;  vc = k - off_y_r;
+        case 270:  // cx = (dst_h-1) - dst_y, cy = mx
+            du_dx = 0;             du_dy = -1;
+            dv_dx = mirror_step;   dv_dy = 0;
+            u_at_origin = (dst_h - 1) - place_x;
+            v_at_origin = mirror_base - place_y;
             break;
-        default:   // 0: cx = mx ; cy = dst_y
-            ua = m;  ub = 0;  uc = k - off_x_r;
-            va = 0;  vb = 1;  vc = -off_y_r;
+        default:   // 0: cx = mx, cy = dst_y
+            du_dx = mirror_step;   du_dy = 0;
+            dv_dx = 0;             dv_dy = 1;
+            u_at_origin = mirror_base - place_x;
+            v_at_origin = -place_y;
             break;
     }
 
-    // Solve 0 <= a*t + c < lim for integer t (a is +/-1), then clamp to the
-    // destination extent. Yields the covered span on one destination axis.
-    auto range = [](int a, int c, int lim, int dst_lim, int &lo, int &hi) {
-        if (a > 0) {
-            lo = -c;
-            hi = lim - c;
+    // Solve 0 <= coeff*dst + base < src_extent for integer dst (coeff is +/-1),
+    // then clamp to the destination extent. Yields the covered span on one axis.
+    auto range = [](int coeff, int base, int src_extent, int dst_extent,
+                    int &span_start, int &span_end) {
+        if (coeff > 0) {
+            span_start = -base;
+            span_end = src_extent - base;
         } else {
-            lo = c - lim + 1;
-            hi = c + 1;
+            span_start = base - src_extent + 1;
+            span_end = base + 1;
         }
-        if (lo < 0) lo = 0;
-        if (hi > dst_lim) hi = dst_lim;
-        if (hi < lo) hi = lo;
+        if (span_start < 0) span_start = 0;
+        if (span_end > dst_extent) span_end = dst_extent;
+        if (span_end < span_start) span_end = span_start;
     };
 
-    Descriptor d;
-    d.src = src;
-    d.palette = nullptr;   // An indexed caller points this at its colour table
-    d.dst_w = dst_w;
-    d.dst_h = dst_h;
-    d.ua = ua; d.ub = ub; d.uc = uc;
-    d.va = va; d.vb = vb; d.vc = vc;
-    d.src_row_bytes = src_row_bytes > 0 ? src_row_bytes : src_w * src_bytes;
-    d.src_bytes = src_bytes;
-    d.pixel_double = dbl;
+    Descriptor desc;
+    desc.src = src;
+    desc.palette = nullptr;   // An indexed caller points this at its colour table
+    desc.dst_w = dst_w;
+    desc.dst_h = dst_h;
+    desc.du_dx = du_dx; desc.du_dy = du_dy; desc.u_at_origin = u_at_origin;
+    desc.dv_dx = dv_dx; desc.dv_dy = dv_dy; desc.v_at_origin = v_at_origin;
+    desc.src_row_bytes = src_row_bytes > 0 ? src_row_bytes : src_w * src_pixel_bytes;
+    desc.src_pixel_bytes = src_pixel_bytes;
+    desc.pixel_double = pixel_double;
 
     // dst_x is bound by whichever coordinate varies with it, and supplies the
     // per-pixel source stride; dst_y is bound by the other coordinate.
-    if (ua != 0) {
-        range(ua, uc, region_w, W, d.dx0, d.dx1);
-        d.x_uses_u = true;
-        d.step_x = (ua > 0 ? 1 : -1) * src_bytes;
-        d.x_adv = (ua > 0);
+    if (du_dx != 0) {
+        range(du_dx, u_at_origin, src_extent_w, dst_w,
+              desc.dst_x_start, desc.dst_x_end);
+        desc.row_walks_src_columns = true;
+        desc.src_step_x = (du_dx > 0 ? 1 : -1) * src_pixel_bytes;
+        desc.row_walks_forward = (du_dx > 0);
     } else {
-        range(va, vc, region_h, W, d.dx0, d.dx1);
-        d.x_uses_u = false;
-        d.step_x = (va > 0 ? 1 : -1) * d.src_row_bytes;
-        d.x_adv = (va > 0);
+        range(dv_dx, v_at_origin, src_extent_h, dst_w,
+              desc.dst_x_start, desc.dst_x_end);
+        desc.row_walks_src_columns = false;
+        desc.src_step_x = (dv_dx > 0 ? 1 : -1) * desc.src_row_bytes;
+        desc.row_walks_forward = (dv_dx > 0);
     }
-    if (ub != 0) {
-        range(ub, uc, region_w, H, d.dy0, d.dy1);
+    if (du_dy != 0) {
+        range(du_dy, u_at_origin, src_extent_w, dst_h,
+              desc.dst_y_start, desc.dst_y_end);
     } else {
-        range(vb, vc, region_h, H, d.dy0, d.dy1);
+        range(dv_dy, v_at_origin, src_extent_h, dst_h,
+              desc.dst_y_start, desc.dst_y_end);
     }
 
-    d.dst_row_bytes = (fmt == RGB444::format) ? (dst_w * 3 / 2) : (dst_w * 2);
-    d.bg_r = bg & 0xff;
-    d.bg_g = (bg >> 8) & 0xff;
-    d.bg_b = (bg >> 16) & 0xff;
-    return d;
+    desc.dst_row_bytes = (format == RGB444::format) ? (dst_w * 3 / 2) : (dst_w * 2);
+    desc.bg_r = bg & 0xff;
+    desc.bg_g = (bg >> 8) & 0xff;
+    desc.bg_b = (bg >> 16) & 0xff;
+    return desc;
 }
 
 }  // namespace spidisplay
