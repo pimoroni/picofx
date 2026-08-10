@@ -64,5 +64,7 @@ lint.ignore = [
 # Per file:
 # E702 - the RGB444 viper reference kernel writes each 3-byte background pixel pair
 #        on one line.
+# F401 - a package's __init__.py imports the names the package is used through, so
+#        every one of them is unused where it is written.
 
-lint.per-file-ignores = { "**/reference/st7789_viper_rgb444.py" = ["E702"] }
+lint.per-file-ignores = { "**/reference/st7789_viper_rgb444.py" = ["E702"], "**/screens/__init__.py" = ["F401"] }

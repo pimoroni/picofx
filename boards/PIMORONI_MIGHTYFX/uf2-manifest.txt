@@ -6,6 +6,7 @@ examples/effects/colour/*.py
 examples/audio/*.py
 examples/screens/*.py
 lib/*.py
+lib/screens/*.py
 lib/picofx/*.py
 lib/picofx/colour/*.py
 lib/picofx/mono/*.py

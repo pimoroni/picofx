@@ -46,7 +46,7 @@ assert SCREEN in (Screen154, Screen280)
 
 def check_resolution():
     """Every row of the offset table, and the shapes that must reject."""
-    values = screens.__pair_values
+    values = screens.ScreenPair.__pair_values
     assert values(90, "rotation") == (90, 90)
     assert values((90, 270), "rotation") == (90, 270)
     assert values(False, "mirror") == (False, False)
@@ -57,7 +57,7 @@ def check_resolution():
         except ValueError:
             pass
 
-    offsets = screens.__pair_offsets
+    offsets = screens.ScreenPair.__pair_offsets
     assert offsets(None) == (None, None)
     assert offsets((5, 10)) == ((5, 10), (5, 10))
     assert offsets((5, None)) == ((5, None), (5, None))     # shared: 5 is no (x, y)
@@ -93,9 +93,9 @@ def pair_frame(index):
 
 def skew_us():
     """The last pair frame's write-start skew, as the fine loop sees it."""
-    err = screens.__signed_mod(pair.__f_disp.stats().write_start_us
-                               - pair.__l_disp.stats().write_start_us,
-                               pair.__period_f)
+    err = screens.ScreenPair.__signed_mod(pair.__f_disp.stats().write_start_us
+                                          - pair.__l_disp.stats().write_start_us,
+                                          pair.__period_f)
     return abs(err)
 
 
