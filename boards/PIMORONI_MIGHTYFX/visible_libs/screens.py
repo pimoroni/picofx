@@ -866,12 +866,14 @@ class ScreenGroup(ScreenBase):
     # caller has already spent seconds on, so the wait costs nothing it notices.
     WALK_WAIT_MS = 600
 
-    # How far past the window a member may sit before a frame waits for it. The
-    # write lands centre_us less the error into a member's scan, so an error
-    # just past the window tears a line at the extreme edge where one several
-    # milliseconds past tears a visible band. Stalling the wall for a line is
-    # the wrong trade, and the hold's own ripple lives inside this.
-    WAIT_SLACK_LINES = 8
+    # Scan lines of clearance a frame is held for beyond coming into the window.
+    # At centre_us exactly the following scan overtakes the write on the panel's
+    # last row, so a member released there seams at the edge and the seam walks
+    # off as the hold closes the rest: the reserve keeps that crossing off the
+    # glass instead. Two lines, since a dithered porch line lands with a
+    # one-frame ambiguity and a reserve under one would ask for what the
+    # mechanism cannot resolve.
+    WAIT_SLACK_LINES = 2
 
     # Sweeps allowed to bring the phases together before the group gives up. It
     # converges in two and the third is noise, so more buys nothing.
@@ -1404,7 +1406,11 @@ class ScreenGroup(ScreenBase):
             past = (error if error > 0 else -error) - centre
             if past > budget:
                 budget = past
-            past -= slack * line_us[index]
+            # The reserve sits inside the window rather than outside it. A frame
+            # released at centre_us exactly puts the following scan's overtake on the
+            # panel's last row, so the wait asks for a few rows of clearance instead
+            # of allowing a few rows of seam.
+            past += slack * line_us[index]
             if past > worst:
                 worst = past
 
