@@ -362,13 +362,19 @@ public:
     // goes out, so this is the only sign v_sync did not hold.
     uint32_t te_timeouts() const { return te_timeout_count; }
 
-    // Frames whose wait ended on a pulse too short to be a blanking, cumulative.
-    // arm() releases the line from a driven low, so the first settled high always
-    // starts a fresh pulse and a short one is always a fault: a panel left in TE
-    // mode 2, whose H-sync pulses run to 500us, or two panels' blankings briefly
-    // overlapping on a shared line. Both look healthy to te_timeouts() while the
-    // panel tears, which is why this counter exists.
+    // Frames whose wait ended on a pulse it watched rise and that fell too soon to be
+    // a blanking, cumulative, all of which te_timeouts() reads as healthy. A pulse
+    // train defeats it: TE mode 2 rises within 17us of the release, inside
+    // JOINED_HIGH_US, so those waits book as joined instead and te_probe()'s period is
+    // what names that fault (measured 2026-08-10).
     uint32_t te_short_waits() const { return te_short_wait_count; }
+
+    // Frames whose wait began with the line already high, cumulative, so the pulse
+    // it ended on started unobserved and has no length to judge. One a frame means a
+    // line released from a high and decaying through the pull-down; the occasional
+    // one is a held frame arming inside a blanking, which reaches a real fall late
+    // and is no fault.
+    uint32_t te_joined_waits() const { return te_joined_wait_count; }
 
     // What this panel's rate reached: the divider only gets to clk_peri/(2*n), so
     // a request is rounded down, sometimes a long way. Fixed at construction.
@@ -457,11 +463,19 @@ private:
     FrameStats last = {};
     uint32_t te_timeout_count = 0;
     uint32_t te_short_wait_count = 0;
+    uint32_t te_joined_wait_count = 0;
 
     // Under this, the pulse the wait ended on was not a blanking. Above TE mode 2's
     // 500us H-sync pulses and below the shortest measured blanking, 1,277us on the
     // 1.54 and 1,536us on the 2.80 (SCREENS_HARDWARE_VERIFICATION.md).
     static constexpr uint32_t SHORT_WAIT_US = 700;
+
+    // A high settled this soon after the release was already up when the wait began.
+    // Over the 14us an arm and its two settled samples cost, measured 2026-08-10, and
+    // far under the thousands an arm during the active scan waits for a blanking. A
+    // line pulsing faster than this reads as joined whatever it does, since its next
+    // rise arrives inside the window.
+    static constexpr uint32_t JOINED_HIGH_US = 50;
 
     int slot_count = 2;       // Band ring depth, from stage_lines at construction
 

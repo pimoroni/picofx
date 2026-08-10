@@ -381,9 +381,11 @@ bool SPIDisplay::poll_te() {
             }
             te_high_seen = true;
         } else if (te_high_seen) {
-            // arm() released the line from a driven low, so this pulse began where
-            // it was timestamped and a short one is a fault rather than a late arm.
-            if (now - te_high_started_us < SHORT_WAIT_US) {
+            // A pulse already up when the wait began started unobserved, so its
+            // length says nothing and only one seen to rise is judged short.
+            if (te_high_started_us - te_started_us < JOINED_HIGH_US) {
+                ++te_joined_wait_count;
+            } else if (now - te_high_started_us < SHORT_WAIT_US) {
                 ++te_short_wait_count;
             }
             te_fire(now);
@@ -1690,14 +1692,23 @@ static mp_obj_t SPIDisplay_te_timeouts(mp_obj_t self_in) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_te_timeouts_obj, SPIDisplay_te_timeouts);
 
-// Frames whose wait ended on a pulse too short to be a blanking: a panel left in
-// TE mode 2, or two panels' blankings overlapping on a shared line. Both read as
-// healthy through te_timeouts() while the panel tears.
+// Frames whose wait ended on a pulse it watched rise and that fell too soon to be a
+// blanking, which te_timeouts() reads as healthy. A pulse train books as joined
+// instead, its next rise landing inside JOINED_HIGH_US, so te_probe() names TE mode 2.
 static mp_obj_t SPIDisplay_te_short_waits(mp_obj_t self_in) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
     return mp_obj_new_int_from_uint(self->display.te_short_waits());
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_te_short_waits_obj, SPIDisplay_te_short_waits);
+
+// Frames whose wait began with the line already high, so the pulse it ended on has
+// no length to judge. One a frame is a line decaying through the pull-down; the
+// occasional one is a frame arming inside a blanking, which is no fault.
+static mp_obj_t SPIDisplay_te_joined_waits(mp_obj_t self_in) {
+    SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
+    return mp_obj_new_int_from_uint(self->display.te_joined_waits());
+}
+static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_te_joined_waits_obj, SPIDisplay_te_joined_waits);
 
 // What a full frame costs on this wire, the measured per-band overhead included, so
 // a tearing margin can be priced before any frame has gone out. stats().frame_us is
@@ -1789,6 +1800,7 @@ static const mp_rom_map_elem_t SPIDisplay_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR_te_capture), MP_ROM_PTR(&SPIDisplay_te_capture_obj) },
     { MP_ROM_QSTR(MP_QSTR_te_timeouts), MP_ROM_PTR(&SPIDisplay_te_timeouts_obj) },
     { MP_ROM_QSTR(MP_QSTR_te_short_waits), MP_ROM_PTR(&SPIDisplay_te_short_waits_obj) },
+    { MP_ROM_QSTR(MP_QSTR_te_joined_waits), MP_ROM_PTR(&SPIDisplay_te_joined_waits_obj) },
     { MP_ROM_QSTR(MP_QSTR_wire_window_us), MP_ROM_PTR(&SPIDisplay_wire_window_obj) },
 };
 static MP_DEFINE_CONST_DICT(SPIDisplay_locals_dict, SPIDisplay_locals_dict_table);
