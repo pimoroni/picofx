@@ -367,6 +367,28 @@ class SPCEPort:
         if self.__bus is not None:
             self.__bus.__del__()
 
+        # A display leaves its chip select and DC driven high, which is right while
+        # anything may still transmit and wrong once nothing will: these are connector
+        # pins, and whatever is plugged in next meets the level they were left at. High
+        # on a screen's BL line lights its backlight and on a motor input drives it,
+        # both before that thing's own code has run. Left pulled down and driving
+        # nothing, which is a cold boot's own state at the pin, so a rebuild starts
+        # where a fresh boot would and nothing contends with a peripheral driving the
+        # same line.
+        #
+        # A screen port keeps its BL, which the backlight owns and backlight_off()
+        # puts out. A port spent on pins hands back all five, another port's chip
+        # selects among them. A motor port's belong to its Motor objects.
+        if self.mode == SPCE.SCREEN:
+            handed_back = self.__pins[:4]
+        elif self.mode in (SPCE.GPIO, SPCE.HUB_LINES):
+            handed_back = self.__pins
+        else:
+            handed_back = ()
+
+        for pin in handed_back:
+            pin.init(Pin.IN, Pin.PULL_DOWN)
+
 
 class MightyFX:
     OUT_PINS = (
@@ -423,6 +445,13 @@ class MightyFX:
     HUB_PORT_NAMES = ("a", "b", "c", "d", "e", "f")
 
     def __init__(self, spce_a=None, spce_b=None, init_i2c=True, init_wav=True, wav_root="/"):
+        # A canvas claim has no object to finalise it, so one outlives the program
+        # that made it where a screen's own workspace does not: a soft reset after a
+        # run that skipped shutdown() leaves the SRAM held and the next program short
+        # of it. Nothing of this program holds any yet, so anything outstanding here
+        # belongs to the last one.
+        release_buffers()
+
         # A motor role drives PWM on its DC, CS, SCK and MOSI lines, holding channels
         # some LED outputs share. BL becomes a plain enable output, so it claims nothing.
         claimed = {}
