@@ -224,8 +224,7 @@ try:
 
     t0 = time.ticks_ms()
     pair = ScreenPair(*built)
-    print("calibrated in {}ms, predicted floor {:.0f}us".format(
-        time.ticks_diff(time.ticks_ms(), t0), pair.align_floor_us))
+    calibration_ms = time.ticks_diff(time.ticks_ms(), t0)
     # Named, since the file now covers more than one configuration
     first = pair.screens[0]
     print("{} pair at {} baud, {}-bit, {}fps, {}B of SRAM a screen".format(
@@ -239,15 +238,26 @@ try:
     except TypeError:
         pass
 
-    WIDTH, HEIGHT = built[0].width, built[0].height
-    canvas = built[0].canvas(HEIGHT, WIDTH)
+    # A pair too mismatched to hold alignment streams unaligned instead, which is an
+    # outcome worth reporting. align_floor_us and the skew readings need a calibrated
+    # pair, so the phases below have no subject and are named as skipped.
+    if not pair.is_aligned():
+        print("this pair declined to align, for the reason logged above, so the phases"
+              " that measure alignment did not run. Pair better-matched panels, or"
+              " measure how far apart these two are with tools/check_te_align.py")
+    else:
+        print("calibrated in {}ms, predicted floor {:.0f}us".format(
+            calibration_ms, pair.align_floor_us))
 
-    aligned_run()
-    cadence_run()
-    paced_run()
-    pause_trials()
-    solo_updates()
-    print("done")
+        WIDTH, HEIGHT = built[0].width, built[0].height
+        canvas = built[0].canvas(HEIGHT, WIDTH)
+
+        aligned_run()
+        cadence_run()
+        paced_run()
+        pause_trials()
+        solo_updates()
+        print("done")
 finally:
     if pair is not None:
         pair.stop_aligning()

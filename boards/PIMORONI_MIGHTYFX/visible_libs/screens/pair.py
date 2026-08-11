@@ -426,7 +426,12 @@ class ScreenPair:
         self.__plans = plans
         self.__calibrated = True
 
-        logging.debug(f"> Calibrated in {time.ticks_diff(time.ticks_ms(), started)}ms, predicted skew floor {self.__floor_us:.0f}us")
+        # The opener promised four seconds, so say when they are up. The figures
+        # only reach a caller who asked for them.
+        if logging.level < logging.LOG_DEBUG:
+            logging.info("> Screen pair calibrated")
+        else:
+            logging.debug(f"> Calibrated in {time.ticks_diff(time.ticks_ms(), started)}ms, predicted skew floor {self.__floor_us:.0f}us")
 
     def __send_walk(self, walk):
         if walk != self.__walk_sent:
