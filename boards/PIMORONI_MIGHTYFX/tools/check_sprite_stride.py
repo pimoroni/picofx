@@ -82,7 +82,7 @@ SECONDS_PER_VIEW = 4
 
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = SCREEN(mighty.spce_a)
-screen.brightness = 1.0
+screen.brightness(1.0)
 
 WIDTH, HEIGHT = screen.width, screen.height
 CELL_W, CELL_H = WIDTH // COLS, HEIGHT // ROWS

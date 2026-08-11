@@ -4,10 +4,10 @@
 
 import time
 
-from machine import ADC, PWM, Pin
+from machine import ADC, Pin
 from pimoroni_i2c import PimoroniI2C
 from motor import Motor
-from picofx import RGBLED, DisabledLED
+from picofx import RGBLED, DisabledLED, PWMLED
 from audio import WavPlayer
 from spidisplay import SPIDisplayBus, release_buffers
 
@@ -29,63 +29,104 @@ class SPCE:
     HUB_LINES = 3
 
 
-class Backlight:
-    """A screen backlight on a PWM channel.
+class Backlight(PWMLED):
+    """A screen backlight, driven as any other LED on the board is.
 
-    Dark from power-on until every screen sharing it has shown a first frame, so no
-    panel shows its power-on contents. After that brightness is the user's, from 0.0
-    to 1.0 against perceived brightness rather than duty. Screens on one port share
-    the line and so the setting.
+    Dark from power-on until a screen on its port has shown a frame, so no panel
+    lights on what bringup left it holding. off() takes it dark again and keeps the
+    brightness, so on() brings the same level back, and both wait a scan so content
+    written while dark is everywhere before the light returns.
+
+    0.0 is off and every setting above it lands somewhere the panel answers, so the
+    range a caller is given is the range they can see. Screens on one port share the
+    line and so the setting.
     """
-
-    FREQUENCY = 1000
 
     # Duty follows the setting raised to this, since perceived brightness goes as
     # roughly the cube root of light output. Chosen on the panel against 2.2 and 3.0.
-    # The lowest settings are dark whatever this is, the driver having a floor that
-    # varies between panels, so the bottom of the range is not worth reclaiming.
     GAMMA = 2.8
 
-    def __init__(self, pin):
-        self.__pwm = PWM(pin, freq=self.FREQUENCY, duty_u16=0)
-        self.__brightness = 0.0
-        self.__screens = []
-        self.__drawn = set()
+    # Where a setting above zero starts. What the driver needs is a pulse rather than a
+    # duty, so it costs a larger share of a shorter period, and it is measured on
+    # holding a steady level rather than on lighting at all, which fails later: the
+    # worst of six 2.8" units was unsteady at 17.7us and the worst of four 1.54" at
+    # 13.3us, and this clears both. One figure whatever the panel, a port's one BL line
+    # serving every screen on it and a hub being free to mix sizes.
+    MINIMUM_PULSE_US = 20
+
+    # That rate is audible and kept so, leaving the band costing most of the range: the
+    # same pulse is 40% duty at 20kHz. A clk_sys change after this is built moves it.
+    MINIMUM_DUTY = MINIMUM_PULSE_US * PWMLED.FREQUENCY / 1_000_000
+
+    def __init__(self, port, pin):
+        super().__init__(pin, gamma=self.GAMMA)
+        self.__port = port
+        self.__level = 1.0     # What a frame lights to, and what on() restores
+        self.__control = 0.0   # The setting as it was asked for, which toggle inverts
         self.__lit = False
+        self.__waiting = True  # Dark until a frame lands, against dark by choice
 
-    def __register(self, screen):
-        self.__screens.append(screen)
+        # The minimum in the terms the gamma reads, so a setting maps onto it there
+        self.__lowest = pow(self.MINIMUM_DUTY, 1.0 / self.GAMMA)
 
-    def __first_frame(self, screen):
-        """Note a screen's first frame, coming on once every screen has shown one."""
+    def brightness(self, value):
+        """Set the level and light to it, which also ends any wait for a frame.
+
+        0.0 is off and keeps the level for the next on(), so a caller can use either
+        spelling. Everything above it spans MINIMUM_DUTY to full.
+        """
+        value = min(1.0, max(0.0, value))
+        self.__waiting = False
+        self.__control = value
+        self.__lit = value > 0.0
         if self.__lit:
+            self.__level = value
+
+        # The minimum folds into the curve the gamma reads and not into the duty it
+        # produces. That curve is what steps evenly to the eye, so offsetting it keeps
+        # equal settings equally spaced, where offsetting the duty would spend the
+        # first quarter of the range going nowhere anyone could see.
+        if self.__lit:
+            super().brightness(self.__lowest + value * (1.0 - self.__lowest))
+        else:
+            super().brightness(0.0)
+
+    def toggle(self):
+        """Invert the setting, as any other LED here does.
+
+        Its own, not the curve the parent holds, which carries the minimum folded in.
+        """
+        self.brightness(1.0 - self.__control)
+
+    def on(self):
+        """Light the line at the level it last held."""
+        if not self.__lit:
+            self.__wait_a_scan()
+
+        self.brightness(self.__level)
+
+    def frame_shown(self):
+        """Note a frame reaching the glass, which is what a dark line waits for.
+
+        Only from power-on: a line taken dark by off() stays dark until it is asked
+        for again, however much is drawn meanwhile.
+        """
+        if not self.__waiting:
             return
 
-        self.__drawn.add(screen)
-        if len(self.__drawn) >= len(self.__screens):
-            # A finished transfer is not a presented frame: each row keeps what the
-            # scan last painted there, so the panel needs a full pass before the new
-            # frame is everywhere. The slowest member sets the wait.
-            slowest = min(member.framerate for member in self.__screens)
+        self.__wait_a_scan()
+        self.brightness(self.__level)
+
+    def __wait_a_scan(self):
+        """Hold for one full scan of the slowest screen on the port.
+
+        A finished transfer is not a presented frame: each row keeps what the scan
+        last painted there, so the panel needs a full pass before the new frame is
+        everywhere.
+        """
+        slowest = self.__port.slowest_framerate
+        if slowest is not None:
             time.sleep_ms(1000 // slowest + 3)
-            self.brightness = 1.0
-
-    @property
-    def brightness(self):
-        return self.__brightness
-
-    @brightness.setter
-    def brightness(self, value):
-        if not 0.0 <= value <= 1.0:
-            raise ValueError(f"{value} is not a valid brightness. Expected 0.0 to 1.0.")
-
-        self.__brightness = value
-        self.__lit = True
-        self.__pwm.duty_u16(int(pow(value, self.GAMMA) * 65535 + 0.5))
-
-    def off(self):
-        self.__pwm.duty_u16(0)
-        self.__brightness = 0.0
 
 
 class SPCEPort:
@@ -191,6 +232,16 @@ class SPCEPort:
         return tuple(self.__screens)
 
     @property
+    def slowest_framerate(self):
+        """The lowest panel refresh rate on the port, which sets any wait for a
+        frame to reach the glass. None before a screen is built.
+        """
+        if not self.__screens:
+            return None
+
+        return min(screen.framerate for screen in self.__screens)
+
+    @property
     def default_te(self):
         """What a screen naming no te takes: its own DC line, one panel to a port
         being how MightyFX is wired.
@@ -289,7 +340,7 @@ class SPCEPort:
         setting. If no screen claims it the pin is left alone, free to be a CS or DC.
         """
         if self.__backlight is None:
-            self.__backlight = Backlight(self.bl)
+            self.__backlight = Backlight(self, self.bl)
 
         return self.__backlight
 

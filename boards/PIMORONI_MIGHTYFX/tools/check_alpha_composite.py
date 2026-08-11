@@ -119,7 +119,7 @@ try:
     region = spidisplay.buffer(arena, 0)
 
     screen = Screen280(mighty.spce_a, bitdepth=16, band_lines=160, cache_columns=0)
-    screen.brightness = 1.0
+    screen.brightness(1.0)
     W, H = screen.width, screen.height
     ROW_BYTES = W * 2
     FRAME_BYTES = ROW_BYTES * H

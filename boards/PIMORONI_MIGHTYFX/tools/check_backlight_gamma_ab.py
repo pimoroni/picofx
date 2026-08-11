@@ -16,13 +16,20 @@
 
 import time
 
-from mighty_fx import SPCE, MightyFX
+from mighty_fx import SPCE, Backlight, MightyFX
 from picovector import color, font
 from screens import Screen280
 
-# (gamma on A, gamma on B). 1.0 is the shipped behaviour, 2.2 is RGB_GAMMA, 2.8
-# is TinyFX's OUTPUT_GAMMA, 3.0 is the cube root that matches perceived
-# lightness. 3.0 is the reference every other curve is measured against.
+# Each curve below is applied here, so the backlight must apply none of its own: both
+# its gamma and the floor it maps a setting above come out for the run, leaving what
+# this tool asks for on the pin. Set before the first screen, which is what builds the
+# backlight.
+Backlight.GAMMA = 1.0
+Backlight.MINIMUM_DUTY = 0.0
+
+# (gamma on A, gamma on B). 1.0 is no curve at all, 2.2 is RGB_GAMMA, 2.8 is what
+# Backlight ships and TinyFX's OUTPUT_GAMMA, 3.0 is the cube root that matches
+# perceived lightness. 3.0 is the reference every other curve is measured against.
 PAIRS = ((3.0, 3.0),
          (1.0, 3.0),
          (2.2, 3.0),
@@ -63,7 +70,7 @@ def show_labels(screens, canvas, pair):
         canvas.text(name, MARGIN, MARGIN, LABEL_SCALE)
         canvas.text(f"gamma {gamma}", MARGIN, MARGIN + 60, LABEL_SCALE)
         screen.update(canvas)
-        screen.brightness = 1.0
+        screen.brightness(1.0)
 
     time.sleep_ms(LABEL_MS)
 
@@ -79,7 +86,7 @@ def ramp_until_pressed(mighty, screens, pair):
         control = min(1.0, max(0.0, control))
 
         for screen, gamma in zip(screens, pair):
-            screen.brightness = pow(control, gamma)
+            screen.brightness(pow(control, gamma))
 
         time.sleep_ms(20)
 
@@ -108,5 +115,5 @@ try:
 
 finally:
     for screen in screens:
-        screen.brightness = 1.0
+        screen.brightness(1.0)
     mighty.shutdown()

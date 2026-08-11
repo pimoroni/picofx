@@ -219,10 +219,7 @@ class Screen(ScreenBase):
         # The line TE is read from, which a pair's excursion scheduler watches
         self.__te_line = (te_pin if te_pin is not None else dc) if te_used else None
 
-        backlight = None
-        if bl:
-            backlight = port.claim_backlight()
-            backlight.__register(self)
+        backlight = port.claim_backlight() if bl else None
 
         display = spidisplay.SPIDisplay(bus=port.bus, cs=cs, dc=dc, te=te_pin,
                                         width=width, height=height,

@@ -45,7 +45,7 @@ PROBE_ERRORS = BUILD_ERRORS + (AttributeError,)
 
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = SCREEN(mighty.spce_a)
-screen.brightness = 1.0
+screen.brightness(1.0)
 
 WIDTH, HEIGHT = screen.width, screen.height
 EXACT_BYTES = WIDTH * HEIGHT * 4    # RGBA8888, the length update() infers

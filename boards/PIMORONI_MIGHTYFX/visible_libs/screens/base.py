@@ -93,24 +93,17 @@ class ScreenBase:
         """What this screen's share of the fast SRAM was set aside for."""
         return self.__reserve
 
-    @property
-    def brightness(self):
-        """How bright the backlight looks, from 0.0 to 1.0.
+    def brightness(self, value):
+        """Set how bright the backlight looks, from 0.0 to 1.0.
 
-        Against perceived brightness, so equal steps look equal. The lowest
-        settings are dark, the backlight driver having a floor of its own.
+        Against perceived brightness, so equal steps look equal. 0.0 is off and every
+        setting above it is one the panel answers, the driver's own floor being folded
+        in. backlight carries the rest of the control, on() and off() among it.
         """
         if self.__backlight is None:
             raise ValueError("this screen has no backlight to set, so its brightness is whatever the assembly ties it to")
 
-        return self.__backlight.brightness
-
-    @brightness.setter
-    def brightness(self, value):
-        if self.__backlight is None:
-            raise ValueError("this screen has no backlight to set, so its brightness is whatever the assembly ties it to")
-
-        self.__backlight.brightness = value
+        self.__backlight.brightness(value)
 
     def canvas(self, width=None, height=None, offset=None):
         """An SRAM-backed image, by default sized to this screen.
@@ -142,13 +135,14 @@ class ScreenBase:
         return canvas
 
     def drawn(self):
-        """Note that a frame has landed, which the backlight waits for."""
-        if self.__members is not None:
-            for screen in self.__members:
-                screen.drawn()
+        """Note that a frame has landed, which the backlight waits for.
 
-        elif self.__backlight is not None:
-            self.__backlight.__first_frame(self)
+        Every panel on a port is cleared as it is brought up, so one frame anywhere
+        on the line is enough: no panel is left holding what power-on put there,
+        whatever the program goes on to draw and to whichever screens.
+        """
+        if self.__backlight is not None:
+            self.__backlight.frame_shown()
 
     def __select(self):
         if self.__index is not None:

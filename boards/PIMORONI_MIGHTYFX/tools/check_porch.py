@@ -121,7 +121,7 @@ for index, (cs, screen_class) in enumerate(HARNESS):
 
 panel = panels[UNDER_TEST]
 display = panel.display
-panel.brightness = 1.0
+panel.brightness(1.0)
 
 dc = Pin(MightyFX.SPCE_A_DC_PIN)
 dc.init(pull=Pin.PULL_DOWN)         # persists through the C module's direction flips

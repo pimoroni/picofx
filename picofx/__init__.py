@@ -55,10 +55,12 @@ class PseudoLED:
 # A basic wrapper for PWM with regular on/off and toggle functions from Pin
 # Intended to be used for driving LEDs with brightness control & compatibility with Pin
 class PWMLED(PseudoLED):
+    FREQUENCY = 1000
+
     def __init__(self, pin, invert=False, gamma=1):
         super().__init__()
         self.__gamma = gamma
-        self.__led = PWM(Pin(pin), freq=1000, duty_u16=0, invert=invert)
+        self.__led = PWM(Pin(pin), freq=self.FREQUENCY, duty_u16=0, invert=invert)
 
     def brightness(self, brightness):
         super().brightness(brightness)
