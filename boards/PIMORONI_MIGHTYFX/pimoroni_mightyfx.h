@@ -94,8 +94,24 @@
 #define PICO_FLASH_SPI_CLKDIV 2
 #endif
 
+// The cmake hint as well as the C define: the rp2 port passes the size to the linker
+// as __micropy_flash_size__, and reads it from this scan of the board header.
+pico_board_cmake_set_default(PICO_FLASH_SIZE_BYTES, (16 * 1024 * 1024))
 #ifndef PICO_FLASH_SIZE_BYTES
 #define PICO_FLASH_SIZE_BYTES (16 * 1024 * 1024)
+#endif
+
+// --- PSRAM ---
+
+// Declaring the chip select and the size here is what lets mpconfigboard.cmake name neither:
+// the SDK reads both from this header, so the port has nothing to detect at boot.
+#ifndef PICO_PSRAM_CS_PIN
+#define PICO_PSRAM_CS_PIN (PIMORONI_MIGHTYFX_PSRAM_CS_PIN)
+#endif
+
+pico_board_cmake_set_default(PICO_PSRAM_SIZE_BYTES, (8 * 1024 * 1024))
+#ifndef PICO_PSRAM_SIZE_BYTES
+#define PICO_PSRAM_SIZE_BYTES (8 * 1024 * 1024)
 #endif
 
 #ifndef PICO_RP2350_A2_SUPPORTED

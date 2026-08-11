@@ -76,6 +76,9 @@
 #define PICO_FLASH_SPI_CLKDIV 2
 #endif
 
+// The cmake hint as well as the C define: the rp2 port passes the size to the linker
+// as __micropy_flash_size__, and reads it from this scan of the board header.
+pico_board_cmake_set_default(PICO_FLASH_SIZE_BYTES, (4 * 1024 * 1024))
 #ifndef PICO_FLASH_SIZE_BYTES
 #define PICO_FLASH_SIZE_BYTES (4 * 1024 * 1024)
 #endif

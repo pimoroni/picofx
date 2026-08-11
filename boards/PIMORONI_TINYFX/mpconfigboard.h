@@ -4,11 +4,11 @@
 #define MICROPY_HW_BOARD_NAME                   "Pimoroni TinyFX"
 #endif
 
-#if defined(MICROPY_PY_NETWORK_CYW43)
+// The flash partition sizes come from mpconfigboard.cmake, which reserves the extra half
+// megabyte the networking firmware needs on the W variant. The port passes them to the
+// linker as defsyms and defines them here itself, so setting them again is an error.
 
-// We need space for networking firmware on network builds
-// 1536 * 1024 = 1.5MB
-#define FIRMWARE_SIZE_BYTES                     (1536 * 1024)
+#if defined(MICROPY_PY_NETWORK_CYW43)
 
 // CYW43 driver configuration.
 #define CYW43_USE_SPI                           (1)
@@ -16,11 +16,4 @@
 #define CYW43_GPIO                              (0)
 #define CYW43_SPI_PIO                           (1)
 
-#else
-
-// 1MB for the firmware
-#define FIRMWARE_SIZE_BYTES                     (1 * 1024 * 1024)
-
 #endif
-
-#define MICROPY_HW_FLASH_STORAGE_BYTES          (PICO_FLASH_SIZE_BYTES - FIRMWARE_SIZE_BYTES)
