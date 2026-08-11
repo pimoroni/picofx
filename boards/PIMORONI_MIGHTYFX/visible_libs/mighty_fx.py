@@ -26,6 +26,7 @@ class SPCE:
     SCREEN = 0
     MOTOR_DRIVER = 1
     GPIO = 2
+    HUB_LINES = 3
 
 
 class Backlight:
@@ -100,15 +101,15 @@ class SPCEPort:
     IO_NAMES = ("dc", "cs", "sck", "mosi", "bl")
 
     def __init__(self, name, mode, spi, pins):
-        if mode not in (None, SPCE.SCREEN, SPCE.MOTOR_DRIVER, SPCE.GPIO):
-            raise ValueError(f"{mode} is not a valid SP/CE mode. Expected SPCE.SCREEN, SPCE.MOTOR_DRIVER, SPCE.GPIO, or None.")
+        if mode not in (None, SPCE.SCREEN, SPCE.MOTOR_DRIVER, SPCE.GPIO, SPCE.HUB_LINES):
+            raise ValueError(f"{mode} is not a valid SP/CE mode. Expected SPCE.SCREEN, SPCE.MOTOR_DRIVER, SPCE.GPIO, SPCE.HUB_LINES, or None.")
 
         self.name = name
         self.mode = mode
 
         # A motor port's pins belong to its Motor objects, and an undeclared port is
         # left alone, so neither offers them up
-        self.__pins = tuple(Pin(pin) for pin in pins) if mode in (SPCE.SCREEN, SPCE.GPIO) else None
+        self.__pins = tuple(Pin(pin) for pin in pins) if mode in (SPCE.SCREEN, SPCE.GPIO, SPCE.HUB_LINES) else None
 
         self.__bus = SPIDisplayBus(spi=spi, sck=self.__pins[2], mosi=self.__pins[3]) if mode == SPCE.SCREEN else None
         self.__backlight = None
@@ -116,6 +117,7 @@ class SPCEPort:
         self.__screens = []
         self.__cs_claimed = []
         self.__dc_claimed = []
+        self.__panels_reset = False
 
     @property
     def io(self):
@@ -126,6 +128,17 @@ class SPCEPort:
         """
         if self.mode != SPCE.GPIO:
             raise ValueError(f"SP/CE {self.name} is not declared SPCE.GPIO, so its pins are not free to borrow")
+
+        return self.__pins
+
+    @property
+    def hub_lines(self):
+        """The connector's five GPIOs, as the chip selects a hub addresses panels
+        with. Only a port declared SPCE.HUB_LINES offers them, the declaration being
+        what says the connector is spent on another port's screens.
+        """
+        if self.mode != SPCE.HUB_LINES:
+            raise ValueError(f"SP/CE {self.name} is not declared SPCE.HUB_LINES, so its pins are not a hub's chip selects")
 
         return self.__pins
 
@@ -164,6 +177,38 @@ class SPCEPort:
         return self.__bus
 
     @property
+    def connector(self):
+        """The SP/CE connector a screen belongs to, which for a port is itself.
+
+        A hub hands out ports of its own, so a screen asks whatever it was built
+        against for the connector holding the bus, the backlight and the screens.
+        """
+        return self
+
+    @property
+    def screens(self):
+        """The screens built on this port, in creation order."""
+        return tuple(self.__screens)
+
+    @property
+    def default_te(self):
+        """What a screen naming no te takes: its own DC line, one panel to a port
+        being how MightyFX is wired.
+        """
+        return True
+
+    @property
+    def panels_reset(self):
+        """Whether every panel on the port has already been reset and cleared, which
+        a hub does for all of them at once and a screen otherwise does for itself.
+        """
+        return self.__panels_reset
+
+    @panels_reset.setter
+    def panels_reset(self, value):
+        self.__panels_reset = bool(value)
+
+    @property
     def selector(self):
         """The port's ScreenMux, if its screens are addressed by index."""
         return self.__selector
@@ -178,13 +223,14 @@ class SPCEPort:
 
         self.__selector = value
 
-    # Construction-time bookkeeping, reached from screens.py as a screen is built. Not
-    # for a user to call: each records a claim the port validates later ones against,
-    # so a spurious call reserves a line, a channel or a first frame for no screen.
-    def __register(self, screen):
+    # The contract a screen is built through, which a ScreenHub port implements too by
+    # passing each call along to here. Not for an application to call: each records a
+    # claim the port validates later ones against, so a spurious call reserves a line
+    # or a channel for no screen.
+    def register(self, screen):
         self.__screens.append(screen)
 
-    def __next_index(self):
+    def next_index(self):
         """The next selector channel, handed out in screen creation order."""
         index = len(self.__screens)
         if index >= self.__selector.count:
@@ -192,7 +238,7 @@ class SPCEPort:
 
         return index
 
-    def __claim_cs(self, pin=None):
+    def claim_cs(self, pin=None):
         """Register a screen's CS line and return it.
 
         None takes the port's own, which is the first screen's to have. Every further
@@ -209,15 +255,16 @@ class SPCEPort:
         self.__cs_claimed.append(pin)
         return pin
 
-    def __claim_dc(self, pin=None, te=True, shared=False):
+    def claim_dc(self, pin=None, te=True, shared=False):
         """Register a screen's DC line and return it.
 
         None takes the port's own, which is the first screen's to have. Pass this
         port's dc to share that line deliberately. Panels using TE may share it only
-        where every one of them is built te=SHARED_DC, which declares the diode that
-        stops each panel's TEOFF pulling the line down; without one they divide the
-        line through their series resistors and no asserted level survives. The
-        firmware cannot see a diode, so the declaration is the caller's.
+        where every one of them names that same line as its te, which declares the
+        diode that stops each panel's TEOFF pulling the line down; without one they
+        divide the line through their series resistors and no asserted level
+        survives. The firmware cannot see a diode, so the declaration is the
+        caller's.
         """
         switched = self.__selector is not None
         if pin is None:
@@ -230,12 +277,12 @@ class SPCEPort:
                 if claimed is not pin:
                     continue
                 if (te and not shared) or (claimed_te and not claimed_shared):
-                    raise ValueError(f"{pin} is carrying TE for another screen. Screens sharing a DC line all need te=False, or te=SHARED_DC on every one of them, which needs a diode fitted to each breakout.")
+                    raise ValueError(f"{pin} is carrying TE for another screen. Screens sharing a DC line all need te=False, or te set to that line on every one of them, which needs a diode fitted to each breakout.")
 
         self.__dc_claimed.append((pin, te, shared))
         return pin
 
-    def __claim_backlight(self):
+    def claim_backlight(self):
         """The port's backlight, created for the first screen to ask for it.
 
         The connector carries one BL line, so every screen taking it shares the
@@ -252,7 +299,7 @@ class SPCEPort:
 
     def release(self):
         """Hand back the bus's DMA channel and its screens' SRAM claims, which
-        nothing else gives up early.
+        nothing else gives up early, and stop driving the connector's lines.
 
         There are 16 channels and the bus takes one until it is collected, so a
         program that builds screens repeatedly runs out and the SDK panics; each
@@ -320,6 +367,10 @@ class MightyFX:
 
     RGB_COLOUR_NAMES = ("red", "green", "blue")
 
+    # A hub reaches the screen port's own chip select and the other connector's five,
+    # and each of those six is named on the board as well as indexed on the hub
+    HUB_PORT_NAMES = ("a", "b", "c", "d", "e", "f")
+
     def __init__(self, spce_a=None, spce_b=None, init_i2c=True, init_wav=True, wav_root="/"):
         # A motor role drives PWM on its DC, CS, SCK and MOSI lines, holding channels
         # some LED outputs share. BL becomes a plain enable output, so it claims nothing.
@@ -348,6 +399,23 @@ class MightyFX:
         # them, from the classes in screens.py
         self.spce_a = SPCEPort("A", spce_a, 0, self.SPCE_A_PINS)
         self.spce_b = SPCEPort("B", spce_b, 1, self.SPCE_B_PINS)
+
+        # One connector given over to chip selects makes the other's panels several
+        # rather than one, so the pairing is checked here and the hub built for the
+        # user. Imported only where a board asked for one, a program with no screens
+        # having no reason to load the package.
+        self.hub = None
+        for screen_port, lines_port in ((self.spce_a, self.spce_b), (self.spce_b, self.spce_a)):
+            if lines_port.mode != SPCE.HUB_LINES:
+                continue
+
+            if screen_port.mode != SPCE.SCREEN:
+                raise ValueError(f"SP/CE {lines_port.name} is declared SPCE.HUB_LINES, which are the chip selects for panels on the other connector, so declare SP/CE {screen_port.name} as SPCE.SCREEN")
+
+            from screens import ScreenHub
+            self.hub = ScreenHub(screen_port, extra_cs=lines_port.hub_lines)
+            for name, port in zip(self.HUB_PORT_NAMES, self.hub.ports):
+                setattr(self, f"hub_{name}", port)
 
         self.motors_a = None
         if spce_a == SPCE.MOTOR_DRIVER:
@@ -425,6 +493,21 @@ class MightyFX:
     @property
     def seven(self):
         return self.outputs[6]
+
+    @property
+    def hub_ports(self):
+        """The hub's ports, one per panel its chip selects reach, and empty without
+        a hub. Each is named as hub_a through hub_f as well.
+        """
+        return () if self.hub is None else self.hub.ports
+
+    def __getattr__(self, name):
+        # Only reached where the attribute is absent, which for a hub port means the
+        # board was never declared for a hub
+        if name.startswith("hub_") and name[4:] in self.HUB_PORT_NAMES:
+            raise AttributeError(f"{name} needs a hub, which is built where one SP/CE port is declared SPCE.SCREEN and the other SPCE.HUB_LINES")
+
+        raise AttributeError(name)
 
     def clear(self):
         for out in self.outputs:

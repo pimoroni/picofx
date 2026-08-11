@@ -1472,6 +1472,32 @@ static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_ma
 }
 static MP_DEFINE_CONST_FUN_OBJ_KW(SPIDisplay_update_obj, 2, SPIDisplay_update);
 
+// fill(colour=black) streams one solid frame, which is update()'s path with no
+// source: an empty extent covers no destination pixel, so every one takes the
+// background. For putting a panel in a known state at bringup, where no image exists
+// yet and the frame is wanted before a canvas is worth claiming.
+static mp_obj_t SPIDisplay_fill(size_t n_args, const mp_obj_t *args) {
+    SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[0]);
+    if (self->display.released()) {
+        mp_raise_ValueError(MP_ERROR_TEXT("this screen's bus has been released by shutdown()"));
+    }
+    if (!self->display.has_sram()) {
+        mp_raise_ValueError(MP_ERROR_TEXT("this screen has been deleted and its SRAM released"));
+    }
+
+    uint32_t bg = 0;
+    if (n_args > 1 && args[1] != mp_const_none) {
+        bg = (uint32_t)mp_obj_get_int_truncated(args[1]);
+    }
+    self->display.update(nullptr, 0, 0, 0, nullptr, 0,
+                         0, 0, 0,
+                         bg, true, 0, true, 0,
+                         false, 0, 0, 0, 0, 0, 0);
+    self->staged_image = mp_const_none;
+    return mp_const_none;
+}
+static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(SPIDisplay_fill_obj, 1, 2, SPIDisplay_fill);
+
 // prepare(image, ...) stages a frame for update_all(): descriptor, cache and
 // the first band's conversion, no bus traffic. The image is rooted on the
 // display until the stream completes or abort_frame(), since the staged
@@ -1789,6 +1815,7 @@ static const mp_rom_map_elem_t SPIDisplay_locals_dict_table[] = {
     { MP_ROM_QSTR(MP_QSTR___del__), MP_ROM_PTR(&SPIDisplay___del___obj) },
     { MP_ROM_QSTR(MP_QSTR_command), MP_ROM_PTR(&SPIDisplay_command_obj) },
     { MP_ROM_QSTR(MP_QSTR_update), MP_ROM_PTR(&SPIDisplay_update_obj) },
+    { MP_ROM_QSTR(MP_QSTR_fill), MP_ROM_PTR(&SPIDisplay_fill_obj) },
     { MP_ROM_QSTR(MP_QSTR_prepare), MP_ROM_PTR(&SPIDisplay_prepare_obj) },
     { MP_ROM_QSTR(MP_QSTR_abort_frame), MP_ROM_PTR(&SPIDisplay_abort_frame_obj) },
     { MP_ROM_QSTR(MP_QSTR_size), MP_ROM_PTR(&SPIDisplay_size_obj) },

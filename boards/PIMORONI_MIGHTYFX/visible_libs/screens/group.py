@@ -34,10 +34,10 @@ class ScreenGroup(ScreenBase):
     reaches only some of them. A subset owns nothing and costs no display.
 
     sync names the one member whose tearing-effect signal a frame waits on, which
-    needs every member built te=SHARED_DC. That panel comes out clean and the rest
-    tear, panels on a hub scanning independently with no edge safe for all of them.
-    None takes the first member that can, saying so if none can; False declines the
-    wait, so a frame goes out at once.
+    needs every member reading TE from the line they share. That panel comes out
+    clean and the rest tear, panels on a hub scanning independently with no edge safe
+    for all of them. None takes the first member that can, saying so if none can;
+    False declines the wait, so a frame goes out at once.
     """
 
     # The first probe after bringup reads long and settles within a second, so each
@@ -178,12 +178,12 @@ class ScreenGroup(ScreenBase):
                 if sync not in screens:
                     raise ValueError(f"{sync} is not a member of this group, so it cannot be the one its frames wait on")
                 if not sync.__shared_te:
-                    raise ValueError(f"{sync} was not built te=SHARED_DC, so its tearing-effect signal is not on the line this group's frames read. Build every member te=SHARED_DC, which needs the diode fitted.")
+                    raise ValueError(f"{sync} does not read its tearing-effect signal from the line this group's frames read. Build every member with te set to the DC line they share, which needs the diode fitted to each breakout.")
                 nominated = sync
             elif shared:
                 nominated = shared[0]
             else:
-                logging.info("screens: this group's panels carry no shared tearing-effect signal, so its frames will not wait and every panel may tear. Build the members te=SHARED_DC to nominate one.")
+                logging.info("screens: this group's panels carry no shared tearing-effect signal, so its frames will not wait and every panel may tear. Build the members with te set to the DC line they share to nominate one.")
 
         first = screens[0]
         display = port.bus.broadcast(*[screen.display for screen in screens])
@@ -243,7 +243,7 @@ class ScreenGroup(ScreenBase):
                 # The sync block above already said why there is no signal to hold
                 # these panels by, so only a required alignment speaks again.
                 if align is True:
-                    raise ValueError("align holds a group's panels in phase by their tearing-effect signal, so it needs every member built te=SHARED_DC")
+                    raise ValueError("align holds a group's panels in phase by their tearing-effect signal, so it needs every member built with te set to the DC line they share")
             else:
                 self.__calibrate(align is True)
 
@@ -291,7 +291,7 @@ class ScreenGroup(ScreenBase):
         periods = []
         for screen in members:
             if screen.sync is None:
-                self.__unaligned(required, f"{screen} carries no tearing-effect signal a group can read, so build every member te=SHARED_DC")
+                self.__unaligned(required, f"{screen} carries no tearing-effect signal a group can read, so build every member with te set to the DC line they share")
                 return
             period = self.__period_of(screen, settle=True)
             if not period:

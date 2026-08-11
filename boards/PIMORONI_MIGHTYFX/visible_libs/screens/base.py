@@ -214,7 +214,7 @@ class ScreenBase:
             v_sync = self.__v_sync
         elif v_sync and not self.__te:
             if self.__members is not None:
-                raise ValueError("this broadcast group has no member to wait on: its panels' scans are unsynchronised, so build it with sync naming one of them, which needs every member built te=SHARED_DC")
+                raise ValueError("this broadcast group has no member to wait on: its panels' scans are unsynchronised, so build it with sync naming one of them, which needs every member built with te set to the DC line they share")
 
             raise ValueError("v_sync needs a screen created with te, since it waits on the panel's tearing-effect signal")
 

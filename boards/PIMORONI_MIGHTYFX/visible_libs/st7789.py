@@ -58,6 +58,11 @@ TE_MODE = 0x00
 # these too and its blanking is the porches alone.
 CONTROLLER_ROWS = const(320)
 
+# Memory columns the controller holds, which every panel it drives shows all of. With
+# CONTROLLER_ROWS this is the window covering any panel on the chip, which is what a
+# hub writes to before it knows what is plugged in.
+CONTROLLER_COLUMNS = const(240)
+
 # What setup() writes, back then front, in scan lines
 PORCH = (12, 12)
 
@@ -123,18 +128,27 @@ PIXEL_FORMAT = OrderedDict({
 })
 
 
+def reset(screen):
+    """Return a panel to its defaults, and wait out the settle before any register
+    write reaches it.
+
+    Apart from setup() so several panels can be reset through one broadcast, where
+    the settle is paid once instead of per panel.
+    """
+    screen.command(REG_SWRESET)
+
+    time.sleep(0.5)
+
+
 def setup(screen, width, height, bitdepth_code, framerate_code, te=True):
     """Bring a panel up, over anything offering a command() to reach it with.
+    Takes a panel already through reset().
 
     te sends TEON so the panel drives its tearing-effect line, which v_sync waits
     on. Panels sharing a DC line take te=False: TEOFF still drives TE low through
     the breakout's series resistor, so panels on one line divide it and the
     asserted level never reaches the input threshold.
     """
-    screen.command(REG_SWRESET)
-
-    time.sleep(0.5)
-
     screen.command(REG_TEON if te else REG_TEOFF)
     screen.command(REG_COLMOD, bitdepth_code)   # 03 = 12-bit, 05 = 16-bit, 06 = 18-bit
     set_porch(screen, *PORCH)

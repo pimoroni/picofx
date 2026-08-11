@@ -14,14 +14,6 @@ import st7789
 
 from .base import ScreenBase
 
-# te=SHARED_DC: the panel's tearing-effect signal arrives on a DC line other screens
-# share. That works only where every breakout on the line carries a diode, which
-# blocks each panel's TEOFF from pulling the line down; without one the screens
-# divide it and no asserted level survives. The firmware cannot see a diode, so
-# naming this is the caller declaring one is fitted. One panel at a time may assert,
-# so the driver sends TEON as a frame's wait begins and TEOFF as it ends.
-SHARED_DC = "shared_dc"
-
 
 class Reserve:
     """What a screen sets its share of the fast SRAM aside for.
@@ -54,16 +46,19 @@ class Screen(ScreenBase):
 
     The first screen on a port names no pins and takes the port's own DC, CS and
     backlight. Every further screen names its cs, and its dc unless it is
-    deliberately sharing the port's, which panels take te=False or te=SHARED_DC to
-    do. With a selector set on the port the screens name no pins and take a channel
-    each, in creation order.
+    deliberately sharing the port's. A screen built against one of a ScreenHub's
+    ports names none of them, the hub having named the whole line-up already. With a
+    selector set on the port the screens name no pins and take a channel each, in
+    creation order.
 
-    te reads the tearing-effect signal from this screen's own DC line, which is how
-    MightyFX wires one panel to a port; SHARED_DC reads it from a line other screens
-    share, which needs a diode on each breakout and asserts TE only for the frame
-    waiting on it; a Pin is a dedicated input; False sends TEOFF and never waits.
-    v_sync follows te, and False keeps the signal without waiting on it. bl=False
-    declines the port's backlight, for a panel whose own is tied on at the assembly.
+    te names the line the tearing-effect signal comes back on. True is this screen's
+    own DC line, which is how MightyFX wires a single panel to a port; the port's own
+    DC line is one other screens share, which needs a diode on each breakout and
+    asserts TE only for the frame waiting on it; any other Pin is a dedicated input;
+    False sends TEOFF and never waits. None takes the port's default, which is True
+    on a connector and the shared line on a hub. v_sync follows te, and False keeps
+    the signal without waiting on it. bl=False declines the port's backlight, for a
+    panel whose own is tied on at the assembly.
 
     Settings resolve as: explicit keyword, then the PROFILES row for the
     (baudrate, bitdepth) pair, then the class constants. With no bitdepth named,
@@ -118,7 +113,7 @@ class Screen(ScreenBase):
     # which is a rate its wire could not hold while one core was what it waited for.
     PROFILES = {}
 
-    def __init__(self, port, cs=None, dc=None, te=True, v_sync=None, bl=True,
+    def __init__(self, port, cs=None, dc=None, te=None, v_sync=None, bl=True,
                  width=None, height=None, bitdepth=None, framerate=None,
                  baudrate=None, reserve=Reserve.CANVAS_SPACE, band_lines=None,
                  cache_columns=None, stage_lines=None, dual_profiles=None):
@@ -182,9 +177,24 @@ class Screen(ScreenBase):
         bd_code = self.__code_for(controller.PIXEL_FORMAT, bitdepth, "bit depth")
         fr_code = self.__code_for(controller.FRAME_RATE_CONTROL, self.__framerate, "frame rate")
 
-        shared_te = te is SHARED_DC
+        if te is None:
+            te = port.default_te
+
         te_used = te is not False
-        te_pin = None if shared_te or isinstance(te, bool) else te
+        named_line = te if te_used and te is not True else None
+
+        # Naming the port's DC line, where True names this panel's own, is what
+        # declares the diode each breakout on a shared line needs. One panel at a
+        # time may assert there, so the driver sends TEON as a frame's wait begins
+        # and TEOFF as it ends.
+        shared_te = named_line is not None and named_line is port.dc
+
+        # A DC line is read by flipping it to an input for the wait, which the driver
+        # does only where it holds no TE pin of its own. So a shared line is declared
+        # by name here and passed as none: a pin means a dedicated input, and giving
+        # it the DC line leaves that line an output and the wait reading what this
+        # board is driving.
+        te_pin = None if shared_te else named_line
 
         if v_sync is None:
             v_sync = te_used
@@ -199,19 +209,19 @@ class Screen(ScreenBase):
             if te_used and not selector.switch_dc:
                 raise ValueError("a selector that leaves DC shared cannot carry TE, so its screens need te=False")
 
-            index = port.__next_index()
+            index = port.next_index()
         else:
             index = None
 
-        cs = port.__claim_cs(cs)
-        dc = port.__claim_dc(dc, te_used, shared_te)
+        cs = port.claim_cs(cs)
+        dc = port.claim_dc(dc, te_used, shared_te)
 
         # The line TE is read from, which a pair's excursion scheduler watches
         self.__te_line = (te_pin if te_pin is not None else dc) if te_used else None
 
         backlight = None
         if bl:
-            backlight = port.__claim_backlight()
+            backlight = port.claim_backlight()
             backlight.__register(self)
 
         display = spidisplay.SPIDisplay(bus=port.bus, cs=cs, dc=dc, te=te_pin,
@@ -233,11 +243,11 @@ class Screen(ScreenBase):
                              f" Raise clk_peri first, machine.freq(150_000_000, 150_000_000),"
                              f" or request a rate the current clock reaches.")
 
-        super().__init__(port, display, width, height, bitdepth, backlight, te_used,
-                         v_sync, index, reserve, shared_te=shared_te,
+        super().__init__(port.connector, display, width, height, bitdepth, backlight,
+                         te_used, v_sync, index, reserve, shared_te=shared_te,
                          sync=self if shared_te else None)
 
-        port.__register(self)
+        port.register(self)
 
         # What setup() is about to write, and the slots that porch spends. A group's
         # trim moves both, so every margin sum reads them from the screen.
@@ -248,7 +258,19 @@ class Screen(ScreenBase):
         # the panel for every register write as well as every frame. A shared line
         # comes up at TEOFF: the driver asserts TE only for the frame that waits on
         # it, since one panel at a time may reach the line.
+        #
+        # A hub has already reset and cleared every panel on the port, in one pass
+        # over all of them. On its own a screen does both for itself, the clear
+        # being what keeps the panel's power-on contents off the glass when the
+        # backlight comes up.
+        alone = not port.panels_reset
+        if alone:
+            controller.reset(self)
+
         controller.setup(self, width, height, bd_code, fr_code, te_used and not shared_te)
+
+        if alone:
+            display.fill()
 
     @staticmethod
     def __code_for(table, value, what):
