@@ -300,7 +300,12 @@ class Screen(ScreenBase):
 
     @property
     def framerate(self):
-        """The panel's own refresh rate, which bounds the tearing margin."""
+        """The refresh rate this screen was built with, which bounds the tearing margin.
+
+        A label, nominal at the default porch: alignment trims the porch to hold
+        panels together, so an aligned panel runs off it. line_slots against the
+        controller's LINE_SLOTS says how far.
+        """
         return self.__framerate
 
     @property

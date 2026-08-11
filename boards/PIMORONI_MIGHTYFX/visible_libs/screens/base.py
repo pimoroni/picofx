@@ -199,9 +199,10 @@ class ScreenBase:
 
     def update(self, image, rotation=0, mirror=False, v_sync=None, bg_color=picovector.color.black, pixel_double=False, offset=None, to=None):
         # A frame outside the pair first hands back the panel state alignment
-        # holds, since the narrowed TE pulse is only safe under the pair's poll
+        # holds, the trimmed porch included: the narrowed TE pulse is only safe
+        # under the pair's poll, and the period was the pair's choice
         if self.__pair is not None:
-            self.__pair.__restore_panel()
+            self.__pair.__release_panel()
 
         # v_sync=None follows the screen, so only a frame that differs says so
         if v_sync is None:

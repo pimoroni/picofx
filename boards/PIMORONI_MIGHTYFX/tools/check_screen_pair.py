@@ -10,7 +10,7 @@
 # which is where a frame that overruns its slot starts without its TE edge and back
 # to back pushing does not look; pause-and-resume trials with eyes on the resume
 # instant; and solo updates on each screen, which must hand back the follower's
-# panel state.
+# panel state, the trimmed porch included, and take it up again on resuming.
 #
 # Set SCREEN to the panel type on the ports. Every phase runs the default reserve and
 # an SRAM canvas redrawn per frame, which is what the thresholds below were measured
@@ -200,13 +200,23 @@ def solo_updates():
     """A screen updated outside its pair hands the follower's panel state back."""
     print("solo updates on both screens, then the pair resumes")
     timeouts0 = timeouts()
+    follower = pair.__f_screen
     for _ in range(5):
         for screen in pair.screens:
             screen.update(canvas, rotation=90)
+    solo_back = follower.porch[0]
+    default_back = follower.CONTROLLER.PORCH[0]
+    assert solo_back == default_back, (
+        f"the follower ran solo at a back porch of {solo_back} lines against"
+        f" the default {default_back}, so the pair kept hold of its period")
     skews = []
     for frame in range(RESUME_FRAMES):
         pair_frame(frame)
         skews.append(skew_us())
+    held_back = follower.porch[0] - pair.__dither
+    assert held_back == default_back + pair.trim_lines, (
+        f"the pair resumed at a back porch of {held_back} lines against the"
+        f" {default_back} + {pair.trim_lines} its calibration chose")
     report_skews("resumed", skews, timeouts0)
     print()
 
@@ -246,8 +256,8 @@ try:
               " that measure alignment did not run. Pair better-matched panels, or"
               " measure how far apart these two are with tools/check_te_align.py")
     else:
-        print("calibrated in {}ms, predicted floor {:.0f}us".format(
-            calibration_ms, pair.align_floor_us))
+        print("calibrated in {}ms, predicted floor {:.0f}us, trim {} porch lines".format(
+            calibration_ms, pair.align_floor_us, pair.trim_lines))
 
         WIDTH, HEIGHT = built[0].width, built[0].height
         canvas = built[0].canvas(HEIGHT, WIDTH)
