@@ -27,7 +27,8 @@
 
 import time
 
-from mighty_fx import SPCE, Backlight, MightyFX
+from mighty_fx import SPCE, MightyFX
+from spce import Backlight
 from picovector import color
 from screens import Screen280
 
