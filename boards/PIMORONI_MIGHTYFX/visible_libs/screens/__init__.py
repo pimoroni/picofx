@@ -12,7 +12,6 @@
 from .base import ScreenBase
 from .group import ScreenGroup
 from .hub import ScreenHub
-from .mux import ScreenMux
 from .pair import ScreenPair, update_pair
 from .screen import Reserve, Screen
 

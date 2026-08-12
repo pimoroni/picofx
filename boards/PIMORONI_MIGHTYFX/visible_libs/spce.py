@@ -127,7 +127,7 @@ class SPCEPort:
 
     A screen port hands out its own DC, CS and BL lines through the named
     properties. A port declared SPCE.GPIO hands out all five through io instead, to
-    serve as further screens' CS and DC lines, or a multiplexer's select lines.
+    serve as further screens' CS and DC lines.
     """
 
     # The connector's GPIOs, in the order io reports them
@@ -146,7 +146,6 @@ class SPCEPort:
 
         self.__bus = SPIDisplayBus(spi=spi, sck=self.__pins[2], mosi=self.__pins[3]) if mode == SPCE.SCREEN else None
         self.__backlight = None
-        self.__selector = None
         self.__screens = []
         self.__cs_claimed = []
         self.__dc_claimed = []
@@ -251,48 +250,23 @@ class SPCEPort:
     def panels_reset(self, value):
         self.__panels_reset = bool(value)
 
-    @property
-    def selector(self):
-        """The port's ScreenMux, if its screens are addressed by index."""
-        return self.__selector
-
-    @selector.setter
-    def selector(self, value):
-        if self.mode != SPCE.SCREEN:
-            raise ValueError(f"SP/CE {self.name} is not a screen port, so it cannot have a selector")
-
-        if self.__screens:
-            raise ValueError(f"SP/CE {self.name} already has screens, and a selector changes how they are addressed, so set it first")
-
-        self.__selector = value
-
     # The contract a screen is built through, which a ScreenHub port implements too by
     # passing each call along to here. Not for an application to call: each records a
     # claim the port validates later ones against, so a spurious call reserves a line
-    # or a channel for no screen.
+    # for no screen.
     def register(self, screen):
         self.__screens.append(screen)
-
-    def next_index(self):
-        """The next selector channel, handed out in screen creation order."""
-        index = len(self.__screens)
-        if index >= self.__selector.count:
-            raise ValueError(f"SP/CE {self.name}'s selector has {self.__selector.count} channels, and all of them are taken")
-
-        return index
 
     def claim_cs(self, pin=None):
         """Register a screen's CS line and return it.
 
         None takes the port's own, which is the first screen's to have. Every further
-        screen needs its own, since CS is the only signal selecting one panel, unless
-        a selector switches the port's single line between them.
+        screen needs its own, since CS is the only signal selecting one panel.
         """
-        switched = self.__selector is not None
         if pin is None:
             pin = self.cs
 
-        if not switched and pin in self.__cs_claimed:
+        if pin in self.__cs_claimed:
             raise ValueError(f"SP/CE {self.name} already has a screen on {pin}. Every further screen on a port needs a cs of its own.")
 
         self.__cs_claimed.append(pin)
@@ -309,18 +283,16 @@ class SPCEPort:
         survives. The firmware cannot see a diode, so the declaration is the
         caller's.
         """
-        switched = self.__selector is not None
         if pin is None:
             pin = self.dc
-            if not switched and any(claimed is pin for claimed, _, _ in self.__dc_claimed):
+            if any(claimed is pin for claimed, _, _ in self.__dc_claimed):
                 raise ValueError(f"SP/CE {self.name}'s own DC line is taken. Give this screen a dc, or pass the port's dc to share that line.")
 
-        if not switched:
-            for claimed, claimed_te, claimed_shared in self.__dc_claimed:
-                if claimed is not pin:
-                    continue
-                if (te and not shared) or (claimed_te and not claimed_shared):
-                    raise ValueError(f"{pin} is carrying TE for another screen. Screens sharing a DC line all need te=False, or te set to that line on every one of them, which needs a diode fitted to each breakout.")
+        for claimed, claimed_te, claimed_shared in self.__dc_claimed:
+            if claimed is not pin:
+                continue
+            if (te and not shared) or (claimed_te and not claimed_shared):
+                raise ValueError(f"{pin} is carrying TE for another screen. Screens sharing a DC line all need te=False, or te set to that line on every one of them, which needs a diode fitted to each breakout.")
 
         self.__dc_claimed.append((pin, te, shared))
         return pin

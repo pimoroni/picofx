@@ -47,9 +47,7 @@ class Screen(ScreenBase):
     The first screen on a port names no pins and takes the port's own DC, CS and
     backlight. Every further screen names its cs, and its dc unless it is
     deliberately sharing the port's. A screen built against one of a ScreenHub's
-    ports names none of them, the hub having named the whole line-up already. With a
-    selector set on the port the screens name no pins and take a channel each, in
-    creation order.
+    ports names none of them, the hub having named the whole line-up already.
 
     te names the line the tearing-effect signal comes back on. True is this screen's
     own DC line, which is how MightyFX wires a single panel to a port; the port's own
@@ -201,18 +199,6 @@ class Screen(ScreenBase):
         elif v_sync and not te_used:
             raise ValueError("v_sync waits on the panel's tearing-effect signal, which te=False turns off")
 
-        selector = port.selector
-        if selector is not None:
-            if cs is not None or dc is not None:
-                raise ValueError("a selector addresses screens by index, so name no cs or dc")
-
-            if te_used and not selector.switch_dc:
-                raise ValueError("a selector that leaves DC shared cannot carry TE, so its screens need te=False")
-
-            index = port.next_index()
-        else:
-            index = None
-
         cs = port.claim_cs(cs)
         dc = port.claim_dc(dc, te_used, shared_te)
 
@@ -241,7 +227,7 @@ class Screen(ScreenBase):
                              f" or request a rate the current clock reaches.")
 
         super().__init__(port.connector, display, width, height, bitdepth, backlight,
-                         te_used, v_sync, index, reserve, shared_te=shared_te,
+                         te_used, v_sync, reserve, shared_te=shared_te,
                          sync=self if shared_te else None)
 
         port.register(self)
@@ -251,10 +237,8 @@ class Screen(ScreenBase):
         self.__porch = controller.PORCH
         self.__line_slots = controller.LINE_SLOTS
 
-        # Bringup goes through this screen's command(), so a selector is pointed at
-        # the panel for every register write as well as every frame. A shared line
-        # comes up at TEOFF: the driver asserts TE only for the frame that waits on
-        # it, since one panel at a time may reach the line.
+        # A shared line comes up at TEOFF: the driver asserts TE only for the frame
+        # that waits on it, since one panel at a time may reach the line.
         #
         # A hub has already reset and cleared every panel on the port, in one pass
         # over all of them. On its own a screen does both for itself, the clear

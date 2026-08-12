@@ -134,9 +134,6 @@ class ScreenGroup(ScreenBase):
             raise ValueError("a broadcast group needs at least two screens")
 
         port = screens[0].port
-        if port.selector is not None:
-            raise ValueError("a selector reaches one screen at a time, so a port with one cannot broadcast")
-
         for screen in screens:
             if screen.port is not port:
                 raise ValueError("a broadcast group has to be on one port, since two ports are two streams")
@@ -152,7 +149,7 @@ class ScreenGroup(ScreenBase):
                 nominated = None
             super().__init__(port, parent.display, parent.width, parent.height,
                              parent.bitdepth, parent.backlight, nominated is not None,
-                             nominated is not None, None, parent.reserve,
+                             nominated is not None, parent.reserve,
                              members=tuple(screens), sync=nominated)
             self.__subset_of = parent
             # Alignment stays the parent's, so a subset reports it rather than
@@ -192,7 +189,7 @@ class ScreenGroup(ScreenBase):
         # PWM.
         super().__init__(port, display, first.width, first.height, first.bitdepth,
                          first.backlight, nominated is not None, nominated is not None,
-                         None, first.reserve, members=tuple(screens), sync=nominated)
+                         first.reserve, members=tuple(screens), sync=nominated)
 
         self.__aligned = False
         # Three states, not two. Nulling the members' rates stops them drifting apart

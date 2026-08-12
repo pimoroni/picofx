@@ -22,7 +22,7 @@ class ScreenBase:
     Not built directly: construct a Screen subclass or a ScreenGroup.
     """
 
-    def __init__(self, port, display, width, height, bitdepth, backlight, te, v_sync, index, reserve, members=None, shared_te=False, sync=None):
+    def __init__(self, port, display, width, height, bitdepth, backlight, te, v_sync, reserve, members=None, shared_te=False, sync=None):
         self.__port = port
         self.__display = display
         self.__width = width
@@ -31,7 +31,6 @@ class ScreenBase:
         self.__backlight = backlight
         self.__te = te
         self.__v_sync = v_sync
-        self.__index = index
         self.__reserve = reserve
         self.__members = members
         self.__canvases = {}
@@ -144,12 +143,7 @@ class ScreenBase:
         if self.__backlight is not None:
             self.__backlight.frame_shown()
 
-    def __select(self):
-        if self.__index is not None:
-            self.__port.selector.select_channel(self.__index)
-
     def command(self, command, data=None):
-        self.__select()
         self.__display.command(command, data)
 
     def __check_rotation(self, rotation):
@@ -216,7 +210,6 @@ class ScreenBase:
         bg = bg_color.p & 0xffffffff
 
         self.__check_rotation(rotation)
-        self.__select()
 
         synced = self.__sync_screen(v_sync, to)
         delay = (self.__subset_of or self).__sync_delay_us
@@ -248,7 +241,6 @@ class ScreenBase:
         bg = bg_color.p & 0xffffffff
 
         self.__check_rotation(rotation)
-        self.__select()
 
         synced = self.__sync_screen(self.__v_sync, to)
         self.__display.prepare(image,

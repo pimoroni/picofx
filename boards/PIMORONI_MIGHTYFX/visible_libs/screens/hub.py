@@ -36,10 +36,6 @@ class ScreenHubPort:
         return self.__connector.bus
 
     @property
-    def selector(self):
-        return self.__connector.selector
-
-    @property
     def panels_reset(self):
         return self.__connector.panels_reset
 
@@ -67,9 +63,6 @@ class ScreenHubPort:
 
     def register(self, screen):
         self.__connector.register(screen)
-
-    def next_index(self):
-        return self.__connector.next_index()
 
 
 class ScreenHub:
