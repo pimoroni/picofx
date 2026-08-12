@@ -58,6 +58,13 @@ class Screen(ScreenBase):
     the signal without waiting on it. bl=False declines the port's backlight, for a
     panel whose own is tied on at the assembly.
 
+    Where te is in play, construction refuses if no panel answers on that line, which
+    is how an empty port or an unplugged panel reports itself instead of running as a
+    screen nothing can see. A refusing screen claims nothing, so a caller may build a
+    line-up over a hub and keep whichever built. A panel wired without its
+    tearing-effect signal takes te=False and is not looked for, there being nothing to
+    look for.
+
     Settings resolve as: explicit keyword, then the PROFILES row for the
     (baudrate, bitdepth) pair, then the class constants. With no bitdepth named,
     the first depth in DEPTHS that has a row for the baud wins, so higher rates
@@ -88,6 +95,8 @@ class Screen(ScreenBase):
     """
 
     CONTROLLER = st7789      # bringup, framerate and bitdepth code tables, RAMWR
+    PROBE_MS = 60            # a present panel always answers inside this
+    PATIENT_PROBE_MS = 250   # the second look, paid only by a line with nothing on it
     WIDTH = HEIGHT = None
     BITDEPTH = 16
     FRAMERATE = 60
@@ -199,13 +208,13 @@ class Screen(ScreenBase):
         elif v_sync and not te_used:
             raise ValueError("v_sync waits on the panel's tearing-effect signal, which te=False turns off")
 
-        cs = port.claim_cs(cs)
-        dc = port.claim_dc(dc, te_used, shared_te)
+        # Checked here and claimed once the panel has answered, so a screen that
+        # refuses reserves neither line
+        cs = port.check_cs(cs)
+        dc = port.check_dc(dc, te_used, shared_te)
 
         # The line TE is read from, which a pair's excursion scheduler watches
         self.__te_line = (te_pin if te_pin is not None else dc) if te_used else None
-
-        backlight = port.claim_backlight() if bl else None
 
         display = spidisplay.SPIDisplay(bus=port.bus, cs=cs, dc=dc, te=te_pin,
                                         width=width, height=height,
@@ -222,21 +231,14 @@ class Screen(ScreenBase):
         # 37.5MHz row quietly run at 24.
         achieved = display.baudrate()
         if achieved < self.__baudrate:
+            display.__del__()
             raise ValueError(f"this wire reached {achieved} baud of the {self.__baudrate} requested."
                              f" Raise clk_peri first, machine.freq(150_000_000, 150_000_000),"
                              f" or request a rate the current clock reaches.")
 
-        super().__init__(port.connector, display, width, height, bitdepth, backlight,
-                         te_used, v_sync, reserve, shared_te=shared_te,
-                         sync=self if shared_te else None)
-
-        port.register(self)
-
-        # What setup() is about to write, and the slots that porch spends. A group's
-        # trim moves both, so every margin sum reads them from the screen.
-        self.__porch = controller.PORCH
-        self.__line_slots = controller.LINE_SLOTS
-
+        # Bringup goes through the display rather than this screen, so the panel is
+        # up and answering before anything on the port is claimed for it.
+        #
         # A shared line comes up at TEOFF: the driver asserts TE only for the frame
         # that waits on it, since one panel at a time may reach the line.
         #
@@ -246,12 +248,56 @@ class Screen(ScreenBase):
         # backlight comes up.
         alone = not port.panels_reset
         if alone:
-            controller.reset(self)
+            controller.reset(display)
 
-        controller.setup(self, width, height, bd_code, fr_code, te_used and not shared_te)
+        controller.setup(display, width, height, bd_code, fr_code, te_used and not shared_te)
+
+        if te_used and not self.__answered(display, controller, shared_te):
+            display.__del__()
+            raise ValueError(f"no screen answered on {cs}. Check it is plugged in, or pass"
+                             f" te=False for a screen whose tearing-effect signal is not wired,"
+                             f" which also turns off waiting for it.")
+
+        port.claim_cs(cs)
+        port.claim_dc(dc, te_used, shared_te)
+        backlight = port.claim_backlight() if bl else None
+
+        super().__init__(port.connector, display, width, height, bitdepth, backlight,
+                         te_used, v_sync, reserve, shared_te=shared_te,
+                         sync=self if shared_te else None)
+
+        port.register(self)
+
+        # What setup() wrote, and the slots that porch spends. A group's trim moves
+        # both, so every margin sum reads them from the screen.
+        self.__porch = controller.PORCH
+        self.__line_slots = controller.LINE_SLOTS
 
         if alone:
             display.fill()
+
+    @staticmethod
+    def __answered(display, controller, shared):
+        """Whether a panel drove the tearing-effect line, which says one is there.
+
+        A present panel answers inside PROBE_MS, measured over 100 probes against a
+        22 to 25ms period. The longer second look is what an empty line pays: two
+        silences are wanted before refusing a screen, since a panel is only reported
+        missing once, and it happens where nothing else can contradict it.
+        """
+        if shared:
+            # One panel at a time may assert on a shared line, so this one is asked
+            # for the probe and released again
+            display.command(controller.REG_TEON, bytes((controller.TE_MODE,)))
+
+        answered = display.te_probe(Screen.PROBE_MS)[2] > 0
+        if not answered:
+            answered = display.te_probe(Screen.PATIENT_PROBE_MS)[2] > 0
+
+        if shared:
+            display.command(controller.REG_TEOFF)
+
+        return answered
 
     @staticmethod
     def __code_for(table, value, what):

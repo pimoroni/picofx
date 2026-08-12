@@ -52,11 +52,17 @@ class ScreenHubPort:
         """The line a screen naming no te reads its tearing-effect signal from."""
         return self.__te
 
-    def claim_cs(self, pin=None):
-        return self.__connector.claim_cs(self.__cs if pin is None else pin)
+    def check_cs(self, pin=None):
+        return self.__connector.check_cs(self.__cs if pin is None else pin)
 
-    def claim_dc(self, pin=None, te=True, shared=False):
-        return self.__connector.claim_dc(self.__dc if pin is None else pin, te, shared)
+    def claim_cs(self, pin):
+        self.__connector.claim_cs(pin)
+
+    def check_dc(self, pin=None, te=True, shared=False):
+        return self.__connector.check_dc(self.__dc if pin is None else pin, te, shared)
+
+    def claim_dc(self, pin, te, shared):
+        self.__connector.claim_dc(pin, te, shared)
 
     def claim_backlight(self):
         return self.__connector.claim_backlight()

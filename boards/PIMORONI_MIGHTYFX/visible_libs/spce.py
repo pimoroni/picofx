@@ -254,11 +254,15 @@ class SPCEPort:
     # passing each call along to here. Not for an application to call: each records a
     # claim the port validates later ones against, so a spurious call reserves a line
     # for no screen.
+    #
+    # A line is checked before the screen is built and recorded once it is, so a
+    # construction that refuses partway leaves nothing behind. The refusals therefore
+    # live in the check and the record only appends.
     def register(self, screen):
         self.__screens.append(screen)
 
-    def claim_cs(self, pin=None):
-        """Register a screen's CS line and return it.
+    def check_cs(self, pin=None):
+        """Resolve a screen's CS line and refuse a line already spoken for.
 
         None takes the port's own, which is the first screen's to have. Every further
         screen needs its own, since CS is the only signal selecting one panel.
@@ -269,11 +273,13 @@ class SPCEPort:
         if pin in self.__cs_claimed:
             raise ValueError(f"SP/CE {self.name} already has a screen on {pin}. Every further screen on a port needs a cs of its own.")
 
-        self.__cs_claimed.append(pin)
         return pin
 
-    def claim_dc(self, pin=None, te=True, shared=False):
-        """Register a screen's DC line and return it.
+    def claim_cs(self, pin):
+        self.__cs_claimed.append(pin)
+
+    def check_dc(self, pin=None, te=True, shared=False):
+        """Resolve a screen's DC line and refuse a line whose TE it would spoil.
 
         None takes the port's own, which is the first screen's to have. Pass this
         port's dc to share that line deliberately. Panels using TE may share it only
@@ -294,8 +300,10 @@ class SPCEPort:
             if (te and not shared) or (claimed_te and not claimed_shared):
                 raise ValueError(f"{pin} is carrying TE for another screen. Screens sharing a DC line all need te=False, or te set to that line on every one of them, which needs a diode fitted to each breakout.")
 
-        self.__dc_claimed.append((pin, te, shared))
         return pin
+
+    def claim_dc(self, pin, te, shared):
+        self.__dc_claimed.append((pin, te, shared))
 
     def claim_backlight(self):
         """The port's backlight, created for the first screen to ask for it.
