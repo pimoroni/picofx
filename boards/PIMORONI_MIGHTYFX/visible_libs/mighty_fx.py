@@ -106,6 +106,11 @@ class MightyFX:
                         f"Output {index + 1}'s {colour} LED cannot light. GPIO {pin} shares a PWM channel with GPIO {motor_pin}, which SP/CE {port_name} is using to drive motors."))
             self.outputs.append(RGBLED(*leds, invert=False, gamma=self.RGB_GAMMA))
 
+        # Every output's three channels in one list, since each drives on its own: a mono LED
+        # in the right end of an output connector reaches that output's red channel, and the
+        # adapter pack brings all three out
+        self.monos = [led for output in self.outputs for led in output.leds]
+
         # Each port owns its bus and pins. Screens are the user's to create against
         # them, from the classes in screens.py
         self.spce_a = SPCEPort("A", spce_a, 0, self.SPCE_A_PINS)

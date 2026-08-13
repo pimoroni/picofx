@@ -98,6 +98,9 @@ class RGBLED:
         self.led_g = g if isinstance(g, PseudoLED) else PWMLED(g, invert=invert, gamma=gamma)
         self.led_b = b if isinstance(b, PseudoLED) else PWMLED(b, invert=invert, gamma=gamma)
 
+        # The same three as a sequence, so they can be indexed and iterated
+        self.leds = (self.led_r, self.led_g, self.led_b)
+
     def __rgb(self, r, g, b):
         self.led_r.brightness(r)
         self.led_g.brightness(g)

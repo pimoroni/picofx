@@ -17,9 +17,7 @@ BRIGHTNESS_MAX = 1.0                    # The max brightness to randomly go up t
 
 # Variables
 tiny = TinyFX()                         # Create a new TinyFX object to interact with the board
-player = MonoPlayer([tiny.rgb.led_r,    # Create a new effect player to control TinyFX's RGB output as mono outputs
-                     tiny.rgb.led_g,
-                     tiny.rgb.led_b])
+player = MonoPlayer(tiny.rgb.leds)      # Create a new effect player to control TinyFX's RGB output as mono outputs
 
 
 # Create and set up a blink effect to play

@@ -3,6 +3,7 @@ secrets.py
 examples/*.py
 examples/effects/*.py
 examples/effects/colour/*.py
+examples/effects/mono/*.py
 examples/audio/*.py
 examples/screens/*.py
 lib/*.py
