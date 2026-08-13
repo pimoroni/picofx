@@ -28,15 +28,7 @@ wave = RainbowWaveFX(speed=RAINBOW_SPEED,
 
 # Set up the wave effect to play. Each output has a different position
 # along the wave, with the value being related to the effect's length
-player.effects = [
-    wave(0),
-    wave(1),
-    wave(2),
-    wave(3),
-    wave(4),
-    wave(5),
-    wave(6)
-]
+player.effects = [wave(i) for i in range(len(mighty.outputs))]
 
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
