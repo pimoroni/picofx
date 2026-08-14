@@ -57,13 +57,36 @@ board writes errors.txt saying which line, and flashes red three times.
 
 Writing an entry
 ----------------
-  <outputs>: <effect> <setting=value> ...
+  <outputs> <their settings>: <effect> <its settings>
 
   out1-7: rainbow_wave speed=0.3
-  out3: pulse speed=0.6
+  out3 level=50%: pulse speed=0.6
+
+There is one colon in an entry. Which outputs, and how bright or what colour
+they are, go before it. The effect and its own settings go after.
 
 Settings you leave out take their usual value. A '#' starts a comment. Spread a
 entry over several lines if it reads better; indenting changes nothing.
+
+
+The board itself
+----------------
+One entry sets the board rather than the lights, and names no output:
+
+  board: drive=manual program=fireplace.py
+
+  'drive'           'manual' keeps the drive hidden until you ask for it
+  'program'         a Python file to run instead of the effects
+
+A program can sit on this drive or on the board's own filesystem. If it is
+missing, or stops with an error, the effects run instead and errors.txt says
+what happened, so a mistyped name never leaves you with a board that does
+nothing.
+
+While a program is running the board is busy with it, so "Boot" and ejecting do
+nothing. The drive is put up first so you can still edit effects.txt; unplug and
+plug back in for the change to take. That happens even with 'drive' set to
+'manual', since hiding it would leave no way to change either setting back.
 
 
 Naming outputs

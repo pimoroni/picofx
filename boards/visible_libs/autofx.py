@@ -15,7 +15,9 @@
 # them. Nothing raises either: a line that cannot be read is reported and skipped, so
 # one bad edit costs its own entry and not the whole file.
 
+import io
 import os
+import sys
 import time
 
 from picofx import RGBLED, ColourPlayer, MonoPlayer
@@ -27,8 +29,9 @@ from picofx.mono import (BinaryCounterFX, BlinkFX, BlinkWaveFX, FlashFX, FlashSe
 
 # The drive a connected computer sees. Making it writable long enough to leave a
 # report belongs to whatever manages that volume, not here.
-CONFIG_PATH = "/fx/effects.txt"
-ERRORS_PATH = "/fx/errors.txt"
+MOUNT_DIR = "/fx"
+CONFIG_PATH = MOUNT_DIR + "/effects.txt"
+ERRORS_PATH = MOUNT_DIR + "/errors.txt"
 
 COLOURS = {
     "red": RED, "yellow": YELLOW, "green": GREEN, "cyan": CYAN, "blue": BLUE,
@@ -36,6 +39,10 @@ COLOURS = {
 }
 
 COMPONENTS = ("r", "g", "b")
+
+# The one name on the left that is not a channel. Its entry carries settings about
+# the board rather than an effect, so it is the only one with no effect name.
+BOARD = "board"
 
 
 # Each effect, the kind of channel it drives, and how a channel gets its callable:
@@ -109,6 +116,20 @@ def __split_quoted(text):
     if token:
         tokens.append(token)
     return tokens
+
+
+def __unquoted(text, char):
+    """Where the first unquoted char sits, or -1. Quoted values may contain it."""
+    quote = None
+    for index, this in enumerate(text):
+        if quote:
+            if this == quote:
+                quote = None
+        elif this in "\"'":
+            quote = this
+        elif this == char:
+            return index
+    return -1
 
 
 def __strip_comment(line):
@@ -264,7 +285,7 @@ def __parse_selector(text, line, problems):
     return channels
 
 
-def __parse_effect(tokens, line, problems):
+def __parse_effect(tokens, line, problems, needs_effect=True):
     """The right of the colon: an effect name then its settings."""
     effect = None
     settings = {}
@@ -291,7 +312,7 @@ def __parse_effect(tokens, line, problems):
         else:
             problems.append("line {}: '{}' is not a setting, expected name=value".format(line, token))
 
-    if effect is None:
+    if effect is None and needs_effect:
         problems.append("line {}: no effect named".format(line))
 
     return effect, settings
@@ -308,13 +329,21 @@ def parse(text):
     def close():
         if pending is None:
             return
-        pending.effect, pending.settings = __parse_effect(pending_tokens, pending.line, problems)
-        for channel in pending.channels:
-            if channel.name in seen:
-                problems.append("line {}: {} was already set on line {}".format(
-                    pending.line, channel.name, seen[channel.name]))
-            else:
-                seen[channel.name] = pending.line
+
+        # A board entry carries settings and no effect, and may be written more than
+        # once, so it is not checked for the repeats a channel would be
+        is_board = len(pending.channels) == 1 and pending.channels[0].name == BOARD
+        pending.effect, pending.settings = __parse_effect(
+            pending_tokens, pending.line, problems, not is_board)
+
+        if not is_board:
+            for channel in pending.channels:
+                if channel.name in seen:
+                    problems.append("line {}: {} was already set on line {}".format(
+                        pending.line, channel.name, seen[channel.name]))
+                else:
+                    seen[channel.name] = pending.line
+
         entries.append(pending)
 
     for number, raw_line in enumerate(text.split("\n")):
@@ -322,9 +351,24 @@ def parse(text):
         if not line:
             continue
 
-        if ":" in line:
+        colon = __unquoted(line, ":")
+        if colon >= 0:
             close()
-            selector, _, remainder = line.partition(":")
+            selector = line[:colon]
+            remainder = line[colon + 1:]
+
+            # One colon divides the outputs from the effect. A second is someone
+            # reading it as a separator between every part, so say what the shape is
+            # rather than complaining about whatever the stray colon stuck itself to
+            if __unquoted(remainder, ":") >= 0:
+                problems.append(
+                    "line {}: this has more than one ':'. Settings for the outputs go "
+                    "before it and the effect after, as in "
+                    "'out4 colour=warm: blink'".format(number + 1))
+                pending = None
+                pending_tokens = []
+                continue
+
             pending = Entry(number + 1)
             pending.channels = __parse_selector(selector, number + 1, problems)
             pending_tokens = __split_quoted(remainder)
@@ -395,11 +439,18 @@ def __play(fx, volume, path, errors, playing):
     try:
         with open(path) as handle:
             text = handle.read()
-        players, problems = load(text, fx)
+        players, settings, problems = load(text, fx)
+
+        # A program never returns, so nothing would be left to watch the button.
+        # The drive has to go up or there would be no way to change either setting
+        if settings.get("program") and settings.get("drive") == "manual":
+            problems.append(
+                "the drive is shown anyway, since a program is named and hiding it "
+                "would leave no way to change one back")
     except OSError:
         # Normally impossible, since the drive rebuilds a missing file. It means the
         # drive is damaged or absent, which is worth showing rather than sitting dark
-        players, problems = [], ["could not read " + path]
+        players, settings, problems = [], {}, ["could not read " + path]
 
     if volume is None:
         wrote = report(problems, errors)
@@ -416,7 +467,38 @@ def __play(fx, volume, path, errors, playing):
     if players:
         players[0].start()
 
-    return players, problems
+    return players, settings, problems
+
+
+def __run_program(name, problems):
+    """
+    Run a program the file named instead of the effects. Returns only when it could
+    not be run or stopped by itself, so the effects can carry on.
+    """
+    for candidate in (name, MOUNT_DIR + "/" + name):
+        try:
+            with open(candidate) as handle:
+                source = handle.read()
+        except OSError:
+            continue
+        try:
+            # Compiled against its own name, so a traceback says which file and
+            # which line rather than naming a string
+            exec(compile(source, name, "exec"), {"__name__": "__main__"})
+        # Anything at all, since this is a user's own program and it must not be
+        # able to take the board down with it
+        except Exception as e:      # noqa: BLE001
+            # The traceback, since a line number is what makes a program fixable by
+            # someone with no way to see a console. Frames from this file are the
+            # machinery that ran it and are not the user's to read
+            trace = io.StringIO()
+            sys.print_exception(e, trace)
+            lines = [line for line in trace.getvalue().rstrip().split("\n")
+                     if "autofx.py" not in line]
+            problems.append("the program {} stopped:\n{}".format(name, "\n".join(lines)))
+        return
+
+    problems.append("there is no program called " + name)
 
 
 def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
@@ -428,16 +510,41 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     double press shows or hides it, and hiding or ejecting re-reads the file and
     plays what it now says. An eject does not show the drive again, since a user
     who ejected is done with it. This does not return.
+
+    A board entry can name a program to run instead, and can keep the drive hidden
+    until the button asks for it.
     """
     if volume is not None:
         volume.mount()
 
-    players, problems = __play(fx, volume, path, errors, [])
+    players, settings, problems = __play(fx, volume, path, errors, [])
 
     if volume is None:
         return players, problems
 
-    volume.expose()
+    # The drive goes up before any program runs, since a program that works never
+    # returns. Otherwise a mistyped name would leave no way back but a reflash, so a
+    # named program overrides drive=manual and __play says as much
+    program = settings.get("program")
+    shows = program or settings.get("drive") != "manual"
+
+    if shows:
+        volume.expose()
+
+    if program:
+        __run_program(program, problems)
+
+        # Here because the program could not run, or because it finished by itself.
+        # Either way the effects carry on, and anything it went wrong with is said
+        # where the user is looking
+        if volume.exposed():
+            volume.withdraw()
+        with volume.writable():
+            wrote = report(problems, errors)
+        if wrote:
+            indicate(fx)
+        if shows:
+            volume.expose()
 
     # A stop from the REPL arrives as an exception, and without this the outputs
     # keep whatever they were last written and the computer keeps the drive
@@ -445,7 +552,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         while True:
             event = volume.service(fx.boot_pressed())
             if event in (volume.HIDDEN, volume.EJECTED, volume.RELOADED):
-                players, problems = __play(fx, volume, path, errors, players)
+                players, settings, problems = __play(fx, volume, path, errors, players)
                 if event == volume.RELOADED:
                     # A single press asks to try an edit without putting the drive
                     # away, so it goes back once the file has been read
@@ -516,9 +623,23 @@ def __callables(effect, how, count, entry, problems):
 
 
 def load(text, fx):
-    """Read the effects file and return the players it describes, plus any problems."""
+    """
+    Read the effects file. Returns the players it describes, the settings its board
+    entries carry, and any problems.
+    """
     entries, problems = parse(text)
     mono, colour = channels(fx)
+
+    # Board entries are settings rather than effects, so they are taken out here and
+    # handed back for the caller to act on
+    board = {}
+    wanted_entries = []
+    for entry in entries:
+        if len(entry.channels) == 1 and entry.channels[0].name == BOARD:
+            board.update(entry.settings)
+        else:
+            wanted_entries.append(entry)
+    entries = wanted_entries
 
     slots = {}
     for kind, pairs in (("mono", mono), ("colour", colour)):
@@ -562,12 +683,22 @@ def load(text, fx):
             else:
                 parts = [channel.name]
 
+            # Once per channel, and only where a different channel holds the
+            # hardware. The same channel named twice is already reported as a repeat,
+            # and a colour output covers three parts, so this would say it three times
+            clash = None
             for part in parts:
-                other = claimed.get(part)
-                if other is not None and other != entry.line:
-                    problems.append("line {}: {} shares its hardware with a channel set on line {}".format(
-                        entry.line, channel.name, other))
-                claimed[part] = entry.line
+                held = claimed.get(part)
+                if held is not None and held[0] != entry.line and held[1] != channel.name:
+                    clash = held
+                    break
+
+            if clash is not None:
+                problems.append("line {}: {} shares its hardware with {}, set on line {}".format(
+                    entry.line, channel.name, clash[1], clash[0]))
+
+            for part in parts:
+                claimed[part] = (entry.line, channel.name)
 
         # The channel decides which player it belongs to, not the effect: a colour
         # channel playing a mono effect shows it in that channel's tint
@@ -597,4 +728,4 @@ def load(text, fx):
     if len(players) == 2:
         players[0].pair(players[1])
 
-    return players, problems
+    return players, board, problems
