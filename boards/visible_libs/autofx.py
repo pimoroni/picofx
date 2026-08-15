@@ -3,17 +3,19 @@
 # SPDX-License-Identifier: MIT
 
 # Reads the effects file a user edits, and turns it into entries a board can play.
-# The format is one entry per set of channels:
+# The format is one entry per set of outputs:
 #
 #   out1-6 level=0.5: pulse_wave speed=0.6
 #   out3.g: blink speed=1.0 duty=0.3
 #
-# Channel settings sit left of the colon, effect settings right of it. An entry runs
-# until the next selector, so settings may be laid out over several lines.
+# Output settings sit left of the colon, effect settings right of it. An entry runs
+# until the next selector, so settings may be laid out over several lines. Everything
+# a user reads says output, where the code says channel: a channel is a slot in a
+# player, and an output is the connector a channel drives.
 #
-# Nothing here knows which channels a board has. It reports names; the loader resolves
-# them. Nothing raises either: a line that cannot be read is reported and skipped, so
-# one bad edit costs its own entry and not the whole file.
+# Nothing in the parser knows which channels a board has. It reports names; the loader
+# resolves them. Nothing raises either: a line that cannot be read is reported and
+# skipped, so one bad edit costs its own entry and not the whole file.
 
 import io
 import os
@@ -45,29 +47,122 @@ COMPONENTS = ("r", "g", "b")
 BOARD = "board"
 
 
-# Each effect, the kind of channel it drives, and how a channel gets its callable:
-# None means one effect serves every channel, "pos" means the effect is called with
-# the channel's position in the group, and a tuple names a method per channel.
+# Each effect, the kind of channel it drives, how a channel gets its callable, and
+# the settings it takes. None means one effect serves every channel, "pos" means the
+# effect is called with the channel's position in the group, and a tuple names a
+# method per channel.
 EFFECTS = {
-    "none": (NoneFX, "mono", None),
-    "static": (StaticFX, "mono", None),
-    "blink": (BlinkFX, "mono", None),
-    "blink_wave": (BlinkWaveFX, "mono", "pos"),
-    "flash": (FlashFX, "mono", None),
-    "flash_sequence": (FlashSequenceFX, "mono", "pos"),
-    "flicker": (FlickerFX, "mono", None),
-    "pulse": (PulseFX, "mono", None),
-    "pulse_wave": (PulseWaveFX, "mono", "pos"),
-    "random": (RandomFX, "mono", None),
-    "binary_counter": (BinaryCounterFX, "mono", "pos"),
-    "traffic_light": (TrafficLightFX, "mono", ("red", "amber", "green")),
-    "rgb": (RGBFX, "colour", None),
-    "hsv": (HSVFX, "colour", None),
-    "rainbow": (RainbowFX, "colour", None),
-    "rainbow_wave": (RainbowWaveFX, "colour", "pos"),
-    "hue_step": (HueStepFX, "colour", None),
-    "rgb_blink": (RGBBlinkFX, "colour", None),
+    "none": (NoneFX, "mono", None, ()),
+    "static": (StaticFX, "mono", None, ("brightness",)),
+    "blink": (BlinkFX, "mono", None, ("speed", "phase", "duty")),
+    "blink_wave": (BlinkWaveFX, "mono", "pos", ("speed", "length", "phase", "duty")),
+    "flash": (FlashFX, "mono", None, ("speed", "flashes", "window", "phase", "duty")),
+    "flash_sequence": (FlashSequenceFX, "mono", "pos",
+                       ("speed", "length", "flashes", "window", "phase", "duty")),
+    "flicker": (FlickerFX, "mono", None,
+                ("brightness", "dimness", "bright_min", "bright_max", "dim_min", "dim_max")),
+    "pulse": (PulseFX, "mono", None, ("speed", "phase")),
+    "pulse_wave": (PulseWaveFX, "mono", "pos", ("speed", "length", "phase")),
+    "random": (RandomFX, "mono", None, ("interval", "brightness_min", "brightness_max")),
+    "binary_counter": (BinaryCounterFX, "mono", "pos", ("interval", "count", "step")),
+    "traffic_light": (TrafficLightFX, "mono", ("red", "amber", "green"),
+                      ("red_interval", "red_amber_interval", "green_interval",
+                       "amber_interval", "fade_rate", "amber_flashing")),
+    "rgb": (RGBFX, "colour", None, ("red", "green", "blue")),
+    "hsv": (HSVFX, "colour", None, ("hue", "sat", "val")),
+    "rainbow": (RainbowFX, "colour", None, ("speed", "sat", "val")),
+    "rainbow_wave": (RainbowWaveFX, "colour", "pos", ("speed", "length", "sat", "val")),
+    "hue_step": (HueStepFX, "colour", None, ("interval", "hue", "sat", "val", "steps")),
+    "rgb_blink": (RGBBlinkFX, "colour", None, ("colour", "speed", "phase", "duty")),
 }
+
+# What a setting's value must be. A name means the same thing wherever it appears, so
+# its kind is stated once here. "count" is a whole number of 1 or more, each one
+# dividing or repeating something, where "whole" may be zero or negative. "angle" is a
+# fraction that takes degrees as well. "rate" is a step taken every millisecond, so
+# zero never arrives and there is no ceiling, only ever faster. "colour" is read by
+# the parser, which turns it into tuples.
+SETTINGS = {
+    "speed": "number",
+    "phase": "fraction",
+    "duty": "fraction",
+    "window": "fraction",
+    "length": "count",
+    "flashes": "count",
+    "steps": "count",
+    "brightness": "fraction",
+    "brightness_min": "fraction",
+    "brightness_max": "fraction",
+    "dimness": "fraction",
+    "bright_min": "seconds",
+    "bright_max": "seconds",
+    "dim_min": "seconds",
+    "dim_max": "seconds",
+    "interval": "seconds",
+    "count": "whole",
+    "step": "whole",
+    "red_interval": "seconds",
+    "red_amber_interval": "seconds",
+    "green_interval": "seconds",
+    "amber_interval": "seconds",
+    "fade_rate": "rate",
+    "amber_flashing": "boolean",
+    "red": "byte",
+    "green": "byte",
+    "blue": "byte",
+    "hue": "angle",
+    "sat": "fraction",
+    "val": "fraction",
+    "colour": "colour",
+}
+
+# Settings written as a pair, the smaller named first
+PAIRED_SETTINGS = (("bright_min", "bright_max"), ("dim_min", "dim_max"),
+                   ("brightness_min", "brightness_max"))
+
+# What a board entry takes, and the values a setting is limited to. A program is a
+# file name, so it is answered when it is looked for rather than here.
+BOARD_SETTINGS = {"drive": ("manual",), "program": None}
+
+# Short of full, which is uncomfortable on an indicator at arm's length and buys no
+# legibility across a room
+INDICATOR_LEVEL = 0.75
+
+# One length for all of them, so the count is the only thing carrying the scale
+FLASH_MS = 150
+
+# What the outputs say where a file cannot, as (colour, level, times, period). Every
+# board carries indicator LEDs shadowing its outputs, so colour reaches a user
+# whatever they have wired in and is what they read first; the count reaches anyone
+# whose indicators are removed. Both climb with how much trouble the reader is in,
+# and red lands on the one condition with nothing else to say it, errors.txt speaking
+# for the blue and the drive itself for the white. Never red against green, the pair
+# most often confused by eye.
+#
+# White lights three channels and still reads dimmer than one channel does at the
+# same level, so its own is set by eye rather than calculated.
+
+BLOCKED = (WHITE, 0.5, 1, FLASH_MS)              # The computer was mid-write, nothing happened
+PROBLEM = (BLUE, INDICATOR_LEVEL, 2, FLASH_MS)   # Written down as well, in errors.txt
+UNREPORTED = (RED, INDICATOR_LEVEL, 3, FLASH_MS)  # Nowhere to write it, so this is all there is
+
+# Shown while the computer is copying, as (colour, resting level, travelling level).
+# White is the computer's colour here, a spot travelling the outputs while it works
+# and one bright flash of every output where it refused a press, so the flash reads
+# on top. The spot stays below BLOCKED's level for that reason, and the floor stays
+# above the point an output stops being visibly lit, measured at 12 of 255.
+TRANSFER = (WHITE, 0.1, 0.35)
+
+# How long the spot spends on each output, and how long the whole thing is held on
+# past the transfer. Each file a user drags is its own run of busy, and the outputs
+# would otherwise stop and start between them.
+TRANSFER_STEP_MS = 120
+TRANSFER_HOLD_MS = 500
+
+# An angle takes everything a fraction does and degrees besides, so its message is
+# built from the same words and the two cannot drift apart on what they share
+__FRACTION_WANTED = "expected a value from 0 to 1, such as 0.5 or 50%"
+__ANGLE_WANTED = __FRACTION_WANTED + ", or an angle from 0deg to 360deg"
 
 
 class Channel:
@@ -88,6 +183,9 @@ class Entry:
         self.channels = []
         self.effect = None
         self.settings = {}
+        # Where each setting was written, since an entry may run over several lines
+        # and a problem belongs to the line the reader has to go and edit
+        self.lines = {}
 
     def __repr__(self):
         return "Entry(line={}, {}, {}, {})".format(
@@ -107,7 +205,9 @@ def __split_quoted(text):
                 token += char
         elif char in "\"'":
             quote = char
-        elif char in " \t":
+        # The last of these is a non-breaking space, which arrives from a web page
+        # and looks like any other space
+        elif char in " \t\xa0":
             if token:
                 tokens.append(token)
                 token = ""
@@ -146,6 +246,63 @@ def __strip_comment(line):
     return line
 
 
+def __is_number(text):
+    """A run of digits with at most one leading dash, which int() reads as written."""
+    return (text[1:] if text[:1] == "-" else text).isdigit()
+
+
+def __drive_letter(text, index):
+    """
+    Whether the colon at index belongs to a drive letter, as a path pasted from a
+    computer carries. Such a path cannot name anything on a board, but it is one
+    value rather than a second colon, so it is read and answered as a value.
+    """
+    letter = text[index - 1:index]
+    stands_alone = letter.isalpha() and not text[index - 2:index - 1].isalpha()
+    return stands_alone and text[index + 1:index + 2] in ("\\", "/")
+
+
+def __unclosed_quote(text):
+    """Whether a quote is opened and never closed, which would swallow the colon."""
+    quote = None
+    for char in text:
+        if quote:
+            if char == quote:
+                quote = None
+        elif char in "\"'":
+            quote = char
+    return quote is not None
+
+
+def __glue(text):
+    """
+    Spaces around a range dash or an equals removed, so 'out1 - 7' and 'level = 50%'
+    read as written without them. Commas are left alone: a space after one is what
+    separates 'level=0.5, 2 level=0.8' into two outputs rather than two values.
+    """
+    out = []
+    quote = None
+
+    for char in text:
+        if quote:
+            out.append(char)
+            if char == quote:
+                quote = None
+        elif char in "\"'":
+            quote = char
+            out.append(char)
+        elif char in "-=":
+            while out and out[-1] in " \t":
+                out.pop()
+            out.append(char)
+        elif char in " \t" and out and out[-1] in "-=":
+            continue
+        else:
+            out.append(char)
+
+    return "".join(out)
+
+
 def __number(text):
     """A float from a plain number or a percentage, or None if it is neither."""
     text = text.strip()
@@ -153,6 +310,12 @@ def __number(text):
     if text.endswith("%"):
         text = text[:-1]
         scale = 0.01
+
+    # MicroPython's float() reads '_' and '.' as zero and takes 'inf' and 'nan',
+    # none of which anyone means as a number, so a digit has to be there
+    if not any(char.isdigit() for char in text):
+        return None
+
     try:
         return float(text) * scale
     except ValueError:
@@ -184,6 +347,69 @@ def __value(text):
     return text if number is None else number
 
 
+def __degrees(text):
+    """A fraction of a turn from 0 to 360 written with 'deg', or None if it is not."""
+    if not isinstance(text, str) or not text.lower().endswith("deg"):
+        return None
+
+    number = __number(text[:-3])
+    if number is None or not 0.0 <= number <= 360.0:
+        return None
+    return number / 360.0
+
+
+def __shown(value):
+    """A setting's value as the user would recognise it, quoted where it is text."""
+    if isinstance(value, str):
+        return "'{}'".format(value)
+    if isinstance(value, bool):
+        return "true" if value else "false"
+
+    text = str(value)
+    return text[:-2] if text.endswith(".0") else text
+
+
+def __value_fault(kind, value):
+    """
+    What is wrong with a value for a setting of this kind, or None if nothing is.
+    Serves both sides of the colon, so a level and a duty answer the same way.
+    """
+    if kind == "boolean":
+        # 1 and 0 are how plenty of people write these, so they are taken as well
+        if isinstance(value, bool) or (isinstance(value, float) and value in (0.0, 1.0)):
+            return None
+        return "expected true or false"
+
+    if kind == "angle":
+        # Degrees in range have already become a fraction, so anything still
+        # carrying the suffix is out of range. Both notations are named because
+        # someone writing 360 has the second one in mind and needs the suffix
+        if isinstance(value, float) and 0.0 <= value <= 1.0:
+            return None
+        return __ANGLE_WANTED
+
+    # Anything the parser could not read as a number it left as the text given
+    if isinstance(value, bool) or not isinstance(value, float):
+        return "expected a number"
+
+    if kind == "fraction" and not 0.0 <= value <= 1.0:
+        # "a value from" so the ends cannot read as the only two allowed, and the
+        # example so a decimal reads as permitted rather than required
+        return __FRACTION_WANTED
+    if kind == "seconds" and value < 0.0:
+        return "expected a number of seconds, which cannot be negative"
+    if kind == "rate" and value <= 0.0:
+        # Nothing moves at zero, and it moves for good: the light never comes up
+        return "expected a rate above 0, such as 0.01"
+    if kind == "byte" and not 0.0 <= value <= 255.0:
+        return "expected 0 to 255"
+    if kind == "count" and (value % 1 != 0 or value < 1.0):
+        return "expected a whole number of 1 or more"
+    if kind == "whole" and value % 1 != 0:
+        return "expected a whole number"
+    return None
+
+
 def __expand(token, prefix, line, problems):
     """The channel names one selector item covers, and the prefix later items inherit."""
     item = token.lower()
@@ -192,7 +418,7 @@ def __expand(token, prefix, line, problems):
     if "." in item:
         item, _, suffix = item.partition(".")
         if suffix != "*" and suffix not in COMPONENTS:
-            problems.append("line {}: '{}' is not a component, expected r, g, b or *".format(line, suffix))
+            problems.append("line {}: '{}' is not one of r, g, b or *".format(line, suffix))
             return [], prefix
 
     # A bare number carries the prefix the first item established
@@ -202,16 +428,33 @@ def __expand(token, prefix, line, problems):
     if len(digits) < len(item):
         prefix = item[:len(item) - len(digits)]
     elif not prefix:
-        problems.append("line {}: '{}' has no channel name before its number".format(line, token))
+        # Nothing established a name, so the correction carries whatever else was
+        # written: a bare number keeps its number, a bare component keeps that
+        correction = "out{}{}".format(digits or "1", "." + suffix if suffix else "")
+        problems.append("line {}: '{}' has no output name before its number. Correct "
+                        "it to '{}'".format(line, token, correction))
         return [], prefix
 
     first, dash, last = digits.partition("-")
-    try:
-        first = int(first)
-        last = int(last) if dash else first
-    except ValueError:
+
+    # MicroPython's int() takes underscores anywhere in a number where CPython's
+    # does not, so 'out1_' would be an output on a board and a name on a host. The
+    # digits are read here instead, and the two answer alike
+    if not first.isdigit() or (dash and not __is_number(last)):
         # Not numbered at all, so the whole item is the name, as `rgb` is
         return [prefix + digits + ("." + suffix if suffix and suffix != "*" else "")], prefix
+
+    first = int(first)
+    last = int(last) if dash else first
+
+    # A doubled dash is the only way the end parses negative, since the start is
+    # whatever was left after the leading non-digits. Left alone it would count down
+    # past zero and report every output it passed through
+    if last < 0:
+        correction = "{}{}-{}{}".format(prefix, first, -last, "." + suffix if suffix else "")
+        problems.append("line {}: '{}' is not a range of outputs. Correct it to "
+                        "'{}'".format(line, token, correction))
+        return [], prefix
 
     step = 1 if last >= first else -1
     components = COMPONENTS if suffix == "*" else ((suffix,) if suffix else (None,))
@@ -227,7 +470,7 @@ def __apply_channel_setting(channels, key, raw, line, problems):
     """Set level or colour on the channels an item covered, one value or a list."""
     values = raw.split(",")
     if len(values) > 1 and len(values) != len(channels):
-        problems.append("line {}: {} has {} values for {} channels".format(
+        problems.append("line {}: {} was given {} values for {} outputs".format(
             line, key, len(values), len(channels)))
 
     for index, channel in enumerate(channels):
@@ -236,11 +479,15 @@ def __apply_channel_setting(channels, key, raw, line, problems):
             continue
 
         if key == "level":
+            # Reported rather than clamped, so 200% is not quietly taken as full and
+            # -1 is not quietly taken as off. The channel keeps its default meanwhile
             number = __number(raw_value)
-            if number is None:
-                problems.append("line {}: level '{}' is not a number".format(line, raw_value))
+            fault = __value_fault("fraction", raw_value if number is None else number)
+            if fault is not None:
+                problems.append("line {}: level is {}, {}".format(
+                    line, __shown(raw_value if number is None else number), fault))
             else:
-                channel.level = min(1.0, max(0.0, number))
+                channel.level = number
         else:
             colour = __colour(raw_value)
             if colour is None:
@@ -264,10 +511,10 @@ def __parse_selector(text, line, problems):
             if key == "color":
                 key = "colour"
             if key not in ("level", "colour"):
-                problems.append("line {}: '{}' is not a channel setting, expected level or colour".format(
+                problems.append("line {}: '{}' is not an output setting, expected level or colour".format(
                     line, key))
             elif not recent:
-                problems.append("line {}: {} comes before any channel".format(line, key))
+                problems.append("line {}: {} comes before any output".format(line, key))
             else:
                 __apply_channel_setting(recent, key, raw, line, problems)
             continue
@@ -286,14 +533,19 @@ def __parse_selector(text, line, problems):
 
 
 def __parse_effect(tokens, line, problems, needs_effect=True):
-    """The right of the colon: an effect name then its settings."""
+    """
+    The right of the colon: an effect name then its settings. Each token carries the
+    line it was written on, since an entry may run over several.
+    """
     effect = None
     settings = {}
+    lines = {}
 
-    for token in tokens:
+    for token, at in tokens:
         if "=" in token:
             key, _, raw = token.partition("=")
             key = key.strip().lower()
+            lines[key] = at
 
             # An effect that takes a colour of its own wants tuples, and a list of
             # them where it blinks through several
@@ -301,21 +553,30 @@ def __parse_effect(tokens, line, problems, needs_effect=True):
                 wanted = [__colour(part) for part in raw.split(",")]
                 if None in wanted:
                     problems.append("line {}: '{}' is not a colour name or six-digit hex".format(
-                        line, raw))
+                        at, raw))
                 else:
                     settings["colour"] = wanted[0] if len(wanted) == 1 else wanted
                 continue
 
-            settings[key] = __value(raw)
+            # A board entry's values are names and file names, so they are kept as
+            # written. Read as an effect setting would be, 'drive=yes' becomes a
+            # boolean and the reader is answered about a word they did not type
+            settings[key] = __value(raw) if needs_effect else raw
         elif effect is None:
             effect = token.lower()
         else:
-            problems.append("line {}: '{}' is not a setting, expected name=value".format(line, token))
+            problems.append("line {}: '{}' is not a setting, expected name=value".format(at, token))
 
     if effect is None and needs_effect:
-        problems.append("line {}: no effect named".format(line))
+        # Settings without an effect is a different mistake from an empty right
+        # side, and is what a misspelt 'board' looks like
+        if settings:
+            problems.append("line {}: settings are given but no effect is named to "
+                            "take them".format(line))
+        else:
+            problems.append("line {}: no effect is named after the ':'".format(line))
 
-    return effect, settings
+    return effect, settings, lines
 
 
 def parse(text):
@@ -333,7 +594,7 @@ def parse(text):
         # A board entry carries settings and no effect, and may be written more than
         # once, so it is not checked for the repeats a channel would be
         is_board = len(pending.channels) == 1 and pending.channels[0].name == BOARD
-        pending.effect, pending.settings = __parse_effect(
+        pending.effect, pending.settings, pending.lines = __parse_effect(
             pending_tokens, pending.line, problems, not is_board)
 
         if not is_board:
@@ -346,46 +607,139 @@ def parse(text):
 
         entries.append(pending)
 
+    # A byte order mark is what Notepad puts at the front of a UTF-8 file. It is
+    # invisible, so it can only ever be reported as a character nobody can see
+    text = text.lstrip("﻿")
+
+    explained = False
+    jammed = set()
+
     for number, raw_line in enumerate(text.split("\n")):
-        line = __strip_comment(raw_line).strip()
+        cut = __strip_comment(raw_line)
+        written = cut.strip()           # Quoted back as typed, since gluing moves it
+        line = __glue(written)
+
+        # A comment written against the text before it, rather than after a space,
+        # has taken part of a value with it. One written after a space is a comment
+        # and saying so on an unrelated problem would be noise
+        if len(cut) < len(raw_line) and cut[-1:] not in ("", " ", "\t"):
+            jammed.add(number + 1)
+
         if not line:
+            continue
+
+        # An unclosed quote takes the rest of the line into itself, colon and all,
+        # so the answer would otherwise be that an entry has no ':' when it plainly does
+        if __unclosed_quote(line):
+            problems.append("line {}: this has a quote that is never closed".format(number + 1))
+            pending = None
+            pending_tokens = []
+            continue
+
+        # A comment can eat a value, which is what a hex colour pasted with its '#'
+        # does. Ending in '=' is what tells that from an ordinary trailing comment,
+        # and it has to come first: after another entry the line reads as one of its
+        # continuations, and the answer would be about an empty colour
+        if len(cut) < len(raw_line) and line.endswith("="):
+            problems.append(
+                "line {}: '{}' has nothing after the '='. A '#' starts a comment, so "
+                "the rest of the line was ignored".format(number + 1, written))
             continue
 
         colon = __unquoted(line, ":")
         if colon >= 0:
             close()
+            pending = None
+            pending_tokens = []
             selector = line[:colon]
             remainder = line[colon + 1:]
 
             # One colon divides the outputs from the effect. A second is someone
             # reading it as a separator between every part, so say what the shape is
             # rather than complaining about whatever the stray colon stuck itself to
-            if __unquoted(remainder, ":") >= 0:
+            second = __unquoted(remainder, ":")
+            if second >= 0 and not __drive_letter(remainder, second):
                 problems.append(
                     "line {}: this has more than one ':'. Settings for the outputs go "
-                    "before it and the effect after, as in "
+                    "before it and the effect after, such as "
                     "'out4 colour=warm: blink'".format(number + 1))
-                pending = None
-                pending_tokens = []
+                continue
+
+            if not selector:
+                problems.append(
+                    "line {}: no outputs are named before the ':'".format(number + 1))
                 continue
 
             pending = Entry(number + 1)
             pending.channels = __parse_selector(selector, number + 1, problems)
-            pending_tokens = __split_quoted(remainder)
+            pending_tokens = [(token, number + 1) for token in __split_quoted(remainder)]
         elif pending is not None:
-            pending_tokens.extend(__split_quoted(line))
+            pending_tokens.extend((token, number + 1) for token in __split_quoted(line))
+        elif len(cut) < len(raw_line):
+            # A comment takes the colon with it, which is what a hex colour pasted
+            # with its '#' does, so name that rather than the shape of an entry
+            problems.append(
+                "line {}: '{}' has no ':'. A '#' starts a comment, so the rest of "
+                "the line was ignored".format(number + 1, written))
+        elif explained:
+            # The shape is said once. A file that is not an effects file at all would
+            # otherwise repeat the whole of it on every line
+            problems.append("line {}: '{}' has no ':'".format(number + 1, written))
         else:
-            problems.append("line {}: '{}' comes before any channel".format(number + 1, line))
+            # The commonest mistake there is, so this says what an entry looks like
+            # instead of naming the state the reader has landed in
+            problems.append(
+                "line {}: '{}' has no ':'. The outputs go before it and the effect "
+                "after, such as 'out4 colour=warm: blink'".format(number + 1, written))
+            explained = True
 
     close()
+
+    # Where the comment took a value's tail and what remained failed on its own
+    # terms, nothing else names the cause: 'colour=red,#00ff00' answers about 'red,'
+    if jammed:
+        named = []
+        for problem in problems:
+            if __about_line(problem) in jammed and "starts a comment" not in problem:
+                problem += ". A '#' starts a comment, so the rest of the line was ignored"
+            named.append(problem)
+        problems = named
+
     return entries, problems
 
 
-def report(problems, path):
+def __about_line(problem):
+    """The line a problem is about. Those about the board as a whole come first."""
+    if problem.startswith("line "):
+        number = problem[5:].split(":", 1)[0]
+        if number.isdigit():
+            return int(number)
+    return -1
+
+
+def __in_line_order(problems):
+    """
+    In the order a reader meets them in the file, since they are found in the order
+    the work happens: everything the parser saw, then everything the loader did.
+
+    Reading the line once per problem rather than through a sort key, which
+    MicroPython recomputes on every comparison, and the position keeps one line's own
+    order.
+    """
+    ordered = [(__about_line(problem), position, problem)
+               for position, problem in enumerate(problems)]
+    ordered.sort()
+    return [problem for _, _, problem in ordered]
+
+
+def report(problems, path, running=True):
     """
     Write the problems where the user is already looking, or clear the file when
-    there are none, so its presence is the message. Needs the volume writable, and
-    says so on the console if it is not.
+    there are none, so its presence is the message. Needs the volume writable.
+
+    Returns whether they were written. A caller that cannot write them has only the
+    outputs left to say anything with, which is a different signal from one whose
+    reader has a file to go and read.
     """
     if not problems:
         try:
@@ -394,32 +748,52 @@ def report(problems, path):
             pass                # Nothing to clear, or nowhere to clear it from
         return False
 
+    # In file order, since the reader has the file open beside this. load() has
+    # ordered its own already, but run() appends a program's troubles afterwards
+    problems = __in_line_order(problems)
+
     for problem in problems:
         print(problem)
 
     try:
         with open(path, "w") as handle:
-            handle.write("Some of the effects file could not be read.\n")
-            handle.write("Everything else is running. Fix these and eject again.\n\n")
+            # General, since a named program that will not run is reported here too
+            # and the effects file may have read perfectly. The second line is not
+            # always true: a file that fails whole leaves nothing running at all
+            handle.write("These are the problems the board found.\n")
+            handle.write("{}. Fix them and eject again.\n\n".format(
+                "Everything else is running" if running else "Nothing is running"))
             for problem in problems:
                 handle.write(problem + "\n")
     except OSError:
+        # A full drive fails after the file exists, so what is left is an empty
+        # errors.txt promising an account it does not carry. Nothing says less but
+        # lies less too, and the caller flashes a signal of its own instead
         print("could not write", path)
+        try:
+            os.remove(path)
+        except OSError:
+            pass
+        return False
 
     return True
 
 
-def indicate(fx, times=3, period_ms=150):
+def indicate(fx, pattern=PROBLEM):
     """
-    Flash every output together, red where an output can show colour. Nothing an
-    effect does starts like this, so it reads as a signal rather than as the show.
+    Flash every output together in the pattern's colour, or plain where an output
+    shows none. Nothing an effect does starts like this, so it reads as a signal
+    rather than as the show.
     """
+    colour, level, times, period_ms = pattern
+    red, green, blue = (part * level for part in colour)
+
     for _ in range(times):
         for output in fx.outputs:
             if isinstance(output, RGBLED):
-                output.set_rgb(255, 0, 0)
+                output.set_rgb(red, green, blue)
             else:
-                output.brightness(1.0)
+                output.brightness(level)
         time.sleep_ms(period_ms)
 
         for output in fx.outputs:
@@ -436,10 +810,35 @@ def __play(fx, volume, path, errors, playing):
         player.stop()
     fx.clear()
 
+    text = None
+    players, settings, problems = [], {}, []
+
+    # The mount point is the board's own, where the reader sees a drive with a file
+    # on it, so messages name the file rather than the path
+    name = path.rsplit("/", 1)[-1]
+
     try:
         with open(path) as handle:
             text = handle.read()
-        players, settings, problems = load(text, fx)
+    except UnicodeError:
+        # An editor saved it as UTF-16, which Notepad offers as "Unicode". Nothing
+        # of it can be read, so the encoding is the only thing worth saying
+        problems.append("{} is not plain text, so none of it could be read. Save it "
+                        "as UTF-8 and eject again.".format(name))
+    except OSError:
+        # Normally impossible, since the drive rebuilds a missing file. It means the
+        # drive is damaged or absent, which is worth showing rather than sitting dark
+        problems.append("could not read " + name)
+
+    if text is not None:
+        try:
+            players, settings, problems = load(text, fx)
+        # A file a user typed must never be able to take the board down. Anything
+        # load does not report itself costs the whole file, where its own reporting
+        # costs one entry, but the drive and the button survive to be edited again
+        except Exception as e:      # noqa: BLE001
+            problems.append("the board failed reading the effects file: {}. The "
+                            "fault is in the board, not the file.".format(repr(e)))
 
         # A program never returns, so nothing would be left to watch the button.
         # The drive has to go up or there would be no way to change either setting
@@ -447,58 +846,108 @@ def __play(fx, volume, path, errors, playing):
             problems.append(
                 "the drive is shown anyway, since a program is named and hiding it "
                 "would leave no way to change one back")
-    except OSError:
-        # Normally impossible, since the drive rebuilds a missing file. It means the
-        # drive is damaged or absent, which is worth showing rather than sitting dark
-        players, settings, problems = [], {}, ["could not read " + path]
 
     if volume is None:
-        wrote = report(problems, errors)
+        wrote = report(problems, errors, bool(players))
     else:
         # The volume is read-only outside this window, which is also where the
         # README is healed
         with volume.writable():
-            wrote = report(problems, errors)
+            wrote = report(problems, errors, bool(players))
 
-    if wrote:
-        indicate(fx)
+    # A drive that is full, damaged or absent all end here, the report having had
+    # nowhere to go, and the outputs are then the only thing left to say it with
+    if problems:
+        indicate(fx, PROBLEM if wrote else UNREPORTED)
 
-    # A paired player is ticked by its partner, so only the head starts a timer
-    if players:
-        players[0].start()
-
+    # Started by the caller, which is the only one that knows whether a program is
+    # about to take the board over
     return players, settings, problems
 
 
-def __run_program(name, problems):
+def __start(players):
+    """A paired player is ticked by its partner, so only the head starts a timer."""
+    if players:
+        players[0].start()
+
+
+def __transfer_frame(fx, at):
     """
-    Run a program the file named instead of the effects. Returns only when it could
-    not be run or stopped by itself, so the effects can carry on.
+    One frame of the wait shown while the computer is copying: a spot travelling the
+    outputs over a resting floor, so a transfer reads as something happening rather
+    than as the board having stopped.
+
+    Driven from the caller's own loop rather than a player, since the players are
+    stopped for the duration, and stepped from the clock so a frame the transfer
+    delays does not slow the travel down.
     """
-    for candidate in (name, MOUNT_DIR + "/" + name):
+    colour, floor, spot = TRANSFER
+    outputs = fx.outputs
+    lit = (at // TRANSFER_STEP_MS) % len(outputs)
+
+    for index, output in enumerate(outputs):
+        level = spot if index == lit else floor
+        if isinstance(output, RGBLED):
+            output.set_rgb(colour[0] * level, colour[1] * level, colour[2] * level)
+        else:
+            output.brightness(level)
+
+
+def __read_program(name, problems):
+    """
+    The source of a program the file named, or None if there is none to read.
+
+    Read before the drive is shown, since exposing it unmounts the mount point and a
+    program kept on the drive could not be opened once the computer has it.
+    """
+    # A path is taken as written, since a doubled separator would otherwise fold and
+    # '/prog.py' would quietly find the drive's copy. A plain name looks on the drive
+    # first, that being the one the reader can see and edit
+    wanted = (name,) if name.startswith("/") else (MOUNT_DIR + "/" + name, name)
+
+    found = []
+    for candidate in wanted:
         try:
             with open(candidate) as handle:
-                source = handle.read()
+                found.append(handle.read())
         except OSError:
             continue
-        try:
-            # Compiled against its own name, so a traceback says which file and
-            # which line rather than naming a string
-            exec(compile(source, name, "exec"), {"__name__": "__main__"})
-        # Anything at all, since this is a user's own program and it must not be
-        # able to take the board down with it
-        except Exception as e:      # noqa: BLE001
-            # The traceback, since a line number is what makes a program fixable by
-            # someone with no way to see a console. Frames from this file are the
-            # machinery that ran it and are not the user's to read
-            trace = io.StringIO()
-            sys.print_exception(e, trace)
-            lines = [line for line in trace.getvalue().rstrip().split("\n")
-                     if "autofx.py" not in line]
-            problems.append("the program {} stopped:\n{}".format(name, "\n".join(lines)))
-        return
 
-    problems.append("there is no program called " + name)
+    if not found:
+        # What is running is said here rather than in the report's heading, which
+        # speaks for the file as a whole and is right about it either way
+        problems.append("there is no program called {}, so the effects are running "
+                        "instead".format(name))
+        return None
+
+    # The drive's copy is the one that runs, being the one the reader can see and
+    # edit. A copy elsewhere taking its place is a trap: edits to the visible file
+    # would do nothing and nothing would say why
+    if len(found) > 1:
+        problems.append("{} is on the drive and on the board's own filesystem, so "
+                        "the drive's copy is the one that runs".format(name))
+
+    return found[0]
+
+
+def __run_program(name, source, problems):
+    """Run what was read, and say so if it stops rather than letting it take the board."""
+    try:
+        # Compiled against its own name, so a traceback says which file and which
+        # line rather than naming a string
+        exec(compile(source, name, "exec"), {"__name__": "__main__"})
+    # Anything at all, since this is a user's own program and it must not be able to
+    # take the board down with it
+    except Exception as e:      # noqa: BLE001
+        # The traceback, since a line number is what makes a program fixable by
+        # someone with no way to see a console. Frames from this file are the
+        # machinery that ran it and are not the user's to read
+        trace = io.StringIO()
+        sys.print_exception(e, trace)
+        lines = [line for line in trace.getvalue().rstrip().split("\n")
+                 if "autofx.py" not in line]
+        problems.append("the program {} stopped, so the effects are running "
+                        "instead:\n{}".format(name, "\n".join(lines)))
 
 
 def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
@@ -507,9 +956,13 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     players and problems.
 
     With one, the drive is shown at boot and the button is watched from then on: a
-    double press shows or hides it, and hiding or ejecting re-reads the file and
-    plays what it now says. An eject does not show the drive again, since a user
+    double press shows or hides it, a single press re-reads the file and puts the
+    drive back, and hiding or ejecting re-reads it and leaves it away, since a user
     who ejected is done with it. This does not return.
+
+    The effects stand aside while the computer is copying, and the outputs answer for
+    themselves where there is no file to answer in: a problem written down, a problem
+    with nowhere to write it, and a press refused mid-write.
 
     A board entry can name a program to run instead, and can keep the drive hidden
     until the button asks for it.
@@ -520,6 +973,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     players, settings, problems = __play(fx, volume, path, errors, [])
 
     if volume is None:
+        __start(players)
         return players, problems
 
     # The drive goes up before any program runs, since a program that works never
@@ -528,35 +982,81 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     program = settings.get("program")
     shows = program or settings.get("drive") != "manual"
 
+    # A program runs instead of the effects, as the file's own setting says, so they
+    # are never started rather than started and stopped: reading the program and
+    # showing the drive both take long enough for a flash of them to be seen
+    if not program:
+        __start(players)
+
+    # Read while the board still holds the drive, since exposing it takes the mount
+    # point away and a program kept there would have nothing left to open
+    source = __read_program(program, problems) if program else None
+
     if shows:
         volume.expose()
 
     if program:
-        __run_program(program, problems)
+        if source is not None:
+            __run_program(program, source, problems)
 
-        # Here because the program could not run, or because it finished by itself.
-        # Either way the effects carry on, and anything it went wrong with is said
-        # where the user is looking
+        # Here because the program could not be found or run, or because it finished
+        # by itself. Either way the effects take the board back, and anything that
+        # went wrong is said where the user is looking
         if volume.exposed():
             volume.withdraw()
         with volume.writable():
-            wrote = report(problems, errors)
-        if wrote:
-            indicate(fx)
+            wrote = report(problems, errors, bool(players))
+        if problems:
+            indicate(fx, PROBLEM if wrote else UNREPORTED)
+        __start(players)            # Never started above, whether the program ran or not
         if shows:
             volume.expose()
+
+    paused = False
+    idle_since = None
 
     # A stop from the REPL arrives as an exception, and without this the outputs
     # keep whatever they were last written and the computer keeps the drive
     try:
         while True:
             event = volume.service(fx.boot_pressed())
+
             if event in (volume.HIDDEN, volume.EJECTED, volume.RELOADED):
                 players, settings, problems = __play(fx, volume, path, errors, players)
+                paused = False
+                idle_since = None
+                __start(players)
                 if event == volume.RELOADED:
                     # A single press asks to try an edit without putting the drive
                     # away, so it goes back once the file has been read
                     volume.expose()
+
+            # A transfer costs a running effect most of a tenth of a second in one
+            # hitch, so the effects stand aside for it and something of the board's
+            # own travels the outputs instead of the show lurching through
+            if volume.busy():
+                idle_since = None
+                if not paused:
+                    for player in players:
+                        player.stop()
+                    paused = True
+            elif paused:
+                if idle_since is None:
+                    idle_since = time.ticks_ms()
+                elif time.ticks_diff(time.ticks_ms(), idle_since) >= TRANSFER_HOLD_MS:
+                    __start(players)
+                    paused = False
+
+            if paused:
+                __transfer_frame(fx, time.ticks_ms())
+
+            if event == volume.BUSY:
+                # A press the computer's writing blocked otherwise looks exactly like
+                # one that did nothing. The effects are already standing aside, so
+                # every output flashing reads on top of the one that is travelling,
+                # and the next frame paints over it
+                indicate(fx, BLOCKED)
+
             time.sleep_ms(interval_ms)
     finally:
         for player in players:
@@ -588,24 +1088,128 @@ def channels(fx):
     return mono, colour
 
 
+def __check_board(entry, problems):
+    """
+    The board settings the entry carries, with anything it cannot use dropped. A
+    board entry names no effect, so nothing else would ever look at these: a typo in
+    'drive' or 'program' would leave a board acting as though the line were absent.
+    """
+    settings = {}
+
+    for key, value in entry.settings.items():
+        at = entry.lines.get(key, entry.line)
+
+        if key not in BOARD_SETTINGS:
+            problems.append("line {}: the board has no setting '{}', it takes {}".format(
+                at, key, ", ".join(sorted(BOARD_SETTINGS))))
+            continue
+
+        # Whatever it was written as, since a setting limited to named values is
+        # compared against them and a program is a file name
+        text = value if isinstance(value, str) else __shown(value)
+
+        allowed = BOARD_SETTINGS[key]
+        if allowed is not None:
+            if text.lower() not in allowed:
+                problems.append("line {}: the board's {} is {}, it takes {}".format(
+                    at, key, __shown(value), ", ".join(allowed)))
+                continue
+            text = text.lower()          # So the caller compares against one spelling
+
+        elif "\\" in text or __unquoted(text, ":") >= 0:
+            base = text.replace("\\", "/").rsplit("/", 1)[-1]
+            problems.append("line {}: '{}' is a path on your computer. Correct it to "
+                            "'{}'".format(at, text, base))
+            continue
+
+        settings[key] = text
+
+    return settings
+
+
+def __check_settings(entry, taken, problems):
+    """
+    The settings the effect takes, with anything it cannot use dropped so it runs on
+    its own defaults. Everything reaching an effect from here is of the kind it wants,
+    which is what keeps a bad value out of the timer callback.
+    """
+    settings = {}
+
+    for key, value in entry.settings.items():
+        # An entry may run over several lines, so a setting answers on its own
+        at = entry.lines.get(key, entry.line)
+
+        if key not in taken:
+            problems.append("line {}: {} has no setting '{}', it takes {}".format(
+                at, entry.effect, key, ", ".join(taken) if taken else "no settings"))
+            continue
+
+        kind = SETTINGS[key]
+        if kind == "colour":
+            settings[key] = value       # Already read into tuples, and reported if bad
+            continue
+
+        # A hue is the one setting the user has an outside source for, and every
+        # colour picker gives it in degrees, so those are taken and turned into the
+        # fraction the effect wants
+        if kind == "angle":
+            turn = __degrees(value)
+            if turn is not None:
+                value = turn
+
+        fault = __value_fault(kind, value)
+        if fault is not None:
+            problems.append("line {}: {}'s {} is {}, {}".format(
+                at, entry.effect, key, __shown(value), fault))
+            continue
+
+        # Each effect gets the type it was written for: a count as an integer, which
+        # several of them require, and a boolean however the user chose to spell it
+        if kind in ("count", "whole"):
+            settings[key] = int(value)
+        elif kind == "boolean":
+            settings[key] = bool(value)
+        else:
+            settings[key] = value
+
+    for smaller, larger in PAIRED_SETTINGS:
+        if smaller in settings and larger in settings and settings[smaller] > settings[larger]:
+            problems.append("line {}: {}'s {} is above its {}".format(
+                entry.line, entry.effect, smaller, larger))
+
+    return settings
+
+
 def __build_effect(entry, count, problems):
     """The effect an entry asks for, or None if it could not be made."""
     known = EFFECTS.get(entry.effect)
     if known is None:
-        problems.append("line {}: '{}' is not an effect".format(entry.line, entry.effect))
+        # An entry that named none at all has already been reported as such, and
+        # saying the missing name is not an effect only shows the reader an internal
+        if entry.effect is not None:
+            problems.append("line {}: '{}' is not an effect".format(entry.line, entry.effect))
         return None, None, None
 
-    cls, kind, how = known
-    settings = dict(entry.settings)
-    if how == "pos" and "length" not in settings:
-        settings["length"] = count      # A wave spans the group unless told otherwise
+    cls, kind, how, taken = known
+    settings = __check_settings(entry, taken, problems)
+
+    # A wave spans the group unless told otherwise. Being called with a position is
+    # not the same as spreading over one: binary_counter is handed a bit, not a share
+    if how == "pos" and "length" in taken and "length" not in settings:
+        settings["length"] = count
 
     try:
         return cls(**settings), kind, how
     except TypeError as e:
         problems.append("line {}: {} does not take those settings, {}".format(
             entry.line, entry.effect, e))
-        return None, None, None
+    # An effect may reject a value with anything it likes. Naming the types it is
+    # known to use would reopen this the next time one raises something new
+    except Exception as e:      # noqa: BLE001
+        problems.append("line {}: {} cannot use those settings, {}".format(
+            entry.line, entry.effect, e))
+
+    return None, None, None
 
 
 def __callables(effect, how, count, entry, problems):
@@ -615,8 +1219,8 @@ def __callables(effect, how, count, entry, problems):
     if how == "pos":
         return [effect(index) for index in range(count)]
 
-    if count > len(how):
-        problems.append("line {}: {} drives {} channels, {} named".format(
+    if count != len(how):
+        problems.append("line {}: {} drives {} outputs, {} named".format(
             entry.line, entry.effect, len(how), count))
     return [getattr(effect, how[index])() if index < len(how) else None
             for index in range(count)]
@@ -636,7 +1240,7 @@ def load(text, fx):
     wanted_entries = []
     for entry in entries:
         if len(entry.channels) == 1 and entry.channels[0].name == BOARD:
-            board.update(entry.settings)
+            board.update(__check_board(entry, problems))
         else:
             wanted_entries.append(entry)
     entries = wanted_entries
@@ -653,6 +1257,15 @@ def load(text, fx):
 
     for entry in entries:
         count = len(entry.channels)
+
+        # Named together and before the effect is built, so a range reaching past the
+        # board answers once rather than per output, and a line with two mistakes
+        # reports both instead of costing an eject each
+        missing = [channel.name for channel in entry.channels if channel.name not in slots]
+        if missing:
+            problems.append("line {}: this board has no {}".format(
+                entry.line, ", ".join(missing)))
+
         effect, kind, how = __build_effect(entry, count, problems)
         if effect is None:
             continue
@@ -663,11 +1276,11 @@ def load(text, fx):
         for position, channel in enumerate(entry.channels):
             slot = slots.get(channel.name)
             if slot is None:
-                problems.append("line {}: this board has no {}".format(entry.line, channel.name))
-            elif kind == "colour" and slot[0] != "colour":
+                continue
+            if kind == "colour" and slot[0] != "colour":
                 # A mono channel cannot show a colour, but a colour channel can play a
                 # mono effect: the player draws it in the channel's own tint
-                problems.append("line {}: {} needs a colour channel, {} is mono".format(
+                problems.append("line {}: {} brings its own colour, which {} cannot show".format(
                     entry.line, entry.effect, channel.name))
             else:
                 wanted.append((channel, slot[0], slot[1], position))
@@ -728,4 +1341,6 @@ def load(text, fx):
     if len(players) == 2:
         players[0].pair(players[1])
 
-    return players, board, problems
+    # Found in the order the work happens, which is every line the parser read and
+    # then every entry the loader built, so a reader gets them in the file's order
+    return players, board, __in_line_order(problems)

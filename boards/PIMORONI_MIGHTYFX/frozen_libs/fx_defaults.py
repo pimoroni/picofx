@@ -51,8 +51,19 @@ straight back with the new effects running, so you can keep editing. Ejecting is
 the surer way, since a computer does not always write the file out until then.
 Press "Boot" twice to put the drive away, and twice again to bring it back.
 
-Deleting effects.txt restores the default. If something cannot be read, the
-board writes errors.txt saying which line, and flashes red three times.
+Deleting effects.txt restores the default; emptying it leaves the board dark.
+
+When something is wrong the lights say so, and the more flashes the worse it is:
+
+  white, once         the computer was still writing, so the press did nothing;
+                      try again in a moment
+  blue, twice         something in effects.txt could not be read; errors.txt
+                      says which line
+  red, three times    there was no room to write errors.txt; this drive is full
+                      or damaged, so free some space or let a computer repair it
+
+While the computer is copying to this drive the effects stand aside and a dim
+white travels along the outputs, coming back a moment after it finishes.
 
 
 Writing an entry
@@ -65,8 +76,9 @@ Writing an entry
 There is one colon in an entry. Which outputs, and how bright or what colour
 they are, go before it. The effect and its own settings go after.
 
-Settings you leave out take their usual value. A '#' starts a comment. Spread a
-entry over several lines if it reads better; indenting changes nothing.
+Settings you leave out take their usual value. A '#' starts a comment. An entry
+can run on over several lines so long as the colon is on the first; indenting
+changes nothing.
 
 
 The board itself
@@ -78,15 +90,22 @@ One entry sets the board rather than the lights, and names no output:
   'drive'           'manual' keeps the drive hidden until you ask for it
   'program'         a Python file to run instead of the effects
 
-A program can sit on this drive or on the board's own filesystem. If it is
-missing, or stops with an error, the effects run instead and errors.txt says
-what happened, so a mistyped name never leaves you with a board that does
-nothing.
+A program can sit on this drive or on the board's own filesystem: a name is
+looked for here first, then on the board, and it may include folders. So
+'program=fireplace.py' finds one of that name in either place, and
+'program=examples/effects/colour/rainbow_wave.py' reaches one of the examples
+the board ships with. Where the name is in both, this drive's copy runs.
 
-While a program is running the board is busy with it, so "Boot" and ejecting do
-nothing. The drive is put up first so you can still edit effects.txt; unplug and
-plug back in for the change to take. That happens even with 'drive' set to
-'manual', since hiding it would leave no way to change either setting back.
+If it is missing, or stops with an error, the effects run instead and
+errors.txt says what happened, so a mistyped name never leaves you with a board
+that does nothing.
+
+The effects stop while a program runs, and the board is busy with it, so "Boot"
+and ejecting do nothing. The drive is put up first so you can still edit
+effects.txt; unplug and plug back in for the change to take. That happens even
+with 'drive' set to 'manual', since hiding it would leave no way to change
+either setting back. It also means a program cannot read files from this drive
+while it runs, so put anything it needs on the board's own filesystem.
 
 
 Naming outputs
@@ -113,7 +132,7 @@ Setting an output
 -----------------
 Before the colon, and separate from the effect:
 
-  'level'           how bright, 0 to 1 or a percentage
+  'level'           how bright, 0 to 1, such as 0.5 or 50%
   'colour'          a name or six-digit hex, for effects that bring no colour
 
   out1-7 level=50%: pulse
@@ -123,7 +142,8 @@ Before the colon, and separate from the effect:
 
 Colours by name: red, yellow, green, cyan, blue, magenta, warm, white, cool,
 black. Or the hex a colour picker gives you, with its '#' left off, as out4
-above uses for a soft orange.
+above uses for a soft orange. A '#' always starts a comment, so one left on a
+colour hides the rest of the line.
 
 
 Effects
@@ -131,7 +151,7 @@ Effects
 For an output, or for one of its red, green and blue:
 
   none
-  static            level
+  static            brightness
   blink             speed phase duty
   blink_wave        speed length phase duty
   flash             speed flashes window phase duty
@@ -160,16 +180,25 @@ outputs, and lights them red, amber and green in that order.
 
 'rgb_blink' takes one colour, or several to blink through in turn:
 
-  rgb: rgb_blink colour=red,warm,ff8040 speed=0.5
+  out1: rgb_blink colour=red,warm,ff8040 speed=0.5
 
 'speed' is cycles a second: 1 goes round once a second, 0.5 once every two, 2
-twice a second.
+twice a second. A negative speed runs the cycle backwards.
 
 The settings measured in seconds are 'interval', flicker's 'bright_min',
 'bright_max', 'dim_min' and 'dim_max', and traffic_light's four intervals.
-'length', 'flashes', 'steps', 'count' and 'step' are plain counts. The rest run
-from 0 to 1 and take a percentage too, 'window' among them, being the share of a
-cycle the flashes happen in.
+'length', 'flashes', 'steps', 'count' and 'step' are plain counts, and a
+negative 'step' counts down.
+'amber_flashing' is true or false, and takes yes, on and 1 too. 'fade_rate' is
+how fast a traffic light's colours come up, per millisecond, so the usual 0.01
+reaches full in a tenth of a second and much above that looks instant.
+
+The rest run from 0 to 1, written 0.5 or 50% as you prefer, 'window' among them,
+being the share of a cycle the flashes happen in. 'hue' takes degrees as well,
+written 180deg, which is what a colour picker gives you.
+
+A setting whose value is not what it takes is ignored, with a note in
+errors.txt, and the effect runs on its usual value for it.
 
 
 This README is rebuilt by the board, so edits to it will not stick.
