@@ -44,9 +44,17 @@ RELOADED = 5
 # volume back. Ejecting on the computer first is the only guaranteed save.
 SETTLE_MS = 1500
 
+# How long the drive stays away before it can be shown again. A computer that wrote
+# effects.txt itself keeps its own copy of the directory, and will write that back over
+# ours unless it sees the volume leave, which costs the edit the board just read. It
+# notices within a second on the computers measured; the rest is margin for those that
+# look less often.
+HIDDEN_MS = 1500
+
 __exposed = False
 __was_pressed = False
 __last_edge = None
+__withdrawn_at = None
 
 
 def __heal_readme(fs):
@@ -58,9 +66,14 @@ def __heal_readme(fs):
         fs.chmod("README.txt", 0, __ATTR_READ_ONLY)
     except OSError:
         pass
-    with open(README_PATH, "w") as f:
-        f.write(fx_defaults.README)
-    fs.chmod("README.txt", __ATTR_READ_ONLY, __ATTR_READ_ONLY)
+    try:
+        with open(README_PATH, "w") as f:
+            f.write(fx_defaults.README)
+        fs.chmod("README.txt", __ATTR_READ_ONLY, __ATTR_READ_ONLY)
+    except OSError:
+        # A full drive has nowhere to put it. The board comes up regardless, since a
+        # missing README costs a reader nothing and a dead board costs them everything
+        print("the FX drive is full, so README.txt could not be rebuilt")
 
 
 def __has_boot_signature(bdev):
@@ -104,8 +117,22 @@ def mount():
     try:
         os.stat(FILE_PATH)
     except OSError:
-        with open(FILE_PATH, "w") as f:
-            f.write(fx_defaults.EFFECTS)
+        try:
+            with open(FILE_PATH, "w") as f:
+                f.write(fx_defaults.EFFECTS)
+        except OSError:
+            # A full drive with the file already deleted. Unguarded this reaches
+            # main.py and the board plays nothing, where mounting anyway leaves the
+            # drive there to be emptied and autofx to say it could not be read.
+            # The empty file the failed write leaves behind has to go: an empty
+            # effects.txt is a board asked to stay dark, and it would keep this
+            # mount from restoring the default once there is room again
+            print("the FX drive is full, so effects.txt could not be restored")
+            print("delete a file from the drive and the default comes back")
+            try:
+                os.remove(FILE_PATH)
+            except OSError:
+                pass
     __heal_readme(fs)
     vfs.umount(MOUNT_POINT)
     vfs.mount(vfs.VfsFat(bdev), MOUNT_POINT, readonly=True)
@@ -156,14 +183,30 @@ def exposed():
     return __exposed
 
 
+def busy():
+    """
+    Whether the computer is mid-transfer. Worth standing aside for: a transfer costs
+    a running effect most of a tenth of a second in one hitch, which reads as a lurch.
+    """
+    return __exposed and rp2.is_msc_busy()
+
+
 def expose():
     """
     Show the drive to the connected computer, releasing the board's own
     mount while the computer owns it.
+
+    Waits out the rest of HIDDEN_MS since the drive was taken back, so the computer
+    has seen it leave. Blocking is safe here: effects run from a timer.
     """
-    global __exposed
+    global __exposed, __withdrawn_at
     if __exposed:
         return False
+    if __withdrawn_at is not None:
+        remaining = HIDDEN_MS - time.ticks_diff(time.ticks_ms(), __withdrawn_at)
+        if remaining > 0:
+            time.sleep_ms(remaining)
+        __withdrawn_at = None
     try:
         vfs.umount(MOUNT_POINT)
     except OSError:
@@ -178,7 +221,7 @@ def withdraw():
     Take the drive back from the computer and re-read it, waiting out any
     write still in flight. Returns True when effects.txt may have changed.
     """
-    global __exposed
+    global __exposed, __withdrawn_at
     if not __exposed:
         return False
     deadline = time.ticks_add(time.ticks_ms(), SETTLE_MS)
@@ -186,6 +229,7 @@ def withdraw():
         time.sleep_ms(50)
     rp2.disable_msc()
     __exposed = False
+    __withdrawn_at = time.ticks_ms()
     mount()
     return True
 
