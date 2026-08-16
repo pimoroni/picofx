@@ -154,7 +154,7 @@ class ScreenGroup(ScreenBase):
             self.__subset_of = parent
             # Alignment stays the parent's, so a subset reports it rather than
             # owning it: its members are held whether or not this set writes them.
-            self.__aligned = parent.is_aligned
+            self.__aligned = parent.is_aligned()
             self.__reference = parent.reference
             self.__floor_us = parent.align_floor_us
             self.__trim = parent.trim
@@ -1037,7 +1037,7 @@ class ScreenGroup(ScreenBase):
         """Captures whose own two falls did not span a plausible period, cumulative.
 
         Counted and not acted on. A sweep books a member from its last fall, so a
-        bad one puts that member out of phase while is_in_phase and exposed_frames,
+        bad one puts that member out of phase while is_in_phase() and exposed_frames,
         which both price the bookings, go on reporting healthy.
         """
         return self.__suspect_sweeps
@@ -1067,17 +1067,15 @@ class ScreenGroup(ScreenBase):
 
         logging.info(f"screens: this group is not holding its panels in phase. {why}")
 
-    @property
     def is_aligned(self):
         """Whether the members are held to one refresh rate.
 
         Their rates, not their phases: this stops them drifting apart, and on the
-        glass it slows a tear band rather than removing one. is_in_phase is the
+        glass it slows a tear band rather than removing one. is_in_phase() is the
         state that makes a panel come out clean.
         """
         return self.__aligned
 
-    @property
     def is_in_phase(self):
         """Whether the members' scans are being held together, not merely their rates.
 
@@ -1087,14 +1085,14 @@ class ScreenGroup(ScreenBase):
         wait target move, which is why the trim rotates on it.
         """
         if self.__subset_of is not None:
-            return self.__subset_of.is_in_phase
+            return self.__subset_of.is_in_phase()
         return self.__holding
 
     @property
     def acquired_us(self):
         """The phase spread the last acquisition reached, or 0 where it did not.
 
-        A construction-time figure and not a running one: read is_in_phase for
+        A construction-time figure and not a running one: read is_in_phase() for
         whether the members are together now.
         """
         if self.__subset_of is not None:
@@ -1106,7 +1104,7 @@ class ScreenGroup(ScreenBase):
         """The member every other is trimmed toward, the slowest of them, or None.
 
         None where the group is not aligned, since nothing was trimmed toward
-        anything. is_aligned says the same thing and is the one to read.
+        anything. is_aligned() says the same thing and is the one to read.
         """
         return self.__reference
 
@@ -1116,7 +1114,7 @@ class ScreenGroup(ScreenBase):
 
         An unmet align request is an outcome and not an error, so this reports zero
         where ScreenPair raises: a group falls back to its nominated member and
-        carries on, and is_aligned is what distinguishes the two.
+        carries on, and is_aligned() is what distinguishes the two.
         """
         return self.__floor_us
 
