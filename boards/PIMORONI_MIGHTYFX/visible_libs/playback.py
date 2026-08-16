@@ -174,10 +174,14 @@ class ImagePlayer:
         is the one position no step contains.
         """
         reached = 0
-        for step, delay in enumerate(self.__delays):
+        step = 0
+        # A counter, since enumerate() allocates a tuple per step and this runs
+        # on every frame read
+        for delay in self.__delays:
             reached += delay
             if position < reached:
                 return step
+            step += 1
         return len(self.__delays) - 1
 
     def __position(self):

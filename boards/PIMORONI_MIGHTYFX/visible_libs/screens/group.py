@@ -748,9 +748,10 @@ class ScreenGroup(ScreenBase):
         anchor = self.__phase_us[reference]
         drift = self.__residual_us[reference] * periods
         walking = False
-        for index, screen in enumerate(members):
+        for index in range(len(members)):
             if index == reference:
                 continue
+            screen = members[index]
             line = self.__line_us[index]
             residual = self.__residual_us[index]
             applied = self.__dither[index]
