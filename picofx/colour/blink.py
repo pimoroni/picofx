@@ -18,6 +18,11 @@ class RGBBlinkFX(CyclingAction):
     :param:   phase   the phase of the blink
     :param:   duty    the duty cycle of the blink
     """
+
+    NAME = "rgb_blink"
+    CALLED = None
+    TAKES = ("colour", "speed", "phase", "duty")
+
     def __init__(self, colour=None, speed=1, phase=0.0, duty=0.5):
         super().__init__(speed)
         self.phase = phase

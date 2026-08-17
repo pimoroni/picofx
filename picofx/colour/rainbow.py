@@ -6,6 +6,10 @@ from picofx import Cycling, rgb_from_hsv
 
 
 class RainbowFX(Cycling):
+    NAME = "rainbow"
+    CALLED = None
+    TAKES = ("speed", "sat", "val")
+
     def __init__(self, speed=1.0, sat=1.0, val=1.0):
         Cycling.__init__(self, speed)
         self.sat = sat
@@ -17,6 +21,10 @@ class RainbowFX(Cycling):
 
 
 class RainbowWaveFX(Cycling):
+    NAME = "rainbow_wave"
+    CALLED = "position"
+    TAKES = ("speed", "length", "sat", "val")
+
     def __init__(self, speed=1, length=1, sat=1, val=1):
         super().__init__(speed)
         self.length = length

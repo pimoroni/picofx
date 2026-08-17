@@ -6,6 +6,11 @@ from picofx import Updateable
 
 
 class TrafficLightFX(Updateable):
+    NAME = "traffic_light"
+    CALLED = ("red", "amber", "green")
+    TAKES = ("red_interval", "red_amber_interval", "green_interval", "amber_interval",
+             "fade_rate", "amber_flashing")
+
     AMBER_FLASHING_CYCLE = 0.25
 
     def __init__(self, red_interval=10, red_amber_interval=5, green_interval=10, amber_interval=5, fade_rate=0.01, amber_flashing=False):

@@ -13,6 +13,8 @@ from .static import StaticFX
 from .sweep import SweepFX
 from .traffic import TrafficLightFX
 
+# Every effect here drives a plain light, and declares NAME as it is known outside
+# code, CALLED as how a channel gets its callable, and TAKES as its settings.
 MONO_EFFECTS = [
     BinaryCounterFX,
     BlinkFX,

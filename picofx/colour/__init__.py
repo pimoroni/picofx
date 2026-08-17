@@ -31,6 +31,8 @@ H_WHITE = (0, 0, 1)
 H_COOL = (0.56, 0.624, 1)
 H_BLACK = (0, 0, 0)
 
+# Every effect here brings its own colour, and declares NAME as it is known outside
+# code, CALLED as how a channel gets its callable, and TAKES as its settings.
 COLOUR_EFFECTS = [
     RGBFX,
     HSVFX,

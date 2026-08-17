@@ -8,6 +8,10 @@ from picofx import Updateable
 class SweepFX(Updateable):
     """A light that sweeps across the outputs and bounces back at each end. """
 
+    NAME = "sweep"
+    CALLED = "position"
+    TAKES = ("speed", "length", "extent")
+
     def __init__(self, speed=1, length=1, extent=1.0):
         self.speed = speed
         self.length = length

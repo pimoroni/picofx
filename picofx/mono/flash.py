@@ -6,6 +6,10 @@ from picofx import Cycling
 
 
 class FlashFX(Cycling):
+    NAME = "flash"
+    CALLED = None
+    TAKES = ("speed", "flashes", "window", "phase", "duty")
+
     def __init__(self, speed=1, flashes=2, window=0.5, phase=0.0, duty=0.5):
         super().__init__(speed)
         self.flashes = flashes
@@ -33,6 +37,10 @@ class FlashFX(Cycling):
 
 
 class FlashSequenceFX(Cycling):
+    NAME = "flash_sequence"
+    CALLED = "position"
+    TAKES = ("speed", "length", "flashes", "window", "phase", "duty")
+
     def __init__(self, speed=1, length=1, flashes=1, window=1, phase=0.0, duty=0.5):
         super().__init__(speed)
         self.length = length

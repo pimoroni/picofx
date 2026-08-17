@@ -6,6 +6,10 @@ from picofx import rgb_from_hsv
 
 
 class RGBFX:
+    NAME = "rgb"
+    CALLED = None
+    TAKES = ("red", "green", "blue")
+
     def __init__(self, red=255, green=255, blue=255):
         self.red = red
         self.green = green
@@ -18,6 +22,10 @@ class RGBFX:
 
 
 class HSVFX:
+    NAME = "hsv"
+    CALLED = None
+    TAKES = ("hue", "sat", "val")
+
     def __init__(self, hue=0.0, sat=1.0, val=1.0):
         self.hue = hue
         self.sat = sat

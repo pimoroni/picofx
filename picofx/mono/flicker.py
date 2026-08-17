@@ -8,6 +8,10 @@ from picofx import Updateable
 
 
 class FlickerFX(Updateable):
+    NAME = "flicker"
+    CALLED = None
+    TAKES = ("brightness", "dimness", "bright_min", "bright_max", "dim_min", "dim_max")
+
     def __init__(self, brightness=1.0, dimness=0.5, bright_min=0.05, bright_max=0.1, dim_min=0.02, dim_max=0.04):
         self.brightness = brightness
         self.dimness = dimness

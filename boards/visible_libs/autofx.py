@@ -27,11 +27,9 @@ import sys
 import time
 
 from picofx import RGBLED, ColourPlayer, MonoPlayer
-from picofx.colour import (BLACK, BLUE, COOL, CYAN, GREEN, MAGENTA, RED, WARM, WHITE, YELLOW,
-                           HSVFX, HueStepFX, RainbowFX, RainbowWaveFX, RGBBlinkFX, RGBFX)
-from picofx.mono import (BinaryCounterFX, BlinkFX, BlinkWaveFX, FlashFX, FlashSequenceFX,
-                         FlickerFX, NoneFX, PulseFX, PulseWaveFX, RandomFX, StaticFX,
-                         SweepFX, TrafficLightFX)
+from picofx.colour import (BLACK, BLUE, COOL, COLOUR_EFFECTS, CYAN, GREEN, MAGENTA, RED,
+                           WARM, WHITE, YELLOW)
+from picofx.mono import MONO_EFFECTS, NoneFX
 
 # The drive a connected computer sees. Making it writable long enough to leave a
 # report belongs to whatever manages that volume, not here.
@@ -52,34 +50,18 @@ BOARD = "board"
 
 
 # Each effect, the kind of channel it drives, how a channel gets its callable, and
-# the settings it takes. None means one effect serves every channel, "pos" means the
-# effect is called with the channel's position in the group, and a tuple names a
-# method per channel.
-EFFECTS = {
-    "none": (NoneFX, "mono", None, ()),
-    "static": (StaticFX, "mono", None, ("brightness",)),
-    "blink": (BlinkFX, "mono", None, ("speed", "phase", "duty")),
-    "blink_wave": (BlinkWaveFX, "mono", "pos", ("speed", "length", "phase", "duty")),
-    "flash": (FlashFX, "mono", None, ("speed", "flashes", "window", "phase", "duty")),
-    "flash_sequence": (FlashSequenceFX, "mono", "pos",
-                       ("speed", "length", "flashes", "window", "phase", "duty")),
-    "flicker": (FlickerFX, "mono", None,
-                ("brightness", "dimness", "bright_min", "bright_max", "dim_min", "dim_max")),
-    "pulse": (PulseFX, "mono", None, ("speed", "phase")),
-    "pulse_wave": (PulseWaveFX, "mono", "pos", ("speed", "length", "phase")),
-    "sweep": (SweepFX, "mono", "pos", ("speed", "length", "extent")),
-    "random": (RandomFX, "mono", None, ("interval", "brightness_min", "brightness_max")),
-    "binary_counter": (BinaryCounterFX, "mono", "pos", ("interval", "count", "step")),
-    "traffic_light": (TrafficLightFX, "mono", ("red", "amber", "green"),
-                      ("red_interval", "red_amber_interval", "green_interval",
-                       "amber_interval", "fade_rate", "amber_flashing")),
-    "rgb": (RGBFX, "colour", None, ("red", "green", "blue")),
-    "hsv": (HSVFX, "colour", None, ("hue", "sat", "val")),
-    "rainbow": (RainbowFX, "colour", None, ("speed", "sat", "val")),
-    "rainbow_wave": (RainbowWaveFX, "colour", "pos", ("speed", "length", "sat", "val")),
-    "hue_step": (HueStepFX, "colour", None, ("interval", "hue", "sat", "val", "steps")),
-    "rgb_blink": (RGBBlinkFX, "colour", None, ("colour", "speed", "phase", "duty")),
-}
+# the settings it takes, read from picofx's own lists rather than named again here.
+# An effect declares the last two, so one added to picofx is offered by this file
+# without it being edited, and one whose settings change cannot go stale here.
+# CALLED is None where one effect serves every channel, "position" where it is called
+# with the channel's place in the group, and a tuple where it names a method per
+# channel. A class with no NAME is not offered.
+EFFECTS = {}
+for _kind, _registry in (("mono", MONO_EFFECTS), ("colour", COLOUR_EFFECTS)):
+    for _effect in _registry:
+        _name = getattr(_effect, "NAME", None)
+        if _name is not None:
+            EFFECTS[_name] = (_effect, _kind, _effect.CALLED, _effect.TAKES)
 
 # Each screen effect and the settings it takes. A screen shows images where an output
 # lights, so these never mix with EFFECTS. "gif" plays an animated GIF at the delays
@@ -1706,7 +1688,13 @@ def __check_settings(entry, taken, problems):
                 at, entry.effect, key, ", ".join(taken) if taken else "no settings"))
             continue
 
-        kind = SETTINGS[key]
+        # An effect names its own settings, so one added to picofx may name a setting
+        # this file has no reading for. The effect still runs, on its own value for it
+        kind = SETTINGS.get(key)
+        if kind is None:
+            problems.append("line {}: {}'s '{}' cannot be set from a file, so it was "
+                            "left as it is".format(at, entry.effect, key))
+            continue
         if kind == "colour":
             settings[key] = value       # Already read into tuples, and reported if bad
             continue
@@ -1760,7 +1748,7 @@ def __build_effect(entry, count, problems):
 
     # A wave spans the group unless told otherwise. Being called with a position is
     # not the same as spreading over one: binary_counter is handed a bit, not a share
-    if how == "pos" and "length" in taken and "length" not in settings:
+    if how == "position" and "length" in taken and "length" not in settings:
         settings["length"] = count
 
     try:
@@ -1781,7 +1769,7 @@ def __callables(effect, how, count, entry, problems):
     """One callable per channel, in the order the entry wrote them."""
     if how is None:
         return [effect] * count
-    if how == "pos":
+    if how == "position":
         return [effect(index) for index in range(count)]
 
     if count != len(how):

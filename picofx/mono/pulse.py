@@ -8,6 +8,10 @@ from picofx import Cycling
 
 
 class PulseFX(Cycling):
+    NAME = "pulse"
+    CALLED = None
+    TAKES = ("speed", "phase")
+
     def __init__(self, speed=1, phase=0):
         super().__init__(speed)
         self.phase = phase
@@ -18,6 +22,10 @@ class PulseFX(Cycling):
 
 
 class PulseWaveFX(Cycling):
+    NAME = "pulse_wave"
+    CALLED = "position"
+    TAKES = ("speed", "length", "phase")
+
     def __init__(self, speed=1, length=1, phase=0.0):
         super().__init__(speed)
         self.length = length

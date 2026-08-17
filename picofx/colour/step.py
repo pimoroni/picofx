@@ -6,6 +6,10 @@ from picofx import Updateable, rgb_from_hsv
 
 
 class HueStepFX(Updateable):
+    NAME = "hue_step"
+    CALLED = None
+    TAKES = ("interval", "hue", "sat", "val", "steps")
+
     def __init__(self, interval=1.0, hue=0.0, sat=1.0, val=1.0, steps=6):
         self.interval = interval
         self.start_hue = hue

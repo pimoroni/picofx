@@ -6,6 +6,10 @@ from picofx import Cycling
 
 
 class BlinkFX(Cycling):
+    NAME = "blink"
+    CALLED = None
+    TAKES = ("speed", "phase", "duty")
+
     def __init__(self, speed=1, phase=0.0, duty=0.5):
         super().__init__(speed)
         self.phase = phase
@@ -17,6 +21,10 @@ class BlinkFX(Cycling):
 
 
 class BlinkWaveFX(Cycling):
+    NAME = "blink_wave"
+    CALLED = "position"
+    TAKES = ("speed", "length", "phase", "duty")
+
     def __init__(self, speed=1, length=1, phase=0.0, duty=0.5):
         super().__init__(speed)
         self.length = length
