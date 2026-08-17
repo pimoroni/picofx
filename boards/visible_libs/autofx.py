@@ -7,6 +7,8 @@
 #
 #   out1-6 level=0.5: pulse_wave speed=0.6
 #   out3.g: blink speed=1.0 duty=0.3
+#   screenA: gif file="anim.gif"
+#
 #
 # Output settings sit left of the colon, effect settings right of it. An entry runs
 # until the next selector, so settings may be laid out over several lines. Everything
@@ -76,12 +78,30 @@ EFFECTS = {
     "rgb_blink": (RGBBlinkFX, "colour", None, ("colour", "speed", "phase", "duty")),
 }
 
+# Each screen effect and the settings it takes. A screen shows images where an output
+# lights, so these never mix with EFFECTS. "gif" plays an animated GIF at the delays
+# the file declares unless fps names one; "image" holds one still; "sequence" plays a
+# folder of image files in the order their names number them, at the delay each name
+# declares unless fps names one. All of them look on the drive first, then the board.
+SCREEN_EFFECTS = {
+    "gif": ("file", "fps", "interval", "loop", "ping_pong"),
+    "image": ("file",),
+    "sequence": ("folder", "fps", "interval", "loop", "ping_pong"),
+}
+
+# The selector names that reach a screen: each SP/CE port's name, attribute and SPI
+SCREEN_PORTS = {
+    "screena": ("A", "spce_a", 0),
+    "screenb": ("B", "spce_b", 1),
+}
+
 # What a setting's value must be. A name means the same thing wherever it appears, so
 # its kind is stated once here. "count" is a whole number of 1 or more, each one
 # dividing or repeating something, where "whole" may be zero or negative. "angle" is a
 # fraction that takes degrees as well. "rate" is a step taken every millisecond, so
 # zero never arrives and there is no ceiling, only ever faster. "colour" is read by
-# the parser, which turns it into tuples.
+# the parser, which turns it into tuples. "name" is a file name kept as written.
+# "quarter" serves the left of the colon, a quarter turn for how a screen is mounted.
 SETTINGS = {
     "speed": "number",
     "phase": "fraction",
@@ -114,6 +134,11 @@ SETTINGS = {
     "sat": "fraction",
     "val": "fraction",
     "colour": "colour",
+    "file": "name",
+    "folder": "name",
+    "fps": "number",
+    "loop": "boolean",
+    "ping_pong": "boolean",
 }
 
 # Settings written as a pair, the smaller named first
@@ -121,8 +146,11 @@ PAIRED_SETTINGS = (("bright_min", "bright_max"), ("dim_min", "dim_max"),
                    ("brightness_min", "brightness_max"))
 
 # What a board entry takes, and the values a setting is limited to. A program is a
-# file name, so it is answered when it is looked for rather than here.
-BOARD_SETTINGS = {"drive": ("manual",), "program": None}
+# file name, so it is answered when it is looked for rather than here. A screen's
+# size is a fact about the hardware, so it is set here rather than on the entry
+# that plays something.
+BOARD_SETTINGS = {"drive": ("manual",), "program": None,
+                  "screena": ("2.8", "1.54"), "screenb": ("2.8", "1.54")}
 
 # Short of full, which is uncomfortable on an indicator at arm's length and buys no
 # legibility across a room
@@ -171,6 +199,14 @@ class Channel:
         self.name = name
         self.level = None
         self.colour = None
+        # A screen's own, sitting left of the colon with level and colour: how it is
+        # mounted and lit, and how its content is placed
+        self.rotation = None
+        self.backlight = None
+        self.mirror = None
+        self.offset = None
+        self.background = None
+        self.pixel_double = None
 
     def __repr__(self):
         return "Channel({}, level={}, colour={})".format(self.name, self.level, self.colour)
@@ -190,6 +226,68 @@ class Entry:
     def __repr__(self):
         return "Entry(line={}, {}, {}, {})".format(
             self.line, [c.name for c in self.channels], self.effect, self.settings)
+
+
+class ScreenShow:
+    """One panel and the player feeding it, serviced from the caller's own loop.
+
+    The player holds the clock, so service() may be called as often as the caller
+    likes and a frame goes to the glass only when it changes.
+    """
+    def __init__(self, screen, player, channel):
+        import picovector
+
+        self.screen = screen
+        self.player = player
+        self.rotation = channel.rotation if channel.rotation is not None else 0
+        self.mirror = bool(channel.mirror)
+        self.offset = channel.offset
+        self.pixel_double = bool(channel.pixel_double)
+        self.background = (picovector.color.rgb(*channel.background)
+                           if channel.background is not None else picovector.color.black)
+        self.__backlight = channel.backlight
+        self.__lit = False
+
+    def service(self):
+        if not self.player.has_advanced():
+            return
+
+        # Before the first frame, so the panel never lights at full first. on() is
+        # for a panel an earlier reload took dark, which a fresh one ignores
+        if not self.__lit:
+            self.__lit = True
+            if self.__backlight is not None:
+                self.screen.brightness(self.__backlight)
+            else:
+                self.screen.backlight.on()
+        self.screen.update(self.player.image, rotation=self.rotation, mirror=self.mirror,
+                           offset=self.offset, bg_color=self.background,
+                           pixel_double=self.pixel_double)
+
+    def pause(self):
+        self.player.pause()
+
+    def resume(self):
+        self.player.play()
+
+
+class __Still:
+    """One image, standing where a player does for a screen that shows a file."""
+    def __init__(self, image):
+        self.image = image
+        self.__shown = False
+
+    def has_advanced(self):
+        if self.__shown:
+            return False
+        self.__shown = True
+        return True
+
+    def pause(self):
+        pass
+
+    def play(self):
+        pass
 
 
 def __split_quoted(text):
@@ -276,9 +374,10 @@ def __unclosed_quote(text):
 
 def __glue(text):
     """
-    Spaces around a range dash or an equals removed, so 'out1 - 7' and 'level = 50%'
-    read as written without them. Commas are left alone: a space after one is what
-    separates 'level=0.5, 2 level=0.8' into two outputs rather than two values.
+    Spaces around a range dash, an equals or a pipe removed, so 'out1 - 7',
+    'level = 50%' and 'fade = 0.05 | 0.3' read as written without them. Commas are
+    left alone: a space after one is what separates 'level=0.5, 2 level=0.8' into two
+    outputs rather than two values.
     """
     out = []
     quote = None
@@ -291,11 +390,11 @@ def __glue(text):
         elif char in "\"'":
             quote = char
             out.append(char)
-        elif char in "-=":
+        elif char in "-=|":
             while out and out[-1] in " \t":
                 out.pop()
             out.append(char)
-        elif char in " \t" and out and out[-1] in "-=":
+        elif char in " \t" and out and out[-1] in "-=|":
             continue
         else:
             out.append(char)
@@ -388,6 +487,17 @@ def __value_fault(kind, value):
             return None
         return __ANGLE_WANTED
 
+    if kind == "name":
+        # Anything numeric is not a file name, however it was written
+        if isinstance(value, str):
+            return None
+        return "expected a file name, such as anim.gif"
+
+    if kind == "quarter":
+        if isinstance(value, float) and value in (0.0, 90.0, 180.0, 270.0):
+            return None
+        return "expected 0, 90, 180 or 270"
+
     # Anything the parser could not read as a number it left as the text given
     if isinstance(value, bool) or not isinstance(value, float):
         return "expected a number"
@@ -466,8 +576,49 @@ def __expand(token, prefix, line, problems):
     return names, prefix
 
 
+# What each left-side setting's value must be. level and backlight answer alike,
+# both being how bright something is; colour, background and offset have shapes of
+# their own and are read where they are applied
+CHANNEL_KINDS = {"level": "fraction", "backlight": "fraction",
+                 "rotation": "quarter", "mirror": "boolean", "pixel_double": "boolean"}
+
+# Which of those belong to an output and which to a screen, for saying so
+OUTPUT_SETTINGS = ("level", "colour")
+SCREEN_SETTINGS = ("backlight", "rotation", "mirror", "offset", "background", "pixel_double")
+
+
 def __apply_channel_setting(channels, key, raw, line, problems):
-    """Set level or colour on the channels an item covered, one value or a list."""
+    """Set a left-side setting on the channels an item covered, one value or a list."""
+    # An offset is one value in two parts, so it takes the pipe that divides a value
+    # rather than the comma that divides one value per output. A * centres that side,
+    # which is what leaving the whole setting out does to both
+    if key == "offset":
+        if "," in raw:
+            problems.append("line {}: offset is one value in two parts, so it takes a "
+                            "'|'. Correct it to 'offset={}'".format(
+                                line, raw.replace(",", "|")))
+            return
+
+        parts = [part.strip() for part in raw.split("|")]
+        pair = []
+        good = len(parts) == 2
+        for part in parts if good else ():
+            if part == "*":
+                pair.append(None)
+                continue
+            number = __number(part)
+            if number is None:
+                good = False
+                break
+            pair.append(int(number))
+        if not good:
+            problems.append("line {}: offset is '{}', expected x|y such as "
+                            "offset=10|20 or *|20".format(line, raw))
+        else:
+            for channel in channels:
+                channel.offset = tuple(pair)
+        return
+
     values = raw.split(",")
     if len(values) > 1 and len(values) != len(channels):
         problems.append("line {}: {} was given {} values for {} outputs".format(
@@ -478,23 +629,28 @@ def __apply_channel_setting(channels, key, raw, line, problems):
         if raw_value is None:
             continue
 
-        if key == "level":
-            # Reported rather than clamped, so 200% is not quietly taken as full and
-            # -1 is not quietly taken as off. The channel keeps its default meanwhile
-            number = __number(raw_value)
-            fault = __value_fault("fraction", raw_value if number is None else number)
-            if fault is not None:
-                problems.append("line {}: level is {}, {}".format(
-                    line, __shown(raw_value if number is None else number), fault))
-            else:
-                channel.level = number
-        else:
+        if key in ("colour", "background"):
             colour = __colour(raw_value)
             if colour is None:
-                problems.append("line {}: colour '{}' is not a name or six-digit hex".format(
-                    line, raw_value))
+                problems.append("line {}: {} '{}' is not a name or six-digit hex".format(
+                    line, key, raw_value))
             else:
-                channel.colour = colour
+                setattr(channel, key, colour)
+            continue
+
+        # Reported rather than clamped, so 200% is not quietly taken as full and
+        # -1 is not quietly taken as off. The channel keeps its default meanwhile
+        kind = CHANNEL_KINDS[key]
+        value = __value(raw_value)
+        fault = __value_fault(kind, value)
+        if fault is not None:
+            problems.append("line {}: {} is {}, {}".format(line, key, __shown(value), fault))
+        elif kind == "quarter":
+            setattr(channel, key, int(value))
+        elif kind == "boolean":
+            setattr(channel, key, bool(value))
+        else:
+            setattr(channel, key, value)
 
 
 def __parse_selector(text, line, problems):
@@ -510,9 +666,13 @@ def __parse_selector(text, line, problems):
             raw = raw.rstrip(",")
             if key == "color":
                 key = "colour"
-            if key not in ("level", "colour"):
-                problems.append("line {}: '{}' is not an output setting, expected level or colour".format(
-                    line, key))
+            elif key == "bg":
+                key = "background"
+            if key not in ("colour", "background", "offset") and key not in CHANNEL_KINDS:
+                problems.append(
+                    "line {}: '{}' is not a setting here, expected an output's {} or a "
+                    "screen's {}".format(line, key, ", ".join(OUTPUT_SETTINGS),
+                                         ", ".join(SCREEN_SETTINGS)))
             elif not recent:
                 problems.append("line {}: {} comes before any output".format(line, key))
             else:
@@ -548,10 +708,21 @@ def __parse_effect(tokens, line, problems, needs_effect=True):
             lines[key] = at
 
             # An effect that takes a colour of its own wants tuples, and a list of
-            # them where it blinks through several
+            # them where it blinks through several. Those are the parts of one
+            # setting rather than one value per output, so they take the pipe
             if key in ("colour", "color"):
-                wanted = [__colour(part) for part in raw.split(",")]
-                if None in wanted:
+                wanted = [__colour(part) for part in raw.split("|")]
+
+                # A comma is only the mistake where every part it divides is a
+                # colour. Where they are not, something else is wrong with the
+                # value, and a comment that ate its tail is the usual something
+                if None in wanted and "," in raw and \
+                        all(__colour(part) is not None for part in raw.split(",")):
+                    problems.append(
+                        "line {}: the colours an effect blinks through are one value in "
+                        "several parts, so they take '|'. Correct it to '{}={}'".format(
+                            at, key, raw.replace(",", "|")))
+                elif None in wanted:
                     problems.append("line {}: '{}' is not a colour name or six-digit hex".format(
                         at, raw))
                 else:
@@ -811,7 +982,7 @@ def __play(fx, volume, path, errors, playing):
     fx.clear()
 
     text = None
-    players, settings, problems = [], {}, []
+    players, shows, settings, problems = [], [], {}, []
 
     # The mount point is the board's own, where the reader sees a drive with a file
     # on it, so messages name the file rather than the path
@@ -832,7 +1003,7 @@ def __play(fx, volume, path, errors, playing):
 
     if text is not None:
         try:
-            players, settings, problems = load(text, fx)
+            players, shows, settings, problems = load(text, fx)
         # A file a user typed must never be able to take the board down. Anything
         # load does not report itself costs the whole file, where its own reporting
         # costs one entry, but the drive and the button survive to be edited again
@@ -862,7 +1033,7 @@ def __play(fx, volume, path, errors, playing):
 
     # Started by the caller, which is the only one that knows whether a program is
     # about to take the board over
-    return players, settings, problems
+    return players, shows, settings, problems
 
 
 def __start(players):
@@ -953,7 +1124,7 @@ def __run_program(name, source, problems):
 def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     """
     Play the effects file. Without a volume this reads it once and returns the
-    players and problems.
+    players, shows and problems, leaving the servicing to the caller.
 
     With one, the drive is shown at boot and the button is watched from then on: a
     double press shows or hides it, a single press re-reads the file and puts the
@@ -965,22 +1136,23 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     with nowhere to write it, and a press refused mid-write.
 
     A board entry can name a program to run instead, and can keep the drive hidden
-    until the button asks for it.
+    until the button asks for it. A screen entry is serviced from this loop, so
+    without a volume the caller services the shows it is returned.
     """
     if volume is not None:
         volume.mount()
 
-    players, settings, problems = __play(fx, volume, path, errors, [])
+    players, shows, settings, problems = __play(fx, volume, path, errors, [])
 
     if volume is None:
         __start(players)
-        return players, problems
+        return players, shows, problems
 
     # The drive goes up before any program runs, since a program that works never
     # returns. Otherwise a mistyped name would leave no way back but a reflash, so a
     # named program overrides drive=manual and __play says as much
     program = settings.get("program")
-    shows = program or settings.get("drive") != "manual"
+    drive_up = program or settings.get("drive") != "manual"
 
     # A program runs instead of the effects, as the file's own setting says, so they
     # are never started rather than started and stopped: reading the program and
@@ -992,7 +1164,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     # point away and a program kept there would have nothing left to open
     source = __read_program(program, problems) if program else None
 
-    if shows:
+    if drive_up:
         volume.expose()
 
     if program:
@@ -1009,7 +1181,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         if problems:
             indicate(fx, PROBLEM if wrote else UNREPORTED)
         __start(players)            # Never started above, whether the program ran or not
-        if shows:
+        if drive_up:
             volume.expose()
 
     paused = False
@@ -1022,7 +1194,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
             event = volume.service(fx.boot_pressed())
 
             if event in (volume.HIDDEN, volume.EJECTED, volume.RELOADED):
-                players, settings, problems = __play(fx, volume, path, errors, players)
+                players, shows, settings, problems = __play(fx, volume, path,
+                                                            errors, players)
                 paused = False
                 idle_since = None
                 __start(players)
@@ -1039,16 +1212,23 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                 if not paused:
                     for player in players:
                         player.stop()
+                    for show in shows:
+                        show.pause()
                     paused = True
             elif paused:
                 if idle_since is None:
                     idle_since = time.ticks_ms()
                 elif time.ticks_diff(time.ticks_ms(), idle_since) >= TRANSFER_HOLD_MS:
                     __start(players)
+                    for show in shows:
+                        show.resume()
                     paused = False
 
             if paused:
                 __transfer_frame(fx, time.ticks_ms())
+            else:
+                for show in shows:
+                    show.service()
 
             if event == volume.BUSY:
                 # A press the computer's writing blocked otherwise looks exactly like
@@ -1061,6 +1241,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     finally:
         for player in players:
             player.stop()
+        # shutdown() releases the screen ports, so the cache must not outlive them
+        __SCREENS.clear()
         if volume.exposed():
             volume.withdraw()
         fx.shutdown()
@@ -1086,6 +1268,206 @@ def channels(fx):
         colour.append(("rgb", rgb))
 
     return mono, colour
+
+
+# The screens already built, kept across reloads: construction resets a panel, so a
+# reload that still names one repaints it instead of blanking it first
+__SCREENS = {}
+
+
+def __screen_shown(name):
+    """The selector as the reader wrote it, the port letter back in capitals."""
+    return "screen" + name[6:].upper()
+
+
+def __find_image(name, line, problems):
+    """
+    The file or folder a screen entry names, or None if there is none to play. The
+    drive's copy wins, as a program's does, and for the same reason: it is the one
+    the reader can see and edit.
+    """
+    wanted = (name,) if name.startswith("/") else (MOUNT_DIR + "/" + name, name)
+
+    found = []
+    for candidate in wanted:
+        try:
+            os.stat(candidate)
+            found.append(candidate)
+        except OSError:
+            continue
+
+    if not found:
+        problems.append("line {}: there is no {} on the drive or the board".format(line, name))
+        return None
+
+    if len(found) > 1:
+        problems.append("line {}: {} is on the drive and on the board's own filesystem, "
+                        "so the drive's copy is the one that plays".format(line, name))
+
+    return found[0]
+
+
+def __screen_on(fx, name, line, problems, size):
+    """
+    The panel a selector name reaches, built once and kept: construction resets the
+    glass, so a screen is only ever constructed the first time it is asked for, at
+    the board entry's size for it or 2.8 unsaid, size being unreadable from a panel.
+    """
+    known = __SCREENS.get(name)
+    if known is not None:
+        screen, built_size = known
+        if size is not None and size != built_size:
+            problems.append("{} is already running as a {} screen, so its new size "
+                            "needs the board turning off and on".format(
+                                __screen_shown(name), built_size))
+        return screen
+
+    from spce import SPCE, SPCEPort
+
+    port_name, attr, spi = SCREEN_PORTS[name]
+    port = getattr(fx, attr)
+    shown = __screen_shown(name)
+
+    if port.mode is None:
+        # The port was never declared, so it becomes a screen port here: the same
+        # construction a program would make, made because the file asked for it
+        pins = getattr(type(fx), "SPCE_{}_PINS".format(port_name))
+        port = SPCEPort(port_name, SPCE.SCREEN, spi, pins)
+        setattr(fx, attr, port)
+    elif port.mode != SPCE.SCREEN:
+        problems.append("line {}: SP/CE {} is set up for something else, so {} cannot "
+                        "show anything".format(line, port_name, shown))
+        return None
+
+    if size is None:
+        size = "2.8"
+
+    from screens import Screen154, Screen280
+
+    try:
+        screen = (Screen154 if size == "1.54" else Screen280)(port)
+    except Exception as e:      # noqa: BLE001
+        problems.append("line {}: {} could not start: {}".format(line, shown, e))
+        return None
+
+    __SCREENS[name] = (screen, size)
+    return screen
+
+
+def __build_shows(entries, fx, board, problems):
+    """A show per screen entry: the panel it names and the player feeding it."""
+    shows = []
+    built = set()
+
+    for entry in entries:
+        channel = entry.channels[0]
+        name = channel.name
+
+        if len(entry.channels) > 1:
+            problems.append("line {}: name one screen per entry".format(entry.line))
+            continue
+
+        if name not in SCREEN_PORTS or getattr(fx, SCREEN_PORTS[name][1], None) is None:
+            offered = [__screen_shown(known) for known in sorted(SCREEN_PORTS)
+                       if getattr(fx, SCREEN_PORTS[known][1], None) is not None]
+            if offered:
+                problems.append("line {}: this board has no {}, it has {}".format(
+                    entry.line, __screen_shown(name), " and ".join(offered)))
+            else:
+                problems.append("line {}: this board has no screens".format(entry.line))
+            continue
+
+        # Named twice is already reported as a repeat, so the later entry only skips
+        if name in built:
+            continue
+
+        if entry.effect not in SCREEN_EFFECTS:
+            if entry.effect in EFFECTS:
+                problems.append("line {}: {} lights the outputs, a screen plays {}".format(
+                    entry.line, entry.effect, ", ".join(sorted(SCREEN_EFFECTS))))
+            elif entry.effect is not None:
+                problems.append("line {}: '{}' is not something a screen plays, "
+                                "expected {}".format(entry.line, entry.effect,
+                                                     ", ".join(sorted(SCREEN_EFFECTS))))
+            continue
+
+        if channel.colour is not None:
+            problems.append("line {}: a screen has no colour setting, so it was "
+                            "ignored".format(entry.line))
+
+        # The word is right on an output and this is not one, so the correction
+        # carries the value across
+        if channel.level is not None:
+            problems.append("line {}: a screen has no level. Correct it to "
+                            "'backlight={}'".format(entry.line, __shown(channel.level)))
+
+        settings = __check_settings(entry, SCREEN_EFFECTS[entry.effect], problems)
+
+        # A sequence names a folder where the others name a file, and neither works
+        # without one
+        wanted = "folder" if "folder" in SCREEN_EFFECTS[entry.effect] else "file"
+        target = settings.get(wanted)
+        if target is None:
+            # A source that was refused, or written under the other key, has been
+            # reported already, and one mistake gets one message
+            if "file" not in entry.settings and "folder" not in entry.settings:
+                example = "folder=/frames" if wanted == "folder" else "file=anim.gif"
+                problems.append("line {}: {} needs a {} to play, such as {}".format(
+                    entry.line, entry.effect, wanted, example))
+            continue
+
+        at = entry.lines.get(wanted, entry.line)
+        path = __find_image(target, at, problems)
+        if path is None:
+            continue
+
+        screen = __screen_on(fx, name, entry.line, problems, board.get(name))
+        if screen is None:
+            continue
+
+        # fps and interval both name the pace, one the inverse of the other, so a
+        # slideshow can say seconds and an animation can say a rate
+        fps = settings.get("fps")
+        interval = settings.get("interval")
+        if interval is not None:
+            if fps is not None:
+                problems.append("line {}: {} was given both fps and interval, so fps "
+                                "was used".format(entry.line, entry.effect))
+            elif interval == 0:
+                problems.append("line {}: {}'s interval is 0, expected the seconds "
+                                "between frames".format(
+                                    entry.lines.get("interval", entry.line), entry.effect))
+            else:
+                fps = 1.0 / interval
+
+        try:
+            if entry.effect == "gif":
+                from playback import GIFPlayer
+                player = GIFPlayer(path, fps=fps,
+                                   loop=settings.get("loop", True),
+                                   ping_pong=settings.get("ping_pong", False))
+            elif entry.effect == "sequence":
+                from playback import SequencePlayer
+                player = SequencePlayer(path, fps=fps,
+                                        loop=settings.get("loop", True),
+                                        ping_pong=settings.get("ping_pong", False))
+            else:
+                import picovector
+                player = __Still(picovector.image.load(path))
+        except Exception as e:      # noqa: BLE001
+            problems.append("line {}: {} could not be played: {}".format(at, target, e))
+            continue
+
+        built.add(name)
+        shows.append(ScreenShow(screen, player, channel))
+
+    # A screen the file no longer names keeps its last frame but goes dark, since
+    # nothing is left to say anything on it
+    for name, (screen, _) in __SCREENS.items():
+        if name not in built:
+            screen.backlight.off()
+
+    return shows
 
 
 def __check_board(entry, problems):
@@ -1165,7 +1547,7 @@ def __check_settings(entry, taken, problems):
 
         # Each effect gets the type it was written for: a count as an integer, which
         # several of them require, and a boolean however the user chose to spell it
-        if kind in ("count", "whole"):
+        if kind in ("count", "whole", "quarter"):
             settings[key] = int(value)
         elif kind == "boolean":
             settings[key] = bool(value)
@@ -1186,7 +1568,10 @@ def __build_effect(entry, count, problems):
     if known is None:
         # An entry that named none at all has already been reported as such, and
         # saying the missing name is not an effect only shows the reader an internal
-        if entry.effect is not None:
+        if entry.effect in SCREEN_EFFECTS:
+            problems.append("line {}: {} plays on a screen, such as 'screenA: {} "
+                            "file=anim.gif'".format(entry.line, entry.effect, entry.effect))
+        elif entry.effect is not None:
             problems.append("line {}: '{}' is not an effect".format(entry.line, entry.effect))
         return None, None, None
 
@@ -1228,19 +1613,29 @@ def __callables(effect, how, count, entry, problems):
 
 def load(text, fx):
     """
-    Read the effects file. Returns the players it describes, the settings its board
-    entries carry, and any problems.
+    Read the effects file. Returns the players it describes, the shows its screen
+    entries play, the settings its board entries carry, and any problems.
     """
     entries, problems = parse(text)
     mono, colour = channels(fx)
 
-    # Board entries are settings rather than effects, so they are taken out here and
-    # handed back for the caller to act on
+    # Board entries are settings rather than effects, and a screen name routes its
+    # whole entry to the screens, so a mistyped one is answered about screens and not
+    # about outputs the board never had
     board = {}
+    screen_entries = []
     wanted_entries = []
     for entry in entries:
         if len(entry.channels) == 1 and entry.channels[0].name == BOARD:
             board.update(__check_board(entry, problems))
+            continue
+
+        named = [channel for channel in entry.channels if channel.name.startswith("screen")]
+        if named and len(named) != len(entry.channels):
+            problems.append("line {}: outputs and screens cannot share an entry".format(
+                entry.line))
+        elif named:
+            screen_entries.append(entry)
         else:
             wanted_entries.append(entry)
     entries = wanted_entries
@@ -1265,6 +1660,11 @@ def load(text, fx):
         if missing:
             problems.append("line {}: this board has no {}".format(
                 entry.line, ", ".join(missing)))
+
+        for key in SCREEN_SETTINGS:
+            if any(getattr(channel, key) is not None for channel in entry.channels):
+                problems.append("line {}: {} is for a screen, an output takes {}".format(
+                    entry.line, key, ", ".join(OUTPUT_SETTINGS)))
 
         effect, kind, how = __build_effect(entry, count, problems)
         if effect is None:
@@ -1341,6 +1741,8 @@ def load(text, fx):
     if len(players) == 2:
         players[0].pair(players[1])
 
+    shows = __build_shows(screen_entries, fx, board, problems)
+
     # Found in the order the work happens, which is every line the parser read and
     # then every entry the loader built, so a reader gets them in the file's order
-    return players, board, __in_line_order(problems)
+    return players, shows, board, __in_line_order(problems)

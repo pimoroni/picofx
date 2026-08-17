@@ -80,6 +80,9 @@ Settings you leave out take their usual value. A '#' starts a comment. An entry
 can run on over several lines so long as the colon is on the first; indenting
 changes nothing.
 
+A screen is named the same way and plays pictures instead of lighting up. See
+"Screens" below.
+
 
 The board itself
 ----------------
@@ -89,6 +92,8 @@ One entry sets the board rather than the lights, and names no output:
 
   'drive'           'manual' keeps the drive hidden until you ask for it
   'program'         a Python file to run instead of the effects
+  'screenA'         what size of screen is on SP/CE A, if you have one
+  'screenB'         the same for SP/CE B
 
 A program can sit on this drive or on the board's own filesystem: a name is
 looked for here first, then on the board, and it may include folders. So
@@ -178,9 +183,10 @@ The ones ending '_wave', '_sequence' and '_counter' travel across the outputs
 you name; the rest do the same on every one. 'traffic_light' wants three
 outputs, and lights them red, amber and green in that order.
 
-'rgb_blink' takes one colour, or several to blink through in turn:
+'rgb_blink' takes one colour, or several to blink through in turn, divided by
+'|' because they are parts of one setting rather than one each for the outputs:
 
-  out1: rgb_blink colour=red,warm,ff8040 speed=0.5
+  out1: rgb_blink colour=red|warm|ff8040 speed=0.5
 
 'speed' is cycles a second: 1 goes round once a second, 0.5 once every two, 2
 twice a second. A negative speed runs the cycle backwards.
@@ -199,6 +205,65 @@ written 180deg, which is what a colour picker gives you.
 
 A setting whose value is not what it takes is ignored, with a note in
 errors.txt, and the effect runs on its usual value for it.
+
+
+Screens
+-------
+A screen on either SP/CE connector is named screenA or screenB. A screen
+cannot say what size it is, so tell the board:
+
+  board: screenA=1.54
+
+The sizes are 2.8 and 1.54, and 2.8 is used if you say nothing. Changing it
+needs the board turned off and on again before the new size takes.
+
+What a screen plays:
+
+  gif               file fps interval loop ping_pong
+  image             file
+  sequence          folder fps interval loop ping_pong
+
+  screenA: gif file="clock.gif"
+  screenA: image file=logo.png
+  screenA: sequence folder=photos interval=30
+
+'gif' plays an animated GIF at the delays it was saved with, 'image' holds
+one picture, and 'sequence' plays a folder of them in the order their names
+number them. Pictures can be PNG, JPEG or GIF.
+
+'fps' is frames a second and 'interval' is the seconds between them, so use
+whichever suits: 'fps=12' for an animation, 'interval=30' for a slideshow.
+Either one replaces the delays the file was saved with. 'loop' is true
+unless you set it false, which stops on the last frame. 'ping_pong' plays
+back and forth instead of starting over.
+
+A file is looked for on this drive first, then on the board itself, and the
+name may include folders. There is little room here, so pictures usually
+live on the board.
+
+A screen draws about twenty frames a second at best, and effects on the
+outputs take time from it, so a file asking for more gets its speed and not
+its smoothness.
+
+
+Setting a screen
+----------------
+Before the colon, and separate from what it plays:
+
+  'rotation'        0, 90, 180 or 270, for how the screen is mounted
+  'backlight'       how brightly it is lit, 0 to 1, such as 0.5 or 50%
+  'mirror'          true to flip the picture left to right
+  'offset'          where to put the picture, as x|y
+  'background'      the colour around it, or 'bg' for short
+  'pixel_double'    true to draw each pixel twice as wide and tall, so a
+                    half size picture fills the screen
+
+  screenA rotation=90: gif file="clock.gif"
+  screenA offset=*|20 bg=black: image file=logo.png
+
+A picture is centred unless 'offset' puts it somewhere, and a '*' in place
+of either number centres that side. The '|' is there because a comma always
+means one value per output, where these two are parts of one value.
 
 
 This README is rebuilt by the board, so edits to it will not stick.
