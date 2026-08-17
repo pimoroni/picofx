@@ -9,6 +9,8 @@
 #   out3.g: blink speed=1.0 duty=0.3
 #   screenA: gif file="anim.gif"
 #
+# A [Heading: 30s] begins a scene that shows for its time; scenes take turns, and
+# entries before the first heading are always on.
 #
 # Output settings sit left of the colon, effect settings right of it. An entry runs
 # until the next selector, so settings may be laid out over several lines. Everything
@@ -147,8 +149,8 @@ PAIRED_SETTINGS = (("bright_min", "bright_max"), ("dim_min", "dim_max"),
 
 # What a board entry takes, and the values a setting is limited to. A program is a
 # file name, so it is answered when it is looked for rather than here. A screen's
-# size is a fact about the hardware, so it is set here rather than on the entry
-# that plays something.
+# size is a fact about the hardware, set once here where an entry's settings vary
+# per scene.
 BOARD_SETTINGS = {"drive": ("manual",), "program": None,
                   "screena": ("2.8", "1.54"), "screenb": ("2.8", "1.54")}
 
@@ -222,10 +224,40 @@ class Entry:
         # Where each setting was written, since an entry may run over several lines
         # and a problem belongs to the line the reader has to go and edit
         self.lines = {}
+        # The scene this entry belongs to, or None for one before any heading, which
+        # is always on. A heading itself is an entry whose heading carries (name,
+        # seconds) and nothing else
+        self.scene = None
+        self.heading = None
 
     def __repr__(self):
         return "Entry(line={}, {}, {}, {})".format(
             self.line, [c.name for c in self.channels], self.effect, self.settings)
+
+
+class Scene:
+    """One named scene: its content in the form the players take, ready to switch to."""
+    def __init__(self, name, line, hold, restart=False):
+        self.name = name
+        self.key = name.lower()
+        self.line = line
+        self.hold = hold            # Seconds it shows for, or None to hold forever
+        self.restart = restart      # Whether its content begins again on every entry
+        # Whether its heading has already been answered, so one mistake is not
+        # reported twice: a heading missing its colon has no time either
+        self.advised = False
+        self.effects = None
+        self.levels = None
+        self.colours = None
+        self.driven = set()         # The slots this scene fills, which a switch clears
+        # What this scene's entries built, one per entry, which is what a restart
+        # has to reach: a travelling effect hands the player a closure and keeps the
+        # object the offset lives on
+        self.sources = []
+
+    def __repr__(self):
+        return "Scene({}, line={}, hold={}, restart={})".format(
+            self.name, self.line, self.hold, self.restart)
 
 
 class ScreenShow:
@@ -234,11 +266,12 @@ class ScreenShow:
     The player holds the clock, so service() may be called as often as the caller
     likes and a frame goes to the glass only when it changes.
     """
-    def __init__(self, screen, player, channel):
+    def __init__(self, screen, player, channel, scene=None):
         import picovector
 
         self.screen = screen
         self.player = player
+        self.scene = scene
         self.rotation = channel.rotation if channel.rotation is not None else 0
         self.mirror = bool(channel.mirror)
         self.offset = channel.offset
@@ -247,10 +280,18 @@ class ScreenShow:
                            if channel.background is not None else picovector.color.black)
         self.__backlight = channel.backlight
         self.__lit = False
+        self.__redraw = False
+        # Whether this show has the panel. Only a scene takes it away, so a file
+        # without scenes never has to say so
+        self.live = True
 
     def service(self):
-        if not self.player.has_advanced():
+        # A frame is sent where the player has moved on, or where the panel has been
+        # put aside and needs its picture back: a still moves once and never again,
+        # so nothing else would light it a second time
+        if not (self.player.has_advanced() or self.__redraw):
             return
+        self.__redraw = False
 
         # Before the first frame, so the panel never lights at full first. on() is
         # for a panel an earlier reload took dark, which a fresh one ignores
@@ -270,6 +311,18 @@ class ScreenShow:
     def resume(self):
         self.player.play()
 
+    def rest(self):
+        """Put aside by a scene switch: paused and dark, relighting on return."""
+        self.player.pause()
+        self.screen.backlight.off()
+        self.__lit = False
+        self.__redraw = True
+
+    def restart(self):
+        """Back to the first frame, for a scene that begins again on every entry."""
+        self.player.to_first()
+        self.__redraw = True
+
 
 class __Still:
     """One image, standing where a player does for a screen that shows a file."""
@@ -288,6 +341,9 @@ class __Still:
 
     def play(self):
         pass
+
+    def to_first(self):
+        pass                    # One picture is always on its first frame
 
 
 def __split_quoted(text):
@@ -375,7 +431,7 @@ def __unclosed_quote(text):
 def __glue(text):
     """
     Spaces around a range dash, an equals or a pipe removed, so 'out1 - 7',
-    'level = 50%' and 'fade = 0.05 | 0.3' read as written without them. Commas are
+    'level = 50%' and 'offset = 10 | 20' read as written without them. Commas are
     left alone: a space after one is what separates 'level=0.5, 2 level=0.8' into two
     outputs rather than two values.
     """
@@ -444,6 +500,18 @@ def __value(text):
         return False
     number = __number(text)
     return text if number is None else number
+
+
+def __scene_time(word):
+    """The seconds a heading's setting names, or None where it names no time."""
+    if not word.lower().endswith("s"):
+        return None
+    return __number(word[:-1])
+
+
+def __is_scene_setting(word):
+    """Whether a word would be a setting if it sat after the heading's colon."""
+    return word.lower() == "restart" or __scene_time(word) is not None
 
 
 def __degrees(text):
@@ -756,6 +824,7 @@ def parse(text):
     problems = []
     pending = None
     pending_tokens = []
+    scene = None
     seen = {}
 
     def close():
@@ -768,13 +837,15 @@ def parse(text):
         pending.effect, pending.settings, pending.lines = __parse_effect(
             pending_tokens, pending.line, problems, not is_board)
 
+        # Per scene, since the same output in two scenes is not a repeat
         if not is_board:
             for channel in pending.channels:
-                if channel.name in seen:
+                key = (pending.scene, channel.name)
+                if key in seen:
                     problems.append("line {}: {} was already set on line {}".format(
-                        pending.line, channel.name, seen[channel.name]))
+                        pending.line, channel.name, seen[key]))
                 else:
-                    seen[channel.name] = pending.line
+                    seen[key] = pending.line
 
         entries.append(pending)
 
@@ -797,6 +868,70 @@ def parse(text):
             jammed.add(number + 1)
 
         if not line:
+            continue
+
+        # A heading begins a scene, and everything before the first one is always on.
+        # Read from what was written, since a name is text and the gluing that serves
+        # an entry's ranges and values has nothing to do here
+        if written.startswith("["):
+            close()
+            pending = None
+            pending_tokens = []
+
+            if not written.endswith("]"):
+                problems.append("line {}: '{}' has no ']' to close it".format(
+                    number + 1, written))
+                continue
+
+            # A colon divides the name from its settings, as it divides an entry's
+            # outputs from its effect, so a name may hold anything including a word
+            # that would otherwise be a setting
+            name, colon, rest = written[1:-1].partition(":")
+            name = name.strip()
+            hold = None
+            restart = False
+            advised = False
+
+            for word in rest.split():
+                seconds = __scene_time(word)
+                if word.lower() == "restart":
+                    restart = True
+                elif seconds is None:
+                    problems.append("line {}: a scene has no setting '{}', it takes a "
+                                    "time such as 30s, or restart".format(number + 1, word))
+                elif seconds > 0:
+                    hold = seconds
+                else:
+                    problems.append("line {}: a scene's time is how long it shows, so "
+                                    "it cannot be {}".format(number + 1, word))
+
+            # Settings written where the name goes are kept as the name, since
+            # guessing which words were meant as settings is what the colon settles.
+            # Saying so is what stops '[Lava 8s]' quietly becoming a scene of that
+            # name that never moves on
+            if not colon:
+                words = name.split()
+                taken = 0
+                while taken < len(words) - 1 and __is_scene_setting(words[-1 - taken]):
+                    taken += 1
+                if taken:
+                    problems.append(
+                        "line {}: '{}' needs a ':' before its settings. Correct it to "
+                        "'[{}: {}]'".format(number + 1, written,
+                                            " ".join(words[:-taken]),
+                                            " ".join(words[-taken:])))
+                    advised = True
+
+            if not name:
+                problems.append("line {}: this scene has no name inside the "
+                                "'[ ]'".format(number + 1))
+                continue
+
+            heading = Entry(number + 1)
+            heading.heading = {"name": name, "hold": hold, "restart": restart,
+                               "advised": advised}
+            entries.append(heading)
+            scene = name.lower()
             continue
 
         # An unclosed quote takes the rest of the line into itself, colon and all,
@@ -842,6 +977,7 @@ def parse(text):
                 continue
 
             pending = Entry(number + 1)
+            pending.scene = scene
             pending.channels = __parse_selector(selector, number + 1, problems)
             pending_tokens = [(token, number + 1) for token in __split_quoted(remainder)]
         elif pending is not None:
@@ -982,7 +1118,7 @@ def __play(fx, volume, path, errors, playing):
     fx.clear()
 
     text = None
-    players, shows, settings, problems = [], [], {}, []
+    players, shows, scenes, settings, problems = [], [], [], {}, []
 
     # The mount point is the board's own, where the reader sees a drive with a file
     # on it, so messages name the file rather than the path
@@ -1003,7 +1139,7 @@ def __play(fx, volume, path, errors, playing):
 
     if text is not None:
         try:
-            players, shows, settings, problems = load(text, fx)
+            players, shows, scenes, settings, problems = load(text, fx)
         # A file a user typed must never be able to take the board down. Anything
         # load does not report itself costs the whole file, where its own reporting
         # costs one entry, but the drive and the button survive to be edited again
@@ -1033,7 +1169,7 @@ def __play(fx, volume, path, errors, playing):
 
     # Started by the caller, which is the only one that knows whether a program is
     # about to take the board over
-    return players, shows, settings, problems
+    return players, shows, scenes, settings, problems
 
 
 def __start(players):
@@ -1124,7 +1260,9 @@ def __run_program(name, source, problems):
 def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     """
     Play the effects file. Without a volume this reads it once and returns the
-    players, shows and problems, leaving the servicing to the caller.
+    players, shows, scenes and problems, leaving the servicing and the rotation to
+    the caller. Scenes take turns on their own times, and everything before the
+    first heading stays on throughout.
 
     With one, the drive is shown at boot and the button is watched from then on: a
     double press shows or hides it, a single press re-reads the file and puts the
@@ -1142,11 +1280,25 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     if volume is not None:
         volume.mount()
 
-    players, shows, settings, problems = __play(fx, volume, path, errors, [])
+    players, shows, scenes, settings, problems = __play(fx, volume, path, errors, [])
+
+    scene_at = 0
+    scene_deadline = None
+
+    def begin_scenes():
+        """Enter the first scene and set its clock, for a boot and every reload."""
+        nonlocal scene_at, scene_deadline
+        scene_at = 0
+        scene_deadline = None
+        if scenes:
+            __apply_scene(players, shows, scenes[0])
+            if scenes[0].hold:
+                scene_deadline = time.ticks_add(time.ticks_ms(), int(scenes[0].hold * 1000))
 
     if volume is None:
+        begin_scenes()
         __start(players)
-        return players, shows, problems
+        return players, shows, scenes, problems
 
     # The drive goes up before any program runs, since a program that works never
     # returns. Otherwise a mistyped name would leave no way back but a reflash, so a
@@ -1158,6 +1310,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     # are never started rather than started and stopped: reading the program and
     # showing the drive both take long enough for a flash of them to be seen
     if not program:
+        begin_scenes()
         __start(players)
 
     # Read while the board still holds the drive, since exposing it takes the mount
@@ -1180,6 +1333,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
             wrote = report(problems, errors, bool(players))
         if problems:
             indicate(fx, PROBLEM if wrote else UNREPORTED)
+        begin_scenes()
         __start(players)            # Never started above, whether the program ran or not
         if drive_up:
             volume.expose()
@@ -1194,15 +1348,25 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
             event = volume.service(fx.boot_pressed())
 
             if event in (volume.HIDDEN, volume.EJECTED, volume.RELOADED):
-                players, shows, settings, problems = __play(fx, volume, path,
-                                                            errors, players)
+                players, shows, scenes, settings, problems = __play(fx, volume, path,
+                                                                    errors, players)
                 paused = False
                 idle_since = None
+                begin_scenes()
                 __start(players)
                 if event == volume.RELOADED:
                     # A single press asks to try an edit without putting the drive
                     # away, so it goes back once the file has been read
                     volume.expose()
+
+            # The rotation, standing aside with everything else while a transfer runs
+            if scene_deadline is not None and not paused and \
+                    time.ticks_diff(time.ticks_ms(), scene_deadline) >= 0:
+                scene_at = (scene_at + 1) % len(scenes)
+                scene = scenes[scene_at]
+                __apply_scene(players, shows, scene)
+                scene_deadline = (time.ticks_add(time.ticks_ms(), int(scene.hold * 1000))
+                                  if scene.hold else None)
 
             # A transfer costs a running effect most of a tenth of a second in one
             # hitch, so the effects stand aside for it and something of the board's
@@ -1221,14 +1385,16 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                 elif time.ticks_diff(time.ticks_ms(), idle_since) >= TRANSFER_HOLD_MS:
                     __start(players)
                     for show in shows:
-                        show.resume()
+                        if show.live:
+                            show.resume()
                     paused = False
 
             if paused:
                 __transfer_frame(fx, time.ticks_ms())
             else:
                 for show in shows:
-                    show.service()
+                    if show.live:
+                        show.service()
 
             if event == volume.BUSY:
                 # A press the computer's writing blocked otherwise looks exactly like
@@ -1377,8 +1543,9 @@ def __build_shows(entries, fx, board, problems):
                 problems.append("line {}: this board has no screens".format(entry.line))
             continue
 
-        # Named twice is already reported as a repeat, so the later entry only skips
-        if name in built:
+        # Named twice in one scene is already reported as a repeat, so the later
+        # entry only skips; the same screen in two scenes takes turns
+        if (entry.scene, name) in built:
             continue
 
         if entry.effect not in SCREEN_EFFECTS:
@@ -1440,17 +1607,23 @@ def __build_shows(entries, fx, board, problems):
             else:
                 fps = 1.0 / interval
 
+        # A scene's show waits for its scene; the first scene's is woken by the
+        # first apply, so every scene starts its content from the top
+        asleep = entry.scene is not None
+
         try:
             if entry.effect == "gif":
                 from playback import GIFPlayer
                 player = GIFPlayer(path, fps=fps,
                                    loop=settings.get("loop", True),
-                                   ping_pong=settings.get("ping_pong", False))
+                                   ping_pong=settings.get("ping_pong", False),
+                                   paused=asleep)
             elif entry.effect == "sequence":
                 from playback import SequencePlayer
                 player = SequencePlayer(path, fps=fps,
                                         loop=settings.get("loop", True),
-                                        ping_pong=settings.get("ping_pong", False))
+                                        ping_pong=settings.get("ping_pong", False),
+                                        paused=asleep)
             else:
                 import picovector
                 player = __Still(picovector.image.load(path))
@@ -1458,13 +1631,14 @@ def __build_shows(entries, fx, board, problems):
             problems.append("line {}: {} could not be played: {}".format(at, target, e))
             continue
 
-        built.add(name)
-        shows.append(ScreenShow(screen, player, channel))
+        built.add((entry.scene, name))
+        shows.append(ScreenShow(screen, player, channel, entry.scene))
 
     # A screen the file no longer names keeps its last frame but goes dark, since
     # nothing is left to say anything on it
+    names = {used for _, used in built}
     for name, (screen, _) in __SCREENS.items():
-        if name not in built:
+        if name not in names:
             screen.backlight.off()
 
     return shows
@@ -1611,44 +1785,16 @@ def __callables(effect, how, count, entry, problems):
             for index in range(count)]
 
 
-def load(text, fx):
+def __assemble(entries, slots, effects, levels, colours, claimed, problems):
     """
-    Read the effects file. Returns the players it describes, the shows its screen
-    entries play, the settings its board entries carry, and any problems.
+    Fill one scene's arrays from its entries, or the always-on set's from those
+    before any heading. Claims span every call, since scenes take turns with the
+    same hardware but different channels on it would fight. Returns the slots
+    driven here, which is what a switch must know to clear, and the effects built,
+    which is what a restart begins again.
     """
-    entries, problems = parse(text)
-    mono, colour = channels(fx)
-
-    # Board entries are settings rather than effects, and a screen name routes its
-    # whole entry to the screens, so a mistyped one is answered about screens and not
-    # about outputs the board never had
-    board = {}
-    screen_entries = []
-    wanted_entries = []
-    for entry in entries:
-        if len(entry.channels) == 1 and entry.channels[0].name == BOARD:
-            board.update(__check_board(entry, problems))
-            continue
-
-        named = [channel for channel in entry.channels if channel.name.startswith("screen")]
-        if named and len(named) != len(entry.channels):
-            problems.append("line {}: outputs and screens cannot share an entry".format(
-                entry.line))
-        elif named:
-            screen_entries.append(entry)
-        else:
-            wanted_entries.append(entry)
-    entries = wanted_entries
-
-    slots = {}
-    for kind, pairs in (("mono", mono), ("colour", colour)):
-        for index, (name, _) in enumerate(pairs):
-            slots[name] = (kind, index)
-
-    effects = {"mono": [None] * len(mono), "colour": [None] * len(colour)}
-    levels = {"mono": [1.0] * len(mono), "colour": [1.0] * len(colour)}
-    colours = {"colour": [(255, 255, 255)] * len(colour)}
-    claimed = {}
+    driven = set()
+    sources = []
 
     for entry in entries:
         count = len(entry.channels)
@@ -1688,6 +1834,8 @@ def load(text, fx):
         if not wanted:
             continue
 
+        sources.append(effect)
+
         for channel, where, _, _ in wanted:
             # A colour output and its own components drive the same hardware, so both
             # claim the components and any overlap collides whichever came first
@@ -1718,23 +1866,177 @@ def load(text, fx):
         given = __callables(effect, how, count, entry, problems)
         for channel, where, index, position in wanted:
             effects[where][index] = given[position]
+            driven.add((where, index))
             if channel.level is not None:
                 levels[where][index] = channel.level
             if channel.colour is not None and where == "colour":
                 colours[where][index] = channel.colour
 
+    return driven, sources
+
+
+def __apply_scene(players, shows, scene):
+    """
+    Point the players and shows at one scene. Its arrays already carry the always-on
+    entries and turn off what other scenes drive, so this is an exchange of lists the
+    players read on their next tick.
+
+    A scene told to restart begins its own content again, the always-on entries
+    carrying on: their effects are built in their own pass and so are never among a
+    scene's, and an effect that keeps no offset has nothing to begin again.
+    """
+    if scene.restart:
+        for source in scene.sources:
+            begin = getattr(source, "reset", None)
+            if begin is not None:
+                begin()
+
+    for player in players:
+        if isinstance(player, MonoPlayer):
+            player.effects = scene.effects["mono"]
+            player.levels = scene.levels["mono"]
+        else:
+            player.effects = scene.effects["colour"]
+            player.levels = scene.levels["colour"]
+            player.colours = scene.colours["colour"]
+
+    # A screen another scene was using goes dark unless this one, or an always-on
+    # entry, is still on it: the glass keeps its frame, the light says it is over
+    # One show at a time may have a panel, and a screen may be named by an always-on
+    # entry and by a scene both. The scene's own takes it while the scene shows, as a
+    # scene takes an always-on output, and the always-on one has it the rest of the time
+    holding = {}
+    for show in shows:
+        if show.scene is None:
+            holding.setdefault(show.screen, show)
+    for show in shows:
+        if show.scene == scene.key:
+            holding[show.screen] = show
+
+    live = set(holding.values())
+    lit = set(holding)
+
+    for show in shows:
+        show.live = show in live
+        if show.live:
+            if scene.restart and show.scene == scene.key:
+                show.restart()
+            show.resume()
+        elif show.screen in lit:
+            # Another show has this panel, so it stays lit and this one just waits
+            show.pause()
+        else:
+            show.rest()
+
+
+def load(text, fx):
+    """
+    Read the effects file. Returns the players it describes, the shows its screen
+    entries play, its scenes in heading order, the settings its board entries carry,
+    and any problems. Without headings there are no scenes and everything plays at
+    once, which is the file as it has always been.
+    """
+    entries, problems = parse(text)
+    mono, colour = channels(fx)
+
+    # Board entries are settings rather than effects, a heading begins a scene, and
+    # a screen name routes its whole entry to the screens, so a mistyped one is
+    # answered about screens and not about outputs the board never had
+    board = {}
+    scenes = []
+    known = {}
+    grouped = {None: []}
+    screen_entries = []
+
+    for entry in entries:
+        if entry.heading is not None:
+            name = entry.heading["name"]
+            already = known.get(name.lower())
+            if already is None:
+                scene = Scene(name, entry.line, entry.heading["hold"],
+                              entry.heading["restart"])
+                scene.advised = entry.heading["advised"]
+                known[scene.key] = scene
+                scenes.append(scene)
+                grouped[scene.key] = []
+            else:
+                problems.append("line {}: [{}] was already begun on line {}".format(
+                    entry.line, name, already.line))
+            continue
+
+        if len(entry.channels) == 1 and entry.channels[0].name == BOARD:
+            if entry.scene is not None:
+                problems.append("line {}: the board entry is about the board, so it "
+                                "sits outside every scene".format(entry.line))
+            board.update(__check_board(entry, problems))
+            continue
+
+        named = [channel for channel in entry.channels if channel.name.startswith("screen")]
+        if named and len(named) != len(entry.channels):
+            problems.append("line {}: outputs and screens cannot share an entry".format(
+                entry.line))
+        elif named:
+            screen_entries.append(entry)
+        else:
+            grouped[entry.scene].append(entry)
+
+    # Rotation is by time and time alone for now, so a scene without one stops it
+    if len(scenes) > 1:
+        for scene in scenes:
+            if scene.hold is None and not scene.advised:
+                problems.append("line {}: [{}] names no time, so the scenes after it "
+                                "will not show. Write it like '[{}: 30s]'".format(
+                                    scene.line, scene.name, scene.name))
+
+    slots = {}
+    for kind, pairs in (("mono", mono), ("colour", colour)):
+        for index, (name, _) in enumerate(pairs):
+            slots[name] = (kind, index)
+
+    effects = {"mono": [None] * len(mono), "colour": [None] * len(colour)}
+    levels = {"mono": [1.0] * len(mono), "colour": [1.0] * len(colour)}
+    colours = {"colour": [(255, 255, 255)] * len(colour)}
+    claimed = {}
+
+    always, _ = __assemble(grouped[None], slots, effects, levels, colours,
+                           claimed, problems)
+
+    union = set()
+    for scene in scenes:
+        scene.effects = {"mono": list(effects["mono"]), "colour": list(effects["colour"])}
+        scene.levels = {"mono": list(levels["mono"]), "colour": list(levels["colour"])}
+        scene.colours = {"colour": list(colours["colour"])}
+        scene.driven, scene.sources = __assemble(grouped[scene.key], slots, scene.effects,
+                                                 scene.levels, scene.colours,
+                                                 claimed, problems)
+        union |= scene.driven
+
+    # A slot any scene drives goes dark in the scenes that do not drive it, and dark
+    # is an effect: None means "not driven", which keeps whatever was showing
+    off = NoneFX()
+    for scene in scenes:
+        for kind, index in union - scene.driven - always:
+            scene.effects[kind][index] = off
+
+    live_effects = scenes[0].effects if scenes else effects
+    live_levels = scenes[0].levels if scenes else levels
+    live_colours = scenes[0].colours if scenes else colours
+
+    # A player exists if anything in any scene wants it, or a scene reached only by
+    # rotation would arrive with nowhere to play
     players = []
-    if any(item is not None for item in effects["mono"]):
+    every = [effects] + [scene.effects for scene in scenes]
+    if any(item is not None for one in every for item in one["mono"]):
         player = MonoPlayer([led for _, led in mono])
-        player.effects = effects["mono"]
-        player.levels = levels["mono"]
+        player.effects = live_effects["mono"]
+        player.levels = live_levels["mono"]
         players.append(player)
 
-    if any(item is not None for item in effects["colour"]):
+    if any(item is not None for one in every for item in one["colour"]):
         player = ColourPlayer([led for _, led in colour])
-        player.effects = effects["colour"]
-        player.levels = levels["colour"]
-        player.colours = colours["colour"]
+        player.effects = live_effects["colour"]
+        player.levels = live_levels["colour"]
+        player.colours = live_colours["colour"]
         players.append(player)
 
     # One timer drives both, so the two stay in step
@@ -1745,4 +2047,4 @@ def load(text, fx):
 
     # Found in the order the work happens, which is every line the parser read and
     # then every entry the loader built, so a reader gets them in the file's order
-    return players, shows, board, __in_line_order(problems)
+    return players, shows, scenes, board, __in_line_order(problems)
