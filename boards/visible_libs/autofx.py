@@ -31,7 +31,7 @@ from picofx.colour import (BLACK, BLUE, COOL, CYAN, GREEN, MAGENTA, RED, WARM, W
                            HSVFX, HueStepFX, RainbowFX, RainbowWaveFX, RGBBlinkFX, RGBFX)
 from picofx.mono import (BinaryCounterFX, BlinkFX, BlinkWaveFX, FlashFX, FlashSequenceFX,
                          FlickerFX, NoneFX, PulseFX, PulseWaveFX, RandomFX, StaticFX,
-                         TrafficLightFX)
+                         SweepFX, TrafficLightFX)
 
 # The drive a connected computer sees. Making it writable long enough to leave a
 # report belongs to whatever manages that volume, not here.
@@ -67,6 +67,7 @@ EFFECTS = {
                 ("brightness", "dimness", "bright_min", "bright_max", "dim_min", "dim_max")),
     "pulse": (PulseFX, "mono", None, ("speed", "phase")),
     "pulse_wave": (PulseWaveFX, "mono", "pos", ("speed", "length", "phase")),
+    "sweep": (SweepFX, "mono", "pos", ("speed", "length", "extent")),
     "random": (RandomFX, "mono", None, ("interval", "brightness_min", "brightness_max")),
     "binary_counter": (BinaryCounterFX, "mono", "pos", ("interval", "count", "step")),
     "traffic_light": (TrafficLightFX, "mono", ("red", "amber", "green"),
@@ -101,7 +102,8 @@ SCREEN_PORTS = {
 # its kind is stated once here. "count" is a whole number of 1 or more, each one
 # dividing or repeating something, where "whole" may be zero or negative. "angle" is a
 # fraction that takes degrees as well. "rate" is a step taken every millisecond, so
-# zero never arrives and there is no ceiling, only ever faster. "colour" is read by
+# zero never arrives and there is no ceiling, only ever faster. "span" is a distance
+# across the outputs, which nothing divides by at zero. "colour" is read by
 # the parser, which turns it into tuples. "name" is a file name kept as written.
 # "quarter" serves the left of the colon, a quarter turn for how a screen is mounted.
 SETTINGS = {
@@ -112,6 +114,7 @@ SETTINGS = {
     "length": "count",
     "flashes": "count",
     "steps": "count",
+    "extent": "span",
     "brightness": "fraction",
     "brightness_min": "fraction",
     "brightness_max": "fraction",
@@ -579,6 +582,9 @@ def __value_fault(kind, value):
     if kind == "rate" and value <= 0.0:
         # Nothing moves at zero, and it moves for good: the light never comes up
         return "expected a rate above 0, such as 0.01"
+    if kind == "span" and value <= 0.0:
+        # An extent of nothing is divided by, so this one has to be caught here
+        return "expected a number of outputs above 0, such as 1"
     if kind == "byte" and not 0.0 <= value <= 255.0:
         return "expected 0 to 255"
     if kind == "count" and (value % 1 != 0 or value < 1.0):

@@ -10,6 +10,7 @@ from .none import NoneFX
 from .pulse import PulseFX, PulseWaveFX
 from .rand import RandomFX
 from .static import StaticFX
+from .sweep import SweepFX
 from .traffic import TrafficLightFX
 
 MONO_EFFECTS = [
@@ -24,5 +25,6 @@ MONO_EFFECTS = [
     PulseWaveFX,
     RandomFX,
     StaticFX,
+    SweepFX,
     TrafficLightFX,
 ]

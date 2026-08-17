@@ -165,6 +165,7 @@ For an output, or for one of its red, green and blue:
                     dim_min dim_max
   pulse             speed phase
   pulse_wave        speed length phase
+  sweep             speed length extent
   random            interval brightness_min brightness_max
   binary_counter    interval count step
   traffic_light     red_interval red_amber_interval green_interval
@@ -179,9 +180,15 @@ For an output only, since these bring their own colour:
   hue_step          interval hue sat val steps
   rgb_blink         colour speed phase duty
 
-The ones ending '_wave', '_sequence' and '_counter' travel across the outputs
-you name; the rest do the same on every one. 'traffic_light' wants three
-outputs, and lights them red, amber and green in that order.
+The ones ending '_wave', '_sequence' and '_counter', and 'sweep', travel across
+the outputs you name; the rest do the same on every one. 'traffic_light' wants
+three outputs, and lights them red, amber and green in that order.
+
+'sweep' is a light that crosses the outputs and turns back at each end, which
+is the back and forth a scanner does. Its 'extent' is how far it reaches from
+itself, in outputs, so under 1 keeps it tight and shares its light between the
+two it lies between, and its 'speed' counts one crossing as the travelling
+effects count one pass.
 
 'rgb_blink' takes one colour, or several to blink through in turn, divided by
 '|' because they are parts of one setting rather than one each for the outputs:
