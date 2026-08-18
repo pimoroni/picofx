@@ -885,7 +885,7 @@ def parse(text):
 
     # A byte order mark is what Notepad puts at the front of a UTF-8 file. It is
     # invisible, so it can only ever be reported as a character nobody can see
-    text = text.lstrip("﻿")
+    text = text.lstrip("\ufeff")
 
     explained = False
     jammed = set()
