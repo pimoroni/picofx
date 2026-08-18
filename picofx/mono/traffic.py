@@ -9,11 +9,11 @@ class TrafficLightFX(Updateable):
     NAME = "traffic_light"
     CALLED = ("red", "amber", "green")
     TAKES = ("red_interval", "red_amber_interval", "green_interval", "amber_interval",
-             "fade_rate", "amber_flashing")
+             "amber_flashing")
 
     AMBER_FLASHING_CYCLE = 0.25
 
-    def __init__(self, red_interval=10, red_amber_interval=5, green_interval=10, amber_interval=5, fade_rate=0.01, amber_flashing=False):
+    def __init__(self, red_interval=10, red_amber_interval=5, green_interval=10, amber_interval=5, amber_flashing=False):
         # Have the red be on with amber if amber isn't flashing
         r = 0 if amber_flashing else 1
         self.__states = [
@@ -26,23 +26,21 @@ class TrafficLightFX(Updateable):
         self.__time = 0  # Track time of last state change
         self.__state = list(self.__states[self.__index][0])
         self.__interval = self.__states[self.__index][1]
-        self.__current = [0, 0, 0]
-        self.fade_rate = fade_rate
         self.__amber_flashing = amber_flashing
 
     def red(self):
         def fx():
-            return self.__current[0]
+            return self.__state[0]
         return self, fx
 
     def amber(self):
         def fx():
-            return self.__current[1]
+            return self.__state[1]
         return self, fx
 
     def green(self):
         def fx():
-            return self.__current[2]
+            return self.__state[2]
         return self, fx
 
     def tick(self, delta_ms):
@@ -62,10 +60,3 @@ class TrafficLightFX(Updateable):
                 self.__state[1] = 0
             else:
                 self.__state[1] = self.__states[self.__index][0][1]
-
-        # Add a fading effect to the outputs
-        for i in range(len(self.__current)):
-            if self.__current[i] < self.__state[i]:
-                self.__current[i] = min(self.__current[i] + delta_ms * self.fade_rate, self.__state[i])
-            elif self.__current[i] > self.__state[i]:
-                self.__current[i] = max(self.__current[i] - delta_ms * self.fade_rate, self.__state[i])

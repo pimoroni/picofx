@@ -186,7 +186,7 @@ For an output, or for one of its red, green and blue:
   random            interval brightness_min brightness_max
   binary_counter    interval count step
   traffic_light     red_interval red_amber_interval green_interval
-                    amber_interval fade_rate amber_flashing
+                    amber_interval amber_flashing
 
 For an output only, since these bring their own colour:
 
@@ -199,7 +199,10 @@ For an output only, since these bring their own colour:
 
 The ones ending '_wave', '_sequence' and '_counter', and 'sweep', travel across
 the outputs you name; the rest do the same on every one. 'traffic_light' wants
-three outputs, and lights them red, amber and green in that order.
+three outputs, and lights them red, amber and green in that order. It switches
+cleanly, so add 'ease' for the lamps of a real signal:
+
+  out1-3 ease=0.3: traffic_light
 
 'sweep' is a light that crosses the outputs and turns back at each end, which
 is the back and forth a scanner does. Its 'extent' is how far it reaches from
@@ -219,9 +222,7 @@ The settings measured in seconds are 'interval', flicker's 'bright_min',
 'bright_max', 'dim_min' and 'dim_max', and traffic_light's four intervals.
 'length', 'flashes', 'steps', 'count' and 'step' are plain counts, and a
 negative 'step' counts down.
-'amber_flashing' is true or false, and takes yes, on and 1 too. 'fade_rate' is
-how fast a traffic light's colours come up, per millisecond, so the usual 0.01
-reaches full in a tenth of a second and much above that looks instant.
+'amber_flashing' is true or false, and takes yes, on and 1 too.
 
 The rest run from 0 to 1, written 0.5 or 50% as you prefer, 'window' among them,
 being the share of a cycle the flashes happen in. 'hue' takes degrees as well,

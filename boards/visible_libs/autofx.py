@@ -83,8 +83,7 @@ SCREEN_PORTS = {
 # What a setting's value must be. A name means the same thing wherever it appears, so
 # its kind is stated once here. "count" is a whole number of 1 or more, each one
 # dividing or repeating something, where "whole" may be zero or negative. "angle" is a
-# fraction that takes degrees as well. "rate" is a step taken every millisecond, so
-# zero never arrives and there is no ceiling, only ever faster. "span" is a distance
+# fraction that takes degrees as well. "span" is a distance
 # across the outputs, which nothing divides by at zero. "colour" is read by
 # the parser, which turns it into tuples. "name" is a file name kept as written.
 # "quarter" serves the left of the colon, a quarter turn for how a screen is mounted.
@@ -112,7 +111,6 @@ SETTINGS = {
     "red_amber_interval": "seconds",
     "green_interval": "seconds",
     "amber_interval": "seconds",
-    "fade_rate": "rate",
     "amber_flashing": "boolean",
     "red": "byte",
     "green": "byte",
@@ -564,9 +562,6 @@ def __value_fault(kind, value):
         return __FRACTION_WANTED
     if kind == "seconds" and value < 0.0:
         return "expected a number of seconds, which cannot be negative"
-    if kind == "rate" and value <= 0.0:
-        # Nothing moves at zero, and it moves for good: the light never comes up
-        return "expected a rate above 0, such as 0.01"
     if kind == "span" and value <= 0.0:
         # An extent of nothing is divided by, so this one has to be caught here
         return "expected a number of outputs above 0, such as 1"
