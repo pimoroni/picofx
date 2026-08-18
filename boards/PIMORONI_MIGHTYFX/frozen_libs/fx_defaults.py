@@ -49,7 +49,7 @@ board applies the change straight away.
 In a hurry? Save the file and press "Boot" once. The drive disappears and comes
 straight back with the new effects running, so you can keep editing. Ejecting is
 the surer way, since a computer does not always write the file out until then.
-Press "Boot" twice to put the drive away, and twice again to bring it back.
+Press "Boot" twice to hide the drive, and twice again to bring it back.
 
 Deleting effects.txt restores the default; emptying it leaves the board dark.
 
@@ -62,8 +62,8 @@ When something is wrong the lights say so, and the more flashes the worse it is:
   red, three times    there was no room to write errors.txt; this drive is full
                       or damaged, so free some space or let a computer repair it
 
-While the computer is copying to this drive the effects stand aside and a dim
-white travels along the outputs, coming back a moment after it finishes.
+While the computer is copying to this drive the effects stand aside for a dim
+white travelling along the outputs, and come back a moment after it finishes.
 
 
 Writing an entry
@@ -81,7 +81,7 @@ can run on over several lines so long as the colon is on the first; indenting
 changes nothing.
 
 A screen is named the same way and plays pictures instead of lighting up. See
-"Screens" below.
+"Naming screens" below.
 
 
 The board itself
@@ -95,9 +95,8 @@ One entry sets the board rather than the lights, and names no output:
   'screenA'         what size of screen is on SP/CE A, if you have one
   'screenB'         the same for SP/CE B
 
-A program can sit on this drive or on the board's own filesystem: a name is
-looked for here first, then on the board, and it may include folders. So
-'program=fireplace.py' finds one of that name in either place, and
+A program can sit on this drive or on the board's own filesystem, and its name
+may include folders: it is looked for here first, then on the board, so
 'program=examples/effects/colour/rainbow_wave.py' reaches one of the examples
 the board ships with. Where the name is in both, this drive's copy runs.
 
@@ -106,11 +105,10 @@ errors.txt says what happened, so a mistyped name never leaves you with a board
 that does nothing.
 
 The effects stop while a program runs, and the board is busy with it, so "Boot"
-and ejecting do nothing. The drive is put up first so you can still edit
-effects.txt; unplug and plug back in for the change to take. That happens even
-with 'drive' set to 'manual', since hiding it would leave no way to change
-either setting back. It also means a program cannot read files from this drive
-while it runs, so put anything it needs on the board's own filesystem.
+and ejecting do nothing. The drive is shown anyway, even with 'drive' set to
+'manual', so you can still edit effects.txt; unplug and plug back in for the
+change to take. A program cannot read files from this drive while it runs, so
+put anything it needs on the board's own filesystem.
 
 
 Naming outputs
@@ -129,7 +127,7 @@ three plain lights instead:
   out1-7.*          all 21
 
 Order matters for the effects that travel: they move in the order you write the
-outputs, so list them in the order they appear in your build, which need not be
+outputs, so list them in the order they appear in your model, which need not be
 number order.
 
 
@@ -153,19 +151,19 @@ black. Or the hex a colour picker gives you, with its '#' left off, as out4
 above uses for a soft orange. A '#' always starts a comment, so one left on a
 colour hides the rest of the line.
 
-'fade' and 'ease' both soften a change, and both take the seconds it takes to
-get there. 'fade' crosses evenly, which is what a stage light does. 'ease' goes
-quickly at first and slows as it arrives, which is how a bulb warms, and is the
-one that looks natural on a light switching on and off.
+'fade' and 'ease' take the seconds a change takes to get there. 'fade' crosses
+evenly, which is what a stage light does; 'ease' goes quickly at first and slows
+as it arrives, which is how a bulb warms and is the one that looks natural on a
+light switching on and off.
 
 An output follows one way or the other, so a line takes one of them and not
 both. Two numbers divided by '|' give the rise and the fall their own lengths,
-a slow fade out from a quick come-on being the usual reason:
+a light that comes on quickly and fades out slowly being the usual reason:
 
   out1-7 fade=0.8: blink speed=0.5
   out1-3 ease=0.05|1.2: blink speed=1
 
-Softening belongs to the output, not to the effect, so it works on any of them.
+Softening belongs to the output, not to the effect, so it works on any effect.
 
 
 Effects
@@ -200,16 +198,16 @@ For an output only, since these bring their own colour:
   rgb_blink         colour speed phase duty
 
 The ones ending '_wave', '_sequence' and '_counter', and 'sweep', travel across
-the outputs you name; the rest do the same on every one. 'traffic_light' wants
-three outputs, and lights them red, amber and green in that order. It switches
-cleanly, so add 'ease' for the lamps of a real signal:
+the outputs you name; the rest do the same thing on every one. 'traffic_light'
+wants three outputs, and lights them red, amber and green in that order. It
+switches instantly, so add 'ease' for the lamps of a real signal:
 
   out1-3 ease=0.3: traffic_light
 
 'pelican_crossing' wants five outputs: the same three, then the two figures a
 pedestrian reads, stop and walk. In place of red and amber it flashes the amber
-and the walking figure together, which is what a pelican does while a crossing
-ends. It comes round on its own clock, there being no button to press here:
+and the walking figure together, as a pelican does while a crossing ends. It
+comes round on its own clock, there being no button to press:
 
   out1-5 ease=0.3: pelican_crossing green_interval=20 red_interval=8
 
@@ -219,25 +217,22 @@ Three outputs on 'pelican_crossing' is its traffic lights on their own:
 
   out1-3: pelican_crossing
 
-Naming more than it drives is a mistake, and said so, since the extra outputs
-have nothing to light them.
+Naming more than it drives is a mistake, and errors.txt says so.
 
-'sweep' is a light that crosses the outputs and turns back at each end, which
-is the back and forth a scanner does. Its 'extent' is how far it reaches from
-itself, in outputs, and its 'speed' counts one crossing as the travelling
-effects count one pass. Its 'hold' waits at each end, in seconds, which is
-what gives a trail time to clear before the light comes back over it:
+'sweep' is a light that crosses the outputs and turns back at each end, the
+back and forth a scanner does. Its 'extent' is how far it reaches from itself,
+in outputs, and its 'speed' counts one crossing as the travelling effects count
+one pass. Its 'hold' waits at each end, in seconds, giving a trail time to
+clear before the light comes back over it:
 
   out1-7 ease=0.4: sweep speed=1 length=7 extent=1 hold=1
 
-Give 'extent' a whole number of outputs, such as 1 or 2. At those the light
-one output loses is exactly the light the next one gains, so it travels at a
-steady brightness; in between, the board dims as the light passes between two
-outputs and brightens as it lands on one, which reads as stepping. 1 is the
-tightest that travels smoothly.
+Give 'extent' a whole number of outputs, such as 1 or 2. In between it dims as
+the light passes between two outputs and brightens as it lands on one, which
+reads as stepping. 1 is the tightest that travels smoothly.
 
 'rgb_blink' takes one colour, or several to blink through in turn, divided by
-'|' because they are parts of one setting rather than one each for the outputs:
+'|' since a comma would mean one colour for each output:
 
   out1: rgb_blink colour=red|warm|ff8040 speed=0.5
 
@@ -246,20 +241,19 @@ twice a second. A negative speed runs the cycle backwards.
 
 The settings measured in seconds are 'interval', 'hold', flicker's 'bright_min',
 'bright_max', 'dim_min' and 'dim_max', and the four intervals traffic_light and
-pelican_crossing each take.
-'length', 'flashes', 'steps', 'count' and 'step' are plain counts, and a
-negative 'step' counts down.
+pelican_crossing each take. 'length', 'flashes', 'steps', 'count' and 'step'
+are plain counts, and a negative 'step' counts down.
 
-The rest run from 0 to 1, written 0.5 or 50% as you prefer, 'window' among them,
-being the share of a cycle the flashes happen in. 'hue' takes degrees as well,
-written 180deg, which is what a colour picker gives you.
+The rest run from 0 to 1, written 0.5 or 50% as you prefer. 'window' is one of
+them, being the share of a cycle the flashes happen in. 'hue' takes degrees as
+well, written 180deg, which is what a colour picker gives you.
 
 A setting whose value is not what it takes is ignored, with a note in
 errors.txt, and the effect runs on its usual value for it.
 
 
-Screens
--------
+Naming screens
+--------------
 A screen on either SP/CE connector is named screenA or screenB. A screen
 cannot say what size it is, so tell the board:
 
@@ -268,6 +262,28 @@ cannot say what size it is, so tell the board:
 The sizes are 2.8 and 1.54, and 2.8 is used if you say nothing. Changing it
 needs the board turned off and on again before the new size takes.
 
+
+Setting a screen
+----------------
+Before the colon, and separate from what it plays:
+
+  'rotation'        0, 90, 180 or 270, for how the screen is mounted
+  'backlight'       how brightly it is lit, 0 to 1, such as 0.5 or 50%
+  'mirror'          true to flip the picture left to right
+  'offset'          where to put the picture, as x|y
+  'background'      the colour around it, or 'bg' for short
+  'pixel_double'    true to draw each pixel twice as wide and tall, so a
+                    half size picture fills the screen
+
+  screenA rotation=90: gif file="clock.gif"
+  screenA offset=*|20 bg=black: image file=logo.png
+
+A picture is centred unless 'offset' puts it somewhere, and a '*' in place
+of either number centres that side.
+
+
+Pictures
+--------
 What a screen plays:
 
   gif               file fps interval loop ping_pong hold
@@ -288,9 +304,9 @@ Either one replaces the delays the file was saved with. 'loop' is true
 unless you set it false, which stops on the last frame. 'ping_pong' plays
 back and forth instead of starting over.
 
-'hold' is the seconds to wait where the playing turns around, added to that
-frame's own delay, so a ping-pong pauses at each end rather than bouncing
-straight off. One value serves both ends, or write each with a '|':
+'hold' is the seconds to wait where it turns around, so a ping-pong pauses
+at each end instead of bouncing straight off. One value serves both ends,
+or write each with a '|':
 
   screenA: gif file="wave.gif" ping_pong=yes hold=1
   screenA: gif file="wave.gif" ping_pong=yes hold=1.5|0.5
@@ -300,28 +316,8 @@ name may include folders. There is little room here, so pictures usually
 live on the board.
 
 A screen draws about twenty frames a second at best, and effects on the
-outputs take time from it, so a file asking for more gets its speed and not
-its smoothness.
-
-
-Setting a screen
-----------------
-Before the colon, and separate from what it plays:
-
-  'rotation'        0, 90, 180 or 270, for how the screen is mounted
-  'backlight'       how brightly it is lit, 0 to 1, such as 0.5 or 50%
-  'mirror'          true to flip the picture left to right
-  'offset'          where to put the picture, as x|y
-  'background'      the colour around it, or 'bg' for short
-  'pixel_double'    true to draw each pixel twice as wide and tall, so a
-                    half size picture fills the screen
-
-  screenA rotation=90: gif file="clock.gif"
-  screenA offset=*|20 bg=black: image file=logo.png
-
-A picture is centred unless 'offset' puts it somewhere, and a '*' in place
-of either number centres that side. The '|' is there because a comma always
-means one value per output, where these two are parts of one value.
+outputs take time from it, so a file asking for more keeps its timing by
+dropping frames. Ask for twenty or fewer and it plays every one.
 
 
 Scenes
@@ -356,9 +352,9 @@ round, instead of carrying on from where they were left:
   [Beacon: 5s restart]
   out1-3: flash_sequence flashes=3
 
-The board entry belongs outside every scene, being about the board rather
-than about what is showing. A single scene with no time simply shows for
-ever, and ejecting this drive always starts again at the first scene.
+The board entry belongs outside every scene. A single scene with no time
+simply shows for ever, and ejecting this drive always starts again at the
+first scene.
 
 
 This README is rebuilt by the board, so edits to it will not stick.
