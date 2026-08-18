@@ -182,7 +182,7 @@ For an output, or for one of its red, green and blue:
                     dim_min dim_max
   pulse             speed phase
   pulse_wave        speed length phase
-  sweep             speed length extent
+  sweep             speed length extent hold
   random            interval brightness_min brightness_max
   binary_counter    interval count step
   traffic_light     red_interval red_amber_interval green_interval
@@ -206,9 +206,17 @@ cleanly, so add 'ease' for the lamps of a real signal:
 
 'sweep' is a light that crosses the outputs and turns back at each end, which
 is the back and forth a scanner does. Its 'extent' is how far it reaches from
-itself, in outputs, so under 1 keeps it tight and shares its light between the
-two it lies between, and its 'speed' counts one crossing as the travelling
-effects count one pass.
+itself, in outputs, and its 'speed' counts one crossing as the travelling
+effects count one pass. Its 'hold' waits at each end, in seconds, which is
+what gives a trail time to clear before the light comes back over it:
+
+  out1-7 ease=0.4: sweep speed=1 length=7 extent=1 hold=1
+
+Give 'extent' a whole number of outputs, such as 1 or 2. At those the light
+one output loses is exactly the light the next one gains, so it travels at a
+steady brightness; in between, the board dims as the light passes between two
+outputs and brightens as it lands on one, which reads as stepping. 1 is the
+tightest that travels smoothly.
 
 'rgb_blink' takes one colour, or several to blink through in turn, divided by
 '|' because they are parts of one setting rather than one each for the outputs:
@@ -218,7 +226,7 @@ effects count one pass.
 'speed' is cycles a second: 1 goes round once a second, 0.5 once every two, 2
 twice a second. A negative speed runs the cycle backwards.
 
-The settings measured in seconds are 'interval', flicker's 'bright_min',
+The settings measured in seconds are 'interval', 'hold', flicker's 'bright_min',
 'bright_max', 'dim_min' and 'dim_max', and traffic_light's four intervals.
 'length', 'flashes', 'steps', 'count' and 'step' are plain counts, and a
 negative 'step' counts down.

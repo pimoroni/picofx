@@ -105,6 +105,7 @@ SETTINGS = {
     "dim_min": "seconds",
     "dim_max": "seconds",
     "interval": "seconds",
+    "hold": "seconds",
     "count": "whole",
     "step": "whole",
     "red_interval": "seconds",
@@ -815,6 +816,19 @@ def __parse_effect(tokens, line, problems, needs_effect=True):
                         at, raw))
                 else:
                     settings["colour"] = wanted[0] if len(wanted) == 1 else wanted
+                continue
+
+            # A hold is the dwell where something turns around, and each end may have
+            # its own. Those are the two parts of one setting, so they take the pipe
+            if key == "hold":
+                parts = raw.split("|")
+                if len(parts) > 2:
+                    problems.append("line {}: hold is the wait at each end, so it takes "
+                                    "one part or two, such as hold=0.5 or "
+                                    "hold=0.8|0.2".format(at))
+                else:
+                    wanted = [__value(part) for part in parts]
+                    settings[key] = wanted[0] if len(wanted) == 1 else tuple(wanted)
                 continue
 
             # A board entry's values are names and file names, so they are kept as
@@ -1734,6 +1748,22 @@ def __check_settings(entry, taken, problems):
             continue
         if kind == "colour":
             settings[key] = value       # Already read into tuples, and reported if bad
+            continue
+
+        # A setting written in two parts is one value with an end each, so both are
+        # held to the same kind and the pair is reported as it was written
+        if isinstance(value, tuple):
+            fault = None
+            for part in value:
+                fault = __value_fault(kind, part)
+                if fault is not None:
+                    break
+            if fault is not None:
+                problems.append("line {}: {}'s {} is '{}', {}".format(
+                    at, entry.effect, key,
+                    "|".join(__shown(part) for part in value), fault))
+            else:
+                settings[key] = value
             continue
 
         # A hue is the one setting the user has an outside source for, and every
