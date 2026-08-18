@@ -31,3 +31,9 @@ jobs:
     - name: Lint MicroPython PicoFX
       shell: bash
       run: source ci/python.sh && qa_picofx_check
+
+    - name: Check MightyFX Manual Is Rebuilt
+      shell: bash
+      run: |
+        python3 tools/build_manual.py boards/PIMORONI_MIGHTYFX
+        git diff --exit-code -- boards/PIMORONI_MIGHTYFX/frozen_libs/fx_manual.py
