@@ -1841,7 +1841,9 @@ def __callables(effect, how, count, entry, problems):
     if how == "position":
         return [effect(index) for index in range(count)]
 
-    if count != len(how):
+    # Fewer outputs than the effect drives takes the first of them, as calling only
+    # some of its methods would. More leaves outputs nothing could ever light
+    if count > len(how):
         problems.append("line {}: {} drives {} outputs, {} named".format(
             entry.line, entry.effect, len(how), count))
     return [getattr(effect, how[index])() if index < len(how) else None

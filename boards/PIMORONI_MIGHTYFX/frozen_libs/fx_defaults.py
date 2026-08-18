@@ -213,6 +213,15 @@ ends. It comes round on its own clock, there being no button to press here:
 
   out1-5 ease=0.3: pelican_crossing green_interval=20 red_interval=8
 
+An effect that drives several outputs takes them in the order listed above, so
+naming fewer than it drives lights the first of them and leaves the rest out.
+Three outputs on 'pelican_crossing' is its traffic lights on their own:
+
+  out1-3: pelican_crossing
+
+Naming more than it drives is a mistake, and said so, since the extra outputs
+have nothing to light them.
+
 'sweep' is a light that crosses the outputs and turns back at each end, which
 is the back and forth a scanner does. Its 'extent' is how far it reaches from
 itself, in outputs, and its 'speed' counts one crossing as the travelling
