@@ -15,13 +15,20 @@ import rp2
 import vfs
 
 import fx_defaults
+import fx_manual
 
 MOUNT_POINT = "/fx"
 FILE_PATH = MOUNT_POINT + "/effects.txt"
-README_PATH = MOUNT_POINT + "/README.txt"
+README_NAME = "README.txt"
+MANUAL_NAME = "MANUAL.html"
 ERRORS_PATH = MOUNT_POINT + "/errors.txt"
 
 VOLUME_LABEL = "FX"
+
+# How much of a shipped document is compared. Anything shorter is read to the end;
+# anything longer is met at both ends, measured at 40ms against 424ms for a mount.
+__READ_TO_END = 4096
+__EDGE = 512
 
 # FAT attribute bits, per VfsFat.chmod.
 __ATTR_READ_ONLY = 0x01
@@ -57,23 +64,50 @@ __last_edge = None
 __withdrawn_at = None
 
 
-def __heal_readme(fs):
+def __holds(path, text):
+    """Whether the file already reads as the text.
+
+    Size first, so a missing or half-written file answers without a read. A short
+    document is then compared to its end; a long one by its first and last piece,
+    since reading the manual to the end costs about 400ms on this volume and every
+    mount and every button press would pay it. What that trades away is a rebuilt
+    document differing only in its middle at exactly the same length, which nothing
+    here produces. Both are ASCII, which build_manual.py enforces, so a length in
+    characters is a length in bytes.
+    """
     try:
-        with open(README_PATH) as f:
-            if f.read() == fx_defaults.README:
-                return
+        if os.stat(path)[6] != len(text):
+            return False
+        with open(path) as f:
+            if len(text) <= __READ_TO_END:
+                return f.read() == text
+            if f.read(__EDGE) != text[:__EDGE]:
+                return False
+            f.seek(len(text) - __EDGE)
+            return f.read(__EDGE) == text[-__EDGE:]
+    except OSError:
+        return False
+
+
+def __heal(fs, name, text):
+    """Put a shipped file back on the drive, unless it is already there."""
+    path = MOUNT_POINT + "/" + name
+    if __holds(path, text):
+        return
+    try:
         # A read-only file refuses opens for write, so clear the bit to rewrite.
-        fs.chmod("README.txt", 0, __ATTR_READ_ONLY)
+        fs.chmod(name, 0, __ATTR_READ_ONLY)
     except OSError:
         pass
     try:
-        with open(README_PATH, "w") as f:
-            f.write(fx_defaults.README)
-        fs.chmod("README.txt", __ATTR_READ_ONLY, __ATTR_READ_ONLY)
+        with open(path, "w") as f:
+            f.write(text)
+        fs.chmod(name, __ATTR_READ_ONLY, __ATTR_READ_ONLY)
     except OSError:
         # A full drive has nowhere to put it. The board comes up regardless, since a
-        # missing README costs a reader nothing and a dead board costs them everything
-        print("the FX drive is full, so README.txt could not be rebuilt")
+        # missing document costs a reader nothing and a dead board costs them
+        # everything. A part-written file is left for the next mount to finish
+        print("the FX drive is full, so {} could not be rebuilt".format(name))
 
 
 def __has_boot_signature(bdev):
@@ -88,9 +122,9 @@ def __has_boot_signature(bdev):
 
 def mount():
     """
-    Mount the drive read-only at /fx, rebuilding it from fx_defaults when the
-    filesystem is blank, effects.txt is missing, or the README differs from the
-    shipped text. Returns whether the drive ended up mounted.
+    Mount the drive read-only at /fx, rebuilding it when the filesystem is blank,
+    effects.txt is missing, or either shipped document differs from the text the
+    board carries. Returns whether the drive ended up mounted.
     """
     bdev = rp2.Flash(msc=True)
     fs = vfs.VfsFat(bdev)
@@ -133,7 +167,8 @@ def mount():
                 os.remove(FILE_PATH)
             except OSError:
                 pass
-    __heal_readme(fs)
+    __heal(fs, README_NAME, fx_defaults.README)
+    __heal(fs, MANUAL_NAME, fx_manual.MANUAL)
     vfs.umount(MOUNT_POINT)
     vfs.mount(vfs.VfsFat(bdev), MOUNT_POINT, readonly=True)
     return True
@@ -173,7 +208,7 @@ def writable():
     """
     Take the drive writable for one block. Only safe while the board owns it, so
     never while the computer has it, and the caller should be between mount() and
-    expose(). This is where the README is healed and a report is left.
+    expose(). This is where the shipped documents are healed and a report is left.
     """
     return __Writable()
 
