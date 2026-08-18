@@ -3,9 +3,31 @@
 # SPDX-License-Identifier: MIT
 
 import time
+from collections import namedtuple
+
 from machine import PWM, Pin, Timer
 
 PICOFX_VERSION = "1.1.3"
+
+# How many halvings an eased curve takes to look arrived, judged on lit outputs
+# rather than from a tolerance. A curve's length is how long it takes to get there
+# either way, so an ease and a fade of the same length finish together.
+SETTLE = 6
+
+
+# What a channel does between where it is and where its effect has asked it to be: the
+# seconds it takes each way, and whether it crosses at a steady rate or eases in
+Curve = namedtuple("Curve", ("rise", "fall", "straight"))
+
+
+def ease(rise, fall=None):
+    """A curve that settles into place, as a warming filament does."""
+    return Curve(rise, rise if fall is None else fall, False)
+
+
+def fade(rise, fall=None):
+    """A curve that crosses at a steady rate, arriving in the length it is given."""
+    return Curve(rise, rise if fall is None else fall, True)
 
 
 def rgb_from_hsv(h, s, v):
@@ -185,6 +207,11 @@ class EffectPlayer:
         # A per channel scale on the output of an effect
         self.__levels = [1.0] * self.__num_leds
 
+        # A per channel lag, for a channel that should behave like a bulb rather
+        # than an LED, with what it is currently showing so it can be moved along
+        self.__curves = [None] * self.__num_leds
+        self.__showing = [0.0] * self.__num_leds
+
         self.__period = 1000
         self.__timer = Timer()
         self.__paired = None
@@ -334,6 +361,61 @@ class EffectPlayer:
         for i in range(len(levels), self.__num_leds):
             self.__levels[i] = 1.0
 
+    @property
+    def curves(self):
+        return tuple(self.__curves)
+
+    @curves.setter
+    def curves(self, curves):
+        """How a channel reaches what its effect asks for, or None to reach it at once.
+
+        Made by ease() or fade(), each taking the seconds it takes, or a rise and a
+        fall for a channel that comes up and goes out at different rates.
+        """
+        curves = self.__to_channel_list(curves, "curves")
+
+        for i, curve in enumerate(curves):
+            if curve is None:
+                self.__curves[i] = None
+                continue
+
+            if not isinstance(curve, Curve):
+                raise ValueError("a curve is made by ease() or fade(), or None for a "
+                                 "channel that follows its effect at once")
+            if curve.rise < 0 or curve.fall < 0:
+                raise ValueError("a curve is how long a channel takes to follow its "
+                                 "effect, so it cannot be negative")
+            self.__curves[i] = None if curve.rise == 0 and curve.fall == 0 else curve
+
+        # Reset excess curves
+        for i in range(len(curves), self.__num_leds):
+            self.__curves[i] = None
+
+    def __followed(self, index, value):
+        """What a channel shows this frame, having been moved toward what its effect asked for.
+
+        A curve's length is how long the channel takes to arrive, whether it eases
+        into place or crosses at a steady rate, and neither depends on the frame rate.
+        Called per channel per frame, so it returns the value untouched where no
+        curve is set.
+        """
+        curve = self.__curves[index]
+        if curve is None:
+            return value
+
+        showing = self.__showing[index]
+        rising = value > showing
+        seconds = curve[0] if rising else curve[1]
+        if seconds > 0:
+            if curve[2]:
+                step = self.__period / (seconds * 1000)
+                value = min(value, showing + step) if rising else max(value, showing - step)
+            else:
+                value = value + (showing - value) * 2 ** (-(self.__period * SETTLE) / (seconds * 1000))
+
+        self.__showing[index] = value
+        return value
+
 
 class MonoPlayer(EffectPlayer):
     def __init__(self, mono_leds):
@@ -342,7 +424,8 @@ class MonoPlayer(EffectPlayer):
     def __show(self):
         for i in range(self.__num_leds):
             if self.__effects[i] is not None:
-                self.__leds[i].brightness(self.__effects[i](*self.__data[i]) * self.__levels[i])
+                value = self.__effects[i](*self.__data[i]) * self.__levels[i]
+                self.__leds[i].brightness(self.__followed(i, value))
 
 
 class ChromaticPlayer(EffectPlayer):
@@ -388,7 +471,7 @@ class ColourPlayer(ChromaticPlayer):
                     self.__leds[i].set_rgb(value[0] * level, value[1] * level, value[2] * level)
                 else:
                     # A mono effect gives a 0.0 to 1.0 level to scale the channel's colour by
-                    value *= level
+                    value = self.__followed(i, value * level)
                     r, g, b = self.__colours[i]
                     self.__leds[i].set_rgb(r * value, g * value, b * value)
 
@@ -406,7 +489,7 @@ class StripPlayer(ChromaticPlayer):
                 if isinstance(value, tuple):
                     r, g, b = (c * level for c in value)
                 else:
-                    value *= level
+                    value = self.__followed(i, value * level)
                     r, g, b = (c * value for c in self.__colours[i])
 
                 # The strip is driven through a C binding, which wants whole numbers
