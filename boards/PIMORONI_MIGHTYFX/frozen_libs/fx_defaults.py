@@ -186,7 +186,9 @@ For an output, or for one of its red, green and blue:
   random            interval brightness_min brightness_max
   binary_counter    interval count step
   traffic_light     red_interval red_amber_interval green_interval
-                    amber_interval amber_flashing
+                    amber_interval
+  pelican_crossing  red_interval flashing_interval green_interval
+                    amber_interval
 
 For an output only, since these bring their own colour:
 
@@ -203,6 +205,13 @@ three outputs, and lights them red, amber and green in that order. It switches
 cleanly, so add 'ease' for the lamps of a real signal:
 
   out1-3 ease=0.3: traffic_light
+
+'pelican_crossing' wants five outputs: the same three, then the two figures a
+pedestrian reads, stop and walk. In place of red and amber it flashes the amber
+and the walking figure together, which is what a pelican does while a crossing
+ends. It comes round on its own clock, there being no button to press here:
+
+  out1-5 ease=0.3: pelican_crossing green_interval=20 red_interval=8
 
 'sweep' is a light that crosses the outputs and turns back at each end, which
 is the back and forth a scanner does. Its 'extent' is how far it reaches from
@@ -227,10 +236,10 @@ tightest that travels smoothly.
 twice a second. A negative speed runs the cycle backwards.
 
 The settings measured in seconds are 'interval', 'hold', flicker's 'bright_min',
-'bright_max', 'dim_min' and 'dim_max', and traffic_light's four intervals.
+'bright_max', 'dim_min' and 'dim_max', and the four intervals traffic_light and
+pelican_crossing each take.
 'length', 'flashes', 'steps', 'count' and 'step' are plain counts, and a
 negative 'step' counts down.
-'amber_flashing' is true or false, and takes yes, on and 1 too.
 
 The rest run from 0 to 1, written 0.5 or 50% as you prefer, 'window' among them,
 being the share of a cycle the flashes happen in. 'hue' takes degrees as well,

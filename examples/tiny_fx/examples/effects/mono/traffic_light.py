@@ -20,10 +20,9 @@ player = MonoPlayer(tiny.outputs)                   # Create a new effect player
 
 # Effects
 traffic = TrafficLightFX(red_interval=5,            # The time (in seconds) to stay on Red
-                         red_amber_interval=2.5,    # The time (in seconds) to stay on Red+Amber (or Amber Flashing if enabled)
+                         red_amber_interval=2.5,    # The time (in seconds) to stay on Red+Amber
                          green_interval=5,          # The time (in seconds) to stay on Green
-                         amber_interval=2.5,        # The time (in seconds) to stay on Amber
-                         amber_flashing=False)      # Whether to have Amber be flashing rather than Red+Amber, as some traffic lights use
+                         amber_interval=2.5)        # The time (in seconds) to stay on Amber
 
 
 # How long each output takes to reach what the effect asks for. A single value

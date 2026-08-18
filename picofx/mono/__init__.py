@@ -7,6 +7,7 @@ from .blink import BlinkFX, BlinkWaveFX
 from .flash import FlashFX, FlashSequenceFX
 from .flicker import FlickerFX
 from .none import NoneFX
+from .pelican import PelicanCrossingFX
 from .pulse import PulseFX, PulseWaveFX
 from .rand import RandomFX
 from .static import StaticFX
@@ -23,6 +24,7 @@ MONO_EFFECTS = [
     FlashSequenceFX,
     FlickerFX,
     NoneFX,
+    PelicanCrossingFX,
     PulseFX,
     PulseWaveFX,
     RandomFX,
