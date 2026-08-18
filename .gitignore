@@ -3,3 +3,4 @@ build/
 dist/
 .coverage
 .tox/
+boards/*/manual/MANUAL.html

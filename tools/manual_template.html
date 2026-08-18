@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}}</title>
+<style>
+:root {
+  /* Browser-painted furniture, scrollbars included, follows the page rather than
+     defaulting to light. Without it a nested scroller does not match the page one. */
+  color-scheme: light dark;
+
+  --page: #ffffff;
+  --panel: #f5f6f7;
+  --ink: #22262b;
+  --faint: #5d656e;
+  --rule: #dfe3e7;
+  --accent: #0a7f78;
+  --code-ink: #1d4f5c;
+  --entry: #0a7f78;
+
+  /* Three roles, matching the shape at the top of the manual: what is being
+     driven, what drives it, and the values given to either. */
+  --target: #1f6feb;
+  --effect: #0a7f78;
+  --value: #a8500a;
+  --scene: #7b3fb8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #16191d;
+    --panel: #1e2227;
+    --ink: #dfe3e7;
+    --faint: #9aa3ad;
+    --rule: #2e343b;
+    --accent: #56cfc3;
+    --code-ink: #8fd3e0;
+    --entry: #56cfc3;
+
+    --target: #79b8ff;
+    --effect: #56cfc3;
+    --value: #e8a05c;
+    --scene: #c9a2f0;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--page);
+  color: var(--ink);
+  font: 16px/1.62 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.page {
+  max-width: 68rem;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+  display: grid;
+  gap: 2.5rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 62rem) {
+  .page { grid-template-columns: 15rem 1fr; }
+  /* The sidebar stretches to the row so the box inside it has somewhere to travel;
+     a sticky element in a start-aligned grid item cannot move at all. */
+  .contents {
+    position: sticky;
+    top: 2rem;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+  }
+}
+
+.contents {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 0.5rem;
+  padding: 1rem 1.1rem;
+  font-size: 0.9rem;
+}
+
+.contents h2 {
+  margin: 0 0 0.6rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--faint);
+  border: 0;
+}
+
+.contents ul { list-style: none; margin: 0; padding: 0; }
+.contents li { margin: 0.18rem 0; }
+.contents a { color: var(--ink); text-decoration: none; }
+.contents a:hover { color: var(--accent); text-decoration: underline; }
+
+.contents summary {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.contents summary::-webkit-details-marker { display: none; }
+
+/* The triangle is drawn rather than a glyph, so it turns with the section. */
+.contents summary::before {
+  content: "";
+  flex: none;
+  width: 0;
+  height: 0;
+  border-left: 0.32rem solid var(--faint);
+  border-top: 0.26rem solid transparent;
+  border-bottom: 0.26rem solid transparent;
+  transition: transform 0.12s ease;
+}
+
+.contents details[open] > summary::before { transform: rotate(90deg); }
+
+.contents details > ul {
+  margin: 0.15rem 0 0.4rem 0.95rem;
+  font-size: 0.85rem;
+}
+
+main { min-width: 0; }
+
+h1 {
+  font-size: 2.1rem;
+  line-height: 1.2;
+  margin: 0 0 1rem;
+}
+
+h2 {
+  font-size: 1.45rem;
+  margin: 2.6rem 0 0.9rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+h3 {
+  font-size: 1.1rem;
+  margin: 1.9rem 0 0.7rem;
+  color: var(--faint);
+}
+
+h1:target, h2:target, h3:target { scroll-margin-top: 1.5rem; }
+
+p { margin: 0 0 1rem; }
+
+a { color: var(--accent); }
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  color: var(--code-ink);
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 0.25rem;
+  padding: 0.05rem 0.3rem;
+}
+
+pre {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--rule);
+  border-radius: 0.4rem;
+  padding: 0.85rem 1rem;
+  margin: 0 0 1.15rem;
+  overflow-x: auto;
+}
+
+pre.entry { border-left-color: var(--entry); }
+
+pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.s-target { color: var(--target); }
+.s-effect { color: var(--effect); font-weight: 600; }
+.s-value { color: var(--value); }
+.s-scene { color: var(--scene); font-weight: 600; }
+.s-name { color: var(--ink); }
+.s-punc { color: var(--faint); }
+/* The colon is the one division the format has, so it carries weight the '=' does not */
+.s-colon { color: var(--ink); font-weight: 700; }
+
+.scroll { overflow-x: auto; margin: 0 0 1.3rem; }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.94rem;
+}
+
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--rule);
+}
+
+th {
+  font-size: 0.75rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--faint);
+  border-bottom-width: 2px;
+}
+
+tbody tr:last-child td { border-bottom: 0; }
+td:first-child { white-space: nowrap; }
+
+footer {
+  grid-column: 1 / -1;
+  margin-top: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.92rem;
+  color: var(--faint);
+}
+
+footer h2 {
+  font-size: 0.75rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin: 0 0 0.5rem;
+  padding: 0;
+  border: 0;
+}
+
+main ul { margin: 0 0 1.2rem; padding-left: 1.2rem; }
+main li { margin: 0.25rem 0; }
+
+footer p { margin: 0; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="sidebar">
+{{CONTENTS}}
+</div>
+
+<main>
+{{BODY}}
+</main>
+
+<footer>
+<p>This manual is rebuilt by the board, so edits to it will not stick.</p>
+</footer>
+
+</div>
+</body>
+</html>
