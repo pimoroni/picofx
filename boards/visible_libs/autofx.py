@@ -69,9 +69,9 @@ for _kind, _registry in (("mono", MONO_EFFECTS), ("colour", COLOUR_EFFECTS)):
 # folder of image files in the order their names number them, at the delay each name
 # declares unless fps names one. All of them look on the drive first, then the board.
 SCREEN_EFFECTS = {
-    "gif": ("file", "fps", "interval", "loop", "ping_pong"),
+    "gif": ("file", "fps", "interval", "loop", "ping_pong", "hold"),
     "image": ("file",),
-    "sequence": ("folder", "fps", "interval", "loop", "ping_pong"),
+    "sequence": ("folder", "fps", "interval", "loop", "ping_pong", "hold"),
 }
 
 # The selector names that reach a screen: each SP/CE port's name, attribute and SPI
@@ -1656,12 +1656,14 @@ def __build_shows(entries, fx, board, problems):
                 player = GIFPlayer(path, fps=fps,
                                    loop=settings.get("loop", True),
                                    ping_pong=settings.get("ping_pong", False),
+                                   hold=settings.get("hold", 0),
                                    paused=asleep)
             elif entry.effect == "sequence":
                 from playback import SequencePlayer
                 player = SequencePlayer(path, fps=fps,
                                         loop=settings.get("loop", True),
                                         ping_pong=settings.get("ping_pong", False),
+                                        hold=settings.get("hold", 0),
                                         paused=asleep)
             else:
                 import picovector

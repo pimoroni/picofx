@@ -252,9 +252,9 @@ needs the board turned off and on again before the new size takes.
 
 What a screen plays:
 
-  gif               file fps interval loop ping_pong
+  gif               file fps interval loop ping_pong hold
   image             file
-  sequence          folder fps interval loop ping_pong
+  sequence          folder fps interval loop ping_pong hold
 
   screenA: gif file="clock.gif"
   screenA: image file=logo.png
@@ -269,6 +269,13 @@ whichever suits: 'fps=12' for an animation, 'interval=30' for a slideshow.
 Either one replaces the delays the file was saved with. 'loop' is true
 unless you set it false, which stops on the last frame. 'ping_pong' plays
 back and forth instead of starting over.
+
+'hold' is the seconds to wait where the playing turns around, added to that
+frame's own delay, so a ping-pong pauses at each end rather than bouncing
+straight off. One value serves both ends, or write each with a '|':
+
+  screenA: gif file="wave.gif" ping_pong=yes hold=1
+  screenA: gif file="wave.gif" ping_pong=yes hold=1.5|0.5
 
 A file is looked for on this drive first, then on the board itself, and the
 name may include folders. There is little room here, so pictures usually
