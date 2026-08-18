@@ -139,16 +139,33 @@ Before the colon, and separate from the effect:
 
   'level'           how bright, 0 to 1, such as 0.5 or 50%
   'colour'          a name or six-digit hex, for effects that bring no colour
+  'fade'            seconds to follow the effect, at a steady rate
+  'ease'            seconds to follow it, settling in as a bulb does
 
   out1-7 level=50%: pulse
   out1-3 colour=warm: flicker
   out4 colour=ff8040: static
   out1 level=0.5, 2 level=0.8, 3-7: pulse_wave
+  out1-7 ease=0.4: blink speed=0.5
 
 Colours by name: red, yellow, green, cyan, blue, magenta, warm, white, cool,
 black. Or the hex a colour picker gives you, with its '#' left off, as out4
 above uses for a soft orange. A '#' always starts a comment, so one left on a
 colour hides the rest of the line.
+
+'fade' and 'ease' both soften a change, and both take the seconds it takes to
+get there. 'fade' crosses evenly, which is what a stage light does. 'ease' goes
+quickly at first and slows as it arrives, which is how a bulb warms, and is the
+one that looks natural on a light switching on and off.
+
+An output follows one way or the other, so a line takes one of them and not
+both. Two numbers divided by '|' give the rise and the fall their own lengths,
+a slow fade out from a quick come-on being the usual reason:
+
+  out1-7 fade=0.8: blink speed=0.5
+  out1-3 ease=0.05|1.2: blink speed=1
+
+Softening belongs to the output, not to the effect, so it works on any of them.
 
 
 Effects

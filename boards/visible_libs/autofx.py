@@ -26,7 +26,7 @@ import os
 import sys
 import time
 
-from picofx import RGBLED, ColourPlayer, MonoPlayer
+from picofx import RGBLED, ColourPlayer, MonoPlayer, ease, fade
 from picofx.colour import (BLACK, BLUE, COOL, COLOUR_EFFECTS, CYAN, GREEN, MAGENTA, RED,
                            WARM, WHITE, YELLOW)
 from picofx.mono import MONO_EFFECTS, NoneFX
@@ -186,6 +186,8 @@ class Channel:
         self.name = name
         self.level = None
         self.colour = None
+        self.fade = None
+        self.ease = None
         # A screen's own, sitting left of the colon with level and colour: how it is
         # mounted and lit, and how its content is placed
         self.rotation = None
@@ -234,6 +236,7 @@ class Scene:
         self.effects = None
         self.levels = None
         self.colours = None
+        self.curves = None
         self.driven = set()         # The slots this scene fills, which a switch clears
         # What this scene's entries built, one per entry, which is what a restart
         # has to reach: a travelling effect hands the player a closure and keeps the
@@ -416,7 +419,7 @@ def __unclosed_quote(text):
 def __glue(text):
     """
     Spaces around a range dash, an equals or a pipe removed, so 'out1 - 7',
-    'level = 50%' and 'offset = 10 | 20' read as written without them. Commas are
+    'level = 50%' and 'ease = 0.05 | 0.3' read as written without them. Commas are
     left alone: a space after one is what separates 'level=0.5, 2 level=0.8' into two
     outputs rather than two values.
     """
@@ -635,11 +638,16 @@ def __expand(token, prefix, line, problems):
 # What each left-side setting's value must be. level and backlight answer alike,
 # both being how bright something is; colour, background and offset have shapes of
 # their own and are read where they are applied
-CHANNEL_KINDS = {"level": "fraction", "backlight": "fraction",
-                 "rotation": "quarter", "mirror": "boolean", "pixel_double": "boolean"}
+CHANNEL_KINDS = {"level": "fraction", "fade": "seconds", "ease": "seconds",
+                 "backlight": "fraction", "rotation": "quarter", "mirror": "boolean",
+                 "pixel_double": "boolean"}
+
+# The two ways a channel may follow its effect, which are one setting written two ways:
+# 'fade' crosses at a steady rate, 'ease' settles into place as a filament does
+CURVES = ("fade", "ease")
 
 # Which of those belong to an output and which to a screen, for saying so
-OUTPUT_SETTINGS = ("level", "colour")
+OUTPUT_SETTINGS = ("level", "colour", "fade", "ease")
 SCREEN_SETTINGS = ("backlight", "rotation", "mirror", "offset", "background", "pixel_double")
 
 
@@ -692,6 +700,35 @@ def __apply_channel_setting(channels, key, raw, line, problems):
                     line, key, raw_value))
             else:
                 setattr(channel, key, colour)
+            continue
+
+        # Either curve is one value that may be written in two parts, since a light
+        # may come up and go out at its own rate. Each output may still have its own,
+        # the comma dividing those as it divides any other setting's
+        if key in CURVES:
+            other = CURVES[0] if key == CURVES[1] else CURVES[1]
+            if getattr(channel, other) is not None:
+                problems.append("line {}: an output follows its effect one way, so it "
+                                "takes '{}' or '{}' and not both".format(line, key, other))
+                continue
+
+            parts = raw_value.split("|")
+            seconds = [__number(part) for part in parts]
+            fault = None
+            if len(parts) > 2:
+                fault = "expected the seconds it takes, in one part or two"
+            else:
+                for part, value in zip(parts, seconds):
+                    fault = __value_fault("seconds", part if value is None else value)
+                    if fault is not None:
+                        break
+
+            if fault is not None:
+                problems.append("line {}: {} is '{}', {}, such as {}=0.5 or "
+                                "{}=0.05|0.3 for a rise and a fall".format(
+                                    line, key, raw_value, fault, key, key))
+            else:
+                setattr(channel, key, seconds[0] if len(seconds) == 1 else tuple(seconds))
             continue
 
         # Reported rather than clamped, so 200% is not quietly taken as full and
@@ -1556,6 +1593,11 @@ def __build_shows(entries, fx, board, problems):
             problems.append("line {}: a screen has no level. Correct it to "
                             "'backlight={}'".format(entry.line, __shown(channel.level)))
 
+        for setting in CURVES:
+            if getattr(channel, setting) is not None:
+                problems.append("line {}: {} is for the outputs, so it was ignored".format(
+                    entry.line, setting))
+
         settings = __check_settings(entry, SCREEN_EFFECTS[entry.effect], problems)
 
         # A sequence names a folder where the others name a file, and neither works
@@ -1779,7 +1821,12 @@ def __callables(effect, how, count, entry, problems):
             for index in range(count)]
 
 
-def __assemble(entries, slots, effects, levels, colours, claimed, problems):
+def __curve(curve, seconds):
+    """One curve's setting as a player takes it, the file having written one part or two."""
+    return curve(*seconds) if isinstance(seconds, tuple) else curve(seconds)
+
+
+def __assemble(entries, slots, effects, levels, colours, curves, claimed, problems):
     """
     Fill one scene's arrays from its entries, or the always-on set's from those
     before any heading. Claims span every call, since scenes take turns with the
@@ -1863,6 +1910,10 @@ def __assemble(entries, slots, effects, levels, colours, claimed, problems):
             driven.add((where, index))
             if channel.level is not None:
                 levels[where][index] = channel.level
+            if channel.ease is not None:
+                curves[where][index] = __curve(ease, channel.ease)
+            elif channel.fade is not None:
+                curves[where][index] = __curve(fade, channel.fade)
             if channel.colour is not None and where == "colour":
                 colours[where][index] = channel.colour
 
@@ -1889,10 +1940,12 @@ def __apply_scene(players, shows, scene):
         if isinstance(player, MonoPlayer):
             player.effects = scene.effects["mono"]
             player.levels = scene.levels["mono"]
+            player.curves = scene.curves["mono"]
         else:
             player.effects = scene.effects["colour"]
             player.levels = scene.levels["colour"]
             player.colours = scene.colours["colour"]
+            player.curves = scene.curves["colour"]
 
     # A screen another scene was using goes dark unless this one, or an always-on
     # entry, is still on it: the glass keeps its frame, the light says it is over
@@ -1990,9 +2043,10 @@ def load(text, fx):
     effects = {"mono": [None] * len(mono), "colour": [None] * len(colour)}
     levels = {"mono": [1.0] * len(mono), "colour": [1.0] * len(colour)}
     colours = {"colour": [(255, 255, 255)] * len(colour)}
+    curves = {"mono": [None] * len(mono), "colour": [None] * len(colour)}
     claimed = {}
 
-    always, _ = __assemble(grouped[None], slots, effects, levels, colours,
+    always, _ = __assemble(grouped[None], slots, effects, levels, colours, curves,
                            claimed, problems)
 
     union = set()
@@ -2000,8 +2054,9 @@ def load(text, fx):
         scene.effects = {"mono": list(effects["mono"]), "colour": list(effects["colour"])}
         scene.levels = {"mono": list(levels["mono"]), "colour": list(levels["colour"])}
         scene.colours = {"colour": list(colours["colour"])}
+        scene.curves = {"mono": list(curves["mono"]), "colour": list(curves["colour"])}
         scene.driven, scene.sources = __assemble(grouped[scene.key], slots, scene.effects,
-                                                 scene.levels, scene.colours,
+                                                 scene.levels, scene.colours, scene.curves,
                                                  claimed, problems)
         union |= scene.driven
 
@@ -2015,6 +2070,7 @@ def load(text, fx):
     live_effects = scenes[0].effects if scenes else effects
     live_levels = scenes[0].levels if scenes else levels
     live_colours = scenes[0].colours if scenes else colours
+    live_curves = scenes[0].curves if scenes else curves
 
     # A player exists if anything in any scene wants it, or a scene reached only by
     # rotation would arrive with nowhere to play
@@ -2024,6 +2080,7 @@ def load(text, fx):
         player = MonoPlayer([led for _, led in mono])
         player.effects = live_effects["mono"]
         player.levels = live_levels["mono"]
+        player.curves = live_curves["mono"]
         players.append(player)
 
     if any(item is not None for one in every for item in one["colour"]):
@@ -2031,6 +2088,7 @@ def load(text, fx):
         player.effects = live_effects["colour"]
         player.levels = live_levels["colour"]
         player.colours = live_colours["colour"]
+        player.curves = live_curves["colour"]
         players.append(player)
 
     # One timer drives both, so the two stay in step
