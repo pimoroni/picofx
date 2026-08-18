@@ -1088,8 +1088,11 @@ static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplayBus___del___obj, SPIDisplayBus___del_
 // identity, so each can still be brought up and updated on its own. Settings come
 // from the first member, once, here.
 static mp_obj_t SPIDisplayBus_broadcast(size_t n_args, const mp_obj_t *args) {
-    if (n_args < 3) {
-        mp_raise_ValueError(MP_ERROR_TEXT("a broadcast group needs at least two displays"));
+    // One member is allowed: the group is then a copy of that display, which is the
+    // same frame the member's own update writes, so a wall written for a hub still
+    // runs where a single panel answered.
+    if (n_args < 2) {
+        mp_raise_ValueError(MP_ERROR_TEXT("a broadcast group needs at least one display"));
     }
 
     for (size_t i = 1; i < n_args; ++i) {

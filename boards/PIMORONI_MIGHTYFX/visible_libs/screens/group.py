@@ -33,6 +33,9 @@ class ScreenGroup(ScreenBase):
     subset() names fewer of the members over the same display, for a frame that
     reaches only some of them. A subset owns nothing and costs no display.
 
+    One member is a group, so a wall written for a hub still runs where a single panel
+    answered. There is nothing to hold a lone member against, so it does not align.
+
     sync names the one member whose tearing-effect signal a frame waits on, which
     needs every member reading TE from the line they share. That panel comes out
     clean and the rest tear, panels on a hub scanning independently with no edge safe
@@ -130,8 +133,8 @@ class ScreenGroup(ScreenBase):
     SWEEP_PAUSE_MS = 1000
 
     def __init__(self, *screens, sync=None, align=None, trim=None, parent=None):
-        if len(screens) < 2 and parent is None:
-            raise ValueError("a broadcast group needs at least two screens")
+        if not screens:
+            raise ValueError("a broadcast group needs at least one screen")
 
         port = screens[0].port
         for screen in screens:
@@ -235,7 +238,9 @@ class ScreenGroup(ScreenBase):
         self.__swept_at = 0
         self.__grid_at = 0
         self.__grid_phases = ()
-        if align is not False:
+        # A lone member is in phase with itself, so there is nothing to calibrate and a
+        # required alignment is already met. It reports unaligned, holding no period.
+        if align is not False and len(screens) > 1:
             if nominated is None:
                 # The sync block above already said why there is no signal to hold
                 # these panels by, so only a required alignment speaks again.
