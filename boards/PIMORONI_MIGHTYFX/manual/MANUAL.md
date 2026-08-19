@@ -264,9 +264,9 @@ either number centres that side.
 
 | Plays | Settings |
 | --- | --- |
-| `gif` | `file` `fps` `interval` `loop=yes` `ping_pong=no` `hold=0` |
+| `gif` | `file` `fps` `interval` `loop=yes` `ping_pong=no` `first_as_last=no` `hold=0` |
 | `image` | `file` |
-| `sequence` | `folder` `fps` `interval` `loop=yes` `ping_pong=no` `hold=0` |
+| `sequence` | `folder` `fps` `interval` `loop=yes` `ping_pong=no` `first_as_last=no` `hold=0` |
 
 ```entry
 screenA: gif file="clock.gif"
@@ -283,7 +283,16 @@ or `folder`, so those two always have to be given.
 whichever suits: `fps=12` for an animation, `interval=30` for a slideshow.
 Either one replaces the delays the file was saved with, and leaving out both
 keeps them. `loop` is true unless you set it false, which stops on the last
-frame. `ping_pong` plays back and forth instead of starting over.
+frame. `ping_pong` plays back and forth instead of starting over, which suits an
+animation with two ends, such as an arm flexing.
+
+An animation drawn to loop has no such ends, its last frame leading back into
+its first. Add `first_as_last=yes` for one of those and the whole loop is played
+in each direction, so a spinning coin winds all the way round and back:
+
+```entry
+screenA: gif file="coin.gif" ping_pong=yes first_as_last=yes
+```
 
 `hold` is the seconds to wait where it turns around, so a ping-pong pauses at
 each end instead of bouncing straight off. One value serves both ends, or write

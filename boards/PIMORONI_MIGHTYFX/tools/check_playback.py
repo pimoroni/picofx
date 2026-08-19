@@ -109,6 +109,22 @@ def check_traversal():
     print("  a pair lands chronologically, its second value at the head of the cycle")
     print("  target_ms stays {}ms with 2500ms of dwell in the cycle".format(held.target_ms()))
 
+    # first_as_last plays frame 0 again at the far end, so the whole loop is travelled in
+    # each direction and that frame counts as one of the player's own.
+    for count in (2, 6):
+        closed = numbered(count, ping_pong=True, first_as_last=True)
+        assert closed.frames == count + 1, f"first_as_last at n={count}"
+        assert len(closed.__order) == 2 * count, f"closed looping ping-pong at n={count}"
+        assert closed.__turns == (0, count), closed.__turns
+        assert closed.cycle_ms() == 2 * count * 80, closed.cycle_ms()
+        assert closed.target_ms() == 80, closed.target_ms()
+        one_shot = numbered(count, loop=False, ping_pong=True, first_as_last=True)
+        assert len(one_shot.__order) == 2 * count + 1
+        assert one_shot.__order[-1] == 0, "a closed one-shot still rests back home"
+        assert numbered(count, loop=False, first_as_last=True).__order[-1] == count
+    show_cycle(numbered(6, ping_pong=True, first_as_last=True), "6 frames at 80ms, first_as_last")
+    print("  first_as_last turns on the repeat, so every frame plays twice and the cycle is 2n")
+
 
 def check_origin():
     """A dwell is served by arriving, not to anything placed on the step."""
@@ -148,6 +164,12 @@ def check_position_and_pause():
     player.to_frame(-2)
     assert player.image == 4
     print("  to_frame, to_first and to_last land where they say, negatives included")
+
+    player = numbered(6, ping_pong=True, first_as_last=True)
+    player.to_last()
+    assert player.image == 0, "first_as_last's last frame is the first one drawn again"
+    assert not player.is_reversed(), "the far turn counts as outward until the walk crosses it"
+    print("  under first_as_last that last frame is the far turn, and draws frame 0")
 
     player = numbered(6)
     while player.image != 2:
@@ -231,7 +253,10 @@ def check_refusals():
     refuses("a hold pair outside a looping ping-pong", lambda: numbered(4, hold=(1, 2)))
     refuses("a hold pair of three values", lambda: numbered(4, ping_pong=True, hold=(1, 2, 3)))
     refuses("a negative dwell", lambda: numbered(4, ping_pong=True, hold=-1))
+    refuses("first_as_last on a forward loop", lambda: numbered(4, first_as_last=True))
     refuses("to_frame past the end", lambda: numbered(4).to_frame(4))
+    refuses("to_frame past a first_as_last end",
+            lambda: numbered(4, ping_pong=True, first_as_last=True).to_frame(5))
     refuses("an fps under a millisecond a frame", lambda: numbered(4, fps=2000))
     refuses("no frames at all", lambda: Numbered(0, ()))
     # A cycle of no length would divide by zero on the first read, and GIFs declaring a

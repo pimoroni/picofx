@@ -31,17 +31,27 @@ class ImagePlayer:
     ping-pong the traversal plays out and back, so it visits most frames twice and turns
     at each end, where hold adds a dwell on top of the frame's own delay.
 
+    first_as_last plays the first frame again as the traversal's last, for an animation
+    drawn to loop, so the whole loop is travelled in each direction. That frame counts as
+    one the source supplied, which is what makes frames, the order and positioning all
+    take it. A forward loop has no last frame, so it refuses there.
+
     fps=None takes the source's own delays, a number names a rate and ignores them,
     and fps=False removes the clock so advance() drives instead. Without a clock the
     figures over the cycle all read None, and anything that would consult one raises,
     naming the setting it needs.
     """
 
-    def __init__(self, frames, timings, fps=None, loop=True, ping_pong=False, hold=0, paused=False):
+    def __init__(self, frames, timings, fps=None, loop=True, ping_pong=False, first_as_last=False,
+                 hold=0, paused=False):
         if frames < 1:
             raise ValueError("a player needs at least one frame")
+        if first_as_last and loop and not ping_pong:
+            raise ValueError("first_as_last plays the first frame again at the end and a forward loop has no end, its last frame leading straight back into its first: set ping_pong=True to play out and back, or loop=False to come to rest on it")
 
-        self.__frames = frames
+        self.__source_frames = frames
+        self.__frames = frames + 1 if first_as_last else frames
+        self.__first_as_last = first_as_last
         self.__loop = loop
         self.__ping_pong = ping_pong
         self.__clocked = fps is not False
@@ -62,21 +72,23 @@ class ImagePlayer:
             # walk to divide by.
             if sum(self.__timings) < 1:
                 raise ValueError("every frame delay is zero, so there is no time for the animation to play in: name an fps instead")
+            if first_as_last:
+                self.__timings += (self.__timings[0],)
         else:
             interval = int(1000 / fps) if fps > 0 else 0
             if interval < 1:
                 raise ValueError(f"fps={fps} is under a millisecond a frame, which no screen can present: fps=None takes the source's delays and fps=False drives by hand")
-            self.__timings = (interval,) * frames
+            self.__timings = (interval,) * self.__frames
 
         # The steps a traversal turns around or repeats on, which are the only steps a
         # dwell can sit on. A single-frame source turns at step 0 twice, listed once.
         if ping_pong:
             if loop:
-                self.__turns = (0, frames - 1) if frames > 1 else (0,)
+                self.__turns = (0, self.__frames - 1) if self.__frames > 1 else (0,)
             else:
-                self.__turns = (frames - 1,)
+                self.__turns = (self.__frames - 1,)
         else:
-            self.__turns = (frames - 1,) if loop else ()
+            self.__turns = (self.__frames - 1,) if loop else ()
 
         if hold and not self.__turns:
             raise ValueError("hold waits where an animation turns around and this one plays straight through: set loop=True to repeat, ping_pong=True to play back and forth, or call reverse() to turn around on command")
@@ -240,13 +252,15 @@ class ImagePlayer:
 
     @property
     def frames(self):
-        """How many frames the source holds."""
+        """How many frames there are to play, first_as_last making it one more than the source."""
         return self.__frames
 
     @property
     def image(self):
         """The frame to draw, readable in every state."""
-        return self.__image_for(self.__order[self.__at()])
+        # The modulo serves first_as_last, whose closing frame is the source's first, and
+        # is the identity without it.
+        return self.__image_for(self.__order[self.__at()] % self.__source_frames)
 
     def has_advanced(self):
         """Whether the frame has moved since this last reported, the first call firing.
@@ -314,7 +328,8 @@ class ImagePlayer:
         if frame < 0:
             frame += self.__frames
         if not 0 <= frame < self.__frames:
-            raise ValueError(f"there is no frame {wanted} in a player holding {self.__frames}: frames are 0 to {self.__frames - 1}, or -1 to -{self.__frames} from the end")
+            repeat = ", the last being first_as_last playing frame 0 again" if self.__first_as_last else ""
+            raise ValueError(f"there is no frame {wanted} in a player holding {self.__frames}{repeat}: frames are 0 to {self.__frames - 1}, or -1 to -{self.__frames} from the end")
 
         self.__goto(self.__order.index(frame))
 
@@ -399,7 +414,8 @@ class GIFPlayer(ImagePlayer):
     much.
     """
 
-    def __init__(self, path, fps=None, loop=True, ping_pong=False, hold=0, paused=False):
+    def __init__(self, path, fps=None, loop=True, ping_pong=False, first_as_last=False, hold=0,
+                 paused=False):
         # Diagnostics only: one call of about a second, so there is no progress to report
         # and no wait worth announcing.
         logging.debug(f"> Loading {path} ...")
@@ -408,7 +424,8 @@ class GIFPlayer(ImagePlayer):
         logging.debug(f"> Loaded {self.__sheet.sprites} frames in {time.ticks_diff(time.ticks_ms(), started)}ms")
 
         super().__init__(self.__sheet.sprites, self.__sheet.timings, fps=fps, loop=loop,
-                         ping_pong=ping_pong, hold=hold, paused=paused)
+                         ping_pong=ping_pong, first_as_last=first_as_last, hold=hold,
+                         paused=paused)
 
     def __image_for(self, frame):
         return self.__sheet.sprite(frame)
@@ -437,8 +454,8 @@ class SequencePlayer(ImagePlayer):
     pixel_double.
     """
 
-    def __init__(self, folder, fps=None, timings=None, loop=True, ping_pong=False, hold=0,
-                 paused=False):
+    def __init__(self, folder, fps=None, timings=None, loop=True, ping_pong=False,
+                 first_as_last=False, hold=0, paused=False):
         names = [name for name in os.listdir(folder)
                  if name.lower().endswith(IMAGE_SUFFIXES)]
         if not names:
@@ -460,7 +477,8 @@ class SequencePlayer(ImagePlayer):
         self.__images = self.__load(folder, names, self.__paths)
 
         super().__init__(len(self.__images), timings, fps=fps, loop=loop,
-                         ping_pong=ping_pong, hold=hold, paused=paused)
+                         ping_pong=ping_pong, first_as_last=first_as_last, hold=hold,
+                         paused=paused)
 
     @staticmethod
     def __numbers_in(name):

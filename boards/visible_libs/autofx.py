@@ -69,9 +69,9 @@ for _kind, _registry in (("mono", MONO_EFFECTS), ("colour", COLOUR_EFFECTS)):
 # folder of image files in the order their names number them, at the delay each name
 # declares unless fps names one. All of them look on the drive first, then the board.
 SCREEN_EFFECTS = {
-    "gif": ("file", "fps", "interval", "loop", "ping_pong", "hold"),
+    "gif": ("file", "fps", "interval", "loop", "ping_pong", "first_as_last", "hold"),
     "image": ("file",),
-    "sequence": ("folder", "fps", "interval", "loop", "ping_pong", "hold"),
+    "sequence": ("folder", "fps", "interval", "loop", "ping_pong", "first_as_last", "hold"),
 }
 
 # The selector names that reach a screen: each SP/CE port's name, attribute and SPI
@@ -125,6 +125,7 @@ SETTINGS = {
     "fps": "number",
     "loop": "boolean",
     "ping_pong": "boolean",
+    "first_as_last": "boolean",
 }
 
 # Settings written as a pair, the smaller named first
@@ -1656,6 +1657,7 @@ def __build_shows(entries, fx, board, problems):
                 player = GIFPlayer(path, fps=fps,
                                    loop=settings.get("loop", True),
                                    ping_pong=settings.get("ping_pong", False),
+                                   first_as_last=settings.get("first_as_last", False),
                                    hold=settings.get("hold", 0),
                                    paused=asleep)
             elif entry.effect == "sequence":
@@ -1663,6 +1665,7 @@ def __build_shows(entries, fx, board, problems):
                 player = SequencePlayer(path, fps=fps,
                                         loop=settings.get("loop", True),
                                         ping_pong=settings.get("ping_pong", False),
+                                        first_as_last=settings.get("first_as_last", False),
                                         hold=settings.get("hold", 0),
                                         paused=asleep)
             else:
