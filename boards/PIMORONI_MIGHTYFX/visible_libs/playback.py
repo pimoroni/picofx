@@ -175,6 +175,16 @@ class ImagePlayer:
         """
         raise NotImplementedError("an ImagePlayer subclass supplies its own frames")
 
+    def __frame_number(self, frame):
+        """A frame number as a caller gives it, negatives counting from the end."""
+        wanted = frame
+        if frame < 0:
+            frame += self.__frames
+        if not 0 <= frame < self.__frames:
+            repeat = ", the last being first_as_last playing frame 0 again" if self.__first_as_last else ""
+            raise ValueError(f"there is no frame {wanted} in a player holding {self.__frames}{repeat}: frames are 0 to {self.__frames - 1}, or -1 to -{self.__frames} from the end")
+        return frame
+
     def __needs_clock(self, what):
         if not self.__clocked:
             raise ValueError(f"{what} needs a frame rate and this player was built with fps=False: name an fps, or drive it with advance()")
@@ -207,8 +217,8 @@ class ImagePlayer:
             return elapsed % self.__cycle_ms
         return min(elapsed, self.__cycle_ms)
 
-    def __at(self):
-        """The current step, whichever mode is driving."""
+    def __current_step(self):
+        """The step being played, whichever mode is driving."""
         if not self.__clocked:
             return self.__step
         return self.__walk(self.__position())
@@ -256,11 +266,28 @@ class ImagePlayer:
         return self.__frames
 
     @property
+    def frame(self):
+        """The frame to play, readable in every state.
+
+        A frame number, not a place in the traversal, so a ping-pong reports the same
+        number on the way out and on the way back, and is_reversed() says which leg.
+        """
+        return self.__order[self.__current_step()]
+
+    @property
     def image(self):
         """The frame to draw, readable in every state."""
         # The modulo serves first_as_last, whose closing frame is the source's first, and
         # is the identity without it.
-        return self.__image_for(self.__order[self.__at()] % self.__source_frames)
+        return self.__image_for(self.frame % self.__source_frames)
+
+    def image_at(self, frame):
+        """The image for any frame number, in the same numbering to_frame() takes.
+
+        For a caller drawing a frame the player is not on, such as one player feeding two
+        screens a fixed distance apart.
+        """
+        return self.__image_for(self.__frame_number(frame) % self.__source_frames)
 
     def has_advanced(self):
         """Whether the frame has moved since this last reported, the first call firing.
@@ -271,7 +298,7 @@ class ImagePlayer:
         """
         self.__needs_clock("has_advanced()")
 
-        step = self.__at()
+        step = self.__current_step()
         if step == self.__seen:
             return False
 
@@ -298,7 +325,7 @@ class ImagePlayer:
         plain order the order itself flips. The frame on screen keeps its own delay
         either way, so motion resumes at the usual rate.
         """
-        step = self.__at()
+        step = self.__current_step()
         if self.__ping_pong:
             step = (2 * self.__frames - 2 - step) % len(self.__order)
         else:
@@ -316,22 +343,16 @@ class ImagePlayer:
         crosses it.
         """
         if self.__ping_pong:
-            return self.__at() >= self.__frames
+            return self.__current_step() >= self.__frames
         return self.__order[0] > self.__order[-1]
 
     def to_frame(self, frame):
         """Position on a frame by number, negatives counting from the end.
 
-        A ping-pong order shows a frame twice, and this lands on the first of them.
+        A ping-pong order shows a frame twice, and this lands on the first of them, so
+        to_frame(player.frame) is not always where it stood.
         """
-        wanted = frame
-        if frame < 0:
-            frame += self.__frames
-        if not 0 <= frame < self.__frames:
-            repeat = ", the last being first_as_last playing frame 0 again" if self.__first_as_last else ""
-            raise ValueError(f"there is no frame {wanted} in a player holding {self.__frames}{repeat}: frames are 0 to {self.__frames - 1}, or -1 to -{self.__frames} from the end")
-
-        self.__goto(self.__order.index(frame))
+        self.__goto(self.__order.index(self.__frame_number(frame)))
 
     def to_first(self):
         """Position on frame 0."""

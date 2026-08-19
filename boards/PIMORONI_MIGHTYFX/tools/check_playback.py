@@ -169,7 +169,23 @@ def check_position_and_pause():
     player.to_last()
     assert player.image == 0, "first_as_last's last frame is the first one drawn again"
     assert not player.is_reversed(), "the far turn counts as outward until the walk crosses it"
+    assert player.frame == 6, "and it is a frame number of its own"
+    assert player.image_at(6) == 0 and player.image_at(-1) == 0
     print("  under first_as_last that last frame is the far turn, and draws frame 0")
+
+    # A frame number reads back, so a caller can offset from it: one player feeding two
+    # screens a fixed distance apart is the case, where a second player costs the heap twice.
+    player = numbered(6, ping_pong=True)
+    player.to_frame(4)
+    assert player.frame == 4
+    assert player.image_at(2) == 2 and player.image_at(-1) == 5
+    assert player.image_at((player.frame + 3) % player.frames) == 1
+    while not player.is_reversed():
+        pass
+    while player.frame != 4:
+        pass
+    assert player.is_reversed(), "the same number comes back on the return leg"
+    print("  frame reads the number back, the same one on each leg, and image_at reaches any of them")
 
     player = numbered(6)
     while player.image != 2:
@@ -257,6 +273,7 @@ def check_refusals():
     refuses("to_frame past the end", lambda: numbered(4).to_frame(4))
     refuses("to_frame past a first_as_last end",
             lambda: numbered(4, ping_pong=True, first_as_last=True).to_frame(5))
+    refuses("image_at past the end", lambda: numbered(4).image_at(4))
     refuses("an fps under a millisecond a frame", lambda: numbered(4, fps=2000))
     refuses("no frames at all", lambda: Numbered(0, ()))
     # A cycle of no length would divide by zero on the first read, and GIFs declaring a
@@ -293,6 +310,7 @@ def check_gifs():
         assert player.cycle_ms() == frames * delay
         image = player.image
         assert image.width == 320 and image.height == 320
+        assert player.image_at(1).width == 320, "image_at reaches a frame the player is not on"
         print("  {:<38} {} frames, {}ms, {:.1f}fps asked, {}x{} palettised {}".format(
             path.split("/")[-1], player.frames, player.cycle_ms(), player.target_fps(),
             image.width, image.height, image.has_palette))
@@ -349,6 +367,12 @@ def check_sequence():
     player = SequencePlayer(NAMED_FOLDER, timings=(50,) * 8)
     assert player.cycle_ms() == 400
     print("  timings given by hand override what the names declare")
+
+    # A folder's frames are reachable by number too, where GIFPlayer has sheet and this
+    # has only the file names. One player can then feed two screens a fixed distance apart.
+    apart = player.frames // 2
+    assert player.image_at((player.frame + apart) % player.frames) is not player.image
+    print("  image_at reaches a folder's frames by number, {} apart included".format(apart))
 
     refuses("a folder whose names carry no delay", lambda: SequencePlayer(PLAIN_FOLDER))
     refuses("timings of the wrong length", lambda: SequencePlayer(NAMED_FOLDER, timings=(50, 50)))
