@@ -1231,6 +1231,11 @@ def __play(fx, volume, path, errors, playing):
     if callable(fx):
         fx = fx()
 
+    # Without a volume nothing here will run the program, so the screen entries it
+    # deferred are wanted now rather than never
+    if volume is None:
+        shows = __pending_shows(problems)
+
     if volume is None:
         wrote = report(problems, errors, bool(players))
     else:
@@ -1415,6 +1420,10 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         if source is not None:
             __run_program(program, source, settings.get("args", ()), problems)
 
+        # The board is the effects' again, so the screen entries put off for the
+        # program are built now, before the report, so anything wrong with them is in it
+        shows = __pending_shows(problems)
+
         # Here because the program could not be found or run, or because it finished
         # by itself. Either way the effects take the board back, and anything that
         # went wrong is said where the user is looking
@@ -1499,9 +1508,11 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         for player in players:
             player.stop()
         # shutdown() releases the screen ports and the header's rail, so neither
-        # record of what is running may outlive them
+        # record of what is running may outlive them, and anything a program put off
+        # is never going to be built now
         __SCREENS.clear()
         __STRIPS.clear()
+        __PENDING_SHOWS.clear()
         if volume.exposed():
             volume.withdraw()
         fx.shutdown()
@@ -1776,8 +1787,34 @@ def __screen_on(fx, name, line, problems, size):
     return screen
 
 
-def __build_shows(entries, fx, board, problems):
-    """A show per screen entry: the panel it names and the player feeding it."""
+# The screen entries a named program deferred, as one (entries, fx, board) or nothing
+__PENDING_SHOWS = []
+
+
+def __pending_shows(problems):
+    """The shows a program put off, built now it has given the board back."""
+    if not __PENDING_SHOWS:
+        return []
+
+    entries, fx, board = __PENDING_SHOWS.pop()
+
+    # The entries were checked when the file was read, so anything wrong with them is
+    # already reported and would otherwise be said twice. What is new here is whatever
+    # only building can find, a panel that will not start or content that will not play
+    found = []
+    shows = __build_shows(entries, fx, board, found)
+    problems.extend(problem for problem in found if problem not in problems)
+    return shows
+
+
+def __build_shows(entries, fx, board, problems, build=True):
+    """
+    A show per screen entry: the panel it names and the player feeding it.
+
+    Without `build` the entries are checked and nothing is made, which is what a file
+    naming a program wants: its screen entries are answered when it is read, and the
+    panels and players wait until the program gives the board back.
+    """
     shows = []
     built = set()
 
@@ -1849,6 +1886,11 @@ def __build_shows(entries, fx, board, problems):
         if path is None:
             continue
 
+        # Everything above is the entry being read, which a check wants; everything
+        # below resets a panel or decodes content, which only a build does
+        if not build:
+            continue
+
         screen = __screen_on(fx, name, entry.line, problems, board.get(name))
         if screen is None:
             continue
@@ -1900,11 +1942,13 @@ def __build_shows(entries, fx, board, problems):
         shows.append(ScreenShow(screen, player, channel, entry.scene))
 
     # A screen the file no longer names keeps its last frame but goes dark, since
-    # nothing is left to say anything on it
-    names = {used for _, used in built}
-    for name, (screen, _) in __SCREENS.items():
-        if name not in names:
-            screen.backlight.off()
+    # nothing is left to say anything on it. A check has built nothing, so it has
+    # nothing to say about which screens are still wanted
+    if build:
+        names = {used for _, used in built}
+        for name, (screen, _) in __SCREENS.items():
+            if name not in names:
+                screen.backlight.off()
 
     return shows
 
@@ -2412,7 +2456,16 @@ def load(text, fx):
     for first, second in zip(players, players[1:]):
         first.pair(second)
 
-    shows = __build_shows(screen_entries, fx, board, problems)
+    # A program takes the whole board and sets up its own screens, so building these
+    # before it runs resets a panel and decodes its content into heap for something
+    # about to be replaced. They are built when it gives the board back instead, which
+    # is where a program that is missing, that stops, or that returns all end up
+    if board.get("program"):
+        __PENDING_SHOWS[:] = [(screen_entries, fx, board)]
+        shows = __build_shows(screen_entries, fx, board, problems, build=False)
+    else:
+        __PENDING_SHOWS[:] = []
+        shows = __build_shows(screen_entries, fx, board, problems)
 
     # Found in the order the work happens, which is every line the parser read and
     # then every entry the loader built, so a reader gets them in the file's order

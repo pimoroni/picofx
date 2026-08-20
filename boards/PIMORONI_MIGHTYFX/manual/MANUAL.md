@@ -412,6 +412,10 @@ set to `manual`, so you can still edit `effects.txt`; unplug and plug back in
 for the change to take. A program cannot read files from this drive while it
 runs, so put anything it needs on the board's own filesystem.
 
+`screenA` and `screenB` describe the screens this file's own entries play on, so
+a program never sees them: it sets its own up. Pass it the size in `args` if it
+needs telling.
+
 `args` passes a program whatever it needs to know, so one program can do
 different things without being edited. Several are divided by `|`, and anything
 with a space or a colon in it goes in quotes:
