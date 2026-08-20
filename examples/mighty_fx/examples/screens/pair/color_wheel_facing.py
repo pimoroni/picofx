@@ -1,7 +1,7 @@
-# A spinny rainbow wheel, now on two screens, with one mirrored! Change up some of the constants below to see what happens.
+# A spinny rainbow wheel on a pair of screens arranged to face each other, one of them mirrored to suit. Change up some of the constants below to see what happens.
 
 from mighty_fx import MightyFX, SPCE
-from screens import Screen280
+from screens import Reserve, Screen280, ScreenPair
 from picovector import image, color, shape, mat3
 
 # Constants for drawing
@@ -14,14 +14,19 @@ LINE_THICKNESS = 2
 
 # Create a MightyFX object with both SP/CE ports set up for screens, and a 2.8" screen on each
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
-screens = Screen280(mighty.spce_a), Screen280(mighty.spce_b)
 
-# Access the first screen and create a canvas to draw to
-canvas = image(screens[0].width, screens[0].height)
+# A pair, so both panels change on the one frame. color_wheel_paired.py says what that
+# buys and why it needs the deeper reserve
+pair = ScreenPair(Screen280(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES),
+                  Screen280(mighty.spce_b, reserve=Reserve.FULL_SIZE_IMAGES))
+
+# Access the first screen and create a canvas to draw to. A pair's panels are the same
+# size as each other, so either one gives the size to draw at
+first = pair.screens[0]
+canvas = image(first.width, first.height)
 
 # Pre-calculate the screen centre
-centre_x, centre_y = screens[0].width / 2, screens[0].height / 2
-
+centre_x, centre_y = first.width / 2, first.height / 2
 
 # Variables to keep track of rotation and hue positions
 r = 0
@@ -51,9 +56,10 @@ try:
             # Apply the line with the current pen colour to the canvas
             canvas.shape(line)
 
-        # Update both screens with the latest canvas
-        screens[0].update(canvas)
-        screens[1].update(canvas, mirror=True)
+        # One frame, placed differently on each panel: a pair takes one value for both
+        # screens or a 2-tuple giving one each, so only the second is mirrored. Two panels
+        # mounted back to back, or either side of a model, then read the same way round
+        pair.update(canvas, mirror=(False, True))
 
         # Advance both the rotation and the hue
         r += ROTATION_SPEED
