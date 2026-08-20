@@ -61,6 +61,10 @@ class MightyFX:
     SERVO_STRIP_L = 44
     SERVO_STRIP_R = 45
 
+    # A strip takes a state machine of its own, and they are taken from PIO 1 so the
+    # I2S audio every board builds by default keeps PIO 0 to itself
+    STRIP_PIO = 1
+
     SENSOR_PIN = 46
     V_SENSE_PIN = 47
 
@@ -75,7 +79,8 @@ class MightyFX:
     # and each of those six is named on the board as well as indexed on the hub
     HUB_PORT_NAMES = ("a", "b", "c", "d", "e", "f")
 
-    def __init__(self, spce_a=None, spce_b=None, init_i2c=True, init_wav=True, wav_root="/"):
+    def __init__(self, spce_a=None, spce_b=None, strip_l=None, strip_r=None,
+                 servo_l=None, servo_r=None, init_i2c=True, init_wav=True, wav_root="/"):
         # A canvas claim has no object to finalise it, so one outlives the program
         # that made it where a screen's own workspace does not: a soft reset after a
         # run that skipped shutdown() leaves the SRAM held and the next program short
@@ -165,6 +170,37 @@ class MightyFX:
         # Set up the enable for the rail the L and R connectors share
         self.__rail_en = Pin(self.SERVO_STRIP_EN, Pin.OUT, value=False)
 
+        # What each of those connectors was declared as. A strip carries its length
+        # and a servo its calibration, so one setting says both which role and what
+        # it needs. Anything else is left alone: no pin claimed and no object made,
+        # so the connector is the caller's to use as they like.
+        self.__strips = {}
+        self.__servos = {}
+        for letter, pin, strip, servo, port, backlight in (
+                ("L", self.SERVO_STRIP_L, strip_l, servo_l, self.spce_a, self.SPCE_A_BL_PIN),
+                ("R", self.SERVO_STRIP_R, strip_r, servo_r, self.spce_b, self.SPCE_B_BL_PIN)):
+            if strip and servo:
+                raise ValueError(f"The {letter} connector carries one signal, so it cannot be a strip and a servo at once. Declare strip_{letter.lower()} or servo_{letter.lower()}.")
+
+            if strip:
+                from plasma import WS2812
+                built = WS2812(strip, self.STRIP_PIO, len(self.__strips), pin)
+                built.start()
+                self.__strips[letter] = built
+
+            elif servo:
+                # Each connector shares a PWM channel with one screen port's backlight,
+                # and both pins emit the same signal once both select PWM
+                if port.mode == SPCE.SCREEN:
+                    raise ValueError(f"A servo on {letter} cannot run while SP/CE {port.name} drives a screen. GPIO {pin} shares a PWM channel with GPIO {backlight}, which is that port's backlight, so put the servo on the other connector.")
+
+                from servo import Servo
+                self.__servos[letter] = Servo(pin) if servo is True else Servo(pin, calibration=servo)
+
+        # Whatever was declared needs power, and one rail serves both connectors
+        if self.__strips or self.__servos:
+            self.enable_rail()
+
     def boot_pressed(self):
         return self.__switch.value() == 0
 
@@ -219,6 +255,39 @@ class MightyFX:
         return self.outputs[6]
 
     @property
+    def strip_l(self):
+        """The LED strip on the L connector, declared as MightyFX(strip_l=60)."""
+        return self.__declared(self.__strips, "strip", "L")
+
+    @property
+    def strip_r(self):
+        """The LED strip on the R connector, declared as MightyFX(strip_r=60)."""
+        return self.__declared(self.__strips, "strip", "R")
+
+    @property
+    def servo_l(self):
+        """The servo on the L connector, declared as MightyFX(servo_l=True)."""
+        return self.__declared(self.__servos, "servo", "L")
+
+    @property
+    def servo_r(self):
+        """The servo on the R connector, declared as MightyFX(servo_r=True)."""
+        return self.__declared(self.__servos, "servo", "R")
+
+    def __declared(self, built, role, letter):
+        """One connector's strip or servo, or why there is none to hand back."""
+        made = built.get(letter)
+        if made is not None:
+            return made
+
+        other = "servo" if role == "strip" else "strip"
+        if letter in (self.__servos if role == "strip" else self.__strips):
+            raise RuntimeError(f"The {letter} connector is set up as a {other}, so it has no {role}")
+
+        asked = "60" if role == "strip" else "True"
+        raise RuntimeError(f"{role}_{letter.lower()} is only there where the board was started with {role}_{letter.lower()}={asked}")
+
+    @property
     def hub_ports(self):
         """The hub's ports, one per panel its chip selects reach, and empty without
         a hub. Each is named as hub_a through hub_f as well.
@@ -237,8 +306,17 @@ class MightyFX:
         for out in self.outputs:
             out.set_rgb(0, 0, 0)
 
+        for strip in self.__strips.values():
+            strip.clear()
+
     def shutdown(self):
         self.clear()
+
+        # A servo holds its position while it is driven, so it stops being driven
+        # before the rail goes: the two together leave it limp rather than pushing
+        for servo in self.__servos.values():
+            servo.disable()
+
         self.disable_rail()
 
         self.spce_a.backlight_off()
