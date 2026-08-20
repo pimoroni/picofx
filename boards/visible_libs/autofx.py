@@ -1775,10 +1775,12 @@ def __screen_on(fx, name, line, problems, size):
     if size is None:
         size = "2.8"
 
-    from screens import Screen154, Screen280
+    # Read here rather than at the top of the file, which also runs on a board with no
+    # screens module to import
+    from screens import SCREEN_TYPES
 
     try:
-        screen = (Screen154 if size == "1.54" else Screen280)(port)
+        screen = SCREEN_TYPES[size](port)
     except Exception as e:      # noqa: BLE001
         problems.append("line {}: {} could not start: {}".format(line, shown, e))
         return None

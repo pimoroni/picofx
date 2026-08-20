@@ -1,6 +1,7 @@
+import sys
 import time
 from mighty_fx import MightyFX, SPCE
-from screens import Screen280
+from screens import SCREEN_TYPES
 from picovector import image, color, shape
 
 """
@@ -15,9 +16,13 @@ FADE_STEPS = 50         # How many steps the backlight takes from off to full
 STEP_INTERVAL = 0.02    # The time (in seconds) each of those steps is held for
 RING_THICKNESS = 30     # How wide the ring drawn on the screen is
 
-# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
+# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
+# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = ScreenType(mighty.spce_a)
 
 # Access the screen and create a canvas to draw to
 canvas = image(screen.width, screen.height)

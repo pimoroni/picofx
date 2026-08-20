@@ -17,6 +17,7 @@ from .screen import Reserve, Screen
 
 
 class Screen154(Screen):
+    SIZE = "1.54"
     WIDTH, HEIGHT = 240, 240
     # No 16-bit row at 24MHz: that frame outruns the controller's 39fps floor.
     # This panel shows 240 of the controller's ~320 scan lines, so its tear
@@ -42,6 +43,7 @@ class Screen154(Screen):
 
 
 class Screen280(Screen):
+    SIZE = "2.8"
     WIDTH, HEIGHT = 240, 320
     # No 12-bit row at 75MHz, for the same beam-overtake reason as the 1.54"
     # The 24MHz rate is 45, not the 46 the two-refresh budget nominally allows:
@@ -75,3 +77,8 @@ class Screen280(Screen):
     FULL_IMAGE_RESERVE = {
         (24_000_000, 12): {"stage_lines": 160, "cache_columns": 12},
     }
+
+
+# Every screen type, keyed by the size each one declares, so a new size is a subclass
+# added here and nothing else has to name it again
+SCREEN_TYPES = {screen.SIZE: screen for screen in (Screen154, Screen280)}

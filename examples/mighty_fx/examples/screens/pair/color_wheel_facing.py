@@ -1,5 +1,6 @@
+import sys
 from mighty_fx import MightyFX, SPCE
-from screens import Reserve, Screen280, ScreenPair
+from screens import SCREEN_TYPES, Reserve, ScreenPair
 from picovector import image, color, shape, mat3
 
 """
@@ -17,13 +18,19 @@ HUE_SHIFT = 4
 ROTATION_SPEED = 2
 LINE_THICKNESS = 2
 
-# Create a MightyFX object with both SP/CE ports set up for screens, and a 2.8" screen on each
+# Which screen is on both ports, "2.8" or "1.54", or what the effects file passes in args.
+# A pair aligns its panels, which needs their rates close, and the two sizes default
+# too far apart to bridge, so both panels take one size here
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
+# Create a MightyFX object with both SP/CE ports set up for screens, and one on each
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 
 # A pair, so both panels change on the one frame. color_wheel_paired.py says what that
 # buys and why it needs the deeper reserve
-pair = ScreenPair(Screen280(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES),
-                  Screen280(mighty.spce_b, reserve=Reserve.FULL_SIZE_IMAGES))
+pair = ScreenPair(ScreenType(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES),
+                  ScreenType(mighty.spce_b, reserve=Reserve.FULL_SIZE_IMAGES))
 
 # Access the first screen and create a canvas to draw to. A pair's panels are the same
 # size as each other, so either one gives the size to draw at

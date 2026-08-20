@@ -1,6 +1,7 @@
+import sys
 import time
 from mighty_fx import MightyFX, SPCE
-from screens import Screen280
+from screens import SCREEN_TYPES
 from picovector import color, spritesheet
 
 """
@@ -21,9 +22,13 @@ HUE_SHIFT = 2           # How far the background hue moves each frame, out of 25
 COLORS = (color.rgb(0, 96, 255), color.rgb(255, 32, 96), color.rgb(64, 208, 32),
           color.rgb(255, 176, 0), color.rgb(160, 64, 255))
 
-# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
+# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
+# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = ScreenType(mighty.spce_a)
 
 # A palettised source, such as a GIF or an indexed PNG, is drawn through its colour table,
 # so a transparent entry takes bg_color and a recolour is a write to the table. A

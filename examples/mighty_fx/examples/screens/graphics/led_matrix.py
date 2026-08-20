@@ -1,5 +1,6 @@
+import sys
 from mighty_fx import MightyFX, SPCE
-from screens import Screen280
+from screens import SCREEN_TYPES
 from picovector import color, image, rect
 
 """
@@ -23,9 +24,13 @@ RAINBOWS = 1.5                  # Full rainbows across the matrix corner to corn
 # off the clock instead, the wave lands as 1, 1, 2, 1, 1, 2, which reads as choppy however steady the frames
 LAMPS_A_FRAME = 1
 
+# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = ScreenType(mighty.spce_a)
 
 # A matrix sign is wider than it is tall, so the canvas is drawn landscape and every update turns it a
 # quarter onto the panel. From the screen rather than image(), which puts it in SRAM and halves both the

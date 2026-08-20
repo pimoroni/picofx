@@ -1,6 +1,7 @@
 import random
+import sys
 from mighty_fx import MightyFX, SPCE
-from screens import Screen280, ScreenGroup
+from screens import SCREEN_TYPES, ScreenGroup
 from picovector import image, color, shape
 
 """
@@ -15,6 +16,10 @@ NUMBER_OF_STARS = 50
 TRAVEL_SPEED = 1.2
 STAR_GROWTH = 0.12
 
+# Which screen is on every hub position, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
 # Create a MightyFX object with a screen hub across both SP/CE ports. One carries the
 # screen bus and the other gives up its five lines as extra chip selects, which is what
 # lets one port drive six panels instead of one
@@ -26,7 +31,7 @@ mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_LINES)
 panels = []
 for port in mighty.hub.ports:
     try:
-        panels.append(Screen280(port))
+        panels.append(ScreenType(port))
     except ValueError:
         pass
 

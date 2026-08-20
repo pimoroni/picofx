@@ -1,5 +1,6 @@
+import sys
 from mighty_fx import MightyFX, SPCE
-from screens import Screen280
+from screens import SCREEN_TYPES
 from picovector import image, color, shape, mat3
 
 """
@@ -17,7 +18,11 @@ HUE_SHIFT = 4
 ROTATION_SPEED = 2
 LINE_THICKNESS = 2
 
-# Create a MightyFX object with both SP/CE ports set up for screens, and a 2.8" screen on each
+# Which screen is on both ports, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
+# Create a MightyFX object with both SP/CE ports set up for screens, and one on each
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 
 # Two screens held separately, with no pair between them. update() does not return until
@@ -27,7 +32,7 @@ mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 #
 # What it buys is memory: each screen converts within a frame of its own, so the default
 # reserve keeps up where a pair needs a deeper stage.
-screens = Screen280(mighty.spce_a), Screen280(mighty.spce_b)
+screens = ScreenType(mighty.spce_a), ScreenType(mighty.spce_b)
 
 # Access the first screen and create a canvas to draw to
 canvas = image(screens[0].width, screens[0].height)
