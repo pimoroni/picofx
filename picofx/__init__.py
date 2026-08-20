@@ -224,8 +224,13 @@ class EffectPlayer:
             self.stop()
 
             self.__period = int(1000 / fps)
-            if self.__paired is not None:
-                self.__paired.__period = self.__period
+
+            # Each paired player ticks the next, so the whole chain runs on this
+            # timer and every one of them measures time by this period
+            partner = self.__paired
+            while partner is not None:
+                partner.__period = self.__period
+                partner = partner.__paired
 
             self.__last = time.ticks_ms()
             self.__timer.init(mode=Timer.PERIODIC, period=self.__period, callback=self.__update)
