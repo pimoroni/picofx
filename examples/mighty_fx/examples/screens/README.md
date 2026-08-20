@@ -26,11 +26,9 @@ These are micropython examples for the screens Mighty FX can drive from its SP/C
   - [Animated GIF Ping Pong](#animated-gif-ping-pong)
   - [Billboard Cased](#billboard-cased)
   - [Billboard Folders](#billboard-folders)
-  - [Billboard From Flash](#billboard-from-flash)
   - [Billboard Paired](#billboard-paired)
   - [Billboard Slideshow](#billboard-slideshow)
   - [Billboard Wall](#billboard-wall)
-  - [Dual Animated GIFs](#dual-animated-gifs)
   - [Neon Ping Pong](#neon-ping-pong)
   - [Traces Scroll](#traces-scroll)
   - [Traces Wall](#traces-wall)
@@ -118,10 +116,6 @@ These are micropython examples for the screens Mighty FX can drive from its SP/C
 [playback/billboard_folders.py](playback/billboard_folders.py)
 
 
-### Billboard From Flash
-[playback/billboard_from_flash.py](playback/billboard_from_flash.py)
-
-
 ### Billboard Paired
 [playback/billboard_paired.py](playback/billboard_paired.py)
 
@@ -132,10 +126,6 @@ These are micropython examples for the screens Mighty FX can drive from its SP/C
 
 ### Billboard Wall
 [playback/billboard_wall.py](playback/billboard_wall.py)
-
-
-### Dual Animated GIFs
-[playback/dual_animated_gifs.py](playback/dual_animated_gifs.py)
 
 
 ### Neon Ping Pong
