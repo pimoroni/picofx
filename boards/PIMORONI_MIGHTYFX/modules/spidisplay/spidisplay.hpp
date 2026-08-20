@@ -218,6 +218,8 @@ public:
     // before this returns, each composited over bg by its own alpha; an RGBA
     // pixel's alpha is ignored. bg is also what the pixels the source does not
     // cover take. Each axis is centred, or placed by its off_x/off_y top-left.
+    // tile_x and tile_y repeat the source on that axis of its own, so the read
+    // wraps at its size and any offset is valid.
     // Blocks until the frame has left over SPI.
     // sync_delay_us starts the stream that long after the TE wait releases, which
     // places a broadcast write inside every member's tearing margin instead of at
@@ -225,7 +227,8 @@ public:
     void update(const uint8_t *src, int src_w, int src_h, int src_stride,
                 const uint8_t *palette, size_t palette_len,
                 int rotation, int mirror, int pixel_double,
-                uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
+                bool centred_x, int off_x, bool centred_y, int off_y,
+                bool tile_x, bool tile_y, uint32_t bg,
                 bool v_sync, uint32_t timeout_us, uint32_t sync_delay_us = 0,
                 uint64_t target_cs = 0, uint64_t target_dc = 0,
                 uint64_t sync_cs = 0, uint64_t sync_dc = 0);
@@ -254,7 +257,8 @@ public:
     void prepare(const uint8_t *src, int src_w, int src_h, int src_stride,
                  const uint8_t *palette, size_t palette_len,
                  int rotation, int mirror, int pixel_double,
-                 uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
+                 bool centred_x, int off_x, bool centred_y, int off_y,
+                 bool tile_x, bool tile_y, uint32_t bg,
                  uint64_t target_cs = 0, uint64_t target_dc = 0,
                  uint64_t sync_cs = 0, uint64_t sync_dc = 0);
 

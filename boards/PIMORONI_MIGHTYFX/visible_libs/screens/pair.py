@@ -177,6 +177,27 @@ class ScreenPair:
         return (offset, offset)
 
     @staticmethod
+    def __pair_tiles(tile):
+        """tile resolved to one value per screen.
+
+        Shared unless either element is itself a pair, tile being an (x, y)
+        pair already, which is the rule offset follows: a shared form is a
+        bool or an (x, y) pair of them, a per-screen form is two of either.
+        """
+        if not isinstance(tile, (tuple, list)):
+            return (tile, tile)
+        if len(tile) != 2:
+            raise ValueError("tile is one value for both axes, or an (x, y) pair; a per-screen tile is two of either")
+
+        if any(isinstance(element, (tuple, list)) for element in tile):
+            for element in tile:
+                if isinstance(element, (tuple, list)) and len(element) != 2:
+                    raise ValueError(f"{element} is not an (x, y) pair of tile settings")
+            return tile
+
+        return (tile, tile)
+
+    @staticmethod
     def __fold(delta, period):
         """Signed fold of a difference into half a period."""
         d = delta % period
@@ -268,20 +289,23 @@ class ScreenPair:
 
         return self.__trim_lines
 
-    def update(self, image, second=None, *, rotation=0, mirror=False, v_sync=None,
-               bg_color=picovector.color.black, pixel_double=False, offset=None):
+    def update(self, image, second=None, *, rotation=0, mirror=False,
+               pixel_double=False, offset=None, tile=False,
+               bg_color=picovector.color.black, v_sync=None):
         """Stream a frame to both screens, aligned when align is on.
 
         One image reaches both panels, or a second positional image gives each
         its own. Every placement keyword takes one value for both screens, or a
         2-tuple for one each, so a pair mounted opposite ways is
-        rotation=(90, 270). offset is the exception, being an (x, y) pair
-        itself: it is shared unless an element is itself a pair.
+        rotation=(90, 270). offset and tile are the exception, each being an
+        (x, y) pair itself: they are shared unless an element is itself a pair.
 
             offset=(5, 10)              both screens at (5, 10)
             offset=(5, None)            both screens: x=5, y centred
             offset=(None, (5, 10))      first centred, second at (5, 10)
             offset=((0, 0), (5, 10))    one each
+            tile=(True, False)          both screens tile x only
+            tile=((True, True), False)  first tiles both axes, second neither
 
         v_sync=None waits on the tearing-effect signal when both screens were
         built for it. An aligned pair refuses v_sync=False, the signal being
@@ -293,8 +317,9 @@ class ScreenPair:
         rotations = self.__pair_values(rotation, "rotation")
         mirrors = self.__pair_values(mirror, "mirror")
         doubles = self.__pair_values(pixel_double, "pixel_double")
-        backgrounds = self.__pair_values(bg_color, "bg_color")
         offsets = self.__pair_offsets(offset)
+        tiles = self.__pair_tiles(tile)
+        backgrounds = self.__pair_values(bg_color, "bg_color")
 
         if self.__align:
             if v_sync is False:
@@ -315,11 +340,11 @@ class ScreenPair:
                 self.__resync()
 
         first_screen.prepare(image, rotation=rotations[0], mirror=mirrors[0],
-                             bg_color=backgrounds[0], pixel_double=doubles[0],
-                             offset=offsets[0])
+                             pixel_double=doubles[0], offset=offsets[0],
+                             tile=tiles[0], bg_color=backgrounds[0])
         second_screen.prepare(second, rotation=rotations[1], mirror=mirrors[1],
-                              bg_color=backgrounds[1], pixel_double=doubles[1],
-                              offset=offsets[1])
+                              pixel_double=doubles[1], offset=offsets[1],
+                              tile=tiles[1], bg_color=backgrounds[1])
         update_pair(first_screen, second_screen, v_sync=v_sync)
 
         if self.__align:

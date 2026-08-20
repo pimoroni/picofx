@@ -611,7 +611,8 @@ TePhase SPIDisplay::te_phase(SPIDisplay &first, SPIDisplay &second,
 void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h, int src_stride,
                          const uint8_t *palette, size_t palette_len,
                          int rotation, int mirror, int pixel_double,
-                         uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
+                         bool centred_x, int off_x, bool centred_y, int off_y,
+                         bool tile_x, bool tile_y, uint32_t bg,
                          uint64_t target_cs, uint64_t target_dc,
                          uint64_t sync_cs, uint64_t sync_dc) {
     uint32_t t_pre = time_us_32();
@@ -629,8 +630,9 @@ void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h, int src_strid
     bool indexed = palette != nullptr;
 
     Transform t = map_transform(rotation, mirror);
-    desc = make_descriptor(src, src_w, src_h, dst_w, dst_h, t, dbl, bg, fmt,
+    desc = make_descriptor(src, src_w, src_h, dst_w, dst_h, fmt, t, dbl,
                            centred_x, off_x, centred_y, off_y,
+                           tile_x, tile_y, bg,
                            src_stride,
                            indexed ? Indexed8::bytes : RGBA8888::bytes);
 
@@ -954,13 +956,15 @@ void SPIDisplay::abort_frame() {
 void SPIDisplay::update(const uint8_t *src, int src_w, int src_h, int src_stride,
                         const uint8_t *palette, size_t palette_len,
                         int rotation, int mirror, int pixel_double,
-                        uint32_t bg, bool centred_x, int off_x, bool centred_y, int off_y,
+                        bool centred_x, int off_x, bool centred_y, int off_y,
+                        bool tile_x, bool tile_y, uint32_t bg,
                         bool v_sync, uint32_t timeout_us, uint32_t sync_delay_us,
                         uint64_t target_cs, uint64_t target_dc,
                         uint64_t sync_cs, uint64_t sync_dc) {
     prepare(src, src_w, src_h, src_stride, palette, palette_len,
             rotation, mirror, pixel_double,
-            bg, centred_x, off_x, centred_y, off_y,
+            centred_x, off_x, centred_y, off_y,
+            tile_x, tile_y, bg,
             target_cs, target_dc, sync_cs, sync_dc);
     arm(v_sync, timeout_us);
     while (!poll_te()) {
@@ -1275,9 +1279,10 @@ typedef struct _FrameArgs {
     const uint8_t *palette;
     size_t palette_len;
     mp_int_t rotation, mirror, pixel_double;
-    uint32_t bg;
     bool centred_x, centred_y;
     int off_x, off_y;
+    bool tile_x, tile_y;
+    uint32_t bg;
     bool v_sync;
     mp_int_t timeout_us;
     mp_int_t sync_delay_us;
@@ -1291,16 +1296,17 @@ typedef struct _FrameArgs {
 static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
                                    mp_map_t *kw_args, bool with_sync, FrameArgs *out) {
     enum { ARG_self, ARG_image,
-           ARG_rotation, ARG_mirror, ARG_pixel_double, ARG_bg, ARG_offset, ARG_to,
-           ARG_sync, ARG_v_sync, ARG_timeout_us, ARG_sync_delay_us };
+           ARG_rotation, ARG_mirror, ARG_pixel_double, ARG_offset, ARG_tile,
+           ARG_bg, ARG_to, ARG_sync, ARG_v_sync, ARG_timeout_us, ARG_sync_delay_us };
     static const mp_arg_t allowed_args[] = {
         { MP_QSTR_, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_image, MP_ARG_REQUIRED | MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_rotation, MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_mirror, MP_ARG_INT, {.u_int = 0} },
         { MP_QSTR_pixel_double, MP_ARG_INT, {.u_int = 0} },
-        { MP_QSTR_bg, MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_offset, MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_tile, MP_ARG_OBJ, {.u_obj = mp_const_none} },
+        { MP_QSTR_bg, MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_to, MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_sync, MP_ARG_OBJ, {.u_obj = mp_const_none} },
         { MP_QSTR_v_sync, MP_ARG_BOOL, {.u_bool = false} },
@@ -1358,13 +1364,6 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
         mp_raise_ValueError(MP_ERROR_TEXT("image buffer is shorter than its dimensions"));
     }
 
-    // A packed colour carries alpha in the top byte, so it can exceed a signed
-    // machine word; truncate to 32 bits (only the low 24 are used).
-    uint32_t bg = 0;
-    if (args[ARG_bg].u_obj != mp_const_none) {
-        bg = (uint32_t)mp_obj_get_int_truncated(args[ARG_bg].u_obj);
-    }
-
     // offset=None centres both axes; an (x, y) pair places the top-left, where
     // either element may be None to centre just that axis.
     bool centred_x = true;
@@ -1388,6 +1387,32 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
         }
     }
 
+    // tile=True repeats the source on both of its own axes, an (x, y) pair on
+    // one each: the read wraps at the source's size, so any offset is valid.
+    bool tile_x = false;
+    bool tile_y = false;
+    if (args[ARG_tile].u_obj != mp_const_none) {
+        if (mp_obj_is_bool(args[ARG_tile].u_obj)) {
+            tile_x = tile_y = mp_obj_is_true(args[ARG_tile].u_obj);
+        } else {
+            size_t len;
+            mp_obj_t *items;
+            mp_obj_get_array(args[ARG_tile].u_obj, &len, &items);
+            if (len != 2) {
+                mp_raise_ValueError(MP_ERROR_TEXT("tile is one value for both axes, or an (x, y) pair"));
+            }
+            tile_x = mp_obj_is_true(items[0]);
+            tile_y = mp_obj_is_true(items[1]);
+        }
+    }
+
+    // A packed colour carries alpha in the top byte, so it can exceed a signed
+    // machine word; truncate to 32 bits (only the low 24 are used).
+    uint32_t bg = 0;
+    if (args[ARG_bg].u_obj != mp_const_none) {
+        bg = (uint32_t)mp_obj_get_int_truncated(args[ARG_bg].u_obj);
+    }
+
     out->self = self;
     out->image = args[ARG_image].u_obj;
     out->buf = buf;
@@ -1404,6 +1429,8 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
     out->centred_y = centred_y;
     out->off_x = off_x;
     out->off_y = off_y;
+    out->tile_x = tile_x;
+    out->tile_y = tile_y;
     out->v_sync = with_sync ? args[ARG_v_sync].u_bool : false;
     out->timeout_us = with_sync ? args[ARG_timeout_us].u_int : 0;
     out->sync_delay_us = with_sync ? args[ARG_sync_delay_us].u_int : 0;
@@ -1467,7 +1494,8 @@ static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_ma
     a.self->display.update((const uint8_t *)a.buf.buf, a.src_w, a.src_h, a.src_stride,
         a.palette, a.palette_len,
         a.rotation, a.mirror, a.pixel_double,
-        a.bg, a.centred_x, a.off_x, a.centred_y, a.off_y,
+        a.centred_x, a.off_x, a.centred_y, a.off_y,
+        a.tile_x, a.tile_y, a.bg,
         a.v_sync, a.timeout_us, (uint32_t)a.sync_delay_us,
         a.target_cs, a.target_dc, a.sync_cs, a.sync_dc);
     a.self->staged_image = mp_const_none;
@@ -1494,7 +1522,8 @@ static mp_obj_t SPIDisplay_fill(size_t n_args, const mp_obj_t *args) {
     }
     self->display.update(nullptr, 0, 0, 0, nullptr, 0,
                          0, 0, 0,
-                         bg, true, 0, true, 0,
+                         true, 0, true, 0,
+                         false, false, bg,
                          false, 0, 0, 0, 0, 0, 0);
     self->staged_image = mp_const_none;
     return mp_const_none;
@@ -1511,7 +1540,8 @@ static mp_obj_t SPIDisplay_prepare(size_t n_args, const mp_obj_t *pos_args, mp_m
     a.self->display.prepare((const uint8_t *)a.buf.buf, a.src_w, a.src_h, a.src_stride,
         a.palette, a.palette_len,
         a.rotation, a.mirror, a.pixel_double,
-        a.bg, a.centred_x, a.off_x, a.centred_y, a.off_y,
+        a.centred_x, a.off_x, a.centred_y, a.off_y,
+        a.tile_x, a.tile_y, a.bg,
         a.target_cs, a.target_dc, a.sync_cs, a.sync_dc);
     a.self->staged_image = a.image;
     return mp_const_none;

@@ -562,7 +562,7 @@ class ScreenGroup(ScreenBase):
         """
         owner = self.__subset_of or self
         if owner.__holding:
-            to = args[6] if len(args) > 6 else kwargs.get("to")
+            to = args[7] if len(args) > 7 else kwargs.get("to")
             owner.__walk_in(self.screens if to is None else to)
         super().update(image, *args, **kwargs)
         synced = self.__synced_frame

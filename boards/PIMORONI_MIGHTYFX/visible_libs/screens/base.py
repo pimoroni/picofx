@@ -191,7 +191,7 @@ class ScreenBase:
                 return screen
         return None
 
-    def update(self, image, rotation=0, mirror=False, v_sync=None, bg_color=picovector.color.black, pixel_double=False, offset=None, to=None):
+    def update(self, image, rotation=0, mirror=False, pixel_double=False, offset=None, tile=False, bg_color=picovector.color.black, v_sync=None, to=None):
         # A frame outside the pair first hands back the panel state alignment
         # holds, the trimmed porch included: the narrowed TE pulse is only safe
         # under the pair's poll, and the period was the pair's choice
@@ -218,7 +218,7 @@ class ScreenBase:
                               rotation=rotation,
                               mirror=1 if mirror else 0,
                               pixel_double=1 if pixel_double else 0,
-                              bg=bg, offset=offset, v_sync=v_sync,
+                              offset=offset, tile=tile, bg=bg, v_sync=v_sync,
                               to=self.__write_targets(to),
                               sync=None if synced is None else synced.display,
                               sync_delay_us=delay)
@@ -231,7 +231,7 @@ class ScreenBase:
             self.__group.__frame_ticked(self.__display.stats(), synced, delay)
 
     @micropython.native
-    def prepare(self, image, rotation=0, mirror=False, bg_color=picovector.color.black, pixel_double=False, offset=None, to=None):
+    def prepare(self, image, rotation=0, mirror=False, pixel_double=False, offset=None, tile=False, bg_color=picovector.color.black, to=None):
         """Stage a frame for update_pair(), converting as far ahead as it can.
 
         Placement is per screen, so a pair can differ in rotation, mirroring and
@@ -247,6 +247,6 @@ class ScreenBase:
                                rotation=rotation,
                                mirror=1 if mirror else 0,
                                pixel_double=1 if pixel_double else 0,
-                               bg=bg, offset=offset,
+                               offset=offset, tile=tile, bg=bg,
                                to=self.__write_targets(to),
                                sync=None if synced is None else synced.display)
