@@ -33,7 +33,7 @@ Replace this file with your own program if you would rather write code; deleting
 brings this one back, and an empty one leaves the board quiet.
 """
 
-autofx.run(MightyFX(), volume=fx_drive)
+autofx.run(MightyFX, volume=fx_drive)
 '''
 
 EFFECTS = """\

@@ -26,7 +26,7 @@ import os
 import sys
 import time
 
-from picofx import RGBLED, ColourPlayer, MonoPlayer, ease, fade
+from picofx import RGBLED, ColourPlayer, MonoPlayer, StripPlayer, ease, fade
 from picofx.colour import (BLACK, BLUE, COOL, COLOUR_EFFECTS, CYAN, GREEN, MAGENTA, RED,
                            WARM, WHITE, YELLOW)
 from picofx.mono import MONO_EFFECTS, NoneFX
@@ -47,6 +47,15 @@ COMPONENTS = ("r", "g", "b")
 # The one name on the left that is not a channel. Its entry carries settings about
 # the board rather than an effect, so it is the only one with no effect name.
 BOARD = "board"
+
+# A strip's LEDs are named like the outputs, so 'stripL1-10' is a range of them and
+# the bare name is the whole run. One kind of channel per connector, since each is a
+# player of its own writing to its own strip.
+STRIPS = ("stripl", "stripr")
+
+# The channels that can show a colour, so a colour effect may play on them and a mono
+# effect is drawn in the tint they hold. A strip is one of these; a mono channel is not.
+CHROMATIC = ("colour",) + STRIPS
 
 
 # Each effect, the kind of channel it drives, how a channel gets its callable, and
@@ -135,9 +144,14 @@ PAIRED_SETTINGS = (("bright_min", "bright_max"), ("dim_min", "dim_max"),
 # What a board entry takes, and the values a setting is limited to. A program is a
 # file name, so it is answered when it is looked for rather than here. A screen's
 # size is a fact about the hardware, set once here where an entry's settings vary
-# per scene.
+# per scene, and a strip's length is the same: it is the one channel count the board
+# cannot discover for itself.
 BOARD_SETTINGS = {"drive": ("manual",), "program": None,
-                  "screena": ("2.8", "1.54"), "screenb": ("2.8", "1.54")}
+                  "screena": ("2.8", "1.54"), "screenb": ("2.8", "1.54"),
+                  "stripl": None, "stripr": None}
+
+# The board settings whose value is a number rather than one of a set of words
+BOARD_COUNTS = STRIPS
 
 # Short of full, which is uncomfortable on an indicator at arm's length and buys no
 # legibility across a room
@@ -182,6 +196,12 @@ __ANGLE_WANTED = __FRACTION_WANTED + ", or an angle from 0deg to 360deg"
 
 class Channel:
     """One channel an entry names, with whatever settings were attached to it."""
+
+    # Every setting that may sit left of the colon, so a channel copied when a bare
+    # strip name expands cannot quietly lose one. Checked against __init__ on the host.
+    SETTINGS = ("level", "colour", "fade", "ease", "rotation", "backlight", "mirror",
+                "offset", "background", "pixel_double")
+
     def __init__(self, name):
         self.name = name
         self.level = None
@@ -196,6 +216,14 @@ class Channel:
         self.offset = None
         self.background = None
         self.pixel_double = None
+
+    def like(self, name):
+        """The same channel under another name, which is how a bare strip name
+        becomes the run of LEDs it stands for."""
+        made = Channel(name)
+        for setting in self.SETTINGS:
+            setattr(made, setting, getattr(self, setting))
+        return made
 
     def __repr__(self):
         return "Channel({}, level={}, colour={})".format(self.name, self.level, self.colour)
@@ -1147,10 +1175,19 @@ def indicate(fx, pattern=PROBLEM):
 
 
 def __play(fx, volume, path, errors, playing):
-    """Stop what is playing, read the file again, and play what it now says."""
+    """
+    Stop what is playing, read the file again, and play what it now says.
+
+    Takes a board or something that makes one, and hands the board back: the file is
+    what declares a strip, so on the first read there is nothing built yet.
+    """
     for player in playing:
         player.stop()
-    fx.clear()
+
+    # clear() covers a strip as well as the outputs, and a strip holds its last frame
+    # once nothing is writing it, so a file that no longer names one leaves it dark
+    if not callable(fx):
+        fx.clear()
 
     text = None
     players, shows, scenes, settings, problems = [], [], [], {}, []
@@ -1174,7 +1211,7 @@ def __play(fx, volume, path, errors, playing):
 
     if text is not None:
         try:
-            players, shows, scenes, settings, problems = load(text, fx)
+            fx, players, shows, scenes, settings, problems = load(text, fx)
         # A file a user typed must never be able to take the board down. Anything
         # load does not report itself costs the whole file, where its own reporting
         # costs one entry, but the drive and the button survive to be edited again
@@ -1188,6 +1225,11 @@ def __play(fx, volume, path, errors, playing):
             problems.append(
                 "the drive is shown anyway, since a program is named and hiding it "
                 "would leave no way to change one back")
+
+    # Nothing declared anything, the file being unreadable or its loading having
+    # failed, and the board still has to come up: it is what answers on the lights
+    if callable(fx):
+        fx = fx()
 
     if volume is None:
         wrote = report(problems, errors, bool(players))
@@ -1204,7 +1246,7 @@ def __play(fx, volume, path, errors, playing):
 
     # Started by the caller, which is the only one that knows whether a program is
     # about to take the board over
-    return players, shows, scenes, settings, problems
+    return fx, players, shows, scenes, settings, problems
 
 
 def __start(players):
@@ -1294,10 +1336,13 @@ def __run_program(name, source, problems):
 
 def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     """
-    Play the effects file. Without a volume this reads it once and returns the
+    Play the effects file. Without a volume this reads it once and returns the board,
     players, shows, scenes and problems, leaving the servicing and the rotation to
     the caller. Scenes take turns on their own times, and everything before the
     first heading stays on throughout.
+
+    `fx` is a board or something that makes one, a board class being the usual thing,
+    since a strip's length is declared at construction and the file is what names it.
 
     With one, the drive is shown at boot and the button is watched from then on: a
     double press shows or hides it, a single press re-reads the file and puts the
@@ -1315,7 +1360,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     if volume is not None:
         volume.mount()
 
-    players, shows, scenes, settings, problems = __play(fx, volume, path, errors, [])
+    fx, players, shows, scenes, settings, problems = __play(fx, volume, path, errors, [])
 
     scene_at = 0
     scene_deadline = None
@@ -1333,7 +1378,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     if volume is None:
         begin_scenes()
         __start(players)
-        return players, shows, scenes, problems
+        return fx, players, shows, scenes, problems
 
     # The drive goes up before any program runs, since a program that works never
     # returns. Otherwise a mistyped name would leave no way back but a reflash, so a
@@ -1383,8 +1428,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
             event = volume.service(fx.boot_pressed())
 
             if event in (volume.HIDDEN, volume.EJECTED, volume.RELOADED):
-                players, shows, scenes, settings, problems = __play(fx, volume, path,
-                                                                    errors, players)
+                fx, players, shows, scenes, settings, problems = __play(
+                    fx, volume, path, errors, players)
                 paused = False
                 idle_since = None
                 begin_scenes()
@@ -1442,8 +1487,10 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     finally:
         for player in players:
             player.stop()
-        # shutdown() releases the screen ports, so the cache must not outlive them
+        # shutdown() releases the screen ports and the header's rail, so neither
+        # record of what is running may outlive them
         __SCREENS.clear()
+        __STRIPS.clear()
         if volume.exposed():
             volume.withdraw()
         fx.shutdown()
@@ -1469,6 +1516,169 @@ def channels(fx):
         colour.append(("rgb", rgb))
 
     return mono, colour
+
+
+def __has_strips(fx):
+    """Whether this board has the header's strip connectors at all.
+
+    Asked of the class, so no board need exist yet and no property is evaluated:
+    MicroPython's dir() and getattr() both run a property's getter, and one that
+    answers by raising would read as an absent connector.
+    """
+    return hasattr(fx if isinstance(fx, type) else type(fx), "strip_l")
+
+
+def __board(fx, settings, problems):
+    """
+    The board to play on: whatever the caller handed in, or one built here from what
+    the file declared.
+
+    A board that will not take the file's declarations still has to come up, since it
+    is what says so on the lights and what watches the button, so it is built plain
+    and the reason is reported.
+    """
+    if not callable(fx):
+        return fx
+
+    declared = {}
+    for kind in STRIPS:
+        count = settings.get(kind)
+        if count:
+            declared["strip_" + kind[-1]] = count
+
+    if not declared:
+        return fx()
+
+    try:
+        return fx(**declared)
+    except Exception as e:      # noqa: BLE001
+        problems.append("the board could not be set up as the file asks: {}".format(e))
+        return fx()
+
+
+# The strips already running, as (strip, count) per connector. A board is built once,
+# a reload keeping the one it has, so this is what a changed length is answered against
+__STRIPS = {}
+
+
+def strips(fx, lengths, problems):
+    """
+    The strips the file asked for, as (kind, strip, count), and the kinds a board
+    would not set up.
+
+    A board declares its strips as it is built and hands each back as strip_l or
+    strip_r, something taking set_rgb(index, red, green, blue). Those two names are
+    the only place this module knows anything about the header, so a board naming its
+    connectors differently changes them and nothing else.
+    """
+    built = []
+    failed = set()
+
+    for kind in STRIPS:
+        count = lengths.get(kind)
+        if not count:
+            continue
+
+        running = __STRIPS.get(kind)
+        if running is not None:
+            strip, leds = running
+            if count != leds:
+                problems.append("{} is already running with {} LEDs, so its new length "
+                                "needs the board turning off and on".format(
+                                    __strip_shown(kind), leds))
+            lengths[kind] = leds
+            built.append((kind, strip, leds))
+            continue
+
+        try:
+            strip = getattr(fx, "strip_" + kind[-1])
+        # Reached where the board refused the length or offers no such connector,
+        # which the board's own message may already have said. Said again here so an
+        # entry naming the strip is answered rather than left with no slots
+        except Exception as e:      # noqa: BLE001
+            failed.add(kind)
+            lengths.pop(kind, None)
+            problems.append("{} could not be set up: {}".format(__strip_shown(kind), e))
+            continue
+
+        __STRIPS[kind] = (strip, count)
+        built.append((kind, strip, count))
+
+    return built, failed
+
+
+def __strip_of(name):
+    """The strip a channel name belongs to, or None where it names something else."""
+    for kind in STRIPS:
+        if name == kind or (name.startswith(kind) and not name[len(kind)].isalpha()):
+            return kind
+    return None
+
+
+def __strip_shown(kind):
+    """The strip as the reader writes it, the connector letter back in capitals."""
+    return kind[:-1] + kind[-1].upper()
+
+
+def __resolve_strips(entries, lengths, has_strips, problems, said=()):
+    """
+    Expand a bare strip name into the run of LEDs it stands for, and answer a file
+    naming a strip the board entry gave no length. Done as the file is loaded rather
+    than as its selectors are parsed, since the board entry carrying the length is
+    read in this pass.
+
+    Anything already said for is passed in, a strip the board would not set up having
+    been reported where that was found.
+    """
+    said = set(said)
+
+    for entry in entries:
+        resolved = []
+
+        for channel in entry.channels:
+            kind = __strip_of(channel.name)
+            if kind is None:
+                resolved.append(channel)
+                continue
+
+            shown = __strip_shown(kind)
+            count = lengths.get(kind)
+
+            if not count:
+                # Once per strip: a range names its LEDs one by one, and whatever is
+                # wrong is wrong for all of them at once
+                if kind not in said:
+                    said.add(kind)
+                    if not has_strips:
+                        problems.append("line {}: this board has no strip connectors, "
+                                        "so it has no {}".format(entry.line, shown))
+                    else:
+                        problems.append("line {}: {} needs its length before it can "
+                                        "play. Write it like 'board: {}=60'".format(
+                                            entry.line, shown, shown))
+                continue
+
+            tail = channel.name[len(kind):]
+
+            if "." in tail:
+                problems.append(
+                    "line {}: each LED on a strip shows one colour, so write it like "
+                    "'{}{}'".format(entry.line, shown, tail.partition(".")[0]))
+                continue
+
+            if not tail:
+                resolved.extend(channel.like("{}{}".format(kind, number))
+                                for number in range(1, count + 1))
+                continue
+
+            if int(tail) > count:
+                problems.append("line {}: {} has {} LEDs, so there is no {}{}".format(
+                    entry.line, shown, count, shown, tail))
+                continue
+
+            resolved.append(channel)
+
+        entry.channels = resolved
 
 
 # The screens already built, kept across reloads: construction resets a panel, so a
@@ -1688,7 +1898,7 @@ def __build_shows(entries, fx, board, problems):
     return shows
 
 
-def __check_board(entry, problems):
+def __check_board(entry, has_strips, problems):
     """
     The board settings the entry carries, with anything it cannot use dropped. A
     board entry names no effect, so nothing else would ever look at these: a typo in
@@ -1707,6 +1917,24 @@ def __check_board(entry, problems):
         # Whatever it was written as, since a setting limited to named values is
         # compared against them and a program is a file name
         text = value if isinstance(value, str) else __shown(value)
+
+        # A count is a number where every other board setting is a word or a file
+        # name, and this entry keeps its values as written, so it is read here
+        if key in BOARD_COUNTS:
+            if not has_strips:
+                problems.append("line {}: this board has no strip connectors, so it "
+                                "has no {}".format(at, __strip_shown(key)))
+                continue
+
+            number = __number(text)
+            fault = ("expected a number" if number is None
+                     else __value_fault("count", number))
+            if fault is not None:
+                problems.append("line {}: the board's {} is {}, {}".format(
+                    at, __strip_shown(key), __shown(text), fault))
+            else:
+                settings[key] = int(number)
+            continue
 
         allowed = BOARD_SETTINGS[key]
         if allowed is not None:
@@ -1896,7 +2124,7 @@ def __assemble(entries, slots, effects, levels, colours, curves, claimed, proble
             slot = slots.get(channel.name)
             if slot is None:
                 continue
-            if kind == "colour" and slot[0] != "colour":
+            if kind == "colour" and slot[0] not in CHROMATIC:
                 # A mono channel cannot show a colour, but a colour channel can play a
                 # mono effect: the player draws it in the channel's own tint
                 problems.append("line {}: {} brings its own colour, which {} cannot show".format(
@@ -1946,7 +2174,7 @@ def __assemble(entries, slots, effects, levels, colours, curves, claimed, proble
                 curves[where][index] = __curve(ease, channel.ease)
             elif channel.fade is not None:
                 curves[where][index] = __curve(fade, channel.fade)
-            if channel.colour is not None and where == "colour":
+            if channel.colour is not None and where in colours:
                 colours[where][index] = channel.colour
 
     return driven, sources
@@ -1969,15 +2197,11 @@ def __apply_scene(players, shows, scene):
                 begin()
 
     for player in players:
-        if isinstance(player, MonoPlayer):
-            player.effects = scene.effects["mono"]
-            player.levels = scene.levels["mono"]
-            player.curves = scene.curves["mono"]
-        else:
-            player.effects = scene.effects["colour"]
-            player.levels = scene.levels["colour"]
-            player.colours = scene.colours["colour"]
-            player.curves = scene.curves["colour"]
+        player.effects = scene.effects[player.kind]
+        player.levels = scene.levels[player.kind]
+        player.curves = scene.curves[player.kind]
+        if player.kind in scene.colours:
+            player.colours = scene.colours[player.kind]
 
     # A screen another scene was using goes dark unless this one, or an always-on
     # entry, is still on it: the glass keeps its frame, the light says it is over
@@ -2010,13 +2234,18 @@ def __apply_scene(players, shows, scene):
 
 def load(text, fx):
     """
-    Read the effects file. Returns the players it describes, the shows its screen
-    entries play, its scenes in heading order, the settings its board entries carry,
-    and any problems. Without headings there are no scenes and everything plays at
-    once, which is the file as it has always been.
+    Read the effects file. Returns the board it plays on, the players it describes,
+    the shows its screen entries play, its scenes in heading order, the settings its
+    board entries carry, and any problems. Without headings there are no scenes and
+    everything plays at once, which is the file as it has always been.
+
+    `fx` is a board or something that makes one, a board class being the usual thing.
+    Where it makes one, the board is built here rather than by the caller, once the
+    file's own board entry has been read, so what the file declares reaches the
+    constructor. A board built already is used as it is.
     """
     entries, problems = parse(text)
-    mono, colour = channels(fx)
+    has_strips = __has_strips(fx)
 
     # Board entries are settings rather than effects, a heading begins a scene, and
     # a screen name routes its whole entry to the screens, so a mistyped one is
@@ -2047,7 +2276,7 @@ def load(text, fx):
             if entry.scene is not None:
                 problems.append("line {}: the board entry is about the board, so it "
                                 "sits outside every scene".format(entry.line))
-            board.update(__check_board(entry, problems))
+            board.update(__check_board(entry, has_strips, problems))
             continue
 
         named = [channel for channel in entry.channels if channel.name.startswith("screen")]
@@ -2067,15 +2296,32 @@ def load(text, fx):
                                 "will not show. Write it like '[{}: 30s]'".format(
                                     scene.line, scene.name, scene.name))
 
+    # The board comes up here, now that its own entry has been read: a strip's length
+    # is declared at construction, and this is the first point it is known
+    fx = __board(fx, board, problems)
+    mono, colour = channels(fx)
+
+    # The strips the file asked for, taken before its channel names are resolved: a
+    # bare strip name stands for a run whose length only the board entry knows
+    built, failed = strips(fx, board, problems)
+    __resolve_strips(entries, board, has_strips, problems, failed)
+
+    # Every kind of channel this board offers, as the names each player's slots take.
+    # A strip is one kind per connector, since each is a player writing to its own
+    names = [("mono", [name for name, _ in mono]), ("colour", [name for name, _ in colour])]
+    for kind, _, count in built:
+        names.append((kind, ["{}{}".format(kind, number) for number in range(1, count + 1)]))
+
     slots = {}
-    for kind, pairs in (("mono", mono), ("colour", colour)):
-        for index, (name, _) in enumerate(pairs):
+    for kind, holds in names:
+        for index, name in enumerate(holds):
             slots[name] = (kind, index)
 
-    effects = {"mono": [None] * len(mono), "colour": [None] * len(colour)}
-    levels = {"mono": [1.0] * len(mono), "colour": [1.0] * len(colour)}
-    colours = {"colour": [(255, 255, 255)] * len(colour)}
-    curves = {"mono": [None] * len(mono), "colour": [None] * len(colour)}
+    effects = {kind: [None] * len(holds) for kind, holds in names}
+    levels = {kind: [1.0] * len(holds) for kind, holds in names}
+    curves = {kind: [None] * len(holds) for kind, holds in names}
+    colours = {kind: [(255, 255, 255)] * len(holds) for kind, holds in names
+               if kind in CHROMATIC}
     claimed = {}
 
     always, _ = __assemble(grouped[None], slots, effects, levels, colours, curves,
@@ -2083,10 +2329,10 @@ def load(text, fx):
 
     union = set()
     for scene in scenes:
-        scene.effects = {"mono": list(effects["mono"]), "colour": list(effects["colour"])}
-        scene.levels = {"mono": list(levels["mono"]), "colour": list(levels["colour"])}
-        scene.colours = {"colour": list(colours["colour"])}
-        scene.curves = {"mono": list(curves["mono"]), "colour": list(curves["colour"])}
+        scene.effects = {kind: list(held) for kind, held in effects.items()}
+        scene.levels = {kind: list(held) for kind, held in levels.items()}
+        scene.colours = {kind: list(held) for kind, held in colours.items()}
+        scene.curves = {kind: list(held) for kind, held in curves.items()}
         scene.driven, scene.sources = __assemble(grouped[scene.key], slots, scene.effects,
                                                  scene.levels, scene.colours, scene.curves,
                                                  claimed, problems)
@@ -2108,27 +2354,37 @@ def load(text, fx):
     # rotation would arrive with nowhere to play
     players = []
     every = [effects] + [scene.effects for scene in scenes]
-    if any(item is not None for one in every for item in one["mono"]):
-        player = MonoPlayer([led for _, led in mono])
-        player.effects = live_effects["mono"]
-        player.levels = live_levels["mono"]
-        player.curves = live_curves["mono"]
-        players.append(player)
 
-    if any(item is not None for one in every for item in one["colour"]):
-        player = ColourPlayer([led for _, led in colour])
-        player.effects = live_effects["colour"]
-        player.levels = live_levels["colour"]
-        player.colours = live_colours["colour"]
-        player.curves = live_curves["colour"]
-        players.append(player)
+    def wanted(kind):
+        return any(item is not None for one in every for item in one[kind])
 
-    # One timer drives both, so the two stay in step
-    if len(players) == 2:
-        players[0].pair(players[1])
+    def filled(player, kind):
+        # The kind is kept on the player because a scene switch has to know which
+        # arrays to hand it, and two strips are one class told apart only by this
+        player.kind = kind
+        player.effects = live_effects[kind]
+        player.levels = live_levels[kind]
+        player.curves = live_curves[kind]
+        if kind in live_colours:
+            player.colours = live_colours[kind]
+        return player
+
+    if wanted("mono"):
+        players.append(filled(MonoPlayer([led for _, led in mono]), "mono"))
+
+    if wanted("colour"):
+        players.append(filled(ColourPlayer([led for _, led in colour]), "colour"))
+
+    for kind, strip, count in built:
+        if wanted(kind):
+            players.append(filled(StripPlayer(strip, num_leds=count), kind))
+
+    # One timer drives them all, each ticking the next, so every channel steps together
+    for first, second in zip(players, players[1:]):
+        first.pair(second)
 
     shows = __build_shows(screen_entries, fx, board, problems)
 
     # Found in the order the work happens, which is every line the parser read and
     # then every entry the loader built, so a reader gets them in the file's order
-    return players, shows, scenes, board, __in_line_order(problems)
+    return fx, players, shows, scenes, board, __in_line_order(problems)
