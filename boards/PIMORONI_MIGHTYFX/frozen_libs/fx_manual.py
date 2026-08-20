@@ -482,6 +482,7 @@ footer p { margin: 0; }
 <tbody>
 <tr><td><code>drive</code></td><td><code>manual</code> keeps the drive hidden until you ask for it</td><td>shown at boot</td></tr>
 <tr><td><code>program</code></td><td>a Python file to run instead of the effects</td><td>the effects run</td></tr>
+<tr><td><code>args</code></td><td>what to pass that program, divided by <code>|</code></td><td>it is given none</td></tr>
 <tr><td><code>screenA</code></td><td>what size of screen is on SP/CE A, if you have one</td><td>2.8</td></tr>
 <tr><td><code>screenB</code></td><td>the same for SP/CE B</td><td>2.8</td></tr>
 <tr><td><code>stripL</code></td><td>how many LEDs are on a strip plugged into <strong>L</strong></td><td>no strip</td></tr>
@@ -491,6 +492,12 @@ footer p { margin: 0; }
 <p>A program can sit on this drive or on the board's own filesystem, and its name may include folders: it is looked for here first, then on the board, so <code>program=examples/effects/colour/rainbow_wave.py</code> reaches one of the examples the board ships with. Where the name is in both, this drive's copy runs.</p>
 <p>If it is missing, or stops with an error, the effects run instead and <code>errors.txt</code> says what happened, so a mistyped name never leaves you with a board that does nothing.</p>
 <p>The effects stop while a program runs, and the board is busy with it, so <strong>Boot</strong> and ejecting do nothing. The drive is shown anyway, even with <code>drive</code> set to <code>manual</code>, so you can still edit <code>effects.txt</code>; unplug and plug back in for the change to take. A program cannot read files from this drive while it runs, so put anything it needs on the board's own filesystem.</p>
+<p><code>args</code> passes a program whatever it needs to know, so one program can do different things without being edited. Several are divided by <code>|</code>, and anything with a space or a colon in it goes in quotes:</p>
+<pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">slideshow.py</span> <span class="s-name">args</span><span class="s-punc">=</span><span class="s-value">posters|3</span>
+<span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">clock.py</span> <span class="s-name">args</span><span class="s-punc">=</span><span class="s-value">"07:30"</span></code></pre>
+<p><strong>If you are writing the program</strong>, it reads them from <code>sys.argv</code>, the way any Python program does, with the first being <code>sys.argv[1]</code>. Thonny passes none when you run the same file from there, so give each one a value to fall back on and the file works either way:</p>
+<pre class="python"><code>args = sys.argv[1:]
+FOLDER = args[0] if args else "posters"</code></pre>
 <h3 id="what-is-already-on-the-board">What is already on the board</h3>
 <p>These come with the board, so <code>program=</code> reaches any of them with nothing to download:</p>
 <div class="scroll"><table>

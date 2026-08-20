@@ -146,7 +146,7 @@ PAIRED_SETTINGS = (("bright_min", "bright_max"), ("dim_min", "dim_max"),
 # size is a fact about the hardware, set once here where an entry's settings vary
 # per scene, and a strip's length is the same: it is the one channel count the board
 # cannot discover for itself.
-BOARD_SETTINGS = {"drive": ("manual",), "program": None,
+BOARD_SETTINGS = {"drive": ("manual",), "program": None, "args": None,
                   "screena": ("2.8", "1.54"), "screenb": ("2.8", "1.54"),
                   "stripl": None, "stripr": None}
 
@@ -1314,12 +1314,21 @@ def __read_program(name, problems):
     return found[0]
 
 
-def __run_program(name, source, problems):
+def __run_program(name, source, args, problems):
     """Run what was read, and say so if it stops rather than letting it take the board."""
+    # The file's arguments arrive the way a program receives them anywhere, so the same
+    # file runs unchanged from an editor, where sys.argv is empty and a program falls
+    # back to its own constants. sys is built in and its argv cannot be rebound, so the
+    # list is filled in place; it outlives the program, so it is emptied afterwards or a
+    # reload would inherit the last one's arguments. The name sits at [0] as it does
+    # everywhere, which is why a program reads argv[1:] and never argv[0]: no editor
+    # supplies one.
+    sys.argv[:] = [name] + list(args)
+
     try:
         # Compiled against its own name, so a traceback says which file and which
         # line rather than naming a string
-        exec(compile(source, name, "exec"), {"__name__": "__main__"})
+        exec(compile(source, name, "exec"), {"__name__": "__main__", "__file__": name})
     # Anything at all, since this is a user's own program and it must not be able to
     # take the board down with it
     except Exception as e:      # noqa: BLE001
@@ -1332,6 +1341,8 @@ def __run_program(name, source, problems):
                  if "autofx.py" not in line]
         problems.append("the program {} stopped, so the effects are running "
                         "instead:\n{}".format(name, "\n".join(lines)))
+    finally:
+        sys.argv.clear()
 
 
 def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
@@ -1402,7 +1413,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
 
     if program:
         if source is not None:
-            __run_program(program, source, problems)
+            __run_program(program, source, settings.get("args", ()), problems)
 
         # Here because the program could not be found or run, or because it finished
         # by itself. Either way the effects take the board back, and anything that
@@ -1918,6 +1929,13 @@ def __check_board(entry, has_strips, problems):
         # compared against them and a program is a file name
         text = value if isinstance(value, str) else __shown(value)
 
+        # A program's arguments are divided by the pipe that divides any value into
+        # parts, and each one reaches the program as it was written. Read here so they
+        # skip the path check below, which a time or a Windows path would otherwise trip
+        if key == "args":
+            settings[key] = tuple(part.strip() for part in text.split("|") if part.strip())
+            continue
+
         # A count is a number where every other board setting is a word or a file
         # name, and this entry keeps its values as written, so it is read here
         if key in BOARD_COUNTS:
@@ -2255,6 +2273,7 @@ def load(text, fx):
     known = {}
     grouped = {None: []}
     screen_entries = []
+    args_line = None
 
     for entry in entries:
         if entry.heading is not None:
@@ -2276,7 +2295,12 @@ def load(text, fx):
             if entry.scene is not None:
                 problems.append("line {}: the board entry is about the board, so it "
                                 "sits outside every scene".format(entry.line))
-            board.update(__check_board(entry, has_strips, problems))
+            given = __check_board(entry, has_strips, problems)
+            # A board entry may be written more than once, so where the arguments were
+            # written is kept rather than checked here: the program may name a later line
+            if "args" in given:
+                args_line = entry.lines.get("args", entry.line)
+            board.update(given)
             continue
 
         named = [channel for channel in entry.channels if channel.name.startswith("screen")]
@@ -2287,6 +2311,11 @@ def load(text, fx):
             screen_entries.append(entry)
         else:
             grouped[entry.scene].append(entry)
+
+    # Arguments with nothing to receive them, which nothing else would report
+    if args_line is not None and not board.get("program"):
+        problems.append("line {}: args needs a program to give them to. Write it like "
+                        "'board: program=demo.py args=first|second'".format(args_line))
 
     # Rotation is by time and time alone for now, so a scene without one stops it
     if len(scenes) > 1:
