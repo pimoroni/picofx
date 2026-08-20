@@ -1,31 +1,34 @@
-# A green screen terminal, of the kind wheeled up to a minicomputer: an operator typing a command a
-# character at a time and the machine answering a line at a time, on a tube that glows.
-#
-# The tube is what makes it this object, and it is three filters over a page of plain lettering:
-# scanlines with a falloff into the corners, a bloom so a lit character spills into the dark around it,
-# and a grain. phosphor() does all three in one call and tints the page as well, which is the shorter
-# route where the content is not already the phosphor's colour; here they are run separately so the
-# tube's curve is a setting, its full strength taking a corner down to a sixth and the top and bottom
-# lines of the page with it.
-#
-# The filters rewrite the pixels they cover, so nothing can be added to a page already filtered. That is
-# what shapes the code: the page is held as text and drawn again in full every frame, then filtered
-# once. Drawing it is under 30ms of a 150ms frame, the filters and the panel write being the rest, so
-# the scroll comes for nothing: a line leaving the top of the tube is a line dropped from a list.
-#
-# No CRT reaches its own edge, so the face is a rounded rectangle of dark green on a black surround and
-# the lettering is inset well within it, which keeps it out of the corners the curve darkens most. A dark
-# ground rather than black also gives the curve something to darken.
-#
-# A terminal is also fixed pitch, and none of the ROM faces is: their capitals share a width but a space
-# and a comma do not, so a line drawn as text puts each of its columns wherever the last one ended. The
-# character set is therefore baked once into a strip of cells, a narrow character centred in its own,
-# and the page blits cells onto the pitch.
-
 import time
 from mighty_fx import MightyFX, SPCE
 from screens import Screen280
 from picovector import color, font, image, rect, shape
+
+"""
+Draw a green screen terminal, of the kind wheeled up to a minicomputer: an operator typing
+a command a character at a time and the machine answering a line at a time, on a tube that
+glows.
+
+The tube is three filters over a page of plain lettering: scanlines with a falloff into
+the corners, a bloom so a lit character spills into the dark around it, and a grain.
+phosphor() does all three in one call and tints the page as well, which is the shorter
+route; they are run separately here so the tube's curve is a setting, its full strength
+taking a corner down to a sixth.
+
+The filters rewrite the pixels they cover, so nothing can be added to a page already
+filtered. That is what shapes the code: the page is held as text and drawn again in full
+every frame, then filtered once. Drawing it is under 30ms of a 150ms frame, so the scroll
+comes for nothing, a line leaving the top of the tube being a line dropped from a list.
+
+No CRT reaches its own edge, so the face is a rounded rectangle of dark green on a black
+surround, which keeps the lettering out of the corners the curve darkens most and gives
+that curve something to darken.
+
+A terminal is fixed pitch and none of the ROM faces is: their capitals share a width but a
+space and a comma do not, so the character set is baked once into a strip of cells and the
+page blits cells onto the pitch.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants for drawing
 TINT = color.rgb(51, 255, 51)   # The phosphor. P1 green here; rgb(255, 187, 0) is the amber tube

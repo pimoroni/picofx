@@ -1,9 +1,14 @@
-# A scrolling billboard, its posters carried on a loop and read from the card one at a time.
-
 import time
 from mighty_fx import MightyFX, SPCE
 from screens import Screen280
 from picovector import image, rect
+
+"""
+Draw a scrolling billboard, its posters carried on a loop and read from the card one at a
+time.
+
+Press "Boot" to exit the program.
+"""
 
 # The loop, in the order it comes round. As many as you like: the board only ever holds the poster
 # on show and the one behind it, so the length costs nothing but the files themselves

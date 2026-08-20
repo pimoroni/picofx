@@ -1,10 +1,15 @@
-# A trivision billboard, its posters carried on three-sided slats that turn a third at a time.
-
 import math
 import time
 from mighty_fx import MightyFX, SPCE
 from screens import Screen280
 from picovector import color, font, image, rect, shape
+
+"""
+Draw a trivision billboard, its posters carried on three-sided slats that turn a third at
+a time.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants for drawing
 SLATS = 20                          # How many prisms the board is split into across its width
@@ -44,13 +49,10 @@ FACES = 3                           # Sides to a slat, and so how many posters t
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a)
 
-# The board is wider than it is tall, so the canvas is drawn landscape and every update turns it a
-# quarter turn onto the panel.
-#
-# It comes from the screen rather than from image(), which puts it in SRAM instead of on the GC
-# heap. The heap is PSRAM, read over XIP, and every pixel of this board is written by a blit and
-# read again by the update, so both halve. The posters stay on the heap: only one canvas of this
-# size fits the region, and they are read far less than the canvas is written
+# The board is wider than it is tall, so the canvas is drawn landscape and every update turns it a quarter
+# turn onto the panel. It comes from the screen rather than from image(), which puts it in SRAM instead of on
+# the PSRAM heap, halving both the blit that writes every pixel and the update that reads them back. The
+# posters stay on the heap: only one canvas of this size fits the region
 canvas = screen.canvas(screen.height, screen.width)
 SLAT = canvas.width // SLATS
 APOTHEM = SLAT / (2 * math.sqrt(3))     # From a slat's axis out to the middle of one of its faces

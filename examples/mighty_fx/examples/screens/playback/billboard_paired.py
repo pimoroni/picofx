@@ -1,16 +1,21 @@
-# Shows two different posters at once, one on each of a pair of screens, both changing together.
-#
-# Two SP/CE ports are two streams, so a pair can be sent different pictures for about what one panel costs on
-# its own. Measured on a Screen280 pair: 67ms for one panel, 68ms for the same poster on both, and 68ms for a
-# different poster on each. The same two panels driven one after the other cost 134ms, which is what the pair
-# is saving.
-#
-# One player feeds both. image_at() reads any frame without moving the player, so the second panel takes the
-# poster a fixed distance along the folder, and the whole folder is held once rather than twice.
-
 from mighty_fx import MightyFX, SPCE
 from playback import SequencePlayer
 from screens import Reserve, Screen280, ScreenPair
+
+"""
+Show two different posters at once, one on each of a pair of screens, both changing
+together.
+
+Two SP/CE ports are two streams, so a pair can be sent different pictures for about what
+one panel costs on its own: 68ms for a different poster on each, against 134ms for the
+same two panels driven one after the other.
+
+One player feeds both. image_at() reads any frame without moving the player, so the second
+panel takes the poster a fixed distance along the folder and the folder is held once
+rather than twice.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants
 POSTERS = "/examples/assets/billboards/portrait"   # Shared with the billboard showcases

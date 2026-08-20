@@ -1,13 +1,17 @@
-# An LED matrix simulated on the panel: content drawn one pixel to a lamp, scaled up, and a baked mask
-# blitted over the top so each lamp reads as a round aperture behind a dark face.
-#
-# Two blits a frame whatever drew the content, so any source can feed it: shapes, text, an image, or a
-# player's frame. The content here is the diagonal rainbow the LED matrix boards run, which shows the
-# matrix off: every lamp carries its own colour at once.
-
 from mighty_fx import MightyFX, SPCE
 from screens import Screen280
 from picovector import color, image, rect
+
+"""
+Simulate an LED matrix on the panel: content drawn one pixel to a lamp, scaled up, and a
+baked mask blitted over the top so each lamp reads as a round aperture behind a dark face.
+
+Two blits a frame whatever drew the content, so any source can feed it: shapes, text, an
+image, or a player's frame. The content here is the diagonal rainbow the LED matrix boards
+run, which shows the matrix off: every lamp carries its own colour at once.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants for drawing
 PIXEL = 8                       # Panel pixels across one lamp, so how coarse the matrix is
@@ -15,9 +19,8 @@ APERTURE = 0.7                  # The lit hole, as a fraction of a lamp's width
 SOFTEN = 1.0                    # Panel pixels the aperture's edge fades over, which is what rounds it
 MASK = color.black              # The face the lamps are set behind
 RAINBOWS = 1.5                  # Full rainbows across the matrix corner to corner, so how dense it is
-# A matrix moves its pattern in whole lamps, a lamp being the smallest thing it has, so the only even step
-# is a whole number of them a frame. Timed off the clock instead, the wave travels a fraction of a lamp a
-# frame and lands as 1, 1, 2, 1, 1, 2, which reads as choppy however steady the frames are
+# A matrix moves its pattern in whole lamps, so the only even step is a whole number of them a frame. Timed
+# off the clock instead, the wave lands as 1, 1, 2, 1, 1, 2, which reads as choppy however steady the frames
 LAMPS_A_FRAME = 1
 
 # Create a MightyFX object with SP/CE A set up for a screen
@@ -25,21 +28,20 @@ mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a)
 
 # A matrix sign is wider than it is tall, so the canvas is drawn landscape and every update turns it a
-# quarter onto the panel. From the screen rather than image(), which puts it in SRAM: the mask is read
-# and the frame written every frame, so both halve
+# quarter onto the panel. From the screen rather than image(), which puts it in SRAM and halves both the
+# mask read and the frame written
 canvas = screen.canvas(screen.height, screen.width)
 WIDTH, HEIGHT = canvas.width, canvas.height
 
 # The matrix's own size, in lamps. Whatever the lamps do not divide is left as a border, so they stay
-# square and land on whole pixels. A finer lamp buys resolution and loses the round aperture: below about
-# 6px there is no room to shape one, and a 4px lamp comes out a soft square instead
+# square and land on whole pixels. A finer lamp buys resolution and loses the round aperture: a 4px lamp
+# comes out a soft square
 COLUMNS = WIDTH // PIXEL
 ROWS = HEIGHT // PIXEL
 LEFT = (WIDTH - COLUMNS * PIXEL) // 2
 TOP = (HEIGHT - ROWS * PIXEL) // 2
 # Lamps one full rainbow covers. Set from the diagonal rather than from the width, so the matrix carries
-# the same rainbow whatever the lamp size. The LED matrix boards work out to about 0.4 of one across their
-# own diagonal, which on a panel this wide leaves it too sparse to read as a wave
+# the same rainbow whatever the lamp size
 CYCLE = round((COLUMNS + ROWS) / RAINBOWS)
 
 # One pixel to a lamp, which is where the content is drawn. Everything else is scaling and masking

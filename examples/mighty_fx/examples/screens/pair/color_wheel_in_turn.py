@@ -1,8 +1,13 @@
-# A spinny rainbow wheel on two screens, updated one after the other. Run color_wheel_paired.py to see what a pair does differently.
-
 from mighty_fx import MightyFX, SPCE
 from screens import Screen280
 from picovector import image, color, shape, mat3
+
+"""
+Spin a rainbow wheel on two screens, updated one after the other. Run
+color_wheel_paired.py to see what a pair does differently.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants for drawing
 INNER_RADIUS = 40
@@ -16,12 +21,12 @@ LINE_THICKNESS = 2
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 
 # Two screens held separately, with no pair between them. update() does not return until
-# its frame is on the glass, so the second panel's frame only starts once the first has
-# finished. Each panel waits its own tearing-effect signal and so comes out clean, but the
-# two are never showing the same frame, and they drift as each runs to its own oscillator.
+# its frame is on the glass, so the second panel only starts once the first has finished.
+# Each waits its own tearing-effect signal and comes out clean, but the two are never
+# showing the same frame and they drift as each runs to its own oscillator.
 #
-# What it buys is memory. Each screen converts within a frame of its own, so the default
-# reserve keeps up, where a pair converting both inside one frame needs a deeper stage.
+# What it buys is memory: each screen converts within a frame of its own, so the default
+# reserve keeps up where a pair needs a deeper stage.
 screens = Screen280(mighty.spce_a), Screen280(mighty.spce_b)
 
 # Access the first screen and create a canvas to draw to

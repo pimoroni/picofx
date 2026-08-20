@@ -4,8 +4,10 @@ from screens import Screen280
 from picovector import image
 
 """
-Alternates between two .PNG images from a folder, each shown for its own duration.
-Images must be the same resolution as the screen
+Alternate between two .PNG images from a folder, each shown for its own duration. Images
+must be the same resolution as the screen
+
+Press "Boot" to exit the program.
 """
 
 # Constants

@@ -1,9 +1,14 @@
-# Fade a screen's backlight up and down over a still frame. Change up some of the constants below to see what happens.
-
 import time
 from mighty_fx import MightyFX, SPCE
 from screens import Screen280
 from picovector import image, color, shape
+
+"""
+Fade a screen's backlight up and down over a still frame. Change up some of the constants
+below to see what happens.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants for drawing
 FADE_STEPS = 50         # How many steps the backlight takes from off to full

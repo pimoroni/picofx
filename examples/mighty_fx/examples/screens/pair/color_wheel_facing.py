@@ -1,8 +1,13 @@
-# A spinny rainbow wheel on a pair of screens arranged to face each other, one of them mirrored to suit. Change up some of the constants below to see what happens.
-
 from mighty_fx import MightyFX, SPCE
 from screens import Reserve, Screen280, ScreenPair
 from picovector import image, color, shape, mat3
+
+"""
+Spin a rainbow wheel on a pair of screens arranged to face each other, one of them
+mirrored to suit. Change up some of the constants below to see what happens.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants for drawing
 INNER_RADIUS = 40

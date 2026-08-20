@@ -1,10 +1,15 @@
-# A flip-dot sign, spelling its message in dots that turn over one column after the next.
-
 import math
 import time
 from mighty_fx import MightyFX, SPCE
 from screens import Screen280
 from picovector import color, font, image, mat3, shape
+
+"""
+Draw a flip-dot sign, spelling its message in dots that turn over one column after the
+next.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants for drawing
 # match is the bolder face that still fits, a wider one running a five character line off a board
@@ -24,16 +29,14 @@ LIT = color.rgb(240, 230, 40)       # A dot showing its yellow face
 UNLIT = color.rgb(48, 46, 44)       # And its dark one, which a real dot still shows plainly
 STOP = color.rgb(90, 88, 84)        # The posts, lighter than either face so they read as parts
 FRAME = color.black                 # What the dots are set into
-# A frame takes about 65ms, nearly all of it reaching the panel, so these are set in whole frames
-# rather than finer: a turn spanning fewer of them arrives in two or three steps however smooth the
-# sum is, and a sweep shorter than one starts whole blocks of columns together
+# A frame takes about 65ms, nearly all of it reaching the panel, so these are set in whole frames: a
+# turn spanning fewer arrives in two or three steps however smooth the sum is
 FLIP_MS = 420                       # How long one dot takes to turn over
 SWEEP_MS = 70                       # How much later each column starts turning than the one before
 HOLD = 4.0                          # How long a message stays up once the board has settled
 
-# What the sign shows, a line to a row of lettering. A board this wide holds four or five
-# characters a line, as terse as a real sign of the same pitch. The first two share a destination,
-# so that change turns over only the time and leaves the rest of the board standing
+# What the sign shows, a line to a row of lettering. A board this wide holds four or five characters
+# a line. The first two share a destination, so that change turns over only the time
 MESSAGES = (
     ("CITY", "12:04"),
     ("CITY", "12:11"),
@@ -47,8 +50,7 @@ screen = Screen280(mighty.spce_a)
 
 # The sign is wider than it is tall, so the canvas is drawn landscape and every update turns it a
 # quarter turn onto the panel. It comes from the screen rather than from image(), which puts it in
-# SRAM instead of on the GC heap: the heap is PSRAM and read over XIP, so the update pays about
-# twice per pixel to convert from one
+# SRAM instead of on the PSRAM heap, halving what the update pays per pixel
 canvas = screen.canvas(screen.height, screen.width)
 columns = canvas.width // CELL
 rows = canvas.height // CELL
@@ -67,8 +69,8 @@ REACH = 1.0 / math.cos(math.pi / DOT_SIDES)
 NUDGE = 0.5
 
 # The post in whole pixels, so a wider pitch carries a larger one rather than the same two pixels
-# sitting in a bigger dot. It is drawn as an octagon like the dot, which at two pixels comes out a
-# square and at four has its corners off, both of which is what a post looks like at that size
+# sitting in a bigger dot. It is drawn as an octagon like the dot, which at this size comes out a
+# square with its corners off, and that is what a post looks like
 PIN_PIXELS = max(2, round(DOT * PIN_SHARE))
 PIN_AT = PIN_PIXELS // 2
 PIN_REACH = 1.0 / math.cos(math.pi / 8)

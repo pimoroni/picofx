@@ -1,19 +1,23 @@
-# A motorway lane control gantry, a signal to a lane, working through a lane closure.
-#
-# A signal is a square RGB lamp matrix with a lamp in each corner, which is what makes the 40 a ring of
-# discrete lamps rather than a drawn circle. The aspect is drawn at the matrix's own resolution, scaled up a
-# lamp to a block, and a baked mask laid over it; the corner lamps are not part of the matrix, so they go on
-# over the top and flash a side at a time, for a closed lane only.
-#
-# A panel on a screen hub is a lane, so the gantry is as wide as the hub is populated. The lanes of a gantry
-# change together, which is what a group is for: an aspect is drawn once and streamed to every lane showing
-# it, so the lanes that share one come up on the same frame. A setting usually repeats across lanes, so a
-# four lane gantry is one or two writes rather than four.
-
 import time
 from mighty_fx import MightyFX, SPCE
 from screens import Screen280, ScreenGroup
 from picovector import color, font, image, rect, shape
+
+"""
+Draw a motorway lane control gantry, a signal to a lane, working through a lane closure.
+
+A signal is a square RGB lamp matrix with a lamp in each corner, which is what makes the
+40 a ring of discrete lamps rather than a drawn circle. The aspect is drawn at the
+matrix's own resolution, scaled up a lamp to a block, and a baked mask laid over it; the
+corner lamps are not part of the matrix, so they go on over the top and flash a side at a
+time, for a closed lane only.
+
+A panel on a screen hub is a lane, so the gantry is as wide as the hub is populated. The
+lanes change together, which is what a group is for: an aspect is drawn once and streamed
+to every lane showing it, so a four lane gantry is one or two writes rather than four.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants for drawing
 # A panel cannot be asked what size it is, only whether one answered, so the class has to be named. A
@@ -222,11 +226,10 @@ def number_at(limit):
     return NUMBER_AT[limit]
 
 
-# Each way an arrow points is its own drawing: the reference signals treat a lane open and a lane change as
-# two signs, and a shape that reads straight down does not read turned. Each entry is the tip's direction,
-# the two directions its barbs run back in, how far their corner sits from the middle, how far each barb
-# runs, then where the shaft starts and stops. Turned, the shaft goes diagonal and the barbs come round to
-# square. Directions step a lamp at a time; the rest are lamps along the direction given
+# Each way an arrow points is its own drawing, a shape that reads straight down not reading turned. Each
+# entry is the tip's direction, the two directions its barbs run back in, how far their corner sits from the
+# middle, how far each barb runs, then where the shaft starts and stops. Directions step a lamp at a time;
+# the rest are lamps along the direction given
 ARROWS = {-1: ((-1, 1), ((0, -1), (1, 0)), 11, 16, 10, 2),
           0: ((0, 1), ((-1, -1), (1, -1)), 11, 10, 14, 1),
           1: ((1, 1), ((0, -1), (-1, 0)), 11, 16, 10, 2)}

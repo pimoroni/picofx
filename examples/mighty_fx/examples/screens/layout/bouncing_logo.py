@@ -1,9 +1,15 @@
-# Bounces a logo around the screen, recolouring it at each edge while the drifting background shows through its darkest parts. Change up some of the constants below to see what happens.
-
 import time
 from mighty_fx import MightyFX, SPCE
 from screens import Screen280
 from picovector import color, spritesheet
+
+"""
+Bounce a logo around the screen, recolouring it at each edge while the drifting background
+shows through its darkest parts. Change up some of the constants below to see what
+happens.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants for drawing
 LOGO_PATH = "/examples/assets/pirate_face.gif"  # The logo to bounce, beside this example
@@ -20,17 +26,15 @@ mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a)
 
 # A palettised source, such as a GIF or an indexed PNG, is drawn through its colour table,
-# so nothing here is redrawn frame to frame: a transparent entry takes bg_color, and a
-# recolour is a write to the table. A single-frame GIF arrives as a spritesheet of one
-# sprite, which is how its palette comes along
+# so a transparent entry takes bg_color and a recolour is a write to the table. A
+# single-frame GIF arrives as a spritesheet of one sprite, which is how its palette comes
 logo = spritesheet.load(LOGO_PATH).sprite(0)
 palette = logo.palette
 
-# Entries are told apart by how bright they were drawn rather than by index, which is
-# unsafe twice over: an export may reorder the table, and the decoder can present one
-# colour as several identical entries. The darkest is the logo's own shading, and every
-# other opaque entry carries the colour that changes, so a logo drawn in several colours
-# comes out in one
+# Entries are told apart by how bright they were drawn rather than by index, an export
+# being free to reorder the table. The darkest is the logo's own shading and every other
+# opaque entry carries the colour that changes, so a logo drawn in several colours comes
+# out in one
 opaque = [i for i in range(logo.palette_size) if palette[i].a != 0]
 darkest = min(opaque, key=lambda i: palette[i].r + palette[i].g + palette[i].b)
 brighter = [i for i in opaque if i != darkest]

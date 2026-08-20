@@ -1,27 +1,28 @@
-# Plays one animation across every panel a hub can reach, each showing the same frame.
-#
-# The pattern was drawn to tile in both directions, so a wall reads as one surface rather than as six copies,
-# and its pulses travel across the joins: in at the left and bottom edges, out at the top and right. Every
-# panel showing the same frame is what makes that work, and it costs one decode rather than six.
-#
-# The joins interrupt it, and are meant to here: two panels butted together hide a band of pixels behind their
-# bezels, so the pattern steps at each one. Taking that out means an offset per panel, which the pair examples
-# cover; a wall reads as a wall regardless.
-#
-# The frames are indexed PNGs, one a frame, and that is the choice worth copying. Measured on a board, eight
-# 320x240 frames cost 609KB of heap indexed against about 2.4MB truecolour, the player holding whatever each
-# file carries. They are also smaller on flash than the same animation as a GIF and load in less time, a
-# picture this busy defeating a GIF's compression sooner than a PNG's.
-#
-# A frame costs the same however many panels are on the hub, which is the point of driving them as a group: the
-# hub holds every chip select it is told to and the panels latch one stream of pixels together. Measured on a
-# wall of three, an update takes 67ms as a group, 67ms as a subset of one, and 67ms sending to a single panel on
-# its own. The rate a wall can hold is therefore the rate one panel can hold, and what scales with the count is
-# the alignment done once at construction.
-
 from mighty_fx import MightyFX, SPCE
 from playback import SequencePlayer
 from screens import Screen280, ScreenGroup
+
+"""
+Play one animation across every panel a hub can reach, each showing the same frame.
+
+The pattern was drawn to tile in both directions, so a wall reads as one surface rather
+than as six copies, and its pulses travel across the joins. Every panel showing the same
+frame is what makes that work, and it costs one decode rather than six.
+
+The joins interrupt it, and are meant to here: two panels butted together hide a band of
+pixels behind their bezels, so the pattern steps at each one. Taking that out means an
+offset per panel, which the pair examples cover.
+
+A frame costs the same however many panels are on the hub, which is the point of driving
+them as a group: the panels latch one stream of pixels together, so the rate a wall can
+hold is the rate one panel can hold.
+
+The frames are indexed PNGs, one a frame, which is the choice worth copying: eight of this
+size cost 609KB of heap indexed against about 2.4MB truecolour, the player holding
+whatever each file carries.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants
 FRAMES = "/examples/assets/traces"   # The folder of frames, beside this example
@@ -32,9 +33,9 @@ FPS = 10                         # The rate to play at, a folder of images decla
 # the board hands back six ports and every panel is brought up and cleared together
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_LINES)
 
-# A port is handed out per chip select the hub reaches, whether or not a panel is on the
-# end of it. One that is not there refuses to be created, so build them all and keep
-# whichever answered: a hub does not have to be full to be used
+# The hub hands out a port per chip select it reaches, whether or not a panel is on the end
+# of it. One that is not there refuses to be created, so build them all and keep whichever
+# answered: a hub does not have to be full to be used
 panels = []
 for port in mighty.hub.ports:
     try:

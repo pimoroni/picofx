@@ -1,27 +1,30 @@
-# A lixie: ten engraved acrylic sheets stacked front to back with a digit on each, an LED under every
-# sheet, and only the one being shown lit. The engraving is what the light escapes through, so a lit sheet
-# reads as its digit and its own cut edges in fine bright lines, and the nine unlit sheets stay as the
-# faint tracery a photograph of one shows. The panel is the stack seen face on, so the sheets are the whole
-# of the picture: a sheet further back appears a size smaller, which is why the edges nest.
-#
-# Nothing here is an image of a sheet. Nine sheets never change, so they are drawn once into a frame that
-# is the ground every real frame starts from, and the lit one is drawn straight onto the frame in the
-# brightness it is showing at. That makes a frame one blit, two digits' worth of drawing during a change,
-# and the tube. A sheet apiece would have been ten panel sized images and a blit each.
-#
-# The glow goes on the frame rather than on any sheet: bloom() adds its halo to the colour channels and
-# leaves alpha alone, which on something drawn over nothing puts a channel above that pixel's alpha, and
-# blit composites four channels at once relying on a channel never exceeding it. The frame is opaque.
-#
-# The face is a hairline, which is what an engraved line is, and the size that fills the panel comes from
-# one measurement: a face's ink is proportional to the size asked for, so measuring once at a size that
-# fits gives every other. Measuring at a size whose em box is taller than the scratch reports the ink that
-# landed on it, not the ink the face would have drawn.
-
 import time
 from mighty_fx import MightyFX, SPCE
 from screens import Screen280
 from picovector import color, font, image, shape
+
+"""
+Draw a lixie: ten engraved acrylic sheets stacked front to back with a digit on each, an
+LED under every sheet, and only the one being shown lit. The engraving is what the light
+escapes through, so a lit sheet reads as its digit and its own cut edges in fine bright
+lines while the nine unlit ones stay a faint tracery. The panel is the stack seen face on,
+and a sheet further back appears a size smaller, which is why the edges nest.
+
+Nothing here is an image of a sheet. The nine that never change are drawn once into the
+frame every real frame starts from, and the lit one is drawn straight onto it at the
+brightness it is showing. A sheet apiece would have been ten panel sized images and a blit
+each.
+
+The glow goes on the frame rather than on any sheet: bloom() adds its halo to the colour
+channels and leaves alpha alone, so on a transparent layer a channel ends up above that
+pixel's alpha and the blit that composites all four corrupts. The frame is opaque.
+
+The face is a hairline, which is what an engraved line is, and the size that fills the
+panel comes from one measurement: a face's ink is proportional to the size asked for, so
+measuring once gives every other.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants for drawing
 LIXIE_FONT = "/rom/fonts/AlumniSansPinstripe.af"

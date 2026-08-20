@@ -1,15 +1,20 @@
-# A roadworks sign, the kind towed to the side of a road: amber lamps behind a dark face, holding a message
-# rather than scrolling it.
-#
-# Two things make it this sign and not a video wall. Every character has its own small matrix module with a
-# bezel all round it, so the lamps exist in a grid of cells and the face is plain between them. And a
-# character sits on a fixed pitch whatever its width. The corner beacons are neither: they are single
-# large lamps on the face itself, so they are drawn over the top rather than through any matrix.
-
 import time
 from mighty_fx import MightyFX, SPCE
 from screens import Screen280
 from picovector import color, font, image, rect, shape
+
+"""
+Draw a roadworks sign, the kind towed to the side of a road: amber lamps behind a dark
+face, holding a message rather than scrolling it.
+
+Two things make it this sign and not a video wall. Every character has its own small
+matrix module with a bezel all round it, so the lamps exist in a grid of cells and the
+face is plain between them. And a character sits on a fixed pitch whatever its width. The
+corner beacons are neither: they are single large lamps on the face itself, so they are
+drawn over the top rather than through any matrix.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants for drawing
 LAMP = 4                        # Panel pixels across one lamp
@@ -26,8 +31,8 @@ LIT = color.rgb(255, 170, 0)    # A lit lamp. Amber is the only colour these sig
 MODULE = color.rgb(17, 17, 17)  # A module's face, between its lamps
 FACE = color.black              # And the sign's own face, which the modules are set into
 # An unlit lamp. It has to be brighter than the band behind it, not merely a different hue: at 12 bits
-# rgb(34, 17, 0) and rgb(17, 17, 17) both come to the same total, so the lamps were there and
-# invisible, the eye reading brightness rather than colour at this size
+# rgb(34, 17, 0) and rgb(17, 17, 17) come to the same total, and at this size the eye reads brightness
+# rather than colour
 UNLIT = color.rgb(68, 34, 0)
 
 HOLD = 4.0                      # How long a page of the message stands, in seconds
@@ -48,8 +53,8 @@ mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a)
 
 # A sign is wider than it is tall, so the canvas is drawn landscape and every update turns it a quarter
-# onto the panel. From the screen rather than image(), which puts it in SRAM: the mask is read and the
-# frame written every frame, so both halve
+# onto the panel. From the screen rather than image(), which puts it in SRAM and halves both the mask
+# read and the frame written
 canvas = screen.canvas(screen.height, screen.width)
 WIDTH, HEIGHT = canvas.width, canvas.height
 

@@ -1,9 +1,14 @@
-# A split-flap clock, its digits climbing through the drum a flap at a time as a real board does.
-
 import time
 from mighty_fx import MightyFX, SPCE
 from screens import Screen280
 from picovector import color, font, image, rect, shape
+
+"""
+Draw a split-flap clock, its digits climbing through the drum a flap at a time as a real
+board does.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants for drawing
 FLAP_FONT = "/rom/fonts/AdventPro-Medium.af"  # A vector face, so it sizes to the card

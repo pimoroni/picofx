@@ -3,7 +3,9 @@ from screens import Screen280
 from picovector import color, font
 
 """
-Scrolls a line of text in every pixel font the board has in ROM
+Scroll a line of text in every pixel font the board has in ROM
+
+Press "Boot" to exit the program.
 """
 
 # Constants

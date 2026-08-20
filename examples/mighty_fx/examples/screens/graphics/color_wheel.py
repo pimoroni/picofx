@@ -1,8 +1,13 @@
-# A spinny rainbow wheel. Change up some of the constants below to see what happens.
-
 from mighty_fx import MightyFX, SPCE
 from screens import Screen280
 from picovector import image, color, shape, mat3
+
+"""
+Spin a rainbow wheel on a screen. Change up some of the constants below to see what
+happens.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants for drawing
 INNER_RADIUS = 40

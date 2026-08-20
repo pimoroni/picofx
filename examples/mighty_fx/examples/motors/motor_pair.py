@@ -1,13 +1,19 @@
-# A spinny rainbow wheel. Change up some of the constants below to see what happens.
-
 import math
 import time
 from mighty_fx import MightyFX, SPCE
 
-# Constants for drawing
-SWEEPS = 2              # How many speed sweeps of the motors to perform
-STEPS = 10              # The number of discrete sweep steps
-STEPS_INTERVAL = 0.5    # The time in seconds between each step of the sequence
+"""
+Sweep a pair of motors up and down their speed range together, on an SP/CE connector
+declared as a motor driver.
+
+A connector declared that way hands back two motors, a pair of its data pins to each, and
+both are given the same speed here. That speed follows a sine, so a cycle runs from a stop
+out to full forward, back through a stop to full reverse, and round again.
+
+Press "Boot" to exit the program.
+"""
+
+# Constants
 SPEED_EXTENT = 1.0      # How far from zero to drive the motors when sweeping
 
 mighty = MightyFX(spce_a=SPCE.MOTOR_DRIVER)

@@ -1,9 +1,14 @@
-# Travelling through a star field, across every panel a screen hub reaches. Change up some of the constants below to see what happens.
-
 import random
 from mighty_fx import MightyFX, SPCE
 from screens import Screen280, ScreenGroup
 from picovector import image, color, shape
+
+"""
+Travel through a star field, across every panel a screen hub reaches. Change up some of
+the constants below to see what happens.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants for drawing
 NUMBER_OF_STARS = 50
@@ -15,9 +20,9 @@ STAR_GROWTH = 0.12
 # lets one port drive six panels instead of one
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_LINES)
 
-# The hub hands out a port per chip select it reaches, whether or not a panel is on the
-# end of it. A panel that is not there refuses to be created, so build all six and keep
-# whichever answered, and a hub does not have to be fully populated to be used
+# The hub hands out a port per chip select it reaches, whether or not a panel is on the end
+# of it. One that is not there refuses to be created, so build them all and keep whichever
+# answered: a hub does not have to be full to be used
 panels = []
 for port in mighty.hub.ports:
     try:
@@ -33,7 +38,7 @@ if not panels:
 
 # A group draws one frame to every panel it holds, and holds their refresh rates together so any tear band
 # crawls rather than races across them. One panel is a group too, so however many answered are driven the
-# same way, and a lone one has nothing to hold it against so it is left unheld
+# same way
 wall = ScreenGroup(*panels)
 print(f"{len(panels)} of {len(mighty.hub.ports)} hub positions answered")
 

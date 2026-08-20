@@ -1,8 +1,13 @@
-# A spinny rainbow wheel, on a pair of screens held in step. Change up some of the constants below to see what happens.
-
 from mighty_fx import MightyFX, SPCE
 from screens import Reserve, Screen280, ScreenPair
 from picovector import image, color, shape, mat3
+
+"""
+Spin a rainbow wheel on a pair of screens held in step. Change up some of the constants
+below to see what happens.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants for drawing
 INNER_RADIUS = 40
@@ -19,10 +24,9 @@ mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 # frame reaches both without a tear band walking across either. Working out how takes a
 # few seconds when the pair is created, and it goes on correcting as the program runs.
 #
-# Both panels change on the one frame, so both canvases are converted inside a single
-# frame's time where two independent screens would each have a frame of their own. That
-# is what the deeper reserve buys, and a pair drawing at full size refuses without it.
-# color_wheel_in_turn.py draws the same wheel without a pair, for comparison.
+# Both panels convert inside a single frame's time, which is what the deeper reserve
+# buys, and a pair drawing at full size refuses without it. color_wheel_in_turn.py draws
+# the same wheel without a pair, for comparison.
 pair = ScreenPair(Screen280(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES),
                   Screen280(mighty.spce_b, reserve=Reserve.FULL_SIZE_IMAGES))
 

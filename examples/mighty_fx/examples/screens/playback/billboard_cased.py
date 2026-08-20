@@ -1,28 +1,3 @@
-# Shows a folder of posters as if each were in a case behind glass, laid over the picture as it goes.
-#
-# This is what a canvas is for. A poster sent straight to the panel is what the file says and nothing more;
-# drawn into a canvas first, anything can go over it, and here that is a case around the edge and light across
-# the glass. The poster changes and the case does not, which is what makes it read as a case rather than as
-# part of the art.
-#
-# The pane is the same for every poster, so it is drawn once into an image of its own and blitted over each
-# one. That is the difference between a startup cost and a per poster one: it is some thirty antialiased
-# polygons. Laying it over in one pass gives the same pixels as drawing it on top would, source-over
-# compositing being associative, and costs a blit.
-#
-# An image starts empty, so the pane needs no cutout: what is not drawn stays transparent and the poster shows
-# through. There is no cutout to be had in any case, checked both ways round under both fill rules, since
-# shapes() draws each shape on its own and the rule does not span them.
-#
-# Two things about drawing over a picture on this panel, and they are the transferable part:
-#
-#   A level is 17 of 255. The panel resolves 16 levels a channel, so anything fainter than one of them is not
-#   there at all: a wash at alpha 26 over a bright poster moves it by five and disappears.
-#
-#   Opaque marks read over any art, translucent ones only over art that is flat or dark. The case is opaque and
-#   always reads; the glass is a wash, so it shows on the dark posters while the busy bright ones swallow it.
-#   Darkening a bright poster to rescue it only makes a murkier poster, which is why nothing here does.
-
 import math
 import time
 
@@ -30,6 +5,33 @@ from mighty_fx import MightyFX, SPCE
 from playback import SequencePlayer
 from screens import Screen280
 from picovector import color, image, rect, shape, vec2
+
+"""
+Show a folder of posters as if each were in a case behind glass, laid over the picture as
+it goes.
+
+This is what a canvas is for. A poster sent straight to the panel is what the file says
+and nothing more; drawn into a canvas first, anything can go over it, and here that is a
+case around the edge and light across the glass. The poster changes and the case does not,
+which is what makes it read as a case.
+
+The pane is the same for every poster, so it is drawn once into an image of its own and
+blitted over each one, which turns some thirty antialiased polygons into a startup cost.
+Laying it over in one pass gives the same pixels as drawing it on top, source-over
+compositing being associative.
+
+An image starts empty, so the pane needs no cutout: what is not drawn stays transparent
+and the poster shows through. There is no cutout to be had in any case, shapes() drawing
+each shape on its own however the fill rule is set.
+
+Two things about drawing over a picture on this panel, and they are the transferable part.
+A level is 17 of 255, the panel resolving 16 levels a channel, so anything fainter than
+one of them is not there at all. And opaque marks read over any art where translucent ones
+only read over art that is flat or dark, which is why the case is opaque and the glass
+shows on the dark posters while the busy bright ones swallow it.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants
 POSTERS = "/examples/assets/billboards/portrait"   # Shared with the billboard showcases
@@ -81,8 +83,8 @@ def band(across, half, feather, levels, tone):
 def case():
     """Everything outside a rounded window: four bars, then each corner less its quarter circle.
 
-    A thick stroked rounded rectangle will not do it. Its outer edge is rounded too, so the panel's own corners
-    are left bare, and a square big enough to cover those reaches into the window.
+    A stroked rounded rectangle will not do it, its outer edge being rounded too, so the panel's own corners
+    would be left bare.
     """
     pane.pen = CASE
     pane.rectangle(0, 0, WIDE, CASE_WIDE)

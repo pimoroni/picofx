@@ -1,9 +1,14 @@
-# A split-flap departures board, every card climbing through the drum until it reaches its letter.
-
 import time
 from mighty_fx import MightyFX, SPCE
 from screens import Screen280
 from picovector import color, font, image, rect, shape
+
+"""
+Draw a split-flap departures board, every card climbing through the drum until it reaches
+its letter.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants for drawing
 FLAP_FONT = "/rom/fonts/Oswald.af"   # A condensed vector face, which is what a board wants

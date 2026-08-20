@@ -1,25 +1,30 @@
-# Scrolls an animation endlessly across the panel, from a source no bigger than the panel itself.
-#
-# The pattern is drawn to tile, so the column after its last is its first. That is what lets it scroll for ever:
-# the window is taken as two pieces, the far end of the tile and then its start, and where those meet is where
-# the tile already met itself.
-#
-# The driver's own offset= would do this in one step and cost nothing, but it cannot wrap: a window past the end
-# of a source shows the background instead of starting again. Giving it a source two tiles wide fixes that and
-# costs a second copy of the art, which is what this avoids. Two blits into a canvas cost about 11ms, and a
-# canvas is truecolour where a tile is indexed, so a frame lands in 67ms rather than 44ms. That buys back 163KB
-# of flash and 600KB of heap.
-#
-# Nothing here waits for the player: the field moves every frame even when the animation has not, so there is no
-# has_advanced() to ask. The animation runs on the player's clock and the scroll on the loop's, which is why the
-# pattern can live at 8fps while the field glides two or three pixels a frame.
-
 import time
 
 from mighty_fx import MightyFX, SPCE
 from playback import SequencePlayer
 from screens import Screen280
 from picovector import rect
+
+"""
+Scroll an animation endlessly across the panel, from a source no bigger than the panel
+itself.
+
+The pattern is drawn to tile, so the column after its last is its first. That is what lets
+it scroll for ever: the window is taken as two pieces, the far end of the tile and then
+its start, and where those meet is where the tile already met itself.
+
+The driver's own offset= would do this in one step, but it cannot wrap: a window past the
+end of a source shows the background instead of starting again. Giving it a source two
+tiles wide fixes that at the cost of a second copy of the art, 163KB of flash and 600KB of
+heap, which is what this avoids.
+
+Nothing here waits for the player: the field moves every frame even when the animation has
+not, so there is no has_advanced() to ask. The animation runs on the player's clock and
+the scroll on the loop's, which is why the pattern can live at 8fps while the field glides
+two or three pixels a frame.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants
 FRAMES = "/examples/assets/traces"   # The folder of frames, shared with the wall example

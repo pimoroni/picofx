@@ -1,25 +1,28 @@
-# Shows a different poster on every panel a hub can reach, all changing on one clock.
-#
-# A hub shares one SP/CE port, and one port is one stream, so panels showing different pictures are sent one
-# after another. Measured on three: 68ms to broadcast one poster to all of them, 181ms to send a different
-# poster to each, so six would be about 360ms. The change therefore ripples across the wall rather than landing
-# at once, which against a three second dwell reads as a row of boards flipping.
-#
-# traces_wall.py is the other half of this: the same picture on every panel, which the hub sends once and every
-# panel latches together. Between them they are what a hub is, and the choice a wall has to make.
-#
-# There is no ScreenGroup here. A group exists to hold panels in phase so they can be sent together, and no two
-# panels are ever sent together in this example. Building one would cost two seconds of calibration at startup
-# and half a second on the first change, for nothing.
-#
-# One player feeds every panel. image_at() reads any frame without moving the player, so panel n takes the
-# poster n along the folder and the folder is held once.
-
 import time
 
 from mighty_fx import MightyFX, SPCE
 from playback import SequencePlayer
 from screens import Screen280
+
+"""
+Show a different poster on every panel a hub can reach, all changing on one clock.
+
+A hub shares one SP/CE port, and one port is one stream, so panels showing different
+pictures are sent one after another: measured on three, 68ms to broadcast one poster to
+all of them against 181ms to send a different poster to each. The change therefore ripples
+across the wall rather than landing at once.
+
+traces_wall.py is the other half of this, the same picture on every panel, which the hub
+sends once. Between them they are the choice a wall has to make.
+
+There is no ScreenGroup here. A group exists to hold panels in phase so they can be sent
+together, and no two panels are ever sent together in this example.
+
+One player feeds every panel. image_at() reads any frame without moving the player, so
+panel n takes the poster n along the folder and the folder is held once.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants
 POSTERS = "/examples/assets/billboards/portrait"   # Shared with the billboard showcases
@@ -30,9 +33,9 @@ DWELL = 3.0                      # Seconds a poster is up for
 # the board hands back six ports and every panel is brought up and cleared together
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_LINES)
 
-# A port is handed out per chip select the hub reaches, whether or not a panel is on the
-# end of it. One that is not there refuses to be created, so build them all and keep
-# whichever answered: a hub does not have to be full to be used
+# The hub hands out a port per chip select it reaches, whether or not a panel is on the end
+# of it. One that is not there refuses to be created, so build them all and keep whichever
+# answered: a hub does not have to be full to be used
 panels = []
 for port in mighty.hub.ports:
     try:

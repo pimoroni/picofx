@@ -1,9 +1,13 @@
-# Travelling through a star field. Change up some of the constants below to see what happens.
-
 import random
 from mighty_fx import MightyFX, SPCE
 from screens import Screen280
 from picovector import image, color, shape
+
+"""
+Travel through a star field. Change up some of the constants below to see what happens.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants for drawing
 NUMBER_OF_STARS = 50

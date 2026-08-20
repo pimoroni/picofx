@@ -1,18 +1,21 @@
-# Plays an animated GIF on a screen, at the frame delays the file was authored with.
-#
-# The coin was drawn for this panel: its colours already sit on the 16 levels a channel the panel resolves,
-# dithered, so a smooth gradient reads smooth. A photograph exported straight to a GIF has colours between
-# those levels and bands into patches instead, which is worth knowing before blaming the screen. It is
-# square, so it centres with the background above and below it whichever way the panel is turned.
-#
-# The coin sits on a middle grey. Its own rim is almost black, so on a dark ground the two meet and the coin
-# loses its outline: a subject needs a ground it is not the same value as, and grey suits a design carrying
-# both dark and near white. The panel is given the same grey for the strip the square does not reach, and it
-# is read from the file rather than typed here, so naming a different GIF above still lands on its own ground.
-
 from mighty_fx import MightyFX, SPCE
 from playback import GIFPlayer
 from screens import Screen280
+
+"""
+Play an animated GIF on a screen, at the frame delays the file was authored with.
+
+The coin was drawn for this panel, its colours already sitting on the 16 levels a channel
+resolves. A photograph exported straight to a GIF has colours between those levels and
+bands into patches instead.
+
+It is square, so the panel shows a background around it. The coin's rim is almost black
+and would meet a dark ground invisibly, so it sits on a middle grey, and the panel is
+given the same grey by reading the file's own corner. Naming a different GIF above
+therefore still lands on its own ground.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants
 GIF_PATH = "/examples/assets/pirate_coin.gif"   # The GIF to play, beside this example
@@ -22,12 +25,11 @@ ROTATION = 90                    # Quarter turn, to suit how the screen is mount
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a)
 
-# A GIF declares a delay for each of its frames but keeps no clock, so a player is what
-# walks them. The default plays at the file's own delays; fps=12 would name a rate instead
+# A GIF carries a delay for each frame but no clock, so a player is what walks them. The
+# default plays at the file's own delays; fps=12 would name a rate instead
 player = GIFPlayer(GIF_PATH)
 
-# What the panel shows where the frames do not reach. A decoded frame is palettised, and get() resolves that
-# and hands back a colour, so the corner pixel is the ground the file was authored over
+# A decoded frame is palettised, and get() resolves that and hands back a colour
 ground = player.image.get(0, 0)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)

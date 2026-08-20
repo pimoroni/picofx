@@ -1,8 +1,13 @@
-# Draw to whichever screens are plugged in, on one SP/CE port or both. Each screen counts out its own position in dots.
-
 from mighty_fx import MightyFX, SPCE
 from screens import Screen280
 from picovector import image, color, shape
+
+"""
+Draw to whichever screens are plugged in, on one SP/CE port or both. Each screen counts
+out its own position in dots.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants for drawing
 HUE_SHIFT = 2           # How far around the colour wheel to move each frame

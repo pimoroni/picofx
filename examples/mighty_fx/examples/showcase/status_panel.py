@@ -1,24 +1,3 @@
-# A status panel for the company that made the board: the wordmark over a cycling ribbon, the coin as a
-# badge, a few statuses, and the seven RGB outputs standing in for the line the board came down.
-#
-# Everything is drawn at half the panel's size and doubled on the way out, so every pixel on the glass is a
-# square of four and the whole interface shares the chunky coin's grain rather than fighting it. That costs a
-# quarter of the canvas, a quarter of the ground image and a quarter of the drawing, and the panel receives the
-# same pixels either way, so the wire is unchanged. Doubling is nearest by nature: a smooth enlargement would
-# blur the type at a size where it is already tight, and smear the dither that gives the coin its character.
-#
-# The ribbon is the one thing drawn in full colour, two hues cycling together across it, and it is dithered
-# along its own direction. That is not decoration: 16 levels a channel turn a smooth gradient into bands, and
-# a column of jitter every other column scatters them, which is the same trick the coin was authored with.
-#
-# The seven outputs are a production line. One stage is live at a time, its lamp lit on the glass and its LED
-# lit on the board below, so the light travelling the row is a board travelling the line and output four is
-# stage four. One level per output, read by both, so a lamp and its LED cannot drift apart.
-#
-# The interface is built once into an image and blitted as the ground, so a frame draws only the ribbon, the
-# badge, the live stage and the lamps. That ground lives in the GC heap rather than a second canvas, the
-# screen's fast SRAM holding one canvas.
-
 import gc
 import time
 
@@ -26,6 +5,33 @@ from mighty_fx import MightyFX, SPCE
 from playback import GIFPlayer
 from screens import Screen280
 from picovector import color, font, image, rect, shape
+
+"""
+Draw a status panel for the company that made the board: the wordmark over a cycling
+ribbon, the coin as a badge, a few statuses, and the seven RGB outputs standing in for the
+line the board came down.
+
+Everything is drawn at half the panel's size and doubled on the way out, so every pixel on
+the glass is a square of four and the whole interface shares the chunky coin's grain
+rather than fighting it. That costs a quarter of the canvas and a quarter of the drawing,
+and the panel receives the same pixels either way. Doubling is nearest by nature: a smooth
+enlargement would blur type that is already tight, and smear the dither that gives the
+coin its character.
+
+The ribbon is dithered along its own direction, which is not decoration: 16 levels a
+channel turn a smooth gradient into bands, and a column of jitter every other column
+scatters them.
+
+The seven outputs are a production line, one stage live at a time with its lamp lit on the
+glass and its LED lit on the board below, so output four is stage four. One level per
+output, read by both, so a lamp and its LED cannot drift apart.
+
+The interface is built once into an image and blitted as the ground, so a frame draws only
+the ribbon, the badge, the live stage and the lamps. That ground lives in the GC heap, the
+screen's fast SRAM holding the canvas.
+
+Press "Boot" to exit the program.
+"""
 
 # Constants for drawing
 EMBLEM = "/examples/assets/pirate_coin_emblem.gif"
