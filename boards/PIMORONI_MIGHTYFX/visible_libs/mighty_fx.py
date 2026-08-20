@@ -58,8 +58,8 @@ class MightyFX:
     SPCE_B_PINS = (SPCE_B_DC_PIN, SPCE_B_CS_PIN, SPCE_B_SCK_PIN, SPCE_B_MOSI_PIN, SPCE_B_BL_PIN)
 
     SERVO_STRIP_EN = 43
-    SERVO_STRIP_A = 44
-    SERVO_STRIP_B = 45
+    SERVO_STRIP_L = 44
+    SERVO_STRIP_R = 45
 
     SENSOR_PIN = 46
     V_SENSE_PIN = 47
@@ -162,17 +162,25 @@ class MightyFX:
         if init_wav:
             self.wav = WavPlayer(0, self.I2S_BCLK_PIN, self.I2S_LRCLK_PIN, self.I2S_DATA_PIN, self.AMP_EN_PIN, root=wav_root)
 
-        # Set up the servo/strip enable
-        self.__servo_strip_en = Pin(self.SERVO_STRIP_EN, Pin.OUT, value=False)
+        # Set up the enable for the rail the L and R connectors share
+        self.__rail_en = Pin(self.SERVO_STRIP_EN, Pin.OUT, value=False)
 
     def boot_pressed(self):
         return self.__switch.value() == 0
 
-    def enable_servo_strips(self):
-        self.__servo_strip_en.on()
+    def enable_rail(self):
+        """Power the L and R connectors. One rail serves both, so a load on
+        either is live from here.
+        """
+        self.__rail_en.on()
 
-    def disable_servo_strips(self):
-        self.__servo_strip_en.off()
+    def disable_rail(self):
+        """Take the power off both connectors."""
+        self.__rail_en.off()
+
+    def is_rail_enabled(self):
+        """Whether the L and R connectors are powered."""
+        return self.__rail_en.value() == 1
 
     def read_voltage(self, samples=1):
         val = 0
@@ -231,7 +239,7 @@ class MightyFX:
 
     def shutdown(self):
         self.clear()
-        self.disable_servo_strips()
+        self.disable_rail()
 
         self.spce_a.backlight_off()
         self.spce_b.backlight_off()
