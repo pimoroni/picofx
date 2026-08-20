@@ -4,6 +4,8 @@ examples/effects/colour/*.py
 examples/effects/mono/*.py
 examples/audio/*.py
 examples/motors/*.py
+examples/servos/*.py
+examples/strips/*.py
 examples/screens/single/*.py
 examples/screens/graphics/*.py
 examples/screens/images/*.py

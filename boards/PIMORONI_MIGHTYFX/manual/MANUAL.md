@@ -222,6 +222,31 @@ The rest run from 0 to 1, written 0.5 or 50% as you prefer. `window` is one of
 them, being the share of a cycle the flashes happen in. `hue` takes degrees as
 well, written 180deg, which is what a colour picker gives you.
 
+## LED strips
+
+A strip of WS2812 LEDs plugs into the connector marked **L** or **R**, and its
+LEDs take the same effects, colours and levels the outputs do. Tell the board
+how long it is first, since that is the one thing it cannot work out for itself:
+
+```entry
+board: stripL=60
+stripL: rainbow_wave speed=0.3
+```
+
+| Written | Means |
+| --- | --- |
+| `stripL` | every LED on the strip |
+| `stripL5` | one of them |
+| `stripL1-10` | the first ten |
+| `stripL60-1` | all sixty, the other way round, for a strip mounted backwards |
+
+`stripR` is the same for the other connector. Both share one power supply, so a
+strip on either lights the small LED between them, and anything plugged into the
+one you are not using is powered too.
+
+Each LED shows a colour of its own, so `stripL5.r` is not a thing to write; set
+`colour` on the LEDs instead, as an output takes it.
+
 ## Screens
 
 ### Naming screens
@@ -366,6 +391,8 @@ board: drive=manual program=fireplace.py
 | `program` | a Python file to run instead of the effects | the effects run |
 | `screenA` | what size of screen is on SP/CE A, if you have one | 2.8 |
 | `screenB` | the same for SP/CE B | 2.8 |
+| `stripL` | how many LEDs are on a strip plugged into **L** | no strip |
+| `stripR` | the same for **R** | no strip |
 
 ### Running your own program
 
@@ -403,6 +430,8 @@ download:
 | `examples/screens/hub` | more than two, through a hub |
 | `examples/audio` | playing a wav file |
 | `examples/motors` | driving a pair of motors |
+| `examples/servos` | sweeping a servo on the L connector |
+| `examples/strips` | a rainbow along an LED strip |
 | `examples/gpio` | using SP/CE pins as plain inputs and outputs |
 | `examples/showcase` | larger builds that put several of these together |
 
@@ -414,9 +443,10 @@ board: program=examples/screens/playback/animated_gif.py
 board: program=examples/showcase/flip_dot_sign.py
 ```
 
-Anything under `screens`, `audio` or `motors` needs that hardware attached, and
-some of the showcase ones want pictures or a network of their own. The full set,
-with what each one does, is on [GitHub](https://github.com/pimoroni/picofx).
+Anything under `screens`, `audio`, `motors`, `servos` or `strips` needs that
+hardware attached, and some of the showcase ones want pictures or a network of
+their own. The full set, with what each one does, is on
+[GitHub](https://github.com/pimoroni/picofx).
 
 ## When something is wrong
 

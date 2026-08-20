@@ -273,6 +273,7 @@ footer p { margin: 0; }
 <li><a href="#blinking-through-colours">Blinking through colours</a></li>
 <li><a href="#what-the-settings-mean">What the settings mean</a></li>
 </ul></details></li>
+<li><a href="#led-strips">LED strips</a></li>
 <li><details><summary><a href="#screens">Screens</a></summary><ul>
 <li><a href="#naming-screens">Naming screens</a></li>
 <li><a href="#setting-a-screen">Setting a screen</a></li>
@@ -402,6 +403,20 @@ footer p { margin: 0; }
 <p><code>speed</code> is cycles a second: 1 goes round once a second, 0.5 once every two, 2 twice a second. A negative speed runs the cycle backwards.</p>
 <p>The settings measured in seconds are <code>interval</code>, <code>hold</code>, flicker's <code>bright_min</code>, <code>bright_max</code>, <code>dim_min</code> and <code>dim_max</code>, and the four intervals <code>traffic_light</code> and <code>pelican_crossing</code> each take. <code>length</code>, <code>flashes</code>, <code>steps</code>, <code>count</code> and <code>step</code> are plain counts, and a negative <code>step</code> counts down.</p>
 <p>The rest run from 0 to 1, written 0.5 or 50% as you prefer. <code>window</code> is one of them, being the share of a cycle the flashes happen in. <code>hue</code> takes degrees as well, written 180deg, which is what a colour picker gives you.</p>
+<h2 id="led-strips">LED strips</h2>
+<p>A strip of WS2812 LEDs plugs into the connector marked <strong>L</strong> or <strong>R</strong>, and its LEDs take the same effects, colours and levels the outputs do. Tell the board how long it is first, since that is the one thing it cannot work out for itself:</p>
+<pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">stripL</span><span class="s-punc">=</span><span class="s-value">60</span>
+<span class="s-target">stripL</span><span class="s-colon">:</span> <span class="s-effect">rainbow_wave</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.3</span></code></pre>
+<div class="scroll"><table>
+<thead><tr><th>Written</th><th>Means</th></tr></thead>
+<tbody>
+<tr><td><code>stripL</code></td><td>every LED on the strip</td></tr>
+<tr><td><code>stripL5</code></td><td>one of them</td></tr>
+<tr><td><code>stripL1-10</code></td><td>the first ten</td></tr>
+<tr><td><code>stripL60-1</code></td><td>all sixty, the other way round, for a strip mounted backwards</td></tr>
+</tbody></table></div>
+<p><code>stripR</code> is the same for the other connector. Both share one power supply, so a strip on either lights the small LED between them, and anything plugged into the one you are not using is powered too.</p>
+<p>Each LED shows a colour of its own, so <code>stripL5.r</code> is not a thing to write; set <code>colour</code> on the LEDs instead, as an output takes it.</p>
 <h2 id="screens">Screens</h2>
 <h3 id="naming-screens">Naming screens</h3>
 <p>A screen on either SP/CE connector is named <code>screenA</code> or <code>screenB</code>. A screen cannot say what size it is, so tell the board:</p>
@@ -469,6 +484,8 @@ footer p { margin: 0; }
 <tr><td><code>program</code></td><td>a Python file to run instead of the effects</td><td>the effects run</td></tr>
 <tr><td><code>screenA</code></td><td>what size of screen is on SP/CE A, if you have one</td><td>2.8</td></tr>
 <tr><td><code>screenB</code></td><td>the same for SP/CE B</td><td>2.8</td></tr>
+<tr><td><code>stripL</code></td><td>how many LEDs are on a strip plugged into <strong>L</strong></td><td>no strip</td></tr>
+<tr><td><code>stripR</code></td><td>the same for <strong>R</strong></td><td>no strip</td></tr>
 </tbody></table></div>
 <h3 id="running-your-own-program">Running your own program</h3>
 <p>A program can sit on this drive or on the board's own filesystem, and its name may include folders: it is looked for here first, then on the board, so <code>program=examples/effects/colour/rainbow_wave.py</code> reaches one of the examples the board ships with. Where the name is in both, this drive's copy runs.</p>
@@ -491,6 +508,8 @@ footer p { margin: 0; }
 <tr><td><code>examples/screens/hub</code></td><td>more than two, through a hub</td></tr>
 <tr><td><code>examples/audio</code></td><td>playing a wav file</td></tr>
 <tr><td><code>examples/motors</code></td><td>driving a pair of motors</td></tr>
+<tr><td><code>examples/servos</code></td><td>sweeping a servo on the L connector</td></tr>
+<tr><td><code>examples/strips</code></td><td>a rainbow along an LED strip</td></tr>
 <tr><td><code>examples/gpio</code></td><td>using SP/CE pins as plain inputs and outputs</td></tr>
 <tr><td><code>examples/showcase</code></td><td>larger builds that put several of these together</td></tr>
 </tbody></table></div>
@@ -498,7 +517,7 @@ footer p { margin: 0; }
 <pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">examples/effects/colour/sweep_trail.py</span>
 <span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">examples/screens/playback/animated_gif.py</span>
 <span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">examples/showcase/flip_dot_sign.py</span></code></pre>
-<p>Anything under <code>screens</code>, <code>audio</code> or <code>motors</code> needs that hardware attached, and some of the showcase ones want pictures or a network of their own. The full set, with what each one does, is on <a href="https://github.com/pimoroni/picofx">GitHub</a>.</p>
+<p>Anything under <code>screens</code>, <code>audio</code>, <code>motors</code>, <code>servos</code> or <code>strips</code> needs that hardware attached, and some of the showcase ones want pictures or a network of their own. The full set, with what each one does, is on <a href="https://github.com/pimoroni/picofx">GitHub</a>.</p>
 <h2 id="when-something-is-wrong">When something is wrong</h2>
 <p>The lights say so, and the more flashes the worse it is:</p>
 <div class="scroll"><table>
