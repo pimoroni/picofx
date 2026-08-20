@@ -15,6 +15,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <cstring>
 
@@ -51,28 +52,28 @@ public:
         }
 
         // v does not vary with dst_y here, so the source rows sampled are fixed.
-        // A wrapped v walks the whole source height repeatedly, so the window
-        // caches every source row for its columns and the walk wraps inside it.
-        if (frame_desc.wrap_v) {
-            src_row_min = 0;
-            src_rows = frame_desc.src_extent_h >> pixel_shift;
-        } else {
-            int v_lo = frame_desc.dv_dx * frame_desc.dst_x_start + frame_desc.v_at_origin;
-            int v_hi = frame_desc.dv_dx * (frame_desc.dst_x_end - 1) + frame_desc.v_at_origin;
-            if (v_lo > v_hi) {
-                std::swap(v_lo, v_hi);
-            }
-            src_row_min = v_lo >> pixel_shift;
-            src_rows = (v_hi >> pixel_shift) - src_row_min + 1;
+        // A wrapped v keeps the unreduced range: fill() materialises the repeat
+        // into the window row by row, so the walk over it needs no wrap of its
+        // own.
+        int v_lo = frame_desc.dv_dx * frame_desc.dst_x_start + frame_desc.v_at_origin;
+        int v_hi = frame_desc.dv_dx * (frame_desc.dst_x_end - 1) + frame_desc.v_at_origin;
+        if (v_lo > v_hi) {
+            std::swap(v_lo, v_hi);
         }
+        src_row_min = v_lo >> pixel_shift;
+        src_rows = (v_hi >> pixel_shift) - src_row_min + 1;
 
         // The frame-wide part of the rebase; fill() supplies the rest per window.
-        // fill() materialises a wrapped u into a contiguous window, so the cached
-        // descriptor drops the flag and convert_band runs over it unchanged.
+        // fill() materialises a wrapped axis into a contiguous window, mirrored
+        // or not, so the cached descriptor drops the flags and convert_band runs
+        // the same loops an unwrapped frame does.
         cached_desc = frame_desc;
         cached_desc.src = (const uint8_t *)storage;
         cached_desc.v_at_origin = frame_desc.v_at_origin - (src_row_min << pixel_shift);
         cached_desc.wrap_u = false;
+        cached_desc.wrap_mirror_u = false;
+        cached_desc.wrap_v = false;
+        cached_desc.wrap_mirror_v = false;
     }
 
     // Convert row_count destination rows from first_row into dst_band, refreshing
@@ -152,46 +153,79 @@ private:
             return false;
         }
 
+        // The window is filled in nested runs, each sized once and never per
+        // row: v runs of consecutive source rows for a wrapped v, u runs of
+        // consecutive source columns for a wrapped u inside them, and the v
+        // run's rows innermost, so per-row work is one fixed-size copy per u
+        // run. A mirrored axis alternates its runs' direction: a descending u
+        // run reads the source ascending, which is what the XIP cache
+        // prefetches, and writes descending in fixed-size pieces, px being 1
+        // or 4. An unwrapped axis is simply one run.
+        const int src_w_px = frame_desc.src_extent_w >> pixel_shift;
+        const int src_h_px = frame_desc.src_extent_h >> pixel_shift;
         uint8_t *dst = (uint8_t *)storage;
-        if (!frame_desc.wrap_u) {
-            const uint8_t *src = frame_desc.src
-                               + (size_t)src_row_min * frame_desc.src_row_bytes
-                               + (size_t)src_column_min * px;
-            for (int i = 0; i < src_rows; ++i) {
-                std::memcpy(dst + (size_t)i * row_bytes, src, row_bytes);
-                src += frame_desc.src_row_bytes;
-            }
-        } else {
-            // A wrapped u is materialised: a window straddling the source's end
-            // copies its tail then its head, and one wider than the source loops
-            // the same runs, so the window is contiguous and wrap-free. The runs
-            // are the same for every row, so they are sized once per window, and
-            // the rebase below is unchanged, keyed on the unreduced column.
-            const int src_w_px = frame_desc.src_extent_w >> pixel_shift;
-            const int first_column = floor_mod(src_column_min, src_w_px);
-            const uint8_t *src = frame_desc.src
-                               + (size_t)src_row_min * frame_desc.src_row_bytes;
-            if (first_column + src_columns <= src_w_px) {
-                const uint8_t *row_src = src + (size_t)first_column * px;
-                for (int i = 0; i < src_rows; ++i) {
-                    std::memcpy(dst + (size_t)i * row_bytes, row_src, row_bytes);
-                    row_src += frame_desc.src_row_bytes;
-                }
+        int filled = 0;
+        while (filled < src_rows) {
+            int v_len = src_rows - filled;
+            int v_stride = frame_desc.src_row_bytes;
+            const uint8_t *v_src;
+            if (!frame_desc.wrap_v) {
+                v_src = frame_desc.src
+                      + (size_t)(src_row_min + filled) * frame_desc.src_row_bytes;
+            } else if (!frame_desc.wrap_mirror_v) {
+                const int r = floor_mod(src_row_min + filled, src_h_px);
+                v_len = std::min(v_len, src_h_px - r);
+                v_src = frame_desc.src + (size_t)r * frame_desc.src_row_bytes;
             } else {
-                for (int i = 0; i < src_rows; ++i) {
-                    uint8_t *row_dst = dst + (size_t)i * row_bytes;
-                    int column = first_column;
-                    int remaining = src_columns;
-                    while (remaining > 0) {
-                        const int run = std::min(remaining, src_w_px - column);
-                        std::memcpy(row_dst, src + (size_t)column * px, (size_t)run * px);
-                        row_dst += (size_t)run * px;
-                        remaining -= run;
-                        column = 0;
-                    }
-                    src += frame_desc.src_row_bytes;
+                const int unfolded = floor_mod(src_row_min + filled, 2 * src_h_px);
+                const bool v_reversed = unfolded >= src_h_px;
+                const int r = v_reversed ? 2 * src_h_px - 1 - unfolded : unfolded;
+                v_len = std::min(v_len, v_reversed ? r + 1 : src_h_px - r);
+                v_src = frame_desc.src + (size_t)r * frame_desc.src_row_bytes;
+                if (v_reversed) {
+                    v_stride = -frame_desc.src_row_bytes;
                 }
             }
+
+            int placed = 0;
+            while (placed < src_columns) {
+                int run = src_columns - placed;
+                bool u_reversed = false;
+                int column;
+                if (!frame_desc.wrap_u) {
+                    column = src_column_min + placed;
+                } else if (!frame_desc.wrap_mirror_u) {
+                    column = floor_mod(src_column_min + placed, src_w_px);
+                    run = std::min(run, src_w_px - column);
+                } else {
+                    const int unfolded = floor_mod(src_column_min + placed, 2 * src_w_px);
+                    u_reversed = unfolded >= src_w_px;
+                    column = u_reversed ? 2 * src_w_px - 1 - unfolded : unfolded;
+                    run = std::min(run, u_reversed ? column + 1 : src_w_px - column);
+                }
+                const uint8_t *u_src = v_src
+                    + (size_t)(u_reversed ? column - run + 1 : column) * px;
+
+                for (int k = 0; k < v_len; ++k) {
+                    const uint8_t *row_src = u_src + (ptrdiff_t)k * v_stride;
+                    uint8_t *out = dst + (size_t)(filled + k) * row_bytes
+                                 + (size_t)placed * px;
+                    if (!u_reversed) {
+                        std::memcpy(out, row_src, (size_t)run * px);
+                    } else if (px == 1) {
+                        for (int n = 0; n < run; ++n) {
+                            out[run - 1 - n] = row_src[n];
+                        }
+                    } else {
+                        for (int n = 0; n < run; ++n) {
+                            std::memcpy(out + (size_t)(run - 1 - n) * px,
+                                        row_src + (size_t)n * px, 4);
+                        }
+                    }
+                }
+                placed += run;
+            }
+            filled += v_len;
         }
 
         cached_desc.src_row_bytes = (int)row_bytes;

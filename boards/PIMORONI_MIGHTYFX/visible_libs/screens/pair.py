@@ -181,8 +181,9 @@ class ScreenPair:
         """tile resolved to one value per screen.
 
         Shared unless either element is itself a pair, tile being an (x, y)
-        pair already, which is the rule offset follows: a shared form is a
-        bool or an (x, y) pair of them, a per-screen form is two of either.
+        pair already, which is the rule offset follows: a shared form is one
+        tile value (a bool or Tile.MIRROR) or an (x, y) pair of them, a
+        per-screen form is two of either.
         """
         if not isinstance(tile, (tuple, list)):
             return (tile, tile)
@@ -306,6 +307,7 @@ class ScreenPair:
             offset=((0, 0), (5, 10))    one each
             tile=(True, False)          both screens tile x only
             tile=((True, True), False)  first tiles both axes, second neither
+            tile=(Tile.MIRROR, False)   both screens tile x, every other repeat reflected
 
         v_sync=None waits on the tearing-effect signal when both screens were
         built for it. An aligned pair refuses v_sync=False, the signal being

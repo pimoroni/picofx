@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
 
@@ -51,9 +52,13 @@ struct Descriptor {
     bool row_walks_forward;
     // A wrapped axis repeats the source: its coordinate reduces modulo the
     // extent instead of running out of it, so the covered box is the whole
-    // frame on whichever destination axis it binds.
+    // frame on whichever destination axis it binds. A seam_reflects wrap reverses
+    // every other repeat, the period doubling and the top half reading back
+    // to front, so each seam is a reflection.
     bool wrap_u;
     bool wrap_v;
+    bool wrap_mirror_u;
+    bool wrap_mirror_v;
     int src_extent_w;       // Source extent in canvas pixels, doubled when pixel_double
     int src_extent_h;
     int dst_row_bytes;      // Packed bytes per destination row
@@ -66,6 +71,12 @@ struct Descriptor {
 inline int floor_mod(int value, int period) {
     int m = value % period;
     return m < 0 ? m + period : m;
+}
+
+// A seam_reflects repeat's coordinate: the unfolded in [0, 2 * extent) folds onto
+// [0, extent), the top half reading back to front, both edges repeating.
+inline int fold(int unfolded, int extent) {
+    return unfolded < extent ? unfolded : 2 * extent - 1 - unfolded;
 }
 
 // Source format traits, each carrying a Loader built once per band. RGBA8888's is
@@ -173,6 +184,192 @@ struct RGB565 {
     }
 };
 
+// One destination row whose walking axis wraps: the whole row is covered and
+// the source repeats along it, a plain seam resetting the pointer to the
+// source's start and a seam_reflects one reflecting, the pointer staying on the edge
+// pixel and the step reversing so the edge repeats. A seam splits the row into
+// runs, and inside one the walk is the plain machinery, so the pixel loops stay
+// as tight as the unwrapped path's and only the seam pays.
+//
+// Kept out of convert_band and never inlined into it: sharing the row body was
+// measured to move the unwrapped path's code generation, which byte-identity
+// cannot catch, so the wrapped row seeds itself and pays that once per row.
+template <class Src, class Dst>
+__attribute__((noinline))
+void convert_wrapped_row(const Descriptor &desc, uint8_t *out, int dst_y) {
+    const int dst_w = desc.dst_w;
+    const bool pixel_double = desc.pixel_double;
+    const typename Src::Loader loader(desc);
+
+    int u = desc.du_dx * desc.dst_x_start + desc.du_dy * dst_y + desc.u_at_origin;
+    int v = desc.dv_dx * desc.dst_x_start + desc.dv_dy * dst_y + desc.v_at_origin;
+    int u_unfolded = 0;
+    int v_unfolded = 0;
+    if (desc.wrap_u) {
+        if (desc.wrap_mirror_u) {
+            u_unfolded = floor_mod(u, 2 * desc.src_extent_w);
+            u = fold(u_unfolded, desc.src_extent_w);
+        } else {
+            u = floor_mod(u, desc.src_extent_w);
+            u_unfolded = u;
+        }
+    }
+    if (desc.wrap_v) {
+        if (desc.wrap_mirror_v) {
+            v_unfolded = floor_mod(v, 2 * desc.src_extent_h);
+            v = fold(v_unfolded, desc.src_extent_h);
+        } else {
+            v = floor_mod(v, desc.src_extent_h);
+            v_unfolded = v;
+        }
+    }
+    const int src_col = pixel_double ? (u >> 1) : u;
+    const int src_row = pixel_double ? (v >> 1) : v;
+    const uint8_t *src_ptr = desc.src + (long)src_row * desc.src_row_bytes
+                      + (long)src_col * Src::bytes;
+    int row_walk_parity = 0;
+    if (pixel_double) {
+        row_walk_parity = (desc.row_walks_src_columns ? u : v) & 1;
+    }
+
+    const int extent = desc.row_walks_src_columns ? desc.src_extent_w
+                                                  : desc.src_extent_h;
+    const bool seam_reflects = desc.row_walks_src_columns ? desc.wrap_mirror_u
+                                                     : desc.wrap_mirror_v;
+    const int unfolded = desc.row_walks_src_columns ? u_unfolded : v_unfolded;
+    const bool starts_reflected = seam_reflects && unfolded >= extent;
+    int step = starts_reflected ? -desc.src_step_x : desc.src_step_x;
+    int advance_at_parity = desc.row_walks_forward ? 1 : 0;
+    if (starts_reflected) {
+        advance_at_parity ^= 1;
+    }
+    int until_seam;
+    if (desc.row_walks_forward) {
+        until_seam = (starts_reflected ? 2 * extent : extent) - unfolded;
+    } else {
+        until_seam = unfolded - (starts_reflected ? extent : 0) + 1;
+    }
+    const uint8_t *seam_ptr = nullptr;
+    if (!seam_reflects) {
+        const int seam_index = desc.row_walks_forward
+            ? 0 : (pixel_double ? (extent - 1) >> 1 : extent - 1);
+        seam_ptr = desc.row_walks_src_columns
+            ? desc.src + (long)src_row * desc.src_row_bytes
+                + (long)seam_index * Src::bytes
+            : desc.src + (long)seam_index * desc.src_row_bytes
+                + (long)src_col * Src::bytes;
+    }
+
+    // pixel_double keeps a per-pixel walk, its source cost already halved; its
+    // last pixel's advance is recovered from the parity for a reflecting seam.
+    auto seam = [&](bool advanced_last) {
+        if (seam_reflects) {
+            if (advanced_last) {
+                src_ptr -= step;
+            }
+            step = -step;
+            if (pixel_double) {
+                advance_at_parity ^= 1;
+                row_walk_parity ^= 1;
+            }
+        } else {
+            src_ptr = seam_ptr;
+        }
+        until_seam = extent;
+    };
+
+    if constexpr (!Dst::pairs) {
+        uint8_t r, g, b;
+        int x = 0;
+        while (x < dst_w) {
+            int n = std::min(until_seam, dst_w - x);
+            x += n;
+            until_seam -= n;
+            if (pixel_double) {
+                for (int i = 0; i < n; ++i) {
+                    loader.load(src_ptr, r, g, b);
+                    Dst::pack1(out, r, g, b);
+                    out += 2;
+                    if (row_walk_parity == advance_at_parity) {
+                        src_ptr += step;
+                    }
+                    row_walk_parity ^= 1;
+                }
+                if (until_seam == 0) {
+                    seam((row_walk_parity ^ 1) == advance_at_parity);
+                }
+            } else {
+                for (int i = 0; i < n; ++i) {
+                    loader.load(src_ptr, r, g, b);
+                    src_ptr += step;
+                    Dst::pack1(out, r, g, b);
+                    out += 2;
+                }
+                if (until_seam == 0) {
+                    seam(true);
+                }
+            }
+        }
+    } else {
+        // A seam can fall mid-pair, so a run's odd tail is held and the next
+        // run's first pixel completes it; dst_w is even, so a row never ends
+        // holding.
+        uint8_t r0, g0, b0, r1, g1, b1;
+        bool holding = false;
+        int x = 0;
+        while (x < dst_w) {
+            int n = std::min(until_seam, dst_w - x);
+            x += n;
+            until_seam -= n;
+            if (pixel_double) {
+                for (int i = 0; i < n; ++i) {
+                    loader.load(src_ptr, r1, g1, b1);
+                    if (row_walk_parity == advance_at_parity) {
+                        src_ptr += step;
+                    }
+                    row_walk_parity ^= 1;
+                    if (!holding) {
+                        r0 = r1; g0 = g1; b0 = b1;
+                        holding = true;
+                    } else {
+                        Dst::pack2(out, r0, g0, b0, r1, g1, b1);
+                        out += 3;
+                        holding = false;
+                    }
+                }
+                if (until_seam == 0) {
+                    seam((row_walk_parity ^ 1) == advance_at_parity);
+                }
+            } else {
+                if (holding && n > 0) {
+                    loader.load(src_ptr, r1, g1, b1);
+                    src_ptr += step;
+                    Dst::pack2(out, r0, g0, b0, r1, g1, b1);
+                    out += 3;
+                    holding = false;
+                    --n;
+                }
+                for (; n >= 2; n -= 2) {
+                    loader.load(src_ptr, r0, g0, b0);
+                    src_ptr += step;
+                    loader.load(src_ptr, r1, g1, b1);
+                    src_ptr += step;
+                    Dst::pack2(out, r0, g0, b0, r1, g1, b1);
+                    out += 3;
+                }
+                if (n == 1) {
+                    loader.load(src_ptr, r0, g0, b0);
+                    src_ptr += step;
+                    holding = true;
+                }
+                if (until_seam == 0) {
+                    seam(true);
+                }
+            }
+        }
+    }
+}
+
 // Convert row_count destination rows from first_row into dst_band, one packed row
 // per dst_row_bytes. Rows outside the covered box, and the uncovered ends of
 // covered rows, are filled with the background.
@@ -238,19 +435,32 @@ void convert_band(const Descriptor &desc, uint8_t *dst_band, int first_row,
             continue;
         }
 
+        // A row whose walking axis wraps seeds itself in convert_wrapped_row,
+        // kept out of this body so the unwrapped rows' code generation never
+        // moves with it.
+        if (desc.row_walks_src_columns ? desc.wrap_u : desc.wrap_v) {
+            convert_wrapped_row<Src, Dst>(desc, out, dst_y);
+            continue;
+        }
+
         // Seed the row walk at the first covered column. The pointer is only read
         // inside the covered span, so stepping from here tracks the map exactly.
-        // A wrapped coordinate reduces here, which is all the row-selecting axis
-        // needs; the walking axis also resets at each seam below.
+        // A wrapped row-selecting coordinate reduces here, folding when seam_reflects.
         int u_at_row_start =
             desc.du_dx * dst_x_start + desc.du_dy * dst_y + desc.u_at_origin;
         int v_at_row_start =
             desc.dv_dx * dst_x_start + desc.dv_dy * dst_y + desc.v_at_origin;
         if (desc.wrap_u) {
-            u_at_row_start = floor_mod(u_at_row_start, desc.src_extent_w);
+            u_at_row_start = desc.wrap_mirror_u
+                ? fold(floor_mod(u_at_row_start, 2 * desc.src_extent_w),
+                       desc.src_extent_w)
+                : floor_mod(u_at_row_start, desc.src_extent_w);
         }
         if (desc.wrap_v) {
-            v_at_row_start = floor_mod(v_at_row_start, desc.src_extent_h);
+            v_at_row_start = desc.wrap_mirror_v
+                ? fold(floor_mod(v_at_row_start, 2 * desc.src_extent_h),
+                       desc.src_extent_h)
+                : floor_mod(v_at_row_start, desc.src_extent_h);
         }
         const int src_col = pixel_double ? (u_at_row_start >> 1) : u_at_row_start;
         const int src_row = pixel_double ? (v_at_row_start >> 1) : v_at_row_start;
@@ -260,61 +470,6 @@ void convert_band(const Descriptor &desc, uint8_t *dst_band, int first_row,
         if (pixel_double) {
             row_walk_parity =
                 (desc.row_walks_src_columns ? u_at_row_start : v_at_row_start) & 1;
-        }
-
-        if (desc.row_walks_src_columns ? desc.wrap_u : desc.wrap_v) {
-            // The walking axis wraps, so the whole row is covered and the source
-            // repeats along it: the pointer resets at each seam, counted down in
-            // canvas pixels. Parity carries across a seam untouched, the extent
-            // being even under pixel-double, so a seam never splits a doubled
-            // pixel; only the walk's own advance-at-parity engages.
-            const int extent = desc.row_walks_src_columns ? desc.src_extent_w
-                                                          : desc.src_extent_h;
-            const int walk_start = desc.row_walks_src_columns ? u_at_row_start
-                                                              : v_at_row_start;
-            const int seam_index = desc.row_walks_forward
-                ? 0 : (pixel_double ? (extent - 1) >> 1 : extent - 1);
-            const uint8_t *seam_ptr = desc.row_walks_src_columns
-                ? desc.src + (long)src_row * desc.src_row_bytes
-                    + (long)seam_index * Src::bytes
-                : desc.src + (long)seam_index * desc.src_row_bytes
-                    + (long)src_col * Src::bytes;
-            int until_seam = desc.row_walks_forward ? extent - walk_start
-                                                    : walk_start + 1;
-
-            auto wrapped_fetch = [&](uint8_t &r, uint8_t &g, uint8_t &b) {
-                loader.load(src_ptr, r, g, b);
-                if (pixel_double) {
-                    if (row_walk_parity == advance_at_parity) {
-                        src_ptr += src_step_x;
-                    }
-                    row_walk_parity ^= 1;
-                } else {
-                    src_ptr += src_step_x;
-                }
-                if (--until_seam == 0) {
-                    src_ptr = seam_ptr;
-                    until_seam = extent;
-                }
-            };
-
-            if constexpr (!Dst::pairs) {
-                uint8_t r, g, b;
-                for (int x = 0; x < dst_w; ++x) {
-                    wrapped_fetch(r, g, b);
-                    Dst::pack1(out, r, g, b);
-                    out += 2;
-                }
-            } else {
-                uint8_t r0, g0, b0, r1, g1, b1;
-                for (int x = 0; x < dst_w; x += 2) {
-                    wrapped_fetch(r0, g0, b0);
-                    wrapped_fetch(r1, g1, b1);
-                    Dst::pack2(out, r0, g0, b0, r1, g1, b1);
-                    out += 3;
-                }
-            }
-            continue;
         }
 
         if constexpr (!Dst::pairs) {
@@ -540,14 +695,17 @@ inline void emit_rows(ConvertFn convert, const Descriptor &desc, uint8_t *out,
 // Fill a descriptor for a whole-frame conversion. Each axis is centred, or placed
 // by its off_x/off_y top-left in the canvas. wrap_x and wrap_y repeat the source
 // on that axis of its own: any offset is then valid, the origin reducing modulo
-// the extent here so a caller's ever-growing offset never overflows the affine
-// ints. src_row_bytes is the source pitch, wider than a row on a strided view
-// into a larger image; pass 0 to derive it from src_w.
+// the period here so a caller's ever-growing offset never overflows the affine
+// ints. wrap_mirror_x and wrap_mirror_y reverse every other repeat, and imply
+// the wrap on their axis. src_row_bytes is the source pitch, wider than a row
+// on a strided view into a larger image; pass 0 to derive it from src_w.
 inline Descriptor make_descriptor(const uint8_t *src, int src_w, int src_h,
                                   int dst_w, int dst_h, int format,
                                   const Transform &transform, bool pixel_double,
                                   bool centred_x, int off_x, bool centred_y, int off_y,
-                                  bool wrap_x, bool wrap_y, uint32_t bg,
+                                  bool wrap_x, bool wrap_y,
+                                  bool wrap_mirror_x, bool wrap_mirror_y,
+                                  uint32_t bg,
                                   int src_row_bytes, int src_pixel_bytes) {
     int scale = pixel_double ? 2 : 1;
     int src_extent_w = src_w * scale;   // Source extent in canvas pixels
@@ -565,16 +723,18 @@ inline Descriptor make_descriptor(const uint8_t *src, int src_w, int src_h,
     // axis reduces its placement here, and an unwrapped one already far enough
     // out to cover nothing clamps to a band that still covers nothing. Every
     // offset the binding can pass is then exact.
+    wrap_x = wrap_x || wrap_mirror_x;
+    wrap_y = wrap_y || wrap_mirror_y;
     constexpr int PLACE_LIMIT = 1 << 28;
     if (wrap_x) {
-        place_x = floor_mod(place_x, src_extent_w);
+        place_x = floor_mod(place_x, wrap_mirror_x ? 2 * src_extent_w : src_extent_w);
     } else if (place_x > PLACE_LIMIT) {
         place_x = PLACE_LIMIT;
     } else if (place_x < -PLACE_LIMIT) {
         place_x = -PLACE_LIMIT;
     }
     if (wrap_y) {
-        place_y = floor_mod(place_y, src_extent_h);
+        place_y = floor_mod(place_y, wrap_mirror_y ? 2 * src_extent_h : src_extent_h);
     } else if (place_y > PLACE_LIMIT) {
         place_y = PLACE_LIMIT;
     } else if (place_y < -PLACE_LIMIT) {
@@ -587,7 +747,7 @@ inline Descriptor make_descriptor(const uint8_t *src, int src_w, int src_h,
     int mirror_base = transform.mirror ? (dst_w - 1) : 0;
 
     // Canvas coordinates as affine functions of the destination pixel. cx/cy are
-    // the inverse-rotated (un-mirrored) destination pixel; u/v subtract the
+    // the inverse-rotated (un-seam_reflects) destination pixel; u/v subtract the
     // source offset. Exactly one of u, v varies with dst_x, the other with dst_y.
     int du_dx, du_dy, u_at_origin, dv_dx, dv_dy, v_at_origin;
     switch (transform.rotation) {
@@ -618,10 +778,12 @@ inline Descriptor make_descriptor(const uint8_t *src, int src_w, int src_h,
     }
 
     if (wrap_x) {
-        u_at_origin = floor_mod(u_at_origin, src_extent_w);
+        u_at_origin = floor_mod(u_at_origin,
+                                wrap_mirror_x ? 2 * src_extent_w : src_extent_w);
     }
     if (wrap_y) {
-        v_at_origin = floor_mod(v_at_origin, src_extent_h);
+        v_at_origin = floor_mod(v_at_origin,
+                                wrap_mirror_y ? 2 * src_extent_h : src_extent_h);
     }
 
     // Solve 0 <= coeff*dst + base < src_extent for integer dst (coeff is +/-1),
@@ -654,6 +816,8 @@ inline Descriptor make_descriptor(const uint8_t *src, int src_w, int src_h,
 
     desc.wrap_u = wrap_x;
     desc.wrap_v = wrap_y;
+    desc.wrap_mirror_u = wrap_mirror_x;
+    desc.wrap_mirror_v = wrap_mirror_y;
     desc.src_extent_w = src_extent_w;
     desc.src_extent_h = src_extent_h;
 

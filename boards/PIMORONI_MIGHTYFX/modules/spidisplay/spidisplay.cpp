@@ -612,7 +612,8 @@ void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h, int src_strid
                          const uint8_t *palette, size_t palette_len,
                          int rotation, int mirror, int pixel_double,
                          bool centred_x, int off_x, bool centred_y, int off_y,
-                         bool tile_x, bool tile_y, uint32_t bg,
+                         bool tile_x, bool tile_y,
+                         bool tile_mirror_x, bool tile_mirror_y, uint32_t bg,
                          uint64_t target_cs, uint64_t target_dc,
                          uint64_t sync_cs, uint64_t sync_dc) {
     uint32_t t_pre = time_us_32();
@@ -632,7 +633,7 @@ void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h, int src_strid
     Transform t = map_transform(rotation, mirror);
     desc = make_descriptor(src, src_w, src_h, dst_w, dst_h, fmt, t, dbl,
                            centred_x, off_x, centred_y, off_y,
-                           tile_x, tile_y, bg,
+                           tile_x, tile_y, tile_mirror_x, tile_mirror_y, bg,
                            src_stride,
                            indexed ? Indexed8::bytes : RGBA8888::bytes);
 
@@ -957,14 +958,15 @@ void SPIDisplay::update(const uint8_t *src, int src_w, int src_h, int src_stride
                         const uint8_t *palette, size_t palette_len,
                         int rotation, int mirror, int pixel_double,
                         bool centred_x, int off_x, bool centred_y, int off_y,
-                        bool tile_x, bool tile_y, uint32_t bg,
+                        bool tile_x, bool tile_y,
+                        bool tile_mirror_x, bool tile_mirror_y, uint32_t bg,
                         bool v_sync, uint32_t timeout_us, uint32_t sync_delay_us,
                         uint64_t target_cs, uint64_t target_dc,
                         uint64_t sync_cs, uint64_t sync_dc) {
     prepare(src, src_w, src_h, src_stride, palette, palette_len,
             rotation, mirror, pixel_double,
             centred_x, off_x, centred_y, off_y,
-            tile_x, tile_y, bg,
+            tile_x, tile_y, tile_mirror_x, tile_mirror_y, bg,
             target_cs, target_dc, sync_cs, sync_dc);
     arm(v_sync, timeout_us);
     while (!poll_te()) {
@@ -1282,6 +1284,7 @@ typedef struct _FrameArgs {
     bool centred_x, centred_y;
     int off_x, off_y;
     bool tile_x, tile_y;
+    bool tile_mirror_x, tile_mirror_y;
     uint32_t bg;
     bool v_sync;
     mp_int_t timeout_us;
@@ -1387,13 +1390,15 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
         }
     }
 
-    // tile=True repeats the source on both of its own axes, an (x, y) pair on
-    // one each: the read wraps at the source's size, so any offset is valid.
-    bool tile_x = false;
-    bool tile_y = false;
+    // tile repeats the source on its own axes, one value for both or an (x, y)
+    // pair: the read wraps at the source's size, so any offset is valid. Each
+    // value is False, True or Tile.MIRROR, the last reversing every other
+    // repeat so each seam is a reflection.
+    mp_int_t tile_mode_x = 0;
+    mp_int_t tile_mode_y = 0;
     if (args[ARG_tile].u_obj != mp_const_none) {
-        if (mp_obj_is_bool(args[ARG_tile].u_obj)) {
-            tile_x = tile_y = mp_obj_is_true(args[ARG_tile].u_obj);
+        if (mp_obj_is_bool(args[ARG_tile].u_obj) || mp_obj_is_int(args[ARG_tile].u_obj)) {
+            tile_mode_x = tile_mode_y = mp_obj_get_int(args[ARG_tile].u_obj);
         } else {
             size_t len;
             mp_obj_t *items;
@@ -1401,8 +1406,11 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
             if (len != 2) {
                 mp_raise_ValueError(MP_ERROR_TEXT("tile is one value for both axes, or an (x, y) pair"));
             }
-            tile_x = mp_obj_is_true(items[0]);
-            tile_y = mp_obj_is_true(items[1]);
+            tile_mode_x = mp_obj_get_int(items[0]);
+            tile_mode_y = mp_obj_get_int(items[1]);
+        }
+        if (tile_mode_x < 0 || tile_mode_x > 2 || tile_mode_y < 0 || tile_mode_y > 2) {
+            mp_raise_ValueError(MP_ERROR_TEXT("a tile value is False, True or Tile.MIRROR"));
         }
     }
 
@@ -1429,8 +1437,10 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
     out->centred_y = centred_y;
     out->off_x = off_x;
     out->off_y = off_y;
-    out->tile_x = tile_x;
-    out->tile_y = tile_y;
+    out->tile_x = tile_mode_x != 0;
+    out->tile_y = tile_mode_y != 0;
+    out->tile_mirror_x = tile_mode_x == 2;
+    out->tile_mirror_y = tile_mode_y == 2;
     out->v_sync = with_sync ? args[ARG_v_sync].u_bool : false;
     out->timeout_us = with_sync ? args[ARG_timeout_us].u_int : 0;
     out->sync_delay_us = with_sync ? args[ARG_sync_delay_us].u_int : 0;
@@ -1495,7 +1505,7 @@ static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_ma
         a.palette, a.palette_len,
         a.rotation, a.mirror, a.pixel_double,
         a.centred_x, a.off_x, a.centred_y, a.off_y,
-        a.tile_x, a.tile_y, a.bg,
+        a.tile_x, a.tile_y, a.tile_mirror_x, a.tile_mirror_y, a.bg,
         a.v_sync, a.timeout_us, (uint32_t)a.sync_delay_us,
         a.target_cs, a.target_dc, a.sync_cs, a.sync_dc);
     a.self->staged_image = mp_const_none;
@@ -1523,7 +1533,7 @@ static mp_obj_t SPIDisplay_fill(size_t n_args, const mp_obj_t *args) {
     self->display.update(nullptr, 0, 0, 0, nullptr, 0,
                          0, 0, 0,
                          true, 0, true, 0,
-                         false, false, bg,
+                         false, false, false, false, bg,
                          false, 0, 0, 0, 0, 0, 0);
     self->staged_image = mp_const_none;
     return mp_const_none;
@@ -1541,7 +1551,7 @@ static mp_obj_t SPIDisplay_prepare(size_t n_args, const mp_obj_t *pos_args, mp_m
         a.palette, a.palette_len,
         a.rotation, a.mirror, a.pixel_double,
         a.centred_x, a.off_x, a.centred_y, a.off_y,
-        a.tile_x, a.tile_y, a.bg,
+        a.tile_x, a.tile_y, a.tile_mirror_x, a.tile_mirror_y, a.bg,
         a.target_cs, a.target_dc, a.sync_cs, a.sync_dc);
     a.self->staged_image = a.image;
     return mp_const_none;

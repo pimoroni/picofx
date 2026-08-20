@@ -219,7 +219,8 @@ public:
     // pixel's alpha is ignored. bg is also what the pixels the source does not
     // cover take. Each axis is centred, or placed by its off_x/off_y top-left.
     // tile_x and tile_y repeat the source on that axis of its own, so the read
-    // wraps at its size and any offset is valid.
+    // wraps at its size and any offset is valid; tile_mirror_x and
+    // tile_mirror_y reverse every other repeat, so each seam is a reflection.
     // Blocks until the frame has left over SPI.
     // sync_delay_us starts the stream that long after the TE wait releases, which
     // places a broadcast write inside every member's tearing margin instead of at
@@ -228,7 +229,8 @@ public:
                 const uint8_t *palette, size_t palette_len,
                 int rotation, int mirror, int pixel_double,
                 bool centred_x, int off_x, bool centred_y, int off_y,
-                bool tile_x, bool tile_y, uint32_t bg,
+                bool tile_x, bool tile_y,
+                bool tile_mirror_x, bool tile_mirror_y, uint32_t bg,
                 bool v_sync, uint32_t timeout_us, uint32_t sync_delay_us = 0,
                 uint64_t target_cs = 0, uint64_t target_dc = 0,
                 uint64_t sync_cs = 0, uint64_t sync_dc = 0);
@@ -258,7 +260,8 @@ public:
                  const uint8_t *palette, size_t palette_len,
                  int rotation, int mirror, int pixel_double,
                  bool centred_x, int off_x, bool centred_y, int off_y,
-                 bool tile_x, bool tile_y, uint32_t bg,
+                 bool tile_x, bool tile_y,
+                 bool tile_mirror_x, bool tile_mirror_y, uint32_t bg,
                  uint64_t target_cs = 0, uint64_t target_dc = 0,
                  uint64_t sync_cs = 0, uint64_t sync_dc = 0);
 

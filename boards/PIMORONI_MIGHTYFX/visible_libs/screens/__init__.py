@@ -9,7 +9,7 @@
 # CONTROLLER names the module supplying the bringup sequence, so the chip stays an
 # independent axis from the panel size.
 
-from .base import ScreenBase
+from .base import ScreenBase, Tile
 from .group import ScreenGroup
 from .hub import ScreenHub
 from .pair import ScreenPair, update_pair

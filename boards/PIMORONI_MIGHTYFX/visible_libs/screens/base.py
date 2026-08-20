@@ -10,6 +10,19 @@ import picovector
 import spidisplay
 
 
+class Tile:
+    """How update() and prepare() repeat a source on one of its own axes.
+
+    OFF and REPEAT are what False and True already mean, so the tile setting
+    takes either spelling. MIRROR reverses every other repeat, making each
+    seam a reflection: any source tiles seamlessly, drawn to repeat or not,
+    and half an image mirrored fills the whole panel.
+    """
+    OFF = 0
+    REPEAT = 1
+    MIRROR = 2
+
+
 class ScreenBase:
     """The frame path shared by a single screen and a broadcast group.
 
