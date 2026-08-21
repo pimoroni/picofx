@@ -13,7 +13,7 @@ Press "Boot" to exit the program.
 # Constants for drawing
 FLAP_FONT = "/rom/fonts/Oswald.af"   # A condensed vector face, which is what a board wants
 # What is on a card, in the order it comes round. A column is fitted with the drum it needs rather
-# than one carrying everything, as a real board is: a time never shows a letter, so its cards are
+# than one carrying everything, as a real board is. A time never shows a letter, so its cards are
 # eleven round instead of thirty-seven and settle in a third of the travel. Blank leads each one,
 # so a board turns up from blank the same way whatever its cards carry
 DIGITS = " 0123456789"
@@ -25,14 +25,14 @@ HOLD = 7.0                          # How long a page stands before the next one
 # 17, and one level up from black reads as barely there against it
 CARD = color.rgb(34, 34, 38)        # The face of a card
 INK = color.rgb(238, 238, 232)      # And the lettering on it, and the colons painted beside them
-HEADING = color.rgb(232, 176, 24)   # The column headings, painted on the board rather than flapped
+HEADING = color.rgb(232, 176, 24)   # The column headings, painted on the board, not flapped
 SPLIT = color.rgb(8, 8, 9)          # The line the cards are hinged on, and the gaps between them
 BOARD = color.black                 # What the cards are set into
 GAP = 1                             # Between one card and the next inside a column
 COLUMN_GAP = 12                     # The least between columns, which carry no cards at all
-COLON_W = 9                         # The colon in a time, painted on the board rather than flapped
+COLON_W = 9                         # The colon in a time, painted on the board, not flapped
 
-# A card is sized to its letter rather than to the space going spare. Sized to the space, a row
+# A card is sized to its letter, not to the space going spare. Sized to the space, a row
 # cannot be told from the one below it, the cards meeting with nothing between them
 CARD_PAD = 2                        # Card left above and below its lettering
 ROW_GAP = 6                         # Between one row of cards and the next
@@ -46,8 +46,8 @@ LETTER_MAX = 24                     # How tall the lettering aims to be, the car
 ANTIALIAS = image.X2                # Lettering off a vector face wants smoothing at this size
 
 # The columns, each a heading, how many cards wide it is, how many cards into it a colon is painted,
-# and what its cards are fitted with. A colon is not carried on a card, so a time is four cards
-# rather than five
+# and what its cards are fitted with. A colon is not carried on a card, so a time is four cards, not
+# five
 COLUMNS = (("TIME", 4, 2, DIGITS), ("DEST", 6, 0, ALPHA), ("GATE", 3, 0, BOTH))
 
 # What the board shows, a page at a time and a row to a service. A name longer than its column is
@@ -66,7 +66,7 @@ mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a)
 
 # The board is wider than it is tall, so the canvas is drawn landscape and every update turns it a
-# quarter turn onto the panel. From the screen rather than image(), which puts it in SRAM: a falling
+# quarter turn onto the panel. From the screen, not image(), which puts it in SRAM: a falling
 # card is written by a blit and read again by the update, so both halve
 canvas = screen.canvas(screen.height, screen.width)
 WIDTH, HEIGHT = canvas.width, canvas.height
@@ -135,12 +135,12 @@ CELL_H = LETTER_H + CARD_PAD * 2
 CELL_H += CELL_H % 2
 HALF = CELL_H // 2
 
-# Where the ink sits inside the em box, so a letter centres on its card rather than its box centring
+# Where the ink sits inside the em box, so a letter centres on its card, not its box centring
 INK_TOP = (CELL_H - LETTER_H) // 2 - round(ink_rows(SIZE, "HW8O")[0])
 EM_BOX = round(SIZE) + 2
 
 # Where every card sits across the board, and where the painted colons go between them. Cards are
-# laid only where a column has one, so the space between columns is board rather than blank cards
+# laid only where a column has one, so the space between columns is board, not blank cards
 spots = []
 colons = []
 at = MARGIN
@@ -158,7 +158,7 @@ for _, wide, colon, _drum in COLUMNS:
     at += COLUMN_SPACE
 
 # The headings sit over their own columns, at one size so the row reads as a row. A column's last
-# gap is board too, so a heading may use it rather than being held to the cards alone
+# gap is board too, so a heading may use it and is not held to the cards alone
 HEADING_SIZE = SIZE * HEADING_MAX
 starts = []
 card = 0
@@ -172,7 +172,7 @@ for name, wide, _, _drum in COLUMNS:
 HEADING_INK = round(INK_PER_PX * HEADING_SIZE)
 HEADING_TOP = -round(ink_rows(HEADING_SIZE, "HW8O")[0])
 
-# Whatever the rows do not need goes under the headings rather than being left at the foot of the
+# Whatever the rows do not need goes under the headings and not the foot of the
 # board, where it reads as a row that failed to draw. HEADING_GAP is the least it may be
 over = HEIGHT - (MARGIN * 2 + HEADING_INK + ROWS * CELL_H + (ROWS - 1) * ROW_GAP)
 HEADING_H = HEADING_INK + max(HEADING_GAP, over)
@@ -190,7 +190,7 @@ def place(row, card):
 def sheet_for(letters):
     """Every character of one drum drawn once, a card to each.
 
-    A flap is then a blit rather than lettering laid out again, and a drum's cards are all in one
+    A flap is then a blit, not lettering laid out again, and a drum's cards are all in one
     image, so a column's whole set is one sheet however many cards are fitted with it.
     """
     made = image(CELL_W * len(letters), CELL_H)
@@ -209,7 +209,7 @@ def sheet_for(letters):
 
         wide = made.measure_text(letter, font_size=SIZE)[0]
         made.pen = INK
-        # The rect covers the em box rather than the card, text() clipping to it and the box starting
+        # The rect covers the em box, not the card, text() clipping to it and the box starting
         # above the card to bring the ink down onto it
         made.text(letter, rect(left + round((CELL_W - wide) / 2), INK_TOP, CELL_W, EM_BOX),
                   font_size=SIZE)
@@ -283,9 +283,9 @@ def falling(row, card, from_index, to_index, part):
 print(f"{ROWS} rows of {CARDS} cards, {CELL_W}x{CELL_H}, lettering {LETTER_H}px, "
       f"headings {HEADING_INK}px, drums of {[len(letters) for letters in sheets]}")
 
-# The board comes up blank and climbs to its first page, which is what a real one does from cold.
-# A card only ever goes forwards, so how long it takes is how far round its letter is: the page
-# lands raggedly rather than all at once, and that is the mechanism rather than an effect
+# The board comes up blank and climbs to its first page, as a real one does from cold. A card only ever
+# goes forwards, so how long it takes is how far round its letter is: the page lands raggedly, and that
+# is the mechanism rather than an effect
 canvas.pen = BOARD
 canvas.clear()
 
@@ -302,7 +302,7 @@ for (name, _wide, _, _drum), start in zip(COLUMNS, starts):
     canvas.text(name, rect(spots[start], MARGIN + HEADING_TOP, WIDTH, round(HEADING_SIZE) + 2),
                 font_size=HEADING_SIZE)
 
-# The colons, painted on the board between the pairs they separate rather than carried on a card,
+# The colons, painted on the board between the pairs they separate, not carried on a card,
 # and in the cards' own ink since they read as part of the time
 canvas.pen = INK
 dot = max(2, CELL_W // 8)

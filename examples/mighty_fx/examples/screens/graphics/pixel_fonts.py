@@ -58,10 +58,9 @@ moving_at = time.ticks_ms()     # When the list may move again, so each end gets
 print(f"{len(fonts)} faces, {fonts[0][1].height}px to {fonts[-1][1].height}px,"
       f" {content_height}px of list on a {screen.height}px panel")
 
-# A pixel face has one size and no other, so the only way to look closer at one is to magnify
-# the pixels it drew. The corner holds a copy of the panel's own top left corner, taken after
-# the list is drawn and blitted back at LOUPE_ZOOM, which is why the source is copied out
-# first: an image cannot be blitted over itself where the two overlap
+# A pixel face has one size and no other, so the only way to look closer is to magnify the pixels it
+# drew. The corner holds a copy of the panel's own top left, taken after the list is drawn and blitted
+# back at LOUPE_ZOOM. The copy is needed because an image cannot be blitted over itself where it overlaps
 tag_face = getattr(font, TAG_FACE)
 TAG = f"top left corner at x{LOUPE_ZOOM}"
 

@@ -59,9 +59,8 @@ GLOW_FROM = 35                  # The brightness a pixel glows from, low enough 
 GLOW = 500                      # How much of the halo is added back, 255 being all of it
 GLOW_SPREAD = 14                # How far it reaches, in panel pixels
 # The glow is a smooth ramp and the panel has 16 levels a channel to hold it in, so it lands as patches
-# with hard edges between them. A signed grain scatters those edges, and reads as the tube's own noise.
-# It is kept under half a level because the ground is a level above black and so has room to move both
-# ways, where a black ground clamped everything the grain took downwards. 0 turns it off
+# with hard edges. A signed grain scatters those edges and reads as the tube's own noise, kept under half
+# a level since the ground sits a level above black and has room to move both ways. 0 turns it off
 GRAIN = 5
 
 CPS = 1                         # Characters the operator types a frame, a frame being about 150ms
@@ -112,7 +111,7 @@ mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a)
 
 # A terminal is wider than it is tall, so the canvas is drawn landscape and every update turns it a
-# quarter onto the panel. From the screen rather than image(), which puts it in SRAM: the whole page is
+# quarter onto the panel. From the screen, not image(), which puts it in SRAM: the whole page is
 # drawn and filtered every frame, and the heap is PSRAM
 canvas = screen.canvas(screen.height, screen.width)
 WIDTH, HEIGHT = canvas.width, canvas.height
@@ -149,7 +148,7 @@ PITCH = CELL_H + LEADING * CELL_SCALE   # One line of characters to the next
 INSET = BORDER + PAD                    # The least the lettering is kept from the panel's edge
 COLUMNS = (WIDTH - INSET * 2) // CELL_W
 ROWS = (HEIGHT - INSET * 2) // PITCH
-# Whole cells rarely divide the face evenly, so the page is centred on what is left over rather than
+# Whole cells rarely divide the face evenly, so the page is centred on what is left over and not
 # laid from the inset, which would collect the remainder down one side. Measured to the ink: the last
 # row's leading is not part of the page, and counting it would push everything up
 TEXT_X = (WIDTH - COLUMNS * CELL_W) // 2
@@ -176,7 +175,7 @@ CELL_AT = {letter: index * CELL_W for index, letter in enumerate(CHARSET)}
 print(f"{COLUMNS} columns by {ROWS} rows, in cells of {CELL_W}x{CELL_H} on a pitch of {PITCH}")
 print(f"{len(CHARSET)} characters baked, {glyphs.width}x{glyphs.height}")
 
-# Two rects, moved rather than made: a page is up to a thousand cells and a rect apiece every frame is
+# Two rects, moved and not made: a page is up to a thousand cells and a rect apiece every frame is
 # what makes an animation judder, the heap moving faster than the collector likes
 source = rect(0, 0, CELL_W, CELL_H)
 target = rect(0, 0, CELL_W, CELL_H)
@@ -275,7 +274,7 @@ try:
                     entry, typed = entry + 1, 0
                     held_to = time.ticks_add(time.ticks_ms(), THINK_MS)
             else:
-                # The machine's answer, a line to a frame, which is what makes it faster than the typing
+                # The machine's answer, a line to a frame, which makes it faster than the typing
                 print_line(SESSION[entry])
                 entry, served = entry + 1, served + 1
                 if entry >= len(SESSION):

@@ -12,8 +12,8 @@ ribbon, the coin as a badge, a few statuses, and the seven RGB outputs standing 
 line the board came down.
 
 Everything is drawn at half the panel's size and doubled on the way out, so every pixel on
-the glass is a square of four and the whole interface shares the chunky coin's grain
-rather than fighting it. That costs a quarter of the canvas and a quarter of the drawing,
+the glass is a square of four and the whole interface shares the chunky coin's grain and does not
+fight it. That costs a quarter of the canvas and a quarter of the drawing,
 and the panel receives the same pixels either way. Doubling is nearest by nature: a smooth
 enlargement would blur type that is already tight, and smear the dither that gives the
 coin its character.
@@ -69,7 +69,7 @@ RIBBON_DITHER = 8                       # Jitter on every other band, which scat
 
 # The statuses: a label, what it says, and the colour that carries. A state is coloured for what it means and
 # a count is not a state, so a number stays in the type's own ink. Measured, not estimated: the longest is 100
-# of the 160 the interface has, which is what lets the bullets sit this close to the badge
+# of the 160 the interface has, which lets the bullets sit this close to the badge
 STATE_GOOD = color.rgb(0, 136, 0)       # Both on the panel's own grid of 16 levels a channel, and both short
 STATE_BAD = color.rgb(204, 0, 0)        # of full, a saturated hue having little to give against white
 STATUSES = (("CREW ON DUTY", "40", INK),
@@ -82,9 +82,9 @@ HEADING = "ASSEMBLY LINE"               # What the row of lamps is, since seven 
 STAGE_MS = 900                          # How long a stage holds before the board moves on
 DIM = 0.08                              # What every output but the live one holds, so the line is never dark
 LAMP_R = 3
-# The light on the plate is drawn as rings rather than added by bloom(), which lifts what is already bright
-# and so leaves a saturated red or blue lamp with no glow at all: their luminance is below any threshold the
-# paler hues need to be lifted at
+# The light on the plate is drawn as rings rather than added by bloom(). That lifts what is
+# already bright, so a saturated red or blue lamp gets no glow at all: its luminance is below any
+# threshold the paler hues need to be lifted at
 GLOW_R = LAMP_R + 3                     # How far a lit lamp's light reaches onto the plate around it
 SPRITE_R = GLOW_R + 1                   # And the pixel of clear margin past it the sprite keeps
 GLOW_STEPS = 5                          # Rings it is built from, drawn largest first so they build inwards
@@ -120,7 +120,7 @@ NUMBER_NUDGE = 1                        # A digit reads better a pixel right of 
 LAMP_Y = NUMBER_TOP - LAMP_R - 1
 HEADING_TOP = LAMP_Y - LAMP_R - body_face.height - 2
 STATUS_DOWN = 1                         # The statuses sit a pixel below the badge's own top, which is what
-                                        # squares them against it rather than against the plate behind it
+                                        # squares them against it, not against the plate behind it
 BULLET_DOWN = 5                         # Where a bullet sits against its line, which is nearer the middle
                                         # of the type than the top of the space it is given
 ROW_INSET = 4                           # Nudges the lamps if the panel and the connectors do not line up
@@ -159,8 +159,8 @@ def glyph_blanks(face, glyph, size, tall, down):
     or two, and it shows.
 
     Only the two end glyphs of a string need measuring, advances adding up without kerning, so this draws one
-    glyph rather than a whole line. The scratch is fresh, an image starting empty, so any non zero byte is
-    ink, and each row is read whole rather than pixel by pixel. Answers are kept, faces and sizes here being
+    glyph, not a whole line. The scratch is fresh, an image starting empty, so any non zero byte is
+    ink, and each row is read whole, not pixel by pixel. Answers are kept, faces and sizes here being
     few.
     """
     kept = __blanks.get((glyph, size))
@@ -196,7 +196,7 @@ def glyph_blanks(face, glyph, size, tall, down):
 
 
 def centred_on_ink(face, text, size, tall, down, across=None):
-    """The x to draw the text at for its ink to sit centred, worked out once rather than every frame."""
+    """The x to draw the text at for its ink to sit centred, worked out once, not every frame."""
     before = glyph_blanks(face, text[0], size, tall, down)[0]
     after = glyph_blanks(face, text[-1], size, tall, down)[1]
     return ((across or WIDTH) - (measure(face, text, size) - before - after)) / 2 - before
@@ -211,7 +211,7 @@ def plate(render, x, y, w, h, screws=True):
     """A raised plate, in the interface's coordinates: a shadow, a face, a lit inside edge, and screws.
 
     Both plates come from here, so the badge and the line read as parts of one machine. None of it is pixel
-    aligned by design: it is drawn at twice the size and reduced, so an edge lands between two of the panel's
+    aligned by design. It is drawn at twice the size and reduced, so an edge lands between two of the panel's
     pixels and arrives as shading, which is what a picture of a real plate does.
     """
     box = (x * REDUCE, y * REDUCE, w * REDUCE, h * REDUCE)
@@ -300,7 +300,7 @@ def build_ground():
         ground.pen = tone
         ground.text(state, STATUS_LEFT + 6 + measure(body_face, lead, 1), top, 1)
 
-    # The numbers, which are read rather than looked at, so they are type and not part of the render
+    # The numbers, which are read, not looked at, so they are type and not part of the render
     ground.pen = RULE
     for index in range(len(STAGES)):
         number = str(index + 1)
@@ -310,7 +310,7 @@ def build_ground():
 
 def lamp_origin(index):
     """The interface pixel a lamp's sprite is blitted at. The lamps are spaced to match the connectors, so a
-    centre falls between two pixels: the whole part places the sprite and the fraction is drawn into it, which
+    centre falls between two pixels. The whole part places the sprite and the fraction is drawn into it, which
     keeps the row evenly spaced without asking a blit for a fractional position."""
     return int(cell_centre(index)) - SPRITE_R, LAMP_Y - SPRITE_R
 
@@ -414,7 +414,7 @@ marked = time.ticks_ms()
 build_ground()
 
 # What the ribbon and the lamps are labelled with, and where each sits to be centred on its own ink. Measured
-# once here rather than every frame, a string's width being fixed once its face is
+# once here, not every frame, a string's width being fixed once its face is
 HEADINGS = tuple(f"{HEADING} = {stage}" for stage in STAGES)
 TAGLINE_AT = centred_on_ink(body_face, TAGLINE, 1, body_face.height + 2, 0)
 HEADING_AT = tuple(centred_on_ink(body_face, text, 1, body_face.height + 2, 0) for text in HEADINGS)

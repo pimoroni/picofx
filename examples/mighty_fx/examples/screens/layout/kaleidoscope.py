@@ -73,9 +73,8 @@ screen = ScreenType(mighty.spce_a)
 # swaps the sides, this being the panel as it is mounted rather than as it is wired
 TILE_W, TILE_H = screen.height // 2, screen.width // 2
 
-# The circle then has to reach the window's far corner, since that corner is the furthest
-# from the middle that the mirrors show. Taking the radius from the window is what lets the
-# beads go straight in at the size they are drawn: a pixel of the circle is a pixel of the
+# The circle reaches the window's far corner, the furthest point from the middle that the
+# mirrors show. Taking the radius from the window keeps a pixel of the circle a pixel of the
 # frame, with no scaling anywhere
 CIRCLE = round(math.sqrt(TILE_W * TILE_W + TILE_H * TILE_H))
 
@@ -152,11 +151,9 @@ try:
         # Both axes mirrored, so the panel is four reflections of the window meeting at the
         # folds, and the window underneath them is the only thing that changes.
         #
-        # The offset is what puts the folds in the right place. A window placed one of
-        # itself along and down sits in the far quarter of the panel, so the corner holding
-        # the middle of the circle lands in the middle of the panel and the mirrors meet
-        # there, which is one kaleidoscope. Leave it out and the window is centred instead,
-        # putting a fold through the middle and four half centres around it
+        # The offset puts the folds in the right place: a window placed one of itself along
+        # and down lands the middle of the circle in the middle of the panel. Without it a
+        # fold runs through the middle instead.
         screen.update(wheel[frames // HOLD % FRAMES], rotation=ROTATION,
                       tile=Tile.MIRROR, bg_color=GROUND, offset=(TILE_W, TILE_H))
         frames += 1

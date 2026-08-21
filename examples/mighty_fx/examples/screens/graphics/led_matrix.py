@@ -17,7 +17,7 @@ Press "Boot" to exit the program.
 # Constants for drawing
 PIXEL = 8                       # Panel pixels across one lamp, so how coarse the matrix is
 APERTURE = 0.7                  # The lit hole, as a fraction of a lamp's width
-SOFTEN = 1.0                    # Panel pixels the aperture's edge fades over, which is what rounds it
+SOFTEN = 1.0                    # Panel pixels the aperture's edge fades over, which rounds it
 MASK = color.black              # The face the lamps are set behind
 RAINBOWS = 1.5                  # Full rainbows across the matrix corner to corner, so how dense it is
 # A matrix moves its pattern in whole lamps, so the only even step is a whole number of them a frame. Timed
@@ -33,7 +33,7 @@ mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a)
 
 # A matrix sign is wider than it is tall, so the canvas is drawn landscape and every update turns it a
-# quarter onto the panel. From the screen rather than image(), which puts it in SRAM and halves both the
+# quarter onto the panel. From the screen, not image(), which puts it in SRAM and halves both the
 # mask read and the frame written
 canvas = screen.canvas(screen.height, screen.width)
 WIDTH, HEIGHT = canvas.width, canvas.height
@@ -125,7 +125,7 @@ def bake_rainbow():
 rainbow = bake_rainbow()
 
 # Every rect a frame needs, built once. A rect is an object, so making them in the loop allocated 60 a
-# frame, and the couple of kilobytes that came to brought a collection round every eighth frame: a 70ms
+# frame. The couple of kilobytes that came to brought a collection round every eighth frame: a 70ms
 # pause in a 90ms frame, which showed as the wave jumping rather than as a slow one
 SCALE_FROM = rect(0, 0, COLUMNS, ROWS)
 SCALE_TO = rect(LEFT, TOP, COLUMNS * PIXEL, ROWS * PIXEL)

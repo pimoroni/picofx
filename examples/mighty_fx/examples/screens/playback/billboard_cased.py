@@ -12,7 +12,7 @@ it goes.
 This is what a canvas is for. A poster sent straight to the panel is what the file says
 and nothing more; drawn into a canvas first, anything can go over it, and here that is a
 case around the edge and light across the glass. The poster changes and the case does not,
-which is what makes it read as a case.
+which makes it read as a case.
 
 The pane is the same for every poster, so it is drawn once into an image of its own and
 blitted over each one, which turns some thirty antialiased polygons into a startup cost.
@@ -39,7 +39,7 @@ ROTATION = 0                     # Portrait, which is the shape these posters ar
 DWELL = 3.0                      # Seconds a poster is up for
 LEVEL = 17                       # One of the panel's 16 levels a channel, which is the least that shows
 CASE_WIDE = 4                    # How far the case reaches over the poster
-CASE_ROUND = 10                  # The window's corner, which is what hides the poster's square one
+CASE_ROUND = 10                  # The window's corner, which hides the poster's square one
 GLASS = color.rgb(28, 44, 66)    # What a sheet of glass takes out of what is behind it
 SKY = color.rgb(225, 242, 255)   # And what it gives back
 CASE = color.rgb(150, 150, 150)

@@ -15,7 +15,7 @@ Press "Boot" to exit the program.
 # match is the bolder face that still fits, a wider one running a five character line off a board
 # this size. dir(font) lists all 37
 SIGN_FONT = "match"                 # The lettering, drawn one pixel to a dot
-CELL = 10                           # The dot pitch in pixels, which is what sets how much the sign holds
+CELL = 10                           # The dot pitch in pixels, which sets how much the sign holds
 DOT_SIDES = 8                       # Octagonal dots, as one type has. Set it to 16 for the round type
 DOT_TWIST = 22.5                    # Turns the octagon so its flats face up and along, as a real one sits
 DOT_INSET = 1                       # How much of the frame shows between one dot and the next
@@ -49,7 +49,7 @@ mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a)
 
 # The sign is wider than it is tall, so the canvas is drawn landscape and every update turns it a
-# quarter turn onto the panel. It comes from the screen rather than from image(), which puts it in
+# quarter turn onto the panel. It comes from the screen, not from image(), which puts it in
 # SRAM instead of on the PSRAM heap, halving what the update pays per pixel
 canvas = screen.canvas(screen.height, screen.width)
 columns = canvas.width // CELL
@@ -61,14 +61,13 @@ pattern = image(columns, rows)
 
 DOT = CELL - DOT_INSET * 2
 
-# A radius that reaches the dot's flats to the edge of its tile rather than its corners, and a
-# half pixel across to sit the shape on the pixel grid. Without the offset the right and bottom of
-# the dot fall outside the tile and one corner comes out square instead of chamfered. Eight pixels
-# of dot is the smallest that chamfers evenly, which is what CELL and DOT_INSET are set for
+# A radius that reaches the dot's flats to the edge of its tile, not its corners, and a half pixel
+# across to sit the shape on the pixel grid. Without the offset one corner comes out square instead of
+# chamfered. Eight pixels of dot is the smallest that chamfers evenly, which CELL and DOT_INSET are set for
 REACH = 1.0 / math.cos(math.pi / DOT_SIDES)
 NUDGE = 0.5
 
-# The post in whole pixels, so a wider pitch carries a larger one rather than the same two pixels
+# The post in whole pixels, so a wider pitch carries a larger one, not the same two pixels
 # sitting in a bigger dot. It is drawn as an octagon like the dot, which at this size comes out a
 # square with its corners off, and that is what a post looks like
 PIN_PIXELS = max(2, round(DOT * PIN_SHARE))
@@ -207,7 +206,7 @@ def schedule(wanted, now):
     """A start time for every dot that has to change, each column later than the one before.
 
     Only the dots that differ are given one, so the sign turns over what the message changed and
-    leaves the rest standing, which is what makes a real board rattle in patches.
+    leaves the rest standing, which makes a real board rattle in patches.
     """
     flips = []
     for index in range(columns * rows):

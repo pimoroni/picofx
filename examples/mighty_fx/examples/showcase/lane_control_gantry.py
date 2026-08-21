@@ -6,7 +6,7 @@ from picovector import color, font, image, rect, shape
 """
 Draw a motorway lane control gantry, a signal to a lane, working through a lane closure.
 
-A signal is a square RGB lamp matrix with a lamp in each corner, which is what makes the
+A signal is a square RGB lamp matrix with a lamp in each corner, which makes the
 40 a ring of discrete lamps rather than a drawn circle. The aspect is drawn at the
 matrix's own resolution, scaled up a lamp to a block, and a baked mask laid over it; the
 corner lamps are not part of the matrix, so they go on over the top and flash a side at a
@@ -14,7 +14,7 @@ time, for a closed lane only.
 
 A panel on a screen hub is a lane, so the gantry is as wide as the hub is populated. The
 lanes change together, which is what a group is for: an aspect is drawn once and streamed
-to every lane showing it, so a four lane gantry is one or two writes rather than four.
+to every lane showing it, so a four lane gantry is one or two writes, not four.
 
 Press "Boot" to exit the program.
 """
@@ -31,18 +31,18 @@ ROTATION = 90                   # A signal is drawn landscape and turned a quart
 LAMP = 6
 APERTURE = 0.7                  # The lit hole, as a fraction of a lamp's width
 SOFTEN = 1.0                    # Panel pixels the aperture's edge fades over
-CORNER_AIR = 3                  # The face left showing around a corner lamp, which is what sets it in
+CORNER_AIR = 3                  # The face left showing around a corner lamp, which sets it in
 
 HOUSING = color.black           # What the signals are set into
 FACE = color.rgb(17, 17, 17)    # A signal's own face, so it reads as a panel even when it is blank
-KEYLINE = color.rgb(51, 51, 51)  # Its edge, which is what finds it against the housing
+KEYLINE = color.rgb(51, 51, 51)  # Its edge, which finds it against the housing
 UNLIT = color.rgb(34, 34, 34)   # A lamp that is not lit, a shade up from the face behind it
 # A red aspect: the ring of a speed limit, the X of a closed lane, and a corner lamp lit
 RED = color.rgb(255, 34, 34)
 # The number inside a ring, the national speed limit's disc, and the arrow into the lane alongside
 WHITE = color.rgb(238, 238, 238)
 GREEN = color.rgb(0, 221, 170)   # An arrow straight down, green being the colour for a lane open
-# A corner lamp between flashes, which stays visibly red rather than dark. Lit, it is the same red as an
+# A corner lamp between flashes, which stays visibly red, not dark. Lit, it is the same red as an
 # aspect, the lamps on a real signal being the one colour
 CORNER_OFF = color.rgb(51, 17, 17)
 
@@ -71,7 +71,7 @@ SIXTY = ("speed", 60)
 # What the gantry shows, a setting at a time and an aspect to a lane, as wide as a full hub so that however
 # many answered are all driven. Two lanes close, one at a time and each pointing drivers into the lane beside
 # it first, and the national speed limit goes up as the restriction is lifted, which is the order a real one
-# works in. Two lanes carrying the same aspect is also what makes a write a subset rather than a single panel
+# works in. Two lanes carrying the same aspect is also what makes a write a subset and not a single panel
 GANTRY = (
     (BLANK, BLANK, BLANK, BLANK, BLANK, BLANK),
     (OPEN, OPEN, OPEN, OPEN, OPEN, OPEN),
@@ -86,7 +86,7 @@ GANTRY = (
 )
 
 # Create a MightyFX object with a screen hub across both SP/CE ports. One carries the screen bus and the other
-# gives up its five lines as extra chip selects, which is what lets one port drive six panels instead of one
+# gives up its five lines as extra chip selects, which lets one port drive six panels instead of one
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_LINES)
 
 # The hub hands out a port per chip select it reaches, whether or not a panel is on the end of it. A panel
@@ -104,13 +104,12 @@ if not screens:
     mighty.shutdown()
     raise RuntimeError("No panels answered! Check the hub is plugged into SP/CE A, with its panels on the hub rather than on the board")
 
-# A group holds the lanes to one refresh and brings their scans together, so a setting reaches all of them on
-# one frame and any tear band crawls rather than races along the gantry. One panel is still a gantry, and a
-# group of one takes it, so however many answered are driven the same way
+# A group holds the lanes to one refresh, so a setting reaches all of them on one frame and any tear band
+# crawls along the gantry. A group of one is still a gantry, so however many answered are driven the same way
 gantry = ScreenGroup(*screens)
 
 # The distinct aspects each setting calls for, over the lanes that answered, worked out once. This is what
-# makes a setting cost a write per aspect rather than per lane
+# makes a setting cost a write per aspect, not per lane
 ASPECTS_IN = []
 for setting in GANTRY:
     distinct = []
@@ -121,7 +120,7 @@ for setting in GANTRY:
     ASPECTS_IN.append(distinct)
 
 # One canvas serves every lane, drawn again for each aspect a setting calls for. Landscape and turned a
-# quarter onto the panels. On the heap rather than in SRAM, a gantry redrawing only when it changes
+# quarter onto the panels. On the heap, not in SRAM, a gantry redrawing only when it changes
 WIDTH, HEIGHT = screens[0].height, screens[0].width
 canvas = image(WIDTH, HEIGHT)
 
@@ -131,7 +130,7 @@ SIGNAL_X = (WIDTH - SIGNAL) // 2
 SIGNAL_Y = (HEIGHT - SIGNAL) // 2
 
 # The matrix is exactly the ring, that being the widest aspect, and odd across so a middle lamp exists to
-# centre the rest on. Sizing it to the aspects rather than to the space left over is what leaves the corner
+# centre the rest on. Sizing it to the aspects, not to the space left over is what leaves the corner
 # lamps room: nothing is drawn in a border the ring does not reach
 CELLS = RING_RADIUS * 2 + 1
 MIDDLE = RING_RADIUS
@@ -267,7 +266,7 @@ def bake_mask():
     """The signal's face, with an aperture over every lamp of the matrix and everything else opaque.
 
     Baked once, and shared by both lanes since every signal is the same shape. A lamp tile is blitted across
-    a row and the row down the matrix, which is a few dozen blits rather than one per lamp.
+    a row and the row down the matrix, which is a few dozen blits, not one per lamp.
     """
     tile = image(LAMP, LAMP)
     tile.pen = color.transparent
@@ -333,7 +332,7 @@ def lamp_stroke(from_x, from_y, to_x, to_y, weight, across, carry=(0, 0)):
     """Light a stroke of whole lamps between two lamps, square on or at 45 degrees, a row at a time.
 
     Not through the rasteriser, which cannot place these: a 45 degree vector stroke lights an even count of
-    lamps along a row whatever its thickness, and an even count cannot sit symmetrically on a matrix whose
+    lamps along a row whatever its thickness. An even count cannot sit symmetrically on a matrix whose
     middle is a lamp, so one arm of a cross always came out a lamp short of the other.
 
     `weight` is the count across a stroke running square on, and `across` the count along a row where it runs
@@ -341,7 +340,7 @@ def lamp_stroke(from_x, from_y, to_x, to_y, weight, across, carry=(0, 0)):
     so a tip tapers to one lamp the way a real sign's does.
 
     `carry` moves each end along the stroke, the first point then the second, out being positive. Out is how
-    two barbs come to a point of their own instead of stopping where their middles cross; in by one is what
+    two barbs come to a point of their own instead of stopping where their middles cross. In by one is what
     leaves a diagonal tip a single lamp, which it cannot be otherwise, a symmetric run's ends both falling on
     an even count.
     """
@@ -378,13 +377,13 @@ def lamp_stroke(from_x, from_y, to_x, to_y, weight, across, carry=(0, 0)):
 def draw_national():
     """The national speed limit: a white disc with a band across it, low on the left to high on the right.
 
-    The band is unlit lamps, a sign's black stripe on a lamp matrix being simply where the lamps are off.
+    The band is unlit lamps, a sign's black stripe on a lamp matrix being where the lamps are off.
     The line runs past the disc on both sides, so it cuts clean to the edge at either end.
     """
     lamps.pen = WHITE
     lamps.circle(CELLS / 2, CELLS / 2, RING_RADIUS)
 
-    # Past the disc at both ends, so the band cuts clean to its edge rather than stopping inside it
+    # Past the disc at both ends, so the band cuts clean to its edge and does not stop inside it
     lamps.pen = UNLIT
     over = RING_RADIUS + 1
     lamp_stroke(MIDDLE - over, MIDDLE + over, MIDDLE + over, MIDDLE - over,
@@ -419,7 +418,7 @@ def draw_arrow(towards):
     corner_y = MIDDLE + point[1] * at
     for barb in barbs:
         # A square barb's middle sits in from the corner by half its weight. A diagonal one is carried past
-        # the corner instead, so the pair comes to a point rather than stopping where their middles cross
+        # the corner instead, so the pair comes to a point and does not stop where their middles cross
         square = barb[0] == 0 or barb[1] == 0
         slip_x = -point[0] * (STROKE // 2) if barb[0] == 0 else 0
         slip_y = -point[1] * (STROKE // 2) if barb[1] == 0 else 0
@@ -466,7 +465,7 @@ def send(setting, on_the_left):
     """One setting to the gantry, an aspect at a time, each streamed to every lane showing it.
 
     That is what a group is for: `to` names the lanes a frame reaches, so the ones sharing an aspect are
-    written together on one frame, and a setting costs a write per distinct aspect rather than per lane. A
+    written together on one frame, and a setting costs a write per distinct aspect, not per lane. A
     gantry showing one limit across four lanes is a single write.
     """
     for aspect in ASPECTS_IN[setting]:

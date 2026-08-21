@@ -15,29 +15,28 @@ Press "Boot" to exit the program.
 SLATS = 20                          # How many prisms the board is split into across its width
 TURN_MS = 1600                      # How long a slat takes to turn a third of the way round
 # A turn crosses the board as a wave, which is both what a mechanical board does and what keeps the
-# drawing cheap: only the slats moving at a given moment are redrawn, and the wider this is set the
+# drawing cheap. Only the slats moving at a given moment are redrawn, and the wider this is set the
 # fewer of them there are at once. Roughly TURN_MS over this many are moving together
 STAGGER_MS = 200                    # How much later each slat starts turning than the one left of it
 HOLD = 3.0                          # How long a poster faces out before the board turns again
 # The panel is 12 bit, so each channel has 16 levels and a shading ramp crossing one shows as a hard
 # step between neighbouring slats. A slat barely off square on is not visibly turning, so a step
-# there reads as a fault: shading holds off until SHADE_FROM and then runs to AMBIENT at edge on,
+# there reads as a fault. Shading holds off until SHADE_FROM and then runs to AMBIENT at edge on,
 # which puts every step on a face that is plainly moving and narrowing as well
 SHADE_FROM = 20                     # How far a face turns before it is shaded at all, in degrees
 AMBIENT = 90                        # How lit it is by edge on, against 255 facing out
 POSTER_FONT = "awesome"             # The lettering on the posters. dir(font) lists all 37
 POSTER_SCALE = 3                    # Pixel fonts scale by whole numbers, so 3 is triple size
 
-# Files to put on the faces instead of the drawn posters, as many as there are or none at all. Each
-# is fitted to the whole board as it loads, so one shaped differently is stretched rather than
-# cropped, and fewer than three faces' worth are used again in turn. A board without them says so
-# and draws the posters, so the example runs whatever is or is not on this one
+# Files to put on the faces instead of the drawn posters, as many as there are or none at all. Each is
+# fitted to the whole board as it loads, so one shaped differently is stretched, not cropped, and fewer
+# than three faces' worth are used again in turn. Without them the example says so and draws the posters
 POSTER_FILES = ("/examples/assets/billboards/landscape/lambo.png",
                 "/examples/assets/billboards/landscape/tufty.png",
                 "/examples/assets/billboards/landscape/frum.png")
 
 # One poster to a face, so a third of a turn brings the next one round and three turns come back to
-# the first. Drawn here rather than loaded, which is what lets the board run with no files at all
+# the first. Drawn here rather than loaded, which lets the board run with no files at all
 POSTERS = (
     ("SUMMER", color.rgb(216, 72, 32), color.rgb(255, 236, 180), color.rgb(255, 176, 40)),
     ("SALE", color.rgb(24, 64, 148), color.rgb(240, 248, 255), color.rgb(96, 168, 232)),
@@ -50,7 +49,7 @@ mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a)
 
 # The board is wider than it is tall, so the canvas is drawn landscape and every update turns it a quarter
-# turn onto the panel. It comes from the screen rather than from image(), which puts it in SRAM instead of on
+# turn onto the panel. It comes from the screen, not from image(), which puts it in SRAM instead of on
 # the PSRAM heap, halving both the blit that writes every pixel and the update that reads them back. The
 # posters stay on the heap: only one canvas of this size fits the region
 canvas = screen.canvas(screen.height, screen.width)
@@ -120,7 +119,7 @@ def showing(turn):
 
     A slat is an equilateral prism, so its faces sit 120 degrees apart and at most two ever face
     out. A face's width projects as the slat's own by the cosine of its angle, and its middle sits
-    APOTHEM by the sine of it from the slat's axis, which is what slides a face across as it turns.
+    APOTHEM by the sine of it from the slat's axis, which slides a face across as it turns.
 
     The two together are why the wall shows through part way round: with a face square on the slat
     covers its whole pitch, and with a corner square on it covers only 0.866 of it.
@@ -151,8 +150,8 @@ def draw(turns):
     board as a wave only a handful are moving at once.
 
     The neighbours of a changed slat are redrawn too. A turning slat overhangs its own pitch by up
-    to a pixel, so blanking a pitch takes a slice of whatever is beside it, and the slat outside
-    the wave is square on and overhangs nothing, which is what stops that spreading any further.
+    to a pixel, so blanking a pitch takes a slice of whatever is beside it. The slat outside
+    the wave is square on and overhangs nothing, which stops that spreading any further.
     """
     changed = [slat for slat in range(SLATS) if turns[slat] != drawn[slat]]
     if not changed:

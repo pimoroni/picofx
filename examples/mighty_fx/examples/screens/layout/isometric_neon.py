@@ -58,7 +58,7 @@ SPIRE_LIT = color.rgb(255, 96, 226)
 SPIRE_FOOT = color.rgb(38, 8, 60)
 
 # The lattice: a corner sits at (p * CELL_W / 2, q * CELL_H / 2), and a cell's centre at
-# the same spacing on the other parity, which is what interlocks them. Both counts are
+# the same spacing on the other parity, which interlocks them. Both counts are
 # the tile's own repeat, so a corner looked up past the edge is the one that wraps to it
 P_PERIOD = TILE_W // (CELL_W // 2)
 Q_PERIOD = TILE_H // (CELL_H // 2)
@@ -102,7 +102,7 @@ def corner_level(p, q):
 
 
 # One level per corner, so a corner shared by four cells is worked out once and they all
-# agree on it, which is what leaves the terraces without a crack
+# agree on it, which leaves the terraces without a crack
 CORNERS = [[corner_level(p, q) for q in range(Q_PERIOD)] for p in range(P_PERIOD)]
 
 

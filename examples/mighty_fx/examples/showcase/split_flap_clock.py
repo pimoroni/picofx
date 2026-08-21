@@ -20,7 +20,7 @@ FLAP_MS = 260                       # How long one card takes to fall
 CARD = color.rgb(34, 34, 38)        # The face of a card
 SHADOW = color.rgb(17, 17, 19)      # The top edge of a card, recessed behind the one in front
 HOUSING = color.rgb(17, 17, 19)     # The case the cards are set into, a level between them and board
-KEYLINE = color.rgb(51, 51, 56)     # The case edge, which is what finds it against the board
+KEYLINE = color.rgb(51, 51, 56)     # The case edge, which finds it against the board
 HIGHLIGHT = color.rgb(85, 85, 92)   # A lit edge along the top of the case, light coming from above
 INK = color.rgb(238, 238, 232)      # And the lettering on it
 SPLIT = color.rgb(8, 8, 9)          # The line the cards are hinged on, and the gaps between them
@@ -32,7 +32,7 @@ CORNER = 6                          # How far the outer corners of a card are ro
 SHADOW_H = 3                        # How deep the shadow on a card top reads
 BEZEL = 8                           # How far the case stands out around the cards
 MARGIN = 6                          # Around the whole row
-SEPARATOR = 14                      # The colons, which are painted on rather than flapped
+SEPARATOR = 14                      # The colons, which are painted on, not flapped
 ANTIALIAS = image.X2                # Lettering this size is worth smoothing
 CELL_H = 96                         # How tall a card is
 
@@ -41,7 +41,7 @@ mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a)
 
 # The row is wider than it is tall, so the canvas is drawn landscape and every update turns it a
-# quarter turn onto the panel. From the screen rather than image(), which puts it in SRAM: every
+# quarter turn onto the panel. From the screen, not image(), which puts it in SRAM: every
 # pixel of a falling card is written by a blit and read again by the update, so both halve
 canvas = screen.canvas(screen.height, screen.width)
 WIDTH, HEIGHT = canvas.width, canvas.height
@@ -107,7 +107,7 @@ SIZE = card_size()
 INK_TOP = ink_top(SIZE)
 EM_BOX = round(SIZE) + 2          # What a text rect has to cover, text() clipping to it
 
-# Every character of the drum drawn once, a card to each, so a flap is a blit rather than lettering
+# Every character of the drum drawn once, a card to each, so a flap is a blit, not lettering
 # drawn again. Two rows of it: the top half of a card and the bottom half, which fall separately
 drum = image(CELL_W * len(DRUM), CELL_H)
 drum.pen = SPLIT
@@ -124,15 +124,15 @@ for index, letter in enumerate(DRUM):
     drum.shape(shape.rounded_rectangle(rect(left, HALF + SPLIT_H - SPLIT_H // 2,
                                             CELL_W, HALF - SPLIT_H), 0, 0, CORNER, CORNER))
 
-    # Each card is recessed behind the one in front, so its top edge is shadowed. Drawn into the drum
-    # rather than per frame, and under both halves: the lower one is shadowed by the hinge above it
+    # Each card is recessed behind the one in front, so its top edge is shadowed. Drawn into the drum and not
+    # per frame, and under both halves: the lower one is shadowed by the hinge above it
     drum.pen = SHADOW
     drum.rectangle(rect(left, 0, CELL_W, SHADOW_H))
     drum.rectangle(rect(left, HALF + SPLIT_H - SPLIT_H // 2, CELL_W, SHADOW_H))
 
     wide = drum.measure_text(letter, font_size=SIZE)[0]
     drum.pen = INK
-    # text() clips to the rect, so it covers the whole em box rather than the card: the box starts
+    # text() clips to the rect, so it covers the whole em box rather than the card. The box starts
     # above the card to bring the ink down onto it, and a rect sized to the card would cut the ink off
     drum.text(letter, rect(left + round((CELL_W - wide) / 2), INK_TOP, CELL_W, EM_BOX),
               font_size=SIZE)
@@ -180,7 +180,7 @@ def falling(flap, from_index, to_index, part):
     target.x, target.w = places[flap], CELL_W
 
     # The new character's upper half stands behind for the whole fall, whole and the right way up:
-    # it is waiting there rather than arriving, so it is never squashed. Drawn every frame, and not
+    # it is waiting there and not arriving, so it is never squashed. Drawn every frame, and not
     # only while the card is above the hinge, or the last sliver of card outlives the card
     target.y, target.h = TOP, HALF
     canvas.blit(drum, half_of(to_index, False), target)
@@ -214,7 +214,7 @@ def clock_now(started):
 
 
 # The board comes up blank and climbs to the time, a card at a time, which is what a real one does
-# from cold and what shows the drum being wound round rather than simply set
+# from cold and what shows the drum being wound round and not set
 canvas.pen = BOARD
 canvas.clear()
 
@@ -245,7 +245,7 @@ turning = [None] * FLAPS            # When the card at this place started fallin
 for flap in range(FLAPS):
     settled(flap, 0)
 
-# The colons, painted on the board between the pairs rather than carried on a card
+# The colons, painted on the board between the pairs, not carried on a card
 canvas.pen = INK
 for position in (1, 3):
     middle = places[position] + CELL_W + GAP + SEPARATOR // 2

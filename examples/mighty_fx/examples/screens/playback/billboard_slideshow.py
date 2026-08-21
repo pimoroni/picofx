@@ -10,7 +10,7 @@ picture, so nothing needs a canvas, and it is what the other examples in this fo
 to.
 
 Every poster decodes into the heap when the player is made, so the whole folder is held
-before the first one shows. These are palettised, which is what keeps that affordable:
+before the first one shows. These are palettised, which keeps that affordable:
 eleven of them are about 850KB where truecolour ones would be four times that.
 
 Press "Boot" to exit the program.

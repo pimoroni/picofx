@@ -10,7 +10,7 @@ Ask the colour module for a set of colours rather than picking them by hand.
 
 The first two strips are the same eight hues twice, once through hsv and once through oklch.
 hsv holds the numbers even and lets the lightness wander, so its yellow glares and its blue
-sinks; oklch holds the lightness even instead, which is what makes a row of it read as one
+sinks; oklch holds the lightness even instead, which makes a row of it read as one
 family. That is the whole reason to reach for it.
 
 Under those, three calls that hand back a set: harmony() for hues that belong together,

@@ -15,7 +15,7 @@ The ground slopes because its height is held at the corners of the lattice and n
 middle of each cell. A cell whose four corners sit at different heights is drawn as a
 sloping quad, and neighbouring cells share those corners, so the surface comes out
 continuous rather than as steps. Which way a cell tilts also decides how much light it
-takes, which is what makes the hills read as hills.
+takes, which makes the hills read as hills.
 
 It tiles cleanly because the height at every corner is looked up by wrapped coordinates and
 the loops run past the tile's edges, so a hill straddling one finishes itself on the
@@ -61,7 +61,7 @@ TRUNK = color.rgb(84, 52, 28)
 SHADOW = color.rgb(20, 108, 72)
 
 # The lattice: a corner sits at (p * CELL_W / 2, q * CELL_H / 2), and a cell's centre at
-# the same spacing on the other parity, which is what interlocks them. Both counts are
+# the same spacing on the other parity, which interlocks them. Both counts are
 # the tile's own repeat, so a corner looked up past the edge is the one that wraps to it
 P_PERIOD = TILE_W // (CELL_W // 2)
 Q_PERIOD = TILE_H // (CELL_H // 2)
@@ -75,7 +75,7 @@ ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a)
 
-# The tile is drawn once and never touched again, so it lives in the heap rather than in
+# The tile is drawn once and never touched again, so it lives in the heap and not in
 # the fast SRAM a canvas would claim: converting a heap source still finishes inside the
 # time the frame spends on the wire
 terrain = image(TILE_W, TILE_H)
@@ -103,7 +103,7 @@ def corner_height(p, q):
 
 
 # One height per corner, so a corner shared by four cells is worked out once and they
-# all agree on it, which is what leaves the surface without a crack
+# all agree on it, which leaves the surface without a crack
 CORNERS = [[corner_height(p, q) for q in range(Q_PERIOD)] for p in range(P_PERIOD)]
 
 
@@ -123,7 +123,7 @@ def wooded(u, v):
 
 
 def scattered(u, v):
-    """One cell in TREE_SPACING, spread about rather than sitting on a grid."""
+    """One cell in TREE_SPACING, spread about, not sitting on a grid."""
     scatter = ((u % P_PERIOD + 1) * 2654435761) ^ ((v % Q_PERIOD + 1) * 2246822519)
     return scatter % TREE_SPACING == 0
 
@@ -207,7 +207,7 @@ across, down = 0.0, 0.0
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        # The view wanders rather than running in a line: two slow turns of different
+        # The view wanders, and does not run in a line: two slow turns of different
         # lengths add up to a heading that keeps bending, and the course follows it at a
         # steady speed. Any offset is valid with tiling on, so the path can be whatever
         # it likes and never needs bringing back inside the tile

@@ -64,7 +64,7 @@ LEFT = color.rgb(0, 104, 106)
 RIGHT = color.rgb(172, 140, 48)
 SEAM = color.rgb(58, 54, 50)
 
-# All three rhombi of a block are the same rhombus turned three ways, which is what makes
+# All three rhombi of a block are the same rhombus turned three ways, which makes
 # the cube read as a cube. That holds when a face is as wide as its height times the root
 # of three, so the sides come out as deep as the top face is tall
 BLOCK_W = round(BLOCK_H * 1.7320508)
@@ -161,7 +161,7 @@ for down in range(-1, 2):
 
 # The rasteriser does not treat the two slopes of a diagonal alike, so the halves of a
 # motif can come out a pixel different. This pattern is symmetric, so the left half is
-# mirrored into the right rather than trusted to match: a stray pixel at the edge of a
+# mirrored into the right rather than trusted to match. A stray pixel at the edge of a
 # tile reads as the tiles not meeting, which is the one fault a tiled source cannot hide.
 # It also makes the wrap exact, the last column being the mirror of the first
 raw, stride = hexagons.raw, hexagons.stride

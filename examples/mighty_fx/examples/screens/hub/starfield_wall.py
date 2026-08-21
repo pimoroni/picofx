@@ -57,7 +57,7 @@ centre_x, centre_y = panels[0].width / 2, panels[0].height / 2
 class RandomStar:
     def __init__(self):
         # Create a new star, with initial x, y, and size
-        # Initial x will fall between -WIDTH / 2 and +WIDTH / 2 and y between -HEIGHT/2 and +HEIGHT/2
+        # Initial x will fall between -WIDTH / 2 and +WIDTH / 2 and y between -HEIGHT/2 and +HEIGHT/2.
         # These are relative values for now, treating (0, 0) as the centre of the panel
         self.x = random.randint(0, panels[0].height) - centre_x
         self.y = random.randint(0, panels[0].height) - centre_y

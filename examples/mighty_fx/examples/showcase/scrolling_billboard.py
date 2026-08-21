@@ -30,9 +30,8 @@ DWELL = 5.0                         # How long a poster faces out before the loo
 SCROLL_MS = 4000                    # How long it takes for the next one to come up
 
 # A motor gets the loop moving, runs it, then brings it to a stand, so the move ramps at each end and
-# coasts between. RAMP is how much of it each ramp takes: 0 is no ramp and a jolt at both ends, and
-# 0.5 is all ramp and no coast, which peaks at twice the average speed in the middle of the move.
-# The middle is where a jump between frames shows most, so a coast is what keeps it smooth
+# coasts between. RAMP is how much of it each ramp takes: 0 jolts at both ends, and 0.5 is all ramp,
+# peaking at twice the average speed in the middle of the move where a jump between frames shows most
 RAMP = 0.2
 
 
@@ -41,9 +40,8 @@ mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a)
 
 # Two posters tall, and the panel's own way up, so nothing is rotated and nothing is drawn: the
-# scroll is the driver reading its frame from further down this canvas each time. On the GC heap
-# rather than in SRAM, a portrait frame from PSRAM costing the same as a landscape one from the
-# fast region, which leaves that free for anything else
+# scroll is the driver reading its frame from further down this canvas each time. On the GC heap,
+# not in SRAM: a portrait frame from PSRAM costs the same as a landscape one from the fast region
 WIDTH, HEIGHT = screen.width, screen.height
 canvas = image(WIDTH, HEIGHT * 2)
 spare = image(WIDTH, HEIGHT)
@@ -87,7 +85,7 @@ def advance(next_index):
 
     Both happen while the board is standing still, so the third of a second they take is never
     seen. Nothing is written to the panel afterwards either: the top half now holds exactly what
-    the panel is already showing, so the loop simply carries on from an offset of nothing.
+    the panel is already showing, so the loop carries on from an offset of nothing.
     """
     spare.blit(canvas, rect(0, HEIGHT, WIDTH, HEIGHT), rect(0, 0, WIDTH, HEIGHT))
     canvas.blit(spare, 0, 0)

@@ -5,7 +5,7 @@ from picovector import color, font, image, rect, shape
 
 """
 Draw a roadworks sign, the kind towed to the side of a road: amber lamps behind a dark
-face, holding a message rather than scrolling it.
+face, holding a message, not scrolling it.
 
 Two things make it this sign and not a video wall. Every character has its own small
 matrix module with a bezel all round it, so the lamps exist in a grid of cells and the
@@ -25,20 +25,19 @@ BEZEL = 1                       # Lamps of plain face between one character's mo
 LINE_BEZEL = 3                  # And between one row of modules and the next, which a sign leaves wider
 LIT = color.rgb(255, 170, 0)    # A lit lamp. Amber is the only colour these signs use
 
-# The panel is 12 bit, so a channel has 16 levels and one step up is all there is below full dark. These
-# three are what make the sign read as an object rather than as text on nothing: a module's own face
-# against the sign's, and a lamp that is not lit against the module behind it
+# These three make the sign read as an object rather than text on nothing: a module's face against the
+# sign's, and a lamp that is not lit against the module behind it
 MODULE = color.rgb(17, 17, 17)  # A module's face, between its lamps
 FACE = color.black              # And the sign's own face, which the modules are set into
-# An unlit lamp. It has to be brighter than the band behind it, not merely a different hue: at 12 bits
-# rgb(34, 17, 0) and rgb(17, 17, 17) come to the same total, and at this size the eye reads brightness
-# rather than colour
+# An unlit lamp. It has to be brighter than the band behind it, not a different hue. At 12 bits
+# rgb(34, 17, 0) and rgb(17, 17, 17) come to the same total, and at this size the eye reads brightness, not
+# colour
 UNLIT = color.rgb(68, 34, 0)
 
 HOLD = 4.0                      # How long a page of the message stands, in seconds
 BEACON_R = 12                   # A corner beacon's radius in panel pixels, it being a lamp of its own
 BEACON_MS = 500                 # How long each side's pair stays on for
-BEACON_OFF = color.rgb(51, 17, 0)   # A beacon between flashes, which stays visibly amber rather than dark
+BEACON_OFF = color.rgb(51, 17, 0)   # A beacon between flashes, which stays visibly amber, not dark
 
 # What the sign says, a page at a time and a line to a row of modules. Lines are centred by whole
 # modules, a module being the smallest thing the sign can move text by
@@ -53,7 +52,7 @@ mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a)
 
 # A sign is wider than it is tall, so the canvas is drawn landscape and every update turns it a quarter
-# onto the panel. From the screen rather than image(), which puts it in SRAM and halves both the mask
+# onto the panel. From the screen, not image(), which puts it in SRAM and halves both the mask
 # read and the frame written
 canvas = screen.canvas(screen.height, screen.width)
 WIDTH, HEIGHT = canvas.width, canvas.height
@@ -200,7 +199,7 @@ SCALE_FROM = rect(0, 0, COLUMNS, ROWS)
 SCALE_TO = rect(0, 0, COLUMNS * LAMP, ROWS * LAMP)
 
 # The four beacons, a pair to a side so they alternate left against right. In panel pixels, not lamps,
-# these being lamps of their own rather than part of any matrix
+# these being lamps of their own, not part of any matrix
 BEACON_AT = ((BEACON_R, BEACON_R), (BEACON_R, HEIGHT - BEACON_R),
              (WIDTH - BEACON_R, BEACON_R), (WIDTH - BEACON_R, HEIGHT - BEACON_R))
 
@@ -208,7 +207,7 @@ BEACON_AT = ((BEACON_R, BEACON_R), (BEACON_R, HEIGHT - BEACON_R),
 def draw_lamps(page):
     """The message on the lamp grid, a character to a module.
 
-    Drawn a character at a time rather than as a string, which is what fixes the pitch: a module holds one
+    Drawn a character at a time rather than as a string, which fixes the pitch. A module holds one
     character whatever its width, so a narrow letter sits in a wider gap exactly as it does on the road.
     """
     lamps.pen = UNLIT
@@ -223,7 +222,7 @@ def draw_lamps(page):
         y = first + line * PITCH_H
         for column, letter in enumerate(text):
             # Centred in its module, the font being proportional where the pitch is not, and lifted so the
-            # ink lands at the module's top rather than the empty rows above it
+            # ink lands at the module's top, not the empty rows above it
             wide = int(lamps.measure_text(letter, font_size=1)[0]) - BEARING
             lamps.text(letter, start + column * PITCH_W + (CELL_W - wide) // 2, y - INK_TOP, 1)
 
