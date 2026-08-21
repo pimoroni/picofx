@@ -70,6 +70,9 @@ main{max-width:44rem;margin:1.5rem auto;padding:0 1.4rem}
 .screen-row input[type=number]{font:inherit;font-size:.85rem;width:4.5rem;padding:.3rem .4rem;
  border:1px solid var(--line);border-radius:6px}
 .opt{display:flex;align-items:center;gap:.35rem;font-size:.85rem;color:var(--dim);cursor:pointer}
+.screen-row .drop{margin-left:auto;border:none;background:none;color:var(--dim);
+ font-size:1.2rem;line-height:1;padding:.1rem .5rem}
+.screen-row .drop:hover{color:var(--warn)}
 .screens h2 + .hint{margin-top:0}
 .screens h2:not(:first-child){margin-top:1rem}
 
@@ -103,6 +106,8 @@ footer{max-width:44rem;margin:0 auto 2rem;padding:0 1.4rem;font-size:.8rem;color
   </div>
   <div class="actions">
    <span id="picked-name" style="font-weight:600"></span>
+   <label class="opt grow"><input type="checkbox" id="outputs" checked>
+    play on the board's own lights</label>
   </div>
  </div>
  <div class="screens" id="screens"></div>
@@ -347,7 +352,26 @@ var state = {
   stripKept: {},     // strip -> its existing entry lines
   stripChoices: {},  // strip -> {mode: "look"|"keep"|"none"}
   media: [],         // {name, kind: "gif"|"image"|"folder"} found on the drive
+  outputs: true,     // whether the look plays on the board's own seven lights
 };
+
+
+function withoutOutputs(text) {
+  // What is left of a look with the board's own lights out of it. A scene with
+  // nothing left in it goes too, since a heading with no entries under it is a
+  // scene that shows nothing and says so in errors.txt
+  var kept = text.split("\\n").filter(function (line) {
+    return !/^out\\d/i.test(line.trim());
+  });
+  var plays = kept.some(function (line) {
+    var held = line.trim();
+    return held.indexOf(":") >= 0 && held.charAt(0) !== "[" && held.charAt(0) !== "#";
+  });
+  if (!plays) {
+    kept = kept.filter(function (line) { return line.trim().charAt(0) !== "["; });
+  }
+  return kept.join("\\n");
+}
 
 // What the board's file already says: hardware settings to carry, screens and
 // strips to offer. Pure text in, so the same reading is checkable off the drive.
@@ -419,13 +443,27 @@ function absorbText(text) {
   state.stripsAtStart = state.strips.slice();
 }
 
+function showing(port) {
+  // Whether a screen is in the file at all: one showing nothing is not
+  // declared either, since a declaration the file never uses is a panel the
+  // board brings up for no one
+  var choice = state.choices[port];
+  return choice !== undefined && choice.mode !== "none";
+}
+
+
 function boardLine() {
   var tokens = state.boardResidue.slice();
   state.ports.forEach(function (port) {
-    if (state.sizes[port]) tokens.push(port.toLowerCase() + "=" + state.sizes[port]);
+    if (state.sizes[port] && showing(port)) {
+      tokens.push(port.toLowerCase() + "=" + state.sizes[port]);
+    }
   });
   state.strips.forEach(function (name) {
-    if (state.lengths[name]) tokens.push(name.toLowerCase() + "=" + state.lengths[name]);
+    var choice = state.stripChoices[name];
+    if (state.lengths[name] && choice && choice.mode !== "none") {
+      tokens.push(name.toLowerCase() + "=" + state.lengths[name]);
+    }
   });
   return tokens.length ? "board: " + tokens.join(" ") : "";
 }
@@ -496,7 +534,8 @@ function currentText() {
     inPlay.push({ selector: state.reversed[name] ? name + count + "-1" : name, count: count });
   });
   if (parts.length > 1) parts.push("\\n");
-  parts.push(state.look.write(pace, mood, inPlay));
+  var played = state.look.write(pace, mood, inPlay);
+  parts.push(state.outputs ? played : withoutOutputs(played));
   return parts.join("");
 }
 
@@ -629,16 +668,17 @@ function sizeSelect(port) {
 function renderScreens() {
   var box = document.getElementById("screens");
   box.textContent = "";
-  if (!state.fileHandle) { box.className = "screens"; return; }
   box.className = "screens shown";
   var head = document.createElement("h2");
   head.textContent = "Screens";
   box.appendChild(head);
   var hint = document.createElement("div");
   hint.className = "hint";
-  hint.textContent = state.media.length
-    ? "What each screen shows, from the pictures on the drive."
-    : "No pictures on the drive yet. Drop a gif or png onto it and reopen.";
+  hint.textContent = !state.fileHandle
+    ? "What each screen shows. Open the FX drive to see the pictures on it."
+    : state.media.length
+      ? "What each screen shows, from the pictures on the drive."
+      : "No pictures on the drive yet. Drop a gif or png onto it and reopen.";
   box.appendChild(hint);
   CATALOGUE.screen_ports.forEach(function (name) {
     var port = portName(name);
@@ -668,7 +708,6 @@ function renderScreens() {
     row.appendChild(sizeSelect(port));
     row.appendChild(turnSelect(port));
     if (state.kept[port]) row.appendChild(thumbButton(port, "as it is", "keep", null));
-    row.appendChild(thumbButton(port, "nothing", "none", null));
     state.media.forEach(function (media) {
       row.appendChild(thumbButton(port, media.name, "media", media));
     });
@@ -679,10 +718,34 @@ function renderScreens() {
         function (on) { state.pingpong[port] = on; }));
       row.appendChild(holdBox(port));
     }
+    row.appendChild(removeButton("screen", function () {
+      state.ports = state.ports.filter(function (name) { return name !== port; });
+      delete state.sizes[port];
+      delete state.kept[port];
+      delete state.carried[port];
+      delete state.rotations[port];
+      delete state.pingpong[port];
+      delete state.holds[port];
+      delete state.choices[port];
+    }));
     box.appendChild(row);
   });
   renderStrips(box);
 }
+
+function removeButton(what, drop) {
+  var button = document.createElement("button");
+  button.className = "drop";
+  button.textContent = "\\u00d7";
+  button.title = "Take this " + what + " out of the file, so the board does not set it up";
+  button.onclick = function () {
+    drop();
+    renderScreens();
+    update();
+  };
+  return button;
+}
+
 
 function holdBox(port) {
   // Seconds to wait where the playing turns around, which is what pauses a
@@ -801,7 +864,13 @@ function renderStrips(box) {
       state.reversed[name], function (on) { state.reversed[name] = on; }));
     if (state.stripKept[name]) row.appendChild(stripChoice(name, "as it is", "keep"));
     row.appendChild(stripChoice(name, "with the look", "look"));
-    row.appendChild(stripChoice(name, "nothing", "none"));
+    row.appendChild(removeButton("strip", function () {
+      state.strips = state.strips.filter(function (held) { return held !== name; });
+      delete state.lengths[name];
+      delete state.reversed[name];
+      delete state.stripKept[name];
+      delete state.stripChoices[name];
+    }));
     box.appendChild(row);
   });
 }
@@ -879,8 +948,13 @@ document.getElementById("open").onclick = async function () {
 
 document.getElementById("pace").oninput = update;
 document.getElementById("mood").oninput = update;
+document.getElementById("outputs").onchange = function () {
+  state.outputs = document.getElementById("outputs").checked;
+  update();
+};
 
 renderGallery();
+renderScreens();
 document.getElementById("save").disabled = false;
 </script>
 </body>
