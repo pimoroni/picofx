@@ -14,10 +14,15 @@ These are micropython examples for the screens Mighty FX can drive from its SP/C
   - [Alternating Images](#alternating-images)
 - [Layout Examples](#layout-examples)
   - [Bouncing Logo](#bouncing-logo)
+  - [Isometric Slopes](#isometric-slopes)
+  - [Isometric Neon](#isometric-neon)
+  - [Kaleidoscope](#kaleidoscope)
+  - [Brick Wall](#brick-wall)
 - [Screen Pair Examples](#screen-pair-examples)
   - [Colour Wheel Paired](#colour-wheel-paired)
   - [Colour Wheel In Turn](#colour-wheel-in-turn)
   - [Colour Wheel Facing](#colour-wheel-facing)
+  - [Carpets Paired](#carpets-paired)
 - [Screen Hub Examples](#screen-hub-examples)
   - [Starfield Wall](#starfield-wall)
 - [Playback Examples](#playback-examples)
@@ -74,6 +79,22 @@ These are micropython examples for the screens Mighty FX can drive from its SP/C
 [layout/bouncing_logo.py](layout/bouncing_logo.py)
 
 
+### Isometric Slopes
+[layout/isometric_slopes.py](layout/isometric_slopes.py)
+
+
+### Isometric Neon
+[layout/isometric_neon.py](layout/isometric_neon.py)
+
+
+### Kaleidoscope
+[layout/kaleidoscope.py](layout/kaleidoscope.py)
+
+
+### Brick Wall
+[layout/brick_wall.py](layout/brick_wall.py)
+
+
 ## Screen Pair Examples
 
 ### Colour Wheel Paired
@@ -86,6 +107,10 @@ These are micropython examples for the screens Mighty FX can drive from its SP/C
 
 ### Colour Wheel Facing
 [pair/color_wheel_facing.py](pair/color_wheel_facing.py)
+
+
+### Carpets Paired
+[pair/carpets_paired.py](pair/carpets_paired.py)
 
 
 ## Screen Hub Examples
