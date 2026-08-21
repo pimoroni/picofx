@@ -57,6 +57,11 @@ STRIPS = ("stripl", "stripr")
 # effect is drawn in the tint they hold. A strip is one of these; a mono channel is not.
 CHROMATIC = ("colour",) + STRIPS
 
+# The player kinds that write the board's own outputs. A strip has a player of its
+# own and reaches none of them, so a file playing only there leaves the outputs to
+# whatever last wrote them
+OUTPUT_KINDS = ("mono", "colour")
+
 
 # Each effect, the kind of channel it drives, how a channel gets its callable, and
 # the settings it takes, read from picofx's own lists rather than named again here.
@@ -1425,6 +1430,15 @@ def __handover(fx, to_board):
         time.sleep_ms(HANDOVER_STEP_MS)
 
 
+def __darken(fx):
+    """Every output out, leaving a strip to the player that drives it."""
+    for output in fx.outputs:
+        if isinstance(output, RGBLED):
+            output.set_rgb(0, 0, 0)
+        else:
+            output.brightness(0)
+
+
 def __transfer_frame(fx, at):
     """
     One frame of the wait shown while the computer is copying: a spot travelling the
@@ -1715,6 +1729,11 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                     idle_since = time.ticks_ms()
                 elif time.ticks_diff(time.ticks_ms(), idle_since) >= TRANSFER_HOLD_MS:
                     __start(players, fx)
+                    # A player paints over the wait as it starts, and only the ones
+                    # writing the outputs do: a file playing on a strip alone, or on
+                    # nothing but its screens, would leave the travelling spot lit
+                    if not any(player.kind in OUTPUT_KINDS for player in players):
+                        __darken(fx)
                     for show in shows:
                         if show.live:
                             show.resume()
