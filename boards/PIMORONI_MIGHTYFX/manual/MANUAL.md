@@ -276,14 +276,23 @@ Before the colon, and separate from what it plays:
 | `offset` | where to put the picture, as `x\|y` | centred |
 | `background` | the colour around it, or `bg` for short | black |
 | `pixel_double` | true to draw each pixel twice as wide and tall, so a half size picture fills the screen | no |
+| `tile` | `repeat` or `mirror` to fill the screen with copies of the picture, as `across\|down` | off |
 
 ```entry
 screenA rotation=90: gif file="clock.gif"
 screenA offset=*|20 bg=black: image file=logo.png
+screenA tile=repeat: image file=bricks.png
 ```
 
 A picture is centred unless `offset` puts it somewhere, and a `*` in place of
 either number centres that side.
+
+`tile` fills the screen with a small picture instead of leaving a background
+around it. `repeat` lays copies side by side, so a picture drawn to join up at
+its edges makes a pattern with no seam in it, and `mirror` turns every other
+copy round, which joins any picture up whether it was drawn to or not. One
+value covers both directions and two set them apart, `tile=mirror|off`
+spreading a picture across the screen and leaving its height alone.
 
 ### Pictures
 

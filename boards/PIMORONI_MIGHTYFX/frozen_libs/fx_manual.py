@@ -434,10 +434,13 @@ footer p { margin: 0; }
 <tr><td><code>offset</code></td><td>where to put the picture, as <code>x|y</code></td><td>centred</td></tr>
 <tr><td><code>background</code></td><td>the colour around it, or <code>bg</code> for short</td><td>black</td></tr>
 <tr><td><code>pixel_double</code></td><td>true to draw each pixel twice as wide and tall, so a half size picture fills the screen</td><td>no</td></tr>
+<tr><td><code>tile</code></td><td><code>repeat</code> or <code>mirror</code> to fill the screen with copies of the picture, as <code>across|down</code></td><td>off</td></tr>
 </tbody></table></div>
 <pre class="entry"><code><span class="s-target">screenA</span> <span class="s-name">rotation</span><span class="s-punc">=</span><span class="s-value">90</span><span class="s-colon">:</span> <span class="s-effect">gif</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">"clock.gif"</span>
-<span class="s-target">screenA</span> <span class="s-name">offset</span><span class="s-punc">=</span><span class="s-value">*|20</span> <span class="s-name">bg</span><span class="s-punc">=</span><span class="s-value">black</span><span class="s-colon">:</span> <span class="s-effect">image</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">logo.png</span></code></pre>
+<span class="s-target">screenA</span> <span class="s-name">offset</span><span class="s-punc">=</span><span class="s-value">*|20</span> <span class="s-name">bg</span><span class="s-punc">=</span><span class="s-value">black</span><span class="s-colon">:</span> <span class="s-effect">image</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">logo.png</span>
+<span class="s-target">screenA</span> <span class="s-name">tile</span><span class="s-punc">=</span><span class="s-value">repeat</span><span class="s-colon">:</span> <span class="s-effect">image</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">bricks.png</span></code></pre>
 <p>A picture is centred unless <code>offset</code> puts it somewhere, and a <code>*</code> in place of either number centres that side.</p>
+<p><code>tile</code> fills the screen with a small picture instead of leaving a background around it. <code>repeat</code> lays copies side by side, so a picture drawn to join up at its edges makes a pattern with no seam in it, and <code>mirror</code> turns every other copy round, which joins any picture up whether it was drawn to or not. One value covers both directions and two set them apart, <code>tile=mirror|off</code> spreading a picture across the screen and leaving its height alone.</p>
 <h3 id="pictures">Pictures</h3>
 <div class="scroll"><table>
 <thead><tr><th>Plays</th><th>Settings</th></tr></thead>

@@ -200,7 +200,7 @@ class Channel:
     # Every setting that may sit left of the colon, so a channel copied when a bare
     # strip name expands cannot quietly lose one. Checked against __init__ on the host.
     SETTINGS = ("level", "colour", "fade", "ease", "rotation", "backlight", "mirror",
-                "offset", "background", "pixel_double")
+                "offset", "background", "pixel_double", "tile")
 
     def __init__(self, name):
         self.name = name
@@ -216,6 +216,7 @@ class Channel:
         self.offset = None
         self.background = None
         self.pixel_double = None
+        self.tile = None
 
     def like(self, name):
         """The same channel under another name, which is how a bare strip name
@@ -292,6 +293,14 @@ class ScreenShow:
         self.mirror = bool(channel.mirror)
         self.offset = channel.offset
         self.pixel_double = bool(channel.pixel_double)
+        # The words a file writes, turned into the driver's own values here, which is
+        # the one place a screen is certainly present to have them
+        if channel.tile is None:
+            self.tile = False
+        else:
+            from screens import Tile
+            modes = {"off": Tile.OFF, "repeat": Tile.REPEAT, "mirror": Tile.MIRROR}
+            self.tile = tuple(modes[word] for word in channel.tile)
         self.background = (picovector.color.rgb(*channel.background)
                            if channel.background is not None else picovector.color.black)
         self.__backlight = channel.backlight
@@ -318,8 +327,8 @@ class ScreenShow:
             else:
                 self.screen.backlight.on()
         self.screen.update(self.player.image, rotation=self.rotation, mirror=self.mirror,
-                           offset=self.offset, bg_color=self.background,
-                           pixel_double=self.pixel_double)
+                           pixel_double=self.pixel_double, offset=self.offset,
+                           tile=self.tile, bg_color=self.background)
 
     def pause(self):
         self.player.pause()
@@ -671,9 +680,16 @@ CHANNEL_KINDS = {"level": "fraction", "fade": "seconds", "ease": "seconds",
 # 'fade' crosses at a steady rate, 'ease' settles into place as a filament does
 CURVES = ("fade", "ease")
 
+# How a picture repeats on one side of a screen, and the spellings someone reaching
+# for the plain true and false of every other setting would write
+TILING = ("off", "repeat", "mirror")
+TILING_ALSO = {"true": "repeat", "yes": "repeat", "on": "repeat",
+               "false": "off", "no": "off", "1": "repeat", "0": "off"}
+
 # Which of those belong to an output and which to a screen, for saying so
 OUTPUT_SETTINGS = ("level", "colour", "fade", "ease")
-SCREEN_SETTINGS = ("backlight", "rotation", "mirror", "offset", "background", "pixel_double")
+SCREEN_SETTINGS = ("backlight", "rotation", "mirror", "offset", "background",
+                   "pixel_double", "tile")
 
 
 def __apply_channel_setting(channels, key, raw, line, problems):
@@ -706,6 +722,24 @@ def __apply_channel_setting(channels, key, raw, line, problems):
         else:
             for channel in channels:
                 channel.offset = tuple(pair)
+        return
+
+    # Tiling is one value in two parts as an offset is, a side each, and one part
+    # given covers both. The picture repeats from wherever the offset put it, so a
+    # panel is filled by a source smaller than it is
+    if key == "tile":
+        parts = [part.strip().lower() for part in raw.split("|")]
+        if len(parts) == 1:
+            parts = parts * 2
+
+        words = [TILING_ALSO.get(part, part) for part in parts]
+        if len(words) != 2 or any(word not in TILING for word in words):
+            problems.append("line {}: tile is '{}', expected {} such as tile=repeat "
+                            "for both sides or tile=repeat|off for one".format(
+                                line, raw, " or ".join(TILING)))
+        else:
+            for channel in channels:
+                channel.tile = tuple(words)
         return
 
     values = raw.split(",")
@@ -786,7 +820,7 @@ def __parse_selector(text, line, problems):
                 key = "colour"
             elif key == "bg":
                 key = "background"
-            if key not in ("colour", "background", "offset") and key not in CHANNEL_KINDS:
+            if key not in ("colour", "background", "offset", "tile") and key not in CHANNEL_KINDS:
                 problems.append(
                     "line {}: '{}' is not a setting here, expected an output's {} or a "
                     "screen's {}".format(line, key, ", ".join(OUTPUT_SETTINGS),
