@@ -866,7 +866,7 @@ class ST7789_RGB444:
         bg = bg & 0xffffffff
 
         r_index = rotation // 90
-        if r_index < 0 or r_index > 3 or rotation % 90:     # Modulo check ensures rotation is exactly a multipe of 90
+        if r_index < 0 or r_index > 3 or rotation % 90:     # Modulo check ensures rotation is exactly a multiple of 90
             raise ValueError(f"{rotation} is not a valid angle. Expected 0, 90, 180, or 270.")
 
         r_half = r_index >> 1          # Zero for 0 or 90. One for 180 or 270
