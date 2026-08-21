@@ -11,6 +11,7 @@ This is the library reference for the PicoFX library.
   - [StripPlayer](#stripplayer)
   - [Common](#common)
 - [Effects System](#effects-system)
+  - [Offering an effect to an effects file](#offering-an-effect-to-an-effects-file)
 
 
 ## LEDs
@@ -117,3 +118,45 @@ For creating dynamic effects, classes can inherit from two types, `Updateable` a
 
 * `Updateable` gives an effect the `ticks_ms(delta_ms)` function, letting the effect change over time.
 * `Cycling` is an extension of `Updateable` that pre-implements a cycling counter within `ticks_ms` giving the `__call__` method access to a `__offset` variable that counts up from 0.0 to 1.0 and repeats.
+
+
+### Offering an effect to an effects file
+
+On MightyFX, an effect can also be written by name in `effects.txt`. An effect offers itself by declaring three class attributes:
+
+* `NAME` is the word an entry writes. An effect without one is not offered.
+* `CALLED` is how a channel gets its callable: `None` where one object serves every channel, `"position"` where it is called with the channel's place in the group, and a tuple of method names where it names one per channel, as `traffic_light` names `red`, `amber` and `green`.
+* `TAKES` is the settings an entry may write.
+
+```python
+from picofx import Cycling
+
+
+class BreatheFX(Cycling):
+    NAME = "breathe"
+    CALLED = None
+    TAKES = ("speed", "brightness")
+
+    def __init__(self, speed=1, brightness=1.0):
+        super().__init__(speed)
+        self.brightness = brightness
+
+    def __call__(self):
+        # __offset counts 0.0 to 1.0 and repeats, so this rises and falls once a cycle
+        return abs(self.__offset * 2 - 1) * self.brightness
+```
+
+The effects the board already knows are the ones in `MONO_EFFECTS` and `COLOUR_EFFECTS`, which is a list an effect of your own can be added to. Do it in `main.py`, before `autofx` is imported, since that is when the names are gathered:
+
+```python
+from picofx.mono import MONO_EFFECTS
+from breathe import BreatheFX
+
+MONO_EFFECTS.append(BreatheFX)
+
+import autofx
+```
+
+`out1-4: breathe speed=0.5 brightness=80%` then plays it, and a value the effect cannot use is reported in `errors.txt` the way any other is.
+
+Settings are named rather than invented: `TAKES` may only hold names the effects file already reads, `speed`, `duty`, `interval`, `brightness`, `hue` and the rest listed in the manual. A name it has no reading for is reported and the effect runs on its own value for it.

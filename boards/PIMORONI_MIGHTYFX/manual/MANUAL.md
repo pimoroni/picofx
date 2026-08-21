@@ -222,6 +222,11 @@ The rest run from 0 to 1, written 0.5 or 50% as you prefer. `window` is one of
 them, being the share of a cycle the flashes happen in. `hue` takes degrees as
 well, written 180deg, which is what a colour picker gives you.
 
+**If you write Python**, an effect of your own can join this list and be written
+here like any other. The library reference on
+[GitHub](https://github.com/pimoroni/picofx/blob/main/picofx/README.md) says how,
+under Effects System.
+
 ## LED strips
 
 A strip of WS2812 LEDs plugs into the connector marked **L** or **R**, and its
