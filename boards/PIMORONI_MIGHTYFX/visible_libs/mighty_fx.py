@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: MIT
 
+import gc
+
 from machine import ADC, Pin
 from pimoroni_i2c import PimoroniI2C
 from motor import Motor
@@ -318,6 +320,12 @@ class MightyFX:
             servo.disable()
 
         self.disable_rail()
+
+        # The strips hand back their state machines, DMA and PIO program as they
+        # are collected, so drop them and collect now: a board built after this
+        # takes the same slots.
+        self.__strips.clear()
+        gc.collect()
 
         self.spce_a.backlight_off()
         self.spce_b.backlight_off()

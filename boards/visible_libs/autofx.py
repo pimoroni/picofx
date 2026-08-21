@@ -1208,12 +1208,13 @@ def indicate(fx, pattern=PROBLEM):
         time.sleep_ms(period_ms)
 
 
-def __play(fx, volume, path, errors, playing):
+def __play(fx, volume, path, errors, playing, maker=None):
     """
     Stop what is playing, read the file again, and play what it now says.
 
     Takes a board or something that makes one, and hands the board back: the file is
-    what declares a strip, so on the first read there is nothing built yet.
+    what declares a strip, so on the first read there is nothing built yet. `maker`
+    is passed through to load(), which rebuilds the board where its entry changed.
     """
     for player in playing:
         player.stop()
@@ -1250,7 +1251,7 @@ def __play(fx, volume, path, errors, playing):
 
     if text is not None:
         try:
-            fx, players, shows, scenes, settings, problems = load(text, fx)
+            fx, players, shows, scenes, settings, problems = load(text, fx, maker)
         # A file a user typed must never be able to take the board down. Anything
         # load does not report itself costs the whole file, where its own reporting
         # costs one entry, but the drive and the button survive to be edited again
@@ -1421,10 +1422,15 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     until the button asks for it. A screen entry is serviced from this loop, so
     without a volume the caller services the shows it is returned.
     """
+    # What rebuilds the board where a reload's board entry changes the hardware.
+    # A caller handing in a built board keeps it for the whole run
+    maker = fx if callable(fx) else None
+
     if volume is not None:
         volume.mount()
 
-    fx, players, shows, scenes, settings, problems = __play(fx, volume, path, errors, [])
+    fx, players, shows, scenes, settings, problems = __play(
+        fx, volume, path, errors, [], maker)
 
     scene_at = 0
     scene_deadline = None
@@ -1497,7 +1503,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
 
             if event in (volume.HIDDEN, volume.EJECTED, volume.RELOADED):
                 fx, players, shows, scenes, settings, problems = __play(
-                    fx, volume, path, errors, players)
+                    fx, volume, path, errors, players, maker)
                 paused = False
                 idle_since = None
                 begin_scenes()
@@ -1675,6 +1681,54 @@ def strips(fx, lengths, problems):
         built.append((kind, strip, count))
 
     return built, failed
+
+
+# How long a presence probe watches a tearing-effect line for. Two periods of a
+# 60Hz panel and a little over, which is all it takes to see any edge at all
+PRESENCE_PROBE_MS = 40
+
+
+def __screen_gone(screen):
+    """
+    Whether a panel that was brought up has stopped answering.
+
+    One unplugged and put back has lost the TEON its bringup set, so it asserts
+    nothing. Nothing is sent to find out: a screen owning its line keeps TE on
+    from bringup, so any edge at all is the panel still being there. One with no
+    signal to read cannot be told about either way, so it counts as present.
+    """
+    if not screen.v_sync:
+        return False
+    try:
+        return screen.display.te_probe(PRESENCE_PROBE_MS)[2] == 0
+    except Exception:      # noqa: BLE001
+        return False
+
+
+def __hardware_changed(fx, declared):
+    """
+    Whether the board entry no longer matches what is running: a strip added,
+    dropped or resized, a screen's size changed, or a panel swapped for another,
+    which has to come up again to be talked to. Asked of a running board on a
+    reload, so what is running is this module's own record of what it built.
+    """
+    for kind in STRIPS:
+        asked = declared.get(kind)
+        running = __STRIPS.get(kind)
+        if asked and running is None and __has_strips(fx):
+            return True
+        if running is not None and asked != running[1]:
+            return True
+    for name in SCREEN_PORTS:
+        asked = declared.get(name)
+        known = __SCREENS.get(name)
+        if known is None:
+            continue
+        if asked is not None and asked != known[1]:
+            return True
+        if __screen_gone(known[0]):
+            return True
+    return False
 
 
 def __strip_of(name):
@@ -2344,7 +2398,7 @@ def __apply_scene(players, shows, scene):
             show.rest()
 
 
-def load(text, fx):
+def load(text, fx, maker=None):
     """
     Read the effects file. Returns the board it plays on, the players it describes,
     the shows its screen entries play, its scenes in heading order, the settings its
@@ -2354,7 +2408,10 @@ def load(text, fx):
     `fx` is a board or something that makes one, a board class being the usual thing.
     Where it makes one, the board is built here rather than by the caller, once the
     file's own board entry has been read, so what the file declares reaches the
-    constructor. A board built already is used as it is.
+    constructor. A board built already is used as it is, unless `maker` says what
+    would build its replacement: then a board entry that no longer matches the
+    running hardware shuts the board down and a fresh one is built, as a restart
+    would. Without a maker the change is reported instead.
     """
     entries, problems = parse(text)
     has_strips = __has_strips(fx)
@@ -2418,6 +2475,16 @@ def load(text, fx):
                 problems.append("line {}: [{}] names no time, so the scenes after it "
                                 "will not show. Write it like '[{}: 30s]'".format(
                                     scene.line, scene.name, scene.name))
+
+    # A changed board entry gets a fresh board, as a restart would: the running one
+    # is shut down and the build below makes its replacement from the file's own
+    # declarations. The strip record goes first, so nothing here still holds a strip
+    # when shutdown() collects them, and the screens die with their ports
+    if maker is not None and not callable(fx) and __hardware_changed(fx, board):
+        __STRIPS.clear()
+        __SCREENS.clear()
+        fx.shutdown()
+        fx = maker
 
     # The board comes up here, now that its own entry has been read: a strip's length
     # is declared at construction, and this is the first point it is known
