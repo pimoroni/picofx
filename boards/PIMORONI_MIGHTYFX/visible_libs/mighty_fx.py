@@ -5,10 +5,10 @@
 import gc
 import time
 
-from machine import ADC, Pin
+from machine import ADC, PWM, Pin
 from pimoroni_i2c import PimoroniI2C
 from motor import Motor
-from picofx import RGBLED, DisabledLED
+from picofx import PWMLED, RGBLED, DisabledLED
 from audio import WavPlayer
 from spidisplay import release_buffers
 from spce import SPCE, SPCEPort
@@ -18,6 +18,10 @@ from spce import SPCE, SPCEPort
 # GPIO 32 and 8 apart above it drive the same channel, and both emit the same
 # signal whenever both select PWM. Used to keep LED outputs off channels that
 # an SP/CE role is driving.
+# What wake() lit, kept alive: a PWM object that is collected stops driving
+__waking = []
+
+
 def __pwm_channel(gpio):
     if gpio < 32:
         return gpio % 16
@@ -71,6 +75,13 @@ class MightyFX:
     # I2S audio every board builds by default keeps PIO 0 to itself
     STRIP_PIO = 1
 
+    # LEDs built past the length asked for. A strip takes its frame as one timed run
+    # of bits, and a flash write, which a file copy makes many of, holds the
+    # interrupts off long enough to break one apart: the run then overruns into the
+    # LED after the last one addressed, which nothing would write again. These are
+    # driven dark with every frame, so an overrun lands where it is cleaned up
+    STRIP_FLUSH_LEDS = 2
+
     SENSOR_PIN = 46
     V_SENSE_PIN = 47
 
@@ -80,6 +91,10 @@ class MightyFX:
     RGB_GAMMA = 2.2
 
     RGB_COLOUR_NAMES = ("red", "green", "blue")
+
+    # What wake() lights the outputs to. Dim enough to read as the board saying it
+    # is alive rather than as an effect, and the first frame paints over it
+    WAKE_LEVEL = 0.1
 
     # A hub reaches the screen port's own chip select and the other connector's five,
     # and each of those six is named on the board as well as indexed on the hub
@@ -195,7 +210,8 @@ class MightyFX:
 
             if strip:
                 from plasma import WS2812
-                built = WS2812(strip, self.STRIP_PIO, len(self.__strips), pin)
+                built = WS2812(strip + self.STRIP_FLUSH_LEDS, self.STRIP_PIO,
+                               len(self.__strips), pin)
                 built.start()
                 self.__strips[letter] = built
 
@@ -211,6 +227,22 @@ class MightyFX:
         # Whatever was declared still needs power: one rail serves both connectors,
         # and it stays down until enable_rail() is called, so nothing on the header
         # is live before the caller starts driving it
+
+    @classmethod
+    def wake(cls):
+        """
+        Light every output dim white, before there is a board to light them with.
+
+        Reading the effects file takes seconds of importing before anything can
+        play, and a board showing nothing for them reads as a dead one. Call this
+        first and the outputs say it is alive meanwhile. What plays paints over
+        them; nothing has to put them out.
+        """
+        duty = int(65535 * cls.WAKE_LEVEL)
+        # Held at module level, since a PWM that is collected stops driving its pin
+        for pins in cls.OUT_PINS:
+            for pin in pins:
+                __waking.append(PWM(Pin(pin), freq=PWMLED.FREQUENCY, duty_u16=duty))
 
     def boot_pressed(self):
         return self.__switch.value() == 0

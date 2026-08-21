@@ -188,6 +188,10 @@ TRANSFER = (WHITE, 0.1, 0.35)
 TRANSFER_STEP_MS = 120
 TRANSFER_HOLD_MS = 500
 
+# What one pass of the spot costs as the drive changes hands, per output. Half the
+# transfer's step: this says something happened rather than that it is still going
+HANDOVER_STEP_MS = TRANSFER_STEP_MS // 2
+
 # An angle takes everything a fraction does and degrees besides, so its message is
 # built from the same words and the two cannot drift apart on what they share
 __FRACTION_WANTED = "expected a value from 0 to 1, such as 0.5 or 50%"
@@ -318,17 +322,20 @@ class ScreenShow:
             return
         self.__redraw = False
 
-        # Before the first frame, so the panel never lights at full first. on() is
-        # for a panel an earlier reload took dark, which a fresh one ignores
-        if not self.__lit:
+        lighting = not self.__lit
+        self.screen.update(self.player.image, rotation=self.rotation, mirror=self.mirror,
+                           pixel_double=self.pixel_double, offset=self.offset,
+                           tile=self.tile, bg_color=self.background)
+
+        # Lit once the panel holds this frame, never before: its memory still has
+        # whatever was last sent, so lighting first shows the picture that has gone.
+        # on() is for a panel an earlier reload took dark, which a fresh one ignores
+        if lighting:
             self.__lit = True
             if self.__backlight is not None:
                 self.screen.brightness(self.__backlight)
             else:
                 self.screen.backlight.on()
-        self.screen.update(self.player.image, rotation=self.rotation, mirror=self.mirror,
-                           pixel_double=self.pixel_double, offset=self.offset,
-                           tile=self.tile, bg_color=self.background)
 
     def pause(self):
         self.player.pause()
@@ -1225,6 +1232,11 @@ def __play(fx, volume, path, errors, playing, maker=None):
     # __start() once something is driving the header
     if not callable(fx):
         fx.clear()
+        # The panels go out with the lights. Left lit they are the one thing still
+        # showing the file that has just been set aside, and a screen an entry no
+        # longer names would stay lit for good
+        for screen, _size in __SCREENS.values():
+            screen.backlight.off()
         rail = getattr(fx, "disable_rail", None)
         if rail is not None:
             rail()
@@ -1294,6 +1306,20 @@ def __play(fx, volume, path, errors, playing, maker=None):
     return fx, players, shows, scenes, settings, problems
 
 
+# What the players are ticked at. picofx defaults to 100, which a board driving
+# screens as well cannot afford: the timer runs on the same core as the frames, and
+# at 100 a frame measured 214ms against 44ms with the players stopped, where 50
+# costs 87ms. Effects tick by elapsed time, so the rate is smoothness alone.
+PLAYER_FPS = 50
+
+
+def __service_shows(shows):
+    """One pass of every screen that has the panel."""
+    for show in shows:
+        if show.live:
+            show.service()
+
+
 def __start(players, fx):
     """
     A paired player is ticked by its partner, so only the head starts a timer.
@@ -1306,7 +1332,38 @@ def __start(players, fx):
         if rail is not None:
             rail()
     if players:
-        players[0].start()
+        players[0].start(fps=PLAYER_FPS)
+
+
+def __spot(fx, lit):
+    """One output at the travelling level, the rest at the resting floor."""
+    colour, floor, spot = TRANSFER
+    for index, output in enumerate(fx.outputs):
+        level = spot if index == lit else floor
+        if isinstance(output, RGBLED):
+            output.set_rgb(colour[0] * level, colour[1] * level, colour[2] * level)
+        else:
+            output.brightness(level)
+
+
+def __handover(fx, to_board):
+    """
+    The drive changing hands, said with one pass of the spot a transfer travels.
+
+    A double press reloads the board exactly as a single press does, so without
+    this nothing on the outputs tells the two apart. Which way the spot runs says
+    which way the drive went, reading the outputs as the line they are: the first
+    sits by the USB connector and the last at the far end, so a pass towards the
+    end is the board taking the drive and one towards the connector is the
+    computer taking it. A transfer travels the first way, into the board, which
+    is the only direction it can mean: the drive reports a write and never a
+    read. Half the transfer's step, so the whole pass is brief.
+    """
+    count = len(fx.outputs)
+    order = range(count) if to_board else range(count - 1, -1, -1)
+    for lit in order:
+        __spot(fx, lit)
+        time.sleep_ms(HANDOVER_STEP_MS)
 
 
 def __transfer_frame(fx, at):
@@ -1318,17 +1375,14 @@ def __transfer_frame(fx, at):
     Driven from the caller's own loop rather than a player, since the players are
     stopped for the duration, and stepped from the clock so a frame the transfer
     delays does not slow the travel down.
-    """
-    colour, floor, spot = TRANSFER
-    outputs = fx.outputs
-    lit = (at // TRANSFER_STEP_MS) % len(outputs)
 
-    for index, output in enumerate(outputs):
-        level = spot if index == lit else floor
-        if isinstance(output, RGBLED):
-            output.set_rgb(colour[0] * level, colour[1] * level, colour[2] * level)
-        else:
-            output.brightness(level)
+    Nothing is sent to a strip meanwhile. A frame reaches one as a single timed
+    run of bits, and a flash write holds the interrupts off long enough to break
+    one apart, which lands as the wrong colours or as a run that overruns the
+    LEDs declared into one nothing addresses afterwards. Every frame sent is
+    another that can be torn, so the strips are left holding what they have.
+    """
+    __spot(fx, (at // TRANSFER_STEP_MS) % len(fx.outputs))
 
 
 def __read_program(name, problems):
@@ -1488,7 +1542,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         if problems:
             indicate(fx, PROBLEM if wrote else UNREPORTED)
         begin_scenes()
-        __start(players, fx)        # Never started above, whether the program ran or not
+        __start(players, fx)            # Never started above, whether the program ran or not
         if drive_up:
             volume.expose()
 
@@ -1497,7 +1551,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
 
     # A quick tap can start and end inside one screen's service, which a level read
     # between frames never sees. A board catching presses by interrupt is asked for
-    # those instead; the rest are polled
+    # those instead; the rest are polled, and sampled around each screen as well
+    pressed = False
     pending = volume.IDLE
 
     def watch():
@@ -1507,17 +1562,18 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         window, and an event held back until the next pass reads as the button
         being slow. The first event stands until the loop has taken it.
 
-        The board is asked for its taps each time rather than once: a rebuild hands
+        The board is asked for its tap each time rather than once: a rebuild hands
         back a new board whose interrupt replaces the old one's, so a method held
         from before would never hear another press.
         """
-        nonlocal pending
+        nonlocal pending, pressed
         if pending != volume.IDLE:
             return pending
 
         taps = getattr(fx, "boot_taps", None)
         if taps is None:
-            pending = volume.service(fx.boot_pressed())
+            pending = volume.service(pressed or fx.boot_pressed())
+            pressed = False
             return pending
 
         waiting = taps()
@@ -1543,17 +1599,37 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
             event = watch()
             pending = volume.IDLE
 
+            if event == volume.SHOWN:
+                # Nothing else happens here: the drive has gone to the computer and
+                # the effects carry on. They stand aside for the pass, as they do
+                # for a transfer, and take the outputs back after it
+                for player in players:
+                    player.stop()
+                __handover(fx, False)
+                __start(players, fx)
+
             if event in (volume.HIDDEN, volume.EJECTED, volume.RELOADED):
+                if event == volume.HIDDEN:
+                    # Before the reload, which darkens everything and would swallow it
+                    for player in players:
+                        player.stop()
+                    __handover(fx, True)
                 fx, players, shows, scenes, settings, problems = __play(
                     fx, volume, path, errors, players, maker)
                 paused = False
                 idle_since = None
-                begin_scenes()
-                __start(players, fx)
                 if event == volume.RELOADED:
                     # A single press asks to try an edit without putting the drive
-                    # away, so it goes back once the file has been read
+                    # away, so it goes back once the file has been read. Showing it
+                    # waits out the window the computer needs to see the drive
+                    # leave, and nothing starts until it has: the lights run from a
+                    # timer and the screens from this loop, so starting first would
+                    # leave one playing through the wait and the other held still
                     volume.expose()
+                begin_scenes()
+                __start(players, fx)
+                # A frame each as the lights start, so the panels come back with them
+                __service_shows(shows)
 
             # The rotation, standing aside with everything else while a transfer runs
             if scene_deadline is not None and not paused and \
@@ -2545,8 +2621,16 @@ def load(text, fx, maker=None):
     # Every kind of channel this board offers, as the names each player's slots take.
     # A strip is one kind per connector, since each is a player writing to its own
     names = [("mono", [name for name, _ in mono]), ("colour", [name for name, _ in colour])]
+
+    # LEDs the board builds past the length a strip was asked for, to catch a frame
+    # torn by a flash write before it overruns onto a strip's last real LED. Their
+    # names carry a space, which nothing a file can write ever does, so they hold a
+    # slot each without being reachable
+    spare = getattr(type(fx), "STRIP_FLUSH_LEDS", 0)
     for kind, _, count in built:
-        names.append((kind, ["{}{}".format(kind, number) for number in range(1, count + 1)]))
+        holds = ["{}{}".format(kind, number) for number in range(1, count + 1)]
+        holds += ["{} flush {}".format(kind, number) for number in range(spare)]
+        names.append((kind, holds))
 
     slots = {}
     for kind, holds in names:
@@ -2613,7 +2697,17 @@ def load(text, fx, maker=None):
 
     for kind, strip, count in built:
         if wanted(kind):
-            players.append(filled(StripPlayer(strip, num_leds=count), kind))
+            players.append(filled(StripPlayer(strip, num_leds=count + spare), kind))
+
+    # The spare LEDs are driven dark rather than left alone, in every scene: an
+    # effect of None is a slot nothing writes, which is what would let a torn frame
+    # stay lit there. Set once the players are decided, so a strip nothing plays on
+    # is still a strip with no player
+    for kind, _, count in built:
+        for index in range(count, count + spare):
+            effects[kind][index] = off
+            for scene in scenes:
+                scene.effects[kind][index] = off
 
     # One timer drives them all, each ticking the next, so every channel steps together
     for first, second in zip(players, players[1:]):

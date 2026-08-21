@@ -13,7 +13,9 @@ In a hurry? Save the file and press **Boot** once. The drive disappears and
 comes straight back with the new effects running, so you can keep editing.
 Ejecting is the surer way, since a computer does not always write the file out
 until then. Press **Boot** twice to hide the drive, and twice again to bring it
-back.
+back. A dim white light runs along the outputs each time, towards the USB
+connector as the computer takes the drive and away from it as the board takes it
+back, so a double press is never mistaken for a single one.
 
 Deleting `effects.txt` restores the default; emptying it leaves the board dark.
 

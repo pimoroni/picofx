@@ -232,7 +232,8 @@ def expose():
     mount while the computer owns it.
 
     Waits out the rest of HIDDEN_MS since the drive was taken back, so the computer
-    has seen it leave. Blocking is safe here: effects run from a timer.
+    has seen it leave. Effects run from a timer and carry on; anything the caller
+    drives itself, a screen being the one, holds its last frame for the wait.
     """
     global __exposed, __withdrawn_at
     if __exposed:

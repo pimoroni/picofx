@@ -19,6 +19,10 @@
 MAIN = '''\
 from mighty_fx import MightyFX
 
+# Light the outputs first: importing the effects machinery below takes a few
+# seconds, and this says the board is alive while it happens
+MightyFX.wake()
+
 import autofx
 import fx_drive
 
