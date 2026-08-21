@@ -197,9 +197,9 @@ class MightyFX:
                 from servo import Servo
                 self.__servos[letter] = Servo(pin) if servo is True else Servo(pin, calibration=servo)
 
-        # Whatever was declared needs power, and one rail serves both connectors
-        if self.__strips or self.__servos:
-            self.enable_rail()
+        # Whatever was declared still needs power: one rail serves both connectors,
+        # and it stays down until enable_rail() is called, so nothing on the header
+        # is live before the caller starts driving it
 
     def boot_pressed(self):
         return self.__switch.value() == 0

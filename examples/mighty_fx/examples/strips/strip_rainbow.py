@@ -10,7 +10,8 @@ Run a rainbow along an LED strip on the L connector.
 
 Plug a WS2812 strip into the connector marked L and set LEDS below to however many it
 has, since that is the one thing the board cannot work out for itself. Both L and R
-share one power rail, so anything on R is live too. Press "Boot" to exit the program.
+share one power rail, so anything on R is live too once enable_rail() is called.
+Press "Boot" to exit the program.
 
 A strip takes the same effects the RGB outputs do, one per LED, so anything under
 picofx.colour or picofx.mono can play here.
@@ -24,6 +25,8 @@ SPEED = 0.3             # How fast the rainbow travels along it
 # Variables
 mighty = MightyFX(strip_l=LEDS)                     # Create a new MightyFX object, with a strip on L
 player = StripPlayer(mighty.strip_l, LEDS)          # Create a new effect player to control the strip
+
+mighty.enable_rail()                                # Power the L and R connectors, which stay off until asked
 
 # One effect per LED, each reading the same wave from a position of its own
 wave = RainbowWaveFX(speed=SPEED, length=LEDS)

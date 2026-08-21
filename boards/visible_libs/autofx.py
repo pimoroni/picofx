@@ -1219,9 +1219,14 @@ def __play(fx, volume, path, errors, playing):
         player.stop()
 
     # clear() covers a strip as well as the outputs, and a strip holds its last frame
-    # once nothing is writing it, so a file that no longer names one leaves it dark
+    # once nothing is writing it, so a file that no longer names one leaves it dark.
+    # The rail follows the players: down here with everything stopped, up again in
+    # __start() once something is driving the header
     if not callable(fx):
         fx.clear()
+        rail = getattr(fx, "disable_rail", None)
+        if rail is not None:
+            rail()
 
     text = None
     players, shows, scenes, settings, problems = [], [], [], {}, []
@@ -1288,8 +1293,17 @@ def __play(fx, volume, path, errors, playing):
     return fx, players, shows, scenes, settings, problems
 
 
-def __start(players):
-    """A paired player is ticked by its partner, so only the head starts a timer."""
+def __start(players, fx):
+    """
+    A paired player is ticked by its partner, so only the head starts a timer.
+
+    The strip header's rail comes up here as well, where a strip was built: the
+    board leaves it down until asked, and this is when something starts driving it.
+    """
+    if __STRIPS:
+        rail = getattr(fx, "enable_rail", None)
+        if rail is not None:
+            rail()
     if players:
         players[0].start()
 
@@ -1427,7 +1441,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
 
     if volume is None:
         begin_scenes()
-        __start(players)
+        __start(players, fx)
         return fx, players, shows, scenes, problems
 
     # The drive goes up before any program runs, since a program that works never
@@ -1441,7 +1455,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     # showing the drive both take long enough for a flash of them to be seen
     if not program:
         begin_scenes()
-        __start(players)
+        __start(players, fx)
 
     # Read while the board still holds the drive, since exposing it takes the mount
     # point away and a program kept there would have nothing left to open
@@ -1468,7 +1482,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         if problems:
             indicate(fx, PROBLEM if wrote else UNREPORTED)
         begin_scenes()
-        __start(players)            # Never started above, whether the program ran or not
+        __start(players, fx)        # Never started above, whether the program ran or not
         if drive_up:
             volume.expose()
 
@@ -1487,7 +1501,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                 paused = False
                 idle_since = None
                 begin_scenes()
-                __start(players)
+                __start(players, fx)
                 if event == volume.RELOADED:
                     # A single press asks to try an edit without putting the drive
                     # away, so it goes back once the file has been read
@@ -1517,7 +1531,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                 if idle_since is None:
                     idle_since = time.ticks_ms()
                 elif time.ticks_diff(time.ticks_ms(), idle_since) >= TRANSFER_HOLD_MS:
-                    __start(players)
+                    __start(players, fx)
                     for show in shows:
                         if show.live:
                             show.resume()
