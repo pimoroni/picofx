@@ -59,12 +59,48 @@ These are micropython examples for the screens Mighty FX can drive from its SP/C
 [graphics/starfield.py](graphics/starfield.py)
 
 
-### Canvas Text
-[graphics/canvas_text.py](graphics/canvas_text.py)
+### Pixel Fonts
+[graphics/pixel_fonts.py](graphics/pixel_fonts.py)
 
 
 ### LED Matrix
 [graphics/led_matrix.py](graphics/led_matrix.py)
+
+
+### Shapes
+[graphics/shapes.py](graphics/shapes.py)
+
+
+### Paths
+[graphics/paths.py](graphics/paths.py)
+
+
+### Pens
+[graphics/pens.py](graphics/pens.py)
+
+
+### Filters
+[graphics/filters.py](graphics/filters.py)
+
+
+### Colours
+[graphics/colours.py](graphics/colours.py)
+
+
+### Text Layout
+[graphics/text_layout.py](graphics/text_layout.py)
+
+
+### Vector Fonts
+[graphics/vector_fonts.py](graphics/vector_fonts.py)
+
+
+### Sprites
+[graphics/sprites.py](graphics/sprites.py)
+
+
+### Tweens
+[graphics/tweens.py](graphics/tweens.py)
 
 
 ## Image Examples
