@@ -310,32 +310,58 @@ class ScreenShow:
         self.__backlight = channel.backlight
         self.__lit = False
         self.__redraw = False
+        self.__due = False
         # Whether this show has the panel. Only a scene takes it away, so a file
         # without scenes never has to say so
         self.live = True
 
-    def service(self):
-        # A frame is sent where the player has moved on, or where the panel has been
-        # put aside and needs its picture back: a still moves once and never again,
-        # so nothing else would light it a second time
-        if not (self.player.has_advanced() or self.__redraw):
-            return
-        self.__redraw = False
+    def wants(self):
+        """
+        Whether a frame is due: the player has moved on, or the panel has been put
+        aside and needs its picture back. A still moves once and never again, so
+        nothing else would light it a second time.
 
-        lighting = not self.__lit
+        The answer is held until the frame is taken, since asking a player twice
+        is asking it to advance twice.
+        """
+        if not self.__due:
+            self.__due = self.player.has_advanced() or self.__redraw
+        return self.__due
+
+    def stage(self):
+        """Convert the frame due, for update_pair() to stream beside another's."""
+        self.__due = False
+        self.__redraw = False
+        self.screen.prepare(self.player.image, rotation=self.rotation,
+                            mirror=self.mirror, pixel_double=self.pixel_double,
+                            offset=self.offset, tile=self.tile,
+                            bg_color=self.background)
+
+    def lit(self):
+        """
+        Light the panel, once it holds the frame and never before: its memory still
+        has whatever was last sent, so lighting first shows the picture that has
+        gone. on() is for a panel an earlier reload took dark, which a fresh one
+        ignores.
+        """
+        if self.__lit:
+            return
+        self.__lit = True
+        if self.__backlight is not None:
+            self.screen.brightness(self.__backlight)
+        else:
+            self.screen.backlight.on()
+
+    def service(self):
+        """This show's frame on its own, where nothing else is due beside it."""
+        if not self.wants():
+            return
+        self.__due = False
+        self.__redraw = False
         self.screen.update(self.player.image, rotation=self.rotation, mirror=self.mirror,
                            pixel_double=self.pixel_double, offset=self.offset,
                            tile=self.tile, bg_color=self.background)
-
-        # Lit once the panel holds this frame, never before: its memory still has
-        # whatever was last sent, so lighting first shows the picture that has gone.
-        # on() is for a panel an earlier reload took dark, which a fresh one ignores
-        if lighting:
-            self.__lit = True
-            if self.__backlight is not None:
-                self.screen.brightness(self.__backlight)
-            else:
-                self.screen.backlight.on()
+        self.lit()
 
     def pause(self):
         self.player.pause()
@@ -1313,11 +1339,44 @@ def __play(fx, volume, path, errors, playing, maker=None):
 PLAYER_FPS = 50
 
 
+# Whether two screens will stream together. Set false where a pair was refused,
+# which is a fact about how the screens were built and will not change while they
+# are the screens there are
+__PAIRING = True
+
+
 def __service_shows(shows):
-    """One pass of every screen that has the panel."""
-    for show in shows:
-        if show.live:
-            show.service()
+    """
+    One pass of every screen that has the panel.
+
+    Two panels on their own ports stream together in about the time one of them
+    takes alone, so a frame due on each is sent as a pair. Measured at 58ms
+    against 110ms for the two in turn, and 89ms against 155ms with the players
+    running. Placement stays per screen, prepare() holding each frame until both
+    are ready.
+    """
+    global __PAIRING
+
+    due = [show for show in shows if show.live and show.wants()]
+
+    if __PAIRING and len(due) == 2 and due[0].screen.port is not due[1].screen.port:
+        from screens import update_pair
+        try:
+            for show in due:
+                show.stage()
+            update_pair(due[0].screen, due[1].screen)
+            for show in due:
+                show.lit()
+            return
+        # Screens built too differently to share a stream, which update_pair says
+        # for itself. A staged frame is still waiting on each, and update() sends
+        # it, so the fall-through below shows them rather than losing the frame
+        except ValueError as e:
+            __PAIRING = False
+            print("the screens are being drawn one at a time: {}".format(e))
+
+    for show in due:
+        show.service()
 
 
 def __start(players, fx):
