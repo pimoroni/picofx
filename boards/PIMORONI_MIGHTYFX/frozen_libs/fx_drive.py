@@ -15,12 +15,15 @@ import rp2
 import vfs
 
 import fx_defaults
+import fx_editor
 import fx_manual
 
 MOUNT_POINT = "/fx"
 FILE_PATH = MOUNT_POINT + "/effects.txt"
 README_NAME = "README.txt"
 MANUAL_NAME = "MANUAL.html"
+PICKER_NAME = "PICKER.html"
+CATALOGUE_NAME = "catalogue.js"
 ERRORS_PATH = MOUNT_POINT + "/errors.txt"
 
 VOLUME_LABEL = "FX"
@@ -110,6 +113,21 @@ def __heal(fs, name, text):
         print("the FX drive is full, so {} could not be rebuilt".format(name))
 
 
+def __sweep_swap_files():
+    """
+    Remove the temporary files a browser save leaves when it is interrupted.
+    Chromium writes through a .crswap beside the file and renames on close, so
+    one still present is a save the drive left with. Its content is unfinished
+    by definition; the real file still holds the last completed save.
+    """
+    for name in os.listdir(MOUNT_POINT):
+        if name.lower().endswith(".crswap"):
+            try:
+                os.remove(MOUNT_POINT + "/" + name)
+            except OSError:
+                pass
+
+
 def __has_boot_signature(bdev):
     """Whether sector zero still ends 0x55 0xAA, so something formatted this once."""
     sector = bytearray(512)
@@ -169,6 +187,9 @@ def mount():
                 pass
     __heal(fs, README_NAME, fx_defaults.README)
     __heal(fs, MANUAL_NAME, fx_manual.MANUAL)
+    __heal(fs, PICKER_NAME, fx_editor.PICKER)
+    __heal(fs, CATALOGUE_NAME, fx_editor.CATALOGUE)
+    __sweep_swap_files()
     vfs.umount(MOUNT_POINT)
     vfs.mount(vfs.VfsFat(bdev), MOUNT_POINT, readonly=True)
     return True

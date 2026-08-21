@@ -1,0 +1,1174 @@
+# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
+#
+# SPDX-License-Identifier: MIT
+
+# Generated from editor/*.html and the autofx tables by tools/build_editor.py.
+# Edit those and rebuild; edits here are lost.
+
+
+PICKER = """\
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>FX Picker</title>
+<script src="catalogue.js"></script>
+<style>
+:root{
+ --bg:#f5f3ef; --panel:#fff; --ink:#26221e; --dim:#8a8378; --line:#e2ddd4;
+ --accent:#00857d; --accent-ink:#fff; --warn:#b33; --warn-bg:#fbeaea;
+}
+*{box-sizing:border-box}
+body{font:16px/1.5 system-ui,sans-serif;margin:0;background:var(--bg);color:var(--ink)}
+header{display:flex;align-items:center;gap:.8rem;padding:.8rem 1.4rem;background:var(--panel);
+ border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header h1{font-size:1.1rem;margin:0 auto 0 0}
+button{font:inherit;padding:.5rem 1rem;border:1px solid var(--line);border-radius:8px;
+ background:var(--panel);cursor:pointer}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button:disabled{opacity:.4;cursor:default}
+main{max-width:44rem;margin:1.5rem auto;padding:0 1.4rem}
+#status{font-size:.85rem;color:var(--dim)}
+.banner{padding:.8rem 1.1rem;border-radius:10px;margin:1rem 0;background:#e7f2f1}
+.banner.warn{background:var(--warn-bg);color:var(--warn)}
+.banner pre{margin:.4rem 0 0;white-space:pre-wrap;font-size:.85rem}
+
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(12.5rem,1fr));gap:1rem;margin:1rem 0}
+.card{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:0;
+ overflow:hidden;cursor:pointer;text-align:left;transition:border-color .15s, transform .1s}
+.card:hover{transform:translateY(-2px)}
+.card.picked{border-color:var(--accent)}
+.card .strip{height:3.2rem;display:flex}
+.card .strip span{flex:1}
+.card .label{padding:.6rem .9rem .8rem}
+.card .label b{display:block;font-size:1rem}
+
+.sliders{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+ padding:1.1rem 1.4rem;margin:1.2rem 0;display:none}
+.sliders.shown{display:block}
+.slider{display:grid;grid-template-columns:6.5rem 1fr 6.5rem;align-items:center;gap:1rem;margin:.7rem 0}
+.slider label{font-weight:600}
+.slider input{width:100%;accent-color:var(--accent)}
+.slider .ends{font-size:.8rem;color:var(--dim);text-align:right}
+.slider .ends:first-of-type{text-align:left}
+.actions{display:flex;gap:.8rem;align-items:center;margin-top:1rem;flex-wrap:wrap}
+.actions .grow{margin-left:auto}
+
+.screens{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+ padding:1.1rem 1.4rem;margin:1.2rem 0;display:none}
+.screens.shown{display:block}
+.screens h2{font-size:1rem;margin:0 0 .3rem}
+.screens .hint{font-size:.85rem;color:var(--dim);margin:.2rem 0 .6rem}
+.screen-row{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin:.6rem 0}
+.screen-row .port{font-weight:600;width:5.5rem}
+.thumb{width:4.6rem;height:3.2rem;border:2px solid var(--line);border-radius:8px;overflow:hidden;
+ padding:0;background:var(--panel);display:flex;align-items:center;justify-content:center;
+ font-size:.7rem;color:var(--dim);flex-direction:column;line-height:1.2}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb.picked{border-color:var(--accent)}
+.thumb small{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 .2rem}
+.screen-row input[type=number]{font:inherit;font-size:.85rem;width:4.5rem;padding:.3rem .4rem;
+ border:1px solid var(--line);border-radius:6px}
+.opt{display:flex;align-items:center;gap:.35rem;font-size:.85rem;color:var(--dim);cursor:pointer}
+.screens h2 + .hint{margin-top:0}
+.screens h2:not(:first-child){margin-top:1rem}
+
+details{margin:1.2rem 0}
+summary{cursor:pointer;color:var(--dim);font-size:.9rem}
+pre.file{font:.9rem/1.5 ui-monospace,Consolas,monospace;background:var(--panel);
+ border:1px solid var(--line);border-radius:10px;padding:1rem;white-space:pre-wrap}
+footer{max-width:44rem;margin:0 auto 2rem;padding:0 1.4rem;font-size:.8rem;color:var(--dim)}
+</style>
+</head>
+<body>
+<header>
+ <h1>Make some lights</h1>
+ <span id="status"></span>
+ <button id="open">Open the FX drive</button>
+ <button id="save" class="primary" disabled>Put it on the board</button>
+ <button id="check" disabled>Did it work?</button>
+</header>
+<main>
+ <div id="banner"></div>
+ <p>Pick a look. Slide until it feels right. Put it on the board.</p>
+ <div class="gallery" id="gallery"></div>
+ <div class="sliders" id="sliders">
+  <div class="slider">
+   <label>Pace</label>
+   <input type="range" id="pace" min="0" max="1" step="0.01" value="0.5">
+  </div>
+  <div class="slider">
+   <label id="mood-label">Colour</label>
+   <input type="range" id="mood" min="0" max="1" step="0.01" value="0.5">
+  </div>
+  <div class="actions">
+   <span id="picked-name" style="font-weight:600"></span>
+  </div>
+ </div>
+ <div class="screens" id="screens"></div>
+ <details>
+  <summary>The file this writes (effects.txt, editable by hand too)</summary>
+  <pre class="file" id="preview"></pre>
+ </details>
+</main>
+<footer>
+A concept. Each look writes a complete effects.txt, which stays a plain file
+anyone can open and edit by hand.
+</footer>
+
+<script>
+"use strict";
+
+// ---- prefabs ---------------------------------------------------------------
+// Each look is a writer of a whole effects.txt, taking pace and mood as 0..1.
+// Pace is tempo. Mood is the look's own second decision, named per look, so a
+// slider always does something visible for that look. Values are rounded so
+// the written file reads as something a person could have typed.
+
+function r2(n) { return Math.round(n * 100) / 100; }
+function lerp(a, b, t) { return r2(a + (b - a) * t); }
+
+// A palette the mood slider walks: warm embers to cold blues via full colour
+var MOODS = ["red", "warm", "yellow", "green", "cyan", "cool", "blue"];
+function moodColour(t) { return MOODS[Math.min(MOODS.length - 1, Math.floor(t * MOODS.length))]; }
+
+// Each look picks from a palette of its own, so the middle of the slider is the
+// colour its card shows and moving it stays within what suits that look
+function tone(palette, t) {
+  return palette[Math.min(palette.length - 1, Math.floor(t * palette.length))];
+}
+
+// A travelling effect's length scales with the strip so the wave keeps its
+// proportion whatever the LED count
+function span(count, mood) {
+  return Math.max(2, Math.round(count * lerp(2, 0.6, mood)));
+}
+
+// Looks with spans true play along any strip handed to write() as
+// {selector, count} pairs; those shaped to named lamps sit strips out.
+// Between them they cover every effect that travels across the outputs:
+// rainbow_wave, pulse_wave, blink_wave, flash_sequence, sweep and binary_counter.
+var LOOKS = [
+  {
+    name: "Rainbow", mood: "Colour spread", spans: true,
+    strip: ["#e33", "#e73", "#ea3", "#3a5", "#36c", "#63c", "#a3c"],
+    write: function (pace, mood, strips) {
+      var speed = lerp(0.05, 0.8, pace);
+      var lines = "out1-7: rainbow_wave speed=" + speed +
+                  " length=" + Math.round(lerp(14, 4, mood)) + "\\n";
+      (strips || []).forEach(function (s) {
+        lines += s.selector + ": rainbow_wave speed=" + speed +
+                 " length=" + span(s.count, mood) + "\\n";
+      });
+      return lines;
+    }
+  },
+  {
+    name: "Campfire", mood: "Embers to blaze", spans: true,
+    strip: ["#812200", "#c43a00", "#ff5a00", "#ff8c1a", "#ff5a00", "#c43a00", "#812200"],
+    write: function (pace, mood, strips) {
+      var flicker = "flicker brightness=" + lerp(0.5, 1, mood) +
+                    " dimness=" + lerp(0.7, 0.35, mood) +
+                    " bright_min=" + lerp(0.1, 0.02, pace) + " bright_max=" + lerp(0.4, 0.1, pace) +
+                    " dim_min=" + lerp(0.08, 0.02, pace) + " dim_max=" + lerp(0.3, 0.08, pace);
+      var lines = "out1-7 colour=ff5a00: " + flicker + "\\n";
+      (strips || []).forEach(function (s) {
+        lines += s.selector + " colour=ff5a00: " + flicker + "\\n";
+      });
+      return lines;
+    }
+  },
+  {
+    name: "Breathe", mood: "Colour", spans: true,
+    strip: ["#2b7f8f", "#37a0b4", "#43c1d9", "#56d8f0", "#43c1d9", "#37a0b4", "#2b7f8f"],
+    write: function (pace, mood, strips) {
+      var colour = tone(["blue", "cool", "cyan", "green", "warm"], mood);
+      var pulse = "pulse speed=" + lerp(0.08, 0.5, pace);
+      var ease = lerp(0.8, 0.2, pace);
+      var lines = "out1-7 colour=" + colour + " ease=" + ease + ": " + pulse + "\\n";
+      (strips || []).forEach(function (s) {
+        lines += s.selector + " colour=" + colour + " ease=" + ease + ": " + pulse + "\\n";
+      });
+      return lines;
+    }
+  },
+  {
+    name: "Wave", mood: "Wave length", spans: true,
+    strip: ["#122438", "#2a4a6a", "#4a7fb5", "#7fb5e6", "#4a7fb5", "#2a4a6a", "#122438"],
+    write: function (pace, mood, strips) {
+      var speed = lerp(0.1, 1, pace);
+      var lines = "out1-7 colour=cool: pulse_wave speed=" + speed +
+                  " length=" + Math.round(lerp(14, 4, mood)) + "\\n";
+      (strips || []).forEach(function (s) {
+        lines += s.selector + " colour=cool: pulse_wave speed=" + speed +
+                 " length=" + span(s.count, mood) + "\\n";
+      });
+      return lines;
+    }
+  },
+  {
+    name: "Sparkle", mood: "Colour", spans: true,
+    strip: ["#ffffff", "#999999", "#ffffff", "#cccccc", "#eeeeee", "#888888", "#ffffff"],
+    write: function (pace, mood, strips) {
+      var colour = tone(["cyan", "cool", "white", "warm", "yellow"], mood);
+      var random = "random interval=" + lerp(0.25, 0.03, pace) +
+                   " brightness_min=0 brightness_max=1";
+      var lines = "out1-7 colour=" + colour + ": " + random + "\\n";
+      (strips || []).forEach(function (s) {
+        lines += s.selector + " colour=" + colour + ": " + random + "\\n";
+      });
+      return lines;
+    }
+  },
+  {
+    name: "Scanner", mood: "Colour", spans: true,
+    strip: ["#330000", "#660000", "#cc0000", "#ff3333", "#cc0000", "#660000", "#330000"],
+    write: function (pace, mood, strips) {
+      var colour = tone(["magenta", "blue", "red", "yellow", "white"], mood);
+      var fade = lerp(0.5, 0.15, pace);
+      var speed = lerp(0.3, 2, pace);
+      var lines = "out1-7 colour=" + colour + " fade=" + fade +
+                  ": sweep speed=" + speed + " length=7 extent=1\\n";
+      (strips || []).forEach(function (s) {
+        lines += s.selector + " colour=" + colour + " fade=" + fade +
+                 ": sweep speed=" + speed + " length=" + s.count +
+                 " extent=" + Math.max(1, Math.round(s.count / 8)) + "\\n";
+      });
+      return lines;
+    }
+  },
+  {
+    name: "Chase", mood: "Colour", spans: true,
+    strip: ["#111111", "#111111", "#ffff00", "#ffd24a", "#111111", "#111111", "#111111"],
+    write: function (pace, mood, strips) {
+      var colour = tone(["magenta", "white", "yellow", "cyan", "green"], mood);
+      var speed = lerp(0.3, 2, pace);
+      var fade = lerp(0.4, 0.1, pace);
+      var lines = "out1-7 colour=" + colour + " fade=" + fade +
+                  ": flash_sequence speed=" + speed + " length=7 flashes=1 window=0.4\\n";
+      (strips || []).forEach(function (s) {
+        lines += s.selector + " colour=" + colour + " fade=" + fade +
+                 ": flash_sequence speed=" + speed + " length=" + s.count +
+                 " flashes=1 window=0.4\\n";
+      });
+      return lines;
+    }
+  },
+  {
+    name: "Counter", mood: "Colour", spans: true,
+    strip: ["#00ff00", "#111111", "#00ff00", "#00ff00", "#111111", "#00ff00", "#111111"],
+    write: function (pace, mood, strips) {
+      var colour = tone(["white", "cyan", "green", "yellow", "red"], mood);
+      var interval = lerp(1, 0.08, pace);
+      var lines = "out1-7 colour=" + colour + ": binary_counter interval=" + interval + "\\n";
+      (strips || []).forEach(function (s) {
+        lines += s.selector + " colour=" + colour + ": binary_counter interval=" +
+                 interval + "\\n";
+      });
+      return lines;
+    }
+  },
+  {
+    name: "Emergency", mood: "Red and blue to amber", spans: false,
+    strip: ["#dd2222", "#2222dd", "#dd2222", "#111111", "#2222dd", "#dd2222", "#2222dd"],
+    write: function (pace, mood) {
+      var speed = lerp(0.6, 2.5, pace);
+      var amber = mood > 0.75;
+      var left = amber ? "yellow" : "red";
+      var right = amber ? "yellow" : "blue";
+      return "out1-3 colour=" + left + ": flash speed=" + speed + " flashes=3 window=0.5\\n" +
+             "out5-7 colour=" + right + ": flash speed=" + speed + " flashes=3 window=0.5 phase=0.5\\n" +
+             "out4: none\\n";
+    }
+  },
+  {
+    name: "Pelican crossing", mood: "Lamp softness", spans: false,
+    strip: ["#ff0000", "#ff7800", "#00d28c", "#ff0000", "#00d28c", "#111111", "#111111"],
+    write: function (pace, mood) {
+      var scale = lerp(2, 0.4, pace);
+      return "out1-5 colour=red,ff7800,00d28c,red,00d28c ease=" + lerp(0.05, 0.6, mood) +
+             ": pelican_crossing red_interval=" + r2(8 * scale) +
+             " flashing_interval=" + r2(6 * scale) +
+             " green_interval=" + r2(20 * scale) +
+             " amber_interval=" + r2(3 * scale) + "\\n" +
+             "out6-7: none\\n";
+    }
+  },
+  {
+    name: "Party", mood: "Colour", spans: true,
+    strip: ["#ff00ff", "#ffff00", "#00ffff", "#ff00ff", "#ffff00", "#00ffff", "#ff00ff"],
+    write: function (pace, mood, strips) {
+      var hold = Math.round(lerp(20, 6, pace));
+      // A colour per scene, so the three on the card are the three it plays
+      var first = tone(["red", "blue", "magenta", "cyan", "white"], mood);
+      var second = tone(["green", "white", "yellow", "warm", "red"], mood);
+      var third = tone(["blue", "green", "cyan", "white", "magenta"], mood);
+      var chase = "", strobe = "", twinkle = "";
+      (strips || []).forEach(function (s) {
+        chase += s.selector + " colour=" + first + ": blink_wave speed=" +
+                 lerp(0.6, 3, pace) + " length=" + span(s.count, mood) + "\\n";
+        strobe += s.selector + " colour=" + second + ": flash speed=" + lerp(1, 4, pace) +
+                  " flashes=2 window=0.3\\n";
+        twinkle += s.selector + " colour=" + third + ": random interval=" +
+                   lerp(0.2, 0.03, pace) + "\\n";
+      });
+      return "[Chase: " + hold + "s]\\n" +
+             "out1-7 colour=" + first + ": blink_wave speed=" + lerp(0.6, 3, pace) +
+             " length=" + Math.round(lerp(10, 3, mood)) + "\\n" + chase +
+             "[Strobe: " + hold + "s]\\n" +
+             "out1-7 colour=" + second + ": flash speed=" + lerp(1, 4, pace) +
+             " flashes=2 window=0.3\\n" + strobe +
+             "[Twinkle: " + hold + "s]\\n" +
+             "out1-7 colour=" + third + ": random interval=" + lerp(0.2, 0.03, pace) +
+             "\\n" + twinkle;
+    }
+  },
+];
+
+var HEADER = "# Written by the FX picker. Everything here can be edited by hand;\\n" +
+             "# MANUAL.html on this drive explains every line.\\n";
+
+// ---- state and rendering -----------------------------------------------------
+
+var state = {
+  look: null, dirHandle: null, fileHandle: null,
+  boardResidue: [],  // board entry settings that are not screens or strips, kept as written
+  ports: [],         // screens in play, as written in entries ("screenA")
+  sizes: {},         // port -> "2.8" | "1.54", or null where the file leaves it unsaid
+  kept: {},          // port -> its existing entry lines, for the keep-as-is choice
+  carried: {},       // port -> the entry's channel settings less rotation, reused on new lines
+  rotations: {},     // port -> quarter turn, or null to write none
+  pingpong: {},      // port -> play a chosen gif or slideshow back and forth
+  holds: {},         // port -> seconds to wait where it turns around, or none
+  choices: {},       // port -> {mode: "keep"|"none"|"media", media}
+  strips: [],        // strips in play, as written ("stripL")
+  lengths: {},       // strip -> LED count, or null where the file leaves it unsaid
+  reversed: {},      // strip -> wired far end first, written as a descending range
+  stripKept: {},     // strip -> its existing entry lines
+  stripChoices: {},  // strip -> {mode: "look"|"keep"|"none"}
+  media: [],         // {name, kind: "gif"|"image"|"folder"} found on the drive
+};
+
+// What the board's file already says: hardware settings to carry, screens and
+// strips to offer. Pure text in, so the same reading is checkable off the drive.
+// Screen sizes, rotations and strip lengths are managed here so they can be
+// chosen; every other board setting is carried through untouched.
+function absorbText(text) {
+  state.boardResidue = [];
+  state.ports = [];
+  state.sizes = {};
+  state.kept = {};
+  state.carried = {};
+  state.rotations = {};
+  state.pingpong = {};
+  state.holds = {};
+  state.strips = [];
+  state.lengths = {};
+  state.reversed = {};
+  state.stripKept = {};
+  text.split("\\n").forEach(function (line) {
+    var board = line.match(/^\\s*board\\s*:\\s*(.*)$/i);
+    if (board) {
+      board[1].split(/\\s+/).forEach(function (token) {
+        if (token === "") return;
+        var size = token.match(/^(screen[ab])=(.+)$/i);
+        var count = token.match(/^(strip[lr])=(.+)$/i);
+        if (size) state.sizes[declarePort(size[1])] = size[2];
+        else if (count) state.lengths[declareStrip(count[1])] = count[2];
+        else state.boardResidue.push(token);
+      });
+      return;
+    }
+    var entry = line.match(/^\\s*(screen[ab])\\b([^:]*):/i);
+    if (entry) {
+      var port = declarePort(entry[1]);
+      (state.kept[port] = state.kept[port] || []).push(line);
+      if (!(port in state.carried)) state.carried[port] = entry[2].trim();
+      return;
+    }
+    var strip = line.match(/^\\s*(strip[lr])\\b[^:]*:/i);
+    if (strip) {
+      var name = declareStrip(strip[1]);
+      (state.stripKept[name] = state.stripKept[name] || []).push(line);
+    }
+  });
+  state.ports.forEach(function (port) {
+    if (!(port in state.sizes)) state.sizes[port] = null;
+    state.choices[port] = { mode: state.kept[port] ? "keep" : "none" };
+    state.rotations[port] = null;
+    state.pingpong[port] = false;
+    state.holds[port] = "";
+    // rotation is chosen in the picker, so it comes out of the carried settings
+    if (state.carried[port]) {
+      var rest = [];
+      state.carried[port].split(/\\s+/).forEach(function (token) {
+        var turn = token.match(/^rotation=(\\d+)$/i);
+        if (turn) state.rotations[port] = turn[1];
+        else if (token !== "") rest.push(token);
+      });
+      state.carried[port] = rest.join(" ");
+    }
+  });
+  state.strips.forEach(function (name) {
+    if (!(name in state.lengths)) state.lengths[name] = null;
+    state.reversed[name] = false;
+    state.stripChoices[name] = { mode: state.stripKept[name] ? "keep" : "look" };
+  });
+  // The board builds its strips once, at start, so only these come up on a reload;
+  // one added later needs the board turning off and on, and the save says so
+  state.stripsAtStart = state.strips.slice();
+}
+
+function boardLine() {
+  var tokens = state.boardResidue.slice();
+  state.ports.forEach(function (port) {
+    if (state.sizes[port]) tokens.push(port.toLowerCase() + "=" + state.sizes[port]);
+  });
+  state.strips.forEach(function (name) {
+    if (state.lengths[name]) tokens.push(name.toLowerCase() + "=" + state.lengths[name]);
+  });
+  return tokens.length ? "board: " + tokens.join(" ") : "";
+}
+
+function portName(name) {
+  return "screen" + name.slice(-1).toUpperCase();
+}
+
+function declarePort(name) {
+  var port = portName(name);
+  if (state.ports.indexOf(port) < 0) state.ports.push(port);
+  return port;
+}
+
+function stripName(name) {
+  return "strip" + name.slice(-1).toUpperCase();
+}
+
+function declareStrip(name) {
+  var strip = stripName(name);
+  if (state.strips.indexOf(strip) < 0) state.strips.push(strip);
+  return strip;
+}
+
+function quoted(name) {
+  return name.indexOf(" ") >= 0 ? '"' + name + '"' : name;
+}
+
+function screenLine(port, media, pace) {
+  var selector = port;
+  if (state.carried[port]) selector += " " + state.carried[port];
+  if (state.rotations[port] != null) selector += " rotation=" + state.rotations[port];
+  var back = state.pingpong[port] ? " ping_pong=true" : "";
+  if (state.holds[port]) back += " hold=" + state.holds[port];
+  if (media.kind === "folder")
+    return selector + ": sequence folder=" + quoted(media.name) +
+           " fps=" + lerp(1, 10, pace) + back;
+  if (media.kind === "gif")
+    return selector + ": gif file=" + quoted(media.name) + back;
+  return selector + ": image file=" + quoted(media.name);
+}
+
+function currentText() {
+  if (!state.look) return "";
+  var pace = parseFloat(document.getElementById("pace").value);
+  var mood = parseFloat(document.getElementById("mood").value);
+  var parts = [HEADER];
+  var board = boardLine();
+  if (board) parts.push(board + "\\n");
+  state.ports.forEach(function (port) {
+    var choice = state.choices[port];
+    if (!choice || choice.mode === "none") return;
+    if (choice.mode === "keep")
+      (state.kept[port] || []).forEach(function (line) { parts.push(line + "\\n"); });
+    else
+      parts.push(screenLine(port, choice.media, pace) + "\\n");
+  });
+  var inPlay = [];
+  state.strips.forEach(function (name) {
+    var choice = state.stripChoices[name];
+    if (!choice || choice.mode === "none") return;
+    if (choice.mode === "keep") {
+      (state.stripKept[name] || []).forEach(function (line) { parts.push(line + "\\n"); });
+      return;
+    }
+    var count = Number(state.lengths[name]);
+    if (!count) return;
+    inPlay.push({ selector: state.reversed[name] ? name + count + "-1" : name, count: count });
+  });
+  if (parts.length > 1) parts.push("\\n");
+  parts.push(state.look.write(pace, mood, inPlay));
+  return parts.join("");
+}
+
+function renderGallery() {
+  var gallery = document.getElementById("gallery");
+  LOOKS.forEach(function (look) {
+    var card = document.createElement("button");
+    card.className = "card";
+    var strip = document.createElement("div");
+    strip.className = "strip";
+    look.strip.forEach(function (colour) {
+      var cell = document.createElement("span");
+      cell.style.background = colour;
+      strip.appendChild(cell);
+    });
+    var label = document.createElement("div");
+    label.className = "label";
+    var name = document.createElement("b");
+    name.textContent = look.name;
+    label.appendChild(name);
+    card.appendChild(strip);
+    card.appendChild(label);
+    card.onclick = function () { pick(look, card); };
+    gallery.appendChild(card);
+  });
+}
+
+function pick(look, card) {
+  state.look = look;
+  document.querySelectorAll(".card").forEach(function (c) { c.classList.remove("picked"); });
+  card.classList.add("picked");
+  document.getElementById("sliders").classList.add("shown");
+  document.getElementById("picked-name").textContent = look.name;
+  document.getElementById("mood-label").textContent = look.mood;
+  renderScreens();
+  update();
+}
+
+function update() {
+  var text = currentText();
+  document.getElementById("preview").textContent = text;
+  document.getElementById("save").disabled = !(state.look && state.fileHandle) && !state.look;
+  try { localStorage.setItem("fx-draft", text); } catch (e) {}
+}
+
+function banner(text, warn, detail) {
+  var box = document.getElementById("banner");
+  box.textContent = "";
+  if (!text) return;
+  var note = document.createElement("div");
+  note.className = "banner" + (warn ? " warn" : "");
+  note.textContent = text;
+  if (detail) {
+    var pre = document.createElement("pre");
+    pre.textContent = detail;
+    note.appendChild(pre);
+  }
+  box.appendChild(note);
+}
+
+// ---- screens ------------------------------------------------------------------
+
+async function scanMedia(dir) {
+  // What the drive holds that a screen can show: gifs and stills, and folders
+  // of them, which play as a slideshow
+  state.media = [];
+  for await (var pair of dir.entries()) {
+    var name = pair[0], handle = pair[1];
+    if (handle.kind === "file") {
+      if (/\\.gif$/i.test(name)) state.media.push({ name: name, kind: "gif", handle: handle });
+      else if (/\\.png$/i.test(name)) state.media.push({ name: name, kind: "image", handle: handle });
+    } else if (name !== "System Volume Information") {
+      for await (var inner of handle.entries()) {
+        if (inner[1].kind === "file" && /\\.(gif|png)$/i.test(inner[0])) {
+          state.media.push({ name: name, kind: "folder" });
+          break;
+        }
+      }
+    }
+  }
+}
+
+function thumbButton(port, label, mode, media) {
+  var button = document.createElement("button");
+  button.className = "thumb";
+  var choice = state.choices[port] || {};
+  if (choice.mode === mode && (!media || choice.media === media)) button.classList.add("picked");
+  if (media && media.handle) {
+    media.handle.getFile().then(function (file) {
+      var img = document.createElement("img");
+      img.src = URL.createObjectURL(file);
+      button.insertBefore(img, button.firstChild);
+    }).catch(function () {});
+  }
+  var caption = document.createElement("small");
+  caption.textContent = label;
+  button.appendChild(caption);
+  button.onclick = function () {
+    state.choices[port] = { mode: mode, media: media };
+    renderScreens();
+    update();
+  };
+  return button;
+}
+
+function sizeSelect(port) {
+  // The panel sizes the board offers, plus silence where the file already relies
+  // on the board's own default; choosing a size writes it into the board entry
+  var pick = document.createElement("select");
+  var offered = CATALOGUE.board_settings[port.toLowerCase()] || [];
+  if (state.sizes[port] === null) {
+    var quiet = document.createElement("option");
+    quiet.textContent = "size as fitted";
+    pick.appendChild(quiet);
+  }
+  offered.forEach(function (size) {
+    var option = document.createElement("option");
+    option.value = size;
+    option.textContent = size + " inch";
+    if (state.sizes[port] === size) option.selected = true;
+    pick.appendChild(option);
+  });
+  pick.onchange = function () {
+    if (pick.value) state.sizes[port] = pick.value;
+    update();
+  };
+  return pick;
+}
+
+function renderScreens() {
+  var box = document.getElementById("screens");
+  box.textContent = "";
+  if (!state.fileHandle) { box.className = "screens"; return; }
+  box.className = "screens shown";
+  var head = document.createElement("h2");
+  head.textContent = "Screens";
+  box.appendChild(head);
+  var hint = document.createElement("div");
+  hint.className = "hint";
+  hint.textContent = state.media.length
+    ? "What each screen shows, from the pictures on the drive."
+    : "No pictures on the drive yet. Drop a gif or png onto it and reopen.";
+  box.appendChild(hint);
+  CATALOGUE.screen_ports.forEach(function (name) {
+    var port = portName(name);
+    var row = document.createElement("div");
+    row.className = "screen-row";
+    var label = document.createElement("span");
+    label.className = "port";
+    label.textContent = "Screen " + port.slice(-1).toUpperCase();
+    row.appendChild(label);
+    if (state.ports.indexOf(port) < 0) {
+      var add = document.createElement("button");
+      add.textContent = "add this screen";
+      add.onclick = function () {
+        declarePort(port);
+        state.sizes[port] = (CATALOGUE.board_settings[name] || ["2.8"])[0];
+        state.choices[port] = { mode: "none" };
+        state.rotations[port] = null;
+        state.pingpong[port] = false;
+        state.holds[port] = "";
+        renderScreens();
+        update();
+      };
+      row.appendChild(add);
+      box.appendChild(row);
+      return;
+    }
+    row.appendChild(sizeSelect(port));
+    row.appendChild(turnSelect(port));
+    if (state.kept[port]) row.appendChild(thumbButton(port, "as it is", "keep", null));
+    row.appendChild(thumbButton(port, "nothing", "none", null));
+    state.media.forEach(function (media) {
+      row.appendChild(thumbButton(port, media.name, "media", media));
+    });
+    var choice = state.choices[port] || {};
+    if (choice.mode === "media" && choice.media.kind !== "image") {
+      row.appendChild(optionCheck("back and forth",
+        "Play it forwards then backwards, no jump at the loop", state.pingpong[port],
+        function (on) { state.pingpong[port] = on; }));
+      row.appendChild(holdBox(port));
+    }
+    box.appendChild(row);
+  });
+  renderStrips(box);
+}
+
+function holdBox(port) {
+  // Seconds to wait where the playing turns around, which is what pauses a
+  // ping-pong at each end instead of bouncing straight off
+  var wrap = document.createElement("label");
+  wrap.className = "opt";
+  wrap.title = "Seconds to wait where it turns around";
+  wrap.appendChild(document.createTextNode("hold"));
+  var box = document.createElement("input");
+  box.type = "number";
+  box.min = 0;
+  box.step = 0.5;
+  box.value = state.holds[port] || "";
+  box.placeholder = "0";
+  box.onchange = function () {
+    state.holds[port] = box.value && Number(box.value) > 0 ? box.value : "";
+    update();
+  };
+  wrap.appendChild(box);
+  return wrap;
+}
+
+
+function turnSelect(port) {
+  // How the panel is mounted, in quarter turns; silence writes no rotation
+  var pick = document.createElement("select");
+  [["", "not turned"], ["90", "turned 90"], ["180", "turned 180"], ["270", "turned 270"]]
+    .forEach(function (turn) {
+      var option = document.createElement("option");
+      option.value = turn[0];
+      option.textContent = turn[1];
+      if (state.rotations[port] === (turn[0] || null)) option.selected = true;
+      pick.appendChild(option);
+    });
+  pick.onchange = function () {
+    state.rotations[port] = pick.value || null;
+    update();
+  };
+  return pick;
+}
+
+function optionCheck(label, title, on, apply) {
+  var wrap = document.createElement("label");
+  wrap.className = "opt";
+  wrap.title = title;
+  var tick = document.createElement("input");
+  tick.type = "checkbox";
+  tick.checked = on;
+  tick.onchange = function () { apply(tick.checked); update(); };
+  wrap.appendChild(tick);
+  wrap.appendChild(document.createTextNode(label));
+  return wrap;
+}
+
+function stripChoice(name, label, mode) {
+  var button = document.createElement("button");
+  button.className = "thumb";
+  if ((state.stripChoices[name] || {}).mode === mode) button.classList.add("picked");
+  var caption = document.createElement("small");
+  caption.textContent = label;
+  button.appendChild(caption);
+  button.onclick = function () {
+    state.stripChoices[name] = { mode: mode };
+    renderScreens();
+    update();
+  };
+  return button;
+}
+
+function renderStrips(box) {
+  var head = document.createElement("h2");
+  head.textContent = "Strips";
+  box.appendChild(head);
+  var hint = document.createElement("div");
+  hint.className = "hint";
+  hint.textContent = state.look && state.look.spans === false
+    ? "The picked look is shaped to the board's own lights, so strips sit this one out."
+    : "How many LEDs each strip has; the look plays along it.";
+  box.appendChild(hint);
+  CATALOGUE.strips.forEach(function (lower) {
+    var name = stripName(lower);
+    var row = document.createElement("div");
+    row.className = "screen-row";
+    var label = document.createElement("span");
+    label.className = "port";
+    label.textContent = "Strip " + name.slice(-1).toUpperCase();
+    row.appendChild(label);
+    if (state.strips.indexOf(name) < 0) {
+      var add = document.createElement("button");
+      add.textContent = "add this strip";
+      add.onclick = function () {
+        declareStrip(name);
+        state.lengths[name] = 30;
+        state.reversed[name] = false;
+        state.stripChoices[name] = { mode: "look" };
+        renderScreens();
+        update();
+      };
+      row.appendChild(add);
+      box.appendChild(row);
+      return;
+    }
+    var count = document.createElement("input");
+    count.type = "number";
+    count.min = 1;
+    count.placeholder = "LEDs";
+    count.title = "How many LEDs the strip has";
+    if (state.lengths[name]) count.value = state.lengths[name];
+    count.onchange = function () {
+      state.lengths[name] = count.value ? Number(count.value) : null;
+      update();
+    };
+    row.appendChild(count);
+    row.appendChild(optionCheck("far end first",
+      "The strip is wired from the far end, so effects travel the other way",
+      state.reversed[name], function (on) { state.reversed[name] = on; }));
+    if (state.stripKept[name]) row.appendChild(stripChoice(name, "as it is", "keep"));
+    row.appendChild(stripChoice(name, "with the look", "look"));
+    row.appendChild(stripChoice(name, "nothing", "none"));
+    box.appendChild(row);
+  });
+}
+
+// ---- the drive ---------------------------------------------------------------
+
+async function connect() {
+  var dir = await window.showDirectoryPicker({ mode: "readwrite" });
+  state.dirHandle = dir;
+  state.fileHandle = await dir.getFileHandle("effects.txt");
+  absorbText(await (await state.fileHandle.getFile()).text());
+  await scanMedia(dir);
+  renderScreens();
+  document.getElementById("check").disabled = false;
+  document.getElementById("status").textContent = "connected to the drive";
+}
+
+document.getElementById("save").onclick = async function () {
+  if (!state.look) return;
+  try {
+    if (!state.fileHandle) await connect();
+    var onBoard = await (await state.fileHandle.getFile()).text();
+    var lastWritten = null;
+    try { lastWritten = localStorage.getItem("fx-picker-wrote"); } catch (e) {}
+    if (onBoard.indexOf("Written by the FX picker") < 0 && onBoard !== lastWritten &&
+        onBoard.trim() !== "") {
+      if (!confirm("The file on the board was written some other way, maybe by hand. Replace it?"))
+        return;
+    }
+    var text = currentText();
+    var writable = await state.fileHandle.createWritable();
+    await writable.write(text);
+    await writable.close();
+    var back = await (await state.fileHandle.getFile()).text();
+    if (back !== text) throw new Error("the file read back differently");
+    try { localStorage.setItem("fx-picker-wrote", text); } catch (e) {}
+    var newStrips = state.strips.filter(function (name) {
+      return state.lengths[name] && (state.stripsAtStart || []).indexOf(name) < 0;
+    });
+    banner("On its way. Eject the FX drive on this computer, and the board plays it. " +
+           "Double-press the board's button to bring the drive back, then ask 'Did it work?'." +
+           (newStrips.length ? " The strip you added only comes up when the board starts, " +
+                               "so turn it off and on once the eject is done." : ""));
+  } catch (e) {
+    state.fileHandle = null;
+    state.dirHandle = null;
+    banner("That didn't reach the board: " + e.name + ". Is the FX drive showing? " +
+           "A double press of its button brings it back; then try again.", true);
+  }
+};
+
+document.getElementById("check").onclick = async function () {
+  try {
+    var handle = await state.dirHandle.getFileHandle("errors.txt");
+    var text = await (await handle.getFile()).text();
+    banner("The board wasn't happy with some of it:", true, text.trim());
+  } catch (e) {
+    if (e.name === "NotFoundError")
+      banner("All good. The board read the file and found nothing wrong.");
+    else
+      banner("Couldn't look: " + e.name + ". Is the drive showing?", true);
+  }
+};
+
+document.getElementById("open").onclick = async function () {
+  try {
+    await connect();
+    banner("");
+    update();
+  } catch (e) {
+    banner("Could not open the drive: " + e.name + ". Is it showing? " +
+           "A double press of the board's button brings it back.", true);
+  }
+};
+
+document.getElementById("pace").oninput = update;
+document.getElementById("mood").oninput = update;
+
+renderGallery();
+document.getElementById("save").disabled = false;
+</script>
+</body>
+</html>
+"""
+
+CATALOGUE = """\
+// Generated from the autofx tables. Do not edit.
+var CATALOGUE = {
+ "effects": {
+  "binary_counter": {
+   "kind": "mono",
+   "takes": [
+    "interval",
+    "count",
+    "step"
+   ]
+  },
+  "blink": {
+   "kind": "mono",
+   "takes": [
+    "speed",
+    "phase",
+    "duty"
+   ]
+  },
+  "blink_wave": {
+   "kind": "mono",
+   "takes": [
+    "speed",
+    "length",
+    "phase",
+    "duty"
+   ]
+  },
+  "flash": {
+   "kind": "mono",
+   "takes": [
+    "speed",
+    "flashes",
+    "window",
+    "phase",
+    "duty"
+   ]
+  },
+  "flash_sequence": {
+   "kind": "mono",
+   "takes": [
+    "speed",
+    "length",
+    "flashes",
+    "window",
+    "phase",
+    "duty"
+   ]
+  },
+  "flicker": {
+   "kind": "mono",
+   "takes": [
+    "brightness",
+    "dimness",
+    "bright_min",
+    "bright_max",
+    "dim_min",
+    "dim_max"
+   ]
+  },
+  "hsv": {
+   "kind": "colour",
+   "takes": [
+    "hue",
+    "sat",
+    "val"
+   ]
+  },
+  "hue_step": {
+   "kind": "colour",
+   "takes": [
+    "interval",
+    "hue",
+    "sat",
+    "val",
+    "steps"
+   ]
+  },
+  "none": {
+   "kind": "mono",
+   "takes": []
+  },
+  "pelican_crossing": {
+   "kind": "mono",
+   "takes": [
+    "red_interval",
+    "flashing_interval",
+    "green_interval",
+    "amber_interval"
+   ]
+  },
+  "pulse": {
+   "kind": "mono",
+   "takes": [
+    "speed",
+    "phase"
+   ]
+  },
+  "pulse_wave": {
+   "kind": "mono",
+   "takes": [
+    "speed",
+    "length",
+    "phase"
+   ]
+  },
+  "rainbow": {
+   "kind": "colour",
+   "takes": [
+    "speed",
+    "sat",
+    "val"
+   ]
+  },
+  "rainbow_wave": {
+   "kind": "colour",
+   "takes": [
+    "speed",
+    "length",
+    "sat",
+    "val"
+   ]
+  },
+  "random": {
+   "kind": "mono",
+   "takes": [
+    "interval",
+    "brightness_min",
+    "brightness_max"
+   ]
+  },
+  "rgb": {
+   "kind": "colour",
+   "takes": [
+    "red",
+    "green",
+    "blue"
+   ]
+  },
+  "rgb_blink": {
+   "kind": "colour",
+   "takes": [
+    "colour",
+    "speed",
+    "phase",
+    "duty"
+   ]
+  },
+  "static": {
+   "kind": "mono",
+   "takes": [
+    "brightness"
+   ]
+  },
+  "sweep": {
+   "kind": "mono",
+   "takes": [
+    "speed",
+    "length",
+    "extent",
+    "hold"
+   ]
+  },
+  "traffic_light": {
+   "kind": "mono",
+   "takes": [
+    "red_interval",
+    "red_amber_interval",
+    "green_interval",
+    "amber_interval"
+   ]
+  }
+ },
+ "screen_effects": {
+  "gif": [
+   "file",
+   "fps",
+   "interval",
+   "loop",
+   "ping_pong",
+   "first_as_last",
+   "hold"
+  ],
+  "image": [
+   "file"
+  ],
+  "sequence": [
+   "folder",
+   "fps",
+   "interval",
+   "loop",
+   "ping_pong",
+   "first_as_last",
+   "hold"
+  ]
+ },
+ "settings": {
+  "speed": "number",
+  "phase": "fraction",
+  "duty": "fraction",
+  "window": "fraction",
+  "length": "count",
+  "flashes": "count",
+  "steps": "count",
+  "extent": "span",
+  "brightness": "fraction",
+  "brightness_min": "fraction",
+  "brightness_max": "fraction",
+  "dimness": "fraction",
+  "bright_min": "seconds",
+  "bright_max": "seconds",
+  "dim_min": "seconds",
+  "dim_max": "seconds",
+  "interval": "seconds",
+  "hold": "seconds",
+  "count": "whole",
+  "step": "whole",
+  "red_interval": "seconds",
+  "red_amber_interval": "seconds",
+  "flashing_interval": "seconds",
+  "green_interval": "seconds",
+  "amber_interval": "seconds",
+  "red": "byte",
+  "green": "byte",
+  "blue": "byte",
+  "hue": "angle",
+  "sat": "fraction",
+  "val": "fraction",
+  "colour": "colour",
+  "file": "name",
+  "folder": "name",
+  "fps": "number",
+  "loop": "boolean",
+  "ping_pong": "boolean",
+  "first_as_last": "boolean"
+ },
+ "colours": [
+  "black",
+  "blue",
+  "cool",
+  "cyan",
+  "green",
+  "magenta",
+  "red",
+  "warm",
+  "white",
+  "yellow"
+ ],
+ "channel_kinds": {
+  "level": "fraction",
+  "fade": "seconds",
+  "ease": "seconds",
+  "backlight": "fraction",
+  "rotation": "quarter",
+  "mirror": "boolean",
+  "pixel_double": "boolean"
+ },
+ "screen_ports": [
+  "screena",
+  "screenb"
+ ],
+ "strips": [
+  "stripl",
+  "stripr"
+ ],
+ "board_settings": {
+  "drive": [
+   "manual"
+  ],
+  "program": null,
+  "args": null,
+  "screena": [
+   "2.8",
+   "1.54"
+  ],
+  "screenb": [
+   "2.8",
+   "1.54"
+  ],
+  "stripl": null,
+  "stripr": null
+ }
+};
+"""
