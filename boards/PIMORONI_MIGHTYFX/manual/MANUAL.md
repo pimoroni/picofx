@@ -22,9 +22,30 @@ Deleting `effects.txt` restores the default; emptying it leaves the board dark.
 While the computer is copying to this drive the effects stand aside for a dim
 white travelling along the outputs, and come back a moment after it finishes.
 
+**Would you rather not write the file at all? `PICKER.html` on this drive writes
+it for you. See [the picker](#the-picker).**
+
 **The board also carries programs that run as they are, from single effects to
 whole builds, and one line in `effects.txt` starts any of them. See
 [what is already on the board](#what-is-already-on-the-board).**
+
+## The picker
+
+`PICKER.html` on this drive writes `effects.txt` for you. Open it in Chrome or
+Edge, pick a look, and slide until it suits. It shows the file it is writing as
+you go, so nothing about it is hidden.
+
+Screens and strips are set up there too. Say how many LEDs a strip has and which
+size each screen is, pick a picture from this drive for a screen to show, and
+turn the board's own seven lights off where the screens are all you want.
+
+"Put it on the board" writes the file. Eject this drive, or press **Boot** once,
+and the board plays it. "Did it work?" reads `errors.txt` back and shows what the
+board made of each line.
+
+A page cannot write to a drive in Firefox or Safari, so the picker needs Chrome or
+Edge. What it writes is an ordinary `effects.txt`: anything it makes can be edited
+by hand afterwards, and it asks before replacing a file it did not write itself.
 
 ## Writing an entry
 
