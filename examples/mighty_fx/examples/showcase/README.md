@@ -13,6 +13,7 @@ The posters the two billboards show live with the other example art in [assets/b
 - [Scrolling Billboard](#scrolling-billboard)
 - [CRT Terminal](#crt-terminal)
 - [Acrylic Lixie](#acrylic-lixie)
+- [Isometric Flight](#isometric-flight)
 
 
 ## Roadworks Sign
@@ -49,3 +50,7 @@ The posters the two billboards show live with the other example art in [assets/b
 
 ## Acrylic Lixie
 [acrylic_lixie.py](acrylic_lixie.py)
+
+
+## Isometric Flight
+[isometric_flight.py](isometric_flight.py)

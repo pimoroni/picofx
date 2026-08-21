@@ -7,19 +7,14 @@ from screens import SCREEN_TYPES
 """
 Fill the whole panel with a brick wall drawn from a tile of 32 by 32 pixels.
 
-That tile is 4KB. A wall covering the panel the ordinary way is a full-size image, 307KB of
-it, so tiling is not a convenience here but the difference between an asset that fits
-anywhere and one that has to be budgeted for. Anything built from a repeat is the same
-story: tiles, chequerplate, mesh, upholstery, a grid.
+That tile is 4KB where a wall covering the panel would be a full-size image of 307KB, so tiling
+is the difference between an asset that fits anywhere and one that has to be budgeted for.
 
-A running bond is what makes the tile so small. One course is a brick and its mortar, and
-the course above is the same thing moved sideways by half a brick, so two courses is
-everything the pattern ever does. Give the tile exactly those two and the driver supplies
-the rest of the wall.
-
-The brick that starts halfway along the upper course finishes on the far side of the tile,
-so it is drawn twice, once at each end. That is the whole trick to a source that tiles: a
-shape crossing an edge has to appear at the opposite edge as well.
+A running bond is what makes the tile so small: one course is a brick and its mortar, and the
+course above is the same moved sideways by half a brick, so two courses is everything the pattern
+ever does. The brick starting halfway along the upper course finishes on the far side of the tile,
+so it is drawn twice, once at each end. That is the whole trick to a source that tiles, a shape
+crossing an edge having to appear at the opposite edge as well.
 
 Press "Boot" to exit the program.
 """

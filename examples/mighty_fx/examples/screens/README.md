@@ -16,10 +16,9 @@ These are micropython examples for the screens Mighty FX can drive from its SP/C
   - [Bouncing Logo](#bouncing-logo)
   - [Orientations](#orientations)
   - [Pixel Doubled](#pixel-doubled)
-  - [Isometric Slopes](#isometric-slopes)
-  - [Isometric Neon](#isometric-neon)
   - [Kaleidoscope](#kaleidoscope)
-  - [Brick Wall](#brick-wall)
+  - [Tiled Bricks](#tiled-bricks)
+  - [Tiled Arrows](#tiled-arrows)
 - [Screen Pair Examples](#screen-pair-examples)
   - [Colour Wheel Paired](#colour-wheel-paired)
   - [Colour Wheel In Turn](#colour-wheel-in-turn)
@@ -130,20 +129,16 @@ These are micropython examples for the screens Mighty FX can drive from its SP/C
 [layout/pixel_doubled.py](layout/pixel_doubled.py)
 
 
-### Isometric Slopes
-[layout/isometric_slopes.py](layout/isometric_slopes.py)
-
-
-### Isometric Neon
-[layout/isometric_neon.py](layout/isometric_neon.py)
-
-
 ### Kaleidoscope
 [layout/kaleidoscope.py](layout/kaleidoscope.py)
 
 
-### Brick Wall
-[layout/brick_wall.py](layout/brick_wall.py)
+### Tiled Bricks
+[layout/tiled_bricks.py](layout/tiled_bricks.py)
+
+
+### Tiled Arrows
+[layout/tiled_arrows.py](layout/tiled_arrows.py)
 
 
 ## Screen Pair Examples
