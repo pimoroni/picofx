@@ -189,8 +189,8 @@ try:
 
         # Two images and an offset each, in one call: the hexagons drift on the diagonal
         # and the blocks sideways, from one tile setting they happen to share
-        pair.update(hexagons, blocks, rotation=ROTATION, tile=True,
-                    offset=((-hex_at, -hex_at), (-block_at, 0)))
+        pair.update(hexagons, blocks, rotation=ROTATION,
+                    offset=((-hex_at, -hex_at), (-block_at, 0)), tile=True)
         frames += 1
 
 # Stop any running effects and turn off all the outputs

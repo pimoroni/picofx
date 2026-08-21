@@ -203,8 +203,8 @@ try:
 
         # Two across for one down keeps the flight along the lattice's own slope, and
         # sideways the tile is mirrored rather than repeated
-        screen.update(terrain, rotation=ROTATION, tile=(ACROSS, True),
-                      offset=(-down * 2, -down))
+        screen.update(terrain, rotation=ROTATION, offset=(-down * 2, -down),
+                      tile=(ACROSS, True))
         frames += 1
 
 # Stop any running effects and turn off all the outputs

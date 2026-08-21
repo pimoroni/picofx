@@ -218,8 +218,8 @@ try:
         # Half as far down as across, which is the ground the isometric view foreshortens
         down += SPEED * math.sin(heading) / 2
 
-        screen.update(terrain, rotation=ROTATION, tile=True,
-                      offset=(-int(across), -int(down)))
+        screen.update(terrain, rotation=ROTATION,
+                      offset=(-int(across), -int(down)), tile=True)
         frames += 1
 
 # Stop any running effects and turn off all the outputs

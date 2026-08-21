@@ -155,7 +155,7 @@ try:
         # and down lands the middle of the circle in the middle of the panel. Without it a
         # fold runs through the middle instead.
         screen.update(wheel[frames // HOLD % FRAMES], rotation=ROTATION,
-                      tile=Tile.MIRROR, bg_color=GROUND, offset=(TILE_W, TILE_H))
+                      offset=(TILE_W, TILE_H), tile=Tile.MIRROR, bg_color=GROUND)
         frames += 1
 
 # Stop any running effects and turn off all the outputs

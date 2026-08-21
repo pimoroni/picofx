@@ -77,8 +77,8 @@ try:
     while not mighty.boot_pressed():
         # Sliding the wall proves there is no seam in it: the courses run on for ever in
         # both directions, from those three bricks
-        screen.update(wall, rotation=ROTATION, tile=True,
-                      offset=(-frames * STEP, -frames * STEP))
+        screen.update(wall, rotation=ROTATION,
+                      offset=(-frames * STEP, -frames * STEP), tile=True)
         frames += 1
 
 # Stop any running effects and turn off all the outputs

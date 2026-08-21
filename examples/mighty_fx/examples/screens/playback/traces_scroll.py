@@ -38,8 +38,8 @@ frames = 0
 try:
     while not mighty.boot_pressed():
         # The tile fills the panel wherever the field has reached, the read wrapping at its own width
-        screen.update(player.image, rotation=ROTATION, tile=(True, False),
-                      offset=(-frames * STEP, None))
+        screen.update(player.image, rotation=ROTATION,
+                      offset=(-frames * STEP, None), tile=(True, False))
         frames += 1
 
 # Stop any running effects and turn off all the outputs
