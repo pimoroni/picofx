@@ -8,29 +8,12 @@ from screens import SCREEN_TYPES, Reserve, ScreenPair
 Lay a different carpet on each panel of a pair, each tiled from a scrap of a pattern and
 each drifting its own way.
 
-Every placement setting a screen takes, a pair takes one of per screen, and this sends two
-images and an offset each in a single call. One panel carries interlocking hexagons,
-drifting on the diagonal; the other carries tumbling blocks, drifting sideways. Nothing
-about the two has to agree.
+Every placement setting a screen takes, a pair takes one of per screen, so this sends two
+images and an offset each in one call, and nothing about the two has to agree: hexagons
+drift on the diagonal, tumbling blocks drift sideways.
 
-Both tiles are tiny, because a pattern is only ever the smallest piece that repeats. The
-hexagons need two rows, the second half a tile across, and the blocks two of themselves,
-every other one sitting half a step across and down. Between them that is 69KB for two
-panels of carpet, where two panel-sized images would be over 600KB.
-
-The hexagons are the interesting one to draw. Each motif is three hexagons inside one
-another, taller than they are wide, with a slot of ground cut out of the outer one at one
-end. That slot is the whole pattern: it stops the ring reading as a closed loop and lets
-the ground run in and on to the next motif, and the two rows take their slot at opposite
-ends, so the openings face each other and the ground threads between them.
-
-Neither pattern is mirrored, which is worth saying since Tile.MIRROR hides a join for
-nothing elsewhere. The blocks are lit from one side, so a reflected copy is lit from the
-other and the seam becomes the loudest thing on the panel; worse, the cubes meet their own
-reflection and the faces stop lining up. Mirroring is for art with no direction to lose,
-which is what kaleidoscope.py trades on.
-
-Neither is drawn after startup. The drift is the offset, and it costs nothing.
+Both tiles are tiny, a pattern being only the smallest piece that repeats, so the two come
+to 69KB. Neither is drawn after startup: the drift is the offset, and it costs nothing.
 
 Press "Boot" to exit the program.
 """

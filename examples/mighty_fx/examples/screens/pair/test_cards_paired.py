@@ -7,24 +7,15 @@ from screens import SCREEN_TYPES, Reserve, ScreenPair
 """
 Turn a test card on each panel of a pair, the second one mirrored against the first.
 
-Every placement setting a screen takes, a pair takes one of per screen, so mirror=(False,
-True) is one call that leaves one panel as drawn and flips the other. Set the panels beside
-each other and the pair reads as a thing and its reflection, which is what a screen seen
-through a mirror or from behind a window needs; MIRRORED = False gives both the same instead,
-and nothing else in the file changes.
+Every placement setting a screen takes, a pair takes one of per screen, so mirror=(False, True)
+is one call that leaves one panel as drawn and flips the other. Set the panels beside each other
+and the pair reads as a thing and its reflection.
 
-The cards are the shipped test cards, and each panel takes its own. They are 320 square where
-the panel is 240 by 320, so every turn keeps a different part of one: upright it loses the paw
-patterns down the sides, turned a quarter it loses the colour bars along the ends. A source is
-not obliged to be the panel's shape or the panel's size, and nothing here is letterboxed.
+The caption is drawn onto a copy of each card, so the assets are untouched. On the mirrored panel
+it reads backwards, which is the plainest proof the setting reached that panel and not the other.
 
-The caption is drawn onto a copy of each card, so the assets are untouched and the caption
-turns and flips with the picture it is on. On the mirrored panel it reads backwards, which is
-the plainest proof the setting reached that panel and not the other.
-
-Two full-size sources out of the heap at once is the one case that cannot keep up otherwise,
-so both screens are built with Reserve.FULL_SIZE_IMAGES. A pair needs the same reserve on
-both, a reservation being shared out across it.
+Two full-size sources at once is the one case that cannot keep up otherwise, so both screens are
+built with Reserve.FULL_SIZE_IMAGES, a pair needing the same reserve on both.
 
 Press "Boot" to exit the program.
 """

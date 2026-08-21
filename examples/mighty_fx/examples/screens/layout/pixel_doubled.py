@@ -7,26 +7,14 @@ from screens import SCREEN_TYPES
 """
 Fill the panel from a source a quarter of its size, and show what that costs.
 
-pixel_double= draws every source pixel as a two by two block, so an image half the panel's
-width and half its height covers all of it. That is a quarter of the memory and a quarter of
-the pixels to convert, which is what makes it worth having: a full-size image out of the
-regular heap struggles to keep ahead of the wire, and a quarter-size one out of the same heap
-does not have to.
+pixel_double= draws every source pixel as a two by two block, so an image half the panel's width
+and half its height covers all of it, for a quarter of the memory and a quarter of the pixels to
+convert.
 
-Three states go round, and the middle one is the point of having three. A full-size card
-first, then the small card at its own size in the middle of the panel, then the same small
-card doubled to fill it. The middle state is the small card's real extent, so the doubling
-that follows reads as what it is, a source too small for the panel being made to cover it,
-and not as an effect laid over a picture that was full size all along.
-
-What it costs is everywhere the drawing is finer than two pixels. Both cards carry the same
-design at the same measurements, so a curve, a diagonal and a letter are the only things that
-differ, and they differ because a two pixel block cannot land between one panel pixel and the
-next.
-
-Both are drawn once at startup. The small one lives in the heap, which is the case the setting
-is for, and the full-size one takes the fast SRAM canvas, which is the only way a picture that
-size keeps up without doubling.
+Three states go round: a full-size card, the small card at its own size in the middle of the
+panel, then that same small card doubled to fill it, so the doubling reads as what it is. What it
+costs is everywhere the drawing is finer than two pixels, a two pixel block being unable to land
+between one panel pixel and the next.
 
 Press "Boot" to exit the program.
 """

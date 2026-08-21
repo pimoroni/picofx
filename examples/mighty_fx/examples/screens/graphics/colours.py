@@ -6,21 +6,18 @@ from screens import SCREEN_TYPES
 from picovector import color, font
 
 """
-Ask the colour module for a set of colours rather than picking them by hand.
+Ask the colour module for a set of colours instead of picking them by hand.
 
-The first two strips are the same eight hues twice, once through hsv and once through oklch.
-hsv holds the numbers even and lets the lightness wander, so its yellow glares and its blue
-sinks; oklch holds the lightness even instead, which makes a row of it read as one
-family. That is the whole reason to reach for it.
+The first two strips are the same eight hues through hsv and through oklch. hsv holds the numbers
+even and lets the lightness wander, so its yellow glares and its blue sinks; oklch holds the
+lightness even, which makes a row of it read as one family.
 
-Under those, three calls that hand back a set: harmony() for hues that belong together,
-tones() for one hue from dark to light, and ramp() for the steps between colours you name.
-Then readable_on(), which picks lettering that can be read against a given ground, with the
-contrast it managed said beside it.
+Under those, three calls that hand back a set: harmony() for hues that belong together, tones()
+for one hue from dark to light, and ramp() for the steps between colours you name. Then
+readable_on(), which picks lettering that can be read against a given ground.
 
-One thing to know before using any of them: an amount in this module runs 0 to 255, not 0 to
-1, so mix(a, b, 0.5) hands back a unchanged where mix(a, b, 128) is the halfway blend. The
-same goes for saturate, darken and lighten.
+One thing to know before using any of them: an amount in this module runs 0 to 255, not 0 to 1,
+so mix(a, b, 0.5) hands back a unchanged where mix(a, b, 128) is the halfway blend.
 
 Press "Boot" to exit the program.
 """

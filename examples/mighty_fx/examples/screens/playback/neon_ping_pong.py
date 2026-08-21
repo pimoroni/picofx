@@ -13,7 +13,7 @@ ping_pong plays them forward then back, so three files give six steps of movemen
 hold dwells where it turns. The arm genuinely stops at each end, so nothing belongs at the
 turn; an animation drawn to loop wants first_as_last there.
 
-Every frame decodes into the heap at construction, so a sequence costs its whole length
+Every frame decodes when the player is made, so a sequence costs its whole length
 before it plays a step: three truecolour frames of this size are about 900KB.
 
 Press "Boot" to exit the program.

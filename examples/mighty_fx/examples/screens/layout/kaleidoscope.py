@@ -11,29 +11,14 @@ from screens import SCREEN_TYPES, Tile
 """
 Turn a kaleidoscope, from a set of small frames drawn once at startup.
 
-tile=Tile.MIRROR repeats a source like tile=True does, but reverses every other repeat, so
-each seam is a reflection instead of a join. The panel therefore shows one quarter of art and
-three reflections of it meeting at the folds, which is what a kaleidoscope does with mirrors.
+tile=Tile.MIRROR reverses every other repeat, so each seam is a reflection and the panel
+shows one quarter of art with three reflections of it meeting at the folds. Each frame is
+the window a kaleidoscope sees, one corner of it the middle of a circle of beads, and a
+whole turn of the beads brings the set back to its first frame so the loop closes exactly.
 
-The art is a circle of beads, scattered afresh on every run, and each frame is the window a
-kaleidoscope would actually see: one corner of the window is the middle of the circle, where
-the mirrors meet. Every frame turns the beads a little further round, and after a whole turn
-the set is back where it started, so the loop closes exactly.
-
-A bead crossing the edge of the window is drawn as far as it goes and its reflection
-finishes it, which is a bead touching a mirror. Nothing has to be arranged to avoid the
-edges: the mirrors take care of them.
-
-The frames live in the heap, since nothing draws to them again and the fast SRAM is better
-left for anything that does. Each is a quarter of the pixels of a panel-sized frame, which
-is what makes a whole turn of them affordable at all.
-
-Drawing before the loop rather than in it also buys the quality: X4 antialiasing is four
-times the rasterising, which is a few seconds once at startup and nothing at all per frame.
-
-How fast it turns is FRAMES against HOLD: more frames is a finer step and more memory, and a
-longer hold slows the turn without costing anything but smoothness. A whole turn here takes
-about four seconds.
+Drawing before the loop buys the quality: X4 antialiasing costs a few seconds once at
+startup and nothing per frame. Each frame is a quarter of a panel's pixels, which is what
+makes a whole turn of them affordable.
 
 Press "Boot" to exit the program.
 """

@@ -7,19 +7,14 @@ from screens import Screen280
 """
 Show a different poster on every panel a hub can reach, all changing on one clock.
 
-A hub shares one SP/CE port, and one port is one stream, so panels showing different
-pictures are sent one after another: measured on three, 68ms to broadcast one poster to
-all of them against 181ms to send a different poster to each. The change therefore ripples
-across the wall rather than landing at once.
+A hub shares one SP/CE port, and one port is one stream, so panels showing different pictures are
+sent one after another: measured on three, 68ms to broadcast one poster to all of them against
+181ms to send a different poster to each. The change therefore ripples across the wall instead of
+landing at once, and there is no ScreenGroup, a group existing to hold panels in phase so they
+can be sent together.
 
-traces_wall.py is the other half of this, the same picture on every panel, which the hub
-sends once. Between them they are the choice a wall has to make.
-
-There is no ScreenGroup here. A group exists to hold panels in phase so they can be sent
-together, and no two panels are ever sent together in this example.
-
-One player feeds every panel. image_at() reads any frame without moving the player, so
-panel n takes the poster n along the folder and the folder is held once.
+One player feeds every panel. image_at() reads any frame without moving the player, so panel n
+takes the poster n along the folder and the folder is held once.
 
 Press "Boot" to exit the program.
 """

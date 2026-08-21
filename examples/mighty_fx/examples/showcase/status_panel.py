@@ -7,28 +7,17 @@ from screens import Screen280
 from picovector import color, font, image, rect, shape
 
 """
-Draw a status panel for the company that made the board: the wordmark over a cycling
-ribbon, the coin as a badge, a few statuses, and the seven RGB outputs standing in for the
-line the board came down.
+Draw a status panel for the company that made the board: the wordmark over a cycling ribbon,
+the coin as a badge, a few statuses, and the seven RGB outputs standing in for the line the
+board came down.
 
-Everything is drawn at half the panel's size and doubled on the way out, so every pixel on
-the glass is a square of four and the whole interface shares the chunky coin's grain and does not
-fight it. That costs a quarter of the canvas and a quarter of the drawing,
-and the panel receives the same pixels either way. Doubling is nearest by nature: a smooth
-enlargement would blur type that is already tight, and smear the dither that gives the
-coin its character.
+Everything is drawn at half the panel's size and doubled on the way out, so every pixel on the
+glass is a square of four, for a quarter of the canvas and a quarter of the drawing. The ribbon
+is dithered along its own direction, since 16 levels a channel turn a gradient into bands.
 
-The ribbon is dithered along its own direction, which is not decoration: 16 levels a
-channel turn a smooth gradient into bands, and a column of jitter every other column
-scatters them.
-
-The seven outputs are a production line, one stage live at a time with its lamp lit on the
-glass and its LED lit on the board below, so output four is stage four. One level per
-output, read by both, so a lamp and its LED cannot drift apart.
-
-The interface is built once into an image and blitted as the ground, so a frame draws only
-the ribbon, the badge, the live stage and the lamps. That ground lives in the GC heap, the
-screen's fast SRAM holding the canvas.
+The seven outputs are a production line, one stage live at a time with its lamp lit on the glass
+and its LED lit on the board below. One level per output, read by both, so the two cannot drift
+apart. The interface is built once and blitted as the ground, so a frame draws only what moves.
 
 Press "Boot" to exit the program.
 """
@@ -155,13 +144,9 @@ def glyph_blanks(face, glyph, size, tall, down):
     """The blank a glyph carries before and after its ink, out of the advance it takes.
 
     Centring on measure_text leaves a string off centre: what it returns is the advance, and a glyph's ink
-    stops short of its own by whatever the face leaves around it. On an interface this wide that is a pixel
-    or two, and it shows.
+    stops short of its own by whatever the face leaves around it. On an interface this wide that shows.
 
-    Only the two end glyphs of a string need measuring, advances adding up without kerning, so this draws one
-    glyph, not a whole line. The scratch is fresh, an image starting empty, so any non zero byte is
-    ink, and each row is read whole, not pixel by pixel. Answers are kept, faces and sizes here being
-    few.
+    Only the two end glyphs need measuring, advances adding up without kerning, and answers are kept.
     """
     kept = __blanks.get((glyph, size))
     if kept:
@@ -239,10 +224,8 @@ def plate(render, x, y, w, h, screws=True):
 def build_render():
     """The rendered half of the interface, drawn large and reduced onto the ground.
 
-    Everything here is continuous tone: a vector wordmark, a plate behind the badge, and a plate carrying the
-    line with a rail and a housing for each lamp. Drawing it at twice the size and reducing it is what gives
-    it the grain of a picture taken at a higher resolution than the panel, which is the emblem's own look. It
-    costs nothing per frame, being built once, and the scratch is handed back afterwards.
+    Everything here is continuous tone: a vector wordmark, a plate behind the badge, and a plate carrying
+    the line with a rail and a housing for each lamp. Built once, so it costs nothing per frame.
     """
     render = image(WIDTH * REDUCE, HEIGHT * REDUCE)
     render.antialias = image.X4

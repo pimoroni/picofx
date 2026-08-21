@@ -9,8 +9,8 @@ A pair presents its panels together, so one call sends the frame to both and nei
 be left showing what the other has moved on from. There is one player rather than two: the
 animation has one position, shown twice.
 
-Both panels are full size and each converts its own frame, so the SRAM for two of them is
-set aside when the screens are made. That is what the reserve is.
+Both panels are full size and each converts its own frame, so room for two is set aside when
+the screens are made. That is what the reserve is.
 
 Press "Boot" to exit the program.
 """

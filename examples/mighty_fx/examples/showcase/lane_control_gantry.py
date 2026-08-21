@@ -331,18 +331,13 @@ def draw_speed(limit):
 def lamp_stroke(from_x, from_y, to_x, to_y, weight, across, carry=(0, 0)):
     """Light a stroke of whole lamps between two lamps, square on or at 45 degrees, a row at a time.
 
-    Not through the rasteriser, which cannot place these: a 45 degree vector stroke lights an even count of
-    lamps along a row whatever its thickness. An even count cannot sit symmetrically on a matrix whose
-    middle is a lamp, so one arm of a cross always came out a lamp short of the other.
+    A 45 degree vector stroke lights an even count of lamps along a row whatever its thickness, and an
+    even count cannot sit symmetrically on a matrix whose middle is a lamp, so the rasteriser cannot
+    place these.
 
-    `weight` is the count across a stroke running square on, and `across` the count along a row where it runs
-    at 45 degrees, which is the same visual weight. Ends are cut square to the stroke rather than to the grid,
-    so a tip tapers to one lamp the way a real sign's does.
-
-    `carry` moves each end along the stroke, the first point then the second, out being positive. Out is how
-    two barbs come to a point of their own instead of stopping where their middles cross. In by one is what
-    leaves a diagonal tip a single lamp, which it cannot be otherwise, a symmetric run's ends both falling on
-    an even count.
+    `weight` is the count across a stroke running square on and `across` the count along a row at 45
+    degrees, the same visual weight. `carry` moves each end along the stroke, out being positive, which
+    is how two barbs come to a point of their own.
     """
     starts, ends = carry
     if from_x == to_x:
@@ -406,10 +401,7 @@ def draw_arrow(towards):
     """The arrow: straight down for a lane open, and turned to point into the lane to either side of it.
 
     `towards` is -1, 0 or 1. A lane open is green straight down and a lane change is white turned across,
-    which is the pairing a real gantry uses: the colour carries as much of the meaning as the direction does.
-
-    The shaft stops short of the barbs, leaving a gap between them, and the barbs meet in a point of their
-    own. Turned, the shaft goes to 45 degrees and the barbs come round to square.
+    as a real gantry pairs them. The shaft stops short of the barbs, which meet in a point of their own.
     """
     lamps.pen = GREEN if towards == 0 else WHITE
     point, barbs, at, back, from_here, to_there = ARROWS[towards]

@@ -5,21 +5,14 @@ from screens import Screen280, ScreenGroup
 """
 Play one animation across every panel a hub can reach, each showing the same frame.
 
-The pattern was drawn to tile in both directions, so a wall reads as one surface rather
-than as six copies, and its pulses travel across the joins. Every panel showing the same
-frame is what makes that work, and it costs one decode rather than six.
+The pattern was drawn to tile in both directions, so a wall reads as one surface and its pulses
+travel across the joins. Every panel showing the same frame is what makes that work: a frame
+costs the same however many panels are on the hub, the panels latching one stream of pixels
+together, so the rate a wall can hold is the rate one panel can hold.
 
-The joins interrupt it, and are meant to here: two panels butted together hide a band of
-pixels behind their bezels, so the pattern steps at each one. Taking that out means an
-offset per panel, which the pair examples cover.
-
-A frame costs the same however many panels are on the hub, which is the point of driving
-them as a group: the panels latch one stream of pixels together, so the rate a wall can
-hold is the rate one panel can hold.
-
-The frames are indexed PNGs, one a frame, which is the choice worth copying: eight of this
-size cost 609KB of heap indexed against about 2.4MB truecolour, the player holding
-whatever each file carries.
+Two panels butted together hide a band of pixels behind their bezels, so the pattern steps at
+each join. The frames are indexed PNGs, one a frame, which is the choice worth copying: eight of
+this size cost 609KB against about 2.4MB truecolour.
 
 Press "Boot" to exit the program.
 """
@@ -54,7 +47,7 @@ if not panels:
 wall = ScreenGroup(*panels)
 print(f"{len(panels)} of {len(mighty.hub.ports)} hub positions answered")
 
-# Every frame decodes into the heap here, so a frame costs nothing to reach afterwards
+# Every frame decodes when the player is made, so a frame costs nothing to reach afterwards
 player = SequencePlayer(FRAMES, fps=FPS)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)

@@ -6,29 +6,16 @@ from screens import Screen280
 from picovector import brush, color, image, rect, shape, vec2
 
 """
-Show a folder of posters as if each were in a case behind glass, laid over the picture as
-it goes.
+Show a folder of posters as if each were in a case behind glass, laid over the picture as it
+goes.
 
-This is what a canvas is for. A poster sent straight to the panel is what the file says
-and nothing more; drawn into a canvas first, anything can go over it, and here that is a
-case around the edge and light across the glass. The poster changes and the case does not,
-which makes it read as a case.
+This is what a canvas is for: drawn into one, anything can go over the poster, and here that is
+a case around the edge and light across the glass. The poster changes and the case does not.
 
-The pane is the same for every poster, so it is drawn once into an image of its own and
-blitted over each one, which turns some thirty antialiased polygons into a startup cost.
-Laying it over in one pass gives the same pixels as drawing it on top, source-over
-compositing being associative.
-
-An image starts empty, so what is not drawn stays transparent and the poster shows
-through. The case's window is a cutout even so: brush.erase() is a pen that takes alpha
-away where it draws, antialiased edge and all, so the window is one shape erased out of a
-filled rectangle rather than a frame built from bars and corners.
-
-Two things about drawing over a picture on this panel, and they are the transferable part.
-A level is 17 of 255, the panel resolving 16 levels a channel, so anything fainter than
-one of them is not there at all. And opaque marks read over any art where translucent ones
-only read over art that is flat or dark, which is why the case is opaque and the glass
-shows on the dark posters while the busy bright ones swallow it.
+The pane is the same for every poster, so it is drawn once into an image of its own and blitted
+over each. An image starts empty, so what is not drawn stays transparent, and the window is cut
+with brush.erase(), a pen that takes alpha away where it draws, antialiased edge and all. The
+case is opaque because a translucent mark reads only over art that is flat or dark.
 
 Press "Boot" to exit the program.
 """

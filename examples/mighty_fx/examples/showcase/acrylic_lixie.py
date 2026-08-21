@@ -4,24 +4,16 @@ from screens import Screen280
 from picovector import color, font, image, shape
 
 """
-Draw a lixie: ten engraved acrylic sheets stacked front to back with a digit on each, an
-LED under every sheet, and only the one being shown lit. The engraving is what the light
-escapes through, so a lit sheet reads as its digit and its own cut edges in fine bright
-lines while the nine unlit ones stay a faint tracery. The panel is the stack seen face on,
-and a sheet further back appears a size smaller, which is why the edges nest.
+Draw a lixie: ten engraved acrylic sheets stacked front to back with a digit on each, an LED
+under every sheet, and only the one being shown lit. The engraving is what the light escapes
+through, so a lit sheet reads as its digit in fine bright lines while the nine unlit ones stay a
+faint tracery, and a sheet further back appears a size smaller, which is why the edges nest.
 
-Nothing here is an image of a sheet. The nine that never change are drawn once into the
-frame every real frame starts from, and the lit one is drawn straight onto it at the
-brightness it is showing. A sheet apiece would have been ten panel sized images and a blit
-each.
+Nothing here is an image of a sheet: the nine that never change are drawn once into the frame
+every real frame starts from, and the lit one goes straight onto it. The face is a hairline, and
+one measurement sizes every digit, a face's ink being proportional to the size asked for.
 
-The glow goes on the frame rather than on any sheet: bloom() adds its halo to the colour
-channels and leaves alpha alone, so on a transparent layer a channel ends up above that
-pixel's alpha and the blit that composites all four corrupts. The frame is opaque.
-
-The face is a hairline, which is what an engraved line is, and the size that fills the
-panel comes from one measurement: a face's ink is proportional to the size asked for, so
-measuring once gives every other.
+The glow goes on the frame, which is opaque, and not on any sheet.
 
 Press "Boot" to exit the program.
 """
@@ -87,9 +79,8 @@ BLANK = bytes(len(stack.raw))
 def ink_rows(letters, size, at):
     """The first and last rows a drawing of these characters inks, taken off the scratch.
 
-    Both ends of the buffer are stripped whole, which is two C calls where a row at a time over a panel is
-    a second and a half of allocation. Read off a drawing, the face's own metrics being the em box and the
-    advance, and neither is the ink.
+    Read off a drawing, the face's own metrics being the em box and the advance, and neither is the ink.
+    Both ends of the buffer are stripped whole, which is two C calls.
     """
     stack.raw[:] = BLANK
     stack.pen = color.white

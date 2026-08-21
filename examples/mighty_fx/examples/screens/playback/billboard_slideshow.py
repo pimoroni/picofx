@@ -9,7 +9,7 @@ The simplest thing a player does: a folder walked on a clock. Nothing is drawn o
 picture, so nothing needs a canvas, and it is what the other examples in this folder add
 to.
 
-Every poster decodes into the heap when the player is made, so the whole folder is held
+Every poster decodes when the player is made, so the whole folder is held
 before the first one shows. These are palettised, which keeps that affordable:
 eleven of them are about 850KB where truecolour ones would be four times that.
 

@@ -6,26 +6,16 @@ from screens import SCREEN_TYPES
 from picovector import color, font, image, rect
 
 """
-Let a box place the lettering, rather than working out where to put it.
+Let a box place the lettering, instead of working out where to put it.
 
-text() takes a rect instead of a position, and then align says which corner or edge the
-lettering settles against, nine combinations of a horizontal and a vertical. All nine are
-here at once, each in its own box, so the difference is a glance.
+text() takes a rect instead of a position, and align says which corner or edge the lettering
+settles against, nine combinations of a horizontal and a vertical, all here at once. The last box
+is given more words than it has room for, and overflow=ELLIPSES trims what does not fit.
 
-The last box is given far more words than it has room for, and overflow=ELLIPSES trims what
-does not fit and finishes with a full stop or three rather than spilling past the edge.
-
-Align works on the em box the face declares, not on the ink inside it, and a face leaves room
-above its capitals for the accents. So top alignment only looks like top alignment where the
-word reaches that high, and the greeting here is chosen for its umlaut: measured on this board
-in this face, "Hello" leaves seven rows empty above it and "Ähoj" leaves one.
-
-The face is a pixel one for the same reason. Of the four vector faces in ROM, not one carries
-a single accented character, and a missing glyph is dropped in silence rather than reported,
-so "Héllo" simply comes out narrower than "Hello". Every pixel face carries the lot.
-
-The vertical middle inherits the same gap and lands the ink low by half of it, which is worth
-knowing wherever something has to be centred exactly.
+Align works on the em box the face declares, not the ink inside it, and a face leaves room above
+its capitals for accents. So top alignment only looks like it where the word reaches that high:
+measured here, "Hello" leaves seven rows empty above it and "Ähoj" leaves one. The vertical middle
+inherits the same gap and lands the ink low by half of it.
 
 Press "Boot" to exit the program.
 """

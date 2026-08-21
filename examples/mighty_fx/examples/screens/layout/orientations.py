@@ -7,29 +7,14 @@ from screens import SCREEN_TYPES, Reserve
 """
 Show one mark in all eight ways a panel can carry it.
 
-rotation= turns the picture in quarter steps and mirror= flips it left to right. The two
-together are every orientation there is, and the order they cycle in here is the lesson: the
-four turns first, then the four turns of the mirrored mark. Nothing rotation= does on its own
-reaches that second set, which is why mirror= is a setting of its own and not two more turns.
+rotation= turns the picture in quarter steps and mirror= flips it left to right, and the two
+together are every orientation there is. The cycle here is the four turns, then the four turns
+of the mirrored mark, since nothing rotation= does on its own reaches that second set.
 
-Both are there for how a panel ends up mounted. A screen fitted on its side wants rotation=,
-and one seen in a mirror or from behind a window wants mirror=, so the drawing can be made
-the right way round once and left alone.
-
-The mark has to declare its own orientation or every step looks like a different picture. F
-is the letter with no symmetry to hide behind, every edge carries a zigzag of its own colour
-so one look says which edge is against which side of the panel, and the caption is drawn into
-the mark, so it turns and flips with everything else: upside down at 180, back to front when
-mirrored. That is the plainest sight of what the settings did.
-
-The mark is square and as long as the panel's longest side, so it reaches past the panel
-whichever way round it is turned: upright it loses part of its sides, and turned a quarter it
-loses part of its top and foot instead. Every turn therefore keeps a different part of it and
-none of them is ever letterboxed, the colour running to the panel's edge throughout. Nothing
-is wrong with that: a source is not obliged to be the panel's shape or the panel's size. The
-four zigzags all reach far enough in to survive every turn, as do the letter and the caption.
-
-Nothing is drawn per frame; the mark is redrawn only when the settings change.
+Both are there for how a panel ends up mounted: a screen on its side wants rotation=, one seen
+in a mirror or from behind a window wants mirror=. The mark is an F with a zigzag on each edge
+and its caption drawn in, so one look says which edge sits against which side of the panel. It
+is redrawn only when the settings change.
 
 Press "Boot" to exit the program.
 """

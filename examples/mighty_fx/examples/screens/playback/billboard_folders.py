@@ -5,25 +5,19 @@ from playback import SequencePlayer
 from screens import Screen280
 
 """
-Show several folders of posters, the boot button turning to the next poster or moving on
-to the next folder.
+Show several folders of posters, the boot button turning to the next poster or moving on to the
+next folder.
 
-A player holds one sequence, so several sequences are several players, each with its own
-length, clock and settings. Here the settings are what make the point: the portrait folder
-is sent as it is and the landscape one gets a quarter turn, so changing folder changes how
-a poster is placed as well as which posters they are.
+A player holds one sequence, so several sequences are several players, each with its own length,
+clock and settings. Here the settings make the point: the portrait folder is sent as it is and
+the landscape one gets a quarter turn, so changing folder changes how a poster is placed.
 
-The button does three things by how long it is held: a press turns to the next poster, a
-hold changes folder, and a longer hold ends the example. An example that takes the button
-for itself has to give a way out, or there is none but the reset pin. All three are judged
-on release, a press being impossible to tell from a hold until it ends.
+The button's three actions are judged on release, a press being impossible to tell from a hold
+until it ends, and an example that takes the button has to give a way out. Turning to the next
+poster is a reposition and not an advance: advance() refuses a player that has a rate, where
+to_frame() moves a clocked one and lets its clock carry on.
 
-Turning to the next poster is a reposition and not an advance. advance() drives a player
-built with fps=False and refuses one that has a rate; to_frame() moves a clocked player
-and lets its clock carry on from there.
-
-Press "Boot" for the next poster, hold it to change folder, and hold it two seconds to
-exit the program.
+Press "Boot" for the next poster, hold it to change folder, and hold it two seconds to exit.
 """
 
 # Constants: a folder, the rotation its posters want, and how long each is up for
