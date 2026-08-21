@@ -1,27 +1,19 @@
-import time
-
 from mighty_fx import MightyFX, SPCE
 from playback import SequencePlayer
 from screens import Screen280
-from picovector import rect
 
 """
-Scroll an animation endlessly across the panel, from a source no bigger than the panel
-itself.
+Scroll an animation endlessly across the panel, from a single tile of it.
 
-The pattern is drawn to tile, so the column after its last is its first. That is what lets
-it scroll for ever: the window is taken as two pieces, the far end of the tile and then
-its start, and where those meet is where the tile already met itself.
-
-The driver's own offset= would do this in one step, but it cannot wrap: a window past the
-end of a source shows the background instead of starting again. Giving it a source two
-tiles wide fixes that at the cost of a second copy of the art, 163KB of flash and 600KB of
-heap, which is what this avoids.
+The pattern is drawn to tile, so the column after its last is its first. tile= has the
+driver read it that way: a window past the tile's end shows its start again, so the offset
+can grow for ever and the tile goes straight to the panel, with no canvas, blits or
+wrap-around bookkeeping.
 
 Nothing here waits for the player: the field moves every frame even when the animation has
 not, so there is no has_advanced() to ask. The animation runs on the player's clock and
-the scroll on the loop's, which is why the pattern can live at 8fps while the field glides
-two or three pixels a frame.
+the scroll on the frame count, which is why the pattern can live at 8fps while the field
+glides a couple of pixels a frame.
 
 Press "Boot" to exit the program.
 """
@@ -30,34 +22,25 @@ Press "Boot" to exit the program.
 FRAMES = "/examples/assets/traces"   # The folder of frames, shared with the wall example
 ROTATION = 90                    # Quarter turn, to suit how the screen is mounted
 FPS = 8                          # The rate the pattern itself animates at
-ACROSS_MS = 8000                 # How long the field takes to travel one tile
+STEP = 2                         # Pixels the field travels each frame
 
 # Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a)
 
-# The canvas is a whole panel, which at a quarter turn is exactly one tile
-canvas = screen.canvas(screen.height, screen.width)
-
 player = SequencePlayer(FRAMES, fps=FPS)
-PERIOD = player.image.width      # The tile's repeat, and so where the scroll comes back on itself
-print(f"{player.frames} frames of {PERIOD}px, travelling one tile every {ACROSS_MS}ms")
+PERIOD = player.image.width      # The tile, and so how far the field travels before it repeats
+print(f"{player.frames} frames of {PERIOD}px, {STEP}px a frame")
 
-started = time.ticks_ms()
+frames = 0
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        elapsed = time.ticks_diff(time.ticks_ms(), started)
-        at = (elapsed * PERIOD // ACROSS_MS) % PERIOD
-        rest = PERIOD - at
-
-        # The tile from where the field has reached, then as much of its start as is left over
-        canvas.blit(player.image, rect(at, 0, rest, canvas.height), rect(0, 0, rest, canvas.height))
-        if at:
-            canvas.blit(player.image, rect(0, 0, at, canvas.height), rect(rest, 0, at, canvas.height))
-
-        screen.update(canvas, rotation=ROTATION)
+        # The tile fills the panel wherever the field has reached, the read wrapping at its own width
+        screen.update(player.image, rotation=ROTATION, tile=(True, False),
+                      offset=(-frames * STEP, None))
+        frames += 1
 
 # Stop any running effects and turn off all the outputs
 finally:

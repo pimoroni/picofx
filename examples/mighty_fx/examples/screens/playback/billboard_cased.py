@@ -1,10 +1,9 @@
-import math
 import time
 
 from mighty_fx import MightyFX, SPCE
 from playback import SequencePlayer
 from screens import Screen280
-from picovector import color, image, rect, shape, vec2
+from picovector import brush, color, image, rect, shape, vec2
 
 """
 Show a folder of posters as if each were in a case behind glass, laid over the picture as
@@ -20,9 +19,10 @@ blitted over each one, which turns some thirty antialiased polygons into a start
 Laying it over in one pass gives the same pixels as drawing it on top, source-over
 compositing being associative.
 
-An image starts empty, so the pane needs no cutout: what is not drawn stays transparent
-and the poster shows through. There is no cutout to be had in any case, shapes() drawing
-each shape on its own however the fill rule is set.
+An image starts empty, so what is not drawn stays transparent and the poster shows
+through. The case's window is a cutout even so: brush.erase() is a pen that takes alpha
+away where it draws, antialiased edge and all, so the window is one shape erased out of a
+filled rectangle rather than a frame built from bars and corners.
 
 Two things about drawing over a picture on this panel, and they are the transferable part.
 A level is 17 of 255, the panel resolving 16 levels a channel, so anything fainter than
@@ -81,29 +81,20 @@ def band(across, half, feather, levels, tone):
 
 
 def case():
-    """Everything outside a rounded window: four bars, then each corner less its quarter circle.
+    """A filled rectangle with the window erased out of it, laid over the light.
 
-    A stroked rounded rectangle will not do it, its outer edge being rounded too, so the panel's own corners
-    would be left bare.
+    Built in an image of its own so the erasing cannot reach the light already on the pane, then blitted over
+    it, which is the same order as a case standing in front of glass.
     """
-    pane.pen = CASE
-    pane.rectangle(0, 0, WIDE, CASE_WIDE)
-    pane.rectangle(0, TALL - CASE_WIDE, WIDE, CASE_WIDE)
-    pane.rectangle(0, 0, CASE_WIDE, TALL)
-    pane.rectangle(WIDE - CASE_WIDE, 0, CASE_WIDE, TALL)
+    frame = image(WIDE, TALL)
+    frame.antialias = image.X4
+    frame.pen = CASE
+    frame.clear()
 
-    for across, down, out_x, out_y in ((CASE_WIDE, CASE_WIDE, -1, -1),
-                                       (WIDE - CASE_WIDE, CASE_WIDE, 1, -1),
-                                       (CASE_WIDE, TALL - CASE_WIDE, -1, 1),
-                                       (WIDE - CASE_WIDE, TALL - CASE_WIDE, 1, 1)):
-        middle = (across - out_x * CASE_ROUND, down - out_y * CASE_ROUND)
-        points = [vec2(across, down)]
-        for step in range(9):
-            angle = step / 8 * math.pi / 2
-            points.append(vec2(middle[0] + out_x * CASE_ROUND * math.cos(angle),
-                               middle[1] + out_y * CASE_ROUND * math.sin(angle)))
-
-        pane.shape(shape.custom(points))
+    frame.pen = brush.erase()
+    frame.shape(shape.rounded_rectangle(CASE_WIDE, CASE_WIDE, WIDE - CASE_WIDE * 2,
+                                        TALL - CASE_WIDE * 2, CASE_ROUND))
+    pane.blit(frame, 0, 0)
 
     # The glass sits proud of the case, so its inside edge catches a little light
     pane.pen = CASE_LIT

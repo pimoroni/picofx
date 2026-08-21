@@ -49,6 +49,10 @@ These are micropython examples for the screens Mighty FX can drive from its SP/C
 [single/backlight_fade.py](single/backlight_fade.py)
 
 
+### Screen Sizes
+[single/screen_sizes.py](single/screen_sizes.py)
+
+
 ## Graphics Examples
 
 ### Colour Wheel
