@@ -1495,11 +1495,53 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     paused = False
     idle_since = None
 
+    # A quick tap can start and end inside one screen's service, which a level read
+    # between frames never sees. A board catching presses by interrupt is asked for
+    # those instead; the rest are polled
+    pending = volume.IDLE
+
+    def watch():
+        """
+        The button and the drive, looked at between the screens as well as at the
+        top of the loop. One pass of the screens can outlast the double press
+        window, and an event held back until the next pass reads as the button
+        being slow. The first event stands until the loop has taken it.
+
+        The board is asked for its taps each time rather than once: a rebuild hands
+        back a new board whose interrupt replaces the old one's, so a method held
+        from before would never hear another press.
+        """
+        nonlocal pending
+        if pending != volume.IDLE:
+            return pending
+
+        taps = getattr(fx, "boot_taps", None)
+        if taps is None:
+            pending = volume.service(fx.boot_pressed())
+            return pending
+
+        waiting = taps()
+        if not waiting:
+            pending = volume.service(False)
+            return pending
+
+        # The drive reads presses as edges, so every press is offered with the
+        # release that ends it. Without that release the next press is still the
+        # last one being held, and a double press spread over two passes of this
+        # loop reads as a single one
+        for _ in range(waiting):
+            for held in (True, False):
+                event = volume.service(held)
+                if event != volume.IDLE:
+                    pending = event
+        return pending
+
     # A stop from the REPL arrives as an exception, and without this the outputs
     # keep whatever they were last written and the computer keeps the drive
     try:
         while True:
-            event = volume.service(fx.boot_pressed())
+            event = watch()
+            pending = volume.IDLE
 
             if event in (volume.HIDDEN, volume.EJECTED, volume.RELOADED):
                 fx, players, shows, scenes, settings, problems = __play(
@@ -1549,6 +1591,10 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                 for show in shows:
                     if show.live:
                         show.service()
+                    # A frame can cost longer than the double press window, so the
+                    # button is answered between them rather than after them all
+                    if watch() != volume.IDLE:
+                        break
 
             if event == volume.BUSY:
                 # A press the computer's writing blocked otherwise looks exactly like

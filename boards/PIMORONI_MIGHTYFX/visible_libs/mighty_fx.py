@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: MIT
 
 import gc
+import time
 
 from machine import ADC, Pin
 from pimoroni_i2c import PimoroniI2C
@@ -38,6 +39,9 @@ class MightyFX:
     I2C_SCL_PIN = 17
 
     USER_SW_PIN = 18
+
+    # How long after a press its own contact bounce is ignored for
+    BOOT_DEBOUNCE_MS = 40
 
     I2S_DATA_PIN = 20
     I2S_BCLK_PIN = 21
@@ -158,8 +162,13 @@ class MightyFX:
         if init_i2c:
             self.i2c = PimoroniI2C(self.I2C_SDA_PIN, self.I2C_SCL_PIN, 100000)
 
-        # Set up the user switch
+        # Set up the user switch. A press is caught by interrupt as well as read as
+        # a level, so a tap inside a long frame is not missed by a program that only
+        # looks between them
         self.__switch = Pin(self.USER_SW_PIN, Pin.IN, Pin.PULL_UP)
+        self.__taps = 0
+        self.__tapped_at = 0
+        self.__switch.irq(trigger=Pin.IRQ_FALLING, handler=self.__switch_pressed)
 
         # Set up the internal voltage sensor
         self.__v_sense = ADC(Pin(self.V_SENSE_PIN))
@@ -205,6 +214,26 @@ class MightyFX:
 
     def boot_pressed(self):
         return self.__switch.value() == 0
+
+    def boot_taps(self):
+        """
+        How many times the button has been pressed since this was last asked, the
+        presses taken as they are read. Caught by interrupt, so a tap that begins
+        and ends inside one long frame still counts where boot_pressed() would
+        miss it, and two inside one are two rather than one.
+        """
+        taken = self.__taps
+        self.__taps = 0
+        return taken
+
+    def __switch_pressed(self, _pin):
+        # Contacts bounce, and each bounce is another falling edge. Anything inside
+        # the window is the same press, which matters where a caller reads two
+        # presses in a row as a double
+        now = time.ticks_ms()
+        if time.ticks_diff(now, self.__tapped_at) > self.BOOT_DEBOUNCE_MS:
+            self.__tapped_at = now
+            self.__taps += 1
 
     def enable_rail(self):
         """Power the L and R connectors. One rail serves both, so a load on
