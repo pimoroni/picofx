@@ -108,6 +108,8 @@ footer{max-width:44rem;margin:0 auto 2rem;padding:0 1.4rem;font-size:.8rem;color
    <span id="picked-name" style="font-weight:600"></span>
    <label class="opt grow"><input type="checkbox" id="outputs" checked>
     play on the board's own lights</label>
+   <label class="opt" title="The board plays the file as soon as it is saved, with no eject"><input type="checkbox" id="straight">
+    play it as soon as I save</label>
   </div>
  </div>
  <div class="screens" id="screens"></div>
@@ -379,6 +381,7 @@ function withoutOutputs(text) {
 // chosen; every other board setting is carried through untouched.
 function absorbText(text) {
   state.boardResidue = [];
+  state.straight = false;
   state.ports = [];
   state.sizes = {};
   state.kept = {};
@@ -390,11 +393,19 @@ function absorbText(text) {
   state.lengths = {};
   state.reversed = {};
   state.stripKept = {};
+  state.soundKept = null;
+  state.sound = null;
+  state.soundLoop = false;
   text.split("\\n").forEach(function (line) {
     var board = line.match(/^\\s*board\\s*:\\s*(.*)$/i);
     if (board) {
       board[1].split(/\\s+/).forEach(function (token) {
         if (token === "") return;
+        var reload = token.match(/^reload=(.+)$/i);
+        if (reload) {
+          state.straight = reload[1].toLowerCase() === "auto";
+          return;
+        }
         var size = token.match(/^(screen[ab])=(.+)$/i);
         var count = token.match(/^(strip[lr])=(.+)$/i);
         if (size) state.sizes[declarePort(size[1])] = size[2];
@@ -410,12 +421,21 @@ function absorbText(text) {
       if (!(port in state.carried)) state.carried[port] = entry[2].trim();
       return;
     }
+    var sound = line.match(/^\\s*audio\\b[^:]*:/i);
+    if (sound) {
+      state.soundKept = line;
+      var named = line.match(/file\\s*=\\s*"?([^"\\s]+)"?/i);
+      if (named) state.sound = named[1];
+      state.soundLoop = /loop\\s*=\\s*(true|yes|on)\\b/i.test(line);
+      return;
+    }
     var strip = line.match(/^\\s*(strip[lr])\\b[^:]*:/i);
     if (strip) {
       var name = declareStrip(strip[1]);
       (state.stripKept[name] = state.stripKept[name] || []).push(line);
     }
   });
+  document.getElementById("straight").checked = state.straight;
   state.ports.forEach(function (port) {
     if (!(port in state.sizes)) state.sizes[port] = null;
     state.choices[port] = { mode: state.kept[port] ? "keep" : "none" };
@@ -454,6 +474,7 @@ function showing(port) {
 
 function boardLine() {
   var tokens = state.boardResidue.slice();
+  if (state.straight) tokens.push("reload=auto");
   state.ports.forEach(function (port) {
     if (state.sizes[port] && showing(port)) {
       tokens.push(port.toLowerCase() + "=" + state.sizes[port]);
@@ -506,6 +527,14 @@ function screenLine(port, media, pace) {
   return selector + ": image file=" + quoted(media.name);
 }
 
+function soundLine() {
+  // Sound does not follow scenes, so this goes above every heading
+  if (state.sound)
+    return "audio: wav file=" + quoted(state.sound) +
+           (state.soundLoop ? " loop=true" : "");
+  return state.soundKept;
+}
+
 function currentText() {
   if (!state.look) return "";
   var pace = parseFloat(document.getElementById("pace").value);
@@ -533,6 +562,8 @@ function currentText() {
     if (!count) return;
     inPlay.push({ selector: state.reversed[name] ? name + count + "-1" : name, count: count });
   });
+  var sound = soundLine();
+  if (sound) parts.push(sound + "\\n");
   if (parts.length > 1) parts.push("\\n");
   var played = state.look.write(pace, mood, inPlay);
   parts.push(state.outputs ? played : withoutOutputs(played));
@@ -599,17 +630,19 @@ function banner(text, warn, detail) {
 // ---- screens ------------------------------------------------------------------
 
 async function scanMedia(dir) {
-  // What the drive holds that a screen can show: gifs and stills, and folders
-  // of them, which play as a slideshow
+  // What the drive holds that a screen can show: gifs and stills, PNG or JPEG,
+  // and folders of them, which play as a slideshow
   state.media = [];
+  state.sounds = [];
   for await (var pair of dir.entries()) {
     var name = pair[0], handle = pair[1];
     if (handle.kind === "file") {
       if (/\\.gif$/i.test(name)) state.media.push({ name: name, kind: "gif", handle: handle });
-      else if (/\\.png$/i.test(name)) state.media.push({ name: name, kind: "image", handle: handle });
+      else if (/\\.(png|jpe?g)$/i.test(name)) state.media.push({ name: name, kind: "image", handle: handle });
+      else if (/\\.wav$/i.test(name)) state.sounds.push(name);
     } else if (name !== "System Volume Information") {
       for await (var inner of handle.entries()) {
-        if (inner[1].kind === "file" && /\\.(gif|png)$/i.test(inner[0])) {
+        if (inner[1].kind === "file" && /\\.(gif|png|jpe?g)$/i.test(inner[0])) {
           state.media.push({ name: name, kind: "folder" });
           break;
         }
@@ -731,6 +764,61 @@ function renderScreens() {
     box.appendChild(row);
   });
   renderStrips(box);
+  renderSound(box);
+}
+
+function renderSound(box) {
+  var head = document.createElement("h2");
+  head.textContent = "Sound";
+  box.appendChild(head);
+  var hint = document.createElement("div");
+  hint.className = "hint";
+  hint.textContent = !state.fileHandle
+    ? "A WAV played alongside the lights. Open the FX drive to see the sounds on it."
+    : state.sounds.length
+      ? "A WAV played alongside the lights, one at a time."
+      : "No sounds on the drive yet. Drop a wav onto it and reopen.";
+  box.appendChild(hint);
+
+  var row = document.createElement("div");
+  row.className = "screen-row";
+  var label = document.createElement("span");
+  label.className = "port";
+  label.textContent = "Plays";
+  row.appendChild(label);
+
+  if (state.soundKept && !state.sound) row.appendChild(soundChoice("as it is", null));
+  state.sounds.forEach(function (name) {
+    row.appendChild(soundChoice(name, name));
+  });
+  if (state.sound || state.soundKept) {
+    if (state.sound)
+      row.appendChild(optionCheck("over and over",
+        "Play it again as it ends, rather than once as the board starts",
+        state.soundLoop, function (on) { state.soundLoop = on; }));
+    row.appendChild(removeButton("sound", function () {
+      state.sound = null;
+      state.soundKept = null;
+      state.soundLoop = false;
+    }));
+  }
+  box.appendChild(row);
+}
+
+function soundChoice(label, name) {
+  var button = document.createElement("button");
+  button.className = "thumb";
+  if (state.sound === name && (name || state.soundKept)) button.classList.add("picked");
+  var caption = document.createElement("small");
+  caption.textContent = label;
+  button.appendChild(caption);
+  button.onclick = function () {
+    state.sound = name;
+    if (name) state.soundKept = null;
+    renderScreens();
+    update();
+  };
+  return button;
 }
 
 function removeButton(what, drop) {
@@ -948,6 +1036,10 @@ document.getElementById("open").onclick = async function () {
 
 document.getElementById("pace").oninput = update;
 document.getElementById("mood").oninput = update;
+document.getElementById("straight").onchange = function () {
+  state.straight = document.getElementById("straight").checked;
+  update();
+};
 document.getElementById("outputs").onchange = function () {
   state.outputs = document.getElementById("outputs").checked;
   update();
