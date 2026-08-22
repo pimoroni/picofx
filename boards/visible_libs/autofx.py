@@ -94,6 +94,15 @@ SCREEN_PORTS = {
     "screenb": ("B", "spce_b", 1),
 }
 
+# The one selector that plays sound. "wav" streams a file for as long as it lasts,
+# or for good with loop=true. The file is opened at load, while the board is sure
+# to hold the drive, and a handle opened then plays on after a computer takes the
+# volume, where opening it later would find no drive at all.
+AUDIO = "audio"
+AUDIO_EFFECTS = {
+    "wav": ("file", "loop"),
+}
+
 # What a setting's value must be. A name means the same thing wherever it appears, so
 # its kind is stated once here. "count" is a whole number of 1 or more, each one
 # dividing or repeating something, where "whole" may be zero or negative. "angle" is a
@@ -407,6 +416,39 @@ class __Still:
 
     def to_first(self):
         pass                    # One picture is always on its first frame
+
+
+class Sound:
+    """
+    One WAV playing beside the effects: the player it runs on, the file it reads,
+    already open, and whether it starts again when it ends. The handle stays the
+    board's for the whole run, so a computer taking the drive does not stop it.
+    """
+    def __init__(self, wav, handle, loop):
+        self.wav = wav
+        self.handle = handle
+        self.loop = loop
+
+    def start(self):
+        try:
+            self.wav.play_wav(self.handle, loop=self.loop)
+        except (OSError, ValueError):
+            # The file was replaced while a computer held the drive, so there is
+            # nothing left to play until the next reload reopens it
+            pass
+
+    def pause(self):
+        self.wav.pause()
+
+    def resume(self):
+        self.wav.resume()
+
+    def close(self):
+        self.wav.deinit()
+        try:
+            self.handle.close()
+        except OSError:
+            pass
 
 
 def __split_quoted(text):
@@ -1246,7 +1288,7 @@ def indicate(fx, pattern=PROBLEM):
         time.sleep_ms(period_ms)
 
 
-def __play(fx, volume, path, errors, playing, maker=None):
+def __play(fx, volume, path, errors, playing, sounding=(), maker=None):
     """
     Stop what is playing, read the file again, and play what it now says.
 
@@ -1256,6 +1298,11 @@ def __play(fx, volume, path, errors, playing, maker=None):
     """
     for player in playing:
         player.stop()
+
+    # A sound's handle belongs to the file just set aside, so it closes here and
+    # the read below opens whatever the file names now
+    for sound in sounding:
+        sound.close()
 
     # clear() covers a strip as well as the outputs, and a strip holds its last frame
     # once nothing is writing it, so a file that no longer names one leaves it dark.
@@ -1273,7 +1320,7 @@ def __play(fx, volume, path, errors, playing, maker=None):
             rail()
 
     text = None
-    players, shows, scenes, settings, problems = [], [], [], {}, []
+    players, shows, sounds, scenes, settings, problems = [], [], [], [], {}, []
 
     # The mount point is the board's own, where the reader sees a drive with a file
     # on it, so messages name the file rather than the path
@@ -1294,7 +1341,7 @@ def __play(fx, volume, path, errors, playing, maker=None):
 
     if text is not None:
         try:
-            fx, players, shows, scenes, settings, problems = load(text, fx, maker)
+            fx, players, shows, sounds, scenes, settings, problems = load(text, fx, maker)
         # A file a user typed must never be able to take the board down. Anything
         # load does not report itself costs the whole file, where its own reporting
         # costs one entry, but the drive and the button survive to be edited again
@@ -1320,10 +1367,10 @@ def __play(fx, volume, path, errors, playing, maker=None):
         shows = __pending_shows(problems)
 
     if volume is None:
-        wrote = report(problems, errors, bool(players))
+        wrote = report(problems, errors, bool(players or sounds))
     else:
         with volume.writable():
-            wrote = report(problems, errors, bool(players))
+            wrote = report(problems, errors, bool(players or sounds))
 
     # A drive that is full, damaged or absent all end here, the report having had
     # nowhere to go, and the outputs are then the only thing left to say it with
@@ -1332,7 +1379,7 @@ def __play(fx, volume, path, errors, playing, maker=None):
 
     # Started by the caller, which is the only one that knows whether a program is
     # about to take the board over
-    return fx, players, shows, scenes, settings, problems
+    return fx, players, shows, sounds, scenes, settings, problems
 
 
 # What the players are ticked at. picofx defaults to 100, which a board driving
@@ -1527,9 +1574,9 @@ def __run_program(name, source, args, problems):
 def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     """
     Play the effects file. Without a volume this reads it once and returns the board,
-    players, shows, scenes and problems, leaving the servicing and the rotation to
-    the caller. Scenes take turns on their own times, and everything before the
-    first heading stays on throughout.
+    players, shows, sounds, scenes and problems, leaving the servicing and the
+    rotation to the caller. Scenes take turns on their own times, and everything
+    before the first heading stays on throughout.
 
     `fx` is a board or something that makes one, a board class being the usual thing,
     since a strip's length is declared at construction and the file is what names it.
@@ -1554,8 +1601,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     if volume is not None:
         volume.mount()
 
-    fx, players, shows, scenes, settings, problems = __play(
-        fx, volume, path, errors, [], maker)
+    fx, players, shows, sounds, scenes, settings, problems = __play(
+        fx, volume, path, errors, [], (), maker)
 
     scene_at = 0
     scene_deadline = None
@@ -1573,7 +1620,9 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     if volume is None:
         begin_scenes()
         __start(players, fx)
-        return fx, players, shows, scenes, problems
+        for sound in sounds:
+            sound.start()
+        return fx, players, shows, sounds, scenes, problems
 
     # The drive goes up before any program runs, since a program that works never
     # returns. Otherwise a mistyped name would leave no way back but a reflash, so a
@@ -1587,6 +1636,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     if not program:
         begin_scenes()
         __start(players, fx)
+        for sound in sounds:
+            sound.start()
 
     # Read while the board still holds the drive, since exposing it takes the mount
     # point away and a program kept there would have nothing left to open
@@ -1614,6 +1665,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
             indicate(fx, PROBLEM if wrote else UNREPORTED)
         begin_scenes()
         __start(players, fx)            # Never started above, whether the program ran or not
+        for sound in sounds:
+            sound.start()
         if drive_up:
             volume.expose()
 
@@ -1685,8 +1738,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                     for player in players:
                         player.stop()
                     __handover(fx, True)
-                fx, players, shows, scenes, settings, problems = __play(
-                    fx, volume, path, errors, players, maker)
+                fx, players, shows, sounds, scenes, settings, problems = __play(
+                    fx, volume, path, errors, players, sounds, maker)
                 paused = False
                 idle_since = None
                 if event == volume.RELOADED:
@@ -1699,6 +1752,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                     volume.expose()
                 begin_scenes()
                 __start(players, fx)
+                for sound in sounds:
+                    sound.start()
                 # A frame each as the lights start, so the panels come back with them
                 __service_shows(shows)
 
@@ -1721,6 +1776,10 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                         player.stop()
                     for show in shows:
                         show.pause()
+                    # A transfer's stalls are longer than the sound's own buffer, so
+                    # it holds silence for the copy instead of crackling through it
+                    for sound in sounds:
+                        sound.pause()
                     paused = True
             elif paused:
                 if idle_since is None:
@@ -1735,6 +1794,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                     for show in shows:
                         if show.live:
                             show.resume()
+                    for sound in sounds:
+                        sound.resume()
                     paused = False
 
             if paused:
@@ -1759,6 +1820,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     finally:
         for player in players:
             player.stop()
+        for sound in sounds:
+            sound.close()
         # shutdown() releases the screen ports and the header's rail, so neither
         # record of what is running may outlive them, and anything a program put off
         # is never going to be built now
@@ -2255,6 +2318,72 @@ def __build_shows(entries, fx, board, problems, build=True):
     return shows
 
 
+def __build_sounds(entries, fx, problems):
+    """
+    A sound per audio entry, of which the board plays one at a time. The file is
+    opened here, while the board holds the drive, which is what lets it stream on
+    after a computer takes the volume.
+    """
+    sounds = []
+    wav = getattr(fx, "wav", None)
+
+    for entry in entries:
+        if wav is None:
+            problems.append("line {}: this board has no audio".format(entry.line))
+            continue
+
+        if entry.scene is not None:
+            problems.append("line {}: audio does not follow scenes yet, so its entry "
+                            "sits before every heading".format(entry.line))
+            continue
+
+        if entry.effect not in AUDIO_EFFECTS:
+            if entry.effect in EFFECTS or entry.effect in SCREEN_EFFECTS:
+                problems.append("line {}: {} does not make a sound, audio plays "
+                                "{}".format(entry.line, entry.effect,
+                                            ", ".join(sorted(AUDIO_EFFECTS))))
+            elif entry.effect is not None:
+                problems.append("line {}: '{}' is not something audio plays, expected "
+                                "{}".format(entry.line, entry.effect,
+                                            ", ".join(sorted(AUDIO_EFFECTS))))
+            continue
+
+        channel = entry.channels[0]
+        for setting in Channel.SETTINGS:
+            if getattr(channel, setting) is not None:
+                problems.append("line {}: {} says nothing about a sound, so it was "
+                                "ignored".format(entry.line, setting))
+
+        settings = __check_settings(entry, AUDIO_EFFECTS[entry.effect], problems)
+
+        target = settings.get("file")
+        if target is None:
+            if "file" not in entry.settings:
+                problems.append("line {}: {} needs a file to play, such as "
+                                "file=sound.wav".format(entry.line, entry.effect))
+            continue
+
+        if sounds:
+            problems.append("line {}: the board plays one sound at a time, so the "
+                            "first audio entry is the one heard".format(entry.line))
+            continue
+
+        at = entry.lines.get("file", entry.line)
+        path = __find_image(target, at, problems)
+        if path is None:
+            continue
+
+        try:
+            handle = open(path, "rb")
+        except OSError as e:
+            problems.append("line {}: {} could not be opened: {}".format(at, target, e))
+            continue
+
+        sounds.append(Sound(wav, handle, bool(settings.get("loop", False))))
+
+    return sounds
+
+
 def __check_board(entry, has_strips, problems):
     """
     The board settings the entry carries, with anything it cannot use dropped. A
@@ -2599,9 +2728,10 @@ def __apply_scene(players, shows, scene):
 def load(text, fx, maker=None):
     """
     Read the effects file. Returns the board it plays on, the players it describes,
-    the shows its screen entries play, its scenes in heading order, the settings its
-    board entries carry, and any problems. Without headings there are no scenes and
-    everything plays at once, which is the file as it has always been.
+    the shows its screen entries play, the sounds its audio entries name, its
+    scenes in heading order, the settings its board entries carry, and any
+    problems. Without headings there are no scenes and everything plays at once,
+    which is the file as it has always been.
 
     `fx` is a board or something that makes one, a board class being the usual thing.
     Where it makes one, the board is built here rather than by the caller, once the
@@ -2622,6 +2752,7 @@ def load(text, fx, maker=None):
     known = {}
     grouped = {None: []}
     screen_entries = []
+    audio_entries = []
     args_line = None
 
     for entry in entries:
@@ -2650,6 +2781,15 @@ def load(text, fx, maker=None):
             if "args" in given:
                 args_line = entry.lines.get("args", entry.line)
             board.update(given)
+            continue
+
+        sounding = [channel for channel in entry.channels if channel.name == AUDIO]
+        if sounding and len(sounding) != len(entry.channels):
+            problems.append("line {}: outputs and audio cannot share an entry".format(
+                entry.line))
+            continue
+        if sounding:
+            audio_entries.append(entry)
             continue
 
         named = [channel for channel in entry.channels if channel.name.startswith("screen")]
@@ -2800,6 +2940,10 @@ def load(text, fx, maker=None):
         __PENDING_SHOWS[:] = []
         shows = __build_shows(screen_entries, fx, board, problems)
 
+    # Opening a file is all a sound costs, so a named program defers nothing here:
+    # its handle waits, opened while the board is sure to hold the drive
+    sounds = __build_sounds(audio_entries, fx, problems)
+
     # Found in the order the work happens, which is every line the parser read and
     # then every entry the loader built, so a reader gets them in the file's order
-    return fx, players, shows, scenes, board, __in_line_order(problems)
+    return fx, players, shows, sounds, scenes, board, __in_line_order(problems)

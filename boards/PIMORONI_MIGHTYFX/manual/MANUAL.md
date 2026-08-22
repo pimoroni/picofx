@@ -373,6 +373,33 @@ A screen draws about twenty frames a second at best, and effects on the outputs
 take time from it, so a file asking for more keeps its timing by dropping
 frames. Ask for twenty or fewer and it plays every one.
 
+## Sound
+
+The board plays a WAV file through its onboard amplifier, alongside whatever the
+lights and screens are doing:
+
+```entry
+audio: wav file=chimes.wav
+audio: wav file=ambience.wav loop=yes
+```
+
+| Plays | Settings |
+| --- | --- |
+| `wav` | `file` `loop=no` |
+
+The file plays once as the board starts, or over and over with `loop`. The board
+plays one sound at a time, so it takes the first `audio` entry and notes the rest
+in `errors.txt`.
+
+A file is looked for on this drive first, then on the board itself, as a picture
+is. The board opens it before this drive is shown, so a computer taking the drive
+does not stop the sound. While the computer is copying to this drive the sound
+waits in silence with the effects, and a file replaced under a playing sound ends
+it quietly.
+
+An ordinary uncompressed WAV plays, mono or stereo; MP3 does not. An `audio`
+entry sits before any scene heading, since sound does not follow scenes yet.
+
 ## Scenes
 
 A file can hold several sets of effects and show them one after another. A

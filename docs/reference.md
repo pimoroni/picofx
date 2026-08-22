@@ -351,7 +351,7 @@ deinit() -> None
 set_root(root: string) -> None
 
 # Player Control
-play_wav(wav_file: string, loop: bool=False) -> None
+play_wav(wav_file: string | file, loop: bool=False) -> None
 play_tone(frequency: float, amplitude: float, shape: int=TONE_SINE) -> None
 pause() -> None
 resume() -> None

@@ -280,6 +280,7 @@ footer p { margin: 0; }
 <li><a href="#setting-a-screen">Setting a screen</a></li>
 <li><a href="#pictures">Pictures</a></li>
 </ul></details></li>
+<li><a href="#sound">Sound</a></li>
 <li><a href="#scenes">Scenes</a></li>
 <li><details><summary><a href="#the-board">The board</a></summary><ul>
 <li><a href="#running-your-own-program">Running your own program</a></li>
@@ -469,6 +470,18 @@ footer p { margin: 0; }
 <span class="s-target">screenA</span><span class="s-colon">:</span> <span class="s-effect">gif</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">"wave.gif"</span> <span class="s-name">ping_pong</span><span class="s-punc">=</span><span class="s-value">yes</span> <span class="s-name">hold</span><span class="s-punc">=</span><span class="s-value">1.5|0.5</span></code></pre>
 <p>A file is looked for on this drive first, then on the board itself, and the name may include folders. There is little room here, so pictures usually live on the board.</p>
 <p>A screen draws about twenty frames a second at best, and effects on the outputs take time from it, so a file asking for more keeps its timing by dropping frames. Ask for twenty or fewer and it plays every one.</p>
+<h2 id="sound">Sound</h2>
+<p>The board plays a WAV file through its onboard amplifier, alongside whatever the lights and screens are doing:</p>
+<pre class="entry"><code><span class="s-target">audio</span><span class="s-colon">:</span> <span class="s-effect">wav</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">chimes.wav</span>
+<span class="s-target">audio</span><span class="s-colon">:</span> <span class="s-effect">wav</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">ambience.wav</span> <span class="s-name">loop</span><span class="s-punc">=</span><span class="s-value">yes</span></code></pre>
+<div class="scroll"><table>
+<thead><tr><th>Plays</th><th>Settings</th></tr></thead>
+<tbody>
+<tr><td><code>wav</code></td><td><code>file</code> <code>loop=no</code></td></tr>
+</tbody></table></div>
+<p>The file plays once as the board starts, or over and over with <code>loop</code>. The board plays one sound at a time, so it takes the first <code>audio</code> entry and notes the rest in <code>errors.txt</code>.</p>
+<p>A file is looked for on this drive first, then on the board itself, as a picture is. The board opens it before this drive is shown, so a computer taking the drive does not stop the sound. While the computer is copying to this drive the sound waits in silence with the effects, and a file replaced under a playing sound ends it quietly.</p>
+<p>An ordinary uncompressed WAV plays, mono or stereo; MP3 does not. An <code>audio</code> entry sits before any scene heading, since sound does not follow scenes yet.</p>
 <h2 id="scenes">Scenes</h2>
 <p>A file can hold several sets of effects and show them one after another. A heading in square brackets begins one, and says how long it shows for:</p>
 <pre class="entry"><code><span class="s-scene">[Evening: 30s]</span>

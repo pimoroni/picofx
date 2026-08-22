@@ -56,7 +56,8 @@ board applies the change straight away. One line per set of outputs:
   out1-7: rainbow_wave speed=0.3
 
 MANUAL.html on this drive has the rest, and opens in a browser: every effect and
-what it takes, the screens, running a program, and showing scenes in turn.
+what it takes, the screens, playing sound, running a program, and showing scenes
+in turn.
 
 In a hurry? Save the file and press "Boot" once. The drive disappears and comes
 straight back with the new effects running, so you can keep editing. Ejecting is

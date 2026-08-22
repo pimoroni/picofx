@@ -16,7 +16,14 @@ https://github.com/miketeachman/micropython-i2s-examples/blob/master/examples/wa
 
 class WavReader:
     def __init__(self, file):
-        self.wav_file = open(file, "rb")
+        # A path is opened here and closed by close(). An already-open file is
+        # the caller's to close, so one handle can be played many times
+        self.__owns_file = isinstance(file, str)
+        if self.__owns_file:
+            self.wav_file = open(file, "rb")
+        else:
+            self.wav_file = file
+            self.wav_file.seek(0)
         self._parse(self.wav_file)
 
     def _parse(self, wav_file):
@@ -75,7 +82,8 @@ class WavReader:
         return self.wav_file.readinto(buf[:max_bytes])
 
     def close(self):
-        self.wav_file.close()
+        if self.__owns_file:
+            self.wav_file.close()
 
 
 class WavPlayer:
@@ -142,15 +150,17 @@ class WavPlayer:
     def play_wav(self, wav_file, loop=False):
         self.__stop_i2s()                                       # Stop any active playback and terminate the I2S instance
 
-        try:
-            self.__wav_file = open(self.__root + wav_file, "rb")    # Open the chosen WAV file in read-only, binary mode
-        except OSError:
-            raise ValueError(f"'{wav_file}' not found") from None
+        # Parse the WAV file, returning the necessary parameters to initialise I2S communication.
+        # A string names a file under root; anything else is an already-open WAV file
+        if isinstance(wav_file, str):
+            try:
+                self.__wav_file = WavReader(self.__root + wav_file)
+            except OSError:
+                raise ValueError(f"'{wav_file}' not found") from None
+        else:
+            self.__wav_file = WavReader(wav_file)
         self.__loop_wav = loop                                  # Record if the user wants the file to loop
         self._loop_count = 0                                    # Count loops for debugging purposes
-
-        # Parse the WAV file, returning the necessary parameters to initialise I2S communication
-        self.__wav_file = WavReader(self.__root + wav_file)
 
         self.__start_i2s(bits=self.__wav_file.bits_per_sample,
                          format=self.__wav_file.format,
@@ -277,29 +287,37 @@ class WavPlayer:
         # PLAY
         if self.__state == WavPlayer.PLAY:
             if self.__mode == WavPlayer.MODE_WAV:
-                if self.__loop_wav:  # Looped playback
-                    loop_read = 0
-                    while loop_read < self.WAV_BUFFER_LENGTH:
-                        num_read = self.__wav_file.readinto(self.__wav_samples_mv[loop_read:])      # Read the next section of the WAV file
-                        loop_read += num_read
-                        if num_read == 0:
-                            _ = self.__wav_file.seek(0)    # Play again, so advance to first byte of sample data
-                            self._loop_count += 1
-                    self.__audio_out.write(self.__wav_samples_mv)
+                try:
+                    if self.__loop_wav:  # Looped playback
+                        loop_read = 0
+                        while loop_read < self.WAV_BUFFER_LENGTH:
+                            num_read = self.__wav_file.readinto(self.__wav_samples_mv[loop_read:])      # Read the next section of the WAV file
+                            loop_read += num_read
+                            if num_read == 0:
+                                _ = self.__wav_file.seek(0)    # Play again, so advance to first byte of sample data
+                                self._loop_count += 1
+                        self.__audio_out.write(self.__wav_samples_mv)
+                        return
 
-                else:  # Single shot playback
-                    num_read = self.__wav_file.readinto(self.__wav_samples_mv)
+                    num_read = self.__wav_file.readinto(self.__wav_samples_mv)  # Single shot playback
+                except OSError:
+                    # The file went away beneath the player, a drive file replaced by
+                    # the computer being the way that happens. The sound ends cleanly
+                    # rather than raising out of the callback
+                    self.__wav_file.close()
+                    self.__state = WavPlayer.FLUSH
+                    self.__audio_out.write(self.__silence_samples)
+                    return
 
-                    if num_read:
-                        self.__audio_out.write(self.__wav_samples_mv[: num_read])   # We are within the file, so write out the next audio samples
-                    else:
-                        self.__audio_out.write(self.__silence_samples)              # Play silence to end this callback
+                if num_read:
+                    self.__audio_out.write(self.__wav_samples_mv[: num_read])   # We are within the file, so write out the next audio samples
+                else:
+                    self.__audio_out.write(self.__silence_samples)              # Play silence to end this callback
 
-                    # Have we reached the end of the file? (num_read is either 0 or a short read)
-                    if num_read < self.WAV_BUFFER_LENGTH:
-                        # Do we want to loop the WAV playback?
-                        self.__wav_file.close()                                 # Stop playing, so close the file
-                        self.__state = WavPlayer.FLUSH                          # and enter the flush state on the next callback
+                # Have we reached the end of the file? (num_read is either 0 or a short read)
+                if num_read < self.WAV_BUFFER_LENGTH:
+                    self.__wav_file.close()                                 # Stop playing, so close the file
+                    self.__state = WavPlayer.FLUSH                          # and enter the flush state on the next callback
 
             else:
                 if self.__queued_samples is not None:
