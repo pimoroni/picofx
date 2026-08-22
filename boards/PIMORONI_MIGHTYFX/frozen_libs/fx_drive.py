@@ -1,7 +1,8 @@
 """
 The FX drive: a small FAT partition holding effects.txt, editable from a connected
-computer over USB mass storage, and room for the assets a program reads. Board code
-only ever reads the drive, except in the window writable() opens.
+computer over USB mass storage, and room for the assets a program reads. The mount
+is read-write whenever the board holds the drive, and released while the computer
+does, so the two writers can never meet.
 
 The drive is shown at boot and controlled by the button from then on: a double press
 of the button passed to service() shows or hides it, and hiding it, or ejecting it on
@@ -140,7 +141,7 @@ def __has_boot_signature(bdev):
 
 def mount():
     """
-    Mount the drive read-only at /fx, rebuilding it when the filesystem is blank,
+    Mount the drive read-write at /fx, rebuilding it when the filesystem is blank,
     effects.txt is missing, or either shipped document differs from the text the
     board carries. Returns whether the drive ended up mounted.
     """
@@ -190,8 +191,6 @@ def mount():
     __heal(fs, PICKER_NAME, fx_editor.PICKER)
     __heal(fs, CATALOGUE_NAME, fx_editor.CATALOGUE)
     __sweep_swap_files()
-    vfs.umount(MOUNT_POINT)
-    vfs.mount(vfs.VfsFat(bdev), MOUNT_POINT, readonly=True)
     return True
 
 
@@ -201,35 +200,18 @@ def path(name):
 
 
 class __Writable:
-    """
-    The drive, writable for as long as the block lasts, then read-only again. A
-    drive that is not mounted, because it was damaged or is with the computer,
-    gives a block that changes nothing, so a caller need not check first.
-    """
-    def __init__(self):
-        self.__opened = False
-
     def __enter__(self):
-        try:
-            vfs.umount(MOUNT_POINT)
-            vfs.mount(vfs.VfsFat(rp2.Flash(msc=True)), MOUNT_POINT)
-            self.__opened = True
-        except OSError:
-            self.__opened = False
-        return MOUNT_POINT if self.__opened else None
+        return MOUNT_POINT
 
     def __exit__(self, *args):
-        if self.__opened:
-            vfs.umount(MOUNT_POINT)
-            vfs.mount(vfs.VfsFat(rp2.Flash(msc=True)), MOUNT_POINT, readonly=True)
         return False
 
 
 def writable():
     """
-    Take the drive writable for one block. Only safe while the board owns it, so
-    never while the computer has it, and the caller should be between mount() and
-    expose(). This is where the shipped documents are healed and a report is left.
+    A block in which the drive may be written. The mount is read-write whenever the
+    board holds the drive, so the block changes nothing; it marks the writes that
+    must not happen while the computer has it, where they raise OSError.
     """
     return __Writable()
 

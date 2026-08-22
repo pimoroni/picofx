@@ -1322,8 +1322,6 @@ def __play(fx, volume, path, errors, playing, maker=None):
     if volume is None:
         wrote = report(problems, errors, bool(players))
     else:
-        # The volume is read-only outside this window, which is also where the
-        # README is healed
         with volume.writable():
             wrote = report(problems, errors, bool(players))
 
