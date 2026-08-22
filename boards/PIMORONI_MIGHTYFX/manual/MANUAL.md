@@ -23,7 +23,8 @@ While the computer is copying to this drive the effects stand aside for a dim
 white travelling along the outputs, and come back a moment after it finishes.
 
 **Would you rather not write the file at all? `PICKER.html` on this drive writes
-it for you. See [the picker](#the-picker).**
+it for you. See [the picker](#the-picker). `EDITOR.html` beside it is a place to
+write it with the names offered as you type. See [the editor](#the-editor).**
 
 **The board also carries programs that run as they are, from single effects to
 whole builds, and one line in `effects.txt` starts any of them. See
@@ -46,6 +47,25 @@ board made of each line.
 A page cannot write to a drive in Firefox or Safari, so the picker needs Chrome or
 Edge. What it writes is an ordinary `effects.txt`: anything it makes can be edited
 by hand afterwards, and it asks before replacing a file it did not write itself.
+
+## The editor
+
+`EDITOR.html` on this drive is `effects.txt` in a window that knows the format.
+Every word is coloured by the part it plays, and as you type it offers what fits
+where you are: the outputs and screens at the start of a line, the effects after
+the colon, then that effect's own settings and the values each one takes. A line
+underneath says what shape a value wants. Tab or Enter takes what is offered,
+Escape leaves it, and Ctrl+Space asks for it again.
+
+A name it does not know is underlined, an effect that is not one or a setting the
+effect does not take. Values are left alone, since a percentage, a colour and a
+list all live there and the board is the one that reads them. "Put it on the
+board" writes the file and "Did it work?" reads `errors.txt` back, as the picker
+does.
+
+It offers only what this board provides, so anything the firmware gains appears
+without the page changing. Like the picker it needs Chrome or Edge, and it needs
+`catalogue.js` beside it, which is why both live on this drive together.
 
 ## Writing an entry
 

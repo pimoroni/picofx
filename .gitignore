@@ -4,3 +4,4 @@ dist/
 .coverage
 .tox/
 boards/*/manual/MANUAL.html
+boards/*/editor/catalogue.js

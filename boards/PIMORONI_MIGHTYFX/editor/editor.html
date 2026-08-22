@@ -1,0 +1,928 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>FX Editor</title>
+<script src="catalogue.js"></script>
+<style>
+:root{
+ --bg:#f5f3ef; --panel:#fff; --ink:#26221e; --dim:#8a8378; --line:#e2ddd4;
+ --accent:#00857d; --accent-ink:#fff; --warn:#b33; --warn-bg:#fbeaea;
+ --target:#1f6feb; --effect:#0a7f78; --value:#a8500a; --scene:#7b3fb8;
+ --comment:#8a8378; --faint:#5d656e;
+}
+*{box-sizing:border-box}
+body{font:16px/1.5 system-ui,sans-serif;margin:0;background:var(--bg);color:var(--ink)}
+header{display:flex;align-items:center;gap:.8rem;padding:.8rem 1.4rem;background:var(--panel);
+ border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header h1{font-size:1.1rem;margin:0 auto 0 0}
+button{font:inherit;padding:.5rem 1rem;border:1px solid var(--line);border-radius:8px;
+ background:var(--panel);cursor:pointer}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button:disabled{opacity:.4;cursor:default}
+main{max-width:52rem;margin:1.5rem auto;padding:0 1.4rem}
+#status{font-size:.85rem;color:var(--dim)}
+.banner{padding:.8rem 1.1rem;border-radius:10px;margin:1rem 0;background:#e7f2f1}
+.banner.warn{background:var(--warn-bg);color:var(--warn)}
+.banner pre{margin:.4rem 0 0;white-space:pre-wrap;font-size:.85rem}
+
+.editor{position:relative;background:var(--panel);border:1px solid var(--line);
+ border-radius:14px;overflow:hidden;height:24rem}
+.editor pre, .editor textarea{
+ position:absolute;inset:0;margin:0;padding:1rem 1.2rem;border:0;
+ font:14px/1.6 ui-monospace,Consolas,"Cascadia Mono",monospace;
+ white-space:pre;overflow:auto;tab-size:4;
+}
+.editor pre{pointer-events:none;background:transparent;color:var(--ink);z-index:1;
+ scrollbar-width:none}
+.editor pre::-webkit-scrollbar{display:none}
+.editor textarea{background:transparent;color:transparent;caret-color:var(--ink);
+ resize:none;outline:none;z-index:2}
+.editor textarea::selection{background:rgba(0,133,125,.18)}
+
+.s-target{color:var(--target)}
+.s-effect{color:var(--effect);font-weight:600}
+.s-value{color:var(--value)}
+.s-scene{color:var(--scene);font-weight:600}
+.s-name{color:var(--ink)}
+.s-punc{color:var(--faint)}
+.s-colon{color:var(--ink);font-weight:700}
+.s-comment{color:var(--comment);font-style:italic}
+.s-bad{text-decoration:underline wavy var(--warn);text-decoration-skip-ink:none}
+
+.suggest{position:fixed;z-index:6;background:var(--panel);border:1px solid var(--line);
+ border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.12);min-width:12rem;max-width:24rem;
+ max-height:14rem;overflow:auto;display:none;font:13px/1.5 ui-monospace,Consolas,monospace}
+.suggest.shown{display:block}
+.suggest div{padding:.25rem .8rem;cursor:pointer;display:flex;gap:.8rem;align-items:baseline}
+.suggest div small{color:var(--dim);font:12px/1.4 system-ui,sans-serif;margin-left:auto;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.suggest div.lit{background:var(--accent);color:var(--accent-ink)}
+.suggest div.lit small{color:var(--accent-ink)}
+.suggest div.rule{border-top:1px solid var(--line);margin:.25rem 0;padding:0;cursor:default}
+
+.hint{font-size:.85rem;color:var(--dim);margin:.6rem .2rem;min-height:1.3rem}
+.foot{font-size:.85rem;color:var(--dim);margin:1.2rem .2rem}
+.foot a{color:var(--accent)}
+</style>
+</head>
+<body>
+<header>
+<h1>FX Editor</h1>
+<span id="status">nothing open yet</span>
+<button id="open">Open the drive</button>
+<button id="save" class="primary">Put it on the board</button>
+<button id="check" disabled>Did it work?</button>
+</header>
+<main>
+<div id="banners"></div>
+<div class="editor">
+<pre id="paint"><code id="painted"></code></pre>
+<textarea id="entry" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off"></textarea>
+<div id="suggest" class="suggest"></div>
+</div>
+<div id="hint" class="hint"></div>
+<p class="foot">One entry per line: which lights, a colon, then the effect.
+The board checks the file when the drive ejects, and "Did it work?" reads what it made
+of each line. Rather pick from cards? <a href="PICKER.html">PICKER.html</a> on this
+drive writes the file for you.</p>
+</main>
+<script>
+"use strict";
+
+// The page still paints without the catalogue beside it; the hint line says why
+// nothing can be offered
+if (typeof CATALOGUE === "undefined") window.CATALOGUE = null;
+
+// ---- what the file may say, from the same tables the board reads ---------------
+
+var TYPE_HINTS = {
+  fraction: "0 to 1, or a percent such as 50%",
+  seconds: "a time in seconds",
+  number: "a number",
+  count: "a whole number",
+  span: "how many lights it spreads over",
+  whole: "a whole number",
+  byte: "0 to 255",
+  angle: "degrees, 0 to 360",
+  colour: "a name such as warm, or six-digit hex with no #",
+  boolean: "true or false",
+  quarter: "0, 90, 180 or 270",
+  name: "a file on this drive"
+};
+
+// The left side's own settings have shapes the type table does not carry
+var CHANNEL_HINTS = {
+  colour: "a name such as warm, or six-digit hex with no #",
+  offset: "where the picture goes, as x|y, * centring that side",
+  background: "the colour around the picture",
+  bg: "the colour around the picture",
+  tile: "repeat or mirror to fill the screen with copies, as across|down"
+};
+
+var TARGETS = [
+  ["out1-7", "all seven outputs"],
+  ["screenA", "a screen on SP/CE A"],
+  ["screenB", "a screen on SP/CE B"],
+  ["stripL", "an LED strip on L"],
+  ["stripR", "an LED strip on R"],
+  ["audio", "a sound played beside the effects"],
+  ["board", "settings for the board itself"],
+  ["[", "a scene heading, [Name: 10s]; entries above the first are always on"]
+];
+
+var BOARD_HINTS = {
+  drive: "manual keeps the drive hidden until asked for",
+  reload: "auto plays the file the moment it is saved, no eject needed",
+  program: "a Python file to run instead of the effects",
+  args: "what to pass that program, divided by |",
+  screena: "what size of screen is on SP/CE A",
+  screenb: "what size of screen is on SP/CE B",
+  stripl: "how many LEDs are on a strip plugged into L",
+  stripr: "the same for R"
+};
+
+// The spelling a completion inserts, where the file reads best in mixed case
+var BOARD_CASE = {screena: "screenA", screenb: "screenB",
+                  stripl: "stripL", stripr: "stripR"};
+
+function targetKind(word) {
+  var lowered = word.toLowerCase();
+  if (lowered === "board") return "board";
+  if (CATALOGUE && lowered === CATALOGUE.audio) return "audio";
+  if (lowered.slice(0, 6) === "screen") return "screen";
+  if (lowered.slice(0, 5) === "strip") return "strip";
+  return "output";
+}
+
+function channelSettings(kind) {
+  // A sound answers to none of the channel settings, autofx saying so where one
+  // is written
+  if (!CATALOGUE || kind === "board" || kind === "audio") return [];
+  if (kind === "screen") return CATALOGUE.screen_settings || [];
+  return CATALOGUE.output_settings || [];
+}
+
+function effectNames(kind) {
+  if (!CATALOGUE) return [];
+  if (kind === "screen") return Object.keys(CATALOGUE.screen_effects);
+  if (kind === "audio") return Object.keys(CATALOGUE.audio_effects);
+  return Object.keys(CATALOGUE.effects);
+}
+
+function effectTakes(name, kind) {
+  if (!CATALOGUE) return null;
+  if (kind === "screen") return CATALOGUE.screen_effects[name.toLowerCase()] || null;
+  if (kind === "audio") return CATALOGUE.audio_effects[name.toLowerCase()] || null;
+  var effect = CATALOGUE.effects[name.toLowerCase()];
+  return effect ? effect.takes : null;
+}
+
+function settingType(name, kind) {
+  if (!CATALOGUE) return null;
+  var lowered = name.toLowerCase();
+  return CATALOGUE.channel_kinds[lowered] ||
+         (kind !== "board" && CATALOGUE.settings[lowered]) || null;
+}
+
+function valuesFor(name, kind) {
+  if (!CATALOGUE) return null;
+  var lowered = name.toLowerCase();
+  if (kind === "board") {
+    var allowed = CATALOGUE.board_settings[lowered];
+    return allowed && allowed.length ? allowed.map(String) : null;
+  }
+  if (lowered === "colour" || lowered === "background" || lowered === "bg")
+    return CATALOGUE.colours;
+  if (lowered === "rotation") return ["0", "90", "180", "270"];
+  if (lowered === "tile") return CATALOGUE.tiling || [];
+  if (settingType(name, kind) === "boolean") return ["true", "false"];
+  return null;
+}
+
+// ---- painting, the same roles the manual gives each word -----------------------
+
+function esc(text) {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function mark(role, text) {
+  return text ? '<span class="' + role + '">' + text + "</span>" : text;
+}
+
+function settingTok(token) {
+  var trailing = "";
+  while (token.slice(-1) === ",") {
+    trailing = "," + trailing;
+    token = token.slice(0, -1);
+  }
+  var at = token.indexOf("=");
+  if (at < 0) return mark("s-name", token) + trailing;
+  return mark("s-name", token.slice(0, at)) + mark("s-punc", "=") +
+         mark("s-value", token.slice(at + 1)) + trailing;
+}
+
+function tokens(text, asWord) {
+  return text.split(/(\s+)/).map(function (word) {
+    return !word.trim() ? word : asWord(word);
+  }).join("");
+}
+
+// What is marked as likely wrong is only what the tables know: names. Values are
+// left unjudged, % and deg and lists living there, and the board stays the judge
+function badWrap(marked) {
+  return '<span class="s-bad">' + marked + "</span>";
+}
+
+function validSelector(word) {
+  var bare = word.toLowerCase().replace(/^,+|,+$/g, "");
+  if (!bare) return true;
+  if (bare === "board" || /^screen[ab]$/.test(bare)) return true;
+  if (CATALOGUE && bare === CATALOGUE.audio) return true;
+  if (/^strip[lr]([0-9][0-9,\-]*)?$/.test(bare)) return true;
+  if (/^out[0-9][0-9,\-.rgb*]*$/.test(bare)) return true;
+  // A group after a comma names its outputs bare: 2, 5-3, 3.r
+  return /^[0-9][0-9,\-]*(\.(r|g|b|\*))?$/.test(bare);
+}
+
+function checkedSetting(word, allowed) {
+  var marked = settingTok(word);
+  if (!allowed) return marked;
+  var name = word.split("=")[0].replace(/,+$/, "").toLowerCase();
+  if (name === "bg") name = "background";
+  return allowed.indexOf(name) >= 0 ? marked : badWrap(marked);
+}
+
+function highlightLine(line, continuation, context, inScene) {
+  var hash = line.indexOf("#");
+  var body = hash < 0 ? line : line.slice(0, hash);
+  var comment = hash < 0 ? "" : mark("s-comment", esc(line.slice(hash)));
+
+  if (!body.trim()) return esc(body) + comment;
+  if (body.replace(/^\s+/, "").slice(0, 1) === "[")
+    return mark("s-scene", esc(body)) + comment;
+
+  var at = body.indexOf(":");
+  if (at < 0) {
+    // A continuation line carries only settings; anything else continues nothing
+    if (!continuation) return badWrap(esc(body)) + comment;
+    var allowed = context && CATALOGUE && context.effect
+                ? effectTakes(context.effect, context.kind) : null;
+    return tokens(esc(body), function (word) {
+      return word.indexOf("=") >= 0 ? checkedSetting(word, allowed) : word;
+    }) + comment;
+  }
+
+  var opening = body.slice(0, at).match(/^\s*([^\s]+)/);
+  var kind = opening ? targetKind(opening[1]) : "output";
+  // Sound does not follow scenes, so its entry belongs above every heading
+  var misplaced = kind === "audio" && inScene;
+  var leftAllowed = CATALOGUE
+                  ? (kind === "board" ? [] : channelSettings(kind)) : null;
+
+  var mono = false;
+  var left = tokens(esc(body.slice(0, at)), function (word) {
+    if (word.indexOf("=") >= 0) return checkedSetting(word, leftAllowed);
+    if (kind === "output" && word.indexOf(".") >= 0) mono = true;
+    var marked = mark("s-target", word);
+    return validSelector(word) && !misplaced ? marked : badWrap(marked);
+  });
+
+  // The first bare word names the effect; a board entry is settings the whole way
+  var named = false;
+  var rightAllowed = CATALOGUE && kind === "board"
+                   ? Object.keys(CATALOGUE.board_settings) : null;
+  var right = tokens(esc(body.slice(at + 1)), function (word) {
+    if (!named && word.indexOf("=") < 0) {
+      named = true;
+      var marked = mark("s-effect", word);
+      if (!CATALOGUE) return marked;
+      if (kind === "board") return badWrap(marked);
+      var name = word.replace(/,+$/, "").toLowerCase();
+      rightAllowed = effectTakes(name, kind);
+      if (!rightAllowed) return badWrap(marked);
+      // A colour effect has nothing to show on a channel driven as a plain light
+      if (mono && CATALOGUE.effects[name].kind === "colour") return badWrap(marked);
+      return marked;
+    }
+    return checkedSetting(word, rightAllowed);
+  });
+
+  return left + mark("s-colon", ":") + right + comment;
+}
+
+function paint(text) {
+  var open = null;
+  var inScene = false;
+  var painted = text.split("\n").map(function (line) {
+    var body = line.split("#")[0];
+    var context = open;
+    var at = body.indexOf(":");
+    if (body.replace(/^\s+/, "").slice(0, 1) === "[") inScene = true;
+    if (!body.trim() || body.replace(/^\s+/, "").slice(0, 1) === "[") {
+      open = null;
+      context = null;
+    } else if (at >= 0) {
+      var opening = body.slice(0, at).match(/^\s*([^\s]+)/);
+      var effect = null;
+      body.slice(at + 1).split(/\s+/).forEach(function (word) {
+        if (word && word.indexOf("=") < 0 && !effect)
+          effect = word.replace(/,+$/, "");
+      });
+      open = {kind: opening ? targetKind(opening[1]) : "output", effect: effect};
+      context = null;
+    }
+    return highlightLine(line, !!context, context, inScene);
+  });
+  return painted.join("\n") + "\n";
+}
+
+// ---- where the caret stands, for offering what fits there ----------------------
+
+function entryBefore(text, caret) {
+  // The logical entry up to the caret: this line, plus the lines above it that
+  // it continues, since an entry's colon is on its first line
+  var lineStart = text.lastIndexOf("\n", caret - 1) + 1;
+  var lines = [text.slice(lineStart, caret)];
+  while (lineStart > 0 && lines[0].split("#")[0].indexOf(":") < 0) {
+    var previousStart = text.lastIndexOf("\n", lineStart - 2) + 1;
+    var previous = text.slice(previousStart, lineStart - 1).split("#")[0];
+    if (!previous.trim() || previous.replace(/^\s+/, "").slice(0, 1) === "[") break;
+    lines.unshift(previous);
+    lineStart = previousStart;
+    if (previous.indexOf(":") >= 0) break;
+  }
+  return lines.join(" ");
+}
+
+// Which outputs these lines already drive, ranges and components expanded
+function outputsUsed(lines) {
+  var used = {};
+  lines.forEach(function (line) {
+    var body = line.split("#")[0];
+    var at = body.indexOf(":");
+    if (at < 0 || !/^\s*out[0-9]/i.test(body)) return;
+    body.slice(0, at).split(/\s+/).forEach(function (word) {
+      if (word.indexOf("=") >= 0) return;
+      word.toLowerCase().split(",").forEach(function (token) {
+        token = token.replace(/^out/, "").split(".")[0];
+        var range = token.match(/^([0-9]+)-([0-9]+)$/);
+        if (range) {
+          var from = Math.min(+range[1], +range[2]);
+          var to = Math.max(+range[1], +range[2]);
+          for (var n = from; n <= to; n++) used[n] = true;
+        } else if (/^[0-9]+$/.test(token)) {
+          used[+token] = true;
+        }
+      });
+    });
+  });
+  return used;
+}
+
+// The caret's own scene, its line left out, and the always-on section above the
+// first heading. Above the first heading the two are one and the same
+function sceneScope(text, caret) {
+  var lines = text.split("\n");
+  var here = text.slice(0, caret).split("\n").length - 1;
+  function heading(line) {
+    return line.split("#")[0].replace(/^\s+/, "").slice(0, 1) === "[";
+  }
+  var start = 0;
+  for (var up = here; up >= 0; up--)
+    if (heading(lines[up])) { start = up + 1; break; }
+  var end = lines.length;
+  for (var down = here + 1; down < lines.length; down++)
+    if (heading(lines[down])) { end = down; break; }
+  var first = lines.length;
+  for (var scan = 0; scan < lines.length; scan++)
+    if (heading(lines[scan])) { first = scan; break; }
+  return {
+    scene: lines.slice(start, end).filter(function (_, index) {
+      return start + index !== here;
+    }),
+    always: start > 0 ? lines.slice(0, first) : []
+  };
+}
+
+function contextAt(text, caret) {
+  var lineStart = text.lastIndexOf("\n", caret - 1) + 1;
+  var line = text.slice(lineStart, caret);
+  if (line.indexOf("#") >= 0) return null;
+  if (line.replace(/^\s+/, "").slice(0, 1) === "[") return null;
+
+  var entry = entryBefore(text, caret);
+  var prefix = line.match(/[^\s:]*$/)[0];
+  var found = {prefix: prefix, target: null, kind: "output", effect: null,
+               comma: false, used: {}};
+
+  // A comma closes its token, so the caret stands at a fresh word
+  if (prefix.slice(-1) === ",") {
+    found.comma = true;
+    found.prefix = prefix = "";
+  }
+
+  var before = entry.slice(0, entry.length - prefix.length);
+  var colon = before.indexOf(":");
+  found.left = colon < 0;
+
+  var opening = entry.match(/^\s*([^\s:]+)/);
+  if (opening) {
+    found.target = opening[1];
+    found.kind = targetKind(opening[1]);
+  }
+
+  // A component anywhere in the selector makes the channel a plain light, so a
+  // colour effect has nothing there to show itself on
+  if (colon >= 0 && found.kind === "output")
+    found.mono = entry.slice(0, entry.indexOf(":")).split(/\s+/).some(function (word) {
+      return word.indexOf("=") < 0 && word.indexOf(".") >= 0;
+    });
+
+  // What the entry already sets, to the end of the caret's line, so a setting
+  // is only ever offered once
+  var lineEnd = text.indexOf("\n", caret);
+  var whole = entry + " " +
+              text.slice(caret, lineEnd < 0 ? text.length : lineEnd).split("#")[0];
+  whole.split(/[\s,]+/).forEach(function (word) {
+    var at = word.indexOf("=");
+    if (at > 0) found.used[word.slice(0, at).toLowerCase()] = true;
+  });
+
+  if (colon < 0) {
+    // A comma before the colon says another output comes next, which is the
+    // writer's to number, so nothing is offered and the hint line explains
+    found.mode = found.comma ? "more" : before.trim() ? "channel" : "target";
+  } else {
+    found.mode = found.kind === "board" ? "setting" : "effect";
+    before.slice(colon + 1).split(/\s+/).forEach(function (word) {
+      if (word && word.indexOf("=") < 0 && !found.effect) {
+        found.effect = word.replace(/,+$/, "");
+        found.mode = "setting";
+      }
+    });
+    // The first word of a new line may start a new entry or carry on the one
+    // above, so both are offered until the word says which
+    if (line.indexOf(":") < 0) {
+      if (line.slice(0, line.length - prefix.length).trim() === "") {
+        found.mode = "fresh";
+      } else {
+        // A first word shaped like a selector settles it: the line is a new
+        // entry still waiting for its colon, not the one above carrying on
+        var starts = line.match(/^\s*([^\s:]+)/);
+        if (starts && /^(out[0-9]|screen[ab]|strip[lr]|board)/i.test(starts[1])) {
+          found.target = starts[1];
+          found.kind = targetKind(starts[1]);
+          found.effect = null;
+          found.mode = "channel";
+          found.used = {};
+          line.split(/[\s,]+/).forEach(function (word) {
+            var given = word.indexOf("=");
+            if (given > 0) found.used[word.slice(0, given).toLowerCase()] = true;
+          });
+        }
+      }
+    }
+  }
+
+  var at = found.prefix.indexOf("=");
+  if (at >= 0) {
+    found.mode = "value";
+    found.setting = found.prefix.slice(0, at);
+    found.prefix = found.prefix.slice(at + 1);
+  }
+
+  if (found.mode === "target" || found.mode === "fresh") {
+    var scope = sceneScope(text, caret);
+    found.sceneUsed = outputsUsed(scope.scene);
+    found.alwaysUsed = outputsUsed(scope.always);
+  }
+  return found;
+}
+
+function offers(found) {
+  if (!found) return [];
+  var out = [];
+  var seen = found.prefix.toLowerCase();
+
+  function offer(insert, hint) {
+    if (insert.toLowerCase().slice(0, seen.length) === seen && insert !== found.prefix)
+      out.push({insert: insert, hint: hint || ""});
+  }
+
+  // fade and ease are one setting written two ways, so each rules the other out
+  function unused(name) {
+    if (found.used[name.toLowerCase()]) return false;
+    if (name === "fade" && found.used.ease) return false;
+    if (name === "ease" && found.used.fade) return false;
+    return true;
+  }
+
+  function channelOffers() {
+    channelSettings(found.kind).forEach(function (name) {
+      if (!unused(name)) return;
+      var type = settingType(name, found.kind);
+      offer(name + "=", CHANNEL_HINTS[name] || TYPE_HINTS[type] || "");
+    });
+    offer(": ", "then the effect");
+  }
+
+  function settingOffers() {
+    var takes = found.kind === "board"
+              ? (CATALOGUE ? Object.keys(CATALOGUE.board_settings) : [])
+              : found.effect ? effectTakes(found.effect, found.kind) : null;
+    (takes || []).forEach(function (name) {
+      if (!unused(name)) return;
+      var shown = BOARD_CASE[name] || name;
+      var hint = found.kind === "board" ? BOARD_HINTS[name]
+               : TYPE_HINTS[settingType(name, found.kind)];
+      offer(shown + "=", hint || "");
+    });
+  }
+
+  // A word already naming outputs can take more of them, one colour channel, or
+  // go to its effect. Half-written punctuation leaves the numbers to the writer
+  function selectorOffers() {
+    if (/^out[0-9]/i.test(found.prefix) && found.prefix.slice(-1) === ".") {
+      offer(found.prefix + "r", "just the red");
+      offer(found.prefix + "g", "just the green");
+      offer(found.prefix + "b", "just the blue");
+      offer(found.prefix + "*", "all three, each its own light");
+      return;
+    }
+    if (/[-.,]$/.test(found.prefix)) return;
+    if (/^out[0-9]/i.test(found.prefix) || /^strip[lr][0-9]/i.test(found.prefix)) {
+      var tail = found.prefix.split(",").pop();
+      offer(found.prefix + ",", "another output after it: out1,3,5-7");
+      if (/^[0-9]+$/.test(tail.replace(/^[a-z]+/i, "")))
+        offer(found.prefix + "-", "a range to another output, run either way");
+      if (/^out/i.test(found.prefix) && tail.indexOf(".") < 0)
+        offer(found.prefix + ".", "one colour channel alone: .r .g .b, or .*");
+      offer(found.prefix + ": ", "then the effect");
+    } else if (/^(screen[ab]|strip[lr]|board|audio)$/i.test(found.prefix)) {
+      offer(found.prefix + ": ", "then the effect");
+    }
+  }
+
+  // One output by number: the first this scene does not drive yet, and beside it
+  // the first held by the always-on section, which a scene may take over
+  function dynamicOutput() {
+    var free = null;
+    var takeover = null;
+    for (var n = 1; n <= 7; n++) {
+      if (found.sceneUsed[n]) continue;
+      if (found.alwaysUsed[n]) {
+        if (takeover === null) takeover = n;
+      } else if (free === null) {
+        free = n;
+      }
+    }
+    if (free !== null)
+      offer("out" + free, free === 1 ? "one output" : "the next output not used here");
+    if (takeover !== null)
+      offer("out" + takeover, "takes over an always-on output while this scene shows");
+  }
+
+  function freshStarts() {
+    dynamicOutput();
+    TARGETS.forEach(function (pair) { offer(pair[0], pair[1]); });
+    selectorOffers();
+  }
+
+  if (found.mode === "target") {
+    freshStarts();
+
+  } else if (found.mode === "channel") {
+    channelOffers();
+
+  } else if (found.mode === "effect") {
+    effectNames(found.kind).forEach(function (name) {
+      var effect = CATALOGUE.effects[name];
+      if (found.mono && effect && effect.kind === "colour") return;
+      var hint = effect && effect.kind === "colour" ? "brings its own colours" : "";
+      offer(name, hint);
+    });
+
+  } else if (found.mode === "setting") {
+    settingOffers();
+
+  } else if (found.mode === "fresh") {
+    // A new line under an entry: carrying it on comes first, a fresh start after
+    // a dividing line
+    settingOffers();
+    var split = out.length;
+    freshStarts();
+    if (split && out.length > split) out.divider = split;
+
+  } else if (found.mode === "value") {
+    (valuesFor(found.setting, found.kind) || []).forEach(function (value) {
+      offer(value);
+    });
+    // A pipe joins the parts of a value that has them; a comma after a value on
+    // the left starts the next output group
+    if (found.prefix) {
+      var name = found.setting.toLowerCase();
+      var piped = {fade: "rise|fall, each its own seconds",
+                   ease: "rise|fall, each its own seconds",
+                   offset: "x|y, * centring that side",
+                   tile: "across|down",
+                   hold: "one end|the other",
+                   args: "the next argument"};
+      if (piped[name])
+        offer(found.prefix + "|", piped[name]);
+      else if (name === "colour" && found.effect &&
+               found.effect.toLowerCase() === "rgb_blink")
+        offer(found.prefix + "|", "another colour to blink through");
+      if (found.left && found.kind !== "screen" && found.kind !== "board")
+        offer(found.prefix + ",", name === "colour"
+              ? "a colour for each output"
+              : "then another output with settings of its own");
+    }
+  }
+  return out;
+}
+
+function hintFor(found) {
+  if (!found) return "";
+  if (!CATALOGUE)
+    return "catalogue.js is not beside this page, so nothing can be suggested; " +
+           "the copy on the FX drive has it";
+  if (found.mode === "more")
+    return "another output comes next: a number, or a range such as 5-3, " +
+           "then its settings or the colon";
+  if ((found.mode === "target" || found.mode === "fresh") &&
+      /^out[0-9]/i.test(found.prefix))
+    return "outputs join with commas, ranges run either way, and .r .g .b " +
+           "or .* takes one colour channel alone";
+  if (found.mode === "value" || (found.mode === "setting" && found.prefix)) {
+    var name = found.mode === "value" ? found.setting : found.prefix;
+    if (found.kind === "board") return BOARD_HINTS[name.toLowerCase()] || "";
+    var type = settingType(name, found.kind);
+    return type ? name.replace(/,+$/, "") + ": " +
+                  (CHANNEL_HINTS[name.toLowerCase()] || TYPE_HINTS[type]) : "";
+  }
+  if (found.effect) {
+    var takes = effectTakes(found.effect, found.kind);
+    if (takes) return found.effect + " takes: " + takes.join(", ");
+  }
+  if (found.kind === "audio")
+    return "one sound plays at a time, and its entry sits above every scene heading";
+  if (found.mode === "channel")
+    return "before the colon: how the " +
+           (found.kind === "screen" ? "screen is set" : "lights are set");
+  return "";
+}
+
+// ---- the page -----------------------------------------------------------------
+
+var entry = document.getElementById("entry");
+var painted = document.getElementById("painted");
+var paintBox = document.getElementById("paint");
+var suggest = document.getElementById("suggest");
+var hintLine = document.getElementById("hint");
+
+var STARTER = "# One entry per line: which lights, a colon, then the effect.\n" +
+              "# Settings you leave out take their usual value.\n\n" +
+              "out1-7: rainbow_wave speed=0.3\n";
+
+var state = {dirHandle: null, fileHandle: null, offered: [], rows: [], lit: 0};
+
+function repaint() {
+  painted.innerHTML = paint(entry.value);
+  // The box grows with the file, a spare row deep, so the text never scrolls
+  // vertically inside it and the page carries a long file instead
+  var rowHeight = parseFloat(getComputedStyle(entry).lineHeight);
+  var wanted = (entry.value.split("\n").length + 1) * rowHeight + 48;
+  paintBox.parentNode.style.height = Math.max(384, wanted) + "px";
+  paintBox.scrollTop = entry.scrollTop;
+  paintBox.scrollLeft = entry.scrollLeft;
+}
+
+function banner(text, warn, detail) {
+  var box = document.getElementById("banners");
+  box.innerHTML = "";
+  if (!text) return;
+  var note = document.createElement("div");
+  note.className = warn ? "banner warn" : "banner";
+  note.textContent = text;
+  if (detail) {
+    var lines = document.createElement("pre");
+    lines.textContent = detail;
+    note.appendChild(lines);
+  }
+  box.appendChild(note);
+}
+
+// Where the caret's line sits on the screen, found by mirroring the text up to it
+function caretPlace() {
+  var mirror = document.createElement("div");
+  var styles = getComputedStyle(entry);
+  ["font", "whiteSpace", "tabSize"].forEach(function (key) {
+    mirror.style[key] = styles[key];
+  });
+  mirror.style.position = "absolute";
+  mirror.style.visibility = "hidden";
+  mirror.style.whiteSpace = "pre";
+  var upTo = entry.value.slice(0, entry.selectionStart);
+  mirror.textContent = upTo.slice(upTo.lastIndexOf("\n") + 1);
+  document.body.appendChild(mirror);
+  var width = mirror.offsetWidth;
+  document.body.removeChild(mirror);
+
+  var rect = entry.getBoundingClientRect();
+  var rowHeight = parseFloat(styles.lineHeight);
+  var lineTop = rect.top + parseFloat(styles.paddingTop) +
+                (upTo.split("\n").length - 1) * rowHeight - entry.scrollTop;
+  return {
+    left: rect.left + parseFloat(styles.paddingLeft) + width - entry.scrollLeft,
+    below: lineTop + rowHeight + 2,
+    above: lineTop - 2
+  };
+}
+
+function showSuggestions() {
+  var caret = entry.selectionStart;
+  if (caret !== entry.selectionEnd) return hideSuggestions();
+  var found = contextAt(entry.value, caret);
+  hintLine.textContent = hintFor(found);
+
+  var offered = offers(found);
+  if (!offered.length) return hideSuggestions();
+
+  state.offered = offered;
+  state.found = found;
+  state.lit = 0;
+  state.rows = [];
+  suggest.innerHTML = "";
+  offered.slice(0, 40).forEach(function (one, index) {
+    if (index && index === offered.divider) {
+      var rule = document.createElement("div");
+      rule.className = "rule";
+      suggest.appendChild(rule);
+    }
+    var row = document.createElement("div");
+    var name = document.createElement("span");
+    name.textContent = one.insert;
+    row.appendChild(name);
+    if (one.hint) {
+      var why = document.createElement("small");
+      why.textContent = one.hint;
+      row.appendChild(why);
+    }
+    if (index === 0) row.className = "lit";
+    row.onmousedown = function (event) {
+      event.preventDefault();
+      accept(index);
+    };
+    suggest.appendChild(row);
+    state.rows.push(row);
+  });
+  // Placed below the caret's line, or above it where the screen runs out
+  suggest.style.visibility = "hidden";
+  suggest.className = "suggest shown";
+  var place = caretPlace();
+  var top = place.below;
+  if (top + suggest.offsetHeight > window.innerHeight - 8)
+    top = Math.max(8, place.above - suggest.offsetHeight);
+  suggest.style.top = top + "px";
+  suggest.style.left = Math.max(8, Math.min(place.left,
+      window.innerWidth - suggest.offsetWidth - 8)) + "px";
+  suggest.style.visibility = "";
+}
+
+function hideSuggestions() {
+  suggest.className = "suggest";
+  state.offered = [];
+}
+
+function light(index) {
+  var count = state.rows.length;
+  state.lit = (index + count) % count;
+  state.rows.forEach(function (row, i) {
+    row.className = i === state.lit ? "lit" : "";
+  });
+  state.rows[state.lit].scrollIntoView({block: "nearest"});
+}
+
+function accept(index) {
+  var one = state.offered[index === undefined ? state.lit : index];
+  if (!one) return;
+  var caret = entry.selectionStart;
+  var start = caret - state.found.prefix.length;
+  // The colon closes the word before it, so it steps back over the gap
+  if (one.insert.slice(0, 1) === ":")
+    while (start > 0 && entry.value[start - 1] === " ") start--;
+  entry.focus();
+  entry.setSelectionRange(start, caret);
+  // insertText keeps the undo history; setRangeText is the fallback without it
+  if (!document.execCommand("insertText", false, one.insert))
+    entry.setRangeText(one.insert, start, caret, "end");
+  hideSuggestions();
+  changed();
+}
+
+function changed() {
+  repaint();
+  try { localStorage.setItem("fx-editor-draft", entry.value); } catch (e) {}
+  showSuggestions();
+}
+
+entry.addEventListener("input", changed);
+entry.addEventListener("scroll", function () {
+  paintBox.scrollTop = entry.scrollTop;
+  paintBox.scrollLeft = entry.scrollLeft;
+  hideSuggestions();
+});
+// The dropdown is pinned to the screen, so anything moving under it lets go of it
+window.addEventListener("resize", hideSuggestions);
+window.addEventListener("scroll", function (event) {
+  if (event.target instanceof Node && suggest.contains(event.target)) return;
+  hideSuggestions();
+}, true);
+entry.addEventListener("click", showSuggestions);
+entry.addEventListener("blur", function () {
+  setTimeout(hideSuggestions, 150);
+});
+entry.addEventListener("keydown", function (event) {
+  if (!state.offered.length) {
+    if (event.key === " " && event.ctrlKey) {
+      event.preventDefault();
+      showSuggestions();
+    }
+    return;
+  }
+  if (event.key === "ArrowDown") { event.preventDefault(); light(state.lit + 1); }
+  else if (event.key === "ArrowUp") { event.preventDefault(); light(state.lit - 1); }
+  else if (event.key === "Tab" || event.key === "Enter") {
+    event.preventDefault();
+    accept();
+  }
+  else if (event.key === "Escape") hideSuggestions();
+});
+
+// ---- the drive ------------------------------------------------------------------
+
+async function connect() {
+  var dir = await window.showDirectoryPicker({mode: "readwrite"});
+  state.dirHandle = dir;
+  state.fileHandle = await dir.getFileHandle("effects.txt");
+  var onBoard = await (await state.fileHandle.getFile()).text();
+  var held = entry.value.trim();
+  if (onBoard.trim() !== held && (!held || held === STARTER.trim() ||
+      confirm("Load effects.txt from the drive and replace what is here?"))) {
+    entry.value = onBoard;
+    repaint();
+  }
+  document.getElementById("check").disabled = false;
+  document.getElementById("status").textContent = "connected to the drive";
+}
+
+document.getElementById("open").onclick = async function () {
+  try {
+    await connect();
+    banner("");
+  } catch (e) {
+    banner("Could not open the drive: " + e.name + ". Is it showing? " +
+           "A double press of the board's button brings it back.", true);
+  }
+};
+
+document.getElementById("save").onclick = async function () {
+  try {
+    if (!state.fileHandle) await connect();
+    var text = entry.value;
+    var writable = await state.fileHandle.createWritable();
+    await writable.write(text);
+    await writable.close();
+    var back = await (await state.fileHandle.getFile()).text();
+    if (back !== text) throw new Error("the file read back differently");
+    banner("On its way. Eject the FX drive on this computer, and the board plays it. " +
+           "Double-press the board's button to bring the drive back, then ask 'Did it work?'.");
+  } catch (e) {
+    state.fileHandle = null;
+    state.dirHandle = null;
+    banner("That didn't reach the board: " + e.name + ". Is the FX drive showing? " +
+           "A double press of its button brings it back; then try again.", true);
+  }
+};
+
+document.getElementById("check").onclick = async function () {
+  try {
+    var handle = await state.dirHandle.getFileHandle("errors.txt");
+    var text = await (await handle.getFile()).text();
+    banner("The board wasn't happy with some of it:", true, text.trim());
+  } catch (e) {
+    if (e.name === "NotFoundError")
+      banner("All good. The board read the file and found nothing wrong.");
+    else
+      banner("Couldn't look: " + e.name + ". Is the drive showing?", true);
+  }
+};
+
+var draft = null;
+try { draft = localStorage.getItem("fx-editor-draft"); } catch (e) {}
+entry.value = draft || STARTER;
+repaint();
+</script>
+</body>
+</html>

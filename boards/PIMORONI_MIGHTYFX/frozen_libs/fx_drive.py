@@ -24,6 +24,7 @@ FILE_PATH = MOUNT_POINT + "/effects.txt"
 README_NAME = "README.txt"
 MANUAL_NAME = "MANUAL.html"
 PICKER_NAME = "PICKER.html"
+EDITOR_NAME = "EDITOR.html"
 CATALOGUE_NAME = "catalogue.js"
 ERRORS_PATH = MOUNT_POINT + "/errors.txt"
 
@@ -201,6 +202,7 @@ def mount():
     __heal(fs, README_NAME, fx_defaults.README)
     __heal(fs, MANUAL_NAME, fx_manual.MANUAL)
     __heal(fs, PICKER_NAME, fx_editor.PICKER)
+    __heal(fs, EDITOR_NAME, fx_editor.EDITOR)
     __heal(fs, CATALOGUE_NAME, fx_editor.CATALOGUE)
     __sweep_swap_files()
     return True

@@ -259,6 +259,7 @@ footer p { margin: 0; }
 <nav class="contents"><h2>Contents</h2><ul>
 <li><a href="#getting-started">Getting started</a></li>
 <li><a href="#the-picker">The picker</a></li>
+<li><a href="#the-editor">The editor</a></li>
 <li><a href="#writing-an-entry">Writing an entry</a></li>
 <li><details><summary><a href="#outputs">Outputs</a></summary><ul>
 <li><a href="#naming-outputs">Naming outputs</a></li>
@@ -302,13 +303,17 @@ footer p { margin: 0; }
 <p>In a hurry? Save the file and press <strong>Boot</strong> once. The drive disappears and comes straight back with the new effects running, so you can keep editing. Ejecting is the surer way, since a computer does not always write the file out until then. Press <strong>Boot</strong> twice to hide the drive, and twice again to bring it back. A dim white light runs along the outputs each time, towards the USB connector as the computer takes the drive and away from it as the board takes it back, so a double press is never mistaken for a single one.</p>
 <p>Deleting <code>effects.txt</code> restores the default; emptying it leaves the board dark.</p>
 <p>While the computer is copying to this drive the effects stand aside for a dim white travelling along the outputs, and come back a moment after it finishes.</p>
-<p><strong>Would you rather not write the file at all? <code>PICKER.html</code> on this drive writes it for you. See <a href="#the-picker">the picker</a>.</strong></p>
+<p><strong>Would you rather not write the file at all? <code>PICKER.html</code> on this drive writes it for you. See <a href="#the-picker">the picker</a>. <code>EDITOR.html</code> beside it is a place to write it with the names offered as you type. See <a href="#the-editor">the editor</a>.</strong></p>
 <p><strong>The board also carries programs that run as they are, from single effects to whole builds, and one line in <code>effects.txt</code> starts any of them. See <a href="#what-is-already-on-the-board">what is already on the board</a>.</strong></p>
 <h2 id="the-picker">The picker</h2>
 <p><code>PICKER.html</code> on this drive writes <code>effects.txt</code> for you. Open it in Chrome or Edge, pick a look, and slide until it suits. It shows the file it is writing as you go, so nothing about it is hidden.</p>
 <p>Screens and strips are set up there too. Say how many LEDs a strip has and which size each screen is, pick a picture from this drive for a screen to show, and turn the board's own seven lights off where the screens are all you want.</p>
 <p>"Put it on the board" writes the file. Eject this drive, or press <strong>Boot</strong> once, and the board plays it. "Did it work?" reads <code>errors.txt</code> back and shows what the board made of each line.</p>
 <p>A page cannot write to a drive in Firefox or Safari, so the picker needs Chrome or Edge. What it writes is an ordinary <code>effects.txt</code>: anything it makes can be edited by hand afterwards, and it asks before replacing a file it did not write itself.</p>
+<h2 id="the-editor">The editor</h2>
+<p><code>EDITOR.html</code> on this drive is <code>effects.txt</code> in a window that knows the format. Every word is coloured by the part it plays, and as you type it offers what fits where you are: the outputs and screens at the start of a line, the effects after the colon, then that effect's own settings and the values each one takes. A line underneath says what shape a value wants. Tab or Enter takes what is offered, Escape leaves it, and Ctrl+Space asks for it again.</p>
+<p>A name it does not know is underlined, an effect that is not one or a setting the effect does not take. Values are left alone, since a percentage, a colour and a list all live there and the board is the one that reads them. "Put it on the board" writes the file and "Did it work?" reads <code>errors.txt</code> back, as the picker does.</p>
+<p>It offers only what this board provides, so anything the firmware gains appears without the page changing. Like the picker it needs Chrome or Edge, and it needs <code>catalogue.js</code> beside it, which is why both live on this drive together.</p>
 <h2 id="writing-an-entry">Writing an entry</h2>
 <pre class="shape"><code><span class="s-target">&lt;outputs&gt;</span> <span class="s-name">&lt;their settings&gt;</span><span class="s-colon">:</span> <span class="s-effect">&lt;effect&gt;</span> <span class="s-name">&lt;its settings&gt;</span></code></pre>
 <pre class="entry"><code><span class="s-target">out1-7</span><span class="s-colon">:</span> <span class="s-effect">rainbow_wave</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.3</span>

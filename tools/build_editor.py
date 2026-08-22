@@ -27,7 +27,7 @@ MODULE_HEADER = """# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoro
 
 """
 
-PAGES = (("PICKER", "picker.html"),)
+PAGES = (("PICKER", "picker.html"), ("EDITOR", "editor.html"))
 
 
 def catalogue(repo_dir):
@@ -49,11 +49,17 @@ def catalogue(repo_dir):
                     in sorted(autofx.EFFECTS.items())},
         "screen_effects": {name: list(takes)
                            for name, takes in autofx.SCREEN_EFFECTS.items()},
+        "audio": autofx.AUDIO,
+        "audio_effects": {name: list(takes)
+                          for name, takes in autofx.AUDIO_EFFECTS.items()},
         "settings": autofx.SETTINGS,
         "colours": sorted(autofx.COLOURS),
         "channel_kinds": autofx.CHANNEL_KINDS,
         "screen_ports": sorted(autofx.SCREEN_PORTS),
         "strips": list(autofx.STRIPS),
+        "output_settings": list(autofx.OUTPUT_SETTINGS),
+        "screen_settings": list(autofx.SCREEN_SETTINGS),
+        "tiling": list(autofx.TILING),
         "board_settings": {key: (list(value) if isinstance(value, tuple) else value)
                            for key, value in autofx.BOARD_SETTINGS.items()},
     }
@@ -85,7 +91,7 @@ def main():
             sources[name] = f.read()
 
     parts = [MODULE_HEADER]
-    for name in ("PICKER", "CATALOGUE"):
+    for name in ("PICKER", "EDITOR", "CATALOGUE"):
         parts.append(embed(name, sources[name]))
     module_text = "\n".join(parts)
 
@@ -99,6 +105,10 @@ def main():
     module = os.path.join(args.board_dir, "frozen_libs", MODULE_NAME)
     with open(module, "w", encoding="utf-8", newline="\n") as f:
         f.write(module_text)
+
+    beside = os.path.join(args.board_dir, "editor", "catalogue.js")
+    with open(beside, "w", encoding="utf-8", newline="\n") as f:
+        f.write(sources["CATALOGUE"])
 
     print("{} bytes of pages and catalogue: {}".format(
         sum(len(text) for text in sources.values()), module))
