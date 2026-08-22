@@ -81,9 +81,12 @@ for _kind, _registry in (("mono", MONO_EFFECTS), ("colour", COLOUR_EFFECTS)):
 # lights, so these never mix with EFFECTS. "gif" plays an animated GIF at the delays
 # the file declares unless fps names one; "image" holds one still; "sequence" plays a
 # folder of image files in the order their names number them, at the delay each name
-# declares unless fps names one. All of them look on the drive first, then the board.
+# declares unless fps names one; "graphics" runs a Python file's draw(canvas, elapsed),
+# the module body running once as its setup. All of them look on the drive first,
+# then the board.
 SCREEN_EFFECTS = {
     "gif": ("file", "fps", "interval", "loop", "ping_pong", "first_as_last", "hold"),
+    "graphics": ("file", "fps", "interval", "width", "height"),
     "image": ("file",),
     "sequence": ("folder", "fps", "interval", "loop", "ping_pong", "first_as_last", "hold"),
 }
@@ -149,6 +152,8 @@ SETTINGS = {
     "loop": "boolean",
     "ping_pong": "boolean",
     "first_as_last": "boolean",
+    "width": "count",
+    "height": "count",
 }
 
 # Settings written as a pair, the smaller named first
@@ -417,6 +422,142 @@ class __Still:
 
     def to_first(self):
         pass                    # One picture is always on its first frame
+
+
+class __Graphics:
+    """
+    A drawing standing where a player does: the file's draw(canvas, elapsed) paints
+    a canvas the size of the panel, at fps or as often as the screen takes a frame.
+
+    The module body is the setup, run once here and again on a restart, from a code
+    object kept so neither ever needs the drive. Its imports are held to IMPORTS,
+    which catches a pasted program reaching for hardware the effects are already
+    driving; it is a mistake caught, not a boundary, since builtins cannot be
+    restricted on this port. A draw() that raises keeps its last frame on the glass
+    and says why once, with everything around it carrying on.
+    """
+
+    # What drawing needs, and nothing that reaches the pins, the ports or the drive,
+    # all of which have owners while a drawing plays beside them
+    IMPORTS = ("math", "random", "time", "picovector")
+
+    def __init__(self, name, code, canvas, ground, fps=None, paused=False):
+        self.image = canvas
+        self.__name = name
+        self.__code = code
+        self.__ground = ground
+        self.__frame_ms = None if not fps else max(1, int(1000 / fps))
+        self.__draw = None
+        self.__stopped = False
+        self.__pushed = False
+        self.__seen = None
+        # Elapsed accumulates in whole ms rather than running from a start tick: a
+        # drawing has no cycle to reduce by, so a fixed origin would outlive the
+        # ticks range on a board left running
+        self.__elapsed_ms = 0
+        self.__playing = not paused
+        self.__last = time.ticks_ms()
+        self.__begin()
+
+    def __begin(self):
+        """Run the module body and the first frame, raising as the file does."""
+        import builtins
+
+        original = builtins.__import__
+
+        def guarded(name, *args, **kwargs):
+            if name.split(".")[0] not in self.IMPORTS:
+                raise ImportError("a drawing can import {}, so {} was refused".format(
+                    ", ".join(self.IMPORTS), name))
+            return original(name, *args, **kwargs)
+
+        namespace = {"__name__": self.__name, "__file__": self.__name}
+        builtins.__import__ = guarded
+        try:
+            exec(self.__code, namespace)
+        finally:
+            builtins.__import__ = original
+
+        draw = namespace.get("draw")
+        if not callable(draw):
+            raise ValueError("it has no draw(canvas, elapsed) for the screen to call")
+
+        # A cleared ground, so beginning again means a blank canvas for a drawing
+        # that paints incrementally, and the first frame is drawn before anything
+        # is sent, so a file that cannot draw is answered at load
+        self.image.pen = self.__ground
+        self.image.clear()
+        draw(self.image, 0.0)
+        self.__draw = draw
+        self.__seen = 0             # The frame just drawn is the first step's
+
+    def __tick(self):
+        now = time.ticks_ms()
+        self.__elapsed_ms += time.ticks_diff(now, self.__last)
+        self.__last = now
+
+    def has_advanced(self):
+        if self.__stopped:
+            return False
+        if not self.__pushed:
+            self.__pushed = True        # The frame the setup drew
+            return True
+        if not self.__playing:
+            return False
+
+        self.__tick()
+        if self.__frame_ms is not None:
+            step = self.__elapsed_ms // self.__frame_ms
+            if step == self.__seen:
+                return False
+            self.__seen = step
+
+        try:
+            self.__draw(self.image, self.__elapsed_ms / 1000)
+        except Exception as e:      # noqa: BLE001
+            self.__stop(e)
+            return False
+        return True
+
+    def __stop(self, error):
+        """Keep the last frame and say why, once; the loop around this carries on."""
+        self.__stopped = True
+        trace = io.StringIO()
+        sys.print_exception(error, trace)
+        lines = [line for line in trace.getvalue().rstrip().split("\n")
+                 if "autofx.py" not in line]
+        message = ("the drawing {} stopped, so its screen keeps its last "
+                   "frame:\n{}".format(self.__name, "\n".join(lines)))
+        print(message)
+        # Where the reader is already looking, while the board holds the volume;
+        # exposed, the mount is gone and there is nowhere to write
+        try:
+            with open(ERRORS_PATH, "a") as handle:
+                handle.write("\n" + message + "\n")
+        except OSError:
+            pass
+
+    def pause(self):
+        if self.__playing:
+            self.__tick()
+            self.__playing = False
+
+    def play(self):
+        if not self.__playing:
+            self.__last = time.ticks_ms()
+            self.__playing = True
+
+    def to_first(self):
+        """Begin again: the setup runs afresh on a cleared canvas, at elapsed zero."""
+        self.__stopped = False
+        self.__pushed = False
+        self.__seen = None
+        self.__elapsed_ms = 0
+        self.__last = time.ticks_ms()
+        try:
+            self.__begin()
+        except Exception as e:      # noqa: BLE001
+            self.__stop(e)
 
 
 class Sound:
@@ -2112,6 +2253,63 @@ def __find_image(name, line, problems):
     return found[0]
 
 
+def __read_drawing(path, target, at, problems):
+    """
+    A graphics file compiled against its own name, or None with the reason said.
+    Compiled while the entries are read, so a file that will not parse is answered
+    at load, and kept as a code object so a restart never goes back to the drive.
+    """
+    try:
+        with open(path) as handle:
+            source = handle.read()
+    except OSError:
+        problems.append("line {}: {} could not be read".format(at, target))
+        return None
+
+    try:
+        return compile(source, target, "exec")
+    except SyntaxError as e:
+        problems.append("line {}: {} is not Python the board can read: {}".format(
+            at, target, e))
+        return None
+
+
+def __make_drawing(code, target, at, channel, screen, settings, fps, asleep, problems):
+    """The player for a graphics entry: its canvas, its ground, and the file begun."""
+    import picovector
+
+    # The canvas fills the panel as the entry mounts it, so the drawing works in the
+    # orientation the reader sees, and pixel_double halves it as it doubles a picture.
+    # A width or height the entry states is used as written, whatever else is set
+    width, height = screen.width, screen.height
+    if (channel.rotation or 0) in (90, 270):
+        width, height = height, width
+    if channel.pixel_double:
+        width, height = width // 2, height // 2
+    width = settings.get("width") or width
+    height = settings.get("height") or height
+
+    ground = (picovector.color.rgb(*channel.background)
+              if channel.background is not None else picovector.color.black)
+
+    try:
+        return __Graphics(target, code, picovector.image(width, height), ground,
+                          fps=fps, paused=asleep)
+    except MemoryError:
+        problems.append("line {}: there is no memory left for {}'s canvas, so free "
+                        "some or halve it with pixel_double".format(at, target))
+    # The traceback, since this is the user's own code and a line number is what
+    # makes it fixable; frames from this file are the machinery that ran it
+    except Exception as e:      # noqa: BLE001
+        trace = io.StringIO()
+        sys.print_exception(e, trace)
+        lines = [line for line in trace.getvalue().rstrip().split("\n")
+                 if "autofx.py" not in line]
+        problems.append("line {}: {} could not start:\n{}".format(
+            at, target, "\n".join(lines)))
+    return None
+
+
 def __screen_on(fx, name, line, problems, size):
     """
     The panel a selector name reaches, built once and kept: construction resets the
@@ -2250,7 +2448,12 @@ def __build_shows(entries, fx, board, problems, build=True):
             # A source that was refused, or written under the other key, has been
             # reported already, and one mistake gets one message
             if "file" not in entry.settings and "folder" not in entry.settings:
-                example = "folder=/frames" if wanted == "folder" else "file=anim.gif"
+                if wanted == "folder":
+                    example = "folder=/frames"
+                elif entry.effect == "graphics":
+                    example = "file=clock.py"
+                else:
+                    example = "file=anim.gif"
                 problems.append("line {}: {} needs a {} to play, such as {}".format(
                     entry.line, entry.effect, wanted, example))
             continue
@@ -2259,6 +2462,14 @@ def __build_shows(entries, fx, board, problems, build=True):
         path = __find_image(target, at, problems)
         if path is None:
             continue
+
+        # A drawing is read and compiled while the entries are checked, so a file
+        # that will not parse is answered whether or not anything is built
+        code = None
+        if entry.effect == "graphics":
+            code = __read_drawing(path, target, at, problems)
+            if code is None:
+                continue
 
         # Everything above is the entry being read, which a check wants; everything
         # below resets a panel or decodes content, which only a build does
@@ -2287,6 +2498,15 @@ def __build_shows(entries, fx, board, problems, build=True):
         # A scene's show waits for its scene; the first scene's is woken by the
         # first apply, so every scene starts its content from the top
         asleep = entry.scene is not None
+
+        if entry.effect == "graphics":
+            player = __make_drawing(code, target, at, channel, screen, settings,
+                                    fps, asleep, problems)
+            if player is None:
+                continue
+            built.add((entry.scene, name))
+            shows.append(ScreenShow(screen, player, channel, entry.scene))
+            continue
 
         try:
             if entry.effect == "gif":

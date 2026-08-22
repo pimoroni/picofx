@@ -393,6 +393,65 @@ A screen draws about twenty frames a second at best, and effects on the outputs
 take time from it, so a file asking for more keeps its timing by dropping
 frames. Ask for twenty or fewer and it plays every one.
 
+### Drawing from code
+
+**This one is for Python writers.** A screen can play a drawing instead of a
+picture: a Python file with one function in it, drawn beside everything else in
+this file, so the lights keep their effects, the other screen keeps its
+pictures, and a scene puts the drawing on and off with everything else it holds.
+
+| Plays | Settings |
+| --- | --- |
+| `graphics` | `file` `fps` `interval` `width` `height` |
+
+```entry
+screenA: graphics file=rings.py
+```
+
+```python
+# rings.py
+from picovector import color, shape
+
+def draw(canvas, elapsed):
+    canvas.pen = color.black
+    canvas.clear()
+    canvas.pen = color.rgb(255, 160, 40)
+    canvas.shape(shape.circle(120, 160, 20 + 10 * (elapsed % 3)))
+```
+
+`draw` is called with a canvas the size of the screen, kept between calls, and
+the seconds since the drawing started; whatever it has drawn when it returns is
+what the screen shows. The rest of the file runs once, when the drawing starts,
+so that is the place to build anything `draw` uses. `fps` or `interval` sets the
+pace, and leaving both out draws as often as the screen takes a frame.
+
+`width` and `height` size the canvas by hand, in pixels, and are honoured as
+written whatever else is set. A small canvas draws faster and is placed like a
+small picture, so `offset` puts it somewhere and `tile=repeat` fills the screen
+with it.
+
+In a scene, the drawing's clock stops while the scene is away, and a scene with
+`restart` runs the whole file again from a blank canvas. The rotation, offset
+and other screen settings place a drawing as they place a picture, with
+`pixel_double` also making the canvas half size, which draws faster and uses a
+quarter of the memory; a stated `width` or `height` is still used as written.
+
+A drawing can load pictures, `picovector.image.load("/faces.png")`, best done
+once in the setup. Name them from the board's own filesystem, with the leading
+`/`: this drive comes and goes with the computer, so a picture kept here may be
+missing just when a scene's `restart` runs the file again. The drawing itself is
+safe wherever it lives, read once and kept.
+
+A drawing may import `math`, `random`, `time` and `picovector`. The board's own
+modules stay with the effects running around it, so a program pasted in that
+reaches for the pins is refused, with a note in `errors.txt`. A mistake anywhere
+in the file lands there too, with its line, and a drawing that stops partway
+keeps its last frame on the screen while everything else carries on.
+
+The examples under `examples/screens/graphics` show what PicoVector can draw,
+and a program that wants the whole board instead of one screen is
+[a program](#running-your-own-program), not a drawing.
+
 ## Sound
 
 The board plays a WAV file through its onboard amplifier, alongside whatever the

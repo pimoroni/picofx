@@ -280,6 +280,7 @@ footer p { margin: 0; }
 <li><a href="#naming-screens">Naming screens</a></li>
 <li><a href="#setting-a-screen">Setting a screen</a></li>
 <li><a href="#pictures">Pictures</a></li>
+<li><a href="#drawing-from-code">Drawing from code</a></li>
 </ul></details></li>
 <li><a href="#sound">Sound</a></li>
 <li><a href="#scenes">Scenes</a></li>
@@ -475,6 +476,28 @@ footer p { margin: 0; }
 <span class="s-target">screenA</span><span class="s-colon">:</span> <span class="s-effect">gif</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">"wave.gif"</span> <span class="s-name">ping_pong</span><span class="s-punc">=</span><span class="s-value">yes</span> <span class="s-name">hold</span><span class="s-punc">=</span><span class="s-value">1.5|0.5</span></code></pre>
 <p>A file is looked for on this drive first, then on the board itself, and the name may include folders. There is little room here, so pictures usually live on the board.</p>
 <p>A screen draws about twenty frames a second at best, and effects on the outputs take time from it, so a file asking for more keeps its timing by dropping frames. Ask for twenty or fewer and it plays every one.</p>
+<h3 id="drawing-from-code">Drawing from code</h3>
+<p><strong>This one is for Python writers.</strong> A screen can play a drawing instead of a picture: a Python file with one function in it, drawn beside everything else in this file, so the lights keep their effects, the other screen keeps its pictures, and a scene puts the drawing on and off with everything else it holds.</p>
+<div class="scroll"><table>
+<thead><tr><th>Plays</th><th>Settings</th></tr></thead>
+<tbody>
+<tr><td><code>graphics</code></td><td><code>file</code> <code>fps</code> <code>interval</code> <code>width</code> <code>height</code></td></tr>
+</tbody></table></div>
+<pre class="entry"><code><span class="s-target">screenA</span><span class="s-colon">:</span> <span class="s-effect">graphics</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">rings.py</span></code></pre>
+<pre class="python"><code># rings.py
+from picovector import color, shape
+
+def draw(canvas, elapsed):
+    canvas.pen = color.black
+    canvas.clear()
+    canvas.pen = color.rgb(255, 160, 40)
+    canvas.shape(shape.circle(120, 160, 20 + 10 * (elapsed % 3)))</code></pre>
+<p><code>draw</code> is called with a canvas the size of the screen, kept between calls, and the seconds since the drawing started; whatever it has drawn when it returns is what the screen shows. The rest of the file runs once, when the drawing starts, so that is the place to build anything <code>draw</code> uses. <code>fps</code> or <code>interval</code> sets the pace, and leaving both out draws as often as the screen takes a frame.</p>
+<p><code>width</code> and <code>height</code> size the canvas by hand, in pixels, and are honoured as written whatever else is set. A small canvas draws faster and is placed like a small picture, so <code>offset</code> puts it somewhere and <code>tile=repeat</code> fills the screen with it.</p>
+<p>In a scene, the drawing's clock stops while the scene is away, and a scene with <code>restart</code> runs the whole file again from a blank canvas. The rotation, offset and other screen settings place a drawing as they place a picture, with <code>pixel_double</code> also making the canvas half size, which draws faster and uses a quarter of the memory; a stated <code>width</code> or <code>height</code> is still used as written.</p>
+<p>A drawing can load pictures, <code>picovector.image.load("/faces.png")</code>, best done once in the setup. Name them from the board's own filesystem, with the leading <code>/</code>: this drive comes and goes with the computer, so a picture kept here may be missing just when a scene's <code>restart</code> runs the file again. The drawing itself is safe wherever it lives, read once and kept.</p>
+<p>A drawing may import <code>math</code>, <code>random</code>, <code>time</code> and <code>picovector</code>. The board's own modules stay with the effects running around it, so a program pasted in that reaches for the pins is refused, with a note in <code>errors.txt</code>. A mistake anywhere in the file lands there too, with its line, and a drawing that stops partway keeps its last frame on the screen while everything else carries on.</p>
+<p>The examples under <code>examples/screens/graphics</code> show what PicoVector can draw, and a program that wants the whole board instead of one screen is <a href="#running-your-own-program">a program</a>, not a drawing.</p>
 <h2 id="sound">Sound</h2>
 <p>The board plays a WAV file through its onboard amplifier, alongside whatever the lights and screens are doing:</p>
 <pre class="entry"><code><span class="s-target">audio</span><span class="s-colon">:</span> <span class="s-effect">wav</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">chimes.wav</span>

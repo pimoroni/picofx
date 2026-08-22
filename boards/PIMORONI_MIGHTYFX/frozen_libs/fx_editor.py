@@ -2168,6 +2168,13 @@ var CATALOGUE = {
    "first_as_last",
    "hold"
   ],
+  "graphics": [
+   "file",
+   "fps",
+   "interval",
+   "width",
+   "height"
+  ],
   "image": [
    "file"
   ],
@@ -2226,7 +2233,9 @@ var CATALOGUE = {
   "fps": "number",
   "loop": "boolean",
   "ping_pong": "boolean",
-  "first_as_last": "boolean"
+  "first_as_last": "boolean",
+  "width": "count",
+  "height": "count"
  },
  "colours": [
   "black",
