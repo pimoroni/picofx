@@ -108,7 +108,7 @@ footer{max-width:44rem;margin:0 auto 2rem;padding:0 1.4rem;font-size:.8rem;color
    <span id="picked-name" style="font-weight:600"></span>
    <label class="opt grow"><input type="checkbox" id="outputs" checked>
     play on the board's own lights</label>
-   <label class="opt" title="The board plays the file as soon as it is saved, with no eject"><input type="checkbox" id="straight">
+   <label class="opt" title="The board plays the file as soon as it is saved, with no eject"><input type="checkbox" id="straight" checked>
     play it as soon as I save</label>
   </div>
  </div>
@@ -340,6 +340,7 @@ var HEADER = "# Written by the FX picker. Everything here can be edited by hand;
 var state = {
   look: null, dirHandle: null, fileHandle: null,
   boardResidue: [],  // board entry settings that are not screens or strips, kept as written
+  straight: true,    // ask the board to play a save at once, unless the file refuses it
   ports: [],         // screens in play, as written in entries ("screenA")
   sizes: {},         // port -> "2.8" | "1.54", or null where the file leaves it unsaid
   kept: {},          // port -> its existing entry lines, for the keep-as-is choice
@@ -381,7 +382,7 @@ function withoutOutputs(text) {
 // chosen; every other board setting is carried through untouched.
 function absorbText(text) {
   state.boardResidue = [];
-  state.straight = false;
+  state.straight = true;
   state.ports = [];
   state.sizes = {};
   state.kept = {};
@@ -976,6 +977,72 @@ async function connect() {
   document.getElementById("status").textContent = "connected to the drive";
 }
 
+
+// ---- waiting for the board -----------------------------------------------------
+
+// Only the board writes errors.txt, and only where it has re-read the file, so a
+// change there is proof it acted. It answers a save in about four seconds.
+//
+// Never read effects.txt while waiting. A read of the file just saved holds off the
+// write the computer still has in hand, and the board then waits half a minute to
+// see it, measured 2026-08-22
+// The board answers a save in about four seconds, so silence is worth reporting at
+// six and watching quietly after, rather than sitting on the answer until the last
+// poll. A change to errors.txt is proof either way and ends the wait at once
+var BOARD_SETTLE_MS = 6000;
+var BOARD_WAIT_MS = 15000;
+var BOARD_POLL_MS = 250;
+
+function playsItself(text) {
+  return /\\breload\\s*=\\s*auto\\b/i.test(text);
+}
+
+// The text of errors.txt, null where there is none, and false where the drive is
+// away mid-reload and the question cannot be answered yet
+async function readErrors() {
+  try {
+    var handle = await state.dirHandle.getFileHandle("errors.txt");
+    return (await (await handle.getFile()).text()).trim();
+  } catch (e) {
+    return e.name === "NotFoundError" ? null : false;
+  }
+}
+
+// Polls until errors.txt differs from what it said before the save, calling
+// nothingYet() once the settle time passes so the reader is not left waiting on a
+// file that may never change. Seeing the drive away is proof the board acted, so an
+// unchanged answer after that is a real answer rather than an early one
+async function waitForBoard(before, nothingYet) {
+  var deadline = Date.now() + BOARD_WAIT_MS;
+  var settled = Date.now() + BOARD_SETTLE_MS;
+  var wentAway = false;
+  var told = false;
+  while (Date.now() < deadline) {
+    await new Promise(function (settle) { setTimeout(settle, BOARD_POLL_MS); });
+    var now = await readErrors();
+    if (now === false) {
+      wentAway = true;
+      continue;
+    }
+    if (now !== before) return now;
+    if (wentAway) return now;
+    if (!told && Date.now() > settled) {
+      nothingYet();
+      told = true;
+    }
+  }
+  return before;
+}
+
+// What to say once the wait is over. Silence cannot be told from a board that has
+// not got there yet, so it is reported as nothing said rather than as all well
+function sayWhatHappened(said, also) {
+  if (said)
+    banner("The board wasn't happy with some of it:", true, said);
+  else
+    banner("Playing on the board. No problems reported." + (also || ""));
+}
+
 document.getElementById("save").onclick = async function () {
   if (!state.look) return;
   try {
@@ -989,6 +1056,7 @@ document.getElementById("save").onclick = async function () {
         return;
     }
     var text = currentText();
+    var errorsBefore = playsItself(text) ? await readErrors() : undefined;
     var writable = await state.fileHandle.createWritable();
     await writable.write(text);
     await writable.close();
@@ -998,10 +1066,21 @@ document.getElementById("save").onclick = async function () {
     var newStrips = state.strips.filter(function (name) {
       return state.lengths[name] && (state.stripsAtStart || []).indexOf(name) < 0;
     });
-    banner("On its way. Eject the FX drive on this computer, and the board plays it. " +
-           "Double-press the board's button to bring the drive back, then ask 'Did it work?'." +
-           (newStrips.length ? " The strip you added only comes up when the board starts, " +
-                               "so turn it off and on once the eject is done." : ""));
+    var strips = newStrips.length
+               ? " The strip you added only comes up when the board starts, so turn it off "
+                 + "and on once you are done."
+               : "";
+    if (errorsBefore === undefined) {
+      banner("On its way. Eject the FX drive on this computer, and the board plays it. " +
+             "Double-press the board's button to bring the drive back, then ask 'Did it " +
+             "work?'." + strips);
+      return;
+    }
+    banner("Saved. Waiting for the board to pick it up...");
+    var was = errorsBefore === false ? null : errorsBefore;
+    sayWhatHappened(await waitForBoard(was, function () {
+      sayWhatHappened(null, strips);
+    }), strips);
   } catch (e) {
     state.fileHandle = null;
     state.dirHandle = null;
@@ -1713,6 +1792,10 @@ function hintFor(found) {
   if (found.mode === "value" || (found.mode === "setting" && found.prefix)) {
     var name = found.mode === "value" ? found.setting : found.prefix;
     if (found.kind === "board") return BOARD_HINTS[name.toLowerCase()] || "";
+    // A drawing names a Python file, which belongs in a Python editor
+    if (found.effect === "graphics" && name.toLowerCase().indexOf("file") === 0)
+      return "a Python file with a draw(canvas, elapsed) in it, written in Thonny " +
+             "or VS Code rather than here";
     var type = settingType(name, found.kind);
     return type ? name.replace(/,+$/, "") + ": " +
                   (CHANNEL_HINTS[name.toLowerCase()] || TYPE_HINTS[type]) : "";
@@ -1739,6 +1822,7 @@ var hintLine = document.getElementById("hint");
 
 var STARTER = "# One entry per line: which lights, a colon, then the effect.\\n" +
               "# Settings you leave out take their usual value.\\n\\n" +
+              "board: reload=auto\\n\\n" +
               "out1-7: rainbow_wave speed=0.3\\n";
 
 var state = {dirHandle: null, fileHandle: null, offered: [], rows: [], lit: 0};
@@ -1943,17 +2027,91 @@ document.getElementById("open").onclick = async function () {
   }
 };
 
+
+// ---- waiting for the board -----------------------------------------------------
+
+// Only the board writes errors.txt, and only where it has re-read the file, so a
+// change there is proof it acted. It answers a save in about four seconds.
+//
+// Never read effects.txt while waiting. A read of the file just saved holds off the
+// write the computer still has in hand, and the board then waits half a minute to
+// see it, measured 2026-08-22
+// The board answers a save in about four seconds, so silence is worth reporting at
+// six and watching quietly after, rather than sitting on the answer until the last
+// poll. A change to errors.txt is proof either way and ends the wait at once
+var BOARD_SETTLE_MS = 6000;
+var BOARD_WAIT_MS = 15000;
+var BOARD_POLL_MS = 250;
+
+function playsItself(text) {
+  return /\\breload\\s*=\\s*auto\\b/i.test(text);
+}
+
+// The text of errors.txt, null where there is none, and false where the drive is
+// away mid-reload and the question cannot be answered yet
+async function readErrors() {
+  try {
+    var handle = await state.dirHandle.getFileHandle("errors.txt");
+    return (await (await handle.getFile()).text()).trim();
+  } catch (e) {
+    return e.name === "NotFoundError" ? null : false;
+  }
+}
+
+// Polls until errors.txt differs from what it said before the save, calling
+// nothingYet() once the settle time passes so the reader is not left waiting on a
+// file that may never change. Seeing the drive away is proof the board acted, so an
+// unchanged answer after that is a real answer rather than an early one
+async function waitForBoard(before, nothingYet) {
+  var deadline = Date.now() + BOARD_WAIT_MS;
+  var settled = Date.now() + BOARD_SETTLE_MS;
+  var wentAway = false;
+  var told = false;
+  while (Date.now() < deadline) {
+    await new Promise(function (settle) { setTimeout(settle, BOARD_POLL_MS); });
+    var now = await readErrors();
+    if (now === false) {
+      wentAway = true;
+      continue;
+    }
+    if (now !== before) return now;
+    if (wentAway) return now;
+    if (!told && Date.now() > settled) {
+      nothingYet();
+      told = true;
+    }
+  }
+  return before;
+}
+
+// What to say once the wait is over. Silence cannot be told from a board that has
+// not got there yet, so it is reported as nothing said rather than as all well
+function sayWhatHappened(said, also) {
+  if (said)
+    banner("The board wasn't happy with some of it:", true, said);
+  else
+    banner("Playing on the board. No problems reported." + (also || ""));
+}
+
 document.getElementById("save").onclick = async function () {
   try {
     if (!state.fileHandle) await connect();
     var text = entry.value;
+    var errorsBefore = playsItself(text) ? await readErrors() : undefined;
     var writable = await state.fileHandle.createWritable();
     await writable.write(text);
     await writable.close();
     var back = await (await state.fileHandle.getFile()).text();
     if (back !== text) throw new Error("the file read back differently");
-    banner("On its way. Eject the FX drive on this computer, and the board plays it. " +
-           "Double-press the board's button to bring the drive back, then ask 'Did it work?'.");
+    if (errorsBefore === undefined) {
+      banner("On its way. Eject the FX drive on this computer, and the board plays it. " +
+             "Double-press the board's button to bring the drive back, then ask 'Did it " +
+             "work?'.");
+      return;
+    }
+    banner("Saved. Waiting for the board to pick it up...");
+    var was = errorsBefore === false ? null : errorsBefore;
+    sayWhatHappened(await waitForBoard(was, function () { sayWhatHappened(null); }));
   } catch (e) {
     state.fileHandle = null;
     state.dirHandle = null;
@@ -1969,7 +2127,7 @@ document.getElementById("check").onclick = async function () {
     banner("The board wasn't happy with some of it:", true, text.trim());
   } catch (e) {
     if (e.name === "NotFoundError")
-      banner("All good. The board read the file and found nothing wrong.");
+      banner("Nothing reported. The board found no problem with the file.");
     else
       banner("Couldn't look: " + e.name + ". Is the drive showing?", true);
   }
