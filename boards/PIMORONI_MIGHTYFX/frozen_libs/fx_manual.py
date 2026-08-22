@@ -505,6 +505,7 @@ footer p { margin: 0; }
 <thead><tr><th>Setting</th><th>What it does</th><th>If omitted</th></tr></thead>
 <tbody>
 <tr><td><code>drive</code></td><td><code>manual</code> keeps the drive hidden until you ask for it</td><td>shown at boot</td></tr>
+<tr><td><code>reload</code></td><td><code>auto</code> plays the file the moment it is saved</td><td>wait for an eject or <strong>Boot</strong></td></tr>
 <tr><td><code>program</code></td><td>a Python file to run instead of the effects</td><td>the effects run</td></tr>
 <tr><td><code>args</code></td><td>what to pass that program, divided by <code>|</code></td><td>it is given none</td></tr>
 <tr><td><code>screenA</code></td><td>what size of screen is on SP/CE A, if you have one</td><td>2.8</td></tr>
@@ -512,6 +513,7 @@ footer p { margin: 0; }
 <tr><td><code>stripL</code></td><td>how many LEDs are on a strip plugged into <strong>L</strong></td><td>no strip</td></tr>
 <tr><td><code>stripR</code></td><td>the same for <strong>R</strong></td><td>no strip</td></tr>
 </tbody></table></div>
+<p>With <code>reload=auto</code>, saving <code>effects.txt</code> is enough on its own: the board notices the save, takes the drive back for a moment, and plays the new effects, exactly as a single press of <strong>Boot</strong> would. Only a save to <code>effects.txt</code> counts, so copying pictures on never interrupts anything.</p>
 <h3 id="running-your-own-program">Running your own program</h3>
 <p>A program can sit on this drive or on the board's own filesystem, and its name may include folders: it is looked for here first, then on the board, so <code>program=examples/effects/colour/rainbow_wave.py</code> reaches one of the examples the board ships with. Where the name is in both, this drive's copy runs.</p>
 <p>If it is missing, or stops with an error, the effects run instead and <code>errors.txt</code> says what happened, so a mistyped name never leaves you with a board that does nothing.</p>

@@ -160,7 +160,8 @@ PAIRED_SETTINGS = (("bright_min", "bright_max"), ("dim_min", "dim_max"),
 # size is a fact about the hardware, set once here where an entry's settings vary
 # per scene, and a strip's length is the same: it is the one channel count the board
 # cannot discover for itself.
-BOARD_SETTINGS = {"drive": ("manual",), "program": None, "args": None,
+BOARD_SETTINGS = {"drive": ("manual",), "reload": ("manual", "auto"),
+                  "program": None, "args": None,
                   "screena": ("2.8", "1.54"), "screenb": ("2.8", "1.54"),
                   "stripl": None, "stripr": None}
 
@@ -1624,6 +1625,12 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
             sound.start()
         return fx, players, shows, sounds, scenes, problems
 
+    # A save landing on effects.txt answers as a single press does, where the file
+    # asks for that; the older volumes some harnesses hand in have no watch
+    watcher = getattr(volume, "watch", None)
+    if watcher is not None:
+        watcher(settings.get("reload") == "auto")
+
     # The drive goes up before any program runs, since a program that works never
     # returns. Otherwise a mistyped name would leave no way back but a reflash, so a
     # named program overrides drive=manual and __play says as much
@@ -1742,6 +1749,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                     fx, volume, path, errors, players, sounds, maker)
                 paused = False
                 idle_since = None
+                if watcher is not None:
+                    watcher(settings.get("reload") == "auto")
                 if event == volume.RELOADED:
                     # A single press asks to try an edit without putting the drive
                     # away, so it goes back once the file has been read. Showing it

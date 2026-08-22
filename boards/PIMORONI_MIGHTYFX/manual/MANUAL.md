@@ -452,12 +452,18 @@ board: drive=manual program=fireplace.py
 | Setting | What it does | If omitted |
 | --- | --- | --- |
 | `drive` | `manual` keeps the drive hidden until you ask for it | shown at boot |
+| `reload` | `auto` plays the file the moment it is saved | wait for an eject or **Boot** |
 | `program` | a Python file to run instead of the effects | the effects run |
 | `args` | what to pass that program, divided by `\|` | it is given none |
 | `screenA` | what size of screen is on SP/CE A, if you have one | 2.8 |
 | `screenB` | the same for SP/CE B | 2.8 |
 | `stripL` | how many LEDs are on a strip plugged into **L** | no strip |
 | `stripR` | the same for **R** | no strip |
+
+With `reload=auto`, saving `effects.txt` is enough on its own: the board notices
+the save, takes the drive back for a moment, and plays the new effects, exactly
+as a single press of **Boot** would. Only a save to `effects.txt` counts, so
+copying pictures on never interrupts anything.
 
 ### Running your own program
 

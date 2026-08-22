@@ -62,10 +62,22 @@ SETTLE_MS = 1500
 # look less often.
 HIDDEN_MS = 1500
 
+# How often the save watcher compares effects.txt's directory entry while the
+# computer holds the drive. Every kind of save updates the entry, where copying
+# other files onto the drive never does, so this is what "the file was saved"
+# looks like from the board. A change must be seen on two polls in a row before
+# it counts, so a half-finished save or a read torn by a host write cannot act.
+WATCH_POLL_MS = 500
+
 __exposed = False
 __was_pressed = False
 __last_edge = None
 __withdrawn_at = None
+__watching = False
+__entry_seen = None
+__entry_pending = None
+__watch_at = None
+__watch_buffer = None
 
 
 def __holds(path, text):
@@ -216,6 +228,57 @@ def writable():
     return __Writable()
 
 
+def watch(enabled):
+    """
+    Whether a save to effects.txt re-reads it without waiting for an eject, which
+    is the file's own reload=auto. service() answers a save with RELOADED, exactly
+    as it answers a single press.
+    """
+    global __watching
+    __watching = bool(enabled)
+
+
+def __effects_entry():
+    """
+    The bytes that change when effects.txt is saved: time, date, first cluster and
+    size from its directory entry, read straight from the flash, so the volume the
+    computer holds is never touched. None where the volume or the entry is absent.
+    """
+    global __watch_buffer
+
+    bdev = rp2.Flash(msc=True)
+    if __watch_buffer is None:
+        __watch_buffer = bytearray(bdev.ioctl(5, 0))
+    block = __watch_buffer
+    size = len(block)
+
+    try:
+        bdev.readblocks(0, block)
+        if block[510] != 0x55 or block[511] != 0xAA:
+            return None
+        sector = block[11] | (block[12] << 8)
+        reserved = block[14] | (block[15] << 8)
+        fats = block[16]
+        root_entries = block[17] | (block[18] << 8)
+        fat_sectors = block[22] | (block[23] << 8)
+
+        # The FAT12 root directory sits behind the reserved sectors and the FATs,
+        # at a fixed size, 32 bytes an entry
+        start = (reserved + fats * fat_sectors) * sector
+        loaded = None
+        for offset in range(start, start + root_entries * 32, 32):
+            wanted = offset // size
+            if wanted != loaded:
+                bdev.readblocks(wanted, block)
+                loaded = wanted
+            at = offset % size
+            if block[at:at + 11] == b"EFFECTS TXT":
+                return bytes(block[at + 22:at + 32])
+    except OSError:
+        return None
+    return None
+
+
 def exposed():
     """Whether the connected computer currently owns the drive."""
     return __exposed
@@ -252,6 +315,10 @@ def expose():
         pass
     rp2.enable_msc()
     __exposed = True
+    global __entry_seen, __entry_pending, __watch_at
+    __entry_seen = __effects_entry() if __watching else None
+    __entry_pending = None
+    __watch_at = None
     return True
 
 
@@ -286,6 +353,10 @@ def service(pressed):
     Returns IDLE, SHOWN, HIDDEN, EJECTED, BUSY or RELOADED. HIDDEN, EJECTED and
     RELOADED all mean the board holds the drive and effects.txt can be read; only
     RELOADED expects the caller to show it again afterwards.
+
+    With watch() on, a save landing on effects.txt answers RELOADED as a single
+    press does, read from the file's directory entry, so nothing else written to
+    the drive ever takes it back.
 
     Note that a single press cannot be told from the first of a double until the
     double press window has passed, so it lands DOUBLE_PRESS_MS after the release.
@@ -326,4 +397,24 @@ def service(pressed):
                 event = RELOADED
 
     __was_pressed = pressed
+
+    # The save watcher, under everything the button asked for
+    if event == IDLE and __exposed and __watching:
+        global __watch_at, __entry_seen, __entry_pending
+        if rp2.is_msc_busy():
+            # A save may still be in flight, so nothing seen counts yet
+            __entry_pending = None
+        elif __watch_at is None or time.ticks_diff(now, __watch_at) >= WATCH_POLL_MS:
+            __watch_at = now
+            entry = __effects_entry()
+            if __entry_seen is None:
+                __entry_seen = entry
+            elif entry != __entry_seen:
+                if entry == __entry_pending:
+                    withdraw()
+                    return RELOADED
+                __entry_pending = entry
+            else:
+                __entry_pending = None
+
     return event
