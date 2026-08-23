@@ -9,6 +9,7 @@ from machine import ADC, PWM, Pin
 from pimoroni_i2c import PimoroniI2C
 from motor import Motor
 from picofx import PWMLED, RGBLED, DisabledLED
+from sensor import build_sensor
 from audio import WavPlayer
 from spidisplay import release_buffers
 from spce import SPCE, SPCEPort
@@ -83,6 +84,12 @@ class MightyFX:
     STRIP_FLUSH_LEDS = 2
 
     SENSOR_PIN = 46
+
+    # The infrared receiver decodes on a state machine of its own. PIO 0 is left to
+    # the I2S audio every board builds by default, and the strips take PIO 1's from
+    # zero upwards, so the receiver takes the last one
+    SENSOR_PIO = 1
+    SENSOR_SM = 3
     V_SENSE_PIN = 47
 
     V_SENSE_GAIN = 2
@@ -101,7 +108,8 @@ class MightyFX:
     HUB_PORT_NAMES = ("a", "b", "c", "d", "e", "f")
 
     def __init__(self, spce_a=None, spce_b=None, strip_l=None, strip_r=None,
-                 servo_l=None, servo_r=None, init_i2c=True, init_wav=True, wav_root="/"):
+                 servo_l=None, servo_r=None, sensor=None, init_i2c=True, init_wav=True,
+                 wav_root="/"):
         # A canvas claim has no object to finalise it, so one outlives the program
         # that made it where a screen's own workspace does not: a soft reset after a
         # run that skipped shutdown() leaves the SRAM held and the next program short
@@ -187,6 +195,10 @@ class MightyFX:
 
         # Set up the internal voltage sensor
         self.__v_sense = ADC(Pin(self.V_SENSE_PIN))
+
+        # Set up whatever the sensor connector was declared as. Nothing is claimed
+        # where nothing was asked for, leaving the pin free for a dupont cable
+        self.__sensor = build_sensor(sensor, self.SENSOR_PIN, self.SENSOR_PIO, self.SENSOR_SM)
 
         # Set up the wav (and tone) player, if the user wants
         self.wav = None
@@ -351,6 +363,14 @@ class MightyFX:
         raise RuntimeError(f"{role}_{letter.lower()} is only there where the board was started with {role}_{letter.lower()}={asked}")
 
     @property
+    def sensor(self):
+        """What the sensor connector was declared as, or why there is nothing to hand back."""
+        if self.__sensor is None:
+            raise RuntimeError("sensor is only there where the board was started with sensor=ANALOG, sensor=PIR or sensor=IR")
+
+        return self.__sensor
+
+    @property
     def hub_ports(self):
         """The hub's ports, one per panel its chip selects reach, and empty without
         a hub. Each is named as hub_a through hub_f as well.
@@ -374,6 +394,14 @@ class MightyFX:
 
     def shutdown(self):
         self.clear()
+
+        # A receiver hands its state machine and PIO program back as it is collected,
+        # so stop it, drop it and collect now: a board built after this takes the same
+        # slot, where a held one refuses the next receiver its PIO
+        if hasattr(self.__sensor, "stop"):
+            self.__sensor.stop()
+            self.__sensor = None
+            gc.collect()
 
         # A servo holds its position while it is driven, so it stops being driven
         # before the rail goes: the two together leave it limp rather than pushing

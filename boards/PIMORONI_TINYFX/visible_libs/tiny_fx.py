@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: MIT
 
+import gc
 import time
 
 from audio import WavPlayer
@@ -9,6 +10,7 @@ from machine import ADC, Pin
 from pimoroni_i2c import PimoroniI2C
 
 from picofx import PWMLED, RGBLED
+from sensor import build_sensor
 
 
 class TinyFX:
@@ -29,6 +31,11 @@ class TinyFX:
     BOOT_DEBOUNCE_MS = 40
 
     SENSOR_PIN = 26
+
+    # The infrared receiver decodes on a state machine of its own, taken from PIO 1
+    # so the I2S audio every board builds by default keeps PIO 0 to itself
+    SENSOR_PIO = 1
+    SENSOR_SM = 3
     V_SENSE_PIN = 28
 
     V_SENSE_GAIN = 2
@@ -37,7 +44,7 @@ class TinyFX:
     OUTPUT_GAMMA = 2.8
     RGB_GAMMA = 2.2
 
-    def __init__(self, init_i2c=True, i2c_freq=100000, init_wav=True, wav_root="/"):
+    def __init__(self, init_i2c=True, i2c_freq=100000, init_wav=True, wav_root="/", sensor=None):
         # Set up the mono and RGB LED outputs
         self.outputs = [PWMLED(out, gamma=self.OUTPUT_GAMMA) for out in self.OUT_PINS]
         self.rgb = RGBLED(*self.RGB_PINS, invert=False, gamma=self.RGB_GAMMA)
@@ -57,10 +64,22 @@ class TinyFX:
         # Set up the internal voltage sensor
         self.__v_sense = ADC(Pin(self.V_SENSE_PIN))
 
+        # Set up whatever the sensor connector was declared as. Nothing is claimed
+        # where nothing was asked for, leaving the pin free for a dupont cable
+        self.__sensor = build_sensor(sensor, self.SENSOR_PIN, self.SENSOR_PIO, self.SENSOR_SM)
+
         # Set up the wav (and tone) player, if the user wants
         self.wav = None
         if init_wav:
             self.wav = WavPlayer(0, self.I2S_BCLK_PIN, self.I2S_LRCLK_PIN, self.I2S_DATA_PIN, self.AMP_EN_PIN, root=wav_root)
+
+    @property
+    def sensor(self):
+        """What the sensor connector was declared as, or why there is nothing to hand back."""
+        if self.__sensor is None:
+            raise RuntimeError("sensor is only there where the board was started with sensor=ANALOG, sensor=PIR or sensor=IR")
+
+        return self.__sensor
 
     def boot_pressed(self):
         return self.__switch.value() == 0
@@ -125,5 +144,13 @@ class TinyFX:
 
     def shutdown(self):
         self.clear()
+
+        # A receiver hands its state machine and PIO program back as it is collected,
+        # so stop it, drop it and collect now: a board built after this takes the same
+        # slot, where a held one refuses the next receiver its PIO
+        if hasattr(self.__sensor, "stop"):
+            self.__sensor.stop()
+            self.__sensor = None
+            gc.collect()
         if self.wav:
             self.wav.deinit()
