@@ -61,7 +61,7 @@ class TinyFXControl:
         for out in self.outputs:
             out.off()
 
-        self.rgb.set_rgb(0, 0, 0)
+        self.rgb.off()
 
         self.__update()
 

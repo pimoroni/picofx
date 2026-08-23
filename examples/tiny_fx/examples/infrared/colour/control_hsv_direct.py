@@ -104,4 +104,4 @@ try:
 # End the program by stopping any active systems
 finally:
     receiver.stop()
-    led.set_rgb(0, 0, 0)
+    led.off()

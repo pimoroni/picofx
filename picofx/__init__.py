@@ -134,6 +134,13 @@ class RGBLED:
     def set_hsv(self, h, s, v):
         self.__rgb(*rgb_from_hsv(h, s, v))
 
+    # White, the colour every channel at full makes
+    def on(self):
+        self.__rgb(1, 1, 1)
+
+    def off(self):
+        self.__rgb(0, 0, 0)
+
 
 class Updateable:
     def __init__(self):

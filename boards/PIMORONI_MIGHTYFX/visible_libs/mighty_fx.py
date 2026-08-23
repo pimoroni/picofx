@@ -367,7 +367,7 @@ class MightyFX:
 
     def clear(self):
         for out in self.outputs:
-            out.set_rgb(0, 0, 0)
+            out.off()
 
         for strip in self.__strips.values():
             strip.clear()

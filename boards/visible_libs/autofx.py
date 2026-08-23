@@ -1423,10 +1423,7 @@ def indicate(fx, pattern=PROBLEM):
         time.sleep_ms(period_ms)
 
         for output in fx.outputs:
-            if isinstance(output, RGBLED):
-                output.set_rgb(0, 0, 0)
-            else:
-                output.brightness(0.0)
+            output.off()
         time.sleep_ms(period_ms)
 
 
@@ -1615,15 +1612,6 @@ def __handover(fx, to_board):
     for lit in order:
         __spot(fx, lit)
         time.sleep_ms(HANDOVER_STEP_MS)
-
-
-def __darken(fx):
-    """Every output out, leaving a strip to the player that drives it."""
-    for output in fx.outputs:
-        if isinstance(output, RGBLED):
-            output.set_rgb(0, 0, 0)
-        else:
-            output.brightness(0)
 
 
 def __transfer_frame(fx, at):
@@ -1938,9 +1926,11 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                     __start(players, fx)
                     # A player paints over the wait as it starts, and only the ones
                     # writing the outputs do: a file playing on a strip alone, or on
-                    # nothing but its screens, would leave the travelling spot lit
+                    # nothing but its screens, would leave the travelling spot lit.
+                    # The outputs only, since clear() would take a strip's player with it
                     if not any(player.kind in OUTPUT_KINDS for player in players):
-                        __darken(fx)
+                        for output in fx.outputs:
+                            output.off()
                     for show in shows:
                         if show.live:
                             show.resume()
