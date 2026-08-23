@@ -212,17 +212,19 @@ class MightyFX:
         for letter, pin, strip, servo, port, backlight in (
                 ("L", self.SERVO_STRIP_L, strip_l, servo_l, self.spce_a, self.SPCE_A_BL_PIN),
                 ("R", self.SERVO_STRIP_R, strip_r, servo_r, self.spce_b, self.SPCE_B_BL_PIN)):
-            if strip and servo:
+            # Tested against None rather than for truth: ANGULAR is zero, so a servo
+            # declared with the commonest calibration of the three reads as no servo
+            if strip is not None and servo is not None:
                 raise ValueError(f"The {letter} connector carries one signal, so it cannot be a strip and a servo at once. Declare strip_{letter.lower()} or servo_{letter.lower()}.")
 
-            if strip:
+            if strip is not None:
                 from plasma import WS2812
                 built = WS2812(strip + self.STRIP_FLUSH_LEDS, self.STRIP_PIO,
                                len(self.__strips), pin)
                 built.start()
                 self.__strips[letter] = built
 
-            elif servo:
+            elif servo is not None:
                 # Each connector shares a PWM channel with one screen port's backlight,
                 # and both pins emit the same signal once both select PWM
                 if port.mode == SPCE.SCREEN:
