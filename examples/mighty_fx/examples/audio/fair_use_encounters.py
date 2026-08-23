@@ -1,8 +1,7 @@
 import time
 
-from machine import Pin
 from mighty_fx import MightyFX
-from pimoroni import Analog
+from sensor import ANALOG
 
 from picofx.colour import BLACK, BLUE, CYAN, GREEN, RED, YELLOW
 
@@ -28,12 +27,8 @@ MAX_SPEED = 20                  # The maximum speed multiplier that the melody w
 SAMPLES = 5                     # The number of measurements to take of the analog sensor, to reduce noise
 
 # Variables
-mighty = MightyFX()             # Create a new MightyFX object to interact with the board
+mighty = MightyFX(sensor=ANALOG if USE_SENSOR else None)    # Create a new MightyFX object, with the sensor only where one is wired
 index = 0                       # The index of the tone to play
-
-if USE_SENSOR:
-    # Create a new Analog object for reading the sensor connector if the sensor is attached
-    sensor = Analog(Pin(mighty.SENSOR_PIN))
 
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
@@ -45,7 +40,7 @@ try:
         speed = 1.0
         if USE_SENSOR:
             # Read the voltage output by the sensor and convert it to a speed
-            speed = (sensor.read_voltage(SAMPLES) * (MAX_SPEED - 1) / 3.3) + 1
+            speed = (mighty.sensor.read_voltage(SAMPLES) * (MAX_SPEED - 1) / 3.3) + 1
 
             # Print out the speed value to a sensible number of decimal places
             print("Speed =", round(speed, 2))

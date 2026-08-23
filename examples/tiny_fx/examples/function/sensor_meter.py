@@ -1,7 +1,6 @@
 import time
 
-from machine import Pin
-from pimoroni import Analog
+from sensor import ANALOG
 from tiny_fx import TinyFX
 
 """
@@ -19,14 +18,13 @@ SAMPLES = 50        # The number of measurements to take per reading, to reduce 
 SLEEP = 0.1         # The time to sleep between each voltage measurement
 
 # Variables
-tiny = TinyFX()                         # Create a new TinyFX object to interact with the board
-sensor = Analog(Pin(tiny.SENSOR_PIN))   # Create a new Analog object for reading the sensor connector
+tiny = TinyFX(sensor=ANALOG)            # Create a new TinyFX object, with an analog sensor on its connector
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not tiny.boot_pressed():
         # Read the voltage output by the sensor
-        voltage = sensor.read_voltage(SAMPLES)
+        voltage = tiny.sensor.read_voltage(SAMPLES)
 
         # Print out the sensor value to a sensible number of decimal places
         print("Voltage =", round(voltage, 2))

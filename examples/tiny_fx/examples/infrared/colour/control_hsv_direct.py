@@ -1,5 +1,5 @@
-from aye_arr.nec import NECRemoteReceiver
 from aye_arr.nec.remotes import PimoroniRemote
+from sensor import IR
 from tiny_fx import TinyFX
 
 from picofx.colour import H_BLACK, H_BLUE, H_COOL, H_CYAN, H_GREEN, H_MAGENTA, H_RED, H_WARM, H_WHITE, H_YELLOW
@@ -30,7 +30,7 @@ SAT_STEP = 0.01         # The amount that saturation will change by with each pr
 VAL_STEP = 0.05         # The amount that value will change by with each press / repeat
 
 # Variables
-tiny = TinyFX()                     # Create a new TinyFX object to interact with the board
+tiny = TinyFX(sensor=IR)           # Create a new TinyFX object, with the infrared receiver on its sensor connector
 led = tiny.rgb                      # Get a reference to the RGB output of TinyFX
 hue = 0
 sat = 0
@@ -87,21 +87,18 @@ remote.bind("LEFT", (adjust_sat, -SAT_STEP))
 remote.bind("UP", (adjust_val, VAL_STEP))
 remote.bind("DOWN", (adjust_val, -VAL_STEP))
 
-# Set up a receiver on the RX pin, using PIO 1 and SM 0, and bind the remote to it.
-receiver = NECRemoteReceiver(TinyFX.SENSOR_PIN, 1, 0)
+# Take the receiver the board set up, and bind the remote to it.
+receiver = tiny.sensor
 receiver.bind(remote)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
-    receiver.start()
-
     # Loop forever
     while True:
         # Decode any IR pulses received since the last time this was called.
         # This should be done as frequently as possible to avoid feeling sluggish
         receiver.decode()
 
-# End the program by stopping any active systems
+# End the program by stopping any active systems, the receiver among them
 finally:
-    receiver.stop()
-    led.off()
+    tiny.shutdown()

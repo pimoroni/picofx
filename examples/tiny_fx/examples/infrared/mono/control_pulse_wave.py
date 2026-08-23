@@ -1,5 +1,5 @@
-from aye_arr.nec import NECRemoteReceiver
 from aye_arr.nec.remotes import PimoroniRemote
+from sensor import IR
 from tiny_fx import TinyFX
 
 from picofx import MonoPlayer
@@ -28,7 +28,7 @@ SPEED_MULT = 1.1                    # The amount to multiply or divide the effec
 LENGTH_STEP = 0.1                   # The amount that length will change by with each press / repeat
 
 # Variables
-tiny = TinyFX()                     # Create a new TinyFX object to interact with the board
+tiny = TinyFX(sensor=IR)           # Create a new TinyFX object, with the infrared receiver on its sensor connector
 player = MonoPlayer(tiny.outputs)   # Create a new effect player to control TinyFX's mono outputs
 
 
@@ -69,13 +69,12 @@ remote.bind("CLOCKWISE", (adjust_speed, SPEED_MULT))
 remote.bind("RIGHT", (adjust_length, LENGTH_STEP))
 remote.bind("LEFT", (adjust_length, -LENGTH_STEP))
 
-# Set up a receiver on Tiny FX's sensor pin, using PIO 1 and SM 0, and bind the remote to it.
-receiver = NECRemoteReceiver(TinyFX.SENSOR_PIN, 1, 0)
+# Take the receiver the board set up, and bind the remote to it.
+receiver = tiny.sensor
 receiver.bind(remote)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
-    receiver.start()
     player.start()   # Start the effects running
 
     # Loop until the effect stops or the "Boot" button is pressed
@@ -86,6 +85,5 @@ try:
 
 # End the program by stopping any active systems
 finally:
-    receiver.stop()
     player.stop()
     tiny.shutdown()

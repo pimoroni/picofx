@@ -1,5 +1,5 @@
-from aye_arr.nec import NECRemoteReceiver
 from aye_arr.nec.remotes import PimoroniRemote
+from sensor import IR
 from tiny_fx import TinyFX
 
 from picofx import ColourPlayer
@@ -20,7 +20,7 @@ Press "Boot" to exit the program.
 """
 
 # Variables
-tiny = TinyFX()                     # Create a new TinyFX object to interact with the board
+tiny = TinyFX(sensor=IR)           # Create a new TinyFX object, with the infrared receiver on its sensor connector
 player = ColourPlayer(tiny.rgb)     # Create a new effect player to control TinyFX's RGB output
 
 
@@ -48,13 +48,12 @@ remote.bind("8_WHITE", (set_led, WHITE))
 remote.bind("9_COOL", (set_led, COOL))
 remote.bind("OK_STOP", (set_led, BLACK))
 
-# Set up a receiver on the RX pin, using PIO 1 and SM 0, and bind the remote to it.
-receiver = NECRemoteReceiver(TinyFX.SENSOR_PIN, 1, 0)
+# Take the receiver the board set up, and bind the remote to it.
+receiver = tiny.sensor
 receiver.bind(remote)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
-    receiver.start()
     player.start()   # Start the effects running
 
     # Loop until the effect stops or the "Boot" button is pressed
@@ -65,6 +64,5 @@ try:
 
 # End the program by stopping any active systems
 finally:
-    receiver.stop()
     player.stop()
     tiny.shutdown()

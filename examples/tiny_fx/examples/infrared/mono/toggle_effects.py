@@ -1,5 +1,5 @@
-from aye_arr.nec import NECRemoteReceiver
 from aye_arr.nec.remotes import PimoroniRemote
+from sensor import IR
 from tiny_fx import TinyFX
 
 from picofx import MonoPlayer
@@ -19,7 +19,7 @@ Press "Boot" to exit the program.
 """
 
 # Variables
-tiny = TinyFX()                     # Create a new TinyFX object
+tiny = TinyFX(sensor=IR)           # Create a new TinyFX object, with the infrared receiver on its sensor connector
 player = MonoPlayer(tiny.outputs)   # Create a new effect player to control TinyFX's mono outputs
 
 # Set up the effects to play
@@ -58,14 +58,13 @@ remote.bind("2_GREEN", on_press=(toggle_channel, 5), on_repeat=None)
 remote.bind("3_BLUE", on_press=(toggle_channel, 2), on_repeat=None)
 remote.bind("4_CYAN", on_press=(toggle_channel, 1), on_repeat=None)
 
-# Set up a receiver on Tiny FX's sensor pin, using PIO 1 and SM 0, and bind the remote to it.
-receiver = NECRemoteReceiver(tiny.SENSOR_PIN, 1, 0)
+# Take the receiver the board set up, and bind the remote to it.
+receiver = tiny.sensor
 receiver.bind(remote)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     player.start()
-    receiver.start()
 
     # Loop until the "Boot" button is pressed
     while not tiny.boot_pressed():
@@ -74,5 +73,4 @@ try:
 # Stop any running effects and turn off all the outputs
 finally:
     player.stop()
-    receiver.stop()
     tiny.shutdown()

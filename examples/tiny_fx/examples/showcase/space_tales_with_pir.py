@@ -1,6 +1,6 @@
 import time
 
-from machine import Pin
+from sensor import PIR
 from tiny_fx import TinyFX
 
 from picofx import MonoPlayer
@@ -18,11 +18,11 @@ PIR_TIMEOUT = 10      # The time to wait before turning off the lights after the
 PIR_TIMEOUT_MS = (PIR_TIMEOUT * 1000)
 
 # Variables
-tiny = TinyFX()                     # Create a new TinyFX object
+tiny = TinyFX(sensor=PIR)           # Create a new TinyFX object, with a PIR on its sensor connector
 player = MonoPlayer(tiny.outputs)   # Create a new effect player to control TinyFX's mono outputs
 
 # Set up a pin for reading the PIR sensor connected to TinyFX
-pir = Pin(tiny.SENSOR_PIN, Pin.IN, Pin.PULL_UP)
+pir = tiny.sensor
 
 # Set up the effects to play
 player.effects = [
