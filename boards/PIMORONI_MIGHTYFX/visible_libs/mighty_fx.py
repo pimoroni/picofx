@@ -103,10 +103,6 @@ class MightyFX:
     # is alive rather than as an effect, and the first frame paints over it
     WAKE_LEVEL = 0.1
 
-    # A hub reaches the screen port's own chip select and the other connector's five,
-    # and each of those six is named on the board as well as indexed on the hub
-    HUB_PORT_NAMES = ("a", "b", "c", "d", "e", "f")
-
     def __init__(self, spce_a=None, spce_b=None, strip_l=None, strip_r=None,
                  servo_l=None, servo_r=None, sensor=None, init_i2c=True, init_wav=True,
                  wav_root="/"):
@@ -164,8 +160,6 @@ class MightyFX:
 
             from screens import ScreenHub
             self.hub = ScreenHub(screen_port, extra_cs=lines_port.hub_lines)
-            for name, port in zip(self.HUB_PORT_NAMES, self.hub.ports):
-                setattr(self, f"hub_{name}", port)
 
         self.motors_a = None
         if spce_a == SPCE.MOTOR_DRIVER:
@@ -369,21 +363,6 @@ class MightyFX:
             raise RuntimeError("sensor is only there where the board was started with sensor=ANALOG, sensor=PIR or sensor=IR")
 
         return self.__sensor
-
-    @property
-    def hub_ports(self):
-        """The hub's ports, one per panel its chip selects reach, and empty without
-        a hub. Each is named as hub_a through hub_f as well.
-        """
-        return () if self.hub is None else self.hub.ports
-
-    def __getattr__(self, name):
-        # Only reached where the attribute is absent, which for a hub port means the
-        # board was never declared for a hub
-        if name.startswith("hub_") and name[4:] in self.HUB_PORT_NAMES:
-            raise AttributeError(f"{name} needs a hub, which is built where one SP/CE port is declared SPCE.SCREEN and the other SPCE.HUB_LINES")
-
-        raise AttributeError(name)
 
     def clear(self):
         for out in self.outputs:

@@ -199,7 +199,7 @@ def report(floor, last_steady):
 
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_LINES if HUB else None)
 if HUB:
-    screens = [Screen280(port) for port in mighty.hub_ports]
+    screens = [Screen280(port) for port in mighty.hub.ports]
 else:
     screens = [Screen280(mighty.spce_a)]
 
