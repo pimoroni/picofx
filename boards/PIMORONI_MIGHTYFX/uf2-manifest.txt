@@ -5,6 +5,7 @@ examples/effects/mono/*.py
 examples/audio/*.py
 examples/function/*.py
 examples/qwst/*.py
+examples/wireless/*.py
 examples/motors/*.py
 examples/servos/*.py
 examples/strips/*.py
