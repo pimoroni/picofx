@@ -7,7 +7,6 @@ import time
 
 from machine import ADC, PWM, Pin
 from pimoroni_i2c import PimoroniI2C
-from motor import Motor
 from picofx import PWMLED, RGBLED, DisabledLED
 from sensor import build_sensor
 from audio import WavPlayer
@@ -122,7 +121,10 @@ class MightyFX:
                     claimed[__pwm_channel(pin)] = (port_name, pin)
 
         # Set up the mono and RGB LED outputs, standing in a DisabledLED for any
-        # channel a motor role holds, so lighting it reports instead of doing nothing
+        # channel a motor role holds, so lighting it reports instead of doing nothing.
+        # The stand-in takes the pin as well as the reason, holding it off: a shared
+        # channel reaches both its GPIOs once both select PWM, so a pin left in that
+        # function shows the motor's signal on an LED the board says cannot light
         self.outputs = []
         for index, rgb_pins in enumerate(self.OUT_PINS):
             leds = []
@@ -133,7 +135,8 @@ class MightyFX:
                 else:
                     port_name, motor_pin = holder
                     leds.append(DisabledLED(
-                        f"Output {index + 1}'s {colour} LED cannot light. GPIO {pin} shares a PWM channel with GPIO {motor_pin}, which SP/CE {port_name} is using to drive motors."))
+                        pin,
+                        reason=f"Output {index + 1}'s {colour} LED cannot light. GPIO {pin} shares a PWM channel with GPIO {motor_pin}, which SP/CE {port_name} is using to drive motors."))
             self.outputs.append(RGBLED(*leds, invert=False, gamma=self.RGB_GAMMA))
 
         # Every output's three channels in one list, since each drives on its own: a mono LED
@@ -161,19 +164,17 @@ class MightyFX:
             from screens import ScreenHub
             self.hub = ScreenHub(screen_port, extra_cs=lines_port.hub_lines)
 
-        self.motors_a = None
-        if spce_a == SPCE.MOTOR_DRIVER:
-            MOTOR_A_PINS = [(self.SPCE_A_DC_PIN, self.SPCE_A_CS_PIN), \
-                            (self.SPCE_A_SCK_PIN, self.SPCE_A_MOSI_PIN)]
-            self.motors_a = [Motor(pins) for pins in MOTOR_A_PINS]
-            self.motors_a_en = Pin(self.SPCE_A_BL_PIN, Pin.OUT, value=True)
-
-        self.motors_b = None
-        if spce_b == SPCE.MOTOR_DRIVER:
-            MOTOR_B_PINS = [(self.SPCE_B_DC_PIN, self.SPCE_B_CS_PIN), \
-                            (self.SPCE_B_SCK_PIN, self.SPCE_B_MOSI_PIN)]
-            self.motors_b = [Motor(pins) for pins in MOTOR_B_PINS]
-            self.motors_b_en = Pin(self.SPCE_B_BL_PIN, Pin.OUT, value=True)
+        # A port declared a motor driver drives two motors from its four data pins,
+        # and powers them from its fifth. Imported only where one was asked for.
+        self.__drivers = {}
+        for letter, mode, motor_pins, enable_pin in (
+                ("A", spce_a, ((self.SPCE_A_DC_PIN, self.SPCE_A_CS_PIN),
+                               (self.SPCE_A_SCK_PIN, self.SPCE_A_MOSI_PIN)), self.SPCE_A_BL_PIN),
+                ("B", spce_b, ((self.SPCE_B_DC_PIN, self.SPCE_B_CS_PIN),
+                               (self.SPCE_B_SCK_PIN, self.SPCE_B_MOSI_PIN)), self.SPCE_B_BL_PIN)):
+            if mode == SPCE.MOTOR_DRIVER:
+                from motor_driver import MotorDriver
+                self.__drivers[letter] = MotorDriver(motor_pins, enable_pin)
 
         # Set up the i2c for Qw/st, if the user wants
         if init_i2c:
@@ -296,6 +297,23 @@ class MightyFX:
         return ((val * 3.3 * self.V_SENSE_GAIN) / 65535) + self.V_SENSE_DIODE_CORRECTION
 
     @property
+    def driver_a(self):
+        """The motor driver on SP/CE A, or why there is none to hand back."""
+        return self.__declared_driver("A")
+
+    @property
+    def driver_b(self):
+        """The motor driver on SP/CE B, or why there is none to hand back."""
+        return self.__declared_driver("B")
+
+    def __declared_driver(self, letter):
+        made = self.__drivers.get(letter)
+        if made is None:
+            raise RuntimeError(f"driver_{letter.lower()} is only there where the board was started with spce_{letter.lower()}=SPCE.MOTOR_DRIVER")
+
+        return made
+
+    @property
     def one(self):
         return self.outputs[0]
 
@@ -382,6 +400,13 @@ class MightyFX:
             self.__sensor = None
             gc.collect()
 
+        # A motor left driving keeps going until something stops it, so both stop
+        # before the power they share is taken away
+        for driver in self.__drivers.values():
+            for motor in driver.motors:
+                motor.disable()
+            driver.disable()
+
         # A servo holds its position while it is driven, so it stops being driven
         # before the rail goes: the two together leave it limp rather than pushing
         for servo in self.__servos.values():
@@ -407,16 +432,6 @@ class MightyFX:
         # the SRAM they claimed can go back. A rebuilt screen then gets the same
         # addresses instead of the region marching up.
         release_buffers()
-
-        if self.motors_a:
-            self.motors_a_en.off()
-            for motor in self.motors_a:
-                motor.disable()
-
-        if self.motors_b:
-            self.motors_b_en.off()
-            for motor in self.motors_b:
-                motor.disable()
 
         if self.wav:
             self.wav.deinit()

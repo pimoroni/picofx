@@ -102,10 +102,16 @@ class PWMLED(PseudoLED):
 # Turning it off works, so board-wide clear() and shutdown() pass through.
 # The first attempt to light it prints the reason; it stays dark throughout.
 class DisabledLED(PseudoLED):
-    def __init__(self, reason):
+    def __init__(self, pin, invert=False, reason=None):
         super().__init__()
-        self.in_use_by = reason
+        self.in_use_by = reason if reason is not None else f"GPIO {pin} cannot light, another function on the board holding it."
         self.__warned = False
+
+        # Held at its off level rather than left as it was. A PWM channel shared
+        # between two GPIOs reaches both once both select PWM, so a pin left in that
+        # function shows the other's signal on an LED this class says is dark, and one
+        # left floating glows faintly.
+        Pin(pin, Pin.OUT, value=invert)
 
     def brightness(self, brightness):
         if brightness > 0 and not self.__warned:
