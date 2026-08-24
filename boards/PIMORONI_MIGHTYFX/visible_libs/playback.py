@@ -20,6 +20,42 @@ import picovector
 IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".gif")
 
 
+def __sized(count):
+    """Kilobytes, rounded up, which is how picovector reports a GIF's own limit."""
+    return "{}KB".format((count + 1023) // 1024)
+
+
+def out_of_memory(path, error):
+    """A MemoryError from decoding, with the sizes a caller can act on.
+
+    MicroPython's bare text gives the bytes and nothing else, not even which file. Says
+    what was wanted and what was free, and why an animation wants so much, but not why
+    the memory had gone: only the caller knows what else it is holding. An error that
+    already explains itself, a GIF over picovector's own limit being the one, is handed
+    back untouched.
+    """
+    if "allocation failed" not in str(error):
+        return error
+    import gc
+    gc.collect()
+    wanted = 0
+    for word in reversed(str(error).replace(",", " ").split()):
+        if word.isdigit():
+            wanted = int(word)
+            break
+    spare = gc.mem_free()
+    if not wanted:
+        room = "did not fit in the {} free".format(__sized(spare))
+    elif wanted > spare:
+        room = "needs {} and {} was free".format(__sized(wanted), __sized(spare))
+    else:
+        # More free than was asked for, so the total was never the problem: what is
+        # left is in pieces smaller than the one piece a frame needs
+        room = "needs {} in one piece and the {} free is in smaller pieces".format(
+            __sized(wanted), __sized(spare))
+    return MemoryError("{} {}. Every frame is stored while it plays.".format(path, room))
+
+
 class ImagePlayer:
     """The clock and the traversal, over a sequence a subclass supplies.
 
@@ -441,7 +477,10 @@ class GIFPlayer(ImagePlayer):
         # and no wait worth announcing.
         logging.debug(f"> Loading {path} ...")
         started = time.ticks_ms()
-        self.__sheet = picovector.spritesheet.load(path)
+        try:
+            self.__sheet = picovector.spritesheet.load(path)
+        except MemoryError as e:
+            raise out_of_memory(path, e) from None
         logging.debug(f"> Loaded {self.__sheet.sprites} frames in {time.ticks_diff(time.ticks_ms(), started)}ms")
 
         super().__init__(self.__sheet.sprites, self.__sheet.timings, fps=fps, loop=loop,
@@ -495,7 +534,10 @@ class SequencePlayer(ImagePlayer):
             raise ValueError(f"{folder} holds {len(names)} images and timings gives {len(timings)} delays: pass one a frame, in the order they play, which is by the numbers in their names")
 
         self.__paths = tuple(f"{folder}/{name}" for name in names)
-        self.__images = self.__load(folder, names, self.__paths)
+        try:
+            self.__images = self.__load(folder, names, self.__paths)
+        except MemoryError as e:
+            raise out_of_memory(folder, e) from None
 
         super().__init__(len(self.__images), timings, fps=fps, loop=loop,
                          ping_pong=ping_pong, first_as_last=first_as_last, hold=hold,

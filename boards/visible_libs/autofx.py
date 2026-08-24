@@ -2369,6 +2369,63 @@ def __pending_shows(problems):
     return shows
 
 
+def __in_kilobytes(count):
+    """Kilobytes, rounded up, matching how picovector reports a GIF's own limit: the
+    two messages can land in the same file and comparing them should need no sums."""
+    return "{}KB".format((count + 1023) // 1024)
+
+
+def __asked_for(error):
+    """The bytes an allocation wanted, from a MemoryError that says so."""
+    for word in reversed(str(error).replace(",", " ").split()):
+        if word.isdigit():
+            return int(word)
+    return 0
+
+
+def __too_big(at, target, effect, error):
+    """Why a picture would not fit, and what to do about it.
+
+    A player already reports the sizes and says an animation is stored whole, so where
+    it has, only what this file adds is written: another screen draws on the same
+    memory, which is what makes one picture play and two fail.
+    """
+    said = str(error).strip()
+    if "was free" in said:
+        # The player has sized it up and said why an animation wants so much
+        head = said[:-1] if said.endswith(".") else said
+        join = ", and both screens share that memory."
+    elif "allocation failed" in said:
+        import gc
+        gc.collect()
+        wanted = __asked_for(error)
+        spare = gc.mem_free()
+        if not wanted:
+            room = "did not fit in the {} free".format(__in_kilobytes(spare))
+        elif wanted > spare:
+            room = "needs {} and {} was free".format(
+                __in_kilobytes(wanted), __in_kilobytes(spare))
+        else:
+            # More free than was asked for, so the total was never the problem: what
+            # was left is in pieces smaller than the one piece a picture needs
+            room = ("needs {} in one piece and the {} free is in smaller "
+                    "pieces".format(__in_kilobytes(wanted), __in_kilobytes(spare)))
+        head = "{} {}".format(target, room)
+        join = ". Both screens share that memory."
+    else:
+        # picovector says by how much a GIF misses its own limit and what to do about
+        # it, which is a fixed ceiling rather than a shortage: nothing to add but the
+        # file, so its own "cannot load GIF" opening comes off
+        if said.startswith("cannot load ") and ": " in said:
+            said = said.split(": ", 1)[1]
+        return "line {}: {}: {}".format(at, target, said)
+
+    advice = ("Try fewer frames, or frames half the size with pixel_double=true, which "
+              "costs a quarter as much." if effect in ("gif", "sequence")
+              else "Try a smaller picture.")
+    return "line {}: {}{} {}".format(at, head, join, advice)
+
+
 def __build_shows(entries, fx, board, problems, build=True):
     """
     A show per screen entry: the panel it names and the player feeding it.
@@ -2518,6 +2575,9 @@ def __build_shows(entries, fx, board, problems, build=True):
             else:
                 import picovector
                 player = __Still(picovector.image.load(path))
+        except MemoryError as e:
+            problems.append(__too_big(at, target, entry.effect, e))
+            continue
         except Exception as e:      # noqa: BLE001
             problems.append("line {}: {} could not be played: {}".format(at, target, e))
             continue
