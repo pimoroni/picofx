@@ -106,11 +106,37 @@ def __holds(path, text):
         return False
 
 
+# The shipped documents the last mount left stale for want of room, for autofx to
+# say beside the file's own problems: a console line reaches nobody with only the
+# drive in front of them
+__unhealed = []
+
+
+def unhealed():
+    """The shipped documents the last mount could not bring up to date."""
+    return tuple(__unhealed)
+
+
 def __heal(fs, name, text):
     """Put a shipped file back on the drive, unless it is already there."""
     path = MOUNT_POINT + "/" + name
     if __holds(path, text):
         return
+    # A document that will not fit is left as it stands: stale and whole beats
+    # part-written, and opening for write would truncate it before failing
+    try:
+        stats = os.statvfs(MOUNT_POINT)
+        room = stats[0] * stats[3]
+        try:
+            room += os.stat(path)[6]
+        except OSError:
+            pass
+        if room < len(text):
+            print("the FX drive is full, so {} was left as it was".format(name))
+            __unhealed.append(name)
+            return
+    except OSError:
+        pass
     try:
         # A read-only file refuses opens for write, so clear the bit to rewrite.
         fs.chmod(name, 0, __ATTR_READ_ONLY)
@@ -125,6 +151,7 @@ def __heal(fs, name, text):
         # missing document costs a reader nothing and a dead board costs them
         # everything. A part-written file is left for the next mount to finish
         print("the FX drive is full, so {} could not be rebuilt".format(name))
+        __unhealed.append(name)
 
 
 def __sweep_swap_files():
@@ -199,6 +226,7 @@ def mount():
                 os.remove(FILE_PATH)
             except OSError:
                 pass
+    del __unhealed[:]
     __heal(fs, README_NAME, fx_defaults.README)
     __heal(fs, MANUAL_NAME, fx_manual.MANUAL)
     __heal(fs, PICKER_NAME, fx_editor.PICKER)

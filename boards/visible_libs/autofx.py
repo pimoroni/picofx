@@ -1508,6 +1508,12 @@ def __play(fx, volume, path, errors, playing, sounding=(), maker=None):
     if volume is None:
         wrote = report(problems, errors, bool(players or sounds))
     else:
+        # A shipped document the mount left stale is said here too, errors.txt being
+        # where a reader with only the drive in front of them will look
+        for name in volume.unhealed():
+            problems.append("the FX drive is full, so {} is out of date; delete a "
+                            "picture or sound from the drive to let it "
+                            "rebuild".format(name))
         with volume.writable():
             wrote = report(problems, errors, bool(players or sounds))
 
