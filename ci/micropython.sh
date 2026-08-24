@@ -11,6 +11,12 @@ PIMORONI_AYE_ARR_VERSION="014955c7882f819fa454f952fa5bff64b304b44f"
 
 PIMORONI_PICOVECTOR_VERSION="main"
 
+PIMORONI_LSM6DS3_FLAVOUR="pimoroni"
+PIMORONI_LSM6DS3_VERSION="v0.0.3"
+
+PIMORONI_QWSTPAD_FLAVOUR="pimoroni"
+PIMORONI_QWSTPAD_VERSION="v0.0.1"
+
 PY_DECL_VERSION="v0.0.5"
 DIR2UF2_VERSION="v0.1.0"
 
@@ -48,6 +54,22 @@ function ci_pimoroni_picovector_clone {
 function ci_board_uses_picovector {
     BOARD_CMAKE="$CI_PROJECT_ROOT/boards/$1/micropython.cmake"
     [ ! -f "$BOARD_CMAKE" ] || grep -qi picovector "$BOARD_CMAKE"
+}
+
+function ci_pimoroni_qwstpad_clone {
+    log_inform "Using Pimoroni QwSTPad $PIMORONI_QWSTPAD_FLAVOUR/$PIMORONI_QWSTPAD_VERSION"
+    git clone https://github.com/$PIMORONI_QWSTPAD_FLAVOUR/qwstpad-micropython "$CI_BUILD_ROOT/qwstpad-micropython"
+    cd "$CI_BUILD_ROOT/qwstpad-micropython" || return 1
+    git checkout $PIMORONI_QWSTPAD_VERSION
+    cd "$CI_BUILD_ROOT"
+}
+
+function ci_pimoroni_lsm6ds3_clone {
+    log_inform "Using Pimoroni LSM6DS3 $PIMORONI_LSM6DS3_FLAVOUR/$PIMORONI_LSM6DS3_VERSION"
+    git clone https://github.com/$PIMORONI_LSM6DS3_FLAVOUR/lsm6ds3-micropython "$CI_BUILD_ROOT/lsm6ds3-micropython"
+    cd "$CI_BUILD_ROOT/lsm6ds3-micropython" || return 1
+    git checkout $PIMORONI_LSM6DS3_VERSION
+    cd "$CI_BUILD_ROOT"
 }
 
 function ci_pimoroni_aye_arr_clone {
@@ -106,6 +128,8 @@ function ci_prepare_all {
         log_inform "Skipping PicoVector: $BOARD does not build with it"
     fi
     ci_pimoroni_aye_arr_clone
+    ci_pimoroni_lsm6ds3_clone
+    ci_pimoroni_qwstpad_clone
     ci_micropython_build_mpy_cross
 }
 
