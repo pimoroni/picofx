@@ -5,6 +5,7 @@ These are micropython examples for driving Mighty FX from a sensor plugged into 
 - [Examples](#examples)
   - [Light Level](#light-level)
   - [Weather Reading](#weather-reading)
+  - [Spirit Level](#spirit-level)
 
 
 ## Examples
@@ -14,3 +15,6 @@ These are micropython examples for driving Mighty FX from a sensor plugged into 
 
 ### Weather Reading
 [weather_reading.py](weather_reading.py)
+
+### Spirit Level
+[spirit_level.py](spirit_level.py)

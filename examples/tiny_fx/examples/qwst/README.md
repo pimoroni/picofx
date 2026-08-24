@@ -5,6 +5,7 @@ These are micropython examples for driving Tiny FX from a sensor plugged into it
 - [Examples](#examples)
   - [Light Level](#light-level)
   - [Weather Reading](#weather-reading)
+  - [Spirit Level](#spirit-level)
 
 
 ## Examples
@@ -14,3 +15,6 @@ These are micropython examples for driving Tiny FX from a sensor plugged into it
 
 ### Weather Reading
 [weather_reading.py](weather_reading.py)
+
+### Spirit Level
+[spirit_level.py](spirit_level.py)
