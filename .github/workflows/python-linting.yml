@@ -37,3 +37,9 @@ jobs:
       run: |
         python3 tools/build_manual.py boards/PIMORONI_MIGHTYFX
         git diff --exit-code -- boards/PIMORONI_MIGHTYFX/frozen_libs/fx_manual.py
+
+    - name: Check MightyFX Editor Is Rebuilt
+      shell: bash
+      run: |
+        python3 tools/build_editor.py boards/PIMORONI_MIGHTYFX
+        git diff --exit-code -- boards/PIMORONI_MIGHTYFX/frozen_libs/fx_editor.py boards/PIMORONI_MIGHTYFX/editor/catalogue.js
