@@ -389,7 +389,13 @@ function absorbText(text) {
   state.soundKept = null;
   state.sound = null;
   state.soundLoop = false;
+  var scene = null;
   text.split("\n").forEach(function (line) {
+    var heading = line.split("#")[0].match(/^\s*\[\s*([^:\]]+)/);
+    if (heading) {
+      scene = heading[1].trim();
+      return;
+    }
     var board = line.match(/^\s*board\s*:\s*(.*)$/i);
     if (board) {
       board[1].split(/\s+/).forEach(function (token) {
@@ -410,7 +416,7 @@ function absorbText(text) {
     var entry = line.match(/^\s*(screen[ab])\b([^:]*):/i);
     if (entry) {
       var port = declarePort(entry[1]);
-      (state.kept[port] = state.kept[port] || []).push(line);
+      (state.kept[port] = state.kept[port] || []).push({line: line, scene: scene});
       if (!(port in state.carried)) state.carried[port] = entry[2].trim();
       return;
     }
@@ -425,7 +431,7 @@ function absorbText(text) {
     var strip = line.match(/^\s*(strip[lr])\b[^:]*:/i);
     if (strip) {
       var name = declareStrip(strip[1]);
-      (state.stripKept[name] = state.stripKept[name] || []).push(line);
+      (state.stripKept[name] = state.stripKept[name] || []).push({line: line, scene: scene});
     }
   });
   document.getElementById("straight").checked = state.straight;
@@ -528,38 +534,103 @@ function soundLine() {
   return state.soundKept;
 }
 
+// The first word of an entry, which is the channel it drives. Two entries naming
+// the same one in the same place is what the board rejects
+function channelOf(line) {
+  var word = line.split("#")[0].match(/^\s*([^\s:]+)/);
+  return word ? word[1].toLowerCase() : "";
+}
+
+// Puts each kept line back where it came from: the always-on ones above the
+// scenes, and a scene's ones under the heading of that name where the chosen look
+// has one. A look whose scenes do not match has nowhere to put the rest, so the
+// first stands for the channel and the others are dropped, which keeps the file
+// valid where replaying them all as always-on would not be
+function placeKept(entries, always, byScene, used) {
+  (entries || []).forEach(function (kept) {
+    var channel = channelOf(kept.line);
+    if (kept.scene === null) {
+      if (used[channel]) return;
+      used[channel] = true;
+      always.push(kept.line);
+      return;
+    }
+    (byScene[kept.scene] = byScene[kept.scene] || []).push(kept);
+  });
+}
+
+// Writes a scene's kept lines under its heading, and reports what found no home
+function intoScenes(played, byScene) {
+  var homeless = [];
+  var lines = played.split("\n");
+  var out = [];
+  var placed = {};
+  lines.forEach(function (line) {
+    out.push(line);
+    var heading = line.split("#")[0].match(/^\s*\[\s*([^:\]]+)/);
+    if (!heading) return;
+    var name = heading[1].trim();
+    (byScene[name] || []).forEach(function (kept) { out.push(kept.line); });
+    placed[name] = true;
+  });
+  Object.keys(byScene).forEach(function (name) {
+    if (!placed[name]) homeless = homeless.concat(byScene[name]);
+  });
+  return {text: out.join("\n"), homeless: homeless};
+}
+
 function currentText() {
   if (!state.look) return "";
   var pace = parseFloat(document.getElementById("pace").value);
   var mood = parseFloat(document.getElementById("mood").value);
-  var parts = [HEADER];
-  var board = boardLine();
-  if (board) parts.push(board + "\n");
+  var always = [];
+  var byScene = {};
+  var used = {};
+  var inPlay = [];
+
   state.ports.forEach(function (port) {
     var choice = state.choices[port];
     if (!choice || choice.mode === "none") return;
-    if (choice.mode === "keep")
-      (state.kept[port] || []).forEach(function (line) { parts.push(line + "\n"); });
-    else
-      parts.push(screenLine(port, choice.media, pace) + "\n");
+    if (choice.mode === "keep") {
+      placeKept(state.kept[port], always, byScene, used);
+    } else {
+      var line = screenLine(port, choice.media, pace);
+      used[channelOf(line)] = true;
+      always.push(line);
+    }
   });
-  var inPlay = [];
   state.strips.forEach(function (name) {
     var choice = state.stripChoices[name];
     if (!choice || choice.mode === "none") return;
     if (choice.mode === "keep") {
-      (state.stripKept[name] || []).forEach(function (line) { parts.push(line + "\n"); });
+      placeKept(state.stripKept[name], always, byScene, used);
       return;
     }
     var count = Number(state.lengths[name]);
     if (!count) return;
     inPlay.push({ selector: state.reversed[name] ? name + count + "-1" : name, count: count });
   });
+
+  var played = state.look.write(pace, mood, inPlay);
+  if (!state.outputs) played = withoutOutputs(played);
+  var settled = intoScenes(played, byScene);
+  // A scene the look does not have leaves its lines nowhere valid, so one stands
+  // for the channel above the scenes and the rest go
+  settled.homeless.forEach(function (kept) {
+    var channel = channelOf(kept.line);
+    if (used[channel]) return;
+    used[channel] = true;
+    always.push(kept.line);
+  });
+
+  var parts = [HEADER];
+  var board = boardLine();
+  if (board) parts.push(board + "\n");
+  always.forEach(function (line) { parts.push(line + "\n"); });
   var sound = soundLine();
   if (sound) parts.push(sound + "\n");
   if (parts.length > 1) parts.push("\n");
-  var played = state.look.write(pace, mood, inPlay);
-  parts.push(state.outputs ? played : withoutOutputs(played));
+  parts.push(settled.text);
   return parts.join("");
 }
 
