@@ -44,6 +44,8 @@ EFFECTS = """\
 # MightyFX effects
 # One entry per set of outputs: <outputs>: <effect> [setting=value ...]
 # Omitted settings take the effect's own defaults. '#' starts a comment.
+board: reload=auto
+
 out1-7: rainbow_wave speed=0.3
 """
 

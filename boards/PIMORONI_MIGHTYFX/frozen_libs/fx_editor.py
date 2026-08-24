@@ -31,6 +31,7 @@ main{max-width:44rem;margin:1.5rem auto;padding:0 1.4rem}
 #status{font-size:.85rem;color:var(--dim)}
 .banner{padding:.8rem 1.1rem;border-radius:10px;margin:1rem 0;background:#e7f2f1}
 .banner.warn{background:var(--warn-bg);color:var(--warn)}
+.banner.hold{background:#fdf3e0;color:#8a6415}
 .banner pre{margin:.4rem 0 0;white-space:pre-wrap;font-size:.85rem}
 
 .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(12.5rem,1fr));gap:1rem;margin:1rem 0}
@@ -87,8 +88,8 @@ footer{max-width:44rem;margin:0 auto 2rem;padding:0 1.4rem;font-size:.8rem;color
 <header>
  <h1>Make some lights</h1>
  <span id="status"></span>
- <button id="open">Open the FX drive</button>
- <button id="save" class="primary" disabled>Put it on the board</button>
+ <button id="open" class="primary">Open the FX drive</button>
+ <button id="save" disabled>Put it on the board</button>
  <button id="check" disabled>Did it work?</button>
 </header>
 <main>
@@ -618,7 +619,8 @@ function banner(text, warn, detail) {
   box.textContent = "";
   if (!text) return;
   var note = document.createElement("div");
-  note.className = "banner" + (warn ? " warn" : "");
+  // warn may also be "hold", the amber of a check still running
+  note.className = warn === "hold" ? "banner hold" : warn ? "banner warn" : "banner";
   note.textContent = text;
   if (detail) {
     var pre = document.createElement("pre");
@@ -966,8 +968,66 @@ function renderStrips(box) {
 
 // ---- the drive ---------------------------------------------------------------
 
+// ---- remembering the drive ------------------------------------------------------
+
+// The drive's handle survives in IndexedDB, so after the first visit it is reached
+// with one click and a permission bubble instead of the file dialog every time. A
+// page cannot go looking for the drive itself; remembering the answer is what there
+// is. Anything failing in here falls back to the dialog
+function rememberDrive(handle) {
+  try {
+    var open = indexedDB.open("fx-pages", 1);
+    open.onupgradeneeded = function () { open.result.createObjectStore("handles"); };
+    open.onsuccess = function () {
+      try {
+        open.result.transaction("handles", "readwrite")
+            .objectStore("handles").put(handle, "drive");
+      } catch (e) {}
+    };
+  } catch (e) {}
+}
+
+function rememberedDrive() {
+  return new Promise(function (settle) {
+    try {
+      var open = indexedDB.open("fx-pages", 1);
+      open.onupgradeneeded = function () { open.result.createObjectStore("handles"); };
+      open.onerror = function () { settle(null); };
+      open.onsuccess = function () {
+        try {
+          var ask = open.result.transaction("handles").objectStore("handles").get("drive");
+          ask.onsuccess = function () { settle(ask.result || null); };
+          ask.onerror = function () { settle(null); };
+        } catch (e) { settle(null); }
+      };
+    } catch (e) { settle(null); }
+  });
+}
+
+async function pickDrive() {
+  var kept = await rememberedDrive();
+  if (kept) {
+    try {
+      if (await kept.requestPermission({mode: "readwrite"}) === "granted") {
+        await kept.getFileHandle("effects.txt");
+        return kept;
+      }
+    } catch (e) {}
+  }
+  var picked;
+  try {
+    picked = await window.showDirectoryPicker(
+        kept ? {mode: "readwrite", startIn: kept} : {mode: "readwrite"});
+  } catch (e) {
+    if (e.name === "AbortError") throw e;
+    picked = await window.showDirectoryPicker({mode: "readwrite"});
+  }
+  rememberDrive(picked);
+  return picked;
+}
+
 async function connect() {
-  var dir = await window.showDirectoryPicker({ mode: "readwrite" });
+  var dir = await pickDrive();
   state.dirHandle = dir;
   state.fileHandle = await dir.getFileHandle("effects.txt");
   absorbText(await (await state.fileHandle.getFile()).text());
@@ -975,6 +1035,13 @@ async function connect() {
   renderScreens();
   document.getElementById("check").disabled = false;
   document.getElementById("status").textContent = "connected to the drive";
+  // The next thing to do carries the colour: opening first, then saving
+  var openButton = document.getElementById("open");
+  openButton.className = "";
+  openButton.textContent = "Open a different drive";
+  var saveButton = document.getElementById("save");
+  saveButton.className = "primary";
+  saveButton.disabled = false;
 }
 
 
@@ -997,6 +1064,25 @@ function playsItself(text) {
   return /\\breload\\s*=\\s*auto\\b/i.test(text);
 }
 
+// Written into errors.txt before saving, so the board's answer is always a
+// change: it deletes the file where the save reads clean and rewrites it where
+// not, so this line vanishing is the answer either way. Self-describing, since a
+// board that never reads the file leaves it to be found later
+var CHECKING = "The board has not read the file yet.";
+
+// Writes the marker; returns whether it took, a full drive being the reason not
+async function markChecking() {
+  try {
+    var handle = await state.dirHandle.getFileHandle("errors.txt", {create: true});
+    var writable = await handle.createWritable();
+    await writable.write(CHECKING + "\\n");
+    await writable.close();
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 // The text of errors.txt, null where there is none, and false where the drive is
 // away mid-reload and the question cannot be answered yet
 async function readErrors() {
@@ -1009,9 +1095,10 @@ async function readErrors() {
 }
 
 // Polls until errors.txt differs from what it said before the save, calling
-// nothingYet() once the settle time passes so the reader is not left waiting on a
-// file that may never change. Seeing the drive away is proof the board acted, so an
-// unchanged answer after that is a real answer rather than an early one
+// nothingYet() once the settle time passes, saying the check is still running: an
+// answer can arrive after the settle, so nothing is claimed until the wait is over.
+// Seeing the drive away is proof the board acted, so an unchanged answer after that
+// is a real answer rather than an early one
 async function waitForBoard(before, nothingYet) {
   var deadline = Date.now() + BOARD_WAIT_MS;
   var settled = Date.now() + BOARD_SETTLE_MS;
@@ -1037,7 +1124,10 @@ async function waitForBoard(before, nothingYet) {
 // What to say once the wait is over. Silence cannot be told from a board that has
 // not got there yet, so it is reported as nothing said rather than as all well
 function sayWhatHappened(said, also) {
-  if (said)
+  if (said === CHECKING)
+    banner("The board did not pick the save up. Eject the FX drive, or press " +
+           "the board's button once, and it plays.", true);
+  else if (said)
     banner("The board wasn't happy with some of it:", true, said);
   else
     banner("Playing on the board. No problems reported." + (also || ""));
@@ -1056,7 +1146,11 @@ document.getElementById("save").onclick = async function () {
         return;
     }
     var text = currentText();
-    var errorsBefore = playsItself(text) ? await readErrors() : undefined;
+    // The board acts on a save only where the file it is already running asked it
+    // to, so the first save that turns it on still needs an eject
+    var errorsBefore = playsItself(onBoard) ? await readErrors() : undefined;
+    // The marker makes the answer an edge even where nothing else changes
+    if (errorsBefore !== undefined && await markChecking()) errorsBefore = CHECKING;
     var writable = await state.fileHandle.createWritable();
     await writable.write(text);
     await writable.close();
@@ -1071,17 +1165,27 @@ document.getElementById("save").onclick = async function () {
                  + "and on once you are done."
                : "";
     if (errorsBefore === undefined) {
-      banner("On its way. Eject the FX drive on this computer, and the board plays it. " +
-             "Double-press the board's button to bring the drive back, then ask 'Did it " +
-             "work?'." + strips);
+      banner("On its way. " + (playsItself(text)
+             ? "Eject the FX drive, or press the board's button once, to play this one. "
+               + "From now on a save plays on its own."
+             : "Eject the FX drive on this computer, and the board plays it. Double-press "
+               + "the board's button to bring the drive back, then ask 'Did it work?'.")
+             + strips);
       return;
     }
-    banner("Saved. Waiting for the board to pick it up...");
+    banner("Saved. Waiting for the board to pick it up...", "hold");
     var was = errorsBefore === false ? null : errorsBefore;
     sayWhatHappened(await waitForBoard(was, function () {
-      sayWhatHappened(null, strips);
+      banner("Playing on the board. Checking for problems..." + strips, "hold");
     }), strips);
   } catch (e) {
+    if (e.name === "QuotaExceededError") {
+      // The drive is there, it is simply full: saving writes a temporary copy
+      // first, so it needs the file's size free
+      banner("The FX drive is full, so there was no room to save. Delete a " +
+             "picture or sound from it and try again.", true);
+      return;
+    }
     state.fileHandle = null;
     state.dirHandle = null;
     banner("That didn't reach the board: " + e.name + ". Is the FX drive showing? " +
@@ -1090,9 +1194,18 @@ document.getElementById("save").onclick = async function () {
 };
 
 document.getElementById("check").onclick = async function () {
+  // A blink before the answer, so asking again visibly did something even when
+  // the answer reads the same
+  banner("Asking the board...", "hold");
+  await new Promise(function (settle) { setTimeout(settle, 350); });
   try {
     var handle = await state.dirHandle.getFileHandle("errors.txt");
     var text = await (await handle.getFile()).text();
+    if (text.trim() === CHECKING) {
+      banner("The board has not read the file yet. Eject the FX drive, or press " +
+             "the board's button once.", "hold");
+      return;
+    }
     banner("The board wasn't happy with some of it:", true, text.trim());
   } catch (e) {
     if (e.name === "NotFoundError")
@@ -1113,6 +1226,28 @@ document.getElementById("open").onclick = async function () {
   }
 };
 
+// What the drive holds changes as people copy files on, so it is looked at
+// again every few seconds and the rows redrawn only where something changed.
+// Directory reads never touch effects.txt, so the board's save watch is safe
+async function rescanMedia() {
+  if (!state.dirHandle) return;
+  var was = JSON.stringify([state.media.map(function (m) { return m.name + m.kind; }),
+                            state.sounds]);
+  var keptMedia = state.media;
+  var keptSounds = state.sounds;
+  try {
+    await scanMedia(state.dirHandle);
+  } catch (e) {
+    state.media = keptMedia;
+    state.sounds = keptSounds;
+    return;
+  }
+  var now = JSON.stringify([state.media.map(function (m) { return m.name + m.kind; }),
+                            state.sounds]);
+  if (now !== was) renderScreens();
+}
+setInterval(rescanMedia, 5000);
+
 document.getElementById("pace").oninput = update;
 document.getElementById("mood").oninput = update;
 document.getElementById("straight").onchange = function () {
@@ -1126,7 +1261,6 @@ document.getElementById("outputs").onchange = function () {
 
 renderGallery();
 renderScreens();
-document.getElementById("save").disabled = false;
 </script>
 </body>
 </html>
@@ -1159,6 +1293,7 @@ main{max-width:52rem;margin:1.5rem auto;padding:0 1.4rem}
 #status{font-size:.85rem;color:var(--dim)}
 .banner{padding:.8rem 1.1rem;border-radius:10px;margin:1rem 0;background:#e7f2f1}
 .banner.warn{background:var(--warn-bg);color:var(--warn)}
+.banner.hold{background:#fdf3e0;color:#8a6415}
 .banner pre{margin:.4rem 0 0;white-space:pre-wrap;font-size:.85rem}
 
 .editor{position:relative;background:var(--panel);border:1px solid var(--line);
@@ -1205,8 +1340,8 @@ main{max-width:52rem;margin:1.5rem auto;padding:0 1.4rem}
 <header>
 <h1>FX Editor</h1>
 <span id="status">nothing open yet</span>
-<button id="open">Open the drive</button>
-<button id="save" class="primary">Put it on the board</button>
+<button id="open" class="primary">Open the FX drive</button>
+<button id="save" disabled>Put it on the board</button>
 <button id="check" disabled>Did it work?</button>
 </header>
 <main>
@@ -1843,7 +1978,8 @@ function banner(text, warn, detail) {
   box.innerHTML = "";
   if (!text) return;
   var note = document.createElement("div");
-  note.className = warn ? "banner warn" : "banner";
+  // warn may also be "hold", the amber of a check still running
+  note.className = warn === "hold" ? "banner hold" : warn ? "banner warn" : "banner";
   note.textContent = text;
   if (detail) {
     var lines = document.createElement("pre");
@@ -2002,19 +2138,89 @@ entry.addEventListener("keydown", function (event) {
 
 // ---- the drive ------------------------------------------------------------------
 
+// ---- remembering the drive ------------------------------------------------------
+
+// The drive's handle survives in IndexedDB, so after the first visit it is reached
+// with one click and a permission bubble instead of the file dialog every time. A
+// page cannot go looking for the drive itself; remembering the answer is what there
+// is. Anything failing in here falls back to the dialog
+function rememberDrive(handle) {
+  try {
+    var open = indexedDB.open("fx-pages", 1);
+    open.onupgradeneeded = function () { open.result.createObjectStore("handles"); };
+    open.onsuccess = function () {
+      try {
+        open.result.transaction("handles", "readwrite")
+            .objectStore("handles").put(handle, "drive");
+      } catch (e) {}
+    };
+  } catch (e) {}
+}
+
+function rememberedDrive() {
+  return new Promise(function (settle) {
+    try {
+      var open = indexedDB.open("fx-pages", 1);
+      open.onupgradeneeded = function () { open.result.createObjectStore("handles"); };
+      open.onerror = function () { settle(null); };
+      open.onsuccess = function () {
+        try {
+          var ask = open.result.transaction("handles").objectStore("handles").get("drive");
+          ask.onsuccess = function () { settle(ask.result || null); };
+          ask.onerror = function () { settle(null); };
+        } catch (e) { settle(null); }
+      };
+    } catch (e) { settle(null); }
+  });
+}
+
+async function pickDrive() {
+  var kept = await rememberedDrive();
+  if (kept) {
+    try {
+      if (await kept.requestPermission({mode: "readwrite"}) === "granted") {
+        await kept.getFileHandle("effects.txt");
+        return kept;
+      }
+    } catch (e) {}
+  }
+  var picked;
+  try {
+    picked = await window.showDirectoryPicker(
+        kept ? {mode: "readwrite", startIn: kept} : {mode: "readwrite"});
+  } catch (e) {
+    if (e.name === "AbortError") throw e;
+    picked = await window.showDirectoryPicker({mode: "readwrite"});
+  }
+  rememberDrive(picked);
+  return picked;
+}
+
 async function connect() {
-  var dir = await window.showDirectoryPicker({mode: "readwrite"});
+  var dir = await pickDrive();
   state.dirHandle = dir;
   state.fileHandle = await dir.getFileHandle("effects.txt");
   var onBoard = await (await state.fileHandle.getFile()).text();
   var held = entry.value.trim();
   if (onBoard.trim() !== held && (!held || held === STARTER.trim() ||
-      confirm("Load effects.txt from the drive and replace what is here?"))) {
-    entry.value = onBoard;
+      confirm("Load effects.txt from the drive and replace what is written here? " +
+              "Undo (Ctrl+Z) brings your text back."))) {
+    // Through the undo history, so what was here is one Ctrl+Z away
+    entry.focus();
+    entry.setSelectionRange(0, entry.value.length);
+    if (!document.execCommand("insertText", false, onBoard)) entry.value = onBoard;
+    entry.setSelectionRange(0, 0);
     repaint();
   }
   document.getElementById("check").disabled = false;
   document.getElementById("status").textContent = "connected to the drive";
+  // The next thing to do carries the colour: opening first, then saving
+  var open = document.getElementById("open");
+  open.className = "";
+  open.textContent = "Open a different drive";
+  var save = document.getElementById("save");
+  save.className = "primary";
+  save.disabled = false;
 }
 
 document.getElementById("open").onclick = async function () {
@@ -2047,6 +2253,25 @@ function playsItself(text) {
   return /\\breload\\s*=\\s*auto\\b/i.test(text);
 }
 
+// Written into errors.txt before saving, so the board's answer is always a
+// change: it deletes the file where the save reads clean and rewrites it where
+// not, so this line vanishing is the answer either way. Self-describing, since a
+// board that never reads the file leaves it to be found later
+var CHECKING = "The board has not read the file yet.";
+
+// Writes the marker; returns whether it took, a full drive being the reason not
+async function markChecking() {
+  try {
+    var handle = await state.dirHandle.getFileHandle("errors.txt", {create: true});
+    var writable = await handle.createWritable();
+    await writable.write(CHECKING + "\\n");
+    await writable.close();
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 // The text of errors.txt, null where there is none, and false where the drive is
 // away mid-reload and the question cannot be answered yet
 async function readErrors() {
@@ -2059,9 +2284,10 @@ async function readErrors() {
 }
 
 // Polls until errors.txt differs from what it said before the save, calling
-// nothingYet() once the settle time passes so the reader is not left waiting on a
-// file that may never change. Seeing the drive away is proof the board acted, so an
-// unchanged answer after that is a real answer rather than an early one
+// nothingYet() once the settle time passes, saying the check is still running: an
+// answer can arrive after the settle, so nothing is claimed until the wait is over.
+// Seeing the drive away is proof the board acted, so an unchanged answer after that
+// is a real answer rather than an early one
 async function waitForBoard(before, nothingYet) {
   var deadline = Date.now() + BOARD_WAIT_MS;
   var settled = Date.now() + BOARD_SETTLE_MS;
@@ -2087,7 +2313,10 @@ async function waitForBoard(before, nothingYet) {
 // What to say once the wait is over. Silence cannot be told from a board that has
 // not got there yet, so it is reported as nothing said rather than as all well
 function sayWhatHappened(said, also) {
-  if (said)
+  if (said === CHECKING)
+    banner("The board did not pick the save up. Eject the FX drive, or press " +
+           "the board's button once, and it plays.", true);
+  else if (said)
     banner("The board wasn't happy with some of it:", true, said);
   else
     banner("Playing on the board. No problems reported." + (also || ""));
@@ -2097,22 +2326,38 @@ document.getElementById("save").onclick = async function () {
   try {
     if (!state.fileHandle) await connect();
     var text = entry.value;
-    var errorsBefore = playsItself(text) ? await readErrors() : undefined;
+    // The board acts on a save only where the file it is already running asked it to,
+    // so the first save that turns it on still needs an eject
+    var running = await (await state.fileHandle.getFile()).text();
+    var errorsBefore = playsItself(running) ? await readErrors() : undefined;
+    // The marker makes the answer an edge even where nothing else changes
+    if (errorsBefore !== undefined && await markChecking()) errorsBefore = CHECKING;
     var writable = await state.fileHandle.createWritable();
     await writable.write(text);
     await writable.close();
     var back = await (await state.fileHandle.getFile()).text();
     if (back !== text) throw new Error("the file read back differently");
     if (errorsBefore === undefined) {
-      banner("On its way. Eject the FX drive on this computer, and the board plays it. " +
-             "Double-press the board's button to bring the drive back, then ask 'Did it " +
-             "work?'.");
+      banner("On its way. " + (playsItself(text)
+             ? "Eject the FX drive, or press the board's button once, to play this one. "
+               + "From now on a save plays on its own."
+             : "Eject the FX drive on this computer, and the board plays it. Double-press "
+               + "the board's button to bring the drive back, then ask 'Did it work?'."));
       return;
     }
-    banner("Saved. Waiting for the board to pick it up...");
+    banner("Saved. Waiting for the board to pick it up...", "hold");
     var was = errorsBefore === false ? null : errorsBefore;
-    sayWhatHappened(await waitForBoard(was, function () { sayWhatHappened(null); }));
+    sayWhatHappened(await waitForBoard(was, function () {
+      banner("Playing on the board. Checking for problems...", "hold");
+    }));
   } catch (e) {
+    if (e.name === "QuotaExceededError") {
+      // The drive is there, it is simply full: saving writes a temporary copy
+      // first, so it needs the file's size free
+      banner("The FX drive is full, so there was no room to save. Delete a " +
+             "picture or sound from it and try again.", true);
+      return;
+    }
     state.fileHandle = null;
     state.dirHandle = null;
     banner("That didn't reach the board: " + e.name + ". Is the FX drive showing? " +
@@ -2121,9 +2366,18 @@ document.getElementById("save").onclick = async function () {
 };
 
 document.getElementById("check").onclick = async function () {
+  // A blink before the answer, so asking again visibly did something even when
+  // the answer reads the same
+  banner("Asking the board...", "hold");
+  await new Promise(function (settle) { setTimeout(settle, 350); });
   try {
     var handle = await state.dirHandle.getFileHandle("errors.txt");
     var text = await (await handle.getFile()).text();
+    if (text.trim() === CHECKING) {
+      banner("The board has not read the file yet. Eject the FX drive, or press " +
+             "the board's button once.", "hold");
+      return;
+    }
     banner("The board wasn't happy with some of it:", true, text.trim());
   } catch (e) {
     if (e.name === "NotFoundError")
