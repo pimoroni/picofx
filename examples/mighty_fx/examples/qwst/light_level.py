@@ -30,6 +30,10 @@ mighty = MightyFX()                     # Create a new MightyFX object to intera
 player = ColourPlayer(mighty.outputs)   # Create a new effect player to control MightyFX's RGB outputs
 ltr = BreakoutLTR559(mighty.i2c)        # The light sensor, on the board's Qw/ST bus
 
+# The sensor's first reading is whatever it held before it was asked to measure, so it
+# is taken and thrown away rather than acted on
+ltr.get_reading()
+
 
 # The colour each output draws its light in. A flicker gives a level rather than a
 # colour, so the colour comes from here

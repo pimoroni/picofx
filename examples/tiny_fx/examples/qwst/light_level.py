@@ -29,6 +29,10 @@ tiny = TinyFX()                     # Create a new TinyFX object to interact wit
 player = MonoPlayer(tiny.outputs)   # Create a new effect player to control TinyFX's mono outputs
 ltr = BreakoutLTR559(tiny.i2c)      # The light sensor, on the board's Qw/ST bus
 
+# The sensor's first reading is whatever it held before it was asked to measure, so it
+# is taken and thrown away rather than acted on
+ltr.get_reading()
+
 
 # Set up a flicker effect to play on every output, so the lamps are never quite steady
 player.effects = [FlickerFX() for _ in tiny.outputs]

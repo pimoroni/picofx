@@ -5,7 +5,9 @@ from mighty_fx import MightyFX
 """
 Use MightyFX's RGB outputs as a bargraph to show the voltage that is powering the board.
 
-Each output lights in the colour its part of the range stands for, so the bar runs from
+The output at the top of the bar is lit as far into its own step as the reading has
+gone, so the bar moves smoothly rather than a whole output at a time. Each lights in the
+colour its part of the range stands for, the hue running from
 red at the bottom, through amber, to green at the top.
 
 Press "Boot" to exit the program.
@@ -17,15 +19,8 @@ MIN_VOLTAGE = 4             # The min voltage, in volts, to show on the meter
 MAX_VOLTAGE = 6             # The max voltage, in volts, to show on the meter
 SAMPLES = 50                # The number of measurements to take per reading, to reduce noise
 SLEEP = 0.1                 # The time to sleep between each voltage measurement
-COLOURS = (
-    (255, 0, 0),            # The colour each output lights in, lowest voltage first
-    (255, 60, 0),
-    (255, 120, 0),
-    (255, 200, 0),
-    (200, 255, 0),
-    (100, 255, 0),
-    (0, 255, 0),
-)
+LOW_HUE = 0.0           # The hue of the lowest output, being red
+HIGH_HUE = 0.333        # The hue of the highest, being green by way of amber
 
 # Variables
 mighty = MightyFX()         # Create a new MightyFX object to interact with the board
@@ -43,16 +38,19 @@ try:
         # Convert the voltage to a percentage of the min to max we want to show
         percent = (voltage - MIN_VOLTAGE) / (MAX_VOLTAGE - MIN_VOLTAGE)
 
+        # How much of the bar the reading fills, in outputs rather than as a fraction
+        filled = min(len(mighty.outputs), max(0.0, percent * len(mighty.outputs)))
+
         # Update all the outputs
         for i in range(len(mighty.outputs)):
-            # Calculate the voltage level the output represents
-            level = (i + 0.5) / len(mighty.outputs)
+            # An output below the top of the bar is full, the one at the top is lit as
+            # far into its own step as the reading has gone, and the rest are out
+            level = min(1.0, max(0.0, filled - i))
 
-            # If the percent is above the level, light the output in its colour, otherwise turn it off
-            if percent >= level:
-                mighty.outputs[i].set_rgb(*(c * BRIGHTNESS for c in COLOURS[i]))
-            else:
-                mighty.outputs[i].off()
+            # The hue between the two ends carries the scale, so no table of colours is
+            # needed and the ramp fits however many outputs a board has
+            hue = LOW_HUE + (HIGH_HUE - LOW_HUE) * i / (len(mighty.outputs) - 1)
+            mighty.outputs[i].set_hsv(hue, 1.0, BRIGHTNESS * level)
 
         time.sleep(SLEEP)
 

@@ -4,28 +4,40 @@ from breakout_bme280 import BreakoutBME280
 from mighty_fx import MightyFX
 
 """
-Show the temperature on MightyFX's RGB outputs, read from a weather sensor on Qw/ST.
+Show the temperature on MightyFX's RGB outputs as a bargraph, read from a weather
+sensor on Qw/ST.
 
 Plug a BME280 breakout into the Qw/ST connector. The board makes the bus itself, as
 mighty.i2c, so the sensor takes that and nothing else needs setting up.
 
-Every output shows the same colour, running from blue at the cold end of the range to
-red at the warm end. The pressure and humidity the sensor also reports are printed.
+The bar fills from the cold end to the warm one, each output lit in the colour its own
+part of the range stands for, the hue running blue through purple to red. The output at the top
+of the bar is lit as far into its own step as the reading has gone, so the bar moves
+smoothly rather than a whole output at a time. Hold the sensor between your fingers to
+watch it climb. The pressure and
+humidity the sensor also reports are printed.
 
 Press "Boot" to exit the program.
 """
 
 # Constants
 BRIGHTNESS = 0.6    # The brightness to set the outputs
-MIN_TEMP = 15       # The temperature, in celsius, to show as fully cold
-MAX_TEMP = 30       # The temperature, in celsius, to show as fully warm
-COLD = (0, 0, 255)  # The colour to show at and below the min temperature
-WARM = (255, 0, 0)  # The colour to show at and above the max temperature
-SLEEP = 1.0         # The time to sleep between each sensor reading
+MIN_TEMP = 18       # The temperature, in celsius, the bar starts at
+MAX_TEMP = 30       # The temperature, in celsius, the bar is full at
+SLEEP = 0.5         # The time to sleep between each sensor reading
+SETTLE = 0.1        # The time to give the sensor to make its first measurement
+COLD_HUE = 0.666    # The hue of the coldest output, being blue
+WARM_HUE = 1.0      # The hue of the warmest, being red again at the top of the wheel
 
 # Variables
 mighty = MightyFX()                 # Create a new MightyFX object to interact with the board
 bme = BreakoutBME280(mighty.i2c)    # The weather sensor, on the board's Qw/ST bus
+
+# The sensor answers with the values its registers hold from reset until it has made a
+# measurement of its own, and reading again does not hurry it. So one read starts it
+# measuring, and the wait is what the reading after it needs to be real
+bme.read()
+time.sleep(SETTLE)
 
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
@@ -38,17 +50,20 @@ try:
               "Pressure =", round(pressure / 100, 1), "hPa,",
               "Humidity =", round(humidity, 1), "%")
 
-        # Convert the temperature to a percentage of the min to max we want to show,
-        # kept within the range so a colder or warmer room still gives a colour
+        # How much of the bar the reading fills, in outputs rather than as a fraction
         percent = (temperature - MIN_TEMP) / (MAX_TEMP - MIN_TEMP)
-        percent = min(1.0, max(0.0, percent))
+        filled = min(len(mighty.outputs), max(0.0, percent * len(mighty.outputs)))
 
-        # Mix the two ends of the range together in that proportion
-        colour = tuple((cold + (warm - cold) * percent) * BRIGHTNESS
-                       for cold, warm in zip(COLD, WARM))
+        # Update all the outputs
+        for i in range(len(mighty.outputs)):
+            # An output below the top of the bar is full, the one at the top is lit as
+            # far into its own step as the reading has gone, and the rest are out
+            level = min(1.0, max(0.0, filled - i))
 
-        for output in mighty.outputs:
-            output.set_rgb(*colour)
+            # The hue between the two ends carries the scale, so no table of colours
+            # is needed and the ramp fits however many outputs a board has
+            hue = COLD_HUE + (WARM_HUE - COLD_HUE) * i / (len(mighty.outputs) - 1)
+            mighty.outputs[i].set_hsv(hue, 1.0, BRIGHTNESS * level)
 
         time.sleep(SLEEP)
 
