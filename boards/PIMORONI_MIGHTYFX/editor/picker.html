@@ -346,12 +346,12 @@ footer{max-width:52rem;margin:0 auto 2rem;padding:0 1.4rem;font-size:.8rem;color
  <div class="assets" id="assets"></div>
 </div>
 
-<div class="keptlines" id="kept" hidden></div>
-</div>
-
 <div class="panel">
  <h2>Sound<span class="says" id="soundSays">one wav, playing on while the lights run</span></h2>
  <div id="sound"></div>
+</div>
+
+<div class="keptlines" id="kept" hidden></div>
 </div>
 
 <label class="opt" style="margin:1.2rem 0"
@@ -1133,9 +1133,9 @@ var state = {
                         // hold and fps, which every scene keeps for itself
   strips: {},           // id -> {leds, reversed, look, pace, mood} with the look,
                         //       pace and mood per scene
-  sound: null, soundLoop: false, soundKept: null,
   stripsAtStart: [],
   // The scene being edited: its fields live at the top level while it is current
+  sound: null, soundLoop: false, soundKept: null,
   look: null, pace: 0.5, mood: 0.5, reversed: false,
   lampsOff: [], lampOrder: [1, 2, 3, 4, 5, 6, 7],
   kept: [],             // this scene's lines no control stands for, written verbatim
@@ -1153,12 +1153,13 @@ STRIP_IDS.forEach(function (id) {
 });
 
 // A scene holds only what can differ between them: the look on the outputs, what
-// each strip plays, and what each screen shows. Lengths, sizes, turns and the sound
-// are facts about the board, so they sit outside the tabs and are not captured here
+// each strip plays, what each screen shows and which sound plays. Lengths, sizes and
+// turns are facts about the board, so they sit outside the tabs and are not captured
 function capture() {
   var body = {
     look: state.look, pace: state.pace, mood: state.mood, reversed: state.reversed,
     lampsOff: state.lampsOff.slice(), lampOrder: state.lampOrder.slice(),
+    sound: state.sound, soundLoop: state.soundLoop, soundKept: state.soundKept,
     kept: state.kept.slice(), strips: {}, screens: {}
   };
   STRIP_IDS.forEach(function (id) {
@@ -1175,6 +1176,9 @@ function capture() {
 }
 
 function apply(body) {
+  state.sound = body.sound;
+  state.soundLoop = body.soundLoop;
+  state.soundKept = body.soundKept;
   state.look = body.look;
   state.pace = body.pace;
   state.mood = body.mood;
@@ -1206,7 +1210,8 @@ function copyBody(body) { return JSON.parse(JSON.stringify(body)); }
 // once its content has been carried into the first scene
 function blankBody() {
   var body = {look: null, pace: 0.5, mood: 0.5, reversed: false, lampsOff: [],
-              lampOrder: [1, 2, 3, 4, 5, 6, 7], kept: [], strips: {}, screens: {}};
+              lampOrder: [1, 2, 3, 4, 5, 6, 7], sound: null, soundLoop: false,
+              soundKept: null, kept: [], strips: {}, screens: {}};
   STRIP_IDS.forEach(function (id) {
     body.strips[id] = {look: null, pace: 0.5, mood: 0.5};
   });
@@ -1293,11 +1298,13 @@ function allBodies() {
   return [state.always.body].concat(state.scenes.map(function (s) { return s.body; }));
 }
 
-function soundLine() {
-  if (state.sound)
-    return "audio: wav file=" + quoted(state.sound) +
-           (state.soundLoop ? " loop=true" : "");
-  return state.soundKept;
+// The sound entry for one scene. The board takes one per scene, and one before any
+// heading which plays in any scene that brings none of its own
+function soundLine(body) {
+  if (body.sound)
+    return "audio: wav file=" + quoted(body.sound) +
+           (body.soundLoop ? " loop=true" : "");
+  return body.soundKept;
 }
 
 function screenEntry(letter, body) {
@@ -1390,6 +1397,8 @@ function keptClashes(body) {
 // What one scene writes from its controls: its screens, its outputs, its strips
 function written(body) {
   var lines = [];
+  var sound = soundLine(body);
+  if (sound) lines.push(sound);
   SCREENS.forEach(function (letter) {
     var line = screenEntry(letter, body);
     if (line) lines.push(line);
@@ -1433,8 +1442,6 @@ function currentText() {
   var lines = [];
   var board = boardLine();
   if (board) lines.push(board);
-  var sound = soundLine();
-  if (sound) lines.push(sound);
 
   var always = entriesFrom(state.always.body);
   if (always.length) {
@@ -1693,12 +1700,25 @@ function absorbEntries(rawLines, body) {
   }
 }
 
+// One scene's sound line, taken as a choice where this page would write it back the
+// same way, and kept word for word where it would not
+function absorbSound(line, body) {
+  if (!line) return;
+  var parsed = parseEntry(line);
+  if (parsed && parsed.effect === "wav" && parsed.fx.file &&
+      !Object.keys(parsed.ch).length) {
+    body.sound = parsed.fx.file;
+    body.soundLoop = parsed.fx.loop === "true";
+    if (soundLine(body) === line) return;
+    body.sound = null;
+    body.soundLoop = false;
+  }
+  body.soundKept = line;
+}
+
 function absorbText(text) {
   state.straight = true;
   state.boardResidue = [];
-  state.sound = null;
-  state.soundLoop = false;
-  state.soundKept = null;
   SCREENS.forEach(function (letter) {
     state.screens[letter] = {there: false, size: "2.8", turn: 0, carried: "",
                              pingpong: false, hold: "", fps: 5, shows: null, kept: null};
@@ -1755,18 +1775,11 @@ function absorbText(text) {
       return;
     }
 
+    // The board hears one sound per scene, so the first in each is the scene's and
+    // any after it goes through as an ordinary line for the board to refuse
     var sound = line.match(/^audio\b[^:]*:/i);
-    if (sound && buckets.length === 1) {
-      var parsed = parseEntry(line);
-      if (parsed && parsed.effect === "wav" && parsed.fx.file &&
-          !Object.keys(parsed.ch).length) {
-        state.sound = parsed.fx.file;
-        state.soundLoop = parsed.fx.loop === "true";
-        if (soundLine() === line) return;
-        state.sound = null;
-        state.soundLoop = false;
-      }
-      state.soundKept = line;
+    if (sound && buckets[buckets.length - 1].sound === undefined) {
+      buckets[buckets.length - 1].sound = line;
       return;
     }
 
@@ -1778,9 +1791,11 @@ function absorbText(text) {
   if (!sawStraight) state.straight = text.trim() === "";
 
   absorbEntries(buckets[0].lines, state.always.body);
+  absorbSound(buckets[0].sound, state.always.body);
   buckets.slice(1).forEach(function (bucket) {
     var body = blankBody();
     absorbEntries(bucket.lines, body);
+    absorbSound(bucket.sound, body);
     state.scenes.push({name: bucket.scene.name, seconds: bucket.scene.seconds,
                        restart: bucket.scene.restart, body: body});
   });
@@ -2512,10 +2527,13 @@ async function removeFromDrive(name, kind) {
     });
   });
   apply(slotAt(state.at).body);
-  if (state.sound === name) {
-    state.sound = null;
-    state.soundLoop = false;
-  }
+  allBodies().forEach(function (body) {
+    if (body.sound === name) {
+      body.sound = null;
+      body.soundLoop = false;
+    }
+  });
+  apply(slotAt(state.at).body);
   delete state.soundInfo[name];
   delete state.art[name];
   try { await scanMedia(state.dirHandle); } catch (e) {}
@@ -2589,9 +2607,13 @@ function renderSound() {
     ? "open the FX drive to see the sounds on it"
     : !state.scanned
       ? "reading the drive..."
-    : state.sounds.length || state.sound || state.soundKept
+    : !(state.sounds.length || state.sound || state.soundKept)
+      ? "no sounds on the drive yet; drop a wav onto it"
+    : !state.scenes.length
       ? "one wav, playing on while the lights run"
-      : "no sounds on the drive yet; drop a wav onto it";
+    : state.at < 0
+      ? "played in any scene that brings no sound of its own"
+      : "played while this scene shows, picking up where it left off";
 
   // How the sound is played rather than which one it is, so it sits above them,
   // where a screen keeps its settings

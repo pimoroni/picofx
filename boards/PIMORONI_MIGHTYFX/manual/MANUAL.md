@@ -41,7 +41,9 @@ which size each screen is, pick a picture from this drive for a screen to show,
 and tap any of the board's own seven lights to leave it out of the effect, or
 drag them into the order your build has them. Pictures and sounds can be copied
 onto the drive, and deleted from it, without leaving the page. Press the plus to
-split what you have into scenes that take turns.
+split what you have into scenes that take turns, each with its own look, pictures
+and sound; a sound picked on the always-on tab plays in any scene that brings none
+of its own.
 
 "Put it on the board" writes the file, and the board picks it up a few seconds
 later. Untick "play it as soon as I save" and it waits instead until this drive
