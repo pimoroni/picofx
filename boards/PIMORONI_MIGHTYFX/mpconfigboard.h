@@ -30,6 +30,6 @@
 // rp2.enable_msc() is called.
 #define MICROPY_HW_USB_MSC                      (1)
 #define MICROPY_HW_USB_MSC_FLASH_OFFSET         (2 * 1024 * 1024)
-#define MICROPY_HW_USB_MSC_FLASH_BYTES          (256 * 1024)
+#define MICROPY_HW_USB_MSC_FLASH_BYTES          (6784 * 1024)
 #define MICROPY_HW_USB_MSC_INQUIRY_VENDOR_STRING   "Pimoroni"
 #define MICROPY_HW_USB_MSC_INQUIRY_PRODUCT_STRING  "MightyFX Drive"

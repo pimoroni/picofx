@@ -21,7 +21,7 @@ set(PICO_NUM_GPIOS 48)
 # not scan into a cmake variable until after this file is read, so the two must agree.
 math(EXPR FLASH_SIZE_BYTES "16 * 1024 * 1024")
 math(EXPR FIRMWARE_SIZE_BYTES "2 * 1024 * 1024")
-math(EXPR CONFIG_FAT_SIZE_BYTES "256 * 1024")
+math(EXPR CONFIG_FAT_SIZE_BYTES "6784 * 1024")
 
 if(NOT DEFINED MICROPY_HW_ROMFS_BYTES)
     math(EXPR MICROPY_HW_ROMFS_BYTES "768 * 1024")
