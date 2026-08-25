@@ -298,6 +298,10 @@ footer{max-width:52rem;margin:0 auto 2rem;padding:0 1.4rem;font-size:.8rem;color
  margin:1.2rem 0;font-size:.82rem;color:var(--dim)}
 .keptlines .row{display:flex;align-items:center;gap:.5rem;margin:.2rem 0}
 .keptlines code{flex:1;font-size:.75rem;color:var(--ink);word-break:break-word}
+/* A line the choices here have taken the outputs of: kept, but not written */
+.keptlines code.clashing{color:var(--dim);text-decoration:line-through}
+.keptlines code.clashing::after{content:" not written: already played here";
+ text-decoration:none;color:var(--warn);font-style:italic}
 .keptlines .drop{border:none;background:none;color:var(--dim);font-size:1rem;
  line-height:1;padding:0 .3rem;cursor:pointer}
 .keptlines .drop:hover{color:var(--warn)}
@@ -1124,8 +1128,9 @@ var state = {
   // The board, true whatever the scene
   straight: true,       // the board plays a save at once (reload=auto)
   boardResidue: [],     // board settings this page does not manage, kept as written
-  screens: {},          // letter -> {there, size, turn, carried, pingpong, hold, fps,
-                        //            shows, kept} with shows and kept per scene
+  screens: {},          // letter -> {there, size, turn, carried} about the board,
+                        // plus the playing scene's own shows, kept, pingpong,
+                        // hold and fps, which every scene keeps for itself
   strips: {},           // id -> {leds, reversed, look, pace, mood} with the look,
                         //       pace and mood per scene
   sound: null, soundLoop: false, soundKept: null,
@@ -1162,7 +1167,9 @@ function capture() {
   });
   SCREENS.forEach(function (letter) {
     var screen = state.screens[letter];
-    body.screens[letter] = {shows: screen.shows, kept: screen.kept};
+    body.screens[letter] = {shows: screen.shows, kept: screen.kept,
+                            pingpong: screen.pingpong, hold: screen.hold,
+                            fps: screen.fps};
   });
   return body;
 }
@@ -1187,6 +1194,9 @@ function apply(body) {
     var was = body.screens[letter];
     screen.shows = was.shows;
     screen.kept = was.kept;
+    screen.pingpong = was.pingpong;
+    screen.hold = was.hold;
+    screen.fps = was.fps;
   });
 }
 
@@ -1201,7 +1211,8 @@ function blankBody() {
     body.strips[id] = {look: null, pace: 0.5, mood: 0.5};
   });
   SCREENS.forEach(function (letter) {
-    body.screens[letter] = {shows: null, kept: null};
+    body.screens[letter] = {shows: null, kept: null, pingpong: false, hold: "",
+                            fps: 5};
   });
   return body;
 }
@@ -1301,21 +1312,83 @@ function screenEntry(letter, body) {
   var selector = "screen" + letter;
   if (screen.carried) selector += " " + screen.carried;
   if (Number(screen.turn)) selector += " rotation=" + screen.turn;
+  var playing = body.screens[letter];
   var extras = "";
   if (kind !== "image") {
-    if (screen.pingpong) extras += " ping_pong=true";
-    if (screen.hold) extras += " hold=" + screen.hold;
+    if (playing.pingpong) extras += " ping_pong=true";
+    if (playing.hold) extras += " hold=" + playing.hold;
   }
   if (kind === "folder")
-    return selector + ": sequence folder=" + quoted(shows) + " fps=" + screen.fps + extras;
+    return selector + ": sequence folder=" + quoted(shows) + " fps=" + playing.fps + extras;
   if (kind === "gif")
     return selector + ": gif file=" + quoted(shows) + extras;
   return selector + ": image file=" + quoted(shows);
 }
 
-// What one scene writes: its screens, its outputs, its strips, then whatever it
-// carries word for word, in that order
-function entriesFrom(body) {
+// The channels one selector names, as keys that can be compared: a bare name
+// stands for all of them, and a component counts as its whole channel, since the
+// board refuses a channel set twice however it was named. null where the selector
+// is not one this page can read
+function channelsNamed(selector) {
+  var keys = [];
+  var parts = selector.toLowerCase().split(",");
+  for (var i = 0; i < parts.length; i++) {
+    var named = parts[i].match(/^([a-z_]*)(\d+(?:-\d+)?)?(?:\.[rgb*])?$/);
+    if (!named) return null;
+    var prefix = named[1] || keys[keys.length - 1];
+    if (!prefix) return null;
+    if (!named[2]) {
+      keys.push(prefix + "|all");
+      continue;
+    }
+    var span = expandNumbers(named[2]);
+    if (!span) return null;
+    span.forEach(function (n) { keys.push(prefix + "|" + n); });
+  }
+  return keys;
+}
+
+// Whether anything already written claims a channel this line would name. A line
+// nobody can read is let through, the board being the judge of it
+function clashesWith(claimed, line) {
+  var word = line.split("#")[0].match(/^\s*([^\s:]+)/);
+  if (!word) return false;
+  var keys = channelsNamed(word[1]);
+  if (!keys) return false;
+  for (var i = 0; i < keys.length; i++) {
+    var family = keys[i].split("|")[0];
+    if (claimed[keys[i]] || claimed[family + "|all"]) return true;
+    if (keys[i].indexOf("|all") > 0) {
+      for (var held in claimed) {
+        if (held.split("|")[0] === family) return true;
+      }
+    }
+  }
+  return false;
+}
+
+function claim(claimed, line) {
+  var word = line.split("#")[0].match(/^\s*([^\s:]+)/);
+  if (!word) return;
+  (channelsNamed(word[1]) || []).forEach(function (key) { claimed[key] = true; });
+}
+
+// The kept lines a scene cannot write, because what was chosen here already drives
+// the channels they name. The board refuses the whole entry in that case, so the
+// choice has to win and the line has to sit out
+function keptClashes(body) {
+  var claimed = {};
+  written(body).forEach(function (line) { claim(claimed, line); });
+  var out = [];
+  body.kept.forEach(function (line) {
+    if (clashesWith(claimed, line)) out.push(line);
+    else claim(claimed, line);
+  });
+  return out;
+}
+
+// What one scene writes from its controls: its screens, its outputs, its strips
+function written(body) {
   var lines = [];
   SCREENS.forEach(function (letter) {
     var line = screenEntry(letter, body);
@@ -1343,7 +1416,16 @@ function entriesFrom(body) {
                                         body.strips[id].mood));
   });
 
-  return lines.concat(body.kept);
+  return lines;
+}
+
+// One scene in full: what its controls wrote, then whatever it carries word for
+// word, less the lines the choices here have taken the channels of
+function entriesFrom(body) {
+  var out = keptClashes(body);
+  return written(body).concat(body.kept.filter(function (line) {
+    return out.indexOf(line) < 0;
+  }));
 }
 
 function currentText() {
@@ -1558,25 +1640,25 @@ function recogniseScreen(parsed, body) {
   }
   if (name === null) return false;
 
-  var was = {turn: screen.turn, carried: screen.carried, pingpong: screen.pingpong,
-             hold: screen.hold, fps: screen.fps};
+  var was = {turn: screen.turn, carried: screen.carried};
   screen.turn = turn;
   screen.carried = carried.join(" ");
-  screen.pingpong = parsed.fx.ping_pong === "true";
-  screen.hold = parsed.fx.hold || "";
-  if (kind === "folder") screen.fps = Number(parsed.fx.fps) || 5;
 
-  body.screens[letter].shows = name;
+  var playing = body.screens[letter];
+  playing.shows = name;
+  playing.pingpong = parsed.fx.ping_pong === "true";
+  playing.hold = parsed.fx.hold || "";
+  if (kind === "folder") playing.fps = Number(parsed.fx.fps) || 5;
   if (screenEntry(letter, body) === parsed.line) return true;
 
-  // The reading did not reproduce the line, so the line is kept and the screen's
-  // settings go back to whatever an earlier entry established
-  body.screens[letter].shows = null;
+  // The reading did not reproduce the line, so the line is kept and everything it
+  // touched goes back to whatever an earlier entry established
+  playing.shows = null;
+  playing.pingpong = false;
+  playing.hold = "";
+  playing.fps = 5;
   screen.turn = was.turn;
   screen.carried = was.carried;
-  screen.pingpong = was.pingpong;
-  screen.hold = was.hold;
-  screen.fps = was.fps;
   return false;
 }
 
@@ -2238,8 +2320,10 @@ function renderScreensHead() {
       : screen.shows
         ? "showing <b>" + screen.shows + "</b>" +
           (mediaNamed(screen.shows) ? "" : " (not on the drive)")
-        : state.fileHandle ? "tap " + letter + " under a picture below"
-                           : "open the FX drive to see its pictures";
+        : !state.fileHandle ? "open the FX drive to see its pictures"
+        : state.scenes.length
+          ? "showing nothing here; tap " + letter + " under a picture below"
+          : "tap " + letter + " under a picture below";
     settings.appendChild(showing);
 
     body.appendChild(settings);
@@ -2336,11 +2420,13 @@ function renderAssets() {
       button.disabled = !state.screens[letter].there;
       if (button.disabled) button.style.opacity = ".3";
       button.onclick = function () {
-        // Tapping the lit one again goes back to what the file said, where there
-        // is something to go back to. Where there is not, it would mean a screen
-        // showing nothing, which the header's cross already says
+        // Tapping the lit one again takes the picture off this scene's screen,
+        // falling back to what the file said where there is something to go back
+        // to. A scene showing nothing on a screen leaves it as the scene before
+        // left it, which the cross in the header cannot say for one scene alone
         var screen = state.screens[letter];
-        screen.shows = (screen.shows === name && screen.kept) ? "keep" : name;
+        screen.shows = screen.shows !== name ? name
+                     : screen.kept ? "keep" : null;
         draw();
       };
       pick.appendChild(button);
@@ -2467,6 +2553,7 @@ function renderKept() {
   box.hidden = !state.kept.length;
   box.textContent = "";
   if (!state.kept.length) return;
+  var clashing = keptClashes(capture());
   var head = document.createElement("div");
   head.textContent = "Also " + (state.scenes.length ? "in this scene" : "in the file") +
                      ", kept as written:";
@@ -2476,6 +2563,11 @@ function renderKept() {
     row.className = "row";
     var code = document.createElement("code");
     code.textContent = line;
+    if (clashing.indexOf(line) >= 0) {
+      code.className = "clashing";
+      code.title = "What you chose here already drives these outputs, so the board " +
+                   "would refuse both. This line is left out of the file.";
+    }
     row.appendChild(code);
     var drop = document.createElement("button");
     drop.className = "drop";
@@ -2950,8 +3042,10 @@ async function waitForBoard(before, nothingYet) {
 // not got there yet, so it is reported as nothing said rather than as all well
 function sayWhatHappened(said, also) {
   if (said === CHECKING)
-    banner("The board did not pick the save up. Eject the FX drive, or press " +
-           "the board's button once, and it plays.", true);
+    banner("No answer from the board yet. Eject the FX drive, or press the " +
+           "board's button once, and it plays. If the lights already changed, " +
+           "this computer is showing the page an old copy of the drive: unplug " +
+           "the board and plug it back in to see what it wrote.", true);
   else if (said)
     banner("The board wasn't happy with some of it:", true, said);
   else
@@ -3066,10 +3160,26 @@ function openFresh() { openDrive(true); }
 document.getElementById("open").onclick = function () { openDrive(false); };
 document.getElementById("openOther").onclick = openFresh;
 
+// Only Chromium browsers can be handed a folder to write to. Saying so first
+// beats a TypeError from a call the browser does not have
+var CAN_REACH_A_DRIVE = typeof window.showDirectoryPicker === "function";
+
+if (!CAN_REACH_A_DRIVE) {
+  ["open", "openOther", "save", "check"].forEach(function (id) {
+    var button = document.getElementById(id);
+    button.disabled = true;
+    button.className = button.className.replace("primary", "");
+  });
+  banner("This browser cannot be given a drive to write to, so the picker cannot " +
+         "reach the board from here. Open this page in Chrome or Edge. Everything " +
+         "it writes is an ordinary effects.txt, so any editor can do the same job " +
+         "by hand.", true);
+}
+
 // Where a visit before this one answered which drive, the choice is offered by
 // name beside the way to a different one
 rememberedDrive().then(function (kept) {
-  if (!kept || state.fileHandle) return;
+  if (!kept || state.fileHandle || !CAN_REACH_A_DRIVE) return;
   // A drive root's name comes back as a bare slash, so only a real folder name
   // is worth showing
   var name = kept.name && kept.name.length > 1 ? " (" + kept.name + ")" : " again";
