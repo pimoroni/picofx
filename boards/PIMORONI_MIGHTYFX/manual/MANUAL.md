@@ -36,13 +36,17 @@ whole builds, and one line in `effects.txt` starts any of them. See
 Edge, pick a look, and slide until it suits. It shows the file it is writing as
 you go, so nothing about it is hidden.
 
-Screens and strips are set up there too. Say how many LEDs a strip has and which
-size each screen is, pick a picture from this drive for a screen to show, and
-turn the board's own seven lights off where the screens are all you want.
+Screens, strips and sound are set up there too. Say how many LEDs a strip has and
+which size each screen is, pick a picture from this drive for a screen to show,
+and tap any of the board's own seven lights to leave it out of the effect, or
+drag them into the order your build has them. Pictures and sounds can be copied
+onto the drive, and deleted from it, without leaving the page. Press the plus to
+split what you have into scenes that take turns.
 
-"Put it on the board" writes the file. Eject this drive, or press **Boot** once,
-and the board plays it. "Did it work?" reads `errors.txt` back and shows what the
-board made of each line.
+"Put it on the board" writes the file, and the board picks it up a few seconds
+later. Untick "play it as soon as I save" and it waits instead until this drive
+is ejected, or **Boot** is pressed once. "Did it work?" reads `errors.txt` back
+and shows what the board made of each line.
 
 A page cannot write to a drive in Firefox or Safari, so the picker needs Chrome or
 Edge. What it writes is an ordinary `effects.txt`: anything it makes can be edited
