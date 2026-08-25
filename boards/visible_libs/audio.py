@@ -147,7 +147,7 @@ class WavPlayer:
     def set_root(self, root):
         self.__root = root.rstrip("/") + "/"
 
-    def play_wav(self, wav_file, loop=False):
+    def play_wav(self, wav_file, loop=False, position=0):
         self.__stop_i2s()                                       # Stop any active playback and terminate the I2S instance
 
         # Parse the WAV file, returning the necessary parameters to initialise I2S communication.
@@ -161,6 +161,11 @@ class WavPlayer:
             self.__wav_file = WavReader(wav_file)
         self.__loop_wav = loop                                  # Record if the user wants the file to loop
         self._loop_count = 0                                    # Count loops for debugging purposes
+
+        # Pick up part way through, from a position() a caller kept. Sought here,
+        # before the I2S callback starts reading, so nothing races the seek
+        if position:
+            self.__wav_file.seek(position)
 
         self.__start_i2s(bits=self.__wav_file.bits_per_sample,
                          format=self.__wav_file.format,
@@ -242,6 +247,18 @@ class WavPlayer:
 
     def is_playing(self):
         return self.__state != WavPlayer.NONE and self.__state != WavPlayer.STOP
+
+    def position(self):
+        """
+        How far into the current WAV's data playback has reached, in bytes, for
+        play_wav() to pick up from later. None where no WAV is under way: paused
+        counts, ended or flushing does not.
+        """
+        if self.__mode != WavPlayer.MODE_WAV or self.__wav_file is None:
+            return None
+        if self.__state != WavPlayer.PLAY and self.__state != WavPlayer.PAUSE:
+            return None
+        return self.__wav_file.tell()
 
     def is_paused(self):
         return self.__state == WavPlayer.PAUSE

@@ -572,28 +572,63 @@ class Sound:
     One WAV playing beside the effects: the player it runs on, the file it reads,
     already open, and whether it starts again when it ends. The handle stays the
     board's for the whole run, so a computer taking the drive does not stop it.
+
+    The board plays one sound at a time, so the sounds share the player and `live`
+    says which of them has it. One put aside by a scene switch remembers where it
+    reached and picks up from there on its next turn; one that had already ended
+    starts again from the top.
     """
-    def __init__(self, wav, handle, loop):
+    def __init__(self, wav, handle, loop, scene=None):
         self.wav = wav
         self.handle = handle
         self.loop = loop
+        self.scene = scene
+        self.live = False
+        self.__from = 0         # Where the next start picks up, 0 being the top
 
     def start(self):
         try:
-            self.wav.play_wav(self.handle, loop=self.loop)
+            self.wav.play_wav(self.handle, loop=self.loop, position=self.__from)
         except (OSError, ValueError):
             # The file was replaced while a computer held the drive, so there is
             # nothing left to play until the next reload reopens it
             pass
+        self.__from = 0
+        self.live = True
 
-    def pause(self):
+    def set_aside(self):
+        """Put aside by a scene switch: silenced, remembering where it reached."""
+        if not self.live:
+            return
         self.wav.pause()
+        # None where the sound had already ended, which is a start from the top
+        self.__from = self.wav.position() or 0
+        self.live = False
+
+    # The player is shared, so a sound standing aside for a transfer only touches
+    # it while the speaker is its own
+    def pause(self):
+        if self.live:
+            self.wav.pause()
 
     def resume(self):
-        self.wav.resume()
+        if self.live:
+            self.wav.resume()
+
+    def restart(self):
+        """Back to the top, for a scene that begins again on every entry."""
+        self.__from = 0
+        if self.live:
+            self.start()
 
     def close(self):
-        self.wav.deinit()
+        # Neither half may stop the other, nor whatever is tidying up after this: a
+        # player mid-transfer and a handle on a volume the computer has taken are both
+        # reached here, and there is nothing left to save either way
+        try:
+            self.wav.deinit()
+        except Exception as e:      # noqa: BLE001
+            print("the sound would not stop:", e)
         try:
             self.handle.close()
         except OSError:
@@ -1760,15 +1795,15 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         scene_at = 0
         scene_deadline = None
         if scenes:
-            __apply_scene(players, shows, scenes[0])
+            __apply_scene(players, shows, sounds, scenes[0])
             if scenes[0].hold:
                 scene_deadline = time.ticks_add(time.ticks_ms(), int(scenes[0].hold * 1000))
+        else:
+            __cue_sound(sounds, None)
 
     if volume is None:
         begin_scenes()
         __start(players, fx)
-        for sound in sounds:
-            sound.start()
         return fx, players, shows, sounds, scenes, problems
 
     # A save landing on effects.txt answers as a single press does, where the file
@@ -1789,8 +1824,6 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     if not program:
         begin_scenes()
         __start(players, fx)
-        for sound in sounds:
-            sound.start()
 
     # Read while the board still holds the drive, since exposing it takes the mount
     # point away and a program kept there would have nothing left to open
@@ -1818,8 +1851,6 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
             indicate(fx, PROBLEM if wrote else UNREPORTED)
         begin_scenes()
         __start(players, fx)            # Never started above, whether the program ran or not
-        for sound in sounds:
-            sound.start()
         if drive_up:
             volume.expose()
 
@@ -1907,8 +1938,6 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                     volume.expose()
                 begin_scenes()
                 __start(players, fx)
-                for sound in sounds:
-                    sound.start()
                 # A frame each as the lights start, so the panels come back with them
                 __service_shows(shows)
 
@@ -1917,7 +1946,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                     time.ticks_diff(time.ticks_ms(), scene_deadline) >= 0:
                 scene_at = (scene_at + 1) % len(scenes)
                 scene = scenes[scene_at]
-                __apply_scene(players, shows, scene)
+                __apply_scene(players, shows, sounds, scene)
                 scene_deadline = (time.ticks_add(time.ticks_ms(), int(scene.hold * 1000))
                                   if scene.hold else None)
 
@@ -2635,21 +2664,18 @@ def __build_shows(entries, fx, board, problems, build=True):
 
 def __build_sounds(entries, fx, problems):
     """
-    A sound per audio entry, of which the board plays one at a time. The file is
-    opened here, while the board holds the drive, which is what lets it stream on
-    after a computer takes the volume.
+    A sound per audio entry: one before any heading playing throughout, and one per
+    scene taking the speaker while its scene shows. The file is opened here, while
+    the board holds the drive, which is what lets it stream on after a computer
+    takes the volume.
     """
     sounds = []
+    taken = set()
     wav = getattr(fx, "wav", None)
 
     for entry in entries:
         if wav is None:
             problems.append("line {}: this board has no audio".format(entry.line))
-            continue
-
-        if entry.scene is not None:
-            problems.append("line {}: audio does not follow scenes yet, so its entry "
-                            "sits before every heading".format(entry.line))
             continue
 
         if entry.effect not in AUDIO_EFFECTS:
@@ -2678,9 +2704,10 @@ def __build_sounds(entries, fx, problems):
                                 "file=sound.wav".format(entry.line, entry.effect))
             continue
 
-        if sounds:
-            problems.append("line {}: the board plays one sound at a time, so the "
-                            "first audio entry is the one heard".format(entry.line))
+        # One sound at a time is the hardware, so a scene carries one and so does the
+        # part before any heading. A second in the same place has already been
+        # answered by the parser as a repeated selector, so it only skips here
+        if entry.scene in taken:
             continue
 
         at = entry.lines.get("file", entry.line)
@@ -2694,7 +2721,8 @@ def __build_sounds(entries, fx, problems):
             problems.append("line {}: {} could not be opened: {}".format(at, target, e))
             continue
 
-        sounds.append(Sound(wav, handle, bool(settings.get("loop", False))))
+        taken.add(entry.scene)
+        sounds.append(Sound(wav, handle, bool(settings.get("loop", False)), entry.scene))
 
     return sounds
 
@@ -2988,11 +3016,35 @@ def __assemble(entries, slots, effects, levels, colours, curves, claimed, proble
     return driven, sources
 
 
-def __apply_scene(players, shows, scene):
+def __cue_sound(sounds, scene):
     """
-    Point the players and shows at one scene. Its arrays already carry the always-on
-    entries and turn off what other scenes drive, so this is an exchange of lists the
-    players read on their next tick.
+    Give the speaker to the sound this scene wants: its own, or the one from before
+    any heading where it brings none. The one giving it up remembers where it
+    reached, so a long sound picks up where it left off on its next turn, and one
+    that had ended starts again from the top.
+    """
+    wanted = None
+    for sound in sounds:
+        if sound.scene is None and wanted is None:
+            wanted = sound
+        if scene is not None and sound.scene == scene.key:
+            wanted = sound
+
+    for sound in sounds:
+        if sound is not wanted:
+            sound.set_aside()
+
+    # One already playing carries on: the scene it also serves has come round again,
+    # or it is the always-on sound outlasting a scene with none of its own
+    if wanted is not None and not wanted.live:
+        wanted.start()
+
+
+def __apply_scene(players, shows, sounds, scene):
+    """
+    Point the players, shows and sounds at one scene. Its arrays already carry the
+    always-on entries and turn off what other scenes drive, so this is an exchange
+    of lists the players read on their next tick.
 
     A scene told to restart begins its own content again, the always-on entries
     carrying on: their effects are built in their own pass and so are never among a
@@ -3038,6 +3090,13 @@ def __apply_scene(players, shows, scene):
             show.pause()
         else:
             show.rest()
+
+    # Beginning again reaches the scene's sound too, which forgets where it was up to
+    if scene.restart:
+        for sound in sounds:
+            if sound.scene == scene.key:
+                sound.restart()
+    __cue_sound(sounds, scene)
 
 
 def load(text, fx, maker=None):

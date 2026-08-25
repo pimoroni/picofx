@@ -507,9 +507,10 @@ def draw(canvas, elapsed):
 <tbody>
 <tr><td><code>wav</code></td><td><code>file</code> <code>loop=no</code></td></tr>
 </tbody></table></div>
-<p>The file plays once as the board starts, or over and over with <code>loop</code>. The board plays one sound at a time, so it takes the first <code>audio</code> entry and notes the rest in <code>errors.txt</code>.</p>
+<p>The file plays once as the board starts, or over and over with <code>loop</code>. The board plays one sound at a time, so each scene takes one <code>audio</code> entry, and one more may sit before any heading.</p>
 <p>A file is looked for on this drive first, then on the board itself, as a picture is. The board opens it before this drive is shown, so a computer taking the drive does not stop the sound. While the computer is copying to this drive the sound waits in silence with the effects, and a file replaced under a playing sound ends it quietly.</p>
-<p>An ordinary uncompressed WAV plays, mono or stereo; MP3 does not. An <code>audio</code> entry sits before any scene heading, since sound does not follow scenes yet.</p>
+<p>An ordinary uncompressed WAV plays, mono or stereo; MP3 does not.</p>
+<p>An <code>audio</code> entry inside a scene plays while that scene shows, and one before any heading plays whenever the showing scene brings no sound of its own. A sound put aside by a scene change picks up where it left off when its turn comes back, and one that had already finished starts again from the top. A scene with <code>restart</code> starts its sound from the top every time, along with everything else it holds.</p>
 <h2 id="scenes">Scenes</h2>
 <p>A file can hold several sets of effects and show them one after another. A heading in square brackets begins one, and says how long it shows for:</p>
 <pre class="entry"><code><span class="s-scene">[Evening: 30s]</span>
