@@ -314,12 +314,12 @@ try:
     while not leaving:
         if pair is not None:
             first, second = leading, (leading + 1) % len(WORLDS)
-            pair.update(tiles[first], tiles[second], rotation=ROTATION, tile=True,
+            pair.update(tiles[first], tiles[second], rotation=ROTATION,
                         offset=(flown(WORLDS[first], places[first]),
-                                flown(WORLDS[second], places[second])))
+                                flown(WORLDS[second], places[second])), tile=True)
         else:
-            screens[0].update(tiles[leading], rotation=ROTATION, tile=True,
-                              offset=flown(WORLDS[leading], places[leading]))
+            screens[0].update(tiles[leading], rotation=ROTATION,
+                              offset=flown(WORLDS[leading], places[leading]), tile=True)
 
         # Judged on release, a press being impossible to tell from a hold until it ends
         if mighty.boot_pressed():

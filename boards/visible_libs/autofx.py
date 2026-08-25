@@ -37,6 +37,11 @@ MOUNT_DIR = "/fx"
 CONFIG_PATH = MOUNT_DIR + "/effects.txt"
 ERRORS_PATH = MOUNT_DIR + "/errors.txt"
 
+# Where a problem found after the file was read is written, which run() sets to
+# whatever it was told to report to. A drawing is the one thing that can stop long
+# after load, so it is the only writer of this
+__REPORTING_TO = [ERRORS_PATH]
+
 COLOURS = {
     "red": RED, "yellow": YELLOW, "green": GREEN, "cyan": CYAN, "blue": BLUE,
     "magenta": MAGENTA, "warm": WARM, "white": WHITE, "cool": COOL, "black": BLACK,
@@ -441,11 +446,12 @@ class __Graphics:
     # all of which have owners while a drawing plays beside them
     IMPORTS = ("math", "random", "time", "picovector")
 
-    def __init__(self, name, code, canvas, ground, fps=None, paused=False):
+    def __init__(self, name, code, canvas, ground, errors, fps=None, paused=False):
         self.image = canvas
         self.__name = name
         self.__code = code
         self.__ground = ground
+        self.__errors = errors
         self.__frame_ms = None if not fps else max(1, int(1000 / fps))
         self.__draw = None
         self.__stopped = False
@@ -530,9 +536,10 @@ class __Graphics:
                    "frame:\n{}".format(self.__name, "\n".join(lines)))
         print(message)
         # Where the reader is already looking, while the board holds the volume;
-        # exposed, the mount is gone and there is nowhere to write
+        # exposed, the mount is gone and there is nowhere to write. Appended rather
+        # than written, so a drive with no room left keeps the account it has
         try:
-            with open(ERRORS_PATH, "a") as handle:
+            with open(self.__errors, "a") as handle:
                 handle.write("\n" + message + "\n")
         except OSError:
             pass
@@ -1734,6 +1741,10 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     # A caller handing in a built board keeps it for the whole run
     maker = fx if callable(fx) else None
 
+    # A drawing that stops does so long after this returned its problems, so it writes
+    # its own, and this is how it knows where they go
+    __REPORTING_TO[0] = errors
+
     if volume is not None:
         volume.mount()
 
@@ -1964,19 +1975,31 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
 
             time.sleep_ms(interval_ms)
     finally:
-        for player in players:
-            player.stop()
-        for sound in sounds:
-            sound.close()
+        # Darkening the board comes first and nothing fallible stands in front of it.
+        # A stop from the REPL arrives as an interrupt and the next one lands wherever
+        # this has reached, so a step that waits, such as handing the drive back while
+        # a computer is mid-write, would otherwise leave the outputs lit for good.
         # shutdown() releases the screen ports and the header's rail, so neither
         # record of what is running may outlive them, and anything a program put off
         # is never going to be built now
+        for player in players:
+            player.stop()
         __SCREENS.clear()
         __STRIPS.clear()
         __PENDING_SHOWS.clear()
-        if volume.exposed():
-            volume.withdraw()
         fx.shutdown()
+
+        # Tidying up after it, each on its own, since neither can undo the above
+        for sound in sounds:
+            try:
+                sound.close()
+            except Exception as e:      # noqa: BLE001
+                print("a sound would not close:", e)
+        try:
+            if volume.exposed():
+                volume.withdraw()
+        except Exception as e:      # noqa: BLE001
+            print("the drive would not go back to the board:", e)
 
 
 def channels(fx):
@@ -2290,10 +2313,11 @@ def __make_drawing(code, target, at, channel, screen, settings, fps, asleep, pro
 
     try:
         return __Graphics(target, code, picovector.image(width, height), ground,
-                          fps=fps, paused=asleep)
-    except MemoryError:
-        problems.append("line {}: there is no memory left for {}'s canvas, so free "
-                        "some or halve it with pixel_double".format(at, target))
+                          __REPORTING_TO[0], fps=fps, paused=asleep)
+    # Sized and answered as a picture that will not fit is, the two landing in the
+    # same file, though only the canvas is this entry's to make smaller
+    except MemoryError as e:
+        problems.append(__too_big(at, target, "graphics", e))
     # The traceback, since this is the user's own code and a line number is what
     # makes it fixable; frames from this file are the machinery that ran it
     except Exception as e:      # noqa: BLE001
@@ -2426,9 +2450,15 @@ def __too_big(at, target, effect, error):
             said = said.split(": ", 1)[1]
         return "line {}: {}: {}".format(at, target, said)
 
-    advice = ("Try fewer frames, or frames half the size with pixel_double=true, which "
-              "costs a quarter as much." if effect in ("gif", "sequence")
-              else "Try a smaller picture.")
+    if effect in ("gif", "sequence"):
+        advice = ("Try fewer frames, or frames half the size with pixel_double=true, "
+                  "which costs a quarter as much.")
+    elif effect == "graphics":
+        # A drawing's canvas is the entry's to size, where a picture's is the file's
+        advice = ("Try a smaller canvas with width= and height=, or pixel_double=true, "
+                  "which halves both.")
+    else:
+        advice = "Try a smaller picture."
     return "line {}: {}{} {}".format(at, head, join, advice)
 
 
