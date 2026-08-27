@@ -569,9 +569,11 @@ class __Graphics:
 
 class Sound:
     """
-    One WAV playing beside the effects: the player it runs on, the file it reads,
-    already open, and whether it starts again when it ends. The handle stays the
-    board's for the whole run, so a computer taking the drive does not stop it.
+    One WAV playing beside the effects: the player it runs on, the sound held in
+    memory, and whether it starts again when it ends. The whole file is read in when
+    the effects load: the drive's own mount ends whenever a computer takes the
+    drive, so a handle onto it would not survive the run, and a copy in memory
+    plays through a handover.
 
     The board plays one sound at a time, so the sounds share the player and `live`
     says which of them has it. One put aside by a scene switch remembers where it
@@ -584,17 +586,44 @@ class Sound:
         self.loop = loop
         self.scene = scene
         self.live = False
+        self.__at = None
+        self.__moved = None
         self.__from = 0         # Where the next start picks up, 0 being the top
 
     def start(self):
         try:
             self.wav.play_wav(self.handle, loop=self.loop, position=self.__from)
-        except (OSError, ValueError):
-            # The file was replaced while a computer held the drive, so there is
-            # nothing left to play until the next reload reopens it
-            pass
+        except (OSError, ValueError) as e:
+            # Unreadable as a WAV, however it came to be: nothing plays until a
+            # reload brings a readable one
+            print("the sound could not start, and waits for the next reload:", e)
         self.__from = 0
         self.live = True
+
+    def service(self):
+        """
+        Watch a playing sound for progress, and start it again where it stalls.
+        The player feeds its buffers over a chain of I2S callbacks, and a lost
+        callback ends the chain: the state stays playing while nothing sounds.
+        A restart from the held position rebuilds the player, and the chain
+        with it. Half a second of stillness says stalled; a sound that ended
+        reports no position and is left alone.
+        """
+        if not self.live:
+            self.__at = None
+            return
+        at = self.wav.position()
+        now = time.ticks_ms()
+        if at is None or at != self.__at:
+            self.__at = at
+            self.__moved = now
+            return
+        if time.ticks_diff(now, self.__moved) < 500:
+            return
+        self.__from = at
+        self.__moved = now
+        print("the sound stalled, and starts again from where it stopped")
+        self.start()
 
     def set_aside(self):
         """Put aside by a scene switch: silenced, remembering where it reached."""
@@ -612,6 +641,8 @@ class Sound:
             self.wav.pause()
 
     def resume(self):
+        # The watch starts afresh: the position stood still through the pause
+        self.__at = None
         if self.live:
             self.wav.resume()
 
@@ -1987,6 +2018,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
             if paused:
                 __transfer_frame(fx, time.ticks_ms())
             else:
+                for sound in sounds:
+                    sound.service()
                 for show in shows:
                     if show.live:
                         show.service()
@@ -2716,9 +2749,15 @@ def __build_sounds(entries, fx, problems):
             continue
 
         try:
-            handle = open(path, "rb")
+            with open(path, "rb") as source:
+                handle = io.BytesIO(source.read())
         except OSError as e:
             problems.append("line {}: {} could not be opened: {}".format(at, target, e))
+            continue
+        except MemoryError:
+            problems.append("line {}: {} is too large to load. A sound has to fit "
+                            "in memory beside everything else that is "
+                            "playing.".format(at, target))
             continue
 
         taken.add(entry.scene)

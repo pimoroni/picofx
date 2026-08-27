@@ -4,6 +4,7 @@
 
 import math
 import struct
+import time
 
 from machine import I2S, Pin
 
@@ -289,8 +290,17 @@ class WavPlayer:
 
     def __stop_i2s(self):
         self.stop()                     # Stop any active playback
-        while self.is_playing():        # and wait for it to complete
+        # Wait for the flush, but not forever: each step needs the I2S callback, and
+        # a callback is lost when the scheduler queue is full, after which the state
+        # can never advance
+        deadline = time.ticks_add(time.ticks_ms(), 250)
+        while self.is_playing() and time.ticks_diff(deadline, time.ticks_ms()) > 0:
             pass
+        if self.is_playing():
+            # The flush never finished, so playback is torn down instead. The next
+            # play builds the peripheral afresh, which restores its callback chain
+            self.__audio_out.deinit()
+            self.__state = WavPlayer.NONE
 
         if self.__enable is not None:
             self.__enable.off()
