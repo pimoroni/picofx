@@ -33,24 +33,27 @@ def fade(rise, fall=None):
 def rgb_from_hsv(h, s, v):
     if s == 0.0:
         return v, v, v
-    else:
-        i = int(h * 6.0)
-        f = (h * 6.0) - i
-        p, q, t = v * (1.0 - s), v * (1.0 - s * f), v * (1.0 - s * (1.0 - f))
 
-        i = i % 6
-        if i == 0:
-            return v, t, p
-        elif i == 1:
-            return q, v, p
-        elif i == 2:
-            return p, v, t
-        elif i == 3:
-            return p, q, v
-        elif i == 4:
-            return t, p, v
-        elif i == 5:
-            return v, p, q
+    sixth = h * 6.0
+    i = int(sixth)
+    f = sixth - i
+
+    # Each sixth shows the darkest mix and one of the two that travel, never both,
+    # so only the shared one is calculated ahead of the branch
+    p = v * (1.0 - s)
+
+    i = i % 6
+    if i == 0:
+        return v, v * (1.0 - s * (1.0 - f)), p
+    if i == 1:
+        return v * (1.0 - s * f), v, p
+    if i == 2:
+        return p, v, v * (1.0 - s * (1.0 - f))
+    if i == 3:
+        return p, v * (1.0 - s * f), v
+    if i == 4:
+        return v * (1.0 - s * (1.0 - f)), p, v
+    return v, p, v * (1.0 - s * f)
 
 
 # A pseudo LED class for storing brightness. For use in comms
@@ -504,11 +507,17 @@ class StripPlayer(ChromaticPlayer):
                 value = self.__effects[i](*self.__data[i])
                 level = self.__levels[i]
 
+                # Indexed one at a time, a genexp here allocating once a LED a frame
                 if isinstance(value, tuple):
-                    r, g, b = (c * level for c in value)
+                    r = value[0] * level
+                    g = value[1] * level
+                    b = value[2] * level
                 else:
                     value = self.__followed(i, value * level)
-                    r, g, b = (c * value for c in self.__colours[i])
+                    colour = self.__colours[i]
+                    r = colour[0] * value
+                    g = colour[1] * value
+                    b = colour[2] * value
 
                 # The strip is driven through a C binding, which wants whole numbers
                 self.__leds.set_rgb(i, int(r), int(g), int(b))
