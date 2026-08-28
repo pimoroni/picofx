@@ -1613,7 +1613,7 @@ PLAYER_FPS = 50
 __PAIRING = True
 
 
-def __service_shows(shows):
+def __service_shows(shows, between=None):
     """
     One pass of every screen that has the panel.
 
@@ -1622,6 +1622,10 @@ def __service_shows(shows):
     against 110ms for the two in turn, and 89ms against 155ms with the players
     running. Placement stays per screen, prepare() holding each frame until both
     are ready.
+
+    `between` is asked after each screen where they are drawn one at a time, and
+    stops the pass when it answers true, so a press waits out one screen rather
+    than all of them. A pair is one stream and cannot be interrupted part way.
     """
     global __PAIRING
 
@@ -1645,6 +1649,8 @@ def __service_shows(shows):
 
     for show in due:
         show.service()
+        if between is not None and between():
+            break
 
 
 def __start(players, fx):
@@ -2020,13 +2026,10 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
             else:
                 for sound in sounds:
                     sound.service()
-                for show in shows:
-                    if show.live:
-                        show.service()
-                    # A frame can cost longer than the double press window, so the
-                    # button is answered between them rather than after them all
-                    if watch() != volume.IDLE:
-                        break
+
+                # A frame can cost longer than the double press window, so the
+                # button is answered between the screens rather than after them all
+                __service_shows(shows, lambda: watch() != volume.IDLE)
 
             if event == volume.BUSY:
                 # A press the computer's writing blocked otherwise looks exactly like
@@ -2197,12 +2200,13 @@ def __screen_gone(screen):
         return False
 
 
-def __hardware_changed(fx, declared):
+def __hardware_changed(fx, declared, for_pair=False):
     """
     Whether the board entry no longer matches what is running: a strip added,
-    dropped or resized, a screen's size changed, or a panel swapped for another,
-    which has to come up again to be talked to. Asked of a running board on a
-    reload, so what is running is this module's own record of what it built.
+    dropped or resized, a screen's size changed, a panel swapped for another, or a
+    file that has gained or lost its second screen, all of which have to come up
+    again to be talked to. Asked of a running board on a reload, so what is running
+    is this module's own record of what it built.
     """
     for kind in STRIPS:
         asked = declared.get(kind)
@@ -2211,12 +2215,19 @@ def __hardware_changed(fx, declared):
             return True
         if running is not None and asked != running[1]:
             return True
+    from screens import Reserve
+    wanted = Reserve.FULL_SIZE_IMAGES if for_pair else Reserve.CANVAS_SPACE
+
     for name in SCREEN_PORTS:
         asked = declared.get(name)
         known = __SCREENS.get(name)
         if known is None:
             continue
         if asked is not None and asked != known[1]:
+            return True
+        # A screen reserves for a pair or for one, and update_pair refuses two that
+        # disagree, so a file that has gained or lost its second wants both rebuilt
+        if known[0].reserve != wanted:
             return True
         if __screen_gone(known[0]):
             return True
@@ -2392,11 +2403,28 @@ def __make_drawing(code, target, at, channel, screen, settings, fps, asleep, pro
     return None
 
 
-def __screen_on(fx, name, line, problems, size):
+def __wants_pair(entries, board):
+    """Whether the file sets up two screens, which is what decides their reserve.
+
+    Read from the file rather than from what a scene happens to show: a pair shares
+    out one reservation and both screens have to agree on it, so it cannot follow
+    the content.
+    """
+    named = {name for name in SCREEN_PORTS if board.get(name)}
+    named.update(entry.channels[0].name for entry in entries
+                 if entry.channels and entry.channels[0].name in SCREEN_PORTS)
+    return len(named) > 1
+
+
+def __screen_on(fx, name, line, problems, size, for_pair=False):
     """
     The panel a selector name reaches, built once and kept: construction resets the
     glass, so a screen is only ever constructed the first time it is asked for, at
     the board entry's size for it or 2.8 unsaid, size being unreadable from a panel.
+
+    Two screens reserve for converting a full-size image each, which is what lets
+    them stream as a pair; one screen presents about a third faster without it,
+    the recipe being measured to hold a pair rather than to suit a single wire.
     """
     known = __SCREENS.get(name)
     if known is not None:
@@ -2429,10 +2457,12 @@ def __screen_on(fx, name, line, problems, size):
 
     # Read here rather than at the top of the file, which also runs on a board with no
     # screens module to import
-    from screens import SCREEN_TYPES
+    from screens import SCREEN_TYPES, Reserve
 
     try:
-        screen = SCREEN_TYPES[size](port)
+        screen = SCREEN_TYPES[size](
+            port, reserve=Reserve.FULL_SIZE_IMAGES if for_pair
+            else Reserve.CANVAS_SPACE)
     except Exception as e:      # noqa: BLE001
         problems.append("line {}: {} could not start: {}".format(line, shown, e))
         return None
@@ -2534,6 +2564,7 @@ def __build_shows(entries, fx, board, problems, build=True):
     """
     shows = []
     built = set()
+    for_pair = __wants_pair(entries, board)
 
     for entry in entries:
         channel = entry.channels[0]
@@ -2621,7 +2652,8 @@ def __build_shows(entries, fx, board, problems, build=True):
         if not build:
             continue
 
-        screen = __screen_on(fx, name, entry.line, problems, board.get(name))
+        screen = __screen_on(fx, name, entry.line, problems, board.get(name),
+                             for_pair)
         if screen is None:
             continue
 
@@ -3231,7 +3263,8 @@ def load(text, fx, maker=None):
     # is shut down and the build below makes its replacement from the file's own
     # declarations. The strip record goes first, so nothing here still holds a strip
     # when shutdown() collects them, and the screens die with their ports
-    if maker is not None and not callable(fx) and __hardware_changed(fx, board):
+    if maker is not None and not callable(fx) and \
+            __hardware_changed(fx, board, __wants_pair(screen_entries, board)):
         __STRIPS.clear()
         __SCREENS.clear()
         fx.shutdown()
