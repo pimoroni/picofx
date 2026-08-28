@@ -24,9 +24,10 @@ class FlickerFX(Updateable):
         self.__bright_dur = 0
         self.__dim_dur = 0
         self.__time = 0
+        self.__dim = brightness * (1.0 - dimness)
 
     def __call__(self):
-        return (self.brightness * (1.0 - self.dimness)) if self.__is_dim else self.brightness
+        return self.__dim if self.__is_dim else self.brightness
 
     def tick(self, delta_ms):
         self.__time += delta_ms
@@ -46,3 +47,6 @@ class FlickerFX(Updateable):
 
                 self.__dim_dur = int(random.uniform(self.dim_min, self.dim_max) * 1000)
                 self.__is_dim = True
+
+        # Calculated once a frame, where __call__ would be once a channel
+        self.__dim = self.brightness * (1.0 - self.dimness)
