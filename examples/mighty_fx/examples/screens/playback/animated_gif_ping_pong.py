@@ -5,10 +5,10 @@ from screens import Screen280
 """
 Play an animated GIF forward then back, dwelling at each turn.
 
-ping_pong walks the frames forward then back, so an animation with two ends, such as an
-arm flexing, never jumps from its last frame to its first. The coin is drawn to loop
-instead, so first_as_last plays its first frame again at the far end and it spins a whole
-turn each way.
+ping_pong walks the frames forward then back, so an animation with two ends, such as the
+scan in dual_animated_gifs.py, never jumps from its last frame to its first. The coin is
+drawn to loop instead, so first_as_last plays its first frame again at the far end and it
+spins a whole turn each way.
 
 hold is the wait where it turns around, one value for both ends or two. Both ends are the
 coin face here, so one value keeps the pauses even. A dwell comes out of the reported
