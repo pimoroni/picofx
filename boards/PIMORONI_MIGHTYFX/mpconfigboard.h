@@ -23,6 +23,11 @@
 // the spidisplay module's frame conversion. A Python thread would conflict badly with both.
 #define MICROPY_PY_THREAD                       (0)
 
+// A function whose locals exceed this size has its call frame allocated on the GC heap, which
+// here is PSRAM. The default of 11 slots leaves several per-LED functions just over it, and 18
+// clears them all with room. Those functions take C stack instead, so they nest less deeply.
+#define VM_MAX_STATE_ON_STACK                   (sizeof(mp_uint_t) * 18)
+
 // USB mass storage exposes only the config volume, the FAT region sitting between the
 // firmware and the ROMFS. Offset and size must agree with the flash split in
 // mpconfigboard.cmake. Defining the offset keeps the standard LittleFS boot; mounting the
