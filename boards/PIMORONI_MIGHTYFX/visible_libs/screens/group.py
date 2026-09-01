@@ -41,6 +41,12 @@ class ScreenGroup(ScreenBase):
     clean and the rest tear, panels on a hub scanning independently with no edge safe
     for all of them. None takes the first member that can, saying so if none can;
     False declines the wait, so a frame goes out at once.
+
+    rotation and mirror are the group's own and its members' are not used, one stream
+    being one placement. That is the deliberate exception to a group taking its size,
+    bit depth, backlight and reserve from its first member: those have to agree
+    anyway, where placement is a choice. A member updated on its own still places by
+    its own, and the group says so where the two differ.
     """
 
     # The first probe after bringup reads long and settles within a second, so each
@@ -132,7 +138,8 @@ class ScreenGroup(ScreenBase):
     # and a walk aimed from a stale booking arrives somewhere else.
     SWEEP_PAUSE_MS = 1000
 
-    def __init__(self, *screens, sync=None, align=None, trim=None, parent=None):
+    def __init__(self, *screens, sync=None, align=None, trim=None, parent=None,
+                 rotation=None, mirror=None):
         if not screens:
             raise ValueError("a broadcast group needs at least one screen")
 
@@ -150,10 +157,14 @@ class ScreenGroup(ScreenBase):
             nominated = parent.sync if sync is None else sync
             if nominated is False:
                 nominated = None
+            # Placement is the parent's too, a subset writing into the parent's
+            # display and so carrying the same one stream
             super().__init__(port, parent.display, parent.width, parent.height,
                              parent.bitdepth, parent.backlight, nominated is not None,
                              nominated is not None, parent.reserve,
-                             members=tuple(screens), sync=nominated)
+                             members=tuple(screens), sync=nominated,
+                             rotation=parent.rotation if rotation is None else rotation,
+                             mirror=parent.mirror if mirror is None else mirror)
             self.__subset_of = parent
             # Alignment stays the parent's, so a subset reports it rather than
             # owning it: its members are held whether or not this set writes them.
@@ -188,11 +199,23 @@ class ScreenGroup(ScreenBase):
         first = screens[0]
         display = port.bus.broadcast(*[screen.display for screen in screens])
 
+        # A group places its own frames and does not read its members', so an unnamed
+        # rotation is upright rather than the first member's. Saying so where they
+        # differ is what stops a member's setting going quietly unused.
+        rotation = 0 if rotation is None else rotation
+        mirror = False if mirror is None else bool(mirror)
+        if any(screen.rotation != rotation or screen.mirror != mirror for screen in screens):
+            logging.info(f"screens: this group places its own frames, at rotation {rotation}"
+                         f"{' and mirrored' if mirror else ''}, so its members' own placement is"
+                         f" not used. Create the group with the placement all of its panels want,"
+                         f" or update a panel on its own to get the one it was created with.")
+
         # The backlight is the first member's, since screens on a port share the one
         # PWM.
         super().__init__(port, display, first.width, first.height, first.bitdepth,
                          first.backlight, nominated is not None, nominated is not None,
-                         first.reserve, members=tuple(screens), sync=nominated)
+                         first.reserve, members=tuple(screens), sync=nominated,
+                         rotation=rotation, mirror=mirror)
 
         self.__aligned = False
         # Three states, not two. Nulling the members' rates stops them drifting apart
@@ -547,24 +570,25 @@ class ScreenGroup(ScreenBase):
         errors = [self.__fold(phase - target) for phase in phases]
         return int(max(errors) - min(errors))
 
-    def update(self, image, *args, **kwargs):
+    def update(self, image, **kwargs):
         """Stream a frame to every member, then advance the hold and the trim.
 
-        Takes what ScreenBase.update() takes. Every member the caller named is
-        written, whatever its phase: update() is a promise that the group has
-        presented by the time it returns, and a member held back to spare it a
-        tear breaks that promise where a tear only spoils one frame. A member
-        out of phase therefore tears until the hold walks it back, which takes a
-        few frames. Both ticks run here rather than on a timer, the windows
+        Takes what ScreenBase.update() takes, placing every member at the group's
+        own rotation and mirror unless the frame names them. Every member the
+        caller named is written, whatever its phase: update() is a promise that
+        the group has presented by the time it returns, and a member held back to
+        spare it a tear breaks that promise where a tear only spoils one frame.
+        A member out of phase therefore tears until the hold walks it back, which
+        takes a few frames. Both ticks run here rather than on a timer, the windows
         between written frames being the only ones a register write may sit in;
         a subset's frames tick its parent, since a member not being written
         still scans and still drifts.
         """
         owner = self.__subset_of or self
         if owner.__holding:
-            to = args[7] if len(args) > 7 else kwargs.get("to")
+            to = kwargs.get("to")
             owner.__walk_in(self.screens if to is None else to)
-        super().update(image, *args, **kwargs)
+        super().update(image, **kwargs)
         synced = self.__synced_frame
         owner.__frame_ticked(self.display.stats(), synced, owner.__sync_delay_us)
         owner.__tick_trim(synced)

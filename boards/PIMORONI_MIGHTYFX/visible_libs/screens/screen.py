@@ -12,7 +12,7 @@
 import spidisplay
 import st7789
 
-from .base import ScreenBase
+from .base import ScreenBase, __check_rotation
 
 
 class Reserve:
@@ -64,6 +64,9 @@ class Screen(ScreenBase):
     line-up over a hub and keep whichever built. A panel wired without its
     tearing-effect signal takes te=False and is not looked for, there being nothing to
     look for.
+
+    rotation and mirror say how the panel is mounted, and every frame follows them
+    unless it names its own, as v_sync is a setting update() follows.
 
     Settings resolve as: explicit keyword, then the PROFILES row for the
     (baudrate, bitdepth) pair, then the class constants. With no bitdepth named,
@@ -123,7 +126,13 @@ class Screen(ScreenBase):
     def __init__(self, port, cs=None, dc=None, te=None, v_sync=None, bl=True,
                  width=None, height=None, bitdepth=None, framerate=None,
                  baudrate=None, reserve=Reserve.CANVAS_SPACE, band_lines=None,
-                 cache_columns=None, stage_lines=None, dual_profiles=None):
+                 cache_columns=None, stage_lines=None, dual_profiles=None,
+                 rotation=0, mirror=False):
+
+        # Ahead of the pin claims and the bringup below, so a bad angle costs
+        # neither, the port otherwise being left holding claims for a screen
+        # that never finished
+        __check_rotation(rotation)
 
         width = self.WIDTH if width is None else width
         height = self.HEIGHT if height is None else height
@@ -264,7 +273,8 @@ class Screen(ScreenBase):
 
         super().__init__(port.connector, display, width, height, bitdepth, backlight,
                          te_used, v_sync, reserve, shared_te=shared_te,
-                         sync=self if shared_te else None)
+                         sync=self if shared_te else None,
+                         rotation=rotation, mirror=mirror)
 
         port.register(self)
 

@@ -19,7 +19,6 @@ Press "Boot" to exit the program.
 
 # Constants
 FRAMES = "/examples/assets/traces"   # The folder of frames, beside this example
-ROTATION = 90                    # Quarter turn, to suit how the screens are mounted
 FPS = 10                         # The rate to play at, a folder of images declaring none
 
 # SP/CE B gives up its five pins as the chip selects for the panels on SP/CE A, so
@@ -43,8 +42,9 @@ if not panels:
     raise RuntimeError("No panels answered! Check the hub is plugged into SP/CE A, with its panels on the hub rather than on the board")
 
 # A group plays the one frame onto every panel it holds. One panel is a group too, so
-# however many answered are driven the same way
-wall = ScreenGroup(*panels)
+# however many answered are driven the same way. The rotation these panels are mounted
+# at belongs to the group, a frame reaching all of them being placed once
+wall = ScreenGroup(*panels, rotation=90)
 print(f"{len(panels)} of {len(mighty.hub.ports)} hub positions answered")
 
 # Every frame decodes when the player is made, so a frame costs nothing to reach afterwards
@@ -55,7 +55,7 @@ try:
     while not mighty.boot_pressed():
         # The panels refresh faster than the animation changes, so only send a new frame
         if player.has_advanced():
-            wall.update(player.image, rotation=ROTATION)
+            wall.update(player.image)
 
 # Stop any running effects and turn off all the outputs
 finally:

@@ -290,7 +290,7 @@ class ScreenPair:
 
         return self.__trim_lines
 
-    def update(self, image, second=None, *, rotation=0, mirror=False,
+    def update(self, image, second=None, *, rotation=None, mirror=None,
                pixel_double=False, offset=None, tile=False,
                bg_color=picovector.color.black, v_sync=None):
         """Stream a frame to both screens, aligned when align is on.
@@ -298,8 +298,10 @@ class ScreenPair:
         One image reaches both panels, or a second positional image gives each
         its own. Every placement keyword takes one value for both screens, or a
         2-tuple for one each, so a pair mounted opposite ways is
-        rotation=(90, 270). offset and tile are the exception, each being an
-        (x, y) pair itself: they are shared unless an element is itself a pair.
+        rotation=(90, 270). Unnamed, rotation and mirror follow each screen's own,
+        so a pair takes the mounting each was created with. offset and tile are
+        the exception, each being an (x, y) pair itself: they are shared unless an
+        element is itself a pair.
 
             offset=(5, 10)              both screens at (5, 10)
             offset=(5, None)            both screens: x=5, y centred

@@ -23,6 +23,12 @@ class Tile:
     MIRROR = 2
 
 
+def __check_rotation(rotation):
+    r_index = rotation // 90
+    if r_index < 0 or r_index > 3 or rotation % 90:     # Modulo check ensures rotation is exactly a multiple of 90
+        raise ValueError(f"{rotation} is not a valid angle. Expected 0, 90, 180, or 270.")
+
+
 class ScreenBase:
     """The frame path shared by a single screen and a broadcast group.
 
@@ -32,10 +38,14 @@ class ScreenBase:
     on a line other screens share, which is what makes the wait transient; sync names
     the screen whose signal a frame waits on.
 
+    rotation and mirror are how the panel is mounted, and every frame follows them
+    unless it names its own.
+
     Not built directly: construct a Screen subclass or a ScreenGroup.
     """
 
-    def __init__(self, port, display, width, height, bitdepth, backlight, te, v_sync, reserve, members=None, shared_te=False, sync=None):
+    def __init__(self, port, display, width, height, bitdepth, backlight, te, v_sync, reserve, members=None, shared_te=False, sync=None, rotation=0, mirror=False):
+        __check_rotation(rotation)
         self.__port = port
         self.__display = display
         self.__width = width
@@ -54,6 +64,8 @@ class ScreenBase:
         self.__sync = sync      # The screen whose TE a frame waits on, None to leave TE alone
         self.__synced_frame = None  # The screen the last frame's wait ended on, if any
         self.__sync_delay_us = 0    # How long a write trails the wait, set by a holding group
+        self.__rotation = rotation  # The angle every frame takes unless it names its own
+        self.__mirror = bool(mirror)
 
     @property
     def port(self):
@@ -89,6 +101,16 @@ class ScreenBase:
     def v_sync(self):
         """Whether a frame waits on the tearing-effect signal unless told otherwise."""
         return self.__v_sync
+
+    @property
+    def rotation(self):
+        """The angle a frame is placed at unless it names its own."""
+        return self.__rotation
+
+    @property
+    def mirror(self):
+        """Whether a frame is flipped left to right unless it says otherwise."""
+        return self.__mirror
 
     @property
     def sync(self):
@@ -159,11 +181,6 @@ class ScreenBase:
     def command(self, command, data=None):
         self.__display.command(command, data)
 
-    def __check_rotation(self, rotation):
-        r_index = rotation // 90
-        if r_index < 0 or r_index > 3 or rotation % 90:     # Modulo check ensures rotation is exactly a multiple of 90
-            raise ValueError(f"{rotation} is not a valid angle. Expected 0, 90, 180, or 270.")
-
     @micropython.native
     def __write_targets(self, to):
         """The displays a write drives, or None for every one this object holds.
@@ -204,7 +221,14 @@ class ScreenBase:
                 return screen
         return None
 
-    def update(self, image, rotation=0, mirror=False, pixel_double=False, offset=None, tile=False, bg_color=picovector.color.black, v_sync=None, to=None):
+    def update(self, image, *, rotation=None, mirror=None, pixel_double=False, offset=None, tile=False, bg_color=picovector.color.black, v_sync=None, to=None):
+        """Stream a frame to the panel, or to every screen a group stands for.
+
+        rotation and mirror follow the screen's own unless the frame names them,
+        so a program says how the panel is mounted once and the loop says only
+        what changes. The rest are frame content and take their defaults per
+        call. to narrows the write to some of a group's members.
+        """
         # A frame outside the pair first hands back the panel state alignment
         # holds, the trimmed porch included: the narrowed TE pulse is only safe
         # under the pair's poll, and the period was the pair's choice
@@ -222,7 +246,15 @@ class ScreenBase:
 
         bg = bg_color.p & 0xffffffff
 
-        self.__check_rotation(rotation)
+        # Placement follows the screen unless the frame names its own. mirror
+        # needs the identity test: None is falsy, so a truthiness check would
+        # read "follow the screen" as "do not mirror".
+        if rotation is None:
+            rotation = self.__rotation
+        if mirror is None:
+            mirror = self.__mirror
+
+        __check_rotation(rotation)
 
         synced = self.__sync_screen(v_sync, to)
         delay = (self.__subset_of or self).__sync_delay_us
@@ -244,16 +276,22 @@ class ScreenBase:
             self.__group.__frame_ticked(self.__display.stats(), synced, delay)
 
     @micropython.native
-    def prepare(self, image, rotation=0, mirror=False, pixel_double=False, offset=None, tile=False, bg_color=picovector.color.black, to=None):
+    def prepare(self, image, *, rotation=None, mirror=None, pixel_double=False, offset=None, tile=False, bg_color=picovector.color.black, to=None):
         """Stage a frame for update_pair(), converting as far ahead as it can.
 
         Placement is per screen, so a pair can differ in rotation, mirroring and
-        offset to suit how each panel is mounted. Nothing reaches the panel until
-        update_pair() runs, and a staged frame refuses command() until it does.
+        offset to suit how each panel is mounted, and rotation and mirror default
+        to the screen's own. Nothing reaches the panel until update_pair() runs,
+        and a staged frame refuses command() until it does.
         """
         bg = bg_color.p & 0xffffffff
 
-        self.__check_rotation(rotation)
+        if rotation is None:
+            rotation = self.__rotation
+        if mirror is None:
+            mirror = self.__mirror
+
+        __check_rotation(rotation)
 
         synced = self.__sync_screen(self.__v_sync, to)
         self.__display.prepare(image,
