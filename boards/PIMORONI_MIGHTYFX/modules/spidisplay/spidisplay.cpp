@@ -1212,7 +1212,7 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
     if (!self->display.has_sram()) {
         mp_raise_msg_varg(&mp_type_ValueError,
             MP_ERROR_TEXT("display workspace needs %u bytes but only %u are free;"
-                          " release old screens (shutdown() then gc.collect())"
+                          " release old screens and collect them"
                           " or reduce band_lines/cache_columns"),
             (unsigned)self->display.sram_bytes(),
             (unsigned)spidisplay::allocator().available());
@@ -1230,7 +1230,7 @@ static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay___del___obj, SPIDisplay___del__);
 static mp_obj_t SPIDisplay_command(size_t n_args, const mp_obj_t *args) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[0]);
     if (self->display.released()) {
-        mp_raise_ValueError(MP_ERROR_TEXT("this screen's bus has been released by shutdown()"));
+        mp_raise_ValueError(MP_ERROR_TEXT("this screen's bus has been released, so it can no longer stream. Create a new screen, on a bus that has not been released."));
     }
     // A staged or streaming frame owns DC, which a command would force low.
     if (self->display.frame_state() != spidisplay::SPIDisplay::FrameState::IDLE) {
@@ -1322,7 +1322,7 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
 
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[ARG_self].u_obj);
     if (self->display.released()) {
-        mp_raise_ValueError(MP_ERROR_TEXT("this screen's bus has been released by shutdown()"));
+        mp_raise_ValueError(MP_ERROR_TEXT("this screen's bus has been released, so it can no longer stream. Create a new screen, on a bus that has not been released."));
     }
     if (!self->display.has_sram()) {
         mp_raise_ValueError(MP_ERROR_TEXT("this screen has been deleted and its SRAM released"));
@@ -1520,7 +1520,7 @@ static MP_DEFINE_CONST_FUN_OBJ_KW(SPIDisplay_update_obj, 2, SPIDisplay_update);
 static mp_obj_t SPIDisplay_fill(size_t n_args, const mp_obj_t *args) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[0]);
     if (self->display.released()) {
-        mp_raise_ValueError(MP_ERROR_TEXT("this screen's bus has been released by shutdown()"));
+        mp_raise_ValueError(MP_ERROR_TEXT("this screen's bus has been released, so it can no longer stream. Create a new screen, on a bus that has not been released."));
     }
     if (!self->display.has_sram()) {
         mp_raise_ValueError(MP_ERROR_TEXT("this screen has been deleted and its SRAM released"));
@@ -1603,7 +1603,7 @@ mp_obj_t spidisplay_update_all(size_t n_args, const mp_obj_t *pos_args, mp_map_t
         }
         SPIDisplay_obj_t *obj = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(pos_args[i]);
         if (obj->display.released()) {
-            mp_raise_ValueError(MP_ERROR_TEXT("this screen's bus has been released by shutdown()"));
+            mp_raise_ValueError(MP_ERROR_TEXT("this screen's bus has been released, so it can no longer stream. Create a new screen, on a bus that has not been released."));
         }
         if (obj->display.frame_state() != spidisplay::SPIDisplay::FrameState::PREPARED) {
             mp_raise_ValueError(MP_ERROR_TEXT("prepare() every display before update_all()"));

@@ -144,7 +144,8 @@ class SPCEPort:
         # left alone, so neither offers them up
         self.__pins = tuple(Pin(pin) for pin in pins) if mode in (SPCE.SCREEN, SPCE.GPIO, SPCE.HUB_LINES) else None
 
-        self.__bus = SPIDisplayBus(spi=spi, sck=self.__pins[2], mosi=self.__pins[3]) if mode == SPCE.SCREEN else None
+        self.__spi = spi        # Kept so the bus can be made again after a release()
+        self.__bus = self.__make_bus() if mode == SPCE.SCREEN else None
         self.__backlight = None
         self.__screens = []
         self.__cs_claimed = []
@@ -200,11 +201,21 @@ class SPCEPort:
     def bl(self):
         return self.__line(4)
 
+    def __make_bus(self):
+        return SPIDisplayBus(spi=self.__spi, sck=self.__pins[2], mosi=self.__pins[3])
+
     @property
     def bus(self):
-        """The SPIDisplayBus every screen on this port streams over."""
-        if self.__bus is None:
+        """The SPIDisplayBus every screen on this port streams over.
+
+        Made again where release() gave its DMA channel back, so a port built on a
+        second time takes a fresh channel instead of handing out a dead bus.
+        """
+        if self.mode != SPCE.SCREEN:
             raise ValueError(f"SP/CE {self.name} is not a screen port, so it has no display bus")
+
+        if self.__bus is None:
+            self.__bus = self.__make_bus()
 
         return self.__bus
 
@@ -329,15 +340,26 @@ class SPCEPort:
         screen likewise holds its band and cache SRAM until collected, and the GC
         heap is PSRAM so collection rarely comes. Screens on this port stop
         working, reporting rather than transferring, and a second call does
-        nothing. Canvases outlive this, since the other port's screens may still be
-        drawing to them; shutdown() is what gives them back.
+        nothing. The port is free to be built on again afterwards, which is the
+        case this exists for. Canvases outlive this, since the other port's screens
+        may still be drawing to them; shutdown() is what gives them back, and one
+        full-size canvas fills the region, so a program building repeatedly reuses
+        the canvas it already has.
         """
         for screen in self.__screens:
             screen.display.__del__()
         self.__screens.clear()
 
+        # The CS and DC claims name screens that are gone and lines handed back below,
+        # so they go too and a port built on again starts from nothing
+        self.__cs_claimed.clear()
+        self.__dc_claimed.clear()
+
+        # Dropped as well as deleted, so the next screen on this port is made a fresh
+        # bus with a channel of its own
         if self.__bus is not None:
             self.__bus.__del__()
+            self.__bus = None
 
         # A display leaves its chip select and DC driven high, which is right while
         # anything may still transmit and wrong once nothing will: these are connector

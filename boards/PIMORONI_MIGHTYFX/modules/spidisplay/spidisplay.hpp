@@ -347,7 +347,7 @@ public:
     // time.
     void idle_wait() const {}
 
-    // Whether the bus has given its DMA channel back, which shutdown() does so a
+    // Whether the bus has given its DMA channel back, which its destructor does so a
     // long-lived program can rebuild screens without exhausting the 16 channels.
     // Every transfer needs the channel, so both command() and update() are refused
     // once it is gone.
