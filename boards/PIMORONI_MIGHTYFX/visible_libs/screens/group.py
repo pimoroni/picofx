@@ -36,7 +36,7 @@ class ScreenGroup(ScreenBase):
     One member is a group, so a wall written for a hub still runs where a single panel
     answered. There is nothing to hold a lone member against, so it does not align.
 
-    sync names the one member whose tearing-effect signal a frame waits on, which
+    leader names the one member whose tearing-effect signal a frame waits on, which
     needs every member reading TE from the line they share. That panel comes out
     clean and the rest tear, panels on a hub scanning independently with no edge safe
     for all of them. None takes the first member that can, saying so if none can;
@@ -141,7 +141,7 @@ class ScreenGroup(ScreenBase):
     # and a walk aimed from a stale booking arrives somewhere else.
     SWEEP_PAUSE_MS = 1000
 
-    def __init__(self, *screens, sync=None, align=None, trim=None, parent=None,
+    def __init__(self, *screens, leader=None, align=None, trim=None, parent=None,
                  rotation=None, mirror=None, reveal_together=False):
         if not screens:
             raise ValueError("a broadcast group needs at least one screen")
@@ -160,9 +160,9 @@ class ScreenGroup(ScreenBase):
         # members, builds no display, and leaves ownership where it is.
         if parent is not None:
             # A subset inherits its parent's nomination, since alignment and the
-            # panel state stay the parent's; sync=False declines the wait for this
+            # panel state stay the parent's; leader=False declines the wait for this
             # set alone. A nominated member outside the set is resolved per write.
-            nominated = parent.sync if sync is None else sync
+            nominated = parent.__leader if leader is None else leader
             if nominated is False:
                 nominated = None
             # Placement is the parent's too, a subset writing into the parent's
@@ -170,7 +170,7 @@ class ScreenGroup(ScreenBase):
             super().__init__(port, parent.__display, parent.width, parent.height,
                              parent.__bitdepth, parent.backlight, nominated is not None,
                              nominated is not None, parent.__reserve,
-                             members=tuple(screens), sync=nominated,
+                             members=tuple(screens), leader=nominated,
                              rotation=parent.rotation if rotation is None else rotation,
                              mirror=parent.mirror if mirror is None else mirror)
             self.__subset_of = parent
@@ -192,14 +192,14 @@ class ScreenGroup(ScreenBase):
         # the rest tear. Naming a member is a request and refuses if it cannot be
         # met; None takes the first that can, and False declines the wait outright.
         nominated = None
-        if sync is not False:
+        if leader is not False:
             shared = [screen for screen in screens if screen.__shared_te]
-            if sync is not None:
-                if sync not in screens:
-                    raise ValueError(f"{sync} is not a member of this group, so it cannot be the one its frames wait on")
-                if not sync.__shared_te:
-                    raise ValueError(f"{sync} does not read its tearing-effect signal from the line this group's frames read. Build every member with te set to the DC line they share, which needs the diode fitted to each breakout.")
-                nominated = sync
+            if leader is not None:
+                if leader not in screens:
+                    raise ValueError(f"{leader} is not a member of this group, so it cannot be the one its frames wait on")
+                if not leader.__shared_te:
+                    raise ValueError(f"{leader} does not read its tearing-effect signal from the line this group's frames read. Build every member with te set to the DC line they share, which needs the diode fitted to each breakout.")
+                nominated = leader
             elif shared:
                 nominated = shared[0]
             else:
@@ -223,7 +223,7 @@ class ScreenGroup(ScreenBase):
         # PWM.
         super().__init__(port, display, first.width, first.height, first.__bitdepth,
                          first.backlight, nominated is not None, nominated is not None,
-                         first.__reserve, members=tuple(screens), sync=nominated,
+                         first.__reserve, members=tuple(screens), leader=nominated,
                          rotation=rotation, mirror=mirror)
 
         self.__aligned = False
@@ -274,7 +274,7 @@ class ScreenGroup(ScreenBase):
         # required alignment is already met. It reports unaligned, holding no period.
         if align is not False and len(screens) > 1:
             if nominated is None:
-                # The sync block above already said why there is no signal to hold
+                # The leader block above already said why there is no signal to hold
                 # these panels by, so only a required alignment speaks again.
                 if align is True:
                     raise ValueError("align holds a group's panels in phase by their tearing-effect signal, so it needs every member built with te set to the DC line they share")
@@ -315,7 +315,7 @@ class ScreenGroup(ScreenBase):
         is probed is each member's own period, which no table gives.
 
         required refuses where the members will not hold; otherwise an unmet request
-        says why and the group falls back to the member sync nominated, which is a
+        says why and the group falls back to the member leader names, which is a
         legitimate outcome and not a failure.
         """
         members = self.screens
@@ -324,7 +324,7 @@ class ScreenGroup(ScreenBase):
 
         periods = []
         for screen in members:
-            if screen.sync is None:
+            if screen.__leader is None:
                 self.__unaligned(required, f"{screen} carries no tearing-effect signal a group can read, so build every member with te set to the DC line they share")
                 return
             period = self.__period_of(screen, settle=True)
@@ -674,7 +674,7 @@ class ScreenGroup(ScreenBase):
         """
         self.__past_budget_us = 0
         members = self.screens
-        synced = self.__sync
+        synced = self.__leader
         if synced is None or synced not in written:
             return 0
 
@@ -960,9 +960,9 @@ class ScreenGroup(ScreenBase):
             # a stale rate, which shows as a tear that walks. What a deep walk
             # needs is a porch floor that keeps its pulse readable, not a turn
             # missed.
-            if synced is self.__sync:
-                self.__trim_at = (members.index(self.__sync) + 1) % len(members)
-                self.__sync = members[self.__trim_at]
+            if synced is self.__leader:
+                self.__trim_at = (members.index(self.__leader) + 1) % len(members)
+                self.__leader = members[self.__trim_at]
             return
 
         self.__starts.append(0)
@@ -1086,16 +1086,16 @@ class ScreenGroup(ScreenBase):
             return self.__subset_of.is_in_phase()
         return self.__holding
 
-    def subset(self, *screens, sync=None, reveal_together=False):
+    def subset(self, *screens, leader=None, reveal_together=False):
         """A member set over this group's display, writing only what it names.
 
         Cheap enough to make per frame: no display and no finaliser, just this
         group's own with a narrower set of members. A subset of one is allowed, so
         a loop over subsets does not break at the last.
 
-        sync defaults to the group's own nomination, resolved per write since the
-        nominated member need not be in the set. sync=False declines the wait for
-        this set alone, leaving the group's nomination where it is.
+        leader defaults to the group's own nomination, resolved per write since
+        the nominated member need not be in the set. leader=False declines the wait
+        for this set alone, leaving the group's nomination where it is.
         """
         if not screens:
             raise ValueError("a subset needs at least one screen")
@@ -1105,5 +1105,5 @@ class ScreenGroup(ScreenBase):
             if screen not in members:
                 raise ValueError(f"{screen} is not a member of this group, so it cannot be in a subset of it")
 
-        return ScreenGroup(*screens, sync=sync, parent=self.__subset_of or self,
+        return ScreenGroup(*screens, leader=leader, parent=self.__subset_of or self,
                            reveal_together=reveal_together)

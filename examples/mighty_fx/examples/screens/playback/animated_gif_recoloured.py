@@ -38,13 +38,13 @@ screen = Screen280(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES)
 # jumping from one to the other
 player = GIFPlayer(GIF_PATH, ping_pong=True)
 
-# Any frame's palette reaches the table they all share, so this is the whole animation's colours
-palette = player.sheet.sprite(0).palette
+# The frames share one colour table, so this is the whole animation's colours
+palette = player.palette
 
 # How bright each entry was drawn, out of 255, read before the first rewrite. An entry is one
 # level of one hue, so its brightest channel is its level
 LEVELS = [max(palette[index].r, palette[index].g, palette[index].b)
-          for index in range(player.sheet.sprite(0).palette_size)]
+          for index in range(player.palette_size)]
 
 # The frames a pass turns around on
 ENDS = (0, player.frames - 1)

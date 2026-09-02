@@ -306,7 +306,7 @@ def check_gifs():
     for path, frames, delay in ((SLOW_GIF, 8, 80), (FAST_GIF, 6, 40)):
         player = GIFPlayer(path)
         assert player.frames == frames, f"{path} has {player.frames} frames"
-        assert player.frames == len(player.sheet.timings)
+        assert player.frames == len(player.__sheet.timings)
         assert player.cycle_ms() == frames * delay
         image = player.image
         assert image.width == 320 and image.height == 320
@@ -352,7 +352,7 @@ def check_sequence():
     t0 = time.ticks_ms()
     player = SequencePlayer(PLAIN_FOLDER, fps=25)
     took = time.ticks_diff(time.ticks_ms(), t0)
-    numbers = [int(path.split("_")[-1].split(".")[0]) for path in player.paths]
+    numbers = [int(path.split("_")[-1].split(".")[0]) for path in player.__paths]
     assert numbers == sorted(numbers), "frames are out of numeric order"
     assert numbers == list(range(len(numbers))), "frames are not a contiguous run"
     assert player.frames == 160

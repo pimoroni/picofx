@@ -94,7 +94,6 @@ body_face = getattr(font, BODY_FACE)
 canvas.font = body_face
 
 player = GIFPlayer(EMBLEM)
-emblem = player.sheet.sprite(0)
 
 LINE_H = body_face.height + 1           # One line of type to the next
 RIBBON_TOP = 22                         # The render above it is a wordmark and nothing else
@@ -102,8 +101,8 @@ RIBBON_H = body_face.height + 1
 BODY_TOP = RIBBON_TOP + RIBBON_H + 4    # Clear of the ribbon, so the badge reads as an object of its own
 PLATE_PAD = 3
 BADGE_AT = (4, BODY_TOP)
-STATUS_LEFT = BADGE_AT[0] + emblem.width + PLATE_PAD + 3
-COIN_AT = rect(BADGE_AT[0], BADGE_AT[1], emblem.width, emblem.height)
+STATUS_LEFT = BADGE_AT[0] + player.width + PLATE_PAD + 3
+COIN_AT = rect(BADGE_AT[0], BADGE_AT[1], player.width, player.height)
 
 NUMBER_TOP = HEIGHT - body_face.height  # The numbers sit at the foot, the lamps above them
 NUMBER_NUDGE = 1                        # A digit reads better a pixel right of its lamp's centre
@@ -249,7 +248,7 @@ def build_render():
                 down, font_size=size)
 
     plate(render, BADGE_AT[0] - PLATE_PAD, BADGE_AT[1] - PLATE_PAD,
-          emblem.width + PLATE_PAD * 2, emblem.height + PLATE_PAD * 2)
+          player.width + PLATE_PAD * 2, player.height + PLATE_PAD * 2)
 
     # One plate under the heading, the lamps and their numbers, so the three read as an instrument and not as
     # text with lights beneath it
@@ -404,7 +403,7 @@ TAGLINE_AT = centred_on_ink(body_face, TAGLINE, 1, body_face.height + 2, 0)
 HEADING_AT = tuple(centred_on_ink(body_face, text, 1, body_face.height + 2, 0) for text in HEADINGS)
 # Two sprites an output, since a lamp is either the stage the board is at or one of the rest
 lamps = tuple((build_lamp(index, False), build_lamp(index, True)) for index in range(len(STAGES)))
-print(f"a {WIDTH}x{HEIGHT} interface doubled onto the panel, badge {emblem.width}px,"
+print(f"a {WIDTH}x{HEIGHT} interface doubled onto the panel, badge {player.width}px,"
       f" {len(STAGES)} stages over {len(mighty.outputs)} outputs, built in"
       f" {time.ticks_diff(time.ticks_ms(), marked)}ms")
 

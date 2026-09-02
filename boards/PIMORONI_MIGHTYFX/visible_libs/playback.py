@@ -491,9 +491,32 @@ class GIFPlayer(ImagePlayer):
         return self.__sheet.sprite(frame)
 
     @property
-    def sheet(self):
-        """The spritesheet underneath, for a caller wanting a frame by hand."""
-        return self.__sheet
+    def width(self):
+        """One frame's width in pixels, every frame being a cell of one grid.
+
+        A GIF's frames share a size by design, which is what lets the player answer:
+        SequencePlayer's images are free to differ, so it does not.
+        """
+        return self.__sheet.source.width // self.__sheet.cols
+
+    @property
+    def height(self):
+        """One frame's height in pixels, as width is."""
+        return self.__sheet.source.height // self.__sheet.rows
+
+    @property
+    def palette(self):
+        """The colour table every frame shares, writable, or None for a truecolour GIF.
+
+        The frames are cells carved from one image, so rewriting an entry recolours
+        the whole animation at once.
+        """
+        return self.__sheet.source.palette
+
+    @property
+    def palette_size(self):
+        """Entries in that table, 0 for a truecolour GIF."""
+        return self.__sheet.source.palette_size
 
 
 class SequencePlayer(ImagePlayer):
@@ -614,6 +637,13 @@ class SequencePlayer(ImagePlayer):
         return self.__images[frame]
 
     @property
-    def paths(self):
-        """Every frame's file, in the order they play."""
-        return self.__paths
+    def path(self):
+        """The file the frame on show came from, beside image and frame."""
+        return self.__paths[self.frame % len(self.__paths)]
+
+    def path_at(self, frame):
+        """The file behind any frame number, as image_at() is to image.
+
+        For a gallery listing what it holds, or a menu naming a frame to jump to.
+        """
+        return self.__paths[self.__frame_number(frame) % len(self.__paths)]

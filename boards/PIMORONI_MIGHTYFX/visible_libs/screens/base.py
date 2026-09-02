@@ -35,7 +35,7 @@ class ScreenBase:
     te says whether a tearing-effect signal is reachable at all, and v_sync whether a
     frame waits on it by default. members is the screens a broadcast group stands
     for, and None for a screen standing for itself. shared_te says the signal arrives
-    on a line other screens share, which is what makes the wait transient; sync names
+    on a line other screens share, which is what makes the wait transient; leader names
     the screen whose signal a frame waits on.
 
     rotation and mirror are how the panel is mounted, and every frame follows them
@@ -47,7 +47,7 @@ class ScreenBase:
     Not built directly: construct a Screen subclass or a ScreenGroup.
     """
 
-    def __init__(self, port, display, width, height, bitdepth, backlight, te, v_sync, reserve, members=None, shared_te=False, sync=None, rotation=0, mirror=False, reveal_together=False):
+    def __init__(self, port, display, width, height, bitdepth, backlight, te, v_sync, reserve, members=None, shared_te=False, leader=None, rotation=0, mirror=False, reveal_together=False):
         __check_rotation(rotation)
         self.__port = port
         self.__display = display
@@ -64,7 +64,7 @@ class ScreenBase:
         self.__group = None     # The ScreenGroup this screen is a member of, if any
         self.__subset_of = None  # The group a subset narrows, so it writes its members only
         self.__shared_te = shared_te  # Whether this panel's TE reaches a line others share
-        self.__sync = sync      # The screen whose TE a frame waits on, None to leave TE alone
+        self.__leader = leader  # The screen whose TE a frame waits on, None to leave TE alone
         self.__synced_frame = None  # The screen the last frame's wait ended on, if any
         self.__sync_delay_us = 0    # How long a write trails the wait, set by a holding group
         self.__rotation = rotation  # The angle every frame takes unless it names its own
@@ -107,16 +107,6 @@ class ScreenBase:
     def reveal_together(self):
         """Whether the port's backlight waits for every screen asking for it."""
         return self.__reveal_together
-
-    @property
-    def sync(self):
-        """The screen whose tearing-effect signal a frame waits on, or None.
-
-        A single screen syncs on itself. A group syncs on the one member it
-        nominated, the rest tearing, since panels on a hub scan independently and no
-        edge is safe for all of them.
-        """
-        return self.__sync
 
     def brightness(self, value):
         """Set how bright the backlight looks, from 0.0 to 1.0.
@@ -206,12 +196,12 @@ class ScreenBase:
         every panel that is written tears, so a narrowed write falls to a member of
         its own set.
         """
-        if not v_sync or self.__sync is None:
+        if not v_sync or self.__leader is None:
             return None
 
         written = self.screens if to is None else to
-        if self.__sync is self or self.__sync in written:
-            return self.__sync
+        if self.__leader is self or self.__leader in written:
+            return self.__leader
 
         for screen in written:
             if screen.__shared_te:
@@ -237,7 +227,7 @@ class ScreenBase:
             v_sync = self.__v_sync
         elif v_sync and not self.__te:
             if self.__members is not None:
-                raise ValueError("this broadcast group has no member to wait on: its panels' scans are unsynchronised, so build it with sync naming one of them, which needs every member built with te set to the DC line they share")
+                raise ValueError("this broadcast group has no member to wait on: its panels' scans are unsynchronised, so build it with leader naming one of them, which needs every member built with te set to the DC line they share")
 
             raise ValueError("v_sync needs a screen created with te, since it waits on the panel's tearing-effect signal")
 

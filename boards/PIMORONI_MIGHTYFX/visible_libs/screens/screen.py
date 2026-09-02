@@ -278,7 +278,7 @@ class Screen(ScreenBase):
 
         super().__init__(port.__connector, display, width, height, bitdepth, backlight,
                          te_used, v_sync, reserve, shared_te=shared_te,
-                         sync=self if shared_te else None,
+                         leader=self if shared_te else None,
                          rotation=rotation, mirror=mirror,
                          reveal_together=reveal_together)
 
