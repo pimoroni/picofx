@@ -242,7 +242,10 @@ class EffectPlayer:
         if not self.is_running() or force:
             self.stop()
 
-            self.__period = int(1000 / fps)
+            # To the nearest millisecond and floored at one, as every rate here
+            # is: truncation ran a 60fps request at 62.5, and a rate past a
+            # millisecond a tick became a period of zero
+            self.__period = max(1, int(1000 / fps + 0.5))
 
             # Each paired player ticks the next, so the whole chain runs on this
             # timer and every one of them measures time by this period
