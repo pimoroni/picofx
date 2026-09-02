@@ -131,7 +131,7 @@ class Roller:
     An interval in seconds, or an fps, is the length it works in. advance() carries the
     deadline on from itself, so a thing due on a beat stays evenly spaced however late
     it is read; restart() starts the length again from now, for a hold that runs from
-    where the last one ended. reached() asks, and changes nothing.
+    where the last one ended. has_elapsed() asks, and changes nothing.
     """
 
     def __init__(self, interval=None, fps=None):
@@ -175,6 +175,6 @@ class Roller:
 
         self.__ticks = time.ticks_add(self.__ticks, int(ms))
 
-    def reached(self):
+    def has_elapsed(self):
         """Whether the deadline has arrived, leaving it where it is."""
         return time.ticks_diff(time.ticks_ms(), self.__ticks) >= 0

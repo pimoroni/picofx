@@ -111,7 +111,7 @@ class ImagePlayer:
             if first_as_last:
                 self.__timings += (self.__timings[0],)
         else:
-            interval = int(1000 / fps) if fps > 0 else 0
+            interval = int(1000 / fps + 0.5) if fps > 0 else 0
             if interval < 1:
                 raise ValueError(f"fps={fps} is under a millisecond a frame, which no screen can present: fps=None takes the source's delays and fps=False drives by hand")
             self.__timings = (interval,) * self.__frames
@@ -552,6 +552,9 @@ class SequencePlayer(ImagePlayer):
         # every comparison here: 160 names cost 8.5 seconds that way against under one.
         keyed = sorted((self.__numbers_in(name), name) for name in names)
         names = [name for _, name in keyed]
+
+        if timings is not None and fps is not None:
+            raise ValueError("an fps and timings are two ways to say the frame delays: name one of them, or neither to read the delays the file names declare")
 
         if timings is None and fps is None:
             declared = [self.__delay_in(name) for name in names]

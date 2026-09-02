@@ -232,7 +232,7 @@ try:
                 started = None
                 settled.restart()
 
-        elif settled.reached():
+        elif settled.has_elapsed():
             started = now
 
         else:
