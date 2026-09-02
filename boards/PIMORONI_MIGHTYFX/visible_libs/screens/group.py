@@ -141,8 +141,8 @@ class ScreenGroup(ScreenBase):
     # and a walk aimed from a stale booking arrives somewhere else.
     SWEEP_PAUSE_MS = 1000
 
-    def __init__(self, *screens, leader=None, align=None, trim=None, parent=None,
-                 rotation=None, mirror=None, reveal_together=False):
+    def __init__(self, *screens, leader=None, align=None, trim=None,
+                 rotation=None, mirror=None, reveal_together=False, parent=None):
         if not screens:
             raise ValueError("a broadcast group needs at least one screen")
 
@@ -157,8 +157,13 @@ class ScreenGroup(ScreenBase):
                 screen.__reveal_together = True
 
         # A subset is a member set over its parent's display, so it claims no
-        # members, builds no display, and leaves ownership where it is.
+        # members, builds no display, and leaves ownership where it is. subset()
+        # is the friendly way in; the membership check lives here so neither
+        # route can name a screen the parent does not hold.
         if parent is not None:
+            for screen in screens:
+                if screen not in parent.screens:
+                    raise ValueError(f"{screen} is not a member of this group, so it cannot be in a subset of it")
             # A subset inherits its parent's nomination, since alignment and the
             # panel state stay the parent's; leader=False declines the wait for this
             # set alone. A nominated member outside the set is resolved per write.
@@ -580,10 +585,12 @@ class ScreenGroup(ScreenBase):
         errors = [self.__fold(phase - target) for phase in phases]
         return int(max(errors) - min(errors))
 
-    def update(self, image, **kwargs):
+    def update(self, image, *, rotation=None, mirror=None, pixel_double=False,
+               offset=None, tile=False, bg_color=None,
+               v_sync=None, to=None):
         """Stream a frame to every member, then advance the hold and the trim.
 
-        Takes what ScreenBase.update() takes, placing every member at the group's
+        The keywords are ScreenBase.update()'s, placing every member at the group's
         own rotation and mirror unless the frame names them. Every member the
         caller named is written, whatever its phase: update() is a promise that
         the group has presented by the time it returns, and a member held back to
@@ -596,9 +603,10 @@ class ScreenGroup(ScreenBase):
         """
         owner = self.__subset_of or self
         if owner.__holding:
-            to = kwargs.get("to")
             owner.__walk_in(self.screens if to is None else to)
-        super().update(image, **kwargs)
+        super().update(image, rotation=rotation, mirror=mirror,
+                       pixel_double=pixel_double, offset=offset, tile=tile,
+                       bg_color=bg_color, v_sync=v_sync, to=to)
         synced = self.__synced_frame
         owner.__frame_ticked(self.__display.stats(), synced, owner.__sync_delay_us)
         owner.__tick_trim(synced)
@@ -1092,11 +1100,6 @@ class ScreenGroup(ScreenBase):
         """
         if not screens:
             raise ValueError("a subset needs at least one screen")
-
-        members = self.screens
-        for screen in screens:
-            if screen not in members:
-                raise ValueError(f"{screen} is not a member of this group, so it cannot be in a subset of it")
 
         return ScreenGroup(*screens, leader=leader, parent=self.__subset_of or self,
                            reveal_together=reveal_together)

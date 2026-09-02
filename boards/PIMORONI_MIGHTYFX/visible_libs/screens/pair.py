@@ -11,7 +11,6 @@ import time
 
 from machine import Pin
 
-import picovector
 import spidisplay
 
 
@@ -281,7 +280,7 @@ class ScreenPair:
 
     def update(self, image, second=None, *, rotation=None, mirror=None,
                pixel_double=False, offset=None, tile=False,
-               bg_color=picovector.color.black, v_sync=None):
+               bg_color=None, v_sync=None):
         """Stream a frame to both screens, aligned when align is on.
 
         One image reaches both panels, or a second positional image gives each

@@ -6,7 +6,6 @@
 # waiting on the tearing-effect signal, naming which panels a write reaches, and
 # the backlight that stays dark until one has been drawn.
 
-import picovector
 import spidisplay
 
 
@@ -138,6 +137,9 @@ class ScreenBase:
         if width < 1 or height < 1:
             raise ValueError("a canvas needs a positive width and height")
 
+        # Imported where it is needed, so the frame path stands on spidisplay alone
+        import picovector
+
         nbytes = width * height * 4    # RGBA8888
         if offset is not None:
             return picovector.image(width, height, spidisplay.buffer(nbytes, offset))
@@ -208,7 +210,7 @@ class ScreenBase:
                 return screen
         return None
 
-    def update(self, image, *, rotation=None, mirror=None, pixel_double=False, offset=None, tile=False, bg_color=picovector.color.black, v_sync=None, to=None):
+    def update(self, image, *, rotation=None, mirror=None, pixel_double=False, offset=None, tile=False, bg_color=None, v_sync=None, to=None):
         """Stream a frame to the panel, or to every screen a group stands for.
 
         rotation and mirror follow the screen's own unless the frame names them,
@@ -231,7 +233,9 @@ class ScreenBase:
 
             raise ValueError("v_sync needs a screen created with te, since it waits on the panel's tearing-effect signal")
 
-        bg = bg_color.p & 0xffffffff
+        # None is opaque black in the packed premultiplied form the module reads,
+        # so nothing here needs picovector for a default
+        bg = 0xff000000 if bg_color is None else bg_color.p & 0xffffffff
 
         # Placement follows the screen unless the frame names its own. mirror
         # needs the identity test: None is falsy, so a truthiness check would
@@ -263,7 +267,7 @@ class ScreenBase:
             self.__group.__frame_ticked(self.__display.stats(), synced, delay)
 
     @micropython.native
-    def prepare(self, image, *, rotation=None, mirror=None, pixel_double=False, offset=None, tile=False, bg_color=picovector.color.black, to=None):
+    def prepare(self, image, *, rotation=None, mirror=None, pixel_double=False, offset=None, tile=False, bg_color=None, to=None):
         """Stage a frame for update_pair(), converting as far ahead as it can.
 
         Placement is per screen, so a pair can differ in rotation, mirroring and
@@ -271,7 +275,7 @@ class ScreenBase:
         to the screen's own. Nothing reaches the panel until update_pair() runs,
         and a staged frame refuses command() until it does.
         """
-        bg = bg_color.p & 0xffffffff
+        bg = 0xff000000 if bg_color is None else bg_color.p & 0xffffffff
 
         if rotation is None:
             rotation = self.__rotation
