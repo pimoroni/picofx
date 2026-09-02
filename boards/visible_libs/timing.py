@@ -81,10 +81,22 @@ class Pacer:
         """
         return self.__delta_ms
 
+    @property
+    def target_ms(self):
+        """Milliseconds the loop is held to, or None where no rate was named."""
+        return self.__interval_ms
+
+    @property
+    def target_fps(self):
+        """The rate that interval amounts to, or None where no rate was named."""
+        return None if self.__interval_ms is None else 1000 / self.__interval_ms
+
+    @property
     def measured_ms(self):
         """Milliseconds the pass that just ended really took, its wait included."""
         return self.__measured_ms
 
+    @property
     def measured_fps(self):
         """The rate the loop is holding, from the last pass."""
         return 1000 / self.__measured_ms if self.__measured_ms > 0 else float("inf")

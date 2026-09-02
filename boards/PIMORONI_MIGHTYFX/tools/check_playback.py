@@ -70,7 +70,7 @@ def show_cycle(player, label):
     """The cycle with step, frame and dwell lined up, which is the only readable form."""
     delays = player.__delays
     order = player.__order
-    print("  {}, cycle {}ms".format(label, player.cycle_ms()))
+    print("  {}, cycle {}ms".format(label, player.cycle_ms))
     print("    step   " + " ".join("{:>5}".format(s) for s in range(len(order))))
     print("    frame  " + " ".join("{:>5}".format(f) for f in order))
     print("    ms     " + " ".join("{:>5}".format(d) for d in delays))
@@ -94,20 +94,20 @@ def check_traversal():
     print("  orders hold for 1, 2, 3 and 8 frames, and a one-shot ping-pong closes on frame 0")
 
     sheet_total = 8 * 80
-    assert numbered(8).cycle_ms() == sheet_total
-    assert numbered(8, ping_pong=True).cycle_ms() == 2 * sheet_total - 160
-    assert numbered(8, loop=False, ping_pong=True).cycle_ms() == 2 * sheet_total - 80
+    assert numbered(8).cycle_ms == sheet_total
+    assert numbered(8, ping_pong=True).cycle_ms == 2 * sheet_total - 160
+    assert numbered(8, loop=False, ping_pong=True).cycle_ms == 2 * sheet_total - 80
     print("  durations hold, the looping figure dropping both endpoints and the one-shot one")
 
     show_cycle(numbered(6, ping_pong=True, hold=(2, 0.5)), "6 frames at 80ms, hold=(2, 0.5)")
     held = numbered(6, ping_pong=True, hold=(2, 0.5))
     assert list(held.__delays) == [580, 80, 80, 80, 80, 2080, 80, 80, 80, 80]
-    assert held.cycle_ms() == 10 * 80 + 2500
+    assert held.cycle_ms == 10 * 80 + 2500
     # The dwells come out of the reported target, or a long pause reads as a slow rate.
-    assert held.target_ms() == 80, held.target_ms()
+    assert held.target_ms == 80, held.target_ms
     assert numbered(1, ping_pong=True, hold=(2, 0.5)).__delays == (580,), "n=1 dwells once"
     print("  a pair lands chronologically, its second value at the head of the cycle")
-    print("  target_ms stays {}ms with 2500ms of dwell in the cycle".format(held.target_ms()))
+    print("  target_ms stays {}ms with 2500ms of dwell in the cycle".format(held.target_ms))
 
     # first_as_last plays frame 0 again at the far end, so the whole loop is travelled in
     # each direction and that frame counts as one of the player's own.
@@ -116,8 +116,8 @@ def check_traversal():
         assert closed.frames == count + 1, f"first_as_last at n={count}"
         assert len(closed.__order) == 2 * count, f"closed looping ping-pong at n={count}"
         assert closed.__turns == (0, count), closed.__turns
-        assert closed.cycle_ms() == 2 * count * 80, closed.cycle_ms()
-        assert closed.target_ms() == 80, closed.target_ms()
+        assert closed.cycle_ms == 2 * count * 80, closed.cycle_ms
+        assert closed.target_ms == 80, closed.target_ms
         one_shot = numbered(count, loop=False, ping_pong=True, first_as_last=True)
         assert len(one_shot.__order) == 2 * count + 1
         assert one_shot.__order[-1] == 0, "a closed one-shot still rests back home"
@@ -296,7 +296,7 @@ def check_caller_driven():
         player.advance()
     assert player.image == 3, "a one-shot must stay on its last frame"
     assert player.is_done()
-    assert player.cycle_ms() is None and player.target_ms() is None
+    assert player.cycle_ms is None and player.target_ms is None
     print("  a one-shot stays on its last frame and reports done, with no rate to report")
 
 
@@ -307,12 +307,12 @@ def check_gifs():
         player = GIFPlayer(path)
         assert player.frames == frames, f"{path} has {player.frames} frames"
         assert player.frames == len(player.__sheet.timings)
-        assert player.cycle_ms() == frames * delay
+        assert player.cycle_ms == frames * delay
         image = player.image
         assert image.width == 320 and image.height == 320
         assert player.image_at(1).width == 320, "image_at reaches a frame the player is not on"
         print("  {:<38} {} frames, {}ms, {:.1f}fps asked, {}x{} palettised {}".format(
-            path.split("/")[-1], player.frames, player.cycle_ms(), player.target_fps(),
+            path.split("/")[-1], player.frames, player.cycle_ms, player.target_fps,
             image.width, image.height, image.has_palette))
 
 
@@ -342,7 +342,7 @@ def check_sequence():
         player = SequencePlayer(folder)
         took = time.ticks_diff(time.ticks_ms(), t0)
         assert player.frames == count, f"{folder} loaded {player.frames} frames"
-        assert player.cycle_ms() == count * delay, f"{folder} cycle {player.cycle_ms()}ms"
+        assert player.cycle_ms == count * delay, f"{folder} cycle {player.cycle_ms}ms"
         print("  {:<12} {} frames at {}ms from their names, loaded in {}ms".format(
             folder, player.frames, delay, took))
         del player
@@ -356,7 +356,7 @@ def check_sequence():
     assert numbers == sorted(numbers), "frames are out of numeric order"
     assert numbers == list(range(len(numbers))), "frames are not a contiguous run"
     assert player.frames == 160
-    assert player.cycle_ms() == 160 * 40
+    assert player.cycle_ms == 160 * 40
     print("  {:<12} {} frames at 25fps, in numeric order, loaded in {}ms".format(
         PLAIN_FOLDER, player.frames, took))
     print("  which is {}ms a frame, and the line above it is the player saying so".format(
@@ -365,7 +365,7 @@ def check_sequence():
 
     # Delays from anywhere else arrive as timings, one a frame.
     player = SequencePlayer(NAMED_FOLDER, timings=(50,) * 8)
-    assert player.cycle_ms() == 400
+    assert player.cycle_ms == 400
     print("  timings given by hand override what the names declare")
 
     # A folder's frames are reachable by number too, where GIFPlayer has sheet and this
@@ -409,9 +409,9 @@ def check_pair():
 
         late = sum(screen.__display.te_timeouts() for screen in pair.screens)
         for name, player, count in (("slow", slow, moved[0]), ("fast", fast, moved[1])):
-            asked = player.target_fps() * PAIR_MS / 1000
+            asked = player.target_fps * PAIR_MS / 1000
             print("  {:<5} asked {:.1f}fps so {:.0f} frames, reached {} at {:.1f}fps".format(
-                name, player.target_fps(), asked, count, player.measured_fps()))
+                name, player.target_fps, asked, count, player.measured_fps))
         print("  {} pair frames in {}ms, te_timeouts {}".format(pushes, PAIR_MS, late))
         assert late == 0, f"{late} frames began without their TE edge"
         assert pushes > 100, f"only {pushes} pushes, the pair should manage over 100"

@@ -48,8 +48,8 @@ def update_pair(first, second, v_sync=None):
     owed = (first.__drawn(hold=together), second.__drawn(hold=together))
     if together and None not in owed:
         time.sleep_ms(max(owed))
-        first.backlight.reveal_now()
-        second.backlight.reveal_now()
+        first.backlight.__reveal_now()
+        second.backlight.__reveal_now()
 
 
 class ScreenPair:

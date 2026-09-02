@@ -431,10 +431,12 @@ class ImagePlayer:
             return self.__step == len(self.__order) - 1
         return self.__position() >= self.__cycle_ms
 
+    @property
     def cycle_ms(self):
         """One full traversal, dwells and both ping-pong legs included."""
         return self.__cycle_ms
 
+    @property
     def target_ms(self):
         """The mean interval a frame is meant to show for, dwells excluded.
 
@@ -442,12 +444,14 @@ class ImagePlayer:
         """
         return self.__target_ms
 
+    @property
     def target_fps(self):
-        """The rate target_ms() amounts to."""
+        """The rate target_ms amounts to."""
         if self.__target_ms is None:
             return None
         return 1000 / self.__target_ms
 
+    @property
     def measured_ms(self):
         """The last interval between frames actually reaching the caller.
 
@@ -456,6 +460,7 @@ class ImagePlayer:
         """
         return self.__measured_ms
 
+    @property
     def measured_fps(self):
         """The rate the measured interval amounts to."""
         return 1000 / self.__measured_ms if self.__measured_ms > 0 else float("inf")
@@ -467,7 +472,7 @@ class GIFPlayer(ImagePlayer):
     The whole GIF decodes once at construction, so a frame costs nothing to reach.
     Frame delays are often whatever the exporting tool wrote, and a 2.8 inch pair
     presents a frame in about 78ms, so a file asking for more than that gets its
-    speed and not its smoothness: measured_fps() against target_fps() says by how
+    speed and not its smoothness: measured_fps against target_fps says by how
     much.
     """
 

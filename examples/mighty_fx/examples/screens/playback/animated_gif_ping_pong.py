@@ -12,7 +12,7 @@ spins a whole turn each way.
 
 hold is the wait where it turns around, one value for both ends or two. Both ends are the
 coin face here, so one value keeps the pauses even. A dwell comes out of the reported
-rate, so measured_fps() still compares the frames themselves rather than the pauses
+rate, so measured_fps still compares the frames themselves rather than the pauses
 between them.
 
 Press "Boot" to exit the program.

@@ -145,7 +145,7 @@ class Backlight(PWMLED):
                 return None
 
         if hold:
-            return self.scan_ms()
+            return self.__scan_ms
 
         self.__wait_a_scan()
         self.brightness(self.__level)
@@ -164,7 +164,8 @@ class Backlight(PWMLED):
                    if screen.backlight is self and screen.reveal_together
                    and screen not in self.__shown)
 
-    def scan_ms(self):
+    @property
+    def __scan_ms(self):
         """One full scan of the slowest screen on the port, in milliseconds.
 
         A finished transfer is not a presented frame: each row keeps what the scan
@@ -174,13 +175,13 @@ class Backlight(PWMLED):
         slowest = self.__port.__slowest_framerate
         return 0 if slowest is None else 1000 // slowest + 3
 
-    def reveal_now(self):
+    def __reveal_now(self):
         """Light at the held level, for a caller that has already spent the scan."""
         self.brightness(self.__level)
 
     def __wait_a_scan(self):
         """Hold for one full scan before the light comes up."""
-        time.sleep_ms(self.scan_ms())
+        time.sleep_ms(self.__scan_ms)
 
 
 class SPCEPort:
@@ -205,6 +206,14 @@ class SPCEPort:
         # A motor port's pins belong to its Motor objects, and an undeclared port is
         # left alone, so neither offers them up
         self.__pins = tuple(Pin(pin) for pin in pins) if mode in (SPCE.SCREEN, SPCE.GPIO, SPCE.HUB_LINES) else None
+
+        # The contract a screen reads by attribute, uniform with a hub's port: the
+        # connector a port belongs to is itself, its own DC line is what a screen
+        # sharing the line is checked against, and a lone panel defaults to reading
+        # TE from its own DC line, which is how MightyFX wires one panel to a port.
+        self.__connector = self
+        self.__dc_line = self.__pins[0] if self.__pins is not None else None
+        self.__default_te = True
 
         self.__spi = spi        # Kept so the bus can be made again after a release()
         self.__spi_bus = self.__make_bus() if mode == SPCE.SCREEN else None
@@ -263,13 +272,6 @@ class SPCEPort:
     def bl(self):
         return self.__line(4)
 
-    @property
-    def __dc_line(self):
-        """The port's own DC line, which a screen naming the shared line is checked
-        against. The public dc raises by mode; the contract wants the pin either way.
-        """
-        return self.__pins[0] if self.__pins is not None else None
-
     def __make_bus(self):
         return SPIDisplayBus(spi=self.__spi, sck=self.__pins[2], mosi=self.__pins[3])
 
@@ -289,15 +291,6 @@ class SPCEPort:
         return self.__spi_bus
 
     @property
-    def __connector(self):
-        """The SP/CE connector a screen belongs to, which for a port is itself.
-
-        A hub hands out ports of its own, so a screen asks whatever it was built
-        against for the connector holding the bus, the backlight and the screens.
-        """
-        return self
-
-    @property
     def __slowest_framerate(self):
         """The lowest panel refresh rate on the port, which sets any wait for a
         frame to reach the glass. None before a screen is built.
@@ -306,13 +299,6 @@ class SPCEPort:
             return None
 
         return min(screen.framerate for screen in self.__screens)
-
-    @property
-    def __default_te(self):
-        """What a screen naming no te takes: its own DC line, one panel to a port
-        being how MightyFX is wired.
-        """
-        return True
 
     # The contract a screen is built through, which a ScreenHub port implements too by
     # passing each call along to here. Not for an application to call: each records a

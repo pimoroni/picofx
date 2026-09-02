@@ -23,8 +23,8 @@ class ScreenHubPort:
     def __init__(self, connector, cs, dc, te):
         self.__connector = connector
         self.__cs = cs
-        self.__dc = dc
-        self.__te = te
+        self.__dc_line = dc
+        self.__default_te = te
 
     @property
     def __bus(self):
@@ -34,15 +34,6 @@ class ScreenHubPort:
     def __panels_reset(self):
         return self.__connector.__panels_reset
 
-    @property
-    def __dc_line(self):
-        return self.__dc
-
-    @property
-    def __default_te(self):
-        """The line a screen naming no te reads its tearing-effect signal from."""
-        return self.__te
-
     def __check_cs(self, pin=None):
         return self.__connector.__check_cs(self.__cs if pin is None else pin)
 
@@ -50,7 +41,7 @@ class ScreenHubPort:
         self.__connector.__claim_cs(pin)
 
     def __check_dc(self, pin=None, te=True, shared=False):
-        return self.__connector.__check_dc(self.__dc if pin is None else pin, te, shared)
+        return self.__connector.__check_dc(self.__dc_line if pin is None else pin, te, shared)
 
     def __claim_dc(self, pin, te, shared):
         self.__connector.__claim_dc(pin, te, shared)

@@ -268,15 +268,19 @@ class EffectPlayer:
     def pair(self, player):
         self.__paired = player
 
+    @property
     def target_ms(self):
         return self.__period
 
+    @property
     def measured_ms(self):
         return self.__measured
 
+    @property
     def target_fps(self):
         return 1000 / self.__period
 
+    @property
     def measured_fps(self):
         return 1000 / self.__measured if self.__measured > 0 else float("inf")
 
