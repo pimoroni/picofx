@@ -179,6 +179,7 @@ class ScreenGroup(ScreenBase):
                              rotation=parent.rotation if rotation is None else rotation,
                              mirror=parent.mirror if mirror is None else mirror)
             self.__subset_of = parent
+            self.__subset_displays = tuple(screen.__display for screen in screens)
             # Calibration stays the parent's, so a subset copies its outcome;
             # the hold is asked live, is_aligned() forwarding to the parent,
             # since its members are held whether or not this set writes them.
@@ -233,6 +234,9 @@ class ScreenGroup(ScreenBase):
                          rotation=rotation, mirror=mirror)
 
         self.__calibrated = False
+        # Position by member, so a frame's bookkeeping never scans the tuple
+        self.__member_index = {screen: index for index, screen in enumerate(screens)}
+        self.__reference_index = 0
         # Three states, not two. Nulling the members' rates stops them drifting apart
         # quickly; an acquisition brings their scans together at one instant; only a
         # hold keeps them there. The residual rate spread separates them again at 30
@@ -247,7 +251,7 @@ class ScreenGroup(ScreenBase):
         self.__aim_us = 0
         self.__line_us = ()
         self.__trim_at = 0
-        self.__starts = []
+        self.__trim_frames = 0
         self.__corrections = 0
         # Frames written with a member past its own tearing budget, and how far
         # the worst of them was past it. A tear is brief and only shows where the
@@ -364,6 +368,7 @@ class ScreenGroup(ScreenBase):
         # Past the refusal, so nothing above has moved a panel: a group that declines
         # to align leaves every porch where bringup left it and names no reference.
         self.__reference = members[slowest]
+        self.__reference_index = slowest
         for screen, trim in zip(members, trims):
             if trim:
                 back, front = screen.__porch
@@ -516,8 +521,7 @@ class ScreenGroup(ScreenBase):
         it runs, and that costs nothing here: no frame is written during an
         excursion, so there is no write for the margin to protect. Every
         excursion runs at once and each is lifted at its own count, so a round
-        costs the longest one and not their sum. Returns how far each member
-        moved, in microseconds, later being positive.
+        costs the longest one and not their sum.
         """
         members = self.screens
         plans = []
@@ -545,9 +549,6 @@ class ScreenGroup(ScreenBase):
             back, front = members[index].__porch
             members[index].__set_porch(back - lines, front)
 
-        return [plans[index] * self.EXCURSION_LINES * self.__line_us[index]
-                for index in range(len(members))]
-
     def __check_span(self, index, falls):
         """Count a capture whose own two falls do not span a plausible period.
 
@@ -574,16 +575,6 @@ class ScreenGroup(ScreenBase):
         """A modular phase difference brought onto +-half a period."""
         error %= self.__target_us
         return error - self.__target_us if error > self.__target_us / 2 else error
-
-    def __phase_spread(self):
-        """How far apart the members' falls are, on the circle. 0 where unreadable."""
-        phases = self.__phases()
-        if phases is None:
-            return 0
-
-        target = phases[self.screens.index(self.__reference)]
-        errors = [self.__fold(phase - target) for phase in phases]
-        return int(max(errors) - min(errors))
 
     def update(self, image, *, rotation=None, mirror=None, pixel_double=False,
                offset=None, tile=False, bg_color=None,
@@ -694,13 +685,15 @@ class ScreenGroup(ScreenBase):
         dither = self.__dither
         line_us = self.__line_us
         target = self.__target_us
+        half = target / 2
         centre = self.__centre_us
         slack = self.WAIT_SLACK_LINES
         periods = ((time.ticks_us() - self.__held_stamp) & TICKS_MASK) / target
+        member_index = self.__member_index
         indices = (range(len(members)) if written is members
-                   else [members.index(screen) for screen in written])
+                   else [member_index[screen] for screen in written])
 
-        base_index = members.index(synced)
+        base_index = member_index[synced]
         base = phase_us[base_index] + periods * (
             residual_us[base_index] + dither[base_index] * line_us[base_index])
 
@@ -710,7 +703,7 @@ class ScreenGroup(ScreenBase):
             carried = phase_us[index] + periods * (
                 residual_us[index] + dither[index] * line_us[index])
             error = (carried - base) % target
-            if error > target / 2:
+            if error > half:
                 error -= target
             past = (error if error > 0 else -error) - centre
             if past > budget:
@@ -735,14 +728,13 @@ class ScreenGroup(ScreenBase):
         # moves with it, so the delay comes back out: the clock and the grid are
         # both fall-referenced, whichever path the frame took.
         stamp = stats.write_start_us
-        members = self.screens
         anchored = -1
         if synced is not None:
             stamp -= delay
             # A stamp is a fall only where the frame waited and the wait did not
             # time out, a timeout releasing at whatever phase its budget expired.
-            if synced in members and stats.te_wait_us < 2 * self.__target_us:
-                anchored = members.index(synced)
+            if stats.te_wait_us < 2 * self.__target_us:
+                anchored = self.__member_index.get(synced, -1)
         self.__tick_hold(stamp & TICKS_MASK, anchored)
 
     def __tick_hold(self, stamp, anchored):
@@ -780,68 +772,82 @@ class ScreenGroup(ScreenBase):
             return
         self.__fresh_hold = False
 
+        # Per frame, so every list and setting is read once: an attribute or an
+        # index scan per member per frame is what a hold's latency is made of.
         members = self.screens
+        dither = self.__dither
+        line_us = self.__line_us
+        residual_us = self.__residual_us
+        phase_us = self.__phase_us
+        anchor_dither = self.__anchor_dither
         periods = elapsed / self.__target_us
         for index in range(len(members)):
-            applied = self.__dither[index]
+            applied = dither[index]
             if applied:
-                self.__anchor_dither[index] += applied * self.__line_us[index] * periods
+                anchor_dither[index] += applied * line_us[index] * periods
             if index == anchored:
                 self.__anchor(index, stamp)
             else:
-                self.__phase_us[index] += (self.__residual_us[index] + applied * self.__line_us[index]) * periods
+                phase_us[index] += (residual_us[index] + applied * line_us[index]) * periods
 
-        reference = members.index(self.__reference)
-        anchor = self.__phase_us[reference]
-        drift = self.__residual_us[reference] * periods
+        # Read after the anchor above, which may have rebased the target
+        target = self.__target_us
+        centre = self.__centre_us
+        walk_lines = self.WALK_LINES
+        walk_floor = self.WALK_FLOOR_LINES
+        anchor_skip = self.__anchor_skip
+        fold = self.__fold
+        reference = self.__reference_index
+        anchor = phase_us[reference]
+        drift = residual_us[reference] * periods
         walking = False
         for index in range(len(members)):
             if index == reference:
                 continue
             screen = members[index]
-            line = self.__line_us[index]
-            residual = self.__residual_us[index]
-            applied = self.__dither[index]
+            line = line_us[index]
+            residual = residual_us[index]
+            applied = dither[index]
             # Folded: the whole group walks the grid as the panels warm, and the
             # anchor wraps each member's booking at half a period, so two members
             # either side of a wrap differ by a period while their scans do not.
             back, front = screen.__porch
-            error = self.__fold(self.__phase_us[index] - anchor)
+            error = fold(phase_us[index] - anchor)
             # The write starts centre_us into the synced member's scan, so a
             # member further out than that has it outside its own budget and is
             # tearing whatever happens: the walk runs deep, its margin no longer
             # being worth protecting. Inside, one line a frame is all the ripple
             # asks for.
-            if abs(error) <= self.__centre_us:
+            if abs(error) <= centre:
                 limit = 1
             else:
-                limit = self.WALK_LINES
+                limit = walk_lines
                 walking = True
                 # Advancing gives porch back and stops at the walk's floor, where
                 # delaying has the whole depth to spend. A member with little
                 # porch in hand therefore goes the long way round, which on these
                 # panels closes a half-period error sooner than crawling.
                 if error > 0:
-                    room = back - applied - self.WALK_FLOOR_LINES
-                    long_way = (self.__target_us - error) / (self.WALK_LINES * line)
+                    room = back - applied - walk_floor
+                    long_way = (target - error) / (walk_lines * line)
                     if room < 1 or error / (room * line) > long_way:
-                        error -= self.__target_us
+                        error -= target
             lines = int(round(((drift - error) / periods - residual) / line))
             lines = limit if lines > limit else (-limit if lines < -limit else lines)
             # Shortening stops at the walk's porch floor, which keeps this
             # member's tearing pulse readable while it travels. Clamp to it
             # rather than skipping the write, which would stall a walk that has
             # to advance.
-            floor_lines = self.WALK_FLOOR_LINES - back + applied
+            floor_lines = walk_floor - back + applied
             if lines < floor_lines:
                 lines = floor_lines
             if abs(lines) > 1:
                 # A porch moving whole excursions lands with the same one-frame
                 # ambiguity a line does, several lines at a time: not a rate.
-                self.__anchor_skip[index] = True
+                anchor_skip[index] = True
             if lines != applied:
                 screen.__set_porch(back + lines - applied, front)
-                self.__dither[index] = lines
+                dither[index] = lines
 
         if walking != self.__walking:
             logging.debug(f"screens: walk {'engaged' if walking else 'done'},"
@@ -945,7 +951,7 @@ class ScreenGroup(ScreenBase):
             # Moving the wait target is only free while the members fall together,
             # so freshness falls back to measuring one panel between frames.
             self.__trim_mode = "probe"
-            self.__starts = []
+            self.__trim_frames = 0
 
     def __tick_trim(self, synced=None):
         """Keep the members' rate models current between frames.
@@ -970,15 +976,15 @@ class ScreenGroup(ScreenBase):
             # needs is a porch floor that keeps its pulse readable, not a turn
             # missed.
             if synced is self.__leader:
-                self.__trim_at = (members.index(self.__leader) + 1) % len(members)
+                self.__trim_at = (self.__member_index[self.__leader] + 1) % len(members)
                 self.__leader = members[self.__trim_at]
             return
 
-        self.__starts.append(0)
-        if len(self.__starts) <= self.TRIM_FRAMES:
+        self.__trim_frames += 1
+        if self.__trim_frames <= self.TRIM_FRAMES:
             return
 
-        self.__starts = []
+        self.__trim_frames = 0
         index = self.__trim_at
         screen = members[index]
         self.__trim_at = (index + 1) % len(members)
@@ -1051,7 +1057,7 @@ class ScreenGroup(ScreenBase):
 
         # A run of probe counts belongs to the mode that gathered it, so a change
         # begins its own run.
-        self.__starts = []
+        self.__trim_frames = 0
         self.__trim_mode = value
 
     def __period_of(self, screen, settle=False):

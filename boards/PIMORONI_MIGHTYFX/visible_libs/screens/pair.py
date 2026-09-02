@@ -13,6 +13,11 @@ from machine import Pin
 
 import spidisplay
 
+# The resolved forms of the placement defaults, so a steady playback loop's
+# update() allocates nothing resolving them.
+__BOTH_NONE = (None, None)
+__BOTH_FALSE = (False, False)
+
 
 def update_pair(first, second, v_sync=None):
     """Stream a frame to two screens at once, each starting on its own TE edge.
@@ -44,9 +49,10 @@ def update_pair(first, second, v_sync=None):
     # Each port's backlight spends a scan before it lights, so taking them in turn
     # brings the second panel up a scan late. Asked to reveal together they share one
     together = first.reveal_together and second.reveal_together
-    owed = (first.__drawn(keep_dark=together), second.__drawn(keep_dark=together))
-    if together and None not in owed:
-        time.sleep_ms(max(owed))
+    owed_first = first.__drawn(keep_dark=together)
+    owed_second = second.__drawn(keep_dark=together)
+    if together and owed_first is not None and owed_second is not None:
+        time.sleep_ms(owed_first if owed_first > owed_second else owed_second)
         first.backlight.__reveal_now()
         second.backlight.__reveal_now()
 
@@ -306,12 +312,19 @@ class ScreenPair:
         first_screen, second_screen = self.__screens
         if second is None:
             second = image
-        rotations = self.__pair_values(rotation, "rotation")
-        mirrors = self.__pair_values(mirror, "mirror")
-        doubles = self.__pair_values(pixel_double, "pixel_double")
-        offsets = self.__pair_offsets(offset)
-        tiles = self.__pair_tiles(tile)
-        backgrounds = self.__pair_values(bg_color, "bg_color")
+        # The defaults resolve to constants, so a playback loop's steady state
+        # allocates none of the six pairs below
+        if (rotation is None and mirror is None and pixel_double is False
+                and offset is None and tile is False and bg_color is None):
+            rotations = mirrors = offsets = backgrounds = __BOTH_NONE
+            doubles = tiles = __BOTH_FALSE
+        else:
+            rotations = self.__pair_values(rotation, "rotation")
+            mirrors = self.__pair_values(mirror, "mirror")
+            doubles = self.__pair_values(pixel_double, "pixel_double")
+            offsets = self.__pair_offsets(offset)
+            tiles = self.__pair_tiles(tile)
+            backgrounds = self.__pair_values(bg_color, "bg_color")
 
         if self.__align:
             if v_sync is False:

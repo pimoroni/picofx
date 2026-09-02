@@ -62,6 +62,7 @@ class ScreenBase:
         self.__pair = None      # The ScreenPair holding panel state on this screen
         self.__group = None     # The ScreenGroup this screen is a member of, if any
         self.__subset_of = None  # The group a subset narrows, so it writes its members only
+        self.__subset_displays = None  # The members' displays, built once per subset
         self.__shared_te = shared_te  # Whether this panel's TE reaches a line others share
         self.__leader = leader  # The screen whose TE a frame waits on, None to leave TE alone
         self.__synced_frame = None  # The screen the last frame's wait ended on, if any
@@ -178,9 +179,8 @@ class ScreenBase:
         what makes front.update(image) write only the panels front stands for.
         """
         if to is None:
-            if self.__subset_of is None:
-                return None
-            to = self.__members
+            # A subset's own member set is fixed, so its display tuple is too
+            return self.__subset_displays
 
         members = self.screens
         for screen in to:
