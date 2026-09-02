@@ -99,6 +99,29 @@ pair(player: EffectPlayer) -> None
 # Properties
 effects: tuple[Any]
 effects(effect_list: Any | list[Any]) -> None
+levels: tuple[float]
+levels(levels: float | list[float]) -> None
+curves: tuple[Curve]
+curves(curves: Curve | list[Curve]) -> None
+```
+
+`levels` scales what each channel's effect asks for, so one effect can drive several outputs at different brightnesses. `ColourPlayer` adds `colours`, the colour each channel shows a mono effect's brightness in.
+
+`curves` is how long a channel takes to reach what its effect asks for, instead of arriving at once. A curve is made by `fade()` or `ease()`:
+
+```python
+fade(rise: float, fall: float=None) -> Curve
+ease(rise: float, fall: float=None) -> Curve
+```
+
+Both take seconds. A `fade` crosses at a steady rate and arrives in the length it is given; an `ease` settles into place, as a warming filament does. Passing one value uses it for both directions, and a second sets the fall apart from the rise, which is how a real bulb behaves. `None` clears a channel's curve, and neither the effect nor the frame rate is affected: the effect still returns what it always did, and the channel follows it.
+
+```python
+from picofx import MonoPlayer, ease
+
+player = MonoPlayer(tiny.outputs)
+player.effects = [blink] * 6
+player.curves = [ease(0.2, 0.5)] * 6   # Slow to light, slower to go out
 ```
 
 ## Effects System

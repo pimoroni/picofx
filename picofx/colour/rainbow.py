@@ -7,6 +7,7 @@ from picofx import Cycling, rgb_from_hsv
 
 class RainbowFX(Cycling):
     NAME = "rainbow"
+    CHROMATIC = True
     CALLED = None
     TAKES = ("speed", "sat", "val")
 
@@ -22,6 +23,7 @@ class RainbowFX(Cycling):
 
 class RainbowWaveFX(Cycling):
     NAME = "rainbow_wave"
+    CHROMATIC = True
     CALLED = "position"
     TAKES = ("speed", "length", "sat", "val")
 

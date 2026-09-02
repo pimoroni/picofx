@@ -20,6 +20,7 @@ class RGBBlinkFX(CyclingAction):
     """
 
     NAME = "rgb_blink"
+    CHROMATIC = True
     CALLED = None
     TAKES = ("colour", "speed", "phase", "duty")
 

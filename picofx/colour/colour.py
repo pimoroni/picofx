@@ -7,6 +7,7 @@ from picofx import rgb_from_hsv
 
 class RGBFX:
     NAME = "rgb"
+    CHROMATIC = True
     CALLED = None
     TAKES = ("red", "green", "blue")
 
@@ -51,6 +52,7 @@ class RGBFX:
 
 class HSVFX:
     NAME = "hsv"
+    CHROMATIC = True
     CALLED = None
     TAKES = ("hue", "sat", "val")
 

@@ -223,6 +223,9 @@ class EffectPlayer:
         # A per channel scale on the output of an effect
         self.__levels = [1.0] * self.__num_leds
 
+        # Whether each channel's effect brings its own colour, which a curve refuses
+        self.__chromatic = [False] * self.__num_leds
+
         # A per channel lag, for a channel that should behave like a bulb rather
         # than an LED, with what it is currently showing so it can be moved along
         self.__curves = [None] * self.__num_leds
@@ -319,10 +322,20 @@ class EffectPlayer:
         for i, item in enumerate(effect_list):
             self.__effects[i] = None
             self.__data[i] = ()
+            self.__chromatic[i] = False
 
             # Skip the item if it is none
             if item is None:
                 continue
+
+            # An effect that brings its own colour says so, and a curve has nothing
+            # to move on one: refused here and in the curves setter, whichever is
+            # set second, so the tick never has to ask
+            owner = item[0] if isinstance(item, tuple) and item else item
+            if getattr(owner, "CHROMATIC", False):
+                self.__chromatic[i] = True
+                if self.__curves[i] is not None:
+                    raise ValueError(f"channel {i} has a curve, and this effect brings its own colour, which a curve cannot follow: clear the curve, or give the channel a mono effect")
 
             # Is the item on its own and callable?
             if callable(item):
@@ -361,6 +374,7 @@ class EffectPlayer:
         for i in range(len(effect_list), self.__num_leds):
             self.__effects[i] = None
             self.__data[i] = ()
+            self.__chromatic[i] = False
 
     def __to_channel_list(self, values, name):
         # Passes a list of values through or applies one value for every channel
@@ -396,6 +410,9 @@ class EffectPlayer:
 
         Made by ease() or fade(), each taking the seconds it takes, or a rise and a
         fall for a channel that comes up and goes out at different rates.
+
+        A mono effect's level is what a curve moves. An effect that brings its own
+        colour refuses one, levels being the setting that reaches both kinds.
         """
         curves = self.__to_channel_list(curves, "curves")
 
@@ -403,6 +420,9 @@ class EffectPlayer:
             if curve is None:
                 self.__curves[i] = None
                 continue
+
+            if self.__chromatic[i]:
+                raise ValueError(f"channel {i}'s effect brings its own colour, which a curve cannot follow: curve a mono effect, or set levels, which reaches both")
 
             if not isinstance(curve, Curve):
                 raise ValueError("a curve is made by ease() or fade(), or None for a "

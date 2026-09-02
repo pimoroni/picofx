@@ -7,6 +7,7 @@ from picofx import Updateable, rgb_from_hsv
 
 class HueStepFX(Updateable):
     NAME = "hue_step"
+    CHROMATIC = True
     CALLED = None
     TAKES = ("interval", "hue", "sat", "val", "steps")
 
