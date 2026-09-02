@@ -1,6 +1,6 @@
 import sys
-import time
 from mighty_fx import MightyFX, SPCE
+from timing import Pacer
 from screens import SCREEN_TYPES
 from picovector import color, spritesheet
 
@@ -66,6 +66,10 @@ hue = 0
 
 recolor(COLORS[index])
 
+# The logo moves a step a frame, so a frame that comes round sooner moves it further.
+# A pacer holds the rate, which is what keeps the speed the one chosen here
+pacer = Pacer(FRAME_DURATION)
+
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
@@ -94,7 +98,7 @@ try:
             index = (index + 1) % len(COLORS)
             recolor(COLORS[index])
 
-        time.sleep(FRAME_DURATION)
+        pacer.hold()
 
 # Stop any running effects and turn off all the outputs
 finally:

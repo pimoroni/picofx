@@ -1,5 +1,6 @@
 import time
 
+from timing import Pacer
 from breakout_bme280 import BreakoutBME280
 from tiny_fx import TinyFX
 
@@ -22,7 +23,7 @@ MIN_TEMP = 15       # The temperature, in celsius, to show as fully cold
 MAX_TEMP = 30       # The temperature, in celsius, to show as fully warm
 COLD_HUE = 0.666    # The hue shown at and below the min temperature, being blue
 WARM_HUE = 1.0      # The hue shown at and above the max, being red again at the top of the wheel
-SLEEP = 1.0         # The time to sleep between each sensor reading
+INTERVAL = 1.0      # How often to take a sensor reading, in seconds
 SETTLE = 0.1        # The time to give the sensor to make its first measurement
 
 # Variables
@@ -36,6 +37,10 @@ bme = BreakoutBME280(tiny.i2c)      # The weather sensor, on the board's Qw/ST b
 bme.read()
 time.sleep(SETTLE)
 
+
+# Reading a sensor takes time of its own, so a pacer holds the readings to the
+# interval rather than adding it to each one, as sleeping the whole interval would
+pacer = Pacer(INTERVAL)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
@@ -56,7 +61,7 @@ try:
         # to red, so no mixing of colours is needed to cross it
         rgb.set_hsv(COLD_HUE + (WARM_HUE - COLD_HUE) * percent, 1.0, BRIGHTNESS)
 
-        time.sleep(SLEEP)
+        pacer.hold()
 
 # Turn off all the outputs
 finally:

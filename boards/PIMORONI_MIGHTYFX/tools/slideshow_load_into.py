@@ -24,6 +24,7 @@ import os
 import time
 
 from mighty_fx import SPCE, MightyFX
+from timing import Pacer
 from screens import Screen280
 from picovector import color, image
 
@@ -108,13 +109,12 @@ preflight(paths[0])
 index = -1  # Start with -1 so that the first image gets shown
 frames = 0
 started = time.ticks_ms()
+pacer = Pacer(SLEEP_DELAY_MS / 1000)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     print(f"\nplaying {len(paths)} images, boot to stop")
     while not mighty.boot_pressed():
-        frame_start = time.ticks_ms()
-
         # Move along to the next image index, and wrap it into the range of available images
         index = (index + 1) % len(paths)
 
@@ -127,10 +127,7 @@ try:
         frames += 1
 
         # Have the image shown for the rest of its time, if any is left
-        elapsed = time.ticks_diff(time.ticks_ms(), frame_start)
-        remaining = SLEEP_DELAY_MS - elapsed
-        if remaining > 0:
-            time.sleep_ms(remaining)
+        pacer.hold()
 
 # Stop any running effects and turn off all the outputs
 finally:

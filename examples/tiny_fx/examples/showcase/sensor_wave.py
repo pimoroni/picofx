@@ -1,5 +1,4 @@
-import time
-
+from timing import Pacer
 from sensor import ANALOG
 from tiny_fx import TinyFX
 
@@ -17,7 +16,7 @@ MIN_VOLTAGE = 0     # The min voltage, in volts, the sensor returns
 MAX_VOLTAGE = 3.3   # The max voltage, in volts, the sensor returns
 MAX_SPEED = 2       # The max speed to play the wave effect at, in either direction
 SAMPLES = 50        # The number of measurements to take per reading, to reduce noise
-SLEEP = 0.1         # The time to sleep between each voltage measurement
+INTERVAL = 0.1      # How often to take a voltage measurement, in seconds
 
 
 # Variables
@@ -43,6 +42,10 @@ player.effects = [
 ]
 
 
+# Reading a sensor takes time of its own, so a pacer holds the readings to the
+# interval rather than adding it to each one, as sleeping the whole interval would
+pacer = Pacer(INTERVAL)
+
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     player.start()   # Start the effects running
@@ -61,7 +64,7 @@ try:
         # Apply the percentage, centred around its middle to the wave
         wave.speed = (percent - 0.5) * 2 * MAX_SPEED
 
-        time.sleep(SLEEP)
+        pacer.hold()
 
 # Stop any running effects and turn off all the outputs
 finally:

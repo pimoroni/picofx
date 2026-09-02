@@ -2,6 +2,7 @@ import gc
 import time
 
 from mighty_fx import MightyFX, SPCE
+from timing import Pacer
 from playback import GIFPlayer
 from screens import Screen280
 from picovector import color, font, image, rect, shape
@@ -407,12 +408,14 @@ print(f"a {WIDTH}x{HEIGHT} interface doubled onto the panel, badge {emblem.width
       f" {len(STAGES)} stages over {len(mighty.outputs)} outputs, built in"
       f" {time.ticks_diff(time.ticks_ms(), marked)}ms")
 
-started = time.ticks_ms()
+# Everything on the panel is drawn from how long the program has been running, so it
+# looks the same however fast the frames come and the pacer names no rate to hold
+pacer = Pacer()
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        elapsed = time.ticks_diff(time.ticks_ms(), started)
+        elapsed = pacer.elapsed
         live, levels = levels_at(elapsed)
 
         # The outputs, from the same numbers the glass is about to be drawn from
@@ -423,6 +426,7 @@ try:
 
         draw(elapsed, live)
         screen.update(canvas, rotation=ROTATION, pixel_double=True)
+        pacer.hold()
 
 # Stop any running effects and turn off all the outputs
 finally:

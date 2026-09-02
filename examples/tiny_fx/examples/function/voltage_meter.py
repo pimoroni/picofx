@@ -1,5 +1,4 @@
-import time
-
+from timing import Pacer
 from tiny_fx import TinyFX
 
 """
@@ -13,11 +12,15 @@ BRIGHTNESS = 0.6    # The brightness to set the outputs
 MIN_VOLTAGE = 4     # The min voltage, in volts, to show on the meter
 MAX_VOLTAGE = 6     # The max voltage, in volts, to show on the meter
 SAMPLES = 50        # The number of measurements to take per reading, to reduce noise
-SLEEP = 0.1         # The time to sleep between each voltage measurement
+INTERVAL = 0.1      # How often to take a voltage measurement, in seconds
 
 # Variables
 tiny = TinyFX()                         # Create a new TinyFX object to interact with the board
 
+
+# Reading a sensor takes time of its own, so a pacer holds the readings to the
+# interval rather than adding it to each one, as sleeping the whole interval would
+pacer = Pacer(INTERVAL)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
@@ -39,7 +42,7 @@ try:
             # If the percent is above the level, turn the output on, otherwise turn it off
             tiny.outputs[i].brightness(BRIGHTNESS if percent >= level else 0)
 
-        time.sleep(SLEEP)
+        pacer.hold()
 
 # Turn off all the outputs
 finally:

@@ -1,6 +1,7 @@
 import math
 import time
 from mighty_fx import MightyFX, SPCE
+from timing import Roller
 from screens import Screen280
 from picovector import color, font, image, rect, shape
 
@@ -195,7 +196,10 @@ screen.update(canvas, rotation=90)
 
 turned = 0
 started = None
-settled_at = time.ticks_add(time.ticks_ms(), int(HOLD * 1000))
+
+# When the board is next due to turn. The hold runs from the moment the last turn
+# finished rather than on a fixed beat, which is what restart() starts again
+settled = Roller(HOLD)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
@@ -226,9 +230,9 @@ try:
                 turned = (turned + 120) % 360
                 turns = [turned] * SLATS
                 started = None
-                settled_at = time.ticks_add(now, int(HOLD * 1000))
+                settled.restart()
 
-        elif time.ticks_diff(now, settled_at) >= 0:
+        elif settled.reached():
             started = now
 
         else:

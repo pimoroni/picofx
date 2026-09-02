@@ -1,8 +1,8 @@
 import math
 import random
-import time
 
 from mighty_fx import MightyFX
+from timing import Pacer
 from servo import ANGULAR
 
 """
@@ -37,6 +37,11 @@ start_value = servo.mid_value()
 end_value = random.uniform(-SERVO_EXTENT, SERVO_EXTENT)
 update = 0
 
+# The movement is stepped a count at a time, so its length depends on the steps landing
+# on the rate they were counted for. A pacer holds that where sleeping the interval
+# would add whatever each step costs
+pacer = Pacer(fps=UPDATES)
+
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
@@ -59,7 +64,7 @@ try:
             end_value = random.uniform(-SERVO_EXTENT, SERVO_EXTENT)
             print("Heading for", round(end_value, 1), "degrees")
 
-        time.sleep(1 / UPDATES)
+        pacer.hold()
 
 # Stop driving the servo, drop the connectors' power and turn off all the outputs
 finally:

@@ -1,5 +1,4 @@
-import time
-
+from timing import Pacer
 from mighty_fx import MightyFX
 from sensor import ANALOG
 
@@ -20,13 +19,17 @@ BRIGHTNESS = 0.6    # The brightness to set the outputs
 MIN_VOLTAGE = 0     # The min voltage, in volts, the sensor returns
 MAX_VOLTAGE = 3.3   # The max voltage, in volts, the sensor returns
 SAMPLES = 50        # The number of measurements to take per reading, to reduce noise
-SLEEP = 0.1         # The time to sleep between each voltage measurement
+INTERVAL = 0.1      # How often to take a voltage measurement, in seconds
 LOW_HUE = 0.666     # The hue of the lowest output, being blue
 HIGH_HUE = 0.0      # The hue of the highest, coming back down the wheel to red
 
 # Variables
 mighty = MightyFX(sensor=ANALOG)    # Create a new MightyFX object, with an analog sensor on its connector
 
+
+# Reading a sensor takes time of its own, so a pacer holds the readings to the
+# interval rather than adding it to each one, as sleeping the whole interval would
+pacer = Pacer(INTERVAL)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
@@ -54,7 +57,7 @@ try:
             hue = LOW_HUE + (HIGH_HUE - LOW_HUE) * i / (len(mighty.outputs) - 1)
             mighty.outputs[i].set_hsv(hue, 1.0, BRIGHTNESS * level)
 
-        time.sleep(SLEEP)
+        pacer.hold()
 
 # Turn off all the outputs
 finally:

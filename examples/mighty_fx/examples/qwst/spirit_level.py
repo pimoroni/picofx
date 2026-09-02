@@ -1,5 +1,6 @@
 import time
 
+from timing import Pacer
 from lsm6ds3 import LSM6DS3
 from mighty_fx import MightyFX
 
@@ -34,7 +35,7 @@ TILT_EXTENT = 0.5   # The sideways pull, as a fraction of gravity, that reaches 
 LEVEL_HUE = 0.333   # The hue of a level board, being green
 TILTED_HUE = 0.0    # The hue at the ends of the travel, being red
 ONE_G = 16384       # What the sensor reads for gravity alone, at its default scale
-SLEEP = 0.02        # The time to sleep between each reading
+INTERVAL = 0.02     # How often to take a reading, in seconds
 SETTLE = 0.1        # The time to give the sensor to make its first measurement
 
 # Variables
@@ -52,6 +53,10 @@ time.sleep(SETTLE)
 # what was there rather than replacing it
 smoothed = imu.get_readings()[AXIS] / ONE_G
 
+
+# Reading a sensor takes time of its own, so a pacer holds the readings to the
+# interval rather than adding it to each one, as sleeping the whole interval would
+pacer = Pacer(INTERVAL)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
@@ -75,7 +80,7 @@ try:
             nearness = max(0.0, 1.0 - abs(position - i))
             output.set_hsv(hue, 1.0, BRIGHTNESS * nearness)
 
-        time.sleep(SLEEP)
+        pacer.hold()
 
 # Turn off all the outputs
 finally:

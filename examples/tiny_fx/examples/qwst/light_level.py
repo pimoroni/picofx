@@ -1,5 +1,4 @@
-import time
-
+from timing import Pacer
 from breakout_ltr559 import BreakoutLTR559
 from tiny_fx import TinyFX
 
@@ -22,7 +21,7 @@ Press "Boot" to exit the program.
 # Constants
 LUX_LOW = 60        # The light level, in Lux, below which the lamps come on
 LUX_HIGH = 70       # The light level, in Lux, above which they go off again
-SLEEP = 0.1         # The time to sleep between each light measurement
+INTERVAL = 0.1      # How often to take a light measurement, in seconds
 
 # Variables
 tiny = TinyFX()                     # Create a new TinyFX object to interact with the board
@@ -37,6 +36,10 @@ ltr.get_reading()
 # Set up a flicker effect to play on every output, so the lamps are never quite steady
 player.effects = [FlickerFX() for _ in tiny.outputs]
 
+
+# Reading a sensor takes time of its own, so a pacer holds the readings to the
+# interval rather than adding it to each one, as sleeping the whole interval would
+pacer = Pacer(INTERVAL)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
@@ -54,7 +57,7 @@ try:
                 player.stop()
                 tiny.clear()
 
-        time.sleep(SLEEP)
+        pacer.hold()
 
 # Stop any running effects and turn off all the outputs
 finally:

@@ -1,5 +1,4 @@
-import time
-
+from timing import Pacer
 from breakout_ltr559 import BreakoutLTR559
 from mighty_fx import MightyFX
 
@@ -23,7 +22,7 @@ Press "Boot" to exit the program.
 LAMP_COLOUR = (255, 170, 80)    # The warm colour the lamps light in
 LUX_LOW = 60                    # The light level, in Lux, below which the lamps come on
 LUX_HIGH = 70                   # The light level, in Lux, above which they go off again
-SLEEP = 0.1                     # The time to sleep between each light measurement
+INTERVAL = 0.1                  # How often to take a light measurement, in seconds
 
 # Variables
 mighty = MightyFX()                     # Create a new MightyFX object to interact with the board
@@ -44,6 +43,10 @@ player.colours = LAMP_COLOUR
 player.effects = [FlickerFX() for _ in mighty.outputs]
 
 
+# Reading a sensor takes time of its own, so a pacer holds the readings to the
+# interval rather than adding it to each one, as sleeping the whole interval would
+pacer = Pacer(INTERVAL)
+
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
@@ -60,7 +63,7 @@ try:
                 player.stop()
                 mighty.clear()
 
-        time.sleep(SLEEP)
+        pacer.hold()
 
 # Stop any running effects and turn off all the outputs
 finally:
