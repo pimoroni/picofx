@@ -393,6 +393,18 @@ class SPCEPort:
         if self.__backlight is not None:
             self.__backlight.off()
 
+    def stop_panels(self):
+        """Take every panel on this port dark and asleep.
+
+        Ahead of release(), a pin handed back being unable to carry a command. Each
+        panel is reached over its own chip select, a hub's among them. A frame left
+        staged owns DC, so it is abandoned first; nothing is going to the glass after
+        this anyway.
+        """
+        for screen in self.__screens:
+            screen.display.abort_frame()
+            screen.CONTROLLER.stop(screen)
+
     def release(self):
         """Hand back the bus's DMA channel and its screens' SRAM claims, which
         nothing else gives up early, and stop driving the connector's lines.

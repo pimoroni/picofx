@@ -31,6 +31,7 @@ REG_PORCTRL   = const(0xB2)
 REG_GMCTRP1   = const(0xE0)
 REG_GMCTRN1   = const(0xE1)
 REG_INVOFF    = const(0x20)
+REG_SLPIN     = const(0x10)
 REG_SLPOUT    = const(0x11)
 REG_DISPON    = const(0x29)
 REG_GAMSET    = const(0x26)
@@ -138,6 +139,18 @@ def reset(screen):
     screen.command(REG_SWRESET)
 
     time.sleep(0.5)
+
+
+def stop(screen):
+    """Take a panel dark and put its controller to sleep.
+
+    The panel keeps its memory either way, so this is about what it is doing rather
+    than what it holds: left scanning, the frame comes back the moment anything
+    drives the backlight line. Construction resets the panel, so nothing is needed
+    to wake one.
+    """
+    screen.command(REG_DISPOFF)
+    screen.command(REG_SLPIN)
 
 
 def setup(screen, width, height, bitdepth_code, framerate_code, te=True):

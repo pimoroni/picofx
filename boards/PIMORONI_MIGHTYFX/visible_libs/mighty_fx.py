@@ -425,6 +425,12 @@ class MightyFX:
         self.spce_a.backlight_off()
         self.spce_b.backlight_off()
 
+        # A panel keeps its frame and keeps scanning it, so anything later driving the
+        # backlight line shows it again, which reads as the board never having stopped.
+        # After the light is out, so nothing is seen going dark
+        self.spce_a.stop_panels()
+        self.spce_b.stop_panels()
+
         # Give the DMA channels back rather than waiting for the GC, so a program
         # that builds screens repeatedly does not exhaust the 16 the chip has
         self.spce_a.release()
