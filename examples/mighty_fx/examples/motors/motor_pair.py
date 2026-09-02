@@ -1,6 +1,7 @@
 import math
 import time
 from mighty_fx import MightyFX, SPCE
+from motor_driver import MotorDriver
 
 """
 Sweep a pair of motors up and down their speed range together, on an SP/CE connector
@@ -21,7 +22,7 @@ SPEED_EXTENT = 1.0      # How far from zero to drive the motors when sweeping
 
 mighty = MightyFX(spce_a=SPCE.MOTOR_DRIVER)
 
-driver = mighty.driver_a    # The driver on the A connector, and the two motors it holds
+driver = MotorDriver(mighty.spce_a)    # The driver on the A connector, and the two motors it holds
 i = 0
 
 driver.enable()             # Power it, which the board leaves off until asked

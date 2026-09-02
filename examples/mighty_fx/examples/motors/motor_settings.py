@@ -1,6 +1,7 @@
 import time
 
 from mighty_fx import MightyFX, SPCE
+from motor_driver import MotorDriver
 from motor import FAST_DECAY, SLOW_DECAY
 
 from pimoroni import NORMAL_DIR, REVERSED_DIR
@@ -21,7 +22,7 @@ HOLD = 2                # The time, in seconds, to hold each setting
 
 # Variables
 mighty = MightyFX(spce_a=SPCE.MOTOR_DRIVER)
-driver = mighty.driver_a
+driver = MotorDriver(mighty.spce_a)
 motor = driver.motor_a  # Everything here is shown on one of the driver's two motors
 
 driver.enable()         # Power the driver, which the board leaves off until asked

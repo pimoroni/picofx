@@ -103,8 +103,8 @@ class MightyFX:
     WAKE_LEVEL = 0.1
 
     def __init__(self, spce_a=None, spce_b=None, strip_l=None, strip_r=None,
-                 servo_l=None, servo_r=None, sensor=None, init_i2c=True, init_wav=True,
-                 wav_root="/"):
+                 servo_l=None, servo_r=None, sensor=None, init_i2c=True, i2c_freq=100000,
+                 init_wav=True, wav_root="/"):
         # A canvas claim has no object to finalise it, so one outlives the program
         # that made it where a screen's own workspace does not: a soft reset after a
         # run that skipped shutdown() leaves the SRAM held and the next program short
@@ -153,7 +153,7 @@ class MightyFX:
         # rather than one, so the pairing is checked here and the hub built for the
         # user. Imported only where a board asked for one, a program with no screens
         # having no reason to load the package.
-        self.hub = None
+        self.__hub = None
         for screen_port, lines_port in ((self.spce_a, self.spce_b), (self.spce_b, self.spce_a)):
             if lines_port.mode != SPCE.HUB_LINES:
                 continue
@@ -162,23 +162,12 @@ class MightyFX:
                 raise ValueError(f"SP/CE {lines_port.name} is declared SPCE.HUB_LINES, which are the chip selects for panels on the other connector, so declare SP/CE {screen_port.name} as SPCE.SCREEN")
 
             from screens import ScreenHub
-            self.hub = ScreenHub(screen_port, extra_cs=lines_port.hub_lines)
-
-        # A port declared a motor driver drives two motors from its four data pins,
-        # and powers them from its fifth. Imported only where one was asked for.
-        self.__drivers = {}
-        for letter, mode, motor_pins, enable_pin in (
-                ("A", spce_a, ((self.SPCE_A_DC_PIN, self.SPCE_A_CS_PIN),
-                               (self.SPCE_A_SCK_PIN, self.SPCE_A_MOSI_PIN)), self.SPCE_A_BL_PIN),
-                ("B", spce_b, ((self.SPCE_B_DC_PIN, self.SPCE_B_CS_PIN),
-                               (self.SPCE_B_SCK_PIN, self.SPCE_B_MOSI_PIN)), self.SPCE_B_BL_PIN)):
-            if mode == SPCE.MOTOR_DRIVER:
-                from motor_driver import MotorDriver
-                self.__drivers[letter] = MotorDriver(motor_pins, enable_pin)
+            self.__hub = ScreenHub(screen_port, extra_cs=lines_port.hub_lines)
 
         # Set up the i2c for Qw/st, if the user wants
+        self.__i2c = None
         if init_i2c:
-            self.i2c = PimoroniI2C(self.I2C_SDA_PIN, self.I2C_SCL_PIN, 100000)
+            self.__i2c = PimoroniI2C(self.I2C_SDA_PIN, self.I2C_SCL_PIN, i2c_freq)
 
         # Set up the user switch. A press is caught by interrupt as well as read as
         # a level, so a tap inside a long frame is not missed by a program that only
@@ -196,9 +185,9 @@ class MightyFX:
         self.__sensor = build_sensor(sensor, self.SENSOR_PIN, self.SENSOR_PIO, self.SENSOR_SM)
 
         # Set up the wav (and tone) player, if the user wants
-        self.wav = None
+        self.__wav = None
         if init_wav:
-            self.wav = WavPlayer(0, self.I2S_BCLK_PIN, self.I2S_LRCLK_PIN, self.I2S_DATA_PIN, self.AMP_EN_PIN, root=wav_root)
+            self.__wav = WavPlayer(0, self.I2S_BCLK_PIN, self.I2S_LRCLK_PIN, self.I2S_DATA_PIN, self.AMP_EN_PIN, root=wav_root)
 
         # Set up the enable for the rail the L and R connectors share
         self.__rail_en = Pin(self.SERVO_STRIP_EN, Pin.OUT, value=False)
@@ -299,21 +288,23 @@ class MightyFX:
         return ((val * 3.3 * self.V_SENSE_GAIN) / 65535) + self.V_SENSE_DIODE_CORRECTION
 
     @property
-    def driver_a(self):
-        """The motor driver on SP/CE A, or why there is none to hand back."""
-        return self.__declared_driver("A")
+    def hub(self):
+        """The six-panel screen hub, built where the board's ports declare one."""
+        if self.__hub is None:
+            raise RuntimeError("hub is only accessible if the board was created with one SP/CE port as SPCE.SCREEN and the other as SPCE.HUB_LINES")
+        return self.__hub
 
     @property
-    def driver_b(self):
-        """The motor driver on SP/CE B, or why there is none to hand back."""
-        return self.__declared_driver("B")
+    def i2c(self):
+        if self.__i2c is None:
+            raise RuntimeError("i2c is only accessible if the board was created with init_i2c=True")
+        return self.__i2c
 
-    def __declared_driver(self, letter):
-        made = self.__drivers.get(letter)
-        if made is None:
-            raise RuntimeError(f"driver_{letter.lower()} is only there where the board was started with spce_{letter.lower()}=SPCE.MOTOR_DRIVER")
-
-        return made
+    @property
+    def wav(self):
+        if self.__wav is None:
+            raise RuntimeError("wav is only accessible if the board was created with init_wav=True")
+        return self.__wav
 
     @property
     def one(self):
@@ -373,14 +364,15 @@ class MightyFX:
         if letter in (self.__servos if role == "strip" else self.__strips):
             raise RuntimeError(f"The {letter} connector is set up as a {other}, so it has no {role}")
 
-        asked = "60" if role == "strip" else "True"
-        raise RuntimeError(f"{role}_{letter.lower()} is only there where the board was started with {role}_{letter.lower()}={asked}")
+        name = f"{role}_{letter.lower()}"
+        asked = f"its LED count, {name}=60 for example" if role == "strip" else f"{name}=True"
+        raise RuntimeError(f"{name} is only accessible if the board was created with {asked}")
 
     @property
     def sensor(self):
         """What the sensor connector was declared as, or why there is nothing to hand back."""
         if self.__sensor is None:
-            raise RuntimeError("sensor is only there where the board was started with sensor=ANALOG, sensor=PIR or sensor=IR")
+            raise RuntimeError("sensor is only accessible if the board was created with sensor=ANALOG, sensor=PIR or sensor=IR")
 
         return self.__sensor
 
@@ -404,10 +396,11 @@ class MightyFX:
 
         # A motor left driving keeps going until something stops it, so both stop
         # before the power they share is taken away
-        for driver in self.__drivers.values():
-            for motor in driver.motors:
-                motor.disable()
-            driver.disable()
+        for port in (self.spce_a, self.spce_b):
+            if port.driver is not None:
+                for motor in port.driver.motors:
+                    motor.disable()
+                port.driver.disable()
 
         # A servo holds its position while it is driven, so it stops being driven
         # before the rail goes: the two together leave it limp rather than pushing
@@ -441,5 +434,5 @@ class MightyFX:
         # addresses instead of the region marching up.
         release_buffers()
 
-        if self.wav:
-            self.wav.deinit()
+        if self.__wav:
+            self.__wav.deinit()

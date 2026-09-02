@@ -105,7 +105,7 @@ class Backlight(PWMLED):
 
         self.brightness(self.__level)
 
-    def __frame_shown(self, source=None, to=None, hold=False):
+    def __frame_shown(self, source=None, to=None, keep_dark=False):
         """Note a frame reaching the glass, which is what a dark line waits for.
 
         Only from power-on: a line taken dark by off() stays dark until it is asked
@@ -114,8 +114,9 @@ class Backlight(PWMLED):
         source is what was written and to the panels it reached. Called with neither,
         the first frame lights the line whatever any screen asked for.
 
-        hold counts the frame but leaves the line dark, handing back the scan to spend
-        before reveal_now(); None says the line is not ready and nothing is owed.
+        keep_dark counts the frame but leaves the line unlit, handing back the scan
+        to spend before __reveal_now(); None says the line is not ready and nothing
+        is owed.
         """
         if not self.__waiting:
             return None
@@ -144,7 +145,7 @@ class Backlight(PWMLED):
                                  f" without reveal_together.")
                 return None
 
-        if hold:
+        if keep_dark:
             return self.__scan_ms
 
         self.__wait_a_scan()
@@ -204,8 +205,14 @@ class SPCEPort:
         self.mode = mode
 
         # A motor port's pins belong to its Motor objects, and an undeclared port is
-        # left alone, so neither offers them up
+        # left alone, so neither offers them up as Pins; the raw numbers stay for
+        # motor_pins, a Motor wanting a number where a screen wants the object
+        self.__pin_numbers = tuple(pins)
         self.__pins = tuple(Pin(pin) for pin in pins) if mode in (SPCE.SCREEN, SPCE.GPIO, SPCE.HUB_LINES) else None
+
+        # The MotorDriver built on this port, which sets it, so a board's shutdown
+        # can stop motors it did not build
+        self.driver = None
 
         # The contract a screen reads by attribute, uniform with a hub's port: the
         # connector a port belongs to is itself, its own DC line is what a screen
@@ -245,6 +252,19 @@ class SPCEPort:
             raise ValueError(f"SP/CE {self.name} is not declared SPCE.HUB_LINES, so its pins are not a hub's chip selects")
 
         return self.__pins
+
+    @property
+    def motor_pins(self):
+        """The four data pins as the two motors' pin pairs, then the shared enable.
+
+        Only a port declared SPCE.MOTOR_DRIVER offers them, so spending a connector
+        on motors is visible in the call that declared it.
+        """
+        if self.mode != SPCE.MOTOR_DRIVER:
+            raise ValueError(f"SP/CE {self.name} is not declared SPCE.MOTOR_DRIVER, so its pins are not a motor driver's")
+
+        numbers = self.__pin_numbers
+        return ((numbers[0], numbers[1]), (numbers[2], numbers[3])), numbers[4]
 
     def __line(self, index):
         if self.mode != SPCE.SCREEN:

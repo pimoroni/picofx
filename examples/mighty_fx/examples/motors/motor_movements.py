@@ -1,6 +1,7 @@
 import time
 
 from mighty_fx import MightyFX, SPCE
+from motor_driver import MotorDriver
 
 from picofx.colour import RED, WHITE
 
@@ -25,7 +26,7 @@ PAUSE_TIME = 0.5        # The time, in seconds, to stand still between movements
 
 # Variables
 mighty = MightyFX(spce_a=SPCE.MOTOR_DRIVER)
-driver = mighty.driver_a
+driver = MotorDriver(mighty.spce_a)
 
 driver.enable()         # Power the driver, which the board leaves off until asked
 

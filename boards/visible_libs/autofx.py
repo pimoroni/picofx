@@ -2736,7 +2736,11 @@ def __build_sounds(entries, fx, problems):
     """
     sounds = []
     taken = set()
-    wav = getattr(fx, "wav", None)
+    # A board without audio raises from the property, naming the setting to change
+    try:
+        wav = fx.wav
+    except (AttributeError, RuntimeError):
+        wav = None
 
     for entry in entries:
         if wav is None:

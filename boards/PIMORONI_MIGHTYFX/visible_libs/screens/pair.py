@@ -44,7 +44,7 @@ def update_pair(first, second, v_sync=None):
     # Each port's backlight spends a scan before it lights, so taking them in turn
     # brings the second panel up a scan late. Asked to reveal together they share one
     together = first.reveal_together and second.reveal_together
-    owed = (first.__drawn(hold=together), second.__drawn(hold=together))
+    owed = (first.__drawn(keep_dark=together), second.__drawn(keep_dark=together))
     if together and None not in owed:
         time.sleep_ms(max(owed))
         first.backlight.__reveal_now()

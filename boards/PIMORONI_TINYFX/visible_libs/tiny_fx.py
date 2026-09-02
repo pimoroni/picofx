@@ -50,8 +50,9 @@ class TinyFX:
         self.rgb = RGBLED(*self.RGB_PINS, invert=False, gamma=self.RGB_GAMMA)
 
         # Set up the i2c for Qw/st, if the user wants
+        self.__i2c = None
         if init_i2c:
-            self.i2c = PimoroniI2C(self.I2C_SDA_PIN, self.I2C_SCL_PIN, i2c_freq)
+            self.__i2c = PimoroniI2C(self.I2C_SDA_PIN, self.I2C_SCL_PIN, i2c_freq)
 
         # Set up the user switch. A press is caught by interrupt as well as read as
         # a level, so a tap inside a long frame is not missed by a program that only
@@ -69,17 +70,29 @@ class TinyFX:
         self.__sensor = build_sensor(sensor, self.SENSOR_PIN, self.SENSOR_PIO, self.SENSOR_SM)
 
         # Set up the wav (and tone) player, if the user wants
-        self.wav = None
+        self.__wav = None
         if init_wav:
-            self.wav = WavPlayer(0, self.I2S_BCLK_PIN, self.I2S_LRCLK_PIN, self.I2S_DATA_PIN, self.AMP_EN_PIN, root=wav_root)
+            self.__wav = WavPlayer(0, self.I2S_BCLK_PIN, self.I2S_LRCLK_PIN, self.I2S_DATA_PIN, self.AMP_EN_PIN, root=wav_root)
 
     @property
     def sensor(self):
         """What the sensor connector was declared as, or why there is nothing to hand back."""
         if self.__sensor is None:
-            raise RuntimeError("sensor is only there where the board was started with sensor=ANALOG, sensor=PIR or sensor=IR")
+            raise RuntimeError("sensor is only accessible if the board was created with sensor=ANALOG, sensor=PIR or sensor=IR")
 
         return self.__sensor
+
+    @property
+    def i2c(self):
+        if self.__i2c is None:
+            raise RuntimeError("i2c is only accessible if the board was created with init_i2c=True")
+        return self.__i2c
+
+    @property
+    def wav(self):
+        if self.__wav is None:
+            raise RuntimeError("wav is only accessible if the board was created with init_wav=True")
+        return self.__wav
 
     def boot_pressed(self):
         return self.__switch.value() == 0
@@ -152,5 +165,5 @@ class TinyFX:
             self.__sensor.stop()
             self.__sensor = None
             gc.collect()
-        if self.wav:
-            self.wav.deinit()
+        if self.__wav:
+            self.__wav.deinit()

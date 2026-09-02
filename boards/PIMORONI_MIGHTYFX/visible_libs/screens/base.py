@@ -151,7 +151,7 @@ class ScreenBase:
 
         return canvas
 
-    def __drawn(self, to=None, hold=False):
+    def __drawn(self, to=None, keep_dark=False):
         """Note that a frame has landed, which the backlight waits for.
 
         Every panel on a port is cleared as it is brought up, so one frame anywhere
@@ -159,13 +159,13 @@ class ScreenBase:
         whatever the program goes on to draw and to whichever screens.
 
         to is the panels the frame reached, a narrowed group write covering only the
-        members it named. hold leaves the line dark and hands back the scan, for a
-        caller lighting several ports on one wait.
+        members it named. keep_dark leaves the line unlit and hands back the scan,
+        for a caller lighting several ports on one wait.
         """
         if self.__backlight is None:
             return None
 
-        return self.__backlight.__frame_shown(self, to, hold)
+        return self.__backlight.__frame_shown(self, to, keep_dark)
 
     def __command(self, command, data=None):
         self.__display.command(command, data)

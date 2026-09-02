@@ -1,6 +1,7 @@
 import time
 
 from mighty_fx import MightyFX, SPCE
+from motor_driver import MotorDriver
 
 """
 Play an evocative musical melody on MightyFX's motors, on a driver on SP/CE port A.
@@ -26,7 +27,7 @@ TOGGLE_US = 2000        # How long to hold each direction when singing stationar
 
 # Variables
 mighty = MightyFX(spce_a=SPCE.MOTOR_DRIVER)
-driver = mighty.driver_a
+driver = MotorDriver(mighty.spce_a)
 index = 0
 
 driver.enable()         # Power the driver, which the board leaves off until asked
