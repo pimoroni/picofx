@@ -174,9 +174,10 @@ class ScreenGroup(ScreenBase):
                              rotation=parent.rotation if rotation is None else rotation,
                              mirror=parent.mirror if mirror is None else mirror)
             self.__subset_of = parent
-            # Alignment stays the parent's, so a subset reports it rather than
-            # owning it: its members are held whether or not this set writes them.
-            self.__aligned = parent.is_aligned()
+            # Calibration stays the parent's, so a subset copies its outcome;
+            # the hold is asked live, is_aligned() forwarding to the parent,
+            # since its members are held whether or not this set writes them.
+            self.__calibrated = parent.__calibrated
             self.__reference = parent.__reference
             self.__floor_us = parent.__floor_us
             self.__acquired_us = parent.__acquired_us
@@ -226,7 +227,7 @@ class ScreenGroup(ScreenBase):
                          first.__reserve, members=tuple(screens), leader=nominated,
                          rotation=rotation, mirror=mirror)
 
-        self.__aligned = False
+        self.__calibrated = False
         # Three states, not two. Nulling the members' rates stops them drifting apart
         # quickly; an acquisition brings their scans together at one instant; only a
         # hold keeps them there. The residual rate spread separates them again at 30
@@ -382,7 +383,7 @@ class ScreenGroup(ScreenBase):
             logging.debug(f"screens: verified at {held}, spread {max(held) - min(held)}us")
             self.__target_us = target
 
-        self.__aligned = True
+        self.__calibrated = True
         self.__floor_us = quanta
         self.__line_us = tuple(line_us)
         # In microseconds, per member, so an acquisition can tell which of them can
@@ -1066,24 +1067,16 @@ class ScreenGroup(ScreenBase):
         logging.info(f"screens: this group is not holding its panels in phase. {why}")
 
     def is_aligned(self):
-        """Whether the members are held to one refresh rate.
+        """Whether the members are being held together, so a frame lands untorn on all of them.
 
-        Their rates, not their phases: this stops them drifting apart, and on the
-        glass it slows a tear band rather than removing one. is_in_phase() is the
-        state that makes a panel come out clean.
-        """
-        return self.__aligned
-
-    def is_in_phase(self):
-        """Whether the members' scans are being held together, not merely their rates.
-
-        Held, not reached: acquisition brings them together at one instant and the
-        residual rate spread pulls them apart again inside two periods, so only a
-        hold makes this true for longer than a tenth of a second. It is what lets the
-        wait target move, which is why the trim rotates on it.
+        The state, not the request: acquisition brings the scans together at one
+        instant and only the hold keeps them there, so this reads False until the
+        hold is carrying them and False again if a long pause loses them. One rate
+        held without the phases is not enough, slowing a tear band rather than
+        removing one, so it reads False there too.
         """
         if self.__subset_of is not None:
-            return self.__subset_of.is_in_phase()
+            return self.__subset_of.is_aligned()
         return self.__holding
 
     def subset(self, *screens, leader=None, reveal_together=False):
