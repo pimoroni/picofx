@@ -158,6 +158,30 @@ inline void prepare_palette(uint8_t *table, const uint8_t *palette, size_t palet
     }
 }
 
+// A wide pair-format background fill, four packed pixel pairs per 12-byte piece.
+// A separate function deliberately: held in convert_band's body, block or loops,
+// it cost the covered path 1% in register pressure. The count is even, as every
+// fill's is.
+__attribute__((noinline))
+inline uint8_t *fill_bg_pairs(uint8_t *dst_ptr, int pixels, const uint8_t *bg_packed) {
+    uint8_t block[12];
+    for (int i = 0; i < 12; ++i) {
+        block[i] = bg_packed[i % 3];
+    }
+    int i = 0;
+    for (; i + 7 < pixels; i += 8) {
+        memcpy(dst_ptr, block, 12);
+        dst_ptr += 12;
+    }
+    for (; i < pixels; i += 2) {
+        dst_ptr[0] = bg_packed[0];
+        dst_ptr[1] = bg_packed[1];
+        dst_ptr[2] = bg_packed[2];
+        dst_ptr += 3;
+    }
+    return dst_ptr;
+}
+
 // Destination packers. RGB444 packs two pixels into three bytes; RGB565 packs one
 // into two big-endian bytes. format is the runtime tag, and the panel bit depth.
 struct RGB444 {
@@ -178,9 +202,9 @@ struct RGB565 {
     static constexpr bool pairs = false;
 
     static inline void pack1(uint8_t *out, uint8_t r, uint8_t g, uint8_t b) {
-        uint16_t value = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
-        out[0] = (value >> 8) & 0xff;
-        out[1] = value & 0xff;
+        const uint16_t value = (uint16_t)__builtin_bswap16(
+            ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3));
+        memcpy(out, &value, 2);
     }
 };
 
@@ -401,6 +425,9 @@ void convert_band(const Descriptor &desc, uint8_t *dst_band, int first_row,
     // A pair format needs an even count, which every call site holds to.
     auto fill_bg = [&](uint8_t *dst_ptr, int pixels) {
         if constexpr (Dst::pairs) {
+            if (pixels >= 8) {
+                return fill_bg_pairs(dst_ptr, pixels, bg_packed);
+            }
             for (int i = 0; i < pixels; i += 2) {
                 dst_ptr[0] = bg_packed[0];
                 dst_ptr[1] = bg_packed[1];
@@ -598,10 +625,6 @@ struct Transform {
     int rotation;
     bool mirror;
 };
-
-inline Transform map_transform(int rotation, int mirror) {
-    return {rotation, mirror != 0};
-}
 
 // A selected kernel instantiation: converts row_count destination rows from first_row.
 using ConvertFn = void (*)(const Descriptor &, uint8_t *, int, int);
