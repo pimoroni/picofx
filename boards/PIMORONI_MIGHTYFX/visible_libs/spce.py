@@ -7,6 +7,7 @@
 # and hands them out, so the contract a screen is built through lives here rather
 # than beside the board class it has nothing to do with.
 
+import logging
 import time
 
 from machine import Pin
@@ -25,9 +26,11 @@ class Backlight(PWMLED):
     """A screen backlight, driven as any other LED on the board is.
 
     Dark from power-on until a screen on its port has shown a frame, so no panel
-    lights on what bringup left it holding. off() takes it dark again and keeps the
-    brightness, so on() brings the same level back, and both wait a scan so content
-    written while dark is everywhere before the light returns.
+    lights on what bringup left it holding. Screens created with reveal_together hold
+    it until every one of them has drawn, which is asked for rather than assumed
+    because one never drawn leaves the line dark. off() takes it dark again and keeps
+    the brightness, so on() brings the same level back, and both wait a scan so
+    content written while dark is everywhere before the light returns.
 
     0.0 is off and every setting above it lands somewhere the panel answers, so the
     range a caller is given is the range they can see. Screens on one port share the
@@ -57,6 +60,8 @@ class Backlight(PWMLED):
         self.__control = 0.0   # The setting as it was asked for, which toggle inverts
         self.__lit = False
         self.__waiting = True  # Dark until a frame lands, against dark by choice
+        self.__shown = []      # The screens asking to reveal together that have drawn
+        self.__said = False    # Whether the wait has already explained itself
 
         # The minimum in the terms the gamma reads, so a setting maps onto it there
         self.__lowest = pow(self.MINIMUM_DUTY, 1.0 / self.GAMMA)
@@ -68,7 +73,10 @@ class Backlight(PWMLED):
         spelling. Everything above it spans MINIMUM_DUTY to full.
         """
         value = min(1.0, max(0.0, value))
-        self.__waiting = False
+        if self.__waiting:
+            self.__waiting = False
+            self.__shown = []   # Nothing left to count, so the screens are let go
+
         self.__control = value
         self.__lit = value > 0.0
         if self.__lit:
@@ -97,28 +105,82 @@ class Backlight(PWMLED):
 
         self.brightness(self.__level)
 
-    def frame_shown(self):
+    def frame_shown(self, source=None, to=None, hold=False):
         """Note a frame reaching the glass, which is what a dark line waits for.
 
         Only from power-on: a line taken dark by off() stays dark until it is asked
         for again, however much is drawn meanwhile.
+
+        source is what was written and to the panels it reached. Called with neither,
+        the first frame lights the line whatever any screen asked for.
+
+        hold counts the frame but leaves the line dark, handing back the scan to spend
+        before reveal_now(); None says the line is not ready and nothing is owed.
         """
         if not self.__waiting:
-            return
+            return None
+
+        if source is not None:
+            asked = False
+            fresh = False
+            for screen in (source.screens if to is None else to):
+                if screen.reveal_together:
+                    asked = True
+                    if screen not in self.__shown:
+                        self.__shown.append(screen)
+                        fresh = True
+
+            waiting_for = self.__waiting_for()
+            if waiting_for:
+                # A frame reaching only panels already counted is a program looping
+                # without covering the rest, which is the shape a caller cannot see.
+                # One reaching panels that asked for nothing says nothing at all
+                if asked and not fresh and not self.__said:
+                    self.__said = True
+                    logging.info(f"screens: the backlight is waiting for {waiting_for} more"
+                                 f" screen{'' if waiting_for == 1 else 's'} to show a frame"
+                                 f" before it lights. Update {'it' if waiting_for == 1 else 'them'},"
+                                 f" call backlight.on() to light it now, or create the screens"
+                                 f" without reveal_together.")
+                return None
+
+        if hold:
+            return self.scan_ms()
 
         self.__wait_a_scan()
         self.brightness(self.__level)
+        return None
 
-    def __wait_a_scan(self):
-        """Hold for one full scan of the slowest screen on the port.
+    def forget_screens(self):
+        """Let go of the screens counted so far, their port having released them.
+
+        The wait itself stays where it is, re-arming it would blink a line already up.
+        """
+        self.__shown = []
+
+    def __waiting_for(self):
+        """How many screens asking to reveal together have yet to show a frame."""
+        return sum(1 for screen in self.__port.screens
+                   if screen.backlight is self and screen.reveal_together
+                   and screen not in self.__shown)
+
+    def scan_ms(self):
+        """One full scan of the slowest screen on the port, in milliseconds.
 
         A finished transfer is not a presented frame: each row keeps what the scan
         last painted there, so the panel needs a full pass before the new frame is
         everywhere.
         """
         slowest = self.__port.slowest_framerate
-        if slowest is not None:
-            time.sleep_ms(1000 // slowest + 3)
+        return 0 if slowest is None else 1000 // slowest + 3
+
+    def reveal_now(self):
+        """Light at the held level, for a caller that has already spent the scan."""
+        self.brightness(self.__level)
+
+    def __wait_a_scan(self):
+        """Hold for one full scan before the light comes up."""
+        time.sleep_ms(self.scan_ms())
 
 
 class SPCEPort:
@@ -354,6 +416,11 @@ class SPCEPort:
         # so they go too and a port built on again starts from nothing
         self.__cs_claimed.clear()
         self.__dc_claimed.clear()
+
+        # The backlight is holding those screens too. It keeps its level and its lit
+        # state, a line that is up staying up rather than blinking over a rebuild
+        if self.__backlight is not None:
+            self.__backlight.forget_screens()
 
         # Dropped as well as deleted, so the next screen on this port is made a fresh
         # bus with a channel of its own

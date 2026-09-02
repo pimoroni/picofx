@@ -68,6 +68,11 @@ class Screen(ScreenBase):
     rotation and mirror say how the panel is mounted, and every frame follows them
     unless it names its own, as v_sync is a setting update() follows.
 
+    reveal_together holds the port's backlight until every screen asking for it has
+    drawn, for a line-up that comes up as one. A panel never drawn holds the line
+    dark, so ask only on the ones the program covers; brightness() and on() still
+    light it.
+
     Settings resolve as: explicit keyword, then the PROFILES row for the
     (baudrate, bitdepth) pair, then the class constants. With no bitdepth named,
     the first depth in DEPTHS that has a row for the baud wins, so higher rates
@@ -127,7 +132,7 @@ class Screen(ScreenBase):
                  width=None, height=None, bitdepth=None, framerate=None,
                  baudrate=None, reserve=Reserve.CANVAS_SPACE, band_lines=None,
                  cache_columns=None, stage_lines=None, dual_profiles=None,
-                 rotation=0, mirror=False):
+                 rotation=0, mirror=False, reveal_together=False):
 
         # Ahead of the pin claims and the bringup below, so a bad angle costs
         # neither, the port otherwise being left holding claims for a screen
@@ -274,7 +279,8 @@ class Screen(ScreenBase):
         super().__init__(port.connector, display, width, height, bitdepth, backlight,
                          te_used, v_sync, reserve, shared_te=shared_te,
                          sync=self if shared_te else None,
-                         rotation=rotation, mirror=mirror)
+                         rotation=rotation, mirror=mirror,
+                         reveal_together=reveal_together)
 
         port.register(self)
 

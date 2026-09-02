@@ -41,10 +41,13 @@ class ScreenBase:
     rotation and mirror are how the panel is mounted, and every frame follows them
     unless it names its own.
 
+    reveal_together holds the port's backlight until every screen asking for it has
+    drawn, so a line-up comes up as one.
+
     Not built directly: construct a Screen subclass or a ScreenGroup.
     """
 
-    def __init__(self, port, display, width, height, bitdepth, backlight, te, v_sync, reserve, members=None, shared_te=False, sync=None, rotation=0, mirror=False):
+    def __init__(self, port, display, width, height, bitdepth, backlight, te, v_sync, reserve, members=None, shared_te=False, sync=None, rotation=0, mirror=False, reveal_together=False):
         __check_rotation(rotation)
         self.__port = port
         self.__display = display
@@ -66,6 +69,7 @@ class ScreenBase:
         self.__sync_delay_us = 0    # How long a write trails the wait, set by a holding group
         self.__rotation = rotation  # The angle every frame takes unless it names its own
         self.__mirror = bool(mirror)
+        self.__reveal_together = bool(reveal_together)
 
     @property
     def port(self):
@@ -111,6 +115,11 @@ class ScreenBase:
     def mirror(self):
         """Whether a frame is flipped left to right unless it says otherwise."""
         return self.__mirror
+
+    @property
+    def reveal_together(self):
+        """Whether the port's backlight waits for every screen asking for it."""
+        return self.__reveal_together
 
     @property
     def sync(self):
@@ -168,15 +177,21 @@ class ScreenBase:
 
         return canvas
 
-    def drawn(self):
+    def drawn(self, to=None, hold=False):
         """Note that a frame has landed, which the backlight waits for.
 
         Every panel on a port is cleared as it is brought up, so one frame anywhere
         on the line is enough: no panel is left holding what power-on put there,
         whatever the program goes on to draw and to whichever screens.
+
+        to is the panels the frame reached, a narrowed group write covering only the
+        members it named. hold leaves the line dark and hands back the scan, for a
+        caller lighting several ports on one wait.
         """
-        if self.__backlight is not None:
-            self.__backlight.frame_shown()
+        if self.__backlight is None:
+            return None
+
+        return self.__backlight.frame_shown(self, to, hold)
 
     def command(self, command, data=None):
         self.__display.command(command, data)
@@ -268,7 +283,7 @@ class ScreenBase:
                               sync=None if synced is None else synced.display,
                               sync_delay_us=delay)
         self.__synced_frame = synced
-        self.drawn()
+        self.drawn(to)
 
         # A member updated on its own still scans, so its frames advance its
         # group's hold too; a run of them would otherwise walk the group apart.

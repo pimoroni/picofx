@@ -41,8 +41,15 @@ def update_pair(first, second, v_sync=None):
         raise ValueError("v_sync needs both screens created with te, since each waits on its own panel's tearing-effect signal")
 
     spidisplay.update_all(first.display, second.display, v_sync=v_sync)
-    first.drawn()
-    second.drawn()
+
+    # Each port's backlight spends a scan before it lights, so taking them in turn
+    # brings the second panel up a scan late. Asked to reveal together they share one
+    together = first.reveal_together and second.reveal_together
+    owed = (first.drawn(hold=together), second.drawn(hold=together))
+    if together and None not in owed:
+        time.sleep_ms(max(owed))
+        first.backlight.reveal_now()
+        second.backlight.reveal_now()
 
 
 class ScreenPair:
@@ -72,6 +79,9 @@ class ScreenPair:
     whenever that screen is updated outside its pair, and by stop_aligning().
     update_pair() stays underneath as the stateless entry, which is what the
     diagnostics use.
+
+    reveal_together is asked of both screens, so the two ports' backlights come up on
+    one scan instead of a scan apart.
     """
 
     # The fine loop, as tools/check_te_align.py measured it
@@ -99,13 +109,18 @@ class ScreenPair:
     CAPTURE_TIMEOUT_MS = 500
     SCHEDULE_TIMEOUT_MS = 250   # an excursion spans at most MAX_FRAMES + 1 periods
 
-    def __init__(self, first, second, align=None):
+    def __init__(self, first, second, align=None, reveal_together=False):
         if first is second:
             raise ValueError("a pair needs two different screens")
         if first.port is second.port:
             raise ValueError("a pair needs a screen on each SP/CE port, since one port is one stream; broadcast() shares a port")
         if first.reserve != second.reserve:
             raise ValueError("a pair needs both screens built with the same reserve, since a reservation is shared out across the pair: set it on both, or on neither")
+
+        # Each port's own backlight is what holds, so the screens carry it
+        if reveal_together:
+            first.__reveal_together = True
+            second.__reveal_together = True
 
         self.__screens = (first, second)
         self.__align = False

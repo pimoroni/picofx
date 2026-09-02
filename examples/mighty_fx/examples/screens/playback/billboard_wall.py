@@ -30,11 +30,12 @@ mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_LINES)
 
 # The hub hands out a port per chip select it reaches, whether or not a panel is on the end
 # of it. One that is not there refuses to be created, so build them all and keep whichever
-# answered: a hub does not have to be full to be used
+# answered: a hub does not have to be full to be used. They share one backlight line and a
+# poster reaches them one at a time, so reveal_together holds it until all of them have one
 panels = []
 for port in mighty.hub.ports:
     try:
-        panels.append(Screen280(port))
+        panels.append(Screen280(port, reveal_together=True))
     except ValueError:
         pass
 

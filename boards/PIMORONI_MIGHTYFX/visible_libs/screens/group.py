@@ -47,6 +47,9 @@ class ScreenGroup(ScreenBase):
     bit depth, backlight and reserve from its first member: those have to agree
     anyway, where placement is a choice. A member updated on its own still places by
     its own, and the group says so where the two differ.
+
+    reveal_together is asked of every member. One group write covers them all, so it
+    only matters where a subset covers part of the line-up.
     """
 
     # The first probe after bringup reads long and settles within a second, so each
@@ -139,7 +142,7 @@ class ScreenGroup(ScreenBase):
     SWEEP_PAUSE_MS = 1000
 
     def __init__(self, *screens, sync=None, align=None, trim=None, parent=None,
-                 rotation=None, mirror=None):
+                 rotation=None, mirror=None, reveal_together=False):
         if not screens:
             raise ValueError("a broadcast group needs at least one screen")
 
@@ -147,6 +150,11 @@ class ScreenGroup(ScreenBase):
         for screen in screens:
             if screen.port is not port:
                 raise ValueError("a broadcast group has to be on one port, since two ports are two streams")
+
+        # The backlight counts panels, not whatever wrote them, so the members carry it
+        if reveal_together:
+            for screen in screens:
+                screen.__reveal_together = True
 
         # A subset is a member set over its parent's display, so it claims no
         # members, builds no display, and leaves ownership where it is.
@@ -1147,7 +1155,7 @@ class ScreenGroup(ScreenBase):
         """
         return self.__floor_us
 
-    def subset(self, *screens, sync=None):
+    def subset(self, *screens, sync=None, reveal_together=False):
         """A member set over this group's display, writing only what it names.
 
         Cheap enough to make per frame: no display and no finaliser, just this
@@ -1166,4 +1174,5 @@ class ScreenGroup(ScreenBase):
             if screen not in members:
                 raise ValueError(f"{screen} is not a member of this group, so it cannot be in a subset of it")
 
-        return ScreenGroup(*screens, sync=sync, parent=self.__subset_of or self)
+        return ScreenGroup(*screens, sync=sync, parent=self.__subset_of or self,
+                           reveal_together=reveal_together)
