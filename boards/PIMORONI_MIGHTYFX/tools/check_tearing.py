@@ -91,8 +91,8 @@ for baud, depth in CASES:
     canvases = [sources(screen) for screen in screens]
 
     print(f"\n{baud // 1_000_000}MHz {depth}bpp, offset {FPS_OFFSET:+}:"
-          f" 280 at {screens[0].framerate}fps band {screens[0].display.band_rows()}"
-          f" | 154 at {screens[1].framerate}fps band {screens[1].display.band_rows()},"
+          f" 280 at {screens[0].framerate}fps band {screens[0].__display.band_rows()}"
+          f" | 154 at {screens[1].framerate}fps band {screens[1].__display.band_rows()},"
           f" v_sync on, rotation 90")
 
     totals = [dict.fromkeys(STATS, 0) for _ in screens]
@@ -104,7 +104,7 @@ for baud, depth in CASES:
         which = (frames // FRAMES_PER_BACKGROUND) % 2
         for screen, pair, total in zip(screens, canvases, totals):
             screen.update(pair[which], rotation=90)
-            stats = screen.display.stats()
+            stats = screen.__display.stats()
             for field in STATS:
                 total[field] += getattr(stats, field)
         frames += 1

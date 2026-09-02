@@ -73,12 +73,8 @@ class ScreenBase:
 
     @property
     def port(self):
+        """The SP/CE connector this screen was built against."""
         return self.__port
-
-    @property
-    def display(self):
-        """The spidisplay.SPIDisplay a frame streams over, for its diagnostics."""
-        return self.__display
 
     @property
     def backlight(self):
@@ -96,15 +92,6 @@ class ScreenBase:
     @property
     def height(self):
         return self.__height
-
-    @property
-    def bitdepth(self):
-        return self.__bitdepth
-
-    @property
-    def v_sync(self):
-        """Whether a frame waits on the tearing-effect signal unless told otherwise."""
-        return self.__v_sync
 
     @property
     def rotation(self):
@@ -130,11 +117,6 @@ class ScreenBase:
         edge is safe for all of them.
         """
         return self.__sync
-
-    @property
-    def reserve(self):
-        """What this screen's share of the fast SRAM was set aside for."""
-        return self.__reserve
 
     def brightness(self, value):
         """Set how bright the backlight looks, from 0.0 to 1.0.
@@ -177,7 +159,7 @@ class ScreenBase:
 
         return canvas
 
-    def drawn(self, to=None, hold=False):
+    def __drawn(self, to=None, hold=False):
         """Note that a frame has landed, which the backlight waits for.
 
         Every panel on a port is cleared as it is brought up, so one frame anywhere
@@ -191,9 +173,9 @@ class ScreenBase:
         if self.__backlight is None:
             return None
 
-        return self.__backlight.frame_shown(self, to, hold)
+        return self.__backlight.__frame_shown(self, to, hold)
 
-    def command(self, command, data=None):
+    def __command(self, command, data=None):
         self.__display.command(command, data)
 
     @micropython.native
@@ -213,7 +195,7 @@ class ScreenBase:
             if screen not in members:
                 raise ValueError(f"{screen} is not one of these screens, so a frame cannot be sent to it")
 
-        return tuple(screen.display for screen in to)
+        return tuple(screen.__display for screen in to)
 
     def __sync_screen(self, v_sync, to):
         """The screen whose TE this write waits on, or None to leave TE alone.
@@ -280,10 +262,10 @@ class ScreenBase:
                               pixel_double=1 if pixel_double else 0,
                               offset=offset, tile=tile, bg=bg, v_sync=v_sync,
                               to=self.__write_targets(to),
-                              sync=None if synced is None else synced.display,
+                              sync=None if synced is None else synced.__display,
                               sync_delay_us=delay)
         self.__synced_frame = synced
-        self.drawn(to)
+        self.__drawn(to)
 
         # A member updated on its own still scans, so its frames advance its
         # group's hold too; a run of them would otherwise walk the group apart.
@@ -315,4 +297,4 @@ class ScreenBase:
                                pixel_double=1 if pixel_double else 0,
                                offset=offset, tile=tile, bg=bg,
                                to=self.__write_targets(to),
-                               sync=None if synced is None else synced.display)
+                               sync=None if synced is None else synced.__display)

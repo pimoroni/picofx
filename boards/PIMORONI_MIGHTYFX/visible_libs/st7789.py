@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
+#
+# SPDX-License-Identifier: MIT
+#
 # The ST7789 controller: its register codes, the tables a panel is tuned from, and
 # the bringup sequence. A screen class in screens.py names this module as its
 # CONTROLLER, so a second controller is a new module of the same shape.
@@ -69,7 +73,7 @@ PORCH = (12, 12)
 
 # Scan slots per refresh at those porches. Converts a TE period to a line time
 # whatever the panel's visible rows. A screen whose porch has moved spends its own
-# count, so read screen.line_slots rather than this.
+# count, held on the screen object, so read that rather than this.
 LINE_SLOTS = const(344)
 
 # PSEN off, then the idle and partial porches, which normal mode never reads

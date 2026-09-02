@@ -407,7 +407,7 @@ def check_pair():
                 moved[0] += slow_moved
                 moved[1] += fast_moved
 
-        late = sum(screen.display.te_timeouts() for screen in pair.screens)
+        late = sum(screen.__display.te_timeouts() for screen in pair.screens)
         for name, player, count in (("slow", slow, moved[0]), ("fast", fast, moved[1])):
             asked = player.target_fps() * PAIR_MS / 1000
             print("  {:<5} asked {:.1f}fps so {:.0f} frames, reached {} at {:.1f}fps".format(

@@ -167,9 +167,9 @@ class ScreenGroup(ScreenBase):
                 nominated = None
             # Placement is the parent's too, a subset writing into the parent's
             # display and so carrying the same one stream
-            super().__init__(port, parent.display, parent.width, parent.height,
-                             parent.bitdepth, parent.backlight, nominated is not None,
-                             nominated is not None, parent.reserve,
+            super().__init__(port, parent.__display, parent.width, parent.height,
+                             parent.__bitdepth, parent.backlight, nominated is not None,
+                             nominated is not None, parent.__reserve,
                              members=tuple(screens), sync=nominated,
                              rotation=parent.rotation if rotation is None else rotation,
                              mirror=parent.mirror if mirror is None else mirror)
@@ -177,9 +177,10 @@ class ScreenGroup(ScreenBase):
             # Alignment stays the parent's, so a subset reports it rather than
             # owning it: its members are held whether or not this set writes them.
             self.__aligned = parent.is_aligned()
-            self.__reference = parent.reference
-            self.__floor_us = parent.align_floor_us
-            self.__trim = parent.trim
+            self.__reference = parent.__reference
+            self.__floor_us = parent.__floor_us
+            self.__acquired_us = parent.__acquired_us
+            self.__trim_mode = parent.__trim_mode
             return
 
         for screen in screens:
@@ -205,7 +206,7 @@ class ScreenGroup(ScreenBase):
                 logging.info("screens: this group's panels carry no shared tearing-effect signal, so its frames will not wait and every panel may tear. Build the members with te set to the DC line they share to nominate one.")
 
         first = screens[0]
-        display = port.bus.broadcast(*[screen.display for screen in screens])
+        display = port.__bus.broadcast(*[screen.__display for screen in screens])
 
         # A group places its own frames and does not read its members', so an unnamed
         # rotation is upright rather than the first member's. Saying so where they
@@ -220,9 +221,9 @@ class ScreenGroup(ScreenBase):
 
         # The backlight is the first member's, since screens on a port share the one
         # PWM.
-        super().__init__(port, display, first.width, first.height, first.bitdepth,
+        super().__init__(port, display, first.width, first.height, first.__bitdepth,
                          first.backlight, nominated is not None, nominated is not None,
-                         first.reserve, members=tuple(screens), sync=nominated,
+                         first.__reserve, members=tuple(screens), sync=nominated,
                          rotation=rotation, mirror=mirror)
 
         self.__aligned = False
@@ -294,11 +295,11 @@ class ScreenGroup(ScreenBase):
         if not self.__target_us:
             if trim not in (None, False):
                 logging.info("screens: this group holds no period for its members, so there is nothing for a trim to correct toward")
-            self.__trim = False
+            self.__trim_mode = False
         elif trim in (None, True):
-            self.__trim = "rotate" if self.__holding else False
+            self.__trim_mode = "rotate" if self.__holding else False
         else:
-            self.__trim = trim
+            self.__trim_mode = trim
 
         # Last, so a construction that raised claims nothing: a member left holding a
         # group that does not exist refuses every later attempt to group it.
@@ -334,16 +335,16 @@ class ScreenGroup(ScreenBase):
 
         # Each panel's line time is its own and fixed by its oscillator; the porch
         # moves how many of them a refresh spends, not how long one lasts.
-        line_us = [period / screen.line_slots for period, screen in zip(periods, members)]
+        line_us = [period / screen.__line_slots for period, screen in zip(periods, members)]
         slowest = periods.index(max(periods))
-        frame_us = self.display.wire_window_us()
+        frame_us = self.__display.wire_window_us()
         trims = [int(round((periods[slowest] - period) / line))
                  for period, line in zip(periods, line_us)]
 
         # The budget is the fastest member's, not the reference's: a written frame
         # costs fixed microseconds while a fast panel's lines are shorter, so the
         # same write eats more of them.
-        margins = [(screen.line_slots + trim + screen.height - frame_us / line)
+        margins = [(screen.__line_slots + trim + screen.height - frame_us / line)
                    for screen, trim, line in zip(members, trims, line_us)]
         tightest = margins.index(min(margins))
         quanta = 2 * line_us[tightest]
@@ -359,7 +360,7 @@ class ScreenGroup(ScreenBase):
         self.__reference = members[slowest]
         for screen, trim in zip(members, trims):
             if trim:
-                back, front = screen.porch
+                back, front = screen.__porch
                 screen.__set_porch(back + trim, front)
 
         # One verify pass. A trim is priced from a single reading, and a reading that
@@ -373,7 +374,7 @@ class ScreenGroup(ScreenBase):
             for index, screen in enumerate(members):
                 correction = int(round((target - held[index]) / line_us[index]))
                 if correction:
-                    back, front = screen.porch
+                    back, front = screen.__porch
                     screen.__set_porch(back + correction, front)
                 # What the member runs at against the target, under half a line
                 # either way: the rate error the hold's accumulator integrates.
@@ -424,9 +425,9 @@ class ScreenGroup(ScreenBase):
         # the acquisition worse.
         rows = []
         for index, screen in enumerate(self.screens):
-            screen.command(screen.CONTROLLER.REG_TEON, b"\x00")
-            falls, finished = screen.display.te_capture(2, 200)
-            screen.command(screen.CONTROLLER.REG_TEOFF)
+            screen.__command(screen.CONTROLLER.REG_TEON, b"\x00")
+            falls, finished = screen.__display.te_capture(2, 200)
+            screen.__command(screen.CONTROLLER.REG_TEOFF)
             if not falls:
                 return None
             rows.append((falls[-1], finished))
@@ -524,7 +525,7 @@ class ScreenGroup(ScreenBase):
         for index, screen in enumerate(members):
             if plans[index]:
                 lines = self.EXCURSION_LINES if plans[index] > 0 else -self.EXCURSION_LINES
-                back, front = screen.porch
+                back, front = screen.__porch
                 screen.__set_porch(back + lines, front)
 
         elapsed = 0
@@ -535,7 +536,7 @@ class ScreenGroup(ScreenBase):
             time.sleep_ms(int((run - elapsed) * self.__target_us / 1000) + 1)
             elapsed = run
             lines = self.EXCURSION_LINES if plans[index] > 0 else -self.EXCURSION_LINES
-            back, front = members[index].porch
+            back, front = members[index].__porch
             members[index].__set_porch(back - lines, front)
 
         return [plans[index] * self.EXCURSION_LINES * self.__line_us[index]
@@ -598,7 +599,7 @@ class ScreenGroup(ScreenBase):
             owner.__walk_in(self.screens if to is None else to)
         super().update(image, **kwargs)
         synced = self.__synced_frame
-        owner.__frame_ticked(self.display.stats(), synced, owner.__sync_delay_us)
+        owner.__frame_ticked(self.__display.stats(), synced, owner.__sync_delay_us)
         owner.__tick_trim(synced)
 
     def __walk_in(self, written):
@@ -795,7 +796,7 @@ class ScreenGroup(ScreenBase):
             # Folded: the whole group walks the grid as the panels warm, and the
             # anchor wraps each member's booking at half a period, so two members
             # either side of a wrap differ by a period while their scans do not.
-            back, front = screen.porch
+            back, front = screen.__porch
             error = self.__fold(self.__phase_us[index] - anchor)
             # The write starts centre_us into the synced member's scan, so a
             # member further out than that has it outside its own budget and is
@@ -887,14 +888,14 @@ class ScreenGroup(ScreenBase):
                         elif residual < -self.TRIM_DEADBAND * line:
                             lines = self.TRIM_LIMIT_LINES
                         if lines:
-                            back, front = screen.porch
+                            back, front = screen.__porch
                             if back + lines >= 1:
                                 screen.__set_porch(back + lines, front)
                                 self.__corrections += 1
                                 self.__anchor_skip[index] = True
                                 residual += lines * line
                                 logging.debug(f"screens: trimmed member {index} by"
-                                              f" {lines:+} line to porch {screen.porch},"
+                                              f" {lines:+} line to porch {screen.__porch},"
                                               f" {residual:+.1f}us a period left")
                     self.__residual_us[index] = residual
         self.__anchor_stamp[index] = stamp
@@ -923,7 +924,7 @@ class ScreenGroup(ScreenBase):
         for index, screen in enumerate(self.screens):
             applied = self.__dither[index]
             if applied:
-                back, front = screen.porch
+                back, front = screen.__porch
                 screen.__set_porch(back - applied, front)
                 self.__dither[index] = 0
         # Back to the fall itself: with the constellation loose only the nominated
@@ -931,10 +932,10 @@ class ScreenGroup(ScreenBase):
         self.__sync_delay_us = 0
         self.__holding = False
         logging.info(f"screens: the panels could not be brought back into phase after a {elapsed // 1000}ms pause, so they are no longer being held together")
-        if self.__trim == "rotate":
+        if self.__trim_mode == "rotate":
             # Moving the wait target is only free while the members fall together,
             # so freshness falls back to measuring one panel between frames.
-            self.__trim = "probe"
+            self.__trim_mode = "probe"
             self.__starts = []
 
     def __tick_trim(self, synced=None):
@@ -947,11 +948,11 @@ class ScreenGroup(ScreenBase):
         periods of a measurement and nothing is probed. probe re-measures one
         member every TRIM_FRAMES through a capture, stalling the frame it lands on.
         """
-        if not self.__trim:
+        if not self.__trim_mode:
             return
 
         members = self.screens
-        if self.__trim == "rotate":
+        if self.__trim_mode == "rotate":
             # A frame that waited on someone else, or not at all, measured nothing,
             # so the target stays for the next frame to anchor.
             # Every member takes its turn, walking or not: the anchor is the only
@@ -972,9 +973,9 @@ class ScreenGroup(ScreenBase):
         index = self.__trim_at
         screen = members[index]
         self.__trim_at = (index + 1) % len(members)
-        screen.command(screen.CONTROLLER.REG_TEON, b"\x00")
-        falls, _ = screen.display.te_capture(4, 200)
-        screen.command(screen.CONTROLLER.REG_TEOFF)
+        screen.__command(screen.CONTROLLER.REG_TEON, b"\x00")
+        falls, _ = screen.__display.te_capture(4, 200)
+        screen.__command(screen.CONTROLLER.REG_TEOFF)
         if len(falls) > 1:
             measured = ((falls[-1] - falls[0]) & 0x3FFFFFFF) / (len(falls) - 1)
             # Each captured period carries a dithered porch line whole
@@ -1006,14 +1007,14 @@ class ScreenGroup(ScreenBase):
         limit = self.TRIM_LIMIT_LINES
         lines = limit if lines > limit else (-limit if lines < -limit else lines)
         if lines:
-            back, front = screen.porch
+            back, front = screen.__porch
             if back + lines < 1:
                 lines = 0
             else:
                 screen.__set_porch(back + lines, front)
                 self.__corrections += 1
                 logging.debug(f"screens: trimmed member {index} by"
-                              f" {lines:+} line to porch {screen.porch},"
+                              f" {lines:+} line to porch {screen.__porch},"
                               f" {measured:.0f}us against {self.__target_us:.0f}")
         if self.__holding:
             self.__residual_us[index] = measured + lines * line - self.__target_us
@@ -1021,12 +1022,12 @@ class ScreenGroup(ScreenBase):
                 self.__anchor_skip[index] = True
 
     @property
-    def trim(self):
+    def __trim(self):
         """How the group keeps its members' periods current: rotate, probe or False."""
-        return self.__trim
+        return self.__trim_mode
 
-    @trim.setter
-    def trim(self, value):
+    @__trim.setter
+    def __trim(self, value):
         if value not in (None, True, False, "rotate", "probe"):
             raise ValueError(f"{value} is not a valid trim. Expected None, False, 'rotate', or 'probe'.")
 
@@ -1042,47 +1043,7 @@ class ScreenGroup(ScreenBase):
         # A run of probe counts belongs to the mode that gathered it, so a change
         # begins its own run.
         self.__starts = []
-        self.__trim = value
-
-    @property
-    def corrections(self):
-        """Porch lines the trim has applied since construction, for a diagnostic."""
-        return self.__corrections
-
-    @property
-    def exposed_frames(self):
-        """Frames written with a member past its own tearing budget, for a diagnostic.
-
-        A frame counted here may show a seam on that member; whether it does
-        depends on how much the content changed. Only a held group counts, an
-        unheld one having no phase to be outside of.
-        """
-        return self.__exposed_frames
-
-    @property
-    def worst_exposure_us(self):
-        """How far past its budget the worst member of any exposed frame sat.
-
-        Read against the group's tearing margin: a few tens of microseconds puts
-        the seam within a line or two of an edge, where milliseconds put it in
-        the middle of the glass.
-        """
-        return self.__worst_exposure_us
-
-    @property
-    def suspect_sweeps(self):
-        """Captures whose own two falls did not span a plausible period, cumulative.
-
-        Counted and not acted on. A sweep books a member from its last fall, so a
-        bad one puts that member out of phase while is_in_phase() and exposed_frames,
-        which both price the bookings, go on reporting healthy.
-        """
-        return self.__suspect_sweeps
-
-    @property
-    def worst_sweep_error_us(self):
-        """How far the worst such capture's span missed the period, signed."""
-        return self.__worst_sweep_error_us
+        self.__trim_mode = value
 
     def __period_of(self, screen, settle=False):
         """One member's refresh period, it alone asserting on the shared line.
@@ -1090,11 +1051,11 @@ class ScreenGroup(ScreenBase):
         settle discards a first reading, which a panel fresh from bringup needs: it
         comes back about 3.4% long and settles within a second.
         """
-        screen.command(screen.CONTROLLER.REG_TEON, b"\x00")
+        screen.__command(screen.CONTROLLER.REG_TEON, b"\x00")
         if settle:
-            screen.display.te_probe(self.PROBE_MS)
-        period = screen.display.te_probe(self.PROBE_MS)[0]
-        screen.command(screen.CONTROLLER.REG_TEOFF)
+            screen.__display.te_probe(self.PROBE_MS)
+        period = screen.__display.te_probe(self.PROBE_MS)[0]
+        screen.__command(screen.CONTROLLER.REG_TEOFF)
         return period
 
     def __unaligned(self, required, why):
@@ -1124,36 +1085,6 @@ class ScreenGroup(ScreenBase):
         if self.__subset_of is not None:
             return self.__subset_of.is_in_phase()
         return self.__holding
-
-    @property
-    def acquired_us(self):
-        """The phase spread the last acquisition reached, or 0 where it did not.
-
-        A construction-time figure and not a running one: read is_in_phase() for
-        whether the members are together now.
-        """
-        if self.__subset_of is not None:
-            return self.__subset_of.acquired_us
-        return self.__acquired_us
-
-    @property
-    def reference(self):
-        """The member every other is trimmed toward, the slowest of them, or None.
-
-        None where the group is not aligned, since nothing was trimmed toward
-        anything. is_aligned() says the same thing and is the one to read.
-        """
-        return self.__reference
-
-    @property
-    def align_floor_us(self):
-        """The skew the hold is predicted to settle within, or 0 when not aligned.
-
-        An unmet align request is an outcome and not an error, so this reports zero
-        where ScreenPair raises: a group falls back to its nominated member and
-        carries on, and is_aligned() is what distinguishes the two.
-        """
-        return self.__floor_us
 
     def subset(self, *screens, sync=None, reveal_together=False):
         """A member set over this group's display, writing only what it names.

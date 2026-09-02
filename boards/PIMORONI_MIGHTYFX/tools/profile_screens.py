@@ -387,7 +387,7 @@ try:
             display = None
             achieved_baudrate = band_rows = actual_framerate = None
         else:
-            display = screen.display
+            display = screen.__display
 
             # Both went through a clamp, so record what the driver settled on and
             # not only what was asked for
@@ -434,7 +434,7 @@ try:
                 "port": port_name,
                 "width": screen.width,
                 "height": screen.height,
-                "bitdepth": screen.bitdepth,
+                "bitdepth": screen.__bitdepth,
                 "framerate": screen.framerate,
                 "actual_framerate": round(actual_framerate, 2),
                 "requested_baudrate": baudrate,
@@ -454,7 +454,7 @@ try:
             append_result(row)
 
             print(f"{index:>6} {panel_name} {achieved_baudrate // 1_000_000}MHz"
-                  f" {screen.bitdepth}bpp band {band_rows:>2} cache {cache_columns:>2}"
+                  f" {screen.__bitdepth}bpp band {band_rows:>2} cache {cache_columns:>2}"
                   f" rot {rotation:>3} {'mir' if mirror else '   '} {source:>5}"
                   f" {'dbl' if pixel_double else '   '}"
                   f" convert {averages['convert_total_us']:>7} stall {averages['stall_us']:>7}"

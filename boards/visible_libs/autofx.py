@@ -2192,10 +2192,10 @@ def __screen_gone(screen):
     from bringup, so any edge at all is the panel still being there. One with no
     signal to read cannot be told about either way, so it counts as present.
     """
-    if not screen.v_sync:
+    if not screen.__v_sync:
         return False
     try:
-        return screen.display.te_probe(PRESENCE_PROBE_MS)[2] == 0
+        return screen.__display.te_probe(PRESENCE_PROBE_MS)[2] == 0
     except Exception:      # noqa: BLE001
         return False
 
@@ -2227,7 +2227,7 @@ def __hardware_changed(fx, declared, for_pair=False):
             return True
         # A screen reserves for a pair or for one, and update_pair refuses two that
         # disagree, so a file that has gained or lost its second wants both rebuilt
-        if known[0].reserve != wanted:
+        if known[0].__reserve != wanted:
             return True
         if __screen_gone(known[0]):
             return True

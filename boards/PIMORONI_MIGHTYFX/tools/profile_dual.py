@@ -30,7 +30,7 @@ UINT32 = 0xFFFFFFFF
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 screens = (SCREEN_A(mighty.spce_a, band_lines=BAND_LINES, v_sync=False),
            SCREEN_B(mighty.spce_b, band_lines=BAND_LINES, v_sync=False))
-displays = [s.display for s in screens]
+displays = [s.__display for s in screens]
 
 WIDTH, HEIGHT = screens[0].width, screens[0].height
 centre_x, centre_y = WIDTH / 2, HEIGHT / 2
@@ -44,7 +44,7 @@ sram_canvas = screens[0].canvas()
 
 def row_bytes(screen):
     # Matches make_descriptor: RGB444 packs two pixels into three bytes.
-    return screen.width * 3 // 2 if screen.bitdepth == 12 else screen.width * 2
+    return screen.width * 3 // 2 if screen.__bitdepth == 12 else screen.width * 2
 
 
 def row_wire_us(screen, baudrate):
@@ -113,7 +113,7 @@ def report_case(name, canvas, rotation):
     wire_us = row_wire_us(screens[0], displays[0].baudrate())
 
     print(f"\n{name}, rotation {rotation},"
-          f" v_sync={screens[0].v_sync}, worst of {FRAMES} frames:")
+          f" v_sync={screens[0].__v_sync}, worst of {FRAMES} frames:")
     for index, w in enumerate(worst):
         print(f"  screen {index}: convert {w['convert']}us ({w['convert'] / rows:.1f}us/row),"
               f" stall {w['stall']}us, frame {w['frame']}us, te_wait {w['te']}us")

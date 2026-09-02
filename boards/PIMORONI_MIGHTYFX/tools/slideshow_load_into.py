@@ -138,10 +138,10 @@ finally:
               f" {per_frame:.1f} ms per frame against a {SLEEP_DELAY_MS} ms target")
         if per_frame > SLEEP_DELAY_MS:
             print("  Over the target, so the delay never fired and this is flat out.")
-        s = screen.display.stats()
+        s = screen.__display.stats()
         print(f"  last update(): convert {s.convert_total_us / 1000:.1f} ms,"
-              f" stall {s.stall_us / 1000:.1f} ms, {screen.display.band_rows()} rows per band,"
-              f" {screen.display.baudrate()} Hz")
+              f" stall {s.stall_us / 1000:.1f} ms, {screen.__display.band_rows()} rows per band,"
+              f" {screen.__display.baudrate()} Hz")
         if s.stall_us > s.convert_total_us:
             print("  Stall exceeds convert, so the frame is bound by the wire and not"
                   " by conversion. Decode is whatever is left of the frame time.")

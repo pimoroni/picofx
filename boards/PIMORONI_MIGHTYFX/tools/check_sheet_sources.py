@@ -155,11 +155,11 @@ try:
     FRAME_BYTES = ROW_BYTES * H
 
     base = spidisplay.buffer_size()
-    claim = screen.display.sram_bytes()
+    claim = screen.__display.sram_bytes()
     ring = region[base:base + FRAME_BYTES]
 
     print(f"screen {W}x{H} at 16-bit, arena {arena}, claim {claim} at {base}")
-    print(f"band_rows {screen.display.band_rows()}, a row is {ROW_BYTES} bytes,"
+    print(f"band_rows {screen.__display.band_rows()}, a row is {ROW_BYTES} bytes,"
           f" a frame is {FRAME_BYTES}")
 
     # Preflight. Each of these can void every verdict below, so they run first and
@@ -171,8 +171,8 @@ try:
         print(f"PREFLIGHT: claim {claim} is short of one frame ({FRAME_BYTES}), so"
               f" the ring holds fewer rows than a frame. Converted-byte verdicts are N/A.")
         ring_usable = False
-    if screen.display.band_rows() * 2 != H:
-        print(f"PREFLIGHT: {screen.display.band_rows()} band rows is not half of"
+    if screen.__display.band_rows() * 2 != H:
+        print(f"PREFLIGHT: {screen.__display.band_rows()} band rows is not half of"
               f" {H}, so a slot is reused mid-frame. Converted-byte verdicts are N/A.")
         ring_usable = False
 

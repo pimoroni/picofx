@@ -67,14 +67,14 @@ def draw(background):
 
 
 def tescan(screen, n):
-    screen.command(st7789.REG_TESCAN, bytes((n >> 8, n & 0xFF)))
+    screen.__command(st7789.REG_TESCAN, bytes((n >> 8, n & 0xFF)))
 
 
 def teon(screen, mode):
     if mode is None:
-        screen.command(st7789.REG_TEON)
+        screen.__command(st7789.REG_TEON)
     else:
-        screen.command(st7789.REG_TEON, mode)
+        screen.__command(st7789.REG_TEON, mode)
 
 
 def restore_te(screen):
@@ -187,7 +187,7 @@ def sweep_1d(label, screen, display, dc):
     codes = (FR_CODES[46], FR_CODES[45])
     periods = []
     for code in codes:
-        screen.command(st7789.REG_FRCTRL2, code)
+        screen.__command(st7789.REG_FRCTRL2, code)
         time.sleep_ms(100)
         periods.append(display.te_probe(500)[0])
     print("1d {}: FRCTRL2 codes 0x{:02x}/0x{:02x} steady periods {}us / {}us".format(
@@ -196,24 +196,24 @@ def sweep_1d(label, screen, display, dc):
     print("  alternating per frame for {} frames: watch for glitches".format(
         DITHER_FRAMES))
     for frame in range(DITHER_FRAMES):
-        screen.command(st7789.REG_FRCTRL2, codes[frame % 2])
+        screen.__command(st7789.REG_FRCTRL2, codes[frame % 2])
         draw(BACKGROUNDS[frame % 2])
         screen.update(canvas, rotation=90, v_sync=False)
 
     falls = []
     for cycle in range(40):
-        screen.command(st7789.REG_FRCTRL2, codes[cycle % 2])
+        screen.__command(st7789.REG_FRCTRL2, codes[cycle % 2])
         falls.extend(capture_falls(dc, 2))
     if len(falls) > 2:
         mean = time.ticks_diff(falls[-1], falls[0]) // (len(falls) - 1)
         print("  alternating mean period {}us against steady {}us / {}us".format(
             mean, periods[0], periods[1]))
-    screen.command(st7789.REG_FRCTRL2, FR_CODES[screen.framerate])
+    screen.__command(st7789.REG_FRCTRL2, FR_CODES[screen.framerate])
     print()
 
 
 def run_1b():
-    displays = [s.display for s in screens]
+    displays = [s.__display for s in screens]
     for screen in screens:
         restore_te(screen)
     periods = [d.te_probe(500)[0] for d in displays]
@@ -230,7 +230,7 @@ def run_1b():
             d.prepare(canvas, rotation=90)
         spidisplay.update_all(displays[0], displays[1], v_sync=True)
         for i, (s, d) in enumerate(zip(screens, displays)):
-            s.drawn()
+            s.__drawn()
             worst_frame[i] = max(worst_frame[i], d.stats().frame_us)
     tescan(screens[faster], 0)
     print("  worst frames {}us / {}us  te_timeouts {}".format(
@@ -243,9 +243,9 @@ def run_1b():
 
 try:
     for label, screen, dc in zip(labels, screens, dc_pins):
-        display = screen.display
+        display = screen.__display
         screen.update(canvas, rotation=90)
-        screen.drawn()
+        screen.__drawn()
         sweep_1a(label, screen, display, dc)
         sweep_1c(label, screen, display, dc)
         sweep_1d(label, screen, display, dc)

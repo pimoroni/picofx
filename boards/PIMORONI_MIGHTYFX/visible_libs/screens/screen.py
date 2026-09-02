@@ -199,7 +199,7 @@ class Screen(ScreenBase):
         fr_code = self.__code_for(controller.FRAME_RATE_CONTROL, self.__framerate, "frame rate")
 
         if te is None:
-            te = port.default_te
+            te = port.__default_te
 
         te_used = te is not False
         named_line = te if te_used and te is not True else None
@@ -208,7 +208,7 @@ class Screen(ScreenBase):
         # declares the diode each breakout on a shared line needs. One panel at a
         # time may assert there, so the driver sends TEON as a frame's wait begins
         # and TEOFF as it ends.
-        shared_te = named_line is not None and named_line is port.dc
+        shared_te = named_line is not None and named_line is port.__dc_line
 
         # A DC line is read by flipping it to an input for the wait, which the driver
         # does only where it holds no TE pin of its own. So a shared line is declared
@@ -224,13 +224,13 @@ class Screen(ScreenBase):
 
         # Checked here and claimed once the panel has answered, so a screen that
         # refuses reserves neither line
-        cs = port.check_cs(cs)
-        dc = port.check_dc(dc, te_used, shared_te)
+        cs = port.__check_cs(cs)
+        dc = port.__check_dc(dc, te_used, shared_te)
 
         # The line TE is read from, which a pair's excursion scheduler watches
         self.__te_line = (te_pin if te_pin is not None else dc) if te_used else None
 
-        display = spidisplay.SPIDisplay(bus=port.bus, cs=cs, dc=dc, te=te_pin,
+        display = spidisplay.SPIDisplay(bus=port.__bus, cs=cs, dc=dc, te=te_pin,
                                         width=width, height=height,
                                         ram_write=controller.RAM_WRITE,
                                         te_on=controller.TE_ON, te_off=controller.TE_OFF,
@@ -260,7 +260,7 @@ class Screen(ScreenBase):
         # over all of them. On its own a screen does both for itself, the clear
         # being what keeps the panel's power-on contents off the glass when the
         # backlight comes up.
-        alone = not port.panels_reset
+        alone = not port.__panels_reset
         if alone:
             controller.reset(display)
 
@@ -272,17 +272,17 @@ class Screen(ScreenBase):
                              f" te=False for a screen whose tearing-effect signal is not wired,"
                              f" which also turns off waiting for it.")
 
-        port.claim_cs(cs)
-        port.claim_dc(dc, te_used, shared_te)
-        backlight = port.claim_backlight() if bl else None
+        port.__claim_cs(cs)
+        port.__claim_dc(dc, te_used, shared_te)
+        backlight = port.__claim_backlight() if bl else None
 
-        super().__init__(port.connector, display, width, height, bitdepth, backlight,
+        super().__init__(port.__connector, display, width, height, bitdepth, backlight,
                          te_used, v_sync, reserve, shared_te=shared_te,
                          sync=self if shared_te else None,
                          rotation=rotation, mirror=mirror,
                          reveal_together=reveal_together)
 
-        port.register(self)
+        port.__register(self)
 
         # What setup() wrote, and the slots that porch spends. A group's trim moves
         # both, so every margin sum reads them from the screen.
@@ -354,25 +354,6 @@ class Screen(ScreenBase):
         """
         return self.__framerate
 
-    @property
-    def line_slots(self):
-        """Scan slots this panel spends per refresh, porches included.
-
-        A TE period over this is the line time. The porch sets it, so a member a
-        group has trimmed reports its own count rather than the controller's
-        default, and every margin sum reads it from here.
-        """
-        return self.__line_slots
-
-    @property
-    def porch(self):
-        """The back and front porch, in scan lines, as PORCTRL holds them.
-
-        A group's trim owns this while it holds its members in phase, so setting it
-        by hand belongs to a diagnostic rather than to an application.
-        """
-        return self.__porch
-
     def __set_porch(self, back, front):
         """Move this panel's refresh period by whole scan lines.
 
@@ -382,7 +363,7 @@ class Screen(ScreenBase):
         if back < 1 or front < 1:
             raise ValueError(f"a porch of ({back}, {front}) has a side under one line, which the controller has no code for")
 
-        self.CONTROLLER.set_porch(self, back, front)
+        self.CONTROLLER.set_porch(self.__display, back, front)
         self.__porch = (back, front)
         self.__line_slots = self.CONTROLLER.CONTROLLER_ROWS + back + front
 

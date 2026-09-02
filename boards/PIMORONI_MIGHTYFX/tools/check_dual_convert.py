@@ -91,7 +91,7 @@ def measure(screen, source, rotation, dual):
     convert = core1 = frame = stall = 0
     for _ in range(MEASURE_FRAMES):
         screen.update(source, rotation=rotation)
-        s = screen.display.stats()
+        s = screen.__display.stats()
         convert += s.convert_total_us
         core1 += s.core1_rows
         frame += s.frame_us
@@ -127,14 +127,14 @@ try:
         for source in sources.values():
             draw(source)
 
-        row_bytes = width * 3 // 2 if screen.bitdepth == 12 else width * 2
-        baudrate = screen.display.baudrate()
+        row_bytes = width * 3 // 2 if screen.__bitdepth == 12 else width * 2
+        baudrate = screen.__display.baudrate()
         row_wire_us = row_bytes * BITS_PER_BYTE * 1_000_000 / baudrate
 
-        print(f"{type(screen).__name__} {width}x{height} {screen.bitdepth}-bit at"
+        print(f"{type(screen).__name__} {width}x{height} {screen.__bitdepth}-bit at"
               f" {baudrate}Hz, band_lines={band_lines} cache_columns={cache_columns}")
         print(f"  wire: {row_wire_us:.1f}us a row, {row_wire_us * height / 1000:.1f}ms"
-              f" a frame, {screen.display.sram_bytes()}B of SRAM claimed")
+              f" a frame, {screen.__display.sram_bytes()}B of SRAM claimed")
         print("  source rot   one core   two cores   ratio  core1 rows"
               "     one frame    two frames   verdict")
 

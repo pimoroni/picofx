@@ -58,7 +58,7 @@ def build(reserve):
 
 
 def run_phase(label, screens, step_fn):
-    displays = [s.display for s in screens]
+    displays = [s.__display for s in screens]
     print(label)
     timeouts0 = [d.te_timeouts() for d in displays]
     worst = [{"convert": 0, "stall": 0, "frame": 0, "te": 0} for _ in displays]
@@ -89,12 +89,12 @@ def run_phase(label, screens, step_fn):
 
 # PSRAM phases: reserved screens, no SRAM canvas.
 mighty, screens = build(Reserve.FULL_SIZE_IMAGES)
-displays = [s.display for s in screens]
+displays = [s.__display for s in screens]
 
 WIDTH, HEIGHT = screens[0].width, screens[0].height
-ROW_BYTES = WIDTH * 3 // 2 if screens[0].bitdepth == 12 else WIDTH * 2
+ROW_BYTES = WIDTH * 3 // 2 if screens[0].__bitdepth == 12 else WIDTH * 2
 print("panels: {}x{} at {}bpp, band {} rows, baud {}".format(
-    WIDTH, HEIGHT, screens[0].bitdepth, displays[0].band_rows(),
+    WIDTH, HEIGHT, screens[0].__bitdepth, displays[0].band_rows(),
     displays[0].baudrate()))
 print("wire-bound frame: {}us".format(
     HEIGHT * ROW_BYTES * 8 * 1_000_000 // displays[0].baudrate()))
@@ -155,7 +155,7 @@ mighty.shutdown()
 del mighty, screens, displays
 gc.collect()
 mighty, screens = build(Reserve.CANVAS_SPACE)
-displays = [s.display for s in screens]
+displays = [s.__display for s in screens]
 sram_canvas = screens[0].canvas(HEIGHT, WIDTH)
 
 
@@ -172,7 +172,7 @@ run_phase("interleaved SRAM rot90: panels flip together; expect no tear band",
 # command() refusal and abort_frame() recovery.
 screens[0].prepare(sram_canvas, rotation=90)
 try:
-    screens[0].command(0x2C)
+    screens[0].__command(0x2C)
     print("command on staged frame: NOT refused (wrong)")
 except ValueError as e:
     print("command on staged frame refused:", e)

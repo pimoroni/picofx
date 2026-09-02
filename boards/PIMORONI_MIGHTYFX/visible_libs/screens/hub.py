@@ -27,48 +27,39 @@ class ScreenHubPort:
         self.__te = te
 
     @property
-    def connector(self):
-        """The SP/CE port whose bus every panel on this hub shares."""
-        return self.__connector
+    def __bus(self):
+        return self.__connector.__bus
 
     @property
-    def bus(self):
-        return self.__connector.bus
+    def __panels_reset(self):
+        return self.__connector.__panels_reset
 
     @property
-    def panels_reset(self):
-        return self.__connector.panels_reset
-
-    @property
-    def cs(self):
-        return self.__cs
-
-    @property
-    def dc(self):
+    def __dc_line(self):
         return self.__dc
 
     @property
-    def default_te(self):
+    def __default_te(self):
         """The line a screen naming no te reads its tearing-effect signal from."""
         return self.__te
 
-    def check_cs(self, pin=None):
-        return self.__connector.check_cs(self.__cs if pin is None else pin)
+    def __check_cs(self, pin=None):
+        return self.__connector.__check_cs(self.__cs if pin is None else pin)
 
-    def claim_cs(self, pin):
-        self.__connector.claim_cs(pin)
+    def __claim_cs(self, pin):
+        self.__connector.__claim_cs(pin)
 
-    def check_dc(self, pin=None, te=True, shared=False):
-        return self.__connector.check_dc(self.__dc if pin is None else pin, te, shared)
+    def __check_dc(self, pin=None, te=True, shared=False):
+        return self.__connector.__check_dc(self.__dc if pin is None else pin, te, shared)
 
-    def claim_dc(self, pin, te, shared):
-        self.__connector.claim_dc(pin, te, shared)
+    def __claim_dc(self, pin, te, shared):
+        self.__connector.__claim_dc(pin, te, shared)
 
-    def claim_backlight(self):
-        return self.__connector.claim_backlight()
+    def __claim_backlight(self):
+        return self.__connector.__claim_backlight()
 
-    def register(self, screen):
-        self.__connector.register(screen)
+    def __register(self, screen):
+        self.__connector.__register(screen)
 
 
 class ScreenHub:
@@ -99,7 +90,7 @@ class ScreenHub:
     BLIND_BAND_LINES = 2
 
     def __init__(self, port, extra_cs=(), dc=None, te=None, controller=st7789):
-        if port.screens:
+        if port.__screens:
             raise ValueError(f"SP/CE {port.name} already has screens, and a hub has to reach every panel before the first one is built, so build it first")
 
         self.__connector = port
@@ -126,16 +117,26 @@ class ScreenHub:
 
         self.__ports = tuple(ScreenHubPort(port, line, dc, te) for line in lines)
         self.__bring_panels_up(lines, dc)
-        port.panels_reset = True
+        port.__panels_reset = True
 
     @property
     def ports(self):
-        """One port per chip select the hub reaches, in the order they were named."""
+        """One port per chip select the hub reaches, in the order they were named.
+
+        Lettered as well as ordered: hub.a is ports[0] and each chip select takes
+        the next letter, matching the lettering on the hub itself.
+        """
         return self.__ports
 
-    @property
-    def connector(self):
-        return self.__connector
+    def __getattr__(self, name):
+        # One letter a port, derived from the chip selects rather than fixed at
+        # six, so a hub of any size letters every port it reaches and no more.
+        if len(name) == 1 and "a" <= name <= "z":
+            index = ord(name) - ord("a")
+            if index < len(self.__ports):
+                return self.__ports[index]
+            raise ValueError(f"this hub reaches {len(self.__ports)} panels, so there is no port {name}")
+        raise AttributeError(name)
 
     def __bring_panels_up(self, lines, dc):
         """Reset and clear every panel the hub reaches, in one pass over all of them.
@@ -152,7 +153,7 @@ class ScreenHub:
         # Thrown away at the end of this: they exist to carry the chip select masks
         # and the smallest workspace a frame can be streamed from, and each screen
         # claims its own measured one afterwards.
-        displays = [spidisplay.SPIDisplay(bus=self.__connector.bus, cs=line, dc=dc, te=None,
+        displays = [spidisplay.SPIDisplay(bus=self.__connector.__bus, cs=line, dc=dc, te=None,
                                           width=columns, height=rows,
                                           ram_write=controller.RAM_WRITE,
                                           te_on=controller.TE_ON, te_off=controller.TE_OFF,
@@ -165,7 +166,7 @@ class ScreenHub:
         try:
             # A hub of one is a plain screen port, which is what a board reaches with
             # nothing plugged into its second connector, and a group of one is refused
-            every_panel = displays[0] if len(displays) == 1 else self.__connector.bus.broadcast(*displays)
+            every_panel = displays[0] if len(displays) == 1 else self.__connector.__bus.broadcast(*displays)
             controller.reset(every_panel)
             controller.setup(every_panel, columns, rows,
                              controller.PIXEL_FORMAT[self.BLIND_BITDEPTH],

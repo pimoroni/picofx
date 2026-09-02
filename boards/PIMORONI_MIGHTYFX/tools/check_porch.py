@@ -120,7 +120,7 @@ for index, (cs, screen_class) in enumerate(HARNESS):
                   else screen_class(port, cs=Pin(cs), dc=port.dc, te=False, baudrate=BAUDRATE))
 
 panel = panels[UNDER_TEST]
-display = panel.display
+display = panel.__display
 panel.brightness(1.0)
 
 dc = Pin(MightyFX.SPCE_A_DC_PIN)
@@ -138,7 +138,7 @@ except ValueError:
 
 
 def set_porch(porch):
-    panel.command(st7789.REG_PORCTRL, bytes(porch) + PORCH_TAIL)
+    panel.__command(st7789.REG_PORCTRL, bytes(porch) + PORCH_TAIL)
 
 
 def read_te():
@@ -393,7 +393,7 @@ try:
     panel.update(canvas)
     frame_us = display.stats().frame_us
 
-    panel.command(st7789.REG_TEON, TEM_VBLANK)
+    panel.__command(st7789.REG_TEON, TEM_VBLANK)
     base_period, base_high, base_edges = display.te_probe(PROBE_MS)
     if base_edges < 2:
         raise ValueError(f"TE is silent on CS {UNDER_TEST}: {base_edges} edges."
@@ -447,5 +447,5 @@ try:
 
 finally:
     set_porch(DEFAULT_PORCH)
-    panel.command(st7789.REG_TEOFF)
+    panel.__command(st7789.REG_TEOFF)
     mighty.shutdown()

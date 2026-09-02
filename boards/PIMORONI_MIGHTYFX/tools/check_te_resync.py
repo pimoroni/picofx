@@ -116,17 +116,17 @@ def draw(background):
 
 
 def tescan(screen, n):
-    screen.command(st7789.REG_TESCAN, bytes((n >> 8, n & 0xFF)))
+    screen.__command(st7789.REG_TESCAN, bytes((n >> 8, n & 0xFF)))
 
 
 def restore_te(screen):
-    screen.command(st7789.REG_TEON, b"\x00")
+    screen.__command(st7789.REG_TEON, b"\x00")
     tescan(screen, 0)
 
 
 def rate(panel, rate_index):
     """Set one panel's frame rate, and hand its DC line back to the capture."""
-    screens[panel].command(st7789.REG_FRCTRL2,
+    screens[panel].__command(st7789.REG_FRCTRL2,
                            st7789.FRAME_RATE_CONTROL[RATES[rate_index]])
     dc_pins[panel].init(Pin.IN, pull=Pin.PULL_DOWN)
 
@@ -194,7 +194,7 @@ for screen in screens:
     screen.update(canvas, rotation=90, v_sync=False)
     screen.update(canvas, rotation=90, v_sync=False)
 
-displays = [s.display for s in screens]
+displays = [s.__display for s in screens]
 periods = [d.te_probe(500)[0] for d in displays]
 frames_us = [d.stats().frame_us for d in displays]
 fi = 0 if periods[0] <= periods[1] else 1      # the faster panel follows

@@ -33,7 +33,7 @@ machine.freq(150_000_000, 150_000_000)
 
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a, **SETTINGS)
-display = screen.display
+display = screen.__display
 
 # The images are landscape and the panel is portrait, so the canvas matches the
 # source and the rotation happens on the way out

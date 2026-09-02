@@ -105,7 +105,7 @@ class Backlight(PWMLED):
 
         self.brightness(self.__level)
 
-    def frame_shown(self, source=None, to=None, hold=False):
+    def __frame_shown(self, source=None, to=None, hold=False):
         """Note a frame reaching the glass, which is what a dark line waits for.
 
         Only from power-on: a line taken dark by off() stays dark until it is asked
@@ -151,7 +151,7 @@ class Backlight(PWMLED):
         self.brightness(self.__level)
         return None
 
-    def forget_screens(self):
+    def __forget_screens(self):
         """Let go of the screens counted so far, their port having released them.
 
         The wait itself stays where it is, re-arming it would blink a line already up.
@@ -160,7 +160,7 @@ class Backlight(PWMLED):
 
     def __waiting_for(self):
         """How many screens asking to reveal together have yet to show a frame."""
-        return sum(1 for screen in self.__port.screens
+        return sum(1 for screen in self.__port.__screens
                    if screen.backlight is self and screen.reveal_together
                    and screen not in self.__shown)
 
@@ -171,7 +171,7 @@ class Backlight(PWMLED):
         last painted there, so the panel needs a full pass before the new frame is
         everywhere.
         """
-        slowest = self.__port.slowest_framerate
+        slowest = self.__port.__slowest_framerate
         return 0 if slowest is None else 1000 // slowest + 3
 
     def reveal_now(self):
@@ -207,7 +207,7 @@ class SPCEPort:
         self.__pins = tuple(Pin(pin) for pin in pins) if mode in (SPCE.SCREEN, SPCE.GPIO, SPCE.HUB_LINES) else None
 
         self.__spi = spi        # Kept so the bus can be made again after a release()
-        self.__bus = self.__make_bus() if mode == SPCE.SCREEN else None
+        self.__spi_bus = self.__make_bus() if mode == SPCE.SCREEN else None
         self.__backlight = None
         self.__screens = []
         self.__cs_claimed = []
@@ -263,11 +263,18 @@ class SPCEPort:
     def bl(self):
         return self.__line(4)
 
+    @property
+    def __dc_line(self):
+        """The port's own DC line, which a screen naming the shared line is checked
+        against. The public dc raises by mode; the contract wants the pin either way.
+        """
+        return self.__pins[0] if self.__pins is not None else None
+
     def __make_bus(self):
         return SPIDisplayBus(spi=self.__spi, sck=self.__pins[2], mosi=self.__pins[3])
 
     @property
-    def bus(self):
+    def __bus(self):
         """The SPIDisplayBus every screen on this port streams over.
 
         Made again where release() gave its DMA channel back, so a port built on a
@@ -276,13 +283,13 @@ class SPCEPort:
         if self.mode != SPCE.SCREEN:
             raise ValueError(f"SP/CE {self.name} is not a screen port, so it has no display bus")
 
-        if self.__bus is None:
-            self.__bus = self.__make_bus()
+        if self.__spi_bus is None:
+            self.__spi_bus = self.__make_bus()
 
-        return self.__bus
+        return self.__spi_bus
 
     @property
-    def connector(self):
+    def __connector(self):
         """The SP/CE connector a screen belongs to, which for a port is itself.
 
         A hub hands out ports of its own, so a screen asks whatever it was built
@@ -291,12 +298,7 @@ class SPCEPort:
         return self
 
     @property
-    def screens(self):
-        """The screens built on this port, in creation order."""
-        return tuple(self.__screens)
-
-    @property
-    def slowest_framerate(self):
+    def __slowest_framerate(self):
         """The lowest panel refresh rate on the port, which sets any wait for a
         frame to reach the glass. None before a screen is built.
         """
@@ -306,22 +308,11 @@ class SPCEPort:
         return min(screen.framerate for screen in self.__screens)
 
     @property
-    def default_te(self):
+    def __default_te(self):
         """What a screen naming no te takes: its own DC line, one panel to a port
         being how MightyFX is wired.
         """
         return True
-
-    @property
-    def panels_reset(self):
-        """Whether every panel on the port has already been reset and cleared, which
-        a hub does for all of them at once and a screen otherwise does for itself.
-        """
-        return self.__panels_reset
-
-    @panels_reset.setter
-    def panels_reset(self, value):
-        self.__panels_reset = bool(value)
 
     # The contract a screen is built through, which a ScreenHub port implements too by
     # passing each call along to here. Not for an application to call: each records a
@@ -331,10 +322,10 @@ class SPCEPort:
     # A line is checked before the screen is built and recorded once it is, so a
     # construction that refuses partway leaves nothing behind. The refusals therefore
     # live in the check and the record only appends.
-    def register(self, screen):
+    def __register(self, screen):
         self.__screens.append(screen)
 
-    def check_cs(self, pin=None):
+    def __check_cs(self, pin=None):
         """Resolve a screen's CS line and refuse a line already spoken for.
 
         None takes the port's own, which is the first screen's to have. Every further
@@ -348,10 +339,10 @@ class SPCEPort:
 
         return pin
 
-    def claim_cs(self, pin):
+    def __claim_cs(self, pin):
         self.__cs_claimed.append(pin)
 
-    def check_dc(self, pin=None, te=True, shared=False):
+    def __check_dc(self, pin=None, te=True, shared=False):
         """Resolve a screen's DC line and refuse a line whose TE it would spoil.
 
         None takes the port's own, which is the first screen's to have. Pass this
@@ -375,10 +366,10 @@ class SPCEPort:
 
         return pin
 
-    def claim_dc(self, pin, te, shared):
+    def __claim_dc(self, pin, te, shared):
         self.__dc_claimed.append((pin, te, shared))
 
-    def claim_backlight(self):
+    def __claim_backlight(self):
         """The port's backlight, created for the first screen to ask for it.
 
         The connector carries one BL line, so every screen taking it shares the
@@ -402,8 +393,8 @@ class SPCEPort:
         this anyway.
         """
         for screen in self.__screens:
-            screen.display.abort_frame()
-            screen.CONTROLLER.stop(screen)
+            screen.__display.abort_frame()
+            screen.CONTROLLER.stop(screen.__display)
 
     def release(self):
         """Hand back the bus's DMA channel and its screens' SRAM claims, which
@@ -421,7 +412,7 @@ class SPCEPort:
         the canvas it already has.
         """
         for screen in self.__screens:
-            screen.display.__del__()
+            screen.__display.__del__()
         self.__screens.clear()
 
         # The CS and DC claims name screens that are gone and lines handed back below,
@@ -432,13 +423,13 @@ class SPCEPort:
         # The backlight is holding those screens too. It keeps its level and its lit
         # state, a line that is up staying up rather than blinking over a rebuild
         if self.__backlight is not None:
-            self.__backlight.forget_screens()
+            self.__backlight.__forget_screens()
 
         # Dropped as well as deleted, so the next screen on this port is made a fresh
         # bus with a channel of its own
-        if self.__bus is not None:
-            self.__bus.__del__()
-            self.__bus = None
+        if self.__spi_bus is not None:
+            self.__spi_bus.__del__()
+            self.__spi_bus = None
 
         # A display leaves its chip select and DC driven high, which is right while
         # anything may still transmit and wrong once nothing will: these are connector

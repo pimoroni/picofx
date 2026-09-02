@@ -129,18 +129,18 @@ try:
     bg_rgb = (BG.r, BG.g, BG.b)
     src_rgb = (SRC.r, SRC.g, SRC.b)
 
-    print(f"screen {W}x{H} at 16-bit, band_rows {screen.display.band_rows()},"
+    print(f"screen {W}x{H} at 16-bit, band_rows {screen.__display.band_rows()},"
           f" a frame is {FRAME_BYTES} bytes")
 
     # Preflight, as in check_sheet_sources.py: the ring has to hold a whole frame
     # in row order or every byte verdict below is void.
     ring_usable = True
-    claim = screen.display.sram_bytes()
+    claim = screen.__display.sram_bytes()
     if claim < FRAME_BYTES:
         print(f"PREFLIGHT: claim {claim} is short of one frame ({FRAME_BYTES}).")
         ring_usable = False
-    if screen.display.band_rows() * 2 != H:
-        print(f"PREFLIGHT: {screen.display.band_rows()} band rows is not half of {H}.")
+    if screen.__display.band_rows() * 2 != H:
+        print(f"PREFLIGHT: {screen.__display.band_rows()} band rows is not half of {H}.")
         ring_usable = False
     if ring_usable:
         halves = image(W, H)

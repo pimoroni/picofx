@@ -32,20 +32,20 @@ def update_pair(first, second, v_sync=None):
         raise ValueError("update_pair needs a screen on each SP/CE port, since one port is one stream; broadcast() shares a port")
     # One reservation is shared out across the pair, so it leaves both screens short
     # rather than protecting the one that made it.
-    if first.reserve != second.reserve:
+    if first.__reserve != second.__reserve:
         raise ValueError("update_pair needs both screens built with the same reserve, since a reservation is shared out across the pair: set it on both, or on neither")
 
     if v_sync is None:
-        v_sync = first.v_sync and second.v_sync
-    elif v_sync and not (first.v_sync and second.v_sync):
+        v_sync = first.__v_sync and second.__v_sync
+    elif v_sync and not (first.__v_sync and second.__v_sync):
         raise ValueError("v_sync needs both screens created with te, since each waits on its own panel's tearing-effect signal")
 
-    spidisplay.update_all(first.display, second.display, v_sync=v_sync)
+    spidisplay.update_all(first.__display, second.__display, v_sync=v_sync)
 
     # Each port's backlight spends a scan before it lights, so taking them in turn
     # brings the second panel up a scan late. Asked to reveal together they share one
     together = first.reveal_together and second.reveal_together
-    owed = (first.drawn(hold=together), second.drawn(hold=together))
+    owed = (first.__drawn(hold=together), second.__drawn(hold=together))
     if together and None not in owed:
         time.sleep_ms(max(owed))
         first.backlight.reveal_now()
@@ -114,7 +114,7 @@ class ScreenPair:
             raise ValueError("a pair needs two different screens")
         if first.port is second.port:
             raise ValueError("a pair needs a screen on each SP/CE port, since one port is one stream; broadcast() shares a port")
-        if first.reserve != second.reserve:
+        if first.__reserve != second.__reserve:
             raise ValueError("a pair needs both screens built with the same reserve, since a reservation is shared out across the pair: set it on both, or on neither")
 
         # Each port's own backlight is what holds, so the screens carry it
@@ -254,7 +254,7 @@ class ScreenPair:
             return
 
         first, second = self.__screens
-        if not (first.v_sync and second.v_sync):
+        if not (first.__v_sync and second.__v_sync):
             raise ValueError("alignment waits on both panels' tearing-effect signals, so it needs both screens created with te and v_sync")
         if not self.__calibrated:
             self.__calibrate()
@@ -278,32 +278,6 @@ class ScreenPair:
         if self.__calibrated:
             self.__release_panel()
             self.__f_screen.__pair = None
-
-    @property
-    def align_floor_us(self):
-        """The steady skew alignment is predicted to settle at, in microseconds.
-
-        The deadband, two of the follower's line times: the hold's one-line
-        porch quantum sits under it, so the deadband is what bounds the loop.
-        Measured medians: 114us on a 2.8" pair against 132us predicted, and
-        196us on a 1.54" against 110us.
-        """
-        if not self.__calibrated:
-            raise ValueError("align has never been on, so the pair is uncalibrated")
-
-        return self.__floor_us
-
-    @property
-    def trim_lines(self):
-        """Porch lines the static trim added to the follower, for a diagnostic.
-
-        What calibration priced the pair's rate gap at; the hold's dither comes
-        and goes one further line on top of it.
-        """
-        if not self.__calibrated:
-            raise ValueError("align has never been on, so the pair is uncalibrated")
-
-        return self.__trim_lines
 
     def update(self, image, second=None, *, rotation=None, mirror=None,
                pixel_double=False, offset=None, tile=False,
@@ -388,7 +362,7 @@ class ScreenPair:
         started = time.ticks_ms()
 
         screens = self.__screens
-        displays = tuple(screen.display for screen in screens)
+        displays = tuple(screen.__display for screen in screens)
 
         # The first probe after a panel's bringup reads about 3.4% long and
         # settles within a second, so each panel's first reading is discarded.
@@ -406,7 +380,7 @@ class ScreenPair:
 
         # Each panel's line time is its own, fixed by its oscillator; the porch
         # moves how many of them a refresh spends, not how long one lasts.
-        line_us = [period / screen.line_slots
+        line_us = [period / screen.__line_slots
                    for period, screen in zip(periods, screens)]
         s_line = line_us[fi]
 
@@ -414,7 +388,7 @@ class ScreenPair:
         # until its period meets the leader's. Floored, so the follower stays
         # the faster panel: the hold's one-line dither only ever slows it.
         trim = int((periods[li] - periods[fi]) // s_line)
-        back, front = f_screen.porch
+        back, front = f_screen.__porch
 
         # Both refusals run before anything moves a panel. The trim has to fit
         # under the blanking ceiling, and the tighter panel's margin has to
@@ -431,8 +405,8 @@ class ScreenPair:
 
         trims = [0, 0]
         trims[fi] = trim
-        margins = [screen.line_slots + trims[i] + screen.height
-                   - screen.display.wire_window_us() / line_us[i]
+        margins = [screen.__line_slots + trims[i] + screen.height
+                   - screen.__display.wire_window_us() / line_us[i]
                    for i, screen in enumerate(screens)]
         tightest = margins.index(min(margins))
         margin_us = margins[tightest] * line_us[tightest]
@@ -449,7 +423,7 @@ class ScreenPair:
                 # lines out. Floored again, for the same reason as above.
                 correction = int((periods[li] - held) // s_line)
                 if correction:
-                    back, front = f_screen.porch
+                    back, front = f_screen.__porch
                     f_screen.__set_porch(back + correction, front)
                     trim += correction
                 periods[fi] = int(round(held + correction * s_line))
@@ -459,7 +433,7 @@ class ScreenPair:
 
         # The follower's own slot count, which the trim just moved: the
         # lines-per-period currency the sweep and the plans price in.
-        line_slots = f_screen.line_slots
+        line_slots = f_screen.__line_slots
 
         # Per panel: the sorted rate table, the built rate's index, and a probed
         # settled period at one and two steps each way where the table has them.
@@ -478,12 +452,12 @@ class ScreenPair:
                 for rate_index in (nominal - depth, nominal + depth):
                     if not 0 <= rate_index < len(ordered):
                         continue
-                    screen.command(screen.CONTROLLER.REG_FRCTRL2, table[ordered[rate_index]])
+                    screen.__command(screen.CONTROLLER.REG_FRCTRL2, table[ordered[rate_index]])
                     time.sleep_ms(100)
-                    period = screen.display.te_probe(self.PROBE_MS)[0]
+                    period = screen.__display.te_probe(self.PROBE_MS)[0]
                     if period:
                         sweep[i][rate_index] = period
-            screen.command(screen.CONTROLLER.REG_FRCTRL2, table[ordered[nominal]])
+            screen.__command(screen.CONTROLLER.REG_FRCTRL2, table[ordered[nominal]])
             time.sleep_ms(100)
 
         # What the trim left, under one porch line a period, which the hold's
@@ -558,13 +532,13 @@ class ScreenPair:
 
     def __send_walk(self, walk):
         if walk != self.__walk_sent:
-            self.__f_screen.command(self.__reg_tescan, bytes((walk >> 8, walk & 0xFF)))
+            self.__f_screen.__command(self.__reg_tescan, bytes((walk >> 8, walk & 0xFF)))
             self.__walk_sent = walk
 
     def __send_dither(self, want):
         """Hold the follower's porch want lines off its trim, -1, 0 or +1."""
         if want != self.__dither:
-            back, front = self.__f_screen.porch
+            back, front = self.__f_screen.__porch
             self.__f_screen.__set_porch(back + want - self.__dither, front)
             self.__dither = want
 
@@ -588,7 +562,7 @@ class ScreenPair:
         """
         self.__restore_panel()
         if self.__trim_on:
-            back, front = self.__f_screen.porch
+            back, front = self.__f_screen.__porch
             self.__f_screen.__set_porch(back - self.__trim_lines, front)
             self.__trim_on = False
 
@@ -597,7 +571,7 @@ class ScreenPair:
         if not self.__trim_lines or self.__trim_on:
             return False
 
-        back, front = self.__f_screen.porch
+        back, front = self.__f_screen.__porch
         self.__f_screen.__set_porch(back + self.__trim_lines, front)
         self.__trim_on = True
         return True
@@ -609,7 +583,7 @@ class ScreenPair:
         if self.__n_hi is None:
             # The tear margin needs a streamed frame's length, so the walk's
             # bounds wait for the first one
-            margin = (self.__f_screen.line_slots + self.__f_screen.height
+            margin = (self.__f_screen.__line_slots + self.__f_screen.height
                       - stats_f.frame_us / self.__s_line)
             self.__n_hi = max(4, int(margin * self.SLIP_FRACTION))
             self.__dither_hi = max(2, int(margin * self.DITHER_FRACTION))
@@ -678,7 +652,7 @@ class ScreenPair:
     def __set_rate(self, index, code):
         """Set one panel's rate, and hand its TE line back to the schedule's watch."""
         screen = self.__screens[index]
-        screen.command(screen.CONTROLLER.REG_FRCTRL2,
+        screen.__command(screen.CONTROLLER.REG_FRCTRL2,
                        self.__nominal_codes[index] if code is None else code)
         self.__te_lines[index].init(Pin.IN, pull=Pin.PULL_DOWN)
 

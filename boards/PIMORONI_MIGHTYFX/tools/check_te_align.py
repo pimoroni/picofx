@@ -61,11 +61,11 @@ def draw(background):
 
 
 def tescan(screen, n):
-    screen.command(st7789.REG_TESCAN, bytes((n >> 8, n & 0xFF)))
+    screen.__command(st7789.REG_TESCAN, bytes((n >> 8, n & 0xFF)))
 
 
 def restore_te(screen):
-    screen.command(st7789.REG_TEON, b"\x00")
+    screen.__command(st7789.REG_TEON, b"\x00")
     tescan(screen, 0)
 
 
@@ -85,9 +85,9 @@ for screen in screens:
     restore_te(screen)
     screen.update(canvas, rotation=90, v_sync=False)
     screen.update(canvas, rotation=90, v_sync=False)
-    screen.drawn()
+    screen.__drawn()
 
-displays = [s.display for s in screens]
+displays = [s.__display for s in screens]
 periods = [d.te_probe(500)[0] for d in displays]
 frames_us = [d.stats().frame_us for d in displays]
 fi = 0 if periods[0] <= periods[1] else 1      # the faster panel follows
@@ -104,10 +104,10 @@ code_slow = st7789.FRAME_RATE_CONTROL[f_screen.framerate - 1]
 # The rate quantum sets the steady skew floor. A panel latches its frame length at
 # a frame boundary, so one slow-code frame retards the follower by the whole extra
 # period it ran for, and nothing finer is available to the loop.
-f_screen.command(st7789.REG_FRCTRL2, code_slow)
+f_screen.__command(st7789.REG_FRCTRL2, code_slow)
 time.sleep_ms(100)
 period_slow = f_disp.te_probe(500)[0]
-f_screen.command(st7789.REG_FRCTRL2, code_norm)
+f_screen.__command(st7789.REG_FRCTRL2, code_norm)
 quantum_lines = (period_slow - periods[fi]) / s_line
 
 print("leader {} period {}us, follower {} period {}us".format(
@@ -134,7 +134,7 @@ def run_phase(label, correct, dither):
     n_lo_seen, n_hi_seen = n_hi, 0
 
     restore_te(f_screen)
-    f_screen.command(st7789.REG_FRCTRL2, code_norm)
+    f_screen.__command(st7789.REG_FRCTRL2, code_norm)
     print(label)
     frames = 0
     t0 = time.ticks_ms()
@@ -144,7 +144,7 @@ def run_phase(label, correct, dither):
             d.prepare(canvas, rotation=90)
         spidisplay.update_all(displays[0], displays[1], v_sync=True)
         for s in screens:
-            s.drawn()
+            s.__drawn()
         frames += 1
 
         worst_frame = max(worst_frame, l_disp.stats().frame_us,
@@ -174,7 +174,7 @@ def run_phase(label, correct, dither):
             tescan(f_screen, n)
             n_sent = n
         if want_slow != slow_on:
-            f_screen.command(st7789.REG_FRCTRL2,
+            f_screen.__command(st7789.REG_FRCTRL2,
                              code_slow if want_slow else code_norm)
             slow_on = want_slow
         if want_slow:
@@ -203,5 +203,5 @@ try:
     print("done")
 finally:
     restore_te(f_screen)
-    f_screen.command(st7789.REG_FRCTRL2, code_norm)
+    f_screen.__command(st7789.REG_FRCTRL2, code_norm)
     mighty.shutdown()

@@ -41,7 +41,7 @@ def check(name, expected, actual):
 
 def report(label, screen):
     """Compare everything the Screen knows against what its SPIDisplay holds."""
-    display = screen.display
+    display = screen.__display
     print(f"\n{label}: {type(screen).__name__}")
 
     # The one comparison nothing else makes. A mismatch is a fault in Screen's
@@ -57,7 +57,7 @@ def report(label, screen):
 
     # The workspace claim is band pair plus cache, each rounded to 4 bytes, and
     # sram_bytes() is what buffer_size() dropped by when the screen was built
-    row_bytes = screen.width * 3 // 2 if screen.bitdepth == 12 else screen.width * 2
+    row_bytes = screen.width * 3 // 2 if screen.__bitdepth == 12 else screen.width * 2
     band_bytes = (display.band_rows() * row_bytes + 3) & ~3
     print(f"       claims {display.sram_bytes()} bytes of SRAM"
           f" ({2 * band_bytes} band + {display.sram_bytes() - 2 * band_bytes} cache)")
@@ -73,7 +73,7 @@ def report(label, screen):
         print(f"       {achieved} Hz against {requested} requested,"
               f" {100.0 * achieved / requested:.1f}% of it")
 
-    print(f"       {screen.framerate} fps, {screen.bitdepth}-bit, v_sync={screen.v_sync}")
+    print(f"       {screen.framerate} fps, {screen.__bitdepth}-bit, v_sync={screen.__v_sync}")
 
 
 def draw_ruler(screen, label):

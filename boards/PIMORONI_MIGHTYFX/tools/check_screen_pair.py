@@ -100,7 +100,7 @@ def skew_us():
 
 
 def timeouts():
-    return sum(screen.display.te_timeouts() for screen in pair.screens)
+    return sum(screen.__display.te_timeouts() for screen in pair.screens)
 
 
 def report_skews(label, skews, timeouts_before):
@@ -114,7 +114,7 @@ def report_skews(label, skews, timeouts_before):
 
 def aligned_run():
     print("aligned run, target is the pair's own floor of {:.0f}us".format(
-        pair.align_floor_us))
+        pair.__floor_us))
     timeouts0 = timeouts()
     skews = []
     frame = 0
@@ -204,7 +204,7 @@ def solo_updates():
     for _ in range(5):
         for screen in pair.screens:
             screen.update(canvas, rotation=90)
-    solo_back = follower.porch[0]
+    solo_back = follower.__porch[0]
     default_back = follower.CONTROLLER.PORCH[0]
     assert solo_back == default_back, (
         f"the follower ran solo at a back porch of {solo_back} lines against"
@@ -213,10 +213,10 @@ def solo_updates():
     for frame in range(RESUME_FRAMES):
         pair_frame(frame)
         skews.append(skew_us())
-    held_back = follower.porch[0] - pair.__dither
-    assert held_back == default_back + pair.trim_lines, (
+    held_back = follower.__porch[0] - pair.__dither
+    assert held_back == default_back + pair.__trim_lines, (
         f"the pair resumed at a back porch of {held_back} lines against the"
-        f" {default_back} + {pair.trim_lines} its calibration chose")
+        f" {default_back} + {pair.__trim_lines} its calibration chose")
     report_skews("resumed", skews, timeouts0)
     print()
 
@@ -238,8 +238,8 @@ try:
     # Named, since the file now covers more than one configuration
     first = pair.screens[0]
     print("{} pair at {} baud, {}-bit, {}fps, {}B of SRAM a screen".format(
-        SCREEN.__name__, first.display.baudrate(), first.bitdepth, first.framerate,
-        first.display.sram_bytes()))
+        SCREEN.__name__, first.__display.baudrate(), first.__bitdepth, first.framerate,
+        first.__display.sram_bytes()))
 
     check_resolution()
     try:
@@ -249,7 +249,7 @@ try:
         pass
 
     # A pair too mismatched to hold alignment streams unaligned instead, which is an
-    # outcome worth reporting. align_floor_us and the skew readings need a calibrated
+    # outcome worth reporting. The floor and the skew readings need a calibrated
     # pair, so the phases below have no subject and are named as skipped.
     if not pair.is_aligned():
         print("this pair declined to align, for the reason logged above, so the phases"
@@ -257,7 +257,7 @@ try:
               " measure how far apart these two are with tools/check_te_align.py")
     else:
         print("calibrated in {}ms, predicted floor {:.0f}us, trim {} porch lines".format(
-            calibration_ms, pair.align_floor_us, pair.trim_lines))
+            calibration_ms, pair.__floor_us, pair.__trim_lines))
 
         WIDTH, HEIGHT = built[0].width, built[0].height
         canvas = built[0].canvas(HEIGHT, WIDTH)

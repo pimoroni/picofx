@@ -31,7 +31,7 @@ print("nominal rate: {}fps, nominal two-refresh budget: {}us".format(
 print()
 
 for label, screen in zip(labels, screens):
-    display = screen.display
+    display = screen.__display
     screen.update(canvas, rotation=90)   # warm
     screen.update(canvas, rotation=90)
     frame_us = display.stats().frame_us
