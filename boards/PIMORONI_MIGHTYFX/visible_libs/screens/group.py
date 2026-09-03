@@ -829,31 +829,6 @@ class ScreenGroup(ScreenBase):
         self.__anchor_skip[index] = True
         return lines
 
-    @property
-    def __trim(self):
-        # rotate, probe or False
-        return self.__trim_mode
-
-    @__trim.setter
-    def __trim(self, value):
-        if value not in (None, True, False, "rotate", "probe"):
-            raise ValueError(f"{value} is not a valid trim. Expected None, False, 'rotate', or 'probe'.")
-
-        if not self.__target_us:
-            raise ValueError("this group holds no period for its members, so there is nothing for "
-                             "a trim to correct toward")
-
-        if value in (None, True):
-            value = "rotate" if self.__holding else False
-
-        if value == "rotate" and not self.__holding:
-            logging.info("screens: rotating the trim moves which member comes out clean, and these "
-                         "are held to one rate but not one phase, so every panel's tear moves with it")
-
-        # A run of probe counts belongs to the mode that gathered it
-        self.__trim_frames = 0
-        self.__trim_mode = value
-
     def __period_of(self, screen, settle=False):
         # settle discards the first reading, which a panel fresh from bringup needs
         screen.__command(screen.CONTROLLER.REG_TEON, b"\x00")
