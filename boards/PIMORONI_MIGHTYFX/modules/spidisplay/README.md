@@ -3,7 +3,10 @@
 A panel-agnostic SPI and DMA transport for SP/CE screens. One `SPIDisplayBus` per SPI port owns the
 peripheral, its DMA channel and its rate. Each `SPIDisplay` on a bus owns one panel's chip select
 and data/command lines and streams a converted frame to it band by band, so conversion of the next
-band overlaps the DMA of the last. Bringup stays in MicroPython, in `st7789.py`.
+band overlaps the DMA of the last. Bringup stays in MicroPython, in `st7789.py`, which also holds
+the tables a panel is tuned from: the porch, the rows a refresh scans and the rate and pixel-format
+codes. Nothing here knows where the pixel format came from: `bitdepth` at construction selects the
+packer, and `st7789.py` sends the panel the matching COLMOD.
 
 This file holds what a maintainer would otherwise re-derive from the code. The Python surface is
 documented for customers in `docs/screens.md`.
@@ -24,7 +27,7 @@ documented for customers in `docs/screens.md`.
 `update()` composes four resumable steps, which `update_all()` drives for several displays at once:
 
 1. `prepare()` builds the conversion descriptor, seeds the column cache and converts as far ahead
-   as the band ring allows. It sets the bus rate and DMA frame width, sends nothing and never
+   as the band ring allows. It sets the bus rate and DMA word width, sends nothing and never
    waits on the bus.
 2. `arm()` begins the tearing-effect wait without blocking: the TE line goes to input, the stale
    level is recorded and the timeout starts. `poll_te()` samples the rising-then-falling wait and
@@ -39,7 +42,8 @@ group instead, one display carrying every member's CS and DC bits.
 
 ### The band ring
 
-The band buffers form a ring of `ceil(stage_lines / band_lines)` slots, at least two. Conversion
+The band buffers form a ring of `ceil(stage_lines / band_lines)` slots, at least two. A height that
+`band_lines` does not divide ends in a shorter final band, sized where it is converted and kicked. Conversion
 may run the whole ring ahead of the wire, which is what lets a slow source convert during the TE
 wait and hold a head start against the wire's pace. One slot always stays reserved for the transfer
 in flight, whether or not the channel reports busy: reclaiming it on the live busy flag lets a

@@ -19,7 +19,8 @@ static constexpr int NO_CONVERT_ROWS = 0;
 
 // Arm every display so the TE waits overlap, then loop until every frame has
 // drained. Each pass sweeps for latency first, then runs at most one convert
-// slice of slice_rows. hysteresis_rows is explained where it is read.
+// slice of slice_rows. hysteresis_rows is the free ring rows another display must
+// show before the burst leaves the one it is on; negative means half its ring.
 template <typename Display>
 void interleave(Display *const *displays, int count, bool v_sync,
                 uint32_t te_timeout_us, int slice_rows, int hysteresis_rows) {

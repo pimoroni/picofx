@@ -158,6 +158,9 @@ uint32_t SPIDisplayBus::set_baudrate(uint32_t value) {
     return achieved_baudrate;
 }
 
+// The packers write every 16-bit pixel big-endian in memory, the order the wire wants.
+// A 16-bit DMA word reads little-endian, so the channel swaps the bytes back; an 8-bit
+// word carries them in memory order and needs no swap. The pixel format is untouched.
 void SPIDisplayBus::configure_dma(int bits) {
     dma_channel_config c = dma_channel_get_default_config(dma_chan);
     channel_config_set_transfer_data_size(&c, bits == 16 ? DMA_SIZE_16 : DMA_SIZE_8);
@@ -166,7 +169,7 @@ void SPIDisplayBus::configure_dma(int bits) {
     channel_config_set_write_increment(&c, false);
     channel_config_set_bswap(&c, bits == 16);
     dma_channel_configure(dma_chan, &c, &spi_get_hw(spi)->dr, nullptr, 0, false);
-    dma_frame_bits = bits;
+    dma_word_bits = bits;
 }
 
 
@@ -326,18 +329,19 @@ void SPIDisplay::arm(bool v_sync, uint32_t timeout_us) {
         te_command(te_on_cmd, &te_mode_byte, 1);
     }
 
-    gpio_set_dir_masked64(dc_mask, dc_mask);
-    // Drive DC low before the release below: the data phase leaves it high, and a
+    // Every DC line in the group is driven low; only the one TE is read from flips
+    // to an input below. Low before the release: the data phase leaves it high, and a
     // released line decaying through the pull-down reads as a completed blanking.
     // This is also the level the RAMWR command phase needs, and CS is high here so
     // no panel is listening.
+    gpio_set_dir_masked64(dc_mask, dc_mask);
     gpio_put_masked64(dc_mask, 0);
     te_started_us = time_us_32();
     te_timeout_budget_us = timeout_us;
     te_fired = !v_sync;
     te_high_seen = false;
     if (v_sync) {
-        uint pin = (te_pin >= 0) ? (uint)te_pin : dc_pin;
+        uint pin = te_line();
         if (te_pin < 0) {
             gpio_set_dir(dc_pin, GPIO_IN);
         }
@@ -365,7 +369,7 @@ bool SPIDisplay::poll_te() {
     }
 
     uint32_t now = time_us_32();
-    uint pin = (te_pin >= 0) ? (uint)te_pin : dc_pin;
+    uint pin = te_line();
     bool level = gpio_get(pin) != 0;
 
     // TE shares the DC node, so the level right after the direction flip can
@@ -400,7 +404,7 @@ bool SPIDisplay::poll_te() {
 }
 
 TeProbe SPIDisplay::te_probe(uint32_t ms) {
-    uint pin = te_pin >= 0 ? (uint)te_pin : dc_pin;
+    uint pin = te_line();
     if (te_pin < 0) {
         // The probe starts from a genuine low for the same reason arm() does
         gpio_put(dc_pin, 0);
@@ -505,7 +509,7 @@ TePhase SPIDisplay::te_phase(SPIDisplay &first, SPIDisplay &second,
     SPIDisplay *displays[2] = {&first, &second};
     uint pins[2];
     for (int i = 0; i < 2; ++i) {
-        pins[i] = displays[i]->te_pin >= 0 ? (uint)displays[i]->te_pin : displays[i]->dc_pin;
+        pins[i] = displays[i]->te_line();
         if (displays[i]->te_pin < 0) {
             // The capture starts from a genuine low for the same reason arm() does
             gpio_put(displays[i]->dc_pin, 0);
@@ -562,7 +566,8 @@ TePhase SPIDisplay::te_phase(SPIDisplay &first, SPIDisplay &second,
     }
 
     // Each line's falls fold onto one period against a shared reference, the median
-    // taken so a missed or doubled edge cannot swing the answer. The difference goes
+    // taken so a missed or doubled edge cannot swing the answer: the upper median, so
+    // two falls give the later one and an odd count its middle. The difference goes
     // signed before the reduction, 2**32 not being a multiple of a TE period.
     const uint32_t ref = falls[0][0];
     uint32_t offsets[2];
@@ -648,12 +653,12 @@ void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h, int src_strid
     // Every band is this size except a possibly-shorter final one
     full_band_bytes = (size_t)rows_per_band * desc.dst_row_bytes;
 
-    // Wider SPI frames cut the PL022's per-frame idle time, 1.5 clocks between frames
-    // whatever their width. A transfer has to be a whole number of frames, so an odd
-    // packed row width, RGB444 at half the possible widths, falls back to 8-bit frames.
-    wide_frames = (desc.dst_row_bytes % 2) == 0;
-    frame_shift = wide_frames ? 1 : 0;
-    bus->use_frame_bits(wide_frames ? 16 : 8);
+    // Wider SPI words, frames in the PL022's datasheet, cut its idle time between them,
+    // 1.5 clocks whatever the width. A transfer has to be a whole number of words, so an odd
+    // packed row width, RGB444 at half the possible widths, falls back to 8-bit words.
+    wide_words = (desc.dst_row_bytes % 2) == 0;
+    word_shift = wide_words ? 1 : 0;
+    bus->use_word_bits(wide_words ? 16 : 8);
 
     // Check if the source address sits anywhere inside the 16MB hardware window for CS1
     uintptr_t src_addr = (uintptr_t)desc.src;
@@ -701,7 +706,7 @@ void SPIDisplay::start_stream() {
     gpio_put_masked64(write_dc(), write_dc());
 
     // RAMWR returned with the shifter idle, so widening here truncates nothing
-    if (wide_frames) {
+    if (wide_words) {
         spi_set_format(bus->spi, 16, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
     }
 
@@ -715,12 +720,14 @@ void SPIDisplay::start_stream() {
     bands_kicked = 1;
     state = FrameState::STREAMING;
     dma_channel_set_read_addr(bus->dma_chan, slot_ptr(0), false);
-    dma_channel_set_trans_count(bus->dma_chan, full_band_bytes >> frame_shift, true);  // true starts it
+    dma_channel_set_trans_count(bus->dma_chan, full_band_bytes >> word_shift, true);  // true starts it
 }
 
-// In RAM for the same QMI-contention reason as the handler. Busy means the
-// completion this entry answers was already serviced by a masked thread kick,
-// so touching the registers would corrupt the band in flight.
+// The interrupt-side kick; try_kick() is the same dispatch from the thread, for a
+// band that finished converting after the completion came and went. In RAM for the
+// same QMI-contention reason as the handler. Busy means the completion this entry
+// answers was already serviced by a masked thread kick, so touching the registers
+// would corrupt the band in flight.
 void __not_in_flash_func(SPIDisplay::kick_from_isr)() {
     if (dma_channel_is_busy(bus->dma_chan)) {
         return;
@@ -746,7 +753,7 @@ void __not_in_flash_func(SPIDisplay::kick_from_isr)() {
     dma_channel_set_read_addr(bus->dma_chan, slot_ptr(band), false);
     size_t bytes = next == rows_per_band ? full_band_bytes
                                          : (size_t)next * desc.dst_row_bytes;
-    dma_channel_set_trans_count(bus->dma_chan, bytes >> frame_shift, true);
+    dma_channel_set_trans_count(bus->dma_chan, bytes >> word_shift, true);
 }
 
 bool SPIDisplay::step_convert(int max_rows) {
@@ -778,9 +785,9 @@ bool SPIDisplay::step_convert(int max_rows) {
     return true;
 }
 
-// The thread-side kick, now the fallback for bands that finish converting
-// while the channel already sits idle; completions themselves kick from the
-// DMA_IRQ_2 handler. The check-ack-kick runs under PRIMASK so the handler
+// The thread-side kick, the fallback for a band that finishes converting while
+// the channel already sits idle; completions themselves kick from kick_from_isr()
+// above, the same dispatch. The check-ack-kick runs under PRIMASK so the handler
 // cannot interleave with it, and the ack retires the pended completion this
 // idleness came from so a stale handler entry finds nothing.
 bool SPIDisplay::try_kick() {
@@ -809,7 +816,7 @@ bool SPIDisplay::try_kick() {
     dma_channel_set_read_addr(bus->dma_chan, slot_ptr(band), false);
     size_t bytes = next == rows_per_band ? full_band_bytes
                                          : (size_t)next * desc.dst_row_bytes;
-    dma_channel_set_trans_count(bus->dma_chan, bytes >> frame_shift, true);
+    dma_channel_set_trans_count(bus->dma_chan, bytes >> word_shift, true);
     restore_interrupts_from_disabled(save);
     return true;
 }
@@ -847,7 +854,7 @@ bool SPIDisplay::finish_if_drained() {
     dma_irqn_acknowledge_channel(DMA_IRQ2_INDEX, bus->dma_chan);
     restore_interrupts_from_disabled(save);
 
-    if (wide_frames) {
+    if (wide_words) {
         spi_set_format(bus->spi, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
     }
 
@@ -879,8 +886,8 @@ uint32_t SPIDisplay::deadline_us() const {
         return 0;
     }
     uint32_t remaining = dma_channel_hw_addr(bus->dma_chan)->transfer_count;
-    uint32_t frame_bits = 8u << frame_shift;
-    return (uint32_t)(((uint64_t)remaining * frame_bits * 1000000u) / achieved_baudrate);
+    uint32_t word_bits = 8u << word_shift;
+    return (uint32_t)(((uint64_t)remaining * word_bits * 1000000u) / achieved_baudrate);
 }
 
 uint32_t SPIDisplay::convert_debt_us() const {
@@ -922,7 +929,7 @@ void SPIDisplay::abort_frame() {
         dma_irqn_acknowledge_channel(DMA_IRQ2_INDEX, bus->dma_chan);
         while (spi_is_busy(bus->spi)) {
         }
-        if (wide_frames) {
+        if (wide_words) {
             spi_set_format(bus->spi, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
         }
     }

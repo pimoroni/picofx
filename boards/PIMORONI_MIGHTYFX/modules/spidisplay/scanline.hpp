@@ -284,8 +284,10 @@ void convert_wrapped_row(const Descriptor &desc, uint8_t *out, int dst_y) {
                 + (long)src_col * Src::bytes;
     }
 
-    // pixel_double keeps a per-pixel walk, its source cost already halved; its
-    // last pixel's advance is recovered from the parity for a reflecting seam.
+    // advanced_last is whether the pixel just packed moved src_ptr, which a
+    // reflecting seam undoes so the edge pixel repeats. A plain walk always did;
+    // pixel_double moves only on the half advance_at_parity names, and the parity
+    // has toggled once since that pixel, so the caller reads it back one step.
     auto seam = [&](bool advanced_last) {
         if (seam_reflects) {
             if (advanced_last) {
@@ -629,12 +631,12 @@ struct Transform {
 // A selected kernel instantiation: converts row_count destination rows from first_row.
 using ConvertFn = void (*)(const Descriptor &, uint8_t *, int, int);
 
-// Resolve the runtime formats to a kernel instantiation. The descriptor carries
-// rotation, mirror and pixel-double, so only the source format selects: a
-// per-pixel palette test in the loop body cannot be hoisted, and costs the direct
-// path about 5% of its convert budget.
-inline ConvertFn select_convert(int format, bool indexed) {
-    if (format == RGB444::format) {
+// Resolve the destination packer tag and the source kind to a kernel instantiation.
+// The descriptor carries rotation, mirror and pixel-double, so only indexed selects
+// on the source side: a per-pixel palette test in the loop body cannot be hoisted,
+// and costs the direct path about 5% of its convert budget.
+inline ConvertFn select_convert(int dst_format, bool indexed) {
+    if (dst_format == RGB444::format) {
         return indexed ? &convert_band<Indexed8, RGB444>
                        : &convert_band<RGBA8888, RGB444>;
     }

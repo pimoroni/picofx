@@ -69,10 +69,10 @@ private:
     // next transfer; not while a frame streams.
     uint32_t set_baudrate(uint32_t value);
 
-    // 16-bit frames go out most significant byte first, so the channel byte swaps
+    // The DMA word width, 8 or 16 bits; a 16-bit word's bytes are swapped, see the definition
     void configure_dma(int bits);
-    void use_frame_bits(int bits) {
-        if (dma_frame_bits != bits) {
+    void use_word_bits(int bits) {
+        if (dma_word_bits != bits) {
             configure_dma(bits);
         }
     }
@@ -81,7 +81,7 @@ private:
     uint sck_pin;                 // Held so the destructor can hand them back as GPIO
     uint mosi_pin;
     int dma_chan;
-    int dma_frame_bits;           // Width the DMA channel is currently configured for
+    int dma_word_bits;            // Width the DMA channel is currently configured for
     uint32_t requested_baudrate;  // What a display last asked for, for the compare
     uint32_t achieved_baudrate;   // What the divider reached for that request
 };
@@ -144,7 +144,8 @@ public:
 
     // Convert and stream a whole frame, blocking until it has left. src is RGBA8888,
     // or a palette index per pixel with palette set. Each axis is centred or placed
-    // by its offset, and tiling wraps the read at the source's size.
+    // by its offset, and tiling wraps the read at the source's size. mirror flips
+    // the whole output; tile_mirror_x and tile_mirror_y reflect every other repeat.
     void update(const uint8_t *src, int src_w, int src_h, int src_stride,
                 const uint8_t *palette, size_t palette_len,
                 int rotation, int mirror, int pixel_double,
@@ -156,7 +157,8 @@ public:
                 uint64_t sync_cs = 0, uint64_t sync_dc = 0);
 
     // The resumable steps update() composes: prepare(), arm(), poll_te() until it
-    // fires, start_stream(), then step() until done()
+    // fires, start_stream(), then step() until done(). A frame in PREPARED or ARMED
+    // is called staged: converted ahead, owning its lines, not yet on the wire.
     enum class FrameState : uint8_t { IDLE, PREPARED, ARMED, STREAMING };
     FrameState frame_state() const { return state; }
 
@@ -198,7 +200,9 @@ public:
     // Rows the ring holds ahead of the wire when full, the reserved slot out
     int stage_capacity_rows() const { return (slot_count - 1) * rows_per_band; }
 
-    // Ring rows a burst could fill now; a concurrent kick only understates it
+    // Ring rows a burst could fill now; a concurrent kick only understates it. The
+    // one ring rule, shared with convert_room(): converted rows lead kicked rows by
+    // at most slot_count - 1 bands, the last slot being the transfer in flight.
     int stage_free_rows() const {
         int kicked = bands_kicked;
         int free_rows = (kicked + slot_count - 1) * rows_per_band - rows_converted;
@@ -267,8 +271,9 @@ private:
         return sram_claim + (size_t)(band_index % slot_count) * band_bytes;
     }
 
-    // Rows convertible into the current band now. One slot stays reserved for the
-    // transfer in flight whether or not the channel is busy, or the wire starves.
+    // Rows convertible into the current band now, under the ring rule stated at
+    // stage_free_rows(): the write band may lead the kicked count by slot_count - 2,
+    // the reserved slot being the transfer in flight whether or not the channel is busy.
     int convert_room() const {
         if (rows_converted >= dst_h) {
             return 0;
@@ -356,8 +361,8 @@ private:
     void te_command(uint8_t opcode, const uint8_t *data, size_t data_len);
     ColumnCache cache{nullptr, 0, 0};
     size_t full_band_bytes = 0;
-    bool wide_frames = false;
-    int frame_shift = 0;
+    bool wide_words = false;          // 16-bit DMA words, where a packed row is an even byte count
+    int word_shift = 0;               // Bytes to words: 1 for wide, 0 for 8-bit
     volatile int rows_converted = 0;  // Rows converted, published after the pixels
     volatile int rows_kicked = 0;     // Rows handed to the DMA channel
     volatile int bands_kicked = 0;    // Kicks so far, naming the next slot to send

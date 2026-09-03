@@ -157,8 +157,10 @@ private:
         // row: v runs of consecutive source rows for a wrapped v, u runs of
         // consecutive source columns for a wrapped u inside them, and the v
         // run's rows innermost, so per-row work is one fixed-size copy per u
-        // run. A mirrored axis alternates its runs' direction: a descending u
-        // run reads the source ascending, which is what the XIP cache
+        // run. A run never crosses a source edge: v_len and run are cut at the
+        // next fold, so a mirrored axis alternates direction run by run, a 3-row
+        // source over window rows -1 to 4 filling as 0 | 0 1 2 | 2 1. A descending
+        // u run reads the source ascending, which is what the XIP cache
         // prefetches, and writes descending in fixed-size pieces, px being 1
         // or 4. An unwrapped axis is simply one run.
         const int src_w_px = frame_desc.src_extent_w >> pixel_shift;
