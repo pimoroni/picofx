@@ -1,39 +1,12 @@
-# Measures what the second core buys frame conversion.
+# Measures what the second core buys frame conversion. Only rows reading SRAM are
+# split, a canvas or a source read through the column cache, since two cores
+# reading PSRAM over one QMI cost more than the halved pixel work saves. Each case
+# says whether it expects the split, so a wrong answer either way is named.
 #
-# Conversion halves each row range across both cores, through the worker
-# picovector's rasteriser owns. How much that wins depends on what the rows are
-# waiting for. The pixel loop parallelises, but two cores reach PSRAM over one
-# QMI: halving a range that reads PSRAM leaves them at distant row offsets, and
-# two interleaved read streams cost more than the halved pixel work saves. So
-# only rows reading SRAM are split, which is a canvas, or a source read through
-# the column cache, whose windows are SRAM.
-#
-# That makes the split's reach a property of the settings, not just the source,
-# and this reports it as such: with cache_columns=0 a PSRAM source at rotation 90
-# has no window to read from, so the split declines there too. Each case says
-# which it expects, so a wrong answer either way is named.
-#
-# Measured on a 2.8" at 24MHz, 12-bit, band 4, cache 12:
-#
-#   SRAM, rotation 0    32.6 -> 20.4 us a row   1.60x
-#   SRAM, rotation 90   28.2 -> 17.5 us a row   1.61x
-#   PSRAM, rotation 0   declines, and unsplit it was 0.84x, a fifth slower
-#   PSRAM, rotation 90  84.3 -> 73.9 us a row   1.14x, through the cache
-#
-# The cached rotation-90 figure is the weak one, and the frame time says why:
-# conversion averages well under the wire's per-row budget there, yet the frame
-# still overruns because a window fill is one lump the shallow ring cannot absorb.
-# Splitting rows does not move a lump. Prefetching the next fill onto core1 would.
-#
-# spidisplay.dual_convert() is what makes this measurable on one firmware: each
-# case runs both ways over the same pixels. core1_rows proves the split engaged,
-# since a declined range reports the same timing as one core. The setting is
-# firmware state and survives a soft reset, so a program that turns it off leaves
-# every later program on one core: this one restores it however the run ends.
-#
-# v_sync is off so the timings are conversion and the wire alone. The content is
-# drawn once per source, not per frame, so nothing but conversion is being timed.
-# A port never releases its claims, so each settings row needs its own MightyFX.
+# spidisplay.dual_convert() runs each case both ways over the same pixels, and
+# core1_rows proves the split engaged. The setting survives a soft reset, so it is
+# restored however the run ends. v_sync is off so the timings are conversion and the
+# wire alone.
 #
 # A diagnostic, not an example, so it is not copied to the board. Copy it across
 # to run it.

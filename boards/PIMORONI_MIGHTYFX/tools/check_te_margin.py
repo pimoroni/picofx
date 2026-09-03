@@ -1,8 +1,7 @@
-# Measures each panel's real refresh period from its TE line and reports the
-# tear margin left over a measured frame, per panel. The FRCTRL2 setting picks
-# a divider of the panel's internal oscillator, and oscillators vary per unit,
-# so two panels at one setting can hold different margins: a small or negative
-# one shows as a marginal tear wobbling in and out on that panel alone.
+# Measures each panel's real refresh period from its TE line and reports the tear
+# margin left over a measured frame. Oscillators vary per unit, so two panels at one
+# setting can hold different margins, and a small or negative one shows as a
+# marginal tear wobbling in and out on that panel alone.
 #
 # A diagnostic, not an example, so it is not copied to the board. Run it with
 # mpremote.

@@ -1,16 +1,8 @@
-# Checks that a Screen and the SPIDisplay under it agree on the panel.
-#
-# Dimensions, rate and banding used to be arguments to update(). They are now
-# construction state, and it is held twice: once in the Screen, once in the
-# SPIDisplay the Screen built. size(), band_rows() and baudrate() are the only
-# readings of the second copy, so nothing else can tell the two apart.
-#
-# That matters most for the keyword overrides. Screen280(port, height=280) has to
-# carry 280 all the way into the C constructor, and if it does not, the only symptom
-# is a wrong picture on a panel that is already showing an unfamiliar frame. So the
-# second screen here is deliberately overridden, and the check and the panel
-# corroborate each other: size() says the number arrived, and a frame that stops
-# short of the bottom says the transport acted on it.
+# Checks that a Screen and the SPIDisplay under it agree on the panel. Dimensions,
+# rate and banding are held twice, once in each, and a keyword override such as
+# Screen280(port, height=280) has to reach the C constructor: the second screen here
+# is overridden, size() says the number arrived, and a frame stopping short of the
+# bottom says the transport acted on it.
 #
 # A diagnostic, not an example, so it is not copied to the board. Copy it across to
 # run it.

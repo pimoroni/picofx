@@ -1,23 +1,14 @@
-# Sweeps the screen settings that decide frame time and records every cell.
+# Sweeps the screen settings that decide frame time and records every cell, which is
+# how a panel's PROFILES rows are measured.
 #
-# The settings fall in two groups. Bit depth, frame rate, baud rate, band lines and
-# cache columns are fixed when a Screen is built; rotation, mirror and pixel
-# doubling are changed between frames. A port never releases its CS, DC and
-# backlight claims, so a new Screen needs a new MightyFX, and the sweep is ordered
-# to rebuild as rarely as it can.
+# Bit depth, frame rate, baud rate, band lines and cache columns are fixed when a
+# Screen is built; rotation, mirror and pixel doubling change between frames. A new
+# Screen needs a new MightyFX, so the sweep is ordered to rebuild as rarely as it can.
 #
-# A diagnostic, not an example, so it is not copied to the board. Copy it across and
-# run it, and it appends one JSON object per cell to RESULTS_FILE. CHECKPOINT_FILE
-# resumes an interrupted run. Hold the boot button to stop.
-#
-# The settings form a matrix, indexed rather than built, so a cell is decoded from its
-# index on demand. A checkpoint is one of those indexes and means nothing against a
-# different matrix, so changing any axis mid-run is refused: finish the run, or clear
-# both files and start again.
-#
-# One pass per cell. Repeats were measured and dropped: across two panels the spread
-# between passes was 0 to 9us against frame times near 42,000us, so a second pass buys
-# nothing a MEASURE_FRAMES average does not already give.
+# A diagnostic, not an example, so it is not copied to the board. It appends one JSON
+# object per cell to RESULTS_FILE, and CHECKPOINT_FILE resumes an interrupted run. A
+# checkpoint indexes the settings matrix, so changing any axis mid-run is refused.
+# Hold the boot button to stop.
 
 import gc
 import json
@@ -37,56 +28,35 @@ MEASURE_FRAMES = 6
 
 START_DELAY_S = 2       # Time to interrupt before the sweep takes the REPL
 
-# A rebuild takes a DMA channel and gives it back only when the old bus is collected,
-# so a sweep collects at every group boundary; without that the 16 channels run out
-# and the SDK panics. This is the blunt fallback if a run still dies: 0 never resets,
-# which is fastest, and any other number resets after that many groups. Resetting only
-# resumes on its own if this is staged as main.py.
+# A machine reset after this many groups, 0 for never. The fallback if a run still
+# runs out of DMA channels despite collecting at every group; only resumes on its own
+# if this is staged as main.py.
 RESET_EVERY_GROUPS = 0
 NOMINAL_FRAME_MS = 30   # Only to size the run up front, not used in any result
-# One probe per group, for the panel's real refresh rate. A short window truncates
-# to whole periods and reads about 10% low, so this stays long: measured against the
-# controller's table, 1000ms agrees within 2% where 250ms does not.
+# One probe per group, for the panel's real refresh rate; a short window reads about 10% low
 TE_PROBE_MS = 1000
 
 # Each panel names the SP/CE port it is wired to, so two sizes sweep in one run
-# without moving cables. Only the port under test is declared a screen port.
 PANELS = (("240x240", Screen154, "b"), ("240x320", Screen280, "a"))
-# 16 bits per pixel is a third more bytes on the wire than 12, so it costs frame
-# time in exchange for colour. It is worth measuring at the higher baud rates, where
-# a 12-bit frame finishes well inside the refresh budget and the spare bandwidth has
-# nowhere else to go. A 240-wide row is 480 bytes at 16 bits, which is exactly
-# MAX_ROW_BYTES, so the band buffers are already sized for it.
 BITDEPTHS = (12, 16)
 FRAMERATES = (None,)    # None takes the profile's rate for the wire under test
 BAUDRATES = (24_000_000, 37_500_000, 75_000_000)
-# Band lines divide the panel heights, 240 and 320; cache columns divide the width,
-# 240 for both. A value that leaves a short last band or window measures the ragged
-# edge as much as the setting, so 24 band lines is here as the ceiling despite not
-# dividing 320. 0 columns disables the cache; 1 to 3 are live windows, there being
-# no minimum width in the driver, so the whole cache curve measures on shipped
-# firmware.
-#
-# Each cell's screen claims 2 * band_lines * width * 2 + cache_columns * width * 4
-# bytes from the SRAM a canvas comes from, held until the group's shutdown()
-# returns it, so the axes' ceilings are also an SRAM spend per cell.
+# Values that divide the panel heights and width, so no cell measures a ragged last
+# band or window; 24 band lines is the ceiling despite not dividing 320. Each cell
+# claims its band ring and cache from SRAM, so the ceilings are also a spend per cell.
 BAND_LINES = (1, 2, 3, 4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24)
 CACHE_COLUMNS = (0, 1, 2, 3, 4, 5, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24)
 
-# Changed between frames, so these sweep inside one construction.
-#
-# Three rotations and no mirror cover every distinct cost. Measured on a 240x240 at
-# 24MHz: rotation reads rows forward at 17,312us, in reverse at 22,984us, or by
-# column at 27,855us, and mirroring only swaps a frame between the first two. So
-# rotation 0, 180 and 90 name the three, and mirroring any of them repeats one.
+# Changed between frames, so these sweep inside one construction. Rotation 0, 180 and
+# 90 read rows forward, in reverse and by column, the three distinct costs; a mirror
+# only swaps a frame between the first two.
 ROTATIONS = (0, 90, 180)
 MIRRORS = (False,)
 SOURCES = ("psram",)# "sram")
 
 PIXEL_DOUBLE = (False, True)
 
-# clk_sys and clk_peri each baud rate needs. The PL022 divides clk_peri by at least
-# two, so 24MHz is the ceiling until clk_peri is raised past 48MHz.
+# clk_sys and clk_peri each baud rate needs; the PL022 divides clk_peri by at least two
 CLOCKS = {
     24_000_000: (150_000_000, 48_000_000),
     37_500_000: (150_000_000, 150_000_000),
@@ -95,14 +65,9 @@ CLOCKS = {
 
 V_SYNC = False          # Off, so a pass times the conversion and the wire alone
 
-# The source is drawn rather than loaded, so a run cannot be skewed by whatever
-# images happen to be staged. Verified on hardware to convert within 0.07% of a
-# loaded PNG, both living on the PSRAM GC heap.
-#
-# Backgrounds cycle so a torn frame shows as a band of the previous colour. They
-# are held for FRAMES_PER_BACKGROUND frames, since v_sync is off and a full field
-# alternating every frame is worth avoiding. One canvas is prebuilt per background,
-# a draw costing about as much as a frame.
+# The source is drawn, not loaded, so a run cannot be skewed by whatever images are
+# staged. Backgrounds cycle so a torn frame shows as a band of the previous colour,
+# one canvas prebuilt per background since a draw costs about as much as a frame.
 BACKGROUNDS = (color.rgb(127, 127, 127), color.rgb(34, 177, 76))
 SRAM_BACKGROUND = (color.rgb(34, 76, 177))
 FRAMES_PER_BACKGROUND = 2
@@ -178,8 +143,8 @@ CELLS = __extent(AXES)
 CELLS_PER_GROUP = __extent(AXES[GROUP_AXES:])
 GROUPS = __extent(AXES[:GROUP_AXES])
 
-# The axis lengths, which is what a cell index is decoded against. Stored with a
-# checkpoint so a resume can tell the matrix has changed under it.
+# The axis lengths a cell index is decoded against, stored with a checkpoint so a
+# resume notices a changed matrix
 MATRIX_SHAPE = tuple(len(axis) for axis in AXES)
 
 
@@ -202,12 +167,7 @@ def cell_at(index):
 
 
 def unshippable(bitdepth, baudrate):
-    """Combinations there is no point measuring, since they could not be shipped.
-
-    16 bits at 24MHz puts a 240x320 frame at 56,005us. Two refreshes of that is a
-    sustainable 35.7fps, under the ST7789's own 39fps floor, so the rate cannot even
-    be set. Measured 2026-08-02.
-    """
+    # 16 bits at 24MHz puts a 240x320 frame under the ST7789's 39fps floor, so it cannot ship
     return bitdepth == 16 and baudrate == 24_000_000
 
 
@@ -244,10 +204,8 @@ def draw(canvas, width, height, background):
     canvas.circle(width - CORNER_MARK // 2, CORNER_MARK // 2, CORNER_MARK // 2)
 
 
-# Sources are built once per shape and kept, so a sweep does not churn hundreds of
-# canvases. It also matters for SRAM: every SRAM canvas aliases the same address, so
-# making a fresh one per switch left the old ones pointing at memory the new one had
-# taken over.
+# Sources are built once per shape and kept: every SRAM canvas aliases the same
+# address, so a fresh one per switch would leave the old ones pointing at its memory
 __source_cache = {}
 
 
@@ -313,8 +271,7 @@ def sram_fits(largest_bytes):
 
 start_index = load_checkpoint(MATRIX_SHAPE)
 
-# The SRAM region is smaller than the GC heap, so say up front if it cannot hold a
-# source rather than letting the cells fail one at a time
+# Said up front if the SRAM region cannot hold a source, not one failing cell at a time
 sources = SOURCES
 if "sram" in sources:
     largest = max(panel.WIDTH * panel.HEIGHT for _, panel, _ in PANELS) * 4
@@ -472,11 +429,9 @@ try:
             screen = None
             display = None
 
-            # SPIDisplayBus claims a DMA channel and releases it only from its
-            # finaliser, and there are 16. The GC heap is 8MB of PSRAM so a sweep
-            # allocates too little to trigger a collection on its own, and the
-            # channels run out after 16 rebuilds. Collecting here is what keeps a
-            # long run alive.
+            # A bus releases its DMA channel only from its finaliser, and a sweep
+            # allocates too little to collect on its own, so the 16 channels would
+            # run out after 16 rebuilds
             gc.collect()
 
         groups_done += 1

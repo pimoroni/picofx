@@ -1,13 +1,11 @@
-# Checks playback.py, against the two 320x320 test GIFs on the board and against
-# synthetic frame counts for the sizes no GIF here has.
+# Checks playback.py against the two 320x320 test GIFs on the board and synthetic
+# frame counts for the sizes no GIF here has.
 #
-# Phases: the traversal, printed as a step, frame and dwell table since a bare delays
-# list cannot be read without knowing where the cycle was cut, and asserted for the two
-# orders that are easy to get wrong; the origin rule, a dwell being earned by arriving
-# rather than served to anything placed there; placement, pause and reverse, including
-# reverse part way through a dwell; every raise, each naming its fix; and a run on a
-# real pair reporting what was achieved against what was asked, where the shortfall is
-# real and known.
+# Phases: the traversal, printed as a step, frame and dwell table and asserted for
+# the two orders that are easy to get wrong; the origin rule, a dwell being earned by
+# arriving; placement, pause and reverse, including reverse part way through a dwell;
+# every raise, each naming its fix; and a run on a real pair reporting what was
+# achieved against what was asked.
 #
 # The pair phase needs two Screen280 on the SP/CE ports; set PAIR to False to skip it.
 # A diagnostic, not an example, so it is not copied to the board. Run it with mpremote.

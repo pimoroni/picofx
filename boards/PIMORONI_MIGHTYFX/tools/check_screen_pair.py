@@ -1,22 +1,16 @@
-# Checks that a ScreenPair with align on reaches the skew the diagnostic loop
-# reaches (tools/check_te_align.py), and that an application pausing and resuming
-# shows no visible stagger, the pair spending a resync on the drift the pause left
-# (tools/check_te_resync.py measured both).
+# Checks a ScreenPair: that align holds the two panels' skew at its predicted floor,
+# and that pausing and resuming shows no visible stagger.
 #
-# Phases: placement resolution asserted against the documented table, since wrong
-# disambiguation is silent; an aligned run reporting steady skew against the pair's
-# own predicted floor; a cadence run asserting normal animation never reaches the
-# resync trigger; a paced run at a fixed interval near the pair's own frame time,
-# which is where a frame that overruns its slot starts without its TE edge and back
-# to back pushing does not look; pause-and-resume trials with eyes on the resume
-# instant; and solo updates on each screen, which must hand back the follower's
-# panel state, the trimmed porch included, and take it up again on resuming.
+# Phases: placement resolution against the documented table; an aligned run
+# reporting steady skew; a cadence run, where normal animation must never reach the
+# resync trigger; a paced run at a fixed interval near the pair's own frame time;
+# pause-and-resume trials with eyes on the resume instant; and solo updates on each
+# screen, which must hand back the follower's panel state and take it up again.
 #
 # Set SCREEN to the panel type on the ports. Every phase runs the default reserve and
-# an SRAM canvas redrawn per frame, which is what the thresholds below were measured
-# against; a pair on Reserve.FULL_SIZE_IMAGES converting heap images is a dearer frame
-# and is not covered here. A diagnostic, not an example, so it is not copied to the
-# board. Run it with mpremote, with eyes on both panels.
+# an SRAM canvas redrawn per frame, which the thresholds were measured against. A
+# diagnostic, not an example, so it is not copied to the board. Run it with mpremote,
+# with eyes on both panels.
 
 import time
 
@@ -254,7 +248,7 @@ try:
     if not pair.is_aligned():
         print("this pair declined to align, for the reason logged above, so the phases"
               " that measure alignment did not run. Pair better-matched panels, or"
-              " measure how far apart these two are with tools/check_te_align.py")
+              " probe each one's period with te_probe() to see how far apart they are")
     else:
         print("calibrated in {}ms, predicted floor {:.0f}us, trim {} porch lines".format(
             calibration_ms, pair.__floor_us, pair.__trim_lines))

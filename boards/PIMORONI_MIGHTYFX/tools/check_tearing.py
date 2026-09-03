@@ -1,10 +1,7 @@
-# Visual tearing check for every profile row, at the worst case the profiles
-# were chosen against: rotation 90 from a PSRAM source, v_sync on.
-#
-# Backgrounds alternate every few frames, so a torn frame shows as a horizontal
-# band of the previous colour across the grid. The printed margin is what the
-# two-refresh budget holds beyond the measured pipeline; tearing appearing only
-# once FPS_OFFSET pushes a margin negative is the analysis confirmed.
+# Visual tearing check for every profile row, at the worst case the profiles were
+# chosen against: rotation 90 from a PSRAM source, v_sync on. Backgrounds alternate,
+# so a torn frame shows as a horizontal band of the previous colour across the grid.
+# The printed margin is what the two-refresh budget holds beyond the measured frame.
 #
 # A diagnostic, not an example, so it is not copied to the board. Copy it across
 # to run it. Wiring: a 2.8" on SP/CE A and a 1.54" on SP/CE B.
@@ -36,8 +33,7 @@ CLOCKS = {
     75_000_000: (150_000_000, 150_000_000),
 }
 
-# No (75MHz, 12bpp): that profile was dropped, the wire outrunning the panel's
-# scan during each cache window's run whatever the band and cache choice
+# No (75MHz, 12bpp): that wire outruns the panel's scan whatever the band and cache choice
 CASES = ((24_000_000, 12), (37_500_000, 16), (37_500_000, 12),
          (75_000_000, 16))
 
@@ -45,11 +41,8 @@ STATS = ("convert_us", "te_wait_us", "frame_us")
 
 
 def offset_rate(screen_class, baud, depth):
-    """The profile's rate plus FPS_OFFSET, snapped to a controller step.
-
-    Read through the row's dual-core replacement where this firmware has one, since
-    a rate the shipped code no longer picks would prove nothing about the profiles.
-    """
+    # The profile's rate plus FPS_OFFSET, snapped to a controller step, read through
+    # the row's dual-core replacement where this firmware has one
     row = screen_class.PROFILES[(baud, depth)]
     if spidisplay.dual_convert() and "dual" in row:
         row = row["dual"]

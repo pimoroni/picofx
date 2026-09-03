@@ -1,41 +1,18 @@
-# Is the ST7789 porch a runtime rate trim? PORCTRL (0xB2) sets the back and front
-# porch, so it sets how many scan slots a refresh spends, and one porch line should
-# buy one line time against FRCTRL2's 8.5. setup() writes it once before DISPON, so
-# whether a panel honours a later change, latches it at a frame boundary and does it
-# without a visible glitch is what this answers. A ScreenGroup's alignment rests on
-# the answer, since it trims and dithers a member's rate in porch lines.
+# Does a panel honour a porch change at runtime, latch it at a frame boundary, and
+# do it without a visible glitch? A group's alignment trims and dithers a member's
+# rate in porch lines, so a new panel has to answer yes to all three.
 #
-# Experiments, all on the one panel named by UNDER_TEST:
-#   1  Sweep: the achieved period and TE pulse at each porch against the one-line
-#      claim, the line time the sweep's own slope measures, and each row's tear
-#      margin. Splitting a step between the two porches says whether they are
-#      interchangeable, and the rows below the default say whether a trim can speed
-#      a panel up as well as slow it, which decides whether a group's reference has
-#      to be its slowest member.
-#   2  Latch: consecutive TE periods across a write. 2a writes just after a fall,
-#      320 scan lines before the blanking it changes. 2b writes at three points
-#      inside a long blanking and asks for a much shorter one, which is the only
-#      way a frame could come out malformed and is a phase a free-running dither
-#      reaches. A spanning period matching neither steady value is the fault.
-#   3  Glitch, eyes on the panel: the porch alternated under a still image and then
-#      under a v_sync stream, by one line as the hold would dither it and by 32 as
-#      an acquisition would step it. The mean period over the alternation says
-#      whether every frame took the value in force.
+# Three experiments on the panel UNDER_TEST names. 1, sweep: the achieved period and
+# TE pulse at each porch, against one line time per porch line. 2, latch: consecutive
+# TE periods across a write, including writes inside a long blanking asking for a
+# much shorter one; a spanning period matching neither steady value is the fault.
+# 3, glitch, eyes on the panel: the porch alternated under a still image and a
+# v_sync stream, by one line and by 32.
 #
-# Every panel on the harness is built, so each is sent TEOFF at bringup, and TEON
-# then goes to the one under test alone. A panel nobody built keeps whatever TE
-# state it was left in and would drive the shared line, and an unclaimed CS floats
-# low so it would take the frames as well. On a lone panel, leave HARNESS at one
-# entry. Diodes are what make the shared line readable at all.
-#
-# The short porches are the one part that could misbehave, a refresh below what the
-# panel's drive expects. The default is written back whatever happens.
-#
-# Lengthening the porch lowers the refresh rate, which matters on the 1.54": it ships
-# at 53fps and (28, 28) takes it to about 48.5, under the roughly 50fps at which that
-# panel is known to pulse. So the sweep prints the achieved rate per row and names any
-# row that crosses PULSE_FPS, since a pulse there belongs to the rate and not to the
-# porch. A group's own trims are five or six lines, nowhere near it.
+# Every panel on the harness is built, so each is sent TEOFF and only the one under
+# test drives the shared line. On a lone panel leave HARNESS at one entry. The
+# default porch is written back whatever happens. Rows whose rate crosses PULSE_FPS
+# are named, since a pulse there belongs to the rate and not the porch.
 #
 # A diagnostic, not an example, so it is not copied to the board. Run it with
 # mpremote, with eyes on the panel under test for experiment 3.
@@ -81,12 +58,9 @@ PORCHES = (
     (12, 12),   # back to the default, which the period must return to
 )
 
-# Experiment 3 writes frames, so both ends of a step want tear margin and a rate above
-# PULSE_FPS, or the stream tears or pulses on its own account and the porch is blamed.
-# The 2.80 has room at its default porch. A 1.54 whose oscillator runs fast has none
-# there, 31,506us of frame against 584 lines of budget, so its steps sit on a longer
-# porch, which is the thing the porch is for. Its step is also 8 lines and not 32,
-# since 32 would take it under PULSE_FPS whatever it started from.
+# Experiment 3 writes frames, so both ends of a step need tear margin and a rate above
+# PULSE_FPS, or the stream tears or pulses on its own account. A fast 1.54 has no
+# margin at its default porch, so its steps sit on a longer one and the big step is 8.
 GLITCH_STEPS = {
     screens.Screen280: (((12, 12), (12, 13)), ((12, 12), (28, 28))),
     screens.Screen154: (((20, 20), (20, 21)), ((20, 20), (24, 24))),
