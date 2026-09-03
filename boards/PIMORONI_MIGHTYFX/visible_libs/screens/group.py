@@ -463,7 +463,7 @@ class ScreenGroup(ScreenBase):
         if len(falls) < 2 or not self.__target_us:
             return
 
-        spanned = (falls[-1] - falls[0]) & TICKS_MASK
+        spanned = (falls[-1] - falls[0]) & 0xFFFFFFFF
         error = spanned - self.__target_us
         if abs(error) > self.CAPTURE_TOLERANCE_LINES * self.__line_us[index]:
             self.__suspect_sweeps += 1
@@ -806,7 +806,7 @@ class ScreenGroup(ScreenBase):
         self.__trim_at = (index + 1) % len(members)
         falls, _ = self.__solo_capture(screen, 4, 200)
         if len(falls) > 1:
-            measured = ((falls[-1] - falls[0]) & TICKS_MASK) / (len(falls) - 1)
+            measured = ((falls[-1] - falls[0]) & 0xFFFFFFFF) / (len(falls) - 1)
             # Each captured period carries a dithered porch line whole
             self.__correct(screen, measured - self.__dither[index] * self.__line_us[index])
 
