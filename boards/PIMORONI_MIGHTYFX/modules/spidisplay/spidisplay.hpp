@@ -40,8 +40,8 @@ struct TeCapture {
     uint32_t finished_us;
 };
 
-// One update()'s instrumentation, microseconds but for the last field. The convert
-// figures are wall time, half of a row range going to core1.
+// One update()'s instrumentation, microseconds but for the last two fields. The
+// convert figures are wall time, half of a row range going to core1.
 struct FrameStats {
     uint32_t pre_us;             // Descriptor setup
     uint32_t convert_us;         // The first band alone
@@ -294,11 +294,6 @@ private:
     bool finish_if_drained();
 
     SPIDisplay &operator=(const SPIDisplay &) = default;
-
-    // One packed destination row's bytes at this width and depth
-    static size_t packed_row_bytes(int dst_w, int bitdepth) {
-        return (bitdepth == 12) ? (size_t)(dst_w * 3 / 2) : (size_t)(dst_w * 2);
-    }
 
     // One compare per transfer for a panel that has the bus to itself
     void use_baudrate() {

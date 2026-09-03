@@ -180,7 +180,7 @@ SPIDisplay::SPIDisplay(SPIDisplayBus *bus, uint cs, uint dc, int te, uint8_t ram
     : bus(bus), cs_mask(1ull << cs), dc_mask(1ull << dc), dc_pin(dc), te_pin(te),
       ram_write_cmd(ram_write), te_on_cmd(te_on), te_off_cmd(te_off),
       te_mode_byte(te_mode),
-      fmt(bitdepth == 12 ? RGB444::format : RGB565::format),
+      fmt(format_for_bitdepth(bitdepth)),
       dst_w(width), dst_h(height),
       cache_columns(cache_columns < 0 ? 0 : (cache_columns > width ? width : cache_columns)),
       requested_baudrate(baudrate) {
@@ -205,7 +205,7 @@ SPIDisplay::SPIDisplay(SPIDisplayBus *bus, uint cs, uint dc, int te, uint8_t ram
     // the band to 4 keeps every slot and the cache word-aligned. The cache is
     // sized by width: a window caches up to dst_w source rows of its columns
     // (column_cache.hpp), so height would under-provision a landscape panel.
-    full_row_bytes = packed_row_bytes(dst_w, bitdepth);
+    full_row_bytes = packed_row_bytes(fmt, dst_w);
     band_bytes = (rows_per_band * full_row_bytes + 3) & ~(size_t)3;
     cache_capacity = this->cache_columns * dst_w * 4;
     sram_claim_bytes = (size_t)slot_count * band_bytes + (size_t)cache_capacity + PALETTE_BYTES;
@@ -1181,6 +1181,13 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
     }
     if (args[ARG_baudrate].u_int < 1) {
         mp_raise_ValueError(MP_ERROR_TEXT("baudrate must be positive"));
+    }
+    int format = spidisplay::format_for_bitdepth(args[ARG_bitdepth].u_int);
+    if (format == 0) {
+        mp_raise_ValueError(MP_ERROR_TEXT("bitdepth must be 12 or 16"));
+    }
+    if (args[ARG_width].u_int % spidisplay::pixels_per_group(format) != 0) {
+        mp_raise_ValueError(MP_ERROR_TEXT("a 12-bit row packs two pixels in three bytes, so width must be even"));
     }
 
     // te=None is the shared DC line; a Pin is a dedicated TE input.

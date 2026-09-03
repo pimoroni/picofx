@@ -184,9 +184,14 @@ inline uint8_t *fill_bg_pairs(uint8_t *dst_ptr, int pixels, const uint8_t *bg_pa
 
 // Destination packers. RGB444 packs two pixels into three bytes; RGB565 packs one
 // into two big-endian bytes. format is the runtime tag, and the panel bit depth.
+// A packer owns its group's size, and the three functions below it are the only
+// place a format's arithmetic is written, so a new packer is added here alone.
 struct RGB444 {
     static constexpr int format = 444;
+    static constexpr int bitdepth = 12;
     static constexpr bool pairs = true;
+    static constexpr int group_pixels = 2;
+    static constexpr int group_bytes = 3;
 
     static inline void pack2(uint8_t *out,
                              uint8_t r0, uint8_t g0, uint8_t b0,
@@ -199,7 +204,10 @@ struct RGB444 {
 
 struct RGB565 {
     static constexpr int format = 565;
+    static constexpr int bitdepth = 16;
     static constexpr bool pairs = false;
+    static constexpr int group_pixels = 1;
+    static constexpr int group_bytes = 2;
 
     static inline void pack1(uint8_t *out, uint8_t r, uint8_t g, uint8_t b) {
         const uint16_t value = (uint16_t)__builtin_bswap16(
@@ -207,6 +215,29 @@ struct RGB565 {
         memcpy(out, &value, 2);
     }
 };
+
+// The packer tag for a panel bit depth, 0 where no packer exists for it
+inline int format_for_bitdepth(int bitdepth) {
+    if (bitdepth == RGB444::bitdepth) {
+        return RGB444::format;
+    }
+    if (bitdepth == RGB565::bitdepth) {
+        return RGB565::format;
+    }
+    return 0;
+}
+
+// Pixels a row width has to be a multiple of, so a packed row ends on a whole group
+inline int pixels_per_group(int format) {
+    return format == RGB444::format ? RGB444::group_pixels : RGB565::group_pixels;
+}
+
+// One packed destination row's bytes at this width
+inline int packed_row_bytes(int format, int dst_w) {
+    return format == RGB444::format
+        ? dst_w / RGB444::group_pixels * RGB444::group_bytes
+        : dst_w / RGB565::group_pixels * RGB565::group_bytes;
+}
 
 // One destination row whose walking axis wraps: the whole row is covered and
 // the source repeats along it, a plain seam resetting the pointer to the
@@ -415,8 +446,8 @@ void convert_band(const Descriptor &desc, uint8_t *dst_band, int first_row,
     const uint8_t bg_r = desc.bg_r, bg_g = desc.bg_g, bg_b = desc.bg_b;
     const typename Src::Loader loader(desc);
 
-    // Packed background: one pixel pair (three bytes) or one pixel (two bytes).
-    uint8_t bg_packed[3] = {0, 0, 0};
+    // Packed background, one group: a pixel pair for RGB444, one pixel for RGB565
+    uint8_t bg_packed[Dst::group_bytes] = {};
     if constexpr (Dst::pairs) {
         Dst::pack2(bg_packed, bg_r, bg_g, bg_b, bg_r, bg_g, bg_b);
     } else {
@@ -889,7 +920,7 @@ inline Descriptor make_descriptor(const uint8_t *src, int src_w, int src_h,
         }
     }
 
-    desc.dst_row_bytes = (format == RGB444::format) ? (dst_w * 3 / 2) : (dst_w * 2);
+    desc.dst_row_bytes = packed_row_bytes(format, dst_w);
     desc.bg_r = bg & 0xff;
     desc.bg_g = (bg >> 8) & 0xff;
     desc.bg_b = (bg >> 16) & 0xff;
