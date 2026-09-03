@@ -53,6 +53,7 @@ class ScreenBase:
         self.__subset_displays = None  # The members' displays, built once per subset
         self.__shared_te = shared_te  # Whether this panel's TE reaches a line others share
         self.__leader = leader  # The screen whose TE a frame waits on, None to leave TE alone
+        self.__leader_source = None  # A group whose current leader an inheriting subset waits on
         self.__synced_frame = None  # The screen the last frame's wait ended on, if any
         self.__sync_delay_us = 0    # How long a write trails the wait, set by a holding group
         self.__rotation = rotation  # The angle every frame takes unless it names its own
@@ -152,12 +153,13 @@ class ScreenBase:
     def __sync_screen(self, v_sync, to):
         # Only a screen sharing its DC line needs the transient wait. A member outside the
         # written set would stay clean while every written panel tears, so a narrowed write waits on one of its own.
-        if not v_sync or self.__leader is None:
+        leader = self.__leader if self.__leader_source is None else self.__leader_source.__leader
+        if not v_sync or leader is None:
             return None
 
         written = self.screens if to is None else to
-        if self.__leader is self or self.__leader in written:
-            return self.__leader
+        if leader is self or leader in written:
+            return leader
 
         for screen in written:
             if screen.__shared_te:

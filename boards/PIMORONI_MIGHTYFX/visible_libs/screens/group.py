@@ -127,6 +127,9 @@ class ScreenGroup(ScreenBase):
                              mirror=parent.mirror if mirror is None else mirror)
             self.__subset_of = parent
             self.__subset_displays = tuple(screen.__display for screen in screens)
+            # Inherited live, so a rotating trim moving the parent's leader moves this one's
+            if leader is None:
+                self.__leader_source = parent
             # Answered through a subset as the parent would; is_aligned() forwards live
             self.__reference = parent.__reference
             self.__acquired_us = parent.__acquired_us
