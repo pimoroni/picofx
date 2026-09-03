@@ -9,7 +9,7 @@
 import logging
 import time
 
-from .base import ScreenBase
+from .base import ScreenBase, __tightest_margin
 
 # time.ticks_us() wraps at 2**30 where the C module's stamps wrap at 2**32, and
 # their low bits agree, so a group's hold reduces every stamp it keeps to 30 bits
@@ -180,12 +180,10 @@ class ScreenGroup(ScreenBase):
                              mirror=parent.mirror if mirror is None else mirror)
             self.__subset_of = parent
             self.__subset_displays = tuple(screen.__display for screen in screens)
-            # Calibration stays the parent's, so a subset copies its outcome;
-            # the hold is asked live, is_aligned() forwarding to the parent,
-            # since its members are held whether or not this set writes them.
-            self.__calibrated = parent.__calibrated
+            # These answer through a subset as the parent would; the hold is
+            # asked live instead, is_aligned() forwarding to the parent, since
+            # its members are held whether or not this set writes them.
             self.__reference = parent.__reference
-            self.__floor_us = parent.__floor_us
             self.__acquired_us = parent.__acquired_us
             self.__trim_mode = parent.__trim_mode
             return
@@ -233,7 +231,6 @@ class ScreenGroup(ScreenBase):
                          first.__reserve, members=tuple(screens), leader=nominated,
                          rotation=rotation, mirror=mirror)
 
-        self.__calibrated = False
         # Position by member, so a frame's bookkeeping never scans the tuple
         self.__member_index = {screen: index for index, screen in enumerate(screens)}
         self.__reference_index = 0
@@ -245,7 +242,6 @@ class ScreenGroup(ScreenBase):
         self.__acquired_us = 0
         self.__holding = False
         self.__reference = None
-        self.__floor_us = 0
         self.__target_us = 0
         self.__margins = ()
         self.__aim_us = 0
@@ -351,14 +347,12 @@ class ScreenGroup(ScreenBase):
         trims = [int(round((periods[slowest] - period) / line))
                  for period, line in zip(periods, line_us)]
 
-        # The budget is the fastest member's, not the reference's: a written frame
-        # costs fixed microseconds while a fast panel's lines are shorter, so the
-        # same write eats more of them.
-        margins = [(screen.__line_slots + trim + screen.height - frame_us / line)
-                   for screen, trim, line in zip(members, trims, line_us)]
-        tightest = margins.index(min(margins))
-        quanta = 2 * line_us[tightest]
-        margin_us = margins[tightest] * line_us[tightest]
+        tightest, margins_us, quanta = __tightest_margin(members, trims, line_us,
+                                                         [frame_us] * len(members))
+        # Kept per member as a diagnostic: which panel is the constraint, and
+        # by how much. Nothing on the frame path reads it.
+        self.__margins = margins_us
+        margin_us = margins_us[tightest]
         reserve = self.DITHER_FRACTION * margin_us
 
         if quanta + reserve > margin_us or margin_us <= 0:
@@ -393,12 +387,7 @@ class ScreenGroup(ScreenBase):
             logging.debug(f"screens: verified at {held}, spread {max(held) - min(held)}us")
             self.__target_us = target
 
-        self.__calibrated = True
-        self.__floor_us = quanta
         self.__line_us = tuple(line_us)
-        # In microseconds, per member, so an acquisition can tell which of them can
-        # afford to be advanced and which has to be delayed the long way round.
-        self.__margins = tuple(margin * line for margin, line in zip(margins, line_us))
 
         # What a phase spread has to fit inside. A member out of phase spends that
         # much of its own tearing margin, so the aim is the tightest member's less
@@ -436,9 +425,7 @@ class ScreenGroup(ScreenBase):
         # the acquisition worse.
         rows = []
         for index, screen in enumerate(self.screens):
-            screen.__command(screen.CONTROLLER.REG_TEON, b"\x00")
-            falls, finished = screen.__display.te_capture(2, 200)
-            screen.__command(screen.CONTROLLER.REG_TEOFF)
+            falls, finished = self.__solo_capture(screen, 2, 200)
             if not falls:
                 return None
             rows.append((falls[-1], finished))
@@ -470,31 +457,19 @@ class ScreenGroup(ScreenBase):
         the remainder in at about a line time a frame, where refusing would leave
         every panel but one tearing indefinitely. Only a member going silent fails.
         """
-        members = self.screens
         # One more check than excursion rounds: the last round's outcome has to be
         # measured, or a converged group is judged on the state before it.
         for attempt in range(self.ACQUIRE_TRIES + 1):
-            phases = self.__phases()
-            if phases is None:
+            errors, target = self.__sweep_errors()
+            if errors is None:
                 logging.info("screens: a member went silent during the phase sweep, so the group is not in phase")
                 return False
 
-            # Phases are modular, so the spread is taken on the circle: a member one
-            # step behind the reference reads a whole period ahead of it, and a plain
-            # max minus min calls a converged group maximally spread.
-            target = phases[members.index(self.__reference)]
-            errors = [self.__fold(phase - target) for phase in phases]
             spread = max(errors) - min(errors)
             settled = spread <= self.__aim_us
             if settled or attempt == self.ACQUIRE_TRIES:
                 self.__acquired_us = spread
-                # The grid the hold measures against is common: every member's
-                # ideal falls are the reference's, and the bookings are seeded
-                # with the offsets this sweep measured, so the hold walks every
-                # member onto the grid rather than holding it where it landed.
-                self.__grid_at = self.__swept_at
-                self.__grid_phases = tuple([target] * len(members))
-                self.__phase_us = [-error for error in errors]
+                self.__seed_grid(errors, target)
                 if settled:
                     logging.info(f"screens: members brought into phase, spread {spread}us"
                                  f" after {attempt} excursions. It decays at the residual"
@@ -509,6 +484,33 @@ class ScreenGroup(ScreenBase):
             # time since that member last fell, so one further through its frame than
             # the reference has to wait the difference out.
             self.__excurse(errors)
+
+    def __sweep_errors(self):
+        """Every member's folded phase error against the reference, from one sweep.
+
+        Folded, since phases are modular: a member one step behind the reference
+        reads a whole period ahead of it, and a plain difference calls a
+        converged group maximally spread. Returns (errors, the reference's
+        phase), or (None, None) where a member went silent.
+        """
+        phases = self.__phases()
+        if phases is None:
+            return None, None
+
+        target = phases[self.__reference_index]
+        return [self.__fold(phase - target) for phase in phases], target
+
+    def __seed_grid(self, errors, target):
+        """Rebuild the grid at the last sweep's instant, booking what it measured.
+
+        The grid the hold measures against is common: every member's ideal falls
+        are the reference's, and the bookings carry the offsets the sweep
+        measured, so the hold walks every member onto the grid rather than
+        holding it where it landed.
+        """
+        self.__grid_at = self.__swept_at
+        self.__grid_phases = tuple([target] * len(self.screens))
+        self.__phase_us = [-error for error in errors]
 
     def __excurse(self, errors):
         """One concurrent excursion round cancelling the given phase errors.
@@ -548,6 +550,14 @@ class ScreenGroup(ScreenBase):
             lines = self.EXCURSION_LINES if plans[index] > 0 else -self.EXCURSION_LINES
             back, front = members[index].__porch
             members[index].__set_porch(back - lines, front)
+
+    @staticmethod
+    def __solo_capture(screen, edges, timeout_ms):
+        """One member's TE falls, it alone asserting on the shared line."""
+        screen.__command(screen.CONTROLLER.REG_TEON, b"\x00")
+        falls, finished = screen.__display.te_capture(edges, timeout_ms)
+        screen.__command(screen.CONTROLLER.REG_TEOFF)
+        return falls, finished
 
     def __check_span(self, index, falls):
         """Count a capture whose own two falls do not span a plausible period.
@@ -646,17 +656,12 @@ class ScreenGroup(ScreenBase):
         measured, leaving the hold's dither to close what is left. A silent
         member keeps the bookings, the walk then being the only recovery left.
         """
-        phases = self.__phases()
-        if phases is None:
+        errors, target = self.__sweep_errors()
+        if errors is None:
             logging.debug("screens: a member did not answer the sweep, so the walk keeps its bookings")
             return
 
-        members = self.screens
-        target = phases[members.index(self.__reference)]
-        errors = [self.__fold(phase - target) for phase in phases]
-        self.__grid_at = self.__swept_at
-        self.__grid_phases = tuple([target] * len(members))
-        self.__phase_us = [-error for error in errors]
+        self.__seed_grid(errors, target)
         self.__held_stamp = self.__swept_at
         logging.debug(f"screens: swept the members after a pause, spread"
                       f" {int(max(errors) - min(errors))}us for the walk to close")
@@ -902,16 +907,11 @@ class ScreenGroup(ScreenBase):
                             lines = -self.TRIM_LIMIT_LINES
                         elif residual < -self.TRIM_DEADBAND * line:
                             lines = self.TRIM_LIMIT_LINES
-                        if lines:
-                            back, front = screen.__porch
-                            if back + lines >= 1:
-                                screen.__set_porch(back + lines, front)
-                                self.__corrections += 1
-                                self.__anchor_skip[index] = True
-                                residual += lines * line
-                                logging.debug(f"screens: trimmed member {index} by"
-                                              f" {lines:+} line to porch {screen.__porch},"
-                                              f" {residual:+.1f}us a period left")
+                        if lines and self.__trim_porch(index, lines):
+                            residual += lines * line
+                            logging.debug(f"screens: trimmed member {index} by"
+                                          f" {lines:+} line to porch {screen.__porch},"
+                                          f" {residual:+.1f}us a period left")
                     self.__residual_us[index] = residual
         self.__anchor_stamp[index] = stamp
         self.__anchor_dither[index] = 0.0
@@ -988,11 +988,9 @@ class ScreenGroup(ScreenBase):
         index = self.__trim_at
         screen = members[index]
         self.__trim_at = (index + 1) % len(members)
-        screen.__command(screen.CONTROLLER.REG_TEON, b"\x00")
-        falls, _ = screen.__display.te_capture(4, 200)
-        screen.__command(screen.CONTROLLER.REG_TEOFF)
+        falls, _ = self.__solo_capture(screen, 4, 200)
         if len(falls) > 1:
-            measured = ((falls[-1] - falls[0]) & 0x3FFFFFFF) / (len(falls) - 1)
+            measured = ((falls[-1] - falls[0]) & TICKS_MASK) / (len(falls) - 1)
             # Each captured period carries a dithered porch line whole
             self.__correct(screen, measured - self.__dither[index] * self.__line_us[index])
 
@@ -1022,19 +1020,31 @@ class ScreenGroup(ScreenBase):
         limit = self.TRIM_LIMIT_LINES
         lines = limit if lines > limit else (-limit if lines < -limit else lines)
         if lines:
-            back, front = screen.__porch
-            if back + lines < 1:
-                lines = 0
-            else:
-                screen.__set_porch(back + lines, front)
-                self.__corrections += 1
+            lines = self.__trim_porch(index, lines)
+            if lines:
                 logging.debug(f"screens: trimmed member {index} by"
                               f" {lines:+} line to porch {screen.__porch},"
                               f" {measured:.0f}us against {self.__target_us:.0f}")
         if self.__holding:
             self.__residual_us[index] = measured + lines * line - self.__target_us
-            if lines:
-                self.__anchor_skip[index] = True
+
+    def __trim_porch(self, index, lines):
+        """Move one member's porch by whole lines, where its floor allows.
+
+        Counts the correction and skips the member's next anchor, a gap spanning
+        a porch move not being a rate. Returns the lines actually applied, so a
+        refused move corrects nothing. The caller owns the residual it is
+        correcting, the two trims deriving theirs differently.
+        """
+        screen = self.screens[index]
+        back, front = screen.__porch
+        if back + lines < 1:
+            return 0
+
+        screen.__set_porch(back + lines, front)
+        self.__corrections += 1
+        self.__anchor_skip[index] = True
+        return lines
 
     @property
     def __trim(self):

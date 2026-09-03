@@ -13,6 +13,8 @@ from machine import Pin
 
 import spidisplay
 
+from .base import __tightest_margin
+
 # The resolved forms of the placement defaults, so a steady playback loop's
 # update() allocates nothing resolving them.
 __BOTH_NONE = (None, None)
@@ -73,7 +75,7 @@ class ScreenPair:
 
     align defaults to aligning where the pair can, calibrating at construction:
     about four seconds of period probes which it says it is doing, from which the
-    pair predicts the steady skew it can hold, align_floor_us. A pair too
+    pair predicts the steady skew it can hold. A pair too
     mismatched to hold any says why and runs unaligned, is_aligned() then
     reporting False. align=True refuses such a pair instead, and align=False
     leaves the panels alone; start_aligning() takes the four seconds later, and
@@ -417,12 +419,10 @@ class ScreenPair:
 
         trims = [0, 0]
         trims[fi] = trim
-        margins = [screen.__line_slots + trims[i] + screen.height
-                   - screen.__display.wire_window_us() / line_us[i]
-                   for i, screen in enumerate(screens)]
-        tightest = margins.index(min(margins))
-        margin_us = margins[tightest] * line_us[tightest]
-        quanta = 2 * line_us[tightest]
+        tightest, margins_us, quanta = __tightest_margin(
+            screens, trims, line_us,
+            [display.wire_window_us() for display in displays])
+        margin_us = margins_us[tightest]
         if quanta + self.DITHER_FRACTION * margin_us > margin_us or margin_us <= 0:
             raise ValueError(f"{screens[tightest]} keeps only {margin_us:.0f}us of tearing margin, and holding a pair costs {quanta:.0f}us of granularity plus a reserve. Drop the rate a step, or create the pair with align=False.")
 

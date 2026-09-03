@@ -28,6 +28,22 @@ def __check_rotation(rotation):
         raise ValueError(f"{rotation} is not a valid angle. Expected 0, 90, 180, or 270.")
 
 
+def __tightest_margin(screens, trims, line_us, wire_us):
+    """Each member's tearing margin, and which member has least of it.
+
+    Margin is the scan lines a write leaves uncovered, priced in that member's
+    own line time: a fast panel's lines are shorter, so the same write eats
+    more of them, and the tightest member is judged in lines for that reason.
+    The quanta is a hold's granularity, two of its lines. Returns
+    (tightest index, per-member margins in microseconds, quanta_us).
+    """
+    margins = [screen.__line_slots + trim + screen.height - wire / line
+               for screen, trim, line, wire in zip(screens, trims, line_us, wire_us)]
+    tightest = margins.index(min(margins))
+    margins_us = tuple(margin * line for margin, line in zip(margins, line_us))
+    return tightest, margins_us, 2 * line_us[tightest]
+
+
 class ScreenBase:
     """The frame path shared by a single screen and a broadcast group.
 
