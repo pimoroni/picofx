@@ -144,9 +144,8 @@ class ScreenGroup(ScreenBase):
                                      "one its frames wait on")
                 if not leader.__shared_te:
                     raise ValueError(f"{leader} does not read its tearing-effect signal from the "
-                                     "line this group's frames read. Build every member with te "
-                                     "set to the DC line they share, which needs the diode "
-                                     "fitted to each breakout.")
+                                     "line this group reads. Build every member with te set to "
+                                     "the DC line they share, which needs each breakout's diode.")
                 nominated = leader
             elif shared:
                 nominated = shared[0]
@@ -183,10 +182,9 @@ class ScreenGroup(ScreenBase):
         rotation = 0 if rotation is None else rotation
         mirror = False if mirror is None else bool(mirror)
         if any(screen.rotation != rotation or screen.mirror != mirror for screen in screens):
-            logging.info(f"screens: this group places its own frames, at rotation {rotation}"
+            logging.info(f"screens: a group places its own frames, at rotation {rotation}"
                          f"{' and mirrored' if mirror else ''}, so its members' own placement is "
-                         f"not used. Create the group with the placement all of its panels want, "
-                         f"or update a panel on its own to get the one it was created with.")
+                         "not used. Create the group with the placement its panels want.")
 
         # The backlight is the first member's, screens on a port sharing the one PWM
         super().__init__(port, display, first.width, first.height, first.__bitdepth,
@@ -297,10 +295,9 @@ class ScreenGroup(ScreenBase):
         reserve = self.DITHER_FRACTION * margin_us
 
         if quanta + reserve > margin_us or margin_us <= 0:
-            self.__unaligned(required, f"{members[tightest]} keeps only {margin_us:.0f}us of "
-                                       f"tearing margin, and holding a group costs {quanta:.0f}us "
-                                       "of granularity plus a reserve. Lengthen every member's "
-                                       "porch, or drop the rate a step")
+            self.__unaligned(required, f"{members[tightest]} is {margin_us:.0f}us from tearing "
+                                       f"where the hold needs {quanta:.0f}us plus a reserve. "
+                                       "Lengthen every member's porch, or drop the rate a step")
             return
 
         # Past the refusal, so nothing above has moved a panel

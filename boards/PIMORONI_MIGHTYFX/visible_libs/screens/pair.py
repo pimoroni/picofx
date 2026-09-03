@@ -327,9 +327,9 @@ class ScreenPair:
             [display.wire_window_us() for display in displays])
         margin_us = margins_us[tightest]
         if quanta + self.DITHER_FRACTION * margin_us > margin_us or margin_us <= 0:
-            raise ValueError(f"{screens[tightest]} keeps only {margin_us:.0f}us of tearing margin, "
-                             f"and holding a pair costs {quanta:.0f}us of granularity plus a "
-                             "reserve. Drop the rate a step, or create the pair with align=False.")
+            raise ValueError(f"{screens[tightest]} is {margin_us:.0f}us from tearing where the "
+                             f"hold needs {quanta:.0f}us plus a reserve. Drop the rate a step, "
+                             "or create the pair with align=False.")
 
         if trim:
             f_screen.__set_porch(back + trim, front)
