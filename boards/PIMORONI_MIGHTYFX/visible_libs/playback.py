@@ -2,12 +2,9 @@
 #
 # SPDX-License-Identifier: MIT
 #
-# Players that turn a numbered sequence of images into an animation. A picovector
-# spritesheet numbers a GIF's frames and keeps no clock, so the clock lives here:
-# ImagePlayer holds the timing and a subclass answers only where a frame comes from,
-# GIFPlayer from a GIF decoded at construction and SequencePlayer from a folder of
-# image files. A player never touches a screen, so one update of a screen pair can
-# carry two players' frames.
+# Players that turn a numbered sequence of images into an animation. ImagePlayer holds
+# the clock; GIFPlayer supplies frames from a GIF decoded at construction and
+# SequencePlayer from a folder of image files. A player never touches a screen.
 
 import logging
 import os
@@ -15,13 +12,11 @@ import time
 
 import picovector
 
-# What picovector.image.load() decodes. A GIF here has to be a single frame, animated
-# ones being GIFPlayer's job.
+# What picovector.image.load() decodes; an animated GIF is GIFPlayer's job
 IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".gif")
 
 
 def __sized(count):
-    """Kilobytes, rounded up, which is how picovector reports a GIF's own limit."""
     return "{}KB".format((count + 1023) // 1024)
 
 
@@ -42,8 +37,7 @@ def out_of_memory(path, error):
     elif wanted > spare:
         room = "needs {} and {} was free".format(__sized(wanted), __sized(spare))
     else:
-        # More free than was asked for, so the total was never the problem: what is
-        # left is in pieces smaller than the one piece a frame needs
+        # More was free than asked for, so what is left is in pieces smaller than a frame
         room = "needs {} in one piece and the {} free is in smaller pieces".format(
             __sized(wanted), __sized(spare))
     return MemoryError("{} {}. Every frame is stored while it plays.".format(path, room))
@@ -78,8 +72,7 @@ class ImagePlayer:
             self.__timings = tuple(timings)
             if min(self.__timings) < 0:
                 raise ValueError("a frame delay is a wait in milliseconds, so it cannot be negative")
-            # A GIF can declare zero for every frame, leaving a cycle of no length for the
-            # walk to divide by.
+            # A GIF can declare zero for every frame, leaving no cycle length to divide by
             if sum(self.__timings) < 1:
                 raise ValueError("every frame delay is zero, so there is no time for the animation to play in: name an fps instead")
             if first_as_last:
@@ -90,8 +83,7 @@ class ImagePlayer:
                 raise ValueError(f"fps={fps} is under a millisecond a frame, which no screen can present: fps=None takes the source's delays and fps=False drives by hand")
             self.__timings = (interval,) * self.__frames
 
-        # The steps a traversal turns around or repeats on, which are the only steps a
-        # dwell can sit on. A single-frame source turns at step 0 twice, listed once.
+        # The steps a traversal turns or repeats on, the only steps a dwell can sit on
         if ping_pong:
             if loop:
                 self.__turns = (0, self.__frames - 1) if self.__frames > 1 else (0,)
@@ -121,7 +113,6 @@ class ImagePlayer:
 
     @staticmethod
     def __hold_values(hold):
-        """The dwells in ms, from one value for both turns or a 2-tuple as they are served."""
         if isinstance(hold, (tuple, list)):
             if len(hold) != 2:
                 raise ValueError(f"hold takes one value or two, not {len(hold)}: two being the wait at the far end, then the wait back at the start")
@@ -135,16 +126,9 @@ class ImagePlayer:
         return int(after_in * 1000), int(after_out * 1000)
 
     def __build_order(self):
-        """The traversal as frame numbers, both ping-pong legs included.
-
-        Listing the legs here keeps ping-pong out of the rest of the class, which then
-        works through one list of frame numbers in the order they play.
-
-        A looping ping-pong is 2n-2 steps, omitting the endpoints so neither shows for
-        twice its delay as the lap wraps. A one-shot has no next lap to double against
-        and is 2n-1, closing on frame 0 so an animation that plays in and out retracts
-        fully.
-        """
+        # The traversal as frame numbers, both ping-pong legs included. A looping ping-pong
+        # is 2n-2 steps, omitting the endpoints so neither shows for twice its delay as the
+        # lap wraps; a one-shot is 2n-1, closing on frame 0.
         order = tuple(range(self.__frames))
         if self.__ping_pong:
             if self.__loop:
@@ -154,7 +138,6 @@ class ImagePlayer:
         return order
 
     def __build_delays(self):
-        """The per-step dwells for the current order, with the cycle and target they give."""
         if not self.__clocked:
             self.__delays = None
             self.__cycle_ms = None
@@ -167,26 +150,21 @@ class ImagePlayer:
 
         self.__delays = tuple(delays)
         self.__cycle_ms = sum(delays)
-        # Dwells come back out of the reported target, or a two second hold reads as a
-        # slow frame rate instead of as a pause.
+        # Dwells come out of the target, or a two second hold reads as a slow frame rate
         held = sum(self.__hold_on(step) for step in self.__turns)
         self.__target_ms = (self.__cycle_ms - held) / len(self.__order)
 
     def __hold_on(self, step):
-        """The dwell this step carries on top of its frame's own delay."""
         if step not in self.__turns:
             return 0
         return self.__after_out_ms if step == 0 else self.__after_in_ms
 
     def __image_for(self, frame):
-        """The image for a frame number, which is all a subclass has to answer.
-
-        Called on every image read, so a subclass loading on demand has to cache.
-        """
+        # All a subclass has to answer. Called on every image read, so one loading on
+        # demand has to cache.
         raise NotImplementedError("an ImagePlayer subclass supplies its own frames")
 
     def __frame_number(self, frame):
-        """A frame number as a caller gives it, negatives counting from the end."""
         wanted = frame
         if frame < 0:
             frame += self.__frames
@@ -200,15 +178,11 @@ class ImagePlayer:
             raise ValueError(f"{what} needs a frame rate and this player was built with fps=False: name an fps, or drive it with advance()")
 
     def __walk(self, position):
-        """The step a position within the cycle falls on.
-
-        The fall-through serves a one-shot resting at the very end of its cycle, which
-        is the one position no step contains.
-        """
+        # The step a position within the cycle falls on. The fall-through serves a
+        # one-shot resting at the very end, the one position no step contains.
         reached = 0
         step = 0
-        # A counter, since enumerate() allocates a tuple per step and this runs
-        # on every frame read
+        # A counter, since enumerate() allocates a tuple per step on every frame read
         for delay in self.__delays:
             reached += delay
             if position < reached:
@@ -217,7 +191,7 @@ class ImagePlayer:
         return len(self.__delays) - 1
 
     def __position(self):
-        """Elapsed reduced to within one cycle, so a long pause stays in ticks range."""
+        # Elapsed within one cycle, so a long pause stays in ticks range
         if self.__frozen_ms is not None:
             elapsed = self.__frozen_ms
         else:
@@ -228,24 +202,19 @@ class ImagePlayer:
         return min(elapsed, self.__cycle_ms)
 
     def __current_step(self):
-        """The step being played, whichever mode is driving."""
         if not self.__clocked:
             return self.__step
         return self.__walk(self.__position())
 
     def __origin(self, step):
-        """Where to put the clock to place the player on a step.
-
-        Past the step's dwell, a dwell being earned by arriving rather than granted to
-        a player set down there. Construction uses this too, so the dwell back at the
-        start is not spent before the first outward leg has run.
-        """
+        # Where the clock goes to place the player on a step: past its dwell, which is
+        # earned by arriving, not granted to a player set down there
         if not self.__clocked:
             return 0
         return sum(self.__delays[:step]) + self.__hold_on(step)
 
     def __goto(self, step):
-        """Move to a step, keeping the pause state, so the next read reports it."""
+        # Keeps the pause state, and the next read reports the move
         if self.__clocked:
             into = self.__origin(step)
             if self.__frozen_ms is not None:
@@ -258,12 +227,7 @@ class ImagePlayer:
         self.__seen = None
 
     def __signal(self, step):
-        """Record a frame reaching the caller, and the step it was on.
-
-        An interval leaving a turn spent most of itself dwelling, so it is no frame rate
-        and does not count. The step is recorded here because the measure reads the step
-        it replaces, and the two must not come apart.
-        """
+        # An interval leaving a turn spent most of itself dwelling, so it is no frame rate
         now = time.ticks_ms()
         if self.__signalled_at is not None and self.__seen not in self.__turns:
             self.__measured_ms = time.ticks_diff(now, self.__signalled_at)
@@ -406,8 +370,7 @@ class GIFPlayer(ImagePlayer):
 
     def __init__(self, path, fps=None, loop=True, ping_pong=False, first_as_last=False, hold=0,
                  paused=False):
-        # Diagnostics only: one call of about a second, so there is no progress to report
-        # and no wait worth announcing.
+        # Diagnostics only: one call of about a second, so no wait worth announcing
         logging.debug(f"> Loading {path} ...")
         started = time.ticks_ms()
         try:
@@ -453,8 +416,7 @@ class SequencePlayer(ImagePlayer):
                  if name.lower().endswith(IMAGE_SUFFIXES)]
         if not names:
             raise ValueError(f"{folder} holds no images to play, looking for {', '.join(IMAGE_SUFFIXES)}")
-        # Keys built once and sorted with the names, since sort(key=...) recomputes a key on
-        # every comparison here: 160 names cost 8.5 seconds that way against under one.
+        # Keys built once: sort(key=...) recomputes a key on every comparison here
         keyed = sorted((self.__numbers_in(name), name) for name in names)
         names = [name for _, name in keyed]
 
@@ -481,11 +443,7 @@ class SequencePlayer(ImagePlayer):
 
     @staticmethod
     def __numbers_in(name):
-        """The numbers in a name, so frame_10 sorts after frame_9 and not after frame_1.
-
-        Lexicographic order is wrong for any export past nine frames, and wrong silently:
-        the animation simply plays in the wrong order.
-        """
+        # So frame_10 sorts after frame_9; lexicographic order is silently wrong past nine
         found = []
         digits = ""
         for character in name:
@@ -500,11 +458,8 @@ class SequencePlayer(ImagePlayer):
 
     @staticmethod
     def __delay_in(name):
-        """The delay in ms a frame's name declares, or None.
-
-        Reads the form an ezgif export writes, frame_3_delay-0.08s.png. Each name gives its
-        own frame's delay, so a sequence that holds one frame longer keeps that timing.
-        """
+        # The delay in ms a name declares in the form an ezgif export writes,
+        # frame_3_delay-0.08s.png, or None
         _, found, rest = name.partition("delay-")
         if not found:
             return None
@@ -519,15 +474,10 @@ class SequencePlayer(ImagePlayer):
 
     @staticmethod
     def __load(folder, names, paths):
-        """Decode every frame, saying so as it goes since this blocks for seconds.
-
-        A line of dots at LOG_INFO, a line a frame at LOG_DEBUG, the measured total either
-        way, and no estimate: cost a frame spans fivefold with image size, and the first
-        frames load about three times faster than the rest while the heap is still empty.
-        """
+        # Blocks for seconds, so it reports as it goes: dots at LOG_INFO, a line a frame
+        # at LOG_DEBUG. No estimate, the cost a frame varying fivefold with image size.
+        # info() prints at LOG_DEBUG too, so a dot would land mid-line.
         count = len(paths)
-        # Dots and per-frame lines are alternatives, not levels of the same thing: info()
-        # prints at LOG_DEBUG too, so a dot would land in the middle of a line.
         dotted = logging.level < logging.LOG_DEBUG
 
         logging.info(f"> Loading {count} frames from {folder}", end=" " if dotted else "\n")

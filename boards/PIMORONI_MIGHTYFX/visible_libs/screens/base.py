@@ -2,9 +2,8 @@
 #
 # SPDX-License-Identifier: MIT
 #
-# The frame path a single screen and a broadcast group share: staging a frame,
-# waiting on the tearing-effect signal, naming which panels a write reaches, and
-# the backlight that stays dark until one has been drawn.
+# The frame path a single screen and a broadcast group share: staging a frame, the
+# wait on the tearing-effect signal, and the backlight that stays dark until one has drawn.
 
 import spidisplay
 
@@ -18,19 +17,13 @@ class Tile:
 
 def __check_rotation(rotation):
     r_index = rotation // 90
-    if r_index < 0 or r_index > 3 or rotation % 90:     # Modulo check ensures rotation is exactly a multiple of 90
+    if r_index < 0 or r_index > 3 or rotation % 90:
         raise ValueError(f"{rotation} is not a valid angle. Expected 0, 90, 180, or 270.")
 
 
 def __tightest_margin(screens, trims, line_us, wire_us):
-    """Each member's tearing margin, and which member has least of it.
-
-    Margin is the scan lines a write leaves uncovered, priced in that member's
-    own line time: a fast panel's lines are shorter, so the same write eats
-    more of them, and the tightest member is judged in lines for that reason.
-    The quanta is a hold's granularity, two of its lines. Returns
-    (tightest index, per-member margins in microseconds, quanta_us).
-    """
+    # Margin is the scan lines a write leaves uncovered, judged in each member's line
+    # time. Returns (tightest index, margins in us, the hold's quantum of two lines).
     margins = [screen.__line_slots + trim + screen.height - wire / line
                for screen, trim, line, wire in zip(screens, trims, line_us, wire_us)]
     tightest = margins.index(min(margins))
@@ -68,7 +61,6 @@ class ScreenBase:
 
     @property
     def port(self):
-        """The SP/CE connector this screen was built against."""
         return self.__port
 
     @property
@@ -132,16 +124,8 @@ class ScreenBase:
         return canvas
 
     def __drawn(self, to=None, keep_dark=False):
-        """Note that a frame has landed, which the backlight waits for.
-
-        Every panel on a port is cleared as it is brought up, so one frame anywhere
-        on the line is enough: no panel is left holding what power-on put there,
-        whatever the program goes on to draw and to whichever screens.
-
-        to is the panels the frame reached, a narrowed group write covering only the
-        members it named. keep_dark leaves the line unlit and hands back the scan,
-        for a caller lighting several ports on one wait.
-        """
+        # Every panel on a port is cleared at bringup, so one frame anywhere on the line
+        # lights it. keep_dark hands back the scan, for a caller lighting several ports at once.
         if self.__backlight is None:
             return None
 
@@ -152,13 +136,9 @@ class ScreenBase:
 
     @micropython.native
     def __write_targets(self, to):
-        """The displays a write drives, or None for every one this object holds.
-
-        A subset narrows to its own members when the caller names none, which is
-        what makes front.update(image) write only the panels front stands for.
-        """
+        # A subset with nothing named writes its own members, so front.update(image)
+        # reaches only the panels front stands for
         if to is None:
-            # A subset's own member set is fixed, so its display tuple is too
             return self.__subset_displays
 
         members = self.screens
@@ -169,14 +149,8 @@ class ScreenBase:
         return tuple(screen.__display for screen in to)
 
     def __sync_screen(self, v_sync, to):
-        """The screen whose TE this write waits on, or None to leave TE alone.
-
-        Only a screen sharing its DC line needs the transient discipline, a panel
-        owning its own line keeping TEON from bringup. Waiting on a member outside
-        the written set buys nothing, that panel being clean and not updated while
-        every panel that is written tears, so a narrowed write falls to a member of
-        its own set.
-        """
+        # Only a screen sharing its DC line needs the transient wait. A member outside the
+        # written set would stay clean while every written panel tears, so a narrowed write waits on one of its own.
         if not v_sync or self.__leader is None:
             return None
 
@@ -191,13 +165,11 @@ class ScreenBase:
 
     def update(self, image, *, rotation=None, mirror=None, pixel_double=False, offset=None, tile=False, bg_color=None, v_sync=None, to=None):
         """Stream a frame to the panel, or to every screen a group stands for."""
-        # A frame outside the pair first hands back the panel state alignment
-        # holds, the trimmed porch included: the narrowed TE pulse is only safe
-        # under the pair's poll, and the period was the pair's choice
+        # A frame outside the pair hands back the panel state its alignment holds
         if self.__pair is not None:
             self.__pair.__release_panel()
 
-        # v_sync=None follows the screen, so only a frame that differs says so
+        # v_sync=None follows the screen, so only a frame that differs names it
         if v_sync is None:
             v_sync = self.__v_sync
         elif v_sync and not self.__te:
@@ -206,13 +178,11 @@ class ScreenBase:
 
             raise ValueError("v_sync needs a screen created with te, since it waits on the panel's tearing-effect signal")
 
-        # None is opaque black in the packed premultiplied form the module reads,
-        # so nothing here needs picovector for a default
+        # None is opaque black in the module's packed premultiplied form
         bg = 0xff000000 if bg_color is None else bg_color.p & 0xffffffff
 
-        # Placement follows the screen unless the frame names its own. mirror
-        # needs the identity test: None is falsy, so a truthiness check would
-        # read "follow the screen" as "do not mirror".
+        # mirror needs the identity test: None is falsy, so a truthiness check would
+        # read "follow the screen" as "do not mirror"
         if rotation is None:
             rotation = self.__rotation
         if mirror is None:
@@ -222,7 +192,6 @@ class ScreenBase:
 
         synced = self.__sync_screen(v_sync, to)
         delay = (self.__subset_of or self).__sync_delay_us
-        # The C module handles the transform, transfer, and TE wait
         self.__display.update(image,
                               rotation=rotation,
                               mirror=1 if mirror else 0,
@@ -234,8 +203,7 @@ class ScreenBase:
         self.__synced_frame = synced
         self.__drawn(to)
 
-        # A member updated on its own still scans, so its frames advance its
-        # group's hold too; a run of them would otherwise walk the group apart.
+        # A member's own frames advance its group's hold too, or a run of them walks the group apart
         if self.__group is not None:
             self.__group.__frame_ticked(self.__display.stats(), synced, delay)
 

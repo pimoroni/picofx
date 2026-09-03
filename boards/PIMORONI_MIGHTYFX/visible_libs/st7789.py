@@ -2,9 +2,8 @@
 #
 # SPDX-License-Identifier: MIT
 #
-# The ST7789 controller: its register codes, the tables a panel is tuned from, and
-# the bringup sequence. A screen class in screens.py names this module as its
-# CONTROLLER, so a second controller is a new module of the same shape.
+# The ST7789 controller: register codes, the tables a panel is tuned from, and the
+# bringup sequence. A second controller is a new module of the same shape.
 
 import time
 from collections import OrderedDict
@@ -49,31 +48,22 @@ REG_PWMFRSEL  = const(0xCC)
 # The memory-write opcode a frame is streamed behind
 RAM_WRITE = REG_RAMWR
 
-# The TE opcodes the frame path drives itself, for a screen sharing its DC line: one
-# panel at a time may assert TE there, so the driver sends TEON as a frame's wait
-# begins and TEOFF as it ends. TE_MODE is TEON's parameter, V-blank only, sent
-# explicitly since TEON without one leaves the mode bit as it was. Passed to the
-# display for the same reason RAM_WRITE is, so this module stays the only place the
-# opcodes live.
+# The TE opcodes the frame path drives itself, for a screen sharing its DC line. TE_MODE
+# is TEON's parameter, V-blank only, sent since TEON alone leaves the mode bit as it was.
 TE_ON = REG_TEON
 TE_OFF = REG_TEOFF
 TE_MODE = 0x00
 
-# Scan rows a refresh spends whatever the panel shows, so a 240-row panel scans
-# these too and its blanking is the porches alone.
+# Scan rows a refresh spends whatever the panel shows, so a 240-row panel scans these too
 CONTROLLER_ROWS = const(320)
 
-# Memory columns the controller holds, which every panel it drives shows all of. With
-# CONTROLLER_ROWS this is the window covering any panel on the chip, which is what a
-# hub writes to before it knows what is plugged in.
+# Memory columns the controller holds; with CONTROLLER_ROWS, the window covering any panel
 CONTROLLER_COLUMNS = const(240)
 
 # What setup() writes, back then front, in scan lines
 PORCH = (12, 12)
 
-# Scan slots per refresh at those porches. Converts a TE period to a line time
-# whatever the panel's visible rows. A screen whose porch has moved spends its own
-# count, held on the screen object, so read that rather than this.
+# Scan slots per refresh at those porches; a screen whose porch has moved holds its own count
 LINE_SLOTS = const(344)
 
 # PSEN off, then the idle and partial porches, which normal mode never reads
@@ -81,12 +71,8 @@ PORCH_TAIL = b"\x00\x33\x33"
 
 
 def set_porch(screen, back, front):
-    """Write the normal-mode porches, which set how many slots a refresh spends.
-
-    One porch line is one line time, measured to within 0.04% on both panel types.
-    The controller reads these as it enters blanking and never inside one, so a
-    write lands on the frame after it and cannot truncate the one in flight.
-    """
+    # One porch line is one line time. The controller reads these as it enters blanking,
+    # so a write lands on the frame after it and cannot truncate the one in flight.
     screen.command(REG_PORCTRL, bytes((back, front)) + PORCH_TAIL)
 
 # Codes for setting screen frame rate
@@ -134,38 +120,24 @@ PIXEL_FORMAT = OrderedDict({
 
 
 def reset(screen):
-    """Return a panel to its defaults, and wait out the settle before any register
-    write reaches it.
-
-    Apart from setup() so several panels can be reset through one broadcast, where
-    the settle is paid once instead of per panel.
-    """
+    # Apart from setup() so several panels can be reset through one broadcast, the
+    # settle paid once
     screen.command(REG_SWRESET)
 
     time.sleep(0.5)
 
 
 def stop(screen):
-    """Take a panel dark and put its controller to sleep.
-
-    The panel keeps its memory either way, so this is about what it is doing rather
-    than what it holds: left scanning, the frame comes back the moment anything
-    drives the backlight line. Construction resets the panel, so nothing is needed
-    to wake one.
-    """
+    # The panel keeps its memory; left scanning, the frame would come back the moment
+    # anything drove the backlight. Construction resets a panel, which wakes it.
     screen.command(REG_DISPOFF)
     screen.command(REG_SLPIN)
 
 
 def setup(screen, width, height, bitdepth_code, framerate_code, te=True):
-    """Bring a panel up, over anything offering a command() to reach it with.
-    Takes a panel already through reset().
-
-    te sends TEON so the panel drives its tearing-effect line, which v_sync waits
-    on. Panels sharing a DC line take te=False: TEOFF still drives TE low through
-    the breakout's series resistor, so panels on one line divide it and the
-    asserted level never reaches the input threshold.
-    """
+    # Takes a panel already through reset(). te sends TEON so the panel drives its
+    # tearing-effect line; panels sharing a DC line take te=False, since TEOFF still
+    # drives the line low and panels on one line would divide it.
     screen.command(REG_TEON if te else REG_TEOFF)
     screen.command(REG_COLMOD, bitdepth_code)   # 03 = 12-bit, 05 = 16-bit, 06 = 18-bit
     set_porch(screen, *PORCH)
@@ -174,7 +146,7 @@ def setup(screen, width, height, bitdepth_code, framerate_code, te=True):
     screen.command(REG_VRHS, b"\x12")
     screen.command(REG_VDVS, b"\x20")
     screen.command(REG_PWCTRL1, b"\xa4\xa1")
-    screen.command(REG_FRCTRL2, framerate_code)      # Framerate control
+    screen.command(REG_FRCTRL2, framerate_code)
     screen.command(REG_RAMCTRL, b"\x00\xc0")
 
     if width == 320 or height == 320:
@@ -195,8 +167,7 @@ def setup(screen, width, height, bitdepth_code, framerate_code, te=True):
     screen.command(REG_SLPOUT)
     screen.command(REG_DISPON)
 
-    # Inclusive end addresses, so each is one less than the dimension. A window
-    # shorter than the frame wraps to the top of the panel rather than erroring.
+    # Inclusive end addresses; a window shorter than the frame wraps to the top of the panel
     last_column, last_row = width - 1, height - 1
     screen.command(REG_CASET, bytes((0, 0, last_column >> 8, last_column & 0xff)))
     screen.command(REG_RASET, bytes((0, 0, last_row >> 8, last_row & 0xff)))

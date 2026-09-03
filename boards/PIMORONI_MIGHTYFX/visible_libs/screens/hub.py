@@ -3,9 +3,8 @@
 # SPDX-License-Identifier: MIT
 #
 # Several panels sharing one SP/CE port's bus, each selected by a chip select of its
-# own. The hub owns an ordering no screen can reach: every chip select has to be
-# deasserted before the first panel is brought up, and the panels at risk are the
-# ones with no object yet to speak for them.
+# own. The hub deasserts every chip select before the first panel is brought up,
+# which no screen can do for the panels that have no object yet.
 
 import spidisplay
 import st7789
@@ -51,9 +50,7 @@ class ScreenHubPort:
 class ScreenHub:
     """Several panels on one SP/CE port, each addressed by a chip select of its own."""
 
-    # What the blind pass runs at. Nothing here reaches a shipped frame: every screen
-    # writes its own depth, rate and window over these as it is built, and the panel
-    # is cleared before that. The rate is the one every wire holds.
+    # What the bringup pass runs at; every screen writes its own settings over these
     BLIND_BAUDRATE = 24_000_000
     BLIND_BITDEPTH = 12
     BLIND_FRAMERATE = 60
@@ -66,8 +63,7 @@ class ScreenHub:
         self.__connector = port
         self.__controller = controller
 
-        # port.cs raises where the connector is not a screen port, which is the
-        # refusal a hub wants anyway
+        # port.cs raises where the connector is not a screen port
         lines = [port.cs]
         for pin in extra_cs:
             pin = pin if isinstance(pin, Pin) else Pin(pin)
@@ -78,10 +74,8 @@ class ScreenHub:
         dc = port.dc if dc is None else dc
         te = dc if te is None else te
 
-        # Every line high before any panel is spoken to. A display drives its own
-        # chip select high, but not until it is constructed, so a panel with no
-        # object yet reads its floating line as asserted and takes the bringup meant
-        # for the panels ahead of it.
+        # Every line high before any panel is spoken to: a panel with no display yet
+        # reads its floating chip select as asserted and takes another's bringup
         for line in lines:
             line.init(Pin.OUT, value=True)
 
@@ -95,8 +89,7 @@ class ScreenHub:
         return self.__ports
 
     def __getattr__(self, name):
-        # One letter a port, derived from the chip selects rather than fixed at
-        # six, so a hub of any size letters every port it reaches and no more.
+        # One letter a port, so a hub of any size letters every port it reaches
         if len(name) == 1 and "a" <= name <= "z":
             index = ord(name) - ord("a")
             if index < len(self.__ports):
@@ -105,20 +98,13 @@ class ScreenHub:
         raise AttributeError(name)
 
     def __bring_panels_up(self, lines, dc):
-        """Reset and clear every panel the hub reaches, in one pass over all of them.
-
-        A display carries a mask of chip selects rather than a pin, so a broadcast
-        writes every panel at once and the controller's reset settle is paid once
-        instead of per panel. The window is the controller's whole memory, which is
-        the same size whatever the glass shows, so one clear covers every panel size
-        that can be on the port.
-        """
+        # One broadcast resets and clears every panel at once, so the reset settle is
+        # paid once. The window is the controller's whole memory, so one clear covers
+        # every panel size that can be on the port.
         controller = self.__controller
         columns, rows = controller.CONTROLLER_COLUMNS, controller.CONTROLLER_ROWS
 
-        # Thrown away at the end of this: they exist to carry the chip select masks
-        # and the smallest workspace a frame can be streamed from, and each screen
-        # claims its own measured one afterwards.
+        # Temporary displays carrying the chip select masks and the smallest workspace
         displays = [spidisplay.SPIDisplay(bus=self.__connector.__bus, cs=line, dc=dc, te=None,
                                           width=columns, height=rows,
                                           ram_write=controller.RAM_WRITE,
@@ -130,8 +116,7 @@ class ScreenHub:
                                           cache_columns=0, stage_lines=0)
                     for line in lines]
         try:
-            # A hub of one is a plain screen port, which is what a board reaches with
-            # nothing plugged into its second connector, and a group of one is refused
+            # A hub of one is a plain screen port, and a broadcast of one is refused
             every_panel = displays[0] if len(displays) == 1 else self.__connector.__bus.broadcast(*displays)
             controller.reset(every_panel)
             controller.setup(every_panel, columns, rows,
@@ -140,7 +125,6 @@ class ScreenHub:
                              te=False)
             every_panel.fill()
         finally:
-            # The destructor leaves each chip select an output driven high, so the
-            # deassert above outlives the displays that carried it.
+            # The destructor leaves each chip select an output driven high
             for display in displays:
                 display.__del__()

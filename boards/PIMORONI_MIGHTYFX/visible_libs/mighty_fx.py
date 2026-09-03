@@ -14,14 +14,12 @@ from spidisplay import release_buffers
 from spce import SPCE, SPCEPort
 
 
-# The RP2350 shares its 24 PWM channels between GPIO pairs: pins 16 apart below
-# GPIO 32 and 8 apart above it drive the same channel, and both emit the same
-# signal whenever both select PWM. Used to keep LED outputs off channels that
-# an SP/CE role is driving.
 # What wake() lit, kept alive: a PWM object that is collected stops driving
 __waking = []
 
 
+# The RP2350 shares its PWM channels between GPIO pairs, pins 16 apart below GPIO 32
+# and 8 apart above it, so an LED output can land on a channel an SP/CE role drives
 def __pwm_channel(gpio):
     if gpio < 32:
         return gpio % 16
@@ -71,22 +69,16 @@ class MightyFX:
     SERVO_STRIP_L = 44
     SERVO_STRIP_R = 45
 
-    # A strip takes a state machine of its own, and they are taken from PIO 1 so the
-    # I2S audio every board builds by default keeps PIO 0 to itself
+    # Strips take PIO 1, leaving PIO 0 to the I2S audio every board builds
     STRIP_PIO = 1
 
-    # LEDs built past the length asked for. A strip takes its frame as one timed run
-    # of bits, and a flash write, which a file copy makes many of, holds the
-    # interrupts off long enough to break one apart: the run then overruns into the
-    # LED after the last one addressed, which nothing would write again. These are
-    # driven dark with every frame, so an overrun lands where it is cleaned up
+    # LEDs built past the length asked for and driven dark: a flash write holds the
+    # interrupts off long enough to break a frame apart, and the overrun lands on these
     STRIP_FLUSH_LEDS = 2
 
     SENSOR_PIN = 46
 
-    # The infrared receiver decodes on a state machine of its own. PIO 0 is left to
-    # the I2S audio every board builds by default, and the strips take PIO 1's from
-    # zero upwards, so the receiver takes the last one
+    # The receiver takes PIO 1's last state machine, the strips taking them from zero
     SENSOR_PIO = 1
     SENSOR_SM = 3
     V_SENSE_PIN = 47
@@ -98,18 +90,14 @@ class MightyFX:
 
     RGB_COLOUR_NAMES = ("red", "green", "blue")
 
-    # What wake() lights the outputs to. Dim enough to read as the board saying it
-    # is alive rather than as an effect, and the first frame paints over it
+    # What wake() lights the outputs to: dim enough to read as alive, not as an effect
     WAKE_LEVEL = 0.1
 
     def __init__(self, spce_a=None, spce_b=None, strip_l=None, strip_r=None,
                  servo_l=None, servo_r=None, sensor=None, init_i2c=True, i2c_freq=100000,
                  init_wav=True, wav_root="/"):
-        # A canvas claim has no object to finalise it, so one outlives the program
-        # that made it where a screen's own workspace does not: a soft reset after a
-        # run that skipped shutdown() leaves the SRAM held and the next program short
-        # of it. Nothing of this program holds any yet, so anything outstanding here
-        # belongs to the last one.
+        # A canvas claim has no object to finalise it, so a run that skipped shutdown()
+        # leaves the SRAM held. Nothing of this program holds any yet.
         release_buffers()
 
         # A motor role drives PWM on its DC, CS, SCK and MOSI lines, holding channels
@@ -120,11 +108,8 @@ class MightyFX:
                 for pin in pins[:4]:
                     claimed[__pwm_channel(pin)] = (port_name, pin)
 
-        # Set up the mono and RGB LED outputs, standing in a DisabledLED for any
-        # channel a motor role holds, so lighting it reports instead of doing nothing.
-        # The stand-in takes the pin as well as the reason, holding it off: a shared
-        # channel reaches both its GPIOs once both select PWM, so a pin left in that
-        # function shows the motor's signal on an LED the board says cannot light
+        # A DisabledLED stands in for any channel a motor role holds, so lighting it
+        # reports. It takes the pin too, held off, or the motor's signal would show on the LED.
         self.outputs = []
         for index, rgb_pins in enumerate(self.OUT_PINS):
             leds = []
@@ -139,20 +124,15 @@ class MightyFX:
                         reason=f"Output {index + 1}'s {colour} LED cannot light. GPIO {pin} shares a PWM channel with GPIO {motor_pin}, which SP/CE {port_name} is using to drive motors."))
             self.outputs.append(RGBLED(*leds, invert=False, gamma=self.RGB_GAMMA))
 
-        # Every output's three channels in one list, since each drives on its own: a mono LED
-        # in the right end of an output connector reaches that output's red channel, and the
-        # adapter pack brings all three out
+        # Every output's three channels, since a mono LED on an output connector reaches one of them
         self.monos = [led for output in self.outputs for led in output.leds]
 
-        # Each port owns its bus and pins. Screens are the user's to create against
-        # them, from the classes in screens.py
+        # Each port owns its bus and pins; screens are created against them
         self.spce_a = SPCEPort("A", spce_a, 0, self.SPCE_A_PINS)
         self.spce_b = SPCEPort("B", spce_b, 1, self.SPCE_B_PINS)
 
-        # One connector given over to chip selects makes the other's panels several
-        # rather than one, so the pairing is checked here and the hub built for the
-        # user. Imported only where a board asked for one, a program with no screens
-        # having no reason to load the package.
+        # One connector given over to chip selects makes the other's panels a hub, built
+        # here. Imported only where a board asked for one.
         self.__hub = None
         for screen_port, lines_port in ((self.spce_a, self.spce_b), (self.spce_b, self.spce_a)):
             if lines_port.mode != SPCE.HUB_LINES:
@@ -169,9 +149,7 @@ class MightyFX:
         if init_i2c:
             self.__i2c = PimoroniI2C(self.I2C_SDA_PIN, self.I2C_SCL_PIN, i2c_freq)
 
-        # Set up the user switch. A press is caught by interrupt as well as read as
-        # a level, so a tap inside a long frame is not missed by a program that only
-        # looks between them
+        # A press is caught by interrupt as well as read, so a tap inside a long frame is not missed
         self.__switch = Pin(self.USER_SW_PIN, Pin.IN, Pin.PULL_UP)
         self.__taps = 0
         self.__tapped_at = 0
@@ -180,8 +158,7 @@ class MightyFX:
         # Set up the internal voltage sensor
         self.__v_sense = ADC(Pin(self.V_SENSE_PIN))
 
-        # Set up whatever the sensor connector was declared as. Nothing is claimed
-        # where nothing was asked for, leaving the pin free for a dupont cable
+        # Nothing is claimed where nothing was asked for, leaving the pin free
         self.__sensor = build_sensor(sensor, self.SENSOR_PIN, self.SENSOR_PIO, self.SENSOR_SM)
 
         # Set up the wav (and tone) player, if the user wants
@@ -192,17 +169,14 @@ class MightyFX:
         # Set up the enable for the rail the L and R connectors share
         self.__rail_en = Pin(self.SERVO_STRIP_EN, Pin.OUT, value=False)
 
-        # What each of those connectors was declared as. A strip carries its length
-        # and a servo its calibration, so one setting says both which role and what
-        # it needs. Anything else is left alone: no pin claimed and no object made,
-        # so the connector is the caller's to use as they like.
+        # A strip carries its length and a servo its calibration, so one setting names
+        # the role and what it needs. Anything else is left alone, no pin claimed.
         self.__strips = {}
         self.__servos = {}
         for letter, pin, strip, servo, port, backlight in (
                 ("L", self.SERVO_STRIP_L, strip_l, servo_l, self.spce_a, self.SPCE_A_BL_PIN),
                 ("R", self.SERVO_STRIP_R, strip_r, servo_r, self.spce_b, self.SPCE_B_BL_PIN)):
-            # Tested against None rather than for truth: ANGULAR is zero, so a servo
-            # declared with the commonest calibration of the three reads as no servo
+            # Tested against None: ANGULAR is zero, so the commonest calibration reads as no servo
             if strip is not None and servo is not None:
                 raise ValueError(f"The {letter} connector carries one signal, so it cannot be a strip and a servo at once. Declare strip_{letter.lower()} or servo_{letter.lower()}.")
 
@@ -214,28 +188,18 @@ class MightyFX:
                 self.__strips[letter] = built
 
             elif servo is not None:
-                # Each connector shares a PWM channel with one screen port's backlight,
-                # and both pins emit the same signal once both select PWM
+                # Each connector shares a PWM channel with one screen port's backlight
                 if port.mode == SPCE.SCREEN:
                     raise ValueError(f"A servo on {letter} cannot run while SP/CE {port.name} drives a screen. GPIO {pin} shares a PWM channel with GPIO {backlight}, which is that port's backlight, so put the servo on the other connector.")
 
                 from servo import Servo
                 self.__servos[letter] = Servo(pin) if servo is True else Servo(pin, calibration=servo)
 
-        # Whatever was declared still needs power: one rail serves both connectors,
-        # and it stays down until enable_rail() is called, so nothing on the header
-        # is live before the caller starts driving it
+        # The rail stays down until enable_rail(), so nothing on the header is live before then
 
     @classmethod
     def wake(cls):
-        """
-        Light every output dim white, before there is a board to light them with.
-
-        Reading the effects file takes seconds of importing before anything can
-        play, and a board showing nothing for them reads as a dead one. Call this
-        first and the outputs say it is alive meanwhile. What plays paints over
-        them; nothing has to put them out.
-        """
+        """Light every output dim white before there is a board, so seconds of importing do not read as a dead one."""
         duty = int(65535 * cls.WAKE_LEVEL)
         # Held at module level, since a PWM that is collected stops driving its pin
         for pins in cls.OUT_PINS:
@@ -246,29 +210,20 @@ class MightyFX:
         return self.__switch.value() == 0
 
     def boot_taps(self):
-        """
-        How many times the button has been pressed since this was last asked, the
-        presses taken as they are read. Caught by interrupt, so a tap that begins
-        and ends inside one long frame still counts where boot_pressed() would
-        miss it, and two inside one are two rather than one.
-        """
+        """Presses since this was last asked, caught by interrupt so a tap inside one long frame counts."""
         taken = self.__taps
         self.__taps = 0
         return taken
 
     def __switch_pressed(self, _pin):
-        # Contacts bounce, and each bounce is another falling edge. Anything inside
-        # the window is the same press, which matters where a caller reads two
-        # presses in a row as a double
+        # Each bounce is another falling edge; anything inside the window is the same press
         now = time.ticks_ms()
         if time.ticks_diff(now, self.__tapped_at) > self.BOOT_DEBOUNCE_MS:
             self.__tapped_at = now
             self.__taps += 1
 
     def enable_rail(self):
-        """Power the L and R connectors. One rail serves both, so a load on
-        either is live from here.
-        """
+        """Power the L and R connectors; one rail serves both."""
         self.__rail_en.on()
 
     def disable_rail(self):
@@ -355,7 +310,6 @@ class MightyFX:
         return self.__declared(self.__servos, "servo", "R")
 
     def __declared(self, built, role, letter):
-        """One connector's strip or servo, or why there is none to hand back."""
         made = built.get(letter)
         if made is not None:
             return made
@@ -386,52 +340,43 @@ class MightyFX:
     def shutdown(self):
         self.clear()
 
-        # A receiver hands its state machine and PIO program back as it is collected,
-        # so stop it, drop it and collect now: a board built after this takes the same
-        # slot, where a held one refuses the next receiver its PIO
+        # Stop and collect the receiver now, so the next board's takes the same PIO slot
         if hasattr(self.__sensor, "stop"):
             self.__sensor.stop()
             self.__sensor = None
             gc.collect()
 
-        # A motor left driving keeps going until something stops it, so both stop
-        # before the power they share is taken away
+        # A motor left driving keeps going, so both stop before their shared power goes
         for port in (self.spce_a, self.spce_b):
             if port.driver is not None:
                 for motor in port.driver.motors:
                     motor.disable()
                 port.driver.disable()
 
-        # A servo holds its position while it is driven, so it stops being driven
-        # before the rail goes: the two together leave it limp rather than pushing
+        # A servo stops being driven before the rail goes, so it goes limp instead of pushing
         for servo in self.__servos.values():
             servo.disable()
 
         self.disable_rail()
 
-        # The strips hand back their state machines, DMA and PIO program as they
-        # are collected, so drop them and collect now: a board built after this
-        # takes the same slots.
+        # Drop the strips and collect now, so the next board's take the same PIO slots
         self.__strips.clear()
         gc.collect()
 
         self.spce_a.backlight_off()
         self.spce_b.backlight_off()
 
-        # A panel keeps its frame and keeps scanning it, so anything later driving the
-        # backlight line shows it again, which reads as the board never having stopped.
-        # After the light is out, so nothing is seen going dark
+        # A panel keeps scanning its frame, so anything later driving the backlight
+        # would show it again. After the light is out, so nothing is seen going dark.
         self.spce_a.stop_panels()
         self.spce_b.stop_panels()
 
-        # Give the DMA channels back rather than waiting for the GC, so a program
-        # that builds screens repeatedly does not exhaust the 16 the chip has
+        # Give the DMA channels back now, so repeated screens do not exhaust the 16
         self.spce_a.release()
         self.spce_b.release()
 
-        # Both ports are down, so no screen is drawing from a canvas any more and
-        # the SRAM they claimed can go back. A rebuilt screen then gets the same
-        # addresses instead of the region marching up.
+        # No screen draws from a canvas now, so the SRAM goes back and a rebuilt screen
+        # gets the same addresses
         release_buffers()
 
         if self.__wav:
