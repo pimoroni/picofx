@@ -32,10 +32,9 @@ namespace spidisplay {
 static constexpr uintptr_t PSRAM_WINDOW = 0x01000000;                   // 16 MB window per CS
 static constexpr uintptr_t PSRAM_CACHED_BASE = XIP_BASE + PSRAM_WINDOW; // Start of PSRAM (0x11000000)
 
-// Every display claims its band ring and column cache scratch from here at
-// construction. SRAM is required, since the RP2350 M33 has no SRAM data cache, so
-// DMA sees CPU writes without maintenance. Claims come from the top of the region,
-// so the module's buffer() views keep their bottom-up addresses.
+// Every display claims its band ring and column cache from here at construction, from
+// the top so buffer() views keep their bottom-up addresses. The M33 has no SRAM data
+// cache, so DMA sees CPU writes without maintenance.
 static SRAMAllocator sram;
 static bool sram_bound = false;
 
@@ -47,13 +46,12 @@ static SRAMAllocator &allocator() {
     return sram;
 }
 
-// Kicks are interrupt-driven on DMA_IRQ_2, a line nothing else in this
-// firmware touches (rp2.DMA, PWMCluster and I2S(0) share IRQ 0; I2S(1) has
-// IRQ 1), taken exclusively and refcounted by bus lifetimes. irq_owner maps a
-// channel to its display only while that display is streaming, so the owner
-// table, not FrameState, is what gates the handler. Priority sits above the
-// 0x80 everything else uses: this handler is a few microseconds, the I2S one
-// runs tens, and a kick must not wait behind audio.
+// Kicks are interrupt-driven on DMA_IRQ_2, which nothing else in this firmware
+// touches: rp2.DMA, PWMCluster and I2S(0) share IRQ 0 and I2S(1) has IRQ 1. It is
+// taken exclusively and refcounted by bus lifetimes. irq_owner maps a channel to its
+// display only while that display streams, so the owner table gates the handler,
+// not FrameState. Priority sits above the 0x80 everything else uses, since a
+// kick of a few microseconds must not wait behind tens of them of audio.
 static_assert(NUM_DMA_IRQS > 2, "the interleaver's kicks need DMA_IRQ_2");
 static constexpr uint DMA_IRQ2_INDEX = 2;
 static constexpr uint8_t DMA_IRQ2_PRIORITY = 0x40;
@@ -302,7 +300,7 @@ void SPIDisplay::command(const uint8_t *cmd, size_t cmd_len,
 }
 
 // TEON and TEOFF reach the one member the sync masks name, not every line this
-// display drives: on a shared DC net a second panel at TEON adds its blanking to
+// display drives. On a shared DC net a second panel at TEON adds its blanking to
 // the one being waited on, and the wait locks to whichever came first.
 void SPIDisplay::te_command(uint8_t opcode, const uint8_t *data, size_t data_len) {
     use_baudrate();
@@ -382,7 +380,7 @@ bool SPIDisplay::poll_te() {
             te_high_seen = true;
         } else if (te_high_seen) {
             // A pulse already up when the wait began started unobserved, so its
-            // length says nothing and only one seen to rise is judged short.
+            // length is unknown and only one seen to rise is judged short.
             if (te_high_started_us - te_started_us < JOINED_HIGH_US) {
                 ++te_joined_wait_count;
             } else if (now - te_high_started_us < SHORT_WAIT_US) {
@@ -563,11 +561,9 @@ TePhase SPIDisplay::te_phase(SPIDisplay &first, SPIDisplay &second,
         return result;
     }
 
-    // Each line's falls fold onto one period against a shared reference, the
-    // median taken so a missed or doubled edge cannot swing the answer. The
-    // difference goes signed before the reduction: 2**32 is not a multiple of a
-    // TE period, so reducing an unsigned wrap would bias every fall that
-    // precedes the reference.
+    // Each line's falls fold onto one period against a shared reference, the median
+    // taken so a missed or doubled edge cannot swing the answer. The difference goes
+    // signed before the reduction, 2**32 not being a multiple of a TE period.
     const uint32_t ref = falls[0][0];
     uint32_t offsets[2];
     for (int i = 0; i < 2; ++i) {
@@ -652,10 +648,9 @@ void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h, int src_strid
     // Every band is this size except a possibly-shorter final one
     full_band_bytes = (size_t)rows_per_band * desc.dst_row_bytes;
 
-    // Wider SPI frames cut the PL022's per-frame idle time (1.5 clocks between
-    // frames whatever their width, 7.9% of frame time at 8 bits), but a transfer
-    // has to be a whole number of frames, so an odd packed row width - RGB444 at
-    // half the possible widths - falls back to 8-bit frames by itself.
+    // Wider SPI frames cut the PL022's per-frame idle time, 1.5 clocks between frames
+    // whatever their width. A transfer has to be a whole number of frames, so an odd
+    // packed row width, RGB444 at half the possible widths, falls back to 8-bit frames.
     wide_frames = (desc.dst_row_bytes % 2) == 0;
     frame_shift = wide_frames ? 1 : 0;
     bus->use_frame_bits(wide_frames ? 16 : 8);
@@ -664,8 +659,8 @@ void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h, int src_strid
     uintptr_t src_addr = (uintptr_t)desc.src;
     bool src_in_psram = (src_addr >= PSRAM_CACHED_BASE && src_addr < PSRAM_CACHED_BASE + PSRAM_WINDOW);
 
-    // The cache decides here whether it applies, and stays live across bands so a
-    // window seeded by one serves the next.
+    // Whether the cache applies is settled here, and it stays live across bands so a
+    // window seeded by one serves the next
     cache = ColumnCache((uint32_t *)(sram_claim + (size_t)slot_count * band_bytes),
                         cache_capacity, cache_columns);
     cache.begin(desc, convert, src_in_psram);
@@ -681,10 +676,10 @@ void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h, int src_strid
     stall_pending = false;
     state = FrameState::PREPARED;
 
-    // The first band, then the whole ring: a staged display must carry its
-    // head start out of prepare(), since a TE edge landing right after arm()
-    // would otherwise start the stream with whatever the wait happened to
-    // allow. The ring room rule holds this to band 0 when stage_lines is 0.
+    // The first band, then the whole ring: a staged display carries its head start
+    // out of prepare(), since a TE edge landing right after arm() would otherwise
+    // start the stream with only what the wait happened to convert. The ring room
+    // rule holds this to band 0 when stage_lines is 0.
     uint32_t t_conv = time_us_32();
     step_convert(rows_per_band);
     last.convert_us = time_us_32() - t_conv;
@@ -907,9 +902,8 @@ uint32_t SPIDisplay::wire_window_us() const {
                                                 : (uint64_t)full_row_bytes;
     uint64_t bits = row_bytes * 8u * (uint64_t)dst_h;
     uint64_t us = (bits * 1000000u) / achieved_baudrate;
-    // Plus the per-band overhead, measured the same on both panel sizes: a 320-row
-    // frame streams in 42,016us against 38,400 of pure bits, and a 240-row one in
-    // 31,512 against 28,800.
+    // Plus the per-band overhead, measured the same on both panel sizes. A 320-row
+    // frame streams in 42,016us against 38,400 of pure bits.
     return (uint32_t)((us * 1094u) / 1000u);
 }
 
@@ -1017,10 +1011,9 @@ void spidisplay_sram_release_low(void) {
     spidisplay::allocator().release_low();
 }
 
-// Whether a conversion is halved across both cores, for the module's
-// dual_convert(). Reading it back is what a tool records alongside its timings, and
-// what tells a caller whether this firmware has a second core to convert on at all:
-// a build without the core1 worker always reports off.
+// Whether a conversion is halved across both cores, for the module's dual_convert().
+// A build without the core1 worker always reports off, so reading it back also
+// reports whether this firmware has a second core to convert on.
 int spidisplay_dual_convert(void) {
 #if SPIDISPLAY_PV_CORE1
     return spidisplay::dual_convert ? 1 : 0;
@@ -1033,18 +1026,16 @@ void spidisplay_set_dual_convert(int enable) {
     spidisplay::dual_convert = enable != 0;
 }
 
-// The C++ objects live inline in their mp_objs: one fewer allocation and a single
-// lifetime to manage.
+// The C++ objects live inline in their mp_objs: one allocation and one lifetime
 typedef struct _SPIDisplayBus_obj_t {
     mp_obj_base_t base;
     spidisplay::SPIDisplayBus bus;
 } SPIDisplayBus_obj_t;
 
-// bus_obj roots the bus against the GC, since the C++ object holds a bare pointer
-// into it. sram_owner_obj roots the member whose SRAM claim a broadcast group
-// shares, so the owner cannot be finalised under the group; none elsewhere.
-// staged_image roots a prepare()d frame's source: the staged Descriptor holds a
-// raw pointer and Python runs between prepare() and update_all().
+// Three GC roots for pointers the C++ object holds bare. bus_obj roots the bus.
+// sram_owner_obj roots the member whose SRAM claim a broadcast group shares, so the
+// owner cannot be finalised under the group. staged_image roots a prepare()d frame's
+// source, Python running between prepare() and update_all().
 typedef struct _SPIDisplay_obj_t {
     mp_obj_base_t base;
     mp_obj_t bus_obj;
@@ -1084,15 +1075,14 @@ static mp_obj_t SPIDisplayBus_make_new(const mp_obj_type_t *type, size_t n_args,
 
 static mp_obj_t SPIDisplayBus___del__(mp_obj_t self_in) {
     SPIDisplayBus_obj_t *self = (SPIDisplayBus_obj_t *)MP_OBJ_TO_PTR(self_in);
-    self->bus.~SPIDisplayBus();  // idempotent: the destructor guards on dma_chan
+    self->bus.~SPIDisplayBus();  // Safe to call twice: the destructor checks dma_chan
     return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplayBus___del___obj, SPIDisplayBus___del__);
 
 // broadcast(display, display, ...) -> a display whose CS and DC masks carry every
-// member's bit, so one frame lands on all of them. The members keep their
-// identity, so each can still be brought up and updated on its own. Settings come
-// from the first member, once, here.
+// member's bit, so one frame lands on all of them. Settings come from the first
+// member, once, here.
 static mp_obj_t SPIDisplayBus_broadcast(size_t n_args, const mp_obj_t *args) {
     // One member is allowed: the group is then a copy of that display, which is the
     // same frame the member's own update writes, so a wall written for a hub still
@@ -1222,7 +1212,7 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
 
 static mp_obj_t SPIDisplay___del__(mp_obj_t self_in) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
-    self->display.~SPIDisplay();  // idempotent: releases the SRAM claim and GPIO
+    self->display.~SPIDisplay();  // Safe to call twice: releases the SRAM claim and GPIO
     return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay___del___obj, SPIDisplay___del__);
@@ -1448,10 +1438,9 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
         mp_raise_ValueError(MP_ERROR_TEXT("sync_delay_us cannot be negative, since the wait cannot release before the tearing edge"));
     }
 
-    // to= narrows the write to some of a group's members, named as displays so
-    // the 64-bit masks never cross into Python. Each must be one of this
-    // display's own, which is what stops a subset writing a panel its group does
-    // not own, and the masks go no further than the staged frame.
+    // to= narrows the write to some of a group's members, named as displays so the
+    // 64-bit masks never cross into Python. Each must be one of this display's own,
+    // so a subset cannot write a panel its group does not hold.
     out->target_cs = 0;
     out->target_dc = 0;
     if (args[ARG_to].u_obj != mp_const_none) {
@@ -1568,15 +1557,12 @@ static mp_obj_t SPIDisplay_abort_frame(mp_obj_t self_in) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_abort_frame_obj, SPIDisplay_abort_frame);
 
-// update_all(*displays, v_sync=False, timeout_us=50000, slice_rows=8,
-// hysteresis_rows=-1): stream every prepared display's frame concurrently,
-// each starting on its own TE edge. The displays must sit on different buses;
-// one bus driving several panels is what broadcast() is for. Kicks are
-// interrupt-driven, so slice_rows only bounds the TE poll latency; the
-// default keeps one slice's conversion under the TE pulse width so an edge
-// cannot slip past, and smaller values just spend more loop overhead.
-// hysteresis_rows is the free ring room a display needs to take the convert
-// burst from another (interleaver.hpp); negative selects half its ring.
+// update_all(*displays, v_sync=False, timeout_us=50000, slice_rows=8, hysteresis_rows=-1)
+// streams every prepared display's frame concurrently, each starting on its own TE
+// edge. The displays must sit on different buses. slice_rows bounds the TE poll
+// latency; the default keeps one slice's conversion under the TE pulse width.
+// hysteresis_rows is the free ring room a display needs to take the convert burst
+// from another, and negative selects half its ring.
 mp_obj_t spidisplay_update_all(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     enum { ARG_v_sync, ARG_timeout_us, ARG_slice_rows, ARG_hysteresis_rows };
     static const mp_arg_t allowed_args[] = {
@@ -1656,12 +1642,11 @@ mp_obj_t spidisplay_update_all(size_t n_args, const mp_obj_t *pos_args, mp_map_t
 extern const mp_obj_fun_builtin_var_t spidisplay_update_all_obj;
 MP_DEFINE_CONST_FUN_OBJ_KW(spidisplay_update_all_obj, 1, spidisplay_update_all);
 
-// te_phase(first, second, period_us, edges=2, timeout_ms=500) -> (skew_us, age_us),
-// or None when either TE line yields too few falls in time. The pair's phase
-// without writing a frame: skew_us is first's falling edge relative to second's,
-// folded to +-period_us/2, and age_us is how old the capture already is at
-// return, so a caller can price the drift since. Neither display may hold a
-// staged or streaming frame, a staged frame owning the DC lines TE is read from.
+// te_phase(first, second, period_us, edges=2, timeout_ms=500) -> (skew_us, age_us).
+// None when either TE line yields too few falls in time. skew_us is first's falling
+// edge relative to second's, folded to +-period_us/2. age_us is how old the capture
+// already is at return, so a caller can price the drift since. Neither display may
+// hold a staged or streaming frame, a staged frame owning the DC lines TE is read from.
 mp_obj_t spidisplay_te_phase(size_t n_args, const mp_obj_t *args) {
     if (!mp_obj_is_type(args[0], &SPIDisplay_type) || !mp_obj_is_type(args[1], &SPIDisplay_type)) {
         mp_raise_TypeError(MP_ERROR_TEXT("te_phase takes two SPIDisplay objects"));
@@ -1826,9 +1811,8 @@ static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(SPIDisplay_te_probe_obj, 1, 2, SPIDis
 // te_capture(edges=4, timeout_ms=250) -> (falls, finished_us), the fall timestamps
 // and the instant the capture stopped, both on the ticks_us clock. Fewer falls than
 // asked for means the timeout ran out. A shared DC line carries one panel's TE at a
-// time, so a hub is swept member by member and each fall aged by its own period to
-// bring the set onto one instant; te_probe() discards the timestamps and te_phase()
-// needs two lines.
+// time, so a hub is swept member by member and each fall aged by its own period onto
+// one instant. te_probe() discards the timestamps and te_phase() needs two lines.
 static mp_obj_t SPIDisplay_te_capture(size_t n_args, const mp_obj_t *args) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[0]);
     if (self->display.frame_state() != spidisplay::SPIDisplay::FrameState::IDLE) {

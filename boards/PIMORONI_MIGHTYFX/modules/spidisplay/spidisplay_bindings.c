@@ -12,17 +12,14 @@ extern const mp_obj_type_t SPIDisplay_type;
 // update_all(*displays, ...): the cross-bus interleaver, defined in spidisplay.cpp.
 extern const mp_obj_fun_builtin_var_t spidisplay_update_all_obj;
 
-// te_phase(first, second, period_us, ...): a pair's signed TE skew without
-// writing a frame, defined in spidisplay.cpp.
+// te_phase(first, second, period_us, ...) is a pair's signed TE skew, defined in spidisplay.cpp.
 extern const mp_obj_fun_builtin_var_t spidisplay_te_phase_obj;
 
-// Linker symbols bounding the SRAM region the GC heap would occupy. The GC heap is
-// PSRAM-only here, so this region is free for fast SRAM-backed framebuffers.
+// Linker symbols bounding the SRAM region the GC heap would occupy; the heap is PSRAM-only
 extern uint8_t __GcHeapStart[];
 extern uint8_t __GcHeapEnd[];
 
-// The allocator over that region (spidisplay.cpp): displays claim from the top,
-// canvases from the bottom, and available() is the span between them.
+// The allocator over that region: displays claim from the top, canvases from the bottom
 extern size_t spidisplay_sram_available(void);
 extern size_t spidisplay_sram_headroom(void);
 extern long long spidisplay_sram_claim_low(size_t bytes);
@@ -32,14 +29,10 @@ extern void spidisplay_sram_release_low(void);
 extern int spidisplay_dual_convert(void);
 extern void spidisplay_set_dual_convert(int enable);
 
-// buffer(nbytes) -> writable memoryview over the free SRAM region, claimed from the
-// bottom so two buffers never overlap. Pass it to picovector's
-// image(width, height, buffer) so rendering and conversion both run against SRAM
-// instead of PSRAM, which halves the conversion cost.
-//
-// buffer(nbytes, offset) places one by hand instead, outside the claims: an offset
-// names an address, so it can overlap anything and is the escape hatch rather than
-// the normal route. Claims come back at release_buffers(), which shutdown() calls.
+// buffer(nbytes) -> a writable memoryview over free SRAM, claimed from the bottom,
+// for a picovector image that converts at half the cost of one in PSRAM.
+// buffer(nbytes, offset) places one by hand outside the claims, so it can overlap
+// anything. Claims come back at release_buffers().
 static mp_obj_t spidisplay_buffer(size_t n_args, const mp_obj_t *args) {
     mp_int_t nbytes = mp_obj_get_int(args[0]);
     if (nbytes < 0) {
@@ -66,17 +59,13 @@ static mp_obj_t spidisplay_buffer(size_t n_args, const mp_obj_t *args) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(spidisplay_buffer_obj, 1, 2, spidisplay_buffer);
 
-// Bytes of SRAM buffer() can still hand out, so a caller can size a canvas to fit.
-// Shrinks as screens are built and as canvases are claimed, and recovers when the
-// screens release (shutdown(), or their finalisers via gc.collect()).
+// Bytes buffer() can still hand out: shrinks with screens and canvases, recovers on release
 static mp_obj_t spidisplay_buffer_size(void) {
     return mp_obj_new_int_from_uint(spidisplay_sram_available());
 }
 static MP_DEFINE_CONST_FUN_OBJ_0(spidisplay_buffer_size_obj, spidisplay_buffer_size);
 
-// Give every claimed buffer back. The views themselves have no owner to finalise
-// them, so this belongs with releasing the screens that drew to them: anything
-// still holding one is left pointing at space the next claim can take.
+// Give every claimed buffer back; a view still held points at space the next claim can take
 static mp_obj_t spidisplay_release_buffers(void) {
     spidisplay_sram_release_low();
     return mp_const_none;
@@ -84,10 +73,7 @@ static mp_obj_t spidisplay_release_buffers(void) {
 static MP_DEFINE_CONST_FUN_OBJ_0(spidisplay_release_buffers_obj, spidisplay_release_buffers);
 
 // dual_convert() -> whether a frame's rows are halved across both cores;
-// dual_convert(enable) sets it and returns the new state. On by default: half of
-// each row range goes to the second core, which picovector's rasteriser shares.
-// Turning it off leaves conversion on one core, which is how a diagnostic times
-// the two against each other on one firmware.
+// dual_convert(enable) sets it. On by default; off leaves one core, for timing the two.
 static mp_obj_t spidisplay_dual_convert_obj_fn(size_t n_args, const mp_obj_t *args) {
     if (n_args > 0) {
         spidisplay_set_dual_convert(mp_obj_is_true(args[0]) ? 1 : 0);
