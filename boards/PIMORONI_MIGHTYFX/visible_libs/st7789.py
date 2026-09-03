@@ -172,4 +172,6 @@ def setup(screen, width, height, bitdepth_code, framerate_code, te=True):
     screen.command(REG_CASET, bytes((0, 0, last_column >> 8, last_column & 0xff)))
     screen.command(REG_RASET, bytes((0, 0, last_row >> 8, last_row & 0xff)))
 
+    # Always this value: the scan direction does not follow MADCTL, so a panel flipped
+    # here tears. Rotation and mirroring are done in the frame path instead.
     screen.command(REG_MADCTL, MADCTL_HORIZ_ORDER)

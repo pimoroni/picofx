@@ -43,6 +43,7 @@ def update_pair(first, second, v_sync=None):
     together = first.reveal_together and second.reveal_together
     owed_first = first.__drawn(keep_dark=together)
     owed_second = second.__drawn(keep_dark=together)
+    # None from either port says it owes no wait, whatever the reason, so neither is revealed here
     if together and owed_first is not None and owed_second is not None:
         time.sleep_ms(owed_first if owed_first > owed_second else owed_second)
         first.backlight.__reveal_now()
@@ -51,6 +52,11 @@ def update_pair(first, second, v_sync=None):
 
 class ScreenPair:
     """Two screens on their own SP/CE ports, presented together as one."""
+
+    # The faster panel is the follower and the slower the reference. Three moves hold
+    # the follower on it: the walk, the controller's TESCAN line shifting its scan a
+    # few lines a frame; the dither, one porch line either way; and an excursion, a
+    # rate code held for whole frames to close the drift a pause left.
 
     # The per-frame correction
     DEADBAND_LINES = 2
@@ -64,13 +70,13 @@ class ScreenPair:
     BLANKING_CEILING_LINES = 56
 
     # The resync after a pause
-    DEPTHS = (1, 2)             # rate steps a plan may move a panel: deeper buys latency, costs aim
+    RATE_STEPS = (1, 2)         # rate codes off nominal a plan may run: further closes more, less exactly
     MAX_FRAMES = 3              # frames of excursion a plan may spend on one panel
     ACCURACY_LINES = 5          # close enough to hand over, so a plan stops paying for better
     ABSORB_US = 1430            # handover error the fine loop hides without looking worse than usual
     WANDER_US_PER_PERIOD = 20   # two free-running oscillators wander about 10us a period each
     TARGET_US = -300            # aim slightly negative, the side the walk corrects
-    PROBE_MS = 250              # settled period probe
+    PROBE_MS = 250              # settled period probe; a Screen's presence probes are their own
     CAPTURE_EDGES = 2           # TE falls per panel per phase capture
     CAPTURE_TIMEOUT_MS = 500
     SCHEDULE_TIMEOUT_MS = 250   # an excursion spans at most MAX_FRAMES + 1 periods
@@ -102,8 +108,8 @@ class ScreenPair:
         self.__trim_on = False
         self.__resync_due = False
         self.__timeouts_seen = 0
-        self.__n_hi = None
-        self.__dither_hi = 0
+        self.__walk_ceiling = None
+        self.__dither_ceiling = 0
 
         if align is None:
             # A request, not a requirement: every reason a pair cannot hold alignment is
@@ -211,9 +217,9 @@ class ScreenPair:
         # The scans start up to half a period out, which the hold closes at about a
         # line a period, so the first aligned frame spends a resync instead
         self.__resync_due = True
-        self.__timeouts_seen = self.__f_disp.te_timeouts() + self.__l_disp.te_timeouts()
+        self.__timeouts_seen = self.__follower_display.te_timeouts() + self.__reference_display.te_timeouts()
         self.__last_frame_ms = None
-        self.__f_screen.__pair = self
+        self.__follower.__pair = self
         self.__align = True
 
     def stop_aligning(self):
@@ -224,7 +230,7 @@ class ScreenPair:
         self.__align = False
         if self.__calibrated:
             self.__release_panel()
-            self.__f_screen.__pair = None
+            self.__follower.__pair = None
 
     def update(self, image, second=None, *, rotation=None, mirror=None,
                pixel_double=False, offset=None, tile=False,
@@ -295,19 +301,19 @@ class ScreenPair:
         if not (periods[0] and periods[1]):
             raise ValueError("no tearing-effect signal from one of the panels, which alignment measures by")
 
-        fi = 0 if periods[0] <= periods[1] else 1      # the faster panel follows
-        li = 1 - fi
-        f_screen = screens[fi]
-        controller = f_screen.CONTROLLER
+        follower_index = 0 if periods[0] <= periods[1] else 1      # the faster panel follows the slower
+        reference_index = 1 - follower_index
+        follower = screens[follower_index]
+        controller = follower.CONTROLLER
 
         # A panel's line time is fixed by its oscillator; the porch moves how many a refresh spends
         line_us = [period / screen.__line_slots
                    for period, screen in zip(periods, screens)]
-        s_line = line_us[fi]
+        follower_line_us = line_us[follower_index]
 
         # Floored, so the follower stays the faster panel: the dither only ever slows it
-        trim = int((periods[li] - periods[fi]) // s_line)
-        back, front = f_screen.__porch
+        trim = int((periods[reference_index] - periods[follower_index]) // follower_line_us)
+        back, front = follower.__porch
 
         # Both refusals run before anything moves a panel
         if back + trim + front > self.BLANKING_CEILING_LINES:
@@ -321,7 +327,7 @@ class ScreenPair:
                              f"bridge. {remedy}, or create the pair with align=False.")
 
         trims = [0, 0]
-        trims[fi] = trim
+        trims[follower_index] = trim
         tightest, margins_us, quanta = __tightest_margin(
             screens, trims, line_us,
             [display.wire_window_us() for display in displays])
@@ -332,24 +338,24 @@ class ScreenPair:
                              "or create the pair with align=False.")
 
         if trim:
-            f_screen.__set_porch(back + trim, front)
+            follower.__set_porch(back + trim, front)
             time.sleep_ms(100)
-            held = displays[fi].te_probe(self.PROBE_MS)[0]
+            held = displays[follower_index].te_probe(self.PROBE_MS)[0]
             if held:
                 # One verify pass: a trim priced from one reading lands whole lines out
-                correction = int((periods[li] - held) // s_line)
+                correction = int((periods[reference_index] - held) // follower_line_us)
                 if correction:
-                    back, front = f_screen.__porch
-                    f_screen.__set_porch(back + correction, front)
+                    back, front = follower.__porch
+                    follower.__set_porch(back + correction, front)
                     trim += correction
-                periods[fi] = int(round(held + correction * s_line))
+                periods[follower_index] = int(round(held + correction * follower_line_us))
             else:
-                periods[fi] = int(round(periods[fi] + trim * s_line))
+                periods[follower_index] = int(round(periods[follower_index] + trim * follower_line_us))
             logging.debug(f"> Trimmed the follower {trim} porch lines, "
-                          f"{periods[li] - periods[fi]}us a period left")
+                          f"{periods[reference_index] - periods[follower_index]}us a period left")
 
         # The follower's slot count, which the trim just moved
-        line_slots = f_screen.__line_slots
+        line_slots = follower.__line_slots
 
         # Per panel: the sorted rate table, the built rate's index, and a probed
         # settled period at one and two steps each way where the table has them.
@@ -364,8 +370,8 @@ class ScreenPair:
             tables.append(table)
             rates.append(ordered)
             nominals.append(nominal)
-            for depth in self.DEPTHS:
-                for rate_index in (nominal - depth, nominal + depth):
+            for steps in self.RATE_STEPS:
+                for rate_index in (nominal - steps, nominal + steps):
                     if not 0 <= rate_index < len(ordered):
                         continue
                     screen.__command(screen.CONTROLLER.REG_FRCTRL2, table[ordered[rate_index]])
@@ -377,52 +383,53 @@ class ScreenPair:
             time.sleep_ms(100)
 
         # What the trim left, under one line a period, which the dither carries at a duty
-        natural = line_slots * (1.0 / periods[fi] - 1.0 / periods[li])  # lines per us
-        logging.debug(f"> Pair drift {natural * periods[fi]:.2f} lines a period after the trim")
+        natural = line_slots * (1.0 / periods[follower_index]
+                                - 1.0 / periods[reference_index])  # lines per us
+        logging.debug(f"> Pair drift {natural * periods[follower_index]:.2f} lines a period after the trim")
 
         # Excursion options per panel: the no-op, then each probed code held for one to
-        # MAX_FRAMES frames. A slower follower or a faster leader closes a positive error.
+        # MAX_FRAMES frames. A slower follower or a faster reference closes a positive error.
         options = ([(None, 0, 0.0)], [(None, 0, 0.0)])
         for i in (0, 1):
             for rate_index, period in sweep[i].items():
                 stretch = line_slots * (period / periods[i] - 1.0)
-                per_frame = -stretch if i == fi else stretch
+                per_frame = -stretch if i == follower_index else stretch
                 code = tables[i][rates[i][rate_index]]
                 for frames in range(1, self.MAX_FRAMES + 1):
                     options[i].append((code, frames, per_frame * frames))
 
         # Every plan a resync could use, priced once. A plan pays the drift over its own
         # run, half a period of wait plus one per frame, and only codes pushing one way pair.
-        settling = natural * periods[fi]
+        settling = natural * periods[follower_index]
         plans = {}
         for want_negative in (False, True):
             entries = []
-            for f_code, f_frames, f_lines in options[fi]:
-                if f_frames and (f_lines < 0) != want_negative:
+            for follower_code, follower_frames, follower_lines in options[follower_index]:
+                if follower_frames and (follower_lines < 0) != want_negative:
                     continue
-                for l_code, l_frames, l_lines in options[li]:
-                    if l_frames and (l_lines < 0) != want_negative:
+                for reference_code, reference_frames, reference_lines in options[reference_index]:
+                    if reference_frames and (reference_lines < 0) != want_negative:
                         continue
-                    cost = max(f_frames, l_frames)
-                    shift = f_lines + l_lines + settling * (cost + 0.5)
+                    cost = max(follower_frames, reference_frames)
+                    shift = follower_lines + reference_lines + settling * (cost + 0.5)
                     schedule = [None, None]
-                    schedule[fi] = (f_code, f_frames)
-                    schedule[li] = (l_code, l_frames)
+                    schedule[follower_index] = (follower_code, follower_frames)
+                    schedule[reference_index] = (reference_code, reference_frames)
                     entries.append((shift, cost, tuple(schedule)))
             plans[want_negative] = entries
 
-        self.__f_screen = f_screen
-        self.__f_disp = displays[fi]
-        self.__l_disp = displays[li]
-        self.__period_f = periods[fi]
-        self.__s_line = s_line
+        self.__follower = follower
+        self.__follower_display = displays[follower_index]
+        self.__reference_display = displays[reference_index]
+        self.__follower_period_us = periods[follower_index]
+        self.__follower_line_us = follower_line_us
         self.__natural = natural
         # What a pause costs, floored at the oscillators' wander: without the floor a
         # well-matched pair never prices a pause as worth a resync
-        self.__drift_us_per_ms = max(abs(natural) * s_line * 1000.0,
-                                     self.WANDER_US_PER_PERIOD * 1000.0 / periods[fi])
-        self.__target_lines = self.TARGET_US / s_line
-        self.__floor_us = self.DEADBAND_LINES * s_line
+        self.__drift_us_per_ms = max(abs(natural) * follower_line_us * 1000.0,
+                                     self.WANDER_US_PER_PERIOD * 1000.0 / periods[follower_index])
+        self.__target_lines = self.TARGET_US / follower_line_us
+        self.__floor_us = self.DEADBAND_LINES * follower_line_us
         self.__reg_tescan = controller.REG_TESCAN
         self.__nominal_codes = tuple(tables[i][rates[i][nominals[i]]] for i in (0, 1))
         self.__te_lines = tuple(screen.__te_line for screen in screens)
@@ -439,15 +446,16 @@ class ScreenPair:
                           f"predicted skew floor {self.__floor_us:.0f}us")
 
     def __send_walk(self, walk):
+        # The walk is the TESCAN scanline, so the register value and the walk are one number
         if walk != self.__walk_sent:
-            self.__f_screen.__command(self.__reg_tescan, bytes((walk >> 8, walk & 0xFF)))
+            self.__follower.__command(self.__reg_tescan, bytes((walk >> 8, walk & 0xFF)))
             self.__walk_sent = walk
 
     def __send_dither(self, want):
         # want is -1, 0 or +1 porch lines off the trim
         if want != self.__dither:
-            back, front = self.__f_screen.__porch
-            self.__f_screen.__set_porch(back + want - self.__dither, front)
+            back, front = self.__follower.__porch
+            self.__follower.__set_porch(back + want - self.__dither, front)
             self.__dither = want
 
     def __restore_panel(self):
@@ -461,8 +469,8 @@ class ScreenPair:
         # Runs before any frame outside the pair, so a lone update keeps no period it did not ask for
         self.__restore_panel()
         if self.__trim_on:
-            back, front = self.__f_screen.__porch
-            self.__f_screen.__set_porch(back - self.__trim_lines, front)
+            back, front = self.__follower.__porch
+            self.__follower.__set_porch(back - self.__trim_lines, front)
             self.__trim_on = False
 
     def __apply_trim(self):
@@ -470,41 +478,41 @@ class ScreenPair:
         if not self.__trim_lines or self.__trim_on:
             return False
 
-        back, front = self.__f_screen.__porch
-        self.__f_screen.__set_porch(back + self.__trim_lines, front)
+        back, front = self.__follower.__porch
+        self.__follower.__set_porch(back + self.__trim_lines, front)
         self.__trim_on = True
         return True
 
     def __correct(self):
         # One proportional correction from the last pair frame's write starts
-        stats_f = self.__f_disp.stats()
-        stats_l = self.__l_disp.stats()
-        if self.__n_hi is None:
+        follower_stats = self.__follower_display.stats()
+        reference_stats = self.__reference_display.stats()
+        if self.__walk_ceiling is None:
             # The tear margin needs a streamed frame's length, so the walk's
             # bounds wait for the first one
-            margin = (self.__f_screen.__line_slots + self.__f_screen.height
-                      - stats_f.frame_us / self.__s_line)
-            self.__n_hi = max(4, int(margin * self.SLIP_FRACTION))
-            self.__dither_hi = max(2, int(margin * self.DITHER_FRACTION))
+            margin = (self.__follower.__line_slots + self.__follower.height
+                      - follower_stats.frame_us / self.__follower_line_us)
+            self.__walk_ceiling = max(4, int(margin * self.SLIP_FRACTION))
+            self.__dither_ceiling = max(2, int(margin * self.DITHER_FRACTION))
 
-        timeouts = self.__f_disp.te_timeouts() + self.__l_disp.te_timeouts()
+        timeouts = self.__follower_display.te_timeouts() + self.__reference_display.te_timeouts()
         if timeouts != self.__timeouts_seen:
             self.__timeouts_seen = timeouts     # a timeout fired, so the skew is not a phase
             return
 
-        err_us = self.__signed_mod(stats_f.write_start_us - stats_l.write_start_us,
-                                   self.__period_f)
-        need = -err_us / self.__s_line          # positive: the follower must be delayed
+        err_us = self.__signed_mod(follower_stats.write_start_us - reference_stats.write_start_us,
+                                   self.__follower_period_us)
+        need = -err_us / self.__follower_line_us          # positive: the follower must be delayed
         walk = self.__walk
         if abs(need) >= self.DEADBAND_LINES:
             step = round(self.KP * need)
             step = max(-self.MAX_STEP, min(self.MAX_STEP, step))
-            walk = max(0, min(self.__n_hi, walk + step))
+            walk = max(0, min(self.__walk_ceiling, walk + step))
         self.__walk = walk
         self.__send_walk(walk)
         # One porch line each way: +1 bleeds the walk back and cancels drift it cannot,
         # -1 hastens a follower left late with no walk to give back
-        if need > (self.__n_hi - walk) + self.ASSIST_LINES or walk > self.__dither_hi:
+        if need > (self.__walk_ceiling - walk) + self.ASSIST_LINES or walk > self.__dither_ceiling:
             dither = 1
         elif walk == 0 and need < -self.ASSIST_LINES:
             dither = -1
@@ -517,14 +525,14 @@ class ScreenPair:
         # measure, correct, and let the loop rebuild it. Runs between frames, so it
         # costs one late frame.
         self.__restore_panel()
-        captured = spidisplay.te_phase(self.__f_disp, self.__l_disp, self.__period_f,
+        captured = spidisplay.te_phase(self.__follower_display, self.__reference_display, self.__follower_period_us,
                                        self.CAPTURE_EDGES, self.CAPTURE_TIMEOUT_MS)
         if captured is None:
             return          # too few edges, so let the fine loop walk it out
         skew_us, age_us = captured
         if abs(skew_us) <= self.ABSORB_US:
             return
-        aged = -skew_us / self.__s_line + self.__natural * age_us
+        aged = -skew_us / self.__follower_line_us + self.__natural * age_us
         self.__run_schedule(self.__plan_for(aged - self.__target_lines))
 
     def __plan_for(self, error):

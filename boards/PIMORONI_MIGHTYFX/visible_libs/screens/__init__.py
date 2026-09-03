@@ -15,8 +15,8 @@ from .screen import Reserve, Screen
 class Screen154(Screen):
     SIZE = "1.54"
     WIDTH, HEIGHT = 240, 240
-    # No 16-bit row at 24MHz, that frame outrunning the controller's slowest rate, and
-    # no 12-bit row at 75MHz, that wire overtaking the panel's scan near the top of the frame
+    # Two wires have no row. 24MHz 16-bit: that frame outruns the controller's slowest
+    # rate. 75MHz 12-bit: that wire overtakes the panel's scan near the top of the frame.
     PROFILES = {
         (24_000_000, 12): {"band_lines": 2, "cache_columns": 0, "framerate": 53},
         (37_500_000, 16): {"band_lines": 12, "cache_columns": 12, "framerate": 60},

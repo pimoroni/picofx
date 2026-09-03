@@ -87,9 +87,9 @@ def pair_frame(index):
 
 def skew_us():
     """The last pair frame's write-start skew, as the fine loop sees it."""
-    err = screens.ScreenPair.__signed_mod(pair.__f_disp.stats().write_start_us
-                                          - pair.__l_disp.stats().write_start_us,
-                                          pair.__period_f)
+    err = screens.ScreenPair.__signed_mod(pair.__follower_display.stats().write_start_us
+                                          - pair.__reference_display.stats().write_start_us,
+                                          pair.__follower_period_us)
     return abs(err)
 
 
@@ -194,7 +194,7 @@ def solo_updates():
     """A screen updated outside its pair hands the follower's panel state back."""
     print("solo updates on both screens, then the pair resumes")
     timeouts0 = timeouts()
-    follower = pair.__f_screen
+    follower = pair.__follower
     for _ in range(5):
         for screen in pair.screens:
             screen.update(canvas, rotation=90)

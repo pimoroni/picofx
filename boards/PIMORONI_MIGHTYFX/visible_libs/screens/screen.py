@@ -14,7 +14,7 @@ from .base import ScreenBase, __check_rotation
 class Reserve:
     """What a screen's share of the fast SRAM is set aside for."""
     CANVAS_SPACE = 0        # Only what a frame needs, leaving the region for canvas()
-    FULL_SIZE_IMAGES = 1    # Room for two screens to each convert a full-size heap image
+    FULL_SIZE_IMAGES = 1    # Room to convert a full-size heap image while a paired screen does the same
 
 
 class Screen(ScreenBase):
@@ -175,6 +175,7 @@ class Screen(ScreenBase):
 
         port.__register(self)
 
+        # The porch setup() gave the panel and the scan slots it implies; __set_porch keeps both current
         self.__porch = controller.PORCH
         self.__line_slots = controller.LINE_SLOTS
 
@@ -224,7 +225,7 @@ class Screen(ScreenBase):
 
     @property
     def framerate(self):
-        """The refresh rate this screen was built with; an aligned panel is trimmed off it."""
+        """The refresh rate this screen was built with; alignment may move a panel a little off it."""
         return self.__framerate
 
     def __set_porch(self, back, front):

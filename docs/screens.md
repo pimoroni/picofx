@@ -16,6 +16,7 @@ This is the library reference for the SP/CE screens, as driven from a Pimoroni M
   - [Waiting on one member](#waiting-on-one-member)
   - [Alignment](#alignment-1)
 - [Using a Hub](#using-a-hub)
+- [The Controller Module](#the-controller-module)
 - [`Screen` Reference](#screen-reference)
   - [Constants](#constants)
   - [Variables](#variables)
@@ -98,7 +99,9 @@ A row's `"dual"` entry, where it has one, replaces the row on a firmware that co
 
 A baud rate the current peripheral clock cannot reach is refused, since the divider would round the wire down and run the profile's tuning slower than it was measured on. Raise the clock first, `machine.freq(150_000_000, 150_000_000)`, or request a rate the clock reaches.
 
-`band_lines`, `cache_columns` and `stage_lines` override what the profile chose, for profiling a new panel or wire. The first two spend fast SRAM from the same region canvases come from, at least two band buffers plus `cache_columns * width * 4` bytes, for as long as the screen lives. `stage_lines` deepens the band buffers into a ring of that many rows, which `prepare()` converts ahead of the frame.
+`band_lines`, `cache_columns` and `stage_lines` override what the profile chose, for profiling a new panel or wire. The first two spend fast SRAM from the same region canvases come from, at least two band buffers plus `cache_columns * width * 4` bytes, for as long as the screen lives. `band_lines` need not divide the height; the last band of a frame is shorter. `stage_lines` deepens the band buffers into a ring of that many rows, which `prepare()` converts ahead of the frame.
+
+A `PROFILES` row is measured, not derived. `tools/profile_screens.py` sweeps a wire's settings on the panel and records each cell's frame time, and `tools/check_tearing.py` shows a chosen rate holding, drawing the worst case, a heap image at rotation 90, and printing the margin the refresh leaves. A rate that shows no torn band there is one to keep, and `tools/check_te_margin.py` reports the margin of a single setting.
 
 
 ## Reserving Fast Memory
@@ -240,6 +243,15 @@ Every panel the hub reaches is reset and cleared as the hub is built, whether a 
 A screen built against a hub port that has no panel raises `ValueError` and claims nothing, so a program can build a screen on every port and keep the ones that answered.
 
 
+## The Controller Module
+
+`st7789` is the module `Screen.CONTROLLER` names, and everything specific to the panel's controller lives there: the register opcodes, the bringup sequence `setup()` writes, and the tables a screen's settings are checked against. `FRAME_RATE_CONTROL` maps a frame rate to its code, and its keys are the only rates a screen accepts. `PIXEL_FORMAT` maps a bit depth, 12 or 16, to its code, which is the one place the panel is told its pixel format; the driver underneath packs to the depth the screen was built with. `PORCH` is the back and front porch `setup()` writes, in scan lines, and `set_porch()` changes them, which is how alignment moves a panel's refresh. `CONTROLLER_ROWS`, 320, is the rows a refresh scans whatever the panel's height, so a 240-row panel scans 80 it does not show, and `LINE_SLOTS` is that plus both porches: a refresh period divided by it is the panel's line time. `TE_ON`, `TE_OFF` and `TE_MODE` are the opcodes the frame path uses to switch one panel's tearing-effect signal onto a shared line.
+
+`setup()` leaves the panel unflipped, since the controller's scan direction does not follow its `MADCTL` register and a panel flipped there tears. Rotation and mirroring are done in the frame path instead.
+
+A second controller is a new module of the same shape, named through `CONTROLLER` on a `Screen` subclass.
+
+
 ## `Screen` Reference
 
 ### Constants
@@ -327,7 +339,7 @@ brightness(value: float) -> None
 There is no 16-bit row at 24MHz on the 1.54", where that frame outruns the controller's slowest rate, and no 12-bit row at 75MHz on either, where the wire overtakes the panel's scan near the top of the frame.
 
 ```python
-SIZE: str                   # "1.54" or "2.8", the key in SCREEN_TYPES
+SIZE: str                   # The key in SCREEN_TYPES, "1.54" or "2.8"; a new type picks the string its size is known by
 WIDTH: int
 HEIGHT: int
 ```
@@ -337,7 +349,7 @@ HEIGHT: int
 
 ```python
 CANVAS_SPACE = 0            # Only what a frame needs, leaving the region for canvas()
-FULL_SIZE_IMAGES = 1        # Room for two screens to each convert a full-size heap image
+FULL_SIZE_IMAGES = 1        # Room to convert a full-size heap image while a paired screen does the same
 ```
 
 
@@ -431,3 +443,7 @@ ScreenHub(port: SPCEPort,
 
 
 ## Diagnostics
+
+The screens report on the console through the `logging` module. At the default level, `LOG_INFO`, they say when a calibration starts and finishes, and why an alignment request went unmet. `logging.level = logging.LOG_DEBUG` adds the figures behind those notices: a pair's porch trim and the drift left after it, a group's verified periods and their spread, every trim correction with the member it moved, the walk engaging and finishing, how many periods a frame was held for the members to come together, and any capture whose falls did not span a plausible period. One panel of a group tearing shows up there first, as the member the corrections keep naming.
+
+Per-frame timing and the tearing-effect counters belong to the driver underneath the screens, not to this API. The tools in `tools/` read them, `check_tearing.py` printing a profile's margin and `check_te_margin.py` a single setting's, and the driver's own README documents what they measure.

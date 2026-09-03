@@ -30,6 +30,12 @@ class ScreenGroup(ScreenBase):
     # zero, and a member far enough out to be tearing anyway walks in faster. The trim
     # keeps the rate models current as the panels warm, by rotating which member a
     # frame waits on or by probing one between frames.
+    #
+    # Three members have names. The leader is the one a frame waits on, nominated at
+    # construction and moved by a rotating trim. The reference is the slowest, whose
+    # rate the others are trimmed to and whose booking errors are held against. The
+    # synced member is whichever the last frame's wait ended on: the leader, unless a
+    # narrowed write left it out.
 
     # The first probe after bringup reads long, so each panel's first reading is
     # discarded. 300ms is about 13 periods; at 100 one miscounted edge moved a trim
@@ -292,9 +298,9 @@ class ScreenGroup(ScreenBase):
         # A diagnostic; nothing on the frame path reads it
         self.__margins = margins_us
         margin_us = margins_us[tightest]
-        reserve = self.DITHER_FRACTION * margin_us
+        dither_reserve_us = self.DITHER_FRACTION * margin_us
 
-        if quanta + reserve > margin_us or margin_us <= 0:
+        if quanta + dither_reserve_us > margin_us or margin_us <= 0:
             self.__unaligned(required, f"{members[tightest]} is {margin_us:.0f}us from tearing "
                                        f"where the hold needs {quanta:.0f}us plus a reserve. "
                                        "Lengthen every member's porch, or drop the rate a step")
@@ -546,7 +552,7 @@ class ScreenGroup(ScreenBase):
         base = phase_us[base_index] + periods * (
             residual_us[base_index] + dither[base_index] * line_us[base_index])
 
-        budget = 0
+        excess = 0
         worst = 0
         for index in indices:
             carried = phase_us[index] + periods * (
@@ -555,14 +561,14 @@ class ScreenGroup(ScreenBase):
             if error > half:
                 error -= target
             past = (error if error > 0 else -error) - centre
-            if past > budget:
-                budget = past
+            if past > excess:
+                excess = past
             # A few rows of clearance, where centre_us exactly would seam the last row
             past += slack * line_us[index]
             if past > worst:
                 worst = past
 
-        self.__past_budget_us = budget
+        self.__past_budget_us = excess
         return worst
 
     def __frame_ticked(self, stats, synced, delay):
@@ -634,7 +640,9 @@ class ScreenGroup(ScreenBase):
             line = line_us[index]
             residual = residual_us[index]
             applied = dither[index]
-            # Folded: the anchor wraps each booking at half a period
+            # Folded: the anchor wraps each booking at half a period. A positive error
+            # is a booking ahead of the reference, closed by shortening the porch, so
+            # lines below carries the opposite sign: positive lengthens, negative shortens.
             back, front = screen.__porch
             error = fold(phase_us[index] - anchor)
             # A member further out than centre_us is tearing whatever happens, so the
@@ -725,8 +733,9 @@ class ScreenGroup(ScreenBase):
         self.__phase_us[index] = booked + self.__fold(raw - booked)
 
     def __rebase(self, target, stamp):
-        # The ideal falls keep their phase at stamp and advance at the new period from
-        # it, so every booked error carries over
+        # A booking is a phase against the grid, so the grid is re-expressed at stamp
+        # and advances at the new period from there: booking minus grid, the error, is
+        # the same number before and after
         self.__grid_phases = tuple(
             (((stamp - self.__grid_at) & TICKS_MASK) + phase) % self.__target_us
             for phase in self.__grid_phases)
