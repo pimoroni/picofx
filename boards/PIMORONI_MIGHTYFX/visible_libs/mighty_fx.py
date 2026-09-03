@@ -18,14 +18,6 @@ from spce import SPCE, SPCEPort
 __waking = []
 
 
-# The RP2350 shares its PWM channels between GPIO pairs, pins 16 apart below GPIO 32
-# and 8 apart above it, so an LED output can land on a channel an SP/CE role drives
-def __pwm_channel(gpio):
-    if gpio < 32:
-        return gpio % 16
-    return 16 + ((gpio - 32) % 8)
-
-
 class MightyFX:
     OUT_PINS = (
         (3, 0, 1),
@@ -106,7 +98,7 @@ class MightyFX:
         for port_name, mode, pins in (("A", spce_a, self.SPCE_A_PINS), ("B", spce_b, self.SPCE_B_PINS)):
             if mode == SPCE.MOTOR_DRIVER:
                 for pin in pins[:4]:
-                    claimed[__pwm_channel(pin)] = (port_name, pin)
+                    claimed[self.__pwm_channel(pin)] = (port_name, pin)
 
         # A DisabledLED stands in for any channel a motor role holds, so lighting it
         # reports. It takes the pin too, held off, or the motor's signal would show on the LED.
@@ -114,7 +106,7 @@ class MightyFX:
         for index, rgb_pins in enumerate(self.OUT_PINS):
             leds = []
             for colour, pin in zip(self.RGB_COLOUR_NAMES, rgb_pins):
-                holder = claimed.get(__pwm_channel(pin))
+                holder = claimed.get(self.__pwm_channel(pin))
                 if holder is None:
                     leds.append(pin)
                 else:
@@ -196,6 +188,15 @@ class MightyFX:
                 self.__servos[letter] = Servo(pin) if servo is True else Servo(pin, calibration=servo)
 
         # The rail stays down until enable_rail(), so nothing on the header is live before then
+
+    @staticmethod
+    def __pwm_channel(gpio):
+        # The RP2350 shares its PWM channels between GPIO pairs, pins 16 apart below
+        # GPIO 32 and 8 apart above it, so an LED output can land on a channel an SP/CE
+        # role drives
+        if gpio < 32:
+            return gpio % 16
+        return 16 + ((gpio - 32) % 8)
 
     @classmethod
     def wake(cls):

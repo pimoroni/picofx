@@ -721,7 +721,7 @@ inline void emit_rows(ConvertFn convert, const Descriptor &desc, uint8_t *out,
 // the period here so a caller's ever-growing offset never overflows the affine
 // ints. wrap_mirror_x and wrap_mirror_y reverse every other repeat, and imply
 // the wrap on their axis. src_row_bytes is the source pitch, wider than a row
-// on a strided view into a larger image; pass 0 to derive it from src_w.
+// on a strided view into a larger image.
 inline Descriptor make_descriptor(const uint8_t *src, int src_w, int src_h,
                                   int dst_w, int dst_h, int format,
                                   const Transform &transform, bool pixel_double,
@@ -833,7 +833,7 @@ inline Descriptor make_descriptor(const uint8_t *src, int src_w, int src_h,
     desc.dst_h = dst_h;
     desc.du_dx = du_dx; desc.du_dy = du_dy; desc.u_at_origin = u_at_origin;
     desc.dv_dx = dv_dx; desc.dv_dy = dv_dy; desc.v_at_origin = v_at_origin;
-    desc.src_row_bytes = src_row_bytes > 0 ? src_row_bytes : src_w * src_pixel_bytes;
+    desc.src_row_bytes = src_row_bytes;
     desc.src_pixel_bytes = src_pixel_bytes;
     desc.pixel_double = pixel_double;
 

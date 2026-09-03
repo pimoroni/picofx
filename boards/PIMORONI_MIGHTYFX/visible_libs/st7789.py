@@ -111,11 +111,11 @@ FRAME_RATE_CONTROL = OrderedDict({
     39: 0x1F
 })
 
-# Codes for setting screen bit depth
+# Codes for setting screen bit depth. The controller also offers 18-bit RGB666 as
+# 0x06, which the converter does not implement.
 PIXEL_FORMAT = OrderedDict({
     12: 0x03,   # 12 bits per pixel RGB444
     16: 0x05    # 16 bits per pixel RGB565
-    # 18: 0x06    # 18 bits per pixel RGB666 (not implemented)
 })
 
 
