@@ -182,17 +182,16 @@ class Screen(ScreenBase):
         if alone:
             display.fill()
 
-    @staticmethod
-    def __answered(display, controller, shared):
+    def __answered(self, display, controller, shared):
         # A present panel answers inside PROBE_MS. An empty line gets a second, longer
         # look, since a missing panel is reported once and nothing can contradict it.
         if shared:
             # One panel at a time may assert on a shared line, so ask and release
             display.command(controller.REG_TEON, bytes((controller.TE_MODE,)))
 
-        answered = display.te_probe(Screen.PROBE_MS)[2] > 0
+        answered = display.te_probe(self.PROBE_MS)[2] > 0
         if not answered:
-            answered = display.te_probe(Screen.PATIENT_PROBE_MS)[2] > 0
+            answered = display.te_probe(self.PATIENT_PROBE_MS)[2] > 0
 
         if shared:
             display.command(controller.REG_TEOFF)
