@@ -53,6 +53,8 @@ struct FrameStats {
     uint32_t write_start_us;     // time_us_32() at the RAMWR that opened the frame
     uint32_t core1_rows;         // Rows of this frame core1 converted, 0 when the
                                  // split was off or every range was too short
+    int32_t stall_row;           // The row the wire first waited for, -1 when it
+                                 // never starved; the final drain does not count
 };
 
 class SPIDisplay;
@@ -370,6 +372,7 @@ private:
     uint32_t te_timeout_budget_us = 0;
     volatile bool stall_pending = false;      // Wire starving or draining
     volatile uint32_t stall_started_us = 0;   // When the starvation was seen
+    volatile int32_t stall_started_row = -1;  // The row it waited for, -1 for a drain
 };
 
 }  // namespace spidisplay

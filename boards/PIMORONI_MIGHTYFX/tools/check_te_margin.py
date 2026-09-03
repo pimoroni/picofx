@@ -9,7 +9,7 @@
 import spidisplay
 import st7789
 from mighty_fx import SPCE, MightyFX
-from picovector import image
+from picovector import color, image
 from screens import Screen280
 
 PROBE_MS = 1000
@@ -22,6 +22,9 @@ labels = ("SP/CE A", "SP/CE B")
 
 WIDTH, HEIGHT = screens[0].width, screens[0].height
 canvas = image(HEIGHT, WIDTH, spidisplay.buffer(HEIGHT * WIDTH * 4))
+# The buffer holds whatever the region last carried, so the frame is given a colour
+canvas.pen = color.rgb(127, 127, 127)
+canvas.clear()
 
 nominal = screens[0].framerate if hasattr(screens[0], "framerate") else 46
 print("FRCTRL2 steps:", sorted(st7789.FRAME_RATE_CONTROL))

@@ -674,11 +674,13 @@ void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h, int src_strid
     last.convert_total_us = 0;
     last.stall_us = 0;
     last.core1_rows = 0;
+    last.stall_row = -1;
 
     rows_converted = 0;
     rows_kicked = 0;
     bands_kicked = 0;
     stall_pending = false;
+    stall_started_row = -1;
     state = FrameState::PREPARED;
 
     // The first band, then the whole ring: a staged display carries its head start
@@ -739,10 +741,12 @@ void __not_in_flash_func(SPIDisplay::kick_from_isr)() {
     int next = dst_h - rows_kicked < rows_per_band ? dst_h - rows_kicked
                                                    : rows_per_band;
     if (rows_converted - rows_kicked < next) {
-        // The wire is starving; the thread's next kick closes the clock.
+        // The wire is starving; the thread's next kick closes the clock and books
+        // the row it waited for.
         if (!stall_pending) {
             stall_pending = true;
             stall_started_us = time_us_32();
+            stall_started_row = rows_kicked;
         }
         return;
     }
@@ -807,6 +811,9 @@ bool SPIDisplay::try_kick() {
 
     if (stall_pending) {
         last.stall_us += time_us_32() - stall_started_us;
+        if (last.stall_row < 0) {
+            last.stall_row = stall_started_row;    // the frame's first starvation
+        }
         stall_pending = false;
     }
 
@@ -834,6 +841,7 @@ bool SPIDisplay::finish_if_drained() {
         if (!stall_pending) {
             stall_pending = true;
             stall_started_us = now;
+            stall_started_row = -1;     // a drain, not a starvation
         }
         return false;
     }
@@ -842,6 +850,9 @@ bool SPIDisplay::finish_if_drained() {
     uint32_t t_end = time_us_32();
     if (stall_pending) {
         last.stall_us += t_end - stall_started_us;
+        if (last.stall_row < 0) {
+            last.stall_row = stall_started_row;
+        }
         stall_pending = false;
     }
     last.frame_us = t_end - frame_started_us;
@@ -1735,7 +1746,7 @@ static mp_obj_t SPIDisplay_stats(mp_obj_t self_in) {
     static const qstr fields[] = {
         MP_QSTR_pre_us, MP_QSTR_convert_us, MP_QSTR_te_wait_us, MP_QSTR_frame_us,
         MP_QSTR_convert_total_us, MP_QSTR_stall_us, MP_QSTR_write_start_us,
-        MP_QSTR_core1_rows,
+        MP_QSTR_core1_rows, MP_QSTR_stall_row,
     };
     spidisplay::FrameStats s = self->display.stats();
     mp_obj_t items[MP_ARRAY_SIZE(fields)] = {
@@ -1747,6 +1758,7 @@ static mp_obj_t SPIDisplay_stats(mp_obj_t self_in) {
         mp_obj_new_int_from_uint(s.stall_us),
         mp_obj_new_int_from_uint(s.write_start_us),
         mp_obj_new_int_from_uint(s.core1_rows),
+        mp_obj_new_int(s.stall_row),
     };
     return mp_obj_new_attrtuple(fields, MP_ARRAY_SIZE(fields), items);
 }
