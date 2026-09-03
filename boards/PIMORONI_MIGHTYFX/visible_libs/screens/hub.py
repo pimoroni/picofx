@@ -58,7 +58,8 @@ class ScreenHub:
 
     def __init__(self, port, extra_cs=(), dc=None, te=None, controller=st7789):
         if port.__screens:
-            raise ValueError(f"SP/CE {port.name} already has screens, and a hub has to reach every panel before the first one is built, so build it first")
+            raise ValueError(f"SP/CE {port.name} already has screens, and a hub has to reach every "
+                             "panel before the first one is built, so build it first")
 
         self.__connector = port
         self.__controller = controller
@@ -68,7 +69,8 @@ class ScreenHub:
         for pin in extra_cs:
             pin = pin if isinstance(pin, Pin) else Pin(pin)
             if pin in lines:
-                raise ValueError(f"{pin} is named twice, and each panel on a hub needs a chip select of its own")
+                raise ValueError(f"{pin} is named twice, and each panel on a hub needs a "
+                                 "chip select of its own")
             lines.append(pin)
 
         dc = port.dc if dc is None else dc

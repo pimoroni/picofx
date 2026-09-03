@@ -24,15 +24,18 @@ def update_pair(first, second, v_sync=None):
     if first is second:
         raise ValueError("update_pair needs two different screens")
     if first.port is second.port:
-        raise ValueError("update_pair needs a screen on each SP/CE port, since one port is one stream; broadcast() shares a port")
+        raise ValueError("update_pair needs a screen on each SP/CE port, since one port is one "
+                         "stream; broadcast() shares a port")
     # A reservation is shared out across the pair, so one alone leaves both short
     if first.__reserve != second.__reserve:
-        raise ValueError("update_pair needs both screens built with the same reserve, since a reservation is shared out across the pair: set it on both, or on neither")
+        raise ValueError("update_pair needs both screens built with the same reserve, since a "
+                         "reservation is shared out across the pair: set it on both, or on neither")
 
     if v_sync is None:
         v_sync = first.__v_sync and second.__v_sync
     elif v_sync and not (first.__v_sync and second.__v_sync):
-        raise ValueError("v_sync needs both screens created with te, since each waits on its own panel's tearing-effect signal")
+        raise ValueError("v_sync needs both screens created with te, since each waits on its own "
+                         "panel's tearing-effect signal")
 
     spidisplay.update_all(first.__display, second.__display, v_sync=v_sync)
 
@@ -76,9 +79,12 @@ class ScreenPair:
         if first is second:
             raise ValueError("a pair needs two different screens")
         if first.port is second.port:
-            raise ValueError("a pair needs a screen on each SP/CE port, since one port is one stream; broadcast() shares a port")
+            raise ValueError("a pair needs a screen on each SP/CE port, since one port is one "
+                             "stream; broadcast() shares a port")
         if first.__reserve != second.__reserve:
-            raise ValueError("a pair needs both screens built with the same reserve, since a reservation is shared out across the pair: set it on both, or on neither")
+            raise ValueError("a pair needs both screens built with the same reserve, since a "
+                             "reservation is shared out across the pair: set it "
+                             "on both, or on neither")
 
         # The screens carry it, each port's backlight being what holds
         if reveal_together:
@@ -113,7 +119,8 @@ class ScreenPair:
     def __pair_values(value, name):
         if isinstance(value, (tuple, list)):
             if len(value) != 2:
-                raise ValueError(f"a per-screen {name} is two values, one for each screen, not {len(value)}")
+                raise ValueError(f"a per-screen {name} is two values, one for each "
+                                 f"screen, not {len(value)}")
             return value
         return (value, value)
 
@@ -132,16 +139,20 @@ class ScreenPair:
                 if element is None:
                     continue
                 if not isinstance(element, (tuple, list)) or len(element) != 2:
-                    raise ValueError(f"{offset} reads as a per-screen offset, so each element is an (x, y) pair or None; a shared offset is (x, y) with plain coordinates")
+                    raise ValueError(f"{offset} reads as a per-screen offset, so each element is an "
+                                     "(x, y) pair or None; a shared offset is (x, y) "
+                                     "with plain coordinates")
                 for coordinate in element:
                     if coordinate is not None and not isinstance(coordinate, int):
-                        raise ValueError(f"{element} is not an (x, y) pair: each coordinate is a number, or None for centred on that axis")
+                        raise ValueError(f"{element} is not an (x, y) pair: each coordinate is a "
+                                         "number, or None for centred on that axis")
             return offset
 
         # Shared: one (x, y) applied to both screens
         for coordinate in offset:
             if coordinate is not None and not isinstance(coordinate, int):
-                raise ValueError(f"{offset} is not an (x, y) pair: each coordinate is a number, or None for centred on that axis. A per-screen offset is two such pairs.")
+                raise ValueError(f"{offset} is not an (x, y) pair: each coordinate is a number, or None "
+                                 "for centred on that axis. A per-screen offset is two such pairs.")
         return (offset, offset)
 
     @staticmethod
@@ -150,7 +161,8 @@ class ScreenPair:
         if not isinstance(tile, (tuple, list)):
             return (tile, tile)
         if len(tile) != 2:
-            raise ValueError("tile is one value for both axes, or an (x, y) pair; a per-screen tile is two of either")
+            raise ValueError("tile is one value for both axes, or an (x, y) pair; a "
+                             "per-screen tile is two of either")
 
         if any(isinstance(element, (tuple, list)) for element in tile):
             for element in tile:
@@ -190,7 +202,8 @@ class ScreenPair:
 
         first, second = self.__screens
         if not (first.__v_sync and second.__v_sync):
-            raise ValueError("alignment waits on both panels' tearing-effect signals, so it needs both screens created with te and v_sync")
+            raise ValueError("alignment waits on both panels' tearing-effect signals, so it needs "
+                             "both screens created with te and v_sync")
         if not self.__calibrated:
             self.__calibrate()
         self.__apply_trim()
@@ -235,7 +248,9 @@ class ScreenPair:
 
         if self.__align:
             if v_sync is False:
-                raise ValueError("an aligned pair waits on the tearing-effect signal every frame, since that is what alignment measures by. Call stop_aligning() for free-running frames.")
+                raise ValueError("an aligned pair waits on the tearing-effect signal every frame, "
+                                 "since that is what alignment measures by. Call stop_aligning() "
+                                 "for free-running frames.")
 
             # A pause leaves the pair drifted; past what the loop can hide, spend a resync
             # while the content is still stale. A frame outside the pair handed the trim
@@ -298,10 +313,12 @@ class ScreenPair:
         if back + trim + front > self.BLANKING_CEILING_LINES:
             # Different panel types take their rates from their own PROFILES, which has a fix
             if screens[0].framerate != screens[1].framerate:
-                remedy = f"Set both screens to the same framerate, {screens[0].framerate}fps and {screens[1].framerate}fps being too far apart"
+                remedy = (f"Set both screens to the same framerate, {screens[0].framerate}fps and "
+                          f"{screens[1].framerate}fps being too far apart")
             else:
                 remedy = "Pair better-matched panels"
-            raise ValueError(f"these panels' refreshes sit further apart than a porch trim can bridge. {remedy}, or create the pair with align=False.")
+            raise ValueError("these panels' refreshes sit further apart than a porch trim can "
+                             f"bridge. {remedy}, or create the pair with align=False.")
 
         trims = [0, 0]
         trims[fi] = trim
@@ -310,7 +327,9 @@ class ScreenPair:
             [display.wire_window_us() for display in displays])
         margin_us = margins_us[tightest]
         if quanta + self.DITHER_FRACTION * margin_us > margin_us or margin_us <= 0:
-            raise ValueError(f"{screens[tightest]} keeps only {margin_us:.0f}us of tearing margin, and holding a pair costs {quanta:.0f}us of granularity plus a reserve. Drop the rate a step, or create the pair with align=False.")
+            raise ValueError(f"{screens[tightest]} keeps only {margin_us:.0f}us of tearing margin, "
+                             f"and holding a pair costs {quanta:.0f}us of granularity plus a "
+                             "reserve. Drop the rate a step, or create the pair with align=False.")
 
         if trim:
             f_screen.__set_porch(back + trim, front)
@@ -326,7 +345,8 @@ class ScreenPair:
                 periods[fi] = int(round(held + correction * s_line))
             else:
                 periods[fi] = int(round(periods[fi] + trim * s_line))
-            logging.debug(f"> Trimmed the follower {trim} porch lines, {periods[li] - periods[fi]}us a period left")
+            logging.debug(f"> Trimmed the follower {trim} porch lines, "
+                          f"{periods[li] - periods[fi]}us a period left")
 
         # The follower's slot count, which the trim just moved
         line_slots = f_screen.__line_slots
@@ -415,7 +435,8 @@ class ScreenPair:
         if logging.level < logging.LOG_DEBUG:
             logging.info("> Screen pair calibrated")
         else:
-            logging.debug(f"> Calibrated in {time.ticks_diff(time.ticks_ms(), started)}ms, predicted skew floor {self.__floor_us:.0f}us")
+            logging.debug(f"> Calibrated in {time.ticks_diff(time.ticks_ms(), started)}ms, "
+                          f"predicted skew floor {self.__floor_us:.0f}us")
 
     def __send_walk(self, walk):
         if walk != self.__walk_sent:

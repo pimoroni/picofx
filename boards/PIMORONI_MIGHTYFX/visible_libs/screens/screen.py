@@ -78,7 +78,9 @@ class Screen(ScreenBase):
         if reserve == Reserve.FULL_SIZE_IMAGES:
             recipe = self.FULL_IMAGE_RESERVE.get((self.__baudrate, bitdepth))
             if recipe is None:
-                raise ValueError(f"Reserve.FULL_SIZE_IMAGES has no measured recipe for {type(self).__name__} at {self.__baudrate}Hz {bitdepth}-bit. Measure one, or name stage_lines and cache_columns.")
+                raise ValueError("Reserve.FULL_SIZE_IMAGES has no measured recipe for "
+                                 f"{type(self).__name__} at {self.__baudrate}Hz {bitdepth}-bit. "
+                                 "Measure one, or name stage_lines and cache_columns.")
 
             recipe = self.__for_cores(recipe, dual_profiles,
                                       ("stage_lines", "cache_columns"),
@@ -89,7 +91,8 @@ class Screen(ScreenBase):
             if cache_columns is None:
                 cache_columns = recipe["cache_columns"]
         elif reserve != Reserve.CANVAS_SPACE:
-            raise ValueError(f"{reserve} is not a valid reserve. Expected Reserve.CANVAS_SPACE, or Reserve.FULL_SIZE_IMAGES.")
+            raise ValueError(f"{reserve} is not a valid reserve. Expected Reserve.CANVAS_SPACE, or "
+                             "Reserve.FULL_SIZE_IMAGES.")
 
         band_lines = profile["band_lines"] if band_lines is None else band_lines
         cache_columns = profile["cache_columns"] if cache_columns is None else cache_columns
@@ -97,7 +100,8 @@ class Screen(ScreenBase):
         stage_lines = 0 if stage_lines is None else stage_lines
 
         if width is None or height is None:
-            raise ValueError(f"{type(self).__name__} sets no WIDTH and HEIGHT. Subclass Screen and set them, or pass them here.")
+            raise ValueError(f"{type(self).__name__} sets no WIDTH and HEIGHT. Subclass Screen and "
+                             "set them, or pass them here.")
 
         controller = self.CONTROLLER
         bd_code = self.__code_for(controller.PIXEL_FORMAT, bitdepth, "bit depth")
@@ -141,9 +145,9 @@ class Screen(ScreenBase):
         achieved = display.baudrate()
         if achieved < self.__baudrate:
             display.__del__()
-            raise ValueError(f"this wire reached {achieved} baud of the {self.__baudrate} requested."
-                             f" Raise clk_peri first, machine.freq(150_000_000, 150_000_000),"
-                             f" or request a rate the current clock reaches.")
+            raise ValueError(f"this wire reached {achieved} baud of the {self.__baudrate} requested. "
+                             f"Raise clk_peri first, machine.freq(150_000_000, 150_000_000), "
+                             f"or request a rate the current clock reaches.")
 
         # A hub has already reset and cleared every panel on the port; a screen on its
         # own does both. A shared line comes up at TEOFF.
@@ -155,9 +159,9 @@ class Screen(ScreenBase):
 
         if te_used and not self.__answered(display, controller, shared_te):
             display.__del__()
-            raise ValueError(f"no screen answered on {cs}. Check it is plugged in, or pass"
-                             f" te=False for a screen whose tearing-effect signal is not wired,"
-                             f" which also turns off waiting for it.")
+            raise ValueError(f"no screen answered on {cs}. Check it is plugged in, or pass "
+                             f"te=False for a screen whose tearing-effect signal is not wired, "
+                             f"which also turns off waiting for it.")
 
         port.__claim_cs(cs)
         port.__claim_dc(dc, te_used, shared_te)
@@ -212,7 +216,9 @@ class Screen(ScreenBase):
         override = row["dual"]
         missing = [key for key in required if key not in override]
         if missing:
-            raise ValueError(f"the dual-core {what} row names {', '.join(missing)} nowhere. It replaces the single-core row rather than amending it, so it needs every setting that row has.")
+            raise ValueError(f"the dual-core {what} row names {', '.join(missing)} nowhere. It "
+                             "replaces the single-core row rather than amending it, so it needs "
+                             "every setting that row has.")
 
         return override
 
@@ -224,7 +230,8 @@ class Screen(ScreenBase):
     def __set_porch(self, back, front):
         # One porch line is one line time; a group's align moves a member with this
         if back < 1 or front < 1:
-            raise ValueError(f"a porch of ({back}, {front}) has a side under one line, which the controller has no code for")
+            raise ValueError(f"a porch of ({back}, {front}) has a side under one line, which the "
+                             "controller has no code for")
 
         self.CONTROLLER.set_porch(self.__display, back, front)
         self.__porch = (back, front)

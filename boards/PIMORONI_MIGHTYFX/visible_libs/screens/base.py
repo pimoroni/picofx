@@ -98,7 +98,8 @@ class ScreenBase:
     def brightness(self, value):
         """Set how bright the backlight looks, from 0.0 to 1.0."""
         if self.__backlight is None:
-            raise ValueError("this screen has no backlight to set, so its brightness is whatever the assembly ties it to")
+            raise ValueError("this screen has no backlight to set, so its brightness is whatever "
+                             "the assembly ties it to")
 
         self.__backlight.brightness(value)
 
@@ -174,9 +175,12 @@ class ScreenBase:
             v_sync = self.__v_sync
         elif v_sync and not self.__te:
             if self.__members is not None:
-                raise ValueError("this broadcast group has no member to wait on: its panels' scans are unsynchronised, so build it with leader naming one of them, which needs every member built with te set to the DC line they share")
+                raise ValueError("this broadcast group has no member to wait on: its panels' scans are "
+                                 "unsynchronised, so build it with leader naming one of them, which "
+                                 "needs every member built with te set to the DC line they share")
 
-            raise ValueError("v_sync needs a screen created with te, since it waits on the panel's tearing-effect signal")
+            raise ValueError("v_sync needs a screen created with te, since it waits on the "
+                             "panel's tearing-effect signal")
 
         # None is opaque black in the module's packed premultiplied form
         bg = 0xff000000 if bg_color is None else bg_color.p & 0xffffffff
