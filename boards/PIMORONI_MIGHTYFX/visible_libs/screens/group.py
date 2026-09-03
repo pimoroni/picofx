@@ -484,7 +484,7 @@ class ScreenGroup(ScreenBase):
                        bg_color=bg_color, v_sync=v_sync, to=to)
         synced = self.__synced_frame
         owner.__frame_ticked(self.__display.stats(), synced, owner.__sync_delay_us)
-        owner.__tick_trim(synced)
+        owner.__tick_trim(synced, self.screens if to is None else to)
 
     def __walk_in(self, written):
         # Nothing is written while this runs, so the group presents in one piece. A tick
@@ -762,7 +762,7 @@ class ScreenGroup(ScreenBase):
             self.__trim_mode = "probe"
             self.__trim_frames = 0
 
-    def __tick_trim(self, synced=None):
+    def __tick_trim(self, synced=None, written=None):
         # A calibration goes stale as the panels warm. rotate moves the wait target to the
         # next member each frame, so every booking stays within a few periods of a
         # measurement; probe re-measures one member every TRIM_FRAMES, stalling that frame.
@@ -771,11 +771,19 @@ class ScreenGroup(ScreenBase):
 
         members = self.screens
         if self.__trim_mode == "rotate":
-            # Only a frame that waited on the leader measured it. Every member takes its
-            # turn, walking or not; a skipped one drifts on a stale rate, seen as a tear that walks.
-            if synced is self.__leader:
-                self.__trim_at = (self.__member_index[self.__leader] + 1) % len(members)
-                self.__leader = members[self.__trim_at]
+            # The member a frame waited on is the one it measured, and only a written member
+            # can be waited on next, so the leader moves to the next written member after it.
+            # Every member takes its turn, walking or not; a skipped one drifts on a stale
+            # rate, seen as a tear that walks.
+            if synced is None:
+                return
+            index = self.__member_index[synced]
+            for _ in range(len(members)):
+                index = (index + 1) % len(members)
+                if written is members or members[index] in written:
+                    break
+            self.__trim_at = index
+            self.__leader = members[index]
             return
 
         self.__trim_frames += 1

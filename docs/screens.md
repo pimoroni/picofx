@@ -219,7 +219,7 @@ With `align` on, the group brings its members' refreshes into step and holds the
 
 A frame after a long pause first waits for the members to come back together, up to about half a second, then goes out and tears on any still out of step, since a stalled wall is worse than one spoiled frame.
 
-`trim` says how the group keeps its members' rates current as the panels warm. `None`, the default, rotates the member each frame waits on so every panel is measured in turn. `"probe"` re-measures one member every thirty frames instead, stalling that frame briefly. `False` turns it off. Only a group that aligned has anything to trim.
+`trim` says how the group keeps its members' rates current as the panels warm. `None`, the default, rotates the member each frame waits on so every panel is measured in turn, among the panels that frame writes, so a subset written on its own takes turns among its own members. `"probe"` re-measures one member every thirty frames instead, stalling that frame briefly. `False` turns it off. Only a group that aligned has anything to trim.
 
 
 ## Using a Hub
