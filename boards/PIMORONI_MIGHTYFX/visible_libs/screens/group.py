@@ -147,6 +147,26 @@ class ScreenGroup(ScreenBase):
                 logging.info("screens: this group's panels carry no shared tearing-effect signal, so its frames will not wait and every panel may tear. Build the members with te set to the DC line they share to nominate one.")
 
         first = screens[0]
+
+        # broadcast() refuses these too, in the driver's words. The cache width, ring depth
+        # and write command have no reading here, so those three stay its to report.
+        for position, screen in enumerate(screens[1:], start=2):
+            if (screen.width, screen.height) != (first.width, first.height):
+                raise ValueError(f"screen size mismatch: panel {position} is "
+                                 f"{screen.width}x{screen.height} whereas panel 1 is "
+                                 f"{first.width}x{first.height}. Group panels by size")
+            if screen.__bitdepth != first.__bitdepth:
+                raise ValueError(f"bitdepth mismatch: panel {position} is {screen.__bitdepth}-bit "
+                                 f"whereas panel 1 is {first.__bitdepth}-bit")
+            if screen.__display.baudrate() != first.__display.baudrate():
+                raise ValueError(f"baudrate mismatch: panel {position} runs at "
+                                 f"{screen.__display.baudrate()} whereas panel 1 runs at "
+                                 f"{first.__display.baudrate()}")
+            if screen.__display.band_rows() != first.__display.band_rows():
+                raise ValueError(f"band_lines mismatch: panel {position} takes "
+                                 f"{screen.__display.band_rows()} rows at a time whereas panel 1 "
+                                 f"takes {first.__display.band_rows()}")
+
         display = port.__bus.broadcast(*[screen.__display for screen in screens])
 
         # A group places its own frames, so an unnamed rotation is upright, not the
