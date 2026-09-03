@@ -16,91 +16,13 @@ from .base import ScreenBase, __check_rotation
 
 
 class Reserve:
-    """What a screen sets its share of the fast SRAM aside for.
-
-    CANVAS_SPACE claims only what a frame needs, leaving the region for canvas().
-    FULL_SIZE_IMAGES claims enough for two screens to each convert their own
-    full-size image out of the GC heap at once, which is the one case that cannot
-    keep up otherwise; a full-size canvas no longer fits alongside it, half-size
-    ones still do. Drawing to canvas(), or halving an image and passing
-    pixel_double, needs neither.
-
-    It buys a frame that does not tear, not a faster one: the conversion moves into
-    prepare(), ahead of the frame, so the wire never starves but the pair takes
-    longer to come round. Measured on a 240x240 pair, 61ms a pair against 54ms
-    untorn at rotation 0, and 76ms against 66ms at rotation 90.
-
-    Both screens of a pair need the same value, which update_pair() checks: a
-    reservation is shared out across the pair, so one on its own leaves both short
-    rather than protecting the screen that made it.
-
-    FULL_SIZE_IMAGES is only available where a screen type has measured a recipe for
-    the wire, in its FULL_IMAGE_RESERVE, and refuses elsewhere rather than guessing.
-    """
-    CANVAS_SPACE = 0
-    FULL_SIZE_IMAGES = 1
+    """What a screen's share of the fast SRAM is set aside for."""
+    CANVAS_SPACE = 0        # Only what a frame needs, leaving the region for canvas()
+    FULL_SIZE_IMAGES = 1    # Room for two screens to each convert a full-size heap image
 
 
 class Screen(ScreenBase):
-    """One panel on an SP/CE port.
-
-    The first screen on a port names no pins and takes the port's own DC, CS and
-    backlight. Every further screen names its cs, and its dc unless it is
-    deliberately sharing the port's. A screen built against one of a ScreenHub's
-    ports names none of them, the hub having named the whole line-up already.
-
-    te names the line the tearing-effect signal comes back on. True is this screen's
-    own DC line, which is how MightyFX wires a single panel to a port; the port's own
-    DC line is one other screens share, which needs a diode on each breakout and
-    asserts TE only for the frame waiting on it; any other Pin is a dedicated input;
-    False sends TEOFF and never waits. None takes the port's default, which is True
-    on a connector and the shared line on a hub. v_sync follows te, and False keeps
-    the signal without waiting on it. bl=False declines the port's backlight, for a
-    panel whose own is tied on at the assembly.
-
-    Where te is in play, construction refuses if no panel answers on that line, which
-    is how an empty port or an unplugged panel reports itself instead of running as a
-    screen nothing can see. A refusing screen claims nothing, so a caller may build a
-    line-up over a hub and keep whichever built. A panel wired without its
-    tearing-effect signal takes te=False and is not looked for, there being nothing to
-    look for.
-
-    rotation and mirror say how the panel is mounted, and every frame follows them
-    unless it names its own, as v_sync is a setting update() follows.
-
-    reveal_together holds the port's backlight until every screen asking for it has
-    drawn, for a line-up that comes up as one. A panel never drawn holds the line
-    dark, so ask only on the ones the program covers; brightness() and on() still
-    light it.
-
-    Settings resolve as: explicit keyword, then the PROFILES row for the
-    (baudrate, bitdepth) pair, then the class constants. With no bitdepth named,
-    the first depth in DEPTHS that has a row for the baud wins, so higher rates
-    default to 16-bit colour and bitdepth=12 buys their last few frames per
-    second. Every resolved value is validated against the controller's tables, so
-    a bad experiment fails where the mistake is.
-
-    A row's "dual" entry, where it has one, replaces it on a firmware that converts
-    frames on both cores, some wires reaching a higher rate once one core is no
-    longer what the wire waits for. dual_profiles=True or False chooses that set by
-    hand, for measuring one against the other; by default the firmware decides, and
-    a build without a second core to convert on never sees the dual rows. Turning
-    spidisplay.dual_convert() off after a screen is built leaves it holding a rate
-    chosen for two cores, so that setting is for diagnostics.
-
-    reserve says what the screen's share of the fast SRAM is for, and is the setting
-    to reach for rather than the three below: Reserve.FULL_SIZE_IMAGES buys the one
-    case that cannot keep up otherwise, two screens each converting their own
-    full-size image out of the GC heap through update_pair().
-
-    band_lines and cache_columns spend SRAM from the same region canvases come
-    from: at least two band buffers plus cache_columns * width * 4 bytes, claimed
-    for as long as the screen lives and reported by display.sram_bytes().
-    stage_lines deepens the band buffers into a ring of that many rows, which
-    prepare() converts up front so the wire starts with that much of a head start.
-    Any of the three overrides what reserve chose, for profiling a new panel or
-    wire.
-    """
+    """One panel on an SP/CE port."""
 
     CONTROLLER = st7789      # bringup, framerate and bitdepth code tables, RAMWR
     PROBE_MS = 60            # a present panel always answers inside this
@@ -346,12 +268,7 @@ class Screen(ScreenBase):
 
     @property
     def framerate(self):
-        """The refresh rate this screen was built with, which bounds the tearing margin.
-
-        A label, nominal at the default porch: alignment trims the porch to hold
-        panels together, so an aligned panel runs off it. line_slots against the
-        controller's LINE_SLOTS says how far.
-        """
+        """The refresh rate this screen was built with; an aligned panel is trimmed off it."""
         return self.__framerate
 
     def __set_porch(self, back, front):

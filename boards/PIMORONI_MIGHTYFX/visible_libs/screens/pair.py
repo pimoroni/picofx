@@ -22,16 +22,7 @@ __BOTH_FALSE = (False, False)
 
 
 def update_pair(first, second, v_sync=None):
-    """Stream a frame to two screens at once, each starting on its own TE edge.
-
-    Both screens must have prepare()d a frame, sit on different SP/CE ports since
-    one port is one stream, and agree on reserve. Presenting a pair this way takes
-    about the time one of them alone would, instead of the two in turn, and the
-    panels change together.
-
-    v_sync=None waits on the tearing-effect signal when both screens were built
-    for it.
-    """
+    """Stream the frames two screens have prepare()d, at once and each on its own TE edge."""
     if first is second:
         raise ValueError("update_pair needs two different screens")
     if first.port is second.port:
@@ -60,36 +51,7 @@ def update_pair(first, second, v_sync=None):
 
 
 class ScreenPair:
-    """Two screens on their own SP/CE ports, presented together as one.
-
-    update() streams a frame to both panels at once and, with align on, holds
-    their TE phases together so the two change as one: calibration trims the
-    faster panel's refresh onto the slower's by lengthening its porch whole
-    lines, and that panel then follows, its edge delayed with TESCAN inside
-    the measured tear margin and its porch dithered a line either way when
-    the walk cannot absorb what is left, one correction per pair frame. After a
-    pause long enough for the pair to drift apart, the next update() first
-    spends a frame-counted rate excursion on both panels while the stale
-    content hides it, so resuming costs one late frame instead of seconds of
-    visible catching up.
-
-    align defaults to aligning where the pair can, calibrating at construction:
-    about four seconds of period probes which it says it is doing, from which the
-    pair predicts the steady skew it can hold. A pair too
-    mismatched to hold any says why and runs unaligned, is_aligned() then
-    reporting False. align=True refuses such a pair instead, and align=False
-    leaves the panels alone; start_aligning() takes the four seconds later, and
-    stop_aligning() stops.
-
-    Alignment holds panel state on the following screen: the trimmed porch, a
-    non-zero TESCAN and at times a dithered porch line. All are restored
-    whenever that screen is updated outside its pair, and by stop_aligning().
-    update_pair() stays underneath as the stateless entry, which is what the
-    diagnostics use.
-
-    reveal_together is asked of both screens, so the two ports' backlights come up on
-    one scan instead of a scan apart.
-    """
+    """Two screens on their own SP/CE ports, presented together as one."""
 
     # The fine loop, as tools/check_te_align.py measured it
     DEADBAND_LINES = 2
@@ -243,20 +205,11 @@ class ScreenPair:
         return self.__screens
 
     def is_aligned(self):
-        """Whether the pair is holding its panels' TE phases together.
-
-        The state alignment reached rather than what was asked of it, so False
-        where a request went unmet and False again after stop_aligning().
-        """
+        """Whether the pair is holding its panels' refreshes together, not whether it was asked to."""
         return self.__align
 
     def start_aligning(self):
-        """Start holding the panels' TE phases together, measuring them first.
-
-        The first call spends about four seconds probing both panels' periods,
-        which it says it is doing; later calls resume from those measurements.
-        Raises where this pair cannot hold alignment, saying which reason.
-        """
+        """Start holding the panels' refreshes together, calibrating for about four seconds the first time."""
         if self.__align:
             return
 
@@ -277,7 +230,7 @@ class ScreenPair:
         self.__align = True
 
     def stop_aligning(self):
-        """Stop correcting, handing the following panel its TESCAN and rate back."""
+        """Stop correcting, handing the following panel its own rate back."""
         if not self.__align:
             return
 
@@ -289,28 +242,7 @@ class ScreenPair:
     def update(self, image, second=None, *, rotation=None, mirror=None,
                pixel_double=False, offset=None, tile=False,
                bg_color=None, v_sync=None):
-        """Stream a frame to both screens, aligned when align is on.
-
-        One image reaches both panels, or a second positional image gives each
-        its own. Every placement keyword takes one value for both screens, or a
-        2-tuple for one each, so a pair mounted opposite ways is
-        rotation=(90, 270). Unnamed, rotation and mirror follow each screen's own,
-        so a pair takes the mounting each was created with. offset and tile are
-        the exception, each being an (x, y) pair itself: they are shared unless an
-        element is itself a pair.
-
-            offset=(5, 10)              both screens at (5, 10)
-            offset=(5, None)            both screens: x=5, y centred
-            offset=(None, (5, 10))      first centred, second at (5, 10)
-            offset=((0, 0), (5, 10))    one each
-            tile=(True, False)          both screens tile x only
-            tile=((True, True), False)  first tiles both axes, second neither
-            tile=(Tile.MIRROR, False)   both screens tile x, every other repeat reflected
-
-        v_sync=None waits on the tearing-effect signal when both screens were
-        built for it. An aligned pair refuses v_sync=False, the signal being
-        what alignment measures by.
-        """
+        """Stream one image, or one each, to both screens at once."""
         first_screen, second_screen = self.__screens
         if second is None:
             second = image

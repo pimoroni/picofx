@@ -10,16 +10,10 @@ import spidisplay
 
 
 class Tile:
-    """How update() and prepare() repeat a source on one of its own axes.
-
-    OFF and REPEAT are what False and True already mean, so the tile setting
-    takes either spelling. MIRROR reverses every other repeat, making each
-    seam a reflection: any source tiles seamlessly, drawn to repeat or not,
-    and half an image mirrored fills the whole panel.
-    """
-    OFF = 0
-    REPEAT = 1
-    MIRROR = 2
+    """How update() and prepare() repeat a source along an axis."""
+    OFF = 0         # What False means
+    REPEAT = 1      # What True means
+    MIRROR = 2      # Every other repeat reversed, so each seam is a reflection
 
 
 def __check_rotation(rotation):
@@ -45,22 +39,7 @@ def __tightest_margin(screens, trims, line_us, wire_us):
 
 
 class ScreenBase:
-    """The frame path shared by a single screen and a broadcast group.
-
-    te says whether a tearing-effect signal is reachable at all, and v_sync whether a
-    frame waits on it by default. members is the screens a broadcast group stands
-    for, and None for a screen standing for itself. shared_te says the signal arrives
-    on a line other screens share, which is what makes the wait transient; leader names
-    the screen whose signal a frame waits on.
-
-    rotation and mirror are how the panel is mounted, and every frame follows them
-    unless it names its own.
-
-    reveal_together holds the port's backlight until every screen asking for it has
-    drawn, so a line-up comes up as one.
-
-    Not built directly: construct a Screen subclass or a ScreenGroup.
-    """
+    """The frame path a Screen and a ScreenGroup share. Construct one of those."""
 
     def __init__(self, port, display, width, height, bitdepth, backlight, te, v_sync, reserve, members=None, shared_te=False, leader=None, rotation=0, mirror=False, reveal_together=False):
         __check_rotation(rotation)
@@ -125,30 +104,14 @@ class ScreenBase:
         return self.__reveal_together
 
     def brightness(self, value):
-        """Set how bright the backlight looks, from 0.0 to 1.0.
-
-        Against perceived brightness, so equal steps look equal. 0.0 is off and every
-        setting above it is one the panel answers, the driver's own floor being folded
-        in. backlight carries the rest of the control, on() and off() among it.
-        """
+        """Set how bright the backlight looks, from 0.0 to 1.0."""
         if self.__backlight is None:
             raise ValueError("this screen has no backlight to set, so its brightness is whatever the assembly ties it to")
 
         self.__backlight.brightness(value)
 
     def canvas(self, width=None, height=None, offset=None):
-        """An SRAM-backed image, by default sized to this screen.
-
-        The GC heap is PSRAM, so a plain image() is read over XIP and costs about
-        twice as much per pixel to convert. Each size is claimed once from this
-        screen's own part of the region and handed back on every later call, so two
-        screens never share pixels.
-
-        Half the panel's width and height, drawn with pixel_double=True, is a
-        quarter of the bytes: two screens can hold one each where one full-size
-        canvas already fills the region. offset places a canvas by hand instead,
-        outside the claims.
-        """
+        """An image in fast SRAM, by default sized to this screen and claimed once per size."""
         width = self.__width if width is None else width
         height = self.__height if height is None else height
         if width < 1 or height < 1:
@@ -227,13 +190,7 @@ class ScreenBase:
         return None
 
     def update(self, image, *, rotation=None, mirror=None, pixel_double=False, offset=None, tile=False, bg_color=None, v_sync=None, to=None):
-        """Stream a frame to the panel, or to every screen a group stands for.
-
-        rotation and mirror follow the screen's own unless the frame names them,
-        so a program says how the panel is mounted once and the loop says only
-        what changes. The rest are frame content and take their defaults per
-        call. to narrows the write to some of a group's members.
-        """
+        """Stream a frame to the panel, or to every screen a group stands for."""
         # A frame outside the pair first hands back the panel state alignment
         # holds, the trimmed porch included: the narrowed TE pulse is only safe
         # under the pair's poll, and the period was the pair's choice
@@ -284,13 +241,7 @@ class ScreenBase:
 
     @micropython.native
     def prepare(self, image, *, rotation=None, mirror=None, pixel_double=False, offset=None, tile=False, bg_color=None, to=None):
-        """Stage a frame for update_pair(), converting as far ahead as it can.
-
-        Placement is per screen, so a pair can differ in rotation, mirroring and
-        offset to suit how each panel is mounted, and rotation and mirror default
-        to the screen's own. Nothing reaches the panel until update_pair() runs,
-        and a staged frame refuses command() until it does.
-        """
+        """Stage a frame for update_pair(), converting as far ahead as it can."""
         bg = 0xff000000 if bg_color is None else bg_color.p & 0xffffffff
 
         if rotation is None:

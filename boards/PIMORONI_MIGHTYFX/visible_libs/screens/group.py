@@ -19,38 +19,7 @@ TICKS_MASK = 0x3FFFFFFF
 
 
 class ScreenGroup(ScreenBase):
-    """Several of a port's screens driven as one, sharing a frame.
-
-    One stream reaches every member, so a wall of panels renders in the time one of
-    them takes. The members keep their identity, so each can still be brought up and
-    updated on its own.
-
-    Built directly over panels agreeing on bit depth, dimensions, rate and tuning.
-    Those are copied once, so a member that later re-rates itself moves only itself.
-    A screen belongs to one group at a time, which is what keeps ownership of the
-    panel state a group holds single.
-
-    subset() names fewer of the members over the same display, for a frame that
-    reaches only some of them. A subset owns nothing and costs no display.
-
-    One member is a group, so a wall written for a hub still runs where a single panel
-    answered. There is nothing to hold a lone member against, so it does not align.
-
-    leader names the one member whose tearing-effect signal a frame waits on, which
-    needs every member reading TE from the line they share. That panel comes out
-    clean and the rest tear, panels on a hub scanning independently with no edge safe
-    for all of them. None takes the first member that can, saying so if none can;
-    False declines the wait, so a frame goes out at once.
-
-    rotation and mirror are the group's own and its members' are not used, one stream
-    being one placement. That is the deliberate exception to a group taking its size,
-    bit depth, backlight and reserve from its first member: those have to agree
-    anyway, where placement is a choice. A member updated on its own still places by
-    its own, and the group says so where the two differ.
-
-    reveal_together is asked of every member. One group write covers them all, so it
-    only matters where a subset covers part of the line-up.
-    """
+    """Several of a port's screens driven as one, sharing a frame."""
 
     # The first probe after bringup reads long and settles within a second, so each
     # panel's first reading is discarded, as ScreenPair does. 300ms is about 13
@@ -589,19 +558,7 @@ class ScreenGroup(ScreenBase):
     def update(self, image, *, rotation=None, mirror=None, pixel_double=False,
                offset=None, tile=False, bg_color=None,
                v_sync=None, to=None):
-        """Stream a frame to every member, then advance the hold and the trim.
-
-        The keywords are ScreenBase.update()'s, placing every member at the group's
-        own rotation and mirror unless the frame names them. Every member the
-        caller named is written, whatever its phase: update() is a promise that
-        the group has presented by the time it returns, and a member held back to
-        spare it a tear breaks that promise where a tear only spoils one frame.
-        A member out of phase therefore tears until the hold walks it back, which
-        takes a few frames. Both ticks run here rather than on a timer, the windows
-        between written frames being the only ones a register write may sit in;
-        a subset's frames tick its parent, since a member not being written
-        still scans and still drifts.
-        """
+        """Stream a frame to every member, or to those named in to."""
         owner = self.__subset_of or self
         if owner.__holding:
             owner.__walk_in(self.screens if to is None else to)
@@ -1091,29 +1048,13 @@ class ScreenGroup(ScreenBase):
         logging.info(f"screens: this group is not holding its panels in phase. {why}")
 
     def is_aligned(self):
-        """Whether the members are being held together, so a frame lands untorn on all of them.
-
-        The state, not the request: acquisition brings the scans together at one
-        instant and only the hold keeps them there, so this reads False until the
-        hold is carrying them and False again if a long pause loses them. One rate
-        held without the phases is not enough, slowing a tear band rather than
-        removing one, so it reads False there too.
-        """
+        """Whether the members' refreshes are being held together, not whether that was asked."""
         if self.__subset_of is not None:
             return self.__subset_of.is_aligned()
         return self.__holding
 
     def subset(self, *screens, leader=None, reveal_together=False):
-        """A member set over this group's display, writing only what it names.
-
-        Cheap enough to make per frame: no display and no finaliser, just this
-        group's own with a narrower set of members. A subset of one is allowed, so
-        a loop over subsets does not break at the last.
-
-        leader defaults to the group's own nomination, resolved per write since
-        the nominated member need not be in the set. leader=False declines the wait
-        for this set alone, leaving the group's nomination where it is.
-        """
+        """A group over some of these members, sharing this one's display; cheap enough to make per frame."""
         if not screens:
             raise ValueError("a subset needs at least one screen")
 

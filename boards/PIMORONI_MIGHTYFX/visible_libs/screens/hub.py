@@ -13,12 +13,7 @@ from machine import Pin
 
 
 class ScreenHubPort:
-    """One panel's place on a hub: its own chip select, and the lines the hub shares.
-
-    Handed to a screen in place of the connector, and answers the same construction
-    calls. Anything that is not per-panel comes from the connector itself, so a
-    screen built here is registered, backlit and released exactly as any other.
-    """
+    """One panel's place on a hub, answering a screen's construction calls as the connector would."""
 
     def __init__(self, connector, cs, dc, te):
         self.__connector = connector
@@ -54,23 +49,7 @@ class ScreenHubPort:
 
 
 class ScreenHub:
-    """Several panels on one SP/CE port, each addressed by a chip select of its own.
-
-    ports[0] is the connector's own chip select and the rest follow extra_cs in the
-    order given, so a screen is built against a port here exactly as it would be
-    against the connector alone.
-
-    te names the line the tearing-effect signal comes back on, and defaults to the
-    shared DC line. That declares a diode on every breakout, which blocks each
-    panel's TEOFF from pulling the line down; without them the panels divide it and
-    no asserted level survives, so a build without diodes passes te=False. The
-    firmware cannot see a diode, so the declaration is the caller's.
-
-    Every panel the hub reaches is reset and cleared as the hub is built, whether a
-    screen is created for it afterwards or not. A panel holds its last frame across
-    a soft reset, so one the program leaves out would otherwise light showing the
-    previous run.
-    """
+    """Several panels on one SP/CE port, each addressed by a chip select of its own."""
 
     # What the blind pass runs at. Nothing here reaches a shipped frame: every screen
     # writes its own depth, rate and window over these as it is built, and the panel
@@ -112,11 +91,7 @@ class ScreenHub:
 
     @property
     def ports(self):
-        """One port per chip select the hub reaches, in the order they were named.
-
-        Lettered as well as ordered: hub.a is ports[0] and each chip select takes
-        the next letter, matching the lettering on the hub itself.
-        """
+        """One port per chip select, in the order named; hub.a is ports[0] and so on."""
         return self.__ports
 
     def __getattr__(self, name):

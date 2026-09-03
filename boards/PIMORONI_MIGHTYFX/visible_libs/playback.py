@@ -26,14 +26,7 @@ def __sized(count):
 
 
 def out_of_memory(path, error):
-    """A MemoryError from decoding, with the sizes a caller can act on.
-
-    MicroPython's bare text gives the bytes and nothing else, not even which file. Says
-    what was wanted and what was free, and why an animation wants so much, but not why
-    the memory had gone: only the caller knows what else it is holding. An error that
-    already explains itself, a GIF over picovector's own limit being the one, is handed
-    back untouched.
-    """
+    """A MemoryError from decoding, restated with the sizes a caller can act on."""
     if "allocation failed" not in str(error):
         return error
     import gc
@@ -57,26 +50,7 @@ def out_of_memory(path, error):
 
 
 class ImagePlayer:
-    """The clock and the traversal, over a sequence a subclass supplies.
-
-    Reports which frame to draw and never draws it. The frame is a pure function of
-    elapsed time over a fixed order, which is what makes pause, positioning and
-    reverse() all origin shifts.
-
-    A frame is one image of the source and a step is one place in the traversal. Under
-    ping-pong the traversal plays out and back, so it visits most frames twice and turns
-    at each end, where hold adds a dwell on top of the frame's own delay.
-
-    first_as_last plays the first frame again as the traversal's last, for an animation
-    drawn to loop, so the whole loop is travelled in each direction. That frame counts as
-    one the source supplied, which is what makes frames, the order and positioning all
-    take it. A forward loop has no last frame, so it refuses there.
-
-    fps=None takes the source's own delays, a number names a rate and ignores them,
-    and fps=False removes the clock so advance() drives instead. Without a clock the
-    figures over the cycle all read None, and anything that would consult one raises,
-    naming the setting it needs.
-    """
+    """The clock and the traversal over a sequence a subclass supplies; reports the frame to draw."""
 
     def __init__(self, frames, timings, fps=None, loop=True, ping_pong=False, first_as_last=False,
                  hold=0, paused=False):
@@ -303,11 +277,7 @@ class ImagePlayer:
 
     @property
     def frame(self):
-        """The frame to play, readable in every state.
-
-        A frame number, not a place in the traversal, so a ping-pong reports the same
-        number on the way out and on the way back, and is_reversed() says which leg.
-        """
+        """The frame number to play; a ping-pong reports the same number out and back."""
         return self.__order[self.__current_step()]
 
     @property
@@ -318,20 +288,11 @@ class ImagePlayer:
         return self.__image_for(self.frame % self.__source_frames)
 
     def image_at(self, frame):
-        """The image for any frame number, in the same numbering to_frame() takes.
-
-        For a caller drawing a frame the player is not on, such as one player feeding two
-        screens a fixed distance apart.
-        """
+        """The image for any frame number, in the numbering to_frame() takes."""
         return self.__image_for(self.__frame_number(frame) % self.__source_frames)
 
     def has_advanced(self):
-        """Whether the frame has moved since this last reported, the first call firing.
-
-        Two players can share one condition: the position comes from the clock and not
-        from a count of calls, so a call skipped by short-circuiting costs at most one
-        redundant redraw.
-        """
+        """Whether the frame has moved since this last reported, the first call firing."""
         self.__needs_clock("has_advanced()")
 
         step = self.__current_step()
@@ -354,13 +315,7 @@ class ImagePlayer:
         self.__signal(self.__step)
 
     def reverse(self):
-        """Turn around from where it stands.
-
-        Under ping-pong this mirrors the step, both directions already sitting in the
-        order, so at a turn it drops the balance of that dwell and carries on. On a
-        plain order the order itself flips. The frame on screen keeps its own delay
-        either way, so motion resumes at the usual rate.
-        """
+        """Turn around from where it stands."""
         step = self.__current_step()
         if self.__ping_pong:
             step = (2 * self.__frames - 2 - step) % len(self.__order)
@@ -372,22 +327,13 @@ class ImagePlayer:
         self.__goto(step)
 
     def is_reversed(self):
-        """Whether the frame number is decreasing.
-
-        On a plain order, whether reverse() has flipped it. Under ping-pong, whether
-        the walk is on the return leg, the far turn counting as outward until the walk
-        crosses it.
-        """
+        """Whether the frame number is decreasing: reverse() flipped it, or a ping-pong is on its way back."""
         if self.__ping_pong:
             return self.__current_step() >= self.__frames
         return self.__order[0] > self.__order[-1]
 
     def to_frame(self, frame):
-        """Position on a frame by number, negatives counting from the end.
-
-        A ping-pong order shows a frame twice, and this lands on the first of them, so
-        to_frame(player.frame) is not always where it stood.
-        """
+        """Position on a frame by number, negatives counting from the end."""
         self.__goto(self.__order.index(self.__frame_number(frame)))
 
     def to_first(self):
@@ -412,11 +358,7 @@ class ImagePlayer:
             self.__frozen_ms = None
 
     def is_playing(self):
-        """Whether the frame is advancing, so False when paused and when done.
-
-        Narrower than WavPlayer.is_playing(), which reports being engaged and stays
-        True through a pause.
-        """
+        """Whether the frame is advancing, so False when paused and when done."""
         self.__needs_clock("is_playing()")
         if self.__frozen_ms is not None:
             return False
@@ -438,10 +380,7 @@ class ImagePlayer:
 
     @property
     def target_ms(self):
-        """The mean interval a frame is meant to show for, dwells excluded.
-
-        A mean because a GIF's frames may each declare their own delay.
-        """
+        """The mean interval a frame is meant to show for, dwells excluded."""
         return self.__target_ms
 
     @property
@@ -453,11 +392,7 @@ class ImagePlayer:
 
     @property
     def measured_ms(self):
-        """The last interval between frames actually reaching the caller.
-
-        Read it where has_advanced() returns True, which is when it changes, or a
-        polling caller sees only whichever interval was most recent.
-        """
+        """The last interval between frames reaching the caller; it changes where has_advanced() is True."""
         return self.__measured_ms
 
     @property
@@ -467,14 +402,7 @@ class ImagePlayer:
 
 
 class GIFPlayer(ImagePlayer):
-    """An animated GIF, played at the delays the file declares or at a named rate.
-
-    The whole GIF decodes once at construction, so a frame costs nothing to reach.
-    Frame delays are often whatever the exporting tool wrote, and a 2.8 inch pair
-    presents a frame in about 78ms, so a file asking for more than that gets its
-    speed and not its smoothness: measured_fps against target_fps says by how
-    much.
-    """
+    """An animated GIF, decoded once at construction and played at its own delays or a named rate."""
 
     def __init__(self, path, fps=None, loop=True, ping_pong=False, first_as_last=False, hold=0,
                  paused=False):
@@ -497,11 +425,7 @@ class GIFPlayer(ImagePlayer):
 
     @property
     def width(self):
-        """One frame's width in pixels, every frame being a cell of one grid.
-
-        A GIF's frames share a size by design, which is what lets the player answer:
-        SequencePlayer's images are free to differ, so it does not.
-        """
+        """One frame's width in pixels, every frame of a GIF sharing a size."""
         return self.__sheet.source.width // self.__sheet.cols
 
     @property
@@ -511,11 +435,7 @@ class GIFPlayer(ImagePlayer):
 
     @property
     def palette(self):
-        """The colour table every frame shares, writable, or None for a truecolour GIF.
-
-        The frames are cells carved from one image, so rewriting an entry recolours
-        the whole animation at once.
-        """
+        """The colour table every frame shares, writable, or None for a truecolour GIF."""
         return self.__sheet.source.palette
 
     @property
@@ -525,22 +445,7 @@ class GIFPlayer(ImagePlayer):
 
 
 class SequencePlayer(ImagePlayer):
-    """An animation held as one image file a frame, the sibling of GIFPlayer.
-
-    Frames are PNG, JPEG or single-frame GIF, ordered by the numbers in their names so an
-    export numbering past nine without padding still plays in order. An animated GIF is
-    GIFPlayer's job, picovector compositing all of its frames into one stacked image.
-    fps=None reads the delay each name declares in the form an ezgif export writes, a
-    caller with delays from anywhere else passes timings, and fps=n names one rate for
-    every frame.
-
-    Every frame decodes into the heap at construction, which blocks for seconds and says
-    so as it goes. Measured on a MightyFX: 8 truecolour frames of 320x320 cost 410KB each
-    and 2.2 seconds to load, where 160 half-size palettised frames cost 20KB each and 6.1
-    seconds. Palettised sources are worth roughly twenty times the animation for the same
-    heap, so a long sequence wants exporting half size and indexed, drawn back with
-    pixel_double.
-    """
+    """An animation held as one image file a frame, ordered by the numbers in their names."""
 
     def __init__(self, folder, fps=None, timings=None, loop=True, ping_pong=False,
                  first_as_last=False, hold=0, paused=False):
@@ -650,8 +555,5 @@ class SequencePlayer(ImagePlayer):
         return self.__paths[self.frame % len(self.__paths)]
 
     def path_at(self, frame):
-        """The file behind any frame number, as image_at() is to image.
-
-        For a gallery listing what it holds, or a menu naming a frame to jump to.
-        """
+        """The file behind any frame number, as image_at() is to image."""
         return self.__paths[self.__frame_number(frame) % len(self.__paths)]
