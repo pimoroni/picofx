@@ -54,7 +54,10 @@ struct FrameStats {
     uint32_t core1_rows;         // Rows of this frame core1 converted, 0 when the
                                  // split was off or every range was too short
     int32_t stall_row;           // The row the wire first waited for, -1 when it
-                                 // never starved; the final drain does not count
+                                 // never starved; the final drain does not count.
+                                 // Always a band boundary, so a tear at a fixed row
+                                 // with -1 here is the panel's scan, which does not
+                                 // follow MADCTL, and not the conversion
 };
 
 class SPIDisplay;

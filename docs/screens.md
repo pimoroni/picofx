@@ -173,7 +173,7 @@ tile=((True, True), False)  # first tiles both axes, second neither
 tile=(Tile.MIRROR, False)   # both screens tile x, every other repeat reflected
 ```
 
-Both screens must be on different ports, since one port is one stream, and must agree on `reserve`, since a reservation is shared out across the pair. `reveal_together=True` on the pair asks it of both screens, so the two backlights come up on one refresh.
+Both screens must be on different ports, since one port is one stream, and must agree on `reserve`, since a reservation is shared out across the pair. They need not be the same size: a pair drives a 1.54" and a 2.8" together, where a group is built over matching panels only. `reveal_together=True` on the pair asks it of both screens, so the two backlights come up on one refresh.
 
 ### Alignment
 

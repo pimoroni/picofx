@@ -3,7 +3,9 @@
 # SPDX-License-Identifier: MIT
 #
 # The screens an SP/CE port can drive. A screen type is a Screen subclass carrying
-# its panel's settings, PROFILES being the measured tuning per wire.
+# its panel's settings, PROFILES being the measured tuning per wire. MicroPython
+# only: the package leans on the spidisplay module and on double-underscore names
+# being reachable, which CPython mangles.
 
 from .base import ScreenBase, Tile
 from .group import ScreenGroup
@@ -52,5 +54,7 @@ class Screen280(Screen):
     }
 
 
-# Every screen type by the size it declares, so a new size is added here alone
+# Every screen type by the size it declares. A new type is registered here, and a
+# wire it has no PROFILES row for runs on the class constants, whose 60fps most
+# wires cannot hold, so its rows are measured before it ships
 SCREEN_TYPES = {screen.SIZE: screen for screen in (Screen154, Screen280)}

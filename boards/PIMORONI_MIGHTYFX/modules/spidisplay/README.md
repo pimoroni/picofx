@@ -57,8 +57,10 @@ converted band or timestamps the wire starving. `stall_us` in `FrameStats` is th
 genuinely starving for conversion: near zero means the frame was wire-bound, growth means the
 conversion could not keep the ring fed. `stall_row` is where that first happened, the row the wire
 was waiting for, and -1 for a frame that never starved; the drain at the end of every frame counts
-toward `stall_us` but never sets it. A tear at a fixed row with `stall_row` at -1 is not a
-starvation, and the scan direction note under compatibility below is the likelier cause.
+toward `stall_us` but never sets it. It is always a band boundary, so a starving band and a panel
+tearing at a fixed row look alike until it is read: a tear with `stall_row` at -1 is not a
+starvation, and the panel's scan direction not following MADCTL, noted under compatibility below,
+is the likelier cause.
 
 ### The SRAM claim
 

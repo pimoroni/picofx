@@ -20,7 +20,7 @@ class Reserve:
 class Screen(ScreenBase):
     """One panel on an SP/CE port."""
 
-    CONTROLLER = st7789      # bringup, framerate and bitdepth code tables, RAMWR
+    CONTROLLER = st7789      # bringup, the rate and depth code tables, the porch and the rows a refresh scans
     PROBE_MS = 60            # a present panel always answers inside this
     PATIENT_PROBE_MS = 250   # the second look, paid only by a line with nothing on it
     WIDTH = HEIGHT = None

@@ -11,7 +11,8 @@ import time
 from .base import ScreenBase, __tightest_margin
 
 # time.ticks_us() wraps at 2**30 and the C module's stamps at 2**32; their low bits
-# agree, so every stamp is reduced to 30 bits and the two share one arithmetic
+# agree, so a stamp kept or compared across the two is reduced to 30 bits. A
+# difference of two C stamps is taken at 32 bits first, keeping its full span.
 TICKS_MASK = 0x3FFFFFFF
 
 
@@ -31,11 +32,16 @@ class ScreenGroup(ScreenBase):
     # keeps the rate models current as the panels warm, by rotating which member a
     # frame waits on or by probing one between frames.
     #
-    # Three members have names. The leader is the one a frame waits on, nominated at
-    # construction and moved by a rotating trim. The reference is the slowest, whose
-    # rate the others are trimmed to and whose booking errors are held against. The
-    # synced member is whichever the last frame's wait ended on: the leader, unless a
-    # narrowed write left it out.
+    # Four words name members. The nominated member is the leader= construction chose,
+    # or the first that can be waited on. The leader is the one a frame waits on now,
+    # the nominated member until a rotating trim moves it. The reference is the slowest,
+    # whose rate the others are trimmed to and whose booking errors are held against.
+    # The synced member is whichever the last frame's wait ended on: the leader, unless
+    # a narrowed write left it out.
+    #
+    # trim also carries three senses: the trim= mode above, the whole porch lines
+    # calibration adds to bring a member's rate onto the reference's, and the one-line
+    # corrections the hold keeps making after.
 
     # The first probe after bringup reads long, so each panel's first reading is
     # discarded. 300ms is about 13 periods; at 100 one miscounted edge moved a trim
@@ -661,7 +667,11 @@ class ScreenGroup(ScreenBase):
                     room = back - applied - walk_floor
                     long_way = (target - error) / (walk_lines * line)
                     if room < 1 or error / (room * line) > long_way:
+                        # Phases are modular, so the same booking is also a negative
+                        # error one period away, and the walk closes that one instead
                         error -= target
+            # us per period: the error to close over this frame's periods, less the
+            # rate error the member already carries, then in whole porch lines
             lines = int(round(((drift - error) / periods - residual) / line))
             lines = limit if lines > limit else (-limit if lines < -limit else lines)
             # Clamped to the floor; skipping the write would stall a walk that has to advance

@@ -184,8 +184,10 @@ inline uint8_t *fill_bg_pairs(uint8_t *dst_ptr, int pixels, const uint8_t *bg_pa
 
 // Destination packers. RGB444 packs two pixels into three bytes; RGB565 packs one
 // into two big-endian bytes. format is the runtime tag, and the panel bit depth.
-// A packer owns its group's size, and the three functions below it are the only
-// place a format's arithmetic is written, so a new packer is added here alone.
+// The three functions below are where a format is selected and its row priced. The
+// kernels still carry each group's byte count as literals, and a tag neither packer
+// owns is treated as RGB565, so a third packer touches convert_band and
+// convert_wrapped_row as well as this block.
 struct RGB444 {
     static constexpr int format = 444;
     static constexpr int bitdepth = 12;
@@ -370,7 +372,8 @@ void convert_wrapped_row(const Descriptor &desc, uint8_t *out, int dst_y) {
     } else {
         // A seam can fall mid-pair, so a run's odd tail is held and the next
         // run's first pixel completes it; dst_w is even, so a row never ends
-        // holding.
+        // holding. One held pixel is a group of two, so this assumes no packer
+        // groups more.
         uint8_t r0, g0, b0, r1, g1, b1;
         bool holding = false;
         int x = 0;
