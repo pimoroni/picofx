@@ -3,8 +3,14 @@
 // SPDX-License-Identifier: MIT
 //
 // The pixel formats a conversion reads and writes. A source trait says how to load a
-// pixel, a destination packer how to pack one. Adding a format is adding a struct
+// pixel and a destination packer how to pack one. Adding a format is adding a struct
 // here, then teaching select_convert and the two kernels in scanline.hpp about it.
+//
+// Each source trait carries a Loader built outside the pixel loop. Only an indexed
+// source is composited over the background, its palette being the one thing that can
+// be composited ahead of that loop, so an RGBA source's alpha is ignored and its
+// colour taken as premultiplied. Blending every pixel was measured to roughly double
+// a panel-sized frame's conversion, so it no longer keeps up with the wire.
 
 #pragma once
 
@@ -15,14 +21,7 @@
 
 namespace spidisplay {
 
-// Source format traits, each carrying a Loader built once per band. RGBA8888's is
-// empty and compiles away. Indexed8's reads the colour table, whose words sit in
-// memory as RGBA bytes like a direct pixel.
-//
-// Only an indexed source composites, its table being the one thing compositable
-// ahead of the pixel loop. So an RGBA source's alpha is ignored and its colour
-// taken as premultiplied. Blending per pixel was measured to roughly double a
-// panel-sized frame's conversion, taking it off its wire bound.
+// A direct source, its Loader empty and compiling away
 struct RGBA8888 {
     static constexpr int bytes = 4;
 
@@ -37,6 +36,7 @@ struct RGBA8888 {
     };
 };
 
+// An indexed source, its Loader reading a colour table of RGBA words
 struct Indexed8 {
     static constexpr int bytes = 1;
 
@@ -54,16 +54,10 @@ struct Indexed8 {
     };
 };
 
-// One channel of a premultiplied source over the background, the panel holding no
-// destination pixels to read back.
-//
-// picovector stores colour already multiplied by its alpha, so the source is added
-// and not scaled. Scaling again would darken a translucent entry by up to a quarter
-// of the range. The arithmetic matches its blend_over_premul() byte for byte,
-// rounding bias included.
-//
-// The clamp never engages on a valid entry. It is here because palette is
-// caller-supplied, where an over-bright entry would carry into the next channel.
+// Composite one channel of a premultiplied source over the background, there being no
+// destination pixel to read back from a panel. picovector stores colour already
+// multiplied by its alpha, so the source is added and not scaled, matching its
+// blend_over_premul() byte for byte. The clamp only engages on an over-bright entry.
 inline uint8_t composite_over(int src, int bg, int alpha) {
     if (alpha == 0) {
         return (uint8_t)bg;
@@ -75,16 +69,19 @@ inline uint8_t composite_over(int src, int bg, int alpha) {
     return (uint8_t)(value > 255 ? 255 : value);
 }
 
-// An index byte reaches all 256 entries whatever the source's table length, so
-// prepare_palette zeroes the rest and an index past the source reads transparent.
-static constexpr size_t PALETTE_BYTES = 256 * 4;
+static constexpr size_t PALETTE_BYTES = 256 * 4;    // Bytes in a full colour table
 
+// Prepare a source's palette once a frame, compositing it over the background
 inline void prepare_palette(uint8_t *table, const uint8_t *palette, size_t palette_len,
                             uint8_t bg_r, uint8_t bg_g, uint8_t bg_b) {
+    // A longer table is truncated, since no source pixel can reach past 256 entries
     if (palette_len > PALETTE_BYTES) {
         palette_len = PALETTE_BYTES;
     }
     memcpy(table, palette, palette_len);
+
+    // Zero the entries the source does not fill, so a pixel naming one past its
+    // palette reads as transparent instead of as stale colour
     memset(table + palette_len, 0, PALETTE_BYTES - palette_len);
     for (size_t i = 0; i < PALETTE_BYTES; i += 4) {
         const int alpha = table[i + 3];
@@ -94,36 +91,40 @@ inline void prepare_palette(uint8_t *table, const uint8_t *palette, size_t palet
     }
 }
 
-// A wide pair-format background fill, four packed pixel pairs per 12-byte piece.
-// A separate function deliberately: held in convert_band's body, block or loops,
-// it cost the covered path 1% in register pressure. The count is even, as every
-// fill's is.
+// Pixels in the block below, and so the fewest a caller should hand fill_bg_pairs
+constexpr int BG_BLOCK_PIXELS = 8;
+
+// Fill a run of background pixels in a pair format. A pair packs to three bytes, so a
+// 12-byte block is the shortest span that is both whole pairs and whole words, copied
+// until fewer than BG_BLOCK_PIXELS remain. Kept out of line because inlining it into
+// convert_band cost the covered path 1% in register pressure. pixels has to be even.
 __attribute__((noinline))
 inline uint8_t *fill_bg_pairs(uint8_t *dst_ptr, int pixels, const uint8_t *bg_packed) {
-    uint8_t block[12];
-    for (int i = 0; i < 12; ++i) {
-        block[i] = bg_packed[i % 3];
+    constexpr int PAIR_BYTES = 3;
+    constexpr int BLOCK_BYTES = 12;
+
+    uint8_t block[BLOCK_BYTES];
+    for (int i = 0; i < BLOCK_BYTES; ++i) {
+        block[i] = bg_packed[i % PAIR_BYTES];
     }
     int i = 0;
-    for (; i + 7 < pixels; i += 8) {
-        memcpy(dst_ptr, block, 12);
-        dst_ptr += 12;
+    for (; i + BG_BLOCK_PIXELS - 1 < pixels; i += BG_BLOCK_PIXELS) {
+        memcpy(dst_ptr, block, BLOCK_BYTES);
+        dst_ptr += BLOCK_BYTES;
     }
     for (; i < pixels; i += 2) {
         dst_ptr[0] = bg_packed[0];
         dst_ptr[1] = bg_packed[1];
         dst_ptr[2] = bg_packed[2];
-        dst_ptr += 3;
+        dst_ptr += PAIR_BYTES;
     }
     return dst_ptr;
 }
 
-// Destination packers. RGB444 packs two pixels into three bytes; RGB565 packs one
-// into two big-endian bytes. format is the runtime tag, and the panel bit depth.
-// The three functions below are where a format is selected and its row priced. The
-// kernels still carry each group's byte count as literals, and a tag neither packer
-// owns is treated as RGB565, so a third packer touches convert_band and
-// convert_wrapped_row as well as this block.
+// Destination packers. format tags a packer and bitdepth the panel depth it serves,
+// and a tag neither packer owns is treated as RGB565.
+
+// Two pixels packed into three bytes
 struct RGB444 {
     static constexpr int format = 444;
     static constexpr int bitdepth = 12;
@@ -134,12 +135,13 @@ struct RGB444 {
     static inline void pack2(uint8_t *out,
                              uint8_t r0, uint8_t g0, uint8_t b0,
                              uint8_t r1, uint8_t g1, uint8_t b1) {
-        out[0] = (r0 & 0xf0) | (g0 >> 4);   // R1 | G1
-        out[1] = (b0 & 0xf0) | (r1 >> 4);   // B1 | R2
-        out[2] = (g1 & 0xf0) | (b1 >> 4);   // G2 | B2
+        out[0] = (r0 & 0xf0) | (g0 >> 4);   // R0 | G0
+        out[1] = (b0 & 0xf0) | (r1 >> 4);   // B0 | R1
+        out[2] = (g1 & 0xf0) | (b1 >> 4);   // G1 | B1
     }
 };
 
+// One pixel packed into two big-endian bytes
 struct RGB565 {
     static constexpr int format = 565;
     static constexpr int bitdepth = 16;
@@ -170,7 +172,7 @@ inline int pixels_per_group(int format) {
     return format == RGB444::format ? RGB444::group_pixels : RGB565::group_pixels;
 }
 
-// One packed destination row's bytes at this width
+// One packed destination row's bytes, a part group at the end of a width being lost
 inline int packed_row_bytes(int format, int dst_w) {
     return format == RGB444::format
         ? dst_w / RGB444::group_pixels * RGB444::group_bytes

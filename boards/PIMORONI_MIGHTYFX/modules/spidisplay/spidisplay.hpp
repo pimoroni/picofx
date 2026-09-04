@@ -54,7 +54,8 @@ struct FrameStats {
                                  // to the recovering kick, plus the final drain
     uint32_t write_start_us;     // time_us_32() at the RAMWR that opened the frame
     uint32_t core1_rows;         // Rows of this frame core1 converted, 0 when the
-                                 // split was off or every range was too short
+                                 // split was off, the source was not SRAM, or no
+                                 // range held two rows
     int32_t stall_row;           // The row the wire first waited for, -1 when it
                                  // never starved; the final drain does not count.
                                  // Always a band boundary, so a tear at a fixed row

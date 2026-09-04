@@ -323,7 +323,7 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
     int src_stride = mp_obj_get_int(mp_load_attr(args[ARG_image].u_obj, MP_QSTR_stride));
 
     // An empty or negative extent converts to a background-filled frame, since the
-    // covered box comes out empty and no source pixel is read. Report it instead.
+    // covered region comes out empty and no source pixel is read. Report it instead.
     if (src_w < 1 || src_h < 1) {
         mp_raise_ValueError(MP_ERROR_TEXT("image width and height must be positive"));
     }
