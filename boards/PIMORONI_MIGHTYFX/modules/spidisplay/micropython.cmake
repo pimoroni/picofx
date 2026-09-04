@@ -3,6 +3,7 @@ add_library(usermod_${MOD_NAME} INTERFACE)
 
 target_sources(usermod_${MOD_NAME} INTERFACE
     ${CMAKE_CURRENT_LIST_DIR}/spidisplay.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/spidisplay_bindings.cpp
     ${CMAKE_CURRENT_LIST_DIR}/spidisplay_bindings.c
 )
 

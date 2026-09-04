@@ -15,8 +15,9 @@ documented for customers in `docs/screens.md`.
 
 | file | holds |
 | --- | --- |
-| `spidisplay.hpp`, `spidisplay.cpp` | the bus, the display, the frame state machine and the MicroPython bindings for both types |
-| `spidisplay_bindings.c` | the module table, `buffer()`, `buffer_size()`, `release_buffers()` and `dual_convert()` |
+| `spidisplay.hpp`, `spidisplay.cpp` | the bus, the display and the frame state machine, knowing nothing of MicroPython bar the C-linkage calls reaching this file's own state |
+| `spidisplay_bindings.cpp` | the two types wrapping those classes, and `update_all()` and `te_phase()`, which take several displays at once |
+| `spidisplay_bindings.c`, `spidisplay_bindings.h` | the module table, `buffer()`, `buffer_size()`, `release_buffers()` and `dual_convert()`, and the declarations the three binding files share |
 | `scanline.hpp` | the conversion kernels: RGBA8888 or palettised source to RGB444 or RGB565 rows, with rotation, mirror, pixel doubling and tiling |
 | `column_cache.hpp` | a cache of source columns for rotated frames, so a rotation-90 row does not read one pixel per PSRAM line |
 | `interleaver.hpp` | `update_all()`, driving several displays on different buses through a frame at once |
@@ -73,6 +74,16 @@ member for the group's lifetime.
 
 `buffer()` claims canvases from the bottom of the same region. The views have no owner to
 finalise them, so `release_buffers()` belongs with releasing the screens that drew to them.
+
+The module functions over that region, none of which belongs to either type:
+
+| call | does |
+| --- | --- |
+| `buffer(nbytes)` | claims from the bottom and returns a writable `memoryview`, for a picovector image that converts at half the cost of one in PSRAM |
+| `buffer(nbytes, offset)` | places a view by hand at an offset from the region's base, bounded by the display workspaces but claimed from nothing, so it may overlap another view |
+| `buffer_size()` | the bytes a claim can still take, which shrinks with screens and canvases and recovers on release |
+| `release_buffers()` | drops every canvas claim at once. A view still held then points at space the next claim can take |
+| `dual_convert()` | whether a frame's rows are halved across both cores, on by default. `dual_convert(enable)` sets it, and turning it off leaves one core, for timing the two against each other |
 
 ## The tearing-effect wait
 

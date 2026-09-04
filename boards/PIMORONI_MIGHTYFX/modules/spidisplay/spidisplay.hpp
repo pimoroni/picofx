@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
+//
 // SPDX-License-Identifier: MIT
 //
 // A panel-agnostic SPI + DMA transport. One SPIDisplayBus per SPI port owns the

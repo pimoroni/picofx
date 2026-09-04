@@ -1,17 +1,22 @@
+// SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
+//
 // SPDX-License-Identifier: MIT
 //
-// Claim allocator over the free SRAM region between the GC heap symbols.
-// Header-only so the host test harness compiles the same code the firmware runs.
+// An allocator for claiming regions of free SRAM between the GC heap symbols.
 //
-// Claims come from both ends. Displays take their band and cache workspace from
-// the TOP, canvases from the BOTTOM, and the two grow toward each other, so the
-// space between them is always one contiguous span and neither end fragments the
-// other. A canvas keeps the low addresses because a re-run of a script then gets
-// the same ones back.
+// Claims can be taken from either end of the free SRAM, by claim_high() and
+// claim_low(). In spidisplay the Displays take their bands and cache workspaces
+// from the high end and their frame canvases from the low end, so the two sets
+// grow towards each other. The free SRAM between high and low is always one
+// contiguous span, and neither end fragments the other.
 //
-// The claim table is fixed because the allocator itself must not allocate; a full
-// table fails a claim cleanly and the caller raises. Sixteen covers the displays
-// and canvases a board can drive at once.
+// Note, the two ends are released differently. A high claim has an owner whose
+// destructor knows its base and releases that one claim, whereas a canvas is
+// handed out as a view that nothing finalises, so the low claims can only be
+// dropped together, when the screens that drew to them go.
+//
+// The allocator itself must not allocate, so the number of claims is capped at
+// MAX_CLAIMS, with attempts above that failing cleanly.
 
 #pragma once
 
@@ -22,35 +27,42 @@ namespace spidisplay {
 
 class SRAMAllocator {
 public:
-    static constexpr int MAX_CLAIMS = 16;
+    static constexpr int MAX_CLAIMS = 16;   // Sixteen seems to be enough to
+                                            // cover the displays and canvases
+                                            // an RP2350 board can drive at once.
 
+    // Take the region to hand out, which must be set before any claim is made.
     void init(uint8_t *region_start, uint8_t *region_end) {
         start = region_start;
         end = region_end;
     }
 
-    // 4-aligned block of at least `bytes`, placed first-fit from the top.
-    // nullptr when nothing fits or the table is full.
-    uint8_t *claim(size_t bytes) {
+    // Claim at least `bytes` from the highest free addresses. Returns nullptr if it
+    // will not fit or if MAX_CLAIMS is reached.
+    uint8_t *claim_high(size_t bytes) {
         if (start == nullptr || bytes == 0) {
-            return nullptr;
-        }
-        Claim *slot = free_slot();
-        if (slot == nullptr) {
-            return nullptr;
+            return nullptr;    // No region to claim from, or nothing asked for
         }
 
+        Claim *slot = free_slot();
+        if (slot == nullptr) {
+            return nullptr;    // The claim table is full
+        }
+
+        // Round the size up to a whole number of 4-byte words
         bytes = (bytes + 3) & ~(size_t)3;
         if (bytes > (size_t)(end - start)) {
-            return nullptr;
+            return nullptr;    // Larger than the whole region, so it can never fit
         }
+
+        // Start hard against the high end, then walk down past any live claim the
+        // block overlaps. There are at most MAX_CLAIMS of them, so rescanning
+        // after each move costs almost nothing.
         uint8_t *base = align_down(end - bytes);
-        // Step down past every live claim the candidate overlaps. Claims are
-        // few (MAX_CLAIMS) so the rescan-on-move loop is trivially cheap.
         bool moved = true;
         while (moved) {
             if (base < start) {
-                return nullptr;
+                return nullptr;    // Walked outside the region, no room left
             }
             moved = false;
             for (const Claim &other : claims) {
@@ -63,34 +75,37 @@ public:
             }
         }
 
+        // Record the claim, tagged with the end it came from
         slot->base = base;
         slot->bytes = bytes;
         slot->low = false;
         return base;
     }
 
-    // The same from the bottom, for canvases. Placed first-fit upward, so the
-    // lowest free address wins and a script's canvases land where they did last run.
+    // The same from the lowest free addresses, which is what marks a canvas as a
+    // claim that only release_low() gives back.
     uint8_t *claim_low(size_t bytes) {
         if (start == nullptr || bytes == 0) {
-            return nullptr;
-        }
-        Claim *slot = free_slot();
-        if (slot == nullptr) {
-            return nullptr;
+            return nullptr;    // No region to claim from, or nothing asked for
         }
 
+        Claim *slot = free_slot();
+        if (slot == nullptr) {
+            return nullptr;    // The claim table is full
+        }
+
+        // Round the size up to a whole number of 4-byte words
         bytes = (bytes + 3) & ~(size_t)3;
         if (bytes > (size_t)(end - start)) {
-            return nullptr;
+            return nullptr;    // Larger than the whole region, so it can never fit
         }
+
+        // Start hard against the low end, then walk up, mirroring claim_high().
         uint8_t *base = align_up(start);
-        // Step up past every live claim the candidate overlaps, the mirror of the
-        // downward walk above.
         bool moved = true;
         while (moved) {
             if (base + bytes > end) {
-                return nullptr;
+                return nullptr;    // Walked outside the region, no room left
             }
             moved = false;
             for (const Claim &other : claims) {
@@ -103,14 +118,15 @@ public:
             }
         }
 
+        // Record the claim, tagged with the end it came from
         slot->base = base;
         slot->bytes = bytes;
         slot->low = true;
         return base;
     }
 
-    // Drop every low claim at once. Canvases have no owner to finalise them, so
-    // they come back when the screens that drew to them do.
+    // Drop every low claim at once, so canvases come back when the screens that
+    // drew to them do.
     void release_low() {
         for (Claim &candidate : claims) {
             if (candidate.base != nullptr && candidate.low) {
@@ -121,7 +137,8 @@ public:
         }
     }
 
-    // Unknown or null bases are ignored, so a double release is a no-op.
+    // Drop the one claim that starts at `base`. A nullptr or unrecognised base
+    // does nothing, so releasing the same claim twice is safe.
     void release(const uint8_t *base) {
         if (base == nullptr) {
             return;
@@ -135,8 +152,7 @@ public:
         }
     }
 
-    // The contiguous span between the two sets of claims: what a further claim from
-    // either end can have.
+    // How much free SRAM is left between the high and low claims.
     size_t available() const {
         if (start == nullptr) {
             return 0;
@@ -158,9 +174,9 @@ public:
         return ceiling > floor ? (size_t)(ceiling - floor) : 0;
     }
 
-    // Bytes from the region base to the lowest workspace claim, which is what an
-    // explicitly placed view is measured against: naming an offset says where to
-    // start, so it reaches over the low claims deliberately.
+    // How much room a buffer placed by hand has, counted from the start of the region
+    // up to the lowest high claim. Naming an offset says where to start, so this span
+    // deliberately reaches over any low claims in the way.
     size_t headroom() const {
         if (start == nullptr) {
             return 0;
@@ -175,8 +191,7 @@ public:
         return (size_t)(ceiling - start);
     }
 
-    // Distance from the region base to the first byte a claim_low() would take, so
-    // a caller can turn a claimed base into an offset.
+    // Where a claim_low() base sits, as an offset from the start of the region.
     size_t low_offset(const uint8_t *base) const {
         return (size_t)(base - start);
     }
@@ -185,7 +200,8 @@ private:
     struct Claim {
         uint8_t *base = nullptr;
         size_t bytes = 0;
-        bool low = false;
+        bool low = false;       // Whether this is a claim from the low end,
+                                // so only release_low() drops it
     };
 
     Claim *free_slot() {
