@@ -9,7 +9,7 @@
 
 #include "column_cache.hpp"
 #include "interleaver.hpp"
-#include "scanline.hpp"
+#include "pixel_formats.hpp"
 #include "spidisplay.hpp"
 
 extern "C" {

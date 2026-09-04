@@ -16,7 +16,7 @@
 #include "hardware/spi.h"
 
 #include "column_cache.hpp"
-#include "scanline.hpp"
+#include "descriptor.hpp"
 
 namespace spidisplay {
 

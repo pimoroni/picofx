@@ -635,7 +635,8 @@ void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h, int src_strid
     bool indexed = palette != nullptr;
 
     Transform t = {rotation, mirror != 0};
-    desc = make_descriptor(src, src_w, src_h, dst_w, dst_h, fmt, t, dbl,
+    desc = make_descriptor(src, src_w, src_h, dst_w, dst_h,
+                           packed_row_bytes(fmt, dst_w), t, dbl,
                            centred_x, off_x, centred_y, off_y,
                            tile_x, tile_y, tile_mirror_x, tile_mirror_y, bg,
                            src_stride,
