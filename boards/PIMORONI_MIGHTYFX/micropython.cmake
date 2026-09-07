@@ -46,7 +46,7 @@ include(adcfft/micropython)
 
 # Display transform + DMA transport. After PV_DUAL_CORE above, which it reads to
 # decide whether frame conversion can use picovector's core1 worker.
-include(${CMAKE_CURRENT_LIST_DIR}/modules/spidisplay/micropython.cmake)
+find_package(SPIDISPLAY CONFIG REQUIRED)
 
 # C++ Magic Memory
 include(cppmem/micropython)

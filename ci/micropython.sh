@@ -11,6 +11,9 @@ PIMORONI_AYE_ARR_VERSION="014955c7882f819fa454f952fa5bff64b304b44f"
 
 PIMORONI_PICOVECTOR_VERSION="main"
 
+PIMORONI_SPIDISPLAY_FLAVOUR="pimoroni"
+PIMORONI_SPIDISPLAY_VERSION="bc4a1a37634b6ac2fdefb431106465f6c4eacfd6"
+
 PIMORONI_LSM6DS3_FLAVOUR="pimoroni"
 PIMORONI_LSM6DS3_VERSION="v0.0.3"
 
@@ -54,6 +57,17 @@ function ci_pimoroni_picovector_clone {
 function ci_board_uses_picovector {
     BOARD_CMAKE="$CI_PROJECT_ROOT/boards/$1/micropython.cmake"
     [ ! -f "$BOARD_CMAKE" ] || grep -qi picovector "$BOARD_CMAKE"
+}
+
+function ci_pimoroni_spidisplay_clone {
+    log_inform "Using Pimoroni SPIDisplay $PIMORONI_SPIDISPLAY_FLAVOUR/$PIMORONI_SPIDISPLAY_VERSION"
+    git clone https://github.com/$PIMORONI_SPIDISPLAY_FLAVOUR/spidisplay "$CI_BUILD_ROOT/spidisplay"
+    git -C "$CI_BUILD_ROOT/spidisplay" checkout $PIMORONI_SPIDISPLAY_VERSION
+}
+
+function ci_board_uses_spidisplay {
+    BOARD_CMAKE="$CI_PROJECT_ROOT/boards/$1/micropython.cmake"
+    [ ! -f "$BOARD_CMAKE" ] || grep -qi spidisplay "$BOARD_CMAKE"
 }
 
 function ci_pimoroni_qwstpad_clone {
@@ -127,6 +141,11 @@ function ci_prepare_all {
     else
         log_inform "Skipping PicoVector: $BOARD does not build with it"
     fi
+    if [ -z "$BOARD" ] || ci_board_uses_spidisplay "$BOARD"; then
+        ci_pimoroni_spidisplay_clone
+    else
+        log_inform "Skipping SPIDisplay: $BOARD does not build with it"
+    fi
     ci_pimoroni_aye_arr_clone
     ci_pimoroni_lsm6ds3_clone
     ci_pimoroni_qwstpad_clone
@@ -168,6 +187,7 @@ function ci_cmake_configure {
     -DPIMORONI_PICO_PATH="$CI_BUILD_ROOT/pimoroni-pico" \
     -DPICOVECTOR_MICROPYTHON_DIR="$CI_BUILD_ROOT/picovector-micropython" \
     -DPICOVECTOR_DIR="$CI_BUILD_ROOT/picovector" \
+    -DSPIDISPLAY_DIR="$CI_BUILD_ROOT/spidisplay" \
     -DCI_BUILD_ROOT="$CI_BUILD_ROOT" \
     -DPIMORONI_TOOLS_DIR="$TOOLS_DIR" \
     -DUSER_C_MODULES="$MICROPY_BOARD_DIR/micropython.cmake" \
