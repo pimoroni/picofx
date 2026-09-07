@@ -618,6 +618,12 @@ TePhase SPIDisplay::te_phase(SPIDisplay &first, SPIDisplay &second,
     return result;
 }
 
+// A transfer is whole SPI words, so an even packed row streams as 16-bit words and an
+// odd one as 8-bit. prepare() and wire_window_us() both derive from this, so they agree.
+static bool wide_words_for_row(size_t row_bytes) {
+    return (row_bytes % 2) == 0;
+}
+
 void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h, int src_stride,
                          const uint8_t *palette, size_t palette_len,
                          int rotation, int mirror, int pixel_double,
@@ -663,9 +669,8 @@ void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h, int src_strid
     // Every band is this size except a possibly-shorter final one
     full_band_bytes = (size_t)rows_per_band * desc.dst_row_bytes;
 
-    // Wider SPI words cut the PL022's idle between frames, 1.5 clocks whatever the
-    // width. A transfer is whole words, so an odd packed row falls back to 8-bit.
-    wide_words = (desc.dst_row_bytes % 2) == 0;
+    // Wider SPI words cut the PL022's idle between words, 1.5 clocks whatever the width
+    wide_words = wide_words_for_row((size_t)desc.dst_row_bytes);
     word_shift = wide_words ? 1 : 0;
     bus->use_word_bits(wide_words ? 16 : 8);
 
@@ -949,11 +954,13 @@ uint32_t SPIDisplay::wire_window_us() const {
     uint64_t bits = row_bytes * 8u * (uint64_t)dst_h;
     uint64_t us = (bits * 1000000u) / achieved_baudrate;
 
-    // Plus the per-band overhead, the same on both panel sizes. A 240x320 12-bit frame
-    // at 24MHz is 38,400us of pure bits and streams in 42,016us, so the ratio holds
-    // whatever the rate or the row width.
-    constexpr uint64_t BAND_OVERHEAD_PERMILLE = 1094;
-    return (uint32_t)((us * BAND_OVERHEAD_PERMILLE) / 1000u);
+    // Plus the PL022's idle, a fixed 1.5 SCK a word whatever its width, so a byte costs
+    // 8.75 clocks in 16-bit words and 9.5 in 8-bit. A 240x320 12-bit frame at 24MHz is
+    // 38,400us of pure bits, and the 16-bit ratio predicts 42,000 against 42,016 seen.
+    constexpr uint64_t IDLE_HALF_CLOCKS = 3;    // 1.5 SCK, in halves to divide exactly
+    const uint64_t half_clocks =
+        wide_words_for_row((size_t)row_bytes) ? 32u : 16u;   // The word's own, in halves
+    return (uint32_t)((us * (half_clocks + IDLE_HALF_CLOCKS)) / half_clocks);
 }
 
 void SPIDisplay::abort_frame() {
