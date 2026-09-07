@@ -66,13 +66,31 @@ struct FrameStats {
 class SPIDisplay;
 
 class SPIDisplayBus {
+    friend class SPIDisplay;
+
+    //--------------------------------------------------
+    // Variables
+    //--------------------------------------------------
+private:
+    spi_inst_t *spi;
+    uint sck_pin;                 // Held so the destructor can hand them back as GPIO
+    uint mosi_pin;
+    int dma_chan;
+    int dma_word_bits;            // Width the DMA channel is currently configured for
+    uint32_t requested_baudrate;  // What a display last asked for, for the compare
+    uint32_t achieved_baudrate;   // What the divider reached for that request
+
+    //--------------------------------------------------
+    // Constructors/Destructor
+    //--------------------------------------------------
 public:
     SPIDisplayBus(uint spi_index, uint sck, uint mosi, uint baudrate);
     ~SPIDisplayBus();
 
+    //--------------------------------------------------
+    // Methods
+    //--------------------------------------------------
 private:
-    friend class SPIDisplay;
-
     // Re-rate the bus, returning the rate the divider reached. Takes effect on the
     // next transfer, so never while a frame streams.
     uint32_t set_baudrate(uint32_t value);
@@ -84,17 +102,100 @@ private:
             configure_dma(bits);
         }
     }
-
-    spi_inst_t *spi;
-    uint sck_pin;                 // Held so the destructor can hand them back as GPIO
-    uint mosi_pin;
-    int dma_chan;
-    int dma_word_bits;            // Width the DMA channel is currently configured for
-    uint32_t requested_baudrate;  // What a display last asked for, for the compare
-    uint32_t achieved_baudrate;   // What the divider reached for that request
 };
 
 class SPIDisplay {
+    //--------------------------------------------------
+    // Enums
+    //--------------------------------------------------
+public:
+    // The states a frame passes through under update()'s steps. PREPARED and ARMED are
+    // called staged, converted ahead and owning their lines but not yet on the wire.
+    enum class FrameState : uint8_t { IDLE, PREPARED, ARMED, STREAMING };
+
+    //--------------------------------------------------
+    // Constants
+    //--------------------------------------------------
+private:
+    // A pulse shorter than this was not a blanking
+    static constexpr uint32_t SHORT_WAIT_US = 700;
+
+    // A high found this soon after the wait began had already started, length unknown
+    static constexpr uint32_t JOINED_HIGH_US = 50;
+
+    //--------------------------------------------------
+    // Variables
+    //--------------------------------------------------
+private:
+    SPIDisplayBus *bus;
+    uint64_t cs_mask;   // Every CS this display drives, so a group drives them together
+    uint64_t dc_mask;   // Likewise DC, since a group's members may each have their own
+    uint dc_pin;        // The single DC line TE is read from, when te_pin < 0
+    int te_pin;
+    uint8_t ram_write_cmd;
+    uint8_t te_on_cmd;
+    uint8_t te_off_cmd;
+    uint8_t te_mode_byte;
+    int fmt;            // Destination packer tag (RGB444::format / RGB565::format)
+    int dst_w;          // The panel's own dimensions, fixed for its lifetime
+    int dst_h;
+    int rows_per_band;  // Destination rows per DMA band, clamped at construction
+    int cache_columns;  // Column cache width, clamped to the panel at construction
+
+    // Band ring, cache storage, then an indexed source's palette, in one claim
+    uint8_t *sram_claim = nullptr;
+    size_t sram_claim_bytes = 0;
+    size_t band_bytes = 0;          // One band buffer, rounded up to 4
+    size_t full_row_bytes = 0;      // A whole panel row packed, which prices a frame
+                                    // before one is staged
+    int cache_capacity = 0;         // Cache storage in bytes
+    bool owns_sram_claim = false;   // False on a copy, which shares the member's claim
+    uint32_t requested_baudrate;    // What this display asks the bus for
+    uint32_t achieved_baudrate;     // What the divider gave it
+    FrameStats last = {};
+    uint32_t te_timeout_count = 0;
+    uint32_t te_short_wait_count = 0;
+    uint32_t te_joined_wait_count = 0;
+    int slot_count = 2;         // Band ring depth including the reserved in-flight slot
+
+    // The staged frame
+    FrameState state = FrameState::IDLE;
+    Descriptor desc = {};
+
+    // The lines this write drives, 0 meaning all. Set by prepare(), cleared at IDLE
+    uint64_t target_cs_mask = 0;
+    uint64_t target_dc_mask = 0;
+
+    // The one member this frame waits on, cleared with the target masks
+    uint64_t sync_cs_mask = 0;
+    uint64_t sync_dc_mask = 0;
+
+    ColumnCache cache{nullptr, 0, 0};
+    size_t full_band_bytes = 0;         // A full band's packed bytes, set per frame
+    bool wide_words = false;            // 16-bit DMA words, for an even packed row
+    int word_shift = 0;                 // Bytes to words, 1 for wide and 0 for 8-bit
+
+    // Shared with the DMA_IRQ_2 handler, which is why they are volatile. The handler
+    // books a stall that the thread later closes.
+    volatile int rows_converted = 0;            // Rows converted, published last
+    volatile int rows_kicked = 0;               // Rows handed to the DMA channel
+    volatile int bands_kicked = 0;              // Kicks so far, naming the next slot
+    volatile bool stall_pending = false;        // Wire starving or draining
+    volatile uint32_t stall_started_us = 0;     // When the starvation was seen
+    volatile int32_t stall_started_row = -1;    // The row it waited for, -1 for a drain
+
+    // The TE wait's own state, from arm() until the edge fires or the timeout runs out
+    uint32_t frame_started_us = 0;
+    bool te_fired = false;
+    bool te_high_seen = false;
+    bool te_raw_prev = false;           // Last raw TE sample, for the settling test
+    uint32_t te_started_us = 0;
+    uint32_t te_high_started_us = 0;    // When the pulse the wait ends on began
+    uint32_t te_timeout_budget_us = 0;  // This wait's timeout, from arm()
+
+    //--------------------------------------------------
+    // Constructors/Destructor
+    //--------------------------------------------------
 public:
     // Construct a display on a bus, from its pins, the panel's register opcodes and its
     // geometry. The band ring and cache are claimed from SRAM here, which has_sram()
@@ -119,6 +220,10 @@ public:
 
     ~SPIDisplay();
 
+    //--------------------------------------------------
+    // Methods
+    //--------------------------------------------------
+public:
     // Check if this and another display agree on the bus and all the stream depends on
     bool compatible_with(const SPIDisplay &other) const;
 
@@ -176,9 +281,6 @@ public:
                 uint64_t target_cs = 0, uint64_t target_dc = 0,
                 uint64_t sync_cs = 0, uint64_t sync_dc = 0);
 
-    // The states a frame passes through under update()'s steps. PREPARED and ARMED are
-    // called staged, converted ahead and owning their lines but not yet on the wire.
-    enum class FrameState : uint8_t { IDLE, PREPARED, ARMED, STREAMING };
     FrameState frame_state() const { return state; }
 
     // Stage a frame, building the descriptor, seeding the cache and filling the ring's
@@ -330,81 +432,13 @@ private:
         }
     }
 
-    SPIDisplayBus *bus;
-    uint64_t cs_mask;   // Every CS this display drives, so a group drives them together
-    uint64_t dc_mask;   // Likewise DC, since a group's members may each have their own
-    uint dc_pin;        // The single DC line TE is read from, when te_pin < 0
-    int te_pin;
-    uint8_t ram_write_cmd;
-    uint8_t te_on_cmd;
-    uint8_t te_off_cmd;
-    uint8_t te_mode_byte;
-    int fmt;            // Destination packer tag (RGB444::format / RGB565::format)
-    int dst_w;          // The panel's own dimensions, fixed for its lifetime
-    int dst_h;
-    int rows_per_band;  // Destination rows per DMA band, clamped at construction
-    int cache_columns;  // Column cache width, clamped to the panel at construction
-
-    // Band ring, cache storage, then an indexed source's palette, in one claim
-    uint8_t *sram_claim = nullptr;
-    size_t sram_claim_bytes = 0;
-    size_t band_bytes = 0;          // One band buffer, rounded up to 4
-    size_t full_row_bytes = 0;      // A whole panel row packed, which prices a frame
-                                    // before one is staged
-    int cache_capacity = 0;         // Cache storage in bytes
-    bool owns_sram_claim = false;   // False on a copy, which shares the member's claim
-    uint32_t requested_baudrate;    // What this display asks the bus for
-    uint32_t achieved_baudrate;     // What the divider gave it
-    FrameStats last = {};
-    uint32_t te_timeout_count = 0;
-    uint32_t te_short_wait_count = 0;
-    uint32_t te_joined_wait_count = 0;
-
-    // A pulse shorter than this was not a blanking
-    static constexpr uint32_t SHORT_WAIT_US = 700;
-
-    // A high found this soon after the wait began had already started, length unknown
-    static constexpr uint32_t JOINED_HIGH_US = 50;
-
-    int slot_count = 2;         // Band ring depth including the reserved in-flight slot
-
-    // The staged frame
-    FrameState state = FrameState::IDLE;
-    Descriptor desc = {};
-
-    // The lines this write drives, 0 meaning all. Set by prepare(), cleared at IDLE
-    uint64_t target_cs_mask = 0;
-    uint64_t target_dc_mask = 0;
+    // The lines a write drives, its target masks where it has them
     uint64_t write_cs() const { return target_cs_mask ? target_cs_mask : cs_mask; }
     uint64_t write_dc() const { return target_dc_mask ? target_dc_mask : dc_mask; }
 
-    // The one member this frame waits on, cleared with the target masks
-    uint64_t sync_cs_mask = 0;
-    uint64_t sync_dc_mask = 0;
     // Send a TE opcode to the one member the sync masks name, not every line this
     // display drives, since a second panel at TEON would add its own blanking
     void te_command(uint8_t opcode, const uint8_t *data, size_t data_len);
-    ColumnCache cache{nullptr, 0, 0};
-    size_t full_band_bytes = 0;         // A full band's packed bytes, set per frame
-    bool wide_words = false;            // 16-bit DMA words, for an even packed row
-    int word_shift = 0;                 // Bytes to words, 1 for wide and 0 for 8-bit
-
-    // Shared with the DMA_IRQ_2 handler, which is why they are volatile. The handler
-    // books a stall that the thread later closes.
-    volatile int rows_converted = 0;            // Rows converted, published last
-    volatile int rows_kicked = 0;               // Rows handed to the DMA channel
-    volatile int bands_kicked = 0;              // Kicks so far, naming the next slot
-    volatile bool stall_pending = false;        // Wire starving or draining
-    volatile uint32_t stall_started_us = 0;     // When the starvation was seen
-    volatile int32_t stall_started_row = -1;    // The row it waited for, -1 for a drain
-
-    uint32_t frame_started_us = 0;
-    bool te_fired = false;
-    bool te_high_seen = false;
-    bool te_raw_prev = false;           // Last raw TE sample, for the settling test
-    uint32_t te_started_us = 0;
-    uint32_t te_high_started_us = 0;    // When the pulse the wait ends on began
-    uint32_t te_timeout_budget_us = 0;  // This wait's timeout, from arm()
 };
 
 }  // namespace spidisplay

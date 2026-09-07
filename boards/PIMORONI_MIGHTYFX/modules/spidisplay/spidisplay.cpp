@@ -292,117 +292,6 @@ void SPIDisplay::add(const SPIDisplay &other) {
     dc_mask |= other.dc_mask;
 }
 
-void SPIDisplay::command(const uint8_t *cmd, size_t cmd_len,
-                         const uint8_t *data, size_t data_len) {
-    use_baudrate();
-    gpio_set_dir_masked64(dc_mask, dc_mask);
-    gpio_put_masked64(dc_mask, 0);
-    gpio_clr_mask64(cs_mask);
-    spi_write_blocking(bus->spi, cmd, cmd_len);
-    if (data_len) {
-        gpio_put_masked64(dc_mask, dc_mask);
-        spi_write_blocking(bus->spi, data, data_len);
-    }
-    gpio_set_mask64(cs_mask);
-}
-
-void SPIDisplay::te_command(uint8_t opcode, const uint8_t *data, size_t data_len) {
-    use_baudrate();
-    gpio_set_dir_masked64(sync_dc_mask, sync_dc_mask);
-    gpio_put_masked64(sync_dc_mask, 0);
-    gpio_clr_mask64(sync_cs_mask);
-    spi_write_blocking(bus->spi, &opcode, 1);
-    if (data_len) {
-        gpio_put_masked64(sync_dc_mask, sync_dc_mask);
-        spi_write_blocking(bus->spi, data, data_len);
-    }
-    gpio_set_mask64(sync_cs_mask);
-}
-
-void SPIDisplay::arm(bool v_sync, uint32_t timeout_us) {
-    if (state != FrameState::PREPARED) {
-        return;
-    }
-
-    // Send TEON before the line is released, since the command's data phase drives DC
-    // high and the wait would otherwise begin on a level this display just set.
-    if (sync_cs_mask != 0) {
-        te_command(te_on_cmd, &te_mode_byte, 1);
-    }
-
-    // Drive every DC line in the group low, which is the level RAMWR needs, and low
-    // before any release, since a line decaying through the pull-down would read as a
-    // completed blanking. CS is high here, so no panel is listening.
-    gpio_set_dir_masked64(dc_mask, dc_mask);
-    gpio_put_masked64(dc_mask, 0);
-
-    te_started_us = time_us_32();
-    te_timeout_budget_us = timeout_us;
-    te_fired = !v_sync;
-    te_high_seen = false;
-    if (v_sync) {
-        // Only the TE line becomes an input, the group's other DC lines staying driven
-        uint pin = te_line();
-        if (te_pin < 0) {
-            gpio_set_dir(dc_pin, GPIO_IN);
-        }
-        te_raw_prev = gpio_get(pin) != 0;
-    } else {
-        last.te_wait_us = 0;
-    }
-    state = FrameState::ARMED;
-}
-
-void SPIDisplay::te_fire(uint32_t now) {
-    if (te_pin < 0) {
-        gpio_set_dir(dc_pin, GPIO_OUT);
-    }
-    last.te_wait_us = now - te_started_us;
-    te_fired = true;
-}
-
-bool SPIDisplay::poll_te() {
-    if (state != FrameState::ARMED) {
-        return false;
-    }
-    if (te_fired) {
-        return true;
-    }
-
-    uint32_t now = time_us_32();
-    uint pin = te_line();
-    bool level = gpio_get(pin) != 0;
-
-    // An edge counts only after two agreeing samples, a shared line settling slowly
-    bool settled = level == te_raw_prev;
-    te_raw_prev = level;
-    if (settled) {
-        if (level) {
-            if (!te_high_seen) {
-                te_high_started_us = now;
-            }
-            te_high_seen = true;
-        } else if (te_high_seen) {
-            // Check if the pulse was already high when the wait began, its rise then
-            // unobserved and its length unknown, so only one seen to rise judges short
-            if (te_high_started_us - te_started_us < JOINED_HIGH_US) {
-                ++te_joined_wait_count;
-            } else if (now - te_high_started_us < SHORT_WAIT_US) {
-                ++te_short_wait_count;
-            }
-            te_fire(now);
-            return true;
-        }
-    }
-
-    if (now - te_started_us >= te_timeout_budget_us) {
-        ++te_timeout_count;
-        te_fire(now);
-        return true;
-    }
-    return false;
-}
-
 TeProbe SPIDisplay::te_probe(uint32_t ms) {
     uint pin = te_line();
     if (te_pin < 0) {
@@ -618,6 +507,52 @@ TePhase SPIDisplay::te_phase(SPIDisplay &first, SPIDisplay &second,
     return result;
 }
 
+void SPIDisplay::command(const uint8_t *cmd, size_t cmd_len,
+                         const uint8_t *data, size_t data_len) {
+    use_baudrate();
+    gpio_set_dir_masked64(dc_mask, dc_mask);
+    gpio_put_masked64(dc_mask, 0);
+    gpio_clr_mask64(cs_mask);
+    spi_write_blocking(bus->spi, cmd, cmd_len);
+    if (data_len) {
+        gpio_put_masked64(dc_mask, dc_mask);
+        spi_write_blocking(bus->spi, data, data_len);
+    }
+    gpio_set_mask64(cs_mask);
+}
+
+void SPIDisplay::update(const uint8_t *src, int src_w, int src_h, int src_stride,
+                        const uint8_t *palette, size_t palette_len,
+                        int rotation, int mirror, int pixel_double,
+                        bool centred_x, int off_x, bool centred_y, int off_y,
+                        bool tile_x, bool tile_y,
+                        bool tile_mirror_x, bool tile_mirror_y, uint32_t bg,
+                        bool v_sync, uint32_t timeout_us, uint32_t sync_delay_us,
+                        uint64_t target_cs, uint64_t target_dc,
+                        uint64_t sync_cs, uint64_t sync_dc) {
+    prepare(src, src_w, src_h, src_stride, palette, palette_len,
+            rotation, mirror, pixel_double,
+            centred_x, off_x, centred_y, off_y,
+            tile_x, tile_y, tile_mirror_x, tile_mirror_y, bg,
+            target_cs, target_dc, sync_cs, sync_dc);
+    arm(v_sync, timeout_us);
+
+    // Block through the wait, then hold off further if the caller asked
+    while (!poll_te()) {
+    }
+    if (v_sync && sync_delay_us) {
+        const uint32_t released = time_us_32();
+        while (time_us_32() - released < sync_delay_us) {
+        }
+    }
+
+    // Stream a band at a time until the frame is back to IDLE
+    start_stream();
+    while (state != FrameState::IDLE) {
+        step(rows_per_band);
+    }
+}
+
 // A transfer is whole SPI words, so an even packed row streams as 16-bit words and an
 // odd one as 8-bit. prepare() and wire_window_us() both derive from this, so they agree.
 static bool wide_words_for_row(size_t row_bytes) {
@@ -709,6 +644,82 @@ void SPIDisplay::prepare(const uint8_t *src, int src_w, int src_h, int src_strid
     }
 }
 
+void SPIDisplay::arm(bool v_sync, uint32_t timeout_us) {
+    if (state != FrameState::PREPARED) {
+        return;
+    }
+
+    // Send TEON before the line is released, since the command's data phase drives DC
+    // high and the wait would otherwise begin on a level this display just set.
+    if (sync_cs_mask != 0) {
+        te_command(te_on_cmd, &te_mode_byte, 1);
+    }
+
+    // Drive every DC line in the group low, which is the level RAMWR needs, and low
+    // before any release, since a line decaying through the pull-down would read as a
+    // completed blanking. CS is high here, so no panel is listening.
+    gpio_set_dir_masked64(dc_mask, dc_mask);
+    gpio_put_masked64(dc_mask, 0);
+
+    te_started_us = time_us_32();
+    te_timeout_budget_us = timeout_us;
+    te_fired = !v_sync;
+    te_high_seen = false;
+    if (v_sync) {
+        // Only the TE line becomes an input, the group's other DC lines staying driven
+        uint pin = te_line();
+        if (te_pin < 0) {
+            gpio_set_dir(dc_pin, GPIO_IN);
+        }
+        te_raw_prev = gpio_get(pin) != 0;
+    } else {
+        last.te_wait_us = 0;
+    }
+    state = FrameState::ARMED;
+}
+
+bool SPIDisplay::poll_te() {
+    if (state != FrameState::ARMED) {
+        return false;
+    }
+    if (te_fired) {
+        return true;
+    }
+
+    uint32_t now = time_us_32();
+    uint pin = te_line();
+    bool level = gpio_get(pin) != 0;
+
+    // An edge counts only after two agreeing samples, a shared line settling slowly
+    bool settled = level == te_raw_prev;
+    te_raw_prev = level;
+    if (settled) {
+        if (level) {
+            if (!te_high_seen) {
+                te_high_started_us = now;
+            }
+            te_high_seen = true;
+        } else if (te_high_seen) {
+            // Check if the pulse was already high when the wait began, its rise then
+            // unobserved and its length unknown, so only one seen to rise judges short
+            if (te_high_started_us - te_started_us < JOINED_HIGH_US) {
+                ++te_joined_wait_count;
+            } else if (now - te_high_started_us < SHORT_WAIT_US) {
+                ++te_short_wait_count;
+            }
+            te_fire(now);
+            return true;
+        }
+    }
+
+    if (now - te_started_us >= te_timeout_budget_us) {
+        ++te_timeout_count;
+        te_fire(now);
+        return true;
+    }
+    return false;
+}
+
 void SPIDisplay::start_stream() {
     // Check if a frame is armed and its wait has fired
     if (state != FrameState::ARMED || !te_fired) {
@@ -740,6 +751,105 @@ void SPIDisplay::start_stream() {
     dma_channel_set_read_addr(bus->dma_chan, slot_ptr(0), false);
     // The trailing true is what starts the transfer
     dma_channel_set_trans_count(bus->dma_chan, full_band_bytes >> word_shift, true);
+}
+
+bool SPIDisplay::step(int max_rows) {
+    // Kick either side of the conversion, so a band that finishes here goes out at once
+    bool advanced = try_kick();
+    advanced |= step_convert(max_rows);
+    advanced |= try_kick();
+    advanced |= finish_if_drained();
+    return advanced;
+}
+
+uint32_t SPIDisplay::convert_debt_us() const {
+    // Scale what this frame converted by the rows to go, so it follows its own rate
+    int done = rows_converted;
+    int remaining = dst_h - done;
+    if (done <= 0 || remaining <= 0 || last.convert_total_us == 0) {
+        return 0;
+    }
+    return (uint32_t)(((uint64_t)last.convert_total_us * (uint64_t)remaining)
+                      / (uint64_t)done);
+}
+
+uint32_t SPIDisplay::wire_window_us() const {
+    if (achieved_baudrate == 0) {
+        return 0;
+    }
+    // A staged frame's own row width, or the whole panel's when nothing is staged,
+    // so a tearing margin can be priced at construction and not only after a frame.
+    uint64_t row_bytes = desc.dst_row_bytes > 0 ? (uint64_t)desc.dst_row_bytes
+                                                : (uint64_t)full_row_bytes;
+    uint64_t bits = row_bytes * 8u * (uint64_t)dst_h;
+    uint64_t us = (bits * 1000000u) / achieved_baudrate;
+
+    // Plus the PL022's idle, a fixed 1.5 SCK a word whatever its width, so a byte costs
+    // 8.75 clocks in 16-bit words and 9.5 in 8-bit. A 240x320 12-bit frame at 24MHz is
+    // 38,400us of pure bits, and the 16-bit ratio predicts 42,000 against 42,016 seen.
+    constexpr uint64_t IDLE_HALF_CLOCKS = 3;    // 1.5 SCK, in halves to divide exactly
+    const uint64_t half_clocks =
+        wide_words_for_row((size_t)row_bytes) ? 32u : 16u;   // The word's own, in halves
+    return (uint32_t)((us * (half_clocks + IDLE_HALF_CLOCKS)) / half_clocks);
+}
+
+uint32_t SPIDisplay::deadline_us() const {
+    // Check if a transfer is actually in flight
+    if (state != FrameState::STREAMING || !dma_channel_is_busy(bus->dma_chan)) {
+        return 0;
+    }
+
+    // Price what the channel still has to send at this display's rate
+    uint32_t remaining = dma_channel_hw_addr(bus->dma_chan)->transfer_count;
+    uint32_t word_bits = 8u << word_shift;
+    return (uint32_t)(((uint64_t)remaining * word_bits * 1000000u) / achieved_baudrate);
+}
+
+void SPIDisplay::abort_frame() {
+    // Check if there is a frame to abandon
+    if (state == FrameState::IDLE) {
+        return;
+    }
+
+    if (state == FrameState::STREAMING) {
+        // Unroute and disown before the abort, then ack after it, so no handler can
+        // kick into the teardown and no completion can re-latch behind it
+        uint32_t save = save_and_disable_interrupts();
+        dma_irqn_set_channel_enabled(DMA_IRQ2_INDEX, bus->dma_chan, false);
+        irq_owner[bus->dma_chan] = nullptr;
+        restore_interrupts_from_disabled(save);
+        dma_channel_abort(bus->dma_chan);
+        dma_irqn_acknowledge_channel(DMA_IRQ2_INDEX, bus->dma_chan);
+
+        // The abort can land mid-transfer, so drain the shifter before restoring
+        while (spi_is_busy(bus->spi)) {
+        }
+        if (wide_words) {
+            spi_set_format(bus->spi, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
+        }
+    }
+    // Check if the shared DC line is still an input, as an armed display leaves it
+    // until its edge fires
+    if (state == FrameState::ARMED && !te_fired && te_pin < 0) {
+        gpio_set_dir(dc_pin, GPIO_OUT);
+    }
+    // Release CS and drive DC again, whatever state the frame reached
+    gpio_set_mask64(write_cs());
+    gpio_set_dir_masked64(write_dc(), write_dc());
+    gpio_set_mask64(write_dc());
+
+    // Check if a member may be at TEON and the bus can still send. A repeat TEOFF
+    // costs one opcode, where a panel left asserting costs the next wait its edge.
+    if (sync_cs_mask != 0 && !released()) {
+        te_command(te_off_cmd, nullptr, 0);
+    }
+
+    stall_pending = false;
+    target_cs_mask = 0;
+    target_dc_mask = 0;
+    sync_cs_mask = 0;
+    sync_dc_mask = 0;
+    state = FrameState::IDLE;
 }
 
 // In RAM for the same QMI-contention reason as the handler that calls it
@@ -776,6 +886,14 @@ void __not_in_flash_func(SPIDisplay::kick_from_isr)() {
     size_t bytes = next == rows_per_band ? full_band_bytes
                                          : (size_t)next * desc.dst_row_bytes;
     dma_channel_set_trans_count(bus->dma_chan, bytes >> word_shift, true);
+}
+
+void SPIDisplay::te_fire(uint32_t now) {
+    if (te_pin < 0) {
+        gpio_set_dir(dc_pin, GPIO_OUT);
+    }
+    last.te_wait_us = now - te_started_us;
+    te_fired = true;
 }
 
 bool SPIDisplay::step_convert(int max_rows) {
@@ -911,135 +1029,17 @@ bool SPIDisplay::finish_if_drained() {
     return true;
 }
 
-bool SPIDisplay::step(int max_rows) {
-    // Kick either side of the conversion, so a band that finishes here goes out at once
-    bool advanced = try_kick();
-    advanced |= step_convert(max_rows);
-    advanced |= try_kick();
-    advanced |= finish_if_drained();
-    return advanced;
-}
-
-uint32_t SPIDisplay::deadline_us() const {
-    // Check if a transfer is actually in flight
-    if (state != FrameState::STREAMING || !dma_channel_is_busy(bus->dma_chan)) {
-        return 0;
+void SPIDisplay::te_command(uint8_t opcode, const uint8_t *data, size_t data_len) {
+    use_baudrate();
+    gpio_set_dir_masked64(sync_dc_mask, sync_dc_mask);
+    gpio_put_masked64(sync_dc_mask, 0);
+    gpio_clr_mask64(sync_cs_mask);
+    spi_write_blocking(bus->spi, &opcode, 1);
+    if (data_len) {
+        gpio_put_masked64(sync_dc_mask, sync_dc_mask);
+        spi_write_blocking(bus->spi, data, data_len);
     }
-
-    // Price what the channel still has to send at this display's rate
-    uint32_t remaining = dma_channel_hw_addr(bus->dma_chan)->transfer_count;
-    uint32_t word_bits = 8u << word_shift;
-    return (uint32_t)(((uint64_t)remaining * word_bits * 1000000u) / achieved_baudrate);
-}
-
-uint32_t SPIDisplay::convert_debt_us() const {
-    // Scale what this frame converted by the rows to go, so it follows its own rate
-    int done = rows_converted;
-    int remaining = dst_h - done;
-    if (done <= 0 || remaining <= 0 || last.convert_total_us == 0) {
-        return 0;
-    }
-    return (uint32_t)(((uint64_t)last.convert_total_us * (uint64_t)remaining)
-                      / (uint64_t)done);
-}
-
-uint32_t SPIDisplay::wire_window_us() const {
-    if (achieved_baudrate == 0) {
-        return 0;
-    }
-    // A staged frame's own row width, or the whole panel's when nothing is staged,
-    // so a tearing margin can be priced at construction and not only after a frame.
-    uint64_t row_bytes = desc.dst_row_bytes > 0 ? (uint64_t)desc.dst_row_bytes
-                                                : (uint64_t)full_row_bytes;
-    uint64_t bits = row_bytes * 8u * (uint64_t)dst_h;
-    uint64_t us = (bits * 1000000u) / achieved_baudrate;
-
-    // Plus the PL022's idle, a fixed 1.5 SCK a word whatever its width, so a byte costs
-    // 8.75 clocks in 16-bit words and 9.5 in 8-bit. A 240x320 12-bit frame at 24MHz is
-    // 38,400us of pure bits, and the 16-bit ratio predicts 42,000 against 42,016 seen.
-    constexpr uint64_t IDLE_HALF_CLOCKS = 3;    // 1.5 SCK, in halves to divide exactly
-    const uint64_t half_clocks =
-        wide_words_for_row((size_t)row_bytes) ? 32u : 16u;   // The word's own, in halves
-    return (uint32_t)((us * (half_clocks + IDLE_HALF_CLOCKS)) / half_clocks);
-}
-
-void SPIDisplay::abort_frame() {
-    // Check if there is a frame to abandon
-    if (state == FrameState::IDLE) {
-        return;
-    }
-
-    if (state == FrameState::STREAMING) {
-        // Unroute and disown before the abort, then ack after it, so no handler can
-        // kick into the teardown and no completion can re-latch behind it
-        uint32_t save = save_and_disable_interrupts();
-        dma_irqn_set_channel_enabled(DMA_IRQ2_INDEX, bus->dma_chan, false);
-        irq_owner[bus->dma_chan] = nullptr;
-        restore_interrupts_from_disabled(save);
-        dma_channel_abort(bus->dma_chan);
-        dma_irqn_acknowledge_channel(DMA_IRQ2_INDEX, bus->dma_chan);
-
-        // The abort can land mid-transfer, so drain the shifter before restoring
-        while (spi_is_busy(bus->spi)) {
-        }
-        if (wide_words) {
-            spi_set_format(bus->spi, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
-        }
-    }
-    // Check if the shared DC line is still an input, as an armed display leaves it
-    // until its edge fires
-    if (state == FrameState::ARMED && !te_fired && te_pin < 0) {
-        gpio_set_dir(dc_pin, GPIO_OUT);
-    }
-    // Release CS and drive DC again, whatever state the frame reached
-    gpio_set_mask64(write_cs());
-    gpio_set_dir_masked64(write_dc(), write_dc());
-    gpio_set_mask64(write_dc());
-
-    // Check if a member may be at TEON and the bus can still send. A repeat TEOFF
-    // costs one opcode, where a panel left asserting costs the next wait its edge.
-    if (sync_cs_mask != 0 && !released()) {
-        te_command(te_off_cmd, nullptr, 0);
-    }
-
-    stall_pending = false;
-    target_cs_mask = 0;
-    target_dc_mask = 0;
-    sync_cs_mask = 0;
-    sync_dc_mask = 0;
-    state = FrameState::IDLE;
-}
-
-void SPIDisplay::update(const uint8_t *src, int src_w, int src_h, int src_stride,
-                        const uint8_t *palette, size_t palette_len,
-                        int rotation, int mirror, int pixel_double,
-                        bool centred_x, int off_x, bool centred_y, int off_y,
-                        bool tile_x, bool tile_y,
-                        bool tile_mirror_x, bool tile_mirror_y, uint32_t bg,
-                        bool v_sync, uint32_t timeout_us, uint32_t sync_delay_us,
-                        uint64_t target_cs, uint64_t target_dc,
-                        uint64_t sync_cs, uint64_t sync_dc) {
-    prepare(src, src_w, src_h, src_stride, palette, palette_len,
-            rotation, mirror, pixel_double,
-            centred_x, off_x, centred_y, off_y,
-            tile_x, tile_y, tile_mirror_x, tile_mirror_y, bg,
-            target_cs, target_dc, sync_cs, sync_dc);
-    arm(v_sync, timeout_us);
-
-    // Block through the wait, then hold off further if the caller asked
-    while (!poll_te()) {
-    }
-    if (v_sync && sync_delay_us) {
-        const uint32_t released = time_us_32();
-        while (time_us_32() - released < sync_delay_us) {
-        }
-    }
-
-    // Stream a band at a time until the frame is back to IDLE
-    start_stream();
-    while (state != FrameState::IDLE) {
-        step(rows_per_band);
-    }
+    gpio_set_mask64(sync_cs_mask);
 }
 
 }  // namespace spidisplay
