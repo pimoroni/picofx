@@ -3,8 +3,7 @@
 // SPDX-License-Identifier: MIT
 //
 // The MicroPython types wrapping SPIDisplayBus and SPIDisplay, and the two module
-// functions taking several displays at once, update_all() and te_phase(). The driver
-// they wrap is in spidisplay.cpp and knows nothing of MicroPython. Module
+// functions taking several displays at once, update_all() and te_phase(). Module
 // registration is in spidisplay_bindings.c.
 
 #include "column_cache.hpp"
@@ -20,16 +19,13 @@ extern "C" {
 
 #include "spidisplay_bindings.h"
 
-// The C++ objects live inline in their mp_objs: one allocation and one lifetime
 typedef struct _SPIDisplayBus_obj_t {
     mp_obj_base_t base;
     spidisplay::SPIDisplayBus bus;
 } SPIDisplayBus_obj_t;
 
-// Three GC roots for pointers the C++ object holds bare. bus_obj roots the bus.
-// sram_owner_obj roots the member whose SRAM claim a broadcast group shares, so the
-// owner cannot be finalised under the group. staged_image roots a prepare()d frame's
-// source, Python running between prepare() and update_all().
+// Three references held against collection, for pointers the C++ object holds bare.
+// They are the bus, the member whose SRAM claim a group shares, and a staged source.
 typedef struct _SPIDisplay_obj_t {
     mp_obj_base_t base;
     mp_obj_t bus_obj;
@@ -66,18 +62,15 @@ static mp_obj_t SPIDisplayBus_make_new(const mp_obj_type_t *type, size_t n_args,
 
 static mp_obj_t SPIDisplayBus___del__(mp_obj_t self_in) {
     SPIDisplayBus_obj_t *self = (SPIDisplayBus_obj_t *)MP_OBJ_TO_PTR(self_in);
-    self->bus.~SPIDisplayBus();  // Safe to call twice: the destructor checks dma_chan
+    self->bus.~SPIDisplayBus();
     return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplayBus___del___obj, SPIDisplayBus___del__);
 
 // broadcast(display, display, ...) -> a display whose CS and DC masks carry every
-// member's bit, so one frame lands on all of them. Settings come from the first
-// member, once, here.
+// member's bit, so one frame lands on all of them, with the first member's settings.
 static mp_obj_t SPIDisplayBus_broadcast(size_t n_args, const mp_obj_t *args) {
-    // One member is allowed: the group is then a copy of that display, which is the
-    // same frame the member's own update writes, so a wall written for a hub still
-    // runs where a single panel answered.
+    // Check if any display was named, a group of one being a valid copy of it
     if (n_args < 2) {
         mp_raise_ValueError(MP_ERROR_TEXT("a broadcast group needs at least one display"));
     }
@@ -95,9 +88,8 @@ static mp_obj_t SPIDisplayBus_broadcast(size_t n_args, const mp_obj_t *args) {
     SPIDisplay_obj_t *group = mp_obj_malloc_with_finaliser(SPIDisplay_obj_t, &SPIDisplay_type);
     group->bus_obj = first->bus_obj;
     group->staged_image = mp_const_none;
-    // The copy shares the first member's SRAM claim, so root that member for the
-    // group's lifetime. Explicitly deleting the member still dangles the group,
-    // the same misuse as deleting the bus under a display.
+    // The group shares the first member's SRAM claim, so hold that member against
+    // collection for the group's lifetime. Deleting it by hand still dangles the group.
     group->sram_owner_obj = args[1];
     new (&group->display) spidisplay::SPIDisplay(first->display);
 
@@ -174,7 +166,7 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
         mp_raise_ValueError(MP_ERROR_TEXT("a 12-bit row packs two pixels in three bytes, so width must be even"));
     }
 
-    // te=None is the shared DC line; a Pin is a dedicated TE input.
+    // te=None is the shared DC line, and a Pin is a dedicated TE input.
     int te = -1;
     if (args[ARG_te].u_obj != mp_const_none) {
         te = (int)mp_hal_get_pin_obj(args[ARG_te].u_obj);
@@ -195,9 +187,9 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
         (uint32_t)args[ARG_baudrate].u_int, args[ARG_band_lines].u_int,
         args[ARG_cache_columns].u_int, args[ARG_stage_lines].u_int);
 
-    // A failed claim configured no GPIO, so the orphan's finaliser has nothing to
-    // undo; raise with both sides of the shortfall.
+    // Check if the workspace claim failed
     if (!self->display.has_sram()) {
+        // Both sides of the shortfall, since only the caller can free the difference
         mp_raise_msg_varg(&mp_type_ValueError,
             MP_ERROR_TEXT("display workspace needs %u bytes but only %u are free;"
                           " release old screens and collect them"
@@ -210,7 +202,7 @@ static mp_obj_t SPIDisplay_make_new(const mp_obj_type_t *type, size_t n_args,
 
 static mp_obj_t SPIDisplay___del__(mp_obj_t self_in) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
-    self->display.~SPIDisplay();  // Safe to call twice: releases the SRAM claim and GPIO
+    self->display.~SPIDisplay();  // Releases the SRAM claim and the GPIO
     return mp_const_none;
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay___del___obj, SPIDisplay___del__);
@@ -220,7 +212,7 @@ static mp_obj_t SPIDisplay_command(size_t n_args, const mp_obj_t *args) {
     if (self->display.released()) {
         mp_raise_ValueError(MP_ERROR_TEXT("this screen's bus has been released, so it can no longer stream. Create a new screen, on a bus that has not been released."));
     }
-    // A staged or streaming frame owns DC, which a command would force low.
+    // Check if a frame holds the DC line, which a command would drive low under it
     if (self->display.frame_state() != spidisplay::SPIDisplay::FrameState::IDLE) {
         mp_raise_ValueError(MP_ERROR_TEXT("a frame is staged or streaming; update_all() or abort_frame() first"));
     }
@@ -229,6 +221,8 @@ static mp_obj_t SPIDisplay_command(size_t n_args, const mp_obj_t *args) {
     const uint8_t *cmd;
     size_t cmd_len;
     mp_buffer_info_t cbuf;
+
+    // A command is one byte or a buffer of them
     if (mp_obj_is_int(args[1])) {
         cmd_byte = (uint8_t)mp_obj_get_int(args[1]);
         cmd = &cmd_byte;
@@ -243,6 +237,8 @@ static mp_obj_t SPIDisplay_command(size_t n_args, const mp_obj_t *args) {
     const uint8_t *data = nullptr;
     size_t data_len = 0;
     mp_buffer_info_t dbuf;
+
+    // data is optional, and likewise a byte or a buffer
     if (n_args > 2 && args[2] != mp_const_none) {
         if (mp_obj_is_int(args[2])) {
             data_byte = (uint8_t)mp_obj_get_int(args[2]);
@@ -281,9 +277,8 @@ typedef struct _FrameArgs {
     uint64_t sync_cs, sync_dc;        // 0 to leave TE alone
 } FrameArgs;
 
-// with_sync parses the trailing v_sync, timeout_us and sync_delay_us; prepare()
-// leaves them out, since the TE wait belongs to update_all(), and they raise as
-// unknown keywords there.
+// Parse and validate the frame arguments. with_sync adds the trailing v_sync,
+// timeout_us and sync_delay_us, which prepare() raises as unknown keywords instead.
 static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
                                    mp_map_t *kw_args, bool with_sync, FrameArgs *out) {
     enum { ARG_self, ARG_image,
@@ -305,6 +300,7 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
         { MP_QSTR_sync_delay_us, MP_ARG_INT, {.u_int = 0} },
     };
     mp_arg_val_t args[MP_ARRAY_SIZE(allowed_args)] = {};
+    // Without with_sync the three sync arguments are dropped, so they raise as unknown
     size_t n_allowed = MP_ARRAY_SIZE(allowed_args) - (with_sync ? 0 : 3);
     mp_arg_parse_all(n_args, pos_args, kw_args, n_allowed, allowed_args, args);
 
@@ -322,14 +318,11 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
     int src_h = mp_obj_get_int(mp_load_attr(args[ARG_image].u_obj, MP_QSTR_height));
     int src_stride = mp_obj_get_int(mp_load_attr(args[ARG_image].u_obj, MP_QSTR_stride));
 
-    // An empty or negative extent converts to a background-filled frame, since the
-    // covered region comes out empty and no source pixel is read. Report it instead.
+    // Check if the source is empty, which would otherwise convert as background only
     if (src_w < 1 || src_h < 1) {
         mp_raise_ValueError(MP_ERROR_TEXT("image width and height must be positive"));
     }
-    // A palettised source is one index byte per pixel, drawn through its colour
-    // table; the table's bytes are reachable here by reference and are copied
-    // per frame into the display's own SRAM before this call returns.
+    // A palettised source is one index byte per pixel, its table taken by reference
     mp_obj_t palette_obj = mp_load_attr(args[ARG_image].u_obj, MP_QSTR_palette);
     const uint8_t *palette = NULL;
     size_t palette_len = 0;
@@ -346,16 +339,15 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
         mp_raise_ValueError(MP_ERROR_TEXT("image stride is narrower than its width"));
     }
 
-    // The kernel walks src_h rows of the pitch the image reports, so a buffer
-    // shorter than that is read out of bounds and an empty one locks the board.
-    // The bound is exactly the extent a strided view reports for itself.
+    // Bound the source buffer by the extent a strided view reports, since a shorter
+    // one is read past its end and an empty one locks the board
     size_t src_bytes = (size_t)(src_h - 1) * (size_t)src_stride
                      + (size_t)src_w * px_bytes;
     if (buf.len < src_bytes) {
         mp_raise_ValueError(MP_ERROR_TEXT("image buffer is shorter than its dimensions"));
     }
 
-    // offset=None centres both axes; an (x, y) pair places the top-left, where
+    // offset=None centres both axes, and an (x, y) pair places the top-left, where
     // either element may be None to centre just that axis.
     bool centred_x = true;
     bool centred_y = true;
@@ -378,10 +370,8 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
         }
     }
 
-    // tile repeats the source on its own axes, one value for both or an (x, y)
-    // pair: the read wraps at the source's size, so any offset is valid. Each
-    // value is False, True or Tile.MIRROR, the last reversing every other
-    // repeat so each seam is a reflection.
+    // tile repeats the source on its own axes, one value for both or an (x, y) pair.
+    // Each value is False, True or Tile.MIRROR, the last reflecting every other repeat.
     mp_int_t tile_mode_x = 0;
     mp_int_t tile_mode_y = 0;
     if (args[ARG_tile].u_obj != mp_const_none) {
@@ -402,8 +392,7 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
         }
     }
 
-    // A packed colour carries alpha in the top byte, so it can exceed a signed
-    // machine word; truncate to 32 bits (only the low 24 are used).
+    // A packed colour carries alpha in the top byte, so truncate to 32 bits
     uint32_t bg = 0;
     if (args[ARG_bg].u_obj != mp_const_none) {
         bg = (uint32_t)mp_obj_get_int_truncated(args[ARG_bg].u_obj);
@@ -425,6 +414,7 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
     out->centred_y = centred_y;
     out->off_x = off_x;
     out->off_y = off_y;
+    // False, True and Tile.MIRROR arrive as 0, 1 and 2
     out->tile_x = tile_mode_x != 0;
     out->tile_y = tile_mode_y != 0;
     out->tile_mirror_x = tile_mode_x == 2;
@@ -437,8 +427,7 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
     }
 
     // to= narrows the write to some of a group's members, named as displays so the
-    // 64-bit masks never cross into Python. Each must be one of this display's own,
-    // so a subset cannot write a panel its group does not hold.
+    // 64-bit masks never cross into Python. Each must be one this display holds.
     out->target_cs = 0;
     out->target_dc = 0;
     if (args[ARG_to].u_obj != mp_const_none) {
@@ -453,6 +442,7 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
                 mp_raise_TypeError(MP_ERROR_TEXT("to= takes SPIDisplay objects"));
             }
             spidisplay::SPIDisplay &member = ((SPIDisplay_obj_t *)MP_OBJ_TO_PTR(members[i]))->display;
+            // A CS bit outside this display's mask means it is not a member
             if (member.cs_lines() & ~self->display.cs_lines()) {
                 mp_raise_ValueError(MP_ERROR_TEXT("to= names a display this one does not drive, so it is not a member of this group"));
             }
@@ -461,10 +451,8 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
         }
     }
 
-    // sync= names the one member whose TE this frame waits on, and with it asks for
-    // the transient TEON and TEOFF around the wait. One display and not a tuple: a
-    // shared DC line carries one panel's blanking at a time, which is the whole
-    // reason the discipline exists.
+    // sync= names the one member whose TE this frame waits on, and asks for the
+    // transient TEON and TEOFF around the wait. One display, never a tuple.
     out->sync_cs = 0;
     out->sync_dc = 0;
     if (args[ARG_sync].u_obj != mp_const_none) {
@@ -477,6 +465,7 @@ static void SPIDisplay_parse_frame(size_t n_args, const mp_obj_t *pos_args,
         if (lines & ~self->display.cs_lines()) {
             mp_raise_ValueError(MP_ERROR_TEXT("sync= names a display this one does not drive, so it is not a member of this group"));
         }
+        // Check if more than one CS bit is set, so sync= named a group
         if (lines & (lines - 1)) {
             mp_raise_ValueError(MP_ERROR_TEXT("sync= names one panel to wait on, and this one drives several"));
         }
@@ -500,10 +489,7 @@ static mp_obj_t SPIDisplay_update(size_t n_args, const mp_obj_t *pos_args, mp_ma
 }
 static MP_DEFINE_CONST_FUN_OBJ_KW(SPIDisplay_update_obj, 2, SPIDisplay_update);
 
-// fill(colour=black) streams one solid frame, which is update()'s path with no
-// source: an empty extent covers no destination pixel, so every one takes the
-// background. For putting a panel in a known state at bringup, where no image exists
-// yet and the frame is wanted before a canvas is worth claiming.
+// fill(colour=black) streams one solid frame through update()'s path with no source
 static mp_obj_t SPIDisplay_fill(size_t n_args, const mp_obj_t *args) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[0]);
     if (self->display.released()) {
@@ -527,10 +513,8 @@ static mp_obj_t SPIDisplay_fill(size_t n_args, const mp_obj_t *args) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(SPIDisplay_fill_obj, 1, 2, SPIDisplay_fill);
 
-// prepare(image, ...) stages a frame for update_all(): descriptor, cache and
-// the first band's conversion, no bus traffic. The image is rooted on the
-// display until the stream completes or abort_frame(), since the staged
-// descriptor holds a raw pointer into it.
+// prepare(image, ...) stages a frame for update_all() with no bus traffic. The image is
+// held against collection until the stream completes, the descriptor pointing into it.
 static mp_obj_t SPIDisplay_prepare(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     FrameArgs a;
     SPIDisplay_parse_frame(n_args, pos_args, kw_args, false, &a);
@@ -545,8 +529,6 @@ static mp_obj_t SPIDisplay_prepare(size_t n_args, const mp_obj_t *pos_args, mp_m
 }
 static MP_DEFINE_CONST_FUN_OBJ_KW(SPIDisplay_prepare_obj, 2, SPIDisplay_prepare);
 
-// Abandon a staged or streaming frame and release the image root. The panel
-// keeps its GRAM write pointer, so the next full frame recovers the glass.
 static mp_obj_t SPIDisplay_abort_frame(mp_obj_t self_in) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
     self->display.abort_frame();
@@ -556,11 +538,7 @@ static mp_obj_t SPIDisplay_abort_frame(mp_obj_t self_in) {
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_abort_frame_obj, SPIDisplay_abort_frame);
 
 // update_all(*displays, v_sync=False, timeout_us=50000, slice_rows=8, hysteresis_rows=-1)
-// streams every prepared display's frame concurrently, each starting on its own TE
-// edge. The displays must sit on different buses. slice_rows bounds the TE poll
-// latency; the default keeps one slice's conversion under the TE pulse width.
-// hysteresis_rows is the free ring room a display needs to take the convert burst
-// from another, and negative selects half its ring.
+// streams every prepared frame concurrently, from displays on different buses.
 mp_obj_t spidisplay_update_all(size_t n_args, const mp_obj_t *pos_args, mp_map_t *kw_args) {
     enum { ARG_v_sync, ARG_timeout_us, ARG_slice_rows, ARG_hysteresis_rows };
     static const mp_arg_t allowed_args[] = {
@@ -592,6 +570,7 @@ mp_obj_t spidisplay_update_all(size_t n_args, const mp_obj_t *pos_args, mp_map_t
         if (obj->display.frame_state() != spidisplay::SPIDisplay::FrameState::PREPARED) {
             mp_raise_ValueError(MP_ERROR_TEXT("prepare() every display before update_all()"));
         }
+        // Check against the displays already taken, for a repeat or a shared bus
         for (size_t j = 0; j < i; ++j) {
             if (obj == objs[j]) {
                 mp_raise_ValueError(MP_ERROR_TEXT("a display is listed twice"));
@@ -604,11 +583,8 @@ mp_obj_t spidisplay_update_all(size_t n_args, const mp_obj_t *pos_args, mp_map_t
         displays[i] = &obj->display;
     }
 
-    // Will the conversion keep every wire fed? Each display prices its own
-    // remaining rows at the rate prepare() measured on them, so this follows the
-    // real rotation, source memory and cache rather than a table of constants. The
-    // longest wire window is the deadline, every row having to be converted by the
-    // time the last stream drains.
+    // Total the conversion still owed, against the longest single wire window, which
+    // is the deadline every display's rows have to be converted by
     uint32_t debt_us = 0;
     uint32_t window_us = 0;
     for (size_t i = 0; i < n_args; ++i) {
@@ -618,33 +594,29 @@ mp_obj_t spidisplay_update_all(size_t n_args, const mp_obj_t *pos_args, mp_map_t
             window_us = window;
         }
     }
+    // Check if the conversion cannot keep up, which would tear rather than fail
     if (window_us > 0 && debt_us > window_us) {
         mp_raise_msg_varg(&mp_type_ValueError,
                           MP_ERROR_TEXT("conversion cannot keep the wires fed: %u us still to convert against a %u us frame, so it would tear. Build the screens with a deeper stage_lines, or halve the source and pass pixel_double"),
                           (unsigned)debt_us, (unsigned)window_us);
     }
 
-    // Everything that can raise has; the interleaver runs without the GC or NLR.
+    // Everything that can raise has, so the interleaver runs without the GC or NLR.
     spidisplay::interleave(displays, (int)n_args, args[ARG_v_sync].u_bool,
                            (uint32_t)args[ARG_timeout_us].u_int,
                            (int)args[ARG_slice_rows].u_int,
                            (int)args[ARG_hysteresis_rows].u_int);
 
+    // The frames have left, so let their sources be collected
     for (size_t i = 0; i < n_args; ++i) {
         objs[i]->staged_image = mp_const_none;
     }
     return mp_const_none;
 }
-// Declared extern first: a const object compiled as C++ takes internal linkage
-// otherwise, and spidisplay_bindings.c links against this name.
-extern const mp_obj_fun_builtin_var_t spidisplay_update_all_obj;
 MP_DEFINE_CONST_FUN_OBJ_KW(spidisplay_update_all_obj, 1, spidisplay_update_all);
 
-// te_phase(first, second, period_us, edges=2, timeout_ms=500) -> (skew_us, age_us).
-// None when either TE line yields too few falls in time. skew_us is first's falling
-// edge relative to second's, folded to +-period_us/2. age_us is how old the capture
-// already is at return, so a caller can price the drift since. Neither display may
-// hold a staged or streaming frame, a staged frame owning the DC lines TE is read from.
+// te_phase(first, second, period_us, edges=2, timeout_ms=500) -> (skew_us, age_us), or
+// None when either line yields too few falls. Neither display may hold a frame.
 mp_obj_t spidisplay_te_phase(size_t n_args, const mp_obj_t *args) {
     if (!mp_obj_is_type(args[0], &SPIDisplay_type) || !mp_obj_is_type(args[1], &SPIDisplay_type)) {
         mp_raise_TypeError(MP_ERROR_TEXT("te_phase takes two SPIDisplay objects"));
@@ -654,9 +626,7 @@ mp_obj_t spidisplay_te_phase(size_t n_args, const mp_obj_t *args) {
     if (first == second) {
         mp_raise_ValueError(MP_ERROR_TEXT("te_phase needs two different displays"));
     }
-    // Two panels sharing a DC line resolve to one signal, so a capture from both
-    // reads the same edges and folds to a meaningless zero. Sweep them one at a
-    // time with te_capture() instead, ageing each fall by that panel's own period.
+    // Check if both TE lines are the same GPIO, which would fold to a meaningless zero
     if (first->display.te_line() == second->display.te_line()) {
         mp_raise_ValueError(MP_ERROR_TEXT("these displays read TE from one line, so there is no phase between them. Sweep them with te_capture(), one panel at TEON at a time"));
     }
@@ -689,7 +659,6 @@ mp_obj_t spidisplay_te_phase(size_t n_args, const mp_obj_t *args) {
     };
     return mp_obj_new_tuple(2, items);
 }
-extern const mp_obj_fun_builtin_var_t spidisplay_te_phase_obj;
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(spidisplay_te_phase_obj, 3, 5, spidisplay_te_phase);
 
 // The panel's own dimensions, fixed when it was built.
@@ -703,19 +672,18 @@ static mp_obj_t SPIDisplay_size(mp_obj_t self_in) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_size_obj, SPIDisplay_size);
 
-// What this panel's rate reached, which is not the request: the divider rounds
-// down. Panels on one port each carry their own.
 static mp_obj_t SPIDisplay_baudrate(mp_obj_t self_in) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
     return mp_obj_new_int_from_uint(self->display.baudrate());
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_baudrate_obj, SPIDisplay_baudrate);
 
-// The most recent update() as one snapshot, reachable by name or by index. See
-// FrameStats for what each field means. What the frame went out at, and how it was
-// banded, are not here, being fixed at construction: read baudrate() and band_rows().
+// The most recent update()'s figures. What the frame went out at, and how it was
+// banded, are fixed at construction, so read baudrate() and band_rows() for those.
 static mp_obj_t SPIDisplay_stats(mp_obj_t self_in) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
+
+    // An attrtuple, so a caller reads a field by name or by index
     static const qstr fields[] = {
         MP_QSTR_pre_us, MP_QSTR_convert_us, MP_QSTR_te_wait_us, MP_QSTR_frame_us,
         MP_QSTR_convert_total_us, MP_QSTR_stall_us, MP_QSTR_write_start_us,
@@ -737,60 +705,43 @@ static mp_obj_t SPIDisplay_stats(mp_obj_t self_in) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_stats_obj, SPIDisplay_stats);
 
-// Frames whose TE wait timed out. Zero is the only healthy value on a panel wired
-// for v_sync.
 static mp_obj_t SPIDisplay_te_timeouts(mp_obj_t self_in) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
     return mp_obj_new_int_from_uint(self->display.te_timeouts());
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_te_timeouts_obj, SPIDisplay_te_timeouts);
 
-// Frames whose wait ended on a pulse it watched rise and that fell too soon to be a
-// blanking, which te_timeouts() reads as healthy. A pulse train books as joined
-// instead, its next rise landing inside JOINED_HIGH_US, so te_probe() names TE mode 2.
 static mp_obj_t SPIDisplay_te_short_waits(mp_obj_t self_in) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
     return mp_obj_new_int_from_uint(self->display.te_short_waits());
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_te_short_waits_obj, SPIDisplay_te_short_waits);
 
-// Frames whose wait began with the line already high, so the pulse it ended on has
-// no length to judge. One a frame is a line decaying through the pull-down; the
-// occasional one is a frame arming inside a blanking, which is no fault.
 static mp_obj_t SPIDisplay_te_joined_waits(mp_obj_t self_in) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
     return mp_obj_new_int_from_uint(self->display.te_joined_waits());
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_te_joined_waits_obj, SPIDisplay_te_joined_waits);
 
-// What a full frame costs on this wire, the measured per-band overhead included, so
-// a tearing margin can be priced before any frame has gone out. stats().frame_us is
-// the same figure once one has.
 static mp_obj_t SPIDisplay_wire_window(mp_obj_t self_in) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
     return mp_obj_new_int_from_uint(self->display.wire_window_us());
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_wire_window_obj, SPIDisplay_wire_window);
 
-// Destination rows per DMA band, after the clamp the request went through, so the
-// band count is height over this. Fixed at construction.
 static mp_obj_t SPIDisplay_band_rows(mp_obj_t self_in) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
     return mp_obj_new_int(self->display.band_rows());
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_band_rows_obj, SPIDisplay_band_rows);
 
-// Bytes of SRAM this display claimed for its band and cache workspace, fixed at
-// construction: what buffer_size() dropped by when it was built. A broadcast
-// group reports its first member's shared claim.
 static mp_obj_t SPIDisplay_sram_bytes(mp_obj_t self_in) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(self_in);
     return mp_obj_new_int_from_uint(self->display.sram_bytes());
 }
 static MP_DEFINE_CONST_FUN_OBJ_1(SPIDisplay_sram_bytes_obj, SPIDisplay_sram_bytes);
 
-// te_probe(ms=250) -> (period_us, high_us, edges). A short high against the
-// period means the asserted level is vertical blanking.
+// te_probe(ms=250) -> (period_us, high_us, edges)
 static mp_obj_t SPIDisplay_te_probe(size_t n_args, const mp_obj_t *args) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[0]);
     mp_int_t ms = n_args > 1 ? mp_obj_get_int(args[1]) : 250;
@@ -807,11 +758,8 @@ static mp_obj_t SPIDisplay_te_probe(size_t n_args, const mp_obj_t *args) {
 }
 static MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(SPIDisplay_te_probe_obj, 1, 2, SPIDisplay_te_probe);
 
-// te_capture(edges=4, timeout_ms=250) -> (falls, finished_us), the fall timestamps
-// and the instant the capture stopped, both on the ticks_us clock. Fewer falls than
-// asked for means the timeout ran out. A shared DC line carries one panel's TE at a
-// time, so a hub is swept member by member and each fall aged by its own period onto
-// one instant. te_probe() discards the timestamps and te_phase() needs two lines.
+// te_capture(edges=4, timeout_ms=250) -> (falls, finished_us), both on the ticks_us
+// clock. Fewer falls than asked for means the timeout ran out.
 static mp_obj_t SPIDisplay_te_capture(size_t n_args, const mp_obj_t *args) {
     SPIDisplay_obj_t *self = (SPIDisplay_obj_t *)MP_OBJ_TO_PTR(args[0]);
     if (self->display.frame_state() != spidisplay::SPIDisplay::FrameState::IDLE) {

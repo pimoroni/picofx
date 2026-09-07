@@ -471,7 +471,7 @@ using ConvertFn = void (*)(const Descriptor &, uint8_t *, int, int);
 
 // Resolve the destination packer tag and the source kind to a kernel instantiation. The
 // descriptor carries rotation, mirror and pixel-double, so only indexed selects on the
-// source side, a palette test in the loop body costing the direct path about 5%.
+// source side, since a palette test in the loop body cannot be hoisted out of it.
 inline ConvertFn select_convert(int dst_format, bool indexed) {
     if (dst_format == RGB444::format) {
         return indexed ? &convert_band<Indexed8, RGB444>
@@ -521,7 +521,8 @@ inline void emit_rows(ConvertFn convert, const Descriptor &desc, uint8_t *out,
                       int first_row, int row_count, bool sram_source) {
 #if SPIDISPLAY_PV_CORE1 || SPIDISPLAY_SPLIT_SERIAL
     // Check if the range can split. Only SRAM does, two cores at distant PSRAM offsets
-    // costing the shared QMI more than the halved work saves, 0.84x against 1.60x
+    // costing the shared QMI more than the halved work saves, 0.84x against SRAM's
+    // 1.60x on unrotated 12-bit rows.
     if (dual_convert && sram_source && row_count >= 2) {   // A single row has no halves
         const int first_half_rows = row_count / 2;
         uint8_t *second_half_out =

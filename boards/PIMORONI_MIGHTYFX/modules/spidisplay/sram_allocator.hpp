@@ -12,7 +12,7 @@
 //
 // Note, the two ends are released differently. A high claim has an owner whose
 // destructor knows its base and releases that one claim, whereas a canvas is
-// handed out as a view that nothing finalises, so the low claims can only be
+// handed out as a view that nothing destroys, so the low claims can only be
 // dropped together, when the screens that drew to them go.
 //
 // The allocator itself must not allocate, so the number of claims is capped at

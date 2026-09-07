@@ -17,8 +17,8 @@ extern "C" {
 /***** The types and their module functions, from spidisplay_bindings.cpp *****/
 extern const mp_obj_type_t SPIDisplayBus_type;
 extern const mp_obj_type_t SPIDisplay_type;
-extern const mp_obj_fun_builtin_var_t spidisplay_update_all_obj;
-extern const mp_obj_fun_builtin_var_t spidisplay_te_phase_obj;
+MP_DECLARE_CONST_FUN_OBJ_KW(spidisplay_update_all_obj);
+MP_DECLARE_CONST_FUN_OBJ_VAR_BETWEEN(spidisplay_te_phase_obj);
 
 /***** The SRAM allocator, over the region the PSRAM-only GC heap leaves free *****/
 extern uint8_t __GcHeapStart[];   // A linker symbol, so the region's base

@@ -16,7 +16,7 @@
 // rebasing the Descriptor to point at it, convert_band is able to run unchanged over
 // a small contiguous sub-image. A window serves as many destination rows as it holds
 // source columns, and is refilled once the rows advance past it. Being in SRAM also
-// lets its conversion split across both cores, a 1.60x gain PSRAM cannot have.
+// lets its conversion split across both cores, the 1.60x an SRAM source gets.
 //
 // Rebasing is the u and v origins and the source strides, nothing else. Descriptor
 // coordinates stay in destination space, so a window's rows still clip against
