@@ -97,4 +97,3 @@ There are many examples to get you started with Mighty and Tiny FX (and other bo
 To take Mighty and Tiny FX further, the full API documentation for the boards can be found at:
 
 * [Library Reference](/docs/reference.md)
-* [Playback Reference](/docs/playback.md) - playing animated GIFs and image sequences on a screen
