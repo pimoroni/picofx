@@ -121,4 +121,3 @@ To take Mighty and Tiny FX further, the full API documentation for the boards ca
 
 * [Library Reference: Mighty FX](/docs/mighty_fx_reference.md)
 * [Library Reference: Tiny FX](/docs/tiny_fx_reference.md)
-* [Playback Reference](/docs/playback.md) - playing animated GIFs and image sequences on a screen
