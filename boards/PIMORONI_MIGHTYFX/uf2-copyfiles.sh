@@ -19,6 +19,7 @@ cp -r -v "$SCRIPT_PATH/../../picofx" "$TARGET/lib"
 cp -r -v "$SCRIPT_PATH/visible_libs/." "$TARGET/lib"
 cp -r -v "$SCRIPT_PATH/../visible_libs/." "$TARGET/lib"
 cp -r -v "$CI_BUILD_ROOT/aye_arr/aye_arr" "$TARGET/lib"
+cp -r -v "$CI_BUILD_ROOT/spidisplay/src/." "$TARGET/lib"
 
 # Remove any markdown files
 find "$TARGET" -type f -name '*.md' -exec rm -v {} \;
