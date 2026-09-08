@@ -203,7 +203,7 @@ The members keep their identity, so each can still be updated on its own. A grou
 
 A group of one member is allowed, so a program written for a hub still runs where a single panel answered.
 
-`subset(*screens)` names fewer of the members over the same display, for a frame that reaches only some of them, and `update(image, to=(...))` does the same for one frame. A subset owns nothing and is cheap enough to make per frame.
+`subset(*screens)` names fewer of the members over the same display, for a frame that reaches only some of them, and `update(image, to=(...))` does the same for one frame. A subset owns nothing, so bind one and reuse it; where the membership changes each frame, `to=` takes a tuple and costs less than building a subset every time.
 
 `reveal_together=True` asks it of every member. One group write covers them all, so it only matters where a subset covers part of the line-up.
 

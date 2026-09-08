@@ -2,8 +2,8 @@
 #
 # SPDX-License-Identifier: MIT
 #
-# One panel on an SP/CE port. A screen type is a subclass carrying its panel's
-# settings; Screen154 and Screen280 in __init__.py are the shipped ones.
+# One panel on a SP/CE port. A screen type is a subclass carrying its panel's
+# settings. Screen154 and Screen280 in __init__.py are the shipped ones.
 
 import spidisplay
 import st7789
@@ -13,30 +13,30 @@ from .base import ScreenBase, __check_rotation
 
 class Reserve:
     """What a screen's share of the fast SRAM is set aside for."""
-    CANVAS_SPACE = 0        # Only what a frame needs, leaving the region for canvas()
+    CANVAS_SPACE = 0        # Only what a frame needs, leaving the rest for canvas()
     FULL_SIZE_IMAGES = 1    # Room to convert a full-size heap image while a paired screen does the same
 
 
 class Screen(ScreenBase):
-    """One panel on an SP/CE port."""
+    """One panel on a SP/CE port."""
 
-    CONTROLLER = st7789      # bringup, the rate and depth code tables, the porch and the rows a refresh scans
-    PROBE_MS = 60            # a present panel always answers inside this
-    PATIENT_PROBE_MS = 250   # the second look, paid only by a line with nothing on it
+    CONTROLLER = st7789      # Bringup, the rate and depth code tables, the porch and the rows a refresh scans
+    PROBE_MS = 60            # A present panel always answers inside this
+    PATIENT_PROBE_MS = 250   # The second look, paid only by a line with nothing on it
     WIDTH = HEIGHT = None
     BITDEPTH = 16
     FRAMERATE = 60
     BAUDRATE = 24_000_000
-    BAND_LINES = 12          # With CACHE_COLUMNS, the fallback tuning for a wire
-    CACHE_COLUMNS = 12       # PROFILES does not cover: the measured sweet spot
+    BAND_LINES = 12          # The measured band a wire outside PROFILES falls back on
+    CACHE_COLUMNS = 12       # The measured cache width a wire outside PROFILES falls back on
     DEPTHS = (16, 12)        # Default bit depth preference, first row wins
 
-    # Reserve.FULL_SIZE_IMAGES recipes per (baudrate, bitdepth): the ring depth and
-    # cache width measured to hold a pair wire-bound. A wire with no row is refused.
+    # Reserve.FULL_SIZE_IMAGES recipes per (baudrate, bitdepth), being the ring depth
+    # and cache width measured to hold a pair wire-bound. A wire with no row is refused.
     FULL_IMAGE_RESERVE = {}
 
-    # Measured tuning per (baudrate, bitdepth): the band, cache and highest rate that
-    # hold at rotation 90. A "dual" entry replaces the row on a two-core firmware.
+    # Measured tuning per (baudrate, bitdepth), being the band, cache and highest rate
+    # that hold at rotation 90. A "dual" entry replaces the row on a two-core firmware.
     PROFILES = {}
 
     def __init__(self, port, cs=None, dc=None, te=None, v_sync=None, bl=True,
@@ -115,7 +115,7 @@ class Screen(ScreenBase):
 
         # Naming the port's DC line declares a shared TE line, one panel asserting at a
         # time. The driver reads a DC line by flipping it to an input, so a shared
-        # line is passed as no pin: a pin here would mean a dedicated input.
+        # line is passed as no pin, a pin here meaning a dedicated input.
         shared_te = named_line is not None and named_line is port.__dc_line
         te_pin = None if shared_te else named_line
 
@@ -144,13 +144,14 @@ class Screen(ScreenBase):
         # otherwise run its tuning on a 24MHz wire
         achieved = display.baudrate()
         if achieved < self.__baudrate:
+            # The display claimed SRAM at construction, so a refusal hands it back
             display.__del__()
             raise ValueError(f"this wire reached {achieved} baud of the {self.__baudrate} requested. "
                              f"Raise clk_peri first, machine.freq(150_000_000, 150_000_000), "
                              f"or request a rate the current clock reaches.")
 
-        # A hub has already reset and cleared every panel on the port; a screen on its
-        # own does both. A shared line comes up at TEOFF.
+        # A hub has already reset and cleared every panel on the port, so a screen on
+        # its own does both. A shared line comes up at TEOFF.
         alone = not port.__panels_reset
         if alone:
             controller.reset(display)
@@ -175,7 +176,7 @@ class Screen(ScreenBase):
 
         port.__register(self)
 
-        # The porch setup() gave the panel and the scan slots it implies; __set_porch keeps both current
+        # setup()'s porch and the scan slots it implies, both kept current by __set_porch
         self.__porch = controller.PORCH
         self.__line_slots = controller.LINE_SLOTS
 
@@ -224,11 +225,11 @@ class Screen(ScreenBase):
 
     @property
     def framerate(self):
-        """The refresh rate this screen was built with; alignment may move a panel a little off it."""
+        """The refresh rate this screen was built with. Alignment may move a panel a little off it."""
         return self.__framerate
 
     def __set_porch(self, back, front):
-        # One porch line is one line time; a group's align moves a member with this
+        # One porch line is one line time, and a group's align moves a member with this
         if back < 1 or front < 1:
             raise ValueError(f"a porch of ({back}, {front}) has a side under one line, which the "
                              "controller has no code for")

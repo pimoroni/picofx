@@ -50,7 +50,7 @@ class ScreenHubPort:
 class ScreenHub:
     """Several panels on one SP/CE port, each addressed by a chip select of its own."""
 
-    # What the bringup pass runs at; every screen writes its own settings over these
+    # What the bringup pass runs at, every screen writing its own settings over these
     BLIND_BAUDRATE = 24_000_000
     BLIND_BITDEPTH = 12
     BLIND_FRAMERATE = 60
@@ -76,7 +76,7 @@ class ScreenHub:
         dc = port.dc if dc is None else dc
         te = dc if te is None else te
 
-        # Every line high before any panel is spoken to: a panel with no display yet
+        # Every line high before any panel is spoken to. A panel with no display yet
         # reads its floating chip select as asserted and takes another's bringup
         for line in lines:
             line.init(Pin.OUT, value=True)
@@ -87,7 +87,7 @@ class ScreenHub:
 
     @property
     def ports(self):
-        """One port per chip select, in the order named; hub.a is ports[0] and so on."""
+        """One port per chip select in the order named, hub.a being ports[0] and so on."""
         return self.__ports
 
     def __getattr__(self, name):

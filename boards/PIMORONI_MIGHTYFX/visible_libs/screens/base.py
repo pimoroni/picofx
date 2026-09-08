@@ -2,10 +2,14 @@
 #
 # SPDX-License-Identifier: MIT
 #
-# The frame path a single screen and a broadcast group share: staging a frame, the
-# wait on the tearing-effect signal, and the backlight that stays dark until one has drawn.
+# The frame path a single screen and a broadcast group share. It stages a frame, waits
+# on the tearing-effect signal, and keeps the backlight dark until one has drawn. Two
+# methods are native, the thin wrappers a frame passes through, where it pays 1.6x to 5.6x.
 
 import spidisplay
+
+# A dither moves a member one porch line either way, so the hold's smallest span is two
+HOLD_QUANTUM_LINES = 2
 
 
 class Tile:
@@ -23,12 +27,12 @@ def __check_rotation(rotation):
 
 def __tightest_margin(screens, trims, line_us, wire_us):
     # Margin is the scan lines a write leaves uncovered, judged in each member's line
-    # time. Returns (tightest index, margins in us, the hold's quantum of two lines).
+    # time. Returns (tightest index, margins in us, the hold's quantum in us).
     margins = [screen.__line_slots + trim + screen.height - wire / line
                for screen, trim, line, wire in zip(screens, trims, line_us, wire_us)]
     tightest = margins.index(min(margins))
     margins_us = tuple(margin * line for margin, line in zip(margins, line_us))
-    return tightest, margins_us, 2 * line_us[tightest]
+    return tightest, margins_us, HOLD_QUANTUM_LINES * line_us[tightest]
 
 
 class ScreenBase:
@@ -151,8 +155,9 @@ class ScreenBase:
         return tuple(screen.__display for screen in to)
 
     def __sync_screen(self, v_sync, to):
-        # Only a screen sharing its DC line needs the transient wait. A member outside the
-        # written set would stay clean while every written panel tears, so a narrowed write waits on one of its own.
+        # Only a screen sharing its DC line needs the transient wait. A member outside
+        # the written set would stay clean while every written panel tears, so a
+        # narrowed write waits on one of its own.
         leader = self.__leader if self.__leader_source is None else self.__leader_source.__leader
         if not v_sync or leader is None:
             return None
@@ -187,10 +192,10 @@ class ScreenBase:
         # None is opaque black in the module's packed premultiplied form
         bg = 0xff000000 if bg_color is None else bg_color.p & 0xffffffff
 
-        # mirror needs the identity test: None is falsy, so a truthiness check would
-        # read "follow the screen" as "do not mirror"
         if rotation is None:
             rotation = self.__rotation
+        # None is falsy, so mirror needs the identity test. A truthiness check would
+        # read "follow the screen" as "do not mirror"
         if mirror is None:
             mirror = self.__mirror
 

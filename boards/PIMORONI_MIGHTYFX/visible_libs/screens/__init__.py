@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: MIT
 #
-# The screens an SP/CE port can drive. A screen type is a Screen subclass carrying
+# The screens a SP/CE port can drive. A screen type is a Screen subclass carrying
 # its panel's settings, PROFILES being the measured tuning per wire. MicroPython
-# only: the package leans on the spidisplay module and on double-underscore names
-# being reachable, which CPython mangles.
+# only, since the package leans on the spidisplay module and on double-underscore
+# names being reachable, which CPython mangles.
 
 from .base import ScreenBase, Tile
 from .group import ScreenGroup
@@ -17,8 +17,8 @@ from .screen import Reserve, Screen
 class Screen154(Screen):
     SIZE = "1.54"
     WIDTH, HEIGHT = 240, 240
-    # Two wires have no row. 24MHz 16-bit: that frame outruns the controller's slowest
-    # rate. 75MHz 12-bit: that wire overtakes the panel's scan near the top of the frame.
+    # Two wires have no row. A 24MHz 16-bit frame outruns the controller's slowest
+    # rate, and a 75MHz 12-bit wire overtakes the panel's scan near the top of the frame.
     PROFILES = {
         (24_000_000, 12): {"band_lines": 2, "cache_columns": 0, "framerate": 53},
         (37_500_000, 16): {"band_lines": 12, "cache_columns": 12, "framerate": 60},
@@ -26,7 +26,7 @@ class Screen154(Screen):
         (75_000_000, 16): {"band_lines": 12, "cache_columns": 12, "framerate": 60},
     }
 
-    # The shallowest ring holding a pair wire-bound at either rotation; a column cache buys nothing here
+    # The shallowest ring holding a pair wire-bound at either rotation, no column cache needed
     FULL_IMAGE_RESERVE = {
         (24_000_000, 12): {"stage_lines": 120, "cache_columns": 0},
     }
@@ -47,8 +47,8 @@ class Screen280(Screen):
                            "dual": {"band_lines": 12, "cache_columns": 12, "framerate": 60}},
     }
 
-    # The shallowest ring holding a pair wire-bound; the faster wires have no row since a
-    # shorter wire row makes the frame conversion-bound whatever the ring holds
+    # The shallowest ring holding a pair wire-bound. The faster wires have no row, since
+    # a shorter wire row makes the frame conversion-bound whatever the ring holds
     FULL_IMAGE_RESERVE = {
         (24_000_000, 12): {"stage_lines": 160, "cache_columns": 12},
     }
