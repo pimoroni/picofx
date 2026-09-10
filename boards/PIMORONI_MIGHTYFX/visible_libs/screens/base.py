@@ -10,8 +10,8 @@
 
 import spidisplay
 
-# A dither moves a member one porch line either way, so the hold's smallest span is two
-HOLD_QUANTUM_LINES = 2
+# A dither moves a member one porch line either way
+DITHER_EXTENT_LINES = 1
 
 
 class Tile:
@@ -27,14 +27,24 @@ def __check_rotation(rotation):
         raise ValueError(f"{rotation} is not a valid angle. Expected 0, 90, 180, or 270.")
 
 
-def __tightest_margin(screens, trims, line_us, wire_us):
+def __fold(delta, period):
+    # Fold a difference onto half a period either way, keeping the sign, so a phase
+    # error reads as the short way round. The boundary is exactly half, a booking
+    # carrying a fraction of a line, so a floored half would fold the wrong way
+    delta %= period
+    return delta - period if delta > period / 2 else delta
+
+
+def __tightest_margin(screens, pads, line_us, wire_us):
     # Margin is the scan lines a write leaves uncovered, judged in each member's line
     # time. Returns (tightest index, margins in us, the dither's range in us).
-    margins = [screen.__line_slots + trim + screen.height - wire / line
-               for screen, trim, line, wire in zip(screens, trims, line_us, wire_us)]
+    margins = [screen.__line_slots + pad + screen.height - wire / line
+               for screen, pad, line, wire in zip(screens, pads, line_us, wire_us)]
     tightest = margins.index(min(margins))
     margins_us = tuple(margin * line for margin, line in zip(margins, line_us))
-    return tightest, margins_us, HOLD_QUANTUM_LINES * line_us[tightest]
+
+    # Doubled, the dither reaching either way, and in the tightest member's line time
+    return tightest, margins_us, 2 * DITHER_EXTENT_LINES * line_us[tightest]
 
 
 class ScreenBase:
@@ -227,7 +237,7 @@ class ScreenBase:
         self.__drawn(to)
 
         if self.__group is not None:
-            # Advance the group's hold, or a run of a member's own frames walks it apart
+            # Advance the group's hold, or a run of a member's own frames lets it drift apart
             self.__group.__frame_ticked(self.__display.stats(), synced, delay)
 
     @micropython.native

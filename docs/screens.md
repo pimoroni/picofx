@@ -177,7 +177,7 @@ Both screens must be on different ports, since one port is one stream, and must 
 
 ### Alignment
 
-Two panels refresh from their own oscillators, so left alone their refreshes drift apart and one panel shows a new frame tens of milliseconds before the other. With `align` on, the pair measures both panels' refresh periods, trims the faster panel's onto the slower's, and then corrects the small remaining drift on every frame. After a pause long enough for the pair to drift apart, the next `update()` spends one frame catching up while the stale content hides it, so resuming costs one late frame.
+Two panels refresh from their own oscillators, so left alone their refreshes drift apart and one panel shows a new frame tens of milliseconds before the other. With `align` on, the pair measures both panels' refresh periods, brings the faster panel's onto the slower's, and then corrects the small remaining drift on every frame. After a pause long enough for the pair to drift apart, the next `update()` spends one frame catching up while the stale content hides it, so resuming costs one late frame.
 
 `align=None`, the default, aligns where the pair can. Construction calibrates for about four seconds, saying so on the console. A pair too mismatched to hold alignment says why and runs unaligned, and `is_aligned()` then reports `False`. `align=True` raises `ValueError` for such a pair instead, and `align=False` leaves the panels alone. `start_aligning()` takes the four seconds later, and `stop_aligning()` stops.
 
@@ -213,7 +213,7 @@ Panels on a hub refresh independently, so there is no moment when a frame is saf
 
 ### Alignment
 
-With `align` on, the group brings its members' refreshes into step and holds them there, so a frame lands untorn on all of them. Construction calibrates each member for a fraction of a second, saying so on the console, trims each panel's refresh onto the slowest, and brings their refreshes together. From then on every frame the group writes also nudges any member that has drifted, a scan line at a time.
+With `align` on, the group brings its members' refreshes into step and holds them there, so a frame lands untorn on all of them. Construction calibrates each member for a fraction of a second, saying so on the console, matches each panel's refresh to the slowest, and brings their refreshes together. From then on every frame the group writes also nudges any member that has drifted, a scan line at a time.
 
 `align=None`, the default, aligns where the group can and otherwise says why and runs held to one member's signal only. `align=True` raises `ValueError` where the members cannot be held. `align=False` leaves the panels alone. `is_aligned()` reports the state reached, so it reads `False` where a request went unmet or a long pause lost the members.
 
@@ -444,6 +444,6 @@ ScreenHub(port: SPCEPort,
 
 ## Diagnostics
 
-The screens report on the console through the `logging` module. At the default level, `LOG_INFO`, they say when a calibration starts and finishes, and why an alignment request went unmet. `logging.level = logging.LOG_DEBUG` adds the figures behind those notices: a pair's porch trim and the drift left after it, a group's verified periods and their spread, every trim correction with the member it moved, the walk engaging and finishing, how many periods a frame was held for the members to come together, and any capture whose falls did not span a plausible period. One panel of a group tearing shows up there first, as the member the corrections keep naming.
+The screens report on the console through the `logging` module. At the default level, `LOG_INFO`, they say when a calibration starts and finishes, and why an alignment request went unmet. `logging.level = logging.LOG_DEBUG` adds the figures behind those notices: a pair's porch padding and the drift left after it, a group's verified periods and their spread, every trim correction with the member it moved, the walk engaging and finishing, how many periods a frame was held for the members to come together, and any capture whose falls did not span a plausible period. One panel of a group tearing shows up there first, as the member the corrections keep naming.
 
 Per-frame timing and the tearing-effect counters belong to the driver underneath the screens, not to this API. The tools in `tools/` read them, `check_tearing.py` printing a profile's margin and `check_te_margin.py` a single setting's, and the driver's own README documents what they measure.

@@ -9,7 +9,7 @@
 import logging
 import time
 
-from .base import ScreenBase, __tightest_margin
+from .base import ScreenBase, __fold, __tightest_margin
 
 # time.ticks_us() wraps at 2**30 and the C module's stamps at 2**32, and their low
 # bits agree, so a stamp kept or compared across the two is reduced to 30 bits. A
@@ -20,21 +20,21 @@ TICKS_MASK = 0x3FFFFFFF
 class ScreenGroup(ScreenBase):
     """Several of a port's screens driven as one, sharing a frame."""
 
-    # Three stages hold a group together. __calibrate trims the members onto one rate,
+    # Three stages hold a group together. __calibrate pads the members to one rate,
     # __acquire brings their scans together, and __tick_hold keeps them there, while
     # __tick_trim keeps the rate models current as the panels warm.
     #
     # Four words name members:
     #   nominated  the leader= construction chose, or the first that can be waited on
     #   leader     the one a frame waits on now, the nominated member until a trim moves it
-    #   reference  the slowest, whose rate the others are trimmed to and errors held against
+    #   reference  the slowest, whose rate the others are padded to and errors held against
     #   synced     whichever the last frame's wait ended on, the leader unless a narrowed
     #              write left it out
     #
-    # trim carries three senses, the trim= setting, the whole porch lines calibration adds
-    # to bring a member's rate onto the reference's, and the hold's one-line corrections.
+    # trim is the trim= setting and the one-line corrections it switches on, made over
+    # and over as the panels warm. Calibration's one-time porch lines are padding instead.
 
-    # Three times the 100ms where one miscounted edge moved a trim by three lines
+    # Three times the 100ms where one miscounted edge moved a pad by three lines
     PROBE_MS = 300
     SETTLE_MS = 100     # What a porch move needs before a period reads true
 
@@ -216,7 +216,7 @@ class ScreenGroup(ScreenBase):
         # Position by member, so a frame's bookkeeping never scans the tuple
         self.__member_index = {screen: index for index, screen in enumerate(screens)}
 
-        self.__reference = None                 # The slowest member, whose rate the others are trimmed to
+        self.__reference = None                 # The slowest member, whose rate the others are padded to
         self.__reference_index = 0
         self.__target_us = 0                    # The period every member is held to, 0 until one is
         self.__line_us = ()                     # Each member's line time, us
@@ -285,7 +285,7 @@ class ScreenGroup(ScreenBase):
             screen.__group = self
 
     def __calibrate(self, required):
-        # The reference is the slowest member, so every trim lengthens a porch, the
+        # The reference is the slowest member, so every pad lengthens a porch, the
         # direction that adds margin. required refuses where the members will not hold,
         # and an unmet request says why instead.
         members = self.screens
@@ -310,28 +310,28 @@ class ScreenGroup(ScreenBase):
         line_us = [period / screen.__line_slots for period, screen in zip(periods, members)]
         slowest = periods.index(max(periods))
         frame_us = self.__display.wire_window_us()
-        trims = [int(round((periods[slowest] - period) / line))
-                 for period, line in zip(periods, line_us)]
+        pads = [int(round((periods[slowest] - period) / line))
+                for period, line in zip(periods, line_us)]
 
-        tightest, margins_us, quanta = __tightest_margin(members, trims, line_us,
+        tightest, margins_us, dither_range_us = __tightest_margin(members, pads, line_us,
                                                          [frame_us] * len(members))
         self.__margins = margins_us
         margin_us = margins_us[tightest]
         dither_reserve_us = self.DITHER_FRACTION * margin_us
 
-        if quanta + dither_reserve_us > margin_us or margin_us <= 0:
+        if dither_range_us + dither_reserve_us > margin_us or margin_us <= 0:
             self.__unaligned(required, f"{members[tightest]} is {margin_us:.0f}us from tearing "
-                                       f"where the hold needs {quanta:.0f}us plus a reserve. "
+                                       f"where the hold needs {dither_range_us:.0f}us plus a reserve. "
                                        "Lengthen every member's porch, or drop the rate a step")
             return
 
         # Past the refusal, so nothing above has moved a panel
         self.__reference = members[slowest]
         self.__reference_index = slowest
-        for screen, trim in zip(members, trims):
-            if trim:
+        for screen, pad in zip(members, pads):
+            if pad:
                 back, front = screen.__porch
-                screen.__set_porch(back + trim, front)
+                screen.__set_porch(back + pad, front)
 
         # One verify pass, since a reading that miscounts an edge lands whole porch lines out
         time.sleep_ms(self.SETTLE_MS)
@@ -339,12 +339,12 @@ class ScreenGroup(ScreenBase):
         if all(held):
             target = max(held)
             for index, screen in enumerate(members):
-                correction = int(round((target - held[index]) / line_us[index]))
-                if correction:
+                adjust = int(round((target - held[index]) / line_us[index]))
+                if adjust:
                     back, front = screen.__porch
-                    screen.__set_porch(back + correction, front)
+                    screen.__set_porch(back + adjust, front)
                 # The rate error the hold integrates, under half a line either way
-                self.__residual_us[index] = held[index] + correction * line_us[index] - target
+                self.__residual_us[index] = held[index] + adjust * line_us[index] - target
             logging.debug(f"screens: verified at {held}, spread {max(held) - min(held)}us")
             self.__target_us = target
 
@@ -360,7 +360,7 @@ class ScreenGroup(ScreenBase):
         if self.__target_us and self.__acquire():
             self.__arm_hold()
         phase = "held in phase" if self.__holding else "left unheld"
-        logging.info(f"screens: trimmed onto {self.__reference} and {phase}, {trims} porch "
+        logging.info(f"screens: padded to {self.__reference} and {phase}, {pads} porch "
                      f"lines, {margin_us:.0f}us of margin at the tightest member")
 
     def __phases(self):
@@ -421,7 +421,7 @@ class ScreenGroup(ScreenBase):
             return None, None
 
         target = phases[self.__reference_index]
-        return [self.__fold(phase - target) for phase in phases], target
+        return [__fold(phase - target, self.__target_us) for phase in phases], target
 
     def __seed_grid(self, errors, target):
         # The grid is common, every member's ideal falls being the reference's, and the
@@ -435,28 +435,28 @@ class ScreenGroup(ScreenBase):
         # whole periods and going back after. Each member takes the nearer direction, and
         # all run at once, so a round costs the longest one.
         members = self.screens
-        plans = []
+        excursions = []
         for index in range(len(members)):
             stretch = self.EXCURSION_LINES * self.__line_us[index]
-            plans.append(int(round(errors[index] / stretch)))
+            excursions.append(int(round(errors[index] / stretch)))
 
         logging.debug(f"screens: errors {[int(e) for e in errors]}, "
-                      f"excursions {plans} periods")
+                      f"excursions {excursions} periods")
 
         for index, screen in enumerate(members):
-            if plans[index]:
-                lines = self.EXCURSION_LINES if plans[index] > 0 else -self.EXCURSION_LINES
+            if excursions[index]:
+                lines = self.EXCURSION_LINES if excursions[index] > 0 else -self.EXCURSION_LINES
                 back, front = screen.__porch
                 screen.__set_porch(back + lines, front)
 
         elapsed = 0
-        for index in sorted(range(len(members)), key=lambda i: abs(plans[i])):
-            if not plans[index]:
+        for index in sorted(range(len(members)), key=lambda i: abs(excursions[i])):
+            if not excursions[index]:
                 continue
-            run = abs(plans[index])
+            run = abs(excursions[index])
             time.sleep_ms(int((run - elapsed) * self.__target_us / 1000) + 1)
             elapsed = run
-            lines = self.EXCURSION_LINES if plans[index] > 0 else -self.EXCURSION_LINES
+            lines = self.EXCURSION_LINES if excursions[index] > 0 else -self.EXCURSION_LINES
             back, front = members[index].__porch
             members[index].__set_porch(back - lines, front)
 
@@ -483,11 +483,6 @@ class ScreenGroup(ScreenBase):
             logging.debug(f"screens: a capture spanned {spanned}us against a "
                           f"{self.__target_us}us period, so the phase it gives "
                           f"may not be this member's")
-
-    def __fold(self, error):
-        # Fold onto half a period either way
-        error %= self.__target_us
-        return error - self.__target_us if error > self.__target_us / 2 else error
 
     def update(self, image, *, rotation=None, mirror=None, pixel_double=False,
                offset=None, tile=False, bg_color=None,
@@ -651,7 +646,7 @@ class ScreenGroup(ScreenBase):
         walk_lines = self.WALK_LINES
         walk_floor = self.WALK_FLOOR_LINES
         anchor_skip = self.__anchor_skip
-        fold = self.__fold
+        fold = __fold
         reference_index = self.__reference_index
         anchor = phase_us[reference_index]
         drift = residual_us[reference_index] * periods
@@ -667,7 +662,7 @@ class ScreenGroup(ScreenBase):
 
             # Folded, since the anchor wraps each booking at half a period. A positive
             # error is a booking ahead of the reference, closed by shortening the porch
-            error = fold(phase_us[index] - anchor)
+            error = fold(phase_us[index] - anchor, target)
 
             # A member further out than centre_us is tearing whatever happens, so the
             # walk runs deep. Inside it, one line a frame is all the ripple asks for
@@ -761,7 +756,7 @@ class ScreenGroup(ScreenBase):
         # Resolved nearest the booking, phases being modular, which is what rides out a pause
         booked = self.__phase_us[index]
         raw = (((stamp - self.__grid_at) & TICKS_MASK) + self.__grid_phases[index]) % self.__target_us
-        self.__phase_us[index] = booked + self.__fold(raw - booked)
+        self.__phase_us[index] = booked + __fold(raw - booked, self.__target_us)
 
     def __rebase(self, target, stamp):
         # A booking is a phase against the grid, so the grid is re-expressed at stamp
@@ -827,9 +822,9 @@ class ScreenGroup(ScreenBase):
         if len(falls) > 1:
             measured = ((falls[-1] - falls[0]) & 0xFFFFFFFF) / (len(falls) - 1)
             # Each captured period carries a dithered porch line whole
-            self.__correct(screen, measured - self.__dither[index] * self.__line_us[index])
+            self.__trim_member(screen, measured - self.__dither[index] * self.__line_us[index])
 
-    def __correct(self, screen, measured):
+    def __trim_member(self, screen, measured):
         # Move one member a line closer to the held period. A held reference is not
         # moved, since the target follows it and the grid is rebased, so the bookings carry over.
         if not measured or screen not in self.screens:
