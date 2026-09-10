@@ -3,9 +3,7 @@
 # SPDX-License-Identifier: MIT
 #
 # The screens a SP/CE port can drive. A screen type is a Screen subclass carrying
-# its panel's settings, PROFILES being the measured tuning per wire. MicroPython
-# only, since the package leans on the spidisplay module and on double-underscore
-# names being reachable, which CPython mangles.
+# its panel's settings.
 
 from .base import ScreenBase, Tile
 from .group import ScreenGroup
@@ -15,46 +13,53 @@ from .screen import Reserve, Screen
 
 
 class Screen154(Screen):
+    """The 1.54" screen, 240 by 240 pixels."""
+
     SIZE = "1.54"
     WIDTH, HEIGHT = 240, 240
-    # Two wires have no row. A 24MHz 16-bit frame outruns the controller's slowest
-    # rate, and a 75MHz 12-bit wire overtakes the panel's scan near the top of the frame.
+
+    # Every wire here is wire-bound, so a second core buys nothing and no row has a dual entry
     PROFILES = {
+        # No 24MHz 16-bit, too slow to finish a frame inside the controller's slowest refresh
         (24_000_000, 12): {"band_lines": 2, "cache_columns": 0, "framerate": 53},
         (37_500_000, 16): {"band_lines": 12, "cache_columns": 12, "framerate": 60},
         (37_500_000, 12): {"band_lines": 12, "cache_columns": 12, "framerate": 60},
         (75_000_000, 16): {"band_lines": 12, "cache_columns": 12, "framerate": 60},
+        # No 75MHz 12-bit, so fast the write overtakes the panel's scan and tears near the top
     }
 
-    # The shallowest ring holding a pair wire-bound at either rotation, no column cache needed
     FULL_IMAGE_RESERVE = {
+        # The shallowest ring holding a pair wire-bound at either rotation, no column cache needed
         (24_000_000, 12): {"stage_lines": 120, "cache_columns": 0},
+        # No 37.5MHz or 75MHz rows, so fast that conversion sets the pace whatever the ring holds
     }
 
 
 class Screen280(Screen):
+    """The 2.8" screen, 240 by 320 pixels."""
+
     SIZE = "2.8"
     WIDTH, HEIGHT = 240, 320
-    # No 12-bit row at 75MHz, as for the 1.54". Each rate is a controller step below the
-    # measured tearing onset, so a fast panel oscillator still has margin. The dual rows
-    # are the wires one core could not keep fed.
+
+    # Each rate is a controller step below the measured tearing onset, so a fast panel
+    # oscillator still has margin. A dual row is a wire one core could not keep fed.
     PROFILES = {
+        # No 24MHz 16-bit, too slow to finish a frame inside the controller's slowest refresh
         (24_000_000, 12): {"band_lines": 4, "cache_columns": 4, "framerate": 45},
         (37_500_000, 16): {"band_lines": 12, "cache_columns": 12, "framerate": 52},
         (37_500_000, 12): {"band_lines": 12, "cache_columns": 12, "framerate": 55,
                            "dual": {"band_lines": 12, "cache_columns": 12, "framerate": 60}},
         (75_000_000, 16): {"band_lines": 12, "cache_columns": 12, "framerate": 53,
                            "dual": {"band_lines": 12, "cache_columns": 12, "framerate": 60}},
+        # No 75MHz 12-bit, so fast the write overtakes the panel's scan and tears near the top
     }
 
-    # The shallowest ring holding a pair wire-bound. The faster wires have no row, since
-    # a shorter wire row makes the frame conversion-bound whatever the ring holds
     FULL_IMAGE_RESERVE = {
+        # The shallowest ring holding a pair wire-bound
         (24_000_000, 12): {"stage_lines": 160, "cache_columns": 12},
+        # No 37.5MHz or 75MHz rows, so fast that conversion sets the pace whatever the ring holds
     }
 
 
-# Every screen type by the size it declares. A new type is registered here, and a
-# wire it has no PROFILES row for runs on the class constants, whose 60fps most
-# wires cannot hold, so its rows are measured before it ships
+# Every screen type by the size it declares, which is where a new type is registered
 SCREEN_TYPES = {screen.SIZE: screen for screen in (Screen154, Screen280)}

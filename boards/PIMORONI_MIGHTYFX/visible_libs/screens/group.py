@@ -2,8 +2,9 @@
 #
 # SPDX-License-Identifier: MIT
 #
-# Several of a port's screens driven as one, sharing a frame. They are calibrated onto
-# one refresh rate, brought into phase, and held there from the frames they already write.
+# Several screens, already built on one SP/CE port, driven as one and sharing a frame.
+# A group calibrates them onto one refresh rate, brings their scans into phase, and holds
+# them there from the frames they already write. subset() drives some of its members.
 
 import logging
 import time
@@ -19,37 +20,25 @@ TICKS_MASK = 0x3FFFFFFF
 class ScreenGroup(ScreenBase):
     """Several of a port's screens driven as one, sharing a frame."""
 
-    # How a group holds its members together, in three stages. Calibration probes each
-    # member's period and trims every porch toward the slowest member, the reference,
-    # until the rates agree to a fraction of a line. Acquisition then runs each
-    # member's porch long or short for whole periods until their scans fall together.
+    # Three stages hold a group together. __calibrate trims the members onto one rate,
+    # __acquire brings their scans together, and __tick_hold keeps them there, while
+    # __tick_trim keeps the rate models current as the panels warm.
     #
-    # The hold keeps them there. Each member has a booked phase against a common grid,
-    # advanced between frames by its modelled rate error. The synced member's TE fall
-    # is the frame's write stamp, so its booking is replaced by a measurement. Every
-    # other member is dithered a porch line either way to keep its booked error nearest
-    # zero, and a member far enough out to be tearing anyway walks in faster. The trim
-    # keeps the rate models current as the panels warm, by rotating which member a
-    # frame waits on or by probing one between frames.
+    # Four words name members:
+    #   nominated  the leader= construction chose, or the first that can be waited on
+    #   leader     the one a frame waits on now, the nominated member until a trim moves it
+    #   reference  the slowest, whose rate the others are trimmed to and errors held against
+    #   synced     whichever the last frame's wait ended on, the leader unless a narrowed
+    #              write left it out
     #
-    # Four words name members. The nominated member is the leader= construction chose,
-    # or the first that can be waited on. The leader is the one a frame waits on now,
-    # the nominated member until a rotating trim moves it. The reference is the slowest,
-    # whose rate the others are trimmed to and whose booking errors are held against.
-    # The synced member is whichever the last frame's wait ended on, the leader unless
-    # a narrowed write left it out.
-    #
-    # trim also carries three senses, being the trim= setting, the whole porch lines
-    # calibration adds to bring a member's rate onto the reference's, and the one-line
-    # corrections the hold keeps making after.
+    # trim carries three senses, the trim= setting, the whole porch lines calibration adds
+    # to bring a member's rate onto the reference's, and the hold's one-line corrections.
 
-    # The first probe after bringup reads long, so each panel's first reading is
-    # discarded. 300ms is about 13 periods, where at 100 one miscounted edge moved a
-    # trim by three lines.
+    # Three times the 100ms where one miscounted edge moved a trim by three lines
     PROBE_MS = 300
-    SETTLE_MS = 100
+    SETTLE_MS = 100     # What a porch move needs before a period reads true
 
-    # Of the fastest member's margin, what the hold may spend
+    # Of the tightest member's margin, what the hold may spend
     DITHER_FRACTION = 0.4
 
     # Frames between probe-mode measurements, about two seconds
@@ -80,14 +69,27 @@ class ScreenGroup(ScreenBase):
     WALK_WAIT_MS = 600
 
     # Clearance held beyond coming into the window. At centre_us exactly the following
-    # scan overtakes the write on the last row. Two, a dithered line landing with a
-    # one-frame ambiguity.
+    # scan overtakes the write on the last row, and a dithered line lands with a
+    # one-frame ambiguity, so two lines covers both
     WAIT_SLACK_LINES = 2
 
     # How far a capture's two falls may span from a period before its phase is suspect
     CAPTURE_TOLERANCE_LINES = 8
 
-    # Sweeps allowed to bring the phases together, which converges in two
+    # Falls a phase capture takes, two being the fewest that name one
+    PHASE_EDGES = 2
+
+    # Falls a trim's period reading takes, averaged over the gaps between them
+    TRIM_EDGES = 4
+
+    # The wait for either, far past the three periods four falls span
+    CAPTURE_TIMEOUT_MS = 200
+
+    # Periods of wait past which the frame took no tearing edge, so its stamp is not a fall
+    TIMED_OUT_PERIODS = 2
+
+    # Excursion rounds allowed to bring the phases together, each after a sweep and one
+    # sweep more to measure the last. Four members converge inside the aim, six do not
     ACQUIRE_TRIES = 3
 
     # Past this gap between frames a rate reading is not trusted, and a hold not yet
@@ -100,6 +102,9 @@ class ScreenGroup(ScreenBase):
 
     def __init__(self, *screens, leader=None, align=None, trim=None,
                  rotation=None, mirror=None, reveal_together=False, parent=None):
+        """Drive several of a port's screens as one, sharing a frame.
+        leader names the member a frame waits on and False declines the wait, align holds
+        the members in phase where it can, and trim keeps that hold current as they warm."""
         if not screens:
             raise ValueError("a broadcast group needs at least one screen")
 
@@ -108,20 +113,19 @@ class ScreenGroup(ScreenBase):
             if screen.port is not port:
                 raise ValueError("a broadcast group has to be on one port, since two ports are two streams")
 
-        # The backlight counts panels, not whatever wrote them, so the members carry it
+        # The backlight counts panels, not what wrote them, so reveal_together goes on the members
         if reveal_together:
             for screen in screens:
                 screen.__reveal_together = True
 
-        # A subset is a member set over its parent's display, claiming no members and
-        # building no display
+        # A subset is a member set over its parent's display, claiming no members of its own
         if parent is not None:
             for screen in screens:
                 if screen not in parent.screens:
                     raise ValueError(f"{screen} is not a member of this group, so it cannot "
                                      "be in a subset of it")
-            # A subset inherits the parent's nomination, and leader=False declines the
-            # wait for this set alone
+
+            # The parent's nomination is inherited, and leader=False declines the wait for this set alone
             nominated = parent.__leader if leader is None else leader
             if nominated is False:
                 nominated = None
@@ -133,10 +137,13 @@ class ScreenGroup(ScreenBase):
                              mirror=parent.mirror if mirror is None else mirror)
             self.__subset_of = parent
             self.__subset_displays = tuple(screen.__display for screen in screens)
+
             # Inherited live, so a rotating trim moving the parent's leader moves this one's
             if leader is None:
                 self.__leader_source = parent
-            # Answered through a subset as the parent would, is_aligned() forwarding live
+
+            # Copied so a read of a subset answers as its parent would. __reference_index
+            # is not, a subset's members being a different list from the parent's
             self.__reference = parent.__reference
             self.__acquired_us = parent.__acquired_us
             self.__trim_mode = parent.__trim_mode
@@ -146,7 +153,7 @@ class ScreenGroup(ScreenBase):
             if screen.__group is not None:
                 raise ValueError("a screen belongs to one group at a time, and one of these is "
                                  "already in another. Take a subset of the group it is in, or "
-                                 "build a single group over every panel that shares a frame.")
+                                 "build a single group over every screen that shares a frame.")
 
         # A hub's panels scan independently, so no edge is safe for every one. The
         # nominated panel comes out clean and the rest tear. Naming one refuses if unmet.
@@ -172,34 +179,33 @@ class ScreenGroup(ScreenBase):
         first = screens[0]
 
         # broadcast() refuses these too, in the driver's words. The cache width, ring depth
-        # and write command have no reading here, so those three stay its to report.
+        # and write command have no reading here, so the driver alone reports those three.
         for position, screen in enumerate(screens[1:], start=2):
             if (screen.width, screen.height) != (first.width, first.height):
-                raise ValueError(f"screen size mismatch: panel {position} is "
-                                 f"{screen.width}x{screen.height} whereas panel 1 is "
-                                 f"{first.width}x{first.height}. Group panels by size")
+                raise ValueError(f"a group's screens are all one size, and screen {position} is "
+                                 f"{screen.width}x{screen.height} whereas screen 1 is "
+                                 f"{first.width}x{first.height}. Group screens by size")
             if screen.__bitdepth != first.__bitdepth:
-                raise ValueError(f"bitdepth mismatch: panel {position} is {screen.__bitdepth}-bit "
-                                 f"whereas panel 1 is {first.__bitdepth}-bit")
+                raise ValueError(f"a group's screens share a bitdepth, and screen {position} is "
+                                 f"{screen.__bitdepth}-bit whereas screen 1 is {first.__bitdepth}-bit")
             if screen.__display.baudrate() != first.__display.baudrate():
-                raise ValueError(f"baudrate mismatch: panel {position} runs at "
-                                 f"{screen.__display.baudrate()} whereas panel 1 runs at "
+                raise ValueError(f"a group's screens share a baudrate, and screen {position} runs "
+                                 f"at {screen.__display.baudrate()} whereas screen 1 runs at "
                                  f"{first.__display.baudrate()}")
             if screen.__display.band_rows() != first.__display.band_rows():
-                raise ValueError(f"band_lines mismatch: panel {position} takes "
-                                 f"{screen.__display.band_rows()} rows at a time whereas panel 1 "
-                                 f"takes {first.__display.band_rows()}")
+                raise ValueError(f"a group's screens share their band_lines, and screen {position} "
+                                 f"takes {screen.__display.band_rows()} rows at a time whereas "
+                                 f"screen 1 takes {first.__display.band_rows()}")
 
         display = port.__bus.broadcast(*[screen.__display for screen in screens])
 
-        # A group places its own frames, so an unnamed rotation is upright, not the
-        # first member's
+        # A group places its own frames, so an unnamed rotation is upright, not a member's
         rotation = 0 if rotation is None else rotation
         mirror = False if mirror is None else bool(mirror)
         if any(screen.rotation != rotation or screen.mirror != mirror for screen in screens):
             logging.info(f"screens: a group places its own frames, at rotation {rotation}"
                          f"{' and mirrored' if mirror else ''}, so its members' own placement is "
-                         "not used. Create the group with the placement its panels want.")
+                         "not used. Create the group with the placement its screens want.")
 
         # The backlight is the first member's, screens on a port sharing the one PWM
         super().__init__(port, display, first.width, first.height, first.__bitdepth,
@@ -209,37 +215,45 @@ class ScreenGroup(ScreenBase):
 
         # Position by member, so a frame's bookkeeping never scans the tuple
         self.__member_index = {screen: index for index, screen in enumerate(screens)}
+
+        self.__reference = None                 # The slowest member, whose rate the others are trimmed to
         self.__reference_index = 0
-        # Three states. One rate stops the members drifting apart quickly, an acquisition
-        # brings their scans together at one instant, and only a hold keeps them there
-        self.__acquired_us = 0
-        self.__holding = False
-        self.__reference = None
-        self.__target_us = 0
-        self.__margins = ()
-        self.__aim_us = 0
-        self.__line_us = ()
-        self.__trim_at = 0
-        self.__trim_frames = 0
-        self.__corrections = 0
-        self.__exposed_frames = 0        # Frames written with a member past its tearing budget
-        self.__worst_exposure_us = 0     # The worst of those excesses
-        self.__past_budget_us = 0        # The last check's excess, which the walk reads
-        self.__suspect_sweeps = 0        # Captures whose two falls did not span a plausible period
-        self.__worst_sweep_error_us = 0  # The worst of those spans, against the held period
-        self.__residual_us = [0.0] * len(screens)    # Modelled rate error a member carries, us a period
-        self.__phase_us = [0.0] * len(screens)       # Where a member is booked against the grid, us
-        self.__dither = [0] * len(screens)           # Porch lines currently applied to a member
-        self.__anchor_stamp = [0] * len(screens)     # The last fall measured for a member
-        self.__anchor_dither = [0.0] * len(screens)  # Dither spent since that fall, us
-        self.__anchor_skip = [False] * len(screens)  # Whether a member's next gap is not a rate
-        self.__fresh_hold = False   # Whether the hold is still waiting for its first frame
-        self.__walking = False      # Whether a member walked last frame, which only the log reads
-        self.__centre_us = 0        # How far into the tightest margin a write starts
-        self.__held_stamp = 0       # The last frame's write stamp, or the last sweep's end
-        self.__swept_at = 0         # When the last phase sweep finished
-        self.__grid_at = 0          # When the grid was last expressed
-        self.__grid_phases = ()     # Each member's ideal phase against the grid at grid_at
+        self.__target_us = 0                    # The period every member is held to, 0 until one is
+        self.__line_us = ()                     # Each member's line time, us
+        self.__aim_us = 0                       # The spread a hold fits in, the tightest margin less its reserve
+        self.__centre_us = 0                    # How far into the tightest margin a write starts
+
+        self.__holding = False                  # Whether the hold is running, which is_aligned reports
+        self.__fresh_hold = False               # Whether the hold is still waiting for its first frame
+        self.__walking = False                  # Whether a member walked last frame, which only the log reads
+
+        count = len(screens)
+        self.__residual_us = [0.0] * count      # Modelled rate error a member carries, us a period
+        self.__phase_us = [0.0] * count         # Where a member is booked against the grid, us
+        self.__dither = [0] * count             # Porch lines currently applied to a member
+        self.__anchor_stamp = [0] * count       # The last fall measured for a member
+        self.__anchor_dither = [0.0] * count    # Dither spent since that fall, us
+        self.__anchor_skip = [False] * count    # Whether a member's next gap is not a rate
+
+        self.__grid_at = 0                      # When the grid was last expressed
+        self.__grid_phases = ()                 # Each member's ideal phase against the grid at grid_at
+        self.__held_stamp = 0                   # The last frame's write stamp, or the last sweep's end
+        self.__swept_at = 0                     # When the last phase sweep finished
+
+        self.__trim_at = 0                      # The member a trim measures next, which rotate keeps
+                                                # current so a switch to probe starts somewhere sensible
+        self.__trim_frames = 0                  # Frames since a probing trim last measured
+
+        # Diagnostics, read off the group rather than by a frame
+        self.__acquired_us = 0                  # The phase spread the last acquisition left
+        self.__corrections = 0                  # Porch corrections made
+        self.__margins = ()                     # Each member's tearing margin at calibration
+        self.__exposed_frames = 0               # Frames written with a member past its tearing budget
+        self.__worst_exposure_us = 0            # The worst of those excesses
+        self.__past_budget_us = 0               # The last check's excess, which the walk reads
+        self.__suspect_sweeps = 0               # Captures whose two falls did not span a plausible period
+        self.__worst_sweep_error_us = 0         # The worst of those errors against the held period
+
         # A lone member is in phase with itself, so a required alignment is already met
         if align is not False and len(screens) > 1:
             if nominated is None:
@@ -251,8 +265,6 @@ class ScreenGroup(ScreenBase):
             else:
                 self.__calibrate(align is True)
 
-        # None rotates only once the members are held in phase. Held to one rate but not
-        # one phase, rotating moves which panel comes out clean and jumps every tear with it
         if trim not in (None, True, False, "rotate", "probe"):
             raise ValueError(f"{trim} is not a valid trim. Expected None, False, 'rotate', or 'probe'.")
 
@@ -262,6 +274,8 @@ class ScreenGroup(ScreenBase):
                              "nothing for a trim to correct toward")
             self.__trim_mode = False
         elif trim in (None, True):
+            # Held to one rate but not one phase, rotating moves which panel comes out
+            # clean and jumps every tear with it, so an unnamed trim waits for the hold
             self.__trim_mode = "rotate" if self.__holding else False
         else:
             self.__trim_mode = trim
@@ -301,7 +315,6 @@ class ScreenGroup(ScreenBase):
 
         tightest, margins_us, quanta = __tightest_margin(members, trims, line_us,
                                                          [frame_us] * len(members))
-        # A diagnostic, with nothing on the frame path reading it
         self.__margins = margins_us
         margin_us = margins_us[tightest]
         dither_reserve_us = self.DITHER_FRACTION * margin_us
@@ -346,33 +359,34 @@ class ScreenGroup(ScreenBase):
 
         if self.__target_us and self.__acquire():
             self.__arm_hold()
-        logging.info(f"screens: aligned on {self.__reference}, trims {trims} porch lines, "
-                     f"{margin_us:.0f}us of margin at the tightest member")
+        phase = "held in phase" if self.__holding else "left unheld"
+        logging.info(f"screens: trimmed onto {self.__reference} and {phase}, {trims} porch "
+                     f"lines, {margin_us:.0f}us of margin at the tightest member")
 
     def __phases(self):
         # Every member's phase at one instant, or None where one went silent. A shared
         # line carries one panel at a time, so each capture's last fall is aged forward
-        # by the held period onto the last capture's end. Two falls is the fewest that
-        # names one, and every extra fall ages the earlier members by another period.
+        # by the held period onto the last capture's end, and every extra fall ages the
+        # earlier members by another period.
         rows = []
         for index, screen in enumerate(self.screens):
-            falls, finished = self.__solo_capture(screen, 2, 200)
+            falls, finished = self.__solo_capture(screen, self.PHASE_EDGES,
+                                                  self.CAPTURE_TIMEOUT_MS)
             if not falls:
                 return None
             rows.append((falls[-1], finished))
             self.__check_span(index, falls)
 
         # Aged by the held period, averaged over a settled probe, not by this capture's own
-        reference = rows[-1][1]
-        self.__swept_at = reference & TICKS_MASK
-        return [((reference - fall) & 0xFFFFFFFF) % self.__target_us
+        last_finished = rows[-1][1]
+        self.__swept_at = last_finished & TICKS_MASK
+        return [((last_finished - fall) & 0xFFFFFFFF) % self.__target_us
                 for fall, _ in rows]
 
     def __acquire(self):
-        # Bring the members' scans together. The sweep's own ageing error is what the
-        # retries are for. A group still past the aim when they run out is armed from
-        # its last sweep regardless, and the hold walks the rest in. Only a member going
-        # silent fails. One more check than rounds, so the last round's outcome is measured.
+        # Bring the members' scans together, the retries covering the sweep's own ageing
+        # error. A group still past the aim when they run out is armed from its last sweep
+        # regardless and the hold walks the rest in, and only a member going silent fails.
         for attempt in range(self.ACQUIRE_TRIES + 1):
             errors, target = self.__sweep_errors()
             if errors is None:
@@ -418,7 +432,7 @@ class ScreenGroup(ScreenBase):
 
     def __excurse(self, errors):
         # A positive error is cancelled by delaying the member, its porch running long for
-        # whole periods and goes back after. Each member takes the nearer direction, and
+        # whole periods and going back after. Each member takes the nearer direction, and
         # all run at once, so a round costs the longest one.
         members = self.screens
         plans = []
@@ -448,7 +462,7 @@ class ScreenGroup(ScreenBase):
 
     @staticmethod
     def __solo_capture(screen, edges, timeout_ms):
-        # This member alone asserting on the shared line
+        # Capture with this member alone asserting on the shared line
         screen.__command(screen.CONTROLLER.REG_TEON, b"\x00")
         falls, finished = screen.__display.te_capture(edges, timeout_ms)
         screen.__command(screen.CONTROLLER.REG_TEOFF)
@@ -471,7 +485,7 @@ class ScreenGroup(ScreenBase):
                           f"may not be this member's")
 
     def __fold(self, error):
-        # Onto half a period either way
+        # Fold onto half a period either way
         error %= self.__target_us
         return error - self.__target_us if error > self.__target_us / 2 else error
 
@@ -518,8 +532,7 @@ class ScreenGroup(ScreenBase):
 
     def __reseed(self):
         # Members drift independently while nothing measures them, so re-anchoring one
-        # fixes one alone and a fresh sweep rebooks them all. A silent member keeps
-        # the bookings.
+        # fixes that one alone and a fresh sweep rebooks them all
         errors, target = self.__sweep_errors()
         if errors is None:
             logging.debug("screens: a member did not answer the sweep, so the walk keeps its bookings")
@@ -570,7 +583,7 @@ class ScreenGroup(ScreenBase):
             past = (error if error > 0 else -error) - centre
             if past > excess:
                 excess = past
-            # A few rows of clearance, where centre_us exactly would seam the last row
+            # The clearance WAIT_SLACK_LINES holds, in this member's line time
             past += slack * line_us[index]
             if past > worst:
                 worst = past
@@ -579,20 +592,23 @@ class ScreenGroup(ScreenBase):
         return worst
 
     def __frame_ticked(self, stats, synced, delay):
+        # Turn a written frame's stats into a hold tick, naming the member it measured
         if not self.__holding:
             return
 
-        # The write trails the wait by the centring delay, so the delay comes back out
         stamp = stats.write_start_us
         anchored = -1
         if synced is not None:
+            # The write trails the wait by the centring delay, so the delay comes back out
             stamp -= delay
-            # A stamp is a fall only where the frame waited and the wait did not time out
-            if stats.te_wait_us < 2 * self.__target_us:
+
+            # A wait this long took no edge, so the stamp is a timeout and not a fall
+            if stats.te_wait_us < self.TIMED_OUT_PERIODS * self.__target_us:
                 anchored = self.__member_index.get(synced, -1)
         self.__tick_hold(stamp & TICKS_MASK, anchored)
 
     def __tick_hold(self, stamp, anchored):
+        # anchored is the member index the wait ended on, or -1 where nothing was measured.
         # Errors are held against the reference member, which is never dithered, so the
         # whole group warming together costs nothing. A dithered line lands with a
         # one-frame ambiguity, so an unmeasured hold would random-walk apart.
@@ -636,21 +652,23 @@ class ScreenGroup(ScreenBase):
         walk_floor = self.WALK_FLOOR_LINES
         anchor_skip = self.__anchor_skip
         fold = self.__fold
-        reference = self.__reference_index
-        anchor = phase_us[reference]
-        drift = residual_us[reference] * periods
+        reference_index = self.__reference_index
+        anchor = phase_us[reference_index]
+        drift = residual_us[reference_index] * periods
         walking = False
         for index in range(len(members)):
-            if index == reference:
+            if index == reference_index:
                 continue
             screen = members[index]
             line = line_us[index]
             residual = residual_us[index]
             applied = dither[index]
+            back, front = screen.__porch
+
             # Folded, since the anchor wraps each booking at half a period. A positive
             # error is a booking ahead of the reference, closed by shortening the porch
-            back, front = screen.__porch
             error = fold(phase_us[index] - anchor)
+
             # A member further out than centre_us is tearing whatever happens, so the
             # walk runs deep. Inside it, one line a frame is all the ripple asks for
             if abs(error) <= centre:
@@ -667,6 +685,7 @@ class ScreenGroup(ScreenBase):
                         # Phases are modular, so the same booking is also a negative
                         # error one period away, and the walk closes that one instead
                         error -= target
+
             # The error to close over this frame's periods in us, less the rate error
             # the member already carries, then in whole porch lines. Positive lengthens
             # the porch and negative shortens it, the opposite sign to the error
@@ -738,6 +757,7 @@ class ScreenGroup(ScreenBase):
                     self.__residual_us[index] = residual
         self.__anchor_stamp[index] = stamp
         self.__anchor_dither[index] = 0.0
+
         # Resolved nearest the booking, phases being modular, which is what rides out a pause
         booked = self.__phase_us[index]
         raw = (((stamp - self.__grid_at) & TICKS_MASK) + self.__grid_phases[index]) % self.__target_us
@@ -760,6 +780,7 @@ class ScreenGroup(ScreenBase):
                 back, front = screen.__porch
                 screen.__set_porch(back - applied, front)
                 self.__dither[index] = 0
+
         # Back to the fall itself, only the nominated member coming out clean now
         self.__sync_delay_us = 0
         self.__holding = False
@@ -802,7 +823,7 @@ class ScreenGroup(ScreenBase):
         index = self.__trim_at
         screen = members[index]
         self.__trim_at = (index + 1) % len(members)
-        falls, _ = self.__solo_capture(screen, 4, 200)
+        falls, _ = self.__solo_capture(screen, self.TRIM_EDGES, self.CAPTURE_TIMEOUT_MS)
         if len(falls) > 1:
             measured = ((falls[-1] - falls[0]) & 0xFFFFFFFF) / (len(falls) - 1)
             # Each captured period carries a dithered porch line whole
@@ -870,7 +891,7 @@ class ScreenGroup(ScreenBase):
         return self.__holding
 
     def subset(self, *screens, leader=None, reveal_together=False):
-        """A group over some of these members, sharing this one's display. Bind one and reuse it,
+        """A group over some of these members, sharing this one's stream. Bind one and reuse it,
         or pass to= where the membership changes each frame."""
         if not screens:
             raise ValueError("a subset needs at least one screen")

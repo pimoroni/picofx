@@ -2,8 +2,9 @@
 #
 # SPDX-License-Identifier: MIT
 #
-# One panel on a SP/CE port. A screen type is a subclass carrying its panel's
-# settings. Screen154 and Screen280 in __init__.py are the shipped ones.
+# The Screen class a screen type subclasses, with the construction that resolves its
+# settings, brings the panel up, probes for it and only then claims the port's lines.
+# Screen154 and Screen280 in __init__.py are the shipped types.
 
 import spidisplay
 import st7789
@@ -18,33 +19,34 @@ class Reserve:
 
 
 class Screen(ScreenBase):
-    """One panel on a SP/CE port."""
+    """One screen on a SP/CE port."""
 
-    CONTROLLER = st7789      # Bringup, the rate and depth code tables, the porch and the rows a refresh scans
-    PROBE_MS = 60            # A present panel always answers inside this
+    CONTROLLER = st7789      # Everything specific to the panel's controller
+    PROBE_MS = 60            # A present panel answers inside this
     PATIENT_PROBE_MS = 250   # The second look, paid only by a line with nothing on it
     WIDTH = HEIGHT = None
-    BITDEPTH = 16
-    FRAMERATE = 60
-    BAUDRATE = 24_000_000
+    BITDEPTH = 16            # The depth where no PROFILES row matches the wire
+    FRAMERATE = 60           # The rate a wire outside PROFILES falls back on, which few can hold
+    BAUDRATE = 24_000_000    # The wire a screen takes where the caller sets none
     BAND_LINES = 12          # The measured band a wire outside PROFILES falls back on
     CACHE_COLUMNS = 12       # The measured cache width a wire outside PROFILES falls back on
-    DEPTHS = (16, 12)        # Default bit depth preference, first row wins
-
-    # Reserve.FULL_SIZE_IMAGES recipes per (baudrate, bitdepth), being the ring depth
-    # and cache width measured to hold a pair wire-bound. A wire with no row is refused.
-    FULL_IMAGE_RESERVE = {}
+    DEPTHS = (16, 12)        # Bit depth preference, the first with a PROFILES row for the wire winning
 
     # Measured tuning per (baudrate, bitdepth), being the band, cache and highest rate
     # that hold at rotation 90. A "dual" entry replaces the row on a two-core firmware.
     PROFILES = {}
+
+    # Reserve.FULL_SIZE_IMAGES recipes per (baudrate, bitdepth), being the ring depth
+    # and cache width measured to hold a pair wire-bound. A wire with no row is refused.
+    FULL_IMAGE_RESERVE = {}
 
     def __init__(self, port, cs=None, dc=None, te=None, v_sync=None, bl=True,
                  width=None, height=None, bitdepth=None, framerate=None,
                  baudrate=None, reserve=Reserve.CANVAS_SPACE, band_lines=None,
                  cache_columns=None, stage_lines=None, dual_profiles=None,
                  rotation=0, mirror=False, reveal_together=False):
-
+        """Bring a screen up on this port, resolving its settings and claiming its lines.
+        Unnamed pins take the port's own, and ValueError names whatever stops it."""
         # Before any claim, so a bad angle leaves the port holding nothing
         __check_rotation(rotation)
 
@@ -52,8 +54,8 @@ class Screen(ScreenBase):
         height = self.HEIGHT if height is None else height
         self.__baudrate = self.BAUDRATE if baudrate is None else baudrate
 
-        # dual_convert() is off on a firmware with no second core to convert on
         if dual_profiles is None:
+            # Take the firmware's answer, off where there is no second core to convert on
             dual_profiles = spidisplay.dual_convert()
 
         if bitdepth is None:
@@ -64,7 +66,7 @@ class Screen(ScreenBase):
             else:
                 bitdepth = self.BITDEPTH
 
-        # An off-table pair falls back to the class constants, so a new wire can be profiled
+        # An off-table wire falls back to the class constants, so a new one can be profiled
         profile = self.PROFILES.get((self.__baudrate, bitdepth))
         if profile is None:
             profile = {"band_lines": self.BAND_LINES,
@@ -110,6 +112,7 @@ class Screen(ScreenBase):
         if te is None:
             te = port.__default_te
 
+        # te is False for none, True for this screen's own DC line, or the pin it comes back on
         te_used = te is not False
         named_line = te if te_used and te is not True else None
 
@@ -124,7 +127,7 @@ class Screen(ScreenBase):
         elif v_sync and not te_used:
             raise ValueError("v_sync waits on the panel's tearing-effect signal, which te=False turns off")
 
-        # Claimed only once the panel has answered, so a refusal reserves nothing
+        # Checked now and claimed only once the panel has answered, so a refusal reserves nothing
         cs = port.__check_cs(cs)
         dc = port.__check_dc(dc, te_used, shared_te)
 
@@ -140,8 +143,8 @@ class Screen(ScreenBase):
                                         band_lines=band_lines, cache_columns=cache_columns,
                                         stage_lines=stage_lines)
 
-        # The divider rounds a request down, so a profile measured at 37.5MHz would
-        # otherwise run its tuning on a 24MHz wire
+        # The SPI clock divider rounds a request down, so a profile measured at 37.5MHz
+        # would otherwise run its tuning on a 24MHz wire
         achieved = display.baudrate()
         if achieved < self.__baudrate:
             # The display claimed SRAM at construction, so a refusal hands it back
@@ -150,12 +153,12 @@ class Screen(ScreenBase):
                              f"Raise clk_peri first, machine.freq(150_000_000, 150_000_000), "
                              f"or request a rate the current clock reaches.")
 
-        # A hub has already reset and cleared every panel on the port, so a screen on
-        # its own does both. A shared line comes up at TEOFF.
+        # A hub already reset and cleared every panel, so a screen on its own does both
         alone = not port.__panels_reset
         if alone:
             controller.reset(display)
 
+        # TE is on only for a dedicated line, a shared one waiting at TEOFF until a frame needs it
         controller.setup(display, width, height, bd_code, fr_code, te_used and not shared_te)
 
         if te_used and not self.__answered(display, controller, shared_te):
@@ -184,8 +187,8 @@ class Screen(ScreenBase):
             display.fill()
 
     def __answered(self, display, controller, shared):
-        # A present panel answers inside PROBE_MS. An empty line gets a second, longer
-        # look, since a missing panel is reported once and nothing can contradict it.
+        # An empty line gets a second, longer look, since a missing panel is reported
+        # once and nothing can contradict it.
         if shared:
             # One panel at a time may assert on a shared line, so ask and release
             display.command(controller.REG_TEON, bytes((controller.TE_MODE,)))
@@ -229,7 +232,7 @@ class Screen(ScreenBase):
         return self.__framerate
 
     def __set_porch(self, back, front):
-        # One porch line is one line time, and a group's align moves a member with this
+        # One porch line is one line time, which is how a pair or a group moves a panel's refresh
         if back < 1 or front < 1:
             raise ValueError(f"a porch of ({back}, {front}) has a side under one line, which the "
                              "controller has no code for")
@@ -240,5 +243,5 @@ class Screen(ScreenBase):
 
     @property
     def requested_baudrate(self):
-        """The rate this panel asked for, against display.baudrate()'s achieved one."""
+        """The rate this screen asked for, which the SPI clock divider may have rounded down."""
         return self.__baudrate

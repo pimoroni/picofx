@@ -78,7 +78,7 @@ Where `te` is in play, construction raises `ValueError` if no panel answers on t
 
 `bl=False` declines the port's backlight, for a panel whose own is tied on at the assembly.
 
-`rotation` and `mirror` say how the panel is mounted, and every frame follows them unless it names its own. `rotation` is 0, 90, 180 or 270 degrees clockwise.
+`rotation` and `mirror` say how the panel is mounted, and every frame follows them unless it sets its own. `rotation` is 0, 90, 180 or 270 degrees clockwise.
 
 `reveal_together=True` holds the port's backlight until every screen asking for it has drawn, so a line-up comes up as one. A panel never drawn holds the line dark, so only ask on the screens the program covers. `brightness()` still lights it.
 
@@ -93,7 +93,7 @@ screen = Screen280(mighty.spce_a, baudrate=37_500_000)
 
 Settings resolve as: an explicit keyword, then the `PROFILES` row for the (`baudrate`, `bitdepth`) pair, then the class constants. With no `bitdepth` named, the first depth in `DEPTHS` that has a row for the baud rate wins, so the faster wires default to 16-bit colour and `bitdepth=12` buys their last few frames per second. Every resolved value is checked against the controller's tables, so a bad experiment fails where the mistake is.
 
-The rates run below the 60fps of a normal display because a frame shares the panel with its own refresh. A frame that takes longer than the refresh leaves it to tear, so each profile's rate is the fastest the panel's scan can hold while the wire keeps ahead of it, stepped down where a panel's oscillator spread would otherwise leave no margin.
+The rates run below 60fps because a frame shares the panel with its own refresh. A frame that takes longer than the refresh leaves it to tear, so each profile's rate is the fastest the panel's scan can hold while the wire keeps ahead of it, stepped down where a panel's oscillator spread would otherwise leave no margin.
 
 A row's `"dual"` entry, where it has one, replaces the row on a firmware that converts frames on both cores, since some wires reach a higher rate once one core is no longer what the wire waits for. The firmware decides by default. `dual_profiles=True` or `False` chooses the set by hand, for measuring one against the other, and is a diagnostic setting.
 
@@ -140,7 +140,7 @@ The backlight stays dark until the first frame has been drawn. `brightness()` se
 
 The image need not match the panel. Every frame is placed by the same settings, and each defaults to the screen's own or to a per-call default:
 
-- `rotation` and `mirror` follow the screen's construction unless the frame names them, so a program says how the panel is mounted once and the loop says only what changes.
+- `rotation` and `mirror` follow the screen's construction unless the frame sets them, so a program says how the panel is mounted once and the loop says only what changes.
 - `pixel_double=True` draws each source pixel as a 2 by 2 block, so a half-size image fills the panel at a quarter of the memory and conversion cost.
 - `offset=None` centres the image on both axes. An `(x, y)` pair places its top-left corner, and either element may be `None` to centre just that axis. The offset is in panel pixels, after rotation.
 - `tile` repeats the source along its own axes, one value for both or an `(x, y)` pair. Each value is `False`, `True` or `Tile.MIRROR`, the last reversing every other repeat so each seam is a reflection: any source tiles seamlessly, and half an image mirrored fills the whole panel.
@@ -173,7 +173,7 @@ tile=((True, True), False)  # first tiles both axes, second neither
 tile=(Tile.MIRROR, False)   # both screens tile x, every other repeat reflected
 ```
 
-Both screens must be on different ports, since one port is one stream, and must agree on `reserve`, since a reservation is shared out across the pair. They need not be the same size: a pair drives a 1.54" and a 2.8" together, where a group is built over matching panels only. `reveal_together=True` on the pair asks it of both screens, so the two backlights come up on one refresh.
+Both screens must be on different ports, since one port is one stream, and must agree on `reserve`, since a reservation is shared out across the pair. They need not be the same size: a pair drives a 1.54" and a 2.8" together, where a group is built over matching screens only. `reveal_together=True` on the pair asks it of both screens, so the two backlights come up on one refresh.
 
 ### Alignment
 
@@ -188,7 +188,7 @@ Alignment needs both screens built with `te` and `v_sync`, and an aligned pair r
 
 ## Driving Several Screens as One
 
-Several screens on one port, such as a hub's panels, can be driven as one `ScreenGroup`. One stream reaches every member, so a wall of panels shows a frame in the time one of them takes:
+Several screens on one port, such as those on a hub, can be driven as one `ScreenGroup`. One stream reaches every member, so a wall of panels shows a frame in the time one of them takes:
 
 ```python
 from screens import ScreenGroup
@@ -197,13 +197,13 @@ wall = ScreenGroup(*screens)
 wall.update(canvas)
 ```
 
-The members keep their identity, so each can still be updated on its own. A group is built over panels agreeing on size, bit depth, rate and tuning, and takes its size, bit depth, backlight and `reserve` from its first member. A screen belongs to one group at a time.
+The members keep their identity, so each can still be updated on its own. A group is built over screens agreeing on size, bit depth, rate and tuning, and takes its size, bit depth, backlight and `reserve` from its first member. A screen belongs to one group at a time.
 
 `rotation` and `mirror` are the group's own, since one stream is one placement, and default to upright. The members' own placement is not used by a group write, and the group says so on the console where the two differ. A member updated on its own still places by its own.
 
 A group of one member is allowed, so a program written for a hub still runs where a single panel answered.
 
-`subset(*screens)` names fewer of the members over the same display, for a frame that reaches only some of them, and `update(image, to=(...))` does the same for one frame. A subset owns nothing, so bind one and reuse it; where the membership changes each frame, `to=` takes a tuple and costs less than building a subset every time.
+`subset(*screens)` names fewer of the members over the same stream, for a frame that reaches only some of them, and `update(image, to=(...))` does the same for one frame. A subset owns nothing, so bind one and reuse it; where the membership changes each frame, `to=` takes a tuple and costs less than building a subset every time.
 
 `reveal_together=True` asks it of every member. One group write covers them all, so it only matters where a subset covers part of the line-up.
 
@@ -224,7 +224,7 @@ A frame after a long pause first waits for the members to come back together, up
 
 ## Using a Hub
 
-A hub carries several panels on one SP/CE port, each addressed by a chip select of its own. Build the `ScreenHub` before any screen on that port, naming the extra chip selects in the order the hub letters them, then build each screen against one of the hub's ports as it would be built against the connector:
+A hub carries several screens on one SP/CE port, each addressed by a chip select of its own. Build the `ScreenHub` before any screen on that port, naming the extra chip selects in the order the hub letters them, then build each screen against one of the hub's ports as it would be built against the connector:
 
 ```python
 from screens import ScreenHub, Screen280
@@ -234,7 +234,7 @@ hub = ScreenHub(mighty.spce_a, extra_cs=(24, 25, 26))
 screens = [Screen280(port) for port in hub.ports]
 ```
 
-`ports[0]` is the connector's own chip select and the rest follow `extra_cs` in the order given. The ports are lettered as well: `hub.a` is `ports[0]`, `hub.b` the next, matching the lettering on the hub itself.
+`ports[0]` is the connector's own chip select and the rest follow `extra_cs` in the order given. The ports are lettered as well: `hub.a` is `ports[0]`, `hub.b` the next, matching the lettering on the hub itself. The letters run `a` to `z`, so any port past the twenty-sixth is reached through `ports`.
 
 `te` names the line the tearing-effect signal comes back on, and defaults to the shared data/command line. That declares a diode on every breakout, which stops each panel's own signal from pulling the shared line down. Without diodes the panels divide the line and no signal survives, so a build without them passes `te=False`. The firmware cannot see a diode, so the declaration is yours.
 
@@ -284,7 +284,7 @@ rotation: int
 mirror: bool
 reveal_together: bool
 framerate: int              # The refresh rate the screen was built with
-requested_baudrate: int     # The rate asked for, against display.baudrate()'s achieved one
+requested_baudrate: int     # The rate asked for, which the SPI clock divider may have rounded down
 ```
 
 
@@ -327,7 +327,7 @@ brightness(value: float) -> None
 
 ## `Screen154` and `Screen280` Reference
 
-`Screen154` is the 1.54" panel, 240 by 240 pixels. `Screen280` is the 2.8" panel, 240 by 320. Each carries a `PROFILES` table for the four wires the Mighty FX offers, and a `FULL_IMAGE_RESERVE` recipe at 24MHz 12-bit.
+`Screen154` is the 1.54" screen, 240 by 240 pixels. `Screen280` is the 2.8" screen, 240 by 320. Each carries a `PROFILES` table for four wires, and a `FULL_IMAGE_RESERVE` recipe at 24MHz 12-bit.
 
 | wire | `Screen154` | `Screen280` |
 | --- | --- | --- |
@@ -336,7 +336,7 @@ brightness(value: float) -> None
 | 37.5MHz, 12-bit | 60fps | 55fps, 60fps on a two-core firmware |
 | 75MHz, 16-bit | 60fps | 53fps, 60fps on a two-core firmware |
 
-There is no 16-bit row at 24MHz on the 1.54", where that frame outruns the controller's slowest rate, and no 12-bit row at 75MHz on either, where the wire overtakes the panel's scan near the top of the frame.
+Neither carries a 16-bit row at 24MHz, where the wire is too slow to finish a frame inside the controller's slowest refresh, or a 12-bit row at 75MHz, where it is fast enough that the write overtakes the panel's scan and tears near the top.
 
 ```python
 SIZE: str                   # The key in SCREEN_TYPES, "1.54" or "2.8"; a new type picks the string its size is known by
@@ -429,7 +429,7 @@ BLIND_BAND_LINES = 2
 ### Variables
 ```python
 ports: tuple[ScreenHubPort]    # One per chip select, in the order named
-a, b, c, ...: ScreenHubPort    # The same ports by letter
+a, b, c, ...: ScreenHubPort    # The same ports by letter, a to z
 ```
 
 ### Functions
