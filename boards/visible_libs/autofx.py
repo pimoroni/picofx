@@ -107,8 +107,8 @@ SCREEN_EFFECTS = {
 }
 
 # The selector names that reach a screen. The board declares its screen ports, and those of the
-# board being loaded are kept here as (kind, property, SPI bus, name as written), the kind being
-# the name in lower case, with whether the board can carry a Screen Hub
+# board being loaded are kept here as (kind, property, name as written), the kind being the name
+# in lower case, with whether the board can carry a Screen Hub
 __BOARD_SCREENS = []
 __BOARD_HUB = [False]
 
@@ -2427,8 +2427,7 @@ def __learn_board(fx):
     __BOARD_BRIGHTNESS[:] = [name.lower() for name in getattr(board, "STRIP_BRIGHTNESS", ())]
     __BOARD_TAKES[:] = [(name.lower(), tuple(other.lower() for other in others))
                         for name, others in getattr(board, "STRIP_TAKES", ())]
-    __BOARD_SCREENS[:] = [(name.lower(), prop, spi, name)
-                          for name, prop, spi in getattr(board, "SCREENS", ())]
+    __BOARD_SCREENS[:] = [(name.lower(), prop, name) for name, prop in getattr(board, "SCREENS", ())]
     # A board's outputs and its own LED are known by their pins
     outputs = len(getattr(board, "OUT_PINS", ()))
     if outputs:
@@ -2464,20 +2463,20 @@ def __after(kind):
 
 def __hub_example():
     """A board entry giving the board's first screen port the hub, as a message quotes it."""
-    return "'board: {}=hub'".format(__BOARD_SCREENS[0][3])
+    return "'board: {}=hub'".format(__BOARD_SCREENS[0][2])
 
 
 def __screen_kinds():
     """The screen ports' kinds, in the order the board declares them."""
-    return [kind for kind, _prop, _spi, _shown in __BOARD_SCREENS]
+    return [kind for kind, _prop, _shown in __BOARD_SCREENS]
 
 
 def __screen_port(kind):
-    """A screen port as (property, SPI bus, port letter), or None for one the board has not got."""
-    for known, prop, spi, _shown in __BOARD_SCREENS:
+    """A screen port as (property, port letter), or None for one the board has not got."""
+    for known, prop, _shown in __BOARD_SCREENS:
         if known == kind:
             # Lettered by its property, spce_a being A, since a board with one port names it bare
-            return prop, spi, prop[-1].upper()
+            return prop, prop[-1].upper()
     return None
 
 
@@ -2505,7 +2504,7 @@ def __board(fx, settings, problems):
     hub = __hub_port(settings)
     if hub is not None:
         SPCE = __port_classes(fx)[0]
-        for kind, prop, _spi, _shown in __BOARD_SCREENS:
+        for kind, prop, _shown in __BOARD_SCREENS:
             declared[prop] = SPCE.SCREEN if kind == hub else SPCE.HUB_SELECTS
 
     if not declared:
@@ -2756,7 +2755,7 @@ __SCREENS = {}
 
 def __screen_shown(name):
     """The selector as the board declares it, or with the port letter back in capitals."""
-    for kind, _prop, _spi, shown in __BOARD_SCREENS:
+    for kind, _prop, shown in __BOARD_SCREENS:
         if kind == name:
             return shown
     return "screen" + name[6:].upper()
@@ -2880,7 +2879,7 @@ def __screen_on(fx, name, line, problems, size, for_pair=False):
 
     SPCE, SPCEPort = __port_classes(fx)
 
-    attr, spi, port_name = __screen_port(name)
+    attr, port_name = __screen_port(name)
     port = getattr(fx, attr)
     shown = __screen_shown(name)
 
@@ -2888,7 +2887,7 @@ def __screen_on(fx, name, line, problems, size, for_pair=False):
         # The port was never declared, so it becomes a screen port here: the same
         # construction a program would make, made because the file asked for it
         pins = getattr(type(fx), attr.upper() + "_PINS")
-        port = SPCEPort(port_name, SPCE.SCREEN, spi, pins)
+        port = SPCEPort(port_name, SPCE.SCREEN, pins)
         setattr(fx, attr, port)
     elif port.mode != SPCE.SCREEN:
         problems.append("line {}: SP/CE {} is set up for something else, so {} cannot "
@@ -2931,11 +2930,11 @@ def __screen_entry_fits(entry, fx, hub, board, problems):
                                            HUB_POSITIONS[-1].upper()))
         else:
             problems.append("line {}: SP/CE {} carries the hub's selects, so {} has no "
-                            "screen".format(entry.line, port[2], __screen_shown(name)))
+                            "screen".format(entry.line, port[1], __screen_shown(name)))
         return False
 
     if port is None or getattr(fx, port[0], None) is None:
-        offered = [shown for _kind, prop, _spi, shown in __BOARD_SCREENS
+        offered = [shown for _kind, prop, shown in __BOARD_SCREENS
                    if getattr(fx, prop, None) is not None]
         if offered:
             problems.append("line {}: this board has no {}, it has {}".format(
@@ -3627,7 +3626,7 @@ def __check_hub(board, lines, entries, problems):
     for name in __screen_kinds():
         if name == hub or board.get(name) is None:
             continue
-        port_name = __screen_port(name)[2]
+        port_name = __screen_port(name)[1]
 
         if board[name] == HUB:
             problems.append("line {}: the board entry gives both connectors the hub, which "
@@ -3736,7 +3735,7 @@ def __build_effect(entry, count, problems):
         elif entry.effect in SCREEN_EFFECTS:
             problems.append("line {}: {} plays on a screen, such as '{}: {} "
                             "file=anim.gif'".format(entry.line, entry.effect,
-                                                    __BOARD_SCREENS[0][3], entry.effect))
+                                                    __BOARD_SCREENS[0][2], entry.effect))
         elif entry.effect is not None:
             problems.append("line {}: '{}' is not an effect".format(entry.line, entry.effect))
         return None, None, None
