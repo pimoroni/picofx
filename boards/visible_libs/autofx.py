@@ -96,10 +96,10 @@ SCREEN_EFFECTS = {
     "sequence": ("folder", "fps", "interval", "loop", "ping_pong", "first_as_last", "hold"),
 }
 
-# The selector names that reach a screen: each SP/CE port's name, attribute and SPI
+# The selector names that reach a screen: each SP/CE port's name and attribute
 SCREEN_PORTS = {
-    "screena": ("A", "spce_a", 0),
-    "screenb": ("B", "spce_b", 1),
+    "screena": ("A", "spce_a"),
+    "screenb": ("B", "spce_b"),
 }
 
 # The one selector that plays sound. "wav" streams a file for as long as it lasts,
@@ -2435,9 +2435,9 @@ def __screen_on(fx, name, line, problems, size, for_pair=False):
                                 __screen_shown(name), built_size))
         return screen
 
-    from spce import SPCE, SPCEPort
+    from mighty_fx import SPCE, SPCEPort
 
-    port_name, attr, spi = SCREEN_PORTS[name]
+    port_name, attr = SCREEN_PORTS[name]
     port = getattr(fx, attr)
     shown = __screen_shown(name)
 
@@ -2445,7 +2445,7 @@ def __screen_on(fx, name, line, problems, size, for_pair=False):
         # The port was never declared, so it becomes a screen port here: the same
         # construction a program would make, made because the file asked for it
         pins = getattr(type(fx), "SPCE_{}_PINS".format(port_name))
-        port = SPCEPort(port_name, SPCE.SCREEN, spi, pins)
+        port = SPCEPort(port_name, SPCE.SCREEN, pins)
         setattr(fx, attr, port)
     elif port.mode != SPCE.SCREEN:
         problems.append("line {}: SP/CE {} is set up for something else, so {} cannot "
