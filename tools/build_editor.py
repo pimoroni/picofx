@@ -231,7 +231,7 @@ def check_board(board_dir, board):
         if sorted(strip.get("takes", [])) != takes.get(strip["name"], []):
             sys.exit("{} and the board's class's STRIP_TAKES disagree on the terminals {} "
                      "takes".format(DESCRIPTION_NAME, strip["name"]))
-    screens = [name.lower() for name, _prop, _spi in declared["SCREENS"]]
+    screens = [name.lower() for name, _prop in declared["SCREENS"]]
     described = board["screens"] or {"ports": [], "hub": False}
     missing = [port["id"] for port in described["ports"] if port["id"] not in screens]
     if missing:
@@ -247,7 +247,7 @@ def described(board):
     in this repository."""
     screens = board["screens"] or {"ports": [], "hub": False}
     return {"STRIPS": [(strip["name"], None) for strip in board["strips"]],
-            "SCREENS": [(port["id"], None, None) for port in screens["ports"]],
+            "SCREENS": [(port["id"], None) for port in screens["ports"]],
             "STRIP_BRIGHTNESS": [strip["name"] for strip in board["strips"] if "brightness" in strip],
             "STRIP_TAKES": [(strip["name"], strip["takes"]) for strip in board["strips"]
                             if "takes" in strip],
@@ -274,7 +274,7 @@ def catalogue(repo_dir, board_dir, board, offer_screens=True):
     if not offer_screens:
         declared = dict(declared, SCREENS=[])
     strips = [name.lower() for name, _prop in declared["STRIPS"]]
-    screens = [name.lower() for name, _prop, _spi in declared["SCREENS"]]
+    screens = [name.lower() for name, _prop in declared["SCREENS"]]
     sizes = autofx.SCREEN_SIZES + ((autofx.HUB,) if board_hub(declared) else ())
     board_settings = dict(autofx.BOARD_SETTINGS, **dict.fromkeys(screens, sizes),
                           **dict.fromkeys(strips))
@@ -288,7 +288,7 @@ def catalogue(repo_dir, board_dir, board, offer_screens=True):
         "colour": board["output_words"]["colour"],
         "strips": [[name, connectors.get(name.lower())] for name, _prop in declared["STRIPS"]],
         "screens": [[name, connectors.get(name.lower())]
-                    for name, _prop, _spi in declared["SCREENS"]],
+                    for name, _prop in declared["SCREENS"]],
         "hub": board_hub(declared),
         "sound": bool(board["sound"]),
     }
