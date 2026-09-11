@@ -20,8 +20,8 @@ def __sized(count):
     return "{}KB".format((count + 1023) // 1024)
 
 
-def out_of_memory(path, error):
-    """A MemoryError from decoding, restated with the sizes a caller can act on."""
+def __memory_error_for(path, error):
+    # A MemoryError from decoding, restated with the sizes a caller can act on
     if "allocation failed" not in str(error):
         return error
     import gc
@@ -376,7 +376,7 @@ class GIFPlayer(ImagePlayer):
         try:
             self.__sheet = picovector.spritesheet.load(path)
         except MemoryError as e:
-            raise out_of_memory(path, e) from None
+            raise __memory_error_for(path, e) from None
         logging.debug(f"> Loaded {self.__sheet.sprites} frames in {time.ticks_diff(time.ticks_ms(), started)}ms")
 
         super().__init__(self.__sheet.sprites, self.__sheet.timings, fps=fps, loop=loop,
@@ -435,7 +435,7 @@ class SequencePlayer(ImagePlayer):
         try:
             self.__images = self.__load(folder, names, self.__paths)
         except MemoryError as e:
-            raise out_of_memory(folder, e) from None
+            raise __memory_error_for(folder, e) from None
 
         super().__init__(len(self.__images), timings, fps=fps, loop=loop,
                          ping_pong=ping_pong, first_as_last=first_as_last, hold=hold,
