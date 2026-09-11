@@ -11,11 +11,157 @@ from picofx import PWMLED, RGBLED, DisabledLED
 from sensor import build_sensor
 from audio import WavPlayer
 from spidisplay import release_buffers
-from spce import SPCE, SPCEPort
+from ports import ScreenPort
 
 
 # What wake() lit, kept alive: a PWM object that is collected stops driving
 __waking = []
+
+
+class SPCE:
+    """What a SP/CE connector carries, declared when the board is built."""
+
+    SCREEN = 0          # Screens, over the connector's own SPI bus and backlight
+    MOTOR_DRIVER = 1    # Two motors and the enable they share
+    GPIO = 2            # The five pins, free to borrow through io
+    HUB_LINES = 3       # The five pins, as the chip selects a hub addresses panels with
+
+
+class SPCEPort(ScreenPort):
+    """One of the board's SP/CE connectors, built by the board and handed out.
+
+    A screen connector is a screen port and is built as one. Every other declaration
+    leaves the bus and the pins alone and hands the five GPIOs out through the property
+    that names what they are for, so spending a connector is visible in the call that
+    declared it.
+    """
+
+    def __init__(self, name, mode, pins):
+        if mode not in (None, SPCE.SCREEN, SPCE.MOTOR_DRIVER, SPCE.GPIO, SPCE.HUB_LINES):
+            raise ValueError(f"{mode} is not a valid SP/CE mode. Expected SPCE.SCREEN, "
+                             "SPCE.MOTOR_DRIVER, SPCE.GPIO, SPCE.HUB_LINES, or None.")
+
+        self.name = name
+        self.mode = mode
+        self.driver = None      # The MotorDriver built here, so a board's shutdown can stop it
+
+        # Kept as numbers for motor_pins, which hands out pairs a Motor is built from
+        self.__pin_numbers = tuple(pins)
+
+        if mode == SPCE.SCREEN:
+            super().__init__(pins, label=f"SP/CE {name}")
+            return
+
+        self.label = f"SP/CE {name}"
+
+        # A motor connector's pins belong to its Motor objects and an undeclared one is
+        # left alone, so neither makes Pins
+        self.__pins = (tuple(Pin(pin) for pin in pins)
+                       if mode in (SPCE.GPIO, SPCE.HUB_LINES) else None)
+
+        # What a screen port holds, so a board's shutdown runs over any declaration
+        self.__screens = []
+        self.__backlight = None
+        self.__spi_bus = None
+        self.__cs_claimed = []
+        self.__dc_claimed = []
+        self.__panels_reset = False
+
+    @property
+    def io(self):
+        """The connector's five GPIOs, in the order DC, CS, SCK, MOSI, BL.
+
+        Only a connector declared SPCE.GPIO offers them.
+        """
+        if self.mode != SPCE.GPIO:
+            raise ValueError(f"SP/CE {self.name} is not declared SPCE.GPIO, so its pins "
+                             "are not free to borrow")
+
+        return self.__pins
+
+    @property
+    def hub_lines(self):
+        """The connector's five GPIOs, as the chip selects a hub addresses panels with.
+
+        Only a connector declared SPCE.HUB_LINES offers them, the declaration being what
+        says it is spent on another port's screens.
+        """
+        if self.mode != SPCE.HUB_LINES:
+            raise ValueError(f"SP/CE {self.name} is not declared SPCE.HUB_LINES, so its "
+                             "pins are not a hub's chip selects")
+
+        return self.__pins
+
+    @property
+    def motor_pins(self):
+        """The four data pins as the two motors' pin pairs, then the shared enable.
+
+        Only a connector declared SPCE.MOTOR_DRIVER offers them.
+        """
+        if self.mode != SPCE.MOTOR_DRIVER:
+            raise ValueError(f"SP/CE {self.name} is not declared SPCE.MOTOR_DRIVER, so "
+                             "its pins are not a motor driver's")
+
+        numbers = self.__pin_numbers
+        return ((numbers[0], numbers[1]), (numbers[2], numbers[3])), numbers[4]
+
+    def __line(self, index):
+        if self.mode != SPCE.SCREEN:
+            raise ValueError(f"SP/CE {self.name} is not a screen port, so it has no "
+                             f"{self.LINE_NAMES[index]} line")
+
+        return self.__pins[index]
+
+    # Only a screen connector has these. Pass dc or cs to a screen to share that line
+    @property
+    def dc(self):
+        """The connector's data and command line, which the first screen on it takes."""
+        return self.__line(0)
+
+    @property
+    def cs(self):
+        """The connector's chip select, which the first screen on it takes."""
+        return self.__line(1)
+
+    @property
+    def sck(self):
+        """The connector's SPI clock, which its bus is made on."""
+        return self.__line(2)
+
+    @property
+    def mosi(self):
+        """The connector's SPI data line, which its bus is made on."""
+        return self.__line(3)
+
+    @property
+    def bl(self):
+        """The connector's backlight line, which every screen on it shares."""
+        return self.__line(4)
+
+    @property
+    def __bus(self):
+        # Refused rather than built, a screen given an explicit cs never reading the
+        # lines above. Made again after a release(), as the port's own does.
+        if self.mode != SPCE.SCREEN:
+            raise ValueError(f"SP/CE {self.name} is not a screen port, so it has no display bus")
+
+        if self.__spi_bus is None:
+            self.__spi_bus = self.__make_bus()
+
+        return self.__spi_bus
+
+    def release(self):
+        """Hand the connector's lines back, and a screen port's bus and SRAM with them."""
+        if self.mode == SPCE.SCREEN:
+            super().release()
+            return
+
+        # Whatever is plugged in next meets the level these pins were left at, and high
+        # on a motor input drives it before that thing's own code has run. A motor
+        # connector's pins are not here, belonging to its Motor objects.
+        if self.__pins is not None:
+            for pin in self.__pins:     # All five, another port's chip selects among them
+                pin.init(Pin.IN, Pin.PULL_DOWN)
 
 
 class MightyFX:
@@ -120,8 +266,8 @@ class MightyFX:
         self.monos = [led for output in self.outputs for led in output.leds]
 
         # Each port owns its bus and pins; screens are created against them
-        self.spce_a = SPCEPort("A", spce_a, 0, self.SPCE_A_PINS)
-        self.spce_b = SPCEPort("B", spce_b, 1, self.SPCE_B_PINS)
+        self.spce_a = SPCEPort("A", spce_a, self.SPCE_A_PINS)
+        self.spce_b = SPCEPort("B", spce_b, self.SPCE_B_PINS)
 
         # One connector given over to chip selects makes the other's panels a hub, built
         # here. Imported only where a board asked for one.
