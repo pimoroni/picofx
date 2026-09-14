@@ -40,4 +40,4 @@ try:
 # End the program by shutting down the board
 finally:
     tiny.shutdown()
-    target.shutdown()
+    target.deinit()
