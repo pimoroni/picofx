@@ -1982,11 +1982,9 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                     watcher(settings.get("reload") == "auto")
                 if event == volume.RELOADED:
                     # A single press asks to try an edit without putting the drive
-                    # away, so it goes back once the file has been read. Showing it
-                    # waits out the window the computer needs to see the drive
-                    # leave, and nothing starts until it has: the lights run from a
-                    # timer and the screens from this loop, so starting first would
-                    # leave one playing through the wait and the other held still
+                    # away, so it goes back once the file has been read, and before
+                    # anything starts, so the lights and the screens come up together
+                    # behind it
                     volume.expose()
                 begin_scenes()
                 __start(players, fx)

@@ -57,11 +57,6 @@ RELOADED = 5
 # volume back. Ejecting on the computer first is the only guaranteed save.
 SETTLE_MS = 1500
 
-# How long the drive stays away before it can be shown again. Showing it again leaves
-# and rejoins the USB bus, which no computer can miss, so nothing waits here. The setting
-# stays for a host that turns out to need the media gone for a while as well.
-HIDDEN_MS = 0
-
 # How long the board stays off the bus before rejoining, on the second reload and after.
 # The first activation of the runtime USB device disconnects and reconnects by itself,
 # with the 50ms hold TinyUSB applies, so only a later expose() waits here. Measured
@@ -78,7 +73,7 @@ WATCH_POLL_MS = 500
 __exposed = False
 __was_pressed = False
 __last_edge = None
-__withdrawn_at = None
+__withdrawn = False
 __watching = False
 __entry_seen = None
 __entry_pending = None
@@ -365,21 +360,16 @@ def expose():
     Show the drive to the connected computer, releasing the board's own
     mount while the computer owns it.
 
-    After a withdraw, waits out whatever HIDDEN_MS asks for and then rejoins the USB
-    bus, so the computer enumerates the board afresh and reads the drive as it now
-    is. Neither happens at boot, when nothing has been taken back. Effects run from a
-    timer and carry on; anything the caller drives itself, a screen being the one,
-    holds its last frame for the wait.
+    After a withdraw, also rejoins the USB bus, so the computer enumerates the board
+    afresh and reads the drive as it now is. Not at boot, when nothing has been taken
+    back. Effects run from a timer and carry on through the rejoin; anything the
+    caller drives itself, a screen being the one, holds its last frame.
     """
-    global __exposed, __withdrawn_at
+    global __exposed, __withdrawn
     if __exposed:
         return False
-    rejoin = __withdrawn_at is not None
-    if rejoin:
-        remaining = HIDDEN_MS - time.ticks_diff(time.ticks_ms(), __withdrawn_at)
-        if remaining > 0:
-            time.sleep_ms(remaining)
-        __withdrawn_at = None
+    rejoin = __withdrawn
+    __withdrawn = False
     try:
         vfs.umount(MOUNT_POINT)
     except OSError:
@@ -400,7 +390,7 @@ def withdraw():
     Take the drive back from the computer and re-read it, waiting out any
     write still in flight. Returns True when effects.txt may have changed.
     """
-    global __exposed, __withdrawn_at
+    global __exposed, __withdrawn
     if not __exposed:
         return False
     deadline = time.ticks_add(time.ticks_ms(), SETTLE_MS)
@@ -408,7 +398,7 @@ def withdraw():
         time.sleep_ms(50)
     rp2.disable_msc()
     __exposed = False
-    __withdrawn_at = time.ticks_ms()
+    __withdrawn = True
     mount()
     return True
 
