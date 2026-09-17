@@ -10,6 +10,7 @@ the computer, re-reads the file. An eject does not show it again.
 """
 
 import errno
+import machine
 import os
 import time
 import rp2
@@ -56,12 +57,17 @@ RELOADED = 5
 # volume back. Ejecting on the computer first is the only guaranteed save.
 SETTLE_MS = 1500
 
-# How long the drive stays away before it can be shown again. A computer that wrote
-# effects.txt itself keeps its own copy of the directory, and will write that back over
-# ours unless it sees the volume leave, which costs the edit the board just read. It
-# notices within a second on the computers measured; the rest is margin for those that
-# look less often.
+# How long the drive stays away before it can be shown again, so the computer sees the
+# volume leave and drops its copy of the directory. Windows notices within a second;
+# macOS never notices at any length up to a minute, which is why showing the drive again
+# also leaves and rejoins the USB bus.
 HIDDEN_MS = 1500
+
+# How long the board stays off the bus before rejoining, on the second reload and after.
+# The first activation of the runtime USB device disconnects and reconnects by itself,
+# with the 50ms hold TinyUSB applies, so only a later expose() waits here. Measured
+# working on macOS 15.5 and Windows 11 at this value; not tried lower.
+__OFF_BUS_MS = 500
 
 # How often the save watcher compares effects.txt's directory entry while the
 # computer holds the drive. Every kind of save updates the entry, where copying
@@ -322,19 +328,42 @@ def busy():
     return __exposed and rp2.is_msc_busy()
 
 
+def __rejoin_bus():
+    """
+    Leave the USB bus and return, so the computer enumerates the board afresh.
+
+    A computer that missed the media leaving keeps serving its old view of the volume
+    and fails every read that reaches the device, and nothing on its side recovers.
+    Leaving the bus it cannot miss. The serial console drops and returns with it, and
+    macOS reports the drive as not ejected properly, which is true.
+    """
+    usbd = machine.USBDevice()
+    if usbd.active():
+        usbd.active(False)
+        time.sleep_ms(__OFF_BUS_MS)
+    else:
+        # The first activation disconnects and reconnects by itself, with the
+        # built-in serial and drive descriptors since nothing else is configured
+        usbd.builtin_driver = usbd.BUILTIN_DEFAULT
+    usbd.active(True)
+
+
 def expose():
     """
     Show the drive to the connected computer, releasing the board's own
     mount while the computer owns it.
 
     Waits out the rest of HIDDEN_MS since the drive was taken back, so the computer
-    has seen it leave. Effects run from a timer and carry on; anything the caller
-    drives itself, a screen being the one, holds its last frame for the wait.
+    has seen it leave, then rejoins the USB bus so that a computer that did not see
+    it enumerates the board afresh. Neither happens at boot, when nothing has been
+    taken back. Effects run from a timer and carry on; anything the caller drives
+    itself, a screen being the one, holds its last frame for the wait.
     """
     global __exposed, __withdrawn_at
     if __exposed:
         return False
-    if __withdrawn_at is not None:
+    rejoin = __withdrawn_at is not None
+    if rejoin:
         remaining = HIDDEN_MS - time.ticks_diff(time.ticks_ms(), __withdrawn_at)
         if remaining > 0:
             time.sleep_ms(remaining)
@@ -344,6 +373,8 @@ def expose():
     except OSError:
         pass
     rp2.enable_msc()
+    if rejoin:
+        __rejoin_bus()
     __exposed = True
     global __entry_seen, __entry_pending, __watch_at
     __entry_seen = __effects_entry() if __watching else None
