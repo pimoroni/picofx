@@ -3317,8 +3317,15 @@ document.getElementById("save").onclick = async function () {
     saveByHand();
     return;
   }
+  // Both held down until the verdict: a second save cannot land in the wait and race
+  // the first, a check cannot read back the marker this save is about to write, and
+  // the buttons coming back say the board has answered
+  var button = this;
+  var check = document.getElementById("check");
   try {
     if (!state.fileHandle) await connect();
+    button.disabled = true;
+    check.disabled = true;
     var onBoard = await (await state.fileHandle.getFile()).text();
     var lastWritten = null;
     try { lastWritten = localStorage.getItem("fx-picker-wrote"); } catch (e) {}
@@ -3382,6 +3389,9 @@ document.getElementById("save").onclick = async function () {
     state.dirHandle = null;
     banner("That didn't reach the board: " + e.name + ". Is the FX drive showing? " +
            "A double press of its button brings it back; then try again.", true);
+  } finally {
+    button.disabled = false;
+    check.disabled = false;
   }
 };
 
@@ -4735,8 +4745,15 @@ document.getElementById("save").onclick = async function () {
     saveByHand();
     return;
   }
+  // Both held down until the verdict: a second save cannot land in the wait and race
+  // the first, a check cannot read back the marker this save is about to write, and
+  // the buttons coming back say the board has answered
+  var button = this;
+  var check = document.getElementById("check");
   try {
     if (!state.fileHandle) await connect();
+    button.disabled = true;
+    check.disabled = true;
     var text = entry.value;
     // The board acts on a save only where the file it is already running asked it to,
     // so the first save that turns it on still needs an eject
@@ -4778,6 +4795,9 @@ document.getElementById("save").onclick = async function () {
     state.dirHandle = null;
     banner("That didn't reach the board: " + e.name + ". Is the FX drive showing? " +
            "A double press of its button brings it back; then try again.", true);
+  } finally {
+    button.disabled = false;
+    check.disabled = false;
   }
 };
 
