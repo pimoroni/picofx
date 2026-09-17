@@ -32,9 +32,9 @@ whole builds, and one line in `effects.txt` starts any of them. See
 
 ## The picker
 
-`PICKER.html` on this drive writes `effects.txt` for you. Open it in Chrome or
-Edge, pick a look, and slide until it suits. It shows the file it is writing as
-you go, so nothing about it is hidden.
+`PICKER.html` on this drive writes `effects.txt` for you. Open it in a browser,
+pick a look, and slide until it suits. It shows the file it is writing as you
+go, so nothing about it is hidden.
 
 Screens, strips and sound are set up there too. Say how many LEDs a strip has and
 which size each screen is, pick a picture from this drive for a screen to show,
@@ -52,9 +52,21 @@ and shows what the board made of each line. On a Mac each save shows "Disk Not
 Ejected Properly" once and a Finder window on this drive closes; the drive comes
 back on its own a few seconds later and the page carries on.
 
-A page cannot write to a drive in Firefox or Safari, so the picker needs Chrome or
-Edge. What it writes is an ordinary `effects.txt`: anything it makes can be edited
-by hand afterwards, and it asks before replacing a file it did not write itself.
+In Chrome, or another browser built on Chromium, that is the whole of it: one
+click saves to the board. Safari and Firefox cannot write to a drive from a page,
+so there the picker reads the drive through a folder chooser and "Put it on the
+board" downloads `effects.txt` instead. Set the browser to ask where to save each
+download, choose the FX drive and replace the file there, and the board plays it
+just the same. Left at the default, the file lands in your Downloads folder, and
+copying it onto the drive over the old one does the same job. Pointing the
+browser's downloads at the drive does not work, since it saves a numbered copy
+the board never reads. Either way, "Did it work?" asks for the drive again to
+read the board's answer, and pictures and sounds are copied onto the drive in
+Finder or Explorer.
+
+What the picker writes is an ordinary `effects.txt`: anything it makes can be
+edited by hand afterwards, and it asks before replacing a file it did not write
+itself.
 
 ## The editor
 
@@ -72,7 +84,8 @@ board" writes the file and "Did it work?" reads `errors.txt` back, as the picker
 does.
 
 It offers only what this board provides, so anything the firmware gains appears
-without the page changing. Like the picker it needs Chrome or Edge, and it needs
+without the page changing. It saves the way the picker does, in one click from a
+Chromium browser and by download from Safari or Firefox, and it needs
 `catalogue.js` beside it, which is why both live on this drive together.
 
 ## Writing an entry
