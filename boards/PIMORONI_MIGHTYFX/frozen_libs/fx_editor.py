@@ -3031,6 +3031,18 @@ async function markChecking() {
   }
 }
 
+// Whether the drive is there to be asked, by listing its first entry. A drive that
+// has left the bus mid-reload makes every path vanish at once, so a missing file
+// is only missing while the directory itself still answers
+async function driveAnswers() {
+  try {
+    for await (var entry of state.dirHandle.values()) return true;
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 // The text of errors.txt, null where there is none, and false where the drive is
 // away mid-reload and the question cannot be answered yet
 async function readErrors() {
@@ -3038,7 +3050,8 @@ async function readErrors() {
     var handle = await state.dirHandle.getFileHandle("errors.txt");
     return (await (await handle.getFile()).text()).trim();
   } catch (e) {
-    return e.name === "NotFoundError" ? null : false;
+    if (e.name !== "NotFoundError") return false;
+    return (await driveAnswers()) ? null : false;
   }
 }
 
@@ -4253,6 +4266,18 @@ async function markChecking() {
   }
 }
 
+// Whether the drive is there to be asked, by listing its first entry. A drive that
+// has left the bus mid-reload makes every path vanish at once, so a missing file
+// is only missing while the directory itself still answers
+async function driveAnswers() {
+  try {
+    for await (var entry of state.dirHandle.values()) return true;
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 // The text of errors.txt, null where there is none, and false where the drive is
 // away mid-reload and the question cannot be answered yet
 async function readErrors() {
@@ -4260,7 +4285,8 @@ async function readErrors() {
     var handle = await state.dirHandle.getFileHandle("errors.txt");
     return (await (await handle.getFile()).text()).trim();
   } catch (e) {
-    return e.name === "NotFoundError" ? null : false;
+    if (e.name !== "NotFoundError") return false;
+    return (await driveAnswers()) ? null : false;
   }
 }
 
