@@ -48,7 +48,9 @@ of its own.
 "Put it on the board" writes the file, and the board picks it up a few seconds
 later. Untick "play it as soon as I save" and it waits instead until this drive
 is ejected, or **Boot** is pressed once. "Did it work?" reads `errors.txt` back
-and shows what the board made of each line.
+and shows what the board made of each line. On a Mac each save shows "Disk Not
+Ejected Properly" once and a Finder window on this drive closes; the drive comes
+back on its own a few seconds later and the page carries on.
 
 A page cannot write to a drive in Firefox or Safari, so the picker needs Chrome or
 Edge. What it writes is an ordinary `effects.txt`: anything it makes can be edited
