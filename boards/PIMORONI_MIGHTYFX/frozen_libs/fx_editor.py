@@ -34,6 +34,11 @@ main{max-width:52rem;margin:1.5rem auto;padding:0 1.4rem}
 .banner.warn{background:var(--warn-bg);color:var(--warn)}
 .banner.hold{background:#fdf3e0;color:#8a6415}
 .banner pre{margin:.4rem 0 0;white-space:pre-wrap;font-size:.85rem}
+/* The seven outputs as the board lights them while a save is written */
+.spots{display:inline-flex;gap:.3rem;margin-left:.7rem;vertical-align:middle}
+.spots i{display:block;width:.85rem;height:.85rem;border-radius:3px;border:1px solid rgba(138,100,21,.45);
+ background:rgba(138,100,21,.12)}
+.spots i.lit{background:#fff;border-color:#8a6415;box-shadow:0 0 6px 1px rgba(255,255,255,.9)}
 .note{background:#e7f2f1;border-radius:10px;padding:.7rem 1.1rem;margin:0 0 1.2rem;font-size:.9rem}
 .tag{display:inline-block;font-size:.75rem;background:#fdf3e0;color:#8a6415;border-radius:99px;
  padding:.1rem .55rem;margin-left:.4rem}
@@ -2791,7 +2796,36 @@ function draw() {
   }
 }
 
+// The board's own saving animation, so the page shows what the outputs show: one
+// white light travelling the seven over a dim floor, out1 to out7, 120ms a step.
+// Started by saving() and stopped by the next banner, whatever it says
+var SPOT_STEP_MS = 120;
+// How long the animation outlives the write: the board holds its light for 500ms
+// after the last write and then runs one pass of seven half-steps
+var SAVING_TAIL_MS = 920;
+var spotTimer = null;
+
+function stopSpots() {
+  if (spotTimer !== null) clearInterval(spotTimer);
+  spotTimer = null;
+}
+
+function saving(text) {
+  banner(text, "hold");
+  var row = document.createElement("span");
+  row.className = "spots";
+  for (var i = 0; i < 7; i++) row.appendChild(document.createElement("i"));
+  document.getElementById("banner").firstChild.appendChild(row);
+  var at = 0;
+  spotTimer = setInterval(function () {
+    for (var i = 0; i < row.children.length; i++)
+      row.children[i].className = i === at ? "lit" : "";
+    at = (at + 1) % row.children.length;
+  }, SPOT_STEP_MS);
+}
+
 function banner(text, warn, detail) {
+  stopSpots();
   var box = document.getElementById("banner");
   box.textContent = "";
   if (!text) return;
@@ -3296,6 +3330,7 @@ document.getElementById("save").onclick = async function () {
         return;
     }
     var text = currentText();
+    saving("Saving to the board...");
     // The board acts on a save only where the file it is already running asked it
     // to, so the first save that turns it on still needs an eject
     var errorsBefore = playsItself(onBoard) ? await readErrors() : undefined;
@@ -3317,6 +3352,9 @@ document.getElementById("save").onclick = async function () {
                ? " The strip you added only comes up when the board starts, so turn it off "
                  + "and on once you are done."
                : "";
+    // The board keeps its light travelling for a moment after the last write, then
+    // runs one pass as the drive changes hands, so the page holds its own as long
+    await new Promise(function (settle) { setTimeout(settle, SAVING_TAIL_MS); });
     if (errorsBefore === undefined) {
       banner("On its way. " + (playsItself(text)
              ? "Eject the FX drive, or press the board's button once, to play this one. "
@@ -3477,6 +3515,11 @@ main{max-width:52rem;margin:1.5rem auto;padding:0 1.4rem}
 .banner.warn{background:var(--warn-bg);color:var(--warn)}
 .banner.hold{background:#fdf3e0;color:#8a6415}
 .banner pre{margin:.4rem 0 0;white-space:pre-wrap;font-size:.85rem}
+/* The seven outputs as the board lights them while a save is written */
+.spots{display:inline-flex;gap:.3rem;margin-left:.7rem;vertical-align:middle}
+.spots i{display:block;width:.85rem;height:.85rem;border-radius:3px;border:1px solid rgba(138,100,21,.45);
+ background:rgba(138,100,21,.12)}
+.spots i.lit{background:#fff;border-color:#8a6415;box-shadow:0 0 6px 1px rgba(255,255,255,.9)}
 
 .editor{position:relative;background:var(--panel);border:1px solid var(--line);
  border-radius:14px;overflow:hidden;height:24rem}
@@ -4155,7 +4198,36 @@ function repaint() {
   paintBox.scrollLeft = entry.scrollLeft;
 }
 
+// The board's own saving animation, so the page shows what the outputs show: one
+// white light travelling the seven over a dim floor, out1 to out7, 120ms a step.
+// Started by saving() and stopped by the next banner, whatever it says
+var SPOT_STEP_MS = 120;
+// How long the animation outlives the write: the board holds its light for 500ms
+// after the last write and then runs one pass of seven half-steps
+var SAVING_TAIL_MS = 920;
+var spotTimer = null;
+
+function stopSpots() {
+  if (spotTimer !== null) clearInterval(spotTimer);
+  spotTimer = null;
+}
+
+function saving(text) {
+  banner(text, "hold");
+  var row = document.createElement("span");
+  row.className = "spots";
+  for (var i = 0; i < 7; i++) row.appendChild(document.createElement("i"));
+  document.getElementById("banners").firstChild.appendChild(row);
+  var at = 0;
+  spotTimer = setInterval(function () {
+    for (var i = 0; i < row.children.length; i++)
+      row.children[i].className = i === at ? "lit" : "";
+    at = (at + 1) % row.children.length;
+  }, SPOT_STEP_MS);
+}
+
 function banner(text, warn, detail) {
+  stopSpots();
   var box = document.getElementById("banners");
   box.innerHTML = "";
   if (!text) return;
@@ -4669,6 +4741,7 @@ document.getElementById("save").onclick = async function () {
     // The board acts on a save only where the file it is already running asked it to,
     // so the first save that turns it on still needs an eject
     var running = await (await state.fileHandle.getFile()).text();
+    saving("Saving to the board...");
     var errorsBefore = playsItself(running) ? await readErrors() : undefined;
     // The marker makes the answer an edge even where nothing else changes
     if (errorsBefore !== undefined && await markChecking()) errorsBefore = CHECKING;
@@ -4677,6 +4750,9 @@ document.getElementById("save").onclick = async function () {
     await writable.close();
     var back = await (await state.fileHandle.getFile()).text();
     if (back !== text) throw new Error("the file read back differently");
+    // The board keeps its light travelling for a moment after the last write, then
+    // runs one pass as the drive changes hands, so the page holds its own as long
+    await new Promise(function (settle) { setTimeout(settle, SAVING_TAIL_MS); });
     if (errorsBefore === undefined) {
       banner("On its way. " + (playsItself(text)
              ? "Eject the FX drive, or press the board's button once, to play this one. "
