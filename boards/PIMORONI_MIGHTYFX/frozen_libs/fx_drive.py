@@ -159,19 +159,32 @@ def __heal(fs, name, text):
         __unhealed.append(name)
 
 
-def __sweep_swap_files():
+def __remove_tree(path):
+    """Remove a file, or a directory and everything in it, ignoring what will not go."""
+    try:
+        if os.stat(path)[0] & 0x4000:
+            for name in os.listdir(path):
+                __remove_tree(path + "/" + name)
+            os.rmdir(path)
+        else:
+            os.remove(path)
+    except OSError:
+        pass
+
+
+def __sweep_host_litter():
     """
-    Remove the temporary files a browser save leaves when it is interrupted.
-    Chromium writes through a .crswap beside the file and renames on close, so
-    one still present is a save the drive left with. Its content is unfinished
-    by definition; the real file still holds the last completed save.
+    Remove what a computer leaves on the drive that the board has no use for.
+
+    Chromium writes a save through a .crswap beside the file and renames on close,
+    so one still present is a save the drive left with, unfinished by definition.
+    macOS writes a ._ sidecar beside every file it touches and a .fseventsd
+    directory at the root, neither of which anything here reads.
     """
     for name in os.listdir(MOUNT_POINT):
-        if name.lower().endswith(".crswap"):
-            try:
-                os.remove(MOUNT_POINT + "/" + name)
-            except OSError:
-                pass
+        lower = name.lower()
+        if lower.endswith(".crswap") or name.startswith("._") or lower == ".fseventsd":
+            __remove_tree(MOUNT_POINT + "/" + name)
 
 
 def __has_boot_signature(bdev):
@@ -237,7 +250,7 @@ def mount():
     __heal(fs, PICKER_NAME, fx_editor.PICKER)
     __heal(fs, EDITOR_NAME, fx_editor.EDITOR)
     __heal(fs, CATALOGUE_NAME, fx_editor.CATALOGUE)
-    __sweep_swap_files()
+    __sweep_host_litter()
     return True
 
 
