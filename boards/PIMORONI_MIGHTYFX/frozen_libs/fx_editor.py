@@ -3006,6 +3006,10 @@ async function connect(fresh) {
 // see it, measured 2026-08-22
 var BOARD_SETTLE_MS = 6000;
 var BOARD_WAIT_MS = 15000;
+// How long the drive is given to come back once it has been seen away. The board
+// leaves the USB bus on a reload and a Mac takes about four seconds to mount it
+// again, measured 2026-09-17, with the answer readable the moment it does
+var BOARD_AWAY_MS = 10000;
 var BOARD_POLL_MS = 250;
 
 function playsItself(text) {
@@ -3059,7 +3063,8 @@ async function readErrors() {
 // nothingYet() once the settle time passes, saying the check is still running: an
 // answer can arrive after the settle, so nothing is claimed until the wait is over.
 // Seeing the drive away is proof the board acted, so an unchanged answer after that
-// is a real answer rather than an early one
+// is a real answer rather than an early one, and the wait is extended once so the
+// answer is not missed while the drive is still on its way back
 async function waitForBoard(before, nothingYet) {
   var deadline = Date.now() + BOARD_WAIT_MS;
   var settled = Date.now() + BOARD_SETTLE_MS;
@@ -3069,6 +3074,7 @@ async function waitForBoard(before, nothingYet) {
     await new Promise(function (settle) { setTimeout(settle, BOARD_POLL_MS); });
     var now = await readErrors();
     if (now === false) {
+      if (!wentAway) deadline = Math.max(deadline, Date.now() + BOARD_AWAY_MS);
       wentAway = true;
       continue;
     }
@@ -4241,6 +4247,10 @@ document.getElementById("open").onclick = async function () {
 // poll. A change to errors.txt is proof either way and ends the wait at once
 var BOARD_SETTLE_MS = 6000;
 var BOARD_WAIT_MS = 15000;
+// How long the drive is given to come back once it has been seen away. The board
+// leaves the USB bus on a reload and a Mac takes about four seconds to mount it
+// again, measured 2026-09-17, with the answer readable the moment it does
+var BOARD_AWAY_MS = 10000;
 var BOARD_POLL_MS = 250;
 
 function playsItself(text) {
@@ -4294,7 +4304,8 @@ async function readErrors() {
 // nothingYet() once the settle time passes, saying the check is still running: an
 // answer can arrive after the settle, so nothing is claimed until the wait is over.
 // Seeing the drive away is proof the board acted, so an unchanged answer after that
-// is a real answer rather than an early one
+// is a real answer rather than an early one, and the wait is extended once so the
+// answer is not missed while the drive is still on its way back
 async function waitForBoard(before, nothingYet) {
   var deadline = Date.now() + BOARD_WAIT_MS;
   var settled = Date.now() + BOARD_SETTLE_MS;
@@ -4304,6 +4315,7 @@ async function waitForBoard(before, nothingYet) {
     await new Promise(function (settle) { setTimeout(settle, BOARD_POLL_MS); });
     var now = await readErrors();
     if (now === false) {
+      if (!wentAway) deadline = Math.max(deadline, Date.now() + BOARD_AWAY_MS);
       wentAway = true;
       continue;
     }
