@@ -1615,7 +1615,7 @@ __PAIRING = True
 
 def __service_shows(shows, between=None):
     """
-    One pass of every screen that has the panel.
+    One pass of every screen that has the panel, answering whether one was drawn.
 
     Two panels on their own ports stream together in about the time one of them
     takes alone, so a frame due on each is sent as a pair. Measured at 58ms
@@ -1639,7 +1639,7 @@ def __service_shows(shows, between=None):
             update_pair(due[0].screen, due[1].screen)
             for show in due:
                 show.lit()
-            return
+            return True
         # Screens built too differently to share a stream, which update_pair says
         # for itself. A staged frame is still waiting on each, and update() sends
         # it, so the fall-through below shows them rather than losing the frame
@@ -1651,6 +1651,8 @@ def __service_shows(shows, between=None):
         show.service()
         if between is not None and between():
             break
+
+    return bool(due)
 
 
 def __start(players, fx):
@@ -2027,6 +2029,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                         sound.resume()
                     paused = False
 
+            drew = False
             if paused:
                 __transfer_frame(fx, time.ticks_ms())
             else:
@@ -2035,7 +2038,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
 
                 # A frame can cost longer than the double press window, so the
                 # button is answered between the screens rather than after them all
-                __service_shows(shows, lambda: watch() != volume.IDLE)
+                drew = __service_shows(shows, lambda: watch() != volume.IDLE)
 
             if event == volume.BUSY:
                 # A press the computer's writing blocked otherwise looks exactly like
@@ -2044,7 +2047,12 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                 # and the next frame paints over it
                 indicate(fx, BLOCKED)
 
-            time.sleep_ms(interval_ms)
+            # A pass that drew goes straight round, since the next frame may
+            # already be due and a wait would then be added to every frame the
+            # screens send. Nothing here needs answering sooner than the wait:
+            # the lights run from a timer, and a press is latched until it is read
+            if not drew:
+                time.sleep_ms(interval_ms)
     finally:
         # Darkening the board comes first and nothing fallible stands in front of it.
         # A stop from the REPL arrives as an interrupt and the next one lands wherever
