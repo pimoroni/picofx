@@ -1130,6 +1130,7 @@ function panelPreview(screen) {
 var state = {
   // The drive
   dirHandle: null, fileHandle: null,
+  boardText: null,      // effects.txt as last read from the drive, where there is no handle
   media: [],            // {name, kind: "gif"|"image"|"folder", handle, thumbHandle}
   sounds: [],           // wav names on the drive
   soundInfo: {},        // name -> {seconds, bars} read from the file, or null
@@ -2551,6 +2552,7 @@ async function removeFromDrive(name, kind) {
 
 // The cross that offers it, quiet until the pointer is over the tile
 function binButton(name, kind) {
+  if (!CAN_REACH_A_DRIVE) return document.createTextNode("");
   var bin = document.createElement("span");
   bin.className = "bin";
   bin.textContent = "\\u00d7";
@@ -2962,6 +2964,7 @@ async function pickDrive(fresh) {
 }
 
 async function connect(fresh) {
+  if (!CAN_REACH_A_DRIVE) return connectByInput();
   var dir = await pickDrive(fresh);
   var file;
   try {
@@ -2994,6 +2997,179 @@ async function connect(fresh) {
   saveButton.className = "primary";
   saveButton.disabled = false;
   draw();
+}
+
+// ---- the drive without handles ---------------------------------------------------
+
+// Safari and Firefox cannot hand a page a folder to write to. There the drive is
+// read through a folder chooser, which gives every file in one pick, and a save
+// hands effects.txt to the browser's download, which the user places on the drive
+var folderInput = document.createElement("input");
+folderInput.type = "file";
+folderInput.setAttribute("webkitdirectory", "");
+folderInput.style.display = "none";
+document.body.appendChild(folderInput);
+
+var folderSettle = null;
+folderInput.onchange = function () {
+  var files = Array.prototype.slice.call(folderInput.files);
+  folderInput.value = "";
+  var settle = folderSettle;
+  folderSettle = null;
+  if (settle) settle(files);
+};
+// A dismissed dialog answers null, so nothing waits forever on it
+folderInput.oncancel = function () {
+  var settle = folderSettle;
+  folderSettle = null;
+  if (settle) settle(null);
+};
+
+function chooseFolder() {
+  return new Promise(function (settle) {
+    folderSettle = settle;
+    folderInput.click();
+  });
+}
+
+// A File dressed as the handle the previews and waveforms already take
+function pseudoHandle(file) {
+  return {kind: "file", name: file.name,
+          getFile: function () { return Promise.resolve(file); }};
+}
+
+function pathOf(file) {
+  return (file.webkitRelativePath || file.name).split("/");
+}
+
+// Whether any part of the path is a dot entry. Firefox hands back everything the
+// drive holds, including the sidecars and event log a Mac leaves on it
+function hiddenPath(parts) {
+  return parts.some(function (part) { return part.charAt(0) === "."; });
+}
+
+// The chooser's files sorted into the shape scanMedia() gives: effects.txt and
+// errors.txt picked out, and everything a screen or the speaker can play
+function sortFolder(files) {
+  var media = [];
+  var sounds = [];
+  var effects = null;
+  var errors = null;
+  var folders = {};
+  for (var i = 0; i < files.length; i++) {
+    var parts = pathOf(files[i]);
+    if (hiddenPath(parts)) continue;
+    var name = parts[parts.length - 1];
+    if (parts.length === 2) {
+      if (name === "effects.txt") effects = files[i];
+      else if (name === "errors.txt") errors = files[i];
+      else if (/\\.gif$/i.test(name))
+        media.push({name: name, kind: "gif", handle: pseudoHandle(files[i])});
+      else if (/\\.(png|jpe?g)$/i.test(name))
+        media.push({name: name, kind: "image", handle: pseudoHandle(files[i])});
+      else if (/\\.wav$/i.test(name)) {
+        sounds.push(name);
+        profileSound(name, pseudoHandle(files[i]));
+      }
+    } else if (parts.length === 3 && parts[1] !== "System Volume Information" &&
+               !folders[parts[1]] && /\\.(gif|png|jpe?g)$/i.test(name)) {
+      folders[parts[1]] = true;
+      media.push({name: parts[1], kind: "folder", thumbHandle: pseudoHandle(files[i])});
+    }
+  }
+  sounds.sort();
+  media.sort(function (a, b) { return a.name < b.name ? -1 : 1; });
+  return {media: media, sounds: sounds, effects: effects, errors: errors,
+          drive: files.length ? pathOf(files[0])[0] : null};
+}
+
+function takeFolder(found) {
+  state.media = found.media;
+  state.sounds = found.sounds;
+  state.scanned = true;
+}
+
+async function connectByInput() {
+  var files = await chooseFolder();
+  if (files === null) {
+    var dropped = new Error("the dialog was dismissed");
+    dropped.name = "AbortError";
+    throw dropped;
+  }
+  var found = sortFolder(files);
+  if (!found.effects) {
+    var refused = new Error("no effects.txt");
+    refused.name = "NotAnFxDrive";
+    throw refused;
+  }
+  takeFolder(found);
+  state.boardText = await found.effects.text();
+  absorbText(state.boardText);
+  document.getElementById("check").disabled = false;
+  document.getElementById("status").textContent =
+      "read from " + (found.drive && found.drive.length > 1 ? found.drive : "the drive");
+  var openButton = document.getElementById("open");
+  openButton.className = "";
+  openButton.textContent = "Look at the drive again";
+  var saveButton = document.getElementById("save");
+  saveButton.className = "primary";
+  saveButton.disabled = false;
+  draw();
+}
+
+// A save with nowhere to write: effects.txt goes to the browser's download, and
+// the banner says where it belongs and how the board answers
+function saveByHand() {
+  var text = currentText();
+  var lastWritten = null;
+  try { lastWritten = localStorage.getItem("fx-picker-wrote"); } catch (e) {}
+  var onBoard = state.boardText || "";
+  if (onBoard.indexOf("Written by the FX picker") < 0 && onBoard !== lastWritten &&
+      onBoard.trim() !== "") {
+    if (!confirm("The file on the board was written some other way, maybe by hand. " +
+                 "Its entries are kept, but its comments and layout will be redone. " +
+                 "Save over it?"))
+      return;
+  }
+  var link = document.createElement("a");
+  link.href = URL.createObjectURL(new Blob([text], {type: "text/plain"}));
+  link.download = "effects.txt";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  try { localStorage.setItem("fx-picker-wrote", text); } catch (e) {}
+  state.boardText = text;
+  banner("effects.txt is downloading. Put it on the FX drive in place of the old one" +
+         (playsItself(onBoard)
+          ? ", and the board plays it. Then press 'Did it work?'."
+          : ", then eject the drive or press the board's button once, and it plays."));
+}
+
+// Did it work, asked by picking the drive again. Only its answer and its files
+// are taken; what is being built on the page stays as it is
+async function askByInput() {
+  banner("Pick the FX drive again, so its answer can be read.", "hold");
+  var files = await chooseFolder();
+  if (files === null) {
+    banner("");
+    return;
+  }
+  var found = sortFolder(files);
+  if (!found.effects) {
+    banner("That folder has no effects.txt, so it does not look like an FX " +
+           "drive. Pick the drive itself, the one named FX.", true);
+    return;
+  }
+  takeFolder(found);
+  draw();
+  var said = found.errors ? (await found.errors.text()).trim() : null;
+  if (said === CHECKING)
+    banner("The board has not read the file yet. Check effects.txt landed on the " +
+           "drive, then eject it or press the board's button once.", "hold");
+  else if (said)
+    banner("The board wasn't happy with some of it:", true, said);
+  else
+    banner("All good. The board read the file and found nothing wrong.");
 }
 
 // ---- waiting for the board -------------------------------------------------------
@@ -3103,6 +3279,10 @@ function sayWhatHappened(said, also) {
 }
 
 document.getElementById("save").onclick = async function () {
+  if (!CAN_REACH_A_DRIVE) {
+    saveByHand();
+    return;
+  }
   try {
     if (!state.fileHandle) await connect();
     var onBoard = await (await state.fileHandle.getFile()).text();
@@ -3168,6 +3348,10 @@ document.getElementById("save").onclick = async function () {
 };
 
 document.getElementById("check").onclick = async function () {
+  if (!CAN_REACH_A_DRIVE) {
+    askByInput();
+    return;
+  }
   // A blink before the answer, so asking again visibly did something even when
   // the answer reads the same
   banner("Asking the board...", "hold");
@@ -3210,20 +3394,18 @@ function openFresh() { openDrive(true); }
 document.getElementById("open").onclick = function () { openDrive(false); };
 document.getElementById("openOther").onclick = openFresh;
 
-// Only Chromium browsers can be handed a folder to write to. Saying so first
-// beats a TypeError from a call the browser does not have
+// Only Chromium browsers can be handed a folder to write to. Elsewhere the drive
+// is read through a folder chooser and a save goes by download, above
 var CAN_REACH_A_DRIVE = typeof window.showDirectoryPicker === "function";
 
+// Edge is named only where it is already on the machine
+var ONE_CLICK_BROWSERS = "Chrome" + (/Win/.test(navigator.platform) ? " or Edge" : "") +
+                         ", or another browser built on Chromium,";
+
 if (!CAN_REACH_A_DRIVE) {
-  ["open", "openOther", "save", "check"].forEach(function (id) {
-    var button = document.getElementById(id);
-    button.disabled = true;
-    button.className = button.className.replace("primary", "");
-  });
-  banner("This browser cannot be given a drive to write to, so the picker cannot " +
-         "reach the board from here. Open this page in Chrome or Edge. Everything " +
-         "it writes is an ordinary effects.txt, so any editor can do the same job " +
-         "by hand.", true);
+  document.getElementById("openOther").hidden = true;
+  banner("This browser cannot write to the drive, so a save downloads effects.txt for " +
+         "you to put on it. " + ONE_CLICK_BROWSERS + " saves straight to the board.");
 }
 
 // Where a visit before this one answered which drive, the choice is offered by
@@ -3960,7 +4142,7 @@ var STARTER = "# One entry per line: which lights, a colon, then the effect.\\n"
               "board: reload=auto\\n\\n" +
               "out1-7: rainbow_wave speed=0.3\\n";
 
-var state = {dirHandle: null, fileHandle: null, offered: [], rows: [], lit: 0};
+var state = {dirHandle: null, fileHandle: null, boardText: null, offered: [], rows: [], lit: 0};
 
 function repaint() {
   painted.innerHTML = paint(entry.value);
@@ -4196,11 +4378,9 @@ async function pickDrive() {
   return picked;
 }
 
-async function connect() {
-  var dir = await pickDrive();
-  state.dirHandle = dir;
-  state.fileHandle = await dir.getFileHandle("effects.txt");
-  var onBoard = await (await state.fileHandle.getFile()).text();
+// Take the drive's effects.txt into the editor, asking first where it would
+// replace something written here, and ready the buttons for a save
+function loadFromDrive(onBoard, status, openLabel) {
   var held = entry.value.trim();
   if (onBoard.trim() !== held && (!held || held === STARTER.trim() ||
       confirm("Load effects.txt from the drive and replace what is written here? " +
@@ -4213,14 +4393,23 @@ async function connect() {
     repaint();
   }
   document.getElementById("check").disabled = false;
-  document.getElementById("status").textContent = "connected to the drive";
+  document.getElementById("status").textContent = status;
   // The next thing to do carries the colour: opening first, then saving
   var open = document.getElementById("open");
   open.className = "";
-  open.textContent = "Open a different drive";
+  open.textContent = openLabel;
   var save = document.getElementById("save");
   save.className = "primary";
   save.disabled = false;
+}
+
+async function connect() {
+  if (!CAN_REACH_A_DRIVE) return connectByInput();
+  var dir = await pickDrive();
+  state.dirHandle = dir;
+  state.fileHandle = await dir.getFileHandle("effects.txt");
+  var onBoard = await (await state.fileHandle.getFile()).text();
+  loadFromDrive(onBoard, "connected to the drive", "Open a different drive");
 }
 
 document.getElementById("open").onclick = async function () {
@@ -4228,10 +4417,138 @@ document.getElementById("open").onclick = async function () {
     await connect();
     banner("");
   } catch (e) {
+    if (e.name === "AbortError") return;
+    if (e.name === "NotAnFxDrive") {
+      banner("That folder has no effects.txt, so it does not look like an FX " +
+             "drive. Pick the drive itself, the one named FX.", true);
+      return;
+    }
     banner("Could not open the drive: " + e.name + ". Is it showing? " +
            "A double press of the board's button brings it back.", true);
   }
 };
+
+// ---- the drive without handles -------------------------------------------------
+
+// Safari and Firefox cannot hand a page a folder to write to. There the drive is
+// read through a folder chooser, and a save hands effects.txt to the browser's
+// download, which the user places on the drive
+var folderInput = document.createElement("input");
+folderInput.type = "file";
+folderInput.setAttribute("webkitdirectory", "");
+folderInput.style.display = "none";
+document.body.appendChild(folderInput);
+
+var folderSettle = null;
+folderInput.onchange = function () {
+  var files = Array.prototype.slice.call(folderInput.files);
+  folderInput.value = "";
+  var settle = folderSettle;
+  folderSettle = null;
+  if (settle) settle(files);
+};
+// A dismissed dialog answers null, so nothing waits forever on it
+folderInput.oncancel = function () {
+  var settle = folderSettle;
+  folderSettle = null;
+  if (settle) settle(null);
+};
+
+function chooseFolder() {
+  return new Promise(function (settle) {
+    folderSettle = settle;
+    folderInput.click();
+  });
+}
+
+// effects.txt and errors.txt out of the chooser's files, at the drive's root only.
+// Firefox hands back dot entries too, the sidecars and event log a Mac leaves
+function sortFolder(files) {
+  var found = {effects: null, errors: null, drive: null};
+  for (var i = 0; i < files.length; i++) {
+    var parts = (files[i].webkitRelativePath || files[i].name).split("/");
+    if (parts.length !== 2 || parts[1].charAt(0) === ".") continue;
+    found.drive = parts[0];
+    if (parts[1] === "effects.txt") found.effects = files[i];
+    else if (parts[1] === "errors.txt") found.errors = files[i];
+  }
+  return found;
+}
+
+async function connectByInput() {
+  var files = await chooseFolder();
+  if (files === null) {
+    var dropped = new Error("the dialog was dismissed");
+    dropped.name = "AbortError";
+    throw dropped;
+  }
+  var found = sortFolder(files);
+  if (!found.effects) {
+    var refused = new Error("no effects.txt");
+    refused.name = "NotAnFxDrive";
+    throw refused;
+  }
+  state.boardText = await found.effects.text();
+  loadFromDrive(state.boardText,
+                "read from " + (found.drive && found.drive.length > 1 ? found.drive : "the drive"),
+                "Look at the drive again");
+}
+
+// A save with nowhere to write: effects.txt goes to the browser's download, and
+// the banner says where it belongs and how the board answers
+function saveByHand() {
+  var text = entry.value;
+  var onBoard = state.boardText || "";
+  var link = document.createElement("a");
+  link.href = URL.createObjectURL(new Blob([text], {type: "text/plain"}));
+  link.download = "effects.txt";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  state.boardText = text;
+  banner("effects.txt is downloading. Put it on the FX drive in place of the old one" +
+         (playsItself(onBoard)
+          ? ", and the board plays it. Then press 'Did it work?'."
+          : ", then eject the drive or press the board's button once, and it plays."));
+}
+
+// Did it work, asked by picking the drive again. Only its answer is taken; what is
+// written on the page stays as it is
+async function askByInput() {
+  banner("Pick the FX drive again, so its answer can be read.", "hold");
+  var files = await chooseFolder();
+  if (files === null) {
+    banner("");
+    return;
+  }
+  var found = sortFolder(files);
+  if (!found.effects) {
+    banner("That folder has no effects.txt, so it does not look like an FX " +
+           "drive. Pick the drive itself, the one named FX.", true);
+    return;
+  }
+  var said = found.errors ? (await found.errors.text()).trim() : null;
+  if (said === CHECKING)
+    banner("The board has not read the file yet. Check effects.txt landed on the " +
+           "drive, then eject it or press the board's button once.", "hold");
+  else if (said)
+    banner("The board wasn't happy with some of it:", true, said);
+  else
+    banner("Nothing reported. The board found no problem with the file.");
+}
+
+// Only Chromium browsers can be handed a folder to write to. Elsewhere the drive
+// is read through a folder chooser and a save goes by download, above
+var CAN_REACH_A_DRIVE = typeof window.showDirectoryPicker === "function";
+
+// Edge is named only where it is already on the machine
+var ONE_CLICK_BROWSERS = "Chrome" + (/Win/.test(navigator.platform) ? " or Edge" : "") +
+                         ", or another browser built on Chromium,";
+
+if (!CAN_REACH_A_DRIVE) {
+  banner("This browser cannot write to the drive, so a save downloads effects.txt for " +
+         "you to put on it. " + ONE_CLICK_BROWSERS + " saves straight to the board.");
+}
 
 
 // ---- waiting for the board -----------------------------------------------------
@@ -4342,6 +4659,10 @@ function sayWhatHappened(said, also) {
 }
 
 document.getElementById("save").onclick = async function () {
+  if (!CAN_REACH_A_DRIVE) {
+    saveByHand();
+    return;
+  }
   try {
     if (!state.fileHandle) await connect();
     var text = entry.value;
@@ -4385,6 +4706,10 @@ document.getElementById("save").onclick = async function () {
 };
 
 document.getElementById("check").onclick = async function () {
+  if (!CAN_REACH_A_DRIVE) {
+    askByInput();
+    return;
+  }
   // A blink before the answer, so asking again visibly did something even when
   // the answer reads the same
   banner("Asking the board...", "hold");
