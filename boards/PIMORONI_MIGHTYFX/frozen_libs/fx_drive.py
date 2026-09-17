@@ -57,11 +57,10 @@ RELOADED = 5
 # volume back. Ejecting on the computer first is the only guaranteed save.
 SETTLE_MS = 1500
 
-# How long the drive stays away before it can be shown again, so the computer sees the
-# volume leave and drops its copy of the directory. Windows notices within a second;
-# macOS never notices at any length up to a minute, which is why showing the drive again
-# also leaves and rejoins the USB bus.
-HIDDEN_MS = 1500
+# How long the drive stays away before it can be shown again. Showing it again leaves
+# and rejoins the USB bus, which no computer can miss, so nothing waits here. The setting
+# stays for a host that turns out to need the media gone for a while as well.
+HIDDEN_MS = 0
 
 # How long the board stays off the bus before rejoining, on the second reload and after.
 # The first activation of the runtime USB device disconnects and reconnects by itself,
@@ -353,11 +352,11 @@ def expose():
     Show the drive to the connected computer, releasing the board's own
     mount while the computer owns it.
 
-    Waits out the rest of HIDDEN_MS since the drive was taken back, so the computer
-    has seen it leave, then rejoins the USB bus so that a computer that did not see
-    it enumerates the board afresh. Neither happens at boot, when nothing has been
-    taken back. Effects run from a timer and carry on; anything the caller drives
-    itself, a screen being the one, holds its last frame for the wait.
+    After a withdraw, waits out whatever HIDDEN_MS asks for and then rejoins the USB
+    bus, so the computer enumerates the board afresh and reads the drive as it now
+    is. Neither happens at boot, when nothing has been taken back. Effects run from a
+    timer and carry on; anything the caller drives itself, a screen being the one,
+    holds its last frame for the wait.
     """
     global __exposed, __withdrawn_at
     if __exposed:
