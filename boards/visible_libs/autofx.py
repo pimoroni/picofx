@@ -1668,6 +1668,21 @@ def __start(players, fx):
         players[0].start(fps=PLAYER_FPS)
 
 
+def __resume(players, fx):
+    """
+    Start the players again after a pass of the spot, over dark outputs.
+
+    The spot leaves every output it did not carry at its resting floor, and a
+    player writes only the outputs an effect drives, so one the file never names
+    would keep that floor for good. Darkening first costs the driven outputs one
+    frame, which the players paint over. The outputs only, since clear() would
+    take a strip's player with it.
+    """
+    for output in fx.outputs:
+        output.off()
+    __start(players, fx)
+
+
 def __spot(fx, lit):
     """One output at the travelling level, the rest at the resting floor."""
     colour, floor, spot = TRANSFER
@@ -1951,7 +1966,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                 for player in players:
                     player.stop()
                 __handover(fx, False)
-                __start(players, fx)
+                __resume(players, fx)
 
             if event in (volume.HIDDEN, volume.EJECTED, volume.RELOADED):
                 if event == volume.HIDDEN:
@@ -2006,14 +2021,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                 if idle_since is None:
                     idle_since = time.ticks_ms()
                 elif time.ticks_diff(time.ticks_ms(), idle_since) >= TRANSFER_HOLD_MS:
-                    __start(players, fx)
-                    # A player paints over the wait as it starts, and only the ones
-                    # writing the outputs do: a file playing on a strip alone, or on
-                    # nothing but its screens, would leave the travelling spot lit.
-                    # The outputs only, since clear() would take a strip's player with it
-                    if not any(player.kind in OUTPUT_KINDS for player in players):
-                        for output in fx.outputs:
-                            output.off()
+                    __resume(players, fx)
                     for show in shows:
                         if show.live:
                             show.resume()
