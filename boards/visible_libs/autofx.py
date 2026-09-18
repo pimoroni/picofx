@@ -27,8 +27,8 @@ import sys
 import time
 
 from picofx import RGBLED, ColourPlayer, MonoPlayer, StripPlayer, ease, fade
-from picofx.colour import (BLACK, BLUE, COOL, COLOUR_EFFECTS, CYAN, GREEN, MAGENTA, RED,
-                           WARM, WHITE, YELLOW)
+from picofx.colour import (BLACK, BLUE, COOL, COLOUR_EFFECTS, CYAN, GREEN, MAGENTA, ORANGE,
+                           PINK, PURPLE, RED, WARM, WHITE, YELLOW)
 from picofx.mono import MONO_EFFECTS, NoneFX
 
 # The drive a connected computer sees. Making it writable long enough to leave a
@@ -43,8 +43,9 @@ ERRORS_PATH = MOUNT_DIR + "/errors.txt"
 __REPORTING_TO = [ERRORS_PATH]
 
 COLOURS = {
-    "red": RED, "yellow": YELLOW, "green": GREEN, "cyan": CYAN, "blue": BLUE,
-    "magenta": MAGENTA, "warm": WARM, "white": WHITE, "cool": COOL, "black": BLACK,
+    "red": RED, "orange": ORANGE, "yellow": YELLOW, "green": GREEN, "cyan": CYAN,
+    "blue": BLUE, "purple": PURPLE, "magenta": MAGENTA, "pink": PINK, "warm": WARM,
+    "white": WHITE, "cool": COOL, "black": BLACK,
 }
 
 COMPONENTS = ("r", "g", "b")

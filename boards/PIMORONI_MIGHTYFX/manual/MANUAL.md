@@ -153,10 +153,10 @@ out1 level=0.5, 2 level=0.8, 3-7: pulse_wave
 out1-7 ease=0.4: blink speed=0.5
 ```
 
-Colours by name: red, yellow, green, cyan, blue, magenta, warm, white, cool,
-black. Or the hex a colour picker gives you, with its `#` left off, as `out4`
-above uses for a soft orange. A `#` always starts a comment, so one left on a
-colour hides the rest of the line.
+Colours by name: red, orange, yellow, green, cyan, blue, purple, magenta, pink,
+warm, white, cool, black. Or the hex a colour picker gives you, with its `#`
+left off, as `out4` above uses for an orange paler than the named one. A `#`
+always starts a comment, so one left on a colour hides the rest of the line.
 
 ### Fade and ease
 
