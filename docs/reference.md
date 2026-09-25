@@ -8,6 +8,7 @@ This is the library reference for the [Pimoroni Tiny FX](https://shop.pimoroni.c
 - [Reading the User Button](#reading-the-user-button)
 - [Setting the Mono LED Outputs](#setting-the-mono-led-outputs)
 - [Setting the RGB LED Output](#setting-the-rgb-led-output)
+- [Using the Sensor Connector](#using-the-sensor-connector)
 - [Reading Voltage](#reading-voltage)
 - [Effects System](#effects-system)
   - [Program Lifecycle](#program-lifecycle)
@@ -38,6 +39,12 @@ Tiny FX has one user button, labelled **Boot**. This can be read using the `boot
 
 ```python
 state_boot = tiny.boot_pressed()
+```
+
+This reports the button's state at the moment it is asked, so a tap that starts and ends between two reads is missed. `boot_taps()` instead counts presses as they happen, and returns how many there have been since it was last called:
+
+```python
+taps = tiny.boot_taps()
 ```
 
 
@@ -82,55 +89,96 @@ This `RGBLED` object offers two functions to control its associated output, `set
 
 ```python
 # Turn the rgb output to red
-tiny.rgb.set_rgb(255, 0, 0)
-# tiny.rgb.set_hsv(0, 1, 1)
+rgb.set_rgb(255, 0, 0)
+# rgb.set_hsv(0, 1, 1)
 time.sleep(1)
 
 # Turn the rgb output to green
-tiny.rgb.set_rgb(0, 255, 0)
-# tiny.rgb.set_hsv(0.333, 1, 1)
+rgb.set_rgb(0, 255, 0)
+# rgb.set_hsv(0.333, 1, 1)
 time.sleep(1)
 
 # Turn the rgb output to blue
-tiny.rgb.set_rgb(0, 0, 255)
-# tiny.rgb.set_hsv(0.666, 1, 1)
+rgb.set_rgb(0, 0, 255)
+# rgb.set_hsv(0.666, 1, 1)
 time.sleep(1)
 
 # Turn the rgb output to white
-tiny.rgb.set_rgb(255, 255, 255)
-# tiny.rgb.set_hsv(0, 0, 1)
+rgb.set_rgb(255, 255, 255)
+# rgb.set_hsv(0, 0, 1)
 time.sleep(1)
+```
+
+There are also `on()` and `off()`. `on()` sets every channel to full, giving white, and `off()` is the same as `set_rgb(0, 0, 0)`.
+
+```python
+# Turn the rgb output on, then off again
+rgb.on()
+time.sleep(1)
+rgb.off()
 ```
 
 It is also possible to control the individual outputs of the RGB connection by accessing the `led_r`, `led_g`, `led_b` variables on the `RGBLED`, giving access to the internal `PWMLED` objects used.
 
 ```python
 # Turn the rgb output to red
-tiny.rgb.led_r.on()
-tiny.rgb.led_g.off()
-tiny.rgb.led_b.off()
+rgb.led_r.on()
+rgb.led_g.off()
+rgb.led_b.off()
 time.sleep(1)
 
 # Turn the rgb output to green
-tiny.rgb.led_r.off()
-tiny.rgb.led_g.on()
-tiny.rgb.led_b.off()
+rgb.led_r.off()
+rgb.led_g.on()
+rgb.led_b.off()
 time.sleep(1)
 
 # Turn the rgb output to blue
-tiny.rgb.led_r.off()
-tiny.rgb.led_g.off()
-tiny.rgb.led_b.on()
+rgb.led_r.off()
+rgb.led_g.off()
+rgb.led_b.on()
 time.sleep(1)
 
 # Turn the rgb output to white
-tiny.rgb.led_r.on()
-tiny.rgb.led_g.on()
-tiny.rgb.led_b.on()
+rgb.led_r.on()
+rgb.led_g.on()
+rgb.led_b.on()
 time.sleep(1)
 ```
 
 This can be useful for if you wish to connect up additional mono LEDs (the RGB connector can actually accept a Mono connector without any rewiring), though note that the gamma value for the RGB output is slightly different to that of the mono outputs.
+
+
+## Using the Sensor Connector
+
+Tiny FX has a connector for a single sensor, carrying one signal alongside ground and 3.3V. Two accessories are made for it, the PIR Stick and the IR Receiver, and the signal can also be read as an analog voltage. The board sets each of these up for you when told which one to use:
+
+```python
+from sensor import ANALOG, PIR, IR
+
+tiny = TinyFX(sensor=ANALOG)
+```
+
+What the board set up is then available through `sensor`:
+
+| role | what `sensor` gives you |
+| --- | --- |
+| `ANALOG` | an `Analog`, read with `read_voltage()`, which optionally takes a `samples` count |
+| `PIR` | a `Pin`, already an input with its pull-up set, read with `value()` |
+| `IR` | a `NECRemoteReceiver` from the `aye_arr` library, already started, ready to `bind()` a remote and `decode()` |
+
+Letting the board set up `IR` is especially worthwhile, as the receiver needs a PIO state machine and the board knows which ones are free.
+
+```python
+from aye_arr.nec.remotes import PimoroniRemote
+
+tiny = TinyFX(sensor=IR)
+
+receiver = tiny.sensor
+receiver.bind(PimoroniRemote())
+```
+
+Without `sensor=`, the board leaves the connector alone, and reading `sensor` raises an error saying so. To use the connector some other way, its pin number is available as `SENSOR_PIN`.
 
 
 ## Reading Voltage
@@ -275,14 +323,19 @@ wav: WavPlayer
 ```python
 # Initialisation
 TinyFX(init_i2c: bool=True,
+       i2c_freq: int=100000,
        init_wav: bool=True,
-       wav_root: string="/")
+       wav_root: string="/",
+       sensor: string=None)
 
 # Interaction
 boot_pressed() -> bool
+boot_taps() -> int
 
 # Sensing
 read_voltage(samples: int=1) -> float
+@property
+sensor -> Analog | Pin | NECRemoteReceiver
 
 # Access
 @property
