@@ -1,15 +1,19 @@
-# examples/mighty_fx/examples/screens/slideshow_from_flash.py, decoding into a
-# pre-allocated RGBA8888 image instead of allocating one per frame.
+# A slideshow read from flash, decoding each PNG into a pre-allocated RGBA8888 image
+# instead of allocating one per frame.
 #
 # The point is the palette route. image.load() on an indexed PNG returns a
 # palettised image: one byte of palette index per pixel plus a 256-entry palette,
-# which update() cannot read, so it raises. load_into() an existing image keeps that
+# which update() draws through that palette. load_into() an existing image keeps that
 # image's mode, which takes the decoder's RGBA expansion branch and produces a
-# four-byte-per-pixel frame update() can convert. This confirms that path end to end.
+# four-byte-per-pixel frame instead. This confirms that path end to end.
 #
 # The preflight says so in numbers rather than leaving it to the picture: it loads
 # the first image both ways and reports has_palette for each, so a run against a
 # folder of truecolour PNGs cannot be mistaken for a successful conversion.
+#
+# Both routes reach the panel, so this is a choice and not a workaround. Only the
+# expanded frame can be drawn into, since drawing onto a palettised image silently does
+# nothing, so anything drawing over a loaded picture wants this route.
 #
 # Two side effects worth knowing, since they are the reason this is not simply the
 # better example. The image is allocated once, so per-frame allocation and its
@@ -76,7 +80,7 @@ def preflight(path):
     except LOAD_ERRORS as e:
         print(f"  image.load():  failed, {type(e).__name__}: {e}")
         return
-    direct = getattr(loaded, "has_palette", None)
+    direct = loaded.has_palette
     del loaded
 
     try:
@@ -84,12 +88,7 @@ def preflight(path):
     except LOAD_ERRORS as e:
         print(f"  load_into():   failed, {type(e).__name__}: {e}")
         return
-    into = getattr(canvas, "has_palette", None)
-
-    if direct is None or into is None:
-        print("  has_palette is not exposed by this build, so the modes cannot be"
-              " compared. The frames below still say whether load_into() works.")
-        return
+    into = canvas.has_palette
 
     print(f"  image.load():  has_palette {direct}")
     print(f"  load_into():   has_palette {into}")
@@ -97,7 +96,7 @@ def preflight(path):
         print("  This is the case under test: indexed on disk, RGBA8888 after"
               " load_into(). A clean slideshow below confirms the conversion.")
     elif direct:
-        print("  load_into() left it palettised, so update() will reject it. Not the"
+        print("  load_into() left it palettised, so nothing was expanded. Not the"
               " expected outcome.")
     else:
         print("  These PNGs are not indexed, so nothing is being converted and a"
