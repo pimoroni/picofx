@@ -7,7 +7,7 @@ from picofx.colour import BLUE, CYAN, GREEN, MAGENTA, RED, WARM, YELLOW
 from picofx.mono import StaticFX
 
 """
-Turn each of Mighty FX's outputs on and off by pressing the number buttons on the
+Turn each of MightyFX's outputs on and off by pressing the number buttons on the
 Pimoroni Aye Arr Remote, and hold to adjust their brightness.
 
 Each output lights in the colour its own button is marked with, so pressing the blue

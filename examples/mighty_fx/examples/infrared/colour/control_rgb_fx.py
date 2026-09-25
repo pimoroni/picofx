@@ -6,7 +6,7 @@ from picofx import ColourPlayer
 from picofx.colour import BLACK, BLUE, COOL, CYAN, GREEN, MAGENTA, RED, RGBFX, WARM, WHITE, YELLOW
 
 """
-Set the colour of Mighty FX's seven RGB outputs using the number buttons on the
+Set the colour of MightyFX's seven RGB outputs using the number buttons on the
 Pimoroni Aye Arr Remote. This version uses the effects system to interact with
 them. One effect drives every output, so they change together.
 

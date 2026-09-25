@@ -5,7 +5,7 @@ from sensor import IR
 from picofx.colour import BLACK, BLUE, COOL, CYAN, GREEN, MAGENTA, RED, WARM, WHITE, YELLOW
 
 """
-Set the colour of Mighty FX's seven RGB outputs using the number buttons on the
+Set the colour of MightyFX's seven RGB outputs using the number buttons on the
 Pimoroni Aye Arr Remote. This version interacts with the outputs directly.
 
 Actions:

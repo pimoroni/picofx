@@ -5,7 +5,7 @@ from picovector import image
 
 """
 Alternate between two .PNG images from a folder, each shown for its own duration. Images
-must be the same resolution as the screen
+must be the same resolution as the screen.
 
 Press "Boot" to exit the program.
 """

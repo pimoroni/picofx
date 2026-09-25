@@ -3,7 +3,7 @@ from mighty_fx import MightyFX
 from picofx.colour import GREEN
 
 """
-Play a WAV file saved locally to the Mighty FX
+Play a WAV file saved locally to MightyFX.
 
 Output 4 says which state the board is in: a quarter white while it waits, and green
 while a file plays. The board takes a moment to start, and a press before the white

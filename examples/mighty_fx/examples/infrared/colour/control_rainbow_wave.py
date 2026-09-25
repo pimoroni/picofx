@@ -6,7 +6,7 @@ from picofx import ColourPlayer
 from picofx.colour import RainbowWaveFX
 
 """
-Play a rainbow that travels along Mighty FX's outputs, controllable by the
+Play a rainbow that travels along MightyFX's outputs, controllable by the
 directional buttons on a Pimoroni Aye Arr Remote.
 
 Where the rainbow example gives every output the same colour at once, this gives each

@@ -6,7 +6,7 @@ from screens import SCREEN_TYPES
 from picovector import color, font, image, rect
 
 """
-One picture under eleven filters, so the difference is a glance rather than a guess.
+Show one picture under eleven filters, so the difference is a glance rather than a guess.
 
 A filter is a call on an image and it rewrites every pixel already there, so nothing can be
 added to a picture after one runs. That is why each cell here is filtered in a small image

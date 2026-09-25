@@ -5,9 +5,11 @@ from picovector import color, font, image, shape
 
 """
 Draw a lixie: ten engraved acrylic sheets stacked front to back with a digit on each, an LED
-under every sheet, and only the one being shown lit. The engraving is what the light escapes
-through, so a lit sheet reads as its digit in fine bright lines while the nine unlit ones stay a
-faint tracery, and a sheet further back appears a size smaller, which is why the edges nest.
+under every sheet, and only the one being shown lit.
+
+The engraving is what the light escapes through, so a lit sheet reads as its digit in fine bright
+lines while the nine unlit ones stay a faint tracery, and a sheet further back appears a size
+smaller, which is why the edges nest.
 
 Nothing here is an image of a sheet: the nine that never change are drawn once into the frame
 every real frame starts from, and the lit one goes straight onto it. The face is a hairline, and

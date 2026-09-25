@@ -6,7 +6,7 @@ from screens import SCREEN_TYPES
 from picovector import color, font, image, mat3, shape, vec2
 
 """
-Every setting that decides how a path is drawn, four rows of three.
+Show every setting that decides how a path is drawn, four rows of three.
 
 Where the stroke sits against the edge it traces, inside it, centred on it or outside it.
 How two segments meet at a corner, mitred to a point, rounded off, or cut across. How a

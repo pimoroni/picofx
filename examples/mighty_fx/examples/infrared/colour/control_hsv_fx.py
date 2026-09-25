@@ -6,10 +6,10 @@ from picofx import ColourPlayer
 from picofx.colour import H_BLACK, H_BLUE, H_COOL, H_CYAN, H_GREEN, H_MAGENTA, H_RED, H_WARM, H_WHITE, H_YELLOW, HSVFX
 
 """
-Set the colour of Mighty FX's onboard RGB LED using the number buttons
-on the Pimoroni Aye Arr Remote, and change its hue, saturation, and value
-using the directional buttons. This version uses the effects system
-to interact with the LED.
+Set the colour of MightyFX's seven RGB outputs using the number buttons on the
+Pimoroni Aye Arr Remote, and change their hue, saturation, and value using the
+directional buttons. This version uses the effects system to interact with them.
+One effect drives every output, so they change together.
 
 Actions:
 - (1)-(9) Buttons [Press + Hold] = Set Colour

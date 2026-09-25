@@ -7,7 +7,7 @@ from picofx.colour import BLUE, CYAN, GREEN, MAGENTA, RED, WARM, YELLOW
 from picofx.mono import BlinkFX, NoneFX, PulseFX, RandomFX, StaticFX
 
 """
-Play a different effect on each of Mighty FX's outputs, and turn them on and off by
+Play a different effect on each of MightyFX's outputs, and turn them on and off by
 pressing the number buttons on the Pimoroni Aye Arr Remote.
 
 Every effect here is a mono one, giving a brightness rather than a colour, so each
