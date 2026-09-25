@@ -75,8 +75,8 @@ class MightyFX:
     SENSOR_SM = 3
     V_SENSE_PIN = 47
 
+    # The sense divider is 10k over 10k, so a reading is half the rail
     V_SENSE_GAIN = 2
-    V_SENSE_DIODE_CORRECTION = 0.3
 
     RGB_GAMMA = 2.2
 
@@ -236,12 +236,13 @@ class MightyFX:
         return self.__rail_en.value() == 1
 
     def read_voltage(self, samples=1):
+        """Read the supply voltage the board runs from, which on battery is the cell itself."""
         val = 0
         for _ in range(samples):
             val += self.__v_sense.read_u16()
         val /= samples
 
-        return ((val * 3.3 * self.V_SENSE_GAIN) / 65535) + self.V_SENSE_DIODE_CORRECTION
+        return (val * 3.3 * self.V_SENSE_GAIN) / 65535
 
     @property
     def hub(self):

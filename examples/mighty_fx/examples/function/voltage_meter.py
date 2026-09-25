@@ -4,6 +4,9 @@ from mighty_fx import MightyFX
 """
 Use MightyFX's RGB outputs as a bargraph to show the voltage that is powering the board.
 
+The board runs from USB or from a LiPo, whichever is higher, so the scale covers both.
+A full bar is USB, and a battery falls down the bar as it discharges.
+
 The output at the top of the bar is lit as far into its own step as the reading has
 gone, so the bar moves smoothly rather than a whole output at a time. Each lights in the
 colour its part of the range stands for, the hue running from
@@ -14,8 +17,8 @@ Press "Boot" to exit the program.
 
 # Constants
 BRIGHTNESS = 0.6            # The brightness to set the outputs
-MIN_VOLTAGE = 4             # The min voltage, in volts, to show on the meter
-MAX_VOLTAGE = 6             # The max voltage, in volts, to show on the meter
+MIN_VOLTAGE = 3.5           # The bottom of the meter, in volts, being a LiPo near empty
+MAX_VOLTAGE = 5.5           # The top of the meter, in volts, being USB at its highest
 SAMPLES = 50                # The number of measurements to take per reading, to reduce noise
 INTERVAL = 0.1              # How often to take a voltage measurement, in seconds
 LOW_HUE = 0.0           # The hue of the lowest output, being red
