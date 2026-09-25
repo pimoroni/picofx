@@ -124,7 +124,7 @@ Play a wave of pulses on TinyFX's outputs.
 
 
 ### Binary Counter
-[effects/binary_counter.py](examples/effects/binary_counter.py)
+[effects/mono/binary_counter.py](examples/effects/mono/binary_counter.py)
 
 Play an incrementing binary counter on TinyFX's outputs.
 

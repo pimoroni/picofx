@@ -10,3 +10,5 @@ These are micropython examples for driving an LED strip from Mighty FX's L and R
 
 ### Strip Rainbow
 [strip_rainbow.py](strip_rainbow.py)
+
+Run a rainbow along an LED strip on the L connector.

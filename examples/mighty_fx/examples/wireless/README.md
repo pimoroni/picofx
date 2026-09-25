@@ -14,5 +14,9 @@ They each need a `secrets.py` file on the board's file system, holding the crede
 ### CheerLights
 [cheerlights.py](cheerlights.py)
 
+Obtain the current CheerLights colour from the internet and show it on MightyFX's RGB outputs. For more information about CheerLights, visit: https://cheerlights.com/
+
 ### Random
 [random.py](random.py)
+
+Show random colours obtained from the internet on MightyFX's outputs.
