@@ -26,9 +26,6 @@ target_compile_definitions(usermod_picovector INTERFACE PV_GIF_MAX_BYTES=6291456
 # Essential
 include(pimoroni_i2c/micropython)
 
-# QR Code Library
-include(qrcode/micropython/micropython)
-
 # Sensors & Breakouts
 include(micropython-common-breakouts)
 
