@@ -11,14 +11,14 @@ costs the same however many panels are on the hub, the panels latching one strea
 together, so the rate a wall can hold is the rate one panel can hold.
 
 Two panels butted together hide a band of pixels behind their bezels, so the pattern steps at
-each join. The frames are indexed PNGs, one a frame, which is the choice worth copying: eight of
-this size cost 609KB against about 2.4MB truecolour.
+each join. The frames are indexed PNGs, one a frame, which is the choice worth copying. The player
+holds every frame decoded, and an indexed frame takes a quarter of the memory of a truecolour one.
 
 Press "Boot" to exit the program.
 """
 
 # Constants
-FRAMES = "/examples/assets/traces"   # The folder of frames, beside this example
+FRAMES = "/examples/assets/traces"   # The folder of frames, shared with the scroll example
 FPS = 10                         # The rate to play at, a folder of images declaring none
 
 # SP/CE B gives up its five pins as the chip selects for the panels on SP/CE A, so

@@ -11,7 +11,7 @@ Press "Boot" to exit the program.
 """
 
 # Constants
-IMAGE_FOLDER = "/examples/assets"  # The folder the images are in, beside this example
+IMAGE_FOLDER = "/examples/assets"  # The folder the images are in
 FIRST_IMAGE = "gold_macaw_card.png"        # The name of the first image
 SECOND_IMAGE = "red_macaw_card.png"        # The name of the second image
 FIRST_DURATION = 1.5

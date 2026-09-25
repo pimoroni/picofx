@@ -18,7 +18,7 @@ Press "Boot" to exit the program.
 """
 
 # Constants
-GIF_PATH = "/examples/assets/pirate_coin.gif"   # The GIF to play, beside this example
+GIF_PATH = "/examples/assets/pirate_coin.gif"   # The GIF to play
 
 # Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it.
 # rotation is how the panel is mounted, which every frame then takes without naming it

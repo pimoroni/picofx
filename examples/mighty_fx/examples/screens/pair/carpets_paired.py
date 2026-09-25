@@ -12,8 +12,9 @@ Every placement setting a screen takes, a pair takes one of per screen, so this 
 images and an offset each in one call, and nothing about the two has to agree: hexagons
 drift on the diagonal, tumbling blocks drift sideways.
 
-Both tiles are tiny, a pattern being only the smallest piece that repeats, so the two come
-to 69KB. Neither is drawn after startup: the drift is the offset, and it costs nothing.
+Both tiles are tiny, a pattern being only the smallest piece that repeats, so the two come to
+about a ninth of the two full-panel images they stand in for. Neither is drawn after startup:
+the drift is the offset, and it costs nothing.
 
 Press "Boot" to exit the program.
 """

@@ -14,13 +14,14 @@ hold dwells where it turns. The arm genuinely stops at each end, so nothing belo
 turn; an animation drawn to loop wants first_as_last there.
 
 Every frame decodes when the player is made, so a sequence costs its whole length
-before it plays a step: three truecolour frames of this size are about 900KB.
+before it plays a step. These frames are truecolour, which holds four times the memory an
+indexed frame of the same size does.
 
 Press "Boot" to exit the program.
 """
 
 # Constants
-FRAMES = "/examples/assets/rosie"   # The folder of frames, beside this example
+FRAMES = "/examples/assets/rosie"   # The folder of frames
 ROTATION = 90                    # Quarter turn, to suit how the screen is mounted
 FPS = 8                          # The rate to play at, a folder of images declaring none
 HOLD = 0.4                       # Seconds to dwell where it turns around, at each end

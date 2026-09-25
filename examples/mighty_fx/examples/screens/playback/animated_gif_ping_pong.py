@@ -19,7 +19,7 @@ Press "Boot" to exit the program.
 """
 
 # Constants
-GIF_PATH = "/examples/assets/pirate_coin.gif"   # The GIF to play, beside this example
+GIF_PATH = "/examples/assets/pirate_coin.gif"   # The GIF to play
 ROTATION = 90                    # Quarter turn, to suit how the screen is mounted
 HOLD = 1.0                       # Seconds to dwell at each end, both being the coin face
 

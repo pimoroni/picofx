@@ -21,7 +21,7 @@ Press "Boot" to exit the program.
 """
 
 # Constants
-GIF_PATH = "/examples/assets/medscan.gif"   # The GIF to play, beside this example
+GIF_PATH = "/examples/assets/medscan.gif"   # The GIF to play
 ROTATION = 90                    # Quarter turn, to suit how the screen is mounted
 
 # What each pass comes back as, taken in turn. The first is near enough what the file was drawn

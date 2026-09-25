@@ -13,7 +13,7 @@ Press "Boot" to exit the program.
 """
 
 # Constants for drawing
-LOGO_PATH = "/examples/assets/pirate_face.gif"  # The logo to bounce, beside this example
+LOGO_PATH = "/examples/assets/pirate_face.gif"  # The logo to bounce
 HOLLOW_LOGO = True      # Whether the logo's darkest colour is left open for the background
 STEP = 3                # How many pixels the logo moves each frame
 FRAME_DURATION = 0.02   # How long each position is shown for, in seconds
