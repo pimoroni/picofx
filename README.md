@@ -1,6 +1,6 @@
 # PicoFX<!-- omit in toc -->
 
-## A RGB and Mono LED effects system for MicroPython <!-- omit in toc -->
+## An RGB and Mono LED effects system for MicroPython <!-- omit in toc -->
 
 This repository is home to the PicoFX library, as well as MicroPython builds for supported boards like the Pimoroni Mighty FX and Tiny FX (W).
 
@@ -20,7 +20,7 @@ This repository is home to the PicoFX library, as well as MicroPython builds for
 
 ## Introduction
 
-PicoFX is a MicroPython library for easily playing effects on mono and RGB leds.
+PicoFX is a MicroPython library for easily playing effects on mono and RGB LEDs.
 
 Tiny FX is a programmable, RP2040-based controller board for adding smart light and sound effects to models and dioramas.
 
@@ -70,7 +70,7 @@ This build type includes only the firmware needed for Mighty and Tiny FX to func
 * `tiny_fx-vX.X.X-micropython-with-libs-and-examples.uf2`
 * `tiny_fx_w-vX.X.X-micropython-with-libs-and-examples.uf2`
 
-This build type contains both the firmware for Mighty and Tiny FX, library files to easily create effects, and examples to get you going.
+This build type contains the firmware for Mighty and Tiny FX, library files to easily create effects, and examples to get you going.
 
 ## Flashing the Firmware
 

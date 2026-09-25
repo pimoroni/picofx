@@ -62,7 +62,7 @@ PANEL_W, PANEL_H = screen.height, screen.width
 
 sky_shades = color.ramp(SKIES, SKY_STEPS)
 
-# Each entry paired with what it becomes by night, worked out once. A table is always the full 256
+# Each entry paired with what it becomes by night, calculated once. A table is always the full 256
 # whatever the picture drew with, so the transparent entry the sky shows through and the opaque
 # black the rest is padded with are both passed over
 walls = []

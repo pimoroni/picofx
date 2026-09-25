@@ -1,6 +1,6 @@
 # Pimoroni Mighty FX Playback - Library Reference <!-- omit in toc -->
 
-This is the library reference for the `playback` module, which plays animated GIFs and image sequences on an SP/CE screen.
+This is the library reference for the `playback` module, which plays animated GIFs and image sequences on a SP/CE screen.
 
 
 ## Table of Content <!-- omit in toc -->

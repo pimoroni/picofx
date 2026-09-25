@@ -4,7 +4,7 @@ from mighty_fx import MightyFX, SPCE
 from motor_driver import MotorDriver
 
 """
-Sweep a pair of motors up and down their speed range together, on an SP/CE connector
+Sweep a pair of motors up and down their speed range together, on a SP/CE connector
 declared as a motor driver.
 
 A connector declared that way hands back a driver, holding the two motors its data pins

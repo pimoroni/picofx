@@ -108,7 +108,7 @@ if not screens:
 # crawls along the gantry. A group of one is still a gantry, so however many answered are driven the same way
 gantry = ScreenGroup(*screens)
 
-# The distinct aspects each setting calls for, over the lanes that answered, worked out once. This is what
+# The distinct aspects each setting calls for, over the lanes that answered, calculated once. This is what
 # makes a setting cost a write per aspect, not per lane
 ASPECTS_IN = []
 for setting in GANTRY:

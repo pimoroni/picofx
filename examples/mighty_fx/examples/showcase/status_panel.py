@@ -181,7 +181,7 @@ def glyph_blanks(face, glyph, size, tall, down):
 
 
 def centred_on_ink(face, text, size, tall, down, across=None):
-    """The x to draw the text at for its ink to sit centred, worked out once, not every frame."""
+    """The x to draw the text at for its ink to sit centred, calculated once, not every frame."""
     before = glyph_blanks(face, text[0], size, tall, down)[0]
     after = glyph_blanks(face, text[-1], size, tall, down)[1]
     return ((across or WIDTH) - (measure(face, text, size) - before - after)) / 2 - before

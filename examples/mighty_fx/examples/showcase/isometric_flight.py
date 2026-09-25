@@ -53,7 +53,7 @@ def field(p, q):
     return (total / 1.8 + 1) / 2
 
 
-# One figure per corner, worked out once and shared by both worlds and by the four cells that
+# One figure per corner, calculated once and shared by both worlds and by the four cells that
 # meet there, so no two cells can disagree about where their common corner sits
 FIELD = [[field(p, q) for q in range(Q_PERIOD)] for p in range(P_PERIOD)]
 

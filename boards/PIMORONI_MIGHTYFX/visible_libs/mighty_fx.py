@@ -192,7 +192,7 @@ class MightyFX:
     @staticmethod
     def __pwm_channel(gpio):
         # The RP2350 shares its PWM channels between GPIO pairs, pins 16 apart below
-        # GPIO 32 and 8 apart above it, so an LED output can land on a channel an SP/CE
+        # GPIO 32 and 8 apart above it, so an LED output can land on a channel a SP/CE
         # role drives
         if gpio < 32:
             return gpio % 16
@@ -377,8 +377,7 @@ class MightyFX:
         self.spce_a.release()
         self.spce_b.release()
 
-        # No screen draws from a canvas now, so the SRAM goes back and a rebuilt screen
-        # gets the same addresses
+        # No screen draws from a canvas now, so the SRAM goes back
         release_buffers()
 
         if self.__wav:
