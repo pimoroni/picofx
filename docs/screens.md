@@ -213,7 +213,7 @@ Panels on a hub refresh independently, so there is no moment when a frame is saf
 
 ### Alignment
 
-With `align` on, the group brings its members' refreshes into step and holds them there, so a frame lands untorn on all of them. Construction calibrates each member for a fraction of a second, saying so on the console, matches each panel's refresh to the slowest, and brings their refreshes together. From then on every frame the group writes also nudges any member that has drifted, a scan line at a time.
+With `align` on, the group brings its members' refreshes into step and holds them there, so a frame lands untorn on all of them. Construction calibrates each member for about a second, saying so on the console, matches each panel's refresh to the slowest, and brings their refreshes together. From then on every frame the group writes also nudges any member that has drifted, a scan line at a time.
 
 `align=None`, the default, aligns where the group can and otherwise says why and runs held to one member's signal only. `align=True` raises `ValueError` where the members cannot be held. `align=False` leaves the panels alone. `is_aligned()` reports the state reached, so it reads `False` where a request went unmet or a long pause lost the members.
 

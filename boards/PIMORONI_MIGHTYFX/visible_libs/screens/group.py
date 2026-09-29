@@ -289,8 +289,11 @@ class ScreenGroup(ScreenBase):
         # direction that adds margin. required refuses where the members will not hold,
         # and an unmet request says why instead.
         members = self.screens
-        logging.info(f"> Calibrating {len(members)} screens, about "
-                     f"{len(members) * self.PROBE_MS * 2 // 1000 + 1} seconds ...")
+        # Three probes a member and one settle, acquisition adding a share no constant fixes
+        least_ms = 3 * len(members) * self.PROBE_MS + self.SETTLE_MS
+        logging.info(f"> Calibrating {len(members)} screens, at least "
+                     f"{least_ms / 1000:.1f} seconds ...")
+        started = time.ticks_ms()
 
         periods = []
         for screen in members:
@@ -362,6 +365,7 @@ class ScreenGroup(ScreenBase):
         phase = "held in phase" if self.__holding else "left unheld"
         logging.info(f"screens: padded to {self.__reference} and {phase}, {pads} porch "
                      f"lines, {margin_us:.0f}us of margin at the tightest member")
+        logging.debug(f"> Calibrated in {time.ticks_diff(time.ticks_ms(), started)}ms")
 
     def __phases(self):
         # Every member's phase at one instant, or None where one went silent. A shared
