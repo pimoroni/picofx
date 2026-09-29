@@ -126,15 +126,15 @@ class MightyFX:
         # One connector given over to chip selects makes the other's panels a hub, built
         # here. Imported only where a board asked for one.
         self.__hub = None
-        for screen_port, lines_port in ((self.spce_a, self.spce_b), (self.spce_b, self.spce_a)):
-            if lines_port.mode != SPCE.HUB_LINES:
+        for screen_port, selects_port in ((self.spce_a, self.spce_b), (self.spce_b, self.spce_a)):
+            if selects_port.mode != SPCE.HUB_SELECTS:
                 continue
 
             if screen_port.mode != SPCE.SCREEN:
-                raise ValueError(f"SP/CE {lines_port.name} is declared SPCE.HUB_LINES, which are the chip selects for panels on the other connector, so declare SP/CE {screen_port.name} as SPCE.SCREEN")
+                raise ValueError(f"SP/CE {selects_port.name} is declared SPCE.HUB_SELECTS, which are the chip selects for panels on the other connector, so declare SP/CE {screen_port.name} as SPCE.SCREEN")
 
             from screens import ScreenHub
-            self.__hub = ScreenHub(screen_port, extra_cs=lines_port.hub_lines)
+            self.__hub = ScreenHub(screen_port, extra_cs=selects_port.hub_selects)
 
         # Set up the i2c for Qw/st, if the user wants
         self.__i2c = None
@@ -248,7 +248,7 @@ class MightyFX:
     def hub(self):
         """The six-panel screen hub, built where the board's ports declare one."""
         if self.__hub is None:
-            raise RuntimeError("hub is only accessible if the board was created with one SP/CE port as SPCE.SCREEN and the other as SPCE.HUB_LINES")
+            raise RuntimeError("hub is only accessible if the board was created with one SP/CE port as SPCE.SCREEN and the other as SPCE.HUB_SELECTS")
         return self.__hub
 
     @property

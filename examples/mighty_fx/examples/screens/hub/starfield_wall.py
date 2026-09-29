@@ -23,7 +23,7 @@ ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 # Create a MightyFX object with a screen hub across both SP/CE ports. One carries the
 # screen bus and the other gives up its five lines as extra chip selects, which is what
 # lets one port drive six panels instead of one
-mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_LINES)
+mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_SELECTS)
 
 # The hub hands out a port per chip select it reaches, whether or not a panel is on the end
 # of it. One that is not there refuses to be created, so build them all and keep whichever

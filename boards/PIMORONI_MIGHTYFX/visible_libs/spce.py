@@ -21,7 +21,7 @@ class SPCE:
     SCREEN = 0          # Screens, over the connector's own SPI bus and backlight
     MOTOR_DRIVER = 1    # Two motors and the enable they share
     GPIO = 2            # The five pins, free to borrow through io
-    HUB_LINES = 3       # The five pins, as the chip selects a hub addresses panels with
+    HUB_SELECTS = 3     # The five pins, as the chip selects a hub addresses panels with
 
 
 class Backlight(PWMLED):
@@ -179,9 +179,9 @@ class SPCEPort:
     IO_NAMES = ("dc", "cs", "sck", "mosi", "bl")
 
     def __init__(self, name, mode, spi, pins):
-        if mode not in (None, SPCE.SCREEN, SPCE.MOTOR_DRIVER, SPCE.GPIO, SPCE.HUB_LINES):
+        if mode not in (None, SPCE.SCREEN, SPCE.MOTOR_DRIVER, SPCE.GPIO, SPCE.HUB_SELECTS):
             raise ValueError(f"{mode} is not a valid SP/CE mode. Expected SPCE.SCREEN, "
-                             "SPCE.MOTOR_DRIVER, SPCE.GPIO, SPCE.HUB_LINES, or None.")
+                             "SPCE.MOTOR_DRIVER, SPCE.GPIO, SPCE.HUB_SELECTS, or None.")
 
         self.name = name
         self.mode = mode
@@ -190,7 +190,7 @@ class SPCEPort:
         # alone, so neither offers Pins. The numbers stay for motor_pins, which wants them
         self.__pin_numbers = tuple(pins)
         self.__pins = (tuple(Pin(pin) for pin in pins)
-                       if mode in (SPCE.SCREEN, SPCE.GPIO, SPCE.HUB_LINES) else None)
+                       if mode in (SPCE.SCREEN, SPCE.GPIO, SPCE.HUB_SELECTS) else None)
 
         self.driver = None      # The MotorDriver built here, so a board's shutdown can stop it
 
@@ -221,14 +221,14 @@ class SPCEPort:
         return self.__pins
 
     @property
-    def hub_lines(self):
+    def hub_selects(self):
         """The connector's five GPIOs, as the chip selects a hub addresses panels with.
 
-        Only a port declared SPCE.HUB_LINES offers them, the declaration being what says
+        Only a port declared SPCE.HUB_SELECTS offers them, the declaration being what says
         the connector is spent on another port's screens.
         """
-        if self.mode != SPCE.HUB_LINES:
-            raise ValueError(f"SP/CE {self.name} is not declared SPCE.HUB_LINES, so its "
+        if self.mode != SPCE.HUB_SELECTS:
+            raise ValueError(f"SP/CE {self.name} is not declared SPCE.HUB_SELECTS, so its "
                              "pins are not a hub's chip selects")
 
         return self.__pins
@@ -413,7 +413,7 @@ class SPCEPort:
         # code has run. Pulled down is a cold boot's own state at the pin.
         if self.mode == SPCE.SCREEN:
             handed_back = self.__pins[:4]   # The BL stays, backlight_off() putting it out
-        elif self.mode in (SPCE.GPIO, SPCE.HUB_LINES):
+        elif self.mode in (SPCE.GPIO, SPCE.HUB_SELECTS):
             handed_back = self.__pins       # All five, another port's chip selects among them
         else:
             handed_back = ()                # A motor port's belong to its Motor objects

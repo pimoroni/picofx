@@ -23,7 +23,7 @@ FPS = 10                         # The rate to play at, a folder of images decla
 
 # SP/CE B gives up its five pins as the chip selects for the panels on SP/CE A, so
 # the board hands back six ports and every panel is brought up and cleared together
-mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_LINES)
+mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_SELECTS)
 
 # The hub hands out a port per chip select it reaches, whether or not a panel is on the end
 # of it. One that is not there refuses to be created, so build them all and keep whichever
