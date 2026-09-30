@@ -1750,8 +1750,9 @@ function absorbText(text) {
       var seconds = 10;
       var restart = false;
       (heading[2] || "").split(/\s+/).forEach(function (word) {
-        var time = word.match(/^(\d+(?:\.\d+)?)s$/i);
-        if (time) seconds = Number(time[1]);
+        // A time in seconds or in minutes, held as seconds
+        var time = word.match(/^(\d+(?:\.\d+)?)([sm])$/i);
+        if (time) seconds = Number(time[1]) * (time[2].toLowerCase() === "m" ? 60 : 1);
         else if (word.toLowerCase() === "restart") restart = true;
       });
       buckets.push({scene: {name: heading[1], seconds: seconds, restart: restart},

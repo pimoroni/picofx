@@ -532,7 +532,7 @@ def draw(canvas, elapsed):
 
 <span class="s-scene">[Night: 10s]</span>
 <span class="s-target">out1-7</span> <span class="s-name">colour</span><span class="s-punc">=</span><span class="s-value">warm</span><span class="s-colon">:</span> <span class="s-effect">pulse</span></code></pre>
-<p>The name is everything before the <code>:</code> and may be anything you like, spaces included. Scenes take turns in the order they are written, then start again.</p>
+<p>The name is everything before the <code>:</code> and may be anything you like, spaces included. The time is in seconds, <code>30s</code>, or in minutes, <code>10m</code>. Scenes take turns in the order they are written, then start again.</p>
 <p>Entries before the first heading are always on, whatever is showing, so anything that should never change goes there:</p>
 <pre class="entry"><code><span class="s-target">out1</span><span class="s-colon">:</span> <span class="s-effect">static</span> <span class="s-name">brightness</span><span class="s-punc">=</span><span class="s-value">0.2</span></code></pre>
 <p>While a scene shows, an output it does not name goes dark if any other scene uses it, and is left alone if none of them do. A scene may name an output that is always on, and takes it over for as long as it shows.</p>

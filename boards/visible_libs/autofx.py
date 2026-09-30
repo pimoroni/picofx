@@ -938,10 +938,14 @@ def __value(text):
 
 
 def __scene_time(word):
-    """The seconds a heading's setting names, or None where it names no time."""
-    if not word.lower().endswith("s"):
+    """The seconds a heading's setting names, in seconds or minutes, or None where it names no time."""
+    unit = word[-1:].lower()
+    if unit not in ("s", "m"):
         return None
-    return __number(word[:-1])
+    number = __number(word[:-1])
+    if number is None or unit == "s":
+        return number
+    return number * 60
 
 
 def __is_scene_setting(word):
@@ -1434,7 +1438,7 @@ def parse(text):
                     restart = True
                 elif seconds is None:
                     problems.append("line {}: a scene has no setting '{}', it takes a "
-                                    "time such as 30s, or restart".format(number + 1, word))
+                                    "time such as 30s or 10m, or restart".format(number + 1, word))
                 elif seconds > 0:
                     hold = seconds
                 else:

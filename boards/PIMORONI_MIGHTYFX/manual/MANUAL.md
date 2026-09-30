@@ -553,7 +553,8 @@ out1-7 colour=warm: pulse
 ```
 
 The name is everything before the `:` and may be anything you like, spaces
-included. Scenes take turns in the order they are written, then start again.
+included. The time is in seconds, `30s`, or in minutes, `10m`. Scenes take turns
+in the order they are written, then start again.
 
 Entries before the first heading are always on, whatever is showing, so anything
 that should never change goes there:
