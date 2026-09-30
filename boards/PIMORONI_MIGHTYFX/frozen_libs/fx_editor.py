@@ -4897,6 +4897,17 @@ var CATALOGUE = {
     "dim_max"
    ]
   },
+  "flicker_each": {
+   "kind": "mono",
+   "takes": [
+    "brightness",
+    "dimness",
+    "bright_min",
+    "bright_max",
+    "dim_min",
+    "dim_max"
+   ]
+  },
   "hsv": {
    "kind": "colour",
    "takes": [
@@ -4961,6 +4972,14 @@ var CATALOGUE = {
    ]
   },
   "random": {
+   "kind": "mono",
+   "takes": [
+    "interval",
+    "brightness_min",
+    "brightness_max"
+   ]
+  },
+  "random_each": {
    "kind": "mono",
    "takes": [
     "interval",

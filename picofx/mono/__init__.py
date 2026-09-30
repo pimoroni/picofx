@@ -5,11 +5,11 @@
 from .binary import BinaryCounterFX
 from .blink import BlinkFX, BlinkWaveFX
 from .flash import FlashFX, FlashSequenceFX
-from .flicker import FlickerFX
+from .flicker import FlickerEachFX, FlickerFX
 from .none import NoneFX
 from .pelican import PelicanCrossingFX
 from .pulse import PulseFX, PulseWaveFX
-from .rand import RandomFX
+from .rand import RandomEachFX, RandomFX
 from .static import StaticFX
 from .sweep import SweepFX
 from .traffic import TrafficLightFX
@@ -23,11 +23,13 @@ MONO_EFFECTS = [
     FlashFX,
     FlashSequenceFX,
     FlickerFX,
+    FlickerEachFX,
     NoneFX,
     PelicanCrossingFX,
     PulseFX,
     PulseWaveFX,
     RandomFX,
+    RandomEachFX,
     StaticFX,
     SweepFX,
     TrafficLightFX,

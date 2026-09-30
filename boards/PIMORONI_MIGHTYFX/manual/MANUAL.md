@@ -193,10 +193,12 @@ where its effect is.
 | `flash` | `speed=1` `flashes=2` `window=0.5` `phase=0` `duty=0.5` |
 | `flash_sequence` | `speed=1` `length=1` `flashes=1` `window=1` `phase=0` `duty=0.5` |
 | `flicker` | `brightness=1` `dimness=0.5` `bright_min=0.05` `bright_max=0.1` `dim_min=0.02` `dim_max=0.04` |
+| `flicker_each` | as `flicker` |
 | `pulse` | `speed=1` `phase=0` |
 | `pulse_wave` | `speed=1` `length=1` `phase=0` |
 | `sweep` | `speed=1` `length=1` `extent=1` `hold=0` |
 | `random` | `interval=0.05` `brightness_min=0` `brightness_max=1` |
+| `random_each` | as `random` |
 | `binary_counter` | `interval=0.1` `count=0` `step=1` |
 | `traffic_light` | `red_interval=10` `red_amber_interval=5` `green_interval=10` `amber_interval=5` |
 | `pelican_crossing` | `red_interval=8` `flashing_interval=6` `green_interval=20` `amber_interval=3` |
@@ -216,6 +218,14 @@ where its effect is.
 
 The ones ending `_wave`, `_sequence` and `_counter`, and `sweep`, travel across
 the outputs you name; the rest do the same thing on every one.
+
+The ones ending `_each` give every output its own: `flicker_each` dips each at
+its own moments, as flames do, and `random_each` gives each its own brightness.
+`flicker` and `random` do the same to all of them at once, as one light would:
+
+```entry
+out1-7 colour=ff5a00: flicker_each dimness=0.6
+```
 
 An effect that drives several outputs takes them in the order given in its own
 section below, so naming fewer than it drives lights the first of them and

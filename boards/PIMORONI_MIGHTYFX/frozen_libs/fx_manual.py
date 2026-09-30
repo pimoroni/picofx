@@ -378,10 +378,12 @@ footer p { margin: 0; }
 <tr><td><code>flash</code></td><td><code>speed=1</code> <code>flashes=2</code> <code>window=0.5</code> <code>phase=0</code> <code>duty=0.5</code></td></tr>
 <tr><td><code>flash_sequence</code></td><td><code>speed=1</code> <code>length=1</code> <code>flashes=1</code> <code>window=1</code> <code>phase=0</code> <code>duty=0.5</code></td></tr>
 <tr><td><code>flicker</code></td><td><code>brightness=1</code> <code>dimness=0.5</code> <code>bright_min=0.05</code> <code>bright_max=0.1</code> <code>dim_min=0.02</code> <code>dim_max=0.04</code></td></tr>
+<tr><td><code>flicker_each</code></td><td>as <code>flicker</code></td></tr>
 <tr><td><code>pulse</code></td><td><code>speed=1</code> <code>phase=0</code></td></tr>
 <tr><td><code>pulse_wave</code></td><td><code>speed=1</code> <code>length=1</code> <code>phase=0</code></td></tr>
 <tr><td><code>sweep</code></td><td><code>speed=1</code> <code>length=1</code> <code>extent=1</code> <code>hold=0</code></td></tr>
 <tr><td><code>random</code></td><td><code>interval=0.05</code> <code>brightness_min=0</code> <code>brightness_max=1</code></td></tr>
+<tr><td><code>random_each</code></td><td>as <code>random</code></td></tr>
 <tr><td><code>binary_counter</code></td><td><code>interval=0.1</code> <code>count=0</code> <code>step=1</code></td></tr>
 <tr><td><code>traffic_light</code></td><td><code>red_interval=10</code> <code>red_amber_interval=5</code> <code>green_interval=10</code> <code>amber_interval=5</code></td></tr>
 <tr><td><code>pelican_crossing</code></td><td><code>red_interval=8</code> <code>flashing_interval=6</code> <code>green_interval=20</code> <code>amber_interval=3</code></td></tr>
@@ -399,6 +401,8 @@ footer p { margin: 0; }
 </tbody></table></div>
 <h3 id="which-ones-travel">Which ones travel</h3>
 <p>The ones ending <code>_wave</code>, <code>_sequence</code> and <code>_counter</code>, and <code>sweep</code>, travel across the outputs you name; the rest do the same thing on every one.</p>
+<p>The ones ending <code>_each</code> give every output its own: <code>flicker_each</code> dips each at its own moments, as flames do, and <code>random_each</code> gives each its own brightness. <code>flicker</code> and <code>random</code> do the same to all of them at once, as one light would:</p>
+<pre class="entry"><code><span class="s-target">out1-7</span> <span class="s-name">colour</span><span class="s-punc">=</span><span class="s-value">ff5a00</span><span class="s-colon">:</span> <span class="s-effect">flicker_each</span> <span class="s-name">dimness</span><span class="s-punc">=</span><span class="s-value">0.6</span></code></pre>
 <p>An effect that drives several outputs takes them in the order given in its own section below, so naming fewer than it drives lights the first of them and leaves the rest out. Naming more than it drives is a mistake, and <code>errors.txt</code> says so.</p>
 <h3 id="traffic-lights-and-crossings">Traffic lights and crossings</h3>
 <p><code>traffic_light</code> wants three outputs, and lights them red, amber and green in that order. It switches instantly, so add <code>ease</code> for the lamps of a real signal:</p>
