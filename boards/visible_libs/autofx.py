@@ -3265,6 +3265,13 @@ def load(text, fx, maker=None):
         else:
             grouped[entry.scene].append(entry)
 
+    # Drop the length of any strip no entry plays on, so its connector stays off
+    used = {__strip_of(channel.name) for group in grouped.values() for entry in group
+            for channel in entry.channels}
+    for kind in STRIPS:
+        if kind not in used:
+            board.pop(kind, None)
+
     # Arguments with nothing to receive them, which nothing else would report
     if args_line is not None and not board.get("program"):
         problems.append("line {}: args needs a program to give them to. Write it like "
