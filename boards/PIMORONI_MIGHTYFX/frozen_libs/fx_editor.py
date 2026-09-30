@@ -1301,7 +1301,8 @@ function boardLine() {
   SCREENS.forEach(function (letter) {
     var screen = state.screens[letter];
     var used = screen.there && bodies.some(function (b) { return b.screens[letter].shows; });
-    if (used && screen.size) tokens.push("screen" + letter.toLowerCase() + "=" + screen.size);
+    // A screen needs its size, and one left as fitted is drawn and written as a 2.8
+    if (used) tokens.push("screen" + letter.toLowerCase() + "=" + (screen.size || "2.8"));
   });
   STRIP_IDS.forEach(function (id) {
     if (state.strips[id].leds) tokens.push(id.toLowerCase() + "=" + state.strips[id].leds);
@@ -1777,7 +1778,9 @@ function absorbText(text) {
         if (reload) {
           state.straight = reload[1].toLowerCase() === "auto";
           sawStraight = true;
-        } else if (size && SCREENS.indexOf(size[1].toUpperCase()) >= 0) {
+        // A Screen Hub is carried as written, this page drawing screens alone
+        } else if (size && SCREENS.indexOf(size[1].toUpperCase()) >= 0 &&
+                   size[2].toLowerCase() !== "hub") {
           var screen = state.screens[size[1].toUpperCase()];
           screen.there = true;
           screen.size = size[2];
@@ -2246,7 +2249,9 @@ function renderScreensHead() {
     head.appendChild(drop);
 
     var size = document.createElement("select");
-    var offered = CATALOGUE.board_settings["screen" + letter.toLowerCase()] || ["2.8", "1.54"];
+    // The sizes a panel can be, the catalogue's hub being no panel size
+    var offered = (CATALOGUE.board_settings["screen" + letter.toLowerCase()] || ["2.8", "1.54"])
+      .filter(function (inches) { return inches !== "hub"; });
     if (!screen.size) {
       var quiet = document.createElement("option");
       quiet.value = "";
@@ -3629,6 +3634,7 @@ var TARGETS = [
   ["out1-7", "all seven outputs"],
   ["screenA", "a screen on SP/CE A"],
   ["screenB", "a screen on SP/CE B"],
+  ["hubA", "a screen on a Screen Hub, from hubA to hubF, such as hubA-C"],
   ["stripL", "an LED strip on L"],
   ["stripR", "an LED strip on R"],
   ["audio", "a sound played beside the effects"],
@@ -3641,8 +3647,8 @@ var BOARD_HINTS = {
   reload: "auto plays the file the moment it is saved, no eject needed",
   program: "a Python file to run instead of the effects",
   args: "what to pass that program, divided by |",
-  screena: "what size of screen is on SP/CE A",
-  screenb: "what size of screen is on SP/CE B",
+  screena: "what size of screen is on SP/CE A, or hub for a Screen Hub",
+  screenb: "what size of screen is on SP/CE B, or hub for a Screen Hub",
   stripl: "how many LEDs are on a strip plugged into L",
   stripr: "the same for R"
 };
@@ -3655,7 +3661,7 @@ function targetKind(word) {
   var lowered = word.toLowerCase();
   if (lowered === "board") return "board";
   if (CATALOGUE && lowered === CATALOGUE.audio) return "audio";
-  if (lowered.slice(0, 6) === "screen") return "screen";
+  if (lowered.slice(0, 6) === "screen" || lowered.slice(0, 3) === "hub") return "screen";
   if (lowered.slice(0, 5) === "strip") return "strip";
   return "output";
 }
@@ -3694,6 +3700,9 @@ function valuesFor(name, kind) {
   if (!CATALOGUE) return null;
   var lowered = name.toLowerCase();
   if (kind === "board") {
+    // A hub position takes the sizes a screen does, less the hub itself
+    if (HUB_PLACES.test(lowered))
+      return CATALOGUE.board_settings.screena.filter(function (size) { return size !== "hub"; });
     var allowed = CATALOGUE.board_settings[lowered];
     return allowed && allowed.length ? allowed.map(String) : null;
   }
@@ -3739,10 +3748,13 @@ function badWrap(marked) {
   return '<span class="s-bad">' + marked + "</span>";
 }
 
+// A Screen Hub's positions, lettered A to F as on its silk, singly or as ranges: hubA-C,E
+var HUB_PLACES = /^hub[a-f](-[a-f])?(,[a-f](-[a-f])?)*$/;
+
 function validSelector(word) {
   var bare = word.toLowerCase().replace(/^,+|,+$/g, "");
   if (!bare) return true;
-  if (bare === "board" || /^screen[ab]$/.test(bare)) return true;
+  if (bare === "board" || /^screen[ab]$/.test(bare) || HUB_PLACES.test(bare)) return true;
   if (CATALOGUE && bare === CATALOGUE.audio) return true;
   if (/^strip[lr]([0-9][0-9,\\-]*)?$/.test(bare)) return true;
   if (/^out[0-9][0-9,\\-.rgb*]*$/.test(bare)) return true;
@@ -3750,12 +3762,15 @@ function validSelector(word) {
   return /^[0-9][0-9,\\-]*(\\.(r|g|b|\\*))?$/.test(bare);
 }
 
-function checkedSetting(word, allowed) {
+// A setting marked wrong where its name is not allowed, unless it fits the pattern given,
+// as a board entry's hub positions do
+function checkedSetting(word, allowed, pattern) {
   var marked = settingTok(word);
   if (!allowed) return marked;
   var name = word.split("=")[0].replace(/,+$/, "").toLowerCase();
   if (name === "bg") name = "background";
-  return allowed.indexOf(name) >= 0 ? marked : badWrap(marked);
+  var fits = allowed.indexOf(name) >= 0 || (pattern && pattern.test(name));
+  return fits ? marked : badWrap(marked);
 }
 
 function highlightLine(line, continuation, context, inScene) {
@@ -3810,7 +3825,7 @@ function highlightLine(line, continuation, context, inScene) {
       if (mono && CATALOGUE.effects[name].kind === "colour") return badWrap(marked);
       return marked;
     }
-    return checkedSetting(word, rightAllowed);
+    return checkedSetting(word, rightAllowed, kind === "board" ? HUB_PLACES : null);
   });
 
   return left + mark("s-colon", ":") + right + comment;
@@ -3975,7 +3990,7 @@ function contextAt(text, caret) {
         // A first word shaped like a selector settles it: the line is a new
         // entry still waiting for its colon, not the one above carrying on
         var starts = line.match(/^\\s*([^\\s:]+)/);
-        if (starts && /^(out[0-9]|screen[ab]|strip[lr]|board)/i.test(starts[1])) {
+        if (starts && /^(out[0-9]|screen[ab]|hub[a-f]|strip[lr]|board)/i.test(starts[1])) {
           found.target = starts[1];
           found.kind = targetKind(starts[1]);
           found.effect = null;
@@ -4043,6 +4058,9 @@ function offers(found) {
                : TYPE_HINTS[settingType(name, found.kind)];
       offer(shown + "=", hint || "");
     });
+    // A hub's positions are a pattern where the others are names, so one is offered to start
+    if (found.kind === "board" && CATALOGUE)
+      offer("hubA=", "the screen size at a Screen Hub position, such as hubA-C=2.8");
   }
 
   // A word already naming outputs can take more of them, one colour channel, or
@@ -4064,7 +4082,8 @@ function offers(found) {
       if (/^out/i.test(found.prefix) && tail.indexOf(".") < 0)
         offer(found.prefix + ".", "one colour channel alone: .r .g .b, or .*");
       offer(found.prefix + ": ", "then the effect");
-    } else if (/^(screen[ab]|strip[lr]|board|audio)$/i.test(found.prefix)) {
+    } else if (/^(screen[ab]|strip[lr]|board|audio)$/i.test(found.prefix) ||
+               HUB_PLACES.test(found.prefix.toLowerCase())) {
       offer(found.prefix + ": ", "then the effect");
     }
   }
@@ -5172,11 +5191,13 @@ var CATALOGUE = {
   "args": null,
   "screena": [
    "2.8",
-   "1.54"
+   "1.54",
+   "hub"
   ],
   "screenb": [
    "2.8",
-   "1.54"
+   "1.54",
+   "hub"
   ],
   "stripl": null,
   "stripr": null

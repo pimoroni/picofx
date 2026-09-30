@@ -278,6 +278,7 @@ footer p { margin: 0; }
 <li><a href="#led-strips">LED strips</a></li>
 <li><details><summary><a href="#screens">Screens</a></summary><ul>
 <li><a href="#naming-screens">Naming screens</a></li>
+<li><a href="#a-screen-hub">A Screen Hub</a></li>
 <li><a href="#setting-a-screen">Setting a screen</a></li>
 <li><a href="#pictures">Pictures</a></li>
 <li><a href="#drawing-from-code">Drawing from code</a></li>
@@ -443,7 +444,14 @@ footer p { margin: 0; }
 <p>A screen on either SP/CE connector is named <code>screenA</code> or <code>screenB</code>. A screen cannot say what size it is, so tell the board:</p>
 <pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">screenA</span><span class="s-punc">=</span><span class="s-value">1.54</span></code></pre>
 <p>That is a board entry, which sets the board rather than the lights and is one of a handful covered under <a href="#the-board">The board</a>.</p>
-<p>The sizes are 2.8 and 1.54, and 2.8 is used if you say nothing. Changing it needs the board turned off and on again before the new size takes.</p>
+<p>The sizes are 2.8 and 1.54, and a screen plays nothing until its size is given. Changing it needs the board turned off and on again before the new size takes.</p>
+<h3 id="a-screen-hub">A Screen Hub</h3>
+<p>A Screen Hub takes both connectors and carries up to six screens, at the positions its board letters A to F. Say which connector its screens come through with <code>hub</code>, the other taking its selects, then the size at each position fitted:</p>
+<pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">screenA</span><span class="s-punc">=</span><span class="s-value">hub</span> <span class="s-name">hubA-D,F</span><span class="s-punc">=</span><span class="s-value">2.8</span> <span class="s-name">hubE</span><span class="s-punc">=</span><span class="s-value">1.54</span>
+<span class="s-target">hubA-C</span><span class="s-colon">:</span> <span class="s-effect">gif</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">flames.gif</span>
+<span class="s-target">hubD,F</span><span class="s-colon">:</span> <span class="s-effect">image</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">badge.png</span></code></pre>
+<p>Positions are named as outputs are, <code>hubB</code> alone or <code>hubA-C,E</code> for several. Several positions showing the same picture are sent it once, so a picture across all six moves as smoothly as it does on one. A picture goes only to screens of one size, so give 2.8 and 1.54 positions entries of their own. A position with nothing to show in a scene is black.</p>
+<p>All six share one backlight, so <code>backlight</code> is for the whole hub: the first entry to set it decides, and <code>errors.txt</code> says where two entries showing at once ask for different ones. In scenes, each scene can set its own.</p>
 <h3 id="setting-a-screen">Setting a screen</h3>
 <p>Before the colon, and separate from what it plays:</p>
 <div class="scroll"><table>
@@ -543,8 +551,9 @@ def draw(canvas, elapsed):
 <tr><td><code>reload</code></td><td><code>auto</code> plays the file the moment it is saved</td><td>wait for an eject or <strong>Boot</strong></td></tr>
 <tr><td><code>program</code></td><td>a Python file to run instead of the effects</td><td>the effects run</td></tr>
 <tr><td><code>args</code></td><td>what to pass that program, divided by <code>|</code></td><td>it is given none</td></tr>
-<tr><td><code>screenA</code></td><td>what size of screen is on SP/CE A, if you have one</td><td>2.8</td></tr>
-<tr><td><code>screenB</code></td><td>the same for SP/CE B</td><td>2.8</td></tr>
+<tr><td><code>screenA</code></td><td>what size of screen is on SP/CE A, or <code>hub</code> for a Screen Hub</td><td>no screen</td></tr>
+<tr><td><code>screenB</code></td><td>the same for SP/CE B</td><td>no screen</td></tr>
+<tr><td><code>hubA</code> to <code>hubF</code></td><td>what size of screen is at each of a Screen Hub's positions</td><td>no screen there</td></tr>
 <tr><td><code>stripL</code></td><td>how many LEDs are on a strip plugged into <strong>L</strong></td><td>no strip</td></tr>
 <tr><td><code>stripR</code></td><td>the same for <strong>R</strong></td><td>no strip</td></tr>
 </tbody></table></div>

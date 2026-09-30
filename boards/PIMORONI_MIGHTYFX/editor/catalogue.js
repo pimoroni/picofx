@@ -333,11 +333,13 @@ var CATALOGUE = {
   "args": null,
   "screena": [
    "2.8",
-   "1.54"
+   "1.54",
+   "hub"
   ],
   "screenb": [
    "2.8",
-   "1.54"
+   "1.54",
+   "hub"
   ],
   "stripl": null,
   "stripr": null

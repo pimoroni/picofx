@@ -1292,7 +1292,8 @@ function boardLine() {
   SCREENS.forEach(function (letter) {
     var screen = state.screens[letter];
     var used = screen.there && bodies.some(function (b) { return b.screens[letter].shows; });
-    if (used && screen.size) tokens.push("screen" + letter.toLowerCase() + "=" + screen.size);
+    // A screen needs its size, and one left as fitted is drawn and written as a 2.8
+    if (used) tokens.push("screen" + letter.toLowerCase() + "=" + (screen.size || "2.8"));
   });
   STRIP_IDS.forEach(function (id) {
     if (state.strips[id].leds) tokens.push(id.toLowerCase() + "=" + state.strips[id].leds);
@@ -1768,7 +1769,9 @@ function absorbText(text) {
         if (reload) {
           state.straight = reload[1].toLowerCase() === "auto";
           sawStraight = true;
-        } else if (size && SCREENS.indexOf(size[1].toUpperCase()) >= 0) {
+        // A Screen Hub is carried as written, this page drawing screens alone
+        } else if (size && SCREENS.indexOf(size[1].toUpperCase()) >= 0 &&
+                   size[2].toLowerCase() !== "hub") {
           var screen = state.screens[size[1].toUpperCase()];
           screen.there = true;
           screen.size = size[2];
@@ -2237,7 +2240,9 @@ function renderScreensHead() {
     head.appendChild(drop);
 
     var size = document.createElement("select");
-    var offered = CATALOGUE.board_settings["screen" + letter.toLowerCase()] || ["2.8", "1.54"];
+    // The sizes a panel can be, the catalogue's hub being no panel size
+    var offered = (CATALOGUE.board_settings["screen" + letter.toLowerCase()] || ["2.8", "1.54"])
+      .filter(function (inches) { return inches !== "hub"; });
     if (!screen.size) {
       var quiet = document.createElement("option");
       quiet.value = "";

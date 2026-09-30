@@ -341,8 +341,30 @@ board: screenA=1.54
 That is a board entry, which sets the board rather than the lights and is one of
 a handful covered under [The board](#the-board).
 
-The sizes are 2.8 and 1.54, and 2.8 is used if you say nothing. Changing it
-needs the board turned off and on again before the new size takes.
+The sizes are 2.8 and 1.54, and a screen plays nothing until its size is given.
+Changing it needs the board turned off and on again before the new size takes.
+
+### A Screen Hub
+
+A Screen Hub takes both connectors and carries up to six screens, at the
+positions its board letters A to F. Say which connector its screens come through
+with `hub`, the other taking its selects, then the size at each position fitted:
+
+```entry
+board: screenA=hub hubA-D,F=2.8 hubE=1.54
+hubA-C: gif file=flames.gif
+hubD,F: image file=badge.png
+```
+
+Positions are named as outputs are, `hubB` alone or `hubA-C,E` for several.
+Several positions showing the same picture are sent it once, so a picture across
+all six moves as smoothly as it does on one. A picture goes only to screens of
+one size, so give 2.8 and 1.54 positions entries of their own. A position with
+nothing to show in a scene is black.
+
+All six share one backlight, so `backlight` is for the whole hub: the first
+entry to set it decides, and `errors.txt` says where two entries showing at once
+ask for different ones. In scenes, each scene can set its own.
 
 ### Setting a screen
 
@@ -572,8 +594,9 @@ board: drive=manual program=fireplace.py
 | `reload` | `auto` plays the file the moment it is saved | wait for an eject or **Boot** |
 | `program` | a Python file to run instead of the effects | the effects run |
 | `args` | what to pass that program, divided by `\|` | it is given none |
-| `screenA` | what size of screen is on SP/CE A, if you have one | 2.8 |
-| `screenB` | the same for SP/CE B | 2.8 |
+| `screenA` | what size of screen is on SP/CE A, or `hub` for a Screen Hub | no screen |
+| `screenB` | the same for SP/CE B | no screen |
+| `hubA` to `hubF` | what size of screen is at each of a Screen Hub's positions | no screen there |
 | `stripL` | how many LEDs are on a strip plugged into **L** | no strip |
 | `stripR` | the same for **R** | no strip |
 
