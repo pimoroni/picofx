@@ -339,8 +339,9 @@ footer p { margin: 0; }
 <thead><tr><th>Written</th><th>Means</th></tr></thead>
 <tbody>
 <tr><td><code>out3.r</code></td><td>just the red</td></tr>
-<tr><td><code>out3.*</code></td><td>all three of them</td></tr>
-<tr><td><code>out1-7.*</code></td><td>all 21</td></tr>
+<tr><td><code>out3.*</code></td><td>all three of them, red, green then blue</td></tr>
+<tr><td><code>out1-7.*</code></td><td>all 21, from 1's red to 7's blue</td></tr>
+<tr><td><code>out7-1.*</code></td><td>all 21 the other way round, from 7's blue to 1's red</td></tr>
 </tbody></table></div>
 <p>Order matters for the effects that travel: they move in the order you write the outputs, so list them in the order they appear in your model, which need not be number order.</p>
 <h3 id="setting-an-output">Setting an output</h3>

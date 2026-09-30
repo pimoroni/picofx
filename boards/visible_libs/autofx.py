@@ -958,6 +958,11 @@ def __expand(token, prefix, line, problems):
     step = 1 if last >= first else -1
     components = COMPONENTS if suffix == "*" else ((suffix,) if suffix else (None,))
 
+    # Check if the range counts down
+    if step < 0:
+        # Its components count down too, so 'out7-1.*' runs b, g, r
+        components = components[::-1]
+
     names = []
     for number in range(first, last + step, step):
         for component in components:

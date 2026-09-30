@@ -127,8 +127,9 @@ three plain lights instead:
 | Written | Means |
 | --- | --- |
 | `out3.r` | just the red |
-| `out3.*` | all three of them |
-| `out1-7.*` | all 21 |
+| `out3.*` | all three of them, red, green then blue |
+| `out1-7.*` | all 21, from 1's red to 7's blue |
+| `out7-1.*` | all 21 the other way round, from 7's blue to 1's red |
 
 Order matters for the effects that travel: they move in the order you write the
 outputs, so list them in the order they appear in your model, which need not be
