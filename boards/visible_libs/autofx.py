@@ -1581,7 +1581,7 @@ def __play(fx, volume, path, errors, playing, sounding=(), maker=None):
 
     # Without a volume nothing here will run the program, so the screen entries it
     # deferred are wanted now rather than never
-    if volume is None:
+    if volume is None and __PENDING_SHOWS:
         shows = __pending_shows(problems)
 
     if volume is None:
