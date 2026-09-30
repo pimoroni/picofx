@@ -40,13 +40,15 @@ brings this one back, and an empty one leaves the board quiet.
 autofx.run(MightyFX, volume=fx_drive)
 '''
 
+# Exactly what the picker writes for its Rainbow look on the outputs, so a fresh board's
+# file opens in the picker as that look. Change it with the picker's own output, or the
+# picker reads it as a file written by hand
 EFFECTS = """\
-# MightyFX effects
-# One entry per set of outputs: <outputs>: <effect> [setting=value ...]
-# Omitted settings take the effect's own defaults. '#' starts a comment.
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
 board: reload=auto
 
-out1-7: rainbow_wave speed=0.3
+out1-7: rainbow_wave speed=0.43 length=9
 """
 
 README = """\
