@@ -444,13 +444,10 @@ class EffectPlayer:
 
         A curve's length is how long the channel takes to arrive, whether it eases
         into place or crosses at a steady rate, and neither depends on the frame rate.
-        Called per channel per frame, so it returns the value untouched where no
-        curve is set.
+        Called per curved channel per frame. A caller skips it where no curve is
+        set, the call costing more than the check.
         """
         curve = self.__curves[index]
-        if curve is None:
-            return value
-
         showing = self.__showing[index]
         rising = value > showing
         seconds = curve[0] if rising else curve[1]
@@ -470,10 +467,18 @@ class MonoPlayer(EffectPlayer):
         super().__init__(mono_leds)
 
     def __show(self):
+        # Fetched once a frame, where each output would otherwise look them up again
+        effects = self.__effects
+        data = self.__data
+        levels = self.__levels
+        curves = self.__curves
+        leds = self.__leds
         for i in range(self.__num_leds):
-            if self.__effects[i] is not None:
-                value = self.__effects[i](*self.__data[i]) * self.__levels[i]
-                self.__leds[i].brightness(self.__followed(i, value))
+            if effects[i] is not None:
+                value = effects[i](*data[i]) * levels[i]
+                if curves[i] is not None:
+                    value = self.__followed(i, value)
+                leds[i].brightness(value)
 
 
 class ChromaticPlayer(EffectPlayer):
@@ -509,19 +514,28 @@ class ColourPlayer(ChromaticPlayer):
         super().__init__(rgb_leds)
 
     def __show(self):
+        # Fetched once a frame, where each output would otherwise look them up again
+        effects = self.__effects
+        data = self.__data
+        levels = self.__levels
+        curves = self.__curves
+        colours = self.__colours
+        leds = self.__leds
         for i in range(self.__num_leds):
-            if self.__effects[i] is not None:
-                value = self.__effects[i](*self.__data[i])
-                level = self.__levels[i]
+            if effects[i] is not None:
+                value = effects[i](*data[i])
+                level = levels[i]
 
                 if isinstance(value, tuple):
                     # A colour effect brings its own colour, so only the level applies
-                    self.__leds[i].set_rgb(value[0] * level, value[1] * level, value[2] * level)
+                    leds[i].set_rgb(value[0] * level, value[1] * level, value[2] * level)
                 else:
                     # A mono effect gives a 0.0 to 1.0 level to scale the channel's colour by
-                    value = self.__followed(i, value * level)
-                    r, g, b = self.__colours[i]
-                    self.__leds[i].set_rgb(r * value, g * value, b * value)
+                    value *= level
+                    if curves[i] is not None:
+                        value = self.__followed(i, value)
+                    r, g, b = colours[i]
+                    leds[i].set_rgb(r * value, g * value, b * value)
 
 
 class StripPlayer(ChromaticPlayer):
@@ -529,10 +543,17 @@ class StripPlayer(ChromaticPlayer):
         super().__init__(led_strip, num_leds)
 
     def __show(self):
+        # Fetched once a frame, where each LED would otherwise look them up again
+        effects = self.__effects
+        data = self.__data
+        levels = self.__levels
+        curves = self.__curves
+        colours = self.__colours
+        strip = self.__leds
         for i in range(self.__num_leds):
-            if self.__effects[i] is not None:
-                value = self.__effects[i](*self.__data[i])
-                level = self.__levels[i]
+            if effects[i] is not None:
+                value = effects[i](*data[i])
+                level = levels[i]
 
                 # Indexed one at a time, a genexp here allocating once a LED a frame
                 if isinstance(value, tuple):
@@ -540,14 +561,16 @@ class StripPlayer(ChromaticPlayer):
                     g = value[1] * level
                     b = value[2] * level
                 else:
-                    value = self.__followed(i, value * level)
-                    colour = self.__colours[i]
+                    value *= level
+                    if curves[i] is not None:
+                        value = self.__followed(i, value)
+                    colour = colours[i]
                     r = colour[0] * value
                     g = colour[1] * value
                     b = colour[2] * value
 
                 # The strip is driven through a C binding, which wants whole numbers
-                self.__leds.set_rgb(i, int(r), int(g), int(b))
+                strip.set_rgb(i, int(r), int(g), int(b))
 
         # A strip shows nothing until its frame is sent, once a frame
         self.__leds.update()
