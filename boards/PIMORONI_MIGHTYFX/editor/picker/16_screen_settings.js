@@ -152,17 +152,6 @@ function nameHue(name) {
   return (hash >>> 0) % 360;
 }
 
-// The opening strings of the drawings on the drive, as the page would read them from each file
-var DRAWING_FILES = [
-  ["rings.py", "Drawing: Rings\nRings that grow and fade, in the four colours.\n" +
-               "Icon: " + String.fromCodePoint(0x1F3AF) + "\nColour: orange"],
-  ["starfield.py", "Drawing: Starfield\nTravel through a field of stars.\n" +
-                   "Icon: " + String.fromCodePoint(0x2605) + "\nColour: 5a6cff"],
-  ["sketch.py", "Drawing: Sketch\nLines drawn and wiped, over and over."],
-  // A program, not a drawing, so it is not listed
-  ["departures.py", "Departures from the local stop, on every screen the board has."]
-];
-
 // What an opening string says of a drawing, or null for a file that is not one
 function drawingSaid(docstring) {
   var lines = docstring.split("\n");
@@ -209,15 +198,14 @@ function drawingArt(name, wide, high) {
   return drawingArts[key];
 }
 
-// Its face as a square, for the tab's swatch
-function madeDrawing(name) { state.art[name] = drawingArt(name, 240, 240); }
-
-DRAWING_FILES.forEach(function (file) {
-  var drawing = drawingSaid(file[1]);
-  if (!drawing) return;
-  state.media.push({name: file[0], kind: "drawing", drawing: drawing});
-  madeDrawing(file[0]);
-});
+// Its face as a square, for the tab's swatch. Made afresh each time the drive is read, since the
+// opening string it comes from may have changed
+function madeDrawing(name) {
+  Object.keys(drawingArts).forEach(function (key) {
+    if (key.indexOf(name + "|") === 0) delete drawingArts[key];
+  });
+  state.art[name] = drawingArt(name, 240, 240);
+}
 
 // ---- drawing a look on the module -------------------------------------------------------------
 

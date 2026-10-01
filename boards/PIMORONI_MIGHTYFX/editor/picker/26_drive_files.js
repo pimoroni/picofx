@@ -6,8 +6,8 @@
 var scanBusy = false;
 
 async function scanMedia(dir) {
-  // What the drive holds that a screen can show: gifs and stills, PNG or JPEG,
-  // and folders of them, which play as a slideshow. One walk at a time, built
+  // What the drive holds that a screen can show: gifs and stills, PNG or JPEG, folders of
+  // them, which play as a slideshow, and drawings. One walk at a time, built
   // aside and landed whole, so a redraw mid-scan never sees half a drive and two
   // walks can never lace their findings together
   if (scanBusy) return;
@@ -23,6 +23,15 @@ async function scanMedia(dir) {
         else if (/\.wav$/i.test(name)) {
           sounds.push(name);
           profileSound(name, handle);
+        } else if (/\.py$/i.test(name)) {
+          // A Python file is a drawing only where its opening string says so
+          var drawing = null;
+          try {
+            drawing = drawingSaid(openingString(await (await handle.getFile()).text()));
+          } catch (e) {
+            drawing = null;
+          }
+          if (drawing) media.push({name: name, kind: "drawing", drawing: drawing});
         }
       } else if (name !== "System Volume Information") {
         for await (var inner of handle.entries()) {
@@ -39,6 +48,8 @@ async function scanMedia(dir) {
   sounds.sort();
   media.sort(function (a, b) { return a.name < b.name ? -1 : 1; });
   state.media = media;
+  // A drawing cannot run in the page, so it is shown by a face made from its opening string
+  media.forEach(function (one) { if (one.kind === "drawing") madeDrawing(one.name); });
   state.sounds = sounds;
   state.scanned = true;
 }

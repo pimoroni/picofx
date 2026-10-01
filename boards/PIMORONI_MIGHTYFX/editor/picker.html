@@ -8783,9 +8783,9 @@ function renderAssets() {
   });
   if (state.fileHandle)
     box.appendChild(adderTile("add pictures",
-      {description: "Pictures the board plays",
-       accept: {"image/png": [".gif", ".png", ".jpg", ".jpeg"]}},
-      "pictures", /\.(gif|png|jpe?g)$/i));
+      {description: "Pictures and drawings the board plays",
+       accept: {"image/png": [".gif", ".png", ".jpg", ".jpeg"], "text/x-python": [".py"]}},
+      "pictures", /\.(gif|png|jpe?g|py)$/i));
 }
 
 function mediaNamed(name) {
@@ -10224,17 +10224,6 @@ function nameHue(name) {
   return (hash >>> 0) % 360;
 }
 
-// The opening strings of the drawings on the drive, as the page would read them from each file
-var DRAWING_FILES = [
-  ["rings.py", "Drawing: Rings\nRings that grow and fade, in the four colours.\n" +
-               "Icon: " + String.fromCodePoint(0x1F3AF) + "\nColour: orange"],
-  ["starfield.py", "Drawing: Starfield\nTravel through a field of stars.\n" +
-                   "Icon: " + String.fromCodePoint(0x2605) + "\nColour: 5a6cff"],
-  ["sketch.py", "Drawing: Sketch\nLines drawn and wiped, over and over."],
-  // A program, not a drawing, so it is not listed
-  ["departures.py", "Departures from the local stop, on every screen the board has."]
-];
-
 // What an opening string says of a drawing, or null for a file that is not one
 function drawingSaid(docstring) {
   var lines = docstring.split("\n");
@@ -10281,15 +10270,14 @@ function drawingArt(name, wide, high) {
   return drawingArts[key];
 }
 
-// Its face as a square, for the tab's swatch
-function madeDrawing(name) { state.art[name] = drawingArt(name, 240, 240); }
-
-DRAWING_FILES.forEach(function (file) {
-  var drawing = drawingSaid(file[1]);
-  if (!drawing) return;
-  state.media.push({name: file[0], kind: "drawing", drawing: drawing});
-  madeDrawing(file[0]);
-});
+// Its face as a square, for the tab's swatch. Made afresh each time the drive is read, since the
+// opening string it comes from may have changed
+function madeDrawing(name) {
+  Object.keys(drawingArts).forEach(function (key) {
+    if (key.indexOf(name + "|") === 0) delete drawingArts[key];
+  });
+  state.art[name] = drawingArt(name, 240, 240);
+}
 
 // ---- drawing a look on the module -------------------------------------------------------------
 
@@ -15323,8 +15311,8 @@ draw();
 var scanBusy = false;
 
 async function scanMedia(dir) {
-  // What the drive holds that a screen can show: gifs and stills, PNG or JPEG,
-  // and folders of them, which play as a slideshow. One walk at a time, built
+  // What the drive holds that a screen can show: gifs and stills, PNG or JPEG, folders of
+  // them, which play as a slideshow, and drawings. One walk at a time, built
   // aside and landed whole, so a redraw mid-scan never sees half a drive and two
   // walks can never lace their findings together
   if (scanBusy) return;
@@ -15340,6 +15328,15 @@ async function scanMedia(dir) {
         else if (/\.wav$/i.test(name)) {
           sounds.push(name);
           profileSound(name, handle);
+        } else if (/\.py$/i.test(name)) {
+          // A Python file is a drawing only where its opening string says so
+          var drawing = null;
+          try {
+            drawing = drawingSaid(openingString(await (await handle.getFile()).text()));
+          } catch (e) {
+            drawing = null;
+          }
+          if (drawing) media.push({name: name, kind: "drawing", drawing: drawing});
         }
       } else if (name !== "System Volume Information") {
         for await (var inner of handle.entries()) {
@@ -15356,6 +15353,8 @@ async function scanMedia(dir) {
   sounds.sort();
   media.sort(function (a, b) { return a.name < b.name ? -1 : 1; });
   state.media = media;
+  // A drawing cannot run in the page, so it is shown by a face made from its opening string
+  media.forEach(function (one) { if (one.kind === "drawing") madeDrawing(one.name); });
   state.sounds = sounds;
   state.scanned = true;
 }

@@ -448,9 +448,9 @@ function renderAssets() {
   });
   if (state.fileHandle)
     box.appendChild(adderTile("add pictures",
-      {description: "Pictures the board plays",
-       accept: {"image/png": [".gif", ".png", ".jpg", ".jpeg"]}},
-      "pictures", /\.(gif|png|jpe?g)$/i));
+      {description: "Pictures and drawings the board plays",
+       accept: {"image/png": [".gif", ".png", ".jpg", ".jpeg"], "text/x-python": [".py"]}},
+      "pictures", /\.(gif|png|jpe?g|py)$/i));
 }
 
 function mediaNamed(name) {
