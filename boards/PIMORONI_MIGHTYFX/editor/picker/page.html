@@ -597,9 +597,10 @@ th{font-weight:600;color:var(--dim);font-size:.76rem}
 /* The sliders follow the colour where a stretch has one */
 .chosen .colourpick + .tuning{margin-top:.6rem}
 /* The looks in groups, a heading over each row */
-.groupedlooks .gallery-head{margin:1rem 0 .4rem;font-size:.92rem}
+.groupedlooks .gallery-head,.programview .gallery-head{margin:1rem 0 .4rem;font-size:.92rem}
 .groupedlooks .gallery-head:first-child{margin-top:0}
-.groupedlooks .gallery-head .says{font:400 .8rem system-ui,sans-serif;color:var(--dim)}
+.groupedlooks .gallery-head .says,.programview .gallery-head .says{font:400 .8rem system-ui,sans-serif;
+ color:var(--dim)}
 /* Nothing, and a sound's silence, as a card made small at the end of a line: the cards' own
    corners, border and face, the face beside the name */
 .card.nothing.small{margin-left:auto;align-self:center;display:flex;align-items:stretch;
@@ -926,8 +927,13 @@ header button:disabled{opacity:.4;cursor:default}
 .progargs{display:flex;flex-wrap:wrap;gap:.4rem 1rem;margin:-.1rem 0 .5rem .8rem;
  font-size:.82rem;color:var(--dim)}
 .progargs label{display:flex;align-items:center;gap:.4rem}
-.progargs input{font:inherit;font-size:.82rem;width:9rem;padding:.22rem .4rem;
- border:1px solid var(--line);border-radius:6px;color:var(--ink)}
+.progargs input,.progargs select{font:inherit;font-size:.82rem;width:9rem;padding:.22rem .4rem;
+ border:1px solid var(--line);border-radius:6px;color:var(--ink);background:#fff}
+.progargs select{width:auto}
+/* The cross taking away an argument added by hand */
+.progless{font:inherit;font-size:.9rem;line-height:1;padding:.15rem .4rem;border:1px solid var(--line);
+ border-radius:6px;background:#fff;color:var(--dim);cursor:pointer}
+.progless:hover{border-color:var(--warn);color:var(--warn)}
 .progmore{font:inherit;font-size:.8rem;padding:.2rem .55rem;border:1px dashed var(--board);
  border-radius:7px;background:none;color:var(--board);cursor:pointer}
 .progfolder{margin:0 0 .25rem}
@@ -989,16 +995,29 @@ body.programpage .programview{display:block}
 body.programpage #tabs,body.programpage #sceneBody,body.programpage #setupWay,
 body.programpage #programNote{display:none}
 canvas.progthumb{display:block;image-rendering:pixelated;background:#222}
-.proghero{display:flex;gap:1.1rem;align-items:flex-start;margin:.8rem 0 1.1rem;padding:.8rem;
- background:#fff;border:1.5px solid var(--board);border-radius:14px}
+/* The chosen program, or the space it will take, the same size either way so choosing one moves
+   nothing on the page. What the board runs is said along its top */
+.proghero{display:flex;flex-direction:column;margin:.8rem 0 1.1rem;background:#fff;
+ border:1.5px solid var(--board);border-radius:14px;overflow:hidden}
+.proghero.unchosen{border-style:dashed}
+/* Two lines' room, so a note that wraps takes no more than one that does not */
+.proghero .programnote{margin:0;border:0;border-bottom:1.5px dashed var(--board);border-radius:0;
+ align-items:center;box-sizing:border-box;min-height:calc(2 * 1.5 * .85rem + 1.1rem)}
+.proghero .programnote span{flex:1}
+.progchoosenone{flex:none;font:inherit;font-size:.8rem;padding:.2rem .6rem;border:1px solid var(--board);
+ border-radius:7px;background:#fff;color:var(--board);cursor:pointer}
+.herobody{display:flex;gap:1.1rem;align-items:flex-start;padding:.8rem}
+.progpicture{flex:none;width:16rem;height:210px;display:flex;align-items:center;
+ justify-content:center}
 .proghero .progthumb.big{width:16rem;height:12rem;border-radius:8px;flex:none}
+/* A pair's two panels side by side, each drawn at six tenths so both fit the picture's place */
+.twopanels{display:flex;gap:.3rem;align-items:center}
+.twopanels .holder{zoom:.6}
 .progwords{min-width:0}
 .progwords h3{margin:.1rem 0 .3rem;font-size:1.15rem}
 .progwords p{margin:0 0 .45rem;font-size:.9rem}
 .progwords .progwhere{font-size:.8rem;color:var(--dim)}
 .progwords .progargs{margin:.6rem 0 0}
-.proggroup{margin:1.1rem 0 .45rem;font:700 .76rem system-ui,sans-serif;color:var(--dim);
- text-transform:uppercase;letter-spacing:.04em}
 .proggrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.6rem}
 .progcard{position:relative;display:block;padding:0;border:2px solid var(--line);
  border-radius:10px;overflow:hidden;background:#fff;text-align:left;cursor:pointer;font:inherit;
@@ -1009,18 +1028,21 @@ canvas.progthumb{display:block;image-rendering:pixelated;background:#222}
 .progname{display:block;padding:.35rem .55rem;font-size:.85rem;font-weight:600;
  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* What a program uses: a row of small drawings along the foot of its thumbnail, named beside the
-   picked one, and as chips choosing which are shown */
-.featureicon{width:14px;height:14px;flex:none;fill:currentColor;stroke:currentColor;
- stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}
-.proguses{position:absolute;right:4px;top:calc(100% - 2.1rem - 22px);display:flex;gap:2px}
-.proguses .featureicon{width:18px;height:18px;padding:2px;border-radius:4px;color:#fff;
+   picked one, and as chips choosing which are shown. Drawn at 18px wherever they appear, so a
+   chip reads the same as a card */
+.featureicon{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;
+ stroke-linecap:round;stroke-linejoin:round}
+.featureicon .f{fill:currentColor;stroke:none}
+.featureicon .fs{fill:currentColor}
+.proguses{position:absolute;right:4px;top:calc(100% - 2.1rem - 26px);display:flex;gap:2px}
+.proguses .featureicon{width:22px;height:22px;padding:2px;border-radius:4px;color:#fff;
  background:rgba(20,20,22,.7)}
 .herouses{display:flex;flex-wrap:wrap;gap:.3rem .9rem;margin:.1rem 0 .4rem;font-size:.84rem}
 .herouses span{display:inline-flex;align-items:center;gap:.35rem;color:var(--board)}
-.featurefilter{display:flex;flex-wrap:wrap;align-items:center;gap:.35rem;margin:.2rem 0 .2rem;
+.featurefilter{display:flex;flex-wrap:wrap;align-items:center;gap:.25rem;margin:.2rem 0 .2rem;
  font-size:.8rem;color:var(--dim)}
 .featurefilter>span{margin-right:.2rem}
-.featurechip{display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .5rem;
+.featurechip{display:inline-flex;align-items:center;gap:.25rem;padding:.15rem .45rem .15rem .3rem;
  border:1.5px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);
  font:inherit;font-size:.78rem;cursor:pointer}
 .featurechip:hover{border-color:var(--board)}
@@ -1097,10 +1119,6 @@ body[data-pageway] #tabs.tabbar.wrapped .tab.on{border-color:var(--line);
  background:linear-gradient(var(--accent),var(--accent)) 0 0 / 100% 3px no-repeat border-box,
             var(--panel)}
 .headswitch.headtabs .cover[data-page=program].on b{color:var(--board)}
-/* A tab that is not open yet, the program's on the page taken to the board for testing */
-.headswitch.headtabs .cover.soon{cursor:default}
-.headswitch.headtabs .cover.soon .coverface{opacity:.35;filter:grayscale(1)}
-.headswitch.headtabs .cover.soon small{font-style:italic}
 @media (max-width:1180px){
  body[data-pageway=headtabs] header{padding-bottom:0}
  .headswitch.headtabs{margin-top:.5rem}

@@ -137,6 +137,45 @@ function copyKept(kept) {
   });
 }
 
+// The arguments an args= gives, divided at pipes a quote does not hold, their quotes taken off
+function argsRead(value) {
+  var parts = [], part = "", quoted = false;
+  value.split("").forEach(function (one) {
+    if (one === "\"") quoted = !quoted;
+    else if (one === "|" && !quoted) {
+      parts.push(part);
+      part = "";
+    } else part += one;
+  });
+  parts.push(part);
+  return parts;
+}
+
+// The program a file runs, opening the program tab with it chosen, where the page knows the
+// program and writes its arguments back as the file has them. Otherwise both stay on the board
+// line as written, and the page opens on the effects
+function readProgram(named, argued) {
+  boardSet.program = null;
+  onProgramPage = false;
+  if (!named) {
+    if (argued) boardResidue.push(argued);
+    return;
+  }
+  var path = named.slice("program=".length);
+  var given = argued ? argsRead(argued.slice("args=".length)) : [];
+  var kept = boardSet.args[path];
+  boardSet.args[path] = given;
+  if (programNamed(path) && argsWritten(path) === (argued ? argued.slice("args=".length) : "")) {
+    boardSet.program = path;
+    boardSet.lastProgram = path;
+    onProgramPage = true;
+    return;
+  }
+  boardSet.args[path] = kept;
+  boardResidue.push(named);
+  if (argued) boardResidue.push(argued);
+}
+
 // Take a file into the page: the board line, the scenes, and every entry kept in its scene
 function absorbFile(text) {
   var parsed = readEffects(text);
@@ -145,13 +184,17 @@ function absorbFile(text) {
   boardSet.reload = false;
   boardSet.driveHidden = false;
   boardResidue = [];
+  var named = null, argued = null;
   parsed.tokens.forEach(function (token) {
     var lowered = token.toLowerCase();
     if (lowered === "reload=auto") boardSet.reload = true;
     else if (lowered === "reload=manual") boardSet.reload = false;
     else if (lowered === "drive=manual") boardSet.driveHidden = true;
+    else if (/^program=/i.test(token) && !named) named = token;
+    else if (/^args=/i.test(token) && !argued) argued = token;
     else boardResidue.push(token);
   });
+  readProgram(named, argued);
   boardComments = parsed.comments;
 
   function bodyKeeping(kept) {

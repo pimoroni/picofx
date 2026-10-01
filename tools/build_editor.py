@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Turns a board's editor pages into the frozen module the FX drive carries.
 
-Assembles editor/picker.html from the parts in editor/picker/, generates catalogue.js
-from the live autofx tables so a page always offers what the firmware it ships with
-provides, and writes the pages and catalogue compressed into a frozen module for fx_drive
-to heal onto the drive. The parts and pages are committed and the module is generated, so
-run this after editing a part, a page or anything the catalogue reads.
+Assembles editor/picker.html from the parts in editor/picker/ and the thumbnails in
+editor/thumbs/, generates catalogue.js from the live autofx tables so a page always offers
+what the firmware it ships with provides, and writes the pages and catalogue compressed
+into a frozen module for fx_drive to heal onto the drive. The parts and pages are committed
+and the module is generated, so run this after editing a part, a page or anything the
+catalogue reads.
 
     python3 tools/build_editor.py boards/PIMORONI_MIGHTYFX
     python3 tools/build_editor.py --check boards/PIMORONI_MIGHTYFX
@@ -15,6 +16,7 @@ pages once inflated, since two zlib builds need not compress the same text to th
 """
 
 import argparse
+import base64
 import glob
 import json
 import os
@@ -72,6 +74,9 @@ EXAMPLE_USES = [("outputs", r"mighty\.(outputs|monos)\b|ColourPlayer|MonoPlayer"
 # A program that looks for a screen on each port runs on one or on two
 EITHER_SCREEN = r"for port in \(mighty\.spce_a, mighty\.spce_b\)"
 
+# The one argument the examples read, the screen's size, taken with a default where none is given
+SIZE_ARGUMENT = r'^SCREEN_SIZE = "([^"]+)" if not sys\.argv\[1:\] else sys\.argv\[1\]'
+
 # The picker's parts are its script, so the page closes after the last of them
 PICKER_END = "</script>\n</body>\n</html>\n"
 
@@ -108,12 +113,31 @@ def board_examples(repo_dir):
             opening = re.search(r'"""\s*(.*?)"""', source, re.DOTALL)
             words = " ".join(opening.group(1).split()) if opening else ""
             first = re.match(r"(.*?\.)(\s|$)", words)
-            found.append({"path": "examples/" + where + "/" + name, "folder": where,
-                          "does": first.group(1) if first else words,
-                          "needs": EXAMPLE_NEEDS.get(where.split("/")[0]),
-                          "uses": uses_of(source)})
+            example = {"path": "examples/" + where + "/" + name, "folder": where,
+                       "does": first.group(1) if first else words,
+                       "needs": EXAMPLE_NEEDS.get(where.split("/")[0]),
+                       "uses": uses_of(source)}
+            # The arguments it reads, so the page offers those and no others
+            size = re.search(SIZE_ARGUMENT, source, re.MULTILINE)
+            if size:
+                example["args"] = [{"name": "Screen size", "kind": "size", "default": size.group(1)}]
+            found.append(example)
     # A doubled underscore would read as a placeholder left unfilled, so it is escaped
     return json.dumps(found, indent=1).replace("__", "_\\u005f")
+
+
+def thumbnails(board_dir):
+    """Each example's thumbnail in editor/thumbs/, by name, as a data URL the page carries.
+
+    The examples and their pictures are on the board's filesystem, which the computer never sees,
+    so the page brings its thumbnails with it.
+    """
+    found = {}
+    for path in sorted(glob.glob(os.path.join(board_dir, "editor", "thumbs", "*.png"))):
+        with open(path, "rb") as f:
+            encoded = base64.b64encode(f.read()).decode("ascii")
+        found[os.path.basename(path)[:-len(".png")]] = "data:image/png;base64," + encoded
+    return json.dumps(found, indent=1)
 
 
 def picker(board_dir, repo_dir):
@@ -124,7 +148,8 @@ def picker(board_dir, repo_dir):
     for part in sorted(glob.glob(os.path.join(folder, "[0-9][0-9]_*.js"))):
         with open(part, encoding="utf-8") as f:
             text += f.read()
-    text = text.replace("__EXAMPLES__", board_examples(repo_dir)) + PICKER_END
+    text = text.replace("__EXAMPLES__", board_examples(repo_dir))
+    text = text.replace("__THUMBS__", thumbnails(board_dir)) + PICKER_END
     left = sorted(set(re.findall(r"__[A-Z_]+__", text)))
     if left:
         sys.exit("picker.html has {} unfilled".format(", ".join(left)))

@@ -136,7 +136,8 @@ function panelPreview(screen) {
   var litH = made.lit[1];
   var litX = left + boardW / 2 - litW / 2;
   var litY = up(boardH / 2) - litH / 2;
-  var art = screen.shows && screen.shows !== "keep" ? mediaArt(screen.shows) : null;
+  // A screen may be handed its picture outright, as the program page's preview is
+  var art = screen.art || (screen.shows && screen.shows !== "keep" ? mediaArt(screen.shows) : null);
 
   parts.push(svgTag("rect", {x: litX, y: litY, width: litW, height: litH,
                              fill: art ? GROUND_INK : EMPTY_INK}));
@@ -191,7 +192,7 @@ function panelPreview(screen) {
     var img = document.createElement("img");
     img.src = art.url;
     img.style.cssText = "flex:none;width:" + (art.w * scale) + "px;height:" +
-                        (art.h * scale) + "px";
+                        (art.h * scale) + "px" + (art.pixelated ? ";image-rendering:pixelated" : "");
     pane.appendChild(img);
     holder.style.position = "relative";
     holder.appendChild(pane);

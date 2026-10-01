@@ -8,11 +8,11 @@
 // The programs offered are those that do something the effects cannot and run by themselves:
 // the showcase signs, screen pieces, and what a remote, a sensor, a speaker or a motor brings.
 // The effects' own demonstrations, walkthroughs of the drawing library and calibrations are left
-// out. Each has a small thumbnail, drawn here at a screen's shape and low resolution, standing in
-// for frames the board itself would give once a tool captures them
+// out. Each has a small thumbnail at a screen's shape and low resolution: a frame captured off a
+// board running it where there is one, drawn here where there is not.
 
-// Where each offered example sits and how its thumbnail is drawn. What each uses is read from
-// its source when the page is built
+// Where each offered example sits and how its thumbnail is drawn, "shot" being its captured frame.
+// What each uses is read from its source when the page is built
 var OFFERED = [
   ["Signs and displays", [
     ["showcase/flip_dot_sign.py", "flipdot"],
@@ -27,10 +27,10 @@ var OFFERED = [
     ["showcase/roadworks_sign.py", "roadworks"],
     ["showcase/lane_control_gantry.py", "gantry"],
     ["showcase/crt_terminal.py", "crt"],
-    ["showcase/status_panel.py", "asset:pirate_coin_emblem.gif"],
-    ["showcase/scrolling_billboard.py", "asset:billboards/landscape/lambo.png"],
+    ["showcase/status_panel.py", "shot"],
+    ["showcase/scrolling_billboard.py", "shot"],
     ["showcase/trivision_billboard.py", "trivision"],
-    ["showcase/skyline.py", "asset:skyline.png"],
+    ["showcase/skyline.py", "shot"],
     ["showcase/isometric_flight.py", "iso"]]],
   ["On screens", [
     ["screens/graphics/starfield.py", "stars"],
@@ -38,12 +38,12 @@ var OFFERED = [
     ["screens/graphics/led_matrix.py", "matrix"],
     ["screens/layout/kaleidoscope.py", "kaleido"],
     ["screens/layout/bouncing_logo.py", "logo"],
-    ["screens/playback/traces_scroll.py", "asset:traces/traces2.png"],
-    ["screens/playback/billboard_cased.py", "asset:billboards/landscape/frum.png"],
-    ["screens/playback/animated_gif_recoloured.py", "asset:pirate_coin.gif"],
+    ["screens/playback/traces_scroll.py", "shot"],
+    ["screens/playback/billboard_cased.py", "shot"],
+    ["screens/playback/animated_gif_recoloured.py", "shot"],
     ["screens/pair/carpets_paired.py", "carpet"],
     ["screens/hub/starfield_wall.py", "stars"],
-    ["screens/playback/traces_wall.py", "asset:traces/traces5.png"]]],
+    ["screens/playback/traces_wall.py", "shot"]]],
   ["With the remote", [
     ["infrared/colour/control_rainbow_wave.py", "lamps:rainbow"],
     ["infrared/colour/control_hsv_fx.py", "lamps:warm"],
@@ -65,49 +65,88 @@ var OFFERED = [
     ["showcase/programmed_route.py", "servo"]]]
 ];
 
-// The drive's own programs, drawn as the offered ones are, and what each uses, which a program
-// on the drive would say in its opening string
-var DRIVE_THUMBS = {"slideshow.py": "asset:billboards/landscape/tufty.png",
-                    "departures.py": "bus", "fireplace.py": "flame"};
-var DRIVE_USES = {"slideshow.py": ["screen"], "departures.py": ["either", "wifi"],
-                  "fireplace.py": ["outputs"]};
+// What each group's heading says after its name, as the looks' groups do
+var GROUP_SAYS = {
+  "On the drive": "your own programs",
+  "Signs and displays": "showcase pieces made to be looked at",
+  "On screens": "pictures and motion for one screen or more",
+  "With the remote": "the effects, steered from the IR remote",
+  "With a sensor": "the lights following what a sensor reads",
+  "Sound": "lights to a soundtrack",
+  "Moving things": "servos and motors"
+};
 
-// What a program can use beyond the board, each with its name and a small drawing, in the
-// order they are shown
+// The picture each of the drive's programs names in its opening string, read off the drive, by
+// the program's name
+var DRIVE_PICTURES = {};
+
+// Round holes cut through a filled shape, one at each point, as a path's own subpaths
+function holes(points, radius) {
+  return points.map(function (at) {
+    return "M" + (at[0] - radius) + " " + at[1] + "a" + radius + " " + radius + " 0 1 0 " +
+           radius * 2 + " 0a" + radius + " " + radius + " 0 1 0 " + -radius * 2 + " 0";
+  }).join("");
+}
+
+// What a program can use beyond the board, each with its name, the shorter one its chip in the
+// filter takes, and a drawing on a 24 grid, in the order they are shown. A part classed "f" is
+// filled, "fs" filled and outlined, and the rest outlined, so each reads as a silhouette at 18px
 var FEATURES = [
-  ["outputs", "the outputs", "<circle cx='3' cy='8' r='2'/><circle cx='8' cy='8' r='2'/>" +
-                             "<circle cx='13' cy='8' r='2'/>"],
-  ["screen", "a screen", "<rect x='2.5' y='3.5' width='11' height='9' rx='1.2' fill='none'/>"],
-  ["either", "one screen or two", "<rect x='1' y='4' width='6.5' height='8' rx='1' fill='none'/>" +
-                                  "<rect x='8.5' y='4' width='6.5' height='8' rx='1' fill='none' " +
-                                  "stroke-dasharray='1.6 1.2'/>"],
-  ["pair", "two screens", "<rect x='1' y='4' width='6.5' height='8' rx='1' fill='none'/>" +
-                          "<rect x='8.5' y='4' width='6.5' height='8' rx='1' fill='none'/>"],
-  ["hub", "a screen hub", "<rect x='1' y='2.5' width='4' height='4.5' rx='.6'/>" +
-                          "<rect x='6' y='2.5' width='4' height='4.5' rx='.6'/>" +
-                          "<rect x='11' y='2.5' width='4' height='4.5' rx='.6'/>" +
-                          "<rect x='1' y='9' width='4' height='4.5' rx='.6'/>" +
-                          "<rect x='6' y='9' width='4' height='4.5' rx='.6'/>" +
-                          "<rect x='11' y='9' width='4' height='4.5' rx='.6'/>"],
-  ["strip", "an LED strip", "<path d='M1 10 Q8 4 15 10' fill='none'/><circle cx='4' cy='7.6' r='1.3'/>" +
-                            "<circle cx='8' cy='6.5' r='1.3'/><circle cx='12' cy='7.6' r='1.3'/>"],
-  ["sound", "a speaker", "<path d='M2 6h3l4-3v10l-4-3H2z'/><path d='M11 5.5q2 2.5 0 5M12.8 3.8" +
-                         "q3.4 4.2 0 8.4' fill='none'/>"],
-  ["remote", "the IR remote", "<rect x='5' y='1.5' width='6' height='13' rx='2' fill='none'/>" +
-                              "<circle cx='8' cy='5' r='1.1'/><circle cx='8' cy='9' r='.9'/>" +
-                              "<circle cx='8' cy='11.8' r='.9'/>"],
-  ["qwst", "a Qw/ST sensor", "<rect x='3' y='3' width='10' height='10' rx='1.5' fill='none'/>" +
-                             "<path d='M5.5 9.5l2-3 1.5 2 1.5-2.5' fill='none'/>"],
-  ["analog", "an analog sensor", "<path d='M2 12a6 6 0 0 1 12 0' fill='none'/>" +
-                                 "<path d='M8 12l3-5' fill='none'/>"],
-  ["motor", "motors", "<circle cx='8' cy='8' r='5.5' fill='none'/><circle cx='8' cy='8' r='1.6'/>" +
-                      "<path d='M8 2.5v3M8 10.5v3M2.5 8h3M10.5 8h3' fill='none'/>"],
-  ["servo", "servos", "<rect x='2' y='8' width='12' height='6' rx='1' fill='none'/>" +
-                      "<path d='M8 8l4-5.5' fill='none'/><circle cx='8' cy='8' r='1.3'/>"],
-  ["wifi", "Wi-Fi", "<path d='M1.5 6.5a9 9 0 0 1 13 0M4 9a5.5 5.5 0 0 1 8 0' fill='none'/>" +
-                    "<circle cx='8' cy='12' r='1.4'/>"],
-  ["button", "the Boot button", "<circle cx='8' cy='8' r='5.5' fill='none'/><circle cx='8' cy='8' " +
-                                "r='2.6'/>"]
+  ["outputs", "the outputs", "outputs",
+   "<circle class='f' cx='3.8' cy='10' r='3'/><circle class='f' cx='12' cy='10' r='3'/>" +
+   "<circle class='f' cx='20.2' cy='10' r='3'/><path d='M1.5 18h21' stroke-width='2.2'/>"],
+  // One panel filled, two apart for a pair, the second outlined where it is optional, six for a hub
+  ["screen", "a screen", "screen", "<rect class='f' x='3' y='5' width='18' height='14' rx='2'/>"],
+  ["either", "one screen or two", "1 or 2 screens",
+   "<rect class='f' x='0.5' y='6' width='9.5' height='12' rx='1.6'/>" +
+   "<rect x='15' y='7' width='7.5' height='10' rx='1.2' stroke-width='2'/>"],
+  ["pair", "two screens", "2 screens",
+   "<rect class='f' x='0.5' y='6' width='9.5' height='12' rx='1.6'/>" +
+   "<rect class='f' x='14' y='6' width='9.5' height='12' rx='1.6'/>"],
+  ["hub", "a screen hub", "hub",
+   "<rect class='f' x='1' y='4' width='6.3' height='7' rx='1.2'/>" +
+   "<rect class='f' x='8.85' y='4' width='6.3' height='7' rx='1.2'/>" +
+   "<rect class='f' x='16.7' y='4' width='6.3' height='7' rx='1.2'/>" +
+   "<rect class='f' x='1' y='13' width='6.3' height='7' rx='1.2'/>" +
+   "<rect class='f' x='8.85' y='13' width='6.3' height='7' rx='1.2'/>" +
+   "<rect class='f' x='16.7' y='13' width='6.3' height='7' rx='1.2'/>"],
+  // The strip folded back on itself, along the top, back along the middle and out along the foot,
+  // as the effects page draws a strip, its LEDs cut out of it
+  ["strip", "an LED strip", "strip",
+   "<path class='f' fill-rule='evenodd' d='M1 2.5H17.5A6 6 0 0 1 17.5 14.5H6.5A1 1 0 0 0 6.5 " +
+   "16.5H23V21.5H6.5A6 6 0 0 1 6.5 9.5H17.5A1 1 0 0 0 17.5 7.5H1Z" +
+   holes([[4.5, 5], [9, 5], [13.5, 5], [9.5, 12], [14, 12], [10.5, 19], [15, 19], [19.5, 19]],
+         1.35) + "'/>"],
+  ["sound", "a speaker", "speaker",
+   "<g transform='scale(1.5)' stroke-width='1.2'><path class='fs' d='M2 6h3l4-3v10l-4-3H2z'/>" +
+   "<path d='M11 5.5q2 2.5 0 5M12.8 3.8q3.4 4.2 0 8.4'/></g>"],
+  // The handset tilted, pointing, with its signal leaving the tip
+  ["remote", "the IR remote", "remote",
+   "<g transform='rotate(-35 12 12)'><path class='f' fill-rule='evenodd' d='M9.5 7h5a2.5 2.5 0 " +
+   "0 1 2.5 2.5v11a2.5 2.5 0 0 1-2.5 2.5h-5A2.5 2.5 0 0 1 7 20.5v-11A2.5 2.5 0 0 1 9.5 7z" +
+   holes([[12, 11]], 1.6) + "'/><path d='M9 4q3-2 6 0M7 1.2q5-3 10 0' stroke-width='2'/></g>"],
+  // The connector's plug, its four pins and a short stub of cable
+  ["qwst", "a Qw/ST sensor", "Qw/ST",
+   "<path class='f' fill-rule='evenodd' d='M5 2h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 " +
+   "1-2-2V4a2 2 0 0 1 2-2zM5 5.5h2v8H5zM9 5.5h2v8H9zM13 5.5h2v8h-2zM17 5.5h2v8h-2z'/>" +
+   "<rect class='f' x='10' y='17' width='4' height='5.5'/>"],
+  // A fader, since a gauge reads as the effects' Speed and a wave as sound
+  ["analog", "an analog sensor", "analog",
+   "<path d='M3 12h18' stroke-width='2.4'/><rect class='f' x='12' y='6' width='5.5' " +
+   "height='12' rx='1.4'/>"],
+  ["motor", "motors", "motors",
+   "<rect class='f' x='1.5' y='5' width='15' height='14' rx='3.5'/>" +
+   "<rect class='f' x='16.5' y='10.5' width='6' height='3' rx='1'/>"],
+  // A servo from the side, its mounting tabs and its arm, the arm no longer than the body
+  ["servo", "servos", "servos",
+   "<rect class='f' x='4' y='10' width='16' height='11' rx='1.5'/>" +
+   "<rect class='f' x='1' y='13' width='22' height='3' rx='1'/>" +
+   "<rect class='f' x='7' y='6.5' width='4' height='4'/><path d='M9 5.5H17.5' stroke-width='3.2'/>"],
+  ["wifi", "Wi-Fi", "Wi-Fi",
+   "<g transform='scale(1.5)' stroke-width='1.2'><path d='M1.5 6.5a9 9 0 0 1 13 0M4 9a5.5 5.5 0 " +
+   "0 1 8 0'/><circle class='fs' cx='8' cy='12' r='1.4'/></g>"],
+  ["button", "the Boot button", "Boot button",
+   "<rect x='3' y='3' width='18' height='18' rx='3'/><circle class='f' cx='12' cy='12' r='4.5'/>"]
 ];
 
 function featureNamed(key) {
@@ -117,33 +156,23 @@ function featureNamed(key) {
 function featureIcon(key) {
   var feature = featureNamed(key);
   var icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  icon.setAttribute("viewBox", "0 0 16 16");
+  icon.setAttribute("viewBox", "0 0 24 24");
   icon.setAttribute("class", "featureicon");
   icon.setAttribute("aria-hidden", "true");
-  icon.innerHTML = feature[2];
+  icon.innerHTML = feature[3];
   return icon;
 }
 
-// What a program uses, from its source for an example and from its opening string on the drive
+// What an example uses, read from its source. A program on the drive says nothing of it
 function usesOf(path) {
-  if (DRIVE_USES[path]) return DRIVE_USES[path];
   var example = BOARD_EXAMPLES.filter(function (one) { return one.path === path; })[0];
   return example ? example.uses : [];
 }
 
-var ASSETS = "../../../examples/mighty_fx/examples/assets/";
-
 // Frames captured off a board running each example, composed to what its panel showed and scaled
-// to the thumbnail's size. Where one exists it is the thumbnail, the drawn one standing in only for
-// what has not been captured
-var SHOTS = "../../bench/thumbs/";
-var CAPTURED = ["acrylic_lixie", "animated_gif_recoloured", "billboard_cased", "bouncing_logo",
-                "bus_departures", "carpets_paired", "color_wheel", "crt_terminal", "departure_board",
-                "departures_list", "flip_dot_sign", "isometric_flight", "kaleidoscope",
-                "lane_control_gantry", "led_matrix", "nixie_tube", "roadworks_sign",
-                "scrolling_billboard", "skyline", "split_flap_clock", "split_flap_departures",
-                "starfield", "starfield_wall", "status_panel", "traces_scroll", "traces_wall",
-                "tram_stop_sign", "trivision_billboard"];
+// to the thumbnail's size, by the example's file name, carried in the page as data URLs. Where one
+// exists it is the thumbnail, the drawn one standing in only for what has not been captured
+var THUMBS = __THUMBS__;
 
 function offeredAt(path) {
   for (var g = 0; g < OFFERED.length; g++) {
@@ -200,9 +229,31 @@ function paintThumb(g, kind, seed, canvas) {
     g.fillStyle = ink;
     for (i = 0; i < count; i++) g.fillRect(3 + i * (size + gap), top, size, size);
   }
-  if (kind.indexOf("asset:") === 0 || kind.indexOf("shot:") === 0) {
+  // A pair's two captured frames side by side, each whole in its half, as the two panels stand
+  if (kind.indexOf("pair:") === 0) {
     fill("#111");
-    var src = kind.indexOf("shot:") === 0 ? SHOTS + kind.slice(5) + ".png" : ASSETS + kind.slice(6);
+    [THUMBS[kind.slice(5)], THUMBS[kind.slice(5) + "-2"]].forEach(function (src, side) {
+      var panel = thumbImages[src];
+      if (!panel) {
+        panel = thumbImages[src] = new Image();
+        panel.src = src;
+      }
+      var placed = function () {
+        var half = W / 2 - 1;
+        var fit = Math.min(half / panel.width, H / panel.height);
+        g.imageSmoothingEnabled = true;
+        g.drawImage(panel, side * (half + 2) + (half - panel.width * fit) / 2,
+                    (H - panel.height * fit) / 2, panel.width * fit, panel.height * fit);
+      };
+      if (panel.complete && panel.width) placed();
+      else panel.addEventListener("load", placed);
+    });
+    return;
+  }
+  // A captured frame carried in the page, or the picture a program on the drive names
+  if (kind.indexOf("shot:") === 0 || kind.indexOf("picture:") === 0) {
+    fill("#111");
+    var src = kind.indexOf("shot:") === 0 ? THUMBS[kind.slice(5)] : DRIVE_PICTURES[kind.slice(8)];
     var image = thumbImages[src];
     if (!image) {
       image = thumbImages[src] = new Image();
@@ -394,13 +445,12 @@ function paintThumb(g, kind, seed, canvas) {
       g.fill();
     }
     break;
-  case "flame":
-    fill("#120804");
-    for (i = 0; i < 40; i++) {
-      var across = 18 + chance() * 28, up = 44 - chance() * (26 - Math.abs(across - 32));
-      g.fillStyle = chance() < 0.5 ? "#ff7a1a" : "#ffc27a";
-      g.fillRect(across, up, 2, 44 - up);
-    }
+  case "drive":
+    // A program of the user's own that names no picture, shown as a prompt waiting for code
+    fill("#1c1f22");
+    g.fillStyle = "#8a93a0";
+    g.font = "bold 16px monospace";
+    g.fillText(">_", 22, 30);
     break;
   case "servo":
   case "motor":
@@ -427,14 +477,19 @@ function paintThumb(g, kind, seed, canvas) {
 function programThumb(path) {
   var offered = offeredAt(path);
   var file = path.split("/").pop().replace(/\.py$/, "");
-  var kind = offered && CAPTURED.indexOf(file) >= 0 ? "shot:" + file
-           : offered ? offered[1] : DRIVE_THUMBS[path] || "flame";
+  var kind = offered && THUMBS[file + "-2"] ? "pair:" + file
+           : offered && THUMBS[file] ? "shot:" + file
+           : offered ? offered[1] : DRIVE_PICTURES[path] ? "picture:" + path : "drive";
   return thumbCanvas(kind, path.length);
 }
 
 // ---- the program page ------------------------------------------------------------------------
 
 var programView = null;
+
+// Whether the program tab is open. A program is chosen only by picking one, so the tab can be open
+// with none chosen, and the file says program= only once one is
+var onProgramPage = false;
 
 // A program as a card, as the looks are, its thumbnail over its name, and what it uses as a row
 // of small drawings along the foot of the thumbnail
@@ -457,21 +512,104 @@ function programCard(path) {
   card.appendChild(name);
   card.title = ((programNamed(path) || {}).does || "") + (uses.length ? "\nUses " +
     uses.map(function (key) { return featureNamed(key)[1]; }).join(", ") : "");
+  // Picked again, the program is put back, leaving none chosen
   card.onclick = function () {
-    boardSet.program = path;
-    boardSet.lastProgram = path;
+    boardSet.program = boardSet.program === path ? null : path;
+    if (boardSet.program) boardSet.lastProgram = path;
     draw();
   };
   return card;
 }
 
-// The picked program large, with what it does, what it needs and what it takes
-function programHero(path) {
-  var hero = document.createElement("div");
-  hero.className = "proghero";
+// The screen size a program is shown on: the one it is given, else screen A's, else a 2.8"
+function sizeShown(path) {
+  var program = programNamed(path) || {};
+  var at = (program.onDrive ? [] : program.args || []).map(function (argument) {
+    return argument.kind;
+  }).indexOf("size");
+  var given = at >= 0 ? (boardSet.args[path] || [])[at] : null;
+  var screen = state.screens && state.screens.A;
+  return given || (screen && screen.there && screen.size) || "2.8";
+}
+
+// One captured frame on a module at the program's screen size, turned as the program turns it
+function framedPanel(path, url) {
+  var image = thumbImages[url];
+  var upright = image && image.height > image.width;
+  return panelPreview({size: sizeShown(path), turn: upright ? 0 : 90,
+                       art: {url: url, w: upright ? 240 : 320, h: upright ? 320 : 240,
+                             pixelated: true}});
+}
+
+// The picked program's picture: a screen program's captured frame on the panel it would play on,
+// as the Screens tab draws one, turned as the program turns it, and anything else its thumbnail
+// large. A frame taller than wide was taken from a panel upright
+function programPicture(path) {
+  var file = path.split("/").pop().replace(/\.py$/, "");
+  var onScreen = usesOf(path).some(function (key) {
+    return ["screen", "either", "pair", "hub"].indexOf(key) >= 0;
+  });
+  if (onScreen && THUMBS[file]) {
+    // A pair's second frame goes on a second panel, the two drawn smaller to stand side by side
+    if (!THUMBS[file + "-2"]) return framedPanel(path, THUMBS[file]);
+    var both = document.createElement("div");
+    both.className = "twopanels";
+    both.appendChild(framedPanel(path, THUMBS[file]));
+    both.appendChild(framedPanel(path, THUMBS[file + "-2"]));
+    return both;
+  }
   var big = programThumb(path);
   big.classList.add("big");
-  hero.appendChild(big);
+  return big;
+}
+
+// The line along the preview's top, saying what the board runs, with the way to choose none
+function heroNote(path) {
+  var note = document.createElement("div");
+  note.className = "programnote";
+  note.appendChild(boardIcon());
+  var said = document.createElement("span");
+  said.textContent = path
+    ? "The board runs " + path.split("/").pop() + " in place of the effects. They are kept, and " +
+      "play if it is missing or stops, when errors.txt says why."
+    : "No program chosen, so the board plays the effects. Pick one below to run it in their place.";
+  note.appendChild(said);
+  if (path) {
+    var none = document.createElement("button");
+    none.type = "button";
+    none.className = "progchoosenone";
+    none.textContent = "Choose none";
+    none.onclick = function () {
+      boardSet.program = null;
+      draw();
+    };
+    note.appendChild(none);
+  }
+  return note;
+}
+
+// The picked program large, with what it does, what it needs and what it takes. With none picked
+// the box keeps its size, an empty panel in the picture's place, so choosing one moves nothing
+function programHero(path) {
+  var hero = document.createElement("div");
+  hero.className = "proghero" + (path ? "" : " unchosen");
+  hero.appendChild(heroNote(path));
+  var body = document.createElement("div");
+  body.className = "herobody";
+  hero.appendChild(body);
+  var picture = document.createElement("div");
+  picture.className = "progpicture";
+  // The empty panel upright, so its words read across
+  picture.appendChild(path ? programPicture(path) : panelPreview({size: "2.8", turn: 0}));
+  body.appendChild(picture);
+  if (!path) {
+    var waiting = document.createElement("div");
+    waiting.className = "progwords";
+    waiting.innerHTML = "<h3>Choose a program</h3><p>Each takes the whole board, its outputs, " +
+                        "screens and sound, while it runs.</p>";
+    body.appendChild(waiting);
+    return hero;
+  }
   var words = document.createElement("div");
   words.className = "progwords";
   var program = programNamed(path) || {};
@@ -490,20 +628,13 @@ function programHero(path) {
   });
   if (uses.children.length) words.appendChild(uses);
   words.appendChild(argsFor(path, false));
-  hero.appendChild(words);
+  body.appendChild(words);
   return hero;
 }
 
 function renderProgramView() {
   programView.textContent = "";
-  if (!boardSet.program) return;
-  var note = document.createElement("div");
-  note.className = "programnote";
-  note.appendChild(boardIcon());
-  note.appendChild(document.createTextNode(
-    "The board runs " + boardSet.program.split("/").pop() + " in place of the effects. They " +
-    "are kept, and play if it is missing or stops, when errors.txt says why."));
-  programView.appendChild(note);
+  if (!onProgramPage) return;
   programView.appendChild(programHero(boardSet.program));
   programView.appendChild(featureFilter());
   var shown = 0;
@@ -511,9 +642,15 @@ function renderProgramView() {
     var kept = paths.filter(passesFilter);
     if (!kept.length) return;
     shown += kept.length;
-    var heading = document.createElement("h4");
-    heading.className = "proggroup";
-    heading.textContent = title;
+    var heading = document.createElement("div");
+    heading.className = "gallery-head";
+    heading.appendChild(document.createTextNode(title));
+    if (GROUP_SAYS[title]) {
+      var says = document.createElement("span");
+      says.className = "says";
+      says.textContent = GROUP_SAYS[title];
+      heading.appendChild(says);
+    }
     programView.appendChild(heading);
     var grid = document.createElement("div");
     grid.className = "proggrid";
@@ -535,7 +672,10 @@ function renderProgramView() {
 // ---- choosing by what is to hand ----------------------------------------------------------------
 // A chip for each thing an offered program can use, all on to begin with. A chip turned off is
 // something not to hand, so every program needing it goes, and a program stays only while all it
-// uses is on. One screen or two is had with either a screen or two, so it has no chip of its own
+// uses is on. One screen or two is had with either a screen or two, so it has no chip of its own,
+// and every board has its outputs and its Boot button, so neither has one
+
+var CHIPLESS = ["either", "outputs", "button"];
 
 var unhad = [];
 
@@ -544,6 +684,16 @@ function had(key) { return unhad.indexOf(key) < 0; }
 function passesFilter(path) {
   return usesOf(path).every(function (key) {
     return key === "either" ? had("screen") || had("pair") : had(key);
+  });
+}
+
+// The things there is a chip for, those some offered program uses
+function chipFeatures() {
+  var offered = offeredPaths();
+  return FEATURES.filter(function (feature) {
+    return CHIPLESS.indexOf(feature[0]) < 0 && offered.some(function (path) {
+      return usesOf(path).indexOf(feature[0]) >= 0;
+    });
   });
 }
 
@@ -559,13 +709,10 @@ function featureFilter() {
   var row = document.createElement("div");
   row.className = "featurefilter";
   var said = document.createElement("span");
-  said.textContent = "I have";
+  said.textContent = "Plugged in:";
   row.appendChild(said);
-  var offered = offeredPaths();
-  FEATURES.forEach(function (feature) {
-    if (feature[0] === "either") return;
-    var used = offered.some(function (path) { return usesOf(path).indexOf(feature[0]) >= 0; });
-    if (!used) return;
+  var chips = chipFeatures();
+  chips.forEach(function (feature) {
     var chip = document.createElement("button");
     chip.type = "button";
     chip.className = "featurechip" + (had(feature[0]) ? " on" : "");
@@ -573,7 +720,7 @@ function featureFilter() {
     chip.title = had(feature[0]) ? "Showing programs that use " + feature[1]
                                  : "Hiding programs that need " + feature[1];
     chip.appendChild(featureIcon(feature[0]));
-    chip.appendChild(document.createTextNode(feature[1]));
+    chip.appendChild(document.createTextNode(feature[2]));
     chip.onclick = function () {
       var at = unhad.indexOf(feature[0]);
       if (at >= 0) unhad.splice(at, 1);
@@ -582,17 +729,20 @@ function featureFilter() {
     };
     row.appendChild(chip);
   });
-  if (unhad.length) {
-    var all = document.createElement("button");
-    all.type = "button";
-    all.className = "featureclear";
-    all.textContent = "all of them";
-    all.onclick = function () {
-      unhad = [];
-      draw();
-    };
-    row.appendChild(all);
-  }
+  // Every chip on, or every chip off for ticking what is to hand
+  [["all", function () { return []; }],
+   ["none", function () { return chips.map(function (feature) { return feature[0]; }); }]]
+    .forEach(function (one) {
+      var choice = document.createElement("button");
+      choice.type = "button";
+      choice.className = "featureclear";
+      choice.textContent = one[0];
+      choice.onclick = function () {
+        unhad = one[1]();
+        draw();
+      };
+      row.appendChild(choice);
+    });
   return row;
 }
 
@@ -610,18 +760,16 @@ var PAGE_WAYS = [["covers", "Two covers"], ["header", "Header: cards"],
 var HEADER_WAYS = ["header", "headseg", "headtabs", "headsplit", "headrow"];
 var TAB_WAYS = ["headtabs", "headsplit"];
 var pageWay = (location.search.match(/way=(\w+)/) || [])[1] || "covers";
+// Back to the effects, the file running them again
 function toEffects() {
+  onProgramPage = false;
   boardSet.program = null;
   draw();
 }
 
-// The program shown on arriving is chosen as much as one clicked, so it is the one the tab shows
-// once the effects are back
+// Over to the programs with none chosen, until one is picked
 function toProgram() {
-  // A drive may hold no program, where the first of the examples is shown
-  boardSet.program = boardSet.lastProgram ||
-                     (DRIVE_PROGRAMS.length ? DRIVE_PROGRAMS[0][0] : BOARD_EXAMPLES[0].path);
-  boardSet.lastProgram = boardSet.program;
+  onProgramPage = true;
   draw();
 }
 
@@ -640,7 +788,7 @@ function effectsFace() {
 function renderPageSwitch() {
   var bar = document.getElementById("pageSwitch");
   bar.textContent = "";
-  bar.className = "pageswitch " + pageWay + (boardSet.program ? " programmed" : "");
+  bar.className = "pageswitch " + pageWay + (onProgramPage ? " programmed" : "");
   document.getElementById("galleryOffer").textContent = "";
   var inHeader = document.getElementById("headSwitch");
   inHeader.textContent = "";
@@ -667,7 +815,7 @@ function renderPageSwitch() {
         } else {
           cover.type = "button";
         }
-        cover.className = "cover" + ((one[0] === "program") === !!boardSet.program ? " on" : "");
+        cover.className = "cover" + ((one[0] === "program") === onProgramPage ? " on" : "");
         cover.dataset.page = one[0];
         var face = one[0] === "effects" ? effectsFace()
                  : program ? programThumb(program) : thumbCanvas("stars", 3);
@@ -688,7 +836,7 @@ function renderPageSwitch() {
     [["effects", "Effects"], ["program", "Program"]].forEach(function (one) {
       var tab = document.createElement("button");
       tab.type = "button";
-      tab.className = "foldertab" + ((one[0] === "program") === !!boardSet.program ? " on" : "");
+      tab.className = "foldertab" + ((one[0] === "program") === onProgramPage ? " on" : "");
       tab.dataset.page = one[0];
       var face = one[0] === "effects" ? effectsFace()
                : program ? programThumb(program) : thumbCanvas("stars", 3);
@@ -702,7 +850,7 @@ function renderPageSwitch() {
     // The effects as they are, a strip offering a program above the scenes, or under the
     // gallery; picked, a sheet takes the page, with the way back at its head
     var slot = document.getElementById("galleryOffer");
-    if (!boardSet.program) {
+    if (!onProgramPage) {
       (pageWay === "under" ? slot : bar).appendChild(sheetOffer());
     } else {
       var head = document.createElement("div");
@@ -798,7 +946,7 @@ var oneProgramDraw = draw;
 
 draw = function () {
   oneProgramDraw();
-  document.body.classList.toggle("programpage", !!boardSet.program);
+  document.body.classList.toggle("programpage", onProgramPage);
   document.body.dataset.pageway = pageWay;
   renderTrying();
   renderPageSwitch();
@@ -810,21 +958,11 @@ draw = function () {
   paintAll();
 };
 
-// The examples' own pictures, loaded as the page opens, so a thumbnail made from one is drawn
-// whole the first time it is shown and never fills in late. Once all are in, the page is drawn
-// again for any thumbnail already showing
-(function () {
-  var sources = [];
-  OFFERED.forEach(function (set) {
-    set[1].forEach(function (entry) { if (entry[1].indexOf("asset:") === 0) sources.push(entry[1]); });
-  });
-  Object.keys(DRIVE_THUMBS).forEach(function (path) {
-    if (DRIVE_THUMBS[path].indexOf("asset:") === 0) sources.push(DRIVE_THUMBS[path]);
-  });
-  CAPTURED.forEach(function (name) { sources.push("shot:" + name); });
+// Pictures for thumbnails, decoded ahead of being shown, so a thumbnail is drawn whole the first
+// time and never fills in late. Once all are in, the page is drawn again for any already showing
+function loadThumbs(sources) {
   var waiting = 0;
-  sources.forEach(function (kind) {
-    var src = kind.indexOf("shot:") === 0 ? SHOTS + kind.slice(5) + ".png" : ASSETS + kind.slice(6);
+  sources.forEach(function (src) {
     if (thumbImages[src]) return;
     var image = thumbImages[src] = new Image();
     waiting++;
@@ -834,7 +972,9 @@ draw = function () {
     };
     image.src = src;
   });
-}());
+}
+
+loadThumbs(Object.keys(THUMBS).map(function (name) { return THUMBS[name]; }));
 
 // The scenes are always a grid of cards, the way into another one the grid's last tile
 function scenesAsCards() {
@@ -885,7 +1025,7 @@ window.addEventListener("resize", headerOnOneLine);
 // Before there are scenes, the way into them is the effects tab's own, at its end, so no row is
 // kept above the gallery for it. Once there are scenes their tabs are that row, as they were
 function scenesInTheTab() {
-  var into = TAB_WAYS.indexOf(pageWay) >= 0 && !state.scenes.length && !boardSet.program &&
+  var into = TAB_WAYS.indexOf(pageWay) >= 0 && !state.scenes.length && !onProgramPage &&
              document.querySelector("#headSwitch .cover[data-page=effects]");
   document.body.classList.toggle("scenesintab", !!into);
   if (!into) return;
