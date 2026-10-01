@@ -46,9 +46,10 @@ autofx.run(MightyFX, volume=fx_drive)
 EFFECTS = """\
 # Written by the FX picker. Everything here can be edited by hand;
 # MANUAL.html on this drive explains every line.
+
 board: reload=auto
 
-out1-7: rainbow_wave speed=0.43 length=9
+out1-7: rainbow_wave speed=-0.39 length=9
 """
 
 README = """\
