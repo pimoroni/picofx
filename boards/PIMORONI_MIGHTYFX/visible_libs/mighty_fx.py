@@ -68,6 +68,10 @@ class MightyFX:
     # transfer sending a frame partway, breaking it apart, and the overrun lands on these
     STRIP_FLUSH_LEDS = 2
 
+    # How long a strip takes to power up once the rail is on, and miss any frame sent sooner.
+    # A 64 LED panel took one after 5ms and not after 2ms, so this is double that
+    RAIL_SETTLE_MS = 10
+
     SENSOR_PIN = 46
 
     # The receiver takes PIO 1's last state machine, the strips taking them from zero
@@ -224,8 +228,10 @@ class MightyFX:
             self.__taps += 1
 
     def enable_rail(self):
-        """Power the L and R connectors; one rail serves both."""
-        self.__rail_en.on()
+        """Power the L and R connectors, returning once a strip on them can take a frame."""
+        if not self.is_rail_enabled():
+            self.__rail_en.on()
+            time.sleep_ms(self.RAIL_SETTLE_MS)
 
     def disable_rail(self):
         """Take the power off both connectors."""
