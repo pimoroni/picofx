@@ -32,41 +32,43 @@ whole builds, and one line in `effects.txt` starts any of them. See
 
 ## The picker
 
-`PICKER.html` on this drive writes `effects.txt` for you. Open it in a browser,
-pick a look, and slide until it suits. It shows the file it is writing as you
-go, so nothing about it is hidden.
+`PICKER.html` on this drive writes `effects.txt` for you. Open it in Chrome or
+Edge, press **Open FX drive** and choose this drive, and the page reads the file
+the board is playing, so you carry on from where it is. The file it will write
+is shown at the foot of the page, so nothing about it is hidden.
 
-Screens, strips and sound are set up there too. Say how many LEDs a strip has and
-which size each screen is, pick a picture from this drive for a screen to show,
-and tap any of the board's own seven lights to leave it out of the effect, or
-drag them into the order your build has them. Pictures and sounds can be copied
-onto the drive, and deleted from it, without leaving the page. Press the plus to
-split what you have into scenes that take turns, each with its own look, pictures
-and sound; a sound picked on the always-on tab plays in any scene that brings none
-of its own.
+Two tabs sit under the page's header. **The effects** sets the lights, screens
+and sound: pick a stretch of outputs or LEDs, tap a look from the cards to play
+on it, and slide its settings until it suits. A run can be cut into stretches
+that each play a look of their own. **Edit board** sets up what is built: the
+order the lights are wired in, how many LEDs a strip has, which size each screen
+is, and a Screen Hub. The pictures, drawings and sounds on this drive are offered
+on the Screens and Sound tabs, where files can be copied onto the drive and
+deleted from it. Press the plus to split what you have into scenes that take
+turns, each with its own looks, pictures and sound; what **Always on** holds plays
+under every scene.
 
-"Put it on the board" writes the file, and the board picks it up a few seconds
-later. Untick "play it as soon as I save" and it waits instead until this drive
-is ejected, or **Boot** is pressed once. "Did it work?" reads `errors.txt` back
-and shows what the board made of each line. On a Mac each save shows "Disk Not
-Ejected Properly" once and a Finder window on this drive closes; the drive comes
-back on its own a few seconds later and the page carries on.
+**A program** runs one of the board's programs in place of the effects: the
+showcase signs, screen pieces, and what a remote, a sensor, a speaker or a motor
+brings, beside any programs of your own on this drive. Pick one and save, and the
+board restarts to run it. [Your program in the picker](#your-program-in-the-picker)
+says how a program of yours describes itself there.
 
-In Chrome, or another browser built on Chromium, that is the whole of it: one
-click saves to the board. Safari and Firefox cannot write to a drive from a page,
-so there the picker reads the drive through a folder chooser and "Put it on the
-board" downloads `effects.txt` instead. Set the browser to ask where to save each
-download, choose the FX drive and replace the file there, and the board plays it
-just the same. Left at the default, the file lands in your Downloads folder, and
-copying it onto the drive over the old one does the same job. Pointing the
-browser's downloads at the drive does not work, since it saves a numbered copy
-the board never reads. Either way, "Did it work?" asks for the drive again to
-read the board's answer, and pictures and sounds are copied onto the drive in
-Finder or Explorer.
+**Save to board** writes the file, and the board picks it up a few seconds later.
+Its arrow opens the save's settings: untick "Play saves without an eject" and the
+board waits instead until this drive is ejected, or **Boot** is pressed once, and
+"Keep the drive hidden at start" is `drive=manual`. **Check board** reads
+`errors.txt` back and shows what the board made of each line. On a Mac each save
+shows "Disk Not Ejected Properly" once and a Finder window on this drive closes;
+the drive comes back on its own a few seconds later and the page carries on.
+
+The page reaches the drive only in Chrome, Edge or another browser built on
+Chromium. Safari and Firefox cannot write to a drive from a page, so there it
+says so, and `effects.txt` can still be changed in any text editor.
 
 What the picker writes is an ordinary `effects.txt`: anything it makes can be
-edited by hand afterwards, and it asks before replacing a file it did not write
-itself.
+edited by hand afterwards. A line it cannot write itself is kept as it is, and it
+asks before replacing a file it has not read.
 
 ## The editor
 
@@ -506,6 +508,23 @@ The examples under `examples/screens/graphics` show what PicoVector can draw,
 and a program that wants the whole board instead of one screen is
 [a program](#running-your-own-program), not a drawing.
 
+The picker offers a drawing on its Screens tab where the drawing's opening string
+starts with `Drawing:` and its name, and keeps it out of its programs. It cannot
+run the drawing, so it shows it by a face instead, which two more lines can set:
+
+```python
+'''
+Drawing: Rings
+Rings that grow and fade, in the four colours.
+Icon: *
+Colour: orange
+'''
+```
+
+`Icon` is any one character, an emoji included, and `Colour` one of the colour
+words or a hex. A drawing naming neither is shown by its initial, on a colour
+taken from its name.
+
 ## Sound
 
 The board plays a WAV file through its onboard amplifier, alongside whatever the
@@ -617,6 +636,9 @@ If it is missing, or stops with an error, the effects run instead and
 `errors.txt` says what happened, so a mistyped name never leaves you with a
 board that does nothing.
 
+Saving a file that names a program, while the effects play, restarts the board,
+which then runs the program as it would from power on.
+
 The effects stop while a program runs, and the board is busy with it, so
 **Boot** and ejecting do nothing. The drive is shown anyway, even with `drive`
 set to `manual`, so you can still edit `effects.txt`; press **Reset** for the
@@ -645,6 +667,32 @@ the file works either way:
 args = sys.argv[1:]
 FOLDER = args[0] if args else "posters"
 ```
+
+### Your program in the picker
+
+The picker's **A program** tab lists every Python file at the top of this drive
+beside the examples, and describes each one by its opening string, the text in
+triple quotes at the top of the file. Its first plain line says what the program
+does, and three more lines tell the picker how to show it:
+
+```python
+'''
+Program: Big clock
+Shows the time across both screens.
+Args: Colour, Seconds
+Picture: clock.png
+'''
+```
+
+| Line | What the picker does with it |
+| --- | --- |
+| `Program: Big clock` | names the program, where it would use the file's name |
+| `Args: Colour, Seconds` | gives each argument a box of its own, and writes `args=` from them |
+| `Picture: clock.png` | shows the program by that picture from this drive |
+
+Each is optional. Without `Args`, the picker offers plain boxes to add arguments
+to, and without `Picture`, a plain tile. A file whose opening string starts
+`Drawing:` is [a drawing](#drawing-from-code), so it is left out.
 
 ### What is already on the board
 

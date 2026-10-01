@@ -287,6 +287,7 @@ footer p { margin: 0; }
 <li><a href="#scenes">Scenes</a></li>
 <li><details><summary><a href="#the-board">The board</a></summary><ul>
 <li><a href="#running-your-own-program">Running your own program</a></li>
+<li><a href="#your-program-in-the-picker">Your program in the picker</a></li>
 <li><a href="#what-is-already-on-the-board">What is already on the board</a></li>
 </ul></details></li>
 <li><a href="#when-something-is-wrong">When something is wrong</a></li>
@@ -308,11 +309,12 @@ footer p { margin: 0; }
 <p><strong>Would you rather not write the file at all? <code>PICKER.html</code> on this drive writes it for you. See <a href="#the-picker">the picker</a>. <code>EDITOR.html</code> beside it is a place to write it with the names offered as you type. See <a href="#the-editor">the editor</a>.</strong></p>
 <p><strong>The board also carries programs that run as they are, from single effects to whole builds, and one line in <code>effects.txt</code> starts any of them. See <a href="#what-is-already-on-the-board">what is already on the board</a>.</strong></p>
 <h2 id="the-picker">The picker</h2>
-<p><code>PICKER.html</code> on this drive writes <code>effects.txt</code> for you. Open it in a browser, pick a look, and slide until it suits. It shows the file it is writing as you go, so nothing about it is hidden.</p>
-<p>Screens, strips and sound are set up there too. Say how many LEDs a strip has and which size each screen is, pick a picture from this drive for a screen to show, and tap any of the board's own seven lights to leave it out of the effect, or drag them into the order your build has them. Pictures and sounds can be copied onto the drive, and deleted from it, without leaving the page. Press the plus to split what you have into scenes that take turns, each with its own look, pictures and sound; a sound picked on the always-on tab plays in any scene that brings none of its own.</p>
-<p>"Put it on the board" writes the file, and the board picks it up a few seconds later. Untick "play it as soon as I save" and it waits instead until this drive is ejected, or <strong>Boot</strong> is pressed once. "Did it work?" reads <code>errors.txt</code> back and shows what the board made of each line. On a Mac each save shows "Disk Not Ejected Properly" once and a Finder window on this drive closes; the drive comes back on its own a few seconds later and the page carries on.</p>
-<p>In Chrome, or another browser built on Chromium, that is the whole of it: one click saves to the board. Safari and Firefox cannot write to a drive from a page, so there the picker reads the drive through a folder chooser and "Put it on the board" downloads <code>effects.txt</code> instead. Set the browser to ask where to save each download, choose the FX drive and replace the file there, and the board plays it just the same. Left at the default, the file lands in your Downloads folder, and copying it onto the drive over the old one does the same job. Pointing the browser's downloads at the drive does not work, since it saves a numbered copy the board never reads. Either way, "Did it work?" asks for the drive again to read the board's answer, and pictures and sounds are copied onto the drive in Finder or Explorer.</p>
-<p>What the picker writes is an ordinary <code>effects.txt</code>: anything it makes can be edited by hand afterwards, and it asks before replacing a file it did not write itself.</p>
+<p><code>PICKER.html</code> on this drive writes <code>effects.txt</code> for you. Open it in Chrome or Edge, press <strong>Open FX drive</strong> and choose this drive, and the page reads the file the board is playing, so you carry on from where it is. The file it will write is shown at the foot of the page, so nothing about it is hidden.</p>
+<p>Two tabs sit under the page's header. <strong>The effects</strong> sets the lights, screens and sound: pick a stretch of outputs or LEDs, tap a look from the cards to play on it, and slide its settings until it suits. A run can be cut into stretches that each play a look of their own. <strong>Edit board</strong> sets up what is built: the order the lights are wired in, how many LEDs a strip has, which size each screen is, and a Screen Hub. The pictures, drawings and sounds on this drive are offered on the Screens and Sound tabs, where files can be copied onto the drive and deleted from it. Press the plus to split what you have into scenes that take turns, each with its own looks, pictures and sound; what <strong>Always on</strong> holds plays under every scene.</p>
+<p><strong>A program</strong> runs one of the board's programs in place of the effects: the showcase signs, screen pieces, and what a remote, a sensor, a speaker or a motor brings, beside any programs of your own on this drive. Pick one and save, and the board restarts to run it. <a href="#your-program-in-the-picker">Your program in the picker</a> says how a program of yours describes itself there.</p>
+<p><strong>Save to board</strong> writes the file, and the board picks it up a few seconds later. Its arrow opens the save's settings: untick "Play saves without an eject" and the board waits instead until this drive is ejected, or <strong>Boot</strong> is pressed once, and "Keep the drive hidden at start" is <code>drive=manual</code>. <strong>Check board</strong> reads <code>errors.txt</code> back and shows what the board made of each line. On a Mac each save shows "Disk Not Ejected Properly" once and a Finder window on this drive closes; the drive comes back on its own a few seconds later and the page carries on.</p>
+<p>The page reaches the drive only in Chrome, Edge or another browser built on Chromium. Safari and Firefox cannot write to a drive from a page, so there it says so, and <code>effects.txt</code> can still be changed in any text editor.</p>
+<p>What the picker writes is an ordinary <code>effects.txt</code>: anything it makes can be edited by hand afterwards. A line it cannot write itself is kept as it is, and it asks before replacing a file it has not read.</p>
 <h2 id="the-editor">The editor</h2>
 <p><code>EDITOR.html</code> on this drive is <code>effects.txt</code> in a window that knows the format. Every word is coloured by the part it plays, and as you type it offers what fits where you are: the outputs and screens at the start of a line, the effects after the colon, then that effect's own settings and the values each one takes. A line underneath says what shape a value wants. Tab or Enter takes what is offered, Escape leaves it, and Ctrl+Space asks for it again.</p>
 <p>A name it does not know is underlined, an effect that is not one or a setting the effect does not take. Values are left alone, since a percentage, a colour and a list all live there and the board is the one that reads them. "Put it on the board" writes the file and "Did it work?" reads <code>errors.txt</code> back, as the picker does.</p>
@@ -512,6 +514,14 @@ def draw(canvas, elapsed):
 <p>A drawing can load pictures, <code>picovector.image.load("/faces.png")</code>, best done once in the setup. Name them from the board's own filesystem, with the leading <code>/</code>: this drive comes and goes with the computer, so a picture kept here may be missing just when a scene's <code>restart</code> runs the file again. The drawing itself is safe wherever it lives, read once and kept.</p>
 <p>A drawing may import <code>math</code>, <code>random</code>, <code>time</code> and <code>picovector</code>. The board's own modules stay with the effects running around it, so a program pasted in that reaches for the pins is refused, with a note in <code>errors.txt</code>. A mistake anywhere in the file lands there too, with its line, and a drawing that stops partway keeps its last frame on the screen while everything else carries on.</p>
 <p>The examples under <code>examples/screens/graphics</code> show what PicoVector can draw, and a program that wants the whole board instead of one screen is <a href="#running-your-own-program">a program</a>, not a drawing.</p>
+<p>The picker offers a drawing on its Screens tab where the drawing's opening string starts with <code>Drawing:</code> and its name, and keeps it out of its programs. It cannot run the drawing, so it shows it by a face instead, which two more lines can set:</p>
+<pre class="python"><code>'''
+Drawing: Rings
+Rings that grow and fade, in the four colours.
+Icon: *
+Colour: orange
+'''</code></pre>
+<p><code>Icon</code> is any one character, an emoji included, and <code>Colour</code> one of the colour words or a hex. A drawing naming neither is shown by its initial, on a colour taken from its name.</p>
 <h2 id="sound">Sound</h2>
 <p>The board plays a WAV file through its onboard amplifier, alongside whatever the lights and screens are doing:</p>
 <pre class="entry"><code><span class="s-target">audio</span><span class="s-colon">:</span> <span class="s-effect">wav</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">chimes.wav</span>
@@ -561,6 +571,7 @@ def draw(canvas, elapsed):
 <h3 id="running-your-own-program">Running your own program</h3>
 <p>A program can sit on this drive or on the board's own filesystem, and its name may include folders: it is looked for here first, then on the board, so <code>program=examples/effects/colour/rainbow_wave.py</code> reaches one of the examples the board ships with. Where the name is in both, this drive's copy runs.</p>
 <p>If it is missing, or stops with an error, the effects run instead and <code>errors.txt</code> says what happened, so a mistyped name never leaves you with a board that does nothing.</p>
+<p>Saving a file that names a program, while the effects play, restarts the board, which then runs the program as it would from power on.</p>
 <p>The effects stop while a program runs, and the board is busy with it, so <strong>Boot</strong> and ejecting do nothing. The drive is shown anyway, even with <code>drive</code> set to <code>manual</code>, so you can still edit <code>effects.txt</code>; press <strong>Reset</strong> for the change to take. A program cannot read files from this drive while it runs, so put anything it needs on the board's own filesystem.</p>
 <p><code>screenA</code> and <code>screenB</code> describe the screens this file's own entries play on, so a program never sees them: it sets its own up. Pass it the size in <code>args</code> if it needs telling.</p>
 <p><code>args</code> passes a program whatever it needs to know, so one program can do different things without being edited. Several are divided by <code>|</code>, and anything with a space or a colon in it goes in quotes:</p>
@@ -569,6 +580,22 @@ def draw(canvas, elapsed):
 <p><strong>If you are writing the program</strong>, it reads them from <code>sys.argv</code>, the way any Python program does, with the first being <code>sys.argv[1]</code>. Thonny passes none when you run the same file from there, so give each one a value to fall back on and the file works either way:</p>
 <pre class="python"><code>args = sys.argv[1:]
 FOLDER = args[0] if args else "posters"</code></pre>
+<h3 id="your-program-in-the-picker">Your program in the picker</h3>
+<p>The picker's <strong>A program</strong> tab lists every Python file at the top of this drive beside the examples, and describes each one by its opening string, the text in triple quotes at the top of the file. Its first plain line says what the program does, and three more lines tell the picker how to show it:</p>
+<pre class="python"><code>'''
+Program: Big clock
+Shows the time across both screens.
+Args: Colour, Seconds
+Picture: clock.png
+'''</code></pre>
+<div class="scroll"><table>
+<thead><tr><th>Line</th><th>What the picker does with it</th></tr></thead>
+<tbody>
+<tr><td><code>Program: Big clock</code></td><td>names the program, where it would use the file's name</td></tr>
+<tr><td><code>Args: Colour, Seconds</code></td><td>gives each argument a box of its own, and writes <code>args=</code> from them</td></tr>
+<tr><td><code>Picture: clock.png</code></td><td>shows the program by that picture from this drive</td></tr>
+</tbody></table></div>
+<p>Each is optional. Without <code>Args</code>, the picker offers plain boxes to add arguments to, and without <code>Picture</code>, a plain tile. A file whose opening string starts <code>Drawing:</code> is <a href="#drawing-from-code">a drawing</a>, so it is left out.</p>
 <h3 id="what-is-already-on-the-board">What is already on the board</h3>
 <p>These come with the board, so <code>program=</code> reaches any of them with nothing to download:</p>
 <div class="scroll"><table>
