@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Turns a board's editor pages into the frozen module the FX drive carries.
 
-Reads editor/picker.html, generates catalogue.js from the live autofx tables so a
-page always offers what the firmware it ships with provides, and writes the pages and
-catalogue compressed into a frozen module for fx_drive to heal onto the drive. The
-pages are committed and the module is generated, so run this after editing a page or
-anything the catalogue reads.
+Assembles editor/picker.html from the parts in editor/picker/, generates catalogue.js
+from the live autofx tables so a page always offers what the firmware it ships with
+provides, and writes the pages and catalogue compressed into a frozen module for fx_drive
+to heal onto the drive. The parts and pages are committed and the module is generated, so
+run this after editing a part, a page or anything the catalogue reads.
 
     python3 tools/build_editor.py boards/PIMORONI_MIGHTYFX
     python3 tools/build_editor.py --check boards/PIMORONI_MIGHTYFX
@@ -15,8 +15,10 @@ pages once inflated, since two zlib builds need not compress the same text to th
 """
 
 import argparse
+import glob
 import json
 import os
+import re
 import sys
 import types
 import zlib
@@ -42,6 +44,92 @@ EDGE = 512
 
 # How many bytes of a zlib stream go on one line of the module
 BYTES_PER_LINE = 64
+
+# The examples the board's filesystem carries, as its uf2-copyfiles.sh copies them
+EXAMPLES = os.path.join("examples", "mighty_fx", "examples")
+
+# What each examples folder needs attached, as the manual says
+EXAMPLE_NEEDS = {"screens": "a screen", "audio": "a speaker", "motors": "motors",
+                 "servos": "a servo", "strips": "a strip"}
+
+# What an example uses beyond the board, read from its source. Every example exits on Boot, so
+# Boot counts only where its opening string gives the button another job
+EXAMPLE_USES = [("outputs", r"mighty\.(outputs|monos)\b|ColourPlayer|MonoPlayer"),
+                ("screen", r"^from screens import|SPCE\.SCREEN"),
+                ("pair", r"ScreenPair"),
+                ("hub", r"mighty\.hub\b|SPCE\.HUB"),
+                ("strip", r"mighty\.strip_[lr]\b"),
+                ("sound", r"mighty\.wav\b"),
+                ("remote", r"aye_arr|from sensor import IR"),
+                ("qwst", r"^from (breakout_\w+|lsm6ds3) import"),
+                # Only where one is needed, an optional one being written "ANALOG if"
+                ("analog", r"sensor=ANALOG\)"),
+                ("motor", r"MotorDriver|SPCE\.MOTOR"),
+                ("servo", r"^from servo import|mighty\.servo_[lr]\b"),
+                ("wifi", r"^import network|urequests|^import requests"),
+                ("button", r'Press "Boot" (?!to exit)|press Boot|boot_taps')]
+
+# A program that looks for a screen on each port runs on one or on two
+EITHER_SCREEN = r"for port in \(mighty\.spce_a, mighty\.spce_b\)"
+
+# The picker's parts are its script, so the page closes after the last of them
+PICKER_END = "</script>\n</body>\n</html>\n"
+
+
+def uses_of(source):
+    """What an example's source says it uses, in EXAMPLE_USES order."""
+    found = [name for name, pattern in EXAMPLE_USES
+             if re.search(pattern, source, re.MULTILINE)]
+    if re.search(EITHER_SCREEN, source):
+        found = ["either" if name == "pair" else name for name in found]
+        if "either" not in found:
+            found.append("either")
+    elif re.search(r"spce_b=SPCE\.SCREEN", source) and "pair" not in found:
+        found.append("pair")
+    # Two screens or a hub are more than one screen, so they say it for it
+    if set(found) & {"pair", "hub", "either"}:
+        found = [name for name in found if name != "screen"]
+    return found
+
+
+def board_examples(repo_dir):
+    """The examples the board carries, each with its path there and its opening sentence."""
+    root = os.path.join(repo_dir, EXAMPLES)
+    found = []
+    for folder, _dirs, files in sorted(os.walk(root)):
+        where = os.path.relpath(folder, root).replace(os.sep, "/")
+        if where == "." or where.split("/")[0] == "assets":
+            continue
+        for name in sorted(files):
+            if not name.endswith(".py"):
+                continue
+            with open(os.path.join(folder, name), encoding="utf-8") as f:
+                source = f.read()
+            opening = re.search(r'"""\s*(.*?)"""', source, re.DOTALL)
+            words = " ".join(opening.group(1).split()) if opening else ""
+            first = re.match(r"(.*?\.)(\s|$)", words)
+            found.append({"path": "examples/" + where + "/" + name, "folder": where,
+                          "does": first.group(1) if first else words,
+                          "needs": EXAMPLE_NEEDS.get(where.split("/")[0]),
+                          "uses": uses_of(source)})
+    # A doubled underscore would read as a placeholder left unfilled, so it is escaped
+    return json.dumps(found, indent=1).replace("__", "_\\u005f")
+
+
+def picker(board_dir, repo_dir):
+    """picker.html, from page.html and the numbered parts after it, with the examples filled in."""
+    folder = os.path.join(board_dir, "editor", "picker")
+    with open(os.path.join(folder, "page.html"), encoding="utf-8") as f:
+        text = f.read()
+    for part in sorted(glob.glob(os.path.join(folder, "[0-9][0-9]_*.js"))):
+        with open(part, encoding="utf-8") as f:
+            text += f.read()
+    text = text.replace("__EXAMPLES__", board_examples(repo_dir)) + PICKER_END
+    left = sorted(set(re.findall(r"__[A-Z_]+__", text)))
+    if left:
+        sys.exit("picker.html has {} unfilled".format(", ".join(left)))
+    return text
+
 
 def catalogue(repo_dir):
     """catalogue.js, from the same tables autofx reads on the board."""
@@ -118,12 +206,17 @@ def main():
     editor_dir = os.path.join(args.board_dir, "editor")
     module = os.path.join(args.board_dir, "frozen_libs", MODULE_NAME)
 
-    # What the generated files should hold
+    # What the generated files should hold, the picker being generated as well as embedded
+    generated = {os.path.join(editor_dir, "picker.html"): picker(args.board_dir, repo_dir)}
     sources = {"CATALOGUE": catalogue(repo_dir)}
-    generated = {os.path.join(editor_dir, "catalogue.js"): sources["CATALOGUE"]}
+    generated[os.path.join(editor_dir, "catalogue.js")] = sources["CATALOGUE"]
     for name, page in PAGES:
-        with open(os.path.join(editor_dir, page), encoding="utf-8", newline="") as f:
-            sources[name] = f.read()
+        path = os.path.join(editor_dir, page)
+        if path in generated:
+            sources[name] = generated[path]
+        else:
+            with open(path, encoding="utf-8", newline="") as f:
+                sources[name] = f.read()
 
     if args.check:
         stale = []
