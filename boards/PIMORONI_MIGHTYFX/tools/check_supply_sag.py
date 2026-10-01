@@ -91,6 +91,7 @@ def light_strips(lit):
         for index in range(STRIP_LEDS):
             value = STRIP_VALUE if index < lit else 0
             strip.set_rgb(index, value, value, value)
+        strip.update()
 
 
 def settled():

@@ -1878,10 +1878,10 @@ def __transfer_frame(fx, at):
     delays does not slow the travel down.
 
     Nothing is sent to a strip meanwhile. A frame reaches one as a single timed
-    run of bits, and a flash write holds the interrupts off long enough to break
-    one apart, which lands as the wrong colours or as a run that overruns the
-    LEDs declared into one nothing addresses afterwards. Every frame sent is
-    another that can be torn, so the strips are left holding what they have.
+    run of bits, and a flash write pauses the transfer sending it partway, which
+    breaks it apart into the wrong colours or into a run that overruns the LEDs
+    declared into one nothing addresses afterwards. Every frame sent is another
+    that can be torn, so the strips are left holding what they have.
     """
     __spot(fx, (at // TRANSFER_STEP_MS) % len(fx.outputs))
 

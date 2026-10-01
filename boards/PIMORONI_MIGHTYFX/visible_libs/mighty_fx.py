@@ -64,8 +64,8 @@ class MightyFX:
     # Strips take PIO 1, leaving PIO 0 to the I2S audio every board builds
     STRIP_PIO = 1
 
-    # LEDs built past the length asked for and driven dark: a flash write holds the
-    # interrupts off long enough to break a frame apart, and the overrun lands on these
+    # LEDs built past the length asked for and driven dark: a flash write pauses the
+    # transfer sending a frame partway, breaking it apart, and the overrun lands on these
     STRIP_FLUSH_LEDS = 2
 
     SENSOR_PIN = 46
@@ -172,12 +172,12 @@ class MightyFX:
             if strip is not None and servo is not None:
                 raise ValueError(f"The {letter} connector carries one signal, so it cannot be a strip and a servo at once. Declare strip_{letter.lower()} or servo_{letter.lower()}.")
 
+            # A strip is sent a frame only by update(). A refresh of its own would resend it
+            # through every flash write, and a frame sent during one is torn
             if strip is not None:
                 from plasma import WS2812
-                built = WS2812(strip + self.STRIP_FLUSH_LEDS, self.STRIP_PIO,
-                               len(self.__strips), pin)
-                built.start()
-                self.__strips[letter] = built
+                self.__strips[letter] = WS2812(strip + self.STRIP_FLUSH_LEDS, self.STRIP_PIO,
+                                               len(self.__strips), pin)
 
             elif servo is not None:
                 # Each connector shares a PWM channel with one screen port's backlight
@@ -293,12 +293,12 @@ class MightyFX:
 
     @property
     def strip_l(self):
-        """The LED strip on the L connector, declared as MightyFX(strip_l=60)."""
+        """The LED strip on the L connector, declared as MightyFX(strip_l=60). Shown by update()."""
         return self.__declared(self.__strips, "strip", "L")
 
     @property
     def strip_r(self):
-        """The LED strip on the R connector, declared as MightyFX(strip_r=60)."""
+        """The LED strip on the R connector, declared as MightyFX(strip_r=60). Shown by update()."""
         return self.__declared(self.__strips, "strip", "R")
 
     @property
@@ -338,6 +338,7 @@ class MightyFX:
 
         for strip in self.__strips.values():
             strip.clear()
+            strip.update()
 
     def shutdown(self):
         self.clear()

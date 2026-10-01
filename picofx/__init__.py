@@ -548,3 +548,6 @@ class StripPlayer(ChromaticPlayer):
 
                 # The strip is driven through a C binding, which wants whole numbers
                 self.__leds.set_rgb(i, int(r), int(g), int(b))
+
+        # A strip shows nothing until its frame is sent, once a frame
+        self.__leds.update()

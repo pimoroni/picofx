@@ -82,6 +82,8 @@ ColourPlayer(rgb_leds: RGBLED | list[RGBLED])
 StripPlayer(rgb_leds : WS2812 | APA102, num_leds: int=60)
 ```
 
+The player sends the strip its frame with `update()` each time it draws one, so the strip needs no `start()` of its own.
+
 
 ### Common
 ```python
