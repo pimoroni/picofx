@@ -4,5204 +4,925 @@
 
 # Generated from editor/*.html and the autofx tables by tools/build_editor.py.
 # Edit those and rebuild; edits here are lost.
-
-
-PICKER = """\
-<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>FX Picker</title>
-<script src="catalogue.js"></script>
-<style>
-:root{
- --bg:#f5f3ef; --panel:#fff; --ink:#26221e; --dim:#8a8378; --line:#e2ddd4;
- --accent:#00857d; --accent-ink:#fff; --warn:#b33; --warn-bg:#fbeaea;
- --stripL:#c2570f; --stripR:#8a1f6d;
-}
-*{box-sizing:border-box}
-body{font:16px/1.5 system-ui,sans-serif;margin:0;background:var(--bg);color:var(--ink)}
-header{display:flex;align-items:center;gap:.8rem;padding:.8rem 1.4rem;background:var(--panel);
- border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
-header h1{font-size:1.1rem;margin:0 auto 0 0}
-button{font:inherit;padding:.5rem 1rem;border:1px solid var(--line);border-radius:8px;
- background:var(--panel);cursor:pointer}
-button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
-button:disabled{opacity:.4;cursor:default}
-main{max-width:52rem;margin:1.5rem auto;padding:0 1.4rem}
-#status{font-size:.85rem;color:var(--dim)}
-.banner{padding:.8rem 1.1rem;border-radius:10px;margin:1rem 0;background:#e7f2f1}
-.banner.warn{background:var(--warn-bg);color:var(--warn)}
-.banner.hold{background:#fdf3e0;color:#8a6415}
-.banner pre{margin:.4rem 0 0;white-space:pre-wrap;font-size:.85rem}
-/* The seven outputs as the board lights them while a save is written */
-.spots{display:inline-flex;gap:.3rem;margin-left:.7rem;vertical-align:middle}
-.spots i{display:block;width:.85rem;height:.85rem;border-radius:3px;border:1px solid rgba(138,100,21,.45);
- background:rgba(138,100,21,.12)}
-.spots i.lit{background:#fff;border-color:#8a6415;box-shadow:0 0 6px 1px rgba(255,255,255,.9)}
-.note{background:#e7f2f1;border-radius:10px;padding:.7rem 1.1rem;margin:0 0 1.2rem;font-size:.9rem}
-.tag{display:inline-block;font-size:.75rem;background:#fdf3e0;color:#8a6415;border-radius:99px;
- padding:.1rem .55rem;margin-left:.4rem}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;
- padding:1.1rem 1.4rem;margin:1.2rem 0}
-.panel h2{font-size:1rem;margin:0 0 .6rem;display:flex;align-items:baseline;gap:.6rem}
-.says{font-weight:400;font-size:.85rem;color:var(--dim)}
-.panel h2 .says{margin-left:0}
-#outputs .says{margin-left:auto}
-.side-head{display:flex;align-items:center;gap:.7rem;margin:1rem 0 .5rem;font-size:.92rem}
-.side-head:first-child{margin-top:0}
-.side-head .chain{margin-left:.3rem;flex-grow:1}
-.side-head .chain svg{height:auto}
-.side-head .says{flex-shrink:1}
-
-/* The outputs are the one drawing you can act on, so they are buttons: a socket
-   each, a ring where the pointer is, and a hole where one has been left out */
-.lamps{display:flex;gap:.4rem;flex-shrink:0}
-.lamp{padding:.3rem .3rem .15rem;border:1px solid var(--line);border-radius:8px;
- background:var(--panel);line-height:1;cursor:pointer}
-.lamp:hover:enabled{border-color:var(--dim)}
-.lamp:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
-.lamp:disabled{cursor:default}
-.lamp i{display:block;width:1.5rem;height:1.5rem;border-radius:5px;
- box-shadow:inset 0 0 0 1px rgba(0,0,0,.14)}
-.lamp.off i{background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 4px,
- #e0dbd2 4px,#e0dbd2 8px)}
-.lamp b{display:block;font:400 .68rem/1.6 system-ui,sans-serif;color:var(--dim);
- text-align:center}
-.lamp.off b{color:#c3bdb3}
-.lamp.carried{opacity:.35}
-.lamp.landing{border-color:var(--accent);box-shadow:-2px 0 0 var(--accent)}
-.lamp.landing.after{box-shadow:2px 0 0 var(--accent)}
-
-/* Putting the outputs back the way the board has them */
-.putback{align-self:center;margin-left:.2rem;padding:.25rem .55rem;
- border:1px solid var(--line);border-radius:7px;background:var(--panel);
- font:400 .74rem system-ui,sans-serif;color:var(--dim);cursor:pointer}
-.putback:hover{border-color:var(--dim);color:var(--ink)}
-
-/* Which way a run travels, shown rather than described */
-.way{padding:.25rem .4rem;line-height:0;color:var(--ink);border-radius:6px}
-.way:hover{border-color:var(--dim)}
-
-/* A strip's side and its length are facts about the board, as a screen's size is,
-   so they sit together in the side's own colour and everything the scene chooses
-   follows to the right of it */
-.strip-tag{display:flex;align-items:center;gap:.45rem;padding:.32rem .55rem;
- border-radius:9px;color:#fff;font:600 .85rem system-ui,sans-serif}
-.strip-tag.l{background:var(--stripL)}
-.strip-tag.r{background:var(--stripR)}
-.strip-tag input[type=number]{width:4.4rem;padding:.12rem .3rem;text-align:center;
- border:1px solid rgba(255,255,255,.55);border-radius:6px;
- background:rgba(255,255,255,.16);color:#fff;font:inherit;font-weight:400}
-.strip-tag small{font-weight:400;opacity:.85}
-
-.opt{display:flex;align-items:center;gap:.35rem;font-size:.85rem;color:var(--dim);cursor:pointer}
-.opt input[type=number]{font:inherit;font-size:.85rem;width:4rem;padding:.2rem .3rem;
- border:1px solid var(--line);border-radius:6px}
-
-/* The hero: the same gallery a first-timer meets, three clicks to a lit board */
-.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(11rem,1fr));gap:1rem;margin:1rem 0}
-.card{background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:0;
- overflow:hidden;cursor:pointer;text-align:left;transition:transform .1s}
-.card:hover{transform:translateY(-2px)}
-.card.picked{border-color:var(--accent)}
-.card .bar{height:3rem;display:flex}
-.card .bar span{flex:1}
-.card .name{padding:.55rem .9rem .7rem;font-weight:600;display:flex;
- align-items:center;gap:.5rem}
-/* Which strips play this look, in the corner the way a picture says its screen */
-.card .who{margin-left:auto;display:flex;gap:.25rem}
-.card .who span{width:1.35rem;height:1.35rem;border-radius:6px;border:1px solid var(--line);
- font-size:.72rem;font-weight:700;color:var(--dim);display:flex;align-items:center;
- justify-content:center;background:var(--panel)}
-.card .who span.lit{color:#fff;border-color:transparent}
-.card .who span.lit.l{background:var(--stripL)}
-.card .who span.lit.r{background:var(--stripR)}
-.card .who span.off{background:#efece6;border-color:transparent;color:#c3bdb3;
- cursor:default}
-.card.nothing .bar{background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 7px,#e4e0d9 7px,#e4e0d9 14px)}
-
-/* What this scene chose, and the settings that shape it, kept together: the name
-   on the left and the sliders taking the rest */
-.tuned{display:flex;align-items:center;gap:.9rem;margin:.45rem 0 0;padding:.45rem .7rem;
- border:1px solid var(--line);border-radius:10px;background:#fff}
-.tuned .who{flex:0 0 auto;min-width:6.5rem;font-size:.8rem;color:var(--dim);
- line-height:1.25}
-.tuned .who b{display:block;font-size:.92rem;color:var(--ink)}
-.tuned .tuning{flex:1;grid-template-columns:auto 1fr;gap:.35rem .7rem}
-.tuned .tuning label{white-space:nowrap}
-.tuning{display:grid;grid-template-columns:7rem 1fr;align-items:center;gap:.6rem 1rem}
-.tuning input{width:100%;accent-color:var(--accent)}
-.tuning label{font-size:.9rem}
-
-/* One set of pictures, each able to go to A, to B, or to both */
-.assets{display:grid;grid-template-columns:repeat(auto-fill,minmax(6.2rem,1fr));gap:.7rem}
-.asset{position:relative;border:2px solid var(--line);border-radius:10px;overflow:hidden;
- background:var(--panel);padding:0}
-.asset.onA{border-color:#1f6feb}
-.asset.onB{border-color:#a44ad0}
-.asset.onAB{border-color:var(--accent)}
-.asset .face{position:relative;height:3.6rem;display:flex;align-items:center;
- justify-content:center;overflow:hidden;
- font-size:.7rem;color:var(--dim);background:linear-gradient(135deg,#efece6,#e3dfd6)}
-.asset .face img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.asset .kind{position:absolute;top:2px;left:2px;font-size:.6rem;
- background:rgba(20,20,22,.7);color:#fff;border-radius:4px;padding:0 .3rem;z-index:1}
-/* The file name is only wanted when you go looking for it, so it lies over the
-   picture on hover or on keyboard focus rather than taking a row of its own */
-.asset .label{position:absolute;left:0;right:0;bottom:0;font-size:.7rem;
- padding:.25rem .4rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
- background:rgba(20,20,22,.82);color:#fff;opacity:0;transition:opacity .12s;
- pointer-events:none;z-index:1}
-.asset:hover .label,.asset:focus-within .label{opacity:1}
-.asset .pick{display:flex;border-top:1px solid var(--line)}
-.asset .pick button{flex:1;border:0;border-radius:0;padding:.2rem;font-size:.75rem;
- font-weight:700;color:var(--dim);background:var(--panel)}
-.asset .pick button:first-child{border-right:1px solid var(--line)}
-.asset .pick button.lit{background:#1f6feb;color:#fff}
-.asset .pick button.lit.b{background:#a44ad0}
-/* Files come to the drive without leaving the page: a dashed tile at the end of
-   each collection, in the plus's own manner */
-.adder{border:1px dashed rgba(15,138,114,.5);border-radius:10px;background:rgba(15,138,114,.06);
- color:var(--accent);cursor:pointer;display:flex;flex-direction:column;
- align-items:center;justify-content:center;gap:.25rem;
- font:600 .74rem system-ui,sans-serif;min-height:5.2rem}
-.adder:hover{background:rgba(15,138,114,.14);border-color:var(--accent)}
-.adder svg{display:block}
-.sounds .adder{width:8.4rem}
-
-/* Deleting is offered where the file is, quiet until the pointer arrives */
-.bin{position:absolute;top:2px;right:2px;z-index:2;width:1.2rem;height:1.2rem;
- border-radius:5px;background:rgba(20,20,22,.7);color:#fff;line-height:1.2rem;
- text-align:center;font-size:.8rem;cursor:pointer;opacity:0;transition:opacity .12s}
-.asset:hover .bin,.asset:focus-within .bin,.sound:hover .bin{opacity:1}
-.bin:hover{background:#b4443a}
-.sound{position:relative}
-
-.screens-head{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1rem}
-.screen-box{border:2px solid var(--line);border-radius:10px;overflow:hidden}
-.screen-box.a{border-color:#1f6feb}
-.screen-box.b{border-color:#a44ad0}
-.screen-box h3{font-size:.9rem;margin:0;padding:.4rem .9rem;color:#fff;background:var(--dim);
- display:flex;align-items:center;gap:.4rem}
-/* The panel's size is a fact about the board, not about a scene, so it rides in
-   the coloured band with the port's name instead of among the settings */
-.screen-box h3 select.inband{margin-left:.4rem;border:1px solid rgba(255,255,255,.55);
- border-radius:6px;background:rgba(255,255,255,.15);color:#fff;font:inherit;
- font-size:.78rem;padding:.1rem .25rem}
-.screen-box h3 select.inband option{color:var(--ink)}
-.screen-box h3 .drop{margin-left:auto;background:transparent;border:0;color:#fff;font-size:1.1rem;
- line-height:1;padding:0 .2rem;opacity:.8}
-.screen-box h3 .drop:hover{opacity:1}
-.screen-box .body.adding{justify-content:center;padding:1.4rem .9rem}
-.keep{display:flex;align-items:baseline;gap:.5rem;flex-wrap:wrap;
- width:calc(100% - 1.8rem);margin:0 .9rem .8rem;text-align:left;padding:.35rem .55rem;
- border:2px solid var(--line);border-radius:8px;background:var(--panel);font-size:.78rem}
-.keep.picked{border-color:var(--accent)}
-.keep b{flex-shrink:0}
-/* The entry says itself in full: a truncated one is the half a reader cannot check */
-.keep code{color:var(--dim);font-size:.72rem;line-height:1.45;word-break:break-word;
- flex:1 1 100%}
-.screen-box.a h3{background:#1f6feb}
-.screen-box.b h3{background:#a44ad0}
-.screen-box .body{padding:.7rem .9rem;display:flex;flex-direction:column;gap:.7rem;
- align-items:center}
-.screen-box .settings{width:100%;display:grid;grid-template-columns:1fr 1fr;
- gap:.4rem .8rem;align-items:center}
-.screen-box .settings .showing{margin:0}
-.screen-box .row{display:flex;gap:.4rem;align-items:center;flex-wrap:wrap}
-.holder{flex-shrink:0;line-height:0}
-select{font:inherit;font-size:.85rem;padding:.25rem .3rem;border:1px solid var(--line);border-radius:6px}
-.showing{font-size:.85rem;color:var(--dim);margin-top:.4rem}
-.showing b{color:var(--ink)}
-pre.file{font:.85rem/1.5 ui-monospace,Consolas,monospace;background:var(--panel);
- border:1px solid var(--line);border-radius:10px;padding:1rem;white-space:pre-wrap}
-/* The editor's own palette, so the two pages say the same thing the same way */
-.s-target{color:#1f6feb}
-.s-effect{color:#0a7f78;font-weight:600}
-.s-value{color:#a8500a}
-.s-scene{color:#7b3fb8;font-weight:600}
-.s-name{color:var(--ink)}
-.s-punc{color:#5d656e}
-.s-colon{color:var(--ink);font-weight:700}
-.s-comment{color:#8a8378;font-style:italic}
-details{margin:1.2rem 0}
-summary{cursor:pointer;color:var(--dim);font-size:.9rem}
-footer{max-width:52rem;margin:0 auto 2rem;padding:0 1.4rem;font-size:.8rem;color:var(--dim)}
-
-/* One sound plays at a time, so these behave as a gallery of one choice, each
-   showing its shape and how long it runs */
-.sounds{display:flex;flex-wrap:wrap;gap:.7rem}
-.sound{width:8.4rem;padding:.45rem .5rem .4rem;border:2px solid var(--line);
- border-radius:10px;background:var(--panel);text-align:left;cursor:pointer}
-.sound:hover{border-color:var(--dim)}
-.sound.picked{border-color:var(--accent)}
-.sound svg{display:block;width:100%;height:1.8rem}
-.sound b{display:block;font:600 .74rem/1.5 system-ui,sans-serif;color:var(--ink);
- white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sound small{color:var(--dim);font-size:.68rem}
-.sound.quiet svg{opacity:.6}
-
-/* Whether it starts again as it ends */
-.again{align-self:center;padding:.3rem .6rem;border:1px solid var(--line);
- border-radius:7px;background:var(--panel);font:400 .78rem system-ui,sans-serif;
- color:var(--dim);cursor:pointer}
-.again:hover:enabled{border-color:var(--dim);color:var(--ink)}
-.again:disabled{opacity:.45;cursor:default}
-.again.on{border-color:var(--accent);color:var(--accent);font-weight:600}
-
-/* Scenes take turns, so they are tabs: the bar is only drawn once there is more
-   than the one everything starts in, and the plus is always there */
-.tabbar{display:flex;flex-wrap:wrap;align-items:stretch;gap:.45rem;margin:.4rem 0 0}
-.tab{flex:0 0 auto;display:flex;flex-direction:column;justify-content:center;
- gap:.3rem;width:8.2rem;padding:.4rem .55rem;border:1px solid var(--line);
- border-radius:9px 9px 0 0;border-bottom-color:var(--line);background:#f1efeb;
- cursor:pointer;text-align:left;margin-bottom:-1px;min-height:3.4rem;overflow:hidden}
-.tab b,.tab small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tab:hover{border-color:var(--dim)}
-/* The one being edited joins the area below it, as a browser tab joins its page */
-.tab.on{background:var(--panel);border-color:var(--line);border-bottom-color:var(--panel);
- box-shadow:inset 0 3px 0 var(--accent)}
-.tab.on b{color:var(--ink)}
-.tabbar.wrapped{display:grid;gap:.45rem;margin-bottom:.5rem;
- grid-template-columns:repeat(auto-fill,minmax(8.4rem,1fr))}
-.tabbar.wrapped .tab{width:auto;border-radius:9px;margin-bottom:0}
-.tabbar.wrapped .plus{margin:0;width:100%;min-height:3.4rem;justify-content:center;
- border-style:dashed}
-.tabbar.wrapped .tab.on{border-color:var(--accent);border-bottom-color:var(--accent)}
-.scenebody.framed.loose{border-radius:12px}
-.tab .look{display:flex;width:100%;height:.32rem;border-radius:2px;overflow:hidden;
- background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 3px,#e0dbd2 3px,#e0dbd2 6px)}
-.tab .look span{flex:1}
-.tab b{font:600 .78rem/1.3 system-ui,sans-serif;color:var(--ink)}
-.tab small{font-size:.68rem;color:var(--dim)}
-.tab .shut{float:right;border:0;background:none;color:var(--dim);cursor:pointer;
- font-size:.85rem;line-height:1;padding:0 0 0 .3rem}
-.tab .shut:hover{color:#b4443a}
-.tab.carried{opacity:.4}
-.tab.landing{box-shadow:-2px 0 0 var(--accent)}
-.plus{margin-left:auto;align-self:center;display:flex;align-items:center;gap:.35rem;
- padding:.42rem .7rem;border:1px solid rgba(15,138,114,.4);border-radius:9px;
- background:rgba(15,138,114,.08);color:var(--accent);cursor:pointer;
- font:600 .78rem system-ui,sans-serif}
-.plus:hover{background:rgba(15,138,114,.16);border-color:var(--accent)}
-.plus svg{display:block}
-
-/* Everything inside the frame belongs to the tab above it */
-.scenebody{border:1px solid transparent;border-radius:0 12px 12px 12px;padding:0}
-.scenebody.framed{border-color:var(--line);background:var(--panel);
- padding:.9rem 1rem 1.1rem;margin-bottom:1rem}
-.scenebody.framed .panel{background:#faf9f7}
-
-/* What one scene is called, and how long it holds */
-.sceneset{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;
- margin:0 0 .9rem;font-size:.82rem;color:var(--dim)}
-.sceneset input{border:1px solid var(--line);border-radius:7px;background:#fff;
- padding:.32rem .5rem;font:inherit;color:var(--ink)}
-.sceneset input:focus{outline:2px solid rgba(15,138,114,.35);outline-offset:1px;
- border-color:var(--accent)}
-.sceneset input[type=text]{width:10rem;font-weight:600}
-.sceneset input[type=number]{width:4.2rem;text-align:center}
-.sceneset label{display:flex;align-items:center;gap:.35rem;cursor:pointer;
- padding:.3rem .55rem;border:1px solid var(--line);border-radius:7px;
- background:var(--panel)}
-.sceneset label:hover{border-color:var(--dim)}
-
-/* Lines the file already had that no control stands for, carried word for word */
-.keptlines{border:1px dashed var(--line);border-radius:10px;padding:.6rem .9rem;
- margin:1.2rem 0;font-size:.82rem;color:var(--dim)}
-.keptlines .row{display:flex;align-items:center;gap:.5rem;margin:.2rem 0}
-.keptlines code{flex:1;font-size:.75rem;color:var(--ink);word-break:break-word}
-/* A line the choices here have taken the outputs of: kept, but not written */
-.keptlines code.clashing{color:var(--dim);text-decoration:line-through}
-.keptlines code.clashing::after{content:" not written: already played here";
- text-decoration:none;color:var(--warn);font-style:italic}
-.keptlines .drop{border:none;background:none;color:var(--dim);font-size:1rem;
- line-height:1;padding:0 .3rem;cursor:pointer}
-.keptlines .drop:hover{color:var(--warn)}
-</style>
-</head>
-<body>
-<header>
- <h1>Make some lights</h1>
- <span id="status"></span>
- <button id="open" class="primary">Open the FX drive</button>
- <button id="openOther" hidden>Open another drive</button>
- <button id="save" disabled>Put it on the board</button>
- <button id="check" disabled>Did it work?</button>
-</header>
-<main>
-<div id="banner"></div>
-<div class="note" id="recognised" hidden></div>
-
-<div class="tabbar" id="tabs"></div>
-<div class="scenebody" id="sceneBody">
-<div id="sceneSettings"></div>
-
-<p style="margin:.2rem 0 0">Pick a look for your seven lights. Slide until it feels right.
- Put it on the board.</p>
-<div class="gallery" id="gallery"></div>
-
-<div class="panel">
- <h2>Outputs<span class="says">tap one to leave it out, drag to match
-  your build</span></h2>
- <div id="outputs"></div>
-</div>
-
-<div class="panel">
- <h2>Strips<span class="says">how long each one is, and the look it plays</span></h2>
- <div id="strips"></div>
-</div>
-
-<div class="panel">
- <h2>Screens<span class="says" id="screensSays">one set of pictures, each able to go to A,
-  to B, or to both</span></h2>
- <div class="screens-head" id="screensHead"></div>
- <div class="assets" id="assets"></div>
-</div>
-
-<div class="panel">
- <h2>Sound<span class="says" id="soundSays">one wav, playing on while the lights run</span></h2>
- <div id="sound"></div>
-</div>
-
-<div class="keptlines" id="kept" hidden></div>
-</div>
-
-<label class="opt" style="margin:1.2rem 0"
- title="The board plays the file as soon as it is saved, with no eject">
- <input type="checkbox" id="straight" checked> play it as soon as I save</label>
-
-<details>
- <summary>The file this writes (effects.txt, editable by hand too)</summary>
- <pre class="file" id="preview"></pre>
-</details>
-</main>
-<footer>
-Each choice on this page writes plain lines into effects.txt, which stays a file
-anyone can open and edit by hand. MANUAL.html on the drive explains every line.
-</footer>
-
-<script>
-"use strict";
-
-// The catalogue is generated beside this page; without it the screen and strip
-// names cannot be known, so say so instead of failing silently
-if (typeof CATALOGUE === "undefined") {
-  window.CATALOGUE = {board_settings: {screena: ["2.8", "1.54"], screenb: ["2.8", "1.54"]},
-                      screen_ports: ["screena", "screenb"], strips: ["stripl", "stripr"]};
-  document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById("banner").innerHTML =
-      "<div class='banner warn'>catalogue.js is missing from this folder, so the " +
-      "board's ports are assumed. Run tools/build_editor.py to write it.</div>";
-  });
-}
-
-var SCREENS = CATALOGUE.screen_ports.map(function (name) {
-  return name.slice(-1).toUpperCase();
-});
-var STRIP_IDS = CATALOGUE.strips.map(function (name) {
-  return "strip" + name.slice(-1).toUpperCase();
-});
-
-var HEADER = "# Written by the FX picker. Everything here can be edited by hand;\\n" +
-             "# MANUAL.html on this drive explains every line.\\n";
-
-// ---- helpers -------------------------------------------------------------------
-
-function r2(n) { return Math.round(n * 100) / 100; }
-function lerp(a, b, t) { return r2(a + (b - a) * t); }
-function unlerp(v, a, b) {
-  var t = (v - a) / (b - a);
-  return Math.max(0, Math.min(1, t));
-}
-
-// Each look picks from a palette of its own, so the middle of the slider is the
-// colour its card shows and moving it stays within what suits that look
-function tone(palette, t) {
-  return palette[Math.min(palette.length - 1, Math.floor(t * palette.length))];
-}
-function toneBack(palette, colour) {
-  var at = palette.indexOf(colour);
-  return at < 0 ? null : (at + 0.5) / palette.length;
-}
-
-// A travelling effect's length scales with the run so the wave keeps its
-// proportion whatever the light count
-function span(count, mood) {
-  return Math.max(2, Math.round(count * lerp(2, 0.6, mood)));
-}
-
-function quoted(name) {
-  return name.indexOf(" ") >= 0 ? '"' + name + '"' : name;
-}
-
-// A run of numbers as the file writes them: climbing or falling by one closes up
-// into a range, a pair stays a pair, and anything else is listed
-function rangify(list) {
-  var parts = [];
-  var i = 0;
-  while (i < list.length) {
-    var j = i;
-    if (j + 1 < list.length && list[j + 1] === list[j] + 1) {
-      while (j + 1 < list.length && list[j + 1] === list[j] + 1) j++;
-    } else if (j + 1 < list.length && list[j + 1] === list[j] - 1) {
-      while (j + 1 < list.length && list[j + 1] === list[j] - 1) j++;
-    }
-    var count = j - i + 1;
-    if (count === 1) parts.push(String(list[i]));
-    else if (count === 2) parts.push(list[i] + "," + list[j]);
-    else parts.push(list[i] + "-" + list[j]);
-    i = j + 1;
-  }
-  return parts.join(",");
-}
-
-// The numbers a selector names, in the order it names them, or null where a part
-// does not read as numbers at all
-function expandNumbers(text) {
-  var out = [];
-  var parts = text.split(",");
-  for (var i = 0; i < parts.length; i++) {
-    var one = parts[i].match(/^(\\d+)(?:-(\\d+))?$/);
-    if (!one) return null;
-    var from = Number(one[1]);
-    var to = one[2] === undefined ? from : Number(one[2]);
-    var step = to >= from ? 1 : -1;
-    for (var n = from; n !== to + step; n += step) out.push(n);
-  }
-  return out;
-}
-
-// The playing outputs split round-robin into up to three groups, which is how a
-// three-colour look lands one colour per light in turn
-function roundRobin(playing, ways) {
-  var groups = [];
-  playing.forEach(function (which, i) {
-    var at = i % ways;
-    (groups[at] = groups[at] || []).push(which);
-  });
-  return groups;
-}
-
-// A strip cut into up to three contiguous runs, as selectors, low end first or
-// high end first to match how the strip is wired
-function stripThirds(name, count, reversed, ways) {
-  var edges = [];
-  for (var i = 0; i <= ways; i++) edges.push(Math.round(count * i / ways));
-  var parts = [];
-  for (var g = 0; g < ways; g++) {
-    var from = edges[g] + 1;
-    var to = edges[g + 1];
-    if (to < from) continue;
-    parts.push(reversed ? name + (count - from + 1) + "-" + (count - to + 1)
-                        : name + from + "-" + to);
-  }
-  return parts;
-}
-
-// ---- the looks -----------------------------------------------------------------
-// Each look writes real entries for whatever target it is handed: the board's
-// outputs in the order they are to play, or a strip of any length. entries()
-// returns the lines; reads() inverts a parsed line back into slider positions,
-// and the parser only trusts it where regenerating reproduces the file exactly.
-
-var BREATHE_TONES = ["blue", "cool", "cyan", "green", "warm"];
-var SPARKLE_TONES = ["cyan", "cool", "white", "warm", "yellow"];
-var SCANNER_TONES = ["magenta", "blue", "red", "yellow", "white"];
-var CHASE_TONES = ["magenta", "white", "yellow", "cyan", "green"];
-var COUNTER_TONES = ["white", "cyan", "green", "yellow", "red"];
-var PARTY_FIRST = ["red", "blue", "magenta", "cyan", "white"];
-var PARTY_SECOND = ["green", "white", "yellow", "warm", "red"];
-var PARTY_THIRD = ["blue", "green", "cyan", "white", "magenta"];
-
-var LOOKS = [
-  {
-    name: "Rainbow", mood: "Colour spread", spans: true,
-    strip: ["#e33", "#e73", "#ea3", "#3a5", "#36c", "#63c", "#a3c"],
-    entries: function (target, pace, mood) {
-      return [target.selector + ": rainbow_wave speed=" + lerp(0.05, 0.8, pace) +
-              " length=" + span(target.count, mood)];
-    },
-    reads: function (ch, fx, target) {
-      if (fx.speed === undefined || fx.length === undefined) return null;
-      return {pace: unlerp(Number(fx.speed), 0.05, 0.8),
-              mood: unlerp(Number(fx.length) / target.count, 2, 0.6)};
-    },
-    effect: "rainbow_wave"
-  },
-  {
-    name: "Campfire", mood: "Embers to blaze", spans: true,
-    strip: ["#812200", "#c43a00", "#ff5a00", "#ff8c1a", "#ff5a00", "#c43a00", "#812200"],
-    entries: function (target, pace, mood) {
-      return [target.selector + " colour=ff5a00: flicker brightness=" + lerp(0.5, 1, mood) +
-              " dimness=" + lerp(0.7, 0.35, mood) +
-              " bright_min=" + lerp(0.1, 0.02, pace) + " bright_max=" + lerp(0.4, 0.1, pace) +
-              " dim_min=" + lerp(0.08, 0.02, pace) + " dim_max=" + lerp(0.3, 0.08, pace)];
-    },
-    reads: function (ch, fx) {
-      if (fx.bright_min === undefined || fx.brightness === undefined) return null;
-      return {pace: unlerp(Number(fx.bright_min), 0.1, 0.02),
-              mood: unlerp(Number(fx.brightness), 0.5, 1)};
-    },
-    effect: "flicker"
-  },
-  {
-    name: "Breathe", mood: "Colour", spans: true,
-    strip: ["#2b7f8f", "#37a0b4", "#43c1d9", "#56d8f0", "#43c1d9", "#37a0b4", "#2b7f8f"],
-    entries: function (target, pace, mood) {
-      return [target.selector + " colour=" + tone(BREATHE_TONES, mood) +
-              " ease=" + lerp(0.8, 0.2, pace) + ": pulse speed=" + lerp(0.08, 0.5, pace)];
-    },
-    reads: function (ch, fx) {
-      var mood = toneBack(BREATHE_TONES, ch.colour);
-      if (fx.speed === undefined || mood === null) return null;
-      return {pace: unlerp(Number(fx.speed), 0.08, 0.5), mood: mood};
-    },
-    effect: "pulse"
-  },
-  {
-    name: "Wave", mood: "Wave length", spans: true,
-    strip: ["#122438", "#2a4a6a", "#4a7fb5", "#7fb5e6", "#4a7fb5", "#2a4a6a", "#122438"],
-    entries: function (target, pace, mood) {
-      return [target.selector + " colour=cool: pulse_wave speed=" + lerp(0.1, 1, pace) +
-              " length=" + span(target.count, mood)];
-    },
-    reads: function (ch, fx, target) {
-      if (fx.speed === undefined || fx.length === undefined) return null;
-      return {pace: unlerp(Number(fx.speed), 0.1, 1),
-              mood: unlerp(Number(fx.length) / target.count, 2, 0.6)};
-    },
-    effect: "pulse_wave"
-  },
-  {
-    name: "Sparkle", mood: "Colour", spans: true,
-    strip: ["#ffffff", "#999999", "#ffffff", "#cccccc", "#eeeeee", "#888888", "#ffffff"],
-    entries: function (target, pace, mood) {
-      return [target.selector + " colour=" + tone(SPARKLE_TONES, mood) +
-              ": random interval=" + lerp(0.25, 0.03, pace) +
-              " brightness_min=0 brightness_max=1"];
-    },
-    reads: function (ch, fx) {
-      var mood = toneBack(SPARKLE_TONES, ch.colour);
-      if (fx.interval === undefined || mood === null) return null;
-      return {pace: unlerp(Number(fx.interval), 0.25, 0.03), mood: mood};
-    },
-    effect: "random"
-  },
-  {
-    name: "Scanner", mood: "Colour", spans: true,
-    strip: ["#330000", "#660000", "#cc0000", "#ff3333", "#cc0000", "#660000", "#330000"],
-    entries: function (target, pace, mood) {
-      return [target.selector + " colour=" + tone(SCANNER_TONES, mood) +
-              " fade=" + lerp(0.5, 0.15, pace) + ": sweep speed=" + lerp(0.3, 2, pace) +
-              " length=" + target.count +
-              " extent=" + Math.max(1, Math.round(target.count / 8))];
-    },
-    reads: function (ch, fx) {
-      var mood = toneBack(SCANNER_TONES, ch.colour);
-      if (fx.speed === undefined || mood === null) return null;
-      return {pace: unlerp(Number(fx.speed), 0.3, 2), mood: mood};
-    },
-    effect: "sweep"
-  },
-  {
-    name: "Chase", mood: "Colour", spans: true,
-    strip: ["#111111", "#111111", "#ffff00", "#ffd24a", "#111111", "#111111", "#111111"],
-    entries: function (target, pace, mood) {
-      return [target.selector + " colour=" + tone(CHASE_TONES, mood) +
-              " fade=" + lerp(0.4, 0.1, pace) + ": flash_sequence speed=" + lerp(0.3, 2, pace) +
-              " length=" + target.count + " flashes=1 window=0.4"];
-    },
-    reads: function (ch, fx) {
-      var mood = toneBack(CHASE_TONES, ch.colour);
-      if (fx.speed === undefined || mood === null) return null;
-      return {pace: unlerp(Number(fx.speed), 0.3, 2), mood: mood};
-    },
-    effect: "flash_sequence"
-  },
-  {
-    name: "Counter", mood: "Colour", spans: true,
-    strip: ["#00ff00", "#111111", "#00ff00", "#00ff00", "#111111", "#00ff00", "#111111"],
-    entries: function (target, pace, mood) {
-      return [target.selector + " colour=" + tone(COUNTER_TONES, mood) +
-              ": binary_counter interval=" + lerp(1, 0.08, pace)];
-    },
-    reads: function (ch, fx) {
-      var mood = toneBack(COUNTER_TONES, ch.colour);
-      if (fx.interval === undefined || mood === null) return null;
-      return {pace: unlerp(Number(fx.interval), 1, 0.08), mood: mood};
-    },
-    effect: "binary_counter"
-  },
-  {
-    // Two banks flashing against each other with a quiet gap between, landed on
-    // the playing outputs in their order, so a lightbar of any width works.
-    // spans false keeps it off the strips, whose one run has no banks
-    name: "Emergency", mood: "Red and blue to amber", spans: false,
-    strip: ["#dd2222", "#2222dd", "#dd2222", "#111111", "#2222dd", "#dd2222", "#2222dd"],
-    entries: function (target, pace, mood) {
-      var speed = lerp(0.6, 2.5, pace);
-      var amber = mood > 0.75;
-      var playing = target.playing;
-      var half = playing.length === 1 ? 1 : Math.floor(playing.length / 2);
-      var left = playing.slice(0, half);
-      var right = playing.slice(playing.length - half);
-      var gap = playing.slice(half, playing.length - half);
-      var lines = ["out" + rangify(left) + " colour=" + (amber ? "yellow" : "red") +
-                   ": flash speed=" + speed + " flashes=3 window=0.5"];
-      if (right.length && playing.length > 1)
-        lines.push("out" + rangify(right) + " colour=" + (amber ? "yellow" : "blue") +
-                   ": flash speed=" + speed + " flashes=3 window=0.5 phase=0.5");
-      if (gap.length && playing.length > 1)
-        lines.push("out" + rangify(gap) + ": none");
-      return lines;
-    },
-    reads: function (ch, fx) {
-      if (fx.speed === undefined || fx.flashes !== "3") return null;
-      return {pace: unlerp(Number(fx.speed), 0.6, 2.5),
-              mood: ch.colour === "yellow" ? 0.9 : 0.4};
-    },
-    effect: "flash"
-  },
-  {
-    // Five lamps in the crossing's own colours, landed on the first five playing
-    // outputs; any beyond them are told to stay dark, and fewer take fewer lamps
-    name: "Pelican crossing", mood: "Lamp softness", spans: false,
-    strip: ["#ff0000", "#ff7800", "#00d28c", "#ff0000", "#00d28c", "#111111", "#111111"],
-    entries: function (target, pace, mood) {
-      var scale = lerp(2, 0.4, pace);
-      var playing = target.playing;
-      var lamps = playing.slice(0, 5);
-      var rest = playing.slice(5);
-      var colours = ["red", "ff7800", "00d28c", "red", "00d28c"].slice(0, lamps.length);
-      var lines = ["out" + rangify(lamps) + " colour=" + colours.join(",") +
-                   " ease=" + lerp(0.05, 0.6, mood) +
-                   ": pelican_crossing red_interval=" + r2(8 * scale) +
-                   " flashing_interval=" + r2(6 * scale) +
-                   " green_interval=" + r2(20 * scale) +
-                   " amber_interval=" + r2(3 * scale)];
-      if (rest.length) lines.push("out" + rangify(rest) + ": none");
-      return lines;
-    },
-    reads: function (ch, fx) {
-      if (fx.red_interval === undefined || ch.ease === undefined) return null;
-      return {pace: unlerp(Number(fx.red_interval) / 8, 2, 0.4),
-              mood: unlerp(Number(ch.ease), 0.05, 0.6)};
-    },
-    effect: "pelican_crossing"
-  },
-  {
-    // Three colours chase each other across whatever plays it: the lights split
-    // into three sets, each flashing in its own colour a third of a beat apart
-    name: "Party", mood: "Colour", spans: true,
-    strip: ["#ff00ff", "#ffff00", "#00ffff", "#ff00ff", "#ffff00", "#00ffff", "#ff00ff"],
-    entries: function (target, pace, mood) {
-      var speed = lerp(1, 4, pace);
-      var colours = [tone(PARTY_FIRST, mood), tone(PARTY_SECOND, mood),
-                     tone(PARTY_THIRD, mood)];
-      var groups;
-      if (target.kind === "outputs") {
-        groups = roundRobin(target.playing, Math.min(3, target.playing.length))
-                 .map(function (group) { return "out" + rangify(group); });
-      } else {
-        groups = stripThirds(target.name, target.count, target.reversed,
-                             Math.min(3, target.count));
-      }
-      return groups.map(function (selector, i) {
-        return selector + " colour=" + colours[i] + ": flash speed=" + speed +
-               " flashes=1 window=0.5" + (i ? " phase=" + [0, 0.33, 0.67][i] : "");
-      });
-    },
-    reads: function (ch, fx) {
-      var mood = toneBack(PARTY_FIRST, ch.colour);
-      if (fx.speed === undefined || fx.flashes !== "1" || mood === null) return null;
-      return {pace: unlerp(Number(fx.speed), 1, 4), mood: mood};
-    },
-    effect: "flash"
-  },
-];
-
-function lookNamed(name) {
-  return LOOKS.filter(function (l) { return l.name === name; })[0] || null;
-}
-
-// A flash entry is Emergency where it flashes in threes and Party where it
-// flashes singly; the other effects each belong to one look
-function lookForEntry(effect, fx) {
-  if (effect === "flash") return fx.flashes === "3" ? lookNamed("Emergency")
-                               : fx.flashes === "1" ? lookNamed("Party") : null;
-  var found = LOOKS.filter(function (l) { return l.effect === effect; });
-  return found[0] || null;
-}
-
-// ---- what a look looks like on the lights that play it --------------------------
-
-// A look's colour at one place in a run: the ends of the run are the ends of the
-// look, so however many lights are playing, the first and the last are the palette's
-// own first and last rather than stopping short of it
-function spreadColour(look, at, many) {
-  if (!look) return "#e4e0d9";
-  if (many < 2) return look.strip[0];
-  var last = look.strip.length - 1;
-  return look.strip[Math.round(at * last / (many - 1))];
-}
-
-// A strip's run in the look's colours, drawn on its own wire so its height stays
-// put whether there are six LEDs or a hundred
-function lampsPreview(look, count, reversed) {
-  // A light is one size, always. A run too long for one row turns back on itself,
-  // the way a strip is laid in a case: every other row fills backwards, so the
-  // lights stay in the order the chain runs. Three rows, an odd number, so a run
-  // that carries on ends at the right and reads straight into what is said there
-  var SIZE = 11;
-  var GAP = 2.5;
-  var PER_ROW = 25;
-  var ROWS = 3;
-  var EDGE = 10;           // room at each side for the turns, the tails and the beads
-  var TAIL = 6;            // how far a tail runs past the last light
-  var SAID = 5;            // lights the last row gives up so 'and more' has its room
-  // A run that carries on stops short on its last row rather than running to the
-  // edge, so the words sit inside the same width and nothing shrinks as a strip
-  // passes the length that can be drawn
-  var most = count > PER_ROW * ROWS ? PER_ROW * ROWS - SAID : PER_ROW * ROWS;
-  var many = Math.min(count, most);
-  var rows = Math.ceil(many / PER_ROW);
-  var across = Math.min(many, PER_ROW);
-  var wide = across * SIZE + (across - 1) * GAP;
-  var pitch = SIZE + GAP * 2;
-  var high = rows * pitch - GAP * 2 + 2;
-
-  function place(i) {
-    var row = Math.floor(i / PER_ROW);
-    var col = i % PER_ROW;
-    if (row % 2) col = PER_ROW - 1 - col;
-    return {x: EDGE + col * (SIZE + GAP), y: row * pitch + 1, row: row};
-  }
-  function middleOf(row) { return row * pitch + 1 + SIZE / 2; }
-
-  var cells = [];
-
-  // Where the run doubles back, drawn as the loop of wire it is
-  for (var r = 0; r < rows - 1; r++) {
-    var atRight = r % 2 === 0;
-    var x = atRight ? EDGE + wide : EDGE;
-    var bulge = atRight ? x + EDGE : x - EDGE;
-    cells.push("<path d='M" + x + " " + middleOf(r) + " C" + bulge + " " + middleOf(r) +
-               " " + bulge + " " + middleOf(r + 1) + " " + x + " " + middleOf(r + 1) +
-               "' fill='none' stroke='#c9c3b9' stroke-width='1.8'/>");
-  }
-
-  // Where it begins: a lead in, with a bead on the end of it
-  var first = place(0);
-  cells.push("<path d='M0 " + middleOf(0) + " L" + first.x + " " + middleOf(0) +
-             "' stroke='#c9c3b9' stroke-width='1.8' fill='none'/>");
-  cells.push("<rect x='0' y='" + (middleOf(0) - 3.4) + "' width='4.6' height='6.8' " +
-             "rx='1.4' fill='#8f8a81'/>");
-
-  for (var i = 0; i < many; i++) {
-    var at = reversed ? many - 1 - i : i;
-    var colour = spreadColour(look, at, many);
-    var spot = place(i);
-    cells.push("<rect x='" + spot.x + "' y='" + spot.y + "' width='" + SIZE +
-               "' height='" + SIZE + "' rx='2.4' fill='" + colour +
-               "' stroke='rgba(0,0,0,.12)' stroke-width='0.6'/>");
-  }
-
-  var full = EDGE * 2 + wide;
-  // Where it ends: carrying on towards what is said about the rest, or stopping
-  // in a bead of its own where the whole run is drawn
-  var last = place(many - 1);
-  var lastY = middleOf(last.row);
-  var goingRight = last.row % 2 === 0;
-  var from = goingRight ? last.x + SIZE : last.x;
-  var to = from + (goingRight ? TAIL : -TAIL);
-  cells.push("<path d='M" + from + " " + lastY + " L" + to + " " + lastY +
-             "' stroke='#c9c3b9' stroke-width='1.8' fill='none'/>");
-  if (count <= most) {
-    cells.push("<circle cx='" + to + "' cy='" + lastY + "' r='2.4' fill='#fff' " +
-               "stroke='#a9a49b' stroke-width='1.6'/>");
-  } else {
-    var ended = place(many - 1);
-    cells.push("<text x='" + (ended.x + SIZE + TAIL + 4) + "' y='" +
-               (middleOf(rows - 1) + 3.5) + "' font-size='10' font-family='system-ui' " +
-               "fill='#8a8378'>and " + (count - most) + " more</text>");
-  }
-
-  var box = document.createElement("div");
-  box.style.lineHeight = "0";
-  // The drawing grows into whatever the row has spare, up to a point: a run of six
-  // blown up to the width of a run of a hundred would say the wrong thing about it
-  box.style.flex = "1 1 " + full + "px";
-  box.style.maxWidth = Math.round(full * 1.8) + "px";
-  box.innerHTML = "<svg width='100%' height='" + high + "' viewBox='0 0 " +
-                  full + " " + high + "' preserveAspectRatio='xMinYMid meet'>" +
-                  cells.join("") + "</svg>";
-  return box;
-}
-
-// The board's own outputs: only seven, so they are drawn large enough to be lamps
-// rather than beads, and numbered as the board numbers them, which is what an entry
-// in the file names
-function outputsPreview(look, reversed) {
-  // The effect is handed to the outputs the file names, one colour each in the order
-  // it names them, so an output left out gives its place up and one dragged along
-  // takes a different colour without any of them moving on the board
-  var playing = state.lampOrder.filter(function (n) {
-    return state.lampsOff.indexOf(n) < 0;
-  });
-  var box = document.createElement("div");
-  box.className = "lamps";
-
-  state.lampOrder.forEach(function (which, i) {
-    var off = state.lampsOff.indexOf(which) >= 0;
-    var slot = playing.indexOf(which);
-    var at = reversed ? playing.length - 1 - slot : slot;
-    var colour = look && slot >= 0 ? look.strip[at % look.strip.length] : "#e4e0d9";
-
-    var lamp = document.createElement("button");
-    lamp.className = "lamp" + (off ? " off" : "");
-    lamp.draggable = true;
-    lamp.title = (off ? "out" + which + " is left out; tap to play it again"
-                      : "tap to leave out" + which + " out") +
-                 ", or drag it to where it sits in your build";
-    var face = document.createElement("i");
-    if (!off) face.style.background = colour;
-    lamp.appendChild(face);
-    var name = document.createElement("b");
-    name.textContent = which;
-    lamp.appendChild(name);
-
-    {
-      lamp.onclick = function () {
-        var was = state.lampsOff.indexOf(which);
-        if (was >= 0) state.lampsOff.splice(was, 1);
-        else state.lampsOff.push(which);
-        draw();
-      };
-      lamp.ondragstart = function (e) {
-        carrying = i;
-        lamp.classList.add("carried");
-        e.dataTransfer.effectAllowed = "move";
-        e.dataTransfer.setData("text/plain", String(which));
-      };
-      lamp.ondragend = function () { carrying = null; draw(); };
-      lamp.ondragover = function (e) {
-        if (carrying === null || carrying === i) return;
-        e.preventDefault();
-        var mid = lamp.getBoundingClientRect();
-        lamp.classList.add("landing");
-        lamp.classList.toggle("after", e.clientX > mid.left + mid.width / 2);
-      };
-      lamp.ondragleave = function () { lamp.classList.remove("landing", "after"); };
-      lamp.ondrop = function (e) {
-        e.preventDefault();
-        if (carrying === null || carrying === i) return;
-        var mid = lamp.getBoundingClientRect();
-        var to = i + (e.clientX > mid.left + mid.width / 2 ? 1 : 0);
-        var moved = state.lampOrder.splice(carrying, 1)[0];
-        state.lampOrder.splice(to > carrying ? to - 1 : to, 0, moved);
-        carrying = null;
-        draw();
-      };
-    }
-
-    box.appendChild(lamp);
-  });
-
-  // Only worth offering once something has actually been moved or left out
-  if (!asTheBoardHasThem()) {
-    var back = document.createElement("button");
-    back.className = "putback";
-    back.textContent = "put them back";
-    back.title = "one to seven, in the board's own order, none left out";
-    back.onclick = function () {
-      state.lampOrder = [1, 2, 3, 4, 5, 6, 7];
-      state.lampsOff = [];
-      draw();
-    };
-    box.appendChild(back);
-  }
-  return box;
-}
-
-var carrying = null;
-
-function asTheBoardHasThem() {
-  if (state.lampsOff.length) return false;
-  return state.lampOrder.every(function (which, i) { return which === i + 1; });
-}
-
-// The outputs still playing, in the order they are to play: starting from the far
-// end writes the same run backwards, which the board walks in the written order
-function playingOutputs(body) {
-  var on = body.lampOrder.filter(function (n) {
-    return body.lampsOff.indexOf(n) < 0;
-  });
-  return body.reversed ? on.slice().reverse() : on;
-}
-
-// Which end a run starts from, drawn rather than worded: a light at the near end,
-// and an arrow off it saying which way the effect travels
-function directionToggle(holder, onChange) {
-  var button = document.createElement("button");
-  button.className = "way";
-  button.title = holder.reversed ? "starting from the far end, running back"
-                                 : "starting from the near end, running on";
-  var arrow = holder.reversed
-    ? "<rect x='19' y='2.5' width='8' height='8' rx='2' fill='currentColor'/>" +
-      "<path d='M17 6.5 L11.5 6.5 M14 3.5 L11 6.5 L14 9.5' fill='none' " +
-      "stroke='currentColor' stroke-width='1.8' stroke-linecap='round' " +
-      "stroke-linejoin='round'/>"
-    : "<rect x='1' y='2.5' width='8' height='8' rx='2' fill='currentColor'/>" +
-      "<path d='M11 6.5 L16.5 6.5 M14 3.5 L17 6.5 L14 9.5' fill='none' " +
-      "stroke='currentColor' stroke-width='1.8' stroke-linecap='round' " +
-      "stroke-linejoin='round'/>";
-  button.innerHTML = "<svg width='28' height='13' viewBox='0 0 28 13'>" + arrow + "</svg>";
-  button.onclick = function () {
-    holder.reversed = !holder.reversed;
-    onChange();
-  };
-  return button;
-}
-
-// ---- the screen modules, drawn from the sizing drawings -------------------------
-
-// The part is black on black, so the panel's machined edge and the driver's navy do
-// the separating. An unlit screen sits at the grey a backlight leaves; around a
-// picture it is the near-black a lit panel shows when told black, which a background
-// setting would one day replace
-var BOARD_INK = "#0a0a0a";
-var PANEL_INK = "#000000";
-var EMPTY_INK = "#2a2f33";
-var GROUND_INK = "#0f1113";
-var FRAME_INK = "#3d464c";
-var FRAME_WIDE = 0.3;
-var CHIN_INK = "#131f33";
-var HOLE_INK = "#efece6";
-var HOLE_EDGE = "#6d7379";
-var NAME_INK = "#e8eef2";
-
-// Both products in millimetres, from the sizing drawings. The panel corners are the
-// alignment marks the panels are placed against, so they are the source of truth;
-// the lit area is drawn equidistant from the board's exact middle, which is what the
-// mounting is designed around. The holes are symmetric, so the chin and the printed
-// name are what say which way up a module is
-var MODULE = {
-  "2.8": {board: [48, 88], body: [9.6, 75.2], tab: [4, 44, 88], tabRadius: 4,
-          panel: [0.5, 9.4, 47.5, 74.54], lit: [43.2, 57.6]},
-  "1.54": {board: [32, 56], body: [9.6, 43.2], tab: [4, 28, 56], tabRadius: 4,
-           panel: [0.24, 9.615, 31.76, 43.335], lit: [27.7, 27.7]}
-};
-
-// The printed names, lifted from the supplied artwork, in their own units
-var PER_MM = 2.835;
-var PRINTED = {
-  "2.8": {d: 'M72.585,28.824v1.577h-5.307v-1.398l1.25-.952c.793-.605,2.093-1.567,2.093-2.439,0-.388-.258-.665-.635-.665s-.754.277-.754.853h-1.835c.04-1.497,1.131-2.439,2.628-2.439,1.429,0,2.47.883,2.47,2.152,0,1.438-1.428,2.42-2.241,2.976l-.496.337h2.827Z M75.929,29.32c0,.685-.525,1.181-1.259,1.181s-1.26-.496-1.26-1.181.525-1.181,1.26-1.181,1.259.496,1.259,1.181Z M82.506,28.387c0,1.23-1.121,2.113-2.877,2.113s-2.876-.883-2.876-2.113c0-.783.446-1.339,1.22-1.646-.595-.308-.932-.812-.932-1.478,0-1.131,1.001-1.904,2.588-1.904s2.589.773,2.589,1.904c0,.675-.337,1.181-.942,1.478.784.308,1.23.863,1.23,1.646ZM80.561,28.209c0-.506-.367-.822-.933-.822s-.932.316-.932.822c0,.517.367.844.932.844s.933-.327.933-.844ZM78.767,25.502c0,.456.337.754.862.754s.863-.298.863-.754c0-.477-.337-.773-.863-.773s-.862.297-.862.773Z M85.682,23.459l-1.062,2.886h-1.438l.437-2.886h2.063ZM88.369,23.459l-1.062,2.886h-1.438l.437-2.886h2.062Z M97.318,28.616v1.785h-4.761v-6.942h2.023v5.157h2.737Z M101.258,30.501c-2.133,0-3.67-1.498-3.67-3.571s1.537-3.57,3.67-3.57c1.934,0,3.392,1.229,3.61,3.016h-2.073c-.179-.675-.754-1.161-1.537-1.161-.942,0-1.607.715-1.607,1.706,0,1.002.665,1.726,1.607,1.726.773,0,1.349-.485,1.537-1.16h2.073c-.219,1.775-1.677,3.016-3.61,3.016Z M112.091,26.929c0,2.014-1.498,3.472-3.57,3.472h-2.768v-6.942h2.768c2.072,0,3.57,1.458,3.57,3.471ZM110.027,26.92c0-.972-.645-1.676-1.527-1.676h-.724v3.372h.724c.883,0,1.527-.714,1.527-1.696Z', x: 21.614, y: 249.80300000000003},
-  "1.54": {d: 'M44.498,23.459v6.942h-1.904v-5.366h-1.319v-1.576h3.224Z M48.109,29.32c0,.685-.525,1.181-1.259,1.181s-1.26-.496-1.26-1.181.526-1.181,1.26-1.181,1.259.496,1.259,1.181Z M54.24,28.06c0,1.418-1.15,2.44-2.737,2.44-1.448,0-2.559-.942-2.648-2.252h1.904c.089.348.377.605.744.605.426,0,.793-.357.793-.923,0-.525-.328-.883-.793-.883-.327,0-.585.179-.724.546h-1.795l.595-4.136h4.324v1.576h-3.025l-.159,1.27c.327-.356.813-.564,1.438-.564,1.319,0,2.083.972,2.083,2.32Z M60.947,29.053h-1.051v1.349h-1.904v-1.349h-2.985v-1.389l2.608-4.205h2.281v4.017h1.051v1.577ZM56.801,27.475h1.19l.01-1.944-1.2,1.944Z M64.073,23.459l-1.061,2.886h-1.438l.437-2.886h2.063ZM66.761,23.459l-1.062,2.886h-1.438l.437-2.886h2.063Z M75.71,28.616v1.785h-4.761v-6.942h2.023v5.157h2.738Z M79.649,30.501c-2.132,0-3.67-1.498-3.67-3.571s1.538-3.57,3.67-3.57c1.934,0,3.392,1.229,3.61,3.016h-2.073c-.178-.675-.753-1.161-1.537-1.161-.942,0-1.607.715-1.607,1.706,0,1.002.665,1.726,1.607,1.726.773,0,1.349-.485,1.537-1.16h2.073c-.218,1.775-1.676,3.016-3.61,3.016Z M90.482,26.929c0,2.014-1.498,3.472-3.57,3.472h-2.767v-6.942h2.767c2.073,0,3.57,1.458,3.57,3.471ZM88.419,26.92c0-.972-.645-1.676-1.527-1.676h-.724v3.372h.724c.883,0,1.527-.714,1.527-1.696Z', x: 20.48, y: 159.09400000000002}
-};
-
-// What each size measures in pixels, which is what a picture is sized against:
-// the board draws a picture at its own size, centred, and never scales it
-var PANEL_PX = {"2.8": [240, 320], "1.54": [240, 240]};
-
-var DRAWN = 210;
-
-function svgTag(name, attrs, inner) {
-  var out = "<" + name;
-  Object.keys(attrs).forEach(function (key) { out += " " + key + "='" + attrs[key] + "'"; });
-  return inner === undefined ? out + "/>" : out + ">" + inner + "</" + name + ">";
-}
-
-// A tab is rounded where it sticks out and square where it meets the body
-function tabPath(x0, x1, near, far, radius) {
-  var edge = far < near ? far + radius : far - radius;
-  return "M" + x0 + " " + near +
-         " L" + x0 + " " + edge +
-         " Q" + x0 + " " + far + " " + (x0 + radius) + " " + far +
-         " L" + (x1 - radius) + " " + far +
-         " Q" + x1 + " " + far + " " + x1 + " " + edge +
-         " L" + x1 + " " + near + " Z";
-}
-
-// The module as it is mounted. A turn turns the whole thing and the picture is put
-// back upright inside it, which is what a reader sees looking at a mounted screen
-function panelPreview(screen) {
-  var made = MODULE[screen.size] || MODULE["2.8"];
-  var turn = Number(screen.turn || 0);
-  var quarter = turn % 180 === 90;
-
-  var boardW = made.board[0];
-  var boardH = made.board[1];
-  var extent = Math.max(boardW, boardH);
-  var left = (extent - boardW) / 2;
-  var bottom = (extent - boardH) / 2;
-  function up(y) { return extent - bottom - y; }
-
-  var parts = [];
-
-  parts.push(svgTag("rect", {x: left, y: up(made.body[1]), width: boardW,
-                             height: made.body[1] - made.body[0], fill: BOARD_INK}));
-  parts.push(svgTag("path", {d: tabPath(left + made.tab[0], left + made.tab[1],
-                                        up(made.body[1]), up(made.tab[2]), made.tabRadius),
-                             fill: BOARD_INK}));
-  parts.push(svgTag("path", {d: tabPath(left + made.tab[0], left + made.tab[1],
-                                        up(made.body[0]), up(boardH - made.tab[2]),
-                                        made.tabRadius), fill: BOARD_INK}));
-
-  [[8, 5], [16, 3.2], [24, 5], [32, 3.2], [40, 5]].forEach(function (hole) {
-    if (hole[0] > boardW - 4) return;      // the small panel has three, not five
-    [4, boardH - 4].forEach(function (y) {
-      parts.push(svgTag("circle", {cx: left + hole[0], cy: up(y), r: hole[1] / 2,
-                                   fill: HOLE_INK, stroke: HOLE_EDGE,
-                                   "stroke-width": 0.3}));
-    });
-  });
-
-  parts.push(svgTag("rect", {x: left + made.panel[0], y: up(made.panel[3]),
-                             width: made.panel[2] - made.panel[0],
-                             height: made.panel[3] - made.panel[1], fill: PANEL_INK,
-                             stroke: FRAME_INK, "stroke-width": FRAME_WIDE}));
-
-  var litW = made.lit[0];
-  var litH = made.lit[1];
-  var litX = left + boardW / 2 - litW / 2;
-  var litY = up(boardH / 2) - litH / 2;
-  var art = screen.shows && screen.shows !== "keep" ? mediaArt(screen.shows) : null;
-
-  parts.push(svgTag("rect", {x: litX, y: litY, width: litW, height: litH,
-                             fill: art ? GROUND_INK : EMPTY_INK}));
-  parts.push(svgTag("rect", {x: litX - 0.4, y: litY + litH, width: litW + 0.8,
-                             height: Math.max(0, up(made.panel[1]) - (litY + litH) - 0.4),
-                             fill: CHIN_INK}));
-
-  if (screen.shows === "keep") {
-    parts.push(svgTag("text", {x: litX + litW / 2, y: litY + litH / 2 + 1.4,
-                               "text-anchor": "middle", fill: "#8b959b",
-                               "font-size": 4, "font-family": "system-ui"}, "as it is"));
-  } else if (art) {
-    // Drawn over the module as a plain img, since the browser plays every kind of
-    // gif properly there where an image inside svg drops delta frames
-  } else if (screen.shows) {
-    parts.push(svgTag("text", {x: litX + litW / 2, y: litY + litH / 2 + 1.4,
-                               "text-anchor": "middle", fill: "#8b959b",
-                               "font-size": 4, "font-family": "system-ui"},
-                      "on the board"));
-  } else {
-    parts.push(svgTag("text", {x: litX + litW / 2, y: litY + litH / 2 + 1.4,
-                               "text-anchor": "middle", fill: "#8b959b",
-                               "font-size": 4, "font-family": "system-ui"}, "no picture"));
-  }
-
-  var name = PRINTED[screen.size] || PRINTED["2.8"];
-  parts.push("<g transform='translate(" + (left - name.x / PER_MM) + " " +
-             (extent - bottom - name.y / PER_MM) + ") scale(" + (1 / PER_MM) + ")' " +
-             "fill='" + NAME_INK + "'>" + svgTag("path", {d: name.d}) + "</g>");
-
-  var holder = document.createElement("div");
-  holder.className = "holder";
-  holder.innerHTML =
-    "<svg width='" + DRAWN + "' height='" + DRAWN + "' viewBox='0 0 " + extent + " " + extent +
-    "'><g transform='rotate(" + turn + " " + (extent / 2) + " " + (extent / 2) + ")'>" +
-    parts.join("") + "</g></svg>";
-
-  // The picture as the board will draw it: its own pixels, centred, cropped by the
-  // lit window, black around it. The window sits on the drawing's exact centre, so
-  // a turned module swaps its width and height and nothing else moves; the picture
-  // itself stays upright, which is what a viewer of a mounted screen sees
-  if (art) {
-    var px = PANEL_PX[screen.size] || PANEL_PX["2.8"];
-    var scale = (DRAWN / extent) * (litW / px[0]);
-    var windowW = (quarter ? litH : litW) * (DRAWN / extent);
-    var windowH = (quarter ? litW : litH) * (DRAWN / extent);
-    var pane = document.createElement("div");
-    pane.style.cssText = "position:absolute;overflow:hidden;" +
-      "left:" + ((DRAWN - windowW) / 2) + "px;top:" + ((DRAWN - windowH) / 2) + "px;" +
-      "width:" + windowW + "px;height:" + windowH + "px;" +
-      "display:flex;align-items:center;justify-content:center";
-    var img = document.createElement("img");
-    img.src = art.url;
-    img.style.cssText = "flex:none;width:" + (art.w * scale) + "px;height:" +
-                        (art.h * scale) + "px";
-    pane.appendChild(img);
-    holder.style.position = "relative";
-    holder.appendChild(pane);
-  }
-  return holder;
-}
-
-// ---- state ----------------------------------------------------------------------
-
-var state = {
-  // The drive
-  dirHandle: null, fileHandle: null,
-  boardText: null,      // effects.txt as last read from the drive, where there is no handle
-  media: [],            // {name, kind: "gif"|"image"|"folder", handle, thumbHandle}
-  sounds: [],           // wav names on the drive
-  soundInfo: {},        // name -> {seconds, bars} read from the file, or null
-  art: {},              // name -> {url, ratio} for drawing on the panels
-  // The board, true whatever the scene
-  straight: true,       // the board plays a save at once (reload=auto)
-  boardResidue: [],     // board settings this page does not manage, kept as written
-  screens: {},          // letter -> {there, size, turn, carried} about the board,
-                        // plus the playing scene's own shows, kept, pingpong,
-                        // hold and fps, which every scene keeps for itself
-  strips: {},           // id -> {leds, reversed, look, pace, mood} with the look,
-                        //       pace and mood per scene
-  stripsAtStart: [],
-  // The scene being edited: its fields live at the top level while it is current
-  sound: null, soundLoop: false, soundKept: null,
-  look: null, pace: 0.5, mood: 0.5, reversed: false,
-  lampsOff: [], lampOrder: [1, 2, 3, 4, 5, 6, 7],
-  kept: [],             // this scene's lines no control stands for, written verbatim
-  at: -1, always: {body: null}, scenes: [],
-  recognised: {look: null, exact: true, any: false},
-  scanned: false,
-};
-
-SCREENS.forEach(function (letter) {
-  state.screens[letter] = {there: false, size: "2.8", turn: 0, carried: "",
-                           pingpong: false, hold: "", fps: 5, shows: null, kept: null};
-});
-STRIP_IDS.forEach(function (id) {
-  state.strips[id] = {leds: null, reversed: false, look: null, pace: 0.5, mood: 0.5};
-});
-
-// A scene holds only what can differ between them: the look on the outputs, what
-// each strip plays, what each screen shows and which sound plays. Lengths, sizes and
-// turns are facts about the board, so they sit outside the tabs and are not captured
-function capture() {
-  var body = {
-    look: state.look, pace: state.pace, mood: state.mood, reversed: state.reversed,
-    lampsOff: state.lampsOff.slice(), lampOrder: state.lampOrder.slice(),
-    sound: state.sound, soundLoop: state.soundLoop, soundKept: state.soundKept,
-    kept: state.kept.slice(), strips: {}, screens: {}
-  };
-  STRIP_IDS.forEach(function (id) {
-    var strip = state.strips[id];
-    body.strips[id] = {look: strip.look, pace: strip.pace, mood: strip.mood};
-  });
-  SCREENS.forEach(function (letter) {
-    var screen = state.screens[letter];
-    body.screens[letter] = {shows: screen.shows, kept: screen.kept,
-                            pingpong: screen.pingpong, hold: screen.hold,
-                            fps: screen.fps};
-  });
-  return body;
-}
-
-function apply(body) {
-  state.sound = body.sound;
-  state.soundLoop = body.soundLoop;
-  state.soundKept = body.soundKept;
-  state.look = body.look;
-  state.pace = body.pace;
-  state.mood = body.mood;
-  state.reversed = body.reversed;
-  state.lampsOff = body.lampsOff.slice();
-  state.lampOrder = body.lampOrder.slice();
-  state.kept = body.kept.slice();
-  STRIP_IDS.forEach(function (id) {
-    var strip = state.strips[id];
-    var was = body.strips[id];
-    strip.look = was.look;
-    strip.pace = was.pace;
-    strip.mood = was.mood;
-  });
-  SCREENS.forEach(function (letter) {
-    var screen = state.screens[letter];
-    var was = body.screens[letter];
-    screen.shows = was.shows;
-    screen.kept = was.kept;
-    screen.pingpong = was.pingpong;
-    screen.hold = was.hold;
-    screen.fps = was.fps;
-  });
-}
-
-function copyBody(body) { return JSON.parse(JSON.stringify(body)); }
-
-// A scene with nothing in it yet, which is what the always-on tab is left holding
-// once its content has been carried into the first scene
-function blankBody() {
-  var body = {look: null, pace: 0.5, mood: 0.5, reversed: false, lampsOff: [],
-              lampOrder: [1, 2, 3, 4, 5, 6, 7], sound: null, soundLoop: false,
-              soundKept: null, kept: [], strips: {}, screens: {}};
-  STRIP_IDS.forEach(function (id) {
-    body.strips[id] = {look: null, pace: 0.5, mood: 0.5};
-  });
-  SCREENS.forEach(function (letter) {
-    body.screens[letter] = {shows: null, kept: null, pingpong: false, hold: "",
-                            fps: 5};
-  });
-  return body;
-}
-
-state.always.body = blankBody();
-
-// -1 is the tab everything starts in: the entries above every heading, which play
-// all the way through
-function slotAt(which) { return which < 0 ? state.always : state.scenes[which]; }
-
-function store() { slotAt(state.at).body = capture(); }
-
-function switchTo(which) {
-  store();
-  state.at = which;
-  apply(slotAt(which).body);
-  draw();
-}
-
-// The first scene carries the board as it stands, since someone pressing plus wants
-// a sequence rather than a backdrop, and losing their work to get one is no answer.
-// Every later scene copies the one before it, so a small change is a small edit
-function addScene() {
-  store();
-  var made;
-  if (!state.scenes.length) {
-    made = {name: "Scene 1", seconds: 10, restart: false, body: capture()};
-    state.always.body = blankBody();
-  } else {
-    var before = state.scenes[state.scenes.length - 1];
-    made = {name: "Scene " + (state.scenes.length + 1), seconds: before.seconds,
-            restart: before.restart, body: copyBody(before.body)};
-  }
-  state.scenes.push(made);
-  state.at = state.scenes.length - 1;
-  apply(made.body);
-  draw();
-}
-
-function removeScene(which) {
-  store();
-  var gone = state.scenes.splice(which, 1)[0];
-  // Taking the last scene away leaves nothing playing, so its content comes back to
-  // the tab that plays all the way through, which is where the page started
-  if (!state.scenes.length && !hasContent(state.always.body))
-    state.always.body = gone.body;
-  state.at = state.scenes.length ? Math.min(which, state.scenes.length - 1) : -1;
-  apply(slotAt(state.at).body);
-  draw();
-}
-
-function hasContent(body) {
-  if (body.look || body.kept.length) return true;
-  var found = false;
-  STRIP_IDS.forEach(function (id) { if (body.strips[id].look) found = true; });
-  SCREENS.forEach(function (l) { if (body.screens[l].shows) found = true; });
-  return found;
-}
-
-// ---- writing the file ------------------------------------------------------------
-
-function boardLine() {
-  var tokens = state.boardResidue.slice();
-  if (state.straight) tokens.push("reload=auto");
-  var bodies = allBodies();
-  SCREENS.forEach(function (letter) {
-    var screen = state.screens[letter];
-    var used = screen.there && bodies.some(function (b) { return b.screens[letter].shows; });
-    // A screen needs its size, and one left as fitted is drawn and written as a 2.8
-    if (used) tokens.push("screen" + letter.toLowerCase() + "=" + (screen.size || "2.8"));
-  });
-  STRIP_IDS.forEach(function (id) {
-    if (state.strips[id].leds) tokens.push(id.toLowerCase() + "=" + state.strips[id].leds);
-  });
-  return tokens.length ? "board: " + tokens.join(" ") : "";
-}
-
-function allBodies() {
-  return [state.always.body].concat(state.scenes.map(function (s) { return s.body; }));
-}
-
-// The sound entry for one scene. The board takes one per scene, and one before any
-// heading which plays in any scene that brings none of its own
-function soundLine(body) {
-  if (body.sound)
-    return "audio: wav file=" + quoted(body.sound) +
-           (body.soundLoop ? " loop=true" : "");
-  return body.soundKept;
-}
-
-function screenEntry(letter, body) {
-  var screen = state.screens[letter];
-  var shows = body.screens[letter].shows;
-  if (!screen.there || !shows) return null;
-  if (shows === "keep") return body.screens[letter].kept;
-  var media = mediaNamed(shows);
-  var kind = media ? media.kind
-           : /\\.gif$/i.test(shows) ? "gif"
-           : /\\.(png|jpe?g)$/i.test(shows) ? "image" : "folder";
-  var selector = "screen" + letter;
-  if (screen.carried) selector += " " + screen.carried;
-  if (Number(screen.turn)) selector += " rotation=" + screen.turn;
-  var playing = body.screens[letter];
-  var extras = "";
-  if (kind !== "image") {
-    if (playing.pingpong) extras += " ping_pong=true";
-    if (playing.hold) extras += " hold=" + playing.hold;
-  }
-  if (kind === "folder")
-    return selector + ": sequence folder=" + quoted(shows) + " fps=" + playing.fps + extras;
-  if (kind === "gif")
-    return selector + ": gif file=" + quoted(shows) + extras;
-  return selector + ": image file=" + quoted(shows);
-}
-
-// The channels one selector names, as keys that can be compared: a bare name
-// stands for all of them, and a component counts as its whole channel, since the
-// board refuses a channel set twice however it was named. null where the selector
-// is not one this page can read
-function channelsNamed(selector) {
-  var keys = [];
-  var parts = selector.toLowerCase().split(",");
-  for (var i = 0; i < parts.length; i++) {
-    var named = parts[i].match(/^([a-z_]*)(\\d+(?:-\\d+)?)?(?:\\.[rgb*])?$/);
-    if (!named) return null;
-    var prefix = named[1] || keys[keys.length - 1];
-    if (!prefix) return null;
-    if (!named[2]) {
-      keys.push(prefix + "|all");
-      continue;
-    }
-    var span = expandNumbers(named[2]);
-    if (!span) return null;
-    span.forEach(function (n) { keys.push(prefix + "|" + n); });
-  }
-  return keys;
-}
-
-// Whether anything already written claims a channel this line would name. A line
-// nobody can read is let through, the board being the judge of it
-function clashesWith(claimed, line) {
-  var word = line.split("#")[0].match(/^\\s*([^\\s:]+)/);
-  if (!word) return false;
-  var keys = channelsNamed(word[1]);
-  if (!keys) return false;
-  for (var i = 0; i < keys.length; i++) {
-    var family = keys[i].split("|")[0];
-    if (claimed[keys[i]] || claimed[family + "|all"]) return true;
-    if (keys[i].indexOf("|all") > 0) {
-      for (var held in claimed) {
-        if (held.split("|")[0] === family) return true;
-      }
-    }
-  }
-  return false;
-}
-
-function claim(claimed, line) {
-  var word = line.split("#")[0].match(/^\\s*([^\\s:]+)/);
-  if (!word) return;
-  (channelsNamed(word[1]) || []).forEach(function (key) { claimed[key] = true; });
-}
-
-// The kept lines a scene cannot write, because what was chosen here already drives
-// the channels they name. The board refuses the whole entry in that case, so the
-// choice has to win and the line has to sit out
-function keptClashes(body) {
-  var claimed = {};
-  written(body).forEach(function (line) { claim(claimed, line); });
-  var out = [];
-  body.kept.forEach(function (line) {
-    if (clashesWith(claimed, line)) out.push(line);
-    else claim(claimed, line);
-  });
-  return out;
-}
-
-// What one scene writes from its controls: its screens, its outputs, its strips
-function written(body) {
-  var lines = [];
-  var sound = soundLine(body);
-  if (sound) lines.push(sound);
-  SCREENS.forEach(function (letter) {
-    var line = screenEntry(letter, body);
-    if (line) lines.push(line);
-  });
-
-  var look = lookNamed(body.look);
-  if (look) {
-    var playing = playingOutputs(body);
-    if (playing.length) {
-      var target = {kind: "outputs", selector: "out" + rangify(playing),
-                    count: playing.length, playing: playing};
-      lines = lines.concat(look.entries(target, body.pace, body.mood));
-    }
-  }
-
-  STRIP_IDS.forEach(function (id) {
-    var strip = state.strips[id];
-    var chosen = lookNamed(body.strips[id].look);
-    if (!strip.leds || !chosen || !chosen.spans) return;
-    var target = {kind: "strip", name: id,
-                  selector: strip.reversed ? id + strip.leds + "-1" : id,
-                  count: strip.leds, reversed: strip.reversed};
-    lines = lines.concat(chosen.entries(target, body.strips[id].pace,
-                                        body.strips[id].mood));
-  });
-
-  return lines;
-}
-
-// One scene in full: what its controls wrote, then whatever it carries word for
-// word, less the lines the choices here have taken the channels of
-function entriesFrom(body) {
-  var out = keptClashes(body);
-  return written(body).concat(body.kept.filter(function (line) {
-    return out.indexOf(line) < 0;
-  }));
-}
-
-function currentText() {
-  store();
-  var lines = [];
-  var board = boardLine();
-  if (board) lines.push(board);
-
-  var always = entriesFrom(state.always.body);
-  if (always.length) {
-    if (lines.length) lines.push("");
-    lines = lines.concat(always);
-  }
-
-  state.scenes.forEach(function (scene) {
-    lines.push("");
-    lines.push("[" + (scene.name.trim() || "Scene") + ": " + scene.seconds + "s" +
-               (scene.restart ? " restart" : "") + "]");
-    lines = lines.concat(entriesFrom(scene.body));
-  });
-
-  return HEADER + lines.join("\\n") + "\\n";
-}
-
-// ---- reading a file back ---------------------------------------------------------
-// Every recogniser proves itself: it turns a line back into slider positions, then
-// regenerates and only adopts the reading where the file comes out identical. A
-// line that fails is kept word for word, so nothing a hand wrote is redrawn.
-
-// One entry line taken apart: the selector word, the settings either side of the
-// colon as maps, and the channel settings' original text for carrying
-function parseEntry(line) {
-  var at = line.indexOf(":");
-  if (at < 0) return null;
-  var left = line.slice(0, at).match(/"[^"]*"|\\S+/g) || [];
-  var right = line.slice(at + 1).match(/"[^"]*"|\\S+/g) || [];
-  if (!left.length || !right.length) return null;
-  var ch = {};
-  var chText = [];
-  for (var i = 1; i < left.length; i++) {
-    var pair = left[i].split("=");
-    if (pair.length !== 2) return null;
-    ch[pair[0].toLowerCase()] = pair[1].replace(/^"|"$/g, "");
-    chText.push(left[i]);
-  }
-  var fx = {};
-  for (var j = 1; j < right.length; j++) {
-    var set = right[j].split("=");
-    if (set.length !== 2) return null;
-    fx[set[0].toLowerCase()] = set[1].replace(/^"|"$/g, "");
-  }
-  return {selector: left[0], ch: ch, chText: chText,
-          effect: right[0].toLowerCase(), fx: fx};
-}
-
-// The outputs an out selector names, read into the model's terms: the listed order
-// is the play order, a wholly descending list is the reversed toggle, and whatever
-// is not listed is left out
-function outputsTarget(selector) {
-  var digits = selector.slice(3);
-  var listed = digits === "" ? null : expandNumbers(digits);
-  if (!listed || !listed.length || listed.length > 7) return null;
-  for (var i = 0; i < listed.length; i++) {
-    if (listed[i] < 1 || listed[i] > 7 || listed.indexOf(listed[i]) !== i) return null;
-  }
-  var reversed = listed.length > 1 && listed.every(function (n, i) {
-    return i === 0 || n === listed[i - 1] - 1;
-  });
-  var order = reversed ? listed.slice().reverse() : listed.slice();
-  for (var n = 1; n <= 7; n++) if (order.indexOf(n) < 0) order.push(n);
-  var off = order.filter(function (n) { return listed.indexOf(n) < 0; });
-  return {order: order, off: off, reversed: reversed, playing: listed.slice(),
-          count: listed.length};
-}
-
-// Tries the looks against a run of entry lines; on success the body takes the
-// reading and the consumed count comes back, else zero and the line will be kept
-function recogniseOutputs(parsedLines, start, body) {
-  var head = parsedLines[start];
-  if (!/^out[\\d,-]*$/.test(head.selector)) return 0;
-  var look = lookForEntry(head.effect, head.fx);
-  if (!look) return 0;
-
-  var target;
-  if (!look.spans) {
-    // The banks and the quiet rest are the playing outputs dealt out in order,
-    // so the order comes back by reading the lines in theirs
-    var told = [];
-    for (var f = start; f < parsedLines.length && f < start + 3; f++) {
-      var row = parsedLines[f];
-      if (!/^out[\\d,-]+$/.test(row.selector)) break;
-      var fits = f === start || row.effect === "none" ||
-                 (look.name === "Emergency" && row.effect === head.effect);
-      if (!fits) break;
-      var found = expandNumbers(row.selector.slice(3));
-      if (!found) break;
-      told = told.concat(found);
-      if (row.effect === "none") break;
-    }
-    if (!told.length || told.length > 7) return 0;
-    target = {kind: "outputs", playing: told, count: told.length};
-  } else if (look.name === "Party") {
-    // Party writes up to three groups, one colour each in turn, so the play order
-    // comes back by interleaving the groups the way they were dealt out
-    var groups = [];
-    for (var g = start; g < parsedLines.length && groups.length < 3; g++) {
-      var one = parsedLines[g];
-      if (one.effect !== "flash" || !/^out[\\d,-]+$/.test(one.selector)) break;
-      var numbers = expandNumbers(one.selector.slice(3));
-      if (!numbers) break;
-      groups.push(numbers);
-    }
-    var playing = [];
-    for (var slot = 0; groups.some(function (grp) { return slot < grp.length; }); slot++) {
-      groups.forEach(function (grp) { if (slot < grp.length) playing.push(grp[slot]); });
-    }
-    if (!playing.length || playing.length > 7) return 0;
-    target = {kind: "outputs", playing: playing, count: playing.length};
-  } else if (look.spans) {
-    var read = outputsTarget(head.selector);
-    if (!read) return 0;
-    target = {kind: "outputs", selector: "out" + rangify(read.playing),
-              count: read.count, playing: read.playing};
-  } else {
-    target = {kind: "outputs"};
-  }
-
-  var pm = look.reads(head.ch, head.fx, target);
-  if (!pm) return 0;
-  var regen = look.entries(target, pm.pace, pm.mood);
-  for (var i = 0; i < regen.length; i++) {
-    var against = parsedLines[start + i];
-    if (!against || against.line !== regen[i]) return 0;
-  }
-
-  body.look = look.name;
-  body.pace = pm.pace;
-  body.mood = pm.mood;
-  var model = outputsTarget("out" + rangify(target.playing));
-  body.reversed = model.reversed;
-  body.lampOrder = model.order;
-  body.lampsOff = model.off;
-  return regen.length;
-}
-
-function recogniseStrip(parsedLines, start, body) {
-  var head = parsedLines[start];
-  var named = head.selector.match(/^(strip[lr])([\\d-]*)$/i);
-  if (!named) return 0;
-  var id = "strip" + named[1].slice(-1).toUpperCase();
-  if (STRIP_IDS.indexOf(id) < 0 || body.strips[id].look) return 0;
-  var count = Number(state.strips[id].leds);
-  if (!count) return 0;
-
-  // The bare name is the whole run; its full range written high end first is the
-  // wiring direction; anything else is a sub-range this page does not manage
-  var reversed;
-  if (named[2] === "") reversed = false;
-  else if (named[2] === count + "-1") reversed = true;
-  else if (head.effect === "flash") reversed = null;   // Party writes thirds
-  else return 0;
-
-  var look = lookForEntry(head.effect, head.fx);
-  if (!look || !look.spans) return 0;
-
-  var tries = reversed === null ? [false, true] : [reversed];
-  for (var t = 0; t < tries.length; t++) {
-    var target = {kind: "strip", name: id,
-                  selector: tries[t] ? id + count + "-1" : id,
-                  count: count, reversed: tries[t]};
-    var pm = look.reads(head.ch, head.fx, target);
-    if (!pm) continue;
-    var regen = look.entries(target, pm.pace, pm.mood);
-    var matched = true;
-    for (var i = 0; i < regen.length; i++) {
-      var against = parsedLines[start + i];
-      if (!against || against.line !== regen[i]) { matched = false; break; }
-    }
-    if (!matched) continue;
-    state.strips[id].reversed = tries[t];
-    body.strips[id] = {look: look.name, pace: pm.pace, mood: pm.mood};
-    return regen.length;
-  }
-  return 0;
-}
-
-function recogniseScreen(parsed, body) {
-  var named = parsed.selector.match(/^screen([ab])$/i);
-  if (!named) return false;
-  var letter = named[1].toUpperCase();
-  if (SCREENS.indexOf(letter) < 0 || body.screens[letter].shows) return false;
-  var screen = state.screens[letter];
-  screen.there = true;
-
-  var turn = 0;
-  var carried = [];
-  parsed.chText.forEach(function (token) {
-    var spin = token.match(/^rotation=(\\d+)$/i);
-    if (spin) turn = Number(spin[1]);
-    else carried.push(token);
-  });
-
-  var name = null;
-  var kind = null;
-  if (parsed.effect === "gif" && parsed.fx.file) { name = parsed.fx.file; kind = "gif"; }
-  else if (parsed.effect === "image" && parsed.fx.file) { name = parsed.fx.file; kind = "image"; }
-  else if (parsed.effect === "sequence" && parsed.fx.folder) {
-    name = parsed.fx.folder;
-    kind = "folder";
-  }
-  if (name === null) return false;
-
-  var was = {turn: screen.turn, carried: screen.carried};
-  screen.turn = turn;
-  screen.carried = carried.join(" ");
-
-  var playing = body.screens[letter];
-  playing.shows = name;
-  playing.pingpong = parsed.fx.ping_pong === "true";
-  playing.hold = parsed.fx.hold || "";
-  if (kind === "folder") playing.fps = Number(parsed.fx.fps) || 5;
-  if (screenEntry(letter, body) === parsed.line) return true;
-
-  // The reading did not reproduce the line, so the line is kept and everything it
-  // touched goes back to whatever an earlier entry established
-  playing.shows = null;
-  playing.pingpong = false;
-  playing.hold = "";
-  playing.fps = 5;
-  screen.turn = was.turn;
-  screen.carried = was.carried;
-  return false;
-}
-
-// One scene's raw entry lines into its body: recognised runs are adopted, a screen
-// line that resists becomes that screen's keep choice, and the rest ride verbatim
-function absorbEntries(rawLines, body) {
-  var parsedLines = rawLines.map(function (line) {
-    var parsed = parseEntry(line.trim());
-    if (parsed) parsed.line = line.trim();
-    return parsed || {line: line.trim(), selector: "", effect: "", ch: {}, fx: {},
-                      chText: []};
-  });
-  var at = 0;
-  while (at < parsedLines.length) {
-    var taken = 0;
-    if (!body.look) taken = recogniseOutputs(parsedLines, at, body);
-    if (!taken) taken = recogniseStrip(parsedLines, at, body);
-    if (!taken && recogniseScreen(parsedLines[at], body)) taken = 1;
-    if (!taken) {
-      var screenish = parsedLines[at].selector.match(/^screen([ab])\\b/i);
-      var letter = screenish ? screenish[1].toUpperCase() : null;
-      if (letter && SCREENS.indexOf(letter) >= 0 && !body.screens[letter].shows) {
-        state.screens[letter].there = true;
-        body.screens[letter].kept = parsedLines[at].line;
-        body.screens[letter].shows = "keep";
-      } else {
-        body.kept.push(parsedLines[at].line);
-      }
-      taken = 1;
-    }
-    at += taken;
-  }
-}
-
-// One scene's sound line, taken as a choice where this page would write it back the
-// same way, and kept word for word where it would not
-function absorbSound(line, body) {
-  if (!line) return;
-  var parsed = parseEntry(line);
-  if (parsed && parsed.effect === "wav" && parsed.fx.file &&
-      !Object.keys(parsed.ch).length) {
-    body.sound = parsed.fx.file;
-    body.soundLoop = parsed.fx.loop === "true";
-    if (soundLine(body) === line) return;
-    body.sound = null;
-    body.soundLoop = false;
-  }
-  body.soundKept = line;
-}
-
-function absorbText(text) {
-  state.straight = true;
-  state.boardResidue = [];
-  SCREENS.forEach(function (letter) {
-    state.screens[letter] = {there: false, size: "2.8", turn: 0, carried: "",
-                             pingpong: false, hold: "", fps: 5, shows: null, kept: null};
-  });
-  STRIP_IDS.forEach(function (id) {
-    state.strips[id] = {leds: null, reversed: false, look: null, pace: 0.5, mood: 0.5};
-  });
-  state.always = {body: blankBody()};
-  state.scenes = [];
-  state.at = -1;
-
-  // First pass sorts the lines into buckets, since the board line has to land
-  // before the entries can be read against declared lengths
-  var buckets = [{scene: null, lines: []}];
-  var sawStraight = false;
-  text.split("\\n").forEach(function (raw) {
-    var line = raw.split("#")[0].trim();
-    if (line === "") return;
-
-    var heading = line.match(/^\\[\\s*([^:\\]]*?)\\s*(?::([^\\]]*))?\\]$/);
-    if (heading) {
-      var seconds = 10;
-      var restart = false;
-      (heading[2] || "").split(/\\s+/).forEach(function (word) {
-        // A time in seconds or in minutes, held as seconds
-        var time = word.match(/^(\\d+(?:\\.\\d+)?)([sm])$/i);
-        if (time) seconds = Number(time[1]) * (time[2].toLowerCase() === "m" ? 60 : 1);
-        else if (word.toLowerCase() === "restart") restart = true;
-      });
-      buckets.push({scene: {name: heading[1], seconds: seconds, restart: restart},
-                    lines: []});
-      return;
-    }
-
-    var board = line.match(/^board\\s*:\\s*(.*)$/i);
-    if (board) {
-      board[1].split(/\\s+/).forEach(function (token) {
-        if (token === "") return;
-        var reload = token.match(/^reload=(.+)$/i);
-        var size = token.match(/^screen([ab])=(.+)$/i);
-        var count = token.match(/^strip([lr])=(\\d+)$/i);
-        if (reload) {
-          state.straight = reload[1].toLowerCase() === "auto";
-          sawStraight = true;
-        // A Screen Hub is carried as written, this page drawing screens alone
-        } else if (size && SCREENS.indexOf(size[1].toUpperCase()) >= 0 &&
-                   size[2].toLowerCase() !== "hub") {
-          var screen = state.screens[size[1].toUpperCase()];
-          screen.there = true;
-          screen.size = size[2];
-        } else if (count && STRIP_IDS.indexOf("strip" + count[1].toUpperCase()) >= 0) {
-          state.strips["strip" + count[1].toUpperCase()].leds = Number(count[2]);
-        } else {
-          state.boardResidue.push(token);
-        }
-      });
-      return;
-    }
-
-    // The board hears one sound per scene, so the first in each is the scene's and
-    // any after it goes through as an ordinary line for the board to refuse
-    var sound = line.match(/^audio\\b[^:]*:/i);
-    if (sound && buckets[buckets.length - 1].sound === undefined) {
-      buckets[buckets.length - 1].sound = line;
-      return;
-    }
-
-    buckets[buckets.length - 1].lines.push(line);
-  });
-
-  // A file that never says reload= leaves the board on manual, so a fresh save
-  // should not quietly change that
-  if (!sawStraight) state.straight = text.trim() === "";
-
-  absorbEntries(buckets[0].lines, state.always.body);
-  absorbSound(buckets[0].sound, state.always.body);
-  buckets.slice(1).forEach(function (bucket) {
-    var body = blankBody();
-    absorbEntries(bucket.lines, body);
-    absorbSound(bucket.sound, body);
-    state.scenes.push({name: bucket.scene.name, seconds: bucket.scene.seconds,
-                       restart: bucket.scene.restart, body: body});
-  });
-
-  state.stripsAtStart = STRIP_IDS.filter(function (id) {
-    return state.strips[id].leds;
-  });
-  state.at = -1;
-  apply(state.always.body);
-  document.getElementById("straight").checked = state.straight;
-
-  // What was made of the file, said once at the top: the look found, whether the
-  // file is exactly what this page would write, and whether anything was readable
-  var bodies = allBodies();
-  var found = null;
-  var any = false;
-  bodies.forEach(function (body) {
-    if (!found && body.look) found = body.look;
-    if (hasContent(body)) any = true;
-  });
-  var keptCount = bodies.reduce(function (sum, body) {
-    var here = body.kept.length;
-    SCREENS.forEach(function (l) { if (body.screens[l].kept) here++; });
-    return sum + here;
-  }, 0);
-  var exact = currentText().replace(/\\s+$/, "") === text.replace(/\\s+$/, "");
-  state.recognised = {look: found, exact: exact, any: any, kept: keptCount,
-                      empty: text.trim() === ""};
-}
-
-// ---- rendering -------------------------------------------------------------------
-
-function bar(colours, className) {
-  var strip = document.createElement("div");
-  strip.className = className;
-  colours.forEach(function (c) {
-    var cell = document.createElement("span");
-    cell.style.background = c;
-    strip.appendChild(cell);
-  });
-  return strip;
-}
-
-function renderRecognised() {
-  var box = document.getElementById("recognised");
-  var found = state.recognised;
-  if (!state.fileHandle || found.empty) {
-    box.hidden = true;
-    return;
-  }
-  box.hidden = false;
-  if (found.look) {
-    box.innerHTML = "The board is playing <b>" + found.look + "</b>" +
-      (found.exact ? "" : "<span class='tag'>edited since</span>");
-  } else if (found.kept) {
-    box.innerHTML = "This drive's <b>effects.txt</b> was written some other way. " +
-      "Its entries are kept as written; anything chosen here is added around them.";
-  } else {
-    box.innerHTML = "This drive's <b>effects.txt</b> plays nothing yet. " +
-      "Pick a look below.";
-  }
-}
-
-function renderScenes() {
-  var box = document.getElementById("tabs");
-  box.textContent = "";
-
-  // One scene is what a file has before anyone asks for more, and a bar of one tab
-  // says nothing, so it is not drawn until there is a choice to make
-  if (state.scenes.length) {
-    box.appendChild(sceneTab(-1, state.always, "Always on", "under every scene"));
-    state.scenes.forEach(function (scene, i) {
-      box.appendChild(sceneTab(i, scene, scene.name, scene.seconds + "s" +
-                               (scene.restart ? ", from the start" : "")));
-    });
-  }
-
-  var plus = document.createElement("button");
-  plus.className = "plus";
-  plus.innerHTML = "<svg width='11' height='11' viewBox='0 0 11 11'><path d='M5.5 1 " +
-                   "L5.5 10 M1 5.5 L10 5.5' stroke='currentColor' stroke-width='1.8' " +
-                   "stroke-linecap='round'/></svg>" +
-                   (state.scenes.length ? "another scene" : "split into scenes");
-  plus.title = state.scenes.length ? "Add another scene"
-                                   : "Split this into scenes that take turns";
-  plus.onclick = addScene;
-  box.appendChild(plus);
-
-  // The frame is what says these belong to the tab, so it appears with the tabs
-  var frame = document.getElementById("sceneBody");
-  frame.className = "scenebody" + (state.scenes.length ? " framed" : "");
-
-  // Whether the tabs still sit on one row decides whether one of them can join the
-  // frame below, so it is measured rather than guessed
-  var tabs = box.querySelectorAll(".tab");
-  var plusTop = box.querySelector(".plus").offsetTop;
-  var wrapped = tabs.length > 1 &&
-                (tabs[tabs.length - 1].offsetTop > tabs[0].offsetTop ||
-                 plusTop > tabs[0].offsetTop);
-  box.classList.toggle("wrapped", wrapped);
-  if (wrapped && state.scenes.length) frame.classList.add("loose");
-}
-
-function sceneTab(which, slot, name, says) {
-  var here = state.at === which;
-  var body = here ? capture() : slot.body;
-  var tab = document.createElement("button");
-  tab.className = "tab" + (here ? " on" : "");
-  tab.draggable = which >= 0;
-
-  var swatch = document.createElement("div");
-  swatch.className = "look";
-  var look = lookNamed(body.look);
-  if (look) look.strip.forEach(function (colour) {
-    var cell = document.createElement("span");
-    cell.style.background = colour;
-    swatch.appendChild(cell);
-  });
-  tab.appendChild(swatch);
-
-  var title = document.createElement("b");
-  title.textContent = name;
-  if (which >= 0) {
-    var shut = document.createElement("span");
-    shut.className = "shut";
-    shut.textContent = "\\u00d7";
-    shut.title = "Take this scene out";
-    shut.onclick = function (e) { e.stopPropagation(); removeScene(which); };
-    title.appendChild(shut);
-  }
-  tab.appendChild(title);
-
-  var under = document.createElement("small");
-  under.textContent = says;
-  tab.appendChild(under);
-
-  tab.onclick = function () { if (state.at !== which) switchTo(which); };
-
-  if (which >= 0) {
-    tab.ondragstart = function (e) {
-      carriedTab = which;
-      tab.classList.add("carried");
-      e.dataTransfer.effectAllowed = "move";
-      e.dataTransfer.setData("text/plain", String(which));
-    };
-    tab.ondragend = function () { carriedTab = null; draw(); };
-    tab.ondragover = function (e) {
-      if (carriedTab === null || carriedTab === which) return;
-      e.preventDefault();
-      tab.classList.add("landing");
-    };
-    tab.ondragleave = function () { tab.classList.remove("landing"); };
-    tab.ondrop = function (e) {
-      e.preventDefault();
-      if (carriedTab === null || carriedTab === which) return;
-      store();
-      // The scene being edited is followed by identity, since moving any tab shifts
-      // the numbers of the ones it passes
-      var editing = state.at >= 0 ? state.scenes[state.at] : null;
-      var moved = state.scenes.splice(carriedTab, 1)[0];
-      state.scenes.splice(which, 0, moved);
-      state.at = editing ? state.scenes.indexOf(editing) : -1;
-      carriedTab = null;
-      draw();
-    };
-  }
-  return tab;
-}
-
-var carriedTab = null;
-
-function renderSceneSettings() {
-  var box = document.getElementById("sceneSettings");
-  box.textContent = "";
-  if (state.at < 0) return;
-  var scene = state.scenes[state.at];
-
-  var row = document.createElement("div");
-  row.className = "sceneset";
-
-  var name = document.createElement("input");
-  name.type = "text";
-  name.value = scene.name;
-  name.title = "What this scene is called, which is its heading in the file";
-  name.dataset.focus = "scene-name";
-  name.oninput = function () {
-    // The brackets and the colon are the heading's own punctuation
-    scene.name = name.value.replace(/[\\[\\]:]/g, "");
-    if (name.value !== scene.name) name.value = scene.name;
-    renderScenes();
-    renderPreview();
-  };
-  row.appendChild(name);
-
-  var shows = document.createElement("span");
-  shows.textContent = "shows for";
-  row.appendChild(shows);
-
-  var seconds = document.createElement("input");
-  seconds.type = "number";
-  seconds.min = 1;
-  seconds.value = scene.seconds;
-  seconds.dataset.focus = "scene-seconds";
-  seconds.onchange = function () {
-    scene.seconds = Math.max(1, Number(seconds.value) || 1);
-    draw();
-  };
-  row.appendChild(seconds);
-
-  var unit = document.createElement("span");
-  unit.textContent = "seconds";
-  row.appendChild(unit);
-
-  var again = document.createElement("label");
-  var tick = document.createElement("input");
-  tick.type = "checkbox";
-  tick.checked = scene.restart;
-  tick.onchange = function () { scene.restart = tick.checked; draw(); };
-  again.appendChild(tick);
-  again.appendChild(document.createTextNode("from the start each turn"));
-  again.title = "Its effects begin again every time the scene comes round";
-  row.appendChild(again);
-
-  box.appendChild(row);
-}
-
-// A look's name beside the settings it takes, which is what a scene chose as
-// opposed to what is wired to the board
-function tunedBlock(said, holder) {
-  var wrap = document.createElement("div");
-  wrap.className = "tuned";
-  var who = document.createElement("div");
-  who.className = "who";
-  who.innerHTML = said;
-  wrap.appendChild(who);
-  wrap.appendChild(tuningFor(holder));
-  return wrap;
-}
-
-function tuningFor(holder) {
-  var look = lookNamed(holder.look);
-  var box = document.createElement("div");
-  box.className = "tuning";
-  box.innerHTML =
-    "<label>Pace</label><input type='range' min='0' max='1' step='0.01' value='" + holder.pace + "'>" +
-    "<label>" + look.mood + "</label><input type='range' min='0' max='1' step='0.01' value='" + holder.mood + "'>";
-  var inputs = box.querySelectorAll("input");
-  // Only the file depends on a slider's value, so nothing is rebuilt under the
-  // pointer and the drag keeps its grip
-  inputs[0].oninput = function () { holder.pace = Number(inputs[0].value); renderPreview(); };
-  inputs[1].oninput = function () { holder.mood = Number(inputs[1].value); renderPreview(); };
-  return box;
-}
-
-function renderGallery() {
-  var box = document.getElementById("gallery");
-  box.textContent = "";
-  // Nothing is a choice like any other, and belongs at the end where a reader has
-  // seen what there is before being offered none of it
-  LOOKS.concat([{name: null}]).forEach(function (look) {
-    var card = document.createElement("div");
-    var onOut = state.look === look.name;
-    // The border says what the outputs play, and nothing else: the marks say the
-    // strips for themselves
-    card.className = "card" + (onOut ? " picked" : "") + (look.name ? "" : " nothing");
-    card.appendChild(look.name ? bar(look.strip, "bar") : (function () {
-      var blank = document.createElement("div");
-      blank.className = "bar";
-      return blank;
-    })());
-
-    var name = document.createElement("div");
-    name.className = "name";
-    name.appendChild(document.createTextNode(look.name || "Nothing"));
-
-    var who = document.createElement("div");
-    who.className = "who";
-    STRIP_IDS.forEach(function (id) {
-      var letter = id.slice(-1).toLowerCase();
-      var strip = state.strips[id];
-      var lit = strip.look === look.name && strip.leds && look.name;
-      var mark = document.createElement("span");
-      mark.textContent = letter.toUpperCase();
-      var canPlay = strip.leds && (look.name === null || look.spans);
-      mark.className = (lit ? "lit " + letter : "") + (canPlay ? "" : " off");
-      mark.title = !strip.leds ? "say how many LEDs this strip has first"
-                 : (look.name && !look.spans) ? "this look is shaped to the seven lamps"
-                 : "play this on strip " + letter.toUpperCase();
-      mark.onclick = function (event) {
-        event.stopPropagation();
-        if (!canPlay) return;
-        strip.look = strip.look === look.name ? null : look.name;
-        draw();
-      };
-      who.appendChild(mark);
-    });
-    name.appendChild(who);
-    card.appendChild(name);
-
-    card.onclick = function () { state.look = look.name; draw(); };
-    box.appendChild(card);
-  });
-}
-
-function renderOutputs() {
-  var box = document.getElementById("outputs");
-  box.textContent = "";
-  var look = lookNamed(state.look);
-
-  var head = document.createElement("div");
-  head.className = "side-head";
-  head.appendChild(directionToggle(state, draw));
-  head.appendChild(outputsPreview(look, state.reversed));
-  var out = state.lampsOff.length;
-  if (!look || out === 7) {
-    var says = document.createElement("span");
-    says.className = "says";
-    says.textContent = look ? "every one left out"
-                            : "playing nothing, so they stay dark";
-    head.appendChild(says);
-  }
-  box.appendChild(head);
-
-  if (look && out < 7)
-    box.appendChild(tunedBlock("playing <b>" + look.name + "</b>" +
-                               (out ? out + " left out" : ""), state));
-}
-
-function renderStrips() {
-  var box = document.getElementById("strips");
-  box.textContent = "";
-  STRIP_IDS.forEach(function (id) {
-    var strip = state.strips[id];
-    var letter = id.slice(-1);
-    var look = lookNamed(strip.look);
-
-    var head = document.createElement("div");
-    head.className = "side-head";
-
-    var tag = document.createElement("div");
-    tag.className = "strip-tag " + letter.toLowerCase();
-    tag.appendChild(document.createTextNode(letter === "L" ? "Left" : "Right"));
-    head.appendChild(tag);
-
-    var count = document.createElement("input");
-    count.type = "number";
-    count.min = 0;
-    // The chip already says LEDs, so an empty box is simply none counted
-    if (strip.leds) count.value = strip.leds;
-    count.onchange = function () {
-      // Nothing typed and none counted mean the same thing here
-      strip.leds = Number(count.value) > 0 ? Number(count.value) : null;
-      if (!strip.leds) strip.look = null;
-      draw();
-    };
-    count.title = "How many LEDs are on this strip, which is the same for every scene";
-    count.dataset.focus = "leds-" + id;
-    tag.appendChild(count);
-    var unit = document.createElement("small");
-    unit.textContent = "LEDs";
-    tag.appendChild(unit);
-
-    if (strip.leds) head.appendChild(directionToggle(strip, draw));
-
-    if (strip.leds) {
-      var chain = lampsPreview(look, strip.leds, strip.reversed);
-      chain.classList.add("chain");
-      head.appendChild(chain);
-    }
-
-    if (!strip.leds || !look) {
-      var says = document.createElement("span");
-      says.className = "says";
-      says.textContent = strip.leds ? "tap " + letter + " on a look above"
-                                    : "say how many LEDs it has";
-      head.appendChild(says);
-    }
-    box.appendChild(head);
-
-    if (strip.leds && look)
-      box.appendChild(tunedBlock("playing <b>" + look.name + "</b>",
-                                 state.strips[id]));
-  });
-}
-
-function renderScreensHead() {
-  var box = document.getElementById("screensHead");
-  box.textContent = "";
-  SCREENS.forEach(function (letter) {
-    var screen = state.screens[letter];
-    var side = document.createElement("div");
-    side.className = "screen-box " + letter.toLowerCase();
-    var head = document.createElement("h3");
-    head.appendChild(document.createTextNode("Screen " + letter));
-    side.appendChild(head);
-
-    var body = document.createElement("div");
-    body.className = "body";
-    side.appendChild(body);
-
-    if (!screen.there) {
-      body.className = "body adding";
-      var add = document.createElement("button");
-      add.textContent = "add this screen";
-      add.onclick = function () {
-        screen.there = true;
-        screen.shows = null;
-        screen.kept = null;
-        draw();
-      };
-      body.appendChild(add);
-      box.appendChild(side);
-      return;
-    }
-
-    // Taking the screen out is the only way to have none: a screen showing
-    // nothing says the same thing twice
-    var drop = document.createElement("button");
-    drop.className = "drop";
-    drop.textContent = "\\u00d7";
-    drop.title = "Take this screen out of every scene";
-    drop.onclick = function () {
-      screen.there = false;
-      // Every scene's choice for it goes too, since nothing is left to show them
-      store();
-      allBodies().forEach(function (held) {
-        held.screens[letter].shows = null;
-        held.screens[letter].kept = null;
-      });
-      apply(slotAt(state.at).body);
-      draw();
-    };
-    head.appendChild(drop);
-
-    var size = document.createElement("select");
-    // The sizes a panel can be, the catalogue's hub being no panel size
-    var offered = (CATALOGUE.board_settings["screen" + letter.toLowerCase()] || ["2.8", "1.54"])
-      .filter(function (inches) { return inches !== "hub"; });
-    if (!screen.size) {
-      var quiet = document.createElement("option");
-      quiet.value = "";
-      quiet.textContent = "size as fitted";
-      quiet.selected = true;
-      size.appendChild(quiet);
-    }
-    offered.forEach(function (inches) {
-      var option = document.createElement("option");
-      option.value = inches;
-      option.textContent = inches + " inch";
-      if (screen.size === inches) option.selected = true;
-      size.appendChild(option);
-    });
-    size.onchange = function () {
-      if (size.value) screen.size = size.value;
-      draw();
-    };
-    size.className = "inband";
-    size.title = "Which panel is plugged in, which is the same for every scene";
-    head.insertBefore(size, drop);
-
-    body.appendChild(panelPreview(screen));
-
-    var settings = document.createElement("div");
-    settings.className = "settings";
-    var row = document.createElement("div");
-    row.className = "row";
-    var turn = document.createElement("select");
-    [[0, "not turned"], [90, "quarter"], [180, "half"], [270, "three quarters"]]
-      .forEach(function (pair) {
-        var option = document.createElement("option");
-        option.value = pair[0];
-        option.textContent = pair[1];
-        if (Number(screen.turn || 0) === pair[0]) option.selected = true;
-        turn.appendChild(option);
-      });
-    turn.onchange = function () { screen.turn = Number(turn.value); draw(); };
-    row.appendChild(turn);
-    settings.appendChild(row);
-
-    // A moving picture can bounce instead of jumping at the loop, and wait where
-    // it turns; a slideshow also says how fast it walks its folder
-    var media = screen.shows && screen.shows !== "keep" ? mediaNamed(screen.shows) : null;
-    if (media && media.kind !== "image") {
-      var moving = document.createElement("div");
-      moving.className = "row";
-      var back = document.createElement("label");
-      back.className = "opt";
-      back.title = "Play it forwards then backwards, no jump at the loop";
-      var tick = document.createElement("input");
-      tick.type = "checkbox";
-      tick.checked = screen.pingpong;
-      tick.onchange = function () { screen.pingpong = tick.checked; draw(); };
-      back.appendChild(tick);
-      back.appendChild(document.createTextNode("back and forth"));
-      moving.appendChild(back);
-
-      var holdWrap = document.createElement("label");
-      holdWrap.className = "opt";
-      holdWrap.title = "Seconds to wait where it turns around";
-      holdWrap.appendChild(document.createTextNode("hold"));
-      var hold = document.createElement("input");
-      hold.type = "number";
-      hold.min = 0;
-      hold.step = 0.5;
-      hold.value = screen.hold || "";
-      hold.placeholder = "0";
-      hold.dataset.focus = "hold-" + letter;
-      hold.onchange = function () {
-        screen.hold = hold.value && Number(hold.value) > 0 ? hold.value : "";
-        draw();
-      };
-      holdWrap.appendChild(hold);
-      moving.appendChild(holdWrap);
-
-      if (media.kind === "folder") {
-        var fpsWrap = document.createElement("label");
-        fpsWrap.className = "opt";
-        fpsWrap.title = "Pictures shown per second";
-        fpsWrap.appendChild(document.createTextNode("fps"));
-        var fps = document.createElement("input");
-        fps.type = "number";
-        fps.min = 1;
-        fps.value = screen.fps;
-        fps.dataset.focus = "fps-" + letter;
-        fps.onchange = function () {
-          screen.fps = Math.max(1, Number(fps.value) || 5);
-          draw();
-        };
-        fpsWrap.appendChild(fps);
-        moving.appendChild(fpsWrap);
-      }
-      settings.appendChild(moving);
-    }
-
-    var showing = document.createElement("div");
-    showing.className = "showing";
-    showing.innerHTML = screen.shows === "keep"
-      ? "left as the file has it"
-      : screen.shows
-        ? "showing <b>" + screen.shows + "</b>" +
-          (mediaNamed(screen.shows) ? "" : " (not on the drive)")
-        : !state.fileHandle ? "open the FX drive to see its pictures"
-        : state.scenes.length
-          ? "showing nothing here; tap " + letter + " under a picture below"
-          : "tap " + letter + " under a picture below";
-    settings.appendChild(showing);
-
-    body.appendChild(settings);
-
-    // What the file already says for this screen, where the picker did not write it
-    // and no picture can stand for it. It is a line of its own under the settings
-    if (screen.kept) {
-      var keep = document.createElement("button");
-      keep.className = "keep" + (screen.shows === "keep" ? " picked" : "");
-      keep.title = screen.kept;
-      keep.innerHTML = "<b>Leave it as it is</b><code>" + screen.kept + "</code>";
-      keep.onclick = function () { screen.shows = "keep"; draw(); };
-      side.appendChild(keep);
-    }
-    box.appendChild(side);
-  });
-}
-
-function mediaNamed(name) {
-  return state.media.filter(function (m) { return m.name === name; })[0] || null;
-}
-
-// A picture's drawing on the panel: its object URL and shape, loaded once per name
-function mediaArt(name) {
-  var held = state.art[name];
-  if (held) return held.ratio ? held : null;
-  var media = mediaNamed(name);
-  var handle = media && (media.kind === "folder" ? media.thumbHandle : media.handle);
-  if (!handle) return null;
-  state.art[name] = {url: null, ratio: 0};
-  handle.getFile().then(function (file) {
-    var url = URL.createObjectURL(file);
-    var probe = new Image();
-    probe.onload = function () {
-      state.art[name] = {url: url, w: probe.naturalWidth, h: probe.naturalHeight,
-                         ratio: probe.naturalWidth / probe.naturalHeight};
-      draw();
-    };
-    probe.src = url;
-  }).catch(function () { delete state.art[name]; });
-  return null;
-}
-
-function renderAssets() {
-  var box = document.getElementById("assets");
-  box.textContent = "";
-  document.getElementById("screensSays").textContent = !state.fileHandle
-    ? "open the FX drive to see the pictures on it"
-    : !state.scanned
-      ? "reading the drive..."
-      : state.media.length
-        ? "one set of pictures, each able to go to A, to B, or to both"
-        : "no pictures on the drive yet; drop a gif, png or jpg onto it";
-  state.media.forEach(function (media) {
-    var name = media.name;
-    var on = {};
-    SCREENS.forEach(function (l) {
-      on[l] = state.screens[l].there && state.screens[l].shows === name;
-    });
-    var cell = document.createElement("div");
-    cell.className = "asset" + (on.A && on.B ? " onAB" : on.A ? " onA" : on.B ? " onB" : "");
-    var face = document.createElement("div");
-    face.className = "face";
-    var art = mediaArt(name);
-    if (art) {
-      face.style.background =
-        "repeating-conic-gradient(#e8e4dc 0% 25%, #cbc5bb 0% 50%) 0 0/12px 12px";
-      var img = document.createElement("img");
-      img.src = art.url;
-      face.appendChild(img);
-    } else {
-      // The extension stands in only until the picture arrives
-      face.textContent = name.split(".").pop();
-    }
-    if (media.kind !== "image") {
-      var kind = document.createElement("span");
-      kind.className = "kind";
-      kind.textContent = media.kind === "folder" ? "slideshow" : "gif";
-      face.appendChild(kind);
-    }
-    cell.appendChild(face);
-    cell.title = name;
-    var label = document.createElement("div");
-    label.className = "label";
-    label.textContent = name;
-    face.appendChild(label);
-    var pick = document.createElement("div");
-    pick.className = "pick";
-    SCREENS.forEach(function (letter) {
-      var button = document.createElement("button");
-      button.textContent = letter;
-      var lit = on[letter];
-      button.className = lit ? "lit" + (letter === "B" ? " b" : "") : "";
-      button.disabled = !state.screens[letter].there;
-      if (button.disabled) button.style.opacity = ".3";
-      button.onclick = function () {
-        // Tapping the lit one again takes the picture off this scene's screen,
-        // falling back to what the file said where there is something to go back
-        // to. A scene showing nothing on a screen leaves it as the scene before
-        // left it, which the cross in the header cannot say for one scene alone
-        var screen = state.screens[letter];
-        screen.shows = screen.shows !== name ? name
-                     : screen.kept ? "keep" : null;
-        draw();
-      };
-      pick.appendChild(button);
-    });
-    cell.appendChild(pick);
-    cell.appendChild(binButton(name, media.kind));
-    box.appendChild(cell);
-  });
-  if (state.fileHandle)
-    box.appendChild(adderTile("add pictures",
-      {description: "Pictures the board plays",
-       accept: {"image/png": [".gif", ".png", ".jpg", ".jpeg"]}},
-      "pictures", /\\.(gif|png|jpe?g)$/i));
-}
-
-// Files picked in the dialog, written straight onto the drive: the same handle a
-// save uses, so nothing leaves the page. What did not fit is said plainly
-async function addFiles(kinds, what, takes) {
-  var picked;
-  try {
-    picked = await window.showOpenFilePicker({multiple: true, types: [kinds],
-                                              excludeAcceptAllOption: true});
-  } catch (e) {
-    return;                       // the dialog was dismissed
-  }
-  var landed = 0;
-  var refused = [];
-  for (var i = 0; i < picked.length; i++) {
-    var file;
-    try {
-      // The dialog filters, and this holds where a platform's does not: a kind
-      // the board cannot play never reaches the drive
-      if (!takes.test(picked[i].name)) {
-        refused.push(picked[i].name + " (not a kind the board plays)");
-        continue;
-      }
-      file = await picked[i].getFile();
-      var existing = null;
-      try { existing = await state.dirHandle.getFileHandle(file.name); } catch (e) {}
-      if (existing && !confirm(file.name + " is already on the drive. Replace it?"))
-        continue;
-      var handle = await state.dirHandle.getFileHandle(file.name, {create: true});
-      var writable = await handle.createWritable();
-      await writable.write(file);
-      await writable.close();
-      landed++;
-    } catch (e) {
-      refused.push(file ? file.name : "a file");
-      if (e.name === "QuotaExceededError") {
-        refused = refused.concat(picked.slice(i + 1).map(function (p) { return p.name; }));
-        banner("The FX drive filled up: " + landed + " " + what + " copied, no room for " +
-               refused.join(", ") + ". Delete something from it and try again.", true);
-        break;
-      }
-    }
-  }
-  if (landed && !refused.length)
-    banner(landed + " " + what + " copied to the drive.");
-  else if (refused.length && landed)
-    banner(landed + " copied; these did not arrive: " + refused.join(", "), true);
-  else if (refused.length)
-    banner("Nothing arrived: " + refused.join(", "), true);
-  try { await scanMedia(state.dirHandle); } catch (e) {}
-  draw();
-}
-
-// Takes one file off the drive, clearing whatever on the page was showing it
-async function removeFromDrive(name, kind) {
-  var said = kind === "folder"
-    ? "Delete the folder " + name + " and every picture in it from the FX drive?"
-    : "Delete " + name + " from the FX drive?";
-  if (!confirm(said)) return;
-  try {
-    await state.dirHandle.removeEntry(name, {recursive: kind === "folder"});
-  } catch (e) {
-    banner("Could not delete " + name + ": " + e.name + ". Is the drive showing?", true);
-    return;
-  }
-  store();
-  allBodies().forEach(function (body) {
-    SCREENS.forEach(function (letter) {
-      if (body.screens[letter].shows === name) body.screens[letter].shows = null;
-    });
-  });
-  apply(slotAt(state.at).body);
-  allBodies().forEach(function (body) {
-    if (body.sound === name) {
-      body.sound = null;
-      body.soundLoop = false;
-    }
-  });
-  apply(slotAt(state.at).body);
-  delete state.soundInfo[name];
-  delete state.art[name];
-  try { await scanMedia(state.dirHandle); } catch (e) {}
-  draw();
-}
-
-// The cross that offers it, quiet until the pointer is over the tile
-function binButton(name, kind) {
-  if (!CAN_REACH_A_DRIVE) return document.createTextNode("");
-  var bin = document.createElement("span");
-  bin.className = "bin";
-  bin.textContent = "\\u00d7";
-  bin.title = "Delete " + name + " from the FX drive";
-  bin.onclick = function (e) {
-    e.stopPropagation();
-    removeFromDrive(name, kind);
-  };
-  return bin;
-}
-
-function adderTile(label, kinds, what, takes) {
-  var tile = document.createElement("button");
-  tile.className = "adder";
-  tile.innerHTML = "<svg width='13' height='13' viewBox='0 0 11 11'><path d='M5.5 1 " +
-                   "L5.5 10 M1 5.5 L10 5.5' stroke='currentColor' stroke-width='1.8' " +
-                   "stroke-linecap='round'/></svg>" + label;
-  tile.title = "Copy files from this computer onto the FX drive";
-  tile.onclick = function () { addFiles(kinds, what, takes); };
-  return tile;
-}
-
-// Lines the file already had that no control on this page stands for: they are
-// carried word for word, in this scene, and each can be dropped
-function renderKept() {
-  var box = document.getElementById("kept");
-  box.hidden = !state.kept.length;
-  box.textContent = "";
-  if (!state.kept.length) return;
-  var clashing = keptClashes(capture());
-  var head = document.createElement("div");
-  head.textContent = "Also " + (state.scenes.length ? "in this scene" : "in the file") +
-                     ", kept as written:";
-  box.appendChild(head);
-  state.kept.forEach(function (line, i) {
-    var row = document.createElement("div");
-    row.className = "row";
-    var code = document.createElement("code");
-    code.textContent = line;
-    if (clashing.indexOf(line) >= 0) {
-      code.className = "clashing";
-      code.title = "What you chose here already drives these outputs, so the board " +
-                   "would refuse both. This line is left out of the file.";
-    }
-    row.appendChild(code);
-    var drop = document.createElement("button");
-    drop.className = "drop";
-    drop.textContent = "\\u00d7";
-    drop.title = "Take this line out of the file";
-    drop.onclick = function () {
-      state.kept.splice(i, 1);
-      draw();
-    };
-    row.appendChild(drop);
-    box.appendChild(row);
-  });
-}
-
-function renderSound() {
-  var box = document.getElementById("sound");
-  box.textContent = "";
-  document.getElementById("soundSays").textContent = !state.fileHandle
-    ? "open the FX drive to see the sounds on it"
-    : !state.scanned
-      ? "reading the drive..."
-    : !(state.sounds.length || state.sound || state.soundKept)
-      ? "no sounds on the drive yet; drop a wav onto it"
-    : !state.scenes.length
-      ? "one wav, playing on while the lights run"
-    : state.at < 0
-      ? "played in any scene that brings no sound of its own"
-      : "played while this scene shows, picking up where it left off";
-
-  // How the sound is played rather than which one it is, so it sits above them,
-  // where a screen keeps its settings
-  var again = document.createElement("button");
-  again.className = "again" + (state.soundLoop && state.sound ? " on" : "");
-  again.textContent = "on repeat";
-  again.disabled = !state.sound;
-  again.title = state.sound
-    ? "Start it again as it ends, instead of playing once as the board starts"
-    : "Nothing is playing, so there is nothing to repeat";
-  again.onclick = function () { state.soundLoop = !state.soundLoop; draw(); };
-  var above = document.createElement("div");
-  above.style.margin = "0 0 .7rem";
-  above.appendChild(again);
-  box.appendChild(above);
-
-  var row = document.createElement("div");
-  row.className = "sounds";
-  // A sound the file names that the drive does not hold still gets its tile, since
-  // the board may find it on its own storage
-  var names = state.sounds.slice();
-  if (state.sound && names.indexOf(state.sound) < 0) names.unshift(state.sound);
-  if (state.soundKept) row.appendChild(soundKeptTile());
-  names.forEach(function (name) { row.appendChild(soundTile(name)); });
-  row.appendChild(soundTile(null));
-  if (state.fileHandle)
-    row.appendChild(adderTile("add sounds",
-      {description: "Sounds the board plays", accept: {"audio/wav": [".wav"]}},
-      "sounds", /\\.wav$/i));
-  box.appendChild(row);
-}
-
-// The audio line the file already had, which no tile of a name can stand for
-function soundKeptTile() {
-  var tile = document.createElement("button");
-  tile.className = "sound" + (state.sound ? "" : " picked");
-  tile.title = state.soundKept;
-  tile.innerHTML = "<svg viewBox='0 0 104 30' preserveAspectRatio='none'><rect x='0' " +
-                   "y='14' width='104' height='2' rx='1' fill='#c9c3b9'/></svg>";
-  var title = document.createElement("b");
-  title.textContent = "As it is";
-  tile.appendChild(title);
-  var says = document.createElement("small");
-  says.textContent = state.soundKept.slice(0, 40);
-  tile.appendChild(says);
-  tile.onclick = function () {
-    state.sound = null;
-    state.soundLoop = false;
-    draw();
-  };
-  return tile;
-}
-
-// A sound to choose, or the silence at the end of the row, which is simply no entry
-function soundTile(name) {
-  var picked = name === null ? !state.sound && !state.soundKept : state.sound === name;
-  var info = name ? state.soundInfo[name] : null;
-  var tile = document.createElement("button");
-  tile.className = "sound" + (picked ? " picked" : "") + (name ? "" : " quiet");
-  var colour = picked ? "#0f8a72" : "#c9c3b9";
-  if (name && info && info.bars) {
-    var cells = [];
-    info.bars.forEach(function (tall, i) {
-      var high = Math.max(2, tall * 26);
-      cells.push("<rect x='" + (i * 4) + "' y='" + ((30 - high) / 2) + "' width='2.6' " +
-                 "height='" + high + "' rx='1.3' fill='" + colour + "'/>");
-    });
-    tile.innerHTML = "<svg viewBox='0 0 104 30' preserveAspectRatio='none'>" +
-                     cells.join("") + "</svg>";
-  } else {
-    tile.innerHTML = "<svg viewBox='0 0 104 30' preserveAspectRatio='none'><rect x='0' " +
-                     "y='14' width='104' height='2' rx='1' fill='" + colour + "'/></svg>";
-  }
-  var title = document.createElement("b");
-  title.textContent = name || "Silence";
-  tile.appendChild(title);
-  var says = document.createElement("small");
-  says.textContent = !name ? "nothing plays"
-                   : info && info.seconds ? info.seconds + "s" +
-                     (picked && state.soundLoop ? ", on repeat" : "")
-                   : state.sounds.indexOf(name) < 0 ? "not on the drive" : "";
-  tile.appendChild(says);
-  tile.onclick = function () {
-    state.sound = name;
-    if (name) state.soundKept = null;
-    if (!name) {
-      state.soundLoop = false;
-      state.soundKept = null;
-    }
-    draw();
-  };
-  if (name && state.sounds.indexOf(name) >= 0) tile.appendChild(binButton(name, "wav"));
-  return tile;
-}
-
-function renderPreview() {
-  var text = currentText();
-  document.getElementById("preview").innerHTML =
-    text.split("\\n").map(paintLine).join("\\n");
-}
-
-function escapeHtml(text) {
-  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-// The written file in the editor's colours: comments, headings, and entries as
-// selector, settings and effect. Painting only what it wrote, it can stay far
-// simpler than the editor's own highlighter
-function paintLine(line) {
-  var bare = escapeHtml(line);
-  if (/^\\s*#/.test(line)) return "<span class='s-comment'>" + bare + "</span>";
-  var heading = line.match(/^(\\s*\\[\\s*)([^:\\]]*)(.*)$/);
-  if (heading)
-    return "<span class='s-punc'>" + escapeHtml(heading[1]) + "</span>" +
-           "<span class='s-scene'>" + escapeHtml(heading[2]) + "</span>" +
-           "<span class='s-punc'>" + escapeHtml(heading[3]) + "</span>";
-  var at = line.indexOf(":");
-  if (at < 0) return bare;
-
-  function settings(text) {
-    return (text.match(/"[^"]*"|\\S+|\\s+/g) || []).map(function (token) {
-      var pair = token.match(/^([^=\\s]+)(=)(.*)$/);
-      if (!pair) return escapeHtml(token);
-      return "<span class='s-name'>" + escapeHtml(pair[1]) + "</span>" +
-             "<span class='s-punc'>=</span>" +
-             "<span class='s-value'>" + escapeHtml(pair[3]) + "</span>";
-    }).join("");
-  }
-
-  var left = line.slice(0, at);
-  var right = line.slice(at + 1);
-  var selector = left.match(/^(\\s*)(\\S+)(.*)$/);
-  var head = selector
-    ? escapeHtml(selector[1]) + "<span class='s-target'>" + escapeHtml(selector[2]) +
-      "</span>" + settings(selector[3])
-    : escapeHtml(left);
-  var effect = right.match(/^(\\s*)(\\S+)(.*)$/);
-  var tail = effect
-    ? escapeHtml(effect[1]) + "<span class='s-effect'>" + escapeHtml(effect[2]) +
-      "</span>" + settings(effect[3])
-    : escapeHtml(right);
-  return head + "<span class='s-colon'>:</span>" + tail;
-}
-
-function draw() {
-  // A redraw replaces the control being used, so whoever had focus is found
-  // again by name once the page is rebuilt: a stepper can be clicked repeatedly
-  var held = document.activeElement && document.activeElement.dataset
-           ? document.activeElement.dataset.focus : null;
-  renderRecognised();
-  renderScenes();
-  renderSceneSettings();
-  renderGallery();
-  renderOutputs();
-  renderStrips();
-  renderScreensHead();
-  renderAssets();
-  renderKept();
-  renderSound();
-  renderPreview();
-  if (held) {
-    var again = document.querySelector('[data-focus="' + held + '"]');
-    if (again) again.focus();
-  }
-}
-
-// The board's own saving animation, so the page shows what the outputs show: one
-// white light travelling the seven over a dim floor, out1 to out7, 120ms a step.
-// Started by saving() and stopped by the next banner, whatever it says
-var SPOT_STEP_MS = 120;
-// How long the animation outlives the write: the board holds its light for 500ms
-// after the last write and then runs one pass of seven half-steps
-var SAVING_TAIL_MS = 920;
-var spotTimer = null;
-
-function stopSpots() {
-  if (spotTimer !== null) clearInterval(spotTimer);
-  spotTimer = null;
-}
-
-function saving(text) {
-  banner(text, "hold");
-  var row = document.createElement("span");
-  row.className = "spots";
-  for (var i = 0; i < 7; i++) row.appendChild(document.createElement("i"));
-  document.getElementById("banner").firstChild.appendChild(row);
-  var at = 0;
-  spotTimer = setInterval(function () {
-    for (var i = 0; i < row.children.length; i++)
-      row.children[i].className = i === at ? "lit" : "";
-    at = (at + 1) % row.children.length;
-  }, SPOT_STEP_MS);
-}
-
-function banner(text, warn, detail) {
-  stopSpots();
-  var box = document.getElementById("banner");
-  box.textContent = "";
-  if (!text) return;
-  var note = document.createElement("div");
-  // warn may also be "hold", the amber of a check still running
-  note.className = warn === "hold" ? "banner hold" : warn ? "banner warn" : "banner";
-  note.textContent = text;
-  if (detail) {
-    var pre = document.createElement("pre");
-    pre.textContent = detail;
-    note.appendChild(pre);
-  }
-  box.appendChild(note);
-}
-
-// ---- the drive -------------------------------------------------------------------
-
-var scanBusy = false;
-
-async function scanMedia(dir) {
-  // What the drive holds that a screen can show: gifs and stills, PNG or JPEG,
-  // and folders of them, which play as a slideshow. One walk at a time, built
-  // aside and landed whole, so a redraw mid-scan never sees half a drive and two
-  // walks can never lace their findings together
-  if (scanBusy) return;
-  scanBusy = true;
-  var media = [];
-  var sounds = [];
-  try {
-    for await (var pair of dir.entries()) {
-      var name = pair[0], handle = pair[1];
-      if (handle.kind === "file") {
-        if (/\\.gif$/i.test(name)) media.push({ name: name, kind: "gif", handle: handle });
-        else if (/\\.(png|jpe?g)$/i.test(name)) media.push({ name: name, kind: "image", handle: handle });
-        else if (/\\.wav$/i.test(name)) {
-          sounds.push(name);
-          profileSound(name, handle);
-        }
-      } else if (name !== "System Volume Information") {
-        for await (var inner of handle.entries()) {
-          if (inner[1].kind === "file" && /\\.(gif|png|jpe?g)$/i.test(inner[0])) {
-            media.push({ name: name, kind: "folder", thumbHandle: inner[1] });
-            break;
-          }
-        }
-      }
-    }
-  } finally {
-    scanBusy = false;
-  }
-  sounds.sort();
-  media.sort(function (a, b) { return a.name < b.name ? -1 : 1; });
-  state.media = media;
-  state.sounds = sounds;
-  state.scanned = true;
-}
-
-// A wav's length and shape, read from the file itself: the header gives the
-// byte rate and the data run, and a few small slices give the peaks. Anything
-// unreadable simply draws flat
-async function profileSound(name, handle) {
-  if (state.soundInfo[name] !== undefined) return;
-  state.soundInfo[name] = null;
-  try {
-    var file = await handle.getFile();
-    var head = new DataView(await file.slice(0, 8192).arrayBuffer());
-    if (head.getUint32(0) !== 0x52494646 || head.getUint32(8) !== 0x57415645)
-      throw new Error("not a wav");
-    var at = 12;
-    var byteRate = 0;
-    var bits = 16;
-    var dataAt = 0;
-    var dataSize = 0;
-    while (at + 8 <= head.byteLength) {
-      var id = head.getUint32(at);
-      var size = head.getUint32(at + 4, true);
-      if (id === 0x666d7420) {                       // "fmt "
-        byteRate = head.getUint32(at + 16, true);
-        bits = head.getUint16(at + 22, true);
-      } else if (id === 0x64617461) {                // "data"
-        dataAt = at + 8;
-        dataSize = Math.min(size, file.size - dataAt);
-        break;
-      }
-      at += 8 + size + (size % 2);
-    }
-    if (!byteRate || !dataSize) throw new Error("no sound in it");
-
-    var bars = [];
-    for (var b = 0; b < 26; b++) {
-      var from = dataAt + Math.floor(dataSize * b / 26);
-      var take = Math.min(2048, dataAt + dataSize - from);
-      var slice = await file.slice(from, from + take).arrayBuffer();
-      var peak = 0;
-      if (bits === 16) {
-        var wide = new Int16Array(slice, 0, Math.floor(slice.byteLength / 2));
-        for (var i = 0; i < wide.length; i++) peak = Math.max(peak, Math.abs(wide[i]));
-        peak /= 32768;
-      } else {
-        var thin = new Uint8Array(slice);
-        for (var j = 0; j < thin.length; j++) peak = Math.max(peak, Math.abs(thin[j] - 128));
-        peak /= 128;
-      }
-      bars.push(peak);
-    }
-    state.soundInfo[name] = {seconds: Math.max(1, Math.round(dataSize / byteRate)),
-                             bars: bars};
-    renderSound();
-  } catch (e) {
-    state.soundInfo[name] = null;
-  }
-}
-
-// ---- remembering the drive -------------------------------------------------------
-
-// The drive's handle survives in IndexedDB, so after the first visit it is reached
-// with one click and a permission bubble instead of the file dialog every time. A
-// page cannot go looking for the drive itself; remembering the answer is what there
-// is. Anything failing in here falls back to the dialog
-function rememberDrive(handle) {
-  try {
-    var open = indexedDB.open("fx-pages", 1);
-    open.onupgradeneeded = function () { open.result.createObjectStore("handles"); };
-    open.onsuccess = function () {
-      try {
-        open.result.transaction("handles", "readwrite")
-            .objectStore("handles").put(handle, "drive");
-      } catch (e) {}
-    };
-  } catch (e) {}
-}
-
-function rememberedDrive() {
-  return new Promise(function (settle) {
-    try {
-      var open = indexedDB.open("fx-pages", 1);
-      open.onupgradeneeded = function () { open.result.createObjectStore("handles"); };
-      open.onerror = function () { settle(null); };
-      open.onsuccess = function () {
-        try {
-          var ask = open.result.transaction("handles").objectStore("handles").get("drive");
-          ask.onsuccess = function () { settle(ask.result || null); };
-          ask.onerror = function () { settle(null); };
-        } catch (e) { settle(null); }
-      };
-    } catch (e) { settle(null); }
-  });
-}
-
-async function pickDrive(fresh) {
-  var kept = await rememberedDrive();
-  if (kept && !fresh) {
-    try {
-      if (await kept.requestPermission({mode: "readwrite"}) === "granted") {
-        await kept.getFileHandle("effects.txt");
-        return kept;
-      }
-    } catch (e) {}
-  }
-  var picked;
-  try {
-    picked = await window.showDirectoryPicker(
-        kept ? {mode: "readwrite", startIn: kept} : {mode: "readwrite"});
-  } catch (e) {
-    if (e.name === "AbortError") throw e;
-    picked = await window.showDirectoryPicker({mode: "readwrite"});
-  }
-  rememberDrive(picked);
-  return picked;
-}
-
-async function connect(fresh) {
-  if (!CAN_REACH_A_DRIVE) return connectByInput();
-  var dir = await pickDrive(fresh);
-  var file;
-  try {
-    file = await dir.getFileHandle("effects.txt");
-  } catch (e) {
-    // Every FX drive carries effects.txt, so a folder without one is simply not
-    // an FX drive, and saying so beats a bare error name
-    if (e.name === "NotFoundError") {
-      var refused = new Error("no effects.txt");
-      refused.name = "NotAnFxDrive";
-      throw refused;
-    }
-    throw e;
-  }
-  state.dirHandle = dir;
-  state.fileHandle = file;
-  await scanMedia(dir);
-  absorbText(await (await state.fileHandle.getFile()).text());
-  document.getElementById("check").disabled = false;
-  document.getElementById("status").textContent = "connected to the drive";
-  // The next thing to do carries the colour: opening first, then saving. Once a
-  // drive is open the only opening left is a different one, so one button remains
-  // and it goes straight to the dialog
-  var openButton = document.getElementById("open");
-  openButton.className = "";
-  openButton.textContent = "Open a different drive";
-  openButton.onclick = openFresh;
-  document.getElementById("openOther").hidden = true;
-  var saveButton = document.getElementById("save");
-  saveButton.className = "primary";
-  saveButton.disabled = false;
-  draw();
-}
-
-// ---- the drive without handles ---------------------------------------------------
-
-// Safari and Firefox cannot hand a page a folder to write to. There the drive is
-// read through a folder chooser, which gives every file in one pick, and a save
-// hands effects.txt to the browser's download, which the user places on the drive
-var folderInput = document.createElement("input");
-folderInput.type = "file";
-folderInput.setAttribute("webkitdirectory", "");
-folderInput.style.display = "none";
-document.body.appendChild(folderInput);
-
-var folderSettle = null;
-folderInput.onchange = function () {
-  var files = Array.prototype.slice.call(folderInput.files);
-  folderInput.value = "";
-  var settle = folderSettle;
-  folderSettle = null;
-  if (settle) settle(files);
-};
-// A dismissed dialog answers null, so nothing waits forever on it
-folderInput.oncancel = function () {
-  var settle = folderSettle;
-  folderSettle = null;
-  if (settle) settle(null);
-};
-
-function chooseFolder() {
-  return new Promise(function (settle) {
-    folderSettle = settle;
-    folderInput.click();
-  });
-}
-
-// A File dressed as the handle the previews and waveforms already take
-function pseudoHandle(file) {
-  return {kind: "file", name: file.name,
-          getFile: function () { return Promise.resolve(file); }};
-}
-
-function pathOf(file) {
-  return (file.webkitRelativePath || file.name).split("/");
-}
-
-// Whether any part of the path is a dot entry. Firefox hands back everything the
-// drive holds, including the sidecars and event log a Mac leaves on it
-function hiddenPath(parts) {
-  return parts.some(function (part) { return part.charAt(0) === "."; });
-}
-
-// The chooser's files sorted into the shape scanMedia() gives: effects.txt and
-// errors.txt picked out, and everything a screen or the speaker can play
-function sortFolder(files) {
-  var media = [];
-  var sounds = [];
-  var effects = null;
-  var errors = null;
-  var folders = {};
-  for (var i = 0; i < files.length; i++) {
-    var parts = pathOf(files[i]);
-    if (hiddenPath(parts)) continue;
-    var name = parts[parts.length - 1];
-    if (parts.length === 2) {
-      if (name === "effects.txt") effects = files[i];
-      else if (name === "errors.txt") errors = files[i];
-      else if (/\\.gif$/i.test(name))
-        media.push({name: name, kind: "gif", handle: pseudoHandle(files[i])});
-      else if (/\\.(png|jpe?g)$/i.test(name))
-        media.push({name: name, kind: "image", handle: pseudoHandle(files[i])});
-      else if (/\\.wav$/i.test(name)) {
-        sounds.push(name);
-        profileSound(name, pseudoHandle(files[i]));
-      }
-    } else if (parts.length === 3 && parts[1] !== "System Volume Information" &&
-               !folders[parts[1]] && /\\.(gif|png|jpe?g)$/i.test(name)) {
-      folders[parts[1]] = true;
-      media.push({name: parts[1], kind: "folder", thumbHandle: pseudoHandle(files[i])});
-    }
-  }
-  sounds.sort();
-  media.sort(function (a, b) { return a.name < b.name ? -1 : 1; });
-  return {media: media, sounds: sounds, effects: effects, errors: errors,
-          drive: files.length ? pathOf(files[0])[0] : null};
-}
-
-function takeFolder(found) {
-  state.media = found.media;
-  state.sounds = found.sounds;
-  state.scanned = true;
-}
-
-async function connectByInput() {
-  var files = await chooseFolder();
-  if (files === null) {
-    var dropped = new Error("the dialog was dismissed");
-    dropped.name = "AbortError";
-    throw dropped;
-  }
-  var found = sortFolder(files);
-  if (!found.effects) {
-    var refused = new Error("no effects.txt");
-    refused.name = "NotAnFxDrive";
-    throw refused;
-  }
-  takeFolder(found);
-  state.boardText = await found.effects.text();
-  absorbText(state.boardText);
-  document.getElementById("check").disabled = false;
-  document.getElementById("status").textContent =
-      "read from " + (found.drive && found.drive.length > 1 ? found.drive : "the drive");
-  var openButton = document.getElementById("open");
-  openButton.className = "";
-  openButton.textContent = "Look at the drive again";
-  var saveButton = document.getElementById("save");
-  saveButton.className = "primary";
-  saveButton.disabled = false;
-  draw();
-}
-
-// A save with nowhere to write: effects.txt goes to the browser's download, and
-// the banner says where it belongs and how the board answers
-function saveByHand() {
-  var text = currentText();
-  var lastWritten = null;
-  try { lastWritten = localStorage.getItem("fx-picker-wrote"); } catch (e) {}
-  var onBoard = state.boardText || "";
-  if (onBoard.indexOf("Written by the FX picker") < 0 && onBoard !== lastWritten &&
-      onBoard.trim() !== "") {
-    if (!confirm("The file on the board was written some other way, maybe by hand. " +
-                 "Its entries are kept, but its comments and layout will be redone. " +
-                 "Save over it?"))
-      return;
-  }
-  var link = document.createElement("a");
-  link.href = URL.createObjectURL(new Blob([text], {type: "text/plain"}));
-  link.download = "effects.txt";
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  try { localStorage.setItem("fx-picker-wrote", text); } catch (e) {}
-  state.boardText = text;
-  banner("effects.txt is downloading. Put it on the FX drive in place of the old one" +
-         (playsItself(onBoard)
-          ? ", and the board plays it. Then press 'Did it work?'."
-          : ", then eject the drive or press the board's button once, and it plays."));
-}
-
-// Did it work, asked by picking the drive again. Only its answer and its files
-// are taken; what is being built on the page stays as it is
-async function askByInput() {
-  banner("Pick the FX drive again, so its answer can be read.", "hold");
-  var files = await chooseFolder();
-  if (files === null) {
-    banner("");
-    return;
-  }
-  var found = sortFolder(files);
-  if (!found.effects) {
-    banner("That folder has no effects.txt, so it does not look like an FX " +
-           "drive. Pick the drive itself, the one named FX.", true);
-    return;
-  }
-  takeFolder(found);
-  draw();
-  var said = found.errors ? (await found.errors.text()).trim() : null;
-  if (said === CHECKING)
-    banner("The board has not read the file yet. Check effects.txt landed on the " +
-           "drive, then eject it or press the board's button once.", "hold");
-  else if (said)
-    banner("The board wasn't happy with some of it:", true, said);
-  else
-    banner("All good. The board read the file and found nothing wrong.");
-}
-
-// ---- waiting for the board -------------------------------------------------------
-
-// Only the board writes errors.txt, and only where it has re-read the file, so a
-// change there is proof it acted. It answers a save in about four seconds.
-//
-// Never read effects.txt while waiting. A read of the file just saved holds off the
-// write the computer still has in hand, and the board then waits half a minute to
-// see it, measured 2026-08-22
-var BOARD_SETTLE_MS = 6000;
-var BOARD_WAIT_MS = 15000;
-// How long the drive is given to come back once it has been seen away. The board
-// leaves the USB bus on a reload and a Mac takes about four seconds to mount it
-// again, measured 2026-09-17, with the answer readable the moment it does
-var BOARD_AWAY_MS = 10000;
-var BOARD_POLL_MS = 250;
-
-function playsItself(text) {
-  return /\\breload\\s*=\\s*auto\\b/i.test(text);
-}
-
-// Written into errors.txt before saving, so the board's answer is always a
-// change: it deletes the file where the save reads clean and rewrites it where
-// not, so this line vanishing is the answer either way. Self-describing, since a
-// board that never reads the file leaves it to be found later
-var CHECKING = "The board has not read the file yet.";
-
-// Writes the marker; returns whether it took, a full drive being the reason not
-async function markChecking() {
-  try {
-    var handle = await state.dirHandle.getFileHandle("errors.txt", {create: true});
-    var writable = await handle.createWritable();
-    await writable.write(CHECKING + "\\n");
-    await writable.close();
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-// Whether the drive is there to be asked, by listing its first entry. A drive that
-// has left the bus mid-reload makes every path vanish at once, so a missing file
-// is only missing while the directory itself still answers
-async function driveAnswers() {
-  try {
-    for await (var entry of state.dirHandle.values()) return true;
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-// The text of errors.txt, null where there is none, and false where the drive is
-// away mid-reload and the question cannot be answered yet
-async function readErrors() {
-  try {
-    var handle = await state.dirHandle.getFileHandle("errors.txt");
-    return (await (await handle.getFile()).text()).trim();
-  } catch (e) {
-    if (e.name !== "NotFoundError") return false;
-    return (await driveAnswers()) ? null : false;
-  }
-}
-
-// Polls until errors.txt differs from what it said before the save, calling
-// nothingYet() once the settle time passes, saying the check is still running: an
-// answer can arrive after the settle, so nothing is claimed until the wait is over.
-// Seeing the drive away is proof the board acted, so an unchanged answer after that
-// is a real answer rather than an early one, and the wait is extended once so the
-// answer is not missed while the drive is still on its way back
-async function waitForBoard(before, nothingYet) {
-  var deadline = Date.now() + BOARD_WAIT_MS;
-  var settled = Date.now() + BOARD_SETTLE_MS;
-  var wentAway = false;
-  var told = false;
-  while (Date.now() < deadline) {
-    await new Promise(function (settle) { setTimeout(settle, BOARD_POLL_MS); });
-    var now = await readErrors();
-    if (now === false) {
-      if (!wentAway) deadline = Math.max(deadline, Date.now() + BOARD_AWAY_MS);
-      wentAway = true;
-      continue;
-    }
-    if (now !== before) return now;
-    if (wentAway) return now;
-    if (!told && Date.now() > settled) {
-      nothingYet();
-      told = true;
-    }
-  }
-  return before;
-}
-
-// What to say once the wait is over. Silence cannot be told from a board that has
-// not got there yet, so it is reported as nothing said rather than as all well
-function sayWhatHappened(said, also) {
-  if (said === CHECKING)
-    banner("No answer from the board yet. Eject the FX drive, or press the " +
-           "board's button once, and it plays. If the lights already changed, " +
-           "this computer is showing the page an old copy of the drive: unplug " +
-           "the board and plug it back in to see what it wrote.", true);
-  else if (said)
-    banner("The board wasn't happy with some of it:", true, said);
-  else
-    banner("Playing on the board. No problems reported." + (also || ""));
-}
-
-document.getElementById("save").onclick = async function () {
-  if (!CAN_REACH_A_DRIVE) {
-    saveByHand();
-    return;
-  }
-  // Both held down until the verdict: a second save cannot land in the wait and race
-  // the first, a check cannot read back the marker this save is about to write, and
-  // the buttons coming back say the board has answered
-  var button = this;
-  var check = document.getElementById("check");
-  try {
-    if (!state.fileHandle) await connect();
-    button.disabled = true;
-    check.disabled = true;
-    var onBoard = await (await state.fileHandle.getFile()).text();
-    var lastWritten = null;
-    try { lastWritten = localStorage.getItem("fx-picker-wrote"); } catch (e) {}
-    if (onBoard.indexOf("Written by the FX picker") < 0 && onBoard !== lastWritten &&
-        onBoard.trim() !== "") {
-      if (!confirm("The file on the board was written some other way, maybe by hand. " +
-                   "Its entries are kept, but its comments and layout will be redone. " +
-                   "Save over it?"))
-        return;
-    }
-    var text = currentText();
-    saving("Saving to the board...");
-    // The board acts on a save only where the file it is already running asked it
-    // to, so the first save that turns it on still needs an eject
-    var errorsBefore = playsItself(onBoard) ? await readErrors() : undefined;
-    // The marker makes the answer an edge even where nothing else changes
-    if (errorsBefore !== undefined && await markChecking()) errorsBefore = CHECKING;
-    var writable = await state.fileHandle.createWritable();
-    await writable.write(text);
-    await writable.close();
-    var back = await (await state.fileHandle.getFile()).text();
-    if (back !== text) throw new Error("the file read back differently");
-    try { localStorage.setItem("fx-picker-wrote", text); } catch (e) {}
-    state.recognised = {look: state.always.body.look ||
-                        (state.scenes[0] ? state.scenes[0].body.look : null),
-                        exact: true, any: true};
-    var newStrips = STRIP_IDS.filter(function (id) {
-      return state.strips[id].leds && state.stripsAtStart.indexOf(id) < 0;
-    });
-    var strips = newStrips.length
-               ? " The strip you added only comes up when the board starts, so turn it off "
-                 + "and on once you are done."
-               : "";
-    // The board keeps its light travelling for a moment after the last write, then
-    // runs one pass as the drive changes hands, so the page holds its own as long
-    await new Promise(function (settle) { setTimeout(settle, SAVING_TAIL_MS); });
-    if (errorsBefore === undefined) {
-      banner("On its way. " + (playsItself(text)
-             ? "Eject the FX drive, or press the board's button once, to play this one. "
-               + "From now on a save plays on its own."
-             : "Eject the FX drive on this computer, and the board plays it. Double-press "
-               + "the board's button to bring the drive back, then ask 'Did it work?'.")
-             + strips);
-      return;
-    }
-    banner("Saved. Waiting for the board to pick it up...", "hold");
-    var was = errorsBefore === false ? null : errorsBefore;
-    sayWhatHappened(await waitForBoard(was, function () {
-      banner("Playing on the board. Checking for problems..." + strips, "hold");
-    }), strips);
-  } catch (e) {
-    if (e.name === "AbortError") return;
-    if (e.name === "QuotaExceededError") {
-      // The drive is there, it is simply full: saving writes a temporary copy
-      // first, so it needs the file's size free
-      banner("The FX drive is full, so there was no room to save. Delete a " +
-             "picture or sound from it and try again.", true);
-      return;
-    }
-    state.fileHandle = null;
-    state.dirHandle = null;
-    banner("That didn't reach the board: " + e.name + ". Is the FX drive showing? " +
-           "A double press of its button brings it back; then try again.", true);
-  } finally {
-    button.disabled = false;
-    check.disabled = false;
-  }
-};
-
-document.getElementById("check").onclick = async function () {
-  if (!CAN_REACH_A_DRIVE) {
-    askByInput();
-    return;
-  }
-  // A blink before the answer, so asking again visibly did something even when
-  // the answer reads the same
-  banner("Asking the board...", "hold");
-  await new Promise(function (settle) { setTimeout(settle, 350); });
-  try {
-    var handle = await state.dirHandle.getFileHandle("errors.txt");
-    var text = await (await handle.getFile()).text();
-    if (text.trim() === CHECKING) {
-      banner("The board has not read the file yet. Eject the FX drive, or press " +
-             "the board's button once.", "hold");
-      return;
-    }
-    banner("The board wasn't happy with some of it:", true, text.trim());
-  } catch (e) {
-    if (e.name === "NotFoundError")
-      banner("All good. The board read the file and found nothing wrong.");
-    else
-      banner("Couldn't look: " + e.name + ". Is the drive showing?", true);
-  }
-};
-
-async function openDrive(fresh) {
-  try {
-    await connect(fresh);
-    banner("");
-  } catch (e) {
-    if (e.name === "AbortError") return;
-    if (e.name === "NotAnFxDrive") {
-      banner("That folder has no effects.txt, so it does not look like an FX " +
-             "drive. Pick the drive itself, the one named FX.", true);
-      return;
-    }
-    banner("Could not open the drive: " + e.name + ". Is it showing? " +
-           "A double press of the board's button brings it back.", true);
-  }
-}
-
-function openFresh() { openDrive(true); }
-
-document.getElementById("open").onclick = function () { openDrive(false); };
-document.getElementById("openOther").onclick = openFresh;
-
-// Only Chromium browsers can be handed a folder to write to. Elsewhere the drive
-// is read through a folder chooser and a save goes by download, above
-var CAN_REACH_A_DRIVE = typeof window.showDirectoryPicker === "function";
-
-// Edge is named only where it is already on the machine
-var ONE_CLICK_BROWSERS = "Chrome" + (/Win/.test(navigator.platform) ? " or Edge" : "") +
-                         ", or another browser built on Chromium,";
-
-if (!CAN_REACH_A_DRIVE) {
-  document.getElementById("openOther").hidden = true;
-  banner("This browser cannot write to the drive, so a save downloads effects.txt for " +
-         "you to put on it. " + ONE_CLICK_BROWSERS + " saves straight to the board.");
-}
-
-// Where a visit before this one answered which drive, the choice is offered by
-// name beside the way to a different one
-rememberedDrive().then(function (kept) {
-  if (!kept || state.fileHandle || !CAN_REACH_A_DRIVE) return;
-  // A drive root's name comes back as a bare slash, so only a real folder name
-  // is worth showing
-  var name = kept.name && kept.name.length > 1 ? " (" + kept.name + ")" : " again";
-  document.getElementById("open").textContent = "Open the FX drive" + name;
-  document.getElementById("openOther").hidden = false;
-});
-
-// What the drive holds changes as people copy files on, so it is looked at
-// again every few seconds and the grid redrawn only where something changed.
-// Directory reads never touch effects.txt, so the board's save watch is safe
-async function rescanMedia() {
-  if (!state.dirHandle || scanBusy) return;
-  var was = JSON.stringify([state.media.map(function (m) { return m.name + m.kind; }),
-                            state.sounds]);
-  try {
-    await scanMedia(state.dirHandle);
-  } catch (e) {
-    return;
-  }
-  var now = JSON.stringify([state.media.map(function (m) { return m.name + m.kind; }),
-                            state.sounds]);
-  if (now !== was) draw();
-}
-setInterval(rescanMedia, 5000);
-
-document.getElementById("straight").onchange = function () {
-  state.straight = document.getElementById("straight").checked;
-  draw();
-};
-
-draw();
-</script>
-</body>
-</html>
-"""
-
-EDITOR = """\
-<!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>FX Editor</title>
-<script src="catalogue.js"></script>
-<style>
-:root{
- --bg:#f5f3ef; --panel:#fff; --ink:#26221e; --dim:#8a8378; --line:#e2ddd4;
- --accent:#00857d; --accent-ink:#fff; --warn:#b33; --warn-bg:#fbeaea;
- --target:#1f6feb; --effect:#0a7f78; --value:#a8500a; --scene:#7b3fb8;
- --comment:#8a8378; --faint:#5d656e;
-}
-*{box-sizing:border-box}
-body{font:16px/1.5 system-ui,sans-serif;margin:0;background:var(--bg);color:var(--ink)}
-header{display:flex;align-items:center;gap:.8rem;padding:.8rem 1.4rem;background:var(--panel);
- border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
-header h1{font-size:1.1rem;margin:0 auto 0 0}
-button{font:inherit;padding:.5rem 1rem;border:1px solid var(--line);border-radius:8px;
- background:var(--panel);cursor:pointer}
-button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
-button:disabled{opacity:.4;cursor:default}
-main{max-width:52rem;margin:1.5rem auto;padding:0 1.4rem}
-#status{font-size:.85rem;color:var(--dim)}
-.banner{padding:.8rem 1.1rem;border-radius:10px;margin:1rem 0;background:#e7f2f1}
-.banner.warn{background:var(--warn-bg);color:var(--warn)}
-.banner.hold{background:#fdf3e0;color:#8a6415}
-.banner pre{margin:.4rem 0 0;white-space:pre-wrap;font-size:.85rem}
-/* The seven outputs as the board lights them while a save is written */
-.spots{display:inline-flex;gap:.3rem;margin-left:.7rem;vertical-align:middle}
-.spots i{display:block;width:.85rem;height:.85rem;border-radius:3px;border:1px solid rgba(138,100,21,.45);
- background:rgba(138,100,21,.12)}
-.spots i.lit{background:#fff;border-color:#8a6415;box-shadow:0 0 6px 1px rgba(255,255,255,.9)}
-
-.editor{position:relative;background:var(--panel);border:1px solid var(--line);
- border-radius:14px;overflow:hidden;height:24rem}
-.editor pre, .editor textarea{
- position:absolute;inset:0;margin:0;padding:1rem 1.2rem;border:0;
- font:14px/1.6 ui-monospace,Consolas,"Cascadia Mono",monospace;
- white-space:pre;overflow:auto;tab-size:4;
-}
-.editor pre{pointer-events:none;background:transparent;color:var(--ink);z-index:1;
- scrollbar-width:none}
-.editor pre::-webkit-scrollbar{display:none}
-.editor textarea{background:transparent;color:transparent;caret-color:var(--ink);
- resize:none;outline:none;z-index:2}
-.editor textarea::selection{background:rgba(0,133,125,.18)}
-
-.s-target{color:var(--target)}
-.s-effect{color:var(--effect);font-weight:600}
-.s-value{color:var(--value)}
-.s-scene{color:var(--scene);font-weight:600}
-.s-name{color:var(--ink)}
-.s-punc{color:var(--faint)}
-.s-colon{color:var(--ink);font-weight:700}
-.s-comment{color:var(--comment);font-style:italic}
-.s-bad{text-decoration:underline wavy var(--warn);text-decoration-skip-ink:none}
-
-.suggest{position:fixed;z-index:6;background:var(--panel);border:1px solid var(--line);
- border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.12);min-width:12rem;max-width:24rem;
- max-height:14rem;overflow:auto;display:none;font:13px/1.5 ui-monospace,Consolas,monospace}
-.suggest.shown{display:block}
-.suggest div{padding:.25rem .8rem;cursor:pointer;display:flex;gap:.8rem;align-items:baseline}
-.suggest div small{color:var(--dim);font:12px/1.4 system-ui,sans-serif;margin-left:auto;
- white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.suggest div.lit{background:var(--accent);color:var(--accent-ink)}
-.suggest div.lit small{color:var(--accent-ink)}
-.suggest div.rule{border-top:1px solid var(--line);margin:.25rem 0;padding:0;cursor:default}
-
-.hint{font-size:.85rem;color:var(--dim);margin:.6rem .2rem;min-height:1.3rem}
-.foot{font-size:.85rem;color:var(--dim);margin:1.2rem .2rem}
-.foot a{color:var(--accent)}
-</style>
-</head>
-<body>
-<header>
-<h1>FX Editor</h1>
-<span id="status">nothing open yet</span>
-<button id="open" class="primary">Open the FX drive</button>
-<button id="save" disabled>Put it on the board</button>
-<button id="check" disabled>Did it work?</button>
-</header>
-<main>
-<div id="banners"></div>
-<div class="editor">
-<pre id="paint"><code id="painted"></code></pre>
-<textarea id="entry" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off"></textarea>
-<div id="suggest" class="suggest"></div>
-</div>
-<div id="hint" class="hint"></div>
-<p class="foot">One entry per line: which lights, a colon, then the effect.
-The board checks the file when the drive ejects, and "Did it work?" reads what it made
-of each line. Rather pick from cards? <a href="PICKER.html">PICKER.html</a> on this
-drive writes the file for you.</p>
-</main>
-<script>
-"use strict";
-
-// The page still paints without the catalogue beside it; the hint line says why
-// nothing can be offered
-if (typeof CATALOGUE === "undefined") window.CATALOGUE = null;
-
-// ---- what the file may say, from the same tables the board reads ---------------
-
-var TYPE_HINTS = {
-  fraction: "0 to 1, or a percent such as 50%",
-  seconds: "a time in seconds",
-  number: "a number",
-  count: "a whole number",
-  span: "how many lights it spreads over",
-  whole: "a whole number",
-  byte: "0 to 255",
-  angle: "degrees, 0 to 360",
-  colour: "a name such as warm, or six-digit hex with no #",
-  boolean: "true or false",
-  quarter: "0, 90, 180 or 270",
-  name: "a file on this drive"
-};
-
-// The left side's own settings have shapes the type table does not carry
-var CHANNEL_HINTS = {
-  colour: "a name such as warm, or six-digit hex with no #",
-  offset: "where the picture goes, as x|y, * centring that side",
-  background: "the colour around the picture",
-  bg: "the colour around the picture",
-  tile: "repeat or mirror to fill the screen with copies, as across|down"
-};
-
-var TARGETS = [
-  ["out1-7", "all seven outputs"],
-  ["screenA", "a screen on SP/CE A"],
-  ["screenB", "a screen on SP/CE B"],
-  ["hubA", "a screen on a Screen Hub, from hubA to hubF, such as hubA-C"],
-  ["stripL", "an LED strip on L"],
-  ["stripR", "an LED strip on R"],
-  ["audio", "a sound played beside the effects"],
-  ["board", "settings for the board itself"],
-  ["[", "a scene heading, [Name: 10s]; entries above the first are always on"]
-];
-
-var BOARD_HINTS = {
-  drive: "manual keeps the drive hidden until asked for",
-  reload: "auto plays the file the moment it is saved, no eject needed",
-  program: "a Python file to run instead of the effects",
-  args: "what to pass that program, divided by |",
-  screena: "what size of screen is on SP/CE A, or hub for a Screen Hub",
-  screenb: "what size of screen is on SP/CE B, or hub for a Screen Hub",
-  stripl: "how many LEDs are on a strip plugged into L",
-  stripr: "the same for R"
-};
-
-// The spelling a completion inserts, where the file reads best in mixed case
-var BOARD_CASE = {screena: "screenA", screenb: "screenB",
-                  stripl: "stripL", stripr: "stripR"};
-
-function targetKind(word) {
-  var lowered = word.toLowerCase();
-  if (lowered === "board") return "board";
-  if (CATALOGUE && lowered === CATALOGUE.audio) return "audio";
-  if (lowered.slice(0, 6) === "screen" || lowered.slice(0, 3) === "hub") return "screen";
-  if (lowered.slice(0, 5) === "strip") return "strip";
-  return "output";
-}
-
-function channelSettings(kind) {
-  // A sound answers to none of the channel settings, autofx saying so where one
-  // is written
-  if (!CATALOGUE || kind === "board" || kind === "audio") return [];
-  if (kind === "screen") return CATALOGUE.screen_settings || [];
-  return CATALOGUE.output_settings || [];
-}
-
-function effectNames(kind) {
-  if (!CATALOGUE) return [];
-  if (kind === "screen") return Object.keys(CATALOGUE.screen_effects);
-  if (kind === "audio") return Object.keys(CATALOGUE.audio_effects);
-  return Object.keys(CATALOGUE.effects);
-}
-
-function effectTakes(name, kind) {
-  if (!CATALOGUE) return null;
-  if (kind === "screen") return CATALOGUE.screen_effects[name.toLowerCase()] || null;
-  if (kind === "audio") return CATALOGUE.audio_effects[name.toLowerCase()] || null;
-  var effect = CATALOGUE.effects[name.toLowerCase()];
-  return effect ? effect.takes : null;
-}
-
-function settingType(name, kind) {
-  if (!CATALOGUE) return null;
-  var lowered = name.toLowerCase();
-  return CATALOGUE.channel_kinds[lowered] ||
-         (kind !== "board" && CATALOGUE.settings[lowered]) || null;
-}
-
-function valuesFor(name, kind) {
-  if (!CATALOGUE) return null;
-  var lowered = name.toLowerCase();
-  if (kind === "board") {
-    // A hub position takes the sizes a screen does, less the hub itself
-    if (HUB_PLACES.test(lowered))
-      return CATALOGUE.board_settings.screena.filter(function (size) { return size !== "hub"; });
-    var allowed = CATALOGUE.board_settings[lowered];
-    return allowed && allowed.length ? allowed.map(String) : null;
-  }
-  if (lowered === "colour" || lowered === "background" || lowered === "bg")
-    return CATALOGUE.colours;
-  if (lowered === "rotation") return ["0", "90", "180", "270"];
-  if (lowered === "tile") return CATALOGUE.tiling || [];
-  if (settingType(name, kind) === "boolean") return ["true", "false"];
-  return null;
-}
-
-// ---- painting, the same roles the manual gives each word -----------------------
-
-function esc(text) {
-  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function mark(role, text) {
-  return text ? '<span class="' + role + '">' + text + "</span>" : text;
-}
-
-function settingTok(token) {
-  var trailing = "";
-  while (token.slice(-1) === ",") {
-    trailing = "," + trailing;
-    token = token.slice(0, -1);
-  }
-  var at = token.indexOf("=");
-  if (at < 0) return mark("s-name", token) + trailing;
-  return mark("s-name", token.slice(0, at)) + mark("s-punc", "=") +
-         mark("s-value", token.slice(at + 1)) + trailing;
-}
-
-function tokens(text, asWord) {
-  return text.split(/(\\s+)/).map(function (word) {
-    return !word.trim() ? word : asWord(word);
-  }).join("");
-}
-
-// What is marked as likely wrong is only what the tables know: names. Values are
-// left unjudged, % and deg and lists living there, and the board stays the judge
-function badWrap(marked) {
-  return '<span class="s-bad">' + marked + "</span>";
-}
-
-// A Screen Hub's positions, lettered A to F as on its silk, singly or as ranges: hubA-C,E
-var HUB_PLACES = /^hub[a-f](-[a-f])?(,[a-f](-[a-f])?)*$/;
-
-function validSelector(word) {
-  var bare = word.toLowerCase().replace(/^,+|,+$/g, "");
-  if (!bare) return true;
-  if (bare === "board" || /^screen[ab]$/.test(bare) || HUB_PLACES.test(bare)) return true;
-  if (CATALOGUE && bare === CATALOGUE.audio) return true;
-  if (/^strip[lr]([0-9][0-9,\\-]*)?$/.test(bare)) return true;
-  if (/^out[0-9][0-9,\\-.rgb*]*$/.test(bare)) return true;
-  // A group after a comma names its outputs bare: 2, 5-3, 3.r
-  return /^[0-9][0-9,\\-]*(\\.(r|g|b|\\*))?$/.test(bare);
-}
-
-// A setting marked wrong where its name is not allowed, unless it fits the pattern given,
-// as a board entry's hub positions do
-function checkedSetting(word, allowed, pattern) {
-  var marked = settingTok(word);
-  if (!allowed) return marked;
-  var name = word.split("=")[0].replace(/,+$/, "").toLowerCase();
-  if (name === "bg") name = "background";
-  var fits = allowed.indexOf(name) >= 0 || (pattern && pattern.test(name));
-  return fits ? marked : badWrap(marked);
-}
-
-function highlightLine(line, continuation, context, inScene) {
-  var hash = line.indexOf("#");
-  var body = hash < 0 ? line : line.slice(0, hash);
-  var comment = hash < 0 ? "" : mark("s-comment", esc(line.slice(hash)));
-
-  if (!body.trim()) return esc(body) + comment;
-  if (body.replace(/^\\s+/, "").slice(0, 1) === "[")
-    return mark("s-scene", esc(body)) + comment;
-
-  var at = body.indexOf(":");
-  if (at < 0) {
-    // A continuation line carries only settings; anything else continues nothing
-    if (!continuation) return badWrap(esc(body)) + comment;
-    var allowed = context && CATALOGUE && context.effect
-                ? effectTakes(context.effect, context.kind) : null;
-    return tokens(esc(body), function (word) {
-      return word.indexOf("=") >= 0 ? checkedSetting(word, allowed) : word;
-    }) + comment;
-  }
-
-  var opening = body.slice(0, at).match(/^\\s*([^\\s]+)/);
-  var kind = opening ? targetKind(opening[1]) : "output";
-  // Sound does not follow scenes, so its entry belongs above every heading
-  var misplaced = kind === "audio" && inScene;
-  var leftAllowed = CATALOGUE
-                  ? (kind === "board" ? [] : channelSettings(kind)) : null;
-
-  var mono = false;
-  var left = tokens(esc(body.slice(0, at)), function (word) {
-    if (word.indexOf("=") >= 0) return checkedSetting(word, leftAllowed);
-    if (kind === "output" && word.indexOf(".") >= 0) mono = true;
-    var marked = mark("s-target", word);
-    return validSelector(word) && !misplaced ? marked : badWrap(marked);
-  });
-
-  // The first bare word names the effect; a board entry is settings the whole way
-  var named = false;
-  var rightAllowed = CATALOGUE && kind === "board"
-                   ? Object.keys(CATALOGUE.board_settings) : null;
-  var right = tokens(esc(body.slice(at + 1)), function (word) {
-    if (!named && word.indexOf("=") < 0) {
-      named = true;
-      var marked = mark("s-effect", word);
-      if (!CATALOGUE) return marked;
-      if (kind === "board") return badWrap(marked);
-      var name = word.replace(/,+$/, "").toLowerCase();
-      rightAllowed = effectTakes(name, kind);
-      if (!rightAllowed) return badWrap(marked);
-      // A colour effect has nothing to show on a channel driven as a plain light
-      if (mono && CATALOGUE.effects[name].kind === "colour") return badWrap(marked);
-      return marked;
-    }
-    return checkedSetting(word, rightAllowed, kind === "board" ? HUB_PLACES : null);
-  });
-
-  return left + mark("s-colon", ":") + right + comment;
-}
-
-function paint(text) {
-  var open = null;
-  var inScene = false;
-  var painted = text.split("\\n").map(function (line) {
-    var body = line.split("#")[0];
-    var context = open;
-    var at = body.indexOf(":");
-    if (body.replace(/^\\s+/, "").slice(0, 1) === "[") inScene = true;
-    if (!body.trim() || body.replace(/^\\s+/, "").slice(0, 1) === "[") {
-      open = null;
-      context = null;
-    } else if (at >= 0) {
-      var opening = body.slice(0, at).match(/^\\s*([^\\s]+)/);
-      var effect = null;
-      body.slice(at + 1).split(/\\s+/).forEach(function (word) {
-        if (word && word.indexOf("=") < 0 && !effect)
-          effect = word.replace(/,+$/, "");
-      });
-      open = {kind: opening ? targetKind(opening[1]) : "output", effect: effect};
-      context = null;
-    }
-    return highlightLine(line, !!context, context, inScene);
-  });
-  return painted.join("\\n") + "\\n";
-}
-
-// ---- where the caret stands, for offering what fits there ----------------------
-
-function entryBefore(text, caret) {
-  // The logical entry up to the caret: this line, plus the lines above it that
-  // it continues, since an entry's colon is on its first line
-  var lineStart = text.lastIndexOf("\\n", caret - 1) + 1;
-  var lines = [text.slice(lineStart, caret)];
-  while (lineStart > 0 && lines[0].split("#")[0].indexOf(":") < 0) {
-    var previousStart = text.lastIndexOf("\\n", lineStart - 2) + 1;
-    var previous = text.slice(previousStart, lineStart - 1).split("#")[0];
-    if (!previous.trim() || previous.replace(/^\\s+/, "").slice(0, 1) === "[") break;
-    lines.unshift(previous);
-    lineStart = previousStart;
-    if (previous.indexOf(":") >= 0) break;
-  }
-  return lines.join(" ");
-}
-
-// Which outputs these lines already drive, ranges and components expanded
-function outputsUsed(lines) {
-  var used = {};
-  lines.forEach(function (line) {
-    var body = line.split("#")[0];
-    var at = body.indexOf(":");
-    if (at < 0 || !/^\\s*out[0-9]/i.test(body)) return;
-    body.slice(0, at).split(/\\s+/).forEach(function (word) {
-      if (word.indexOf("=") >= 0) return;
-      word.toLowerCase().split(",").forEach(function (token) {
-        token = token.replace(/^out/, "").split(".")[0];
-        var range = token.match(/^([0-9]+)-([0-9]+)$/);
-        if (range) {
-          var from = Math.min(+range[1], +range[2]);
-          var to = Math.max(+range[1], +range[2]);
-          for (var n = from; n <= to; n++) used[n] = true;
-        } else if (/^[0-9]+$/.test(token)) {
-          used[+token] = true;
-        }
-      });
-    });
-  });
-  return used;
-}
-
-// The caret's own scene, its line left out, and the always-on section above the
-// first heading. Above the first heading the two are one and the same
-function sceneScope(text, caret) {
-  var lines = text.split("\\n");
-  var here = text.slice(0, caret).split("\\n").length - 1;
-  function heading(line) {
-    return line.split("#")[0].replace(/^\\s+/, "").slice(0, 1) === "[";
-  }
-  var start = 0;
-  for (var up = here; up >= 0; up--)
-    if (heading(lines[up])) { start = up + 1; break; }
-  var end = lines.length;
-  for (var down = here + 1; down < lines.length; down++)
-    if (heading(lines[down])) { end = down; break; }
-  var first = lines.length;
-  for (var scan = 0; scan < lines.length; scan++)
-    if (heading(lines[scan])) { first = scan; break; }
-  return {
-    scene: lines.slice(start, end).filter(function (_, index) {
-      return start + index !== here;
-    }),
-    always: start > 0 ? lines.slice(0, first) : []
-  };
-}
-
-function contextAt(text, caret) {
-  var lineStart = text.lastIndexOf("\\n", caret - 1) + 1;
-  var line = text.slice(lineStart, caret);
-  if (line.indexOf("#") >= 0) return null;
-  if (line.replace(/^\\s+/, "").slice(0, 1) === "[") return null;
-
-  var entry = entryBefore(text, caret);
-  var prefix = line.match(/[^\\s:]*$/)[0];
-  var found = {prefix: prefix, target: null, kind: "output", effect: null,
-               comma: false, used: {}};
-
-  // A comma closes its token, so the caret stands at a fresh word
-  if (prefix.slice(-1) === ",") {
-    found.comma = true;
-    found.prefix = prefix = "";
-  }
-
-  var before = entry.slice(0, entry.length - prefix.length);
-  var colon = before.indexOf(":");
-  found.left = colon < 0;
-
-  var opening = entry.match(/^\\s*([^\\s:]+)/);
-  if (opening) {
-    found.target = opening[1];
-    found.kind = targetKind(opening[1]);
-  }
-
-  // A component anywhere in the selector makes the channel a plain light, so a
-  // colour effect has nothing there to show itself on
-  if (colon >= 0 && found.kind === "output")
-    found.mono = entry.slice(0, entry.indexOf(":")).split(/\\s+/).some(function (word) {
-      return word.indexOf("=") < 0 && word.indexOf(".") >= 0;
-    });
-
-  // What the entry already sets, to the end of the caret's line, so a setting
-  // is only ever offered once
-  var lineEnd = text.indexOf("\\n", caret);
-  var whole = entry + " " +
-              text.slice(caret, lineEnd < 0 ? text.length : lineEnd).split("#")[0];
-  whole.split(/[\\s,]+/).forEach(function (word) {
-    var at = word.indexOf("=");
-    if (at > 0) found.used[word.slice(0, at).toLowerCase()] = true;
-  });
-
-  if (colon < 0) {
-    // A comma before the colon says another output comes next, which is the
-    // writer's to number, so nothing is offered and the hint line explains
-    found.mode = found.comma ? "more" : before.trim() ? "channel" : "target";
-  } else {
-    found.mode = found.kind === "board" ? "setting" : "effect";
-    before.slice(colon + 1).split(/\\s+/).forEach(function (word) {
-      if (word && word.indexOf("=") < 0 && !found.effect) {
-        found.effect = word.replace(/,+$/, "");
-        found.mode = "setting";
-      }
-    });
-    // The first word of a new line may start a new entry or carry on the one
-    // above, so both are offered until the word says which
-    if (line.indexOf(":") < 0) {
-      if (line.slice(0, line.length - prefix.length).trim() === "") {
-        found.mode = "fresh";
-      } else {
-        // A first word shaped like a selector settles it: the line is a new
-        // entry still waiting for its colon, not the one above carrying on
-        var starts = line.match(/^\\s*([^\\s:]+)/);
-        if (starts && /^(out[0-9]|screen[ab]|hub[a-f]|strip[lr]|board)/i.test(starts[1])) {
-          found.target = starts[1];
-          found.kind = targetKind(starts[1]);
-          found.effect = null;
-          found.mode = "channel";
-          found.used = {};
-          line.split(/[\\s,]+/).forEach(function (word) {
-            var given = word.indexOf("=");
-            if (given > 0) found.used[word.slice(0, given).toLowerCase()] = true;
-          });
-        }
-      }
-    }
-  }
-
-  var at = found.prefix.indexOf("=");
-  if (at >= 0) {
-    found.mode = "value";
-    found.setting = found.prefix.slice(0, at);
-    found.prefix = found.prefix.slice(at + 1);
-  }
-
-  if (found.mode === "target" || found.mode === "fresh") {
-    var scope = sceneScope(text, caret);
-    found.sceneUsed = outputsUsed(scope.scene);
-    found.alwaysUsed = outputsUsed(scope.always);
-  }
-  return found;
-}
-
-function offers(found) {
-  if (!found) return [];
-  var out = [];
-  var seen = found.prefix.toLowerCase();
-
-  function offer(insert, hint) {
-    if (insert.toLowerCase().slice(0, seen.length) === seen && insert !== found.prefix)
-      out.push({insert: insert, hint: hint || ""});
-  }
-
-  // fade and ease are one setting written two ways, so each rules the other out
-  function unused(name) {
-    if (found.used[name.toLowerCase()]) return false;
-    if (name === "fade" && found.used.ease) return false;
-    if (name === "ease" && found.used.fade) return false;
-    return true;
-  }
-
-  function channelOffers() {
-    channelSettings(found.kind).forEach(function (name) {
-      if (!unused(name)) return;
-      var type = settingType(name, found.kind);
-      offer(name + "=", CHANNEL_HINTS[name] || TYPE_HINTS[type] || "");
-    });
-    offer(": ", "then the effect");
-  }
-
-  function settingOffers() {
-    var takes = found.kind === "board"
-              ? (CATALOGUE ? Object.keys(CATALOGUE.board_settings) : [])
-              : found.effect ? effectTakes(found.effect, found.kind) : null;
-    (takes || []).forEach(function (name) {
-      if (!unused(name)) return;
-      var shown = BOARD_CASE[name] || name;
-      var hint = found.kind === "board" ? BOARD_HINTS[name]
-               : TYPE_HINTS[settingType(name, found.kind)];
-      offer(shown + "=", hint || "");
-    });
-    // A hub's positions are a pattern where the others are names, so one is offered to start
-    if (found.kind === "board" && CATALOGUE)
-      offer("hubA=", "the screen size at a Screen Hub position, such as hubA-C=2.8");
-  }
-
-  // A word already naming outputs can take more of them, one colour channel, or
-  // go to its effect. Half-written punctuation leaves the numbers to the writer
-  function selectorOffers() {
-    if (/^out[0-9]/i.test(found.prefix) && found.prefix.slice(-1) === ".") {
-      offer(found.prefix + "r", "just the red");
-      offer(found.prefix + "g", "just the green");
-      offer(found.prefix + "b", "just the blue");
-      offer(found.prefix + "*", "all three, each its own light");
-      return;
-    }
-    if (/[-.,]$/.test(found.prefix)) return;
-    if (/^out[0-9]/i.test(found.prefix) || /^strip[lr][0-9]/i.test(found.prefix)) {
-      var tail = found.prefix.split(",").pop();
-      offer(found.prefix + ",", "another output after it: out1,3,5-7");
-      if (/^[0-9]+$/.test(tail.replace(/^[a-z]+/i, "")))
-        offer(found.prefix + "-", "a range to another output, run either way");
-      if (/^out/i.test(found.prefix) && tail.indexOf(".") < 0)
-        offer(found.prefix + ".", "one colour channel alone: .r .g .b, or .*");
-      offer(found.prefix + ": ", "then the effect");
-    } else if (/^(screen[ab]|strip[lr]|board|audio)$/i.test(found.prefix) ||
-               HUB_PLACES.test(found.prefix.toLowerCase())) {
-      offer(found.prefix + ": ", "then the effect");
-    }
-  }
-
-  // One output by number: the first this scene does not drive yet, and beside it
-  // the first held by the always-on section, which a scene may take over
-  function dynamicOutput() {
-    var free = null;
-    var takeover = null;
-    for (var n = 1; n <= 7; n++) {
-      if (found.sceneUsed[n]) continue;
-      if (found.alwaysUsed[n]) {
-        if (takeover === null) takeover = n;
-      } else if (free === null) {
-        free = n;
-      }
-    }
-    if (free !== null)
-      offer("out" + free, free === 1 ? "one output" : "the next output not used here");
-    if (takeover !== null)
-      offer("out" + takeover, "takes over an always-on output while this scene shows");
-  }
-
-  function freshStarts() {
-    dynamicOutput();
-    TARGETS.forEach(function (pair) { offer(pair[0], pair[1]); });
-    selectorOffers();
-  }
-
-  if (found.mode === "target") {
-    freshStarts();
-
-  } else if (found.mode === "channel") {
-    channelOffers();
-
-  } else if (found.mode === "effect") {
-    effectNames(found.kind).forEach(function (name) {
-      var effect = CATALOGUE.effects[name];
-      if (found.mono && effect && effect.kind === "colour") return;
-      var hint = effect && effect.kind === "colour" ? "brings its own colours" : "";
-      offer(name, hint);
-    });
-
-  } else if (found.mode === "setting") {
-    settingOffers();
-
-  } else if (found.mode === "fresh") {
-    // A new line under an entry: carrying it on comes first, a fresh start after
-    // a dividing line
-    settingOffers();
-    var split = out.length;
-    freshStarts();
-    if (split && out.length > split) out.divider = split;
-
-  } else if (found.mode === "value") {
-    (valuesFor(found.setting, found.kind) || []).forEach(function (value) {
-      offer(value);
-    });
-    // A pipe joins the parts of a value that has them; a comma after a value on
-    // the left starts the next output group
-    if (found.prefix) {
-      var name = found.setting.toLowerCase();
-      var piped = {fade: "rise|fall, each its own seconds",
-                   ease: "rise|fall, each its own seconds",
-                   offset: "x|y, * centring that side",
-                   tile: "across|down",
-                   hold: "one end|the other",
-                   args: "the next argument"};
-      if (piped[name])
-        offer(found.prefix + "|", piped[name]);
-      else if (name === "colour" && found.effect &&
-               found.effect.toLowerCase() === "rgb_blink")
-        offer(found.prefix + "|", "another colour to blink through");
-      if (found.left && found.kind !== "screen" && found.kind !== "board")
-        offer(found.prefix + ",", name === "colour"
-              ? "a colour for each output"
-              : "then another output with settings of its own");
-    }
-  }
-  return out;
-}
-
-function hintFor(found) {
-  if (!found) return "";
-  if (!CATALOGUE)
-    return "catalogue.js is not beside this page, so nothing can be suggested; " +
-           "the copy on the FX drive has it";
-  if (found.mode === "more")
-    return "another output comes next: a number, or a range such as 5-3, " +
-           "then its settings or the colon";
-  if ((found.mode === "target" || found.mode === "fresh") &&
-      /^out[0-9]/i.test(found.prefix))
-    return "outputs join with commas, ranges run either way, and .r .g .b " +
-           "or .* takes one colour channel alone";
-  if (found.mode === "value" || (found.mode === "setting" && found.prefix)) {
-    var name = found.mode === "value" ? found.setting : found.prefix;
-    if (found.kind === "board") return BOARD_HINTS[name.toLowerCase()] || "";
-    // A drawing names a Python file, which belongs in a Python editor
-    if (found.effect === "graphics" && name.toLowerCase().indexOf("file") === 0)
-      return "a Python file with a draw(canvas, elapsed) in it, written in Thonny " +
-             "or VS Code rather than here";
-    var type = settingType(name, found.kind);
-    return type ? name.replace(/,+$/, "") + ": " +
-                  (CHANNEL_HINTS[name.toLowerCase()] || TYPE_HINTS[type]) : "";
-  }
-  if (found.effect) {
-    var takes = effectTakes(found.effect, found.kind);
-    if (takes) return found.effect + " takes: " + takes.join(", ");
-  }
-  if (found.kind === "audio")
-    return "one sound plays at a time, and its entry sits above every scene heading";
-  if (found.mode === "channel")
-    return "before the colon: how the " +
-           (found.kind === "screen" ? "screen is set" : "lights are set");
-  return "";
-}
-
-// ---- the page -----------------------------------------------------------------
-
-var entry = document.getElementById("entry");
-var painted = document.getElementById("painted");
-var paintBox = document.getElementById("paint");
-var suggest = document.getElementById("suggest");
-var hintLine = document.getElementById("hint");
-
-var STARTER = "# One entry per line: which lights, a colon, then the effect.\\n" +
-              "# Settings you leave out take their usual value.\\n\\n" +
-              "board: reload=auto\\n\\n" +
-              "out1-7: rainbow_wave speed=0.3\\n";
-
-var state = {dirHandle: null, fileHandle: null, boardText: null, offered: [], rows: [], lit: 0};
-
-function repaint() {
-  painted.innerHTML = paint(entry.value);
-  // The box grows with the file, a spare row deep, so the text never scrolls
-  // vertically inside it and the page carries a long file instead
-  var rowHeight = parseFloat(getComputedStyle(entry).lineHeight);
-  var wanted = (entry.value.split("\\n").length + 1) * rowHeight + 48;
-  paintBox.parentNode.style.height = Math.max(384, wanted) + "px";
-  paintBox.scrollTop = entry.scrollTop;
-  paintBox.scrollLeft = entry.scrollLeft;
-}
-
-// The board's own saving animation, so the page shows what the outputs show: one
-// white light travelling the seven over a dim floor, out1 to out7, 120ms a step.
-// Started by saving() and stopped by the next banner, whatever it says
-var SPOT_STEP_MS = 120;
-// How long the animation outlives the write: the board holds its light for 500ms
-// after the last write and then runs one pass of seven half-steps
-var SAVING_TAIL_MS = 920;
-var spotTimer = null;
-
-function stopSpots() {
-  if (spotTimer !== null) clearInterval(spotTimer);
-  spotTimer = null;
-}
-
-function saving(text) {
-  banner(text, "hold");
-  var row = document.createElement("span");
-  row.className = "spots";
-  for (var i = 0; i < 7; i++) row.appendChild(document.createElement("i"));
-  document.getElementById("banners").firstChild.appendChild(row);
-  var at = 0;
-  spotTimer = setInterval(function () {
-    for (var i = 0; i < row.children.length; i++)
-      row.children[i].className = i === at ? "lit" : "";
-    at = (at + 1) % row.children.length;
-  }, SPOT_STEP_MS);
-}
-
-function banner(text, warn, detail) {
-  stopSpots();
-  var box = document.getElementById("banners");
-  box.innerHTML = "";
-  if (!text) return;
-  var note = document.createElement("div");
-  // warn may also be "hold", the amber of a check still running
-  note.className = warn === "hold" ? "banner hold" : warn ? "banner warn" : "banner";
-  note.textContent = text;
-  if (detail) {
-    var lines = document.createElement("pre");
-    lines.textContent = detail;
-    note.appendChild(lines);
-  }
-  box.appendChild(note);
-}
-
-// Where the caret's line sits on the screen, found by mirroring the text up to it
-function caretPlace() {
-  var mirror = document.createElement("div");
-  var styles = getComputedStyle(entry);
-  ["font", "whiteSpace", "tabSize"].forEach(function (key) {
-    mirror.style[key] = styles[key];
-  });
-  mirror.style.position = "absolute";
-  mirror.style.visibility = "hidden";
-  mirror.style.whiteSpace = "pre";
-  var upTo = entry.value.slice(0, entry.selectionStart);
-  mirror.textContent = upTo.slice(upTo.lastIndexOf("\\n") + 1);
-  document.body.appendChild(mirror);
-  var width = mirror.offsetWidth;
-  document.body.removeChild(mirror);
-
-  var rect = entry.getBoundingClientRect();
-  var rowHeight = parseFloat(styles.lineHeight);
-  var lineTop = rect.top + parseFloat(styles.paddingTop) +
-                (upTo.split("\\n").length - 1) * rowHeight - entry.scrollTop;
-  return {
-    left: rect.left + parseFloat(styles.paddingLeft) + width - entry.scrollLeft,
-    below: lineTop + rowHeight + 2,
-    above: lineTop - 2
-  };
-}
-
-function showSuggestions() {
-  var caret = entry.selectionStart;
-  if (caret !== entry.selectionEnd) return hideSuggestions();
-  var found = contextAt(entry.value, caret);
-  hintLine.textContent = hintFor(found);
-
-  var offered = offers(found);
-  if (!offered.length) return hideSuggestions();
-
-  state.offered = offered;
-  state.found = found;
-  state.lit = 0;
-  state.rows = [];
-  suggest.innerHTML = "";
-  offered.slice(0, 40).forEach(function (one, index) {
-    if (index && index === offered.divider) {
-      var rule = document.createElement("div");
-      rule.className = "rule";
-      suggest.appendChild(rule);
-    }
-    var row = document.createElement("div");
-    var name = document.createElement("span");
-    name.textContent = one.insert;
-    row.appendChild(name);
-    if (one.hint) {
-      var why = document.createElement("small");
-      why.textContent = one.hint;
-      row.appendChild(why);
-    }
-    if (index === 0) row.className = "lit";
-    row.onmousedown = function (event) {
-      event.preventDefault();
-      accept(index);
-    };
-    suggest.appendChild(row);
-    state.rows.push(row);
-  });
-  // Placed below the caret's line, or above it where the screen runs out
-  suggest.style.visibility = "hidden";
-  suggest.className = "suggest shown";
-  var place = caretPlace();
-  var top = place.below;
-  if (top + suggest.offsetHeight > window.innerHeight - 8)
-    top = Math.max(8, place.above - suggest.offsetHeight);
-  suggest.style.top = top + "px";
-  suggest.style.left = Math.max(8, Math.min(place.left,
-      window.innerWidth - suggest.offsetWidth - 8)) + "px";
-  suggest.style.visibility = "";
-}
-
-function hideSuggestions() {
-  suggest.className = "suggest";
-  state.offered = [];
-}
-
-function light(index) {
-  var count = state.rows.length;
-  state.lit = (index + count) % count;
-  state.rows.forEach(function (row, i) {
-    row.className = i === state.lit ? "lit" : "";
-  });
-  state.rows[state.lit].scrollIntoView({block: "nearest"});
-}
-
-function accept(index) {
-  var one = state.offered[index === undefined ? state.lit : index];
-  if (!one) return;
-  var caret = entry.selectionStart;
-  var start = caret - state.found.prefix.length;
-  // The colon closes the word before it, so it steps back over the gap
-  if (one.insert.slice(0, 1) === ":")
-    while (start > 0 && entry.value[start - 1] === " ") start--;
-  entry.focus();
-  entry.setSelectionRange(start, caret);
-  // insertText keeps the undo history; setRangeText is the fallback without it
-  if (!document.execCommand("insertText", false, one.insert))
-    entry.setRangeText(one.insert, start, caret, "end");
-  hideSuggestions();
-  changed();
-}
-
-function changed() {
-  repaint();
-  try { localStorage.setItem("fx-editor-draft", entry.value); } catch (e) {}
-  showSuggestions();
-}
-
-entry.addEventListener("input", changed);
-entry.addEventListener("scroll", function () {
-  paintBox.scrollTop = entry.scrollTop;
-  paintBox.scrollLeft = entry.scrollLeft;
-  hideSuggestions();
-});
-// The dropdown is pinned to the screen, so anything moving under it lets go of it
-window.addEventListener("resize", hideSuggestions);
-window.addEventListener("scroll", function (event) {
-  if (event.target instanceof Node && suggest.contains(event.target)) return;
-  hideSuggestions();
-}, true);
-entry.addEventListener("click", showSuggestions);
-entry.addEventListener("blur", function () {
-  setTimeout(hideSuggestions, 150);
-});
-entry.addEventListener("keydown", function (event) {
-  if (!state.offered.length) {
-    if (event.key === " " && event.ctrlKey) {
-      event.preventDefault();
-      showSuggestions();
-    }
-    return;
-  }
-  if (event.key === "ArrowDown") { event.preventDefault(); light(state.lit + 1); }
-  else if (event.key === "ArrowUp") { event.preventDefault(); light(state.lit - 1); }
-  else if (event.key === "Tab" || event.key === "Enter") {
-    event.preventDefault();
-    accept();
-  }
-  else if (event.key === "Escape") hideSuggestions();
-});
-
-// ---- the drive ------------------------------------------------------------------
-
-// ---- remembering the drive ------------------------------------------------------
-
-// The drive's handle survives in IndexedDB, so after the first visit it is reached
-// with one click and a permission bubble instead of the file dialog every time. A
-// page cannot go looking for the drive itself; remembering the answer is what there
-// is. Anything failing in here falls back to the dialog
-function rememberDrive(handle) {
-  try {
-    var open = indexedDB.open("fx-pages", 1);
-    open.onupgradeneeded = function () { open.result.createObjectStore("handles"); };
-    open.onsuccess = function () {
-      try {
-        open.result.transaction("handles", "readwrite")
-            .objectStore("handles").put(handle, "drive");
-      } catch (e) {}
-    };
-  } catch (e) {}
-}
-
-function rememberedDrive() {
-  return new Promise(function (settle) {
-    try {
-      var open = indexedDB.open("fx-pages", 1);
-      open.onupgradeneeded = function () { open.result.createObjectStore("handles"); };
-      open.onerror = function () { settle(null); };
-      open.onsuccess = function () {
-        try {
-          var ask = open.result.transaction("handles").objectStore("handles").get("drive");
-          ask.onsuccess = function () { settle(ask.result || null); };
-          ask.onerror = function () { settle(null); };
-        } catch (e) { settle(null); }
-      };
-    } catch (e) { settle(null); }
-  });
-}
-
-async function pickDrive() {
-  var kept = await rememberedDrive();
-  if (kept) {
-    try {
-      if (await kept.requestPermission({mode: "readwrite"}) === "granted") {
-        await kept.getFileHandle("effects.txt");
-        return kept;
-      }
-    } catch (e) {}
-  }
-  var picked;
-  try {
-    picked = await window.showDirectoryPicker(
-        kept ? {mode: "readwrite", startIn: kept} : {mode: "readwrite"});
-  } catch (e) {
-    if (e.name === "AbortError") throw e;
-    picked = await window.showDirectoryPicker({mode: "readwrite"});
-  }
-  rememberDrive(picked);
-  return picked;
-}
-
-// Take the drive's effects.txt into the editor, asking first where it would
-// replace something written here, and ready the buttons for a save
-function loadFromDrive(onBoard, status, openLabel) {
-  var held = entry.value.trim();
-  if (onBoard.trim() !== held && (!held || held === STARTER.trim() ||
-      confirm("Load effects.txt from the drive and replace what is written here? " +
-              "Undo (Ctrl+Z) brings your text back."))) {
-    // Through the undo history, so what was here is one Ctrl+Z away
-    entry.focus();
-    entry.setSelectionRange(0, entry.value.length);
-    if (!document.execCommand("insertText", false, onBoard)) entry.value = onBoard;
-    entry.setSelectionRange(0, 0);
-    repaint();
-  }
-  document.getElementById("check").disabled = false;
-  document.getElementById("status").textContent = status;
-  // The next thing to do carries the colour: opening first, then saving
-  var open = document.getElementById("open");
-  open.className = "";
-  open.textContent = openLabel;
-  var save = document.getElementById("save");
-  save.className = "primary";
-  save.disabled = false;
-}
-
-async function connect() {
-  if (!CAN_REACH_A_DRIVE) return connectByInput();
-  var dir = await pickDrive();
-  state.dirHandle = dir;
-  state.fileHandle = await dir.getFileHandle("effects.txt");
-  var onBoard = await (await state.fileHandle.getFile()).text();
-  loadFromDrive(onBoard, "connected to the drive", "Open a different drive");
-}
-
-document.getElementById("open").onclick = async function () {
-  try {
-    await connect();
-    banner("");
-  } catch (e) {
-    if (e.name === "AbortError") return;
-    if (e.name === "NotAnFxDrive") {
-      banner("That folder has no effects.txt, so it does not look like an FX " +
-             "drive. Pick the drive itself, the one named FX.", true);
-      return;
-    }
-    banner("Could not open the drive: " + e.name + ". Is it showing? " +
-           "A double press of the board's button brings it back.", true);
-  }
-};
-
-// ---- the drive without handles -------------------------------------------------
-
-// Safari and Firefox cannot hand a page a folder to write to. There the drive is
-// read through a folder chooser, and a save hands effects.txt to the browser's
-// download, which the user places on the drive
-var folderInput = document.createElement("input");
-folderInput.type = "file";
-folderInput.setAttribute("webkitdirectory", "");
-folderInput.style.display = "none";
-document.body.appendChild(folderInput);
-
-var folderSettle = null;
-folderInput.onchange = function () {
-  var files = Array.prototype.slice.call(folderInput.files);
-  folderInput.value = "";
-  var settle = folderSettle;
-  folderSettle = null;
-  if (settle) settle(files);
-};
-// A dismissed dialog answers null, so nothing waits forever on it
-folderInput.oncancel = function () {
-  var settle = folderSettle;
-  folderSettle = null;
-  if (settle) settle(null);
-};
-
-function chooseFolder() {
-  return new Promise(function (settle) {
-    folderSettle = settle;
-    folderInput.click();
-  });
-}
-
-// effects.txt and errors.txt out of the chooser's files, at the drive's root only.
-// Firefox hands back dot entries too, the sidecars and event log a Mac leaves
-function sortFolder(files) {
-  var found = {effects: null, errors: null, drive: null};
-  for (var i = 0; i < files.length; i++) {
-    var parts = (files[i].webkitRelativePath || files[i].name).split("/");
-    if (parts.length !== 2 || parts[1].charAt(0) === ".") continue;
-    found.drive = parts[0];
-    if (parts[1] === "effects.txt") found.effects = files[i];
-    else if (parts[1] === "errors.txt") found.errors = files[i];
-  }
-  return found;
-}
-
-async function connectByInput() {
-  var files = await chooseFolder();
-  if (files === null) {
-    var dropped = new Error("the dialog was dismissed");
-    dropped.name = "AbortError";
-    throw dropped;
-  }
-  var found = sortFolder(files);
-  if (!found.effects) {
-    var refused = new Error("no effects.txt");
-    refused.name = "NotAnFxDrive";
-    throw refused;
-  }
-  state.boardText = await found.effects.text();
-  loadFromDrive(state.boardText,
-                "read from " + (found.drive && found.drive.length > 1 ? found.drive : "the drive"),
-                "Look at the drive again");
-}
-
-// A save with nowhere to write: effects.txt goes to the browser's download, and
-// the banner says where it belongs and how the board answers
-function saveByHand() {
-  var text = entry.value;
-  var onBoard = state.boardText || "";
-  var link = document.createElement("a");
-  link.href = URL.createObjectURL(new Blob([text], {type: "text/plain"}));
-  link.download = "effects.txt";
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  state.boardText = text;
-  banner("effects.txt is downloading. Put it on the FX drive in place of the old one" +
-         (playsItself(onBoard)
-          ? ", and the board plays it. Then press 'Did it work?'."
-          : ", then eject the drive or press the board's button once, and it plays."));
-}
-
-// Did it work, asked by picking the drive again. Only its answer is taken; what is
-// written on the page stays as it is
-async function askByInput() {
-  banner("Pick the FX drive again, so its answer can be read.", "hold");
-  var files = await chooseFolder();
-  if (files === null) {
-    banner("");
-    return;
-  }
-  var found = sortFolder(files);
-  if (!found.effects) {
-    banner("That folder has no effects.txt, so it does not look like an FX " +
-           "drive. Pick the drive itself, the one named FX.", true);
-    return;
-  }
-  var said = found.errors ? (await found.errors.text()).trim() : null;
-  if (said === CHECKING)
-    banner("The board has not read the file yet. Check effects.txt landed on the " +
-           "drive, then eject it or press the board's button once.", "hold");
-  else if (said)
-    banner("The board wasn't happy with some of it:", true, said);
-  else
-    banner("Nothing reported. The board found no problem with the file.");
-}
-
-// Only Chromium browsers can be handed a folder to write to. Elsewhere the drive
-// is read through a folder chooser and a save goes by download, above
-var CAN_REACH_A_DRIVE = typeof window.showDirectoryPicker === "function";
-
-// Edge is named only where it is already on the machine
-var ONE_CLICK_BROWSERS = "Chrome" + (/Win/.test(navigator.platform) ? " or Edge" : "") +
-                         ", or another browser built on Chromium,";
-
-if (!CAN_REACH_A_DRIVE) {
-  banner("This browser cannot write to the drive, so a save downloads effects.txt for " +
-         "you to put on it. " + ONE_CLICK_BROWSERS + " saves straight to the board.");
-}
-
-
-// ---- waiting for the board -----------------------------------------------------
-
-// Only the board writes errors.txt, and only where it has re-read the file, so a
-// change there is proof it acted. It answers a save in about four seconds.
-//
-// Never read effects.txt while waiting. A read of the file just saved holds off the
-// write the computer still has in hand, and the board then waits half a minute to
-// see it, measured 2026-08-22
-// The board answers a save in about four seconds, so silence is worth reporting at
-// six and watching quietly after, rather than sitting on the answer until the last
-// poll. A change to errors.txt is proof either way and ends the wait at once
-var BOARD_SETTLE_MS = 6000;
-var BOARD_WAIT_MS = 15000;
-// How long the drive is given to come back once it has been seen away. The board
-// leaves the USB bus on a reload and a Mac takes about four seconds to mount it
-// again, measured 2026-09-17, with the answer readable the moment it does
-var BOARD_AWAY_MS = 10000;
-var BOARD_POLL_MS = 250;
-
-function playsItself(text) {
-  return /\\breload\\s*=\\s*auto\\b/i.test(text);
-}
-
-// Written into errors.txt before saving, so the board's answer is always a
-// change: it deletes the file where the save reads clean and rewrites it where
-// not, so this line vanishing is the answer either way. Self-describing, since a
-// board that never reads the file leaves it to be found later
-var CHECKING = "The board has not read the file yet.";
-
-// Writes the marker; returns whether it took, a full drive being the reason not
-async function markChecking() {
-  try {
-    var handle = await state.dirHandle.getFileHandle("errors.txt", {create: true});
-    var writable = await handle.createWritable();
-    await writable.write(CHECKING + "\\n");
-    await writable.close();
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-// Whether the drive is there to be asked, by listing its first entry. A drive that
-// has left the bus mid-reload makes every path vanish at once, so a missing file
-// is only missing while the directory itself still answers
-async function driveAnswers() {
-  try {
-    for await (var entry of state.dirHandle.values()) return true;
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-// The text of errors.txt, null where there is none, and false where the drive is
-// away mid-reload and the question cannot be answered yet
-async function readErrors() {
-  try {
-    var handle = await state.dirHandle.getFileHandle("errors.txt");
-    return (await (await handle.getFile()).text()).trim();
-  } catch (e) {
-    if (e.name !== "NotFoundError") return false;
-    return (await driveAnswers()) ? null : false;
-  }
-}
-
-// Polls until errors.txt differs from what it said before the save, calling
-// nothingYet() once the settle time passes, saying the check is still running: an
-// answer can arrive after the settle, so nothing is claimed until the wait is over.
-// Seeing the drive away is proof the board acted, so an unchanged answer after that
-// is a real answer rather than an early one, and the wait is extended once so the
-// answer is not missed while the drive is still on its way back
-async function waitForBoard(before, nothingYet) {
-  var deadline = Date.now() + BOARD_WAIT_MS;
-  var settled = Date.now() + BOARD_SETTLE_MS;
-  var wentAway = false;
-  var told = false;
-  while (Date.now() < deadline) {
-    await new Promise(function (settle) { setTimeout(settle, BOARD_POLL_MS); });
-    var now = await readErrors();
-    if (now === false) {
-      if (!wentAway) deadline = Math.max(deadline, Date.now() + BOARD_AWAY_MS);
-      wentAway = true;
-      continue;
-    }
-    if (now !== before) return now;
-    if (wentAway) return now;
-    if (!told && Date.now() > settled) {
-      nothingYet();
-      told = true;
-    }
-  }
-  return before;
-}
-
-// What to say once the wait is over. Silence cannot be told from a board that has
-// not got there yet, so it is reported as nothing said rather than as all well
-function sayWhatHappened(said, also) {
-  if (said === CHECKING)
-    banner("The board did not pick the save up. Eject the FX drive, or press " +
-           "the board's button once, and it plays.", true);
-  else if (said)
-    banner("The board wasn't happy with some of it:", true, said);
-  else
-    banner("Playing on the board. No problems reported." + (also || ""));
-}
-
-document.getElementById("save").onclick = async function () {
-  if (!CAN_REACH_A_DRIVE) {
-    saveByHand();
-    return;
-  }
-  // Both held down until the verdict: a second save cannot land in the wait and race
-  // the first, a check cannot read back the marker this save is about to write, and
-  // the buttons coming back say the board has answered
-  var button = this;
-  var check = document.getElementById("check");
-  try {
-    if (!state.fileHandle) await connect();
-    button.disabled = true;
-    check.disabled = true;
-    var text = entry.value;
-    // The board acts on a save only where the file it is already running asked it to,
-    // so the first save that turns it on still needs an eject
-    var running = await (await state.fileHandle.getFile()).text();
-    saving("Saving to the board...");
-    var errorsBefore = playsItself(running) ? await readErrors() : undefined;
-    // The marker makes the answer an edge even where nothing else changes
-    if (errorsBefore !== undefined && await markChecking()) errorsBefore = CHECKING;
-    var writable = await state.fileHandle.createWritable();
-    await writable.write(text);
-    await writable.close();
-    var back = await (await state.fileHandle.getFile()).text();
-    if (back !== text) throw new Error("the file read back differently");
-    // The board keeps its light travelling for a moment after the last write, then
-    // runs one pass as the drive changes hands, so the page holds its own as long
-    await new Promise(function (settle) { setTimeout(settle, SAVING_TAIL_MS); });
-    if (errorsBefore === undefined) {
-      banner("On its way. " + (playsItself(text)
-             ? "Eject the FX drive, or press the board's button once, to play this one. "
-               + "From now on a save plays on its own."
-             : "Eject the FX drive on this computer, and the board plays it. Double-press "
-               + "the board's button to bring the drive back, then ask 'Did it work?'."));
-      return;
-    }
-    banner("Saved. Waiting for the board to pick it up...", "hold");
-    var was = errorsBefore === false ? null : errorsBefore;
-    sayWhatHappened(await waitForBoard(was, function () {
-      banner("Playing on the board. Checking for problems...", "hold");
-    }));
-  } catch (e) {
-    if (e.name === "QuotaExceededError") {
-      // The drive is there, it is simply full: saving writes a temporary copy
-      // first, so it needs the file's size free
-      banner("The FX drive is full, so there was no room to save. Delete a " +
-             "picture or sound from it and try again.", true);
-      return;
-    }
-    state.fileHandle = null;
-    state.dirHandle = null;
-    banner("That didn't reach the board: " + e.name + ". Is the FX drive showing? " +
-           "A double press of its button brings it back; then try again.", true);
-  } finally {
-    button.disabled = false;
-    check.disabled = false;
-  }
-};
-
-document.getElementById("check").onclick = async function () {
-  if (!CAN_REACH_A_DRIVE) {
-    askByInput();
-    return;
-  }
-  // A blink before the answer, so asking again visibly did something even when
-  // the answer reads the same
-  banner("Asking the board...", "hold");
-  await new Promise(function (settle) { setTimeout(settle, 350); });
-  try {
-    var handle = await state.dirHandle.getFileHandle("errors.txt");
-    var text = await (await handle.getFile()).text();
-    if (text.trim() === CHECKING) {
-      banner("The board has not read the file yet. Eject the FX drive, or press " +
-             "the board's button once.", "hold");
-      return;
-    }
-    banner("The board wasn't happy with some of it:", true, text.trim());
-  } catch (e) {
-    if (e.name === "NotFoundError")
-      banner("Nothing reported. The board found no problem with the file.");
-    else
-      banner("Couldn't look: " + e.name + ". Is the drive showing?", true);
-  }
-};
-
-var draft = null;
-try { draft = localStorage.getItem("fx-editor-draft"); } catch (e) {}
-entry.value = draft || STARTER;
-repaint();
-</script>
-</body>
-</html>
-"""
-
-CATALOGUE = """\
-// Generated from the autofx tables. Do not edit.
-var CATALOGUE = {
- "effects": {
-  "binary_counter": {
-   "kind": "mono",
-   "takes": [
-    "interval",
-    "count",
-    "step"
-   ]
-  },
-  "blink": {
-   "kind": "mono",
-   "takes": [
-    "speed",
-    "phase",
-    "duty"
-   ]
-  },
-  "blink_wave": {
-   "kind": "mono",
-   "takes": [
-    "speed",
-    "length",
-    "phase",
-    "duty"
-   ]
-  },
-  "flash": {
-   "kind": "mono",
-   "takes": [
-    "speed",
-    "flashes",
-    "window",
-    "phase",
-    "duty"
-   ]
-  },
-  "flash_sequence": {
-   "kind": "mono",
-   "takes": [
-    "speed",
-    "length",
-    "flashes",
-    "window",
-    "phase",
-    "duty"
-   ]
-  },
-  "flicker": {
-   "kind": "mono",
-   "takes": [
-    "brightness",
-    "dimness",
-    "bright_min",
-    "bright_max",
-    "dim_min",
-    "dim_max"
-   ]
-  },
-  "flicker_each": {
-   "kind": "mono",
-   "takes": [
-    "brightness",
-    "dimness",
-    "bright_min",
-    "bright_max",
-    "dim_min",
-    "dim_max"
-   ]
-  },
-  "hsv": {
-   "kind": "colour",
-   "takes": [
-    "hue",
-    "sat",
-    "val"
-   ]
-  },
-  "hue_step": {
-   "kind": "colour",
-   "takes": [
-    "interval",
-    "hue",
-    "sat",
-    "val",
-    "steps"
-   ]
-  },
-  "none": {
-   "kind": "mono",
-   "takes": []
-  },
-  "pelican_crossing": {
-   "kind": "mono",
-   "takes": [
-    "red_interval",
-    "flashing_interval",
-    "green_interval",
-    "amber_interval"
-   ]
-  },
-  "pulse": {
-   "kind": "mono",
-   "takes": [
-    "speed",
-    "phase"
-   ]
-  },
-  "pulse_wave": {
-   "kind": "mono",
-   "takes": [
-    "speed",
-    "length",
-    "phase"
-   ]
-  },
-  "rainbow": {
-   "kind": "colour",
-   "takes": [
-    "speed",
-    "sat",
-    "val"
-   ]
-  },
-  "rainbow_wave": {
-   "kind": "colour",
-   "takes": [
-    "speed",
-    "length",
-    "sat",
-    "val"
-   ]
-  },
-  "random": {
-   "kind": "mono",
-   "takes": [
-    "interval",
-    "brightness_min",
-    "brightness_max"
-   ]
-  },
-  "random_each": {
-   "kind": "mono",
-   "takes": [
-    "interval",
-    "brightness_min",
-    "brightness_max"
-   ]
-  },
-  "rgb": {
-   "kind": "colour",
-   "takes": [
-    "red",
-    "green",
-    "blue"
-   ]
-  },
-  "rgb_blink": {
-   "kind": "colour",
-   "takes": [
-    "colour",
-    "speed",
-    "phase",
-    "duty"
-   ]
-  },
-  "static": {
-   "kind": "mono",
-   "takes": [
-    "brightness"
-   ]
-  },
-  "sweep": {
-   "kind": "mono",
-   "takes": [
-    "speed",
-    "length",
-    "extent",
-    "hold"
-   ]
-  },
-  "traffic_light": {
-   "kind": "mono",
-   "takes": [
-    "red_interval",
-    "red_amber_interval",
-    "green_interval",
-    "amber_interval"
-   ]
-  }
- },
- "screen_effects": {
-  "gif": [
-   "file",
-   "fps",
-   "interval",
-   "loop",
-   "ping_pong",
-   "first_as_last",
-   "hold"
-  ],
-  "graphics": [
-   "file",
-   "fps",
-   "interval",
-   "width",
-   "height"
-  ],
-  "image": [
-   "file"
-  ],
-  "sequence": [
-   "folder",
-   "fps",
-   "interval",
-   "loop",
-   "ping_pong",
-   "first_as_last",
-   "hold"
-  ]
- },
- "audio": "audio",
- "audio_effects": {
-  "wav": [
-   "file",
-   "loop"
-  ]
- },
- "settings": {
-  "speed": "number",
-  "phase": "fraction",
-  "duty": "fraction",
-  "window": "fraction",
-  "length": "count",
-  "flashes": "count",
-  "steps": "count",
-  "extent": "span",
-  "brightness": "fraction",
-  "brightness_min": "fraction",
-  "brightness_max": "fraction",
-  "dimness": "fraction",
-  "bright_min": "seconds",
-  "bright_max": "seconds",
-  "dim_min": "seconds",
-  "dim_max": "seconds",
-  "interval": "seconds",
-  "hold": "seconds",
-  "count": "whole",
-  "step": "whole",
-  "red_interval": "seconds",
-  "red_amber_interval": "seconds",
-  "flashing_interval": "seconds",
-  "green_interval": "seconds",
-  "amber_interval": "seconds",
-  "red": "byte",
-  "green": "byte",
-  "blue": "byte",
-  "hue": "angle",
-  "sat": "fraction",
-  "val": "fraction",
-  "colour": "colour",
-  "file": "name",
-  "folder": "name",
-  "fps": "number",
-  "loop": "boolean",
-  "ping_pong": "boolean",
-  "first_as_last": "boolean",
-  "width": "count",
-  "height": "count"
- },
- "colours": [
-  "black",
-  "blue",
-  "cool",
-  "cyan",
-  "green",
-  "magenta",
-  "orange",
-  "pink",
-  "purple",
-  "red",
-  "warm",
-  "white",
-  "yellow"
- ],
- "channel_kinds": {
-  "level": "fraction",
-  "fade": "seconds",
-  "ease": "seconds",
-  "backlight": "fraction",
-  "rotation": "quarter",
-  "mirror": "boolean",
-  "pixel_double": "boolean"
- },
- "screen_ports": [
-  "screena",
-  "screenb"
- ],
- "strips": [
-  "stripl",
-  "stripr"
- ],
- "output_settings": [
-  "level",
-  "colour",
-  "fade",
-  "ease"
- ],
- "screen_settings": [
-  "backlight",
-  "rotation",
-  "mirror",
-  "offset",
-  "background",
-  "pixel_double",
-  "tile"
- ],
- "tiling": [
-  "off",
-  "repeat",
-  "mirror"
- ],
- "board_settings": {
-  "drive": [
-   "manual"
-  ],
-  "reload": [
-   "manual",
-   "auto"
-  ],
-  "program": null,
-  "args": null,
-  "screena": [
-   "2.8",
-   "1.54",
-   "hub"
-  ],
-  "screenb": [
-   "2.8",
-   "1.54",
-   "hub"
-  ],
-  "stripl": null,
-  "stripr": null
- }
-};
-"""
+#
+# Each page is its length, its first and last characters, and the whole page as a zlib
+# stream. The ends let a mount see the drive already holds a page without inflating it.
+
+
+PICKER = (145346, '<!doctype html>\n<html>\n<head>\n<meta charset="utf-8">\n<title>FX Picker</title>\n<script src="catalogue.js"></script>\n<style>\n:root{\n --bg:#f5f3ef; --panel:#fff; --ink:#26221e; --dim:#8a8378; --line:#e2ddd4;\n --accent:#00857d; --accent-ink:#fff; --warn:#b33; --warn-bg:#fbeaea;\n --stripL:#c2570f; --stripR:#8a1f6d;\n}\n*{box-sizing:border-box}\nbody{font:16px/1.5 system-ui,sans-serif;margin:0;background:var(--bg);color:var(--ink)}\nheader{display:flex;align-items:center;gap:.8rem;padding:.8rem 1.4rem;background:var(', 'rn m.name + m.kind; }),\n                            state.sounds]);\n  try {\n    await scanMedia(state.dirHandle);\n  } catch (e) {\n    return;\n  }\n  var now = JSON.stringify([state.media.map(function (m) { return m.name + m.kind; }),\n                            state.sounds]);\n  if (now !== was) draw();\n}\nsetInterval(rescanMedia, 5000);\n\ndocument.getElementById("straight").onchange = function () {\n  state.straight = document.getElementById("straight").checked;\n  draw();\n};\n\ndraw();\n</script>\n</body>\n</html>\n', (
+    b'x\xda\xe4\xbdkw\xdbF\x920\xfc]\xbf\x02\xa1gWdLB\xbc\x93\xa2,\xfb8\xb1\xb3\xce\xbbv\x9c\xc7\xf6\x9c\xec\x8e\xa2\xcd\x01\tPDL\x12\x1c\x00\xb4\xa4\xd1\xe8\xbf\xbfu\xeb\x1b\x00RT.\xbb\xcfs6'
+    b'\xbbc\x81@_\xab\xab\xeb\xd6U\xd5\xcf\xbe\n\x93Y~\xbb\x89\xbcE\xbeZ>?z\xa6\xfeDA\x08\x7fVQ\x1ex\xb3E\x90fQ~^\xdb\xe6\xf3\xd6\xb8\x06\xaf\xf38_F\xcf\xbf\xfb\x0f\xef\xc7x\xf69J'
+    b"\x9f\x9d\xf0\x8b\xa3g\xd9,\x8d7\xb9\x97\xa5\xb3\xf3\xda,\xc8\x83er\xb5\x8d\xfc_\xb3\xda\xf3g'\xfc\r\x0b\xe5\xb7Xx\x92&I~w\xe4\xb5Z\xd3\xab\xc9\x93\xf9`\xde\x8b\xe6g\xf0k\x13\xac\xa3%\xbc\x98\xd3"
+    b"\xafx\xfdy\xf2\xa4;\xecv;\x11\xfe\x0c\xe3\xd5\xe4\xc98\x18\xf7Fc\xfc\xb9\x8c\xd7\xd1\xe4I\xd4\r\xc3\xb0\x7f\x86M\x05\xb3Y\xb4\xce'O\xda\xed\xf1`\x14\x9e\xe97\xdc\x8e\xb4y\x1d\xa4\xeb\xc9\x93i\xaf\xa7~"
+    b'\xf0\x08\xa6Q\x10\x05\xd4J\x96\xc3P\xdfN\x9e\xcc\xba\x83Q\x9b\xaa\xd0\x9b\x0f\xd8ug>\x0c\xcf\x8e\xee\x8f\xbe\xbe\x9b&7\xad,\xfeG\xbc\xbe\x9aL\x934\x8c\xd2\x16\xbc\xb9?\x9a&\xe1\xed\xdd<\x81Qt\x86\x9b'
+    b'\x9b\x93\x8e?\xf0\xb2\xdb,\x8fV\xadm\xdc\xcc\x82u\xd6\xca\xa24\x9e\x9f\xad\x82\xf4*^O\xdag\xd3`\xf6\xf9*M\xb6\xebp\xf2%H\xeb\x08\x8f\xc6\xd9,Y&\xa9\xfc\x86\xb17\xee\x8fpI\xa2\xf4.\x8c\xb3'
+    b'\xcd2\xb8\x9d\xcc\x97\xd1\xcdY\xb0\x8c\xaf\xd6\xad\x18\x1a\xcf&8\xcd(=\xbb\n6\x13\x7f\x9cF\xab\xb3M\x10\x8688\xfa\xe5u\xfc>\xbe,uF\xe0n\xc0\xb4\xf5\x1c\xf2<YM:\x9b\x1b/K\x96q\xe8q'
+    b"1\x84t\xe3l\x93dq\x1e'\xebI\x96\xc3\xca\xdf\x9e\xe5\xc9\x06&\xf0\x0f\x18a\x18\xddL\x06j\x90\xde\xa2C\x10@\xf0D\x93\x8e\xdf\xc1\x9e\xd5|\xbd`\x9b'^\xdbk\x03\xa8\xb6\xd0\xd7\x9a\x81\x15\xaf\x17\x00\x96"
+    b'\xdc\x8cz@\xa3\xa61\xd3\xc8v\x0cI\x86\x9d\x06a\xbc\xcd&\xe3\xcd\rNe\xc7$g\xdb4\x03\xa8n\x92\x18A\xa5\xfa\xf77i\x0c\x83\xbb\xbd+Uc\xdcq\x17\xc3\xe0\x93\xee\xbb\xfc\xb9qF\xd3\xbf\x8e\xe2\xab'
+    b"E>\x19\xb6\xf5\\'\xb0|\xc1t\x19\x85w\xc9&\x98\xc5\xf9\xed\xc4\xef\xaba\x85\xd1<\xd8.\xf3\xfb\xa3U\x10\xaf\xefV\xc1M\xeb:\x0e\xf3\xc5d\xd0\xb5\xc0\xd7a\xb8 \x0c5\xa8\xda\xb2\xb8\xf7GO\xb2<\xc8"
+    b'\xb7\x99\x05|\x7f\x8c\xe5\x9d\x19\xc0\x1e\x02t\xf2\xa7\xc1z\r\xf8T\xc4\x12\x0b\xe2\n\xa8\x9d6@U\xf5\x8f\xa5\x1c\x9c}\x12\x8d\xe6\xddyG\xb7\xe8\xe3\x8e*\xc3R\xf6\x99\x0bL|i\xc6\xe2/\x92eh\xd7|2'
+    b'\x0f\x81*\xb4\xa5\nl\xbea\xbf3\xd0\xc5\xbdM\x1a\xdd\xc9\xb0h\xfe\x88Tg\xd7\x0b\xd8\x0e\xad\x0c\xa0\x1bM\xa0@\xeb:\r6gEx\xdc\x1f\x9d|\xed}ZD^\x16}\x89\xd6^\xb2\xcd7\xdb<\xf3\x82\xcc'
+    b'\xcb\xe1\xe54\t\xd2\xd0[\xe2\xda\xd1\x8b\x95\x07\x8d.#/\xf0\xb2\xe0K\xe4\xc5\x99w\r\x98\x9aC\xc5\xafO\x8e\xfcl\x93\xe4\x99\xde\x96\xf1\x1a\xd1\xb2E\xbb\x93\xb6b\xcf,^k\x19\xcd\xf3\x89?\xc27_\xa2\x14'
+    b'\xb6P\xb0l\xd1\x16\x9e\xac\xe20\\F\xf7\xd2\x9a\x17\xeb\xf6\xa6\xcbd\xf6\xf9\x8c\x11A\xd6r\xc1X%\xbf\xdc\xa5\xea\xc1J\x95\xb6Kz5\r\xea\x9d\xde\xb8\xd9i\xb7\x9b\xddN\xd3\xef\x0f\x1a\xee.)\x95\xe8t\x1b'
+    b'f0\xfe2\xce\xdde\x01:\xea\xe0\xbe,\xcd\x19\x91\xc4E\x10&\xd7\x80\x94m\x0f\xe8\x9f\x87\xc3\xa0\xe6\xbb\x83AS\xfd\xcf?\xc5\xe6\xd7I\x1e\xdd\x951\xa9\n\xfb4\x96\x8e,,\xd5\x14\x057\x00m\x12k\x9dO'
+    b'i\x99\xfd<\xb8*\xae\r\x83\xd4*:\x1a\x14(c%\xde\x15\x86uzJ\xa4F\x0f\x8c6\x86?\x18\x94\x96\x9bw\xa6O$\xe8n\x17ez\x04\x89\xeb\xf4\x9d\x8e\x19\x16\x8a\xbck*\xd1\xa5\xfd\xa0\xfa\xf5\x16]\x9b'
+    b" \x17\x80\xe7\x0f\xf1\xc5N\xc62\r\xb2\x08\x07\xc2\xf8<\xe4\xe9d\xc1\xad\x90\x19!r\xfdv\xfb\xec\x10\xb2\xa3\xc6\xe3q\x136\xa8`\xb8O\xd4V,\x7fE\x92\x87\x1d\xc7a\xd4B6s\x18'\x1c\xd9Pa\x1aA"
+    b'\x14\xd4A\x95\xae\xccI5=\x99\xc7i\x96\xb7f\xb0\xebC5\x06buv!\xcf\x07\xc1\x88\x08\xb5\xb5\xd8\xb4\xdbq@-X\xe5\xebI\xa7\xa2\x82\x97}\xb9\xba\x93=\\\x9c\x93L\x9b\x1a\xc8\x16)\n-\xd0\x84"'
+    b'V\x9aL\xa5\x11\xd1\xa9d\x1dya\x1a\\\x03\x1ax\xb7\xc9\xd6\x9b\x05k/\x98\xe5\xf0\xbe\tX\x84En\xa9,\xb3\x9el\x82\x04\x0cP?\xca\x8f<\xcf\x8b\x82\xd9\xa2\toR\xac}\r\xbc\x97\xdb\x14\xde\x08D\x0e'
+    b'>\xaeC(\x00D9\x92\x02\xd8\xe1\x02\x88\xe44\x02\xda\x87\x13\xc6!\x11\x11\\\x06\xabM\xe6\xae\x08\x81\xbf\xaf\xe1!\xd3A\x10ba\xc3wz\xb4q\xf8\xdf\xce\xe0\x0f\xe5\xf7\xb4\xdd\x05\xd4\x9d\x12\xf7\xa7qL\x16\t'
+    b'\x90\xe2I\xb4f\xae\\\xc1\xd1\x05o\xa9\xf0<\x99m\xb3\xd6\x978\x8b\xa1\xf4\x1dL\x9e\x04\xd0na\xa0J\x06\x90\xef\xadd>\x07\xf9\x19\xe7\xa3\xda\xd1R@\x91\xf5\xd3\xe7\x1d\xe4\x9fY\xbf"\xff\xf2\xcb\x05\xc7\x80\xc1'
+    b'a\xa8p\xbc\x86\x9e\x91/"\x8dT\x94\xb8\xdd\xc4\xff\xf3;}5/\x1fF\x08\x9d\xda\x0c!\xdaDA\x0e\xebCP\x0fR@g\xe8\x01fU\xef\x0f\xc2\xe8\xaa\xf9d\xde\x8e\xa2(P\x7f=\xa0I\xcd#\xefI\xd4'
+    b'\x0e\xa7a\x97~\xa9gX!\xd5\x8d7-\xcc\x8b\x04? \x1c@\x81P\xfa\x00YyX-+\x17\xd7\x03&\x99G7\xb90O\xde\xef\xf6\\\xa6wB\xbag\xbdi8\xed\xa9O\xb3 Mc[\xf6\xea\r\xd4\xa7'
+    b'% ;L\xf7n\x8fHg\x81\xb5\x85K\x8e0uJ\x14\xda\xf2\x839\x0c\xeb\xce\xaa\xb6\xa3\x16\xee\xef\x1fa\x8f\xe2N\xcc\xad}\x8e\xebA/\xae\x83[K0Y\x04"\x95\xe0\xc6\x83\x82X\xec\x8e\xe9\x1f\x10\xea\xb9'
+    b'"\x7f\x0e]\xea:\nAw`1+%\xf9\x1f\xb4\xdfF(_\xecT!\xccz\x8eH\x1e;l-K\xfbR\xe6\xc4[s\xd7\x96\xac\xd0\x90\x10\x8e?-\xe2\xd9\x82\x00\x06\xa4m\xbb\xf6\xf2\x14D\xb6%\x10\xb3l'
+    b'\x91\\\xaf\xbd4\x00\xc8\xa5\x00> \x95a\x84*\xe94\n\t\x90P\xe5\xae\x08 \xa2^6\x11i\x97z-\xc0gH{\x1c\xda\xda?x\x1e\xebK\x8f\xd4\xca\xe3\xccC\x06@\xe46\x86e_F\xeb\xab|A\x94'
+    b"{\x0e\xe4\x1c\xe8\xfd\x14\xc9\xacF\x80&\xca\xa9@\xcag)\x90a\xaa\xfc\x0f\x14J\x9bH\xd5\x15\xd9\x075\xcd\xcb\x93\xab\x88f\x0b<\x07+c'P\x1c\xc1\x80\xe3\xd9\xa6\xd4#\x08\xc0\xe9m\xbeP\xb8\x97\x01\xf6D"
+    b'\xa0\xf2\'I\x16e\xd8\xe2<Y.\x93k\xc08j\x19\xd8\x05\xc0\xc1K\x80\\0\xe1\xa7\x19\xb4l)k/;\xee\x0f\x1cD\xecu+\x10QKX\x80k\xb2\x8dQ\xe0$\xe4\x1a"r\x91lQ\x89\\\xf7\xd6\x80'
+    b'\xfc\ni\x8b\x15\xfb\x86S,\xddQ\xec\x83S\x0c\x80\x08hy\x81\xa6\x92\xf3\xf5v5\x8d\xd2\xcb;&\xcb}F\x13#\x08v5C;+\x11\xa9\xaa\xddV\x96\x8e\x07\x83\n\xbc\xaa\x90\xd8\x9dJ\x9da\xa3\x04.\xa5'
+    b'T\x17\x045gb\xd9*X.K\xa2\x9c&\x91c \x91G~\xb2\xc9\x0f[\xe0^Q\xb8\xaa\x16\x04\xcb\x9b\x1ez\xa8\x82qy\x1av\xb3\xb2\x02.q3\xe0\x7f\x14i\xa3\xad\xabD-\xe8/\x99\xf0\x86\x08V\x91'
+    b'w\x05 \x82m\x02\xbb\x8e%\xc3<^\xc1\xbeZEQ\x0e\x94%_\xc0F\xf4f\xcbx\xf6\x99\xb6I\x00\xaac.\xb4\x1a\xb7\x88T\xd6\xf0\xbbJ\xe3\xf0\x0c\xffi\x01\xf4\xe0\r\xa8\xab\x00\x9e\xed\n$4f\xbbu'
+    b'\x14\x0b[\xf3x\xb9l\xae\xe2\xf5*\xb8\xa9wPtmv\xe6i\xa3A`\xee\x94\xa4Z\x80 p\xb7\xf0!\x05\xa3{\xa8\x82\xa1m\x0b\x00D\xa4ds \x02\x93\x05h\xa9\xd1\xba\xb0v6\x92#\xb39\x03\x92\xbb'
+    b'\x163\x11=\xce\x93\x14E\xbbL\x86(\x94Q\x7f\xe2B\x08\x86\xff\xac#_mH9\x7f\x83\xc6\xc5p\x0fG\x96\x82\x9e?\rR%Q\xf7\x8a\xaa\x8c]\xc8\xcb\x00\x1a$]\x93d\xce\xef\xd7\xb0\xc0\x86\xf2\x0f\x98\xf2'
+    b'\x9f\xd2\xbf#\x8d\xcb\xc6\x92\xe3\xeaIG\xde\xae\x8d\xa0\xcd\x0c\xcc\x91h\xbfe\x1e\xd6\x04\x84\x89\x81\xca\'\xc9\xe7\xa6"\xcd\xb3$]\x13[\x8a\x84u\xc1\xdc\xf3m\x8a\xd8w\x9b\x11S`jO\xf8\xc4\xc3\xbe^$%'
+    b'\xf5\xe8\xac,\x80wy\x1c\xa6\x12\xc3@I\x94=W\xa4\xecU\xc8\x94\xc3*\x93\x82\x8d=\xcc\xf7\x95.\xdd-\xc2l\xd4n\x97\xb7\xffC\xb4\xe4\xc8\xfbu\x9b\xe5\xf1\xfc\x16\xd6\x1d^\x00\r\x90\x0f;\xf0\xbb4C\xb2'
+    b'YX\xe4\xd0\xc1"\xc2\xb8\r0\xd8u^Yq?\xeb\xa8(\xbf\x97\x87\x14\xca\x83|\xea\x1a=\xe6\xd1,\x1a\xee\x1c\xe0\x99#\xc9\x02`J*\x03m\x96u\xc2<\x9c\xf6\xc2\xef\x10\xe4G$\xba\xf7Ax?u\x9e'
+    b'\x91(h\x11+\xc8\x19\x87\xb5\xb0\x90E\xac-\x12\xc1\x8cH\x92E\x19\x15\xca\x81\xe4\xbb\x01\xe9$oz\x9f\xa3\x8d\x91I\x98\xb6\xe2\xd6C\x19#\xe1]@\x1a\xa5n\x06\xd0,J\xa1\x95\xe0\xb3\x92M\xd2(c\xa1#'
+    b'\xdf\xae\xa3\x03\xf5\xffS\x8bR\xb2\xf4AVB\xbd\xdf\xf9\x15\xef\xf4G\xb1\x0b2K\x15\x8cb\xf724\xde\x9dDgP\xdc\xa7\xad\t\x94\\\xec\xb9\xc3\x92\x01b\\\xc9"\x8f<G\x7f\x85\xad\xec\xb4_\xa9M\xd9\x16'
+    b'\x8d\n\tYU\x87?\xa8\xec0%\xdc\xc1\x8b\xc8L\x0f,\xc7\xe2\xeb\x0c\xa7b3\xde2\x98F\xcb;\xdb\xf0\xbaN\xd0\xec\xca\x05\xb1\xa3\x03X\x1f\x1b\xf6\xa0\xbb]+9T\xe7\x01\xbaY\x96\x17\x14-k\xb7\xff\xe5'
+    b'L\x8c\xf3\xd5\xbc\xc2\x19m\xc9R\x88\x98\xfd~M\xe8\x8b\xe2\xad\x10``\xefh(\xf1P[G\xde~\x95\xe0\xbf/\x9b\xf8\xef7M/I\xf1a\n{\x8f\xf02\xc8\xa0v\xf6{\x18\xfd\x90\xc4\x17\x8b\xd3+\x88S'
+    b"\xd3w\xfa\xfc%\x8d\xa0\xb9\xf8K\xf4(\xbe\x8e\x18[\xe4\xe5\xbb\x8d'Z\x02P\xbd\xfb\xc9\xfa\xa5\xcb\x8d\x9ft\xe6\xc3y4\xb5\n|S(\x10\xf4\xfbA\xe8\xb4\xf0\xcd~\x86N\xe5<\x1f\x14\x9f\xa8b\xb6\x8a\xc9?"
+    b'`\xb1|\x88\x89\x94\x81`s\xb0\xca\xcdhA\xa9HH;=\xa6\xa4L\xc8\xe1o/\x9c\x87\xc3\xc2d\xbcxue&\x14La\xb1\xb6ytF\xf6\x19\x10\xb2,\x1cV\xfb\x1d\x9f\x93\xe9\xaf\xd1,\x07\x0c\x81\xa1\xe3'
+    b'\xa0M\x9b@\x14\xc3\x8a\xf6\xd0J\t\xb8pF"\x01>X\x13\x1b\n\x8d+*\x11\xed&\xfe\x7f\xb7\xe9\x8f\x1c\x05\xc2E\x1eG&\x14\xf1Z\x9d\xfbu\xf4q\xca\x1c\x8fI\x90\xaa\xe3!I\xb2^\xde\x828\x03\x10\x0f'
+    b'\xd1~\xb8&\x1b%l \x94|p#\x82\xf0G\x8c\x01tV\x90\x97\x97q\x94\x91\xa4\x89\xa4\x1e\x99\x82\x12\x81\x809\x90\xc4\x88\x9b\r\x9e?G\xb7,Z\x93-\xceQ\xe8\x85U\x80\xe2\x9f\\\xb3\x8a\xca\xda\xae\xde\x9a'
+    b'\x9e\xcf\x9b\xbf\x0c7\xb6?\x9f\xa5\xa2\xe5\xcb!\xa8c\xd1\x16\x16Qi#(\xd3\xbe\x12\x8e\x91\x94\xac_F\xcb%\x88\x83q\xb6w=\xc6]gA\x94J\xd6\xb6%ly\t\xf2u\x17\x1b\x13\x99\xbc\x85\xc7Zy\x06'
+    b"cYG\xf621\x18X\x02\x17`4\xe5\x1d\x9b6\xafc\x14#\x14\x9cT\x8f\x1d\x83w(\x94\xbb\x9cW\xf0\x041\xaf\x92o\xbau=u\xe6\xcb\xacG\xc8W\xbb\x80mmW\x9d+\x1f\xd6\xc8\x8e\xdd'b\xee\x96"
+    b'\x14\xcb\xc3q\x0c\xfej(\xbc\r\x0f\x9eR\xe9\x94\x8c\x89\xa3\xb5\x82;\xab\xf9S\xa7\xa2"\x9a\xb0\xa9\xbe\x83\r\x95\x81z\xb0\x8a\x94\x01&L\x81\x10z\xb8Nh\x14ZF\xc1\x17%\x1em\x82\xab\x08m\xfca\x90-'
+    b'`\xcb\xe5td\xc9v\xa3\x08\x84\xaad\xae\xcc\xfeh\xfeY\x02]\x89\xf1\xa0@4\x90\xcdr\x9b\x89qh\xc5\xa7\xab\xb4k\xc2P\x1b\xb1\x08\x14\xd26\x9f\x17\x0e\x9atd\xd8\xe97\xfd\xc1C\xe2Q\xa9F{\x88\x12'
+    b"N\x95\x9d\xb5\xa0^:\xc8FG\ta\x9c\xf2\xe8'\xccN\xab\xb5\xb0\x1d\xb4\xdfhE\xca`9|\xc0`\x89\x92\x9b\x10\xe5\x81/GE\x04\x18e\xe3\xdb3\xcbN\x7f\x9f\x97\x80j\x88\x8e\x84\x1ca\x0e-4\xd8b"
+    b'\xe6\xc9\x1a0\x83\x18\xcbi"\xa2\xc6\xabh\x19\x91\xc9\x18I\xed|\x1e\xa5Lf\xe5\x1c\x87(1\x1e\xe2\xfc}\x1b\x03\xc6m\xd7\x80\x0e\xce\x01\x0f\x9a\xc2\xbf\x00n\xe12O\xe3\xf5\x1e^\xc2\x1b\x01\x9f\x14%\xe9\xea\x13'
+    b'\x89\xae\xa3>v\xab\xccx\x83\nD\xd8\xc5s\n\x02/7W6\xa2\x95Dg\x17c\x1e$\x94EB\x08\xf3\xaf&\x83\xf4\x81\x16\xc2*\xea\x90E\xf8]F\x83\'\xd3~\xbf\xdf\x0b\xd4"\x96\x05\x194\xa9\xb1F\x9f'
+    b'\xb9g\x99{DF\x90\t\xb58.\xb0\x11\xfd_\xb9\xec\xc8)&\xb5\x8b\xbeHw\xbfS8t\x1a\xf3\x83]\xb2\x9fUf\xbaK\xfc3e\xbcE\xaf(|\x1bW(\xa3\x96i+\x8c#\x92\x14I\xba\xe8I\x87\x99'
+    b'\x9em\xbf\x0f\xe2\x05\xc6v\x8e\x86=<9-Y\xdaA\xad\x96\x97\x01k\xbbJ\\\x81%\x82\xcd\x13\xaf\x91\xa6\xb2\x05\x07-\xea\xb0\x05\xa7\xa8\xc0"\xfe\xc8nKs\xe8\x86E\xa25\x10\x97\x00\t\xb1\x17\xac\x12eo'
+    b"W\xda2\x19\xd3m(\xc1'$\xd2~\xbc\xc6&\xefJ>\x05g\x07\x1a\x92\x8b\xfbqX\xb5\x1f\x1dC\xf2`\xb7!\xd9\x95\x94]73\xf6\x80P\x06\xa7=s\xf1\x92\r\xee\x86\xbb\n\xfd\xd4\xad\xe5\x87i\xb2)["
+    b'\xb9\xac\xd1\xdb\x86\x12-K\x14\x06\xefx\xa1\x15\x94j[\xa6\xa5-e\xec\xde\xd5\xa3\x91\xcdn\x93\x00\xab\x94\x8f\xce\x7f>7y\xb7\x83\x01\x19\xc7\r\x83\xe4\xd0\xca\xe7(\xda\xdc\x1d\xe8\x831\xd0\xa7\xea(jNH\xde'
+    b'<\xf2\x98&\xcf\x82\xe5\xac\x8e\xca\x83\xd7\xf2:D\x1e\x1b\xc6\xd7C\xec\x9a\xe3\xc2\xd9\x04\x99m\xcd\xa1L\xe5\xe9`\xf7\xc0\xd3\xf8]\xead\x11od\xca\x07Yy\xb1\xa07\xbd+\xf8\x11\xc8V\x862\xe9\xad6\x94F'
+    b'\xcb9\x8a4\xf3\xedr\x89\xb2P\x9en\xd7\xb3\x005\x10\xf4]\x88\xd9\xbfk\x11@!\xd0\x12\xd8Wq\x06\xe2\x0e\xec\xf2\xd9"\x02\x99\x0cw!\xf56K\xc2\xe8\xae$S\x96\x0c\x9d.\xc3\xea\x0f\xce\xaea\x1e\xad)'
+    b'4\xfdyB\xff\xb6\xf0\x05n\x1b\x92w=\xf8?X\x9a\x02aE\x92X\x16\x1c\x0b\x94\xb5X\xa8\x8a\xb4\x12\xfa\xdd\xb9\xbeRLD\x0f\x10\xa2\x8c\xbbL\x958U\xe8H\x91-\xdb\xf8\xf2\x08\x1ev\xe4i\x92,\xd8x'
+    b'p\x8f\xf0\xb4H\xd0\xe5E\xb9\xfe\x15a\x00\xca\xdf.G\x94\n\xd6\xe0\xee"h\n}\x10a\x83;\xb8\xe6\x9e\x01\xdf\x1f15{\xe0l\xaa\xa8(\xf6\x1e\xe9\xda\xc2G\xc9j\xb2\x0f\x9f\xa8Y~J\xca\xe7L*k'
+    b'w\x08\x9b\xd4n\xd2\xc8G!\x91g\xc1\x8d\x92\xb3\xf26n\x01wJH\x99m~\x9b\xaca\x9cA\xd6\xd4\xaf\x1e\xf4 >\xdcz\xaa)aQ\x85V~\x9bf\x8f\x87q\x9e\xa4\xa2\x9fl\x02\x10|\xf3H\xf98y'
+    b'\xf9uB\xbaO\x86D\xc0\x9c\xd9Yg\xda\xf8\x13\xcfU\x88\xc7\xb6r\x00T\xa4\x0f\x07\xccfkE E\xcf\xf4\x87v0\x9a\x8f\xc6eG^(\xf8%Xn\x15ux\x12\x8c\x07\xed6\xc9z-\x92\x10\xd4\xfb\xd1'
+    b'\xb47\x9fV\xd7\xa7#\xa7*\xee\xd7\xda\x00\xb9R\r\x0c\xc2\xe1`H>\xa1D\x16\xcb\xfc\xb2x\xcc"EW+@\xed;\xed\xbbH\xbe\xf2\x8c>\xe8x?\x89s\xd8\x06\xb3\xfb\xa30\xca\x83x\xa9|\xec,\x97\xc1'
+    b'l\xbb"w\xe8\x82T\xbd\x8f\x182\x0f\x9b\'\t:\xbc\xec\xf0\\\x16\xc7o\xc7\x13Ey.?h\x0c\xb7\xec\xb3\x88yt\x8e\x96\xa1v\x0b$>^i\\\xc8@p\x8b\x16\xe8\xa4K.\x12\xea\xd8\x16$\xae\x84\x0f'
+    b"*b\xc0i\xd2\x81\xc9YB\xb6\x07\x9d\xaf\xd19\x05\n'\xf0\xd2[&\xf4\x1a=HD2#e\xec\xaeLF\r\x03\xb6\xad\xb5,\xf6\xdb:[\xe9\xc4\xc1\xb2\x1e\xed\xe5\xb0E\xf1\xad\xa8X;{\xb0\xc8\xd3K\xa7"
+    b'\xec\x96.\xb3\xc7\xd7\x8dJ\x1d\xc4\x99y5J\xeak\x95=\xd3\x1f[\xb0\xa9v\x053\x9a\xf8\xee\xb0\x89\xd2&8\xf2~\xb3\xf5\xcdL\x80| \xf6a\xf8\xd0\x1e\xbd\xcfJ5N[\xcb\x8bCu8&>7\xf0\x19'
+    b'\x08\rz\xef\\\xa1\xd3g\x80\xd2\t\xdaa\x18\x9f\xe8e\x85\xd3V\xc1+r\xf8 \xcf(\xa2\xc7\xe8\x01\x11L\xdc\xb3\xc6;\xad\x1d\xaeM\xa6\xdaW\x83F\x7f\x98\xe7d\xd5!\x14W\xaf\x88\x84\x18\x94B!\xb8\xac\x0f'
+    b'\xc4o\x8fc\xdeA\xf1\x17\xb88\x1f\x91>\xd3\x91"\xb0\x87m\xba\xce\\?\xd9<\x98f|0\x89\xbe\x02\xca\x82\x8d\x1e\xb6kx\x9c\x91a%%)r\x95\xa4\x11k~\xc1Z\xbb\xe2Z\x9eT\xb2\xf4\xf1\xda\x1c\x8b'
+    b'\xa2\x81\x8d4\xcd\xe55\x92.n\x8a\x0e3\x83)\x9e\xd9\xee#-\xb6\xdc\x92\xe5i\x94\xcf\x16\xb6;U1\x06\x82\xdc\xde\xa7\x85\xf3\xc7\x03$\xc0\x1d\n\x8b\x08k=\xe3p3.\xf8\x13\xf6-\x85\xe1Q\xd8z\n\xa5'
+    b'N\xd9)\xf2\xcc\x89?r\xd6Y\x04\x08\xfb\xac\xb5\x13\xa1iU\x1f\x86\xefrEq\r$\xad\x0e\xc6\xb1\x18k^\x8f\xc9o\xd9\xea\x01\xd0\xf3\xa6M\xfa\xc3\x94\xe1\xf7P\x18h\xe5!\x82\xab\xfc\xbb\xd7\xc8\xbe\x10\x7fP'
+    b'\xde\x01\x9d\xe5W\x98\x16\xab,\x80\x9e\x01|\x83\xa6\xe9\xc8\x84\xb8\xdb\x14$\xdd\x0c\xcf>`\x98\\\x12\x19\x19JB\n\xafh\xdf\xecu\x08\xaa\x82\xf3\xceu\xb0\x04\xbd\x92\x83q\x8fV\xb1t\xe4Jc\xa8\x94?\x05\xef'
+    b'}\x04\xe6&*Z\xc0\x8a\xc8\xad\x96\xd0\x17\xa5\xf4q\xa7\xaa\xcc\x82\xf9T\xb5\xd4\xb3G\x9b\x85\x11\x9b\xcd\x0b%/Dw\x0c\xed\x8a&pwk\x85\xc4\xe6~et\xdb\xb9\xcb\xa4_\x96\xd2\xd8\xd0^=\xd8\x07\xc8\xe1'
+    b'\xee\x05\xb4\xf86RB2V\xccS\x10FC\x7f\x89\x0e\x9fw\x05Q\xa3K*\x08\xe2\x17~/\x9c\xfb\x94Y<\xbbs\x16\xe0\xd7}\xe8\xd0\xf9\xb1\x1e*=\xcb\xb9\xdc~\x1e\xb2\xeb\x98\x1em\xc1\xd9\x8b\xf6\xf4\x9d%'
+    b'f\x88\xc7y\xef01CZ\xb0\x9c%-\xb9\xa0*\xce\x85\xc6\x91-\xb6\xa0&.\x93 \x9f\x90\x15\xdd:\xef2\x00\xa0C\xba\x07\x98\xaekxc\rp\x97!\x8bBzz*\xfcIF!$H\xb4\x02m\x9fF'
+    b'l*y\xc5\xf7\xe5\x83\xf1\x89\x7f\xd8\xf1\xdd\xda\x00\x96\xa5\xae,\xe0<\xc2\x89\xd4:k\xedw\x8d\x97\xce\x8e\xf06\xeb\xd0\xa5\xdf\xa8\xd8\xc3\x15\xf1n\xf6i\xd4\xb8Z\x8c\xa8\\\x05\x0b\x81vy!#8\x0e9\x1e\x1a'
+    b'>p<DRC\xc5\xe9\x10\xb2\x8c\xd7F\xde\x00*\x8c\x1e\xe4t\xf0\x83\xfb\x99X\x05\xf9`\x89\x8a\x0ch\x10L\x13\x0c^\x14\xb7m\xb5\xff\xefJ\xe0,\x9bT\xf5\xa9\xac\x87\x14\xc1\xfc\xe3\xb8\x88\x14)\xca\xddn\x06'
+    b'\xb3\xd3\x80\xa0\xd7\xfbT\xf9\xfa\xb8\xa1~\xa5\x93\x0e\xb7K\xaf\x1cd\xf7d\x1e\xccO\xe7#\xcbq\r\x99,\xfb\xad\x8106C\x051l\x96\xf4>4\x02e\x06P\xe8z\xf3\x10\xe2Vi\x83\x82\xc6v\xa8\xddiQ'
+    b'\xdb\xed\xee\xa0\x1f\xaacqr\xfa\xed1\x1ad\x07\xb7`\xab|\xee\xd5@\xb4\x05\xab\xd2\x1co\x0f\x82\x0f\xc7*\xc2\x9eJx\xdd\x1bTE?\x19\x1e\xb7\x87)\xe9\xde\xd8\x0f\x1c\xc5\xaaKme\xac\xf0\xc7\xddQ\xaf\xe8'
+    b'\xa3\xdf\xadt\xc7\xb7+\xb3\xcb\xc3#\xe8S\x896\x14\x94\xb7\xc1c\x83\xd9F\xfb\x82\xd9JC=$\xc2\xe4mL\xfa\x8e:\x0f\x0e\x96h\xf3\xbe\xf5\x80\x96\xb3w\xe6:\xf1P\x0cI\x93%\xaa,\xa8\x9c\xce\x93\xb4\xe9'
+    b'\tG\xf0\xd0vMn:\xf4\xc0\xb6\xf1\r\xadjV\xe1\x14p\xa0\xb5\x8f\x1d\xf9x#\xe8\xbd\xa1\xacO\x07m\r=\x88\nc\xef>wl\xad(\xe9\xe0X\xd3\x12\xd9\xfb\xc5)\xa5\xe4mR\xb29TZ\xf9\xef9'
+    b'\xa6\x07\xdb\xe3#A27e\x1eizd\x94B\xc5s\xed\x84x%\xf3\t9\xc66\xd1\x1b\x84N\x1b\xed\xd0rwx\xfel\t\x80F\x86\\\x12\x16\x08\xb1\xc3h\x96\xa4\x01)t\xb4\xf1\xf2\x05`\xd1\xd5\xe2~g'
+    b';\x93\tG\xa8)I\xb4f\x0f`\xa2\xb1\x05\x81\x0b\xcb\x8b\xd3\xa8\xa9\xe3x\xab\xaf\x92\xf8BA\xfdU\x16G{\xe1\xe8dOp\x88ZxP *\xc4/\xef9\xc8\xeb\x95wg\xb9sG r\xb2\x11<;\x91'
+    b"\x0c%\xcfN$\r\n\xf2\x18I\x8a\x12\xa5\xcf\x8f\xbcg\x8b\xce\xf3whD\xc8\xd01\x87\x13\x05@\xe1\x0e~B\xa9\xd3\x8b\xc3\xf3\x1a\xa7b\xa0\xcc'\xf0\n?\xb1\xc3\x0f}L6\xd1\xba\xe6\xe1Bd\xe75\xc9?"
+    b"Q{\xfe~#\xe8\xf1\xdd\x7f\xb0\x9f\xcf\xb3\x13\xaeSQ\xfb=Z\x10j\x1eK\xd4\\3@'pP\x08\xf7U\xc5\x0c\x065O\xd9^\x9e\xff\x08X\x17\xe7\xca\x01\x9b\x0e\xbdwT\xa4\xf31\xab\xe6\xab\x18\xa3\xd5\x90"
+    b'2|~a\xaa0\xc8\x10H\xcf0\x8b\x05\xfc\t\xe3/T\x9fs6 8\xe0\x8d\xbc\x97\xf9c\x1e\x80\x1a\x15J\x01\xad\xae\xd6q\x16\x85zfR\xde\xa9\xc0:\x11WA\xa3Me\xabZ:\xe0r\xf4\xf3\x1b\xfci'
+    b'\r\x8a^~\x94\x93\xa5\x9a\xe9k\xe3\x11\n\x9c\xd7\\\x8a\xe1\xb5k\xcf1\xe5\r\x86\xf8\xa0\x86\x81\xa4\xf1\x16\x03\xe98\x8d\x04#\x82\xef}D\xd7uq\xb9\x01\x10\xcd\xa3h\x99q\xe0\x9c\x7f\xe4U@\xdc\x7fv\xb2q'
+    b'\xc7.\x86k\x1e\xb9\xfaQ\t\nb\x0e5\xc2\xc9\xee\xf3\xf7LU\x18\x07\x15\x18\x82[\x98Y\x1elH\xf2\x01y\x10]\xc6H\x0e\x04\x1a\xd4D\xeb\xd6\x15\xbe]\x059\x19\xc5i:\xd3m\xbc\x0c\x05oaE\xbb\xd8'
+    b'\xbc\x02\x99P.\x03\xf2\x87\x06\xf5\x91"_*\xc6\xa4\x05.\xf2I\xe3\xf3Yc/#\x00\xc3(\xc9\xd2\xbfc,\x1cT\xf3\x88\xa1\xb0\xcbMy,\x82\x0c\xf4\xf5#\r.9\xd8\x15\x1c\x80Vt\x06\xaf\x18\xaeFJ'
+    b'\xe3\xf4\xe3\xf4\xfa\x06_\xa8\x898U\xd8\xa9\x9c\x0b\xcb\xf3\xe1\x13Fz\xbak\xba\xf8\xcdL\xf6:\xf8\xd2$`\xa3>\x01\xd8\xc9)Oh%8\x11J\xba]\xefZ\x06li\xef\xa04\xed\xe5\xae\xf1gq\x83\xebj'
+    b'$\xdc\xa8\x8a\t\x16t\xf7\xa2\x12\x15j\xc0\x8a0\xed\xd4y\xed\x93\x0e\x8d\xe6c!#\xef\x80\xee\x94$\xca\xf8\x8e\x01+\x80\xfa \xee\x93{\x0e\xc8>\x11zW\x13\xacHr\xf4HrdJ\x07:oM\xe1X\x80'
+    b'\x00\xa8\xb1\x87\x00P>\x0e\xe2\x82\x06\xad\xe6\xbf\xa7\xa6\x9f\x9d\xd0\xe0i\xf2|\xbaF\x1c\x81\xcf\xd3\x9ek\x07i\x8a\x9dA6\x0b\xbc\xa8\xce\x87\x8e\x99\x9f\xdf\xc0nD\xbb\x1f\xe1\xd7\x14\x854\xdc\tI\xd2\x00\xa8K\x0b'
+    b'\xd0\xd8&\x8d\x14l\xb0-\x1e#\xbc\xfc\x12G\xd7\xb8\x04\xf0H\xb0T\xdd?;\x11:\xcc\x87s\xcf\x8f^\x93\x03(\x89&L\x84b\xb1\x19\xca\x80`r\xf1\xdacF\t\xac\x13\x80d\x0f\xf0Z\x82\xd9\xe8\xf4\x8df'
+    b's\x14\xaco\xe9p\rp,a.\x14\xd2<\xd4\x1c|\xef\xdd\xcb\x1f\xfe\xfa\xf2\xad\x8f\xa9\xc5\x14\xddc/\xd6\xe8\x86z\xcb\xd8tN\x9d\xfa0b5T\x95O\xec\xf9Qm\x9bE\x14B\x07\xcbu\x06\x92\xed\t\xd9'
+    b'Ku\x861\\\xda+\xa0\xe4)yzL#Q\x86efg\xda[6\xce%\xc6\x99b\xe9p\xa0DA\xb0=<\x92\xcd\x94/\xc84\xf2>\xaf\x93kN\xa3\x81\x87\xca\xe8\xf3e\xbc\xb7\xe6\x00Z\xb2\xf2\xc3\xf4\xd7'
+    b'\xf9\xf2\xf6(\x9e{u\xc4\x1d\xf8\xf6\xed\xcbO/\xdf\xbe\xff\xb7\xbf\xbe\xf6\xce\xcf\xcf\xbd\x1al\x8ch\x0e\xd3\nk\r\xef\x0e(\xc5u\xbc\x0e\x93k\xdf*\xe5\xdd\x11\xea\xfe\xa2\xfc\x1b&\xde\x1d\x8f/\x98x\x17\xb5\xae'
+    b'?\xae5\xbdZ\xc7\x1f\xf4k\x97M\x19\xf9\xb4\xf4\xe5\x9e\x82\xbf+\xfe\xe3\n\xbf\xa0\x1bZ\x86\xb5\xa4i\xac)mQ\xb3DG\xe9;>-\xe93>\xa5\xd04HZ^\x08\x8a\x1f\x9e*\xa3k\xd3kt-\x7f\x1b'
+    b'\x034\x00\xe0\xf5\xda\xab\xf7\xef\xbee\xf9\xf1m\x02\x9c?\x84\xba\xf3\xed\x9a\xce\x15\xbc:O\xda\xaa\x7f\x15\xe5\xaf\x97\x11>~s\xfb}XWRA\xc3\x8f\xf1\xef\x9bO\xef\xdez\xe72\x95\x9aE@\x8e%\xe3\x13J'
+    b'h\xc7\xcf\xed\xccrt\x1a\x13g\x19\x05\x14\xa4\xc9\x8a\x97}NN\x1c\xdaC\xa0\xe6=U\x8d\x12\xb0\x8f3r\xcc\xe3L*\xd0\xfe\x16-\xa0\xde\x07L\x17\x90$\xcb\xec\x84\xf8\xdf/\xect\xe0on\x91\xac\xd3\xee\x00'
+    b'\x04\xf2\x99N\xa1 \xec\xdd70\x11\xdc\x11\x08\x8f\xde\xc7o?\xbc~\xfd\xc3GXN\xbd\xb4\xbe\r{\x7f\x15l\xea\x06.\x88m\x0c\x9b4\xc2\x83(B??\x03)9\xaa\xb7:\r?O\xfe\xba\xd9D\xe9\xb7A'
+    b'\x16\xd5\xb1\x13\xf8\x1f\xf5\xf2\xe9\xc3\xf7?\xfe\xf2\xfd\xabB?\xb4z\x0f\xf5\xc0\x0b\n\x908\xa0/\xea\xec\xcd\xeb\x97\xaf^\x7f\x80\x9ejO\xbc\x9fD)\x99\xde*\xf1\x94\x0e\x87S\xdf6B\x91\x9e\x83d`\x1a\xa9\x03'
+    b'\x0c!\x01g?\xaf\xcd\x12\xc8\x7f\xd0j\x89.\xc0\xca\xed&\x0c\xd0\x06o\xfd\x16\xfc\x07\x9d-7\x18\x1e\xd8\xfa\xfd\xff\x1d\x1di\xb0\xa5\xdd\xfa\x1a\xa0\xa6`\xf6.\xc8\x17>\xe9$uP\xc8\xd0u\xab\xe1\x9d\xe0\x9f3'
+    b'\xef\xdeT\x02\xe1lS\x0f@\x83kz\xb9U\x19\xda\n\x00\xda\xf5\xa9\xd7\xf2\x82\x06T\xcf\x1bN\xb5\xed\x9a*\x02\xd7\xc5\xba\xbcV\x08\xf7\x1c@^\xff\xc2\x95NT\xf53\xb3\x904(<\xd5h7\xe59^\xd7;'
+    b'\xd87\xa3#@\x88h<\tP\x1b\nJ\xa7\x8d\x11(\xc7\x19+4F\xef\x10\xce?\x86_L\xec\xa5\xb8\xcba\x83\x92/\x02kQ4+zNdD@W\xc9\x17v\xa1\x10\xa6 \x9e\xd3\xd7\x14\xfb\xb9\x8ds\t'
+    b'\x03\xc5\xc1\x98\xa9\x83\xaa\x10\xd5\xb5\x1bO\xee\xe0\xa9\xbc\xbe\xd0S\x93\x17\xbe\xa4\xc5hy\x1d\x99\xf7\x1c\x1aM\xeb9@\xd6-\xd2h\\" \x9c\xde\xbe\x01\xed\xd2\xf4\xc8\xd31 \x0f\x10\xe6\xaa\x11rq\x7f?\xafK'
+    b'!\x0b\xf2P\xec\x19(\x01/\xbc\xf5v\xb9\xf4&^\x1d^<\xf5\xda\xfe\x00\x17\xca\x1d\x83Z\x89\x97\x92\x80\x84\xf8\x05s\xd2c\x9d\xe1#\x9b\x05\x18\xdd\xa1\x9d\x851_\x89\xac\xc75\xca\xe8\xe8\x88H\x87z\xd8\xd2\x06'
+    b'tV\xa0$q\xc2\xc0\x8d$R\x8a\xa53\x98\x11\xa8\x1bf\xca(\xa6\xd5\xe9]\x13V(\t\x1d\x08k\x04\xea6m\x0c\xa7\xe2\x00L\xc2J\xf8\xd4\xf6\x87RY\x10K\xb7\xfe\xf7-\xf0\xe7p\x07\x11S\xe0\xaby\xc0'
+    b'\xf2\x9e\x9f\x13\xbc\x8ek\xc7Bw\xe0\x0f\xfe\x98\xd0\x0f\x03$\x9c9\xe0\x1e\x1b\xedt\x1e>\x12\x96D,\xc1\x847\x13L\xb2\xb0\x9a\x92\x80\x9a\x02\x17f\xa8\x02\x8d!\xf9c\x89\x19K\xbc-qs\x12\\\x02/\r\xd6'
+    b'W\x18\x99\x0c\x8b\x13\xa7Zj\xc1\x1f\x92\xdcj-\xa4\x0b\x144\x12"\x96\xc8\xd6B\x8b\x1e@\x03\xf1\xfc\xb6\x8e\xef\r\xbal\xe8p\xff\xdc\xbb\xb8<\x9371\xfc\xc2L\t"5\xd7c@\x14\xac\xa30R\xd8 \x16'
+    b'\xfd\x15\x8a\xc6g\xf4\x13\xc5\x86_\x01"\x1d\xb7\xb4\xf7\xaf\xffJ?/\xe8\xdb%\t\x12\xfc\xfb\x12_\xa8\xc6tg\xbf\xa5\x89_\x9f>\xe51\xdc\xcb\xdc\x1f?\x94\xd6\xef\x1fJ\xcb\x1d\x8a\x86\x11\xa3\xe29\xc0\xaa\x05\xa0'
+    b'\x85j\x06^\xf2\t\x1a\x81\xaa\xb4\x10\xfef\x9b-\xea\xa8e\xae\xafh\xa1.\xe2\xcbF\x83k\xe8\xb9\x99j]\xa7\x9a\x94\x87>jM\xe4\x8d22\xbbzu\xe9V\xb9tL#\x96\xd1\xde\xdb\x14\r\x1b\xc0\x13\xfa:'
+    b't\xa2\x894J\xb0\x1a\xe1\xc5A\x1e\xd0\x9a\x04Q\x1d\x96E\x062\xa4\xae,\x9f\xe2. E\x93(\x10G\xfb\x04\xd4\x01\xb6\x18&P\x04\xe5W\xb4\xdb\xe1&\xd2\xcd\x83\xae\xb2\\\x1a\xb4\x06\xf6\n\xe8\xff\x03\x7f\xad\xa3'
+    b'A\xcf 7\xca\xc96j+d\xc7R~\xb6Y\xc6\xb9\xcc\xc2#\xf3G\xdd\xa0\xbf\x87X\xcf\x93\x15"\xe8\xc5O\x9f\xda\xb8\x8f\xfb\xf4\x9c\x8b\x00\x18}\xb29\xd4O\xfe\xab\xfes\xf8\xb4Q\x7f1i\xd1C\xe3\xc5_'
+    b'N\x1af\xc1\xbf\x82J\rMa`\xdag\xba9bk\xe7\x1e\xcf\xa3\x0e\xe5.:j-\x88\x91&\xf0\x11\xdfv\x19\xeb\xb4,\x0e\x14\x89\xaaN\xec\xaa]\xbb*P\x81\r\xce9A\nFe_\x00^O\xbc\x96`'
+    b'\xa2\x9e\xf9\xda\xe3\xefg\xf0\xf4\xd59\xd5xJ\xb5\xf1\xc5\xd3szl L\x19\x81\xd6\x8d\x02n\xc0\x17\x1b\x1f\xb4\xfe-\xe6a\x82\xb7G\xf4\xb9\x95&@\xf9\x98\xb2m7|\xb0\x87yg\xd0f\xba\xc9\x94f\x064'
+    b'\x0c\xcd*\x016H\xdf[\xc2\xbaI\x1aX\x92\x89\x9f\xa8%\xbf\x05\x11J\x18\x08\xe2\x1b\x0c\xc8"}\xd8\xe9\x07\xec\xb3.\xa3j\xa2\x0fmf0\x85{\xd6\xc8"\xa5|\x80\r\xca\x1f\x96,JC\x03\x94\xb6Q\x81X'
+    b'n\xec\xfd\x0b\xb5\xc9@\xads\x83\x17A\x0e\xeb\xe5Y?\xfe\xf9O\xe8\xa2\xc1\x10\xa4\xb6\x1aJ\xfa\xd6p\xe4\xd2\x86\xa1\x90\xb0\xeb\xcdP\xe7+\x02\x0c\xad\xdd\xf1\xd56\xd9\x92I##g\x1a\xb5\xfb\xe0\x17\xba\xd8`\xb8'
+    b'$E\x84\xc2V\xc3\xf6\x16\x00"\xeb\xa52\x97\x11\xa8I^\xa2\xdeP\xa9\x8fS\x9b}\xd0\xfbO\x8b8\r3\xe2\x96MOxr\x8a\xec;#S\x84\x03\xd2(D7f\x05\xd1\x8a\xfdu\xce\xf0\xe2\x8dE\xa5\x19,'
+    b'\x15|<\x06\xa1\x84Zo\x9cU\xf2-\xdd\xfa\x15\xb7~\x05\xbb\x97\x1b\xbfrw\xadl3\xea\xed\xe2\xea\xd2\xd0c\xbd\xc9\xe4\x13\x11x\xb3s\xe1\xd33\xaa\xdc`\x98\xaf\xb7\x11\x7f\xb4(\xaa\x02\x04\nU,\x1e\xc8\xf8'
+    b"[\xdc-1+En\xf5'\xdae\x9d\xc6\x0e\x9d\xd7\x13\xf1\x02\xcaH\x1b\\=O\x1aU\x94Y!\r\xa9\x15\xca\xf2\xf8\x07(\x16\xae .b\x0cP\xe6%E\xac`\xb4;\x9d\xaciY\x8e\xbc\xd2\xc5N\x85JS"
+    b'\x14N\x8c\x89\xf8\x98d@E\x16\x1c\xe6`\xdc\x17\x13\xda\x83\xc4\x1f\x02\xc1I\x8c5[\xdf\x8a\xc0\xe9\xab\x9e\xeb\rl\x8d\x81\x90\x89\x14\xb9\x8e`\xe5\x91q\xc0W\xe8\x00\xf3\x13\xb3\xb0D\xcbC\x87Z\x94\x8f\x90\xf6\x93'
+    b"(\x08*\xae1kb{\xda\xd3\x11\xab\xa4\xec<\x99\xa7\xdb,'\xeb\x1b3\xab4\x12;\rR\xb94\x02\xa16\xdc\xce\xec#\xca\xe8&\x98\xe5\xcb[\x9fu\xd0o>\xbc~\xf9\xe9\xcd\xeb_>\xbd\xff\xe15*\xbd"
+    b"\x17\xb5\xe9r\x1b\xa1yb\x06\x8a:\xfd\xbd\r\xd6\xf8\xf7\num|\xb8\x0e\xd2U\xedR\xf4\xe5\x1f_~\xf8\xf7\xb7vuU\\U'\xc7>]\r\xfe\xdeF\x98\xeeN7\xf0\xed\xcb\x1f~x\xfd\xc1j`\x15\xc0"
+    b'\x04r2\xa0\xa8\xa1\xa4d\xf4P5u\xa3\xd2\xc4\xb7o^~|]\xdd\x80\xee\xdcTu\xa7\xa3\x9ax\xff\xd7\x1f>9\xa3\xd05K\xd37M\xe1\xb0\xa4\x01\x00\xc3\xa7\xff\xfc\xe5\xbb\xef?|\xfcD\xd5e\xc4j\x02'
+    b'\xd6\x90T{\xce\x14\xb8\xfa\xc7\xd7\xdf\xbe\xff\xe1\x15\xd57\xc0.\xcf@\x01\xb2\xd4\xfd\xa77\xdf\x7fx\xe5\xac\xa1n\xc6\xed\xd5\x1a\xd1\xa5\xd8"\xde\xbe\x7f\xff\xef4s\xd8\xbbL\x98p\x83O\xbc\xda\x87 ^O\xa9c'
+    b'\xd4T\xe0\xc5\xb7\xcc\xd8\xb2\r\xa22\xbcFM\x08\x9dz\xd3m\xc462\xda\x17h\xeaz\x12\xf5z\xd8\xd7\x93h$\x7f\x03\xfe\xdb\x0b\x06\xfcw8\xa3\xbf\xc3\x1e\xff\r\xe0\xef%7"\xfbhb\x99\xbax\xff6='
+    b'\n\x9b\xb1\x94.\xfcO\xc8\xcd\x05\x97\xf1\xb5\xac\x07\x94i\x02:\x06M\xe1\x17R\xf9\xb2M\x14\x85\xe7$[\xa2\x1a\xd6\xf6\xdb\x03\xd4\xc4\xc6\xdcn\xa3hD\xf1j\xb2\xb5\xa9\ni}\xd2\x87\xad\xfc\tM\x16#!\xed'
+    b'q{\xe4\xc8\x9b\xe77M\xa1@f\xd4H\xc3\xe77>\r\xa9 @\x01G\x86/"\xe0;\x9f*D5=\xff;\xf2\x9fU\x86\x0f\x91\xbdT\x0f\r\x9c\xa7\xcc\xb6Q4g\xf2\xe2\x96**\xed\xea\xc4sg\xcd\xda'
+    b'k\xe3\xde\x997k\xdf\x80"6\xc0kG\xf2\xdd\xc1\xaao\x83\xd5\x06X}d\xd0\xea5\x0b\xd2x\xbe\xb3\x0c\xfe\x11\xedG\xacq\xa7\xdbm\xb7\tgf\xfd^ \x8f\xf3\xf9\xc0<\x8eg\x9d\xa0\xf8\xd6*+-\xfc'
+    b'\xe1\xd8&r\xdf9\xf7\n\r.\xc9\x8c\xe7M\xe9t\x12X@f\xe3\x1e,FG5^F\xbc0^\x15+\x8c\x10\xee\xbd\xc1\xee:\xdc\xcf/\xabxmW\xeb\xd0\xd2w5\x8e[\x05\x83\x1b\xbb`\x1f\x0bvv\xef'
+    b'\x05\x18R\xb1\xed\xf6\xb8\xdc8\x15s[\xeeQ)\xb5\xcd\x0e\xda0\xa5\x8db&W\xb9[\x0c\x8c\x7f\xff\x8e1]5\x04$8\xc7C\xb7\x8d\x19\t\xd5\xc6e\xde\xb5W\x04A\xaa\xb7\xc97\x00\x19`\xdcE\xe2\xbb\x7f'
+    b'st\xa7\xa3\xf9x\xce\x04v\x14\xb4\xa7}z\xec\xf7f\x9d\xf0\x94\x1e\x07\xc3p<o\x17\xdfZe\xa5\x85?ms\xb0\xac\xb8\x8e\xea\x8e\xf4\xb1\x1b\xa9\xa3 \x8bl\\"\x8c\xb3\x11n\xe2m\xb6hI(\x13\xf7\xb1'
+    b'\xc0\xff\xb7`\x1d\xf2E\x1c\x12\xe9\xa9b\xe1,\x8cx\xb6\xf0-+\xe6\xc34\x9d\x9b\x83\xb7\x88\x8a\xbf\x93\x92\xf3\xd4\x1a\n7\xf0\xdf\x1d8F\xc0\xa9\xc6\xb0\x9f\x90Dk\xf4\xc2_\xc2\xef\xf6\xe3\x18P\xcf~o\xcc\xc8'
+    b"\x12\xf4\x83!\x93\xda~0\x9aO\x99\xb5\xe3C4,\xbe\xb5\xcaJ\x0b\x7f\x1a\x8e\xa1\xfc)h\xb1\x83\xf1w\x88\xf8\xfe\xaf\xe0\xfa8\xd5?\x97\xe5\x1b@W\xe3\xd9G\xd0Y>/\x1fI\xc9\xe6\xf4\x1f\xa1\xcb)\xfd'"
+    b"\x0c]\xbf\x9d\xd1\x7f,[\xd2\x7f\xcc\xdb\xe9?\xbb\xec\x9fO\xc9\x1cEh'%CYt\x1d\x82\xc6L.s_\x82\xa5\x8d\x8f]\x12\xcd\xda\xbd\xdd8i\xd8\n1\xe1\xb6\xf3\x02\xd8m\xa7\xf6\x07P\xb8\xc2LvR"
+    b'85\x85?\x81\xc8\xa9\xa6\tw\x15X\x0e!t\x0c\xdd\x1d\x188\xe3\x93\xf0Ga`\xaf\xd7n\x8b\xc48\x1c\xea\xc7\xd9L?\xce\xe7\xbd\x9eh9\xd6[\xab\xac\xb4\xf0\xdf\x80\x81\xb6&\xbd\x9b\x97\xce\x830*\x88\xa0'
+    b'@\x1f\x06\x0e3\xcd\xae1AG\x89`\xf6\x88\x08\x1c@0m\xc2Q\xc5\xceo\xd0\x99\x81J\xea\x93\xb2\x8esR\xe64p\xe2\x8d\x1b\x7f\x04\xeb.\x00\xe8\x7f\x90u# \x0fAgZ\x87\x1d\n\xd4\x02d\xa2\xc7\xe1'
+    b'r\x87\xfec\xe6k\x1e\x91>j\\\x0e\xbb\xfd\xa0X\xa0\xfc\xf8\xe7\xe3\xb2e\xd29\x1c\x93\x0b\xba\x0b"\xf2\x1c\xfd\xb0\x7f\xc9\xa2\xbfo#\x8c.\xfe\xa30\x1a;\xc7\x96\xa3\xec\xbc#\x0eG\xe7\xd0\xff\x1fA}\x9d\x99'
+    b'\xff?\x80\xa2.\x84w\xe0*B\xed\xb1\x94\xb7\xdd\xd6xia\xa0\xf5\xf6\xc1\x02\xff}\xd8j[\x0f\xf7\xf0\xfei\xbc\x0e\xd2\xdb_f\x0c\x8e\n\x19\xa0\xf3{t\xe4JlrG\xf6?\xcc\xcbez\x87\xa0\x95\x0b\xaa'
+    b'\x02Z\xe1Q\xdeu\x82y\xe0\xd0\xf3FB-8\x0bD\x96\x8b\xaf3\xb9\xe9\x93\xdfG \t\x1a\xaf\x82\x8d7\x8dr \xa9\xeb&\x9d\xd3Q\xca*\xd5`^q6\xc8\x87\x00q\xca\xc7\x00\xe4\xc9\x13\xf0a\x1ef/'
+    b'\x10\xc3?\x85?\x91\x93~\xe6\xab\xc6\x08\xad\xd1}"3.&\x98A\xd2\x1ce\xd1qb\x92qD:\xfaf\xe0\x95Ck\x99\x93\xbdw^\xaf"@\xc0\xf5\xec\xd6\xec\x9e\x0fQH\'\x01h\xe4\xa5\xdb0\x10\xd4f'
+    b'3Q\xb7\xc5\xdd\x14\x86]\xf8\x8fu0\xf8/$\xeb\xb4\xfd\xd6\xdaB\xd5\x05\xe4\xedo\xdbMt\xe2\xcb4K\x91\xde!\x10\x18\xad\x98\x9fY\xe5h:P\x8e0\xef9`\xcch`\x7fV\x8bt\xaeh\xb2\xbc\xb0\xcb'
+    b'P\xfa\xb1s}^j\xe9S\x1d9f\xb6\xdc\x9b\n\xa5N\x80\xee\xd9mQ\xca|\xd3\x16{\xf5\xb5\x9b\xd4\x87S\x90\xef\xed)\x96,\xb4\xde*\xd7C\xbc,\xd6\xc2BM\xef\xe1\xba\xecD\x8c\x16\x7f\xc0Y$#\xda'
+    b'\x9d\x06F\xdd(\x12\xab:\x83\xf6\x85>L\xf0&|\x8aP\xa6V\x8ad\xd1\xee\xb2\xf8&/\xa2\xcd\x00{\x86\x01\x0e\x14\x03d\xba\xc2\xf1\x18\xc6G\xa50\x9d\xe7\xf6\xf9"M\x84\x0f,\x8bS\xa1f\x0e\x9b\x0b\x1d{'
+    b"\xfcQ\x93\xf16(b\xd1\xb4\x1cr\t\xeb\xf5\xfb'\x05\x8d\x88\x88\x82\xa1X\xa6\x03!\xa6|X\xf8[L\xa4\xbb\xad\n2Gr\xa2\xa8\xf5j\xbfO<\xe0\xdd\xbb\xc3\xa4\xa0\xd9\x0c{h\xab\x05z\x01\xf5Na\x99"
+    b"@R\xda'L\x94\x89\xfdw\xe8\xb0J\xf7\x1f\xea\xdb\\\xd2\x84\x1c\x92\x9d\xcb\xb62\x8b\xac\xcbq'\xfa\x12\xcc\xb1\xb6,\x93jQ(\xfc\x19Q\xf0it\x9b\xf0\xc1\xeaJNy\x97\x18\x16@\xdel^\x18\xa4\x9f\xd9"
+    b"\x95m\x1e]\xd3!\xf2\xe7H\x1eiD6\xad\xfe1\x82\xcd\x8b\x81 2:C\xb2\xdf\xe2\xdd|Y2'U\xfd\x01R\x8d\xf2\x8b\x16\xc8Gc-\xed\x84\xdd\xf1L\xde\xea\x02\xd6\xdb?JL'R\x8dn\x93\x8aT"
+    b'\x93\xdd\xa7_A\xa8\x0f\xa1\xc4\xbcj\x15\xe4s\xe0\xd2N\xbcw\xa4X\xca-"kl\x9f\xae\x1a\xf0\x188\xc8\'yqi:\xa4\x91(\xe3\xd6a4\x14k\x94\x08\x8f\x8c\xc3x\x9b\xed 7%\xa35\x9f\xbc\rw'
+    b'\xc9\x87\x8aHm\x18\x89~QH\x04\xb0\t\x7fqD\xc5\xb4[\x1f{_\xf3"\xed\xec]\x89E\xa5\xaa\xc3\x07\xab\xd2\xa1q\xa9^\xb7\xfd`E"\xc9\xa5\x8a=]\xcf\xe5\x0e\x91\xe5\xbc\xb9\x8f\xfcGY\xfe\xe7\x90J'
+    b'\x1b\xb0e\x8a\tD\x0cW\xf0\xf7[a\xedn\xd0\xaa:\x16Sj\xff \x83\xac\x0c\xc3:\xbb\xddm\x82-`N\x85\xd4,\xeeY\xbc\x93f\xc8\xdflq9\xa0\x9a\xc6a\x86c\xbd\xe2|b\x07\xa9\x91\xc3\x9cj\x90'
+    b'\\U\xd8\xe9+\xa3\x9b\xda\xa85-\x92\xa37]\xee\xde\x87\x881\x08)gh\x06\xc2\x8bn\x93\xe4[iSQ\xf8}\xfbX;1\xaa}Es\x06\xbe\xd3o\x0f+\xf0\x07I\xb7\xa0\xe8T\x11L\x8b\x84\x91\xdeh'
+    b'9\x8dH\x93M\xcf\xfa\xc0\xee \xeaK\xb5+\x96U\x9c\xbc?\xdc\x93\t\xdb\x8b\xd0\xde{B\xaf\xf1\x86\x13f\xd1*\xe4\xd4\xcc\xc93\xce\x87\x96\x9f\xa2K\xe8\xad\xe8\x88^\xb3\xc0\x04t\xa4@y\xdc\x858\x1a\xea\xc7'
+    b'\x8a\xea(\x89J\xf4\xfdL\xbc\x11-\x8f\xea\x8a\xa1\xda\xee\x802\x1e\xf6\nt\x8f2\xe4\x97\xf6\x11\xdc\xe9\xe6F\xffUL\x92\xdai\x98\x01\xb9\x94\x80\x87S\x98\xa6\xb2 X^\x9aV\x95]\xf6\x05A\x19q\x89\xde)'
+    b'\xc2\x1eU\xd3\x7f\xd7>5 \xb99F\x99Yd[|q\xd1&s\x0f\x1d\xcf\x0fG\x97\xd8\x13\xec:Cf\x15\xd8\x7f\x8f\x19\xc2A\xf4\xc7\x1a\xb5\x8a\xa2k\xa7\xf6\x87\x9a\xbap\xaf\x1el\xe8\x12\x92\x8aNS&8'
+    b')I>\xff\x80\xc9q\xca\xe1\x1a\xe4T\x859\x80s\xecS\x83lia\xfb\x92\x10\x94g\x82\x01\x1b\x00\xef\x8b69\xe4\xf2\\\x94\xbb-/<g\xe2\x8e3O\x9b\x05\xc4\xeb\x0f\x83\xe0\x05H$"\x03E\xe6\xe8!'
+    b'\xa2\xa6\xba\x10\xb6\xa5\xca!\x8bX\xde\x9e\xb1\x9f#\xd1\x7f\x89Ce"\xce\xf9\x8dP\x0eF\x13\x85\x1b]\x84\xbf\xbeK\xd2\xd78\x1a\t\xaf5H\x80\xab\xc9\xef\x98\xb60\xe0\xf4\x12Y\xcby\xce\x9a\x08 \xa4\x81\xa1e'
+    b'\xf0h\xec\xdf\x96\xe8\x84Zl\xacSh\x8cyI\x03\xddU\x053\xc8\xdd\x962\x92\x9e\x1f\xb6<\xd6T\xf8\xf1\xcc\xf5\x8b\xa6\xc6*\x96\x8c\x9c])HKR\x19\xb0\xd3\xeb2\xfe\x1c\xe9\xdb\xf8\x98\xa3R\xf8\x96\x8ax'
+    b'\xde\x17DG\x88\x80\xcd\x1cg\x9a\x9fr\xba%\xa8\x8d\x17`\xad\xf9J\xe6\x89\xba\x91&S\xe1fhaRw\xda[\xef\xb1E\xbe%3K\xd0\xd5\x9a\xb8\xfe\x8a\xdcYyhXG\x13{\xa3R\xe9\x0c\x02\x01\xfeP'
+    b"\xf7\xdasx\x96\xf8\xd1\x02\xcb7e\xa9\x9c}\x8fT\x96'\x9b\r\x05\xf8.\x92T.;\xb6c\xab\x90\xca0\xe3\xaf\xf3\xf8\x02<s\x87\x81\x19\x14\xfb\n?h\xac\xaa\xc9-\x8a\x145\x8a\x9fi\x16\xcf0\x16E\xad"
+    b'$\x14\xe7@NX,\x85\t4\xb0s\xeb\x9b\x15\x03g\xad\xb1U\xd7:\xa4\n(\x96\x0b[8\x91\xfe0\xda\x86C\xe3,\x1f\xf9c\xf2\x82W\x9a\xab\xb3|YS\xe7>\xd5\x82\x12:\xb8\xf3\r\x18\x98\xd7\x86lJ'
+    b'\x14VE\x11j[\xf2\xf2\x158Rh\n\x16\x8eo\xbc\xb7\xaf_e\xec\x95\xbc\x80\xa19.\xf2\xa4\xc6\xfc\xc8\xf1\xeb\x02\xcd\x82\x8f<\x03\x95\xb1\x8bC\x158\x84\x01S\xc14%\x9d\xaa/1dy\x92pJ\x89y'
+    b'\xc2\xd1&x\x13\x18{9\x93\xf32\xcf$Z\xce\x9bG\xda\xae\xca\x17\xaej\x17\xfee\x80\x89M\x10Wg\xc0\x84&\x12\x81\xca$\x08[\xc3\xbc\x92\xdc\xdau\x00\x8c\\EPr{J\nE\xdd\xbc\xe8\xa4\x8d\x12-'
+    b'\xbc\xc3\x98\x03_d]L\xe0\x89\xea\xbb\x97\x84\xa1\x04\xeb\x88\x1d\x17J\xa9\x11\xc2Br>&\x9c6\xef\x0f\xb9\xd5\x89mz\x88\xc2\xc4\xf7<\x95\xaa\x80\x05_\xda\xdd\x94\xf3 \x0ey=\x04\xad>~\xff7\x8c;\xef'
+    b't\x14\x9e\xfd\xdb\xcb\x1f\xe1w\xd7\x1f\xa8\x17?\xbe\xfe\xf0\xcb\x87\xf7?\xe1K\xfd\x0e~\xa3\x07nO\xfd~\xfd\xea\xdf\xa8\x95\xf6\x99E\xf3\xd0\xab<\xc1XS1tS >\xae\x05%\xa1\xe3\x8c\xbb\x9c\x8f.^f'
+    b"z\xa3Nq\xf4\xd2\xec\xa7\x97\xdf\xbf\x85f\x87v\xab\xd8,\x86Z\xcc\x03\x12\xd1\xa1.'\xe6\xde v\xeb\x9dN\xb0WS|\xf9=\xba\x1a\x0f\x8a\xadh\x9a&upA\xaf\xe8\x1a\xa4-Z@\xbcc\x0eiM\xa3"
+    b'c2y#\x96\xe3|\x14\xfe\x11\x8a\x15\x16\x04\x89E\xa6(\x05o\x14\xdd\xb4MT\xa0.]?\x99[\xe8\x82q\x13:\x04\x17SHetq\xbb\x95\xcd\x8fS\xd7\x93\x11\x1f\x87\xa6ny\xe5\x8b\t2\xb9\x08\x9er'
+    b'\x18P\x83\x1bL\x10"\xf3cR!\xc3\xa5\xa0l\xda\xcdGJ\x08"\xda\xc2G\x86\xcf\xf5\x8a\x7f\xcd\xeb\xfc\xa2\xf8\xa2\xc5 \x9d\x14\xde+d \xfarndQ\xed\x87\x04\xda\xb1*\x83\xc8\xae\xca\xcc\xa2x\xc9D\xe9'
+    b'D\xb5\xa8\xcb\x89\x9eg\xb5\x86\x05\x9b\xa5r\xd7\x08\xa3sU\xfckFk4\xbd\xf2\x0b\x8a-\xfc\x1aq[\x87\xbf\xc4\x18\xb3s\xae\n"\xd6\x7f\xedu\xd5W\x8a\xf19\xe7Q~-e[\xaa\x10\x14\x87\x82\x184\xa3'
+    b'\xe8\x16\xf1\xb4\xba\x13\xd2\x84+~n\xdb\xee\xe3\xc2\xec\xb4\x9e%\xa1O\xf2\xcdD\xcc`\x0b\xff\x82\\\x81\xcb(X\xc3T\xe0\x7f\xf0\xee\xec\xc8\x16\x1do&\xbc\tI\x0e\x87Q\xd6\xcd\xc4@d\xbc\x9d\xd0\x80\xd4T\x9e'
+    b'\xa2(\t/\xe8\xed\xbd\x8a\x83\xd1\xd3\xe1\xf8\xef\xf7s\x1c\x82\x1d\xc3\xee\xb6\x00\xff\xa3>N\x00\x1aP_ 7\x8b\x90"rX\x11\xa3\xe1O\xfa\x1a2\xdc1a\xb2\x9db\x9c3\xd2L\xc5R$\xc2\x17\xc0D1*'
+    b"\xc4V(\xf4\xc5\x0eLJ90)\x05NI\xcb\x82l\xcfK\xdd\xe0\xa4 \xff '\x1b)\x82\x8e$\xa1\xb6\x01\xf6\rb\x88\x14y\xa1\xc0E\x98\xc3\xc03%\xa7\xdb\xe5U\xe4\x94\xbe\x81\xa2Tc\x02\x8f-\xab8"
+    b'MX\xecA\xcf6\xb0\xde^x~\xfc\x0e\xd5\x95\x1b\xd2\x90\xf0\xc9\x00\x94mt\xdf\xe2K\xee\xa3\xb2HYG\xdaWA\xc7Ey\xbbz\x95\x12\xa5f\x8f\x89\x81\x9d\x1f\xa3\xb5\xea\x18IG\xf29:?~2;\x9d'
+    b"\xf5\xa6\xa7\xea\x05_\xdfp~\xdc\xf1\xc7\xc7'\xcfk\x126e\xaf-\xa6w\x89\xaeb4y\x04\x98Q*\xa4\\\xe7r\xa29\xa5<)k\xeb\xe6A/V\x94\x99\xc5\xaes\xd9?mj\xba\x1a\x9emwFm\x9e"
+    b'\xef[|I\x8d\xf8\x15\xd3n\x97\xa6\\;h\x926P\xd4\x84\x9dQa\xa6t\xef\xe6\xfc\xb8}\xec\xdd\x9e\x1f\x93\xaajw\xda\xf2z~\x9f\x06x\xecI\xb3}\x7fx,"\xd2\xf9\xf1\x10\xfb(\xa7\xc0Ho\xb0\xfb'
+    b'\xbe\xea\xfe\xc9x>\x0e\xc6\x1d\x19\xc1\x8e\x00[$\x86\xa5\xc0Z\x8a\xa6\xb4b\xe9\x94\xbcG\xf1\xd3\x13\x15on\xac<h\x8c\xd8#\xc6Z\x81\xb0\x9b\xc4\xacV\xdc\xa8\xc0\x7f\x05\x19\xd6\xf7\x13Y\x16\r&zu\xeb@'
+    b'\xa6\xa6\xc8H\x15v*\x88\x99B\xf8\x16\x01\xd55\x802\xb6\x87\xca6\xd4\x82SZ\xd2v\x13\xff\xcf\xeft\x1b\xc5\x85o\xc3\n9\xd8M\xf8\x89\x81\xd5\xe7\xbc\xef\x99\xf0#\xb58+\xe0>Ja\x13\x92\x02T\xba\xac'
+    b"<!q\xd0\x95\xba\xccurh'\xa6\xc0<\xa5[\x1c\x89\x85Ro\x17s]\xad\xb9\xc4\xf1z\x91,\x99\x86Rf\x14\xc3\xbdE3\xe0e\xd1\xc2\xbd\xad7\xfc'\x9eQ+\x0c\xc5\x17\x98*S\x97\xb8J`\x08\x8a"
+    b'p\xaa\xaf.\xfd\xb4"?\xad\xd2/\xb8\xf4\x8dZ\x9d\x89\xfcV5(\x1cT\xa2.\xebN=\x12\xec&^\x0b\xff\xee\xd9\xf55+j\x93\xf66OFo}\n\xfdt\xbe\xfcQ\xfb\xdd\xa4\txv\xce\x92\x8bl0'
+    b'g\xa0\xb38\x9d\xc1\x9a\xcc\x04\xe3y8\xc7\xdeL\xd0]\x8f\x16p\xd6AY\xb4\xecV\x90\x00\x8f\xf2\xf2\xf0p\x83\xd3\xa0\x7f:-\x0f\xd7\xc2R\xdb\xb4H\xf1\xc2t\xa0X\x89\x08\x85qc\xf8\xbe\xda\xa6u\xaaf\x16'
+    b"\xf1)/\xceSO\x910\x9eLq\xa4u[H\x10\x01\xeb)\x10\xbe\x81\xd4\xd2\t:a\xd0m\xf99\x0fV\xf1\x12\x9a\xd3i\xb2\xaba\xa0\xe8\x1f]Vt\xfc\x1cE]'\xe0\x97\x97\x03\x17\x1e\x85\xf3g'8\x9b"
+    b"\xe2\xce\xc5\xcb\xbf\xceM\xa6\xa9\x19\x06\xa7D\x92l\xaa^\x0b\xe3/\\\x1e/S\xa3\x84r>\x9e\xcd\xbc\x89d\x13\xd4\xda5\xd9\xe4\x9f\x16,)\xe3\xc6\xbe\xa2\x99juJ']\xc1\xdd\x82\n\x02\xe5\xc9nJxy"
+    b'\xc0w\xabNX}\xc3\x1d\r\xba/\xb79]\xe2\xc6VQ\xe8J\xa2\xa7c\x06)\xaaUc\xd0\x03\xb6\xcbP_eu\x9d\xf2M\x91\xe4C4\xe5$f\xce,0g-\x8e\x1f\xef\x96\xa3\xcd\x83\x04\x0c \xb5\xb9\xa9'
+    b'\xb9\xd3]\x057?Q\xb7\xe7\xb6/+\x15\xff\x1ao\nl\x14jY\x19\xb9\xbc\xda\xb3\xec\xcb\x95\xa2\xdf\x98\xf2\xdf%\xd4$;\x13\x0e\xa0\x1a\xffM\x82\x8c\xd2kW\xad4\xe6N\x90\x01znM`GY\x94~\x89'
+    b'^f\x1b\xe0(\x1f0\xb7\xec\xf9\xf1\xcd\xbbx\xfd\x9f\xef\x80\x92\xae\xa2(?~^\xdd \xe39\x9fx\xd6h\x16\xcfN`\xb8\x9c\xa3K\x04Y\x98\x90\x9dgAe\x01\xc3U\x91\xd3\x85\t\x07,S&O\xf7Z\x18'
+    b'\x96X\x97h[\x87\r\x87)u)\x0eP\x0e\xfd)\x92\xda\xd2\xf3H\x99\xe53y\xd6\xe8\xa3PI\xbb\x9c\xa3P%\xe5\xe0\\\x1e:m\x03\x1b\xe3\xd6lD\xe5\x1c6&*\x9a\xb2\x7f\x18\xa3\x89\x0c\xd95\x9b\x94\xec'
+    b'%tq\x1a\xdb\x07uH\xb9B@\xe5D\xe6\xf6\xd0\xb4sC\x90\x02o\x1b1\x84e\xb9\xb9H\xd0Z\xa1\x06\xc4\xdeH\x88\xa3\xacS\xd3u$d\xfb\x03\xcc\xa7{?\xd7\x04\xcd\xab+\x84\t\xdai\xc4\xc6\x11|F'
+    b"{\xb0\x17\xc6t\x8d\xf1:WCPy\xfb\x90\xae\xb1Mp\xa5\x12N\xd9\xf9S\x8f\x8a'\xfe\x98z\x17\xf67,\xcf{\x1cx\xd9\x88\xbaV\xb4]\x1dp\xe8\n\xd9\xfb\xf9\\\xe70\x82b\xcf\x98\x1b\xdek\xd6\xf9\x08"
+    b'2C\xb9\xeb~ \x03\xbaW\xa3\xc6k$\xd6\x95\x86wP\xc6\x0c\xf4\xd0;\xdf5RN\x8bA\xf9\x96,\xe1m\x99\xd8~\x0bn\xd9\xb3\x9d\xc2c\xc9\xb1\x0b\xc5HjkB\x7f*\x84I2!\xff\xeb\xbfr)I'
+    b"\xfad\x99%\xa1\x87\x7f)\x9b1\xe9(\xc7XF\x8fl\xaf\x8c= \xe6T\xc3\xea\x08\x08\x0b\x97\x01M\xcc\x03\x01\x86\xa7I\xf0\xb7f\x9f\x1aQ\x15BCJ\xb5yN\x87\xb6\xd6'\xca*\x8aI\xd8\xa4\x019\xf1\xe3"
+    b'\x9d\x8a\x84\x0b\xad\x84\x82\xe9g\x1ef\xd6\x95\xcc\x0b\x94\x13\x14\xfd<kG\xbb\x8e\x04jR\x9c\x93\xf0\x96Z\xc6\x17\x95\x0e\x0c5\x12\x1e)YoL\tH\xf4\xc1J\x16\xb3/\xa8I\xdc[\xb32\xe4\xe0\xe6\xdb\r\xca'
+    b'\xb8\xe6$\xda\x99\xcf\x1bTC\x18\x86\xc9\xc8M\x86"\\j\x0bJx\x1d\xcd:\xfcv\x01\x1d\xd6\xe7\xe6,\x99\x92\xe2\xf0J\xec\\@\xd5+\xe5\x0bCV.\t$\xa1\x0e\x81bG/t\x80%x\xa2\xce\xf3\xa8P'
+    b'\xb2\x9ea\x98*J\x9e\xa5\xcc\x93jL\xd7A\xf6\xd0\xee9\xd3\x15\x10\x1cX\x011\xb9Q\xac\x84.\x06 l\xc1\xf7\xa6\x16\xb5t\xb2\xa8B\xd9B\xca\x1a\xfe\x0f\xf9I\xdd\x9c`\x9e\xb9S\xc15\xa6\xeb\xc3\x9c\xe9D'
+    b"\xf6|\xb4\xde\xa13\x89\xb9;\x01\x93sb\xa6\xcezM\x12\xf9\xd7\xeca\xfaa\x90\x07\x9f\xf0\x92\x0f \xb6r\x80\xf4\x12}\xe0H\x92\xac\x01}\x8dj;\x8bgQ\xfe\n~\xd7k\xb8l'\x94\xa4\x11PS\x92o"
+    b'\xf1D\xf7\xce,"dr\x96\xc9\x9e\x0e\x1dQ)\x00U6@\xb7\xb0\xef\x84\x0c\xc9\xf0\xba99\x7f%\x7f\x19\xfbe\xac\x8e]\xecib\x0e]\xc0\xc1W|\xf3\\\xdd\x82\x18\x198cr\x9f\xc0q\\E\xf97\xb8'
+    b')\xa0\xb5o\x97xO\xd1\x07\x00\xa0]\xbej!\xe4*\x9d\xda\xeebyru\xb5\x8c\xea5J\xc9\x0f0\xc54\xfd\xd8\xfa\x7fx\xcf\xb1w\x9f(\x0e\x99:|\x96\x1emW\xe0*H1\x89)\x02\xbb\xd0k\x1a\xe1'
+    b'z\x9b\xf15=\x19@%\xf8\x93\xcdn\xd0\xef\x83\xe0o^\x96\xc7\x82^\xab\xa01\xa99\x07\x80P<\xae\xdb\xc5\xf5\x06\xa8\x84\x15\x92\x84l~5n\xa4\x00r`\'\xf9v\xab\xcbc"13\xd9\x178\xc6\x16\xf5'
+    b"\x9b'M\xaf\xdd\xe4\xee\xac!\x14\xb7\xc4~\xdaq\xcf4\x91\xee\x92\xb6\xe8%\x8eBg\xcabI\xeb=\x8a\xb8\xd7IJ\xca\x07\xecg\x96\xa4f|\x91\x81dq\xc53\x85Y\xbe\r\x96Kt>\x8d\xd6\x02\x8b$\xd5"
+    b'LO\x9dq\x06\x19\x88\x98\xdf\xa0\x04\xf6\x86\x1eW\xf5\x86-\xb0\xd0\x89\xdb\xa1|\x1c\x0b\xbb|\x1c\x04J|Y\xb3\xbe\xbb\xbc\xa2\xb6a\xe3\xca\xca+\x95\x13\x0e^\x93\x94\xf7"\xd4\xc7k;\xa1\x12\x0b\xff\x1c;\xb1&'
+    b'/\x02\x99\x9e\xdd\xd2~\xd6RXm\xb4\x81w\xc8\x7f\xaeG.V\x83\xa67lz#\x8d\x1e.s\xd0\x89\xb8\x8a\xeb*\xabZ\\N\x1cO1\x81\x95RkH\x18+\xe2\x8c\xd1\x17*\x16J\x9fT\x178\x96\xf2y'
+    b'T\xfe\x03\xe8\x03l\xe9QE\xfc\xa6\xd3\xd1j\xc1UUa\xe9\x8668\xa5\x0eSi\x93EC\xd1\xa9\xee\xf2\x18h\x82>\xce\xdf\x9b\xe2j\xc2\x17lZ9\x9f#<\x1c\xc4&\x91\xc1\x98\x94\xa1|~\x86*\xb6u'
+    b'`\xcb\x032\n\xd9u\xb0\xfc\xac}\xb7\xd5\xf5+\xac\xf1\xd8\xc7=8.\xb9`\xa1\x8e\xd7JX)\x131\x0b \xddC\xf5\x08\x95C\x97\xdf\xabq\xd8\x85-\x11=Y\x8b\xebpC\xbd\xad\xa3\x1bI\xb2V\x90\xfd\x89'
+    b'\xe6\x88\xc0`\x0b\x83\\H\x8a\xd0RG0\xb6\xd2\x8ag\x8f\x98oL\x02\x88\xd4\x013^\xc7\x87\x8d\xe8\xf4^\x01:j\xa0\xf1\x03Ec\x14>Y\xe3b\x88^\x8b\xc9BtNN|ki\xad\xfa\xbe\xd1O\xcc\xea'
+    b'\x16\x92\xa4;Y\x7f\xbb\xc0D\xad\x06\xa0r\xed\xc8a\xb4\x83\x9f]\xda\x01C\xa9Y\xdf\x14=\xe0\x1em@\xd6*\x11\x89\xe6\xacOl\x89\xba<\xe4\xedC\xc2}\xb91\rA\xddZ\xb2\xae\xe9\x93\xce\x94\x8f\x0c\x0b\xc3'
+    b'\xa2\xae`h\xda\xb4\xde9%\x93\\\xd7\x1fh\x1b\xfa\xd8\x18`\xc6b\x1eW\x96\xc6\xd96E\x1d\x1a-\xfb)Z\x0eM\xeesce\xed\x8c\xbc\xa1?\xf0\xdev\xf0\x9ae|z\xd7\xe9\xa3%\x0f\xdf\xc8\x97\xbew\x8a'
+    b"\xfd\xd9\xa7EVS\xcah\xe9tVeh\x95Whk\x9b\x05\x9b\xf3c\xd2'*\x9a\xa2\x12h\xc3QE`\xe4G\x02V\x03\x88?\x1c\x0ej\xb6\xc3\x12\x1cF\xff\xf7\xc0\xc1\xc2\xe4\x9dF\xb9\xae\x05\x89N\xaf`\x88"
+    b"\xeb\x8e=x\x87 \x10\x9csmd\xd2\xf6>^W\xdc9\xe7\xdeW\x85W\xcc\xb4\xd4^f^vo\x930\xea\xa4\x94lQ\xeebX%\xe1v\x19i\x8f#\xbd\x7f\xb2\xf8\x1f\xb8i\xc4\x1e\xbb'+\xa3I\xa1\x8a"
+    b'\xaa\x13h\xe8\xd3\xa58\xfc\xd0\x83\xf6\xb2\xa0\xebQ\x80\xf9\xaf\x82\xd9\x82|8\xd1\x07C{\xa2P\xf6\xf9\x14>\xaf\x83/\xb7@}\x8e\xc4G(\x8b\xa0YJZ\xe8{/)u;\x12?\x1e:)\xe0B0\xafR'
+    b'dTD1\x98\x90\x92\x10\x8e\x91<\xacGS^V\xb9OFR=**\xd1\xe2\x01#\x05\xcey\x94\x92e\x1d4\xfd5G\xfd\xc8L\x98\xda\x06\xd6Eq\xd8\xaa\xdc\x1f!\xe6c\xb2\xb4\x01=N#2\xc0q2'
+    b"\xc5\xf7/?\xbc\xfa\xe5\xfb\x1f\xfe\x9dr\xfa\xb7\x03\xfc\xbf\x9a\xca\xd0\xf7\xc3\xeb\xb7\xe6\x13\xfd'\x9f^\xbf\xfb\xf1\xd3\x7f\xeaO\xdd\xa0;\xef\xf5\xe4\xd3\xbf}x\xff\xd7\x1f\xac\x16\xe7\x9dNG}\xfb\xee\xc3\xcbw\xaf\xf5"
+    b'\xa7^\xd8\x1f\xf6g\xce\xa7\x9f\xbe\x7f\x85\xfeCm\xbf\xa7\xf2$~\xff\x83.\xdf\xe9uL7o\xde\xbf5-E\xc0[\xa2\xa1\xfdE\x1c\x91jO\x86\xe1\xa87:\x95O?\xd8\xddG\xe3(\x9aw\xe5\xfa\x80o\x12'
+    b"\xd8\xfc\x9cx\x92-'+\xd8\xda1\x88\xbft\xc5\xcf.\xcc\xf3\x05\xb9p]fI\xba\xa6\xb4\xca|LG\xcc\x11\xaf\x9dC\xde\x84\x17\xda}\xce\x0c\xaai/\xc5\x19\xda<9\x08\xb8p\xeb8v\x96l\xd3\x19\xa7\xdf"
+    b"O\xb7\x98=^\xf0\x0eq\x81\xae~V\xe7\x7f^\xf4\xf7m\x1c\xc6xY_n\xc6\xaa$ZJ\x9e)\xc7~E\xd3\xb2\x0ct\x85'*\x14\xfd\x00-F\x19\x8c\x1a\xc7EX\xc4S\xc4#G\x1etv\xbbB\xa8\xc4"
+    b'3\xbdyp\xcb\x984\x9f)\xc6\x8d\x84\xea\xf2\x14\xaa\xc2i\xff\x83[K"@\xd3\xaflot\xef\xc0\xb5y\xf7\xfe\xd5_\xdf\xd2\xd5\'@\x1e\xe8"\x93\x89\xdc\x822\xf1.\xfa\xe3\xa67\x1e_6I\xe6\x81\xdf\xa7'
+    b'\x18\x944\x1a\xf8\xddK\xf4o\xc7\xabO@\xb2\xee\xf7\xa5\x10\xbc\xf9\xc0w\x0c\x82\xc0m\xf1h\x82=\x94\xa5\x0c"\xa7\x18 \xd6\x1f\xe1\xe3\xa8\xef\x0f\xfaPo\x89q#\x17\xfd\x1e\xe6\xe9\x1a\x8c\xfc!\xdf\xa0\xc2\xb7\xa9'
+    b'X\x83\xe9\xe1\xe7aa0X\xcb\x1eLw,\x85v\r\xc6\x1aM\xb7\x8f\xc3\x19bF\x93^\xc7\x1fqk\xbd\xde@\x0f\xa9;\xc2,z\xf8\xef\xe5\xfd\xd1\xbd\xb9\xebF\xa0\xad\xec\xf4\xcbx\x8e\xbf\x0c\xb6n7\xa0i'
+    b'\xd2R\xe6\x18\xed\xdd\xb4\xc2\xc3\xf1\xe4i\x8d\xb7\x08(\xd7\xbew\xef\xc8\xddo\xdc\x1b\xc8\xee\xff\xf0\xfd\x0f\x9f^\xbf*,\x08\xcc\xff\xf8\xdd\x08\x98\xedx\xd0\xec\x8e\xfdq\xb7\xff\x05\xc03\x1a-Z\x03\xbf\xd7\x1e}i'
+    b'u\xfc\xde\xe9x\xd9\xf1\xbb\x83\x96\x7f:\xe8\xce\xfc\xd1i\xaf\xe5\x0f\xdbP\xdco\xc3#\x94\x1e\x8e\xe4\xb9\xeb\xf7{\xa7\xcdv\xcb\xef\x8d\xc7-\xa8\x01\xff\x0c\x87Po\xd8\x1b\xd0S\xd6\xf2G\x83\xbe\xdf\x1d\x8d\xf8a<'
+    b'\xe8-\xa0\x01\x18\xe2\xcco\xf7\xe1\xa9\x7f:jv|\xa0\x0b\xd2T\xd7\x1fv\xc7\xf2\x0c_\xbb\xd08\xbc\x83E\x1e\x8f{\xf4\x00\xfft\x06]x\x0b_{cl\x01\xd6\t>t\xa1R\xb7\xdf\x81\xc7\xd3\xd1p\xd9\x82'
+    b'\x86\x87\xb0\x00\xa3\x05\xcc\xba;\xfa\x9b\xf7\x0eP\xed\x14Z\xeb\x9e\xfa\xbd\xee\xac\xdd\xf4\x87c\x18\xe1\xa0;\xc0\xde\xc7\x9d\x16N\xf7\x94\x9f3\xfc1\xa4\x16\xf8\x89\xdebY~j\x9a\x97M\xaa\x86%\x9bV\x03\xd0\xdb\x18'
+    b'\xe0\xdb\x1e"|{\xe3\xd1\x0c\x07\xdbE\xc0u\xba8@\xa0\xa60\xd8\xf1h\xc4\xcf\x19\xfd\x80\x0ea\x8a\xf2H\xefg\x00\xd6\xd1\xb8\xe7\xf7\xfb\xd8[\x8f\x00\xd2\xed\xc2\xe3\x10^\xf8\x83S\x18\x7f\xaf\r\x00?\xedu\xa1'
+    b'n\xa7\xcbO\x00\x90\xd1\x18V\x84\x80\n5\xdam\x9c\xdci\xbb\xdf\xc4%\x1f\xf3s\x86\xcf\xa7\xfeh\xd4\xa3\xb7\xd82\xbc%\xb0\x8c\xb0\xd9\xdeH\xc0\xe2\x9f\xf6\xbbMj\x12\x86\xd2\xc7\xfeh*\xfex\xd8\xa3\x87&\x8d'
+    b'\xe6o\xef\xc6\xb0!\x87\x1d\x9co\xb7}\x8a\x03\x87\xd9C;CX\xf6q\x97F\xd6\xa3\xa7\x8c\x06\xe9\xf7:C~\x80W\xd8\xeb\xa03\xc2\xc2\xfe\xb8\xdf\xe7\xd7\xfd~\xc6uz\xb0e\xb8r\xbf\xff\xb7w8\x0c\xc4\xbd'
+    b'\x01\xb4O\x15\xfb\x03Ze\xc6\xada\x17\xfff88\xc0\xc5\xd31?\xc0+\x1cP\x1fQ\x10\x8a\xb6p\xd6-\xf94\x02\xe0S\xbd\xee\xe9\x88\x1f\xe0\x15.\xdf\x00\xf0\xa3\xdb\x84\x89\xf6\x07\xa7K\x80Y{\x08\xbf`\x81'
+    b'\x86\x88\xbd\x80wK\xf8g\xd4\xe27\xb0\x13\x86=\x00\x01\xac\xf5\xf0\xf4\x11u\xba\xd0\xd1)\xcc\xbb3F\xb8\r;C\xd8\x87\xa3\xf1`\xd1\xea\xc3$;_ZC\x04>\x96\xec\xf6\xbe\x0c\x00\xe9\x11\x97\x81\x13B\xadN'
+    b'\x1b\xb1m\xdc\xec\x01\xd4\xdb\x9d\x19\xa2K\xaf\x07k\xde\x83\xe5\xa3=5\xe6G\x90xG\x9d\x0cP\xb7\xc7\xcfM\xfdv\x06\x0b\xde\xeb\xc3.\x02*u\xda%\xc4:\xc5\xaf\x1d\xf8\xa7\xdd\x81\x11C\xb7\xa3\xde\xac\xe5wF'
+    b'\xa7-F\n\x80#"\xd5\x10\xd1\t\x1b\xe4gB\x10\xc4\xb6a\x1bV\xa13\xe0\'hp\x04\xe8\xdf&\xfc\xeb"!\xc07]\xdc%\xf2\xb5;$\xec\xc3\x12\xbd>t\xd1\x1fc\x11\xd5\xeeBu\xdf\xed n\x8eF'
+    b'\xd4\xeeh\xc4\xa3k\x99\x81"0:H\x8a\x00\xf7\x86\xb8\xc1gH.\xda\x1d&-\x00!X\xf7\xae\x9a;<\xe2\xc4F\xc3\xb1\x01.\xfc\x98ag]\x82\xc5\x00\xc7\xd6G\xc8\xaa\x1a\x9d\xbfA\x07\x98\x84s\xc4\x1d '
+    b'*\x9dB\x93\x80\xf6<&\xdc\x9b\x83\xee\x88\x9f\x17\x00&\xa0\xa7\x00T\xe8\n\x1fgD\xb7p\x96X\x06\x00\xd4o\xea\xe2\xa7\xc3\xbf\x1d7\xbd\x9b\x89\xd7\x85\x1f\xf0\x01];\xbb\xfdS\x7f\xdc\xee\xb5\xf5\x7f=\x97\x81\x11'
+    b'\xf1\x86M\x82scL\xfb\xc23\xe1}\xfd\x05i\xf8\x90\x10\xae\xd79ER>\x80A\x01_\xeb\xf6\x01R\xfd\xb1\xdfi\xff>\x128<\x9c\x04"\xd9\xef#f\xb7\x87D\x00\xfb\x1d$>\x1d\xe4"\xfd~\x8bP\x99'
+    b'\x1f\xe1S\x1f)\x16P\xa2\xc1)!\x14<\x0e\xfb\xc8\x05\xba\x83\xee\x82I\x93\xdf\x06z\xd5\x83\x19\xf4F#\xe4E\xfe\x08\xa0\x80\x7f\xfb]\xc43\xe6Q=`\xf9\xf4p\xda\xc5\xed@$\x1b\xe6:f\xd2\xca\x9f\xe8\t'
+    b'\xa8\n}\x87}N\x08\x0e+\x05\x00&\xb8\x8dN\x07K"\xae}\xd8T\xc3\x05\xd0<a\x90\xf0\x15P\xae;\x00\xde\xd2\xa1ivG3l\x08\xbb\x1d\x02\xfd\x85f\x07\xc3\xbe\xb0%y\x84E \xfe\xd5\x062\x0eX'
+    b'\xc3O\xf0o\x0f\xf7\xfe\xb0\rs\x1d\xe1r\xb4\x99+\xb6\x07\x9d/\xb4\x1d\xf4j\xca/\xe0i\xe3\x01\xfd\x1a\x9f.\x016@\xf5\x01\xb8\xed\x01\xe0ow\xdc\xf9\xd2\x07\x84\x1f-T}`\xe5\x7f{\x87#j\xc3\x9e\x18'
+    b"\x01\n\x0f\xe0S\xe7t\xe93# \x80\xe3\x8e\x87'\x1cD\x1fw\x9aC\xb5:\x0fQ\xba\xe1\x10\t\xd4\xa3\xa8#\xf1\xdfQ\xe71\x84n\x8c\x95@\xa6\xea\x9f:t\xae\xbb\x97\xce\x8d\x7f;\x9d\x1bk:\xd7\xfb\x9f\xa0"
+    b'sc\x8b\xce\r\xab\xe8\xdci\x1b*w\x1fC\xe6F6\x99\x1b\x11\x99\xeb\xed&s\xc0\xbf\xfa\x80\xae\x7f\x1e\x95\xc3\xf1\x13\x91\x83\xed\x03\x14\xbbo\x88\\W\x8b\xc4?-L\x88\xc9?"o\x15\x05\x19^\xd1\x8aR\xef'
+    b'&\xbe\x01\xb5\xab\xe4Yc\xd4\xee\x8c\xeahml\xa2\x94-\xb6\x06\xa3\x9a\x95Y\xc5\xd1\x9dS\x1c39\xe2\x08o\x15O\xf1\xea\x0er\xf1!\x970\xb9\xc8+\xce-e\xfa\xc7\xff@yZ\x84\xe9\x8bn\xbf\r\x12\x7f'
+    b'\xb7}\xd9\xd44\x9a\xdf\xc1?x\xc5"U|\xf5\xe1\xe5O?\xa0h\xdei\xdb\xd6\xfb\xec\xcb\xd5\xa7\xe0J.\x10\t\xf2<\xa5\xeb\x81@\x03-^\xdaS{\xa6\xae\xf7C\xbb\xcb\xfb)\xden\xea\x7f\x8en\xb3:\xd5'
+    b'jT8\x9a\xc0W4\xd5c\xfd\xa7\xe7\xe2\x93\x05\xef\xd0@\xc4\xae]T\xf3\x02^Q\x88\xefq\xad\x10_H\xe3(\xdd\xaeC\xcdy54\xbaM\xd4\x0f\xb2>qq\xb2>\xd5\xcc\x8d`54C\xe9\xfb\xd2\x82)'
+    b'.\x11i\xa4\xe8\r\xa7\xfd\x1cr\xba\xca\x8e\xdd\x81B/\xfb\xfb\x96\x15N\xf9\x8c\x0eb\xca\xcb*\xbc\xb5.\x7f\x0b\xa6?\x06\xf9\xa2~\x03\xb0\xbe\xe94\xc9\xd4\xd2D\x1bo\xd3\xe3\xcb\xe9\xdd\xcbW\xd0\xf8\x15`\xc0\x01'
+    b"\x19n_\xd0\x8f\xa7R\x12#:\xe1gK~ZP\xa8\xb1\xf3\x7f[\xbb\xb5Qm\xcb\x8dC\x9cW\xad\x12\xd4\x99S\xe2\xff\x14Jp\xd7\xfc\\\xa7\xf7j\xc0N\x89R'\xf5\x9b\x8e\x1e\xe3\x9e\xb2\xdc]\xa7\xb2;\xeb"
+    b'uy\x9co\x0b%x\xae\xf0\xf8\xb7\x9a}\xae#*\xbf\xbez\x97\x0c\x0fx\xcd\xe6K\n\x04\xf3\xcc\xdd#\xec\xe5,.\x8e\xca\xb8`6\xebfK\x81\xc1t\x9a\xb8\xdd\xa4\x12\xe0F\x11Rq^\xde\xe6)\xdd?\xee'
+    b'e\x18b\x8c.G\xd4jN6\x08\x1a\x80\x98\xed\xac\xa3\x1dT\xce\x95+\x1d\x7f48\xb1\n(\xc8\x88-\x16\x17\xfc\xd5G:@\x11\xb5\xf2\x9a6\xb9\x8e\xda\xa4\xd9\xe9[\xa9\xa4\n\xbd\x84\x1am\xedG\x86\xf8\x9b\xd3'
+    b'\x99!}\xfb\x17\xaf3n\xd3F:m\x9f\x19\x97V\xa0H\x18\x86\x87\xc3\xf0\xe9\x97\x15\x1eJ\xbf\xdf\xb8_;\xfa+\xa71\xd5aT\xc1M\x9d[kJ=\xe3-\xce)\xc4\xeaR\xa1%\xbd6(\xcaGw\x95\xe7'
+    b'\xe4\n^(\xf5F\x972\xd7Zn\xea\xb7\xd6\xe9\x9fU\x9e\x9ahy\xb7V\xe8\x90}#\xd1\x91s1\x90\x10=\xbc\x11>\xaf5)\xd8\t\x07J|\x01\xba\x90)\x87\xb7x\xe5W\x93\x8d\xe0\x13\x19\xf9\x03\t\x13\xd8'
+    b'J>\xf1\xec&\xd0\xc5X\xffD"\x8d\xe6\xfe\x89\xb1\x98\xde\xb3WK\xc5\xf8\xf0(\x01\xc7\x87\x97\xf5\x08\xa9Qn\x06\xd8 \xbc\xa3\xf6\x8a\xef:\x97\xcd\x87O\x94\xe4\xbf\xf2t\xd5\x1bl\xa9\x8b/\xd4/6?5\x1e'
+    b"h\xfb\xff\xda\xc9\xb5er\x82\xd9-\xcf\x99\xe5\xc1m\x16\xa1Q9ah\xed\xe2\x02-w0\x81\x8b\xce\x10\xb83Y\xf5.\xd0BG\xef\xd0\xf6'\xef\x90Q\x0f./+\xf8'\x92.uF\x82\xa7\xe9\xf8\x1b\xc3\xed"
+    b'\x9f\xab\xbd\xdbB\xa7zqk\xd1a\xa8d\xb1[\x05x\xdeM\x06\xe5\x059\x08\x03\xa1h\xd2\xf5}\x98\x13\x8cZD\xeb\xa2\x86E\xbf\xaa\xff[\xe3\x8cP\xb1~\x1c\xac\x80+8\x93\xfd\x83.\xd7<D\x10dx+'
+    b'\xdd\x02\x80\xd2\t\xbf\x86\x9d\x00\xfb\xf9 H3L\x95m\xbe)\x07\\\x13c\x93?\xa8\x95\x9a}TV\xc3\xeck\xbd{\xe5Avo;\xaf<L\x1a\x14\x06\x12Hi\x82\x16\xa9\xe0\x97\xbd\x07\xb1H\x08\x89U\xa7\xab'
+    b'\x89\x83n\xf8\x11\xf4E\xf5\xeb\xb6\xd1\xd1\x14F\x1f\xbc<\xd0\xa8\x82\xae>Vi\x96@g\x8eU\x14~s\xfe\xb0\\3\x10x\xb6\xb3\x0b\xc4\xf9\x1b\xfbK\xc7\xfe\xf2\x1f\x94,\x88\x80*\x88\x8c\xbeR-n\xceb\x0c'
+    b'\xf0\x1b#\x8d\xcc\x9eE\xaf4.\xf7\xc6.\xc7\xfe\x8c\x8a\x7f\xd2\xb9\x16\xba\x0b\xdb\xbf)}\n\xe6#\xc5,\x19\xab(\x8c\x83\x97i^\xb7\x8b\x98L\x19\x0f#\x04L\x81\x10\x00\x07\xa8\xf9\x03\x8e\xbe\xa9\x17\x08\xc7x\x10'
+    b'\xa5\xc4\xc1\xbf\xb0O\xbb&\xe6Tl7\xf1,\x8c\x06\x80B\x89\xeadLt{(\xf4o\x0f\x8d.\x13\x1e\x1f\x88^\xf65\xd0.\x96\x03\x8b\x80\xce\xeaV/\r\xee\xfc0\xbe\xa0\x0e\xe2\x14\x16\x91\x93\x90\xbdP\xe7z'
+    b'\xa1\x14\xf1\xa9\x98=\xbaj\xd9\xb3\x7f\xaaQ\xa7\x08\x02\xc2\xac\xa7\x1e(\x9a\x0fR\x0cj\xb5\x15\xacg\x8b$\x05\x8c\xaf\xf1IWMm\xa6\xda\x93\xf1\xf4tp:\xad=\xdc\x90\x8eU\xaa\xe1Y\x8d\xfc\xe6`%lX'
+    b'\x87+\xd5\xee\xd1#Rd\xd8Z\xc3\x8e\xc2B\xb8\xc0\xbc\x1b&\x81\xd9+\xce\x96\xa1\x82\x84\x8c\x04\x1cx\xe4)\xeb\xc5\xab\xab&f\xb6\x99\xf1\xa9\xdf\x14\xa3\x8bt&3N4AY\xaf\x92\xb9j\xf2\nz\xc1\x9b\x9f'
+    b'\xa3ty+I5\xe4\xd6Wl-\xb8\x8a\x94(\x8c\xae\x00\xe8\xa0\x89\xa7z\xcb<\xf0\xe6)\x85\x8c8\xa3u\xf7\xd2\xff\x82\xa5\xdb\xd1V\xcd\x0e\x1eq\x17\xf5\x7f\x05>\xaf\x13\xa5_\xa9\xc9+n!\x9e\xfbr X'
+    b'\xd2w\xd4{\xa3\xf0X\x90\xaa=\xbbB\x9f\xafu\x06R\xca\xea\xfc\x98\x1e\x97A\x1e\xd5I)%f\xd2b\x97\xff\x1b\xc9\x8b\xf0\xee\x9d\xd6O\xdd\t\xd6\xcbZ\x03U\xbcu+6\xd8\xf0\xc2\x1dt\n\xdf\xaa\xe2\xadM'
+    b'\xf4\xb0v\x0f@\xa3\x06\x99&*d^\xea3\xbc\x97\x90\xb2+\x15\x95M\xd9"\xc8\xf9\xe5\x90@ q\x93q\xdc\xd3\xf8]\xcd\xfal\xf9\xf5\x1c\xb1\x8f\x92\xe5\xdb\x83\xc3c\xdb\xd0\xd3b\x88\xb4\xf5\xba\x18z\xa7T/'
+    b'\xad\xc9\xcbOn\xff\xf8\xb9\xbb\\i\x92\xab\xb5"\xbdM[\x1e\xa4\x1a\xf1\xf5]/\x1b&4\xcf\xbe\xec\xba\xa6!\xa7\x9d\x8dLd\x9a\xb6\xaf\xd9\xb1q\xd7\xe8\x03\x8a\x168\xca\xeb\xa8\xecn\xca\xa2\xa7-o3 t'
+    b'\x1bP\xe5\xa7\xb7v\xea\x9d\\\x92\xc95\xc5\xf7G|n\xe2\x9c\x1d\x1b\xf8#\xbb\xeb\x08\x01\x10\xe7\x0e\xed9\xc1\x1d\xa0\xbb\x03\xb7\x19\x10,\xa2P\x91\xf2\xec:\xd8pX\x9bI\xc9"Y\x90\xec\xec,DI\xd0k:'
+    b';\xb3\x8d\x19*~\x0e\xf3\x0f\xc9e\xf4b\xcf([1p1#\xce\xe2^0\\\x90eC\xd8\xb2\xc5~H\x9b\xc6\xc84e},o^\xf5\xc1\xec^7\x9fn\x9d\x91\xe9D0\x05\xb3\xa7\xd4\x85\xc8mnP7'
+    b"3U\x18\x96(X\xd6\x95\x1d\xe3\x05\x13?\x96d\xa8n\xa1\xb9b\xed7\xa5\xda?q\xed7\xfbk\xa3\x90s\xc8\xc6c\xb7\x0b\x89e\x9ae\xd9'\x8c\x80F\xafq\xb9\xb4v\x12L\xb3d\xb9\xcd\xa33\xe4\xd8\xf3e"
+    b'r=Y\x00\xfd\x8d\xd6g\x96S\x1e\x92\xad\t\xa1\xbc\x0c\xa8\xa5\xe6\xde\xd0\xd8\xbf\xb99\xcb\x93Me\xa97N)\xab]\x96\xfa(\xf8K@\xc9ED\xba3\x1f\xde\x94\xeb\x86qFN\xd0\x18\xf9{F\x8eG\xad\x18'
+    b'\xa8{6A\xf4\x8d\xd2\xb3_\xb7Y\x1e\xcfo[3\xf6\x94\x97\xd7VT\x18\x88!\xfb\x82\xc2V:L\x05\x1e\xfd,\x9daV\x944\xf7\xb7\xe9\xd2z]\x04+\x8ef\x82\xfe\x91gfn\x88\xa0\xfe\xb5\x95\x99\xb70'
+    b"\xc7\x9dl\x8d*.\n\x15k\xd6\xaa\xda\x8e\xf10\x1c\x19\xaf\x10S\x1e\x9bZg\x1c\\\x1a\x01'\x8au`\x93\x94\xb3\x1b\xc1V\x8b\xde\xf5\\\xccqY$\xff\xf7\xdf\x7f7\xb4\xb8,\xf2U\xf3\xd8\xe2\xb9\x1d\xb4K^"
+    b'\x88\xf03\x8c\xd37@W\x96\x11\xab=$\x16D\xce\x1b\n4\x05\xc2\x89\x8b\xa0\n)#\x83\xe4K\xf4sX\x9f@%\xa5\xc2T\x13\xdai\x88\xfai\x9a|\x13lo\x05\xe9`A}@\xe3\xa4\x86M\xbc\x8b\xcbf'
+    b'!\x91\xd6\x1d\x9fF\xa0\xb4\n\xe2\x05H\xa9\xb5\x7f\xd6H\x1e\x85\xbfs\xe6nMi\x063~mWS\x1e7B7C\xb2\x9c\x15[=\xc1\xdb\xca\xbfHl\xb1\xa6\xcf\x0c\x08\xaa\xf1\xfdz\x9eL\xbc\xbb\xfb\xa6U\x83'
+    b'\xe4\x95\xd6s\xef.\x8b\x00\xdb\xd1\xb9\x7f\x1a\xa4\xd9}a\x9e\x086\x8a\x9fD\x00As\x80\\NC\xe5\xe6\x00\xd5\xf1|\x00\xd0\xe7\x9e\x92\xb0\xa8|\x002.\xf6\xec3\x0bFk\xd0\xa48R7O@\x06{\x8f&'
+    b' \x99\xd9$A\xb0\xe7X\x82\x98\xf5\xb1\x12\x10x\x19FmQ\xe2D\xd0\x12\xea\x80\xb8I\x10\x9e\x07\xdb<i\xa8\xc5\xfe\x10\x81\xc4\xbf\x8d\x0c\x00\xd1:Nm\x88\x0f(rT4\x9c\xa3z\x10&QFF\xa5U\xb0'
+    b"\x0e0\xdb\xd8\xe7hC\xf8 \x81\x0e88b\x14Y\x01$\xc8R1cbJ\x00!\xech\xca\t\x18n\x8e\xa6\xe4@\x0b\xef\xad,'\x0c\x87\x9d\xbb\x1a}_\x97\xdb\xcc\xb9\xcd\x84 $\xc18\xa4\x98\xf0\x08\x9b\x1e"
+    b"&I\xd9$\xeb\xab\xbd\xcd\xe1\x0e\xe5\xf4\xf7\x1b}\xe2\xc7z\x14\xb5+\xd7\x9b\xe0\n2\xdb=\x92\xbc\xcc\xc5\xc9\x12c\x0ei\xa6\xcb\x08\xd1H'\xdf\x95\x0c\x94&\xb1\xf2=g9R\xd9\x12\xf7\x0eO\x19\xe6f\xeca"
+    b'LYa7t^\xa8\xd1\x02\xc6\xf22\xff\x98\x13J^\\6\rN\xf1\x04\xa6\x11\t\x14!\x10\xf8\x90\x05\xa2y\x1c-C\xcc\xd4\xc9hB\xd9\xf4\x92\r\xac\xd5\x97h\x89\x10X*\xc7bqIW\xdbG\x91\x07\xfa'
+    b'\xf16\x01\x86%\t\xfe\xf9\xcd\xbf\x03\xd0\rQ\xc1\x99\xa9\n\x9c\xa1\x96\x1c)9\r-=*\x00Y\xd7\x04\xa8`\x16FL\x1d\n3\xa9\x0e\x8a\xc2\x1a\x9f\xa9\xd3\x02u\xe1m\x81\xa7\xb4\x82\x1a\x9c\x02\x1f\xc8\x122\xb4'
+    b'4Y"\xc9\xc4,\x88sLW\xac\xe2u`4S\xd8\xaf\x98\xaa/\x806[\x1d\x95\x1a\x92\xbc9\xd1y\x13g\x03kN\xadf\n\xd8)\xd0\x8d\xabuL\x13\xb9\xb3gM\x02\xa1\xda\xae\xc1\xfaV\xe6I:eF'
+    b'w\xf5\x99\xa9\xe3\xf9\xed\xc7o?\xbc~\xfd\xc3\xc7\n\x13-\xef"\x96\xd38|J6\xdc\x05\x7f\xb9D\xe2O\xfb\xcb\xac\x08l\xb3\t;b\xf2n\x9b`\x90\xa0l8\x8cd\xdf\xab\x10\xaa\x9d\xa3\x9b\xc3]B\xb5p'
+    b'\x9bLp\x05h\xa7\xa9\xa9~\xd6K\x0f\x13As\xeb\xc7O\x1f\xbe\xff\xf1\x97\xef_U\xcd&\x0e\x9d\x99\x10\x02_\xc4!M\x02\xb7\x8ej\xb4\x88\x1f\x0f\xa2\x94\xf4-\xa9I\t\xf9q\xdc\x19\xa7\xe5\xb8Vi\x0c9G'
+    b'\x84\xba*\x89\xc2\xff&z3*\xfa,1eM\xaaFQa\xe4)@)>\x89\xce\xf2\x17y-b5\xd9\xb6p\x9b2\x19\xa1]\xc1\xa5}\xef-E\xc5e\xbc2T\x8a\x9c\x06\xe8\x08\x13\x8f\xa1\xe7\x01\xfa\x92\x17'
+    b'\t\xa1v\xf3\xc6\xa4\x8e\xf0Igu\xccA\xf4\xe4x*\xa8\x8b\xc4y\x16lPC\xb0\xf2\xa2\xca\x9b\xba\x15\x14\x05X,r\x82\xda\xa0\x12\x8d\xa7)\x94zc\xa8\x95z\x83\xcf\xf6\xa2\xf0[7\xc5\xb8\xd9\xbf\xc5\x88w'
+    b"\x0e5s\xf6t)\xd0U\xcap\xee{&8\x82#\xf8\xc3\xa1;\xd6{|\xe1P \xeb\x1b\xbe\xe0\xf6>[\x9f\xf0\xd9\x8c\xc8\xa6\xe6\x16\x1fS\xb1'\x87`\xb2(A\x84\x1c\xe7%\xbcV\xb1\x98\xe1m\x11\xd9e\x05"
+    b'(\x9f\x85\xb3\x02\xf8\xc6]\x01|\xa3\x93w\xf3\xb1\xc6a\xf4B)h\x84\xa1\xe7\xd5\xe4\xc3\x1ea\x99\xb0\xc8N\xb7M\x7fj\xc7\xcb\xbb\xcf\x1a\xcc\x0f\x13\x14\xa9\xa2y\xb3\x90\x16y\x8d?\xf6\xb7D\xf4GJ\xc3\xf3}'
+    b'e\xa0#\t\xdc&vu\xb3Y\xdeZ\x01\x97\x16\x82\xa8\xa8K\xfaq\xe6~C\xc4r\xbe\xe3\x8bB\x19D0\xa7\x0c\xbe0e\x88\xa2\xa8\xc0Nx6_6\x9cV\x83\xbe\xe0\xb3\xf9"\xb9\xe5\xe9\x0b>\x9b/V\xe8'
+    b'\x94\x13\xcdyvT\x11\x18\xec\x06\x87\n\xb6\x9f\x1dUE\x1c\x17\xe2NKe?[\x93\xb4\xf7\xce\x1f\xb9=L\x82\x8d\xc2F93Wa(pB9\rM\xcf\xda-\xf2I\x81\xd3\xb3\xb6\x8d|R\xf0\xfcs6P'
+    b'q\x0eUe\xdcc\x10\x1a\x14=;_\x05\xe0\xf8\xf1\xb3\xe0\x93W\xdc8j\xb2\xf2\xd3)C2-\x7f\xc7G\xe7\xdb|\xa3\xfa\x9d\xf3\x9d\x19\x12Km\xd8F\xb2\xb9\xfd\x06\xc6\xaf6\x8c\xdaW\xff\xdf\xc7\xf7?\x00l'
+    b'1P\x98\x1e3\xca\xd8\x81\x17XP\xc1\x06\xf9dX\xac\x97d\\e\xcf\xa2\x8bR\xbc\xdb(\xaf\x88)\x12)\xab\xc5\xaeV:5\x0e\x8e\x1c\xb3\x1cb\xb2uTdPr\x15{\x04\x9dvSb\x01\x11h\xd4=-'
+    b'*\x7f;K\xc7zJ\xd3e\xb0\xfeLs*\xf3\xc2\xc7\xcb\xa9\xae\x94Z V\x0f\xca\xac\x0f\x88\xd2\x85\xe6\x8a\x82\xb5%\xef\xee\xe0[\x8f`Z;Y\xd2^\x11\xeb\xb1\xbb\xe7\x01\xb6R\x14 \x9b{\x84\xcf\x87\x19\xc3'
+    b'`\x0f?\xe0\x9d+\xd9\xdee\xf9-\xcc`\xc1\xb1\xd5Q\x11\x95\x88\x8b\xa4\x08J\xbel\x0e\x7f\x8f\xf5\xe5\x03t\x83\x0e\nl\xa0E\xb1\xc2\xb8\x88\x82\x902\x0f0\x8a\xa3\xe0\xc7\x81}K\x9d%>_\xa4\x98\xfd\xcd\xf2'
+    b'\xcc\\&\xf9\xcb\\%\xdf*d<xFY\xb0\xecq{Z\xbc!\x1d\xe4\x82\xca]\xd2\xd63M\xe6\tK}\xaaqi o\xa8Yk\xc9\xb0P\xf1\x1a\xb34\x7fJ\xf4h\x88\x03Pc\x86\x19\x04N\x8e%f'
+    b'\xad\xce$\xa8\x13\xaa\xa02R\x18\x8f>kw\xea\x04\xe8\xc6~\xc1\x87\xa4\xac\x9a\xa9CN\xcc*B\x17@\xa4\x11\xdf\x16F\xea\xffu\xb0\xce)m^\xe0\xe9\xbb\x8f\xedd\x04\x1c\xd9\x8a\x87\x99\xecc\xbbL\xa8.G'
+    b'\xb3ap\x1b\xa6\x81\xb8\x8a\xf8n\t6X\x05\xeb\xec\x1a\x98\x1f6\xfa\x9aV\x13\x0f\x9eR5\xd6d\xa3\x86\x9a\x90J\rH\xcf\xbe\x83\x94j\x9f\x1dqf\x14\xb6\x8c\xcd\xa97\xa8t[bH\x18~\xc4\xd6\xea%\xc8'
+    b'*7A\x95C\xf4+{\x8du>\r\xdeN\xe2Nx\xa7/}\xc7\xf1\xe1\xb5xb\xbf\x9ax\x9dv\x93\x92\xc5\x92A@\xb6\x10\xeb\xafz\xdd\xef\x15\x7f|`GT\xe4\x0b\x95\xb9\x9f\xbbxX1`LO#L'
+    b'\xafr\xccd\xdd\xad\xaa\x87i\xa7\xad\xe9p\x87\xbe2\xcf94@OS\n\xc9o=_\xcd\xca\xf83a\xa6\xce\\\xee\xf4M\xe7\x8f8\xce"\xaa\xef\x98\x99A~\xed{V\xc4y\xbd\xf0\x9c!\x89\xd7\xbezkq'
+    b'B\xddu\x11\xac:Q\x18\xa7D\xd1\x89\x82p7\x05\x9f\x05\xa3\xd9,\xcbx\x1a \x8d\xe1\x80q\xcdzu>\x14\xb9sC\xf1\xd0Y\xb2\x92\x8c\xea\xb0\x19\xcc]\x16H\xf6\xf4\x85-Y\x15\xf1rXx\xa4/G\xb9'
+    b'\x8a\x98FR\xf6\x89]X\x8c.;_\x01\xf7\x96\x14<\xf5\x12\x06\xca}ZU\x98\x89\x00\xf2\x99\x9a?\xb8B/L\xea\x7f\x01\xde\x8euD\x87\xa0V\xa7D\xca\\\x92\xb9se\xad\x99\x18\xf5\x02\xe7\xae%~<6'
+    b'3\x82s!5\x8e\xca\x1ah\xdf\xd9\xa3\xd3\xe5<\xc8\xc3MG\x86\x87\xfb|i\x8cj\x8c:x\x98_\xbb\x8d)V}\xa9\xdc<\xaaZ\xb3/\x07ro\x04J\xe3\\a&\xa5\x05\xfd}\xe7\x1bF\x86C\x16\xf16'
+    b'^\xdb\xf6\x8c<\xf9\x0c#\xd5(`\x9b\xb6m\x1d\xc5\xe4(RF\xf4\x86T\x15\xb7\x03\xcbD^\xb3\xb2t\x861\xdd\x9b\t[\xe0\x1bz\xae\xffiZ\xc3\x96\xb5:\xe5\xe9M\xbb\nv\n\x0f\xc1G\x1ehu3\xb5'
+    b'\xe4\x84i\xb1M\xd1&\xf4\xadf"\x90\xd30\xd6Q\x14\xf2\xd9\xb3\\|#\xf9TI\xdc\x0e\xd0.\x9c\xe3!\xb1N\x14\x10H"$4\x8e\x92\x0bR\xd7\x1fk7\xd5-\xe5\x89u\xc0\xc8\xdd\xf0\x8d\xa08\x18?O'
+    b'\xde&\xc0T\xbf\r(\xb9\x10\x06\x840\xd17\xc7\xca\xb8=\xc8H\xd9hX\x92\xe5A\xd2\xab\xb3\xaa\x1a\xfda\x86\xee\xa8\xe2p\xc70\xaa\xeb\x96\xc4GiK\xd3\x95\x9a\x04\xf6s\xean\xfa\xc6\xae\n\x1e]\xc3U\xab'
+    b'\x15l\x0f\x06y\xec\x8b\xd3.J\x04\xee\xd2\x07\xc2<\x0br\x97%\x16\xae\xd8\xb3V\x9ek\xe1B;\x12\x16[5\xf8\x1a5u\x83\x11\xb5\xe5\x9bc&\xc9\x96Kb\x95\x12q\x0c6\x08\x83\x0f\xd6$\xbc\x8aLk\x89'
+    b'\xb4\x14!\x85\xe9t\x99\xe5\x10\xaf\x98\xa6tfD9\xd0L\x1azK\xb2$5\x077o\x05\x99\xa4\x8f\r;\xb1U-\xd8\x86q2\xa1\xd3<\xa4!\xb4^\x7f\xdf&\x80\x9dv\x15\xf7\xf4\xb7\xee\x1aj(o+^'
+    b'\x0er\x8ed\xcb\xca\xdej\xe7\xc3\xb2L6\x8e L\x08\xca\xb7\xbf1*\xb3Da(\xcf\xc3\x1b\x9bJ\x89\x96_\xa5\x02\x19\xb5\x9fy\xa5\xbd\xf5aS|%\xb4\xb7p\xef\x1f!}\xc9\x85\xd2\x99R\xa1\x1be@ '
+    b"\x19\x13\xcfb\xd1a\x17\xff\xf2\rr\xdc\x8d*\xc0\x17fJ9q\xa1\xa5[4\x8f\x9c,U'?\xfb\xa0\xf8\xff\xe5$\xf6s\x10\xb8\xa4\r\x048\x9e\xe2\x96\x8a\xd67\xeb\xab\x7f\xfe\xba\x89^\\5*\xaa\xf0\x91/"
+    b'.\xcf\xdc\xb84\x11\xf0\xd4\x8d\x910\xcf"e9s\x9dJ\xc5\n\xd0\xb0n\x99T\x91hn\tU\xaf\x1cY\xd3(V&o&@\x86s\xab\x15\x95Y\xd2M\x15\xbd\xcb\xd8#!4)Y\x84j\xfa\xe26\x821'
+    b'y*\xf3\xd4mz\xa6\xf2&+\x15\xb8\xa1\x1a\xa0!\xe1\xdb_\xf05\xa3\xf4Y\xa9\x1a*\xcan\x15|C3\xb0\x8b(\x01X\x8f\x86\xaf1d\xf0;\x1b\xd1\xbe\xb5sbT-.j\xefJYO\xbaj~\x939'
+    b'=\xa2\xc1\xe9\xa9\x0c\xea\xac\xd4+b\xcc\x9e.\xd1y\xb5H\x01t_\xa6\xcd\xca\xba\xec\xdcZ]\xdb&\x99\xa8\xb7Q\x9a\x1d\xa2\x95\xaa\t\xc9\x92\x02\x80\xc4\xf0G\xe7\x12,\x90\x9c1i?%\xbb\x9b\xd2\xf9\x0b\x94\xa5'
+    b'\x04J\xfaT\x91\xe4f\xc97\xce\xa45\xa0j\xd0\x05\x89\xde\xdbu\x9eyr=\x18\x07\xaf\xc9(,\xe7\xde#}(\x9fF\xf3mF\xf9\xcd\xa5\x14\x1e\xd3{\xf95H8\xfaVC\xf4]\x0b2\x1aJ\xe8svT'
+    b'#\x9d\xabYQRx>\xcc\xa7\xbc\x96\xfa\x8c\x1fg\x86\x1e\x0f\x96\x19P\xa0"dB\x1a0\x14\x90\xa0\xa2\xf2O\xda\x81X\xaa\xa8\xcbvI\x95\xc9\xe9>\xf1\xb3\x1d\xd7\xd2\xb0\xdf\x1f3\xda\xd2\xf544/\xccD\x8e'
+    b'\x85.\xe2K\xe0\x8c9\x08\x06\'\xffU\xbf\x08Z\xff\xf8\xe5\xf2\xebF\xfd\xe7\xf0i\xfd\xc5\xa4\x05\x7f\x1a/\x1a/\xe0\xf1g\xff"\xbd\x9a~}\xd9x\xf1\x97\x13;K5\xb5Uq\xa5*\xcd\x02`\x1d\xa3\x13\x1c\x15'
+    b'\xc2h\x16 \xc68W\x0c`\xadPm\xa9A\xaeT\xd1\xa2\xe9\x0e\xc3\x8ft\x9c\r5E\xd2\x89t\x07\xf8\xfaO\xc0\x18\x93\xdb\x17\x95\xb4x\xadr\x8a\xdf[\x97\xe9\x04\xc8u\xa2\x1b\xf8\x1b2\x15\xcb\xea\xba\x03\xabS'
+    b',X1 |]!Ua\xb8b\xf5\xa8(<S_Nly6ai\x93*\x92\xafl\x04\xa9@b0\x97\x88L\xb7Zz\x9c-\x83xe\xe3/a\x1e\x9e\xcaK\xb21\xf2\x93\xa5\xeb\x19\xd7\x84\xf7\xeb\x84\x94'
+    b'>\x85\x96l\x14\xce\x8d\x06j\x8cF\xec\xde\x80\xbf\x7f\xddb\xa0i\xe1\xaa\xcd\x19\xdf\x9e\xfaS\x9c/\xea4\nr\xc8\x80^\x0c&c\xe6J\x8cU\x89\xd1\xd5\x8f\xb1\xf4I\rUm\x8dc?g_\xd7/\xe0\xdf\xc9'
+    b'\xe5\xd3\xc6\x89V)\xbe\xc2\x8a\xe54\xa7\xd6\xe6p\xf7\x10\x16\xc7\xc8\n]\x1fK\x95\xebWm\r\x0b\xf7J;\x83]\xb4\xa1,a)\xec\x0c\x99\xc3?k&\xaf0eO\xe6\xd9_H1Bl\xf5N\xdaPhx'
+    b'Y\xd2P\x85lK\x0f*\xd5\xa8 \xad\xf7\x1cs\x9c+\xe4\xd6\xe3_DK\xba\x06S:)&\xd9\xc6\xcf\xeeX\x89#\xf0P*\x06\xa0\xb6\xc1\xbd\x8b\x87\x027\xe7\x04\x03;\xfcSW\x1b_\xd6\xabW\x17\xc1zq'
+    b'\xb9\'P\xdeZ\x87KG\xa96\x1c\x89\xce\x7f\xd8g%\xd0\xd6\xd25Rm\xcaK\x0b\xc2h4\x0b\x80#\xf0\x11\n\x92\xfd\xd9"\xc9`\x9fq\\\x87l>r}\xcbTj\x02\xcd\xe5\xc8\x9d\x80\xf7\x9b\xd1\x08\x14\x87'
+    b'1\xc1\xd4r\x13\xb3\xbe\xad2\xd3\xd7Lb\x8b\xd0\x1f1\x1ft\xbdN\xd0\xcf\xd4\\\x99\x8b\x9bZ\xde\x8b\xd3\x82Y\x19\x9c\xd8\xb7\xbc#\x0b\tp\x05*h%$\x03\x9dP\x0e.U\xa5k\xf3\xa2V\xae\xf5\x99u\xd7'
+    b"\x06\xa75`.e\xec0;\xdb\xb3w\xcb\x0e\xba\xd1\xc06\x99NroG:u\x7f\xe5`\x8a\n%^\xf9\xa0\xe9\xa6\\o,'f\x9ct\x98\x9c\x0e\x95\xa5.M\x96\x19{m\x89\x84\xd9d\xedJ\xb9\xa7\xd0\x17"
+    b'\xd2a\r\x94\x1d\xd8i\x083>\xd9\x1c[\x9d\x80\x17\xb43-\\\xb3\x92E\xf5$\x92\x85\xde<\xd6\x08B\x18q\xbe[\xa92\xf4\x85\x17\xc1\xea\xd0\x81\xa0\x9a\x07\x1f\x02\x9bK\xb0\xb5\xadM\x8f\x9c\x8d`\x96W\xbb\x96'
+    b"\xd5\xab\x920\x97\xe5h\xd7\xe2.\xb6&\xbc\xbc\x07q\xe9N<Ve\t\xc8\xf2\xce\x12\xcfD_\xf4\x91\x06|2*\r\xee\x88\x9a#1pR\xb8,\xa5\xa9~\xeb\x0f&\x89\xbe\xac \x03H\xcc\x05t'\x8a\x9cF"
+    b'\xd5y\x90M\xe3V\xd04~\x04:&VE\xeb\xfc\x91G\xf7B\x7fJ\xcbR\xb4L\xda\x12\x8a\xdc\xe3\x02\x023\xea\xbb\xd2\x82y\xf4QV\xc9\xdc\x84\xfe\x95\x0bA\r\xc12\xf0\xe9B\\\xe9?b\x96\x88\xbb\xb5\xf2'
+    b'7\xc7!\x19\x83\xf4`\x80\t\xb6:\xa8\x90V\xb7$\x8bf*\xb8>Qv\xe3\xb2p\x95\xcb&s\xac\\8\x0bh\xb4\x86\x07G\xad\x17k\x9be\x97\xfd\xa3\xae\xfb\xc6\x91("\xf4^\xd3\x1f\xa0\xe2x\xb3\xd6Dn'
+    b" \xb4(\x10\xde!\x96\x93\x1bv\xb46\xee\xc9\xb1\xb9\xc5\x98\xb8\xea\x9c\x15\x0c|\xc6\x88\xfe,\xd3\x0c!\x13\x16\x84L#c.\xb5@'e4D\xad]\xf6\x94\xcc\r!\x13\xe8|\x07\x04\xb1\x98/\x9d\xc8z\x89\x9d"
+    b'Xd\xd6e \x02u\x8b\x03\x14\x93\xab\xdb\x0c\xc0Pj-\xea\xf0g\x9dX\xbd\xe83\xc1\x8e\xb2\xe8C_}\xbaW&\xbe\xccw\xcfm\xbb\xf6\x99\xb6\x8a\x05\xa9Kx\xf9\x8d&\x81r\x16|\xee\x00\xa8|\x94\xa2\xda'
+    b'\x93w.US\xf4\xd6\xbc\xb7\xfa3\x17\x1dU\xe1.\xb7g\xc2\xfe\x1c\x8be\x99\x96\xd0\x07\xd5\xed\xceN\xe4\xdd\x85X\x88\xd1b\xc9\x97\xfb\xa41\xde5\x80vb:A\xe3\x88\xb0\x89\x18w\xb0\x98\x9c\x0c\xe2\xeb\xac\xea'
+    b'\xceA.%G\x83d\x16\x94g1\nb\xc5\xcb\xbd\x13v\xc0L\xad\x89\xcbKig\xbdy\xfd\xf2\xd5\xeb\x0f\x14\xc6\x89\xf5\xd92\xfc\xf3\x9a;\xf9y]s\x8eJR\xb1\xad\x06|PBGq\xbf\xfd\xa8D\x1f\\'
+    b"k\x87d\xd4f\x13\xb9E-Z\xce't\xef\x13;\x9c2S\xa6\x1e\xc9u&[\xc6\xe8\x0b\xa6\x02^\xf8\x8e\xf55]L\x17]\xc1\x84\xd3 g\xa7U\xf6\xa5\r\xc2d#\xb9\x92Rm V\xc6\x06\x9a\x0c\x9f."
+    b'\xd2e\x83!\x80/\x9e\x05K\xd0\xef\x8e(\xcaNY\x8d\xe7t\x85{\x9c\xb1\xbc\xabH\x88\xd0\x0f\x905\xd5\tf@a L\x83(\xb1SD\xe7\x13\xbe&_,\xabr\xc3DQ\x82\r\x9d\n\xdb\xa6\x0fi\x96_'
+    b'I\x8cC\x14\x93\xdaJN\xb5l\xac!\xd96Y\xd2\x85\x17\xde*\xd8\xc85|\x16\x85\xd2\xb5\x8f\xbd$\x8d\xaf\xe2u\x00\xda,\x060\xe1\xd0\xd5\x05\x1avj \xe0\x04"\xf48z\x08\x1d]\x92\x16\xa2\xb5\xa9\x89\xb9'
+    b'E\x14\xbe>C\xa5\xaa\xa0\xc0[\xc9vX\x81\xa1C\xae6\xe6\xf4j(\xfd\xa5v\xf1_\xb5\xcb\xafk\xff\xfc\xf9\xe3\xd3\x93+QG\xf4\x05\xea\xea\xbeVS9\xc8\xe9\xc0\xfd\xa1\xda\xc4\xb2\xb1ke\x02AFM\xcd'
+    b'\x15\x0f5\xed\xb1\xd2e\xe9,\xd0\xf3O\t\xf5\xe26\x1dM\xb7\xc3\x9a\xae\xd5EI\xd3\xdd\x04q*I%,=\xf7\xdc\xbe\x81\x0c\x8b\xa8\x11\xa2\x8d\xb5[a\x03\x99-.\xb0\x18\xaa|\x8e\x89\xea\x92\xccK\xf0\xa1s'
+    b'\xe9K\xd2s\xd0\x06A7\xfd\xcb\xc9U\xd3\xdc\xfd\xc6\x93\x10\xf9\x94\x87\xa2m#\xa4\x8f\xdf\xe89\xeb\t\xfe\xca\x13\xfc\x15\xaf!\xb7`\x06o\xdc\x19f$\xd8P\x91\x8b_\xabg\x08E\x1e\x9a\xe0\xfc\xe6\x02JU\xce'
+    b'\x0f\xdf\xef\x9b\x9e\xa5X\xdf\x19\x99\x89\xa6I\xf9^\x16\x13\x0f\x0f\xd3\x19\x06\x13\xf9k\x0b(\x1c26\x919\x14\x87\xd0\x84\xb1M\xe0\x7f\xf7U\xd7\xb7\xf0%\x90%\x0b,\xdb\x7f\x94\x7f\xdf*\t)\xf9>0\xefU&'
+    b"n\xfbq\x96\xd3\xedBx\xdd\n\x1b8Ux\x90\xba\x9c' \xa5\x16\x08W\x18!\xfd&\x82\x85\xd5TY-\x0e\xf2\x15ZMq\xe2g9\xc72\x9aJW\xd6\xed}\xa5\x1b5?\x91$Wa0\r\x81X\xb8\x06"
+    b"R\xde\x80=KH\xa0\xd6\xcfuQ4\x90c*\x13\xb2\xe6N\nV?.d\xec\x13R\x1b\xf7%?Z;\xd5}\xf1\xdc\x1b\x95\xb0\xa6\xca\xea\xe4\xd4rv#\x0b\x0f\xf8\x15\xb0\x1fJvL'\xf8\x02:\xb0z5"
+    b'"\x94|o\x10\xe6\xc6\xa51\xa8\x1dd\xf99\x17\x07\xde\xc1cqyY\xbc8hm\xddv\xa9r\x0b\xf2e\xd48\x985=\xaa1\x90\x05W\xf9\xf1X\xd6\x02\xf1\x88\xb6\xd4\x03\xe9\xac\xea\xae\x1c\xf7\x93\x03\xc55o'
+    b'\xf85^\x04=\x82\xbf\x08:\x04\x1auP\xb8\xaa\xa7\xc1\xdd2EY\x9b\xb1\x90\x1bw\xb2\xfb* #\xcd;`\x96\xfb\x7f\\\xa3\xc3]\xc2>\xa9\xb2\x1f\x12t^\x85\x7fl\xdd\xc5\xc4\xabi\x05\xd4\x9d\xa0\xbd\xcdE'
+    b'\x0br\x96\xc7lj\xed\xd7\x87:_\xa6\xb2d\x9a\x9b\x8a\r\xbf\xce\xce0\xe0&\xdb\xcefJ] \xbb/\x1fP\x0b?\xd6b\x92b\xc4 \x9fl\xd1V\xc4W;\x1b?\xa6&[a\xfe\x11\xa5\x89k\x8e\xa2\x9c\x00'
+    b'S\xb6\xab\xd9nY"\')k\x00\xf1j\x92\xc5\xb3\xa6g9\x92\x99=\x8c\xa7\xe1|\x08\xa1\n^P9\xc3"O\xfe\x0b\xe8\xc0\xc5\xcfa\xb3u\xf9\xf5_N\xf8\xb0\x13k\xf9\x9a h\xb4\xd7w\xa4[\x16\x8d\xef'
+    b'@z&a\x81\xea01mR\xb7\xfe\xfc\xc6\xda\xebd\xe00\xed\x1c\xd9\xaa\xb1SJi\xd1:\xc3\x0c\xd9\xfc\x82\xf5\xe7L\x83\xe8\xef\xdb8\xcaI&\xd6\x97I(\x83\x89"\xcda\x14,\xf9Z\xdeX]x\xa6\xda'
+    b"\x93{\x1dx\xe7X>e\xd3[\xbdpF\x0bT7\ndF\x9bgWuu\x8d\x99\xde@rQm\x9a\x9f\xc1\xe33\x1b\xe2\x96'\x19~a\xa9\xfe\xa9\xd7\x83\x82\x86@\t!\xa1\xbb\x91\xec\xd5\x9a\xeb\xeb\xd2\x8a\xab"
+    b'\xf5T\xad\x16T\xb2\x17k\n\xb3\xf8|f5:g*>\'z\xc2\xbd\x03y\xc1Zrk\x15\x91mt\x85\xa8\xc1\x87\xb2\xee\xce\x16\x1bN\x93\x82%_\xaf"X\xb5\xf5\xec\xb6\x86S*\xb4c\xa1A\xc3\x199\x8e'
+    b'\xa2jpb\xd2sY\x85=%\xcdu\n\xed\xb1\xb1\xcfiP\xd6\x06\xff(Mh\xae-\x80\xaaf\xe5\xc4\x9d\x86\xee\x8d\xcd\x87\x9a2l\xc9\xfei3%\xb9\x80x\x8f\xc9M\x93(l\xa2\xa9\xc8\x91\xd5\xde}!\xcd'
+    b'R\x01\xe8?\xc2\xb2\xdd\xd6\xacmA/\x94\x05V\xdd\xb2\x9eFx\x1fO\xb2\xdd\xec\xb8\xd6\x9a\x82\x98\xd5\xad@Z\xdcPM\xba\x9b\x01\xef\xdeH\xd15S\xed\x08n\xd8r\xae\x8c\xa0\x7f\xd4\xa1\xf4f\xd3\x9bD\x8aV'
+    b'l\x93+\xb3M\xaevn\x13\xae\xae^<\xc3\xadrU\xdc*\xec|jo\x95+g\xab\xa0\xef\xa5,3\xf9.\xcc\xd1\xecR#i\xa3j\x13%\xa4\x97\xef\xdeD\xea\x06\xf3"\xa6\xda\xf5v`\xaaT-4*s'
+    b'd\x1e*%\x8a\x87\xa7\xc6\x0c\\\x82\xa3\xdcs\rlS\x1a*\xf8\xdc]\xa5\x1b\xdb\xf7\nK?\x83\xa2\x1b-\x1c\x01\xb7\xa5\xd76\\\xa5\xa9\xb2EDZ#q\xbe\xd8TC\xdb\x83i.\xf0\xe1\x02\xcb\\6\x8cO'
+    b'\x9f\xb5\xa1\n\x17m\xc3r\x14\xde\xfc\xc6m\xa5\x9d\x86+m\xd4\x95\x9b\xcba4,\xc6\x11\xb3t\xe5b\x97\x17Z\xe6`,\xfd\x88\x91\xee\xb6\xb9cC\xfe.\xc3\xbbL\x87\xca\xd0\xb35g\xbb\xe2}\xc9\xf7}\xe7X'
+    b'\xee\x9d\xf4W\x9b\x95pr\x1f\x9b\xcbx\xbe\xa82\t\x0foJC\x86\x97oVe\x89\x80\x8c.\xaa\xa1\xa2\x8dx\xb3\x12\xd3><\x90\x85w\x97\xfcN\xad\xecR\xa6\x95PV!\xcd`\x96m\xdb\xbdA\x15\x05\xec\x92'
+    b'G\x9f\xc4*$\x04\xd4\x07\xc9\xf4\xf6\x1c\x08\x1c\xc6\x07Z&\xa2\xd2\x8a\xeb\xd3\t\xec|\xa5\xe3\xf5\xf4I\x05\xbfV\xb1z|\x97.h}%\\*\xae<\x03H\xaf}C7j)\x14\xd4\x92\x139\xe9F?\xea"'
+    b'D\xca\x9d\xef\x12X)\x9f\xe7sK\xbcv ]\xf0\xfd\x17!\x13/\xb8\xde\xfc^\x11\xd3\xf6\x84qv\x92q\x87!\xf3\xff\xc52\xbdl\xd4\x81&\x83\x14\x8aNw\x06\xdb\\\xdf\x17\x8dptA\xb2\x9c\xa4HVu'
+    b'<\xcd\x16\x12\xdc\xea4@\x8f\xff\xebf\xa3\xf4x\xd5\x9c9BR\xda\x07\x1e\x1c=c\x8d\xab\xda5\xbd\xd83\x0b\xf1&\xd9\xf5N\xaf\\\x1a>\x95.H\xbeZ\xa8\x15O,\xa5\xd4\xf396\xa8\x1cg\x9c\xf5\x02\x95'
+    b'\xe8\x94Bt\x94[\xca"\xbe\xe2\x1bN9.\x89\xebq\x8b\xd71\xddl\xac/\x1c=3\xce-L\xf6\xe8h~;mq\x8b;\xb3\xa5\x14TZ5\x11\xe5\xb2#:~\xc3\xd6y\xb5\'\x88\xa6\xafNi\x06\x18\x9f'
+    b'R9\xf5\x94\xab\x84\xaef\t\x8f\xe2\xe2GL\xdb\xa9\xc4\xd7\xa5\x97E \x98P\x1af\xaa\xb5\x92\xa6\xf1\xdbT\x166NX\xcc\xa2\xac\xc1\xa4\xecsoF\xa8\xae\xfa~\xe1]H,\x13\xce\xf3\x12\xd4\xef\x0bU\xc85'
+    b'&\n\x1fG\xaeJ\xadi\x02\x98\xbb\x04\xf0w\x9e#R\xdb\x17\xf9\xa5:A\xb4\x97\xe5\xa1\xc3C\xe1<F\xf7V\x8d\xdd[\x8eh\x8fa$\x16+q=\xc7~\x1b3Q\x11i@R\x1c\xccz$\x9by\x0c\xa3y'
+    b'\x14\xab\xb9\xb3\xc6\xc6\xbbE\x84A\xcbEH\x1a\x94\x82E\xb8\x94\xc8\x8c\xb3\x8fx1\x1e\xc8\xdb\xa0Y\x9a\x8a\x94\xd5\xa0\xe4hY\x01\xa8,i%\xa3p\xec\xad\xed]\x8c\x83\xfc&\x84s\x14\xb9\x85\xe5\x16\x99E\x15\xec'
+    b'\x80\x9d.\xea\x17\xc1\xf4r\x1f\x1fp\x9c\xd7$g\x93q\x81\xdcA\xfb\xc5\x05D\x9b\xf7\xc4\xf1\xc3\xa1\xfeU>\xef\xd5\xbd>\xecQ\xef\xb8\xc8+\xa4toL0\\E\xe2\xc2\x95\xa8/\xf0\x11\xdb}Y"\xa7H\x0e'
+    b'\xc7\x12\xbf\x89\xd7\xa4\xfb\xc2{\rM\xed\x13\x8e\xbe\xa6\x1a\x9eb\x97\x87\n\x8d\xe2\xcd\r\xf0Ny\xfc)\x17!\x1e\x18\x0b\xf7\xdck\xc1\xbfE\x12\xa8\xda\xc7(\xe2\x96o\x07\x01\xc8\x84l\xea\x8e\xae\xd4\xa8\xee\xc9\xa7\xf9'
+    b'\r\x9a\r\xc9IJ\x9at?\x9c\xa9f\xa9"o\x1d\xcd:*\x9a\x17G\xfd\xdf\xd2\x01W}\xb8\x0b\xe5`^\xec\x85\xdc\xcd\xd5\xea\x94\xfb\x92\x1c{\xe4Y+=Z\xb1\x04\xf7\x16\xcb\xd5\xec\xa4\x88\x83Gv\xf6\x86;'
+    b'\xce\x97d9\xfd[\x99\x93\xdc\x80\x82{\x1b1y\xed\x95\xb7\x8a[\x90\xa2\xaey\xe9u\xb8\x90\xee\xf6\xe1X\x02\xa5\x7f\xa9\x88\x12%J\x17\x03\x06\x1c\xc0\xe8x\x01\x86\xae\x0e\x1a\xb0c\x01\x9c\n\xf4\x02O\xdakg;'
+    b'\xc3\x03\x1c\xbf~\x8d\xe9\xd6jl2:6\x1c\xb81\x1aU\xc14\xd8\xaeT\xe4\xb3Q\xc7\xe7\xd3Hv\xca\x8e\x18\xc6\x94 \x15o$\xa6\xbbw#mY\xd4V\x18b\x16\xeaD\x19\r\x9cV\x04\x7f\x9cK\x94k\xb2'
+    b'%\xdeq\x95\x98\xf8W\xe3\xd4\x12\xac\xbd(H\x97q\x94\x8a\x99\x1a}\x05\xa6\xcb8[P`ki!dOV,\x84&o\x05x\xd7\x9cE`0\x0e\xcax\x84):v\xe2\x12~\xb4bZJ\xbe\xb0\xb6_\xcf'
+    b"q\xe6a:\\\xcb\xe8\xce\xc7i(\x14s\x9c\xb4Ia\x86\xe22\xe7\xa3\xa2#~\xba\xa3J]w\xe3\x9c\xdd\xa7Q\x16g\xd8@\xc4f.z\xc9\x05\x8f3J\x9a'\xee>\xe6\x00\x9d,\xcc)\x9e\xb5\xebLk&"
+    b"Ln\x9a%\xe9\xf4\xb5\x08'0\\Q\x91\\ng\t\x10(#J\xa9B\x90\x9c\xed\xc8c*)<7G\xf1\xe2Y\xe2\x1c\x1e\xa7\x14\xd4h\xe1\xa4:+\xe7\xb2\x0e+\x97v\x01\xd5\xef\xb0\xc8\xc4.\xe8\xd8'@"
+    b'\xa4T\xa7\xa2\xf8\x8cg\xa8\x98\xb3\x03OB\xefv&\x18W\'\xac\x17\x97\xf7\xee\x11U\x90+>\xc7\x99\xfa\xd8U\xa0l\xf8sE\xdd\xcf\x91f\x8f"\x00\x18\xafI\xfdy\xff\x81H\x90\x97\xfc5\xbf\xa2\x9a\x15\rT'
+    b'(\xbb;\xab\x93\xd5\xbbR\xd8aI1\xc8\xe5\xf2\xe4\x86\xe9\xa8S\x1e\x83-r2\x1e\xc2\x96-\x08\x9d\xd0\xd4~\x11\xe9\xe7\xa9\xe6\xe9\x05Y\xc84\xf9\xc2<\x97d#}\xbb\x84\x11i\xa5\x05\x98\xe4.\x81\xe99\x9e'
+    b'Pb\\\xfc>\x91\xc9\xf8\xceW\xcaG\x05\xa9\xc8u\x08\xac\x88\x08\xac\x00\x0c\xa2\xef\x035\x15\xd1\xe3\xb8C\xed\x96o\x9b\xc9t]\xf2\xb2\xe3h\x92\x8a\x8e\x1a\xaeO\xbfW\\Y~\x1d\xd0\x95r\xf4\x899y\x99\xb2'
+    b'\xb1\x0f3\xf3\x00\xf1\xfd\xe18\x13\xf2OWNIJ9\xe7`\x13Rq\xd1\x19\x8a\x89?\x9f2f(\x1e\\\x07\xb7L\xaf\xca\x1eI\xe6\x9e8\x89XI\xf2"\xf9\xfa\x88c\xa9\xf3X\xdc8\xd7\xafl\xfevv\xb4'
+    b'\x9f05\\\x19\xcf\x92\x85lY\xe9:\xf8R!\x8c\xc1\x1b\x01\xe8W\xf6\xe5}Z\xfcm\x14\xa8\x83\x89\x82-\x8bo\x85\x02\x92\x0e\xcd\x14Z\xd2\x0bG\xb2\xb0\x1c\xc7\xadh_>xw\x01P\xe8\xda\xec\x9aR\x87\x9a'
+    b'\x8d\xde\x1fy\x85\xa8]\xa1\xce\x85\x88kZ\x0br\xc5D\xbf\xacB\xae\xc9@<\xa0\xd4>)g\x0e\xd0:\xc3\xa1>\xee\xff-\x199\x7fgN\xce\xc7\x85\xd6\xff\x19\x999\xd5\x08\x9clF\xe7*\xb3\xaa\x95u\xe6\xfe'
+    b'\xac\xe0R\xaa\x17\xc4\xca\xf9\x81);X\x9a\xfb\x8eLw\x9b CZ\x90\xe6\x99s\xda\x0cR\xcet;\xfb\x1c\xe5\x99si\n\xb9\xde\xda\x81*\xcb\x80B\x9c1\xe0\x92\xa3\xdf\xed\x14O\x12\xf5I\xc7\x19\xca>\x11F'
+    b'\xb3%\x86\x80z\xbc\x9d2\xe5\xd4\xcb\x9d\xe1\x88\xefh\xf0\n(4 \xe2\xe6&\xfa"\xb8\xfeh\xf0Qc9\xe2\xacr\xfcB\xc7\xd1\x8a\x85\x02\xc1\xa7"\xbe\x02\xde\x16\x02\x9al\xa1E\xb9\xfbZ\x06G\xde\x8a\xba\x19'
+    b'\x15\xe9/\x12\x8f\x8e\x86\xba\xe0x\xa8\xc9\xcf\x97\x97_\xbfh\xe0\x8f\x17\x93\t\x06H\xc1\xefF\xe3\xc5\xcf\x97Np\xa5\xb4R\xe0\xc7\xe2\xa1\x0b\xe4\xbdmsW\xe5\x93kM\x9fN\xc8\xa5\x11\xb4x\x926\xa2\xa2GO'
+    b'~\xce\x9e\x9eTA\x84c\xb3\x0c\x07\xe2k@\xe3\x15\xf9\xb4\xab\xde1\x85\xf3\xda[\xc5\xebm\x8e\x02\t\x85\xa7\xc1\xf2\xcbg]\x97\x04\xa6\x98tLl\xd6X\xd69\xbe\xf4g\x9f\x03L\xeb\x17\xd9\xea\xd2\xb2\x01(\x00'
+    b'`\xd5\x865cQ\x90\xf05\x85\x87}\xcdE`n\x85\xbc\x14\xb40+t\xf7\x1a\xb6A\x8e\xe8X\xedj\x9d\x99\x06TQM947,\x90:\x91s\xba1\xc1P\xe6\xcc\nG%1\x93\x02;\xde-\xa6\xd3/'
+    b'\xe9\xb4\xe8:\xd7\x92<\xec\x10]\r\xa6\xeb>m\xaa\x7fo\x10Ny\xc0;\xe8F/\x01\xc9&\x88h\xfe\xd7\x05#\x8bx\xc6\xab\x85V\x17V>\x84\x1e\x8euG/TB\x12Ga;\xd8X\xc0ia\xcaV '
+    b'\xce\x16S\xf7\x9f\x16\x96\x9fP\x1d\x93\x9a\x14k\xd8"\xe6\x8ez\xea\x18\xa4P\x91\xe4h:\xcd)\xda\x9c\xb4\xff\x05\x8d\xc6\x9e\\\x05\xb7\xe3B,\xae\x96\x90\x87\xd2\xde\x9c\xd9\xd5\x1d\xca\xe4J\x94\xb4\xb3XJ\xf7\xdel'
+    b')[\xa3\xd2JMF\xf8\xa6}\x1e"y\xef\x85?z\xc12YG\xba9\xfbj)\x84\\\x85\x98\x8c\xefK\x82\xb6\x96\x9a\xabp\x90j\x94\xf6\x17\xb9-,\xb6\xd3\x9a\x0b\xab=\xb6\xc7\xca\x9e/\x1dHU\x99$K'
+    b"\x9f\x05'dXgU\x93\xe7\xe5\xc7\xd9\x97N\xd4\xcc\xa9\x1c\x15\xda\x01\x8a\x1d\x08\x80\x0c\xfc\xa1\x06\xf8\x8c\xcd\x90*.\xa5\xc3\xc9+E\xfc*\xc1\xa9h\xd3t\x05\xfc\xbd\xe4\xc0\xbe\x04\x01\xc9P*\xc9\x188\x81\xb6\xc9"
+    b'Q\x93\xd9I>\xe3\xb5x\xe2d\xe6\xa2\x84c\xce\xac-mb\x96\x9a`\x9es\xa8\x12\x99{$\x80\x9c\x94\x04\xf2d\x8b\xd7\x81\n\x1d@I\xdf\x88\x07 \x15pP\xac1\t\x8b\xac\xea\xd0+\xcaT\xf3\xf3\x14\xf8\xe3'
+    b"\xe5\xd7\x13\xd7 L\xc51\x8b\x13\x93\xdc\x0bEz\xad\x1c\x02J\xfe\xb5/\xbf\xb6\xc8\xdb\xc3\x15=[k\xab\x00\xec\xbe&\xf6\xc4Y\xd2.'}\x82\xec:rE9JlB\xfcT\x929\x03/\xa0\xb3\xab`\xbd\r"
+    b'\x96\x92\x13q\x0elbAWQp{ \x9b\x8a\xda\xc4\x0e\x87\xcb[\x950\x11\xbb\xd0ip\x0c\xe9iT\x08\xed(\x1bI@\x10\x13n\x1a\xadk<RSn\xcb\x0c\x9b^ud\x94\xad\xb3YuT\xae\xf1\xca:'
+    b'\n\x8c|,\xde\xa9\xe25\\\xc4\x96\xcf\xaa\x13+V\x0f[\r\xd9\xb2\x94\x94\xc7\xa9\xc6h\x15*\xe72\x14\x9e\xaej\xe8\x80*;\xb3\xa2\xfd\xad2\xbfbe\xaaE\xbbV!\xe1"\xfe\xeb\xdc\xb9j\x13"\xb9\xa4\x02'
+    b'@ai!E\xc7f\xa3\x84(_\xab*\x87\x80\x92:\xa1t\x02\x9d\xc6\xafr\xf9\xf4}EWQ.\x97\x15}s\xfb}H$\x96p\x0c$\xcd\xd9"\x82\xf9\x85v\xb4+}R\xfb\xe2\'\x15rOI-9j'
+    b'H\xae\x87\xc9\x828\xe4\\\xc5\xe6V\r\xebf\x819\xaf\xda\xb5$\xcb\xd0\xae\x06\xb4\xcfb\xb9@L]TPi\xb3Pq\t\x85l\x1b8\x1a\xd4N\x82\xe92z y\x9d\xed#j\x9f0!\xa5\xb4\xa4pI<'
+    b"W\x81\xdd\xda\xaca\xfb\x8dJ\xae\xba\xdbB\xf6A'\xed\xb9\xa8\x07\x85\x84\x89\r\xe9YqNc\xe7\xa4\xd8N\x11\x8ad8\xa0omg\xb6W^\xb6]\xd9\x96\x16\xa5\xc7\xa4\x91\x93\xad\xdc\x9c\xb6\xfe\xa6$\x88\xd8F"
+    b"\x83Z}\xfa\xd4\xf8\xe0)\xec\xdc\xae\xf0>d\xf8H\xa3oZ\xb7\xb3\xf3}p\xe7nl\xa8\x89\xbc\x01Y\xf5/'\x14wC\xa4\x8cH[\xc5G;\xfb\xbb6\xd2\xeb3hA)\xb9i\x84\xfe\xc8U#\xf0\x8f2"
+    b'\x01hH\xee\xda\xdb\xd1j\x93C\x952u\xbd/\x84+\x02\x8b"\xaf\x98?\xe4\xe6*\x93\xd91@\x99\x03=k\xf1\x82>u\xc9\xa1\x95kM\xa2\xcf\x1f\xbc\xae\x8d\xa3\xaf\xedk\x12\xf53~\x96>*\xd6~f\xe3'
+    b'\xcf,Z.\xf7\xf4\x86\x9e+:\x14\x0c\x8a\xcaUahJ\xbcJ\x05\xf1gv\xfay\xfb\x8a0\xacP\xce\x08A\xe5\x8a\xa7\xff\x08\xeb\x0fz\xc9\x9d\xc4\xe57\xf6\xf0\x8a\xa4\xcc\xa0I\xad\xb4\xe3\x8b\x88T\xc87l\xee'
+    b"\x06C\xb5\x9b*\xf9\x84\x1b\xc6Zx\xe3\xf3\x05w\x8e\xb0k\xe4\x0e6\xd1Y\x854E\xc1n\xb8E;9\x03\x96\xb5\xee\xad\xf4jF\nD\xf2'\xc7\xa2\xcf\xa6t\xbd\xa6\xa9\xcewBN\x9f\x9bh_i\x9b\xf7\xdc"
+    b'\x0b\x8c\x9a\x9a\xe0\x05\x98\x98-\x89p\xe0\xfc8\x0f\xae\x8e\x9f\xf3-Hl\nzv\x82\x9f\x9f\xd7\x8a\x17\xf2rK\xbc\xebw\x8e\x92rd\xc6_P\xde\x84\xd1Y\xf7\xa4\xe1\xb0\x88 +\x1f3t$\xf6\x12"\xd8\xc0'
+    b'\x8c|\xebJ\xd1\xda\xf7yf\xf2\x88\xa7Q\xf1^-\xcb\xe5\xccN\xef\x82\x9eg\x00\xddP]N\x89)\xc6\xfcZ\xc9_\xf5\xd1\x83\xe6\xdc\x8e*\xe6\xf6\x16X\xbc=\xd6\x1fc\xbc\x0e\x93\x19\xd9\x14d\xc0k\xe9\xb2\x02'
+    b'k)L;;\x1cc\xf1*\x9b\x9a8k\xde\xf8H\x85\x84ExZ\xc2s\xd3\x14\xe8+.\x89s\xf2]\x00*g%\xaa\rA\xf6\x99\x93\xb0\xad\x924R\xd9\xd7\xa6\x14R\xc5i\xcf\x82\xa9\xc8\xa4\xd6\x8c%?\xb2'
+    b'\x8a\xf4\xe3\x0c\xa8@4\xe3\xa5\xb9\xd7N\x9f+\x80r\xb0\n>Gnn\xd9\xaal\xdd8#\x9b\x00P\xa1O\xc1\xb4\x8e\xb7K\xd9B\n\x10\xfb\x97l\x13M\xd65\xf8\x81\xea@j_DVkT\x89z;\xa2\xed'
+    b'\xadH\xb8=c\x88\x9bZ\xaf\xb2\xc5\xc3C\x82\xea\xbd\x07\x83\xec\x9b\xe6\xf2<;\xd8^g!qo\r\xa6\xac\xee\xbb\x89\xeet\x9b\xe7\x89\x90],\xea\xde\x85\x8boj\xfa\x93\x83\xf4\xf6\x1d\xb8\x9d\x8e\xb9\xf8\x16\x9f\x9d'
+    b'\xdbn;\x1d\xf8\xff\xe3\xe7\xcf\xf0\xee^/<?~7\xf0\x07^\xc7\xdb1\xf5\xda[\xfa\xdc\xf6\xdeu<|z\x0b\x8f\xf0\xf7\x18I9\xe8\xbf\xe7\xc7\xc2\xf4\xbf\x05\x96\x93\xaa\xb7-5\x0e\x7f|\xbc\xb3a)\x8aj'
+    b"\xc0,\xd8\xe0\xa5\xba\x80\t\xc7'\xea\xfa\xdb\xeaZ\xf5\xea\x14\xd8\xb5`\xcd\x84\x87\x11\x08\x17\x80\x0ce\x12\xf2O\xa5-\x98\xe6q\xbe\x8cv\xe6\xd3\xae\xbd\x0c\xf1\x9e<\xbb\xc1C\xf2\x92`\xbaw\xea\x93\x04Z\xabc\xd6"
+    b',\xf1\xc8\x8es\x12\x98\x05\x04\tz\x89\xd4\xe6\\g\xccW\xb4\xc1\xb9m\x13\x8a6l/\x11\xba\xae\\\x13\x07\xda\xda0\xd6,"r\x8517\x89\xcao\xae\xb6:6\x87\xa6\x06}\x1b\x1fR"\xc52SF\xae\xdd'
+    b'*\x03\x0e\x0c\xd59Ih\x88\xe5]\xb4\xa4\x12(M\xee\xcct\x8f\xb9(\xa8b\xa8\xf3\xd3*%C\xeb\x08|\xd3W\x96c\x08#\xe5\xd3Z\x13\r\xc3\xd0\xb60\x9a\xc5a\x94i\x85@\xb2\xef"C\xa0C\x0bt4'
+    b'\xb2\xd4\x0c\x9a\x11\xd1n\x8b\xd6\xad\xa2 \xc3k\xc3\x9c\xeb\x13\xae\xb6Q\x96\x91\xbb\x0b{\x0fL9\x89\xed\x8d\xff\xf7-\xd0\xa3\x8fr\x82\xfer\xb9\xac\xd7|\xf8j\x04\r\\\x94OrkR\xa14\x14\xa5}\xda@\xd7'
+    b'\xf9,\xca?\xf1]J\xe4u\x95\x06t\x17\xf39u\xe5\x06\xfb\x96p\xac\x8ee.\xec\x82d\xcc\xd0\x8dB=*\xd1\xb6\xdfU\xc5\xe1\xa9\xb1V\x94\xd7\xcc\x88\xd6\xf3m\x9c\x81\\L\x81\xe1\xf5\x9a\x8c\xb5\xd6T\xa3\xd6'
+    b'\xa7\xb5j\x16\xa0\x0bU2\x04\x0bC\xa8E@\xeez\r\xf8i\x16\xd5\x1a\xc5\xf4\xc3B\xa0U\xea\xfae\x92\xb3[r\x93\xf0\xda\x0e\x16\xb0\xaeb\x08\xf8dX\xdf\xcda\xd9\x1e\xa8\xdc\x0b\xebF\xb8\t5\xaa\xb3\xe9\xcb'
+    b'2\x1fH\x81\xa1\xa4\x8b\xe9\x88\x03\x88\xe3\xd2M\ry\x98I\xb8\x8c\xc5\x81\x9d^]\xa1~\xaa.\x0f!\xa3\xa5v\x80\xcb\xae\xd1\x9cv\x90\x8cO%\xdd\xeeQ(\xa9\x9d=6=\x18\xfb\xa1\x93\x88^\xa1\x11\x90\xae\xf0'
+    b'G\xab\x05\xd4\xa8pq\x9e\xc7\x1e\xe5\x00\xc1\xe6\xb0m\xaaa\x9c\x06\x15\xb9\xde\xb9b\x02},V\x90\xaa\x94\xf7 \xa1\xad^\r\xc7\xfduA\t\x96\x0e\x99-\x16-\x10>xS\xb3>\x16D\xba\x9f\xb7\xedv8r'
+    b'\n\xc8Tj\x9f\x88\x1d\xe8\x9b;1\xde\xc7.g8\x83Y)\xf2?E3M\xb2\xf91M6\xc1\x15y\xe8\xe2\xd56\xe5k7\xce<\xf1\xc6f\xa08\xd0\x85\xf6u\x06\x8c"\xe8\xa9\xb8\x81<\xcbf{\xa0\xb3\xd2'
+    b'\xb9\\\xa9h\x01\x00\xb8\x85\xab\x16\x98\xcar/\xf8\xa9j\xb2:jPm\xf8\xaf\xd4\x86o\x14o\xef\xa1\xb9\xee\\c\xee\x00w\xa5>\x81u \xaa\xd2\xd0\xf2\xd1\xce\'"\r\x9a\xb0\xa8\x06\n\xb4L\n\x9b$\xb6\x91'
+    b'\x1f\x06y\xf0)\r\xd6\xd9\x1c\xa0\xc0\n\x07p\x8d\xe4\x9a\x88}\r\x97\xa7\xb6\xa30\x10\xe2W\xf0\x1b\xb4\x03\x80\xdd\t\xe8&1\x8a\xc5\x1f\xe9\xce1\x99\xa1\x92$\xcf\n3\x8a\xf8\x1e\r\x07h\xceD8\xe6E\xee\xf3'
+    b"(\xd7\xc7\xbb\xdcw\x01\x84\xcej\xac\xb6Tt\n\xe6Ru_\xcb\xaa\xb8\xe7\x8a\x91\xbfA\xdf\x89u\xfe*\x9a\x07\xdbe^o\xec\x81':%\xc0lk\xbb\xe6I&\xf8\xd2L\xdd\x86x\x0f\xd8m\x15\xdba\x1f\x9b"
+    b'\xaa\xb9\xee\x1e\xec\xef\x84\x82\x95\x1b\xcd:\xfc)\xdfV\x8c\xf2\xc9<\x11|\xc1\x10j\xca$\x95\xdf*_\x0e\x98\x1a\xe7\x85\xb8%\xe6\x95-\xe2y\x9e\x1d9\x17c\xab8c\xb1\xd3&\xe4\x16\xc2\xee"Qfy"`'
+    b'\x87\xec\xfc\xa0\xb7\x16\x1d0\xbe\xa8\xba\xe6(\xc8/\x0b\x8e~\x1c\xa3\xf8\xc56\x1b;\x17\xf8\x18\xa8X\xb7\xf8\x94\x949\xf7\xb6\x9fv\x93\x9bl\xb8e\xc9\xd4\xad\x86\xeb\x0eO\x1f\x19\xcags\xb7Mi/\xdb\x83W\x17'
+    b'\xdbh$\xb3\x82R\x00\xae$\x9bX1\x15v\x03\x95\xaa\xffGI\x90u\xb8\x05 \xb3\xab\xed3\x05x.\xf5\xb3Rd\x990\x92h\xbd\xe3v\xaa\x00Cz\x8e\xec\xcc\x10\x0fJ\x1b\x98\xdc\xa0,\xd3\x03m\xaa\x15\xc3'
+    b'5v5\x15\xaf7\xc0\xc3\xa81Ngw\xbba\x91\t\xe6V\xd3o\xbf\x04\xcb-\xe7HUz\xb8\xa9\xa0x\xe3O\xfaX@\x9bAf\xc0g\xa2\xd0\xba\x8f\t]\xba\x95\x1f\x0f\xcb\xfed#1\x1d!\x8d\xc5\x0cR'
+    b"s\x18n\xa6'\xd4\xc2o\xa6P\xb2\xa6Q\x17I\x8bsR\x9b\x06\xec\xe9d\x92\xb2P\xd24q\x9d\x921\xc8\xa5\xec\x1bleK|Yn\xa2T\xb3\x14Y\x84\xe7o\xcc\xdf\x17?_\xfc|9\xb9t\xd2n\xa9\x10"
+    b'\x0e\x81\x152>\xd3Nc\x1f\x18\xbd\x82]\xca~\xf7#P\xb88\x12\xf4\xbfWKnsej\xde\x08\xaa\xe2\x01\xfb\xb0`D%\x8b(\xcc\xd5A\xdc\xacUu\xa5\xae&8*zM\x1d\x80\\RX\xe3\x17\x13\xbe'
+    b'\x9a\xfdi\x15k\x07[\xf5\xca\x05\x98\xbc\xb5\x0b\xec\xc0\x17\xf9\xec4\x0f\xf2\n\x9f\xe7V\xa1\x8dkT:\x97\xdb\xb9\x82\x9bz\xa7\xa9\x83\xa5\xec1Q\x08\x89r\x812\x04\xaar\x85\xa4\xa2-\x9f\xc5\x87\t\xafX\xb0\xb4'
+    b"D\xd6\xd4\x8a=ay+\x0b'\xfa\x02\xee\xe9g\x19\x80\xb2mt\xe3\x9c\x85\xb9\x03\xd6\x12K\xea\x85\xa4\xf3H\xa0\x865\xfd\xc5:\xa1\xb4\x8dn\xfa\xfb\xae\x85p\x8b\xa3\xb6m\xb5V\x90\x87hn\x05\x19x\xc6\x1aT"
+    b'\xf9SaJx\xd2\xf5C\x12\x82\xd4\xe1Z\x00\xd9[\x03\x89\xb5\xd82\xb9%M\xe0\xc8\x1c\xceFi\x10\x03\xae0\xa78A\x98\x8d\xa0\xe4\x92\xa7\xfd<$\xb9\niV\x95KEUy\xad\x8a\x96#(\xaa\xb3\xad\xbf'
+    b'$5\xf0\x98\xef\xcd\x80^\xf5\xfd\xea:Gd\xccF\xaa\xacxq\xadN\xcc\x8e\xa6y/\xa0<\xeb\xc9f\x93p\x169I\xa1\x8b\xb6\xa5\x94_hO\t\xc33\xf3\xed:\n\xbfY&\xb3\xcfu<:f\x8f\xde\xc8'
+    b'J\x19\x87&\x85C\xd8\x14\x96+h\xe4\xd8\xb4\xd6\x89\xaf\x17\xc9A\xcd,\x12\xb7\x15xQS\x1fl\xb3*\x8eV\xf7k\x83\x16\n6*?\xc0x\x00\x9a\xdf%i]\xe6\xe8\xa6\xea\r\n\xc7_\xa5\xe2&\x8byQ'
+    b'\xbd\xe7\x02F\xc1\xaf\x107v\xcdW[x,\xa8\xa1\x90\xac\xbeYS&:T{F[\xfa\xf9\x8f\x01\x9e\x1e\xf1\xf33f\x95\xb8[\xcf\x8f)\x17\xc01\xba\x98\x9e\x1f\xb7\xe1ops~\xdcA\xf3o\xb4\x81\x17~'
+    b'\x1b\x8d\xceH\xdd\xce\x8f\xd1\\"#\xa7D\x18O\xbd\xda\xb1\xb6\xee\xaa~\xe8\xbe#\xb4RPR\x0c:\xf3\xfa\xa3:U-B\xa7:\x05\xc4\x9aR}\xed2\xf4Y\xf4\x89Nc\x96\xb7&\xd9k\x18\xe1J\xe3\xd1\x05'
+    b'n\x0bJ%\x0b[\x8azu\x12\xb9R\xee\xd6\xe96^\xe6\xa2Ck\xe3\xe4&\xa1\xfcHZ\x9c@\xfd\x86\xa2\xc8X\xa6\xb9J\xe3\r\n\x7f4D2\xd5U\x8b(\x0eL\xb5C\x9b\xa9\xc6\xbc\xe5\xac\xc4\xfc\x99\xe8I'
+    b'\xb9\xce\x83\xcdK\x92\x12\xb7\xf9\xceC\xcd\xeb[\xban\xaa\xcez\xff\re\xb9\xf4\xf6p\xa1\xf9\x8a+\xec\x17\x97\x01\xb4?\x18\xe0\xeb\xf3\xabe\xfc\x99N\xcb\xf8`\x92\x8f\xc8\xd8L\x9e)\xdf\x95h\xadB^\x02r.'
+    b"\x81\xc5Y\x04\x99\x9c\x9bE\x92\x06\xdc\x1c\x8d\xc9\t\x1c\xabo\tPq${\xe6>8\xa8\xf7\xf6\xfd\xfb\x7f\xff\xa8\xf2\x88]\x88{\x12\x85'T\xde\x96Q\xcc\xe1?cg\xe1\x077\xb5Jg\xf5~k\xee\x06e\xa2"
+    b'q^HCc\xb9\x1dR\xe6\x17:2\xd0\x97\x92\xab\xd4wx,\xca\x00RX\x8c\x87\xac\xec\xd6\xb3\n\xd2\xcf\x19\xd6\x13Df\xe0\x90\xab\x92\xf2&\\e\xd1\xf2\x8b\xa8\x9a8\x05\x97\xe0\xe0\x1b\xb2\x9c\xf2x_\xd0%'
+    b'_\xc8\x8eMjj+s\x99:\xd7V#\xd1\xf6Fl\xd7\xa6\xb6v\x15\xf4\xae0\xa6N\x10\xa8\xe1\x05\xddTX/Ki\x82w\xe8\xa8v\x18\xa8=.\xecN\n;p]\x12\xb9\x94:\xf8\xa3\x98K\xe7b\xa7\xc3'
+    b':[\x97NX\xb4\xda"\x1f\x0f\x11J\x0cl0\xb4\xe0\x07\x05I{H\x07\xb2\xcb=\x0c\xf3\xd0@\x9bB\x90a\x1c:\tw,\xefe\xdb\xd0\xb0\xff6\x06\x15\x13\xc2\xd8O\x97\x14\x94\xb0\x9f\xcf(\xf4\x8d\x07\x98R'
+    b'\xd5\xdd\x18*\x01H\xfa\xf9@#\xb0G\x85\x0b$H\xdf\x02Z\xc8\x1ea\xb6\xf4\xfaG\xcc\x9aw^\x18L!Y\x9f2-Y\x89c\x9cN\xed\x15\xa8\xe3\xc4a\x9f\xe0\x1fs]\xa0\xd9L\xaaK\xbd\x95\x80T\x15\xe7'
+    b' \xf2\xa8}A\x05\x14\xc7]\x0e\xfa\x19:\xb9\xdezo_\xbf\xcaD\x17\xa7\xc5X\xd0\xed\xa9i\x96W\x9c\x89N\xec\xf9`\x98\xa7\x9d\x00\x07\x1a\xe6\xab\xb0p\x8d\xb0\xb9E\xb01\xf2b\x86\xe67\x8frOU6\\'
+    b'\xa3\xa4\x83\xd4@"nD\x9es\xfdj\x05\xe0i\x8e\x95\x86t4\xf5\xd9n\xe4\xf4\xa2\xc2\xb0\xee\x84\x1f|%\x10-GP\xd8\xc8\xb7\x1b\x13ur\xe3\x12\x06\xba\x86)m\xff\xe4]g\xeft\x9c\x91\xe3UPA\r'
+    b'\x94`ZA,\x8d\x82/\x1fw\x19\xdem^b\r\xb7hH.\xaa\x1b3\xbe\xba\xc1Sw<\x15\xf8\xbe\x8a\xb5>\x98\xef\xab\xbcs{\xf9~\xa5\xa8l&`\x94XI7\xf6 \xb1\xe3\xf4C\x8e)\x0c\xc4\xbc\x16'
+    b"\xbe\xae\xe9\xef\x0e\xfdU\x99\xb3>\xf1\xc9)u\xde$`5\x1a\x955dbJl\xc2q6\xb5\xcb\x1a\x07\x1c6\n\xf7:\xc9\x8c$9\x9b\xe5\xe9\xe9\xa4\x9c\xa2\xb2\x80u#\xe7\x84\x8b\xe3\x0f\x0f:\xe1B'bw"
+    b'\xee\xf0\xa6f},\xd0=\xec\x17v6+\xae\xfa\x86e<\xcc:z\xc0WB\xb9\xbc\xd9NI\x94\x19\x14fz\xeb\x85\x80\xe9\xd2m\tz\x99\xb9\x92\xa3\x8c\x83X\xba\xa1\x8f\x83h|@\x89\x10.\xcf\x00*\x95h'
+    b'k)\xa7\xb5\x82#\x9e\xd9\xbd%?\xbc\xdd\x0eB\t\xc97\xf8/^\x12\xaa\x01\xc2\xa4Y\xd6\xb9Q\xb9C(\x99\xc0c\xac\xc9T~\xff\xfe\xf8#\xef>\xaad\xdf\xd6\xe7\xf26T\xb4\xb0Q\x08\xbf<L\xea\xd8\xbf'
+    b'\x15\xad\xa4\x0fW\x87\xb5\x07\x05\x0b\xcd\xe1\x00[X\x7f\xd7]\xde\xa6\xe2A"\x97\x00\x08}\x8a\xdfb\x80c\xed-,?-\xfd\x07\xf6\xbao\xec@j\xe8\xc1\x86\x91\n\x92;\xc0\x86&\xb9\xd6\xaa\xec\xa1\xea\x13\xdbC'
+    b"\xdb\x8e*0[\xc0b\xab\x0b\xf4\x88D \xab\xe7\x90\x965;J\x13\xfa!\xab\x8eW\x1bP\x82\xd7\x9c\x18\x18\x1a\x8cB\xeb^r%:4\xa43mi\xd5_\xec\xa1\xec\xb5\x9d:Z\x1c\xce'\x14u\xc4t\x8cn"
+    b'<l\xee\xa74\x06\\\x14U\xb3#\x87\x17\x97\xc3\xbc\x94\xb5\xf59\x9duU})g\xb4\xf8\xca\x9e\x9d\xc3\xe5\xf7\x9e*\xe9\x15Q\xf6\xbe7\x8e4\x85G\x07h\xf9\xd1B\x95ep\xd3\x13C\xa5\xca\xf6\x89\xb4\xdb-'
+    b'\x99\xaaq\x80-\xc4`6V\x95\xf1\x95\x93I\x9a\x9d\xfa\x90\xddxe]\xd1Ze:\xc6y\xd4\xaa\xbb2\x96\xe32\x82\x1c\xc0:\t\x1c\x8auV6b\xeb\x13\x80K\x84\xda\xc4\x17\x8b\xec\xd4\\[\xe6^Vf\xae'
+    b'\x9e\xc5\xda\xa5\xb3}|i\x04\xe5\xd2\x90\xe9{\xc3\t=\xab\xba\xe4\xcdV\xea\x1f\xcd\x86\x1f`\xc4\x95\xac\xd8\x95\xe1\xf3\xc0\x96\x8f\x89\x11\x91\xc9\x8a\xd07\x98\xa2;\xc2Aw\xadM\xaa\xd4\x01\xc0\x1dP\x03j;A\xa4'
+    b'\x19\xb4\x8a\x89\xdc\xcd\xa4\x8b\xcb\xab4\xb4\xc6\x0e\x8f\xdeG\xf1\xea\x03\xae\x93+\xf2\xba\xc6\x1e\xf9\x95c\x81\xb370\xf8\xc7\x1c\xf8\xeaJ\x0f\xf0\xe9G\xdc3\xf9p\x06A\x15\xa2\x1d\x1ehq\xc0\x92\xc5\xf3_l\xb4\x85'
+    b'\xd3\xdb\xcf\x1b\x0f`\xe9\x8b^m\x17\xdf\xdby\xa2"\x91\xd7\xa6\xef\x86=\xd4]\xd8dy\x02\x1e0kr\x98s-:\xe8\xc4\xba\xa3\x1f\t\xae\xb3\xb6\xbc\x15\x13m;\xa1W5\x8a\x1e\xbe\xca\xe2\xae\xf3\x85\x86\xe1\x81'
+    b'~\x88\x14\x1d\x19\x86E\xc4\xc1\x06\xe4\x9c\x1cGR\xb3\x8b\xee\xd0\xed\x8e\x0e\n\xe8V\xe1\xdc\x85\xd4o\xceGI\xae\xe4~\xdb\xa1\xc8\x12L\x9cC\xab\xd0\x90\xe1\x92\xd7>\x00\xfe\xa1\x10\xea\xe0\xb3\xba\\@\xf6\x02\xdd\xd8'
+    b'\x91\x89\xeb\x0b\x86\x16\xa2\xb9 \xe1\xbb\x17Q~\x98\xe8\xecnt^\x8d7\x97I[\xca\xd8\xa9\xfc\xa8m\xc1\x82.\x9e\xd7\x88%.D\x87-\x18\x16v\xd1\x00\xdf\xd4\xac\x8f\xfb\x9c\x05\xb9@\x95\xb3\xa0\x9e-\xde.S'
+    b'\x12\x10\xa8\xde\xfe\xa5/,\xbc\x93\x8fD\xdf\xac\xa7B\xcc\xc5\x8a\x8e\xd2\x88\x0e,O\x12\xe5\x96d\x9dv\x90\x9a\x83.\xef\xc8*\xd0\x1a\\\xed\x01e\x05iVP:LTb\xe3(_\x9c\xbd#5\x97\x8bx\x95E'
+    b'+P\xd4\x04\xe7K\xf8\xec2\xc9_\xe6\xda\xd1\xa6\xe1[\xa1\xc6\x95\xa2]\x99\x82\xa5\xe4F}T\xc8\x8b\xb1\x93\xcf\xd3Q\x93\xc2\x12\xe5\x11\x06u\xf0\xd0\x02d\x80h)ix\xf8\x06\xbf\x19\xc8z\xcb\xe4j\x8b\x8b\xb1'
+    b'\xd8N\xe5\xd8a\x9dHQ\xach\x8e\x02\xe40\xe2\xdc\xab\x7f\xfb\xf2\xd3\xff_\xdd\xb7\x7f7qd\xf9\xff\xee\xbf\xa2\xa3\xec\x8c\xa5 \xcb\xc6<BD\x1c\x8e\xcd#\xf1.\x13X\xcc\x0c\xbb\xc78\x9c\x96\xd5\xb6;\xc8j'
+    b"m\xb7\x84\xf1\x01\xff\xef{\x9fU\xb7\xaa\xbbe9\x90|\xf7\x9b3\x03\xa8\xbb\xba\xdeu\xeb>?w\xf7\xf9\x8b\x9f\xff\xf9\x94q\x0b\xde\xa9\x91\xf7P\xe8z\x1bI'\x18\x9aC\x81n\xea\xdc\x1e\xdc\xbb\xdb9\xd2\xbb\xb8"
+    b'!\x84\x19\x98\xf9\xac2\xe9"\xf8\x81\x07\xa0\xf0Q\xa4\x96`b\xa7C\xde\x88\x13\xf3\xb4OZ1\xc3\x06=-\xa4\xf2N\xd2\xe8t\xc2\xe7\xb1\x9f\x03.\x08\xa9-a\xbc\xe3\xa8,/G\x84\xfd\xcc\xc0\x1a\xc1*S\xe9'
+    b'\x80\xa9\x91\xd9n\x12\xabuZl\xd6\x11\x1a\xc1\r\x86\xc8\xbf\xdd\x18\xb9\xce\xe8e8P\x99|\xe4\xf5\xf0\x9f\x1d+\xc9\x04\xf8\x1c;Z\xb6\xa7\x15\xad:\x0b\\<RAR\xa9k\xe4:\x85=QY\xab\x8e\x17\xc2o'
+    b"\x96\x1c<*\x14\x10\xd4|:J\xa7\xe3\x8eym\\\xc8P\xa0\xe23B\xf1\x95\x8b\xd3St\xb3\x9c\xae.k\xd1A\xcf\xa7UV\xce\xf7\xc8\xe4G\x03\xe8'\xf6\xbc\xd7\xee5jQ\x05\x11\x1ed`pq\xce\x16\xab"
+    b"qeR:\xe2\xcc\xd4}\xd0\x00\x9f\xaf\xe6\xe4\xd7\xe0\xe6\x07\x0fL=\x02\xc8\xba\x1a\xed:<\xdc\xeac\x16$N\xb5\n'\xeb\xa8\x9f\x1c\xfe\x80\xcf\xfeg\x91\x96@)\xe8\xc1\xed\x07\xf8\xe4,\x9d\x9c\xd0\xcf\xed\xef\xf1"
+    b"''\x1c\x92bU\xe7\xe8\xc8\x91\x98\xdaa\xc2<\x95\xf6N\xf8C\x87\xa9v\x9c$-f\xed}x\xa2$Gfh\x07P'.\x03a\x0b4sKA~\xa9\xde\xeb\x0eVBS\xd6~\xb4\xfc\xe1\xa2rK\xfc\x9c"
+    b",\x8e\xae\x02p\xe1'j\xa0\x8fT\xf6\xb1\xf3\x10\x96\x8d7[\xdd\x83h\xcd\xe1!\x89#\xf2,?\xc6\xf0\x1a\xbe\xa9\x8a\x05\xf2\x02\x08\x16\x87R\x00\xb0%\xbf/\xceg\xe4\xae<WH\x88\x99\xe09\xa4\x08*\xe9\xb4"
+    b"5\x98mR\xf2\xf4>Tw\n\xe2\x1f\x80%)\x98\x1f\xc3_')B\xe0 \x14\xc5\xe4=;I0B\xb3\x87\xef\xcf\xc6y\xea\x90K\x85A@\xc3\x9f\xfdMw\x12\xa1y\x82|L_\x88\x8e\xd2\x14\nu@\xb8"
+    b"\xd8\\5\xd4E\xff\x18\x10H\xf47\x1e#<\xa4\xf129+\xda\x93\xb9t\xdbi\x14Q&]\xeaIg\xfc\xee\x88\x1a\xa5\xc7\x91\x81\x1a6U'x\xeb\x08$\xd9\x06s\xca\xe5{\x01\x0cB\xc5\t\xcf\xb1\x0c\xfd\xec"
+    b'#\x8b\x81\xebh\x171\xe8\xda\xeaN~\x1c\x86\xd2\xe6\xe8\xe7\xdeZg?Z\x12\x85\x81\x0cJ]w\x14\x0c*\xf5\x12\xa7?7\x1f\x8d~\x7f\x8do[\x05UZ#\xdc\xdd0\x95\xf3\xb3N/^\xe0@\x84L\x8f\x9d'
+    b'*\\$g\xd8\xcao\x96;\xbfE\xab\xac_\xb4\xaf\xb4+\xe1V\xfb@\xdcQ\xd1]\xcf\x9dA\x93$\xdb{\x17\x06\xdf\xaf4~,mF\xad\x83Z}o`\xe9f\xed\xb5\xbc\x0b\xd4\xd7\xf2\x0c\x9d\xbe\xf0\xe1\xe0^'
+    b"\xf0\xd8\xbb\xf9\xd2n\x08a\xde])r\xbef\x0f'ls+|[S\xaf\xe2\xd3\r\xcf1\x07\x85\xaf\xe1{\x92\xa0';\xb6\x93@T\x84`\xfb\x87\xaa\x9e6\xc5\x86\xa6\xf3\xad\xf2u\xe3\x8a\xe1\xc3e\x9bQ?\xf2"
+    b"\x1b\xd2Q\xbcA\x03\x1a~x\x05\x9f\xcc\xaa\x9bm\xdbD?i\xdf\xb7\xbe\x88'S|\xd1T$WN\x19 \x8d\xf6r\xc3G\xab9\xea\xa2\xbd,B$d`\xfa\x15w+\xb5\xd7\xb6]\xf9\xa5q?\xf7\x0f\xa3\x9d"
+    b"\t\x8f\xc2\xf7\xb5]\x07\x0f\x1b6\x1d\x17\xbev\xd7%\xa6\x9df't\xd7'\xcea\xd0\xb3h~\xe1.3\xfb\xacy\xb21\x11\x82/\xd1\xb0\xd3\xe4\xa3\x1a\x14v#\xcb\xc1\xdf\xf7j \x9a\xa2\xb6Y\x91s\xe6\xc2q"
+    b'\xb4&=\xec\x84E\x02w\xdf@\xef\xe58\x06\xe9.z\xdb\xa0\x9a#\xad\xbcC(\xfa\xc3\xe4\xce\xda=\x0cjpS\xf2\xc8\xb5\xad\xca\xea\xa0\xa1F\xdbr\xb7\x95Gq\x1e=]\xe4\xbd\x8b\xa9\xb8\x91\xe6\x1f\xb2^\xa7'
+    b'\xb7\xe65\xf7u\xac\x9bGx\xde2\xfe\xe0\xd9\x7f\xf17\xa4\xb4\xc92\xe2\xab\x84\xad3.8\xc3\xa6\x08o\xd3K32U\x06\x11DT\xd2`\x80`G\xd8\xd41\x8f\x14\xa0o\xcd\x10\xc3F\xbbE\xf3gKxV'
+    b'\xe9P\xab\x8c\xa6\x1f\x19\xc6\xf6\x8d\xfaB\xd2\x9a\x06VQ\xf6nt\xaa\xb7\xbeCZ\xcf\xd8\x81\xb1t\xc9:\x14l\xddc2\x8eIQcxe\x98Lf\x14\xa0\xd8 \xd9\x9f\xb3\xab*a2\x92\xf3(G\x119\x8f'
+    b'a7\xbe\xb5H\x8e\xb7\x98=\n"\x96\xcdn\xa0L\xc6\xe2\xe1\xe1`\xd6\xf8V\xd2m9\x03u\x97\xcd\xa0.\x07\xa9\xe1;\x18\xbc\x0f\xb1JF?=\xa7\x90\xce\x9c\x0e\x13\xe13\xe0\t\xf8\xf1\x18h\xb4=\x1f\xa4\xc0'
+    b'\xa3\xe3\xc1o\x82*[\xbd\x97B\xe5\xb5@\xf8\xd7\x19\xc0\x9a\x82\x1f\x0b.\xb5[9\xcdtl 2gu\xea\x10\xbd\x02X?\xbeVk\x1a\xb4s\xa3<;7\x8e\x80\xe4nu\x85\xf1\x93\x94\xd1\x9dd\x12\x8d\xe3\x90'
+    b'\r\xb5^9\xc4Y\xa1\x01\xa4|\x18\xf26"H\xfc\xe4\x9f\xaf\x9e\xd36$g;\x04/O\x11N\x89\x80\xfb\xf0*\xc5f\xa2A\xec\x96s3\x04\xb6\xedL|\xb0\'\x08\xec\x87\xf8\xda\xa5\x01g\x95\xad\x8c\x80\x94\xb0'
+    b'%z\xcf!\x0f\x83\xdf\r\x03\xec=\x15\xd4\xe2\xe9\xd2\xf7gL\xa6\xa4\x009H\xb6\xb0#*\xc3\r\xe6gp\x9d\ty\x1b\xca3\xae\xc6g\x00\x93\xdf\xdaK\xedQ4"\xc4\x9a[\x94\x13\x87\xfc\x8e\xc3\x18&[\xb4'
+    b']\xb8\x064\xee=\x03\x02\xd1\xed\xa1\xf6|j\x96Q\xb2Cy\xfbz\x89\x08\n0\xfbr\x0e9C\x01\xfc\xe6\x92&\xf7]Y\x8c(60\xbbH\xf6Q\xa4\xd4k\x97^\xc0\x16\x17\\\xe6FE~K\xff\xe1\x0f\xa0'
+    b"RC\xa9b\x9a\xc2\xa0\xd3\xc9\x1bD\xe4\xe9'g\xd1\xe3_\x08%h\x89\xa1T\xa6\xa1^W\xb2\xd9T\xd3\xd5\x12\x05\x1e\x17\xaf\xcac\xe8)\xf4\x91\xcf\xd1\xe0\x98\xe0e\xc3\x13<\xce\x80\xfeg\xb5-\x17b\xc9\xb9C"
+    b'\x11\x99iw+\xa0\x9a7p\xa2J\xa9\xfcr\xe3\xecu\xe6\xdd\x034\xce\xf7\xa2Ok\xf7\xef\x9a\xdc\x98\xadw\xb0\\*\xcc\xf1\xc2\x80\x94\xb1pwy\x05\x97\xc8T\xbco\xa8*\x9bx\x9e\xaa\x1a\x0c\x06\x86\x191\xa4'
+    b"'\xba\xba\xb1\x1bS\xba`\xf0\xe6\xd1F\xfb\x1c\xb9F\xf0%\xd0\xa7\xd3\x02\xff\xdc\xed\xe3\x9f{}\x84\x95\xc74\x03p\xcf[\x06\xa1\xe3\xef\xb8*\xe0F\x10Y\xed!\x1b\xcd\xd2\xe44?\xe9'3\xa4Ue\xf2\xfb\x0c"
+    b"I\x16\xe5e\xea\xf8\x83(\x14\xb2\xa6\x00\xa4\xe7\xf6p\x89\x1f=\x97\xf7~\xb4\x1c\x0c\x81\xa7\xe0j\x15\x04L\xd5\xa4O\x0f'GuK\xba\xa6\x991\x107\xee\x8d\xbf\x19}\xe3W\xe6L_\x83\x9fb\xb8T\x82O\t"
+    b"na\xda\x8c\x12'1\xd8%\xd7\xc5\xe9`O\x90fv\xf7\xf0\xe6\xa5\x17\xf2@~k\x81\xbd\xe0f&\xd1\x86\xc3\x83V\xe8\x0b\x96\x0c\xfb\x82O\x8cn\x98#)\xc3K\xc2+\xca\xe0\xad\x9fT\xaa\xab\x0e\x0b\xe36\r"
+    b'l\xdb\x19\xf4\x036\xee\x06\xc8r\xf9\xf1\xc6i\t\xdb\x18{\xf4m\xf6 \xbb;>N\xb6\xfe\x96l\xdf\xfb[?\xf9\xf6xt|o4\xc2\xdf\xf7\xb6\xfe\xd6\x03\xe1xk\xf3\xf6\xf6\xecc\x82\x7f\x04\xfa\xa8\xfc|\x99'
+    b'h\x00o=\xc3\x02?\x84\x0cA\xaf\x07B\x8a\\\xbf\xed\x85\x0f%\x95\x86\x85\xb8\xe0b\xb7\x83\xf3\x0e\x9b\x82\x90\x8c\x90\xb3C\xd8/6?;8=\xc7\xfe!\xa4\xc0\x07\x87\xc4@-\xd5\xa1j4\xad\xc5\x00\x88\xc9\xac'
+    b"\x98uki\xd0WQCJf\xc0\xd5\x1c\x8d\xb0p\xc4\x08\xe6F\xba\xa6\xd7a?\xdbo\xe4\x8e\xd3\xe0\xd2>\xa4d\x8bm3\x8b\xdf\x07\xa3\xa3\xb3\x10\x08\x8d\xf0\x89='\xcaa\x86'\x9e\xb4\x0c\xab\xedp*\x1a\xe1"
+    b')\x91\x8e\xc2\xben\x86\x0fj\x18\x00\x15\xb77\xf9r}\xa8\xe9\xc7,\x8f\xd5\xb4\xf8\xa4s-\xd1\n\xdc\x804\x0b\x0b\xb2\xf57\xe0\xfb\xf9wc\xf4J=\xa8\x06i\xa3u)r\x9f\xdb\xce\xfb0\x14"[\xd6\x03v'
+    b'\x8f\x85\x86\x91\x86xYU\x96\xd44\xce+\xbcl\xc6\xfe\xbalL\xf7eM\x99\xd1\x97=\xad\x8a\xe9M1K\x8f\xf39\xfa\xfft\x06w\xe2\xd6\xae\xf3\x89!\xcf\x92\xd9L/\xd4\t\x81\xd0e\x12\x9cM\xb1\xd1\xc1\x91'
+    b".NN\x0cL\xc5\xba\x13\x11m}'\xe9d\x82\xf5\xd9\xec\x8b^\xd2$\x1cm'Pr|!\xc2\xa8\x8a\xf7\t\xdd\xc0\xf8\xa5\xadq^\x0c@\x08\xe0\x90\xecX\xf6\xe6\xb0T\xf6\x11\x11\xdc\xfa\xdc\xe9+\x14v\x06m"
+    b'\x99\xb6B\xd2i\xe4s\xb5\x8c\x92\xd7AYT\x95\xe2j\x9cqL$\xb2\x1e\x05\xc1\r\x92\x00[8\x94\xd20\xcf\xc5\xaa\xfei\rnF5{\x8d\xc6\xcd\xa0\x98\xd2\xe2\x9eh\x05\xc5G*\xaa\x0eW\xf3J\xa2\x83\x18'
+    b'\xa8\xe7i\x9bD\xe6\xed\x1aa\x9ay;A\xed\xdd(\x9f\xeeQ%]\x06\xb1\xf3\xc4\xb2\xd7k\t\x9a\t\xb1\xd0<\xea\x8b\xe7\x1b\x9b\xc3\x16\x10\x1a\xb7|\x8d\xe2\x08\xf9\x819\xdd\x8dn\xbfO@\x8a\x8f\xcb\x9c\xcc\x8aC'
+    b'\xa3I\xf5\x89\x0c\x08\x07\xd7{I\xa6\xc7\xc7\x84\xa2\xfd\x89o\x95M\xe0\xd6:\xc3\xe4\xb03@B\xde\x87\xf3\x84\x0f\xf0o\xe0\xdf\xe4\xef\xec\xb4st\xe5\xd2\xe3t|\x1f\x92\xcd\xb7\x83.|\xf7\x19\xbe\xf9\x0c\xe5\x1e\x9d'
+    b'RB\x17\x87F\x80bT%\xea\x04\xddg0S\x93\xe2\xb4\xef\xf1\x845\x1d\x02\xf1\x8a\x8e\xad\x1cz\xc3\xbd\xc8\x8b)g\xb5\x03\x8esQeU\x10\x87m\x927 \xc4\xfc\x805=\xaa\xb19adH:\x85\x04\xbc'
+    b'5\xb9\\K\xab\xcb\xe9\xb1\xa7\x0f0\xb5\xd4W\xba\xb0\x08\x1a\x01\xd3;\x12-0\xd9:i\x1c\x04KQ^\n=\x91\xb1\x01\x8f\xc1\x16\x17\xf8\xbc\xb8\xa0\xbd\xfd\x02\xd6\x10\xeb|I\xea\xa3\xee\xa7\xf3\xc5d\x9e\xcf&8'
+    b"\xb0\x12\xc3\xc8Q\xb7\x8cy\x85\xa8\xc5\xa3\xfeJ~\xba\x06\xe2\xfc\xe3\xf1d1\xcevi1w'\x93\x17\xb2\x01\xb0n\x81\xa2MH\xe62\x08X\xe2d\xd7R\xa3\x00L\xf1\xf2\x10\xe23\xd0\xde\xf3\\p3\xaf4\x06"
+    b'\x0b\xd6\x82\xc6\xeb2SsR\x11\x9f\x99\xba)\xa3:\xcfRSJu\xe2^]r>?\xaf\x8e\xf7\x92\xfe\xb0J\xa5\xd2\xe4\xabyE\xc6\x90\xcaEt\xc3\xba\xce\xa1\xe5sT\x97\xa0\xfb\x1a\xac;\xfa\x02\xe2\xe4\x86\x00'
+    b"Z|&\x84\xcaQ\xb8!'\x03)Q$\x92=D\x1b\xd0\x06\x08\xd0F\x80\xeb\xb4\x9awy(\x87\xf9\x11\xe3\xf4\xd8{EfB\x92D\x06\xe5H\xc5I\x8a\\\xeeS|<{\xd6\xf2\x10fv\xf7zt\xbaKt"
+    b'\xa7\xf9\xfa\x9d\xba\xc2^\xed\xd9\xc7\xbc\x12\x000K$i\x82\xedK\xae\x8cI\xd18/\x7f\t4 \xfc\x8b\x94\x19<\xda\x87\xe1\xae\xba2s\xe4\xea\xc4\x88P\x18\xc1I^\x9e\xfb/\xd9]\xa9r:W+@\x0e\x92'
+    b"W\x8c\x93\x04\xb7\xd3\xa3N\xaf\xd7:\x0f\x81\xee\xe8F\x1d\xef'\x9f\x98c\xb2\x07\xc4EG\x03!\x12$O\xaeT\xd4@\xfc\xc5\x1byk\x9c\x1b\xf9\xa4\xcb\xf3\x01\xe9\x83\xad\xc2\xa7V\xe2xR\xd8\x80U>B\xb7n"
+    b'\xa9\xc4\x11\x1f\xd3h#\xd1\xaa?J\xfcT\x02\x95g\xa4\xf0N\x80_\x97y\xbdb\xe7?\x17\xc5<}\xfa\xf18\xcb\xa0\xa5\xa7eY\x84\x96=\x7fd\xb5%A1\x90s\xcaA_9,\xda\xed^\x94\x8cxf4'
+    b'\x99\xb3\x81*0\xcd\xe6\x1d\xa1\xea\xa2\xec\x12\xf0\xbdS|@o\x91\xfb[\xcc\x86\xac\xf6g"\x82{\x02\x7f\x12\xb3\x84?\x8e\x8bY\x8e\xf0_\xd3")\x8b\xe2\x9cHIC(\x9ev\x9a\xf3\x8e\xc3\x15\x85\x91\xd0\x9dA'
+    b'\xf2D\xf4I\x8e\xb3"\xb8\x9e\x9c\xf3f\xe3\xceg|\x1e\xccVY.2\xdbgX\xe9\xf7\xe1i\xbb2\x89\xd6\xa5\xbb\xb8\xb1\xb5i\xc1\xc0]3#^>\xa8\xc4\xdem\x03^9\x87\xd0\x1f\xd6J\xc1\x11TY[\xfd'
+    b'\\\xe5C\x81\x83\xd6k\x8eEO\x9e\xe1\xfa\x14\x99A\xb7\xb4\x1b\xb4\xa6@\x02R\xebx\x85j\x99\xb6\xc8\xb9\x04\x02\xfb\x0fd\x8a\xba\xd1\tm"!\xca\xb71\xcf\xf0\x9a\x18p\xe4;i\xe73\xf7-\x13\x87\xe94\xb2'
+    b"\x94Rv\xb8\xfc\xe6N+\x8e\xa9e\xd2\xca1\xcb\xf9<\xbe\xe4\x19;\xf2\x19l\x8a'X\x99\xf0n\xc4\xb5\xf9\xdc\x1c\xc8$\xec$5\xb9W\x95z\xb2\xc7\x88\xb5g\xcf\x02\x9c\x17G\xe2\\\x86v'=\xe4S\xf2\xbf"
+    b'Q\xe0(=\x12\x8fT\xe5\xa75\x06\xd54\x14wjn\xa5\xad\xd8\xd3\x9e\x8dR\xf7\x97g3m\xe4\xe1sZ^!\x8aev\xbc(+\xda5\xb5\x11\xb7q\x11\xbaA\x1e\xbb\xf4W\xe3\xfa\x08x\xbbx\xda?H\xf6'
+    b'\xcd\xd5\xaak\xf4(<\x8aa\xda\r\xe3R\xbe\xdc\x9d\xdc\xe6\xcbY]\xae\xaeg\xc6\t\x1d\xcfE.\xe9-O\x1c\xed\xef\xd6+\xc3\xdd_\xe7s\xbe\xfax|/]^5o\xb6Y\x92txY\xdaa!n+\xf5'
+    b'4P\xd1Sm\xfb\xd3\x93\xc2\xdb\x86ZT\xf8_\x91\x1a81\x95\xe0\xf5\xc9\x1b\xbb"1\x96\x9d\xc9\x8d\x06N\x10\x97\x10;\xe2\x83B\xcd\x03\x051yy"\xa9\xcd\x9f|:X\x8fw\x7f}\xf7\xea\xe9\xee\xe3_\xde'
+    b'\xed\xbe{\xf2j\xff_O\x9d)\xa9\xd5\xcd\xc4\x83\xe1\x8d\x96"\xe7ye\xdc(\x9fFQC9\x07\xf4\xe0\x8b\xf6P\x91\x91\xc5\x95[\x89b\xb8\xcf\xda0\xa6\xd7\x18\x12\xb7\x05\x0ec\t\xad\xf4\xb8\x85\x82\x85\x93O\xa3'
+    b'\x84\xd5Nd%\xed\x19\x7f\xd6&T\xcd\xf3\xe5\xa0\xdf\x16\xa6=\x9fD\xbakj\xa9\xe3\xde\xb5g\xca\xb8c2e\xdc\xf9\xff5S\x06\xeb.\xddh\xdd~x\\\xcc.\xe9\xb2\xact\x1b \x94jq>[\xcc\xe9~'
+    b'\x14\xd6#\xd8\x19TC\x9bi}\x994\x1cb\x7f\xcdIt\xe3\xa3\xfa<\x9ffU\xdd\xbd\xe2,\x1dK\xd2\xc5\x828\xfa\xb2\x98\xb8\xb8h\xba\xb4E\xa7\x0e\x84p\xc8\xd0\x10iI\t\xec5\rk\x90\xb5\xbe\xcfj\x04'
+    b'\xd5\xc6\xb1<H\xd6,\xc9j\x8d\x86\xa8Y6\x8e\xcd\x85\x98]}uc!\xea\x99\xbc\xa9\xd0%\x7f\x12\xdde\x94\x84m\x19\xb2o\xfd\x8b\x18\xdf\x17\xf7\xf3\x19\xcbb\x94\xd7\x0c\x7f\xc2\xcc\xbb\xcc\x06\xdej~\x13`\x93'
+    b'\xa8?\xbb\xe8i\xbd,kG0\xa9\xa4\xc8\xb5h\xbb\xbd68\x8cN?\xce\xf14\xec<l\x87\xebP\x1b MG\xc3\x15\x9d\x07\x89~\xbef\xc4\x03\xfa\x95,\xa9\x08_{\x98\x85ql\xb3\xf19I\t(\\V'
+    b'\xcc\xa1SS\xb2\xd1(i-\xd5\x12B\xa3\xc9gN[\xcd\r\x05h\xc8\x97\xc5B\xf07Y\xad!G\x88\x8e\xadf\x7f\x11T\x19\x97;\x96\xb5\x08mD\x85\x93-2\xdfN6\xddABy\xb3\xc8\x19I\x03\xfa$'
+    b'\xceP\xd7{\xd0\xb1\x16\x9b8\x96\x00\xbbm\x0c"\xff\x07\xa2%\xd9\xb1*\x1c\xc3\r\x02%\xfd\x96\x14\xbc\xf2\xbco\x92\x957x8\xc43"\xa1BM\xda[\x0e\xach\r5\xa7\x1c\xa8\xab\x07\x99\x93\xfb\xf6\x1f\xf4`'
+    b'\xc0o\xbf\xa2\xff\x02\xd5\xf7\xc5\xde\x0b\xf0M\xd7\xf0\x96\x8e"}\xfelY\xce\xe8\'\x92\xf2\x9e\xaf\x1d\xae\x15\xdf\x99f\xaf\x84\x8b\xf4\x83\xf3D\x88\xfbZwx\x14\x9f\t\xf8\xa8\xef2\xf6\x15\x08\x0f\xc9\xe9\x83\xd1`\x04'
+    b'\x8cD\x95\x94\x8b\xa9\xd6f\x01\xdc}-\xf81\xeb\xbd\x11S\x81\xad(t\x13\x8eJ\n\x0e\xd3\x9e\x1b\xa7@\xef\xd4\xa1_k\xb3\x0e&\x9dD\x8f>\xe9\xff\xb0g\x8b\x99w\xf3\xe7\xc3|r\xe2r\xcc\xfd\xc2Q\xba\xd2'
+    b'\x8cd \x8cr#\xb19\x08GLjrM\xa5Ta\x8f\x08B\x82\xe2|\xfb\\\xa1\xaa[\xc5\xf4\xe3\x01M\x8d\x0b\xe3*P\xd2\x96,\xb0V&\xe4\xeb\xf0\x91\xbd\xaf\x9c\x1c\xe3=5hH\xb5\xdc<\x02\xc1\x1c\x1e'
+    b'\r:p\xe8\x8a\xd0\xf1E\x1aL\x92Xc\x1d\xc6\xd9\xbc\xd4\x93\xc1i\x7fQ\xb1D\xc3d\xdf\xc6\x8cX%\x13\x1f\xe5\xf7\xceq\xa6\xc69&\xd6\x84\x1e]9\r\x80\x014\x95o\x94\xb8\xb3\xa9P\xad\x1c\x94\xc1;\x1a'
+    b'\xc6rl7+\xff}\x13=\x8a\\%i\xd5h\xb9W\xb8o\xa9\xa0\x98b\xcf\xd3\xf2\x94\xd6\xba\x83\xcc\xf4\xe0{\x90\x1c:\xbeL\x13\x84u\x83\x91\x0b\xcb\xf6\xbe<\x99\x01\xd1\x01\xc5\x89\xdd\x95m\xef8R\x94a4'
+    b"M\x9b\xa3\x13j-\xe0h\x16NKv\x8a\x89\x00pW\xcf9\r2F\xc1\xafE\x16\x84s4\x90\xa2\xce\x84S\x98\xa9S/j-\x80\xa95\xb9\x14\xaap\x0fi\xae\xed\xc8\x0c\xe8\x92\xab\xd3'\x8e\xb50/{\x9c"
+    b'\x1d\x82\xdf/\xa6\x94\x1c$x\xdfP!\x91\xca:\xbe\xbc\xbe"\x19\xad\xe7r94e_\x14mCs\x1d\xf4=\x9bA\x9c\xd7^{\xb9\xc5d\xd2\xbb\xc6\xf8Y\x03=\x0f\x8d\x9f\xb2\xbe-\xa6\xcf\x03\xbe\x05j\x86O'
+    b'c\xf1\xa4\xe4\xf6\x9b@\xd9\xd9\xe2\x89\xff\xb0\x86M\xad\x1f\xcd\x9a\xf0NL\x99\xcb\x01\xd7QAA\xd52\x1b\xd2$\xfe\xa8\xc9\x1d\xe8\xfd\x9cU\x9a@AIr\x0f\x9c\xc5M\xbe\xb4p\x81\xbe\x8e\xac\xcc\xdcCDS}'
+    b'\x94\x81\xf8|\xf7j\xe2e\xb4\x9d\x96\x08\xdb\xa1T\xbdu7\xb9\xb3\xb5\x9e\xccJ`Z\xcb\x0f\xd9n5\xcb\x8e\xe7\xafP\xc9\xb0\xb3\x8eP\x1d q#*T\xf2\x91P\xbe\xdb\xf8\xd7K\x10\x9a\xef\xae;9~\xeb\xae'
+    b"\x17\xe4\xb7\xd7\x93\x92\xa1\xc1\xd1\xbc\xb0\xb3\xfe\xed\xf1\x0f\xc7wF?x\x89\xf9\xe1\x97'\x16\xeb\xec\x8a\xdf\xba\x17\x9a\x9b\xf2h\xad\x06\xfd\xe4\xe1\xb6\x1a\x81\x9d\x82i\x16*\xb1\xd5O\xeen\xf5\x1a\xdbv\xf0K\xcbDy"
+    b'\x9b`\xb5\xa6$\xac\xdf\x11FG\x18\xe7\xa8\xa8\xcb\xfb\x8e\xbe\x16(\xb3\x80\xd0\xc2\xae\xa3\x84s\x01\x0c\x95\xcf\x1a\x9f1\x8b\x83\xff,1W\xa3\x0b\xcdw\x88s\x945\xf82:\x00\x9e\xbaD\x16x\xf1\xd8\xf2X\xba\x8f'
+    b'\x82\xcb\x8d\x0c5\xd1t\xfa\x08\x97@\x8f\xea\xa1\xe2O\x8a\xc49\xa24j;#\x1f\xf7\xaft\x14e@\x8d8\xd9!D6\xa9;\xbd\xbe\x91S\xefa\xf0\xba\xab\xe1\xdb\xad\x93\x07\xe9\xf7\xdbT\\\xce\x82\xd3C(V'
+    b'/\rT\xfe\x1e\x8c\xd2\xb2\x8a3\x02V\xce\x8e\x9f\xf8B\r\xf7\xc2<E\xef\xf9<\xf4S;\x83\x83i\xc3\xd0\xb6Qi\x04\xeb\xf3]\xb2}\xdf\xc3\xb1a+l\xda\xec8\n@\x93\x91C\xc1\xbbd\xcb[O.\xe5'
+    b'Y\xf7\xceV\xb2A\x15\xf7\x92\xcdd[\xde\n9\xd8\x1e\xdco\xa1\x1c\x1d%\x12\x94"\x00\xbbE\xdf\x11\xbd\x18\xdcQ\x8a\x81/e"\xf1\xf5\xe6O\x9d\xc8)\xe8+\x11\xbaV8Q\x9e\x0b\xb6\xa6\xb1\x15\xd3\x90\xae\xc0'
+    b'\x17\xf5\xaf#\xb97#\xba\xb5)\xb4\x03\xf8:\x89\x1d)\xb2\xf7\x80I\xca\x9fN\x86\xbf\xd1S\xa7L73\x11k\x8d^i\xc1i\xd2\\@\x8f\xc2\x9fK\xf3M\xeb\xf9\x0f\xa5\x1a"\xc6\x94q\xda\x0b.L\x16\x9a\xbb'
+    b'\x11p\x97\xca92\xe1\xfc\x91\xe2\x8c;q\x04a\xc79i~\xbdk\xc5\xf9\xd0*\xbd\xe9\xc5wZp\xf9\x90v4\xb4e-\xbd\x8f\x92\xa5\xb5]5\xddY\x96\xf0-\x99#V\xdc\xd5&"\xb6\x16u\x90[\x0c\xd2'
+    b'\xbc\xb8\xcb0R\xeb\xb8<\x19\x9eq\x83=\x86\xf9R\xd94\x80\xf6#\xeef\xab\xbaf\xc6Utz\xb5\x9c-X\x95\xfa\x8f\xbf\x85\x1b\x86\xfc3f X\xcdQ\xff\xde\x13b\xf2v\x1a\xe7\xe0\x05V9\x9de\xbf\xcc'
+    b'\xcf\']\xac"\x88]\xa3:]\xb2\xb2\xbfS\x9a\xb2\xbf\xa7\xe7\xb3\x87P\xbd{\xfc#?\x9e\xcc\x83\xa7?\xf1\xd3S|jYb\xf5\xee#^Xt\xc9\x98\xc5\xaf\xc0D*L0\xaa!\x1a)p\xcc 7K\x82'
+    b"5q\xf0Bv G\xa8,\xcaBTI\xda\x96\xbe\xc7\xd5\xa1B\x94Zi\x90\xbc\xc4\xc1\xb3\xa0\x8d\x88p\x94\xa7\x08\xbdo\n\x84\xe7\x86\x7f\t\x93\r\xe2ZZRu\xc8u\xa8\xf6#\xe8\x17\npxY\x90\x82'"
+    b'3\x0c\xb9\x9b_\xd1\xf5:\x85]J\xe0jfn\xe9\xbdn\xbe\xcd\xdf\xdeV\xdf}\xbb\xc9\x8ec\xf4\xc6\x99\x14\x81|\xcf\xa0yb\x0bv\xd6\xab\r\x99\t\xba+\xb8Z\xbe\x0c\xa0\x90gd5\x13\x1ek\xa4a\xe51'
+    b'\xa6j\xf3\xb7.\xb4\xf2\xf6\x10\xfe\xe8u\x0f\x7f\x1b\xbe=:\x82\x7f\x0c\xbe\xeb\xfd\xdbf\xcf\x87\xef\xd1\x87=cf\xaf\xf5\x00\x93\xdaq\xf3f8\xf2\xe1\xe1\xed\xa3\x9e\xedPH\xcf\xe2\x9a\xd8O\xba\xad\xaa\xed\x9bT\xb5'
+    b'\xb4Sw\xc2\x9a\x9c\x16CU\xf6\xee\x9cw\x86\x1d7\x15a\x96E\x9aj\xd2;x\xdeS\xb3=\xfac\xe2\xe6\x8c\x9e\xe9\xbcw\x0e\x7f\xeb\x1c}\xd7\xf9\xfc\xf6\xe0\xd6\xe7\xb7\xd5\xad\xcdS\n\xb1?<\x8a]\xa6\xe6\xc5'
+    b'\xfbl\x1a2J\x88\x1f\x84\xd0%\xf8\xc6/\xe3\xe1o;o\xab\xa3[\xbd\xee\x8e]?G,\x19"Izb\x8f3\xd5\x1f%(\x89\'\x12iXm"\x05\xf8h\xc9z\xb4\xad\xc8\xce\xaa\xc5\t{\xa0\xb9\xe1\x86\xe5'
+    b'\xa3PAe\x87\x98\x85P\xbfSTm\xca\xb2:\xd1(\x9d\xbbK\xbf$\x17\xe2\xa0\x00\xf9_\xdd\xf6l\x81P\x11\x8a\x848\x99\x07\xa7\xa7\xd7\x85E\xb4\x93n\x0cn\xfa\x9d(\xff\xcc(\xf4\x8d\x9b\xc2p\xe8\xf3\xb4\x04'
+    b'\xb2^\x1b\xbb\xfb\x8a\x0e\x82\xaa\x1e\xfc|\xfa\r\xe8J\xde\x11p\xbea@i`\x10\xae\xafL\x0b\xd1\xa1\x0f\xe7\xe1\xfa\xb1\xcd\xd3\x1c\xc3i\xf8\xb3\xfa\xc8\xf8y\xcb\xb8\xf8em\\\xf2\xcd\xb5\xa3\x92r\x8dc\xa2\xde\xdb'
+    b"+\x96\xd6\xe0V\x03\xb5\x9c\x14\xd3\xf5\x9f\x86\xa6~\x1cQx\xe317@\xe7\x8e\xa4\xd52\xc3'\x89\\]\x95d\xf9d\x834\xe3-\xa2o\x1b\xa9^/\xce\n\xf2-C\xdb5#uP\xe6^V\x01c\xcc?\xe9"
+    b"}G\x97\xcc\x9f\x92\x82\xd7\xf9\xa0\xf9\x9c`\x04F:\xcf0e\x89Z\xa7\x89\x9bB\x05<qu\xd9xr\x19\x86_;\x86 \x851|P\xa6\x15\x19\x98\xe67\x8a'b\x0f\xe1\xa3k\xca\n\xf6\x88\x97g\x99ky"
+    b'\x05\x0c\xeb\xe94\x87)\xe8\xf6\xfcS\x9bc\xb41%\xae\x7f\xe1\x12~\xf9G.\x17\x88\xf9\\\x92\x1f\xd8\n\r\xe0\xb2\x7f\xac\x01\xbe\xfe\t\xdb\xf0\xcd\x87l>\xf3\x0f\x82\xe4\xa7>l\xddK\xb85\xb3D\x90\x16\xae\xbb'
+    b'~\x88S\xb4A\xf3\xb3\x03\xe2\xe2-^\x96[\xc9z\xe7h\xddFA\x92"[4\xf0TZ\xb8N\xc3\x00\x91\nRx\x8a*\x95\xbc\xce\xf999\xd98\xdb-\xfb?\x90/Y-O\x17>\xc6\xb0O\xf2\x85\xb88'
+    b'C\xd0\t\xe2K\x92y\x99~\xc88\xdc\xc8\xe7\xd4!\x97\xa74\x19\xe7\xe7\xc9\xc9\xa4@^\t\xea\xb9\x8d\xba\x19\xf8\xfb\xfb~r{{\xeb\xbc\x92\xfd8\xc0\x1a\xc9\x86\xc1i\xa8\xb9{pT\x08C`N\xfe\x13\xf8\x9c'
+    b'\xf2M#\xe7\xca.\x7f}\xefs\x99S\x80PEY\x94\x0f^\xbex\xfd\xee\xe0\xf5\xd3\x97\xef\xfeq\x80x8\xdb[\x0f\xd7\xc4\xf4\x84\xf9\xd7\xa8\x167r\xec\xcdD\x8d\xd9\x0c\xa514\x1a[\xf6\xe9G]:\x0f\x15'
+    b'\xbd>\xeemA\xcf\xb1\xc6\xf4d.n]\x13\x84\x8ac\x1c\x0e\xc9\xaf7Ek\x1c{\x8db*lT7\xf1\xbc "\xe1\x06\x0eZ:\xbb\xfb\xaf\xfd_\x7f~\xf7zw\xff9w\xf7\x07\xec.]\x0f\xb3b\xfe:'
+    b"?'\xa8\xa88\x174\xce\xc9\x01\xbc\xd7psR`\xbb\xf2\xdf\x88\x1a\xaa\xc7\xce\xa9\xfb\xe8\x85\x06\xd7\x9e/\xc1\xb2f\xad~K\xabd\t<\xcb!^\x96\xf8\xa0\x9f\x08\xf8\xd6\xc3\x95\xcc#\xde\xd7\xacn\x1f\xc11t"
+    b"\xda\x824\xbe\x97\xc0\x8c\x9ay\xbb-\xd8V\xa4\xa1V!\x86\xc7\x00\xd2\x02e\x92\xa2\xca\x1a\x8d\xe3\x8ei\xdb\x8a'\n(\x80\x9b\xce\xba\x00\xda4\x08\x1a3\xd6\x0e\x14!\x887Q\xf6\xc8\xbc\xc7\xe0\t;?9\xe9\x05"
+    b'S\x1f\xe8\xe8#\x19\xa9{\xcaQ$\x7fkl\x06\t@?8\x0e\x91\x08\x16\xac\xe9EZ\x02\x1d\x18gxo\xf1\x80\xcc.{\xb8\x9aC\x80N\xf0\xb5^H\xbc\xafB\xc7\xa3)\xc8G\xabX\xd9\x90\xfa\xa4\x88[\x02'
+    b'\x12\x14!6\xc25\xc6\x1b\x92\xa1\x8bS\xc4\x99b\x9b\x06\xa1\xf0\x89\r\r\xce\xe3\x94\xe1\xb7\xb1\xa1`\x9e\xa9:r5\xa6jp\xbay$\t\xff\x1er\t\xff\x18\x7f\xd2j\xc8\x80\x1fj\xad\xe1\x80\xf1\x97\x0e\xd9N\xac'
+    b"bp,\x1b.\xbcu\x81\xbbe\\1W&\x99\xb8\xb0\xdd N\xb0\xccZ\xd3\x14aa'\x16o\xc0\x7f\xc6\xf0\xb8\xf1\xe5\xffq\x1a{\xf4\xb7\xd8[T\x97^_\x12;\xbe{\xff\xdb\xb1\xa2\xacZ4$\xee\x0f\xd3"
+    b"\xde\xb9\xa6\x02&\xfb>\x89\xcet\x0f\x9d\xe6'\x95\xdc\x0f\xb0\xba \xa6\xbf\xfc\xf5gT\xf7\xff\xfb\xcb\xa7?\x8bo\x00\x9b\xb1\xd0w\xbc\x12u\xff\xb9\xea\xfa)\xce*\xad,\xfa\xe7 yAN\x16\x93\xf7\t\xb5\x88\xe9"
+    b'\x90\xfb\t\xf1MR\x1d\xa55\xc0J%\xf2\x01\x98\xb2\t\xa7_M\x95\x97;\xcf\xc7\x1b88\x89\xe1\xaa2\xb8X\x90\xe2\xe3MH\x83\xa2\xeb\xe1\xa2\xd0m\x8c\xc8\xa2\xbe8\xc5\x1cA7\xf3\x92,\xb9\xa4X\x98\x17p'
+    b'\xc8\xce\x08u\x94\x81\x98xn\xed\xe11\xf3\xad`\xaf\x16\xf5\x86\xb5\xe7\xb40l\x90\xd4G\xde?\x1f\t\x17{Fw\x9d4\x083\x06\x8b3\x10\xcdG\xb7\x17\n\x8c\x02\x86!\xb8\xb3}\x1f\x06\x15a\xd7\x12\xd3\xc3\xee'
+    b'\xfe\xc6\xa1\x9f}\xf8>\x05\xf8\xb6\x9bo1\xe0\xf3\xdf6s\xd6NH0\x1b\x07\xb2\x92r\xfeS"\x19M\x9d\xe7\xaf\x04\xfbk\xebC\xed\xc5\x95\t\xa5q\xb1%\x18\x19\x1aD\x85\xde\xa8\x1d\x06<X\xb9%6\xd6\x06'
+    b"-\x04 y\xac\xf6\xa3\xe6\x0c\xa0\x85\x84\x07\x97\x05N\x103\x93\xdc\t\x83,\x14F\xe0]\xf9ViE\x08\x9c\xe1\xe0\x12\xf8\x8b\xf3\xe4_\xc5\x04(K\x82\x16\xa3\x92\x99\x9d`\xce\xa35'\xb5\x1e.\xba\xacV\xc3\xba"
+    b'\xebJQQ\xcc\xc6\x1b\xad(J\x05\x8d\xf1\xb7<\x0f\xfc\xd9\xd6QTcr\xed\xdcK\xfc\x07Rw\x07\xba4L\xb4\x17\xc1\x1a\xd4\x82\xa7\xecd\x99i\xf3Q\x07x\xd2@N\xd0\x93P\xa7]\x12\xfc!\xae\x12E)'
+    b'\x1c?w\x9a~{F \x05\x82a\xe2\xd1\x18&\x06\x98\x80\x91\xa6b\xdc\xb8\r\xb7\xc6m\xf5M0\x004\np\xe1\x1f\xbb\xc3\xca\xff0/\xd8\x9d\xcd\x9dv5~\xc2\x9e[G\xffIrX3\xe8[h\xf6\xf7\xee'
+    b'\xf8\xac\xff\x9c\x83(\x7f2\xb4a\xf6\xa7\xca\x04ce\xa3K\xb8\x8a\xcb\xd4\xb3\xb3\t\xca!x\x85\xb2:4MN\xb2\x8b\x84\x0c\x17\t\xe96*\xfa\x9eE\x08\x98\xfdj\x90\xecN/\xc9^\x81\xd5-\xa6\xd8\x07\ni'
+    b"\x14\x0b+\x12K\x10`'i-&\xaa}\xf7{N\xb7\xd1\x1c\x8a[\x1f\x11\xec`=\xb3q@\x1e\x1b\x8b{e\xbd'\x83\x1a\xfb\x1b\x07^F\x01\xadF\x17\x83\xf8YO`j\xfe\x85R\x1e\x7fC\x0e\xabN#\xf4"
+    b'\xe0\xf6\x0f\xdb\xbdAZ\x96\xe9\xe5\xde\x02cE\xba=#\xb7\x91k4\xd4\xfe\xcf|:\xbf\xb3\xdd\xdd\xea\xd1(\xb6>\xde\xdb\xbe\xfb\xc3\xdd\xfbw\xef\xa3\xfe.*\xf3\xc0\x95\xf9\xfe\xee\xed{\xf7\xef\xdeSFr~\x86'
+    b'l8v\x88\xe2+\xbb\x1d\x0e\xee%#\x81A\xd3\x99\x93H\xe4\x1f\xe0R\xbfJ\x89\xf3\xda2OsJT~\xfb\xbe\xf1\xab\x85a\xee\xce\xc3b\xf8\xec\x80\xb1\xf4\xb74a/\xce\x1f3\xa6\x0f\x92\x1fw\xb8\xfb\xd8\xc8'
+    b's\xf16\xb7\xb7\x08\x85\xb6E\x03L\xe7a.^\xae\xbeV\x08\xea\xbf\x1b\xc5M\x12mb\x82\xb4\xf5\xf1\xfe\xfd\xfb\xe3\xef\xefn\xa3\x07t{|y\xe7\xe4|\x9ex[\x9a\x99\x8b\xa6\xf6n\xdf\xaf\x07j\xf2<\xd9\xd2'
+    b'\xb7\xefs\xe9\xed\xed\xa8\xb4\xa1\xd5\xbe\x97w\xef\xdf\xfe\x1e\xfe\xdf\xd0K\xec\x1e\xce\xaf\xef\x9e[\x01\x9e\xdd\x87\xc1\x0bY\x066u\xe7SI\x1a\xc0\x9b\x11_m\xc8\xe7\xcb\xa3LI\xb0\xb8\xb5\x03Kw\x8bg\xfe\x16\xe7'
+    b'O\x00\tc\xbb\x06\n\xf4\x8d\x9b/\xcc<\xa6\x9d\xe85\xedDu\xf8$\xef\xdc iRZZ\x0b\xbf\x93\xa0F,A\x8d\x80xn\xdf\x87\xbf}\x80\xbe\x1cS\xa4g;:%\xb7x\xdc\xa4h\xe8\xba\xd9\xf8\x0e>'
+    b'\xdf\xb4\x96~V4\xbe\x0f\xe6i{\xeb\xee\x83\xbe\xaf\xc7}\xbcAM\x84[\x11\x0f\xb5\xa3\r\xe6\x9cc\xc9>w\xe9\x165\x10\x9dx[\t\x92G\x8b*M\x01u\xb4\x8bv\xf0\xbc\xc5x\xc7\x17\x9cJ\x8bp\xfap'
+    b'o\xedb\xbd]j\xb6\x9f\x00}1\xe3\xa6\x87\xe6\xa8\x91{\x82\xc5\x0fn\x90N\xb1\xfa\x10\x05A\xfa\xe7\\&\xf0\xb74\x93\x8e\xaa.~\x00b\xaa\xad\x97\xbe\xd8\xdcI\xeel\x7f\x7f\xffA\xb4\xd9\xc3\xc1\xe0\x85 \x83'
+    b'\xc1\x93\xf2\xc0\x0c\xa6\xa9\x9f\xbfs?\x7f\x87~\xe2\x97\xae\x9f\xbf\xaf\xd0O\xfc\xe0\xf0\xf7#X\xc6\xdb\xdb\x0f\x9az\x0b\x8f\xe3\xadO\x9e%\x8c\x95\x00\x85\x82\xed\xdev\x87|\x12\xab\xfa0\x80:\xa6\x7fS\xb4\x94\xdf\x8c'
+    b'\x9b\x8e\xba\xf4z\xd7`k`?\x86\xf4\xa7\xfa\xf7\xc7\xda\xc5z\x10\xecu\x97\xdc\x95\x95\xf9J\x901QH\x0e|\xe0\x93?,\xf3)0\x06\xd6\x82\xe9\x82\x985\xae\x16\xe5\x07\xe2)`\xcd\xf7\xd1\xee\x95\x8d\x9f\xec\xb1'
+    b'\xb4\xe4\xf4f\xa4\x87I>\xe4U>g\xaf6A\xbd\x18\x93\x8a1\x9f\xb3\x1b8[\xfc\x99\xef\x98e%B\x80\x90\xf6b1\x1aM\x82\x04\x10\x8e\xbf\x11\x8c\x0e\x0e|FA\x0e\xf8\x11\xac\x92\xd4\x9b\x02\xb5qZP\xea'
+    b">\n\xcb\x1771\x9e\x07f\x8e\x1e\xd6f)\x9dV\x17\x1c\xce\xa9\xaaQ\x0e\x0b\xcb\r\xb7\x03LcN\x8a\xd0|\xca\x113\x88\xc3T9\x14&\x8fgbM\xf4\xdc\x0c\x875Z^'dL(\xfa\x013\xe8\xc8T"
+    b'\x0e\xf0A\xb7s\xf2q\x03G\x85N\xa2\x1a#\x82/\x06\xc5t1Cx\xbblJ\x98\x0b5\x7fl*Tf\xd5b2\x0f\xc0B\x0f(\xca\xb9\xc3\xfd@xJ\r2\x91Z\xab\xc51\xb0{UK\xec\x8a\xc5KI'
+    b'\x826\xe6%\xcc_J\x1f\xf8\xda\xfb\x1c\x8bA\x9a\xd3\xc8\x99dP4v\x07\xce\xe7\\&\xa9\x8f\xc1:\xe8;bn\xd8\x1a\x16\xc8U\xed\xb8\\E\x0e\x12<\xfb0\xa34\xff\x81\x1b\x02\x12\xaa\x97@\xd5\xf3*3L'
+    b'>\x1a\x8e<\xec\xaa\x1d\xf1\xcd\x96\xe9\xcfZ(Wo\x86\xb7o\xdd\x11\x9f\xba\xcf\xde\xcf\xf5o\x96/o\xbc\xc0\xc2SVH\x89\xaf]\xec^\xdb\x92\x02\xe3\xd4\x8d\x97\x92X\x91\xea}{\x8ft\x1cX\x88[U\xc4b'
+    b';*_\xcd\x8d&#\xda2q\xb1\x10\xd0\xeb\xba\xa2\x12j\x15\xcb9@\xd3x\xcb\x9d@\xf7\xcf\xbc\x0b\x87$\x8fc&\xa3\xb6=U\x9dH\xa5\xd0\xaf\xd4|\x1d\xae\x0e\xd9\x85\xa8\x12\n%+\xb3\xffY\x80\x14\xfe\xd2'
+    b'\xd1\xcf\xee\xa7\xf3b\x8c\xe8\x1c\xfe\x04^q2\xa1\x0elG\xccy\x1c\xa8\x0bLU!\xa6M\x87\xed\xa7\xd5`\xfe1HW g\xc8"r_\xad5\x9e\xd2\xab?\x04g\xf5\x84r\xf8\x16\xe5\xa5\xe0Y\xb9\x86\x05\x93'
+    b'\xad>\xbc>\xc7\xb9\xecO\x87T\xe6\nD\xf1\xa69h\xbe`cD\x9b\xdd\x11\x88\xfe\x8ad\xc3\x1co\xf6\xf0\x86]nm\x9dH\x90\xbd\x16\xb8Nk\x88\xd6\xc9\xaa\xef,`H\xa6\xd0\x8c\xddW\xd7\xc0\t\xc8\x17{'
+    b'\x97\xfb\x98s\xc2k\xfb\xc7\xe4\x14\xe2\xe1\x9d\xec~\xd52\x8a\x95e\x94\x89V\x82F\x15\xe2u\xfb\xa5>\xd9.\x1f\xa4\x8b\xf4\xe3\xd8\xeb*1\x1f\x8b\xe6UPO\x90[\xa0\x90K\x0e#u\x9e\xdc\x06\x16\xdf\xd5\xc6J'
+    b'\x8c\x8a\xa3\xa1\xc8\x80\x90bl\x19\xbb91\xa1p\xd8\x7f\xf1\xba\xffZ\xcc\x9f!\x97\x15\x83\x18\x85\xc8c\xa1\xf0\xd3xB\x14\xbaF4\xa9X\xf1\xee\xf4\xd9\xc7\'."\xde\x0b\xf5R\xd42\xa4f\xc7]9\x1d\x87\x83'
+    b'\xb1@\xc9(/\xbd\xf2\xc3\xe4b\xd8q+\x16Ca\xa0*\x9e\xe3\xa4\xaa\xa2\x1c\x91O\xa0\xe8\x07-|\x8b\xaf\xca\xabE8\x82\xb3{\x8d\xf5\x8d\x8c1@\xeeM\xa0\x9bS\xb1\xb5\x87\x89B\xa3\x8bz\x8chG\xb6l'
+    b'\x84c\xa4\x91V\xaf\xd5P\xec\xe2\xd4\xc6\x85\xdbB\xecf\x81\x0e\x7fC\xba\xb4\x88mCF\xb4\xcf\x86[6}\xa29\x00#\x06\xb8B\xe1\x0c\xab\xc4\xc5\xa0\x92o\x9f~\xceP\x96\x15\xd9\xbb)=\xe3\x946"\xedP'
+    b"\xdc\x90\x82\x97\ng:\x05v\xd5['4\xb7\xa9\x83\x1c\x0cyD\xcfQ\xec\xd5\x00W\xe3\x89\xc2R\xbc\xb9|\xf9\xd0\xd8\xda\x89^F3\x8a\xf0\x80\xc1\x00\xfc\x8c\x9a\x8f\xbc\xff->|\x86\xa4`\xe9\xfaa\xa9\x17\xc8"
+    b'*\xc3\x12:\xd8\x02k\xa5@\xfc\xc4\xebG\x87\xa5\xd4EZ\xcbGX\xb6e~\x9e\x96\x9cD\xd9\x94i\xdcl\x01\xa0Kd\x05S:"\xecI\xf2G%\xa2\x83\xf4$-sZ\xe5g@\xf6O\x8a\x8f*x\x9c\x89'
+    b'$\x83\xb2\x88#_\x08\xd1J\xfe\x03\x08\xb3\xfa\xda\xa5\xfa\xd0}\x875\x92\x1e\x17\xcf\xfd\xe2\xf4\xcc\x7f\xc8\x91.\xa5\x1a\xb6X\x8d\xcb\x82\x8f\xba\xba\x92\x13\x02,\x9a\xeanqz\xb0\xc23\x82\xb90\xc4I\xb7\xdf\x08h'
+    b'\x0b\xd4I\xd0\x85\x17\x94\n\xc0\x82\xb4\x02)*\x13qY\xb2>\xdcd\xfb\xe3^\xd1=\xb2Jn#S\xdc\xe56\x92hy\xfb\n\x98\xaa\xdd\xf9\xbc\xcc\xe1\x1c\xc1\x05r\x91\x8d\xde\xe7\xf3\xb1^\xa6(E\xc4uq$'
+    b'(,>\x19\xfa0aRA\t6]\x87j\xd9Y\xcc\xd7\xa8\x9f\xf2c9 \x86\xce\x89\xd2\xb6\x95%\xe9\x90\xf4jD\xbe\x95\xd4\x1c\x83YY\xcc\x0b\x1c#+\x8d\x06\xc7 \x19\xdaV\x89\xb2\xb2\xa7\xbb}\x1a&\x9b'
+    b"\xd5\\\x9eL\xc8M\xff\xfcgQ\x7fEe.2\x8bp\xa7\xda\xd4\xd5C6\x1d8`M\x95\x9cY\xd6\xad$'\x85\x016\xc5\x9b\x80\xa0Q\x14\xea,\x9f\xc7S\x92\x02\xdd\x9c\xb4L\xc9W\xe8;s\xd6\xd8u/\xc5"
+    b'\xf1!xFu\xdc\\\x84\x8b\xda\xae\\\xa7\xc2\x95 \xc2\xd7\xb5\xe8\t4w\xcfH\xe1\x00\x84\x10\xa7O\xa2\xaaE\x05B\xe6\x10v\x01\xab$\x11\xe5\x07\x84A>\xf7\xb8\x93\xa8-4n\xddU\xb6\x18\x17\x06,2\x18'
+    b"\xcb'\xb5\x87\xe1\x01\xe9\x8b\xa5\xccCJ\x1a\x91Gn\xe6a$\xedH=2\x1f(6\x15\x93\x0f\n\x15\x99\\]\x85\xde!\x08?\xf4\xe2\xa4\xde\rF\xb1\xe4C\xf8*\x9b\xa4\xe8\xd1\xf72e\x90\x04\x8f\xcc\xa9!\x01"
+    b'\x9b\xde\r\xff\xcd\x19Y\xb2\t|`\x86\x01\xeb\xa2\xb2!\x9c#\xbe=\x8b9G\xde\r\x1c\xd1d"E\n\x14\xa2jr\xa3\xb3\x9d\xca8\n`\xa4;"\xd0:/\xb4|\x9c\x1d\xa3rY\x10\xf0\xe0B\xa3\x8d\x9d\xfc'
+    b'#=Vx^\xd9\xbe:`\xbe\x9fp(]\xec^\x15\x8c\x9a\x9e\x0c\x10\xca1H\x12K\xe9\x07l\x99\x01\x90\x84rw\xde\x95\xc4\xac\x9d\x81$\xa36\xe8aL\xb1\xd7+!\x10hC$T\x06\xa1\xbed\xb63|'
+    b'Y\x8f\x89\xfa0\xa0\xd40*\xac\x8f\x98U~"b\x07\xdc]}\x8f\xfa\'\x90\x89.\x7f\xbb\x84C\xa2~S|@\x91@\xda8\xc7r.\xc7\x88i\x84;\xb9\xd7z\x13x\xaf_\x8bCGO\xa9\x93\xd1Cu\xcc'
+    b'\xd0\xbc\x19M\xdai\xeaB\x1bH/-\x089\x1c\xb8mZ\xa1f\xdaX\xd7\xe2\xf5\xecE\x08\xae\x81#\x03\x148\xe4E\x16\x13\xeaF\xa2n\x0cXY\xf0\nWv;\x84\xee\xf3\x12B\xc0\xed\x9b)\xd1\x1e*o\x1f'
+    b"Z\xee\xf9S\xb7\x9c\xf8\xa5N[\xeb\x87\x8d.\x13kMf\xf5k='j\x94\x87\xe6\xd2\x9b\xd6Ws\xa3X\xb5\xed\xd8\x9b\xe2&\xad/u\xadX\xe2X\xd1`Xnn\xb6\x17\xab+\\\xeb\xb5=p\x07U0\xbc"
+    b'un\x1f]\xe7|\x01ec\xbd\xff7r\n\x0e\xb5\x8e\xa3k|(\xa2\x01\xd7?\x0f\xf3=\xd7\x97AK^\xe3\\\xb1|A\xae\xfeL\xa7\x08\xbd\xec\xa8.I\xad\xd5\x97\xa6\x86\xf2w_\x8f\x95#\x8a}9.C'
+    b'\xf9\xbb\x1f\xa4\x95$@QKM\xa0\xd5\x80nl\x1dQ\xce3vA\x8f\xeeA\xbc\xa2\x95&2\xee\xc5\xa7\x9a\xef\x06\xbd\x18\xb4yp\xf0\xdb\x15\xfc8\x9a59N/S\xe3,Y0\x0f\xb9\x1fe\x9b\xa4\x8c\xf3\x05'
+    b'\xfe\x14 d\xcdb5E\x1b\xd4\xbaE\xca\x9a\x19u\x85\xd1\x7f=4\x1a\t)f\xa3mO$ \xb3v\xb78oP\x9e\x1fY\xc9\x00mmu\x85\xca\n\xea\x94\x9a2\x05{X[]\xbf@\xe4\x02\xfe\x9a#%'
+    b'\xc5\xe6k;*J\x8fHe\x12}\xfa\x97\xa9D\xd6\\\x8a#\xf5\xf6\xa1pu\xee1\xf3I@Z\xccO=\t?%\xb7\x11\xcd\xdb\x94\xc3|\x98N\xa3\xe2\x14}\x7f\x91\x1a\xe2yQ\xbcO\x02?P\xc6^\xfa?'
+    b'\xa3/\xd8\xe5\x94\x0fd\x9d\x9c\x16\x92D\xa5\xd0\xd0\x01\xcb\xa3\x91jg\x89H-<\x1c\xbdf\xbfb\x8a\x14w\xe8Y\x98qTcK\xcf\x048\x8b\xc3\x12D<\x0b\xdc\xf5\xb3\xbdK\xa4\xd7+\x04\xf9r\xda\x84j\xfe'
+    b'FBb#W\xa8\xe8\xdd\xa4\x00I\xf5\x80Q\x84p\x9e\xf7\xe1zc{\x16)\xb17(\xae\xb5\xd3\x04\x9c\xcb\x99\xd1\xf6\xa8\xc7;\xb53\xe5\xd2c#\t\x90b>@R\xdb\x97\xa8\x8fg\xff%YO;\x1cBN'
+    b'\t\xca\xb8f\xbcum\x8f\xdd-\xabu\xcea\xa5\xbb\xec5\xd5\xe9Xu\xbeC\xae&lx\x06\xf7\x9e\x9aY\xbe\xf0(\x92\x84\xe1\x9e\x14$\xbe\\\xa4\x97}t>\x1fe\xd8;da\x06-\x98\x0f\xfb\xc0\xf7\xb9\xc8'
+    b'aXS\xb4:\xa0K\xf1\x9c"J4\xd6X\\\x8a/Q\xebt\x81\x9e\xeaPq\x99\x8d\x8bi\xd6V\xef\x01n\xc0\x82\xe3^L\x82\x82\x10\xae\x9a\xf3)M\x97%\x87J\xf9\x88`\xa9\xc1\x19\xd0\xc5\x96\xdc\x91H{'
+    b'\xf7&\xc5\xa8{\x88;\nX\x87O\xa8\xc6@*\x01?7)\x81IG \xf7\xa9*\xdd\xe1I\xc4\x0c\x07T\xad\xa6\x80\xc1O}\x1dF\xd8\xa6\xdf\x0c\xff\xdb5\xb8\xee\xc1\xbe\xac\xda\xf6e\x9fNA\xd3\xee\xac\xd3x'
+    b'u\xd7W@q{\x96s\x7fpI9\xfc\x92\x16Q\xf7\x8b3S\xe4S\xd6\x8c\xa9h\x8b\x10^\xa8y\xb2\xcb\xd8%\x04\x87}\xf22\xd0\x8d\xdf\x0bs\x1b\xf7\x9d\xdf\xa5\x01\x8e\xa2\xdc\xbd\xafQC\x8dx\x1aU\xb2\xfe'
+    b"$'\r\xf2EQ\xbe\x7f\xb4>\x882\x1a\x8b2;\xa3|\xac\x9e\x98\x16\xa5|=7!a\xa2\x9e\xc6\xb0\xc1\xbe\xea\xa5\xa9\xc9A\xc7\xa7\xce1\xad\xf5\xd1\xa6\xca!Y\x8a\xfa\x17\x91k\xd4\x9eO.i\x9b\x8b\xdb\x04"
+    b"W+2/EO!\xdd\x84\xcbw\xfaPB\xe4+\tz$\x97\xfb\x00E\x1f\x83\xe5+\x97\xb1\xb7\x96*\xa7z\x1frH\xba~he\x0b\x97\x87\xfa&\x80\x82\xaeg\x12\t\x89\x17'\xa6b\x88b\x9b\xfe8\xab\xa5"
+    b"\xdd\xe84\xa2\xc9\x7f\x01g\xe43Z\xa4sU\x03c>\xf0\x901R\xdcD\x87'\x87\xde.p\x98\xdegb\n\x8b#\xdd%\xf7\x89\x9b5\xeb\r\xd3\x17\x9b\x07c\xd6\x8d\xe1\xf3\xc12\xa8\xfcF\xa6\xca\x83a\x98\xbc"
+    b"\x062@\x16u\x1f\xa9\xa9\xc9>U\xdb\x92\xd2\xf1a\xa8\x1cL\xc5\x97\xf2\xf1/O\x1f\xff\xc7\xfe\xaf?\xf7\xd6\xe2\xa4\x1f\x12\xc9\x97\xf2,\x88\x16]\xe8\xfde\x06g\xea1E\t\xd9\xd3.\x01\x1e\xb2\x07\x1b'*8"
+    b'_H\t\xae9X\xd1\xd6r2%eMh\xe93\\@\xd3u4\x18\xccf\x97\xccp\xf05\x84\xe8\x9cC\x99\xff>\xcd\xa4\xab3\xa8i\x17\xa1\x03\x8bb<\xf0\x01\xa0\xd1\xf89DfA\x19\xc3E\xc1[\x02\xcf'
+    b'1\xe8\x84\xe6\x11\\\x14\xeb(\xc5U}\x89\xc3\x18\x91\x07s\xd5"\xf7T\x19u\x16\xd3!\x01\xd0\x10~\x08\x97\xb0\xcc6\x82\x11\xb0\x11\x98\xd0\xb9Y\x15\xef@*A\xde\xa7\x89JR4\x13R\xd6s\xd5j\xb3\t\x84'
+    b'pPGx\xeb\x9e Z\x90x\xf2a,*V\xf7\xab&a\x1a\x07;\x83\xfd\x9be>\x06\x14\xc4\x1d\xf9\x9e\xfd\xbe\xa8\xe6T\xbfF\x8fJ\xc2\x10ric\x13\x0f\x19 \x05\r\x9d\x83\xd3ph\xe82\x06\x83\x8ei'
+    b'?m3V\xbbK$\xd1y>]\x90\xa5\x88\xb1H2\xca>p\x9e\xa5\xd5\x02\xd8\x86d{k\xfb\xfe\xc6\xd6\x83\x8d\xedm2b\xec\xbd\xd8}\xf5\xe4\xdd\xc1\xd3\xd7\xaf\x9f?\xe5\x08\xd3\xfb[[\x12b\xca\xef\xde\xec'
+    b"\xee\xbf\x96P\xd9{\xf4*\x0e\x96u\xc6O\xd4CN\t^\r\xb7!\xe9d)\xd4\\\xd6f\x84*\xc6\n\xff\x80S|i6\xdd\x1ae\xfbs\x19\xd1\xfey\xb0\x07'\xa3\xe2\xac\x81eF\xac\x02[\xa6P7\xcb\xf9"
+    b'\x0e\xeb\x0b\x83\xed\x9e\xc3V\xc5\xd3\xb6\xa6!\xef\xb5q\xff\xb0q\xfb\xfb>\x9f\x15\xe3\xb3\xe7\xc2\x0f\xf0\xd9yA!\xecB\x1a\xcdD\xec\xbe\xd9\xfdo\x99\x88\xadh\x8e^\xbex.\xf1\xb9\xdb\xf7\xb6\xac\xe5\xc1\xde\xe55'
+    b'\x18\x9b\xcd\xb7#\x1e\xde\xdb\xea\xbb\x1d\xf8\x7f\xba\x98\x17oG\xaa\xcba\xc6Du\xe3\xc2g\x92\x16\xd8hu9m\xa2\xd8\xa4C\x88\xed\xf5\xca\xb8$\xa6\x93\x0b\xba#\xfdI\x18\xd2\x08)3\x83\x01\xc1wI\x1f\xf9\x08'
+    b'\xe0\xc4T\x14&<\xa5%(39\x89x\xd3\xab\x83#\x90\x06iY\xb1\xad?\xa4\xd3\xbcR\x88X3\xcfY\xae\x1c\xf2 9\x80)\xd9`@\xcc\x11\xf7=g\x83:\xc6\x97\xc8\xceF\x10~w\xceL/}\x0e\xc9'
+    b'9\x85w2\x89\x9a\xa4\x88\x81\x83\x8b\xa2\xc4\x9e`\xb7W \xf1\x88?,\x93,\x93\x01\xb2\x1f0\x89\x0fe\xa5H\xe8\xa2\xaeS\x93\x05r8\xc0`\xc0\xc1\xe4\xbd\xcf\x8c\t\xe1\x05\xc2v\x83eG\xbf\x92\x88\r\xc1\x1a'
+    b'\xe9&\xe1\xd0\xf5\xba\x03\xe7\x8d2\x85YUpK\xb2\xb0\x9b\xa7\nkL\x14\xe6\xe6\xf2V"(M\xd7e\x0cS\x90&Q4\xb6\xe5\xf5\xb3\x01T\xa1\x01( *s\x95\xa0G\x19\xb3\x95}\xe4+\'\x92\xbc\x8dY'
+    b'F\xf4\x12\x16\xbb\xd0\xaeB\x7f\xc3\xe6a#\xb6`\xc6\xd3\xb9\x00\xaa\x82!\x98BT\xce\x89\x94H\xfa#42\xf1\xbeE\xf5\x02\xf3\xba\xe4@D\xfep\xe4\x032\x11\x7f^\xbew\xf4\xb9\xc7\xd9v&g\xe1\x8a\x84x'
+    b"\xab4\x1em\x08\xea\xe7.\xbf\xabm\x88(\xfa\x8e\x06G \x01\xd1\xae \xf3/E\xe1E\xb3\xfe\x05\xcb\x80'\x86t\x03\xd0\x9e\xbdq\t\xba2\xca\n;-4\xa7\x05Uc\xe8\x87uM@zo'^o0r"
+    b'9$M&\xbb>\x8c\x94R\x00\xbd\x86sY\xcf\x87\x95\xb2_U\xf5u\x0fP\xb8oC\xaf\xa6\xb36_&\xe17\xaf\xf5\x06\xfc\xa6\xc9+,\x9e\xfa\xb8\xf1po\xf40\xd9,N\xfe\xb0\xbeX/\x0bt \xe7\xac'
+    b'B\xe6^`7\x1d\xc9\xaf\xa2\x10c\xc4\x0c\xcb\x8d\xa1$\xbe\x9f\x1cs*`\xa1\xe4H\xb5\xff;CQ\xc9\xa1\xc4\x88Q\x1e\xfd\xe4\t\xac\x82r\x99\xb2s\x1c\xb1*\xc4\x1e\xa3O\x9d\x8d\xa3\x1f\xc2J\xd2\xd2{!\x8a'
+    b'3\xb3\x19\xf7~\xae8\xf0\x1f\xc0D0\x934G\x19\xc2gJ\xa2)\x914I\x8c\x05\x92e\x91P\x89\x1b\xcc1uF\x11\x86\xbc\x1d\x9f\xe3)T\xc87\xdf\xd8\xc9\x9c\xd2\x13\xa6\x14da\x86-6q\\\x81\x01\x9d'
+    b'\x87\xffei\x89.]\xba\xdfm\xc7(\xdf:K\x04\xc7\x99\\\xc2f\xf0\x0c\x89\x9e\x88\x0b\x85\xa1\x17J\xe3x\xe6\x04\x95\x1b\x87B\xc9\x95\xa3\xdd\x8f\x8d=+J\xd2\x07ty\x15\xfbf\xc5\xbc^o\x0c\xc7\x84\xae\xe1'
+    b'\x1d\x8c=\x84mX \xac\xd0\xad\x90\x9d\x0b\xbdE\xc6\xcde\x1d[\xa8\xa5/\x80\x10\xed^\xa4A\xf8+\xa9\x12\x8bI\xa0\x12\x950?S\xe5\x8f\xae[\xbd \xe9\xdb5\x0e\x18\xd8?\x04\xd7\x00n\xaf\xab\xdb%`\xb9'
+    b'\x1c\x90\xb7\x82D\\\x18\xe7hO.\x0c\xd2#\x96\xd8\x91\xbe\x866\xdaotx=;\x87.rG\x9f\xf5\x9b\xa6J\x98Cg\x1c43e-n\xa1\x81\xf9*\xe8\x15R\n^WG \xe0\xb1\xef\xb9\xef]\xd3\xdb'
+    b'oh\r\xfe\xfew\xdb\xb9\x9fty\xfd8\xed\x11w^\xa4\xbcz\xbe\x9fW\xce\xc9\x981\xe7\xa8S\xdeM#%\xbe\x0b3n;\x1a\x11\x1c\xd1D\xc0O\rY\xa7&\x88\x18\xa5\x96\xbb;c\xc0D\x8e\xb7\x91\x98\x19'
+    b'\xa4\xfc\xaa\x9c\xa0\x88\x9f\x19;@\xa4>\xb1\x00\x11\xb2\xe0x"\x87\x0b\x97S6\x99X\xa5\xf7%\xf6\xf5\x17\xd2"fc\x12\xa5\xfb\x04\tbb\x85\x97\xeb\x07~-\xf4\x0c\xbb\x00i\xee=)\x06\x9e:\xe5\x99\xf7\x1c'
+    b"\x0e\xe4\xfcX3p\xbdB-\xd9?\xb1);\xd4\rH\x08W\xbfVc\x98:+\xf7\xd9$\x9dr\x0cf\x07\xe7\xfe\x18sn\x15'6_\xf5b:\x9b,N\x1b\xaa\xf4f\x04T-.N\xc9\xd8\x80\xd2\\>\xd5"
+    b'\x94*\x01je\xa0\xeb\xf9K4\x17/}\x9a\x13\xd7\xddA\x02\xab\x05\x17\x00\xf0\xa3\xe7~\xdb\x0c\xc8\xccE80dQ\x10\x85\xe55\x96!\xe3\xc7\x1aQ\xe1\xeer\x8fy\x89\xb63\xe6\x96&\xfd\x17l\xf9=\xd8\xca'
+    b'\x8c\xd6\x85zcs\xd9\xc1\x01\x1a\xe7\xc7\x8c\xc5F\x92-Kbr\x94&\xe9\xd4%&\xa73GRYj\xd3=\x88\xaf\xb2\xa2\xdb\xc8\x87$\xf4p\x9c\x99\x13o$KK\xca\x97\x10\x8b\xd4j\xaab\xf3\x93\xcf!A'
+    b';\x96\xb6\x1a\xe9`\xb1"$\x00\xf3@\xbaR\xe6M\xd1\x80\xd4\x0e\x87\xed8 p\xea\xd5\xce\xb5F\xcf0h\xc0\xe4&39\x18T\xeb*\x11\r\x9a\xd3\xa8f\xaa\xf3\x94\x8d*o~\x15\x9a\xa3n\xe8\xda\xee\xabh'
+    b'\xb6\x9c}m\xdb\xd9\x9fg\x16\xbb\xc60\xf6\xd7\x98\xc6\xfe<\xe3X\xbby\xcc\x1eR\xbd\x9a\x97\x99I\x13\x05A\xc3\n%\x8c\xc0\x13\xa3\xc1@\xc5\n\x8b\xaf\x87\x0c\xa9(\xb6\xe8\xd8\x19\x05\xa6\x01\xdf\xb0\x89\xc7\x85\x9d\x16'
+    b'\x8bJ\xee\xc2U\xe6\x85\xd3\xf6\xb0\xfcK\xf5q\xae\x18\xd2X\xb0\xf5\x899K\x0c\x1d\xac\x88\x87\xfd]\xe13\xbd\xe3\xdd\x1e\x0b\x04;I\x93\xdd\t$\x8f:3\x95\x0c=\x92F0F!+,W\x1b\xbd\x0f\xb6<\x86'
+    b"\xbb\x88\x10\xeex\xb8z\x95\xd3u\xc1\xd7[\xe5E'\xdb\xb1\x00\xb8\x03\xb70w(\xd4\xa7\xf4\xe2\xc1\xe8}\xbeD\x17R;\xd57\xd0\x8a\xcc\xd5wc\xb9*\x84!\x0c\xf8\x1e\xf9#\x04\x85\xa2\xff\xf1{\x9c\x04\xd6\x1f"
+    b'\xd6\xd0\x13\xdc\xc6\xf1$\xde\x05iL.u\x17~\x1d\xa3\xa8\x9aEK\x87\xbd\x89\x0e\x9ah9r9\xc5H\xd1\xc8\xe6[\xb2(}\xfe\xdc\x1a\xcd\x1e$wD\xff*\x97\xcaB\x9f\x98z\xd8\xae\xb3$6>\xfb\x98\xe2'
+    b"\xb5\xc9\xacC:\xbd\x14m\x98\x91\r\xb2\x0b\x06\xf3\x84>\x1f\xbc~\xb5\xff\xf2\xdd\xfe\x93\x03\\\x849\xda\xa1\xdc\x05\x9f\x8fmb{b\x80\xa5W\xf4\xf1a>>\x1aL\xf0<y\x94vz\xb1;'\x88JG\x8cs"
+    b'\xce\x80\x14&h \x91K;\xe1:\x14\xe6s\xb3\x96^:V\xf4\x01\xe5Z\xc4\xfcBb\xf6@\x1d{%\xd9\xd4\xa6\xb5\\]L\x1c\xb0\xef9eXK\x1a2\x02\xdcJ:lDa6\x9e\xea/1\xc1\x14\x10\xcf'
+    b'Zq\x0f-\x18\xd03\x9fP\xad\x86\xf5I*,\xd5\xa67aa\xb2\x89L\xeb\x0c\xf10S\x9b}[\xc8\x03\xfbz\x87X\xa4\x1e\x80\x13\xb9(\xd4\xf5\x15\x84\xe1\xf7\x05\xe2e\x08\xb9i\xe4\xcb\x1ae\xda\t!\x85\\'
+    b'\x8akaR_8y~\xc0\xceV5c\xc0Z\xbc\xdc\xd7J\x14\x8d\x12\x04\\<\x14\xc7B\xec\x1c_}k\xf5\xb5\xc6\xdc\xc8$\x1f\xfb\xeb\x87\xfd\x06|6\xb0x\xd9\x87M=r\xc9pU\xech\xf7FxR,'
+    b'\x80$np\xf7\x9b\xfa\xd40$\xd4\xf4F\xc8\x13H\xd3\xc4\x9e\x8a\xb1\xe4\xb1cC4\x8d\xb7\xe4\x80E\x08\xe3\xf6Z\xd7\x15BN\x00X\x907\x8d\xe6K\x9cU\x14\x01\xa0\xa5\xc5\x0c\xef\xf3\xc0@+wJ\x8a\xe7\xb8'
+    b'\xb6)X\x17\xea\x94v\xf6\xbdr\x0e\xa1h*w\x88\xd5\xf0@\xd5\xfd\xc6 \xfb\xe52\x90^\x894\x18\x95\x86\xb0\xf7n^\xa2a\\\xf5\xfav\xc2n\x18\xd9l\xe76.\xf8\x9f\x8bb\x9e>\xfdxL\xb8\x05q<'
+    b"\xac\x05\x05qj\xfe\xbe0?\x12\x9d\x8b\x16\x96\xa1\x82\x11\x8b\xe1)\x85\xbb\xe9\x1cD\xbb\xb4\xbc$\x99\xd6W'r\x0f+\x0e\x98\xe3\xd1\xabq\xbdb\xb4\xa2\x932\xcb\xa2Y|\x1d\xb8\xe7T\xd4\xa6\xc9fx\xc1~\x13"
+    b"e\x81\xd2\x7fA\xa7\x06\xb65\xe73O\xeb\x1cf\x07v\x0c\xa6A\xc6C\xcb\x90F\xa47\x109\r\xef`v\x7f\xe9D\xd8O\xf5-\xda\x10\x98\x1b'\xc2\xb2\xe1\xbc\xfe]\xe0\xfd1\xce\xc7(g\x13j\x8a\xdf%C"
+    b'"G\xb2Tp\n\x07\xc9~\x15\x1eq\xd1"<\xaa)\x07v\xe1z\xc03-$I\x12\x81\xca\xd1\x954\xa1\xa2-x\xc8\'\xb6y\xd01\xae\xde\xa8\xdd\xbd\xb2Ah\xb3Z\xf0\x87K\x84y\xf5\x9f\xfd2i\xde:'
+    b'\x10\xb5H\xf3\xbb\xc9\x88|\xe9\x8cr\x9dY_\xd6=Wt"\x19\xcc\x1b\xd1lF\x08q\x97\x8fI4\x126X8\xe3\xa9\x17\xb9\x8dm\xba\x12u=\xc5\x9c;\xef\x8d\xcayV9\x91#8\xdb\x7f\xf8\x06\xbcso'
+    b'\xcb]{_\xd7\xc4b\xe4\xa9\x95\xac,\x9e\xb0P"\x0b\x91H\x03}]\x8d.\xae\xe4\xd3\xb3\xf4\xa2\xad\x1f\xeb\xd5\x9cv\x96_67\xd5~\x99\x11\xafH\x99#+S4/_\xe6\xed\xa3a6Q\xa5\x8f1]7'
+    b'\x0e\x86e\x80\x16\xba\x12\x12\x95\x80\x0e\xd0\x01\x8eN%z\x7f\xd7\xb0O\xfcF\x0c\x95>\x1en"v\xa9\xfb\x8aWY\x10-\xd0\xb4\xe5\xbe\xa6\xa7\xdd\x97\xfa\xda-\xdb\x84\xb4^\xd4\t\x87T \xda\xe0\x86\xa5\xc3\x13\xbe'
+    b"\xfaE\xd0pF\xc2\x0ba\x10-\xbcq\x93q`\x01\x0e\xd2\x88\xd7\x9f\x8b'\xcb\x14\xb6\x1cQ\xd0\x9aW\xd8\xec%2\xf8\x10\x8a\xcfJp\x04\x8dP\x06\xce7\xed\xf1\x19\xd2\xd4\xc5\xb9z\xeeW\xea'z\xc6\xbe\x81\xcd"
+    b'\x91\xfbO\xa1\x0b\x91\x89\\L\x8fK\xa3\xf7M`>G\r\x8c.m\x9c\x00&#f\xbf\x97\xf8\nC\x05\xe7\xe5,\x83\xd5i\x87\x99\x11\x84^\x995q\x85y:\xe6\xcc \xbc\xc5B?;\xa3\x9d\x12\xde\xf3\x1c\xd8'
+    b'\x0b\x90\x81\xa8\x0f/~}\xfa\xee\xf1\xf3\xfd\xc7\xff\xf1n\xef\xd5\x8b7\x07O_\xa1WT\x87\xa6+#)h\xf3M>\xdd\xd4p\xb5\x0f\xf9i\n]\x19\x80\xcc0\xc7P\xb8\x1eg\xc8.\xa9\x03.\xb7d;\x1e^'
+    b'\x87\xc8v:e\xfd\xa2\xac\x85w\x11\xd6U\xea\xe3\xb0\x96\xdd\xf2\x7f\x0c\xa0\xc2\x9f\x7f\xf4N\x96\xc6E\xe1\xae\x8b\xeeWZ\xfcIh\x15u\xf5B|\x05\xe4\xd9\x83\x83\xd6A\xa1\x1c\x05\x91\x85$mfI\xb2a\x8e\xe1'
+    b'\xccR\xcdu\xb0\x10f\x0e\x820kJ\x89\xce\xb0z\x8eca\xd1\xd1\xfb_0\xa0\x83\xf7e\xc5\xbd\x88\xf8\x969y,R\x91\xd1%\x19\xef\x90d\x8c2B?g\xb3\xc4%6\x1da\x9d\xac\xd5\xa0\xaa\x06\xc8\x1e\x1a'
+    b"\x96\xe4=\xe5~v\xec\x18\xc14}\xfe\\g\x84\x11L\xb4\x15\xab\xc8\xa5\xd2f\x8a\t|\xfb|\xbd\x92\xdc\xc5\xa40!\xfdX\xea\xd0|\xaaIZ\x9d\t\x0e\x0b\xecqq\x00\x90\xd3' ?|@A\xda\xc4\x8b\x9a"
+    b'\xe9\xe1Z\x10\x1cL\xa8W\x9a\xb8\xcf\xfd\x08\x03\xa8:I\x17W\xce\x17\x85\x05\xebq\xa6T\x1f\xc0t\x1d\x91k\x82d\xb1<\x0c\xb6\xa0y\ro\xb6\xa3\x85\xa3F\x9eo\xad\rj_\xd500{@Rf\x93\x8c\x8d'
+    b'\x8a\xec\xdd^L\x8d\xcd\x16/8\xa4\x81\xde\x11S!G\x10\x16Z\xfc5UipZ\xa21\x97\xf0\xf1\xa7\x96\xd2x\xe6X\xac\x9f\x03\x0e3P\x1f+f\x8c\xd9?p^,`\xb3\xc6w\xae\xbd\x918(\x8b\xf8\x01'
+    b'\xb2y\x9ddu\xef"\x1bS\xef\xf6a,k\xe1\x96l\x00\xd9\xf7\xda\x80\x7f?x\xf1+\xa9\x04\xa7\xa7\xf9\xc9e\xf7\xd0D\x82F\x89\xd6\xceM\xd8\xeb\xb9\xee\x8as\x82MG\xf6{9\x0c\xa8\x8d!=\x8aX\xf5\x18'
+    b'\xba)\x1aCo\x99?\x98\r@`o\x8a\xffg\x03\xb2\x8e\x110\xb7=\x13ig\x13\xad\x98\x85\xebc\xf6\x1d\xcc?\xbd\xc4\xc0+\xe4\x91o\xf86|\x16\xa7\xd8M%O\xdb*\xf5\x91\xb8\xc9&\x11\xd7S\xec\x8a\xfc'
+    b'\xfb\xc7M\xce\xfe\xfe\x13\xfc\x0b\xf5\xda\xf8\xf7\xd9\xfc|\xf2\xd3\xda\xff\x02\x1e\x07\xdf\x1c'
+))
+
+EDITOR = (52847, '<!doctype html>\n<html>\n<head>\n<meta charset="utf-8">\n<title>FX Editor</title>\n<script src="catalogue.js"></script>\n<style>\n:root{\n --bg:#f5f3ef; --panel:#fff; --ink:#26221e; --dim:#8a8378; --line:#e2ddd4;\n --accent:#00857d; --accent-ink:#fff; --warn:#b33; --warn-bg:#fbeaea;\n --target:#1f6feb; --effect:#0a7f78; --value:#a8500a; --scene:#7b3fb8;\n --comment:#8a8378; --faint:#5d656e;\n}\n*{box-sizing:border-box}\nbody{font:16px/1.5 system-ui,sans-serif;margin:0;background:var(--bg);color:var(--ink)}\nheader{display', '  "the board\'s button once.", "hold");\n      return;\n    }\n    banner("The board wasn\'t happy with some of it:", true, text.trim());\n  } catch (e) {\n    if (e.name === "NotFoundError")\n      banner("Nothing reported. The board found no problem with the file.");\n    else\n      banner("Couldn\'t look: " + e.name + ". Is the drive showing?", true);\n  }\n};\n\nvar draft = null;\ntry { draft = localStorage.getItem("fx-editor-draft"); } catch (e) {}\nentry.value = draft || STARTER;\nrepaint();\n</script>\n</body>\n</html>\n', (
+    b'x\xda\xbd}kw\xdb\xc8\x91\xe8w\xfd\n\x18\xcefH\x9b\x84(y\xfc\x08i\xd9G\x96\xe5\x8cO\x1c\xdb\xd7\xd2\xc4\xbbW\xa3\xf8\x80\x04H"\x02\x01\x06\x00-1\xb2\xfe\xfb\xadW\xbf\x00\x90\x92=\xb3w\xf6l,'
+    b'\x02\x8d\xee\xea\xea\xeazuU\xf5\xf3{Q>\xa9\xd6\xcb\xd8\x9bW\x8b\xf4\xc5\xces\xf5O\x1cF\xf0\xcf"\xaeBo2\x0f\x8b2\xae\x0e\xfcU5\xed?\xf3\xe1q\x95Ti\xfc\xe2\xcd\x7f{\xc7QR\xe5\xc5\xf3]'
+    b'~\xb0\xf3\xbc\x9c\x14\xc9\xb2\xf2\xcabr\xe0O\xc2*L\xf3\xd9*\x0e\xfeU\xfa/\x9e\xef\xf2;lT\xad\xb1\xf1\xb0\xc8\xf3\xeaz\xc7\xeb\xf7\xc7\xb3\xe1\xfd\xe9\xe3\xe9\xa3x:\x82_\xcb0\x8bSx0\xa5_Iv'
+    b'1\xbc\xbf\xffd\x7f\x7f/\xc6\x9fQ\xb2\x18\xde\x7f\x16>{\xf4\xf4\x19\xfeL\x93,\x1e\xde\x8f\xf7\xa3(\xfay\x84]\x85\x93I\x9cU\xc3\xfb\x83\xc1\xb3\xc7O\xa3\x91~\xc2\xfdH\x9f\x97a\x91\r\xef\x8f\x1f=R?'
+    b'\x18\x82q\x1c\xc6!\xf5R\x85\xc5,\x86^\xf6\xa6O\xa6\xf1\x18[\xc5\xd3i<\xc1~\xc3\xa7S\x1e\xfak\x98\xae`\xec\xf0\xd9\xe3\xc1 \xc4\x07%\x8c\x03\x0f\x9e\x8e\x1fM\xc7\xcf\xa8\x9bI\xbeX\x104\x06\xe0i\x98'
+    b'\xe0\x83\xc7\xd1\x93\xc7O\xe2\xd1\xce\xcd\xce\x83\xebq~\xd5/\x93\xff$\xd9l8\xce\x8b(.\xfa\xf0\xe4fg\x9cG\xeb\xebi\x0e\xad\xf7\x9e,\xafv\xf7\x82\xc7^\xb9.\xabx\xd1_%\xbd2\xcc\xca~\x19\x17\xc9'
+    b't\xb4\x00X\x93l8\x18\x8d\xc3\xc9\xc5\xac\xc8WY4\xfc\x1a\x16\x1dDkw4\xc9\xd3\xbc\x90\xdf\x80\x82\xee\xcd\x0e\xael\\\\GI\xb9L\xc3\xf5p\x9a\xc6W\xa30MfY?\x81\xce\xcb!b+.F\xb3'
+    b'p9\x0c\x9e\x15\xf1b\xb4\x0c\xa3\x08\x81\xa3_\xde^\xf03>l\x0cF\xab\xd6\x85i\xeb9TU\xbe\x18\xee-\xaf\xbc2O\x93\xc8\xe3f\xb8`\xdd\xd12/\x93*\xc9\xb3aY%\x93\x8b\xf5\xa8\xca\x970\x81\xff'
+    b'\x00\x84Q|5|\xac\x80\xf4\xe6{\x84\x01DO<\xdc\x0b\xf6pd5_/\\U\xb97\xf0\x06\x80\xaa\x15\x8c\x951\xb2\x92l\x0eh\xa9\x0c\xd4\x8f\tj\x82\x99 \xdb\x00\x92\x80]\x84Q\xb2*\x87\xcf\x96W8'
+    b'\x95\r\x93\x9c\xac\x8a\x12\xb0\xba\xcc\x13D\x95\x1a?X\x16\t\x00\xb7\xben|\xc6$\xe8.\x86!K=v\xf3uwD\xd3\xbf\x8c\x93\xd9\xbc\x1a>\x19\xe8\xb9\x0ea\xf9\xc2q\x1aG\xd7\xf92\x9c$\xd5z\x18\xfc\xac'
+    b'\xc0\x8a\xe2i\xb8J\xab\x9b\x9d\x05\xd0\xda\xf5"\xbc\xea_&Q5\x1f>\xde\xb7\xd0\xb7\xc7xA\x1cjT\rdqov\xee\x97UX\xadJ\x0b\xf9\xc13l\xef\xcc\x00\xb6"\x90S0\x0e\xb3\x0c\xe8\xa9N%\x16'
+    b'\xc6\x15R\xf7\x06\x80U5>\xb6rh\xf6~\xfct\xba?\xdd\xd3=\x06\xb81\x9b\xb8\x94\xed\xea"\x13\x1f\x1aX\x82y\x9eF\xf6\x97\xf7\xa7\x110\x97\x81|\x02\xbb\xf1\xc9\xcf{\x8fusoY\xc4\xd7\x02\x16\xcd\x1f'
+    b'\x89jt9\x87\xed\xd0/\x01\xbb\xf1\x10\x1a\xf4/\x8bp9\xaa\xe3\xe3fg\xf7\x81w:\x8f\xbd2\xfe\x1ag^\xbe\xaa\x96\xab\xaa\xf4\xc2\xd2\xab\xe0\xe18\x0f\x8b\xc8Kq\xed\xe8\xc1\xc2\x83N\xd3\xd8\x0b\xbd2\xfc\x1a'
+    b"{I\xe9]\x02\xa5V\xf0\xe1\x83\xdd\x9d\xa0\\\xe6U\xa9\xb7e\x92!Y\xf6iw\xd2V|d\x16\xaf\x9f\xc6\xd3j\x18<\xc5'_\xe3\x02\xb6P\x98\xf6i\x0b\x0f\x17I\x14\xa5\xf1\x8d\xf4\xe6%\xba\xbfq\x9aO."
+    b'FL\x08\xb2\x96s\xa6*\xf9\xe5.\xd5#X\xa9\xc6v)f\xe3\xb0\xb3\xf7\xe8Yoo0\xe8\xed\xef\xf5\x82\x9f\x1fw\xdd]\xd2h\xb1\xb7\xdf5\xc0\x04iR\xb9\xcb\x02\xec\xd8\xa1}Y\x9a\x11\xb1\xc4y\x18\xe5\x97'
+    b'@\x94\x03\x0f\xf8\x9f\x87`P\xf7\xfb\x8f\x1f\xf7\xd4\xff\x07\x7f\x81\xeew\x82\x98\xa4\xd0\xb5\xe6*E\x9c\x86U\xf25\xde\xc8\xa5\xb6r\x02\xcd\xc2\x14\xd9\xfe\x0c\xc8\xc8\x01\xd1\xd3\x14\xe0\x99\x03\x86\xe3L!o\x9f\xf7\x8b@'
+    b'\x80\x94\xd4\xf3\xd4\x8f*\xbe\x029\x12\x87 \xe24d\xe1\x18\xc6[U\xf1(\xc9@\xa2\x02\xcf\xd3\xdc[\xed\x9f=\xde>\xfb\x16\xc3\x1a\x00H,\x08~&A\xf0\xc4[%\xfdE\x9e\xe5D\x9d\xbd\xa3<\x83N\xc3\xb2'
+    b'\xe7\x1f\x85\xe5\x04`\x0e\xbd\xbf\xc3K\xbf\xa7\x9b\xc0\xf75r6\xf3!\x0eP\x85c&\xeb\x9fQ$Y\xb3\xb9\x16\x1e\xd7G\xfa\xae\xcaa\x96g\x0eV\xab\x02\x04\xd1\x12f\x99U\rQ\xa3\xf9\xf9\x1e\x8c\x0f\xc2?O'
+    b"\xd3qX\x083\xc2\x8e\x9c\x91\x86C`s\xe3\x8b\x04\xf6\x97j\xaa\x89\xd7m\xac\xf1\xba\x15\x0e\xe7\t\xfcS\xf5\x1b\xf0\xedxEL\xb3\xa6Y\xc1\xe6%m\x82~(\xd0\xf7\x9b\xc3\x0e\x87e\x9c\x82.\x00\xcby]'"
+    b'\xfdAo\xef\xd1\xa3\xde\xde>P\xe6\xde3"\xcdRt\x89k{t~D;C\x14\x0b\xe75?j\xe1\xfd\xd0\x9c\xb4\x0e\xa75=\xe1\xbeH\x03q^\xd2\x93\xf6\x9e\xb2p\xe1\xb6e\xf5\x00\xde,W\xd9\xc4yC'
+    b'J\x0b\xbf\xc3\xc7Y\xe33g\x80\xa72\x80h?Ncy&\x1f\x90"8L@ML&\xf4\xc98\x8c\xae\x11\xcf\xfd(\x9e\xe4EH[\x06\x90\x1b\x17\xb82\xdee\xf8u\xedY\x0c\x7fTk\xda//\x92%)'
+    b'zL0\xd0\xe3j6\x8b\xcb\xcap\x86ir\x15Gzu\x9f\xfcA\x0cb@\xdc\xd2bY\xc4\xb0\x9e)\x8e5\xe8\xe1\xff!/\x1c-\x80{\xf3\x06\xd8\x13i\xac\xa43q\x12\xe8\x1a\x9f\x08s\xd9\xa3G\xeeN\xb5'
+    b'\xb7\xc4\x88\x99\xc2#\xd1\x0e\xdb\x99\x82~t\xa3\xd1\x11\x94\xf3\xfc2sE\x83y\xebE\xc9W#\xcd\xf7IM`E\xd0U{F\x8e\x06i\xd4E[\x97\x1c\x87\xb0W\x92,v{\xf7\xcaE\x98\xa6\xd7u]B\xa6'
+    b"\xb3O\xd3\xf9y\x9b\xb2\xcb\x02\x90\xf0\xe1r\xb6,'1]g\xd6D'\xfaa\x9c\xa6\xc9\xb2LJ\x17\xa8\xbap\xba\x93\xe6\xd6\xec\xa2en\x9b\xdb\x17\xab4\xbe\x16ZB\x15\xb8\x9d\xdc\x94j\xc2Ka$\xc5\xa0\xa1"
+    b"\xf0\xed\x04sX\x9a\xdb\xb56\xdd\xe5\x13Z\\\xa6D@\xab\xa2;R6\x00\xd6)\x1ahw\xee\x8d\x85\x16w'\x1f{a\x0b&\x00\x0b`\x0c\xb2\r\xf8|W\x0cM\xb4v\xc4\xec\x8c\x0b\xfcc\xcf6/\xe1\x17\x98"
+    b'\x8d\xb07\xbd$:\xf0Y9\xf5_dy\x05\xf3\x9dy\xf9\x12T\xa8u\\A\xaf\xd0\x04;#\x1d\x99\xda\xe2;\xdf\x9b\xc0N(\x0f|Q\xd0\xfd\x17\x1f\xf0\x0bT\xd1`\x8c\xa8\x00M\xe1\xf9.\x7f\xe3~\x8cj\x9a'
+    b'\xef)U\xfb\xc5\xc7U\xe5\xc1\n\xe7\x99\xd1\xee\xda\xbf\x9b\xcc\xe3\xc9\x85\xf5\xe1kXQ\xf8\xf02/.^Z_\xec\xea\xd9\xa2\xa6\x0e\xff\xe0\xde\xc0\xefY/%\xa3\x19\x1e\xc9\x0b\x99\x03K#4\xc2AhR\xeb%'
+    b'rgh;\xc9#\xebA\x1c\xe1\xe7\xf8\x0c\xfe\x81\xa6h\xb5\x8b\x04\xa3F\xb0\x10\x80\t\xaf\\\xc2v x\x0f\xfci\x98\x960_\xdcW\x93pIl\xf9?1\xa0p:\x95\x87\xf9b\x99\xc6\x95z\x84[\x8d\xff\x84'
+    b'\x11T\xdf\xd6,\x84\xd25\xf6\xd5o=+kr\xd8\x1eiW7\x9e\xf3\x9c\xa4\xc9R=F\xa2\x82\xe5\x03a@\xf0{KP\xdfIj#\x1b\x98\xccE\xd9\xee\x81\x8aM\x82\xaa\x87+\xc5\xcb\xc5B5\xd89\xd5\x8a'
+    b'9\xcd\x9a5\xf5)\xaa\xe5\x97\xaa)Q\x84\x17\xff\x0b\xdacWY\xe4\xf9\xf6\n\xfa\xa06\x84\x11(\xef\xf3\x90\xe8a\x01\x8b\xb8\x93O\xbd8$\x00\xb28\xf0>\x85\xd0\x0f\xa85`\xdcz\xd3"_x\xa0\x81D\xe5'
+    b'K\xefy\xe8\xcd\x8bxz\xe0\x7f|{\xf4\xb7\xe3O\x01:[\xfc\x17\xd6\x8f\xe7\xbb\xe1\x0b&\xb0\xa4\xdca8\xd0F\x88-0\xa7\xa0\x8b\xac\xf3U\x00\xab\x8a8\x14\xd2Q\xce\x15\x7fU\x825R\x15\xc9\xa4\xf2G;'
+    b';\xbb\xbbd\x9e,\xc3\x19>M\xd2\xd4#\xe2\x00\xe0\x93j\x0e\x1a\x0fu\xab\x1d5\xde\x18\xf4!$\xa2jD/p\x11hF`\xb0\xacq\xc2k\xecPm\xbb\tl\xc7q\xec\x01\x01\xc4E\x1c\xed$S\xaf\x83\x8e'
+    b'$\xc0\xc4\xd1\xe1\xe9\xe1\xbb\x0f\x7f\xfd\xf5\xd8;88\xf0|\x94\xe0S\xe8%\xf2\xbb0n\x06"2\xb0Zx\xd9*M\x19\xd4>\xfc\xc7h\xd5\xb3]\x84k\x1c\xbc\xc7h\xc4\xc7%\xe8-^\x85\x1b\xcb\xb6\xb2xI'
+    b'\xfa\xee\x7f;;\xc0w\xbc\xd3\xff\xf9x\xfc\xe5\x97\xb7\xefOO`0P\xc6\xa1\xab\x90\xd4\xb7\xa1\xe7\x0f\xbc*\xf7\xf6z\x1e\xe04DbB\xfe\xe4\x95+XH\xb0\xe1\x1e\x0f\xfe\xcb\xefA\xfb\x124\x8c,*\xa1y'
+    b'\xe8U\t\x8c\x9ed\xea\x19\xbd\xcfV\x8b1(\x0b\xf8\x9a\xff\xa4\xa7\x13\x10#\x15=\xbc\x04{4\xb6_!\x9b\x827 \x85a~\xd9Z\x99\x88(=\x96<\x11\x14V\xd4\x94\xbem\xefe\xbc\xaeb5\x050\x86\xe8'
+    b'Y\x98\xcd\xa8y\x14\xcf\x8a8\x06\xea\xa5\xb7\x8f\x9e\x0c\x04\xa44_\t\xa0\x88E5Q\xd0\xa6\x16\x84\x832\xb9\x02\x96>\x03@\xe6\xf1\x15\xd1\x08\xac\xb6w\x9f\x87\xcba|\x82\xbb*\x80T\xa05\xf3\x0b|\xf7\xefU'
+    b"XT\x84\x82A\xcf\xfb\x0b\xfc\xff\xde\xb3\x01\xb6\xd8\x7f\xca\x03\xe3h4,\xad\xa9\xd07\xef3\x7f\xe7\xc6\xd0)\xcau\x0fI\xf0'@\xc1%b\xb9\xaa\x80\xd4Jo\x8e\x063\xa8WKYt\xf2X\x12\x11xQ\x0e"
+    b'\xcf\x80&q\x8f\x15kZ\xf1\xa3_\x0e\xdf\xbf?~\xe7,\xfa\xef\x9a;\xd08\x9ak\x9e\x0f<\x02\xb8.B\x00{\xbbZ\xc1\xdf\xb3\x1c\xd1\x0c\x1d]}\x03*}\xe0!\x05\x15\xb8=*\xa4c\x9c\x0bc\xcfh\x16'
+    b'\x80@\xdct\x04\x8f\x17\xd23\xbbGn>\xbbS3\xd8\xd1\x88\xd7"^\xc60\x18Lb\x91\x14\x05\xda*9b:\xe5\xfd2\x01J\xc8xB\x93|\x99\x08\xb8!XYe\xf9\r6c\xc6K@[\xe5\xf0\xd3_'
+    b"\x8f\teg\xd0\xfb\x99\x0f\x1cb\xaf\xff\xd4\xef\x01\xd6\xa07\xc7\xc9\xe1\x9f\xf7\xa8\tw\x7fHm\xd4X\xb0\xc0'\x1fw\x8f\x8e\xbdC\xb7\xd5\xab\xf6V\xafT\xab\xf9j\xdc\xe8(\xf4N\xf8\xef_Vc\xe1\x02\xd8\x0c"
+    b'\xa7\x08\xff\xbe\xe9\xe9\x85\xc4\xa7\xfd#= ,\xc2\xf2\x1du\x96y\xef\x8e_\x13O\\b\x87\xef\x9c&\x9f\xda\x9a|RM\xc2U\x94\xe4\x02\x11-\x00*\xbcq\xa4\xf8\xa4\x91+\x1a\x1d\xc4\x8d\xf0\x0bM\xba\xc8\xaf\r'
+    b'\x9fJ*\xd0\x88\xa7\xaa\xf5\x99\x9a-Xi\x1ej\x03\xf0E\xcf;{O\xdbeoP\x9e\x8fH\xce\xc1\x9ay\xe1\x18x\x82\xf0\xc5\x02\xf4G\x10\xb6^\x98^"_\xce3\xff|\xe7\\\x96\xf0\xd5\x87\xc3O\xaf\x1d\xca'
+    b'\xa7m\x06T\x02\xacf\x15\xa6\xdeE\x1c/KK\xce\xb1\x8e\xec\x01\xb3JR\xc0\xe3\x05L\x0f@&\xf2*\xe24\x0f\x91`\xc9\xd5\x8as\xb7\xe4\x10\xfe\xb1\xc8\xd1\x9aC\xc6\x05\xdb\x19\xb5\xa5\xa8\x87\x9b\x86D\xa7\x97\xc5'
+    b'q\x04<\x1f;Z\x16\xf9\xac\x08\x17\xb4\xfb>\xaeA\xf2d\xd2G\xee\x15+\xd0\x992P\xf5\xc3\x08\xb6\x99\x83Rbh\xc5\xac\xa4}\x87B\x01`\x00-\x80w\x96t\xd9CE\x1a\xd6\x02\xd6d\xed}c\xeeJ\xf4'
+    b'\x12\xaa\xafPu\xc5\x9e\x85\xa4\x92\xd2"O\xda\xf8@8\xb4H6\xa5Y\x1d\x8d\xef\xd0\xd1\xab[:B\xc2Jm\x8e\x0f\xe4V\xd2\x12\x12\x853\xe1-ST\x90\x80D2\x98\xe8;\xf3a!\xac\x80\x04\x1f\xf6\xff\xc9'
+    b"\xe1\x99\xa4\xc1!\xc3A\x9d\x87\x14\xb4$'\x94\xc6\x05\xaa/\x86c\x11\xc6Y\xbc\x8c\xd1\x02\x01)\xb6@s\x18\x18g\x19[\xb4stx\x82b\xf9\xda\xe0\xd1\xecq\x83\x12\xbd\xa3\x01\xcc\xfa\x7fz\xbez\x17\xea\x89\xc8"
+    b'\xa6C\xf8\xa7\xab\x8c\xc4\xb0\xc7\xee\x90\xbf\x81f\xd0\x01\x05+\xea\x12\xd5"<`\xad\xa1j\x01\xc0\xe0\xf3\xa0\xca\xdf\xe1\x83#\x00\xb7\x83V\xb8\x87*\x87n\x83\x9a\x06\xef\xbe.\xcc\x12Xd\xa6~\xab\xa6F\xe9\xf8\xf3'
+    b'\x9f=\xfb;\xfd"\xa0\ro\xbe\xe7\xfd_\x1b*(\xd3d\x12\x83U\xef=\xe9\xf2\xb0\x8c\x0b\xdf\xfb\xf6\xcdk\xb4y$m\x808,\xc0\xe4\x8b\x8d=?V=#\xba\xec\xef\xe8\xf7\x88\xf6&?av\xec\xa3\xdf\xce'
+    b'`t2G\x0b"=\x11\x1e\xd4\xb9\x00\xdc2Z\x81h\x0e\x85\x97\x81U\r\xa3\x96\xb8\xad\xd0\x9b\xa0v\x9f|\xabeo\x8ft\xff\xe9\x15\xaaaHfe.4\x05\xdfp\x87\xc6\x91-\xd3\xb9g0\r(\xc1\xc1\xed'
+    b'\xe5q\x9f1\x8a\xf5\x0c\xcf\xce\x15NL\x13A\x96nc\x96\x8b\xdf|\xd1\xbc\x16z\xe6\x0e\x1a-\x19M\x8d\x966\xd2\x98\xed \xef\xb5\x11\xe6\xce\xe7\xbb\xe0\xfc0F>\x18\\\xc4\xeb\xb2\xd3\x80Y\x98\\\xb7\xd9M\r'
+    b'#\xed\xbdP#\xa7\x93\xad\xcdM\xc3\xe6\x8cO\xc3\x0b\x981*E=\xef\xd6y\xb3\xb2\xfe\xdd+$\xe3\x9f\xe1(\xee>>\xc7\xa5h\xef\xb5\x86\x88\r\x93\xbf\xadOd$\xdc\xd4\xb3w\xfa\x96\xaf-l\xca\x87/\x95'
+    b'\xf9X!\xae\xbc\xa1tn\xe3R(\xeb\x14\x14\xd3\xef\xc5\xa5\xcb\xea\x9a\x00\xb5\x12\xb4l\xd3/8Jy&\x9f\xe3\xc4\r?fT\xde\xb3v\x1e\xf0=kid/\xe8\x8f\xbb\x06m\xf6\xcc\xc8\xc1\\\xbe\xc9\x8b\xff\x8d'
+    b'y\xb9+\xae\xf8\xf75M\x82x\x15\nU\xe5\xbe\xf5\x18\xfd$\x0cA\x18\x97\x9eV\x14#\xd2\xc2\xc1$\xe4\xb7\xf8\x11kZ\xd4\x11\x0e\xf2\xcb\xaf\xaf\xbe||wxt|\x12\x809])\x96\xdb\xed\n\xbe\x1a\x08&'
+    b'X4\xc3\x10B\x0e\x03\x90\xa2`\xe9t4v:\x08\t@\xac: -\xe1\x9e\xe2\xf8#\xef\x86\xa6\xc9\xc8\x00%\x1aF\x8d\x1c:t\x87\xd1k\xc1\x1fI\x9f\xea;X>\xf93H\xe3l\x06\n\xfdK\xfd`\x11.'
+    b";'dyt5}z\xdeM\x9b\x94d\x9b\xc2\x16W\x82}m\xa3\xb4\xbc\x9b\xf9\xdd\x9dV<qoe\xab<.\xf2\x8a<\xf3\x16\x7f\xf7\x07\xa8\xf3\xfe\x85\xfe\x17\xacD\xfc\x07\xad\xc4\xf3\xd6\xef\xd1\xbeic\x00\xf0"
+    b"\x1cE\x91f\xf7\xf8\xe1\xa6\r(\x84E\xc6\xab\r\x07Z\xb18:[\xb1\xf6\xa6\xd7[@\xb9$\xc8gB\xaa\xb9\xd6\xc3\x8a\\\xf9\x1fD\xad\x9e\x81.]\xb2\x0f\x08\x95\x95\xba+\xc2\xb8$\x0c\xf7-'\x1dt\x9b1"
+    b'\xb9\xcb\xd8\xf8 \x00{.\rA\x11\xd8\xfd\xf3.\x8c\xe9\xff9\\,G~\xd7<~\xce\x8f\xd3\xcay\xfa\x82\x9f\xce\xf0\xa9\xbb\x83\x17aq\xd1A\x88{^\xeb\x80@F?\xb1{U\xdcl?y\x0fi\x86\xf0\xcf'
+    b'O\xfe\x0b\xfcE\xcd\x1ez\xbe\xf8X}\xa01|\xd4\xce\x03\xf3\x8bN\x95_\xc4\x99\xd1\xe4\xaa"\xe4%\x83\xb5 \xf5\x85O\xc2\xb9\x99\xa8=\xfd=Y\xac\x9e\xe6\x00\xf6g=\x1f\xc1\x90\x07\xbc=\xe8kxg\xf7\x02'
+    b'\xca\x13t\xa4h\x9fv]\xa5\x9b\xd0\xb1\xcf\x87i\xc7?\xf05\xf7\x81\xd7\xcf\xbd\x81&\x0c\xc2\x95\xcf\xc7c@\x1e2\x0fw\xe4-M\r\x14a\xd5\xc5\xefT#<TCr\x83\x91\xbd\x87\x86G\xab\xd7\xc4dk\x9d'
+    b'\x84\x88\xf1\xbd\xae;\xba\x8doj\\\x12\x11\xa1M\xffY+\xcf61\x95\xcb4\xa9:\xbb\x9d\xdf\xca\x87\xdd\xdd.\xf1\t\xc3\xbc\x8c\xbe\xad?\xba\xc7\xbav\x91,:] \x0c"\xe6\xa1\xf4\xce\xed\t\xb9\xdd\xe0_y'
+    b'\x92u|\xa15\xd8*\x9f\xc9\x1fZ\xd2\x94`\x03\x83I\x9e&\x17q\xba\x06\xe50\x87%${\t\x7f)\xff\x9e\xf8\xf0.\xb2\xfcrH\xd2\xa1\x0c\xbc\x7f\x90\xacA\xcb\x08{$w\xd0*\xfb\xd7*\x9a\xa1e\xf9_'
+    b'\xe4\x8b\x8d\xe2\x19\xfd\x9b&e\x85C|egK\x8cG\xef\xa1\xf8H\xd8\xd6.+e\xb0R\x0f\x06o\xe30\xfa\\\x00\x1e\x18R\x07e\xee>\xa0\x13I\xde\x002+k\x0b\xa8y\x1fZ\xe6\xdeO\xa5\x16V$\x8f'
+    b'@)FfF\xee\x8a7\x88\x124\xcd\x00\xec2I/\xc0*\x02\xd0\x01#h2\x96^\x11f\xb3\x18l]\xf6c\xf4\x8e\xc9"3R\x0bhx\xf7\x9f\xf0\xee,\xecO\xcf;}\xfa\xa7\xfb\xb2\xd3s\x7fw\x1f\xfc'
+    b'iw\xe4\xca\xee$:\xa1\xf3j\x90\xdf\xaeu5F\xfb\xb3\xcd\xb42,\xe5\x9f\xbd\x87\xdfz\x0f\xffD\x8c\xc5\xec\x98{\xf8\xa5\xde0\xc8G\xd5\x1b\xee\xd2U\xf5w\xff\xc9\xa2\xf3,\x1c\x9f\xffi\x97\x85/w\x00/'
+    b'\xebR\x99^\xb4v\xed\x18oz\x9cM\x96\x9b\xfd%\x00\x80V\xd3YZ\x9cw\xce\x06\xfd\xbf\x9c\xe3\xff\xf4~\xeb\x9f?\xe8\xbet\x00\xda\xf05\x98\x0e\xf6gA1\x1b?8\x7f\xb0\xfdK"\x0b\x94\xa5K/\x9c\x02'
+    b'\r\xb0q\xbe`\xdfcI$\xa0\x82\x85\xb0\x83\xa1\xb7\x0f6_\xff\x11\x98\x8bAa\x88q\xf7\x9f.\xbc\x9d\xdf\x82N\xf1m\xf6m\xfc\xed\xb7\x07\xdd\x1a\xf0\x86\x1a\x85\x0b+\x8a\xe5\xdd\xc7&\x1b\x8eK\xde\xcf\x84]\xa6'
+    b'\xa2<\xf4`\x93\x91\xee\x94T\xde4\xe1`%\x10zH\xbc\x19\t\xb6\xac\x87]\xa3\xd7P\xb6\x16\x9d\xbe\xfcT:\xdaY\tZ\x98m\x82\xc6\x13\x18^LP"\xbd\x9e\x19O:7\xc4(\xc0\x1e\xd82D3\x1b"'
+    b':\xf9\xd6a\xd4q\xa4\xf4L\x9a\x95\x103s<\xe4\xb4g\x83sC\xccH\xc8D\xc7\xedZ(\xf7\xa0t\x1d\xd5\xa1\xad\x14\xa9\xb1\x08E\x07Z\xf3RB\x05\xbf\xe8z/\x0e\xbc\x01RvG\xe1\x0f\xc8U\xfe\xe4\xd5'
+    b'\xa2f\xb6NO\xdd\xbdT\x18\x18\xd6\xb9\x93\xcb\xf2\xe7\xc9lN\xc7\x05\xef\x92,\xee\xe0\xd9L\x0f(\x0b\xb5\x93\x15iZ\xfc\x8b\x04B\x92\x9dP\xf4\x87\xc6\xf1<,\xe7\x007\x1dQiIx\x9f\xf751\x84<Z'
+    b'\xc3{j\x06"\x11`\xa2\xb3\x9f!\x7f\xa1\x05\x1b\xbe\xd7\xdfH@\x87\xfb\x99\x8f\xea\x81\x92l\xd2\x02d\x1b*<VW\xd4\x0fbB\xb3\x15\x18_\x04\x8f^e\xfc\x06\x9f\xa3\x10\x94\x9e4\xb3\xc1\xe6\x86U\x81|\x93'
+    b'\xe5\xd5\x90*\x85\xe2\xcc\xd5]\x15d\xe4v\x15\xb8h\x0cg\x10[{\xa0\xa14\xca\x86M\xe5\xc12X\xec\xd5`\x04\xe2\xc1\x04\xbapI\xfc)M\x7f\x04\xc2j\xcd\x07i1(\xa0\xea3>\xcb\xc0\xc7\xdar\xb9g'
+    b'\xf7\xa8\x11\xa3\xa8\xa4\x1d\xf8\xa6\xc5!d\xe1\x98\x80\xf8C\x9e\x8b=\xdcp\xe6\xbdt\x9c\x04ncMk\x01k\xda\xc6\xec0\x1a\x08k(\x1a\xc8\x9e\xd7\xae{\xe8\x0fh\x03\xdbj\x1ao\xa8\x97[\xf9\t\x0e\x8d\x0fx'
+    b'\xe8\x9b\x1a&n\xd4Rb,\x00+\x93\xb4\x9e\xb6\xa6\x06jQ5\x99\x13\x15=\xe8\x9c\xc1\xff\x9e\xa3\xb2\xa4\x88\x9c\rT\xfd\xfdK\xdbc)\x0f\xcf\xf6\xce\x11\n\xe3\x8e#j8!G\x9b>\xa1\x9a\xe6\x08/\xbb\xfb'
+    b'A=(sb\xc8|\x92=\x8e\xd3\x1c\x1dS\xec\xe7\x8f\xbf\xc6\xf0LN\x04\x14\x8b\xa4x\x9b\t\xadf\xddI\x82+)\xfb][\xde\xa0<\x1d6\r\xce\x16w\xed\xcb\xa6\t\x0e\xcf\xce\xcea>\xad\x8eD\xb3\xd2\n'
+    b'\xb2<\xcba\x0c\xb2\xa4\xec\xe1\x95\xdem\x08\xc0U\x8f7Q\x03R};!h\xf2o%\x07k\xcabu\xbb\xee\x05Y\x1cD\x96\xdb}\xa0\xbb\x97\xa9(9^\x13N\x8as\xf0\xfa\x03\xeb\xd0"J\x13p\x9b\xc6\x05'
+    b'\xe3\xdd3\xab\xb7\x8d\xd5{\xe4/`\xe29\xd5g=\xa4\xee\x90"\xce\xea\x839$\x19\xb9\x12\x99\x8ea\x94\x8b\x13[\xf1\xa1\xf1e\xb8\xb6\xc4dT_\xaa\x02\xe5I\x0b\xa9 \xdcu\xc2h!\x1f\x98P\xbb\xd3\xd1u'
+    b'm\xd8\xfcA\x8f\xba\x91B\x94\xed\xb3\x8dD\xee\xf1l\x1a\xab\x89\xc4bqeO\xcf\xda\xac\xea\x86ue\xa4\xba\xeb\xba\xd1\xcde\x14\x90&\xa5\xd5\x0e"Z\xd6Y\xc1`+.wQU\x88\xd4\xdc\x05\xdb\xe0\xc6u\xc0'
+    b'\xb7?\xb9\r,\x11ct\xf0,\x0eP\x90\xd5:\xee\x03L\x19\x0c \xe4\xa3+uZ@g\x89\x19\xab\x880\x89$\xe3\xa0\x06\x0b\x04\xdaY\x8e\x03\xd2v\xc1\x9e\x07\x06y\xe2\x9f\xba\r\xcc\x96e\xb8\xb1wb+\x8b'
+    b'\xb0\xf1\xd0\xf3Z\xd8\x9eeq1\xbd\xda\xbbRz&\xde\xf6\xd0\xd2p\x80u\xa3m?D\xdb^\x08\xdb\x12A\xb6\xfeF\xae$\xcb\xed\xa3\xe4\x92\x8e\x83\xe1G\xc2\xcb\xeb;U"\xbb\x90\x94\x8di\xef\xff\x96\xf9u\xbb'
+    b'\x9e"\x07\x85\xfe-\xd5\x8e\xb5/\xfe\xea>\xa9\xc7\x86\xc9)\x05\x81\xe5\x9c\xa5BlT\x80~@\r\xb3&f6c]\xf9C\xf5\xf9\xfbzU\x1b\xbd\x86I\xfc\xcfL\xcb<\xbda\x95K\x148f\xfc\xd7\xd6\x9e\xfc'
+    b'!EA}\xac\xcf\x1al(\x9a\x9cM\xf9epf\xdd`\x9a\x17\xc7!\xf4\xbbI;22q#\xbb#)#\xa1\xe3\x16\x97\xd6\xe0l\xe00\n\xc2\x1b\xfd\x97 \xf1\x1a7\xc7\xf0{\x94\x9e\x9e\x0c6\x94\x7fo\xb6'
+    b'\xae\x81\xbdU\xdb\xac\x9a{\xf7\xb4%\xd30i\xd4\x96\xd4\x1d\xc8\xc6\x10\x9f\x14n\x08\xf4\xd4\xfc\x96\xf9\x8e\x1f\xd7\x9c\x85SF\x00:\x88\xb2\x08\x141<T\xa70\xb6\x84,\xe5\xd0X\xc1\xd0\xfcv?.J\xdeW1'
+    b"t\x12\x8b+\x8ez\xd7\xe7\xad\x14\xd8\x94\xcf0KG\xa4\xf4j\x89LT\xc31\xe4p(\x9e\xf62]\xb1\xe8\xc6\x9fJ\x1dL*\nz\x90\xe3\xd6\xca\x18\x0b\xe4C\x9a\xc4`Kh\x93\x9c\xb8\x91D'\xe0,X\x85"
+    b'\xc0\xde\x94f\x06\x7f\x9e\xc0bV\x8a\x8d\xa4aY\xbdU\xd4\xf4\x1br2FO\x1f\xf7\x18\xd0\xea\xc8\xfa\x10\r\xdf3f>D\xcd\xba35\xebs\xcb\xbbkFz\xc1\xf4I=\xa0Q\xee\xf0 \x87\xb1\xd8\x92\x9bX'
+    b'^\x11\x7fM\xf2Uy\x0b\xc4f\xa8\xbe\xb7\xaf\xa1v\xbb\xd0l\x93 w:v;\xd0\xbb\xd3a\x92\xc4\xa6\xd4W\x16\xab\xd2\x8f\xee\xcc\xae\xc6E\x1c^p\xa7\x84\x91`\x95\x95\xf3dZi\x98\xba\xe6\xa5\x9a\xb7\x03\xae'
+    b'\x01H\x0f\xee\xe0\x90Y\x9a\x1e\xe6\xc6\x12]4\x1eo\x13\xcf\xf6\xddb\xf4\xacrI\x01\xf9\x95\x9a\x00S\x0c\x19Y\xb3\x80\xef\x89\x97\x92\x1c\xad\x18m\x92g\x98\x16\xe4\xc5WKx\x12GfSHW\xbf\x96qDd'
+    b'P\x1aq\xb7*I\x82]\x13{`x\x9a\xec\xef\x07\x04\xd8m\x82\x8amu\\\xb1{\xc4\xbe\x95_o7\x117\x1a[\xd1\x8c(\xfe\xac\xc9\xfe\xbf\x8bk\xdfn\xc7(\x0e\xd9\xe2\x84\x95Y\xf6\xfc\xb6q\xac\xe3\x15\xfe'
+    b'\xcf=\n1\x94\x08\x93T\x94\xc8\xfd\x05\x16\xd6\x14\xe6hQ\xf5\xc7J\xc2\xb1\xb3\xf4a\xb7\xaf\xfe\xf8\x93\x11t<7\xfa\xce\x86B\xfcc\x18\xa4w\xe0\xfd=\xac\xe6\xc1\x02\x08\xed!\xb5\x03a\xd1\xf3\xe4\xcf\xfds\xab'
+    b"'9!\xca\xf5'\xe1\xd5\xed\x9f \xcb\xee\x90\xfe\x8c:\x12\x0c8\x82\xbf\x9e\xe3\x14\xe0\x8f\x87\x0f\xbbDeg\xd9yM\xebwd\xbf\xb8W\x1f*?*#\xd5\x9d\x0fu\xf3\x90\xde\xb4\xf4U\x93\x9d7M\xc1\x84\xdf"
+    b'\xabMv\xaa\x18\xbe\x8anEY\xd6#&M~"R+a\xc1\xcc9\x06\x07\xf8\xf5\xe9h\x8dW^\x87\x01b\x87\xcc\xda\xc5K\x10x\x87\xb5\x10Ay\xc1\x87-\x97\xb9\xc4\x9b\xc5\xbaw<\xc8\xb4\x0e\xef\x10\x9a\x93'
+    b'\t\x88\xf6\xa6\x14\xb3\xb9\x7f]\xf3T\xd2\x81\x84\xa5\xc3a\x07\xaa\x0fGQ\x95\x93\xeb>sh\xe3\xd8d`\x9d\x8do\xf1\xac\x9a\xc4\xb8#\xab\xb5\x8f\x01Ka\xa4\x03\x1aV\x91\x0f\x88\xe2\x03\x02}\x84\x7f\xe2\xd6\xc4?'
+    b'\xfa\xfd\xaef\x1b6`\xe5\xd9jy\x8e\x14\xa2{\x83\x8fP\xd6\x08\xaf\xd5\x83\xc5\xe40b\xe6\xc6\x13vF\xc5\xa8[\x19\x97?\xa7\x07\xcf\xdd\x0f\xe8!\x90\xf2\x06H\xf0-\xc3\xc2\x83\xe1\xef\x06\x1cL\x08[ )1'
+    b'\x8a\x9ffM\x7f\xd5A\xc0\x87\x9bA\xc0\xb7\x0c\x82\x1a\x07\x9f8@\xc8\x12\xf2zr\x85\x04\x19\x82\x97\xabd\xe9\x0bS\xe86C+\xbe\xa0\xc6\x07\x9c\xb3\xe1%d\xec?\xe4\xb7\x14mAK(\x9b\x90C\x12y\xef\x0c'
+    b'\xa5\xed\x0b\xed\xcf.\r\xa1\x10\xd4\xa8\xc1\x9e\x9d#\xa1\xd4b\xe8X\xe9<\xac6o\x87\x1f\xd6\xa2\xdc}\xd2\xd0\xa1t,D\xddS\xef\xfa\xc0\xec\xa8)jzg\x05\xc4\xe9@\x93,\xaa\xa6\x07\x1b\xd5Ym\x83\x16\xf1'
+    b'4\xb9R\xb2X\x84\x05ZBC<\x14S\xc2\x85\x88\x8f\xbc\x9f \xe9\xf9\x93\xa1|\xda\x13K\x82\xcdk6\xc2\xdb\x8c\x08z[\xf77\xd1)\xda\x90\xad\xe2\x1eq\xd7!h\x127\xcagv(\xc7l\x934/\xe5\x9c'
+    b'\x8dx79[\xeb\x8a?j\x0c!\x08\x8f\xb8\xe4\x98\x8d\x1d\xadR\x01\x94\x9b\x83\x12hZ\x01\x8fcK\x04~\xae\xd1\xa3\xff\xf0}\xc7\x0b=&\xd4*D\x9b\xf5\xe1\x9f\x9a;\n\x14\xfc\xdb:nA\xe5\xfe@:i'
+    b'(:\x0c\x82\xb8^\xb9\xedsdx\r\x078\x0fV\xb7e\x87\xda\x98E<Hkw\xda\xbct\xc6\x19\x0e"\xda\x9e\xbdx\xca\xdbME\x8d\x06\xb5P\xac>\xe2A\x88\x1cOr\xfeU)\xdeSo\xa1\xc3\xbd\x94\x9b'
+    b'\xc9q.\xd1\xa2\x86\xdc\xdf\x16w\x15\x1b}\xe2\xb4\xe2\xa80\x10\x832IF\x12\x9d1\x80}bO\xc2r\x18w\xad\x19\x8a\x83\xb8u\xf1\xec\xe5\xa8\xa9\x8ae\xbe\x88;\xdf}\xf6!f}\xbb\xb3\xda\xe8\x1c\x8c\x82\xcf'
+    b'*\xb0\x82w\xb2R\xdc\xcb\x18\xc3\xc0\xc5\xdeDQ\xa1\xe2|E\x13a\xb3\x131\xa9\\\xc7:\xaa\x97\x0e\xac\xf0(B%y\xc1\x93\x89mF\x1eg\xda\x17\x954Y\x9f\xa6Z\xf6B\x0b\xd2\xd00\x87\xff{X\xdb\xd9'
+    b'\x16?\xa4\x8f{z\x00>Sd\x1e\xcb\xbbc\xa8\xde\xb5\xd8i4\x96\xc2\xfd\xd9oe\xef\xfcvM][\x0f\x8d\x15p\xac\x87\x17\xc8{\x99\nH-\xe4\xc3f\xdb:\xa8E\xa1\x1a\xeepc\x8e9\xf5\xb6\xac\x9d\x1a'
+    b'";\x11\xde\xa0\x12\x7f2\xce\xbb\x0b\x91\x94q\x11\x88\x1a\xb1)\x9e\'\x11k\xe6\xac\xc7\x846\x89\xea\x8c\x12\x06\x8b\x9f8\xb0\x9b\xd2\xc5hy\xd5~\xc0u\x95\xd5T\x8a\xa0\xc9\xf3\x03C\x0e\xf7W\xe9\x10|D~H'
+    b'\x8b\xeb\xbd\xf4\xfc\x05\xc0\x89\xa7\xbc\xc2\x88t\xb8\x90/;\x15\xdf\xf9rLB\x08`\xb5\xfbzS\xc7-\x9eX\x95BC]\x89g^\xcc2\x1eT\xa8\x85\x10\xf5\xfd.\xb5\xbb9\xd4\x18:q\xabY\x96\x81\xfd\xfcv'
+    b'\xe7Zm\xcazf\xda\xf9\xb6c\x9b\x11\xce\xd9\x0f\x81\x08[6\x84\x15\xbf\xe4E\xa2\x9cHR=\xf8!o+\xe0\x97\x94\x01\xa7\xf2\x939<\x9fz#\xa3\x81\x88`\x0cD\xc0v\x80\x90\x00\xa7\xfd\xd0Q\x11\x0e$y'
+    b'\x9e@T\x9a\xf0]%dX?[\xd1M\xf4F\xa0_\x1b\xe4\x98"\x14Zi\xbf\x89P\x85 \x12\xca\x06=6\xf1\xe8-c\xe1\x872\x03#\x8a7#6&\xf2\x03\xd1\x9c\x92\x1a0\xd4.5\xa4\x7fB\x9b\xdd\x19'
+    b'c\x90\x13d/\xc3\x84\xc2gPEF\xfdA\x12\x89\xf1\xfcV\xd0*F\x18a\x9b\xf2\xcf3\xc7\x9a\xa6\xa5)k\nR\x8b\x8c5\xf8\x93/\x80\xde\xc0\xeaVn\x89o&l\xea\x9b\x8a\xfb\xfa\xa6#\x99\xbe\xd16\xe9'
+    b"*\xdf\x05\xf7\x80B\xd65_kB[7\x1b5\xda4%\xb7\xe9\xb3\xd9\xba\xd5\xc9\xdd\\F\xc5\x0c\x9a-\x1c'\x90\xfa\xcf2\xf4\xee\xca\xbam\xc4S\xa4\xd2f.nc\x9c\x9bng\xe8\xd4f\x0bO\xd7^\x80n"
+    b'\x8bG@\xfb\xb8o\x9c@\x12[G\xdc\x14\x8dj\x9fG\xb8\xe8\xe4 Q[\xdfR\xb1^\xb5\x9em\xa1\xd4\xaa\x9c\xb6\xb4\x96s\t\xad\xa4!4\xf6\xf0\x14\x8f\xcd\x0c\x1d}h\xf5W\xbccm\x89Z\xa2/\x81l\xc2'
+    b"V\xc7\x823\rl\xf2+\x93\x84\xed9\xa4.\x82R\xfb\xfcU{\xb6\xed6~\xc0\xaf\xbb5\xd7'}\xea\xdax\xc4\x05K\x9e\xa6\x95\xd2 \xbf\x9dT\x1f\xd2\x9fW\xb8\x86\xe6w\x19\x13\xbd9\xc8\xac\x1d\xd8\xda.\x0e"
+    b'\x1a\xad\xc3\x99y=\x12\xba\xf6i6?\xaf;\x01\xd5B\xe2P\x8a\x89\x12\xc2il\x8a\xfa\xc0\xcf\xc8\x06\xb6\xe1PG@\x00r\xb0\\\x95\xf3\xce57\x1cz\xf6\xf8C\x16\xfd\xb0\x9c\xbe\x7f\xe3\xe8\xe7\xd30bGQ'
+    b'\x0c\x80h\xcf\x91"7U\xb7\x0c\xbdJ\x88j\x92-\x14\xfb\x8e%MXe\xd7:\x8b\x8d\x82U\x86\x1bMB\xe5\xcc\xdc\xad=\xd8\x92\x8f\xa3WB\x9f\x85\xd6#\xf6\x10Z\xdf(\xf0\xd8Q\x80\x80\xdf\xfe%\xb6\xaa\x7f'
+    b'\x89\xbd\xb5}Y\x8b\xf1\xbcq\x16WX\xdd\x07\xa6(5\xb9z\xfc\x8c\xe1\xb5m\x8c\xcdF\x8b\x90\xa2\x8d\xb0\xba\xd3\x98\xdc\xa6k\xdec\x8d\xe4\x07k$}\xb0G\xf4Gs\x7f\x88\x81\xe8=7Q\x9e\xcf\xe1\x91\x18L'
+    b'\xc5\x843\xec\xff\x9c\t\xc4qr\xaa\xde|\xd0\xcdz\x94\x9fj\x97\xd9\xf0\xbbM\x04\t\x885\x04\xd1\x1c\xc8\xcc\xdb\xa4\t\xee4\x82\x95L\x80\xca\xdd#O\xce\xce\xbb\xb5\x8e\x86\xae(s\x03\xdd\xecW\x0e.\x9d \xb7'
+    b'\x0eCNi(\x7f\xd0zRi&\xc0\x85I\xc55\xcb\x82\x7f\xd8mi\xefnQ\xa0\xadTp\xee\xa4\xeeL\x19\xda+\xbd\x95\x84\xce]\x1ab(\x85\x88\x0c\x0b\xa9Q\x88\xca\xdf\xb2\x83\xe29o]\x07\x17\x9b\x13Y'
+    b'b\x17\xfc\x9a\x82\x9c\x88\xa5\xe4\xac\xaf)e\x15\x8dxTJj|\xa31u;\xca\xa4\xeb\x00N%\x06\x0e\x84bU\xf2\x18\xa5l\x91/\xc8\x04\xf2k\x88\xeb\x05\x06\x0e\xf6\x83g~\xcd\x95A:\xa8\xb2\xb7\x01zR'
+    b'\n\xe5,\r\xbd\xaaH&\x1eZLb{c\xc1\x89L\xd7v\x10\x1e\x81)\xe4\xdc\xe1,\xc7\x99Rh g\x1dz\xbf\x84\xe9\xb4\xaf\x98.f\x92T*\xbe4\x0e\xbf\n\xbfeS\xafT\x96>[\x81\xee\x06d\xb5'
+    b'\xb8\xb6\x03\xdd w\xa5P:\xb2\xc4\xf0\xc7v\xdfX`\x87`\x10\x9e\x1du\x03\xe8\xa4@\x94\xffkU\xb2\x0e]`)\x98\xd1\xd6\x0ff\xce\x073N/\xdd\xfe\xc9\xd8\xf9d\x8c\xaa\xd2-_<P\x95-\xaa9\x0c'
+    b'\xd0c\tF\xb1\xf9\x97\xe2b\xf2k\xd1Fv\xec\x02!\xee\xac\x1f\xf4tZ\x83\x834ww\xdf\x05\xcb\x9c,\xa14\xfc\xcd\r\xdd`\x95*\x04\x03\xae\xae\xd1\x99\xb3\xc3e\xbe\xec\xdc\x82\x86\x1e\xd7\xc0p\x9c\x0c\x9c\xb5'
+    b'\x80\x86\x13\xd6\x00\xe9=\xea=\xee?\xf5\x9d\x90\xb2\xc6\xe9\x19\xc0ay\xa0\xc1^\xf9\x0f\xe8\xef\t\xd9\xc1]\xc3|\xdbA\xe8s!\x0c>\x88\x04\nv\xa1\xe9Q\x95\x888\xa1G\xa0o\xd4\x01\xc1C\xceMtK`'
+    b"9\xbe34_o\x01'@p\x9a[\x14\xf6x\x8e\x07\x18A\xe1\x053/\x18S\xd5\x87\xe0\xc1md\xb6ED\xd6\xce#;\x96\xcdW3\xf5\xbeq\x82\xcb\x9f6\x91N\x9d\xb7\xd73k6+\xa9\xdd\xdb6\xefv"
+    b'\xf8-N\x88u\xb9\x84~\xc6k]\x16\xc9\x1cHR\x98\x0b\x17;\xd11\xd1\\\x84d\x1d\xcb\xa9\xa7\xae@\xc5=\xda\x87\x99)\xd5\xf8h=\x16U\x8e0UJ\x05=$\xc4t\xb1\x8e\x92\xcd\x03\xa35\xb2\xe7\xc9\x07'
+    b'\x02\xd2QB\xc0~\x89\x1d{Vi&\xd8\x85\xf3\xc29z\xde\x93s\xe7\xa7r\xecl\x0b\xfb\x9ams\x96\x81&\xab"wF\x8dv\xc6\xa6\xa1\x86n\xe4\x97\x01\xe4\x80A\xe9:\xb0\xd5\x1c%\xd4)\xcdG\xb7\xb6\x1c'
+    b'-2\xd1Q\xc3T\xf5\xcc\x87\xf7\xd4\x87\xae\xf4\xcc1z\xfa!u\xd1\xf3\xf4\x08{\xe8\xac\xcb\xf5\xda\xb3\xeb\x0f%\x12\xc6|\t=\xe0R\x93\xcd\x8f\x02\xdf\xf6\xab\xeail\x1fR5CB$\xa5\x8b\xbe\t3\x8b\x16'
+    b'd$\x8e=\xb2H\r\x95\x95\xb2M#%\x93\x95\x0e\xde\x8c4\xac\x11\x08\xc3)e\x91Z4\xbce\x98\x14x\xfe\xc9\xc0\xe2\xaf\xb3\xc19\xa67\xc1\x1f\xe88\xd1\xbaP]\xf8\xde\xc5\xcc\xd6N\x00\x1bN2)\xedu'
+    b'\xae}\xab\\.5\x0b\xc4\x8c\xbb\xfds\xb5\xb9\xe5k\xbb&\xc6\xf7\xd8.w(\xbap\xde\xdc\x02*DX\xbe\xd4\x7fm\x8e\rnQ\x87o\xff\x18\xc9u\\P\x8c\xbc\x12\xf6\x92\xc4N\xa4\xeb7\xed%\xb1\xd6\x9d\x13'
+    b'\x97-HT\xee]\x85\x8f\x9a\xe9s\xdb\xe7\xae+\x854L\xed\xfb\xa5j\xb8:\xdcoh\x9c\x90\\\x98\x92\xcf\x06\x88c\xf6\xf4\xd9\xa6\xf8\x8a\xa7\xac\x0f\xb2G\x98\xcb&\xe1\x87\x12\x19\xd8\x02\xa5\xb6IP\x9b`G\x8b'
+    b'\x15B\xd0\xa0K\xed\xcd\xa4\xe6\x80\x7f\xd3\xde{\xc1\x9dt\xe9\x19WlB\xc6E\x0foC\x07{\xbd\x14::\xa6\x1c\x85\xe3\x02s\xad\xb4\x8d&\x19WK\xae\t<~\xd8b\xbc,\x13\xb0\xae1XN\xa5D\xa2\x9b'
+    b"\x96\x9c\xf1\xf4\tW\xa2\x9as\xb9\xf7\xc5H'y\xaa\x94On$\xeea\x91f\\\xe2\x8e\x1d\xbeu&I\t\xa35\xe3FI\xf8\xebf\xce\x803\xff\xf6L\x01:\xb0O\x96\xeckE\xbf\x06V\x8bK\xca\xf8\xdb4"
+    b'\xc4\xa3wG\xe1\xb5K\x1a6\xfeC?\xc9\x8f~\xab\xab\xe7m/\x91\xd7\xf8O\xaa\xdb\xd9\x95\xeaZ\xdba\xb9\xff!K\xa08\x8b\xbeik\xb2\xbd\xb5T\x14\xd3\xb8\x87\xdf+JP\xbc\xb1\x19\x12!\x8d\xf9\xd4m\xca'
+    b'\xe27\xd0\x8e\xec\xe6\xaa\x1bM\xd0\xc6\xdb\xa4\x18\x90\xb6\xa74\xb3\xaaCj\xbfv\x97V*k\xcc\xc6_\xc6\xb0u/\xfc\xbb\x80\xa7\xb5{\xd1gA\xc3\xa6\x8f\xd1\xf0\xc9W\xb3\xb9\xabP[Q\x04\xee\x99\xf8=\xbb\xd8'
+    b'U\xcb+\xc9z\xb9\x05 47\x1a(ixy\xfcP\x01\x8b\xfa\x16\x11\x9b\xa8\x17\r?\x0e\xab\xa65\x03\x86\xea\x1d\xea\\(\xd8\xb3B\xaa\xae\xde\xaa\x9dz\xf0U=\xd16\xab4\x93\xd9\xe8\x1b\xf6u\t\xaf{5'
+    b"\x8f\x83j`\xdf\x82\xa3\xd2\xaeu\xf9@\xf8\x8d\xa5Y\x9d\xf3Y)\xab*\xd5r\xe3hT?,\x97\xba\x90K}\xd2\xa7\x8a\x18\x13'J*\rR\x9d\x91\xd2\x99\xad\x0b\xdd\xc6\xa3\xe5\xa1\x17\xea\xc3c*i\xc7\xa6\x99"
+    b".\x8d\x8a\xb9\xea-pIu\x03\x8d\xf6\xc2\x9cek\xb0~\xe4TAo\x90[lhwv\xca\x07\x83\x1c\\\x15\xc0\x04\xfe\\\xea0f\xd7\xacd\x0bD\x19w\x8d\xe9\x91\xad'\xce\xcaM\xb6\xe1F\xdc\xb3\x10\xa3\xc4"
+    b'\xf0M\xdaB\xdd\xcb\xd2\xb5\xcd\x13\x87\xe57\xba}Y;\x0e\x1a:\x1d\x8dn\xf1\x97ij\xae;\x0c[\xaaj)\xed\x88\xc4cT\x84\x978\x1cg%:\xa5\x1d\x95E\xa6\xd2Z\x93\xcc\xbc\xe7\x12\xd65\xa0\x94\xb6\x88'
+    b"`\xcd\x8ap\t_\x97\x84\x92& \xc6\x9c\x9fr} \xfchP+\xe4T\xab4I\xab\x1f\x12\xc4\x1d\xd8a_\x91\x08\xe24\\\x96\x98\x0e\x97 \xd9\xf6\xf4\xa9\x06\xfc<\x85\x0f\xb3u3L\x05\x89\xe0\x1f'\xde\x11"
+    b'.@\xc1E\x9eA\x88el\xd5Xv\xe3\x9d\xbd\xf2\xeaL\x01?x\xc9sm\x86\x11\x88\x11\xde\x88\x99!}\xa8\xe9\xc3oY\xb6\xbaG\xbf\xab\x15\xdd\x9b\x9d\xe6*\xb49\xe7\xef\xe4\x1dw\xcd\xba\xb2\xeb\x1c\xbd\xa9%'
+    b'\xc6\xf8\x1fzMS\xe2?%#\xa1\xe7\xf9\xdd&P\x8d\x8ap\xee&G\x13O\x17g\x95\xa0>,\xd3\xcc\xdb\xd9dX\x97\xf8\xa7\x9d^\xed\x94]\xdd\xb8s\xb5A\xe5\x8cZ\x8f\xd4\x19z\x18]\x86?k\xcb\xd4\x98'
+    b'\x83\x92\x9f/\xd5\x9f\x92\xb4K\xb6\x87T\x82F/8>\xb2#\xc9}7\x97\xa9Re\xbd\xfb\xbf\xf7?\xae\x1b\xab\xc2?\xa3|B\xeaP\x00,\xf98\x8d\xf1\xcfW\xeb\xb7QG\n\xc6\x03Dn"\xe2\xc6\xf6\xaa\n'
+    b"\xbd\xfd\xc5\xab\xfc\xea\xd6O\xd4\x07\xea\xa2\x84-\xedUEy\xf9\x02E\xf6;\x8e\xae\xdd\xf8\xc9\\F\xa0\x0fN\xc0\xb0?=\xfe\x84G\xeb\xf7\xbd\xdfQT\xfe\xb7\xac\xb97\xa1Gu\xea\x87\xe5\xda\xd9SO'\xc8\xe4"
+    b'\x98\x82\xaf\x13L\x85\xc1\xd2a\xc4\xc4\xa1\x93\xd6n\x88E\x0f\xa5\x14\xef\x01\x96\xe2\xdc\xd0\x90k5CK@\xe28\xbf\xfcrI%\xb3\x97q\x1c\x1d\x0c\x82G\x94\n\xb7#\xe1)\x15\xa2\xe8:J\x8a_`\x87\xa0\x8e'
+    b"\xcd\x81\xb8\xc8(\xdd'4\xf8)\xa9\x03\xfc@Nb\xf0<\r\x84h~Y\xf2_):\x8a\x07NQW\xe0b\x94\xea\xca\xbcD\xe5\xe7%x\xb1\xc1/\xa7\x7f\x7f\x87\x01\xb2\xf4\x9e#'\x8d\x05&\xc1Oc\xa0\x94"
+    b'\x19\x0e\xc0\x9c[\xd5\xaf\xc5E\xa0[}pp/\x8a\xe3\xa5\x8e\xec\xa5\x0c\xc3\x8c\xa2\x15\xf9\x06\xa1\x92{S7d\xa5k<\xfaf\xe7\xa2\x8e|\xa3\x1d\xa4\xeas\x84\x1e\xca*\x96\x17R\x92X\xe5\xaa\xe7\x97\xbf\xc4\x92'
+    b'\xaf\xbe\xc4\xcb\x10\xdf\xc0jT\x1d \xae\xa3|\x01*F\x1c\x9d\xe0}\x16<\x99n\x80\xc4\xc3\xedM\x08d(\xfb\xc5\x9ep[^\x04\xc6`\x80\x8ddF|\xe8\xfd\x8c\xb7\t\xea\r\x14\xf0\xa5F\xef\x81A\x05t\x8b'
+    b"F0W\xa0\xe9\xf4\x99G\xcf~\xee\xc9\x90$<\x96W\xbe\xd3\x05#\xe84_\x9aHV\xf5\xa4\xa5\xdd;\x8e'\xb6\x1b\xe2#;\xad\x85\x08E\xa5\xb5\x84T\x92+\xcc\x92\x85\x94\xa4\x91\x15\xe2[\x08\xe6\xb4\xa8*V"
+    b'U\xa9h\xf8xH1k\x18\xc1\x88W\xba\xf0\xb6\xc3\xcag_\xa5\xc0qe.Z#\xe7\x9f\x17%\x0bo\x9a\xe69\xea\xa8@\xfdh\xd6\xc0\xbfO{\xde\xde\xfe`A\xd5!\xabx\x19`\x8f\xe4\xa5\xe0"\xd1\x0c\x1e'
+    b'\xd0%\xd2@Y\xe5\xcbe\xac\x1d\xcbd\x10\xf2\xed\x1b=\x82\x91\xc8\t\xeb\xf2\x83da\x96\xf1\xf1\xc3\xe9\x97\x93\xd3\xe3\x8f_\xfe\x8e%\xb9`\xa0\x11\xf6\xff\x0bP#\x11\x0f\xb9\xa7\xd5\xcc=\xbaSJ\x1d\xd0\xd1\x89\xdc'
+    b'\xd0\xaaO\x86vk)\xe9?8U4t\x1e\x0f\x00r*\xb6D>\x04\xf2\x18\x84\x18\xe6\x86\x1f+\xb2\xcdPqe%\x94\nbcQj\xc2\xcb\x1c\xcf\tq\xd2\x02\xec\xe1?\xde\xbe\xff\xeb\x97\xd3\xc3\xb7\xef\x18\xdc'
+    b'\xbf \xb8\xec\xd2\xc9\xabS\x90\x91\xc6\xb3m%\x02\x01NN\xf0\xc6\xb6\x8e1{L{\xed\xa6\xf5&\xc0\xd2\x8a\xb7x\x15\x10\x10\xb3iA$\xdf\xec\xdf\xa9\x13\xc8K`\xb2\xe0\x19\xe5\x12\x1e\xe4#^L^\x11nt'
+    b'\x8b\xa1\x83\xc8\x84e\x11\x9e\x0e"`\x19\x8aI\x07\xed\x02*\xdb\xf6^*7\xd1\xads\xbe\x93\xed\x92p\xaaK\xe2=G\x87}\x82\x0e{\xfc,\x04\x1a\xc8\xa2\xa3y\x92F\x9dM\x03%>\x17m\xda(Y\xd4\xa5-'
+    b'\x98\xc7R\x94\x15\xf5\xe6\xf4\x0c#\xe9I\x85:\x13\xc9\xc6\x14\x88|\x8dO\xe3\xb22\xb1`\xcdY\xd0\xa4\xb1\xf7B\x87\x07\xf1\xbc\x942l\xbd?K\xce\x1d\x04%\xa4\x8f\x84\x18\xfa\x00zGe\xfb>\t<\x15\x11\xe6'
+    b'\xfdW\xeb0\xa8\xa6\xf5\x9c\xfdP+U\xe5,*^\xd8\xd5\x03\x86\x8d\xc7q<!\x8b\xccL\x01\xaa\xad\xea\x81\xc6\xf0\x88\xae\xa3\xb8r\xa4\x89e\x893]\x19\x071\xd9Oy\x15o!\xa3(\xf9\xea+\xf1\x83\xa0\xd2'
+    b"\tR\x98b\xc4l,\x04\xc9\xc5?C4\x89\xd9\x05H\xf5%$h\x14\xf6c\xc6\x91\xf38\x90\x83f\xea\x8eK\x80c7\xe4|\xe6{'\xf9\xf7\x90[\x98\xc7\xf8\x93\x16\x83\x7f\xd3\xbc\xa8W\x9c\xd7\x11f%e*"
+    b'\xe9HM\xd9\xc6\xab\x9b\xad\xb7i\xc2Ks\n\xc3IQn\xe7\xdc!\xbf\xa7\xb1mB\xe6|^\xa5\xa7\xe3B\xd8o\xb1\xb9\x95W\xecd\xdcK\xba\x01\xab\xe2\xe2\xbd`%X\xcc\x08d\xc4|\x87\x85N\\D\x96\xcc'
+    b"\t\xf3Ieegaw\x1f\xc9N\xb2\x8a\xc8\xf1\xed\x17wXfV\x84\xd6)\xe1h\x83\x18\x1f\xd1\x15\rx\xfd\x15\xda%$\x93N\xf0\x961:\x0c\r\xc7'\xc9\x7fb\xff\xbc\xc5\xc5|\x11\xaf\xd5J0@,\xa6"
+    b'\xcf\xe0\xf99\xc5\xe0\xe2\xb0\xf4\xcbd\x8b\xda\r\x03]\xee\x18-\x1e\xb90\xd2o\xb4\xfa\x9a\x94\xc98\x81\x8d\x8bZ\xbb\xcf\xb784[\x19\xb0\xb1\xd5R\xacT\xce|<5\x89,\xa2\x8e\xb8\xe9,\xfa\x9eC\x92\x9e6'
+    b'\x9c.\xb1`O\xf2-\xfdY\xcf\x84\xeb\xea\xc0R\xbd.\x94XmS\rwl\xd4%\xbc\x13\x0f\x0b\xf3\xf0x\xecA\xfe\x8c\x0f\x9b\xdd\x14\xf1\x02\xf4\x81Z7Jx\xf0\t\x14\xcf\x07\xd6\xf9\x15\x12\x19\x90\xd6Q\x9a\xc0'
+    b'\xb3O\xf0\xb6c\x0b\x9a6%\x8f\xd7\xabM\xa7\xc3G\xacC\x15\xec\xa5\xc5\\\xd0\xe6\x97r_\x1b\xb4\xec\xb6X\xf0\x8c\xb2\xf6\x04YW\x11\xec\xb7\xa9jN~%]\x8b\xc7\xc0H\x89\x9a\x8d\xd0\xa0\x02\x87\xeb\xc2\x88\xee'
+    b'7\x94\xbb\x9e$Z\xe0\x85yz\xa2\x0f\x1d\xb5t_\xf2,\xd1\xa26m\xfa\xde~3\x97\x12\xb5\xbb\x136\xd60\x08\xcc\xda\xb2\x9c\x8fw\xd0Jq\x8a\xbbq\x1bT<j\xad\x8e-O,l\x80\xd8\x19\xa2\x9e\x85h'
+    b'\xf29-\x92\xb7\x83\x91\x95\xf9X\xa3n\xd7\x11lr\xe9$&\xed\xc0\r"\xd6BH\xde\xeb\x98\xdd\xcd`\x92,\x04.\x15\xd4\xba\xe4\xa2F\xfcJMBb\x98\xd5c>\x97\x1b\x98\x07d1\xa9\x10eu\xddcS'
+    b'L*\xe0\xf4\x86\xffy\xd0vX\x96Sz\xba\x9d\x81\xcb\x81\xca\x98tK\xa1\xc7\xf8\x07\x8a6\xd5\x9f\x9c\xec\xb9\xa7U\x18\x12|\x17\x9eL\xfa\n\xb4u\xb58|\xa2Od\xd5\x8c\x1c\xb5\n\x1at\xed\xb8\xac\xdb\x95F'
+    b'kH\xcb\xb7z\xbb\x8a\xe9\x893\xd2\xa1\x8f\x9c\xd2c0\xa6Z<z5\x85\x92\x0e\xc6\x8dc\x0c\x9b\xdb\xa1\xdf*Cn\xbd\r\x02\xbcS\xd2 \t\x1a\xb7\xc0\x80\x9d\x8e,\xb5\xcf\x86\x01\xbe\xe8\xd6C\xd7\xcc\xea\r\xba'
+    b'M\xe59MT\xb2\x15\xbe\xca\xb3E\x8e\xd1\x1b\x1c\x9bj\x08\x84n\x0563\xa1\x9f\xe8t\xc6\x7f_\xf3\xad\x94\xe6,\x12o\x7f\\V<\xae\x82F\x82#\xda\x96U\xb4e\x9b\xb29\x92]\xbd\xb9Q\n\xdbG\xae\xab'
+    b'G\xcc\xaa%\xb5\x11\x8f/T\x15\x1d\x13o*\xbe76\xa4(H]\xdf\x8e\xba]\xbc\xaaf\xae\xad!\xce*\n\x8c\xd5"\x96\xfc\xb8\xc8z,eE\xbd\xabHpP\x8b\x80 W\x9c\x83\xc5\x88\x1a\x85%\x9f\xf0\xdc'
+    b'\x17\xea\xfa<\xde\xd1J,<\xebJ5\xf4\xa5\xed\x03x\xd6\x93\xdey\xf2\xfd\xd6.\xbb\xa3\xc6\xc4\xb9\x1b\x86B9\x0e\xdc\x16\x92_l\x8f\xa4k}\xf0\x90\xa9\x96 \x9e\x03\xf2g\x916.(\xea\xe9\xb3nw\xe3\x98'
+    b'\xeer\xf8\xf5\xb3\xba\x1aSe\x03c\xcbB\xf9\xa3\x16\xae[\xbf\x10\x86\xac\xf2\x8e\xc5\xff8\x03{\x95I*\x95\xa2Jc\x10\xd9\\Y6\xd8C\xfe\x02\xad(\xfa\xc3\xe5\xd5-L\x17\x1e\x03\xd3\xd5%0j\x1b\x93\x8d'
+    b'63N\xddv\xe3Ma\x068\xd3M\xcfE\xba\x83\x85\x99\xff#\x89/;\xd7t\xf1/|\x98\x81\x1d\x8f8\xb9\xa9\x19p\xce\x865\xd5\xea\xc8\xc1\xea\xe0\xee\xcc\xf0\x12}\xd7#@f\xa0\x1c\xb2\xac87\xd21\x8b'
+    b'\xeb\x16\xdam\x9a\x80]\xc3CUV\xb0\x84c\xe0$\x1aZ\x9eD\xce\x0f\x95\x82\x00:\xd1Q\xfc\xf7I%eX\xc9UT\xd25}\xec]\xa2\xb0\xe3p\xb9c\xb8\xb6$\xe84\n*\x0c\xe5h@\x8a^\x95v\xc1'
+    b'+K\xd58+Uu\xa9s\xfe\xce\x03\xc5\x98\x9e\xf5\xfb\x08.7\x9d\x82\x08\x10\xe5E!\xa2:Q\xb8\xf8\x84\xa7\x96\xaad\x86Q\\0Y\x9b`CO\xadu\xbf\x1b`%\x87\xbd\x01\x86v\xb1\x1e\xa1s\x81\xbe\xa7'
+    b'F\x89\\\xe4\x16\xe2E\xeb0eu\x1d(\xc5]\xd2\niY\x14_\xc5\x93#<6\xcd\xc0\x047\xe3\x80\x15$E\x18\x0cn\xe4\xf8U\x03\xae\xc7\xb3\xf0\xd7\xf3l\xf8\xc1\x94\x02\x8e\xef\x8b\xfe\xd5\xa2\xc1\xe1\xe9\xcb,'
+    b"\x8e:\xdd\xe6\x05W\xf4Xj\xf7\x8b\xaf\x19\xbf@\x0f\xfe\xb5\x07\xa4\x1d\xa6'0\xf3p\x16#(o\xabx\xd1\xf1\xa7W}>|\xecGE8\xa5b\x13\xb6\xfb\xd9\xbb\xc1\xbbP's\x10l\xd01\x8a\xca\x86\xe2J"
+    b'`\xf0G\xa0H\x1f\xa3\xa0{\x07\x18\x8e\xd1\xd3\x01\xd8\xe1\n\x16\x02\x1d4\xde\xd4\x92\xb7\xa2oW7\xb5\x1c\xe5\x7f\xa0\x8b\xb6\x15\xad\xb8\xd1ewDE\xbe$\xb1\x8e\xa1\x08\xc8\xa3#\x95@\xa0\xecr\xac\x0c\xa0*U'
+    b'\x83\xa1\x85\xffp\x10\x1al\x9a4\x06;~\x96sx\xc5\x8ep\xfa\xe6l\x81\xbb\xa0\xb1\xdc\xab\xc3\x02`l\xfc\xa6\x05C\x96\xb6\x81$\xca\xda\x86\xe4\xb6\xa2\xbf>\xcc&x\xfb,z\xc6q\xefi\xfe\x0fj\x12\xe6\xb4'
+    b';\x1f8\xe1\xf9m(\xeaQ\x9e\xd7\x96%\x9c\x00\x1f\xb8\xc0\xab\xed\\\x12\xd9\xf2\xc58]\x15-K\x0e\xd4\x89\x0e@\xd8~\x9d\x1a \xc0c\x1e\x0fd\xbd6uz\x11\xaf92j3\xa2\xee9\xccZ[$F\xa3'
+    b'g\xc4@O\x8a1\x11\xeb\xa2\x87\x93\xaaH\xfff\x1c\x1a\xb7\xe9x-\xfb\xa5^\xec\xd1>\xdf\xad\r|\x08\xc6\xfb\xe5k\n\xd2\xc1\xb2F\xed#\x89X6\xc2\x85\x9c\x0b\xd4\xa5\x8e\xb8j\xeb\xf7\xd7\xe5w\xf5\xda\xbf\xb5'
+    b'\xd7\xd3pL\x01\x1d\xb5\xc7\xc7\xe8\xc15\x01\xb4[\xd0%\xf2U{\xd26\rt\\N\xc2%\xc69l\xd8\xca\xce\x990G\x02\xf5\xff\x80Sa\xd5k\x01V\x08z=\x95G\xee\xf7\x8c\xb0c\xf8\x0et\x82\x17H\xd0'
+    b'y#\xec\xd5\xe2+\x1d\x94$\x99G\xae\xa38z\xfd\x8ay\x8f>\x07\xe1<\x00T\x04\xd5\x8d\xa3\x05\x86\x85\xc5\x11\x1d\x19\xe1)!E\xe5\xe0\xb6\xa4\x83\x12\xba\xd0y\x91\x94%9\xa3W\xe3\xb19\xd6S5P\xe8\xa8'
+    b'/J0@Kb\x020p \xf0\x0e\xb1K9\x1b\xcc0b\x0bx\\\x9a\xe7\x17\xaa.\x80A\x03\xd7\x93\x195\x90\xc4\x97+\xd2\xd5\x88r\xd4\xc5W\xda$%\xf4\xae\xd8\xe9Tn7J8\x80\x84\xc4\xb1\xe8 \xc2'
+    b'\x84\x196\xfbT\x95\x87y\x8d\x83w\x18yLj$\xf6v\xec\n\xb6\xa8-*T\x06\xf8\x80\xe4\x1f\xce\xaa\xf4{\xe2\x90\xe3j\xaf`\xdf\xad\x96\xb3"\x04\x13\x87\xeelul<\no_RQ\xc1\x12\x88WlS'
+    b'\xce\xbbD\x01\x1bw|\x86\x03\x1d\xf3\xca\xa2\x93^\xcb\x15\x90xY\xd6\xfb\x13fa@\xd6\x9f\xc8\x18U\x01\xf8\xe3K\xbaM\xef=\xbc\xe88\x8c\xe8$\xccw\xb39\x83\xbc\x15\x9c\x00c\xf8\xf9\x17|\xcc\xd7M\x9b\x82'
+    b'\xb7uY/\xe6h\xed\xf9\xcdN\x13\xfb\x80Q\xc2\xbfss\x10\x86h\x7f,r 8\xbb\xd0\x0f\x97\xa00\xf7Y\xad\x1b\x85\x86\xef\xb6L\xff[\x0b\xa5\xfb\x8d\xc5u\xee\xf6\xc7\xe0w\xb8\x0ev\xe3\x9b\xed\xcb[_`'
+    b'9\xf9*/\xa4z\xd4\xd6\xc5\xeenZR\x90\xdd\x9d\xfaR\x123-/6C\xa4\xe6\x81\x8dxTu\xd5\xa1=+\xd3\xcdw!\xa3F2\xf5f\x8a\xdcT\xba\xd7\xf6\xa6b\x83\x85\xe5:\x9b\x98\xe1\x97\xc0\xd3l\x92'
+    b'\xa3K)@v\xe0-4X\xaf\xa4I\x99\xfanEh\xd5F}Tk\x82>\xc5\x16\x80\x94\x7f\xaf@\xaa|\xd4\x0c\xb3s\x8d\x11PC{\xcb\xddtut\x1e\x07\xf6Xkku\x05\x0b\xf4F\x07\x92t$\xa1\xa4'
+    b"\x0c\xaa\xab\xca^0\xd94\xf8E-\x11\xa9\xbe-U)C\xc4\x01\xbbD\xcd<\xf8\x99\xc6\x82(\x93\xa8\x84\xbcN\n\xca\xb7Y\x7f\xc4&EG\x0fLh{\xe95\xa7'\x86\xc9\xdblHmn\xc0hm\xc3A\x83"
+    b'E\x18-*0Q\xcd\x87\xe3\xbc\xa8\x8e\x91\x8a\x00M\x18d}\xe9I\xca\xd7\xddA\xde8:\xf1\x1c[\x0ep\x9fN=lA\x96DhH\xc4\x91\x96\xba\xd6\xa2\xf0u\xd3\x14\xccD\x96\x11^$\xc7r\x8e\xcb\xeb\xc8'
+    b'\xbdQ`5\xafR\x92\xb4\x12\x9e\xe8aE3\x16c*n\xd2\xdc\xc1\xc6\x99\xd0\x14\xe9\xb0\xaa*L\xfb\xe6{\xb1\xf1\x8ap\xcb\xbf\x92\x87\xd1\x1b\xe0\x98<\x89<{\x85Q\x11\xb4\x0c\xd5\nt_\xe4\x11\xef\xc2q\x9c'
+    b'Z7\x18a\x12\xa0{f\xc5\x05\x85t\xcd:\xeeD\x95\x19\xe2\xca\x90)\xd5x\xea\xdc\xa3\xbf`\xdfs/\xf0J\xe2\xbfL-gS\xaf\x1cf\x0f\xf6\xe2;\x80\xd0A\x16\x95\xb65\xd2\x9f\xe7\xca\xf8\xb8\x94\xeb\xefl'
+    b'l\xbcl\t\xda\xf4\x7fE\xb3\xbcs\x04\x8a\xf5\xc3\xff\x8bE\x9aU\x88X\xc1g\x9d(\xfe\x03\xdfde\x92\xc2DQ\xfa\r\xa3\xbe\xc7\x971\xc3\xb8\x97\x98\x9fN+\xc5a!\xdc;\xd2\xd8\xda2\xc9-\xe7\xc2f\xf7'
+    b'\xc2\xc01\x8a\xed\x02\x84?\xe0\x19\xa0\xd5\x80\xa9X=\x92\xbb\x9a\x9e\xdf\n\xc7@\x07\xc9Z\xf6\xfd\xcd\xb6 \x0c:\x93\x07)\x11%%\xde.\xe8\\u\xb29\x8c\x90\x08\x0e/\xdbp\x9c\xea\xfc\xd8\xf2$Qt\x90\xbe'
+    b'\x03\x03\x96A\x05\x8e\xa9(\xd0Ua\xea\xe5K\x0e\x16E\xebp\xbc\x8b{\xdb\xc3Fh\xf0=sJ\x12\x92\x8e\xf7\xd2\xd7\x8fk\xfe\x7f\xb5U\xb4\xa3\x0c\x83\xff\xb6EN\x86J~\xe2_\xee K\xd8\ra\xb1\xf6\xf5'
+    b'\xdb&2\x9b\x12\n\xb6LF\xa7\xa9\xf6\xc5\xc0\xef\xbf|:><\xfa\xe5\xcb\xe1\x97\xd7\x9f\xde\xfe\xc3\xdc\x9c"\x8d\x01\x94LgYRY\xdc\xa4\xd0\x8c\xd1\x12y\xc6\xa3\xa9C\x16qnIa\x9d\x8fi\x89\xa3;\x80'
+    b'\xf7\xb7\xca"\xf6g\x121\xea\xefD,\xd6\xfbU}u\xbaL\'\x0c\xd6\x06\x16\xe6\xcb\x0c\x8d7\x855\x16x\xf3\x01\x97\x1fC\xd7\xc8\x1a\xcf$\x01Z*\xb1\xdfB\x14\xa0\x99\xb0y\x03\xb0\xba\xe8\xef\xd4\x8d\x00\x9e\x84'
+    b'^\x15\xa9\x9b\xc7\x119R\xa8\xe3;\xa5X\xbd\x9a\x81\xdd\xf0}^\x1dfo\xae^\xf3T\xb4^\xa0\xc6;\xa5+\x15\xf2\x14\xbdF\\\x9a\xd3f\xaa\xca\x03\xabS\xc2\xd1\xd2\x92Zn\x19&\xb74\xa3\xf0\tg\x81\x87'
+    b'\x82\xb2a\x8b\xf5t\x996\xbe\xf6\xe7\xcd\x7fc6\xbf8s6\xd5rP\x90\x1e\xa1\x94# h\x9b\xea\xbe9T]\xa6\x8c\x05\x02\xbc\xb7t["\xcam\xd8\xda\r>\xef\x1f\xc2tVhq\x82\xe9\xcf\x11z\x95\x15'
+    b"&\xc9R\xd1\xd3I\xa8\xc2\xf4-0\xc1\xf0h5\xec\x95\xa3V\x14b\xef\xc7,\xf0\x93p\x1a\x16\t\x89\xaf7\xa0uL\xf3+e\xe8\xce\xc5rF\xdb7Tk\x064\xcc\xf1\x87U\x1e ',b\x1b\xeb%k\x05"
+    b'a\xa4\xb2\xc9\xcc\x87\x93y\x9e\x97\x18K\xc9\xbd\x12W\x9aS\xe9][\xa8\xca\x16\x19\xe3y\x05\x16\xae\xc4\xfe\xd0\xa7\x85\x9bK\xe5\x91\x90\xe8\x83\xb7|\xa6\xa5\x83\x87\x08\x84\x1d>\xe6\xc7\x11\x89\xa1l9Ie\x0f-`'
+    b'\xd8j\x1eH\xb6\x06g\x93\xb8\xaf@,\x1dV\xa0\x1e\xc0\x82\x01\xff\xb8\x8c\xc7\x17I\x15)=\xcd\x97\x1a\x8f\xce\x07tZ\x15\xd1e_tT\x95qV\xd0\xe6\xc8\x17\xebk\x15\x97\xce\x8fN\xc88\xd0\x01\x94\xf6(\xc0'
+    b'\x07\xe6R\xb3\xbf\xce\x02\xb8\xea7\x076\x1d\x16E\xb8\x0e\x96E^\xe58G>\xba\x080\x16\xda\x1e\x95\x98\\)\xf5\x83\xcdS%\xac}\xdf\x94;\x13\x80l\xf8\xccg5x\xcd\xad\xdch\xff\x8a\xa5\xa3\x86\xba\x19\xf1'
+    b']\xa5\x80(48`\x9b\x8a\x17\x86\xfd&\xa5\x84\x9b[iq\xc8\xcfH\x8d\xe4z\xb4\x19E\x83\xb9(A\xffo\xba\x01%\x7f\x00\xecr\x19\x94\x13\xe5\xce\x04\xfe\x86\xfa\xf8~w@m\xecR\x03\xe5\xae\x04\xf1\xfc\x8e'
+    b'>\xf3f\x9d\xde\xde@T\xa7\r\xd94\xffD\xfe\xa0\x8a\xfc\xf2\x06\xfc\xa9d\x9a\xc0\x82\x80\x8e!P\xe4\xc8\xea\xb2tMQ\xd2\x8a\x17\xf0\x16%?T\x04\xef)]\x17\xd5\x9c<\x97\x1b\xd0\x93(\x06\xdd\x87\xaf\x01!'
+    b'g\xa5Gk\xe7\xfd=\x9cHI"+\xf6\x07d\x88 \x88W\xdf\x90\xa9\xaa\x0f.sQI\x06<\x15\xf5K\xf8/\xfe\xb8\xd9\x14\xccK\x1d;\xf1\xaf\xf6\r2R\x8e\x93\x87\xc7(X\xde\xc7\x9f\xe24\xac\xa0\xef\x8f'
+    b'a5\xa7\xdcC\xf5\x9a"6TH\xd6\xae]\xac\x82\xbaR\x01Zh\\\xec\xd3\x050R\'3\x80MY\x1cV\x9d\x81U\x16\xc9\xad\xf7\xc1\'\x95\xcc7\x0f\xe4;\xfbz\x19\xd5\x93]\x8bA\xd4\x15\'\x87\x8a\x1c\x1c'
+    b'\x02\xaeh\xd1\xcaw\\\xebBS\x85\xe9\x81\x1e\xd5:h-\x93\xd8\xae\xe2i\xad\xad\xc1nD\xe7p\xb6\x84\xce\xaa\xe26\xb5z$\xa4\xf4\x15\x1c\x82\x7f@[\x86\xb4\x8d\x8eo|\x9fd\xdah6\xa1\x16C>\n\xd4'
+    b'-\xbd\x96\xa6"W\xc3\x93\xcd-\xcd\xeck \x14\xd15\xc8r\xe4d\xf8*D\xdb\x90\xc2\xe6\x90\xb2\xa5\x16\xa4\xae.\xe3k\x8b\x85\x9aj\xf8\x1c\x05\xc9\x86P\x1a*\x08Y\xeb\xd4i7\x1a\xa9\x0eL\x1b\xf5\xcf\xda\xd7'
+    b'\xcd\xf4w\xf2%\xb0\x11\x8b\xfaL\xc7\xa6G\x9d}\xca\xca\x95.\xdc\xb0\xa7\xb3K\xb9\x9d\xe4\xce\x8b\xda\xda2\xc6;T\xdfl>\xe3\x8530\xdf|\xfb\x8a\xeaPT\x19`\xef\x97\xaa>\xbb\xe4G\xd8\x8cm\x96\xc7e'
+    b'C=\xb0t\x03\xe0?;RWA\x82\xa7\xa5\x80\xb18-\xf4\xa5\xaaY\xa4\xf3\xf38\xf7B\xe4\x8c\x93\x93\x10\xbfZ\xa3\xaeoQ\xb6\xdcZfY\xafM\xab\xa1\xbed:IVBD/\xb6\xa8#!\xd3\x0b\xb6\n'
+    b'\xe6@\n\xd0\xf4\xd7O\xef\x1c\xcf-\xfc\xee \xb9\xbdJ\xf3q\x87n\xde:\xefy\xd7(\xceq!\xe0\xe7.U\xec\xf6o\xba\xa6+\x85 \xaf\xc6D\xb6\x87\xe0\xe2\xa7\xa6\x0fK\xe8\xd0o\x8e\xb2\xb5\x8d1\x9bJU'
+    b'0\xba\xd2\xa3\x1d\x07\x93Y1\xba\xa6\xe6#\xc5\x194\x92\xd7\x93L\xe2\xa5Dt\xc1\xdeD-\xdeQ\xac;\x94\xe2\xf9\x96\xf4|em\xd9\'\x01/\xb1R\x95\xca\xed\xe2\x85\xe6\xa4\xd0\xa4"\xc55\x13u\xfc\xa7\xd7I'
+    b'\xc4N\xad\xe2\xe2\xe5O\x81]R\x80\x8a]\x91\xd5\x1e#\xfa-*\xce\x0b\xf9\xbaE\x93\xc7\xba\xf8*\xdf\x94\x87\x0c(_\x84\t\xde\x1a\x8d\xdck\x9cp\x84\x16\xae{\xa6F\xfb$\xf0>`\xd9}JV\xd5\x87H\x98'
+    b'3\x98\x8d\x94\x8fiG\xaa\xbc\xa3\x9bI\xd0\xc8\xb9U\x15%\xc0\x96|<V\xe7\xdf0\xb0\xcb\xbb\xd5bi3J\xaf\x05\x01\xa2/(\x160\xa40\x01\xb2\x10\xaa\x8f\xe6\xa6\xe9\xfc\xb8\x10p\xad\xd2\xfa1\xf1\xef\xe0\xd9'
+    b'\xff;\xe6\xe7\xef3>\x9b\x93+\xc3DG\xf6*\xe1\xfcRy!\xec\xa7\xc2\xf6u\r\xf5\xa1\xab\xacR7\x80\xda\xa3_\x8e\x8f\xfe\xf6\xf6\xfd_\xbb5\x1c\xe8\xac3\xbe\x1bCYlr\x08\xba\x8ea\x87\x1cQF\x8b'
+    b'\xbdwS\xba\xd6M\x11Y+&\x9c\xdd\x82\xfb\xfa\x96mR\xa3\x1d\xad\xb8\xe0\x046\xc1\x0c:@\xf6\x13\x1a\xa7\xcb\xe5Z*{\xe4\x8b\x98\xc3N\x86\x82\xe0\x1eaR\xf7\xe9\xf4\xf4^\x8c\x88"^\xe6\x98\x07\x18\x98\xa4'
+    b'E!.\xa0\t\xb0\x93\xc0`_\xb8\t\xa7\x81\x11[\xb4-\x8f\xe6\xa8\xd3\xaf\x16J\x1c\x95j[\xcc\x19S\xed6\xf31\x00t\xe9\xda\xcd|\x18\xbc\xddn\xb6\xcdf\x12\x85\xc05,\xe1\x87q\x9dd/6<m\xc8'
+    b'\x91AB\x00~6\x9f/H\x81\r\xe1\x0e>{\x1b\x8e\xa3\x19\xf9\x90\x99z\xe9\xfe\x0f-L\x13s\x19\xa0\xd0\xc3"\x9c\xcc\xb1z\x14\xc2\xf0\xe1\xfd\xf1\x97\xa3wo\x8f\xfe\xf6\xe5\xd5\xa7\x0f\x9fO\x8e?a\xbe\xa1O'
+    b'\xe8\x8aI\xd7\xd8\xfd\x9cdR*2\x0b\xbf&\xb3\x10@\t\x80UV\xa0\xd0/\xe8\xea\x08$\x1d\x04\x80\xa3\x19\xbb\xad\xe5\x0e\x14\xe9qX\xafT/\x91\xb5\x00*KR\x12,j\x95z8\xadM\xceH\x9b\x05\x9eb'
+    b')\x16\xd5\x8d\xb8B\xd4\xf2\x995S\xd7\xa4\xe0z\xa8up]\x19h\x9c8\xbb\xc4\xc7\xdco\xe8\x03\xdd\x12d\xb4\x06\xa4y\xb5`\x0b\xcb"\x94T\xcd\xb5\xac\x8a\x90s_s\xb3\x89\x14!\x9a\xcbL\xad{\n\x8c\xb8'
+    b'\xfb\xf1\xa8\x0c"o\xd3\x11\xcd\xbe\xb4\xccJ\x16o.I /)\xe2\xbe\xc3J\xe4V\x1e\xbc\x93\x87}\x14\x95:\x98\x80\rF;\xd6\x0b\'\xb4\x07\xdfV\xda\xdc\x17\xa4&t\xc1\xdd\x8a\xf8^\xa1\x8aJ\xa1i\x8a\xdd'
+    b"\xbd'\xcb\x9f\xc6\xb2Q\xcea\x97\x82\x8d\x00\x94\xcb\xa2\x1e\xe0A5a\xb1\x7f\x95r\x9bO\xa7\xea\n=Ydr\xe0S\nX!\x19}TK'\xa3m]W)\x88\xdf\xb1?\x02\x13n\x01\xf8\x05\x98xD+\xd8"
+    b'e\x19s\\\xe9"\x0e\xcb\x15F\x16\xef\x0f\xf6\x9f\xf4\x07\xcf\xfa\xfb\xfbN\xba\xf4\x9d&O\xd8,a\x16x\xcb+\x9e.\x01\xff\x9a\x0b\x1f\xa3,\xeb\x8a\x86L\xae\x08\xc6Kt\xe8\xe2\xe3\x7f\xaf\x92\xb8\x82\x95\xa2\xe8\x99'
+    b'\x9eS\xaa\xa4L\xb8F\x8c\xeca\x11\xee\xe6\x1e\x10\xcc\xde\xa2\xf0\x97<M\x11\x9dj\x15s\xdb\xc5\xa0W\xd3T\xcfag\x00:\x0e(\xc8\x16\xa5WX\xf1\x85A\xc8\x1f\xb8\xb6\xcc\xc9\xf1\xe9\xe9\xbbcNF~2\x18'
+    b"H62\xbf\xfb|\xf8\xf6T\xb2\xaa\x1f\xd3\xabz^\xb5\xf27\xcaE\x0f\x00\x11\xd6+\x92\x98]\xc2\x0fS\xe4\x98\x8a:\xe3\xff\xe0\xf9\x97\xc5\xeb\xb1G\xabb\xf2\xaf'\xaf\x80e\x94|\x919\x17X\x10\x8e\x8b~\x0c"
+    b'.|\xd2\\\x11\x1cwAA\xe0\t\xe1It\xa5\xdaj\xff\xa5\xbf\xf7\xb4gD\x89`\x19I\x13\x8fR\x98{\xe6\xa8\x87+\xd5\xc3B\xc4\xe1\xe7\xc3\xff\x11D\x0cj8\xfa\xf8\xe1\x9d\xa4r\xef?\x1e\xd8\x8e([1'
+    b'6y\xd5b\xd2\xef\xfe6\xe6\xe9\xfdV>8\x80\xff\xa7*\x12cU@\x89\x9a\xeb\x84M]\x03\xc7]p\x89\x97\xe6\x93,\x9d\xd1\xaf\xc4\xbbQT\xb9\x1c\xa7\xbd\xff\x874\xc38\x8d+A;\xd7\xe31\x89\x18H\xfb'
+    b'\x88\x98\x922\xca39T\x15\xfe\xa3r6\xb0?`\xca2\xb2\xdc\x96\x0c\xfaS\x96\x94\xeaV#\x0b\xcf\x86*\x03\xef\x04P\xd2\x8f\xe2rR$c\x86\x9doL\xc6\x1e\xd5~\x0eU\xe5\x08\x86CC)\xc4\x92\x10+'
+    b'\x06!\xcf\xba\x02\xc8\xac\xb8`\xc1+\xba\x16\x8a\xba\xbbhX"e?\xf3\xdcX\x84\x16 \x8bG\xb2Rd\xba\x12\xe84d~AE\x1cA\xcb\x13\xda\x1f\xc7\xca`\x80\xbeKXv\x18\xa6\xae\xe6c\x8f\xa4\xc8q\x95'
+    b"\x83fl\xd8\xdc='\xab\x9d\xac5\xce\xcc\x8c\x07\t\xecN\xb6L\x87\xa4p\xddX)T\xb8ZD\xd8\xaaW\x1eD,\xd9\xcf\xf2V\x07>r\xe8\x83<\rh\xa9;\x1a\x97|qw{S\n\xe3\xeft\xdb\xefc"
+    b'h\x9cg\xd5\xafp\xb81Y\xc9\xc2\x0f-\xa6\xa2\xef\x89\x83u&\x1b\xad\x87\xeaV\x9a\x94\x15\x97\xd7T7i\xb33\x80\xaa_%_\xb9\x04$\xf6\x89\x8bN\x891\x1c\xf5P\x82L\x88\xfa\xc2T\xf8\x1e;\x0e0\\'
+    b'\xa2\xb7\x91\xe9V\xf1GQ+(\xf2F\xea\x8f\xecX\x17\xb0\xa9\xe7\xaa\xb0-z\xc6D\x93S\xd7\xd9\xb1\xc8R>\x8d\x1aA\x10\x9c\x87\xfc\xaeA\x10\x14\x97\xc1\xe7\x9e\xa6\n\x10\xd6\x93\xa8Q\x05W\xdd\xec\xe8\xb0i\xeb'
+    b'\x16\x9c\x1f^\x86S\x95\xde\x8dr\xc4\xd23\xd0\xac1\x0c\x82u\x87\x8cr\x11\x915P7\xdee\xeb)\x14\xf2{\x1b\xf1JnSp\x13\xa7\x8dg\\\x80O\x90\x05\xfc\x1a\xf6e\x1dc\xb8q\xc9\xbdW\xfe\xb1\x1b\xc8'
+    b'\xa5\xdb\x8es\xde<\xdfp\xca\xdc\xb5"\\\xb6\x9e\xd8\xde\x93\x83\xd87\xc8\xa3\xdcC\xdb\x96KLdT\x976P\x0b\'\xe4\x0f\x9b\x8b\xf5\x11+\xea\x88\x9a`\xc9\x05>\xc7.\xd9\xa7\xc8\xee\x89\x8aMZ\xabB\x16\xb2'
+    b'xL\xf8\xa02.\xc2\xc9\x91k\xffO\x8c\xae\x08\x12\xdd\\\xdb\x85\x0eB0\x04\x97\xea\x9a\xd0%\x10\xe1Z\xb1<\xae\xb7\x80\xc5\xb2\xec\x92\x0bCXIZz\xe3\xa4\xc0\xa8\x0ctb\xe8\xc8a\xee\xb8~\x0b\xde$\r'
+    b'\x93\x85{\x05Z\xc8f\x0e&\x00q\xd9\x988\xaeyh\x90\xc0\xb4\xf2c\xb9\x13Q\xa3\x95\\\t\xe8P\x12@\x14P\n\x12\xe6\x14t\x01\x19\x90X\xaa\xb5\x02K;\xc3\xca\xbea\x91\xa2\x89\x15\x1b\xbdS\x01\x06\x14\x11'
+    b'\x8bAN\x11XJ\x8b5\xf2\x17\xa9[N\xd4,~\xa1x\x1cc.\xe7*\x8d8\x15\xd4\x9d\xea\xd4\x8f\x83\xbd\xc9\x0br\xaeux\x15{\xd6\x8a\x19\xefh\x04\xdbDn\xb3}\x8d[ \xcb/;\x98\xc1\xe7\xa8s\xee'
+    b'\xe1a\xd4\xdeV\xab\x85:\xff\x1f\x18\xd1\xe1%\x9d\xa0jJ\xe4\xac\xc9\xd4\x89\xe9\x91\x9c+\xab\xcb\xe7\x1a\xac\xae\x13\nq\xcby\x9c\x9d\x85\xa1\xc8\xc5Q\xb9\xacZ\xde\\O\xe4\xd2\n\xbe4\xec\xc2\xbac\x08[\x1c\x08'
+    b'\xac\xb5[`\xd4\xf4\xba6\x0eu>\xa5z\xd6kC\x95(\x87&\x19\xd8`\xca\xbe\x98\xcc=w\xbaq\xa0BN\xc1\xebjn\x02\xe6\xfcS\xb9\x15QC\xd7\xf6\xf6\x1e\xad\xc1\x9f\xffl\x03\xf7B-\xaf\x99\xa7\xbd\xc5'
+    b"\x15P\xb2z\x06\xceZ\x11V\x06\xca\xd4\x0e\tI\xef\x02\x16`x\x84\xb3E\xbd\x131\x8c\x0c[\xa7!\x88\x19\x85\xb6v\x07\xd2Y\xf8\x8e7\xcb%\x1c\x9f/\x1d`\xe7\x1fyb\xd87\xe4Yw\xc7\x12#s\xb6'"
+    b'j\xb8 \x9c\xe24\xb5\x8f\x0e\xd6\x08\xeb/\xe4L\xc7K\xc8\xe0\xab\x1eU\x8f\xb1\n(\xdd\xd5=\x17%\x1c\x7f\xb2T\xeeE\xd2\x8fW\xcb\xc0;\xd6\xfeh\xe5\xa7\xed\x19g[[\x8d\xd8;\xf8\xa8-\xdf\xe4\xff\x17G'
+    b"\xdc\xc74\\[\xc6'{6\xbc\xf7\xda\xf9f\x96! \xa7\x11\x95\xe0\xe1\xbb\x85n\x89\x90\xe2\x88\xb6[#\xa4\xb69\x83<\xe7\x10\xa8\xcd_\x0b$\xf4\no\xd0\xa4\x08RJ\x9b3\xc2\x03\x082J&T8\x97-"
+    b'E^9!\xcd\x94\xf0\x9eY\xb61Z9!\xdd\xa6k\xdfs\xd1\xd3\x85\x85\xe4C2"8%D\x9b\x0br\xbbA\xc8L\x9dMT\xe5o\xe4C1\xdd\xa9\x8a\xbf\x05K\x19\xf1N\x1d\xe1\x86\xaa\x1ckE)C\xaa'
+    b'\x0e\x13\x13\xcc\x01\x8d\xa3\xf3s\t\xaa\x83[c/\xdd\x08m+\xff\xcc\xc4\xd2u7\x84\xa7\xd1\xb0v\xb8\xa1\xe1\x14\xd4y\xfb\xab\xcd\x07uV5A\x11\xd2b\xec\x13\xea,W\x966\xd2\\7\xa7\xa8\x18rdC&'
+    b'YOu+\x160\xdb\x04\xd4\x1f1\x1a\xb6\xe2\xf8x\x8b\xa5-fj\x94$\xd7q\xff\x9a\xc3d\xe9\xfb\x87\xc2\x0e=UB\xcd?\xe1b{\x8e\xa70\x08\xec\xea\x16\xac\xac\xbdR\xb7\x8e\xdb\x8e\x02\x81\x01\xd5\xbe\xa6$'
+    b"\x03%P's;\xc8\x14\x1a4\x97s+-\x07+\xfb\xce\xa8\xb8\xaa\xba\xd8K\xf1Q\xe2-\xac\x14\x95Fo\xb5\x01\xbb\xe7\xe4\x8e\x83ta\x80\\c\xb6[\x9f\x8cb\xa6[\x0c\xd1\x06B\xbf\xc3$\x15\xcf\xc8mv"
+    b'(m\x99\x90\x99\xce\x8f\xac%"\x83\xbeG$\xb0\xf3\x86\x83\x03j\x01\x11D\xa1\x86\x1f\xe8\x10\xd2T_\x88\xe4\x90;\'\x82\x9b\xf2\x82V%E\x8e\xc6\x17\x07T[\xa5A>\xd4Q}\xba\xd5\x06\xf9\xba\x03Q*e'
+    b'Q9d\xc8\xad\xf4h\xca\x1b"\xa3D\xf38\xa7 \xe8\xdf\xa1\x91\xb9\x05\r-\x95\xacAON-\x82fD\xea\x07\xad\x02\xb3?\xbe\xd3\xf0\x9f\xed\xd4\xeb\xd1o\x15\xbf\x1b\xc5-\xba\xfeS\xe2\xb7\x1c\x99\x0f\xc3\xd5O'
+    b'5\x1ez>\x86p\x90Ji\xb8\x13\x9f[\x8b\xaa\x0e\x08\x0cj\xdf\r\xdb b\xb9\x9a\x94\xda\x99\xbd\xf94\xfc5\x85\xa7\xf6E{h\x81\xa9eJ\xe8\x1c\xa9\xa5\x81"%\xca\t fv\xd5\x0f\xd6\xbbw\x88\xb9='
+    b'A\xcf|\xe0}n=\xcf@\xfc\xa1<O\xb0\x08\x1cr6\xe7\xf0P\xd5V\xa5\x02\xd5\xf5\xe5gG\x81\xb6h\xed\xf7\x8a\x87\xbaz\x9b\xecq\xdb\xfc\xb9\xc4:\xe1m\xc9m\xdb\x15\x1a\xc5\xb2h2J\xb5i\x81^\x82'
+    b"6n\x8f\xc4\xfe?\xab\xbc\n\x8f\xaf&\x94\xf5\xa7\x8c{\x05\x8b\x9dR\xab=Y=\x91ee\xb2X\x82\x9cC'\xe2P\x95f\x15\xdfj\x08\xccf\x01\xdaV\x08\xd2\x1a\xef\x130\xdd\x89*\xc2\xba1\x0b0\xc5\x80~"
+    b'*\xf9\xbeD\xbc\xfd\xa9\x11\xe6m\x87s\x944\xa6b\tEL\xcb\x94\xe5\x18r\xb8`\xb5\x1eO\xd1_\x93c\x18@i\x06y\xc3\xba\x03\xc9P\xdc\x05\xd7\xf7&\xb5^\x15\xef\x05\x989\\\xe2\xf6\xe0\xee\x96\x14\x01s'
+    b'\x9bW3\xb1\xc0\xbcs\x02\x08@1G\xd5\x97r\x8e\xcdZ\xb7\x06\x86;[\xf2;B\xc4q\xab\xb7\x86\x86\x8f\xa4\xe4t\xeb\xa4o`]2\xaao|\xbdA\x8d\xb2\xdc?\r=\xcav\xf4\x8c\xb6\xe8\xd7*\xb3\xe6\xf7'
+    b')\xd8v\x0c\xca\x06\x05\xfbP\xae&\xb1\xfcG\xac`\xb0{\x85\x93\xd3\x08\x0b\x94\x0b>\x86y\xa3\xcdd\xd2\xd1\x94\xfe\x91\x19-\xd8:~)\xc5\xa8Z\xc4\xd6\xf1\xefa\xa9#q\xb4\n\xe5l\xd5\x1f\x96X\x8f\xb0\x80'
+    b'\x83\x88\xa9?\xd6\x8bh\xa9\xbdwr$Z\xb5\xf9\xe1\xb7\n"qL\xd2\x96\xc4\x8d;D\x8d|\x8f]\xba\xd92m\xf0\xc6m"\xe3{\rRk\xc6wd\xb85Gj\r/\xbf3\x9eD\x05\xec\xd6z\xa5\xe4\x13'
+    b'\x9c\rF md,.Wi\xe6\x8cpLmH\xf5`\x98\x95qE\x1c\xf5\xcc\xa9\x8c3\xdbT\x19\xa7Y\x0c\xc7M\xe1\xe3\xde\xc02\x97\x1c\xca\xd1\x8e\x95\xa4\xf7|\x17O\xdb\x96\xd5\x0b\xf8\x0b\xc3\x0c\xf1\xdfy\xb5'
+    b'H_\xec\xfc?\xd2\xf3\xe0\xc9'
+))
+
+CATALOGUE = (4908, '// Generated from the autofx tables. Do not edit.\nvar CATALOGUE = {\n "effects": {\n  "binary_counter": {\n   "kind": "mono",\n   "takes": [\n    "interval",\n    "count",\n    "step"\n   ]\n  },\n  "blink": {\n   "kind": "mono",\n   "takes": [\n    "speed",\n    "phase",\n    "duty"\n   ]\n  },\n  "blink_wave": {\n   "kind": "mono",\n   "takes": [\n    "speed",\n    "length",\n    "phase",\n    "duty"\n   ]\n  },\n  "flash": {\n   "kind": "mono",\n   "takes": [\n    "speed",\n    "flashes",\n    "window",\n    "phase",\n    "duty"\n   ]\n  }', ' ],\n "output_settings": [\n  "level",\n  "colour",\n  "fade",\n  "ease"\n ],\n "screen_settings": [\n  "backlight",\n  "rotation",\n  "mirror",\n  "offset",\n  "background",\n  "pixel_double",\n  "tile"\n ],\n "tiling": [\n  "off",\n  "repeat",\n  "mirror"\n ],\n "board_settings": {\n  "drive": [\n   "manual"\n  ],\n  "reload": [\n   "manual",\n   "auto"\n  ],\n  "program": null,\n  "args": null,\n  "screena": [\n   "2.8",\n   "1.54",\n   "hub"\n  ],\n  "screenb": [\n   "2.8",\n   "1.54",\n   "hub"\n  ],\n  "stripl": null,\n  "stripr": null\n }\n};\n', (
+    b'x\xda\xcdXK\x8b\xdc8\x10\xbe\xf7\xaf0>\x87\t\xbb$\xb0L\xd8CHB.\x81\\vO\xc3`d\xbbl\x8b\x96%G\x8f\xeei\x96\xfc\xf7\xe8mKv&\xe3\x9eY\xc8e\xb0\xaa\xa4\xafJ\xf5\xf8J=\xaf'
+    b'_\x17\x9f\x81\x02G\x12\xda\xa2\xe3l,\xe4\x00\x05R\x92u\x0f\x85D5\x01qS|d\x05e\xb2\x80\x16\xcb\x9b\xc3\t\xf1\xe2\xc3\xfb\x7f\xde\x7f\xf9\xfa\xf9\xdfO\xc5\xdf\xc5\x7f\x87\xa2\x84\xae\x83F\x8a\xf2\xd6\xac\x8a\xb2'
+    b'\xc6\x14\xf1K\xd50E%p/-\xca#\xa6\xad^\x94#\xa3\xac|eE\x12\x1d\xc1\x1c\xbb3\xab\xa2\xc4f\xff\t\x11\xa7-J\x8b\x10\x16B\xc2T\x9a\xcf{\xfd\xe7\xfb+k\x88`z\xdc\x81/&\x806\xe0M'
+    b'\x03\x12\x10\x16\xad\x92\x97-\xf0\xea\x8cNp\xad\x05\x02\xb4\x97\xc3S\xedu\x04\x89\xe1ZS\xf6\xb0\xd6\xfa\xe5Y\x9ff\xe7]\x96+\x01\xdf\x14\xd0\xe6\x85n\xfbL\x87ps\xdcU95\xc7\xfd )\x88h\xb1\xc5\xe3'
+    b'r\xe96T#\xa6\xb9\x04=,\x8e,7\xd8\xa5\xd6n\xfaV\x01j\x86\xdf\xd2\xc1A\x9cV~5\x8c0\xc5\xb7=\x1bTL\x85@\xb1\xdbL\x17f\xb8\n*\xdb\x83{\xc0\xf3\x8e\xfe\xb9\xb1E\x97\x8b\xcc2e\xf4'
+    b'iU9\x1f\x99@\xa7\t\xd1\xaa\xe1L\x08L\xfb\x1d\x99\xe2\xd0V\xb9\xdb\xb6\x9a5\xccJ\xd1s\x00\xba\x92\xa2\xb1\xd6\x15\x12\xa5\xe9m&E\x04<\x8f\xb46\x00_\x9c\xa8R\x1b\x1caZ\xeb\x06\xde\x93\xfb\xc4\xc4\xa3'
+    b'\xa5\xe5\xd1\xb7\xef\xf0d\x13\xe9-~aP\xd3\xd1\xf8\x8c\xc94\xb7\xf3\xbac\x9dt\xd5\x97\xce\xe6^\xdex\t\xc3}\xbd+\xa8|\x0e\xa9-\xefh\x84(XCW\xdbC\xf81\x03K\xdd\xce\xa1,$\x92\xb8\xb9\x8e'
+    b'w3\xa43lp\xd9U\r\x03\x0f\x12\xe6w\xca\xc0H\x9b\xd9\x92\x1cu\x1dn*b|y&\x15\x19Y\xc6/Wq\xd1\xc1\xfaV\x8a\xc6\x9e\xca^p=\xee\x82\x17e\x87\x89\xcfH\xd9M~\\eeY\x12\xc6'
+    b'&\xff9\x19\x9a\x9c\x98\xa6\\\x7f\x06s!+$*M\xa1>F1D\xf76:=G\xd3\x80\x1b\xb1\xcb\xe2\x19\xb7!\x01\xe5\x006\xae\x11\x10\x8f\xa8\x87\x14-\xea\x16\xaf\x1c\xaf\xd6\xbe\x00\xff\xbf.\xe8\xa3\x8cT\x8b'
+    b'\x99\xc9\xb5\xfb\x88\xa2<\xee\x9a\x00\xb7\xa2`\xad/\xe0\x04H\xa9\xbd\x88\xc7\\mjx\xaaL\xb6K7\x16l+ia\xc7Q#1s}\xec\x9aj%\xf5\xef\xb3\x95\xdc\x17\xfa\xed\xf2-\x1e\xdfv\xa9\xd4M\xeeT'
+    b"\xe6;\xe3\xd6\xb8\x88<\xe4\xa2#W\xe62v{T\xafyn}9\xff\xa6\xfa\xc9\xc1\x00*\xa0a\xb4\x15\xa9\xca\xe1%\xaa\xf0\xde\xda\x94o\xec\x8fE\x93+l=\xe4B\x17'-=k5\xccA\xccD\t\t\xe4"
+    b"\x18\x1bl\x90oY\xbf]\xf2\x1d\x19q\xe4\xea_\xe0sWz\xf5E\xc2\x02.\x15\xd9\xd1\x91H\x06'@\xb4\x8fWGr\x9d7o0\x15\xfa\xf9\x91N\x19\xd7/\xa6\x07\xd0\xe8\x11}k\xa72W\xa3\xcbF\xb1\xdd"
+    b'e\x9cc:\xe6\xa1J\xe7.\xcf5i\xbf\xe7Z\xc7Ki\x17x~\x8aB\xdf\xc5\xce\xf9@{:F\xa89.\xc2\xe5\xaf\xca\x88\xff\xba\x04\x13\xf3P.\r\xd1Q\x89\xdc\x82\xe9\x17F\x0f\xd1}\x8f5)>-J'
+    b'\xc9{\x89\xf8\xe8\xbf\x06\x1cRr\x01B4\x07\x1c,S\x96\xcd\x80(\x05R\x99)\x15\x89\x86\xc0\t6\x12\xd2\xa1\x16Vu\x01\x9e~\xd2f\xd3w\x0cS0\x03\xe1\xcc\xccvf+\xe7\x9bB\\\x86\xfc\x8c\x98s\xc6'
+    b'72\xf4\xa0\xddk\x99\xaa]\xde\x832\x1dl\x13\xe32\x86\xd8\xc9|\xb8\xdc\xa2\x0e\xf7\x15\x92\xe3i\xdeiV$\xf4\xa4\xfe\xe6a\x1fSrR\xb2ZP\xf0\xdd\x1c\x99ey\xce\x91\x99\xc3\x11l9\xdfr\x8c98'
+    b'i@\x96Qp\x99\xee:}v\x8eh\xcfu]\xb5\x1baq\xaf\x0f7\x00\xade\xfd\xed~\r\xddy\x9cP\x18\x13\xf8\xf7r0\xe4\x0f\xd4\x0c\xf1\xb6\xca\x07N\xcb\xf1i\x1e\xa1#\xa2\xca=-\xee=\x1aa\xa8\xcd'
+    b"\xd5n\x94\x99\x7f-\xcd;'\xce\xf4\xf47\x0fq\xaa\x08ql\xc3\xad\x99\xb8\x0e9\x0bh\x7f\xde\xfc\xe5\xa1\xfe\xb8y\xfb&\xcc[U/F\xbcO\xec\x8e\x13.\xdbK\xab.\xe7N\xa2+\xea\xf0\xfd\xdd\xe1\x07\x0e\x8d"
+    b',+'
+))

@@ -9,7 +9,9 @@ of the button passed to service() shows or hides it, and hiding it, or ejecting 
 the computer, re-reads the file. An eject does not show it again.
 """
 
+import deflate
 import errno
+import io
 import machine
 import os
 import time
@@ -35,6 +37,9 @@ VOLUME_LABEL = "FX"
 # anything longer is met at both ends, measured at 40ms against 424ms for a mount.
 __READ_TO_END = 4096
 __EDGE = 512
+
+# How much of a packed page is inflated onto the drive at a time
+__INFLATE_CHUNK = 4096
 
 # FAT attribute bits, per VfsFat.chmod.
 __ATTR_READ_ONLY = 0x01
@@ -81,29 +86,46 @@ __watch_at = None
 __watch_buffer = None
 
 
-def __holds(path, text):
-    """Whether the file already reads as the text.
+def __ends(text):
+    """A document's length and the two ends __holds() compares, the whole of a short one."""
+    if len(text) <= __READ_TO_END:
+        return len(text), text, ""
+    return len(text), text[:__EDGE], text[-__EDGE:]
 
-    Size first, so a missing or half-written file answers without a read. A short
-    document is then compared to its end; a long one by its first and last piece,
-    since reading the manual to the end costs about 400ms on this volume and every
-    mount and every button press would pay it. What that trades away is a rebuilt
-    document differing only in its middle at exactly the same length, which nothing
-    here produces. Both are ASCII, which build_manual.py enforces, so a length in
-    characters is a length in bytes.
+
+def __holds(path, size, head, tail):
+    """Whether the file is size long, starting with head and ending with tail.
+
+    Size first, so a missing or half-written file answers without a read. A long
+    document is met at both ends, since reading the manual to the end costs about
+    400ms on this volume and every mount and every button press would pay it. What
+    that trades away is a rebuilt document differing only in its middle at exactly the
+    same length, which nothing here produces. Every document is ASCII, which the build
+    tools enforce, so a length in characters is a length in bytes.
     """
     try:
-        if os.stat(path)[6] != len(text):
+        if os.stat(path)[6] != size:
             return False
         with open(path) as f:
-            if len(text) <= __READ_TO_END:
-                return f.read() == text
-            if f.read(__EDGE) != text[:__EDGE]:
+            if f.read(len(head)) != head:
                 return False
-            f.seek(len(text) - __EDGE)
-            return f.read(__EDGE) == text[-__EDGE:]
+            f.seek(size - len(tail))
+            return f.read(len(tail)) == tail
     except OSError:
         return False
+
+
+def __inflate(packed, f):
+    """Write a zlib stream to the open file, a chunk at a time."""
+    # BytesIO reads a frozen bytes object in place, where a read() of the whole
+    # stream would put the page on the heap
+    stream = deflate.DeflateIO(io.BytesIO(packed), deflate.ZLIB)
+    chunk = bytearray(__INFLATE_CHUNK)
+    while True:
+        count = stream.readinto(chunk)
+        if not count:
+            return
+        f.write(memoryview(chunk)[:count])
 
 
 # The shipped documents the last mount left stale for want of room, for autofx to
@@ -117,10 +139,19 @@ def unhealed():
     return tuple(__unhealed)
 
 
-def __heal(fs, name, text):
-    """Put a shipped file back on the drive, unless it is already there."""
+def __heal(fs, name, document):
+    """Put a shipped file back on the drive, unless it is already there.
+
+    The document is its text, or a packed page from fx_editor, which is its length,
+    its two ends and its zlib stream.
+    """
     path = MOUNT_POINT + "/" + name
-    if __holds(path, text):
+    packed = None
+    if isinstance(document, str):
+        size, head, tail = __ends(document)
+    else:
+        size, head, tail, packed = document
+    if __holds(path, size, head, tail):
         return
     # A document that will not fit is left as it stands: stale and whole beats
     # part-written, and opening for write would truncate it before failing
@@ -131,7 +162,7 @@ def __heal(fs, name, text):
             room += os.stat(path)[6]
         except OSError:
             pass
-        if room < len(text):
+        if room < size:
             print("the FX drive is full, so {} was left as it was".format(name))
             __unhealed.append(name)
             return
@@ -143,8 +174,11 @@ def __heal(fs, name, text):
     except OSError:
         pass
     try:
-        with open(path, "w") as f:
-            f.write(text)
+        with open(path, "w" if packed is None else "wb") as f:
+            if packed is None:
+                f.write(document)
+            else:
+                __inflate(packed, f)
         fs.chmod(name, __ATTR_READ_ONLY, __ATTR_READ_ONLY)
     except OSError:
         # A full drive has nowhere to put it. The board comes up regardless, since a
