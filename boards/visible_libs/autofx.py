@@ -2130,6 +2130,11 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                     __handover(fx, True)
                 fx, players, shows, sounds, scenes, settings, problems = __play(
                     fx, volume, path, errors, players, sounds, maker)
+                # A program only runs from a start, so a file that now names one restarts
+                # the board, which then runs it as it does at power on
+                if settings.get("program"):
+                    import machine
+                    machine.reset()
                 paused = False
                 idle_since = None
                 if watcher is not None:

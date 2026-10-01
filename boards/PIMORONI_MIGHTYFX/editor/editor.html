@@ -1285,6 +1285,18 @@ document.getElementById("save").onclick = async function () {
     // The board keeps its light travelling for a moment after the last write, then
     // runs one pass as the drive changes hands, so the page holds its own as long
     await new Promise(function (settle) { setTimeout(settle, SAVING_TAIL_MS); });
+    // A program running keeps the board busy, so neither an eject nor a press reaches it
+    if (/\bprogram=/.test(running)) {
+      banner("On its way. The board is running a program, so press its Reset button to play "
+             + "this one.");
+      return;
+    }
+    // A board saving on its own that is given a program restarts to run it, so there is no
+    // answer to wait for
+    if (errorsBefore !== undefined && /\bprogram=/.test(text)) {
+      banner("On its way. The board restarts to run the program, which takes a few seconds.");
+      return;
+    }
     if (errorsBefore === undefined) {
       banner("On its way. " + (playsItself(text)
              ? "Eject the FX drive, or press Boot once, to play this one. "
@@ -1309,7 +1321,7 @@ document.getElementById("save").onclick = async function () {
     state.fileHandle = null;
     state.dirHandle = null;
     banner("That didn't reach the board: " + e.name + ". Is the FX drive showing? " +
-           "A double press of its button brings it back; then try again.", true);
+           "A double press of Boot brings it back; then try again.", true);
   } finally {
     button.disabled = false;
     check.disabled = false;

@@ -330,13 +330,20 @@ document.getElementById("save").onclick = async function () {
     await new Promise(function (settle) { setTimeout(settle, SAVING_TAIL_MS); });
     // Said once, where this save is the first to hide the drive
     var hides = /\bdrive=manual\b/.test(text) && !/\bdrive=manual\b/.test(onBoard)
-      ? " The drive stays hidden the next time the board starts: double-press its button " +
+      ? " The drive stays hidden the next time the board starts: double-press Boot " +
         "to bring it back."
       : "";
     // A program running keeps the board busy, so neither an eject nor a press reaches it
     if (/\bprogram=/.test(onBoard)) {
       banner("On its way. The board is running a program, so press its Reset button to play " +
              "this one." + hides);
+      return;
+    }
+    // A board saving on its own that is given a program restarts to run it, so there is no
+    // answer to wait for
+    if (errorsBefore !== undefined && /\bprogram=/.test(text)) {
+      banner("On its way. The board restarts to run the program, which takes a few seconds." +
+             hides);
       return;
     }
     if (errorsBefore === undefined) {
@@ -364,7 +371,7 @@ document.getElementById("save").onclick = async function () {
     drive.fileHandle = null;
     drive.dirHandle = null;
     banner("That didn't reach the board: " + e.name + ". Is the FX drive showing? " +
-           "A double press of its button brings it back; then try again.", true);
+           "A double press of Boot brings it back; then try again.", true);
   } finally {
     button.disabled = !drive.fileHandle;
     check.disabled = !drive.fileHandle;
