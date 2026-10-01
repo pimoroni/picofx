@@ -169,10 +169,10 @@ async function waitForBoard(before, nothingYet) {
 
 function sayWhatHappened(said, also) {
   if (said === CHECKING)
-    banner("No answer from the board yet. Eject the FX drive, or press the " +
-           "board's button once, and it plays. If the lights already changed, " +
-           "this computer is showing the page an old copy of the drive: unplug " +
-           "the board and plug it back in to see what it wrote.", true);
+    banner("No answer from the board yet. Eject the FX drive, or press Boot " +
+           "once, and it plays. If the lights already changed, this computer is " +
+           "showing the page an old copy of the drive: press the board's Reset " +
+           "button to see what it wrote.", true);
   else if (said)
     banner("The board wasn't happy with some of it:", true, said);
   else
@@ -191,7 +191,7 @@ async function openDrive(fresh) {
       return;
     }
     banner("Could not open the drive: " + e.name + ". Is it showing? " +
-           "A double press of the board's button brings it back.", true);
+           "A double press of Boot brings it back.", true);
   }
 }
 
@@ -335,16 +335,16 @@ document.getElementById("save").onclick = async function () {
       : "";
     // A program running keeps the board busy, so neither an eject nor a press reaches it
     if (/\bprogram=/.test(onBoard)) {
-      banner("On its way. The board is running a program, so unplug it and plug it back in " +
-             "to play this one." + hides);
+      banner("On its way. The board is running a program, so press its Reset button to play " +
+             "this one." + hides);
       return;
     }
     if (errorsBefore === undefined) {
       banner("On its way. " + (playsItself(text)
-             ? "Eject the FX drive, or press the board's button once, to play this one. " +
+             ? "Eject the FX drive, or press Boot once, to play this one. " +
                "From now on a save plays on its own."
              : "Eject the FX drive on this computer, and the board plays it. Double-press " +
-               "the board's button to bring the drive back, then press 'Check board'.") + hides);
+               "Boot to bring the drive back, then press 'Check board'.") + hides);
       return;
     }
     banner("Saved. Waiting for the board to pick it up...", "hold");
@@ -381,7 +381,7 @@ document.getElementById("check").onclick = async function () {
     if (said === false) throw {name: "NotReadable"};
     if (said === CHECKING) {
       banner("The board has not read the file yet. Eject the FX drive, or press " +
-             "the board's button once.", "hold");
+             "Boot once.", "hold");
       return;
     }
     if (said) banner("The board wasn't happy with some of it:", true, said);

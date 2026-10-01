@@ -619,8 +619,8 @@ board that does nothing.
 
 The effects stop while a program runs, and the board is busy with it, so
 **Boot** and ejecting do nothing. The drive is shown anyway, even with `drive`
-set to `manual`, so you can still edit `effects.txt`; unplug and plug back in
-for the change to take. A program cannot read files from this drive while it
+set to `manual`, so you can still edit `effects.txt`; press **Reset** for the
+change to take. A program cannot read files from this drive while it
 runs, so put anything it needs on the board's own filesystem.
 
 `screenA` and `screenB` describe the screens this file's own entries play on, so

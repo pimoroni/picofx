@@ -1021,7 +1021,7 @@ document.getElementById("open").onclick = async function () {
       return;
     }
     banner("Could not open the drive: " + e.name + ". Is it showing? " +
-           "A double press of the board's button brings it back.", true);
+           "A double press of Boot brings it back.", true);
   }
 };
 
@@ -1106,7 +1106,7 @@ function saveByHand() {
   banner("effects.txt is downloading. Put it on the FX drive in place of the old one" +
          (playsItself(onBoard)
           ? ", and the board plays it. Then press 'Did it work?'."
-          : ", then eject the drive or press the board's button once, and it plays."));
+          : ", then eject the drive or press Boot once, and it plays."));
 }
 
 // Did it work, asked by picking the drive again. Only its answer is taken; what is
@@ -1127,7 +1127,7 @@ async function askByInput() {
   var said = found.errors ? (await found.errors.text()).trim() : null;
   if (said === CHECKING)
     banner("The board has not read the file yet. Check effects.txt landed on the " +
-           "drive, then eject it or press the board's button once.", "hold");
+           "drive, then eject it or press Boot once.", "hold");
   else if (said)
     banner("The board wasn't happy with some of it:", true, said);
   else
@@ -1248,7 +1248,7 @@ async function waitForBoard(before, nothingYet) {
 function sayWhatHappened(said, also) {
   if (said === CHECKING)
     banner("The board did not pick the save up. Eject the FX drive, or press " +
-           "the board's button once, and it plays.", true);
+           "Boot once, and it plays.", true);
   else if (said)
     banner("The board wasn't happy with some of it:", true, said);
   else
@@ -1287,10 +1287,10 @@ document.getElementById("save").onclick = async function () {
     await new Promise(function (settle) { setTimeout(settle, SAVING_TAIL_MS); });
     if (errorsBefore === undefined) {
       banner("On its way. " + (playsItself(text)
-             ? "Eject the FX drive, or press the board's button once, to play this one. "
+             ? "Eject the FX drive, or press Boot once, to play this one. "
                + "From now on a save plays on its own."
              : "Eject the FX drive on this computer, and the board plays it. Double-press "
-               + "the board's button to bring the drive back, then ask 'Did it work?'."));
+               + "Boot to bring the drive back, then ask 'Did it work?'."));
       return;
     }
     banner("Saved. Waiting for the board to pick it up...", "hold");
@@ -1330,7 +1330,7 @@ document.getElementById("check").onclick = async function () {
     var text = await (await handle.getFile()).text();
     if (text.trim() === CHECKING) {
       banner("The board has not read the file yet. Eject the FX drive, or press " +
-             "the board's button once.", "hold");
+             "Boot once.", "hold");
       return;
     }
     banner("The board wasn't happy with some of it:", true, text.trim());

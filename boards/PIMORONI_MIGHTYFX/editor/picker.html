@@ -11875,10 +11875,10 @@ async function waitForBoard(before, nothingYet) {
 
 function sayWhatHappened(said, also) {
   if (said === CHECKING)
-    banner("No answer from the board yet. Eject the FX drive, or press the " +
-           "board's button once, and it plays. If the lights already changed, " +
-           "this computer is showing the page an old copy of the drive: unplug " +
-           "the board and plug it back in to see what it wrote.", true);
+    banner("No answer from the board yet. Eject the FX drive, or press Boot " +
+           "once, and it plays. If the lights already changed, this computer is " +
+           "showing the page an old copy of the drive: press the board's Reset " +
+           "button to see what it wrote.", true);
   else if (said)
     banner("The board wasn't happy with some of it:", true, said);
   else
@@ -11897,7 +11897,7 @@ async function openDrive(fresh) {
       return;
     }
     banner("Could not open the drive: " + e.name + ". Is it showing? " +
-           "A double press of the board's button brings it back.", true);
+           "A double press of Boot brings it back.", true);
   }
 }
 
@@ -12041,16 +12041,16 @@ document.getElementById("save").onclick = async function () {
       : "";
     // A program running keeps the board busy, so neither an eject nor a press reaches it
     if (/\bprogram=/.test(onBoard)) {
-      banner("On its way. The board is running a program, so unplug it and plug it back in " +
-             "to play this one." + hides);
+      banner("On its way. The board is running a program, so press its Reset button to play " +
+             "this one." + hides);
       return;
     }
     if (errorsBefore === undefined) {
       banner("On its way. " + (playsItself(text)
-             ? "Eject the FX drive, or press the board's button once, to play this one. " +
+             ? "Eject the FX drive, or press Boot once, to play this one. " +
                "From now on a save plays on its own."
              : "Eject the FX drive on this computer, and the board plays it. Double-press " +
-               "the board's button to bring the drive back, then press 'Check board'.") + hides);
+               "Boot to bring the drive back, then press 'Check board'.") + hides);
       return;
     }
     banner("Saved. Waiting for the board to pick it up...", "hold");
@@ -12087,7 +12087,7 @@ document.getElementById("check").onclick = async function () {
     if (said === false) throw {name: "NotReadable"};
     if (said === CHECKING) {
       banner("The board has not read the file yet. Eject the FX drive, or press " +
-             "the board's button once.", "hold");
+             "Boot once.", "hold");
       return;
     }
     if (said) banner("The board wasn't happy with some of it:", true, said);
@@ -13284,7 +13284,7 @@ function boardRows(locked) {
                        boardSet.reload ? "auto" : "manual",
                        function (value) { boardSet.reload = value === "auto"; });
   rows.appendChild(boardRow("Saving", saving,
-    busy ? "a program keeps the board busy, so unplug it and plug it back in to play a change"
+    busy ? "a program keeps the board busy, so press its Reset button to play a change"
          : boardSet.reload ? "the board has to be running a file that says so, so the save " +
                              "that first turns this on still needs an eject"
                            : "eject the drive, or press Boot once, to play a save"));
@@ -13517,7 +13517,7 @@ function saveMenu() {
   choice("Play saves without an eject",
          "the save that first turns this on still needs one",
          boardSet.reload, function (on) { boardSet.reload = on; },
-         savingMeansSomething() ? null : "a program keeps the board busy: unplug it to play a " +
+         savingMeansSomething() ? null : "a program keeps the board busy: press Reset to play a " +
                                          "change");
   choice("Keep the drive hidden at start", "double-press Boot to bring it back",
          boardSet.driveHidden, function (on) { boardSet.driveHidden = on; },

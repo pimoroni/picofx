@@ -27,7 +27,7 @@ function saveMenu() {
   choice("Play saves without an eject",
          "the save that first turns this on still needs one",
          boardSet.reload, function (on) { boardSet.reload = on; },
-         savingMeansSomething() ? null : "a program keeps the board busy: unplug it to play a " +
+         savingMeansSomething() ? null : "a program keeps the board busy: press Reset to play a " +
                                          "change");
   choice("Keep the drive hidden at start", "double-press Boot to bring it back",
          boardSet.driveHidden, function (on) { boardSet.driveHidden = on; },

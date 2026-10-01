@@ -120,7 +120,7 @@ function boardRows(locked) {
                        boardSet.reload ? "auto" : "manual",
                        function (value) { boardSet.reload = value === "auto"; });
   rows.appendChild(boardRow("Saving", saving,
-    busy ? "a program keeps the board busy, so unplug it and plug it back in to play a change"
+    busy ? "a program keeps the board busy, so press its Reset button to play a change"
          : boardSet.reload ? "the board has to be running a file that says so, so the save " +
                              "that first turns this on still needs an eject"
                            : "eject the drive, or press Boot once, to play a save"));
