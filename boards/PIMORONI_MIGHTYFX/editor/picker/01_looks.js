@@ -3,6 +3,18 @@
 // the numbered parts in this folder joined in order, each part able to replace what an earlier
 // one defines, and this first part holds the looks.
 
+// The catalogue is generated beside this page; without it the screen sizes and ports
+// cannot be known, so say so instead of failing silently
+if (typeof CATALOGUE === "undefined") {
+  window.CATALOGUE = {board_settings: {screena: ["2.8", "1.54"], screenb: ["2.8", "1.54"]},
+                      screen_ports: ["screena", "screenb"], strips: ["stripl", "stripr"]};
+  document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("banner").innerHTML =
+      "<div class='banner warn'>catalogue.js is missing from this folder, so the " +
+      "board's ports are assumed. Run tools/build_editor.py to write it.</div>";
+  });
+}
+
 // The board is declared here and filled in below the look tables, because a config
 // that draws its looks in sets names those tables and they are not built yet
 var BOARD;

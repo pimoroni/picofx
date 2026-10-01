@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>Mighty FX Picker</title>
+<script src="catalogue.js"></script>
 <style>
 
 :root{
@@ -1749,6 +1750,18 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
 // The FX picker, a page for choosing what the board plays and saving it as effects.txt. It is
 // the numbered parts in this folder joined in order, each part able to replace what an earlier
 // one defines, and this first part holds the looks.
+
+// The catalogue is generated beside this page; without it the screen sizes and ports
+// cannot be known, so say so instead of failing silently
+if (typeof CATALOGUE === "undefined") {
+  window.CATALOGUE = {board_settings: {screena: ["2.8", "1.54"], screenb: ["2.8", "1.54"]},
+                      screen_ports: ["screena", "screenb"], strips: ["stripl", "stripr"]};
+  document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("banner").innerHTML =
+      "<div class='banner warn'>catalogue.js is missing from this folder, so the " +
+      "board's ports are assumed. Run tools/build_editor.py to write it.</div>";
+  });
+}
 
 // The board is declared here and filled in below the look tables, because a config
 // that draws its looks in sets names those tables and they are not built yet
@@ -7281,7 +7294,10 @@ draw();
 // Which panel is plugged into each screen port, or none. Only the size is the board's:
 // which way up it is mounted is left for when screens are settled
 var SCREEN_PORTS = [{id: "screena", label: "Screen A"}, {id: "screenb", label: "Screen B"}];
-var SCREEN_SIZES = ["2.8", "1.54"];
+// The sizes a panel can be, as the firmware takes them, the catalogue's hub being no panel size
+var SCREEN_SIZES = CATALOGUE.board_settings.screena.filter(function (inches) {
+  return inches !== "hub";
+});
 var screensFitted = {screena: "", screenb: ""};
 
 // A scene holds its cutting and its looks, but not the wiring or where the lamps sit,
@@ -8316,8 +8332,9 @@ draw();
 // what the screen shows. A picture newly chosen starts at the turn it was last given on
 // that screen, which saves setting it again and binds nothing.
 
-var CATALOGUE = {board_settings: {screena: SCREEN_SIZES.slice(), screenb: SCREEN_SIZES.slice()}};
-var SCREENS = ["A", "B"];
+var SCREENS = CATALOGUE.screen_ports.map(function (name) {
+  return name.slice(-1).toUpperCase();
+});
 
 state.screens = {};
 SCREENS.forEach(function (letter) {

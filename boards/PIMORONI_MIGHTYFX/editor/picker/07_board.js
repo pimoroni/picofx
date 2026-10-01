@@ -7,7 +7,10 @@
 // Which panel is plugged into each screen port, or none. Only the size is the board's:
 // which way up it is mounted is left for when screens are settled
 var SCREEN_PORTS = [{id: "screena", label: "Screen A"}, {id: "screenb", label: "Screen B"}];
-var SCREEN_SIZES = ["2.8", "1.54"];
+// The sizes a panel can be, as the firmware takes them, the catalogue's hub being no panel size
+var SCREEN_SIZES = CATALOGUE.board_settings.screena.filter(function (inches) {
+  return inches !== "hub";
+});
 var screensFitted = {screena: "", screenb: ""};
 
 // A scene holds its cutting and its looks, but not the wiring or where the lamps sit,

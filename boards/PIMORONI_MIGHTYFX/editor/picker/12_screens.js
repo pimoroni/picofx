@@ -15,8 +15,9 @@
 // what the screen shows. A picture newly chosen starts at the turn it was last given on
 // that screen, which saves setting it again and binds nothing.
 
-var CATALOGUE = {board_settings: {screena: SCREEN_SIZES.slice(), screenb: SCREEN_SIZES.slice()}};
-var SCREENS = ["A", "B"];
+var SCREENS = CATALOGUE.screen_ports.map(function (name) {
+  return name.slice(-1).toUpperCase();
+});
 
 state.screens = {};
 SCREENS.forEach(function (letter) {
