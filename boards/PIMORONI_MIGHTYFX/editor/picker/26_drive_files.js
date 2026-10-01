@@ -171,9 +171,14 @@ async function addFiles(kinds, what, takes) {
     picked = await window.showOpenFilePicker({multiple: true, types: [kinds],
                                               excludeAcceptAllOption: true});
   } catch (e) {
-    return;                       // the dialog was dismissed
+    // A dismissed dialog says nothing. Anything else is the browser refusing the files
+    if (e.name !== "AbortError")
+      banner("The browser would not open those files (" + e.message + "). Copy them to " +
+             "another folder, such as Downloads, and add them from there.", true);
+    return;
   }
   var landed = 0;
+  var arrived = [];
   var refused = [];
   for (var i = 0; i < picked.length; i++) {
     var file;
@@ -194,6 +199,7 @@ async function addFiles(kinds, what, takes) {
       await writable.write(file);
       await writable.close();
       landed++;
+      arrived.push(file.name);
     } catch (e) {
       refused.push(file ? file.name : "a file");
       if (e.name === "QuotaExceededError") {
@@ -204,13 +210,20 @@ async function addFiles(kinds, what, takes) {
       }
     }
   }
-  if (landed && !refused.length)
-    banner(landed + " " + what + " copied to the drive.");
-  else if (refused.length && landed)
+  try { await scanMedia(state.dirHandle); } catch (e) {}
+  // A Python file is offered only where its opening string makes it a drawing
+  var unoffered = arrived.filter(function (name) {
+    return /\.py$/i.test(name) && !mediaNamed(name);
+  });
+  if (refused.length && landed)
     banner(landed + " copied; these did not arrive: " + refused.join(", "), true);
   else if (refused.length)
     banner("Nothing arrived: " + refused.join(", "), true);
-  try { await scanMedia(state.dirHandle); } catch (e) {}
+  else if (unoffered.length)
+    banner(unoffered.join(", ") + " copied, but only a drawing is offered here, and a " +
+           "drawing's opening string starts with Drawing: and its name.", true);
+  else if (landed)
+    banner(landed + " " + what + " copied to the drive.");
   draw();
 }
 

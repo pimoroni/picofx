@@ -387,7 +387,7 @@ function renderAssets() {
       ? "reading the drive..."
       : state.media.length
         ? "one set of pictures, each able to go to A, to B, or to both"
-        : "no pictures on the drive yet; drop a gif, png or jpg onto it";
+        : "no pictures on the drive yet; drop a gif, png, jpg or drawing onto it";
   state.media.forEach(function (media) {
     var name = media.name;
     var on = {};
@@ -412,7 +412,8 @@ function renderAssets() {
     if (media.kind !== "image") {
       var kind = document.createElement("span");
       kind.className = "kind";
-      kind.textContent = media.kind === "folder" ? "slideshow" : "gif";
+      kind.textContent = media.kind === "folder" ? "slideshow"
+                       : media.kind === "drawing" ? "drawing" : "gif";
       face.appendChild(kind);
     }
     cell.appendChild(face);
@@ -447,7 +448,7 @@ function renderAssets() {
     box.appendChild(cell);
   });
   if (state.fileHandle)
-    box.appendChild(adderTile("add pictures",
+    box.appendChild(adderTile("add pictures or drawings",
       {description: "Pictures and drawings the board plays",
        accept: {"image/png": [".gif", ".png", ".jpg", ".jpeg"], "text/x-python": [".py"]}},
       "pictures", /\.(gif|png|jpe?g|py)$/i));
