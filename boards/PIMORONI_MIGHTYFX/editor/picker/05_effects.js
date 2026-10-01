@@ -759,7 +759,7 @@ function renderStripTools(where, run) {
 
   var filler = document.createElement("button");
   filler.textContent = "Fill with the next " + (run.pattern || 2);
-  filler.title = "take this section and the ones after it as a pattern, and repeat it " +
+  filler.title = "take this stretch and the ones after it as a pattern, and repeat it " +
                  "to the end of the run";
   filler.disabled = run.picked + (run.pattern || 2) > run.sections.length;
   filler.onclick = function () { fill(run, run.pattern || 2); };
