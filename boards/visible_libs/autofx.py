@@ -1659,6 +1659,9 @@ def __play(fx, volume, path, errors, playing, sounding=(), maker=None):
     """
     for player in playing:
         player.stop()
+    # The players held the strips. A board rebuilt below for a changed entry claims
+    # their state machines again, which a strip still referenced would refuse
+    playing.clear()
 
     # A sound's handle belongs to the file just set aside, so it closes here and
     # the read below opens whatever the file names now

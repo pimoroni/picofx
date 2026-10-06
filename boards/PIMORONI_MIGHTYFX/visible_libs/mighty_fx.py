@@ -368,7 +368,11 @@ class MightyFX:
 
         self.disable_rail()
 
-        # Drop the strips and collect now, so the next board's take the same PIO slots
+        # Hand each strip's state machine and DMA channel back now, so the next board's
+        # strips can take the same slots. Left to the collector, a stale reference to a
+        # strip, a stopped player's or one still on the C stack, keeps them claimed
+        for strip in self.__strips.values():
+            strip.__del__()
         self.__strips.clear()
         gc.collect()
 
