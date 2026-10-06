@@ -134,54 +134,33 @@ var SOUND_SAMPLES = 96;
 
 // ---- each scene keeps its own sound -------------------------------------------------------------
 
-var oneSoundCapture = capture;
-
-capture = function () {
-  var body = oneSoundCapture();
-  body.sound = state.sound;
-  body.soundLoop = state.soundLoop;
-  body.soundKept = state.soundKept;
-  return body;
-};
-
-var oneSoundApply = apply;
-
-apply = function (body) {
-  oneSoundApply(body);
-  if (!("sound" in body)) return;
-  state.sound = body.sound;
-  state.soundLoop = body.soundLoop;
-  state.soundKept = body.soundKept;
-};
-
-var oneSoundBlank = blankBody;
-
-blankBody = function () {
-  var body = oneSoundBlank();
-  body.sound = null;
-  body.soundLoop = false;
-  body.soundKept = null;
-  return body;
-};
-
-var oneSoundContent = hasContent;
-
-hasContent = function (body) { return oneSoundContent(body) || !!body.sound; };
-
-// A scene's sound is its first line
-var oneSoundEntries = entriesOf;
-
-entriesOf = function (body) {
-  var lines = oneSoundEntries(body);
-  var sound = "sound" in body ? soundLine(body) : null;
-  if (sound) lines.unshift(sound);
-  return lines;
-};
+bodyParts.push({
+  capture: function (body) {
+    body.sound = state.sound;
+    body.soundLoop = state.soundLoop;
+    body.soundKept = state.soundKept;
+  },
+  apply: function (body) {
+    if (!("sound" in body)) return;
+    state.sound = body.sound;
+    state.soundLoop = body.soundLoop;
+    state.soundKept = body.soundKept;
+  },
+  blank: function (body) {
+    body.sound = null;
+    body.soundLoop = false;
+    body.soundKept = null;
+  },
+  hasContent: function (body) { return !!body.sound; },
+  // A scene's sound is its first line
+  entries: function (body, lines) {
+    var sound = "sound" in body ? soundLine(body) : null;
+    if (sound) lines.unshift(sound);
+    return lines;
+  }
+});
 
 // ---- drawing the tab ---------------------------------------------------------------------------
-
-// The tab's swatch is the shape of the sound playing, or silence
-var oneSoundSwatch = tabSwatch;
 
 // A sound's outline, filled edge to edge and mirrored about the middle. Each moment of it is
 // coloured by how loud it is, blue when quiet through violet and pink to red when loud, the
@@ -282,8 +261,8 @@ renderSound = function () {
   row.removeChild(quiet);
 };
 
-tabSwatch = function (swatch, panel) {
-  if (panel !== "soundPanel") return oneSoundSwatch(swatch, panel);
+// The tab's swatch is the shape of the sound playing, or silence
+tabSwatches.soundPanel = function (swatch) {
   swatch.textContent = "";
   swatch.className = "accswatch soundswatch";
   var info = state.sound ? state.soundInfo[state.sound] : null;
@@ -323,13 +302,10 @@ function kindUnderName() {
   tab.insertBefore(named, tab.firstChild);
 }
 
-var oneSoundDraw = draw;
-
-draw = function () {
-  oneSoundDraw();
+drawSteps.after.push(function () {
   kindUnderName();
   renderSound();
-};
+});
 
 (function () {
   var panel = document.createElement("details");
@@ -346,7 +322,3 @@ draw = function () {
 TAB_NAMES.soundPanel = "Sound";
 TAB_PANELS.push("soundPanel");
 keptOpen("soundPanel");
-
-state.always.body = capture();
-showChosen();
-draw();

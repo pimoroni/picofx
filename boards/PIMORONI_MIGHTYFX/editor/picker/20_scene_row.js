@@ -35,5 +35,3 @@ renderSceneSettings = function () {
                           "instead of carrying on where they left off"),
                    ticked);
 };
-
-draw();

@@ -828,10 +828,7 @@ function renderPageSwitch() {
   body.parentNode.insertBefore(programView, body.nextSibling);
 }());
 
-var oneProgramDraw = draw;
-
-draw = function () {
-  oneProgramDraw();
+drawSteps.after.push(function () {
   document.body.classList.toggle("programpage", onProgramPage);
   document.body.dataset.pageway = "headsplit";
   renderPageSwitch();
@@ -841,7 +838,7 @@ draw = function () {
   headerOnOneLine();
   // The effects' live swatch in the tabs is made after the page painted, so it is painted now
   paintAll();
-};
+});
 
 // Pictures for thumbnails, decoded ahead of being shown, so a thumbnail is drawn whole the first
 // time and never fills in late. Once all are in, the page is drawn again for any already showing
@@ -918,5 +915,3 @@ function scenesInTheTab() {
   plus.addEventListener("click", function (event) { event.stopPropagation(); });
   into.appendChild(plus);
 }
-
-draw();

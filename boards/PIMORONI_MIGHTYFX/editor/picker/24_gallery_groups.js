@@ -72,5 +72,3 @@ renderGalleries = function () {
   });
   flat.parentNode.replaceChild(holder, flat);
 };
-
-draw();

@@ -47,23 +47,17 @@ function sendTargets() {
 
 // ---- each scene keeps its groups ---------------------------------------------------------------
 
-var oneGroupsCapture = capture;
-
-capture = function () {
-  var body = oneGroupsCapture();
-  HUB_PLACES.forEach(function (place) { body.places[place].group = groupOf(place); });
-  return body;
-};
-
-var oneGroupsApply = apply;
-
-apply = function (body) {
-  oneGroupsApply(body);
-  HUB_PLACES.forEach(function (place) {
-    if (body.places && body.places[place].group)
-      state.places[place].group = body.places[place].group;
-  });
-};
+bodyParts.push({
+  capture: function (body) {
+    HUB_PLACES.forEach(function (place) { body.places[place].group = groupOf(place); });
+  },
+  apply: function (body) {
+    HUB_PLACES.forEach(function (place) {
+      if (body.places && body.places[place].group)
+        state.places[place].group = body.places[place].group;
+    });
+  }
+});
 
 // ---- joining, leaving, and a group set as one --------------------------------------------------
 
@@ -111,12 +105,7 @@ function settleGroups() {
   });
 }
 
-var oneGroupsDraw = draw;
-
-draw = function () {
-  settleGroups();
-  oneGroupsDraw();
-};
+drawSteps.before.push(settleGroups);
 
 // ---- pictures go to groups ---------------------------------------------------------------------
 
@@ -373,6 +362,3 @@ function apartSaid(sends) {
   return listSaid(told) + ", so " + (told.length > 1 ? "each is" : several ? "they are" : "it is") +
          " sent apart from " + listSaid(bases) + ".";
 }
-
-state.always.body = capture();
-draw();

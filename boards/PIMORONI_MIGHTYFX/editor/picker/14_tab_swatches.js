@@ -2,13 +2,9 @@
 // ---- the LED tabs' swatches, live ------------------------------------------------------------
 // Each LED tab's swatch a small copy of its section's lamps, painted every frame from the
 // same values the lamps are painted from, so it can never say something the lamps do not.
-// Tried against still swatches drawn in what each stretch plays, the cost being movement on
-// the row of tabs.
+// The cost is movement on the row of tabs.
 
-var oneLiveSwatch = tabSwatch;
-
-tabSwatch = function (swatch, panel) {
-  if (LED_PANELS.indexOf(panel) < 0) return oneLiveSwatch(swatch, panel);
+function liveSwatch(swatch, panel) {
   swatch.textContent = "";
   swatch.className = "accswatch liveswatch";
   runsOfPanel(panel).forEach(function (run) {
@@ -27,14 +23,9 @@ tabSwatch = function (swatch, panel) {
     }});
   });
   swatch.title = "what its lights are showing now";
-};
+}
 
-var oneLiveDraw = draw;
+LED_PANELS.forEach(function (panel) { tabSwatches[panel] = liveSwatch; });
 
 // The swatches are made after the page has painted, so are painted now or show dark a frame
-draw = function () {
-  oneLiveDraw();
-  paintAll();
-};
-
-draw();
+drawSteps.after.push(paintAll);

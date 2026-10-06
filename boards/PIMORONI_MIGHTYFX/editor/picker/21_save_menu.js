@@ -63,9 +63,4 @@ function saveMenu() {
   });
 }());
 
-var oneSaveMenuDraw = draw;
-
-draw = function () {
-  oneSaveMenuDraw();
-  saveMenu();
-};
+drawSteps.after.push(saveMenu);

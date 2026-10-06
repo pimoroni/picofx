@@ -46,14 +46,11 @@ async function drivePictures(dir, programs) {
   loadThumbs(Object.keys(DRIVE_PICTURES).map(function (name) { return DRIVE_PICTURES[name]; }));
 }
 
-var oneProgramsConnect = connect;
-
-connect = async function (fresh) {
-  await oneProgramsConnect(fresh);
+connectSteps.push(async function () {
   DRIVE_PROGRAMS = await drivePrograms(drive.dirHandle);
   await drivePictures(drive.dirHandle, DRIVE_PROGRAMS);
   // A program the page had chosen that this drive does not hold is no longer there to run
   if (boardSet.program && !programNamed(boardSet.program)) boardSet.program = null;
   if (boardSet.lastProgram && !programNamed(boardSet.lastProgram)) boardSet.lastProgram = null;
   draw();
-};
+});

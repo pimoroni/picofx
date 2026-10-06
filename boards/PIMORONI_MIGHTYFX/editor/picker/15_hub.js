@@ -54,47 +54,31 @@ function placeTurnForChosen(place) {
 
 // ---- each scene keeps what the hub's positions show ------------------------------------------
 
-var oneHubCapture = capture;
-
-capture = function () {
-  var body = oneHubCapture();
-  body.places = {};
-  HUB_PLACES.forEach(function (place) {
-    var held = state.places[place];
-    body.places[place] = {shows: held.shows, pingpong: held.pingpong, hold: held.hold,
-                          fps: held.fps, turn: held.turn};
-  });
-  return body;
-};
-
-var oneHubApply = apply;
-
-apply = function (body) {
-  oneHubApply(body);
-  if (!body.places) return;
-  HUB_PLACES.forEach(function (place) {
-    var held = state.places[place];
-    Object.assign(held, body.places[place]);
-    held.turn = body.places[place].turn || 0;
-    held.lastShows = held.shows;
-  });
-};
-
-var oneHubBlank = blankBody;
-
-blankBody = function () {
-  var body = oneHubBlank();
-  HUB_PLACES.forEach(function (place) { body.places[place].shows = null; });
-  return body;
-};
-
-var oneHubContent = hasContent;
-
-hasContent = function (body) {
-  return oneHubContent(body) || HUB_PLACES.some(function (place) {
-    return !!(body.places && body.places[place].shows);
-  });
-};
+bodyParts.push({
+  capture: function (body) {
+    body.places = {};
+    HUB_PLACES.forEach(function (place) {
+      var held = state.places[place];
+      body.places[place] = {shows: held.shows, pingpong: held.pingpong, hold: held.hold,
+                            fps: held.fps, turn: held.turn};
+    });
+  },
+  apply: function (body) {
+    if (!body.places) return;
+    HUB_PLACES.forEach(function (place) {
+      var held = state.places[place];
+      Object.assign(held, body.places[place]);
+      held.turn = body.places[place].turn || 0;
+      held.lastShows = held.shows;
+    });
+  },
+  blank: function (body) {
+    HUB_PLACES.forEach(function (place) { body.places[place].shows = null; });
+  },
+  hasContent: function (body) {
+    return HUB_PLACES.some(function (place) { return !!(body.places && body.places[place].shows); });
+  }
+});
 
 // ---- what the file says ----------------------------------------------------------------------
 
@@ -170,18 +154,14 @@ screenEntry = function (letter, body) {
   return state.hub.on ? null : oneHubEntryFor(letter, body);
 };
 
-var oneHubEntries = entriesOf;
+bodyParts.push({
+  entries: function (body, lines) {
+    if (state.hub.on) placeGroups(body).forEach(function (group) { lines.push(hubEntry(group)); });
+    return lines;
+  }
+});
 
-entriesOf = function (body) {
-  var lines = oneHubEntries(body);
-  if (state.hub.on) placeGroups(body).forEach(function (group) { lines.push(hubEntry(group)); });
-  return lines;
-};
-
-var oneHubBoardLine = boardLine;
-
-boardLine = function () {
-  var line = oneHubBoardLine();
+boardLineSteps.after.push(function (line) {
   if (!state.hub.on) return line;
   var rest = line.replace(/^board: ?/, "").replace(/\bscreen[ab]=\S+ ?/g, "").trim();
   // The connector the screens come through, then each size fitted and where: hubA-D=2.8
@@ -193,7 +173,7 @@ boardLine = function () {
     if (places.length) tokens.push("hub" + placesSaid(places) + "=" + inches);
   });
   return "board: " + tokens.join(" ") + (rest ? " " + rest : "");
-};
+});
 
 // ---- drawing the hub -------------------------------------------------------------------------
 
@@ -523,11 +503,11 @@ renderAssets = function () {
 
 // ---- the tab --------------------------------------------------------------------------------
 
-// The tab's swatch is the hub's six positions, each showing what it shows
-var oneHubSwatch = tabSwatch;
+// The tab's swatch is the hub's six positions, each showing what it shows, where a hub is on
+var screensSwatch = tabSwatches.screensPanel;
 
-tabSwatch = function (swatch, panel) {
-  if (panel !== "screensPanel" || !state.hub.on) return oneHubSwatch(swatch, panel);
+tabSwatches.screensPanel = function (swatch) {
+  if (!state.hub.on) return screensSwatch(swatch);
   swatch.textContent = "";
   swatch.className = "accswatch screenswatch hubswatch";
   HUB_PLACES.forEach(function (place) {
@@ -546,11 +526,9 @@ tabSwatch = function (swatch, panel) {
   }).join(", ");
 };
 
-var oneHubDraw = draw;
+drawSteps.before.push(function () { HUB_PLACES.forEach(placeTurnForChosen); });
 
-draw = function () {
-  HUB_PLACES.forEach(placeTurnForChosen);
-  oneHubDraw();
+drawSteps.after.push(function () {
   // Under the tab's name, the hub and the size of its panels, in no more room than the name's
   var under = document.querySelector("#ledTabs .ledtab[data-panel=screensPanel] .tabunder");
   if (!under || !state.hub.on) return;
@@ -559,7 +537,7 @@ draw = function () {
   });
   under.textContent = !sizes.length ? "hub, empty"
                     : sizes.length > 1 ? "hub, mixed" : "hub, " + sizes[0] + "\"";
-};
+});
 
 // The switch takes the place of the line the tab opened with, at the top where the other
 // tabs have their board box
@@ -571,7 +549,3 @@ draw = function () {
   says.parentNode.insertBefore(facts, says);
   says.hidden = true;
 }());
-
-state.always.body = capture();
-showChosen();
-draw();

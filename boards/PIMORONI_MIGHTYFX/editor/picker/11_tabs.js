@@ -39,8 +39,10 @@ function showChosen() {
   document.body.classList.toggle("nolooks", !chosenTakesLooks());
 }
 
-// A tab's swatch, which for an LED section is what it plays
-function tabSwatch(swatch, panel) { renderSwatch(swatch, panel); }
+// A tab's swatch, drawn by whichever part has that panel
+var tabSwatches = {};
+
+function tabSwatch(swatch, panel) { tabSwatches[panel](swatch, panel); }
 
 function renderLedTabs() {
   var bar = document.getElementById("ledTabs");
@@ -101,10 +103,7 @@ setSetup = function (on) {
 // are for whichever of their two sides was last worked on
 var lastOutputRun = outs;
 
-var oneTabsDraw = draw;
-
-draw = function () {
-  oneTabsDraw();
+drawSteps.after.push(function () {
   if (!active.strip) lastOutputRun = active;
   if (active.strip) {
     renderTools("outTools", lastOutputRun);
@@ -115,7 +114,7 @@ draw = function () {
     renderChosen(run.id + "Chosen", run);
   });
   renderLedTabs();
-};
+});
 
 (function () {
   var bar = document.createElement("div");
@@ -134,6 +133,3 @@ draw = function () {
     stack.appendChild(document.getElementById(panel));
   });
 }());
-
-showChosen();
-draw();

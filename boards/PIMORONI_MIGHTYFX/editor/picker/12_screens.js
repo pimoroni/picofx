@@ -488,66 +488,44 @@ function allBodies() {
 
 // ---- each scene keeps what its screens show ---------------------------------------------------
 
-var oneScreensCapture = capture;
-
-capture = function () {
-  var body = oneScreensCapture();
-  body.screens = {};
-  SCREENS.forEach(function (letter) {
-    var screen = state.screens[letter];
-    body.screens[letter] = {shows: screen.shows, kept: screen.kept, pingpong: screen.pingpong,
-                            hold: screen.hold, fps: screen.fps, turn: screen.turn};
-  });
-  return body;
-};
-
-var oneScreensApply = apply;
-
-apply = function (body) {
-  oneScreensApply(body);
-  if (!body.screens) return;
-  SCREENS.forEach(function (letter) {
-    var screen = state.screens[letter];
-    Object.assign(screen, body.screens[letter]);
-    screen.turn = body.screens[letter].turn || 0;
-    screen.lastShows = screen.shows;
-  });
-};
-
-var oneScreensBlank = blankBody;
-
-blankBody = function () {
-  var body = oneScreensBlank();
-  SCREENS.forEach(function (letter) { body.screens[letter].shows = null; });
-  return body;
-};
-
-var oneScreensContent = hasContent;
-
-hasContent = function (body) {
-  return oneScreensContent(body) || SCREENS.some(function (letter) {
-    return !!(body.screens && body.screens[letter].shows);
-  });
-};
-
-// A scene's screens are written after its lamps
-var oneScreensEntries = entriesOf;
-
-entriesOf = function (body) {
-  var lines = oneScreensEntries(body);
-  SCREENS.forEach(function (letter) {
-    var entry = body.screens && screenEntry(letter, body);
-    if (entry) lines.push(entry);
-  });
-  return lines;
-};
+bodyParts.push({
+  capture: function (body) {
+    body.screens = {};
+    SCREENS.forEach(function (letter) {
+      var screen = state.screens[letter];
+      body.screens[letter] = {shows: screen.shows, kept: screen.kept, pingpong: screen.pingpong,
+                              hold: screen.hold, fps: screen.fps, turn: screen.turn};
+    });
+  },
+  apply: function (body) {
+    if (!body.screens) return;
+    SCREENS.forEach(function (letter) {
+      var screen = state.screens[letter];
+      Object.assign(screen, body.screens[letter]);
+      screen.turn = body.screens[letter].turn || 0;
+      screen.lastShows = screen.shows;
+    });
+  },
+  blank: function (body) {
+    SCREENS.forEach(function (letter) { body.screens[letter].shows = null; });
+  },
+  hasContent: function (body) {
+    return SCREENS.some(function (letter) { return !!(body.screens && body.screens[letter].shows); });
+  },
+  // A scene's screens are written after its lamps
+  entries: function (body, lines) {
+    SCREENS.forEach(function (letter) {
+      var entry = body.screens && screenEntry(letter, body);
+      if (entry) lines.push(entry);
+    });
+    return lines;
+  }
+});
 
 // The board line gives a screen's size only where some scene shows something on it. The board
 // reserves for a pair wherever two screens are named, which
 // slows the one in use
-var oneScreensBoardLine = boardLine;
-
-boardLine = function () {
+boardLineSteps.before.push(function () {
   var bodies = [state.always.body].concat(state.scenes.map(function (scene) {
     return scene.body;
   }));
@@ -558,8 +536,7 @@ boardLine = function () {
     });
     screensFitted["screen" + letter.toLowerCase()] = used ? screen.size : "";
   });
-  return oneScreensBoardLine();
-};
+});
 
 // ---- drawing the tab -------------------------------------------------------------------------
 
@@ -580,10 +557,7 @@ function renderScreensTab() {
 }
 
 // The tab's swatch is the two screens, each showing what its screen shows
-var oneScreensSwatch = tabSwatch;
-
-tabSwatch = function (swatch, panel) {
-  if (panel !== "screensPanel") return oneScreensSwatch(swatch, panel);
+tabSwatches.screensPanel = function (swatch) {
   swatch.textContent = "";
   swatch.className = "accswatch screenswatch";
   SCREENS.forEach(function (letter) {
@@ -622,16 +596,14 @@ function sizesUnderName() {
   tab.insertBefore(named, tab.firstChild);
 }
 
-var oneScreensDraw = draw;
-
 // A picture newly chosen is given its starting turn before anything else is drawn, since
 // writing the file applies every scene in turn and would take it as already chosen
-draw = function () {
-  SCREENS.forEach(turnForChosen);
-  oneScreensDraw();
+drawSteps.before.push(function () { SCREENS.forEach(turnForChosen); });
+
+drawSteps.after.push(function () {
   sizesUnderName();
   renderScreensTab();
-};
+});
 
 (function () {
   var panel = document.createElement("details");
@@ -654,7 +626,3 @@ draw = function () {
 TAB_NAMES.screensPanel = "Screens";
 TAB_PANELS.push("screensPanel");
 keptOpen("screensPanel");
-
-state.always.body = capture();
-showChosen();
-draw();

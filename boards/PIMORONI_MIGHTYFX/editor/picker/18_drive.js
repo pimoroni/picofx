@@ -215,6 +215,9 @@ function overwriteQuestion() {
          "what this page writes. Save over it?";
 }
 
+// What the parts below read off a drive once it is open, each awaited in the order the parts come
+var connectSteps = [];
+
 async function connect(fresh) {
   var dir = await pickDrive(fresh);
   var file;
@@ -246,6 +249,7 @@ async function connect(fresh) {
   saveButton.disabled = false;
   // The header's buttons have changed width, which decides whether it keeps one line
   draw();
+  for (var at = 0; at < connectSteps.length; at++) await connectSteps[at]();
 }
 
 // errors.txt read into the lines it names. autofx begins each problem "line N:", and anything
@@ -405,5 +409,3 @@ if (!CAN_REACH_A_DRIVE) {
   document.getElementById("open").disabled = true;
   banner("This page reaches the drive only in Chrome or Edge.");
 }
-
-draw();

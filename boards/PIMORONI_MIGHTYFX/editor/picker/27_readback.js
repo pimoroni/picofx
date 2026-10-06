@@ -903,58 +903,41 @@ function readHubLines(bodies) {
 
 // ---- kept entries travel with their scene -----------------------------------------------------
 
-var oneReadCapture = capture;
-
-capture = function () {
-  var body = oneReadCapture();
-  body.kept = copyKept(keptNow);
-  body.notes = JSON.parse(JSON.stringify(notesNow));
-  return body;
-};
-
-var oneReadApply = apply;
-
-apply = function (body) {
-  oneReadApply(body);
-  keptNow = copyKept(body.kept);
-  notesNow = JSON.parse(JSON.stringify(body.notes || {}));
-};
-
-// A body with nothing in it keeps nothing either, whatever the scene on show kept
-var oneReadBlankBody = blankBody;
-
-blankBody = function () {
-  var body = oneReadBlankBody();
-  body.kept = [];
-  body.notes = {};
-  return body;
-};
+bodyParts.push({
+  capture: function (body) {
+    body.kept = copyKept(keptNow);
+    body.notes = JSON.parse(JSON.stringify(notesNow));
+  },
+  apply: function (body) {
+    keptNow = copyKept(body.kept);
+    notesNow = JSON.parse(JSON.stringify(body.notes || {}));
+  },
+  // A body with nothing in it keeps nothing either, whatever the scene on show kept
+  blank: function (body) {
+    body.kept = [];
+    body.notes = {};
+  },
+  // Kept entries come last in their scene, each with its comments above it. A line read into
+  // the page has its comments above it again while it writes the same
+  entries: function (body, written) {
+    var notes = body.notes || {};
+    var lines = [];
+    written.forEach(function (line) {
+      lines = lines.concat(notes[line] || []);
+      lines.push(line);
+    });
+    (body.kept || []).forEach(function (one) {
+      lines = lines.concat(one.comments);
+      if (one.text !== null) lines.push(one.text);
+    });
+    return lines;
+  }
+});
 
 // ---- writing them back ------------------------------------------------------------------------
 
-// Kept entries come last in their scene, each with its comments above it. A line read into the
-// page has its comments above it again while it writes the same
-var oneReadEntries = entriesOf;
-
-entriesOf = function (body) {
-  var notes = body.notes || {};
-  var lines = [];
-  oneReadEntries(body).forEach(function (line) {
-    lines = lines.concat(notes[line] || []);
-    lines.push(line);
-  });
-  (body.kept || []).forEach(function (one) {
-    lines = lines.concat(one.comments);
-    if (one.text !== null) lines.push(one.text);
-  });
-  return lines;
-};
-
-// The board line's tokens this page does not hold, after its own, and the comments above it
-var oneReadBoardLine = boardLine;
-
-boardLine = function () {
-  var line = oneReadBoardLine();
+// The board line's tokens this page does not hold, after its own
+boardLineSteps.after.push(function (line) {
   // A strip whose length the page writes itself leaves out any kept for it, which coming
   // later would be the one the board takes
   var written = (line || "").toLowerCase().match(/\bstrip[lr](?==)/g) || [];
@@ -964,31 +947,14 @@ boardLine = function () {
   });
   if (kept.length) line = (line || "board:") + " " + kept.join(" ");
   return line;
-};
-
-var oneReadText = currentText;
+});
 
 // Under the header, the wiring where it is not number order, then the comments above the board line
-currentText = function () {
-  var text = oneReadText();
+fileHead.under.push(function () {
   var wired = wiringLine();
-  if ((!wired && !boardComments.length) || text.indexOf(HEADER) !== 0) return text;
-  var rest = text.slice(HEADER.length).replace(/^\n/, "");
-  return HEADER + (wired ? wired + "\n" : "") + "\n" +
-         (boardComments.length ? boardComments.join("\n") + "\n" : "") + rest;
-};
-
-// A heading kept as written while its scene is as it was read, since the page cannot say it
-var oneReadHeading = sceneHeading;
-
-sceneHeading = function (scene) {
-  var read = scene.read;
-  if (read && read.written && scene.name === read.name && scene.restart === read.restart &&
-      (read.seconds === null ? scene.waits : scene.seconds === read.seconds)) {
-    return read.written;
-  }
-  return oneReadHeading(scene);
-};
+  return wired ? [wired] : [];
+});
+fileHead.above.push(function () { return boardComments; });
 
 // ---- showing them -----------------------------------------------------------------------------
 
@@ -1074,13 +1040,10 @@ function markKeptLights() {
   });
 }
 
-var oneReadDraw = draw;
-
-draw = function () {
-  oneReadDraw();
+drawSteps.after.push(function () {
   renderKept();
   markKeptLights();
-};
+});
 
 // A look chosen for lights a kept line plays asks first, since the board refuses a light set
 // twice: agreed, the kept lines go and the look plays; declined, nothing changes
@@ -1131,10 +1094,7 @@ dropStrip = function (run) {
 // ---- when the drive is opened -----------------------------------------------------------------
 
 // A file this page wrote opens straight in. Any other asks first, saying what would be kept
-var oneReadConnect = connect;
-
-connect = async function (fresh) {
-  await oneReadConnect(fresh);
+connectSteps.push(async function () {
   var text = await (await drive.fileHandle.getFile()).text();
   if (!text.trim()) return;
 
@@ -1153,7 +1113,7 @@ connect = async function (fresh) {
   }
   absorbFile(text);
   rememberRead(text);
-};
+});
 
 // Read or passed over by choice, the file is this page's to save over without asking again
 function rememberRead(text) {

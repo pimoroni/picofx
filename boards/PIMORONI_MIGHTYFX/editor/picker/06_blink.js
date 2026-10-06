@@ -149,5 +149,3 @@ renderChosen = function (where, run) {
   row.appendChild(more);
   pick.insertBefore(row, pick.firstChild);
 };
-
-draw();

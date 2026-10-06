@@ -489,7 +489,8 @@ function sectionLines(run, section, look) {
                            section.colour), section.level);
 }
 
-function currentText() {
+// What the lamps play, a line or more for each stretch with a look
+function lampLines() {
   var lines = [];
   runs.forEach(function (run) {
     run.sections.forEach(function (section) {
@@ -498,8 +499,7 @@ function currentText() {
       lines = lines.concat(sectionLines(run, section, look));
     });
   });
-  if (!lines.length) return HEADER + "\n# Nothing is playing yet.";
-  return HEADER + "\n" + lines.join("\n");
+  return lines;
 }
 
 // ---- lighting -----------------------------------------------------------------------------
@@ -1150,6 +1150,9 @@ function escapeHtml(text) {
 
 function paintLine(line) {
   var plain = escapeHtml(line);
+  // A scene heading carries a colon, which would read as the one dividing a channel from its
+  // effect, so headings are taken first
+  if (line.charAt(0) === "[") return "<span class='s-scene'>" + plain + "</span>";
   if (/^\s*#/.test(line)) return "<span class='s-comment'>" + plain + "</span>";
   var at = line.indexOf(":");
   if (at < 0) return plain;
@@ -1182,8 +1185,24 @@ function renderPreview() {
 }
 
 // ---- drawing --------------------------------------------------------------------------------
+// The parts below add their own steps to a draw: what each readies before the page is drawn, and
+// what each draws after the outputs, both in the order the parts come
+
+var drawSteps = {before: [], after: []};
+
+// Whether drawing waits, while the page is changed in a way a draw would store half done
+var drawHeld = false;
 
 function draw() {
+  if (drawHeld) return;
+  // A draw empties and refills much of the page, and reads its layout part way through, and a
+  // browser may move the scroll to hold something in view while it is half drawn, seen in Chrome
+  // as a jump of the whole page when a tab was chosen. So the page ends a draw scrolled where it
+  // began. A scroll a page means, such as holding a pressed button still, is made after the draw
+  var across = window.scrollX;
+  var down = window.scrollY;
+  drawSteps.before.forEach(function (step) { step(); });
+
   painters = [];
   cardFaces = [];
   kinOf = {};
@@ -1206,6 +1225,9 @@ function draw() {
   renderPreview();
   levelSides();
   paintAll();
+
+  drawSteps.after.forEach(function (step) { step(); });
+  if (window.scrollX !== across || window.scrollY !== down) window.scrollTo(across, down);
 }
 
 // Each side stacks its own rows, so a run whose lamps wrap onto a second row pushes its
@@ -1235,5 +1257,3 @@ function step() {
 }
 
 settle();
-draw();
-if (HOLDING_STILL) { beat = 0.37; paintAll(); } else { step(); }

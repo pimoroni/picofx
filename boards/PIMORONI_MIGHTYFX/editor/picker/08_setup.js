@@ -306,17 +306,11 @@ function setupButton(label, on, act) {
   return button;
 }
 
-var oneSetupDraw = draw;
-
-draw = function () {
-  oneSetupDraw();
+drawSteps.after.push(function () {
   renderOutFacts();
   SCREEN_PORTS.forEach(renderScreenFacts);
   // What is not the board stands back while it is set up
   document.body.classList.toggle("setupall", setupOn);
   if (setupOn) unmark();
   paintAll();
-};
-
-state.always.body = capture();
-draw();
+});

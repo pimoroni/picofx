@@ -320,5 +320,3 @@ renderChosen = function (where, run) {
   };
   tuning.appendChild(handle);
 };
-
-draw();

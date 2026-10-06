@@ -1178,10 +1178,7 @@ settle();
 
 // ---- drawing the page -------------------------------------------------------------------
 
-var oneReviewDraw = draw;
-
-draw = function () {
-  oneReviewDraw();
+drawSteps.after.push(function () {
   // The outputs' tools and settings are for the stretch being worked on, which while a
   // strip is picked is under that strip instead
   if (active.strip) {
@@ -1209,10 +1206,10 @@ draw = function () {
     }
   });
   fitBars();
-  // The page below paints what it drew and is done before these are made, so a fresh
-  // bead would hold the default fill until the next frame and show black
+  // The page painted what it drew before these were made, so a fresh bead would hold the
+  // default fill until the next frame and show black
   paintAll();
-};
+});
 
 // A cut's label, which lights it falls between, is centred on the cut, so near either end of a
 // bar it overhung the bar and, hidden until pointed at but still taking its room, made an
@@ -2375,7 +2372,3 @@ renderChosen = function (where, run) {
   who.classList.add("withway");
   who.appendChild(directionToggle(run, section));
 };
-
-// The page opens on one board playing all the way through
-state.always.body = capture();
-draw();

@@ -2892,7 +2892,8 @@ function sectionLines(run, section, look) {
                            section.colour), section.level);
 }
 
-function currentText() {
+// What the lamps play, a line or more for each stretch with a look
+function lampLines() {
   var lines = [];
   runs.forEach(function (run) {
     run.sections.forEach(function (section) {
@@ -2901,8 +2902,7 @@ function currentText() {
       lines = lines.concat(sectionLines(run, section, look));
     });
   });
-  if (!lines.length) return HEADER + "\n# Nothing is playing yet.";
-  return HEADER + "\n" + lines.join("\n");
+  return lines;
 }
 
 // ---- lighting -----------------------------------------------------------------------------
@@ -3553,6 +3553,9 @@ function escapeHtml(text) {
 
 function paintLine(line) {
   var plain = escapeHtml(line);
+  // A scene heading carries a colon, which would read as the one dividing a channel from its
+  // effect, so headings are taken first
+  if (line.charAt(0) === "[") return "<span class='s-scene'>" + plain + "</span>";
   if (/^\s*#/.test(line)) return "<span class='s-comment'>" + plain + "</span>";
   var at = line.indexOf(":");
   if (at < 0) return plain;
@@ -3585,8 +3588,24 @@ function renderPreview() {
 }
 
 // ---- drawing --------------------------------------------------------------------------------
+// The parts below add their own steps to a draw: what each readies before the page is drawn, and
+// what each draws after the outputs, both in the order the parts come
+
+var drawSteps = {before: [], after: []};
+
+// Whether drawing waits, while the page is changed in a way a draw would store half done
+var drawHeld = false;
 
 function draw() {
+  if (drawHeld) return;
+  // A draw empties and refills much of the page, and reads its layout part way through, and a
+  // browser may move the scroll to hold something in view while it is half drawn, seen in Chrome
+  // as a jump of the whole page when a tab was chosen. So the page ends a draw scrolled where it
+  // began. A scroll a page means, such as holding a pressed button still, is made after the draw
+  var across = window.scrollX;
+  var down = window.scrollY;
+  drawSteps.before.forEach(function (step) { step(); });
+
   painters = [];
   cardFaces = [];
   kinOf = {};
@@ -3609,6 +3628,9 @@ function draw() {
   renderPreview();
   levelSides();
   paintAll();
+
+  drawSteps.after.forEach(function (step) { step(); });
+  if (window.scrollX !== across || window.scrollY !== down) window.scrollTo(across, down);
 }
 
 // Each side stacks its own rows, so a run whose lamps wrap onto a second row pushes its
@@ -3638,8 +3660,6 @@ function step() {
 }
 
 settle();
-draw();
-if (HOLDING_STILL) { beat = 0.37; paintAll(); } else { step(); }
 
 // ---- scenes ---------------------------------------------------------------------------
 // The scene tabs, adding, removing and reordering them, and a scene's own settings. A scene's
@@ -3677,21 +3697,22 @@ function mostPlayed() {
   return most;
 }
 
-// A scene holds everything that is the scene's: the wiring, where each
-// lamp sits, and every run's cutting and looks. A strip's length is the board's, so it
-// sits outside the body and is not captured
+// A scene holds every run's cutting and looks. The wiring, where each lamp sits and a strip's
+// length are the board's, so they sit outside the body and are not captured. The parts below
+// keep their own share of a scene in the body too, each registering how it captures, applies
+// and blanks that share, whether the share has content, and how it adds to the scene's lines.
+// Each runs after the runs' own, in the order the parts come
+var bodyParts = [];
+
 function capture() {
   var body = {look: mostPlayed(), active: active.name, runs: {},
-              wiring: wiring.map(function (one) { return {broken: one.broken}; }),
-              order: order.map(function (one) { return {out: one.out, channel: one.channel}; }),
               carried: JSON.parse(JSON.stringify(carried))};
   runs.forEach(function (run) { body.runs[run.name] = copyRun(run); });
+  bodyParts.forEach(function (part) { if (part.capture) part.capture(body); });
   return body;
 }
 
 function apply(body) {
-  wiring = body.wiring.map(function (one) { return {broken: one.broken}; });
-  order = body.order.map(function (one) { return {out: one.out, channel: one.channel}; });
   carried = JSON.parse(JSON.stringify(body.carried));
   runs.forEach(function (run) {
     var was = copyRun(body.runs[run.name]);
@@ -3702,10 +3723,11 @@ function apply(body) {
   });
   active = runs.filter(function (run) { return run.name === body.active; })[0] || outs;
   settle();
+  bodyParts.forEach(function (part) { if (part.apply) part.apply(body); });
 }
 
-// A scene with nothing playing in it, wired and cut as the board is now, which is what
-// the always-on tab is left holding once its content has been carried into the first
+// A scene with nothing playing in it, cut as the board is now, which is what the always-on
+// tab is left holding once its content has been carried into the first
 function blankBody() {
   var body = capture();
   Object.keys(body.runs).forEach(function (name) {
@@ -3716,13 +3738,14 @@ function blankBody() {
   });
   body.look = null;
   body.carried = {};
+  bodyParts.forEach(function (part) { if (part.blank) part.blank(body); });
   return body;
 }
 
 function hasContent(body) {
   return Object.keys(body.runs).some(function (name) {
     return body.runs[name].sections.some(function (section) { return section.look; });
-  });
+  }) || bodyParts.some(function (part) { return part.hasContent && part.hasContent(body); });
 }
 
 function slotAt(which) { return which < 0 ? state.always : state.scenes[which]; }
@@ -3933,27 +3956,33 @@ function renderSceneSettings() {
 
 // ---- what the whole file says now -------------------------------------------------------
 
-// The page below writes whatever its globals hold. Asking it once per scene, with each
-// body applied in turn, keeps one writer for all of them
-var oneSceneText = currentText;
-
+// The lamps' lines are written from the runs as they stand, so each scene's body is applied in
+// turn, which keeps one writer for all of them
 function entriesOf(body) {
   apply(body);
-  var text = oneSceneText();
-  if (text.indexOf(HEADER) === 0) text = text.slice(HEADER.length);
-  return text.split("\n").filter(function (line) {
-    return line.trim() && line.indexOf("Nothing is playing") < 0;
-  });
+  var lines = lampLines().filter(function (line) { return line.trim(); });
+  bodyParts.forEach(function (part) { if (part.entries) lines = part.entries(body, lines); });
+  return lines;
 }
 
-// A scene's heading. One read from a file with no time waits, and is written back without one
+// A scene's heading. One read from a file with no time waits, and is written back without one.
+// A heading read from a file is written back as it was while the scene still says the same
 function sceneHeading(scene) {
+  var read = scene.read;
+  if (read && read.written && scene.name === read.name && scene.restart === read.restart &&
+      (read.seconds === null ? scene.waits : scene.seconds === read.seconds)) {
+    return read.written;
+  }
   var settings = (scene.waits ? [] : [scene.seconds + "s"]).concat(scene.restart ? ["restart"] : []);
   return "[" + (scene.name.trim() || "Scene") + (settings.length ? ": " + settings.join(" ") : "") +
          "]";
 }
 
-currentText = function () {
+// What the parts below write above the scenes: lines straight under the file's header, then,
+// after a blank line, lines above the board line. Each is a list of functions giving lines
+var fileHead = {under: [], above: []};
+
+function currentText() {
   store();
   var lines = entriesOf(state.always.body);
   state.scenes.forEach(function (scene) {
@@ -3964,26 +3993,21 @@ currentText = function () {
     lines = lines.concat(entriesOf(scene.body));
   });
   apply(slotAt(state.at).body);
-  if (!lines.length) return HEADER + "\n# Nothing is playing yet.";
-  return HEADER + "\n" + lines.join("\n");
-};
 
-// A scene heading carries a colon, which the entry painter below would read as the one
-// dividing a channel from its effect, so headings are taken first
-var onePaintLine = paintLine;
+  var head = [];
+  fileHead.under.forEach(function (lines) { head = head.concat(lines()); });
+  head.push("");
+  fileHead.above.forEach(function (lines) { head = head.concat(lines()); });
+  var board = boardLine();
+  if (board) head.push(board, "");
+  return HEADER + head.join("\n") + "\n" +
+         (lines.length ? lines.join("\n") : "# Nothing is playing yet.");
+}
 
-paintLine = function (line) {
-  if (line.charAt(0) !== "[") return onePaintLine(line);
-  return "<span class='s-scene'>" + escapeHtml(line) + "</span>";
-};
-
-var oneSceneDraw = draw;
-
-draw = function () {
-  oneSceneDraw();
+drawSteps.after.push(function () {
   renderScenes();
   renderSceneSettings();
-};
+});
 
 // The board opens as it ships, every output one colour lamp, and the outputs whole and
 // playing Rainbow. The strips play nothing, what is wired to them being unknown
@@ -5164,10 +5188,7 @@ settle();
 
 // ---- drawing the page -------------------------------------------------------------------
 
-var oneReviewDraw = draw;
-
-draw = function () {
-  oneReviewDraw();
+drawSteps.after.push(function () {
   // The outputs' tools and settings are for the stretch being worked on, which while a
   // strip is picked is under that strip instead
   if (active.strip) {
@@ -5195,10 +5216,10 @@ draw = function () {
     }
   });
   fitBars();
-  // The page below paints what it drew and is done before these are made, so a fresh
-  // bead would hold the default fill until the next frame and show black
+  // The page painted what it drew before these were made, so a fresh bead would hold the
+  // default fill until the next frame and show black
   paintAll();
-};
+});
 
 // A cut's label, which lights it falls between, is centred on the cut, so near either end of a
 // bar it overhung the bar and, hidden until pointed at but still taking its room, made an
@@ -6362,10 +6383,6 @@ renderChosen = function (where, run) {
   who.appendChild(directionToggle(run, section));
 };
 
-// The page opens on one board playing all the way through
-state.always.body = capture();
-draw();
-
 // ---- blinking through several colours -----------------------------------------------------
 // Blink takes one colour or several. With several it blinks through them in turn, one a beat,
 // which is picofx's rgb_blink. The list is the stretch's blinks, {colours, at}, at being the
@@ -6517,8 +6534,6 @@ renderChosen = function (where, run) {
   pick.insertBefore(row, pick.firstChild);
 };
 
-draw();
-
 // ---- the board, the same in every scene ------------------------------------------------
 // How the board is built is the same in every scene: which outputs have an adapter
 // fitted, how long each strip is, and which screen is plugged into each port. The pages
@@ -6532,22 +6547,6 @@ var SCREEN_SIZES = CATALOGUE.board_settings.screena.filter(function (inches) {
   return inches !== "hub";
 });
 var screensFitted = {screena: "", screenb: ""};
-
-// A scene holds its cutting and its looks, but not the wiring or where the lamps sit,
-// which are the board's
-var oneCapture = capture;
-var oneApply = apply;
-
-capture = function () {
-  var body = oneCapture();
-  delete body.wiring;
-  delete body.order;
-  return body;
-};
-
-apply = function (body) {
-  oneApply(Object.assign({}, body, {wiring: wiring, order: order}));
-};
 
 // A step back in a scene is the scene's, so it never changes the board under the others
 function keepingTheBoard(step) {
@@ -6574,8 +6573,7 @@ function acrossScenes(change) {
     var before = {wiring: JSON.stringify(wiring), order: JSON.stringify(order)};
     // Each scene is changed with the page held still, since drawing would store what is
     // being changed into the scene being edited
-    var drawing = draw;
-    draw = function () {};
+    drawHeld = true;
     try {
       [state.always].concat(state.scenes).forEach(function (slot) {
         wiring = JSON.parse(before.wiring);
@@ -6589,7 +6587,7 @@ function acrossScenes(change) {
         slot.body = capture();
       });
     } finally {
-      draw = drawing;
+      drawHeld = false;
     }
     state.at = editing;
     apply(slotAt(editing).body);
@@ -6637,8 +6635,13 @@ function brokenSaid() {
 }
 
 // ---- what the file says about the board -------------------------------------------------
+// The parts below add their own steps to the board line: what each readies before it is
+// written, and what each makes of the line written so far, both in the order the parts come
+
+var boardLineSteps = {before: [], after: []};
 
 function boardLine() {
+  boardLineSteps.before.forEach(function (step) { step(); });
   var tokens = [];
   SCREEN_PORTS.forEach(function (port) {
     if (screensFitted[port.id]) tokens.push(port.id + "=" + screensFitted[port.id]);
@@ -6654,17 +6657,10 @@ function boardLine() {
     });
     if (used) tokens.push(run.name + "=" + run.leds + (run.order ? "|" + run.order : ""));
   });
-  return tokens.length ? "board: " + tokens.join(" ") : "";
+  var line = tokens.length ? "board: " + tokens.join(" ") : "";
+  boardLineSteps.after.forEach(function (step) { line = step(line); });
+  return line;
 }
-
-var oneBoardText = currentText;
-
-currentText = function () {
-  var text = oneBoardText();
-  var line = boardLine();
-  if (!line) return text;
-  return HEADER + "\n" + line + "\n" + text.slice(HEADER.length);
-};
 
 // A screen port's size choice, which every page offers wherever it puts it
 function screenSize(port) {
@@ -6991,20 +6987,14 @@ function setupButton(label, on, act) {
   return button;
 }
 
-var oneSetupDraw = draw;
-
-draw = function () {
-  oneSetupDraw();
+drawSteps.after.push(function () {
   renderOutFacts();
   SCREEN_PORTS.forEach(renderScreenFacts);
   // What is not the board stands back while it is set up
   document.body.classList.toggle("setupall", setupOn);
   if (setupOn) unmark();
   paintAll();
-};
-
-state.always.body = capture();
-draw();
+});
 
 // ---- the wiring, while the board is set up ------------------------------------------------
 // In the outputs' own panel and only while the board is set up, the board's seven connectors along the bottom, each colour output one pin and
@@ -7260,18 +7250,13 @@ rejoin = function (out) {
   oneWiredRejoin(out);
 };
 
-var oneWiredDraw = draw;
-
-draw = function () {
-  oneWiredDraw();
+drawSteps.after.push(function () {
   renderConnectors();
   playSlide();
-};
+});
 
 // The lines run between things the page has laid out, so they follow the layout
 window.addEventListener("resize", function () { if (setupOn) draw(); });
-
-draw();
 
 // ---- the LED sections, for a page that shows one at a time ----------------------------------
 // The outputs and each strip, which the gallery can give a look to, as against the screens,
@@ -7291,27 +7276,6 @@ function workOn(panel) {
   if (mine.indexOf(active) >= 0) return;
   var run = mine[0];
   if (run) pick(run, run.picked);
-}
-
-// A section's swatch: each stretch in what it plays, as wide as it is long
-function renderSwatch(swatch, panel) {
-  swatch.textContent = "";
-  var named = [];
-  runsOfPanel(panel).forEach(function (run) {
-    run.sections.forEach(function (section) {
-      var look = lookNamed(section.look);
-      var cell = document.createElement("span");
-      cell.style.flex = widthOf(section) + " 1 0";
-      if (look) {
-        cell.style.background = washFor(run, section, look);
-        if (named.indexOf(look.name) < 0) named.push(look.name);
-      } else {
-        cell.className = "nothing";
-      }
-      swatch.appendChild(cell);
-    });
-  });
-  swatch.title = named.length ? "plays " + named.join(", ") : "plays nothing yet";
 }
 
 // ---- the LED sections as tabs -----------------------------------------------------------
@@ -7354,8 +7318,10 @@ function showChosen() {
   document.body.classList.toggle("nolooks", !chosenTakesLooks());
 }
 
-// A tab's swatch, which for an LED section is what it plays
-function tabSwatch(swatch, panel) { renderSwatch(swatch, panel); }
+// A tab's swatch, drawn by whichever part has that panel
+var tabSwatches = {};
+
+function tabSwatch(swatch, panel) { tabSwatches[panel](swatch, panel); }
 
 function renderLedTabs() {
   var bar = document.getElementById("ledTabs");
@@ -7416,10 +7382,7 @@ setSetup = function (on) {
 // are for whichever of their two sides was last worked on
 var lastOutputRun = outs;
 
-var oneTabsDraw = draw;
-
-draw = function () {
-  oneTabsDraw();
+drawSteps.after.push(function () {
   if (!active.strip) lastOutputRun = active;
   if (active.strip) {
     renderTools("outTools", lastOutputRun);
@@ -7430,7 +7393,7 @@ draw = function () {
     renderChosen(run.id + "Chosen", run);
   });
   renderLedTabs();
-};
+});
 
 (function () {
   var bar = document.createElement("div");
@@ -7449,9 +7412,6 @@ draw = function () {
     stack.appendChild(document.getElementById(panel));
   });
 }());
-
-showChosen();
-draw();
 
 // ---- a Screens tab ------------------------------------------------------------------------
 // The two screen boxes, A in blue and B in purple, each with its panel size in the coloured
@@ -7942,66 +7902,44 @@ function allBodies() {
 
 // ---- each scene keeps what its screens show ---------------------------------------------------
 
-var oneScreensCapture = capture;
-
-capture = function () {
-  var body = oneScreensCapture();
-  body.screens = {};
-  SCREENS.forEach(function (letter) {
-    var screen = state.screens[letter];
-    body.screens[letter] = {shows: screen.shows, kept: screen.kept, pingpong: screen.pingpong,
-                            hold: screen.hold, fps: screen.fps, turn: screen.turn};
-  });
-  return body;
-};
-
-var oneScreensApply = apply;
-
-apply = function (body) {
-  oneScreensApply(body);
-  if (!body.screens) return;
-  SCREENS.forEach(function (letter) {
-    var screen = state.screens[letter];
-    Object.assign(screen, body.screens[letter]);
-    screen.turn = body.screens[letter].turn || 0;
-    screen.lastShows = screen.shows;
-  });
-};
-
-var oneScreensBlank = blankBody;
-
-blankBody = function () {
-  var body = oneScreensBlank();
-  SCREENS.forEach(function (letter) { body.screens[letter].shows = null; });
-  return body;
-};
-
-var oneScreensContent = hasContent;
-
-hasContent = function (body) {
-  return oneScreensContent(body) || SCREENS.some(function (letter) {
-    return !!(body.screens && body.screens[letter].shows);
-  });
-};
-
-// A scene's screens are written after its lamps
-var oneScreensEntries = entriesOf;
-
-entriesOf = function (body) {
-  var lines = oneScreensEntries(body);
-  SCREENS.forEach(function (letter) {
-    var entry = body.screens && screenEntry(letter, body);
-    if (entry) lines.push(entry);
-  });
-  return lines;
-};
+bodyParts.push({
+  capture: function (body) {
+    body.screens = {};
+    SCREENS.forEach(function (letter) {
+      var screen = state.screens[letter];
+      body.screens[letter] = {shows: screen.shows, kept: screen.kept, pingpong: screen.pingpong,
+                              hold: screen.hold, fps: screen.fps, turn: screen.turn};
+    });
+  },
+  apply: function (body) {
+    if (!body.screens) return;
+    SCREENS.forEach(function (letter) {
+      var screen = state.screens[letter];
+      Object.assign(screen, body.screens[letter]);
+      screen.turn = body.screens[letter].turn || 0;
+      screen.lastShows = screen.shows;
+    });
+  },
+  blank: function (body) {
+    SCREENS.forEach(function (letter) { body.screens[letter].shows = null; });
+  },
+  hasContent: function (body) {
+    return SCREENS.some(function (letter) { return !!(body.screens && body.screens[letter].shows); });
+  },
+  // A scene's screens are written after its lamps
+  entries: function (body, lines) {
+    SCREENS.forEach(function (letter) {
+      var entry = body.screens && screenEntry(letter, body);
+      if (entry) lines.push(entry);
+    });
+    return lines;
+  }
+});
 
 // The board line gives a screen's size only where some scene shows something on it. The board
 // reserves for a pair wherever two screens are named, which
 // slows the one in use
-var oneScreensBoardLine = boardLine;
-
-boardLine = function () {
+boardLineSteps.before.push(function () {
   var bodies = [state.always.body].concat(state.scenes.map(function (scene) {
     return scene.body;
   }));
@@ -8012,8 +7950,7 @@ boardLine = function () {
     });
     screensFitted["screen" + letter.toLowerCase()] = used ? screen.size : "";
   });
-  return oneScreensBoardLine();
-};
+});
 
 // ---- drawing the tab -------------------------------------------------------------------------
 
@@ -8034,10 +7971,7 @@ function renderScreensTab() {
 }
 
 // The tab's swatch is the two screens, each showing what its screen shows
-var oneScreensSwatch = tabSwatch;
-
-tabSwatch = function (swatch, panel) {
-  if (panel !== "screensPanel") return oneScreensSwatch(swatch, panel);
+tabSwatches.screensPanel = function (swatch) {
   swatch.textContent = "";
   swatch.className = "accswatch screenswatch";
   SCREENS.forEach(function (letter) {
@@ -8076,16 +8010,14 @@ function sizesUnderName() {
   tab.insertBefore(named, tab.firstChild);
 }
 
-var oneScreensDraw = draw;
-
 // A picture newly chosen is given its starting turn before anything else is drawn, since
 // writing the file applies every scene in turn and would take it as already chosen
-draw = function () {
-  SCREENS.forEach(turnForChosen);
-  oneScreensDraw();
+drawSteps.before.push(function () { SCREENS.forEach(turnForChosen); });
+
+drawSteps.after.push(function () {
   sizesUnderName();
   renderScreensTab();
-};
+});
 
 (function () {
   var panel = document.createElement("details");
@@ -8108,10 +8040,6 @@ draw = function () {
 TAB_NAMES.screensPanel = "Screens";
 TAB_PANELS.push("screensPanel");
 keptOpen("screensPanel");
-
-state.always.body = capture();
-showChosen();
-draw();
 
 // ---- a Sound tab ----------------------------------------------------------------------------
 // One wav at a time, chosen from a row of tiles each showing its shape and how long it runs,
@@ -8248,54 +8176,33 @@ var SOUND_SAMPLES = 96;
 
 // ---- each scene keeps its own sound -------------------------------------------------------------
 
-var oneSoundCapture = capture;
-
-capture = function () {
-  var body = oneSoundCapture();
-  body.sound = state.sound;
-  body.soundLoop = state.soundLoop;
-  body.soundKept = state.soundKept;
-  return body;
-};
-
-var oneSoundApply = apply;
-
-apply = function (body) {
-  oneSoundApply(body);
-  if (!("sound" in body)) return;
-  state.sound = body.sound;
-  state.soundLoop = body.soundLoop;
-  state.soundKept = body.soundKept;
-};
-
-var oneSoundBlank = blankBody;
-
-blankBody = function () {
-  var body = oneSoundBlank();
-  body.sound = null;
-  body.soundLoop = false;
-  body.soundKept = null;
-  return body;
-};
-
-var oneSoundContent = hasContent;
-
-hasContent = function (body) { return oneSoundContent(body) || !!body.sound; };
-
-// A scene's sound is its first line
-var oneSoundEntries = entriesOf;
-
-entriesOf = function (body) {
-  var lines = oneSoundEntries(body);
-  var sound = "sound" in body ? soundLine(body) : null;
-  if (sound) lines.unshift(sound);
-  return lines;
-};
+bodyParts.push({
+  capture: function (body) {
+    body.sound = state.sound;
+    body.soundLoop = state.soundLoop;
+    body.soundKept = state.soundKept;
+  },
+  apply: function (body) {
+    if (!("sound" in body)) return;
+    state.sound = body.sound;
+    state.soundLoop = body.soundLoop;
+    state.soundKept = body.soundKept;
+  },
+  blank: function (body) {
+    body.sound = null;
+    body.soundLoop = false;
+    body.soundKept = null;
+  },
+  hasContent: function (body) { return !!body.sound; },
+  // A scene's sound is its first line
+  entries: function (body, lines) {
+    var sound = "sound" in body ? soundLine(body) : null;
+    if (sound) lines.unshift(sound);
+    return lines;
+  }
+});
 
 // ---- drawing the tab ---------------------------------------------------------------------------
-
-// The tab's swatch is the shape of the sound playing, or silence
-var oneSoundSwatch = tabSwatch;
 
 // A sound's outline, filled edge to edge and mirrored about the middle. Each moment of it is
 // coloured by how loud it is, blue when quiet through violet and pink to red when loud, the
@@ -8396,8 +8303,8 @@ renderSound = function () {
   row.removeChild(quiet);
 };
 
-tabSwatch = function (swatch, panel) {
-  if (panel !== "soundPanel") return oneSoundSwatch(swatch, panel);
+// The tab's swatch is the shape of the sound playing, or silence
+tabSwatches.soundPanel = function (swatch) {
   swatch.textContent = "";
   swatch.className = "accswatch soundswatch";
   var info = state.sound ? state.soundInfo[state.sound] : null;
@@ -8437,13 +8344,10 @@ function kindUnderName() {
   tab.insertBefore(named, tab.firstChild);
 }
 
-var oneSoundDraw = draw;
-
-draw = function () {
-  oneSoundDraw();
+drawSteps.after.push(function () {
   kindUnderName();
   renderSound();
-};
+});
 
 (function () {
   var panel = document.createElement("details");
@@ -8461,20 +8365,12 @@ TAB_NAMES.soundPanel = "Sound";
 TAB_PANELS.push("soundPanel");
 keptOpen("soundPanel");
 
-state.always.body = capture();
-showChosen();
-draw();
-
 // ---- the LED tabs' swatches, live ------------------------------------------------------------
 // Each LED tab's swatch a small copy of its section's lamps, painted every frame from the
 // same values the lamps are painted from, so it can never say something the lamps do not.
-// Tried against still swatches drawn in what each stretch plays, the cost being movement on
-// the row of tabs.
+// The cost is movement on the row of tabs.
 
-var oneLiveSwatch = tabSwatch;
-
-tabSwatch = function (swatch, panel) {
-  if (LED_PANELS.indexOf(panel) < 0) return oneLiveSwatch(swatch, panel);
+function liveSwatch(swatch, panel) {
   swatch.textContent = "";
   swatch.className = "accswatch liveswatch";
   runsOfPanel(panel).forEach(function (run) {
@@ -8493,17 +8389,12 @@ tabSwatch = function (swatch, panel) {
     }});
   });
   swatch.title = "what its lights are showing now";
-};
+}
 
-var oneLiveDraw = draw;
+LED_PANELS.forEach(function (panel) { tabSwatches[panel] = liveSwatch; });
 
 // The swatches are made after the page has painted, so are painted now or show dark a frame
-draw = function () {
-  oneLiveDraw();
-  paintAll();
-};
-
-draw();
+drawSteps.after.push(paintAll);
 
 // ---- a Screen Hub in the Screens tab ----------------------------------------------------------
 // A hub takes both connectors: one carries the screens' SPI and the other gives its five pins
@@ -8560,47 +8451,31 @@ function placeTurnForChosen(place) {
 
 // ---- each scene keeps what the hub's positions show ------------------------------------------
 
-var oneHubCapture = capture;
-
-capture = function () {
-  var body = oneHubCapture();
-  body.places = {};
-  HUB_PLACES.forEach(function (place) {
-    var held = state.places[place];
-    body.places[place] = {shows: held.shows, pingpong: held.pingpong, hold: held.hold,
-                          fps: held.fps, turn: held.turn};
-  });
-  return body;
-};
-
-var oneHubApply = apply;
-
-apply = function (body) {
-  oneHubApply(body);
-  if (!body.places) return;
-  HUB_PLACES.forEach(function (place) {
-    var held = state.places[place];
-    Object.assign(held, body.places[place]);
-    held.turn = body.places[place].turn || 0;
-    held.lastShows = held.shows;
-  });
-};
-
-var oneHubBlank = blankBody;
-
-blankBody = function () {
-  var body = oneHubBlank();
-  HUB_PLACES.forEach(function (place) { body.places[place].shows = null; });
-  return body;
-};
-
-var oneHubContent = hasContent;
-
-hasContent = function (body) {
-  return oneHubContent(body) || HUB_PLACES.some(function (place) {
-    return !!(body.places && body.places[place].shows);
-  });
-};
+bodyParts.push({
+  capture: function (body) {
+    body.places = {};
+    HUB_PLACES.forEach(function (place) {
+      var held = state.places[place];
+      body.places[place] = {shows: held.shows, pingpong: held.pingpong, hold: held.hold,
+                            fps: held.fps, turn: held.turn};
+    });
+  },
+  apply: function (body) {
+    if (!body.places) return;
+    HUB_PLACES.forEach(function (place) {
+      var held = state.places[place];
+      Object.assign(held, body.places[place]);
+      held.turn = body.places[place].turn || 0;
+      held.lastShows = held.shows;
+    });
+  },
+  blank: function (body) {
+    HUB_PLACES.forEach(function (place) { body.places[place].shows = null; });
+  },
+  hasContent: function (body) {
+    return HUB_PLACES.some(function (place) { return !!(body.places && body.places[place].shows); });
+  }
+});
 
 // ---- what the file says ----------------------------------------------------------------------
 
@@ -8676,18 +8551,14 @@ screenEntry = function (letter, body) {
   return state.hub.on ? null : oneHubEntryFor(letter, body);
 };
 
-var oneHubEntries = entriesOf;
+bodyParts.push({
+  entries: function (body, lines) {
+    if (state.hub.on) placeGroups(body).forEach(function (group) { lines.push(hubEntry(group)); });
+    return lines;
+  }
+});
 
-entriesOf = function (body) {
-  var lines = oneHubEntries(body);
-  if (state.hub.on) placeGroups(body).forEach(function (group) { lines.push(hubEntry(group)); });
-  return lines;
-};
-
-var oneHubBoardLine = boardLine;
-
-boardLine = function () {
-  var line = oneHubBoardLine();
+boardLineSteps.after.push(function (line) {
   if (!state.hub.on) return line;
   var rest = line.replace(/^board: ?/, "").replace(/\bscreen[ab]=\S+ ?/g, "").trim();
   // The connector the screens come through, then each size fitted and where: hubA-D=2.8
@@ -8699,7 +8570,7 @@ boardLine = function () {
     if (places.length) tokens.push("hub" + placesSaid(places) + "=" + inches);
   });
   return "board: " + tokens.join(" ") + (rest ? " " + rest : "");
-};
+});
 
 // ---- drawing the hub -------------------------------------------------------------------------
 
@@ -9029,11 +8900,11 @@ renderAssets = function () {
 
 // ---- the tab --------------------------------------------------------------------------------
 
-// The tab's swatch is the hub's six positions, each showing what it shows
-var oneHubSwatch = tabSwatch;
+// The tab's swatch is the hub's six positions, each showing what it shows, where a hub is on
+var screensSwatch = tabSwatches.screensPanel;
 
-tabSwatch = function (swatch, panel) {
-  if (panel !== "screensPanel" || !state.hub.on) return oneHubSwatch(swatch, panel);
+tabSwatches.screensPanel = function (swatch) {
+  if (!state.hub.on) return screensSwatch(swatch);
   swatch.textContent = "";
   swatch.className = "accswatch screenswatch hubswatch";
   HUB_PLACES.forEach(function (place) {
@@ -9052,11 +8923,9 @@ tabSwatch = function (swatch, panel) {
   }).join(", ");
 };
 
-var oneHubDraw = draw;
+drawSteps.before.push(function () { HUB_PLACES.forEach(placeTurnForChosen); });
 
-draw = function () {
-  HUB_PLACES.forEach(placeTurnForChosen);
-  oneHubDraw();
+drawSteps.after.push(function () {
   // Under the tab's name, the hub and the size of its panels, in no more room than the name's
   var under = document.querySelector("#ledTabs .ledtab[data-panel=screensPanel] .tabunder");
   if (!under || !state.hub.on) return;
@@ -9065,7 +8934,7 @@ draw = function () {
   });
   under.textContent = !sizes.length ? "hub, empty"
                     : sizes.length > 1 ? "hub, mixed" : "hub, " + sizes[0] + "\"";
-};
+});
 
 // The switch takes the place of the line the tab opened with, at the top where the other
 // tabs have their board box
@@ -9077,10 +8946,6 @@ draw = function () {
   says.parentNode.insertBefore(facts, says);
   says.hidden = true;
 }());
-
-state.always.body = capture();
-showChosen();
-draw();
 
 // ---- every setting a screen takes -------------------------------------------------------------
 // A screen takes more than its picture and turn: how brightly it is lit, where
@@ -9415,42 +9280,36 @@ asScreen = function (place) {
 
 // ---- each scene keeps its screens' looks ------------------------------------------------------
 
-var oneLookCapture = capture;
-
-capture = function () {
-  var body = oneLookCapture();
-  SCREENS.forEach(function (letter) {
-    body.screens[letter].look = Object.assign({}, state.screens[letter].look);
-  });
-  HUB_PLACES.forEach(function (place) {
-    body.places[place].look = Object.assign({}, state.places[place].look);
-  });
-  body.hubLight = state.hubLight;
-  return body;
-};
-
 // Each screen and position keeps one look object for good, a scene's values copied into it, so
 // a control drawn before a scene is re-applied still changes the look that is written
 var lookHomes = {};
 SCREENS.forEach(function (letter) { lookHomes["screen" + letter] = state.screens[letter].look; });
 HUB_PLACES.forEach(function (place) { lookHomes["place" + place] = state.places[place].look; });
 
-var oneLookApply = apply;
-
-apply = function (body) {
-  oneLookApply(body);
-  SCREENS.forEach(function (letter) {
-    var home = lookHomes["screen" + letter];
-    if (body.screens && body.screens[letter].look) Object.assign(home, body.screens[letter].look);
-    state.screens[letter].look = home;
-  });
-  HUB_PLACES.forEach(function (place) {
-    var home = lookHomes["place" + place];
-    if (body.places && body.places[place].look) Object.assign(home, body.places[place].look);
-    state.places[place].look = home;
-  });
-  if (body.hubLight !== undefined) state.hubLight = body.hubLight;
-};
+bodyParts.push({
+  capture: function (body) {
+    SCREENS.forEach(function (letter) {
+      body.screens[letter].look = Object.assign({}, state.screens[letter].look);
+    });
+    HUB_PLACES.forEach(function (place) {
+      body.places[place].look = Object.assign({}, state.places[place].look);
+    });
+    body.hubLight = state.hubLight;
+  },
+  apply: function (body) {
+    SCREENS.forEach(function (letter) {
+      var home = lookHomes["screen" + letter];
+      if (body.screens && body.screens[letter].look) Object.assign(home, body.screens[letter].look);
+      state.screens[letter].look = home;
+    });
+    HUB_PLACES.forEach(function (place) {
+      var home = lookHomes["place" + place];
+      if (body.places && body.places[place].look) Object.assign(home, body.places[place].look);
+      state.places[place].look = home;
+    });
+    if (body.hubLight !== undefined) state.hubLight = body.hubLight;
+  }
+});
 
 // ---- what the file says -----------------------------------------------------------------------
 
@@ -10295,9 +10154,6 @@ function paceForChosen(held) {
   held.look.every = 5;
 }
 
-state.always.body = capture();
-draw();
-
 // ---- the hub's positions in groups -----------------------------------------------------------
 // With a look beside every picture, two positions showing the same picture could differ in a
 // setting no drawing makes plain, and so be sent apart. So positions are put in groups, and a
@@ -10346,23 +10202,17 @@ function sendTargets() {
 
 // ---- each scene keeps its groups ---------------------------------------------------------------
 
-var oneGroupsCapture = capture;
-
-capture = function () {
-  var body = oneGroupsCapture();
-  HUB_PLACES.forEach(function (place) { body.places[place].group = groupOf(place); });
-  return body;
-};
-
-var oneGroupsApply = apply;
-
-apply = function (body) {
-  oneGroupsApply(body);
-  HUB_PLACES.forEach(function (place) {
-    if (body.places && body.places[place].group)
-      state.places[place].group = body.places[place].group;
-  });
-};
+bodyParts.push({
+  capture: function (body) {
+    HUB_PLACES.forEach(function (place) { body.places[place].group = groupOf(place); });
+  },
+  apply: function (body) {
+    HUB_PLACES.forEach(function (place) {
+      if (body.places && body.places[place].group)
+        state.places[place].group = body.places[place].group;
+    });
+  }
+});
 
 // ---- joining, leaving, and a group set as one --------------------------------------------------
 
@@ -10410,12 +10260,7 @@ function settleGroups() {
   });
 }
 
-var oneGroupsDraw = draw;
-
-draw = function () {
-  settleGroups();
-  oneGroupsDraw();
-};
+drawSteps.before.push(settleGroups);
 
 // ---- pictures go to groups ---------------------------------------------------------------------
 
@@ -10673,9 +10518,6 @@ function apartSaid(sends) {
          " sent apart from " + listSaid(bases) + ".";
 }
 
-state.always.body = capture();
-draw();
-
 // ---- the drive, and what the board says back ------------------------------------------------
 // Saving and the read-back of errors.txt: the banner and the saving lights, remembering the
 // drive, and waiting on the board. Opening a drive takes its handles, the read-back part
@@ -10892,6 +10734,9 @@ function overwriteQuestion() {
          "what this page writes. Save over it?";
 }
 
+// What the parts below read off a drive once it is open, each awaited in the order the parts come
+var connectSteps = [];
+
 async function connect(fresh) {
   var dir = await pickDrive(fresh);
   var file;
@@ -10923,6 +10768,7 @@ async function connect(fresh) {
   saveButton.disabled = false;
   // The header's buttons have changed width, which decides whether it keeps one line
   draw();
+  for (var at = 0; at < connectSteps.length; at++) await connectSteps[at]();
 }
 
 // errors.txt read into the lines it names. autofx begins each problem "line N:", and anything
@@ -11082,8 +10928,6 @@ if (!CAN_REACH_A_DRIVE) {
   document.getElementById("open").disabled = true;
   banner("This page reaches the drive only in Chrome or Edge.");
 }
-
-draw();
 
 // ---- the board's own settings -----------------------------------------------------------------
 // Three settings belong to the board and to no section: whether a save plays without an eject
@@ -12402,10 +12246,7 @@ function argsWritten(path) {
 function savingMeansSomething() { return !boardSet.program; }
 function driveMeansSomething() { return !boardSet.program; }
 
-var oneSettingsBoardLine = boardLine;
-
-boardLine = function () {
-  var line = oneSettingsBoardLine();
+boardLineSteps.after.push(function (line) {
   var tokens = [];
   if (boardSet.program) {
     tokens.push("program=" + boardSet.program);
@@ -12417,7 +12258,7 @@ boardLine = function () {
   if (!tokens.length) return line;
   var rest = line.replace(/^board: ?/, "");
   return "board: " + tokens.join(" ") + (rest ? " " + rest : "");
-};
+});
 
 // ---- a program's arguments --------------------------------------------------------------------
 
@@ -12530,13 +12371,10 @@ function programNote() {
     "errors.txt says why."));
 }
 
-var oneSettingsDraw = draw;
-
-draw = function () {
-  oneSettingsDraw();
+drawSteps.after.push(function () {
   document.body.classList.toggle("programmed", !!boardSet.program);
   programNote();
-};
+});
 
 // ---- a scene's own settings, in the screens' style ---------------------------------------
 // The row's words take the screens' label and unit styles, and whether the scene's effects
@@ -12574,8 +12412,6 @@ renderSceneSettings = function () {
                           "instead of carrying on where they left off"),
                    ticked);
 };
-
-draw();
 
 // ---- how the board takes a save, on the save button ----------------------------------------------
 // Whether a save plays without an eject, and whether the drive stays hidden at start, are about
@@ -12641,12 +12477,7 @@ function saveMenu() {
   });
 }());
 
-var oneSaveMenuDraw = draw;
-
-draw = function () {
-  oneSaveMenuDraw();
-  saveMenu();
-};
+drawSteps.after.push(saveMenu);
 
 // ---- the effects page, or a program page ------------------------------------------------------
 // Only program= and args= reach a program, which takes the whole board, so the page is one of
@@ -13511,10 +13342,7 @@ function renderPageSwitch() {
   body.parentNode.insertBefore(programView, body.nextSibling);
 }());
 
-var oneProgramDraw = draw;
-
-draw = function () {
-  oneProgramDraw();
+drawSteps.after.push(function () {
   document.body.classList.toggle("programpage", onProgramPage);
   document.body.dataset.pageway = "headsplit";
   renderPageSwitch();
@@ -13524,7 +13352,7 @@ draw = function () {
   headerOnOneLine();
   // The effects' live swatch in the tabs is made after the page painted, so it is painted now
   paintAll();
-};
+});
 
 // Pictures for thumbnails, decoded ahead of being shown, so a thumbnail is drawn whole the first
 // time and never fills in late. Once all are in, the page is drawn again for any already showing
@@ -13602,8 +13430,6 @@ function scenesInTheTab() {
   into.appendChild(plus);
 }
 
-draw();
-
 // ---- the looks in groups ------------------------------------------------------------------
 // The gallery grouped by how the lights play together, each group a row of at most five, the
 // width a row of cards has. The showiest come first: the travelling looks, Rainbow among them
@@ -13677,8 +13503,6 @@ renderGalleries = function () {
   });
   flat.parentNode.replaceChild(holder, flat);
 };
-
-draw();
 
 // ---- the figure beside each slider --------------------------------------------------------
 // Each slider can show beside it the value the file writes, with its unit, in a box that takes
@@ -14002,8 +13826,6 @@ renderChosen = function (where, run) {
   tuning.appendChild(handle);
 };
 
-draw();
-
 // ---- the drive's files ---------------------------------------------------------------------------
 // The effects page as it goes onto an FX drive: no Screen Hub until one is set up, and the pictures
 // and sounds the drive holds, each picture and wav read off the drive.
@@ -14254,12 +14076,7 @@ var pictureReading = null;
 // The pictures any scene puts on a screen or a hub position, worked out once a draw
 var shownThisDraw = null;
 
-var onePicturesDraw = draw;
-
-draw = function () {
-  shownThisDraw = null;
-  onePicturesDraw();
-};
+drawSteps.before.push(function () { shownThisDraw = null; });
 
 function picturesShown() {
   if (shownThisDraw) return shownThisDraw;
@@ -14402,17 +14219,12 @@ soundTile = function (name) {
   if (file) file.open = false;
 }());
 
-draw();
-
-var oneBoardConnect = connect;
-
-connect = async function (fresh) {
-  await oneBoardConnect(fresh);
+connectSteps.push(async function () {
   state.fileHandle = drive.fileHandle;
   draw();
   await scanMedia(drive.dirHandle);
   draw();
-};
+});
 
 setInterval(rescanMedia, 5000);
 
@@ -14463,17 +14275,14 @@ async function drivePictures(dir, programs) {
   loadThumbs(Object.keys(DRIVE_PICTURES).map(function (name) { return DRIVE_PICTURES[name]; }));
 }
 
-var oneProgramsConnect = connect;
-
-connect = async function (fresh) {
-  await oneProgramsConnect(fresh);
+connectSteps.push(async function () {
   DRIVE_PROGRAMS = await drivePrograms(drive.dirHandle);
   await drivePictures(drive.dirHandle, DRIVE_PROGRAMS);
   // A program the page had chosen that this drive does not hold is no longer there to run
   if (boardSet.program && !programNamed(boardSet.program)) boardSet.program = null;
   if (boardSet.lastProgram && !programNamed(boardSet.lastProgram)) boardSet.lastProgram = null;
   draw();
-};
+});
 
 // ---- reading the board's file back ----------------------------------------------------------
 // Opening the drive reads effects.txt into the page. Every line is either read into the page's
@@ -15379,58 +15188,41 @@ function readHubLines(bodies) {
 
 // ---- kept entries travel with their scene -----------------------------------------------------
 
-var oneReadCapture = capture;
-
-capture = function () {
-  var body = oneReadCapture();
-  body.kept = copyKept(keptNow);
-  body.notes = JSON.parse(JSON.stringify(notesNow));
-  return body;
-};
-
-var oneReadApply = apply;
-
-apply = function (body) {
-  oneReadApply(body);
-  keptNow = copyKept(body.kept);
-  notesNow = JSON.parse(JSON.stringify(body.notes || {}));
-};
-
-// A body with nothing in it keeps nothing either, whatever the scene on show kept
-var oneReadBlankBody = blankBody;
-
-blankBody = function () {
-  var body = oneReadBlankBody();
-  body.kept = [];
-  body.notes = {};
-  return body;
-};
+bodyParts.push({
+  capture: function (body) {
+    body.kept = copyKept(keptNow);
+    body.notes = JSON.parse(JSON.stringify(notesNow));
+  },
+  apply: function (body) {
+    keptNow = copyKept(body.kept);
+    notesNow = JSON.parse(JSON.stringify(body.notes || {}));
+  },
+  // A body with nothing in it keeps nothing either, whatever the scene on show kept
+  blank: function (body) {
+    body.kept = [];
+    body.notes = {};
+  },
+  // Kept entries come last in their scene, each with its comments above it. A line read into
+  // the page has its comments above it again while it writes the same
+  entries: function (body, written) {
+    var notes = body.notes || {};
+    var lines = [];
+    written.forEach(function (line) {
+      lines = lines.concat(notes[line] || []);
+      lines.push(line);
+    });
+    (body.kept || []).forEach(function (one) {
+      lines = lines.concat(one.comments);
+      if (one.text !== null) lines.push(one.text);
+    });
+    return lines;
+  }
+});
 
 // ---- writing them back ------------------------------------------------------------------------
 
-// Kept entries come last in their scene, each with its comments above it. A line read into the
-// page has its comments above it again while it writes the same
-var oneReadEntries = entriesOf;
-
-entriesOf = function (body) {
-  var notes = body.notes || {};
-  var lines = [];
-  oneReadEntries(body).forEach(function (line) {
-    lines = lines.concat(notes[line] || []);
-    lines.push(line);
-  });
-  (body.kept || []).forEach(function (one) {
-    lines = lines.concat(one.comments);
-    if (one.text !== null) lines.push(one.text);
-  });
-  return lines;
-};
-
-// The board line's tokens this page does not hold, after its own, and the comments above it
-var oneReadBoardLine = boardLine;
-
-boardLine = function () {
-  var line = oneReadBoardLine();
+// The board line's tokens this page does not hold, after its own
+boardLineSteps.after.push(function (line) {
   // A strip whose length the page writes itself leaves out any kept for it, which coming
   // later would be the one the board takes
   var written = (line || "").toLowerCase().match(/\bstrip[lr](?==)/g) || [];
@@ -15440,31 +15232,14 @@ boardLine = function () {
   });
   if (kept.length) line = (line || "board:") + " " + kept.join(" ");
   return line;
-};
-
-var oneReadText = currentText;
+});
 
 // Under the header, the wiring where it is not number order, then the comments above the board line
-currentText = function () {
-  var text = oneReadText();
+fileHead.under.push(function () {
   var wired = wiringLine();
-  if ((!wired && !boardComments.length) || text.indexOf(HEADER) !== 0) return text;
-  var rest = text.slice(HEADER.length).replace(/^\n/, "");
-  return HEADER + (wired ? wired + "\n" : "") + "\n" +
-         (boardComments.length ? boardComments.join("\n") + "\n" : "") + rest;
-};
-
-// A heading kept as written while its scene is as it was read, since the page cannot say it
-var oneReadHeading = sceneHeading;
-
-sceneHeading = function (scene) {
-  var read = scene.read;
-  if (read && read.written && scene.name === read.name && scene.restart === read.restart &&
-      (read.seconds === null ? scene.waits : scene.seconds === read.seconds)) {
-    return read.written;
-  }
-  return oneReadHeading(scene);
-};
+  return wired ? [wired] : [];
+});
+fileHead.above.push(function () { return boardComments; });
 
 // ---- showing them -----------------------------------------------------------------------------
 
@@ -15550,13 +15325,10 @@ function markKeptLights() {
   });
 }
 
-var oneReadDraw = draw;
-
-draw = function () {
-  oneReadDraw();
+drawSteps.after.push(function () {
   renderKept();
   markKeptLights();
-};
+});
 
 // A look chosen for lights a kept line plays asks first, since the board refuses a light set
 // twice: agreed, the kept lines go and the look plays; declined, nothing changes
@@ -15607,10 +15379,7 @@ dropStrip = function (run) {
 // ---- when the drive is opened -----------------------------------------------------------------
 
 // A file this page wrote opens straight in. Any other asks first, saying what would be kept
-var oneReadConnect = connect;
-
-connect = async function (fresh) {
-  await oneReadConnect(fresh);
+connectSteps.push(async function () {
   var text = await (await drive.fileHandle.getFile()).text();
   if (!text.trim()) return;
 
@@ -15629,7 +15398,7 @@ connect = async function (fresh) {
   }
   absorbFile(text);
   rememberRead(text);
-};
+});
 
 // Read or passed over by choice, the file is this page's to save over without asking again
 function rememberRead(text) {
@@ -15641,21 +15410,14 @@ overwriteQuestion = function () {
          "those changes. Save over it?";
 };
 
-// ---- the page held where it is, through every draw ---------------------------------------------
-// A draw empties and refills much of the page, and reads its layout part way through, and a
-// browser may move the scroll to hold something in view while it is half drawn. Seen in
-// Chrome as a jump of the whole page when a tab was chosen, with nothing changing height.
-// So whatever a draw does, the page ends it scrolled where it began. A scroll a page means,
-// such as holding a pressed button still, is made after the draw and is left alone.
+// ---- the page, started ---------------------------------------------------------------------------
+// Every part is in place, so the always-on tab takes what they hold and the page is drawn once,
+// then the lights are set going, or held on one frame where motion is turned down
 
-var oneSteadyDraw = draw;
-
-draw = function () {
-  var across = window.scrollX;
-  var down = window.scrollY;
-  oneSteadyDraw();
-  if (window.scrollX !== across || window.scrollY !== down) window.scrollTo(across, down);
-};
+state.always.body = capture();
+showChosen();
+draw();
+if (HOLDING_STILL) { beat = 0.37; paintAll(); } else { step(); }
 </script>
 </body>
 </html>

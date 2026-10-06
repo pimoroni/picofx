@@ -13,22 +13,6 @@ var SCREEN_SIZES = CATALOGUE.board_settings.screena.filter(function (inches) {
 });
 var screensFitted = {screena: "", screenb: ""};
 
-// A scene holds its cutting and its looks, but not the wiring or where the lamps sit,
-// which are the board's
-var oneCapture = capture;
-var oneApply = apply;
-
-capture = function () {
-  var body = oneCapture();
-  delete body.wiring;
-  delete body.order;
-  return body;
-};
-
-apply = function (body) {
-  oneApply(Object.assign({}, body, {wiring: wiring, order: order}));
-};
-
 // A step back in a scene is the scene's, so it never changes the board under the others
 function keepingTheBoard(step) {
   return function (run) {
@@ -54,8 +38,7 @@ function acrossScenes(change) {
     var before = {wiring: JSON.stringify(wiring), order: JSON.stringify(order)};
     // Each scene is changed with the page held still, since drawing would store what is
     // being changed into the scene being edited
-    var drawing = draw;
-    draw = function () {};
+    drawHeld = true;
     try {
       [state.always].concat(state.scenes).forEach(function (slot) {
         wiring = JSON.parse(before.wiring);
@@ -69,7 +52,7 @@ function acrossScenes(change) {
         slot.body = capture();
       });
     } finally {
-      draw = drawing;
+      drawHeld = false;
     }
     state.at = editing;
     apply(slotAt(editing).body);
@@ -117,8 +100,13 @@ function brokenSaid() {
 }
 
 // ---- what the file says about the board -------------------------------------------------
+// The parts below add their own steps to the board line: what each readies before it is
+// written, and what each makes of the line written so far, both in the order the parts come
+
+var boardLineSteps = {before: [], after: []};
 
 function boardLine() {
+  boardLineSteps.before.forEach(function (step) { step(); });
   var tokens = [];
   SCREEN_PORTS.forEach(function (port) {
     if (screensFitted[port.id]) tokens.push(port.id + "=" + screensFitted[port.id]);
@@ -134,17 +122,10 @@ function boardLine() {
     });
     if (used) tokens.push(run.name + "=" + run.leds + (run.order ? "|" + run.order : ""));
   });
-  return tokens.length ? "board: " + tokens.join(" ") : "";
+  var line = tokens.length ? "board: " + tokens.join(" ") : "";
+  boardLineSteps.after.forEach(function (step) { line = step(line); });
+  return line;
 }
-
-var oneBoardText = currentText;
-
-currentText = function () {
-  var text = oneBoardText();
-  var line = boardLine();
-  if (!line) return text;
-  return HEADER + "\n" + line + "\n" + text.slice(HEADER.length);
-};
 
 // A screen port's size choice, which every page offers wherever it puts it
 function screenSize(port) {

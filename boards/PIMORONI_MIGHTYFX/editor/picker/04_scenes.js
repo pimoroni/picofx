@@ -35,21 +35,22 @@ function mostPlayed() {
   return most;
 }
 
-// A scene holds everything that is the scene's: the wiring, where each
-// lamp sits, and every run's cutting and looks. A strip's length is the board's, so it
-// sits outside the body and is not captured
+// A scene holds every run's cutting and looks. The wiring, where each lamp sits and a strip's
+// length are the board's, so they sit outside the body and are not captured. The parts below
+// keep their own share of a scene in the body too, each registering how it captures, applies
+// and blanks that share, whether the share has content, and how it adds to the scene's lines.
+// Each runs after the runs' own, in the order the parts come
+var bodyParts = [];
+
 function capture() {
   var body = {look: mostPlayed(), active: active.name, runs: {},
-              wiring: wiring.map(function (one) { return {broken: one.broken}; }),
-              order: order.map(function (one) { return {out: one.out, channel: one.channel}; }),
               carried: JSON.parse(JSON.stringify(carried))};
   runs.forEach(function (run) { body.runs[run.name] = copyRun(run); });
+  bodyParts.forEach(function (part) { if (part.capture) part.capture(body); });
   return body;
 }
 
 function apply(body) {
-  wiring = body.wiring.map(function (one) { return {broken: one.broken}; });
-  order = body.order.map(function (one) { return {out: one.out, channel: one.channel}; });
   carried = JSON.parse(JSON.stringify(body.carried));
   runs.forEach(function (run) {
     var was = copyRun(body.runs[run.name]);
@@ -60,10 +61,11 @@ function apply(body) {
   });
   active = runs.filter(function (run) { return run.name === body.active; })[0] || outs;
   settle();
+  bodyParts.forEach(function (part) { if (part.apply) part.apply(body); });
 }
 
-// A scene with nothing playing in it, wired and cut as the board is now, which is what
-// the always-on tab is left holding once its content has been carried into the first
+// A scene with nothing playing in it, cut as the board is now, which is what the always-on
+// tab is left holding once its content has been carried into the first
 function blankBody() {
   var body = capture();
   Object.keys(body.runs).forEach(function (name) {
@@ -74,13 +76,14 @@ function blankBody() {
   });
   body.look = null;
   body.carried = {};
+  bodyParts.forEach(function (part) { if (part.blank) part.blank(body); });
   return body;
 }
 
 function hasContent(body) {
   return Object.keys(body.runs).some(function (name) {
     return body.runs[name].sections.some(function (section) { return section.look; });
-  });
+  }) || bodyParts.some(function (part) { return part.hasContent && part.hasContent(body); });
 }
 
 function slotAt(which) { return which < 0 ? state.always : state.scenes[which]; }
@@ -291,27 +294,33 @@ function renderSceneSettings() {
 
 // ---- what the whole file says now -------------------------------------------------------
 
-// The page below writes whatever its globals hold. Asking it once per scene, with each
-// body applied in turn, keeps one writer for all of them
-var oneSceneText = currentText;
-
+// The lamps' lines are written from the runs as they stand, so each scene's body is applied in
+// turn, which keeps one writer for all of them
 function entriesOf(body) {
   apply(body);
-  var text = oneSceneText();
-  if (text.indexOf(HEADER) === 0) text = text.slice(HEADER.length);
-  return text.split("\n").filter(function (line) {
-    return line.trim() && line.indexOf("Nothing is playing") < 0;
-  });
+  var lines = lampLines().filter(function (line) { return line.trim(); });
+  bodyParts.forEach(function (part) { if (part.entries) lines = part.entries(body, lines); });
+  return lines;
 }
 
-// A scene's heading. One read from a file with no time waits, and is written back without one
+// A scene's heading. One read from a file with no time waits, and is written back without one.
+// A heading read from a file is written back as it was while the scene still says the same
 function sceneHeading(scene) {
+  var read = scene.read;
+  if (read && read.written && scene.name === read.name && scene.restart === read.restart &&
+      (read.seconds === null ? scene.waits : scene.seconds === read.seconds)) {
+    return read.written;
+  }
   var settings = (scene.waits ? [] : [scene.seconds + "s"]).concat(scene.restart ? ["restart"] : []);
   return "[" + (scene.name.trim() || "Scene") + (settings.length ? ": " + settings.join(" ") : "") +
          "]";
 }
 
-currentText = function () {
+// What the parts below write above the scenes: lines straight under the file's header, then,
+// after a blank line, lines above the board line. Each is a list of functions giving lines
+var fileHead = {under: [], above: []};
+
+function currentText() {
   store();
   var lines = entriesOf(state.always.body);
   state.scenes.forEach(function (scene) {
@@ -322,23 +331,18 @@ currentText = function () {
     lines = lines.concat(entriesOf(scene.body));
   });
   apply(slotAt(state.at).body);
-  if (!lines.length) return HEADER + "\n# Nothing is playing yet.";
-  return HEADER + "\n" + lines.join("\n");
-};
 
-// A scene heading carries a colon, which the entry painter below would read as the one
-// dividing a channel from its effect, so headings are taken first
-var onePaintLine = paintLine;
+  var head = [];
+  fileHead.under.forEach(function (lines) { head = head.concat(lines()); });
+  head.push("");
+  fileHead.above.forEach(function (lines) { head = head.concat(lines()); });
+  var board = boardLine();
+  if (board) head.push(board, "");
+  return HEADER + head.join("\n") + "\n" +
+         (lines.length ? lines.join("\n") : "# Nothing is playing yet.");
+}
 
-paintLine = function (line) {
-  if (line.charAt(0) !== "[") return onePaintLine(line);
-  return "<span class='s-scene'>" + escapeHtml(line) + "</span>";
-};
-
-var oneSceneDraw = draw;
-
-draw = function () {
-  oneSceneDraw();
+drawSteps.after.push(function () {
   renderScenes();
   renderSceneSettings();
-};
+});

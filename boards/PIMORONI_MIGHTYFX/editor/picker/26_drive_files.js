@@ -249,12 +249,7 @@ var pictureReading = null;
 // The pictures any scene puts on a screen or a hub position, worked out once a draw
 var shownThisDraw = null;
 
-var onePicturesDraw = draw;
-
-draw = function () {
-  shownThisDraw = null;
-  onePicturesDraw();
-};
+drawSteps.before.push(function () { shownThisDraw = null; });
 
 function picturesShown() {
   if (shownThisDraw) return shownThisDraw;
@@ -397,16 +392,11 @@ soundTile = function (name) {
   if (file) file.open = false;
 }());
 
-draw();
-
-var oneBoardConnect = connect;
-
-connect = async function (fresh) {
-  await oneBoardConnect(fresh);
+connectSteps.push(async function () {
   state.fileHandle = drive.fileHandle;
   draw();
   await scanMedia(drive.dirHandle);
   draw();
-};
+});
 
 setInterval(rescanMedia, 5000);

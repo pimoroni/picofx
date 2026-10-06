@@ -18,24 +18,3 @@ function workOn(panel) {
   var run = mine[0];
   if (run) pick(run, run.picked);
 }
-
-// A section's swatch: each stretch in what it plays, as wide as it is long
-function renderSwatch(swatch, panel) {
-  swatch.textContent = "";
-  var named = [];
-  runsOfPanel(panel).forEach(function (run) {
-    run.sections.forEach(function (section) {
-      var look = lookNamed(section.look);
-      var cell = document.createElement("span");
-      cell.style.flex = widthOf(section) + " 1 0";
-      if (look) {
-        cell.style.background = washFor(run, section, look);
-        if (named.indexOf(look.name) < 0) named.push(look.name);
-      } else {
-        cell.className = "nothing";
-      }
-      swatch.appendChild(cell);
-    });
-  });
-  swatch.title = named.length ? "plays " + named.join(", ") : "plays nothing yet";
-}

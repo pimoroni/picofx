@@ -64,10 +64,7 @@ function argsWritten(path) {
 function savingMeansSomething() { return !boardSet.program; }
 function driveMeansSomething() { return !boardSet.program; }
 
-var oneSettingsBoardLine = boardLine;
-
-boardLine = function () {
-  var line = oneSettingsBoardLine();
+boardLineSteps.after.push(function (line) {
   var tokens = [];
   if (boardSet.program) {
     tokens.push("program=" + boardSet.program);
@@ -79,7 +76,7 @@ boardLine = function () {
   if (!tokens.length) return line;
   var rest = line.replace(/^board: ?/, "");
   return "board: " + tokens.join(" ") + (rest ? " " + rest : "");
-};
+});
 
 // ---- a program's arguments --------------------------------------------------------------------
 
@@ -192,10 +189,7 @@ function programNote() {
     "errors.txt says why."));
 }
 
-var oneSettingsDraw = draw;
-
-draw = function () {
-  oneSettingsDraw();
+drawSteps.after.push(function () {
   document.body.classList.toggle("programmed", !!boardSet.program);
   programNote();
-};
+});

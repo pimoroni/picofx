@@ -253,15 +253,10 @@ rejoin = function (out) {
   oneWiredRejoin(out);
 };
 
-var oneWiredDraw = draw;
-
-draw = function () {
-  oneWiredDraw();
+drawSteps.after.push(function () {
   renderConnectors();
   playSlide();
-};
+});
 
 // The lines run between things the page has laid out, so they follow the layout
 window.addEventListener("resize", function () { if (setupOn) draw(); });
-
-draw();

@@ -332,42 +332,36 @@ asScreen = function (place) {
 
 // ---- each scene keeps its screens' looks ------------------------------------------------------
 
-var oneLookCapture = capture;
-
-capture = function () {
-  var body = oneLookCapture();
-  SCREENS.forEach(function (letter) {
-    body.screens[letter].look = Object.assign({}, state.screens[letter].look);
-  });
-  HUB_PLACES.forEach(function (place) {
-    body.places[place].look = Object.assign({}, state.places[place].look);
-  });
-  body.hubLight = state.hubLight;
-  return body;
-};
-
 // Each screen and position keeps one look object for good, a scene's values copied into it, so
 // a control drawn before a scene is re-applied still changes the look that is written
 var lookHomes = {};
 SCREENS.forEach(function (letter) { lookHomes["screen" + letter] = state.screens[letter].look; });
 HUB_PLACES.forEach(function (place) { lookHomes["place" + place] = state.places[place].look; });
 
-var oneLookApply = apply;
-
-apply = function (body) {
-  oneLookApply(body);
-  SCREENS.forEach(function (letter) {
-    var home = lookHomes["screen" + letter];
-    if (body.screens && body.screens[letter].look) Object.assign(home, body.screens[letter].look);
-    state.screens[letter].look = home;
-  });
-  HUB_PLACES.forEach(function (place) {
-    var home = lookHomes["place" + place];
-    if (body.places && body.places[place].look) Object.assign(home, body.places[place].look);
-    state.places[place].look = home;
-  });
-  if (body.hubLight !== undefined) state.hubLight = body.hubLight;
-};
+bodyParts.push({
+  capture: function (body) {
+    SCREENS.forEach(function (letter) {
+      body.screens[letter].look = Object.assign({}, state.screens[letter].look);
+    });
+    HUB_PLACES.forEach(function (place) {
+      body.places[place].look = Object.assign({}, state.places[place].look);
+    });
+    body.hubLight = state.hubLight;
+  },
+  apply: function (body) {
+    SCREENS.forEach(function (letter) {
+      var home = lookHomes["screen" + letter];
+      if (body.screens && body.screens[letter].look) Object.assign(home, body.screens[letter].look);
+      state.screens[letter].look = home;
+    });
+    HUB_PLACES.forEach(function (place) {
+      var home = lookHomes["place" + place];
+      if (body.places && body.places[place].look) Object.assign(home, body.places[place].look);
+      state.places[place].look = home;
+    });
+    if (body.hubLight !== undefined) state.hubLight = body.hubLight;
+  }
+});
 
 // ---- what the file says -----------------------------------------------------------------------
 
@@ -1211,6 +1205,3 @@ function paceForChosen(held) {
   held.look.pace = media.named ? "saved" : "fps";
   held.look.every = 5;
 }
-
-state.always.body = capture();
-draw();
