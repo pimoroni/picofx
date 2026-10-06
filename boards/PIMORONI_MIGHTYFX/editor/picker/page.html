@@ -51,6 +51,17 @@ body:not(:has(.panel[open][data-looks="mono"])) #outGallery{display:none}
 .chip select{border:1px solid rgba(255,255,255,.55);border-radius:6px;
  background:rgba(255,255,255,.16);color:#fff;font:inherit;font-weight:400;padding:.1rem .25rem}
 .chip select option{color:var(--ink)}
+.chip .drop{background:transparent;border:0;color:#fff;font-size:1.1rem;line-height:1;
+ padding:0 .1rem;opacity:.8}
+.chip .drop:hover{opacity:1}
+/* A strip not fitted keeps its chip where it was and the panel its height, the offer to add it
+   standing in the middle of the room the strip took */
+.panel.strip{position:relative}
+/* As tall as while editing, when it holds the length and order to change, so the strip below
+   stays put as the board is edited */
+.panel.strip .leds .chip{box-sizing:border-box;min-height:33px}
+.panel.stripout > :not(summary):not(.leds){visibility:hidden}
+.panel.stripout .addstrip{position:absolute;left:50%;top:55%;transform:translate(-50%,-50%)}
 .head{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.2rem}
 .head .gap{flex:1}
 /* The row of settings that belongs to the bar, which the run above it is cut into. As tall as

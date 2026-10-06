@@ -735,6 +735,9 @@ function readLights(bodies) {
     one.order = lengths[run.name].order;
     run.leds = one.leds;
     run.order = one.order;
+    // A file giving the strip a length has it fitted, whatever this page had removed
+    one.there = true;
+    run.there = true;
   });
   var stripsRead = {};
   var broken = outputsBrokenOut(bodies);
@@ -1104,6 +1107,25 @@ landLook = function (run, at, name) {
     }
   }
   oneReadLandLook(run, at, name);
+};
+
+// A strip removed takes with it every scene's kept lines that play on it, and its length
+// as written, or they would keep its connector on
+var oneReadDropStrip = dropStrip;
+
+dropStrip = function (run) {
+  function elsewhere(one) {
+    var parts = entryParts(one.text);
+    var lamps = parts && lampsNamed(run, parts.selector);
+    return !(lamps && lamps.length);
+  }
+  keptNow = keptNow.filter(elsewhere);
+  allBodies().forEach(function (held) { held.kept = (held.kept || []).filter(elsewhere); });
+  boardResidue = boardResidue.filter(function (token) {
+    var named = token.match(/^(strip[lr])=/i);
+    return !named || named[1].toLowerCase() !== run.name;
+  });
+  oneReadDropStrip(run);
 };
 
 // ---- when the drive is opened -----------------------------------------------------------------

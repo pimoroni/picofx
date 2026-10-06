@@ -324,10 +324,11 @@ settle();
 // channels being the only thing that breaks out, so it takes the run model and leaves the
 // breaking out alone.
 
-// A strip's order is the one it takes its colours in, empty for the board's own
+// A strip's order is the one it takes its colours in, empty for the board's own, and it is
+// fitted until removed while the board is edited
 var STRIPS = [
-  {id: "stripl", name: "stripl", label: "the left strip", leds: 30, order: ""},
-  {id: "stripr", name: "stripr", label: "the right strip", leds: 18, order: ""}
+  {id: "stripl", name: "stripl", label: "the left strip", leds: 30, order: "", there: true},
+  {id: "stripr", name: "stripr", label: "the right strip", leds: 18, order: "", there: true}
 ];
 
 function stripRun(one) {
@@ -337,6 +338,7 @@ function stripRun(one) {
   run.label = one.label;
   run.leds = one.leds;
   run.order = one.order;
+  run.there = one.there;
   return run;
 }
 

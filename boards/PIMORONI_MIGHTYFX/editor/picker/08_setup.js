@@ -259,9 +259,73 @@ function stripBuilt(run) {
   return run.leds + " LEDs, " + (run.order || "grb").toUpperCase();
 }
 
+// Whether a strip is there, on the run and on the entry a fresh run is made from
+function stripThere(run, there) {
+  STRIPS.filter(function (one) { return one.id === run.id; })[0].there = there;
+  run.there = there;
+}
+
+// Taking a strip out clears what it plays in every scene, which leaves its length unwritten
+// and its connector off
+function dropStrip(run) {
+  store();
+  allBodies().forEach(function (held) {
+    var kept = held.runs[run.name];
+    if (!kept) return;
+    kept.sections = [blank(0, run.leds - 1, run)];
+    kept.picked = 0;
+    kept.was = [];
+    kept.undone = [];
+  });
+  stripThere(run, false);
+  apply(slotAt(state.at).body);
+  draw();
+}
+
+// The cross on a strip's chip while the board is edited, as a screen has on its own
+function stripDrop(run) {
+  var drop = document.createElement("button");
+  drop.type = "button";
+  drop.className = "drop";
+  drop.textContent = "\u00d7";
+  drop.title = "Take this strip out of every scene";
+  drop.onclick = function () { dropStrip(run); };
+  return drop;
+}
+
+// A strip not fitted offers to be added, which only editing the board can take up
+function renderStripOut(box, run, panel) {
+  box.textContent = "";
+  box.appendChild(boardBox(panel, ["Strip", small("not fitted")]));
+  var add = document.createElement("button");
+  add.type = "button";
+  add.className = "addstrip";
+  add.textContent = "add this strip";
+  add.disabled = !canEdit(panel);
+  add.onclick = function () {
+    stripThere(run, true);
+    workOn(panel);
+    draw();
+  };
+  box.appendChild(add);
+}
+
+// A strip not fitted takes no look
+var oneSetupLandLook = landLook;
+
+landLook = function (run, at, name) {
+  if (run.strip && !run.there) return;
+  oneSetupLandLook(run, at, name);
+};
+
 renderLeds = function (where, run) {
   var box = document.getElementById(where);
   var panel = run.id + "Panel";
+  document.getElementById(panel).classList.toggle("stripout", !run.there);
+  if (!run.there) {
+    renderStripOut(box, run, panel);
+    return;
+  }
   if (boxed()) {
     // The strip's own count box is already the board's, so the icon goes inside it and
     // it takes the strip's colour
@@ -273,6 +337,7 @@ renderLeds = function (where, run) {
       chip.className = "chip boardchip " + SECTIONS[panel];
       chip.title = "How the board is built, which is the same in every scene";
       chip.insertBefore(boardIcon(), chip.firstChild);
+      chip.appendChild(stripDrop(run));
     } else {
       box.textContent = "";
       box.appendChild(boardBox(panel, ["Strip", small(stripBuilt(run))]));
@@ -285,6 +350,7 @@ renderLeds = function (where, run) {
     var says = box.querySelector(".says");
     if (says) box.removeChild(says);
     box.removeChild(chip);
+    chip.appendChild(stripDrop(run));
     band(box, panel);
     box.appendChild(fact(chip));
   } else {

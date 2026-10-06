@@ -18,8 +18,11 @@ var TAB_PANELS = LED_PANELS.slice();
 
 var chosenTab = "outPanel";
 
-// Whether the section shown is one the gallery can give a look to
-function chosenTakesLooks() { return LED_PANELS.indexOf(chosenTab) >= 0; }
+// Whether the section shown is one the gallery can give a look to, which a strip not fitted is not
+function chosenTakesLooks() {
+  return LED_PANELS.indexOf(chosenTab) >= 0 &&
+         runsOfPanel(chosenTab).every(function (run) { return run.there !== false; });
+}
 
 // Every tab's section stays laid out in one shared place, only the chosen one seen, so the
 // place is as tall as the tallest and choosing a tab never moves what is below it
