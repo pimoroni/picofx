@@ -1102,8 +1102,9 @@ def __expand(token, prefix, line, problems):
 
     # Check if the range counts down
     if step < 0:
-        # Its components count down too, so 'out7-1.*' runs b, g, r
-        components = components[::-1]
+        # Its components count down too, so 'out7-1.*' runs b, g, r. MicroPython slices
+        # a tuple with no step but 1, so reversed() turns it round
+        components = tuple(reversed(components))
 
     names = []
     for number in range(first, last + step, step):
