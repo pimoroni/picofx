@@ -7072,15 +7072,9 @@ SCREENS.forEach(function (letter) {
                            kept: null, turns: {}, lastShows: null};
 });
 
-// A picture newly chosen on a screen starts at the turn it was last given there. What the
-// screen showed when last looked at says whether it is newly chosen, a scene coming round
-// bringing its own turn with it
-function turnForChosen(letter) {
-  var screen = state.screens[letter];
-  if (screen.shows === screen.lastShows) return;
-  screen.turn = (screen.shows && screen.turns[screen.shows]) || 0;
-  screen.lastShows = screen.shows;
-}
+// A picture newly chosen on a screen starts as chosenAfresh says. What the screen showed when
+// last looked at says whether it is newly chosen, a scene coming round bringing its own turn
+function turnForChosen(letter) { chosenAfresh(state.screens[letter]); }
 state.media = [];
 state.art = {};
 state.fileHandle = null;
@@ -7140,7 +7134,9 @@ function tabPath(x0, x1, near, far, radius) {
          " L" + x1 + " " + near + " Z";
 }
 
-function panelPreview(screen) {
+// A screen module drawn with the picture it shows as it stands. panelPreview draws the picture
+// composed with its look
+function panelDrawing(screen) {
   var made = MODULE[screen.size] || MODULE["2.8"];
   var turn = Number(screen.turn || 0);
   var quarter = turn % 180 === 90;
@@ -7245,7 +7241,9 @@ function panelPreview(screen) {
   return holder;
 }
 
-function renderScreensHead() {
+// A box for each screen port. A screen's box has the backlight across its top, what it shows
+// straight under the module, and its look's sections under that
+function renderScreenBoxes() {
   var box = document.getElementById("screensHead");
   box.textContent = "";
   SCREENS.forEach(function (letter) {
@@ -7322,92 +7320,12 @@ function renderScreensHead() {
 
     body.appendChild(panelPreview(screen));
 
-    var settings = document.createElement("div");
-    settings.className = "settings";
-    var row = document.createElement("div");
-    row.className = "row";
-    var turn = document.createElement("select");
-    [[0, "not turned"], [90, "quarter"], [180, "half"], [270, "three quarters"]]
-      .forEach(function (pair) {
-        var option = document.createElement("option");
-        option.value = pair[0];
-        option.textContent = pair[1];
-        if (Number(screen.turn || 0) === pair[0]) option.selected = true;
-        turn.appendChild(option);
-      });
-    turn.onchange = function () { screen.turn = Number(turn.value); draw(); };
-    row.appendChild(turn);
-    settings.appendChild(row);
-
-    // A moving picture can bounce instead of jumping at the loop, and wait where
-    // it turns; a slideshow also says how fast it walks its folder
-    var media = screen.shows && screen.shows !== "keep" ? mediaNamed(screen.shows) : null;
-    if (media && media.kind !== "image") {
-      var moving = document.createElement("div");
-      moving.className = "row";
-      var back = document.createElement("label");
-      back.className = "opt";
-      back.title = "Play it forwards then backwards, no jump at the loop";
-      var tick = document.createElement("input");
-      tick.type = "checkbox";
-      tick.checked = screen.pingpong;
-      tick.onchange = function () { screen.pingpong = tick.checked; draw(); };
-      back.appendChild(tick);
-      back.appendChild(document.createTextNode("back and forth"));
-      moving.appendChild(back);
-
-      var holdWrap = document.createElement("label");
-      holdWrap.className = "opt";
-      holdWrap.title = "Seconds to wait where it turns around";
-      holdWrap.appendChild(document.createTextNode("hold"));
-      var hold = document.createElement("input");
-      hold.type = "number";
-      hold.min = 0;
-      hold.step = 0.5;
-      hold.value = screen.hold || "";
-      hold.placeholder = "0";
-      hold.dataset.focus = "hold-" + letter;
-      hold.onchange = function () {
-        screen.hold = hold.value && Number(hold.value) > 0 ? hold.value : "";
-        draw();
-      };
-      holdWrap.appendChild(hold);
-      moving.appendChild(holdWrap);
-
-      if (media.kind === "folder") {
-        var fpsWrap = document.createElement("label");
-        fpsWrap.className = "opt";
-        fpsWrap.title = "Pictures shown per second";
-        fpsWrap.appendChild(document.createTextNode("fps"));
-        var fps = document.createElement("input");
-        fps.type = "number";
-        fps.min = 1;
-        fps.value = screen.fps;
-        fps.dataset.focus = "fps-" + letter;
-        fps.onchange = function () {
-          screen.fps = Math.max(1, Number(fps.value) || 5);
-          draw();
-        };
-        fpsWrap.appendChild(fps);
-        moving.appendChild(fpsWrap);
-      }
-      settings.appendChild(moving);
-    }
-
-    var showing = document.createElement("div");
-    showing.className = "showing";
-    showing.innerHTML = screen.shows === "keep"
-      ? "left as the file has it"
-      : screen.shows
-        ? "showing <b>" + screen.shows + "</b>" +
-          (mediaNamed(screen.shows) ? "" : " (not on the drive)")
-        : !state.fileHandle ? "open the FX drive to see its pictures"
-        : state.scenes.length
-          ? "showing nothing here; tap " + letter + " under a picture below"
-          : "tap " + letter + " under a picture below";
-    settings.appendChild(showing);
-
-    body.appendChild(settings);
+    // The look's sections, what it shows above them, and its backlight across the top
+    body.appendChild(lookSections("screen" + letter, screen, screen.size));
+    body.insertBefore(showingLine(screen, letter), body.querySelector(".looksettings"));
+    body.insertBefore(lightRow(screen.look.backlight, function (value) {
+      screen.look.backlight = value;
+    }, "backlight", "How brightly screen " + letter + " is lit, in this scene"), body.firstChild);
 
     // What the file already says for this screen, where the picker did not write it
     // and no picture can stand for it. It is a line of its own under the settings
@@ -7422,6 +7340,10 @@ function renderScreensHead() {
     box.appendChild(side);
   });
 }
+
+// The pictures on the drive, each with what it is on. The parts below add to them, each after the
+// one before: the hub's positions, the whole pictures, the hub's groups
+var assetSteps = [];
 
 function renderAssets() {
   var box = document.getElementById("assets");
@@ -7497,35 +7419,23 @@ function renderAssets() {
       {description: "Pictures and drawings the board plays",
        accept: {"image/png": [".gif", ".png", ".jpg", ".jpeg"], "text/x-python": [".py"]}},
       "pictures", /\.(gif|png|jpe?g|py)$/i));
+  assetSteps.forEach(function (step) { step(); });
 }
 
 function mediaNamed(name) {
   return state.media.filter(function (m) { return m.name === name; })[0] || null;
 }
 
+// What a screen's entry says in a scene: its look, or the line kept as the file had it. A hub
+// writes its positions' entries in place of the screens'
 function screenEntry(letter, body) {
+  if (state.hub.on) return null;
   var screen = state.screens[letter];
-  var shows = body.screens[letter].shows;
-  if (!screen.there || !shows) return null;
-  if (shows === "keep") return body.screens[letter].kept;
-  var media = mediaNamed(shows);
-  var kind = media ? media.kind
-           : /\.gif$/i.test(shows) ? "gif"
-           : /\.(png|jpe?g)$/i.test(shows) ? "image" : "folder";
-  var selector = "screen" + letter;
-  if (screen.carried) selector += " " + screen.carried;
-  if (Number(screen.turn)) selector += " rotation=" + screen.turn;
   var playing = body.screens[letter];
-  var extras = "";
-  if (kind !== "image") {
-    if (playing.pingpong) extras += " ping_pong=true";
-    if (playing.hold) extras += " hold=" + playing.hold;
-  }
-  if (kind === "folder")
-    return selector + ": sequence folder=" + quoted(shows) + " fps=" + playing.fps + extras;
-  if (kind === "gif")
-    return selector + ": gif file=" + quoted(shows) + extras;
-  return selector + ": image file=" + quoted(shows);
+  if (!screen.there || !playing.shows) return null;
+  if (playing.shows === "keep") return playing.kept;
+  var look = playing.look || freshLook();
+  return lookEntry("screen" + letter, playing, look, look.backlight, screen.size);
 }
 
 function allBodies() {
@@ -7586,7 +7496,9 @@ boardLineSteps.before.push(function () {
 
 // ---- drawing the tab -------------------------------------------------------------------------
 
-function renderScreensTab() {
+// The tab's head and its pictures. renderScreensTab puts the board's chips beside what is the
+// board's
+function renderScreensParts() {
   renderScreensHead();
   renderAssets();
   var head = document.getElementById("screensHead");
@@ -8061,23 +7973,20 @@ function placeThere(place) { return state.hub.on && !!state.hub.sizes[place]; }
 
 function placesThere() { return HUB_PLACES.filter(placeThere); }
 
-// A position shown as a screen of its panel's size, which is what the module drawing asks for
+// A position shown as a screen of its panel's size, which is what the module drawing asks for,
+// with its look and the hub's shared light
 function asScreen(place) {
   var held = state.places[place];
-  return {size: state.hub.sizes[place], turn: held.turn, shows: held.shows};
+  return {size: state.hub.sizes[place], turn: held.turn, shows: held.shows,
+          look: Object.assign({}, held.look, {backlight: state.hubLight})};
 }
 
 // The connector's own colour, A blue and B purple, which the hub takes from the one its
 // screens come through
 function hubInk() { return state.hub.port === "A" ? "a" : "b"; }
 
-// A picture newly chosen on a position starts at the turn it was last given there
-function placeTurnForChosen(place) {
-  var held = state.places[place];
-  if (held.shows === held.lastShows) return;
-  held.turn = (held.shows && held.turns[held.shows]) || 0;
-  held.lastShows = held.shows;
-}
+// A picture newly chosen on a position starts as chosenAfresh says
+function placeTurnForChosen(place) { chosenAfresh(state.places[place]); }
 
 // ---- each scene keeps what the hub's positions show ------------------------------------------
 
@@ -8132,12 +8041,15 @@ function kindOf(shows) {
 }
 
 // What a position plays, as a key: positions with the same key are one entry, and one stream.
-// Panels of different sizes are sent apart, so the size is part of it
+// Panels of different sizes are sent apart, so the size is part of it. They are one send where
+// the file would say the same for them, so a setting a picture does not take, such as a still's
+// pace, or one the page only remembers, such as the last custom colour, never splits them
 function playingKey(playing, place) {
-  var kind = kindOf(playing.shows);
-  return [state.hub.sizes[place], playing.shows, Number(playing.turn) || 0,
-          kind !== "image" && playing.pingpong, kind !== "image" && playing.hold,
-          kind === "folder" && playing.fps].join("|");
+  var look = playing.look || LOOK_START;
+  var size = state.hub.sizes[place];
+  var where = pictureOffset(look, playing.shows, size, playing.turn);
+  return [size, playing.shows].concat(placingTokens(playing.turn, look, 1, where))
+    .concat(playingTokens(playing, look, kindOf(playing.shows), size)).join("|");
 }
 
 // The positions of one scene, gathered into what each different picture is sent to
@@ -8157,29 +8069,12 @@ function placeGroups(body) {
   return groups;
 }
 
+// A group's entry. Every position is lit by the hub's one light, so each entry carries it
 function hubEntry(group) {
-  var playing = group.playing;
-  var kind = kindOf(playing.shows);
-  var selector = "hub" + placesSaid(group.places);
-  if (Number(playing.turn)) selector += " rotation=" + playing.turn;
-  var extras = "";
-  if (kind !== "image") {
-    if (playing.pingpong) extras += " ping_pong=true";
-    if (playing.hold) extras += " hold=" + playing.hold;
-  }
-  if (kind === "folder")
-    return selector + ": sequence folder=" + quoted(playing.shows) + " fps=" + playing.fps +
-           extras;
-  if (kind === "gif") return selector + ": gif file=" + quoted(playing.shows) + extras;
-  return selector + ": image file=" + quoted(playing.shows);
+  return lookEntry("hub" + placesSaid(group.places), group.playing,
+                   group.playing.look || freshLook(), state.hubLight,
+                   state.hub.sizes[group.places[0]]);
 }
-
-// With a hub fitted its positions are written in place of the two screens
-var oneHubEntryFor = screenEntry;
-
-screenEntry = function (letter, body) {
-  return state.hub.on ? null : oneHubEntryFor(letter, body);
-};
 
 bodyParts.push({
   entries: function (body, lines) {
@@ -8316,114 +8211,49 @@ function placeTile(place) {
   return tile;
 }
 
-// The picked position's settings, as a screen's are under it
+// The picked position's settings, the same sections a screen has. What each position shows is
+// said under its module, and the position being set is the one filled, so the strip says neither
 function placeSettings() {
   var settings = document.createElement("div");
   settings.className = "hubsettings";
   if (!placeThere(placePicked)) return settings;
   var held = state.places[placePicked];
-  var picture = held.shows;
-
-  var named = document.createElement("b");
-  named.className = "placeat";
-  named.textContent = "At " + placePicked;
-  settings.appendChild(named);
-
-  var turn = document.createElement("select");
-  [[0, "not turned"], [90, "quarter"], [180, "half"], [270, "three quarters"]]
-    .forEach(function (pair) {
-      var option = document.createElement("option");
-      option.value = pair[0];
-      option.textContent = pair[1];
-      if (Number(held.turn || 0) === pair[0]) option.selected = true;
-      turn.appendChild(option);
-    });
-  turn.disabled = !picture;
-  turn.title = picture ? "Which way up " + picture + " is drawn at " + placePicked +
-                         ", in this scene"
-                       : "Which way up a picture is drawn, once one is showing";
-  turn.onchange = function () {
-    held.turn = Number(turn.value);
-    held.turns[picture] = held.turn;
-    draw();
-  };
-  settings.appendChild(turn);
-
-  var media = picture ? mediaNamed(picture) : null;
-  if (media && media.kind !== "image") {
-    var back = document.createElement("label");
-    back.className = "opt";
-    var tick = document.createElement("input");
-    tick.type = "checkbox";
-    tick.checked = held.pingpong;
-    tick.onchange = function () { held.pingpong = tick.checked; draw(); };
-    back.appendChild(tick);
-    back.appendChild(document.createTextNode("back and forth"));
-    settings.appendChild(back);
-
-    var holdWrap = document.createElement("label");
-    holdWrap.className = "opt";
-    holdWrap.appendChild(document.createTextNode("hold"));
-    var hold = document.createElement("input");
-    hold.type = "number";
-    hold.min = 0;
-    hold.step = 0.5;
-    hold.value = held.hold || "";
-    hold.placeholder = "0";
-    hold.onchange = function () {
-      held.hold = hold.value && Number(hold.value) > 0 ? hold.value : "";
-      draw();
-    };
-    holdWrap.appendChild(hold);
-    settings.appendChild(holdWrap);
-
-    if (media.kind === "folder") {
-      var fpsWrap = document.createElement("label");
-      fpsWrap.className = "opt";
-      fpsWrap.appendChild(document.createTextNode("fps"));
-      var fps = document.createElement("input");
-      fps.type = "number";
-      fps.min = 1;
-      fps.value = held.fps;
-      fps.onchange = function () {
-        held.fps = Math.max(1, Number(fps.value) || 5);
-        draw();
-      };
-      fpsWrap.appendChild(fps);
-      settings.appendChild(fpsWrap);
-    }
-  }
-
-  var showing = document.createElement("span");
-  showing.className = "showing";
-  showing.innerHTML = picture
-    ? "showing <b>" + picture + "</b>"
-    : state.scenes.length ? "showing nothing here; tap " + placePicked + " under a picture below"
-                          : "tap " + placePicked + " under a picture below";
-  settings.appendChild(showing);
+  settings.appendChild(lookSections("place" + placePicked, held, state.hub.sizes[placePicked]));
   return settings;
 }
 
-// Whether moving pictures slow here, each different one being sent in turn
+// Whether moving pictures slow here: the sends share the hub's speed, a still picture sent once
+// costing the rest nothing
 function hubPace() {
-  var groups = placeGroups(capture());
-  var moving = groups.some(function (group) { return kindOf(group.playing.shows) !== "image"; });
-  var pace = document.createElement("p");
-  pace.className = "hubpace";
-  var pictures = groups.map(function (group) { return group.playing.shows; })
-    .filter(function (shows, at, all) { return all.indexOf(shows) === at; });
-  if (groups.length > 1 && moving && pictures.length === groups.length) {
-    pace.textContent = groups.length + " different pictures, each sent in turn, so moving " +
-                       "pictures play slower than one picture on several positions.";
-  } else if (groups.length > 1 && moving) {
-    pace.textContent = "Sent in " + groups.length + " goes, panels of different sizes or " +
-                       "turns taking a picture apart, so moving pictures play slower.";
-  } else if (groups.length === 1 && groups[0].places.length > 1) {
-    pace.textContent = "One picture, sent once to " + placesSaid(groups[0].places) +
-                       " together.";
+  var sends = placeGroups(capture());
+  var moving = sends.filter(function (send) { return kindOf(send.playing.shows) !== "image"; });
+  var still = sends.filter(function (send) { return kindOf(send.playing.shows) === "image"; });
+  var said = [];
+  if (moving.length > 1) {
+    said.push(namesSaid(moving) + " share the hub's speed, so each animation plays slower " +
+              "than it would alone.");
+  } else if (moving.length === 1) {
+    var together = moving[0].places.length;
+    said.push(namesSaid(moving) + (together > 1 ? (together === 2 ? " both" : " all") +
+              " play their animation at once, as fast as a single screen."
+                                                : " plays its animation at full speed."));
   }
+  if (still.length)
+    said.push(namesSaid(still) + (still.length > 1 || still[0].places.length > 1 ? " show"
+                                                                                  : " shows") +
+              " a still picture, sent once" + (moving.length ? ", costing the rest nothing."
+                                                             : ", so nothing slows."));
+  var apart = apartSaid(sends);
+  if (apart) said.push(apart);
+  var pace = document.createElement("p");
+  pace.className = "hubpace" + (said.length ? "" : " quiet");
+  pace.innerHTML = said.join(" ");
   return pace;
 }
+
+// The hub's box, in place of the screens'. The parts below add to it, each after the one before:
+// the hub's light, its groups
+var hubHeadSteps = [];
 
 function renderHubHead() {
   var box = document.getElementById("screensHead");
@@ -8465,28 +8295,26 @@ function renderHubHead() {
   body.appendChild(hubPace());
   side.appendChild(body);
   box.appendChild(side);
+  hubHeadSteps.forEach(function (step) { step(); });
 }
 
-var oneHubHead = renderScreensHead;
-
-renderScreensHead = function () {
+// The Screens tab's head: a box for each screen, or the hub's box where there is one, with the
+// switch between them above
+function renderScreensHead() {
   var box = document.getElementById("screensHead");
   if (!state.hub.on) {
     box.classList.remove("hubbed");
-    oneHubHead();
+    renderScreenBoxes();
   } else {
     renderHubHead();
   }
   var facts = document.getElementById("hubFacts");
   facts.textContent = "";
   facts.appendChild(hubSwitch());
-};
+}
 
 // A picture's own row of positions, each tapped to show it there or tapped again to take it off
-var oneHubAssets = renderAssets;
-
-renderAssets = function () {
-  oneHubAssets();
+assetSteps.push(function () {
   var box = document.getElementById("assets");
   box.classList.toggle("hubbed", state.hub.on);
   if (!state.hub.on) return;
@@ -8526,7 +8354,7 @@ renderAssets = function () {
     };
     pick.appendChild(all);
   });
-};
+});
 
 // ---- the tab --------------------------------------------------------------------------------
 
@@ -8879,9 +8707,8 @@ function nextGifFrame(playing, gif) {
   }).catch(function () {});
 }
 
-var oneLookPreview = panelPreview;
-
-panelPreview = function (screen) {
+// A screen module drawn with its picture composed with its look, a gif playing in it
+function panelPreview(screen) {
   var art = screen.look && screen.shows && screen.shows !== "keep" ? mediaArt(screen.shows)
                                                                      : null;
   // A drawing is drawn at its canvas's size, then placed and doubled as a picture is
@@ -8890,23 +8717,14 @@ panelPreview = function (screen) {
     art = drawingArt(screen.shows, canvas[0], canvas[1]);
   }
   var made = art ? composedArt(screen, screen.look, art) : null;
-  if (!made) return oneLookPreview(screen);
+  if (!made) return panelDrawing(screen);
   var name = "~look" + Object.keys(state.art).length;
   state.art[name] = made;
-  var drawing = oneLookPreview(Object.assign({}, screen, {shows: name}));
+  var drawing = panelDrawing(Object.assign({}, screen, {shows: name}));
   delete state.art[name];
   if (kindOf(screen.shows) === "gif") liveGif(drawing, made, screen, screen.look, art);
   return drawing;
-};
-
-// A hub position is drawn with its look, and the hub's shared light
-var oneLookAsScreen = asScreen;
-
-asScreen = function (place) {
-  var screen = oneLookAsScreen(place);
-  screen.look = Object.assign({}, state.places[place].look, {backlight: state.hubLight});
-  return screen;
-};
+}
 
 // ---- each scene keeps its screens' looks ------------------------------------------------------
 
@@ -9004,33 +8822,6 @@ function lookEntry(selector, playing, look, light, size) {
     .concat(playingTokens(playing, look, kind, size)).join(" ");
 }
 
-var oneLookScreenEntry = screenEntry;
-
-screenEntry = function (letter, body) {
-  var playing = body.screens[letter];
-  if (state.hub.on || !state.screens[letter].there || !playing.shows || playing.shows === "keep")
-    return oneLookScreenEntry(letter, body);
-  var look = playing.look || freshLook();
-  return lookEntry("screen" + letter, playing, look, look.backlight, state.screens[letter].size);
-};
-
-// Positions are one send where the file would say the same for them, so a setting a picture
-// does not take, such as a still's pace, or one the page only remembers, such as the last
-// custom colour, never splits them
-playingKey = function (playing, place) {
-  var look = playing.look || LOOK_START;
-  var size = state.hub.sizes[place];
-  var where = pictureOffset(look, playing.shows, size, playing.turn);
-  return [size, playing.shows].concat(placingTokens(playing.turn, look, 1, where))
-    .concat(playingTokens(playing, look, kindOf(playing.shows), size)).join("|");
-};
-
-// Every position is lit by the hub's one light, so each entry carries it
-hubEntry = function (group) {
-  return lookEntry("hub" + placesSaid(group.places), group.playing,
-                   group.playing.look || freshLook(), state.hubLight,
-                   state.hub.sizes[group.places[0]]);
-};
 
 // ---- the settings, drawn ----------------------------------------------------------------------
 // Each section folds, saying its values beside its name while closed. Orientation and playback
@@ -9618,26 +9409,6 @@ function lookSections(key, held, size) {
   return sections;
 }
 
-// A screen's box has the backlight across its top, what it shows
-// straight under the module, and the sections under that
-var oneLookHead = renderScreensHead;
-
-renderScreensHead = function () {
-  oneLookHead();
-  if (state.hub.on) return;
-  var boxes = document.querySelectorAll("#screensHead .screen-box");
-  SCREENS.forEach(function (letter, at) {
-    var screen = state.screens[letter];
-    var old = boxes[at] && boxes[at].querySelector(".settings");
-    if (!old) return;
-    var body = old.parentNode;
-    body.replaceChild(lookSections("screen" + letter, screen, screen.size), old);
-    body.insertBefore(showingLine(screen, letter), body.querySelector(".looksettings"));
-    body.insertBefore(lightRow(screen.look.backlight, function (value) {
-      screen.look.backlight = value;
-    }, "backlight", "How brightly screen " + letter + " is lit, in this scene"), body.firstChild);
-  });
-};
 
 // A backlight as a row of its own across the top of a screen's or the hub's box
 function lightRow(value, change, words, title) {
@@ -9649,23 +9420,9 @@ function lightRow(value, change, words, title) {
   return row;
 }
 
-// The picked position's settings, the same sections a screen has. What each position shows is
-// said under its module, and the position being set is the one filled, so the strip says neither
-placeSettings = function () {
-  var settings = document.createElement("div");
-  settings.className = "hubsettings";
-  if (!placeThere(placePicked)) return settings;
-  var held = state.places[placePicked];
-  settings.appendChild(lookSections("place" + placePicked, held, state.hub.sizes[placePicked]));
-  return settings;
-};
-
 // The hub's one backlight is a row of its own across the top of the box, over all six
 // positions and apart from whatever group is being set, since it lights every screen
-var oneLookHubHead = renderHubHead;
-
-renderHubHead = function () {
-  oneLookHubHead();
+hubHeadSteps.push(function () {
   var body = document.querySelector("#screensHead .hubbox .body");
   if (!body) return;
   // What each position shows, a slideshow named as its folder
@@ -9680,14 +9437,12 @@ renderHubHead = function () {
   row.classList.add("hublightrow");
   row.querySelector(".lightopt").classList.add("hublight");
   body.insertBefore(row, body.firstChild);
-};
+});
 
 // The chip goes beside what is the board's and not before a box's name: a screen's panel size in
 // its band, and on the hub which way it is wired, in its band, and each position's panel size
-var oneLookScreensTab = renderScreensTab;
-
-renderScreensTab = function () {
-  oneLookScreensTab();
+function renderScreensTab() {
+  renderScreensParts();
   if (state.hub.on) {
     document.querySelectorAll("#screensHead .hubbox .place .placesize").forEach(function (size) {
       var chip = boardIcon();
@@ -9707,7 +9462,7 @@ renderScreensTab = function () {
     fact.appendChild(size);
     band.title = "";
   });
-};
+}
 
 // A picture newly chosen starts at the turn it was last given on this screen, and a picture
 // never turned here keeps the turn the screen already has, so a turn can be set on an empty
@@ -9721,20 +9476,13 @@ function chosenAfresh(held) {
   held.lastShows = held.shows;
 }
 
-turnForChosen = function (letter) { chosenAfresh(state.screens[letter]); };
-
-placeTurnForChosen = function (place) { chosenAfresh(state.places[place]); };
-
 // ---- the pictures, whole ------------------------------------------------------------------------
 // Each picture is drawn whole in its tile, never cropped: the tiles keep the row's fixed width,
 // and a picture wider than its tile is scaled down to that width, the tile as tall as its shape
 // needs; a narrower one is drawn at its true size, never scaled up, in a square tile at least,
 // so a small picture looks as small as it is. The rows line up at the bottom, keeping the pick
 // rows in line. The name, a still's type and the size show over the picture on hover
-var oneWholeAssets = renderAssets;
-
-renderAssets = function () {
-  oneWholeAssets();
+assetSteps.push(function () {
   document.getElementById("assets").classList.add("wholeassets");
   document.querySelectorAll("#assets .asset").forEach(function (cell, at) {
     var media = state.media[at];
@@ -9775,7 +9523,7 @@ renderAssets = function () {
           .filter(Boolean).join(" \u00b7 ");
     }
   });
-};
+});
 
 function paceForChosen(held) {
   var media = held.shows ? mediaNamed(held.shows) : null;
@@ -9896,10 +9644,7 @@ drawSteps.before.push(settleGroups);
 
 // Under each picture, the groups and the positions on their own, then all. A picture on a
 // group shows on every member, and pressing it again takes it off
-var oneGroupsAssets = renderAssets;
-
-renderAssets = function () {
-  oneGroupsAssets();
+assetSteps.push(function () {
   if (!state.hub.on) return;
   var targets = sendTargets();
   document.querySelectorAll("#assets .asset").forEach(function (cell, at) {
@@ -9944,17 +9689,14 @@ renderAssets = function () {
     };
     pick.appendChild(all);
   });
-};
+});
 
 // ---- drawing the groups -----------------------------------------------------------------------
 
 // Every group wears its colour on each member, its outline and letter, and under every position
 // are the three numbers. The group being set is filled with a tint of its colour, which is the
 // only mark of being picked
-var oneGroupsHead = renderHubHead;
-
-renderHubHead = function () {
-  oneGroupsHead();
+hubHeadSteps.push(function () {
   // How the groups are sent is said under the positions that make them, above what is set
   var pace = document.querySelector("#screensHead .hubpace");
   var strip = document.querySelector("#screensHead .hubsettings");
@@ -10019,7 +9761,7 @@ renderHubHead = function () {
     said.title = said.textContent;
     tile.appendChild(said);
   });
-};
+});
 
 // How fast the hub plays what it shows. A still picture is sent once and costs nothing after, so
 // only the animations share the frames between them: one plays as fast as a single screen,
@@ -10034,33 +9776,6 @@ function namesSaid(sends) {
   return names.length > 1 ? names.slice(0, -1).join(", ") + " and " + names[names.length - 1]
                           : names[0];
 }
-
-hubPace = function () {
-  var sends = placeGroups(capture());
-  var moving = sends.filter(function (send) { return kindOf(send.playing.shows) !== "image"; });
-  var still = sends.filter(function (send) { return kindOf(send.playing.shows) === "image"; });
-  var said = [];
-  if (moving.length > 1) {
-    said.push(namesSaid(moving) + " share the hub's speed, so each animation plays slower " +
-              "than it would alone.");
-  } else if (moving.length === 1) {
-    var together = moving[0].places.length;
-    said.push(namesSaid(moving) + (together > 1 ? (together === 2 ? " both" : " all") +
-              " play their animation at once, as fast as a single screen."
-                                                : " plays its animation at full speed."));
-  }
-  if (still.length)
-    said.push(namesSaid(still) + (still.length > 1 || still[0].places.length > 1 ? " show"
-                                                                                  : " shows") +
-              " a still picture, sent once" + (moving.length ? ", costing the rest nothing."
-                                                             : ", so nothing slows."));
-  var apart = apartSaid(sends);
-  if (apart) said.push(apart);
-  var pace = document.createElement("p");
-  pace.className = "hubpace" + (said.length ? "" : " quiet");
-  pace.innerHTML = said.join(" ");
-  return pace;
-};
 
 // What makes a send differ from another showing the same picture, in the words the settings
 // use, so it is plain why they are sent apart

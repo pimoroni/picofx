@@ -34,23 +34,20 @@ function placeThere(place) { return state.hub.on && !!state.hub.sizes[place]; }
 
 function placesThere() { return HUB_PLACES.filter(placeThere); }
 
-// A position shown as a screen of its panel's size, which is what the module drawing asks for
+// A position shown as a screen of its panel's size, which is what the module drawing asks for,
+// with its look and the hub's shared light
 function asScreen(place) {
   var held = state.places[place];
-  return {size: state.hub.sizes[place], turn: held.turn, shows: held.shows};
+  return {size: state.hub.sizes[place], turn: held.turn, shows: held.shows,
+          look: Object.assign({}, held.look, {backlight: state.hubLight})};
 }
 
 // The connector's own colour, A blue and B purple, which the hub takes from the one its
 // screens come through
 function hubInk() { return state.hub.port === "A" ? "a" : "b"; }
 
-// A picture newly chosen on a position starts at the turn it was last given there
-function placeTurnForChosen(place) {
-  var held = state.places[place];
-  if (held.shows === held.lastShows) return;
-  held.turn = (held.shows && held.turns[held.shows]) || 0;
-  held.lastShows = held.shows;
-}
+// A picture newly chosen on a position starts as chosenAfresh says
+function placeTurnForChosen(place) { chosenAfresh(state.places[place]); }
 
 // ---- each scene keeps what the hub's positions show ------------------------------------------
 
@@ -105,12 +102,15 @@ function kindOf(shows) {
 }
 
 // What a position plays, as a key: positions with the same key are one entry, and one stream.
-// Panels of different sizes are sent apart, so the size is part of it
+// Panels of different sizes are sent apart, so the size is part of it. They are one send where
+// the file would say the same for them, so a setting a picture does not take, such as a still's
+// pace, or one the page only remembers, such as the last custom colour, never splits them
 function playingKey(playing, place) {
-  var kind = kindOf(playing.shows);
-  return [state.hub.sizes[place], playing.shows, Number(playing.turn) || 0,
-          kind !== "image" && playing.pingpong, kind !== "image" && playing.hold,
-          kind === "folder" && playing.fps].join("|");
+  var look = playing.look || LOOK_START;
+  var size = state.hub.sizes[place];
+  var where = pictureOffset(look, playing.shows, size, playing.turn);
+  return [size, playing.shows].concat(placingTokens(playing.turn, look, 1, where))
+    .concat(playingTokens(playing, look, kindOf(playing.shows), size)).join("|");
 }
 
 // The positions of one scene, gathered into what each different picture is sent to
@@ -130,29 +130,12 @@ function placeGroups(body) {
   return groups;
 }
 
+// A group's entry. Every position is lit by the hub's one light, so each entry carries it
 function hubEntry(group) {
-  var playing = group.playing;
-  var kind = kindOf(playing.shows);
-  var selector = "hub" + placesSaid(group.places);
-  if (Number(playing.turn)) selector += " rotation=" + playing.turn;
-  var extras = "";
-  if (kind !== "image") {
-    if (playing.pingpong) extras += " ping_pong=true";
-    if (playing.hold) extras += " hold=" + playing.hold;
-  }
-  if (kind === "folder")
-    return selector + ": sequence folder=" + quoted(playing.shows) + " fps=" + playing.fps +
-           extras;
-  if (kind === "gif") return selector + ": gif file=" + quoted(playing.shows) + extras;
-  return selector + ": image file=" + quoted(playing.shows);
+  return lookEntry("hub" + placesSaid(group.places), group.playing,
+                   group.playing.look || freshLook(), state.hubLight,
+                   state.hub.sizes[group.places[0]]);
 }
-
-// With a hub fitted its positions are written in place of the two screens
-var oneHubEntryFor = screenEntry;
-
-screenEntry = function (letter, body) {
-  return state.hub.on ? null : oneHubEntryFor(letter, body);
-};
 
 bodyParts.push({
   entries: function (body, lines) {
@@ -289,114 +272,49 @@ function placeTile(place) {
   return tile;
 }
 
-// The picked position's settings, as a screen's are under it
+// The picked position's settings, the same sections a screen has. What each position shows is
+// said under its module, and the position being set is the one filled, so the strip says neither
 function placeSettings() {
   var settings = document.createElement("div");
   settings.className = "hubsettings";
   if (!placeThere(placePicked)) return settings;
   var held = state.places[placePicked];
-  var picture = held.shows;
-
-  var named = document.createElement("b");
-  named.className = "placeat";
-  named.textContent = "At " + placePicked;
-  settings.appendChild(named);
-
-  var turn = document.createElement("select");
-  [[0, "not turned"], [90, "quarter"], [180, "half"], [270, "three quarters"]]
-    .forEach(function (pair) {
-      var option = document.createElement("option");
-      option.value = pair[0];
-      option.textContent = pair[1];
-      if (Number(held.turn || 0) === pair[0]) option.selected = true;
-      turn.appendChild(option);
-    });
-  turn.disabled = !picture;
-  turn.title = picture ? "Which way up " + picture + " is drawn at " + placePicked +
-                         ", in this scene"
-                       : "Which way up a picture is drawn, once one is showing";
-  turn.onchange = function () {
-    held.turn = Number(turn.value);
-    held.turns[picture] = held.turn;
-    draw();
-  };
-  settings.appendChild(turn);
-
-  var media = picture ? mediaNamed(picture) : null;
-  if (media && media.kind !== "image") {
-    var back = document.createElement("label");
-    back.className = "opt";
-    var tick = document.createElement("input");
-    tick.type = "checkbox";
-    tick.checked = held.pingpong;
-    tick.onchange = function () { held.pingpong = tick.checked; draw(); };
-    back.appendChild(tick);
-    back.appendChild(document.createTextNode("back and forth"));
-    settings.appendChild(back);
-
-    var holdWrap = document.createElement("label");
-    holdWrap.className = "opt";
-    holdWrap.appendChild(document.createTextNode("hold"));
-    var hold = document.createElement("input");
-    hold.type = "number";
-    hold.min = 0;
-    hold.step = 0.5;
-    hold.value = held.hold || "";
-    hold.placeholder = "0";
-    hold.onchange = function () {
-      held.hold = hold.value && Number(hold.value) > 0 ? hold.value : "";
-      draw();
-    };
-    holdWrap.appendChild(hold);
-    settings.appendChild(holdWrap);
-
-    if (media.kind === "folder") {
-      var fpsWrap = document.createElement("label");
-      fpsWrap.className = "opt";
-      fpsWrap.appendChild(document.createTextNode("fps"));
-      var fps = document.createElement("input");
-      fps.type = "number";
-      fps.min = 1;
-      fps.value = held.fps;
-      fps.onchange = function () {
-        held.fps = Math.max(1, Number(fps.value) || 5);
-        draw();
-      };
-      fpsWrap.appendChild(fps);
-      settings.appendChild(fpsWrap);
-    }
-  }
-
-  var showing = document.createElement("span");
-  showing.className = "showing";
-  showing.innerHTML = picture
-    ? "showing <b>" + picture + "</b>"
-    : state.scenes.length ? "showing nothing here; tap " + placePicked + " under a picture below"
-                          : "tap " + placePicked + " under a picture below";
-  settings.appendChild(showing);
+  settings.appendChild(lookSections("place" + placePicked, held, state.hub.sizes[placePicked]));
   return settings;
 }
 
-// Whether moving pictures slow here, each different one being sent in turn
+// Whether moving pictures slow here: the sends share the hub's speed, a still picture sent once
+// costing the rest nothing
 function hubPace() {
-  var groups = placeGroups(capture());
-  var moving = groups.some(function (group) { return kindOf(group.playing.shows) !== "image"; });
-  var pace = document.createElement("p");
-  pace.className = "hubpace";
-  var pictures = groups.map(function (group) { return group.playing.shows; })
-    .filter(function (shows, at, all) { return all.indexOf(shows) === at; });
-  if (groups.length > 1 && moving && pictures.length === groups.length) {
-    pace.textContent = groups.length + " different pictures, each sent in turn, so moving " +
-                       "pictures play slower than one picture on several positions.";
-  } else if (groups.length > 1 && moving) {
-    pace.textContent = "Sent in " + groups.length + " goes, panels of different sizes or " +
-                       "turns taking a picture apart, so moving pictures play slower.";
-  } else if (groups.length === 1 && groups[0].places.length > 1) {
-    pace.textContent = "One picture, sent once to " + placesSaid(groups[0].places) +
-                       " together.";
+  var sends = placeGroups(capture());
+  var moving = sends.filter(function (send) { return kindOf(send.playing.shows) !== "image"; });
+  var still = sends.filter(function (send) { return kindOf(send.playing.shows) === "image"; });
+  var said = [];
+  if (moving.length > 1) {
+    said.push(namesSaid(moving) + " share the hub's speed, so each animation plays slower " +
+              "than it would alone.");
+  } else if (moving.length === 1) {
+    var together = moving[0].places.length;
+    said.push(namesSaid(moving) + (together > 1 ? (together === 2 ? " both" : " all") +
+              " play their animation at once, as fast as a single screen."
+                                                : " plays its animation at full speed."));
   }
+  if (still.length)
+    said.push(namesSaid(still) + (still.length > 1 || still[0].places.length > 1 ? " show"
+                                                                                  : " shows") +
+              " a still picture, sent once" + (moving.length ? ", costing the rest nothing."
+                                                             : ", so nothing slows."));
+  var apart = apartSaid(sends);
+  if (apart) said.push(apart);
+  var pace = document.createElement("p");
+  pace.className = "hubpace" + (said.length ? "" : " quiet");
+  pace.innerHTML = said.join(" ");
   return pace;
 }
+
+// The hub's box, in place of the screens'. The parts below add to it, each after the one before:
+// the hub's light, its groups
+var hubHeadSteps = [];
 
 function renderHubHead() {
   var box = document.getElementById("screensHead");
@@ -438,28 +356,26 @@ function renderHubHead() {
   body.appendChild(hubPace());
   side.appendChild(body);
   box.appendChild(side);
+  hubHeadSteps.forEach(function (step) { step(); });
 }
 
-var oneHubHead = renderScreensHead;
-
-renderScreensHead = function () {
+// The Screens tab's head: a box for each screen, or the hub's box where there is one, with the
+// switch between them above
+function renderScreensHead() {
   var box = document.getElementById("screensHead");
   if (!state.hub.on) {
     box.classList.remove("hubbed");
-    oneHubHead();
+    renderScreenBoxes();
   } else {
     renderHubHead();
   }
   var facts = document.getElementById("hubFacts");
   facts.textContent = "";
   facts.appendChild(hubSwitch());
-};
+}
 
 // A picture's own row of positions, each tapped to show it there or tapped again to take it off
-var oneHubAssets = renderAssets;
-
-renderAssets = function () {
-  oneHubAssets();
+assetSteps.push(function () {
   var box = document.getElementById("assets");
   box.classList.toggle("hubbed", state.hub.on);
   if (!state.hub.on) return;
@@ -499,7 +415,7 @@ renderAssets = function () {
     };
     pick.appendChild(all);
   });
-};
+});
 
 // ---- the tab --------------------------------------------------------------------------------
 

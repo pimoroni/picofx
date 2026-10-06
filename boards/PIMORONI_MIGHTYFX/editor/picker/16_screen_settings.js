@@ -301,9 +301,8 @@ function nextGifFrame(playing, gif) {
   }).catch(function () {});
 }
 
-var oneLookPreview = panelPreview;
-
-panelPreview = function (screen) {
+// A screen module drawn with its picture composed with its look, a gif playing in it
+function panelPreview(screen) {
   var art = screen.look && screen.shows && screen.shows !== "keep" ? mediaArt(screen.shows)
                                                                      : null;
   // A drawing is drawn at its canvas's size, then placed and doubled as a picture is
@@ -312,23 +311,14 @@ panelPreview = function (screen) {
     art = drawingArt(screen.shows, canvas[0], canvas[1]);
   }
   var made = art ? composedArt(screen, screen.look, art) : null;
-  if (!made) return oneLookPreview(screen);
+  if (!made) return panelDrawing(screen);
   var name = "~look" + Object.keys(state.art).length;
   state.art[name] = made;
-  var drawing = oneLookPreview(Object.assign({}, screen, {shows: name}));
+  var drawing = panelDrawing(Object.assign({}, screen, {shows: name}));
   delete state.art[name];
   if (kindOf(screen.shows) === "gif") liveGif(drawing, made, screen, screen.look, art);
   return drawing;
-};
-
-// A hub position is drawn with its look, and the hub's shared light
-var oneLookAsScreen = asScreen;
-
-asScreen = function (place) {
-  var screen = oneLookAsScreen(place);
-  screen.look = Object.assign({}, state.places[place].look, {backlight: state.hubLight});
-  return screen;
-};
+}
 
 // ---- each scene keeps its screens' looks ------------------------------------------------------
 
@@ -426,33 +416,6 @@ function lookEntry(selector, playing, look, light, size) {
     .concat(playingTokens(playing, look, kind, size)).join(" ");
 }
 
-var oneLookScreenEntry = screenEntry;
-
-screenEntry = function (letter, body) {
-  var playing = body.screens[letter];
-  if (state.hub.on || !state.screens[letter].there || !playing.shows || playing.shows === "keep")
-    return oneLookScreenEntry(letter, body);
-  var look = playing.look || freshLook();
-  return lookEntry("screen" + letter, playing, look, look.backlight, state.screens[letter].size);
-};
-
-// Positions are one send where the file would say the same for them, so a setting a picture
-// does not take, such as a still's pace, or one the page only remembers, such as the last
-// custom colour, never splits them
-playingKey = function (playing, place) {
-  var look = playing.look || LOOK_START;
-  var size = state.hub.sizes[place];
-  var where = pictureOffset(look, playing.shows, size, playing.turn);
-  return [size, playing.shows].concat(placingTokens(playing.turn, look, 1, where))
-    .concat(playingTokens(playing, look, kindOf(playing.shows), size)).join("|");
-};
-
-// Every position is lit by the hub's one light, so each entry carries it
-hubEntry = function (group) {
-  return lookEntry("hub" + placesSaid(group.places), group.playing,
-                   group.playing.look || freshLook(), state.hubLight,
-                   state.hub.sizes[group.places[0]]);
-};
 
 // ---- the settings, drawn ----------------------------------------------------------------------
 // Each section folds, saying its values beside its name while closed. Orientation and playback
@@ -1040,26 +1003,6 @@ function lookSections(key, held, size) {
   return sections;
 }
 
-// A screen's box has the backlight across its top, what it shows
-// straight under the module, and the sections under that
-var oneLookHead = renderScreensHead;
-
-renderScreensHead = function () {
-  oneLookHead();
-  if (state.hub.on) return;
-  var boxes = document.querySelectorAll("#screensHead .screen-box");
-  SCREENS.forEach(function (letter, at) {
-    var screen = state.screens[letter];
-    var old = boxes[at] && boxes[at].querySelector(".settings");
-    if (!old) return;
-    var body = old.parentNode;
-    body.replaceChild(lookSections("screen" + letter, screen, screen.size), old);
-    body.insertBefore(showingLine(screen, letter), body.querySelector(".looksettings"));
-    body.insertBefore(lightRow(screen.look.backlight, function (value) {
-      screen.look.backlight = value;
-    }, "backlight", "How brightly screen " + letter + " is lit, in this scene"), body.firstChild);
-  });
-};
 
 // A backlight as a row of its own across the top of a screen's or the hub's box
 function lightRow(value, change, words, title) {
@@ -1071,23 +1014,9 @@ function lightRow(value, change, words, title) {
   return row;
 }
 
-// The picked position's settings, the same sections a screen has. What each position shows is
-// said under its module, and the position being set is the one filled, so the strip says neither
-placeSettings = function () {
-  var settings = document.createElement("div");
-  settings.className = "hubsettings";
-  if (!placeThere(placePicked)) return settings;
-  var held = state.places[placePicked];
-  settings.appendChild(lookSections("place" + placePicked, held, state.hub.sizes[placePicked]));
-  return settings;
-};
-
 // The hub's one backlight is a row of its own across the top of the box, over all six
 // positions and apart from whatever group is being set, since it lights every screen
-var oneLookHubHead = renderHubHead;
-
-renderHubHead = function () {
-  oneLookHubHead();
+hubHeadSteps.push(function () {
   var body = document.querySelector("#screensHead .hubbox .body");
   if (!body) return;
   // What each position shows, a slideshow named as its folder
@@ -1102,14 +1031,12 @@ renderHubHead = function () {
   row.classList.add("hublightrow");
   row.querySelector(".lightopt").classList.add("hublight");
   body.insertBefore(row, body.firstChild);
-};
+});
 
 // The chip goes beside what is the board's and not before a box's name: a screen's panel size in
 // its band, and on the hub which way it is wired, in its band, and each position's panel size
-var oneLookScreensTab = renderScreensTab;
-
-renderScreensTab = function () {
-  oneLookScreensTab();
+function renderScreensTab() {
+  renderScreensParts();
   if (state.hub.on) {
     document.querySelectorAll("#screensHead .hubbox .place .placesize").forEach(function (size) {
       var chip = boardIcon();
@@ -1129,7 +1056,7 @@ renderScreensTab = function () {
     fact.appendChild(size);
     band.title = "";
   });
-};
+}
 
 // A picture newly chosen starts at the turn it was last given on this screen, and a picture
 // never turned here keeps the turn the screen already has, so a turn can be set on an empty
@@ -1143,20 +1070,13 @@ function chosenAfresh(held) {
   held.lastShows = held.shows;
 }
 
-turnForChosen = function (letter) { chosenAfresh(state.screens[letter]); };
-
-placeTurnForChosen = function (place) { chosenAfresh(state.places[place]); };
-
 // ---- the pictures, whole ------------------------------------------------------------------------
 // Each picture is drawn whole in its tile, never cropped: the tiles keep the row's fixed width,
 // and a picture wider than its tile is scaled down to that width, the tile as tall as its shape
 // needs; a narrower one is drawn at its true size, never scaled up, in a square tile at least,
 // so a small picture looks as small as it is. The rows line up at the bottom, keeping the pick
 // rows in line. The name, a still's type and the size show over the picture on hover
-var oneWholeAssets = renderAssets;
-
-renderAssets = function () {
-  oneWholeAssets();
+assetSteps.push(function () {
   document.getElementById("assets").classList.add("wholeassets");
   document.querySelectorAll("#assets .asset").forEach(function (cell, at) {
     var media = state.media[at];
@@ -1197,7 +1117,7 @@ renderAssets = function () {
           .filter(Boolean).join(" \u00b7 ");
     }
   });
-};
+});
 
 function paceForChosen(held) {
   var media = held.shows ? mediaNamed(held.shows) : null;

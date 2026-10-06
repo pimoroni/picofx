@@ -111,10 +111,7 @@ drawSteps.before.push(settleGroups);
 
 // Under each picture, the groups and the positions on their own, then all. A picture on a
 // group shows on every member, and pressing it again takes it off
-var oneGroupsAssets = renderAssets;
-
-renderAssets = function () {
-  oneGroupsAssets();
+assetSteps.push(function () {
   if (!state.hub.on) return;
   var targets = sendTargets();
   document.querySelectorAll("#assets .asset").forEach(function (cell, at) {
@@ -159,17 +156,14 @@ renderAssets = function () {
     };
     pick.appendChild(all);
   });
-};
+});
 
 // ---- drawing the groups -----------------------------------------------------------------------
 
 // Every group wears its colour on each member, its outline and letter, and under every position
 // are the three numbers. The group being set is filled with a tint of its colour, which is the
 // only mark of being picked
-var oneGroupsHead = renderHubHead;
-
-renderHubHead = function () {
-  oneGroupsHead();
+hubHeadSteps.push(function () {
   // How the groups are sent is said under the positions that make them, above what is set
   var pace = document.querySelector("#screensHead .hubpace");
   var strip = document.querySelector("#screensHead .hubsettings");
@@ -234,7 +228,7 @@ renderHubHead = function () {
     said.title = said.textContent;
     tile.appendChild(said);
   });
-};
+});
 
 // How fast the hub plays what it shows. A still picture is sent once and costs nothing after, so
 // only the animations share the frames between them: one plays as fast as a single screen,
@@ -249,33 +243,6 @@ function namesSaid(sends) {
   return names.length > 1 ? names.slice(0, -1).join(", ") + " and " + names[names.length - 1]
                           : names[0];
 }
-
-hubPace = function () {
-  var sends = placeGroups(capture());
-  var moving = sends.filter(function (send) { return kindOf(send.playing.shows) !== "image"; });
-  var still = sends.filter(function (send) { return kindOf(send.playing.shows) === "image"; });
-  var said = [];
-  if (moving.length > 1) {
-    said.push(namesSaid(moving) + " share the hub's speed, so each animation plays slower " +
-              "than it would alone.");
-  } else if (moving.length === 1) {
-    var together = moving[0].places.length;
-    said.push(namesSaid(moving) + (together > 1 ? (together === 2 ? " both" : " all") +
-              " play their animation at once, as fast as a single screen."
-                                                : " plays its animation at full speed."));
-  }
-  if (still.length)
-    said.push(namesSaid(still) + (still.length > 1 || still[0].places.length > 1 ? " show"
-                                                                                  : " shows") +
-              " a still picture, sent once" + (moving.length ? ", costing the rest nothing."
-                                                             : ", so nothing slows."));
-  var apart = apartSaid(sends);
-  if (apart) said.push(apart);
-  var pace = document.createElement("p");
-  pace.className = "hubpace" + (said.length ? "" : " quiet");
-  pace.innerHTML = said.join(" ");
-  return pace;
-};
 
 // What makes a send differ from another showing the same picture, in the words the settings
 // use, so it is plain why they are sent apart

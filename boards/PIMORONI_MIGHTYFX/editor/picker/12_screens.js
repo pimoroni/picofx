@@ -26,15 +26,9 @@ SCREENS.forEach(function (letter) {
                            kept: null, turns: {}, lastShows: null};
 });
 
-// A picture newly chosen on a screen starts at the turn it was last given there. What the
-// screen showed when last looked at says whether it is newly chosen, a scene coming round
-// bringing its own turn with it
-function turnForChosen(letter) {
-  var screen = state.screens[letter];
-  if (screen.shows === screen.lastShows) return;
-  screen.turn = (screen.shows && screen.turns[screen.shows]) || 0;
-  screen.lastShows = screen.shows;
-}
+// A picture newly chosen on a screen starts as chosenAfresh says. What the screen showed when
+// last looked at says whether it is newly chosen, a scene coming round bringing its own turn
+function turnForChosen(letter) { chosenAfresh(state.screens[letter]); }
 state.media = [];
 state.art = {};
 state.fileHandle = null;
@@ -94,7 +88,9 @@ function tabPath(x0, x1, near, far, radius) {
          " L" + x1 + " " + near + " Z";
 }
 
-function panelPreview(screen) {
+// A screen module drawn with the picture it shows as it stands. panelPreview draws the picture
+// composed with its look
+function panelDrawing(screen) {
   var made = MODULE[screen.size] || MODULE["2.8"];
   var turn = Number(screen.turn || 0);
   var quarter = turn % 180 === 90;
@@ -199,7 +195,9 @@ function panelPreview(screen) {
   return holder;
 }
 
-function renderScreensHead() {
+// A box for each screen port. A screen's box has the backlight across its top, what it shows
+// straight under the module, and its look's sections under that
+function renderScreenBoxes() {
   var box = document.getElementById("screensHead");
   box.textContent = "";
   SCREENS.forEach(function (letter) {
@@ -276,92 +274,12 @@ function renderScreensHead() {
 
     body.appendChild(panelPreview(screen));
 
-    var settings = document.createElement("div");
-    settings.className = "settings";
-    var row = document.createElement("div");
-    row.className = "row";
-    var turn = document.createElement("select");
-    [[0, "not turned"], [90, "quarter"], [180, "half"], [270, "three quarters"]]
-      .forEach(function (pair) {
-        var option = document.createElement("option");
-        option.value = pair[0];
-        option.textContent = pair[1];
-        if (Number(screen.turn || 0) === pair[0]) option.selected = true;
-        turn.appendChild(option);
-      });
-    turn.onchange = function () { screen.turn = Number(turn.value); draw(); };
-    row.appendChild(turn);
-    settings.appendChild(row);
-
-    // A moving picture can bounce instead of jumping at the loop, and wait where
-    // it turns; a slideshow also says how fast it walks its folder
-    var media = screen.shows && screen.shows !== "keep" ? mediaNamed(screen.shows) : null;
-    if (media && media.kind !== "image") {
-      var moving = document.createElement("div");
-      moving.className = "row";
-      var back = document.createElement("label");
-      back.className = "opt";
-      back.title = "Play it forwards then backwards, no jump at the loop";
-      var tick = document.createElement("input");
-      tick.type = "checkbox";
-      tick.checked = screen.pingpong;
-      tick.onchange = function () { screen.pingpong = tick.checked; draw(); };
-      back.appendChild(tick);
-      back.appendChild(document.createTextNode("back and forth"));
-      moving.appendChild(back);
-
-      var holdWrap = document.createElement("label");
-      holdWrap.className = "opt";
-      holdWrap.title = "Seconds to wait where it turns around";
-      holdWrap.appendChild(document.createTextNode("hold"));
-      var hold = document.createElement("input");
-      hold.type = "number";
-      hold.min = 0;
-      hold.step = 0.5;
-      hold.value = screen.hold || "";
-      hold.placeholder = "0";
-      hold.dataset.focus = "hold-" + letter;
-      hold.onchange = function () {
-        screen.hold = hold.value && Number(hold.value) > 0 ? hold.value : "";
-        draw();
-      };
-      holdWrap.appendChild(hold);
-      moving.appendChild(holdWrap);
-
-      if (media.kind === "folder") {
-        var fpsWrap = document.createElement("label");
-        fpsWrap.className = "opt";
-        fpsWrap.title = "Pictures shown per second";
-        fpsWrap.appendChild(document.createTextNode("fps"));
-        var fps = document.createElement("input");
-        fps.type = "number";
-        fps.min = 1;
-        fps.value = screen.fps;
-        fps.dataset.focus = "fps-" + letter;
-        fps.onchange = function () {
-          screen.fps = Math.max(1, Number(fps.value) || 5);
-          draw();
-        };
-        fpsWrap.appendChild(fps);
-        moving.appendChild(fpsWrap);
-      }
-      settings.appendChild(moving);
-    }
-
-    var showing = document.createElement("div");
-    showing.className = "showing";
-    showing.innerHTML = screen.shows === "keep"
-      ? "left as the file has it"
-      : screen.shows
-        ? "showing <b>" + screen.shows + "</b>" +
-          (mediaNamed(screen.shows) ? "" : " (not on the drive)")
-        : !state.fileHandle ? "open the FX drive to see its pictures"
-        : state.scenes.length
-          ? "showing nothing here; tap " + letter + " under a picture below"
-          : "tap " + letter + " under a picture below";
-    settings.appendChild(showing);
-
-    body.appendChild(settings);
+    // The look's sections, what it shows above them, and its backlight across the top
+    body.appendChild(lookSections("screen" + letter, screen, screen.size));
+    body.insertBefore(showingLine(screen, letter), body.querySelector(".looksettings"));
+    body.insertBefore(lightRow(screen.look.backlight, function (value) {
+      screen.look.backlight = value;
+    }, "backlight", "How brightly screen " + letter + " is lit, in this scene"), body.firstChild);
 
     // What the file already says for this screen, where the picker did not write it
     // and no picture can stand for it. It is a line of its own under the settings
@@ -376,6 +294,10 @@ function renderScreensHead() {
     box.appendChild(side);
   });
 }
+
+// The pictures on the drive, each with what it is on. The parts below add to them, each after the
+// one before: the hub's positions, the whole pictures, the hub's groups
+var assetSteps = [];
 
 function renderAssets() {
   var box = document.getElementById("assets");
@@ -451,35 +373,23 @@ function renderAssets() {
       {description: "Pictures and drawings the board plays",
        accept: {"image/png": [".gif", ".png", ".jpg", ".jpeg"], "text/x-python": [".py"]}},
       "pictures", /\.(gif|png|jpe?g|py)$/i));
+  assetSteps.forEach(function (step) { step(); });
 }
 
 function mediaNamed(name) {
   return state.media.filter(function (m) { return m.name === name; })[0] || null;
 }
 
+// What a screen's entry says in a scene: its look, or the line kept as the file had it. A hub
+// writes its positions' entries in place of the screens'
 function screenEntry(letter, body) {
+  if (state.hub.on) return null;
   var screen = state.screens[letter];
-  var shows = body.screens[letter].shows;
-  if (!screen.there || !shows) return null;
-  if (shows === "keep") return body.screens[letter].kept;
-  var media = mediaNamed(shows);
-  var kind = media ? media.kind
-           : /\.gif$/i.test(shows) ? "gif"
-           : /\.(png|jpe?g)$/i.test(shows) ? "image" : "folder";
-  var selector = "screen" + letter;
-  if (screen.carried) selector += " " + screen.carried;
-  if (Number(screen.turn)) selector += " rotation=" + screen.turn;
   var playing = body.screens[letter];
-  var extras = "";
-  if (kind !== "image") {
-    if (playing.pingpong) extras += " ping_pong=true";
-    if (playing.hold) extras += " hold=" + playing.hold;
-  }
-  if (kind === "folder")
-    return selector + ": sequence folder=" + quoted(shows) + " fps=" + playing.fps + extras;
-  if (kind === "gif")
-    return selector + ": gif file=" + quoted(shows) + extras;
-  return selector + ": image file=" + quoted(shows);
+  if (!screen.there || !playing.shows) return null;
+  if (playing.shows === "keep") return playing.kept;
+  var look = playing.look || freshLook();
+  return lookEntry("screen" + letter, playing, look, look.backlight, screen.size);
 }
 
 function allBodies() {
@@ -540,7 +450,9 @@ boardLineSteps.before.push(function () {
 
 // ---- drawing the tab -------------------------------------------------------------------------
 
-function renderScreensTab() {
+// The tab's head and its pictures. renderScreensTab puts the board's chips beside what is the
+// board's
+function renderScreensParts() {
   renderScreensHead();
   renderAssets();
   var head = document.getElementById("screensHead");
