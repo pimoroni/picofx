@@ -2019,6 +2019,21 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     if watcher is not None:
         watcher(settings.get("reload") == "auto")
 
+    # Enumeration after a bus reset has deadlines the players' ticks would make the board
+    # miss, so they stop the moment one arrives, from the USB task itself, and the loop
+    # below stands everything aside until the computer has finished
+    reset_seen = False
+
+    def quiet():
+        nonlocal reset_seen
+        reset_seen = True
+        for player in players:
+            player.stop()
+
+    enumerating = getattr(volume, "enumerating", None)
+    if enumerating is not None:
+        volume.on_bus_reset(quiet)
+
     # The drive goes up before any program runs, since a program that works never
     # returns. Otherwise a mistyped name would leave no way back but a reflash, so a
     # named program overrides drive=manual and __play says as much
@@ -2162,8 +2177,11 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
 
             # A transfer costs a running effect most of a tenth of a second in one
             # hitch, so the effects stand aside for it and something of the board's
-            # own travels the outputs instead of the show lurching through
-            if volume.busy():
+            # own travels the outputs instead of the show lurching through. So they do
+            # for enumeration, which a reset seen since the last pass is the start of
+            settling = reset_seen or (enumerating is not None and enumerating())
+            reset_seen = False
+            if volume.busy() or settling:
                 idle_since = None
                 if not paused:
                     for player in players:

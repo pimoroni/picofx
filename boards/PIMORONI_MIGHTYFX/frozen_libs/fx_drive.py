@@ -68,6 +68,11 @@ SETTLE_MS = 1500
 # working on macOS 15.5 and Windows 11 at this value; not tried lower.
 __OFF_BUS_MS = 500
 
+# How long after a bus reset the computer may take to enumerate the board before
+# enumerating() gives up on it, so a host that never configures it cannot keep the
+# effects standing aside for good
+ENUMERATION_LIMIT_MS = 3000
+
 # How often the save watcher compares effects.txt's directory entry while the
 # computer holds the drive. Every kind of save updates the entry, where copying
 # other files onto the drive never does, so this is what "the file was saved"
@@ -84,6 +89,8 @@ __entry_seen = None
 __entry_pending = None
 __watch_at = None
 __watch_buffer = None
+__reset_at = None
+__on_reset = None
 
 
 def __ends(text):
@@ -369,6 +376,43 @@ def busy():
     return __exposed and rp2.is_msc_busy()
 
 
+def enumerating():
+    """
+    Whether the computer is still enumerating the board after a bus reset.
+
+    Enumeration's replies are due within tens of milliseconds, and the board answers
+    them between other scheduled work, so anything busy on the board stands aside
+    until it is over. A reset can come at any time: a rejoin, the computer waking, or
+    a port it reset after an error.
+    """
+    global __reset_at
+    if __reset_at is None:
+        return False
+    if rp2.usb_mounted() or \
+            time.ticks_diff(time.ticks_ms(), __reset_at) >= ENUMERATION_LIMIT_MS:
+        __reset_at = None
+        return False
+    return True
+
+
+def on_bus_reset(callback):
+    """
+    Have callback called on every USB bus reset, with no arguments, or None to stop.
+
+    It runs in the USB task, ahead of enumeration's first reply, so it can quiet the
+    board at once rather than at its caller's next look.
+    """
+    global __on_reset
+    __on_reset = callback
+
+
+def __bus_reset():
+    global __reset_at
+    __reset_at = time.ticks_ms()
+    if __on_reset is not None:
+        __on_reset()
+
+
 def __rejoin_bus():
     """
     Leave the USB bus and return, so the computer enumerates the board afresh.
@@ -386,6 +430,10 @@ def __rejoin_bus():
         # The first activation disconnects and reconnects by itself, with the
         # built-in serial and drive descriptors since nothing else is configured
         usbd.builtin_driver = usbd.BUILTIN_DEFAULT
+    # The built-in descriptors unchanged, configured here for the reset callback, which
+    # sees every bus reset from now on
+    usbd.config(usbd.builtin_driver.desc_dev, usbd.builtin_driver.desc_cfg,
+                desc_strs=None, reset_cb=__bus_reset)
     usbd.active(True)
 
 
