@@ -50,8 +50,9 @@ body:not(:has(.panel[open][data-looks="mono"])) #outGallery{display:none}
 .chip small{font-weight:400;opacity:.85}
 .head{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.2rem}
 .head .gap{flex:1}
-/* The row of settings that belongs to the bar, which the run above it is cut into */
-.head.cutting{margin-top:.9rem}
+/* The row of settings that belongs to the bar, which the run above it is cut into. As tall as
+   the step buttons, so a side without them starts its bar level with one that has them */
+.head.cutting{margin-top:.9rem;min-height:1.75rem}
 .head.cutting .what{font-size:.82rem;color:var(--dim)}
 
 /* Zoomed in, the bar is wider than the room it has and scrolls inside it. The padding
