@@ -15,9 +15,8 @@ if (typeof CATALOGUE === "undefined") {
   });
 }
 
-// The board is declared here and filled in below the look tables, because a config
-// that draws its looks in sets names those tables and they are not built yet
-var BOARD;
+// The board the page is for, which says whether it offers the network looks
+var BOARD = {wireless: false};
 
 var HEADER = "# Written by the FX picker. Everything here can be edited by hand;\n" +
              "# MANUAL.html on this drive explains every line.\n";
@@ -26,10 +25,6 @@ var HEADER = "# Written by the FX picker. Everything here can be edited by hand;
 
 function r2(n) { return Math.round(n * 100) / 100; }
 function lerp(a, b, t) { return r2(a + (b - a) * t); }
-function unlerp(v, a, b) {
-  var t = (v - a) / (b - a);
-  return Math.max(0, Math.min(1, t));
-}
 
 // Each look picks from a palette of its own, so the middle of the slider is the
 // colour its card shows and moving it stays within what suits that look
@@ -367,242 +362,8 @@ var NET_LOOKS = [
   }
 ];
 
-// ---- one set of looks per target, where a board is drawn that way ------------------
-// The other pages hand every look to every target and let a look refuse the ones it
-// cannot serve. This is the other road: a set of looks belonging to one target, named
-// for what that target does, and reaching effects that suit it. Two sets can both hold
-// a Sparkle, so a look is kept by its id and only shown by its name.
-
-// Six separate lamps in a model, which is what these outputs actually drive. The bars
-// are brightnesses, since that is all a mono lamp has, and are drawn as such
-var MONO_LOOKS = [
-  {
-    id: "mono.steady", name: "Steady", mood: "Brightness", plain: true,
-    spans: true, onMono: true,
-    strip: ["#e8e8e8", "#e8e8e8", "#e8e8e8", "#e8e8e8", "#e8e8e8", "#e8e8e8", "#e8e8e8"],
-    entries: function (target, pace, mood) {
-      return [target.selector + ": static brightness=" + lerp(0.05, 1, mood)];
-    }
-  },
-  {
-    id: "mono.candle", name: "Candle", mood: "Guttering to steady",
-    spans: true, onMono: true,
-    strip: ["#4a4a4a", "#8a8a8a", "#d8d8d8", "#f4f4f4", "#c0c0c0", "#7a7a7a", "#3a3a3a"],
-    entries: function (target, pace, mood) {
-      return [target.selector + ": flicker_each brightness=" + lerp(0.5, 1, mood) +
-              " dimness=" + lerp(0.7, 0.35, mood) +
-              " bright_min=" + lerp(0.1, 0.02, pace) + " bright_max=" + lerp(0.4, 0.1, pace) +
-              " dim_min=" + lerp(0.08, 0.02, pace) + " dim_max=" + lerp(0.3, 0.08, pace)];
-    }
-  },
-  {
-    id: "mono.pulse", name: "Pulse", mood: "How soft the turn is",
-    spans: true, onMono: true,
-    strip: ["#1a1a1a", "#4a4a4a", "#9a9a9a", "#f0f0f0", "#9a9a9a", "#4a4a4a", "#1a1a1a"],
-    entries: function (target, pace, mood) {
-      return [target.selector + " ease=" + lerp(0.05, 0.9, mood) +
-              ": pulse speed=" + lerp(0.08, 0.5, pace)];
-    }
-  },
-  {
-    // The same breath, but travelling the run rather than every lamp together. It is
-    // here because it is the pair that tells you whether a drawing of a look is being
-    // read as time or as lamps: side by side, only one of them should move along
-    id: "mono.pulsewave", name: "Pulse wave", mood: "How long the wave is",
-    spans: true, onMono: true,
-    strip: ["#1a1a1a", "#4a4a4a", "#9a9a9a", "#f0f0f0", "#9a9a9a", "#4a4a4a", "#1a1a1a"],
-    entries: function (target, pace, mood) {
-      return [target.selector + ": pulse_wave speed=" + lerp(0.1, 1, pace) +
-              " length=" + span(target.count, mood)];
-    },
-    alone: function (target, pace) {
-      return [target.selector + ": pulse speed=" + lerp(0.1, 1, pace)];
-    }
-  },
-  {
-    id: "mono.beacon", name: "Beacon", mood: "How long it stays lit",
-    spans: true, onMono: true,
-    strip: ["#111111", "#111111", "#f4f4f4", "#f4f4f4", "#111111", "#111111", "#111111"],
-    entries: function (target, pace, mood) {
-      return [target.selector + " fade=" + lerp(0.4, 0.05, pace) +
-              ": blink speed=" + lerp(0.4, 3, pace) + " duty=" + lerp(0.1, 0.6, mood)];
-    }
-  },
-  {
-    id: "mono.chase", name: "Runway", mood: "How far the tail runs",
-    spans: true, onMono: true,
-    strip: ["#f4f4f4", "#c0c0c0", "#8a8a8a", "#5a5a5a", "#333333", "#1a1a1a", "#111111"],
-    entries: function (target, pace, mood) {
-      return [target.selector + " fade=" + lerp(0.1, 0.7, mood) +
-              ": flash_sequence speed=" + lerp(0.3, 2, pace) +
-              " length=" + target.count + " flashes=1 window=0.4"];
-    }
-  },
-  {
-    id: "mono.sparkle", name: "Sparkle", mood: "How dark it gets between",
-    spans: true, onMono: true,
-    strip: ["#f4f4f4", "#2a2a2a", "#d0d0d0", "#1a1a1a", "#f4f4f4", "#4a4a4a", "#b0b0b0"],
-    entries: function (target, pace, mood) {
-      return [target.selector + ": random_each interval=" + lerp(0.25, 0.03, pace) +
-              " brightness_min=" + lerp(0.5, 0, mood) + " brightness_max=1"];
-    }
-  },
-  {
-    // Two banks flashing against each other with a quiet gap between
-    id: "mono.emergency", name: "Emergency", mood: "How hard the flash is",
-    spans: false, onMono: true,
-    strip: ["#f4f4f4", "#111111", "#111111", "#f4f4f4", "#111111", "#f4f4f4", "#111111"],
-    entries: function (target, pace, mood) {
-      var speed = lerp(0.6, 2.5, pace);
-      var playing = target.playing;
-      var half = playing.length === 1 ? 1 : Math.floor(playing.length / 2);
-      var left = playing.slice(0, half);
-      var right = playing.slice(playing.length - half);
-      var gap = playing.slice(half, playing.length - half);
-      var window = lerp(0.3, 0.7, mood);
-      var lines = [target.name + rangify(left) + ": flash speed=" + speed +
-                   " flashes=3 window=" + window];
-      if (right.length && playing.length > 1)
-        lines.push(target.name + rangify(right) + ": flash speed=" + speed +
-                   " flashes=3 window=" + window + " phase=0.5");
-      if (gap.length && playing.length > 1)
-        lines.push(target.name + rangify(gap) + ": none");
-      return lines;
-    },
-    alone: false
-  },
-  {
-    // Five lamps, which is what a crossing is built from. Any beyond them stay dark
-    id: "mono.crossing", name: "Pelican crossing", mood: "How soft the change is",
-    spans: false, onMono: true, wants: 5,
-    strip: ["#f4f4f4", "#c8c8c8", "#8a8a8a", "#f4f4f4", "#8a8a8a", "#111111", "#111111"],
-    entries: function (target, pace, mood) {
-      var scale = lerp(2, 0.4, pace);
-      var lamps = target.playing.slice(0, 5);
-      var rest = target.playing.slice(5);
-      var lines = [target.name + rangify(lamps) + " ease=" + lerp(0.05, 0.6, mood) +
-                   ": pelican_crossing red_interval=" + r2(8 * scale) +
-                   " flashing_interval=" + r2(6 * scale) +
-                   " green_interval=" + r2(20 * scale) +
-                   " amber_interval=" + r2(3 * scale)];
-      if (rest.length) lines.push(target.name + rangify(rest) + ": none");
-      return lines;
-    },
-    alone: false
-  },
-  {
-    // Three lamps, the same way. An effect the merged gallery never reaches, because
-    // on a strip there is nothing for three lamps to mean
-    id: "mono.traffic", name: "Traffic light", mood: "How soft the change is",
-    spans: false, onMono: true, wants: 3,
-    strip: ["#f4f4f4", "#c8c8c8", "#8a8a8a", "#111111", "#111111", "#111111", "#111111"],
-    entries: function (target, pace, mood) {
-      var scale = lerp(2, 0.4, pace);
-      var lamps = target.playing.slice(0, 3);
-      var rest = target.playing.slice(3);
-      var lines = [target.name + rangify(lamps) + " ease=" + lerp(0.05, 0.6, mood) +
-                   ": traffic_light red_interval=" + r2(12 * scale) +
-                   " red_amber_interval=" + r2(2 * scale) +
-                   " green_interval=" + r2(12 * scale) +
-                   " amber_interval=" + r2(3 * scale)];
-      if (rest.length) lines.push(target.name + rangify(rest) + ": none");
-      return lines;
-    },
-    alone: false
-  },
-  {
-    id: "mono.counter", name: "Counter", mood: "How far it counts",
-    spans: true, onMono: true,
-    strip: ["#f4f4f4", "#111111", "#f4f4f4", "#f4f4f4", "#111111", "#f4f4f4", "#111111"],
-    entries: function (target, pace, mood) {
-      return [target.selector + ": binary_counter interval=" + lerp(1, 0.08, pace) +
-              " count=" + Math.round(lerp(8, 64, mood))];
-    },
-    alone: false
-  }
-];
-
-// One lamp that can be any colour, which is a different instrument entirely. These
-// reach the colour effects, which on six mono lamps mean nothing at all
-var RGB_LOOKS = [
-  {
-    id: "rgb.solid", name: "Solid", mood: "Brightness", solid: true,
-    spans: true, onMono: false,
-    strip: ["#d94a3d", "#e0a03a", "#3fa672", "#3a7fd9", "#8a4ad0", "#d94a9e", "#e8e2d6"],
-    entries: function (target, pace, mood, colour) {
-      return [target.selector + " colour=" + (colour || "ffffff").replace("#", "") +
-              ": static brightness=" + lerp(0.05, 1, mood)];
-    }
-  },
-  {
-    id: "rgb.breathe", name: "Breathe", mood: "Colour", spans: true, onMono: false,
-    strip: ["#2b7f8f", "#37a0b4", "#43c1d9", "#56d8f0", "#43c1d9", "#37a0b4", "#2b7f8f"],
-    entries: function (target, pace, mood) {
-      return [target.selector + " colour=" + tone(BREATHE_TONES, mood) +
-              " ease=" + lerp(0.8, 0.2, pace) + ": pulse speed=" + lerp(0.08, 0.5, pace)];
-    }
-  },
-  {
-    id: "rgb.rainbow", name: "Rainbow", mood: "How deep the colour is",
-    spans: true, onMono: false,
-    strip: ["#e33", "#e73", "#ea3", "#3a5", "#36c", "#63c", "#a3c"],
-    entries: function (target, pace, mood) {
-      return [target.selector + ": rainbow speed=" + lerp(0.05, 0.8, pace) +
-              " sat=" + lerp(0.3, 1, mood)];
-    }
-  },
-  {
-    // hue_step: a colour held, then the next one. Nothing on a strip wants this, and
-    // one lamp changing colour on a beat wants nothing else
-    id: "rgb.steps", name: "Colour steps", mood: "How many colours",
-    spans: true, onMono: false,
-    strip: ["#e33", "#e33", "#3a5", "#3a5", "#36c", "#36c", "#a3c"],
-    entries: function (target, pace, mood) {
-      return [target.selector + ": hue_step interval=" + lerp(2, 0.15, pace) +
-              " steps=" + Math.round(lerp(3, 12, mood)) + " sat=1 val=1"];
-    }
-  },
-  {
-    id: "rgb.blink", name: "Blink", mood: "How long it stays lit",
-    spans: true, onMono: false,
-    strip: ["#111111", "#111111", "#ffd24a", "#ffd24a", "#111111", "#111111", "#111111"],
-    entries: function (target, pace, mood, colour) {
-      return [target.selector + ": rgb_blink colour=" +
-              (colour || "#ffd24a").replace("#", "") +
-              " speed=" + lerp(0.4, 3, pace) + " duty=" + lerp(0.1, 0.6, mood)];
-    },
-    solid: true
-  },
-  {
-    id: "rgb.candle", name: "Candle", mood: "Guttering to steady",
-    spans: true, onMono: false,
-    strip: ["#812200", "#c43a00", "#ff5a00", "#ff8c1a", "#ff5a00", "#c43a00", "#812200"],
-    entries: function (target, pace, mood) {
-      return [target.selector + " colour=ff5a00: flicker_each brightness=" + lerp(0.5, 1, mood) +
-              " dimness=" + lerp(0.7, 0.35, mood) +
-              " bright_min=" + lerp(0.1, 0.02, pace) + " bright_max=" + lerp(0.4, 0.1, pace) +
-              " dim_min=" + lerp(0.08, 0.02, pace) + " dim_max=" + lerp(0.3, 0.08, pace)];
-    }
-  },
-  {
-    id: "rgb.sparkle", name: "Sparkle", mood: "Colour", spans: true, onMono: false,
-    strip: ["#cfefff", "#ffffff", "#ffe9c0", "#ffffff", "#dff3ff", "#ffffff", "#fff3d8"],
-    entries: function (target, pace, mood) {
-      return [target.selector + " colour=" + tone(SPARKLE_TONES, mood) +
-              ": random_each interval=" + lerp(0.25, 0.03, pace) +
-              " brightness_min=0 brightness_max=1"];
-    }
-  }
-];
-
-// The looks this board offers, which is either the one set or the sets its galleries
-// name. A look is kept by its id, so two sets may both hold a Sparkle
+// The looks this board offers
 function everyLook() {
-  if (BOARD.galleries) {
-    return BOARD.galleries.reduce(function (all, gallery) {
-      return all.concat(gallery.looks);
-    }, []);
-  }
   return LOOKS.concat(BOARD.wireless ? NET_LOOKS : []);
 }
 
@@ -612,24 +373,6 @@ function lookNamed(id) {
 
 // What a look is kept as, which is its own id where it has one and its name otherwise
 function keyOf(look) { return look.id || look.name; }
-
-// Every look table is built, so the board can now name the ones it wants
-BOARD = {
-  key: "review", name: "Mighty FX", wireless: false,
-  outputs: null, singles: [], strips: [], screen: null, sound: false,
-  advance: [{id: "seconds", label: "after a while", short: "", writes: "",
-             proposed: false}]
-};
-
-// A look's colour at one place in a run: the ends of the run are the ends of the
-// look, so however many lights are playing, the first and the last are the palette's
-// own first and last rather than stopping short of it
-function spreadColour(look, at, many) {
-  if (!look) return "#e4e0d9";
-  if (many < 2) return look.strip[0];
-  var last = look.strip.length - 1;
-  return look.strip[Math.round(at * last / (many - 1))];
-}
 
 function luminance(colour) {
   var hex = colour.replace("#", "");
@@ -650,21 +393,6 @@ function asMono(colour, peak) {
   var lit = Math.min(1, luminance(colour) / (peak || 1));
   return "rgb(" + Math.round(255 * lit) + "," + Math.round(226 * lit) + "," +
          Math.round(178 * lit) + ")";
-}
-
-function dimmed(colour, level) {
-  var hex = colour.replace("#", "");
-  var parts = [hex.slice(0, 2), hex.slice(2, 4), hex.slice(4, 6)].map(function (pair) {
-    return Math.round(parseInt(pair, 16) * level);
-  });
-  return "rgb(" + parts.join(",") + ")";
-}
-
-// What one light in a run shows. Every look but one spreads its own palette along the
-// run; the solid one has a colour of its own choosing and holds it all the way
-function shadeAt(look, held, at, many) {
-  if (look && look.solid && held) return dimmed(held.colour, lerp(0.05, 1, held.mood));
-  return spreadColour(look, at, many);
 }
 
 // Whether a look has anything to give a target: a colour look cannot land on a mono

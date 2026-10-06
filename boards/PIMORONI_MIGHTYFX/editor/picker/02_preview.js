@@ -329,48 +329,7 @@ function livePlay(look, holder, t, slot, count, sim) {
 // ---- painting them, forty times a second ---------------------------------------------
 
 var FRAME = 1 / 40;
-var running = [];      // every lamp on the page that has an effect to show
-var sims = {};         // the walk each lamp keeps, so a redraw does not restart it
 var beat = 0;
-
-// A lamp is registered rather than painted where it is built, so one loop repaints the
-// page and a rebuild does not leave a stopped lamp behind
-function liveLamp(face, look, holder, slot, count, key) {
-  if (!look || !livePlay(look, holder, 0, slot, count, {})) return false;
-  running.push({face: face, look: look, holder: holder, slot: slot, count: count,
-                key: key});
-  return true;
-}
-
-function paintLive(face, lit, round) {
-  var hex = lit.ink.replace("#", "");
-  var r = parseInt(hex.slice(0, 2), 16), g = parseInt(hex.slice(2, 4), 16),
-      b = parseInt(hex.slice(4, 6), 16);
-  var level = Math.max(0, Math.min(1, lit.level));
-  // An unlit LED is not black: it is its own casing, barely there
-  var mix = 0.12 + level * 0.88;
-  face.style.background = "rgb(" + Math.round(r * mix) + "," + Math.round(g * mix) +
-                          "," + Math.round(b * mix) + ")";
-  face.style.boxShadow = level > 0.04
-    ? "inset 0 0 0 1px rgba(0,0,0,.2), 0 0 " + (3 + level * 9).toFixed(1) + "px " +
-      (level * 2).toFixed(1) + "px rgba(" + r + "," + g + "," + b + "," +
-      (level * 0.5).toFixed(2) + ")"
-    : "inset 0 0 0 1px rgba(0,0,0,.22)";
-}
-
-function paintRunning() {
-  running.forEach(function (one) {
-    var sim = sims[one.key] || (sims[one.key] = {});
-    var lit = livePlay(one.look, one.holder, beat, one.slot, one.count, sim);
-    if (lit) paintLive(one.face, lit);
-  });
-}
 
 var HOLDING_STILL = window.matchMedia &&
                     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-function runLamps() {
-  beat += FRAME;
-  paintRunning();
-  window.setTimeout(runLamps, FRAME * 1000);
-}

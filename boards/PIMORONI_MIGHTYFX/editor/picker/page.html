@@ -33,11 +33,6 @@ main{max-width:60rem;margin:1.4rem auto;padding:0 1.4rem}
 .panel[open]>summary::before{transform:rotate(-135deg) translate(-2px,-2px)}
 .panel>summary:hover::before{border-color:var(--accent)}
 .panel[open]>summary{margin-bottom:.7rem}
-/* A set of looks is of no use with nothing left to drop it on, so it goes away once
-   every panel that can take it is shut. This board has one panel per set; a board with
-   several colour outputs has several, and the set stays while any one of them is open */
-body:not(:has(.panel[open][data-looks="colour"])) #stripGallery{display:none}
-body:not(:has(.panel[open][data-looks="mono"])) #outGallery{display:none}
 .says{font-weight:400;font-size:.85rem;color:var(--dim)}
 
 .chip{display:inline-flex;align-items:center;gap:.45rem;padding:.3rem .55rem;
@@ -178,13 +173,10 @@ button.round svg{display:block}
 .chosen{margin-top:.9rem;border:1px solid var(--line);border-radius:10px;padding:.6rem .8rem}
 .chosen .who{font-size:.82rem;color:var(--dim);margin-bottom:.45rem}
 .chosen .who b{color:var(--ink);font-size:.92rem}
-/* The gallery, as the hero pages draw it: above everything, one set per run, since the
-   mono outputs and the colour strip do not play the same looks. A card shows what a look
-   actually does, and is carried onto whichever stretch is to play it */
+/* The gallery. A card shows what a look actually does, and is tapped onto the stretch being
+   worked on */
 .gallery-head{display:flex;align-items:baseline;gap:.6rem;margin:1.5rem 0 .5rem;
  font:600 1.02rem system-ui,sans-serif}
-#stripGallery .gallery-head:first-child{margin-top:.2rem}
-#outGallery{margin-top:1.9rem}
 .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(9.4rem,1fr));
  gap:.7rem;margin:0 0 .3rem}
 .card{border:2px solid var(--line);border-radius:11px;overflow:hidden;cursor:grab;
@@ -266,33 +258,8 @@ footer{max-width:60rem;margin:0 auto 2rem;padding:0 1.4rem;font-size:.8rem;color
 /* The arrow an output crosses on takes no room at all: it is over the output, and only
    while that output is being pointed at */
 
-/* The wiring bar: the same bar drawn quieter, since it says what is plugged in rather
-   than what is playing. Shorter, thinner and greyer, so the bar that matters stays the
-   one below it */
-.wiring{margin-top:.35rem}
-.wiring .sec{border-width:1px;background:transparent}
-.wiring .sec .lit{height:.55rem;border-radius:5px 5px 0 0;background:#ece7de}
-.wiring .sec .lit.out{background:#ece1fa}
-.wiring .sec .cuts{height:.55rem}
-.wiring .sec .says{font-size:.64rem;font-weight:400;color:var(--dim);padding:0 .2rem}
-.wiring .sec .says em{font-style:normal;color:var(--dim);opacity:.7}
-.wiring .edge{width:.7rem}
-.wiring .drop{transform:scale(.8)}
-.wiring-head{display:flex;align-items:baseline;gap:.5rem;margin:.9rem 0 .1rem;
- font-size:.82rem;color:var(--dim)}
-
-/* Breaking an output out is not the same act as cutting between two lamps, so it is not
-   drawn the same. The mark that puts one back is the same colour, dotted, since it is
-   the same act undone */
-.bar .cut.inside::before{background:#7c3aed}
-.bar .cut.inside{opacity:.85}
-.bar .cut.mend::before{background:none;border-left:2px dotted #7c3aed;width:0}
 .legend{display:flex;gap:1.1rem;flex-wrap:wrap;margin:.5rem 0 0;font-size:.76rem;
  color:var(--dim)}
-.legend span{display:flex;align-items:center;gap:.35rem}
-.legend i{display:block;width:2px;height:.9rem;background:var(--dim)}
-.legend i.inside{background:#7c3aed}
-.legend i.mend{background:none;border-left:2px dotted #7c3aed;width:0}
 
 /* One set of looks, drawn for the kind being worked on. A tab per kind, and a kind the
    board has none of is offered but not taken: it says what breaking an output out would
@@ -547,12 +514,6 @@ th{font-weight:600;color:var(--dim);font-size:.76rem}
 .scenebody.framed{margin-left:-1rem;margin-right:-1rem}
 .tabbar{margin-left:-1rem;margin-right:-1rem}
 .s-scene{color:#7b3fb8;font-weight:600}
-
-/* A switch between the ways a page can be laid out */
-.trying{display:flex;align-items:center;gap:.5rem;font-size:.78rem;color:var(--dim);
- margin:1.2rem 0 .2rem}
-.trying button{font-size:.76rem;padding:.24rem .55rem;border-radius:8px}
-.trying button.on{border-color:var(--accent);color:var(--accent);font-weight:600}
 
 /* Which way a stretch runs, at the end of the line naming it, greyed where its look is the
    same from either end */
@@ -863,29 +824,12 @@ select{font:inherit;font-size:.85rem;padding:.25rem .3rem;border:1px solid var(-
 
 /* A board fact as it reads in place */
 .facts{margin:.1rem 0 .7rem}
-.fact{display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;color:var(--dim)}
-.fact .chip{margin:0}
-.fact select{font:inherit;font-size:.8rem;padding:.22rem .35rem;border-radius:7px;
- border:1px solid var(--line);background:var(--bg);color:inherit}
 
-/* The mark: a dashed outline in the board's colour and a small board, the same on every
-   fact, so one is learnt and the rest are recognised */
-.boardfact{outline:1.5px dashed var(--board);outline-offset:3px;border-radius:7px}
-.fact.boardfact{padding:.1rem .35rem}
+/* The board's chip, the same on every fact, so one is learnt and the rest are recognised */
 .boardicon{color:var(--board);flex:0 0 auto}
 /* The chip drawn larger than the room it takes, so nothing it sits in grows */
 .boardicon{width:16px;height:16px;margin:-1.5px}
-.cross.boardfact{outline-offset:1px;color:var(--board)}
-.marknote{display:flex;align-items:center;gap:.4rem;font-size:.76rem;color:var(--dim);
- margin:0 0 .7rem}
-.marknote:empty{display:none}
 
-/* A panel's own setup band */
-.setupband{display:block;background:#eef2f7;border:1px dashed var(--board);
- border-radius:10px;padding:.5rem .7rem .6rem}
-.setupband .bandsays{display:block;font-size:.72rem;font-weight:600;color:var(--board);
- margin-bottom:.35rem}
-.setupslot{margin-left:.6rem}
 /* Drawn as the board boxes it opens are, their chip and their shape: outlined to set up,
    filled while setting up */
 .setupbutton{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .6rem;
@@ -1007,8 +951,7 @@ header .boardchip .boardicon{color:currentColor}
 /* An effects page or a program page. The program page takes the effects view's place whole */
 .programview{display:none}
 body.programpage .programview{display:block}
-body.programpage #tabs,body.programpage #sceneBody,body.programpage #setupWay,
-body.programpage #programNote{display:none}
+body.programpage #tabs,body.programpage #sceneBody,body.programpage #programNote{display:none}
 canvas.progthumb{display:block;image-rendering:pixelated;background:#222}
 /* The chosen program, or the space it will take, the same size either way so choosing one moves
    nothing on the page. What the board runs is said along its top */
@@ -1065,17 +1008,11 @@ canvas.progthumb{display:block;image-rendering:pixelated;background:#222}
 .featureclear{border:0;background:none;color:var(--board);font:inherit;font-size:.78rem;
  text-decoration:underline;cursor:pointer}
 .prognone{font-size:.86rem;color:var(--dim)}
-/* A bar of page ways floating at the window's foot, so it moves nothing */
-.trying.floating{position:fixed;left:1rem;bottom:1rem;z-index:20;margin:0;padding:.4rem .6rem;
- background:#fff;border:1px solid var(--line);border-radius:10px;
- box-shadow:0 6px 18px rgba(0,0,0,.12)}
-#galleryOffer .sheetoffer{margin:.9rem 0 .2rem}
 .effectsface{display:flex;align-items:center;justify-content:center;background:#1c1f22;
  padding:0 .45rem;border-radius:8px}
 .effectsface .accswatch{width:100%;height:.8rem;margin:0}
 
-/* Two covers: what runs, each large and showing what it would run */
-.pageswitch.covers{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:.3rem 0 1rem}
+/* Two covers: what runs, each showing what it would run */
 .cover{display:flex;align-items:center;gap:.9rem;padding:.55rem .8rem;border:2px solid var(--line);
  border-radius:14px;background:#fff;text-align:left;cursor:pointer;font:inherit;color:var(--ink);
  opacity:.7}
@@ -1102,18 +1039,7 @@ body[data-pageway^=head] header h1{margin-right:0}
  body[data-pageway^=head] header h1{margin-right:auto}
 }
 
-/* One control: the two joined in a single outline, the chosen half filled */
-.headswitch.headseg{gap:0;border:1.5px solid var(--line);border-radius:11px;overflow:hidden;
- background:#fff}
-.headswitch.headseg .cover{border:0;border-radius:0;opacity:1;background:#fff;color:var(--dim)}
-.headswitch.headseg .cover+.cover{border-left:1.5px solid var(--line)}
-.headswitch.headseg .cover.on{background:var(--accent);color:#fff}
-.headswitch.headseg .cover[data-page=program].on{background:var(--board)}
-.headswitch.headseg .cover.on small{color:rgba(255,255,255,.8)}
-
 /* Tabs off the header's foot: each hangs from its lower edge, the chosen one open onto the page */
-body[data-pageway=headtabs] header{padding-bottom:0;align-items:flex-end}
-body[data-pageway=headtabs] header>*:not(.headswitch){align-self:center}
 .headswitch.headtabs{align-self:flex-end;margin-bottom:-1px;gap:.25rem}
 .headswitch.headtabs .cover{border:1.5px solid var(--line);border-bottom:0;
  border-radius:10px 10px 0 0;background:#ece8e1;opacity:1;color:var(--dim);
@@ -1135,7 +1061,6 @@ body[data-pageway] #tabs.tabbar.wrapped .tab.on{border-color:var(--line);
             var(--panel)}
 .headswitch.headtabs .cover[data-page=program].on b{color:var(--board)}
 @media (max-width:1180px){
- body[data-pageway=headtabs] header{padding-bottom:0}
  .headswitch.headtabs{margin-top:.5rem}
 }
 
@@ -1192,15 +1117,6 @@ body.scenesintab #looks>.shelf{margin-top:0}
 .headswitch .cover .plus{margin-left:auto;flex:none;opacity:1}
 .headswitch .cover:not(.on) .plus{display:none}
 
-/* A row of its own: always under the header's first line, each half its width, with room to say
-   what each holds */
-body[data-pageway=headrow] header{flex-wrap:wrap}
-.headswitch.headrow{order:10;flex:1 0 100%;margin:.1rem 0 0}
-body[data-pageway=headrow] header h1{margin-right:auto}
-.headswitch.headrow .cover{flex:1;padding:.25rem .7rem .25rem .3rem}
-.headswitch.headrow .cover .coverface{width:2.1rem;height:1.55rem}
-.headswitch.headrow .cover small{display:inline;margin-left:.5rem;max-width:none}
-.headswitch.headrow .cover b{display:inline}
 .headswitch .cover{gap:.5rem;padding:.25rem .6rem .25rem .3rem;border-radius:10px;
  box-shadow:none}
 .headswitch .cover .coverface{width:2.6rem;height:1.95rem;border-radius:5px}
@@ -1211,49 +1127,8 @@ body[data-pageway=headrow] header h1{margin-right:auto}
 .headswitch .effectsface{padding:0 .25rem}
 .headswitch .effectsface .accswatch{height:.5rem}
 
-/* Folder tabs: two tabs joined to the page each opens */
-.pageswitch.binder{display:flex;gap:.35rem;margin-top:.3rem;border-bottom:2px solid var(--line)}
-.foldertab{display:flex;align-items:center;gap:.55rem;padding:.4rem 1.1rem .4rem .45rem;
- margin-bottom:-2px;border:2px solid var(--line);border-bottom-color:var(--line);
- border-radius:12px 12px 0 0;background:#ebe7e0;color:var(--dim);font:700 .98rem system-ui,
- sans-serif;cursor:pointer}
-.foldertab.on{background:var(--bg);color:var(--ink);border-bottom-color:var(--bg)}
-.foldertab[data-page=program].on{color:var(--board)}
-.foldertab .tabface{width:2.6rem;height:1.95rem;border-radius:5px}
-/* The folder's page runs out past its edges by its own padding, so what is in it keeps the
-   width it has on the other pages */
-body[data-pageway=binder] #sceneBody,body[data-pageway=binder].programpage .programview{
- border:2px solid var(--line);border-top:0;border-radius:0 0 14px 14px;padding:.6rem 1rem 1rem;
- margin-left:-1rem;margin-right:-1rem}
-body[data-pageway=binder] #tabs{border-left:2px solid var(--line);border-right:2px solid var(--line);
- padding:0 .8rem}
-body[data-pageway=binder] .pageswitch.binder{margin-left:-1rem;margin-right:-1rem;
- padding-left:.4rem}
-
-/* A sheet over: an offer above the scenes, then a sheet in the board's colour in their place */
-.sheetoffer{display:flex;align-items:center;gap:.9rem;width:100%;padding:.5rem .7rem;
- margin:.3rem 0 .9rem;border:1.5px dashed var(--board);border-radius:12px;background:#f3f6fa;
- text-align:left;cursor:pointer;font:inherit;color:var(--ink)}
-.sheetoffer b{display:block;color:var(--board)}
-.sheetoffer small{display:block;font-size:.8rem;color:var(--dim)}
-.filmstrip{display:flex;gap:3px;flex:none}
-.filmstrip canvas{width:3.2rem;height:2.4rem;border-radius:3px}
-.sheethead{display:flex;align-items:center;gap:1rem;margin-top:.3rem;padding:.5rem .8rem;
- background:var(--board);color:#fff;border-radius:14px 14px 0 0}
-.sheetback{background:#fff;color:var(--board);border:0;border-radius:8px;padding:.3rem .7rem;
- font:600 .85rem system-ui,sans-serif;cursor:pointer}
-body[data-pageway=sheet].programpage .programview{border:2px solid var(--board);border-top:0;
- border-radius:0 0 14px 14px;padding:.6rem 1rem 1rem;background:#fff;
- box-shadow:0 8px 24px rgba(40,60,80,.15)}
-
-/* The page's setup mode: the header turns it on, a banner says what it means, and the
-   scenes and looks stand back while it is on */
+/* The header's spacer, which holds the drive buttons at the right */
 .setuphead{margin-left:auto}
-.setupbanner{background:#eef2f7;border:1px solid var(--board);border-radius:10px;
- padding:.6rem .9rem;margin:.6rem 0;font-size:.85rem;color:var(--ink)}
-body.setup #tabs,body.setup #sceneSettings,body.setup #looks,
-body.setup [id$=Cut],body.setup [id$=Bar],body.setup [id$=Tools],
-body.setup [id$=Chosen]{opacity:.35;pointer-events:none}
 
 /* A coloured box is a board setting, each section's in its own colour. The chip icon sits
    inside the box, never around it */
@@ -1683,9 +1558,6 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
 /* Setting up is the last thing on the tabs' row, at its far end */
 .ledtabs .gap{flex:1}
 .ledtabs .setupbutton{align-self:center}
-
-/* Which way the page is set up */
-.setupway{font-size:.78rem;color:var(--dim);margin:.2rem 0 .6rem}
 </style>
 </head>
 <body>
@@ -1699,18 +1571,15 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
 </header>
 <main>
 
-<p class="setupway" id="setupWay"></p>
-<div class="setupbanner" id="setupBanner" hidden></div>
 <div id="banner"></div>
 <div class="tabbar" id="tabs"></div>
 <div class="scenebody" id="sceneBody">
  <div id="sceneSettings"></div>
 
 
- <div class="marknote" id="markNote"></div>
  <div id="looks"></div>
 
- <details class="panel" id="outPanel" data-looks="both" open>
+ <details class="panel" id="outPanel" open>
   <summary>The outputs<span class="says">seven of them, each one light or three</span></summary>
   <div class="facts" id="outFacts"></div>
   <div class="head" id="outHead"></div>
@@ -1728,7 +1597,6 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
     <div id="monoBar"></div>
    </div>
   </div>
-  <div id="outWiring"></div>
   <div id="outTools"></div>
   <div id="outChosen"></div>
   <div class="legend" id="outLegend"></div>
@@ -1764,12 +1632,6 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
  <div class="facts" id="screenbFacts"></div>
 </details>
 
- <details class="panel" id="monoPanel" data-looks="mono" open>
-  <summary>The mono lights<span class="says">what the broken-out outputs became</span></summary>
-  <div id="monoHolds"></div>
-  <div id="monoTools"></div>
-  <div id="monoChosen"></div>
- </details>
 </div>
 
 <details open>

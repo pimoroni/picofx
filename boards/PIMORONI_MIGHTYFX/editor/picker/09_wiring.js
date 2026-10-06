@@ -38,7 +38,7 @@ function wiredSide() {
   return {wiring: wired, order: order.map(function (place) { return byKey[lampKey(place)]; })};
 }
 
-// The lamps on show, which a page drawing its own row of them while set up may change
+// The lamps on show
 function lampsShown() {
   return Array.prototype.slice.call(document.querySelectorAll(
     "#outRun .lamp[data-key], #monoRun .lamp[data-key]"));
@@ -47,9 +47,6 @@ function lampsShown() {
 function lampNode(key) {
   return lampsShown().filter(function (node) { return node.dataset.key === key; })[0] || null;
 }
-
-// What a page draws before the wiring is laid over it, which here is nothing
-function beforeWiring() {}
 
 // Every lamp can be found by what it is, which is what the lines and the slide go by
 var oneWiredTakesPlace = takesPlace;
@@ -260,7 +257,6 @@ var oneWiredDraw = draw;
 
 draw = function () {
   oneWiredDraw();
-  beforeWiring();
   renderConnectors();
   playSlide();
 };

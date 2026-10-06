@@ -128,27 +128,9 @@ function soundLine(body) {
   return body.soundKept;
 }
 
-
-// ---- sounds to choose from ---------------------------------------------------------------------
-// Made up for a page with no drive, the drive files part reading each wav for its length and
-// its shape in their place
-
 // How many points a sound's outline is drawn from, enough for it to look smooth at the
 // pictures' size
 var SOUND_SAMPLES = 96;
-
-function madeSound(name, seconds, shape) {
-  var bars = [];
-  for (var i = 0; i < SOUND_SAMPLES; i++) {
-    bars.push(Math.max(0.08, Math.min(1, shape(i / (SOUND_SAMPLES - 1)))));
-  }
-  state.sounds.push(name);
-  state.soundInfo[name] = {seconds: seconds, bars: bars};
-}
-
-madeSound("rain.wav", 42, function (at) { return 0.45 + 0.2 * Math.sin(at * 37); });
-madeSound("chimes.wav", 6, function (at) { return Math.exp(-at * 3) * (0.7 + 0.3 * Math.sin(at * 60)); });
-madeSound("engine.wav", 18, function (at) { return 0.3 + 0.6 * at; });
 
 // ---- each scene keeps its own sound -------------------------------------------------------------
 

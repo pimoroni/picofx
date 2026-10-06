@@ -7,7 +7,7 @@
 var LED_PANELS = ["outPanel", "striplPanel", "striprPanel"];
 
 function runsOfPanel(panel) {
-  if (panel === "outPanel") return splitRuns() ? [outs, mono] : [outs];
+  if (panel === "outPanel") return [outs, mono];
   return runs.filter(function (run) { return run.strip && run.id + "Panel" === panel; });
 }
 

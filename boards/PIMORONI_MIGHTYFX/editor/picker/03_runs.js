@@ -4,7 +4,6 @@
 // a mix. Everything below is the section model over a run of lamps: the only new idea is
 // that the run's own length is something the wiring decides.
 
-var MODE = "sided";
 var OUTS = 7;
 var CHANNELS = ["r", "g", "b"];
 var CHANNEL_WORDS = {r: "red", g: "green", b: "blue"};
@@ -22,21 +21,15 @@ var kinOf = {};
 var wiring = [];
 for (var n = 0; n < OUTS; n++) wiring.push({broken: false});
 
-// A mix, so no way is judged on the easy case
-wiring[2] = {broken: true};
-wiring[4] = {broken: true};
-
 function Run(name, mono) {
   return {name: name, mono: mono, lamps: [], sections: [], picked: 0,
           was: [], undone: []};
 }
 
-// Some ways keep every output in one run; the others give each kind a run of its own
-function splitRuns() { return MODE === "tworuns" || MODE === "sided"; }
-
+// The colour lamps and the mono ones are each a run of their own
 var outs = Run("out", false);
 var mono = Run("mono", true);
-var runs = splitRuns() ? [outs, mono] : [outs];
+var runs = [outs, mono];
 
 // The one stretch being worked on, which is the run it is in and its place in that run.
 // One set of looks can only be for one stretch, so the other run shows no mark at all
@@ -74,7 +67,7 @@ function lampsFor(run) {
   order.forEach(function (place) {
     var colour = place.channel === null;
     if (colour !== !wiring[place.out].broken) return;
-    if (splitRuns() && colour === run.mono) return;
+    if (colour === run.mono) return;
     found.push({out: place.out, colour: colour, channel: place.channel});
   });
   return found;
@@ -452,9 +445,6 @@ function rejoin(out) {
   draw();
 }
 
-// Which run a lamp of this output would be in, so an arrow can say where it is going
-function otherSide(run) { return run === outs ? mono : outs; }
-
 // ---- what the file says ------------------------------------------------------------------
 
 function targetFor(run, section) {
@@ -546,13 +536,12 @@ function inkAt(lit) {
          Math.round(parseInt(hex.slice(4, 6), 16) * mix) + ")";
 }
 
-// ---- the gallery, carried onto a stretch --------------------------------------------------
+// ---- the gallery, played on the chosen stretch --------------------------------------------
 
 var CARD_LIGHTS = 12;
 var MIDDLING = {pace: 0.5, mood: 0.5, colour: "#ff8c1a"};
 var cardFaces = [];
 var cardWalks = {};
-var carrying_look = null;
 var carrying_lamp = null;
 
 // The cut being dragged, and whether the pointer moved far enough for the release to be
@@ -587,10 +576,6 @@ document.addEventListener("mouseup", function () {
   window.setTimeout(function () { dragged = false; }, 0);
 });
 
-function takesLook(run) {
-  return carrying_look !== null && (!splitRuns() || carrying_look.mono === run.mono);
-}
-
 function landLook(run, at, name) {
   var section = run.sections[at];
   if (!section) return;
@@ -624,36 +609,20 @@ function lookCard(isMono, look, on) {
   name.textContent = look.name || "Nothing";
   card.appendChild(name);
 
-  card.draggable = carryLooks;
-  card.title = look.name
-    ? look.name + (carryLooks ? ": drag it onto a stretch of the bar or the run"
-                              : ": play it on the stretch being worked on")
-    : "leave a stretch dark";
+  card.title = look.name ? look.name + ": play it on the stretch being worked on"
+                         : "leave a stretch dark";
   card.onclick = function () {
     var run = galleryRun(isMono);
     landLook(run, stretchFor(run, isMono), look.name);
   };
-  card.ondragstart = function (event) {
-    carrying_look = {mono: isMono, look: look.name};
-    event.dataTransfer.effectAllowed = "copy";
-    event.dataTransfer.setData("text/plain", look.name || "Nothing");
-    document.body.classList.add("carrying");
-  };
-  card.ondragend = function () {
-    carrying_look = null;
-    document.body.classList.remove("carrying");
-    draw();
-  };
   return card;
 }
-
-function mono2run() { return splitRuns() ? mono : outs; }
 
 // The run the cards are for. A run of another kind, a strip say, is its own kind and is
 // worked on while it is the one picked; otherwise the cards follow the colour or mono side
 function galleryRun(isMono) {
   if (active && active.strip) return active;
-  return isMono ? mono2run() : outs;
+  return isMono ? mono : outs;
 }
 
 // Whether a stretch is mono, which is what the set of looks follows
@@ -682,34 +651,8 @@ function stretchFor(run, isMono) {
   return run.picked;
 }
 
-// Where the two tabs go, which a page built on this one may set. "head" puts them over
-// the cards with the set named above them; "foot" under, the cards being met first and
-// saying plainly enough which kind they are, so the sentence goes and the tabs carry it
-// as their title; "needed" is foot, shown only once the board has both kinds; "none"
-// leaves the set to follow whatever stretch was last picked
-var tabsWhere = "head";
-
-// Whether a card is carried onto a stretch as well as tapped, which a page built on this
-// one may turn off. With it off nothing is ever picked up, so every place that would take
-// a card refuses of its own accord and the gallery is a shelf of what the picked stretch
-// can play
-var carryLooks = true;
-
-function tabsAtFoot() { return tabsWhere !== "head"; }
-
-function tabsWanted() {
-  if (tabsWhere === "none") return false;
-  if (tabsWhere !== "needed") return true;
-  return haveKind(false) && haveKind(true);
-}
-
-var KINDS = [
-  {mono: false, tab: "Colour outputs",
-   says: "an output with no adapter on it is one light, any colour"},
-  {mono: true, tab: "Mono lights",
-   says: "brightness is all a broken-out channel has, so the cards show it"}
-];
-
+// The cards follow whatever stretch was last picked, so the gallery is a shelf of what that
+// stretch can play
 function renderGalleries() {
   // A kind the board has none of cannot be worked on, so the set goes back to the one it
   // has. Without this the cards would be for lights that are not there
@@ -719,47 +662,7 @@ function renderGalleries() {
   box.textContent = "";
 
   var tabs = document.createElement("div");
-  tabs.className = "tabs";
-  var of = document.createElement("span");
-  of.className = "of";
-  of.textContent = "Looks for";
-  tabs.appendChild(of);
-  function tabFor(kind) {
-    var tab = document.createElement("button");
-    tab.textContent = kind.tab;
-    tab.className = showing === kind.mono ? "on" : "";
-    tab.disabled = !haveKind(kind.mono);
-    tab.title = tab.disabled
-      ? "this board has none yet: break an output out, or put one back"
-      : (tabsAtFoot() ? kind.says : "show the looks these lights can play");
-    tab.onclick = function () {
-      // The set follows the stretch, so changing the set moves the stretch to match:
-      // leaving the mark on lights these cards cannot reach would say nothing true
-      var run = galleryRun(kind.mono);
-      pick(run, stretchFor(run, kind.mono));
-      draw();
-    };
-    return tab;
-  }
-
-  var says = document.createElement("span");
-  says.className = "says";
-  says.textContent = (showing ? KINDS[1] : KINDS[0]).says;
-
-  if (MODE === "sided") {
-    // The lamps are colour on the left and mono on the right, so the two tabs go to
-    // those ends as well and a tab's side says which lights it is for. They sit on the
-    // edge of the cards they change, which is what makes them read as its tabs
-    tabs.className = "tabs sides";
-    tabs.textContent = "";
-    if (tabsWanted()) {
-      tabs.appendChild(tabFor(KINDS[0]));
-      tabs.appendChild(tabFor(KINDS[1]));
-    }
-  } else {
-    KINDS.forEach(function (kind) { tabs.appendChild(tabFor(kind)); });
-    tabs.appendChild(says);
-  }
+  tabs.className = "tabs sides";
   box.appendChild(tabs);
 
   var run = galleryRun(showing);
@@ -771,17 +674,9 @@ function renderGalleries() {
   // it landed: better to say so on the card than to take it and quietly drop it
   var target = section ? targetFor(run, section) : null;
 
-  var shelf = box;
-  if (MODE === "sided") {
-    // The cards live in a box the tabs are the top edge of, and what the set is goes
-    // inside it rather than between the two tabs, where it broke the row into a sentence
-    shelf = document.createElement("div");
-    // The box is what a tab is joined to. With no tabs there is nothing to join, so the
-    // cards stand on the page as the rest of it does
-    shelf.className = "shelf" + (tabsWanted() ? "" : " bare");
-    if (!tabsAtFoot()) shelf.appendChild(says);
-    box.appendChild(shelf);
-  }
+  var shelf = document.createElement("div");
+  shelf.className = "shelf bare";
+  box.appendChild(shelf);
 
   var looks = document.createElement("div");
   looks.className = "gallery";
@@ -791,7 +686,6 @@ function renderGalleries() {
     var card = lookCard(showing, look, on);
     if (!can) {
       card.className += " cannot";
-      card.draggable = false;
       card.onclick = null;
       card.title = whyNot(look, target);
     }
@@ -862,19 +756,6 @@ function renderRun(where, run) {
     said.textContent = shortName(lamp);
     one.appendChild(said);
     faces.push(face);
-
-    one.addEventListener("dragover", function (event) {
-      if (!takesLook(run) || carrying_look.mono === lamp.colour) return;
-      event.preventDefault();
-      one.classList.add("landing");
-    });
-    one.addEventListener("dragleave", function () { one.classList.remove("landing"); });
-    one.addEventListener("drop", function (event) {
-      event.preventDefault();
-      one.classList.remove("landing");
-      if (!takesLook(run) || carrying_look.mono === lamp.colour) return;
-      landLook(run, mine, carrying_look.look);
-    });
     group.appendChild(one);
   });
 
@@ -897,7 +778,7 @@ function renderRun(where, run) {
 function outputGroup(lamp) {
   var group = document.createElement("div");
   group.className = "outgroup" + (lamp.colour ? " whole" : "");
-  if (MODE === "sided") group.appendChild(crossing(lamp.out, lamp.colour));
+  group.appendChild(crossing(lamp.out, lamp.colour));
   return group;
 }
 
@@ -1010,20 +891,6 @@ function renderBar(where, run) {
       pick(run, at);
       draw();
     };
-    cell.addEventListener("dragover", function (event) {
-      if (!takesLook(run)) return;
-      var first2 = run.lamps[section.from];
-      if (!first2 || carrying_look.mono === first2.colour) return;
-      event.preventDefault();
-      cell.classList.add("landing");
-    });
-    cell.addEventListener("dragleave", function () { cell.classList.remove("landing"); });
-    cell.addEventListener("drop", function (event) {
-      event.preventDefault();
-      cell.classList.remove("landing");
-      if (!takesLook(run)) return;
-      landLook(run, at, carrying_look.look);
-    });
     bar.appendChild(cell);
 
     if (at < run.sections.length - 1) {
@@ -1071,150 +938,6 @@ function cutPoint(run, after, wide, from) {
     cutAt(run, after);
   };
   return snip;
-}
-
-// ---- the wiring bar, for the way that keeps the two jobs apart ----------------------------
-
-function renderWiring() {
-  var box = document.getElementById("outWiring");
-  box.textContent = "";
-  if (MODE !== "wiring") return;
-
-  var head = document.createElement("div");
-  head.className = "wiring-head";
-  head.appendChild(document.createTextNode("Wired as"));
-  var says = document.createElement("span");
-  says.className = "says";
-  says.textContent = "cut an output to break it into three; \u00d7 puts it back to one";
-  head.appendChild(says);
-  box.appendChild(head);
-
-  var wrap = document.createElement("div");
-  wrap.className = "wiring";
-  var bar = document.createElement("div");
-  bar.className = "bar";
-
-  // An output holds three channels' worth of the bar whichever it is, so the widths
-  // stay put as one is broken out and put back
-  wiring.forEach(function (one, at) {
-    var mine = one.broken ? [0, 1, 2] : [null];
-    mine.forEach(function (channel, which) {
-      var cell = document.createElement("button");
-      cell.className = "sec";
-      cell.style.flex = (one.broken ? 1 : 3) + " 1 0";
-      var wash = document.createElement("span");
-      wash.className = "lit" + (one.broken ? "" : " out");
-      cell.appendChild(wash);
-      var said = document.createElement("span");
-      said.className = "says";
-      said.innerHTML = one.broken
-        ? CHANNELS[channel].toUpperCase() + " <em>" + (at + 1) + "</em>"
-        : (at + 1) + " <em>colour</em>";
-      cell.appendChild(said);
-
-      // The one act there is: an output comes apart into three, or it does not
-      if (!one.broken) {
-        var cuts = document.createElement("span");
-        cuts.className = "cuts";
-        cuts.appendChild(breakPoint(at));
-        cell.appendChild(cuts);
-      }
-      cell.onclick = function () {
-        if (!one.broken) breakOut(at);
-      };
-      bar.appendChild(cell);
-
-      // Putting it back is asked for once, between the first two of its three
-      if (one.broken && which === 0) {
-        var edge = document.createElement("div");
-        edge.className = "edge";
-        var drop = document.createElement("button");
-        drop.className = "drop";
-        drop.textContent = "\u00d7";
-        drop.title = "put output " + (at + 1) + " back to one colour light";
-        drop.onclick = function (event) {
-          event.stopPropagation();
-          rejoin(at);
-        };
-        edge.appendChild(drop);
-        bar.appendChild(edge);
-      }
-    });
-  });
-  wrap.appendChild(bar);
-  box.appendChild(wrap);
-}
-
-// Where an output comes apart. There is one such place per output and not one per pair
-// of channels: the adapter brings all three out or it is not fitted
-function breakPoint(out) {
-  var snip = document.createElement("i");
-  snip.className = "cut inside";
-  snip.style.left = "50%";
-  snip.style.width = "min(14px, 40%)";
-  snip.dataset.says = "R | G | B";
-  snip.title = "break output " + (out + 1) + " into its three channels";
-  snip.onclick = function (event) {
-    event.stopPropagation();
-    breakOut(out);
-  };
-  return snip;
-}
-
-// ---- the way that puts both acts in one bar -----------------------------------------------
-// A cut between two lamps sections the run. A cut through a colour lamp breaks that
-// output into its three channels, and the run grows there. Same gesture, so the one that
-// changes the wiring is drawn apart, and a mark between an output's own three puts it back
-
-function insideCutsFor(run, section, cell) {
-  if (MODE !== "onebar") return;
-  var wide = widthOf(section);
-  var cuts = document.createElement("span");
-  cuts.className = "cuts";
-  for (var i = section.from; i <= section.to; i++) {
-    var lamp = run.lamps[i];
-    if (!lamp.colour) continue;
-    cuts.appendChild(breakAt(lamp.out, i - section.from, wide));
-  }
-  cell.appendChild(cuts);
-
-  // Where an output's own channels meet, offered as putting it back together
-  for (var j = section.from; j < section.to; j++) {
-    var here = run.lamps[j];
-    var next = run.lamps[j + 1];
-    if (here.colour || here.out !== next.out) continue;
-    if (here.channel !== 0) continue;
-    cuts.appendChild(mendAt(here.out, j - section.from + 1, wide));
-  }
-}
-
-function breakAt(out, into, wide) {
-  var snip = document.createElement("i");
-  snip.className = "cut inside";
-  snip.style.left = ((into + 0.5) / wide * 100) + "%";
-  snip.style.width = "min(11px, " + (45 / wide) + "%)";
-  snip.dataset.says = "R | G | B";
-  snip.title = "break output " + (out + 1) + " into its three channels, which makes it " +
-               "mono";
-  snip.onclick = function (event) {
-    event.stopPropagation();
-    breakOut(out);
-  };
-  return snip;
-}
-
-function mendAt(out, into, wide) {
-  var mend = document.createElement("i");
-  mend.className = "cut inside mend";
-  mend.style.left = (into / wide * 100) + "%";
-  mend.style.width = "min(11px, " + (45 / wide) + "%)";
-  mend.dataset.says = "back to one";
-  mend.title = "put output " + (out + 1) + " back to one colour light";
-  mend.onclick = function (event) {
-    event.stopPropagation();
-    rejoin(out);
-  };
-  return mend;
 }
 
 // ---- crossing from one side to the other ---------------------------------------------------
@@ -1282,16 +1005,12 @@ function renderCutting(where, run) {
   says.textContent = "Cut into " + run.sections.length +
                      (run.sections.length === 1 ? " stretch" : " stretches");
   box.appendChild(says);
-  // Both sides of the sided page share one set of steps, above them, since a step back
-  // is about the panel and not about one side of it
-  if (MODE !== "sided") zoomAndSteps(box, run);
 }
 
 // The row above everything, where the sided page keeps the steps it shares
 function renderPanelHead() {
   var box = document.getElementById("outHead");
   box.textContent = "";
-  if (MODE !== "sided") return;
   var says = document.createElement("span");
   says.className = "what";
   says.textContent = "Drag a light to where it sits on your build";
@@ -1386,7 +1105,6 @@ function renderChosen(where, run) {
 // The two sides: each as wide as what it holds, so the divide between them moves as
 // outputs are broken out and put back
 function renderSides() {
-  if (MODE !== "sided") return;
   [{run: outs, side: "sideA", head: "headA", title: "Colour outputs",
     says: "no adapter fitted"},
    {run: mono, side: "sideB", head: "headB", title: "Mono lights",
@@ -1419,29 +1137,9 @@ function renderSides() {
 
 function renderLegend() {
   var box = document.getElementById("outLegend");
-  box.textContent = "";
-  if (MODE === "tworuns") {
-    box.textContent = "An output moves between the two runs as it is broken out and put " +
-                      "back. Nothing else about either run changes.";
-    return;
-  }
-  if (MODE === "sided") {
-    box.textContent = "The arrow on an output sends it across: one colour light becomes " +
-                      "three mono ones, and the three come back as one. Each side is as " +
-                      "wide as what it holds, so the divide moves with the board.";
-    return;
-  }
-  [["", "a cut between lights, which sections the run"],
-   ["inside", "a cut through an output, which breaks it into its three channels"],
-   ["mend", "and the mark that puts one back to a single colour light"]]
-    .forEach(function (pair) {
-      var one = document.createElement("span");
-      var mark = document.createElement("i");
-      mark.className = pair[0];
-      one.appendChild(mark);
-      one.appendChild(document.createTextNode(pair[1]));
-      box.appendChild(one);
-    });
+  box.textContent = "The arrow on an output sends it across: one colour light becomes " +
+                    "three mono ones, and the three come back as one. Each side is as " +
+                    "wide as what it holds, so the divide moves with the board.";
 }
 
 // ---- the file, painted -----------------------------------------------------------------------
@@ -1492,44 +1190,17 @@ function draw() {
   renderGalleries();
   renderPanelHead();
   renderRun("outRun", outs);
-  renderWiring();
   renderCutting("outCut", outs);
   renderBar("outBar", outs);
+  renderCutting("monoCut", mono);
+  renderRun("monoRun", mono);
+  renderBar("monoBar", mono);
 
-  var second = document.getElementById("monoPanel");
-  if (splitRuns()) {
-    renderCutting("monoCut", mono);
-    renderRun("monoRun", mono);
-    renderBar("monoBar", mono);
-  } else {
-    document.getElementById("sideB").style.display = "none";
-  }
-
-  if (MODE === "sided") {
-    // Both sides are in the one panel, so one set of tools serves whichever was last
-    // worked on rather than a set under each
-    second.style.display = "none";
-    renderSides();
-    renderTools("outTools", active);
-    renderChosen("outChosen", active);
-  } else if (MODE === "tworuns") {
-    renderTools("outTools", outs);
-    renderChosen("outChosen", outs);
-    renderTools("monoTools", mono);
-    renderChosen("monoChosen", mono);
-  } else {
-    second.style.display = "none";
-    renderTools("outTools", outs);
-    renderChosen("outChosen", outs);
-  }
-
-  // The cuts that change the wiring live in the bar on the way that puts them there
-  if (MODE === "onebar") {
-    var cells = document.querySelectorAll("#outBar .sec");
-    outs.sections.forEach(function (section, at) {
-      if (cells[at]) insideCutsFor(outs, section, cells[at]);
-    });
-  }
+  // Both sides are in the one panel, so one set of tools serves whichever was last worked
+  // on rather than a set under each
+  renderSides();
+  renderTools("outTools", active);
+  renderChosen("outChosen", active);
 
   renderLegend();
   renderPreview();
@@ -1541,7 +1212,6 @@ function draw() {
 // cutting and its bar below the other side's. Both runs take the height of the taller, so
 // the two sides read across whatever either is holding
 function levelSides() {
-  if (!splitRuns()) return;
   var both = [document.getElementById("outRun"), document.getElementById("monoRun")];
   both.forEach(function (box) { box.style.minHeight = ""; });
   var tallest = 0;
@@ -1564,36 +1234,6 @@ function step() {
   window.setTimeout(step, FRAME * 1000);
 }
 
-// A board with something on every lamp, so the page is read as a board and not as a
-// blank one. A stretch over two colour outputs, and one over a broken output's channels
-settle();
-runs.forEach(function (run) {
-  run.sections = run.lamps.map(function (lamp, at) { return blank(at, at, run); });
-});
-settle();
-
-// Two stretches wider than one lamp, so the page opens on a board that has been cut
-// rather than one where every lamp stands alone and there is nothing to cut
-runs.forEach(function (run) {
-  if (run.sections.length > 2) {
-    run.sections[1].to = run.sections[2].to;
-    run.sections.splice(2, 1);
-  }
-});
-settle();
-
-var DRESSED = {colour: ["Rainbow", "Breathe", "Party", "Campfire", "Solid"],
-               mono: ["Campfire", "Sparkle", "Breathe", "Chase", "Solid"]};
-runs.forEach(function (run) {
-  var reached = {colour: 0, mono: 0};
-  run.sections.forEach(function (section) {
-    var lamp = run.lamps[section.from];
-    if (!lamp) return;
-    var kind = lamp.colour ? "colour" : "mono";
-    section.look = DRESSED[kind][reached[kind] % DRESSED[kind].length];
-    reached[kind]++;
-  });
-});
 settle();
 draw();
 if (HOLDING_STILL) { beat = 0.37; paintAll(); } else { step(); }

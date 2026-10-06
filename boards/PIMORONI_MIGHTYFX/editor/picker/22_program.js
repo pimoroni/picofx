@@ -746,20 +746,9 @@ function featureFilter() {
   return row;
 }
 
-// ---- moving between the two pages, three ways ---------------------------------------------------
+// ---- moving between the two pages ---------------------------------------------------------------
+// Two tabs split under the header, the effects tab holding the way into scenes until there are some
 
-var PAGE_WAYS = [["covers", "Two covers"], ["header", "Header: cards"],
-                 ["headseg", "Header: one control"], ["headtabs", "Header: tabs off its foot"],
-                 ["headsplit", "Header: tabs, split under it"],
-                 ["headrow", "Header: a row of its own"],
-                 ["binder", "Folder tabs"], ["sheet", "A sheet over"],
-                 ["under", "Sheet, offered under the gallery"]];
-
-// The ways that put the two covers in the header, each styled its own way, and those drawing
-// them as tabs, whose effects tab holds the way into scenes until there are some
-var HEADER_WAYS = ["header", "headseg", "headtabs", "headsplit", "headrow"];
-var TAB_WAYS = ["headtabs", "headsplit"];
-var pageWay = (location.search.match(/way=(\w+)/) || [])[1] || "covers";
 // Back to the effects, the file running them again
 function toEffects() {
   onProgramPage = false;
@@ -786,136 +775,42 @@ function effectsFace() {
 }
 
 function renderPageSwitch() {
-  var bar = document.getElementById("pageSwitch");
-  bar.textContent = "";
-  bar.className = "pageswitch " + pageWay + (onProgramPage ? " programmed" : "");
-  document.getElementById("galleryOffer").textContent = "";
   var inHeader = document.getElementById("headSwitch");
   inHeader.textContent = "";
   var program = boardSet.program || boardSet.lastProgram;
-  var inTheHeader = HEADER_WAYS.indexOf(pageWay) >= 0;
   // Split under the header, the tabs are drawn as the tabs off its foot are
-  inHeader.className = "headswitch " + pageWay + (pageWay === "headsplit" ? " headtabs" : "");
-  if (pageWay === "covers" || inTheHeader) {
-    // Two cards, what runs picked, each showing what it would run: large above the scenes, or
-    // small in the header where the page's name is, taking no room from the page
-    [["effects", "The effects", "scenes, looks, screens and sound"],
-     ["program", "A program", program ? programTitle(program) : "in place of the effects"]]
-      .forEach(function (one) {
-        // A tab holds the scenes' button, and a button cannot hold another, so a tab is a
-        // plain element taking the click and the keyboard
-        var tabbed = TAB_WAYS.indexOf(pageWay) >= 0;
-        var cover = document.createElement(tabbed ? "div" : "button");
-        if (tabbed) {
-          cover.setAttribute("role", "button");
-          cover.tabIndex = 0;
-          cover.onkeydown = function (event) {
-            if (event.key === "Enter" || event.key === " ") cover.onclick();
-          };
-        } else {
-          cover.type = "button";
-        }
-        cover.className = "cover" + ((one[0] === "program") === onProgramPage ? " on" : "");
-        cover.dataset.page = one[0];
-        var face = one[0] === "effects" ? effectsFace()
-                 : program ? programThumb(program) : thumbCanvas("stars", 3);
-        face.classList.add("coverface");
-        cover.appendChild(face);
-        var words = document.createElement("span");
-        // Small in the header, only a program's name is said, a row of its own having room
-        var brief = inTheHeader && pageWay !== "headrow";
-        var under = brief && !(one[0] === "program" && program) ? "" : one[2];
-        words.innerHTML = "<b>" + one[1] + "</b>" +
-                          (under ? "<small>" + escapeHtml(under) + "</small>" : "");
-        cover.appendChild(words);
-        cover.onclick = one[0] === "effects" ? toEffects : toProgram;
-        (inTheHeader ? inHeader : bar).appendChild(cover);
-      });
-  } else if (pageWay === "binder") {
-    // Two tabs joined to the page they open, as a folder's are, above the scenes' own
-    [["effects", "Effects"], ["program", "Program"]].forEach(function (one) {
-      var tab = document.createElement("button");
-      tab.type = "button";
-      tab.className = "foldertab" + ((one[0] === "program") === onProgramPage ? " on" : "");
-      tab.dataset.page = one[0];
-      var face = one[0] === "effects" ? effectsFace()
-               : program ? programThumb(program) : thumbCanvas("stars", 3);
-      face.classList.add("tabface");
-      tab.appendChild(face);
-      tab.appendChild(document.createTextNode(one[1]));
-      tab.onclick = one[0] === "effects" ? toEffects : toProgram;
-      bar.appendChild(tab);
-    });
-  } else {
-    // The effects as they are, a strip offering a program above the scenes, or under the
-    // gallery; picked, a sheet takes the page, with the way back at its head
-    var slot = document.getElementById("galleryOffer");
-    if (!onProgramPage) {
-      (pageWay === "under" ? slot : bar).appendChild(sheetOffer());
-    } else {
-      var head = document.createElement("div");
-      head.className = "sheethead";
-      var back = document.createElement("button");
-      back.type = "button";
-      back.dataset.page = "effects";
-      back.className = "sheetback";
-      back.textContent = "\u25c2 Back to the effects";
-      back.onclick = toEffects;
-      head.appendChild(back);
-      var title = document.createElement("b");
-      title.textContent = "Running a program";
-      head.appendChild(title);
-      bar.appendChild(head);
-    }
-  }
-}
-
-// A strip of what programs look like, offering one in the effects' place
-function sheetOffer() {
-  var offer = document.createElement("button");
-  offer.type = "button";
-  offer.className = "sheetoffer";
-  offer.dataset.page = "program";
-  var strip = document.createElement("span");
-  strip.className = "filmstrip";
-  ["examples/showcase/flip_dot_sign.py", "examples/showcase/nixie_tube.py",
-   "examples/screens/graphics/starfield.py", "examples/showcase/split_flap_clock.py",
-   "examples/showcase/crt_terminal.py"].forEach(function (path) {
-    strip.appendChild(programThumb(path));
-  });
-  offer.appendChild(strip);
-  var said = document.createElement("span");
-  said.innerHTML = "<b>Run a program instead</b><small>a sign, a clock, something the effects " +
-                   "cannot do. It takes the whole board.</small>";
-  offer.appendChild(said);
-  offer.onclick = toProgram;
-  return offer;
-}
-
-function renderTrying() {
-  var bar = document.getElementById("pageTrying");
-  bar.textContent = "Trying:";
-  PAGE_WAYS.forEach(function (way) {
-    var button = document.createElement("button");
-    button.type = "button";
-    button.className = way[0] === pageWay ? "on" : "";
-    button.textContent = way[1];
-    button.onclick = function () {
-      pageWay = way[0];
-      draw();
+  inHeader.className = "headswitch headsplit headtabs";
+  // Two tabs, what runs picked, each showing what it would run, small in the header where the
+  // page's name is, taking no room from the page
+  [["effects", "The effects"],
+   ["program", "A program", program ? programTitle(program) : ""]].forEach(function (one) {
+    // A tab holds the scenes' button, and a button cannot hold another, so a tab is a plain
+    // element taking the click and the keyboard
+    var cover = document.createElement("div");
+    cover.setAttribute("role", "button");
+    cover.tabIndex = 0;
+    cover.onkeydown = function (event) {
+      if (event.key === "Enter" || event.key === " ") cover.onclick();
     };
-    bar.appendChild(button);
+    cover.className = "cover" + ((one[0] === "program") === onProgramPage ? " on" : "");
+    cover.dataset.page = one[0];
+    var face = one[0] === "effects" ? effectsFace()
+             : program ? programThumb(program) : thumbCanvas("stars", 3);
+    face.classList.add("coverface");
+    cover.appendChild(face);
+    var words = document.createElement("span");
+    // Only a program's name is said under its tab
+    words.innerHTML = "<b>" + one[1] + "</b>" +
+                      (one[2] ? "<small>" + escapeHtml(one[2]) + "</small>" : "");
+    cover.appendChild(words);
+    cover.onclick = one[0] === "effects" ? toEffects : toProgram;
+    inHeader.appendChild(cover);
   });
 }
 
 (function () {
-  // Floating at the foot of the window, so it moves nothing on the page it switches
-  var trying = document.createElement("div");
-  trying.id = "pageTrying";
-  trying.className = "trying floating";
-  document.body.appendChild(trying);
-  // In the header after the page's name, where one way puts its covers. What follows the name is
-  // gathered into one group, so a wide header can set name, tabs and group on a single line
+  // In the header after the page's name. What follows the name is gathered into one group, so a
+  // wide header can set name, tabs and group on a single line
   var headSwitch = document.createElement("span");
   headSwitch.id = "headSwitch";
   headSwitch.className = "headswitch";
@@ -926,15 +821,6 @@ function renderTrying() {
   while (named.nextSibling) actions.appendChild(named.nextSibling);
   named.parentNode.appendChild(headSwitch);
   named.parentNode.appendChild(actions);
-  // Under the gallery, above the tabs, where one way offers a program
-  var offerSlot = document.createElement("div");
-  offerSlot.id = "galleryOffer";
-  var looks = document.getElementById("looksStack") || document.getElementById("looks");
-  looks.parentNode.insertBefore(offerSlot, looks.nextSibling);
-  var bar = document.createElement("div");
-  bar.id = "pageSwitch";
-  var tabs = document.getElementById("tabs");
-  tabs.parentNode.insertBefore(bar, tabs);
   programView = document.createElement("div");
   programView.id = "programView";
   programView.className = "programview";
@@ -947,8 +833,7 @@ var oneProgramDraw = draw;
 draw = function () {
   oneProgramDraw();
   document.body.classList.toggle("programpage", onProgramPage);
-  document.body.dataset.pageway = pageWay;
-  renderTrying();
+  document.body.dataset.pageway = "headsplit";
   renderPageSwitch();
   renderProgramView();
   scenesAsCards();
@@ -991,7 +876,6 @@ var COLUMN_REM = 57.2;
 function headerOnOneLine() {
   var header = document.querySelector("header");
   header.classList.remove("oneline");
-  if (pageWay !== "headsplit") return;
   var rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
   var style = getComputedStyle(header);
   var inner = header.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
@@ -1025,7 +909,7 @@ window.addEventListener("resize", headerOnOneLine);
 // Before there are scenes, the way into them is the effects tab's own, at its end, so no row is
 // kept above the gallery for it. Once there are scenes their tabs are that row, as they were
 function scenesInTheTab() {
-  var into = TAB_WAYS.indexOf(pageWay) >= 0 && !state.scenes.length && !onProgramPage &&
+  var into = !state.scenes.length && !onProgramPage &&
              document.querySelector("#headSwitch .cover[data-page=effects]");
   document.body.classList.toggle("scenesintab", !!into);
   if (!into) return;

@@ -1,45 +1,18 @@
 
 // ---- where the board is set up ----------------------------------------------------------
 // Every fact about the board stays beside what it is about: the wiring on the outputs, a
-// strip's length on the strip, a screen's type on the screen. What differs is how a page
-// says those are the board's and not the scene's, and when they can be changed.
-//
-//   page     a setup mode for the whole page, turned on in the header
-//   panel    a setup band in each panel, opened from that panel's header
-//   marker   always editable, every board fact wearing the same mark
-//   both     the mark always, and the setup mode for changing them
-//   section  each fact in a box of its section's own colour, and the setup mode for
-//            the whole board entered from any section's header, where it is needed
+// strip's length on the strip, a screen's type on the screen. Each reads as a box in its
+// section's own colour, and the whole board is set up at once in a setup mode.
 
-var SETUP_WAY = "section";
-
-var WAYS_SAID = {
-  page: "Set up the board from the header; outside that, it reads as plain words",
-  panel: "Each panel sets up its own part of the board",
-  marker: "Board facts are changed where they sit, and marked as the board's",
-  both: "Board facts are marked, and changed in a setup mode",
-  section: "A coloured box is a board setting, set up from any section"
-};
-
-// Whether the whole page is in its setup mode, and which panels have their band open
+// Whether the whole page is in its setup mode
 var setupOn = false;
-var setupOpen = {};
 
 // The panels that hold a board fact, and the colour each one's box takes
 var SECTIONS = {outPanel: "outs", striplPanel: "stripl", striprPanel: "stripr",
                 screenaPanel: "screena", screenbPanel: "screenb"};
 
-function marked() { return SETUP_WAY === "marker" || SETUP_WAY === "both"; }
-
-// Whether a fact reads as its section's coloured box
-function boxed() { return SETUP_WAY === "section"; }
-
 // Whether the board facts in this panel can be changed just now
-function canEdit(panel) {
-  if (SETUP_WAY === "marker") return true;
-  if (SETUP_WAY === "panel") return !!setupOpen[panel];
-  return setupOn;
-}
+function canEdit(panel) { return setupOn; }
 
 // Where a lamp sits is changed with the wiring, so only where that can be
 lampsMovable = function () { return canEdit("outPanel"); };
@@ -167,7 +140,6 @@ function small(words) {
   return said;
 }
 
-// The mark every board fact wears where marking is the way: a small board with pins
 // The board's chip, three legs a side, set three apart as the smallest spacing that still
 // reads as legs at 16px
 function boardIcon() {
@@ -185,33 +157,10 @@ function boardIcon() {
   return svg;
 }
 
-// One board fact as it reads in place: marked where that is the way, and saying so
-function fact(content) {
-  var chip = document.createElement("span");
-  chip.className = "fact" + (marked() ? " boardfact" : "");
-  if (marked()) {
-    chip.appendChild(boardIcon());
-    chip.title = "How the board is built, which is the same in every scene";
-  }
-  if (typeof content === "string") chip.appendChild(document.createTextNode(content));
-  else chip.appendChild(content);
-  return chip;
-}
-
-// A panel's band, where the panel way opens one: its facts under a label saying whose
-function band(box, panel) {
-  box.classList.toggle("setupband", SETUP_WAY === "panel" && !!setupOpen[panel]);
-  if (SETUP_WAY !== "panel" || !setupOpen[panel]) return;
-  var says = document.createElement("span");
-  says.className = "bandsays";
-  says.textContent = "Board setup, the same in every scene";
-  box.appendChild(says);
-}
-
 // ---- the facts, in place --------------------------------------------------------------------
 
 // The arrows on the lamps are how an output is broken out, so they show only where the
-// wiring can be changed, and are marked as the board's where marking is the way
+// wiring can be changed
 var oneCrossing = crossing;
 
 // Where the wiring cannot be changed the arrow is left out. What stands in its place takes
@@ -225,31 +174,22 @@ function noArrow() {
 crossing = function (out, colour) {
   if (!canEdit("outPanel")) return noArrow();
   var made = oneCrossing(out, colour);
-  if (marked()) made.classList.add("boardfact");
-  if (boxed()) made.classList.add("boardarrow");
+  made.classList.add("boardarrow");
   return made;
 };
 
 function renderOutFacts() {
   var box = document.getElementById("outFacts");
   box.textContent = "";
-  band(box, "outPanel");
-  var said = brokenSaid();
-  if (boxed()) {
-    box.appendChild(boardBox("outPanel", ["Wiring", small(said)]));
-    if (canEdit("outPanel")) {
-      var hint = document.createElement("span");
-      hint.className = "hint";
-      hint.textContent = "Drag a light to where it sits in your build. Arrows split an " +
-                         "output into three mono lights, or rejoin them.";
-      hint.title = hint.textContent;
-      box.appendChild(hint);
-    }
-    return;
+  box.appendChild(boardBox("outPanel", ["Wiring", small(brokenSaid())]));
+  if (canEdit("outPanel")) {
+    var hint = document.createElement("span");
+    hint.className = "hint";
+    hint.textContent = "Drag a light to where it sits in your build. Arrows split an " +
+                       "output into three mono lights, or rejoin them.";
+    hint.title = hint.textContent;
+    box.appendChild(hint);
   }
-  box.appendChild(fact(said.charAt(0).toUpperCase() + said.slice(1) +
-                       (canEdit("outPanel") ? ". The arrow on an output breaks it out, or " +
-                                              "puts it back." : ".")));
 }
 
 var oneRenderLeds = renderLeds;
@@ -326,37 +266,20 @@ renderLeds = function (where, run) {
     renderStripOut(box, run, panel);
     return;
   }
-  if (boxed()) {
-    // The strip's own count box is already the board's, so the icon goes inside it and
-    // it takes the strip's colour
-    if (canEdit(panel)) {
-      oneRenderLeds(where, run);
-      var says = box.querySelector(".says");
-      if (says) box.removeChild(says);
-      var chip = box.querySelector(".chip");
-      chip.className = "chip boardchip " + SECTIONS[panel];
-      chip.title = "How the board is built, which is the same in every scene";
-      chip.insertBefore(boardIcon(), chip.firstChild);
-      chip.appendChild(stripDrop(run));
-    } else {
-      box.textContent = "";
-      box.appendChild(boardBox(panel, ["Strip", small(stripBuilt(run))]));
-    }
-    return;
-  }
+  // The strip's own count box is already the board's, so the icon goes inside it and it
+  // takes the strip's colour
   if (canEdit(panel)) {
     oneRenderLeds(where, run);
-    var chip = box.querySelector(".chip");
     var says = box.querySelector(".says");
     if (says) box.removeChild(says);
-    box.removeChild(chip);
+    var chip = box.querySelector(".chip");
+    chip.className = "chip boardchip " + SECTIONS[panel];
+    chip.title = "How the board is built, which is the same in every scene";
+    chip.insertBefore(boardIcon(), chip.firstChild);
     chip.appendChild(stripDrop(run));
-    band(box, panel);
-    box.appendChild(fact(chip));
   } else {
     box.textContent = "";
-    band(box, panel);
-    box.appendChild(fact(stripBuilt(run)));
+    box.appendChild(boardBox(panel, ["Strip", small(stripBuilt(run))]));
   }
 };
 
@@ -364,33 +287,10 @@ function renderScreenFacts(port) {
   var box = document.getElementById(port.id + "Facts");
   var panel = port.id + "Panel";
   box.textContent = "";
-  band(box, panel);
-  if (boxed()) {
-    var size = screensFitted[port.id];
-    box.appendChild(boardBox(panel, [port.label, canEdit(panel)
-      ? screenSize(port)
-      : small(size ? size + " inch" : "no panel fitted")]));
-    return;
-  }
-  if (canEdit(panel)) {
-    var label = document.createElement("label");
-    label.appendChild(document.createTextNode("Panel fitted "));
-    label.appendChild(screenSize(port));
-    box.appendChild(fact(label));
-  } else {
-    var fitted = screensFitted[port.id];
-    box.appendChild(fact(fitted ? fitted + " inch panel fitted" : "No panel fitted"));
-  }
-}
-
-// Once there are scenes the mark has to be read against them, so the frame says what it is
-function renderMarkNote() {
-  var box = document.getElementById("markNote");
-  box.textContent = "";
-  if (!marked() || !state.scenes.length) return;
-  box.appendChild(boardIcon());
-  box.appendChild(document.createTextNode(
-    "marks how the board is built, which is the same in every scene"));
+  var size = screensFitted[port.id];
+  box.appendChild(boardBox(panel, [port.label, canEdit(panel)
+    ? screenSize(port)
+    : small(size ? size + " inch" : "no panel fitted")]));
 }
 
 // ---- turning setup on ------------------------------------------------------------------------
@@ -406,70 +306,15 @@ function setupButton(label, on, act) {
   return button;
 }
 
-function renderSetupButtons() {
-  if (SETUP_WAY === "page" || SETUP_WAY === "both") {
-    var header = document.getElementById("setupHead");
-    header.textContent = "";
-    header.appendChild(setupButton(setupOn ? "Done setting up" : "Set up the board", setupOn,
-                                   function () {
-                                     setSetup(!setupOn);
-                                     draw();
-                                   }));
-    document.body.classList.toggle("setup", setupOn);
-    var banner = document.getElementById("setupBanner");
-    banner.hidden = !setupOn;
-    banner.textContent = setupOn
-      ? "Setting up the board. What is changed here is the same in every scene, so the " +
-        "scenes and looks wait until you are done."
-      : "";
-  }
-  if (SETUP_WAY === "section") {
-    // The whole board is set up at once, from whichever section it was wanted in, and
-    // any section's Done ends it. What is not the board stands back meanwhile
-    document.body.classList.toggle("setupall", setupOn);
-    Object.keys(SECTIONS).forEach(function (panel) {
-      sectionButton(panel, setupOn ? "Done" : "Set up", setupOn,
-                    function () { setSetup(!setupOn); });
-    });
-  }
-  if (SETUP_WAY === "panel") {
-    Object.keys(SECTIONS).forEach(function (panel) {
-      sectionButton(panel, setupOpen[panel] ? "Done" : "Set up", setupOpen[panel],
-                    function () { setupOpen[panel] = !setupOpen[panel]; });
-    });
-  }
-}
-
-// A section's own setup button, in the header of its panel
-function sectionButton(panel, label, on, toggle) {
-  var summary = document.querySelector("#" + panel + " > summary");
-  var box = summary.querySelector(".setupslot");
-  if (!box) {
-    box = document.createElement("span");
-    box.className = "setupslot";
-    summary.appendChild(box);
-  }
-  box.textContent = "";
-  // Every section grows or shrinks as setup opens and closes, so the one pressed is
-  // held where it was on the screen
-  box.appendChild(setupButton(label, on, function () {
-    var was = summary.getBoundingClientRect().top;
-    toggle();
-    draw();
-    window.scrollBy(0, summary.getBoundingClientRect().top - was);
-  }));
-}
-
 var oneSetupDraw = draw;
 
 draw = function () {
   oneSetupDraw();
   renderOutFacts();
   SCREEN_PORTS.forEach(renderScreenFacts);
-  renderMarkNote();
-  renderSetupButtons();
+  // What is not the board stands back while it is set up
+  document.body.classList.toggle("setupall", setupOn);
   if (setupOn) unmark();
-  document.getElementById("setupWay").textContent = WAYS_SAID[SETUP_WAY];
   paintAll();
 };
 

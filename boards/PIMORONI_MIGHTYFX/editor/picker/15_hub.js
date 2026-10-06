@@ -18,7 +18,7 @@
 var HUB_PLACES = ["A", "B", "C", "D", "E", "F"];
 
 // A position taken out keeps the size it had, for if it is put back
-state.hub = {on: true, port: "A", sizes: {}, was: {}};
+state.hub = {on: false, port: "A", sizes: {}, was: {}};
 state.places = {};
 HUB_PLACES.forEach(function (place) {
   state.hub.sizes[place] = "2.8";
@@ -571,9 +571,6 @@ draw = function () {
   says.parentNode.insertBefore(facts, says);
   says.hidden = true;
 }());
-
-// A page can open on the Screens tab, to be looked at
-if (/[?&]screens\b/.test(location.search)) chosenTab = "screensPanel";
 
 state.always.body = capture();
 showChosen();

@@ -42,9 +42,6 @@ function showChosen() {
 // A tab's swatch, which for an LED section is what it plays
 function tabSwatch(swatch, panel) { renderSwatch(swatch, panel); }
 
-// Setting up is the tabs' button and no section's own
-sectionButton = function () {};
-
 function renderLedTabs() {
   var bar = document.getElementById("ledTabs");
   bar.textContent = "";
@@ -136,14 +133,6 @@ draw = function () {
   LED_PANELS.forEach(function (panel) {
     stack.appendChild(document.getElementById(panel));
   });
-
-  // A section's own Set up, drawn before this page took the button to the tabs
-  document.querySelectorAll(".setupslot").forEach(function (slot) {
-    slot.parentNode.removeChild(slot);
-  });
-
-  // The note naming which way of setting up a page tries is for the pages comparing them
-  document.getElementById("setupWay").hidden = true;
 }());
 
 showChosen();

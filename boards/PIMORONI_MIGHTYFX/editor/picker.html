@@ -33,11 +33,6 @@ main{max-width:60rem;margin:1.4rem auto;padding:0 1.4rem}
 .panel[open]>summary::before{transform:rotate(-135deg) translate(-2px,-2px)}
 .panel>summary:hover::before{border-color:var(--accent)}
 .panel[open]>summary{margin-bottom:.7rem}
-/* A set of looks is of no use with nothing left to drop it on, so it goes away once
-   every panel that can take it is shut. This board has one panel per set; a board with
-   several colour outputs has several, and the set stays while any one of them is open */
-body:not(:has(.panel[open][data-looks="colour"])) #stripGallery{display:none}
-body:not(:has(.panel[open][data-looks="mono"])) #outGallery{display:none}
 .says{font-weight:400;font-size:.85rem;color:var(--dim)}
 
 .chip{display:inline-flex;align-items:center;gap:.45rem;padding:.3rem .55rem;
@@ -178,13 +173,10 @@ button.round svg{display:block}
 .chosen{margin-top:.9rem;border:1px solid var(--line);border-radius:10px;padding:.6rem .8rem}
 .chosen .who{font-size:.82rem;color:var(--dim);margin-bottom:.45rem}
 .chosen .who b{color:var(--ink);font-size:.92rem}
-/* The gallery, as the hero pages draw it: above everything, one set per run, since the
-   mono outputs and the colour strip do not play the same looks. A card shows what a look
-   actually does, and is carried onto whichever stretch is to play it */
+/* The gallery. A card shows what a look actually does, and is tapped onto the stretch being
+   worked on */
 .gallery-head{display:flex;align-items:baseline;gap:.6rem;margin:1.5rem 0 .5rem;
  font:600 1.02rem system-ui,sans-serif}
-#stripGallery .gallery-head:first-child{margin-top:.2rem}
-#outGallery{margin-top:1.9rem}
 .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(9.4rem,1fr));
  gap:.7rem;margin:0 0 .3rem}
 .card{border:2px solid var(--line);border-radius:11px;overflow:hidden;cursor:grab;
@@ -266,33 +258,8 @@ footer{max-width:60rem;margin:0 auto 2rem;padding:0 1.4rem;font-size:.8rem;color
 /* The arrow an output crosses on takes no room at all: it is over the output, and only
    while that output is being pointed at */
 
-/* The wiring bar: the same bar drawn quieter, since it says what is plugged in rather
-   than what is playing. Shorter, thinner and greyer, so the bar that matters stays the
-   one below it */
-.wiring{margin-top:.35rem}
-.wiring .sec{border-width:1px;background:transparent}
-.wiring .sec .lit{height:.55rem;border-radius:5px 5px 0 0;background:#ece7de}
-.wiring .sec .lit.out{background:#ece1fa}
-.wiring .sec .cuts{height:.55rem}
-.wiring .sec .says{font-size:.64rem;font-weight:400;color:var(--dim);padding:0 .2rem}
-.wiring .sec .says em{font-style:normal;color:var(--dim);opacity:.7}
-.wiring .edge{width:.7rem}
-.wiring .drop{transform:scale(.8)}
-.wiring-head{display:flex;align-items:baseline;gap:.5rem;margin:.9rem 0 .1rem;
- font-size:.82rem;color:var(--dim)}
-
-/* Breaking an output out is not the same act as cutting between two lamps, so it is not
-   drawn the same. The mark that puts one back is the same colour, dotted, since it is
-   the same act undone */
-.bar .cut.inside::before{background:#7c3aed}
-.bar .cut.inside{opacity:.85}
-.bar .cut.mend::before{background:none;border-left:2px dotted #7c3aed;width:0}
 .legend{display:flex;gap:1.1rem;flex-wrap:wrap;margin:.5rem 0 0;font-size:.76rem;
  color:var(--dim)}
-.legend span{display:flex;align-items:center;gap:.35rem}
-.legend i{display:block;width:2px;height:.9rem;background:var(--dim)}
-.legend i.inside{background:#7c3aed}
-.legend i.mend{background:none;border-left:2px dotted #7c3aed;width:0}
 
 /* One set of looks, drawn for the kind being worked on. A tab per kind, and a kind the
    board has none of is offered but not taken: it says what breaking an output out would
@@ -547,12 +514,6 @@ th{font-weight:600;color:var(--dim);font-size:.76rem}
 .scenebody.framed{margin-left:-1rem;margin-right:-1rem}
 .tabbar{margin-left:-1rem;margin-right:-1rem}
 .s-scene{color:#7b3fb8;font-weight:600}
-
-/* A switch between the ways a page can be laid out */
-.trying{display:flex;align-items:center;gap:.5rem;font-size:.78rem;color:var(--dim);
- margin:1.2rem 0 .2rem}
-.trying button{font-size:.76rem;padding:.24rem .55rem;border-radius:8px}
-.trying button.on{border-color:var(--accent);color:var(--accent);font-weight:600}
 
 /* Which way a stretch runs, at the end of the line naming it, greyed where its look is the
    same from either end */
@@ -863,29 +824,12 @@ select{font:inherit;font-size:.85rem;padding:.25rem .3rem;border:1px solid var(-
 
 /* A board fact as it reads in place */
 .facts{margin:.1rem 0 .7rem}
-.fact{display:inline-flex;align-items:center;gap:.4rem;font-size:.8rem;color:var(--dim)}
-.fact .chip{margin:0}
-.fact select{font:inherit;font-size:.8rem;padding:.22rem .35rem;border-radius:7px;
- border:1px solid var(--line);background:var(--bg);color:inherit}
 
-/* The mark: a dashed outline in the board's colour and a small board, the same on every
-   fact, so one is learnt and the rest are recognised */
-.boardfact{outline:1.5px dashed var(--board);outline-offset:3px;border-radius:7px}
-.fact.boardfact{padding:.1rem .35rem}
+/* The board's chip, the same on every fact, so one is learnt and the rest are recognised */
 .boardicon{color:var(--board);flex:0 0 auto}
 /* The chip drawn larger than the room it takes, so nothing it sits in grows */
 .boardicon{width:16px;height:16px;margin:-1.5px}
-.cross.boardfact{outline-offset:1px;color:var(--board)}
-.marknote{display:flex;align-items:center;gap:.4rem;font-size:.76rem;color:var(--dim);
- margin:0 0 .7rem}
-.marknote:empty{display:none}
 
-/* A panel's own setup band */
-.setupband{display:block;background:#eef2f7;border:1px dashed var(--board);
- border-radius:10px;padding:.5rem .7rem .6rem}
-.setupband .bandsays{display:block;font-size:.72rem;font-weight:600;color:var(--board);
- margin-bottom:.35rem}
-.setupslot{margin-left:.6rem}
 /* Drawn as the board boxes it opens are, their chip and their shape: outlined to set up,
    filled while setting up */
 .setupbutton{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .6rem;
@@ -1007,8 +951,7 @@ header .boardchip .boardicon{color:currentColor}
 /* An effects page or a program page. The program page takes the effects view's place whole */
 .programview{display:none}
 body.programpage .programview{display:block}
-body.programpage #tabs,body.programpage #sceneBody,body.programpage #setupWay,
-body.programpage #programNote{display:none}
+body.programpage #tabs,body.programpage #sceneBody,body.programpage #programNote{display:none}
 canvas.progthumb{display:block;image-rendering:pixelated;background:#222}
 /* The chosen program, or the space it will take, the same size either way so choosing one moves
    nothing on the page. What the board runs is said along its top */
@@ -1065,17 +1008,11 @@ canvas.progthumb{display:block;image-rendering:pixelated;background:#222}
 .featureclear{border:0;background:none;color:var(--board);font:inherit;font-size:.78rem;
  text-decoration:underline;cursor:pointer}
 .prognone{font-size:.86rem;color:var(--dim)}
-/* A bar of page ways floating at the window's foot, so it moves nothing */
-.trying.floating{position:fixed;left:1rem;bottom:1rem;z-index:20;margin:0;padding:.4rem .6rem;
- background:#fff;border:1px solid var(--line);border-radius:10px;
- box-shadow:0 6px 18px rgba(0,0,0,.12)}
-#galleryOffer .sheetoffer{margin:.9rem 0 .2rem}
 .effectsface{display:flex;align-items:center;justify-content:center;background:#1c1f22;
  padding:0 .45rem;border-radius:8px}
 .effectsface .accswatch{width:100%;height:.8rem;margin:0}
 
-/* Two covers: what runs, each large and showing what it would run */
-.pageswitch.covers{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:.3rem 0 1rem}
+/* Two covers: what runs, each showing what it would run */
 .cover{display:flex;align-items:center;gap:.9rem;padding:.55rem .8rem;border:2px solid var(--line);
  border-radius:14px;background:#fff;text-align:left;cursor:pointer;font:inherit;color:var(--ink);
  opacity:.7}
@@ -1102,18 +1039,7 @@ body[data-pageway^=head] header h1{margin-right:0}
  body[data-pageway^=head] header h1{margin-right:auto}
 }
 
-/* One control: the two joined in a single outline, the chosen half filled */
-.headswitch.headseg{gap:0;border:1.5px solid var(--line);border-radius:11px;overflow:hidden;
- background:#fff}
-.headswitch.headseg .cover{border:0;border-radius:0;opacity:1;background:#fff;color:var(--dim)}
-.headswitch.headseg .cover+.cover{border-left:1.5px solid var(--line)}
-.headswitch.headseg .cover.on{background:var(--accent);color:#fff}
-.headswitch.headseg .cover[data-page=program].on{background:var(--board)}
-.headswitch.headseg .cover.on small{color:rgba(255,255,255,.8)}
-
 /* Tabs off the header's foot: each hangs from its lower edge, the chosen one open onto the page */
-body[data-pageway=headtabs] header{padding-bottom:0;align-items:flex-end}
-body[data-pageway=headtabs] header>*:not(.headswitch){align-self:center}
 .headswitch.headtabs{align-self:flex-end;margin-bottom:-1px;gap:.25rem}
 .headswitch.headtabs .cover{border:1.5px solid var(--line);border-bottom:0;
  border-radius:10px 10px 0 0;background:#ece8e1;opacity:1;color:var(--dim);
@@ -1135,7 +1061,6 @@ body[data-pageway] #tabs.tabbar.wrapped .tab.on{border-color:var(--line);
             var(--panel)}
 .headswitch.headtabs .cover[data-page=program].on b{color:var(--board)}
 @media (max-width:1180px){
- body[data-pageway=headtabs] header{padding-bottom:0}
  .headswitch.headtabs{margin-top:.5rem}
 }
 
@@ -1192,15 +1117,6 @@ body.scenesintab #looks>.shelf{margin-top:0}
 .headswitch .cover .plus{margin-left:auto;flex:none;opacity:1}
 .headswitch .cover:not(.on) .plus{display:none}
 
-/* A row of its own: always under the header's first line, each half its width, with room to say
-   what each holds */
-body[data-pageway=headrow] header{flex-wrap:wrap}
-.headswitch.headrow{order:10;flex:1 0 100%;margin:.1rem 0 0}
-body[data-pageway=headrow] header h1{margin-right:auto}
-.headswitch.headrow .cover{flex:1;padding:.25rem .7rem .25rem .3rem}
-.headswitch.headrow .cover .coverface{width:2.1rem;height:1.55rem}
-.headswitch.headrow .cover small{display:inline;margin-left:.5rem;max-width:none}
-.headswitch.headrow .cover b{display:inline}
 .headswitch .cover{gap:.5rem;padding:.25rem .6rem .25rem .3rem;border-radius:10px;
  box-shadow:none}
 .headswitch .cover .coverface{width:2.6rem;height:1.95rem;border-radius:5px}
@@ -1211,49 +1127,8 @@ body[data-pageway=headrow] header h1{margin-right:auto}
 .headswitch .effectsface{padding:0 .25rem}
 .headswitch .effectsface .accswatch{height:.5rem}
 
-/* Folder tabs: two tabs joined to the page each opens */
-.pageswitch.binder{display:flex;gap:.35rem;margin-top:.3rem;border-bottom:2px solid var(--line)}
-.foldertab{display:flex;align-items:center;gap:.55rem;padding:.4rem 1.1rem .4rem .45rem;
- margin-bottom:-2px;border:2px solid var(--line);border-bottom-color:var(--line);
- border-radius:12px 12px 0 0;background:#ebe7e0;color:var(--dim);font:700 .98rem system-ui,
- sans-serif;cursor:pointer}
-.foldertab.on{background:var(--bg);color:var(--ink);border-bottom-color:var(--bg)}
-.foldertab[data-page=program].on{color:var(--board)}
-.foldertab .tabface{width:2.6rem;height:1.95rem;border-radius:5px}
-/* The folder's page runs out past its edges by its own padding, so what is in it keeps the
-   width it has on the other pages */
-body[data-pageway=binder] #sceneBody,body[data-pageway=binder].programpage .programview{
- border:2px solid var(--line);border-top:0;border-radius:0 0 14px 14px;padding:.6rem 1rem 1rem;
- margin-left:-1rem;margin-right:-1rem}
-body[data-pageway=binder] #tabs{border-left:2px solid var(--line);border-right:2px solid var(--line);
- padding:0 .8rem}
-body[data-pageway=binder] .pageswitch.binder{margin-left:-1rem;margin-right:-1rem;
- padding-left:.4rem}
-
-/* A sheet over: an offer above the scenes, then a sheet in the board's colour in their place */
-.sheetoffer{display:flex;align-items:center;gap:.9rem;width:100%;padding:.5rem .7rem;
- margin:.3rem 0 .9rem;border:1.5px dashed var(--board);border-radius:12px;background:#f3f6fa;
- text-align:left;cursor:pointer;font:inherit;color:var(--ink)}
-.sheetoffer b{display:block;color:var(--board)}
-.sheetoffer small{display:block;font-size:.8rem;color:var(--dim)}
-.filmstrip{display:flex;gap:3px;flex:none}
-.filmstrip canvas{width:3.2rem;height:2.4rem;border-radius:3px}
-.sheethead{display:flex;align-items:center;gap:1rem;margin-top:.3rem;padding:.5rem .8rem;
- background:var(--board);color:#fff;border-radius:14px 14px 0 0}
-.sheetback{background:#fff;color:var(--board);border:0;border-radius:8px;padding:.3rem .7rem;
- font:600 .85rem system-ui,sans-serif;cursor:pointer}
-body[data-pageway=sheet].programpage .programview{border:2px solid var(--board);border-top:0;
- border-radius:0 0 14px 14px;padding:.6rem 1rem 1rem;background:#fff;
- box-shadow:0 8px 24px rgba(40,60,80,.15)}
-
-/* The page's setup mode: the header turns it on, a banner says what it means, and the
-   scenes and looks stand back while it is on */
+/* The header's spacer, which holds the drive buttons at the right */
 .setuphead{margin-left:auto}
-.setupbanner{background:#eef2f7;border:1px solid var(--board);border-radius:10px;
- padding:.6rem .9rem;margin:.6rem 0;font-size:.85rem;color:var(--ink)}
-body.setup #tabs,body.setup #sceneSettings,body.setup #looks,
-body.setup [id$=Cut],body.setup [id$=Bar],body.setup [id$=Tools],
-body.setup [id$=Chosen]{opacity:.35;pointer-events:none}
 
 /* A coloured box is a board setting, each section's in its own colour. The chip icon sits
    inside the box, never around it */
@@ -1683,9 +1558,6 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
 /* Setting up is the last thing on the tabs' row, at its far end */
 .ledtabs .gap{flex:1}
 .ledtabs .setupbutton{align-self:center}
-
-/* Which way the page is set up */
-.setupway{font-size:.78rem;color:var(--dim);margin:.2rem 0 .6rem}
 </style>
 </head>
 <body>
@@ -1699,18 +1571,15 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
 </header>
 <main>
 
-<p class="setupway" id="setupWay"></p>
-<div class="setupbanner" id="setupBanner" hidden></div>
 <div id="banner"></div>
 <div class="tabbar" id="tabs"></div>
 <div class="scenebody" id="sceneBody">
  <div id="sceneSettings"></div>
 
 
- <div class="marknote" id="markNote"></div>
  <div id="looks"></div>
 
- <details class="panel" id="outPanel" data-looks="both" open>
+ <details class="panel" id="outPanel" open>
   <summary>The outputs<span class="says">seven of them, each one light or three</span></summary>
   <div class="facts" id="outFacts"></div>
   <div class="head" id="outHead"></div>
@@ -1728,7 +1597,6 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
     <div id="monoBar"></div>
    </div>
   </div>
-  <div id="outWiring"></div>
   <div id="outTools"></div>
   <div id="outChosen"></div>
   <div class="legend" id="outLegend"></div>
@@ -1764,12 +1632,6 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
  <div class="facts" id="screenbFacts"></div>
 </details>
 
- <details class="panel" id="monoPanel" data-looks="mono" open>
-  <summary>The mono lights<span class="says">what the broken-out outputs became</span></summary>
-  <div id="monoHolds"></div>
-  <div id="monoTools"></div>
-  <div id="monoChosen"></div>
- </details>
 </div>
 
 <details open>
@@ -1796,9 +1658,8 @@ if (typeof CATALOGUE === "undefined") {
   });
 }
 
-// The board is declared here and filled in below the look tables, because a config
-// that draws its looks in sets names those tables and they are not built yet
-var BOARD;
+// The board the page is for, which says whether it offers the network looks
+var BOARD = {wireless: false};
 
 var HEADER = "# Written by the FX picker. Everything here can be edited by hand;\n" +
              "# MANUAL.html on this drive explains every line.\n";
@@ -1807,10 +1668,6 @@ var HEADER = "# Written by the FX picker. Everything here can be edited by hand;
 
 function r2(n) { return Math.round(n * 100) / 100; }
 function lerp(a, b, t) { return r2(a + (b - a) * t); }
-function unlerp(v, a, b) {
-  var t = (v - a) / (b - a);
-  return Math.max(0, Math.min(1, t));
-}
 
 // Each look picks from a palette of its own, so the middle of the slider is the
 // colour its card shows and moving it stays within what suits that look
@@ -2148,242 +2005,8 @@ var NET_LOOKS = [
   }
 ];
 
-// ---- one set of looks per target, where a board is drawn that way ------------------
-// The other pages hand every look to every target and let a look refuse the ones it
-// cannot serve. This is the other road: a set of looks belonging to one target, named
-// for what that target does, and reaching effects that suit it. Two sets can both hold
-// a Sparkle, so a look is kept by its id and only shown by its name.
-
-// Six separate lamps in a model, which is what these outputs actually drive. The bars
-// are brightnesses, since that is all a mono lamp has, and are drawn as such
-var MONO_LOOKS = [
-  {
-    id: "mono.steady", name: "Steady", mood: "Brightness", plain: true,
-    spans: true, onMono: true,
-    strip: ["#e8e8e8", "#e8e8e8", "#e8e8e8", "#e8e8e8", "#e8e8e8", "#e8e8e8", "#e8e8e8"],
-    entries: function (target, pace, mood) {
-      return [target.selector + ": static brightness=" + lerp(0.05, 1, mood)];
-    }
-  },
-  {
-    id: "mono.candle", name: "Candle", mood: "Guttering to steady",
-    spans: true, onMono: true,
-    strip: ["#4a4a4a", "#8a8a8a", "#d8d8d8", "#f4f4f4", "#c0c0c0", "#7a7a7a", "#3a3a3a"],
-    entries: function (target, pace, mood) {
-      return [target.selector + ": flicker_each brightness=" + lerp(0.5, 1, mood) +
-              " dimness=" + lerp(0.7, 0.35, mood) +
-              " bright_min=" + lerp(0.1, 0.02, pace) + " bright_max=" + lerp(0.4, 0.1, pace) +
-              " dim_min=" + lerp(0.08, 0.02, pace) + " dim_max=" + lerp(0.3, 0.08, pace)];
-    }
-  },
-  {
-    id: "mono.pulse", name: "Pulse", mood: "How soft the turn is",
-    spans: true, onMono: true,
-    strip: ["#1a1a1a", "#4a4a4a", "#9a9a9a", "#f0f0f0", "#9a9a9a", "#4a4a4a", "#1a1a1a"],
-    entries: function (target, pace, mood) {
-      return [target.selector + " ease=" + lerp(0.05, 0.9, mood) +
-              ": pulse speed=" + lerp(0.08, 0.5, pace)];
-    }
-  },
-  {
-    // The same breath, but travelling the run rather than every lamp together. It is
-    // here because it is the pair that tells you whether a drawing of a look is being
-    // read as time or as lamps: side by side, only one of them should move along
-    id: "mono.pulsewave", name: "Pulse wave", mood: "How long the wave is",
-    spans: true, onMono: true,
-    strip: ["#1a1a1a", "#4a4a4a", "#9a9a9a", "#f0f0f0", "#9a9a9a", "#4a4a4a", "#1a1a1a"],
-    entries: function (target, pace, mood) {
-      return [target.selector + ": pulse_wave speed=" + lerp(0.1, 1, pace) +
-              " length=" + span(target.count, mood)];
-    },
-    alone: function (target, pace) {
-      return [target.selector + ": pulse speed=" + lerp(0.1, 1, pace)];
-    }
-  },
-  {
-    id: "mono.beacon", name: "Beacon", mood: "How long it stays lit",
-    spans: true, onMono: true,
-    strip: ["#111111", "#111111", "#f4f4f4", "#f4f4f4", "#111111", "#111111", "#111111"],
-    entries: function (target, pace, mood) {
-      return [target.selector + " fade=" + lerp(0.4, 0.05, pace) +
-              ": blink speed=" + lerp(0.4, 3, pace) + " duty=" + lerp(0.1, 0.6, mood)];
-    }
-  },
-  {
-    id: "mono.chase", name: "Runway", mood: "How far the tail runs",
-    spans: true, onMono: true,
-    strip: ["#f4f4f4", "#c0c0c0", "#8a8a8a", "#5a5a5a", "#333333", "#1a1a1a", "#111111"],
-    entries: function (target, pace, mood) {
-      return [target.selector + " fade=" + lerp(0.1, 0.7, mood) +
-              ": flash_sequence speed=" + lerp(0.3, 2, pace) +
-              " length=" + target.count + " flashes=1 window=0.4"];
-    }
-  },
-  {
-    id: "mono.sparkle", name: "Sparkle", mood: "How dark it gets between",
-    spans: true, onMono: true,
-    strip: ["#f4f4f4", "#2a2a2a", "#d0d0d0", "#1a1a1a", "#f4f4f4", "#4a4a4a", "#b0b0b0"],
-    entries: function (target, pace, mood) {
-      return [target.selector + ": random_each interval=" + lerp(0.25, 0.03, pace) +
-              " brightness_min=" + lerp(0.5, 0, mood) + " brightness_max=1"];
-    }
-  },
-  {
-    // Two banks flashing against each other with a quiet gap between
-    id: "mono.emergency", name: "Emergency", mood: "How hard the flash is",
-    spans: false, onMono: true,
-    strip: ["#f4f4f4", "#111111", "#111111", "#f4f4f4", "#111111", "#f4f4f4", "#111111"],
-    entries: function (target, pace, mood) {
-      var speed = lerp(0.6, 2.5, pace);
-      var playing = target.playing;
-      var half = playing.length === 1 ? 1 : Math.floor(playing.length / 2);
-      var left = playing.slice(0, half);
-      var right = playing.slice(playing.length - half);
-      var gap = playing.slice(half, playing.length - half);
-      var window = lerp(0.3, 0.7, mood);
-      var lines = [target.name + rangify(left) + ": flash speed=" + speed +
-                   " flashes=3 window=" + window];
-      if (right.length && playing.length > 1)
-        lines.push(target.name + rangify(right) + ": flash speed=" + speed +
-                   " flashes=3 window=" + window + " phase=0.5");
-      if (gap.length && playing.length > 1)
-        lines.push(target.name + rangify(gap) + ": none");
-      return lines;
-    },
-    alone: false
-  },
-  {
-    // Five lamps, which is what a crossing is built from. Any beyond them stay dark
-    id: "mono.crossing", name: "Pelican crossing", mood: "How soft the change is",
-    spans: false, onMono: true, wants: 5,
-    strip: ["#f4f4f4", "#c8c8c8", "#8a8a8a", "#f4f4f4", "#8a8a8a", "#111111", "#111111"],
-    entries: function (target, pace, mood) {
-      var scale = lerp(2, 0.4, pace);
-      var lamps = target.playing.slice(0, 5);
-      var rest = target.playing.slice(5);
-      var lines = [target.name + rangify(lamps) + " ease=" + lerp(0.05, 0.6, mood) +
-                   ": pelican_crossing red_interval=" + r2(8 * scale) +
-                   " flashing_interval=" + r2(6 * scale) +
-                   " green_interval=" + r2(20 * scale) +
-                   " amber_interval=" + r2(3 * scale)];
-      if (rest.length) lines.push(target.name + rangify(rest) + ": none");
-      return lines;
-    },
-    alone: false
-  },
-  {
-    // Three lamps, the same way. An effect the merged gallery never reaches, because
-    // on a strip there is nothing for three lamps to mean
-    id: "mono.traffic", name: "Traffic light", mood: "How soft the change is",
-    spans: false, onMono: true, wants: 3,
-    strip: ["#f4f4f4", "#c8c8c8", "#8a8a8a", "#111111", "#111111", "#111111", "#111111"],
-    entries: function (target, pace, mood) {
-      var scale = lerp(2, 0.4, pace);
-      var lamps = target.playing.slice(0, 3);
-      var rest = target.playing.slice(3);
-      var lines = [target.name + rangify(lamps) + " ease=" + lerp(0.05, 0.6, mood) +
-                   ": traffic_light red_interval=" + r2(12 * scale) +
-                   " red_amber_interval=" + r2(2 * scale) +
-                   " green_interval=" + r2(12 * scale) +
-                   " amber_interval=" + r2(3 * scale)];
-      if (rest.length) lines.push(target.name + rangify(rest) + ": none");
-      return lines;
-    },
-    alone: false
-  },
-  {
-    id: "mono.counter", name: "Counter", mood: "How far it counts",
-    spans: true, onMono: true,
-    strip: ["#f4f4f4", "#111111", "#f4f4f4", "#f4f4f4", "#111111", "#f4f4f4", "#111111"],
-    entries: function (target, pace, mood) {
-      return [target.selector + ": binary_counter interval=" + lerp(1, 0.08, pace) +
-              " count=" + Math.round(lerp(8, 64, mood))];
-    },
-    alone: false
-  }
-];
-
-// One lamp that can be any colour, which is a different instrument entirely. These
-// reach the colour effects, which on six mono lamps mean nothing at all
-var RGB_LOOKS = [
-  {
-    id: "rgb.solid", name: "Solid", mood: "Brightness", solid: true,
-    spans: true, onMono: false,
-    strip: ["#d94a3d", "#e0a03a", "#3fa672", "#3a7fd9", "#8a4ad0", "#d94a9e", "#e8e2d6"],
-    entries: function (target, pace, mood, colour) {
-      return [target.selector + " colour=" + (colour || "ffffff").replace("#", "") +
-              ": static brightness=" + lerp(0.05, 1, mood)];
-    }
-  },
-  {
-    id: "rgb.breathe", name: "Breathe", mood: "Colour", spans: true, onMono: false,
-    strip: ["#2b7f8f", "#37a0b4", "#43c1d9", "#56d8f0", "#43c1d9", "#37a0b4", "#2b7f8f"],
-    entries: function (target, pace, mood) {
-      return [target.selector + " colour=" + tone(BREATHE_TONES, mood) +
-              " ease=" + lerp(0.8, 0.2, pace) + ": pulse speed=" + lerp(0.08, 0.5, pace)];
-    }
-  },
-  {
-    id: "rgb.rainbow", name: "Rainbow", mood: "How deep the colour is",
-    spans: true, onMono: false,
-    strip: ["#e33", "#e73", "#ea3", "#3a5", "#36c", "#63c", "#a3c"],
-    entries: function (target, pace, mood) {
-      return [target.selector + ": rainbow speed=" + lerp(0.05, 0.8, pace) +
-              " sat=" + lerp(0.3, 1, mood)];
-    }
-  },
-  {
-    // hue_step: a colour held, then the next one. Nothing on a strip wants this, and
-    // one lamp changing colour on a beat wants nothing else
-    id: "rgb.steps", name: "Colour steps", mood: "How many colours",
-    spans: true, onMono: false,
-    strip: ["#e33", "#e33", "#3a5", "#3a5", "#36c", "#36c", "#a3c"],
-    entries: function (target, pace, mood) {
-      return [target.selector + ": hue_step interval=" + lerp(2, 0.15, pace) +
-              " steps=" + Math.round(lerp(3, 12, mood)) + " sat=1 val=1"];
-    }
-  },
-  {
-    id: "rgb.blink", name: "Blink", mood: "How long it stays lit",
-    spans: true, onMono: false,
-    strip: ["#111111", "#111111", "#ffd24a", "#ffd24a", "#111111", "#111111", "#111111"],
-    entries: function (target, pace, mood, colour) {
-      return [target.selector + ": rgb_blink colour=" +
-              (colour || "#ffd24a").replace("#", "") +
-              " speed=" + lerp(0.4, 3, pace) + " duty=" + lerp(0.1, 0.6, mood)];
-    },
-    solid: true
-  },
-  {
-    id: "rgb.candle", name: "Candle", mood: "Guttering to steady",
-    spans: true, onMono: false,
-    strip: ["#812200", "#c43a00", "#ff5a00", "#ff8c1a", "#ff5a00", "#c43a00", "#812200"],
-    entries: function (target, pace, mood) {
-      return [target.selector + " colour=ff5a00: flicker_each brightness=" + lerp(0.5, 1, mood) +
-              " dimness=" + lerp(0.7, 0.35, mood) +
-              " bright_min=" + lerp(0.1, 0.02, pace) + " bright_max=" + lerp(0.4, 0.1, pace) +
-              " dim_min=" + lerp(0.08, 0.02, pace) + " dim_max=" + lerp(0.3, 0.08, pace)];
-    }
-  },
-  {
-    id: "rgb.sparkle", name: "Sparkle", mood: "Colour", spans: true, onMono: false,
-    strip: ["#cfefff", "#ffffff", "#ffe9c0", "#ffffff", "#dff3ff", "#ffffff", "#fff3d8"],
-    entries: function (target, pace, mood) {
-      return [target.selector + " colour=" + tone(SPARKLE_TONES, mood) +
-              ": random_each interval=" + lerp(0.25, 0.03, pace) +
-              " brightness_min=0 brightness_max=1"];
-    }
-  }
-];
-
-// The looks this board offers, which is either the one set or the sets its galleries
-// name. A look is kept by its id, so two sets may both hold a Sparkle
+// The looks this board offers
 function everyLook() {
-  if (BOARD.galleries) {
-    return BOARD.galleries.reduce(function (all, gallery) {
-      return all.concat(gallery.looks);
-    }, []);
-  }
   return LOOKS.concat(BOARD.wireless ? NET_LOOKS : []);
 }
 
@@ -2393,24 +2016,6 @@ function lookNamed(id) {
 
 // What a look is kept as, which is its own id where it has one and its name otherwise
 function keyOf(look) { return look.id || look.name; }
-
-// Every look table is built, so the board can now name the ones it wants
-BOARD = {
-  key: "review", name: "Mighty FX", wireless: false,
-  outputs: null, singles: [], strips: [], screen: null, sound: false,
-  advance: [{id: "seconds", label: "after a while", short: "", writes: "",
-             proposed: false}]
-};
-
-// A look's colour at one place in a run: the ends of the run are the ends of the
-// look, so however many lights are playing, the first and the last are the palette's
-// own first and last rather than stopping short of it
-function spreadColour(look, at, many) {
-  if (!look) return "#e4e0d9";
-  if (many < 2) return look.strip[0];
-  var last = look.strip.length - 1;
-  return look.strip[Math.round(at * last / (many - 1))];
-}
 
 function luminance(colour) {
   var hex = colour.replace("#", "");
@@ -2431,21 +2036,6 @@ function asMono(colour, peak) {
   var lit = Math.min(1, luminance(colour) / (peak || 1));
   return "rgb(" + Math.round(255 * lit) + "," + Math.round(226 * lit) + "," +
          Math.round(178 * lit) + ")";
-}
-
-function dimmed(colour, level) {
-  var hex = colour.replace("#", "");
-  var parts = [hex.slice(0, 2), hex.slice(2, 4), hex.slice(4, 6)].map(function (pair) {
-    return Math.round(parseInt(pair, 16) * level);
-  });
-  return "rgb(" + parts.join(",") + ")";
-}
-
-// What one light in a run shows. Every look but one spreads its own palette along the
-// run; the solid one has a colour of its own choosing and holds it all the way
-function shadeAt(look, held, at, many) {
-  if (look && look.solid && held) return dimmed(held.colour, lerp(0.05, 1, held.mood));
-  return spreadColour(look, at, many);
 }
 
 // Whether a look has anything to give a target: a colour look cannot land on a mono
@@ -2807,58 +2397,16 @@ function livePlay(look, holder, t, slot, count, sim) {
 // ---- painting them, forty times a second ---------------------------------------------
 
 var FRAME = 1 / 40;
-var running = [];      // every lamp on the page that has an effect to show
-var sims = {};         // the walk each lamp keeps, so a redraw does not restart it
 var beat = 0;
-
-// A lamp is registered rather than painted where it is built, so one loop repaints the
-// page and a rebuild does not leave a stopped lamp behind
-function liveLamp(face, look, holder, slot, count, key) {
-  if (!look || !livePlay(look, holder, 0, slot, count, {})) return false;
-  running.push({face: face, look: look, holder: holder, slot: slot, count: count,
-                key: key});
-  return true;
-}
-
-function paintLive(face, lit, round) {
-  var hex = lit.ink.replace("#", "");
-  var r = parseInt(hex.slice(0, 2), 16), g = parseInt(hex.slice(2, 4), 16),
-      b = parseInt(hex.slice(4, 6), 16);
-  var level = Math.max(0, Math.min(1, lit.level));
-  // An unlit LED is not black: it is its own casing, barely there
-  var mix = 0.12 + level * 0.88;
-  face.style.background = "rgb(" + Math.round(r * mix) + "," + Math.round(g * mix) +
-                          "," + Math.round(b * mix) + ")";
-  face.style.boxShadow = level > 0.04
-    ? "inset 0 0 0 1px rgba(0,0,0,.2), 0 0 " + (3 + level * 9).toFixed(1) + "px " +
-      (level * 2).toFixed(1) + "px rgba(" + r + "," + g + "," + b + "," +
-      (level * 0.5).toFixed(2) + ")"
-    : "inset 0 0 0 1px rgba(0,0,0,.22)";
-}
-
-function paintRunning() {
-  running.forEach(function (one) {
-    var sim = sims[one.key] || (sims[one.key] = {});
-    var lit = livePlay(one.look, one.holder, beat, one.slot, one.count, sim);
-    if (lit) paintLive(one.face, lit);
-  });
-}
 
 var HOLDING_STILL = window.matchMedia &&
                     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-function runLamps() {
-  beat += FRAME;
-  paintRunning();
-  window.setTimeout(runLamps, FRAME * 1000);
-}
 // ---- Mighty FX's outputs, inside the sections system ------------------------------------
 // Seven outputs, each three PWM channels behind one lamp. The adapter tells those three
 // apart, so an output is either one colour lamp or up to three mono ones and a board is
 // a mix. Everything below is the section model over a run of lamps: the only new idea is
 // that the run's own length is something the wiring decides.
 
-var MODE = "sided";
 var OUTS = 7;
 var CHANNELS = ["r", "g", "b"];
 var CHANNEL_WORDS = {r: "red", g: "green", b: "blue"};
@@ -2876,21 +2424,15 @@ var kinOf = {};
 var wiring = [];
 for (var n = 0; n < OUTS; n++) wiring.push({broken: false});
 
-// A mix, so no way is judged on the easy case
-wiring[2] = {broken: true};
-wiring[4] = {broken: true};
-
 function Run(name, mono) {
   return {name: name, mono: mono, lamps: [], sections: [], picked: 0,
           was: [], undone: []};
 }
 
-// Some ways keep every output in one run; the others give each kind a run of its own
-function splitRuns() { return MODE === "tworuns" || MODE === "sided"; }
-
+// The colour lamps and the mono ones are each a run of their own
 var outs = Run("out", false);
 var mono = Run("mono", true);
-var runs = splitRuns() ? [outs, mono] : [outs];
+var runs = [outs, mono];
 
 // The one stretch being worked on, which is the run it is in and its place in that run.
 // One set of looks can only be for one stretch, so the other run shows no mark at all
@@ -2928,7 +2470,7 @@ function lampsFor(run) {
   order.forEach(function (place) {
     var colour = place.channel === null;
     if (colour !== !wiring[place.out].broken) return;
-    if (splitRuns() && colour === run.mono) return;
+    if (colour === run.mono) return;
     found.push({out: place.out, colour: colour, channel: place.channel});
   });
   return found;
@@ -3306,9 +2848,6 @@ function rejoin(out) {
   draw();
 }
 
-// Which run a lamp of this output would be in, so an arrow can say where it is going
-function otherSide(run) { return run === outs ? mono : outs; }
-
 // ---- what the file says ------------------------------------------------------------------
 
 function targetFor(run, section) {
@@ -3400,13 +2939,12 @@ function inkAt(lit) {
          Math.round(parseInt(hex.slice(4, 6), 16) * mix) + ")";
 }
 
-// ---- the gallery, carried onto a stretch --------------------------------------------------
+// ---- the gallery, played on the chosen stretch --------------------------------------------
 
 var CARD_LIGHTS = 12;
 var MIDDLING = {pace: 0.5, mood: 0.5, colour: "#ff8c1a"};
 var cardFaces = [];
 var cardWalks = {};
-var carrying_look = null;
 var carrying_lamp = null;
 
 // The cut being dragged, and whether the pointer moved far enough for the release to be
@@ -3441,10 +2979,6 @@ document.addEventListener("mouseup", function () {
   window.setTimeout(function () { dragged = false; }, 0);
 });
 
-function takesLook(run) {
-  return carrying_look !== null && (!splitRuns() || carrying_look.mono === run.mono);
-}
-
 function landLook(run, at, name) {
   var section = run.sections[at];
   if (!section) return;
@@ -3478,36 +3012,20 @@ function lookCard(isMono, look, on) {
   name.textContent = look.name || "Nothing";
   card.appendChild(name);
 
-  card.draggable = carryLooks;
-  card.title = look.name
-    ? look.name + (carryLooks ? ": drag it onto a stretch of the bar or the run"
-                              : ": play it on the stretch being worked on")
-    : "leave a stretch dark";
+  card.title = look.name ? look.name + ": play it on the stretch being worked on"
+                         : "leave a stretch dark";
   card.onclick = function () {
     var run = galleryRun(isMono);
     landLook(run, stretchFor(run, isMono), look.name);
   };
-  card.ondragstart = function (event) {
-    carrying_look = {mono: isMono, look: look.name};
-    event.dataTransfer.effectAllowed = "copy";
-    event.dataTransfer.setData("text/plain", look.name || "Nothing");
-    document.body.classList.add("carrying");
-  };
-  card.ondragend = function () {
-    carrying_look = null;
-    document.body.classList.remove("carrying");
-    draw();
-  };
   return card;
 }
-
-function mono2run() { return splitRuns() ? mono : outs; }
 
 // The run the cards are for. A run of another kind, a strip say, is its own kind and is
 // worked on while it is the one picked; otherwise the cards follow the colour or mono side
 function galleryRun(isMono) {
   if (active && active.strip) return active;
-  return isMono ? mono2run() : outs;
+  return isMono ? mono : outs;
 }
 
 // Whether a stretch is mono, which is what the set of looks follows
@@ -3536,34 +3054,8 @@ function stretchFor(run, isMono) {
   return run.picked;
 }
 
-// Where the two tabs go, which a page built on this one may set. "head" puts them over
-// the cards with the set named above them; "foot" under, the cards being met first and
-// saying plainly enough which kind they are, so the sentence goes and the tabs carry it
-// as their title; "needed" is foot, shown only once the board has both kinds; "none"
-// leaves the set to follow whatever stretch was last picked
-var tabsWhere = "head";
-
-// Whether a card is carried onto a stretch as well as tapped, which a page built on this
-// one may turn off. With it off nothing is ever picked up, so every place that would take
-// a card refuses of its own accord and the gallery is a shelf of what the picked stretch
-// can play
-var carryLooks = true;
-
-function tabsAtFoot() { return tabsWhere !== "head"; }
-
-function tabsWanted() {
-  if (tabsWhere === "none") return false;
-  if (tabsWhere !== "needed") return true;
-  return haveKind(false) && haveKind(true);
-}
-
-var KINDS = [
-  {mono: false, tab: "Colour outputs",
-   says: "an output with no adapter on it is one light, any colour"},
-  {mono: true, tab: "Mono lights",
-   says: "brightness is all a broken-out channel has, so the cards show it"}
-];
-
+// The cards follow whatever stretch was last picked, so the gallery is a shelf of what that
+// stretch can play
 function renderGalleries() {
   // A kind the board has none of cannot be worked on, so the set goes back to the one it
   // has. Without this the cards would be for lights that are not there
@@ -3573,47 +3065,7 @@ function renderGalleries() {
   box.textContent = "";
 
   var tabs = document.createElement("div");
-  tabs.className = "tabs";
-  var of = document.createElement("span");
-  of.className = "of";
-  of.textContent = "Looks for";
-  tabs.appendChild(of);
-  function tabFor(kind) {
-    var tab = document.createElement("button");
-    tab.textContent = kind.tab;
-    tab.className = showing === kind.mono ? "on" : "";
-    tab.disabled = !haveKind(kind.mono);
-    tab.title = tab.disabled
-      ? "this board has none yet: break an output out, or put one back"
-      : (tabsAtFoot() ? kind.says : "show the looks these lights can play");
-    tab.onclick = function () {
-      // The set follows the stretch, so changing the set moves the stretch to match:
-      // leaving the mark on lights these cards cannot reach would say nothing true
-      var run = galleryRun(kind.mono);
-      pick(run, stretchFor(run, kind.mono));
-      draw();
-    };
-    return tab;
-  }
-
-  var says = document.createElement("span");
-  says.className = "says";
-  says.textContent = (showing ? KINDS[1] : KINDS[0]).says;
-
-  if (MODE === "sided") {
-    // The lamps are colour on the left and mono on the right, so the two tabs go to
-    // those ends as well and a tab's side says which lights it is for. They sit on the
-    // edge of the cards they change, which is what makes them read as its tabs
-    tabs.className = "tabs sides";
-    tabs.textContent = "";
-    if (tabsWanted()) {
-      tabs.appendChild(tabFor(KINDS[0]));
-      tabs.appendChild(tabFor(KINDS[1]));
-    }
-  } else {
-    KINDS.forEach(function (kind) { tabs.appendChild(tabFor(kind)); });
-    tabs.appendChild(says);
-  }
+  tabs.className = "tabs sides";
   box.appendChild(tabs);
 
   var run = galleryRun(showing);
@@ -3625,17 +3077,9 @@ function renderGalleries() {
   // it landed: better to say so on the card than to take it and quietly drop it
   var target = section ? targetFor(run, section) : null;
 
-  var shelf = box;
-  if (MODE === "sided") {
-    // The cards live in a box the tabs are the top edge of, and what the set is goes
-    // inside it rather than between the two tabs, where it broke the row into a sentence
-    shelf = document.createElement("div");
-    // The box is what a tab is joined to. With no tabs there is nothing to join, so the
-    // cards stand on the page as the rest of it does
-    shelf.className = "shelf" + (tabsWanted() ? "" : " bare");
-    if (!tabsAtFoot()) shelf.appendChild(says);
-    box.appendChild(shelf);
-  }
+  var shelf = document.createElement("div");
+  shelf.className = "shelf bare";
+  box.appendChild(shelf);
 
   var looks = document.createElement("div");
   looks.className = "gallery";
@@ -3645,7 +3089,6 @@ function renderGalleries() {
     var card = lookCard(showing, look, on);
     if (!can) {
       card.className += " cannot";
-      card.draggable = false;
       card.onclick = null;
       card.title = whyNot(look, target);
     }
@@ -3716,19 +3159,6 @@ function renderRun(where, run) {
     said.textContent = shortName(lamp);
     one.appendChild(said);
     faces.push(face);
-
-    one.addEventListener("dragover", function (event) {
-      if (!takesLook(run) || carrying_look.mono === lamp.colour) return;
-      event.preventDefault();
-      one.classList.add("landing");
-    });
-    one.addEventListener("dragleave", function () { one.classList.remove("landing"); });
-    one.addEventListener("drop", function (event) {
-      event.preventDefault();
-      one.classList.remove("landing");
-      if (!takesLook(run) || carrying_look.mono === lamp.colour) return;
-      landLook(run, mine, carrying_look.look);
-    });
     group.appendChild(one);
   });
 
@@ -3751,7 +3181,7 @@ function renderRun(where, run) {
 function outputGroup(lamp) {
   var group = document.createElement("div");
   group.className = "outgroup" + (lamp.colour ? " whole" : "");
-  if (MODE === "sided") group.appendChild(crossing(lamp.out, lamp.colour));
+  group.appendChild(crossing(lamp.out, lamp.colour));
   return group;
 }
 
@@ -3864,20 +3294,6 @@ function renderBar(where, run) {
       pick(run, at);
       draw();
     };
-    cell.addEventListener("dragover", function (event) {
-      if (!takesLook(run)) return;
-      var first2 = run.lamps[section.from];
-      if (!first2 || carrying_look.mono === first2.colour) return;
-      event.preventDefault();
-      cell.classList.add("landing");
-    });
-    cell.addEventListener("dragleave", function () { cell.classList.remove("landing"); });
-    cell.addEventListener("drop", function (event) {
-      event.preventDefault();
-      cell.classList.remove("landing");
-      if (!takesLook(run)) return;
-      landLook(run, at, carrying_look.look);
-    });
     bar.appendChild(cell);
 
     if (at < run.sections.length - 1) {
@@ -3925,150 +3341,6 @@ function cutPoint(run, after, wide, from) {
     cutAt(run, after);
   };
   return snip;
-}
-
-// ---- the wiring bar, for the way that keeps the two jobs apart ----------------------------
-
-function renderWiring() {
-  var box = document.getElementById("outWiring");
-  box.textContent = "";
-  if (MODE !== "wiring") return;
-
-  var head = document.createElement("div");
-  head.className = "wiring-head";
-  head.appendChild(document.createTextNode("Wired as"));
-  var says = document.createElement("span");
-  says.className = "says";
-  says.textContent = "cut an output to break it into three; \u00d7 puts it back to one";
-  head.appendChild(says);
-  box.appendChild(head);
-
-  var wrap = document.createElement("div");
-  wrap.className = "wiring";
-  var bar = document.createElement("div");
-  bar.className = "bar";
-
-  // An output holds three channels' worth of the bar whichever it is, so the widths
-  // stay put as one is broken out and put back
-  wiring.forEach(function (one, at) {
-    var mine = one.broken ? [0, 1, 2] : [null];
-    mine.forEach(function (channel, which) {
-      var cell = document.createElement("button");
-      cell.className = "sec";
-      cell.style.flex = (one.broken ? 1 : 3) + " 1 0";
-      var wash = document.createElement("span");
-      wash.className = "lit" + (one.broken ? "" : " out");
-      cell.appendChild(wash);
-      var said = document.createElement("span");
-      said.className = "says";
-      said.innerHTML = one.broken
-        ? CHANNELS[channel].toUpperCase() + " <em>" + (at + 1) + "</em>"
-        : (at + 1) + " <em>colour</em>";
-      cell.appendChild(said);
-
-      // The one act there is: an output comes apart into three, or it does not
-      if (!one.broken) {
-        var cuts = document.createElement("span");
-        cuts.className = "cuts";
-        cuts.appendChild(breakPoint(at));
-        cell.appendChild(cuts);
-      }
-      cell.onclick = function () {
-        if (!one.broken) breakOut(at);
-      };
-      bar.appendChild(cell);
-
-      // Putting it back is asked for once, between the first two of its three
-      if (one.broken && which === 0) {
-        var edge = document.createElement("div");
-        edge.className = "edge";
-        var drop = document.createElement("button");
-        drop.className = "drop";
-        drop.textContent = "\u00d7";
-        drop.title = "put output " + (at + 1) + " back to one colour light";
-        drop.onclick = function (event) {
-          event.stopPropagation();
-          rejoin(at);
-        };
-        edge.appendChild(drop);
-        bar.appendChild(edge);
-      }
-    });
-  });
-  wrap.appendChild(bar);
-  box.appendChild(wrap);
-}
-
-// Where an output comes apart. There is one such place per output and not one per pair
-// of channels: the adapter brings all three out or it is not fitted
-function breakPoint(out) {
-  var snip = document.createElement("i");
-  snip.className = "cut inside";
-  snip.style.left = "50%";
-  snip.style.width = "min(14px, 40%)";
-  snip.dataset.says = "R | G | B";
-  snip.title = "break output " + (out + 1) + " into its three channels";
-  snip.onclick = function (event) {
-    event.stopPropagation();
-    breakOut(out);
-  };
-  return snip;
-}
-
-// ---- the way that puts both acts in one bar -----------------------------------------------
-// A cut between two lamps sections the run. A cut through a colour lamp breaks that
-// output into its three channels, and the run grows there. Same gesture, so the one that
-// changes the wiring is drawn apart, and a mark between an output's own three puts it back
-
-function insideCutsFor(run, section, cell) {
-  if (MODE !== "onebar") return;
-  var wide = widthOf(section);
-  var cuts = document.createElement("span");
-  cuts.className = "cuts";
-  for (var i = section.from; i <= section.to; i++) {
-    var lamp = run.lamps[i];
-    if (!lamp.colour) continue;
-    cuts.appendChild(breakAt(lamp.out, i - section.from, wide));
-  }
-  cell.appendChild(cuts);
-
-  // Where an output's own channels meet, offered as putting it back together
-  for (var j = section.from; j < section.to; j++) {
-    var here = run.lamps[j];
-    var next = run.lamps[j + 1];
-    if (here.colour || here.out !== next.out) continue;
-    if (here.channel !== 0) continue;
-    cuts.appendChild(mendAt(here.out, j - section.from + 1, wide));
-  }
-}
-
-function breakAt(out, into, wide) {
-  var snip = document.createElement("i");
-  snip.className = "cut inside";
-  snip.style.left = ((into + 0.5) / wide * 100) + "%";
-  snip.style.width = "min(11px, " + (45 / wide) + "%)";
-  snip.dataset.says = "R | G | B";
-  snip.title = "break output " + (out + 1) + " into its three channels, which makes it " +
-               "mono";
-  snip.onclick = function (event) {
-    event.stopPropagation();
-    breakOut(out);
-  };
-  return snip;
-}
-
-function mendAt(out, into, wide) {
-  var mend = document.createElement("i");
-  mend.className = "cut inside mend";
-  mend.style.left = (into / wide * 100) + "%";
-  mend.style.width = "min(11px, " + (45 / wide) + "%)";
-  mend.dataset.says = "back to one";
-  mend.title = "put output " + (out + 1) + " back to one colour light";
-  mend.onclick = function (event) {
-    event.stopPropagation();
-    rejoin(out);
-  };
-  return mend;
 }
 
 // ---- crossing from one side to the other ---------------------------------------------------
@@ -4136,16 +3408,12 @@ function renderCutting(where, run) {
   says.textContent = "Cut into " + run.sections.length +
                      (run.sections.length === 1 ? " stretch" : " stretches");
   box.appendChild(says);
-  // Both sides of the sided page share one set of steps, above them, since a step back
-  // is about the panel and not about one side of it
-  if (MODE !== "sided") zoomAndSteps(box, run);
 }
 
 // The row above everything, where the sided page keeps the steps it shares
 function renderPanelHead() {
   var box = document.getElementById("outHead");
   box.textContent = "";
-  if (MODE !== "sided") return;
   var says = document.createElement("span");
   says.className = "what";
   says.textContent = "Drag a light to where it sits on your build";
@@ -4240,7 +3508,6 @@ function renderChosen(where, run) {
 // The two sides: each as wide as what it holds, so the divide between them moves as
 // outputs are broken out and put back
 function renderSides() {
-  if (MODE !== "sided") return;
   [{run: outs, side: "sideA", head: "headA", title: "Colour outputs",
     says: "no adapter fitted"},
    {run: mono, side: "sideB", head: "headB", title: "Mono lights",
@@ -4273,29 +3540,9 @@ function renderSides() {
 
 function renderLegend() {
   var box = document.getElementById("outLegend");
-  box.textContent = "";
-  if (MODE === "tworuns") {
-    box.textContent = "An output moves between the two runs as it is broken out and put " +
-                      "back. Nothing else about either run changes.";
-    return;
-  }
-  if (MODE === "sided") {
-    box.textContent = "The arrow on an output sends it across: one colour light becomes " +
-                      "three mono ones, and the three come back as one. Each side is as " +
-                      "wide as what it holds, so the divide moves with the board.";
-    return;
-  }
-  [["", "a cut between lights, which sections the run"],
-   ["inside", "a cut through an output, which breaks it into its three channels"],
-   ["mend", "and the mark that puts one back to a single colour light"]]
-    .forEach(function (pair) {
-      var one = document.createElement("span");
-      var mark = document.createElement("i");
-      mark.className = pair[0];
-      one.appendChild(mark);
-      one.appendChild(document.createTextNode(pair[1]));
-      box.appendChild(one);
-    });
+  box.textContent = "The arrow on an output sends it across: one colour light becomes " +
+                    "three mono ones, and the three come back as one. Each side is as " +
+                    "wide as what it holds, so the divide moves with the board.";
 }
 
 // ---- the file, painted -----------------------------------------------------------------------
@@ -4346,44 +3593,17 @@ function draw() {
   renderGalleries();
   renderPanelHead();
   renderRun("outRun", outs);
-  renderWiring();
   renderCutting("outCut", outs);
   renderBar("outBar", outs);
+  renderCutting("monoCut", mono);
+  renderRun("monoRun", mono);
+  renderBar("monoBar", mono);
 
-  var second = document.getElementById("monoPanel");
-  if (splitRuns()) {
-    renderCutting("monoCut", mono);
-    renderRun("monoRun", mono);
-    renderBar("monoBar", mono);
-  } else {
-    document.getElementById("sideB").style.display = "none";
-  }
-
-  if (MODE === "sided") {
-    // Both sides are in the one panel, so one set of tools serves whichever was last
-    // worked on rather than a set under each
-    second.style.display = "none";
-    renderSides();
-    renderTools("outTools", active);
-    renderChosen("outChosen", active);
-  } else if (MODE === "tworuns") {
-    renderTools("outTools", outs);
-    renderChosen("outChosen", outs);
-    renderTools("monoTools", mono);
-    renderChosen("monoChosen", mono);
-  } else {
-    second.style.display = "none";
-    renderTools("outTools", outs);
-    renderChosen("outChosen", outs);
-  }
-
-  // The cuts that change the wiring live in the bar on the way that puts them there
-  if (MODE === "onebar") {
-    var cells = document.querySelectorAll("#outBar .sec");
-    outs.sections.forEach(function (section, at) {
-      if (cells[at]) insideCutsFor(outs, section, cells[at]);
-    });
-  }
+  // Both sides are in the one panel, so one set of tools serves whichever was last worked
+  // on rather than a set under each
+  renderSides();
+  renderTools("outTools", active);
+  renderChosen("outChosen", active);
 
   renderLegend();
   renderPreview();
@@ -4395,7 +3615,6 @@ function draw() {
 // cutting and its bar below the other side's. Both runs take the height of the taller, so
 // the two sides read across whatever either is holding
 function levelSides() {
-  if (!splitRuns()) return;
   var both = [document.getElementById("outRun"), document.getElementById("monoRun")];
   both.forEach(function (box) { box.style.minHeight = ""; });
   var tallest = 0;
@@ -4418,36 +3637,6 @@ function step() {
   window.setTimeout(step, FRAME * 1000);
 }
 
-// A board with something on every lamp, so the page is read as a board and not as a
-// blank one. A stretch over two colour outputs, and one over a broken output's channels
-settle();
-runs.forEach(function (run) {
-  run.sections = run.lamps.map(function (lamp, at) { return blank(at, at, run); });
-});
-settle();
-
-// Two stretches wider than one lamp, so the page opens on a board that has been cut
-// rather than one where every lamp stands alone and there is nothing to cut
-runs.forEach(function (run) {
-  if (run.sections.length > 2) {
-    run.sections[1].to = run.sections[2].to;
-    run.sections.splice(2, 1);
-  }
-});
-settle();
-
-var DRESSED = {colour: ["Rainbow", "Breathe", "Party", "Campfire", "Solid"],
-               mono: ["Campfire", "Sparkle", "Breathe", "Chase", "Solid"]};
-runs.forEach(function (run) {
-  var reached = {colour: 0, mono: 0};
-  run.sections.forEach(function (section) {
-    var lamp = run.lamps[section.from];
-    if (!lamp) return;
-    var kind = lamp.colour ? "colour" : "mono";
-    section.look = DRESSED[kind][reached[kind] % DRESSED[kind].length];
-    reached[kind]++;
-  });
-});
 settle();
 draw();
 if (HOLDING_STILL) { beat = 0.37; paintAll(); } else { step(); }
@@ -4796,10 +3985,6 @@ draw = function () {
   renderSceneSettings();
 };
 
-// A card is tapped onto a stretch, with no colour and mono tabs over the cards
-tabsWhere = "none";
-carryLooks = false;
-
 // The board opens as it ships, every output one colour lamp, and the outputs whole and
 // playing Rainbow. The strips play nothing, what is wired to them being unknown
 var OPENING_LOOK = "Rainbow";
@@ -5108,9 +4293,6 @@ function spreadStops(target) {
   };
 }(lookNamed("Campfire")));
 
-wiring = wiring.map(function () { return {broken: false}; });
-order = wiring.map(function (one, out) { return {out: out, channel: null}; });
-settle();
 outs.sections = [blank(0, outs.lamps.length - 1)];
 outs.sections[0].look = OPENING_LOOK;
 settle();
@@ -5284,7 +4466,6 @@ function wireRun(run) {
                                width: row.high - row.low + SIZE + GAP,
                                height: SIZE + 4.4, rx: 4});
       plate.onclick = function () { pick(run, at); draw(); };
-      takesDrop(plate, run, at, "span");
       var says = tag("title", {});
       says.textContent = "lights " + (section.from + 1) + " to " + (section.to + 1) +
                          ", playing " +
@@ -5437,7 +4618,6 @@ function renderStripBar(where, run) {
     cell.appendChild(inside);
 
     cell.onclick = function () { pick(run, at); draw(); };
-    takesDrop(cell, run, at, "sec");
     bar.appendChild(cell);
 
     // The cut this section shares with the next: dragged to move it, clicked to take it
@@ -5650,11 +4830,6 @@ function astrayOf(side) {
     return !(onOne && atStep[upTo[place]] === 1);
   });
 }
-
-
-// wireRun asks a run how many lights it has under the name that page gives it, and lands
-// a card on a stretch, which this page does not do, nothing being carried here
-function takesDrop() {}
 
 // The drawing picks through the runs' pick(), which makes the strip the
 // run being worked on, so only one stretch on the page is ever marked
@@ -6928,8 +6103,6 @@ function directionToggle(run, section) {
 // 1 to 7, LEDs 11 to 20 of the left strip, output 3's red and green. The file's selector is the
 // file view's to show, and whether the lights are colour or mono the tab's
 
-var CHANNEL_WORDS = {r: "red", g: "green", b: "blue"};
-
 // A list said as English does: one, two and three
 function spoken(items) {
   if (items.length < 2) return items.join("");
@@ -7513,45 +6686,18 @@ function screenSize(port) {
 
 // ---- where the board is set up ----------------------------------------------------------
 // Every fact about the board stays beside what it is about: the wiring on the outputs, a
-// strip's length on the strip, a screen's type on the screen. What differs is how a page
-// says those are the board's and not the scene's, and when they can be changed.
-//
-//   page     a setup mode for the whole page, turned on in the header
-//   panel    a setup band in each panel, opened from that panel's header
-//   marker   always editable, every board fact wearing the same mark
-//   both     the mark always, and the setup mode for changing them
-//   section  each fact in a box of its section's own colour, and the setup mode for
-//            the whole board entered from any section's header, where it is needed
+// strip's length on the strip, a screen's type on the screen. Each reads as a box in its
+// section's own colour, and the whole board is set up at once in a setup mode.
 
-var SETUP_WAY = "section";
-
-var WAYS_SAID = {
-  page: "Set up the board from the header; outside that, it reads as plain words",
-  panel: "Each panel sets up its own part of the board",
-  marker: "Board facts are changed where they sit, and marked as the board's",
-  both: "Board facts are marked, and changed in a setup mode",
-  section: "A coloured box is a board setting, set up from any section"
-};
-
-// Whether the whole page is in its setup mode, and which panels have their band open
+// Whether the whole page is in its setup mode
 var setupOn = false;
-var setupOpen = {};
 
 // The panels that hold a board fact, and the colour each one's box takes
 var SECTIONS = {outPanel: "outs", striplPanel: "stripl", striprPanel: "stripr",
                 screenaPanel: "screena", screenbPanel: "screenb"};
 
-function marked() { return SETUP_WAY === "marker" || SETUP_WAY === "both"; }
-
-// Whether a fact reads as its section's coloured box
-function boxed() { return SETUP_WAY === "section"; }
-
 // Whether the board facts in this panel can be changed just now
-function canEdit(panel) {
-  if (SETUP_WAY === "marker") return true;
-  if (SETUP_WAY === "panel") return !!setupOpen[panel];
-  return setupOn;
-}
+function canEdit(panel) { return setupOn; }
 
 // Where a lamp sits is changed with the wiring, so only where that can be
 lampsMovable = function () { return canEdit("outPanel"); };
@@ -7679,7 +6825,6 @@ function small(words) {
   return said;
 }
 
-// The mark every board fact wears where marking is the way: a small board with pins
 // The board's chip, three legs a side, set three apart as the smallest spacing that still
 // reads as legs at 16px
 function boardIcon() {
@@ -7697,33 +6842,10 @@ function boardIcon() {
   return svg;
 }
 
-// One board fact as it reads in place: marked where that is the way, and saying so
-function fact(content) {
-  var chip = document.createElement("span");
-  chip.className = "fact" + (marked() ? " boardfact" : "");
-  if (marked()) {
-    chip.appendChild(boardIcon());
-    chip.title = "How the board is built, which is the same in every scene";
-  }
-  if (typeof content === "string") chip.appendChild(document.createTextNode(content));
-  else chip.appendChild(content);
-  return chip;
-}
-
-// A panel's band, where the panel way opens one: its facts under a label saying whose
-function band(box, panel) {
-  box.classList.toggle("setupband", SETUP_WAY === "panel" && !!setupOpen[panel]);
-  if (SETUP_WAY !== "panel" || !setupOpen[panel]) return;
-  var says = document.createElement("span");
-  says.className = "bandsays";
-  says.textContent = "Board setup, the same in every scene";
-  box.appendChild(says);
-}
-
 // ---- the facts, in place --------------------------------------------------------------------
 
 // The arrows on the lamps are how an output is broken out, so they show only where the
-// wiring can be changed, and are marked as the board's where marking is the way
+// wiring can be changed
 var oneCrossing = crossing;
 
 // Where the wiring cannot be changed the arrow is left out. What stands in its place takes
@@ -7737,31 +6859,22 @@ function noArrow() {
 crossing = function (out, colour) {
   if (!canEdit("outPanel")) return noArrow();
   var made = oneCrossing(out, colour);
-  if (marked()) made.classList.add("boardfact");
-  if (boxed()) made.classList.add("boardarrow");
+  made.classList.add("boardarrow");
   return made;
 };
 
 function renderOutFacts() {
   var box = document.getElementById("outFacts");
   box.textContent = "";
-  band(box, "outPanel");
-  var said = brokenSaid();
-  if (boxed()) {
-    box.appendChild(boardBox("outPanel", ["Wiring", small(said)]));
-    if (canEdit("outPanel")) {
-      var hint = document.createElement("span");
-      hint.className = "hint";
-      hint.textContent = "Drag a light to where it sits in your build. Arrows split an " +
-                         "output into three mono lights, or rejoin them.";
-      hint.title = hint.textContent;
-      box.appendChild(hint);
-    }
-    return;
+  box.appendChild(boardBox("outPanel", ["Wiring", small(brokenSaid())]));
+  if (canEdit("outPanel")) {
+    var hint = document.createElement("span");
+    hint.className = "hint";
+    hint.textContent = "Drag a light to where it sits in your build. Arrows split an " +
+                       "output into three mono lights, or rejoin them.";
+    hint.title = hint.textContent;
+    box.appendChild(hint);
   }
-  box.appendChild(fact(said.charAt(0).toUpperCase() + said.slice(1) +
-                       (canEdit("outPanel") ? ". The arrow on an output breaks it out, or " +
-                                              "puts it back." : ".")));
 }
 
 var oneRenderLeds = renderLeds;
@@ -7838,37 +6951,20 @@ renderLeds = function (where, run) {
     renderStripOut(box, run, panel);
     return;
   }
-  if (boxed()) {
-    // The strip's own count box is already the board's, so the icon goes inside it and
-    // it takes the strip's colour
-    if (canEdit(panel)) {
-      oneRenderLeds(where, run);
-      var says = box.querySelector(".says");
-      if (says) box.removeChild(says);
-      var chip = box.querySelector(".chip");
-      chip.className = "chip boardchip " + SECTIONS[panel];
-      chip.title = "How the board is built, which is the same in every scene";
-      chip.insertBefore(boardIcon(), chip.firstChild);
-      chip.appendChild(stripDrop(run));
-    } else {
-      box.textContent = "";
-      box.appendChild(boardBox(panel, ["Strip", small(stripBuilt(run))]));
-    }
-    return;
-  }
+  // The strip's own count box is already the board's, so the icon goes inside it and it
+  // takes the strip's colour
   if (canEdit(panel)) {
     oneRenderLeds(where, run);
-    var chip = box.querySelector(".chip");
     var says = box.querySelector(".says");
     if (says) box.removeChild(says);
-    box.removeChild(chip);
+    var chip = box.querySelector(".chip");
+    chip.className = "chip boardchip " + SECTIONS[panel];
+    chip.title = "How the board is built, which is the same in every scene";
+    chip.insertBefore(boardIcon(), chip.firstChild);
     chip.appendChild(stripDrop(run));
-    band(box, panel);
-    box.appendChild(fact(chip));
   } else {
     box.textContent = "";
-    band(box, panel);
-    box.appendChild(fact(stripBuilt(run)));
+    box.appendChild(boardBox(panel, ["Strip", small(stripBuilt(run))]));
   }
 };
 
@@ -7876,33 +6972,10 @@ function renderScreenFacts(port) {
   var box = document.getElementById(port.id + "Facts");
   var panel = port.id + "Panel";
   box.textContent = "";
-  band(box, panel);
-  if (boxed()) {
-    var size = screensFitted[port.id];
-    box.appendChild(boardBox(panel, [port.label, canEdit(panel)
-      ? screenSize(port)
-      : small(size ? size + " inch" : "no panel fitted")]));
-    return;
-  }
-  if (canEdit(panel)) {
-    var label = document.createElement("label");
-    label.appendChild(document.createTextNode("Panel fitted "));
-    label.appendChild(screenSize(port));
-    box.appendChild(fact(label));
-  } else {
-    var fitted = screensFitted[port.id];
-    box.appendChild(fact(fitted ? fitted + " inch panel fitted" : "No panel fitted"));
-  }
-}
-
-// Once there are scenes the mark has to be read against them, so the frame says what it is
-function renderMarkNote() {
-  var box = document.getElementById("markNote");
-  box.textContent = "";
-  if (!marked() || !state.scenes.length) return;
-  box.appendChild(boardIcon());
-  box.appendChild(document.createTextNode(
-    "marks how the board is built, which is the same in every scene"));
+  var size = screensFitted[port.id];
+  box.appendChild(boardBox(panel, [port.label, canEdit(panel)
+    ? screenSize(port)
+    : small(size ? size + " inch" : "no panel fitted")]));
 }
 
 // ---- turning setup on ------------------------------------------------------------------------
@@ -7918,70 +6991,15 @@ function setupButton(label, on, act) {
   return button;
 }
 
-function renderSetupButtons() {
-  if (SETUP_WAY === "page" || SETUP_WAY === "both") {
-    var header = document.getElementById("setupHead");
-    header.textContent = "";
-    header.appendChild(setupButton(setupOn ? "Done setting up" : "Set up the board", setupOn,
-                                   function () {
-                                     setSetup(!setupOn);
-                                     draw();
-                                   }));
-    document.body.classList.toggle("setup", setupOn);
-    var banner = document.getElementById("setupBanner");
-    banner.hidden = !setupOn;
-    banner.textContent = setupOn
-      ? "Setting up the board. What is changed here is the same in every scene, so the " +
-        "scenes and looks wait until you are done."
-      : "";
-  }
-  if (SETUP_WAY === "section") {
-    // The whole board is set up at once, from whichever section it was wanted in, and
-    // any section's Done ends it. What is not the board stands back meanwhile
-    document.body.classList.toggle("setupall", setupOn);
-    Object.keys(SECTIONS).forEach(function (panel) {
-      sectionButton(panel, setupOn ? "Done" : "Set up", setupOn,
-                    function () { setSetup(!setupOn); });
-    });
-  }
-  if (SETUP_WAY === "panel") {
-    Object.keys(SECTIONS).forEach(function (panel) {
-      sectionButton(panel, setupOpen[panel] ? "Done" : "Set up", setupOpen[panel],
-                    function () { setupOpen[panel] = !setupOpen[panel]; });
-    });
-  }
-}
-
-// A section's own setup button, in the header of its panel
-function sectionButton(panel, label, on, toggle) {
-  var summary = document.querySelector("#" + panel + " > summary");
-  var box = summary.querySelector(".setupslot");
-  if (!box) {
-    box = document.createElement("span");
-    box.className = "setupslot";
-    summary.appendChild(box);
-  }
-  box.textContent = "";
-  // Every section grows or shrinks as setup opens and closes, so the one pressed is
-  // held where it was on the screen
-  box.appendChild(setupButton(label, on, function () {
-    var was = summary.getBoundingClientRect().top;
-    toggle();
-    draw();
-    window.scrollBy(0, summary.getBoundingClientRect().top - was);
-  }));
-}
-
 var oneSetupDraw = draw;
 
 draw = function () {
   oneSetupDraw();
   renderOutFacts();
   SCREEN_PORTS.forEach(renderScreenFacts);
-  renderMarkNote();
-  renderSetupButtons();
+  // What is not the board stands back while it is set up
+  document.body.classList.toggle("setupall", setupOn);
   if (setupOn) unmark();
-  document.getElementById("setupWay").textContent = WAYS_SAID[SETUP_WAY];
   paintAll();
 };
 
@@ -8027,7 +7045,7 @@ function wiredSide() {
   return {wiring: wired, order: order.map(function (place) { return byKey[lampKey(place)]; })};
 }
 
-// The lamps on show, which a page drawing its own row of them while set up may change
+// The lamps on show
 function lampsShown() {
   return Array.prototype.slice.call(document.querySelectorAll(
     "#outRun .lamp[data-key], #monoRun .lamp[data-key]"));
@@ -8036,9 +7054,6 @@ function lampsShown() {
 function lampNode(key) {
   return lampsShown().filter(function (node) { return node.dataset.key === key; })[0] || null;
 }
-
-// What a page draws before the wiring is laid over it, which here is nothing
-function beforeWiring() {}
 
 // Every lamp can be found by what it is, which is what the lines and the slide go by
 var oneWiredTakesPlace = takesPlace;
@@ -8249,7 +7264,6 @@ var oneWiredDraw = draw;
 
 draw = function () {
   oneWiredDraw();
-  beforeWiring();
   renderConnectors();
   playSlide();
 };
@@ -8267,7 +7281,7 @@ draw();
 var LED_PANELS = ["outPanel", "striplPanel", "striprPanel"];
 
 function runsOfPanel(panel) {
-  if (panel === "outPanel") return splitRuns() ? [outs, mono] : [outs];
+  if (panel === "outPanel") return [outs, mono];
   return runs.filter(function (run) { return run.strip && run.id + "Panel" === panel; });
 }
 
@@ -8342,9 +7356,6 @@ function showChosen() {
 
 // A tab's swatch, which for an LED section is what it plays
 function tabSwatch(swatch, panel) { renderSwatch(swatch, panel); }
-
-// Setting up is the tabs' button and no section's own
-sectionButton = function () {};
 
 function renderLedTabs() {
   var bar = document.getElementById("ledTabs");
@@ -8437,14 +7448,6 @@ draw = function () {
   LED_PANELS.forEach(function (panel) {
     stack.appendChild(document.getElementById(panel));
   });
-
-  // A section's own Set up, drawn before this page took the button to the tabs
-  document.querySelectorAll(".setupslot").forEach(function (slot) {
-    slot.parentNode.removeChild(slot);
-  });
-
-  // The note naming which way of setting up a page tries is for the pages comparing them
-  document.getElementById("setupWay").hidden = true;
 }());
 
 showChosen();
@@ -8488,9 +7491,8 @@ function turnForChosen(letter) {
 }
 state.media = [];
 state.art = {};
-// There being no drive, the page says what it would with one open
-state.fileHandle = {};
-state.scanned = true;
+state.fileHandle = null;
+state.scanned = false;
 
 var BOARD_INK = "#0a0a0a";
 
@@ -8934,77 +7936,6 @@ function screenEntry(letter, body) {
   return selector + ": image file=" + quoted(shows);
 }
 
-
-// ---- pictures to choose from ------------------------------------------------------------------
-// Made up for a page with no drive, the drive files part reading the drive's in their place
-
-function madePicture(name, kind, wide, high, paint) {
-  var canvas = document.createElement("canvas");
-  canvas.width = wide;
-  canvas.height = high;
-  paint(canvas.getContext("2d"), wide, high);
-  state.art[name] = {url: canvas.toDataURL(), w: wide, h: high, ratio: wide / high};
-  state.media.push({name: name, kind: kind});
-}
-
-madePicture("sunset.png", "image", 240, 320, function (g, w, h) {
-  var sky = g.createLinearGradient(0, 0, 0, h);
-  sky.addColorStop(0, "#2b1d5c");
-  sky.addColorStop(0.6, "#e0584a");
-  sky.addColorStop(1, "#f3b24a");
-  g.fillStyle = sky;
-  g.fillRect(0, 0, w, h);
-  g.fillStyle = "#ffe2a0";
-  g.beginPath();
-  g.arc(w / 2, h * 0.68, 46, 0, Math.PI * 2);
-  g.fill();
-  g.fillStyle = "#1c1330";
-  g.fillRect(0, h * 0.8, w, h * 0.2);
-});
-madePicture("badge.png", "image", 240, 240, function (g, w, h) {
-  g.fillStyle = "#15191c";
-  g.fillRect(0, 0, w, h);
-  g.strokeStyle = "#00a39a";
-  g.lineWidth = 14;
-  g.beginPath();
-  g.arc(w / 2, h / 2, 88, 0, Math.PI * 2);
-  g.stroke();
-  g.fillStyle = "#f5f3ef";
-  g.font = "bold 84px system-ui, sans-serif";
-  g.textAlign = "center";
-  g.textBaseline = "middle";
-  g.fillText("FX", w / 2, h / 2 + 4);
-});
-madePicture("flame.gif", "gif", 240, 320, function (g, w, h) {
-  g.fillStyle = "#120a06";
-  g.fillRect(0, 0, w, h);
-  var fire = g.createRadialGradient(w / 2, h * 0.7, 10, w / 2, h * 0.62, 140);
-  fire.addColorStop(0, "#fff2b0");
-  fire.addColorStop(0.35, "#f5a623");
-  fire.addColorStop(0.7, "#c2410c");
-  fire.addColorStop(1, "rgba(18,10,6,0)");
-  g.fillStyle = fire;
-  g.fillRect(0, 0, w, h);
-});
-madePicture("stars", "folder", 240, 240, function (g, w, h) {
-  g.fillStyle = "#0b1026";
-  g.fillRect(0, 0, w, h);
-  g.fillStyle = "#e8eef2";
-  [[40, 50, 3], [180, 40, 2], [120, 110, 4], [60, 170, 2], [200, 190, 3], [150, 210, 2]]
-    .forEach(function (star) {
-      g.beginPath();
-      g.arc(star[0], star[1], star[2], 0, Math.PI * 2);
-      g.fill();
-    });
-});
-
-// A picture's drawing, made above
-function mediaArt(name) { return state.art[name] || null; }
-
-// Stand-ins for adding and deleting files, which the drive files part replaces
-function binButton() { return document.createElement("span"); }
-function adderTile() { return document.createElement("span"); }
-
 function allBodies() {
   return [state.always.body].concat(state.scenes.map(function (scene) { return scene.body; }));
 }
@@ -9090,26 +8021,10 @@ function renderScreensTab() {
   renderScreensHead();
   renderAssets();
   var head = document.getElementById("screensHead");
-  var boxes = head.querySelectorAll(".screen-box");
   // The band is the screen's coloured box, so it wears the board's chip like the others
   head.querySelectorAll(".screen-box h3").forEach(function (band) {
     band.insertBefore(boardIcon(), band.firstChild);
     band.title = "How the board is built, which is the same in every scene";
-  });
-  // The turn is kept for the picture showing, so there is none to set with none showing
-  SCREENS.forEach(function (letter, at) {
-    var screen = state.screens[letter];
-    var turn = boxes[at] && boxes[at].querySelector(".settings select");
-    if (!turn) return;
-    var picture = screen.shows && screen.shows !== "keep" ? screen.shows : null;
-    turn.disabled = !picture;
-    turn.title = picture ? "Which way up " + picture + " is drawn on this screen, in this scene"
-                         : "Which way up a picture is drawn, once one is showing";
-    turn.onchange = function () {
-      screen.turn = Number(turn.value);
-      screen.turns[picture] = screen.turn;
-      draw();
-    };
   });
   // Whether a screen is fitted and its size are the board's
   if (!setupOn) {
@@ -9327,27 +8242,9 @@ function soundLine(body) {
   return body.soundKept;
 }
 
-
-// ---- sounds to choose from ---------------------------------------------------------------------
-// Made up for a page with no drive, the drive files part reading each wav for its length and
-// its shape in their place
-
 // How many points a sound's outline is drawn from, enough for it to look smooth at the
 // pictures' size
 var SOUND_SAMPLES = 96;
-
-function madeSound(name, seconds, shape) {
-  var bars = [];
-  for (var i = 0; i < SOUND_SAMPLES; i++) {
-    bars.push(Math.max(0.08, Math.min(1, shape(i / (SOUND_SAMPLES - 1)))));
-  }
-  state.sounds.push(name);
-  state.soundInfo[name] = {seconds: seconds, bars: bars};
-}
-
-madeSound("rain.wav", 42, function (at) { return 0.45 + 0.2 * Math.sin(at * 37); });
-madeSound("chimes.wav", 6, function (at) { return Math.exp(-at * 3) * (0.7 + 0.3 * Math.sin(at * 60)); });
-madeSound("engine.wav", 18, function (at) { return 0.3 + 0.6 * at; });
 
 // ---- each scene keeps its own sound -------------------------------------------------------------
 
@@ -9627,7 +8524,7 @@ draw();
 var HUB_PLACES = ["A", "B", "C", "D", "E", "F"];
 
 // A position taken out keeps the size it had, for if it is put back
-state.hub = {on: true, port: "A", sizes: {}, was: {}};
+state.hub = {on: false, port: "A", sizes: {}, was: {}};
 state.places = {};
 HUB_PLACES.forEach(function (place) {
   state.hub.sizes[place] = "2.8";
@@ -10181,9 +9078,6 @@ draw = function () {
   says.hidden = true;
 }());
 
-// A page can open on the Screens tab, to be looked at
-if (/[?&]screens\b/.test(location.search)) chosenTab = "screensPanel";
-
 state.always.body = capture();
 showChosen();
 draw();
@@ -10269,53 +9163,6 @@ function pictureOffset(look, shows, size, turn) {
   }
   return {x: side(look.anchor % 3, 0), y: side(Math.floor(look.anchor / 3), 1)};
 }
-
-// ---- pictures made for placing ----------------------------------------------------------------
-// A small tile and a half-size sprite, which the placing settings are for, and a folder whose
-// names each say how long their picture shows
-
-madePicture("bricks.png", "image", 40, 40, function (g, w, h) {
-  g.fillStyle = "#8a3b24";
-  g.fillRect(0, 0, w, h);
-  g.fillStyle = "#c9b8a0";
-  g.fillRect(0, 18, w, 3);
-  g.fillRect(0, 38, w, 2);
-  g.fillRect(18, 0, 3, 18);
-  g.fillRect(0, 21, 3, 17);
-  g.fillRect(37, 21, 3, 17);
-});
-madePicture("ghost.png", "image", 96, 96, function (g, w, h) {
-  var cells = ["....XXXX....", "..XXXXXXXX..", ".XXXXXXXXXX.", ".XX..XX..XX.",
-               ".XX..XX..XX.", "XXXXXXXXXXXX", "XXXXXXXXXXXX", "XXXXXXXXXXXX",
-               "XXXXXXXXXXXX", "XXXXXXXXXXXX", "XX.XXX.XXX.X", "X...X...X..."];
-  var size = w / 12;
-  g.clearRect(0, 0, w, h);
-  cells.forEach(function (row, y) {
-    row.split("").forEach(function (cell, x) {
-      if (cell !== "X") return;
-      g.fillStyle = (y === 3 || y === 4) && x % 4 !== 0 && x % 4 !== 3 ? "#1b2a6b" : "#f06aa8";
-      g.fillRect(x * size, y * size, size, size);
-    });
-  });
-});
-madePicture("clock", "folder", 240, 240, function (g, w, h) {
-  g.fillStyle = "#f4efe4";
-  g.fillRect(0, 0, w, h);
-  g.strokeStyle = "#2b2622";
-  g.lineWidth = 8;
-  g.beginPath();
-  g.arc(w / 2, h / 2, 90, 0, Math.PI * 2);
-  g.stroke();
-  g.lineWidth = 6;
-  g.beginPath();
-  g.moveTo(w / 2, h / 2);
-  g.lineTo(w / 2, h / 2 - 64);
-  g.moveTo(w / 2, h / 2);
-  g.lineTo(w / 2 + 44, h / 2);
-  g.stroke();
-});
-// Whether a folder's names each say how long their picture shows: clock_0001_500ms.png
-mediaNamed("clock").named = true;
 
 // ---- drawings -------------------------------------------------------------------------------------
 // A drawing is a Python file drawn on a screen, graphics file=rings.py. It is listed only where
@@ -13572,85 +12419,7 @@ boardLine = function () {
   return "board: " + tokens.join(" ") + (rest ? " " + rest : "");
 };
 
-// ---- the settings, drawn ----------------------------------------------------------------------
-
-// A setting's row: its name, its choice, and a line under it where there is something to say
-function boardRow(name, choice, hint) {
-  var row = document.createElement("div");
-  row.className = "boardrow";
-  var label = document.createElement("span");
-  label.className = "boardrowname";
-  label.textContent = name;
-  row.appendChild(label);
-  row.appendChild(choice);
-  if (hint) {
-    var under = document.createElement("small");
-    under.textContent = hint;
-    row.appendChild(under);
-  }
-  return row;
-}
-
-// Whether the settings carry what the board runs, which a page choosing between an effects page
-// and a program page does not
-var boardRowsRun = true;
-
-// The three settings, locked where the page only lets the board change while editing it
-function boardRows(locked) {
-  var rows = document.createElement("div");
-  rows.className = "boardrows";
-  var runs = segment([["effects", "the effects", locked], ["program", "a program", locked]],
-                     boardSet.program ? "program" : "effects", function (value) {
-                       if (value === "effects") {
-                         boardSet.program = null;
-                       } else if (!boardSet.program) {
-                         boardSet.program = boardSet.lastProgram || DRIVE_PROGRAMS[0][0];
-                       }
-                     });
-  if (boardRowsRun) rows.appendChild(boardRow("Runs", runs));
-
-  var busy = !savingMeansSomething();
-  var saving = segment([["auto", "plays without an eject", locked || busy],
-                        ["manual", "waits for an eject", locked || busy]],
-                       boardSet.reload ? "auto" : "manual",
-                       function (value) { boardSet.reload = value === "auto"; });
-  rows.appendChild(boardRow("Saving", saving,
-    busy ? "a program keeps the board busy, so press its Reset button to play a change"
-         : boardSet.reload ? "the board has to be running a file that says so, so the save " +
-                             "that first turns this on still needs an eject"
-                           : "eject the drive, or press Boot once, to play a save"));
-
-  var shown = !driveMeansSomething();
-  var driveChoice = segment([["shown", "shown at start", locked || shown],
-                             ["hidden", "hidden until asked", locked || shown]],
-                            boardSet.driveHidden ? "hidden" : "shown",
-                            function (value) { boardSet.driveHidden = value === "hidden"; });
-  rows.appendChild(boardRow("The drive", driveChoice,
-    shown ? "shown anyway while a program runs, so it can always be changed back"
-          : boardSet.driveHidden ? "double-press Boot to bring it back" : ""));
-  if (boardSet.program && boardRowsRun) rows.appendChild(programChooser(locked));
-  return rows;
-}
-
-// Where a program comes from and what it does, in a line
-function programRow(path, locked) {
-  var program = programNamed(path);
-  var row = document.createElement("button");
-  row.type = "button";
-  row.className = "progrow" + (boardSet.program === path ? " on" : "");
-  row.disabled = !!locked;
-  var file = path.split("/").pop();
-  row.innerHTML = "<b>" + escapeHtml(program.name || file) + "</b>" +
-                  (program.name ? "<em>" + escapeHtml(file) + "</em>" : "") +
-                  (program.needs ? "<em>needs " + escapeHtml(program.needs) + "</em>" : "") +
-                  "<small>" + escapeHtml(program.does || "says nothing about itself") + "</small>";
-  row.onclick = function () {
-    boardSet.program = path;
-    boardSet.lastProgram = path;
-    draw();
-  };
-  return row;
-}
+// ---- a program's arguments --------------------------------------------------------------------
 
 // The screen size a program is first given: the size set for screen A, else the program's own
 function sizeOffered(argument) {
@@ -13734,64 +12503,6 @@ function argsFor(path, locked) {
   }
   return box;
 }
-
-// Programs on the drive first, then the examples that come with the board by folder, the
-// picked one's arguments under it. A drawing is a screen's picture, so it is not listed
-function programChooser(locked) {
-  var box = document.createElement("div");
-  box.className = "chooser";
-  function heading(words) {
-    var said = document.createElement("div");
-    said.className = "progheading";
-    said.textContent = words;
-    box.appendChild(said);
-  }
-  function listed(path, into) {
-    into.appendChild(programRow(path, locked));
-    if (boardSet.program === path) into.appendChild(argsFor(path, locked));
-  }
-  heading("On the drive");
-  DRIVE_PROGRAMS.forEach(function (one) { listed(one[0], box); });
-  heading("Come with the board");
-  // A folder of folders, such as screens, opens onto its own, so the list starts short
-  function fold(name, within, into) {
-    var mine = BOARD_EXAMPLES.filter(function (one) {
-      return one.folder === within || one.folder.indexOf(within + "/") === 0;
-    });
-    var node = document.createElement("details");
-    node.className = "progfolder";
-    node.open = mine.some(function (one) { return one.path === boardSet.program; }) ||
-                !!openFolders[within];
-    node.addEventListener("toggle", function () { openFolders[within] = node.open; });
-    var summary = document.createElement("summary");
-    summary.innerHTML = escapeHtml(name) + " <small>" + mine.length +
-                        (mine.length === 1 ? " program" : " programs") + "</small>";
-    node.appendChild(summary);
-    mine.filter(function (one) { return one.folder === within; })
-        .forEach(function (one) { listed(one.path, node); });
-    foldersIn(within).forEach(function (inner) {
-      fold(inner.split("/").pop(), inner, node);
-    });
-    into.appendChild(node);
-  }
-  foldersIn("").forEach(function (top) { fold(top, top, box); });
-  return box;
-}
-
-// The folders directly inside one, the examples' own top folders for none
-function foldersIn(within) {
-  var found = [];
-  BOARD_EXAMPLES.forEach(function (one) {
-    var rest = within ? one.folder.slice(within.length + 1) : one.folder;
-    if (within && one.folder.indexOf(within + "/") !== 0) return;
-    var next = rest.split("/")[0];
-    var path = within ? within + "/" + next : next;
-    if (next && found.indexOf(path) < 0) found.push(path);
-  });
-  return found;
-}
-
-var openFolders = {};
 
 // ---- the effects, while a program runs --------------------------------------------------------
 // The board runs a program in their place, so they stand back with a note saying what runs
@@ -14718,20 +13429,9 @@ function featureFilter() {
   return row;
 }
 
-// ---- moving between the two pages, three ways ---------------------------------------------------
+// ---- moving between the two pages ---------------------------------------------------------------
+// Two tabs split under the header, the effects tab holding the way into scenes until there are some
 
-var PAGE_WAYS = [["covers", "Two covers"], ["header", "Header: cards"],
-                 ["headseg", "Header: one control"], ["headtabs", "Header: tabs off its foot"],
-                 ["headsplit", "Header: tabs, split under it"],
-                 ["headrow", "Header: a row of its own"],
-                 ["binder", "Folder tabs"], ["sheet", "A sheet over"],
-                 ["under", "Sheet, offered under the gallery"]];
-
-// The ways that put the two covers in the header, each styled its own way, and those drawing
-// them as tabs, whose effects tab holds the way into scenes until there are some
-var HEADER_WAYS = ["header", "headseg", "headtabs", "headsplit", "headrow"];
-var TAB_WAYS = ["headtabs", "headsplit"];
-var pageWay = (location.search.match(/way=(\w+)/) || [])[1] || "covers";
 // Back to the effects, the file running them again
 function toEffects() {
   onProgramPage = false;
@@ -14758,136 +13458,42 @@ function effectsFace() {
 }
 
 function renderPageSwitch() {
-  var bar = document.getElementById("pageSwitch");
-  bar.textContent = "";
-  bar.className = "pageswitch " + pageWay + (onProgramPage ? " programmed" : "");
-  document.getElementById("galleryOffer").textContent = "";
   var inHeader = document.getElementById("headSwitch");
   inHeader.textContent = "";
   var program = boardSet.program || boardSet.lastProgram;
-  var inTheHeader = HEADER_WAYS.indexOf(pageWay) >= 0;
   // Split under the header, the tabs are drawn as the tabs off its foot are
-  inHeader.className = "headswitch " + pageWay + (pageWay === "headsplit" ? " headtabs" : "");
-  if (pageWay === "covers" || inTheHeader) {
-    // Two cards, what runs picked, each showing what it would run: large above the scenes, or
-    // small in the header where the page's name is, taking no room from the page
-    [["effects", "The effects", "scenes, looks, screens and sound"],
-     ["program", "A program", program ? programTitle(program) : "in place of the effects"]]
-      .forEach(function (one) {
-        // A tab holds the scenes' button, and a button cannot hold another, so a tab is a
-        // plain element taking the click and the keyboard
-        var tabbed = TAB_WAYS.indexOf(pageWay) >= 0;
-        var cover = document.createElement(tabbed ? "div" : "button");
-        if (tabbed) {
-          cover.setAttribute("role", "button");
-          cover.tabIndex = 0;
-          cover.onkeydown = function (event) {
-            if (event.key === "Enter" || event.key === " ") cover.onclick();
-          };
-        } else {
-          cover.type = "button";
-        }
-        cover.className = "cover" + ((one[0] === "program") === onProgramPage ? " on" : "");
-        cover.dataset.page = one[0];
-        var face = one[0] === "effects" ? effectsFace()
-                 : program ? programThumb(program) : thumbCanvas("stars", 3);
-        face.classList.add("coverface");
-        cover.appendChild(face);
-        var words = document.createElement("span");
-        // Small in the header, only a program's name is said, a row of its own having room
-        var brief = inTheHeader && pageWay !== "headrow";
-        var under = brief && !(one[0] === "program" && program) ? "" : one[2];
-        words.innerHTML = "<b>" + one[1] + "</b>" +
-                          (under ? "<small>" + escapeHtml(under) + "</small>" : "");
-        cover.appendChild(words);
-        cover.onclick = one[0] === "effects" ? toEffects : toProgram;
-        (inTheHeader ? inHeader : bar).appendChild(cover);
-      });
-  } else if (pageWay === "binder") {
-    // Two tabs joined to the page they open, as a folder's are, above the scenes' own
-    [["effects", "Effects"], ["program", "Program"]].forEach(function (one) {
-      var tab = document.createElement("button");
-      tab.type = "button";
-      tab.className = "foldertab" + ((one[0] === "program") === onProgramPage ? " on" : "");
-      tab.dataset.page = one[0];
-      var face = one[0] === "effects" ? effectsFace()
-               : program ? programThumb(program) : thumbCanvas("stars", 3);
-      face.classList.add("tabface");
-      tab.appendChild(face);
-      tab.appendChild(document.createTextNode(one[1]));
-      tab.onclick = one[0] === "effects" ? toEffects : toProgram;
-      bar.appendChild(tab);
-    });
-  } else {
-    // The effects as they are, a strip offering a program above the scenes, or under the
-    // gallery; picked, a sheet takes the page, with the way back at its head
-    var slot = document.getElementById("galleryOffer");
-    if (!onProgramPage) {
-      (pageWay === "under" ? slot : bar).appendChild(sheetOffer());
-    } else {
-      var head = document.createElement("div");
-      head.className = "sheethead";
-      var back = document.createElement("button");
-      back.type = "button";
-      back.dataset.page = "effects";
-      back.className = "sheetback";
-      back.textContent = "\u25c2 Back to the effects";
-      back.onclick = toEffects;
-      head.appendChild(back);
-      var title = document.createElement("b");
-      title.textContent = "Running a program";
-      head.appendChild(title);
-      bar.appendChild(head);
-    }
-  }
-}
-
-// A strip of what programs look like, offering one in the effects' place
-function sheetOffer() {
-  var offer = document.createElement("button");
-  offer.type = "button";
-  offer.className = "sheetoffer";
-  offer.dataset.page = "program";
-  var strip = document.createElement("span");
-  strip.className = "filmstrip";
-  ["examples/showcase/flip_dot_sign.py", "examples/showcase/nixie_tube.py",
-   "examples/screens/graphics/starfield.py", "examples/showcase/split_flap_clock.py",
-   "examples/showcase/crt_terminal.py"].forEach(function (path) {
-    strip.appendChild(programThumb(path));
-  });
-  offer.appendChild(strip);
-  var said = document.createElement("span");
-  said.innerHTML = "<b>Run a program instead</b><small>a sign, a clock, something the effects " +
-                   "cannot do. It takes the whole board.</small>";
-  offer.appendChild(said);
-  offer.onclick = toProgram;
-  return offer;
-}
-
-function renderTrying() {
-  var bar = document.getElementById("pageTrying");
-  bar.textContent = "Trying:";
-  PAGE_WAYS.forEach(function (way) {
-    var button = document.createElement("button");
-    button.type = "button";
-    button.className = way[0] === pageWay ? "on" : "";
-    button.textContent = way[1];
-    button.onclick = function () {
-      pageWay = way[0];
-      draw();
+  inHeader.className = "headswitch headsplit headtabs";
+  // Two tabs, what runs picked, each showing what it would run, small in the header where the
+  // page's name is, taking no room from the page
+  [["effects", "The effects"],
+   ["program", "A program", program ? programTitle(program) : ""]].forEach(function (one) {
+    // A tab holds the scenes' button, and a button cannot hold another, so a tab is a plain
+    // element taking the click and the keyboard
+    var cover = document.createElement("div");
+    cover.setAttribute("role", "button");
+    cover.tabIndex = 0;
+    cover.onkeydown = function (event) {
+      if (event.key === "Enter" || event.key === " ") cover.onclick();
     };
-    bar.appendChild(button);
+    cover.className = "cover" + ((one[0] === "program") === onProgramPage ? " on" : "");
+    cover.dataset.page = one[0];
+    var face = one[0] === "effects" ? effectsFace()
+             : program ? programThumb(program) : thumbCanvas("stars", 3);
+    face.classList.add("coverface");
+    cover.appendChild(face);
+    var words = document.createElement("span");
+    // Only a program's name is said under its tab
+    words.innerHTML = "<b>" + one[1] + "</b>" +
+                      (one[2] ? "<small>" + escapeHtml(one[2]) + "</small>" : "");
+    cover.appendChild(words);
+    cover.onclick = one[0] === "effects" ? toEffects : toProgram;
+    inHeader.appendChild(cover);
   });
 }
 
 (function () {
-  // Floating at the foot of the window, so it moves nothing on the page it switches
-  var trying = document.createElement("div");
-  trying.id = "pageTrying";
-  trying.className = "trying floating";
-  document.body.appendChild(trying);
-  // In the header after the page's name, where one way puts its covers. What follows the name is
-  // gathered into one group, so a wide header can set name, tabs and group on a single line
+  // In the header after the page's name. What follows the name is gathered into one group, so a
+  // wide header can set name, tabs and group on a single line
   var headSwitch = document.createElement("span");
   headSwitch.id = "headSwitch";
   headSwitch.className = "headswitch";
@@ -14898,15 +13504,6 @@ function renderTrying() {
   while (named.nextSibling) actions.appendChild(named.nextSibling);
   named.parentNode.appendChild(headSwitch);
   named.parentNode.appendChild(actions);
-  // Under the gallery, above the tabs, where one way offers a program
-  var offerSlot = document.createElement("div");
-  offerSlot.id = "galleryOffer";
-  var looks = document.getElementById("looksStack") || document.getElementById("looks");
-  looks.parentNode.insertBefore(offerSlot, looks.nextSibling);
-  var bar = document.createElement("div");
-  bar.id = "pageSwitch";
-  var tabs = document.getElementById("tabs");
-  tabs.parentNode.insertBefore(bar, tabs);
   programView = document.createElement("div");
   programView.id = "programView";
   programView.className = "programview";
@@ -14919,8 +13516,7 @@ var oneProgramDraw = draw;
 draw = function () {
   oneProgramDraw();
   document.body.classList.toggle("programpage", onProgramPage);
-  document.body.dataset.pageway = pageWay;
-  renderTrying();
+  document.body.dataset.pageway = "headsplit";
   renderPageSwitch();
   renderProgramView();
   scenesAsCards();
@@ -14963,7 +13559,6 @@ var COLUMN_REM = 57.2;
 function headerOnOneLine() {
   var header = document.querySelector("header");
   header.classList.remove("oneline");
-  if (pageWay !== "headsplit") return;
   var rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
   var style = getComputedStyle(header);
   var inner = header.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
@@ -14997,7 +13592,7 @@ window.addEventListener("resize", headerOnOneLine);
 // Before there are scenes, the way into them is the effects tab's own, at its end, so no row is
 // kept above the gallery for it. Once there are scenes their tabs are that row, as they were
 function scenesInTheTab() {
-  var into = TAB_WAYS.indexOf(pageWay) >= 0 && !state.scenes.length && !onProgramPage &&
+  var into = !state.scenes.length && !onProgramPage &&
              document.querySelector("#headSwitch .cover[data-page=effects]");
   document.body.classList.toggle("scenesintab", !!into);
   if (!into) return;
@@ -15006,18 +13601,6 @@ function scenesInTheTab() {
   plus.addEventListener("click", function (event) { event.stopPropagation(); });
   into.appendChild(plus);
 }
-
-draw();
-
-// ---- the effects page or a program page, by tabs ------------------------------------------------
-// The tabs split under the header are the way between the two
-
-pageWay = "headsplit";
-renderTrying = function () {};
-(function () {
-  var bar = document.getElementById("pageTrying");
-  if (bar) bar.parentNode.removeChild(bar);
-}());
 
 draw();
 
@@ -15476,79 +14059,6 @@ async function scanMedia(dir) {
   state.scanned = true;
 }
 
-async function profileSound(name, handle) {
-  if (state.soundInfo[name] !== undefined) return;
-  state.soundInfo[name] = null;
-  try {
-    var file = await handle.getFile();
-    var head = new DataView(await file.slice(0, 8192).arrayBuffer());
-    if (head.getUint32(0) !== 0x52494646 || head.getUint32(8) !== 0x57415645)
-      throw new Error("not a wav");
-    var at = 12;
-    var byteRate = 0;
-    var bits = 16;
-    var dataAt = 0;
-    var dataSize = 0;
-    while (at + 8 <= head.byteLength) {
-      var id = head.getUint32(at);
-      var size = head.getUint32(at + 4, true);
-      if (id === 0x666d7420) {                       // "fmt "
-        byteRate = head.getUint32(at + 16, true);
-        bits = head.getUint16(at + 22, true);
-      } else if (id === 0x64617461) {                // "data"
-        dataAt = at + 8;
-        dataSize = Math.min(size, file.size - dataAt);
-        break;
-      }
-      at += 8 + size + (size % 2);
-    }
-    if (!byteRate || !dataSize) throw new Error("no sound in it");
-
-    var bars = [];
-    for (var b = 0; b < 26; b++) {
-      var from = dataAt + Math.floor(dataSize * b / 26);
-      var take = Math.min(2048, dataAt + dataSize - from);
-      var slice = await file.slice(from, from + take).arrayBuffer();
-      var peak = 0;
-      if (bits === 16) {
-        var wide = new Int16Array(slice, 0, Math.floor(slice.byteLength / 2));
-        for (var i = 0; i < wide.length; i++) peak = Math.max(peak, Math.abs(wide[i]));
-        peak /= 32768;
-      } else {
-        var thin = new Uint8Array(slice);
-        for (var j = 0; j < thin.length; j++) peak = Math.max(peak, Math.abs(thin[j] - 128));
-        peak /= 128;
-      }
-      bars.push(peak);
-    }
-    state.soundInfo[name] = {seconds: Math.max(1, Math.round(dataSize / byteRate)),
-                             bars: bars};
-    renderSound();
-  } catch (e) {
-    state.soundInfo[name] = null;
-  }
-}
-
-function mediaArt(name) {
-  var held = state.art[name];
-  if (held) return held.ratio ? held : null;
-  var media = mediaNamed(name);
-  var handle = media && (media.kind === "folder" ? media.thumbHandle : media.handle);
-  if (!handle) return null;
-  state.art[name] = {url: null, ratio: 0};
-  handle.getFile().then(function (file) {
-    var url = URL.createObjectURL(file);
-    var probe = new Image();
-    probe.onload = function () {
-      state.art[name] = {url: url, w: probe.naturalWidth, h: probe.naturalHeight,
-                         ratio: probe.naturalWidth / probe.naturalHeight};
-      draw();
-    };
-    probe.src = url;
-  }).catch(function () { delete state.art[name]; });
-  return null;
-}
-
 async function rescanMedia() {
   if (!state.dirHandle || scanBusy) return;
   var was = JSON.stringify([state.media.map(function (m) { return m.name + m.kind; }),
@@ -15680,9 +14190,8 @@ async function removeFromDrive(name, kind) {
   draw();
 }
 
-
 // A wav's length and outline, the outline read at SOUND_SAMPLES points
-profileSound = async function (name, handle) {
+async function profileSound(name, handle) {
   soundHandles[name] = handle;
   if (state.soundInfo[name] !== undefined) return;
   state.soundInfo[name] = null;
@@ -15733,7 +14242,7 @@ profileSound = async function (name, handle) {
   } catch (e) {
     state.soundInfo[name] = null;
   }
-};
+}
 
 // ---- pictures, read off the drive in turn ------------------------------------------------------
 // The drive is slow to read, so pictures come off it one at a time, those a screen or hub position
@@ -15798,7 +14307,7 @@ function readNextPicture() {
   });
 }
 
-mediaArt = function (name) {
+function mediaArt(name) {
   var held = state.art[name];
   if (held) return held.ratio ? held : null;
   var media = mediaNamed(name);
@@ -15809,7 +14318,7 @@ mediaArt = function (name) {
   pictureQueue.push({name: name, handle: handle});
   setTimeout(readNextPicture, 0);
   return null;
-};
+}
 
 // ---- files on and off the drive -----------------------------------------------------------------
 // A file deleted is also taken off every hub position showing it
@@ -15893,13 +14402,6 @@ soundTile = function (name) {
   if (file) file.open = false;
 }());
 
-state.hub.on = false;
-state.media = [];
-state.art = {};
-state.sounds = [];
-state.soundInfo = {};
-state.fileHandle = null;
-state.scanned = false;
 draw();
 
 var oneBoardConnect = connect;

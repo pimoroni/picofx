@@ -54,79 +54,6 @@ async function scanMedia(dir) {
   state.scanned = true;
 }
 
-async function profileSound(name, handle) {
-  if (state.soundInfo[name] !== undefined) return;
-  state.soundInfo[name] = null;
-  try {
-    var file = await handle.getFile();
-    var head = new DataView(await file.slice(0, 8192).arrayBuffer());
-    if (head.getUint32(0) !== 0x52494646 || head.getUint32(8) !== 0x57415645)
-      throw new Error("not a wav");
-    var at = 12;
-    var byteRate = 0;
-    var bits = 16;
-    var dataAt = 0;
-    var dataSize = 0;
-    while (at + 8 <= head.byteLength) {
-      var id = head.getUint32(at);
-      var size = head.getUint32(at + 4, true);
-      if (id === 0x666d7420) {                       // "fmt "
-        byteRate = head.getUint32(at + 16, true);
-        bits = head.getUint16(at + 22, true);
-      } else if (id === 0x64617461) {                // "data"
-        dataAt = at + 8;
-        dataSize = Math.min(size, file.size - dataAt);
-        break;
-      }
-      at += 8 + size + (size % 2);
-    }
-    if (!byteRate || !dataSize) throw new Error("no sound in it");
-
-    var bars = [];
-    for (var b = 0; b < 26; b++) {
-      var from = dataAt + Math.floor(dataSize * b / 26);
-      var take = Math.min(2048, dataAt + dataSize - from);
-      var slice = await file.slice(from, from + take).arrayBuffer();
-      var peak = 0;
-      if (bits === 16) {
-        var wide = new Int16Array(slice, 0, Math.floor(slice.byteLength / 2));
-        for (var i = 0; i < wide.length; i++) peak = Math.max(peak, Math.abs(wide[i]));
-        peak /= 32768;
-      } else {
-        var thin = new Uint8Array(slice);
-        for (var j = 0; j < thin.length; j++) peak = Math.max(peak, Math.abs(thin[j] - 128));
-        peak /= 128;
-      }
-      bars.push(peak);
-    }
-    state.soundInfo[name] = {seconds: Math.max(1, Math.round(dataSize / byteRate)),
-                             bars: bars};
-    renderSound();
-  } catch (e) {
-    state.soundInfo[name] = null;
-  }
-}
-
-function mediaArt(name) {
-  var held = state.art[name];
-  if (held) return held.ratio ? held : null;
-  var media = mediaNamed(name);
-  var handle = media && (media.kind === "folder" ? media.thumbHandle : media.handle);
-  if (!handle) return null;
-  state.art[name] = {url: null, ratio: 0};
-  handle.getFile().then(function (file) {
-    var url = URL.createObjectURL(file);
-    var probe = new Image();
-    probe.onload = function () {
-      state.art[name] = {url: url, w: probe.naturalWidth, h: probe.naturalHeight,
-                         ratio: probe.naturalWidth / probe.naturalHeight};
-      draw();
-    };
-    probe.src = url;
-  }).catch(function () { delete state.art[name]; });
-  return null;
-}
-
 async function rescanMedia() {
   if (!state.dirHandle || scanBusy) return;
   var was = JSON.stringify([state.media.map(function (m) { return m.name + m.kind; }),
@@ -258,9 +185,8 @@ async function removeFromDrive(name, kind) {
   draw();
 }
 
-
 // A wav's length and outline, the outline read at SOUND_SAMPLES points
-profileSound = async function (name, handle) {
+async function profileSound(name, handle) {
   soundHandles[name] = handle;
   if (state.soundInfo[name] !== undefined) return;
   state.soundInfo[name] = null;
@@ -311,7 +237,7 @@ profileSound = async function (name, handle) {
   } catch (e) {
     state.soundInfo[name] = null;
   }
-};
+}
 
 // ---- pictures, read off the drive in turn ------------------------------------------------------
 // The drive is slow to read, so pictures come off it one at a time, those a screen or hub position
@@ -376,7 +302,7 @@ function readNextPicture() {
   });
 }
 
-mediaArt = function (name) {
+function mediaArt(name) {
   var held = state.art[name];
   if (held) return held.ratio ? held : null;
   var media = mediaNamed(name);
@@ -387,7 +313,7 @@ mediaArt = function (name) {
   pictureQueue.push({name: name, handle: handle});
   setTimeout(readNextPicture, 0);
   return null;
-};
+}
 
 // ---- files on and off the drive -----------------------------------------------------------------
 // A file deleted is also taken off every hub position showing it
@@ -471,13 +397,6 @@ soundTile = function (name) {
   if (file) file.open = false;
 }());
 
-state.hub.on = false;
-state.media = [];
-state.art = {};
-state.sounds = [];
-state.soundInfo = {};
-state.fileHandle = null;
-state.scanned = false;
 draw();
 
 var oneBoardConnect = connect;

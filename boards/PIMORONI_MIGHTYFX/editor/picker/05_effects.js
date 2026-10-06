@@ -1,8 +1,4 @@
 
-// A card is tapped onto a stretch, with no colour and mono tabs over the cards
-tabsWhere = "none";
-carryLooks = false;
-
 // The board opens as it ships, every output one colour lamp, and the outputs whole and
 // playing Rainbow. The strips play nothing, what is wired to them being unknown
 var OPENING_LOOK = "Rainbow";
@@ -311,9 +307,6 @@ function spreadStops(target) {
   };
 }(lookNamed("Campfire")));
 
-wiring = wiring.map(function () { return {broken: false}; });
-order = wiring.map(function (one, out) { return {out: out, channel: null}; });
-settle();
 outs.sections = [blank(0, outs.lamps.length - 1)];
 outs.sections[0].look = OPENING_LOOK;
 settle();
@@ -487,7 +480,6 @@ function wireRun(run) {
                                width: row.high - row.low + SIZE + GAP,
                                height: SIZE + 4.4, rx: 4});
       plate.onclick = function () { pick(run, at); draw(); };
-      takesDrop(plate, run, at, "span");
       var says = tag("title", {});
       says.textContent = "lights " + (section.from + 1) + " to " + (section.to + 1) +
                          ", playing " +
@@ -640,7 +632,6 @@ function renderStripBar(where, run) {
     cell.appendChild(inside);
 
     cell.onclick = function () { pick(run, at); draw(); };
-    takesDrop(cell, run, at, "sec");
     bar.appendChild(cell);
 
     // The cut this section shares with the next: dragged to move it, clicked to take it
@@ -853,11 +844,6 @@ function astrayOf(side) {
     return !(onOne && atStep[upTo[place]] === 1);
   });
 }
-
-
-// wireRun asks a run how many lights it has under the name that page gives it, and lands
-// a card on a stretch, which this page does not do, nothing being carried here
-function takesDrop() {}
 
 // The drawing picks through the runs' pick(), which makes the strip the
 // run being worked on, so only one stretch on the page is ever marked
@@ -2130,8 +2116,6 @@ function directionToggle(run, section) {
 // The look's name, the panel being its settings, then where it plays in words: outputs
 // 1 to 7, LEDs 11 to 20 of the left strip, output 3's red and green. The file's selector is the
 // file view's to show, and whether the lights are colour or mono the tab's
-
-var CHANNEL_WORDS = {r: "red", g: "green", b: "blue"};
 
 // A list said as English does: one, two and three
 function spoken(items) {

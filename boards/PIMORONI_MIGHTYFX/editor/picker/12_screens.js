@@ -37,9 +37,8 @@ function turnForChosen(letter) {
 }
 state.media = [];
 state.art = {};
-// There being no drive, the page says what it would with one open
-state.fileHandle = {};
-state.scanned = true;
+state.fileHandle = null;
+state.scanned = false;
 
 var BOARD_INK = "#0a0a0a";
 
@@ -483,77 +482,6 @@ function screenEntry(letter, body) {
   return selector + ": image file=" + quoted(shows);
 }
 
-
-// ---- pictures to choose from ------------------------------------------------------------------
-// Made up for a page with no drive, the drive files part reading the drive's in their place
-
-function madePicture(name, kind, wide, high, paint) {
-  var canvas = document.createElement("canvas");
-  canvas.width = wide;
-  canvas.height = high;
-  paint(canvas.getContext("2d"), wide, high);
-  state.art[name] = {url: canvas.toDataURL(), w: wide, h: high, ratio: wide / high};
-  state.media.push({name: name, kind: kind});
-}
-
-madePicture("sunset.png", "image", 240, 320, function (g, w, h) {
-  var sky = g.createLinearGradient(0, 0, 0, h);
-  sky.addColorStop(0, "#2b1d5c");
-  sky.addColorStop(0.6, "#e0584a");
-  sky.addColorStop(1, "#f3b24a");
-  g.fillStyle = sky;
-  g.fillRect(0, 0, w, h);
-  g.fillStyle = "#ffe2a0";
-  g.beginPath();
-  g.arc(w / 2, h * 0.68, 46, 0, Math.PI * 2);
-  g.fill();
-  g.fillStyle = "#1c1330";
-  g.fillRect(0, h * 0.8, w, h * 0.2);
-});
-madePicture("badge.png", "image", 240, 240, function (g, w, h) {
-  g.fillStyle = "#15191c";
-  g.fillRect(0, 0, w, h);
-  g.strokeStyle = "#00a39a";
-  g.lineWidth = 14;
-  g.beginPath();
-  g.arc(w / 2, h / 2, 88, 0, Math.PI * 2);
-  g.stroke();
-  g.fillStyle = "#f5f3ef";
-  g.font = "bold 84px system-ui, sans-serif";
-  g.textAlign = "center";
-  g.textBaseline = "middle";
-  g.fillText("FX", w / 2, h / 2 + 4);
-});
-madePicture("flame.gif", "gif", 240, 320, function (g, w, h) {
-  g.fillStyle = "#120a06";
-  g.fillRect(0, 0, w, h);
-  var fire = g.createRadialGradient(w / 2, h * 0.7, 10, w / 2, h * 0.62, 140);
-  fire.addColorStop(0, "#fff2b0");
-  fire.addColorStop(0.35, "#f5a623");
-  fire.addColorStop(0.7, "#c2410c");
-  fire.addColorStop(1, "rgba(18,10,6,0)");
-  g.fillStyle = fire;
-  g.fillRect(0, 0, w, h);
-});
-madePicture("stars", "folder", 240, 240, function (g, w, h) {
-  g.fillStyle = "#0b1026";
-  g.fillRect(0, 0, w, h);
-  g.fillStyle = "#e8eef2";
-  [[40, 50, 3], [180, 40, 2], [120, 110, 4], [60, 170, 2], [200, 190, 3], [150, 210, 2]]
-    .forEach(function (star) {
-      g.beginPath();
-      g.arc(star[0], star[1], star[2], 0, Math.PI * 2);
-      g.fill();
-    });
-});
-
-// A picture's drawing, made above
-function mediaArt(name) { return state.art[name] || null; }
-
-// Stand-ins for adding and deleting files, which the drive files part replaces
-function binButton() { return document.createElement("span"); }
-function adderTile() { return document.createElement("span"); }
-
 function allBodies() {
   return [state.always.body].concat(state.scenes.map(function (scene) { return scene.body; }));
 }
@@ -639,26 +567,10 @@ function renderScreensTab() {
   renderScreensHead();
   renderAssets();
   var head = document.getElementById("screensHead");
-  var boxes = head.querySelectorAll(".screen-box");
   // The band is the screen's coloured box, so it wears the board's chip like the others
   head.querySelectorAll(".screen-box h3").forEach(function (band) {
     band.insertBefore(boardIcon(), band.firstChild);
     band.title = "How the board is built, which is the same in every scene";
-  });
-  // The turn is kept for the picture showing, so there is none to set with none showing
-  SCREENS.forEach(function (letter, at) {
-    var screen = state.screens[letter];
-    var turn = boxes[at] && boxes[at].querySelector(".settings select");
-    if (!turn) return;
-    var picture = screen.shows && screen.shows !== "keep" ? screen.shows : null;
-    turn.disabled = !picture;
-    turn.title = picture ? "Which way up " + picture + " is drawn on this screen, in this scene"
-                         : "Which way up a picture is drawn, once one is showing";
-    turn.onchange = function () {
-      screen.turn = Number(turn.value);
-      screen.turns[picture] = screen.turn;
-      draw();
-    };
   });
   // Whether a screen is fitted and its size are the board's
   if (!setupOn) {

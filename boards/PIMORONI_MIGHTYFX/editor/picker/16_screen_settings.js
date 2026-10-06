@@ -81,53 +81,6 @@ function pictureOffset(look, shows, size, turn) {
   return {x: side(look.anchor % 3, 0), y: side(Math.floor(look.anchor / 3), 1)};
 }
 
-// ---- pictures made for placing ----------------------------------------------------------------
-// A small tile and a half-size sprite, which the placing settings are for, and a folder whose
-// names each say how long their picture shows
-
-madePicture("bricks.png", "image", 40, 40, function (g, w, h) {
-  g.fillStyle = "#8a3b24";
-  g.fillRect(0, 0, w, h);
-  g.fillStyle = "#c9b8a0";
-  g.fillRect(0, 18, w, 3);
-  g.fillRect(0, 38, w, 2);
-  g.fillRect(18, 0, 3, 18);
-  g.fillRect(0, 21, 3, 17);
-  g.fillRect(37, 21, 3, 17);
-});
-madePicture("ghost.png", "image", 96, 96, function (g, w, h) {
-  var cells = ["....XXXX....", "..XXXXXXXX..", ".XXXXXXXXXX.", ".XX..XX..XX.",
-               ".XX..XX..XX.", "XXXXXXXXXXXX", "XXXXXXXXXXXX", "XXXXXXXXXXXX",
-               "XXXXXXXXXXXX", "XXXXXXXXXXXX", "XX.XXX.XXX.X", "X...X...X..."];
-  var size = w / 12;
-  g.clearRect(0, 0, w, h);
-  cells.forEach(function (row, y) {
-    row.split("").forEach(function (cell, x) {
-      if (cell !== "X") return;
-      g.fillStyle = (y === 3 || y === 4) && x % 4 !== 0 && x % 4 !== 3 ? "#1b2a6b" : "#f06aa8";
-      g.fillRect(x * size, y * size, size, size);
-    });
-  });
-});
-madePicture("clock", "folder", 240, 240, function (g, w, h) {
-  g.fillStyle = "#f4efe4";
-  g.fillRect(0, 0, w, h);
-  g.strokeStyle = "#2b2622";
-  g.lineWidth = 8;
-  g.beginPath();
-  g.arc(w / 2, h / 2, 90, 0, Math.PI * 2);
-  g.stroke();
-  g.lineWidth = 6;
-  g.beginPath();
-  g.moveTo(w / 2, h / 2);
-  g.lineTo(w / 2, h / 2 - 64);
-  g.moveTo(w / 2, h / 2);
-  g.lineTo(w / 2 + 44, h / 2);
-  g.stroke();
-});
-// Whether a folder's names each say how long their picture shows: clock_0001_500ms.png
-mediaNamed("clock").named = true;
-
 // ---- drawings -------------------------------------------------------------------------------------
 // A drawing is a Python file drawn on a screen, graphics file=rings.py. It is listed only where
 // its opening string begins "Drawing:", which gives its name, then a line describing it, then
