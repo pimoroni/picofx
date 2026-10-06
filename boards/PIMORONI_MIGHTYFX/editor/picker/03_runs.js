@@ -146,8 +146,11 @@ function sectionAt(run, which) {
   return 0;
 }
 
-function blank(from, to) {
-  return {from: from, to: to, look: null, pace: 0.45, mood: 0.5, colour: "#ff8c1a", level: 1};
+// A stretch playing nothing yet. One on a strip starts at three quarters brightness, a strip or
+// LED panel at full being glaring up close
+function blank(from, to, run) {
+  return {from: from, to: to, look: null, pace: 0.45, mood: 0.5, colour: "#ff8c1a",
+          level: run && run.strip ? 0.75 : 1};
 }
 
 // ---- keeping a stretch on its own lamps ----------------------------------------------------
@@ -202,7 +205,7 @@ function putStretchesBack(run, was) {
                          level: had.level, custom: had.custom,
                          blinks: copyBlinks(had.blinks), exact: copyExact(had.exact),
                          timings: copyExact(had.timings)}
-                      : Object.assign(blank(at, to), {}));
+                      : Object.assign(blank(at, to, run), {}));
     at = to + 1;
   }
   if (sections.length) run.sections = sections;
@@ -294,7 +297,7 @@ function settle() {
                  blinks: copyBlinks(section.blinks),
                  exact: copyExact(section.exact), timings: copyExact(section.timings)});
     });
-    if (!kept.length || kept[0].from !== 0) kept.unshift(blank(0, -1));
+    if (!kept.length || kept[0].from !== 0) kept.unshift(blank(0, -1, run));
     // Close the gaps, so the sections cover the run exactly
     var at = 0;
     var whole = [];
@@ -307,7 +310,7 @@ function settle() {
         at = section.to + 1;
       }
     });
-    run.sections = whole.length ? whole : [blank(0, run.lamps.length - 1)];
+    run.sections = whole.length ? whole : [blank(0, run.lamps.length - 1, run)];
 
     // A section straddling a colour lamp and a mono one is split where the kind changes
     var split = [];
@@ -396,7 +399,7 @@ function moveEdge(run, which, to) {
 
 function joinAll(run) {
   remember(run);
-  run.sections = [blank(0, run.lamps.length - 1)];
+  run.sections = [blank(0, run.lamps.length - 1, run)];
   settle();
   pick(run, 0);
   draw();
@@ -1565,7 +1568,7 @@ function step() {
 // blank one. A stretch over two colour outputs, and one over a broken output's channels
 settle();
 runs.forEach(function (run) {
-  run.sections = run.lamps.map(function (lamp, at) { return blank(at, at); });
+  run.sections = run.lamps.map(function (lamp, at) { return blank(at, at, run); });
 });
 settle();
 

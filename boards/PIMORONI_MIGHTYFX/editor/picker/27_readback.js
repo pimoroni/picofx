@@ -779,11 +779,11 @@ function readLights(bodies) {
       var filled = [];
       var next = 0;
       sorted.forEach(function (section) {
-        if (section.from > next) filled.push(blank(next, section.from - 1));
+        if (section.from > next) filled.push(blank(next, section.from - 1, run));
         filled.push(section);
         next = section.to + 1;
       });
-      if (next < run.lamps.length) filled.push(blank(next, run.lamps.length - 1));
+      if (next < run.lamps.length) filled.push(blank(next, run.lamps.length - 1, run));
       run.sections = filled;
     });
     settle();
