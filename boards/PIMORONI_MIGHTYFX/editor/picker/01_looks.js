@@ -395,10 +395,12 @@ function asMono(colour, peak) {
          Math.round(178 * lit) + ")";
 }
 
-// Whether a look has anything to give a target: a colour look cannot land on a mono
-// lamp, a banked look cannot land on a run, and some have no single-light form
+// Whether a look has anything to give a target: a colour look cannot land on a mono lamp, a
+// look that does not span cannot land on a run, and some have no single-light form. A banked
+// look deals its banks along a run, so it needs more than one lamp or a single-light form
 function canPlay(look, target) {
   if (!look) return true;
+  if (target.kind === "run" && isBanked(look)) return target.count > 1 || look.alone !== false;
   if (!target.colour && !look.onMono) return false;
   if (target.count === 1 && look.alone === false) return false;
   if (target.kind === "run" && !look.spans) return false;
@@ -415,8 +417,9 @@ function whyNot(look, target) {
   return "play this on " + target.label.toLowerCase();
 }
 
-// The lines one look writes for one target, in the form that target can take
-function linesFor(look, target, pace, mood, colour) {
+// The lines one look's own entries write for one target, in the form that target can take. The
+// effects part writes a stretch through this as the board will play it
+function lookLines(look, target, pace, mood, colour) {
   if (!look || !canPlay(look, target)) return [];
   var lines = (target.count === 1 && look.alone)
     ? look.alone(target, pace, mood, colour)

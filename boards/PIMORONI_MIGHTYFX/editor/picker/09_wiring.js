@@ -48,17 +48,6 @@ function lampNode(key) {
   return lampsShown().filter(function (node) { return node.dataset.key === key; })[0] || null;
 }
 
-// Every lamp can be found by what it is, which is what the lines and the slide go by
-var oneWiredTakesPlace = takesPlace;
-
-takesPlace = function (node, lamp) {
-  oneWiredTakesPlace(node, lamp);
-  var key = lampKey({out: lamp.out, channel: lamp.colour ? null : lamp.channel});
-  node.dataset.key = key;
-  node.addEventListener("mouseenter", function () { bringForward([key], true); });
-  node.addEventListener("mouseleave", function () { bringForward([key], false); });
-};
-
 // A line, its lamp and its pin brought forward, or let go
 function bringForward(keys, on) {
   keys.forEach(function (key) {
@@ -174,13 +163,12 @@ function drawLines() {
 // the drop, which would replace the lamps mid-slide, so every draw until the page is next
 // idle plays the slide from the same starting places
 
-var oneWiredMove = moveLamp;
 var sliding = null;
 
-moveLamp = function (move) {
+function moveLamp(move) {
   slideFrom(lampKey(move.from));
-  oneWiredMove(move);
-};
+  moveLampInScenes(move);
+}
 
 // Where a lamp is within the outputs' panel. The page may scroll straight after a draw to
 // hold a section still, and a place measured within the panel moves with it
@@ -225,10 +213,7 @@ function playSlide() {
 // Breaking an output out, its three lamps open out of where its one stood, each sliding
 // from there to its own place; putting one back, the lamp it becomes closes in from the
 // middle of the three. The other lamps make way as they do for a move
-var oneWiredBreakOut = breakOut;
-var oneWiredRejoin = rejoin;
-
-breakOut = function (out) {
+function breakOut(out) {
   slideFrom(null);
   var whole = sliding.was[lampKey({out: out, channel: null})];
   if (whole) {
@@ -236,10 +221,10 @@ breakOut = function (out) {
       sliding.was[lampKey({out: out, channel: channel})] = whole;
     });
   }
-  oneWiredBreakOut(out);
-};
+  breakOutInScenes(out);
+}
 
-rejoin = function (out) {
+function rejoin(out) {
   slideFrom(null);
   var three = [0, 1, 2].map(function (channel) {
     return sliding.was[lampKey({out: out, channel: channel})];
@@ -250,8 +235,8 @@ rejoin = function (out) {
       top: three.reduce(function (sum, one) { return sum + one.top; }, 0) / three.length
     };
   }
-  oneWiredRejoin(out);
-};
+  rejoinInScenes(out);
+}
 
 drawSteps.after.push(function () {
   renderConnectors();

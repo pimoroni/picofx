@@ -236,7 +236,9 @@ function sceneTab(which, slot, name, says) {
 
 var carriedTab = null;
 
-function renderSceneSettings() {
+// A scene's row of settings, its time and whether it starts afresh. The scene row part
+// restyles it and speaks for the always-on tab
+function renderSceneRow() {
   var box = document.getElementById("sceneSettings");
   box.textContent = "";
   if (state.at < 0) return;

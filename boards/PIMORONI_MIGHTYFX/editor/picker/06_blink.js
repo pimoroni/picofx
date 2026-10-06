@@ -25,62 +25,9 @@ function blinkWord(hex) {
   return blinkNamed(hex) || hex.replace("#", "").toLowerCase();
 }
 
-// A set of colours offers black too, as a turn with the light off
-var oneBlinkSwatches = swatchesFor;
-
-swatchesFor = function (run, section) {
-  var first = run && run.lamps[section.from];
-  if (section.look === BLINK && section.blinks && section.blinks.colours.length > 1 &&
-      first && first.colour) return ["black"].concat(SWATCHES);
-  return oneBlinkSwatches(run, section);
-};
-
-var oneBlinkLines = sectionLines;
-
-sectionLines = function (run, section, look) {
-  var colours = blinkList(run, section);
-  if (!colours) return oneBlinkLines(run, section, look);
-  var line = targetFor(run, section).selector + ": rgb_blink colour=" +
-             colours.map(blinkWord).join("|") + " speed=" + blinkSpeed(section.pace) +
-             " duty=" + blinkDuty(section.mood);
-  return levelled([line], section.level);
-};
-
-// rgb_blink moves to its next colour each time its beat comes round
-COLOURED.rgb_blink = function (t, s) {
-  var colours = String(s.colour || "red").split("|");
-  var beats = Math.floor(t * num(s.speed, 1) + num(s.phase, 0));
-  var which = ((beats % colours.length) + colours.length) % colours.length;
-  return {level: EFFECTS.blink(t, s), ink: inkOf(colours[which])};
-};
-
-// The preview plays a list as the board will, a stretch holding its own list
-var oneBlinkPlay = livePlay;
-
-livePlay = function (look, holder, t, slot, count, sim) {
-  var colours = holder && holder !== MIDDLING && look && look.name === BLINK &&
-                holder.blinks && holder.blinks.colours.length > 1 ? holder.blinks.colours : null;
-  if (!colours) return oneBlinkPlay(look, holder, t, slot, count, sim);
-  var lit = COLOURED.rgb_blink(t, {colour: colours.map(blinkWord).join("|"),
-                                   speed: blinkSpeed(holder.pace), duty: blinkDuty(holder.mood)});
-  return {level: lit.level * (holder.level < 1 ? holder.level : 1), ink: lit.ink};
-};
-
-// The stretch is drawn in the colours it blinks through
-var oneBlinkColours = coloursWritten;
-
-coloursWritten = function (look, section, run) {
-  var colours = blinkList(run, section);
-  if (!colours) return oneBlinkColours(look, section, run);
-  return colours.map(function (hex) { return rgbInk(hexRgb(hex)); });
-};
-
 // Above the swatches, the colours it blinks through, each a chip that the picker changes
 // while it is chosen, with a way to add another and to take one away
-var oneBlinkChosen = renderChosen;
-
-renderChosen = function (where, run) {
-  oneBlinkChosen(where, run);
+chosenSteps.push(function (where, run) {
   var box = document.getElementById(where);
   var section = run && run.sections[run.picked];
   var pick = box && box.querySelector(".chosen .colourpick");
@@ -148,4 +95,4 @@ renderChosen = function (where, run) {
   };
   row.appendChild(more);
   pick.insertBefore(row, pick.firstChild);
-};
+});

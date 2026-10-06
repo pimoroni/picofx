@@ -14,7 +14,8 @@ state.soundKept = null;
 state.sounds = [];
 state.soundInfo = {};
 
-function renderSound() {
+// The Sound tab's row of sounds and its setting, which renderSound below puts in the page's style
+function renderSoundTab() {
   var box = document.getElementById("sound");
   box.textContent = "";
   document.getElementById("soundSays").textContent = !state.fileHandle
@@ -80,7 +81,8 @@ function soundKeptTile() {
   return tile;
 }
 
-function soundTile(name) {
+// A sound's tile, which soundTile below draws the sound on
+function plainSoundTile(name) {
   var picked = name === null ? !state.sound && !state.soundKept : state.sound === name;
   var info = name ? state.soundInfo[name] : null;
   var tile = document.createElement("button");
@@ -199,11 +201,9 @@ function soundOutline(bars) {
   return outline;
 }
 
-// The Sound section's tiles draw their sound the same way
-var oneSoundTile = soundTile;
-
-soundTile = function (name) {
-  var tile = oneSoundTile(name);
+// The Sound section's tiles draw their sound the same way, each with a way to hear it here
+function soundTile(name) {
+  var tile = plainSoundTile(name);
   var info = name ? state.soundInfo[name] : null;
   var drawn = tile.querySelector("svg");
   if (info && info.bars && drawn) tile.replaceChild(soundOutline(info.bars), drawn);
@@ -213,17 +213,15 @@ soundTile = function (name) {
     nothing.className = "nothingface";
     tile.replaceChild(nothing, drawn);
   }
-  return tile;
-};
+  return withHearButton(tile, name);
+}
 
 // The tab in the page's style. What the scene does with its sound is the row's tip, no other
 // tab opening on a sentence; the sentence stays only where there are no sounds to show, since
 // it is then all there is. Repeat is a toggle with its icon, as the screens' Loop is, and
 // silence the small card Nothing is in the gallery, at the end of that line
-var oneRenderSound = renderSound;
-
-renderSound = function () {
-  oneRenderSound();
+function renderSound() {
+  renderSoundTab();
   var box = document.getElementById("sound");
   var says = document.getElementById("soundSays");
   var row = box.querySelector(".sounds");
@@ -259,7 +257,7 @@ renderSound = function () {
   silence.onclick = quiet.onclick;
   head.appendChild(silence);
   row.removeChild(quiet);
-};
+}
 
 // The tab's swatch is the shape of the sound playing, or silence
 tabSwatches.soundPanel = function (swatch) {

@@ -57,31 +57,6 @@ try {
 // The typed values of the stretch whose lines are being written, which linesFor applies
 var exactNow = null;
 
-var oneExactLines = linesFor;
-
-linesFor = function (look, target, pace, mood, colour) {
-  var lines = oneExactLines(look, target, pace, mood, colour);
-  if (!exactNow) return lines;
-  Object.keys(exactNow).forEach(function (slider) {
-    var typed = exactNow[slider];
-    if (!typed) return;
-    // A trail is the fall of a split fade, so a typed one replaces the part after its bar
-    if (typed.key === "fade") {
-      lines = lines.map(function (line) {
-        return line.replace(/(\sfade=[\d.]+\|)[\d.]+/, "$1" + typed.value);
-      });
-      return;
-    }
-    var setting = new RegExp("(^|\\s)" + typed.key + "=(-?)[\\d.]+");
-    lines = lines.map(function (line) {
-      return line.replace(setting, function (all, space, sign) {
-        return space + typed.key + "=" + sign + typed.value;
-      });
-    });
-  });
-  return lines;
-};
-
 // Both ways a stretch's lines are asked for carry its typed values: the file and the preview
 function withExact(exact, write) {
   var had = exactNow;
@@ -92,19 +67,6 @@ function withExact(exact, write) {
     exactNow = had;
   }
 }
-
-var oneExactSection = sectionLines;
-
-sectionLines = function (run, section, look) {
-  return withExact(section.exact, function () { return oneExactSection(run, section, look); });
-};
-
-var oneExactPlay = livePlay;
-
-livePlay = function (look, holder, t, slot, count, sim) {
-  var exact = holder && holder !== MIDDLING ? holder.exact : null;
-  return withExact(exact, function () { return oneExactPlay(look, holder, t, slot, count, sim); });
-};
 
 // A setting's value in a stretch's lines, without its sign, or null where none names it. A
 // fade is read as its fall, the part after its bar, which is what a trail is
@@ -192,10 +154,7 @@ function figureCells(said, unit, title, take) {
   return [box, units];
 }
 
-var oneFigureChosen = renderChosen;
-
-renderChosen = function (where, run) {
-  oneFigureChosen(where, run);
+chosenSteps.push(function (where, run) {
   var box = document.getElementById(where);
   var section = run && run.sections[run.picked];
   var look = section && lookNamed(section.look);
@@ -319,4 +278,4 @@ renderChosen = function (where, run) {
     draw();
   };
   tuning.appendChild(handle);
-};
+});

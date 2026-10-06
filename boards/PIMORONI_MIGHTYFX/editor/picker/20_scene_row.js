@@ -5,10 +5,8 @@
 // Ping pong are. It is called Restart,
 // the heading's own word, as each of theirs is the file's.
 
-var oneSceneSettings = renderSceneSettings;
-
-renderSceneSettings = function () {
-  oneSceneSettings();
+function renderSceneSettings() {
+  renderSceneRow();
   // Always on has no settings of its own, so its row says what it is for, the gallery staying
   // where it was as the tabs are switched. Only once there are scenes for it to be under
   if (state.at < 0 && state.scenes.length) {
@@ -34,4 +32,4 @@ renderSceneSettings = function () {
                           "Its effects begin again every time the scene comes round, " +
                           "instead of carrying on where they left off"),
                    ticked);
-};
+}

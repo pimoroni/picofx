@@ -14,56 +14,6 @@ var SECTIONS = {outPanel: "outs", striplPanel: "stripl", striprPanel: "stripr",
 // Whether the board facts in this panel can be changed just now
 function canEdit(panel) { return setupOn; }
 
-// Where a lamp sits is changed with the wiring, so only where that can be
-lampsMovable = function () { return canEdit("outPanel"); };
-
-// The outputs read as a strip does, with no row above the lamps and no line under them. The
-// arrows and dragging are explained beside the board's box while setting up, so the section
-// is one size either way
-var onePanelHead = renderPanelHead;
-
-renderPanelHead = function () {
-  onePanelHead();
-  var head = document.getElementById("outHead");
-  head.textContent = "";
-  head.style.display = "none";
-};
-
-var oneLegend = renderLegend;
-
-renderLegend = function () {
-  oneLegend();
-  var legend = document.getElementById("outLegend");
-  legend.textContent = "";
-  legend.style.display = "none";
-};
-
-// The steps the two sides share go on the cutting row of the side at the right, as a strip
-// keeps its own on its cutting row
-var oneCutting = renderCutting;
-
-renderCutting = function (where, run) {
-  oneCutting(where, run);
-  if (where !== (mono.lamps.length ? "monoCut" : "outCut")) return;
-  var row = document.getElementById(where);
-  if (row) zoomAndSteps(row, active);
-};
-
-// A side is named only while there are two, telling the colour lamps from the mono ones.
-// With every output one colour lamp, the board's box says so already
-var oneSides = renderSides;
-
-renderSides = function () {
-  oneSides();
-  var two = mono.lamps.length > 0;
-  ["headA", "headB"].forEach(function (id) {
-    var head = document.getElementById(id);
-    if (head) head.style.display = two ? "" : "none";
-  });
-  var sides = document.getElementById("sides");
-  if (sides) sides.classList.toggle("unnamed", !two);
-};
-
 // ---- selection waits while the board is set up ------------------------------------------------
 // A stretch is picked to give it a look, which setup does not do, so a tap there picks
 // nothing and nothing looks picked. What was picked is held by its lamp, the wiring
@@ -73,23 +23,6 @@ renderSides = function () {
 var heldPick = null;
 var heldOutput = null;
 
-var onePick = pick;
-
-pick = function (run, at) {
-  if (setupOn) return;
-  onePick(run, at);
-};
-
-var onePickOutput = pickOutput;
-
-pickOutput = function (out) {
-  if (setupOn) {
-    heldOutput = out;
-    return;
-  }
-  onePickOutput(out);
-};
-
 function setSetup(on) {
   if (on && !setupOn) {
     var section = active.sections[active.picked];
@@ -97,18 +30,20 @@ function setSetup(on) {
     heldOutput = null;
   }
   setupOn = on;
-  if (on) return;
-  if (heldOutput !== null) {
-    pickOutput(heldOutput);
-  } else if (heldPick) {
-    runs.some(function (run) {
-      var at = run.lamps.map(lampKey).indexOf(heldPick);
-      if (at >= 0) pick(run, sectionAt(run, at));
-      return at >= 0;
-    });
+  if (!on) {
+    if (heldOutput !== null) {
+      pickOutput(heldOutput);
+    } else if (heldPick) {
+      runs.some(function (run) {
+        var at = run.lamps.map(lampKey).indexOf(heldPick);
+        if (at >= 0) pick(run, sectionAt(run, at));
+        return at >= 0;
+      });
+    }
+    heldPick = null;
+    heldOutput = null;
   }
-  heldPick = null;
-  heldOutput = null;
+  showChosen();
 }
 
 // Nothing looks picked while setup is on: the marks are drawn by the pages below, so they
@@ -159,24 +94,13 @@ function boardIcon() {
 
 // ---- the facts, in place --------------------------------------------------------------------
 
-// The arrows on the lamps are how an output is broken out, so they show only where the
-// wiring can be changed
-var oneCrossing = crossing;
-
-// Where the wiring cannot be changed the arrow is left out. What stands in its place takes
-// no room, as the arrow does, or each output's lamps would sit further apart outside setup
+// Where the wiring cannot be changed an output's arrow is left out. What stands in its place
+// takes no room, as the arrow does, or each output's lamps would sit further apart outside setup
 function noArrow() {
   var none = document.createElement("span");
   none.style.position = "absolute";
   return none;
 }
-
-crossing = function (out, colour) {
-  if (!canEdit("outPanel")) return noArrow();
-  var made = oneCrossing(out, colour);
-  made.classList.add("boardarrow");
-  return made;
-};
 
 function renderOutFacts() {
   var box = document.getElementById("outFacts");
@@ -192,8 +116,6 @@ function renderOutFacts() {
   }
 }
 
-var oneRenderLeds = renderLeds;
-
 // What a strip is built as, its length and the order it takes its colours in
 function stripBuilt(run) {
   return run.leds + " LEDs, " + (run.order || "grb").toUpperCase();
@@ -205,9 +127,10 @@ function stripThere(run, there) {
   run.there = there;
 }
 
-// Taking a strip out clears what it plays in every scene, which leaves its length unwritten
-// and its connector off
+// Taking a strip out clears what it plays in every scene, the lines kept from a file
+// included, which leaves its length unwritten and its connector off
 function dropStrip(run) {
+  forgetKeptFor(run);
   store();
   allBodies().forEach(function (held) {
     var kept = held.runs[run.name];
@@ -250,15 +173,7 @@ function renderStripOut(box, run, panel) {
   box.appendChild(add);
 }
 
-// A strip not fitted takes no look
-var oneSetupLandLook = landLook;
-
-landLook = function (run, at, name) {
-  if (run.strip && !run.there) return;
-  oneSetupLandLook(run, at, name);
-};
-
-renderLeds = function (where, run) {
+function renderLeds(where, run) {
   var box = document.getElementById(where);
   var panel = run.id + "Panel";
   document.getElementById(panel).classList.toggle("stripout", !run.there);
@@ -269,7 +184,7 @@ renderLeds = function (where, run) {
   // The strip's own count box is already the board's, so the icon goes inside it and it
   // takes the strip's colour
   if (canEdit(panel)) {
-    oneRenderLeds(where, run);
+    renderStripChip(where, run);
     var says = box.querySelector(".says");
     if (says) box.removeChild(says);
     var chip = box.querySelector(".chip");
@@ -281,7 +196,7 @@ renderLeds = function (where, run) {
     box.textContent = "";
     box.appendChild(boardBox(panel, ["Strip", small(stripBuilt(run))]));
   }
-};
+}
 
 function renderScreenFacts(port) {
   var box = document.getElementById(port.id + "Facts");

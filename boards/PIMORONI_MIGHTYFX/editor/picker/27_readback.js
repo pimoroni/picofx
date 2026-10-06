@@ -1045,38 +1045,9 @@ drawSteps.after.push(function () {
   markKeptLights();
 });
 
-// A look chosen for lights a kept line plays asks first, since the board refuses a light set
-// twice: agreed, the kept lines go and the look plays; declined, nothing changes
-var oneReadLandLook = landLook;
-
-landLook = function (run, at, name) {
-  var section = run.sections[at];
-  if (section && name) {
-    var named = keptLights(run);
-    var clashing = [];
-    for (var lamp = section.from; lamp <= section.to; lamp++) {
-      (named[lamp] || []).forEach(function (one) {
-        if (clashing.indexOf(one) < 0) clashing.push(one);
-      });
-    }
-    if (clashing.length) {
-      var lines = clashing.map(function (one) { return one.text; }).join("\n");
-      if (!confirm((clashing.length === 1 ? "A line kept as written already plays some of " +
-                    "these lights:" : "Lines kept as written already play some of these " +
-                    "lights:") + "\n\n" + lines + "\n\nTake " +
-                   (clashing.length === 1 ? "it" : "them") + " out of the file and play " +
-                   name + " instead?")) return;
-      keptNow = keptNow.filter(function (one) { return clashing.indexOf(one) < 0; });
-    }
-  }
-  oneReadLandLook(run, at, name);
-};
-
 // A strip removed takes with it every scene's kept lines that play on it, and its length
 // as written, or they would keep its connector on
-var oneReadDropStrip = dropStrip;
-
-dropStrip = function (run) {
+function forgetKeptFor(run) {
   function elsewhere(one) {
     var parts = entryParts(one.text);
     var lamps = parts && lampsNamed(run, parts.selector);
@@ -1088,8 +1059,7 @@ dropStrip = function (run) {
     var named = token.match(/^(strip[lr])=/i);
     return !named || named[1].toLowerCase() !== run.name;
   });
-  oneReadDropStrip(run);
-};
+}
 
 // ---- when the drive is opened -----------------------------------------------------------------
 
@@ -1119,8 +1089,3 @@ connectSteps.push(async function () {
 function rememberRead(text) {
   try { localStorage.setItem(WROTE_KEY, text); } catch (e) {}
 }
-
-overwriteQuestion = function () {
-  return "The file on the board has changed since this page read it, so saving replaces " +
-         "those changes. Save over it?";
-};

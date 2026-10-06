@@ -19,10 +19,8 @@ var LOOK_GROUPS = [
    looks: ["Sparkle", "Counter", "Traffic light", "Pelican crossing"]}
 ];
 
-var oneFlatGalleries = renderGalleries;
-
-renderGalleries = function () {
-  oneFlatGalleries();
+// The gallery's cards gathered under the groups' headings, in the groups' order
+function groupGallery() {
   var flat = document.querySelector("#looks .gallery");
   if (!flat) return;
   var cards = {};
@@ -71,4 +69,4 @@ renderGalleries = function () {
     holder.appendChild(row);
   });
   flat.parentNode.replaceChild(holder, flat);
-};
+}

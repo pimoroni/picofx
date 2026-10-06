@@ -183,6 +183,17 @@ async function removeFromDrive(name, kind) {
   delete state.art[name];
   try { await scanMedia(state.dirHandle); } catch (e) {}
   draw();
+  // A picture still listed did not go, the drive saying so. One that did is also taken off
+  // every hub position showing it
+  if (state.media.some(function (one) { return one.name === name; })) return;
+  store();
+  allBodies().forEach(function (body) {
+    Object.keys(body.places || {}).forEach(function (place) {
+      if (body.places[place].shows === name) body.places[place].shows = null;
+    });
+  });
+  apply(slotAt(state.at).body);
+  draw();
 }
 
 // A wav's length and outline, the outline read at SOUND_SAMPLES points
@@ -310,25 +321,6 @@ function mediaArt(name) {
   return null;
 }
 
-// ---- files on and off the drive -----------------------------------------------------------------
-// A file deleted is also taken off every hub position showing it
-
-var oneOnBoardRemove = removeFromDrive;
-
-removeFromDrive = async function (name, kind) {
-  await oneOnBoardRemove(name, kind);
-  // Still listed means the question was declined, or the delete failed and said so
-  if (state.media.some(function (one) { return one.name === name; })) return;
-  store();
-  allBodies().forEach(function (body) {
-    Object.keys(body.places || {}).forEach(function (place) {
-      if (body.places[place].shows === name) body.places[place].shows = null;
-    });
-  });
-  apply(slotAt(state.at).body);
-  draw();
-};
-
 // ---- hearing a sound --------------------------------------------------------------------------
 // Each sound on the drive has a play button in its tile's corner, so it can be heard as well as
 // seen. One plays at a time, and pressing it again, or playing another, stops it
@@ -366,10 +358,8 @@ async function hear(name) {
   }
 }
 
-var oneHearingTile = soundTile;
-
-soundTile = function (name) {
-  var tile = oneHearingTile(name);
+// A sound's tile with a way to hear it here, where the open drive holds it
+function withHearButton(tile, name) {
   if (!name || !soundHandles[name]) return tile;
   var playing = hearing.name === name;
   // A tile is a button already, so this is a plain element taking the click, as its cross is
@@ -384,7 +374,7 @@ soundTile = function (name) {
   };
   tile.appendChild(button);
   return tile;
-};
+}
 
 // The file starts folded, there for anyone who opens it
 (function () {

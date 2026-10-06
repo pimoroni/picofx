@@ -64,6 +64,12 @@ function placeOf(lamp) {
 
 function lampsFor(run) {
   var found = [];
+  // A strip's lamps are its LEDs, each a colour lamp, and the drawing asks it how many it has
+  if (run.strip) {
+    for (var i = 0; i < run.leds; i++) found.push({colour: true, at: i, run: run});
+    run.count = run.leds;
+    return found;
+  }
   order.forEach(function (place) {
     var colour = place.channel === null;
     if (colour !== !wiring[place.out].broken) return;
@@ -77,6 +83,7 @@ function widthOf(section) { return section.to - section.from + 1; }
 
 // What one lamp is called, in the words the file uses
 function selectorFor(lamp) {
+  if (lamp.run) return lamp.run.name + (lamp.at + 1);
   var name = "out" + (lamp.out + 1);
   return lamp.colour ? name : name + "." + CHANNELS[lamp.channel];
 }
@@ -126,6 +133,7 @@ function nameThese(lamps) {
 }
 
 function shortName(lamp) {
+  if (lamp.run) return String(lamp.at + 1);
   if (lamp.colour) return String(lamp.out + 1);
   return (lamp.out + 1) + CHANNELS[lamp.channel];
 }
@@ -162,7 +170,10 @@ function copyExact(exact) {
   return exact ? JSON.parse(JSON.stringify(exact)) : undefined;
 }
 
+// What holds a stretch to its lamps across a change to the wiring. A strip's lamps have no
+// output to be named by, so they are named by the strip and their place
 function lampKey(lamp) {
+  if (lamp.run) return lamp.run.id + ":" + lamp.at;
   return lamp.out + "." + (lamp.channel === null ? "whole" : lamp.channel);
 }
 
@@ -220,8 +231,7 @@ var thisStep = 0;
 
 function remember(run) {
   run.undone = [];
-  run.was.push(JSON.stringify({mark: thisStep, sections: run.sections,
-                               wiring: wiring, order: order}));
+  run.was.push(JSON.stringify({mark: thisStep, sections: run.sections}));
   if (run.was.length > 40) run.was.shift();
   thisStep++;
 }
@@ -238,18 +248,13 @@ function steppingWith(run, stack) {
   });
 }
 
+// A step back or on is the scene's, so it changes the stretches and never the board
 function stepBack(run) {
   if (!run.was.length) return;
   var also = steppingWith(run, "was");
   [run].concat(also).forEach(function (one) {
-    one.undone.push(JSON.stringify({mark: thisStep, sections: one.sections,
-                                    wiring: wiring, order: order}));
-    var had = JSON.parse(one.was.pop());
-    one.sections = had.sections;
-    if (one === run) {
-      wiring = had.wiring;
-      order = had.order;
-    }
+    one.undone.push(JSON.stringify({mark: thisStep, sections: one.sections}));
+    one.sections = JSON.parse(one.was.pop()).sections;
   });
   thisStep++;
   settle();
@@ -260,14 +265,8 @@ function stepOn(run) {
   if (!run.undone.length) return;
   var also = steppingWith(run, "undone");
   [run].concat(also).forEach(function (one) {
-    one.was.push(JSON.stringify({mark: thisStep, sections: one.sections,
-                                 wiring: wiring, order: order}));
-    var next = JSON.parse(one.undone.pop());
-    one.sections = next.sections;
-    if (one === run) {
-      wiring = next.wiring;
-      order = next.order;
-    }
+    one.was.push(JSON.stringify({mark: thisStep, sections: one.sections}));
+    one.sections = JSON.parse(one.undone.pop()).sections;
   });
   thisStep++;
   settle();
@@ -339,8 +338,10 @@ function settle() {
 }
 
 // The one stretch being worked on. Everything that changes it comes through here, so
-// the mark, the tools and the set of looks can never end up about different things
+// the mark, the tools and the set of looks can never end up about different things.
+// Setting up the board gives no stretch a look, so nothing is picked while it is on
 function pick(run, at) {
+  if (setupOn) return;
   active = run;
   run.picked = Math.max(0, Math.min(at, run.sections.length - 1));
   showing = kindAt(run, run.picked);
@@ -390,17 +391,27 @@ function moveEdge(run, which, to) {
   run.picked = Math.min(run.picked, run.sections.length - 1);
 }
 
+// Joined back into one, the run plays what the stretch picked was playing
 function joinAll(run) {
+  var section = run.sections[run.picked];
+  var had = section && playsOf(section);
   remember(run);
   run.sections = [blank(0, run.lamps.length - 1, run)];
   settle();
   pick(run, 0);
   draw();
+  if (had && run.sections.length === 1) {
+    Object.assign(run.sections[0], had);
+    settle();
+    draw();
+  }
 }
 
 // ---- the wiring itself -------------------------------------------------------------------
+// One output broken out or put back, in the scene on show. The wiring part does it to every
+// scene and slides the lamps
 
-function breakOut(out) {
+function breakOutWiring(out) {
   if (wiring[out].broken) return;
   runs.forEach(remember);
   acrossWiring(function () {
@@ -417,8 +428,13 @@ function breakOut(out) {
 }
 
 // Breaking out and putting back are done to one output, and what is done next is nearly
-// always to its lamps, so the mark and the set of looks go to the stretch holding them
+// always to its lamps, so the mark and the set of looks go to the stretch holding them.
+// While the board is set up the output is held, and picked once setting up ends
 function pickOutput(out) {
+  if (setupOn) {
+    heldOutput = out;
+    return;
+  }
   runs.some(function (run) {
     var at = run.lamps.map(function (lamp) { return lamp.out; }).indexOf(out);
     if (at < 0) return false;
@@ -427,7 +443,7 @@ function pickOutput(out) {
   });
 }
 
-function rejoin(out) {
+function rejoinWiring(out) {
   if (!wiring[out].broken) return;
   runs.forEach(remember);
   acrossWiring(function () {
@@ -447,7 +463,16 @@ function rejoin(out) {
 
 // ---- what the file says ------------------------------------------------------------------
 
-function targetFor(run, section) {
+// What a stretch plays on, as though it ran from its near end
+function forwardTargetFor(run, section) {
+  if (run.strip) {
+    // The stretch's lights by number, for the looks that deal them out themselves
+    var lights = [];
+    for (var at = section.from; at <= section.to; at++) lights.push(at + 1);
+    return {kind: "run", id: run.id, name: run.name, label: run.label, colour: true,
+            selector: stripSelector(run, section), count: widthOf(section), playing: [],
+            lights: lights};
+  }
   var first = run.lamps[section.from];
   if (!first) return {kind: "outputs", colour: false, selector: "out1", count: 1,
                       label: "nothing", playing: []};
@@ -483,12 +508,6 @@ function levelled(lines, level) {
   });
 }
 
-// What one stretch writes, at its brightness
-function sectionLines(run, section, look) {
-  return levelled(linesFor(look, targetFor(run, section), section.pace, section.mood,
-                           section.colour), section.level);
-}
-
 // What the lamps play, a line or more for each stretch with a look
 function lampLines() {
   var lines = [];
@@ -507,24 +526,30 @@ function lampLines() {
 var painters = [];
 var walks = {};
 
+// What each lamp of a run shows now. A strip's stretches are played in the strip's form
 function litRun(run) {
   var out = [];
   var store = walks[run.name] || (walks[run.name] = {});
-  run.sections.forEach(function (section) {
-    var look = lookNamed(section.look);
-    var wide = widthOf(section);
-    for (var i = 0; i < wide; i++) {
-      var which = section.from + i;
-      var lamp = run.lamps[which];
-      if (!lamp) continue;
-      var walk = store[which] || (store[which] = {});
-      var lit = look ? livePlay(look, section, beat, i, wide, walk) : null;
-      out[which] = lit
-        ? {level: Math.max(0, Math.min(1, lit.level)),
-           ink: lamp.colour ? lit.ink : "#ffd9a0"}
-        : {level: 0, ink: "#3a3f44", nothing: true};
-    }
-  });
+  previewingStrip = !!run.strip;
+  try {
+    run.sections.forEach(function (section) {
+      var look = lookNamed(section.look);
+      var wide = widthOf(section);
+      for (var i = 0; i < wide; i++) {
+        var which = section.from + i;
+        var lamp = run.lamps[which];
+        if (!lamp) continue;
+        var walk = store[which] || (store[which] = {});
+        var lit = look ? livePlay(look, section, beat, i, wide, walk) : null;
+        out[which] = lit
+          ? {level: Math.max(0, Math.min(1, lit.level)),
+             ink: lamp.colour ? lit.ink : "#ffd9a0"}
+          : {level: 0, ink: "#3a3f44", nothing: true};
+      }
+    });
+  } finally {
+    previewingStrip = false;
+  }
   return out;
 }
 
@@ -576,8 +601,36 @@ document.addEventListener("mouseup", function () {
   window.setTimeout(function () { dragged = false; }, 0);
 });
 
+// A look given to a stretch. A line kept as written that already plays some of its lights is
+// asked about first, since the board refuses a light set twice: agreed, the kept lines go;
+// declined, nothing changes. A strip not fitted takes no look, and a new look starts in its
+// own colour, its second setting afresh
 function landLook(run, at, name) {
   var section = run.sections[at];
+  if (section && name) {
+    var named = keptLights(run);
+    var clashing = [];
+    for (var lamp = section.from; lamp <= section.to; lamp++) {
+      (named[lamp] || []).forEach(function (one) {
+        if (clashing.indexOf(one) < 0) clashing.push(one);
+      });
+    }
+    if (clashing.length) {
+      var lines = clashing.map(function (one) { return one.text; }).join("\n");
+      if (!confirm((clashing.length === 1 ? "A line kept as written already plays some of " +
+                    "these lights:" : "Lines kept as written already play some of these " +
+                    "lights:") + "\n\n" + lines + "\n\nTake " +
+                   (clashing.length === 1 ? "it" : "them") + " out of the file and play " +
+                   name + " instead?")) return;
+      keptNow = keptNow.filter(function (one) { return clashing.indexOf(one) < 0; });
+    }
+  }
+  if (run.strip && !run.there) return;
+  var look = lookNamed(name);
+  if (section && look && section.look !== name) {
+    startColour(run, section, look);
+    section.mood = START_MOODS[look.name] !== undefined ? START_MOODS[look.name] : MIDDLING.mood;
+  }
   if (!section) return;
   if (section.look !== name) {
     remember(run);
@@ -615,6 +668,10 @@ function lookCard(isMono, look, on) {
     var run = galleryRun(isMono);
     landLook(run, stretchFor(run, isMono), look.name);
   };
+  if (!isMono && takesColour(lookNamed(look.name))) {
+    card.appendChild(paletteMark());
+    card.title += ". You can choose its colour";
+  }
   return card;
 }
 
@@ -692,10 +749,12 @@ function renderGalleries() {
     looks.appendChild(card);
   });
   shelf.appendChild(looks);
+  groupGallery();
 }
 
+// The looks a run of several lamps can play, a banked one dealing its banks along it
 function spanning() {
-  return LOOKS.filter(function (look) { return look.spans; });
+  return LOOKS.filter(function (look) { return look.spans || isBanked(look); });
 }
 
 function paintCards() {
@@ -819,16 +878,15 @@ function takesPlace(node, lamp) {
     carrying_lamp = null;
     moveLamp({from: carried, to: me, after: after(event)});
   });
+  if (!lampsMovable()) node.draggable = false;
+  // Every lamp can be found by what it is, which is what the lines and the slide go by
+  var key = lampKey(me);
+  node.dataset.key = key;
+  node.addEventListener("mouseenter", function () { bringForward([key], true); });
+  node.addEventListener("mouseleave", function () { bringForward([key], false); });
 }
 
 // A lamp put down beside another, before it or after it, taking that place in the build
-function moveLamp(move) {
-  runs.forEach(remember);
-  placeLamp(move);
-  settle();
-  draw();
-}
-
 function placeLamp(move) {
   var moved = order.splice(placeOf(move.from), 1)[0];
   order.splice(placeOf(move.to) + (move.after ? 1 : 0), 0, moved);
@@ -846,9 +904,11 @@ function showKin(out, on) {
 
 // ---- the bar: one cell per stretch, cut between them --------------------------------------
 
-// What a stretch's cell is washed in, which a page built on this one may make truer to
-// what the stretch plays
-function washFor(run, section, look) { return look.strip[2]; }
+// What a stretch's cell is washed in, the colours it plays
+function washFor(run, section, look) {
+  var first = run.lamps[section.from];
+  return stretchWash(look, section, run, !!first && !first.colour);
+}
 
 function renderBar(where, run) {
   var box = document.getElementById(where);
@@ -946,10 +1006,12 @@ var RIGHT = "<path d='M3 8 H12'/><path d='M8.5 4.5 L12 8 L8.5 11.5'/>";
 var LEFT = "<path d='M13 8 H4'/><path d='M7.5 4.5 L4 8 L7.5 11.5'/>";
 
 // The one act there is, said as a direction: a colour output goes right and becomes
-// three mono lights, and those three come back left as one colour output
+// three mono lights, and those three come back left as one colour output. It shows only
+// where the wiring can be changed, in the board's colour
 function crossing(out, colour) {
+  if (!canEdit("outPanel")) return noArrow();
   var made = document.createElement("button");
-  made.className = "cross";
+  made.className = "cross boardarrow";
   var says = colour
     ? "break output " + (out + 1) + " into three mono lights"
     : "put output " + (out + 1) + " back to one colour light";
@@ -1005,52 +1067,21 @@ function renderCutting(where, run) {
   says.textContent = "Cut into " + run.sections.length +
                      (run.sections.length === 1 ? " stretch" : " stretches");
   box.appendChild(says);
+  // The steps the two sides share go on the cutting row of the side at the right, as a strip
+  // keeps its own on its cutting row
+  if (where === (mono.lamps.length ? "monoCut" : "outCut")) zoomAndSteps(box, active);
 }
 
-// The row above everything, where the sided page keeps the steps it shares
-function renderPanelHead() {
-  var box = document.getElementById("outHead");
-  box.textContent = "";
-  var says = document.createElement("span");
-  says.className = "what";
-  says.textContent = "Drag a light to where it sits on your build";
-  box.appendChild(says);
-  zoomAndSteps(box, active);
-}
-
-function renderTools(where, run) {
-  var box = document.getElementById(where);
-  if (!box) return;
-  box.textContent = "";
-  var row = document.createElement("div");
-  row.className = "tools";
-  var whole = document.createElement("button");
-  whole.textContent = "Join it all back";
-  whole.disabled = run.sections.length < 2;
-  whole.onclick = function () { joinAll(run); };
-  row.appendChild(whole);
-
-  var apart = document.createElement("button");
-  apart.textContent = "One light each";
-  apart.title = "a stretch per light, which is where most boards start";
-  apart.onclick = function () {
-    remember(run);
-    run.sections = run.lamps.map(function (lamp, at) {
-      var was = run.sections[sectionAt(run, at)];
-      return {from: at, to: at, look: was.look, pace: was.pace, mood: was.mood,
-              colour: was.colour, level: was.level, custom: was.custom,
-              blinks: copyBlinks(was.blinks), exact: copyExact(was.exact),
-              timings: copyExact(was.timings)};
-    });
-    settle();
-    pick(run, run.picked);
-    draw();
-  };
-  row.appendChild(apart);
-  box.appendChild(row);
-}
+// The chosen stretch's panel. The parts below add to it, each after the one before, whatever the
+// panel drew
+var chosenSteps = [];
 
 function renderChosen(where, run) {
+  renderChosenPanel(where, run);
+  chosenSteps.forEach(function (step) { step(where, run); });
+}
+
+function renderChosenPanel(where, run) {
   var box = document.getElementById(where);
   if (!box) return;
   box.textContent = "";
@@ -1133,13 +1164,13 @@ function renderSides() {
       : "";
     head.appendChild(says);
   });
-}
-
-function renderLegend() {
-  var box = document.getElementById("outLegend");
-  box.textContent = "The arrow on an output sends it across: one colour light becomes " +
-                    "three mono ones, and the three come back as one. Each side is as " +
-                    "wide as what it holds, so the divide moves with the board.";
+  // A side is named only while there are two, telling the colour lamps from the mono ones.
+  // With every output one colour lamp, the board's box says so already
+  var two = mono.lamps.length > 0;
+  ["headA", "headB"].forEach(function (id) {
+    document.getElementById(id).style.display = two ? "" : "none";
+  });
+  document.getElementById("sides").classList.toggle("unnamed", !two);
 }
 
 // ---- the file, painted -----------------------------------------------------------------------
@@ -1179,11 +1210,6 @@ function paintLine(line) {
   return head + "<span class='s-colon'>:</span>" + tail;
 }
 
-function renderPreview() {
-  document.getElementById("preview").innerHTML =
-    currentText().split("\n").map(paintLine).join("\n");
-}
-
 // ---- drawing --------------------------------------------------------------------------------
 // The parts below add their own steps to a draw: what each readies before the page is drawn, and
 // what each draws after the outputs, both in the order the parts come
@@ -1207,7 +1233,6 @@ function draw() {
   cardFaces = [];
   kinOf = {};
   renderGalleries();
-  renderPanelHead();
   renderRun("outRun", outs);
   renderCutting("outCut", outs);
   renderBar("outBar", outs);
@@ -1221,7 +1246,6 @@ function draw() {
   renderTools("outTools", active);
   renderChosen("outChosen", active);
 
-  renderLegend();
   renderPreview();
   levelSides();
   paintAll();

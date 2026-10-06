@@ -91,13 +91,6 @@ function keptOpen(panel) {
 
 LED_PANELS.forEach(keptOpen);
 
-var oneTabsSetup = setSetup;
-
-setSetup = function (on) {
-  oneTabsSetup(on);
-  showChosen();
-};
-
 // Each section is only ever seen on its own here, so each keeps its own tools and settings
 // whichever is worked on, and none changes height when another tab is chosen. The outputs'
 // are for whichever of their two sides was last worked on
@@ -110,7 +103,7 @@ drawSteps.after.push(function () {
     renderChosen("outChosen", lastOutputRun);
   }
   runs.filter(function (run) { return run.strip && run !== active; }).forEach(function (run) {
-    renderStripTools(run.id + "Tools", run);
+    renderTools(run.id + "Tools", run);
     renderChosen(run.id + "Chosen", run);
   });
   renderLedTabs();

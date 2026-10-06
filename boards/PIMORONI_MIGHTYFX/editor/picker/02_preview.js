@@ -79,8 +79,11 @@ function parseEntry(line, count) {
 
 var TAU = Math.PI * 2;
 
+// Where in its cycle an effect is. A cycle running below zero wraps back into one, as picofx's
+// modulo does, or a blink or a flash would read a negative point in its beat as lit
 function offsetOf(t, settings) {
-  return ((t * num(settings.speed, 1)) + num(settings.phase, 0)) % 1;
+  var at = ((t * num(settings.speed, 1)) + num(settings.phase, 0)) % 1;
+  return at < 0 ? at + 1 : at;
 }
 
 function num(value, fallback) {
@@ -242,9 +245,10 @@ var COLOURED = {
     return {level: 1, ink: hueInk(((t * num(s.speed, 1)) % 1) * 360, s.sat, s.val)};
   },
 
+  // Wrapped as offsetOf is, or a hue would go out of range
   rainbow_wave: function (t, s, pos) {
-    var at = (t * num(s.speed, 1)) + pos / num(s.length, 1);
-    return {level: 1, ink: hueInk((at % 1) * 360, s.sat, s.val)};
+    var at = ((t * num(s.speed, 1)) + pos / num(s.length, 1)) % 1;
+    return {level: 1, ink: hueInk((at < 0 ? at + 1 : at) * 360, s.sat, s.val)};
   },
 
   hue_step: function (t, s) {
@@ -253,26 +257,38 @@ var COLOURED = {
     return {level: 1, ink: hueInk(which / steps * 360, s.sat, s.val)};
   },
 
+  // Given several colours, it moves to its next each time its beat comes round
   rgb_blink: function (t, s) {
-    return {level: EFFECTS.blink(t, s), ink: inkOf(s.colour)};
+    var colours = String(s.colour || "red").split("|");
+    var beats = Math.floor(t * num(s.speed, 1) + num(s.phase, 0));
+    var which = ((beats % colours.length) + colours.length) % colours.length;
+    return {level: EFFECTS.blink(t, s), ink: inkOf(colours[which])};
   }
 };
 
 // ---- the curve a channel follows --------------------------------------------------------
 // fade crosses at a steady rate and ease settles in as a bulb does, both of them the
 // seconds a change takes to arrive. What they leave behind is the trail under anything
-// travelling a run
+// travelling a run. A split fade or ease, rise|fall, goes up at its rise and comes down at its
+// fall, and one number is both
 
 function curved(sim, given, channel) {
-  var fade = num(channel.fade, 0), ease = num(channel.ease, 0);
-  if (!fade && !ease) return given;
+  function parts(value) {
+    if (typeof value === "number") return [value, value];
+    var split = String(value || "").split("|").map(Number);
+    return split.length === 2 && split.every(isFinite) ? split : [0, 0];
+  }
+  var fade = parts(channel.fade), ease = parts(channel.ease);
+  if (!fade[0] && !fade[1] && !ease[0] && !ease[1]) return given;
   var was = sim.curve === undefined ? given : sim.curve;
+  var rising = given > was;
+  var fadeFor = fade[rising ? 0 : 1], easeFor = ease[rising ? 0 : 1];
   var now;
-  if (fade) {
-    var step = FRAME / fade;
-    now = given > was ? Math.min(given, was + step) : Math.max(given, was - step);
+  if (fade[0] || fade[1]) {
+    now = !fadeFor ? given
+        : rising ? Math.min(given, was + FRAME / fadeFor) : Math.max(given, was - FRAME / fadeFor);
   } else {
-    now = was + (given - was) * Math.min(1, FRAME / ease);
+    now = !easeFor ? given : was + (given - was) * Math.min(1, FRAME / easeFor);
   }
   sim.curve = Math.max(0, Math.min(1, now));
   return sim.curve;
@@ -280,19 +296,25 @@ function curved(sim, given, channel) {
 
 // ---- what one lamp of a target is doing at time t ----------------------------------------
 
+// Whether a strip's stretches are being played, so the looks take the strip's form
+var previewingStrip = false;
+
 // The target a look writes for, built from what the lamp knows. Colour is always asked
 // for, so an entry naming one says what to draw the lamp in; a caller showing mono lamps
-// draws it its own way
+// draws it its own way. The preview plays a stretch as that many lamps of its own
 function lampTarget(count) {
   var playing = [];
   for (var i = 1; i <= count; i++) playing.push(i);
-  return {kind: count === 1 ? "one" : "outputs", id: "outputs", name: "out",
-          label: "the outputs", colour: true, count: count, playing: playing,
-          selector: "out" + (count === 1 ? "1" : "1-" + count)};
+  var target = {kind: count === 1 ? "one" : "outputs", id: "outputs", name: "out",
+                label: "the outputs", colour: true, count: count, playing: playing,
+                selector: "out" + (count === 1 ? "1" : "1-" + count)};
+  if (previewingStrip) Object.assign(target, {strip: true, lights: playing.slice()});
+  return target;
 }
 
-// slot is which lamp this is, counted from zero, of count playing
-function livePlay(look, holder, t, slot, count, sim) {
+// What a look's entries light at slot, which lamp this is counted from zero, of count playing.
+// The effects part plays a stretch through this as the board will
+function lookLit(look, holder, t, slot, count, sim) {
   if (!look || !look.entries) return null;
   var lines;
   try {

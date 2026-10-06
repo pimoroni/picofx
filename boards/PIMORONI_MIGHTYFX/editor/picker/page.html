@@ -255,11 +255,6 @@ footer{max-width:60rem;margin:0 auto 2rem;padding:0 1.4rem;font-size:.8rem;color
 .lamp.carried{opacity:.35}
 .lamp.landing{box-shadow:-3px 0 0 var(--accent)}
 .lamp.landing.after{box-shadow:3px 0 0 var(--accent)}
-/* The arrow an output crosses on takes no room at all: it is over the output, and only
-   while that output is being pointed at */
-
-.legend{display:flex;gap:1.1rem;flex-wrap:wrap;margin:.5rem 0 0;font-size:.76rem;
- color:var(--dim)}
 
 /* One set of looks, drawn for the kind being worked on. A tab per kind, and a kind the
    board has none of is offered but not taken: it says what breaking an output out would
@@ -335,7 +330,6 @@ footer{max-width:60rem;margin:0 auto 2rem;padding:0 1.4rem;font-size:.8rem;color
 #sideB .cross{left:-.3rem}
 .cross:hover:enabled{border-color:var(--rgbout);background:#f6f1ff}
 .cross svg{display:block}
-.legend i.dot{width:.7rem;height:.7rem;border-radius:50%;background:#2a2d30}
 
 
 /* Scenes take turns, so they are tabs: the bar is only drawn once there is more
@@ -1582,7 +1576,6 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
  <details class="panel" id="outPanel" open>
   <summary>The outputs<span class="says">seven of them, each one light or three</span></summary>
   <div class="facts" id="outFacts"></div>
-  <div class="head" id="outHead"></div>
   <div class="sides" id="sides">
    <div class="side" id="sideA">
     <div class="sidehead" id="headA"></div>
@@ -1599,7 +1592,6 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
   </div>
   <div id="outTools"></div>
   <div id="outChosen"></div>
-  <div class="legend" id="outLegend"></div>
  </details>
 
  <details class="panel strip" id="striplPanel" open>

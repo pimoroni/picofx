@@ -110,32 +110,8 @@ function riseFor(seconds) {
   };
 }(lookNamed("Scanner"), lookNamed("Chase")));
 
-// The preview follows a split fade or ease as the board does, its rise going up and its fall
-// coming down. One number is both, as before
-curved = function (sim, given, channel) {
-  function parts(value) {
-    if (typeof value === "number") return [value, value];
-    var split = String(value || "").split("|").map(Number);
-    return split.length === 2 && split.every(isFinite) ? split : [0, 0];
-  }
-  var fade = parts(channel.fade), ease = parts(channel.ease);
-  if (!fade[0] && !fade[1] && !ease[0] && !ease[1]) return given;
-  var was = sim.curve === undefined ? given : sim.curve;
-  var rising = given > was;
-  var fadeFor = fade[rising ? 0 : 1], easeFor = ease[rising ? 0 : 1];
-  var now;
-  if (fade[0] || fade[1]) {
-    now = !fadeFor ? given
-        : rising ? Math.min(given, was + FRAME / fadeFor) : Math.max(given, was - FRAME / fadeFor);
-  } else {
-    now = !easeFor ? given : was + (given - was) * Math.min(1, FRAME / easeFor);
-  }
-  sim.curve = Math.max(0, Math.min(1, now));
-  return sim.curve;
-};
-
 // On and off at a pace, lit for a share of each beat, picofx's blink. Given several colours
-// it blinks through them in turn, one a beat, which is rgb_blink (see _blink_colours.js)
+// it blinks through them in turn, one a beat, which is rgb_blink (see 06_blink.js)
 function blinkSpeed(pace) { return lerp(0.3, 3, pace); }
 function blinkDuty(mood) { return lerp(0.1, 0.9, mood); }
 
@@ -230,19 +206,12 @@ function withSection(section, write) {
   }
 }
 
-var oneSignalSection = sectionLines;
-
-sectionLines = function (run, section, look) {
-  return withSection(section, function () { return oneSignalSection(run, section, look); });
-};
-
-var oneSignalPlay = livePlay;
-
-livePlay = function (look, holder, t, slot, count, sim) {
+// What a look lights with its stretch as the one being played
+function sectionLit(look, holder, t, slot, count, sim) {
   return withSection(holder && holder !== MIDDLING ? holder : null, function () {
-    return oneSignalPlay(look, holder, t, slot, count, sim);
+    return lookLit(look, holder, t, slot, count, sim);
   });
-};
+}
 
 function timingOf(name, key) {
   var own = sectionNow && sectionNow.timings;
@@ -335,27 +304,6 @@ function stripRun(one) {
   return run;
 }
 
-// ---- what the page below has to be told about them -------------------------------------
-
-var oneLampsFor = lampsFor;
-
-lampsFor = function (run) {
-  if (!run.strip) return oneLampsFor(run);
-  var found = [];
-  for (var i = 0; i < run.leds; i++) found.push({colour: true, at: i, run: run});
-  // The drawing asks a run how many lights it has under this name
-  run.count = run.leds;
-  return found;
-};
-
-// A stretch is held to its lamps by name across a change to the wiring, and a strip's
-// lamps have no output to be named by, so they are named by the strip and their place
-var oneLampKey = lampKey;
-
-lampKey = function (lamp) {
-  return lamp.run ? lamp.run.id + ":" + lamp.at : oneLampKey(lamp);
-};
-
 // A stretch of a strip is a range of its lights, and the whole of it is the bare name
 function stripSelector(run, section) {
   if (section.from === 0 && section.to === run.lamps.length - 1) return run.name;
@@ -363,31 +311,6 @@ function stripSelector(run, section) {
     ? String(section.from + 1)
     : (section.from + 1) + "-" + (section.to + 1));
 }
-
-var oneTargetFor = targetFor;
-
-targetFor = function (run, section) {
-  if (!run.strip) return oneTargetFor(run, section);
-  // The stretch's lights by number, for the looks that deal them out themselves
-  var lights = [];
-  for (var at = section.from; at <= section.to; at++) lights.push(at + 1);
-  return {kind: "run", id: run.id, name: run.name, label: run.label, colour: true,
-          selector: stripSelector(run, section), count: widthOf(section), playing: [],
-          lights: lights};
-};
-
-var oneSelectorFor = selectorFor;
-
-selectorFor = function (lamp) {
-  if (!lamp.run) return oneSelectorFor(lamp);
-  return lamp.run.name + (lamp.at + 1);
-};
-
-var oneShortName = shortName;
-
-shortName = function (lamp) {
-  return lamp.run ? String(lamp.at + 1) : oneShortName(lamp);
-};
 
 // ---- drawing one -----------------------------------------------------------------------
 // Beads on a wire that runs between them, a bead at the lead in and a ring at the tail, and a whole stretch taking the click rather than only the lights in it
@@ -521,27 +444,6 @@ function wireRun(run) {
   }};
 }
 
-function washOf(look, mono) {
-  var brightest = null;
-  var most = -1;
-  (look.strip || []).forEach(function (colour) {
-    var lit = luminance(colour);
-    if (lit > most) { most = lit; brightest = colour; }
-  });
-  if (!brightest) return "rgba(138,131,120,0.16)";
-  // A mono lamp's colour comes back already worked out, so both forms are read here
-  var said = mono ? asMono(brightest, peakOf(look)) : brightest;
-  var parts;
-  if (said.charAt(0) === "#") {
-    parts = [said.slice(1, 3), said.slice(3, 5), said.slice(5, 7)].map(function (pair) {
-      return parseInt(pair, 16);
-    });
-  } else {
-    parts = said.replace(/[^0-9,]/g, "").split(",").map(Number);
-  }
-  return "rgba(" + parts.join(",") + ",0.22)";
-}
-
 var GLASS_OUT = "<circle cx='7.2' cy='7.2' r='4.9'/><path d='M10.9 10.9 L14.4 14.4'/>" +
                 "<path d='M5 7.2 L9.4 7.2'/>";
 
@@ -550,7 +452,8 @@ var GLASS_IN = "<circle cx='7.2' cy='7.2' r='4.9'/><path d='M10.9 10.9 L14.4 14.
 
 function zoomOf(run) { return run.zoom || 1; }
 
-function divide(run, ways) {
+// The picked stretch cut into a number of stretches as near equal as its lamps allow
+function splitSection(run, ways) {
   var section = run.sections[run.picked];
   if (!section || ways < 2 || widthOf(section) < ways) return;
   remember(run);
@@ -567,7 +470,9 @@ function divide(run, ways) {
   draw();
 }
 
-function fill(run, many) {
+// The run's stretches after the picked one and the many after it made again, those many
+// repeated to the run's end
+function repeatSections(run, many) {
   var pattern = run.sections.slice(run.picked, run.picked + many);
   if (!pattern.length) return;
   remember(run);
@@ -615,7 +520,7 @@ function renderStripBar(where, run) {
     var look = lookNamed(section.look);
     var wash = document.createElement("span");
     wash.className = "lit" + (look ? "" : " nothing");
-    if (look) wash.style.background = washOf(look, run.mono, section, run);
+    if (look) wash.style.background = stretchWash(look, section, run, run.mono);
     cell.appendChild(wash);
 
     var says = document.createElement("span");
@@ -719,57 +624,6 @@ function stripZoomAndSteps(row, run) {
                              function () { stepBack(run); }));
   row.appendChild(iconButton(ON, "Redo", !(run.undone && run.undone.length),
                              function () { stepOn(run); }));
-}
-
-function renderStripTools(where, run) {
-  var box = document.getElementById(where);
-  box.textContent = "";
-  var row = document.createElement("div");
-  row.className = "tools";
-  var section = run.sections[run.picked];
-
-  row.appendChild(document.createTextNode("Split into"));
-  var ways = document.createElement("input");
-  ways.type = "number";
-  ways.min = 2;
-  ways.max = Math.max(2, section ? widthOf(section) : 2);
-  ways.value = run.ways || 3;
-  ways.dataset.focus = where + "-ways";
-  ways.onchange = function () { run.ways = Number(ways.value); };
-  row.appendChild(ways);
-
-  var cut = document.createElement("button");
-  cut.textContent = "Split";
-  cut.disabled = !section || widthOf(section) < 2;
-  cut.onclick = function () { divide(run, Number(ways.value)); };
-  row.appendChild(cut);
-
-  // Cutting by number was here and has gone: clicking the place in the bar is quicker
-  // at every length, and the cut says which two lights it falls between as it is aimed
-  var whole = document.createElement("button");
-  whole.textContent = "Join it all back";
-  whole.disabled = run.sections.length < 2;
-  whole.onclick = function () { joinAll(run); };
-  row.appendChild(whole);
-
-  var filler = document.createElement("button");
-  filler.textContent = "Fill with the next " + (run.pattern || 2);
-  filler.title = "take this stretch and the ones after it as a pattern, and repeat it " +
-                 "to the end of the run";
-  filler.disabled = run.picked + (run.pattern || 2) > run.sections.length;
-  filler.onclick = function () { fill(run, run.pattern || 2); };
-  row.appendChild(filler);
-
-  var many = document.createElement("input");
-  many.type = "number";
-  many.min = 1;
-  many.max = 8;
-  many.value = run.pattern || 2;
-  many.dataset.focus = where + "-pattern";
-  many.onchange = function () { run.pattern = Number(many.value); draw(); };
-  row.appendChild(many);
-
-  box.appendChild(row);
 }
 
 function hexOf(rgb) {
@@ -880,7 +734,8 @@ var STRIP_MOST = 300;
 var STRIP_ORDERS = [["", "GRB, as most strips"], ["rgb", "RGB"], ["rbg", "RBG"],
                     ["gbr", "GBR"], ["brg", "BRG"], ["bgr", "BGR"]];
 
-function renderLeds(where, run) {
+// A strip's chip, its length and its order to set, which the board's setup shows while it is on
+function renderStripChip(where, run) {
   var box = document.getElementById(where);
   box.textContent = "";
   var chip = document.createElement("div");
@@ -969,45 +824,29 @@ function playsOf(section) {
           timings: copyExact(section.timings)};
 }
 
-var oneDivide = divide;
-
-divide = function (run, ways) {
+function divide(run, ways) {
   var section = run.sections[run.picked];
   if (!section) return;
   var had = playsOf(section);
   var at = run.picked, count = run.sections.length;
-  oneDivide(run, ways);
+  splitSection(run, ways);
   for (var made = at; made < at + run.sections.length - count + 1; made++) {
     Object.assign(run.sections[made], playsOf(had));
   }
   draw();
-};
+}
 
-var oneFill = fill;
-
-fill = function (run, many) {
+function fill(run, many) {
+  // It runs to the run's count, which the outputs do not keep
+  run.count = run.lamps.length;
   var pattern = run.sections.slice(run.picked, run.picked + many).map(playsOf);
   var kept = run.picked + many;
-  oneFill(run, many);
+  repeatSections(run, many);
   for (var made = kept; made < run.sections.length; made++) {
     Object.assign(run.sections[made], playsOf(pattern[(made - kept) % pattern.length]));
   }
   draw();
-};
-
-// Joined back into one, the run plays what the stretch picked was playing
-var oneJoinAll = joinAll;
-
-joinAll = function (run) {
-  var section = run.sections[run.picked];
-  var had = section && playsOf(section);
-  oneJoinAll(run);
-  if (had && run.sections.length === 1) {
-    Object.assign(run.sections[0], had);
-    settle();
-    draw();
-  }
-};
+}
 
 // ---- the tools under a run -------------------------------------------------------------------
 // One row for the outputs, the mono lights and the strips alike, in the screens' button style:
@@ -1058,7 +897,7 @@ function toolNumber(value, low, high, focus, change) {
   return box;
 }
 
-function renderStretchTools(where, run) {
+function renderTools(where, run) {
   var box = document.getElementById(where);
   if (!box) return;
   box.textContent = "";
@@ -1158,16 +997,6 @@ function toolAct(words, off, act, title) {
 }
 
 // The strips' row and the outputs' are one
-renderTools = renderStretchTools;
-renderStripTools = renderStretchTools;
-
-// The drawing's fill runs to its run's count, which the outputs do not keep
-var oneCountedFill = fill;
-
-fill = function (run, many) {
-  run.count = run.lamps.length;
-  oneCountedFill(run, many);
-};
 
 // ---- joining them to the page below -----------------------------------------------------
 
@@ -1201,7 +1030,7 @@ drawSteps.after.push(function () {
     document.getElementById(run.id + "Tools").textContent = "";
     document.getElementById(run.id + "Chosen").textContent = "";
     if (run === active) {
-      renderStripTools(run.id + "Tools", run);
+      renderTools(run.id + "Tools", run);
       renderChosen(run.id + "Chosen", run);
     }
   });
@@ -1234,10 +1063,8 @@ function fitBars() {
 
 // ---- what an output's lamps play when its wiring changes ----------------------------------
 // The new lamps are carried what the output played, both ways: broken out into three mono
-// lamps, and three put back as one colour lamp. The page below gives them a stretch of
+// lamps, and three put back as one colour lamp. The wiring change gives them a stretch of
 // their own, starting dark, and this fills it where the look plays on them
-var oneBreakOut = breakOut;
-var oneRejoin = rejoin;
 
 // The stretch an output's lamps played. Put back from three that differ, it is the one
 // most of them played, and the first channel's where all three differ
@@ -1324,9 +1151,6 @@ function changeWiring(change, toColour) {
   };
 }
 
-breakOut = changeWiring(oneBreakOut, false);
-rejoin = changeWiring(oneRejoin, true);
-
 // ---- choosing a colour ---------------------------------------------------------------------
 // Under the stretch it is for, twelve swatches and a custom one
 // that opens a hue and saturation field with a hex box beside it. Brightness is not in
@@ -1349,7 +1173,14 @@ var SWATCHES = ["red", "orange", "yellow", "green", "cyan", "blue", "purple", "m
 
 // The swatches a stretch is offered. Black is none of them, being a light turned off, which
 // a look that blinks through colours can want as one of its turns
-function swatchesFor(run, section) { return SWATCHES; }
+// The swatches a stretch offers. A blink through several colours offers black too, as a turn
+// with the light off
+function swatchesFor(run, section) {
+  var first = run && run.lamps[section.from];
+  if (section.look === BLINK && section.blinks && section.blinks.colours.length > 1 &&
+      first && first.colour) return ["black"].concat(SWATCHES);
+  return SWATCHES;
+}
 
 function rgbInk(rgb) { return "rgb(" + rgb.join(",") + ")"; }
 
@@ -1384,8 +1215,11 @@ function takesColour(look) {
 // under the lamps and the tabs' swatches all ask here
 var MONO_WASH = "#f3c98b";
 
-// Each colour a stretch's lines name, in the order they name them, once each
+// Each colour a stretch's lines name, in the order they name them, once each. A blink through
+// several colours names them all
 function coloursWritten(look, section, run) {
+  var colours = blinkList(run, section);
+  if (colours) return colours.map(function (hex) { return rgbInk(hexRgb(hex)); });
   var target = targetFor(run, section);
   var found = [];
   linesFor(look, target, section.pace, section.mood, section.colour).forEach(function (line) {
@@ -1429,12 +1263,10 @@ function ownColour(look, run, section) {
                       section.colour);
 }
 
-// The gallery's cards play each look at middling settings, which carry one colour for
-// all of them, so every card of a look given a colour was that colour. Each such card
-// plays in its look's own colour instead, the one a stretch given it starts in
+// The gallery's cards play each look at middling settings, which carry one colour for all of
+// them. A card of a look given a colour plays in its look's own, the one a stretch given it
+// starts in, kept here by look
 var cardSettings = {};
-
-var oneCardPlay = livePlay;
 
 // The second setting a look starts at, on its card and on a stretch given it, where middling
 // does not suit it. Solid starts at full brightness, Colour cycle at full saturation, Colour
@@ -1448,11 +1280,12 @@ var START_MOODS = {"Solid": 1, "Colour cycle": 1, "Colour steps": 1 / 3,
 // mark says a colour is chosen
 var SOLID_COLOUR = "#" + hexOf(WORDS.yellow);
 
-livePlay = function (look, holder, t, slot, count, sim) {
+// What a look lights, a card's middling settings made its own
+function cardLit(look, holder, t, slot, count, sim) {
   if (holder === MIDDLING && look && look.solid) {
     // Drawn in the swatch's value, the word it writes taking the lamps' softer shade
-    var solid = oneCardPlay(look, {pace: MIDDLING.pace, mood: START_MOODS.Solid,
-                                   colour: SOLID_COLOUR}, t, slot, count, sim);
+    var solid = sectionLit(look, {pace: MIDDLING.pace, mood: START_MOODS.Solid,
+                                  colour: SOLID_COLOUR}, t, slot, count, sim);
     return solid && {level: solid.level, ink: SOLID_COLOUR};
   } else if (holder === MIDDLING && look && START_MOODS[look.name] !== undefined) {
     // A look given a colour plays in its own at the setting it starts at, as below
@@ -1470,8 +1303,8 @@ livePlay = function (look, holder, t, slot, count, sim) {
     }
     holder = cardSettings[key];
   }
-  return oneCardPlay(look, holder, t, slot, count, sim);
-};
+  return sectionLit(look, holder, t, slot, count, sim);
+}
 
 // The looks shaped to separate lamps. They play on outputs, mono lamps and strips
 var BANKED_LOOKS = ["Emergency", "Traffic light", "Pelican crossing"];
@@ -1483,43 +1316,12 @@ function isBanked(look) {
   return !!look && BANKED_LOOKS.indexOf(look.name) >= 0;
 }
 
-var oneCanPlay = canPlay;
-
-canPlay = function (look, target) {
-  if (target.kind === "run" && isBanked(look)) return target.count > 1 || look.alone !== false;
-  return oneCanPlay(look, target);
-};
-
-var oneBankedLines = linesFor;
-
-linesFor = function (look, target, pace, mood, colour) {
+// The lines a look writes, a banked look on a run or a strip dealing its banks out along it
+function bankedLines(look, target, pace, mood, colour) {
   if (!(target.kind === "run" || target.strip) || !isBanked(look) || target.count === 1)
-    return oneBankedLines(look, target, pace, mood, colour);
+    return lookLines(look, target, pace, mood, colour);
   return stripLines(look, target, pace, mood);
-};
-
-// The preview plays a stretch as that many lamps of its own, so while it plays a strip's it
-// is told to, and these looks take the strip's form there too
-var previewingStrip = false;
-
-var oneBankedLitRun = litRun;
-
-litRun = function (run) {
-  previewingStrip = !!run.strip;
-  try {
-    return oneBankedLitRun(run);
-  } finally {
-    previewingStrip = false;
-  }
-};
-
-var oneBankedLampTarget = lampTarget;
-
-lampTarget = function (count) {
-  var target = oneBankedLampTarget(count);
-  if (previewingStrip) Object.assign(target, {strip: true, lights: target.playing.slice()});
-  return target;
-};
+}
 
 // On a strip, Emergency deals out the stretch's lights as it does outputs. A signal takes a
 // set number of lamps, five for a crossing and three for a traffic light, so the stretch is
@@ -1549,12 +1351,6 @@ function stripLines(look, target, pace, mood) {
   return lines;
 }
 
-spanning = function () {
-  return LOOKS.filter(function (look) {
-    return look.spans || BANKED_LOOKS.indexOf(look.name) >= 0;
-  });
-};
-
 // A card carries a painter's palette where its look takes a colour, and the stretch being
 // worked on can be given one
 function paletteMark() {
@@ -1570,16 +1366,6 @@ function paletteMark() {
   return palette;
 }
 
-var oneLookCard = lookCard;
-
-lookCard = function (isMono, look, on) {
-  var card = oneLookCard(isMono, look, on);
-  if (isMono || !takesColour(lookNamed(look.name))) return card;
-  card.appendChild(paletteMark());
-  card.title += ". You can choose its colour";
-  return card;
-};
-
 function startColour(run, section, look) {
   if (!takesColour(look)) return;
   var own = look.solid ? SOLID_COLOUR : ownColour(look, run, section);
@@ -1589,19 +1375,6 @@ function startColour(run, section, look) {
   }
 }
 
-var oneLandLook = landLook;
-
-landLook = function (run, at, name) {
-  var section = run.sections[at];
-  var look = lookNamed(name);
-  if (section && look && section.look !== name) {
-    startColour(run, section, look);
-    // The second setting means something of each look's own, so it starts afresh
-    section.mood = START_MOODS[look.name] !== undefined ? START_MOODS[look.name] : MIDDLING.mood;
-  }
-  oneLandLook(run, at, name);
-};
-
 // The looks the board opens playing start in their own colours too
 [outs, mono].forEach(function (run) {
   run.sections.forEach(function (section) {
@@ -1609,13 +1382,6 @@ landLook = function (run, at, name) {
     if (look) startColour(run, section, look);
   });
 });
-
-washFor = function (run, section, look) {
-  var first = run.lamps[section.from];
-  return stretchWash(look, section, run, !!first && !first.colour);
-};
-
-washOf = function (look, mono, section, run) { return stretchWash(look, section, run, mono); };
 
 // Every draw settles the model and settling makes the stretches afresh, so a handler
 // that kept the stretch it was made with would write onto one the run no longer holds.
@@ -1783,9 +1549,6 @@ function fieldColour(hue, sat) {
   return hueRgb(hue).map(function (v) { return Math.round(v + (255 - v) * (1 - sat)); });
 }
 
-// The stretch's settings, with the colour choice in place of a slider that stepped tones
-var oneRenderChosen = renderChosen;
-
 // A second setting that is a count, such as Emergency's flashes, stops only at its values,
 // with a tick at each while there are few enough to tell apart
 var MOST_TICKS = 16;
@@ -1806,8 +1569,8 @@ function detented(box, where, count) {
   range.setAttribute("list", ticks.id);
 }
 
-renderChosen = function (where, run) {
-  oneRenderChosen(where, run);
+// The stretch's settings, with the colour choice in place of a slider that stepped tones
+chosenSteps.push(function (where, run) {
   var box = document.getElementById(where);
   var section = run && run.sections[run.picked];
   var look = section && lookNamed(section.look);
@@ -1851,7 +1614,7 @@ renderChosen = function (where, run) {
     renderColourPick(wrap, run);
     wrap.appendChild(tuning);
   }
-};
+});
 
 // ---- how bright a stretch is -------------------------------------------------------------
 // Every look has a brightness, the first slider in the list, written only below full. A look
@@ -1872,14 +1635,27 @@ function coloursItself(run, section, look) {
   return takesColour(look) && !!first && first.colour && custom;
 }
 
-var oneSectionLines = sectionLines;
-
-sectionLines = function (run, section, look) {
-  if (!coloursItself(run, section, look) || !(section.level < 1))
-    return oneSectionLines(run, section, look);
-  return linesFor(look, targetFor(run, section), section.pace, section.mood,
-                  atBrightness(section.colour || "#ffffff", section.level));
-};
+// What one stretch writes, at its brightness and with its typed values. A blink through several
+// colours is written as its list, and a custom colour carries its brightness in its hex
+function sectionLines(run, section, look) {
+  return withExact(section.exact, function () {
+    var colours = blinkList(run, section);
+    if (colours) {
+      var line = targetFor(run, section).selector + ": rgb_blink colour=" +
+                 colours.map(blinkWord).join("|") + " speed=" + blinkSpeed(section.pace) +
+                 " duty=" + blinkDuty(section.mood);
+      return levelled([line], section.level);
+    }
+    if (coloursItself(run, section, look) && section.level < 1) {
+      return linesFor(look, targetFor(run, section), section.pace, section.mood,
+                      atBrightness(section.colour || "#ffffff", section.level));
+    }
+    return withSection(section, function () {
+      return levelled(linesFor(look, targetFor(run, section), section.pace, section.mood,
+                               section.colour), section.level);
+    });
+  });
+}
 
 function brightnessSlider(tuning, run, where) {
   var section = run.sections[run.picked];
@@ -1903,39 +1679,54 @@ function brightnessSlider(tuning, run, where) {
   tuning.insertBefore(range, ahead);
 }
 
-// Solid is written at full, its brightness being the stretch's own
-var oneSolidLines = linesFor;
+// The lines a look writes for a target, as the board will play them
+function linesFor(look, target, pace, mood, colour) {
+  var lines;
+  if (look && look.solid) {
+    // Solid is written at full, its brightness being the stretch's own
+    lines = bankedLines(look, target, pace, 1, colour).map(function (line) {
+      return line.replace(/ brightness=1(?=\s|$)/, "");
+    });
+  } else {
+    lines = bankedLines(look, target, pace, mood, colour);
+  }
 
-linesFor = function (look, target, pace, mood, colour) {
-  if (!look || !look.solid) return oneSolidLines(look, target, pace, mood, colour);
-  return oneSolidLines(look, target, pace, 1, colour).map(function (line) {
-    return line.replace(/ brightness=1(?=\s|$)/, "");
+  // The colour it was given. Solid already writes it. The looks whose slider stepped tones
+  // write a tone, so the colour they wrote is replaced with the chosen one, as a word where it
+  // is a swatch and as hex from the field
+  if (takesColour(look) && target.colour && colour) {
+    var said = wordFor(colour) || colour.replace("#", "").toLowerCase();
+    lines = lines.map(function (line) { return line.replace(/colour=[^\s:]+/, "colour=" + said); });
+  }
+
+  // A wave is written with its speed below zero, so it goes forward as every look does
+  lines = lines.map(function (line) {
+    var effect = (line.split(":")[1] || "").trim().split(/\s+/)[0];
+    if (WAVES.indexOf(effect) < 0) return line;
+    return line.replace(/ speed=(\d)/, " speed=-$1");
   });
-};
 
-// The preview plays a stretch at its brightness, as the board will. A card plays at full
-var oneLevelPlay = livePlay;
-
-livePlay = function (look, holder, t, slot, count, sim) {
-  var lit = oneLevelPlay(look, holder, t, slot, count, sim);
-  if (!lit || !holder || holder === MIDDLING || !(holder.level < 1)) return lit;
-  return Object.assign({}, lit, {level: lit.level * holder.level});
-};
-
-// What a stretch writes, with the colour it was given. Solid already writes it. The looks
-// whose slider stepped tones write a tone, so the colour they wrote is replaced with the
-// chosen one, as a word where it is a swatch and as hex from the field
-var oneLinesFor = linesFor;
-
-linesFor = function (look, target, pace, mood, colour) {
-  var lines = oneLinesFor(look, target, pace, mood, colour);
-  if (!takesColour(look) || !target.colour || !colour) return lines;
-  var word = wordFor(colour);
-  var said = word || colour.replace("#", "").toLowerCase();
-  return lines.map(function (line) {
-    return line.replace(/colour=[^\s:]+/, "colour=" + said);
+  // The values typed for the stretch whose lines are being written
+  if (!exactNow) return lines;
+  Object.keys(exactNow).forEach(function (slider) {
+    var typed = exactNow[slider];
+    if (!typed) return;
+    // A trail is the fall of a split fade, so a typed one replaces the part after its bar
+    if (typed.key === "fade") {
+      lines = lines.map(function (line) {
+        return line.replace(/(\sfade=[\d.]+\|)[\d.]+/, "$1" + typed.value);
+      });
+      return;
+    }
+    var setting = new RegExp("(^|\\s)" + typed.key + "=(-?)[\\d.]+");
+    lines = lines.map(function (line) {
+      return line.replace(setting, function (all, space, sign) {
+        return space + typed.key + "=" + sign + typed.value;
+      });
+    });
   });
-};
+  return lines;
+}
 
 // ---- which way a stretch runs --------------------------------------------------------------
 // A stretch can start from its far end, which writes its lamps counting down. Only a look
@@ -1952,16 +1743,6 @@ var TRAVELLING = ["rainbow_wave", "pulse_wave", "blink_wave", "flash_sequence", 
 // with their speed below zero, which the manual allows, and Reverse counts the lights down
 var WAVES = ["rainbow_wave", "pulse_wave", "blink_wave", "flash_sequence"];
 
-var oneWaveLines = linesFor;
-
-linesFor = function (look, target, pace, mood, colour) {
-  return oneWaveLines(look, target, pace, mood, colour).map(function (line) {
-    var effect = (line.split(":")[1] || "").trim().split(/\s+/)[0];
-    if (WAVES.indexOf(effect) < 0) return line;
-    return line.replace(/ speed=(\d)/, " speed=-$1");
-  });
-};
-
 // Party flashes its three sets a third of a beat apart, and the phases it was given, 0, 0.33
 // and 0.67, lit the first set, then the third, then the second: a step back toward the start
 // each time. Swapped, its sets light in order, away from the start as every look goes
@@ -1975,18 +1756,6 @@ linesFor = function (look, target, pace, mood, colour) {
     });
   };
 }(lookNamed("Party")));
-
-// The preview wraps a cycle running below zero back into one, as picofx's modulo does, or a
-// blink or a flash reads a negative point in its beat as lit and a hue goes out of range
-offsetOf = function (t, settings) {
-  var at = ((t * num(settings.speed, 1)) + num(settings.phase, 0)) % 1;
-  return at < 0 ? at + 1 : at;
-};
-
-COLOURED.rainbow_wave = function (t, s, pos) {
-  var at = ((t * num(s.speed, 1)) + pos / num(s.length, 1)) % 1;
-  return {level: 1, ink: hueInk((at < 0 ? at + 1 : at) * 360, s.sat, s.val)};
-};
 
 // Whether reversing this stretch would change what it plays, judged from its lines as written
 function runsAWay(look, target, section) {
@@ -2042,10 +1811,10 @@ function shortSelector(lamp) {
   return lamp.colour ? String(lamp.out + 1) : (lamp.out + 1) + "." + CHANNELS[lamp.channel];
 }
 
-var oneWayTargetFor = targetFor;
-
-targetFor = function (run, section) {
-  var target = oneWayTargetFor(run, section);
+// What a stretch plays on, counting its lights down where it starts from its far end and its
+// look shows which way it runs
+function targetFor(run, section) {
+  var target = forwardTargetFor(run, section);
   if (!section.reversed || !runsAWay(lookNamed(section.look), target, section)) return target;
   if (run.strip) {
     var whole = section.from === 0 && section.to === run.lamps.length - 1;
@@ -2065,16 +1834,29 @@ targetFor = function (run, section) {
     };
   }
   return target;
-};
+}
 
-// The preview plays a reversed stretch from its far end, as the board will
-var oneWayPlay = livePlay;
-
-livePlay = function (look, holder, t, slot, count, sim) {
-  var backwards = holder && holder.reversed && count > 1 &&
-                  runsAWay(look, lampTarget(count), holder);
-  return oneWayPlay(look, holder, t, backwards ? count - 1 - slot : slot, count, sim);
-};
+// What a look lights at slot of count lamps playing, as the board will play it: with the
+// stretch's typed values, a blink through several colours as its list, a reversed stretch from
+// its far end, and a stretch at its brightness. A card plays at full
+function livePlay(look, holder, t, slot, count, sim) {
+  var exact = holder && holder !== MIDDLING ? holder.exact : null;
+  return withExact(exact, function () {
+    var colours = holder && holder !== MIDDLING && look && look.name === BLINK &&
+                  holder.blinks && holder.blinks.colours.length > 1 ? holder.blinks.colours : null;
+    if (colours) {
+      var blinked = COLOURED.rgb_blink(t, {colour: colours.map(blinkWord).join("|"),
+                                           speed: blinkSpeed(holder.pace),
+                                           duty: blinkDuty(holder.mood)});
+      return {level: blinked.level * (holder.level < 1 ? holder.level : 1), ink: blinked.ink};
+    }
+    var backwards = holder && holder.reversed && count > 1 &&
+                    runsAWay(look, lampTarget(count), holder);
+    var lit = cardLit(look, holder, t, backwards ? count - 1 - slot : slot, count, sim);
+    if (!lit || !holder || holder === MIDDLING || !(holder.level < 1)) return lit;
+    return Object.assign({}, lit, {level: lit.level * holder.level});
+  });
+}
 
 // A light at the end the stretch starts from and an arrow the way it runs
 // A toggle in the screens' style, its word and its pressed state as Loop's and Restart's are,
@@ -2083,7 +1865,7 @@ function directionToggle(run, section) {
   var button = document.createElement("button");
   button.type = "button";
   var look = lookNamed(section.look);
-  var moves = runsAWay(look, oneWayTargetFor(run, section), section);
+  var moves = runsAWay(look, forwardTargetFor(run, section), section);
   button.className = "stoggle direction" + (section.reversed ? " reversed" : "") +
                      (section.reversed && moves ? " on" : "");
   button.setAttribute("aria-pressed", section.reversed && moves ? "true" : "false");
@@ -2226,10 +2008,7 @@ function signalFace(name, key) {
 }
 
 // A signal's timings take Speed's place, each a slider in seconds under its own name
-var oneTimingChosen = renderChosen;
-
-renderChosen = function (where, run) {
-  oneTimingChosen(where, run);
+chosenSteps.push(function (where, run) {
   var box = document.getElementById(where);
   var section = run && run.sections[run.picked];
   var look = section && lookNamed(section.look);
@@ -2273,7 +2052,7 @@ renderChosen = function (where, run) {
     tuning.insertBefore(label, after);
     tuning.insertBefore(range, after);
   });
-};
+});
 
 // ---- an icon for each setting ------------------------------------------------------------------
 // Each slider's name has a small line drawing before it, in the name's own grey, as the toggles
@@ -2303,10 +2082,7 @@ var SETTING_ICONS = {
              "class='filled'/><circle cx='9.3' cy='4' r='.9' class='filled'/>"
 };
 
-var oneIconChosen = renderChosen;
-
-renderChosen = function (where, run) {
-  oneIconChosen(where, run);
+chosenSteps.push(function (where, run) {
   var box = document.getElementById(where);
   var tuning = box && box.querySelector(".chosen .tuning");
   if (!tuning) return;
@@ -2337,12 +2113,9 @@ renderChosen = function (where, run) {
     label.insertAdjacentHTML("afterbegin", "<svg class='settingicon' viewBox='0 0 16 16' " +
                                            "aria-hidden='true'>" + drawn + "</svg>");
   });
-};
+});
 
-var oneHeadChosen = renderChosen;
-
-renderChosen = function (where, run) {
-  oneHeadChosen(where, run);
+chosenSteps.push(function (where, run) {
   var box = document.getElementById(where);
   var who = box && box.querySelector(".chosen .who");
   var section = run && run.sections[run.picked];
@@ -2352,15 +2125,12 @@ renderChosen = function (where, run) {
   var named = document.createElement("b");
   named.textContent = look ? look.name : "Nothing";
   who.appendChild(named);
-  var reversed = section.reversed && runsAWay(look, oneWayTargetFor(run, section), section);
+  var reversed = section.reversed && runsAWay(look, forwardTargetFor(run, section), section);
   who.appendChild(document.createTextNode(" on " + wherePlays(run, section, reversed)));
   who.title = targetFor(run, section).selector;
-};
+});
 
-var oneWayChosen = renderChosen;
-
-renderChosen = function (where, run) {
-  oneWayChosen(where, run);
+chosenSteps.push(function (where, run) {
   var box = document.getElementById(where);
   var section = run && run.sections[run.picked];
   var who = box && box.querySelector(".chosen .who");
@@ -2371,4 +2141,4 @@ renderChosen = function (where, run) {
   who.appendChild(named);
   who.classList.add("withway");
   who.appendChild(directionToggle(run, section));
-};
+});

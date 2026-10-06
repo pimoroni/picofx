@@ -209,10 +209,10 @@ var answered = {said: null, about: null};
 // What this page last wrote or read
 var WROTE_KEY = "fx-picker-wrote";
 
-// What a save asks where the board holds a file this page has neither written nor read
+// What a save asks where the file on the board has changed since this page read it
 function overwriteQuestion() {
-  return "This page does not read the file on the board yet, so saving replaces it with " +
-         "what this page writes. Save over it?";
+  return "The file on the board has changed since this page read it, so saving replaces " +
+         "those changes. Save over it?";
 }
 
 // What the parts below read off a drive once it is open, each awaited in the order the parts come
@@ -275,12 +275,9 @@ function takeAnswer(said, about) {
   renderPreview();
 }
 
-// A line the board named is marked where the page still writes it as the board read it, the
-// board's words after it
-var oneDrivePreview = renderPreview;
-
-renderPreview = function () {
-  oneDrivePreview();
+// The file as the page writes it. A line the board named is marked where the page still writes
+// it as the board read it, the board's words after it
+function renderPreview() {
   var problems = problemsIn(answered.said);
   var lines = currentText().split("\n");
   var read = (answered.about || "").split("\n");
@@ -305,7 +302,7 @@ renderPreview = function () {
     note.textContent = stale === 1 ? "One line the board named has changed since it was read."
                                    : stale + " lines the board named have changed since.";
   }
-};
+}
 
 document.getElementById("save").onclick = async function () {
   var button = this;

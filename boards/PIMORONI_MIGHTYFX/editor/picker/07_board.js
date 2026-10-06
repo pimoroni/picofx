@@ -13,21 +13,6 @@ var SCREEN_SIZES = CATALOGUE.board_settings.screena.filter(function (inches) {
 });
 var screensFitted = {screena: "", screenb: ""};
 
-// A step back in a scene is the scene's, so it never changes the board under the others
-function keepingTheBoard(step) {
-  return function (run) {
-    var board = {wiring: wiring, order: order};
-    step(run);
-    wiring = board.wiring;
-    order = board.order;
-    settle();
-    draw();
-  };
-}
-
-stepBack = keepingTheBoard(stepBack);
-stepOn = keepingTheBoard(stepOn);
-
 // Breaking an output out, or putting it back, is done to every scene in turn, each carrying
 // its own looks across. A scene's steps to undo end there, being about
 // lamps that have since moved: putting the output back is the way to undo it
@@ -60,25 +45,19 @@ function acrossScenes(change) {
   };
 }
 
-breakOut = acrossScenes(breakOut);
-rejoin = acrossScenes(rejoin);
+var breakOutInScenes = acrossScenes(changeWiring(breakOutWiring, false));
+var rejoinInScenes = acrossScenes(changeWiring(rejoinWiring, true));
 
 // Where a lamp sits is the build's as well. Moving one keeps every scene's looks on the
 // lamps they were on, the way breaking out does, so a stretch the move takes apart
 // becomes two playing the same
-moveLamp = acrossScenes(function (move) {
+var moveLampInScenes = acrossScenes(function (move) {
   acrossWiring(function () { placeLamp(move); });
 });
 
-// Whether a lamp can be dragged to where it sits just now, which a page may narrow
-function lampsMovable() { return true; }
-
-var oneTakesPlace = takesPlace;
-
-takesPlace = function (node, lamp) {
-  oneTakesPlace(node, lamp);
-  if (!lampsMovable()) node.draggable = false;
-};
+// Whether a lamp can be dragged to where it sits just now. Where a lamp sits is changed with
+// the wiring, so only where that can be
+function lampsMovable() { return canEdit("outPanel"); }
 
 // The outputs broken out, as a person would say it
 function brokenSaid() {
