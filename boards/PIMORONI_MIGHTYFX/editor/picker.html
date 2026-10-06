@@ -16844,7 +16844,14 @@ var oneReadBoardLine = boardLine;
 
 boardLine = function () {
   var line = oneReadBoardLine();
-  if (boardResidue.length) line = (line || "board:") + " " + boardResidue.join(" ");
+  // A strip whose length the page writes itself leaves out any kept for it, which coming
+  // later would be the one the board takes
+  var written = (line || "").toLowerCase().match(/\bstrip[lr](?==)/g) || [];
+  var kept = boardResidue.filter(function (token) {
+    var named = token.match(/^(strip[lr])=/i);
+    return !named || written.indexOf(named[1].toLowerCase()) < 0;
+  });
+  if (kept.length) line = (line || "board:") + " " + kept.join(" ");
   return line;
 };
 
