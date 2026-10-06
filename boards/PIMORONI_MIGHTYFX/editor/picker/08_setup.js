@@ -254,6 +254,11 @@ function renderOutFacts() {
 
 var oneRenderLeds = renderLeds;
 
+// What a strip is built as, its length and the order it takes its colours in
+function stripBuilt(run) {
+  return run.leds + " LEDs, " + (run.order || "grb").toUpperCase();
+}
+
 renderLeds = function (where, run) {
   var box = document.getElementById(where);
   var panel = run.id + "Panel";
@@ -270,7 +275,7 @@ renderLeds = function (where, run) {
       chip.insertBefore(boardIcon(), chip.firstChild);
     } else {
       box.textContent = "";
-      box.appendChild(boardBox(panel, ["Strip", small(run.leds + " LEDs")]));
+      box.appendChild(boardBox(panel, ["Strip", small(stripBuilt(run))]));
     }
     return;
   }
@@ -285,7 +290,7 @@ renderLeds = function (where, run) {
   } else {
     box.textContent = "";
     band(box, panel);
-    box.appendChild(fact(run.leds + " LEDs"));
+    box.appendChild(fact(stripBuilt(run)));
   }
 };
 

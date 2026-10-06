@@ -207,6 +207,10 @@ BOARD_SETTINGS = {"drive": ("manual",), "reload": ("manual", "auto"),
 # The board settings whose value is a number rather than one of a set of words
 BOARD_COUNTS = STRIPS
 
+# A strip's colour order, written after its length as 'stripL=60|rgb', kept among the
+# board settings under the strip's name and this, which no file can write
+__ORDER = " order"
+
 # Short of full, which is uncomfortable on an indicator at arm's length and buys no
 # legibility across a room
 INDICATOR_LEVEL = 0.75
@@ -2309,7 +2313,8 @@ def __board(fx, settings, problems):
     for kind in STRIPS:
         count = settings.get(kind)
         if count:
-            declared["strip_" + kind[-1]] = count
+            order = settings.get(kind + __ORDER)
+            declared["strip_" + kind[-1]] = (count, order) if order else count
 
     # A hub is declared at construction, its panels on the connector named and its
     # selects on the other, so the board builds the hub itself
@@ -2329,7 +2334,8 @@ def __board(fx, settings, problems):
         return fx()
 
 
-# The strips already running, as (strip, count) per connector. A board is built once,
+# The strips already running, as (strip, count, order) per connector, the order None where
+# the board chose it. A board is built once,
 # a reload keeping the one it has, so this is what a changed length is answered against
 __STRIPS = {}
 
@@ -2364,13 +2370,18 @@ def strips(fx, lengths, problems):
         if not count:
             continue
 
+        order = lengths.get(kind + __ORDER)
         running = __STRIPS.get(kind)
         if running is not None:
-            strip, leds = running
+            strip, leds, running_order = running
             if count != leds:
                 problems.append("{} is already running with {} LEDs, so its new length "
                                 "needs the board turning off and on".format(
                                     __strip_shown(kind), leds))
+            if order != running_order:
+                problems.append("{} is already running with its colours in another "
+                                "order, so the new one needs the board turning off and "
+                                "on".format(__strip_shown(kind)))
             lengths[kind] = leds
             built.append((kind, strip, leds))
             continue
@@ -2386,7 +2397,7 @@ def strips(fx, lengths, problems):
             problems.append("{} could not be set up: {}".format(__strip_shown(kind), e))
             continue
 
-        __STRIPS[kind] = (strip, count)
+        __STRIPS[kind] = (strip, count, order)
         built.append((kind, strip, count))
 
     return built, failed
@@ -2434,7 +2445,8 @@ def __hardware_changed(fx, declared, for_pair=False):
         running = __STRIPS.get(kind)
         if asked and running is None and __has_strips(fx):
             return True
-        if running is not None and asked != running[1]:
+        if running is not None and (asked != running[1] or
+                                    declared.get(kind + __ORDER) != running[2]):
             return True
     from screens import Reserve
     wanted = Reserve.FULL_SIZE_IMAGES if for_pair else Reserve.CANVAS_SPACE
@@ -3262,14 +3274,28 @@ def __check_board(entry, has_strips, problems, lines):
                                 "has no {}".format(at, __strip_shown(key)))
                 continue
 
-            number = __number(text)
+            length, _divider, order = text.partition("|")
+            number = __number(length)
             fault = ("expected a number" if number is None
                      else __value_fault("count", number))
             if fault is not None:
                 problems.append("line {}: the board's {} is {}, {}".format(
-                    at, __strip_shown(key), __shown(text), fault))
-            else:
-                settings[key] = int(number)
+                    at, __strip_shown(key), __shown(length), fault))
+                continue
+
+            # The strip takes its colours in the order written, or the board's own order
+            # where none is, so a later board entry without one takes it back to that.
+            # A wrong order still leaves the strip its length, so it plays in the board's own
+            order = order.strip().lower()
+            if order and sorted(order) != ["b", "g", "r"]:
+                problems.append("line {}: the board's {} has its colours in the order {}, "
+                                "so give the letters r, g and b in the order the strip "
+                                "takes them, such as '{}={}|rgb'".format(
+                                    at, __strip_shown(key), __shown(order),
+                                    __strip_shown(key), int(number)))
+                order = ""
+            settings[key] = int(number)
+            settings[key + __ORDER] = order or None
             continue
 
         allowed = BOARD_SETTINGS[key]
@@ -3764,6 +3790,7 @@ def load(text, fx, maker=None):
     for kind in STRIPS:
         if kind not in used:
             board.pop(kind, None)
+            board.pop(kind + __ORDER, None)
 
     __check_hub(board, board_lines, screen_entries, problems)
 

@@ -324,9 +324,10 @@ settle();
 // channels being the only thing that breaks out, so it takes the run model and leaves the
 // breaking out alone.
 
+// A strip's order is the one it takes its colours in, empty for the board's own
 var STRIPS = [
-  {id: "stripl", name: "stripl", label: "the left strip", leds: 30},
-  {id: "stripr", name: "stripr", label: "the right strip", leds: 18}
+  {id: "stripl", name: "stripl", label: "the left strip", leds: 30, order: ""},
+  {id: "stripr", name: "stripr", label: "the right strip", leds: 18, order: ""}
 ];
 
 function stripRun(one) {
@@ -335,6 +336,7 @@ function stripRun(one) {
   run.id = one.id;
   run.label = one.label;
   run.leds = one.leds;
+  run.order = one.order;
   return run;
 }
 
@@ -885,6 +887,11 @@ function renderStrip(where, run) {
 var STRIP_FEWEST = 1;
 var STRIP_MOST = 300;
 
+// The orders a strip can take its colours in, as the file writes them after its length,
+// the board's own being written as nothing
+var STRIP_ORDERS = [["", "GRB, as most strips"], ["rgb", "RGB"], ["rbg", "RBG"],
+                    ["gbr", "GBR"], ["brg", "BRG"], ["bgr", "BGR"]];
+
 function renderLeds(where, run) {
   var box = document.getElementById(where);
   box.textContent = "";
@@ -909,6 +916,21 @@ function renderLeds(where, run) {
   var unit = document.createElement("small");
   unit.textContent = "LEDs";
   chip.appendChild(unit);
+  var order = document.createElement("select");
+  STRIP_ORDERS.forEach(function (pair) {
+    var option = document.createElement("option");
+    option.value = pair[0];
+    option.textContent = pair[1];
+    if ((run.order || "") === pair[0]) option.selected = true;
+    order.appendChild(option);
+  });
+  order.title = "The order the strip takes its colours in. Change it if red shows as another colour";
+  order.onchange = function () {
+    STRIPS.filter(function (one) { return one.id === run.id; })[0].order = order.value;
+    run.order = order.value;
+    draw();
+  };
+  chip.appendChild(order);
   box.appendChild(chip);
   var says = document.createElement("span");
   says.className = "says";

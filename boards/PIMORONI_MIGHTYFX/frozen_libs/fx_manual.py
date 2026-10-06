@@ -441,6 +441,7 @@ footer p { margin: 0; }
 </tbody></table></div>
 <p><code>stripR</code> is the same for the other connector. Both share one power supply, so a strip on either lights the small LED between them, and anything plugged into the one you are not using is powered too.</p>
 <p>Each LED shows a colour of its own, so <code>stripL5.r</code> is not a thing to write; set <code>colour</code> on the LEDs instead, as an output takes it.</p>
+<p>Most strips take their colours as green, red, then blue, and the board sends them that way. If yours shows another colour where you asked for red, it takes them in another order: write the letters <code>r</code>, <code>g</code> and <code>b</code> after its length in the order it wants them, such as <code>stripL=60|rgb</code>.</p>
 <h2 id="screens">Screens</h2>
 <h3 id="naming-screens">Naming screens</h3>
 <p>A screen on either SP/CE connector is named <code>screenA</code> or <code>screenB</code>. A screen cannot say what size it is, so tell the board:</p>
@@ -564,7 +565,7 @@ Colour: orange
 <tr><td><code>screenA</code></td><td>what size of screen is on SP/CE A, or <code>hub</code> for a Screen Hub</td><td>no screen</td></tr>
 <tr><td><code>screenB</code></td><td>the same for SP/CE B</td><td>no screen</td></tr>
 <tr><td><code>hubA</code> to <code>hubF</code></td><td>what size of screen is at each of a Screen Hub's positions</td><td>no screen there</td></tr>
-<tr><td><code>stripL</code></td><td>how many LEDs are on a strip plugged into <strong>L</strong></td><td>no strip</td></tr>
+<tr><td><code>stripL</code></td><td>how many LEDs are on a strip plugged into <strong>L</strong>, and after a <code>|</code> the order it takes its colours in</td><td>no strip</td></tr>
 <tr><td><code>stripR</code></td><td>the same for <strong>R</strong></td><td>no strip</td></tr>
 </tbody></table></div>
 <p>With <code>reload=auto</code>, saving <code>effects.txt</code> is enough on its own: the board notices the save, takes the drive back for a moment, and plays the new effects, exactly as a single press of <strong>Boot</strong> would. Only a save to <code>effects.txt</code> counts, so copying pictures on never interrupts anything.</p>

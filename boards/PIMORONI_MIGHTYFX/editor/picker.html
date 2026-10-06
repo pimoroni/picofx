@@ -48,6 +48,9 @@ body:not(:has(.panel[open][data-looks="mono"])) #outGallery{display:none}
  border:1px solid rgba(255,255,255,.55);border-radius:6px;
  background:rgba(255,255,255,.16);color:#fff;font:inherit;font-weight:400}
 .chip small{font-weight:400;opacity:.85}
+.chip select{border:1px solid rgba(255,255,255,.55);border-radius:6px;
+ background:rgba(255,255,255,.16);color:#fff;font:inherit;font-weight:400;padding:.1rem .25rem}
+.chip select option{color:var(--ink)}
 .head{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.2rem}
 .head .gap{flex:1}
 /* The row of settings that belongs to the bar, which the run above it is cut into. As tall as
@@ -5107,9 +5110,10 @@ settle();
 // channels being the only thing that breaks out, so it takes the run model and leaves the
 // breaking out alone.
 
+// A strip's order is the one it takes its colours in, empty for the board's own
 var STRIPS = [
-  {id: "stripl", name: "stripl", label: "the left strip", leds: 30},
-  {id: "stripr", name: "stripr", label: "the right strip", leds: 18}
+  {id: "stripl", name: "stripl", label: "the left strip", leds: 30, order: ""},
+  {id: "stripr", name: "stripr", label: "the right strip", leds: 18, order: ""}
 ];
 
 function stripRun(one) {
@@ -5118,6 +5122,7 @@ function stripRun(one) {
   run.id = one.id;
   run.label = one.label;
   run.leds = one.leds;
+  run.order = one.order;
   return run;
 }
 
@@ -5668,6 +5673,11 @@ function renderStrip(where, run) {
 var STRIP_FEWEST = 1;
 var STRIP_MOST = 300;
 
+// The orders a strip can take its colours in, as the file writes them after its length,
+// the board's own being written as nothing
+var STRIP_ORDERS = [["", "GRB, as most strips"], ["rgb", "RGB"], ["rbg", "RBG"],
+                    ["gbr", "GBR"], ["brg", "BRG"], ["bgr", "BGR"]];
+
 function renderLeds(where, run) {
   var box = document.getElementById(where);
   box.textContent = "";
@@ -5692,6 +5702,21 @@ function renderLeds(where, run) {
   var unit = document.createElement("small");
   unit.textContent = "LEDs";
   chip.appendChild(unit);
+  var order = document.createElement("select");
+  STRIP_ORDERS.forEach(function (pair) {
+    var option = document.createElement("option");
+    option.value = pair[0];
+    option.textContent = pair[1];
+    if ((run.order || "") === pair[0]) option.selected = true;
+    order.appendChild(option);
+  });
+  order.title = "The order the strip takes its colours in. Change it if red shows as another colour";
+  order.onchange = function () {
+    STRIPS.filter(function (one) { return one.id === run.id; })[0].order = order.value;
+    run.order = order.value;
+    draw();
+  };
+  chip.appendChild(order);
   box.appendChild(chip);
   var says = document.createElement("span");
   says.className = "says";
@@ -7441,7 +7466,7 @@ function boardLine() {
       var held = body && body.runs && body.runs[run.name];
       return held && held.sections.some(function (section) { return section.look; });
     });
-    if (used) tokens.push(run.name + "=" + run.leds);
+    if (used) tokens.push(run.name + "=" + run.leds + (run.order ? "|" + run.order : ""));
   });
   return tokens.length ? "board: " + tokens.join(" ") : "";
 }
@@ -7728,6 +7753,11 @@ function renderOutFacts() {
 
 var oneRenderLeds = renderLeds;
 
+// What a strip is built as, its length and the order it takes its colours in
+function stripBuilt(run) {
+  return run.leds + " LEDs, " + (run.order || "grb").toUpperCase();
+}
+
 renderLeds = function (where, run) {
   var box = document.getElementById(where);
   var panel = run.id + "Panel";
@@ -7744,7 +7774,7 @@ renderLeds = function (where, run) {
       chip.insertBefore(boardIcon(), chip.firstChild);
     } else {
       box.textContent = "";
-      box.appendChild(boardBox(panel, ["Strip", small(run.leds + " LEDs")]));
+      box.appendChild(boardBox(panel, ["Strip", small(stripBuilt(run))]));
     }
     return;
   }
@@ -7759,7 +7789,7 @@ renderLeds = function (where, run) {
   } else {
     box.textContent = "";
     band(box, panel);
-    box.appendChild(fact(run.leds + " LEDs"));
+    box.appendChild(fact(stripBuilt(run)));
   }
 };
 
@@ -16581,13 +16611,22 @@ function readLights(bodies) {
   // a stretch of the strip is read
   var lengths = {};
   boardResidue.forEach(function (token) {
-    var named = token.match(/^(strip[lr])=(\d+)$/i);
-    if (named) lengths[named[1].toLowerCase()] = {token: token, leds: Number(named[2])};
+    var named = token.match(/^(strip[lr])=(\d+)(?:\|([rgb]{3}))?$/i);
+    if (!named) return;
+    // The board's own order is held as no order, so writing it back changes nothing. One
+    // the page does not offer stays as written, for the board to answer
+    var order = (named[3] || "").toLowerCase();
+    if (order === "grb") order = "";
+    var offered = STRIP_ORDERS.some(function (pair) { return pair[0] === order; });
+    if (offered) lengths[named[1].toLowerCase()] = {token: token, leds: Number(named[2]), order: order};
   });
   runs.forEach(function (run) {
     if (!run.strip || !lengths[run.name]) return;
-    STRIPS.filter(function (one) { return one.id === run.id; })[0].leds = lengths[run.name].leds;
-    run.leds = lengths[run.name].leds;
+    var one = STRIPS.filter(function (strip) { return strip.id === run.id; })[0];
+    one.leds = lengths[run.name].leds;
+    one.order = lengths[run.name].order;
+    run.leds = one.leds;
+    run.order = one.order;
   });
   var stripsRead = {};
   var broken = outputsBrokenOut(bodies);

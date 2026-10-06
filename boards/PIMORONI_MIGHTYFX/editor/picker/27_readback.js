@@ -719,13 +719,22 @@ function readLights(bodies) {
   // a stretch of the strip is read
   var lengths = {};
   boardResidue.forEach(function (token) {
-    var named = token.match(/^(strip[lr])=(\d+)$/i);
-    if (named) lengths[named[1].toLowerCase()] = {token: token, leds: Number(named[2])};
+    var named = token.match(/^(strip[lr])=(\d+)(?:\|([rgb]{3}))?$/i);
+    if (!named) return;
+    // The board's own order is held as no order, so writing it back changes nothing. One
+    // the page does not offer stays as written, for the board to answer
+    var order = (named[3] || "").toLowerCase();
+    if (order === "grb") order = "";
+    var offered = STRIP_ORDERS.some(function (pair) { return pair[0] === order; });
+    if (offered) lengths[named[1].toLowerCase()] = {token: token, leds: Number(named[2]), order: order};
   });
   runs.forEach(function (run) {
     if (!run.strip || !lengths[run.name]) return;
-    STRIPS.filter(function (one) { return one.id === run.id; })[0].leds = lengths[run.name].leds;
-    run.leds = lengths[run.name].leds;
+    var one = STRIPS.filter(function (strip) { return strip.id === run.id; })[0];
+    one.leds = lengths[run.name].leds;
+    one.order = lengths[run.name].order;
+    run.leds = one.leds;
+    run.order = one.order;
   });
   var stripsRead = {};
   var broken = outputsBrokenOut(bodies);

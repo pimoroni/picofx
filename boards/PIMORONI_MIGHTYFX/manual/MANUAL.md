@@ -329,6 +329,11 @@ one you are not using is powered too.
 Each LED shows a colour of its own, so `stripL5.r` is not a thing to write; set
 `colour` on the LEDs instead, as an output takes it.
 
+Most strips take their colours as green, red, then blue, and the board sends
+them that way. If yours shows another colour where you asked for red, it takes
+them in another order: write the letters `r`, `g` and `b` after its length in
+the order it wants them, such as `stripL=60|rgb`.
+
 ## Screens
 
 ### Naming screens
@@ -617,7 +622,7 @@ board: drive=manual program=fireplace.py
 | `screenA` | what size of screen is on SP/CE A, or `hub` for a Screen Hub | no screen |
 | `screenB` | the same for SP/CE B | no screen |
 | `hubA` to `hubF` | what size of screen is at each of a Screen Hub's positions | no screen there |
-| `stripL` | how many LEDs are on a strip plugged into **L** | no strip |
+| `stripL` | how many LEDs are on a strip plugged into **L**, and after a `\|` the order it takes its colours in | no strip |
 | `stripR` | the same for **R** | no strip |
 
 With `reload=auto`, saving `effects.txt` is enough on its own: the board notices

@@ -132,7 +132,7 @@ function boardLine() {
       var held = body && body.runs && body.runs[run.name];
       return held && held.sections.some(function (section) { return section.look; });
     });
-    if (used) tokens.push(run.name + "=" + run.leds);
+    if (used) tokens.push(run.name + "=" + run.leds + (run.order ? "|" + run.order : ""));
   });
   return tokens.length ? "board: " + tokens.join(" ") : "";
 }

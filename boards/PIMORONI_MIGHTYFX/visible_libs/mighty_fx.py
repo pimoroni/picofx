@@ -68,6 +68,10 @@ class MightyFX:
     # transfer sending a frame partway, breaking it apart, and the overrun lands on these
     STRIP_FLUSH_LEDS = 2
 
+    # The order a strip takes its red, green and blue in where its declaration names none,
+    # which is most WS2812 strips'
+    STRIP_ORDER = "grb"
+
     # How long a strip takes to power up once the rail is on, and miss any frame sent sooner.
     # A 64 LED panel took one after 5ms and not after 2ms, so this is double that
     RAIL_SETTLE_MS = 10
@@ -180,8 +184,9 @@ class MightyFX:
             # through every flash write, and a frame sent during one is torn
             if strip is not None:
                 from plasma import WS2812
-                self.__strips[letter] = WS2812(strip + self.STRIP_FLUSH_LEDS, self.STRIP_PIO,
-                                               len(self.__strips), pin)
+                length, order = self.__strip_declared(letter, strip)
+                self.__strips[letter] = WS2812(length + self.STRIP_FLUSH_LEDS, self.STRIP_PIO,
+                                               len(self.__strips), pin, color_order=order)
 
             elif servo is not None:
                 # Each connector shares a PWM channel with one screen port's backlight
@@ -192,6 +197,17 @@ class MightyFX:
                 self.__servos[letter] = Servo(pin) if servo is True else Servo(pin, calibration=servo)
 
         # The rail stays down until enable_rail(), so nothing on the header is live before then
+
+    @classmethod
+    def __strip_declared(cls, letter, strip):
+        # A strip is declared as its length, or as (length, order) with the letters in the
+        # order the strip takes its colours, returned as the plasma module's colour order
+        length, order = strip if isinstance(strip, (tuple, list)) else (strip, cls.STRIP_ORDER)
+        if not isinstance(order, str) or sorted(order.lower()) != ["b", "g", "r"]:
+            raise ValueError(f"strip_{letter.lower()}'s colour order is {order!r}, so give the letters r, g and b in the order the strip takes them, such as (60, \"rgb\")")
+
+        import plasma
+        return length, getattr(plasma, "COLOR_ORDER_" + order.upper())
 
     @staticmethod
     def __pwm_channel(gpio):
@@ -299,12 +315,12 @@ class MightyFX:
 
     @property
     def strip_l(self):
-        """The LED strip on the L connector, declared as MightyFX(strip_l=60). Shown by update()."""
+        """The LED strip on the L connector, declared as MightyFX(strip_l=60), or MightyFX(strip_l=(60, "rgb")) for one taking its colours in another order. Shown by update()."""
         return self.__declared(self.__strips, "strip", "L")
 
     @property
     def strip_r(self):
-        """The LED strip on the R connector, declared as MightyFX(strip_r=60). Shown by update()."""
+        """The LED strip on the R connector, declared as MightyFX(strip_r=60), or MightyFX(strip_r=(60, "rgb")) for one taking its colours in another order. Shown by update()."""
         return self.__declared(self.__strips, "strip", "R")
 
     @property
