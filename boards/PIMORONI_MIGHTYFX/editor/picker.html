@@ -12769,13 +12769,32 @@ function programTitle(path) {
 var THUMB_W = 64, THUMB_H = 48;
 var thumbImages = {};
 
-function thumbCanvas(kind, seed) {
+function thumbCanvas(kind, seed, uses) {
   var canvas = document.createElement("canvas");
   canvas.width = THUMB_W;
   canvas.height = THUMB_H;
   canvas.className = "progthumb";
-  paintThumb(canvas.getContext("2d"), kind, seed || 1, canvas);
+  paintThumb(canvas.getContext("2d"), kind, seed || 1, canvas, uses || []);
   return canvas;
+}
+
+// The outputs a program's lamps are drawn for: all of them, but a colour output among mono ones
+// only where the program uses it
+function lampsDrawn(uses) {
+  var mixed = BOARD.outputs.some(function (output) { return output.kind === "mono"; });
+  return BOARD.outputs.filter(function (output) {
+    return !mixed || output.kind === "mono" || uses.indexOf("rgb") >= 0;
+  });
+}
+
+// A lamp's colour on a mono output, a warm white as bright as the colour, an unlit lamp unchanged
+function monoInk(ink) {
+  if (ink === "#3a3f44") return ink;
+  var level = (parseInt(ink.slice(1, 3), 16) * 0.2126 + parseInt(ink.slice(3, 5), 16) * 0.7152 +
+               parseInt(ink.slice(5, 7), 16) * 0.0722) / 255;
+  level = Math.max(0.3, level);
+  return "rgb(" + Math.round(255 * level) + "," + Math.round(217 * level) + "," +
+         Math.round(160 * level) + ")";
 }
 
 // A repeatable scatter, so a thumbnail is the same every time it is drawn
@@ -12787,7 +12806,7 @@ function scatter(seed) {
   };
 }
 
-function paintThumb(g, kind, seed, canvas) {
+function paintThumb(g, kind, seed, canvas, uses) {
   var W = THUMB_W, H = THUMB_H, x, y, i;
   var chance = scatter(seed);
   function fill(ink) { g.fillStyle = ink; g.fillRect(0, 0, W, H); }
@@ -12836,7 +12855,7 @@ function paintThumb(g, kind, seed, canvas) {
     return;
   }
   if (kind.indexOf("lamps:") === 0) {
-    // What the outputs do, as seven lamps on the board's dark
+    // What the outputs do, as a lamp for each on the board's dark, spread across seven lamps' width
     fill("#1c1f22");
     var inks = {rainbow: ["#ff2d1a", "#ff9022", "#ffd21f", "#22c65a", "#28e0e0", "#2b5cff", "#9a46ff"],
                 warm: ["#ffb060", "#ffc27a", "#ff9022", "#ffb060", "#ffc27a", "#ff9022", "#ffb060"],
@@ -12846,14 +12865,18 @@ function paintThumb(g, kind, seed, canvas) {
                 level: ["#3a3f44", "#3a3f44", "#22c65a", "#22c65a", "#3a3f44", "#3a3f44", "#3a3f44"],
                 bar: ["#2b5cff", "#28e0e0", "#22c65a", "#ffd21f", "#3a3f44", "#3a3f44", "#3a3f44"],
                 melody: ["#9a46ff", "#3a3f44", "#ff36c8", "#9a46ff", "#3a3f44", "#2b5cff", "#ff36c8"],
-                countdown: ["#ff2d1a", "#ff2d1a", "#ff2d1a", "#22c65a", "#3a3f44", "#3a3f44", "#3a3f44"]};
+                countdown: ["#ff2d1a", "#ff2d1a", "#ff2d1a", "#22c65a", "#3a3f44", "#3a3f44", "#3a3f44"],
+                off: ["#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44"]};
     var row = inks[kind.slice(6)] || inks.mono;
-    for (i = 0; i < 7; i++) {
-      g.fillStyle = row[i];
+    var lamps = lampsDrawn(uses);
+    lamps.forEach(function (output, at) {
+      var ink = row[Math.min(at, row.length - 1)];
+      g.fillStyle = output.kind === "mono" ? monoInk(ink) : ink;
       g.beginPath();
-      g.arc(6 + i * 8.6, H / 2, 3.2, 0, Math.PI * 2);
+      g.arc(lamps.length > 1 ? 6 + at * 8.6 * 6 / (lamps.length - 1) : W / 2, H / 2, 3.2, 0,
+            Math.PI * 2);
       g.fill();
-    }
+    });
     return;
   }
   switch (kind) {
@@ -13046,7 +13069,7 @@ function programThumb(path) {
   var kind = offered && THUMBS[file + "-2"] ? "pair:" + file
            : offered && THUMBS[file] ? "shot:" + file
            : offered ? offered[1] : DRIVE_PICTURES[path] ? "picture:" + path : "drive";
-  return thumbCanvas(kind, path.length);
+  return thumbCanvas(kind, path.length, usesOf(path));
 }
 
 // ---- the program page ------------------------------------------------------------------------
@@ -13129,6 +13152,15 @@ function programPicture(path) {
   return big;
 }
 
+// The picture before a program is chosen: an empty panel upright, so its words read across, or on
+// a board without screens its lamps unlit
+function emptyPicture() {
+  if (SCREEN_PORTS.length) return panelPreview({size: "2.8", turn: 0});
+  var big = thumbCanvas("lamps:off", 1);
+  big.classList.add("big");
+  return big;
+}
+
 // The line along the preview's top, saying what the board runs, with the way to choose none
 function heroNote(path) {
   var note = document.createElement("div");
@@ -13165,14 +13197,16 @@ function programHero(path) {
   hero.appendChild(body);
   var picture = document.createElement("div");
   picture.className = "progpicture";
-  // The empty panel upright, so its words read across
-  picture.appendChild(path ? programPicture(path) : panelPreview({size: "2.8", turn: 0}));
+  picture.appendChild(path ? programPicture(path) : emptyPicture());
   body.appendChild(picture);
   if (!path) {
     var waiting = document.createElement("div");
     waiting.className = "progwords";
-    waiting.innerHTML = "<h3>Choose a program</h3><p>Each takes the whole board, its outputs, " +
-                        "screens and sound, while it runs.</p>";
+    var taken = ["outputs"];
+    if (SCREEN_PORTS.length) taken.push(SCREEN_PORTS.length > 1 ? "screens" : "screen");
+    if (BOARD.sound) taken.push("sound");
+    waiting.innerHTML = "<h3>Choose a program</h3><p>Each takes the whole board, its " +
+                        spoken(taken) + ", while it runs.</p>";
     body.appendChild(waiting);
     return hero;
   }
@@ -13360,8 +13394,10 @@ function renderPageSwitch() {
     };
     cover.className = "cover" + ((one[0] === "program") === onProgramPage ? " on" : "");
     cover.dataset.page = one[0];
+    // With no program chosen its tab shows a starfield, or the lamps lit on a board without screens
     var face = one[0] === "effects" ? effectsFace()
-             : program ? programThumb(program) : thumbCanvas("stars", 3);
+             : program ? programThumb(program)
+             : thumbCanvas(SCREEN_PORTS.length ? "stars" : "lamps:rainbow", 3);
     face.classList.add("coverface");
     cover.appendChild(face);
     var words = document.createElement("span");
