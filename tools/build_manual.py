@@ -281,7 +281,7 @@ def main():
     with open(preview, "w", encoding="utf-8", newline="\n") as f:
         f.write(page)
 
-    module = os.path.join(args.board_dir, "frozen_libs", "fx_manual.py")
+    module = os.path.join(args.board_dir, "fx_libs", "fx_manual.py")
     with open(module, "w", encoding="utf-8", newline="\n") as f:
         f.write(MODULE_HEADER)
         f.write(page)

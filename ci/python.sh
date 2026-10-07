@@ -24,6 +24,7 @@ function qa_examples_fix {
 
 function qa_libs_check {
     qa_check boards/frozen_libs
+    qa_check boards/fx_libs
     qa_check boards/visible_libs
     qa_check boards/*/visible_libs
     qa_check boards/*/reference
@@ -32,6 +33,7 @@ function qa_libs_check {
 
 function qa_libs_fix {
     qa_fix boards/frozen_libs
+    qa_fix boards/fx_libs
     qa_fix boards/visible_libs
     qa_fix boards/*/visible_libs
     qa_fix boards/*/reference

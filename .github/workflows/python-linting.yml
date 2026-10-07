@@ -36,7 +36,7 @@ jobs:
       shell: bash
       run: |
         python3 tools/build_manual.py boards/PIMORONI_MIGHTYFX
-        git diff --exit-code -- boards/PIMORONI_MIGHTYFX/frozen_libs/fx_manual.py
+        git diff --exit-code -- boards/PIMORONI_MIGHTYFX/fx_libs/fx_manual.py
 
     - name: Check Each Board's Editor Is Rebuilt
       shell: bash

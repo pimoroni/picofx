@@ -8,7 +8,7 @@ goes in only for a board with that feature. Generates catalogue.js from the live
 so a page always offers what the firmware it ships with provides, its strips and screen ports
 from the board's class or, where the class is not in this repository, from its description. It
 writes the pages and catalogue compressed into a frozen module for fx_drive to heal onto the
-drive. A board with no frozen_libs/ carries no FX drive, and gets its picker.html and
+drive. A board with no fx_libs/ carries no FX drive, and gets its picker.html and
 catalogue.js alone. The parts and pages are
 committed and the module is generated, so run this after editing a part, a page, the
 description or anything the catalogue reads.
@@ -397,7 +397,7 @@ def main():
 
     repo_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     editor_dir = os.path.join(args.board_dir, "editor")
-    module = os.path.join(args.board_dir, "frozen_libs", MODULE_NAME)
+    module = os.path.join(args.board_dir, "fx_libs", MODULE_NAME)
 
     # What the generated files should hold, the picker and catalogue being generated as well as
     # embedded. The catalogue is the autofx tables the board's firmware carries
@@ -407,7 +407,7 @@ def main():
     generated = {os.path.join(editor_dir, "picker.html"): picker(args.board_dir, repo_dir),
                  catalogue_path: catalogue(repo_dir, args.board_dir, board)}
 
-    # A board with no frozen libraries carries no FX drive, so it takes the pages alone
+    # A board with no FX drive modules carries no FX drive, so it takes the pages alone
     if not os.path.isdir(os.path.dirname(module)):
         build_page_only(generated, args.check)
         return
