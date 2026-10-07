@@ -19,13 +19,14 @@
  "opening": {"colour": "Rainbow"},
  "wiring_order": true,
  "strips": [
-  {"name": "stripl", "label": "the left strip", "tab": "Left strip",
+  {"name": "stripl", "label": "the left strip", "tab": "Left strip", "connector": "L",
    "says": "its own connector, and its own cutting", "colour": "#c2570f", "leds": 30, "fitted": true},
-  {"name": "stripr", "label": "the right strip", "tab": "Right strip",
+  {"name": "stripr", "label": "the right strip", "tab": "Right strip", "connector": "R",
    "says": "the same again, playing what it likes", "colour": "#8a1f6d", "leds": 18, "fitted": true}
  ],
  "screens": {
-  "ports": [{"id": "screena", "label": "Screen A"}, {"id": "screenb", "label": "Screen B"}],
+  "ports": [{"id": "screena", "label": "Screen A", "connector": "SP/CE A"},
+            {"id": "screenb", "label": "Screen B", "connector": "SP/CE B"}],
   "hub": true
  },
  "sound": true,

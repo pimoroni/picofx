@@ -278,7 +278,8 @@ def described(board):
 
 def catalogue(repo_dir, board_dir, board):
     """catalogue.js, from the same tables autofx reads on the board, with the strips and screen
-    ports its class declares, or its description where its class is not here."""
+    ports its class declares, or its description where its class is not here, and the board's
+    outputs and connectors from its description."""
     fake = types.ModuleType("machine")
     for name in ("PWM", "Pin", "Timer", "SPI"):
         setattr(fake, name, type(name, (), {}))
@@ -296,6 +297,20 @@ def catalogue(repo_dir, board_dir, board):
     sizes = autofx.SCREEN_SIZES + ((autofx.HUB,) if board_hub(declared) else ())
     board_settings = dict(autofx.BOARD_SETTINGS, **dict.fromkeys(screens, sizes),
                           **dict.fromkeys(strips))
+
+    # The board's own parts for the text editor's targets and hints: its outputs with their kind,
+    # and each strip and screen port as a file writes it, with the connector its description names
+    connectors = {part.get("name", part.get("id")): part.get("connector")
+                  for part in board["strips"] + (board["screens"] or {"ports": []})["ports"]}
+    own = {
+        "outputs": [[output["name"], output["kind"]] for output in board["outputs"]],
+        "colour": board["output_words"]["colour"],
+        "strips": [[name, connectors.get(name.lower())] for name, _prop in declared["STRIPS"]],
+        "screens": [[name, connectors.get(name.lower())]
+                    for name, _prop, _spi in declared["SCREENS"]],
+        "hub": board_hub(declared),
+        "sound": bool(board["sound"]),
+    }
     tables = {
         "effects": {name: {"kind": kind, "takes": list(takes)}
                     for name, (_cls, kind, _called, takes)
@@ -315,6 +330,7 @@ def catalogue(repo_dir, board_dir, board):
         "tiling": list(autofx.TILING),
         "board_settings": {key: (list(value) if isinstance(value, tuple) else value)
                            for key, value in board_settings.items()},
+        "board": own,
     }
     return ("// Generated from the autofx tables. Do not edit.\n"
             "var CATALOGUE = " + json.dumps(tables, indent=1) + ";\n")

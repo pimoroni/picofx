@@ -336,5 +336,32 @@ var CATALOGUE = {
   ],
   "stripdat": null,
   "stripclk": null
+ },
+ "board": {
+  "outputs": [
+   [
+    "rgb",
+    "colour"
+   ]
+  ],
+  "colour": "RGB LED",
+  "strips": [
+   [
+    "stripdat",
+    "DAT"
+   ],
+   [
+    "stripclk",
+    "CLK"
+   ]
+  ],
+  "screens": [
+   [
+    "screena",
+    "SP/CE"
+   ]
+  ],
+  "hub": false,
+  "sound": false
  }
 };

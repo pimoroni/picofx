@@ -26,7 +26,7 @@ main{max-width:52rem;margin:1.5rem auto;padding:0 1.4rem}
 .banner.warn{background:var(--warn-bg);color:var(--warn)}
 .banner.hold{background:#fdf3e0;color:#8a6415}
 .banner pre{margin:.4rem 0 0;white-space:pre-wrap;font-size:.85rem}
-/* The seven outputs as the board lights them while a save is written */
+/* The board's lights as it lights them while a save is written */
 .spots{display:inline-flex;gap:.3rem;margin-left:.7rem;vertical-align:middle}
 .spots i{display:block;width:.85rem;height:.85rem;border-radius:3px;border:1px solid rgba(138,100,21,.45);
  background:rgba(138,100,21,.12)}
@@ -126,32 +126,62 @@ var CHANNEL_HINTS = {
   tile: "repeat or mirror to fill the screen with copies, as across|down"
 };
 
-var TARGETS = [
-  ["out1-7", "all seven outputs"],
-  ["screenA", "a screen on SP/CE A"],
-  ["screenB", "a screen on SP/CE B"],
-  ["hubA", "a screen on a Screen Hub, from hubA to hubF, such as hubA-C"],
-  ["stripL", "an LED strip on L"],
-  ["stripR", "an LED strip on R"],
-  ["audio", "a sound played beside the effects"],
-  ["board", "settings for the board itself"],
-  ["[", "a scene heading, [Name: 10s]; entries above the first are always on"]
-];
+// The board's own parts: its outputs with their kind, and each strip and screen port as a file
+// writes it with the connector it is on. Without the catalogue the board has none
+var OWN = CATALOGUE ? CATALOGUE.board
+                    : {outputs: [], colour: "", strips: [], screens: [], hub: false, sound: false};
+
+// The outputs a file names by number, out1 onwards, and the others it names by name, such as rgb
+var NUMBERED = OWN.outputs.filter(function (output) { return /^out[0-9]+$/.test(output[0]); });
+var NAMED = OWN.outputs.filter(function (output) { return !/^out[0-9]+$/.test(output[0]); });
+
+// Whether the numbered outputs show colour, each breaking into .r .g .b
+var NUMBERED_COLOUR = NUMBERED.length > 0 &&
+                      NUMBERED.every(function (output) { return output[1] === "colour"; });
+
+var COUNT_WORDS = ["none", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+                   "ten", "eleven", "twelve"];
+
+var TARGETS = [];
+if (NUMBERED.length > 1)
+  TARGETS.push(["out1-" + NUMBERED.length, "all " + COUNT_WORDS[NUMBERED.length] + " outputs"]);
+NAMED.forEach(function (output) { TARGETS.push([output[0], "the " + OWN.colour]); });
+OWN.screens.forEach(function (port) { TARGETS.push([port[0], "a screen on " + port[1]]); });
+if (OWN.hub)
+  TARGETS.push(["hubA", "a screen on a Screen Hub, from hubA to hubF, such as hubA-C"]);
+OWN.strips.forEach(function (strip) { TARGETS.push([strip[0], "an LED strip on " + strip[1]]); });
+if (OWN.sound) TARGETS.push([CATALOGUE.audio, "a sound played beside the effects"]);
+TARGETS.push(["board", "settings for the board itself"],
+             ["[", "a scene heading, [Name: 10s]; entries above the first are always on"]);
 
 var BOARD_HINTS = {
   drive: "manual keeps the drive hidden until asked for",
   reload: "auto plays the file the moment it is saved, no eject needed",
   program: "a Python file to run instead of the effects",
-  args: "what to pass that program, divided by |",
-  screena: "what size of screen is on SP/CE A, or hub for a Screen Hub",
-  screenb: "what size of screen is on SP/CE B, or hub for a Screen Hub",
-  stripl: "how many LEDs are on a strip plugged into L",
-  stripr: "the same for R"
+  args: "what to pass that program, divided by |"
 };
+OWN.screens.forEach(function (port) {
+  BOARD_HINTS[port[0].toLowerCase()] = "what size of screen is on " + port[1] +
+                                       (OWN.hub ? ", or hub for a Screen Hub" : "");
+});
+OWN.strips.forEach(function (strip, index) {
+  BOARD_HINTS[strip[0].toLowerCase()] = index ? "the same for " + strip[1]
+                                              : "how many LEDs are on a strip plugged into " + strip[1];
+});
 
 // The spelling a completion inserts, where the file reads best in mixed case
-var BOARD_CASE = {screena: "screenA", screenb: "screenB",
-                  stripl: "stripL", stripr: "stripR"};
+var BOARD_CASE = {};
+OWN.screens.concat(OWN.strips).forEach(function (part) { BOARD_CASE[part[0].toLowerCase()] = part[0]; });
+
+// Check if a word is one of the board's own parts followed by what the pattern takes, such as
+// stripL then 1-10. A pattern matching nothing at all takes the bare name
+function ownPart(word, parts, followed) {
+  var lowered = word.toLowerCase();
+  return parts.some(function (part) {
+    var name = part[0].toLowerCase();
+    return lowered.slice(0, name.length) === name && followed.test(lowered.slice(name.length));
+  });
+}
 
 function targetKind(word) {
   var lowered = word.toLowerCase();
@@ -197,8 +227,10 @@ function valuesFor(name, kind) {
   var lowered = name.toLowerCase();
   if (kind === "board") {
     // A hub position takes the sizes a screen does, less the hub itself
-    if (HUB_PLACES.test(lowered))
-      return CATALOGUE.board_settings.screena.filter(function (size) { return size !== "hub"; });
+    if (OWN.hub && HUB_PLACES.test(lowered))
+      return CATALOGUE.board_settings[OWN.screens[0][0].toLowerCase()].filter(function (size) {
+        return size !== "hub";
+      });
     var allowed = CATALOGUE.board_settings[lowered];
     return allowed && allowed.length ? allowed.map(String) : null;
   }
@@ -249,11 +281,13 @@ var HUB_PLACES = /^hub[a-f](-[a-f])?(,[a-f](-[a-f])?)*$/;
 
 function validSelector(word) {
   var bare = word.toLowerCase().replace(/^,+|,+$/g, "");
-  if (!bare) return true;
-  if (bare === "board" || /^screen[ab]$/.test(bare) || HUB_PLACES.test(bare)) return true;
-  if (CATALOGUE && bare === CATALOGUE.audio) return true;
-  if (/^strip[lr]([0-9][0-9,\-]*)?$/.test(bare)) return true;
-  if (/^out[0-9][0-9,\-.rgb*]*$/.test(bare)) return true;
+  if (!bare || !CATALOGUE) return true;
+  if (bare === "board" || ownPart(bare, OWN.screens, /^$/)) return true;
+  if (OWN.hub && HUB_PLACES.test(bare)) return true;
+  if (OWN.sound && bare === CATALOGUE.audio) return true;
+  if (ownPart(bare, OWN.strips, /^([0-9][0-9,\-]*)?$/)) return true;
+  if (NUMBERED.length && /^out[0-9][0-9,\-.rgb*]*$/.test(bare)) return true;
+  if (ownPart(bare, NAMED, /^(\.(r|g|b|\*))?$/)) return true;
   // A group after a comma names its outputs bare: 2, 5-3, 3.r
   return /^[0-9][0-9,\-]*(\.(r|g|b|\*))?$/.test(bare);
 }
@@ -421,6 +455,15 @@ function sceneScope(text, caret) {
   };
 }
 
+// Check if a word starts the way one of the board's selectors does
+function selectorStart(word) {
+  var lowered = word.toLowerCase();
+  if (lowered.slice(0, 5) === "board") return true;
+  if (NUMBERED.length && /^out[0-9]/.test(lowered)) return true;
+  if (OWN.hub && /^hub[a-f]/.test(lowered)) return true;
+  return ownPart(lowered, OWN.screens.concat(OWN.strips, NAMED), /^/);
+}
+
 function contextAt(text, caret) {
   var lineStart = text.lastIndexOf("\n", caret - 1) + 1;
   var line = text.slice(lineStart, caret);
@@ -486,7 +529,7 @@ function contextAt(text, caret) {
         // A first word shaped like a selector settles it: the line is a new
         // entry still waiting for its colon, not the one above carrying on
         var starts = line.match(/^\s*([^\s:]+)/);
-        if (starts && /^(out[0-9]|screen[ab]|hub[a-f]|strip[lr]|board)/i.test(starts[1])) {
+        if (starts && selectorStart(starts[1])) {
           found.target = starts[1];
           found.kind = targetKind(starts[1]);
           found.effect = null;
@@ -555,14 +598,16 @@ function offers(found) {
       offer(shown + "=", hint || "");
     });
     // A hub's positions are a pattern where the others are names, so one is offered to start
-    if (found.kind === "board" && CATALOGUE)
+    if (found.kind === "board" && OWN.hub)
       offer("hubA=", "the screen size at a Screen Hub position, such as hubA-C=2.8");
   }
 
   // A word already naming outputs can take more of them, one colour channel, or
   // go to its effect. Half-written punctuation leaves the numbers to the writer
   function selectorOffers() {
-    if (/^out[0-9]/i.test(found.prefix) && found.prefix.slice(-1) === ".") {
+    var numbered = NUMBERED.length > 0 && /^out[0-9]/i.test(found.prefix);
+    var components = (numbered && NUMBERED_COLOUR) || ownPart(found.prefix, NAMED, /^\.$/);
+    if (components && found.prefix.slice(-1) === ".") {
       offer(found.prefix + "r", "just the red");
       offer(found.prefix + "g", "just the green");
       offer(found.prefix + "b", "just the blue");
@@ -570,15 +615,19 @@ function offers(found) {
       return;
     }
     if (/[-.,]$/.test(found.prefix)) return;
-    if (/^out[0-9]/i.test(found.prefix) || /^strip[lr][0-9]/i.test(found.prefix)) {
+    if (numbered || ownPart(found.prefix, OWN.strips, /^[0-9]/)) {
       var tail = found.prefix.split(",").pop();
       offer(found.prefix + ",", "another output after it: out1,3,5-7");
       if (/^[0-9]+$/.test(tail.replace(/^[a-z]+/i, "")))
         offer(found.prefix + "-", "a range to another output, run either way");
-      if (/^out/i.test(found.prefix) && tail.indexOf(".") < 0)
+      if (numbered && NUMBERED_COLOUR && tail.indexOf(".") < 0)
         offer(found.prefix + ".", "one colour channel alone: .r .g .b, or .*");
       offer(found.prefix + ": ", "then the effect");
-    } else if (/^(screen[ab]|strip[lr]|board|audio)$/i.test(found.prefix) ||
+    } else if (ownPart(found.prefix, NAMED, /^$/)) {
+      offer(found.prefix + ".", "one colour channel alone: .r .g .b, or .*");
+      offer(found.prefix + ": ", "then the effect");
+    } else if (/^(board|audio)$/i.test(found.prefix) ||
+               ownPart(found.prefix, OWN.screens.concat(OWN.strips), /^$/) ||
                HUB_PLACES.test(found.prefix.toLowerCase())) {
       offer(found.prefix + ": ", "then the effect");
     }
@@ -589,7 +638,7 @@ function offers(found) {
   function dynamicOutput() {
     var free = null;
     var takeover = null;
-    for (var n = 1; n <= 7; n++) {
+    for (var n = 1; n <= NUMBERED.length; n++) {
       if (found.sceneUsed[n]) continue;
       if (found.alwaysUsed[n]) {
         if (takeover === null) takeover = n;
@@ -705,10 +754,14 @@ var paintBox = document.getElementById("paint");
 var suggest = document.getElementById("suggest");
 var hintLine = document.getElementById("hint");
 
+// Every output by number where they all show colour, or else the board's own colour output
+var COLOURED = NUMBERED_COLOUR ? "out1-" + NUMBERED.length
+                               : (NAMED.length ? NAMED[0][0] : "out1-7");
+
 var STARTER = "# One entry per line: which lights, a colon, then the effect.\n" +
               "# Settings you leave out take their usual value.\n\n" +
               "board: reload=auto\n\n" +
-              "out1-7: rainbow_wave speed=0.3\n";
+              COLOURED + ": rainbow_wave speed=0.3\n";
 
 var state = {dirHandle: null, fileHandle: null, boardText: null, offered: [], rows: [], lit: 0};
 
@@ -723,13 +776,16 @@ function repaint() {
   paintBox.scrollLeft = entry.scrollLeft;
 }
 
-// The board's own saving animation, so the page shows what the outputs show: one
-// white light travelling the seven over a dim floor, out1 to out7, 120ms a step.
-// Started by saving() and stopped by the next banner, whatever it says
+// The board's own saving animation, so the page shows what its lights show: one white light
+// travelling the numbered outputs over a dim floor, 120ms a step, or a board without them
+// flashing its own LED for one step in seven. Started by saving() and stopped by the next
+// banner, whatever it says
 var SPOT_STEP_MS = 120;
-// How long the animation outlives the write: the board holds its light for 500ms
-// after the last write and then runs one pass of seven half-steps
-var SAVING_TAIL_MS = 920;
+var SPOTS = NUMBERED.length || 1;
+var FLASH_STEPS = 7;
+// How long the animation outlives the write: the board holds its light for 500ms after the
+// last write and then runs one pass of half-steps, one per light
+var SAVING_TAIL_MS = 500 + SPOTS * SPOT_STEP_MS / 2;
 var spotTimer = null;
 
 function stopSpots() {
@@ -741,13 +797,14 @@ function saving(text) {
   banner(text, "hold");
   var row = document.createElement("span");
   row.className = "spots";
-  for (var i = 0; i < 7; i++) row.appendChild(document.createElement("i"));
+  for (var i = 0; i < SPOTS; i++) row.appendChild(document.createElement("i"));
   document.getElementById("banners").firstChild.appendChild(row);
   var at = 0;
+  var steps = SPOTS > 1 ? SPOTS : FLASH_STEPS;
   spotTimer = setInterval(function () {
     for (var i = 0; i < row.children.length; i++)
-      row.children[i].className = i === at ? "lit" : "";
-    at = (at + 1) % row.children.length;
+      row.children[i].className = i === (SPOTS > 1 ? at : at - (FLASH_STEPS - 1)) ? "lit" : "";
+    at = (at + 1) % steps;
   }, SPOT_STEP_MS);
 }
 

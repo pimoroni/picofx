@@ -343,5 +343,60 @@ var CATALOGUE = {
   ],
   "stripl": null,
   "stripr": null
+ },
+ "board": {
+  "outputs": [
+   [
+    "out1",
+    "colour"
+   ],
+   [
+    "out2",
+    "colour"
+   ],
+   [
+    "out3",
+    "colour"
+   ],
+   [
+    "out4",
+    "colour"
+   ],
+   [
+    "out5",
+    "colour"
+   ],
+   [
+    "out6",
+    "colour"
+   ],
+   [
+    "out7",
+    "colour"
+   ]
+  ],
+  "colour": "Colour outputs",
+  "strips": [
+   [
+    "stripL",
+    "L"
+   ],
+   [
+    "stripR",
+    "R"
+   ]
+  ],
+  "screens": [
+   [
+    "screenA",
+    "SP/CE A"
+   ],
+   [
+    "screenB",
+    "SP/CE B"
+   ]
+  ],
+  "hub": true,
+  "sound": true
  }
 };

@@ -325,5 +325,42 @@ var CATALOGUE = {
   ],
   "program": null,
   "args": null
+ },
+ "board": {
+  "outputs": [
+   [
+    "out1",
+    "mono"
+   ],
+   [
+    "out2",
+    "mono"
+   ],
+   [
+    "out3",
+    "mono"
+   ],
+   [
+    "out4",
+    "mono"
+   ],
+   [
+    "out5",
+    "mono"
+   ],
+   [
+    "out6",
+    "mono"
+   ],
+   [
+    "rgb",
+    "colour"
+   ]
+  ],
+  "colour": "RGB output",
+  "strips": [],
+  "screens": [],
+  "hub": false,
+  "sound": true
  }
 };
