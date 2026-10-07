@@ -2483,6 +2483,10 @@ def __hardware_changed(fx, declared, for_pair=False):
         if running is not None and (asked != running[1] or
                                     declared.get(kind + __ORDER) != running[2]):
             return True
+
+    # Check if any screen is running, since a board with none may have no screens module
+    if not __SCREENS:
+        return False
     from screens import Reserve
     wanted = Reserve.FULL_SIZE_IMAGES if for_pair else Reserve.CANVAS_SPACE
 
