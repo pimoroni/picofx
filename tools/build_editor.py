@@ -6,8 +6,9 @@ boards/editor/picker/, any of its own in its editor/picker/, its description in
 editor/fx_board.json and the thumbnails in editor/thumbs/. A part in one of the feature folders
 goes in only for a board with that feature. Generates catalogue.js from the live autofx tables
 so a page always offers what the firmware it ships with provides, and writes the pages and
-catalogue compressed into a frozen module for fx_drive to heal onto the drive. The parts and
-pages are committed and the module is generated, so run this after editing a part, a page, the
+catalogue compressed into a frozen module for fx_drive to heal onto the drive. A board with no
+frozen_libs/ carries no FX drive, and gets its picker.html alone. The parts and pages are
+committed and the module is generated, so run this after editing a part, a page, the
 description or anything the catalogue reads.
 
     python3 tools/build_editor.py boards/PIMORONI_MIGHTYFX
@@ -266,6 +267,31 @@ def unpacked(module_text):
     return pages
 
 
+def stale_files(generated):
+    """The generated files whose text on disk is not what they should hold."""
+    stale = []
+    for path, text in generated.items():
+        with open(path, encoding="utf-8", newline="") as f:
+            if f.read() != text:
+                stale.append(path)
+    return stale
+
+
+def build_page_only(generated, check):
+    """Write the generated pages, or with check fail where any is stale."""
+    if check:
+        stale = stale_files(generated)
+        if stale:
+            sys.exit("stale, rebuild with tools/build_editor.py: " + ", ".join(stale))
+        print("editor pages are up to date")
+        return
+    for path, text in generated.items():
+        with open(path, "w", encoding="utf-8", newline="\n") as f:
+            f.write(text)
+    print("{} bytes of pages: {}".format(sum(len(text) for text in generated.values()),
+                                         ", ".join(generated)))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true",
@@ -279,6 +305,14 @@ def main():
 
     # What the generated files should hold, the picker being generated as well as embedded
     generated = {os.path.join(editor_dir, "picker.html"): picker(args.board_dir, repo_dir)}
+
+    # A board with no frozen libraries carries no FX drive, so it takes the picker alone. The
+    # catalogue is the autofx tables its firmware would carry, and with none the page takes
+    # its ports and strips from the board's description
+    if not os.path.isdir(os.path.dirname(module)):
+        build_page_only(generated, args.check)
+        return
+
     sources = {"CATALOGUE": catalogue(repo_dir)}
     generated[os.path.join(editor_dir, "catalogue.js")] = sources["CATALOGUE"]
     for name, page in PAGES:
@@ -290,11 +324,7 @@ def main():
                 sources[name] = f.read()
 
     if args.check:
-        stale = []
-        for path, text in generated.items():
-            with open(path, encoding="utf-8", newline="") as f:
-                if f.read() != text:
-                    stale.append(path)
+        stale = stale_files(generated)
         with open(module, encoding="utf-8") as f:
             if unpacked(f.read()) != sources:
                 stale.append(module)

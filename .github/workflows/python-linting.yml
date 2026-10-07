@@ -38,7 +38,9 @@ jobs:
         python3 tools/build_manual.py boards/PIMORONI_MIGHTYFX
         git diff --exit-code -- boards/PIMORONI_MIGHTYFX/frozen_libs/fx_manual.py
 
-    - name: Check MightyFX Editor Is Rebuilt
+    - name: Check Each Board's Editor Is Rebuilt
       shell: bash
       run: |
-        python3 tools/build_editor.py --check boards/PIMORONI_MIGHTYFX
+        for description in boards/*/editor/fx_board.json; do
+          python3 tools/build_editor.py --check "${description%/editor/fx_board.json}"
+        done
