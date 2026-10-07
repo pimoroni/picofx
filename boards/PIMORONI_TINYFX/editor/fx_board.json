@@ -22,6 +22,7 @@
  "screens": null,
  "sound": true,
  "wireless": false,
+ "shell": true,
  "offered": [
   {"section": "With the remote", "says": "the effects, steered from the IR remote", "examples": [
    ["infrared/colour/control_rainbow.py", "lamps:rainbow"],

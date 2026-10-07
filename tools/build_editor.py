@@ -7,8 +7,8 @@ editor/fx_board.json and the thumbnails in editor/thumbs/. A part in one of the 
 goes in only for a board with that feature. Generates catalogue.js from the live autofx tables
 so a page always offers what the firmware it ships with provides, its strips and screen ports
 from the board's class or, where the class is not in this repository, from its description. It
-writes the pages and catalogue compressed into a frozen module for fx_drive to heal onto the
-drive. A board with no fx_libs/ carries no FX drive, and gets its picker.html and
+writes the picker, the text editor every board shares in boards/editor/editor.html and the
+catalogue compressed into a frozen module for fx_drive to heal onto the drive. A board with no fx_libs/ carries no FX drive, and gets its picker.html and
 catalogue.js alone. The parts and pages are
 committed and the module is generated, so run this after editing a part, a page, the
 description or anything the catalogue reads.
@@ -44,8 +44,6 @@ MODULE_HEADER = """# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoro
 # stream. The ends let a mount see the drive already holds a page without inflating it.
 
 """
-
-PAGES = (("PICKER", "picker.html"), ("EDITOR", "editor.html"))
 
 # Added to the header of a module carrying shells
 SHELL_HEADER = """# A shelled page also carries the opening and closing of a page that inflates itself in the
@@ -106,6 +104,9 @@ DESCRIPTION_NAME = "fx_board.json"
 
 # The picker's page and the parts every board shares, from the repository's root
 SHARED_PARTS = os.path.join("boards", "editor", "picker")
+
+# The text editor every board shares, which takes the board's own parts from the catalogue
+SHARED_EDITOR = os.path.join("boards", "editor", "editor.html")
 
 # The folders of picker parts a board takes only where its description has the feature
 FEATURE_FOLDERS = {
@@ -485,14 +486,10 @@ def main():
         build_page_only(generated, args.check)
         return
 
-    sources = {"CATALOGUE": generated[catalogue_path]}
-    for name, page in PAGES:
-        path = os.path.join(editor_dir, page)
-        if path in generated:
-            sources[name] = generated[path]
-        else:
-            with open(path, encoding="utf-8", newline="") as f:
-                sources[name] = f.read()
+    sources = {"CATALOGUE": generated[catalogue_path],
+               "PICKER": generated[os.path.join(editor_dir, "picker.html")]}
+    with open(os.path.join(repo_dir, SHARED_EDITOR), encoding="utf-8", newline="") as f:
+        sources["EDITOR"] = f.read()
 
     shelled = set(SHELLED) if board.get("shell", False) else set()
     if args.check:

@@ -35,3 +35,9 @@ include(cppmem/micropython)
 
 # Disable build-busting C++ exceptions
 include(micropython-disable-exceptions)
+
+# Fail the link where the firmware would run into the FX drive or the filesystem. A linker script
+# given as a link input adds to the port's own
+target_link_options(usermod INTERFACE
+    "-Wl,--defsym=__board_firmware_bytes__=${FIRMWARE_SIZE_BYTES}"
+    "${CMAKE_CURRENT_LIST_DIR}/../firmware_size.ld")

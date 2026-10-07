@@ -21,6 +21,10 @@ jobs:
             shortname: tiny_fx_w
             board: PIMORONI_TINYFX
             variant: w
+          - name: TinyFX with the FX drive
+            shortname: tiny_fx_drive
+            board: PIMORONI_TINYFX
+            variant: drive
           - name: MightyFX
             shortname: mighty_fx
             board: PIMORONI_MIGHTYFX
