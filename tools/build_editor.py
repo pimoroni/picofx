@@ -254,20 +254,22 @@ def picker(board_dir, repo_dir):
     return text
 
 
-# The tables a board's class declares its connectors in, each a tuple of tuples
-BOARD_TABLES = ("STRIPS", "SCREENS")
+# The tables a board's class declares its connectors in, each a tuple
+BOARD_TABLES = ("STRIPS", "SCREENS", "STRIP_BRIGHTNESS", "STRIP_TAKES")
 
 
 def board_declares(board_dir):
     """
     What a board's class declares, read from its source in visible_libs/ so no board need be
-    imported: its STRIPS and SCREENS as lists of tuples, each empty where it declares none,
-    and whether it hands back a Screen Hub. None where the board carries no class here.
+    imported: its STRIPS, SCREENS, STRIP_BRIGHTNESS and STRIP_TAKES as lists, each empty where
+    it declares none, and whether it hands back a Screen Hub. None where the board carries no
+    class here.
     """
     sources = sorted(glob.glob(os.path.join(board_dir, "visible_libs", "*.py")))
     if not sources:
         return None
-    declared = {"STRIPS": [], "SCREENS": [], "hub": False}
+    declared = {table: [] for table in BOARD_TABLES}
+    declared["hub"] = False
     for path in sources:
         with open(path, encoding="utf-8") as f:
             tree = ast.parse(f.read(), path)
@@ -279,10 +281,10 @@ def board_declares(board_dir):
                 if isinstance(item, ast.Assign):
                     for target in item.targets:
                         if getattr(target, "id", "") in BOARD_TABLES:
-                            found[target.id] = [tuple(row) for row in ast.literal_eval(item.value)]
+                            found[target.id] = list(ast.literal_eval(item.value))
                 elif isinstance(item, ast.FunctionDef) and item.name == "hub":
                     found["hub"] = True
-            if any(table in found for table in BOARD_TABLES):
+            if "STRIPS" in found or "SCREENS" in found:
                 declared.update(found)
                 return declared
     return declared
@@ -294,7 +296,10 @@ def board_hub(declared):
 
 
 def check_board(board_dir, board):
-    """Fail where the description names a strip, screen port or hub the board's class lacks."""
+    """
+    Fail where the description names a strip, screen port or hub the board's class lacks, or
+    gives a strip a brightness or other strips' terminals the class does not.
+    """
     declared = board_declares(board_dir)
     if declared is None:
         return
@@ -303,6 +308,16 @@ def check_board(board_dir, board):
     if missing:
         sys.exit("{} names {}, which the board's class does not declare in STRIPS".format(
             DESCRIPTION_NAME, ", ".join(missing)))
+    bright = [name.lower() for name in declared["STRIP_BRIGHTNESS"]]
+    takes = {name.lower(): sorted(other.lower() for other in others)
+             for name, others in declared["STRIP_TAKES"]}
+    for strip in board["strips"]:
+        if ("brightness" in strip) != (strip["name"] in bright):
+            sys.exit("{} and the board's class's STRIP_BRIGHTNESS disagree on whether {} takes a "
+                     "brightness".format(DESCRIPTION_NAME, strip["name"]))
+        if sorted(strip.get("takes", [])) != takes.get(strip["name"], []):
+            sys.exit("{} and the board's class's STRIP_TAKES disagree on the terminals {} "
+                     "takes".format(DESCRIPTION_NAME, strip["name"]))
     screens = [name.lower() for name, _prop, _spi in declared["SCREENS"]]
     described = board["screens"] or {"ports": [], "hub": False}
     missing = [port["id"] for port in described["ports"] if port["id"] not in screens]
@@ -320,6 +335,9 @@ def described(board):
     screens = board["screens"] or {"ports": [], "hub": False}
     return {"STRIPS": [(strip["name"], None) for strip in board["strips"]],
             "SCREENS": [(port["id"], None, None) for port in screens["ports"]],
+            "STRIP_BRIGHTNESS": [strip["name"] for strip in board["strips"] if "brightness" in strip],
+            "STRIP_TAKES": [(strip["name"], strip["takes"]) for strip in board["strips"]
+                            if "takes" in strip],
             "hub": screens["hub"]}
 
 
