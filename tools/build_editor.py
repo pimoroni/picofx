@@ -47,6 +47,52 @@ MODULE_HEADER = """# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoro
 
 PAGES = (("PICKER", "picker.html"), ("EDITOR", "editor.html"))
 
+# Added to the header of a module carrying shells
+SHELL_HEADER = """# A shelled page also carries the opening and closing of a page that inflates itself in the
+# browser, its length and ends being that page's as the drive holds it.
+
+"""
+
+# A page that inflates itself in the browser, for a board whose drive is short of room: its
+# zlib stream in base64 between these two, which fx_drive writes around the frozen stream
+# itself. A browser without DecompressionStream says so instead.
+SHELL_OPENING = """<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>{}</title>
+</head>
+<body>
+<p id="opening">Opening the page...</p>
+<script id="packed" type="application/octet-stream">"""
+
+SHELL_CLOSING = """</script>
+<script>
+(function () {
+  var said = document.getElementById("opening");
+  if (typeof DecompressionStream === "undefined") {
+    said.textContent = "This browser is too old to open this page. A current Chrome or Edge opens it.";
+    return;
+  }
+  var text = atob(document.getElementById("packed").textContent);
+  var bytes = new Uint8Array(text.length);
+  for (var i = 0; i < text.length; i++) bytes[i] = text.charCodeAt(i);
+  var page = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate"));
+  new Response(page).text().then(function (html) {
+    document.open();
+    document.write(html);
+    document.close();
+  }, function (e) { said.textContent = "This page could not be opened: " + e; });
+})();
+</script>
+</body>
+</html>
+"""
+
+# The pages a board whose description sets "shell" writes as shells; the catalogue is script,
+# read as it is
+SHELLED = ("PICKER", "EDITOR")
+
 # How many characters of each end of a page a mount compares
 EDGE = 512
 
@@ -54,8 +100,8 @@ EDGE = 512
 BYTES_PER_LINE = 64
 
 # The board's description: its name, outputs, strips, screens, sound, the examples it offers, and
-# the folder of examples its filesystem carries, as its uf2-copyfiles.sh copies them, and the name
-# those examples give the board
+# the folder of examples its filesystem carries, as its uf2-copyfiles.sh copies them, the name
+# those examples give the board, and with "shell" set, that its drive carries the pages as shells
 DESCRIPTION_NAME = "fx_board.json"
 
 # The picker's page and the parts every board shares, from the repository's root
@@ -336,8 +382,12 @@ def catalogue(repo_dir, board_dir, board):
             "var CATALOGUE = " + json.dumps(tables, indent=1) + ";\n")
 
 
-def embed(name, text):
-    """One page as a tuple of its length, its two ends and its zlib stream."""
+def embed(name, text, shell=False):
+    """One page as a tuple of its length, its two ends and its zlib stream.
+
+    A shelled page adds its shell's opening and closing, and its length and ends are those of
+    the shell as the drive will hold it.
+    """
     if not text.isascii():
         stray = sorted({c for c in text if not c.isascii()})
         sys.exit("{} contains {}, and it has to be ASCII to reach the drive a "
@@ -345,22 +395,45 @@ def embed(name, text):
     packed = zlib.compress(text.encode("ascii"), 9)
     lines = ["    {!r}".format(packed[at:at + BYTES_PER_LINE])
              for at in range(0, len(packed), BYTES_PER_LINE)]
-    return "{} = ({}, {!r}, {!r}, (\n{}\n))\n".format(
-        name, len(text), text[:EDGE], text[-EDGE:], "\n".join(lines))
+    if not shell:
+        return "{} = ({}, {!r}, {!r}, (\n{}\n))\n".format(
+            name, len(text), text[:EDGE], text[-EDGE:], "\n".join(lines))
+    opening, closing = shell_ends(text)
+    drive = opening + base64.b64encode(packed).decode("ascii") + closing
+    return "{} = ({}, {!r}, {!r}, (\n{}\n), {!r}, {!r})\n".format(
+        name, len(drive), drive[:EDGE], drive[-EDGE:], "\n".join(lines),
+        opening.encode("ascii"), closing.encode("ascii"))
+
+
+def shell_ends(text):
+    """The opening and closing of a page's shell, titled as the page is."""
+    title = re.search(r"<title>(.*?)</title>", text)
+    return SHELL_OPENING.format(title.group(1) if title else ""), SHELL_CLOSING
 
 
 def unpacked(module_text):
-    """Each page of a module's text, inflated, after checking its length and ends agree."""
+    """
+    Each page of a module's text, inflated, after checking its length and ends agree, and the
+    names of the pages it carries as shells.
+    """
     namespace = {}
     exec(compile(module_text, MODULE_NAME, "exec"), namespace)
     pages = {}
+    shelled = set()
     for name in ("PICKER", "EDITOR", "CATALOGUE"):
-        size, head, tail, packed = namespace[name]
+        size, head, tail, packed = namespace[name][:4]
         text = zlib.decompress(packed).decode("ascii")
-        if (size, head, tail) != (len(text), text[:EDGE], text[-EDGE:]):
+        drive = text
+        # Check if the page is shelled, which the drive holds as its shell
+        if len(namespace[name]) == 6:
+            opening, closing = namespace[name][4:]
+            drive = (opening.decode("ascii") + base64.b64encode(packed).decode("ascii") +
+                     closing.decode("ascii"))
+            shelled.add(name)
+        if (size, head, tail) != (len(drive), drive[:EDGE], drive[-EDGE:]):
             sys.exit("{} carries a length or ends that are not its page's".format(name))
         pages[name] = text
-    return pages
+    return pages, shelled
 
 
 def stale_files(generated):
@@ -421,23 +494,24 @@ def main():
             with open(path, encoding="utf-8", newline="") as f:
                 sources[name] = f.read()
 
+    shelled = set(SHELLED) if board.get("shell", False) else set()
     if args.check:
         stale = stale_files(generated)
         with open(module, encoding="utf-8") as f:
-            if unpacked(f.read()) != sources:
+            if unpacked(f.read()) != (sources, shelled):
                 stale.append(module)
         if stale:
             sys.exit("stale, rebuild with tools/build_editor.py: " + ", ".join(stale))
         print("editor pages and module are up to date")
         return
 
-    parts = [MODULE_HEADER]
+    parts = [MODULE_HEADER + (SHELL_HEADER if shelled else "")]
     for name in ("PICKER", "EDITOR", "CATALOGUE"):
-        parts.append(embed(name, sources[name]))
+        parts.append(embed(name, sources[name], name in shelled))
     module_text = "\n".join(parts)
 
     # The packing has to invert exactly: parse the module back and compare
-    if unpacked(module_text) != sources:
+    if unpacked(module_text) != (sources, shelled):
         sys.exit("the pages do not survive the module round trip")
 
     generated[module] = module_text

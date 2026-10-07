@@ -9,6 +9,7 @@ of the button passed to service() shows or hides it, and hiding it, or ejecting 
 the computer, re-reads the file. An eject does not show it again.
 """
 
+import binascii
 import deflate
 import errno
 import io
@@ -136,6 +137,15 @@ def __inflate(packed, f):
         f.write(memoryview(chunk)[:count])
 
 
+def __encode(packed, f):
+    """Write a zlib stream to the open file as base64, a chunk at a time."""
+    # A multiple of three bytes encodes without padding, so the chunks join up
+    step = __INFLATE_CHUNK // 4 * 3
+    view = memoryview(packed)
+    for at in range(0, len(packed), step):
+        f.write(binascii.b2a_base64(view[at:at + step], newline=False))
+
+
 # The shipped documents the last mount left stale for want of room, for autofx to
 # say beside the file's own problems: a console line reaches nobody with only the
 # drive in front of them
@@ -151,12 +161,17 @@ def __heal(fs, name, document):
     """Put a shipped file back on the drive, unless it is already there.
 
     The document is its text, or a packed page from fx_editor, which is its length,
-    its two ends and its zlib stream.
+    its two ends and its zlib stream. A packed page may also carry the opening and
+    closing of a page that inflates itself in the browser, and is then written as
+    those around its stream in base64, the length and ends being that page's.
     """
     path = MOUNT_POINT + "/" + name
     packed = None
+    opening = closing = None
     if isinstance(document, str):
         size, head, tail = __ends(document)
+    elif len(document) == 6:
+        size, head, tail, packed, opening, closing = document
     else:
         size, head, tail, packed = document
     if __holds(path, size, head, tail):
@@ -185,8 +200,12 @@ def __heal(fs, name, document):
         with open(path, "w" if packed is None else "wb") as f:
             if packed is None:
                 f.write(document)
-            else:
+            elif opening is None:
                 __inflate(packed, f)
+            else:
+                f.write(opening)
+                __encode(packed, f)
+                f.write(closing)
         fs.chmod(name, __ATTR_READ_ONLY, __ATTR_READ_ONLY)
     except OSError:
         # A full drive has nowhere to put it. The board comes up regardless, since a
