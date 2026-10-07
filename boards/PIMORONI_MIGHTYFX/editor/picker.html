@@ -15028,10 +15028,8 @@ function readLights(bodies) {
   runs.forEach(function (run) {
     if (run.strip && lengths[run.name]) stripSet(run, lengths[run.name].values);
   });
-  // Check if this board's strips share terminals, where a file naming any strip is the board as
-  // built: the strips it names are fitted and no others
-  if (runs.some(function (run) { return run.strip && run.takes.length; }) &&
-      Object.keys(lengths).length) {
+  // A file naming any strip is the board as built, so the strips it names are fitted and no others
+  if (Object.keys(lengths).length) {
     runs.forEach(function (run) {
       if (run.strip && !lengths[run.name]) stripSet(run, {there: false});
     });
