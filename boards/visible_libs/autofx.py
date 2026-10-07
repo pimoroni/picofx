@@ -213,13 +213,13 @@ INDICATOR_LEVEL = 0.75
 # One length for all of them, so the count is the only thing carrying the scale
 FLASH_MS = 150
 
-# What the outputs say where a file cannot, as (colour, level, times, period). Every
-# board carries indicator LEDs shadowing its outputs, so colour reaches a user
-# whatever they have wired in and is what they read first; the count reaches anyone
-# whose indicators are removed. Both climb with how much trouble the reader is in,
-# and red lands on the one condition with nothing else to say it, errors.txt speaking
-# for the blue and the drive itself for the white. Never red against green, the pair
-# most often confused by eye.
+# What the indicators say where a file cannot, as (colour, level, times, period). A
+# board carries indicator LEDs shadowing its outputs, or one LED of its own where it
+# has no outputs, so colour reaches a user whatever they have wired in and is what
+# they read first; the count reaches anyone whose indicators are removed. Both climb
+# with how much trouble the reader is in, and red lands on the one condition with
+# nothing else to say it, errors.txt speaking for the blue and the drive itself for
+# the white. Never red against green, the pair most often confused by eye.
 #
 # White lights three channels and still reads dimmer than one channel does at the
 # same level, so its own is set by eye rather than calculated.
@@ -240,6 +240,10 @@ TRANSFER = (WHITE, 0.1, 0.35)
 # would otherwise stop and start between them.
 TRANSFER_STEP_MS = 120
 TRANSFER_HOLD_MS = 500
+
+# How often a single indicator flashes while the computer is copying, lit for one step at
+# the end of each period, since a spot with nowhere to travel would hold it steady
+TRANSFER_PERIOD_MS = 840
 
 # What one pass of the spot costs as the drive changes hands, per output. Half the
 # transfer's step: this says something happened rather than that it is still going
@@ -1626,24 +1630,44 @@ def report(problems, path, running=True):
     return True
 
 
+def __indicators(fx):
+    """The LEDs a signal shows on: the outputs, or the board's own LED where it has none."""
+    if fx.outputs:
+        return fx.outputs
+    rgb = getattr(fx, "rgb", None)
+    return [] if rgb is None else [rgb]
+
+
+def __flashed(fx):
+    """
+    The LEDs a flash shows on: the indicators, and the board's own LED beside its outputs too,
+    where mono outputs alone would show the count and not the colour. The board's LED takes
+    no part in the spot, sitting outside the line the outputs make.
+    """
+    lights = __indicators(fx)
+    rgb = getattr(fx, "rgb", None)
+    return lights if rgb is None or rgb in lights else lights + [rgb]
+
+
 def indicate(fx, pattern=PROBLEM):
     """
-    Flash every output together in the pattern's colour, or plain where an output
-    shows none. Nothing an effect does starts like this, so it reads as a signal
+    Flash every indicator together in the pattern's colour, or plain where one shows
+    no colour. Nothing an effect does starts like this, so it reads as a signal
     rather than as the show.
     """
     colour, level, times, period_ms = pattern
     red, green, blue = (part * level for part in colour)
+    lights = __flashed(fx)
 
     for _ in range(times):
-        for output in fx.outputs:
+        for output in lights:
             if isinstance(output, RGBLED):
                 output.set_rgb(red, green, blue)
             else:
                 output.brightness(level)
         time.sleep_ms(period_ms)
 
-        for output in fx.outputs:
+        for output in lights:
             output.off()
         time.sleep_ms(period_ms)
 
@@ -1834,15 +1858,15 @@ def __resume(players, fx):
     frame, which the players paint over. The outputs only, since clear() would
     take a strip's player with it.
     """
-    for output in fx.outputs:
+    for output in __indicators(fx):
         output.off()
     __start(players, fx)
 
 
 def __spot(fx, lit):
-    """One output at the travelling level, the rest at the resting floor."""
+    """The indicator at lit at the travelling level, the rest at the resting floor."""
     colour, floor, spot = TRANSFER
-    for index, output in enumerate(fx.outputs):
+    for index, output in enumerate(__indicators(fx)):
         level = spot if index == lit else floor
         if isinstance(output, RGBLED):
             output.set_rgb(colour[0] * level, colour[1] * level, colour[2] * level)
@@ -1863,7 +1887,7 @@ def __handover(fx, to_board):
     is the only direction it can mean: the drive reports a write and never a
     read. Half the transfer's step, so the whole pass is brief.
     """
-    count = len(fx.outputs)
+    count = len(__indicators(fx))
     order = range(count) if to_board else range(count - 1, -1, -1)
     for lit in order:
         __spot(fx, lit)
@@ -1873,7 +1897,7 @@ def __handover(fx, to_board):
 def __transfer_frame(fx, at):
     """
     One frame of the wait shown while the computer is copying: a spot travelling the
-    outputs over a resting floor, so a transfer reads as something happening rather
+    indicators over a resting floor, so a transfer reads as something happening rather
     than as the board having stopped.
 
     Driven from the caller's own loop rather than a player, since the players are
@@ -1886,7 +1910,11 @@ def __transfer_frame(fx, at):
     declared into one nothing addresses afterwards. Every frame sent is another
     that can be torn, so the strips are left holding what they have.
     """
-    __spot(fx, (at // TRANSFER_STEP_MS) % len(fx.outputs))
+    lights = __indicators(fx)
+    if len(lights) == 1:
+        __spot(fx, 0 if at % TRANSFER_PERIOD_MS >= TRANSFER_PERIOD_MS - TRANSFER_STEP_MS else -1)
+    elif lights:
+        __spot(fx, (at // TRANSFER_STEP_MS) % len(lights))
 
 
 def __read_program(name, problems):
