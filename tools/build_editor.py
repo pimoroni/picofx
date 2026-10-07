@@ -49,7 +49,8 @@ EDGE = 512
 BYTES_PER_LINE = 64
 
 # The board's description: its name, outputs, strips, screens, sound, the examples it offers, and
-# the folder of examples its filesystem carries, as its uf2-copyfiles.sh copies them
+# the folder of examples its filesystem carries, as its uf2-copyfiles.sh copies them, and the name
+# those examples give the board
 DESCRIPTION_NAME = "fx_board.json"
 
 # The folders of picker parts a board takes only where its description has the feature
@@ -63,25 +64,27 @@ FEATURE_FOLDERS = {
 EXAMPLE_NEEDS = {"screens": "a screen", "audio": "a speaker", "motors": "motors",
                  "servos": "a servo", "strips": "a strip"}
 
-# What an example uses beyond the board, read from its source. Every example exits on Boot, so
-# Boot counts only where its opening string gives the button another job
-EXAMPLE_USES = [("outputs", r"mighty\.(outputs|monos)\b|ColourPlayer|MonoPlayer"),
+# What an example uses beyond the board, read from its source, {board} standing for the name the
+# board's examples give it. Every example exits on Boot, so Boot counts only where its opening
+# string gives the button another job
+EXAMPLE_USES = [("outputs", r"{board}\.(outputs|monos)\b|ColourPlayer|MonoPlayer"),
+                ("rgb", r"{board}\.rgb\b"),
                 ("screen", r"^from screens import|SPCE\.SCREEN"),
                 ("pair", r"ScreenPair"),
-                ("hub", r"mighty\.hub\b|SPCE\.HUB"),
-                ("strip", r"mighty\.strip_[lr]\b"),
-                ("sound", r"mighty\.wav\b"),
+                ("hub", r"{board}\.hub\b|SPCE\.HUB"),
+                ("strip", r"{board}\.strip_[lr]\b"),
+                ("sound", r"{board}\.wav\b"),
                 ("remote", r"aye_arr|from sensor import IR"),
                 ("qwst", r"^from (breakout_\w+|lsm6ds3) import"),
                 # Only where one is needed, an optional one being written "ANALOG if"
                 ("analog", r"sensor=ANALOG\)"),
                 ("motor", r"MotorDriver|SPCE\.MOTOR"),
-                ("servo", r"^from servo import|mighty\.servo_[lr]\b"),
+                ("servo", r"^from servo import|{board}\.servo_[lr]\b"),
                 ("wifi", r"^import network|urequests|^import requests"),
                 ("button", r'Press "Boot" (?!to exit)|press Boot|boot_taps')]
 
 # A program that looks for a screen on each port runs on one or on two
-EITHER_SCREEN = r"for port in \(mighty\.spce_a, mighty\.spce_b\)"
+EITHER_SCREEN = r"for port in \({board}\.spce_a, {board}\.spce_b\)"
 
 # The one argument the examples read, the screen's size, taken with a default where none is given
 SIZE_ARGUMENT = r'^SCREEN_SIZE = "([^"]+)" if not sys\.argv\[1:\] else sys\.argv\[1\]'
@@ -90,11 +93,12 @@ SIZE_ARGUMENT = r'^SCREEN_SIZE = "([^"]+)" if not sys\.argv\[1:\] else sys\.argv
 PICKER_END = "</script>\n</body>\n</html>\n"
 
 
-def uses_of(source):
-    """What an example's source says it uses, in EXAMPLE_USES order."""
+def uses_of(source, variable):
+    """What an example's source says it uses, in EXAMPLE_USES order, the board named variable."""
+    board = re.escape(variable)
     found = [name for name, pattern in EXAMPLE_USES
-             if re.search(pattern, source, re.MULTILINE)]
-    if re.search(EITHER_SCREEN, source):
+             if re.search(pattern.replace("{board}", board), source, re.MULTILINE)]
+    if re.search(EITHER_SCREEN.replace("{board}", board), source):
         found = ["either" if name == "pair" else name for name in found]
         if "either" not in found:
             found.append("either")
@@ -106,12 +110,12 @@ def uses_of(source):
     return found
 
 
-def board_examples(repo_dir, examples):
+def board_examples(repo_dir, board):
     """The examples the board carries, each with its path there and its opening sentence."""
     found = []
-    if not examples:
+    if not board["examples"]:
         return json.dumps(found)
-    root = os.path.join(repo_dir, examples)
+    root = os.path.join(repo_dir, board["examples"])
     for folder, _dirs, files in sorted(os.walk(root)):
         where = os.path.relpath(folder, root).replace(os.sep, "/")
         if where == "." or where.split("/")[0] == "assets":
@@ -127,7 +131,7 @@ def board_examples(repo_dir, examples):
             example = {"path": "examples/" + where + "/" + name, "folder": where,
                        "does": first.group(1) if first else words,
                        "needs": EXAMPLE_NEEDS.get(where.split("/")[0]),
-                       "uses": uses_of(source)}
+                       "uses": uses_of(source, board["example_variable"])}
             # The arguments it reads, so the page offers those and no others
             size = re.search(SIZE_ARGUMENT, source, re.MULTILINE)
             if size:
@@ -177,7 +181,7 @@ def picker(board_dir, repo_dir):
             text += f.read()
     text = text.replace("__BOARD_NAME__", board["name"])
     text = text.replace("__BOARD__", json.dumps(board, indent=1))
-    text = text.replace("__EXAMPLES__", board_examples(repo_dir, board["examples"]))
+    text = text.replace("__EXAMPLES__", board_examples(repo_dir, board))
     text = text.replace("__THUMBS__", thumbnails(board_dir)) + PICKER_END
     left = sorted(set(re.findall(r"__[A-Z_]+__", text)))
     if left:

@@ -1629,6 +1629,7 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
 var BOARD = {
  "name": "Mighty FX",
  "examples": "examples/mighty_fx/examples",
+ "example_variable": "mighty",
  "outputs": [
   {
    "name": "out1",
@@ -12771,6 +12772,10 @@ var FEATURES = [
   ["outputs", "the outputs", "outputs",
    "<circle class='f' cx='3.8' cy='10' r='3'/><circle class='f' cx='12' cy='10' r='3'/>" +
    "<circle class='f' cx='20.2' cy='10' r='3'/><path d='M1.5 18h21' stroke-width='2.2'/>"],
+  // Three lights overlapping, as the three channels of one RGB output
+  ["rgb", "the RGB output", "RGB",
+   "<circle class='f' cx='12' cy='8' r='5'/><circle cx='8' cy='15' r='5' stroke-width='2'/>" +
+   "<circle cx='16' cy='15' r='5' stroke-width='2'/>"],
   // One panel filled, two apart for a pair, the second outlined where it is optional, six for a hub
   ["screen", "a screen", "screen", "<rect class='f' x='3' y='5' width='18' height='14' rx='2'/>"],
   ["either", "one screen or two", "1 or 2 screens",
@@ -13417,9 +13422,10 @@ function renderProgramView() {
 // A chip for each thing an offered program can use, all on to begin with. A chip turned off is
 // something not to hand, so every program needing it goes, and a program stays only while all it
 // uses is on. One screen or two is had with either a screen or two, so it has no chip of its own,
-// and every board has its outputs and its Boot button, so neither has one
+// and every board has its outputs and its Boot button, and an RGB output where it has one, so
+// none of those has one
 
-var CHIPLESS = ["either", "outputs", "button"];
+var CHIPLESS = ["either", "outputs", "rgb", "button"];
 
 var unhad = [];
 

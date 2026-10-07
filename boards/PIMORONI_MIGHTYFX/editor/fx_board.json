@@ -1,6 +1,7 @@
 {
  "name": "Mighty FX",
  "examples": "examples/mighty_fx/examples",
+ "example_variable": "mighty",
  "outputs": [
   {"name": "out1", "kind": "colour", "breaks_out": true},
   {"name": "out2", "kind": "colour", "breaks_out": true},
