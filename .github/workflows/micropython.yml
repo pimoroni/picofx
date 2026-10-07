@@ -36,6 +36,9 @@ jobs:
             shortname: mighty_fx_drive
             board: PIMORONI_MIGHTYFX
             variant: drive
+          - name: Plasma 2350
+            shortname: plasma_2350
+            board: PIMORONI_PLASMA2350
 
     env:
       # MicroPython version will be contained in github.event.release.tag_name for releases

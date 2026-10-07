@@ -1,0 +1,4 @@
+lib/*.py
+lib/picofx/*.py
+lib/picofx/colour/*.py
+lib/picofx/mono/*.py

@@ -1,0 +1,18 @@
+{
+    "deploy": [
+        "../deploy.md"
+    ],
+    "docs": "",
+    "features": [
+        "USB Type-C"
+    ],
+    "id": "pimoroni-plasma2350",
+    "images": [
+        "pimoroni-plasma2350.jpg"
+    ],
+    "mcu": "rp2350",
+    "product": "Pimoroni Plasma 2350",
+    "thumbnail": "",
+    "url": "https://shop.pimoroni.com/products/plasma-2350",
+    "vendor": "Pimoroni"
+}
