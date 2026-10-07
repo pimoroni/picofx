@@ -5,9 +5,11 @@ Assembles a board's editor/picker.html from the parts every board shares in
 boards/editor/picker/, any of its own in its editor/picker/, its description in
 editor/fx_board.json and the thumbnails in editor/thumbs/. A part in one of the feature folders
 goes in only for a board with that feature. Generates catalogue.js from the live autofx tables
-so a page always offers what the firmware it ships with provides, and writes the pages and
-catalogue compressed into a frozen module for fx_drive to heal onto the drive. A board with no
-frozen_libs/ carries no FX drive, and gets its picker.html alone. The parts and pages are
+so a page always offers what the firmware it ships with provides, its strips and screen ports
+from the board's class or, where the class is not in this repository, from its description. It
+writes the pages and catalogue compressed into a frozen module for fx_drive to heal onto the
+drive. A board with no frozen_libs/ carries no FX drive, and gets its picker.html and
+catalogue.js alone. The parts and pages are
 committed and the module is generated, so run this after editing a part, a page, the
 description or anything the catalogue reads.
 
@@ -265,9 +267,18 @@ def check_board(board_dir, board):
             DESCRIPTION_NAME))
 
 
-def catalogue(repo_dir, board_dir):
+def described(board):
+    """What a board's description says its class would declare, for a board whose class is not
+    in this repository."""
+    screens = board["screens"] or {"ports": [], "hub": False}
+    return {"STRIPS": [(strip["name"], None) for strip in board["strips"]],
+            "SCREENS": [(port["id"], None, None) for port in screens["ports"]],
+            "hub": screens["hub"]}
+
+
+def catalogue(repo_dir, board_dir, board):
     """catalogue.js, from the same tables autofx reads on the board, with the strips and screen
-    ports its class declares."""
+    ports its class declares, or its description where its class is not here."""
     fake = types.ModuleType("machine")
     for name in ("PWM", "Pin", "Timer", "SPI"):
         setattr(fake, name, type(name, (), {}))
@@ -279,7 +290,7 @@ def catalogue(repo_dir, board_dir):
     sys.path.insert(0, os.path.join(repo_dir, "boards", "visible_libs"))
     import autofx
 
-    declared = board_declares(board_dir) or {"STRIPS": [], "SCREENS": [], "hub": False}
+    declared = board_declares(board_dir) or described(board)
     strips = [name.lower() for name, _prop in declared["STRIPS"]]
     screens = [name.lower() for name, _prop, _spi in declared["SCREENS"]]
     sizes = autofx.SCREEN_SIZES + ((autofx.HUB,) if board_hub(declared) else ())
@@ -372,18 +383,20 @@ def main():
     editor_dir = os.path.join(args.board_dir, "editor")
     module = os.path.join(args.board_dir, "frozen_libs", MODULE_NAME)
 
-    # What the generated files should hold, the picker being generated as well as embedded
-    generated = {os.path.join(editor_dir, "picker.html"): picker(args.board_dir, repo_dir)}
+    # What the generated files should hold, the picker and catalogue being generated as well as
+    # embedded. The catalogue is the autofx tables the board's firmware carries
+    with open(os.path.join(editor_dir, DESCRIPTION_NAME), encoding="utf-8") as f:
+        board = json.load(f)
+    catalogue_path = os.path.join(editor_dir, "catalogue.js")
+    generated = {os.path.join(editor_dir, "picker.html"): picker(args.board_dir, repo_dir),
+                 catalogue_path: catalogue(repo_dir, args.board_dir, board)}
 
-    # A board with no frozen libraries carries no FX drive, so it takes the picker alone. The
-    # catalogue is the autofx tables its firmware would carry, and with none the page takes
-    # its ports and strips from the board's description
+    # A board with no frozen libraries carries no FX drive, so it takes the pages alone
     if not os.path.isdir(os.path.dirname(module)):
         build_page_only(generated, args.check)
         return
 
-    sources = {"CATALOGUE": catalogue(repo_dir, args.board_dir)}
-    generated[os.path.join(editor_dir, "catalogue.js")] = sources["CATALOGUE"]
+    sources = {"CATALOGUE": generated[catalogue_path]}
     for name, page in PAGES:
         path = os.path.join(editor_dir, page)
         if path in generated:
