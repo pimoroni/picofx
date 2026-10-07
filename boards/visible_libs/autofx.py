@@ -2063,7 +2063,17 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
 
     if program:
         if source is not None:
-            __run_program(program, source, settings.get("args", ()), problems)
+            # Nothing here looks at the drive until the program ends, so a save that
+            # would reload the file resets the board instead, which then reads it as at
+            # power on. The older volumes some harnesses hand in cannot
+            reset_on_save = getattr(volume, "reset_on_save", None)
+            if reset_on_save is not None:
+                reset_on_save(True)
+            try:
+                __run_program(program, source, settings.get("args", ()), problems)
+            finally:
+                if reset_on_save is not None:
+                    reset_on_save(False)
 
         # The board is the effects' again, so the screen entries put off for the
         # program are built now, before the report, so anything wrong with them is in it

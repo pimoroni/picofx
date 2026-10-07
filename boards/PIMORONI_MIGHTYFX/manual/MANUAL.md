@@ -646,9 +646,10 @@ which then runs the program as it would from power on.
 
 The effects stop while a program runs, and the board is busy with it, so
 **Boot** and ejecting do nothing. The drive is shown anyway, even with `drive`
-set to `manual`, so you can still edit `effects.txt`; press **Reset** for the
-change to take. A program cannot read files from this drive while it
-runs, so put anything it needs on the board's own filesystem.
+set to `manual`, so you can still edit `effects.txt`. With `reload=auto`, saving
+it restarts the board, which then plays whatever it now says; without, press
+**Reset** for the change to take. A program cannot read files from this drive
+while it runs, so put anything it needs on the board's own filesystem.
 
 `screenA` and `screenB` describe the screens this file's own entries play on, so
 a program never sees them: it sets its own up. Pass it the size in `args` if it

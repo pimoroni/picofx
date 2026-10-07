@@ -91,6 +91,7 @@ __watch_at = None
 __watch_buffer = None
 __reset_at = None
 __on_reset = None
+__save_timer = None
 
 
 def __ends(text):
@@ -363,6 +364,53 @@ def __effects_entry():
     return None
 
 
+def __entry_settled():
+    """
+    Whether effects.txt's directory entry has changed and read the same on two
+    looks in a row, so a save has landed. Each call is one look.
+    """
+    global __entry_seen, __entry_pending
+    entry = __effects_entry()
+    if __entry_seen is None:
+        __entry_seen = entry
+    elif entry != __entry_seen:
+        if entry == __entry_pending:
+            return True
+        __entry_pending = entry
+    else:
+        __entry_pending = None
+    return False
+
+
+def __reset_if_saved(_timer):
+    """The save watcher for while nothing calls service(), run by reset_on_save()."""
+    global __entry_pending
+    # Timer callbacks arrive via the scheduler, so one already in flight at deinit
+    # can still run after the watcher is turned off
+    if __save_timer is None or not (__exposed and __watching):
+        return
+    if rp2.is_msc_busy():
+        # A save may still be in flight, so nothing seen counts yet
+        __entry_pending = None
+    elif __entry_settled():
+        machine.reset()
+
+
+def reset_on_save(enabled):
+    """
+    Whether a save that watch() would answer resets the board instead, for a caller
+    that hands the board to something which never calls service(). A soft timer does
+    the polling, so it runs wherever the computer can save at all, the USB task
+    being scheduled the same way. An eject resets nothing.
+    """
+    global __save_timer
+    if __save_timer is not None:
+        __save_timer.deinit()
+        __save_timer = None
+    if enabled:
+        __save_timer = machine.Timer(period=WATCH_POLL_MS, callback=__reset_if_saved)
+
+
 def exposed():
     """Whether the connected computer currently owns the drive."""
     return __exposed
@@ -545,21 +593,14 @@ def service(pressed):
 
     # The save watcher, under everything the button asked for
     if event == IDLE and __exposed and __watching:
-        global __watch_at, __entry_seen, __entry_pending
+        global __watch_at, __entry_pending
         if rp2.is_msc_busy():
             # A save may still be in flight, so nothing seen counts yet
             __entry_pending = None
         elif __watch_at is None or time.ticks_diff(now, __watch_at) >= WATCH_POLL_MS:
             __watch_at = now
-            entry = __effects_entry()
-            if __entry_seen is None:
-                __entry_seen = entry
-            elif entry != __entry_seen:
-                if entry == __entry_pending:
-                    withdraw()
-                    return RELOADED
-                __entry_pending = entry
-            else:
-                __entry_pending = None
+            if __entry_settled():
+                withdraw()
+                return RELOADED
 
     return event
