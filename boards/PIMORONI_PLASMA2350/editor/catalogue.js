@@ -294,7 +294,7 @@ var CATALOGUE = {
   "pixel_double": "boolean"
  },
  "screen_ports": [
-  "screen"
+  "screena"
  ],
  "strips": [
   "stripdat",
@@ -331,7 +331,7 @@ var CATALOGUE = {
   ],
   "program": null,
   "args": null,
-  "screen": [
+  "screena": [
    "2.8",
    "1.54"
   ],
@@ -349,21 +349,21 @@ var CATALOGUE = {
   "colour": "RGB LED",
   "strips": [
    [
-    "stripdat",
+    "stripDat",
     "DAT"
    ],
    [
-    "stripclk",
+    "stripClk",
     "CLK"
    ],
    [
-    "stripapa",
+    "stripApa",
     "both terminals, DAT and CLK"
    ]
   ],
   "screens": [
    [
-    "screen",
+    "screenA",
     "SP/CE"
    ]
   ],
