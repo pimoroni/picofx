@@ -1,7 +1,8 @@
 <script>
 // The FX picker, a page for choosing what the board plays and saving it as effects.txt. It is
-// the numbered parts in this folder joined in number order, with those in the screens, hub and
-// sound folders for a board that has them, and this first part holds the looks.
+// the numbered parts in this folder and any of the board's own, joined in number order, those in
+// the screens, hub and sound folders only for a board that has them. This first part holds the
+// looks.
 
 // The board the page is for, from its editor/fx_board.json: its outputs, strips, screen ports,
 // whether it has a hub, sound and the network looks, and the examples it offers

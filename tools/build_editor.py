@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Turns a board's editor pages into the frozen module the FX drive carries.
 
-Assembles editor/picker.html from the parts in editor/picker/, the board's description in
-editor/fx_board.json and the thumbnails in editor/thumbs/. A part in one of the picker's feature
-folders goes in only for a board with that feature. Generates catalogue.js from the live autofx
-tables so a page always offers what the firmware it ships with provides, and writes the pages
-and catalogue compressed into a frozen module for fx_drive to heal onto the drive. The parts and
+Assembles a board's editor/picker.html from the parts every board shares in
+boards/editor/picker/, any of its own in its editor/picker/, its description in
+editor/fx_board.json and the thumbnails in editor/thumbs/. A part in one of the feature folders
+goes in only for a board with that feature. Generates catalogue.js from the live autofx tables
+so a page always offers what the firmware it ships with provides, and writes the pages and
+catalogue compressed into a frozen module for fx_drive to heal onto the drive. The parts and
 pages are committed and the module is generated, so run this after editing a part, a page, the
 description or anything the catalogue reads.
 
@@ -52,6 +53,9 @@ BYTES_PER_LINE = 64
 # the folder of examples its filesystem carries, as its uf2-copyfiles.sh copies them, and the name
 # those examples give the board
 DESCRIPTION_NAME = "fx_board.json"
+
+# The picker's page and the parts every board shares, from the repository's root
+SHARED_PARTS = os.path.join("boards", "editor", "picker")
 
 # The folders of picker parts a board takes only where its description has the feature
 FEATURE_FOLDERS = {
@@ -155,17 +159,25 @@ def thumbnails(board_dir):
     return json.dumps(found, indent=1)
 
 
-def board_parts(folder, board):
-    """The board's numbered parts in number order, a feature folder's only where it has it."""
-    folders = [folder]
-    for name in sorted(os.listdir(folder)):
-        if not os.path.isdir(os.path.join(folder, name)):
-            continue
-        if name not in FEATURE_FOLDERS:
-            sys.exit("editor/picker/{}/ is not a feature folder the build knows".format(name))
-        if FEATURE_FOLDERS[name](board):
-            folders.append(os.path.join(folder, name))
+def board_parts(picker_folders, board):
+    """The board's numbered parts in number order, from the shared parts and any of its own, a
+    feature folder's only where it has it. A part of the board's own adds to the shared ones."""
+    folders = []
+    for folder in picker_folders:
+        folders.append(folder)
+        for name in sorted(os.listdir(folder)):
+            if not os.path.isdir(os.path.join(folder, name)):
+                continue
+            if name not in FEATURE_FOLDERS:
+                sys.exit("{} is not a feature folder the build knows".format(
+                    os.path.join(folder, name)))
+            if FEATURE_FOLDERS[name](board):
+                folders.append(os.path.join(folder, name))
     parts = [part for where in folders for part in glob.glob(os.path.join(where, "[0-9][0-9]_*.js"))]
+    names = [os.path.basename(part) for part in parts]
+    twice = sorted({name for name in names if names.count(name) > 1})
+    if twice:
+        sys.exit("{} is both a shared part and the board's own".format(", ".join(twice)))
     return sorted(parts, key=os.path.basename)
 
 
@@ -173,10 +185,11 @@ def picker(board_dir, repo_dir):
     """picker.html, from page.html and the numbered parts after it, with the board filled in."""
     with open(os.path.join(board_dir, "editor", DESCRIPTION_NAME), encoding="utf-8") as f:
         board = json.load(f)
-    folder = os.path.join(board_dir, "editor", "picker")
-    with open(os.path.join(folder, "page.html"), encoding="utf-8") as f:
+    shared = os.path.join(repo_dir, SHARED_PARTS)
+    own = os.path.join(board_dir, "editor", "picker")
+    with open(os.path.join(shared, "page.html"), encoding="utf-8") as f:
         text = f.read()
-    for part in board_parts(folder, board):
+    for part in board_parts([shared] + ([own] if os.path.isdir(own) else []), board):
         with open(part, encoding="utf-8") as f:
             text += f.read()
     text = text.replace("__BOARD_NAME__", board["name"])
