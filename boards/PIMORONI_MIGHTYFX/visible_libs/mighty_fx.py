@@ -72,6 +72,10 @@ class MightyFX:
     # which is most WS2812 strips'
     STRIP_ORDER = "grb"
 
+    # The strip connectors in order, each by the name it is written as and the property handing
+    # its strip back
+    STRIPS = (("stripL", "strip_l"), ("stripR", "strip_r"))
+
     # How long a strip takes to power up once the rail is on, and miss any frame sent sooner.
     # A 64 LED panel took one after 5ms and not after 2ms, so this is double that
     RAIL_SETTLE_MS = 10

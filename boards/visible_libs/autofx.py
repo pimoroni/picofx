@@ -56,12 +56,10 @@ BOARD = "board"
 
 # A strip's LEDs are named like the outputs, so 'stripL1-10' is a range of them and
 # the bare name is the whole run. One kind of channel per connector, since each is a
-# player of its own writing to its own strip.
-STRIPS = ("stripl", "stripr")
-
-# The channels that can show a colour, so a colour effect may play on them and a mono
-# effect is drawn in the tint they hold. A strip is one of these; a mono channel is not.
-CHROMATIC = ("colour",) + STRIPS
+# player of its own writing to its own strip. The board declares its strips, and those of
+# the board being loaded are kept here as (kind, property, name as written), the kind being
+# the name in lower case
+__BOARD_STRIPS = []
 
 # The player kinds that write the board's own outputs. A strip has a player of its
 # own and reaches none of them, so a file playing only there leaves the outputs to
@@ -198,14 +196,11 @@ PAIRED_SETTINGS = (("bright_min", "bright_max"), ("dim_min", "dim_max"),
 # file name, so it is answered when it is looked for rather than here. A screen's
 # size is a fact about the hardware, set once here where an entry's settings vary
 # per scene, and a strip's length is the same: it is the one channel count the board
-# cannot discover for itself.
+# cannot discover for itself. Each strip the board declares is a setting too, its value a
+# number rather than one of a set of words.
 BOARD_SETTINGS = {"drive": ("manual",), "reload": ("manual", "auto"),
                   "program": None, "args": None,
-                  "screena": SCREEN_SIZES + (HUB,), "screenb": SCREEN_SIZES + (HUB,),
-                  "stripl": None, "stripr": None}
-
-# The board settings whose value is a number rather than one of a set of words
-BOARD_COUNTS = STRIPS
+                  "screena": SCREEN_SIZES + (HUB,), "screenb": SCREEN_SIZES + (HUB,)}
 
 # A strip's colour order, written after its length as 'stripL=60|rgb', kept among the
 # board settings under the strip's name and this, which no file can write
@@ -2297,14 +2292,16 @@ def channels(fx):
     return mono, colour
 
 
-def __has_strips(fx):
-    """Whether this board has the header's strip connectors at all.
+def __learn_strips(fx):
+    """
+    Keep the strips the board declares, for everything that names a strip.
 
     Asked of the class, so no board need exist yet and no property is evaluated:
     MicroPython's dir() and getattr() both run a property's getter, and one that
     answers by raising would read as an absent connector.
     """
-    return hasattr(fx if isinstance(fx, type) else type(fx), "strip_l")
+    declared = getattr(fx if isinstance(fx, type) else type(fx), "STRIPS", ())
+    __BOARD_STRIPS[:] = [(name.lower(), prop, name) for name, prop in declared]
 
 
 def __board(fx, settings, problems):
@@ -2320,11 +2317,11 @@ def __board(fx, settings, problems):
         return fx
 
     declared = {}
-    for kind in STRIPS:
+    for kind, prop, _shown in __BOARD_STRIPS:
         count = settings.get(kind)
         if count:
             order = settings.get(kind + __ORDER)
-            declared["strip_" + kind[-1]] = (count, order) if order else count
+            declared[prop] = (count, order) if order else count
 
     # A hub is declared at construction, its panels on the connector named and its
     # selects on the other, so the board builds the hub itself
@@ -2367,15 +2364,14 @@ def strips(fx, lengths, problems):
     The strips the file asked for, as (kind, strip, count), and the kinds a board
     would not set up.
 
-    A board declares its strips as it is built and hands each back as strip_l or
-    strip_r, something taking set_rgb(index, red, green, blue). Those two names are
-    the only place this module knows anything about the header, so a board naming its
-    connectors differently changes them and nothing else.
+    A board declares its strips in STRIPS, each by the name a file writes and the
+    property handing it back, something taking set_rgb(index, red, green, blue), and is
+    built with each one's length given by that property's name.
     """
     built = []
     failed = set()
 
-    for kind in STRIPS:
+    for kind, prop, _shown in __BOARD_STRIPS:
         count = lengths.get(kind)
         if not count:
             continue
@@ -2397,7 +2393,7 @@ def strips(fx, lengths, problems):
             continue
 
         try:
-            strip = getattr(fx, "strip_" + kind[-1])
+            strip = getattr(fx, prop)
         # Reached where the board refused the length or offers no such connector,
         # which the board's own message may already have said. Said again here so an
         # entry naming the strip is answered rather than left with no slots
@@ -2450,10 +2446,11 @@ def __hardware_changed(fx, declared, for_pair=False):
             asked_hub.get("sizes") != __HUB.get("sizes"):
         return True
 
-    for kind in STRIPS:
+    __learn_strips(fx)
+    for kind, _prop, _shown in __BOARD_STRIPS:
         asked = declared.get(kind)
         running = __STRIPS.get(kind)
-        if asked and running is None and __has_strips(fx):
+        if asked and running is None:
             return True
         if running is not None and (asked != running[1] or
                                     declared.get(kind + __ORDER) != running[2]):
@@ -2478,15 +2475,21 @@ def __hardware_changed(fx, declared, for_pair=False):
 
 
 def __strip_of(name):
-    """The strip a channel name belongs to, or None where it names something else."""
-    for kind in STRIPS:
+    """The board's strip a channel name belongs to, or None where it names something else."""
+    for kind, _prop, _shown in __BOARD_STRIPS:
         if name == kind or (name.startswith(kind) and not name[len(kind)].isalpha()):
             return kind
     return None
 
 
 def __strip_shown(kind):
-    """The strip as the reader writes it, the connector letter back in capitals."""
+    """
+    The strip as the reader writes it, as the board declares it, or for one the board has not
+    got its last letter in capitals, as a connector letter is written.
+    """
+    for known, _prop, shown in __BOARD_STRIPS:
+        if known == kind:
+            return shown
     return kind[:-1] + kind[-1].upper()
 
 
@@ -3260,9 +3263,14 @@ def __check_board(entry, has_strips, problems, lines):
                 written[place] = at
             continue
 
-        if key not in BOARD_SETTINGS:
+        kinds = [kind for kind, _prop, _shown in __BOARD_STRIPS]
+        if key not in BOARD_SETTINGS and key not in kinds:
+            if not has_strips and key.startswith("strip"):
+                problems.append("line {}: this board has no strip connectors, so it "
+                                "has no {}".format(at, __strip_shown(key)))
+                continue
             problems.append("line {}: the board has no setting '{}', it takes {}".format(
-                at, key, ", ".join(sorted(BOARD_SETTINGS))))
+                at, key, ", ".join(sorted(list(BOARD_SETTINGS) + kinds))))
             continue
 
         # Whatever it was written as, since a setting limited to named values is
@@ -3278,12 +3286,7 @@ def __check_board(entry, has_strips, problems, lines):
 
         # A count is a number where every other board setting is a word or a file
         # name, and this entry keeps its values as written, so it is read here
-        if key in BOARD_COUNTS:
-            if not has_strips:
-                problems.append("line {}: this board has no strip connectors, so it "
-                                "has no {}".format(at, __strip_shown(key)))
-                continue
-
+        if key in kinds:
             length, _divider, order = text.partition("|")
             number = __number(length)
             fault = ("expected a number" if number is None
@@ -3565,9 +3568,9 @@ def __assemble(entries, slots, effects, levels, colours, curves, claimed, proble
             slot = slots.get(channel.name)
             if slot is None:
                 continue
-            if kind == "colour" and slot[0] not in CHROMATIC:
-                # A mono channel cannot show a colour, but a colour channel can play a
-                # mono effect: the player draws it in the channel's own tint
+            if kind == "colour" and slot[0] == "mono":
+                # A mono channel cannot show a colour, but a colour channel or a strip can
+                # play a mono effect: the player draws it in the channel's own tint
                 problems.append("line {}: {} brings its own colour, which {} cannot show".format(
                     entry.line, entry.effect, channel.name))
             else:
@@ -3733,7 +3736,8 @@ def load(text, fx, maker=None):
     would. Without a maker the change is reported instead.
     """
     entries, problems = parse(text)
-    has_strips = __has_strips(fx)
+    __learn_strips(fx)
+    has_strips = bool(__BOARD_STRIPS)
 
     # Board entries are settings rather than effects, a heading begins a scene, and
     # a screen name routes its whole entry to the screens, so a mistyped one is
@@ -3802,7 +3806,7 @@ def load(text, fx, maker=None):
     # Drop the length of any strip no entry plays on, so its connector stays off
     used = {__strip_of(channel.name) for group in grouped.values() for entry in group
             for channel in entry.channels}
-    for kind in STRIPS:
+    for kind, _prop, _shown in __BOARD_STRIPS:
         if kind not in used:
             board.pop(kind, None)
             board.pop(kind + __ORDER, None)
@@ -3872,8 +3876,10 @@ def load(text, fx, maker=None):
     effects = {kind: [None] * len(holds) for kind, holds in names}
     levels = {kind: [1.0] * len(holds) for kind, holds in names}
     curves = {kind: [None] * len(holds) for kind, holds in names}
+    # Every kind but the mono channels can show a colour, and holds the tint a mono effect
+    # is drawn in
     colours = {kind: [(255, 255, 255)] * len(holds) for kind, holds in names
-               if kind in CHROMATIC}
+               if kind != "mono"}
     claimed = {}
 
     always, _ = __assemble(grouped[None], slots, effects, levels, colours, curves,

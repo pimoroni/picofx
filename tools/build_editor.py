@@ -19,6 +19,7 @@ pages once inflated, since two zlib builds need not compress the same text to th
 """
 
 import argparse
+import ast
 import base64
 import glob
 import json
@@ -186,6 +187,7 @@ def picker(board_dir, repo_dir):
     """picker.html, from page.html and the numbered parts after it, with the board filled in."""
     with open(os.path.join(board_dir, "editor", DESCRIPTION_NAME), encoding="utf-8") as f:
         board = json.load(f)
+    check_strips(board_dir, board)
     shared = os.path.join(repo_dir, SHARED_PARTS)
     own = os.path.join(board_dir, "editor", "picker")
     with open(os.path.join(shared, "page.html"), encoding="utf-8") as f:
@@ -203,8 +205,42 @@ def picker(board_dir, repo_dir):
     return text
 
 
-def catalogue(repo_dir):
-    """catalogue.js, from the same tables autofx reads on the board."""
+def board_strips(board_dir):
+    """
+    The strips a board's class declares, as (name as written, property), read from its
+    source in visible_libs/ so no board need be imported. None where the board carries no
+    class here, and empty for a class declaring none.
+    """
+    sources = sorted(glob.glob(os.path.join(board_dir, "visible_libs", "*.py")))
+    if not sources:
+        return None
+    for path in sources:
+        with open(path, encoding="utf-8") as f:
+            tree = ast.parse(f.read(), path)
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ClassDef):
+                for item in node.body:
+                    if isinstance(item, ast.Assign) and any(
+                            getattr(target, "id", "") == "STRIPS" for target in item.targets):
+                        return [tuple(pair) for pair in ast.literal_eval(item.value)]
+    return []
+
+
+def check_strips(board_dir, board):
+    """Fail where the description names a strip the board's class does not declare."""
+    declared = board_strips(board_dir)
+    if declared is None:
+        return
+    names = [name.lower() for name, _prop in declared]
+    missing = [strip["name"] for strip in board["strips"] if strip["name"] not in names]
+    if missing:
+        sys.exit("{} names {}, which the board's class does not declare in STRIPS".format(
+            DESCRIPTION_NAME, ", ".join(missing)))
+
+
+def catalogue(repo_dir, board_dir):
+    """catalogue.js, from the same tables autofx reads on the board, with the strips its class
+    declares."""
     fake = types.ModuleType("machine")
     for name in ("PWM", "Pin", "Timer", "SPI"):
         setattr(fake, name, type(name, (), {}))
@@ -216,6 +252,8 @@ def catalogue(repo_dir):
     sys.path.insert(0, os.path.join(repo_dir, "boards", "visible_libs"))
     import autofx
 
+    strips = [name.lower() for name, _prop in board_strips(board_dir) or []]
+    board_settings = dict(autofx.BOARD_SETTINGS, **{strip: None for strip in strips})
     tables = {
         "effects": {name: {"kind": kind, "takes": list(takes)}
                     for name, (_cls, kind, _called, takes)
@@ -229,12 +267,12 @@ def catalogue(repo_dir):
         "colours": sorted(autofx.COLOURS),
         "channel_kinds": autofx.CHANNEL_KINDS,
         "screen_ports": sorted(autofx.SCREEN_PORTS),
-        "strips": list(autofx.STRIPS),
+        "strips": strips,
         "output_settings": list(autofx.OUTPUT_SETTINGS),
         "screen_settings": list(autofx.SCREEN_SETTINGS),
         "tiling": list(autofx.TILING),
         "board_settings": {key: (list(value) if isinstance(value, tuple) else value)
-                           for key, value in autofx.BOARD_SETTINGS.items()},
+                           for key, value in board_settings.items()},
     }
     return ("// Generated from the autofx tables. Do not edit.\n"
             "var CATALOGUE = " + json.dumps(tables, indent=1) + ";\n")
@@ -313,7 +351,7 @@ def main():
         build_page_only(generated, args.check)
         return
 
-    sources = {"CATALOGUE": catalogue(repo_dir)}
+    sources = {"CATALOGUE": catalogue(repo_dir, args.board_dir)}
     generated[os.path.join(editor_dir, "catalogue.js")] = sources["CATALOGUE"]
     for name, page in PAGES:
         path = os.path.join(editor_dir, page)
