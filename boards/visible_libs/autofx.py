@@ -1086,7 +1086,12 @@ def __expand(token, prefix, line, problems):
     # digits are read here instead, and the two answer alike
     if not first.isdigit() or (dash and not __is_number(last)):
         # Not numbered at all, so the whole item is the name, as `rgb` is
-        return [prefix + digits + ("." + suffix if suffix and suffix != "*" else "")], prefix
+        name = prefix + digits
+        # The board's own RGB output has components as a numbered output does, and no other
+        # name has any, so a star after one is dropped
+        if suffix == "*" and name == "rgb":
+            return ["{}.{}".format(name, component) for component in COMPONENTS], prefix
+        return [name + ("." + suffix if suffix and suffix != "*" else "")], prefix
 
     first = int(first)
     last = int(last) if dash else first
@@ -2313,9 +2318,12 @@ def channels(fx):
         else:
             mono.append((name, output))
 
+    # The board's own RGB output, which breaks into three mono channels as an output does
     rgb = getattr(fx, "rgb", None)
     if rgb is not None:
         colour.append(("rgb", rgb))
+        for letter, led in zip(COMPONENTS, (rgb.led_r, rgb.led_g, rgb.led_b)):
+            mono.append(("rgb.{}".format(letter), led))
 
     return mono, colour
 
