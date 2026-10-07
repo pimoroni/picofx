@@ -254,6 +254,24 @@ function readHubLines(bodies) {
   });
 }
 
+// ---- a picture deleted from the drive ---------------------------------------------------------
+
+driveParts.push({
+  // A picture still listed did not go, the drive saying so. One that did is also taken off
+  // every hub position showing it
+  gone: function (name) {
+    if (state.media.some(function (one) { return one.name === name; })) return;
+    store();
+    allBodies().forEach(function (body) {
+      Object.keys(body.places || {}).forEach(function (place) {
+        if (body.places[place].shows === name) body.places[place].shows = null;
+      });
+    });
+    apply(slotAt(state.at).body);
+    draw();
+  }
+});
+
 // ---- drawing the hub -------------------------------------------------------------------------
 
 // Two screens or a hub, the hub taking both connectors. It is always shown, so it can be seen

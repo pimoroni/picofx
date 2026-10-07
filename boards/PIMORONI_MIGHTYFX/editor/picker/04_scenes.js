@@ -43,6 +43,12 @@ function mostPlayed() {
 // own, in the order the parts come
 var bodyParts = [];
 
+// The parts that keep files on the FX drive, each registering how a walk of the drive finds
+// them (begin, then file or folder for each entry, then land), what it found as text to tell
+// one walk from the next, and how the scenes let go of a deleted file before the drive is walked
+// again (forget) and after it (gone)
+var driveParts = [];
+
 function capture() {
   var body = {look: mostPlayed(), active: active.name, runs: {},
               carried: JSON.parse(JSON.stringify(carried))};

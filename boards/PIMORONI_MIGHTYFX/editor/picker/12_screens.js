@@ -31,8 +31,6 @@ SCREENS.forEach(function (letter) {
 function turnForChosen(letter) { chosenAfresh(state.screens[letter]); }
 state.media = [];
 state.art = {};
-state.fileHandle = null;
-state.scanned = false;
 
 var BOARD_INK = "#0a0a0a";
 
@@ -535,6 +533,128 @@ function readScreens(bodies) {
   Object.keys(readOn).forEach(function (letter) {
     boardResidue.splice(boardResidue.indexOf(sizes[letter].token), 1);
   });
+}
+
+// ---- the pictures on the drive ------------------------------------------------------------------
+// What a screen can show: gifs and stills, PNG or JPEG, folders of them, which play as a
+// slideshow, and drawings
+
+var mediaFound = [];
+
+driveParts.push({
+  begin: function () { mediaFound = []; },
+  file: async function (name, handle) {
+    if (/\.gif$/i.test(name)) mediaFound.push({ name: name, kind: "gif", handle: handle });
+    else if (/\.(png|jpe?g)$/i.test(name)) mediaFound.push({ name: name, kind: "image", handle: handle });
+    else if (/\.py$/i.test(name)) {
+      // A Python file is a drawing only where its opening string says so
+      var drawing = null;
+      try {
+        drawing = drawingSaid(openingString(await (await handle.getFile()).text()));
+      } catch (e) {
+        drawing = null;
+      }
+      if (drawing) mediaFound.push({name: name, kind: "drawing", drawing: drawing});
+    } else return false;
+    return true;
+  },
+  folder: async function (name, handle) {
+    for await (var inner of handle.entries()) {
+      if (inner[1].kind === "file" && /\.(gif|png|jpe?g)$/i.test(inner[0])) {
+        mediaFound.push({ name: name, kind: "folder", thumbHandle: inner[1] });
+        return true;
+      }
+    }
+    return false;
+  },
+  land: function () {
+    mediaFound.sort(function (a, b) { return a.name < b.name ? -1 : 1; });
+    state.media = mediaFound;
+    // A drawing cannot run in the page, so it is shown by a face made from its opening string
+    mediaFound.forEach(function (one) { if (one.kind === "drawing") madeDrawing(one.name); });
+  },
+  said: function () {
+    return JSON.stringify(state.media.map(function (m) { return m.name + m.kind; }));
+  },
+  forget: function (name) {
+    allBodies().forEach(function (body) {
+      SCREENS.forEach(function (letter) {
+        if (body.screens[letter].shows === name) body.screens[letter].shows = null;
+      });
+    });
+    delete state.art[name];
+  }
+});
+
+// ---- pictures, read off the drive in turn ------------------------------------------------------
+// The drive is slow to read, so pictures come off it one at a time, those a screen or hub position
+// shows in any scene first and the rest of the gallery after them
+
+var pictureQueue = [];
+var pictureReading = null;
+
+// The pictures any scene puts on a screen or a hub position, worked out once a draw
+var shownThisDraw = null;
+
+drawSteps.before.push(function () { shownThisDraw = null; });
+
+function picturesShown() {
+  if (shownThisDraw) return shownThisDraw;
+  var shown = shownThisDraw = [];
+  var bodies = [capture(), state.always.body].concat(state.scenes.map(function (scene) {
+    return scene.body;
+  }));
+  bodies.forEach(function (body) {
+    if (!body) return;
+    Object.keys(body.screens || {}).forEach(function (letter) {
+      if (body.screens[letter].shows) shown.push(body.screens[letter].shows);
+    });
+    Object.keys(body.places || {}).forEach(function (place) {
+      if (body.places[place].shows) shown.push(body.places[place].shows);
+    });
+  });
+  return shown;
+}
+
+function readNextPicture() {
+  if (pictureReading || !pictureQueue.length) return;
+  shownThisDraw = null;
+  var shown = picturesShown();
+  pictureQueue.sort(function (a, b) {
+    return (shown.indexOf(b.name) >= 0) - (shown.indexOf(a.name) >= 0);
+  });
+  var next = pictureReading = pictureQueue.shift();
+  next.handle.getFile().then(function (file) {
+    return new Promise(function (settle) {
+      var url = URL.createObjectURL(file);
+      var probe = new Image();
+      probe.onload = function () {
+        state.art[next.name] = {url: url, w: probe.naturalWidth, h: probe.naturalHeight,
+                                ratio: probe.naturalWidth / probe.naturalHeight};
+        settle();
+      };
+      // One that will not load stays held empty, so it is not asked for again
+      probe.onerror = function () { settle(); };
+      probe.src = url;
+    });
+  }, function () {}).then(function () {
+    pictureReading = null;
+    draw();
+    readNextPicture();
+  });
+}
+
+function mediaArt(name) {
+  var held = state.art[name];
+  if (held) return held.ratio ? held : null;
+  var media = mediaNamed(name);
+  var handle = media && (media.kind === "folder" ? media.thumbHandle : media.handle);
+  if (!handle) return null;
+  // Held empty while it waits, so each is asked for once
+  state.art[name] = {url: null, ratio: 0};
+  pictureQueue.push({name: name, handle: handle});
+  setTimeout(readNextPicture, 0);
+  return null;
 }
 
 // ---- drawing the tab -------------------------------------------------------------------------

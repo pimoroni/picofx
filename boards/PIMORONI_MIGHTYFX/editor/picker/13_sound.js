@@ -183,6 +183,143 @@ function readSound(bodies) {
   });
 }
 
+// ---- the sounds on the drive --------------------------------------------------------------------
+
+var soundsFound = [];
+
+driveParts.push({
+  begin: function () { soundsFound = []; },
+  file: async function (name, handle) {
+    if (!/\.wav$/i.test(name)) return false;
+    soundsFound.push(name);
+    profileSound(name, handle);
+    return true;
+  },
+  land: function () {
+    soundsFound.sort();
+    state.sounds = soundsFound;
+  },
+  said: function () { return JSON.stringify(state.sounds); },
+  forget: function (name) {
+    allBodies().forEach(function (body) {
+      if (body.sound === name) {
+        body.sound = null;
+        body.soundLoop = false;
+      }
+    });
+    delete state.soundInfo[name];
+  }
+});
+
+// A wav's length and outline, the outline read at SOUND_SAMPLES points
+async function profileSound(name, handle) {
+  soundHandles[name] = handle;
+  if (state.soundInfo[name] !== undefined) return;
+  state.soundInfo[name] = null;
+  try {
+    var file = await handle.getFile();
+    var head = new DataView(await file.slice(0, 8192).arrayBuffer());
+    if (head.getUint32(0) !== 0x52494646 || head.getUint32(8) !== 0x57415645)
+      throw new Error("not a wav");
+    var at = 12;
+    var byteRate = 0;
+    var bits = 16;
+    var dataAt = 0;
+    var dataSize = 0;
+    while (at + 8 <= head.byteLength) {
+      var id = head.getUint32(at);
+      var size = head.getUint32(at + 4, true);
+      if (id === 0x666d7420) {                       // "fmt "
+        byteRate = head.getUint32(at + 16, true);
+        bits = head.getUint16(at + 22, true);
+      } else if (id === 0x64617461) {                // "data"
+        dataAt = at + 8;
+        dataSize = Math.min(size, file.size - dataAt);
+        break;
+      }
+      at += 8 + size + (size % 2);
+    }
+    if (!byteRate || !dataSize) throw new Error("no sound in it");
+
+    var bars = [];
+    for (var b = 0; b < SOUND_SAMPLES; b++) {
+      var from = dataAt + Math.floor(dataSize * b / SOUND_SAMPLES);
+      var take = Math.min(1024, dataAt + dataSize - from);
+      var slice = await file.slice(from, from + take).arrayBuffer();
+      var peak = 0;
+      if (bits === 16) {
+        var wide = new Int16Array(slice, 0, Math.floor(slice.byteLength / 2));
+        for (var i = 0; i < wide.length; i++) peak = Math.max(peak, Math.abs(wide[i]));
+        peak /= 32768;
+      } else {
+        var thin = new Uint8Array(slice);
+        for (var j = 0; j < thin.length; j++) peak = Math.max(peak, Math.abs(thin[j] - 128));
+        peak /= 128;
+      }
+      bars.push(peak);
+    }
+    state.soundInfo[name] = {seconds: Math.max(1, Math.round(dataSize / byteRate)), bars: bars};
+    draw();
+  } catch (e) {
+    state.soundInfo[name] = null;
+  }
+}
+
+// ---- hearing a sound --------------------------------------------------------------------------
+// Each sound on the drive has a play button in its tile's corner, so it can be heard as well as
+// seen. One plays at a time, and pressing it again, or playing another, stops it
+
+var soundHandles = {};
+var hearing = {name: null, audio: null, url: null};
+
+function stopHearing() {
+  if (hearing.audio) hearing.audio.pause();
+  if (hearing.url) URL.revokeObjectURL(hearing.url);
+  hearing = {name: null, audio: null, url: null};
+}
+
+async function hear(name) {
+  var wasHearing = hearing.name;
+  stopHearing();
+  if (wasHearing === name || !soundHandles[name]) {
+    draw();
+    return;
+  }
+  try {
+    var url = URL.createObjectURL(await soundHandles[name].getFile());
+    var audio = new Audio(url);
+    hearing = {name: name, audio: audio, url: url};
+    audio.onended = function () {
+      if (hearing.audio === audio) stopHearing();
+      draw();
+    };
+    draw();
+    await audio.play();
+  } catch (e) {
+    stopHearing();
+    banner("Could not play " + name + ": " + e.name + ".", true);
+    draw();
+  }
+}
+
+// A sound's tile with a way to hear it here, where the open drive holds it
+function withHearButton(tile, name) {
+  if (!name || !soundHandles[name]) return tile;
+  var playing = hearing.name === name;
+  // A tile is a button already, so this is a plain element taking the click, as its cross is
+  var button = document.createElement("span");
+  button.className = "hear" + (playing ? " playing" : "");
+  button.setAttribute("role", "button");
+  button.textContent = playing ? "\u25a0" : "\u25b6";
+  button.title = (playing ? "Stop " : "Play ") + name + " here";
+  button.onclick = function (event) {
+    event.stopPropagation();
+    hear(name);
+  };
+  tile.appendChild(button);
+  return tile;
+}
+
 // ---- drawing the tab ---------------------------------------------------------------------------
 
 // A sound's outline, filled edge to edge and mirrored about the middle. Each moment of it is
