@@ -2592,6 +2592,16 @@ def __strip_shown(kind):
     return kind[:-1] + kind[-1].upper()
 
 
+def __channel_shown(name):
+    """A channel name as the reader writes it, a strip's with its capitals back and its LEDs after."""
+    letters = name
+    while letters and not letters[-1].isalpha():
+        letters = letters[:-1]
+    if not letters.startswith("strip") or letters == "strip":
+        return name
+    return __strip_shown(letters) + name[len(letters):]
+
+
 def __resolve_strips(entries, lengths, has_strips, problems, said=()):
     """
     Expand a bare strip name into the run of LEDs it stands for, and answer a file
@@ -3694,7 +3704,7 @@ def __assemble(entries, slots, effects, levels, colours, curves, claimed, proble
         missing = [channel.name for channel in entry.channels if channel.name not in slots]
         if missing:
             problems.append("line {}: this board has no {}".format(
-                entry.line, ", ".join(missing)))
+                entry.line, ", ".join(__channel_shown(name) for name in missing)))
 
         for key in SCREEN_SETTINGS:
             if any(getattr(channel, key) is not None for channel in entry.channels):
