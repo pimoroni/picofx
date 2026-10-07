@@ -108,6 +108,19 @@ function withoutColour(line) {
   return line.replace(/\s+colour=[^\s:]+/g, "");
 }
 
+// Anything on or off, as a toggle with its icon, greyed where playback would refuse it
+function toggle(icon, words, on, flip, title, refused) {
+  var button = document.createElement("button");
+  button.type = "button";
+  button.className = "stoggle" + (on && !refused ? " on" : "");
+  button.dataset.words = words;
+  button.innerHTML = "<span aria-hidden='true'>" + icon + "</span> " + words;
+  button.title = title;
+  button.disabled = !!refused;
+  button.onclick = function () { flip(!on); draw(); };
+  return button;
+}
+
 // ---- the looks -----------------------------------------------------------------
 // Each look writes real entries for whatever target it is handed: a bank of outputs
 // in the order they are to play, or a run of any length. alone() is the form it

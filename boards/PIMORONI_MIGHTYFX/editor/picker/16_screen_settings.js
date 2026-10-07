@@ -27,8 +27,6 @@ var LOOK_START = {backlight: 1, mirror: false, anchor: 4, x: "", y: "", bg: "#00
 function freshLook() { return Object.assign({}, LOOK_START); }
 
 SCREENS.forEach(function (letter) { state.screens[letter].look = freshLook(); });
-HUB_PLACES.forEach(function (place) { state.places[place].look = freshLook(); });
-state.hubLight = 1;
 
 // Colours the file can say by name, the words the board knows, the rest written as hex
 var BG_NAMES = {};
@@ -322,21 +320,16 @@ function panelPreview(screen) {
 
 // ---- each scene keeps its screens' looks ------------------------------------------------------
 
-// Each screen and position keeps one look object for good, a scene's values copied into it, so
-// a control drawn before a scene is re-applied still changes the look that is written
+// Each screen keeps one look object for good, a scene's values copied into it, so a control
+// drawn before a scene is re-applied still changes the look that is written
 var lookHomes = {};
 SCREENS.forEach(function (letter) { lookHomes["screen" + letter] = state.screens[letter].look; });
-HUB_PLACES.forEach(function (place) { lookHomes["place" + place] = state.places[place].look; });
 
 bodyParts.push({
   capture: function (body) {
     SCREENS.forEach(function (letter) {
       body.screens[letter].look = Object.assign({}, state.screens[letter].look);
     });
-    HUB_PLACES.forEach(function (place) {
-      body.places[place].look = Object.assign({}, state.places[place].look);
-    });
-    body.hubLight = state.hubLight;
   },
   apply: function (body) {
     SCREENS.forEach(function (letter) {
@@ -344,12 +337,6 @@ bodyParts.push({
       if (body.screens && body.screens[letter].look) Object.assign(home, body.screens[letter].look);
       state.screens[letter].look = home;
     });
-    HUB_PLACES.forEach(function (place) {
-      var home = lookHomes["place" + place];
-      if (body.places && body.places[place].look) Object.assign(home, body.places[place].look);
-      state.places[place].look = home;
-    });
-    if (body.hubLight !== undefined) state.hubLight = body.hubLight;
   }
 });
 
@@ -473,19 +460,6 @@ function segment(options, chosen, choose, title) {
     seg.appendChild(button);
   });
   return seg;
-}
-
-// Anything on or off, as a toggle with its icon, greyed where playback would refuse it
-function toggle(icon, words, on, flip, title, refused) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "stoggle" + (on && !refused ? " on" : "");
-  button.dataset.words = words;
-  button.innerHTML = "<span aria-hidden='true'>" + icon + "</span> " + words;
-  button.title = title;
-  button.disabled = !!refused;
-  button.onclick = function () { flip(!on); draw(); };
-  return button;
 }
 
 function numberBox(value, placeholder, change, step) {
@@ -1013,25 +987,6 @@ function lightRow(value, change, words, title) {
   row.appendChild(light);
   return row;
 }
-
-// The hub's one backlight is a row of its own across the top of the box, over all six
-// positions and apart from whatever group is being set, since it lights every screen
-hubHeadSteps.push(function () {
-  var body = document.querySelector("#screensHead .hubbox .body");
-  if (!body) return;
-  // What each position shows, a slideshow named as its folder
-  body.querySelectorAll(".place").forEach(function (tile) {
-    var says = tile.querySelector(".placesays");
-    var held = state.places[tile.dataset.place];
-    if (says && held && held.shows) says.textContent = pictureSaid(held.shows);
-  });
-  var row = lightRow(state.hubLight, function (value) { state.hubLight = value; },
-                     "backlight, every screen on the hub",
-                     "How brightly the hub's screens are lit, all six together, in this scene");
-  row.classList.add("hublightrow");
-  row.querySelector(".lightopt").classList.add("hublight");
-  body.insertBefore(row, body.firstChild);
-});
 
 // The chip goes beside what is the board's and not before a box's name: a screen's panel size in
 // its band, and on the hub which way it is wired, in its band, and each position's panel size

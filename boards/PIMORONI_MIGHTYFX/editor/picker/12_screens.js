@@ -32,6 +32,9 @@ function turnForChosen(letter) { chosenAfresh(state.screens[letter]); }
 state.media = [];
 state.art = {};
 
+// Whether the screens come through a Screen Hub, which none do until one is set up
+state.hub = {on: false};
+
 var BOARD_INK = "#0a0a0a";
 
 var PANEL_INK = "#000000";
@@ -191,6 +194,18 @@ function panelDrawing(screen) {
     holder.appendChild(pane);
   }
   return holder;
+}
+
+// The Screens tab's head, a box for each screen. A part that draws the head another way
+// registers on instead, saying whether it did, and one that adds to either on after
+var screensHeadSteps = {instead: [], after: []};
+
+function renderScreensHead() {
+  if (!screensHeadSteps.instead.some(function (step) { return step(); })) {
+    document.getElementById("screensHead").classList.remove("hubbed");
+    renderScreenBoxes();
+  }
+  screensHeadSteps.after.forEach(function (step) { step(); });
 }
 
 // A box for each screen port. A screen's box has the backlight across its top, what it shows
@@ -376,6 +391,14 @@ function renderAssets() {
 
 function mediaNamed(name) {
   return state.media.filter(function (m) { return m.name === name; })[0] || null;
+}
+
+// A picture's kind, from the drive or its name
+function kindOf(shows) {
+  var media = mediaNamed(shows);
+  return media ? media.kind
+       : /\.gif$/i.test(shows) ? "gif"
+       : /\.(png|jpe?g)$/i.test(shows) ? "image" : "folder";
 }
 
 // What a screen's entry says in a scene: its look, or the line kept as the file had it. A hub

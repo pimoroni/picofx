@@ -45,6 +45,32 @@ function sendTargets() {
   return targets;
 }
 
+// ---- each scene keeps its positions' looks and the hub's light --------------------------------
+
+HUB_PLACES.forEach(function (place) { state.places[place].look = freshLook(); });
+state.hubLight = 1;
+
+// Each position keeps one look object for good, as a screen does
+var placeLookHomes = {};
+HUB_PLACES.forEach(function (place) { placeLookHomes[place] = state.places[place].look; });
+
+bodyParts.push({
+  capture: function (body) {
+    HUB_PLACES.forEach(function (place) {
+      body.places[place].look = Object.assign({}, state.places[place].look);
+    });
+    body.hubLight = state.hubLight;
+  },
+  apply: function (body) {
+    HUB_PLACES.forEach(function (place) {
+      var home = placeLookHomes[place];
+      if (body.places && body.places[place].look) Object.assign(home, body.places[place].look);
+      state.places[place].look = home;
+    });
+    if (body.hubLight !== undefined) state.hubLight = body.hubLight;
+  }
+});
+
 // ---- each scene keeps its groups ---------------------------------------------------------------
 
 bodyParts.push({
@@ -156,6 +182,27 @@ assetSteps.push(function () {
     };
     pick.appendChild(all);
   });
+});
+
+// ---- the hub's light ---------------------------------------------------------------------------
+
+// The hub's one backlight is a row of its own across the top of the box, over all six
+// positions and apart from whatever group is being set, since it lights every screen
+hubHeadSteps.push(function () {
+  var body = document.querySelector("#screensHead .hubbox .body");
+  if (!body) return;
+  // What each position shows, a slideshow named as its folder
+  body.querySelectorAll(".place").forEach(function (tile) {
+    var says = tile.querySelector(".placesays");
+    var held = state.places[tile.dataset.place];
+    if (says && held && held.shows) says.textContent = pictureSaid(held.shows);
+  });
+  var row = lightRow(state.hubLight, function (value) { state.hubLight = value; },
+                     "backlight, every screen on the hub",
+                     "How brightly the hub's screens are lit, all six together, in this scene");
+  row.classList.add("hublightrow");
+  row.querySelector(".lightopt").classList.add("hublight");
+  body.insertBefore(row, body.firstChild);
 });
 
 // ---- drawing the groups -----------------------------------------------------------------------

@@ -610,8 +610,9 @@ function readLights(bodies) {
   // a stretch of the strip is read
   var lengths = {};
   boardResidue.forEach(function (token) {
-    var named = token.match(/^(strip[lr])=(\d+)(?:\|([rgb]{3}))?$/i);
-    if (!named) return;
+    var named = token.match(/^(\w+)=(\d+)(?:\|([rgb]{3}))?$/i);
+    if (!named || !STRIPS.some(function (strip) { return strip.name === named[1].toLowerCase(); }))
+      return;
     // The board's own order is held as no order, so writing it back changes nothing. One
     // the page does not offer stays as written, for the board to answer
     var order = (named[3] || "").toLowerCase();
@@ -734,14 +735,24 @@ bodyParts.push({
 
 // ---- writing them back ------------------------------------------------------------------------
 
+// The strip a board token gives a length, such as stripl for stripl=30, or null
+function stripOfToken(token) {
+  var named = token.match(/^(\w+)=/);
+  var name = named && named[1].toLowerCase();
+  return STRIPS.some(function (strip) { return strip.name === name; }) ? name : null;
+}
+
 // The board line's tokens this page does not hold, after its own
 boardLineSteps.after.push(function (line) {
   // A strip whose length the page writes itself leaves out any kept for it, which coming
   // later would be the one the board takes
-  var written = (line || "").toLowerCase().match(/\bstrip[lr](?==)/g) || [];
+  var lower = (line || "").toLowerCase();
+  var written = STRIPS.map(function (strip) { return strip.name; }).filter(function (name) {
+    return new RegExp("\\b" + name + "=").test(lower);
+  });
   var kept = boardResidue.filter(function (token) {
-    var named = token.match(/^(strip[lr])=/i);
-    return !named || written.indexOf(named[1].toLowerCase()) < 0;
+    var name = stripOfToken(token);
+    return !name || written.indexOf(name) < 0;
   });
   if (kept.length) line = (line || "board:") + " " + kept.join(" ");
   return line;
@@ -853,10 +864,7 @@ function forgetKeptFor(run) {
   }
   keptNow = keptNow.filter(elsewhere);
   allBodies().forEach(function (held) { held.kept = (held.kept || []).filter(elsewhere); });
-  boardResidue = boardResidue.filter(function (token) {
-    var named = token.match(/^(strip[lr])=/i);
-    return !named || named[1].toLowerCase() !== run.name;
-  });
+  boardResidue = boardResidue.filter(function (token) { return stripOfToken(token) !== run.name; });
 }
 
 // ---- when the drive is opened -----------------------------------------------------------------

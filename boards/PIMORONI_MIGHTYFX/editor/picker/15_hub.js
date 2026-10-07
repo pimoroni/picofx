@@ -96,14 +96,6 @@ function placesSaid(places) {
   return said.join(",");
 }
 
-// A picture's kind, from the drive or its name
-function kindOf(shows) {
-  var media = mediaNamed(shows);
-  return media ? media.kind
-       : /\.gif$/i.test(shows) ? "gif"
-       : /\.(png|jpe?g)$/i.test(shows) ? "image" : "folder";
-}
-
 // What a position plays, as a key: positions with the same key are one entry, and one stream.
 // Panels of different sizes are sent apart, so the size is part of it. They are one send where
 // the file would say the same for them, so a setting a picture does not take, such as a still's
@@ -473,20 +465,19 @@ function renderHubHead() {
   hubHeadSteps.forEach(function (step) { step(); });
 }
 
-// The Screens tab's head: a box for each screen, or the hub's box where there is one, with the
-// switch between them above
-function renderScreensHead() {
-  var box = document.getElementById("screensHead");
-  if (!state.hub.on) {
-    box.classList.remove("hubbed");
-    renderScreenBoxes();
-  } else {
-    renderHubHead();
-  }
+// The hub's box in the Screens tab's head where there is a hub, with the switch between it and
+// the screens' boxes above
+screensHeadSteps.instead.push(function () {
+  if (!state.hub.on) return false;
+  renderHubHead();
+  return true;
+});
+
+screensHeadSteps.after.push(function () {
   var facts = document.getElementById("hubFacts");
   facts.textContent = "";
   facts.appendChild(hubSwitch());
-}
+});
 
 // A picture's own row of positions, each tapped to show it there or tapped again to take it off
 assetSteps.push(function () {

@@ -471,7 +471,7 @@ drawSteps.after.push(function () {
   panel.innerHTML = "<summary>Sound</summary>" +
                     "<p class='says soundsays' id='soundSays'></p>" +
                     "<div id='sound'></div>";
-  var after = document.getElementById("screensPanel");
+  var after = document.getElementById(TAB_PANELS[TAB_PANELS.length - 1]);
   after.parentNode.insertBefore(panel, after.nextSibling);
 }());
 

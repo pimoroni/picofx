@@ -8,9 +8,8 @@
 // which way up it is mounted is left for when screens are settled
 var SCREEN_PORTS = BOARD.screens ? BOARD.screens.ports : [];
 // The sizes a panel can be, as the firmware takes them, the catalogue's hub being no panel size
-var SCREEN_SIZES = CATALOGUE.board_settings.screena.filter(function (inches) {
-  return inches !== "hub";
-});
+var SCREEN_SIZES = (SCREEN_PORTS.length ? CATALOGUE.board_settings[SCREEN_PORTS[0].id] : [])
+  .filter(function (inches) { return inches !== "hub"; });
 var screensFitted = {};
 SCREEN_PORTS.forEach(function (port) { screensFitted[port.id] = ""; });
 

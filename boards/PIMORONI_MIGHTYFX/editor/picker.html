@@ -1784,6 +1784,19 @@ function withoutColour(line) {
   return line.replace(/\s+colour=[^\s:]+/g, "");
 }
 
+// Anything on or off, as a toggle with its icon, greyed where playback would refuse it
+function toggle(icon, words, on, flip, title, refused) {
+  var button = document.createElement("button");
+  button.type = "button";
+  button.className = "stoggle" + (on && !refused ? " on" : "");
+  button.dataset.words = words;
+  button.innerHTML = "<span aria-hidden='true'>" + icon + "</span> " + words;
+  button.title = title;
+  button.disabled = !!refused;
+  button.onclick = function () { flip(!on); draw(); };
+  return button;
+}
+
 // ---- the looks -----------------------------------------------------------------
 // Each look writes real entries for whatever target it is handed: a bank of outputs
 // in the order they are to play, or a run of any length. alone() is the form it
@@ -6384,9 +6397,8 @@ chosenSteps.push(function (where, run) {
 // which way up it is mounted is left for when screens are settled
 var SCREEN_PORTS = BOARD.screens ? BOARD.screens.ports : [];
 // The sizes a panel can be, as the firmware takes them, the catalogue's hub being no panel size
-var SCREEN_SIZES = CATALOGUE.board_settings.screena.filter(function (inches) {
-  return inches !== "hub";
-});
+var SCREEN_SIZES = (SCREEN_PORTS.length ? CATALOGUE.board_settings[SCREEN_PORTS[0].id] : [])
+  .filter(function (inches) { return inches !== "hub"; });
 var screensFitted = {};
 SCREEN_PORTS.forEach(function (port) { screensFitted[port.id] = ""; });
 
@@ -7132,6 +7144,9 @@ function turnForChosen(letter) { chosenAfresh(state.screens[letter]); }
 state.media = [];
 state.art = {};
 
+// Whether the screens come through a Screen Hub, which none do until one is set up
+state.hub = {on: false};
+
 var BOARD_INK = "#0a0a0a";
 
 var PANEL_INK = "#000000";
@@ -7291,6 +7306,18 @@ function panelDrawing(screen) {
     holder.appendChild(pane);
   }
   return holder;
+}
+
+// The Screens tab's head, a box for each screen. A part that draws the head another way
+// registers on instead, saying whether it did, and one that adds to either on after
+var screensHeadSteps = {instead: [], after: []};
+
+function renderScreensHead() {
+  if (!screensHeadSteps.instead.some(function (step) { return step(); })) {
+    document.getElementById("screensHead").classList.remove("hubbed");
+    renderScreenBoxes();
+  }
+  screensHeadSteps.after.forEach(function (step) { step(); });
 }
 
 // A box for each screen port. A screen's box has the backlight across its top, what it shows
@@ -7476,6 +7503,14 @@ function renderAssets() {
 
 function mediaNamed(name) {
   return state.media.filter(function (m) { return m.name === name; })[0] || null;
+}
+
+// A picture's kind, from the drive or its name
+function kindOf(shows) {
+  var media = mediaNamed(shows);
+  return media ? media.kind
+       : /\.gif$/i.test(shows) ? "gif"
+       : /\.(png|jpe?g)$/i.test(shows) ? "image" : "folder";
 }
 
 // What a screen's entry says in a scene: its look, or the line kept as the file had it. A hub
@@ -8315,7 +8350,7 @@ drawSteps.after.push(function () {
   panel.innerHTML = "<summary>Sound</summary>" +
                     "<p class='says soundsays' id='soundSays'></p>" +
                     "<div id='sound'></div>";
-  var after = document.getElementById("screensPanel");
+  var after = document.getElementById(TAB_PANELS[TAB_PANELS.length - 1]);
   after.parentNode.insertBefore(panel, after.nextSibling);
 }());
 
@@ -8449,14 +8484,6 @@ function placesSaid(places) {
     at = end + 1;
   }
   return said.join(",");
-}
-
-// A picture's kind, from the drive or its name
-function kindOf(shows) {
-  var media = mediaNamed(shows);
-  return media ? media.kind
-       : /\.gif$/i.test(shows) ? "gif"
-       : /\.(png|jpe?g)$/i.test(shows) ? "image" : "folder";
 }
 
 // What a position plays, as a key: positions with the same key are one entry, and one stream.
@@ -8828,20 +8855,19 @@ function renderHubHead() {
   hubHeadSteps.forEach(function (step) { step(); });
 }
 
-// The Screens tab's head: a box for each screen, or the hub's box where there is one, with the
-// switch between them above
-function renderScreensHead() {
-  var box = document.getElementById("screensHead");
-  if (!state.hub.on) {
-    box.classList.remove("hubbed");
-    renderScreenBoxes();
-  } else {
-    renderHubHead();
-  }
+// The hub's box in the Screens tab's head where there is a hub, with the switch between it and
+// the screens' boxes above
+screensHeadSteps.instead.push(function () {
+  if (!state.hub.on) return false;
+  renderHubHead();
+  return true;
+});
+
+screensHeadSteps.after.push(function () {
   var facts = document.getElementById("hubFacts");
   facts.textContent = "";
   facts.appendChild(hubSwitch());
-}
+});
 
 // A picture's own row of positions, each tapped to show it there or tapped again to take it off
 assetSteps.push(function () {
@@ -8963,8 +8989,6 @@ var LOOK_START = {backlight: 1, mirror: false, anchor: 4, x: "", y: "", bg: "#00
 function freshLook() { return Object.assign({}, LOOK_START); }
 
 SCREENS.forEach(function (letter) { state.screens[letter].look = freshLook(); });
-HUB_PLACES.forEach(function (place) { state.places[place].look = freshLook(); });
-state.hubLight = 1;
 
 // Colours the file can say by name, the words the board knows, the rest written as hex
 var BG_NAMES = {};
@@ -9258,21 +9282,16 @@ function panelPreview(screen) {
 
 // ---- each scene keeps its screens' looks ------------------------------------------------------
 
-// Each screen and position keeps one look object for good, a scene's values copied into it, so
-// a control drawn before a scene is re-applied still changes the look that is written
+// Each screen keeps one look object for good, a scene's values copied into it, so a control
+// drawn before a scene is re-applied still changes the look that is written
 var lookHomes = {};
 SCREENS.forEach(function (letter) { lookHomes["screen" + letter] = state.screens[letter].look; });
-HUB_PLACES.forEach(function (place) { lookHomes["place" + place] = state.places[place].look; });
 
 bodyParts.push({
   capture: function (body) {
     SCREENS.forEach(function (letter) {
       body.screens[letter].look = Object.assign({}, state.screens[letter].look);
     });
-    HUB_PLACES.forEach(function (place) {
-      body.places[place].look = Object.assign({}, state.places[place].look);
-    });
-    body.hubLight = state.hubLight;
   },
   apply: function (body) {
     SCREENS.forEach(function (letter) {
@@ -9280,12 +9299,6 @@ bodyParts.push({
       if (body.screens && body.screens[letter].look) Object.assign(home, body.screens[letter].look);
       state.screens[letter].look = home;
     });
-    HUB_PLACES.forEach(function (place) {
-      var home = lookHomes["place" + place];
-      if (body.places && body.places[place].look) Object.assign(home, body.places[place].look);
-      state.places[place].look = home;
-    });
-    if (body.hubLight !== undefined) state.hubLight = body.hubLight;
   }
 });
 
@@ -9409,19 +9422,6 @@ function segment(options, chosen, choose, title) {
     seg.appendChild(button);
   });
   return seg;
-}
-
-// Anything on or off, as a toggle with its icon, greyed where playback would refuse it
-function toggle(icon, words, on, flip, title, refused) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "stoggle" + (on && !refused ? " on" : "");
-  button.dataset.words = words;
-  button.innerHTML = "<span aria-hidden='true'>" + icon + "</span> " + words;
-  button.title = title;
-  button.disabled = !!refused;
-  button.onclick = function () { flip(!on); draw(); };
-  return button;
 }
 
 function numberBox(value, placeholder, change, step) {
@@ -9950,25 +9950,6 @@ function lightRow(value, change, words, title) {
   return row;
 }
 
-// The hub's one backlight is a row of its own across the top of the box, over all six
-// positions and apart from whatever group is being set, since it lights every screen
-hubHeadSteps.push(function () {
-  var body = document.querySelector("#screensHead .hubbox .body");
-  if (!body) return;
-  // What each position shows, a slideshow named as its folder
-  body.querySelectorAll(".place").forEach(function (tile) {
-    var says = tile.querySelector(".placesays");
-    var held = state.places[tile.dataset.place];
-    if (says && held && held.shows) says.textContent = pictureSaid(held.shows);
-  });
-  var row = lightRow(state.hubLight, function (value) { state.hubLight = value; },
-                     "backlight, every screen on the hub",
-                     "How brightly the hub's screens are lit, all six together, in this scene");
-  row.classList.add("hublightrow");
-  row.querySelector(".lightopt").classList.add("hublight");
-  body.insertBefore(row, body.firstChild);
-});
-
 // The chip goes beside what is the board's and not before a box's name: a screen's panel size in
 // its band, and on the hub which way it is wired, in its band, and each position's panel size
 function renderScreensTab() {
@@ -10108,6 +10089,32 @@ function sendTargets() {
   return targets;
 }
 
+// ---- each scene keeps its positions' looks and the hub's light --------------------------------
+
+HUB_PLACES.forEach(function (place) { state.places[place].look = freshLook(); });
+state.hubLight = 1;
+
+// Each position keeps one look object for good, as a screen does
+var placeLookHomes = {};
+HUB_PLACES.forEach(function (place) { placeLookHomes[place] = state.places[place].look; });
+
+bodyParts.push({
+  capture: function (body) {
+    HUB_PLACES.forEach(function (place) {
+      body.places[place].look = Object.assign({}, state.places[place].look);
+    });
+    body.hubLight = state.hubLight;
+  },
+  apply: function (body) {
+    HUB_PLACES.forEach(function (place) {
+      var home = placeLookHomes[place];
+      if (body.places && body.places[place].look) Object.assign(home, body.places[place].look);
+      state.places[place].look = home;
+    });
+    if (body.hubLight !== undefined) state.hubLight = body.hubLight;
+  }
+});
+
 // ---- each scene keeps its groups ---------------------------------------------------------------
 
 bodyParts.push({
@@ -10219,6 +10226,27 @@ assetSteps.push(function () {
     };
     pick.appendChild(all);
   });
+});
+
+// ---- the hub's light ---------------------------------------------------------------------------
+
+// The hub's one backlight is a row of its own across the top of the box, over all six
+// positions and apart from whatever group is being set, since it lights every screen
+hubHeadSteps.push(function () {
+  var body = document.querySelector("#screensHead .hubbox .body");
+  if (!body) return;
+  // What each position shows, a slideshow named as its folder
+  body.querySelectorAll(".place").forEach(function (tile) {
+    var says = tile.querySelector(".placesays");
+    var held = state.places[tile.dataset.place];
+    if (says && held && held.shows) says.textContent = pictureSaid(held.shows);
+  });
+  var row = lightRow(state.hubLight, function (value) { state.hubLight = value; },
+                     "backlight, every screen on the hub",
+                     "How brightly the hub's screens are lit, all six together, in this scene");
+  row.classList.add("hublightrow");
+  row.querySelector(".lightopt").classList.add("hublight");
+  body.insertBefore(row, body.firstChild);
 });
 
 // ---- drawing the groups -----------------------------------------------------------------------
@@ -14490,8 +14518,9 @@ function readLights(bodies) {
   // a stretch of the strip is read
   var lengths = {};
   boardResidue.forEach(function (token) {
-    var named = token.match(/^(strip[lr])=(\d+)(?:\|([rgb]{3}))?$/i);
-    if (!named) return;
+    var named = token.match(/^(\w+)=(\d+)(?:\|([rgb]{3}))?$/i);
+    if (!named || !STRIPS.some(function (strip) { return strip.name === named[1].toLowerCase(); }))
+      return;
     // The board's own order is held as no order, so writing it back changes nothing. One
     // the page does not offer stays as written, for the board to answer
     var order = (named[3] || "").toLowerCase();
@@ -14614,14 +14643,24 @@ bodyParts.push({
 
 // ---- writing them back ------------------------------------------------------------------------
 
+// The strip a board token gives a length, such as stripl for stripl=30, or null
+function stripOfToken(token) {
+  var named = token.match(/^(\w+)=/);
+  var name = named && named[1].toLowerCase();
+  return STRIPS.some(function (strip) { return strip.name === name; }) ? name : null;
+}
+
 // The board line's tokens this page does not hold, after its own
 boardLineSteps.after.push(function (line) {
   // A strip whose length the page writes itself leaves out any kept for it, which coming
   // later would be the one the board takes
-  var written = (line || "").toLowerCase().match(/\bstrip[lr](?==)/g) || [];
+  var lower = (line || "").toLowerCase();
+  var written = STRIPS.map(function (strip) { return strip.name; }).filter(function (name) {
+    return new RegExp("\\b" + name + "=").test(lower);
+  });
   var kept = boardResidue.filter(function (token) {
-    var named = token.match(/^(strip[lr])=/i);
-    return !named || written.indexOf(named[1].toLowerCase()) < 0;
+    var name = stripOfToken(token);
+    return !name || written.indexOf(name) < 0;
   });
   if (kept.length) line = (line || "board:") + " " + kept.join(" ");
   return line;
@@ -14733,10 +14772,7 @@ function forgetKeptFor(run) {
   }
   keptNow = keptNow.filter(elsewhere);
   allBodies().forEach(function (held) { held.kept = (held.kept || []).filter(elsewhere); });
-  boardResidue = boardResidue.filter(function (token) {
-    var named = token.match(/^(strip[lr])=/i);
-    return !named || named[1].toLowerCase() !== run.name;
-  });
+  boardResidue = boardResidue.filter(function (token) { return stripOfToken(token) !== run.name; });
 }
 
 // ---- when the drive is opened -----------------------------------------------------------------
