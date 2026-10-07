@@ -139,6 +139,9 @@ var NAMED = OWN.outputs.filter(function (output) { return !/^out[0-9]+$/.test(ou
 var NUMBERED_COLOUR = NUMBERED.length > 0 &&
                       NUMBERED.every(function (output) { return output[1] === "colour"; });
 
+// Outputs joined and ranged as a file writes them, the range ending on the board's last output
+var JOINED_EXAMPLE = NUMBERED.length > 5 ? "out1,3,5-" + NUMBERED.length : "out1,2";
+
 var COUNT_WORDS = ["none", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
                    "ten", "eleven", "twelve"];
 
@@ -617,7 +620,7 @@ function offers(found) {
     if (/[-.,]$/.test(found.prefix)) return;
     if (numbered || ownPart(found.prefix, OWN.strips, /^[0-9]/)) {
       var tail = found.prefix.split(",").pop();
-      offer(found.prefix + ",", "another output after it: out1,3,5-7");
+      offer(found.prefix + ",", "another output after it: " + JOINED_EXAMPLE);
       if (/^[0-9]+$/.test(tail.replace(/^[a-z]+/i, "")))
         offer(found.prefix + "-", "a range to another output, run either way");
       if (numbered && NUMBERED_COLOUR && tail.indexOf(".") < 0)
