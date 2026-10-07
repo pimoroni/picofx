@@ -3662,9 +3662,14 @@ def __apply_scene(players, shows, sounds, scene):
                 begin()
 
     for player in players:
+        # A curve and an effect bringing its own colour refuse each other in either
+        # order, so a channel this scene leaves uncurved lets go of its curve first
+        curves = scene.curves[player.kind]
+        player.curves = [held if coming is not None else None
+                         for held, coming in zip(player.curves, curves)]
         player.effects = scene.effects[player.kind]
         player.levels = scene.levels[player.kind]
-        player.curves = scene.curves[player.kind]
+        player.curves = curves
         if player.kind in scene.colours:
             player.colours = scene.colours[player.kind]
 
