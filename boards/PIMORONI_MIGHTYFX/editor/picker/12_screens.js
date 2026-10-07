@@ -529,9 +529,9 @@ drawSteps.after.push(function () {
   var after = document.getElementById("striprPanel");
   after.parentNode.insertBefore(panel, after.nextSibling);
   // The screens are this tab now, so their own panels go
-  ["screenaPanel", "screenbPanel"].forEach(function (id) {
-    document.getElementById(id).hidden = true;
-    document.getElementById(id).classList.add("replaced");
+  SCREEN_PORTS.forEach(function (port) {
+    document.getElementById(port.id + "Panel").hidden = true;
+    document.getElementById(port.id + "Panel").classList.add("replaced");
   });
 }());
 

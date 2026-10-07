@@ -1638,20 +1638,95 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
 // the numbered parts in this folder joined in order, each part able to replace what an earlier
 // one defines, and this first part holds the looks.
 
+// The board the page is for, from its editor/fx_board.json: its outputs, strips, screen ports
+// and whether it has a hub, sound and the network looks
+var BOARD = {
+ "name": "Mighty FX",
+ "examples": "examples/mighty_fx/examples",
+ "outputs": [
+  {
+   "name": "out1",
+   "kind": "colour",
+   "breaks_out": true
+  },
+  {
+   "name": "out2",
+   "kind": "colour",
+   "breaks_out": true
+  },
+  {
+   "name": "out3",
+   "kind": "colour",
+   "breaks_out": true
+  },
+  {
+   "name": "out4",
+   "kind": "colour",
+   "breaks_out": true
+  },
+  {
+   "name": "out5",
+   "kind": "colour",
+   "breaks_out": true
+  },
+  {
+   "name": "out6",
+   "kind": "colour",
+   "breaks_out": true
+  },
+  {
+   "name": "out7",
+   "kind": "colour",
+   "breaks_out": true
+  }
+ ],
+ "wiring_order": true,
+ "strips": [
+  {
+   "name": "stripl",
+   "label": "the left strip",
+   "tab": "Left strip",
+   "leds": 30,
+   "fitted": true
+  },
+  {
+   "name": "stripr",
+   "label": "the right strip",
+   "tab": "Right strip",
+   "leds": 18,
+   "fitted": true
+  }
+ ],
+ "screens": {
+  "ports": [
+   {
+    "id": "screena",
+    "label": "Screen A"
+   },
+   {
+    "id": "screenb",
+    "label": "Screen B"
+   }
+  ],
+  "hub": true
+ },
+ "sound": true,
+ "wireless": false
+};
+
 // The catalogue is generated beside this page; without it the screen sizes and ports
 // cannot be known, so say so instead of failing silently
 if (typeof CATALOGUE === "undefined") {
-  window.CATALOGUE = {board_settings: {screena: ["2.8", "1.54"], screenb: ["2.8", "1.54"]},
-                      screen_ports: ["screena", "screenb"], strips: ["stripl", "stripr"]};
+  var assumedPorts = BOARD.screens ? BOARD.screens.ports.map(function (port) { return port.id; }) : [];
+  window.CATALOGUE = {board_settings: {}, screen_ports: assumedPorts,
+                      strips: BOARD.strips.map(function (strip) { return strip.name; })};
+  assumedPorts.forEach(function (id) { CATALOGUE.board_settings[id] = ["2.8", "1.54"]; });
   document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("banner").innerHTML =
       "<div class='banner warn'>catalogue.js is missing from this folder, so the " +
       "board's ports are assumed. Run tools/build_editor.py to write it.</div>";
   });
 }
-
-// The board the page is for, which says whether it offers the network looks
-var BOARD = {wireless: false};
 
 var HEADER = "# Written by the FX picker. Everything here can be edited by hand;\n" +
              "# MANUAL.html on this drive explains every line.\n";
@@ -2424,7 +2499,7 @@ var HOLDING_STILL = window.matchMedia &&
 // a mix. Everything below is the section model over a run of lamps: the only new idea is
 // that the run's own length is something the wiring decides.
 
-var OUTS = 7;
+var OUTS = BOARD.outputs.length;
 var CHANNELS = ["r", "g", "b"];
 var CHANNEL_WORDS = {r: "red", g: "green", b: "blue"};
 
@@ -4339,12 +4414,12 @@ settle();
 // channels being the only thing that breaks out, so it takes the run model and leaves the
 // breaking out alone.
 
-// A strip's order is the one it takes its colours in, empty for the board's own, and it is
-// fitted until removed while the board is edited
-var STRIPS = [
-  {id: "stripl", name: "stripl", label: "the left strip", leds: 30, order: "", there: true},
-  {id: "stripr", name: "stripr", label: "the right strip", leds: 18, order: "", there: true}
-];
+// The board's strips. A strip's order is the one it takes its colours in, empty for the board's
+// own, and it is there as the board describes it until added or removed while the board is edited
+var STRIPS = BOARD.strips.map(function (strip) {
+  return {id: strip.name, name: strip.name, label: strip.label, leds: strip.leds, order: "",
+          there: strip.fitted};
+});
 
 function stripRun(one) {
   var run = Run(one.name, false);
@@ -6301,12 +6376,13 @@ chosenSteps.push(function (where, run) {
 
 // Which panel is plugged into each screen port, or none. Only the size is the board's:
 // which way up it is mounted is left for when screens are settled
-var SCREEN_PORTS = [{id: "screena", label: "Screen A"}, {id: "screenb", label: "Screen B"}];
+var SCREEN_PORTS = BOARD.screens ? BOARD.screens.ports : [];
 // The sizes a panel can be, as the firmware takes them, the catalogue's hub being no panel size
 var SCREEN_SIZES = CATALOGUE.board_settings.screena.filter(function (inches) {
   return inches !== "hub";
 });
-var screensFitted = {screena: "", screenb: ""};
+var screensFitted = {};
+SCREEN_PORTS.forEach(function (port) { screensFitted[port.id] = ""; });
 
 // Breaking an output out, or putting it back, is done to every scene in turn, each carrying
 // its own looks across. A scene's steps to undo end there, being about
@@ -6428,8 +6504,8 @@ function screenSize(port) {
 var setupOn = false;
 
 // The panels that hold a board fact, and the colour each one's box takes
-var SECTIONS = {outPanel: "outs", striplPanel: "stripl", striprPanel: "stripr",
-                screenaPanel: "screena", screenbPanel: "screenb"};
+var SECTIONS = {outPanel: "outs"};
+STRIPS.concat(SCREEN_PORTS).forEach(function (one) { SECTIONS[one.id + "Panel"] = one.id; });
 
 // Whether the board facts in this panel can be changed just now
 function canEdit(panel) { return setupOn; }
@@ -6902,7 +6978,7 @@ window.addEventListener("resize", function () { if (setupOn) draw(); });
 // which it cannot. A page showing one at a time makes the one shown the one worked on, so
 // the gallery is for it, and says of the others in a small swatch what they play.
 
-var LED_PANELS = ["outPanel", "striplPanel", "striprPanel"];
+var LED_PANELS = ["outPanel"].concat(STRIPS.map(function (strip) { return strip.id + "Panel"; }));
 
 function runsOfPanel(panel) {
   if (panel === "outPanel") return [outs, mono];
@@ -6929,7 +7005,8 @@ function workOn(panel) {
 // keeps to them: the whole board is being set up, a section at a time, and the tabs stay
 // live to move between sections while it is.
 
-var TAB_NAMES = {outPanel: "Outputs", striplPanel: "Left strip", striprPanel: "Right strip"};
+var TAB_NAMES = {outPanel: "Outputs"};
+BOARD.strips.forEach(function (strip) { TAB_NAMES[strip.name + "Panel"] = strip.tab; });
 
 // The sections with a tab, the LED ones and any other a page adds
 var TAB_PANELS = LED_PANELS.slice();
@@ -7575,9 +7652,9 @@ drawSteps.after.push(function () {
   var after = document.getElementById("striprPanel");
   after.parentNode.insertBefore(panel, after.nextSibling);
   // The screens are this tab now, so their own panels go
-  ["screenaPanel", "screenbPanel"].forEach(function (id) {
-    document.getElementById(id).hidden = true;
-    document.getElementById(id).classList.add("replaced");
+  SCREEN_PORTS.forEach(function (port) {
+    document.getElementById(port.id + "Panel").hidden = true;
+    document.getElementById(port.id + "Panel").classList.add("replaced");
   });
 }());
 

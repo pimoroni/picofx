@@ -3,20 +3,23 @@
 // the numbered parts in this folder joined in order, each part able to replace what an earlier
 // one defines, and this first part holds the looks.
 
+// The board the page is for, from its editor/fx_board.json: its outputs, strips, screen ports
+// and whether it has a hub, sound and the network looks
+var BOARD = __BOARD__;
+
 // The catalogue is generated beside this page; without it the screen sizes and ports
 // cannot be known, so say so instead of failing silently
 if (typeof CATALOGUE === "undefined") {
-  window.CATALOGUE = {board_settings: {screena: ["2.8", "1.54"], screenb: ["2.8", "1.54"]},
-                      screen_ports: ["screena", "screenb"], strips: ["stripl", "stripr"]};
+  var assumedPorts = BOARD.screens ? BOARD.screens.ports.map(function (port) { return port.id; }) : [];
+  window.CATALOGUE = {board_settings: {}, screen_ports: assumedPorts,
+                      strips: BOARD.strips.map(function (strip) { return strip.name; })};
+  assumedPorts.forEach(function (id) { CATALOGUE.board_settings[id] = ["2.8", "1.54"]; });
   document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("banner").innerHTML =
       "<div class='banner warn'>catalogue.js is missing from this folder, so the " +
       "board's ports are assumed. Run tools/build_editor.py to write it.</div>";
   });
 }
-
-// The board the page is for, which says whether it offers the network looks
-var BOARD = {wireless: false};
 
 var HEADER = "# Written by the FX picker. Everything here can be edited by hand;\n" +
              "# MANUAL.html on this drive explains every line.\n";

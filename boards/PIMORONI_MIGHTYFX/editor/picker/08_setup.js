@@ -8,8 +8,8 @@
 var setupOn = false;
 
 // The panels that hold a board fact, and the colour each one's box takes
-var SECTIONS = {outPanel: "outs", striplPanel: "stripl", striprPanel: "stripr",
-                screenaPanel: "screena", screenbPanel: "screenb"};
+var SECTIONS = {outPanel: "outs"};
+STRIPS.concat(SCREEN_PORTS).forEach(function (one) { SECTIONS[one.id + "Panel"] = one.id; });
 
 // Whether the board facts in this panel can be changed just now
 function canEdit(panel) { return setupOn; }

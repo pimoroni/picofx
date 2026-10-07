@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Turns a board's editor pages into the frozen module the FX drive carries.
 
-Assembles editor/picker.html from the parts in editor/picker/ and the thumbnails in
-editor/thumbs/, generates catalogue.js from the live autofx tables so a page always offers
-what the firmware it ships with provides, and writes the pages and catalogue compressed
-into a frozen module for fx_drive to heal onto the drive. The parts and pages are committed
-and the module is generated, so run this after editing a part, a page or anything the
-catalogue reads.
+Assembles editor/picker.html from the parts in editor/picker/, the board's description in
+editor/fx_board.json and the thumbnails in editor/thumbs/, generates catalogue.js from the
+live autofx tables so a page always offers what the firmware it ships with provides, and
+writes the pages and catalogue compressed into a frozen module for fx_drive to heal onto the
+drive. The parts and pages are committed and the module is generated, so run this after
+editing a part, a page, the description or anything the catalogue reads.
 
     python3 tools/build_editor.py boards/PIMORONI_MIGHTYFX
     python3 tools/build_editor.py --check boards/PIMORONI_MIGHTYFX
@@ -47,8 +47,9 @@ EDGE = 512
 # How many bytes of a zlib stream go on one line of the module
 BYTES_PER_LINE = 64
 
-# The examples the board's filesystem carries, as its uf2-copyfiles.sh copies them
-EXAMPLES = os.path.join("examples", "mighty_fx", "examples")
+# The board's description: its name, outputs, strips, screens, sound, and the folder of examples
+# its filesystem carries, as its uf2-copyfiles.sh copies them
+DESCRIPTION_NAME = "fx_board.json"
 
 # What each examples folder needs attached, as the manual says
 EXAMPLE_NEEDS = {"screens": "a screen", "audio": "a speaker", "motors": "motors",
@@ -97,10 +98,12 @@ def uses_of(source):
     return found
 
 
-def board_examples(repo_dir):
+def board_examples(repo_dir, examples):
     """The examples the board carries, each with its path there and its opening sentence."""
-    root = os.path.join(repo_dir, EXAMPLES)
     found = []
+    if not examples:
+        return json.dumps(found)
+    root = os.path.join(repo_dir, examples)
     for folder, _dirs, files in sorted(os.walk(root)):
         where = os.path.relpath(folder, root).replace(os.sep, "/")
         if where == "." or where.split("/")[0] == "assets":
@@ -141,14 +144,18 @@ def thumbnails(board_dir):
 
 
 def picker(board_dir, repo_dir):
-    """picker.html, from page.html and the numbered parts after it, with the examples filled in."""
+    """picker.html, from page.html and the numbered parts after it, with the board filled in."""
+    with open(os.path.join(board_dir, "editor", DESCRIPTION_NAME), encoding="utf-8") as f:
+        board = json.load(f)
     folder = os.path.join(board_dir, "editor", "picker")
     with open(os.path.join(folder, "page.html"), encoding="utf-8") as f:
         text = f.read()
     for part in sorted(glob.glob(os.path.join(folder, "[0-9][0-9]_*.js"))):
         with open(part, encoding="utf-8") as f:
             text += f.read()
-    text = text.replace("__EXAMPLES__", board_examples(repo_dir))
+    text = text.replace("__BOARD_NAME__", board["name"])
+    text = text.replace("__BOARD__", json.dumps(board, indent=1))
+    text = text.replace("__EXAMPLES__", board_examples(repo_dir, board["examples"]))
     text = text.replace("__THUMBS__", thumbnails(board_dir)) + PICKER_END
     left = sorted(set(re.findall(r"__[A-Z_]+__", text)))
     if left:

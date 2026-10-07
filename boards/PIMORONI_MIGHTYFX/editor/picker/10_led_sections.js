@@ -4,7 +4,7 @@
 // which it cannot. A page showing one at a time makes the one shown the one worked on, so
 // the gallery is for it, and says of the others in a small swatch what they play.
 
-var LED_PANELS = ["outPanel", "striplPanel", "striprPanel"];
+var LED_PANELS = ["outPanel"].concat(STRIPS.map(function (strip) { return strip.id + "Panel"; }));
 
 function runsOfPanel(panel) {
   if (panel === "outPanel") return [outs, mono];

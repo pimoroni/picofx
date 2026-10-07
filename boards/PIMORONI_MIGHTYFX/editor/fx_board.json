@@ -1,0 +1,24 @@
+{
+ "name": "Mighty FX",
+ "examples": "examples/mighty_fx/examples",
+ "outputs": [
+  {"name": "out1", "kind": "colour", "breaks_out": true},
+  {"name": "out2", "kind": "colour", "breaks_out": true},
+  {"name": "out3", "kind": "colour", "breaks_out": true},
+  {"name": "out4", "kind": "colour", "breaks_out": true},
+  {"name": "out5", "kind": "colour", "breaks_out": true},
+  {"name": "out6", "kind": "colour", "breaks_out": true},
+  {"name": "out7", "kind": "colour", "breaks_out": true}
+ ],
+ "wiring_order": true,
+ "strips": [
+  {"name": "stripl", "label": "the left strip", "tab": "Left strip", "leds": 30, "fitted": true},
+  {"name": "stripr", "label": "the right strip", "tab": "Right strip", "leds": 18, "fitted": true}
+ ],
+ "screens": {
+  "ports": [{"id": "screena", "label": "Screen A"}, {"id": "screenb", "label": "Screen B"}],
+  "hub": true
+ },
+ "sound": true,
+ "wireless": false
+}

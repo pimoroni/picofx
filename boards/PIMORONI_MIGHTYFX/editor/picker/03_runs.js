@@ -4,7 +4,7 @@
 // a mix. Everything below is the section model over a run of lamps: the only new idea is
 // that the run's own length is something the wiring decides.
 
-var OUTS = 7;
+var OUTS = BOARD.outputs.length;
 var CHANNELS = ["r", "g", "b"];
 var CHANNEL_WORDS = {r: "red", g: "green", b: "blue"};
 

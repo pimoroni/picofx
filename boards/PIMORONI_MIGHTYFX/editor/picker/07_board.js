@@ -6,12 +6,13 @@
 
 // Which panel is plugged into each screen port, or none. Only the size is the board's:
 // which way up it is mounted is left for when screens are settled
-var SCREEN_PORTS = [{id: "screena", label: "Screen A"}, {id: "screenb", label: "Screen B"}];
+var SCREEN_PORTS = BOARD.screens ? BOARD.screens.ports : [];
 // The sizes a panel can be, as the firmware takes them, the catalogue's hub being no panel size
 var SCREEN_SIZES = CATALOGUE.board_settings.screena.filter(function (inches) {
   return inches !== "hub";
 });
-var screensFitted = {screena: "", screenb: ""};
+var screensFitted = {};
+SCREEN_PORTS.forEach(function (port) { screensFitted[port.id] = ""; });
 
 // Breaking an output out, or putting it back, is done to every scene in turn, each carrying
 // its own looks across. A scene's steps to undo end there, being about
