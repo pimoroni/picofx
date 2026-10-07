@@ -74,7 +74,10 @@ bodyParts.push({
   },
   hasContent: function (body) {
     return HUB_PLACES.some(function (place) { return !!(body.places && body.places[place].shows); });
-  }
+  },
+  // The hub is read off the board line before any screen's line, a screen through it writing none
+  readBoard: readHubBoard,
+  read: readHubLines
 });
 
 // ---- what the file says ----------------------------------------------------------------------
@@ -157,6 +160,99 @@ boardLineSteps.after.push(function (line) {
   });
   return "board: " + tokens.join(" ") + (rest ? " " + rest : "");
 });
+
+// ---- reading the file back --------------------------------------------------------------------
+
+// Hub positions as a file names them, hubA-C,E, or null where the item is not one
+function hubPlacesNamed(selector) {
+  var match = selector.match(/^hub([a-f](?:-[a-f])?(?:,[a-f](?:-[a-f])?)*)$/i);
+  if (!match) return null;
+  var places = [];
+  match[1].toUpperCase().split(",").forEach(function (part) {
+    var ends = part.split("-");
+    var from = HUB_PLACES.indexOf(ends[0]);
+    var to = HUB_PLACES.indexOf(ends[1] || ends[0]);
+    var step = to >= from ? 1 : -1;
+    for (var at = from; at !== to + step; at += step) places.push(HUB_PLACES[at]);
+  });
+  return places;
+}
+
+// The hub the board line declares, read into the page, which writes those tokens itself from
+// then on. Left alone where the line declares none
+function readHubBoard() {
+  var port = null;
+  var sizes = {};
+  var taken = [];
+  boardResidue.forEach(function (token) {
+    var wired = token.match(/^screen([ab])=hub$/i);
+    var sized = token.match(/^(hub[a-f\-,]+)=(2\.8|1\.54)$/i);
+    if (wired) {
+      port = wired[1].toUpperCase();
+      taken.push(token);
+    } else if (sized && hubPlacesNamed(sized[1])) {
+      hubPlacesNamed(sized[1]).forEach(function (place) { sizes[place] = sized[2]; });
+      taken.push(token);
+    }
+  });
+  state.hub.on = false;
+  if (!port) return;
+
+  state.hub.on = true;
+  state.hub.port = port;
+  HUB_PLACES.forEach(function (place) { state.hub.sizes[place] = sizes[place] || ""; });
+  boardResidue = boardResidue.filter(function (token) { return taken.indexOf(token) < 0; });
+}
+
+// Try each kept line of each body as a hub entry, moving those the hub's own writer gives back
+function readHubLines(bodies) {
+  if (!state.hub.on) return;
+
+  // Each scene lights the hub its own way, the first of its lines to be read deciding
+  bodies.forEach(function (body) {
+    var numbered = 0;
+    var lightSet = false;
+    state.hubLight = 1;
+    body.kept = body.kept.filter(function (one) {
+      var parts = entryParts(one.text);
+      var places = parts && hubPlacesNamed(parts.selector);
+      if (!places || places.some(function (place) {
+        return !state.hub.sizes[place] || body.places[place].shows;
+      })) return true;
+
+      var playing = screenPlaying(parts, {screens: {X: {}}}, "X");
+      if (!playing) return true;
+      var light = playing.look.backlight;
+      if (lightSet && light !== state.hubLight) return true;
+
+      var trial = {places: JSON.parse(JSON.stringify(body.places))};
+      var group = places.length > 1 ? String(numbered + 1) : places[0];
+      places.forEach(function (place) {
+        trial.places[place] = Object.assign({}, trial.places[place], {
+          shows: playing.shows, turn: playing.turn || 0, pingpong: !!playing.pingpong,
+          hold: playing.hold || "", look: Object.assign({}, playing.look), group: group});
+      });
+      var wasLight = state.hubLight;
+      state.hubLight = light;
+      var written = placeGroups(trial).filter(function (one) {
+        return one.places.join() === places.slice().sort(function (a, b) {
+          return HUB_PLACES.indexOf(a) - HUB_PLACES.indexOf(b);
+        }).join();
+      }).map(hubEntry)[0];
+      if (written !== one.text) {
+        state.hubLight = wasLight;
+        return true;
+      }
+
+      body.places = trial.places;
+      lightSet = true;
+      if (places.length > 1) numbered++;
+      if (one.comments.length) body.notes[one.text] = one.comments;
+      return false;
+    });
+    body.hubLight = state.hubLight;
+  });
+}
 
 // ---- drawing the hub -------------------------------------------------------------------------
 

@@ -159,8 +159,29 @@ bodyParts.push({
     var sound = "sound" in body ? soundLine(body) : null;
     if (sound) lines.unshift(sound);
     return lines;
-  }
+  },
+  read: readSound
 });
+
+// Try each kept line of each body as a sound, moving the one that writes back exactly
+function readSound(bodies) {
+  bodies.forEach(function (body) {
+    body.kept = body.kept.filter(function (one) {
+      var parts = entryParts(one.text);
+      if (!parts || parts.selector !== "audio" || parts.effect !== "wav" || body.sound ||
+          !Object.keys(parts.right).every(function (key) { return key === "file" || key === "loop"; })) {
+        return true;
+      }
+      var sounding = {sound: unquoted(parts.right.file), soundLoop: parts.right.loop === "true",
+                      soundKept: null};
+      if (!sounding.sound || soundLine(sounding) !== one.text) return true;
+      body.sound = sounding.sound;
+      body.soundLoop = sounding.soundLoop;
+      if (one.comments.length) body.notes[one.text] = one.comments;
+      return false;
+    });
+  });
+}
 
 // ---- drawing the tab ---------------------------------------------------------------------------
 

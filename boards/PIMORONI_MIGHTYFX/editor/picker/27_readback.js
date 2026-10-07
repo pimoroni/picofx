@@ -211,19 +211,19 @@ function absorbFile(text) {
             comments: slot.comments, read: heading, body: bodyKeeping(slot.kept)};
   });
   var bodies = [state.always.body].concat(state.scenes.map(function (scene) { return scene.body; }));
-  readHubBoard();
-  readTabs(bodies);
-  readHubLines(bodies);
+  bodies.forEach(function (body) { body.notes = body.notes || {}; });
+  bodyParts.forEach(function (part) { if (part.readBoard) part.readBoard(); });
+  bodyParts.forEach(function (part) { if (part.read) part.read(bodies); });
   readLights(bodies);
   state.at = -1;
   apply(state.always.body);
   draw();
 }
 
-// ---- screens and sound out of the kept lines --------------------------------------------------
-// Each kept line is tried as a setting of the tab it names, and read only where that tab's own
+// ---- the parts' own lines out of the kept lines -----------------------------------------------
+// Each kept line is tried as a setting of the part it names, and read only where that part's own
 // writer then gives back exactly the line. So a setting read wrongly leaves the line kept, never
-// changed. A hub's lines stay kept for now, their positions going in groups
+// changed. A read line's comments are written above it again while it says the same
 
 // An entry's two sides, the lights and their settings before the colon, the effect and its after
 function entryParts(text) {
@@ -248,115 +248,6 @@ function entryParts(text) {
 
 function unquoted(value) {
   return value && /^(["']).*\1$/.test(value) ? value.slice(1, -1) : value;
-}
-
-// A screen's line as the settings of the screen it names, or null where one is not understood
-function screenPlaying(parts, body, letter) {
-  var playing = Object.assign({}, body.screens[letter]);
-  var look = playing.look = freshLook();
-  var source = {gif: "file", image: "file", graphics: "file", sequence: "folder"}[parts.effect];
-  if (!source || !parts.right[source]) return null;
-  playing.shows = unquoted(parts.right[source]);
-
-  var understood = true;
-  Object.keys(parts.left).forEach(function (key) {
-    var value = parts.left[key];
-    if (key === "rotation") playing.turn = Number(value);
-    else if (key === "backlight") look.backlight = /%$/.test(value) ? parseFloat(value) / 100 : Number(value);
-    else if (key === "mirror" && value === "true") look.mirror = true;
-    else if (key === "pixel_double" && value === "true") look.double = true;
-    else if (key === "bg") look.bg = "#" + (WORDS[value] ? hexOf(WORDS[value]) : value);
-    else if (key === "offset") {
-      var sides = value.split("|");
-      look.anchor = null;
-      look.x = sides[0] === "*" ? "" : sides[0];
-      look.y = sides[1] === "*" ? "" : sides[1];
-    } else if (key === "tile") {
-      var ways = value.split("|");
-      look.tile = ways[0];
-      look.tileDown = ways[1] || ways[0];
-    } else understood = false;
-  });
-  Object.keys(parts.right).forEach(function (key) {
-    var value = parts.right[key];
-    if (key === source) return;
-    if (key === "fps" || key === "interval") {
-      look.pace = key;
-      look.every = Number(value);
-    } else if (key === "loop" && value === "false") look.loop = false;
-    else if (key === "ping_pong" && value === "true") playing.pingpong = true;
-    else if (key === "first_as_last" && value === "true") look.whole = true;
-    else if (key === "hold") {
-      var ends = value.split("|");
-      playing.hold = ends[0];
-      look.holdBack = ends[1] || "";
-    } else if (key === "width" || key === "height") {
-      look.canvas = "set";
-      look[key === "width" ? "canvasW" : "canvasH"] = Number(value);
-    } else understood = false;
-  });
-  return understood ? playing : null;
-}
-
-// Try each kept line of each body as a screen or a sound, moving those that write back exactly
-function readTabs(bodies) {
-  var sizes = {};
-  boardResidue.forEach(function (token) {
-    var named = token.match(/^screen([ab])=(2\.8|1\.54)$/i);
-    if (named) sizes[named[1].toUpperCase()] = {token: token, size: named[2]};
-  });
-  var readOn = {};
-
-  bodies.forEach(function (body) {
-    body.notes = body.notes || {};
-    body.kept = body.kept.filter(function (one) {
-      var parts = entryParts(one.text);
-      if (!parts) return true;
-      var read = false;
-
-      var screen = parts.selector.match(/^screen([ab])$/);
-      var letter = screen && screen[1].toUpperCase();
-      if (letter && sizes[letter] && !body.screens[letter].shows) {
-        var playing = screenPlaying(parts, body, letter);
-        if (playing) {
-          var fitted = state.screens[letter];
-          var was = {there: fitted.there, size: fitted.size};
-          fitted.there = true;
-          fitted.size = sizes[letter].size;
-          var trial = {screens: Object.assign({}, body.screens)};
-          trial.screens[letter] = playing;
-          if (screenEntry(letter, trial) === one.text) {
-            body.screens[letter] = playing;
-            readOn[letter] = true;
-            read = true;
-          } else {
-            fitted.there = was.there;
-            fitted.size = was.size;
-          }
-        }
-      }
-
-      if (!read && parts.selector === "audio" && parts.effect === "wav" && !body.sound &&
-          Object.keys(parts.right).every(function (key) { return key === "file" || key === "loop"; })) {
-        var sounding = {sound: unquoted(parts.right.file), soundLoop: parts.right.loop === "true",
-                        soundKept: null};
-        if (sounding.sound && soundLine(sounding) === one.text) {
-          body.sound = sounding.sound;
-          body.soundLoop = sounding.soundLoop;
-          read = true;
-        }
-      }
-
-      // A read line's comments are written above it again while it says the same
-      if (read && one.comments.length) body.notes[one.text] = one.comments;
-      return !read;
-    });
-  });
-
-  // A screen read is fitted at its size, which the page writes itself from here
-  Object.keys(readOn).forEach(function (letter) {
-    boardResidue.splice(boardResidue.indexOf(sizes[letter].token), 1);
-  });
 }
 
 // ---- the lights -------------------------------------------------------------------------------
@@ -805,99 +696,6 @@ function readLights(bodies) {
 
   Object.keys(stripsRead).forEach(function (name) {
     boardResidue.splice(boardResidue.indexOf(lengths[name].token), 1);
-  });
-}
-
-// ---- the hub ----------------------------------------------------------------------------------
-
-// Hub positions as a file names them, hubA-C,E, or null where the item is not one
-function hubPlacesNamed(selector) {
-  var match = selector.match(/^hub([a-f](?:-[a-f])?(?:,[a-f](?:-[a-f])?)*)$/i);
-  if (!match) return null;
-  var places = [];
-  match[1].toUpperCase().split(",").forEach(function (part) {
-    var ends = part.split("-");
-    var from = HUB_PLACES.indexOf(ends[0]);
-    var to = HUB_PLACES.indexOf(ends[1] || ends[0]);
-    var step = to >= from ? 1 : -1;
-    for (var at = from; at !== to + step; at += step) places.push(HUB_PLACES[at]);
-  });
-  return places;
-}
-
-// The hub the board line declares, read into the page, which writes those tokens itself from
-// then on. Left alone where the line declares none
-function readHubBoard() {
-  var port = null;
-  var sizes = {};
-  var taken = [];
-  boardResidue.forEach(function (token) {
-    var wired = token.match(/^screen([ab])=hub$/i);
-    var sized = token.match(/^(hub[a-f\-,]+)=(2\.8|1\.54)$/i);
-    if (wired) {
-      port = wired[1].toUpperCase();
-      taken.push(token);
-    } else if (sized && hubPlacesNamed(sized[1])) {
-      hubPlacesNamed(sized[1]).forEach(function (place) { sizes[place] = sized[2]; });
-      taken.push(token);
-    }
-  });
-  state.hub.on = false;
-  if (!port) return;
-
-  state.hub.on = true;
-  state.hub.port = port;
-  HUB_PLACES.forEach(function (place) { state.hub.sizes[place] = sizes[place] || ""; });
-  boardResidue = boardResidue.filter(function (token) { return taken.indexOf(token) < 0; });
-}
-
-// Try each kept line of each body as a hub entry, moving those the hub's own writer gives back
-function readHubLines(bodies) {
-  if (!state.hub.on) return;
-
-  // Each scene lights the hub its own way, the first of its lines to be read deciding
-  bodies.forEach(function (body) {
-    var numbered = 0;
-    var lightSet = false;
-    state.hubLight = 1;
-    body.kept = body.kept.filter(function (one) {
-      var parts = entryParts(one.text);
-      var places = parts && hubPlacesNamed(parts.selector);
-      if (!places || places.some(function (place) {
-        return !state.hub.sizes[place] || body.places[place].shows;
-      })) return true;
-
-      var playing = screenPlaying(parts, {screens: {X: {}}}, "X");
-      if (!playing) return true;
-      var light = playing.look.backlight;
-      if (lightSet && light !== state.hubLight) return true;
-
-      var trial = {places: JSON.parse(JSON.stringify(body.places))};
-      var group = places.length > 1 ? String(numbered + 1) : places[0];
-      places.forEach(function (place) {
-        trial.places[place] = Object.assign({}, trial.places[place], {
-          shows: playing.shows, turn: playing.turn || 0, pingpong: !!playing.pingpong,
-          hold: playing.hold || "", look: Object.assign({}, playing.look), group: group});
-      });
-      var wasLight = state.hubLight;
-      state.hubLight = light;
-      var written = placeGroups(trial).filter(function (one) {
-        return one.places.join() === places.slice().sort(function (a, b) {
-          return HUB_PLACES.indexOf(a) - HUB_PLACES.indexOf(b);
-        }).join();
-      }).map(hubEntry)[0];
-      if (written !== one.text) {
-        state.hubLight = wasLight;
-        return true;
-      }
-
-      body.places = trial.places;
-      lightSet = true;
-      if (places.length > 1) numbered++;
-      if (one.comments.length) body.notes[one.text] = one.comments;
-      return false;
-    });
-    body.hubLight = state.hubLight;
   });
 }
 

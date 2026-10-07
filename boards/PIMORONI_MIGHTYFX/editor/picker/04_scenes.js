@@ -38,8 +38,9 @@ function mostPlayed() {
 // A scene holds every run's cutting and looks. The wiring, where each lamp sits and a strip's
 // length are the board's, so they sit outside the body and are not captured. The parts below
 // keep their own share of a scene in the body too, each registering how it captures, applies
-// and blanks that share, whether the share has content, and how it adds to the scene's lines.
-// Each runs after the runs' own, in the order the parts come
+// and blanks that share, whether the share has content, how it adds to the scene's lines, and
+// how it reads them back from a file's board line and kept lines. Each runs after the runs'
+// own, in the order the parts come
 var bodyParts = [];
 
 function capture() {
@@ -87,6 +88,10 @@ function hasContent(body) {
 }
 
 function slotAt(which) { return which < 0 ? state.always : state.scenes[which]; }
+
+function allBodies() {
+  return [state.always.body].concat(state.scenes.map(function (scene) { return scene.body; }));
+}
 
 function store() { slotAt(state.at).body = capture(); }
 

@@ -392,10 +392,6 @@ function screenEntry(letter, body) {
   return lookEntry("screen" + letter, playing, look, look.backlight, screen.size);
 }
 
-function allBodies() {
-  return [state.always.body].concat(state.scenes.map(function (scene) { return scene.body; }));
-}
-
 // ---- each scene keeps what its screens show ---------------------------------------------------
 
 bodyParts.push({
@@ -429,7 +425,8 @@ bodyParts.push({
       if (entry) lines.push(entry);
     });
     return lines;
-  }
+  },
+  read: readScreens
 });
 
 // The board line gives a screen's size only where some scene shows something on it. The board
@@ -447,6 +444,98 @@ boardLineSteps.before.push(function () {
     screensFitted["screen" + letter.toLowerCase()] = used ? screen.size : "";
   });
 });
+
+// ---- reading the file back ----------------------------------------------------------------------
+
+// A screen's line as the settings of the screen it names, or null where one is not understood
+function screenPlaying(parts, body, letter) {
+  var playing = Object.assign({}, body.screens[letter]);
+  var look = playing.look = freshLook();
+  var source = {gif: "file", image: "file", graphics: "file", sequence: "folder"}[parts.effect];
+  if (!source || !parts.right[source]) return null;
+  playing.shows = unquoted(parts.right[source]);
+
+  var understood = true;
+  Object.keys(parts.left).forEach(function (key) {
+    var value = parts.left[key];
+    if (key === "rotation") playing.turn = Number(value);
+    else if (key === "backlight") look.backlight = /%$/.test(value) ? parseFloat(value) / 100 : Number(value);
+    else if (key === "mirror" && value === "true") look.mirror = true;
+    else if (key === "pixel_double" && value === "true") look.double = true;
+    else if (key === "bg") look.bg = "#" + (WORDS[value] ? hexOf(WORDS[value]) : value);
+    else if (key === "offset") {
+      var sides = value.split("|");
+      look.anchor = null;
+      look.x = sides[0] === "*" ? "" : sides[0];
+      look.y = sides[1] === "*" ? "" : sides[1];
+    } else if (key === "tile") {
+      var ways = value.split("|");
+      look.tile = ways[0];
+      look.tileDown = ways[1] || ways[0];
+    } else understood = false;
+  });
+  Object.keys(parts.right).forEach(function (key) {
+    var value = parts.right[key];
+    if (key === source) return;
+    if (key === "fps" || key === "interval") {
+      look.pace = key;
+      look.every = Number(value);
+    } else if (key === "loop" && value === "false") look.loop = false;
+    else if (key === "ping_pong" && value === "true") playing.pingpong = true;
+    else if (key === "first_as_last" && value === "true") look.whole = true;
+    else if (key === "hold") {
+      var ends = value.split("|");
+      playing.hold = ends[0];
+      look.holdBack = ends[1] || "";
+    } else if (key === "width" || key === "height") {
+      look.canvas = "set";
+      look[key === "width" ? "canvasW" : "canvasH"] = Number(value);
+    } else understood = false;
+  });
+  return understood ? playing : null;
+}
+
+// Try each kept line of each body as a screen, moving those that write back exactly
+function readScreens(bodies) {
+  var sizes = {};
+  boardResidue.forEach(function (token) {
+    var named = token.match(/^screen([ab])=(2\.8|1\.54)$/i);
+    if (named) sizes[named[1].toUpperCase()] = {token: token, size: named[2]};
+  });
+  var readOn = {};
+
+  bodies.forEach(function (body) {
+    body.kept = body.kept.filter(function (one) {
+      var parts = entryParts(one.text);
+      var screen = parts && parts.selector.match(/^screen([ab])$/);
+      var letter = screen && screen[1].toUpperCase();
+      if (!letter || !sizes[letter] || body.screens[letter].shows) return true;
+      var playing = screenPlaying(parts, body, letter);
+      if (!playing) return true;
+
+      var fitted = state.screens[letter];
+      var was = {there: fitted.there, size: fitted.size};
+      fitted.there = true;
+      fitted.size = sizes[letter].size;
+      var trial = {screens: Object.assign({}, body.screens)};
+      trial.screens[letter] = playing;
+      if (screenEntry(letter, trial) !== one.text) {
+        fitted.there = was.there;
+        fitted.size = was.size;
+        return true;
+      }
+      body.screens[letter] = playing;
+      readOn[letter] = true;
+      if (one.comments.length) body.notes[one.text] = one.comments;
+      return false;
+    });
+  });
+
+  // A screen read is fitted at its size, which the page writes itself from here
+  Object.keys(readOn).forEach(function (letter) {
+    boardResidue.splice(boardResidue.indexOf(sizes[letter].token), 1);
+  });
+}
 
 // ---- drawing the tab -------------------------------------------------------------------------
 
