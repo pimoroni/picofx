@@ -68,6 +68,10 @@ __BOARD_STRIPS = []
 __BOARD_BRIGHTNESS = []
 __BOARD_TAKES = []
 
+# The selector the parser's examples name: an output by number where the board numbers its
+# outputs, or else its own LED, or else its first strip
+__BOARD_EXAMPLE = ["out4"]
+
 # The player kinds that write the board's own outputs. A strip has a player of its
 # own and reaches none of them, so a file playing only there leaves the outputs to
 # whatever last wrote them
@@ -1081,8 +1085,11 @@ def __expand(token, prefix, line, problems):
         prefix = item[:len(item) - len(digits)]
     elif not prefix:
         # Nothing established a name, so the correction carries whatever else was
-        # written: a bare number keeps its number, a bare component keeps that
-        correction = "out{}{}".format(digits or "1", "." + suffix if suffix else "")
+        # written: a bare number keeps its number, a bare component keeps that. A board
+        # that numbers no outputs takes its own LED's name in place of the number
+        named = "out" + (digits or "1") if __BOARD_EXAMPLE[0].startswith("out") \
+            else __BOARD_EXAMPLE[0]
+        correction = named + ("." + suffix if suffix else "")
         problems.append("line {}: '{}' has no output name before its number. Correct "
                         "it to '{}'".format(line, token, correction))
         return [], prefix
@@ -1525,7 +1532,7 @@ def parse(text):
                 problems.append(
                     "line {}: this has more than one ':'. Settings for the outputs go "
                     "before it and the effect after, such as "
-                    "'out4 colour=warm: blink'".format(number + 1))
+                    "'{} colour=warm: blink'".format(number + 1, __BOARD_EXAMPLE[0]))
                 continue
 
             if not selector:
@@ -1554,7 +1561,8 @@ def parse(text):
             # instead of naming the state the reader has landed in
             problems.append(
                 "line {}: '{}' has no ':'. The outputs go before it and the effect "
-                "after, such as 'out4 colour=warm: blink'".format(number + 1, written))
+                "after, such as '{} colour=warm: blink'".format(number + 1, written,
+                                                               __BOARD_EXAMPLE[0]))
             explained = True
 
     close()
@@ -2352,6 +2360,14 @@ def __learn_board(fx):
                         for name, others in getattr(board, "STRIP_TAKES", ())]
     __BOARD_SCREENS[:] = [(name.lower(), prop, spi, name)
                           for name, prop, spi in getattr(board, "SCREENS", ())]
+    # A board's outputs and its own LED are known by their pins
+    outputs = len(getattr(board, "OUT_PINS", ()))
+    if outputs:
+        __BOARD_EXAMPLE[0] = "out{}".format(min(4, outputs))
+    elif hasattr(board, "RGB_PINS"):
+        __BOARD_EXAMPLE[0] = "rgb"
+    elif __BOARD_STRIPS:
+        __BOARD_EXAMPLE[0] = __BOARD_STRIPS[0][2]
     # A hub takes both connectors and is built by the board, so it needs two screen ports, a
     # port able to carry its selects, and a board that hands it back
     hub = len(__BOARD_SCREENS) > 1 and hasattr(board, "hub") and \
@@ -3889,8 +3905,9 @@ def load(text, fx, maker=None):
     running hardware shuts the board down and a fresh one is built, as a restart
     would. Without a maker the change is reported instead.
     """
-    entries, problems = parse(text)
+    # The board is learned first, so the parser's examples name its own parts
     __learn_board(fx)
+    entries, problems = parse(text)
     has_strips = bool(__BOARD_STRIPS)
 
     # Board entries are settings rather than effects, a heading begins a scene, and
