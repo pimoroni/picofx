@@ -526,7 +526,7 @@ drawSteps.after.push(function () {
                     "<p class='says screenssays' id='screensSays'></p>" +
                     "<div class='screens-head' id='screensHead'></div>" +
                     "<div class='assets' id='assets'></div>";
-  var after = document.getElementById("striprPanel");
+  var after = document.getElementById(LED_PANELS[LED_PANELS.length - 1]);
   after.parentNode.insertBefore(panel, after.nextSibling);
 }());
 

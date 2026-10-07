@@ -12,8 +12,10 @@
  ],
  "wiring_order": true,
  "strips": [
-  {"name": "stripl", "label": "the left strip", "tab": "Left strip", "leds": 30, "fitted": true},
-  {"name": "stripr", "label": "the right strip", "tab": "Right strip", "leds": 18, "fitted": true}
+  {"name": "stripl", "label": "the left strip", "tab": "Left strip",
+   "says": "its own connector, and its own cutting", "colour": "#c2570f", "leds": 30, "fitted": true},
+  {"name": "stripr", "label": "the right strip", "tab": "Right strip",
+   "says": "the same again, playing what it likes", "colour": "#8a1f6d", "leds": 18, "fitted": true}
  ],
  "screens": {
   "ports": [{"id": "screena", "label": "Screen A"}, {"id": "screenb", "label": "Screen B"}],

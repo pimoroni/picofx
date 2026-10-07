@@ -1126,14 +1126,12 @@ body.scenesintab #looks>.shelf{margin-top:0}
 
 /* A coloured box is a board setting, each section's in its own colour. The chip icon sits
    inside the box, never around it */
-:root{--boardOuts:#3f5a6b;--stripL:#c2570f;--stripR:#8a1f6d;--screenA:#1f6feb}
+:root{--boardOuts:#3f5a6b;--screenA:#1f6feb}
 .chip.boardchip{display:inline-flex;align-items:center;gap:.45rem;padding:.3rem .55rem;
  border-radius:9px;color:#fff;font:600 .82rem system-ui,sans-serif}
 .boardchip .boardicon{color:#fff;opacity:.9}
 .boardchip small{font-weight:400;opacity:.85}
 .boardchip.outs{background:var(--boardOuts)}
-.boardchip.stripl{background:var(--stripL)}
-.boardchip.stripr{background:var(--stripR)}
 .boardchip select{border:1px solid rgba(255,255,255,.55);border-radius:6px;
  background:rgba(255,255,255,.15);color:#fff;font:inherit;font-weight:400;
  font-size:.78rem;padding:.1rem .25rem}
@@ -1589,26 +1587,6 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
   </div>
   <div id="outTools"></div>
   <div id="outChosen"></div>
- </details>
-
- <details class="panel strip" id="striplPanel" open>
-  <summary>The left strip<span class="says">its own connector, and its own cutting</span></summary>
-  <div class="leds" id="striplLeds"></div>
-  <div class="run striprun" id="striplRun"></div>
-  <div class="head" id="striplCut"></div>
-  <div id="striplBar"></div>
-  <div id="striplTools"></div>
-  <div id="striplChosen"></div>
- </details>
-
- <details class="panel strip" id="striprPanel" open>
-  <summary>The right strip<span class="says">the same again, playing what it likes</span></summary>
-  <div class="leds" id="striprLeds"></div>
-  <div class="run striprun" id="striprRun"></div>
-  <div class="head" id="striprCut"></div>
-  <div id="striprBar"></div>
-  <div id="striprTools"></div>
-  <div id="striprChosen"></div>
  </details>
 
 </div>

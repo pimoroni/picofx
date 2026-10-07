@@ -1126,14 +1126,12 @@ body.scenesintab #looks>.shelf{margin-top:0}
 
 /* A coloured box is a board setting, each section's in its own colour. The chip icon sits
    inside the box, never around it */
-:root{--boardOuts:#3f5a6b;--stripL:#c2570f;--stripR:#8a1f6d;--screenA:#1f6feb}
+:root{--boardOuts:#3f5a6b;--screenA:#1f6feb}
 .chip.boardchip{display:inline-flex;align-items:center;gap:.45rem;padding:.3rem .55rem;
  border-radius:9px;color:#fff;font:600 .82rem system-ui,sans-serif}
 .boardchip .boardicon{color:#fff;opacity:.9}
 .boardchip small{font-weight:400;opacity:.85}
 .boardchip.outs{background:var(--boardOuts)}
-.boardchip.stripl{background:var(--stripL)}
-.boardchip.stripr{background:var(--stripR)}
 .boardchip select{border:1px solid rgba(255,255,255,.55);border-radius:6px;
  background:rgba(255,255,255,.15);color:#fff;font:inherit;font-weight:400;
  font-size:.78rem;padding:.1rem .25rem}
@@ -1591,26 +1589,6 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
   <div id="outChosen"></div>
  </details>
 
- <details class="panel strip" id="striplPanel" open>
-  <summary>The left strip<span class="says">its own connector, and its own cutting</span></summary>
-  <div class="leds" id="striplLeds"></div>
-  <div class="run striprun" id="striplRun"></div>
-  <div class="head" id="striplCut"></div>
-  <div id="striplBar"></div>
-  <div id="striplTools"></div>
-  <div id="striplChosen"></div>
- </details>
-
- <details class="panel strip" id="striprPanel" open>
-  <summary>The right strip<span class="says">the same again, playing what it likes</span></summary>
-  <div class="leds" id="striprLeds"></div>
-  <div class="run striprun" id="striprRun"></div>
-  <div class="head" id="striprCut"></div>
-  <div id="striprBar"></div>
-  <div id="striprTools"></div>
-  <div id="striprChosen"></div>
- </details>
-
 </div>
 
 <details open>
@@ -1673,6 +1651,8 @@ var BOARD = {
    "name": "stripl",
    "label": "the left strip",
    "tab": "Left strip",
+   "says": "its own connector, and its own cutting",
+   "colour": "#c2570f",
    "leds": 30,
    "fitted": true
   },
@@ -1680,6 +1660,8 @@ var BOARD = {
    "name": "stripr",
    "label": "the right strip",
    "tab": "Right strip",
+   "says": "the same again, playing what it likes",
+   "colour": "#8a1f6d",
    "leds": 18,
    "fitted": true
   }
@@ -5115,6 +5097,32 @@ function toolAct(words, off, act, title) {
 
 // ---- joining them to the page below -----------------------------------------------------
 
+// Each strip has a panel after the outputs', in the board's order, and its board box takes the
+// strip's own colour
+(function () {
+  var colours = document.createElement("style");
+  var after = document.getElementById("outPanel");
+  BOARD.strips.forEach(function (strip) {
+    var id = strip.name;
+    var panel = document.createElement("details");
+    panel.className = "panel strip";
+    panel.id = id + "Panel";
+    panel.open = true;
+    panel.innerHTML = "<summary>" + strip.label.charAt(0).toUpperCase() + strip.label.slice(1) +
+                      "<span class='says'>" + strip.says + "</span></summary>" +
+                      "<div class='leds' id='" + id + "Leds'></div>" +
+                      "<div class='run striprun' id='" + id + "Run'></div>" +
+                      "<div class='head' id='" + id + "Cut'></div>" +
+                      "<div id='" + id + "Bar'></div>" +
+                      "<div id='" + id + "Tools'></div>" +
+                      "<div id='" + id + "Chosen'></div>";
+    after.parentNode.insertBefore(panel, after.nextSibling);
+    after = panel;
+    colours.textContent += ".boardchip." + id + "{background:" + strip.colour + "}\n";
+  });
+  document.head.appendChild(colours);
+}());
+
 // The strips are runs of the page below from here on. Each scene keeps its own cutting of
 // them in its body, which captures every run
 runs = runs.concat(STRIPS.map(stripRun));
@@ -7607,7 +7615,7 @@ drawSteps.after.push(function () {
                     "<p class='says screenssays' id='screensSays'></p>" +
                     "<div class='screens-head' id='screensHead'></div>" +
                     "<div class='assets' id='assets'></div>";
-  var after = document.getElementById("striprPanel");
+  var after = document.getElementById(LED_PANELS[LED_PANELS.length - 1]);
   after.parentNode.insertBefore(panel, after.nextSibling);
 }());
 
