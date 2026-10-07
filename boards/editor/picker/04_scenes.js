@@ -21,11 +21,25 @@ function copyRun(run) {
           picked: run.picked, was: run.was.slice(), undone: run.undone.slice()};
 }
 
-// The look that plays on most of the outputs' lamps, which is what a tab's swatch shows
+// The look that plays on most of the outputs' lamps, which is what a tab's swatch shows. A board
+// whose strips are what it is for shows what the first fitted strip playing anything plays, and
+// its outputs' look only where none does
 function mostPlayed() {
+  if (BOARD.strips_first) {
+    var strips = runs.filter(function (run) { return run.strip && run.there; });
+    for (var i = 0; i < strips.length; i++) {
+      var look = mostPlayedOn([strips[i]]);
+      if (look) return look;
+    }
+  }
+  return mostPlayedOn([outs, mono]);
+}
+
+// The look that plays on most of the lamps of the runs given
+function mostPlayedOn(among) {
   var counted = {};
   var most = null;
-  [outs, mono].forEach(function (run) {
+  among.forEach(function (run) {
     run.sections.forEach(function (section) {
       if (!section.look) return;
       counted[section.look] = (counted[section.look] || 0) + widthOf(section);

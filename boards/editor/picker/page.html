@@ -56,7 +56,11 @@ main{max-width:60rem;margin:1.4rem auto;padding:0 1.4rem}
    stays put as the board is edited */
 .panel.strip .leds .chip{box-sizing:border-box;min-height:33px}
 .panel.stripout > :not(summary):not(.leds){visibility:hidden}
-.panel.stripout .addstrip{position:absolute;left:50%;top:55%;transform:translate(-50%,-50%)}
+.panel.stripout .addstrip,.panel.stripout .stripblocked{position:absolute;left:50%;top:55%;
+ transform:translate(-50%,-50%)}
+.panel.stripout .stripblocked{width:max-content;max-width:calc(100% - 3rem);text-align:center}
+/* A tab whose section cannot be used just now, which still opens to say why */
+.ledtab.blocked{opacity:.45}
 .head{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.2rem}
 .head .gap{flex:1}
 /* The row of settings that belongs to the bar, which the run above it is cut into. As tall as

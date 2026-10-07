@@ -12,11 +12,16 @@
  },
  "opening": {"colour": "Rainbow"},
  "wiring_order": false,
+ "strips_first": true,
  "strips": [
   {"name": "stripdat", "label": "the strip on DAT", "tab": "DAT strip", "connector": "DAT",
    "says": "the strip on the data terminal", "colour": "#c2570f", "leds": 66, "fitted": true},
   {"name": "stripclk", "label": "the strip on CLK", "tab": "CLK strip", "connector": "CLK",
-   "says": "a second strip, on the clock terminal", "colour": "#8a1f6d", "leds": 30, "fitted": false}
+   "says": "a second strip, on the clock terminal", "colour": "#8a1f6d", "leds": 30, "fitted": false},
+  {"name": "stripapa", "label": "the APA102 strip", "tab": "APA102 strip",
+   "connector": "both terminals, DAT and CLK",
+   "says": "one strip across both terminals, with a brightness of its own", "colour": "#1f6feb",
+   "leds": 60, "fitted": false, "brightness": 0.5, "takes": ["stripdat", "stripclk"]}
  ],
  "screens": {
   "ports": [{"id": "screena", "label": "Screen", "connector": "SP/CE"}],

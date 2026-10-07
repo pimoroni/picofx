@@ -65,8 +65,9 @@ function renderConnectors() {
   box.textContent = "";
   var old = document.getElementById("wiringLines");
   if (old) old.parentNode.removeChild(old);
-  document.getElementById("outPanel").classList.toggle("wired", setupOn);
-  if (!setupOn) {
+  // A board whose outputs are its own LEDs has no wiring to show
+  document.getElementById("outPanel").classList.toggle("wired", setupOn && BOARD.wiring_order);
+  if (!setupOn || !BOARD.wiring_order) {
     unwiredSpan = sidesSpan();
     return;
   }

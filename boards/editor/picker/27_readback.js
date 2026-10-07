@@ -217,6 +217,13 @@ function absorbFile(text) {
   readLights(bodies);
   state.at = -1;
   apply(state.always.body);
+  // A file fitting a strip beside one whose terminals it takes plays the other, as the board
+  // does, so this one is taken out with its lines
+  runs.filter(function (run) {
+    return run.strip && run.there && runs.some(function (other) {
+      return other.strip && other.there && run.takes.indexOf(other.name) >= 0;
+    });
+  }).forEach(dropStrip);
   draw();
 }
 
@@ -612,27 +619,30 @@ function readLights(bodies) {
   // a stretch of the strip is read
   var lengths = {};
   boardResidue.forEach(function (token) {
-    var named = token.match(/^(\w+)=(\d+)(?:\|([rgb]{3}))?$/i);
-    if (!named || !STRIPS.some(function (strip) { return strip.name === named[1].toLowerCase(); }))
-      return;
-    // The board's own order is held as no order, so writing it back changes nothing. One
-    // the page does not offer stays as written, for the board to answer
-    var order = (named[3] || "").toLowerCase();
-    if (order === "grb") order = "";
-    var offered = STRIP_ORDERS.some(function (pair) { return pair[0] === order; });
-    if (offered) lengths[named[1].toLowerCase()] = {token: token, leds: Number(named[2]), order: order};
+    var named = token.match(/^(\w+)=(\d+)(?:\|(\S+))?$/i);
+    var run = named && stripNamed(named[1]);
+    if (!run) return;
+    // What follows the length, as the page holds it, the board's own being held as nothing so
+    // writing it back changes nothing. One the page does not offer stays as written, for the
+    // board to answer
+    var values = readStripTail(run, named[3] || "");
+    if (!values) return;
+    values.leds = Number(named[2]);
+    // A file giving the strip a length has it fitted, whatever this page had removed
+    values.there = true;
+    lengths[run.name] = {token: token, values: values};
   });
   runs.forEach(function (run) {
-    if (!run.strip || !lengths[run.name]) return;
-    var one = STRIPS.filter(function (strip) { return strip.id === run.id; })[0];
-    one.leds = lengths[run.name].leds;
-    one.order = lengths[run.name].order;
-    run.leds = one.leds;
-    run.order = one.order;
-    // A file giving the strip a length has it fitted, whatever this page had removed
-    one.there = true;
-    run.there = true;
+    if (run.strip && lengths[run.name]) stripSet(run, lengths[run.name].values);
   });
+  // Check if this board's strips share terminals, where a file naming any strip is the board as
+  // built: the strips it names are fitted and no others
+  if (runs.some(function (run) { return run.strip && run.takes.length; }) &&
+      Object.keys(lengths).length) {
+    runs.forEach(function (run) {
+      if (run.strip && !lengths[run.name]) stripSet(run, {there: false});
+    });
+  }
   var stripsRead = {};
   var broken = outputsBrokenOut(bodies);
   var said = wiringRead && orderSaid(wiringRead);

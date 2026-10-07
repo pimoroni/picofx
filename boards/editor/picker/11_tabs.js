@@ -14,10 +14,16 @@
 var TAB_NAMES = {outPanel: "Outputs"};
 BOARD.strips.forEach(function (strip) { TAB_NAMES[strip.name + "Panel"] = strip.tab; });
 
-// The sections with a tab, the LED ones and any other a page adds
+// The sections with a tab, the LED ones and any other a page adds. A board whose strips are what it
+// is for has their tabs first and opens on the first one fitted
 var TAB_PANELS = LED_PANELS.slice();
+if (BOARD.strips_first) TAB_PANELS.push(TAB_PANELS.shift());
 
 var chosenTab = "outPanel";
+if (BOARD.strips_first) {
+  var firstFitted = STRIPS.filter(function (strip) { return strip.there; })[0];
+  if (firstFitted) chosenTab = firstFitted.id + "Panel";
+}
 
 // Whether the section shown is one the gallery can give a look to, which a strip not fitted is not
 function chosenTakesLooks() {
@@ -45,13 +51,22 @@ var tabSwatches = {};
 
 function tabSwatch(swatch, panel) { tabSwatches[panel](swatch, panel); }
 
+// Why a tab's section cannot be used just now, or nothing where it can. Its tab greys and
+// still opens, so the section can say why
+function tabBlocked(panel) {
+  var run = runsOfPanel(panel)[0];
+  return run && run.strip ? stripBlockedBy(run) : "";
+}
+
 function renderLedTabs() {
   var bar = document.getElementById("ledTabs");
   bar.textContent = "";
   TAB_PANELS.forEach(function (panel) {
     var tab = document.createElement("button");
     tab.type = "button";
-    tab.className = "ledtab" + (panel === chosenTab ? " on" : "");
+    var blocked = tabBlocked(panel);
+    tab.className = "ledtab" + (panel === chosenTab ? " on" : "") + (blocked ? " blocked" : "");
+    if (blocked) tab.title = blocked;
     tab.dataset.panel = panel;
     var name = document.createElement("b");
     name.textContent = TAB_NAMES[panel];

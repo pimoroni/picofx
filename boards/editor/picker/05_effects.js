@@ -292,10 +292,14 @@ settle();
 // breaking out alone.
 
 // The board's strips. A strip's order is the one it takes its colours in, empty for the board's
-// own, and it is there as the board describes it until added or removed while the board is edited
+// own, and it is there as the board describes it until added or removed while the board is edited.
+// A strip the description gives a brightness takes that after its length in place of an order,
+// the description's being the board's own, and one it says takes other strips takes their terminals
 var STRIPS = BOARD.strips.map(function (strip) {
+  var brightness = strip.brightness === undefined ? null : strip.brightness;
   return {id: strip.name, name: strip.name, label: strip.label, leds: strip.leds, order: "",
-          there: strip.fitted};
+          there: strip.fitted, brightness: brightness, made: brightness,
+          connector: strip.connector, takes: strip.takes || []};
 });
 
 function stripRun(one) {
@@ -306,7 +310,26 @@ function stripRun(one) {
   run.leds = one.leds;
   run.order = one.order;
   run.there = one.there;
+  run.brightness = one.brightness;
+  run.made = one.made;
+  run.connector = one.connector;
+  run.takes = one.takes;
   return run;
+}
+
+// The strip run a file names, or null where this board has no strip by that name
+function stripNamed(name) {
+  var lower = name.toLowerCase();
+  return runs.filter(function (run) { return run.strip && run.name === lower; })[0] || null;
+}
+
+// The strip's entry, which a fresh run is made from, and the run itself, given the same values
+function stripSet(run, values) {
+  var one = STRIPS.filter(function (strip) { return strip.id === run.id; })[0];
+  Object.keys(values).forEach(function (key) {
+    one[key] = values[key];
+    run[key] = values[key];
+  });
 }
 
 // A stretch of a strip is a range of its lights, and the whole of it is the bare name
@@ -739,6 +762,77 @@ var STRIP_MOST = 300;
 var STRIP_ORDERS = [["", "GRB, as most strips"], ["rgb", "RGB"], ["rbg", "RBG"],
                     ["gbr", "GBR"], ["brg", "BRG"], ["bgr", "BGR"]];
 
+// The brightnesses a strip with one of its own can be given, as the file writes them after its
+// length, the board's own being written as nothing
+var STRIP_BRIGHTNESSES = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
+
+function stripPercent(brightness) { return Math.round(brightness * 100) + "%"; }
+
+// What follows a strip's length on the board line, its brightness or its colour order, as the
+// choice on its chip
+function stripChipChoice(run) {
+  var choice = document.createElement("select");
+  if (run.made === null) {
+    STRIP_ORDERS.forEach(function (pair) {
+      var option = document.createElement("option");
+      option.value = pair[0];
+      option.textContent = pair[1];
+      if ((run.order || "") === pair[0]) option.selected = true;
+      choice.appendChild(option);
+    });
+    choice.title = "The order the strip takes its colours in. Change it if red shows as another colour";
+    choice.onchange = function () {
+      stripSet(run, {order: choice.value});
+      draw();
+    };
+    return choice;
+  }
+  // A brightness read from a file stays offered, though the list does not hold it
+  var offered = STRIP_BRIGHTNESSES.indexOf(run.brightness) < 0 ?
+    STRIP_BRIGHTNESSES.concat([run.brightness]).sort(function (a, b) { return a - b; }) :
+    STRIP_BRIGHTNESSES;
+  offered.forEach(function (brightness) {
+    var option = document.createElement("option");
+    option.value = brightness;
+    option.textContent = stripPercent(brightness) + (brightness === run.made ? ", as made" : "");
+    if (brightness === run.brightness) option.selected = true;
+    choice.appendChild(option);
+  });
+  choice.title = "The strip's own brightness for its whole length, under each stretch's level";
+  choice.onchange = function () {
+    stripSet(run, {brightness: Number(choice.value)});
+    draw();
+  };
+  return choice;
+}
+
+// The same as words, where the chip cannot be changed
+function stripChipShown(run) {
+  return run.made === null ? (run.order || "grb").toUpperCase()
+                           : stripPercent(run.brightness) + " brightness";
+}
+
+// The same as the file writes it after the length, nothing for the board's own
+function stripLengthTail(run) {
+  if (run.made === null) return run.order ? "|" + run.order : "";
+  return run.brightness === run.made ? "" : "|" + stripPercent(run.brightness);
+}
+
+// The same read back from the file, as the values to set, or null for one the page does not
+// offer, which stays as written for the board to answer
+function readStripTail(run, tail) {
+  if (run.made === null) {
+    var order = tail.toLowerCase();
+    if (order === "grb") order = "";
+    var offered = STRIP_ORDERS.some(function (pair) { return pair[0] === order; });
+    return offered ? {order: order} : null;
+  }
+  if (!tail) return {brightness: run.made};
+  var percent = tail.match(/^(\d+(?:\.\d+)?)%$/);
+  var brightness = percent ? Number(percent[1]) / 100 : Number(tail);
+  return brightness >= 0 && brightness <= 1 ? {brightness: brightness} : null;
+}
+
 // A strip's chip, its length and its order to set, which the board's setup shows while it is on
 function renderStripChip(where, run) {
   var box = document.getElementById(where);
@@ -755,8 +849,7 @@ function renderStripChip(where, run) {
     var want = Math.max(STRIP_FEWEST, Math.min(STRIP_MOST, parseInt(count.value, 10) ||
                                                            STRIP_FEWEST));
     if (want === run.leds) return;
-    STRIPS.filter(function (one) { return one.id === run.id; })[0].leds = want;
-    run.leds = want;
+    stripSet(run, {leds: want});
     settle();
     draw();
   };
@@ -764,21 +857,7 @@ function renderStripChip(where, run) {
   var unit = document.createElement("small");
   unit.textContent = "LEDs";
   chip.appendChild(unit);
-  var order = document.createElement("select");
-  STRIP_ORDERS.forEach(function (pair) {
-    var option = document.createElement("option");
-    option.value = pair[0];
-    option.textContent = pair[1];
-    if ((run.order || "") === pair[0]) option.selected = true;
-    order.appendChild(option);
-  });
-  order.title = "The order the strip takes its colours in. Change it if red shows as another colour";
-  order.onchange = function () {
-    STRIPS.filter(function (one) { return one.id === run.id; })[0].order = order.value;
-    run.order = order.value;
-    draw();
-  };
-  chip.appendChild(order);
+  chip.appendChild(stripChipChoice(run));
   box.appendChild(chip);
   var says = document.createElement("span");
   says.className = "says";

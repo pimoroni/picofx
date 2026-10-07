@@ -298,7 +298,8 @@ var CATALOGUE = {
  ],
  "strips": [
   "stripdat",
-  "stripclk"
+  "stripclk",
+  "stripapa"
  ],
  "output_settings": [
   "level",
@@ -335,7 +336,8 @@ var CATALOGUE = {
    "1.54"
   ],
   "stripdat": null,
-  "stripclk": null
+  "stripclk": null,
+  "stripapa": null
  },
  "board": {
   "outputs": [
@@ -353,6 +355,10 @@ var CATALOGUE = {
    [
     "stripclk",
     "CLK"
+   ],
+   [
+    "stripapa",
+    "both terminals, DAT and CLK"
    ]
   ],
   "screens": [

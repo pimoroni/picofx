@@ -56,7 +56,11 @@ main{max-width:60rem;margin:1.4rem auto;padding:0 1.4rem}
    stays put as the board is edited */
 .panel.strip .leds .chip{box-sizing:border-box;min-height:33px}
 .panel.stripout > :not(summary):not(.leds){visibility:hidden}
-.panel.stripout .addstrip{position:absolute;left:50%;top:55%;transform:translate(-50%,-50%)}
+.panel.stripout .addstrip,.panel.stripout .stripblocked{position:absolute;left:50%;top:55%;
+ transform:translate(-50%,-50%)}
+.panel.stripout .stripblocked{width:max-content;max-width:calc(100% - 3rem);text-align:center}
+/* A tab whose section cannot be used just now, which still opens to say why */
+.ledtab.blocked{opacity:.45}
 .head{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.2rem}
 .head .gap{flex:1}
 /* The row of settings that belongs to the bar, which the run above it is cut into. As tall as
@@ -3936,11 +3940,25 @@ function copyRun(run) {
           picked: run.picked, was: run.was.slice(), undone: run.undone.slice()};
 }
 
-// The look that plays on most of the outputs' lamps, which is what a tab's swatch shows
+// The look that plays on most of the outputs' lamps, which is what a tab's swatch shows. A board
+// whose strips are what it is for shows what the first fitted strip playing anything plays, and
+// its outputs' look only where none does
 function mostPlayed() {
+  if (BOARD.strips_first) {
+    var strips = runs.filter(function (run) { return run.strip && run.there; });
+    for (var i = 0; i < strips.length; i++) {
+      var look = mostPlayedOn([strips[i]]);
+      if (look) return look;
+    }
+  }
+  return mostPlayedOn([outs, mono]);
+}
+
+// The look that plays on most of the lamps of the runs given
+function mostPlayedOn(among) {
   var counted = {};
   var most = null;
-  [outs, mono].forEach(function (run) {
+  among.forEach(function (run) {
     run.sections.forEach(function (section) {
       if (!section.look) return;
       counted[section.look] = (counted[section.look] || 0) + widthOf(section);
@@ -4568,10 +4586,14 @@ settle();
 // breaking out alone.
 
 // The board's strips. A strip's order is the one it takes its colours in, empty for the board's
-// own, and it is there as the board describes it until added or removed while the board is edited
+// own, and it is there as the board describes it until added or removed while the board is edited.
+// A strip the description gives a brightness takes that after its length in place of an order,
+// the description's being the board's own, and one it says takes other strips takes their terminals
 var STRIPS = BOARD.strips.map(function (strip) {
+  var brightness = strip.brightness === undefined ? null : strip.brightness;
   return {id: strip.name, name: strip.name, label: strip.label, leds: strip.leds, order: "",
-          there: strip.fitted};
+          there: strip.fitted, brightness: brightness, made: brightness,
+          connector: strip.connector, takes: strip.takes || []};
 });
 
 function stripRun(one) {
@@ -4582,7 +4604,26 @@ function stripRun(one) {
   run.leds = one.leds;
   run.order = one.order;
   run.there = one.there;
+  run.brightness = one.brightness;
+  run.made = one.made;
+  run.connector = one.connector;
+  run.takes = one.takes;
   return run;
+}
+
+// The strip run a file names, or null where this board has no strip by that name
+function stripNamed(name) {
+  var lower = name.toLowerCase();
+  return runs.filter(function (run) { return run.strip && run.name === lower; })[0] || null;
+}
+
+// The strip's entry, which a fresh run is made from, and the run itself, given the same values
+function stripSet(run, values) {
+  var one = STRIPS.filter(function (strip) { return strip.id === run.id; })[0];
+  Object.keys(values).forEach(function (key) {
+    one[key] = values[key];
+    run[key] = values[key];
+  });
 }
 
 // A stretch of a strip is a range of its lights, and the whole of it is the bare name
@@ -5015,6 +5056,77 @@ var STRIP_MOST = 300;
 var STRIP_ORDERS = [["", "GRB, as most strips"], ["rgb", "RGB"], ["rbg", "RBG"],
                     ["gbr", "GBR"], ["brg", "BRG"], ["bgr", "BGR"]];
 
+// The brightnesses a strip with one of its own can be given, as the file writes them after its
+// length, the board's own being written as nothing
+var STRIP_BRIGHTNESSES = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
+
+function stripPercent(brightness) { return Math.round(brightness * 100) + "%"; }
+
+// What follows a strip's length on the board line, its brightness or its colour order, as the
+// choice on its chip
+function stripChipChoice(run) {
+  var choice = document.createElement("select");
+  if (run.made === null) {
+    STRIP_ORDERS.forEach(function (pair) {
+      var option = document.createElement("option");
+      option.value = pair[0];
+      option.textContent = pair[1];
+      if ((run.order || "") === pair[0]) option.selected = true;
+      choice.appendChild(option);
+    });
+    choice.title = "The order the strip takes its colours in. Change it if red shows as another colour";
+    choice.onchange = function () {
+      stripSet(run, {order: choice.value});
+      draw();
+    };
+    return choice;
+  }
+  // A brightness read from a file stays offered, though the list does not hold it
+  var offered = STRIP_BRIGHTNESSES.indexOf(run.brightness) < 0 ?
+    STRIP_BRIGHTNESSES.concat([run.brightness]).sort(function (a, b) { return a - b; }) :
+    STRIP_BRIGHTNESSES;
+  offered.forEach(function (brightness) {
+    var option = document.createElement("option");
+    option.value = brightness;
+    option.textContent = stripPercent(brightness) + (brightness === run.made ? ", as made" : "");
+    if (brightness === run.brightness) option.selected = true;
+    choice.appendChild(option);
+  });
+  choice.title = "The strip's own brightness for its whole length, under each stretch's level";
+  choice.onchange = function () {
+    stripSet(run, {brightness: Number(choice.value)});
+    draw();
+  };
+  return choice;
+}
+
+// The same as words, where the chip cannot be changed
+function stripChipShown(run) {
+  return run.made === null ? (run.order || "grb").toUpperCase()
+                           : stripPercent(run.brightness) + " brightness";
+}
+
+// The same as the file writes it after the length, nothing for the board's own
+function stripLengthTail(run) {
+  if (run.made === null) return run.order ? "|" + run.order : "";
+  return run.brightness === run.made ? "" : "|" + stripPercent(run.brightness);
+}
+
+// The same read back from the file, as the values to set, or null for one the page does not
+// offer, which stays as written for the board to answer
+function readStripTail(run, tail) {
+  if (run.made === null) {
+    var order = tail.toLowerCase();
+    if (order === "grb") order = "";
+    var offered = STRIP_ORDERS.some(function (pair) { return pair[0] === order; });
+    return offered ? {order: order} : null;
+  }
+  if (!tail) return {brightness: run.made};
+  var percent = tail.match(/^(\d+(?:\.\d+)?)%$/);
+  var brightness = percent ? Number(percent[1]) / 100 : Number(tail);
+  return brightness >= 0 && brightness <= 1 ? {brightness: brightness} : null;
+}
+
 // A strip's chip, its length and its order to set, which the board's setup shows while it is on
 function renderStripChip(where, run) {
   var box = document.getElementById(where);
@@ -5031,8 +5143,7 @@ function renderStripChip(where, run) {
     var want = Math.max(STRIP_FEWEST, Math.min(STRIP_MOST, parseInt(count.value, 10) ||
                                                            STRIP_FEWEST));
     if (want === run.leds) return;
-    STRIPS.filter(function (one) { return one.id === run.id; })[0].leds = want;
-    run.leds = want;
+    stripSet(run, {leds: want});
     settle();
     draw();
   };
@@ -5040,21 +5151,7 @@ function renderStripChip(where, run) {
   var unit = document.createElement("small");
   unit.textContent = "LEDs";
   chip.appendChild(unit);
-  var order = document.createElement("select");
-  STRIP_ORDERS.forEach(function (pair) {
-    var option = document.createElement("option");
-    option.value = pair[0];
-    option.textContent = pair[1];
-    if ((run.order || "") === pair[0]) option.selected = true;
-    order.appendChild(option);
-  });
-  order.title = "The order the strip takes its colours in. Change it if red shows as another colour";
-  order.onchange = function () {
-    STRIPS.filter(function (one) { return one.id === run.id; })[0].order = order.value;
-    run.order = order.value;
-    draw();
-  };
-  chip.appendChild(order);
+  chip.appendChild(stripChipChoice(run));
   box.appendChild(chip);
   var says = document.createElement("span");
   says.className = "says";
@@ -6667,7 +6764,7 @@ function boardLine() {
       var held = body && body.runs && body.runs[run.name];
       return held && held.sections.some(function (section) { return section.look; });
     });
-    if (used) tokens.push(run.name + "=" + run.leds + (run.order ? "|" + run.order : ""));
+    if (used) tokens.push(run.name + "=" + run.leds + stripLengthTail(run));
   });
   var line = tokens.length ? "board: " + tokens.join(" ") : "";
   boardLineSteps.after.forEach(function (step) { line = step(line); });
@@ -6794,15 +6891,33 @@ function renderOutFacts() {
   }
 }
 
-// What a strip is built as, its length and the order it takes its colours in
+// What a strip is built as, its length and what follows it on the board line
 function stripBuilt(run) {
-  return run.leds + " LEDs, " + (run.order || "grb").toUpperCase();
+  return run.leds + " LEDs, " + stripChipShown(run);
 }
 
 // Whether a strip is there, on the run and on the entry a fresh run is made from
-function stripThere(run, there) {
-  STRIPS.filter(function (one) { return one.id === run.id; })[0].there = there;
-  run.there = there;
+function stripThere(run, there) { stripSet(run, {there: there}); }
+
+function capitalised(text) { return text.charAt(0).toUpperCase() + text.slice(1); }
+
+// Why a strip cannot be fitted just now, or nothing where it can: a strip taking other strips'
+// terminals cannot be fitted beside them, nor they beside it
+function stripBlockedBy(run) {
+  if (run.there) return "";
+  var fitted = runs.filter(function (one) {
+    return one.strip && one.there && run.takes.indexOf(one.name) >= 0;
+  });
+  if (fitted.length) {
+    return capitalised(run.label) + " takes " + run.connector + ", so it cannot be fitted beside " +
+           fitted.map(function (one) { return one.label; }).join(" and ") + ". Remove " +
+           (fitted.length > 1 ? "them" : "it") + " to fit one here.";
+  }
+  var taking = runs.filter(function (one) {
+    return one.strip && one.there && one.takes.indexOf(run.name) >= 0;
+  })[0];
+  return taking ? capitalised(taking.label) + " uses " + taking.connector +
+                  ". Remove it to fit a strip here." : "";
 }
 
 // Taking a strip out clears what it plays in every scene, the lines kept from a file
@@ -6834,10 +6949,19 @@ function stripDrop(run) {
   return drop;
 }
 
-// A strip not fitted offers to be added, which only editing the board can take up
+// A strip not fitted offers to be added, which only editing the board can take up, or says
+// why it cannot be
 function renderStripOut(box, run, panel) {
   box.textContent = "";
   box.appendChild(boardBox(panel, ["Strip", small("not fitted")]));
+  var blocked = stripBlockedBy(run);
+  if (blocked) {
+    var why = document.createElement("span");
+    why.className = "stripblocked says";
+    why.textContent = blocked;
+    box.appendChild(why);
+    return;
+  }
   var add = document.createElement("button");
   add.type = "button";
   add.className = "addstrip";
@@ -6963,8 +7087,9 @@ function renderConnectors() {
   box.textContent = "";
   var old = document.getElementById("wiringLines");
   if (old) old.parentNode.removeChild(old);
-  document.getElementById("outPanel").classList.toggle("wired", setupOn);
-  if (!setupOn) {
+  // A board whose outputs are its own LEDs has no wiring to show
+  document.getElementById("outPanel").classList.toggle("wired", setupOn && BOARD.wiring_order);
+  if (!setupOn || !BOARD.wiring_order) {
     unwiredSpan = sidesSpan();
     return;
   }
@@ -7176,10 +7301,16 @@ function workOn(panel) {
 var TAB_NAMES = {outPanel: "Outputs"};
 BOARD.strips.forEach(function (strip) { TAB_NAMES[strip.name + "Panel"] = strip.tab; });
 
-// The sections with a tab, the LED ones and any other a page adds
+// The sections with a tab, the LED ones and any other a page adds. A board whose strips are what it
+// is for has their tabs first and opens on the first one fitted
 var TAB_PANELS = LED_PANELS.slice();
+if (BOARD.strips_first) TAB_PANELS.push(TAB_PANELS.shift());
 
 var chosenTab = "outPanel";
+if (BOARD.strips_first) {
+  var firstFitted = STRIPS.filter(function (strip) { return strip.there; })[0];
+  if (firstFitted) chosenTab = firstFitted.id + "Panel";
+}
 
 // Whether the section shown is one the gallery can give a look to, which a strip not fitted is not
 function chosenTakesLooks() {
@@ -7207,13 +7338,22 @@ var tabSwatches = {};
 
 function tabSwatch(swatch, panel) { tabSwatches[panel](swatch, panel); }
 
+// Why a tab's section cannot be used just now, or nothing where it can. Its tab greys and
+// still opens, so the section can say why
+function tabBlocked(panel) {
+  var run = runsOfPanel(panel)[0];
+  return run && run.strip ? stripBlockedBy(run) : "";
+}
+
 function renderLedTabs() {
   var bar = document.getElementById("ledTabs");
   bar.textContent = "";
   TAB_PANELS.forEach(function (panel) {
     var tab = document.createElement("button");
     tab.type = "button";
-    tab.className = "ledtab" + (panel === chosenTab ? " on" : "");
+    var blocked = tabBlocked(panel);
+    tab.className = "ledtab" + (panel === chosenTab ? " on" : "") + (blocked ? " blocked" : "");
+    if (blocked) tab.title = blocked;
     tab.dataset.panel = panel;
     var name = document.createElement("b");
     name.textContent = TAB_NAMES[panel];
@@ -10657,6 +10797,13 @@ function absorbFile(text) {
   readLights(bodies);
   state.at = -1;
   apply(state.always.body);
+  // A file fitting a strip beside one whose terminals it takes plays the other, as the board
+  // does, so this one is taken out with its lines
+  runs.filter(function (run) {
+    return run.strip && run.there && runs.some(function (other) {
+      return other.strip && other.there && run.takes.indexOf(other.name) >= 0;
+    });
+  }).forEach(dropStrip);
   draw();
 }
 
@@ -11052,27 +11199,30 @@ function readLights(bodies) {
   // a stretch of the strip is read
   var lengths = {};
   boardResidue.forEach(function (token) {
-    var named = token.match(/^(\w+)=(\d+)(?:\|([rgb]{3}))?$/i);
-    if (!named || !STRIPS.some(function (strip) { return strip.name === named[1].toLowerCase(); }))
-      return;
-    // The board's own order is held as no order, so writing it back changes nothing. One
-    // the page does not offer stays as written, for the board to answer
-    var order = (named[3] || "").toLowerCase();
-    if (order === "grb") order = "";
-    var offered = STRIP_ORDERS.some(function (pair) { return pair[0] === order; });
-    if (offered) lengths[named[1].toLowerCase()] = {token: token, leds: Number(named[2]), order: order};
+    var named = token.match(/^(\w+)=(\d+)(?:\|(\S+))?$/i);
+    var run = named && stripNamed(named[1]);
+    if (!run) return;
+    // What follows the length, as the page holds it, the board's own being held as nothing so
+    // writing it back changes nothing. One the page does not offer stays as written, for the
+    // board to answer
+    var values = readStripTail(run, named[3] || "");
+    if (!values) return;
+    values.leds = Number(named[2]);
+    // A file giving the strip a length has it fitted, whatever this page had removed
+    values.there = true;
+    lengths[run.name] = {token: token, values: values};
   });
   runs.forEach(function (run) {
-    if (!run.strip || !lengths[run.name]) return;
-    var one = STRIPS.filter(function (strip) { return strip.id === run.id; })[0];
-    one.leds = lengths[run.name].leds;
-    one.order = lengths[run.name].order;
-    run.leds = one.leds;
-    run.order = one.order;
-    // A file giving the strip a length has it fitted, whatever this page had removed
-    one.there = true;
-    run.there = true;
+    if (run.strip && lengths[run.name]) stripSet(run, lengths[run.name].values);
   });
+  // Check if this board's strips share terminals, where a file naming any strip is the board as
+  // built: the strips it names are fitted and no others
+  if (runs.some(function (run) { return run.strip && run.takes.length; }) &&
+      Object.keys(lengths).length) {
+    runs.forEach(function (run) {
+      if (run.strip && !lengths[run.name]) stripSet(run, {there: false});
+    });
+  }
   var stripsRead = {};
   var broken = outputsBrokenOut(bodies);
   var said = wiringRead && orderSaid(wiringRead);
@@ -11350,6 +11500,7 @@ function rememberRead(text) {
 // then the lights are set going, or held on one frame where motion is turned down
 
 state.always.body = capture();
+workOn(chosenTab);
 showChosen();
 draw();
 if (HOLDING_STILL) { beat = 0.37; paintAll(); } else { step(); }

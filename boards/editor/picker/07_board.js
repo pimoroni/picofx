@@ -113,7 +113,7 @@ function boardLine() {
       var held = body && body.runs && body.runs[run.name];
       return held && held.sections.some(function (section) { return section.look; });
     });
-    if (used) tokens.push(run.name + "=" + run.leds + (run.order ? "|" + run.order : ""));
+    if (used) tokens.push(run.name + "=" + run.leds + stripLengthTail(run));
   });
   var line = tokens.length ? "board: " + tokens.join(" ") : "";
   boardLineSteps.after.forEach(function (step) { line = step(line); });

@@ -4,6 +4,7 @@
 // then the lights are set going, or held on one frame where motion is turned down
 
 state.always.body = capture();
+workOn(chosenTab);
 showChosen();
 draw();
 if (HOLDING_STILL) { beat = 0.37; paintAll(); } else { step(); }

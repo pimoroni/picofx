@@ -119,15 +119,33 @@ function renderOutFacts() {
   }
 }
 
-// What a strip is built as, its length and the order it takes its colours in
+// What a strip is built as, its length and what follows it on the board line
 function stripBuilt(run) {
-  return run.leds + " LEDs, " + (run.order || "grb").toUpperCase();
+  return run.leds + " LEDs, " + stripChipShown(run);
 }
 
 // Whether a strip is there, on the run and on the entry a fresh run is made from
-function stripThere(run, there) {
-  STRIPS.filter(function (one) { return one.id === run.id; })[0].there = there;
-  run.there = there;
+function stripThere(run, there) { stripSet(run, {there: there}); }
+
+function capitalised(text) { return text.charAt(0).toUpperCase() + text.slice(1); }
+
+// Why a strip cannot be fitted just now, or nothing where it can: a strip taking other strips'
+// terminals cannot be fitted beside them, nor they beside it
+function stripBlockedBy(run) {
+  if (run.there) return "";
+  var fitted = runs.filter(function (one) {
+    return one.strip && one.there && run.takes.indexOf(one.name) >= 0;
+  });
+  if (fitted.length) {
+    return capitalised(run.label) + " takes " + run.connector + ", so it cannot be fitted beside " +
+           fitted.map(function (one) { return one.label; }).join(" and ") + ". Remove " +
+           (fitted.length > 1 ? "them" : "it") + " to fit one here.";
+  }
+  var taking = runs.filter(function (one) {
+    return one.strip && one.there && one.takes.indexOf(run.name) >= 0;
+  })[0];
+  return taking ? capitalised(taking.label) + " uses " + taking.connector +
+                  ". Remove it to fit a strip here." : "";
 }
 
 // Taking a strip out clears what it plays in every scene, the lines kept from a file
@@ -159,10 +177,19 @@ function stripDrop(run) {
   return drop;
 }
 
-// A strip not fitted offers to be added, which only editing the board can take up
+// A strip not fitted offers to be added, which only editing the board can take up, or says
+// why it cannot be
 function renderStripOut(box, run, panel) {
   box.textContent = "";
   box.appendChild(boardBox(panel, ["Strip", small("not fitted")]));
+  var blocked = stripBlockedBy(run);
+  if (blocked) {
+    var why = document.createElement("span");
+    why.className = "stripblocked says";
+    why.textContent = blocked;
+    box.appendChild(why);
+    return;
+  }
   var add = document.createElement("button");
   add.type = "button";
   add.className = "addstrip";
