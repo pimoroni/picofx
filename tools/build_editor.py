@@ -2,11 +2,12 @@
 """Turns a board's editor pages into the frozen module the FX drive carries.
 
 Assembles editor/picker.html from the parts in editor/picker/, the board's description in
-editor/fx_board.json and the thumbnails in editor/thumbs/, generates catalogue.js from the
-live autofx tables so a page always offers what the firmware it ships with provides, and
-writes the pages and catalogue compressed into a frozen module for fx_drive to heal onto the
-drive. The parts and pages are committed and the module is generated, so run this after
-editing a part, a page, the description or anything the catalogue reads.
+editor/fx_board.json and the thumbnails in editor/thumbs/. A part in one of the picker's feature
+folders goes in only for a board with that feature. Generates catalogue.js from the live autofx
+tables so a page always offers what the firmware it ships with provides, and writes the pages
+and catalogue compressed into a frozen module for fx_drive to heal onto the drive. The parts and
+pages are committed and the module is generated, so run this after editing a part, a page, the
+description or anything the catalogue reads.
 
     python3 tools/build_editor.py boards/PIMORONI_MIGHTYFX
     python3 tools/build_editor.py --check boards/PIMORONI_MIGHTYFX
@@ -50,6 +51,13 @@ BYTES_PER_LINE = 64
 # The board's description: its name, outputs, strips, screens, sound, the examples it offers, and
 # the folder of examples its filesystem carries, as its uf2-copyfiles.sh copies them
 DESCRIPTION_NAME = "fx_board.json"
+
+# The folders of picker parts a board takes only where its description has the feature
+FEATURE_FOLDERS = {
+    "screens": lambda board: bool(board["screens"]),
+    "hub": lambda board: bool(board["screens"] and board["screens"]["hub"]),
+    "sound": lambda board: bool(board["sound"]),
+}
 
 # What each examples folder needs attached, as the manual says
 EXAMPLE_NEEDS = {"screens": "a screen", "audio": "a speaker", "motors": "motors",
@@ -143,6 +151,20 @@ def thumbnails(board_dir):
     return json.dumps(found, indent=1)
 
 
+def board_parts(folder, board):
+    """The board's numbered parts in number order, a feature folder's only where it has it."""
+    folders = [folder]
+    for name in sorted(os.listdir(folder)):
+        if not os.path.isdir(os.path.join(folder, name)):
+            continue
+        if name not in FEATURE_FOLDERS:
+            sys.exit("editor/picker/{}/ is not a feature folder the build knows".format(name))
+        if FEATURE_FOLDERS[name](board):
+            folders.append(os.path.join(folder, name))
+    parts = [part for where in folders for part in glob.glob(os.path.join(where, "[0-9][0-9]_*.js"))]
+    return sorted(parts, key=os.path.basename)
+
+
 def picker(board_dir, repo_dir):
     """picker.html, from page.html and the numbered parts after it, with the board filled in."""
     with open(os.path.join(board_dir, "editor", DESCRIPTION_NAME), encoding="utf-8") as f:
@@ -150,7 +172,7 @@ def picker(board_dir, repo_dir):
     folder = os.path.join(board_dir, "editor", "picker")
     with open(os.path.join(folder, "page.html"), encoding="utf-8") as f:
         text = f.read()
-    for part in sorted(glob.glob(os.path.join(folder, "[0-9][0-9]_*.js"))):
+    for part in board_parts(folder, board):
         with open(part, encoding="utf-8") as f:
             text += f.read()
     text = text.replace("__BOARD_NAME__", board["name"])
