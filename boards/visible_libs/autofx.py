@@ -2361,6 +2361,11 @@ def __port_classes(fx):
     raise ImportError("{} is not reachable from any imported module".format(board.__name__))
 
 
+def __hub_example():
+    """A board entry giving the board's first screen port the hub, as a message quotes it."""
+    return "'board: {}=hub'".format(__BOARD_SCREENS[0][3])
+
+
 def __screen_kinds():
     """The screen ports' kinds, in the order the board declares them."""
     return [kind for kind, _prop, _spi, _shown in __BOARD_SCREENS]
@@ -2839,8 +2844,12 @@ def __hub_entry_fits(entry, places, hub, board, problems):
     shown = __hub_shown(places)
 
     if hub is None:
-        problems.append("line {}: {} is on a Screen Hub, so the board entry needs one. Write "
-                        "it like 'board: screenA=hub'".format(entry.line, shown))
+        if not __BOARD_HUB[0]:
+            problems.append("line {}: this board cannot carry a Screen Hub, so it has no "
+                            "{}".format(entry.line, shown))
+        else:
+            problems.append("line {}: {} is on a Screen Hub, so the board entry needs one. "
+                            "Write it like {}".format(entry.line, shown, __hub_example()))
         return False
 
     missing = [place for place in places if place not in board]
@@ -3348,6 +3357,10 @@ def __check_board(entry, has_strips, problems, lines):
                 problems.append("line {}: this board has no strip connectors, so it "
                                 "has no {}".format(at, __strip_shown(key)))
                 continue
+            if not screens and key.startswith("screen"):
+                problems.append("line {}: this board has no screen connectors, so it "
+                                "has no {}".format(at, __screen_shown(key)))
+                continue
             problems.append("line {}: the board has no setting '{}', it takes {}".format(
                 at, key, ", ".join(sorted(list(BOARD_SETTINGS) + kinds + screens))))
             continue
@@ -3441,12 +3454,15 @@ def __check_hub(board, lines, entries, problems):
     named = {channel.name for entry in entries for channel in entry.channels}
 
     if hub is None:
-        if places:
+        if places and not __BOARD_HUB[0]:
+            problems.append("line {}: this board cannot carry a Screen Hub, so it has no "
+                            "{}".format(lines[places[0]], __hub_shown(places)))
+        elif places:
             problems.append("line {}: the board entry gives {} a size, but no connector has "
-                            "the hub. Write it like 'board: screenA=hub'".format(
-                                lines[places[0]], __hub_shown(places)))
-            for place in places:
-                board.pop(place)
+                            "the hub. Write it like {}".format(
+                                lines[places[0]], __hub_shown(places), __hub_example()))
+        for place in places:
+            board.pop(place)
         return
 
     # Drop a hub no entry shows anything on, so its connectors stay free
@@ -3562,9 +3578,13 @@ def __build_effect(entry, count, problems):
     if known is None:
         # An entry that named none at all has already been reported as such, and
         # saying the missing name is not an effect only shows the reader an internal
-        if entry.effect in SCREEN_EFFECTS:
-            problems.append("line {}: {} plays on a screen, such as 'screenA: {} "
-                            "file=anim.gif'".format(entry.line, entry.effect, entry.effect))
+        if entry.effect in SCREEN_EFFECTS and not __BOARD_SCREENS:
+            problems.append("line {}: {} plays on a screen, and this board has none".format(
+                entry.line, entry.effect))
+        elif entry.effect in SCREEN_EFFECTS:
+            problems.append("line {}: {} plays on a screen, such as '{}: {} "
+                            "file=anim.gif'".format(entry.line, entry.effect,
+                                                    __BOARD_SCREENS[0][3], entry.effect))
         elif entry.effect is not None:
             problems.append("line {}: '{}' is not an effect".format(entry.line, entry.effect))
         return None, None, None
