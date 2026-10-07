@@ -1126,8 +1126,7 @@ body.scenesintab #looks>.shelf{margin-top:0}
 
 /* A coloured box is a board setting, each section's in its own colour. The chip icon sits
    inside the box, never around it */
-:root{--boardOuts:#3f5a6b;--stripL:#c2570f;--stripR:#8a1f6d;--screenA:#1f6feb;
- --screenB:#a44ad0}
+:root{--boardOuts:#3f5a6b;--stripL:#c2570f;--stripR:#8a1f6d;--screenA:#1f6feb}
 .chip.boardchip{display:inline-flex;align-items:center;gap:.45rem;padding:.3rem .55rem;
  border-radius:9px;color:#fff;font:600 .82rem system-ui,sans-serif}
 .boardchip .boardicon{color:#fff;opacity:.9}
@@ -1135,8 +1134,6 @@ body.scenesintab #looks>.shelf{margin-top:0}
 .boardchip.outs{background:var(--boardOuts)}
 .boardchip.stripl{background:var(--stripL)}
 .boardchip.stripr{background:var(--stripR)}
-.boardchip.screena{background:var(--screenA)}
-.boardchip.screenb{background:var(--screenB)}
 .boardchip select{border:1px solid rgba(255,255,255,.55);border-radius:6px;
  background:rgba(255,255,255,.15);color:#fff;font:inherit;font-weight:400;
  font-size:.78rem;padding:.1rem .25rem}
@@ -1613,16 +1610,6 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
   <div id="striprTools"></div>
   <div id="striprChosen"></div>
  </details>
-
-<details class="panel screenpanel" id="screenaPanel" open>
- <summary>Screen A</summary>
- <div class="facts" id="screenaFacts"></div>
-</details>
-
-<details class="panel screenpanel" id="screenbPanel" open>
- <summary>Screen B</summary>
- <div class="facts" id="screenbFacts"></div>
-</details>
 
 </div>
 

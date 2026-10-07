@@ -106,21 +106,3 @@ function boardLine() {
   boardLineSteps.after.forEach(function (step) { line = step(line); });
   return line;
 }
-
-// A screen port's size choice, which every page offers wherever it puts it
-function screenSize(port) {
-  var size = document.createElement("select");
-  [""].concat(SCREEN_SIZES).forEach(function (inches) {
-    var option = document.createElement("option");
-    option.value = inches;
-    option.textContent = inches ? inches + " inch" : "none fitted";
-    if (screensFitted[port.id] === inches) option.selected = true;
-    size.appendChild(option);
-  });
-  size.title = "Which panel is plugged in, which is the same for every scene";
-  size.onchange = function () {
-    screensFitted[port.id] = size.value;
-    draw();
-  };
-  return size;
-}

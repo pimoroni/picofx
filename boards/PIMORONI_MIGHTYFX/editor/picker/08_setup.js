@@ -9,7 +9,7 @@ var setupOn = false;
 
 // The panels that hold a board fact, and the colour each one's box takes
 var SECTIONS = {outPanel: "outs"};
-STRIPS.concat(SCREEN_PORTS).forEach(function (one) { SECTIONS[one.id + "Panel"] = one.id; });
+STRIPS.forEach(function (strip) { SECTIONS[strip.id + "Panel"] = strip.id; });
 
 // Whether the board facts in this panel can be changed just now
 function canEdit(panel) { return setupOn; }
@@ -198,16 +198,6 @@ function renderLeds(where, run) {
   }
 }
 
-function renderScreenFacts(port) {
-  var box = document.getElementById(port.id + "Facts");
-  var panel = port.id + "Panel";
-  box.textContent = "";
-  var size = screensFitted[port.id];
-  box.appendChild(boardBox(panel, [port.label, canEdit(panel)
-    ? screenSize(port)
-    : small(size ? size + " inch" : "no panel fitted")]));
-}
-
 // ---- turning setup on ------------------------------------------------------------------------
 
 function setupButton(label, on, act) {
@@ -223,7 +213,6 @@ function setupButton(label, on, act) {
 
 drawSteps.after.push(function () {
   renderOutFacts();
-  SCREEN_PORTS.forEach(renderScreenFacts);
   // What is not the board stands back while it is set up
   document.body.classList.toggle("setupall", setupOn);
   if (setupOn) unmark();

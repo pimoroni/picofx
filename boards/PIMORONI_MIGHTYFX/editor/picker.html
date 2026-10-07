@@ -1126,8 +1126,7 @@ body.scenesintab #looks>.shelf{margin-top:0}
 
 /* A coloured box is a board setting, each section's in its own colour. The chip icon sits
    inside the box, never around it */
-:root{--boardOuts:#3f5a6b;--stripL:#c2570f;--stripR:#8a1f6d;--screenA:#1f6feb;
- --screenB:#a44ad0}
+:root{--boardOuts:#3f5a6b;--stripL:#c2570f;--stripR:#8a1f6d;--screenA:#1f6feb}
 .chip.boardchip{display:inline-flex;align-items:center;gap:.45rem;padding:.3rem .55rem;
  border-radius:9px;color:#fff;font:600 .82rem system-ui,sans-serif}
 .boardchip .boardicon{color:#fff;opacity:.9}
@@ -1135,8 +1134,6 @@ body.scenesintab #looks>.shelf{margin-top:0}
 .boardchip.outs{background:var(--boardOuts)}
 .boardchip.stripl{background:var(--stripL)}
 .boardchip.stripr{background:var(--stripR)}
-.boardchip.screena{background:var(--screenA)}
-.boardchip.screenb{background:var(--screenB)}
 .boardchip select{border:1px solid rgba(255,255,255,.55);border-radius:6px;
  background:rgba(255,255,255,.15);color:#fff;font:inherit;font-weight:400;
  font-size:.78rem;padding:.1rem .25rem}
@@ -1613,16 +1610,6 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
   <div id="striprTools"></div>
   <div id="striprChosen"></div>
  </details>
-
-<details class="panel screenpanel" id="screenaPanel" open>
- <summary>Screen A</summary>
- <div class="facts" id="screenaFacts"></div>
-</details>
-
-<details class="panel screenpanel" id="screenbPanel" open>
- <summary>Screen B</summary>
- <div class="facts" id="screenbFacts"></div>
-</details>
 
 </div>
 
@@ -6477,24 +6464,6 @@ function boardLine() {
   return line;
 }
 
-// A screen port's size choice, which every page offers wherever it puts it
-function screenSize(port) {
-  var size = document.createElement("select");
-  [""].concat(SCREEN_SIZES).forEach(function (inches) {
-    var option = document.createElement("option");
-    option.value = inches;
-    option.textContent = inches ? inches + " inch" : "none fitted";
-    if (screensFitted[port.id] === inches) option.selected = true;
-    size.appendChild(option);
-  });
-  size.title = "Which panel is plugged in, which is the same for every scene";
-  size.onchange = function () {
-    screensFitted[port.id] = size.value;
-    draw();
-  };
-  return size;
-}
-
 // ---- where the board is set up ----------------------------------------------------------
 // Every fact about the board stays beside what it is about: the wiring on the outputs, a
 // strip's length on the strip, a screen's type on the screen. Each reads as a box in its
@@ -6505,7 +6474,7 @@ var setupOn = false;
 
 // The panels that hold a board fact, and the colour each one's box takes
 var SECTIONS = {outPanel: "outs"};
-STRIPS.concat(SCREEN_PORTS).forEach(function (one) { SECTIONS[one.id + "Panel"] = one.id; });
+STRIPS.forEach(function (strip) { SECTIONS[strip.id + "Panel"] = strip.id; });
 
 // Whether the board facts in this panel can be changed just now
 function canEdit(panel) { return setupOn; }
@@ -6694,16 +6663,6 @@ function renderLeds(where, run) {
   }
 }
 
-function renderScreenFacts(port) {
-  var box = document.getElementById(port.id + "Facts");
-  var panel = port.id + "Panel";
-  box.textContent = "";
-  var size = screensFitted[port.id];
-  box.appendChild(boardBox(panel, [port.label, canEdit(panel)
-    ? screenSize(port)
-    : small(size ? size + " inch" : "no panel fitted")]));
-}
-
 // ---- turning setup on ------------------------------------------------------------------------
 
 function setupButton(label, on, act) {
@@ -6719,7 +6678,6 @@ function setupButton(label, on, act) {
 
 drawSteps.after.push(function () {
   renderOutFacts();
-  SCREEN_PORTS.forEach(renderScreenFacts);
   // What is not the board stands back while it is set up
   document.body.classList.toggle("setupall", setupOn);
   if (setupOn) unmark();
@@ -7651,11 +7609,6 @@ drawSteps.after.push(function () {
                     "<div class='assets' id='assets'></div>";
   var after = document.getElementById("striprPanel");
   after.parentNode.insertBefore(panel, after.nextSibling);
-  // The screens are this tab now, so their own panels go
-  SCREEN_PORTS.forEach(function (port) {
-    document.getElementById(port.id + "Panel").hidden = true;
-    document.getElementById(port.id + "Panel").classList.add("replaced");
-  });
 }());
 
 TAB_NAMES.screensPanel = "Screens";
