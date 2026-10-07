@@ -47,8 +47,8 @@ EDGE = 512
 # How many bytes of a zlib stream go on one line of the module
 BYTES_PER_LINE = 64
 
-# The board's description: its name, outputs, strips, screens, sound, and the folder of examples
-# its filesystem carries, as its uf2-copyfiles.sh copies them
+# The board's description: its name, outputs, strips, screens, sound, the examples it offers, and
+# the folder of examples its filesystem carries, as its uf2-copyfiles.sh copies them
 DESCRIPTION_NAME = "fx_board.json"
 
 # What each examples folder needs attached, as the manual says

@@ -11,70 +11,14 @@
 // out. Each has a small thumbnail at a screen's shape and low resolution: a frame captured off a
 // board running it where there is one, drawn here where there is not.
 
-// Where each offered example sits and how its thumbnail is drawn, "shot" being its captured frame.
-// What each uses is read from its source when the page is built
-var OFFERED = [
-  ["Signs and displays", [
-    ["showcase/flip_dot_sign.py", "flipdot"],
-    ["showcase/split_flap_clock.py", "flap"],
-    ["showcase/split_flap_departures.py", "flapboard"],
-    ["showcase/nixie_tube.py", "nixie"],
-    ["showcase/acrylic_lixie.py", "lixie"],
-    ["showcase/departures_list.py", "board"],
-    ["showcase/departure_board.py", "board"],
-    ["showcase/bus_departures.py", "bus"],
-    ["showcase/tram_stop_sign.py", "amber"],
-    ["showcase/roadworks_sign.py", "roadworks"],
-    ["showcase/lane_control_gantry.py", "gantry"],
-    ["showcase/crt_terminal.py", "crt"],
-    ["showcase/status_panel.py", "shot"],
-    ["showcase/scrolling_billboard.py", "shot"],
-    ["showcase/trivision_billboard.py", "trivision"],
-    ["showcase/skyline.py", "shot"],
-    ["showcase/isometric_flight.py", "iso"]]],
-  ["On screens", [
-    ["screens/graphics/starfield.py", "stars"],
-    ["screens/graphics/color_wheel.py", "wheel"],
-    ["screens/graphics/led_matrix.py", "matrix"],
-    ["screens/layout/kaleidoscope.py", "kaleido"],
-    ["screens/layout/bouncing_logo.py", "logo"],
-    ["screens/playback/traces_scroll.py", "shot"],
-    ["screens/playback/billboard_cased.py", "shot"],
-    ["screens/playback/animated_gif_recoloured.py", "shot"],
-    ["screens/pair/carpets_paired.py", "carpet"],
-    ["screens/hub/starfield_wall.py", "stars"],
-    ["screens/playback/traces_wall.py", "shot"]]],
-  ["With the remote", [
-    ["infrared/colour/control_rainbow_wave.py", "lamps:rainbow"],
-    ["infrared/colour/control_hsv_fx.py", "lamps:warm"],
-    ["infrared/mono/toggle_effects.py", "lamps:mono"],
-    ["infrared/mono/control_pulse_wave.py", "lamps:pulse"]]],
-  ["With a sensor", [
-    ["qwst/light_level.py", "lamps:dusk"],
-    ["qwst/spirit_level.py", "lamps:level"],
-    ["qwst/weather_reading.py", "lamps:bar"],
-    ["function/sensor_meter.py", "lamps:bar"]]],
-  ["Sound", [
-    ["audio/fair_use_encounters.py", "lamps:melody"],
-    ["audio/race_start.py", "lamps:countdown"]]],
-  ["Moving things", [
-    ["servos/servo_easing.py", "servo"],
-    ["servos/servo_pair.py", "servo"],
-    ["motors/motor_song.py", "motor"],
-    ["motors/motor_movements.py", "motor"],
-    ["showcase/programmed_route.py", "servo"]]]
-];
+// The board's offered examples by section, each as its path under examples/ and how its thumbnail
+// is drawn, "shot" being its captured frame. What each uses is read from its source when the page
+// is built
+var OFFERED = (BOARD.offered || []).map(function (set) { return [set.section, set.examples]; });
 
 // What each group's heading says after its name, as the looks' groups do
-var GROUP_SAYS = {
-  "On the drive": "your own programs",
-  "Signs and displays": "showcase pieces made to be looked at",
-  "On screens": "pictures and motion for one screen or more",
-  "With the remote": "the effects, steered from the IR remote",
-  "With a sensor": "the lights following what a sensor reads",
-  "Sound": "lights to a soundtrack",
-  "Moving things": "servos and motors"
-};
+var GROUP_SAYS = {"On the drive": "your own programs"};
+(BOARD.offered || []).forEach(function (set) { GROUP_SAYS[set.section] = set.says; });
 
 // The picture each of the drive's programs names in its opening string, read off the drive, by
 // the program's name

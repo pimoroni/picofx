@@ -3,8 +3,8 @@
 // the numbered parts in this folder joined in order, each part able to replace what an earlier
 // one defines, and this first part holds the looks.
 
-// The board the page is for, from its editor/fx_board.json: its outputs, strips, screen ports
-// and whether it has a hub, sound and the network looks
+// The board the page is for, from its editor/fx_board.json: its outputs, strips, screen ports,
+// whether it has a hub, sound and the network looks, and the examples it offers
 var BOARD = __BOARD__;
 
 // The catalogue is generated beside this page; without it the screen sizes and ports
