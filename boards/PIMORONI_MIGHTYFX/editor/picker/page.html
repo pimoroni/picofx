@@ -330,6 +330,26 @@ footer{max-width:60rem;margin:0 auto 2rem;padding:0 1.4rem;font-size:.8rem;color
 #sideB .cross{left:-.3rem}
 .cross:hover:enabled{border-color:var(--rgbout);background:#f6f1ff}
 .cross svg{display:block}
+/* A board whose outputs start with its mono ones lays them out first: the mono lamps pack to
+   the left and the colour side mirrors to the right, holding the steps both sides share */
+#sides.monofirst #sideB{order:-1}
+#sides.monofirst #sideA{min-width:12rem}
+#sides.monofirst #sideA .lamps{justify-content:flex-end}
+#sides.monofirst #sideB .lamps{justify-content:flex-start}
+#sides.monofirst #sideA .outgroup{margin-right:0;margin-left:.15rem}
+#sides.monofirst #sideB .outgroup{margin-right:.15rem;margin-left:0}
+#sides.monofirst #sideA .sidehead{flex-direction:row-reverse}
+#sides.monofirst #sideB .sidehead{flex-direction:row}
+#sides.monofirst #sideA .head.cutting{justify-content:flex-end}
+#sides.monofirst #sideA .head.cutting .gap{order:-1}
+#sides.monofirst #sideA .head.cutting .what{order:3}
+#sides.monofirst #sideB .head.cutting{justify-content:flex-start}
+#sides.monofirst #sideB .head.cutting .gap,#sides.monofirst #sideB .head.cutting .what{order:0}
+#sides.monofirst #sideA .cross{left:-.3rem;right:auto}
+#sides.monofirst #sideB .cross{right:-.3rem;left:auto}
+/* A mono output is one light, with no channel's corner to cut and no kin to gather */
+.lamp.chan.single::before{display:none}
+.lamp.chan.single.kin{outline:none}
 
 
 /* Scenes take turns, so they are tabs: the bar is only drawn once there is more
@@ -1186,6 +1206,7 @@ body.setupall #soundPanel{opacity:.35;pointer-events:none}
 .wirepin{display:block;width:.8rem;height:.45rem;border-radius:2px}
 /* A colour output is one lamp, so one pin */
 .wirepin.whole{width:2.9rem;background:#cfc8bc}
+.wirepin.single{width:1.4rem;background:#cfc8bc}
 .wireconnector b{display:block;text-align:center;color:#a7a197;
  font:600 .66rem/1.4 system-ui,sans-serif}
 .wireconnector:hover b{color:#fff}

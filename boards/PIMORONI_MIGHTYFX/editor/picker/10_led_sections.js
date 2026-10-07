@@ -7,7 +7,7 @@
 var LED_PANELS = ["outPanel"].concat(STRIPS.map(function (strip) { return strip.id + "Panel"; }));
 
 function runsOfPanel(panel) {
-  if (panel === "outPanel") return [outs, mono];
+  if (panel === "outPanel") return MONO_FIRST ? [mono, outs] : [outs, mono];
   return runs.filter(function (run) { return run.strip && run.id + "Panel" === panel; });
 }
 

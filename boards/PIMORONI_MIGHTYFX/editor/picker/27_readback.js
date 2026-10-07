@@ -281,23 +281,14 @@ function lampsNamed(run, selector) {
     }
     return named;
   }
-  if (run.mono) return channelsNamed(run, selector);
-  if (!/^out\d/i.test(selector) || selector.indexOf(".") >= 0) return null;
-  var outputs = [];
-  var items = selector.slice(3).split(",");
-  for (var i = 0; i < items.length; i++) {
-    var ends = items[i].match(/^(\d+)(?:-(\d+))?$/);
-    if (!ends) return null;
-    var from = Number(ends[1]);
-    var to = ends[2] === undefined ? from : Number(ends[2]);
-    var by = to >= from ? 1 : -1;
-    for (var n = from; n !== to + by; n += by) outputs.push(n);
-  }
+  var places = placesNamed(selector);
+  if (!places) return null;
   var lamps = [];
-  for (var j = 0; j < outputs.length; j++) {
+  for (var j = 0; j < places.length; j++) {
     var place = -1;
     run.lamps.forEach(function (lamp, at) {
-      if (lamp.colour && lamp.out === outputs[j] - 1) place = at;
+      if (lamp.out === places[j].out && lamp.colour === (places[j].channel === null) &&
+          (lamp.colour || lamp.channel === places[j].channel)) place = at;
     });
     if (place < 0) return null;
     lamps.push(place);
@@ -305,32 +296,56 @@ function lampsNamed(run, selector) {
   return lamps;
 }
 
-// The mono run's lamps a selector names by channel, as autofx reads them: a range counting down
-// counts each output's channels down too. Null where an item names a whole output
-function channelsNamed(run, selector) {
-  if (!/^out\d/i.test(selector)) return null;
-  var lamps = [];
-  var items = selector.slice(3).toLowerCase().split(",");
-  for (var i = 0; i < items.length; i++) {
-    var item = items[i].match(/^(\d+)(?:-(\d+))?\.([rgb*])$/);
-    if (!item) return null;
-    var from = Number(item[1]);
-    var to = item[2] === undefined ? from : Number(item[2]);
-    var step = to >= from ? 1 : -1;
-    var channels = item[3] === "*" ? (step < 0 ? [2, 1, 0] : [0, 1, 2])
-                 : [CHANNELS.indexOf(item[3])];
-    for (var out = from; out !== to + step; out += step) {
-      for (var c = 0; c < channels.length; c++) {
-        var place = -1;
-        run.lamps.forEach(function (lamp, at) {
-          if (!lamp.colour && lamp.out === out - 1 && lamp.channel === channels[c]) place = at;
-        });
-        if (place < 0) return null;
-        lamps.push(place);
+// Each item of a selector as the places it names on this board, in its order, as autofx reads
+// it, or null for an item naming none. An item names an output by name, or a range of one name's
+// numbers, whole or with a channel or .* for its three, a range counting down counting the
+// channels down too. A mono output is its one light. An item's prefix carries on to a bare
+// number after it
+function itemsNamed(selector) {
+  var prefix = null;
+  return selector.toLowerCase().split(",").map(function (text) {
+    var item = text.match(/^([a-z]*)(\d+)?(?:-(\d+))?(?:\.([rgb*]))?$/);
+    if (!item || (!item[1] && !prefix) || (item[3] !== undefined && item[2] === undefined)) {
+      return null;
+    }
+    prefix = item[1] || prefix;
+    var outs = [];
+    if (item[2] === undefined) {
+      outs = OUTPUTS.map(function (output, out) { return output.name === prefix ? out : -1; })
+        .filter(function (out) { return out >= 0; });
+    } else {
+      var from = Number(item[2]);
+      var to = item[3] === undefined ? from : Number(item[3]);
+      var step = to >= from ? 1 : -1;
+      for (var number = from; number !== to + step; number += step) {
+        var found = OUTPUTS.map(function (output, out) {
+          return output.prefix === prefix && output.number === number ? out : -1;
+        }).filter(function (out) { return out >= 0; });
+        if (!found.length) return null;
+        outs.push(found[0]);
       }
     }
-  }
-  return lamps;
+    if (!outs.length) return null;
+    var channels = item[4] === undefined ? [null]
+                 : item[4] === "*" ? (step < 0 ? [2, 1, 0] : [0, 1, 2])
+                 : [CHANNELS.indexOf(item[4])];
+    var places = [];
+    for (var at = 0; at < outs.length; at++) {
+      var mono = OUTPUTS[outs[at]].mono;
+      if (mono && item[4] !== undefined) return null;
+      for (var c = 0; c < channels.length; c++) {
+        places.push({out: outs[at], channel: mono ? 0 : channels[c]});
+      }
+    }
+    return places;
+  });
+}
+
+// The places a selector names, or null where any item names none
+function placesNamed(selector) {
+  var items = itemsNamed(selector);
+  if (items.some(function (places) { return !places; })) return null;
+  return [].concat.apply([], items);
 }
 
 // The outputs any kept line names by channel, which the file has broken out
@@ -339,14 +354,11 @@ function outputsBrokenOut(bodies) {
   bodies.forEach(function (body) {
     body.kept.forEach(function (one) {
       var parts = entryParts(one.text);
-      if (!parts || !/^out\d/i.test(parts.selector)) return;
-      parts.selector.slice(3).split(",").forEach(function (item) {
-        var named = item.match(/^(\d+)(?:-(\d+))?\.[rgb*]$/i);
-        if (!named) return;
-        var from = Number(named[1]);
-        var to = named[2] === undefined ? from : Number(named[2]);
-        var step = to >= from ? 1 : -1;
-        for (var out = from; out !== to + step; out += step) broken[out - 1] = true;
+      if (!parts) return;
+      itemsNamed(parts.selector).forEach(function (places) {
+        (places || []).forEach(function (place) {
+          if (place.channel !== null && !OUTPUTS[place.out].mono) broken[place.out] = true;
+        });
       });
     });
   });
@@ -355,17 +367,16 @@ function outputsBrokenOut(bodies) {
 
 // The wiring the file implies: the outputs it names by channel broken out, in the plain order
 function wireAsRead(broken) {
-  wiring = wiring.map(function (one, out) { return {broken: !!broken[out]}; });
+  wiring = wiring.map(function (one, out) {
+    return {broken: OUTPUTS[out].mono || !!broken[out]};
+  });
   order = plainOrder();
 }
 
 // Every lamp in number order, an output broken out as its red, green and blue
 function plainOrder() {
   var plain = [];
-  wiring.forEach(function (one, out) {
-    if (one.broken) CHANNELS.forEach(function (letter, c) { plain.push({out: out, channel: c}); });
-    else plain.push({out: out, channel: null});
-  });
+  wiring.forEach(function (one, out) { plain = plain.concat(placesOf(out)); });
   return plain;
 }
 
@@ -386,39 +397,30 @@ function wiringLine() {
     return place.out === plain[at].out && place.channel === plain[at].channel;
   });
   if (same) return null;
-  return WIRED + "out" + order.map(function (place) {
-    return (place.out + 1) + (place.channel === null ? "" : "." + CHANNELS[place.channel]);
-  }).join(",");
+  return WIRED + joinedItems(order.map(function (place) {
+    var output = OUTPUTS[place.out];
+    var channel = place.channel === null || output.mono ? "" : "." + CHANNELS[place.channel];
+    return {out: place.out, rest: (output.number === null ? "" : String(output.number)) + channel};
+  }));
 }
 
 // A wiring said as a file names outputs, as an order the page holds, or null where it does not
-// name every output exactly once, whole or as its three channels
+// name every output exactly once: a mono output's one light, or a colour output whole or as its
+// three channels. One starting with a bare number is of the first output's name
 function orderSaid(said) {
-  var items = said.replace(/^out/i, "").toLowerCase().split(",");
-  var placed = [];
-  for (var i = 0; i < items.length; i++) {
-    var item = items[i].match(/^(\d+)(?:-(\d+))?(?:\.([rgb*]))?$/);
-    if (!item) return null;
-    var from = Number(item[1]);
-    var to = item[2] === undefined ? from : Number(item[2]);
-    var step = to >= from ? 1 : -1;
-    for (var out = from; out !== to + step; out += step) {
-      if (item[3] === undefined) placed.push({out: out - 1, channel: null});
-      else if (item[3] === "*") {
-        (step < 0 ? [2, 1, 0] : [0, 1, 2]).forEach(function (c) {
-          placed.push({out: out - 1, channel: c});
-        });
-      } else placed.push({out: out - 1, channel: CHANNELS.indexOf(item[3])});
-    }
-  }
-  // Each output once whole, or each of its three channels once
+  var placed = placesNamed(/^\d/.test(said) ? OUTPUTS[0].prefix + said : said);
+  if (!placed) return null;
   var seen = {};
   for (var p = 0; p < placed.length; p++) {
     var key = placed[p].out + "." + placed[p].channel;
-    if (placed[p].out < 0 || placed[p].out >= wiring.length || seen[key]) return null;
+    if (seen[key]) return null;
     seen[key] = true;
   }
   for (var o = 0; o < wiring.length; o++) {
+    if (OUTPUTS[o].mono) {
+      if (!seen[o + ".0"]) return null;
+      continue;
+    }
     var whole = seen[o + ".null"];
     var channels = [0, 1, 2].filter(function (c) { return seen[o + "." + c]; }).length;
     if (whole ? channels : channels !== 3) return null;
@@ -435,13 +437,11 @@ function orderImplied(bodies) {
   bodies.forEach(function (body) {
     body.kept.forEach(function (one) {
       var parts = entryParts(one.text);
-      if (!parts || !/^out\d[\d,\-]*$/i.test(parts.selector)) return;
-      var outputs = [];
-      parts.selector.slice(3).split(",").forEach(function (item) {
-        var ends = item.split("-").map(Number);
-        var step = (ends[1] || ends[0]) >= ends[0] ? 1 : -1;
-        for (var out = ends[0]; out !== (ends[1] || ends[0]) + step; out += step) outputs.push(out);
-      });
+      var places = parts && placesNamed(parts.selector);
+      if (!places || places.some(function (place) {
+        return place.channel !== null && !OUTPUTS[place.out].mono;
+      })) return;
+      var outputs = places.map(function (place) { return place.out + 1; });
       // A look that deals its lights out names gapped sets such as 1,4,7, which say nothing of
       // the wiring, so only a list with no gaps counts, and one going both up and down needs it
       var steps = outputs.slice(1).map(function (out, at) { return out - outputs[at]; });
@@ -455,7 +455,9 @@ function orderImplied(bodies) {
   });
   if (!needed) return null;
   for (var out = 1; out <= wiring.length; out++) if (named.indexOf(out) < 0) named.push(out);
-  return named.map(function (out) { return {out: out - 1, channel: null}; });
+  return named.map(function (out) {
+    return {out: out - 1, channel: OUTPUTS[out - 1].mono ? 0 : null};
+  });
 }
 
 // Whether a set of lamps is one run from end to end, whichever way it was named

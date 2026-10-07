@@ -18,13 +18,7 @@ var SLIDE_MS = 420;
 // Every lamp in the order the board wires them: an output's own lamp, or its three channels
 function wiredLamps() {
   var lamps = [];
-  wiring.forEach(function (one, out) {
-    if (one.broken) {
-      [0, 1, 2].forEach(function (channel) { lamps.push({out: out, channel: channel}); });
-    } else {
-      lamps.push({out: out, channel: null});
-    }
-  });
+  wiring.forEach(function (one, out) { lamps = lamps.concat(placesOf(out)); });
   lamps.forEach(function (lamp) { lamp.key = lampKey(lamp); });
   return lamps;
 }
@@ -85,20 +79,22 @@ function renderConnectors() {
     var pins = document.createElement("div");
     pins.className = "wirepins";
     var keys = [];
-    (one.broken ? [0, 1, 2] : [null]).forEach(function (channel) {
+    // A mono output is one light on one pin, with no channel to mark
+    var single = OUTPUTS[out].mono;
+    placesOf(out).forEach(function (place) {
       var pin = document.createElement("span");
-      var key = lampKey({out: out, channel: channel});
-      pin.className = "wirepin" + (channel === null ? " whole" : "");
+      var key = lampKey(place);
+      pin.className = "wirepin" + (place.channel === null ? " whole" : single ? " single" : "");
       pin.dataset.key = key;
-      if (channel !== null) pin.style.background = CHANNEL_INKS[channel];
+      if (place.channel !== null && !single) pin.style.background = CHANNEL_INKS[place.channel];
       pins.appendChild(pin);
       keys.push(key);
     });
     block.appendChild(pins);
     var name = document.createElement("b");
-    name.textContent = String(out + 1);
+    name.textContent = shortName({out: out, colour: true});
     block.appendChild(name);
-    block.title = "output " + (out + 1) + (one.broken ? ", broken out into three" : "");
+    block.title = outputSaid(out) + (one.broken && !single ? ", broken out into three" : "");
     // A pin is too small to aim at, so the connector is what is pointed at
     block.addEventListener("mouseenter", function () { bringForward(keys, true); });
     block.addEventListener("mouseleave", function () { bringForward(keys, false); });
@@ -151,7 +147,8 @@ function drawLines() {
                       (start.y - rise) + " " + end.x + " " + (end.y + rise) + " " + end.x +
                       " " + end.y);
     path.dataset.key = lamp.key;
-    path.style.stroke = lamp.channel === null ? "var(--boardOuts)" : CHANNEL_INKS[lamp.channel];
+    path.style.stroke = lamp.channel === null || OUTPUTS[lamp.out].mono ? "var(--boardOuts)"
+                                                                        : CHANNEL_INKS[lamp.channel];
     lines.appendChild(path);
   });
   panel.appendChild(lines);

@@ -59,23 +59,37 @@ var moveLampInScenes = acrossScenes(function (move) {
 // the wiring, so only where that can be
 function lampsMovable() { return canEdit("outPanel"); }
 
+// The colour outputs that break out, by place
+function breakingOutputs() {
+  var found = [];
+  OUTPUTS.forEach(function (output, out) { if (!output.mono && output.breaks) found.push(out); });
+  return found;
+}
+
 // The outputs broken out, as a person would say it
 function brokenSaid() {
-  var broken = wiring.map(function (one, at) { return one.broken ? at + 1 : 0; })
-    .filter(function (at) { return at; });
-  if (!broken.length) return "every output is one colour light";
+  var breaking = breakingOutputs();
+  var broken = breaking.filter(function (out) { return wiring[out].broken; });
+  if (!broken.length) {
+    return breaking.length === 1 ? outputSaid(breaking[0]) + " is one colour light"
+                                 : "every output is one colour light";
+  }
   // Three or more in a row close up into a range, as the file writes them, so the box is
   // never much longer than it is with nothing broken out and the setup hint keeps its room
+  var numbers = broken.filter(function (out) { return OUTPUTS[out].number !== null; })
+    .map(function (out) { return OUTPUTS[out].number; });
   var parts = [];
-  for (var at = 0; at < broken.length;) {
+  for (var at = 0; at < numbers.length;) {
     var end = at;
-    while (end + 1 < broken.length && broken[end + 1] === broken[end] + 1) end++;
-    if (end - at >= 2) parts.push(broken[at] + "-" + broken[end]);
-    else for (var one = at; one <= end; one++) parts.push(String(broken[one]));
+    while (end + 1 < numbers.length && numbers[end + 1] === numbers[end] + 1) end++;
+    if (end - at >= 2) parts.push(numbers[at] + "-" + numbers[end]);
+    else for (var one = at; one <= end; one++) parts.push(String(numbers[one]));
     at = end + 1;
   }
-  return (broken.length === 1 ? "output " : "outputs ") + parts.join(", ") +
-         (broken.length === 1 ? " is" : " are") + " broken out";
+  var said = parts.length ? [(numbers.length === 1 ? "output " : "outputs ") + parts.join(", ")]
+                          : [];
+  broken.forEach(function (out) { if (OUTPUTS[out].number === null) said.push(outputSaid(out)); });
+  return said.join(" and ") + (broken.length === 1 ? " is" : " are") + " broken out";
 }
 
 // ---- what the file says about the board -------------------------------------------------

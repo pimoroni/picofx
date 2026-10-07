@@ -10,6 +10,12 @@
   {"name": "out6", "kind": "colour", "breaks_out": true},
   {"name": "out7", "kind": "colour", "breaks_out": true}
  ],
+ "output_words": {
+  "panel": "seven of them, each one light or three",
+  "colour": "Colour outputs", "colour_says": "no adapter fitted",
+  "mono": "Mono lights", "mono_says": "three to every output broken out"
+ },
+ "opening": {"colour": "Rainbow"},
  "wiring_order": true,
  "strips": [
   {"name": "stripl", "label": "the left strip", "tab": "Left strip",

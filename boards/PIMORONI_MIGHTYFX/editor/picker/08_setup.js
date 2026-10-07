@@ -109,8 +109,11 @@ function renderOutFacts() {
   if (canEdit("outPanel")) {
     var hint = document.createElement("span");
     hint.className = "hint";
-    hint.textContent = "Drag a light to where it sits in your build. Arrows split an " +
-                       "output into three mono lights, or rejoin them.";
+    var breaking = breakingOutputs();
+    hint.textContent = "Drag a light to where it sits in your build." +
+      (breaking.length > 1 ? " Arrows split an output into three mono lights, or rejoin them."
+       : breaking.length ? " The arrow on " + outputSaid(breaking[0]) + " splits it into three " +
+                           "mono lights, or rejoins them." : "");
     hint.title = hint.textContent;
     box.appendChild(hint);
   }

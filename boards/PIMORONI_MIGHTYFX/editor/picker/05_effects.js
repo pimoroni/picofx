@@ -1,7 +1,8 @@
 
-// The board opens as it ships, every output one colour lamp, and the outputs whole and
-// playing Rainbow. The strips play nothing, what is wired to them being unknown
-var OPENING_LOOK = "Rainbow";
+// The board opens as it ships, every colour output one colour lamp, each side whole and playing
+// the look the board's description opens it with. The strips play nothing, what is wired to them
+// being unknown
+var OPENING_LOOK = BOARD.opening.colour;
 
 // Every lamp of a stretch cycling through the same hue together, picofx's rainbow, which
 // Rainbow plays only on a single lamp. It sits beside Rainbow in the gallery
@@ -278,6 +279,10 @@ function spreadStops(target) {
 
 outs.sections = [blank(0, outs.lamps.length - 1)];
 outs.sections[0].look = OPENING_LOOK;
+if (mono.lamps.length && BOARD.opening.mono) {
+  mono.sections = [blank(0, mono.lamps.length - 1)];
+  mono.sections[0].look = BOARD.opening.mono;
+}
 settle();
 
 // ---- the strips ---------------------------------------------------------------------------
@@ -1803,9 +1808,9 @@ function wholeOutputsDown(lamps, at) {
     var three = lamps.slice(at + 3 * count, at + 3 * count + 3);
     var out = lamps[at].out - count;
     var whole = three.every(function (lamp, i) {
-      return !lamp.colour && lamp.out === out && lamp.channel === 2 - i;
+      return isChannel(lamp) && lamp.out === out && lamp.channel === 2 - i;
     });
-    if (!whole) break;
+    if (!whole || (count && !nextOutput(out + 1, -1))) break;
     count++;
   }
   return count;
@@ -1819,22 +1824,19 @@ function nameBackwards(lamps) {
     // Two or more whole mono outputs counting down, since one alone as .* would run r, g, b
     var outputs = wholeOutputsDown(lamps, at);
     if (outputs >= 2) {
-      items.push((lamps[at].out + 1) + "-" + (lamps[at].out - outputs + 2) + ".*");
+      items.push(rangeItem(lamps[at].out, lamps[at].out - outputs + 1, "*"));
       at += 3 * outputs;
       continue;
     }
     var last = at;
-    while (lamps[at].colour && last + 1 < lamps.length && lamps[last + 1].colour &&
-           lamps[last + 1].out === lamps[last].out - 1) last++;
-    items.push(last > at ? (lamps[at].out + 1) + "-" + (lamps[last].out + 1)
-                         : shortSelector(lamps[at]));
+    while (!isChannel(lamps[at]) && last + 1 < lamps.length && !isChannel(lamps[last + 1]) &&
+           lamps[last + 1].colour === lamps[at].colour &&
+           lamps[last + 1].out === lamps[last].out - 1 && nextOutput(lamps[last].out, -1)) last++;
+    items.push(rangeItem(lamps[at].out, lamps[last].out,
+                         isChannel(lamps[at]) ? CHANNELS[lamps[at].channel] : null));
     at = last + 1;
   }
-  return "out" + items.join(",");
-}
-
-function shortSelector(lamp) {
-  return lamp.colour ? String(lamp.out + 1) : (lamp.out + 1) + "." + CHANNELS[lamp.channel];
+  return joinedItems(items);
 }
 
 // What a stretch plays on, counting its lights down where it starts from its far end and its
@@ -1962,19 +1964,27 @@ function wherePlays(run, section, reversed) {
     }
     return (from === to ? "LED " + from : "LEDs " + from + " to " + to) + " of " + run.label;
   }
-  if (lamps.every(function (lamp) { return lamp.colour; })) {
-    var numbers = lamps.map(function (lamp) { return lamp.out + 1; });
-    return (numbers.length === 1 ? "output " : "outputs ") + numbersSaid(numbers);
-  }
-  // Mono lights, each output's channels together, in the order they play
+  // Whole outputs and mono ones by number, an output with no number by name, and a broken-out
+  // output's channels together, each group in the order they play
   var groups = [];
   lamps.forEach(function (lamp) {
     var last = groups[groups.length - 1];
-    if (last && last.out === lamp.out) last.channels.push(lamp.channel);
+    var numbered = !isChannel(lamp) && OUTPUTS[lamp.out].number !== null;
+    if (numbered && last && last.numbers) last.numbers.push(OUTPUTS[lamp.out].number);
+    else if (numbered) groups.push({numbers: [OUTPUTS[lamp.out].number]});
+    else if (!isChannel(lamp)) groups.push({said: outputSaid(lamp.out)});
+    else if (last && last.out === lamp.out) last.channels.push(lamp.channel);
     else groups.push({out: lamp.out, channels: [lamp.channel]});
   });
   return spoken(groups.map(function (group) {
-    return "output " + (group.out + 1) + "'s " + spoken(group.channels.map(function (channel) {
+    if (group.numbers) {
+      return (group.numbers.length === 1 ? "output " : "outputs ") + numbersSaid(group.numbers);
+    }
+    if (group.said) return group.said;
+    var output = OUTPUTS[group.out];
+    var whose = output.number === null ? "the " + output.name.toUpperCase()
+                                       : "output " + output.number;
+    return whose + "'s " + spoken(group.channels.map(function (channel) {
       return CHANNEL_WORDS[CHANNELS[channel]];
     }));
   }));

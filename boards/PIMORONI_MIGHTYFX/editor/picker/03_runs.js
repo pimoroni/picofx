@@ -1,12 +1,27 @@
-// ---- Mighty FX's outputs, inside the sections system ------------------------------------
-// Seven outputs, each three PWM channels behind one lamp. The adapter tells those three
-// apart, so an output is either one colour lamp or up to three mono ones and a board is
-// a mix. Everything below is the section model over a run of lamps: the only new idea is
-// that the run's own length is something the wiring decides.
+// ---- the board's outputs, inside the sections system ------------------------------------
+// A colour output is three PWM channels behind one lamp. Where the board lets an adapter tell
+// those three apart, the output is either one colour lamp or three mono ones, and a board is
+// a mix. A mono output is one light, always on the mono side. Everything below is the section
+// model over a run of lamps: the only new idea is that the run's own length is something the
+// wiring decides.
 
 var OUTS = BOARD.outputs.length;
 var CHANNELS = ["r", "g", "b"];
 var CHANNEL_WORDS = {r: "red", g: "green", b: "blue"};
+
+// Each output as the file names it, split into its prefix and number: out3 is out and 3, and
+// rgb, which has no number, is rgb alone
+var OUTPUTS = BOARD.outputs.map(function (output) {
+  var named = output.name.match(/^([a-z]+)(\d*)$/);
+  return {name: output.name, prefix: named[1], number: named[2] ? Number(named[2]) : null,
+          mono: output.kind === "mono", breaks: !!output.breaks_out};
+});
+
+// Whether the mono side comes first, as on a board whose outputs start with its mono ones. The
+// file names the lamps in the same order
+var MONO_FIRST = OUTPUTS.length > 0 && OUTPUTS[0].mono;
+document.getElementById("sides").classList.toggle("monofirst", MONO_FIRST);
+document.querySelector("#outPanel > summary .says").textContent = BOARD.output_words.panel;
 
 // The corner cut into a broken-out lamp, saying which of an output's three drives it
 var CHANNEL_INKS = ["#d63a2a", "#23a55a", "#2f76d9"];
@@ -15,11 +30,11 @@ var CHANNEL_INKS = ["#d63a2a", "#23a55a", "#2f76d9"];
 // others without the page being drawn again
 var kinOf = {};
 
-// An output is one lamp or three, and nothing between: the adapter brings all three
+// A colour output is one lamp or three, and nothing between: the adapter brings all three
 // channels out or it is not fitted. Two channels playing the same thing are two lamps in
-// one stretch, which is sectioning and not wiring
+// one stretch, which is sectioning and not wiring. A mono output is held as broken out for good
 var wiring = [];
-for (var n = 0; n < OUTS; n++) wiring.push({broken: false});
+for (var n = 0; n < OUTS; n++) wiring.push({broken: OUTPUTS[n].mono});
 
 function Run(name, mono) {
   return {name: name, mono: mono, lamps: [], sections: [], picked: 0,
@@ -29,26 +44,28 @@ function Run(name, mono) {
 // The colour lamps and the mono ones are each a run of their own
 var outs = Run("out", false);
 var mono = Run("mono", true);
-var runs = [outs, mono];
+var runs = MONO_FIRST ? [mono, outs] : [outs, mono];
 
 // The one stretch being worked on, which is the run it is in and its place in that run.
 // One set of looks can only be for one stretch, so the other run shows no mark at all
-var active = outs;
+var active = MONO_FIRST ? mono : outs;
 
 // Which kind of lamp the one set of looks is drawn for. It follows whatever was last
 // pointed at, so the cards are always the ones for the lights being worked on
-var showing = false;
+var showing = MONO_FIRST;
 
 // Where each lamp sits, which is the one thing about a board only its owner knows. It
 // is a lamp and not an output that is placed: an output's three channels reach three
 // separate LEDs through the adapter, and those can be anywhere in a build
 var order = [];
-for (var m = 0; m < OUTS; m++) {
-  if (wiring[m].broken) {
-    CHANNELS.forEach(function (letter, c) { order.push({out: m, channel: c}); });
-  } else {
-    order.push({out: m, channel: null});
-  }
+for (var m = 0; m < OUTS; m++) order = order.concat(placesOf(m));
+
+// An output's places in the wiring order: a mono output's one light, a colour output whole, or
+// broken out as its three channels
+function placesOf(out) {
+  if (OUTPUTS[out].mono) return [{out: out, channel: 0}];
+  if (!wiring[out].broken) return [{out: out, channel: null}];
+  return CHANNELS.map(function (letter, c) { return {out: out, channel: c}; });
 }
 
 function sameLamp(a, b) { return a.out === b.out && a.channel === b.channel; }
@@ -81,61 +98,95 @@ function lampsFor(run) {
 
 function widthOf(section) { return section.to - section.from + 1; }
 
+// Whether a lamp is a channel of a colour output broken out, which the file names by its channel
+function isChannel(lamp) { return !lamp.colour && !OUTPUTS[lamp.out].mono; }
+
 // What one lamp is called, in the words the file uses
 function selectorFor(lamp) {
   if (lamp.run) return lamp.run.name + (lamp.at + 1);
-  var name = "out" + (lamp.out + 1);
-  return lamp.colour ? name : name + "." + CHANNELS[lamp.channel];
+  var name = OUTPUTS[lamp.out].name;
+  return isChannel(lamp) ? name + "." + CHANNELS[lamp.channel] : name;
 }
 
-// The shortest way to name a set of lamps that the file still reads. Consecutive
-// outputs taken whole are a range, an output's three channels in order are its `.*`, and
-// the first item establishes the prefix so every one after it is a number and a channel
+// Whether the output after this one, counting by step, is the next of the same name
+function nextOutput(out, step) {
+  var here = OUTPUTS[out], there = OUTPUTS[out + step];
+  return !!there && here.number !== null && there.prefix === here.prefix &&
+         there.number === here.number + step;
+}
+
+// A set of items as the file joins them: an item's prefix carries on to a bare number after it,
+// so a numbered item says its prefix only where it differs from the one before, and an output
+// with no number always says its name
+function joinedItems(items) {
+  var prefix = null;
+  return items.map(function (item) {
+    var output = OUTPUTS[item.out];
+    var said = output.number === null ? output.name + item.rest
+             : (output.prefix === prefix ? "" : output.prefix) + item.rest;
+    prefix = output.prefix;
+    return said;
+  }).join(",");
+}
+
+// An item naming outputs first to last of one name, with a channel suffix or none
+function rangeItem(first, last, suffix) {
+  var from = OUTPUTS[first].number, to = OUTPUTS[last].number;
+  return {out: first,
+          rest: (from === null ? "" : first === last ? String(from) : from + "-" + to) +
+                (suffix ? "." + suffix : "")};
+}
+
+// The shortest way to name a set of lamps that the file still reads. Consecutive outputs taken
+// whole, and consecutive mono outputs, are a range, and an output's three channels in order are
+// its `.*`
 function nameThese(lamps) {
   // An output's three channels, in order, starting here
   function allThree(at) {
-    return at + 2 < lamps.length && !lamps[at].colour &&
+    return at + 2 < lamps.length && isChannel(lamps[at]) &&
            lamps[at].channel === 0 && lamps[at + 1].channel === 1 &&
            lamps[at + 2].channel === 2 && lamps[at + 1].out === lamps[at].out &&
            lamps[at + 2].out === lamps[at].out;
-  }
-  function named(first, last, suffix) {
-    return (first === last ? String(first + 1) : (first + 1) + "-" + (last + 1)) +
-           (suffix ? "." + suffix : "");
   }
 
   var items = [];
   var at = 0;
   while (at < lamps.length) {
-    if (lamps[at].colour) {
+    if (!isChannel(lamps[at])) {
       var last = at;
-      while (last + 1 < lamps.length && lamps[last + 1].colour &&
-             lamps[last + 1].out === lamps[last].out + 1) {
+      while (last + 1 < lamps.length && !isChannel(lamps[last + 1]) &&
+             lamps[last + 1].colour === lamps[at].colour &&
+             lamps[last + 1].out === lamps[last].out + 1 && nextOutput(lamps[last].out, 1)) {
         last++;
       }
-      items.push(named(lamps[at].out, lamps[last].out, null));
+      items.push(rangeItem(lamps[at].out, lamps[last].out, null));
       at = last + 1;
     } else if (allThree(at)) {
       var end = at;
       var highest = lamps[at].out;
-      while (allThree(end + 3) && lamps[end + 3].out === highest + 1) {
+      while (allThree(end + 3) && lamps[end + 3].out === highest + 1 && nextOutput(highest, 1)) {
         end += 3;
         highest++;
       }
-      items.push(named(lamps[at].out, highest, "*"));
+      items.push(rangeItem(lamps[at].out, highest, "*"));
       at = end + 3;
     } else {
-      items.push(named(lamps[at].out, lamps[at].out, CHANNELS[lamps[at].channel]));
+      items.push(rangeItem(lamps[at].out, lamps[at].out, CHANNELS[lamps[at].channel]));
       at++;
     }
   }
-  return "out" + items.join(",");
+  return joinedItems(items);
 }
 
+// A lamp's label on the page: its number, and its channel where it is one, or for an output with
+// no number its name, or its channel's letter
 function shortName(lamp) {
   if (lamp.run) return String(lamp.at + 1);
-  if (lamp.colour) return String(lamp.out + 1);
-  return (lamp.out + 1) + CHANNELS[lamp.channel];
+  var output = OUTPUTS[lamp.out];
+  if (output.number === null) {
+    return isChannel(lamp) ? CHANNELS[lamp.channel].toUpperCase() : output.name.toUpperCase();
+  }
+  return isChannel(lamp) ? output.number + CHANNELS[lamp.channel] : String(output.number);
 }
 
 // ---- sections over those lamps -----------------------------------------------------------
@@ -444,7 +495,7 @@ function pickOutput(out) {
 }
 
 function rejoinWiring(out) {
-  if (!wiring[out].broken) return;
+  if (!wiring[out].broken || OUTPUTS[out].mono) return;
   runs.forEach(remember);
   acrossWiring(function () {
     wiring[out] = {broken: false};
@@ -462,6 +513,40 @@ function rejoinWiring(out) {
 }
 
 // ---- what the file says ------------------------------------------------------------------
+
+// Some outputs by their place counted from one, as the file names them: those of one name in a
+// row as a set of numbers, an output with no number by its name
+function outputsNamed(places) {
+  var items = [];
+  var at = 0;
+  while (at < places.length) {
+    var output = OUTPUTS[places[at] - 1];
+    var last = at;
+    while (output.number !== null && last + 1 < places.length &&
+           OUTPUTS[places[last + 1] - 1].number !== null &&
+           OUTPUTS[places[last + 1] - 1].prefix === output.prefix) last++;
+    var numbers = places.slice(at, last + 1).map(function (place) {
+      return OUTPUTS[place - 1].number;
+    });
+    items.push({out: places[at] - 1, rest: output.number === null ? "" : rangify(numbers)});
+    at = last + 1;
+  }
+  return joinedItems(items);
+}
+
+// An output in words: output 3, or the RGB output for one with no number
+function outputSaid(out) {
+  var output = OUTPUTS[out];
+  return output.number === null ? "the " + output.name.toUpperCase() + " output"
+                                : "output " + output.number;
+}
+
+// The board's colour outputs in words, as one where there is only one
+function colourOutputsSaid() {
+  var colour = [];
+  OUTPUTS.forEach(function (output, out) { if (!output.mono) colour.push(out); });
+  return colour.length === 1 ? outputSaid(colour[0]) : "the colour outputs";
+}
 
 // What a stretch plays on, as though it ran from its near end
 function forwardTargetFor(run, section) {
@@ -484,9 +569,10 @@ function forwardTargetFor(run, section) {
   var target = {kind: first.colour && widthOf(section) === 1 ? "single" : "outputs",
                 name: "out", colour: first.colour, selector: nameThese(mine),
                 count: widthOf(section), playing: [],
-                label: first.colour ? "the colour outputs" : "the mono lights"};
+                label: first.colour ? colourOutputsSaid() : "the mono lights"};
   if (first.colour) {
     target.playing = mine.map(function (lamp) { return lamp.out + 1; });
+    target.nameSet = outputsNamed;
   } else {
     target.playing = mine.map(function (lamp, at) { return at; });
     target.nameSet = function (set) {
@@ -792,9 +878,10 @@ function renderRun(where, run) {
     }
     var mine = sectionAt(run, at);
     var one = document.createElement("div");
+    // A mono output's lamp is one light, with no channel's corner and no kin
     one.className = "lamp" + (run === active && mine === run.picked ? " ringed" : "") +
-                    (lamp.colour ? " colourlamp" : " chan");
-    if (!lamp.colour) {
+                    (lamp.colour ? " colourlamp" : isChannel(lamp) ? " chan" : " chan single");
+    if (!lamp.colour && isChannel(lamp)) {
       one.style.setProperty("--chan", CHANNEL_INKS[lamp.channel]);
       // Which three would gather if this output were put back to one colour lamp, which
       // is the question being asked whenever one of them is pointed at
@@ -1005,21 +1092,21 @@ function cutPoint(run, after, wide, from) {
 var RIGHT = "<path d='M3 8 H12'/><path d='M8.5 4.5 L12 8 L8.5 11.5'/>";
 var LEFT = "<path d='M13 8 H4'/><path d='M7.5 4.5 L4 8 L7.5 11.5'/>";
 
-// The one act there is, said as a direction: a colour output goes right and becomes
-// three mono lights, and those three come back left as one colour output. It shows only
-// where the wiring can be changed, in the board's colour
+// The one act there is, said as a direction: a colour output crosses to the mono side and
+// becomes three mono lights, and those three cross back as one colour output. It shows only
+// where the wiring can be changed, in the board's colour, and only on an output that breaks out
 function crossing(out, colour) {
-  if (!canEdit("outPanel")) return noArrow();
+  if (!canEdit("outPanel") || OUTPUTS[out].mono || !OUTPUTS[out].breaks) return noArrow();
   var made = document.createElement("button");
   made.className = "cross boardarrow";
   var says = colour
-    ? "break output " + (out + 1) + " into three mono lights"
-    : "put output " + (out + 1) + " back to one colour light";
+    ? "break " + outputSaid(out) + " into three mono lights"
+    : "put " + outputSaid(out) + " back to one colour light";
   made.title = says;
   made.setAttribute("aria-label", says);
   made.innerHTML = "<svg viewBox='0 0 16 16' width='12' height='12' fill='none' " +
                    "stroke='currentColor' stroke-width='1.7' stroke-linecap='round' " +
-                   "stroke-linejoin='round'>" + (colour ? RIGHT : LEFT) + "</svg>";
+                   "stroke-linejoin='round'>" + (colour === MONO_FIRST ? LEFT : RIGHT) + "</svg>";
   made.onclick = function (event) {
     event.stopPropagation();
     if (colour) breakOut(out); else rejoin(out);
@@ -1068,8 +1155,10 @@ function renderCutting(where, run) {
                      (run.sections.length === 1 ? " stretch" : " stretches");
   box.appendChild(says);
   // The steps the two sides share go on the cutting row of the side at the right, as a strip
-  // keeps its own on its cutting row
-  if (where === (mono.lamps.length ? "monoCut" : "outCut")) zoomAndSteps(box, active);
+  // keeps its own on its cutting row. That is the second side while it has lamps
+  var first = MONO_FIRST ? mono : outs, second = MONO_FIRST ? outs : mono;
+  var right = second.lamps.length ? second : first;
+  if (where === (right === mono ? "monoCut" : "outCut")) zoomAndSteps(box, active);
 }
 
 // The chosen stretch's panel. The parts below add to it, each after the one before, whatever the
@@ -1136,10 +1225,10 @@ function renderChosenPanel(where, run) {
 // The two sides: each as wide as what it holds, so the divide between them moves as
 // outputs are broken out and put back
 function renderSides() {
-  [{run: outs, side: "sideA", head: "headA", title: "Colour outputs",
-    says: "no adapter fitted"},
-   {run: mono, side: "sideB", head: "headB", title: "Mono lights",
-    says: "three to every output broken out"}].forEach(function (set) {
+  var words = BOARD.output_words;
+  [{run: outs, side: "sideA", head: "headA", title: words.colour, says: words.colour_says},
+   {run: mono, side: "sideB", head: "headB", title: words.mono,
+    says: words.mono_says}].forEach(function (set) {
     var box = document.getElementById(set.side);
     var count = set.run.lamps.length;
     var groups = {};
