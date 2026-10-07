@@ -61,6 +61,13 @@ BOARD = "board"
 # the name in lower case
 __BOARD_STRIPS = []
 
+# The board's strips taking a brightness after their length where the rest take a colour
+# order, and each strip taking other strips' terminals as (kind, other kinds), so it cannot
+# play beside them. An APA102 has one brightness for the whole strip and one colour order,
+# and takes data and clock both
+__BOARD_BRIGHTNESS = []
+__BOARD_TAKES = []
+
 # The player kinds that write the board's own outputs. A strip has a player of its
 # own and reaches none of them, so a file playing only there leaves the outputs to
 # whatever last wrote them
@@ -202,9 +209,10 @@ PAIRED_SETTINGS = (("bright_min", "bright_max"), ("dim_min", "dim_max"),
 BOARD_SETTINGS = {"drive": ("manual",), "reload": ("manual", "auto"),
                   "program": None, "args": None}
 
-# A strip's colour order, written after its length as 'stripL=60|rgb', kept among the
-# board settings under the strip's name and this, which no file can write
+# What follows a strip's length, as 'stripL=60|rgb' or 'stripApa=144|50%', kept among the
+# board settings under the strip's name and one of these, which no file can write
 __ORDER = " order"
+__BRIGHTNESS = " brightness"
 
 # Short of full, which is uncomfortable on an indicator at arm's length and buys no
 # legibility across a room
@@ -2339,6 +2347,9 @@ def __learn_board(fx):
     """
     board = fx if isinstance(fx, type) else type(fx)
     __BOARD_STRIPS[:] = [(name.lower(), prop, name) for name, prop in getattr(board, "STRIPS", ())]
+    __BOARD_BRIGHTNESS[:] = [name.lower() for name in getattr(board, "STRIP_BRIGHTNESS", ())]
+    __BOARD_TAKES[:] = [(name.lower(), tuple(other.lower() for other in others))
+                        for name, others in getattr(board, "STRIP_TAKES", ())]
     __BOARD_SCREENS[:] = [(name.lower(), prop, spi, name)
                           for name, prop, spi in getattr(board, "SCREENS", ())]
     # A hub takes both connectors and is built by the board, so it needs two screen ports, a
@@ -2359,6 +2370,11 @@ def __port_classes(fx):
         if getattr(module, board.__name__, None) is board:
             return module.SPCE, module.SPCEPort
     raise ImportError("{} is not reachable from any imported module".format(board.__name__))
+
+
+def __after(kind):
+    """Which of a strip's settings follows its length, its brightness or its colour order."""
+    return __BRIGHTNESS if kind in __BOARD_BRIGHTNESS else __ORDER
 
 
 def __hub_example():
@@ -2395,8 +2411,8 @@ def __board(fx, settings, problems):
     for kind, prop, _shown in __BOARD_STRIPS:
         count = settings.get(kind)
         if count:
-            order = settings.get(kind + __ORDER)
-            declared[prop] = (count, order) if order else count
+            after = settings.get(kind + __after(kind))
+            declared[prop] = count if after is None else (count, after)
 
     # A hub is declared at construction, its panels on the connector named and its
     # selects on the other, so the board builds the hub itself
@@ -2416,9 +2432,9 @@ def __board(fx, settings, problems):
         return fx()
 
 
-# The strips already running, as (strip, count, order) per connector, the order None where
-# the board chose it. A board is built once,
-# a reload keeping the one it has, so this is what a changed length is answered against
+# The strips already running, as (strip, count, after) per connector, after being the colour
+# order or brightness that followed the length, or None where the board chose it. A board is
+# built once, a reload keeping the one it has, so this is what a changed strip is answered against
 __STRIPS = {}
 
 # The hub the board was built with: the screen selector whose connector carries it, and
@@ -2451,15 +2467,19 @@ def strips(fx, lengths, problems):
         if not count:
             continue
 
-        order = lengths.get(kind + __ORDER)
+        after = lengths.get(kind + __after(kind))
         running = __STRIPS.get(kind)
         if running is not None:
-            strip, leds, running_order = running
+            strip, leds, running_after = running
             if count != leds:
                 problems.append("{} is already running with {} LEDs, so its new length "
                                 "needs the board turning off and on".format(
                                     __strip_shown(kind), leds))
-            if order != running_order:
+            if after != running_after and kind in __BOARD_BRIGHTNESS:
+                problems.append("{} is already running at another brightness, so the new "
+                                "one needs the board turning off and on".format(
+                                    __strip_shown(kind)))
+            elif after != running_after:
                 problems.append("{} is already running with its colours in another "
                                 "order, so the new one needs the board turning off and "
                                 "on".format(__strip_shown(kind)))
@@ -2478,7 +2498,7 @@ def strips(fx, lengths, problems):
             problems.append("{} could not be set up: {}".format(__strip_shown(kind), e))
             continue
 
-        __STRIPS[kind] = (strip, count, order)
+        __STRIPS[kind] = (strip, count, after)
         built.append((kind, strip, count))
 
     return built, failed
@@ -2528,7 +2548,7 @@ def __hardware_changed(fx, declared, for_pair=False):
         if asked and running is None:
             return True
         if running is not None and (asked != running[1] or
-                                    declared.get(kind + __ORDER) != running[2]):
+                                    declared.get(kind + __after(kind)) != running[2]):
             return True
 
     # Check if any screen is running, since a board with none may have no screens module
@@ -3388,6 +3408,28 @@ def __check_board(entry, has_strips, problems, lines):
                     at, __strip_shown(key), __shown(length), fault))
                 continue
 
+            # A strip with a brightness of its own takes it as written, or the board's own
+            # where none is. A wrong one still leaves the strip its length, so it plays at
+            # the board's own
+            if key in __BOARD_BRIGHTNESS:
+                after = order.strip()
+                shown = __strip_shown(key)
+                brightness = __number(after) if after else None
+                if after.isalpha():
+                    problems.append("line {}: the board's {} takes its colours in one order, "
+                                    "so what follows its length is its brightness, such as "
+                                    "'{}={}|50%'".format(at, shown, shown, int(number)))
+                    brightness = None
+                elif after and (brightness is None or
+                                __value_fault("fraction", brightness) is not None):
+                    problems.append("line {}: the board's {} has its brightness as {}, so "
+                                    "give it from 0% to 100%, such as '{}={}|50%'".format(
+                                        at, shown, __shown(after), shown, int(number)))
+                    brightness = None
+                settings[key] = int(number)
+                settings[key + __BRIGHTNESS] = brightness
+                continue
+
             # The strip takes its colours in the order written, or the board's own order
             # where none is, so a later board entry without one takes it back to that.
             # A wrong order still leaves the strip its length, so it plays in the board's own
@@ -3911,7 +3953,21 @@ def load(text, fx, maker=None):
     for kind, _prop, _shown in __BOARD_STRIPS:
         if kind not in used:
             board.pop(kind, None)
-            board.pop(kind + __ORDER, None)
+            board.pop(kind + __after(kind), None)
+
+    # A strip taking another's terminals cannot play beside it. The other plays, being the
+    # commoner build, and this one's entries go unanswered past the reason given here
+    left_off = set()
+    for kind, taken in __BOARD_TAKES:
+        playing = [other for other in taken if board.get(other)]
+        if board.get(kind) and playing:
+            others = " and ".join(__strip_shown(other) for other in playing)
+            problems.append("line {}: {} uses the same terminals as {}, so it is left off. "
+                            "Take {} off the board line to play it".format(
+                                board_lines[kind], __strip_shown(kind), others, others))
+            board.pop(kind)
+            board.pop(kind + __after(kind), None)
+            left_off.add(kind)
 
     __check_hub(board, board_lines, screen_entries, problems)
 
@@ -3954,7 +4010,7 @@ def load(text, fx, maker=None):
     # The strips the file asked for, taken before its channel names are resolved: a
     # bare strip name stands for a run whose length only the board entry knows
     built, failed = strips(fx, board, problems)
-    __resolve_strips(entries, board, has_strips, problems, failed)
+    __resolve_strips(entries, board, has_strips, problems, failed | left_off)
 
     # Every kind of channel this board offers, as the names each player's slots take.
     # A strip is one kind per connector, since each is a player writing to its own
