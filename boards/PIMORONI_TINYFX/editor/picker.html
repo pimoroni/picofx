@@ -11183,17 +11183,24 @@ function stripOfToken(token) {
   return STRIPS.some(function (strip) { return strip.name === name; }) ? name : null;
 }
 
+// The strip or screen port a board token sets, such as stripl for stripl=30 or screena for
+// screena=2.8, or null
+function heldOfToken(token) {
+  var named = token.match(/^(\w+)=/);
+  var name = named && named[1].toLowerCase();
+  var held = STRIPS.map(function (strip) { return strip.name; })
+    .concat(SCREEN_PORTS.map(function (port) { return port.id; }));
+  return held.indexOf(name) >= 0 ? name : null;
+}
+
 // The board line's tokens this page does not hold, after its own
 boardLineSteps.after.push(function (line) {
-  // A strip whose length the page writes itself leaves out any kept for it, which coming
-  // later would be the one the board takes
+  // A strip or screen whose setting the page writes itself leaves out any kept for it, which
+  // coming later would be the one the board takes
   var lower = (line || "").toLowerCase();
-  var written = STRIPS.map(function (strip) { return strip.name; }).filter(function (name) {
-    return new RegExp("\\b" + name + "=").test(lower);
-  });
   var kept = boardResidue.filter(function (token) {
-    var name = stripOfToken(token);
-    return !name || written.indexOf(name) < 0;
+    var name = heldOfToken(token);
+    return !name || !new RegExp("\\b" + name + "=").test(lower);
   });
   if (kept.length) line = (line || "board:") + " " + kept.join(" ");
   return line;
