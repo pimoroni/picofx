@@ -76,6 +76,10 @@ class MightyFX:
     # its strip back
     STRIPS = (("stripL", "strip_l"), ("stripR", "strip_r"))
 
+    # The screen ports in order, each by the name it is written as, the attribute holding its
+    # SPCEPort and the SPI bus it drives
+    SCREENS = (("screenA", "spce_a", 0), ("screenB", "spce_b", 1))
+
     # How long a strip takes to power up once the rail is on, and miss any frame sent sooner.
     # A 64 LED panel took one after 5ms and not after 2ms, so this is double that
     RAIL_SETTLE_MS = 10

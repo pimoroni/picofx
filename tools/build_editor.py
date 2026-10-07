@@ -187,8 +187,8 @@ def picker(board_dir, repo_dir):
     """picker.html, from page.html and the numbered parts after it, with the board filled in."""
     with open(os.path.join(board_dir, "editor", DESCRIPTION_NAME), encoding="utf-8") as f:
         board = json.load(f)
-    check_strips(board_dir, board)
-    shared = os.path.join(repo_dir, SHARED_PARTS)
+    check_board(board_dir, board)
+    shared =os.path.join(repo_dir, SHARED_PARTS)
     own = os.path.join(board_dir, "editor", "picker")
     with open(os.path.join(shared, "page.html"), encoding="utf-8") as f:
         text = f.read()
@@ -205,42 +205,69 @@ def picker(board_dir, repo_dir):
     return text
 
 
-def board_strips(board_dir):
+# The tables a board's class declares its connectors in, each a tuple of tuples
+BOARD_TABLES = ("STRIPS", "SCREENS")
+
+
+def board_declares(board_dir):
     """
-    The strips a board's class declares, as (name as written, property), read from its
-    source in visible_libs/ so no board need be imported. None where the board carries no
-    class here, and empty for a class declaring none.
+    What a board's class declares, read from its source in visible_libs/ so no board need be
+    imported: its STRIPS and SCREENS as lists of tuples, each empty where it declares none,
+    and whether it hands back a Screen Hub. None where the board carries no class here.
     """
     sources = sorted(glob.glob(os.path.join(board_dir, "visible_libs", "*.py")))
     if not sources:
         return None
+    declared = {"STRIPS": [], "SCREENS": [], "hub": False}
     for path in sources:
         with open(path, encoding="utf-8") as f:
             tree = ast.parse(f.read(), path)
         for node in ast.walk(tree):
-            if isinstance(node, ast.ClassDef):
-                for item in node.body:
-                    if isinstance(item, ast.Assign) and any(
-                            getattr(target, "id", "") == "STRIPS" for target in item.targets):
-                        return [tuple(pair) for pair in ast.literal_eval(item.value)]
-    return []
+            if not isinstance(node, ast.ClassDef):
+                continue
+            found = {}
+            for item in node.body:
+                if isinstance(item, ast.Assign):
+                    for target in item.targets:
+                        if getattr(target, "id", "") in BOARD_TABLES:
+                            found[target.id] = [tuple(row) for row in ast.literal_eval(item.value)]
+                elif isinstance(item, ast.FunctionDef) and item.name == "hub":
+                    found["hub"] = True
+            if any(table in found for table in BOARD_TABLES):
+                declared.update(found)
+                return declared
+    return declared
 
 
-def check_strips(board_dir, board):
-    """Fail where the description names a strip the board's class does not declare."""
-    declared = board_strips(board_dir)
+def board_hub(declared):
+    """Whether a board can carry a Screen Hub, which takes both of its screen ports."""
+    return declared["hub"] and len(declared["SCREENS"]) > 1
+
+
+def check_board(board_dir, board):
+    """Fail where the description names a strip, screen port or hub the board's class lacks."""
+    declared = board_declares(board_dir)
     if declared is None:
         return
-    names = [name.lower() for name, _prop in declared]
-    missing = [strip["name"] for strip in board["strips"] if strip["name"] not in names]
+    strips = [name.lower() for name, _prop in declared["STRIPS"]]
+    missing = [strip["name"] for strip in board["strips"] if strip["name"] not in strips]
     if missing:
         sys.exit("{} names {}, which the board's class does not declare in STRIPS".format(
             DESCRIPTION_NAME, ", ".join(missing)))
+    screens = [name.lower() for name, _prop, _spi in declared["SCREENS"]]
+    described = board["screens"] or {"ports": [], "hub": False}
+    missing = [port["id"] for port in described["ports"] if port["id"] not in screens]
+    if missing:
+        sys.exit("{} names {}, which the board's class does not declare in SCREENS".format(
+            DESCRIPTION_NAME, ", ".join(missing)))
+    if described["hub"] and not board_hub(declared):
+        sys.exit("{} offers a Screen Hub, which the board's class cannot carry".format(
+            DESCRIPTION_NAME))
 
 
 def catalogue(repo_dir, board_dir):
-    """catalogue.js, from the same tables autofx reads on the board, with the strips its class
-    declares."""
+    """catalogue.js, from the same tables autofx reads on the board, with the strips and screen
+    ports its class declares."""
     fake = types.ModuleType("machine")
     for name in ("PWM", "Pin", "Timer", "SPI"):
         setattr(fake, name, type(name, (), {}))
@@ -252,8 +279,12 @@ def catalogue(repo_dir, board_dir):
     sys.path.insert(0, os.path.join(repo_dir, "boards", "visible_libs"))
     import autofx
 
-    strips = [name.lower() for name, _prop in board_strips(board_dir) or []]
-    board_settings = dict(autofx.BOARD_SETTINGS, **{strip: None for strip in strips})
+    declared = board_declares(board_dir) or {"STRIPS": [], "SCREENS": [], "hub": False}
+    strips = [name.lower() for name, _prop in declared["STRIPS"]]
+    screens = [name.lower() for name, _prop, _spi in declared["SCREENS"]]
+    sizes = autofx.SCREEN_SIZES + ((autofx.HUB,) if board_hub(declared) else ())
+    board_settings = dict(autofx.BOARD_SETTINGS, **dict.fromkeys(screens, sizes),
+                          **dict.fromkeys(strips))
     tables = {
         "effects": {name: {"kind": kind, "takes": list(takes)}
                     for name, (_cls, kind, _called, takes)
@@ -266,7 +297,7 @@ def catalogue(repo_dir, board_dir):
         "settings": autofx.SETTINGS,
         "colours": sorted(autofx.COLOURS),
         "channel_kinds": autofx.CHANNEL_KINDS,
-        "screen_ports": sorted(autofx.SCREEN_PORTS),
+        "screen_ports": screens,
         "strips": strips,
         "output_settings": list(autofx.OUTPUT_SETTINGS),
         "screen_settings": list(autofx.SCREEN_SETTINGS),

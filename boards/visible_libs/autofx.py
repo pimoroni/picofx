@@ -95,11 +95,11 @@ SCREEN_EFFECTS = {
     "sequence": ("folder", "fps", "interval", "loop", "ping_pong", "first_as_last", "hold"),
 }
 
-# The selector names that reach a screen: each SP/CE port's name, attribute and SPI
-SCREEN_PORTS = {
-    "screena": ("A", "spce_a", 0),
-    "screenb": ("B", "spce_b", 1),
-}
+# The selector names that reach a screen. The board declares its screen ports, and those of the
+# board being loaded are kept here as (kind, property, SPI bus, name as written), the kind being
+# the name in lower case, with whether the board can carry a Screen Hub
+__BOARD_SCREENS = []
+__BOARD_HUB = [False]
 
 # A Screen Hub's positions as its silk letters them, each named in a file as hubA to hubF.
 # A board entry gives a connector the hub with screenA=hub or screenB=hub, its selects
@@ -196,11 +196,11 @@ PAIRED_SETTINGS = (("bright_min", "bright_max"), ("dim_min", "dim_max"),
 # file name, so it is answered when it is looked for rather than here. A screen's
 # size is a fact about the hardware, set once here where an entry's settings vary
 # per scene, and a strip's length is the same: it is the one channel count the board
-# cannot discover for itself. Each strip the board declares is a setting too, its value a
-# number rather than one of a set of words.
+# cannot discover for itself. Each screen port the board declares is a setting too, taking
+# a panel size or, where the board can carry one, the hub, and so is each strip, its value
+# a number rather than one of a set of words.
 BOARD_SETTINGS = {"drive": ("manual",), "reload": ("manual", "auto"),
-                  "program": None, "args": None,
-                  "screena": SCREEN_SIZES + (HUB,), "screenb": SCREEN_SIZES + (HUB,)}
+                  "program": None, "args": None}
 
 # A strip's colour order, written after its length as 'stripL=60|rgb', kept among the
 # board settings under the strip's name and this, which no file can write
@@ -2320,16 +2320,50 @@ def channels(fx):
     return mono, colour
 
 
-def __learn_strips(fx):
+def __learn_board(fx):
     """
-    Keep the strips the board declares, for everything that names a strip.
+    Keep the strips and screen ports the board declares, and whether it can carry a Screen
+    Hub, for everything that names them.
 
     Asked of the class, so no board need exist yet and no property is evaluated:
     MicroPython's dir() and getattr() both run a property's getter, and one that
     answers by raising would read as an absent connector.
     """
-    declared = getattr(fx if isinstance(fx, type) else type(fx), "STRIPS", ())
-    __BOARD_STRIPS[:] = [(name.lower(), prop, name) for name, prop in declared]
+    board = fx if isinstance(fx, type) else type(fx)
+    __BOARD_STRIPS[:] = [(name.lower(), prop, name) for name, prop in getattr(board, "STRIPS", ())]
+    __BOARD_SCREENS[:] = [(name.lower(), prop, spi, name)
+                          for name, prop, spi in getattr(board, "SCREENS", ())]
+    # A hub takes both connectors and is built by the board, so it needs two screen ports, a
+    # port able to carry its selects, and a board that hands it back
+    hub = len(__BOARD_SCREENS) > 1 and hasattr(board, "hub") and \
+        hasattr(__port_classes(fx)[0], "HUB_SELECTS")
+    __BOARD_HUB[:] = [hub]
+
+
+def __port_classes(fx):
+    """
+    SPCE and SPCEPort as the board's own module defines them, each board naming what its
+    connectors can carry. Found by the module holding the board's class, since a MicroPython
+    class does not name its module.
+    """
+    board = fx if isinstance(fx, type) else type(fx)
+    for module in sys.modules.values():
+        if getattr(module, board.__name__, None) is board:
+            return module.SPCE, module.SPCEPort
+    raise ImportError("{} is not reachable from any imported module".format(board.__name__))
+
+
+def __screen_kinds():
+    """The screen ports' kinds, in the order the board declares them."""
+    return [kind for kind, _prop, _spi, _shown in __BOARD_SCREENS]
+
+
+def __screen_port(kind):
+    """A screen port as (property, SPI bus, port letter), or None for one the board has not got."""
+    for known, prop, spi, shown in __BOARD_SCREENS:
+        if known == kind:
+            return prop, spi, shown[len("screen"):]
+    return None
 
 
 def __board(fx, settings, problems):
@@ -2355,9 +2389,9 @@ def __board(fx, settings, problems):
     # selects on the other, so the board builds the hub itself
     hub = __hub_port(settings)
     if hub is not None:
-        from spce import SPCE
-        for name, (_port_name, attr, _spi) in SCREEN_PORTS.items():
-            declared[attr] = SPCE.SCREEN if name == hub else SPCE.HUB_SELECTS
+        SPCE = __port_classes(fx)[0]
+        for kind, prop, _spi, _shown in __BOARD_SCREENS:
+            declared[prop] = SPCE.SCREEN if kind == hub else SPCE.HUB_SELECTS
 
     if not declared:
         return fx()
@@ -2474,7 +2508,7 @@ def __hardware_changed(fx, declared, for_pair=False):
             asked_hub.get("sizes") != __HUB.get("sizes"):
         return True
 
-    __learn_strips(fx)
+    __learn_board(fx)
     for kind, _prop, _shown in __BOARD_STRIPS:
         asked = declared.get(kind)
         running = __STRIPS.get(kind)
@@ -2490,7 +2524,7 @@ def __hardware_changed(fx, declared, for_pair=False):
     from screens import Reserve
     wanted = Reserve.FULL_SIZE_IMAGES if for_pair else Reserve.CANVAS_SPACE
 
-    for name in SCREEN_PORTS:
+    for name in __screen_kinds():
         asked = declared.get(name)
         known = __SCREENS.get(name)
         if known is None:
@@ -2592,7 +2626,10 @@ __SCREENS = {}
 
 
 def __screen_shown(name):
-    """The selector as the reader wrote it, the port letter back in capitals."""
+    """The selector as the board declares it, or with the port letter back in capitals."""
+    for kind, _prop, _spi, shown in __BOARD_SCREENS:
+        if kind == name:
+            return shown
     return "screen" + name[6:].upper()
 
 
@@ -2688,9 +2725,10 @@ def __wants_pair(entries, board):
     out one reservation and both screens have to agree on it, so it cannot follow
     the content.
     """
-    named = {name for name in SCREEN_PORTS if board.get(name) and board.get(name) != HUB}
+    kinds = __screen_kinds()
+    named = {name for name in kinds if board.get(name) and board.get(name) != HUB}
     named.update(entry.channels[0].name for entry in entries
-                 if entry.channels and entry.channels[0].name in SCREEN_PORTS)
+                 if entry.channels and entry.channels[0].name in kinds)
     return len(named) > 1
 
 
@@ -2713,16 +2751,16 @@ def __screen_on(fx, name, line, problems, size, for_pair=False):
                                 __screen_shown(name), built_size))
         return screen
 
-    from spce import SPCE, SPCEPort
+    SPCE, SPCEPort = __port_classes(fx)
 
-    port_name, attr, spi = SCREEN_PORTS[name]
+    attr, spi, port_name = __screen_port(name)
     port = getattr(fx, attr)
     shown = __screen_shown(name)
 
     if port.mode is None:
         # The port was never declared, so it becomes a screen port here: the same
         # construction a program would make, made because the file asked for it
-        pins = getattr(type(fx), "SPCE_{}_PINS".format(port_name))
+        pins = getattr(type(fx), attr.upper() + "_PINS")
         port = SPCEPort(port_name, SPCE.SCREEN, spi, pins)
         setattr(fx, attr, port)
     elif port.mode != SPCE.SCREEN:
@@ -2758,20 +2796,20 @@ def __screen_entry_fits(entry, fx, hub, board, problems):
         return False
 
     # The hub has both connectors, one for its panels and one for their selects
-    if hub is not None and name in SCREEN_PORTS:
+    port = __screen_port(name)
+    if hub is not None and port is not None:
         if name == hub:
             problems.append("line {}: {} is a Screen Hub, so name its panels hubA to "
                             "hub{}".format(entry.line, __screen_shown(name),
                                            HUB_POSITIONS[-1].upper()))
         else:
             problems.append("line {}: SP/CE {} carries the hub's selects, so {} has no "
-                            "screen".format(entry.line, SCREEN_PORTS[name][0],
-                                            __screen_shown(name)))
+                            "screen".format(entry.line, port[2], __screen_shown(name)))
         return False
 
-    if name not in SCREEN_PORTS or getattr(fx, SCREEN_PORTS[name][1], None) is None:
-        offered = [__screen_shown(known) for known in sorted(SCREEN_PORTS)
-                   if getattr(fx, SCREEN_PORTS[known][1], None) is not None]
+    if port is None or getattr(fx, port[0], None) is None:
+        offered = [shown for _kind, prop, _spi, shown in __BOARD_SCREENS
+                   if getattr(fx, prop, None) is not None]
         if offered:
             problems.append("line {}: this board has no {}, it has {}".format(
                 entry.line, __screen_shown(name), " and ".join(offered)))
@@ -3296,13 +3334,14 @@ def __check_board(entry, has_strips, problems, lines):
             continue
 
         kinds = [kind for kind, _prop, _shown in __BOARD_STRIPS]
-        if key not in BOARD_SETTINGS and key not in kinds:
+        screens = __screen_kinds()
+        if key not in BOARD_SETTINGS and key not in kinds and key not in screens:
             if not has_strips and key.startswith("strip"):
                 problems.append("line {}: this board has no strip connectors, so it "
                                 "has no {}".format(at, __strip_shown(key)))
                 continue
             problems.append("line {}: the board has no setting '{}', it takes {}".format(
-                at, key, ", ".join(sorted(list(BOARD_SETTINGS) + kinds))))
+                at, key, ", ".join(sorted(list(BOARD_SETTINGS) + kinds + screens))))
             continue
 
         # Whatever it was written as, since a setting limited to named values is
@@ -3343,7 +3382,10 @@ def __check_board(entry, has_strips, problems, lines):
             settings[key + __ORDER] = order or None
             continue
 
-        allowed = BOARD_SETTINGS[key]
+        if key in screens:
+            allowed = SCREEN_SIZES + (HUB,) if __BOARD_HUB[0] else SCREEN_SIZES
+        else:
+            allowed = BOARD_SETTINGS[key]
         if allowed is not None:
             if text.lower() not in allowed:
                 problems.append("line {}: the board's {} is {}, it takes {}".format(
@@ -3373,7 +3415,7 @@ __REFUSED = " refused"
 
 def __hub_port(board):
     """The screen selector whose connector carries the hub, or None without one."""
-    for name in SCREEN_PORTS:
+    for name in __screen_kinds():
         if board.get(name) == HUB:
             return name
     return None
@@ -3406,10 +3448,10 @@ def __check_hub(board, lines, entries, problems):
         return
 
     # The hub takes one connector for its panels and the other for their selects
-    for name in SCREEN_PORTS:
+    for name in __screen_kinds():
         if name == hub or board.get(name) is None:
             continue
-        port_name = SCREEN_PORTS[name][0]
+        port_name = __screen_port(name)[2]
 
         if board[name] == HUB:
             problems.append("line {}: the board entry gives both connectors the hub, which "
@@ -3768,7 +3810,7 @@ def load(text, fx, maker=None):
     would. Without a maker the change is reported instead.
     """
     entries, problems = parse(text)
-    __learn_strips(fx)
+    __learn_board(fx)
     has_strips = bool(__BOARD_STRIPS)
 
     # Board entries are settings rather than effects, a heading begins a scene, and
