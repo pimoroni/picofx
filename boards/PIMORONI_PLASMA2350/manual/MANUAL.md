@@ -90,6 +90,9 @@ board: screenA=2.8
 screenA: image file="picture.png"
 ```
 
+The Plasma 2350 W has no SP/CE connector, so it takes no screen, and the picker
+offers none.
+
 Pictures and animations go on this drive beside `effects.txt`. `gif` plays an
 animation, `image` shows a still, and `sequence` plays a folder of them in turn.
 

@@ -88,8 +88,25 @@ class PlasmaFX:
     STRIP_BRIGHTNESS = ("stripApa",)
     STRIP_TAKES = (("stripApa", ("stripDat", "stripClk")),)
 
-    # The screen port, by the name it is written as and the attribute holding its SPCEPort
+    # The screen port, by the name it is written as and the attribute holding its SPCEPort.
+    # Emptied by detect() on a 2350 W, which has no SP/CE connector
     SCREENS = (("screenA", "spce_a"),)
+
+    # The 2350 W's wireless module: power enable, data, chip select and clock. None of these
+    # pins is connected on the 2350
+    WIRELESS_PINS = (23, 24, 25, 29)
+
+    # How long the module has to answer after power-up. It answers within 20ms; its driver
+    # allows 250ms, which every 2350 would wait out
+    WIRELESS_START_MS = 100
+
+    # What the module's test register reads once it has started, 0xFEEDBEAD with its halves
+    # swapped as its 16-bit words arrive
+    WIRELESS_TEST_PATTERN = 0xBEADFEED
+
+    # A read of 32 bits at the test register, 0x14, with the command's halves swapped for the
+    # 16-bit words the module takes from power-up
+    WIRELESS_TEST_READ = 0xA0044000
 
     RGB_GAMMA = 2.2
 
@@ -179,6 +196,65 @@ class PlasmaFX:
         # Held at module level, since a PWM that is collected stops driving its pin
         for pin in cls.RGB_PINS:
             __waking.append(PWM(Pin(pin), freq=PWMLED.FREQUENCY, duty_u16=duty, invert=True))
+
+    @classmethod
+    def detect(cls):
+        """Narrow the declared parts to this board's, before anything reads them. A 2350 W carries its wireless module where the 2350 has its SP/CE connector, so it has no screen port."""
+        if cls.__wireless_fitted():
+            cls.SCREENS = ()
+
+    @classmethod
+    def __wireless_fitted(cls):
+        # Once something has brought the wireless driver up, the module may be in use and is left
+        # powered. The driver read the module's own MAC address where it found one
+        try:
+            import network
+        except ImportError:
+            return cls.__wireless_answers()
+        wlan = network.WLAN(network.STA_IF)
+        if wlan.active():
+            return wlan.config("mac") != bytes(6)
+        return cls.__wireless_answers()
+
+    @classmethod
+    def __wireless_answers(cls):
+        # Driven from plain pins, so no state machine or DMA channel is claimed, and powered
+        # down after for its driver to start afresh
+        power_pin, data_pin, select_pin, clock_pin = cls.WIRELESS_PINS
+        power = Pin(power_pin, Pin.OUT, value=0)
+        select = Pin(select_pin, Pin.OUT, value=1)
+        clock = Pin(clock_pin, Pin.OUT, value=0)
+        data = Pin(data_pin, Pin.OUT, value=0)
+        time.sleep_ms(20)
+        power.value(1)
+        powered = time.ticks_ms()
+        answered = False
+        while not answered and time.ticks_diff(time.ticks_ms(), powered) < cls.WIRELESS_START_MS:
+            # Read back to back from power-up, the module can stop answering until powered again
+            time.sleep_ms(5)
+            answered = cls.__wireless_test_read(data, select, clock) == cls.WIRELESS_TEST_PATTERN
+        power.value(0)
+        data.init(Pin.IN, Pin.PULL_DOWN)
+        return answered
+
+    @classmethod
+    def __wireless_test_read(cls, data, select, clock):
+        # The command out on the data line, then the line turned round and the reply read in,
+        # a bit to each clock pulse
+        select.value(0)
+        data.init(Pin.OUT, value=0)
+        for bit in range(31, -1, -1):
+            data.value(cls.WIRELESS_TEST_READ >> bit & 1)
+            clock.value(1)
+            clock.value(0)
+        data.init(Pin.IN, Pin.PULL_DOWN)
+        word = 0
+        for _ in range(32):
+            word = word << 1 | data.value()
+            clock.value(1)
+            clock.value(0)
+        select.value(1)
+        return word
 
     def boot_pressed(self):
         return self.__switch.value() == 0
