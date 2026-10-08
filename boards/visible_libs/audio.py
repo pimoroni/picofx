@@ -115,12 +115,17 @@ class WavPlayer:
     # 22.05kHz mono
     FADE_SAMPLES = 256
 
-    def __init__(self, id, sck_pin, ws_pin, sd_pin, amp_enable=None, ibuf_len=INTERNAL_BUFFER_LENGTH, root="/"):
+    # ibuf_ms, where given, grows the I2S ring to hold at least that much of whatever plays,
+    # sized from its byte rate as it starts, for a board whose refills can be held up
+    def __init__(self, id, sck_pin, ws_pin, sd_pin, amp_enable=None, ibuf_len=INTERNAL_BUFFER_LENGTH, root="/", ibuf_ms=None):
         self.__id = id
         self.__sck_pin = sck_pin
         self.__ws_pin = ws_pin
         self.__sd_pin = sd_pin
         self.__ibuf_len = ibuf_len
+        self.__ibuf_ms = ibuf_ms
+        self.__ring_ms = 0              # How long the ring takes to play out at the current rate
+        self.__silent_at = 0            # When a pause's faded audio has played out of the ring
         self.__enable = None
 
         # Manually tweak the tone amplitude for equal loudness of sine/square/triangle
@@ -243,6 +248,7 @@ class WavPlayer:
                 self.__fading_out = True
             else:
                 self.__state = WavPlayer.PAUSE      # Enter the pause state on the next callback
+                self.__silent_at = time.ticks_add(time.ticks_ms(), self.__ring_ms)
 
     def resume(self):
         self.__fading_out = False
@@ -281,11 +287,19 @@ class WavPlayer:
         return self.__wav_file.tell()
 
     def is_paused(self):
-        return self.__state == WavPlayer.PAUSE
+        # Paused, and the audio queued ahead of the pause has played out
+        return self.__state == WavPlayer.PAUSE and time.ticks_diff(time.ticks_ms(), self.__silent_at) >= 0
 
     def __start_i2s(self, bits=16, format=I2S.MONO, rate=44_100, state=STOP, mode=MODE_WAV):
         import gc
         gc.collect()
+        byte_rate = rate * bits // 8 * (1 if format == I2S.MONO else 2)
+        ibuf = self.__ibuf_len
+        if self.__ibuf_ms is not None:
+            # Rounded up to whole refills, and never below the fixed length
+            wanted = byte_rate * self.__ibuf_ms // 1000
+            ibuf = max(ibuf, -(-wanted // self.WAV_BUFFER_LENGTH) * self.WAV_BUFFER_LENGTH)
+        self.__ring_ms = ibuf * 1000 // byte_rate
         self.__audio_out = I2S(
             self.__id,
             sck=self.__sck_pin,
@@ -295,12 +309,12 @@ class WavPlayer:
             bits=bits,
             format=format,
             rate=rate,
-            ibuf=self.__ibuf_len,
+            ibuf=ibuf,
         )
 
         self.__state = state
         self.__mode = mode
-        self.__flush_count = self.__ibuf_len // self.SILENCE_BUFFER_LENGTH + 1
+        self.__flush_count = ibuf // self.SILENCE_BUFFER_LENGTH + 1
         self.__audio_out.irq(self.__i2s_callback)
         self.__audio_out.write(self.__silence_samples)
 
@@ -308,12 +322,19 @@ class WavPlayer:
             self.__enable.on()
 
     def __stop_i2s(self):
+        # A pause still fading lets its fade play out of the ring, and one that has played
+        # out has nothing left to flush
+        if self.__fading_out or self.__state == WavPlayer.PAUSE:
+            deadline = time.ticks_add(time.ticks_ms(), self.__ring_ms + 100)
+            while not self.is_paused() and time.ticks_diff(deadline, time.ticks_ms()) > 0:
+                pass
+        drained = self.is_paused()
         self.stop()                     # Stop any active playback
         # Wait for the flush, but not forever: each step needs the I2S callback, and
         # a callback is lost when the scheduler queue is full, after which the state
         # can never advance
-        deadline = time.ticks_add(time.ticks_ms(), 250)
-        while self.is_playing() and time.ticks_diff(deadline, time.ticks_ms()) > 0:
+        deadline = time.ticks_add(time.ticks_ms(), 250 + self.__ring_ms)
+        while not drained and self.is_playing() and time.ticks_diff(deadline, time.ticks_ms()) > 0:
             pass
         if self.is_playing():
             # The flush never finished, so playback is torn down instead. The next
@@ -350,6 +371,8 @@ class WavPlayer:
         samples[count * 2:length] = self.__silence_samples[:length - count * 2]
         self.__fading_out = False
         self.__state = WavPlayer.PAUSE
+        # Heard once the ring ahead of it has played
+        self.__silent_at = time.ticks_add(time.ticks_ms(), self.__ring_ms)
 
     def __i2s_callback(self, _):
         # PLAY
