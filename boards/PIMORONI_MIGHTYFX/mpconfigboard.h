@@ -38,3 +38,7 @@
 #define MICROPY_HW_USB_MSC_FLASH_BYTES          (6784 * 1024)
 #define MICROPY_HW_USB_MSC_INQUIRY_VENDOR_STRING   "Pimoroni"
 #define MICROPY_HW_USB_MSC_INQUIRY_PRODUCT_STRING  "MightyFX Drive"
+
+// FAT file names pass to and from Python as UTF-8. A computer writes its long names in Unicode,
+// and read through a code page one accented name breaks listing the whole folder.
+#define MICROPY_FATFS_LFN_UNICODE               (2)

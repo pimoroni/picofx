@@ -220,7 +220,7 @@ def __remove_tree(path):
     try:
         if os.stat(path)[0] & 0x4000:
             for name in os.listdir(path):
-                __remove_tree(path + "/" + name)
+                __remove_tree(path + b"/" + name)
             os.rmdir(path)
         else:
             os.remove(path)
@@ -236,11 +236,15 @@ def __sweep_host_litter():
     so one still present is a save the drive left with, unfinished by definition.
     macOS writes a ._ sidecar beside every file it touches and a .fseventsd
     directory at the root, neither of which anything here reads.
+
+    Names are listed as bytes, undecoded. Listed as str, one name outside ASCII can
+    raise UnicodeError for the whole listing, and the drive would never be shown.
     """
-    for name in os.listdir(MOUNT_POINT):
+    root = MOUNT_POINT.encode()
+    for name in os.listdir(root):
         lower = name.lower()
-        if lower.endswith(".crswap") or name.startswith("._") or lower == ".fseventsd":
-            __remove_tree(MOUNT_POINT + "/" + name)
+        if lower.endswith(b".crswap") or name.startswith(b"._") or lower == b".fseventsd":
+            __remove_tree(root + b"/" + name)
 
 
 def __has_boot_signature(bdev):
