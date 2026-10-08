@@ -111,6 +111,10 @@ class WavPlayer:
     TONE_BITS_PER_SAMPLE = 16
     TONE_FULL_WAVES = 2
 
+    # How many samples a WAV picked up part way through rises over, about 12ms of
+    # 22.05kHz mono
+    FADE_SAMPLES = 256
+
     def __init__(self, id, sck_pin, ws_pin, sd_pin, amp_enable=None, ibuf_len=INTERNAL_BUFFER_LENGTH, root="/"):
         self.__id = id
         self.__sck_pin = sck_pin
@@ -132,6 +136,8 @@ class WavPlayer:
         self.__mode = WavPlayer.MODE_WAV
         self.__wav_file = None
         self.__loop_wav = False
+        self.__fade = 0                 # Samples still to rise from silence
+        self.__fading_out = False       # Whether the next buffer falls to silence and pauses
         self.__flush_count = 0
         self.__audio_out = None
 
@@ -165,8 +171,13 @@ class WavPlayer:
 
         # Pick up part way through, from a position() a caller kept. Sought here,
         # before the I2S callback starts reading, so nothing races the seek
+        self.__fade = 0
+        self.__fading_out = False
         if position:
             self.__wav_file.seek(position)
+            # Mid-waveform, so it fades in or it clicks. The fade reads 16-bit samples
+            if self.__wav_file.bits_per_sample == 16:
+                self.__fade = self.FADE_SAMPLES
 
         self.__start_i2s(bits=self.__wav_file.bits_per_sample,
                          format=self.__wav_file.format,
@@ -226,10 +237,18 @@ class WavPlayer:
 
     def pause(self):
         if self.__state == WavPlayer.PLAY:
-            self.__state = WavPlayer.PAUSE          # Enter the pause state on the next callback
+            # A cut mid-waveform clicks, so a 16-bit WAV fades out over its next buffer
+            # before pausing. is_paused() turns true once it has
+            if self.__mode == WavPlayer.MODE_WAV and self.__wav_file.bits_per_sample == 16:
+                self.__fading_out = True
+            else:
+                self.__state = WavPlayer.PAUSE      # Enter the pause state on the next callback
 
     def resume(self):
+        self.__fading_out = False
         if self.__state == WavPlayer.PAUSE:
+            if self.__mode == WavPlayer.MODE_WAV and self.__wav_file.bits_per_sample == 16:
+                self.__fade = self.FADE_SAMPLES     # Back from silence, so it fades in
             self.__state = WavPlayer.PLAY           # Enter the play state on the next callback
 
     def stop(self):
@@ -310,6 +329,28 @@ class WavPlayer:
 
         self.__state = WavPlayer.NONE   # Return to the none state
 
+    def __fade_in(self, samples, length):
+        # Each sample still to rise is scaled by how far into the fade it falls
+        done = self.FADE_SAMPLES - self.__fade
+        count = min(length // 2, self.__fade)
+        for index in range(count):
+            at = index * 2
+            value = struct.unpack_from("<h", samples, at)[0]
+            struct.pack_into("<h", samples, at, value * (done + index) // self.FADE_SAMPLES)
+        self.__fade -= count
+
+    def __fade_out(self, samples, length):
+        # The buffer falls to silence over its first samples and stays silent after, and
+        # the player is paused from here
+        count = min(length // 2, self.FADE_SAMPLES)
+        for index in range(count):
+            at = index * 2
+            value = struct.unpack_from("<h", samples, at)[0]
+            struct.pack_into("<h", samples, at, value * (self.FADE_SAMPLES - index) // self.FADE_SAMPLES)
+        samples[count * 2:length] = self.__silence_samples[:length - count * 2]
+        self.__fading_out = False
+        self.__state = WavPlayer.PAUSE
+
     def __i2s_callback(self, _):
         # PLAY
         if self.__state == WavPlayer.PLAY:
@@ -323,6 +364,10 @@ class WavPlayer:
                             if num_read == 0:
                                 _ = self.__wav_file.seek(0)    # Play again, so advance to first byte of sample data
                                 self._loop_count += 1
+                        if self.__fade:
+                            self.__fade_in(self.__wav_samples_mv, loop_read)
+                        if self.__fading_out:
+                            self.__fade_out(self.__wav_samples_mv, loop_read)
                         self.__audio_out.write(self.__wav_samples_mv)
                         return
 
@@ -337,6 +382,10 @@ class WavPlayer:
                     return
 
                 if num_read:
+                    if self.__fade:
+                        self.__fade_in(self.__wav_samples_mv, num_read)
+                    if self.__fading_out:
+                        self.__fade_out(self.__wav_samples_mv, num_read)
                     self.__audio_out.write(self.__wav_samples_mv[: num_read])   # We are within the file, so write out the next audio samples
                 else:
                     self.__audio_out.write(self.__silence_samples)              # Play silence to end this callback
