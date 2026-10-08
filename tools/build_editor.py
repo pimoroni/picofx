@@ -257,19 +257,24 @@ def picker(board_dir, repo_dir):
 # The tables a board's class declares its connectors in, each a tuple
 BOARD_TABLES = ("STRIPS", "SCREENS", "STRIP_BRIGHTNESS", "STRIP_TAKES")
 
+# What the module carries, in order. The catalogue without screen ports is only for a board
+# that detects at run time whether it has them
+MODULE_PAGES = ("PICKER", "EDITOR", "CATALOGUE", "CATALOGUE_WITHOUT_SCREENS")
+
 
 def board_declares(board_dir):
     """
     What a board's class declares, read from its source in visible_libs/ so no board need be
     imported: its STRIPS, SCREENS, STRIP_BRIGHTNESS and STRIP_TAKES as lists, each empty where
-    it declares none, and whether it hands back a Screen Hub. None where the board carries no
-    class here.
+    it declares none, whether it hands back a Screen Hub, and whether it detects at run time
+    which of its parts it has. None where the board carries no class here.
     """
     sources = sorted(glob.glob(os.path.join(board_dir, "visible_libs", "*.py")))
     if not sources:
         return None
     declared = {table: [] for table in BOARD_TABLES}
     declared["hub"] = False
+    declared["detect"] = False
     for path in sources:
         with open(path, encoding="utf-8") as f:
             tree = ast.parse(f.read(), path)
@@ -282,8 +287,8 @@ def board_declares(board_dir):
                     for target in item.targets:
                         if getattr(target, "id", "") in BOARD_TABLES:
                             found[target.id] = list(ast.literal_eval(item.value))
-                elif isinstance(item, ast.FunctionDef) and item.name == "hub":
-                    found["hub"] = True
+                elif isinstance(item, ast.FunctionDef) and item.name in ("hub", "detect"):
+                    found[item.name] = True
             if "STRIPS" in found or "SCREENS" in found:
                 declared.update(found)
                 return declared
@@ -338,13 +343,14 @@ def described(board):
             "STRIP_BRIGHTNESS": [strip["name"] for strip in board["strips"] if "brightness" in strip],
             "STRIP_TAKES": [(strip["name"], strip["takes"]) for strip in board["strips"]
                             if "takes" in strip],
-            "hub": screens["hub"]}
+            "hub": screens["hub"], "detect": False}
 
 
-def catalogue(repo_dir, board_dir, board):
+def catalogue(repo_dir, board_dir, board, offer_screens=True):
     """catalogue.js, from the same tables autofx reads on the board, with the strips and screen
     ports its class declares, or its description where its class is not here, and the board's
-    outputs and connectors from its description."""
+    outputs and connectors from its description. Without offer_screens it offers no screen
+    ports, for a board that detects it has none."""
     fake = types.ModuleType("machine")
     for name in ("PWM", "Pin", "Timer", "SPI"):
         setattr(fake, name, type(name, (), {}))
@@ -357,6 +363,8 @@ def catalogue(repo_dir, board_dir, board):
     import autofx
 
     declared = board_declares(board_dir) or described(board)
+    if not offer_screens:
+        declared = dict(declared, SCREENS=[])
     strips = [name.lower() for name, _prop in declared["STRIPS"]]
     screens = [name.lower() for name, _prop, _spi in declared["SCREENS"]]
     sizes = autofx.SCREEN_SIZES + ((autofx.HUB,) if board_hub(declared) else ())
@@ -439,7 +447,9 @@ def unpacked(module_text):
     exec(compile(module_text, MODULE_NAME, "exec"), namespace)
     pages = {}
     shelled = set()
-    for name in ("PICKER", "EDITOR", "CATALOGUE"):
+    for name in MODULE_PAGES:
+        if name not in namespace:
+            continue
         size, head, tail, packed = namespace[name][:4]
         text = zlib.decompress(packed).decode("ascii")
         drive = text
@@ -508,6 +518,10 @@ def main():
                "PICKER": generated[os.path.join(editor_dir, "picker.html")]}
     with open(os.path.join(repo_dir, SHARED_EDITOR), encoding="utf-8", newline="") as f:
         sources["EDITOR"] = f.read()
+    declared = board_declares(args.board_dir)
+    if declared and declared["detect"]:
+        sources["CATALOGUE_WITHOUT_SCREENS"] = catalogue(repo_dir, args.board_dir, board,
+                                                         offer_screens=False)
 
     shelled = set(SHELLED) if board.get("shell", False) else set()
     if args.check:
@@ -521,8 +535,9 @@ def main():
         return
 
     parts = [MODULE_HEADER + (SHELL_HEADER if shelled else "")]
-    for name in ("PICKER", "EDITOR", "CATALOGUE"):
-        parts.append(embed(name, sources[name], name in shelled))
+    for name in MODULE_PAGES:
+        if name in sources:
+            parts.append(embed(name, sources[name], name in shelled))
     module_text = "\n".join(parts)
 
     # The packing has to invert exactly: parse the module back and compare

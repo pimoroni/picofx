@@ -762,6 +762,12 @@ drawSteps.after.push(function () {
   after.parentNode.insertBefore(panel, after.nextSibling);
 }());
 
-TAB_NAMES.screensPanel = "Screens";
-TAB_PANELS.push("screensPanel");
-keptOpen("screensPanel");
+// A board that finds it has no screen ports keeps the panel out of sight, for the parts that draw
+// into it
+if (SCREENS.length) {
+  TAB_NAMES.screensPanel = "Screens";
+  TAB_PANELS.push("screensPanel");
+  keptOpen("screensPanel");
+} else {
+  document.getElementById("screensPanel").hidden = true;
+}

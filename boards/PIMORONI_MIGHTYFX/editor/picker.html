@@ -6839,6 +6839,10 @@ chosenSteps.push(function (where, run) {
 // Which panel is plugged into each screen port, or none. Only the size is the board's:
 // which way up it is mounted is left for when screens are settled
 var SCREEN_PORTS = BOARD.screens ? BOARD.screens.ports : [];
+// The catalogue is the board's own, so a board that finds it has no screen ports offers none
+SCREEN_PORTS = SCREEN_PORTS.filter(function (port) {
+  return CATALOGUE.screen_ports.indexOf(port.id) >= 0;
+});
 // The sizes a panel can be, as the firmware takes them, the catalogue's hub being no panel size
 var SCREEN_SIZES = (SCREEN_PORTS.length ? CATALOGUE.board_settings[SCREEN_PORTS[0].id] : [])
   .filter(function (inches) { return inches !== "hub"; });
@@ -8374,9 +8378,15 @@ drawSteps.after.push(function () {
   after.parentNode.insertBefore(panel, after.nextSibling);
 }());
 
-TAB_NAMES.screensPanel = "Screens";
-TAB_PANELS.push("screensPanel");
-keptOpen("screensPanel");
+// A board that finds it has no screen ports keeps the panel out of sight, for the parts that draw
+// into it
+if (SCREENS.length) {
+  TAB_NAMES.screensPanel = "Screens";
+  TAB_PANELS.push("screensPanel");
+  keptOpen("screensPanel");
+} else {
+  document.getElementById("screensPanel").hidden = true;
+}
 
 // ---- a Sound tab ----------------------------------------------------------------------------
 // One wav at a time, chosen from a row of tiles each showing its shape and how long it runs,

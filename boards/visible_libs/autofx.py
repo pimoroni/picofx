@@ -2037,8 +2037,13 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     # its own, and this is how it knows where they go
     __REPORTING_TO[0] = errors
 
+    # A board that asks its hardware which of its parts it has does so once, before any is read
+    board = fx if isinstance(fx, type) else type(fx)
+    if hasattr(board, "detect"):
+        board.detect()
+
     if volume is not None:
-        volume.mount()
+        volume.mount(screens=bool(getattr(board, "SCREENS", ())))
 
     fx, players, shows, sounds, scenes, settings, problems = __play(
         fx, volume, path, errors, [], (), maker)

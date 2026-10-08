@@ -6658,6 +6658,10 @@ chosenSteps.push(function (where, run) {
 // Which panel is plugged into each screen port, or none. Only the size is the board's:
 // which way up it is mounted is left for when screens are settled
 var SCREEN_PORTS = BOARD.screens ? BOARD.screens.ports : [];
+// The catalogue is the board's own, so a board that finds it has no screen ports offers none
+SCREEN_PORTS = SCREEN_PORTS.filter(function (port) {
+  return CATALOGUE.screen_ports.indexOf(port.id) >= 0;
+});
 // The sizes a panel can be, as the firmware takes them, the catalogue's hub being no panel size
 var SCREEN_SIZES = (SCREEN_PORTS.length ? CATALOGUE.board_settings[SCREEN_PORTS[0].id] : [])
   .filter(function (inches) { return inches !== "hub"; });

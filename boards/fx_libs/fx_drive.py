@@ -253,11 +253,14 @@ def __has_boot_signature(bdev):
     return sector[510] == 0x55 and sector[511] == 0xAA
 
 
-def mount():
+def mount(screens=True):
     """
     Mount the drive read-write at /fx, rebuilding it when the filesystem is blank,
     effects.txt is missing, or either shipped document differs from the text the
     board carries. Returns whether the drive ended up mounted.
+
+    `screens` is False for a board found to have no screen ports, which is then given
+    the catalogue without them where its pages carry one.
     """
     bdev = rp2.Flash(msc=True)
     fs = vfs.VfsFat(bdev)
@@ -305,7 +308,10 @@ def mount():
     __heal(fs, MANUAL_NAME, fx_manual.MANUAL)
     __heal(fs, PICKER_NAME, fx_editor.PICKER)
     __heal(fs, EDITOR_NAME, fx_editor.EDITOR)
-    __heal(fs, CATALOGUE_NAME, fx_editor.CATALOGUE)
+    catalogue = fx_editor.CATALOGUE
+    if not screens:
+        catalogue = getattr(fx_editor, "CATALOGUE_WITHOUT_SCREENS", catalogue)
+    __heal(fs, CATALOGUE_NAME, catalogue)
     __sweep_host_litter()
     return True
 
