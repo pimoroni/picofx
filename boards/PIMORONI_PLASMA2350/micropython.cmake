@@ -25,8 +25,17 @@ find_package(PICOVECTOR_MICROPYTHON CONFIG REQUIRED)
 # Essential
 include(pimoroni_i2c/micropython)
 
+# Sensors & Breakouts
+include(micropython-common-breakouts)
+
 # LEDs & Matrices
 include(plasma/micropython)
+
+# Encoders
+include(encoder/micropython)
+
+# Utility
+include(adcfft/micropython)
 
 # Display transform + DMA transport, from the spidisplay repository. After PV_DUAL_CORE
 # above, which it reads to decide whether frame conversion can use picovector's core1
