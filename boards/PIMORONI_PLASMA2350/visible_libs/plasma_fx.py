@@ -64,7 +64,7 @@ class PlasmaFX:
     SPCE_MOSI_PIN = 11
     SPCE_BL_PIN = 7
 
-    # The one connector, lettered A as a file names it, screenA
+    # The one connector, its port lettered A, which a file names screen
     SPCE_A_PINS = (SPCE_DC_PIN, SPCE_CS_PIN, SPCE_SCK_PIN, SPCE_MOSI_PIN, SPCE_BL_PIN)
 
     STRIP_PIO = 0
@@ -90,7 +90,7 @@ class PlasmaFX:
 
     # The screen port, by the name it is written as and the attribute holding its SPCEPort.
     # Emptied by detect() on a 2350 W, which has no SP/CE connector
-    SCREENS = (("screenA", "spce_a"),)
+    SCREENS = (("screen", "spce_a"),)
 
     # The 2350 W's wireless module: power enable, data, chip select and clock. None of these
     # pins is connected on the 2350

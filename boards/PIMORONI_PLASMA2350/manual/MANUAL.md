@@ -82,12 +82,12 @@ computer is copying to the drive.
 
 ## The screen
 
-A screen on the SP/CE connector is `screenA`, and needs its size on the board
+A screen on the SP/CE connector is `screen`, and needs its size on the board
 line, since a panel cannot say what size it is:
 
 ```entry
-board: screenA=2.8
-screenA: image file="picture.png"
+board: screen=2.8
+screen: image file="picture.png"
 ```
 
 The Plasma 2350 W has no SP/CE connector, so it takes no screen, and the picker
@@ -97,7 +97,7 @@ Pictures and animations go on this drive beside `effects.txt`. `gif` plays an
 animation, `image` shows a still, and `sequence` plays a folder of them in turn.
 
 The panel is mounted upright, 240 wide by 320 tall, so a landscape picture is
-cropped at its sides unless the line turns it: `screenA rotation=90: image
+cropped at its sides unless the line turns it: `screen rotation=90: image
 file="picture.png"`.
 
 **A limit for now.** The board's memory is small, and what the last file showed
