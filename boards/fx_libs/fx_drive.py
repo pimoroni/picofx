@@ -740,6 +740,20 @@ def busy():
     return __exposed and rp2.is_msc_busy()
 
 
+def hold_writes(ms):
+    """
+    Keep the computer's first write after a quiet spell waiting for up to `ms`, so
+    whatever a flash write disturbs can stop cleanly before the writes begin. busy()
+    turns true as the wait starts. 0 never holds a write.
+    """
+    rp2.hold_msc_writes(ms)
+
+
+def release_writes():
+    """Let a held write go now."""
+    rp2.release_msc_writes()
+
+
 def enumerating():
     """
     Whether the computer is still enumerating the board after a bus reset.
