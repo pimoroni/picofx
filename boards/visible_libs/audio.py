@@ -374,7 +374,23 @@ class WavPlayer:
         # Heard once the ring ahead of it has played
         self.__silent_at = time.ticks_add(time.ticks_ms(), self.__ring_ms)
 
+    def __write(self, samples):
+        self.__written = True
+        self.__audio_out.write(samples)
+
     def __i2s_callback(self, _):
+        # Each callback's write is what brings the next callback, so one that raises before
+        # writing, such as a Ctrl-C landing here, would end playback for good. It writes
+        # silence first. A second write would replace the first, so only where none was made
+        self.__written = False
+        try:
+            self.__refill()
+        except BaseException:
+            if not self.__written:
+                self.__audio_out.write(self.__silence_samples)
+            raise
+
+    def __refill(self):
         # PLAY
         if self.__state == WavPlayer.PLAY:
             if self.__mode == WavPlayer.MODE_WAV:
@@ -391,7 +407,7 @@ class WavPlayer:
                             self.__fade_in(self.__wav_samples_mv, loop_read)
                         if self.__fading_out:
                             self.__fade_out(self.__wav_samples_mv, loop_read)
-                        self.__audio_out.write(self.__wav_samples_mv)
+                        self.__write(self.__wav_samples_mv)
                         return
 
                     num_read = self.__wav_file.readinto(self.__wav_samples_mv)  # Single shot playback
@@ -401,7 +417,7 @@ class WavPlayer:
                     # rather than raising out of the callback
                     self.__wav_file.close()
                     self.__state = WavPlayer.FLUSH
-                    self.__audio_out.write(self.__silence_samples)
+                    self.__write(self.__silence_samples)
                     return
 
                 if num_read:
@@ -409,9 +425,9 @@ class WavPlayer:
                         self.__fade_in(self.__wav_samples_mv, num_read)
                     if self.__fading_out:
                         self.__fade_out(self.__wav_samples_mv, num_read)
-                    self.__audio_out.write(self.__wav_samples_mv[: num_read])   # We are within the file, so write out the next audio samples
+                    self.__write(self.__wav_samples_mv[: num_read])   # We are within the file, so write out the next audio samples
                 else:
-                    self.__audio_out.write(self.__silence_samples)              # Play silence to end this callback
+                    self.__write(self.__silence_samples)              # Play silence to end this callback
 
                 # Have we reached the end of the file? (num_read is either 0 or a short read)
                 if num_read < self.WAV_BUFFER_LENGTH:
@@ -422,11 +438,11 @@ class WavPlayer:
                 if self.__queued_samples is not None:
                     self.__tone_samples = self.__queued_samples
                     self.__queued_samples = None
-                self.__audio_out.write(self.__tone_samples)
+                self.__write(self.__tone_samples)
 
         # PAUSE or STOP
         elif self.__state == WavPlayer.PAUSE or self.__state == WavPlayer.STOP:
-            self.__audio_out.write(self.__silence_samples)                  # Play silence
+            self.__write(self.__silence_samples)                  # Play silence
 
         # FLUSH
         elif self.__state == WavPlayer.FLUSH:
@@ -436,7 +452,7 @@ class WavPlayer:
                 self.__flush_count -= 1
             else:
                 self.__state = WavPlayer.STOP                               # Enter the stop state on the next callback
-            self.__audio_out.write(self.__silence_samples)                  # Play silence
+            self.__write(self.__silence_samples)                  # Play silence
 
         # NONE
         elif self.__state == WavPlayer.NONE:
