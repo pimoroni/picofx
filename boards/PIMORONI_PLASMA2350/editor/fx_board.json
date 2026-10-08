@@ -24,7 +24,7 @@
    "leds": 60, "fitted": false, "brightness": 0.5, "takes": ["stripdat", "stripclk"]}
  ],
  "screens": {
-  "ports": [{"id": "screena", "label": "Screen", "connector": "SP/CE"}],
+  "ports": [{"id": "screen", "label": "Screen", "connector": "SP/CE"}],
   "hub": false
  },
  "sound": false,

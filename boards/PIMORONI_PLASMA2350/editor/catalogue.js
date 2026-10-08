@@ -294,7 +294,7 @@ var CATALOGUE = {
   "pixel_double": "boolean"
  },
  "screen_ports": [
-  "screena"
+  "screen"
  ],
  "strips": [
   "stripdat",
@@ -331,7 +331,7 @@ var CATALOGUE = {
   ],
   "program": null,
   "args": null,
-  "screena": [
+  "screen": [
    "2.8",
    "1.54"
   ],
@@ -363,7 +363,7 @@ var CATALOGUE = {
   ],
   "screens": [
    [
-    "screena",
+    "screen",
     "SP/CE"
    ]
   ],

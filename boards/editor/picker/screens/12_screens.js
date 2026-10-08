@@ -15,9 +15,33 @@
 // what the screen shows. A picture newly chosen starts at the turn it was last given on
 // that screen, which saves setting it again and binds nothing.
 
-var SCREENS = CATALOGUE.screen_ports.map(function (name) {
-  return name.slice(-1).toUpperCase();
+// The picker keeps each screen port by a letter, A then B. A file writes it as the board names
+// it: screenA and screenB on a board with two, or screen on a board with one
+var SCREEN_NAMES = {};
+var SCREENS = CATALOGUE.screen_ports.map(function (name, index) {
+  var letter = "AB".charAt(index);
+  SCREEN_NAMES[letter] = "screen" + name.slice("screen".length).toUpperCase();
+  return letter;
 });
+
+// The letter a screen port is kept by, from the name a file writes it as, or null
+function screenLetter(name) {
+  for (var i = 0; i < SCREENS.length; i++) {
+    if (SCREEN_NAMES[SCREENS[i]].toLowerCase() === name.toLowerCase()) return SCREENS[i];
+  }
+  return null;
+}
+
+// A screen as the page shows it: by its letter where there are two, and plainly where there is one
+function screenShown(letter) {
+  return SCREENS.length > 1 ? "Screen " + letter : "Screen";
+}
+
+// The button under a picture that puts it on a screen: which screen where there are two, and with
+// one, only whether it is shown
+function screenButton(letter) {
+  return SCREENS.length > 1 ? letter : "Show";
+}
 
 state.screens = {};
 SCREENS.forEach(function (letter) {
@@ -218,7 +242,7 @@ function renderScreenBoxes() {
     var side = document.createElement("div");
     side.className = "screen-box " + letter.toLowerCase();
     var head = document.createElement("h3");
-    head.appendChild(document.createTextNode("Screen " + letter));
+    head.appendChild(document.createTextNode(screenShown(letter)));
     side.appendChild(head);
 
     var body = document.createElement("div");
@@ -261,7 +285,7 @@ function renderScreenBoxes() {
 
     var size = document.createElement("select");
     // The sizes a panel can be, the catalogue's hub being no panel size
-    var offered = (CATALOGUE.board_settings["screen" + letter.toLowerCase()] || ["2.8", "1.54"])
+    var offered = (CATALOGUE.board_settings[SCREEN_NAMES[letter].toLowerCase()] || ["2.8", "1.54"])
       .filter(function (inches) { return inches !== "hub"; });
     if (!screen.size) {
       var quiet = document.createElement("option");
@@ -292,7 +316,7 @@ function renderScreenBoxes() {
     body.insertBefore(showingLine(screen, letter), body.querySelector(".looksettings"));
     body.insertBefore(lightRow(screen.look.backlight, function (value) {
       screen.look.backlight = value;
-    }, "backlight", "How brightly screen " + letter + " is lit, in this scene"), body.firstChild);
+    }, "backlight", "How brightly " + screenShown(letter).replace("Screen", "screen") + " is lit, in this scene"), body.firstChild);
 
     // What the file already says for this screen, where the picker did not write it
     // and no picture can stand for it. It is a line of its own under the settings
@@ -360,7 +384,7 @@ function renderAssets() {
     pick.className = "pick";
     SCREENS.forEach(function (letter) {
       var button = document.createElement("button");
-      button.textContent = letter;
+      button.textContent = screenButton(letter);
       var lit = on[letter];
       button.className = lit ? "lit" + (letter === "B" ? " b" : "") : "";
       button.disabled = !state.screens[letter].there;
@@ -410,7 +434,7 @@ function screenEntry(letter, body) {
   if (!screen.there || !playing.shows) return null;
   if (playing.shows === "keep") return playing.kept;
   var look = playing.look || freshLook();
-  return lookEntry("screen" + letter, playing, look, look.backlight, screen.size);
+  return lookEntry(SCREEN_NAMES[letter], playing, look, look.backlight, screen.size);
 }
 
 // ---- each scene keeps what its screens show ---------------------------------------------------
@@ -462,7 +486,7 @@ boardLineSteps.before.push(function () {
     var used = screen.there && bodies.some(function (body) {
       return body && body.screens && body.screens[letter].shows;
     });
-    screensFitted["screen" + letter.toLowerCase()] = used ? screen.size : "";
+    screensFitted[SCREEN_NAMES[letter].toLowerCase()] = used ? screen.size : "";
   });
 });
 
@@ -520,16 +544,16 @@ function screenPlaying(parts, body, letter) {
 function readScreens(bodies) {
   var sizes = {};
   boardResidue.forEach(function (token) {
-    var named = token.match(/^screen([ab])=(2\.8|1\.54)$/i);
-    if (named) sizes[named[1].toUpperCase()] = {token: token, size: named[2]};
+    var named = token.match(/^(screen[ab]?)=(2\.8|1\.54)$/i);
+    var letter = named && screenLetter(named[1]);
+    if (letter) sizes[letter] = {token: token, size: named[2]};
   });
   var readOn = {};
 
   bodies.forEach(function (body) {
     body.kept = body.kept.filter(function (one) {
       var parts = entryParts(one.text);
-      var screen = parts && parts.selector.match(/^screen([ab])$/);
-      var letter = screen && screen[1].toUpperCase();
+      var letter = parts && screenLetter(parts.selector);
       if (!letter || !sizes[letter] || body.screens[letter].shows) return true;
       var playing = screenPlaying(parts, body, letter);
       if (!playing) return true;
@@ -716,7 +740,8 @@ tabSwatches.screensPanel = function (swatch) {
   });
   swatch.title = SCREENS.map(function (letter) {
     var screen = state.screens[letter];
-    return letter + ": " + (!screen.there ? "not fitted" : screen.shows || "nothing");
+    var said = !screen.there ? "not fitted" : screen.shows || "nothing";
+    return SCREENS.length > 1 ? letter + ": " + said : said;
   }).join(", ");
 };
 

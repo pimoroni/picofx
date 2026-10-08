@@ -936,7 +936,7 @@ function showingLine(held, letter) {
   if (!picture) {
     line.classList.add("empty");
     line.innerHTML = (state.scenes.length ? "nothing chosen for this scene" : "nothing showing") +
-                     "<small>press " + letter + " under a picture below to show it here</small>";
+                     "<small>press " + screenButton(letter) + " under a picture below to show it here</small>";
     return line;
   }
   var media = mediaNamed(picture);

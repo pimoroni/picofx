@@ -2410,9 +2410,10 @@ def __screen_kinds():
 
 def __screen_port(kind):
     """A screen port as (property, SPI bus, port letter), or None for one the board has not got."""
-    for known, prop, spi, shown in __BOARD_SCREENS:
+    for known, prop, spi, _shown in __BOARD_SCREENS:
         if known == kind:
-            return prop, spi, shown[len("screen"):]
+            # Lettered by its property, spce_a being A, since a board with one port names it bare
+            return prop, spi, prop[-1].upper()
     return None
 
 
