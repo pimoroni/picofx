@@ -342,6 +342,293 @@ def writable():
     return __Writable()
 
 
+class Stream:
+    """
+    A file on the drive read straight from its flash, which reads on while the
+    computer holds the drive. The board's mount is released at every handover and
+    a file opened through it goes stale, so this finds the file's clusters once,
+    from the tables on the flash, and reads them directly from then on.
+
+    Read-only, and blind to the computer rewriting the file, which reads as whatever
+    then fills its clusters. changed() says when that has happened.
+    """
+
+    # FAT directory entries and the attribute bits read from them
+    __ENTRY_SIZE = 32
+    __ATTR_VOLUME_ID = 0x08
+    __ATTR_DIRECTORY = 0x10
+    __ATTR_LONG_NAME = 0x0F
+    __ATTR_LONG_NAME_MASK = 0x3F
+
+    # Where a long name's characters sit in each of its entries, two bytes apiece
+    __LONG_NAME_SPANS = ((1, 11), (14, 26), (28, 32))
+
+    def __init__(self, name):
+        self.__flash = rp2.Flash(msc=True)
+        self.__read_layout()
+        self.__entry_at, self.__entry = self.__find(name)
+        self.size = self.__u32(self.__entry, 28)
+        self.__runs = self.__runs_from(self.__first_cluster(self.__entry), self.size)
+        self.__position = 0
+        self.__run = 0
+
+    def __read(self, offset, length):
+        data = bytearray(length)
+        self.__flash.readblocks(0, data, offset)
+        return data
+
+    @staticmethod
+    def __u16(data, at):
+        return data[at] | (data[at + 1] << 8)
+
+    @staticmethod
+    def __u32(data, at):
+        return data[at] | (data[at + 1] << 8) | (data[at + 2] << 16) | (data[at + 3] << 24)
+
+    def __read_layout(self):
+        boot = self.__read(0, 36)
+        if self.__read(510, 2) != b"\x55\xaa":
+            raise OSError(errno.ENODEV)
+        sector = self.__u16(boot, 11)
+        per_cluster = boot[13]
+        reserved = self.__u16(boot, 14)
+        fats = boot[16]
+        root_entries = self.__u16(boot, 17)
+        total = self.__u16(boot, 19) or self.__u32(boot, 32)
+        fat_sectors = self.__u16(boot, 22)
+
+        # FAT32 keeps neither a fixed root directory nor a 16-bit table size
+        if not (sector and per_cluster and root_entries and fat_sectors):
+            raise OSError(errno.ENODEV)
+
+        root_sectors = (root_entries * self.__ENTRY_SIZE + sector - 1) // sector
+        self.__fat_at = reserved * sector
+        self.__root_at = (reserved + fats * fat_sectors) * sector
+        self.__root_bytes = root_entries * self.__ENTRY_SIZE
+        self.__data_at = self.__root_at + root_sectors * sector
+        self.__cluster_bytes = sector * per_cluster
+        self.__clusters = (total - reserved - fats * fat_sectors - root_sectors) // per_cluster
+
+        # The cluster count alone decides the table's width
+        if self.__clusters >= 65525:
+            raise OSError(errno.ENODEV)
+        self.__fat12 = self.__clusters < 4085
+        self.__end_of_chain = 0xFF8 if self.__fat12 else 0xFFF8
+
+    def __next_cluster(self, cluster):
+        if self.__fat12:
+            # Twelve bits an entry, so two entries share every three bytes
+            pair = self.__read(self.__fat_at + cluster + cluster // 2, 2)
+            value = self.__u16(pair, 0)
+            return value >> 4 if cluster & 1 else value & 0xFFF
+        return self.__u16(self.__read(self.__fat_at + cluster * 2, 2), 0)
+
+    def __first_cluster(self, entry):
+        return self.__u16(entry, 26)
+
+    def __runs_from(self, cluster, size=None):
+        """
+        A cluster chain as runs of contiguous flash, each (position in the file, offset
+        on the drive, length). Without a size the chain is followed to its end, as a
+        directory's is. A chain leaving the volume, looping or ending early raises.
+        """
+        runs = []
+        position = 0
+        steps = 0
+        while size is None or position < size:
+            if size is None and cluster >= self.__end_of_chain:
+                break
+            if not 2 <= cluster < self.__clusters + 2 or steps > self.__clusters:
+                raise OSError(errno.EIO)
+            at = self.__data_at + (cluster - 2) * self.__cluster_bytes
+            length = self.__cluster_bytes if size is None else min(self.__cluster_bytes,
+                                                                   size - position)
+            if runs and runs[-1][1] + runs[-1][2] == at:
+                last = runs[-1]
+                runs[-1] = (last[0], last[1], last[2] + length)
+            else:
+                runs.append((position, at, length))
+            position += length
+            cluster = self.__next_cluster(cluster)
+            steps += 1
+        return runs
+
+    @staticmethod
+    def __checksum(entry):
+        total = 0
+        for byte in entry[:11]:
+            total = (((total & 1) << 7) + (total >> 1) + byte) & 0xFF
+        return total
+
+    def __long_name_part(self, entry):
+        """A long name entry's characters, or None where one is beyond what chr() takes."""
+        part = ""
+        for start, end in self.__LONG_NAME_SPANS:
+            for at in range(start, end, 2):
+                code = self.__u16(entry, at)
+                if code == 0x0000 or code == 0xFFFF:
+                    return part
+                # Half of a surrogate pair
+                if 0xD800 <= code <= 0xDFFF:
+                    return None
+                part += chr(code)
+        return part
+
+    @staticmethod
+    def __short_name(entry):
+        base = bytes(entry[:8]).rstrip(b" ")
+        extension = bytes(entry[8:11]).rstrip(b" ")
+        if base[:1] == b"\x05":
+            base = b"\xe5" + base[1:]
+        try:
+            name = base.decode()
+            return name + "." + extension.decode() if extension else name
+        except UnicodeError:
+            return None
+
+    def __find_in(self, runs, wanted):
+        """
+        The drive offset and bytes of the entry named `wanted` in a directory, matched
+        by its long name or its short one, ASCII case ignored. None where it is absent.
+        """
+        parts = None
+        checksum = None
+        for _, start, length in runs:
+            for at in range(start, start + length, self.__ENTRY_SIZE):
+                entry = self.__read(at, self.__ENTRY_SIZE)
+                first = entry[0]
+                if first == 0x00:
+                    return None
+                if first == 0xE5:
+                    parts = None
+                    continue
+
+                attributes = entry[11]
+                if attributes & self.__ATTR_LONG_NAME_MASK == self.__ATTR_LONG_NAME:
+                    # Stored last part first, the first stored carrying 0x40
+                    if first & 0x40:
+                        parts = {}
+                        checksum = entry[13]
+                    if parts is not None and entry[13] == checksum:
+                        parts[first & 0x1F] = self.__long_name_part(entry)
+                    else:
+                        parts = None
+                    continue
+
+                long_name = None
+                # A long name belongs to the short entry after it only where the
+                # checksum matches, so one orphaned by a host without long names is
+                # not taken for this file's
+                if parts and None not in parts.values() and \
+                        sorted(parts) == list(range(1, len(parts) + 1)) and \
+                        checksum == self.__checksum(entry):
+                    long_name = "".join(parts[order] for order in sorted(parts))
+                parts = None
+
+                if attributes & self.__ATTR_VOLUME_ID:
+                    continue
+                for name in (long_name, self.__short_name(entry)):
+                    if name is not None and name.lower() == wanted:
+                        return at, entry
+        return None
+
+    def __find(self, name):
+        """The drive offset and bytes of the entry a path leads to, through any folders."""
+        runs =[(0, self.__root_at, self.__root_bytes)]
+        parts = [part for part in name.split("/") if part]
+        if not parts or ".." in parts:
+            raise OSError(errno.ENOENT)
+        for depth, part in enumerate(parts):
+            if part == ".":
+                continue
+            found = self.__find_in(runs, part.lower())
+            if found is None:
+                raise OSError(errno.ENOENT)
+            at, entry = found
+            last = depth == len(parts) - 1
+            if bool(entry[11] & self.__ATTR_DIRECTORY) == last:
+                raise OSError(errno.ENOENT)
+            if not last:
+                runs = self.__runs_from(self.__first_cluster(entry))
+        return at, entry
+
+    @staticmethod
+    def __identity(entry):
+        # The name, attributes, write time, first cluster and size. Reading the file
+        # can move its access date, which is left out
+        return bytes(entry[:12]) + bytes(entry[20:32])
+
+    def changed(self):
+        """Whether the computer has rewritten, moved or deleted the file since it was opened."""
+        try:
+            entry = self.__read(self.__entry_at, self.__ENTRY_SIZE)
+            if self.__identity(entry) != self.__identity(self.__entry):
+                return True
+            return self.__runs_from(self.__first_cluster(entry), self.size) != self.__runs
+        except OSError:
+            return True
+
+    def __run_holding(self, position):
+        # Reads run forwards, so the run last read from, or the next, almost always holds it
+        runs = self.__runs
+        index = self.__run
+        if not runs[index][0] <= position < runs[index][0] + runs[index][2]:
+            index = 0
+            while position >= runs[index][0] + runs[index][2]:
+                index += 1
+        self.__run = index
+        return runs[index]
+
+    def readinto(self, buffer):
+        if self.__runs is None:
+            raise OSError(errno.EBADF)
+        view = memoryview(buffer)
+        wanted = max(0, min(len(view), self.size - self.__position))
+        done = 0
+        while done < wanted:
+            start, at, length = self.__run_holding(self.__position)
+            into = self.__position - start
+            count = min(length - into, wanted - done)
+            self.__flash.readblocks(0, view[done:done + count], at + into)
+            done += count
+            self.__position += count
+        return done
+
+    def read(self, size=-1):
+        remaining = max(0, self.size - self.__position)
+        data = bytearray(remaining if size < 0 else min(size, remaining))
+        self.readinto(data)
+        return bytes(data)
+
+    def seek(self, offset, whence=0):
+        if whence == 1:
+            offset += self.__position
+        elif whence == 2:
+            offset += self.size
+        self.__position = max(0, offset)
+        return self.__position
+
+    def tell(self):
+        return self.__position
+
+    def close(self):
+        self.__runs = None
+
+
+def stream(name):
+    """
+    Open a file on the drive for reading in a form that reads on while the computer
+    holds the drive. None where it cannot be found that way, which leaves the mount to
+    answer, and a file the computer then takes will not read on. That is a name
+    differing in case beyond ASCII, a path through "..", or a volume the computer
+    reformatted as something other than FAT12 or FAT16.
+    """
+    try:
+        return Stream(name)
+    except OSError:
+        return None
+
+
 def watch(enabled):
     """
     Whether a save to effects.txt re-reads it without waiting for an eject, which

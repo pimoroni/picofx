@@ -141,9 +141,9 @@ def __hub_shown(places):
     return HUB + ",".join(parts)
 
 # The one selector that plays sound. "wav" streams a file for as long as it lasts,
-# or for good with loop=true. The file is opened at load, while the board is sure
-# to hold the drive, and a handle opened then plays on after a computer takes the
-# volume, where opening it later would find no drive at all.
+# or for good with loop=true. The file is found at load, while the board is sure to
+# hold the drive, and read from the flash from then on, so it plays on after a
+# computer takes the volume, where opening it later would find no drive at all.
 AUDIO = "audio"
 AUDIO_EFFECTS = {
     "wav": ("file", "loop"),
@@ -699,11 +699,10 @@ class __Graphics:
 
 class Sound:
     """
-    One WAV playing beside the effects: the player it runs on, the sound held in
-    memory, and whether it starts again when it ends. The whole file is read in when
-    the effects load: the drive's own mount ends whenever a computer takes the
-    drive, so a handle onto it would not survive the run, and a copy in memory
-    plays through a handover.
+    One WAV playing beside the effects: the player it runs on, the file it reads,
+    and whether it starts again when it ends. A file on the drive is read straight
+    from the flash, so it plays through a handover. One the computer rewrites goes
+    silent until the next reload, since what it reads is no longer that sound.
 
     The board plays one sound at a time, so the sounds share the player and `live`
     says which of them has it. One put aside by a scene switch remembers where it
@@ -719,8 +718,11 @@ class Sound:
         self.__at = None
         self.__moved = None
         self.__from = 0         # Where the next start picks up, 0 being the top
+        self.__gone = False     # Whether the computer changed the file since load
 
     def start(self):
+        if self.__gone:
+            return
         try:
             self.wav.play_wav(self.handle, loop=self.loop, position=self.__from)
         except (OSError, ValueError) as e:
@@ -773,6 +775,15 @@ class Sound:
     def resume(self):
         # The watch starts afresh: the position stood still through the pause
         self.__at = None
+        # A transfer is the only time the computer can have changed the file
+        changed = getattr(self.handle, "changed", None)
+        if not self.__gone and changed is not None and changed():
+            self.__gone = True
+            if self.live:
+                self.wav.stop()
+            self.live = False
+            print("a sound's file changed on the drive, and it waits for the next reload")
+            return
         if self.live:
             self.wav.resume()
 
@@ -1752,7 +1763,7 @@ def __play(fx, volume, path, errors, playing, sounding=(), maker=None):
 
     if text is not None:
         try:
-            fx, players, shows, sounds, scenes, settings, problems = load(text, fx, maker)
+            fx, players, shows, sounds, scenes, settings, problems = load(text, fx, maker, volume)
         # A file a user typed must never be able to take the board down. Anything
         # load does not report itself costs the whole file, where its own reporting
         # costs one entry, but the drive and the button survive to be edited again
@@ -3294,14 +3305,31 @@ def __build_shows(entries, fx, board, problems, build=True):
     return shows
 
 
-def __build_sounds(entries, fx, problems):
+def __open_sound(path, stream):
+    """
+    A handle the player can read for the whole run. The drive's mount ends whenever
+    a computer takes the drive, so a file there is read from the flash, or held in
+    memory where the drive cannot find it that way. The board never gives up its
+    own filesystem, so a file there is read as it plays.
+    """
+    if path.startswith(MOUNT_DIR + "/"):
+        handle = stream(path[len(MOUNT_DIR) + 1:]) if stream is not None else None
+        if handle is not None:
+            return handle
+        with open(path, "rb") as source:
+            return io.BytesIO(source.read())
+    return open(path, "rb")
+
+
+def __build_sounds(entries, fx, problems, volume=None):
     """
     A sound per audio entry: one before any heading playing throughout, and one per
-    scene taking the speaker while its scene shows. The file is opened here, while
+    scene taking the speaker while its scene shows. The file is found here, while
     the board holds the drive, which is what lets it stream on after a computer
     takes the volume.
     """
     sounds = []
+    stream = getattr(volume, "stream", None)
     taken = set()
     # A board without audio raises from the property, naming the setting to change
     try:
@@ -3352,8 +3380,7 @@ def __build_sounds(entries, fx, problems):
             continue
 
         try:
-            with open(path, "rb") as source:
-                handle = io.BytesIO(source.read())
+            handle = __open_sound(path, stream)
         except OSError as e:
             problems.append("line {}: {} could not be opened: {}".format(at, target, e))
             continue
@@ -3895,7 +3922,7 @@ def __apply_scene(players, shows, sounds, scene):
     __cue_sound(sounds, scene)
 
 
-def load(text, fx, maker=None):
+def load(text, fx, maker=None, volume=None):
     """
     Read the effects file. Returns the board it plays on, the players it describes,
     the shows its screen entries play, the sounds its audio entries name, its
@@ -3909,7 +3936,8 @@ def load(text, fx, maker=None):
     constructor. A board built already is used as it is, unless `maker` says what
     would build its replacement: then a board entry that no longer matches the
     running hardware shuts the board down and a fresh one is built, as a restart
-    would. Without a maker the change is reported instead.
+    would. Without a maker the change is reported instead. `volume` is the drive the
+    file came from, whose sounds play on while a computer holds it.
     """
     # The board is learned first, so the parser's examples name its own parts
     __learn_board(fx)
@@ -4155,7 +4183,7 @@ def load(text, fx, maker=None):
 
     # Opening a file is all a sound costs, so a named program defers nothing here:
     # its handle waits, opened while the board is sure to hold the drive
-    sounds = __build_sounds(audio_entries, fx, problems)
+    sounds = __build_sounds(audio_entries, fx, problems, volume)
 
     # Found in the order the work happens, which is every line the parser read and
     # then every entry the loader built, so a reader gets them in the file's order
