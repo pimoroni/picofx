@@ -296,12 +296,12 @@ footer p { margin: 0; }
 <pre class="entry"><code><span class="s-target">rgb</span><span class="s-colon">:</span> <span class="s-effect">rainbow</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.3</span></code></pre>
 <p>It also reports: it flashes when a reload fails, and holds a dim white while a computer is copying to the drive.</p>
 <h2 id="the-screen">The screen</h2>
-<p>A screen on the SP/CE connector is <code>screenA</code>, and needs its size on the board line, since a panel cannot say what size it is:</p>
-<pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">screenA</span><span class="s-punc">=</span><span class="s-value">2.8</span>
-<span class="s-target">screenA</span><span class="s-colon">:</span> <span class="s-effect">image</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">"picture.png"</span></code></pre>
+<p>A screen on the SP/CE connector is <code>screen</code>, and needs its size on the board line, since a panel cannot say what size it is:</p>
+<pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">screen</span><span class="s-punc">=</span><span class="s-value">2.8</span>
+<span class="s-target">screen</span><span class="s-colon">:</span> <span class="s-effect">image</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">"picture.png"</span></code></pre>
 <p>The Plasma 2350 W has no SP/CE connector, so it takes no screen, and the picker offers none.</p>
 <p>Pictures and animations go on this drive beside <code>effects.txt</code>. <code>gif</code> plays an animation, <code>image</code> shows a still, and <code>sequence</code> plays a folder of them in turn.</p>
-<p>The panel is mounted upright, 240 wide by 320 tall, so a landscape picture is cropped at its sides unless the line turns it: <code>screenA rotation=90: image file="picture.png"</code>.</p>
+<p>The panel is mounted upright, 240 wide by 320 tall, so a landscape picture is cropped at its sides unless the line turns it: <code>screen rotation=90: image file="picture.png"</code>.</p>
 <p><strong>A limit for now.</strong> The board's memory is small, and what the last file showed can keep its room until a restart. Saving a change from one full-size picture to another is refused with a note in <code>errors.txt</code>; turn the board off and on with the new file saved and it plays. Animations under about 60KB of frames, small pictures, and drawings with <code>pixel_double=true</code> change over without a restart. The lights are never affected.</p>
 <h2 id="scenes">Scenes</h2>
 <p>A heading starts a scene, and scenes take turns for the time each names. Everything above the first heading stays on throughout:</p>
