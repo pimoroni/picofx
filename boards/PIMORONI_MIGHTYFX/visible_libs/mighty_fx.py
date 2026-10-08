@@ -169,10 +169,13 @@ class MightyFX:
         # Nothing is claimed where nothing was asked for, leaving the pin free
         self.__sensor = build_sensor(sensor, self.SENSOR_PIN, self.SENSOR_PIO, self.SENSOR_SM)
 
-        # Set up the wav (and tone) player, if the user wants
+        # Set up the wav (and tone) player, if the user wants. Its refills come from Python
+        # between screen frames, which two screens playing GIFs held up by as much as 100ms,
+        # so the ring holds twice that
         self.__wav = None
         if init_wav:
-            self.__wav = WavPlayer(0, self.I2S_BCLK_PIN, self.I2S_LRCLK_PIN, self.I2S_DATA_PIN, self.AMP_EN_PIN, root=wav_root)
+            self.__wav = WavPlayer(0, self.I2S_BCLK_PIN, self.I2S_LRCLK_PIN, self.I2S_DATA_PIN, self.AMP_EN_PIN,
+                                   root=wav_root, ibuf_ms=200)
 
         # Set up the enable for the rail the L and R connectors share
         self.__rail_en = Pin(self.SERVO_STRIP_EN, Pin.OUT, value=False)

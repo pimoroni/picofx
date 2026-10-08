@@ -254,8 +254,9 @@ TRANSFER_STEP_MS = 120
 TRANSFER_HOLD_MS = 500
 
 # The longest the drive keeps a computer's first write waiting while a sound stops, which
-# it must before the writes begin. A pass of the loop answers well inside it.
-WRITE_HOLD_MS = 300
+# it must before the writes begin. It covers a pass of the loop and the fade playing out
+# of the player's ring, which a board may make a few hundred milliseconds long.
+WRITE_HOLD_MS = 500
 
 # How often a single indicator flashes while the computer is copying, lit for one step at
 # the end of each period, since a spot with nowhere to travel would hold it steady
@@ -783,7 +784,7 @@ class Sound:
         # Faded out before it stops, a cut mid-waveform clicking. The drive holds the
         # computer's first write meanwhile, so the fade plays out whole
         self.wav.pause()
-        deadline = time.ticks_add(time.ticks_ms(), 200)
+        deadline = time.ticks_add(time.ticks_ms(), WRITE_HOLD_MS - 100)
         while not self.wav.is_paused() and time.ticks_diff(deadline, time.ticks_ms()) > 0:
             time.sleep_ms(5)
         at = self.wav.position()
@@ -2308,12 +2309,14 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                 if idle_since is None:
                     idle_since = time.ticks_ms()
                 elif time.ticks_diff(time.ticks_ms(), idle_since) >= TRANSFER_HOLD_MS:
+                    # The sound goes first again, its ring filling before the screens'
+                    # first frames can hold up its refills
+                    for sound in sounds:
+                        sound.resume()
                     __resume(players, fx)
                     for show in shows:
                         if show.live:
                             show.resume()
-                    for sound in sounds:
-                        sound.resume()
                     paused = False
 
             drew = False
