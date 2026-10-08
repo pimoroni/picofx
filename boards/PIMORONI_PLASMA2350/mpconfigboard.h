@@ -4,6 +4,29 @@
 #define MICROPY_HW_BOARD_NAME                   "Pimoroni Plasma 2350"
 #endif
 
+// I2C0 on the Qw/ST connector
+#define MICROPY_HW_I2C0_SDA                     (PLASMA2350_SDA_PIN)
+#define MICROPY_HW_I2C0_SCL                     (PLASMA2350_SCL_PIN)
+
+// Wireless on the 2350 W, and PPP for a modem on SP/CE
+#define MICROPY_PY_NETWORK_HOSTNAME_DEFAULT     "Plasma2350W"
+#define MICROPY_PY_NETWORK                      (1)
+#define MICROPY_PY_NETWORK_PPP_LWIP             (1)
+
+#define CYW43_USE_SPI                           (1)
+#define CYW43_LWIP                              (1)
+#define CYW43_GPIO                              (1)
+#define CYW43_SPI_PIO                           (1)
+
+#ifndef CYW43_WL_GPIO_COUNT
+#define CYW43_WL_GPIO_COUNT                     (3)
+#endif
+
+#define MICROPY_HW_PIN_EXT_COUNT                CYW43_WL_GPIO_COUNT
+
+int mp_hal_is_pin_reserved(int n);
+#define MICROPY_HW_PIN_RESERVED(i)              mp_hal_is_pin_reserved(i)
+
 // The flash partition sizes come from mpconfigboard.cmake: the port passes them to the
 // linker as defsyms and defines them here itself, so setting them again is an error.
 
@@ -17,7 +40,7 @@
 // volume is board code's job. The volume stays invisible to the host until
 // rp2.enable_msc() is called.
 #define MICROPY_HW_USB_MSC                      (1)
-#define MICROPY_HW_USB_MSC_FLASH_OFFSET         (1280 * 1024)
-#define MICROPY_HW_USB_MSC_FLASH_BYTES          (2304 * 1024)
+#define MICROPY_HW_USB_MSC_FLASH_OFFSET         (1664 * 1024)
+#define MICROPY_HW_USB_MSC_FLASH_BYTES          (2048 * 1024)
 #define MICROPY_HW_USB_MSC_INQUIRY_VENDOR_STRING   "Pimoroni"
 #define MICROPY_HW_USB_MSC_INQUIRY_PRODUCT_STRING  "Plasma FX Drive"
