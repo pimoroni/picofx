@@ -7,10 +7,16 @@ is shown at the foot of the page, so nothing about it is hidden.
 
 <!-- board picker_tabs -->
 
+<!-- if examples -->
 **A program** runs one of the board's programs in place of the effects:
 __PROGRAMS_OFFERED__,
-beside any programs of your own on this drive. Pick one and save, and the board
-restarts to run it. [Your program in the picker](#your-program-in-the-picker)
+beside any programs of your own on this drive.
+<!-- end -->
+<!-- if not examples -->
+**A program** runs one of your own programs on this drive in place of the
+effects.
+<!-- end -->
+Pick one and save, and the board restarts to run it. [Your program in the picker](#your-program-in-the-picker)
 says how a program of yours describes itself there.
 
 **Save to board** writes the file, and the board picks it up a few seconds later.

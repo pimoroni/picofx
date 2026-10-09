@@ -1,12 +1,12 @@
 ## Writing an entry
 
 ```shape
-<outputs> <their settings>: <effect> <its settings>
+<__OUTPUTS__> <their settings>: <effect> <its settings>
 ```
 
 <!-- board entry_examples -->
 
-There is one colon in an entry. Which outputs, and how bright or what colour
+There is one colon in an entry. Which __OUTPUTS__, and how bright or what colour
 they are, go before it. The effect and its own settings go after.
 
 Settings you leave out take their usual value. A `#` starts a comment. An entry

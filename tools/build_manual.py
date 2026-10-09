@@ -4,7 +4,8 @@
 The parts every board shares are in boards/manual/ and a board's own in its manual/,
 numbered so they interleave. A board has a feature as its editor/fx_board.json describes
 it. A part in a feature folder goes in only for a board with that feature, and so do the
-lines between <!-- if feature --> and <!-- end --> in a part. A <!-- board name --> line
+lines between <!-- if feature --> and <!-- end --> in a part, or for a board without it
+with <!-- if not feature -->. A <!-- board name --> line
 takes that block from the board's manual/board.md, and manual/manual.json gives the
 board's own words for each __TERM__ a part leaves open.
 
@@ -49,12 +50,13 @@ FEATURES = {
     "outputs": lambda board: board["numbered_outputs"],
     "strips": lambda board: bool(board["strips"]),
     "screens": lambda board: bool(board["screens"]),
+    "two_screens": lambda board: bool(board["screens"]) and len(board["screens"]["ports"]) > 1,
     "hub": lambda board: bool(board["screens"] and board["screens"]["hub"]),
     "sound": lambda board: bool(board["sound"]),
     "examples": lambda board: bool(board["examples"]),
 }
 
-CONDITION = re.compile(r"<!-- if (\w+) -->")
+CONDITION = re.compile(r"<!-- if (not )?(\w+) -->")
 CONDITION_END = "<!-- end -->"
 BLOCK = re.compile(r"^<!-- block (\w+) -->$", re.MULTILINE)
 PULL = re.compile(r"<!-- board (\w+) -->")
@@ -337,11 +339,11 @@ def expand(path, text, board, own_blocks, pulled):
         if opened:
             if feature:
                 sys.exit("{} opens a condition inside another".format(path))
-            feature = opened.group(1)
+            feature = opened.group(2)
             if feature not in FEATURES:
                 sys.exit("{} tests {}, which is not a feature the build knows".format(
                     path, feature))
-            keeping = FEATURES[feature](board)
+            keeping = FEATURES[feature](board) != bool(opened.group(1))
         elif line == CONDITION_END:
             if not feature:
                 sys.exit("{} ends a condition it never opened".format(path))

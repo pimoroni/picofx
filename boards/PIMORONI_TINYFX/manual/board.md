@@ -20,6 +20,8 @@ out3 level=50%: pulse speed=0.6
 
 <!-- block naming_outputs -->
 
+### Naming outputs
+
 | Written | Means |
 | --- | --- |
 | `out1` | one output |

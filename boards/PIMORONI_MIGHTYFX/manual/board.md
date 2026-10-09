@@ -20,6 +20,8 @@ out3 level=50%: pulse speed=0.6
 
 <!-- block naming_outputs -->
 
+### Naming outputs
+
 | Written | Means |
 | --- | --- |
 | `out1` | one output |
@@ -47,6 +49,24 @@ out4 colour=ff8040: static
 out1 level=0.5, 2 level=0.8, 3-7: pulse_wave
 out1-7 ease=0.4: blink speed=0.5
 ```
+
+<!-- block strips_intro -->
+
+A strip of WS2812 LEDs plugs into the connector marked **L** or **R**, and its
+LEDs take the same effects, colours and levels the outputs do. Tell the board
+how long it is first, since that is the one thing it cannot work out for itself:
+
+<!-- block strips_notes -->
+
+`stripR` is the same for the other connector. Both share one power supply, so a
+strip on either lights the small LED between them, and anything plugged into the
+one you are not using is powered too.
+
+<!-- block screen_notes -->
+
+A screen draws about twenty frames a second at best, and effects on the outputs
+take time from it, so a file asking for more keeps its timing by dropping
+frames. Ask for twenty or fewer and it plays every one.
 
 <!-- block scene_example -->
 

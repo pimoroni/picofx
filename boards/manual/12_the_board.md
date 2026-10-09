@@ -1,6 +1,6 @@
 ## The board
 
-One entry sets the board rather than the lights, and names no output:
+One entry sets the board rather than the lights, and names no __OUTPUT__:
 
 ```entry
 board: drive=manual program=fireplace.py
@@ -27,10 +27,15 @@ copying __COPIED_FILES__ on never interrupts anything.
 ### Running your own program
 
 A program can sit on this drive or on the board's own filesystem, and its name
-may include folders: it is looked for here first, then on the board, so
-`program=__EXAMPLE_PROGRAM__`
-reaches one of the examples the board ships with. Where the name is in both,
-this drive's copy runs.
+may include folders: it is looked for here first, then on the
+<!-- if examples -->
+board, so `program=__EXAMPLE_PROGRAM__`
+reaches one of the examples the board ships with.
+<!-- end -->
+<!-- if not examples -->
+board.
+<!-- end -->
+Where the name is in both, this drive's copy runs.
 
 If it is missing, or stops with an error, the effects run instead and
 `errors.txt` says what happened, so a mistyped name never leaves you with a
@@ -47,8 +52,8 @@ it restarts the board, which then plays whatever it now says; without, press
 while it runs, so put anything it needs on the board's own filesystem.
 
 <!-- if screens -->
-`screenA` and `screenB` describe the screens this file's own entries play on, so
-a program never sees them: it sets its own up. Pass it the size in `args` if it
+__SCREEN_SETTINGS_UNSEEN__:
+it sets its own up. Pass it the size in `args` if it
 needs telling.
 <!-- end -->
 
@@ -73,8 +78,14 @@ FOLDER = args[0] if args else "posters"
 
 ### Your program in the picker
 
-The picker's **A program** tab lists every Python file at the top of this drive
-beside the examples, and describes each one by its opening string, the text in
+The picker's **A program** tab lists every Python file at the top of this
+<!-- if examples -->
+drive beside the examples,
+<!-- end -->
+<!-- if not examples -->
+drive,
+<!-- end -->
+and describes each one by its opening string, the text in
 triple quotes at the top of the file. Its first plain line says what the program
 does, and three more lines tell the picker how to show it:
 

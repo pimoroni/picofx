@@ -1,7 +1,12 @@
 ## When something is wrong
 
+<!-- if outputs -->
 The lights say so, and the more flashes the worse it is. __FLASH_COLOUR_ON__
 shows the colour:
+<!-- end -->
+<!-- if not outputs -->
+The board's LED says so, and the more flashes the worse it is:
+<!-- end -->
 
 | Flashes | What happened |
 | --- | --- |

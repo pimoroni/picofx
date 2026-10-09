@@ -2,11 +2,11 @@
 
 ### Naming screens
 
-A screen on either SP/CE connector is named `screenA` or `screenB`. A screen
+__SCREEN_NAMING__. A screen
 cannot say what size it is, so tell the board:
 
 ```entry
-board: screenA=1.54
+board: __SCREEN__=1.54
 ```
 
 That is a board entry, which sets the board rather than the lights and is one of
@@ -54,9 +54,9 @@ Before the colon, and separate from what it plays:
 | `tile` | `repeat` or `mirror` to fill the screen with copies of the picture, as `across\|down` | off |
 
 ```entry
-screenA rotation=90: gif file="clock.gif"
-screenA offset=*|20 bg=black: image file=logo.png
-screenA tile=repeat: image file=bricks.png
+__SCREEN__ rotation=90: gif file="clock.gif"
+__SCREEN__ offset=*|20 bg=black: image file=logo.png
+__SCREEN__ tile=repeat: image file=bricks.png
 ```
 
 A picture is centred unless `offset` puts it somewhere, and a `*` in place of
@@ -78,9 +78,9 @@ spreading a picture across the screen and leaving its height alone.
 | `sequence` | `folder` `fps` `interval` `loop=yes` `ping_pong=no` `first_as_last=no` `hold=0` |
 
 ```entry
-screenA: gif file="clock.gif"
-screenA: image file=logo.png
-screenA: sequence folder=photos interval=30
+__SCREEN__: gif file="clock.gif"
+__SCREEN__: image file=logo.png
+__SCREEN__: sequence folder=photos interval=30
 ```
 
 `gif` plays an animated GIF at the delays it was saved with, `image` holds one
@@ -100,7 +100,7 @@ its first. Add `first_as_last=yes` for one of those and the whole loop is played
 in each direction, so a spinning coin winds all the way round and back:
 
 ```entry
-screenA: gif file="coin.gif" ping_pong=yes first_as_last=yes
+__SCREEN__: gif file="coin.gif" ping_pong=yes first_as_last=yes
 ```
 
 `hold` is the seconds to wait where it turns around, so a ping-pong pauses at
@@ -108,31 +108,32 @@ each end instead of bouncing straight off. One value serves both ends, or write
 each with a `|`:
 
 ```entry
-screenA: gif file="wave.gif" ping_pong=yes hold=1
-screenA: gif file="wave.gif" ping_pong=yes hold=1.5|0.5
+__SCREEN__: gif file="wave.gif" ping_pong=yes hold=1
+__SCREEN__: gif file="wave.gif" ping_pong=yes hold=1.5|0.5
 ```
 
 A file is looked for on this drive first, then on the board itself, and the name
 may include folders. There is little room here, so pictures usually live on the
 board.
 
-A screen draws about twenty frames a second at best, and effects on the outputs
-take time from it, so a file asking for more keeps its timing by dropping
-frames. Ask for twenty or fewer and it plays every one.
+<!-- board screen_notes -->
 
 ### Drawing from code
 
 **This one is for Python writers.** A screen can play a drawing instead of a
 picture: a Python file with one function in it, drawn beside everything else in
-this file, so the lights keep their effects, the other screen keeps its
-pictures, and a scene puts the drawing on and off with everything else it holds.
+this file, so the lights keep their effects,
+<!-- if two_screens -->
+the other screen keeps its pictures,
+<!-- end -->
+and a scene puts the drawing on and off with everything else it holds.
 
 | Plays | Settings |
 | --- | --- |
 | `graphics` | `file` `fps` `interval` `width` `height` |
 
 ```entry
-screenA: graphics file=rings.py
+__SCREEN__: graphics file=rings.py
 ```
 
 ```python
@@ -175,8 +176,13 @@ reaches for the pins is refused, with a note in `errors.txt`. A mistake anywhere
 in the file lands there too, with its line, and a drawing that stops partway
 keeps its last frame on the screen while everything else carries on.
 
+<!-- if examples -->
 The examples under `examples/screens/graphics` show what PicoVector can draw,
 and a program that wants the whole board instead of one screen is
+<!-- end -->
+<!-- if not examples -->
+A program that wants the whole board instead of one screen is
+<!-- end -->
 [a program](#running-your-own-program), not a drawing.
 
 The picker offers a drawing on its Screens tab where the drawing's opening string

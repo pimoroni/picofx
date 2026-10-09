@@ -2,8 +2,9 @@
 
 `EDITOR.html` on this drive is `effects.txt` in a window that knows the format.
 Every word is coloured by the part it plays, and as you type it offers what fits
-where you are: __ENTRY_TARGETS__ at the start of a line, the effects after
-the colon, then that effect's own settings and the values each one takes. A line
+where you are:
+__ENTRY_TARGETS__
+at the start of a line, the effects after the colon, then that effect's own settings and the values each one takes. A line
 underneath says what shape a value wants. Tab or Enter takes what is offered,
 Escape leaves it, and Ctrl+Space asks for it again.
 

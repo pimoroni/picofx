@@ -25,7 +25,7 @@ where its effect is.
 | `traffic_light` | `red_interval=10` `red_amber_interval=5` `green_interval=10` `amber_interval=5` |
 | `pelican_crossing` | `red_interval=8` `flashing_interval=6` `green_interval=20` `amber_interval=3` |
 
-### For __COLOUR_EFFECTS_FOR__ only, since these bring their own colour
+### __COLOUR_EFFECTS_HEADING__
 
 | Effect | Settings |
 | --- | --- |
@@ -39,9 +39,9 @@ where its effect is.
 ### Which ones travel
 
 The ones ending `_wave`, `_sequence` and `_counter`, and `sweep`, travel across
-the outputs you name; the rest do the same thing on every one.
+the __OUTPUTS__ you name; the rest do the same thing on every one.
 
-The ones ending `_each` give every output its own: `flicker_each` dips each at
+The ones ending `_each` give every __OUTPUT__ its own: `flicker_each` dips each at
 its own moments, as flames do, and `random_each` gives each its own brightness.
 `flicker` and `random` do the same to all of them at once, as one light would:
 
@@ -49,40 +49,40 @@ its own moments, as flames do, and `random_each` gives each its own brightness.
 __FLAME_OUTPUTS__: flicker_each dimness=0.6
 ```
 
-An effect that drives several outputs takes them in the order given in its own
+An effect that drives several __OUTPUTS__ takes them in the order given in its own
 section below, so naming fewer than it drives lights the first of them and
 leaves the rest out. Naming more than it drives is a mistake, and `errors.txt`
 says so.
 
 ### Traffic lights and crossings
 
-`traffic_light` wants three outputs, and lights them red, amber and green in
+`traffic_light` wants three __OUTPUTS__, and lights them red, amber and green in
 that order. It switches instantly, so add `ease` for the lamps of a real signal:
 
 ```entry
-out1-3 ease=0.3: traffic_light
+__THREE_OUTPUTS__ ease=0.3: traffic_light
 ```
 
-`pelican_crossing` wants five outputs: the same three, then the two figures a
+`pelican_crossing` wants five __OUTPUTS__: the same three, then the two figures a
 pedestrian reads, stop and walk. In place of red and amber it flashes the amber
 and the walking figure together, as a pelican does while a crossing ends. It
 comes round on its own clock, there being no button to press:
 
 ```entry
-out1-5 ease=0.3: pelican_crossing green_interval=20 red_interval=8
+__FIVE_OUTPUTS__ ease=0.3: pelican_crossing green_interval=20 red_interval=8
 ```
 
-Three outputs on `pelican_crossing` is its traffic lights on their own:
+Three __OUTPUTS__ on `pelican_crossing` is its traffic lights on their own:
 
 ```entry
-out1-3: pelican_crossing
+__THREE_OUTPUTS__: pelican_crossing
 ```
 
 ### Sweep
 
-`sweep` is a light that crosses the outputs and turns back at each end, the back
+`sweep` is a light that crosses the __OUTPUTS__ and turns back at each end, the back
 and forth a scanner does. Its `extent` is how far it reaches from itself, in
-outputs, and its `speed` counts one crossing as the travelling effects count one
+__OUTPUTS__, and its `speed` counts one crossing as the travelling effects count one
 pass. Its `hold` waits at each end, in seconds, giving a trail time to clear
 before the light comes back over it:
 
@@ -90,14 +90,14 @@ before the light comes back over it:
 __ALL_OUTPUTS__ ease=0.4: sweep speed=1 length=__OUTPUT_COUNT__ extent=1 hold=1
 ```
 
-Give `extent` a whole number of outputs, such as 1 or 2. In between it dims as
-the light passes between two outputs and brightens as it lands on one, which
+Give `extent` a whole number of __OUTPUTS__, such as 1 or 2. In between it dims as
+the light passes between two __OUTPUTS__ and brightens as it lands on one, which
 reads as stepping. 1 is the tightest that travels smoothly.
 
 ### Blinking through colours
 
 `rgb_blink` takes one colour, or several to blink through in turn, divided by
-`|` since a comma would mean one colour for each output. It has no colour of its
+`|` since a comma would mean one colour for each __OUTPUT__. It has no colour of its
 own, so give it at least one:
 
 ```entry

@@ -15,7 +15,8 @@ In a hurry? Save the file and press **Boot** once. The drive disappears and
 comes straight back with the new effects running, so you can keep editing.
 Ejecting is the surer way, since a computer does not always write the file out
 until then. Press **Boot** twice to hide the drive, and twice again to bring it
-back. A dim white light runs along the outputs each time, towards the USB
+back.
+A dim white light runs along the outputs each time, towards the USB
 connector as the computer takes the drive and away from it as the board takes it
 back, so a double press is never mistaken for a single one.
 
@@ -53,8 +54,8 @@ under every scene.
 
 **A program** runs one of the board's programs in place of the effects:
 the showcase signs, screen pieces, and what a remote, a sensor, a speaker or a motor brings,
-beside any programs of your own on this drive. Pick one and save, and the board
-restarts to run it. [Your program in the picker](#your-program-in-the-picker)
+beside any programs of your own on this drive.
+Pick one and save, and the board restarts to run it. [Your program in the picker](#your-program-in-the-picker)
 says how a program of yours describes itself there.
 
 **Save to board** writes the file, and the board picks it up a few seconds later.
@@ -77,8 +78,9 @@ asks before replacing a file it has not read.
 
 `EDITOR.html` on this drive is `effects.txt` in a window that knows the format.
 Every word is coloured by the part it plays, and as you type it offers what fits
-where you are: the outputs and screens at the start of a line, the effects after
-the colon, then that effect's own settings and the values each one takes. A line
+where you are:
+the outputs and screens
+at the start of a line, the effects after the colon, then that effect's own settings and the values each one takes. A line
 underneath says what shape a value wants. Tab or Enter takes what is offered,
 Escape leaves it, and Ctrl+Space asks for it again.
 
@@ -461,8 +463,9 @@ frames. Ask for twenty or fewer and it plays every one.
 
 **This one is for Python writers.** A screen can play a drawing instead of a
 picture: a Python file with one function in it, drawn beside everything else in
-this file, so the lights keep their effects, the other screen keeps its
-pictures, and a scene puts the drawing on and off with everything else it holds.
+this file, so the lights keep their effects,
+the other screen keeps its pictures,
+and a scene puts the drawing on and off with everything else it holds.
 
 | Plays | Settings |
 | --- | --- |
@@ -638,10 +641,10 @@ copying pictures on never interrupts anything.
 ### Running your own program
 
 A program can sit on this drive or on the board's own filesystem, and its name
-may include folders: it is looked for here first, then on the board, so
-`program=examples/effects/colour/rainbow_wave.py`
-reaches one of the examples the board ships with. Where the name is in both,
-this drive's copy runs.
+may include folders: it is looked for here first, then on the
+board, so `program=examples/effects/colour/rainbow_wave.py`
+reaches one of the examples the board ships with.
+Where the name is in both, this drive's copy runs.
 
 If it is missing, or stops with an error, the effects run instead and
 `errors.txt` says what happened, so a mistyped name never leaves you with a
@@ -657,8 +660,8 @@ it restarts the board, which then plays whatever it now says; without, press
 **Reset** for the change to take. A program cannot read files from this drive
 while it runs, so put anything it needs on the board's own filesystem.
 
-`screenA` and `screenB` describe the screens this file's own entries play on, so
-a program never sees them: it sets its own up. Pass it the size in `args` if it
+`screenA` and `screenB` describe the screens this file's own entries play on, so a program never sees them:
+it sets its own up. Pass it the size in `args` if it
 needs telling.
 
 `args` passes a program whatever it needs to know, so one program can do
@@ -682,8 +685,9 @@ FOLDER = args[0] if args else "posters"
 
 ### Your program in the picker
 
-The picker's **A program** tab lists every Python file at the top of this drive
-beside the examples, and describes each one by its opening string, the text in
+The picker's **A program** tab lists every Python file at the top of this
+drive beside the examples,
+and describes each one by its opening string, the text in
 triple quotes at the top of the file. Its first plain line says what the program
 does, and three more lines tell the picker how to show it:
 

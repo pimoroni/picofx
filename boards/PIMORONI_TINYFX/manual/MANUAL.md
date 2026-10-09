@@ -15,7 +15,8 @@ In a hurry? Save the file and press **Boot** once. The drive disappears and
 comes straight back with the new effects running, so you can keep editing.
 Ejecting is the surer way, since a computer does not always write the file out
 until then. Press **Boot** twice to hide the drive, and twice again to bring it
-back. A dim light runs along the outputs each time, towards the USB
+back.
+A dim light runs along the outputs each time, towards the USB
 connector as the computer takes the drive and away from it as the board takes it
 back, so a double press is never mistaken for a single one.
 
@@ -52,8 +53,8 @@ have into scenes that take turns, each with its own looks and sound; what
 
 **A program** runs one of the board's programs in place of the effects:
 what a remote, a sensor or a speaker brings,
-beside any programs of your own on this drive. Pick one and save, and the board
-restarts to run it. [Your program in the picker](#your-program-in-the-picker)
+beside any programs of your own on this drive.
+Pick one and save, and the board restarts to run it. [Your program in the picker](#your-program-in-the-picker)
 says how a program of yours describes itself there.
 
 **Save to board** writes the file, and the board picks it up a few seconds later.
@@ -76,8 +77,9 @@ asks before replacing a file it has not read.
 
 `EDITOR.html` on this drive is `effects.txt` in a window that knows the format.
 Every word is coloured by the part it plays, and as you type it offers what fits
-where you are: the outputs at the start of a line, the effects after
-the colon, then that effect's own settings and the values each one takes. A line
+where you are:
+the outputs
+at the start of a line, the effects after the colon, then that effect's own settings and the values each one takes. A line
 underneath says what shape a value wants. Tab or Enter takes what is offered,
 Escape leaves it, and Ctrl+Space asks for it again.
 
@@ -401,10 +403,10 @@ copying sounds on never interrupts anything.
 ### Running your own program
 
 A program can sit on this drive or on the board's own filesystem, and its name
-may include folders: it is looked for here first, then on the board, so
-`program=examples/effects/mono/sweep_trail.py`
-reaches one of the examples the board ships with. Where the name is in both,
-this drive's copy runs.
+may include folders: it is looked for here first, then on the
+board, so `program=examples/effects/mono/sweep_trail.py`
+reaches one of the examples the board ships with.
+Where the name is in both, this drive's copy runs.
 
 If it is missing, or stops with an error, the effects run instead and
 `errors.txt` says what happened, so a mistyped name never leaves you with a
@@ -441,8 +443,9 @@ FOLDER = args[0] if args else "posters"
 
 ### Your program in the picker
 
-The picker's **A program** tab lists every Python file at the top of this drive
-beside the examples, and describes each one by its opening string, the text in
+The picker's **A program** tab lists every Python file at the top of this
+drive beside the examples,
+and describes each one by its opening string, the text in
 triple quotes at the top of the file. Its first plain line says what the program
 does, and three more lines tell the picker how to show it:
 

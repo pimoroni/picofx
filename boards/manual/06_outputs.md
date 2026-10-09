@@ -1,14 +1,14 @@
-## Outputs
-
-### Naming outputs
+## __OUTPUTS_HEADING__
 
 <!-- board naming_outputs -->
 
+<!-- if outputs -->
 Order matters for the effects that travel: they move in the order you write the
 outputs, so list them in the order they appear in your model, which need not be
 number order.
+<!-- end -->
 
-### Setting an output
+### Setting an __OUTPUT__
 
 Before the colon, and separate from the effect:
 
@@ -33,13 +33,13 @@ evenly, which is what a stage light does; `ease` goes quickly at first and slows
 as it arrives, which is how a bulb warms and is the one that looks natural on a
 light switching on and off.
 
-An output follows one way or the other, so a line takes one of them and not
+An __OUTPUT__ follows one way or the other, so a line takes one of them and not
 both. Two numbers divided by `|` give the rise and the fall their own lengths,
 a light that comes on quickly and fades out slowly being the usual reason:
 
 ```entry
 __ALL_OUTPUTS__ fade=0.8: blink speed=0.5
-out1-3 ease=0.05|1.2: blink speed=1
+__THREE_OUTPUTS__ ease=0.05|1.2: blink speed=1
 ```
 
-Softening belongs to the output, not to the effect, so it works on any effect.
+Softening belongs to the __OUTPUT__, not to the effect, so it works on any effect.

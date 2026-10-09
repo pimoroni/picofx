@@ -13,11 +13,11 @@ Entries before the first heading are always on, whatever is showing, so anything
 that should never change goes there:
 
 ```entry
-out1: static brightness=0.2
+__ONE_OUTPUT__: static brightness=0.2
 ```
 
-While a scene shows, an output it does not name goes dark if any other scene
-uses it, and is left alone if none of them do. A scene may name an output that
+While a scene shows, an __OUTPUT__ it does not name goes dark if any other scene
+uses it, and is left alone if none of them do. A scene may name an __OUTPUT__ that
 is always on, and takes it over for as long as it shows.
 
 <!-- if screens -->
@@ -30,7 +30,7 @@ round, instead of carrying on from where they were left:
 
 ```entry
 [Beacon: 5s restart]
-out1-3: flash_sequence flashes=3
+__THREE_OUTPUTS__: flash_sequence flashes=3
 ```
 
 The board entry belongs outside every scene. A single scene with no time simply
