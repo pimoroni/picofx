@@ -1,8 +1,8 @@
 import time
 
 from mighty_fx import MightyFX, SPCE
-from motor_driver import MotorDriver
 from motor import FAST_DECAY, SLOW_DECAY
+from spce import MotorDriver
 
 from pimoroni import NORMAL_DIR, REVERSED_DIR
 
@@ -21,8 +21,8 @@ SPEED = 0.5             # The speed to drive at while showing each setting
 HOLD = 2                # The time, in seconds, to hold each setting
 
 # Variables
-mighty = MightyFX(spce_a=SPCE.MOTOR_DRIVER)
-driver = MotorDriver(mighty.spce_a)
+mighty = MightyFX(spce_a=SPCE.GPIO_PWM)
+driver = MotorDriver(mighty.spce_a.pins)
 motor = driver.motor_a  # Everything here is shown on one of the driver's two motors
 
 driver.enable()         # Power the driver, which the board leaves off until asked
@@ -88,6 +88,7 @@ try:
         motor.coast()
         hold("Coasting, which lets it run down")
 
-# Stop the motors, take the driver's power away and turn off all the outputs
+# The driver is this program's, not the board's, so it stops the motors itself
 finally:
+    driver.disable()
     mighty.shutdown()

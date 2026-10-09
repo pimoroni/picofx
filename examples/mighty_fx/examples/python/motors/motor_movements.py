@@ -1,7 +1,7 @@
 import time
 
 from mighty_fx import MightyFX, SPCE
-from motor_driver import MotorDriver
+from spce import MotorDriver
 
 from picofx.colour import RED, WHITE
 
@@ -28,8 +28,8 @@ MOVE_TIME = 1.5         # The time, in seconds, each movement lasts
 PAUSE_TIME = 0.5        # The time, in seconds, to stand still between movements
 
 # Variables
-mighty = MightyFX(spce_a=SPCE.MOTOR_DRIVER)
-driver = MotorDriver(mighty.spce_a)
+mighty = MightyFX(spce_a=SPCE.GPIO_PWM)
+driver = MotorDriver(mighty.spce_a.pins)
 
 driver.enable()         # Power the driver, which the board leaves off until asked
 
@@ -85,6 +85,7 @@ try:
         time.sleep(MOVE_TIME)
         pause()
 
-# Stop the motors, take the driver's power away and turn off all the outputs
+# The driver is this program's, not the board's, so it stops the motors itself
 finally:
+    driver.disable()
     mighty.shutdown()
