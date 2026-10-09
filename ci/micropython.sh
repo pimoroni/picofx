@@ -98,6 +98,16 @@ function ci_pimoroni_aye_arr_clone {
     cd "$CI_BUILD_ROOT"
 }
 
+# Hosted pure-Python packages a board names in its own board-packages.list, each cloned
+# under its module name so require() finds the manifest.py inside it. Adding one is a row
+# in that list rather than a function here.
+function ci_fetch_packages {
+    LIST=$1
+    [ -f "$LIST" ] || return 0
+    log_inform "Packages from $LIST"
+    python3 "$CI_PROJECT_ROOT/ci/board_packages.py" fetch --list "$LIST" --dest "$CI_BUILD_ROOT/lib"
+}
+
 function ci_micropython_clone {
     log_inform "Using MicroPython $MICROPYTHON_FLAVOUR/$MICROPYTHON_VERSION"
     git clone https://github.com/$MICROPYTHON_FLAVOUR/micropython "$CI_BUILD_ROOT/micropython"
@@ -159,6 +169,10 @@ function ci_prepare_all {
     ci_pimoroni_aye_arr_clone
     ci_pimoroni_lsm6ds3_clone
     ci_pimoroni_qwstpad_clone
+    # Every board's packages where none was named, as the clones above are unconditional
+    for LIST in "$CI_PROJECT_ROOT"/boards/${BOARD:-*}/board-packages.list; do
+        ci_fetch_packages "$LIST"
+    done
     ci_micropython_build_mpy_cross
 }
 

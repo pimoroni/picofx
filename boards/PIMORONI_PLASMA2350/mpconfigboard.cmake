@@ -13,6 +13,10 @@ set(MICROPY_PY_BLUETOOTH_CYW43 ON)
 # Board specific version of the frozen manifest
 set(MICROPY_FROZEN_MANIFEST ${MICROPY_BOARD_DIR}/manifest.py)
 
+# Where ci/micropython.sh fetched this board's hosted packages. It reaches the manifest as
+# $(LIB_DIR), every MICROPY_MANIFEST_* variable arriving there with the prefix stripped
+set(MICROPY_MANIFEST_LIB_DIR ${CI_BUILD_ROOT}/lib)
+
 set(MICROPY_C_HEAP_SIZE 4096)
 
 # The flash split: firmware, the FX drive's FAT volume, and the filesystem taking what is

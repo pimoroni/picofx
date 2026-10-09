@@ -3,4 +3,5 @@ build/
 dist/
 .coverage
 .tox/
+__pycache__/
 boards/*/manual/MANUAL.html
