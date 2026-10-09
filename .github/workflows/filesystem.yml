@@ -60,6 +60,12 @@ jobs:
         cp -v -r ${{env.ROOT_DIR}}/../aye_arr/aye_arr ${{env.LIBS_DIR}}/lib
         find ${{env.LIBS_DIR}} -type f -name '*.md' -exec rm -v {} \;
 
+    # autofx plays the FX drive, which a Tiny FX carries only in its drive variant
+    - name: "Leave autofx out of the Tiny FX libraries"
+      if: matrix.board == 'PIMORONI_TINYFX'
+      shell: bash
+      run: rm -v ${{env.LIBS_DIR}}/lib/autofx.py
+
     - name: "Assemble example content"
       shell: bash
       run: |
