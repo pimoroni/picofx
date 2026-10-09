@@ -2,7 +2,8 @@
 #
 # SPDX-License-Identifier: MIT
 
-# Generated from manual/MANUAL.md. Edit that and rebuild; edits here are lost.
+# Generated from the manual's parts by tools/build_manual.py. Edit those and rebuild;
+# edits here are lost.
 
 MANUAL = """\
 <!doctype html>

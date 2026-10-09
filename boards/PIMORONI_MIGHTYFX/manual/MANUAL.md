@@ -1,8 +1,10 @@
+<!-- Generated from boards/manual/ and this board's own parts by tools/build_manual.py. Edit those and rebuild; edits here are lost. -->
+
 # MightyFX
 
-Seven outputs, two screen connectors, and a text file that drives them. Edit
-`effects.txt` on this drive, eject it, and the board applies the change straight
-away. No code needed, though there is room for it when you want it.
+Seven outputs, two screen connectors, and a text file that drives them.
+Edit `effects.txt` on this drive, eject it, and the board applies the change
+straight away. No code needed, though there is room for it when you want it.
 
 ## Getting started
 

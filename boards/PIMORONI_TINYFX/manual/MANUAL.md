@@ -1,3 +1,5 @@
+<!-- Generated from boards/manual/ and this board's own parts by tools/build_manual.py. Edit those and rebuild; edits here are lost. -->
+
 # Tiny FX
 
 Six mono outputs, one RGB output, a speaker, and a text file that drives them.

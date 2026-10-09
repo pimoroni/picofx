@@ -1,9 +1,17 @@
 #!/usr/bin/env python3
-"""Turns a board's MANUAL.md into the HTML the FX drive carries.
+"""Assembles a board's manual from its parts and turns it into the HTML the FX drive carries.
 
-Writes two files: MANUAL.html beside the source, for opening in a browser while
-writing, and a frozen module holding the same text, which is what ships. The
-module is committed and the HTML is not, so the generated page appears once.
+The parts every board shares are in boards/manual/ and a board's own in its manual/,
+numbered so they interleave. A board has a feature as its editor/fx_board.json describes
+it. A part in a feature folder goes in only for a board with that feature, and so do the
+lines between <!-- if feature --> and <!-- end --> in a part. A <!-- board name --> line
+takes that block from the board's manual/board.md, and manual/manual.json gives the
+board's own words for each __TERM__ a part leaves open.
+
+Writes three files beside the board's parts: MANUAL.md, the assembled text, MANUAL.html,
+for opening in a browser while writing, and a frozen module holding the page, which is
+what ships. MANUAL.md and the module are committed and the HTML is not, so the generated
+page appears once.
 
 The markdown accepted here is a deliberate subset, since this converter has one
 input and no reason to grow: ATX headings, paragraphs, fenced code with an info
@@ -14,19 +22,53 @@ the HTML as a class, which is how the checks find the lines that must parse.
 """
 
 import argparse
+import glob
 import html
+import json
 import os
 import re
 import sys
 
 TEMPLATE_NAME = "manual_template.html"
 
+# The parts every board's manual shares, from the repository's root
+SHARED_PARTS = os.path.join("boards", "manual")
+
+# The board's description, from its directory
+DESCRIPTION = os.path.join("editor", "fx_board.json")
+
+# What the description does not say: whether the board has numbered outputs, and its
+# words for each __TERM__ the parts leave open
+MANUAL_SETTINGS = os.path.join("manual", "manual.json")
+
+# The board's blocks, each opened by a <!-- block name --> line and running to the next
+BOARD_BLOCKS = os.path.join("manual", "board.md")
+
+# What a board may have, naming the folders of parts and the conditions in them
+FEATURES = {
+    "outputs": lambda board: board["numbered_outputs"],
+    "strips": lambda board: bool(board["strips"]),
+    "screens": lambda board: bool(board["screens"]),
+    "hub": lambda board: bool(board["screens"] and board["screens"]["hub"]),
+    "sound": lambda board: bool(board["sound"]),
+    "examples": lambda board: bool(board["examples"]),
+}
+
+CONDITION = re.compile(r"<!-- if (\w+) -->")
+CONDITION_END = "<!-- end -->"
+BLOCK = re.compile(r"^<!-- block (\w+) -->$", re.MULTILINE)
+PULL = re.compile(r"<!-- board (\w+) -->")
+
+MARKDOWN_HEADER = ("<!-- Generated from boards/manual/ and this board's own parts by "
+                   "tools/build_manual.py. Edit those and rebuild; edits here are lost. -->\n\n")
+
 # The generated module is read by fx_drive and written to the drive verbatim.
 MODULE_HEADER = '''# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
 #
 # SPDX-License-Identifier: MIT
 
-# Generated from manual/MANUAL.md. Edit that and rebuild; edits here are lost.
+# Generated from the manual's parts by tools/build_manual.py. Edit those and rebuild;
+# edits here are lost.
 
 MANUAL = """\\
 '''
@@ -235,12 +277,127 @@ def table_of_contents(contents):
     return "\n".join(items)
 
 
-def build(board_dir, tools_dir):
-    source = os.path.join(board_dir, "manual", "MANUAL.md")
-    with open(source, encoding="utf-8") as f:
-        lines = f.read().split("\n")
+def board_parts(part_folders, board):
+    """The board's numbered parts in number order, from the shared parts and its own, a
+    feature folder's only where it has it. A part of the board's own adds to the shared ones."""
+    folders = []
+    for folder in part_folders:
+        folders.append(folder)
+        for name in sorted(os.listdir(folder)):
+            if not os.path.isdir(os.path.join(folder, name)):
+                continue
+            if name not in FEATURES:
+                sys.exit("{} is not a feature folder the build knows".format(
+                    os.path.join(folder, name)))
+            if FEATURES[name](board):
+                folders.append(os.path.join(folder, name))
+    parts = [part for where in folders for part in glob.glob(os.path.join(where, "[0-9][0-9]_*.md"))]
+    names = [os.path.basename(part) for part in parts]
+    twice = sorted({name for name in names if names.count(name) > 1})
+    if twice:
+        sys.exit("{} is both a shared part and the board's own".format(", ".join(twice)))
+    return sorted(parts, key=os.path.basename)
 
-    found = blocks(lines)
+
+def board_blocks(board_dir):
+    """The board's blocks by name, from its board.md, or none where it has no board.md."""
+    path = os.path.join(board_dir, BOARD_BLOCKS)
+    if not os.path.exists(path):
+        return {}
+    with open(path, encoding="utf-8") as f:
+        pieces = BLOCK.split(f.read())
+    if pieces[0].strip():
+        sys.exit("{} has text before its first block".format(path))
+    names = pieces[1::2]
+    twice = sorted({name for name in names if names.count(name) > 1})
+    if twice:
+        sys.exit("{} has more than one {} block".format(path, ", ".join(twice)))
+    return {name: body.strip("\n") for name, body in zip(names, pieces[2::2])}
+
+
+def expand(path, text, board, own_blocks, pulled):
+    """A part's text with its conditions settled and its board lines filled from the board's
+    blocks, adding the name of each block it takes to pulled.
+
+    A condition the board lacks goes with the blank line after it, so the blank lines either
+    side of it do not double up.
+    """
+    out = []
+    feature = None
+    keeping = True
+    drop_blank = False
+    for line in text.split("\n"):
+        if drop_blank:
+            drop_blank = False
+            if not line.strip():
+                continue
+        opened = CONDITION.fullmatch(line)
+        pull = PULL.fullmatch(line)
+        if opened:
+            if feature:
+                sys.exit("{} opens a condition inside another".format(path))
+            feature = opened.group(1)
+            if feature not in FEATURES:
+                sys.exit("{} tests {}, which is not a feature the build knows".format(
+                    path, feature))
+            keeping = FEATURES[feature](board)
+        elif line == CONDITION_END:
+            if not feature:
+                sys.exit("{} ends a condition it never opened".format(path))
+            drop_blank = not keeping
+            feature = None
+            keeping = True
+        elif not keeping:
+            continue
+        elif pull:
+            if pull.group(1) not in own_blocks:
+                sys.exit("{} takes the board's {} block, which its {} does not have".format(
+                    path, pull.group(1), BOARD_BLOCKS))
+            pulled.add(pull.group(1))
+            out.append(own_blocks[pull.group(1)])
+        else:
+            out.append(line)
+    if feature:
+        sys.exit("{} leaves its {} condition open".format(path, feature))
+    return "\n".join(out)
+
+
+def assemble(board_dir, repo_dir):
+    """The board's manual as markdown, its parts one blank line apart and its terms filled in."""
+    with open(os.path.join(board_dir, DESCRIPTION), encoding="utf-8") as f:
+        board = json.load(f)
+    with open(os.path.join(board_dir, MANUAL_SETTINGS), encoding="utf-8") as f:
+        manual = json.load(f)
+
+    texts = []
+    folders = [os.path.join(repo_dir, SHARED_PARTS), os.path.join(board_dir, "manual")]
+    has = dict(board, numbered_outputs=manual["numbered_outputs"])
+    own_blocks = board_blocks(board_dir)
+    pulled = set()
+    for part in board_parts(folders, has):
+        with open(part, encoding="utf-8") as f:
+            texts.append(expand(part, f.read(), has, own_blocks, pulled).strip("\n"))
+    text = "\n\n".join(texts) + "\n"
+
+    unused = sorted(set(own_blocks) - pulled)
+    if unused:
+        sys.exit("{} has {}, which no part the board takes uses".format(
+            BOARD_BLOCKS, ", ".join(unused)))
+
+    for term, words in manual["terms"].items():
+        placeholder = "__{}__".format(term)
+        if placeholder not in text:
+            sys.exit("{} gives {}, which no part the board takes uses".format(
+                MANUAL_SETTINGS, term))
+        text = text.replace(placeholder, words)
+    left = sorted(set(re.findall(r"__[A-Z_]+__", text)))
+    if left:
+        sys.exit("the manual has {} unfilled".format(", ".join(left)))
+    return text
+
+
+def build(markdown, tools_dir):
+    found = blocks(markdown.split("\n"))
     body, contents = render(found)
 
     title = next(text for kind, (level, text) in
@@ -271,11 +428,17 @@ def build(board_dir, tools_dir):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("board_dir", help="a board directory holding manual/MANUAL.md")
+    parser.add_argument("board_dir", help="a board directory holding manual/manual.json")
     args = parser.parse_args()
 
     tools_dir = os.path.dirname(os.path.abspath(__file__))
-    page = build(args.board_dir, tools_dir)
+    markdown = assemble(args.board_dir, os.path.dirname(tools_dir))
+    page = build(markdown, tools_dir)
+
+    source = os.path.join(args.board_dir, "manual", "MANUAL.md")
+    with open(source, "w", encoding="utf-8", newline="\n") as f:
+        f.write(MARKDOWN_HEADER)
+        f.write(markdown)
 
     preview = os.path.join(args.board_dir, "manual", "MANUAL.html")
     with open(preview, "w", encoding="utf-8", newline="\n") as f:
@@ -287,7 +450,7 @@ def main():
         f.write(page)
         f.write('"""\n')
 
-    print("{} bytes of page: {} and {}".format(len(page), preview, module))
+    print("{} bytes of page: {}, {} and {}".format(len(page), source, preview, module))
 
 
 if __name__ == "__main__":

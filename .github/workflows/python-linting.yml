@@ -35,10 +35,10 @@ jobs:
     - name: Check Each Board's Manual Is Rebuilt
       shell: bash
       run: |
-        for manual in boards/*/manual/MANUAL.md; do
-          board="${manual%/manual/MANUAL.md}"
+        for manual in boards/*/manual/manual.json; do
+          board="${manual%/manual/manual.json}"
           python3 tools/build_manual.py "$board"
-          git diff --exit-code -- "$board/fx_libs/fx_manual.py"
+          git diff --exit-code -- "$board/manual/MANUAL.md" "$board/fx_libs/fx_manual.py"
         done
 
     - name: Check Each Board's Editor Is Rebuilt

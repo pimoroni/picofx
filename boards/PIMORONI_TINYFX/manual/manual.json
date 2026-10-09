@@ -1,0 +1,8 @@
+{
+ "numbered_outputs": true,
+ "terms": {
+  "BOARD_TITLE": "Tiny FX",
+  "BOARD_HAS": "Six mono outputs, one RGB output, a speaker",
+  "COLOUR_SETTING_FOR": "the RGB output when its effect brings no colour"
+ }
+}
