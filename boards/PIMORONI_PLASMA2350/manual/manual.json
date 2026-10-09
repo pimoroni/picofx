@@ -1,0 +1,27 @@
+{
+ "numbered_outputs": false,
+ "terms": {
+  "BOARD_TITLE": "Plasma 2350",
+  "BOARD_HAS": "Two LED terminals, a screen connector",
+  "ENTRY_TARGETS": "the strips, the board's LED and the screen",
+  "OUTPUT": "LED",
+  "OUTPUTS": "LEDs",
+  "OUTPUTS_HEADING": "The board's LED",
+  "ONE_OUTPUT": "rgb",
+  "THREE_OUTPUTS": "stripDat1-3",
+  "FIVE_OUTPUTS": "stripDat1-5",
+  "ALL_OUTPUTS": "stripDat",
+  "OUTPUT_COUNT": "60",
+  "COLOUR_SETTING_FOR": "effects that bring no colour",
+  "MONO_EFFECTS_FOR": "any LED",
+  "COLOUR_EFFECTS_HEADING": "For any LED, bringing their own colour",
+  "FLAME_OUTPUTS": "stripDat colour=ff5a00",
+  "COLOUR_OUTPUT": "rgb",
+  "STRIP": "stripDat",
+  "COLOUR_TAKER": "the board's LED",
+  "SCREEN_NAMING": "A screen on the SP/CE connector is named `screen`",
+  "SCREEN": "screen",
+  "COPIED_FILES": "pictures",
+  "SCREEN_SETTINGS_UNSEEN": "`screen` describes the screen this file's own entries play on, so a program never sees it"
+ }
+}
