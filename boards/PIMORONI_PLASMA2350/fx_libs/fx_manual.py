@@ -2,7 +2,8 @@
 #
 # SPDX-License-Identifier: MIT
 
-# Generated from manual/MANUAL.md. Edit that and rebuild; edits here are lost.
+# Generated from the manual's parts by tools/build_manual.py. Edit those and rebuild;
+# edits here are lost.
 
 MANUAL = """\
 <!doctype html>
@@ -258,13 +259,39 @@ footer p { margin: 0; }
 <div class="sidebar">
 <nav class="contents"><h2>Contents</h2><ul>
 <li><a href="#getting-started">Getting started</a></li>
+<li><a href="#the-picker">The picker</a></li>
+<li><a href="#the-editor">The editor</a></li>
 <li><a href="#writing-an-entry">Writing an entry</a></li>
+<li><details><summary><a href="#the-board-s-led">The board's LED</a></summary><ul>
+<li><a href="#setting-an-led">Setting an LED</a></li>
+<li><a href="#fade-and-ease">Fade and ease</a></li>
+</ul></details></li>
+<li><details><summary><a href="#effects">Effects</a></summary><ul>
+<li><a href="#for-any-led">For any LED</a></li>
+<li><a href="#for-any-led-bringing-their-own-colour">For any LED, bringing their own colour</a></li>
+<li><a href="#which-ones-travel">Which ones travel</a></li>
+<li><a href="#traffic-lights-and-crossings">Traffic lights and crossings</a></li>
+<li><a href="#sweep">Sweep</a></li>
+<li><a href="#blinking-through-colours">Blinking through colours</a></li>
+<li><a href="#what-the-settings-mean">What the settings mean</a></li>
+</ul></details></li>
 <li><a href="#led-strips">LED strips</a></li>
-<li><a href="#the-board-s-led">The board's LED</a></li>
-<li><a href="#the-screen">The screen</a></li>
+<li><details><summary><a href="#screens">Screens</a></summary><ul>
+<li><a href="#naming-screens">Naming screens</a></li>
+<li><a href="#setting-a-screen">Setting a screen</a></li>
+<li><a href="#pictures">Pictures</a></li>
+<li><a href="#drawing-from-code">Drawing from code</a></li>
+</ul></details></li>
 <li><a href="#scenes">Scenes</a></li>
-<li><a href="#the-board">The board</a></li>
+<li><details><summary><a href="#the-board">The board</a></summary><ul>
+<li><a href="#running-your-own-program">Running your own program</a></li>
+<li><a href="#your-program-in-the-picker">Your program in the picker</a></li>
+</ul></details></li>
 <li><a href="#when-something-is-wrong">When something is wrong</a></li>
+<li><details><summary><a href="#more-from-pimoroni">More from Pimoroni</a></summary><ul>
+<li><a href="#boards-and-accessories">Boards and accessories</a></li>
+<li><a href="#going-further">Going further</a></li>
+</ul></details></li>
 </ul></nav>
 </div>
 
@@ -275,47 +302,275 @@ footer p { margin: 0; }
 <p>Edit <code>effects.txt</code> to change what the lights do, then eject this drive and the board applies the change straight away.</p>
 <p>In a hurry? Save the file and press <strong>Boot</strong> once. The drive disappears and comes straight back with the new effects running, so you can keep editing. Ejecting is the surer way, since a computer does not always write the file out until then. Press <strong>Boot</strong> twice to hide the drive, and twice again to bring it back.</p>
 <p>Deleting <code>effects.txt</code> restores the default; emptying it leaves the board dark.</p>
-<p><strong>Would you rather not write the file at all? <code>PICKER.html</code> on this drive writes it for you.</strong> Open it in Chrome or Edge, point it at this drive, and choose what each strip plays. <code>EDITOR.html</code> beside it is a place to write the file with the names offered as you type.</p>
+<p>While the computer is copying to this drive the effects stand aside, the board's LED glowing a dim white with a brighter blink, and come back a moment after it finishes.</p>
+<p><strong>Would you rather not write the file at all? <code>PICKER.html</code> on this drive writes it for you. See <a href="#the-picker">the picker</a>. <code>EDITOR.html</code> beside it is a place to write it with the names offered as you type. See <a href="#the-editor">the editor</a>.</strong></p>
+<h2 id="the-picker">The picker</h2>
+<p><code>PICKER.html</code> on this drive writes <code>effects.txt</code> for you. Open it in Chrome or Edge, press <strong>Open FX drive</strong> and choose this drive, and the page reads the file the board is playing, so you carry on from where it is. The file it will write is shown at the foot of the page, so nothing about it is hidden.</p>
+<p>Two tabs sit under the page's header. <strong>The effects</strong> sets the strips, the board's LED and the screen: pick a stretch of LEDs, tap a look from the cards to play on it, and slide its settings until it suits. A strip can be cut into stretches that each play a look of their own. <strong>Edit board</strong> sets up what is built: which strips are fitted, how many LEDs each has, and which size the screen is. The pictures and drawings on this drive are offered on the Screens tab, where files can be copied onto the drive and deleted from it. Press the plus to split what you have into scenes that take turns, each with its own looks and pictures; what <strong>Always on</strong> holds plays under every scene.</p>
+<p><strong>A program</strong> runs one of your own programs on this drive in place of the effects. Pick one and save, and the board restarts to run it. <a href="#your-program-in-the-picker">Your program in the picker</a> says how a program of yours describes itself there.</p>
+<p><strong>Save to board</strong> writes the file, and the board picks it up a few seconds later. Its arrow opens the save's settings: untick "Play saves without an eject" and the board waits instead until this drive is ejected, or <strong>Boot</strong> is pressed once, and "Keep the drive hidden at start" is <code>drive=manual</code>. <strong>Check board</strong> reads <code>errors.txt</code> back and shows what the board made of each line. On a Mac each save shows "Disk Not Ejected Properly" once and a Finder window on this drive closes; the drive comes back on its own a few seconds later and the page carries on.</p>
+<p>The page reaches the drive only in Chrome, Edge or another browser built on Chromium. Safari and Firefox cannot write to a drive from a page, so there it says so, and <code>effects.txt</code> can still be changed in any text editor.</p>
+<p>What the picker writes is an ordinary <code>effects.txt</code>: anything it makes can be edited by hand afterwards. A line it cannot write itself is kept as it is, and it asks before replacing a file it has not read.</p>
+<h2 id="the-editor">The editor</h2>
+<p><code>EDITOR.html</code> on this drive is <code>effects.txt</code> in a window that knows the format. Every word is coloured by the part it plays, and as you type it offers what fits where you are: the strips, the board's LED and the screen at the start of a line, the effects after the colon, then that effect's own settings and the values each one takes. A line underneath says what shape a value wants. Tab or Enter takes what is offered, Escape leaves it, and Ctrl+Space asks for it again.</p>
+<p>A name it does not know is underlined, an effect that is not one or a setting the effect does not take. Values are left alone, since a percentage, a colour and a list all live there and the board is the one that reads them. "Put it on the board" writes the file and "Did it work?" reads <code>errors.txt</code> back, as the picker does.</p>
+<p>It offers only what this board provides, so anything the firmware gains appears without the page changing. It saves the way the picker does, in one click from a Chromium browser and by download from Safari or Firefox, and it needs <code>catalogue.js</code> beside it, which is why both live on this drive together.</p>
 <h2 id="writing-an-entry">Writing an entry</h2>
-<p>Each line names what to light, a colon, and the effect to play on it:</p>
-<pre class="entry"><code><span class="s-target">stripDat</span><span class="s-colon">:</span> <span class="s-effect">rainbow_wave</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.3</span> <span class="s-name">length</span><span class="s-punc">=</span><span class="s-value">30</span></code></pre>
-<p>Settings follow the effect as <code>name=value</code>. A line starting <code>#</code> is a note and is ignored. The board reads the whole file each time the drive goes away, so a mistake on one line is reported in <code>errors.txt</code> and the rest still plays.</p>
-<h2 id="led-strips">LED strips</h2>
-<p>The two screw terminals are marked <strong>DAT</strong> and <strong>CLK</strong>. A WS2812 strip needs only a data line, so one can go on each terminal: <code>stripDat</code> and <code>stripClk</code>. An APA102 strip needs both, data and clock, so it is the one strip on the board, <code>stripApa</code>.</p>
-<p>A strip's length is declared on the board line:</p>
-<pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">stripDat</span><span class="s-punc">=</span><span class="s-value">60</span> <span class="s-name">stripClk</span><span class="s-punc">=</span><span class="s-value">30</span>
-<span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">stripApa</span><span class="s-punc">=</span><span class="s-value">144</span></code></pre>
-<p>A strip's LEDs are named like outputs, so <code>stripDat1-10</code> is the first ten and the bare name is the whole run:</p>
-<pre class="entry"><code><span class="s-target">stripDat1-30</span><span class="s-colon">:</span> <span class="s-effect">pulse_wave</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.5</span>
-<span class="s-target">stripDat31-60</span> <span class="s-name">colour</span><span class="s-punc">=</span><span class="s-value">ff5a00</span><span class="s-colon">:</span> <span class="s-effect">flicker_each</span></code></pre>
-<p>Most WS2812 strips take their colours as green, red, then blue, and the board sends them that way. If yours shows another colour where you asked for red, it takes them in another order: write the letters <code>r</code>, <code>g</code> and <code>b</code> after its length in the order it wants them, such as <code>stripDat=60|rgb</code>.</p>
-<p>An APA102 strip has a brightness of its own for the whole strip, at 50% unless the board line says otherwise, such as <code>stripApa=144|75%</code>. The effects' own levels apply on top of it.</p>
-<p><code>stripApa</code> and the WS2812 strips cannot play at once, since they use the same terminals. A file naming both plays the WS2812 strips and says so in <code>errors.txt</code>.</p>
+<pre class="shape"><code><span class="s-target">&lt;LEDs&gt;</span> <span class="s-name">&lt;their settings&gt;</span><span class="s-colon">:</span> <span class="s-effect">&lt;effect&gt;</span> <span class="s-name">&lt;its settings&gt;</span></code></pre>
+<pre class="entry"><code><span class="s-target">stripDat</span><span class="s-colon">:</span> <span class="s-effect">rainbow_wave</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.3</span> <span class="s-name">length</span><span class="s-punc">=</span><span class="s-value">30</span>
+<span class="s-target">rgb</span> <span class="s-name">level</span><span class="s-punc">=</span><span class="s-value">50%</span><span class="s-colon">:</span> <span class="s-effect">pulse</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.6</span></code></pre>
+<p>There is one colon in an entry. Which LEDs, and how bright or what colour they are, go before it. The effect and its own settings go after.</p>
+<p>Settings you leave out take their usual value. A <code>#</code> starts a comment. An entry can run on over several lines so long as the colon is on the first; indenting changes nothing.</p>
+<p>A screen is named the same way and plays pictures instead of lighting up. See <a href="#screens">Screens</a>.</p>
 <h2 id="the-board-s-led">The board's LED</h2>
-<p>The RGB LED on the board is <code>rgb</code>, and takes any colour effect:</p>
+<p>The RGB LED on the board is <code>rgb</code>, and takes any effect. The LEDs of a strip are named under <a href="#led-strips">LED strips</a>.</p>
 <pre class="entry"><code><span class="s-target">rgb</span><span class="s-colon">:</span> <span class="s-effect">rainbow</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.3</span></code></pre>
-<p>It also reports: it flashes when a reload fails, and holds a dim white while a computer is copying to the drive.</p>
-<h2 id="the-screen">The screen</h2>
-<p>A screen on the SP/CE connector is <code>screen</code>, and needs its size on the board line, since a panel cannot say what size it is:</p>
-<pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">screen</span><span class="s-punc">=</span><span class="s-value">2.8</span>
-<span class="s-target">screen</span><span class="s-colon">:</span> <span class="s-effect">image</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">"picture.png"</span></code></pre>
+<h3 id="setting-an-led">Setting an LED</h3>
+<p>Before the colon, and separate from the effect:</p>
+<div class="scroll"><table>
+<thead><tr><th>Setting</th><th>What it does</th><th>If omitted</th></tr></thead>
+<tbody>
+<tr><td><code>level</code></td><td>how bright, 0 to 1, such as 0.5 or 50%</td><td>1</td></tr>
+<tr><td><code>colour</code></td><td>a name or six-digit hex, for effects that bring no colour</td><td>white</td></tr>
+<tr><td><code>fade</code></td><td>seconds to follow the effect, at a steady rate</td><td>follows at once</td></tr>
+<tr><td><code>ease</code></td><td>seconds to follow it, settling in as a bulb does</td><td>follows at once</td></tr>
+</tbody></table></div>
+<pre class="entry"><code><span class="s-target">stripDat</span> <span class="s-name">level</span><span class="s-punc">=</span><span class="s-value">50%</span><span class="s-colon">:</span> <span class="s-effect">pulse</span>
+<span class="s-target">stripDat1-30</span> <span class="s-name">colour</span><span class="s-punc">=</span><span class="s-value">warm</span><span class="s-colon">:</span> <span class="s-effect">flicker</span>
+<span class="s-target">rgb</span> <span class="s-name">colour</span><span class="s-punc">=</span><span class="s-value">ff8040</span><span class="s-colon">:</span> <span class="s-effect">static</span>
+<span class="s-target">stripDat</span> <span class="s-name">ease</span><span class="s-punc">=</span><span class="s-value">0.4</span><span class="s-colon">:</span> <span class="s-effect">blink</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.5</span></code></pre>
+<p>Colours by name: red, orange, yellow, green, cyan, blue, purple, magenta, pink, warm, white, cool, black. Or the hex a colour picker gives you, with its <code>#</code> left off, such as ff8040 for an orange paler than the named one. A <code>#</code> always starts a comment, so one left on a colour hides the rest of the line.</p>
+<h3 id="fade-and-ease">Fade and ease</h3>
+<p><code>fade</code> and <code>ease</code> take the seconds a change takes to get there. <code>fade</code> crosses evenly, which is what a stage light does; <code>ease</code> goes quickly at first and slows as it arrives, which is how a bulb warms and is the one that looks natural on a light switching on and off.</p>
+<p>An LED follows one way or the other, so a line takes one of them and not both. Two numbers divided by <code>|</code> give the rise and the fall their own lengths, a light that comes on quickly and fades out slowly being the usual reason:</p>
+<pre class="entry"><code><span class="s-target">stripDat</span> <span class="s-name">fade</span><span class="s-punc">=</span><span class="s-value">0.8</span><span class="s-colon">:</span> <span class="s-effect">blink</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.5</span>
+<span class="s-target">stripDat1-3</span> <span class="s-name">ease</span><span class="s-punc">=</span><span class="s-value">0.05|1.2</span><span class="s-colon">:</span> <span class="s-effect">blink</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">1</span></code></pre>
+<p>Softening belongs to the LED, not to the effect, so it works on any effect.</p>
+<h2 id="effects">Effects</h2>
+<p>Every setting can be left out, and the board fills in the value shown against it below. The few with none shown have nothing to fall back on, and each is covered where its effect is.</p>
+<h3 id="for-any-led">For any LED</h3>
+<div class="scroll"><table>
+<thead><tr><th>Effect</th><th>Settings</th></tr></thead>
+<tbody>
+<tr><td><code>none</code></td><td></td></tr>
+<tr><td><code>static</code></td><td><code>brightness=1</code></td></tr>
+<tr><td><code>blink</code></td><td><code>speed=1</code> <code>phase=0</code> <code>duty=0.5</code></td></tr>
+<tr><td><code>blink_wave</code></td><td><code>speed=1</code> <code>length=1</code> <code>phase=0</code> <code>duty=0.5</code></td></tr>
+<tr><td><code>flash</code></td><td><code>speed=1</code> <code>flashes=2</code> <code>window=0.5</code> <code>phase=0</code> <code>duty=0.5</code></td></tr>
+<tr><td><code>flash_sequence</code></td><td><code>speed=1</code> <code>length=1</code> <code>flashes=1</code> <code>window=1</code> <code>phase=0</code> <code>duty=0.5</code></td></tr>
+<tr><td><code>flicker</code></td><td><code>brightness=1</code> <code>dimness=0.5</code> <code>bright_min=0.05</code> <code>bright_max=0.1</code> <code>dim_min=0.02</code> <code>dim_max=0.04</code></td></tr>
+<tr><td><code>flicker_each</code></td><td>as <code>flicker</code></td></tr>
+<tr><td><code>pulse</code></td><td><code>speed=1</code> <code>phase=0</code></td></tr>
+<tr><td><code>pulse_wave</code></td><td><code>speed=1</code> <code>length=1</code> <code>phase=0</code></td></tr>
+<tr><td><code>sweep</code></td><td><code>speed=1</code> <code>length=1</code> <code>extent=1</code> <code>hold=0</code></td></tr>
+<tr><td><code>random</code></td><td><code>interval=0.05</code> <code>brightness_min=0</code> <code>brightness_max=1</code></td></tr>
+<tr><td><code>random_each</code></td><td>as <code>random</code></td></tr>
+<tr><td><code>binary_counter</code></td><td><code>interval=0.1</code> <code>count=0</code> <code>step=1</code></td></tr>
+<tr><td><code>traffic_light</code></td><td><code>red_interval=10</code> <code>red_amber_interval=5</code> <code>green_interval=10</code> <code>amber_interval=5</code></td></tr>
+<tr><td><code>pelican_crossing</code></td><td><code>red_interval=8</code> <code>flashing_interval=6</code> <code>green_interval=20</code> <code>amber_interval=3</code></td></tr>
+</tbody></table></div>
+<h3 id="for-any-led-bringing-their-own-colour">For any LED, bringing their own colour</h3>
+<div class="scroll"><table>
+<thead><tr><th>Effect</th><th>Settings</th></tr></thead>
+<tbody>
+<tr><td><code>rgb</code></td><td><code>red=255</code> <code>green=255</code> <code>blue=255</code></td></tr>
+<tr><td><code>hsv</code></td><td><code>hue=0</code> <code>sat=1</code> <code>val=1</code></td></tr>
+<tr><td><code>rainbow</code></td><td><code>speed=1</code> <code>sat=1</code> <code>val=1</code></td></tr>
+<tr><td><code>rainbow_wave</code></td><td><code>speed=1</code> <code>length=1</code> <code>sat=1</code> <code>val=1</code></td></tr>
+<tr><td><code>hue_step</code></td><td><code>interval=1</code> <code>hue=0</code> <code>sat=1</code> <code>val=1</code> <code>steps=6</code></td></tr>
+<tr><td><code>rgb_blink</code></td><td><code>colour</code> <code>speed=1</code> <code>phase=0</code> <code>duty=0.5</code></td></tr>
+</tbody></table></div>
+<h3 id="which-ones-travel">Which ones travel</h3>
+<p>The ones ending <code>_wave</code>, <code>_sequence</code> and <code>_counter</code>, and <code>sweep</code>, travel across the LEDs you name; the rest do the same thing on every one.</p>
+<p>The ones ending <code>_each</code> give every LED its own: <code>flicker_each</code> dips each at its own moments, as flames do, and <code>random_each</code> gives each its own brightness. <code>flicker</code> and <code>random</code> do the same to all of them at once, as one light would:</p>
+<pre class="entry"><code><span class="s-target">stripDat</span> <span class="s-name">colour</span><span class="s-punc">=</span><span class="s-value">ff5a00</span><span class="s-colon">:</span> <span class="s-effect">flicker_each</span> <span class="s-name">dimness</span><span class="s-punc">=</span><span class="s-value">0.6</span></code></pre>
+<p>An effect that drives several LEDs takes them in the order given in its own section below, so naming fewer than it drives lights the first of them and leaves the rest out. Naming more than it drives is a mistake, and <code>errors.txt</code> says so.</p>
+<h3 id="traffic-lights-and-crossings">Traffic lights and crossings</h3>
+<p><code>traffic_light</code> wants three LEDs, and lights them red, amber and green in that order. It switches instantly, so add <code>ease</code> for the lamps of a real signal:</p>
+<pre class="entry"><code><span class="s-target">stripDat1-3</span> <span class="s-name">ease</span><span class="s-punc">=</span><span class="s-value">0.3</span><span class="s-colon">:</span> <span class="s-effect">traffic_light</span></code></pre>
+<p><code>pelican_crossing</code> wants five LEDs: the same three, then the two figures a pedestrian reads, stop and walk. In place of red and amber it flashes the amber and the walking figure together, as a pelican does while a crossing ends. It comes round on its own clock, there being no button to press:</p>
+<pre class="entry"><code><span class="s-target">stripDat1-5</span> <span class="s-name">ease</span><span class="s-punc">=</span><span class="s-value">0.3</span><span class="s-colon">:</span> <span class="s-effect">pelican_crossing</span> <span class="s-name">green_interval</span><span class="s-punc">=</span><span class="s-value">20</span> <span class="s-name">red_interval</span><span class="s-punc">=</span><span class="s-value">8</span></code></pre>
+<p>Three LEDs on <code>pelican_crossing</code> is its traffic lights on their own:</p>
+<pre class="entry"><code><span class="s-target">stripDat1-3</span><span class="s-colon">:</span> <span class="s-effect">pelican_crossing</span></code></pre>
+<h3 id="sweep">Sweep</h3>
+<p><code>sweep</code> is a light that crosses the LEDs and turns back at each end, the back and forth a scanner does. Its <code>extent</code> is how far it reaches from itself, in LEDs, and its <code>speed</code> counts one crossing as the travelling effects count one pass. Its <code>hold</code> waits at each end, in seconds, giving a trail time to clear before the light comes back over it:</p>
+<pre class="entry"><code><span class="s-target">stripDat</span> <span class="s-name">ease</span><span class="s-punc">=</span><span class="s-value">0.4</span><span class="s-colon">:</span> <span class="s-effect">sweep</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">1</span> <span class="s-name">length</span><span class="s-punc">=</span><span class="s-value">60</span> <span class="s-name">extent</span><span class="s-punc">=</span><span class="s-value">1</span> <span class="s-name">hold</span><span class="s-punc">=</span><span class="s-value">1</span></code></pre>
+<p>Give <code>extent</code> a whole number of LEDs, such as 1 or 2. In between it dims as the light passes between two LEDs and brightens as it lands on one, which reads as stepping. 1 is the tightest that travels smoothly.</p>
+<h3 id="blinking-through-colours">Blinking through colours</h3>
+<p><code>rgb_blink</code> takes one colour, or several to blink through in turn, divided by <code>|</code> since a comma would mean one colour for each LED. It has no colour of its own, so give it at least one:</p>
+<pre class="entry"><code><span class="s-target">rgb</span><span class="s-colon">:</span> <span class="s-effect">rgb_blink</span> <span class="s-name">colour</span><span class="s-punc">=</span><span class="s-value">red|warm|ff8040</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.5</span></code></pre>
+<h3 id="what-the-settings-mean">What the settings mean</h3>
+<p><code>speed</code> is cycles a second: 1 goes round once a second, 0.5 once every two, 2 twice a second. A negative speed runs the cycle backwards.</p>
+<p>The settings measured in seconds are <code>interval</code>, <code>hold</code>, flicker's <code>bright_min</code>, <code>bright_max</code>, <code>dim_min</code> and <code>dim_max</code>, and the four intervals <code>traffic_light</code> and <code>pelican_crossing</code> each take. <code>length</code>, <code>flashes</code>, <code>steps</code>, <code>count</code> and <code>step</code> are plain counts, and a negative <code>step</code> counts down.</p>
+<p>The rest run from 0 to 1, written 0.5 or 50% as you prefer. <code>window</code> is one of them, being the share of a cycle the flashes happen in. <code>hue</code> takes degrees as well, written 180deg, which is what a colour picker gives you.</p>
+<p><strong>If you write Python</strong>, an effect of your own can join this list and be written here like any other. The library reference on <a href="https://github.com/pimoroni/picofx/blob/main/picofx/README.md">GitHub</a> says how, under Effects System.</p>
+<h2 id="led-strips">LED strips</h2>
+<p>The two screw terminals are marked <strong>DAT</strong> and <strong>CLK</strong>. A WS2812 strip needs only a data line, so one can go on each terminal: <code>stripDat</code> and <code>stripClk</code>. An APA102 strip needs both, data and clock, so it is the one strip on the board, <code>stripApa</code>. A strip's LEDs take the same effects, colours and levels the board's LED does. Tell the board how long a strip is first, since that is the one thing it cannot work out for itself:</p>
+<pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">stripDat</span><span class="s-punc">=</span><span class="s-value">60</span>
+<span class="s-target">stripDat</span><span class="s-colon">:</span> <span class="s-effect">rainbow_wave</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.3</span></code></pre>
+<div class="scroll"><table>
+<thead><tr><th>Written</th><th>Means</th></tr></thead>
+<tbody>
+<tr><td><code>stripDat</code></td><td>every LED on the strip</td></tr>
+<tr><td><code>stripDat5</code></td><td>one of them</td></tr>
+<tr><td><code>stripDat1-10</code></td><td>the first ten</td></tr>
+<tr><td><code>stripDat60-1</code></td><td>all sixty, the other way round, for a strip mounted backwards</td></tr>
+</tbody></table></div>
+<p><code>stripClk</code> and <code>stripApa</code> are named the same way. An APA102 strip has a brightness of its own for the whole strip, at 50% unless the board line says otherwise, such as <code>stripApa=144|75%</code>. The effects' own levels apply on top of it.</p>
+<p><code>stripApa</code> and the WS2812 strips cannot play at once, since they use the same terminals. A file naming both plays the WS2812 strips and says so in <code>errors.txt</code>.</p>
+<p>Each LED shows a colour of its own, so <code>stripDat5.r</code> is not a thing to write; set <code>colour</code> on the LEDs instead, as the board's LED takes it.</p>
+<p>Most strips take their colours as green, red, then blue, and the board sends them that way. If yours shows another colour where you asked for red, it takes them in another order: write the letters <code>r</code>, <code>g</code> and <code>b</code> after its length in the order it wants them, such as <code>stripDat=60|rgb</code>.</p>
+<h2 id="screens">Screens</h2>
+<h3 id="naming-screens">Naming screens</h3>
+<p>A screen on the SP/CE connector is named <code>screen</code>. A screen cannot say what size it is, so tell the board:</p>
+<pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">screen</span><span class="s-punc">=</span><span class="s-value">1.54</span></code></pre>
+<p>That is a board entry, which sets the board rather than the lights and is one of a handful covered under <a href="#the-board">The board</a>.</p>
+<p>The sizes are 2.8 and 1.54, and a screen plays nothing until its size is given. Changing it needs the board turned off and on again before the new size takes.</p>
+<h3 id="setting-a-screen">Setting a screen</h3>
+<p>Before the colon, and separate from what it plays:</p>
+<div class="scroll"><table>
+<thead><tr><th>Setting</th><th>What it does</th><th>If omitted</th></tr></thead>
+<tbody>
+<tr><td><code>rotation</code></td><td>0, 90, 180 or 270, for how the screen is mounted</td><td>0</td></tr>
+<tr><td><code>backlight</code></td><td>how brightly it is lit, 0 to 1, such as 0.5 or 50%</td><td>1</td></tr>
+<tr><td><code>mirror</code></td><td>true to flip the picture left to right</td><td>no</td></tr>
+<tr><td><code>offset</code></td><td>where to put the picture, as <code>x|y</code></td><td>centred</td></tr>
+<tr><td><code>background</code></td><td>the colour around it, or <code>bg</code> for short</td><td>black</td></tr>
+<tr><td><code>pixel_double</code></td><td>true to draw each pixel twice as wide and tall, so a half size picture fills the screen</td><td>no</td></tr>
+<tr><td><code>tile</code></td><td><code>repeat</code> or <code>mirror</code> to fill the screen with copies of the picture, as <code>across|down</code></td><td>off</td></tr>
+</tbody></table></div>
+<pre class="entry"><code><span class="s-target">screen</span> <span class="s-name">rotation</span><span class="s-punc">=</span><span class="s-value">90</span><span class="s-colon">:</span> <span class="s-effect">gif</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">"clock.gif"</span>
+<span class="s-target">screen</span> <span class="s-name">offset</span><span class="s-punc">=</span><span class="s-value">*|20</span> <span class="s-name">bg</span><span class="s-punc">=</span><span class="s-value">black</span><span class="s-colon">:</span> <span class="s-effect">image</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">logo.png</span>
+<span class="s-target">screen</span> <span class="s-name">tile</span><span class="s-punc">=</span><span class="s-value">repeat</span><span class="s-colon">:</span> <span class="s-effect">image</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">bricks.png</span></code></pre>
+<p>A picture is centred unless <code>offset</code> puts it somewhere, and a <code>*</code> in place of either number centres that side.</p>
+<p><code>tile</code> fills the screen with a small picture instead of leaving a background around it. <code>repeat</code> lays copies side by side, so a picture drawn to join up at its edges makes a pattern with no seam in it, and <code>mirror</code> turns every other copy round, which joins any picture up whether it was drawn to or not. One value covers both directions and two set them apart, <code>tile=mirror|off</code> spreading a picture across the screen and leaving its height alone.</p>
+<h3 id="pictures">Pictures</h3>
+<div class="scroll"><table>
+<thead><tr><th>Plays</th><th>Settings</th></tr></thead>
+<tbody>
+<tr><td><code>gif</code></td><td><code>file</code> <code>fps</code> <code>interval</code> <code>loop=yes</code> <code>ping_pong=no</code> <code>first_as_last=no</code> <code>hold=0</code></td></tr>
+<tr><td><code>image</code></td><td><code>file</code></td></tr>
+<tr><td><code>sequence</code></td><td><code>folder</code> <code>fps</code> <code>interval</code> <code>loop=yes</code> <code>ping_pong=no</code> <code>first_as_last=no</code> <code>hold=0</code></td></tr>
+</tbody></table></div>
+<pre class="entry"><code><span class="s-target">screen</span><span class="s-colon">:</span> <span class="s-effect">gif</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">"clock.gif"</span>
+<span class="s-target">screen</span><span class="s-colon">:</span> <span class="s-effect">image</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">logo.png</span>
+<span class="s-target">screen</span><span class="s-colon">:</span> <span class="s-effect">sequence</span> <span class="s-name">folder</span><span class="s-punc">=</span><span class="s-value">photos</span> <span class="s-name">interval</span><span class="s-punc">=</span><span class="s-value">30</span></code></pre>
+<p><code>gif</code> plays an animated GIF at the delays it was saved with, <code>image</code> holds one picture, and <code>sequence</code> plays a folder of them in the order their names number them. Pictures can be PNG, JPEG or GIF. There is nothing to play without <code>file</code> or <code>folder</code>, so those two always have to be given.</p>
+<p><code>fps</code> is frames a second and <code>interval</code> is the seconds between them, so use whichever suits: <code>fps=12</code> for an animation, <code>interval=30</code> for a slideshow. Either one replaces the delays the file was saved with, and leaving out both keeps them. <code>loop</code> is true unless you set it false, which stops on the last frame. <code>ping_pong</code> plays back and forth instead of starting over, which suits an animation with two ends, such as an arm flexing.</p>
+<p>An animation drawn to loop has no such ends, its last frame leading back into its first. Add <code>first_as_last=yes</code> for one of those and the whole loop is played in each direction, so a spinning coin winds all the way round and back:</p>
+<pre class="entry"><code><span class="s-target">screen</span><span class="s-colon">:</span> <span class="s-effect">gif</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">"coin.gif"</span> <span class="s-name">ping_pong</span><span class="s-punc">=</span><span class="s-value">yes</span> <span class="s-name">first_as_last</span><span class="s-punc">=</span><span class="s-value">yes</span></code></pre>
+<p><code>hold</code> is the seconds to wait where it turns around, so a ping-pong pauses at each end instead of bouncing straight off. One value serves both ends, or write each with a <code>|</code>:</p>
+<pre class="entry"><code><span class="s-target">screen</span><span class="s-colon">:</span> <span class="s-effect">gif</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">"wave.gif"</span> <span class="s-name">ping_pong</span><span class="s-punc">=</span><span class="s-value">yes</span> <span class="s-name">hold</span><span class="s-punc">=</span><span class="s-value">1</span>
+<span class="s-target">screen</span><span class="s-colon">:</span> <span class="s-effect">gif</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">"wave.gif"</span> <span class="s-name">ping_pong</span><span class="s-punc">=</span><span class="s-value">yes</span> <span class="s-name">hold</span><span class="s-punc">=</span><span class="s-value">1.5|0.5</span></code></pre>
+<p>A file is looked for on this drive first, then on the board itself, and the name may include folders. There is little room here, so pictures usually live on the board.</p>
 <p>The Plasma 2350 W has no SP/CE connector, so it takes no screen, and the picker offers none.</p>
-<p>Pictures and animations go on this drive beside <code>effects.txt</code>. <code>gif</code> plays an animation, <code>image</code> shows a still, and <code>sequence</code> plays a folder of them in turn.</p>
-<p>The panel is mounted upright, 240 wide by 320 tall, so a landscape picture is cropped at its sides unless the line turns it: <code>screen rotation=90: image file="picture.png"</code>.</p>
+<p>The panel is mounted upright, 240 wide by 320 tall, so a landscape picture is cropped at its sides unless the line turns it, with <code>rotation=90</code>.</p>
 <p><strong>A limit for now.</strong> The board's memory is small, and what the last file showed can keep its room until a restart. Saving a change from one full-size picture to another is refused with a note in <code>errors.txt</code>; turn the board off and on with the new file saved and it plays. Animations under about 60KB of frames, small pictures, and drawings with <code>pixel_double=true</code> change over without a restart. The lights are never affected.</p>
-<h2 id="scenes">Scenes</h2>
-<p>A heading starts a scene, and scenes take turns for the time each names. Everything above the first heading stays on throughout:</p>
-<pre class="entry"><code><span class="s-target">rgb</span><span class="s-colon">:</span> <span class="s-effect">static</span> <span class="s-name">colour</span><span class="s-punc">=</span><span class="s-value">white</span> <span class="s-name">brightness</span><span class="s-punc">=</span><span class="s-value">0.2</span>
+<h3 id="drawing-from-code">Drawing from code</h3>
+<p><strong>This one is for Python writers.</strong> A screen can play a drawing instead of a picture: a Python file with one function in it, drawn beside everything else in this file, so the lights keep their effects, and a scene puts the drawing on and off with everything else it holds.</p>
+<div class="scroll"><table>
+<thead><tr><th>Plays</th><th>Settings</th></tr></thead>
+<tbody>
+<tr><td><code>graphics</code></td><td><code>file</code> <code>fps</code> <code>interval</code> <code>width</code> <code>height</code></td></tr>
+</tbody></table></div>
+<pre class="entry"><code><span class="s-target">screen</span><span class="s-colon">:</span> <span class="s-effect">graphics</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">rings.py</span></code></pre>
+<pre class="python"><code># rings.py
+from picovector import color, shape
 
-<span class="s-scene">[Daytime: 30s]</span>
+def draw(canvas, elapsed):
+    canvas.pen = color.black
+    canvas.clear()
+    canvas.pen = color.rgb(255, 160, 40)
+    canvas.shape(shape.circle(120, 160, 20 + 10 * (elapsed % 3)))</code></pre>
+<p><code>draw</code> is called with a canvas the size of the screen, kept between calls, and the seconds since the drawing started; whatever it has drawn when it returns is what the screen shows. The rest of the file runs once, when the drawing starts, so that is the place to build anything <code>draw</code> uses. <code>fps</code> or <code>interval</code> sets the pace, and leaving both out draws as often as the screen takes a frame.</p>
+<p><code>width</code> and <code>height</code> size the canvas by hand, in pixels, and are honoured as written whatever else is set. A small canvas draws faster and is placed like a small picture, so <code>offset</code> puts it somewhere and <code>tile=repeat</code> fills the screen with it.</p>
+<p>In a scene, the drawing's clock stops while the scene is away, and a scene with <code>restart</code> runs the whole file again from a blank canvas. The rotation, offset and other screen settings place a drawing as they place a picture, with <code>pixel_double</code> also making the canvas half size, which draws faster and uses a quarter of the memory; a stated <code>width</code> or <code>height</code> is still used as written.</p>
+<p>A drawing can load pictures, <code>picovector.image.load("/faces.png")</code>, best done once in the setup. Name them from the board's own filesystem, with the leading <code>/</code>: this drive comes and goes with the computer, so a picture kept here may be missing just when a scene's <code>restart</code> runs the file again. The drawing itself is safe wherever it lives, read once and kept.</p>
+<p>A drawing may import <code>math</code>, <code>random</code>, <code>time</code> and <code>picovector</code>. The board's own modules stay with the effects running around it, so a program pasted in that reaches for the pins is refused, with a note in <code>errors.txt</code>. A mistake anywhere in the file lands there too, with its line, and a drawing that stops partway keeps its last frame on the screen while everything else carries on.</p>
+<p>A program that wants the whole board instead of one screen is <a href="#running-your-own-program">a program</a>, not a drawing.</p>
+<p>The picker offers a drawing on its Screens tab where the drawing's opening string starts with <code>Drawing:</code> and its name, and keeps it out of its programs. It cannot run the drawing, so it shows it by a face instead, which two more lines can set:</p>
+<pre class="python"><code>'''
+Drawing: Rings
+Rings that grow and fade, in the four colours.
+Icon: *
+Colour: orange
+'''</code></pre>
+<p><code>Icon</code> is any one character, an emoji included, and <code>Colour</code> one of the colour words or a hex. A drawing naming neither is shown by its initial, on a colour taken from its name.</p>
+<h2 id="scenes">Scenes</h2>
+<p>A file can hold several sets of effects and show them one after another. A heading in square brackets begins one, and says how long it shows for:</p>
+<pre class="entry"><code><span class="s-scene">[Daytime: 30s]</span>
 <span class="s-target">stripDat</span><span class="s-colon">:</span> <span class="s-effect">rainbow_wave</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.3</span>
 
 <span class="s-scene">[Night: 2m]</span>
 <span class="s-target">stripDat</span> <span class="s-name">colour</span><span class="s-punc">=</span><span class="s-value">ff5a00</span><span class="s-colon">:</span> <span class="s-effect">flicker_each</span></code></pre>
+<p>The name is everything before the <code>:</code> and may be anything you like, spaces included. The time is in seconds, <code>30s</code>, or in minutes, <code>10m</code>. Scenes take turns in the order they are written, then start again.</p>
+<p>Entries before the first heading are always on, whatever is showing, so anything that should never change goes there:</p>
+<pre class="entry"><code><span class="s-target">rgb</span><span class="s-colon">:</span> <span class="s-effect">static</span> <span class="s-name">brightness</span><span class="s-punc">=</span><span class="s-value">0.2</span></code></pre>
+<p>While a scene shows, an LED it does not name goes dark if any other scene uses it, and is left alone if none of them do. A scene may name an LED that is always on, and takes it over for as long as it shows.</p>
+<p>A screen behaves the same way: its picture stays put but the light goes out while another scene has the board, and comes back when its own returns.</p>
+<p>Add <code>restart</code> to a heading and its effects begin again every time it comes round, instead of carrying on from where they were left:</p>
+<pre class="entry"><code><span class="s-scene">[Beacon: 5s restart]</span>
+<span class="s-target">stripDat1-3</span><span class="s-colon">:</span> <span class="s-effect">flash_sequence</span> <span class="s-name">flashes</span><span class="s-punc">=</span><span class="s-value">3</span></code></pre>
+<p>The board entry belongs outside every scene. A single scene with no time simply shows for ever, and ejecting this drive always starts again at the first scene.</p>
 <h2 id="the-board">The board</h2>
-<p>The board line holds what is the same in every scene: each strip's length, and its colour order or brightness, the screen's size, and how the drive behaves. <code>reload=auto</code> applies a saved file without an eject, and <code>drive=manual</code> keeps the drive hidden until <strong>Boot</strong> is pressed twice. <code>program=</code> runs a Python file from this drive in place of the effects.</p>
+<p>One entry sets the board rather than the lights, and names no LED:</p>
+<pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">drive</span><span class="s-punc">=</span><span class="s-value">manual</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">fireplace.py</span></code></pre>
+<div class="scroll"><table>
+<thead><tr><th>Setting</th><th>What it does</th><th>If omitted</th></tr></thead>
+<tbody>
+<tr><td><code>drive</code></td><td><code>manual</code> keeps the drive hidden until you ask for it</td><td>shown at boot</td></tr>
+<tr><td><code>reload</code></td><td><code>auto</code> plays the file the moment it is saved</td><td>wait for an eject or <strong>Boot</strong></td></tr>
+<tr><td><code>program</code></td><td>a Python file to run instead of the effects</td><td>the effects run</td></tr>
+<tr><td><code>args</code></td><td>what to pass that program, divided by <code>|</code></td><td>it is given none</td></tr>
+<tr><td><code>screen</code></td><td>what size of screen is on the SP/CE connector</td><td>no screen</td></tr>
+<tr><td><code>stripDat</code></td><td>how many LEDs are on a WS2812 strip on <strong>DAT</strong>, and after a <code>|</code> the order it takes its colours in</td><td>no strip</td></tr>
+<tr><td><code>stripClk</code></td><td>the same for <strong>CLK</strong></td><td>no strip</td></tr>
+<tr><td><code>stripApa</code></td><td>how many LEDs are on an APA102 strip across both terminals, and after a <code>|</code> its brightness</td><td>no strip</td></tr>
+</tbody></table></div>
+<p>With <code>reload=auto</code>, saving <code>effects.txt</code> is enough on its own: the board notices the save, takes the drive back for a moment, and plays the new effects, exactly as a single press of <strong>Boot</strong> would. Only a save to <code>effects.txt</code> counts, so copying pictures on never interrupts anything.</p>
+<h3 id="running-your-own-program">Running your own program</h3>
+<p>A program can sit on this drive or on the board's own filesystem, and its name may include folders: it is looked for here first, then on the board. Where the name is in both, this drive's copy runs.</p>
+<p>If it is missing, or stops with an error, the effects run instead and <code>errors.txt</code> says what happened, so a mistyped name never leaves you with a board that does nothing.</p>
+<p>Saving a file that names a program, while the effects play, restarts the board, which then runs the program as it would from power on.</p>
+<p>The effects stop while a program runs, and the board is busy with it, so <strong>Boot</strong> and ejecting do nothing. The drive is shown anyway, even with <code>drive</code> set to <code>manual</code>, so you can still edit <code>effects.txt</code>. With <code>reload=auto</code>, saving it restarts the board, which then plays whatever it now says; without, press <strong>Reset</strong> for the change to take. A program cannot read files from this drive while it runs, so put anything it needs on the board's own filesystem.</p>
+<p><code>screen</code> describes the screen this file's own entries play on, so a program never sees it: it sets its own up. Pass it the size in <code>args</code> if it needs telling.</p>
+<p><code>args</code> passes a program whatever it needs to know, so one program can do different things without being edited. Several are divided by <code>|</code>, and anything with a space or a colon in it goes in quotes:</p>
+<pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">slideshow.py</span> <span class="s-name">args</span><span class="s-punc">=</span><span class="s-value">posters|3</span>
+<span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">clock.py</span> <span class="s-name">args</span><span class="s-punc">=</span><span class="s-value">"07:30"</span></code></pre>
+<p><strong>If you are writing the program</strong>, it reads them from <code>sys.argv</code>, the way any Python program does, with the first being <code>sys.argv[1]</code>. Thonny passes none when you run the same file from there, so give each one a value to fall back on and the file works either way:</p>
+<pre class="python"><code>args = sys.argv[1:]
+FOLDER = args[0] if args else "posters"</code></pre>
+<h3 id="your-program-in-the-picker">Your program in the picker</h3>
+<p>The picker's <strong>A program</strong> tab lists every Python file at the top of this drive, and describes each one by its opening string, the text in triple quotes at the top of the file. Its first plain line says what the program does, and three more lines tell the picker how to show it:</p>
+<pre class="python"><code>'''
+Program: Big clock
+Shows the time.
+Args: Colour, Seconds
+Picture: clock.png
+'''</code></pre>
+<div class="scroll"><table>
+<thead><tr><th>Line</th><th>What the picker does with it</th></tr></thead>
+<tbody>
+<tr><td><code>Program: Big clock</code></td><td>names the program, where it would use the file's name</td></tr>
+<tr><td><code>Args: Colour, Seconds</code></td><td>gives each argument a box of its own, and writes <code>args=</code> from them</td></tr>
+<tr><td><code>Picture: clock.png</code></td><td>shows the program by that picture from this drive</td></tr>
+</tbody></table></div>
+<p>Each is optional. Without <code>Args</code>, the picker offers plain boxes to add arguments to, and without <code>Picture</code>, a plain tile. A file whose opening string starts <code>Drawing:</code> is <a href="#drawing-from-code">a drawing</a>, so it is left out.</p>
 <h2 id="when-something-is-wrong">When something is wrong</h2>
-<p>The board's LED says so, and the more flashes the worse it is: white once means the computer was still writing, so press again in a moment; blue twice means a line could not be read, and <code>errors.txt</code> says which; red three times means there was no room to write <code>errors.txt</code>, so free some space on the drive.</p>
+<p>The board's LED says so, and the more flashes the worse it is:</p>
+<div class="scroll"><table>
+<thead><tr><th>Flashes</th><th>What happened</th></tr></thead>
+<tbody>
+<tr><td>white, once</td><td>the computer was still writing, so the press did nothing; try again in a moment</td></tr>
+<tr><td>blue, twice</td><td>something in <code>effects.txt</code> could not be read; <code>errors.txt</code> says which line</td></tr>
+<tr><td>red, three times</td><td>there was no room to write <code>errors.txt</code>; this drive is full or damaged, so free some space or let a computer repair it</td></tr>
+</tbody></table></div>
+<p>A setting whose value is not what it takes is ignored, with a note in <code>errors.txt</code>, and the effect runs on its usual value for it.</p>
+<h2 id="more-from-pimoroni">More from Pimoroni</h2>
+<h3 id="boards-and-accessories">Boards and accessories</h3>
+<ul><li><a href="https://shop.pimoroni.com/products/mightyfx">MightyFX</a></li><li><a href="https://shop.pimoroni.com/products/tinyfx">TinyFX</a></li><li><a href="https://shop.pimoroni.com/products/tiny-fx-w">TinyFX W</a></li><li><a href="https://shop.pimoroni.com/products/plasma-2350">Plasma 2350</a></li><li><a href="https://shop.pimoroni.com/products/plasma-2350-w">Plasma 2350 W</a></li><li><a href="https://shop.pimoroni.com/collections/tiny-fx">Everything in the range</a></li></ul>
+<h3 id="going-further">Going further</h3>
+<ul><li><a href="https://github.com/pimoroni/picofx">picofx on GitHub</a>, the library these effects come from</li><li><a href="https://badgewa.re/docs">The PicoVector drawing API</a>, for programs that draw on a screen</li></ul>
 </main>
 
 <footer>
