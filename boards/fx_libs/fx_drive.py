@@ -715,8 +715,9 @@ __CHANGED_BENEATH = "the FX drive changed while this file was being read"
 class __View:
     """
     The drive read straight from its flash, mounted at the mount point while the
-    computer holds the drive so a program still finds its files by path. Read-only,
-    and anything read once the computer writes to the drive raises OSError.
+    computer holds the drive so a program still finds its files by path. Read-only.
+    Finding a file waits while the computer writes, and a file read once it writes
+    raises OSError.
     """
 
     def __init__(self):
@@ -726,9 +727,21 @@ class __View:
         return path if path.startswith("/") else self.__cwd + "/" + path
 
     @staticmethod
-    def __check(writes):
-        if rp2.msc_write_count() != writes:
-            raise OSError(errno.EIO, __CHANGED_BENEATH)
+    def __settled(lookup, path):
+        # Looks again where a write landed during the lookup, since nothing it found has
+        # reached the program yet. Returns what it found and the write count it holds for
+        while True:
+            while rp2.is_msc_busy():
+                time.sleep_ms(10)
+            writes = rp2.msc_write_count()
+            try:
+                found = lookup(path)
+            except OSError:
+                if rp2.msc_write_count() == writes:
+                    raise
+                continue
+            if rp2.msc_write_count() == writes:
+                return found, writes
 
     def mount(self, readonly, mkfs):
         pass
@@ -739,24 +752,17 @@ class __View:
     def open(self, path, mode):
         if "w" in mode or "a" in mode or "x" in mode or "+" in mode:
             raise OSError(__EROFS)
-        writes = rp2.msc_write_count()
-        stream = Stream(self.__resolve(path))
-        # Finding the file reads the tables, which a write meanwhile may have moved
-        self.__check(writes)
+        stream, writes = self.__settled(Stream, self.__resolve(path))
         # Read in C, every read checking the write count against this one
         return rp2.MSCFile(stream.extents(), stream.size, writes, text="b" not in mode,
                            message=__CHANGED_BENEATH)
 
     def stat(self, path):
-        writes = rp2.msc_write_count()
-        mode, size = __FatReader().kind(self.__resolve(path))
-        self.__check(writes)
+        (mode, size), _ = self.__settled(lambda name: __FatReader().kind(name), self.__resolve(path))
         return (mode, 0, 0, 0, 0, 0, size, 0, 0, 0)
 
     def ilistdir(self, path):
-        writes = rp2.msc_write_count()
-        listed = __FatReader().listing(self.__resolve(path))
-        self.__check(writes)
+        listed, _ = self.__settled(lambda name: __FatReader().listing(name), self.__resolve(path))
         return iter([(name, mode, 0, size) for name, mode, size in listed])
 
     def statvfs(self, _path):
@@ -765,7 +771,7 @@ class __View:
 
     def chdir(self, path):
         path = self.__resolve(path)
-        if __FatReader().kind(path)[0] != __S_IFDIR:
+        if self.__settled(lambda name: __FatReader().kind(name), path)[0][0] != __S_IFDIR:
             raise OSError(__ENOTDIR)
         self.__cwd = "/" + "/".join(part for part in path.split("/") if part)
         if self.__cwd == "/":
