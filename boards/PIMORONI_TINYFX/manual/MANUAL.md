@@ -156,19 +156,26 @@ out1-6 ease=0.4: blink speed=0.5
 
 Colours by name: red, orange, yellow, green, cyan, blue, purple, magenta, pink,
 warm, white, cool, black. Or the hex a colour picker gives you, with its `#`
-left off. A `#` always starts a comment, so one left on a colour hides the rest
-of the line.
+left off, such as ff8040 for an orange paler than the named one. A `#` always
+starts a comment, so one left on a colour hides the rest of the line.
 
 ### Fade and ease
 
 `fade` and `ease` take the seconds a change takes to get there. `fade` crosses
 evenly, which is what a stage light does; `ease` goes quickly at first and slows
-as it arrives, which is how a bulb warms. Two numbers divided by `|` give the
-rise and the fall their own lengths:
+as it arrives, which is how a bulb warms and is the one that looks natural on a
+light switching on and off.
+
+An output follows one way or the other, so a line takes one of them and not
+both. Two numbers divided by `|` give the rise and the fall their own lengths,
+a light that comes on quickly and fades out slowly being the usual reason:
 
 ```entry
+out1-6 fade=0.8: blink speed=0.5
 out1-3 ease=0.05|1.2: blink speed=1
 ```
+
+Softening belongs to the output, not to the effect, so it works on any effect.
 
 ## Effects
 
@@ -345,10 +352,31 @@ out1-6: flicker_each
 rgb colour=warm: pulse
 ```
 
-The time is in seconds, `30s`, or in minutes, `10m`. Scenes take turns in the
-order they are written, then start again. Entries before the first heading are
-always on, whatever is showing. Add `restart` to a heading and its effects begin
-again every time it comes round.
+The name is everything before the `:` and may be anything you like, spaces
+included. The time is in seconds, `30s`, or in minutes, `10m`. Scenes take turns
+in the order they are written, then start again.
+
+Entries before the first heading are always on, whatever is showing, so anything
+that should never change goes there:
+
+```entry
+out1: static brightness=0.2
+```
+
+While a scene shows, an output it does not name goes dark if any other scene
+uses it, and is left alone if none of them do. A scene may name an output that
+is always on, and takes it over for as long as it shows.
+
+Add `restart` to a heading and its effects begin again every time it comes
+round, instead of carrying on from where they were left:
+
+```entry
+[Beacon: 5s restart]
+out1-3: flash_sequence flashes=3
+```
+
+The board entry belongs outside every scene. A single scene with no time simply
+shows for ever, and ejecting this drive always starts again at the first scene.
 
 ## The board
 
@@ -470,8 +498,8 @@ The full set, with what each one does, is on
 
 ## When something is wrong
 
-The lights say so, and the more flashes the worse it is. The RGB output shows
-the colour:
+The lights say so, and the more flashes the worse it is. The RGB output
+shows the colour:
 
 | Flashes | What happened |
 | --- | --- |
@@ -479,8 +507,18 @@ the colour:
 | blue, twice | something in `effects.txt` could not be read; `errors.txt` says which line |
 | red, three times | there was no room to write `errors.txt`; this drive is full or damaged, so free some space or let a computer repair it |
 
+A setting whose value is not what it takes is ignored, with a note in
+`errors.txt`, and the effect runs on its usual value for it.
+
 ## More from Pimoroni
 
+### Boards and accessories
+
+- [MightyFX](https://shop.pimoroni.com/products/mightyfx)
 - [TinyFX](https://shop.pimoroni.com/products/tinyfx)
 - [TinyFX W](https://shop.pimoroni.com/products/tiny-fx-w)
+- [Everything in the range](https://shop.pimoroni.com/collections/tiny-fx)
+
+### Going further
+
 - [picofx on GitHub](https://github.com/pimoroni/picofx), the library these effects come from

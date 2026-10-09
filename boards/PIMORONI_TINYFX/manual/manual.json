@@ -16,6 +16,7 @@
   "COLOUR_OUTPUT": "rgb",
   "SOUND_THROUGH": "its speaker",
   "DRIVE_SIZE": "2MB",
+  "FLASH_COLOUR_ON": "The RGB output",
   "COLOUR_SETTING_FOR": "the RGB output when its effect brings no colour"
  }
 }

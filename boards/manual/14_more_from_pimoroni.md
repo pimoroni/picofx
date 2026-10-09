@@ -10,4 +10,6 @@
 ### Going further
 
 - [picofx on GitHub](https://github.com/pimoroni/picofx), the library these effects come from
+<!-- if screens -->
 - [The PicoVector drawing API](https://badgewa.re/docs), for programs that draw on a screen
+<!-- end -->

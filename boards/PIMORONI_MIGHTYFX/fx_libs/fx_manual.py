@@ -363,7 +363,7 @@ footer p { margin: 0; }
 <span class="s-target">out4</span> <span class="s-name">colour</span><span class="s-punc">=</span><span class="s-value">ff8040</span><span class="s-colon">:</span> <span class="s-effect">static</span>
 <span class="s-target">out1</span> <span class="s-name">level</span><span class="s-punc">=</span><span class="s-value">0.5</span>, <span class="s-target">2</span> <span class="s-name">level</span><span class="s-punc">=</span><span class="s-value">0.8</span>, <span class="s-target">3-7</span><span class="s-colon">:</span> <span class="s-effect">pulse_wave</span>
 <span class="s-target">out1-7</span> <span class="s-name">ease</span><span class="s-punc">=</span><span class="s-value">0.4</span><span class="s-colon">:</span> <span class="s-effect">blink</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.5</span></code></pre>
-<p>Colours by name: red, orange, yellow, green, cyan, blue, purple, magenta, pink, warm, white, cool, black. Or the hex a colour picker gives you, with its <code>#</code> left off, as <code>out4</code> above uses for an orange paler than the named one. A <code>#</code> always starts a comment, so one left on a colour hides the rest of the line.</p>
+<p>Colours by name: red, orange, yellow, green, cyan, blue, purple, magenta, pink, warm, white, cool, black. Or the hex a colour picker gives you, with its <code>#</code> left off, such as ff8040 for an orange paler than the named one. A <code>#</code> always starts a comment, so one left on a colour hides the rest of the line.</p>
 <h3 id="fade-and-ease">Fade and ease</h3>
 <p><code>fade</code> and <code>ease</code> take the seconds a change takes to get there. <code>fade</code> crosses evenly, which is what a stage light does; <code>ease</code> goes quickly at first and slows as it arrives, which is how a bulb warms and is the one that looks natural on a light switching on and off.</p>
 <p>An output follows one way or the other, so a line takes one of them and not both. Two numbers divided by <code>|</code> give the rise and the fall their own lengths, a light that comes on quickly and fades out slowly being the usual reason:</p>
@@ -632,7 +632,7 @@ Picture: clock.png
 <p>Anything under <code>screens</code>, <code>audio</code>, <code>motors</code>, <code>servos</code>, <code>strips</code>, <code>infrared</code> or <code>qwst</code> needs that hardware attached, <code>wireless</code> needs a WiFi network, and some of the showcase ones want pictures or a network of their own.</p>
 <p>The full set, with what each one does, is on <a href="https://github.com/pimoroni/picofx">GitHub</a>.</p>
 <h2 id="when-something-is-wrong">When something is wrong</h2>
-<p>The lights say so, and the more flashes the worse it is:</p>
+<p>The lights say so, and the more flashes the worse it is. Every output shows the colour:</p>
 <div class="scroll"><table>
 <thead><tr><th>Flashes</th><th>What happened</th></tr></thead>
 <tbody>

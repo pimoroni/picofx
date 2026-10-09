@@ -284,7 +284,10 @@ footer p { margin: 0; }
 <li><a href="#what-is-already-on-the-board">What is already on the board</a></li>
 </ul></details></li>
 <li><a href="#when-something-is-wrong">When something is wrong</a></li>
-<li><a href="#more-from-pimoroni">More from Pimoroni</a></li>
+<li><details><summary><a href="#more-from-pimoroni">More from Pimoroni</a></summary><ul>
+<li><a href="#boards-and-accessories">Boards and accessories</a></li>
+<li><a href="#going-further">Going further</a></li>
+</ul></details></li>
 </ul></nav>
 </div>
 
@@ -350,10 +353,13 @@ footer p { margin: 0; }
 <pre class="entry"><code><span class="s-target">out1-6</span> <span class="s-name">level</span><span class="s-punc">=</span><span class="s-value">50%</span><span class="s-colon">:</span> <span class="s-effect">pulse</span>
 <span class="s-target">rgb</span> <span class="s-name">colour</span><span class="s-punc">=</span><span class="s-value">warm</span><span class="s-colon">:</span> <span class="s-effect">flicker</span>
 <span class="s-target">out1-6</span> <span class="s-name">ease</span><span class="s-punc">=</span><span class="s-value">0.4</span><span class="s-colon">:</span> <span class="s-effect">blink</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.5</span></code></pre>
-<p>Colours by name: red, orange, yellow, green, cyan, blue, purple, magenta, pink, warm, white, cool, black. Or the hex a colour picker gives you, with its <code>#</code> left off. A <code>#</code> always starts a comment, so one left on a colour hides the rest of the line.</p>
+<p>Colours by name: red, orange, yellow, green, cyan, blue, purple, magenta, pink, warm, white, cool, black. Or the hex a colour picker gives you, with its <code>#</code> left off, such as ff8040 for an orange paler than the named one. A <code>#</code> always starts a comment, so one left on a colour hides the rest of the line.</p>
 <h3 id="fade-and-ease">Fade and ease</h3>
-<p><code>fade</code> and <code>ease</code> take the seconds a change takes to get there. <code>fade</code> crosses evenly, which is what a stage light does; <code>ease</code> goes quickly at first and slows as it arrives, which is how a bulb warms. Two numbers divided by <code>|</code> give the rise and the fall their own lengths:</p>
-<pre class="entry"><code><span class="s-target">out1-3</span> <span class="s-name">ease</span><span class="s-punc">=</span><span class="s-value">0.05|1.2</span><span class="s-colon">:</span> <span class="s-effect">blink</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">1</span></code></pre>
+<p><code>fade</code> and <code>ease</code> take the seconds a change takes to get there. <code>fade</code> crosses evenly, which is what a stage light does; <code>ease</code> goes quickly at first and slows as it arrives, which is how a bulb warms and is the one that looks natural on a light switching on and off.</p>
+<p>An output follows one way or the other, so a line takes one of them and not both. Two numbers divided by <code>|</code> give the rise and the fall their own lengths, a light that comes on quickly and fades out slowly being the usual reason:</p>
+<pre class="entry"><code><span class="s-target">out1-6</span> <span class="s-name">fade</span><span class="s-punc">=</span><span class="s-value">0.8</span><span class="s-colon">:</span> <span class="s-effect">blink</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.5</span>
+<span class="s-target">out1-3</span> <span class="s-name">ease</span><span class="s-punc">=</span><span class="s-value">0.05|1.2</span><span class="s-colon">:</span> <span class="s-effect">blink</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">1</span></code></pre>
+<p>Softening belongs to the output, not to the effect, so it works on any effect.</p>
 <h2 id="effects">Effects</h2>
 <p>Every setting can be left out, and the board fills in the value shown against it below. The few with none shown have nothing to fall back on, and each is covered where its effect is.</p>
 <h3 id="for-any-output-or-for-one-of-the-rgb-output-s-red-green-and-blue">For any output, or for one of the RGB output's red, green and blue</h3>
@@ -434,7 +440,14 @@ footer p { margin: 0; }
 <span class="s-scene">[Night: 10s]</span>
 <span class="s-target">out1-6</span><span class="s-colon">:</span> <span class="s-effect">flicker_each</span>
 <span class="s-target">rgb</span> <span class="s-name">colour</span><span class="s-punc">=</span><span class="s-value">warm</span><span class="s-colon">:</span> <span class="s-effect">pulse</span></code></pre>
-<p>The time is in seconds, <code>30s</code>, or in minutes, <code>10m</code>. Scenes take turns in the order they are written, then start again. Entries before the first heading are always on, whatever is showing. Add <code>restart</code> to a heading and its effects begin again every time it comes round.</p>
+<p>The name is everything before the <code>:</code> and may be anything you like, spaces included. The time is in seconds, <code>30s</code>, or in minutes, <code>10m</code>. Scenes take turns in the order they are written, then start again.</p>
+<p>Entries before the first heading are always on, whatever is showing, so anything that should never change goes there:</p>
+<pre class="entry"><code><span class="s-target">out1</span><span class="s-colon">:</span> <span class="s-effect">static</span> <span class="s-name">brightness</span><span class="s-punc">=</span><span class="s-value">0.2</span></code></pre>
+<p>While a scene shows, an output it does not name goes dark if any other scene uses it, and is left alone if none of them do. A scene may name an output that is always on, and takes it over for as long as it shows.</p>
+<p>Add <code>restart</code> to a heading and its effects begin again every time it comes round, instead of carrying on from where they were left:</p>
+<pre class="entry"><code><span class="s-scene">[Beacon: 5s restart]</span>
+<span class="s-target">out1-3</span><span class="s-colon">:</span> <span class="s-effect">flash_sequence</span> <span class="s-name">flashes</span><span class="s-punc">=</span><span class="s-value">3</span></code></pre>
+<p>The board entry belongs outside every scene. A single scene with no time simply shows for ever, and ejecting this drive always starts again at the first scene.</p>
 <h2 id="the-board">The board</h2>
 <p>One entry sets the board rather than the lights, and names no output:</p>
 <pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">drive</span><span class="s-punc">=</span><span class="s-value">manual</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">fireplace.py</span></code></pre>
@@ -504,8 +517,12 @@ Picture: clock.png
 <tr><td>blue, twice</td><td>something in <code>effects.txt</code> could not be read; <code>errors.txt</code> says which line</td></tr>
 <tr><td>red, three times</td><td>there was no room to write <code>errors.txt</code>; this drive is full or damaged, so free some space or let a computer repair it</td></tr>
 </tbody></table></div>
+<p>A setting whose value is not what it takes is ignored, with a note in <code>errors.txt</code>, and the effect runs on its usual value for it.</p>
 <h2 id="more-from-pimoroni">More from Pimoroni</h2>
-<ul><li><a href="https://shop.pimoroni.com/products/tinyfx">TinyFX</a></li><li><a href="https://shop.pimoroni.com/products/tiny-fx-w">TinyFX W</a></li><li><a href="https://github.com/pimoroni/picofx">picofx on GitHub</a>, the library these effects come from</li></ul>
+<h3 id="boards-and-accessories">Boards and accessories</h3>
+<ul><li><a href="https://shop.pimoroni.com/products/mightyfx">MightyFX</a></li><li><a href="https://shop.pimoroni.com/products/tinyfx">TinyFX</a></li><li><a href="https://shop.pimoroni.com/products/tiny-fx-w">TinyFX W</a></li><li><a href="https://shop.pimoroni.com/collections/tiny-fx">Everything in the range</a></li></ul>
+<h3 id="going-further">Going further</h3>
+<ul><li><a href="https://github.com/pimoroni/picofx">picofx on GitHub</a>, the library these effects come from</li></ul>
 </main>
 
 <footer>

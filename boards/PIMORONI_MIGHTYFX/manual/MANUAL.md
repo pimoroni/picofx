@@ -161,8 +161,8 @@ out1-7 ease=0.4: blink speed=0.5
 
 Colours by name: red, orange, yellow, green, cyan, blue, purple, magenta, pink,
 warm, white, cool, black. Or the hex a colour picker gives you, with its `#`
-left off, as `out4` above uses for an orange paler than the named one. A `#`
-always starts a comment, so one left on a colour hides the rest of the line.
+left off, such as ff8040 for an orange paler than the named one. A `#` always
+starts a comment, so one left on a colour hides the rest of the line.
 
 ### Fade and ease
 
@@ -753,7 +753,8 @@ The full set, with what each one does, is on
 
 ## When something is wrong
 
-The lights say so, and the more flashes the worse it is:
+The lights say so, and the more flashes the worse it is. Every output
+shows the colour:
 
 | Flashes | What happened |
 | --- | --- |
