@@ -3,16 +3,42 @@
 # SPDX-License-Identifier: MIT
 
 import math
+import micropython
 import struct
 import time
 
 from machine import I2S, Pin
 
+# The USB drive's file type and write controls, on firmware that shows one to a computer.
+# Without them a sound never steps aside for a write
+try:
+    from rp2 import MSCFile as __DriveFile
+    from rp2 import hold_msc_writes as __hold_writes
+    from rp2 import is_msc_busy as __drive_busy
+    from rp2 import msc_write_count as __drive_writes
+    from rp2 import release_msc_writes as __release_writes
+except ImportError:
+    __DriveFile = None
+
 """
 A class for playing Wav files out of an I2S audio amp. It can also play pure tones.
+Where the board shows a USB drive to a computer, a sound fades out while the computer
+writes to it and returns after, except a Wav read from that drive, which ends.
 This code is based heavily on the work of Mike Teachman, at:
 https://github.com/miketeachman/micropython-i2s-examples/blob/master/examples/wavplayer.py
 """
+
+
+@micropython.viper
+def __ramp(samples: ptr16, count: int, gain: int, step: int):
+    # Scales signed 16-bit samples by a gain in 32768ths that moves by step each sample.
+    # Native code, since the callback has to scale a buffer in less time than it plays
+    for index in range(count):
+        value = int(samples[index])
+        if value & 0x8000:
+            value -= 0x10000
+        samples[index] = (value * gain) >> 15
+        gain += step
 
 
 class WavReader:
@@ -111,9 +137,13 @@ class WavPlayer:
     TONE_BITS_PER_SAMPLE = 16
     TONE_FULL_WAVES = 2
 
-    # How many samples a WAV picked up part way through rises over, about 12ms of
-    # 22.05kHz mono
-    FADE_SAMPLES = 256
+    # How long a tone or 16-bit WAV takes to rise from silence or fall to it, where starting
+    # or stopping mid-waveform would click
+    FADE_MS = 40
+
+    # How long the computer's first write to the USB drive waits while a sound fades out,
+    # each flash write stalling the audio beneath it
+    WRITE_HOLD_MS = 500
 
     # ibuf_ms, where given, grows the I2S ring to hold at least that much of whatever plays,
     # sized from its byte rate as it starts, for a board whose refills can be held up
@@ -141,8 +171,16 @@ class WavPlayer:
         self.__mode = WavPlayer.MODE_WAV
         self.__wav_file = None
         self.__loop_wav = False
+        self.__fade_length = 0          # The samples a fade takes at the current sound's rate
         self.__fade = 0                 # Samples still to rise from silence
-        self.__fading_out = False       # Whether the next buffer falls to silence and pauses
+        self.__fading_out = 0           # Samples still to fall to silence, the player pausing after
+        self.__holding = None           # The write hold replaced while a sound plays
+        self.__was_busy = False         # Whether the computer was writing at the last refill
+        self.__writes_seen = 0          # The computer's write count at the last refill
+        self.__from_drive = False       # Whether the WAV is read from the USB drive, so a write ends it
+        self.__stopping = False         # Whether the sound ends once its fade has played out
+        self.__standing_aside = False   # Whether the sound is paused while the computer writes
+        self.__aside_silent = False     # Whether that pause has gone quiet and the amplifier off
         self.__flush_count = 0
         self.__audio_out = None
 
@@ -154,7 +192,9 @@ class WavPlayer:
 
         # Reserve a variable for audio samples used for tones
         self.__tone_samples = None
+        self.__tone_scaled = None       # Room for a faded copy of the tone's buffer
         self.__queued_samples = None
+        self.__queued_scaled = None
 
     def set_root(self, root):
         self.__root = root.rstrip("/") + "/"
@@ -176,13 +216,16 @@ class WavPlayer:
 
         # Pick up part way through, from a position() a caller kept. Sought here,
         # before the I2S callback starts reading, so nothing races the seek
+        channels = 1 if self.__wav_file.format == I2S.MONO else 2
+        self.__fade_length = max(1, self.__wav_file.sample_rate * channels * self.FADE_MS // 1000)
         self.__fade = 0
-        self.__fading_out = False
+        self.__fading_out = 0
+        self.__arm_hold(__DriveFile is not None and isinstance(self.__wav_file.wav_file, __DriveFile))
         if position:
             self.__wav_file.seek(position)
             # Mid-waveform, so it fades in or it clicks. The fade reads 16-bit samples
             if self.__wav_file.bits_per_sample == 16:
-                self.__fade = self.FADE_SAMPLES
+                self.__fade = self.__fade_length
 
         self.__start_i2s(bits=self.__wav_file.bits_per_sample,
                          format=self.__wav_file.format,
@@ -231,33 +274,59 @@ class WavPlayer:
         if not (self.__mode == WavPlayer.MODE_TONE and (self.__state == WavPlayer.PLAY or self.__state == WavPlayer.PAUSE)):
             self.__stop_i2s()                                       # Stop any active playback and terminate the I2S instance
             self.__tone_samples = samples
+            self.__tone_scaled = bytearray(len(samples))
+            self.__fade_length = self.TONE_SAMPLE_RATE * self.FADE_MS // 1000
+            self.__fade = self.__fade_length    # A tone has no attack of its own, so it rises
+            self.__fading_out = 0
+            self.__arm_hold(False)
             self.__start_i2s(bits=self.TONE_BITS_PER_SAMPLE,
                              format=I2S.MONO,
                              rate=self.TONE_SAMPLE_RATE,
                              state=WavPlayer.PLAY,
                              mode=WavPlayer.MODE_TONE)
         else:
+            self.__queued_scaled = bytearray(len(samples))
             self.__queued_samples = samples
-            self.__state = WavPlayer.PLAY
+            # Standing aside for the computer's writes, the new tone waits for them too
+            if not self.__standing_aside:
+                self.__state = WavPlayer.PLAY
 
     def pause(self):
         if self.__state == WavPlayer.PLAY:
-            # A cut mid-waveform clicks, so a 16-bit WAV fades out over its next buffer
-            # before pausing. is_paused() turns true once it has
-            if self.__mode == WavPlayer.MODE_WAV and self.__wav_file.bits_per_sample == 16:
-                self.__fading_out = True
+            # A cut mid-waveform clicks, so a tone or 16-bit WAV fades out before pausing.
+            # is_paused() turns true once it has
+            if self.__fades():
+                if not self.__fading_out:
+                    self.__fading_out = self.__fade_length
             else:
                 self.__state = WavPlayer.PAUSE      # Enter the pause state on the next callback
                 self.__silent_at = time.ticks_add(time.ticks_ms(), self.__ring_ms)
+        # The caller's pause from here, which the end of the computer's writes leaves alone
+        self.__standing_aside = False
 
     def resume(self):
-        self.__fading_out = False
+        self.__fading_out = 0
+        self.__standing_aside = False
+        if self.__aside_silent:
+            self.__aside_silent = False
+            if self.__enable is not None:
+                self.__enable.on()
         if self.__state == WavPlayer.PAUSE:
-            if self.__mode == WavPlayer.MODE_WAV and self.__wav_file.bits_per_sample == 16:
-                self.__fade = self.FADE_SAMPLES     # Back from silence, so it fades in
+            if self.__fades():
+                self.__fade = self.__fade_length    # Back from silence, so it fades in
             self.__state = WavPlayer.PLAY           # Enter the play state on the next callback
 
     def stop(self):
+        # A playing tone or 16-bit WAV fades out first, and ends once the fade has played out
+        if self.__state == WavPlayer.PLAY and self.__fades():
+            self.__stopping = True
+            if not self.__fading_out:
+                self.__fading_out = self.__fade_length
+            return
+        self.__stop_now()
+
+    def __stop_now(self):
+        self.__end_hold()
         if self.__state == WavPlayer.PLAY or self.__state == WavPlayer.PAUSE:
             if self.__mode == WavPlayer.MODE_WAV:
                 # Enter the flush state on the next callback and close the file
@@ -352,27 +421,82 @@ class WavPlayer:
 
     def __fade_in(self, samples, length):
         # Each sample still to rise is scaled by how far into the fade it falls
-        done = self.FADE_SAMPLES - self.__fade
+        step = 32768 // self.__fade_length
         count = min(length // 2, self.__fade)
-        for index in range(count):
-            at = index * 2
-            value = struct.unpack_from("<h", samples, at)[0]
-            struct.pack_into("<h", samples, at, value * (done + index) // self.FADE_SAMPLES)
+        __ramp(samples, count, (self.__fade_length - self.__fade) * step, step)
         self.__fade -= count
 
     def __fade_out(self, samples, length):
-        # The buffer falls to silence over its first samples and stays silent after, and
-        # the player is paused from here
-        count = min(length // 2, self.FADE_SAMPLES)
-        for index in range(count):
-            at = index * 2
-            value = struct.unpack_from("<h", samples, at)[0]
-            struct.pack_into("<h", samples, at, value * (self.FADE_SAMPLES - index) // self.FADE_SAMPLES)
-        samples[count * 2:length] = self.__silence_samples[:length - count * 2]
-        self.__fading_out = False
+        # The fall can span buffers. The one it ends in is silent after it, and the player
+        # is paused from there
+        step = 32768 // self.__fade_length
+        count = min(length // 2, self.__fading_out)
+        __ramp(samples, count, self.__fading_out * step, -step)
+        self.__fading_out -= count
+        if self.__fading_out:
+            return
+        __ramp(memoryview(samples)[count * 2:length], length // 2 - count, 0, 0)    # Zeroed, any length
         self.__state = WavPlayer.PAUSE
         # Heard once the ring ahead of it has played
         self.__silent_at = time.ticks_add(time.ticks_ms(), self.__ring_ms)
+
+    def __fades(self):
+        # Whether the sound can fade, which reads it as 16-bit samples
+        return self.__mode == WavPlayer.MODE_TONE or self.__wav_file.bits_per_sample == 16
+
+    def __arm_hold(self, from_drive):
+        # The computer's first write waits while the sound goes quiet
+        self.__from_drive = from_drive
+        self.__stopping = False
+        self.__standing_aside = False
+        self.__aside_silent = False
+        if __DriveFile is not None:
+            self.__holding = __hold_writes(self.WRITE_HOLD_MS)
+            self.__was_busy = __drive_busy()
+            self.__writes_seen = __drive_writes()
+
+    def __end_hold(self):
+        # Puts back the hold the sound replaced and lets any write it held go
+        if self.__holding is not None:
+            __hold_writes(self.__holding)
+            __release_writes()
+            self.__holding = None
+
+    def __write_arrived(self):
+        # Whether the computer began writing since the last refill. Busy turns true as its
+        # first write is held, before the flash changes, and stays true a second after the
+        # last, so while busy only a write landing counts, such as a copy already under way
+        busy = __drive_busy()
+        writes = __drive_writes()
+        arrived = busy and (not self.__was_busy or writes != self.__writes_seen)
+        self.__was_busy = busy
+        self.__writes_seen = writes
+        return arrived
+
+    def __wait_out_writes(self):
+        # Quiet, so the amplifier goes off and the held write goes. The sound fades back in once
+        # the computer has finished, which busy turning false marks a second after its last write
+        if not self.__aside_silent:
+            self.__aside_silent = True
+            if self.__enable is not None:
+                self.__enable.off()
+            __release_writes()
+        elif not __drive_busy():
+            self.__was_busy = False
+            self.resume()
+
+    def __end_sound(self):
+        self.__stopping = False
+        if self.__mode == WavPlayer.MODE_WAV:
+            self.__wav_file.close()
+            self.__state = WavPlayer.FLUSH
+        else:
+            self.__state = WavPlayer.STOP
+        # Off before any held write goes, since the amplifier sounds at every flash write's
+        # stall even in silence. The next sound turns it back on
+        if self.__enable is not None:
+            self.__enable.off()
+        self.__end_hold()
 
     def __write(self, samples):
         self.__written = True
@@ -394,6 +518,24 @@ class WavPlayer:
         # PLAY
         if self.__state == WavPlayer.PLAY:
             if self.__mode == WavPlayer.MODE_WAV:
+                # The computer's first write is held until the WAV is quiet, fading out where it
+                # can. One from the USB drive then ends, its reads safe only while the write is
+                # held, and any other stands aside until the computer has finished
+                if self.__holding is not None and not self.__stopping and not self.__standing_aside \
+                        and self.__write_arrived():
+                    self.__stopping = self.__from_drive
+                    self.__standing_aside = not self.__from_drive
+                    if self.__wav_file.bits_per_sample == 16:
+                        if not self.__fading_out:
+                            self.__fading_out = self.__fade_length
+                    else:
+                        if self.__stopping:
+                            self.__end_sound()
+                        else:
+                            self.__state = WavPlayer.PAUSE
+                            self.__silent_at = time.ticks_add(time.ticks_ms(), self.__ring_ms)
+                        self.__write(self.__silence_samples)
+                        return
                 try:
                     if self.__loop_wav:  # Looped playback
                         loop_read = 0
@@ -415,8 +557,7 @@ class WavPlayer:
                     # The file went away beneath the player, a drive file replaced by
                     # the computer being the way that happens. The sound ends cleanly
                     # rather than raising out of the callback
-                    self.__wav_file.close()
-                    self.__state = WavPlayer.FLUSH
+                    self.__end_sound()
                     self.__write(self.__silence_samples)
                     return
 
@@ -433,15 +574,39 @@ class WavPlayer:
                 if num_read < self.WAV_BUFFER_LENGTH:
                     self.__wav_file.close()                                 # Stop playing, so close the file
                     self.__state = WavPlayer.FLUSH                          # and enter the flush state on the next callback
+                    self.__end_hold()
 
             else:
                 if self.__queued_samples is not None:
                     self.__tone_samples = self.__queued_samples
+                    self.__tone_scaled = self.__queued_scaled
                     self.__queued_samples = None
-                self.__write(self.__tone_samples)
+                # A tone stands aside for the computer's writes, fading out before the held one goes
+                if self.__holding is not None and not self.__stopping and not self.__standing_aside \
+                        and self.__write_arrived():
+                    self.__standing_aside = True
+                    if not self.__fading_out:
+                        self.__fading_out = self.__fade_length
+                if self.__fade or self.__fading_out:
+                    # The tone's buffer repeats, so a fade scales a copy of it
+                    scaled = self.__tone_scaled
+                    scaled[:] = self.__tone_samples
+                    if self.__fade:
+                        self.__fade_in(scaled, len(scaled))
+                    if self.__fading_out:
+                        self.__fade_out(scaled, len(scaled))
+                    self.__write(scaled)
+                else:
+                    self.__write(self.__tone_samples)
 
         # PAUSE or STOP
         elif self.__state == WavPlayer.PAUSE or self.__state == WavPlayer.STOP:
+            # Check if a fade for a write has played out of the ring
+            if self.__state == WavPlayer.PAUSE and time.ticks_diff(time.ticks_ms(), self.__silent_at) >= 0:
+                if self.__stopping:
+                    self.__end_sound()
+                elif self.__standing_aside:
+                    self.__wait_out_writes()
             self.__write(self.__silence_samples)                  # Play silence
 
         # FLUSH

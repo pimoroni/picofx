@@ -3,6 +3,7 @@ builtins = [
     "micropython",
     "const",
     "ptr8",
+    "ptr16",
     "ptr32",
 ]
 
