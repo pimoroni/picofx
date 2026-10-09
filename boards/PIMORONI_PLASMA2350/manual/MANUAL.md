@@ -115,10 +115,10 @@ Everything above the first heading stays on throughout:
 ```entry
 rgb: static colour=white brightness=0.2
 
-## Daytime 30s
+[Daytime: 30s]
 stripDat: rainbow_wave speed=0.3
 
-## Night 2m
+[Night: 2m]
 stripDat colour=ff5a00: flicker_each
 ```
 

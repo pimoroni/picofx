@@ -307,10 +307,10 @@ footer p { margin: 0; }
 <p>A heading starts a scene, and scenes take turns for the time each names. Everything above the first heading stays on throughout:</p>
 <pre class="entry"><code><span class="s-target">rgb</span><span class="s-colon">:</span> <span class="s-effect">static</span> <span class="s-name">colour</span><span class="s-punc">=</span><span class="s-value">white</span> <span class="s-name">brightness</span><span class="s-punc">=</span><span class="s-value">0.2</span>
 
-## Daytime 30s
+<span class="s-scene">[Daytime: 30s]</span>
 <span class="s-target">stripDat</span><span class="s-colon">:</span> <span class="s-effect">rainbow_wave</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.3</span>
 
-## Night 2m
+<span class="s-scene">[Night: 2m]</span>
 <span class="s-target">stripDat</span> <span class="s-name">colour</span><span class="s-punc">=</span><span class="s-value">ff5a00</span><span class="s-colon">:</span> <span class="s-effect">flicker_each</span></code></pre>
 <h2 id="the-board">The board</h2>
 <p>The board line holds what is the same in every scene: each strip's length, and its colour order or brightness, the screen's size, and how the drive behaves. <code>reload=auto</code> applies a saved file without an eject, and <code>drive=manual</code> keeps the drive hidden until <strong>Boot</strong> is pressed twice. <code>program=</code> runs a Python file from this drive in place of the effects.</p>
