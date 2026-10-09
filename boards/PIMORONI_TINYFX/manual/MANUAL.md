@@ -210,8 +210,12 @@ audio: wav file=ambience.wav loop=yes
 
 The file plays once as the board starts, or over and over with `loop`. The board
 plays one sound at a time, so each scene takes one `audio` entry, and one more may
-sit before any heading. Put the file on this drive beside `effects.txt`. An
-ordinary uncompressed WAV plays, mono or stereo; MP3 does not.
+sit before any heading. Put the file on this drive beside `effects.txt`.
+
+A file is looked for on this drive first, then on the board itself. While the
+computer is copying to this drive the sound waits in silence with the effects.
+
+An ordinary uncompressed WAV plays, mono or stereo; MP3 does not.
 
 The drive is small, so a lower sample rate fits more: a minute of 22kHz mono
 takes about 2.6MB, which is more than the drive holds, and 8kHz mono takes
@@ -252,16 +256,27 @@ board: reload=auto
 | `program` | a Python file to run instead of the effects | the effects run |
 | `args` | what to pass that program, divided by `\|` | it is given none |
 
+With `reload=auto`, saving `effects.txt` is enough on its own: the board notices
+the save, takes the drive back for a moment, and plays the new effects, exactly
+as a single press of **Boot** would. Only a save to `effects.txt` counts, so
+copying sounds on never interrupts anything.
+
 ### Running your own program
 
 A program can sit on this drive or on the board's own filesystem, and its name
-may include folders, so `program=examples/effects/mono/sweep_trail.py` reaches
-one of the examples the board ships with. If it is missing, or stops with an
-error, the effects run instead and `errors.txt` says what happened.
+may include folders: it is looked for here first, then on the board, so
+`program=examples/effects/mono/sweep_trail.py` reaches one of the examples the
+board ships with. Where the name is in both, this drive's copy runs. If it is
+missing, or stops with an error, the effects run instead and `errors.txt` says
+what happened.
+
+Saving a file that names a program, while the effects play, restarts the board,
+which then runs the program as it would from power on.
 
 The effects stop while a program runs, and **Boot** and ejecting do nothing. The
-drive is shown anyway, so you can still edit `effects.txt`; press **Reset** for
-the change to take.
+drive is shown anyway, even with `drive` set to `manual`, so you can still edit
+`effects.txt`. With `reload=auto`, saving it restarts the board, which then plays
+whatever it now says; without, press **Reset** for the change to take.
 
 ### What is already on the board
 

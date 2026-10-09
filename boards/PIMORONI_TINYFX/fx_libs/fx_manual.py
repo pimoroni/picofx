@@ -388,7 +388,9 @@ footer p { margin: 0; }
 <p>The board plays a WAV file through its speaker, alongside whatever the lights are doing:</p>
 <pre class="entry"><code><span class="s-target">audio</span><span class="s-colon">:</span> <span class="s-effect">wav</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">chimes.wav</span>
 <span class="s-target">audio</span><span class="s-colon">:</span> <span class="s-effect">wav</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">ambience.wav</span> <span class="s-name">loop</span><span class="s-punc">=</span><span class="s-value">yes</span></code></pre>
-<p>The file plays once as the board starts, or over and over with <code>loop</code>. The board plays one sound at a time, so each scene takes one <code>audio</code> entry, and one more may sit before any heading. Put the file on this drive beside <code>effects.txt</code>. An ordinary uncompressed WAV plays, mono or stereo; MP3 does not.</p>
+<p>The file plays once as the board starts, or over and over with <code>loop</code>. The board plays one sound at a time, so each scene takes one <code>audio</code> entry, and one more may sit before any heading. Put the file on this drive beside <code>effects.txt</code>.</p>
+<p>A file is looked for on this drive first, then on the board itself. While the computer is copying to this drive the sound waits in silence with the effects.</p>
+<p>An ordinary uncompressed WAV plays, mono or stereo; MP3 does not.</p>
 <p>The drive is small, so a lower sample rate fits more: a minute of 22kHz mono takes about 2.6MB, which is more than the drive holds, and 8kHz mono takes under 1MB.</p>
 <h2 id="scenes">Scenes</h2>
 <p>A file can hold several sets of effects and show them one after another. A heading in square brackets begins one, and says how long it shows for:</p>
@@ -411,9 +413,11 @@ footer p { margin: 0; }
 <tr><td><code>program</code></td><td>a Python file to run instead of the effects</td><td>the effects run</td></tr>
 <tr><td><code>args</code></td><td>what to pass that program, divided by <code>|</code></td><td>it is given none</td></tr>
 </tbody></table></div>
+<p>With <code>reload=auto</code>, saving <code>effects.txt</code> is enough on its own: the board notices the save, takes the drive back for a moment, and plays the new effects, exactly as a single press of <strong>Boot</strong> would. Only a save to <code>effects.txt</code> counts, so copying sounds on never interrupts anything.</p>
 <h3 id="running-your-own-program">Running your own program</h3>
-<p>A program can sit on this drive or on the board's own filesystem, and its name may include folders, so <code>program=examples/effects/mono/sweep_trail.py</code> reaches one of the examples the board ships with. If it is missing, or stops with an error, the effects run instead and <code>errors.txt</code> says what happened.</p>
-<p>The effects stop while a program runs, and <strong>Boot</strong> and ejecting do nothing. The drive is shown anyway, so you can still edit <code>effects.txt</code>; press <strong>Reset</strong> for the change to take.</p>
+<p>A program can sit on this drive or on the board's own filesystem, and its name may include folders: it is looked for here first, then on the board, so <code>program=examples/effects/mono/sweep_trail.py</code> reaches one of the examples the board ships with. Where the name is in both, this drive's copy runs. If it is missing, or stops with an error, the effects run instead and <code>errors.txt</code> says what happened.</p>
+<p>Saving a file that names a program, while the effects play, restarts the board, which then runs the program as it would from power on.</p>
+<p>The effects stop while a program runs, and <strong>Boot</strong> and ejecting do nothing. The drive is shown anyway, even with <code>drive</code> set to <code>manual</code>, so you can still edit <code>effects.txt</code>. With <code>reload=auto</code>, saving it restarts the board, which then plays whatever it now says; without, press <strong>Reset</strong> for the change to take.</p>
 <h3 id="what-is-already-on-the-board">What is already on the board</h3>
 <div class="scroll"><table>
 <thead><tr><th>Folder</th><th>What is in it</th></tr></thead>
