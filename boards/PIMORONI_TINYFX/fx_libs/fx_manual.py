@@ -268,9 +268,12 @@ footer p { margin: 0; }
 <li><a href="#fade-and-ease">Fade and ease</a></li>
 </ul></details></li>
 <li><details><summary><a href="#effects">Effects</a></summary><ul>
-<li><a href="#for-any-output">For any output</a></li>
+<li><a href="#for-any-output-or-for-one-of-the-rgb-output-s-red-green-and-blue">For any output, or for one of the RGB output's red, green and blue</a></li>
 <li><a href="#for-the-rgb-output-only-since-these-bring-their-own-colour">For the RGB output only, since these bring their own colour</a></li>
 <li><a href="#which-ones-travel">Which ones travel</a></li>
+<li><a href="#traffic-lights-and-crossings">Traffic lights and crossings</a></li>
+<li><a href="#sweep">Sweep</a></li>
+<li><a href="#blinking-through-colours">Blinking through colours</a></li>
 <li><a href="#what-the-settings-mean">What the settings mean</a></li>
 </ul></details></li>
 <li><a href="#sound">Sound</a></li>
@@ -352,8 +355,8 @@ footer p { margin: 0; }
 <p><code>fade</code> and <code>ease</code> take the seconds a change takes to get there. <code>fade</code> crosses evenly, which is what a stage light does; <code>ease</code> goes quickly at first and slows as it arrives, which is how a bulb warms. Two numbers divided by <code>|</code> give the rise and the fall their own lengths:</p>
 <pre class="entry"><code><span class="s-target">out1-3</span> <span class="s-name">ease</span><span class="s-punc">=</span><span class="s-value">0.05|1.2</span><span class="s-colon">:</span> <span class="s-effect">blink</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">1</span></code></pre>
 <h2 id="effects">Effects</h2>
-<p>Every setting can be left out, and the board fills in the value shown against it below.</p>
-<h3 id="for-any-output">For any output</h3>
+<p>Every setting can be left out, and the board fills in the value shown against it below. The few with none shown have nothing to fall back on, and each is covered where its effect is.</p>
+<h3 id="for-any-output-or-for-one-of-the-rgb-output-s-red-green-and-blue">For any output, or for one of the RGB output's red, green and blue</h3>
 <div class="scroll"><table>
 <thead><tr><th>Effect</th><th>Settings</th></tr></thead>
 <tbody>
@@ -381,28 +384,47 @@ footer p { margin: 0; }
 <tr><td><code>rgb</code></td><td><code>red=255</code> <code>green=255</code> <code>blue=255</code></td></tr>
 <tr><td><code>hsv</code></td><td><code>hue=0</code> <code>sat=1</code> <code>val=1</code></td></tr>
 <tr><td><code>rainbow</code></td><td><code>speed=1</code> <code>sat=1</code> <code>val=1</code></td></tr>
+<tr><td><code>rainbow_wave</code></td><td><code>speed=1</code> <code>length=1</code> <code>sat=1</code> <code>val=1</code></td></tr>
 <tr><td><code>hue_step</code></td><td><code>interval=1</code> <code>hue=0</code> <code>sat=1</code> <code>val=1</code> <code>steps=6</code></td></tr>
 <tr><td><code>rgb_blink</code></td><td><code>colour</code> <code>speed=1</code> <code>phase=0</code> <code>duty=0.5</code></td></tr>
 </tbody></table></div>
 <h3 id="which-ones-travel">Which ones travel</h3>
-<p>The ones ending <code>_wave</code>, <code>_sequence</code> and <code>_counter</code>, and <code>sweep</code>, travel across the outputs you name; the rest do the same thing on every one. The ones ending <code>_each</code> give every output its own: <code>flicker_each</code> dips each at its own moments, as flames do.</p>
-<p><code>traffic_light</code> wants three outputs, lit red, amber and green in that order, and <code>pelican_crossing</code> five, the same three then the stop and walk figures:</p>
-<pre class="entry"><code><span class="s-target">out1-3</span> <span class="s-name">ease</span><span class="s-punc">=</span><span class="s-value">0.3</span><span class="s-colon">:</span> <span class="s-effect">traffic_light</span>
-<span class="s-target">out1-5</span> <span class="s-name">ease</span><span class="s-punc">=</span><span class="s-value">0.3</span><span class="s-colon">:</span> <span class="s-effect">pelican_crossing</span></code></pre>
-<p><code>sweep</code> is a light that crosses the outputs and turns back at each end. Its <code>extent</code> is how far it reaches from itself, in outputs, and <code>hold</code> waits at each end, in seconds:</p>
-<pre class="entry"><code><span class="s-target">out1-6</span> <span class="s-name">ease</span><span class="s-punc">=</span><span class="s-value">0.4</span><span class="s-colon">:</span> <span class="s-effect">sweep</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">1</span> <span class="s-name">extent</span><span class="s-punc">=</span><span class="s-value">1</span> <span class="s-name">hold</span><span class="s-punc">=</span><span class="s-value">1</span></code></pre>
-<p><code>rgb_blink</code> takes one colour, or several to blink through in turn, divided by <code>|</code>:</p>
+<p>The ones ending <code>_wave</code>, <code>_sequence</code> and <code>_counter</code>, and <code>sweep</code>, travel across the outputs you name; the rest do the same thing on every one.</p>
+<p>The ones ending <code>_each</code> give every output its own: <code>flicker_each</code> dips each at its own moments, as flames do, and <code>random_each</code> gives each its own brightness. <code>flicker</code> and <code>random</code> do the same to all of them at once, as one light would:</p>
+<pre class="entry"><code><span class="s-target">out1-6</span><span class="s-colon">:</span> <span class="s-effect">flicker_each</span> <span class="s-name">dimness</span><span class="s-punc">=</span><span class="s-value">0.6</span></code></pre>
+<p>An effect that drives several outputs takes them in the order given in its own section below, so naming fewer than it drives lights the first of them and leaves the rest out. Naming more than it drives is a mistake, and <code>errors.txt</code> says so.</p>
+<h3 id="traffic-lights-and-crossings">Traffic lights and crossings</h3>
+<p><code>traffic_light</code> wants three outputs, and lights them red, amber and green in that order. It switches instantly, so add <code>ease</code> for the lamps of a real signal:</p>
+<pre class="entry"><code><span class="s-target">out1-3</span> <span class="s-name">ease</span><span class="s-punc">=</span><span class="s-value">0.3</span><span class="s-colon">:</span> <span class="s-effect">traffic_light</span></code></pre>
+<p><code>pelican_crossing</code> wants five outputs: the same three, then the two figures a pedestrian reads, stop and walk. In place of red and amber it flashes the amber and the walking figure together, as a pelican does while a crossing ends. It comes round on its own clock, there being no button to press:</p>
+<pre class="entry"><code><span class="s-target">out1-5</span> <span class="s-name">ease</span><span class="s-punc">=</span><span class="s-value">0.3</span><span class="s-colon">:</span> <span class="s-effect">pelican_crossing</span> <span class="s-name">green_interval</span><span class="s-punc">=</span><span class="s-value">20</span> <span class="s-name">red_interval</span><span class="s-punc">=</span><span class="s-value">8</span></code></pre>
+<p>Three outputs on <code>pelican_crossing</code> is its traffic lights on their own:</p>
+<pre class="entry"><code><span class="s-target">out1-3</span><span class="s-colon">:</span> <span class="s-effect">pelican_crossing</span></code></pre>
+<h3 id="sweep">Sweep</h3>
+<p><code>sweep</code> is a light that crosses the outputs and turns back at each end, the back and forth a scanner does. Its <code>extent</code> is how far it reaches from itself, in outputs, and its <code>speed</code> counts one crossing as the travelling effects count one pass. Its <code>hold</code> waits at each end, in seconds, giving a trail time to clear before the light comes back over it:</p>
+<pre class="entry"><code><span class="s-target">out1-6</span> <span class="s-name">ease</span><span class="s-punc">=</span><span class="s-value">0.4</span><span class="s-colon">:</span> <span class="s-effect">sweep</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">1</span> <span class="s-name">length</span><span class="s-punc">=</span><span class="s-value">6</span> <span class="s-name">extent</span><span class="s-punc">=</span><span class="s-value">1</span> <span class="s-name">hold</span><span class="s-punc">=</span><span class="s-value">1</span></code></pre>
+<p>Give <code>extent</code> a whole number of outputs, such as 1 or 2. In between it dims as the light passes between two outputs and brightens as it lands on one, which reads as stepping. 1 is the tightest that travels smoothly.</p>
+<h3 id="blinking-through-colours">Blinking through colours</h3>
+<p><code>rgb_blink</code> takes one colour, or several to blink through in turn, divided by <code>|</code> since a comma would mean one colour for each output. It has no colour of its own, so give it at least one:</p>
 <pre class="entry"><code><span class="s-target">rgb</span><span class="s-colon">:</span> <span class="s-effect">rgb_blink</span> <span class="s-name">colour</span><span class="s-punc">=</span><span class="s-value">red|warm|ff8040</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.5</span></code></pre>
 <h3 id="what-the-settings-mean">What the settings mean</h3>
-<p><code>speed</code> is cycles a second: 1 goes round once a second, 0.5 once every two. A negative speed runs the cycle backwards. <code>interval</code>, <code>hold</code> and the flicker and signal timings are seconds. <code>length</code>, <code>flashes</code>, <code>steps</code>, <code>count</code> and <code>step</code> are plain counts. The rest run from 0 to 1, written 0.5 or 50% as you prefer, and <code>hue</code> takes degrees as well, written 180deg.</p>
+<p><code>speed</code> is cycles a second: 1 goes round once a second, 0.5 once every two, 2 twice a second. A negative speed runs the cycle backwards.</p>
+<p>The settings measured in seconds are <code>interval</code>, <code>hold</code>, flicker's <code>bright_min</code>, <code>bright_max</code>, <code>dim_min</code> and <code>dim_max</code>, and the four intervals <code>traffic_light</code> and <code>pelican_crossing</code> each take. <code>length</code>, <code>flashes</code>, <code>steps</code>, <code>count</code> and <code>step</code> are plain counts, and a negative <code>step</code> counts down.</p>
+<p>The rest run from 0 to 1, written 0.5 or 50% as you prefer. <code>window</code> is one of them, being the share of a cycle the flashes happen in. <code>hue</code> takes degrees as well, written 180deg, which is what a colour picker gives you.</p>
+<p><strong>If you write Python</strong>, an effect of your own can join this list and be written here like any other. The library reference on <a href="https://github.com/pimoroni/picofx/blob/main/picofx/README.md">GitHub</a> says how, under Effects System.</p>
 <h2 id="sound">Sound</h2>
-<p>The board plays a WAV file through its speaker, alongside whatever the lights are doing:</p>
+<p>The board plays a WAV file through its speaker, alongside whatever else it is doing:</p>
 <pre class="entry"><code><span class="s-target">audio</span><span class="s-colon">:</span> <span class="s-effect">wav</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">chimes.wav</span>
 <span class="s-target">audio</span><span class="s-colon">:</span> <span class="s-effect">wav</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">ambience.wav</span> <span class="s-name">loop</span><span class="s-punc">=</span><span class="s-value">yes</span></code></pre>
-<p>The file plays once as the board starts, or over and over with <code>loop</code>. The board plays one sound at a time, so each scene takes one <code>audio</code> entry, and one more may sit before any heading. Put the file on this drive beside <code>effects.txt</code>.</p>
-<p>A file is looked for on this drive first, then on the board itself. While the computer is copying to this drive the sound waits in silence with the effects.</p>
-<p>An ordinary uncompressed WAV plays, mono or stereo; MP3 does not.</p>
-<p>The drive is small, so a lower sample rate fits more: a minute of 22kHz mono takes about 2.6MB, which is more than the drive holds, and 8kHz mono takes under 1MB.</p>
+<div class="scroll"><table>
+<thead><tr><th>Plays</th><th>Settings</th></tr></thead>
+<tbody>
+<tr><td><code>wav</code></td><td><code>file</code> <code>loop=no</code></td></tr>
+</tbody></table></div>
+<p>The file plays once as the board starts, or over and over with <code>loop</code>. The board plays one sound at a time, so each scene takes one <code>audio</code> entry, and one more may sit before any heading.</p>
+<p>A file is looked for on this drive first, then on the board itself. The board opens it before this drive is shown, so a computer taking the drive does not stop the sound. While the computer is copying to this drive the sound waits in silence with the effects, and a file replaced under a playing sound stays silent until the next reload.</p>
+<p>An ordinary uncompressed WAV plays, mono or stereo; MP3 does not. This drive holds 2MB, so a lower sample rate fits more: a minute of 16-bit 22kHz mono takes about 2.6MB, and the same at 8kHz under 1MB.</p>
+<p>An <code>audio</code> entry inside a scene plays while that scene shows, and one before any heading plays whenever the showing scene brings no sound of its own. A sound put aside by a scene change picks up where it left off when its turn comes back, and one that had already finished starts again from the top. A scene with <code>restart</code> starts its sound from the top every time, along with everything else it holds.</p>
 <h2 id="scenes">Scenes</h2>
 <p>A file can hold several sets of effects and show them one after another. A heading in square brackets begins one, and says how long it shows for:</p>
 <pre class="entry"><code><span class="s-scene">[Evening: 30s]</span>

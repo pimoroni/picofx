@@ -4,7 +4,7 @@ Every setting can be left out, and the board fills in the value shown against it
 below. The few with none shown have nothing to fall back on, and each is covered
 where its effect is.
 
-### For an output, or for one of its red, green and blue
+### For __MONO_EFFECTS_FOR__
 
 | Effect | Settings |
 | --- | --- |
@@ -25,7 +25,7 @@ where its effect is.
 | `traffic_light` | `red_interval=10` `red_amber_interval=5` `green_interval=10` `amber_interval=5` |
 | `pelican_crossing` | `red_interval=8` `flashing_interval=6` `green_interval=20` `amber_interval=3` |
 
-### For an output only, since these bring their own colour
+### For __COLOUR_EFFECTS_FOR__ only, since these bring their own colour
 
 | Effect | Settings |
 | --- | --- |
@@ -46,7 +46,7 @@ its own moments, as flames do, and `random_each` gives each its own brightness.
 `flicker` and `random` do the same to all of them at once, as one light would:
 
 ```entry
-out1-7 colour=ff5a00: flicker_each dimness=0.6
+__FLAME_OUTPUTS__: flicker_each dimness=0.6
 ```
 
 An effect that drives several outputs takes them in the order given in its own
@@ -87,7 +87,7 @@ pass. Its `hold` waits at each end, in seconds, giving a trail time to clear
 before the light comes back over it:
 
 ```entry
-out1-7 ease=0.4: sweep speed=1 length=7 extent=1 hold=1
+__ALL_OUTPUTS__ ease=0.4: sweep speed=1 length=__OUTPUT_COUNT__ extent=1 hold=1
 ```
 
 Give `extent` a whole number of outputs, such as 1 or 2. In between it dims as
@@ -101,7 +101,7 @@ reads as stepping. 1 is the tightest that travels smoothly.
 own, so give it at least one:
 
 ```entry
-out1: rgb_blink colour=red|warm|ff8040 speed=0.5
+__COLOUR_OUTPUT__: rgb_blink colour=red|warm|ff8040 speed=0.5
 ```
 
 ### What the settings mean

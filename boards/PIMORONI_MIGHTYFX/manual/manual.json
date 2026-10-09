@@ -8,6 +8,14 @@
   "ENTRY_TARGETS": "the outputs and screens",
   "COPIED_FILES": "pictures",
   "EXAMPLE_PROGRAM": "examples/effects/colour/rainbow_wave.py",
+  "MONO_EFFECTS_FOR": "an output, or for one of its red, green and blue",
+  "COLOUR_EFFECTS_FOR": "an output",
+  "ALL_OUTPUTS": "out1-7",
+  "OUTPUT_COUNT": "7",
+  "FLAME_OUTPUTS": "out1-7 colour=ff5a00",
+  "COLOUR_OUTPUT": "out1",
+  "SOUND_THROUGH": "its onboard amplifier",
+  "DRIVE_SIZE": "under 7MB",
   "COLOUR_SETTING_FOR": "effects that bring no colour"
  }
 }

@@ -8,6 +8,14 @@
   "ENTRY_TARGETS": "the outputs",
   "COPIED_FILES": "sounds",
   "EXAMPLE_PROGRAM": "examples/effects/mono/sweep_trail.py",
+  "MONO_EFFECTS_FOR": "any output, or for one of the RGB output's red, green and blue",
+  "COLOUR_EFFECTS_FOR": "the RGB output",
+  "ALL_OUTPUTS": "out1-6",
+  "OUTPUT_COUNT": "6",
+  "FLAME_OUTPUTS": "out1-6",
+  "COLOUR_OUTPUT": "rgb",
+  "SOUND_THROUGH": "its speaker",
+  "DRIVE_SIZE": "2MB",
   "COLOUR_SETTING_FOR": "the RGB output when its effect brings no colour"
  }
 }

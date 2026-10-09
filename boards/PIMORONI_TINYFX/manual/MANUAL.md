@@ -173,9 +173,10 @@ out1-3 ease=0.05|1.2: blink speed=1
 ## Effects
 
 Every setting can be left out, and the board fills in the value shown against it
-below.
+below. The few with none shown have nothing to fall back on, and each is covered
+where its effect is.
 
-### For any output
+### For any output, or for one of the RGB output's red, green and blue
 
 | Effect | Settings |
 | --- | --- |
@@ -203,34 +204,73 @@ below.
 | `rgb` | `red=255` `green=255` `blue=255` |
 | `hsv` | `hue=0` `sat=1` `val=1` |
 | `rainbow` | `speed=1` `sat=1` `val=1` |
+| `rainbow_wave` | `speed=1` `length=1` `sat=1` `val=1` |
 | `hue_step` | `interval=1` `hue=0` `sat=1` `val=1` `steps=6` |
 | `rgb_blink` | `colour` `speed=1` `phase=0` `duty=0.5` |
 
 ### Which ones travel
 
 The ones ending `_wave`, `_sequence` and `_counter`, and `sweep`, travel across
-the outputs you name; the rest do the same thing on every one. The ones ending
-`_each` give every output its own: `flicker_each` dips each at its own moments,
-as flames do.
+the outputs you name; the rest do the same thing on every one.
 
-`traffic_light` wants three outputs, lit red, amber and green in that order, and
-`pelican_crossing` five, the same three then the stop and walk figures:
+The ones ending `_each` give every output its own: `flicker_each` dips each at
+its own moments, as flames do, and `random_each` gives each its own brightness.
+`flicker` and `random` do the same to all of them at once, as one light would:
+
+```entry
+out1-6: flicker_each dimness=0.6
+```
+
+An effect that drives several outputs takes them in the order given in its own
+section below, so naming fewer than it drives lights the first of them and
+leaves the rest out. Naming more than it drives is a mistake, and `errors.txt`
+says so.
+
+### Traffic lights and crossings
+
+`traffic_light` wants three outputs, and lights them red, amber and green in
+that order. It switches instantly, so add `ease` for the lamps of a real signal:
 
 ```entry
 out1-3 ease=0.3: traffic_light
-out1-5 ease=0.3: pelican_crossing
 ```
 
-`sweep` is a light that crosses the outputs and turns back at each end. Its
-`extent` is how far it reaches from itself, in outputs, and `hold` waits at each
-end, in seconds:
+`pelican_crossing` wants five outputs: the same three, then the two figures a
+pedestrian reads, stop and walk. In place of red and amber it flashes the amber
+and the walking figure together, as a pelican does while a crossing ends. It
+comes round on its own clock, there being no button to press:
 
 ```entry
-out1-6 ease=0.4: sweep speed=1 extent=1 hold=1
+out1-5 ease=0.3: pelican_crossing green_interval=20 red_interval=8
 ```
 
+Three outputs on `pelican_crossing` is its traffic lights on their own:
+
+```entry
+out1-3: pelican_crossing
+```
+
+### Sweep
+
+`sweep` is a light that crosses the outputs and turns back at each end, the back
+and forth a scanner does. Its `extent` is how far it reaches from itself, in
+outputs, and its `speed` counts one crossing as the travelling effects count one
+pass. Its `hold` waits at each end, in seconds, giving a trail time to clear
+before the light comes back over it:
+
+```entry
+out1-6 ease=0.4: sweep speed=1 length=6 extent=1 hold=1
+```
+
+Give `extent` a whole number of outputs, such as 1 or 2. In between it dims as
+the light passes between two outputs and brightens as it lands on one, which
+reads as stepping. 1 is the tightest that travels smoothly.
+
+### Blinking through colours
+
 `rgb_blink` takes one colour, or several to blink through in turn, divided by
-`|`:
+`|` since a comma would mean one colour for each output. It has no colour of its
+own, so give it at least one:
 
 ```entry
 rgb: rgb_blink colour=red|warm|ff8040 speed=0.5
@@ -238,34 +278,57 @@ rgb: rgb_blink colour=red|warm|ff8040 speed=0.5
 
 ### What the settings mean
 
-`speed` is cycles a second: 1 goes round once a second, 0.5 once every two. A
-negative speed runs the cycle backwards. `interval`, `hold` and the flicker and
-signal timings are seconds. `length`, `flashes`, `steps`, `count` and `step` are
-plain counts. The rest run from 0 to 1, written 0.5 or 50% as you prefer, and
-`hue` takes degrees as well, written 180deg.
+`speed` is cycles a second: 1 goes round once a second, 0.5 once every two, 2
+twice a second. A negative speed runs the cycle backwards.
+
+The settings measured in seconds are `interval`, `hold`, flicker's `bright_min`,
+`bright_max`, `dim_min` and `dim_max`, and the four intervals `traffic_light`
+and `pelican_crossing` each take. `length`, `flashes`, `steps`, `count` and
+`step` are plain counts, and a negative `step` counts down.
+
+The rest run from 0 to 1, written 0.5 or 50% as you prefer. `window` is one of
+them, being the share of a cycle the flashes happen in. `hue` takes degrees as
+well, written 180deg, which is what a colour picker gives you.
+
+**If you write Python**, an effect of your own can join this list and be written
+here like any other. The library reference on
+[GitHub](https://github.com/pimoroni/picofx/blob/main/picofx/README.md) says how,
+under Effects System.
 
 ## Sound
 
-The board plays a WAV file through its speaker, alongside whatever the lights
-are doing:
+The board plays a WAV file through its speaker, alongside whatever
+else it is doing:
 
 ```entry
 audio: wav file=chimes.wav
 audio: wav file=ambience.wav loop=yes
 ```
 
+| Plays | Settings |
+| --- | --- |
+| `wav` | `file` `loop=no` |
+
 The file plays once as the board starts, or over and over with `loop`. The board
 plays one sound at a time, so each scene takes one `audio` entry, and one more may
-sit before any heading. Put the file on this drive beside `effects.txt`.
+sit before any heading.
 
-A file is looked for on this drive first, then on the board itself. While the
-computer is copying to this drive the sound waits in silence with the effects.
+A file is looked for on this drive first, then on the board itself. The board
+opens it before this drive is shown, so a computer taking the drive does not stop
+the sound. While the computer is copying to this drive the sound waits in silence
+with the effects, and a file replaced under a playing sound stays silent until
+the next reload.
 
-An ordinary uncompressed WAV plays, mono or stereo; MP3 does not.
+An ordinary uncompressed WAV plays, mono or stereo; MP3 does not. This drive
+holds 2MB, so a lower sample rate fits more: a minute of 16-bit 22kHz
+mono takes about 2.6MB, and the same at 8kHz under 1MB.
 
-The drive is small, so a lower sample rate fits more: a minute of 22kHz mono
-takes about 2.6MB, which is more than the drive holds, and 8kHz mono takes
-under 1MB.
+An `audio` entry inside a scene plays while that scene shows, and one before any
+heading plays whenever the showing scene brings no sound of its own. A sound
+put aside by a scene change picks up where it left off when its turn comes back,
+and one that had already finished starts again from the top. A scene with
+`restart` starts its sound from the top every time, along with everything else
+it holds.
 
 ## Scenes
 
