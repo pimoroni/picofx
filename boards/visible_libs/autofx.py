@@ -253,10 +253,10 @@ TRANSFER = (WHITE, 0.1, 0.35)
 TRANSFER_STEP_MS = 120
 TRANSFER_HOLD_MS = 500
 
-# The longest the drive keeps a computer's first write waiting while a sound stops, which
-# it must before the writes begin. It covers a pass of the loop and the fade playing out
-# of the player's ring, which a board may make a few hundred milliseconds long.
-WRITE_HOLD_MS = 500
+# The longest a sound paused for the board joining the bus is given to fade out of the
+# player's ring before the player shuts down, which a board may make a few hundred
+# milliseconds long
+SOUND_FADE_MS = 400
 
 # How often a single indicator flashes while the computer is copying, lit for one step at
 # the end of each period, since a spot with nowhere to travel would hold it steady
@@ -706,8 +706,9 @@ class Sound:
     """
     One WAV playing beside the effects: the player it runs on, the file it reads,
     and whether it starts again when it ends. A file on the drive is read straight
-    from the flash, so it plays through a handover. One the computer rewrites goes
-    silent until the next reload, since what it reads is no longer that sound.
+    from the flash, so it plays through a handover, and the player stands it aside
+    while the computer writes. One the computer rewrites goes silent until the next
+    reload, since what it reads is no longer that sound.
 
     The board plays one sound at a time, so the sounds share the player and `live`
     says which of them has it. One put aside by a scene switch remembers where it
@@ -724,7 +725,7 @@ class Sound:
         self.__moved = None
         self.__from = 0         # Where the next start picks up, 0 being the top
         self.__gone = False     # Whether the computer changed the file since load
-        self.__held = False     # Whether a transfer stopped it part way through
+        self.__held = False     # Whether joining the bus stopped it part way through
 
     def start(self):
         if self.__gone:
@@ -752,6 +753,10 @@ class Sound:
             return
         at = self.wav.position()
         now = time.ticks_ms()
+        # Check if it has just ended because the computer replaced its file, which the
+        # player found as the writes finished
+        if at is None and self.__at is not None and self.__file_changed():
+            return
         if at is None or at != self.__at:
             self.__at = at
             self.__moved = now
@@ -772,19 +777,18 @@ class Sound:
         self.__from = self.wav.position() or 0
         self.live = False
 
-    # The player is shared, so a sound standing aside for a transfer only touches
-    # it while the speaker is its own. It stops outright, amplifier off, since each
-    # flash write stalls the audio beneath a pause, and resume() picks up where it was
+    # The player is shared, so a sound standing aside while the board joins the bus only
+    # touches it while the speaker is its own. It stops outright, as the effects do, and
+    # resume() picks up where it was
     def pause(self):
         if not self.live:
             return
-        # None is a sound that had already ended, which the transfer leaves ended
+        # None is a sound that had already ended, which joining the bus leaves ended
         if self.wav.position() is None:
             return
-        # Faded out before it stops, a cut mid-waveform clicking. The drive holds the
-        # computer's first write meanwhile, so the fade plays out whole
+        # Faded out before it stops, a cut mid-waveform clicking
         self.wav.pause()
-        deadline = time.ticks_add(time.ticks_ms(), WRITE_HOLD_MS - 100)
+        deadline = time.ticks_add(time.ticks_ms(), SOUND_FADE_MS)
         while not self.wav.is_paused() and time.ticks_diff(deadline, time.ticks_ms()) > 0:
             time.sleep_ms(5)
         at = self.wav.position()
@@ -797,19 +801,25 @@ class Sound:
     def resume(self):
         # The watch starts afresh: the position stood still through the pause
         self.__at = None
-        # A transfer is the only time the computer can have changed the file
-        changed = getattr(self.handle, "changed", None)
-        if not self.__gone and changed is not None and changed():
-            self.__gone = True
-            if self.live:
-                self.wav.stop()
-            self.live = False
-            print("a sound's file changed on the drive, and it waits for the next reload")
-            self.__held = False
+        if self.__file_changed():
             return
         if self.__held:
             self.__held = False
             self.start()
+
+    def __file_changed(self):
+        # Check if the computer has replaced the file, which leaves the sound silent until
+        # the next reload
+        changed = getattr(self.handle, "changed", None)
+        if self.__gone or changed is None or not changed():
+            return False
+        self.__gone = True
+        if self.live:
+            self.wav.stop()
+        self.live = False
+        self.__held = False
+        print("a sound's file changed on the drive, and it waits for the next reload")
+        return True
 
     def restart(self):
         """Back to the top, for a scene that begins again on every entry."""
@@ -2110,12 +2120,6 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     if watcher is not None:
         watcher(settings.get("reload") == "auto")
 
-    # A sound has to stop before the computer's writes begin, since each one stalls it
-    # with interrupts off, so the drive holds the first while the sound stops
-    holder = getattr(volume, "hold_writes", None)
-    if holder is not None:
-        holder(WRITE_HOLD_MS if sounds else 0)
-
     # Enumeration after a bus reset has deadlines the players' ticks would make the board
     # miss, so they stop the moment one arrives, from the USB task itself, and the loop
     # below stands everything aside until the computer has finished
@@ -2184,6 +2188,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
             volume.expose()
 
     paused = False
+    sounds_aside = False
     idle_since = None
 
     # A quick tap can start and end inside one screen's service, which a level read
@@ -2259,11 +2264,10 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                     import machine
                     machine.reset()
                 paused = False
+                sounds_aside = False
                 idle_since = None
                 if watcher is not None:
                     watcher(settings.get("reload") == "auto")
-                if holder is not None:
-                    holder(WRITE_HOLD_MS if sounds else 0)
                 if event == volume.RELOADED:
                     # A single press asks to try an edit without putting the drive
                     # away, so it goes back once the file has been read, and before
@@ -2292,14 +2296,13 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
             reset_seen = False
             if volume.busy() or settling:
                 idle_since = None
-                if not paused:
-                    # The sound goes first: once a copy has begun every line here runs
-                    # between flash writes, and the sound chops until it stops
+                # The player stands a sound aside for the computer's writes itself, so only
+                # joining the bus stops one here
+                if settling and not sounds_aside:
                     for sound in sounds:
                         sound.pause()
-                    # The sound is quiet, so the write the drive holds can go
-                    if holder is not None:
-                        volume.release_writes()
+                    sounds_aside = True
+                if not paused:
                     for player in players:
                         player.stop()
                     for show in shows:
@@ -2313,6 +2316,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                     # first frames can hold up its refills
                     for sound in sounds:
                         sound.resume()
+                    sounds_aside = False
                     __resume(players, fx)
                     for show in shows:
                         if show.live:
@@ -2366,9 +2370,6 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
             except Exception as e:      # noqa: BLE001
                 print("a sound would not close:", e)
         try:
-            # Nothing is left to stop, so the computer's writes need not wait
-            if holder is not None:
-                holder(0)
             if volume.exposed():
                 volume.withdraw()
         except Exception as e:      # noqa: BLE001

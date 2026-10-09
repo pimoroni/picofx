@@ -180,7 +180,8 @@ class WavPlayer:
         self.__from_drive = False       # Whether the WAV is read from the USB drive, so a write ends it
         self.__stopping = False         # Whether the sound ends once its fade has played out
         self.__standing_aside = False   # Whether the sound is paused while the computer writes
-        self.__aside_silent = False     # Whether that pause has gone quiet and the amplifier off
+        self.__aside_silent = False     # Whether that pause has gone quiet and let the write go
+        self.__amp_on = False
         self.__flush_count = 0
         self.__audio_out = None
 
@@ -199,6 +200,8 @@ class WavPlayer:
     def set_root(self, root):
         self.__root = root.rstrip("/") + "/"
 
+    # Where the file object has a changed() method, the WAV calls it before returning after
+    # the computer's writes to the USB drive, and ends instead if it answers True
     def play_wav(self, wav_file, loop=False, position=0):
         self.__stop_i2s()                                       # Stop any active playback and terminate the I2S instance
 
@@ -307,11 +310,9 @@ class WavPlayer:
     def resume(self):
         self.__fading_out = 0
         self.__standing_aside = False
-        if self.__aside_silent:
-            self.__aside_silent = False
-            if self.__enable is not None:
-                self.__enable.on()
+        self.__aside_silent = False
         if self.__state == WavPlayer.PAUSE:
+            self.__amplify(True)
             if self.__fades():
                 self.__fade = self.__fade_length    # Back from silence, so it fades in
             self.__state = WavPlayer.PLAY           # Enter the play state on the next callback
@@ -386,9 +387,7 @@ class WavPlayer:
         self.__flush_count = ibuf // self.SILENCE_BUFFER_LENGTH + 1
         self.__audio_out.irq(self.__i2s_callback)
         self.__audio_out.write(self.__silence_samples)
-
-        if self.__enable is not None:
-            self.__enable.on()
+        self.__amplify(True)
 
     def __stop_i2s(self):
         # A pause still fading lets its fade play out of the ring, and one that has played
@@ -411,8 +410,7 @@ class WavPlayer:
             self.__audio_out.deinit()
             self.__state = WavPlayer.NONE
 
-        if self.__enable is not None:
-            self.__enable.off()
+        self.__amplify(False)
 
         if self.__audio_out is not None:
             self.__audio_out.deinit()   # Deinit any active I2S comms
@@ -474,29 +472,43 @@ class WavPlayer:
         return arrived
 
     def __wait_out_writes(self):
-        # Quiet, so the amplifier goes off and the held write goes. The sound fades back in once
-        # the computer has finished, which busy turning false marks a second after its last write
+        # Quiet with the amplifier off, so the held write goes. The sound fades back in once the
+        # computer has finished, which busy turning false marks a second after its last write
         if not self.__aside_silent:
             self.__aside_silent = True
-            if self.__enable is not None:
-                self.__enable.off()
             __release_writes()
         elif not __drive_busy():
             self.__was_busy = False
-            self.resume()
+            # A WAV whose file can say the computer rewrote it ends where it did
+            changed = getattr(self.__wav_file.wav_file, "changed", None) \
+                if self.__mode == WavPlayer.MODE_WAV else None
+            if changed is not None and changed():
+                self.__end_sound()
+            else:
+                self.resume()
 
     def __end_sound(self):
         self.__stopping = False
+        self.__standing_aside = False
+        self.__aside_silent = False
         if self.__mode == WavPlayer.MODE_WAV:
             self.__wav_file.close()
             self.__state = WavPlayer.FLUSH
         else:
             self.__state = WavPlayer.STOP
-        # Off before any held write goes, since the amplifier sounds at every flash write's
-        # stall even in silence. The next sound turns it back on
-        if self.__enable is not None:
-            self.__enable.off()
+        # Off before any held write goes
+        self.__amplify(False)
         self.__end_hold()
+
+    def __amplify(self, on):
+        # The amplifier sounds at every flash write's stall even in silence, so it is on only
+        # while there is something to hear. Switching it in silence is silent
+        if self.__enable is not None and on != self.__amp_on:
+            self.__amp_on = on
+            if on:
+                self.__enable.on()
+            else:
+                self.__enable.off()
 
     def __write(self, samples):
         self.__written = True
@@ -601,12 +613,14 @@ class WavPlayer:
 
         # PAUSE or STOP
         elif self.__state == WavPlayer.PAUSE or self.__state == WavPlayer.STOP:
-            # Check if a fade for a write has played out of the ring
-            if self.__state == WavPlayer.PAUSE and time.ticks_diff(time.ticks_ms(), self.__silent_at) >= 0:
-                if self.__stopping:
-                    self.__end_sound()
-                elif self.__standing_aside:
-                    self.__wait_out_writes()
+            # Check if the sound has ended, or a pause's fade has played out of the ring
+            if self.__state == WavPlayer.STOP or time.ticks_diff(time.ticks_ms(), self.__silent_at) >= 0:
+                self.__amplify(False)
+                if self.__state == WavPlayer.PAUSE:
+                    if self.__stopping:
+                        self.__end_sound()
+                    elif self.__standing_aside:
+                        self.__wait_out_writes()
             self.__write(self.__silence_samples)                  # Play silence
 
         # FLUSH
