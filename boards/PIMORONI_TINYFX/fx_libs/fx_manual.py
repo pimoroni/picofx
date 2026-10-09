@@ -520,7 +520,7 @@ Picture: clock.png
 <p>A setting whose value is not what it takes is ignored, with a note in <code>errors.txt</code>, and the effect runs on its usual value for it.</p>
 <h2 id="more-from-pimoroni">More from Pimoroni</h2>
 <h3 id="boards-and-accessories">Boards and accessories</h3>
-<ul><li><a href="https://shop.pimoroni.com/products/mightyfx">MightyFX</a></li><li><a href="https://shop.pimoroni.com/products/tinyfx">TinyFX</a></li><li><a href="https://shop.pimoroni.com/products/tiny-fx-w">TinyFX W</a></li><li><a href="https://shop.pimoroni.com/collections/tiny-fx">Everything in the range</a></li></ul>
+<ul><li><a href="https://shop.pimoroni.com/products/mightyfx">MightyFX</a></li><li><a href="https://shop.pimoroni.com/products/tinyfx">TinyFX</a></li><li><a href="https://shop.pimoroni.com/products/tiny-fx-w">TinyFX W</a></li><li><a href="https://shop.pimoroni.com/products/plasma-2350">Plasma 2350</a></li><li><a href="https://shop.pimoroni.com/products/plasma-2350-w">Plasma 2350 W</a></li><li><a href="https://shop.pimoroni.com/collections/tiny-fx">Everything in the range</a></li></ul>
 <h3 id="going-further">Going further</h3>
 <ul><li><a href="https://github.com/pimoroni/picofx">picofx on GitHub</a>, the library these effects come from</li></ul>
 </main>
