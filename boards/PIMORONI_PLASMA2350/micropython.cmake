@@ -31,8 +31,11 @@ include(micropython-common-breakouts)
 # LEDs & Matrices
 include(plasma/micropython)
 
-# Encoders
+# Servos & Motors
+include(pwm/micropython)
+include(servo/micropython)
 include(encoder/micropython)
+include(motor/micropython)
 
 # Utility
 include(adcfft/micropython)
