@@ -2,7 +2,9 @@
 The FX drive: a small FAT partition holding effects.txt, editable from a connected
 computer over USB mass storage, and room for the assets a program reads. The mount
 is read-write whenever the board holds the drive, and released while the computer
-does, so the two writers can never meet.
+does, so the two writers can never meet. While the computer holds it, the mount
+point is a read-only view read straight from the flash, so a program still finds
+its files there.
 
 The drive is shown at boot and controlled by the button from then on: a double press
 of the button passed to service() shows or hides it, and hiding it, or ejecting it on
@@ -33,6 +35,14 @@ CATALOGUE_NAME = "catalogue.js"
 ERRORS_PATH = MOUNT_POINT + "/errors.txt"
 
 VOLUME_LABEL = "FX"
+
+# The stat modes of a folder and a file
+__S_IFDIR = 0x4000
+__S_IFREG = 0x8000
+
+# The error numbers VfsFat gives these, which MicroPython's errno does not name
+__ENOTDIR = 20
+__EROFS = 30
 
 # How much of a shipped document is compared. Anything shorter is read to the end;
 # anything longer is met at both ends, measured at 40ms against 424ms for a mount.
@@ -342,15 +352,10 @@ def writable():
     return __Writable()
 
 
-class Stream:
+class __FatReader:
     """
-    A file on the drive read straight from its flash, which reads on while the
-    computer holds the drive. The board's mount is released at every handover and
-    a file opened through it goes stale, so this finds the file's clusters once,
-    from the tables on the flash, and reads them directly from then on.
-
-    Read-only, and blind to the computer rewriting the file, which reads as whatever
-    then fills its clusters. changed() says when that has happened.
+    The drive's FAT12 or FAT16 tables and folders, read straight from its flash
+    with no FatFs involved, so they read on while the computer holds the drive.
     """
 
     # FAT directory entries and the attribute bits read from them
@@ -363,14 +368,9 @@ class Stream:
     # Where a long name's characters sit in each of its entries, two bytes apiece
     __LONG_NAME_SPANS = ((1, 11), (14, 26), (28, 32))
 
-    def __init__(self, name):
+    def __init__(self):
         self.__flash = rp2.Flash(msc=True)
         self.__read_layout()
-        self.__entry_at, self.__entry = self.__find(name)
-        self.size = self.__u32(self.__entry, 28)
-        self.__runs = self.__runs_from(self.__first_cluster(self.__entry), self.size)
-        self.__position = 0
-        self.__run = 0
 
     def __read(self, offset, length):
         data = bytearray(length)
@@ -480,16 +480,21 @@ class Stream:
         extension = bytes(entry[8:11]).rstrip(b" ")
         if base[:1] == b"\x05":
             base = b"\xe5" + base[1:]
+        # A lowercase 8.3 name is stored in capitals with these flags, and no long name
+        if entry[12] & 0x08:
+            base = base.lower()
+        if entry[12] & 0x10:
+            extension = extension.lower()
         try:
             name = base.decode()
             return name + "." + extension.decode() if extension else name
         except UnicodeError:
             return None
 
-    def __find_in(self, runs, wanted):
+    def __entries(self, runs):
         """
-        The drive offset and bytes of the entry named `wanted` in a directory, matched
-        by its long name or its short one, ASCII case ignored. None where it is absent.
+        Each entry in a directory as its drive offset, its bytes and its long name,
+        None where it has none. Deleted entries and the volume label are left out.
         """
         parts = None
         checksum = None
@@ -498,7 +503,7 @@ class Stream:
                 entry = self.__read(at, self.__ENTRY_SIZE)
                 first = entry[0]
                 if first == 0x00:
-                    return None
+                    return
                 if first == 0xE5:
                     parts = None
                     continue
@@ -527,13 +532,24 @@ class Stream:
 
                 if attributes & self.__ATTR_VOLUME_ID:
                     continue
-                for name in (long_name, self.__short_name(entry)):
-                    if name is not None and name.lower() == wanted:
-                        return at, entry
+                yield at, entry, long_name
+
+    def __find_in(self, runs, wanted):
+        """
+        The drive offset and bytes of the entry named `wanted` in a directory, matched
+        by its long name or its short one, ASCII case ignored. None where it is absent.
+        """
+        for at, entry, long_name in self.__entries(runs):
+            for name in (long_name, self.__short_name(entry)):
+                if name is not None and name.lower() == wanted:
+                    return at, entry
         return None
 
-    def __find(self, name):
-        """The drive offset and bytes of the entry a path leads to, through any folders."""
+    def __find(self, name, directory=False):
+        """
+        The drive offset and bytes of the entry a path leads to, through any folders.
+        `directory` says what the last part must be, None taking either.
+        """
         runs =[(0, self.__root_at, self.__root_bytes)]
         parts = [part for part in name.split("/") if part]
         if not parts or ".." in parts:
@@ -546,11 +562,70 @@ class Stream:
                 raise OSError(errno.ENOENT)
             at, entry = found
             last = depth == len(parts) - 1
-            if bool(entry[11] & self.__ATTR_DIRECTORY) == last:
+            # Every part before the last is a folder
+            wanted = directory if last else True
+            if wanted is not None and bool(entry[11] & self.__ATTR_DIRECTORY) != wanted:
                 raise OSError(errno.ENOENT)
             if not last:
                 runs = self.__runs_from(self.__first_cluster(entry))
         return at, entry
+
+    @staticmethod
+    def __is_root(path):
+        return not [part for part in path.split("/") if part and part != "."]
+
+    def __runs_of_directory(self, path):
+        """Where a folder's entries sit, the root being a fixed region before the data."""
+        if self.__is_root(path):
+            return [(0, self.__root_at, self.__root_bytes)]
+        _, entry = self.__find(path, directory=True)
+        return self.__runs_from(self.__first_cluster(entry))
+
+    def kind(self, path):
+        """The stat mode and size of what a path names."""
+        if self.__is_root(path):
+            return __S_IFDIR, 0
+        _, entry = self.__find(path, directory=None)
+        if entry[11] & self.__ATTR_DIRECTORY:
+            return __S_IFDIR, 0
+        return __S_IFREG, self.__u32(entry, 28)
+
+    def listing(self, path):
+        """A folder's contents as (name, stat mode, size), its own . and .. left out."""
+        listed = []
+        for _, entry, long_name in self.__entries(self.__runs_of_directory(path)):
+            name = long_name or self.__short_name(entry)
+            if name is None or name in (".", ".."):
+                continue
+            if entry[11] & self.__ATTR_DIRECTORY:
+                listed.append((name, __S_IFDIR, 0))
+            else:
+                listed.append((name, __S_IFREG, self.__u32(entry, 28)))
+        return listed
+
+    def capacity(self):
+        """The cluster size and count, which is what statvfs() reports."""
+        return self.__cluster_bytes, self.__clusters
+
+
+class Stream(__FatReader):
+    """
+    A file on the drive read straight from its flash, which reads on while the
+    computer holds the drive. The board's mount is released at every handover and
+    a file opened through it goes stale, so this finds the file's clusters once,
+    from the tables on the flash, and reads them directly from then on.
+
+    Read-only, and blind to the computer rewriting the file, which reads as whatever
+    then fills its clusters. changed() says when that has happened.
+    """
+
+    def __init__(self, name):
+        super().__init__()
+        self.__entry_at, self.__entry = self.__find(name)
+        self.size = self.__u32(self.__entry, 28)
+        self.__runs = self.__runs_from(self.__first_cluster(self.__entry), self.size)
+        self.__position = 0
+        self.__run = 0
 
     @staticmethod
     def __identity(entry):
@@ -614,6 +689,10 @@ class Stream:
     def close(self):
         self.__runs = None
 
+    def extents(self):
+        """The file's runs of contiguous flash, each (position in the file, offset on the drive, length)."""
+        return self.__runs
+
 
 def stream(name):
     """
@@ -627,6 +706,85 @@ def stream(name):
         return Stream(name)
     except OSError:
         return None
+
+
+# What a read raises once the computer has written to the drive since its file was opened
+__CHANGED_BENEATH = "the FX drive changed while this file was being read"
+
+
+class __View:
+    """
+    The drive read straight from its flash, mounted at the mount point while the
+    computer holds the drive so a program still finds its files by path. Read-only,
+    and anything read once the computer writes to the drive raises OSError.
+    """
+
+    def __init__(self):
+        self.__cwd = ""
+
+    def __resolve(self, path):
+        return path if path.startswith("/") else self.__cwd + "/" + path
+
+    @staticmethod
+    def __check(writes):
+        if rp2.msc_write_count() != writes:
+            raise OSError(errno.EIO, __CHANGED_BENEATH)
+
+    def mount(self, readonly, mkfs):
+        pass
+
+    def umount(self):
+        pass
+
+    def open(self, path, mode):
+        if "w" in mode or "a" in mode or "x" in mode or "+" in mode:
+            raise OSError(__EROFS)
+        writes = rp2.msc_write_count()
+        stream = Stream(self.__resolve(path))
+        # Finding the file reads the tables, which a write meanwhile may have moved
+        self.__check(writes)
+        # Read in C, every read checking the write count against this one
+        return rp2.MSCFile(stream.extents(), stream.size, writes, text="b" not in mode,
+                           message=__CHANGED_BENEATH)
+
+    def stat(self, path):
+        writes = rp2.msc_write_count()
+        mode, size = __FatReader().kind(self.__resolve(path))
+        self.__check(writes)
+        return (mode, 0, 0, 0, 0, 0, size, 0, 0, 0)
+
+    def ilistdir(self, path):
+        writes = rp2.msc_write_count()
+        listed = __FatReader().listing(self.__resolve(path))
+        self.__check(writes)
+        return iter([(name, mode, 0, size) for name, mode, size in listed])
+
+    def statvfs(self, _path):
+        cluster_bytes, clusters = __FatReader().capacity()
+        return (cluster_bytes, cluster_bytes, clusters, 0, 0, 0, 0, 0, 0, 255)
+
+    def chdir(self, path):
+        path = self.__resolve(path)
+        if __FatReader().kind(path)[0] != __S_IFDIR:
+            raise OSError(__ENOTDIR)
+        self.__cwd = "/" + "/".join(part for part in path.split("/") if part)
+        if self.__cwd == "/":
+            self.__cwd = ""
+
+    def getcwd(self):
+        return self.__cwd or "/"
+
+    def mkdir(self, _path):
+        raise OSError(__EROFS)
+
+    def remove(self, _path):
+        raise OSError(__EROFS)
+
+    def rename(self, _old_path, _new_path):
+        raise OSError(__EROFS)
+
+    def rmdir(self, _path):
+        raise OSError(__EROFS)
 
 
 def watch(enabled):
@@ -835,6 +993,10 @@ def expose():
     except OSError:
         pass
     rp2.enable_msc()
+    try:
+        vfs.mount(__View(), MOUNT_POINT)
+    except OSError:
+        pass                # Still in use, which leaves a program without the drive's files
     if rejoin:
         __rejoin_bus()
     __exposed = True
@@ -859,6 +1021,11 @@ def withdraw():
     rp2.disable_msc()
     __exposed = False
     __withdrawn = True
+    # The view goes first, since mount() takes a mount point already in use as done
+    try:
+        vfs.umount(MOUNT_POINT)
+    except OSError:
+        pass
     mount()
     return True
 
