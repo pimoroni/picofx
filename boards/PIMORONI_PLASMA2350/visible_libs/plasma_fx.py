@@ -35,7 +35,6 @@ class SPCEPort(ScreenPort):
 
         self.name = name
         self.mode = mode
-        self.driver = None      # No motor module fits this connector, kept so a caller can ask
 
         if mode == SPCE.SCREEN:
             super().__init__(pins, label=f"SP/CE {name}")

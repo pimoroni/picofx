@@ -22,8 +22,8 @@ class SPCE:
     """What a SP/CE connector carries, declared when the board is built."""
 
     SCREEN = 0          # Screens, over the connector's own SPI bus and backlight
-    MOTOR_DRIVER = 1    # Two motors and the enable they share
-    GPIO = 2            # The five pins, free to borrow through io
+    GPIO = 1            # The five pins, free to borrow through pins
+    GPIO_PWM = 2        # The same, where the four data lines will be driven by PWM
     HUB_SELECTS = 3     # The five pins, as the chip selects a hub addresses panels with
 
 
@@ -37,16 +37,12 @@ class SPCEPort(ScreenPort):
     """
 
     def __init__(self, name, mode, pins):
-        if mode not in (None, SPCE.SCREEN, SPCE.MOTOR_DRIVER, SPCE.GPIO, SPCE.HUB_SELECTS):
+        if mode not in (None, SPCE.SCREEN, SPCE.GPIO, SPCE.GPIO_PWM, SPCE.HUB_SELECTS):
             raise ValueError(f"{mode} is not a valid SP/CE mode. Expected SPCE.SCREEN, "
-                             "SPCE.MOTOR_DRIVER, SPCE.GPIO, SPCE.HUB_SELECTS, or None.")
+                             "SPCE.GPIO, SPCE.GPIO_PWM, SPCE.HUB_SELECTS, or None.")
 
         self.name = name
         self.mode = mode
-        self.driver = None      # The MotorDriver built here, so a board's shutdown can stop it
-
-        # Kept as numbers for motor_pins, which hands out pairs a Motor is built from
-        self.__pin_numbers = tuple(pins)
 
         if mode == SPCE.SCREEN:
             super().__init__(pins, label=f"SP/CE {name}")
@@ -54,10 +50,9 @@ class SPCEPort(ScreenPort):
 
         self.label = f"SP/CE {name}"
 
-        # A motor connector's pins belong to its Motor objects and an undeclared one is
-        # left alone, so neither makes Pins
+        # An undeclared connector is left alone, so it makes no Pins
         self.__pins = (tuple(Pin(pin) for pin in pins)
-                       if mode in (SPCE.GPIO, SPCE.HUB_SELECTS) else None)
+                       if mode is not None else None)
 
         # What a screen port holds, so a board's shutdown runs over any declaration
         self.__screens = []
@@ -68,14 +63,15 @@ class SPCEPort(ScreenPort):
         self.__panels_reset = False
 
     @property
-    def io(self):
+    def pins(self):
         """The connector's five GPIOs, in the order DC, CS, SCK, MOSI, BL.
 
-        Only a connector declared SPCE.GPIO offers them.
+        What a breakout plugged in here is built from. Only a connector declared SPCE.GPIO
+        or SPCE.GPIO_PWM offers them.
         """
-        if self.mode != SPCE.GPIO:
-            raise ValueError(f"SP/CE {self.name} is not declared SPCE.GPIO, so its pins "
-                             "are not free to borrow")
+        if self.mode not in (SPCE.GPIO, SPCE.GPIO_PWM):
+            raise ValueError(f"SP/CE {self.name} is not declared SPCE.GPIO or "
+                             "SPCE.GPIO_PWM, so its pins are not free to borrow")
 
         return self.__pins
 
@@ -91,19 +87,6 @@ class SPCEPort(ScreenPort):
                              "pins are not a hub's chip selects")
 
         return self.__pins
-
-    @property
-    def motor_pins(self):
-        """The four data pins as the two motors' pin pairs, then the shared enable.
-
-        Only a connector declared SPCE.MOTOR_DRIVER offers them.
-        """
-        if self.mode != SPCE.MOTOR_DRIVER:
-            raise ValueError(f"SP/CE {self.name} is not declared SPCE.MOTOR_DRIVER, so "
-                             "its pins are not a motor driver's")
-
-        numbers = self.__pin_numbers
-        return ((numbers[0], numbers[1]), (numbers[2], numbers[3])), numbers[4]
 
     def __line(self, index):
         if self.mode != SPCE.SCREEN:
@@ -157,8 +140,7 @@ class SPCEPort(ScreenPort):
             return
 
         # Whatever is plugged in next meets the level these pins were left at, and high
-        # on a motor input drives it before that thing's own code has run. A motor
-        # connector's pins are not here, belonging to its Motor objects.
+        # on a motor input drives it before that thing's own code has run
         if self.__pins is not None:
             for pin in self.__pins:     # All five, another port's chip selects among them
                 pin.init(Pin.IN, Pin.PULL_DOWN)
@@ -258,16 +240,16 @@ class MightyFX:
         # leaves the SRAM held. Nothing of this program holds any yet.
         release_buffers()
 
-        # A motor role drives PWM on its DC, CS, SCK and MOSI lines, holding channels
-        # some LED outputs share. BL becomes a plain enable output, so it claims nothing.
+        # A connector declared for PWM drives its DC, CS, SCK and MOSI lines, holding
+        # channels some LED outputs share. BL stays a plain line, so it claims nothing.
         claimed = {}
         for port_name, mode, pins in (("A", spce_a, self.SPCE_A_PINS), ("B", spce_b, self.SPCE_B_PINS)):
-            if mode == SPCE.MOTOR_DRIVER:
+            if mode == SPCE.GPIO_PWM:
                 for pin in pins[:4]:
                     claimed[self.__pwm_channel(pin)] = (port_name, pin)
 
-        # A DisabledLED stands in for any channel a motor role holds, so lighting it
-        # reports. It takes the pin too, held off, or the motor's signal would show on the LED.
+        # A DisabledLED stands in for any channel a connector holds, so lighting it
+        # reports. It takes the pin too, held off, or that signal would show on the LED.
         self.outputs = []
         for index, rgb_pins in enumerate(self.OUT_PINS):
             leds = []
@@ -276,10 +258,10 @@ class MightyFX:
                 if holder is None:
                     leds.append(pin)
                 else:
-                    port_name, motor_pin = holder
+                    port_name, held_pin = holder
                     leds.append(DisabledLED(
                         pin,
-                        reason=f"Output {index + 1}'s {colour} LED cannot light. GPIO {pin} shares a PWM channel with GPIO {motor_pin}, which SP/CE {port_name} is using to drive motors."))
+                        reason=f"Output {index + 1}'s {colour} LED cannot light. GPIO {pin} shares a PWM channel with GPIO {held_pin}, which SP/CE {port_name} holds, being declared SPCE.GPIO_PWM."))
             self.outputs.append(RGBLED(*leds, invert=False, gamma=self.RGB_GAMMA))
 
         # Every output's three channels, since a mono LED on an output connector reaches one of them
@@ -531,13 +513,6 @@ class MightyFX:
             self.__sensor.stop()
             self.__sensor = None
             gc.collect()
-
-        # A motor left driving keeps going, so both stop before their shared power goes
-        for port in (self.spce_a, self.spce_b):
-            if port.driver is not None:
-                for motor in port.driver.motors:
-                    motor.disable()
-                port.driver.disable()
 
         # A servo stops being driven before the rail goes, so it goes limp instead of pushing
         for servo in self.__servos.values():
