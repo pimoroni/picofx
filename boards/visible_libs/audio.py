@@ -155,6 +155,7 @@ class WavPlayer:
         self.__ibuf_len = ibuf_len
         self.__ibuf_ms = ibuf_ms
         self.__ring_ms = 0              # How long the ring takes to play out at the current rate
+        self.__byte_rate = 1            # The bytes a second the current sound plays at
         self.__silent_at = 0            # When a pause's faded audio has played out of the ring
         self.__enable = None
 
@@ -303,7 +304,7 @@ class WavPlayer:
                     self.__fading_out = self.__fade_length
             else:
                 self.__state = WavPlayer.PAUSE      # Enter the pause state on the next callback
-                self.__silent_at = time.ticks_add(time.ticks_ms(), self.__ring_ms)
+                self.__silent_at = self.__heard_by(self.WAV_BUFFER_LENGTH)
         # The caller's pause from here, which the end of the computer's writes leaves alone
         self.__standing_aside = False
 
@@ -370,6 +371,7 @@ class WavPlayer:
             wanted = byte_rate * self.__ibuf_ms // 1000
             ibuf = max(ibuf, -(-wanted // self.WAV_BUFFER_LENGTH) * self.WAV_BUFFER_LENGTH)
         self.__ring_ms = ibuf * 1000 // byte_rate
+        self.__byte_rate = byte_rate
         self.__audio_out = I2S(
             self.__id,
             sck=self.__sck_pin,
@@ -435,8 +437,12 @@ class WavPlayer:
             return
         __ramp(memoryview(samples)[count * 2:length], length // 2 - count, 0, 0)    # Zeroed, any length
         self.__state = WavPlayer.PAUSE
-        # Heard once the ring ahead of it has played
-        self.__silent_at = time.ticks_add(time.ticks_ms(), self.__ring_ms)
+        self.__silent_at = self.__heard_by(length)
+
+    def __heard_by(self, waiting):
+        # When the audio queued so far has played. A callback runs as its buffer enters the ring,
+        # so the ring is full then, and the bytes written after it wait for the whole ring
+        return time.ticks_add(time.ticks_ms(), self.__ring_ms + -(-waiting * 1000 // self.__byte_rate))
 
     def __fades(self):
         # Whether the sound can fade, which reads it as 16-bit samples
@@ -545,7 +551,7 @@ class WavPlayer:
                             self.__end_sound()
                         else:
                             self.__state = WavPlayer.PAUSE
-                            self.__silent_at = time.ticks_add(time.ticks_ms(), self.__ring_ms)
+                            self.__silent_at = self.__heard_by(0)
                         self.__write(self.__silence_samples)
                         return
                 try:
