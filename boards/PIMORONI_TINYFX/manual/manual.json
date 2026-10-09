@@ -3,6 +3,11 @@
  "terms": {
   "BOARD_TITLE": "Tiny FX",
   "BOARD_HAS": "Six mono outputs, one RGB output, a speaker",
+  "TRAVELLING_LIGHT": "dim light",
+  "PROGRAMS_OFFERED": "what a remote, a sensor or a speaker brings",
+  "ENTRY_TARGETS": "the outputs",
+  "COPIED_FILES": "sounds",
+  "EXAMPLE_PROGRAM": "examples/effects/mono/sweep_trail.py",
   "COLOUR_SETTING_FOR": "the RGB output when its effect brings no colour"
  }
 }

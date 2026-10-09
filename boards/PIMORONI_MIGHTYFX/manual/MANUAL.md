@@ -21,8 +21,9 @@ back, so a double press is never mistaken for a single one.
 
 Deleting `effects.txt` restores the default; emptying it leaves the board dark.
 
-While the computer is copying to this drive the effects stand aside for a dim
-white travelling along the outputs, and come back a moment after it finishes.
+While the computer is copying to this drive the effects stand aside for a
+dim white light travelling along the outputs, and come back a moment after
+it finishes.
 
 **Would you rather not write the file at all? `PICKER.html` on this drive writes
 it for you. See [the picker](#the-picker). `EDITOR.html` beside it is a place to
@@ -50,10 +51,10 @@ deleted from it. Press the plus to split what you have into scenes that take
 turns, each with its own looks, pictures and sound; what **Always on** holds plays
 under every scene.
 
-**A program** runs one of the board's programs in place of the effects: the
-showcase signs, screen pieces, and what a remote, a sensor, a speaker or a motor
-brings, beside any programs of your own on this drive. Pick one and save, and the
-board restarts to run it. [Your program in the picker](#your-program-in-the-picker)
+**A program** runs one of the board's programs in place of the effects:
+the showcase signs, screen pieces, and what a remote, a sensor, a speaker or a motor brings,
+beside any programs of your own on this drive. Pick one and save, and the board
+restarts to run it. [Your program in the picker](#your-program-in-the-picker)
 says how a program of yours describes itself there.
 
 **Save to board** writes the file, and the board picks it up a few seconds later.
@@ -636,8 +637,9 @@ copying pictures on never interrupts anything.
 
 A program can sit on this drive or on the board's own filesystem, and its name
 may include folders: it is looked for here first, then on the board, so
-`program=examples/effects/colour/rainbow_wave.py` reaches one of the examples
-the board ships with. Where the name is in both, this drive's copy runs.
+`program=examples/effects/colour/rainbow_wave.py`
+reaches one of the examples the board ships with. Where the name is in both,
+this drive's copy runs.
 
 If it is missing, or stops with an error, the effects run instead and
 `errors.txt` says what happened, so a mistyped name never leaves you with a
@@ -686,7 +688,7 @@ does, and three more lines tell the picker how to show it:
 ```python
 '''
 Program: Big clock
-Shows the time across both screens.
+Shows the time.
 Args: Colour, Seconds
 Picture: clock.png
 '''
@@ -699,8 +701,9 @@ Picture: clock.png
 | `Picture: clock.png` | shows the program by that picture from this drive |
 
 Each is optional. Without `Args`, the picker offers plain boxes to add arguments
-to, and without `Picture`, a plain tile. A file whose opening string starts
-`Drawing:` is [a drawing](#drawing-from-code), so it is left out.
+to, and without `Picture`, a plain tile.
+A file whose opening string starts `Drawing:` is [a drawing](#drawing-from-code),
+so it is left out.
 
 ### What is already on the board
 
@@ -712,6 +715,10 @@ download:
 | `examples/effects` | changing from one set of effects to another as time passes |
 | `examples/effects/mono` | one output at a time, and the effects that travel across several |
 | `examples/effects/colour` | the same in colour, with traffic lights and crossings |
+| `examples/function` | the Boot button, the sensor connector and the supply voltage |
+| `examples/infrared/mono` | effects chosen with an infrared remote |
+| `examples/infrared/colour` | the same in colour |
+| `examples/qwst` | light, tilt and weather from Qw/ST breakouts |
 | `examples/screens/single` | one screen, its backlight, and finding what is attached |
 | `examples/screens/playback` | animated GIFs and slideshows |
 | `examples/screens/graphics` | drawing from code: text, colour wheels, a starfield |
@@ -724,6 +731,7 @@ download:
 | `examples/servos` | sweeping a servo on the L connector |
 | `examples/strips` | a rainbow along an LED strip |
 | `examples/gpio` | using SP/CE pins as plain inputs and outputs |
+| `examples/wireless` | colours fetched over WiFi |
 | `examples/showcase` | larger builds that put several of these together |
 
 Three to start with:
@@ -734,9 +742,11 @@ board: program=examples/screens/playback/animated_gif.py
 board: program=examples/showcase/flip_dot_sign.py
 ```
 
-Anything under `screens`, `audio`, `motors`, `servos` or `strips` needs that
-hardware attached, and some of the showcase ones want pictures or a network of
-their own. The full set, with what each one does, is on
+Anything under `screens`, `audio`, `motors`, `servos`, `strips`, `infrared` or
+`qwst` needs that hardware attached, `wireless` needs a WiFi network, and some of
+the showcase ones want pictures or a network of their own.
+
+The full set, with what each one does, is on
 [GitHub](https://github.com/pimoroni/picofx).
 
 ## When something is wrong

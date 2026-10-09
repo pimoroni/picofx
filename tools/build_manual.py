@@ -319,8 +319,9 @@ def expand(path, text, board, own_blocks, pulled):
     """A part's text with its conditions settled and its board lines filled from the board's
     blocks, adding the name of each block it takes to pulled.
 
-    A condition the board lacks goes with the blank line after it, so the blank lines either
-    side of it do not double up.
+    A condition the board lacks that opens after a blank line goes with the blank line after
+    it, so the blank lines either side do not double up. One inside a paragraph or a table
+    keeps it.
     """
     out = []
     feature = None
@@ -344,7 +345,7 @@ def expand(path, text, board, own_blocks, pulled):
         elif line == CONDITION_END:
             if not feature:
                 sys.exit("{} ends a condition it never opened".format(path))
-            drop_blank = not keeping
+            drop_blank = not keeping and (not out or not out[-1].strip())
             feature = None
             keeping = True
         elif not keeping:

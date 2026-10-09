@@ -3,6 +3,11 @@
  "terms": {
   "BOARD_TITLE": "MightyFX",
   "BOARD_HAS": "Seven outputs, two screen connectors",
+  "TRAVELLING_LIGHT": "dim white light",
+  "PROGRAMS_OFFERED": "the showcase signs, screen pieces, and what a remote, a sensor, a speaker or a motor brings",
+  "ENTRY_TARGETS": "the outputs and screens",
+  "COPIED_FILES": "pictures",
+  "EXAMPLE_PROGRAM": "examples/effects/colour/rainbow_wave.py",
   "COLOUR_SETTING_FOR": "effects that bring no colour"
  }
 }

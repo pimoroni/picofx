@@ -15,18 +15,23 @@ In a hurry? Save the file and press **Boot** once. The drive disappears and
 comes straight back with the new effects running, so you can keep editing.
 Ejecting is the surer way, since a computer does not always write the file out
 until then. Press **Boot** twice to hide the drive, and twice again to bring it
-back. A dim light runs along the outputs each time, one way as the computer
-takes the drive and the other as the board takes it back, so a double press is
-never mistaken for a single one.
+back. A dim light runs along the outputs each time, towards the USB
+connector as the computer takes the drive and away from it as the board takes it
+back, so a double press is never mistaken for a single one.
 
 Deleting `effects.txt` restores the default; emptying it leaves the board dark.
 
-While the computer is copying to this drive the effects stand aside for a dim
-light travelling along the outputs, and come back a moment after it finishes.
+While the computer is copying to this drive the effects stand aside for a
+dim light travelling along the outputs, and come back a moment after
+it finishes.
 
 **Would you rather not write the file at all? `PICKER.html` on this drive writes
 it for you. See [the picker](#the-picker). `EDITOR.html` beside it is a place to
-write it with the names offered as you type.**
+write it with the names offered as you type. See [the editor](#the-editor).**
+
+**The board also carries programs that run as they are, from single effects to
+whole builds, and one line in `effects.txt` starts any of them. See
+[what is already on the board](#what-is-already-on-the-board).**
 
 ## The picker
 
@@ -35,18 +40,57 @@ Edge, press **Open FX drive** and choose this drive, and the page reads the file
 the board is playing, so you carry on from where it is. The file it will write
 is shown at the foot of the page, so nothing about it is hidden.
 
-Pick a stretch of outputs, tap a look from the cards to play on it, and slide its
-settings until it suits. The outputs can be cut into stretches that each play a
-look of their own. **Edit board** sets the order the lights are wired in, and
-moving the RGB output across to the mono side breaks it into three plain lights.
-The sounds on this drive are offered on the Sound tab. Press the plus to split
-what you have into scenes that take turns.
+Two tabs sit under the page's header. **The effects** sets the lights and
+sound: pick a stretch of outputs, tap a look from the cards to play on it, and
+slide its settings until it suits. A run can be cut into stretches that each
+play a look of their own. **Edit board** sets the order the lights are wired in,
+and moving the RGB output across to the mono side breaks it into three plain
+lights. The sounds on this drive are offered on the Sound tab, where files can
+be copied onto the drive and deleted from it. Press the plus to split what you
+have into scenes that take turns, each with its own looks and sound; what
+**Always on** holds plays under every scene.
+
+**A program** runs one of the board's programs in place of the effects:
+what a remote, a sensor or a speaker brings,
+beside any programs of your own on this drive. Pick one and save, and the board
+restarts to run it. [Your program in the picker](#your-program-in-the-picker)
+says how a program of yours describes itself there.
 
 **Save to board** writes the file, and the board picks it up a few seconds later.
-**Check board** reads `errors.txt` back and shows what the board made of each
-line. The page reaches the drive only in Chrome, Edge or another browser built
-on Chromium; elsewhere it says so, and `effects.txt` can still be changed in any
-text editor.
+Its arrow opens the save's settings: untick "Play saves without an eject" and the
+board waits instead until this drive is ejected, or **Boot** is pressed once, and
+"Keep the drive hidden at start" is `drive=manual`. **Check board** reads
+`errors.txt` back and shows what the board made of each line. On a Mac each save
+shows "Disk Not Ejected Properly" once and a Finder window on this drive closes;
+the drive comes back on its own a few seconds later and the page carries on.
+
+The page reaches the drive only in Chrome, Edge or another browser built on
+Chromium. Safari and Firefox cannot write to a drive from a page, so there it
+says so, and `effects.txt` can still be changed in any text editor.
+
+What the picker writes is an ordinary `effects.txt`: anything it makes can be
+edited by hand afterwards. A line it cannot write itself is kept as it is, and it
+asks before replacing a file it has not read.
+
+## The editor
+
+`EDITOR.html` on this drive is `effects.txt` in a window that knows the format.
+Every word is coloured by the part it plays, and as you type it offers what fits
+where you are: the outputs at the start of a line, the effects after
+the colon, then that effect's own settings and the values each one takes. A line
+underneath says what shape a value wants. Tab or Enter takes what is offered,
+Escape leaves it, and Ctrl+Space asks for it again.
+
+A name it does not know is underlined, an effect that is not one or a setting the
+effect does not take. Values are left alone, since a percentage, a colour and a
+list all live there and the board is the one that reads them. "Put it on the
+board" writes the file and "Did it work?" reads `errors.txt` back, as the picker
+does.
+
+It offers only what this board provides, so anything the firmware gains appears
+without the page changing. It saves the way the picker does, in one click from a
+Chromium browser and by download from Safari or Firefox, and it needs
+`catalogue.js` beside it, which is why both live on this drive together.
 
 ## Writing an entry
 
@@ -248,7 +292,7 @@ again every time it comes round.
 One entry sets the board rather than the lights, and names no output:
 
 ```entry
-board: reload=auto
+board: drive=manual program=fireplace.py
 ```
 
 | Setting | What it does | If omitted |
@@ -267,32 +311,99 @@ copying sounds on never interrupts anything.
 
 A program can sit on this drive or on the board's own filesystem, and its name
 may include folders: it is looked for here first, then on the board, so
-`program=examples/effects/mono/sweep_trail.py` reaches one of the examples the
-board ships with. Where the name is in both, this drive's copy runs. If it is
-missing, or stops with an error, the effects run instead and `errors.txt` says
-what happened.
+`program=examples/effects/mono/sweep_trail.py`
+reaches one of the examples the board ships with. Where the name is in both,
+this drive's copy runs.
+
+If it is missing, or stops with an error, the effects run instead and
+`errors.txt` says what happened, so a mistyped name never leaves you with a
+board that does nothing.
 
 Saving a file that names a program, while the effects play, restarts the board,
 which then runs the program as it would from power on.
 
-The effects stop while a program runs, and **Boot** and ejecting do nothing. The
-drive is shown anyway, even with `drive` set to `manual`, so you can still edit
-`effects.txt`. With `reload=auto`, saving it restarts the board, which then plays
-whatever it now says; without, press **Reset** for the change to take.
+The effects stop while a program runs, and the board is busy with it, so
+**Boot** and ejecting do nothing. The drive is shown anyway, even with `drive`
+set to `manual`, so you can still edit `effects.txt`. With `reload=auto`, saving
+it restarts the board, which then plays whatever it now says; without, press
+**Reset** for the change to take. A program cannot read files from this drive
+while it runs, so put anything it needs on the board's own filesystem.
+
+`args` passes a program whatever it needs to know, so one program can do
+different things without being edited. Several are divided by `|`, and anything
+with a space or a colon in it goes in quotes:
+
+```entry
+board: program=slideshow.py args=posters|3
+board: program=clock.py args="07:30"
+```
+
+**If you are writing the program**, it reads them from `sys.argv`, the way any
+Python program does, with the first being `sys.argv[1]`. Thonny passes none when
+you run the same file from there, so give each one a value to fall back on and
+the file works either way:
+
+```python
+args = sys.argv[1:]
+FOLDER = args[0] if args else "posters"
+```
+
+### Your program in the picker
+
+The picker's **A program** tab lists every Python file at the top of this drive
+beside the examples, and describes each one by its opening string, the text in
+triple quotes at the top of the file. Its first plain line says what the program
+does, and three more lines tell the picker how to show it:
+
+```python
+'''
+Program: Big clock
+Shows the time.
+Args: Colour, Seconds
+Picture: clock.png
+'''
+```
+
+| Line | What the picker does with it |
+| --- | --- |
+| `Program: Big clock` | names the program, where it would use the file's name |
+| `Args: Colour, Seconds` | gives each argument a box of its own, and writes `args=` from them |
+| `Picture: clock.png` | shows the program by that picture from this drive |
+
+Each is optional. Without `Args`, the picker offers plain boxes to add arguments
+to, and without `Picture`, a plain tile.
 
 ### What is already on the board
+
+These come with the board, so `program=` reaches any of them with nothing to
+download:
 
 | Folder | What is in it |
 | --- | --- |
 | `examples/effects/mono` | one output at a time, and the effects that travel across several |
 | `examples/effects/colour` | the RGB output |
 | `examples/function` | the button, the sensor connector and the supply voltage |
-| `examples/infrared` | effects chosen with an infrared remote |
+| `examples/infrared/mono` | effects chosen with an infrared remote |
+| `examples/infrared/colour` | the same on the RGB output |
 | `examples/qwst` | light, tilt and weather from Qw/ST breakouts |
+| `examples/audio` | sound alongside the lights |
 | `examples/comms` | several boards working together |
 | `examples/showcase` | larger builds that put several of these together |
 
-The audio examples' sounds are not on the board, to leave this drive its room.
+Three to start with:
+
+```entry
+board: program=examples/effects/mono/sweep_trail.py
+board: program=examples/effects/colour/rainbow.py
+board: program=examples/showcase/ship_thrusters.py
+```
+
+Anything under `infrared` or `qwst` needs that hardware attached, and `comms`
+wants a second board. The audio examples' sounds are not on the board, to leave
+this drive its room.
+
+The full set, with what each one does, is on
+[GitHub](https://github.com/pimoroni/picofx).
 
 ## When something is wrong
 

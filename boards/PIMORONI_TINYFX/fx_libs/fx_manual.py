@@ -260,6 +260,7 @@ footer p { margin: 0; }
 <nav class="contents"><h2>Contents</h2><ul>
 <li><a href="#getting-started">Getting started</a></li>
 <li><a href="#the-picker">The picker</a></li>
+<li><a href="#the-editor">The editor</a></li>
 <li><a href="#writing-an-entry">Writing an entry</a></li>
 <li><details><summary><a href="#outputs">Outputs</a></summary><ul>
 <li><a href="#naming-outputs">Naming outputs</a></li>
@@ -276,6 +277,7 @@ footer p { margin: 0; }
 <li><a href="#scenes">Scenes</a></li>
 <li><details><summary><a href="#the-board">The board</a></summary><ul>
 <li><a href="#running-your-own-program">Running your own program</a></li>
+<li><a href="#your-program-in-the-picker">Your program in the picker</a></li>
 <li><a href="#what-is-already-on-the-board">What is already on the board</a></li>
 </ul></details></li>
 <li><a href="#when-something-is-wrong">When something is wrong</a></li>
@@ -288,14 +290,22 @@ footer p { margin: 0; }
 <p>Six mono outputs, one RGB output, a speaker, and a text file that drives them. Edit <code>effects.txt</code> on this drive, eject it, and the board applies the change straight away. No code needed, though there is room for it when you want it.</p>
 <h2 id="getting-started">Getting started</h2>
 <p>Edit <code>effects.txt</code> to change what the lights do, then eject this drive and the board applies the change straight away.</p>
-<p>In a hurry? Save the file and press <strong>Boot</strong> once. The drive disappears and comes straight back with the new effects running, so you can keep editing. Ejecting is the surer way, since a computer does not always write the file out until then. Press <strong>Boot</strong> twice to hide the drive, and twice again to bring it back. A dim light runs along the outputs each time, one way as the computer takes the drive and the other as the board takes it back, so a double press is never mistaken for a single one.</p>
+<p>In a hurry? Save the file and press <strong>Boot</strong> once. The drive disappears and comes straight back with the new effects running, so you can keep editing. Ejecting is the surer way, since a computer does not always write the file out until then. Press <strong>Boot</strong> twice to hide the drive, and twice again to bring it back. A dim light runs along the outputs each time, towards the USB connector as the computer takes the drive and away from it as the board takes it back, so a double press is never mistaken for a single one.</p>
 <p>Deleting <code>effects.txt</code> restores the default; emptying it leaves the board dark.</p>
 <p>While the computer is copying to this drive the effects stand aside for a dim light travelling along the outputs, and come back a moment after it finishes.</p>
-<p><strong>Would you rather not write the file at all? <code>PICKER.html</code> on this drive writes it for you. See <a href="#the-picker">the picker</a>. <code>EDITOR.html</code> beside it is a place to write it with the names offered as you type.</strong></p>
+<p><strong>Would you rather not write the file at all? <code>PICKER.html</code> on this drive writes it for you. See <a href="#the-picker">the picker</a>. <code>EDITOR.html</code> beside it is a place to write it with the names offered as you type. See <a href="#the-editor">the editor</a>.</strong></p>
+<p><strong>The board also carries programs that run as they are, from single effects to whole builds, and one line in <code>effects.txt</code> starts any of them. See <a href="#what-is-already-on-the-board">what is already on the board</a>.</strong></p>
 <h2 id="the-picker">The picker</h2>
 <p><code>PICKER.html</code> on this drive writes <code>effects.txt</code> for you. Open it in Chrome or Edge, press <strong>Open FX drive</strong> and choose this drive, and the page reads the file the board is playing, so you carry on from where it is. The file it will write is shown at the foot of the page, so nothing about it is hidden.</p>
-<p>Pick a stretch of outputs, tap a look from the cards to play on it, and slide its settings until it suits. The outputs can be cut into stretches that each play a look of their own. <strong>Edit board</strong> sets the order the lights are wired in, and moving the RGB output across to the mono side breaks it into three plain lights. The sounds on this drive are offered on the Sound tab. Press the plus to split what you have into scenes that take turns.</p>
-<p><strong>Save to board</strong> writes the file, and the board picks it up a few seconds later. <strong>Check board</strong> reads <code>errors.txt</code> back and shows what the board made of each line. The page reaches the drive only in Chrome, Edge or another browser built on Chromium; elsewhere it says so, and <code>effects.txt</code> can still be changed in any text editor.</p>
+<p>Two tabs sit under the page's header. <strong>The effects</strong> sets the lights and sound: pick a stretch of outputs, tap a look from the cards to play on it, and slide its settings until it suits. A run can be cut into stretches that each play a look of their own. <strong>Edit board</strong> sets the order the lights are wired in, and moving the RGB output across to the mono side breaks it into three plain lights. The sounds on this drive are offered on the Sound tab, where files can be copied onto the drive and deleted from it. Press the plus to split what you have into scenes that take turns, each with its own looks and sound; what <strong>Always on</strong> holds plays under every scene.</p>
+<p><strong>A program</strong> runs one of the board's programs in place of the effects: what a remote, a sensor or a speaker brings, beside any programs of your own on this drive. Pick one and save, and the board restarts to run it. <a href="#your-program-in-the-picker">Your program in the picker</a> says how a program of yours describes itself there.</p>
+<p><strong>Save to board</strong> writes the file, and the board picks it up a few seconds later. Its arrow opens the save's settings: untick "Play saves without an eject" and the board waits instead until this drive is ejected, or <strong>Boot</strong> is pressed once, and "Keep the drive hidden at start" is <code>drive=manual</code>. <strong>Check board</strong> reads <code>errors.txt</code> back and shows what the board made of each line. On a Mac each save shows "Disk Not Ejected Properly" once and a Finder window on this drive closes; the drive comes back on its own a few seconds later and the page carries on.</p>
+<p>The page reaches the drive only in Chrome, Edge or another browser built on Chromium. Safari and Firefox cannot write to a drive from a page, so there it says so, and <code>effects.txt</code> can still be changed in any text editor.</p>
+<p>What the picker writes is an ordinary <code>effects.txt</code>: anything it makes can be edited by hand afterwards. A line it cannot write itself is kept as it is, and it asks before replacing a file it has not read.</p>
+<h2 id="the-editor">The editor</h2>
+<p><code>EDITOR.html</code> on this drive is <code>effects.txt</code> in a window that knows the format. Every word is coloured by the part it plays, and as you type it offers what fits where you are: the outputs at the start of a line, the effects after the colon, then that effect's own settings and the values each one takes. A line underneath says what shape a value wants. Tab or Enter takes what is offered, Escape leaves it, and Ctrl+Space asks for it again.</p>
+<p>A name it does not know is underlined, an effect that is not one or a setting the effect does not take. Values are left alone, since a percentage, a colour and a list all live there and the board is the one that reads them. "Put it on the board" writes the file and "Did it work?" reads <code>errors.txt</code> back, as the picker does.</p>
+<p>It offers only what this board provides, so anything the firmware gains appears without the page changing. It saves the way the picker does, in one click from a Chromium browser and by download from Safari or Firefox, and it needs <code>catalogue.js</code> beside it, which is why both live on this drive together.</p>
 <h2 id="writing-an-entry">Writing an entry</h2>
 <pre class="shape"><code><span class="s-target">&lt;outputs&gt;</span> <span class="s-name">&lt;their settings&gt;</span><span class="s-colon">:</span> <span class="s-effect">&lt;effect&gt;</span> <span class="s-name">&lt;its settings&gt;</span></code></pre>
 <pre class="entry"><code><span class="s-target">out1-6</span><span class="s-colon">:</span> <span class="s-effect">pulse_wave</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.3</span>
@@ -405,7 +415,7 @@ footer p { margin: 0; }
 <p>The time is in seconds, <code>30s</code>, or in minutes, <code>10m</code>. Scenes take turns in the order they are written, then start again. Entries before the first heading are always on, whatever is showing. Add <code>restart</code> to a heading and its effects begin again every time it comes round.</p>
 <h2 id="the-board">The board</h2>
 <p>One entry sets the board rather than the lights, and names no output:</p>
-<pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">reload</span><span class="s-punc">=</span><span class="s-value">auto</span></code></pre>
+<pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">drive</span><span class="s-punc">=</span><span class="s-value">manual</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">fireplace.py</span></code></pre>
 <div class="scroll"><table>
 <thead><tr><th>Setting</th><th>What it does</th><th>If omitted</th></tr></thead>
 <tbody>
@@ -416,22 +426,53 @@ footer p { margin: 0; }
 </tbody></table></div>
 <p>With <code>reload=auto</code>, saving <code>effects.txt</code> is enough on its own: the board notices the save, takes the drive back for a moment, and plays the new effects, exactly as a single press of <strong>Boot</strong> would. Only a save to <code>effects.txt</code> counts, so copying sounds on never interrupts anything.</p>
 <h3 id="running-your-own-program">Running your own program</h3>
-<p>A program can sit on this drive or on the board's own filesystem, and its name may include folders: it is looked for here first, then on the board, so <code>program=examples/effects/mono/sweep_trail.py</code> reaches one of the examples the board ships with. Where the name is in both, this drive's copy runs. If it is missing, or stops with an error, the effects run instead and <code>errors.txt</code> says what happened.</p>
+<p>A program can sit on this drive or on the board's own filesystem, and its name may include folders: it is looked for here first, then on the board, so <code>program=examples/effects/mono/sweep_trail.py</code> reaches one of the examples the board ships with. Where the name is in both, this drive's copy runs.</p>
+<p>If it is missing, or stops with an error, the effects run instead and <code>errors.txt</code> says what happened, so a mistyped name never leaves you with a board that does nothing.</p>
 <p>Saving a file that names a program, while the effects play, restarts the board, which then runs the program as it would from power on.</p>
-<p>The effects stop while a program runs, and <strong>Boot</strong> and ejecting do nothing. The drive is shown anyway, even with <code>drive</code> set to <code>manual</code>, so you can still edit <code>effects.txt</code>. With <code>reload=auto</code>, saving it restarts the board, which then plays whatever it now says; without, press <strong>Reset</strong> for the change to take.</p>
+<p>The effects stop while a program runs, and the board is busy with it, so <strong>Boot</strong> and ejecting do nothing. The drive is shown anyway, even with <code>drive</code> set to <code>manual</code>, so you can still edit <code>effects.txt</code>. With <code>reload=auto</code>, saving it restarts the board, which then plays whatever it now says; without, press <strong>Reset</strong> for the change to take. A program cannot read files from this drive while it runs, so put anything it needs on the board's own filesystem.</p>
+<p><code>args</code> passes a program whatever it needs to know, so one program can do different things without being edited. Several are divided by <code>|</code>, and anything with a space or a colon in it goes in quotes:</p>
+<pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">slideshow.py</span> <span class="s-name">args</span><span class="s-punc">=</span><span class="s-value">posters|3</span>
+<span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">clock.py</span> <span class="s-name">args</span><span class="s-punc">=</span><span class="s-value">"07:30"</span></code></pre>
+<p><strong>If you are writing the program</strong>, it reads them from <code>sys.argv</code>, the way any Python program does, with the first being <code>sys.argv[1]</code>. Thonny passes none when you run the same file from there, so give each one a value to fall back on and the file works either way:</p>
+<pre class="python"><code>args = sys.argv[1:]
+FOLDER = args[0] if args else "posters"</code></pre>
+<h3 id="your-program-in-the-picker">Your program in the picker</h3>
+<p>The picker's <strong>A program</strong> tab lists every Python file at the top of this drive beside the examples, and describes each one by its opening string, the text in triple quotes at the top of the file. Its first plain line says what the program does, and three more lines tell the picker how to show it:</p>
+<pre class="python"><code>'''
+Program: Big clock
+Shows the time.
+Args: Colour, Seconds
+Picture: clock.png
+'''</code></pre>
+<div class="scroll"><table>
+<thead><tr><th>Line</th><th>What the picker does with it</th></tr></thead>
+<tbody>
+<tr><td><code>Program: Big clock</code></td><td>names the program, where it would use the file's name</td></tr>
+<tr><td><code>Args: Colour, Seconds</code></td><td>gives each argument a box of its own, and writes <code>args=</code> from them</td></tr>
+<tr><td><code>Picture: clock.png</code></td><td>shows the program by that picture from this drive</td></tr>
+</tbody></table></div>
+<p>Each is optional. Without <code>Args</code>, the picker offers plain boxes to add arguments to, and without <code>Picture</code>, a plain tile.</p>
 <h3 id="what-is-already-on-the-board">What is already on the board</h3>
+<p>These come with the board, so <code>program=</code> reaches any of them with nothing to download:</p>
 <div class="scroll"><table>
 <thead><tr><th>Folder</th><th>What is in it</th></tr></thead>
 <tbody>
 <tr><td><code>examples/effects/mono</code></td><td>one output at a time, and the effects that travel across several</td></tr>
 <tr><td><code>examples/effects/colour</code></td><td>the RGB output</td></tr>
 <tr><td><code>examples/function</code></td><td>the button, the sensor connector and the supply voltage</td></tr>
-<tr><td><code>examples/infrared</code></td><td>effects chosen with an infrared remote</td></tr>
+<tr><td><code>examples/infrared/mono</code></td><td>effects chosen with an infrared remote</td></tr>
+<tr><td><code>examples/infrared/colour</code></td><td>the same on the RGB output</td></tr>
 <tr><td><code>examples/qwst</code></td><td>light, tilt and weather from Qw/ST breakouts</td></tr>
+<tr><td><code>examples/audio</code></td><td>sound alongside the lights</td></tr>
 <tr><td><code>examples/comms</code></td><td>several boards working together</td></tr>
 <tr><td><code>examples/showcase</code></td><td>larger builds that put several of these together</td></tr>
 </tbody></table></div>
-<p>The audio examples' sounds are not on the board, to leave this drive its room.</p>
+<p>Three to start with:</p>
+<pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">examples/effects/mono/sweep_trail.py</span>
+<span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">examples/effects/colour/rainbow.py</span>
+<span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">examples/showcase/ship_thrusters.py</span></code></pre>
+<p>Anything under <code>infrared</code> or <code>qwst</code> needs that hardware attached, and <code>comms</code> wants a second board. The audio examples' sounds are not on the board, to leave this drive its room.</p>
+<p>The full set, with what each one does, is on <a href="https://github.com/pimoroni/picofx">GitHub</a>.</p>
 <h2 id="when-something-is-wrong">When something is wrong</h2>
 <p>The lights say so, and the more flashes the worse it is. The RGB output shows the colour:</p>
 <div class="scroll"><table>

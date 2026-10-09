@@ -306,7 +306,7 @@ footer p { margin: 0; }
 <p>Edit <code>effects.txt</code> to change what the lights do, then eject this drive and the board applies the change straight away.</p>
 <p>In a hurry? Save the file and press <strong>Boot</strong> once. The drive disappears and comes straight back with the new effects running, so you can keep editing. Ejecting is the surer way, since a computer does not always write the file out until then. Press <strong>Boot</strong> twice to hide the drive, and twice again to bring it back. A dim white light runs along the outputs each time, towards the USB connector as the computer takes the drive and away from it as the board takes it back, so a double press is never mistaken for a single one.</p>
 <p>Deleting <code>effects.txt</code> restores the default; emptying it leaves the board dark.</p>
-<p>While the computer is copying to this drive the effects stand aside for a dim white travelling along the outputs, and come back a moment after it finishes.</p>
+<p>While the computer is copying to this drive the effects stand aside for a dim white light travelling along the outputs, and come back a moment after it finishes.</p>
 <p><strong>Would you rather not write the file at all? <code>PICKER.html</code> on this drive writes it for you. See <a href="#the-picker">the picker</a>. <code>EDITOR.html</code> beside it is a place to write it with the names offered as you type. See <a href="#the-editor">the editor</a>.</strong></p>
 <p><strong>The board also carries programs that run as they are, from single effects to whole builds, and one line in <code>effects.txt</code> starts any of them. See <a href="#what-is-already-on-the-board">what is already on the board</a>.</strong></p>
 <h2 id="the-picker">The picker</h2>
@@ -586,7 +586,7 @@ FOLDER = args[0] if args else "posters"</code></pre>
 <p>The picker's <strong>A program</strong> tab lists every Python file at the top of this drive beside the examples, and describes each one by its opening string, the text in triple quotes at the top of the file. Its first plain line says what the program does, and three more lines tell the picker how to show it:</p>
 <pre class="python"><code>'''
 Program: Big clock
-Shows the time across both screens.
+Shows the time.
 Args: Colour, Seconds
 Picture: clock.png
 '''</code></pre>
@@ -606,6 +606,10 @@ Picture: clock.png
 <tr><td><code>examples/effects</code></td><td>changing from one set of effects to another as time passes</td></tr>
 <tr><td><code>examples/effects/mono</code></td><td>one output at a time, and the effects that travel across several</td></tr>
 <tr><td><code>examples/effects/colour</code></td><td>the same in colour, with traffic lights and crossings</td></tr>
+<tr><td><code>examples/function</code></td><td>the Boot button, the sensor connector and the supply voltage</td></tr>
+<tr><td><code>examples/infrared/mono</code></td><td>effects chosen with an infrared remote</td></tr>
+<tr><td><code>examples/infrared/colour</code></td><td>the same in colour</td></tr>
+<tr><td><code>examples/qwst</code></td><td>light, tilt and weather from Qw/ST breakouts</td></tr>
 <tr><td><code>examples/screens/single</code></td><td>one screen, its backlight, and finding what is attached</td></tr>
 <tr><td><code>examples/screens/playback</code></td><td>animated GIFs and slideshows</td></tr>
 <tr><td><code>examples/screens/graphics</code></td><td>drawing from code: text, colour wheels, a starfield</td></tr>
@@ -618,13 +622,15 @@ Picture: clock.png
 <tr><td><code>examples/servos</code></td><td>sweeping a servo on the L connector</td></tr>
 <tr><td><code>examples/strips</code></td><td>a rainbow along an LED strip</td></tr>
 <tr><td><code>examples/gpio</code></td><td>using SP/CE pins as plain inputs and outputs</td></tr>
+<tr><td><code>examples/wireless</code></td><td>colours fetched over WiFi</td></tr>
 <tr><td><code>examples/showcase</code></td><td>larger builds that put several of these together</td></tr>
 </tbody></table></div>
 <p>Three to start with:</p>
 <pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">examples/effects/colour/sweep_trail.py</span>
 <span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">examples/screens/playback/animated_gif.py</span>
 <span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">examples/showcase/flip_dot_sign.py</span></code></pre>
-<p>Anything under <code>screens</code>, <code>audio</code>, <code>motors</code>, <code>servos</code> or <code>strips</code> needs that hardware attached, and some of the showcase ones want pictures or a network of their own. The full set, with what each one does, is on <a href="https://github.com/pimoroni/picofx">GitHub</a>.</p>
+<p>Anything under <code>screens</code>, <code>audio</code>, <code>motors</code>, <code>servos</code>, <code>strips</code>, <code>infrared</code> or <code>qwst</code> needs that hardware attached, <code>wireless</code> needs a WiFi network, and some of the showcase ones want pictures or a network of their own.</p>
+<p>The full set, with what each one does, is on <a href="https://github.com/pimoroni/picofx">GitHub</a>.</p>
 <h2 id="when-something-is-wrong">When something is wrong</h2>
 <p>The lights say so, and the more flashes the worse it is:</p>
 <div class="scroll"><table>
