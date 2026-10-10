@@ -1983,6 +1983,22 @@ def __transfer_frame(fx, at):
         __spot(fx, (at // TRANSFER_STEP_MS) % len(lights))
 
 
+def __candidates(name):
+    """Where a file the effects file names may be, the drive's copy first."""
+    # A path is taken as written, since a doubled separator would otherwise fold and
+    # '/prog.py' would quietly find the drive's copy. A plain name looks on the drive
+    # first, that being the one the reader can see and edit
+    if name.startswith("/"):
+        return (name,)
+
+    # The drive's examples folder is also mounted at /examples, so a name inside it would
+    # otherwise be found twice and reported as on both filesystems
+    if name.split("/")[0] == "examples":
+        return (MOUNT_DIR + "/" + name,)
+
+    return (MOUNT_DIR + "/" + name, name)
+
+
 def __read_program(name, problems):
     """
     The source of a program the file named, or None if there is none to read.
@@ -1990,13 +2006,8 @@ def __read_program(name, problems):
     Read before the drive is shown, since exposing it unmounts the mount point and a
     program kept on the drive could not be opened once the computer has it.
     """
-    # A path is taken as written, since a doubled separator would otherwise fold and
-    # '/prog.py' would quietly find the drive's copy. A plain name looks on the drive
-    # first, that being the one the reader can see and edit
-    wanted = (name,) if name.startswith("/") else (MOUNT_DIR + "/" + name, name)
-
     found = []
-    for candidate in wanted:
+    for candidate in __candidates(name):
         try:
             with open(candidate) as handle:
                 found.append(handle.read())
@@ -2756,10 +2767,8 @@ def __find_image(name, line, problems):
     drive's copy wins, as a program's does, and for the same reason: it is the one
     the reader can see and edit.
     """
-    wanted = (name,) if name.startswith("/") else (MOUNT_DIR + "/" + name, name)
-
     found = []
-    for candidate in wanted:
+    for candidate in __candidates(name):
         try:
             os.stat(candidate)
             found.append(candidate)

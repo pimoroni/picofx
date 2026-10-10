@@ -34,6 +34,10 @@ EDITOR_NAME = "EDITOR.html"
 CATALOGUE_NAME = "catalogue.js"
 ERRORS_PATH = MOUNT_POINT + "/errors.txt"
 
+# The drive's examples folder, and where it is also mounted
+EXAMPLES_DIR = MOUNT_POINT + "/examples"
+EXAMPLES_MOUNT_POINT = "/examples"
+
 VOLUME_LABEL = "FX"
 
 # The stat modes of a folder and a file
@@ -298,6 +302,7 @@ def mount(screens=True):
         fs = vfs.VfsFat(bdev)
         vfs.mount(fs, MOUNT_POINT)
         fs.label(VOLUME_LABEL)
+    __mount_examples()
     try:
         os.stat(FILE_PATH)
     except OSError:
@@ -791,6 +796,71 @@ class __View:
 
     def rmdir(self, _path):
         raise OSError(__EROFS)
+
+
+class __Examples:
+    """
+    The drive's examples folder, mounted at /examples so an example finds its files by
+    the same path on every board, those without a drive keeping the folder on their
+    own filesystem. Each call is passed on to whatever is mounted at the mount point,
+    the board's own mount or the view, and answers as that does.
+    """
+
+    def __init__(self):
+        self.__cwd = ""
+
+    def __target(self, path):
+        path = path if path.startswith("/") else self.__cwd + "/" + path
+        return (EXAMPLES_DIR + path).rstrip("/")
+
+    def mount(self, readonly, mkfs):
+        pass
+
+    def umount(self):
+        pass
+
+    def open(self, path, mode):
+        return open(self.__target(path), mode)
+
+    def stat(self, path):
+        return os.stat(self.__target(path))
+
+    def ilistdir(self, path):
+        return os.ilistdir(self.__target(path))
+
+    def statvfs(self, _path):
+        return os.statvfs(MOUNT_POINT)
+
+    def chdir(self, path):
+        target = self.__target(path)
+        if not os.stat(target)[0] & __S_IFDIR:
+            raise OSError(__ENOTDIR)
+        self.__cwd = target[len(EXAMPLES_DIR):]
+
+    def getcwd(self):
+        return self.__cwd or "/"
+
+    def mkdir(self, path):
+        os.mkdir(self.__target(path))
+
+    def remove(self, path):
+        os.remove(self.__target(path))
+
+    def rename(self, old_path, new_path):
+        os.rename(self.__target(old_path), self.__target(new_path))
+
+    def rmdir(self, path):
+        os.rmdir(self.__target(path))
+
+
+def __mount_examples():
+    """Mount the examples folder at /examples, once, staying through every handover."""
+    try:
+        vfs.mount(__Examples(), EXAMPLES_MOUNT_POINT)
+    except OSError as e:
+        # Already mounted answers EPERM
+        if e.args[0] != errno.EPERM:
+            raise
 
 
 def watch(enabled):
