@@ -2,8 +2,8 @@
 """Turns a board's editor pages into the frozen module the FX drive carries.
 
 Assembles a board's editor/picker.html from the parts every board shares in
-boards/editor/picker/, any of its own in its editor/picker/, its description in
-editor/fx_board.json and the thumbnails in editor/thumbs/. A part in one of the feature folders
+boards/editor/picker/, any of its own in its editor/picker/ and its description in
+editor/fx_board.json. A part in one of the feature folders
 goes in only for a board with that feature. Generates catalogue.js from the live autofx tables
 so a page always offers what the firmware it ships with provides, its strips and screen ports
 from the board's class or, where the class is not in this repository, from its description. It
@@ -198,20 +198,6 @@ def board_examples(repo_dir, board):
     return json.dumps(found, indent=1).replace("__", "_\\u005f")
 
 
-def thumbnails(board_dir):
-    """Each example's thumbnail in editor/thumbs/, by name, as a data URL the page carries.
-
-    The examples and their pictures are on the board's filesystem, which the computer never sees,
-    so the page brings its thumbnails with it.
-    """
-    found = {}
-    for path in sorted(glob.glob(os.path.join(board_dir, "editor", "thumbs", "*.png"))):
-        with open(path, "rb") as f:
-            encoded = base64.b64encode(f.read()).decode("ascii")
-        found[os.path.basename(path)[:-len(".png")]] = "data:image/png;base64," + encoded
-    return json.dumps(found, indent=1)
-
-
 def board_parts(picker_folders, board):
     """The board's numbered parts in number order, from the shared parts and any of its own, a
     feature folder's only where it has it. A part of the board's own adds to the shared ones."""
@@ -248,8 +234,7 @@ def picker(board_dir, repo_dir):
             text += f.read()
     text = text.replace("__BOARD_NAME__", board["name"])
     text = text.replace("__BOARD__", json.dumps(board, indent=1))
-    text = text.replace("__EXAMPLES__", board_examples(repo_dir, board))
-    text = text.replace("__THUMBS__", thumbnails(board_dir)) + PICKER_END
+    text = text.replace("__EXAMPLES__", board_examples(repo_dir, board)) + PICKER_END
     left = sorted(set(re.findall(r"__[A-Z_]+__", text)))
     if left:
         sys.exit("picker.html has {} unfilled".format(", ".join(left)))

@@ -121,10 +121,10 @@ function usesOf(path) {
   return example ? example.uses : [];
 }
 
-// Frames captured off a board running each example, composed to what its panel showed and scaled
-// to the thumbnail's size, by the example's file name, carried in the page as data URLs. Where one
-// exists it is the thumbnail, the drawn one standing in only for what has not been captured
-var THUMBS = __THUMBS__;
+// Frames captured off a board running each example, composed to what its panel showed, by the
+// example's file name, read from beside each example once the drive is opened. Where one exists it
+// is the thumbnail, the drawn one standing in for what has not been captured or not yet read
+var THUMBS = {};
 
 function offeredAt(path) {
   for (var g = 0; g < OFFERED.length; g++) {
@@ -149,17 +149,19 @@ function programTitle(path) {
 }
 
 // ---- thumbnails ----------------------------------------------------------------------------------
-// A screen's shape at a fifth of a 2.8" panel's pixels, drawn blocky on purpose, which is also what
-// a captured frame scaled down this far would look like
+// A drawn thumbnail is a screen's shape at a fifth of a 2.8" panel's pixels, blocky on purpose. A
+// picture, a captured frame or a drive program's own, is drawn at half a panel's pixels, smooth
 
 var THUMB_W = 64, THUMB_H = 48;
+var PICTURE_W = 160, PICTURE_H = 120;
 var thumbImages = {};
 
 function thumbCanvas(kind, seed, uses) {
+  var picture = /^(shot|pair|picture):/.test(kind);
   var canvas = document.createElement("canvas");
-  canvas.width = THUMB_W;
-  canvas.height = THUMB_H;
-  canvas.className = "progthumb";
+  canvas.width = picture ? PICTURE_W : THUMB_W;
+  canvas.height = picture ? PICTURE_H : THUMB_H;
+  canvas.className = picture ? "progthumb picture" : "progthumb";
   paintThumb(canvas.getContext("2d"), kind, seed || 1, canvas, uses || []);
   return canvas;
 }
@@ -193,7 +195,7 @@ function scatter(seed) {
 }
 
 function paintThumb(g, kind, seed, canvas, uses) {
-  var W = THUMB_W, H = THUMB_H, x, y, i;
+  var W = canvas.width, H = canvas.height, x, y, i;
   var chance = scatter(seed);
   function fill(ink) { g.fillStyle = ink; g.fillRect(0, 0, W, H); }
   function dotRow(ink, top, count, size, gap) {
@@ -844,8 +846,6 @@ function loadThumbs(sources) {
     image.src = src;
   });
 }
-
-loadThumbs(Object.keys(THUMBS).map(function (name) { return THUMBS[name]; }));
 
 // The scenes are always a grid of cards, the way into another one the grid's last tile
 function scenesAsCards() {

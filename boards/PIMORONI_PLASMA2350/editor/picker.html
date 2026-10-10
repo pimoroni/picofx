@@ -971,6 +971,7 @@ header .boardchip .boardicon{color:currentColor}
 body.programpage .programview{display:block}
 body.programpage #tabs,body.programpage #sceneBody,body.programpage #programNote{display:none}
 canvas.progthumb{display:block;image-rendering:pixelated;background:#222}
+canvas.progthumb.picture{image-rendering:auto}
 /* The chosen program, or the space it will take, the same size either way so choosing one moves
    nothing on the page. What the board runs is said along its top */
 .proghero{display:flex;flex-direction:column;margin:.8rem 0 1.1rem;background:#fff;
@@ -10123,9 +10124,9 @@ function usesOf(path) {
   return example ? example.uses : [];
 }
 
-// Frames captured off a board running each example, composed to what its panel showed and scaled
-// to the thumbnail's size, by the example's file name, carried in the page as data URLs. Where one
-// exists it is the thumbnail, the drawn one standing in only for what has not been captured
+// Frames captured off a board running each example, composed to what its panel showed, by the
+// example's file name, read from beside each example once the drive is opened. Where one exists it
+// is the thumbnail, the drawn one standing in for what has not been captured or not yet read
 var THUMBS = {};
 
 function offeredAt(path) {
@@ -10151,17 +10152,19 @@ function programTitle(path) {
 }
 
 // ---- thumbnails ----------------------------------------------------------------------------------
-// A screen's shape at a fifth of a 2.8" panel's pixels, drawn blocky on purpose, which is also what
-// a captured frame scaled down this far would look like
+// A drawn thumbnail is a screen's shape at a fifth of a 2.8" panel's pixels, blocky on purpose. A
+// picture, a captured frame or a drive program's own, is drawn at half a panel's pixels, smooth
 
 var THUMB_W = 64, THUMB_H = 48;
+var PICTURE_W = 160, PICTURE_H = 120;
 var thumbImages = {};
 
 function thumbCanvas(kind, seed, uses) {
+  var picture = /^(shot|pair|picture):/.test(kind);
   var canvas = document.createElement("canvas");
-  canvas.width = THUMB_W;
-  canvas.height = THUMB_H;
-  canvas.className = "progthumb";
+  canvas.width = picture ? PICTURE_W : THUMB_W;
+  canvas.height = picture ? PICTURE_H : THUMB_H;
+  canvas.className = picture ? "progthumb picture" : "progthumb";
   paintThumb(canvas.getContext("2d"), kind, seed || 1, canvas, uses || []);
   return canvas;
 }
@@ -10195,7 +10198,7 @@ function scatter(seed) {
 }
 
 function paintThumb(g, kind, seed, canvas, uses) {
-  var W = THUMB_W, H = THUMB_H, x, y, i;
+  var W = canvas.width, H = canvas.height, x, y, i;
   var chance = scatter(seed);
   function fill(ink) { g.fillStyle = ink; g.fillRect(0, 0, W, H); }
   function dotRow(ink, top, count, size, gap) {
@@ -10847,8 +10850,6 @@ function loadThumbs(sources) {
   });
 }
 
-loadThumbs(Object.keys(THUMBS).map(function (name) { return THUMBS[name]; }));
-
 // The scenes are always a grid of cards, the way into another one the grid's last tile
 function scenesAsCards() {
   var bar = document.getElementById("tabs");
@@ -11434,7 +11435,7 @@ setInterval(rescanMedia, 5000);
 // Opening the drive lists the programs it holds: every Python file at its top level, each described
 // by its opening string as the examples are. A file whose opening string starts "Drawing:" is a
 // drawing for a screen, not a program, so it is left out. A "Picture:" line names a picture on the
-// drive that the program is shown by.
+// drive that the program is shown by. The examples' captured frames are read from beside them.
 
 // A Python file's opening string, the first one written in triple quotes, or "" where it has none
 function openingString(source) {
@@ -11477,9 +11478,47 @@ async function drivePictures(dir, programs) {
   loadThumbs(Object.keys(DRIVE_PICTURES).map(function (name) { return DRIVE_PICTURES[name]; }));
 }
 
+// The folder a path's parts lead to on the drive, or null where one of them is not there
+async function folderAt(dir, parts) {
+  for (var i = 0; i < parts.length; i++) {
+    try {
+      dir = await dir.getDirectoryHandle(parts[i]);
+    } catch (e) {
+      return null;
+    }
+  }
+  return dir;
+}
+
+// Each example's captured frames, read from beside it on the drive, a pair's second screen being
+// name-2.png. One the drive does not hold leaves the example its drawn tile
+async function exampleThumbs(dir) {
+  Object.keys(THUMBS).forEach(function (name) { URL.revokeObjectURL(THUMBS[name]); });
+  THUMBS = {};
+  var folders = {};
+  for (var i = 0; i < BOARD_EXAMPLES.length; i++) {
+    var parts = BOARD_EXAMPLES[i].path.split("/");
+    var file = parts.pop().replace(/\.py$/, "");
+    var where = parts.join("/");
+    if (!(where in folders)) folders[where] = await folderAt(dir, parts);
+    if (!folders[where]) continue;
+    var names = [file, file + "-2"];
+    for (var n = 0; n < names.length; n++) {
+      try {
+        var picture = await (await folders[where].getFileHandle(names[n] + ".png")).getFile();
+        THUMBS[names[n]] = URL.createObjectURL(picture);
+      } catch (e) {
+        continue;
+      }
+    }
+  }
+  loadThumbs(Object.keys(THUMBS).map(function (name) { return THUMBS[name]; }));
+}
+
 connectSteps.push(async function () {
   DRIVE_PROGRAMS = await drivePrograms(drive.dirHandle);
   await drivePictures(drive.dirHandle, DRIVE_PROGRAMS);
+  await exampleThumbs(drive.dirHandle);
   // A program the page had chosen that this drive does not hold is no longer there to run
   if (boardSet.program && !programNamed(boardSet.program)) boardSet.program = null;
   if (boardSet.lastProgram && !programNamed(boardSet.lastProgram)) boardSet.lastProgram = null;
