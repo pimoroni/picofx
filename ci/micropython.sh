@@ -220,8 +220,9 @@ function ci_cmake_build {
         cp "$BUILD_DIR/firmware-romfs-with-libs-and-examples.uf2" $CI_RELEASE_FILENAME-with-libs-and-examples.uf2
     fi
 
-    # A drive variant's whole board, its FX drive included
-    FULL_UF2=$(ls "$BUILD_DIR"/firmware*-with-libs-and-examples-drive-full.uf2 2>/dev/null | head -1)
+    # A drive variant's whole board, its FX drive included. A build without a drive has none,
+    # and the ls failing would stop the CI shell, which runs with pipefail
+    FULL_UF2=$(ls "$BUILD_DIR"/firmware*-with-libs-and-examples-drive-full.uf2 2>/dev/null | head -1 || true)
     if [ -n "$FULL_UF2" ]; then
         log_inform "Copying -drive-full .uf2 to $(pwd)/$CI_RELEASE_FILENAME-full.uf2"
         cp "$FULL_UF2" $CI_RELEASE_FILENAME-full.uf2
