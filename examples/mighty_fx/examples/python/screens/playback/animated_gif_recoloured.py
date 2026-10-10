@@ -18,6 +18,8 @@ The pass changes colour on the frame the sweep turns around on, which the file h
 a second, so the change is seen while the picture is still rather than during the sweep.
 
 Press "Boot" to exit the program.
+
+Section: On screens
 """
 
 # Constants

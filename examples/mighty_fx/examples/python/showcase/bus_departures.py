@@ -9,6 +9,8 @@ anti-aliased vector type on a panel plainly being a panel. A second panel length
 board rather than repeating it, one listing running across both.
 
 Press "Boot" to exit the program.
+
+Section: Signs and displays
 """
 
 # Constants for drawing

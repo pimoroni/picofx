@@ -18,6 +18,8 @@ without being clipped by hand, and it is what lets one band be redrawn without t
 which is what makes the scroll affordable.
 
 Press "Boot" to exit the program.
+
+Section: Signs and displays
 """
 
 # Constants for drawing

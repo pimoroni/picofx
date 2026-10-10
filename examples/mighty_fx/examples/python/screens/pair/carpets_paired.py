@@ -17,6 +17,8 @@ about a ninth of the two full-panel images they stand in for. Neither is drawn a
 the drift is the offset, and it costs nothing.
 
 Press "Boot" to exit the program.
+
+Section: On screens
 """
 
 # Constants

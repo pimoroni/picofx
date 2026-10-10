@@ -8,6 +8,8 @@ Spin a rainbow wheel on a pair of screens held in step. Change up some of the co
 below to see what happens.
 
 Press "Boot" to exit the program.
+
+Program: Colour wheel paired
 """
 
 # Constants for drawing

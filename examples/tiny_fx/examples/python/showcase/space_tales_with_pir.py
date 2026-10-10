@@ -11,6 +11,9 @@ Play effects for each space themed "postcard" when someone walks past.
 A PIR sensor is used to activate the effect, which will turn off after a certain time.
 
 Press "Boot" to exit the program.
+
+Section: With a sensor
+Thumbnail: outputs mono
 """
 
 # Constants

@@ -8,6 +8,8 @@ Spin a rainbow wheel on a pair of screens arranged to face each other, one of th
 mirrored to suit. Change up some of the constants below to see what happens.
 
 Press "Boot" to exit the program.
+
+Program: Colour wheel facing
 """
 
 # Constants for drawing

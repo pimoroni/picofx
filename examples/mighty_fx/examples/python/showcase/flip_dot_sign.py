@@ -9,6 +9,8 @@ Draw a flip-dot sign, spelling its message in dots that turn over one column aft
 next.
 
 Press "Boot" to exit the program.
+
+Section: Signs and displays
 """
 
 # Constants for drawing

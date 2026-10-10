@@ -17,6 +17,8 @@ lanes change together, which is what a group is for: an aspect is drawn once and
 to every lane showing it, so a four lane gantry is one or two writes, not four.
 
 Press "Boot" to exit the program.
+
+Section: Signs and displays
 """
 
 # Constants for drawing

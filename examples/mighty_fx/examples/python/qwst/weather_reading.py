@@ -19,6 +19,9 @@ watch it climb. The pressure and
 humidity the sensor also reports are printed.
 
 Press "Boot" to exit the program.
+
+Section: With a sensor
+Thumbnail: outputs bar
 """
 
 # Constants

@@ -21,6 +21,8 @@ and its LED lit on the board below. One level per output, read by both, so the t
 apart. The interface is built once and blitted as the ground, so a frame draws only what moves.
 
 Press "Boot" to exit the program.
+
+Section: Signs and displays
 """
 
 # Constants for drawing

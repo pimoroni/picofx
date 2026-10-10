@@ -15,6 +15,9 @@ without a remote, so it is the one to reach for when checking a chassis is wired
 scaled correctly.
 
 Give it room, or hold it off the ground. Press "Boot" to exit the program.
+
+Section: Moving things
+Thumbnail: motor
 """
 
 # Constants

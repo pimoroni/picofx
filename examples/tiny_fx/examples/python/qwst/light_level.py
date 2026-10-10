@@ -16,6 +16,9 @@ forth whenever the reading sits on it, so the level that turns them on is lower 
 the level that turns them off.
 
 Press "Boot" to exit the program.
+
+Section: With a sensor
+Thumbnail: outputs dusk
 """
 
 # Constants

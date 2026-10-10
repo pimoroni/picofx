@@ -10,6 +10,8 @@ shows through its darkest parts. Change up some of the constants below to see wh
 happens.
 
 Press "Boot" to exit the program.
+
+Section: On screens
 """
 
 # Constants for drawing

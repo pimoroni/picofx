@@ -8,6 +8,8 @@ Draw a split-flap departures board, every card climbing through the drum until i
 its letter.
 
 Press "Boot" to exit the program.
+
+Section: Signs and displays
 """
 
 # Constants for drawing

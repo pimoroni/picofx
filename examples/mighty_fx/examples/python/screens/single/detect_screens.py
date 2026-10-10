@@ -8,6 +8,8 @@ Draw to whichever screens are plugged in, on one SP/CE port or both. Each screen
 out its own position in dots.
 
 Press "Boot" to exit the program.
+
+Args: Screen A size, Screen B size
 """
 
 # Constants for drawing

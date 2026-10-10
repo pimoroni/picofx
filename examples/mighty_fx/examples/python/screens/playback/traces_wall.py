@@ -15,6 +15,8 @@ each join. The frames are indexed PNGs, one a frame, which is the choice worth c
 holds every frame decoded, and an indexed frame takes a quarter of the memory of a truecolour one.
 
 Press "Boot" to exit the program.
+
+Section: On screens
 """
 
 # Constants

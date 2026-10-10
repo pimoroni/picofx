@@ -1,7 +1,6 @@
 {
  "name": "Plasma 2350",
- "examples": null,
- "example_variable": "plasma",
+ "examples": false,
  "outputs": [
   {"name": "rgb", "kind": "colour", "breaks_out": false}
  ],

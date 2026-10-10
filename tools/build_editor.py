@@ -115,87 +115,8 @@ FEATURE_FOLDERS = {
     "sound": lambda board: bool(board["sound"]),
 }
 
-# What each examples folder needs attached, as the manual says
-EXAMPLE_NEEDS = {"screens": "a screen", "audio": "a speaker", "motors": "motors",
-                 "servos": "a servo", "strips": "a strip"}
-
-# What an example uses beyond the board, read from its source, {board} standing for the name the
-# board's examples give it. Every example exits on Boot, so Boot counts only where its opening
-# string gives the button another job
-EXAMPLE_USES = [("outputs", r"{board}\.(outputs|monos)\b|ColourPlayer|MonoPlayer"),
-                ("rgb", r"{board}\.rgb\b"),
-                ("screen", r"^from screens import|SPCE\.SCREEN"),
-                ("pair", r"ScreenPair"),
-                ("hub", r"{board}\.hub\b|SPCE\.HUB"),
-                ("strip", r"{board}\.strip_[lr]\b"),
-                ("sound", r"{board}\.wav\b"),
-                ("remote", r"aye_arr|from sensor import IR"),
-                ("qwst", r"^from (breakout_\w+|lsm6ds3) import"),
-                # Only where one is needed, an optional one being written "ANALOG if"
-                ("analog", r"sensor=ANALOG\)"),
-                ("motor", r"MotorDriver|SPCE\.MOTOR"),
-                ("servo", r"^from servo import|{board}\.servo_[lr]\b"),
-                ("wifi", r"^import network|urequests|^import requests"),
-                ("button", r'Press "Boot" (?!to exit)|press Boot|boot_taps')]
-
-# A program that looks for a screen on each port runs on one or on two
-EITHER_SCREEN = r"for port in \({board}\.spce_a, {board}\.spce_b\)"
-
-# The one argument the examples read, the screen's size, taken with a default where none is given
-SIZE_ARGUMENT = r'^SCREEN_SIZE = "([^"]+)" if not sys\.argv\[1:\] else sys\.argv\[1\]'
-
 # The picker's parts are its script, so the page closes after the last of them
 PICKER_END = "</script>\n</body>\n</html>\n"
-
-
-def uses_of(source, variable):
-    """What an example's source says it uses, in EXAMPLE_USES order, the board named variable."""
-    board = re.escape(variable)
-    found = [name for name, pattern in EXAMPLE_USES
-             if re.search(pattern.replace("{board}", board), source, re.MULTILINE)]
-    if re.search(EITHER_SCREEN.replace("{board}", board), source):
-        found = ["either" if name == "pair" else name for name in found]
-        if "either" not in found:
-            found.append("either")
-    elif re.search(r"spce_b=SPCE\.SCREEN", source) and "pair" not in found:
-        found.append("pair")
-    # Two screens or a hub are more than one screen, so they say it for it
-    if set(found) & {"pair", "hub", "either"}:
-        found = [name for name in found if name != "screen"]
-    return found
-
-
-def board_examples(repo_dir, board):
-    """The examples the board carries, each with its path there and its opening sentence."""
-    found = []
-    if not board["examples"]:
-        return json.dumps(found)
-    root = os.path.join(repo_dir, board["examples"])
-    # The board carries what is under examples/<board>/ at its own root
-    on_board = "/".join(board["examples"].split("/")[2:])
-    for folder, _dirs, files in sorted(os.walk(root)):
-        where = os.path.relpath(folder, root).replace(os.sep, "/")
-        if where == "." or where.split("/")[0] == "assets":
-            continue
-        for name in sorted(files):
-            if not name.endswith(".py"):
-                continue
-            with open(os.path.join(folder, name), encoding="utf-8") as f:
-                source = f.read()
-            opening = re.search(r'"""\s*(.*?)"""', source, re.DOTALL)
-            words = " ".join(opening.group(1).split()) if opening else ""
-            first = re.match(r"(.*?\.)(\s|$)", words)
-            example = {"path": on_board + "/" + where + "/" + name, "folder": where,
-                       "does": first.group(1) if first else words,
-                       "needs": EXAMPLE_NEEDS.get(where.split("/")[0]),
-                       "uses": uses_of(source, board["example_variable"])}
-            # The arguments it reads, so the page offers those and no others
-            size = re.search(SIZE_ARGUMENT, source, re.MULTILINE)
-            if size:
-                example["args"] = [{"name": "Screen size", "kind": "size", "default": size.group(1)}]
-            found.append(example)
-    # A doubled underscore would read as a placeholder left unfilled, so it is escaped
-    return json.dumps(found, indent=1).replace("__", "_\\u005f")
 
 
 def board_parts(picker_folders, board):
@@ -234,7 +155,7 @@ def picker(board_dir, repo_dir):
             text += f.read()
     text = text.replace("__BOARD_NAME__", board["name"])
     text = text.replace("__BOARD__", json.dumps(board, indent=1))
-    text = text.replace("__EXAMPLES__", board_examples(repo_dir, board)) + PICKER_END
+    text += PICKER_END
     left = sorted(set(re.findall(r"__[A-Z_]+__", text)))
     if left:
         sys.exit("picker.html has {} unfilled".format(", ".join(left)))

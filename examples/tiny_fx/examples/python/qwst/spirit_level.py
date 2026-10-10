@@ -23,6 +23,9 @@ Which way to tilt it is set by AXIS, and readings are smoothed on the way in: a 
 spread across two outputs shows every fraction of a degree the sensor wobbles by.
 
 Press "Boot" to exit the program.
+
+Section: With a sensor
+Thumbnail: outputs level
 """
 
 # Constants

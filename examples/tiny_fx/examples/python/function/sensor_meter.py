@@ -7,6 +7,9 @@ Use TinyFX's mono outputs as a bargraph to show the voltage
 measured from a sensor attached to the sensor connector.
 
 Press "Boot" to exit the program.
+
+Section: With a sensor
+Thumbnail: outputs bar
 """
 
 # Constants

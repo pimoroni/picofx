@@ -12,6 +12,9 @@ given opposite values mirror each other, which suits a gripper or a pair of eyes
 same sweep is played both ways here so the difference is plain to watch.
 
 Press "Boot" to exit the program.
+
+Section: Moving things
+Thumbnail: servo
 """
 
 # Constants

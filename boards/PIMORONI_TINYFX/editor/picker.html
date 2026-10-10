@@ -1634,8 +1634,7 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
 // whether it has a hub, sound and the network looks, and the examples it offers
 var BOARD = {
  "name": "Tiny FX",
- "examples": "examples/tiny_fx/examples/python",
- "example_variable": "tiny",
+ "examples": true,
  "outputs": [
   {
    "name": "out1",
@@ -1683,75 +1682,7 @@ var BOARD = {
  "screens": null,
  "sound": true,
  "wireless": false,
- "shell": true,
- "offered": [
-  {
-   "section": "With the remote",
-   "says": "the effects, steered from the IR remote",
-   "examples": [
-    [
-     "infrared/colour/control_rainbow.py",
-     "lamps:rainbow"
-    ],
-    [
-     "infrared/colour/control_hsv_fx.py",
-     "lamps:warm"
-    ],
-    [
-     "infrared/mono/toggle_effects.py",
-     "lamps:mono"
-    ],
-    [
-     "infrared/mono/control_pulse_wave.py",
-     "lamps:pulse"
-    ]
-   ]
-  },
-  {
-   "section": "With a sensor",
-   "says": "the lights following what a sensor reads",
-   "examples": [
-    [
-     "qwst/light_level.py",
-     "lamps:dusk"
-    ],
-    [
-     "qwst/spirit_level.py",
-     "lamps:level"
-    ],
-    [
-     "qwst/weather_reading.py",
-     "lamps:bar"
-    ],
-    [
-     "function/sensor_meter.py",
-     "lamps:bar"
-    ],
-    [
-     "showcase/sensor_wave.py",
-     "lamps:pulse"
-    ],
-    [
-     "showcase/space_tales_with_pir.py",
-     "lamps:mono"
-    ]
-   ]
-  },
-  {
-   "section": "Sound",
-   "says": "lights to a soundtrack",
-   "examples": [
-    [
-     "audio/fair_use_encounters.py",
-     "lamps:melody"
-    ],
-    [
-     "audio/race_start.py",
-     "lamps:countdown"
-    ]
-   ]
-  }
- ]
+ "shell": true
 };
 
 // The catalogue is generated beside this page; without it the screen sizes and ports
@@ -8363,503 +8294,24 @@ if (!CAN_REACH_A_DRIVE) {
 // Saving without an eject starts on
 var boardSet = {reload: true, driveHidden: false, program: null, args: {}};
 
-// The programs on the drive, as [name, opening string], listed once a drive is open. A program
-// may say what it is in its opening string, as a drawing does: "Program:" and its name, a line on
-// what it does, "Args:" naming what it takes, and "Picture:" naming a picture on the drive to show
-// it by. One that says nothing is listed by its file name
-var DRIVE_PROGRAMS = [];
+// The programs on the drive, read once a drive is open, its own and the examples alike: each one's
+// path, name, what it does, the arguments it takes, its section and thumbnail, and what it uses and
+// needs. 26_drive_programs.js reads them
+var PROGRAMS = [];
 
-// The examples that come with the board, read from its examples folder when the page is built:
-// each one's path on the board, its folder, and the first sentence of its opening string
-var BOARD_EXAMPLES = [
- {
-  "path": "examples/python/audio/fair_use_encounters.py",
-  "folder": "audio",
-  "does": "Play an evocative musical melody with accompanying lights on TinyFX.",
-  "needs": "a speaker",
-  "uses": [
-   "outputs",
-   "rgb",
-   "sound"
-  ]
- },
- {
-  "path": "examples/python/audio/photon_sword.py",
-  "folder": "audio",
-  "does": "Play sounds that react to motion with a TinyFX.",
-  "needs": "a speaker",
-  "uses": [
-   "outputs",
-   "rgb",
-   "sound",
-   "qwst",
-   "button"
-  ]
- },
- {
-  "path": "examples/python/audio/race_start.py",
-  "folder": "audio",
-  "does": "Plays a simple boop, boop, boop, beeep countdown sound effect when you press Boot on TinyFx.",
-  "needs": "a speaker",
-  "uses": [
-   "outputs",
-   "rgb",
-   "sound",
-   "button"
-  ]
- },
- {
-  "path": "examples/python/audio/wav_player.py",
-  "folder": "audio",
-  "does": "Play a WAV file saved locally to the Tiny FX The RGB output says which state the board is in: a quarter white while it waits, and green while a file plays.",
-  "needs": "a speaker",
-  "uses": [
-   "rgb",
-   "sound",
-   "button"
-  ]
- },
- {
-  "path": "examples/python/comms/dual_fx.py",
-  "folder": "comms",
-  "does": "Play wave and rainbow animations across the outputs of this TinyFX and another TinyFX connected by I2C and running as an I2CTarget.",
-  "needs": null,
-  "uses": [
-   "outputs",
-   "rgb"
-  ]
- },
- {
-  "path": "examples/python/comms/multi_fx.py",
-  "folder": "comms",
-  "does": "Play wave and rainbow animations across the outputs of this TinyFX and multiple other TinyFX's connected by I2C and running as an I2CTarget.",
-  "needs": null,
-  "uses": [
-   "outputs",
-   "rgb"
-  ]
- },
- {
-  "path": "examples/python/effects/colour/blink.py",
-  "folder": "effects/colour",
-  "does": "Play a blinking sequence effect on TinyFX's RGB output.",
-  "needs": null,
-  "uses": [
-   "outputs",
-   "rgb"
-  ]
- },
- {
-  "path": "examples/python/effects/colour/hue_step.py",
-  "folder": "effects/colour",
-  "does": "Play a stepped hue effect on TinyFX's RGB output.",
-  "needs": null,
-  "uses": [
-   "outputs",
-   "rgb"
-  ]
- },
- {
-  "path": "examples/python/effects/colour/rainbow.py",
-  "folder": "effects/colour",
-  "does": "Play a rainbow effect on TinyFX's RGB output.",
-  "needs": null,
-  "uses": [
-   "outputs",
-   "rgb"
-  ]
- },
- {
-  "path": "examples/python/effects/colour/random.py",
-  "folder": "effects/colour",
-  "does": "Play a randomly changing brightness and colour effect on TinyFX's RGB output.",
-  "needs": null,
-  "uses": [
-   "outputs",
-   "rgb"
-  ]
- },
- {
-  "path": "examples/python/effects/colour/static_hsv.py",
-  "folder": "effects/colour",
-  "does": "Show a static colour on TinyFX's RGB output, using HSV.",
-  "needs": null,
-  "uses": [
-   "outputs",
-   "rgb"
-  ]
- },
- {
-  "path": "examples/python/effects/colour/static_rgb.py",
-  "folder": "effects/colour",
-  "does": "Show a static colour on TinyFX's RGB output.",
-  "needs": null,
-  "uses": [
-   "outputs",
-   "rgb"
-  ]
- },
- {
-  "path": "examples/python/effects/mono/binary_counter.py",
-  "folder": "effects/mono",
-  "does": "Play an incrementing binary counter on TinyFX's outputs.",
-  "needs": null,
-  "uses": [
-   "outputs"
-  ]
- },
- {
-  "path": "examples/python/effects/mono/blink_wave.py",
-  "folder": "effects/mono",
-  "does": "Play a wave of blinks on TinyFX's outputs.",
-  "needs": null,
-  "uses": [
-   "outputs"
-  ]
- },
- {
-  "path": "examples/python/effects/mono/flashing_sequence.py",
-  "folder": "effects/mono",
-  "does": "Play a flashing sequence across TinyFX's outputs.",
-  "needs": null,
-  "uses": [
-   "outputs"
-  ]
- },
- {
-  "path": "examples/python/effects/mono/pelican_crossing.py",
-  "folder": "effects/mono",
-  "does": "Play a pelican crossing on five of TinyFX's outputs.",
-  "needs": null,
-  "uses": [
-   "outputs"
-  ]
- },
- {
-  "path": "examples/python/effects/mono/pulse_wave.py",
-  "folder": "effects/mono",
-  "does": "Play a wave of pulses on TinyFX's outputs.",
-  "needs": null,
-  "uses": [
-   "outputs"
-  ]
- },
- {
-  "path": "examples/python/effects/mono/single_blink.py",
-  "folder": "effects/mono",
-  "does": "Play a blinking effect on one of TinyFX's outputs.",
-  "needs": null,
-  "uses": [
-   "outputs"
-  ]
- },
- {
-  "path": "examples/python/effects/mono/single_flashing.py",
-  "folder": "effects/mono",
-  "does": "Play a flashing effect on one of TinyFX's outputs.",
-  "needs": null,
-  "uses": [
-   "outputs"
-  ]
- },
- {
-  "path": "examples/python/effects/mono/single_flicker.py",
-  "folder": "effects/mono",
-  "does": "Play a flickering effect on one of TinyFX's outputs.",
-  "needs": null,
-  "uses": [
-   "outputs"
-  ]
- },
- {
-  "path": "examples/python/effects/mono/single_pulse.py",
-  "folder": "effects/mono",
-  "does": "Play a pulsing effect on one of TinyFX's outputs.",
-  "needs": null,
-  "uses": [
-   "outputs"
-  ]
- },
- {
-  "path": "examples/python/effects/mono/single_random.py",
-  "folder": "effects/mono",
-  "does": "Play a randomly changing brightness effect on one of TinyFX's outputs.",
-  "needs": null,
-  "uses": [
-   "outputs"
-  ]
- },
- {
-  "path": "examples/python/effects/mono/static_brightness.py",
-  "folder": "effects/mono",
-  "does": "Show a static brightness on one of TinyFX's outputs.",
-  "needs": null,
-  "uses": [
-   "outputs"
-  ]
- },
- {
-  "path": "examples/python/effects/mono/sweep.py",
-  "folder": "effects/mono",
-  "does": "Sweep a light back and forth across TinyFX's outputs.",
-  "needs": null,
-  "uses": [
-   "outputs"
-  ]
- },
- {
-  "path": "examples/python/effects/mono/sweep_trail.py",
-  "folder": "effects/mono",
-  "does": "Sweep a light back and forth across TinyFX's outputs, leaving a trail behind it.",
-  "needs": null,
-  "uses": [
-   "outputs"
-  ]
- },
- {
-  "path": "examples/python/effects/mono/traffic_light.py",
-  "folder": "effects/mono",
-  "does": "Play a traffic light sequence on TinyFX's outputs.",
-  "needs": null,
-  "uses": [
-   "outputs"
-  ]
- },
- {
-  "path": "examples/python/function/count_taps.py",
-  "folder": "function",
-  "does": "Count taps of TinyFX's Boot button, including the ones that happen while the board is busy, and show the count on its mono outputs.",
-  "needs": null,
-  "uses": [
-   "outputs",
-   "button"
-  ]
- },
- {
-  "path": "examples/python/function/read_button.py",
-  "folder": "function",
-  "does": "Show the state of TinyFX's Boot button on its RGB output.",
-  "needs": null,
-  "uses": [
-   "rgb"
-  ]
- },
- {
-  "path": "examples/python/function/sensor_meter.py",
-  "folder": "function",
-  "does": "Use TinyFX's mono outputs as a bargraph to show the voltage measured from a sensor attached to the sensor connector.",
-  "needs": null,
-  "uses": [
-   "outputs",
-   "analog"
-  ]
- },
- {
-  "path": "examples/python/function/voltage_meter.py",
-  "folder": "function",
-  "does": "Use TinyFX's mono outputs as a bargraph to show the voltage that is powering the board.",
-  "needs": null,
-  "uses": [
-   "outputs"
-  ]
- },
- {
-  "path": "examples/python/infrared/colour/control_hsv_direct.py",
-  "folder": "infrared/colour",
-  "does": "Set the colour of Tiny FX's onboard RGB LED using the number buttons on the Pimoroni Aye Arr Remote, and change its hue, saturation, and value using the directional buttons.",
-  "needs": null,
-  "uses": [
-   "rgb",
-   "remote"
-  ]
- },
- {
-  "path": "examples/python/infrared/colour/control_hsv_fx.py",
-  "folder": "infrared/colour",
-  "does": "Set the colour of Tiny FX's onboard RGB LED using the number buttons on the Pimoroni Aye Arr Remote, and change its hue, saturation, and value using the directional buttons.",
-  "needs": null,
-  "uses": [
-   "outputs",
-   "rgb",
-   "remote"
-  ]
- },
- {
-  "path": "examples/python/infrared/colour/control_rainbow.py",
-  "folder": "infrared/colour",
-  "does": "Play a rainbow effect on TinyFX's RGB output that is controllable by the directional buttons on a Pimoroni Aye Arr Remote.",
-  "needs": null,
-  "uses": [
-   "outputs",
-   "rgb",
-   "remote"
-  ]
- },
- {
-  "path": "examples/python/infrared/colour/control_rgb_direct.py",
-  "folder": "infrared/colour",
-  "does": "Set the colour of Tiny FX's onboard RGB LED using the number buttons on the Pimoroni Aye Arr Remote.",
-  "needs": null,
-  "uses": [
-   "rgb",
-   "remote"
-  ]
- },
- {
-  "path": "examples/python/infrared/colour/control_rgb_fx.py",
-  "folder": "infrared/colour",
-  "does": "Set the colour of Tiny FX's onboard RGB LED using the number buttons on the Pimoroni Aye Arr Remote.",
-  "needs": null,
-  "uses": [
-   "outputs",
-   "rgb",
-   "remote"
-  ]
- },
- {
-  "path": "examples/python/infrared/mono/control_channels.py",
-  "folder": "infrared/mono",
-  "does": "Turn each of Tiny FX's mono outputs on and off by pressing the number buttons on the Pimoroni Aye Arr Remote, and hold to adjust their brightness.",
-  "needs": null,
-  "uses": [
-   "outputs",
-   "remote"
-  ]
- },
- {
-  "path": "examples/python/infrared/mono/control_pulse_wave.py",
-  "folder": "infrared/mono",
-  "does": "Play a wave of pulses on TinyFX's outputs that is controllable by the directional buttons on a Pimoroni Aye Arr Remote.",
-  "needs": null,
-  "uses": [
-   "outputs",
-   "remote"
-  ]
- },
- {
-  "path": "examples/python/infrared/mono/toggle_effects.py",
-  "folder": "infrared/mono",
-  "does": "Play effects for each \"postcard\" on the Tales Of The Space Age set, and turn them on and off by pressing the number buttons on the Pimoroni Aye Arr Remote.",
-  "needs": null,
-  "uses": [
-   "outputs",
-   "remote"
-  ]
- },
- {
-  "path": "examples/python/qwst/light_level.py",
-  "folder": "qwst",
-  "does": "Bring TinyFX's lights up when the room gets dark, read from a light sensor on Qw/ST.",
-  "needs": null,
-  "uses": [
-   "outputs",
-   "qwst"
-  ]
- },
- {
-  "path": "examples/python/qwst/spirit_level.py",
-  "folder": "qwst",
-  "does": "Use TinyFX's mono outputs as a spirit level, read from an accelerometer on Qw/ST.",
-  "needs": null,
-  "uses": [
-   "outputs",
-   "rgb",
-   "qwst"
-  ]
- },
- {
-  "path": "examples/python/qwst/weather_reading.py",
-  "folder": "qwst",
-  "does": "Show the temperature on TinyFX's RGB output, read from a weather sensor on Qw/ST.",
-  "needs": null,
-  "uses": [
-   "rgb",
-   "qwst"
-  ]
- },
- {
-  "path": "examples/python/showcase/rescue_vehicle.py",
-  "folder": "showcase",
-  "does": "Play an alternating flashing sequence on two of TinyFX's outputs, recreating the effect of rescue vehicle beacons.",
-  "needs": null,
-  "uses": [
-   "outputs"
-  ]
- },
- {
-  "path": "examples/python/showcase/sensor_wave.py",
-  "folder": "showcase",
-  "does": "Play a wave of pulses on TinyFX's outputs, who's speed is controlled by a sensor.",
-  "needs": null,
-  "uses": [
-   "outputs",
-   "analog"
-  ]
- },
- {
-  "path": "examples/python/showcase/ship_thrusters.py",
-  "folder": "showcase",
-  "does": "Play a set of flickering thruster effects on a model spaceship, with an RGB light used for planetshine underglow.",
-  "needs": null,
-  "uses": [
-   "outputs",
-   "rgb"
-  ]
- },
- {
-  "path": "examples/python/showcase/space_tales.py",
-  "folder": "showcase",
-  "does": "Play effects for each space themed \"postcard\".",
-  "needs": null,
-  "uses": [
-   "outputs"
-  ]
- },
- {
-  "path": "examples/python/showcase/space_tales_with_pir.py",
-  "folder": "showcase",
-  "does": "Play effects for each space themed \"postcard\" when someone walks past.",
-  "needs": null,
-  "uses": [
-   "outputs"
-  ]
- }
-];
-
-// What an opening string says of a program: a name where it gives one, what it does, the
-// arguments it names and the picture it is shown by, each null where it names none
-function programSaid(docstring) {
-  var lines = (docstring || "").split("\n").filter(function (line) { return line.trim(); });
-  var said = {name: null, does: "", args: null, picture: null};
-  lines.forEach(function (line) {
-    var named = line.match(/^Program:\s*(.+)$/);
-    var takes = line.match(/^Args:\s*(.+)$/);
-    var shown = line.match(/^Picture:\s*(.+)$/);
-    if (named) said.name = named[1].trim();
-    else if (takes) said.args = takes[1].split(",").map(function (arg) { return arg.trim(); });
-    else if (shown) said.picture = shown[1].trim();
-    else if (!said.does) said.does = line.trim();
-  });
-  return said;
-}
-
+// The program at a path, or null where the drive holds none there
 function programNamed(path) {
-  var mine = DRIVE_PROGRAMS.filter(function (one) { return one[0] === path; })[0];
-  if (mine) return Object.assign({path: path, onDrive: true}, programSaid(mine[1]));
-  var example = BOARD_EXAMPLES.filter(function (one) { return one.path === path; })[0];
-  return example ? {path: path, onDrive: false, name: null, does: example.does,
-                    args: example.args || [], needs: example.needs}
-                 : null;
+  return PROGRAMS.filter(function (one) { return one.path === path; })[0] || null;
 }
 
 // A program's arguments as the file takes them, each one quoted where a space or a colon would
-// otherwise divide it, and an empty one left out. A pipe divides them, so none can carry one. An
-// example given only what it would take anyway is given nothing, so its line stays as short
+// otherwise divide it, and an empty one left out. A pipe divides them, so none can carry one. A
+// program given only what it would take anyway is given nothing, so its line stays as short
 function argsWritten(path) {
   var program = programNamed(path);
-  if (program && !program.onDrive && program.args.every(function (argument, at) {
+  if (program && program.args && program.args.length && program.args.every(function (argument, at) {
     var value = (boardSet.args[path] || [])[at];
-    return value === undefined || value === argument.default;
+    return "default" in argument && (value === undefined || value === argument.default);
   })) return "";
   var given = (boardSet.args[path] || []).map(function (arg) {
     return arg.replace(/[|"]/g, "").trim();
@@ -8894,19 +8346,22 @@ function sizeOffered(argument) {
   return screen && screen.there && screen.size ? screen.size : argument.default;
 }
 
-// The picked program's arguments. An example takes only what it reads, a screen size chosen from
-// those the firmware knows. A program on the drive gets a box for each its opening string names,
-// or plain ones to add and take away
+// The picked program's arguments: a box for each it names, a screen size chosen from those the
+// firmware knows, or where it names none but reads sys.argv, plain boxes to add and take away
 function argsFor(path, locked) {
   var program = programNamed(path);
   var given = boardSet.args[path] || (boardSet.args[path] = []);
   var box = document.createElement("div");
   box.className = "progargs";
-  if (!program.onDrive) {
-    program.args.forEach(function (argument, at) {
+  var named = !!program.args;
+  var taken = program.args || given.map(function (arg, at) {
+    return {name: "Argument " + (at + 1), kind: "text"};
+  });
+  taken.forEach(function (argument, at) {
+    var label = document.createElement("label");
+    label.textContent = argument.name;
+    if (argument.kind === "size") {
       if (given[at] === undefined) given[at] = sizeOffered(argument);
-      var label = document.createElement("label");
-      label.textContent = argument.name;
       var choice = document.createElement("select");
       choice.disabled = !!locked;
       SCREEN_SIZES.forEach(function (inches) {
@@ -8922,14 +8377,8 @@ function argsFor(path, locked) {
       };
       label.appendChild(choice);
       box.appendChild(label);
-    });
-    return box;
-  }
-  var named = !!program.args;
-  var names = program.args || given.map(function (arg, at) { return "Argument " + (at + 1); });
-  names.forEach(function (name, at) {
-    var label = document.createElement("label");
-    label.textContent = name;
+      return;
+    }
     var field = document.createElement("input");
     field.value = given[at] || "";
     field.disabled = !!locked;
@@ -9109,28 +8558,38 @@ drawSteps.after.push(saveMenu);
 // effects view whole, scenes and all, since none of it plays while a program runs. Saving and
 // the drive are on the save button's menu.
 //
-// The programs offered are those that do something the effects cannot and run by themselves:
-// the showcase signs, screen pieces, and what a remote, a sensor, a speaker or a motor brings.
-// The effects' own demonstrations, walkthroughs of the drawing library and calibrations are left
-// out. Each has a small thumbnail at a screen's shape and low resolution: a frame captured off a
-// board running it where there is one, drawn here where there is not.
+// The programs offered are those on the drive that name a section, and those at its top level,
+// which the page learns only once the drive is open. Each has a small thumbnail at a screen's
+// shape: its picture where one sits beside it, drawn here where there is not.
 
-// The board's offered examples by section, each as its path under EXAMPLES_ROOT and how its
-// thumbnail is drawn, "shot" being its captured frame. What each uses is read from its source when
-// the page is built
-var OFFERED = (BOARD.offered || []).map(function (set) { return [set.section, set.examples]; });
+// The programs at the top of the drive that name no section, the group they make
+var OWN_GROUP = "On the drive";
 
-// Where the board keeps the examples it offers: what the repository holds under examples/<board>/
-// sits at the board's own root
-var EXAMPLES_ROOT = BOARD.examples ? BOARD.examples.split("/").slice(2).join("/") + "/" : "";
+// The offered programs by group, as [name, paths]: the drive's own, then sections.txt's sections
+// in its order, then any other a program names, each group's programs by title
+function offeredGroups() {
+  var named = SECTIONS.map(function (one) { return one[0]; });
+  PROGRAMS.forEach(function (one) {
+    if (one.section && named.indexOf(one.section) < 0) named.push(one.section);
+  });
+  var own = PROGRAMS.filter(function (one) { return !one.example && !one.section; });
+  var groups = [[OWN_GROUP, own]].concat(named.map(function (name) {
+    return [name, PROGRAMS.filter(function (one) { return one.section === name; })];
+  }));
+  return groups.map(function (group) {
+    var paths = group[1].map(function (one) { return one.path; });
+    paths.sort(function (a, b) { return programTitle(a) < programTitle(b) ? -1 : 1; });
+    return [group[0], paths];
+  }).filter(function (group) { return group[1].length; });
+}
 
-// What each group's heading says after its name, as the looks' groups do
-var GROUP_SAYS = {"On the drive": "your own programs"};
-(BOARD.offered || []).forEach(function (set) { GROUP_SAYS[set.section] = set.says; });
-
-// The picture each of the drive's programs names in its opening string, read off the drive, by
-// the program's name
-var DRIVE_PICTURES = {};
+// What a group's heading says after its name, as the looks' groups do, a section's from
+// sections.txt
+function groupSays(title) {
+  if (title === OWN_GROUP) return "your own programs";
+  var listed = SECTIONS.filter(function (one) { return one[0] === title; })[0];
+  return listed ? listed[1] : "";
+}
 
 // Round holes cut through a filled shape, one at each point, as a path's own subpaths
 function holes(points, radius) {
@@ -9219,36 +8678,17 @@ function featureIcon(key) {
   return icon;
 }
 
-// What an example uses, read from its source. A program on the drive says nothing of it
+// What a program uses, read from its source
 function usesOf(path) {
-  var example = BOARD_EXAMPLES.filter(function (one) { return one.path === path; })[0];
-  return example ? example.uses : [];
+  var program = programNamed(path);
+  return program ? program.uses : [];
 }
-
-// Frames captured off a board running each example, composed to what its panel showed, by the
-// example's file name, read from beside each example once the drive is opened. Where one exists it
-// is the thumbnail, the drawn one standing in for what has not been captured or not yet read
-var THUMBS = {};
-
-function offeredAt(path) {
-  for (var g = 0; g < OFFERED.length; g++) {
-    for (var i = 0; i < OFFERED[g][1].length; i++) {
-      if (EXAMPLES_ROOT + OFFERED[g][1][i][0] === path) return OFFERED[g][1][i];
-    }
-  }
-  return null;
-}
-
-// Words a file name spells for the code, said as a reader would
-var TITLE_WORDS = {crt: "CRT", led: "LED", color: "colour"};
 
 // A program's name to show: its own where it gives one, else its file's, in words
 function programTitle(path) {
   var program = programNamed(path);
   if (program && program.name) return program.name;
-  var words = path.split("/").pop().replace(/\.py$/, "").split("_").map(function (word) {
-    return TITLE_WORDS[word] || word;
-  }).join(" ");
+  var words = path.split("/").pop().replace(/\.py$/, "").split("_").join(" ");
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
@@ -9261,7 +8701,7 @@ var PICTURE_W = 160, PICTURE_H = 120;
 var thumbImages = {};
 
 function thumbCanvas(kind, seed, uses) {
-  var picture = /^(shot|pair|picture):/.test(kind);
+  var picture = /^(shot|pair):/.test(kind);
   var canvas = document.createElement("canvas");
   canvas.width = picture ? PICTURE_W : THUMB_W;
   canvas.height = picture ? PICTURE_H : THUMB_H;
@@ -9299,17 +8739,17 @@ function scatter(seed) {
 }
 
 function paintThumb(g, kind, seed, canvas, uses) {
-  var W = canvas.width, H = canvas.height, x, y, i;
+  var W = canvas.width, H = canvas.height, i;
   var chance = scatter(seed);
   function fill(ink) { g.fillStyle = ink; g.fillRect(0, 0, W, H); }
   function dotRow(ink, top, count, size, gap) {
     g.fillStyle = ink;
     for (i = 0; i < count; i++) g.fillRect(3 + i * (size + gap), top, size, size);
   }
-  // A pair's two captured frames side by side, each whole in its half, as the two panels stand
+  // A pair's two pictures side by side, each whole in its half, as the two panels stand
   if (kind.indexOf("pair:") === 0) {
     fill("#111");
-    [THUMBS[kind.slice(5)], THUMBS[kind.slice(5) + "-2"]].forEach(function (src, side) {
+    PICTURES[kind.slice("pair:".length)].forEach(function (src, side) {
       var panel = thumbImages[src];
       if (!panel) {
         panel = thumbImages[src] = new Image();
@@ -9327,10 +8767,10 @@ function paintThumb(g, kind, seed, canvas, uses) {
     });
     return;
   }
-  // A captured frame carried in the page, or the picture a program on the drive names
-  if (kind.indexOf("shot:") === 0 || kind.indexOf("picture:") === 0) {
+  // A program's picture, read from beside it on the drive
+  if (kind.indexOf("shot:") === 0) {
     fill("#111");
-    var src = kind.indexOf("shot:") === 0 ? THUMBS[kind.slice(5)] : DRIVE_PICTURES[kind.slice(8)];
+    var src = PICTURES[kind.slice("shot:".length)][0];
     var image = thumbImages[src];
     if (!image) {
       image = thumbImages[src] = new Image();
@@ -9346,7 +8786,7 @@ function paintThumb(g, kind, seed, canvas, uses) {
     else image.addEventListener("load", drawn);
     return;
   }
-  if (kind.indexOf("lamps:") === 0) {
+  if (kind.indexOf("outputs:") === 0) {
     // What the outputs do, as a lamp for each on the board's dark, spread across seven lamps' width
     fill("#1c1f22");
     var inks = {rainbow: ["#ff2d1a", "#ff9022", "#ffd21f", "#22c65a", "#28e0e0", "#2b5cff", "#9a46ff"],
@@ -9359,7 +8799,7 @@ function paintThumb(g, kind, seed, canvas, uses) {
                 melody: ["#9a46ff", "#3a3f44", "#ff36c8", "#9a46ff", "#3a3f44", "#2b5cff", "#ff36c8"],
                 countdown: ["#ff2d1a", "#ff2d1a", "#ff2d1a", "#22c65a", "#3a3f44", "#3a3f44", "#3a3f44"],
                 off: ["#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44"]};
-    var row = inks[kind.slice(6)] || inks.mono;
+    var row = inks[kind.slice("outputs:".length)] || inks.mono;
     var lamps = lampsDrawn(uses);
     lamps.forEach(function (output, at) {
       var ink = row[Math.min(at, row.length - 1)];
@@ -9372,105 +8812,9 @@ function paintThumb(g, kind, seed, canvas, uses) {
     return;
   }
   switch (kind) {
-  case "flipdot":
-    fill("#101010");
-    for (y = 0; y < 7; y++) for (x = 0; x < 20; x++) {
-      g.fillStyle = chance() < 0.42 ? "#f5d400" : "#262626";
-      g.fillRect(2 + x * 3, 13 + y * 3, 2, 2);
-    }
-    break;
-  case "flap":
-    fill("#161616");
-    for (i = 0; i < 4; i++) {
-      g.fillStyle = "#2c2c2c";
-      g.fillRect(4 + i * 14 + (i > 1 ? 4 : 0), 12, 12, 24);
-      g.fillStyle = "#0c0c0c";
-      g.fillRect(4 + i * 14 + (i > 1 ? 4 : 0), 23, 12, 1);
-      g.fillStyle = "#eee";
-      g.font = "bold 16px monospace";
-      g.fillText("1942".charAt(i), 6 + i * 14 + (i > 1 ? 4 : 0), 30);
-    }
-    break;
-  case "flapboard":
-    fill("#161616");
-    for (y = 0; y < 5; y++) for (x = 0; x < 9; x++) {
-      g.fillStyle = "#2a2a2a";
-      g.fillRect(2 + x * 6.8, 5 + y * 8, 6, 7);
-      g.fillStyle = chance() < 0.7 ? "#e8e8e8" : "#f5c400";
-      g.fillRect(3.5 + x * 6.8, 7 + y * 8, 3, 3);
-    }
-    break;
-  case "nixie":
-  case "lixie":
-    fill(kind === "nixie" ? "#140a06" : "#06080f");
-    g.font = "bold 30px serif";
-    g.shadowColor = kind === "nixie" ? "#ff7a1a" : "#6ab0ff";
-    g.shadowBlur = 8;
-    g.fillStyle = kind === "nixie" ? "#ffb060" : "#bfe0ff";
-    g.fillText("7", 23, 36);
-    g.shadowBlur = 0;
-    break;
-  case "board":
-  case "bus":
-    fill(kind === "bus" ? "#0b1a33" : "#0a0a0a");
-    for (y = 0; y < 5; y++) {
-      g.fillStyle = kind === "bus" ? "#ffffff" : "#ffb000";
-      g.fillRect(4, 6 + y * 8, 8 + chance() * 10, 3);
-      g.fillRect(28, 6 + y * 8, 14 + chance() * 12, 3);
-      g.fillStyle = kind === "bus" ? "#ffd21f" : "#ffb000";
-      g.fillRect(W - 12, 6 + y * 8, 8, 3);
-    }
-    break;
-  case "amber":
-  case "roadworks":
-    fill("#0d0c0a");
-    for (y = 0; y < 8; y++) for (x = 0; x < 21; x++) {
-      var on = kind === "roadworks" ? (y === 3 || y === 4 || (x > 8 && x < 12))
-                                    : chance() < 0.3;
-      g.fillStyle = on ? "#ffa51a" : "#2a2218";
-      g.fillRect(2 + x * 3, 12 + y * 3, 2, 2);
-    }
-    break;
-  case "gantry":
-    fill("#0a0a0a");
-    for (i = 0; i < 3; i++) {
-      g.fillStyle = "#1e1e1e";
-      g.fillRect(3 + i * 21, 10, 18, 28);
-      g.strokeStyle = i === 0 ? "#ff2d1a" : "#ffffff";
-      g.lineWidth = 2;
-      g.beginPath();
-      if (i === 0) {
-        g.moveTo(7, 16); g.lineTo(17, 32); g.moveTo(17, 16); g.lineTo(7, 32);
-      } else {
-        g.moveTo(12 + i * 21 - 9, 14); g.lineTo(12 + i * 21 - 9, 33);
-        g.moveTo(12 + i * 21 - 14, 28); g.lineTo(12 + i * 21 - 9, 34);
-        g.lineTo(12 + i * 21 - 4, 28);
-      }
-      g.stroke();
-    }
-    break;
-  case "crt":
-    fill("#031a06");
-    g.fillStyle = "#39ff6a";
-    for (y = 0; y < 6; y++) g.fillRect(4, 5 + y * 7, 10 + chance() * 40, 3);
-    g.fillRect(4 + 22, 5 + 6 * 7 - 7, 3, 4);
-    break;
-  case "trivision":
-    fill("#222");
-    for (i = 0; i < 10; i++) {
-      g.fillStyle = ["#ff5a36", "#ffd21f", "#2b5cff"][i % 3 === 0 ? 0 : i < 5 ? 1 : 2];
-      g.fillRect(i * 6.4, 4, 5.6, 40);
-    }
-    break;
-  case "iso":
-    fill("#8fd0ff");
-    for (y = 0; y < 6; y++) for (x = 0; x < 6; x++) {
-      g.fillStyle = (x + y) % 3 ? "#4caf50" : "#2e7d32";
-      g.beginPath();
-      var cx = 32 + (x - y) * 6, cy = 8 + (x + y) * 3.4;
-      g.moveTo(cx, cy); g.lineTo(cx + 6, cy + 3.4); g.lineTo(cx, cy + 6.8); g.lineTo(cx - 6, cy + 3.4);
-      g.fill();
-    }
+  case "shot":
+    // A captured frame not yet read from the drive, as the ground it is drawn on
+    fill("#111");
     break;
   case "stars":
     fill("#02030a");
@@ -9478,52 +8822,6 @@ function paintThumb(g, kind, seed, canvas, uses) {
       var far = chance();
       g.fillStyle = far < 0.8 ? "#8a93b8" : "#ffffff";
       g.fillRect(Math.floor(chance() * W), Math.floor(chance() * H), far < 0.9 ? 1 : 2, 1);
-    }
-    break;
-  case "wheel":
-    fill("#000");
-    for (i = 0; i < 24; i++) {
-      g.fillStyle = "hsl(" + i * 15 + ",100%,55%)";
-      g.beginPath();
-      g.moveTo(32, 24);
-      g.arc(32, 24, 19, i / 24 * Math.PI * 2, (i + 1) / 24 * Math.PI * 2 + 0.02);
-      g.fill();
-    }
-    break;
-  case "matrix":
-    fill("#080808");
-    for (y = 0; y < 10; y++) for (x = 0; x < 14; x++) {
-      var lit = Math.hypot(x - 6.5, (y - 4.5) * 1.3) < 4.2;
-      g.fillStyle = lit ? "#ff3a2a" : "#2a0d0a";
-      g.beginPath();
-      g.arc(5 + x * 4.2, 5 + y * 4.2, 1.5, 0, Math.PI * 2);
-      g.fill();
-    }
-    break;
-  case "kaleido":
-    fill("#10061a");
-    for (i = 0; i < 12; i++) {
-      g.fillStyle = ["#ff36c8", "#28e0e0", "#ffd21f", "#9a46ff"][i % 4];
-      g.beginPath();
-      g.moveTo(32, 24);
-      g.arc(32, 24, 21, i / 12 * Math.PI * 2, (i + 0.55) / 12 * Math.PI * 2);
-      g.fill();
-    }
-    break;
-  case "logo":
-    fill("#15233a");
-    g.fillStyle = "#ff36c8";
-    g.fillRect(34, 10, 20, 12);
-    g.fillStyle = "#15233a";
-    g.fillRect(38, 13, 12, 6);
-    break;
-  case "carpet":
-    fill("#6b1f2a");
-    for (y = 0; y < 6; y++) for (x = 0; x < 8; x++) {
-      g.fillStyle = (x + y) % 2 ? "#d9a441" : "#1f4d6b";
-      g.beginPath();
-      g.arc(4 + x * 8, 4 + y * 8, 2.4, 0, Math.PI * 2);
-      g.fill();
     }
     break;
   case "drive":
@@ -9556,11 +8854,12 @@ function paintThumb(g, kind, seed, canvas, uses) {
 }
 
 function programThumb(path) {
-  var offered = offeredAt(path);
-  var file = path.split("/").pop().replace(/\.py$/, "");
-  var kind = offered && THUMBS[file + "-2"] ? "pair:" + file
-           : offered && THUMBS[file] ? "shot:" + file
-           : offered ? offered[1] : DRIVE_PICTURES[path] ? "picture:" + path : "drive";
+  // A picture where it has one, else what its Thumbnail line draws, else a plain tile: dark for an
+  // example, whose picture is still to be captured, and a prompt for the drive's own
+  var program = programNamed(path) || {};
+  var shown = PICTURES[path] || [];
+  var kind = shown.length > 1 ? "pair:" + path : shown.length ? "shot:" + path
+           : program.thumbnail || (program.example ? "shot" : "drive");
   return thumbCanvas(kind, path.length, usesOf(path));
 }
 
@@ -9605,7 +8904,7 @@ function programCard(path) {
 // The screen size a program is shown on: the one it is given, else screen A's, else a 2.8"
 function sizeShown(path) {
   var program = programNamed(path) || {};
-  var at = (program.onDrive ? [] : program.args || []).map(function (argument) {
+  var at = (program.args || []).map(function (argument) {
     return argument.kind;
   }).indexOf("size");
   var given = at >= 0 ? (boardSet.args[path] || [])[at] : null;
@@ -9626,17 +8925,17 @@ function framedPanel(path, url) {
 // as the Screens tab draws one, turned as the program turns it, and anything else its thumbnail
 // large. A frame taller than wide was taken from a panel upright
 function programPicture(path) {
-  var file = path.split("/").pop().replace(/\.py$/, "");
+  var shown = PICTURES[path] || [];
   var onScreen = usesOf(path).some(function (key) {
     return ["screen", "either", "pair", "hub"].indexOf(key) >= 0;
   });
-  if (onScreen && THUMBS[file]) {
+  if (onScreen && shown.length) {
     // A pair's second frame goes on a second panel, the two drawn smaller to stand side by side
-    if (!THUMBS[file + "-2"]) return framedPanel(path, THUMBS[file]);
+    if (shown.length < 2) return framedPanel(path, shown[0]);
     var both = document.createElement("div");
     both.className = "twopanels";
-    both.appendChild(framedPanel(path, THUMBS[file]));
-    both.appendChild(framedPanel(path, THUMBS[file + "-2"]));
+    both.appendChild(framedPanel(path, shown[0]));
+    both.appendChild(framedPanel(path, shown[1]));
     return both;
   }
   var big = programThumb(path);
@@ -9648,7 +8947,7 @@ function programPicture(path) {
 // a board without screens its lamps unlit
 function emptyPicture() {
   if (SCREEN_PORTS.length) return panelPreview({size: "2.8", turn: 0});
-  var big = thumbCanvas("lamps:off", 1);
+  var big = thumbCanvas("outputs:off", 1);
   big.classList.add("big");
   return big;
 }
@@ -9708,7 +9007,7 @@ function programHero(path) {
   words.innerHTML = "<h3>" + escapeHtml(programTitle(path)) + "</h3>" +
                     "<p>" + escapeHtml(program.does || "Says nothing about itself.") + "</p>" +
                     "<p class='progwhere'>" + escapeHtml(path) +
-                    (program.onDrive ? ", on the drive" : ", comes with the board") + "</p>";
+                    (program.example ? ", comes with the board" : ", on the drive") + "</p>";
   // What it uses, each drawn and named, as the filter below names them
   var uses = document.createElement("div");
   uses.className = "herouses";
@@ -9728,19 +9027,40 @@ function renderProgramView() {
   programView.textContent = "";
   if (!onProgramPage) return;
   programView.appendChild(programHero(boardSet.program));
+  // The programs are the drive's, so none is listed until it is open
+  if (!drive.dirHandle) {
+    var closed = document.createElement("p");
+    closed.className = "prognone";
+    closed.textContent = CAN_REACH_A_DRIVE ? "Open the FX drive to see the programs on it."
+                                           : "This browser cannot open the FX drive, so its " +
+                                             "programs cannot be listed. Chrome and Edge can.";
+    programView.appendChild(closed);
+    return;
+  }
+  // Each program is read off the drive in turn, which takes a while, so the count is shown
+  if (programsReading) {
+    var reading = document.createElement("p");
+    reading.className = "prognone";
+    reading.textContent = "Reading the programs on the drive, " + programsReading[0] + " of " +
+                          programsReading[1] + "...";
+    programView.appendChild(reading);
+    return;
+  }
   programView.appendChild(featureFilter());
   var shown = 0;
+  var listed = 0;
   function group(title, paths) {
+    listed += paths.length;
     var kept = paths.filter(passesFilter);
     if (!kept.length) return;
     shown += kept.length;
     var heading = document.createElement("div");
     heading.className = "gallery-head";
     heading.appendChild(document.createTextNode(title));
-    if (GROUP_SAYS[title]) {
+    if (groupSays(title)) {
       var says = document.createElement("span");
       says.className = "says";
-      says.textContent = GROUP_SAYS[title];
+      says.textContent = groupSays(title);
       heading.appendChild(says);
     }
     programView.appendChild(heading);
@@ -9749,14 +9069,12 @@ function renderProgramView() {
     kept.forEach(function (path) { grid.appendChild(programCard(path)); });
     programView.appendChild(grid);
   }
-  group("On the drive", DRIVE_PROGRAMS.map(function (one) { return one[0]; }));
-  OFFERED.forEach(function (set) {
-    group(set[0], set[1].map(function (entry) { return EXAMPLES_ROOT + entry[0]; }));
-  });
+  offeredGroups().forEach(function (offered) { group(offered[0], offered[1]); });
   if (!shown) {
     var none = document.createElement("p");
     none.className = "prognone";
-    none.textContent = "Every program here needs something not ticked.";
+    none.textContent = listed ? "Every program here needs something not ticked."
+                              : "There are no programs on this drive.";
     programView.appendChild(none);
   }
 }
@@ -9791,10 +9109,8 @@ function chipFeatures() {
 }
 
 function offeredPaths() {
-  var offered = DRIVE_PROGRAMS.map(function (one) { return one[0]; });
-  OFFERED.forEach(function (set) {
-    set[1].forEach(function (entry) { offered.push(EXAMPLES_ROOT + entry[0]); });
-  });
+  var offered = [];
+  offeredGroups().forEach(function (group) { offered = offered.concat(group[1]); });
   return offered;
 }
 
@@ -9890,7 +9206,7 @@ function renderPageSwitch() {
     // With no program chosen its tab shows a starfield, or the lamps lit on a board without screens
     var face = one[0] === "effects" ? effectsFace()
              : program ? programThumb(program)
-             : thumbCanvas(SCREEN_PORTS.length ? "stars" : "lamps:rainbow", 3);
+             : thumbCanvas(SCREEN_PORTS.length ? "stars" : "outputs:rainbow", 3);
     face.classList.add("coverface");
     cover.appendChild(face);
     var words = document.createElement("span");
@@ -10533,10 +9849,90 @@ connectSteps.push(async function () {
 setInterval(rescanMedia, 5000);
 
 // ---- the programs on the drive ------------------------------------------------------------------
-// Opening the drive lists the programs it holds: every Python file at its top level, each described
-// by its opening string as the examples are. A file whose opening string starts "Drawing:" is a
-// drawing for a screen, not a program, so it is left out. A "Picture:" line names a picture on the
-// drive that the program is shown by. The examples' captured frames are read from beside them.
+// Opening the drive reads the programs it holds, every Python file at its top level and under
+// EXAMPLES_ROOT, so the page offers what this drive carries and nothing it does not. A file whose
+// opening string starts "Drawing:" is a drawing for a screen, not a program, so it is left out.
+//
+// Every program is read the same way. Lines in its opening string say how to show it: "Program:"
+// its name, "Args:" what it takes, "Picture:" a picture beside it to show it by, "Section:" the
+// program tab's section it is offered in, and "Thumbnail:" what its thumbnail draws where it has no
+// picture. The first sentence of the rest says what it does. What it uses is read from its source,
+// and an example's folder says what it needs attached. A picture is the one named, else name.png
+// beside it, and name-2.png beside it is a second screen's. sections.txt in EXAMPLES_ROOT orders
+// the sections and says what each holds.
+
+// Where the drive keeps its examples, on a board that carries them
+var EXAMPLES_ROOT = BOARD.examples ? "examples/python/" : "";
+
+// The program tab's sections, as [name, what it holds], in sections.txt's order
+var SECTIONS = [];
+
+// Each program's pictures as object URLs, by its path: its own, and a second screen's after it
+var PICTURES = {};
+
+// How far reading the programs has got, as [read, of], while it is under way, else null
+var programsReading = null;
+
+// What each examples folder needs attached, as the manual says
+var EXAMPLE_NEEDS = {screens: "a screen", audio: "a speaker", motors: "motors", servos: "a servo",
+                     strips: "a strip"};
+
+// What a program uses beyond the board, read from its source, {board} standing for the name the
+// program gives the board. Every example exits on Boot, so Boot counts only where its opening
+// string gives the button another job
+var PROGRAM_USES = [["outputs", "{board}\\.(outputs|monos)\\b|ColourPlayer|MonoPlayer"],
+                    ["rgb", "{board}\\.rgb\\b"],
+                    ["screen", "^from screens import|SPCE\\.SCREEN"],
+                    ["pair", "ScreenPair"],
+                    ["hub", "{board}\\.hub\\b|SPCE\\.HUB"],
+                    ["strip", "{board}\\.strip_[lr]\\b"],
+                    ["sound", "{board}\\.wav\\b"],
+                    ["remote", "aye_arr|from sensor import IR"],
+                    ["qwst", "^from (breakout_\\w+|lsm6ds3) import"],
+                    // Only where one is needed, an optional one being written "ANALOG if"
+                    ["analog", "sensor=ANALOG\\)"],
+                    ["motor", "MotorDriver|SPCE\\.MOTOR"],
+                    ["servo", "^from servo import|{board}\\.servo_[lr]\\b"],
+                    ["wifi", "^import network|urequests|^import requests"],
+                    ["button", "Press \"Boot\" (?!to exit)|press Boot|boot_taps"]];
+
+// A program that looks for a screen on each port runs on one or on two
+var EITHER_SCREEN = "for port in \\({board}\\.spce_a, {board}\\.spce_b\\)";
+
+// The screen size a program reads, with a default where none is given
+var SIZE_ARGUMENT = /^SCREEN_SIZE = "([^"]+)" if not sys\.argv\[1:\] else sys\.argv\[1\]/m;
+
+// The name a program gives the board, from the line that makes it, such as mighty = MightyFX()
+var BOARD_MADE = /^(\w+)\s*=\s*\w*FX\(/m;
+
+// The lines of an opening string that say how to show the program
+var PROGRAM_LINE = /^\s*(Program|Args|Picture|Section|Thumbnail):\s*(.+?)\s*$/;
+
+// A pattern with the program's name for the board put in place of {board}, one matching nothing
+// where the program makes no board
+function programPattern(pattern, board) {
+  var name = board ? board.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : "\\b\\B";
+  return new RegExp(pattern.split("{board}").join(name), "m");
+}
+
+// What a program's source says it uses, in PROGRAM_USES order
+function usesInSource(source) {
+  var made = source.match(BOARD_MADE);
+  var board = made ? made[1] : null;
+  var found = PROGRAM_USES.filter(function (use) {
+    return programPattern(use[1], board).test(source);
+  }).map(function (use) { return use[0]; });
+  if (programPattern(EITHER_SCREEN, board).test(source)) {
+    found = found.map(function (name) { return name === "pair" ? "either" : name; });
+    if (found.indexOf("either") < 0) found.push("either");
+  } else if (/spce_b=SPCE\.SCREEN/.test(source) && found.indexOf("pair") < 0) {
+    found.push("pair");
+  }
+  // Two screens or a hub are more than one screen, so they say it for it
+  if (found.some(function (name) { return ["pair", "hub", "either"].indexOf(name) >= 0; }))
+    found = found.filter(function (name) { return name !== "screen"; });
+  return found;
+}
 
 // A Python file's opening string, the first one written in triple quotes, or "" where it has none
 function openingString(source) {
@@ -10544,39 +9940,47 @@ function openingString(source) {
   return found ? found[2].trim() : "";
 }
 
-async function drivePrograms(dir) {
-  var found = [];
-  for await (var pair of dir.entries()) {
-    var name = pair[0], handle = pair[1];
-    if (handle.kind !== "file" || !/\.py$/i.test(name)) continue;
-    var said = "";
-    try {
-      said = openingString(await (await handle.getFile()).text());
-    } catch (e) {
-      said = "";
-    }
-    if (/^Drawing:/.test(said)) continue;
-    found.push([name, said]);
+// One program as the page describes it, from its path, its folder under EXAMPLES_ROOT ("" for one
+// at the top of the drive) and its source, or null for a drawing
+function programFrom(path, folder, source) {
+  var opening = openingString(source);
+  if (/^Drawing:/.test(opening)) return null;
+  var program = {path: path, folder: folder,
+                 example: !!EXAMPLES_ROOT && path.indexOf(EXAMPLES_ROOT) === 0,
+                 name: null, does: "", args: null, picture: null, section: null, thumbnail: null,
+                 needs: EXAMPLE_NEEDS[folder.split("/")[0]] || null, uses: usesInSource(source)};
+  var said = opening.split("\n").filter(function (line) {
+    var told = line.match(PROGRAM_LINE);
+    if (!told) return true;
+    if (told[1] === "Program") program.name = told[2];
+    else if (told[1] === "Args") program.args = told[2].split(",").map(function (arg) {
+      return {name: arg.trim(), kind: "text"};
+    });
+    else if (told[1] === "Picture") program.picture = told[2];
+    else if (told[1] === "Section") program.section = told[2];
+    else program.thumbnail = told[2].split(/\s+/).join(":");
+    return false;
+  }).join(" ").split(/\s+/).join(" ").trim();
+  var first = said.match(/^(.*?\.)(\s|$)/);
+  program.does = first ? first[1] : said;
+  // Without an Args line, what it reads: the screen size, else whatever is given where it reads
+  // sys.argv at all, else nothing
+  if (!program.args) {
+    var size = source.match(SIZE_ARGUMENT);
+    if (size) program.args = [{name: "Screen size", kind: "size", "default": size[1]}];
+    else if (source.indexOf("sys.argv") < 0) program.args = [];
   }
-  return found.sort(function (a, b) { return a[0] < b[0] ? -1 : 1; });
+  return program;
 }
 
-// Each program's named picture, read off the drive. One that is missing or will not read leaves
-// the program shown by its plain tile
-async function drivePictures(dir, programs) {
-  Object.keys(DRIVE_PICTURES).forEach(function (name) { URL.revokeObjectURL(DRIVE_PICTURES[name]); });
-  DRIVE_PICTURES = {};
-  for (var i = 0; i < programs.length; i++) {
-    var picture = programSaid(programs[i][1]).picture;
-    if (!picture) continue;
-    try {
-      var file = await (await dir.getFileHandle(picture)).getFile();
-      DRIVE_PICTURES[programs[i][0]] = URL.createObjectURL(file);
-    } catch (e) {
-      continue;
-    }
-  }
-  loadThumbs(Object.keys(DRIVE_PICTURES).map(function (name) { return DRIVE_PICTURES[name]; }));
+// The sections sections.txt lists, a line each as its name, a |, and what it holds
+function sectionsFrom(text) {
+  return text.split("\n").map(function (line) { return line.trim(); }).filter(function (line) {
+    return line && line.charAt(0) !== "#";
+  }).map(function (line) {
+    var at = line.indexOf("|");
+    return at < 0 ? [line, ""] : [line.slice(0, at).trim(), line.slice(at + 1).trim()];
+  });
 }
 
 // The folder a path's parts lead to on the drive, or null where one of them is not there
@@ -10591,35 +9995,84 @@ async function folderAt(dir, parts) {
   return dir;
 }
 
-// Each example's captured frames, read from beside it on the drive, a pair's second screen being
-// name-2.png. One the drive does not hold leaves the example its drawn tile
-async function exampleThumbs(dir) {
-  Object.keys(THUMBS).forEach(function (name) { URL.revokeObjectURL(THUMBS[name]); });
-  THUMBS = {};
-  var folders = {};
-  for (var i = 0; i < BOARD_EXAMPLES.length; i++) {
-    var parts = BOARD_EXAMPLES[i].path.split("/");
-    var file = parts.pop().replace(/\.py$/, "");
-    var where = parts.join("/");
-    if (!(where in folders)) folders[where] = await folderAt(dir, parts);
-    if (!folders[where]) continue;
-    var names = [file, file + "-2"];
-    for (var n = 0; n < names.length; n++) {
+// The Python files and pictures in a folder of the drive, by path, and those of the folders inside
+// it where deep, walked in name order
+async function filesIn(dir, path, folder, deep, files, pictures) {
+  var entries = [];
+  for await (var pair of dir.entries()) entries.push(pair);
+  entries.sort(function (a, b) { return a[0] < b[0] ? -1 : 1; });
+  for (var i = 0; i < entries.length; i++) {
+    var name = entries[i][0], handle = entries[i][1];
+    if (handle.kind === "directory") {
+      if (deep) await filesIn(handle, path + name + "/", folder ? folder + "/" + name : name,
+                              deep, files, pictures);
+    } else if (/\.png$/i.test(name)) {
+      pictures[path + name] = handle;
+    } else if (/\.py$/i.test(name)) {
+      if (!deep || folder) files.push([path + name, folder, handle]);
+    } else if (name === "sections.txt" && deep && !folder) {
       try {
-        var picture = await (await folders[where].getFileHandle(names[n] + ".png")).getFile();
-        THUMBS[names[n]] = URL.createObjectURL(picture);
+        SECTIONS = sectionsFrom(await (await handle.getFile()).text());
       } catch (e) {
-        continue;
+        SECTIONS = [];
       }
     }
   }
-  loadThumbs(Object.keys(THUMBS).map(function (name) { return THUMBS[name]; }));
+}
+
+// A program's pictures: the one it names or name.png beside it, and name-2.png beside it
+async function picturesOf(program, pictures) {
+  var stem = program.path.replace(/\.py$/i, "");
+  var beside = stem.slice(0, stem.lastIndexOf("/") + 1);
+  var names = [program.picture ? beside + program.picture : stem + ".png", stem + "-2.png"];
+  var found = [];
+  for (var i = 0; i < names.length; i++) {
+    if (!pictures[names[i]]) break;
+    try {
+      found.push(URL.createObjectURL(await pictures[names[i]].getFile()));
+    } catch (e) {
+      break;
+    }
+  }
+  return found;
+}
+
+// Every program on the drive, the program tab counting them in as they are read
+async function drivePrograms(dir) {
+  var files = [], pictures = {}, found = [];
+  SECTIONS = [];
+  Object.keys(PICTURES).forEach(function (path) { PICTURES[path].forEach(URL.revokeObjectURL); });
+  PICTURES = {};
+  await filesIn(dir, "", "", false, files, pictures);
+  var examples = EXAMPLES_ROOT ? await folderAt(dir, EXAMPLES_ROOT.split("/").filter(Boolean))
+                               : null;
+  if (examples) await filesIn(examples, EXAMPLES_ROOT, "", true, files, pictures);
+  programsReading = [0, files.length];
+  renderProgramView();
+  for (var i = 0; i < files.length; i++) {
+    try {
+      var source = await (await files[i][2].getFile()).text();
+      var program = programFrom(files[i][0], files[i][1], source);
+      if (program) {
+        found.push(program);
+        var shown = await picturesOf(program, pictures);
+        if (shown.length) PICTURES[program.path] = shown;
+      }
+    } catch (e) {
+      // One that will not read is left out, as if it were not there
+    }
+    programsReading[0] = i + 1;
+    if (i % 8 === 7) renderProgramView();
+  }
+  programsReading = null;
+  var urls = [];
+  Object.keys(PICTURES).forEach(function (path) { urls = urls.concat(PICTURES[path]); });
+  loadThumbs(urls);
+  return found;
 }
 
 connectSteps.push(async function () {
-  DRIVE_PROGRAMS = await drivePrograms(drive.dirHandle);
-  await drivePictures(drive.dirHandle, DRIVE_PROGRAMS);
-  await exampleThumbs(drive.dirHandle);
+  PROGRAMS = await drivePrograms(drive.dirHandle);
   // A program the page had chosen that this drive does not hold is no longer there to run
   if (boardSet.program && !programNamed(boardSet.program)) boardSet.program = null;
   if (boardSet.lastProgram && !programNamed(boardSet.lastProgram)) boardSet.lastProgram = null;

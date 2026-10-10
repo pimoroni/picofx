@@ -9,6 +9,8 @@ Travel through a star field, across every panel a screen hub reaches. Change up 
 the constants below to see what happens.
 
 Press "Boot" to exit the program.
+
+Section: On screens
 """
 
 # Constants for drawing

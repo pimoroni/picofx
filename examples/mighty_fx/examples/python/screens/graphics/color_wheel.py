@@ -8,6 +8,9 @@ Spin a rainbow wheel on a screen. Change up some of the constants below to see w
 happens.
 
 Press "Boot" to exit the program.
+
+Program: Colour wheel
+Section: On screens
 """
 
 # Constants for drawing

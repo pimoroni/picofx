@@ -10,6 +10,8 @@ Draw a trivision billboard, its posters carried on three-sided slats that turn a
 a time.
 
 Press "Boot" to exit the program.
+
+Section: Signs and displays
 """
 
 # Constants for drawing

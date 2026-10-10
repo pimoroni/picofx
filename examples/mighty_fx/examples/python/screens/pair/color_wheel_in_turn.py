@@ -8,6 +8,8 @@ Spin a rainbow wheel on two screens, updated one after the other. Run
 color_wheel_paired.py to see what a pair does differently.
 
 Press "Boot" to exit the program.
+
+Program: Colour wheel in turn
 """
 
 # Constants for drawing

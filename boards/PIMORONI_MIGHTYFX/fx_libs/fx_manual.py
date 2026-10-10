@@ -583,21 +583,24 @@ Colour: orange
 <pre class="python"><code>args = sys.argv[1:]
 FOLDER = args[0] if args else "posters"</code></pre>
 <h3 id="your-program-in-the-picker">Your program in the picker</h3>
-<p>The picker's <strong>A program</strong> tab lists every Python file at the top of this drive beside the examples, and describes each one by its opening string, the text in triple quotes at the top of the file. Its first plain line says what the program does, and three more lines tell the picker how to show it:</p>
+<p>The picker's <strong>A program</strong> tab lists every Python file at the top of this drive beside the examples in its <code>examples/python</code> folder, and describes each one by its opening string, the text in triple quotes at the top of the file. Its first sentence says what the program does, and these lines tell the picker how to show it:</p>
 <pre class="python"><code>'''
 Program: Big clock
 Shows the time.
 Args: Colour, Seconds
 Picture: clock.png
+Section: Signs and displays
 '''</code></pre>
 <div class="scroll"><table>
 <thead><tr><th>Line</th><th>What the picker does with it</th></tr></thead>
 <tbody>
 <tr><td><code>Program: Big clock</code></td><td>names the program, where it would use the file's name</td></tr>
 <tr><td><code>Args: Colour, Seconds</code></td><td>gives each argument a box of its own, and writes <code>args=</code> from them</td></tr>
-<tr><td><code>Picture: clock.png</code></td><td>shows the program by that picture from this drive</td></tr>
+<tr><td><code>Picture: clock.png</code></td><td>shows the program by that picture, kept beside it</td></tr>
+<tr><td><code>Section: Signs and displays</code></td><td>lists the program in that section, where it would be listed under <strong>On the drive</strong></td></tr>
+<tr><td><code>Thumbnail: servo</code></td><td>draws a servo for a program with no picture, or <code>motor</code>, or <code>outputs</code> and a pattern such as <code>outputs rainbow</code></td></tr>
 </tbody></table></div>
-<p>Each is optional. Without <code>Args</code>, the picker offers plain boxes to add arguments to, and without <code>Picture</code>, a plain tile. A file whose opening string starts <code>Drawing:</code> is <a href="#drawing-from-code">a drawing</a>, so it is left out.</p>
+<p>Each is optional. Without <code>Picture</code>, the picker shows <code>clock.png</code> beside <code>clock.py</code> where there is one, and <code>clock-2.png</code> beside it as a second screen's. Without <code>Args</code>, a program that reads <code>sys.argv</code> is offered plain boxes to add arguments to. An example is listed only in the section it names. <code>examples/python/sections.txt</code> orders the sections, a line each with its name, then a <code>|</code> and what it holds. A file whose opening string starts <code>Drawing:</code> is <a href="#drawing-from-code">a drawing</a>, so it is left out.</p>
 <h3 id="what-is-already-on-the-board">What is already on the board</h3>
 <p>These come with the board, so <code>program=</code> reaches any of them with nothing to download:</p>
 <div class="scroll"><table>

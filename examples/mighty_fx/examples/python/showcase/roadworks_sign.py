@@ -14,6 +14,8 @@ corner beacons are neither: they are single large lamps on the face itself, so t
 drawn over the top rather than through any matrix.
 
 Press "Boot" to exit the program.
+
+Section: Signs and displays
 """
 
 # Constants for drawing

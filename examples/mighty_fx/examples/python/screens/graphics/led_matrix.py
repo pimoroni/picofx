@@ -12,6 +12,9 @@ image, or a player's frame. The content here is the diagonal rainbow the LED mat
 run, which shows the matrix off: every lamp carries its own colour at once.
 
 Press "Boot" to exit the program.
+
+Program: LED matrix
+Section: On screens
 """
 
 # Constants for drawing

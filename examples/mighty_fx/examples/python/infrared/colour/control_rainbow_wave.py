@@ -25,6 +25,9 @@ Actions:
 An IR Stick should be connected to the Sensor port on Mighty FX.
 
 Press "Boot" to exit the program.
+
+Section: With the remote
+Thumbnail: outputs rainbow
 """
 
 # Constants

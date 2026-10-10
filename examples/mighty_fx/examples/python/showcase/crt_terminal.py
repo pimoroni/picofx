@@ -16,6 +16,9 @@ which is under 30ms of a 150ms frame. A terminal is also fixed pitch where no RO
 character set is baked into a strip of cells and the page blits cells onto the pitch.
 
 Press "Boot" to exit the program.
+
+Program: CRT terminal
+Section: Signs and displays
 """
 
 # Constants for drawing

@@ -12,6 +12,9 @@ colour its part of the range stands for, the hue running from
 blue at the bottom, through green, to red at the top.
 
 Press "Boot" to exit the program.
+
+Section: With a sensor
+Thumbnail: outputs bar
 """
 
 # Constants

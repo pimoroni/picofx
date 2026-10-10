@@ -8,6 +8,8 @@ Draw a split-flap clock, its digits climbing through the drum a flap at a time a
 board does.
 
 Press "Boot" to exit the program.
+
+Section: Signs and displays
 """
 
 # Constants for drawing

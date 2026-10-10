@@ -8,6 +8,8 @@ Draw a railway departure board across a screen hub, a service to each panel, eve
 paging its calling points on its own clock.
 
 Press "Boot" to exit the program.
+
+Section: Signs and displays
 """
 
 # Constants for drawing

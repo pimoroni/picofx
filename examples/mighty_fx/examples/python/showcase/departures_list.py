@@ -8,6 +8,8 @@ Draw a railway departures list on one screen, or spread across a pair with both 
 turning their page together.
 
 Press "Boot" to exit the program.
+
+Section: Signs and displays
 """
 
 # Constants for drawing

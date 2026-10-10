@@ -9,6 +9,9 @@ Plays a simple boop, boop, boop, beeep countdown sound effect when
 you press Boot on TinyFx. Great for counting down to a race start.
 
 Plug a red LED into port 1 and a green LED into port 2.
+
+Section: Sound
+Thumbnail: outputs countdown
 """
 
 # Constants

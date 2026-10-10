@@ -9,6 +9,9 @@ from picofx.mono import PulseWaveFX
 Play a wave of pulses on TinyFX's outputs, who's speed is controlled by a sensor.
 
 Press "Boot" to exit the program.
+
+Section: With a sensor
+Thumbnail: outputs pulse
 """
 
 # Constants

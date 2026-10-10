@@ -13,6 +13,9 @@ Every output shows a colour, so each tone lights one output in a colour of its o
 where a board with mono outputs needs a separate one to carry the colour.
 
 Press "Boot" to exit the program.
+
+Section: Sound
+Thumbnail: outputs melody
 """
 
 # Constants

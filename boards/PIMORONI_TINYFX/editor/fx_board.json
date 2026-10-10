@@ -1,7 +1,6 @@
 {
  "name": "Tiny FX",
- "examples": "examples/tiny_fx/examples/python",
- "example_variable": "tiny",
+ "examples": true,
  "outputs": [
   {"name": "out1", "kind": "mono"},
   {"name": "out2", "kind": "mono"},
@@ -22,22 +21,5 @@
  "screens": null,
  "sound": true,
  "wireless": false,
- "shell": true,
- "offered": [
-  {"section": "With the remote", "says": "the effects, steered from the IR remote", "examples": [
-   ["infrared/colour/control_rainbow.py", "lamps:rainbow"],
-   ["infrared/colour/control_hsv_fx.py", "lamps:warm"],
-   ["infrared/mono/toggle_effects.py", "lamps:mono"],
-   ["infrared/mono/control_pulse_wave.py", "lamps:pulse"]]},
-  {"section": "With a sensor", "says": "the lights following what a sensor reads", "examples": [
-   ["qwst/light_level.py", "lamps:dusk"],
-   ["qwst/spirit_level.py", "lamps:level"],
-   ["qwst/weather_reading.py", "lamps:bar"],
-   ["function/sensor_meter.py", "lamps:bar"],
-   ["showcase/sensor_wave.py", "lamps:pulse"],
-   ["showcase/space_tales_with_pir.py", "lamps:mono"]]},
-  {"section": "Sound", "says": "lights to a soundtrack", "examples": [
-   ["audio/fair_use_encounters.py", "lamps:melody"],
-   ["audio/race_start.py", "lamps:countdown"]]}
- ]
+ "shell": true
 }

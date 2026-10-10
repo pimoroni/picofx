@@ -5,28 +5,38 @@
 // effects view whole, scenes and all, since none of it plays while a program runs. Saving and
 // the drive are on the save button's menu.
 //
-// The programs offered are those that do something the effects cannot and run by themselves:
-// the showcase signs, screen pieces, and what a remote, a sensor, a speaker or a motor brings.
-// The effects' own demonstrations, walkthroughs of the drawing library and calibrations are left
-// out. Each has a small thumbnail at a screen's shape and low resolution: a frame captured off a
-// board running it where there is one, drawn here where there is not.
+// The programs offered are those on the drive that name a section, and those at its top level,
+// which the page learns only once the drive is open. Each has a small thumbnail at a screen's
+// shape: its picture where one sits beside it, drawn here where there is not.
 
-// The board's offered examples by section, each as its path under EXAMPLES_ROOT and how its
-// thumbnail is drawn, "shot" being its captured frame. What each uses is read from its source when
-// the page is built
-var OFFERED = (BOARD.offered || []).map(function (set) { return [set.section, set.examples]; });
+// The programs at the top of the drive that name no section, the group they make
+var OWN_GROUP = "On the drive";
 
-// Where the board keeps the examples it offers: what the repository holds under examples/<board>/
-// sits at the board's own root
-var EXAMPLES_ROOT = BOARD.examples ? BOARD.examples.split("/").slice(2).join("/") + "/" : "";
+// The offered programs by group, as [name, paths]: the drive's own, then sections.txt's sections
+// in its order, then any other a program names, each group's programs by title
+function offeredGroups() {
+  var named = SECTIONS.map(function (one) { return one[0]; });
+  PROGRAMS.forEach(function (one) {
+    if (one.section && named.indexOf(one.section) < 0) named.push(one.section);
+  });
+  var own = PROGRAMS.filter(function (one) { return !one.example && !one.section; });
+  var groups = [[OWN_GROUP, own]].concat(named.map(function (name) {
+    return [name, PROGRAMS.filter(function (one) { return one.section === name; })];
+  }));
+  return groups.map(function (group) {
+    var paths = group[1].map(function (one) { return one.path; });
+    paths.sort(function (a, b) { return programTitle(a) < programTitle(b) ? -1 : 1; });
+    return [group[0], paths];
+  }).filter(function (group) { return group[1].length; });
+}
 
-// What each group's heading says after its name, as the looks' groups do
-var GROUP_SAYS = {"On the drive": "your own programs"};
-(BOARD.offered || []).forEach(function (set) { GROUP_SAYS[set.section] = set.says; });
-
-// The picture each of the drive's programs names in its opening string, read off the drive, by
-// the program's name
-var DRIVE_PICTURES = {};
+// What a group's heading says after its name, as the looks' groups do, a section's from
+// sections.txt
+function groupSays(title) {
+  if (title === OWN_GROUP) return "your own programs";
+  var listed = SECTIONS.filter(function (one) { return one[0] === title; })[0];
+  return listed ? listed[1] : "";
+}
 
 // Round holes cut through a filled shape, one at each point, as a path's own subpaths
 function holes(points, radius) {
@@ -115,36 +125,17 @@ function featureIcon(key) {
   return icon;
 }
 
-// What an example uses, read from its source. A program on the drive says nothing of it
+// What a program uses, read from its source
 function usesOf(path) {
-  var example = BOARD_EXAMPLES.filter(function (one) { return one.path === path; })[0];
-  return example ? example.uses : [];
+  var program = programNamed(path);
+  return program ? program.uses : [];
 }
-
-// Frames captured off a board running each example, composed to what its panel showed, by the
-// example's file name, read from beside each example once the drive is opened. Where one exists it
-// is the thumbnail, the drawn one standing in for what has not been captured or not yet read
-var THUMBS = {};
-
-function offeredAt(path) {
-  for (var g = 0; g < OFFERED.length; g++) {
-    for (var i = 0; i < OFFERED[g][1].length; i++) {
-      if (EXAMPLES_ROOT + OFFERED[g][1][i][0] === path) return OFFERED[g][1][i];
-    }
-  }
-  return null;
-}
-
-// Words a file name spells for the code, said as a reader would
-var TITLE_WORDS = {crt: "CRT", led: "LED", color: "colour"};
 
 // A program's name to show: its own where it gives one, else its file's, in words
 function programTitle(path) {
   var program = programNamed(path);
   if (program && program.name) return program.name;
-  var words = path.split("/").pop().replace(/\.py$/, "").split("_").map(function (word) {
-    return TITLE_WORDS[word] || word;
-  }).join(" ");
+  var words = path.split("/").pop().replace(/\.py$/, "").split("_").join(" ");
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
@@ -157,7 +148,7 @@ var PICTURE_W = 160, PICTURE_H = 120;
 var thumbImages = {};
 
 function thumbCanvas(kind, seed, uses) {
-  var picture = /^(shot|pair|picture):/.test(kind);
+  var picture = /^(shot|pair):/.test(kind);
   var canvas = document.createElement("canvas");
   canvas.width = picture ? PICTURE_W : THUMB_W;
   canvas.height = picture ? PICTURE_H : THUMB_H;
@@ -195,17 +186,17 @@ function scatter(seed) {
 }
 
 function paintThumb(g, kind, seed, canvas, uses) {
-  var W = canvas.width, H = canvas.height, x, y, i;
+  var W = canvas.width, H = canvas.height, i;
   var chance = scatter(seed);
   function fill(ink) { g.fillStyle = ink; g.fillRect(0, 0, W, H); }
   function dotRow(ink, top, count, size, gap) {
     g.fillStyle = ink;
     for (i = 0; i < count; i++) g.fillRect(3 + i * (size + gap), top, size, size);
   }
-  // A pair's two captured frames side by side, each whole in its half, as the two panels stand
+  // A pair's two pictures side by side, each whole in its half, as the two panels stand
   if (kind.indexOf("pair:") === 0) {
     fill("#111");
-    [THUMBS[kind.slice(5)], THUMBS[kind.slice(5) + "-2"]].forEach(function (src, side) {
+    PICTURES[kind.slice("pair:".length)].forEach(function (src, side) {
       var panel = thumbImages[src];
       if (!panel) {
         panel = thumbImages[src] = new Image();
@@ -223,10 +214,10 @@ function paintThumb(g, kind, seed, canvas, uses) {
     });
     return;
   }
-  // A captured frame carried in the page, or the picture a program on the drive names
-  if (kind.indexOf("shot:") === 0 || kind.indexOf("picture:") === 0) {
+  // A program's picture, read from beside it on the drive
+  if (kind.indexOf("shot:") === 0) {
     fill("#111");
-    var src = kind.indexOf("shot:") === 0 ? THUMBS[kind.slice(5)] : DRIVE_PICTURES[kind.slice(8)];
+    var src = PICTURES[kind.slice("shot:".length)][0];
     var image = thumbImages[src];
     if (!image) {
       image = thumbImages[src] = new Image();
@@ -242,7 +233,7 @@ function paintThumb(g, kind, seed, canvas, uses) {
     else image.addEventListener("load", drawn);
     return;
   }
-  if (kind.indexOf("lamps:") === 0) {
+  if (kind.indexOf("outputs:") === 0) {
     // What the outputs do, as a lamp for each on the board's dark, spread across seven lamps' width
     fill("#1c1f22");
     var inks = {rainbow: ["#ff2d1a", "#ff9022", "#ffd21f", "#22c65a", "#28e0e0", "#2b5cff", "#9a46ff"],
@@ -255,7 +246,7 @@ function paintThumb(g, kind, seed, canvas, uses) {
                 melody: ["#9a46ff", "#3a3f44", "#ff36c8", "#9a46ff", "#3a3f44", "#2b5cff", "#ff36c8"],
                 countdown: ["#ff2d1a", "#ff2d1a", "#ff2d1a", "#22c65a", "#3a3f44", "#3a3f44", "#3a3f44"],
                 off: ["#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44"]};
-    var row = inks[kind.slice(6)] || inks.mono;
+    var row = inks[kind.slice("outputs:".length)] || inks.mono;
     var lamps = lampsDrawn(uses);
     lamps.forEach(function (output, at) {
       var ink = row[Math.min(at, row.length - 1)];
@@ -268,105 +259,9 @@ function paintThumb(g, kind, seed, canvas, uses) {
     return;
   }
   switch (kind) {
-  case "flipdot":
-    fill("#101010");
-    for (y = 0; y < 7; y++) for (x = 0; x < 20; x++) {
-      g.fillStyle = chance() < 0.42 ? "#f5d400" : "#262626";
-      g.fillRect(2 + x * 3, 13 + y * 3, 2, 2);
-    }
-    break;
-  case "flap":
-    fill("#161616");
-    for (i = 0; i < 4; i++) {
-      g.fillStyle = "#2c2c2c";
-      g.fillRect(4 + i * 14 + (i > 1 ? 4 : 0), 12, 12, 24);
-      g.fillStyle = "#0c0c0c";
-      g.fillRect(4 + i * 14 + (i > 1 ? 4 : 0), 23, 12, 1);
-      g.fillStyle = "#eee";
-      g.font = "bold 16px monospace";
-      g.fillText("1942".charAt(i), 6 + i * 14 + (i > 1 ? 4 : 0), 30);
-    }
-    break;
-  case "flapboard":
-    fill("#161616");
-    for (y = 0; y < 5; y++) for (x = 0; x < 9; x++) {
-      g.fillStyle = "#2a2a2a";
-      g.fillRect(2 + x * 6.8, 5 + y * 8, 6, 7);
-      g.fillStyle = chance() < 0.7 ? "#e8e8e8" : "#f5c400";
-      g.fillRect(3.5 + x * 6.8, 7 + y * 8, 3, 3);
-    }
-    break;
-  case "nixie":
-  case "lixie":
-    fill(kind === "nixie" ? "#140a06" : "#06080f");
-    g.font = "bold 30px serif";
-    g.shadowColor = kind === "nixie" ? "#ff7a1a" : "#6ab0ff";
-    g.shadowBlur = 8;
-    g.fillStyle = kind === "nixie" ? "#ffb060" : "#bfe0ff";
-    g.fillText("7", 23, 36);
-    g.shadowBlur = 0;
-    break;
-  case "board":
-  case "bus":
-    fill(kind === "bus" ? "#0b1a33" : "#0a0a0a");
-    for (y = 0; y < 5; y++) {
-      g.fillStyle = kind === "bus" ? "#ffffff" : "#ffb000";
-      g.fillRect(4, 6 + y * 8, 8 + chance() * 10, 3);
-      g.fillRect(28, 6 + y * 8, 14 + chance() * 12, 3);
-      g.fillStyle = kind === "bus" ? "#ffd21f" : "#ffb000";
-      g.fillRect(W - 12, 6 + y * 8, 8, 3);
-    }
-    break;
-  case "amber":
-  case "roadworks":
-    fill("#0d0c0a");
-    for (y = 0; y < 8; y++) for (x = 0; x < 21; x++) {
-      var on = kind === "roadworks" ? (y === 3 || y === 4 || (x > 8 && x < 12))
-                                    : chance() < 0.3;
-      g.fillStyle = on ? "#ffa51a" : "#2a2218";
-      g.fillRect(2 + x * 3, 12 + y * 3, 2, 2);
-    }
-    break;
-  case "gantry":
-    fill("#0a0a0a");
-    for (i = 0; i < 3; i++) {
-      g.fillStyle = "#1e1e1e";
-      g.fillRect(3 + i * 21, 10, 18, 28);
-      g.strokeStyle = i === 0 ? "#ff2d1a" : "#ffffff";
-      g.lineWidth = 2;
-      g.beginPath();
-      if (i === 0) {
-        g.moveTo(7, 16); g.lineTo(17, 32); g.moveTo(17, 16); g.lineTo(7, 32);
-      } else {
-        g.moveTo(12 + i * 21 - 9, 14); g.lineTo(12 + i * 21 - 9, 33);
-        g.moveTo(12 + i * 21 - 14, 28); g.lineTo(12 + i * 21 - 9, 34);
-        g.lineTo(12 + i * 21 - 4, 28);
-      }
-      g.stroke();
-    }
-    break;
-  case "crt":
-    fill("#031a06");
-    g.fillStyle = "#39ff6a";
-    for (y = 0; y < 6; y++) g.fillRect(4, 5 + y * 7, 10 + chance() * 40, 3);
-    g.fillRect(4 + 22, 5 + 6 * 7 - 7, 3, 4);
-    break;
-  case "trivision":
-    fill("#222");
-    for (i = 0; i < 10; i++) {
-      g.fillStyle = ["#ff5a36", "#ffd21f", "#2b5cff"][i % 3 === 0 ? 0 : i < 5 ? 1 : 2];
-      g.fillRect(i * 6.4, 4, 5.6, 40);
-    }
-    break;
-  case "iso":
-    fill("#8fd0ff");
-    for (y = 0; y < 6; y++) for (x = 0; x < 6; x++) {
-      g.fillStyle = (x + y) % 3 ? "#4caf50" : "#2e7d32";
-      g.beginPath();
-      var cx = 32 + (x - y) * 6, cy = 8 + (x + y) * 3.4;
-      g.moveTo(cx, cy); g.lineTo(cx + 6, cy + 3.4); g.lineTo(cx, cy + 6.8); g.lineTo(cx - 6, cy + 3.4);
-      g.fill();
-    }
+  case "shot":
+    // A captured frame not yet read from the drive, as the ground it is drawn on
+    fill("#111");
     break;
   case "stars":
     fill("#02030a");
@@ -374,52 +269,6 @@ function paintThumb(g, kind, seed, canvas, uses) {
       var far = chance();
       g.fillStyle = far < 0.8 ? "#8a93b8" : "#ffffff";
       g.fillRect(Math.floor(chance() * W), Math.floor(chance() * H), far < 0.9 ? 1 : 2, 1);
-    }
-    break;
-  case "wheel":
-    fill("#000");
-    for (i = 0; i < 24; i++) {
-      g.fillStyle = "hsl(" + i * 15 + ",100%,55%)";
-      g.beginPath();
-      g.moveTo(32, 24);
-      g.arc(32, 24, 19, i / 24 * Math.PI * 2, (i + 1) / 24 * Math.PI * 2 + 0.02);
-      g.fill();
-    }
-    break;
-  case "matrix":
-    fill("#080808");
-    for (y = 0; y < 10; y++) for (x = 0; x < 14; x++) {
-      var lit = Math.hypot(x - 6.5, (y - 4.5) * 1.3) < 4.2;
-      g.fillStyle = lit ? "#ff3a2a" : "#2a0d0a";
-      g.beginPath();
-      g.arc(5 + x * 4.2, 5 + y * 4.2, 1.5, 0, Math.PI * 2);
-      g.fill();
-    }
-    break;
-  case "kaleido":
-    fill("#10061a");
-    for (i = 0; i < 12; i++) {
-      g.fillStyle = ["#ff36c8", "#28e0e0", "#ffd21f", "#9a46ff"][i % 4];
-      g.beginPath();
-      g.moveTo(32, 24);
-      g.arc(32, 24, 21, i / 12 * Math.PI * 2, (i + 0.55) / 12 * Math.PI * 2);
-      g.fill();
-    }
-    break;
-  case "logo":
-    fill("#15233a");
-    g.fillStyle = "#ff36c8";
-    g.fillRect(34, 10, 20, 12);
-    g.fillStyle = "#15233a";
-    g.fillRect(38, 13, 12, 6);
-    break;
-  case "carpet":
-    fill("#6b1f2a");
-    for (y = 0; y < 6; y++) for (x = 0; x < 8; x++) {
-      g.fillStyle = (x + y) % 2 ? "#d9a441" : "#1f4d6b";
-      g.beginPath();
-      g.arc(4 + x * 8, 4 + y * 8, 2.4, 0, Math.PI * 2);
-      g.fill();
     }
     break;
   case "drive":
@@ -452,11 +301,12 @@ function paintThumb(g, kind, seed, canvas, uses) {
 }
 
 function programThumb(path) {
-  var offered = offeredAt(path);
-  var file = path.split("/").pop().replace(/\.py$/, "");
-  var kind = offered && THUMBS[file + "-2"] ? "pair:" + file
-           : offered && THUMBS[file] ? "shot:" + file
-           : offered ? offered[1] : DRIVE_PICTURES[path] ? "picture:" + path : "drive";
+  // A picture where it has one, else what its Thumbnail line draws, else a plain tile: dark for an
+  // example, whose picture is still to be captured, and a prompt for the drive's own
+  var program = programNamed(path) || {};
+  var shown = PICTURES[path] || [];
+  var kind = shown.length > 1 ? "pair:" + path : shown.length ? "shot:" + path
+           : program.thumbnail || (program.example ? "shot" : "drive");
   return thumbCanvas(kind, path.length, usesOf(path));
 }
 
@@ -501,7 +351,7 @@ function programCard(path) {
 // The screen size a program is shown on: the one it is given, else screen A's, else a 2.8"
 function sizeShown(path) {
   var program = programNamed(path) || {};
-  var at = (program.onDrive ? [] : program.args || []).map(function (argument) {
+  var at = (program.args || []).map(function (argument) {
     return argument.kind;
   }).indexOf("size");
   var given = at >= 0 ? (boardSet.args[path] || [])[at] : null;
@@ -522,17 +372,17 @@ function framedPanel(path, url) {
 // as the Screens tab draws one, turned as the program turns it, and anything else its thumbnail
 // large. A frame taller than wide was taken from a panel upright
 function programPicture(path) {
-  var file = path.split("/").pop().replace(/\.py$/, "");
+  var shown = PICTURES[path] || [];
   var onScreen = usesOf(path).some(function (key) {
     return ["screen", "either", "pair", "hub"].indexOf(key) >= 0;
   });
-  if (onScreen && THUMBS[file]) {
+  if (onScreen && shown.length) {
     // A pair's second frame goes on a second panel, the two drawn smaller to stand side by side
-    if (!THUMBS[file + "-2"]) return framedPanel(path, THUMBS[file]);
+    if (shown.length < 2) return framedPanel(path, shown[0]);
     var both = document.createElement("div");
     both.className = "twopanels";
-    both.appendChild(framedPanel(path, THUMBS[file]));
-    both.appendChild(framedPanel(path, THUMBS[file + "-2"]));
+    both.appendChild(framedPanel(path, shown[0]));
+    both.appendChild(framedPanel(path, shown[1]));
     return both;
   }
   var big = programThumb(path);
@@ -544,7 +394,7 @@ function programPicture(path) {
 // a board without screens its lamps unlit
 function emptyPicture() {
   if (SCREEN_PORTS.length) return panelPreview({size: "2.8", turn: 0});
-  var big = thumbCanvas("lamps:off", 1);
+  var big = thumbCanvas("outputs:off", 1);
   big.classList.add("big");
   return big;
 }
@@ -604,7 +454,7 @@ function programHero(path) {
   words.innerHTML = "<h3>" + escapeHtml(programTitle(path)) + "</h3>" +
                     "<p>" + escapeHtml(program.does || "Says nothing about itself.") + "</p>" +
                     "<p class='progwhere'>" + escapeHtml(path) +
-                    (program.onDrive ? ", on the drive" : ", comes with the board") + "</p>";
+                    (program.example ? ", comes with the board" : ", on the drive") + "</p>";
   // What it uses, each drawn and named, as the filter below names them
   var uses = document.createElement("div");
   uses.className = "herouses";
@@ -624,19 +474,40 @@ function renderProgramView() {
   programView.textContent = "";
   if (!onProgramPage) return;
   programView.appendChild(programHero(boardSet.program));
+  // The programs are the drive's, so none is listed until it is open
+  if (!drive.dirHandle) {
+    var closed = document.createElement("p");
+    closed.className = "prognone";
+    closed.textContent = CAN_REACH_A_DRIVE ? "Open the FX drive to see the programs on it."
+                                           : "This browser cannot open the FX drive, so its " +
+                                             "programs cannot be listed. Chrome and Edge can.";
+    programView.appendChild(closed);
+    return;
+  }
+  // Each program is read off the drive in turn, which takes a while, so the count is shown
+  if (programsReading) {
+    var reading = document.createElement("p");
+    reading.className = "prognone";
+    reading.textContent = "Reading the programs on the drive, " + programsReading[0] + " of " +
+                          programsReading[1] + "...";
+    programView.appendChild(reading);
+    return;
+  }
   programView.appendChild(featureFilter());
   var shown = 0;
+  var listed = 0;
   function group(title, paths) {
+    listed += paths.length;
     var kept = paths.filter(passesFilter);
     if (!kept.length) return;
     shown += kept.length;
     var heading = document.createElement("div");
     heading.className = "gallery-head";
     heading.appendChild(document.createTextNode(title));
-    if (GROUP_SAYS[title]) {
+    if (groupSays(title)) {
       var says = document.createElement("span");
       says.className = "says";
-      says.textContent = GROUP_SAYS[title];
+      says.textContent = groupSays(title);
       heading.appendChild(says);
     }
     programView.appendChild(heading);
@@ -645,14 +516,12 @@ function renderProgramView() {
     kept.forEach(function (path) { grid.appendChild(programCard(path)); });
     programView.appendChild(grid);
   }
-  group("On the drive", DRIVE_PROGRAMS.map(function (one) { return one[0]; }));
-  OFFERED.forEach(function (set) {
-    group(set[0], set[1].map(function (entry) { return EXAMPLES_ROOT + entry[0]; }));
-  });
+  offeredGroups().forEach(function (offered) { group(offered[0], offered[1]); });
   if (!shown) {
     var none = document.createElement("p");
     none.className = "prognone";
-    none.textContent = "Every program here needs something not ticked.";
+    none.textContent = listed ? "Every program here needs something not ticked."
+                              : "There are no programs on this drive.";
     programView.appendChild(none);
   }
 }
@@ -687,10 +556,8 @@ function chipFeatures() {
 }
 
 function offeredPaths() {
-  var offered = DRIVE_PROGRAMS.map(function (one) { return one[0]; });
-  OFFERED.forEach(function (set) {
-    set[1].forEach(function (entry) { offered.push(EXAMPLES_ROOT + entry[0]); });
-  });
+  var offered = [];
+  offeredGroups().forEach(function (group) { offered = offered.concat(group[1]); });
   return offered;
 }
 
@@ -786,7 +653,7 @@ function renderPageSwitch() {
     // With no program chosen its tab shows a starfield, or the lamps lit on a board without screens
     var face = one[0] === "effects" ? effectsFace()
              : program ? programThumb(program)
-             : thumbCanvas(SCREEN_PORTS.length ? "stars" : "lamps:rainbow", 3);
+             : thumbCanvas(SCREEN_PORTS.length ? "stars" : "outputs:rainbow", 3);
     face.classList.add("coverface");
     cover.appendChild(face);
     var words = document.createElement("span");

@@ -12,6 +12,8 @@ once into the ground every frame starts from. A frame is that ground, the lit ca
 filters, and the front of the glass.
 
 Press "Boot" to exit the program.
+
+Section: Signs and displays
 """
 
 # Constants for drawing

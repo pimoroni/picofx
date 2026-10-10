@@ -18,6 +18,8 @@ one measurement sizes every digit, a face's ink being proportional to the size a
 The glow goes on the frame, which is opaque, and not on any sheet.
 
 Press "Boot" to exit the program.
+
+Section: Signs and displays
 """
 
 # Constants for drawing

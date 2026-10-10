@@ -8,6 +8,8 @@ from picovector import image, color, shape
 Travel through a star field. Change up some of the constants below to see what happens.
 
 Press "Boot" to exit the program.
+
+Section: On screens
 """
 
 # Constants for drawing

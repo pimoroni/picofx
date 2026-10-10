@@ -8,6 +8,8 @@ Draw a scrolling billboard, its posters carried on a loop and read from the card
 time.
 
 Press "Boot" to exit the program.
+
+Section: Signs and displays
 """
 
 # The loop, in the order it comes round. As many as you like: the board only ever holds the poster

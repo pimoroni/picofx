@@ -21,6 +21,8 @@ whose red, green and blue sit close together is concrete and fades towards the n
 with colour in it is glass or signage and gets brighter as the light goes.
 
 Press "Boot" to exit the program.
+
+Section: Signs and displays
 """
 
 # Constants

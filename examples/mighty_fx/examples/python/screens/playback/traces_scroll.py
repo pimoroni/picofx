@@ -24,6 +24,8 @@ the scroll on the frame count, which is why the pattern can live at 8fps while t
 glides a couple of pixels a frame.
 
 Press "Boot" to exit the program.
+
+Section: On screens
 """
 
 # Constants

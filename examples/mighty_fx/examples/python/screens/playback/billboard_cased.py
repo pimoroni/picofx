@@ -18,6 +18,8 @@ with brush.erase(), a pen that takes alpha away where it draws, antialiased edge
 case is opaque because a translucent mark reads only over art that is flat or dark.
 
 Press "Boot" to exit the program.
+
+Section: On screens
 """
 
 # Constants
