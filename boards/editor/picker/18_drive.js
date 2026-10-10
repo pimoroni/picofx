@@ -108,7 +108,7 @@ var BOARD_AWAY_MS = 10000;
 var BOARD_POLL_MS = 250;
 
 function playsItself(text) {
-  return /\breload\s*=\s*auto\b/i.test(text);
+  return !/\breload\s*=\s*manual\b/i.test(text);
 }
 
 var CHECKING = "The board has not read the file yet.";

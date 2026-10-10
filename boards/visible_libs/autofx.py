@@ -2126,11 +2126,11 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         __start(players, fx)
         return fx, players, shows, sounds, scenes, problems
 
-    # A save landing on effects.txt answers as a single press does, where the file
-    # asks for that; the older volumes some harnesses hand in have no watch
+    # A save landing on effects.txt answers as a single press does, unless the file
+    # says reload=manual; the older volumes some harnesses hand in have no watch
     watcher = getattr(volume, "watch", None)
     if watcher is not None:
-        watcher(settings.get("reload") == "auto")
+        watcher(settings.get("reload") != "manual")
 
     # Enumeration after a bus reset has deadlines the players' ticks would make the board
     # miss, so they stop the moment one arrives, from the USB task itself, and the loop
@@ -2279,7 +2279,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                 sounds_aside = False
                 idle_since = None
                 if watcher is not None:
-                    watcher(settings.get("reload") == "auto")
+                    watcher(settings.get("reload") != "manual")
                 if event == volume.RELOADED:
                     # A single press asks to try an edit without putting the drive
                     # away, so it goes back once the file has been read, and before

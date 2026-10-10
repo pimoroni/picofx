@@ -9,7 +9,7 @@ board: drive=manual program=fireplace.py
 | Setting | What it does | If omitted |
 | --- | --- | --- |
 | `drive` | `manual` keeps the drive hidden until you ask for it | shown at boot |
-| `reload` | `auto` plays the file the moment it is saved | wait for an eject or **Boot** |
+| `reload` | `manual` waits for an eject or **Boot** before playing a save | played the moment it is saved |
 | `program` | a Python file to run instead of the effects | the effects run |
 | `args` | what to pass that program, divided by `\|` | it is given none |
 <!-- if screens -->
@@ -19,10 +19,11 @@ board: drive=manual program=fireplace.py
 <!-- board strip_settings -->
 <!-- end -->
 
-With `reload=auto`, saving `effects.txt` is enough on its own: the board notices
-the save, takes the drive back for a moment, and plays the new effects, exactly
-as a single press of **Boot** would. Only a save to `effects.txt` counts, so
-copying __COPIED_FILES__ on never interrupts anything.
+Saving `effects.txt` is enough on its own: the board notices the save, takes the
+drive back for a moment, and plays the new effects, exactly as a single press of
+**Boot** would. Only a save to `effects.txt` counts, so copying
+__COPIED_FILES__ on never interrupts anything. With `reload=manual` a save waits
+for an eject or **Boot** instead.
 
 ### Running your own program
 
@@ -46,8 +47,8 @@ which then runs the program as it would from power on.
 
 The effects stop while a program runs, and the board is busy with it, so
 **Boot** and ejecting do nothing. The drive is shown anyway, even with `drive`
-set to `manual`, so you can still edit `effects.txt`. With `reload=auto`, saving
-it restarts the board, which then plays whatever it now says; without, press
+set to `manual`, so you can still edit `effects.txt`. Saving it restarts the
+board, which then plays whatever it now says; with `reload=manual`, press
 **Reset** for the change to take. A program reads its files from this drive even
 while it is shown, so its pictures and sounds can sit beside it here.
 

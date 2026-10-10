@@ -1,13 +1,12 @@
 ## Getting started
 
-Edit `effects.txt` to change what the lights do, then eject this drive and the
-board applies the change straight away.
+Edit `effects.txt` to change what the lights do and save it, and the board plays
+the change a few seconds later. The drive disappears for a moment and comes back
+with the new effects running, so you can keep editing.
 
-In a hurry? Save the file and press **Boot** once. The drive disappears and
-comes straight back with the new effects running, so you can keep editing.
-Ejecting is the surer way, since a computer does not always write the file out
-until then. Press **Boot** twice to hide the drive, and twice again to bring it
-back.
+If a save does not seem to take, press **Boot** once or eject this drive, since
+a computer does not always write the file out straight away. Press **Boot** twice
+to hide the drive, and twice again to bring it back.
 <!-- if outputs -->
 A __TRAVELLING_LIGHT__ runs along the outputs each time, towards the USB
 connector as the computer takes the drive and away from it as the board takes it

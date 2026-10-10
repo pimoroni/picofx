@@ -159,7 +159,7 @@ TARGETS.push(["board", "settings for the board itself"],
 
 var BOARD_HINTS = {
   drive: "manual keeps the drive hidden until asked for",
-  reload: "auto plays the file the moment it is saved, no eject needed",
+  reload: "manual waits for an eject or Boot before playing a save",
   program: "a Python file to run instead of the effects",
   args: "what to pass that program, divided by |"
 };
@@ -763,7 +763,6 @@ var COLOURED = NUMBERED_COLOUR ? "out1-" + NUMBERED.length
 
 var STARTER = "# One entry per line: which lights, a colon, then the effect.\n" +
               "# Settings you leave out take their usual value.\n\n" +
-              "board: reload=auto\n\n" +
               COLOURED + ": rainbow_wave speed=0.3\n";
 
 var state = {dirHandle: null, fileHandle: null, boardText: null, offered: [], rows: [], lit: 0};
@@ -1228,7 +1227,7 @@ var BOARD_AWAY_MS = 10000;
 var BOARD_POLL_MS = 250;
 
 function playsItself(text) {
-  return /\breload\s*=\s*auto\b/i.test(text);
+  return !/\breload\s*=\s*manual\b/i.test(text);
 }
 
 // Written into errors.txt before saving, so the board's answer is always a

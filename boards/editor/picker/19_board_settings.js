@@ -1,9 +1,9 @@
 
 // ---- the board's own settings -----------------------------------------------------------------
-// Three settings belong to the board and to no section: whether a save plays without an eject
-// (reload=auto), whether the drive stays hidden at start (drive=manual), and a program run in
-// place of the effects (program= and args=). They are the board's, so no scene keeps them. The
-// pages built on this one each put them somewhere different, using what is here.
+// Three settings belong to the board and to no section: whether a save plays without an eject,
+// which reload=manual turns off, whether the drive stays hidden at start (drive=manual), and a
+// program run in place of the effects (program= and args=). They are the board's, so no scene
+// keeps them. The pages built on this one each put them somewhere different, using what is here.
 
 // Saving without an eject starts on
 var boardSet = {reload: true, driveHidden: false, program: null, args: {}};
@@ -46,7 +46,7 @@ boardLineSteps.after.push(function (line) {
     if (args) tokens.push("args=" + args);
   }
   if (boardSet.driveHidden) tokens.push("drive=manual");
-  if (boardSet.reload) tokens.push("reload=auto");
+  if (!boardSet.reload) tokens.push("reload=manual");
   if (!tokens.length) return line;
   var rest = line.replace(/^board: ?/, "");
   return "board: " + tokens.join(" ") + (rest ? " " + rest : "");

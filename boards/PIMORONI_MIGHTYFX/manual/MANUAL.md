@@ -3,19 +3,18 @@
 # MightyFX
 
 Seven outputs, two screen connectors, and a text file that drives them.
-Edit `effects.txt` on this drive, eject it, and the board applies the change
-straight away. No code needed, though there is room for it when you want it.
+Edit `effects.txt` on this drive and save it, and the board plays the change a
+few seconds later. No code needed, though there is room for it when you want it.
 
 ## Getting started
 
-Edit `effects.txt` to change what the lights do, then eject this drive and the
-board applies the change straight away.
+Edit `effects.txt` to change what the lights do and save it, and the board plays
+the change a few seconds later. The drive disappears for a moment and comes back
+with the new effects running, so you can keep editing.
 
-In a hurry? Save the file and press **Boot** once. The drive disappears and
-comes straight back with the new effects running, so you can keep editing.
-Ejecting is the surer way, since a computer does not always write the file out
-until then. Press **Boot** twice to hide the drive, and twice again to bring it
-back.
+If a save does not seem to take, press **Boot** once or eject this drive, since
+a computer does not always write the file out straight away. Press **Boot** twice
+to hide the drive, and twice again to bring it back.
 A dim white light runs along the outputs each time, towards the USB
 connector as the computer takes the drive and away from it as the board takes it
 back, so a double press is never mistaken for a single one.
@@ -624,7 +623,7 @@ board: drive=manual program=fireplace.py
 | Setting | What it does | If omitted |
 | --- | --- | --- |
 | `drive` | `manual` keeps the drive hidden until you ask for it | shown at boot |
-| `reload` | `auto` plays the file the moment it is saved | wait for an eject or **Boot** |
+| `reload` | `manual` waits for an eject or **Boot** before playing a save | played the moment it is saved |
 | `program` | a Python file to run instead of the effects | the effects run |
 | `args` | what to pass that program, divided by `\|` | it is given none |
 | `screenA` | what size of screen is on SP/CE A, or `hub` for a Screen Hub | no screen |
@@ -633,10 +632,11 @@ board: drive=manual program=fireplace.py
 | `stripL` | how many LEDs are on a strip plugged into **L**, and after a `\|` the order it takes its colours in | no strip |
 | `stripR` | the same for **R** | no strip |
 
-With `reload=auto`, saving `effects.txt` is enough on its own: the board notices
-the save, takes the drive back for a moment, and plays the new effects, exactly
-as a single press of **Boot** would. Only a save to `effects.txt` counts, so
-copying pictures on never interrupts anything.
+Saving `effects.txt` is enough on its own: the board notices the save, takes the
+drive back for a moment, and plays the new effects, exactly as a single press of
+**Boot** would. Only a save to `effects.txt` counts, so copying
+pictures on never interrupts anything. With `reload=manual` a save waits
+for an eject or **Boot** instead.
 
 ### Running your own program
 
@@ -655,8 +655,8 @@ which then runs the program as it would from power on.
 
 The effects stop while a program runs, and the board is busy with it, so
 **Boot** and ejecting do nothing. The drive is shown anyway, even with `drive`
-set to `manual`, so you can still edit `effects.txt`. With `reload=auto`, saving
-it restarts the board, which then plays whatever it now says; without, press
+set to `manual`, so you can still edit `effects.txt`. Saving it restarts the
+board, which then plays whatever it now says; with `reload=manual`, press
 **Reset** for the change to take. A program reads its files from this drive even
 while it is shown, so its pictures and sounds can sit beside it here.
 

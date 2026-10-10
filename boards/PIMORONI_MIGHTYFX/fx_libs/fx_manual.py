@@ -301,10 +301,10 @@ footer p { margin: 0; }
 
 <main>
 <h1 id="mightyfx">MightyFX</h1>
-<p>Seven outputs, two screen connectors, and a text file that drives them. Edit <code>effects.txt</code> on this drive, eject it, and the board applies the change straight away. No code needed, though there is room for it when you want it.</p>
+<p>Seven outputs, two screen connectors, and a text file that drives them. Edit <code>effects.txt</code> on this drive and save it, and the board plays the change a few seconds later. No code needed, though there is room for it when you want it.</p>
 <h2 id="getting-started">Getting started</h2>
-<p>Edit <code>effects.txt</code> to change what the lights do, then eject this drive and the board applies the change straight away.</p>
-<p>In a hurry? Save the file and press <strong>Boot</strong> once. The drive disappears and comes straight back with the new effects running, so you can keep editing. Ejecting is the surer way, since a computer does not always write the file out until then. Press <strong>Boot</strong> twice to hide the drive, and twice again to bring it back. A dim white light runs along the outputs each time, towards the USB connector as the computer takes the drive and away from it as the board takes it back, so a double press is never mistaken for a single one.</p>
+<p>Edit <code>effects.txt</code> to change what the lights do and save it, and the board plays the change a few seconds later. The drive disappears for a moment and comes back with the new effects running, so you can keep editing.</p>
+<p>If a save does not seem to take, press <strong>Boot</strong> once or eject this drive, since a computer does not always write the file out straight away. Press <strong>Boot</strong> twice to hide the drive, and twice again to bring it back. A dim white light runs along the outputs each time, towards the USB connector as the computer takes the drive and away from it as the board takes it back, so a double press is never mistaken for a single one.</p>
 <p>Deleting <code>effects.txt</code> restores the default; emptying it leaves the board dark.</p>
 <p>While the computer is copying to this drive the effects stand aside for a dim white light travelling along the outputs, and come back a moment after it finishes.</p>
 <p><strong>Would you rather not write the file at all? <code>PICKER.html</code> on this drive writes it for you. See <a href="#the-picker">the picker</a>. <code>EDITOR.html</code> beside it is a place to write it with the names offered as you type. See <a href="#the-editor">the editor</a>.</strong></p>
@@ -560,7 +560,7 @@ Colour: orange
 <thead><tr><th>Setting</th><th>What it does</th><th>If omitted</th></tr></thead>
 <tbody>
 <tr><td><code>drive</code></td><td><code>manual</code> keeps the drive hidden until you ask for it</td><td>shown at boot</td></tr>
-<tr><td><code>reload</code></td><td><code>auto</code> plays the file the moment it is saved</td><td>wait for an eject or <strong>Boot</strong></td></tr>
+<tr><td><code>reload</code></td><td><code>manual</code> waits for an eject or <strong>Boot</strong> before playing a save</td><td>played the moment it is saved</td></tr>
 <tr><td><code>program</code></td><td>a Python file to run instead of the effects</td><td>the effects run</td></tr>
 <tr><td><code>args</code></td><td>what to pass that program, divided by <code>|</code></td><td>it is given none</td></tr>
 <tr><td><code>screenA</code></td><td>what size of screen is on SP/CE A, or <code>hub</code> for a Screen Hub</td><td>no screen</td></tr>
@@ -569,12 +569,12 @@ Colour: orange
 <tr><td><code>stripL</code></td><td>how many LEDs are on a strip plugged into <strong>L</strong>, and after a <code>|</code> the order it takes its colours in</td><td>no strip</td></tr>
 <tr><td><code>stripR</code></td><td>the same for <strong>R</strong></td><td>no strip</td></tr>
 </tbody></table></div>
-<p>With <code>reload=auto</code>, saving <code>effects.txt</code> is enough on its own: the board notices the save, takes the drive back for a moment, and plays the new effects, exactly as a single press of <strong>Boot</strong> would. Only a save to <code>effects.txt</code> counts, so copying pictures on never interrupts anything.</p>
+<p>Saving <code>effects.txt</code> is enough on its own: the board notices the save, takes the drive back for a moment, and plays the new effects, exactly as a single press of <strong>Boot</strong> would. Only a save to <code>effects.txt</code> counts, so copying pictures on never interrupts anything. With <code>reload=manual</code> a save waits for an eject or <strong>Boot</strong> instead.</p>
 <h3 id="running-your-own-program">Running your own program</h3>
 <p>A program can sit on this drive or on the board's own filesystem, and its name may include folders: it is looked for here first, then on the board, so <code>program=examples/python/effects/colour/rainbow_wave.py</code> reaches one of the examples the board ships with. Where the name is in both, this drive's copy runs.</p>
 <p>If it is missing, or stops with an error, the effects run instead and <code>errors.txt</code> says what happened, so a mistyped name never leaves you with a board that does nothing.</p>
 <p>Saving a file that names a program, while the effects play, restarts the board, which then runs the program as it would from power on.</p>
-<p>The effects stop while a program runs, and the board is busy with it, so <strong>Boot</strong> and ejecting do nothing. The drive is shown anyway, even with <code>drive</code> set to <code>manual</code>, so you can still edit <code>effects.txt</code>. With <code>reload=auto</code>, saving it restarts the board, which then plays whatever it now says; without, press <strong>Reset</strong> for the change to take. A program reads its files from this drive even while it is shown, so its pictures and sounds can sit beside it here.</p>
+<p>The effects stop while a program runs, and the board is busy with it, so <strong>Boot</strong> and ejecting do nothing. The drive is shown anyway, even with <code>drive</code> set to <code>manual</code>, so you can still edit <code>effects.txt</code>. Saving it restarts the board, which then plays whatever it now says; with <code>reload=manual</code>, press <strong>Reset</strong> for the change to take. A program reads its files from this drive even while it is shown, so its pictures and sounds can sit beside it here.</p>
 <p>When the program ends, the board goes back to the effects the rest of the file describes.</p>
 <p><code>screenA</code> and <code>screenB</code> describe the screens this file's own entries play on, so a program never sees them: it sets its own up. Pass it the size in <code>args</code> if it needs telling.</p>
 <p><code>args</code> passes a program whatever it needs to know, so one program can do different things without being edited. Several are divided by <code>|</code>, and anything with a space or a colon in it goes in quotes:</p>

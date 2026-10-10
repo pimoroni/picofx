@@ -181,7 +181,7 @@ function absorbFile(text) {
   var parsed = readEffects(text);
   wiringRead = parsed.wiring || null;
 
-  boardSet.reload = false;
+  boardSet.reload = true;
   boardSet.driveHidden = false;
   boardResidue = [];
   var named = null, argued = null;
