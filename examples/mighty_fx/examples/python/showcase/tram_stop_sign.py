@@ -19,7 +19,7 @@ which is what makes the scroll affordable.
 
 Press "Boot" to exit the program.
 
-Section: Signs and displays
+Section: Transport signs
 """
 
 # Constants for drawing

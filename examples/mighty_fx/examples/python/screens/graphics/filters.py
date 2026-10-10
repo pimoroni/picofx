@@ -19,6 +19,8 @@ contrast, duotone, glitch, grid, noise, onebit, palette_dither, saturation, vign
 and zoom are all there to try the same way.
 
 Press "Boot" to exit the program.
+
+Section: Drawing from code
 """
 
 # Constants for drawing

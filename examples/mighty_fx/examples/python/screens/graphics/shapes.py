@@ -19,6 +19,8 @@ Note that stroke() changes the shape it is called on rather than handing back a 
 filled shape and its stroked twin are built separately below.
 
 Press "Boot" to exit the program.
+
+Section: Drawing from code
 """
 
 # Constants for drawing

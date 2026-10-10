@@ -16,7 +16,7 @@ holds every frame decoded, and an indexed frame takes a quarter of the memory of
 
 Press "Boot" to exit the program.
 
-Section: On screens
+Section: Across several screens
 """
 
 # Constants

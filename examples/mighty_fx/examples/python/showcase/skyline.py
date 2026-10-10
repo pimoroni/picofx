@@ -22,7 +22,7 @@ with colour in it is glass or signage and gets brighter as the light goes.
 
 Press "Boot" to exit the program.
 
-Section: Signs and displays
+Section: Animation
 """
 
 # Constants

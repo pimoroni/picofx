@@ -21,6 +21,8 @@ The endpoints do not have to be numbers. A vec2, a rect or a mat3 works as well,
 can carry a position, a box or a whole transform.
 
 Press "Boot" to exit the program.
+
+Section: Drawing from code
 """
 
 # Constants for drawing

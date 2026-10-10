@@ -18,7 +18,7 @@ character set is baked into a strip of cells and the page blits cells onto the p
 Press "Boot" to exit the program.
 
 Program: CRT terminal
-Section: Signs and displays
+Section: Mechanical and glowing displays
 """
 
 # Constants for drawing

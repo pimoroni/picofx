@@ -18,7 +18,7 @@ the drift is the offset, and it costs nothing.
 
 Press "Boot" to exit the program.
 
-Section: On screens
+Section: Across several screens
 """
 
 # Constants

@@ -14,7 +14,7 @@ run, which shows the matrix off: every lamp carries its own colour at once.
 Press "Boot" to exit the program.
 
 Program: LED matrix
-Section: On screens
+Section: Animation
 """
 
 # Constants for drawing

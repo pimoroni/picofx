@@ -9,7 +9,7 @@ paging its calling points on its own clock.
 
 Press "Boot" to exit the program.
 
-Section: Signs and displays
+Section: Transport signs
 """
 
 # Constants for drawing

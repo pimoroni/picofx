@@ -9,7 +9,7 @@ Travel through a star field. Change up some of the constants below to see what h
 
 Press "Boot" to exit the program.
 
-Section: On screens
+Section: Animation
 """
 
 # Constants for drawing

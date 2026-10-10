@@ -10,7 +10,7 @@ board rather than repeating it, one listing running across both.
 
 Press "Boot" to exit the program.
 
-Section: Signs and displays
+Section: Transport signs
 """
 
 # Constants for drawing

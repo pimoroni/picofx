@@ -22,7 +22,7 @@ makes a whole turn of them affordable.
 
 Press "Boot" to exit the program.
 
-Section: On screens
+Section: Animation
 """
 
 # Constants

@@ -11,7 +11,7 @@ happens.
 
 Press "Boot" to exit the program.
 
-Section: On screens
+Section: Animation
 """
 
 # Constants for drawing

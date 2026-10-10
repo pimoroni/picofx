@@ -10,7 +10,7 @@ happens.
 Press "Boot" to exit the program.
 
 Program: Colour wheel
-Section: On screens
+Section: Animation
 """
 
 # Constants for drawing

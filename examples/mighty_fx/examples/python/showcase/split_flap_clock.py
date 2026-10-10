@@ -9,7 +9,7 @@ board does.
 
 Press "Boot" to exit the program.
 
-Section: Signs and displays
+Section: Mechanical and glowing displays
 """
 
 # Constants for drawing

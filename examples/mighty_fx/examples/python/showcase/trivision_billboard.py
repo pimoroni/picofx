@@ -11,7 +11,7 @@ a time.
 
 Press "Boot" to exit the program.
 
-Section: Signs and displays
+Section: Billboards and panels
 """
 
 # Constants for drawing

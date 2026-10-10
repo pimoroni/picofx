@@ -10,7 +10,7 @@ the constants below to see what happens.
 
 Press "Boot" to exit the program.
 
-Section: On screens
+Section: Across several screens
 """
 
 # Constants for drawing

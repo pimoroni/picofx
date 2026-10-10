@@ -9,7 +9,7 @@ time.
 
 Press "Boot" to exit the program.
 
-Section: Signs and displays
+Section: Billboards and panels
 """
 
 # The loop, in the order it comes round. As many as you like: the board only ever holds the poster

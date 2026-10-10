@@ -20,6 +20,8 @@ A face is loaded from its file with font.load, so ROM is not the only place one 
 face beside an example, or on the drive, loads exactly the same way.
 
 Press "Boot" to exit the program.
+
+Section: Drawing from code
 """
 
 # Constants for drawing

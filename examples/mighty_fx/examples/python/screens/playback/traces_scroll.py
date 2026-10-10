@@ -25,7 +25,7 @@ glides a couple of pixels a frame.
 
 Press "Boot" to exit the program.
 
-Section: On screens
+Section: Animation
 """
 
 # Constants

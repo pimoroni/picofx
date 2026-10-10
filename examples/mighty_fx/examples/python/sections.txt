@@ -1,8 +1,12 @@
 # The picker's program tab, a section a line in the order shown: its name, then after a | what it
 # holds. An example joins a section with a "Section:" line in its opening string. A section an
 # example names that is not listed here comes after these, with nothing said of it
-Signs and displays | showcase pieces made to be looked at
-On screens | pictures and motion for one screen or more
+Transport signs | departure boards and signs by the road and the track
+Mechanical and glowing displays | flaps, dots and tubes, as the real ones look
+Billboards and panels | posters and panels that change as you watch
+Animation | pictures in motion, drawn as they play
+Across several screens | one picture spread over a pair or a wall
+Drawing from code | what the drawing library can do
 With the remote | the effects, steered from the IR remote
 With a sensor | the lights following what a sensor reads
 Sound | lights to a soundtrack

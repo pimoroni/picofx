@@ -19,7 +19,7 @@ case is opaque because a translucent mark reads only over art that is flat or da
 
 Press "Boot" to exit the program.
 
-Section: On screens
+Section: Billboards and panels
 """
 
 # Constants

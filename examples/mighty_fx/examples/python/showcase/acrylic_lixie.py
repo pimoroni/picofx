@@ -19,7 +19,7 @@ The glow goes on the frame, which is opaque, and not on any sheet.
 
 Press "Boot" to exit the program.
 
-Section: Signs and displays
+Section: Mechanical and glowing displays
 """
 
 # Constants for drawing

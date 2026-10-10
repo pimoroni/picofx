@@ -18,7 +18,7 @@ to every lane showing it, so a four lane gantry is one or two writes, not four.
 
 Press "Boot" to exit the program.
 
-Section: Signs and displays
+Section: Transport signs
 """
 
 # Constants for drawing

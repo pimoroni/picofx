@@ -22,7 +22,7 @@ apart. The interface is built once and blitted as the ground, so a frame draws o
 
 Press "Boot" to exit the program.
 
-Section: Signs and displays
+Section: Billboards and panels
 """
 
 # Constants for drawing

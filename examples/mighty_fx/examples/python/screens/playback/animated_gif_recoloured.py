@@ -19,7 +19,7 @@ a second, so the change is seen while the picture is still rather than during th
 
 Press "Boot" to exit the program.
 
-Section: On screens
+Section: Billboards and panels
 """
 
 # Constants
