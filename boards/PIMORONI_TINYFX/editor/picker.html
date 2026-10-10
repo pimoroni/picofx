@@ -9114,10 +9114,14 @@ drawSteps.after.push(saveMenu);
 // out. Each has a small thumbnail at a screen's shape and low resolution: a frame captured off a
 // board running it where there is one, drawn here where there is not.
 
-// The board's offered examples by section, each as its path under examples/ and how its thumbnail
-// is drawn, "shot" being its captured frame. What each uses is read from its source when the page
-// is built
+// The board's offered examples by section, each as its path under EXAMPLES_ROOT and how its
+// thumbnail is drawn, "shot" being its captured frame. What each uses is read from its source when
+// the page is built
 var OFFERED = (BOARD.offered || []).map(function (set) { return [set.section, set.examples]; });
+
+// Where the board keeps the examples it offers: what the repository holds under examples/<board>/
+// sits at the board's own root
+var EXAMPLES_ROOT = BOARD.examples ? BOARD.examples.split("/").slice(2).join("/") + "/" : "";
 
 // What each group's heading says after its name, as the looks' groups do
 var GROUP_SAYS = {"On the drive": "your own programs"};
@@ -9228,7 +9232,7 @@ var THUMBS = {};
 function offeredAt(path) {
   for (var g = 0; g < OFFERED.length; g++) {
     for (var i = 0; i < OFFERED[g][1].length; i++) {
-      if ("examples/" + OFFERED[g][1][i][0] === path) return OFFERED[g][1][i];
+      if (EXAMPLES_ROOT + OFFERED[g][1][i][0] === path) return OFFERED[g][1][i];
     }
   }
   return null;
@@ -9744,7 +9748,7 @@ function renderProgramView() {
   }
   group("On the drive", DRIVE_PROGRAMS.map(function (one) { return one[0]; }));
   OFFERED.forEach(function (set) {
-    group(set[0], set[1].map(function (entry) { return "examples/" + entry[0]; }));
+    group(set[0], set[1].map(function (entry) { return EXAMPLES_ROOT + entry[0]; }));
   });
   if (!shown) {
     var none = document.createElement("p");
@@ -9786,7 +9790,7 @@ function chipFeatures() {
 function offeredPaths() {
   var offered = DRIVE_PROGRAMS.map(function (one) { return one[0]; });
   OFFERED.forEach(function (set) {
-    set[1].forEach(function (entry) { offered.push("examples/" + entry[0]); });
+    set[1].forEach(function (entry) { offered.push(EXAMPLES_ROOT + entry[0]); });
   });
   return offered;
 }
