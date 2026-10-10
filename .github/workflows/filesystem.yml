@@ -24,7 +24,7 @@ jobs:
             basename: tiny_fx
             shortname: tiny_fx_w
             board: PIMORONI_TINYFX
-          - name: MightyFX W
+          - name: MightyFX
             basename: mighty_fx
             shortname: mighty_fx
             board: PIMORONI_MIGHTYFX
@@ -37,13 +37,13 @@ jobs:
       EX_DIR: "picofx/ex_temp"
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         submodules: true
         path: picofx
 
     # Check out Pimoroni Aye Arr
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         repository: pimoroni/aye_arr
         ref: ${{env.PIMORONI_AYE_ARR_VERSION}}
@@ -60,9 +60,8 @@ jobs:
         cp -v -r ${{env.ROOT_DIR}}/../aye_arr/aye_arr ${{env.LIBS_DIR}}/lib
         find ${{env.LIBS_DIR}} -type f -name '*.md' -exec rm -v {} \;
 
-    # autofx plays the FX drive, which a Tiny FX carries only in its drive variant
-    - name: "Leave autofx out of the Tiny FX libraries"
-      if: matrix.board == 'PIMORONI_TINYFX'
+    # autofx plays the FX drive, which only the drive variants carry, frozen into their firmware
+    - name: "Leave autofx out of the libraries"
       shell: bash
       run: rm -v ${{env.LIBS_DIR}}/lib/autofx.py
 
@@ -84,35 +83,33 @@ jobs:
 
     - name: Libs .zip artifact
       if: matrix.shortname != 'tiny_fx_w'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{env.RELEASE_FILE}}-libraries-only
         path: picofx/lib_temp
 
     - name: Examples .zip artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: ${{env.RELEASE_FILE}}-examples-only
         path: "picofx/ex_temp"
 
-    - name: Libs .zip release asset
-      if: github.event_name == 'release' && matrix.shortname != 'tiny_fx_w'
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      with:
-        asset_path: picofx/lib_temp
-        upload_url: ${{github.event.release.upload_url}}
-        asset_name: ${{env.RELEASE_FILE}}-libraries-only
-        asset_content_type: application/octet-stream
-
-    - name: Examples .zip release asset
+    # A release takes files, so each folder is zipped first, its contents at the zip's top level
+    - name: "Release: Zip the libraries and examples"
       if: github.event_name == 'release'
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      shell: bash
+      run: |
+        (cd picofx/lib_temp && zip -r "$GITHUB_WORKSPACE/${{env.RELEASE_FILE}}-libraries-only.zip" .)
+        (cd picofx/ex_temp && zip -r "$GITHUB_WORKSPACE/${{env.RELEASE_FILE}}-examples-only.zip" .)
+
+    - name: "Release: Upload the libraries .zip"
+      if: github.event_name == 'release' && matrix.shortname != 'tiny_fx_w'
+      uses: softprops/action-gh-release@v3
       with:
-        asset_path: "picofx/ex_temp"
-        upload_url: ${{github.event.release.upload_url}}
-        asset_name: ${{env.RELEASE_FILE}}-examples-only
-        asset_content_type: application/octet-stream
+        files: ${{env.RELEASE_FILE}}-libraries-only.zip
+
+    - name: "Release: Upload the examples .zip"
+      if: github.event_name == 'release'
+      uses: softprops/action-gh-release@v3
+      with:
+        files: ${{env.RELEASE_FILE}}-examples-only.zip
