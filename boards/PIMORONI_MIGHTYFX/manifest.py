@@ -7,11 +7,6 @@ require("aioble")
 
 freeze("../frozen_libs/")
 
-# The FX drive: the module every board carrying one shares, and this board's own pages,
-# manual and defaults
-freeze("../fx_libs/")
-freeze("./fx_libs/")
-
 # The LSM6DS3, the accelerometer and gyroscope on the multi sensor stick, cloned by
 # ci/micropython.sh at the version pinned there. The other two sensors on that breakout
 # are C modules in the build, and this is the third

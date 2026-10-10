@@ -28,10 +28,12 @@
 // clears them all with room. Those functions take C stack instead, so they nest less deeply.
 #define VM_MAX_STATE_ON_STACK                   (sizeof(mp_uint_t) * 18)
 
-// USB mass storage exposes only the config volume, the FAT region sitting between the
+#if defined(PIMORONI_FX_DRIVE)
+
+// USB mass storage exposes only the FX drive's volume, the FAT region sitting between the
 // firmware and the ROMFS. Offset and size must agree with the flash split in
 // mpconfigboard.cmake. Defining the offset keeps the standard LittleFS boot; mounting the
-// config volume is board code's job. The volume stays invisible to the host until
+// volume is board code's job. The volume stays invisible to the host until
 // rp2.enable_msc() is called.
 #define MICROPY_HW_USB_MSC                      (1)
 #define MICROPY_HW_USB_MSC_FLASH_OFFSET         (2 * 1024 * 1024)
@@ -42,3 +44,5 @@
 // FAT file names pass to and from Python as UTF-8. A computer writes its long names in Unicode,
 // and read through a code page one accented name breaks listing the whole folder.
 #define MICROPY_FATFS_LFN_UNICODE               (2)
+
+#endif

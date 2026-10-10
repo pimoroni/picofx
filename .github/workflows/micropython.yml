@@ -28,6 +28,10 @@ jobs:
           - name: MightyFX
             shortname: mighty_fx
             board: PIMORONI_MIGHTYFX
+          - name: MightyFX with the FX drive
+            shortname: mighty_fx_drive
+            board: PIMORONI_MIGHTYFX
+            variant: drive
 
     env:
       # MicroPython version will be contained in github.event.release.tag_name for releases
