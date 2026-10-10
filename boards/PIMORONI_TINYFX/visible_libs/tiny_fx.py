@@ -17,6 +17,14 @@ from sensor import build_sensor
 __waking = []
 
 
+def __has_network():
+    try:
+        import network  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
 class TinyFX:
     OUT_PINS = (3, 2, 4, 5, 8, 9)
     RGB_PINS = (13, 14, 15)
@@ -50,6 +58,10 @@ class TinyFX:
 
     # What wake() lights the outputs to: dim enough to read as alive, not as an effect
     WAKE_LEVEL = 0.1
+
+    # Whether the board has a wireless module, so the FX drive offers the WiFi credentials and
+    # the programs that go online. Only a W's firmware has networking
+    WIRELESS = __has_network()
 
     def __init__(self, init_i2c=True, i2c_freq=100000, init_wav=True, wav_root="/", sensor=None):
         # Set up the mono and RGB LED outputs

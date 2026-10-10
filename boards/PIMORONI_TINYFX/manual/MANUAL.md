@@ -471,6 +471,11 @@ Each is optional. Without `Picture`, the picker shows `clock.png` beside
 `clock.py` where there is one, and `clock-2.png` beside it as a second screen's.
 Without `Args`, a program that reads `sys.argv` is offered plain boxes to add
 arguments to.
+
+A board with a wireless module keeps `secrets.py` at the top of the drive for
+your WiFi network's name and password, and puts an empty one back if it is
+deleted. A program that goes online, importing `network` or `requests`, is listed
+only where the drive holds that file.
 An example is listed only in the section it names.
 `examples/python/sections.txt` orders the sections, a line each with its name,
 then a `|` and what it holds.

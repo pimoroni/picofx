@@ -110,6 +110,10 @@ __reset_at = None
 __on_reset = None
 __save_timer = None
 
+# What the board told mount() it has, for the remount when the computer hands the drive back
+__screens = True
+__wireless = False
+
 
 def __ends(text):
     """A document's length and the two ends __holds() compares, the whole of a short one."""
@@ -273,15 +277,18 @@ def __has_boot_signature(bdev):
     return sector[510] == 0x55 and sector[511] == 0xAA
 
 
-def mount(screens=True):
+def mount(screens=True, wireless=False):
     """
     Mount the drive read-write at /fx, rebuilding it when the filesystem is blank,
     effects.txt is missing, or either shipped document differs from the text the
     board carries. Returns whether the drive ended up mounted.
 
     `screens` is False for a board found to have no screen ports, which is then given
-    the catalogue without them where its pages carry one.
+    the catalogue without them where its pages carry one. `wireless` is True for a board
+    with a wireless module, which is given the WiFi credentials.
     """
+    global __screens, __wireless
+    __screens, __wireless = screens, wireless
     bdev = rp2.Flash(msc=True)
     fs = vfs.VfsFat(bdev)
     try:
@@ -327,7 +334,8 @@ def mount(screens=True):
                 os.remove(FILE_PATH)
             except OSError:
                 pass
-    __restore_secrets()
+    if wireless:
+        __restore_secrets()
     del __unhealed[:]
     __heal(fs, README_NAME, fx_defaults.README)
     __heal(fs, MANUAL_NAME, fx_manual.MANUAL)
@@ -860,11 +868,7 @@ class __Examples:
 
 
 def __restore_secrets():
-    """Write the empty WiFi credentials where the drive has none, on firmware with networking."""
-    try:
-        import network  # noqa: F401
-    except ImportError:
-        return
+    """Write the empty WiFi credentials where the drive has none."""
     try:
         os.stat(SECRETS_PATH)
     except OSError:
@@ -1115,7 +1119,7 @@ def withdraw():
         vfs.umount(MOUNT_POINT)
     except OSError:
         pass
-    mount()
+    mount(__screens, __wireless)
     return True
 
 

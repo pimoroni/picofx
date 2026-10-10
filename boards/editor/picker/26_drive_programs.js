@@ -25,6 +25,10 @@ var PICTURES = {};
 // How far reading the programs has got, as [read, of], while it is under way, else null
 var programsReading = null;
 
+// Whether the drive holds the WiFi credentials, which a board with a wireless module keeps at its
+// top level, so the programs that go online are offered
+var driveHasCredentials = false;
+
 // What each examples folder needs attached, as the manual says
 var EXAMPLE_NEEDS = {screens: "a screen", audio: "a speaker", motors: "motors", servos: "a servo",
                      strips: "a strip"};
@@ -162,6 +166,7 @@ async function filesIn(dir, path, folder, deep, files, pictures) {
       pictures[path + name] = handle;
     } else if (!deep && /^secrets\.py$/i.test(name)) {
       // The WiFi credentials, which programs import, are not a program
+      driveHasCredentials = true;
     } else if (/\.py$/i.test(name)) {
       if (!deep || folder) files.push([path + name, folder, handle]);
     } else if (name === "sections.txt" && deep && !folder) {
@@ -195,6 +200,7 @@ async function picturesOf(program, pictures) {
 async function drivePrograms(dir) {
   var files = [], pictures = {}, found = [];
   SECTIONS = [];
+  driveHasCredentials = false;
   Object.keys(PICTURES).forEach(function (path) { PICTURES[path].forEach(URL.revokeObjectURL); });
   PICTURES = {};
   await filesIn(dir, "", "", false, files, pictures);

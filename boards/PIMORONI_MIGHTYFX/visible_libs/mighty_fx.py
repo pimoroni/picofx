@@ -80,6 +80,10 @@ class MightyFX:
     # SPCEPort and the SPI bus it drives
     SCREENS = (("screenA", "spce_a", 0), ("screenB", "spce_b", 1))
 
+    # Whether the board has a wireless module, so the FX drive offers the WiFi credentials and
+    # the programs that go online
+    WIRELESS = True
+
     # How long a strip takes to power up once the rail is on, and miss any frame sent sooner.
     # A 64 LED panel took one after 5ms and not after 2ms, so this is double that
     RAIL_SETTLE_MS = 10

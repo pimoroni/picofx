@@ -6,8 +6,9 @@
 // the drive are on the save button's menu.
 //
 // The programs offered are those on the drive that name a section, and those at its top level,
-// which the page learns only once the drive is open. Each has a small thumbnail at a screen's
-// shape: its picture where one sits beside it, drawn here where there is not.
+// which the page learns only once the drive is open, less any going online where the drive holds
+// no WiFi credentials. Each has a small thumbnail at a screen's shape: its picture where one sits
+// beside it, drawn here where there is not.
 
 // The programs at the top of the drive that name no section, the group they make
 var OWN_GROUP = "On the drive";
@@ -15,13 +16,16 @@ var OWN_GROUP = "On the drive";
 // The offered programs by group, as [name, paths]: the drive's own, then sections.txt's sections
 // in its order, then any other a program names, each group's programs by title
 function offeredGroups() {
+  var runnable = PROGRAMS.filter(function (one) {
+    return driveHasCredentials || one.uses.indexOf("wifi") < 0;
+  });
   var named = SECTIONS.map(function (one) { return one[0]; });
-  PROGRAMS.forEach(function (one) {
+  runnable.forEach(function (one) {
     if (one.section && named.indexOf(one.section) < 0) named.push(one.section);
   });
-  var own = PROGRAMS.filter(function (one) { return !one.example && !one.section; });
+  var own = runnable.filter(function (one) { return !one.example && !one.section; });
   var groups = [[OWN_GROUP, own]].concat(named.map(function (name) {
-    return [name, PROGRAMS.filter(function (one) { return one.section === name; })];
+    return [name, runnable.filter(function (one) { return one.section === name; })];
   }));
   return groups.map(function (group) {
     var paths = group[1].map(function (one) { return one.path; });
