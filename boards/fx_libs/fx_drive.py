@@ -19,6 +19,7 @@ import machine
 import os
 import time
 import rp2
+import sys
 import vfs
 
 import fx_defaults
@@ -33,6 +34,7 @@ PICKER_NAME = "PICKER.html"
 EDITOR_NAME = "EDITOR.html"
 CATALOGUE_NAME = "catalogue.js"
 ERRORS_PATH = MOUNT_POINT + "/errors.txt"
+SECRETS_PATH = MOUNT_POINT + "/secrets.py"
 
 # The drive's examples folder, and where it is also mounted
 EXAMPLES_DIR = MOUNT_POINT + "/examples"
@@ -303,6 +305,9 @@ def mount(screens=True):
         vfs.mount(fs, MOUNT_POINT)
         fs.label(VOLUME_LABEL)
     __mount_examples()
+    if MOUNT_POINT not in sys.path:
+        # A module at the top of the drive, the WiFi credentials, imports after the board's own
+        sys.path.append(MOUNT_POINT)
     try:
         os.stat(FILE_PATH)
     except OSError:
@@ -322,6 +327,7 @@ def mount(screens=True):
                 os.remove(FILE_PATH)
             except OSError:
                 pass
+    __restore_secrets()
     del __unhealed[:]
     __heal(fs, README_NAME, fx_defaults.README)
     __heal(fs, MANUAL_NAME, fx_manual.MANUAL)
@@ -851,6 +857,27 @@ class __Examples:
 
     def rmdir(self, path):
         os.rmdir(self.__target(path))
+
+
+def __restore_secrets():
+    """Write the empty WiFi credentials where the drive has none, on firmware with networking."""
+    try:
+        import network  # noqa: F401
+    except ImportError:
+        return
+    try:
+        os.stat(SECRETS_PATH)
+    except OSError:
+        try:
+            with open(SECRETS_PATH, "w") as f:
+                f.write(fx_defaults.SECRETS)
+        except OSError:
+            # A full drive. The empty file the failed write leaves would stop the next mount
+            # restoring it
+            try:
+                os.remove(SECRETS_PATH)
+            except OSError:
+                pass
 
 
 def __mount_examples():

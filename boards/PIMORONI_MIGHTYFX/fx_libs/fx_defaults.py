@@ -2,12 +2,14 @@
 #
 # SPDX-License-Identifier: MIT
 
-# What a fresh board starts from, one constant per file it fills. EFFECTS and README
-# go on the FX drive and are rebuilt by fx_drive; MAIN goes to the filesystem root and
-# is rebuilt by boot.py. Each board carries its own copy of this file.
+# What a fresh board starts from, one constant per file it fills. EFFECTS, README and
+# SECRETS go on the FX drive and are rebuilt by fx_drive, SECRETS only by firmware with
+# networking; MAIN goes to the filesystem root and is rebuilt by boot.py. Each board
+# carries its own copy of this file.
 #
-# These are the only copies. Nothing ships main.py in the image, so a board writes its
-# own on first boot and there is no second version to drift from.
+# These are the only copies a drive build has. Nothing ships main.py or secrets.py in
+# its image, so a board writes its own on first boot. The builds without the drive ship
+# the examples' secrets.py, which holds the same settings as SECRETS.
 #
 # They live here rather than inside fx_drive.py so edits to the wording show up on
 # their own in a diff. Ordinary quotes are fine inside these; only a literal triple
@@ -85,3 +87,10 @@ white travelling along the outputs, and come back a moment after it finishes.
 
 This README is rebuilt by the board, so edits to it will not stick.
 """
+
+# Empty, for the user to fill in. Written only where the drive has none, so their edits stay
+SECRETS = '''\
+# Your WiFi network's name and password, for the programs that go online
+WIFI_SSID = ""
+WIFI_PASSWORD = ""
+'''

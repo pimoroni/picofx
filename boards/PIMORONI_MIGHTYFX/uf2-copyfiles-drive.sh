@@ -15,3 +15,6 @@ rm -r -v "$TARGET/lib/screens"
 
 # The examples and their art go on the FX drive instead, by drive-copyfiles.sh
 rm -r -v "$TARGET/examples"
+
+# The board writes the WiFi credentials to the FX drive, for a text editor to fill in
+rm -v "$TARGET/secrets.py"

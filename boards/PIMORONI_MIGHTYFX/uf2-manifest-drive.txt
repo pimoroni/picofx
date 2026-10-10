@@ -1,4 +1,3 @@
-secrets.py
 lib/*.py
 lib/picofx/*.py
 lib/picofx/colour/*.py

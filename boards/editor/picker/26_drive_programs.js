@@ -2,7 +2,8 @@
 // ---- the programs on the drive ------------------------------------------------------------------
 // Opening the drive reads the programs it holds, every Python file at its top level and under
 // EXAMPLES_ROOT, so the page offers what this drive carries and nothing it does not. A file whose
-// opening string starts "Drawing:" is a drawing for a screen, not a program, so it is left out.
+// opening string starts "Drawing:" is a drawing for a screen, not a program, so it is left out, as
+// is the WiFi credentials file at the top level.
 //
 // Every program is read the same way. Lines in its opening string say how to show it: "Program:"
 // its name, "Args:" what it takes, "Picture:" a picture beside it to show it by, "Section:" the
@@ -159,6 +160,8 @@ async function filesIn(dir, path, folder, deep, files, pictures) {
                               deep, files, pictures);
     } else if (/\.png$/i.test(name)) {
       pictures[path + name] = handle;
+    } else if (!deep && /^secrets\.py$/i.test(name)) {
+      // The WiFi credentials, which programs import, are not a program
     } else if (/\.py$/i.test(name)) {
       if (!deep || folder) files.push([path + name, folder, handle]);
     } else if (name === "sections.txt" && deep && !folder) {
