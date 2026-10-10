@@ -670,9 +670,9 @@ A setting whose value is not what it takes is ignored, with a note in
 
 ### Boards and accessories
 
-- [MightyFX](https://shop.pimoroni.com/products/mightyfx)
-- [TinyFX](https://shop.pimoroni.com/products/tinyfx)
-- [TinyFX W](https://shop.pimoroni.com/products/tiny-fx-w)
+- [Mighty FX](https://shop.pimoroni.com/products/mightyfx)
+- [Tiny FX](https://shop.pimoroni.com/products/tinyfx)
+- [Tiny FX W](https://shop.pimoroni.com/products/tiny-fx-w)
 - [Plasma 2350](https://shop.pimoroni.com/products/plasma-2350)
 - [Plasma 2350 W](https://shop.pimoroni.com/products/plasma-2350-w)
 - [Everything in the range](https://shop.pimoroni.com/collections/tiny-fx)
