@@ -387,8 +387,14 @@ class __FatReader:
     # Where a long name's characters sit in each of its entries, two bytes apiece
     __LONG_NAME_SPANS = ((1, 11), (14, 26), (28, 32))
 
+    # How much of a folder or the table is read at once, sixteen entries of a folder. A sector
+    # is a whole number of these, so a window never crosses into the next region
+    __WINDOW = 512
+
     def __init__(self):
         self.__flash = rp2.Flash(msc=True)
+        self.__fat_window = bytearray(self.__WINDOW)
+        self.__fat_window_at = None
         self.__read_layout()
 
     def __read(self, offset, length):
@@ -434,13 +440,24 @@ class __FatReader:
         self.__fat12 = self.__clusters < 4085
         self.__end_of_chain = 0xFF8 if self.__fat12 else 0xFFF8
 
+    def __fat_u16(self, offset):
+        # The table's bytes come from the window holding them, read afresh only on leaving it
+        into = offset % self.__WINDOW
+        if into == self.__WINDOW - 1:
+            # A FAT12 entry straddling two windows
+            return self.__u16(self.__read(self.__fat_at + offset, 2), 0)
+        window_at = offset - into
+        if window_at != self.__fat_window_at:
+            self.__flash.readblocks(0, self.__fat_window, self.__fat_at + window_at)
+            self.__fat_window_at = window_at
+        return self.__u16(self.__fat_window, into)
+
     def __next_cluster(self, cluster):
         if self.__fat12:
             # Twelve bits an entry, so two entries share every three bytes
-            pair = self.__read(self.__fat_at + cluster + cluster // 2, 2)
-            value = self.__u16(pair, 0)
+            value = self.__fat_u16(cluster + cluster // 2)
             return value >> 4 if cluster & 1 else value & 0xFFF
-        return self.__u16(self.__read(self.__fat_at + cluster * 2, 2), 0)
+        return self.__fat_u16(cluster * 2)
 
     def __first_cluster(self, entry):
         return self.__u16(entry, 26)
@@ -454,6 +471,8 @@ class __FatReader:
         runs = []
         position = 0
         steps = 0
+        # The computer may have rewritten the table since the last walk
+        self.__fat_window_at = None
         while size is None or position < size:
             if size is None and cluster >= self.__end_of_chain:
                 break
@@ -480,18 +499,40 @@ class __FatReader:
         return total
 
     def __long_name_part(self, entry):
-        """A long name entry's characters, or None where one is beyond what chr() takes."""
-        part = ""
-        for start, end in self.__LONG_NAME_SPANS:
-            for at in range(start, end, 2):
-                code = self.__u16(entry, at)
-                if code == 0x0000 or code == 0xFFFF:
-                    return part
-                # Half of a surrogate pair
-                if 0xD800 <= code <= 0xDFFF:
-                    return None
-                part += chr(code)
-        return part
+        """A long name entry's UTF-16 units."""
+        return b"".join(bytes(entry[start:end]) for start, end in self.__LONG_NAME_SPANS)
+
+    @staticmethod
+    def __cut(units):
+        # A long name ends at its first zero unit, 0xFFFF filling the rest of its last entry
+        end = units.find(b"\x00\x00")
+        while end > 0 and end & 1:
+            end = units.find(b"\x00\x00", end + 1)
+        return units if end < 0 else units[:end]
+
+    def __decoded(self, units):
+        """A long name's UTF-16 units as text, or None where one is beyond what chr() takes."""
+        name = ""
+        for at in range(0, len(units), 2):
+            code = self.__u16(units, at)
+            # Half of a surrogate pair
+            if 0xD800 <= code <= 0xDFFF:
+                return None
+            name += chr(code)
+        return name
+
+    @staticmethod
+    def __units_of(text):
+        """Text as the UTF-16 units a long name stores it in."""
+        units = bytearray()
+        for character in text:
+            code = ord(character)
+            halves = (code,) if code <= 0xFFFF else \
+                (0xD800 + ((code - 0x10000) >> 10), 0xDC00 + ((code - 0x10000) & 0x3FF))
+            for half in halves:
+                units.append(half & 0xFF)
+                units.append(half >> 8)
+        return bytes(units)
 
     @staticmethod
     def __short_name(entry):
@@ -512,14 +553,20 @@ class __FatReader:
 
     def __entries(self, runs):
         """
-        Each entry in a directory as its drive offset, its bytes and its long name,
-        None where it has none. Deleted entries and the volume label are left out.
+        Each entry in a directory as its drive offset, its bytes and its long name as
+        UTF-16 units, None where it has none. Deleted entries and the volume label are
+        left out.
         """
         parts = None
         checksum = None
+        window = bytearray(self.__WINDOW)
         for _, start, length in runs:
             for at in range(start, start + length, self.__ENTRY_SIZE):
-                entry = self.__read(at, self.__ENTRY_SIZE)
+                into = (at - start) % self.__WINDOW
+                if into == 0:
+                    count = min(self.__WINDOW, start + length - at)
+                    self.__flash.readblocks(0, memoryview(window)[:count], at)
+                entry = window[into:into + self.__ENTRY_SIZE]
                 first = entry[0]
                 if first == 0x00:
                     return
@@ -543,10 +590,9 @@ class __FatReader:
                 # A long name belongs to the short entry after it only where the
                 # checksum matches, so one orphaned by a host without long names is
                 # not taken for this file's
-                if parts and None not in parts.values() and \
-                        sorted(parts) == list(range(1, len(parts) + 1)) and \
+                if parts and sorted(parts) == list(range(1, len(parts) + 1)) and \
                         checksum == self.__checksum(entry):
-                    long_name = "".join(parts[order] for order in sorted(parts))
+                    long_name = self.__cut(b"".join(parts[order] for order in sorted(parts)))
                 parts = None
 
                 if attributes & self.__ATTR_VOLUME_ID:
@@ -558,9 +604,17 @@ class __FatReader:
         The drive offset and bytes of the entry named `wanted` in a directory, matched
         by its long name or its short one, ASCII case ignored. None where it is absent.
         """
+        # Long names are compared as stored, so none need be decoded, the bytes lowered on
+        # both sides alike
+        wanted_units = self.__units_of(wanted).lower()
+        # A short name is eight characters, a dot and three more at most
+        could_be_short = len(wanted) <= 12
         for at, entry, long_name in self.__entries(runs):
-            for name in (long_name, self.__short_name(entry)):
-                if name is not None and name.lower() == wanted:
+            if long_name is not None and long_name.lower() == wanted_units:
+                return at, entry
+            if could_be_short:
+                short_name = self.__short_name(entry)
+                if short_name is not None and short_name.lower() == wanted:
                     return at, entry
         return None
 
@@ -613,7 +667,7 @@ class __FatReader:
         """A folder's contents as (name, stat mode, size), its own . and .. left out."""
         listed = []
         for _, entry, long_name in self.__entries(self.__runs_of_directory(path)):
-            name = long_name or self.__short_name(entry)
+            name = (self.__decoded(long_name) if long_name else None) or self.__short_name(entry)
             if name is None or name in (".", ".."):
                 continue
             if entry[11] & self.__ATTR_DIRECTORY:
