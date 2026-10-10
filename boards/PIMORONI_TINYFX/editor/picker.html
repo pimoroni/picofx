@@ -1633,7 +1633,7 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
 // whether it has a hub, sound and the network looks, and the examples it offers
 var BOARD = {
  "name": "Tiny FX",
- "examples": "examples/tiny_fx/examples",
+ "examples": "examples/tiny_fx/examples/python",
  "example_variable": "tiny",
  "outputs": [
   {
@@ -8372,7 +8372,7 @@ var DRIVE_PROGRAMS = [];
 // each one's path on the board, its folder, and the first sentence of its opening string
 var BOARD_EXAMPLES = [
  {
-  "path": "examples/audio/fair_use_encounters.py",
+  "path": "examples/python/audio/fair_use_encounters.py",
   "folder": "audio",
   "does": "Play an evocative musical melody with accompanying lights on TinyFX.",
   "needs": "a speaker",
@@ -8383,7 +8383,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/audio/photon_sword.py",
+  "path": "examples/python/audio/photon_sword.py",
   "folder": "audio",
   "does": "Play sounds that react to motion with a TinyFX.",
   "needs": "a speaker",
@@ -8396,7 +8396,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/audio/race_start.py",
+  "path": "examples/python/audio/race_start.py",
   "folder": "audio",
   "does": "Plays a simple boop, boop, boop, beeep countdown sound effect when you press Boot on TinyFx.",
   "needs": "a speaker",
@@ -8408,7 +8408,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/audio/wav_player.py",
+  "path": "examples/python/audio/wav_player.py",
   "folder": "audio",
   "does": "Play a WAV file saved locally to the Tiny FX The RGB output says which state the board is in: a quarter white while it waits, and green while a file plays.",
   "needs": "a speaker",
@@ -8419,7 +8419,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/comms/dual_fx.py",
+  "path": "examples/python/comms/dual_fx.py",
   "folder": "comms",
   "does": "Play wave and rainbow animations across the outputs of this TinyFX and another TinyFX connected by I2C and running as an I2CTarget.",
   "needs": null,
@@ -8429,7 +8429,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/comms/multi_fx.py",
+  "path": "examples/python/comms/multi_fx.py",
   "folder": "comms",
   "does": "Play wave and rainbow animations across the outputs of this TinyFX and multiple other TinyFX's connected by I2C and running as an I2CTarget.",
   "needs": null,
@@ -8439,7 +8439,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/effects/colour/blink.py",
+  "path": "examples/python/effects/colour/blink.py",
   "folder": "effects/colour",
   "does": "Play a blinking sequence effect on TinyFX's RGB output.",
   "needs": null,
@@ -8449,7 +8449,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/effects/colour/hue_step.py",
+  "path": "examples/python/effects/colour/hue_step.py",
   "folder": "effects/colour",
   "does": "Play a stepped hue effect on TinyFX's RGB output.",
   "needs": null,
@@ -8459,7 +8459,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/effects/colour/rainbow.py",
+  "path": "examples/python/effects/colour/rainbow.py",
   "folder": "effects/colour",
   "does": "Play a rainbow effect on TinyFX's RGB output.",
   "needs": null,
@@ -8469,7 +8469,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/effects/colour/random.py",
+  "path": "examples/python/effects/colour/random.py",
   "folder": "effects/colour",
   "does": "Play a randomly changing brightness and colour effect on TinyFX's RGB output.",
   "needs": null,
@@ -8479,7 +8479,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/effects/colour/static_hsv.py",
+  "path": "examples/python/effects/colour/static_hsv.py",
   "folder": "effects/colour",
   "does": "Show a static colour on TinyFX's RGB output, using HSV.",
   "needs": null,
@@ -8489,7 +8489,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/effects/colour/static_rgb.py",
+  "path": "examples/python/effects/colour/static_rgb.py",
   "folder": "effects/colour",
   "does": "Show a static colour on TinyFX's RGB output.",
   "needs": null,
@@ -8499,7 +8499,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/effects/mono/binary_counter.py",
+  "path": "examples/python/effects/mono/binary_counter.py",
   "folder": "effects/mono",
   "does": "Play an incrementing binary counter on TinyFX's outputs.",
   "needs": null,
@@ -8508,7 +8508,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/effects/mono/blink_wave.py",
+  "path": "examples/python/effects/mono/blink_wave.py",
   "folder": "effects/mono",
   "does": "Play a wave of blinks on TinyFX's outputs.",
   "needs": null,
@@ -8517,7 +8517,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/effects/mono/flashing_sequence.py",
+  "path": "examples/python/effects/mono/flashing_sequence.py",
   "folder": "effects/mono",
   "does": "Play a flashing sequence across TinyFX's outputs.",
   "needs": null,
@@ -8526,7 +8526,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/effects/mono/pelican_crossing.py",
+  "path": "examples/python/effects/mono/pelican_crossing.py",
   "folder": "effects/mono",
   "does": "Play a pelican crossing on five of TinyFX's outputs.",
   "needs": null,
@@ -8535,7 +8535,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/effects/mono/pulse_wave.py",
+  "path": "examples/python/effects/mono/pulse_wave.py",
   "folder": "effects/mono",
   "does": "Play a wave of pulses on TinyFX's outputs.",
   "needs": null,
@@ -8544,7 +8544,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/effects/mono/single_blink.py",
+  "path": "examples/python/effects/mono/single_blink.py",
   "folder": "effects/mono",
   "does": "Play a blinking effect on one of TinyFX's outputs.",
   "needs": null,
@@ -8553,7 +8553,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/effects/mono/single_flashing.py",
+  "path": "examples/python/effects/mono/single_flashing.py",
   "folder": "effects/mono",
   "does": "Play a flashing effect on one of TinyFX's outputs.",
   "needs": null,
@@ -8562,7 +8562,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/effects/mono/single_flicker.py",
+  "path": "examples/python/effects/mono/single_flicker.py",
   "folder": "effects/mono",
   "does": "Play a flickering effect on one of TinyFX's outputs.",
   "needs": null,
@@ -8571,7 +8571,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/effects/mono/single_pulse.py",
+  "path": "examples/python/effects/mono/single_pulse.py",
   "folder": "effects/mono",
   "does": "Play a pulsing effect on one of TinyFX's outputs.",
   "needs": null,
@@ -8580,7 +8580,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/effects/mono/single_random.py",
+  "path": "examples/python/effects/mono/single_random.py",
   "folder": "effects/mono",
   "does": "Play a randomly changing brightness effect on one of TinyFX's outputs.",
   "needs": null,
@@ -8589,7 +8589,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/effects/mono/static_brightness.py",
+  "path": "examples/python/effects/mono/static_brightness.py",
   "folder": "effects/mono",
   "does": "Show a static brightness on one of TinyFX's outputs.",
   "needs": null,
@@ -8598,7 +8598,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/effects/mono/sweep.py",
+  "path": "examples/python/effects/mono/sweep.py",
   "folder": "effects/mono",
   "does": "Sweep a light back and forth across TinyFX's outputs.",
   "needs": null,
@@ -8607,7 +8607,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/effects/mono/sweep_trail.py",
+  "path": "examples/python/effects/mono/sweep_trail.py",
   "folder": "effects/mono",
   "does": "Sweep a light back and forth across TinyFX's outputs, leaving a trail behind it.",
   "needs": null,
@@ -8616,7 +8616,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/effects/mono/traffic_light.py",
+  "path": "examples/python/effects/mono/traffic_light.py",
   "folder": "effects/mono",
   "does": "Play a traffic light sequence on TinyFX's outputs.",
   "needs": null,
@@ -8625,7 +8625,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/function/count_taps.py",
+  "path": "examples/python/function/count_taps.py",
   "folder": "function",
   "does": "Count taps of TinyFX's Boot button, including the ones that happen while the board is busy, and show the count on its mono outputs.",
   "needs": null,
@@ -8635,7 +8635,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/function/read_button.py",
+  "path": "examples/python/function/read_button.py",
   "folder": "function",
   "does": "Show the state of TinyFX's Boot button on its RGB output.",
   "needs": null,
@@ -8644,7 +8644,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/function/sensor_meter.py",
+  "path": "examples/python/function/sensor_meter.py",
   "folder": "function",
   "does": "Use TinyFX's mono outputs as a bargraph to show the voltage measured from a sensor attached to the sensor connector.",
   "needs": null,
@@ -8654,7 +8654,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/function/voltage_meter.py",
+  "path": "examples/python/function/voltage_meter.py",
   "folder": "function",
   "does": "Use TinyFX's mono outputs as a bargraph to show the voltage that is powering the board.",
   "needs": null,
@@ -8663,7 +8663,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/infrared/colour/control_hsv_direct.py",
+  "path": "examples/python/infrared/colour/control_hsv_direct.py",
   "folder": "infrared/colour",
   "does": "Set the colour of Tiny FX's onboard RGB LED using the number buttons on the Pimoroni Aye Arr Remote, and change its hue, saturation, and value using the directional buttons.",
   "needs": null,
@@ -8673,7 +8673,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/infrared/colour/control_hsv_fx.py",
+  "path": "examples/python/infrared/colour/control_hsv_fx.py",
   "folder": "infrared/colour",
   "does": "Set the colour of Tiny FX's onboard RGB LED using the number buttons on the Pimoroni Aye Arr Remote, and change its hue, saturation, and value using the directional buttons.",
   "needs": null,
@@ -8684,7 +8684,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/infrared/colour/control_rainbow.py",
+  "path": "examples/python/infrared/colour/control_rainbow.py",
   "folder": "infrared/colour",
   "does": "Play a rainbow effect on TinyFX's RGB output that is controllable by the directional buttons on a Pimoroni Aye Arr Remote.",
   "needs": null,
@@ -8695,7 +8695,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/infrared/colour/control_rgb_direct.py",
+  "path": "examples/python/infrared/colour/control_rgb_direct.py",
   "folder": "infrared/colour",
   "does": "Set the colour of Tiny FX's onboard RGB LED using the number buttons on the Pimoroni Aye Arr Remote.",
   "needs": null,
@@ -8705,7 +8705,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/infrared/colour/control_rgb_fx.py",
+  "path": "examples/python/infrared/colour/control_rgb_fx.py",
   "folder": "infrared/colour",
   "does": "Set the colour of Tiny FX's onboard RGB LED using the number buttons on the Pimoroni Aye Arr Remote.",
   "needs": null,
@@ -8716,7 +8716,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/infrared/mono/control_channels.py",
+  "path": "examples/python/infrared/mono/control_channels.py",
   "folder": "infrared/mono",
   "does": "Turn each of Tiny FX's mono outputs on and off by pressing the number buttons on the Pimoroni Aye Arr Remote, and hold to adjust their brightness.",
   "needs": null,
@@ -8726,7 +8726,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/infrared/mono/control_pulse_wave.py",
+  "path": "examples/python/infrared/mono/control_pulse_wave.py",
   "folder": "infrared/mono",
   "does": "Play a wave of pulses on TinyFX's outputs that is controllable by the directional buttons on a Pimoroni Aye Arr Remote.",
   "needs": null,
@@ -8736,7 +8736,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/infrared/mono/toggle_effects.py",
+  "path": "examples/python/infrared/mono/toggle_effects.py",
   "folder": "infrared/mono",
   "does": "Play effects for each \"postcard\" on the Tales Of The Space Age set, and turn them on and off by pressing the number buttons on the Pimoroni Aye Arr Remote.",
   "needs": null,
@@ -8746,7 +8746,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/qwst/light_level.py",
+  "path": "examples/python/qwst/light_level.py",
   "folder": "qwst",
   "does": "Bring TinyFX's lights up when the room gets dark, read from a light sensor on Qw/ST.",
   "needs": null,
@@ -8756,7 +8756,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/qwst/spirit_level.py",
+  "path": "examples/python/qwst/spirit_level.py",
   "folder": "qwst",
   "does": "Use TinyFX's mono outputs as a spirit level, read from an accelerometer on Qw/ST.",
   "needs": null,
@@ -8767,7 +8767,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/qwst/weather_reading.py",
+  "path": "examples/python/qwst/weather_reading.py",
   "folder": "qwst",
   "does": "Show the temperature on TinyFX's RGB output, read from a weather sensor on Qw/ST.",
   "needs": null,
@@ -8777,7 +8777,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/showcase/rescue_vehicle.py",
+  "path": "examples/python/showcase/rescue_vehicle.py",
   "folder": "showcase",
   "does": "Play an alternating flashing sequence on two of TinyFX's outputs, recreating the effect of rescue vehicle beacons.",
   "needs": null,
@@ -8786,7 +8786,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/showcase/sensor_wave.py",
+  "path": "examples/python/showcase/sensor_wave.py",
   "folder": "showcase",
   "does": "Play a wave of pulses on TinyFX's outputs, who's speed is controlled by a sensor.",
   "needs": null,
@@ -8796,7 +8796,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/showcase/ship_thrusters.py",
+  "path": "examples/python/showcase/ship_thrusters.py",
   "folder": "showcase",
   "does": "Play a set of flickering thruster effects on a model spaceship, with an RGB light used for planetshine underglow.",
   "needs": null,
@@ -8806,7 +8806,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/showcase/space_tales.py",
+  "path": "examples/python/showcase/space_tales.py",
   "folder": "showcase",
   "does": "Play effects for each space themed \"postcard\".",
   "needs": null,
@@ -8815,7 +8815,7 @@ var BOARD_EXAMPLES = [
   ]
  },
  {
-  "path": "examples/showcase/space_tales_with_pir.py",
+  "path": "examples/python/showcase/space_tales_with_pir.py",
   "folder": "showcase",
   "does": "Play effects for each space themed \"postcard\" when someone walks past.",
   "needs": null,

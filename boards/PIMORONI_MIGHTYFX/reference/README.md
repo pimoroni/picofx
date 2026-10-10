@@ -67,7 +67,7 @@ as fast for the same panel.
 ## The examples
 
 `color_wheel_rgb444.py` and `color_wheel_rgb565.py` are the same effect as
-`examples/mighty_fx/examples/screens/color_wheel.py`, built on these drivers
+`examples/mighty_fx/examples/python/screens/graphics/color_wheel.py`, built on these drivers
 instead of `MightyFX`. They construct the SPI peripheral and pins directly, so
 they show everything a driver needs and nothing else.
 

@@ -26,7 +26,7 @@
   "SOUND_THROUGH": "its onboard amplifier",
   "DRIVE_SIZE": "nearly 13MB",
   "COPIED_FILES": "pictures",
-  "EXAMPLE_PROGRAM": "examples/effects/colour/rainbow_wave.py",
+  "EXAMPLE_PROGRAM": "examples/python/effects/colour/rainbow_wave.py",
   "SCREEN_SETTINGS_UNSEEN": "`screenA` and `screenB` describe the screens this file's own entries play on, so a program never sees them",
   "FLASH_COLOUR_ON": "Every output"
  }

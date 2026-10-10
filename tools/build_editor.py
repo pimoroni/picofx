@@ -171,6 +171,8 @@ def board_examples(repo_dir, board):
     if not board["examples"]:
         return json.dumps(found)
     root = os.path.join(repo_dir, board["examples"])
+    # The board carries what is under examples/<board>/ at its own root
+    on_board = "/".join(board["examples"].split("/")[2:])
     for folder, _dirs, files in sorted(os.walk(root)):
         where = os.path.relpath(folder, root).replace(os.sep, "/")
         if where == "." or where.split("/")[0] == "assets":
@@ -183,7 +185,7 @@ def board_examples(repo_dir, board):
             opening = re.search(r'"""\s*(.*?)"""', source, re.DOTALL)
             words = " ".join(opening.group(1).split()) if opening else ""
             first = re.match(r"(.*?\.)(\s|$)", words)
-            example = {"path": "examples/" + where + "/" + name, "folder": where,
+            example = {"path": on_board + "/" + where + "/" + name, "folder": where,
                        "does": first.group(1) if first else words,
                        "needs": EXAMPLE_NEEDS.get(where.split("/")[0]),
                        "uses": uses_of(source, board["example_variable"])}

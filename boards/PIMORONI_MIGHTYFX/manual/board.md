@@ -93,34 +93,34 @@ out1-7 colour=warm: pulse
 
 | Folder | What is in it |
 | --- | --- |
-| `examples/effects` | changing from one set of effects to another as time passes |
-| `examples/effects/mono` | one output at a time, and the effects that travel across several |
-| `examples/effects/colour` | the same in colour, with traffic lights and crossings |
-| `examples/function` | the Boot button, the sensor connector and the supply voltage |
-| `examples/infrared/mono` | effects chosen with an infrared remote |
-| `examples/infrared/colour` | the same in colour |
-| `examples/qwst` | light, tilt and weather from Qw/ST breakouts |
-| `examples/screens/single` | one screen, its backlight, and finding what is attached |
-| `examples/screens/playback` | animated GIFs and slideshows |
-| `examples/screens/graphics` | drawing from code: text, colour wheels, a starfield |
-| `examples/screens/images` | still pictures |
-| `examples/screens/layout` | placing a picture on the screen |
-| `examples/screens/pair` | two screens working together |
-| `examples/screens/hub` | more than two, through a hub |
-| `examples/audio` | playing a wav file |
-| `examples/motors` | driving a pair of motors |
-| `examples/servos` | sweeping a servo on the L connector |
-| `examples/strips` | a rainbow along an LED strip |
-| `examples/gpio` | using SP/CE pins as plain inputs and outputs |
-| `examples/wireless` | colours fetched over WiFi |
-| `examples/showcase` | larger builds that put several of these together |
+| `examples/python/effects` | changing from one set of effects to another as time passes |
+| `examples/python/effects/mono` | one output at a time, and the effects that travel across several |
+| `examples/python/effects/colour` | the same in colour, with traffic lights and crossings |
+| `examples/python/function` | the Boot button, the sensor connector and the supply voltage |
+| `examples/python/infrared/mono` | effects chosen with an infrared remote |
+| `examples/python/infrared/colour` | the same in colour |
+| `examples/python/qwst` | light, tilt and weather from Qw/ST breakouts |
+| `examples/python/screens/single` | one screen, its backlight, and finding what is attached |
+| `examples/python/screens/playback` | animated GIFs and slideshows |
+| `examples/python/screens/graphics` | drawing from code: text, colour wheels, a starfield |
+| `examples/python/screens/images` | still pictures |
+| `examples/python/screens/layout` | placing a picture on the screen |
+| `examples/python/screens/pair` | two screens working together |
+| `examples/python/screens/hub` | more than two, through a hub |
+| `examples/python/audio` | playing a wav file |
+| `examples/python/motors` | driving a pair of motors |
+| `examples/python/servos` | sweeping a servo on the L connector |
+| `examples/python/strips` | a rainbow along an LED strip |
+| `examples/python/gpio` | using SP/CE pins as plain inputs and outputs |
+| `examples/python/wireless` | colours fetched over WiFi |
+| `examples/python/showcase` | larger builds that put several of these together |
 
 Three to start with:
 
 ```entry
-board: program=examples/effects/colour/sweep_trail.py
-board: program=examples/screens/playback/animated_gif.py
-board: program=examples/showcase/flip_dot_sign.py
+board: program=examples/python/effects/colour/sweep_trail.py
+board: program=examples/python/screens/playback/animated_gif.py
+board: program=examples/python/showcase/flip_dot_sign.py
 ```
 
 Anything under `screens`, `audio`, `motors`, `servos`, `strips`, `infrared` or

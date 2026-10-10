@@ -64,22 +64,22 @@ rgb colour=warm: pulse
 
 | Folder | What is in it |
 | --- | --- |
-| `examples/effects/mono` | one output at a time, and the effects that travel across several |
-| `examples/effects/colour` | the RGB output |
-| `examples/function` | the button, the sensor connector and the supply voltage |
-| `examples/infrared/mono` | effects chosen with an infrared remote |
-| `examples/infrared/colour` | the same on the RGB output |
-| `examples/qwst` | light, tilt and weather from Qw/ST breakouts |
-| `examples/audio` | sound alongside the lights |
-| `examples/comms` | several boards working together |
-| `examples/showcase` | larger builds that put several of these together |
+| `examples/python/effects/mono` | one output at a time, and the effects that travel across several |
+| `examples/python/effects/colour` | the RGB output |
+| `examples/python/function` | the button, the sensor connector and the supply voltage |
+| `examples/python/infrared/mono` | effects chosen with an infrared remote |
+| `examples/python/infrared/colour` | the same on the RGB output |
+| `examples/python/qwst` | light, tilt and weather from Qw/ST breakouts |
+| `examples/python/audio` | sound alongside the lights |
+| `examples/python/comms` | several boards working together |
+| `examples/python/showcase` | larger builds that put several of these together |
 
 Three to start with:
 
 ```entry
-board: program=examples/effects/mono/sweep_trail.py
-board: program=examples/effects/colour/rainbow.py
-board: program=examples/showcase/ship_thrusters.py
+board: program=examples/python/effects/mono/sweep_trail.py
+board: program=examples/python/effects/colour/rainbow.py
+board: program=examples/python/showcase/ship_thrusters.py
 ```
 
 Anything under `infrared` or `qwst` needs that hardware attached, and `comms`

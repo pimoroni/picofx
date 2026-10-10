@@ -72,8 +72,8 @@ jobs:
         mkdir -p ${{env.EX_DIR}}
         cp -v -r picofx/examples/${{matrix.basename}}/. ${{env.EX_DIR}}
         rm -v -f ${{env.EX_DIR}}/README.md
-        rm -v -r -f ${{env.EX_DIR}}/examples/audio/photon_sword
-        rm -v -f ${{env.EX_DIR}}/examples/audio/photon_sword.py
+        rm -v -r -f ${{env.EX_DIR}}/examples/python/audio/photon_sword
+        rm -v -f ${{env.EX_DIR}}/examples/python/audio/photon_sword.py
 
     - name: "Append W example content"
       if: matrix.shortname == 'tiny_fx_w'

@@ -13,5 +13,5 @@ rm -v "$TARGET/main.py"
 rm -v "$TARGET/lib/logging.py" "$TARGET/lib/spce.py" "$TARGET/lib/st7789.py"
 rm -r -v "$TARGET/lib/screens"
 
-# The examples and their art are too large for the filesystem the drive leaves
+# The examples and their art go on the FX drive instead, by drive-copyfiles.sh
 rm -r -v "$TARGET/examples"

@@ -14,14 +14,14 @@ For examples that show off the rest of the board's functions, refer to the regul
 These examples requires a `secrets.py` file to be on your board's file system with the credentials of your WiFi network.
 
 ### Random
-[wireless/random.py](examples/wireless/random.py)
+[wireless/random.py](examples/python/wireless/random.py)
 
 Show the state of TinyFX's Boot button on its RGB output.
 Show random colours and patterns obtained from the internet on TinyFX's outputs.
 
 
 ### CheerLights
-[wireless/cheerlights.py](examples/wireless/cheerlights.py)
+[wireless/cheerlights.py](examples/python/wireless/cheerlights.py)
 
 Obtain the current CheerLights colour from the internet and show it on TinyFX's RGB output.
 For more information about CheerLights, visit: [https://cheerlights.com/](https://cheerlights.com/)

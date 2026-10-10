@@ -515,7 +515,7 @@ def draw(canvas, elapsed):
 <p>In a scene, the drawing's clock stops while the scene is away, and a scene with <code>restart</code> runs the whole file again from a blank canvas. The rotation, offset and other screen settings place a drawing as they place a picture, with <code>pixel_double</code> also making the canvas half size, which draws faster and uses a quarter of the memory; a stated <code>width</code> or <code>height</code> is still used as written.</p>
 <p>A drawing can load pictures, <code>picovector.image.load("/faces.png")</code>, best done once in the setup. Name them from the board's own filesystem, with the leading <code>/</code>: this drive comes and goes with the computer, so a picture kept here may be missing just when a scene's <code>restart</code> runs the file again. The drawing itself is safe wherever it lives, read once and kept.</p>
 <p>A drawing may import <code>math</code>, <code>random</code>, <code>time</code> and <code>picovector</code>. The board's own modules stay with the effects running around it, so a program pasted in that reaches for the pins is refused, with a note in <code>errors.txt</code>. A mistake anywhere in the file lands there too, with its line, and a drawing that stops partway keeps its last frame on the screen while everything else carries on.</p>
-<p>The examples under <code>examples/screens/graphics</code> show what PicoVector can draw, and a program that wants the whole board instead of one screen is <a href="#running-your-own-program">a program</a>, not a drawing.</p>
+<p>The examples under <code>examples/python/screens/graphics</code> show what PicoVector can draw, and a program that wants the whole board instead of one screen is <a href="#running-your-own-program">a program</a>, not a drawing.</p>
 <p>The picker offers a drawing on its Screens tab where the drawing's opening string starts with <code>Drawing:</code> and its name, and keeps it out of its programs. It cannot run the drawing, so it shows it by a face instead, which two more lines can set:</p>
 <pre class="python"><code>'''
 Drawing: Rings
@@ -571,7 +571,7 @@ Colour: orange
 </tbody></table></div>
 <p>With <code>reload=auto</code>, saving <code>effects.txt</code> is enough on its own: the board notices the save, takes the drive back for a moment, and plays the new effects, exactly as a single press of <strong>Boot</strong> would. Only a save to <code>effects.txt</code> counts, so copying pictures on never interrupts anything.</p>
 <h3 id="running-your-own-program">Running your own program</h3>
-<p>A program can sit on this drive or on the board's own filesystem, and its name may include folders: it is looked for here first, then on the board, so <code>program=examples/effects/colour/rainbow_wave.py</code> reaches one of the examples the board ships with. Where the name is in both, this drive's copy runs.</p>
+<p>A program can sit on this drive or on the board's own filesystem, and its name may include folders: it is looked for here first, then on the board, so <code>program=examples/python/effects/colour/rainbow_wave.py</code> reaches one of the examples the board ships with. Where the name is in both, this drive's copy runs.</p>
 <p>If it is missing, or stops with an error, the effects run instead and <code>errors.txt</code> says what happened, so a mistyped name never leaves you with a board that does nothing.</p>
 <p>Saving a file that names a program, while the effects play, restarts the board, which then runs the program as it would from power on.</p>
 <p>The effects stop while a program runs, and the board is busy with it, so <strong>Boot</strong> and ejecting do nothing. The drive is shown anyway, even with <code>drive</code> set to <code>manual</code>, so you can still edit <code>effects.txt</code>. With <code>reload=auto</code>, saving it restarts the board, which then plays whatever it now says; without, press <strong>Reset</strong> for the change to take. A program cannot read files from this drive while it runs, so put anything it needs on the board's own filesystem.</p>
@@ -603,32 +603,32 @@ Picture: clock.png
 <div class="scroll"><table>
 <thead><tr><th>Folder</th><th>What is in it</th></tr></thead>
 <tbody>
-<tr><td><code>examples/effects</code></td><td>changing from one set of effects to another as time passes</td></tr>
-<tr><td><code>examples/effects/mono</code></td><td>one output at a time, and the effects that travel across several</td></tr>
-<tr><td><code>examples/effects/colour</code></td><td>the same in colour, with traffic lights and crossings</td></tr>
-<tr><td><code>examples/function</code></td><td>the Boot button, the sensor connector and the supply voltage</td></tr>
-<tr><td><code>examples/infrared/mono</code></td><td>effects chosen with an infrared remote</td></tr>
-<tr><td><code>examples/infrared/colour</code></td><td>the same in colour</td></tr>
-<tr><td><code>examples/qwst</code></td><td>light, tilt and weather from Qw/ST breakouts</td></tr>
-<tr><td><code>examples/screens/single</code></td><td>one screen, its backlight, and finding what is attached</td></tr>
-<tr><td><code>examples/screens/playback</code></td><td>animated GIFs and slideshows</td></tr>
-<tr><td><code>examples/screens/graphics</code></td><td>drawing from code: text, colour wheels, a starfield</td></tr>
-<tr><td><code>examples/screens/images</code></td><td>still pictures</td></tr>
-<tr><td><code>examples/screens/layout</code></td><td>placing a picture on the screen</td></tr>
-<tr><td><code>examples/screens/pair</code></td><td>two screens working together</td></tr>
-<tr><td><code>examples/screens/hub</code></td><td>more than two, through a hub</td></tr>
-<tr><td><code>examples/audio</code></td><td>playing a wav file</td></tr>
-<tr><td><code>examples/motors</code></td><td>driving a pair of motors</td></tr>
-<tr><td><code>examples/servos</code></td><td>sweeping a servo on the L connector</td></tr>
-<tr><td><code>examples/strips</code></td><td>a rainbow along an LED strip</td></tr>
-<tr><td><code>examples/gpio</code></td><td>using SP/CE pins as plain inputs and outputs</td></tr>
-<tr><td><code>examples/wireless</code></td><td>colours fetched over WiFi</td></tr>
-<tr><td><code>examples/showcase</code></td><td>larger builds that put several of these together</td></tr>
+<tr><td><code>examples/python/effects</code></td><td>changing from one set of effects to another as time passes</td></tr>
+<tr><td><code>examples/python/effects/mono</code></td><td>one output at a time, and the effects that travel across several</td></tr>
+<tr><td><code>examples/python/effects/colour</code></td><td>the same in colour, with traffic lights and crossings</td></tr>
+<tr><td><code>examples/python/function</code></td><td>the Boot button, the sensor connector and the supply voltage</td></tr>
+<tr><td><code>examples/python/infrared/mono</code></td><td>effects chosen with an infrared remote</td></tr>
+<tr><td><code>examples/python/infrared/colour</code></td><td>the same in colour</td></tr>
+<tr><td><code>examples/python/qwst</code></td><td>light, tilt and weather from Qw/ST breakouts</td></tr>
+<tr><td><code>examples/python/screens/single</code></td><td>one screen, its backlight, and finding what is attached</td></tr>
+<tr><td><code>examples/python/screens/playback</code></td><td>animated GIFs and slideshows</td></tr>
+<tr><td><code>examples/python/screens/graphics</code></td><td>drawing from code: text, colour wheels, a starfield</td></tr>
+<tr><td><code>examples/python/screens/images</code></td><td>still pictures</td></tr>
+<tr><td><code>examples/python/screens/layout</code></td><td>placing a picture on the screen</td></tr>
+<tr><td><code>examples/python/screens/pair</code></td><td>two screens working together</td></tr>
+<tr><td><code>examples/python/screens/hub</code></td><td>more than two, through a hub</td></tr>
+<tr><td><code>examples/python/audio</code></td><td>playing a wav file</td></tr>
+<tr><td><code>examples/python/motors</code></td><td>driving a pair of motors</td></tr>
+<tr><td><code>examples/python/servos</code></td><td>sweeping a servo on the L connector</td></tr>
+<tr><td><code>examples/python/strips</code></td><td>a rainbow along an LED strip</td></tr>
+<tr><td><code>examples/python/gpio</code></td><td>using SP/CE pins as plain inputs and outputs</td></tr>
+<tr><td><code>examples/python/wireless</code></td><td>colours fetched over WiFi</td></tr>
+<tr><td><code>examples/python/showcase</code></td><td>larger builds that put several of these together</td></tr>
 </tbody></table></div>
 <p>Three to start with:</p>
-<pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">examples/effects/colour/sweep_trail.py</span>
-<span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">examples/screens/playback/animated_gif.py</span>
-<span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">examples/showcase/flip_dot_sign.py</span></code></pre>
+<pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">examples/python/effects/colour/sweep_trail.py</span>
+<span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">examples/python/screens/playback/animated_gif.py</span>
+<span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">examples/python/showcase/flip_dot_sign.py</span></code></pre>
 <p>Anything under <code>screens</code>, <code>audio</code>, <code>motors</code>, <code>servos</code>, <code>strips</code>, <code>infrared</code> or <code>qwst</code> needs that hardware attached, <code>wireless</code> needs a WiFi network, and some of the showcase ones want pictures or a network of their own.</p>
 <p>The full set, with what each one does, is on <a href="https://github.com/pimoroni/picofx">GitHub</a>.</p>
 <h2 id="when-something-is-wrong">When something is wrong</h2>

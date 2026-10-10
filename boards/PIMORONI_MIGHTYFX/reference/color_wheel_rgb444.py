@@ -1,6 +1,6 @@
 # A spinny rainbow wheel, driven by the RGB444 reference driver.
 #
-# Same effect as examples/mighty_fx/examples/screens/color_wheel.py, but built on
+# Same effect as examples/mighty_fx/examples/python/screens/graphics/color_wheel.py, but built on
 # st7789_viper_rgb444 instead of MightyFX, so it shows what the driver needs and
 # nothing else: an SPI peripheral, three pins, and a source image.
 #

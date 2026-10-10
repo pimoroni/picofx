@@ -22,7 +22,7 @@
   "SOUND_THROUGH": "its speaker",
   "DRIVE_SIZE": "2.5MB",
   "COPIED_FILES": "sounds",
-  "EXAMPLE_PROGRAM": "examples/effects/mono/sweep_trail.py",
+  "EXAMPLE_PROGRAM": "examples/python/effects/mono/sweep_trail.py",
   "FLASH_COLOUR_ON": "The RGB output"
  }
 }

@@ -177,7 +177,7 @@ in the file lands there too, with its line, and a drawing that stops partway
 keeps its last frame on the screen while everything else carries on.
 
 <!-- if examples -->
-The examples under `examples/screens/graphics` show what PicoVector can draw,
+The examples under `examples/python/screens/graphics` show what PicoVector can draw,
 and a program that wants the whole board instead of one screen is
 <!-- end -->
 <!-- if not examples -->

@@ -1,6 +1,6 @@
 {
  "name": "Tiny FX",
- "examples": "examples/tiny_fx/examples",
+ "examples": "examples/tiny_fx/examples/python",
  "example_variable": "tiny",
  "outputs": [
   {"name": "out1", "kind": "mono"},
