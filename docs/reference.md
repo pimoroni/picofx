@@ -50,7 +50,7 @@ taps = tiny.boot_taps()
 
 ## Setting the Mono LED Outputs
 
-Tiny FX has six outputs for controlling chains of mono LEDs, labelled **1**, **2**, **3**, **4**, **5**, and **6**. These can be accessed either through the `outputs` list, or by individual properties, which return `PWMLED` objects:
+Tiny FX has six outputs for mono LEDs, labelled **1**, **2**, **3**, **4**, **5**, and **6**, each lighting every LED wired to it together. These can be accessed either through the `outputs` list, or by individual properties, which return `PWMLED` objects:
 
 ```python
 one = tiny.outputs[0]
@@ -79,7 +79,7 @@ time.sleep(1)
 
 ## Setting the RGB LED Output
 
-Tiny FX has a single RGB output for controlling chains of RGB LEDs, labelled **RGB**. This can be accessed through the `rgb` variable, which returns a `RGBLED` object:
+Tiny FX has a single output for non-addressable RGB LEDs, labelled **RGB**, lighting every LED wired to it in the same colour. This can be accessed through the `rgb` variable, which returns a `RGBLED` object:
 
 ```python
 rgb = tiny.rgb
