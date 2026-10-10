@@ -187,7 +187,7 @@ Without `sensor=`, the board leaves the connector alone, and reading `sensor` ra
 
 ## Playing Sound
 
-Mighty FX has a speaker connector, driven by a `WavPlayer` available through `wav`. It plays WAV files and tones, as described in the `WavPlayer` section of the [Tiny FX Library Reference](/docs/reference.md#wavplayer-reference):
+Mighty FX has a speaker connector, driven by a `WavPlayer` available through `wav`. It plays WAV files and tones, as described in the `WavPlayer` section of the [Tiny FX Library Reference](/docs/tiny_fx_reference.md#wavplayer-reference):
 
 ```python
 mighty.wav.play_wav("chime.wav")
@@ -210,7 +210,7 @@ print("Voltage =", round(voltage, 2))
 
 ## Effects System
 
-To make it easier to run multiple effects simultaneously, the `PicoFX` library hands LED control over to players, which each get assigned a range of effects objects: a `ColourPlayer` for the RGB outputs, and a `StripPlayer` for each strip. The program lifecycle is the same as on Tiny FX, described in the [Tiny FX Library Reference](/docs/reference.md#program-lifecycle).
+To make it easier to run multiple effects simultaneously, the `PicoFX` library hands LED control over to players, which each get assigned a range of effects objects: a `ColourPlayer` for the RGB outputs, and a `StripPlayer` for each strip. The program lifecycle is the same as on Tiny FX, described in the [Tiny FX Library Reference](/docs/tiny_fx_reference.md#program-lifecycle).
 
 ```python
 from mighty_fx import MightyFX
