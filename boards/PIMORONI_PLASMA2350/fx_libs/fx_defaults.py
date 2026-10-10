@@ -43,17 +43,14 @@ EFFECTS = """\
 # Written by the FX picker. Everything here can be edited by hand;
 # MANUAL.html on this drive explains every line.
 
-board: reload=auto
-
 rgb: rainbow speed=0.39
 """
 
 README = """\
 Plasma 2350
 ===========
-Edit effects.txt to change what the lights do, then eject this drive and the
-board applies the change straight away. One line per strip, or for the board's
-own LED:
+Edit effects.txt to change what the lights do and save it, and the board plays
+the change a few seconds later. One line per strip, or for the board's own LED:
 
   board: stripDat=60
   stripDat: rainbow_wave speed=0.3
@@ -61,10 +58,9 @@ own LED:
 MANUAL.html on this drive has the rest, and opens in a browser: every effect and
 what it takes, the screen, running a program, and showing scenes in turn.
 
-In a hurry? Save the file and press "Boot" once. The drive disappears and comes
-straight back with the new effects running, so you can keep editing. Ejecting is
-the surer way, since a computer does not always write the file out until then.
-Press "Boot" twice to hide the drive, and twice again to bring it back.
+If a save does not seem to take, press "Boot" once or eject this drive, since a
+computer does not always write the file out straight away. Press "Boot" twice to
+hide the drive, and twice again to bring it back.
 
 Deleting effects.txt restores the default; emptying it leaves the board dark.
 
