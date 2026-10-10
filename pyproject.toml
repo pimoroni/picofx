@@ -33,7 +33,7 @@ include = [
     "docs/*.md",
     "/README.md",
     "/CHANGELOG.md",
-    "/LICENSE.txt"
+    "/LICENSE"
 ]
 
 [tool.hatch.build.targets.wheel]

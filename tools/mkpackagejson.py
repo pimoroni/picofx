@@ -5,18 +5,20 @@ import json
 from pathlib import Path
 
 
-def repo_url(repo_url):
-    if "git@github.com:" not in repo_url and "https://github.com:" not in repo_url and len(repo_url.split("/")) != 2:
-        raise argparse.ArgumentTypeError(f"\"{repo_url}\" is not a valid GitHub URL")
-    repo_url = repo_url.replace("git@github.com:", "")
-    repo_url = repo_url.replace("https://github.com:", "")
-    return repo_url
+def repo_url(remote):
+    """The owner/repo of a GitHub remote, given over SSH, over HTTPS or as owner/repo."""
+    repo = remote.removeprefix("git@github.com:").removeprefix("https://github.com/")
+    repo = repo.removesuffix(".git")
+    if len(repo.split("/")) != 2:
+        raise argparse.ArgumentTypeError(f"\"{remote}\" is not a valid GitHub URL")
+    return repo
 
 parser = argparse.ArgumentParser()
 
 parser.add_argument("-r", "--repo", type=repo_url)
 parser.add_argument("-v", "--ver")
-parser.add_argument("root", type=Path)
+# Each package installs under its own folder name, from where it sits in the repository
+parser.add_argument("packages", type=Path, nargs="+")
 
 args = parser.parse_args()
 
@@ -32,12 +34,11 @@ data.update({
     "urls": [],
 })
 
-for path in args.root.rglob("*"):
-    if path.is_file():
-        relpath = str(path.relative_to(args.root))
-        print(f"Adding {relpath} as github:{args.repo}/src/{relpath}")
-        data["urls"].append(
-            [relpath, f"github:{args.repo}/src/{relpath}"]
-        )
+for package in args.packages:
+    for path in sorted(package.rglob("*.py")):
+        installed = path.relative_to(package.parent).as_posix()
+        url = f"github:{args.repo}/{path.as_posix()}"
+        print(f"Adding {installed} as {url}")
+        data["urls"].append([installed, url])
 
 open("package.json","w").write(json.dumps(data, indent=True))

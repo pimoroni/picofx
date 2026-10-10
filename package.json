@@ -1,12 +1,77 @@
 {
-    "urls": [
-        ["picofx/__init__.py", "github:org/pimoroni/picofx/picofx/__init__.py"],
-        ["picofx/colour/__init__.py", "github:org/pimoroni/picofx/colour/__init__.py"],
-        ["picofx/colour/hsv.py", "github:org/pimoroni/picofx/colour/hsv.py"],
-        ["picofx/colour/rainbow.py", "github:org/pimoroni/picofx/colour/rainbow.py"],
-        ["picofx/colour/rainbow_wave.py", "github:org/pimoroni/picofx/colour/rainbow_wave.py"],
-        ["picofx/colour/rgb.py", "github:org/pimoroni/picofx/colour/rgb.py"],
-        ["picofx/mono/__init__.py", "github:org/pimoroni/picofx/mono/__init__.py"]
-    ],
-    "version": "1.1.1"
+ "urls": [
+  [
+   "picofx/__init__.py",
+   "github:pimoroni/picofx/picofx/__init__.py"
+  ],
+  [
+   "picofx/colour/__init__.py",
+   "github:pimoroni/picofx/picofx/colour/__init__.py"
+  ],
+  [
+   "picofx/colour/blink.py",
+   "github:pimoroni/picofx/picofx/colour/blink.py"
+  ],
+  [
+   "picofx/colour/colour.py",
+   "github:pimoroni/picofx/picofx/colour/colour.py"
+  ],
+  [
+   "picofx/colour/rainbow.py",
+   "github:pimoroni/picofx/picofx/colour/rainbow.py"
+  ],
+  [
+   "picofx/colour/step.py",
+   "github:pimoroni/picofx/picofx/colour/step.py"
+  ],
+  [
+   "picofx/mono/__init__.py",
+   "github:pimoroni/picofx/picofx/mono/__init__.py"
+  ],
+  [
+   "picofx/mono/binary.py",
+   "github:pimoroni/picofx/picofx/mono/binary.py"
+  ],
+  [
+   "picofx/mono/blink.py",
+   "github:pimoroni/picofx/picofx/mono/blink.py"
+  ],
+  [
+   "picofx/mono/flash.py",
+   "github:pimoroni/picofx/picofx/mono/flash.py"
+  ],
+  [
+   "picofx/mono/flicker.py",
+   "github:pimoroni/picofx/picofx/mono/flicker.py"
+  ],
+  [
+   "picofx/mono/none.py",
+   "github:pimoroni/picofx/picofx/mono/none.py"
+  ],
+  [
+   "picofx/mono/pelican.py",
+   "github:pimoroni/picofx/picofx/mono/pelican.py"
+  ],
+  [
+   "picofx/mono/pulse.py",
+   "github:pimoroni/picofx/picofx/mono/pulse.py"
+  ],
+  [
+   "picofx/mono/rand.py",
+   "github:pimoroni/picofx/picofx/mono/rand.py"
+  ],
+  [
+   "picofx/mono/static.py",
+   "github:pimoroni/picofx/picofx/mono/static.py"
+  ],
+  [
+   "picofx/mono/sweep.py",
+   "github:pimoroni/picofx/picofx/mono/sweep.py"
+  ],
+  [
+   "picofx/mono/traffic.py",
+   "github:pimoroni/picofx/picofx/mono/traffic.py"
+  ]
+ ],
+ "version": "1.1.1"
 }
