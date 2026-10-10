@@ -384,6 +384,13 @@ INTERNAL_BUFFER_LENGTH = WAV_BUFFER_LENGTH * 2
 TONE_SAMPLE_RATE = 44_100
 TONE_BITS_PER_SAMPLE = 16
 TONE_FULL_WAVES = 2
+
+# How long a tone or 16-bit WAV takes to fade in or out, where starting or stopping
+# mid-waveform would click
+FADE_MS = 40
+
+# How long a write to the FX drive waits while a sound fades out
+WRITE_HOLD_MS = 500
 ```
 
 
@@ -392,23 +399,31 @@ TONE_FULL_WAVES = 2
 ```python
 # Initialisation
 WavPlayer(id: int,
-          sck_pin: Pin,
-          ws_pin: Pin,
-          sd_pin: Pin,
-          amp_enable: Pin=None,
+          sck_pin: int,
+          ws_pin: int,
+          sd_pin: int,
+          amp_enable: int=None,
           ibuf_len: int=INTERNAL_BUFFER_LENGTH,
-          root: string="/")
+          root: string="/",
+          ibuf_ms: int=None)
 deinit() -> None
 
 # Directories
 set_root(root: string) -> None
 
 # Player Control
-play_wav(wav_file: string | file, loop: bool=False) -> None
+play_wav(wav_file: string | file, loop: bool=False, position: int=0) -> None
 play_tone(frequency: float, amplitude: float, shape: int=TONE_SINE) -> None
 pause() -> None
 resume() -> None
 stop() -> None
 is_playing() -> bool
 is_paused() -> bool
+position() -> int | None
 ```
+
+`ibuf_ms` grows the player's buffer to hold at least that many milliseconds of whatever plays, for a program whose refills can be held up, such as one drawing to screens.
+
+A tone or 16-bit WAV fades in as it starts, and `pause()` and `stop()` fade it out over `FADE_MS` before taking effect, so `is_paused()` turns true once the fade has played out.
+
+`position()` says how far into the current WAV playback has reached, in bytes, or `None` where no WAV is under way. Passing it back to `play_wav()` as `position` picks up from there.
