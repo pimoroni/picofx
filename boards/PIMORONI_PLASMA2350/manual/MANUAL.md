@@ -617,8 +617,8 @@ FOLDER = args[0] if args else "posters"
 The picker's **A program** tab lists every Python file at the top of this
 drive,
 and describes each one by its opening string, the text in
-triple quotes at the top of the file. Its first plain line says what the program
-does, and three more lines tell the picker how to show it:
+triple quotes at the top of the file. Its first sentence says what the program
+does, and these lines tell the picker how to show it:
 
 ```python
 '''
@@ -626,6 +626,7 @@ Program: Big clock
 Shows the time.
 Args: Colour, Seconds
 Picture: clock.png
+Section: Signs and displays
 '''
 ```
 
@@ -633,10 +634,19 @@ Picture: clock.png
 | --- | --- |
 | `Program: Big clock` | names the program, where it would use the file's name |
 | `Args: Colour, Seconds` | gives each argument a box of its own, and writes `args=` from them |
-| `Picture: clock.png` | shows the program by that picture from this drive |
+| `Picture: clock.png` | shows the program by that picture, kept beside it |
+| `Section: Signs and displays` | lists the program in that section, where it would be listed under **On the drive** |
+| `Thumbnail: servo` | draws a servo for a program with no picture, or `motor`, or `outputs` and a pattern such as `outputs rainbow` |
 
-Each is optional. Without `Args`, the picker offers plain boxes to add arguments
-to, and without `Picture`, a plain tile.
+Each is optional. Without `Picture`, the picker shows `clock.png` beside
+`clock.py` where there is one, and `clock-2.png` beside it as a second screen's.
+Without `Args`, a program that reads `sys.argv` is offered plain boxes to add
+arguments to.
+
+A board with a wireless module keeps `secrets.py` at the top of the drive for
+your WiFi network's name and password, and puts an empty one back if it is
+deleted. A program that goes online, importing `network` or `requests`, is listed
+only where the drive holds that file.
 A file whose opening string starts `Drawing:` is [a drawing](#drawing-from-code),
 so it is left out.
 

@@ -91,6 +91,10 @@ class PlasmaFX:
     # Emptied by detect() on a 2350 W, which has no SP/CE connector
     SCREENS = (("screen", "spce_a"),)
 
+    # Whether the board has a wireless module, so the FX drive offers the WiFi credentials and
+    # the programs that go online. Set by detect() on a 2350 W
+    WIRELESS = False
+
     # The 2350 W's wireless module: power enable, data, chip select and clock. None of these
     # pins is connected on the 2350
     WIRELESS_PINS = (23, 24, 25, 29)
@@ -201,6 +205,7 @@ class PlasmaFX:
         """Narrow the declared parts to this board's, before anything reads them. A 2350 W carries its wireless module where the 2350 has its SP/CE connector, so it has no screen port."""
         if cls.__wireless_fitted():
             cls.SCREENS = ()
+            cls.WIRELESS = True
 
     @classmethod
     def __wireless_fitted(cls):
