@@ -10,6 +10,8 @@ This repository is home to the PicoFX library, as well as MicroPython builds for
 - [Introduction](#introduction)
 - [Get Mighty and Tiny FX](#get-mighty-and-tiny-fx)
 - [Programming Mighty and Tiny FX](#programming-mighty-and-tiny-fx)
+- [Changing Effects Without Code](#changing-effects-without-code)
+  - [Configuring WiFi](#configuring-wifi)
 - [Download MicroPython for Mighty and Tiny FX](#download-micropython-for-mighty-and-tiny-fx)
   - [Firmware Only](#firmware-only)
   - [With Libraries and Examples](#with-libraries-and-examples)
@@ -35,18 +37,39 @@ Mighty FX is a programmable, RP2350-based controller board that goes further wit
 
 ## Programming Mighty and Tiny FX
 
-All Mighty and Tiny FX boards come pre-flashed with MicroPython and the libraries and examples needed to get you started.
+All Mighty and Tiny FX boards come pre-flashed with MicroPython and the libraries and examples needed to get you started. Tiny FX runs an example by default, while Mighty FX plays the effects described on its FX drive, which you can change without writing any code (see [Changing Effects Without Code](#changing-effects-without-code)).
 
 To program Mighty and Tiny FX you'll need to use an interpreter such as [Thonny](https://thonny.org/), which is available for Windows, Mac and Linux.
 
 * Connect Mighty or Tiny FX to your computer with a USB-C cable.
 * Make sure you have 'MicroPython (Raspberry Pi Pico)' or 'MicroPython (RP2040)' selected as your interpreter in the bottom right of Thonny.
 * You'll probably also want the 'Files' window open (View > Files), so you can browse the files on the device.
-* Mighty and Tiny FX run an example by default so you'll need to press the stop button in Thonny to interrupt it before you can browse files or run code on the board.
+* Mighty and Tiny FX run something by default, so you'll need to press the stop button in Thonny to interrupt it before you can browse files or run code on the board.
 
 If you're new to working with RP2040 boards, this Learn Guide goes into more detail about how to install and use Thonny.
 
 * [Getting Started with Pico](https://learn.pimoroni.com/article/getting-started-with-pico)
+
+## Changing Effects Without Code
+
+Mighty FX, and Tiny FX running the FX drive firmware, show a drive named "FX" when connected to a computer. Its `effects.txt` file describes what the lights do, and the board plays it at power on.
+
+* Connect your board to your computer with a USB-C cable.
+* A drive named "FX" should appear on your computer.
+* Open `PICKER.html` from the drive in Chrome or Edge to choose effects and save them to the board.
+* Or open `EDITOR.html` to write `effects.txt` with each effect and setting offered as you type, or edit the file in any text editor.
+* Save, and the board plays the change a few seconds later.
+
+`MANUAL.html` on the drive explains every effect and setting, and how to run your own program in place of the effects. Press BOOT twice to hide the drive, and twice again to bring it back.
+
+### Configuring WiFi
+
+On Mighty FX and Tiny FX W running the FX drive firmware:
+
+* Connect your board to your computer with a USB-C cable.
+* A drive named "FX" should appear on your computer.
+* Edit the file `secrets.py` and fill in your WiFi credentials.
+* Programs that go online will now find them.
 
 ## Download MicroPython for Mighty and Tiny FX
 
