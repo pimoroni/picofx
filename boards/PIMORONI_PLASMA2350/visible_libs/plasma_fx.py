@@ -111,7 +111,7 @@ class PlasmaFX:
     # 16-bit words the module takes from power-up
     WIRELESS_TEST_READ = 0xA0044000
 
-    RGB_GAMMA = 2.2
+    RGB_GAMMA = 2.2         # sRGB, for even hues, chosen by eye on a rainbow
 
     # What wake() lights the board's LED to: dim enough to read as alive, not as an effect
     WAKE_LEVEL = 0.1
