@@ -11,6 +11,8 @@ For more information about CheerLights, visit: https://cheerlights.com/
 This example requires a secrets.py file to be on your board's file system with the credentials of your WiFi network.
 
 Press "Boot" to exit the program.
+
+Section: Over WiFi
 """
 
 try:

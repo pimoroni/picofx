@@ -10,4 +10,5 @@ Drawing from code | what the drawing library can do
 With the remote | the effects, steered from the IR remote
 With a sensor | the lights following what a sensor reads
 Sound | lights to a soundtrack
+Over WiFi | the lights following what the internet says
 Moving things | servos and motors
