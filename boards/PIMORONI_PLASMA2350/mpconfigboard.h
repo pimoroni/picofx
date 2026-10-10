@@ -34,14 +34,11 @@ int mp_hal_is_pin_reserved(int n);
 // the spidisplay module's frame conversion. A Python thread would conflict badly with both.
 #define MICROPY_PY_THREAD                       (0)
 
-// USB mass storage exposes only the FX drive's volume, the FAT region sitting between the
-// firmware and the filesystem. Offset and size must agree with the flash split in
-// mpconfigboard.cmake. Defining the offset keeps the standard LittleFS boot; mounting the
-// volume is board code's job. The volume stays invisible to the host until
-// rp2.enable_msc() is called.
+// USB mass storage exposes only the FX drive's volume, the FAT region at the end of flash,
+// whose offset and size mpconfigboard.cmake passes with the rest of the flash split. Defining
+// the offset keeps the standard LittleFS boot; mounting the volume is board code's job. The
+// volume stays invisible to the host until rp2.enable_msc() is called.
 #define MICROPY_HW_USB_MSC                      (1)
-#define MICROPY_HW_USB_MSC_FLASH_OFFSET         (1664 * 1024)
-#define MICROPY_HW_USB_MSC_FLASH_BYTES          (2048 * 1024)
 #define MICROPY_HW_USB_MSC_INQUIRY_VENDOR_STRING   "Pimoroni"
 #define MICROPY_HW_USB_MSC_INQUIRY_PRODUCT_STRING  "Plasma FX Drive"
 
