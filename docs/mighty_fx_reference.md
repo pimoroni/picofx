@@ -12,6 +12,7 @@ This is the library reference for the [Pimoroni Mighty FX](https://shop.pimoroni
   - [LED Strips](#led-strips)
   - [Servos](#servos)
 - [The SP/CE Connectors](#the-spce-connectors)
+- [PWM Channel Sharing](#pwm-channel-sharing)
 - [Using the Sensor Connector](#using-the-sensor-connector)
 - [Playing Sound](#playing-sound)
 - [Reading Voltage](#reading-voltage)
@@ -139,29 +140,64 @@ Mighty FX has two SP/CE connectors, **A** and **B**, each declared for the role 
 | role | what the connector does |
 | --- | --- |
 | `SPCE.SCREEN` | drives screens over its own SPI bus and backlight |
-| `SPCE.MOTOR_DRIVER` | drives a motor driver's two motors and the enable they share |
-| `SPCE.GPIO` | hands its five pins out through the port's `io` |
+| `SPCE.GPIO` | hands its five pins out through the connector's `pins`, for a breakout to be built from |
+| `SPCE.GPIO_PWM` | the same, where the four data lines will be driven by PWM, as a motor driver's are |
 | `SPCE.HUB_SELECTS` | gives its five pins to a Screen Hub on the other connector, as the hub's chip selects |
 
 ```python
 from mighty_fx import MightyFX, SPCE
 
-mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.MOTOR_DRIVER)
+mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.GPIO_PWM)
 ```
 
-Each connector is then available through `spce_a` and `spce_b`, which screens and motor drivers are created against:
+Each connector is then available through `spce_a` and `spce_b`. Screens are created against a `SPCE.SCREEN` connector, and a breakout such as the motor driver from a connector's `pins`:
 
 ```python
-from motor_driver import MotorDriver
+from spce import MotorDriver
 
-driver = MotorDriver(mighty.spce_b)
+driver = MotorDriver(mighty.spce_b.pins)
 driver.enable()
 driver.motor_a.speed(0.5)
 ```
 
-A motor driver drives PWM on its connector's data lines, which some LED outputs share channels with. Those outputs' affected channels report an error if lit, rather than showing the motor's signal.
+With one connector declared `SPCE.SCREEN` and the other `SPCE.HUB_SELECTS`, the board builds a Screen Hub, available through `hub`. Driving screens is covered in the [spidisplay screens reference](https://github.com/pimoroni/spidisplay/blob/main/docs/screens.md).
 
-With one connector declared `SPCE.SCREEN` and the other `SPCE.HUB_SELECTS`, the board builds a Screen Hub, available through `hub`. Driving screens is covered in the [Screens Library Reference](/docs/screens.md).
+
+## PWM Channel Sharing
+
+The RP2350 shares each PWM channel between two GPIOs, and two pins putting PWM on one channel emit the same signal with no error. On Mighty FX these pairs involve two functions:
+
+| Function | GPIO | Shares with | GPIO |
+|---|---|---|---|
+| SP/CE B DC | 24 | Output 4 blue | 8 |
+| SP/CE B CS | 25 | Output 3 red | 9 |
+| SP/CE B SCK | 26 | Output 4 red | 10 |
+| SP/CE B MOSI | 27 | Output 4 green | 11 |
+| SP/CE A DC | 32 | Output 7 green | 40 |
+| SP/CE A CS | 33 | Output 7 blue | 41 |
+| SP/CE A SCK | 34 | Output 7 red | 42 |
+| SP/CE A MOSI | 35 | L and R enable | 43 |
+| SP/CE A backlight | 36 | L connector | 44 |
+| SP/CE B backlight | 37 | R connector | 45 |
+| Output 6 red | 38 | Sensor | 46 |
+
+A connector declared `SPCE.GPIO_PWM` claims its four data lines' channels when the board is created, and each LED channel sharing one becomes a stand-in that stays dark. The first attempt to light one prints why, once, and turning it off is silent:
+
+```
+Output 7's red LED cannot light. GPIO 42 shares a PWM channel with GPIO 34, which SP/CE A holds, being declared SPCE.GPIO_PWM.
+```
+
+Every LED channel has an `in_use_by`, which is `None` when the channel is free to light and otherwise holds that message. An output losing one channel keeps the other two:
+
+```python
+mighty = MightyFX(spce_b=SPCE.GPIO_PWM)
+
+if mighty.three.led_r.in_use_by is None:
+    mighty.three.set_rgb(255, 0, 0)
+mighty.three.led_g.brightness(0.5)      # Output 3 loses only its red
+```
+
+`SPCE.GPIO` claims nothing, so your own PWM on its pins takes the shared channels with no warning. Declare `SPCE.GPIO_PWM` for anything that drives PWM there. A servo on the same side as a screen is refused for the same reason, as described in [Servos](#servos).
 
 
 ## Using the Sensor Connector
