@@ -18,15 +18,18 @@ set(MICROPY_C_HEAP_SIZE 4096)
 # scan into a cmake variable until after this file is read, so the two must agree.
 math(EXPR FLASH_SIZE_BYTES "4 * 1024 * 1024")
 
-# The W variant reserves another half megabyte for the networking firmware, and the drive variant
-# two and a half megabytes for the FX drive. This file is read before the variant's own, so the
-# variant is what to test rather than what it defines.
+# The W variants reserve another half megabyte for the networking firmware, and the drive variants
+# two and a half megabytes for the FX drive, or two on the W. This file is read before the
+# variant's own, so the variant is what to test rather than what it defines.
 math(EXPR FIRMWARE_SIZE_BYTES "1 * 1024 * 1024")
 math(EXPR CONFIG_FAT_SIZE_BYTES "0")
 if(MICROPY_BOARD_VARIANT STREQUAL "w")
     math(EXPR FIRMWARE_SIZE_BYTES "1536 * 1024")
 elseif(MICROPY_BOARD_VARIANT STREQUAL "drive")
     math(EXPR CONFIG_FAT_SIZE_BYTES "2560 * 1024")
+elseif(MICROPY_BOARD_VARIANT STREQUAL "w_drive")
+    math(EXPR FIRMWARE_SIZE_BYTES "1536 * 1024")
+    math(EXPR CONFIG_FAT_SIZE_BYTES "2048 * 1024")
 endif()
 
 if(NOT DEFINED MICROPY_HW_FLASH_STORAGE_BYTES)
