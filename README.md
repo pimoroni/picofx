@@ -52,7 +52,7 @@ If you're new to working with RP2040 boards, this Learn Guide goes into more det
 
 ## Changing Effects Without Code
 
-Mighty FX, and Tiny FX running the FX drive firmware, show a drive named "FX" when connected to a computer. Its `effects.txt` file describes what the lights do, and the board plays it at power on.
+Mighty FX, and Tiny FX or Plasma 2350 running the FX drive firmware, show a drive named "FX" when connected to a computer. Its `effects.txt` file describes what the lights do, and the board plays it at power on. Plasma 2350's standard firmware comes from the [plasma repository](https://github.com/pimoroni/plasma), while its FX drive firmware is built here.
 
 * Connect your board to your computer with a USB-C cable.
 * A drive named "FX" should appear on your computer.
@@ -64,7 +64,7 @@ Mighty FX, and Tiny FX running the FX drive firmware, show a drive named "FX" wh
 
 ### Configuring WiFi
 
-On Mighty FX and Tiny FX W running the FX drive firmware:
+On Mighty FX, and Tiny FX W or Plasma 2350 W running the FX drive firmware:
 
 * Connect your board to your computer with a USB-C cable.
 * A drive named "FX" should appear on your computer.
