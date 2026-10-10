@@ -88,4 +88,37 @@ if (EXISTS "${PIMORONI_TOOLS_DIR}/dir2uf2/dir2uf2" AND EXISTS "${PIMORONI_UF2_MA
         DEPENDS "${MICROPY_TARGET}${UF2_EXT}"
         DEPENDS "${MICROPY_TARGET}-staging"
     )
+
+    # Build the FX drive's FAT volume and append it after the filesystem, for a uf2 that writes the
+    # whole board. The firmware declares no block device for the drive, so its place comes from
+    # the flash split in mpconfigboard.cmake
+    if (CONFIG_FAT_SIZE_BYTES GREATER 0 AND EXISTS "${PIMORONI_DRIVE_STAGING_SCRIPT}" AND EXISTS "${PIMORONI_TOOLS_DIR}/ffsmake/build/ffsmake")
+        set(DRIVE_STAGING_DIR "${CMAKE_CURRENT_BINARY_DIR}/drive")
+        math(EXPR DRIVE_ADDRESS "0x10000000 + ${CONFIG_FAT_OFFSET}")
+        math(EXPR DRIVE_SECTORS "${CONFIG_FAT_SIZE_BYTES} / 4096")
+        string(REPLACE ".uf2" "-with-libs-and-examples.uf2" WITH_LIBS_UF2 "${MICROPY_TARGET}${UF2_EXT}")
+        MESSAGE(STATUS "ffsmake: Using root ${DRIVE_STAGING_DIR}, ${DRIVE_SECTORS} sectors at ${DRIVE_ADDRESS}.")
+
+        add_custom_target("${MICROPY_TARGET}-drive-staging" ALL
+            COMMAND ${CMAKE_COMMAND} -E rm -rf "${DRIVE_STAGING_DIR}"
+            COMMAND ${CMAKE_COMMAND} -E make_directory "${DRIVE_STAGING_DIR}"
+            COMMAND CI_BUILD_ROOT=${CI_BUILD_ROOT} bash "${PIMORONI_DRIVE_STAGING_SCRIPT}" "${DRIVE_STAGING_DIR}"
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "ffsmake: Preparing the FX drive's staging directory."
+            DEPENDS ${MICROPY_TARGET})
+
+        # The board labels the volume FX when it formats it, and so does this
+        add_custom_target("${MICROPY_TARGET}-drive.bin" ALL
+            COMMAND "${PIMORONI_TOOLS_DIR}/ffsmake/build/ffsmake" --label=FX --sector-count=${DRIVE_SECTORS} --force --quiet --directory "${DRIVE_STAGING_DIR}" --output "${CMAKE_CURRENT_BINARY_DIR}/drive.bin"
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "ffsmake: Packing the FX drive to drive.bin."
+            DEPENDS "${MICROPY_TARGET}-drive-staging")
+
+        add_custom_target("${MICROPY_TARGET}-drive-full.uf2" ALL
+            COMMAND ${Python_EXECUTABLE} "${PIMORONI_TOOLS_DIR}/dir2uf2/dir2uf2" --fs-start ${DRIVE_ADDRESS} --fs-size ${CONFIG_FAT_SIZE_BYTES} ${UF2_SPARSE} --append-to "${WITH_LIBS_UF2}" --filename drive-full.uf2 "${CMAKE_CURRENT_BINARY_DIR}/drive.bin"
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "dir2uf2: Appending the FX drive to ${WITH_LIBS_UF2}."
+            DEPENDS "${MICROPY_TARGET}-with-libs-and-examples.uf2"
+            DEPENDS "${MICROPY_TARGET}-drive.bin")
+    endif()
 endif()

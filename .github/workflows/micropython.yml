@@ -98,6 +98,13 @@ jobs:
         name: ${{ env.CI_RELEASE_FILENAME }}-with-libs-and-examples.uf2
         path: ${{ env.CI_BUILD_ROOT }}/${{ env.CI_RELEASE_FILENAME }}-with-libs-and-examples.uf2
 
+    - name: "Artifacts: Upload .uf2 (With FX Drive)"
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ env.CI_RELEASE_FILENAME }}-full.uf2
+        path: ${{ env.CI_BUILD_ROOT }}/${{ env.CI_RELEASE_FILENAME }}-full.uf2
+        if-no-files-found: ignore
+
     - name: "Release: Upload .uf2"
       if: github.event_name == 'release'
       uses: softprops/action-gh-release@v3
@@ -109,3 +116,9 @@ jobs:
       uses: softprops/action-gh-release@v3
       with:
         files: ${{ env.CI_BUILD_ROOT }}/${{ env.CI_RELEASE_FILENAME }}-with-libs-and-examples.uf2
+
+    - name: "Release: Upload .uf2 (With FX Drive)"
+      if: github.event_name == 'release'
+      uses: softprops/action-gh-release@v3
+      with:
+        files: ${{ env.CI_BUILD_ROOT }}/${{ env.CI_RELEASE_FILENAME }}-full.uf2

@@ -19,6 +19,7 @@ PIMORONI_QWSTPAD_VERSION="v0.0.1"
 
 PY_DECL_VERSION="v0.0.5"
 DIR2UF2_VERSION="v0.1.0"
+FFSMAKE_VERSION="v0.0.3"
 
 
 function log_success {
@@ -100,6 +101,12 @@ function ci_tools_clone {
     git clone https://github.com/gadgetoid/py_decl -b "$PY_DECL_VERSION" "$CI_BUILD_ROOT/tools/py_decl"
     git clone https://github.com/gadgetoid/dir2uf2 -b "$DIR2UF2_VERSION" "$CI_BUILD_ROOT/tools/dir2uf2"
     python3 -m pip install littlefs-python==0.12.0
+
+    # ffsmake builds the FX drive's FAT volume with MicroPython's own FatFs, so it matches what
+    # the board formats itself
+    git clone https://github.com/gadgetoid/ffsmake -b "$FFSMAKE_VERSION" "$CI_BUILD_ROOT/tools/ffsmake" --recursive
+    cmake -S "$CI_BUILD_ROOT/tools/ffsmake" -B "$CI_BUILD_ROOT/tools/ffsmake/build"
+    cmake --build "$CI_BUILD_ROOT/tools/ffsmake/build"
 }
 
 function ci_micropython_build_mpy_cross {
@@ -211,6 +218,13 @@ function ci_cmake_build {
     elif [ -f "$BUILD_DIR/firmware-romfs-with-libs-and-examples.uf2" ]; then
         log_inform "Copying -romfs-with-libs-and-examples .uf2 to $(pwd)/$CI_RELEASE_FILENAME-with-libs-and-examples.uf2"
         cp "$BUILD_DIR/firmware-romfs-with-libs-and-examples.uf2" $CI_RELEASE_FILENAME-with-libs-and-examples.uf2
+    fi
+
+    # A drive variant's whole board, its FX drive included
+    FULL_UF2=$(ls "$BUILD_DIR"/firmware*-with-libs-and-examples-drive-full.uf2 2>/dev/null | head -1)
+    if [ -n "$FULL_UF2" ]; then
+        log_inform "Copying -drive-full .uf2 to $(pwd)/$CI_RELEASE_FILENAME-full.uf2"
+        cp "$FULL_UF2" $CI_RELEASE_FILENAME-full.uf2
     fi
 }
 
