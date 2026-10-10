@@ -24,7 +24,7 @@
   "SCREEN_NAMING": "A screen on either SP/CE connector is named `screenA` or `screenB`",
   "SCREEN": "screenA",
   "SOUND_THROUGH": "its onboard amplifier",
-  "DRIVE_SIZE": "under 7MB",
+  "DRIVE_SIZE": "nearly 13MB",
   "COPIED_FILES": "pictures",
   "EXAMPLE_PROGRAM": "examples/effects/colour/rainbow_wave.py",
   "SCREEN_SETTINGS_UNSEEN": "`screenA` and `screenB` describe the screens this file's own entries play on, so a program never sees them",

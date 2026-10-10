@@ -46,14 +46,13 @@ set(MICROPY_BLUETOOTH_BTSTACK ON)
 # MICROPY_PY_BLUETOOTH_CYW43 = 1
 set(MICROPY_PY_BLUETOOTH_CYW43 ON)
 
-# The flash split: firmware, the FX drive's FAT volume where the variant carries one, a
-# read-only ROMFS for the fonts, and the filesystem taking what is left. The port reads the
-# last two from here, so mpconfigboard.h does not set them; the volume's offset and size are
-# repeated there as MICROPY_HW_USB_MSC_FLASH_OFFSET/_BYTES, so the two must agree. The volume
-# must come out of this expression, not only out of the ROMFS: the filesystem sits at the end of
-# flash, so a larger storage value moves its base and orphans every existing filesystem.
-# FLASH_SIZE_BYTES repeats PICO_FLASH_SIZE_BYTES from pimoroni_mightyfx.h, which the SDK does
-# not scan into a cmake variable until after this file is read, so the two must agree.
+# The flash split, in order: firmware, a read-only ROMFS for the fonts, the filesystem, and the
+# FX drive's FAT volume to the end of flash where the variant carries one. The filesystem starts
+# at the same place with or without the volume, so the variants differ only in its size. The
+# port reads the filesystem's base and size and the volume's place from here, so
+# mpconfigboard.h sets none of them. FLASH_SIZE_BYTES repeats PICO_FLASH_SIZE_BYTES from
+# pimoroni_mightyfx.h, which the SDK does not scan into a cmake variable until after this file
+# is read, so the two must agree.
 math(EXPR FLASH_SIZE_BYTES "16 * 1024 * 1024")
 math(EXPR FIRMWARE_SIZE_BYTES "2 * 1024 * 1024")
 
@@ -61,7 +60,7 @@ math(EXPR FIRMWARE_SIZE_BYTES "2 * 1024 * 1024")
 # it defines
 math(EXPR CONFIG_FAT_SIZE_BYTES "0")
 if(MICROPY_BOARD_VARIANT STREQUAL "drive")
-    math(EXPR CONFIG_FAT_SIZE_BYTES "6784 * 1024")
+    math(EXPR CONFIG_FAT_SIZE_BYTES "13056 * 1024")
 endif()
 
 if(NOT DEFINED MICROPY_HW_ROMFS_BYTES)
@@ -70,7 +69,19 @@ endif()
 
 if(NOT DEFINED MICROPY_HW_FLASH_STORAGE_BYTES)
     math(EXPR MICROPY_HW_FLASH_STORAGE_BYTES
-         "${FLASH_SIZE_BYTES} - ${FIRMWARE_SIZE_BYTES} - ${CONFIG_FAT_SIZE_BYTES} - ${MICROPY_HW_ROMFS_BYTES}")
+         "${FLASH_SIZE_BYTES} - ${FIRMWARE_SIZE_BYTES} - ${MICROPY_HW_ROMFS_BYTES} - ${CONFIG_FAT_SIZE_BYTES}")
+endif()
+
+# The port puts the ROMFS just below the filesystem's base, so setting the base places both
+math(EXPR FLASH_STORAGE_BASE "${FIRMWARE_SIZE_BYTES} + ${MICROPY_HW_ROMFS_BYTES}")
+list(APPEND MICROPY_DEF_BOARD "MICROPY_HW_FLASH_STORAGE_BASE=${FLASH_STORAGE_BASE}")
+
+if(CONFIG_FAT_SIZE_BYTES GREATER 0)
+    math(EXPR CONFIG_FAT_OFFSET "${FLASH_STORAGE_BASE} + ${MICROPY_HW_FLASH_STORAGE_BYTES}")
+    list(APPEND MICROPY_DEF_BOARD
+        "MICROPY_HW_USB_MSC_FLASH_OFFSET=${CONFIG_FAT_OFFSET}"
+        "MICROPY_HW_USB_MSC_FLASH_BYTES=${CONFIG_FAT_SIZE_BYTES}"
+    )
 endif()
 
 # The port links the SDK's hardware_psram from here and takes the chip select and size from
