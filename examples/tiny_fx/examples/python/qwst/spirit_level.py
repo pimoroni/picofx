@@ -43,7 +43,10 @@ SETTLE = 0.1        # The time to give the sensor to make its first measurement
 
 # Variables
 tiny = TinyFX()                 # Create a new TinyFX object to interact with the board
-imu = LSM6DS3(tiny.i2c)         # The accelerometer, on the board's Qw/ST bus
+try:
+    imu = LSM6DS3(tiny.i2c)     # The accelerometer, on the board's Qw/ST bus
+except OSError:
+    raise RuntimeError("No LSM6DS3 found on Qw/ST. Plug in a multi sensor stick or another LSM6DS3 breakout") from None
 middle = (len(tiny.outputs) - 1) / 2
 
 # The sensor answers with the values its registers hold from reset until it has made a

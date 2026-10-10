@@ -26,10 +26,15 @@ LAMP_COLOUR = (255, 170, 80)    # The warm colour the lamps light in
 LUX_LOW = 60                    # The light level, in Lux, below which the lamps come on
 LUX_HIGH = 70                   # The light level, in Lux, above which they go off again
 INTERVAL = 0.1                  # How often to take a light measurement, in seconds
+LTR559_ADDRESS = 0x23           # The sensor's address on the bus, which is fixed
 
 # Variables
 mighty = MightyFX()                     # Create a new MightyFX object to interact with the board
 player = ColourPlayer(mighty.outputs)   # Create a new effect player to control MightyFX's RGB outputs
+
+# Check if the sensor answers on the bus, since a missing one raises nothing
+if LTR559_ADDRESS not in mighty.i2c.scan():
+    raise RuntimeError("No LTR559 found on Qw/ST. Plug in a multi sensor stick or another LTR559 breakout")
 ltr = BreakoutLTR559(mighty.i2c)        # The light sensor, on the board's Qw/ST bus
 
 # The sensor's first reading is whatever it held before it was asked to measure, so it

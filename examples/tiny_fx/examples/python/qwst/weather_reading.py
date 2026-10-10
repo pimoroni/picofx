@@ -32,7 +32,10 @@ SETTLE = 0.1        # The time to give the sensor to make its first measurement
 # Variables
 tiny = TinyFX()                     # Create a new TinyFX object to interact with the board
 rgb = tiny.rgb                      # The board's RGB output
-bme = BreakoutBME280(tiny.i2c)      # The weather sensor, on the board's Qw/ST bus
+try:
+    bme = BreakoutBME280(tiny.i2c)  # The weather sensor, on the board's Qw/ST bus
+except RuntimeError:
+    raise RuntimeError("No BME280 found on Qw/ST. Plug in a multi sensor stick or another BME280 breakout") from None
 
 # The sensor answers with the values its registers hold from reset until it has made a
 # measurement of its own, and reading again does not hurry it. So one read starts it

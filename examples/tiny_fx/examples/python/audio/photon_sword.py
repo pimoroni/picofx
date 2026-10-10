@@ -19,9 +19,14 @@ Press Boot to power up, swing to make do sounds! SWOOSH SWOOOOSH!!! and press Bo
 # Constants
 TRIGGER_DELTA = 1.0                         # How much movement change is needed to trigger a swinging sound
 ANIMATION_SLEEP = 0.05                      # The time to sleep between each step of the start and finish animations
+MSA301_ADDRESS = 0x26                       # The accelerometer's address on the bus
 
 # Variables
 tiny = TinyFX(wav_root="/photon_sword")     # Create a new TinyFX object and tell with where the wav files are located
+
+# Check if the accelerometer answers on the bus, since a missing one raises nothing
+if MSA301_ADDRESS not in tiny.i2c.scan():
+    raise RuntimeError("No MSA301 found on Qw/ST. Plug in an MSA301 breakout")
 msa = BreakoutMSA301(tiny.i2c)              # Create a new MSA301 object for reading acceleration data
 last_axes = None                            # The last accelerometer values measured
 

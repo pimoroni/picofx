@@ -34,8 +34,11 @@ COLD_HUE = 0.666    # The hue of the coldest output, being blue
 WARM_HUE = 1.0      # The hue of the warmest, being red again at the top of the wheel
 
 # Variables
-mighty = MightyFX()                 # Create a new MightyFX object to interact with the board
-bme = BreakoutBME280(mighty.i2c)    # The weather sensor, on the board's Qw/ST bus
+mighty = MightyFX()                     # Create a new MightyFX object to interact with the board
+try:
+    bme = BreakoutBME280(mighty.i2c)    # The weather sensor, on the board's Qw/ST bus
+except RuntimeError:
+    raise RuntimeError("No BME280 found on Qw/ST. Plug in a multi sensor stick or another BME280 breakout") from None
 
 # The sensor answers with the values its registers hold from reset until it has made a
 # measurement of its own, and reading again does not hurry it. So one read starts it
