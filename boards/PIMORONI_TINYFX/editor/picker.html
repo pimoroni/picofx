@@ -8320,8 +8320,7 @@ function argsWritten(path) {
               .join("|");
 }
 
-// Whether each of the others means anything, a program keeping the board busy while it runs
-function savingMeansSomething() { return !boardSet.program; }
+// Whether keeping the drive hidden means anything, a program having it shown while it runs
 function driveMeansSomething() { return !boardSet.program; }
 
 boardLineSteps.after.push(function (line) {
@@ -8512,10 +8511,9 @@ function saveMenu() {
     menu.appendChild(label);
   }
   choice("Play saves without an eject",
-         "the save that first turns this on still needs one",
-         boardSet.reload, function (on) { boardSet.reload = on; },
-         savingMeansSomething() ? null : "a program keeps the board busy: press Reset to play a " +
-                                         "change");
+         boardSet.program ? "a save restarts the board, which then runs the program afresh"
+                          : "the save that first turns this on still needs one",
+         boardSet.reload, function (on) { boardSet.reload = on; }, null);
   choice("Keep the drive hidden at start", "double-press Boot to bring it back",
          boardSet.driveHidden, function (on) { boardSet.driveHidden = on; },
          driveMeansSomething() ? null : "shown anyway while a program runs");

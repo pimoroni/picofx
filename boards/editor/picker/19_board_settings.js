@@ -34,8 +34,7 @@ function argsWritten(path) {
               .join("|");
 }
 
-// Whether each of the others means anything, a program keeping the board busy while it runs
-function savingMeansSomething() { return !boardSet.program; }
+// Whether keeping the drive hidden means anything, a program having it shown while it runs
 function driveMeansSomething() { return !boardSet.program; }
 
 boardLineSteps.after.push(function (line) {
