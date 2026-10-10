@@ -53,8 +53,8 @@ class TinyFX:
     V_SENSE_GAIN = 2
     V_SENSE_DIODE_CORRECTION = 0.3
 
-    OUTPUT_GAMMA = 2.8
-    RGB_GAMMA = 2.2
+    OUTPUT_GAMMA = 2.8      # Even steps of brightness, chosen by eye on a slow fade
+    RGB_GAMMA = 2.2         # sRGB, for even hues, chosen by eye on a rainbow
 
     # What wake() lights the outputs to: dim enough to read as alive, not as an effect
     WAKE_LEVEL = 0.1

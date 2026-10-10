@@ -98,7 +98,7 @@ class MightyFX:
     # The sense divider is 10k over 10k, so a reading is half the rail
     V_SENSE_GAIN = 2
 
-    RGB_GAMMA = 2.2
+    RGB_GAMMA = 2.2         # sRGB, for even hues, chosen by eye on a rainbow
 
     RGB_COLOUR_NAMES = ("red", "green", "blue")
 
