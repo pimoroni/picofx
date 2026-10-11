@@ -6736,8 +6736,8 @@ function boardLine() {
 var setupOn = false;
 
 // The panels that hold a board fact, and the colour each one's box takes
-var SECTIONS = {outPanel: "outs"};
-STRIPS.forEach(function (strip) { SECTIONS[strip.id + "Panel"] = strip.id; });
+var BOARD_CHIP_CLASSES = {outPanel: "outs"};
+STRIPS.forEach(function (strip) { BOARD_CHIP_CLASSES[strip.id + "Panel"] = strip.id; });
 
 // Whether the board facts in this panel can be changed just now
 function canEdit(panel) { return setupOn; }
@@ -6788,7 +6788,7 @@ function unmark() {
 // A section's coloured box, the chip icon inside it with whatever the fact says
 function boardBox(panel, parts) {
   var box = document.createElement("span");
-  box.className = "chip boardchip " + SECTIONS[panel];
+  box.className = "chip boardchip " + BOARD_CHIP_CLASSES[panel];
   box.title = "How the board is built, which is the same in every scene";
   box.appendChild(boardIcon());
   parts.forEach(function (part) {
@@ -6946,7 +6946,7 @@ function renderLeds(where, run) {
     var says = box.querySelector(".says");
     if (says) box.removeChild(says);
     var chip = box.querySelector(".chip");
-    chip.className = "chip boardchip " + SECTIONS[panel];
+    chip.className = "chip boardchip " + BOARD_CHIP_CLASSES[panel];
     chip.title = "How the board is built, which is the same in every scene";
     chip.insertBefore(boardIcon(), chip.firstChild);
     chip.appendChild(stripDrop(run));
