@@ -59,7 +59,7 @@ SHELL_OPENING = """<!doctype html>
 <head>
 <meta charset="utf-8">
 <title>{}</title>
-</head>
+{}</head>
 <body>
 <p id="opening">Opening the page...</p>
 <script id="packed" type="application/octet-stream">"""
@@ -341,9 +341,11 @@ def embed(name, text, shell=False):
 
 
 def shell_ends(text):
-    """The opening and closing of a page's shell, titled as the page is."""
+    """The opening and closing of a page's shell, with the page's title and icon."""
     title = re.search(r"<title>(.*?)</title>", text)
-    return SHELL_OPENING.format(title.group(1) if title else ""), SHELL_CLOSING
+    icon = re.search(r'<link rel="icon"[^>]*>\n', text)
+    return (SHELL_OPENING.format(title.group(1) if title else "", icon.group(0) if icon else ""),
+            SHELL_CLOSING)
 
 
 def unpacked(module_text):
