@@ -629,6 +629,7 @@ Section: Signs and displays
 <tr><td><code>examples/python/strips</code></td><td>a rainbow along an LED strip</td></tr>
 <tr><td><code>examples/python/gpio</code></td><td>using SP/CE pins as plain inputs and outputs</td></tr>
 <tr><td><code>examples/python/wireless</code></td><td>colours fetched over WiFi</td></tr>
+<tr><td><code>examples/python/comms</code></td><td>several boards working together</td></tr>
 <tr><td><code>examples/python/showcase</code></td><td>larger builds that put several of these together</td></tr>
 </tbody></table></div>
 <p>Three to start with:</p>

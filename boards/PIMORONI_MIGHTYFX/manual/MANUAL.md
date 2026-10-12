@@ -754,6 +754,7 @@ download:
 | `examples/python/strips` | a rainbow along an LED strip |
 | `examples/python/gpio` | using SP/CE pins as plain inputs and outputs |
 | `examples/python/wireless` | colours fetched over WiFi |
+| `examples/python/comms` | several boards working together |
 | `examples/python/showcase` | larger builds that put several of these together |
 
 Three to start with:

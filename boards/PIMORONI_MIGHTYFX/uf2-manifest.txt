@@ -5,6 +5,7 @@ examples/python/effects/colour/*.py
 examples/python/effects/mono/*.py
 examples/python/audio/*.py
 examples/python/function/*.py
+examples/python/comms/*.py
 examples/python/qwst/*.py
 examples/python/infrared/colour/*.py
 examples/python/infrared/mono/*.py
