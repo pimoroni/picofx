@@ -4,8 +4,7 @@ MICROPYTHON_FLAVOUR="pimoroni"
 MICROPYTHON_VERSION="fx-1.29.0"
 
 PIMORONI_PICO_FLAVOUR="pimoroni"
-# patch/spce carries spce.py, which the boards take from here, until it merges into main
-PIMORONI_PICO_VERSION="patch/spce"
+PIMORONI_PICO_VERSION="main"
 
 PIMORONI_AYE_ARR_FLAVOUR="pimoroni"
 PIMORONI_AYE_ARR_VERSION="v1.0.1"
