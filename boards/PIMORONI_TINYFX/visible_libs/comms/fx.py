@@ -1,9 +1,9 @@
 import struct
 from machine import I2CTarget
-from comms.protocol import DEVICE_ID, VERSION
+from comms.protocol import DEVICE_TINY_FX, VERSION
 
 # Imported so a board driving the bus finds it beside the target
-from comms.protocol import TinyFXControl  # noqa: F401
+from comms.protocol import MightyFXControl, TinyFXControl  # noqa: F401
 
 
 # Device Side (receive)
@@ -19,7 +19,7 @@ class TinyFXTarget:
         self.__mem = bytearray(size)
 
         # Initialise the read-only registers
-        self.__mem[0] = DEVICE_ID
+        self.__mem[0] = DEVICE_TINY_FX
         self.__mem[1] = VERSION
 
         # Set up the I2C for receiving commands
@@ -34,7 +34,7 @@ class TinyFXTarget:
             self.__changed = True
 
             # Reload all read-only registers
-            self.__mem[0] = DEVICE_ID
+            self.__mem[0] = DEVICE_TINY_FX
             self.__mem[1] = VERSION
 
     def process_i2c(self):

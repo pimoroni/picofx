@@ -1,3 +1,4 @@
+i2c_target.py
 lib/*.py
 lib/comms/*.py
 lib/picofx/*.py
