@@ -2221,7 +2221,7 @@ chosenSteps.push(function (where, run) {
     var drawn = SETTING_ICONS[label.textContent];
     if (!drawn || label.querySelector(".settingicon")) return;
     if (label.textContent === "Fade") {
-      label.title = "how long each lamp takes to come on and go off, written as ease, a fade " +
+      label.title = "how long each light takes to come on and go off, written as ease, a fade " +
                     "that slows as it arrives";
     }
     label.classList.add("withicon");

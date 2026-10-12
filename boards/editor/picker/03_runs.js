@@ -201,7 +201,7 @@ function sectionAt(run, which) {
 // A stretch playing nothing yet. One on a strip starts at three quarters brightness, a strip or
 // LED panel at full being glaring up close
 function blank(from, to, run) {
-  return {from: from, to: to, look: null, pace: 0.45, mood: 0.5, colour: "#ff8c1a",
+  return {from: from, to: to, look: null, pace: 0.45, mood: 0.5, colour: "#ffffff",
           level: run && run.strip ? 0.75 : 1};
 }
 
@@ -650,7 +650,7 @@ function inkAt(lit) {
 // ---- the gallery, played on the chosen stretch --------------------------------------------
 
 var CARD_LIGHTS = 12;
-var MIDDLING = {pace: 0.5, mood: 0.5, colour: "#ff8c1a"};
+var MIDDLING = {pace: 0.5, mood: 0.5, colour: "#ffffff"};
 var cardFaces = [];
 var cardWalks = {};
 var carrying_lamp = null;
