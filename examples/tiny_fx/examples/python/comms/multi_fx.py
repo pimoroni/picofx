@@ -69,9 +69,11 @@ rgb_player.effects = [rainbow(i) for i in range(len(rgbs))]
 
 # Create a class that can be paired with an EffectPlayer, to update all connected Tiny's
 class Updater:
-    def __update(self, timer):
+    __paired = None     # Nothing follows this in the chain of players
+
+    def __tick(self, timer):
         for i2c_tiny in i2c_tinys:
-            i2c_tiny.__update(timer)
+            i2c_tiny.__tick(timer)
 
 
 player.pair(rgb_player)     # Pair the RGB player with the Mono player so they run in sync

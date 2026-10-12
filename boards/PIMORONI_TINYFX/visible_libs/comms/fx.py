@@ -30,8 +30,9 @@ class TinyFXControl:
         self.__buf = bytearray(4 * 9)
         self.__i2c = i2c
         self.__addr = address
+        self.__paired = None    # The end of an EffectPlayer's chain, which start() walks
 
-        self.__update()
+        self.__tick()
 
     @property
     def one(self):
@@ -63,12 +64,13 @@ class TinyFXControl:
 
         self.rgb.off()
 
-        self.__update()
+        self.__tick()
 
     def shutdown(self):
         self.clear()
 
-    def __update(self, _=None):
+    # Called by the EffectPlayer this is paired with, after its effects have updated
+    def __tick(self, _=None):
         struct.pack_into("f" * 9, self.__buf, 0,
                          self.outputs[0].__brightness, \
                          self.outputs[1].__brightness, \
