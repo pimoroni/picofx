@@ -27,6 +27,7 @@ examples/assets/billboards/landscape/*.png
 examples/assets/rosie/*.png
 examples/assets/traces/*.png
 lib/*.py
+lib/comms/*.py
 lib/screens/*.py
 lib/picofx/*.py
 lib/picofx/colour/*.py
