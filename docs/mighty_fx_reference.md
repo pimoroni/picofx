@@ -130,7 +130,7 @@ mighty.enable_rail()
 mighty.servo_l.value(45)
 ```
 
-Each connector shares a PWM channel with one SP/CE connector's backlight, **L** with SP/CE A and **R** with SP/CE B, so a servo cannot be used on a connector whose SP/CE partner drives a screen. The board says so when created, naming the other connector to use.
+Each offers the methods of a `Servo`. The two are driven together by one of the board's PIO state machines, so they share a frequency, and setting `frequency()` on either sets both. Being on a PIO, they work beside a screen on either SP/CE connector.
 
 
 ## The SP/CE Connectors
@@ -141,24 +141,25 @@ Mighty FX has two SP/CE connectors, **A** and **B**, each declared for the role 
 | --- | --- |
 | `SPCE.SCREEN` | drives screens over its own SPI bus and backlight |
 | `SPCE.GPIO` | hands its five pins out through the connector's `pins`, for a breakout to be built from |
-| `SPCE.GPIO_PWM` | the same, where the four data lines will be driven by PWM, as a motor driver's are |
+| `SPCE.GPIO_PWM` | the same, where your own PWM will drive the four data lines |
 | `SPCE.HUB_SELECTS` | gives its five pins to a Screen Hub on the other connector, as the hub's chip selects |
+| `SPCE.MOTOR_DRIVER` | drives a motor driver breakout, which the board builds and hands out through the connector's `driver` |
 
 ```python
 from mighty_fx import MightyFX, SPCE
 
-mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.GPIO_PWM)
+mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.MOTOR_DRIVER)
 ```
 
-Each connector is then available through `spce_a` and `spce_b`. Screens are created against a `SPCE.SCREEN` connector, and a breakout such as the motor driver from a connector's `pins`:
+Each connector is then available through `spce_a` and `spce_b`. Screens are created against a `SPCE.SCREEN` connector, and a motor driver is ready to use:
 
 ```python
-from spce import MotorDriver
-
-driver = MotorDriver(mighty.spce_b.pins)
+driver = mighty.spce_b.driver
 driver.enable()
 driver.motor_a.speed(0.5)
 ```
+
+The driver's two motors are driven together by one of the board's PIO state machines, so they share a frequency, and `shutdown()` stops them. A breakout of your own is built from a `SPCE.GPIO` or `SPCE.GPIO_PWM` connector's `pins`.
 
 With one connector declared `SPCE.SCREEN` and the other `SPCE.HUB_SELECTS`, the board builds a Screen Hub, available through `hub`. Driving screens is covered in the [spidisplay screens reference](https://github.com/pimoroni/spidisplay/blob/main/docs/screens.md).
 
@@ -197,7 +198,9 @@ if mighty.three.led_r.in_use_by is None:
 mighty.three.led_g.brightness(0.5)      # Output 3 loses only its red
 ```
 
-`SPCE.GPIO` claims nothing, so your own PWM on its pins takes the shared channels with no warning. Declare `SPCE.GPIO_PWM` for anything that drives PWM there. A servo on the same side as a screen is refused for the same reason, as described in [Servos](#servos).
+`SPCE.GPIO` claims nothing, so your own PWM on its pins takes the shared channels with no warning. Declare `SPCE.GPIO_PWM` for anything that drives PWM there. A `SPCE.MOTOR_DRIVER` connector and the servos on **L** and **R** are driven by PIO, so they claim no channel.
+
+The **L** and **R** connectors share their channels with the SP/CE backlights, **L** with SP/CE A and **R** with SP/CE B. Your own PWM on one, in place of a declared servo or strip, fights the backlight of a screen on that side with no warning.
 
 
 ## Using the Sensor Connector
