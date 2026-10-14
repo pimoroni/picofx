@@ -1,7 +1,6 @@
 from aye_arr.nec.remotes import PimoroniRemote
 from mighty_fx import MightyFX, SPCE
 from sensor import IR
-from spce import MotorDriver
 
 from picofx import ColourPlayer
 from picofx.colour import RED, WHITE
@@ -19,7 +18,7 @@ driven, and outputs 3 and 4 are amber indicators, lit on the side being turned t
 so the robot says which way it is about to go.
 
 A motor driver should be connected to SP/CE port A, and an IR Stick to the Sensor
-port. Port B drives one the same way, declared as spce_b and built from mighty.spce_b.pins.
+port. Port B drives one the same way, declared as spce_b and reached as mighty.spce_b.driver.
 
 Actions:
 - UP Button [Hold] = Drive forwards
@@ -37,8 +36,8 @@ DRIVE_SPEED = 0.8       # How fast to drive, from 0.0 to 1.0
 TURN_SPEED = 0.4        # How fast to spin on the spot, slower being easier to aim
 
 # Variables
-mighty = MightyFX(spce_a=SPCE.GPIO_PWM, sensor=IR)
-driver = MotorDriver(mighty.spce_a.pins)    # The driver on the A connector, and the two motors it holds
+mighty = MightyFX(spce_a=SPCE.MOTOR_DRIVER, sensor=IR)
+driver = mighty.spce_a.driver   # The driver on the A connector, and the two motors it holds
 
 driver.enable()         # Power the driver, which the board leaves off until asked
 
@@ -112,8 +111,7 @@ try:
         # This should be done as frequently as possible to avoid inputs feeling sluggish
         receiver.decode()
 
-# The driver is this program's, not the board's, so it stops the motors itself
+# Stop the lights and motors, and turn off all the outputs
 finally:
     player.stop()
-    driver.disable()
     mighty.shutdown()

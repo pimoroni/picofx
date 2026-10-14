@@ -25,6 +25,7 @@ class SPCE:
     GPIO = 1            # The five pins, free to borrow through pins
     GPIO_PWM = 2        # The same, where the four data lines will be driven by PWM
     HUB_SELECTS = 3     # The five pins, as the chip selects a hub addresses panels with
+    MOTOR_DRIVER = 4    # A motor driver breakout, built by the board and handed out as driver
 
 
 class SPCEPort(ScreenPort):
@@ -36,10 +37,10 @@ class SPCEPort(ScreenPort):
     declared it.
     """
 
-    def __init__(self, name, mode, pins):
-        if mode not in (None, SPCE.SCREEN, SPCE.GPIO, SPCE.GPIO_PWM, SPCE.HUB_SELECTS):
+    def __init__(self, name, mode, pins, pio=None, sm=None):
+        if mode not in (None, SPCE.SCREEN, SPCE.GPIO, SPCE.GPIO_PWM, SPCE.HUB_SELECTS, SPCE.MOTOR_DRIVER):
             raise ValueError(f"{mode} is not a valid SP/CE mode. Expected SPCE.SCREEN, "
-                             "SPCE.GPIO, SPCE.GPIO_PWM, SPCE.HUB_SELECTS, or None.")
+                             "SPCE.GPIO, SPCE.GPIO_PWM, SPCE.HUB_SELECTS, SPCE.MOTOR_DRIVER, or None.")
 
         self.name = name
         self.mode = mode
@@ -61,6 +62,13 @@ class SPCEPort(ScreenPort):
         self.__cs_claimed = []
         self.__dc_claimed = []
         self.__panels_reset = False
+
+        # The PIO and state machine a motor driver takes are the board's to give, as it
+        # knows what else holds them
+        self.__driver = None
+        if mode == SPCE.MOTOR_DRIVER:
+            from spce import MotorDriver
+            self.__driver = MotorDriver(self.__pins, pio, sm)
 
     @property
     def pins(self):
@@ -87,6 +95,18 @@ class SPCEPort(ScreenPort):
                              "pins are not a hub's chip selects")
 
         return self.__pins
+
+    @property
+    def driver(self):
+        """The motor driver breakout on this connector, built where it is declared SPCE.MOTOR_DRIVER.
+
+        Its motors are driven by a PIO, so no LED output loses its PWM channel to them.
+        """
+        if self.mode != SPCE.MOTOR_DRIVER:
+            raise ValueError(f"SP/CE {self.name} is not declared SPCE.MOTOR_DRIVER, so it has "
+                             "no motor driver")
+
+        return self.__driver
 
     def __line(self, index):
         if self.mode != SPCE.SCREEN:
@@ -139,11 +159,72 @@ class SPCEPort(ScreenPort):
             super().release()
             return
 
+        # The driver's state machine and DMA channel go back now, as a stale reference
+        # could keep them from the next board's
+        if self.__driver is not None:
+            self.__driver.deinit()
+            self.__driver = None
+
         # Whatever is plugged in next meets the level these pins were left at, and high
         # on a motor input drives it before that thing's own code has run
         if self.__pins is not None:
             for pin in self.__pins:     # All five, another port's chip selects among them
                 pin.init(Pin.IN, Pin.PULL_DOWN)
+
+
+class __ClusterServo:
+    # One servo of a ServoCluster, offering the methods of a Servo
+
+    def __init__(self, cluster, index):
+        self.__cluster = cluster
+        self.__index = index
+
+    def pin(self):
+        return self.__cluster.pin(self.__index)
+
+    def enable(self):
+        self.__cluster.enable(self.__index)
+
+    def disable(self):
+        self.__cluster.disable(self.__index)
+
+    def is_enabled(self):
+        return self.__cluster.is_enabled(self.__index)
+
+    # These read with no argument and set with one, as a Servo's methods do
+    def pulse(self, *args):
+        return self.__cluster.pulse(self.__index, *args)
+
+    def value(self, *args):
+        return self.__cluster.value(self.__index, *args)
+
+    def calibration(self, *args):
+        return self.__cluster.calibration(self.__index, *args)
+
+    # The cluster's, so setting it on either servo sets both
+    def frequency(self, *args):
+        return self.__cluster.frequency(*args)
+
+    def min_value(self):
+        return self.__cluster.min_value(self.__index)
+
+    def mid_value(self):
+        return self.__cluster.mid_value(self.__index)
+
+    def max_value(self):
+        return self.__cluster.max_value(self.__index)
+
+    def to_min(self):
+        self.__cluster.to_min(self.__index)
+
+    def to_mid(self):
+        self.__cluster.to_mid(self.__index)
+
+    def to_max(self):
+        self.__cluster.to_max(self.__index)
+
+    def to_percent(self, *args):
+        self.__cluster.to_percent(self.__index, *args)
 
 
 class MightyFX:
@@ -191,6 +272,13 @@ class MightyFX:
 
     # Strips take PIO 1, leaving PIO 0 to the I2S audio every board builds
     STRIP_PIO = 1
+
+    # Motor drivers and servos take PIO 2 as clusters, one state machine for each SP/CE
+    # port's driver and one the L and R servos share
+    CLUSTER_PIO = 2
+    SPCE_A_MOTOR_SM = 0
+    SPCE_B_MOTOR_SM = 1
+    SERVO_SM = 2
 
     # LEDs built past the length asked for and driven dark: a flash write pauses the
     # transfer sending a frame partway, breaking it apart, and the overrun lands on these
@@ -246,6 +334,7 @@ class MightyFX:
         self.__rail_en = None
         self.__strips = {}
         self.__servos = {}
+        self.__servo_cluster = None
 
         try:
             self.__build(spce_a, spce_b, strip_l, strip_r, servo_l, servo_r, sensor,
@@ -288,8 +377,8 @@ class MightyFX:
         self.monos = [led for output in self.outputs for led in output.leds]
 
         # Each port owns its bus and pins; screens are created against them
-        self.spce_a = SPCEPort("A", spce_a, self.SPCE_A_PINS)
-        self.spce_b = SPCEPort("B", spce_b, self.SPCE_B_PINS)
+        self.spce_a = SPCEPort("A", spce_a, self.SPCE_A_PINS, self.CLUSTER_PIO, self.SPCE_A_MOTOR_SM)
+        self.spce_b = SPCEPort("B", spce_b, self.SPCE_B_PINS, self.CLUSTER_PIO, self.SPCE_B_MOTOR_SM)
 
         # One connector given over to chip selects makes the other's panels a hub, built
         # here. Imported only where a board asked for one.
@@ -333,9 +422,10 @@ class MightyFX:
 
         # A strip carries its length and a servo its calibration, so one setting names
         # the role and what it needs. Anything else is left alone, no pin claimed.
-        for letter, pin, strip, servo, port, backlight in (
-                ("L", self.SERVO_STRIP_L, strip_l, servo_l, self.spce_a, self.SPCE_A_BL_PIN),
-                ("R", self.SERVO_STRIP_R, strip_r, servo_r, self.spce_b, self.SPCE_B_BL_PIN)):
+        declared_servos = []
+        for letter, pin, strip, servo in (
+                ("L", self.SERVO_STRIP_L, strip_l, servo_l),
+                ("R", self.SERVO_STRIP_R, strip_r, servo_r)):
             # Tested against None: ANGULAR is zero, so the commonest calibration reads as no servo
             if strip is not None and servo is not None:
                 raise ValueError(f"The {letter} connector carries one signal, so it cannot be a strip and a servo at once. Declare strip_{letter.lower()} or servo_{letter.lower()}.")
@@ -349,12 +439,20 @@ class MightyFX:
                                                len(self.__strips), pin, color_order=order)
 
             elif servo is not None:
-                # Each connector shares a PWM channel with one screen port's backlight
-                if port.mode == SPCE.SCREEN:
-                    raise ValueError(f"A servo on {letter} cannot run while SP/CE {port.name} drives a screen. GPIO {pin} shares a PWM channel with GPIO {backlight}, which is that port's backlight, so put the servo on the other connector.")
+                declared_servos.append((letter, pin, servo))
 
-                from servo import Servo
-                self.__servos[letter] = Servo(pin) if servo is True else Servo(pin, calibration=servo)
+        # The servos share one cluster, which leaves each connector's PWM channel to the
+        # screen backlight it shares that channel with
+        if declared_servos:
+            from servo import Calibration, ServoCluster
+            self.__servo_cluster = ServoCluster(self.CLUSTER_PIO, self.SERVO_SM,
+                                                [pin for _, pin, _ in declared_servos])
+            for index, (letter, _, servo) in enumerate(declared_servos):
+                # True keeps the cluster's default calibration, and anything else names one
+                if servo is not True:
+                    calibration = servo if isinstance(servo, Calibration) else Calibration(servo)
+                    self.__servo_cluster.calibration(index, calibration)
+                self.__servos[letter] = __ClusterServo(self.__servo_cluster, index)
 
         # The rail stays down until enable_rail(), so nothing on the header is live before then
 
@@ -541,12 +639,24 @@ class MightyFX:
             self.__sensor = None
             gc.collect()
 
+        # A motor left driving keeps going, so each driver stops and lets go of its cluster first
+        for port in ports:
+            if port.mode == SPCE.MOTOR_DRIVER:
+                port.release()
+
         # A servo stops being driven before the rail goes, so it goes limp instead of pushing
         for servo in self.__servos.values():
             servo.disable()
 
         if self.__rail_en is not None:
             self.disable_rail()
+
+        # The servos' state machine and DMA channel go back now, as a stale reference could
+        # keep them from the next board's
+        if self.__servo_cluster is not None:
+            self.__servo_cluster.__del__()
+            self.__servo_cluster = None
+        self.__servos.clear()
 
         # Hand each strip's state machine and DMA channel back now, so the next board's
         # strips can take the same slots. Left to the collector, a stale reference to a
