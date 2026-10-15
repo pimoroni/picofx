@@ -10,8 +10,8 @@ takes that block from the board's manual/board.md, and manual/manual.json gives 
 board's own words for each __TERM__ a part leaves open.
 
 Writes three files beside the board's parts: MANUAL.md, the assembled text, MANUAL.html,
-for opening in a browser while writing, and a frozen module holding the page, which is
-what ships. MANUAL.md and the module are committed and the HTML is not, so the generated
+for opening in a browser while writing, and a frozen module holding the page packed, which
+is what ships. MANUAL.md and the module are committed and the HTML is not, so the generated
 page appears once.
 
 The markdown accepted here is a deliberate subset, since this converter has one
@@ -29,6 +29,8 @@ import json
 import os
 import re
 import sys
+
+from build_editor import embed
 
 TEMPLATE_NAME = "manual_template.html"
 
@@ -64,16 +66,16 @@ PULL = re.compile(r"<!-- board (\w+) -->")
 MARKDOWN_HEADER = ("<!-- Generated from boards/manual/ and this board's own parts by "
                    "tools/build_manual.py. Edit those and rebuild; edits here are lost. -->\n\n")
 
-# The generated module is read by fx_drive and written to the drive verbatim.
-MODULE_HEADER = '''# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
+# The generated module holds the page packed as the editor's pages are, and fx_drive inflates
+# it onto the drive.
+MODULE_HEADER = """# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
 #
 # SPDX-License-Identifier: MIT
 
 # Generated from the manual's parts by tools/build_manual.py. Edit those and rebuild;
 # edits here are lost.
 
-MANUAL = """\\
-'''
+"""
 
 
 def slug(text):
@@ -413,12 +415,6 @@ def build(markdown, tools_dir):
     page = page.replace("{{CONTENTS}}", table_of_contents(contents))
     page = page.replace("{{BODY}}", body)
 
-    # The page is embedded in a triple-quoted Python string, so neither may appear.
-    for forbidden in ('"""', "\\"):
-        if forbidden in page:
-            sys.exit("the page contains {!r}, which the frozen module cannot hold"
-                     .format(forbidden))
-
     # fx_drive compares and writes the page a piece at a time, counting characters
     # against a file counting bytes, so one character has to be one byte.
     if not page.isascii():
@@ -450,8 +446,7 @@ def main():
     module = os.path.join(args.board_dir, "fx_libs", "fx_manual.py")
     with open(module, "w", encoding="utf-8", newline="\n") as f:
         f.write(MODULE_HEADER)
-        f.write(page)
-        f.write('"""\n')
+        f.write(embed("MANUAL", page))
 
     print("{} bytes of page: {}, {} and {}".format(len(page), source, preview, module))
 

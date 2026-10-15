@@ -180,8 +180,8 @@ def unhealed():
 def __heal(fs, name, document):
     """Put a shipped file back on the drive, unless it is already there.
 
-    The document is its text, or a packed page from fx_editor, which is its length,
-    its two ends and its zlib stream. A packed page may also carry the opening and
+    The document is its text, or a packed page from fx_editor or fx_manual, which is its
+    length, its two ends and its zlib stream. A packed page may also carry the opening and
     closing of a page that inflates itself in the browser, and is then written as
     those around its stream in base64, the length and ends being that page's.
     """
