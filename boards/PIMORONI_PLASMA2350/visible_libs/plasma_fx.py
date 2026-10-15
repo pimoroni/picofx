@@ -118,6 +118,20 @@ class PlasmaFX:
 
     def __init__(self, spce_a=None, strip_dat=None, strip_clk=None, strip_apa=None,
                  init_i2c=True, i2c_freq=100000):
+        # What a build claims starts empty, so one that raises partway hands back what it
+        # took before the error reaches the caller. Left to the collector, the boot button's
+        # handler would hold the board, and with it every state machine the board took
+        self.spce_a = None
+        self.__switch = None
+        self.__strips = {}
+
+        try:
+            self.__build(spce_a, strip_dat, strip_clk, strip_apa, init_i2c, i2c_freq)
+        except BaseException:
+            self.__release()
+            raise
+
+    def __build(self, spce_a, strip_dat, strip_clk, strip_apa, init_i2c, i2c_freq):
         # A canvas claim has no object to finalise it, so a run that skipped shutdown()
         # leaves the SRAM held. Nothing of this program holds any yet.
         release_buffers()
@@ -145,7 +159,6 @@ class PlasmaFX:
         # strip_clk. An APA102 strip takes both terminals, data and clock, as strip_apa.
         # A strip is sent a frame only by update(). A refresh of its own would resend it
         # through every flash write, and a frame sent during one is torn
-        self.__strips = {}
         if strip_apa is not None:
             if strip_dat is not None or strip_clk is not None:
                 raise ValueError("An APA102 strip takes both terminals, data and clock, so "
@@ -313,6 +326,10 @@ class PlasmaFX:
 
     def shutdown(self):
         self.clear()
+        self.__release()
+
+    def __release(self):
+        # Hands back what a build claimed, and runs over a build that stopped partway
 
         # Hand each strip's state machine and DMA channel back now, so the next board's
         # strips can take the same slots. Left to the collector, a stale reference to a
@@ -322,10 +339,11 @@ class PlasmaFX:
         self.__strips.clear()
         gc.collect()
 
-        # The next board's interrupt replaces this one's, which otherwise keeps it alive
-        self.__switch.irq(handler=None)
+        # The handler holds this board, so detached, a board left behind can be collected
+        if self.__switch is not None:
+            self.__switch.irq(handler=None)
 
-        if self.spce_a.mode == SPCE.SCREEN:
+        if self.spce_a is not None and self.spce_a.mode == SPCE.SCREEN:
             self.spce_a.backlight_off()
 
             # A panel keeps scanning its frame, so anything later driving the backlight
