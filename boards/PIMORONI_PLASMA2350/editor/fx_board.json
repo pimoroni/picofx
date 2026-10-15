@@ -27,5 +27,6 @@
   "hub": false
  },
  "sound": false,
- "wireless": false
+ "wireless": false,
+ "shell": true
 }
