@@ -18,6 +18,9 @@ to your devices, caused by the boards all trying the power each other.
 All connected Tiny's should be running the i2c_target.py example (save it as main.py
 to have it run from power-up), and each should have a unique address.
 
+A sound played alongside keeps up with about five other boards at an UPDATE_RATE of 30.
+More boards, or a faster rate, leave too little time to feed it.
+
 Press "Boot" to exit the program.
 """
 

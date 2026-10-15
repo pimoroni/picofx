@@ -104,7 +104,8 @@ class TinyFX:
 
         # Set up the wav (and tone) player, if the user wants
         if init_wav:
-            self.__wav = WavPlayer(0, self.I2S_BCLK_PIN, self.I2S_LRCLK_PIN, self.I2S_DATA_PIN, self.AMP_EN_PIN, root=wav_root)
+            self.__wav = WavPlayer(0, self.I2S_BCLK_PIN, self.I2S_LRCLK_PIN, self.I2S_DATA_PIN, self.AMP_EN_PIN,
+                                   root=wav_root, ibuf_ms=100)
 
     @property
     def sensor(self):
