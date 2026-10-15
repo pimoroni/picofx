@@ -376,6 +376,47 @@ class MightyFX:
         # Every output's three channels, since a mono LED on an output connector reaches one of them
         self.monos = [led for output in self.outputs for led in output.leds]
 
+        # Set up the enable for the rail the L and R connectors share
+        self.__rail_en = Pin(self.SERVO_STRIP_EN, Pin.OUT, value=False)
+
+        # A strip carries its length and a servo its calibration, so one setting names
+        # the role and what it needs. Anything else is left alone, no pin claimed.
+        declared_servos = []
+        for letter, pin, strip, servo in (
+                ("L", self.SERVO_STRIP_L, strip_l, servo_l),
+                ("R", self.SERVO_STRIP_R, strip_r, servo_r)):
+            # Tested against None: ANGULAR is zero, so the commonest calibration reads as no servo
+            if strip is not None and servo is not None:
+                raise ValueError(f"The {letter} connector carries one signal, so it cannot be a strip and a servo at once. Declare strip_{letter.lower()} or servo_{letter.lower()}.")
+
+            # A strip is sent a frame only by update(). A refresh of its own would resend it
+            # through every flash write, and a frame sent during one is torn
+            if strip is not None:
+                from plasma import WS2812
+                length, order = self.__strip_declared(letter, strip)
+                self.__strips[letter] = WS2812(length + self.STRIP_FLUSH_LEDS, self.STRIP_PIO,
+                                               len(self.__strips), pin, color_order=order)
+
+            elif servo is not None:
+                declared_servos.append((letter, pin, servo))
+
+        # The servos share one cluster, which leaves each connector's PWM channel to the
+        # screen backlight it shares that channel with. Built before the motor drivers, as
+        # the first cluster on the PIO sets which 32 pins it reaches, and the servos' reach
+        # holds either port's pins too
+        if declared_servos:
+            from servo import Calibration, ServoCluster
+            self.__servo_cluster = ServoCluster(self.CLUSTER_PIO, self.SERVO_SM,
+                                                [pin for _, pin, _ in declared_servos])
+            for index, (letter, _, servo) in enumerate(declared_servos):
+                # True keeps the cluster's default calibration, and anything else names one
+                if servo is not True:
+                    calibration = servo if isinstance(servo, Calibration) else Calibration(servo)
+                    self.__servo_cluster.calibration(index, calibration)
+                self.__servos[letter] = __ClusterServo(self.__servo_cluster, index)
+
+        # The rail stays down until enable_rail(), so nothing on the header is live before then
+
         # Each port owns its bus and pins; screens are created against them
         self.spce_a = SPCEPort("A", spce_a, self.SPCE_A_PINS, self.CLUSTER_PIO, self.SPCE_A_MOTOR_SM)
         self.spce_b = SPCEPort("B", spce_b, self.SPCE_B_PINS, self.CLUSTER_PIO, self.SPCE_B_MOTOR_SM)
@@ -416,45 +457,6 @@ class MightyFX:
         if init_wav:
             self.__wav = WavPlayer(0, self.I2S_BCLK_PIN, self.I2S_LRCLK_PIN, self.I2S_DATA_PIN, self.AMP_EN_PIN,
                                    root=wav_root, ibuf_ms=200)
-
-        # Set up the enable for the rail the L and R connectors share
-        self.__rail_en = Pin(self.SERVO_STRIP_EN, Pin.OUT, value=False)
-
-        # A strip carries its length and a servo its calibration, so one setting names
-        # the role and what it needs. Anything else is left alone, no pin claimed.
-        declared_servos = []
-        for letter, pin, strip, servo in (
-                ("L", self.SERVO_STRIP_L, strip_l, servo_l),
-                ("R", self.SERVO_STRIP_R, strip_r, servo_r)):
-            # Tested against None: ANGULAR is zero, so the commonest calibration reads as no servo
-            if strip is not None and servo is not None:
-                raise ValueError(f"The {letter} connector carries one signal, so it cannot be a strip and a servo at once. Declare strip_{letter.lower()} or servo_{letter.lower()}.")
-
-            # A strip is sent a frame only by update(). A refresh of its own would resend it
-            # through every flash write, and a frame sent during one is torn
-            if strip is not None:
-                from plasma import WS2812
-                length, order = self.__strip_declared(letter, strip)
-                self.__strips[letter] = WS2812(length + self.STRIP_FLUSH_LEDS, self.STRIP_PIO,
-                                               len(self.__strips), pin, color_order=order)
-
-            elif servo is not None:
-                declared_servos.append((letter, pin, servo))
-
-        # The servos share one cluster, which leaves each connector's PWM channel to the
-        # screen backlight it shares that channel with
-        if declared_servos:
-            from servo import Calibration, ServoCluster
-            self.__servo_cluster = ServoCluster(self.CLUSTER_PIO, self.SERVO_SM,
-                                                [pin for _, pin, _ in declared_servos])
-            for index, (letter, _, servo) in enumerate(declared_servos):
-                # True keeps the cluster's default calibration, and anything else names one
-                if servo is not True:
-                    calibration = servo if isinstance(servo, Calibration) else Calibration(servo)
-                    self.__servo_cluster.calibration(index, calibration)
-                self.__servos[letter] = __ClusterServo(self.__servo_cluster, index)
-
-        # The rail stays down until enable_rail(), so nothing on the header is live before then
 
     @classmethod
     def __strip_declared(cls, letter, strip):
