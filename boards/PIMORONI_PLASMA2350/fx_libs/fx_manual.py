@@ -5,585 +5,230 @@
 # Generated from the manual's parts by tools/build_manual.py. Edit those and rebuild;
 # edits here are lost.
 
-MANUAL = """\
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Plasma 2350</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 31.181 31.181'%3E%3Crect fill='%23fff' width='31.181' height='31.181' rx='4.252' ry='4.252'/%3E%3Cpath d='M12.732,4.036H2.361c-.235,0-.425.19-.425.425v22.258c0,.235.19.425.425.425h1.875c.235,0,.425-.19.425-.425v-10.361h7.514c.235,0,.425-.19.425-.425v-1.684c0-.235-.19-.425-.425-.425h-7.514v-7.254h8.071c.235,0,.425-.19.425-.425v-1.684c0-.235-.19-.425-.425-.425Z'/%3E%3Cpath d='M29.199,26.526l-5.675-11.158,5.296-10.719c.065-.132.058-.288-.02-.413-.078-.125-.214-.201-.361-.201h-1.875c-.161,0-.309.091-.38.235l-4.129,8.273-4.074-8.271c-.071-.145-.219-.237-.381-.237h-1.992c-.147,0-.283.076-.361.201-.078.125-.085.28-.021.412l5.268,10.72-5.646,11.159c-.067.132-.06.289.017.415.078.126.214.203.362.203h1.875c.16,0,.307-.09.379-.233l4.484-8.824,4.484,8.824c.072.143.219.233.379.233h1.992c.148,0,.285-.077.362-.203.078-.126.083-.283.017-.415Z'/%3E%3C/svg%3E">
-<style>
-:root {
-  /* Browser-painted furniture, scrollbars included, follows the page rather than
-     defaulting to light. Without it a nested scroller does not match the page one. */
-  color-scheme: light dark;
-
-  --page: #ffffff;
-  --panel: #f5f6f7;
-  --ink: #22262b;
-  --faint: #5d656e;
-  --rule: #dfe3e7;
-  --accent: #0a7f78;
-  --code-ink: #1d4f5c;
-  --entry: #0a7f78;
-
-  /* Three roles, matching the shape at the top of the manual: what is being
-     driven, what drives it, and the values given to either. */
-  --target: #1f6feb;
-  --effect: #0a7f78;
-  --value: #a8500a;
-  --scene: #7b3fb8;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --page: #16191d;
-    --panel: #1e2227;
-    --ink: #dfe3e7;
-    --faint: #9aa3ad;
-    --rule: #2e343b;
-    --accent: #56cfc3;
-    --code-ink: #8fd3e0;
-    --entry: #56cfc3;
-
-    --target: #79b8ff;
-    --effect: #56cfc3;
-    --value: #e8a05c;
-    --scene: #c9a2f0;
-  }
-}
-
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  padding: 0;
-  background: var(--page);
-  color: var(--ink);
-  font: 16px/1.62 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
-
-.page {
-  max-width: 68rem;
-  margin: 0 auto;
-  padding: 2rem 1.25rem 4rem;
-  display: grid;
-  gap: 2.5rem;
-  grid-template-columns: 1fr;
-}
-
-@media (min-width: 62rem) {
-  .page { grid-template-columns: 15rem 1fr; }
-  /* The sidebar stretches to the row so the box inside it has somewhere to travel;
-     a sticky element in a start-aligned grid item cannot move at all. */
-  .contents {
-    position: sticky;
-    top: 2rem;
-    max-height: calc(100vh - 4rem);
-    overflow-y: auto;
-  }
-}
-
-.contents {
-  background: var(--panel);
-  border: 1px solid var(--rule);
-  border-radius: 0.5rem;
-  padding: 1rem 1.1rem;
-  font-size: 0.9rem;
-}
-
-.contents h2 {
-  margin: 0 0 0.6rem;
-  font-size: 0.75rem;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--faint);
-  border: 0;
-}
-
-.contents ul { list-style: none; margin: 0; padding: 0; }
-.contents li { margin: 0.18rem 0; }
-.contents a { color: var(--ink); text-decoration: none; }
-.contents a:hover { color: var(--accent); text-decoration: underline; }
-
-.contents summary {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  cursor: pointer;
-  list-style: none;
-}
-
-.contents summary::-webkit-details-marker { display: none; }
-
-/* The triangle is drawn rather than a glyph, so it turns with the section. */
-.contents summary::before {
-  content: "";
-  flex: none;
-  width: 0;
-  height: 0;
-  border-left: 0.32rem solid var(--faint);
-  border-top: 0.26rem solid transparent;
-  border-bottom: 0.26rem solid transparent;
-  transition: transform 0.12s ease;
-}
-
-.contents details[open] > summary::before { transform: rotate(90deg); }
-
-.contents details > ul {
-  margin: 0.15rem 0 0.4rem 0.95rem;
-  font-size: 0.85rem;
-}
-
-main { min-width: 0; }
-
-h1 {
-  font-size: 2.1rem;
-  line-height: 1.2;
-  margin: 0 0 1rem;
-}
-
-h2 {
-  font-size: 1.45rem;
-  margin: 2.6rem 0 0.9rem;
-  padding-bottom: 0.35rem;
-  border-bottom: 1px solid var(--rule);
-}
-
-h3 {
-  font-size: 1.1rem;
-  margin: 1.9rem 0 0.7rem;
-  color: var(--faint);
-}
-
-h1:target, h2:target, h3:target { scroll-margin-top: 1.5rem; }
-
-p { margin: 0 0 1rem; }
-
-a { color: var(--accent); }
-
-code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.9em;
-  color: var(--code-ink);
-  background: var(--panel);
-  border: 1px solid var(--rule);
-  border-radius: 0.25rem;
-  padding: 0.05rem 0.3rem;
-}
-
-pre {
-  background: var(--panel);
-  border: 1px solid var(--rule);
-  border-left: 3px solid var(--rule);
-  border-radius: 0.4rem;
-  padding: 0.85rem 1rem;
-  margin: 0 0 1.15rem;
-  overflow-x: auto;
-}
-
-pre.entry { border-left-color: var(--entry); }
-
-pre code {
-  background: none;
-  border: 0;
-  padding: 0;
-  color: inherit;
-  font-size: 0.875rem;
-  line-height: 1.55;
-}
-
-.s-target { color: var(--target); }
-.s-effect { color: var(--effect); font-weight: 600; }
-.s-value { color: var(--value); }
-.s-scene { color: var(--scene); font-weight: 600; }
-.s-name { color: var(--ink); }
-.s-punc { color: var(--faint); }
-/* The colon is the one division the format has, so it carries weight the '=' does not */
-.s-colon { color: var(--ink); font-weight: 700; }
-
-.scroll { overflow-x: auto; margin: 0 0 1.3rem; }
-
-table {
-  border-collapse: collapse;
-  width: 100%;
-  font-size: 0.94rem;
-}
-
-th, td {
-  text-align: left;
-  vertical-align: top;
-  padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid var(--rule);
-}
-
-th {
-  font-size: 0.75rem;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--faint);
-  border-bottom-width: 2px;
-}
-
-tbody tr:last-child td { border-bottom: 0; }
-td:first-child { white-space: nowrap; }
-
-footer {
-  grid-column: 1 / -1;
-  margin-top: 1rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--rule);
-  font-size: 0.92rem;
-  color: var(--faint);
-}
-
-footer h2 {
-  font-size: 0.75rem;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--faint);
-  margin: 0 0 0.5rem;
-  padding: 0;
-  border: 0;
-}
-
-main ul { margin: 0 0 1.2rem; padding-left: 1.2rem; }
-main li { margin: 0.25rem 0; }
-
-footer p { margin: 0; }
-</style>
-</head>
-<body>
-<div class="page">
-
-<div class="sidebar">
-<nav class="contents"><h2>Contents</h2><ul>
-<li><a href="#getting-started">Getting started</a></li>
-<li><a href="#the-picker">The picker</a></li>
-<li><a href="#the-editor">The editor</a></li>
-<li><a href="#writing-an-entry">Writing an entry</a></li>
-<li><details><summary><a href="#the-board-s-led">The board's LED</a></summary><ul>
-<li><a href="#setting-an-led">Setting an LED</a></li>
-<li><a href="#fade-and-ease">Fade and ease</a></li>
-</ul></details></li>
-<li><details><summary><a href="#effects">Effects</a></summary><ul>
-<li><a href="#for-any-led">For any LED</a></li>
-<li><a href="#for-any-led-bringing-their-own-colour">For any LED, bringing their own colour</a></li>
-<li><a href="#which-ones-travel">Which ones travel</a></li>
-<li><a href="#traffic-lights-and-crossings">Traffic lights and crossings</a></li>
-<li><a href="#sweep">Sweep</a></li>
-<li><a href="#blinking-through-colours">Blinking through colours</a></li>
-<li><a href="#what-the-settings-mean">What the settings mean</a></li>
-</ul></details></li>
-<li><a href="#led-strips">LED strips</a></li>
-<li><details><summary><a href="#screens">Screens</a></summary><ul>
-<li><a href="#naming-screens">Naming screens</a></li>
-<li><a href="#setting-a-screen">Setting a screen</a></li>
-<li><a href="#pictures">Pictures</a></li>
-<li><a href="#drawing-from-code">Drawing from code</a></li>
-</ul></details></li>
-<li><a href="#scenes">Scenes</a></li>
-<li><details><summary><a href="#the-board">The board</a></summary><ul>
-<li><a href="#running-your-own-program">Running your own program</a></li>
-<li><a href="#your-program-in-the-picker">Your program in the picker</a></li>
-</ul></details></li>
-<li><a href="#when-something-is-wrong">When something is wrong</a></li>
-<li><details><summary><a href="#more-from-pimoroni">More from Pimoroni</a></summary><ul>
-<li><a href="#boards-and-accessories">Boards and accessories</a></li>
-<li><a href="#going-further">Going further</a></li>
-</ul></details></li>
-</ul></nav>
-</div>
-
-<main>
-<h1 id="plasma-2350">Plasma 2350</h1>
-<p>Two LED terminals, a screen connector, and a text file that drives them. Edit <code>effects.txt</code> on this drive and save it, and the board plays the change a few seconds later. No code needed, though there is room for it when you want it.</p>
-<h2 id="getting-started">Getting started</h2>
-<p>Edit <code>effects.txt</code> to change what the lights do and save it, and the board plays the change a few seconds later. The drive disappears for a moment and comes back with the new effects running, so you can keep editing.</p>
-<p>If a save does not seem to take, press <strong>Boot</strong> once or eject this drive, since a computer does not always write the file out straight away. Press <strong>Boot</strong> twice to hide the drive, and twice again to bring it back.</p>
-<p>Deleting <code>effects.txt</code> restores the default; emptying it leaves the board dark.</p>
-<p>While the computer is copying to this drive the effects stand aside, the board's LED glowing a dim white with a brighter blink, and come back a moment after it finishes.</p>
-<p><strong>Would you rather not write the file at all? <code>PICKER.html</code> on this drive writes it for you. See <a href="#the-picker">the picker</a>. <code>EDITOR.html</code> beside it is a place to write it with the names offered as you type. See <a href="#the-editor">the editor</a>.</strong></p>
-<h2 id="the-picker">The picker</h2>
-<p><code>PICKER.html</code> on this drive writes <code>effects.txt</code> for you. Open it in Chrome or Edge, press <strong>Open FX drive</strong> and choose this drive, and the page reads the file the board is playing, so you carry on from where it is. The file it will write is shown at the foot of the page, so nothing about it is hidden.</p>
-<p>Two tabs sit under the page's header. <strong>The effects</strong> sets the strips, the board's LED and the screen: pick a stretch of LEDs, tap a look from the cards to play on it, and slide its settings until it suits. A strip can be cut into stretches that each play a look of their own. <strong>Edit board</strong> sets up what is built: which strips are fitted, how many LEDs each has, and which size the screen is. The pictures and drawings on this drive are offered on the Screens tab, where files can be copied onto the drive and deleted from it. Press the plus to split what you have into scenes that take turns, each with its own looks and pictures; what <strong>Always on</strong> holds plays under every scene.</p>
-<p><strong>A program</strong> runs one of your own programs on this drive in place of the effects. Pick one and save, and the board restarts to run it. <a href="#your-program-in-the-picker">Your program in the picker</a> says how a program of yours describes itself there.</p>
-<p><strong>Save to board</strong> writes the file, and the board picks it up a few seconds later. Its arrow opens the save's settings: untick "Play saves without an eject" and the board waits instead until this drive is ejected, or <strong>Boot</strong> is pressed once, and "Keep the drive hidden at start" is <code>drive=manual</code>. <strong>Check board</strong> reads <code>errors.txt</code> back and shows what the board made of each line. On a Mac each save shows "Disk Not Ejected Properly" once and a Finder window on this drive closes; the drive comes back on its own a few seconds later and the page carries on.</p>
-<p>The page reaches the drive only in Chrome, Edge or another browser built on Chromium. Safari and Firefox cannot write to a drive from a page, so there it says so, and <code>effects.txt</code> can still be changed in any text editor.</p>
-<p>What the picker writes is an ordinary <code>effects.txt</code>: anything it makes can be edited by hand afterwards. A line it cannot write itself is kept as it is, and it asks before replacing a file it has not read.</p>
-<h2 id="the-editor">The editor</h2>
-<p><code>EDITOR.html</code> on this drive is <code>effects.txt</code> in a window that knows the format. Every word is coloured by the part it plays, and as you type it offers what fits where you are: the strips, the board's LED and the screen at the start of a line, the effects after the colon, then that effect's own settings and the values each one takes. A line underneath says what shape a value wants. Tab or Enter takes what is offered, Escape leaves it, and Ctrl+Space asks for it again.</p>
-<p>A name it does not know is underlined, an effect that is not one or a setting the effect does not take. Values are left alone, since a percentage, a colour and a list all live there and the board is the one that reads them. "Put it on the board" writes the file and "Did it work?" reads <code>errors.txt</code> back, as the picker does.</p>
-<p>It offers only what this board provides, so anything the firmware gains appears without the page changing. It saves the way the picker does, in one click from a Chromium browser and by download from Safari or Firefox, and it needs <code>catalogue.js</code> beside it, which is why both live on this drive together.</p>
-<h2 id="writing-an-entry">Writing an entry</h2>
-<pre class="shape"><code><span class="s-target">&lt;LEDs&gt;</span> <span class="s-name">&lt;their settings&gt;</span><span class="s-colon">:</span> <span class="s-effect">&lt;effect&gt;</span> <span class="s-name">&lt;its settings&gt;</span></code></pre>
-<pre class="entry"><code><span class="s-target">stripDat</span><span class="s-colon">:</span> <span class="s-effect">rainbow_wave</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.3</span> <span class="s-name">length</span><span class="s-punc">=</span><span class="s-value">30</span>
-<span class="s-target">rgb</span> <span class="s-name">level</span><span class="s-punc">=</span><span class="s-value">50%</span><span class="s-colon">:</span> <span class="s-effect">pulse</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.6</span></code></pre>
-<p>There is one colon in an entry. Which LEDs, and how bright or what colour they are, go before it. The effect and its own settings go after.</p>
-<p>Settings you leave out take their usual value. A <code>#</code> starts a comment. An entry can run on over several lines so long as the colon is on the first; indenting changes nothing.</p>
-<p>A screen is named the same way and plays pictures instead of lighting up. See <a href="#screens">Screens</a>.</p>
-<h2 id="the-board-s-led">The board's LED</h2>
-<p>The RGB LED on the board is <code>rgb</code>, and takes any effect. The LEDs of a strip are named under <a href="#led-strips">LED strips</a>.</p>
-<pre class="entry"><code><span class="s-target">rgb</span><span class="s-colon">:</span> <span class="s-effect">rainbow</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.3</span></code></pre>
-<h3 id="setting-an-led">Setting an LED</h3>
-<p>Before the colon, and separate from the effect:</p>
-<div class="scroll"><table>
-<thead><tr><th>Setting</th><th>What it does</th><th>If omitted</th></tr></thead>
-<tbody>
-<tr><td><code>level</code></td><td>how bright, 0 to 1, such as 0.5 or 50%</td><td>1</td></tr>
-<tr><td><code>colour</code></td><td>a name or six-digit hex, for effects that bring no colour</td><td>white</td></tr>
-<tr><td><code>fade</code></td><td>seconds to follow the effect, at a steady rate</td><td>follows at once</td></tr>
-<tr><td><code>ease</code></td><td>seconds to follow it, settling in as a bulb does</td><td>follows at once</td></tr>
-</tbody></table></div>
-<pre class="entry"><code><span class="s-target">stripDat</span> <span class="s-name">level</span><span class="s-punc">=</span><span class="s-value">50%</span><span class="s-colon">:</span> <span class="s-effect">pulse</span>
-<span class="s-target">stripDat1-30</span> <span class="s-name">colour</span><span class="s-punc">=</span><span class="s-value">warm</span><span class="s-colon">:</span> <span class="s-effect">flicker</span>
-<span class="s-target">rgb</span> <span class="s-name">colour</span><span class="s-punc">=</span><span class="s-value">ff8040</span><span class="s-colon">:</span> <span class="s-effect">static</span>
-<span class="s-target">stripDat</span> <span class="s-name">ease</span><span class="s-punc">=</span><span class="s-value">0.4</span><span class="s-colon">:</span> <span class="s-effect">blink</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.5</span></code></pre>
-<p>Colours by name: red, orange, yellow, green, cyan, blue, purple, magenta, pink, warm, white, cool, black. Or the hex a colour picker gives you, with its <code>#</code> left off, such as ff8040 for an orange paler than the named one. A <code>#</code> always starts a comment, so one left on a colour hides the rest of the line.</p>
-<h3 id="fade-and-ease">Fade and ease</h3>
-<p><code>fade</code> and <code>ease</code> take the seconds a change takes to get there. <code>fade</code> crosses evenly, which is what a stage light does; <code>ease</code> goes quickly at first and slows as it arrives, which is how a bulb warms and is the one that looks natural on a light switching on and off.</p>
-<p>An LED follows one way or the other, so a line takes one of them and not both. Two numbers divided by <code>|</code> give the rise and the fall their own lengths, a light that comes on quickly and fades out slowly being the usual reason:</p>
-<pre class="entry"><code><span class="s-target">stripDat</span> <span class="s-name">fade</span><span class="s-punc">=</span><span class="s-value">0.8</span><span class="s-colon">:</span> <span class="s-effect">blink</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.5</span>
-<span class="s-target">stripDat1-3</span> <span class="s-name">ease</span><span class="s-punc">=</span><span class="s-value">0.05|1.2</span><span class="s-colon">:</span> <span class="s-effect">blink</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">1</span></code></pre>
-<p>Softening belongs to the LED, not to the effect, so it works on any effect.</p>
-<h2 id="effects">Effects</h2>
-<p>Every setting can be left out, and the board fills in the value shown against it below. The few with none shown have nothing to fall back on, and each is covered where its effect is.</p>
-<h3 id="for-any-led">For any LED</h3>
-<div class="scroll"><table>
-<thead><tr><th>Effect</th><th>Settings</th></tr></thead>
-<tbody>
-<tr><td><code>none</code></td><td></td></tr>
-<tr><td><code>static</code></td><td><code>brightness=1</code></td></tr>
-<tr><td><code>blink</code></td><td><code>speed=1</code> <code>phase=0</code> <code>duty=0.5</code></td></tr>
-<tr><td><code>blink_wave</code></td><td><code>speed=1</code> <code>length=1</code> <code>phase=0</code> <code>duty=0.5</code></td></tr>
-<tr><td><code>flash</code></td><td><code>speed=1</code> <code>flashes=2</code> <code>window=0.5</code> <code>phase=0</code> <code>duty=0.5</code></td></tr>
-<tr><td><code>flash_sequence</code></td><td><code>speed=1</code> <code>length=1</code> <code>flashes=1</code> <code>window=1</code> <code>phase=0</code> <code>duty=0.5</code></td></tr>
-<tr><td><code>flicker</code></td><td><code>brightness=1</code> <code>dimness=0.5</code> <code>bright_min=0.05</code> <code>bright_max=0.1</code> <code>dim_min=0.02</code> <code>dim_max=0.04</code></td></tr>
-<tr><td><code>flicker_each</code></td><td>as <code>flicker</code></td></tr>
-<tr><td><code>pulse</code></td><td><code>speed=1</code> <code>phase=0</code></td></tr>
-<tr><td><code>pulse_wave</code></td><td><code>speed=1</code> <code>length=1</code> <code>phase=0</code></td></tr>
-<tr><td><code>sweep</code></td><td><code>speed=1</code> <code>length=1</code> <code>extent=1</code> <code>hold=0</code></td></tr>
-<tr><td><code>random</code></td><td><code>interval=0.05</code> <code>brightness_min=0</code> <code>brightness_max=1</code></td></tr>
-<tr><td><code>random_each</code></td><td>as <code>random</code></td></tr>
-<tr><td><code>binary_counter</code></td><td><code>interval=0.1</code> <code>count=0</code> <code>step=1</code></td></tr>
-<tr><td><code>traffic_light</code></td><td><code>red_interval=10</code> <code>red_amber_interval=5</code> <code>green_interval=10</code> <code>amber_interval=5</code></td></tr>
-<tr><td><code>pelican_crossing</code></td><td><code>red_interval=8</code> <code>flashing_interval=6</code> <code>green_interval=20</code> <code>amber_interval=3</code></td></tr>
-</tbody></table></div>
-<h3 id="for-any-led-bringing-their-own-colour">For any LED, bringing their own colour</h3>
-<div class="scroll"><table>
-<thead><tr><th>Effect</th><th>Settings</th></tr></thead>
-<tbody>
-<tr><td><code>rgb</code></td><td><code>red=255</code> <code>green=255</code> <code>blue=255</code></td></tr>
-<tr><td><code>hsv</code></td><td><code>hue=0</code> <code>sat=1</code> <code>val=1</code></td></tr>
-<tr><td><code>rainbow</code></td><td><code>speed=1</code> <code>sat=1</code> <code>val=1</code></td></tr>
-<tr><td><code>rainbow_wave</code></td><td><code>speed=1</code> <code>length=1</code> <code>sat=1</code> <code>val=1</code></td></tr>
-<tr><td><code>hue_step</code></td><td><code>interval=1</code> <code>hue=0</code> <code>sat=1</code> <code>val=1</code> <code>steps=6</code></td></tr>
-<tr><td><code>rgb_blink</code></td><td><code>colour</code> <code>speed=1</code> <code>phase=0</code> <code>duty=0.5</code></td></tr>
-</tbody></table></div>
-<h3 id="which-ones-travel">Which ones travel</h3>
-<p>The ones ending <code>_wave</code>, <code>_sequence</code> and <code>_counter</code>, and <code>sweep</code>, travel across the LEDs you name; the rest do the same thing on every one.</p>
-<p>The ones ending <code>_each</code> give every LED its own: <code>flicker_each</code> dips each at its own moments, as flames do, and <code>random_each</code> gives each its own brightness. <code>flicker</code> and <code>random</code> do the same to all of them at once, as one light would:</p>
-<pre class="entry"><code><span class="s-target">stripDat</span> <span class="s-name">colour</span><span class="s-punc">=</span><span class="s-value">ff5a00</span><span class="s-colon">:</span> <span class="s-effect">flicker_each</span> <span class="s-name">dimness</span><span class="s-punc">=</span><span class="s-value">0.6</span></code></pre>
-<p>An effect that drives several LEDs takes them in the order given in its own section below, so naming fewer than it drives lights the first of them and leaves the rest out. Naming more than it drives is a mistake, and <code>errors.txt</code> says so.</p>
-<h3 id="traffic-lights-and-crossings">Traffic lights and crossings</h3>
-<p><code>traffic_light</code> wants three LEDs, and lights them red, amber and green in that order. It switches instantly, so add <code>ease</code> for the lamps of a real signal:</p>
-<pre class="entry"><code><span class="s-target">stripDat1-3</span> <span class="s-name">ease</span><span class="s-punc">=</span><span class="s-value">0.3</span><span class="s-colon">:</span> <span class="s-effect">traffic_light</span></code></pre>
-<p><code>pelican_crossing</code> wants five LEDs: the same three, then the two figures a pedestrian reads, stop and walk. In place of red and amber it flashes the amber and the walking figure together, as a pelican does while a crossing ends. It comes round on its own clock, there being no button to press:</p>
-<pre class="entry"><code><span class="s-target">stripDat1-5</span> <span class="s-name">ease</span><span class="s-punc">=</span><span class="s-value">0.3</span><span class="s-colon">:</span> <span class="s-effect">pelican_crossing</span> <span class="s-name">green_interval</span><span class="s-punc">=</span><span class="s-value">20</span> <span class="s-name">red_interval</span><span class="s-punc">=</span><span class="s-value">8</span></code></pre>
-<p>Three LEDs on <code>pelican_crossing</code> is its traffic lights on their own:</p>
-<pre class="entry"><code><span class="s-target">stripDat1-3</span><span class="s-colon">:</span> <span class="s-effect">pelican_crossing</span></code></pre>
-<h3 id="sweep">Sweep</h3>
-<p><code>sweep</code> is a light that crosses the LEDs and turns back at each end, the back and forth a scanner does. Its <code>extent</code> is how far it reaches from itself, in LEDs, and its <code>speed</code> counts one crossing as the travelling effects count one pass. Its <code>hold</code> waits at each end, in seconds, giving a trail time to clear before the light comes back over it:</p>
-<pre class="entry"><code><span class="s-target">stripDat</span> <span class="s-name">ease</span><span class="s-punc">=</span><span class="s-value">0.4</span><span class="s-colon">:</span> <span class="s-effect">sweep</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">1</span> <span class="s-name">length</span><span class="s-punc">=</span><span class="s-value">60</span> <span class="s-name">extent</span><span class="s-punc">=</span><span class="s-value">1</span> <span class="s-name">hold</span><span class="s-punc">=</span><span class="s-value">1</span></code></pre>
-<p>Give <code>extent</code> a whole number of LEDs, such as 1 or 2. In between it dims as the light passes between two LEDs and brightens as it lands on one, which reads as stepping. 1 is the tightest that travels smoothly.</p>
-<h3 id="blinking-through-colours">Blinking through colours</h3>
-<p><code>rgb_blink</code> takes one colour, or several to blink through in turn, divided by <code>|</code> since a comma would mean one colour for each LED. It has no colour of its own, so give it at least one:</p>
-<pre class="entry"><code><span class="s-target">rgb</span><span class="s-colon">:</span> <span class="s-effect">rgb_blink</span> <span class="s-name">colour</span><span class="s-punc">=</span><span class="s-value">red|warm|ff8040</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.5</span></code></pre>
-<h3 id="what-the-settings-mean">What the settings mean</h3>
-<p><code>speed</code> is cycles a second: 1 goes round once a second, 0.5 once every two, 2 twice a second. A negative speed runs the cycle backwards.</p>
-<p>The settings measured in seconds are <code>interval</code>, <code>hold</code>, flicker's <code>bright_min</code>, <code>bright_max</code>, <code>dim_min</code> and <code>dim_max</code>, and the four intervals <code>traffic_light</code> and <code>pelican_crossing</code> each take. <code>length</code>, <code>flashes</code>, <code>steps</code>, <code>count</code> and <code>step</code> are plain counts, and a negative <code>step</code> counts down.</p>
-<p>The rest run from 0 to 1, written 0.5 or 50% as you prefer. <code>window</code> is one of them, being the share of a cycle the flashes happen in. <code>hue</code> takes degrees as well, written 180deg, which is what a colour picker gives you.</p>
-<p><strong>If you write Python</strong>, an effect of your own can join this list and be written here like any other. The library reference on <a href="https://github.com/pimoroni/picofx/blob/main/picofx/README.md">GitHub</a> says how, under Effects System.</p>
-<h2 id="led-strips">LED strips</h2>
-<p>The two screw terminals are marked <strong>DAT</strong> and <strong>CLK</strong>. A WS2812 strip needs only a data line, so one can go on each terminal: <code>stripDat</code> and <code>stripClk</code>. An APA102 strip needs both, data and clock, so it is the one strip on the board, <code>stripApa</code>. A strip's LEDs take the same effects, colours and levels the board's LED does. Tell the board how long a strip is first, since that is the one thing it cannot work out for itself:</p>
-<pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">stripDat</span><span class="s-punc">=</span><span class="s-value">60</span>
-<span class="s-target">stripDat</span><span class="s-colon">:</span> <span class="s-effect">rainbow_wave</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.3</span></code></pre>
-<div class="scroll"><table>
-<thead><tr><th>Written</th><th>Means</th></tr></thead>
-<tbody>
-<tr><td><code>stripDat</code></td><td>every LED on the strip</td></tr>
-<tr><td><code>stripDat5</code></td><td>one of them</td></tr>
-<tr><td><code>stripDat1-10</code></td><td>the first ten</td></tr>
-<tr><td><code>stripDat60-1</code></td><td>all sixty, the other way round, for a strip mounted backwards</td></tr>
-</tbody></table></div>
-<p><code>stripClk</code> and <code>stripApa</code> are named the same way. An APA102 strip has a brightness of its own for the whole strip, at 50% unless the board line says otherwise, such as <code>stripApa=144|75%</code>. The effects' own levels apply on top of it.</p>
-<p><code>stripApa</code> and the WS2812 strips cannot play at once, since they use the same terminals. A file naming both plays the WS2812 strips and says so in <code>errors.txt</code>.</p>
-<p>Each LED shows a colour of its own, so <code>stripDat5.r</code> is not a thing to write; set <code>colour</code> on the LEDs instead, as the board's LED takes it.</p>
-<p>Most strips take their colours as green, red, then blue, and the board sends them that way. If yours shows another colour where you asked for red, it takes them in another order: write the letters <code>r</code>, <code>g</code> and <code>b</code> after its length in the order it wants them, such as <code>stripDat=60|rgb</code>.</p>
-<h2 id="screens">Screens</h2>
-<h3 id="naming-screens">Naming screens</h3>
-<p>A screen on the SP/CE connector is named <code>screen</code>. A screen cannot say what size it is, so tell the board:</p>
-<pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">screen</span><span class="s-punc">=</span><span class="s-value">1.54</span></code></pre>
-<p>That is a board entry, which sets the board rather than the lights and is one of a handful covered under <a href="#the-board">The board</a>.</p>
-<p>The sizes are 2.8 and 1.54, and a screen plays nothing until its size is given. Changing it needs the board turned off and on again before the new size takes.</p>
-<h3 id="setting-a-screen">Setting a screen</h3>
-<p>Before the colon, and separate from what it plays:</p>
-<div class="scroll"><table>
-<thead><tr><th>Setting</th><th>What it does</th><th>If omitted</th></tr></thead>
-<tbody>
-<tr><td><code>rotation</code></td><td>0, 90, 180 or 270, for how the screen is mounted</td><td>0</td></tr>
-<tr><td><code>backlight</code></td><td>how brightly it is lit, 0 to 1, such as 0.5 or 50%</td><td>1</td></tr>
-<tr><td><code>mirror</code></td><td>true to flip the picture left to right</td><td>no</td></tr>
-<tr><td><code>offset</code></td><td>where to put the picture, as <code>x|y</code></td><td>centred</td></tr>
-<tr><td><code>background</code></td><td>the colour around it, or <code>bg</code> for short</td><td>black</td></tr>
-<tr><td><code>pixel_double</code></td><td>true to draw each pixel twice as wide and tall, so a half size picture fills the screen</td><td>no</td></tr>
-<tr><td><code>tile</code></td><td><code>repeat</code> or <code>mirror</code> to fill the screen with copies of the picture, as <code>across|down</code></td><td>off</td></tr>
-</tbody></table></div>
-<pre class="entry"><code><span class="s-target">screen</span> <span class="s-name">rotation</span><span class="s-punc">=</span><span class="s-value">90</span><span class="s-colon">:</span> <span class="s-effect">gif</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">"clock.gif"</span>
-<span class="s-target">screen</span> <span class="s-name">offset</span><span class="s-punc">=</span><span class="s-value">*|20</span> <span class="s-name">bg</span><span class="s-punc">=</span><span class="s-value">black</span><span class="s-colon">:</span> <span class="s-effect">image</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">logo.png</span>
-<span class="s-target">screen</span> <span class="s-name">tile</span><span class="s-punc">=</span><span class="s-value">repeat</span><span class="s-colon">:</span> <span class="s-effect">image</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">bricks.png</span></code></pre>
-<p>A picture is centred unless <code>offset</code> puts it somewhere, and a <code>*</code> in place of either number centres that side.</p>
-<p><code>tile</code> fills the screen with a small picture instead of leaving a background around it. <code>repeat</code> lays copies side by side, so a picture drawn to join up at its edges makes a pattern with no seam in it, and <code>mirror</code> turns every other copy round, which joins any picture up whether it was drawn to or not. One value covers both directions and two set them apart, <code>tile=mirror|off</code> spreading a picture across the screen and leaving its height alone.</p>
-<h3 id="pictures">Pictures</h3>
-<div class="scroll"><table>
-<thead><tr><th>Plays</th><th>Settings</th></tr></thead>
-<tbody>
-<tr><td><code>gif</code></td><td><code>file</code> <code>fps</code> <code>interval</code> <code>loop=yes</code> <code>ping_pong=no</code> <code>first_as_last=no</code> <code>hold=0</code></td></tr>
-<tr><td><code>image</code></td><td><code>file</code></td></tr>
-<tr><td><code>sequence</code></td><td><code>folder</code> <code>fps</code> <code>interval</code> <code>loop=yes</code> <code>ping_pong=no</code> <code>first_as_last=no</code> <code>hold=0</code></td></tr>
-</tbody></table></div>
-<pre class="entry"><code><span class="s-target">screen</span><span class="s-colon">:</span> <span class="s-effect">gif</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">"clock.gif"</span>
-<span class="s-target">screen</span><span class="s-colon">:</span> <span class="s-effect">image</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">logo.png</span>
-<span class="s-target">screen</span><span class="s-colon">:</span> <span class="s-effect">sequence</span> <span class="s-name">folder</span><span class="s-punc">=</span><span class="s-value">photos</span> <span class="s-name">interval</span><span class="s-punc">=</span><span class="s-value">30</span></code></pre>
-<p><code>gif</code> plays an animated GIF at the delays it was saved with, <code>image</code> holds one picture, and <code>sequence</code> plays a folder of them in the order their names number them. Pictures can be PNG, JPEG or GIF. There is nothing to play without <code>file</code> or <code>folder</code>, so those two always have to be given.</p>
-<p><code>fps</code> is frames a second and <code>interval</code> is the seconds between them, so use whichever suits: <code>fps=12</code> for an animation, <code>interval=30</code> for a slideshow. Either one replaces the delays the file was saved with, and leaving out both keeps them. <code>loop</code> is true unless you set it false, which stops on the last frame. <code>ping_pong</code> plays back and forth instead of starting over, which suits an animation with two ends, such as an arm flexing.</p>
-<p>An animation drawn to loop has no such ends, its last frame leading back into its first. Add <code>first_as_last=yes</code> for one of those and the whole loop is played in each direction, so a spinning coin winds all the way round and back:</p>
-<pre class="entry"><code><span class="s-target">screen</span><span class="s-colon">:</span> <span class="s-effect">gif</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">"coin.gif"</span> <span class="s-name">ping_pong</span><span class="s-punc">=</span><span class="s-value">yes</span> <span class="s-name">first_as_last</span><span class="s-punc">=</span><span class="s-value">yes</span></code></pre>
-<p><code>hold</code> is the seconds to wait where it turns around, so a ping-pong pauses at each end instead of bouncing straight off. One value serves both ends, or write each with a <code>|</code>:</p>
-<pre class="entry"><code><span class="s-target">screen</span><span class="s-colon">:</span> <span class="s-effect">gif</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">"wave.gif"</span> <span class="s-name">ping_pong</span><span class="s-punc">=</span><span class="s-value">yes</span> <span class="s-name">hold</span><span class="s-punc">=</span><span class="s-value">1</span>
-<span class="s-target">screen</span><span class="s-colon">:</span> <span class="s-effect">gif</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">"wave.gif"</span> <span class="s-name">ping_pong</span><span class="s-punc">=</span><span class="s-value">yes</span> <span class="s-name">hold</span><span class="s-punc">=</span><span class="s-value">1.5|0.5</span></code></pre>
-<p>A file is looked for on this drive first, then on the board itself, and the name may include folders. There is little room here, so pictures usually live on the board.</p>
-<p>The Plasma 2350 W has no SP/CE connector, so it takes no screen, and the picker offers none.</p>
-<p>The panel is mounted upright, 240 wide by 320 tall, so a landscape picture is cropped at its sides unless the line turns it, with <code>rotation=90</code>.</p>
-<p><strong>A limit for now.</strong> The board's memory is small, and what the last file showed can keep its room until a restart. Saving a change from one full-size picture to another is refused with a note in <code>errors.txt</code>; turn the board off and on with the new file saved and it plays. Animations under about 60KB of frames, small pictures, and drawings with <code>pixel_double=true</code> change over without a restart. The lights are never affected.</p>
-<h3 id="drawing-from-code">Drawing from code</h3>
-<p><strong>This one is for Python writers.</strong> A screen can play a drawing instead of a picture: a Python file with one function in it, drawn beside everything else in this file, so the lights keep their effects, and a scene puts the drawing on and off with everything else it holds.</p>
-<div class="scroll"><table>
-<thead><tr><th>Plays</th><th>Settings</th></tr></thead>
-<tbody>
-<tr><td><code>graphics</code></td><td><code>file</code> <code>fps</code> <code>interval</code> <code>width</code> <code>height</code></td></tr>
-</tbody></table></div>
-<pre class="entry"><code><span class="s-target">screen</span><span class="s-colon">:</span> <span class="s-effect">graphics</span> <span class="s-name">file</span><span class="s-punc">=</span><span class="s-value">rings.py</span></code></pre>
-<pre class="python"><code># rings.py
-from picovector import color, shape
-
-def draw(canvas, elapsed):
-    canvas.pen = color.black
-    canvas.clear()
-    canvas.pen = color.rgb(255, 160, 40)
-    canvas.shape(shape.circle(120, 160, 20 + 10 * (elapsed % 3)))</code></pre>
-<p><code>draw</code> is called with a canvas the size of the screen, kept between calls, and the seconds since the drawing started; whatever it has drawn when it returns is what the screen shows. The rest of the file runs once, when the drawing starts, so that is the place to build anything <code>draw</code> uses. <code>fps</code> or <code>interval</code> sets the pace, and leaving both out draws as often as the screen takes a frame.</p>
-<p><code>width</code> and <code>height</code> size the canvas by hand, in pixels, and are honoured as written whatever else is set. A small canvas draws faster and is placed like a small picture, so <code>offset</code> puts it somewhere and <code>tile=repeat</code> fills the screen with it.</p>
-<p>In a scene, the drawing's clock stops while the scene is away, and a scene with <code>restart</code> runs the whole file again from a blank canvas. The rotation, offset and other screen settings place a drawing as they place a picture, with <code>pixel_double</code> also making the canvas half size, which draws faster and uses a quarter of the memory; a stated <code>width</code> or <code>height</code> is still used as written.</p>
-<p>A drawing can load pictures, <code>picovector.image.load("/faces.png")</code>, best done once in the setup. Name them from the board's own filesystem, with the leading <code>/</code>: this drive comes and goes with the computer, so a picture kept here may be missing just when a scene's <code>restart</code> runs the file again. The drawing itself is safe wherever it lives, read once and kept.</p>
-<p>A drawing may import <code>math</code>, <code>random</code>, <code>time</code> and <code>picovector</code>. The board's own modules stay with the effects running around it, so a program pasted in that reaches for the pins is refused, with a note in <code>errors.txt</code>. A mistake anywhere in the file lands there too, with its line, and a drawing that stops partway keeps its last frame on the screen while everything else carries on.</p>
-<p>A program that wants the whole board instead of one screen is <a href="#running-your-own-program">a program</a>, not a drawing.</p>
-<p>The picker offers a drawing on its Screens tab where the drawing's opening string starts with <code>Drawing:</code> and its name, and keeps it out of its programs. It cannot run the drawing, so it shows it by a face instead, which two more lines can set:</p>
-<pre class="python"><code>'''
-Drawing: Rings
-Rings that grow and fade, in the four colours.
-Icon: *
-Colour: orange
-'''</code></pre>
-<p><code>Icon</code> is any one character, an emoji included, and <code>Colour</code> one of the colour words or a hex. A drawing naming neither is shown by its initial, on a colour taken from its name.</p>
-<h2 id="scenes">Scenes</h2>
-<p>A file can hold several sets of effects and show them one after another. A heading in square brackets begins one, and says how long it shows for:</p>
-<pre class="entry"><code><span class="s-scene">[Daytime: 30s]</span>
-<span class="s-target">stripDat</span><span class="s-colon">:</span> <span class="s-effect">rainbow_wave</span> <span class="s-name">speed</span><span class="s-punc">=</span><span class="s-value">0.3</span>
-
-<span class="s-scene">[Night: 2m]</span>
-<span class="s-target">stripDat</span> <span class="s-name">colour</span><span class="s-punc">=</span><span class="s-value">ff5a00</span><span class="s-colon">:</span> <span class="s-effect">flicker_each</span></code></pre>
-<p>The name is everything before the <code>:</code> and may be anything you like, spaces included. The time is in seconds, <code>30s</code>, or in minutes, <code>10m</code>. Scenes take turns in the order they are written, then start again.</p>
-<p>Entries before the first heading are always on, whatever is showing, so anything that should never change goes there:</p>
-<pre class="entry"><code><span class="s-target">rgb</span><span class="s-colon">:</span> <span class="s-effect">static</span> <span class="s-name">brightness</span><span class="s-punc">=</span><span class="s-value">0.2</span></code></pre>
-<p>While a scene shows, an LED it does not name goes dark if any other scene uses it, and is left alone if none of them do. A scene may name an LED that is always on, and takes it over for as long as it shows.</p>
-<p>A screen behaves the same way: its picture stays put but the light goes out while another scene has the board, and comes back when its own returns.</p>
-<p>Add <code>restart</code> to a heading and its effects begin again every time it comes round, instead of carrying on from where they were left:</p>
-<pre class="entry"><code><span class="s-scene">[Beacon: 5s restart]</span>
-<span class="s-target">stripDat1-3</span><span class="s-colon">:</span> <span class="s-effect">flash_sequence</span> <span class="s-name">flashes</span><span class="s-punc">=</span><span class="s-value">3</span></code></pre>
-<p>The board entry belongs outside every scene. A single scene with no time simply shows for ever, and ejecting this drive always starts again at the first scene.</p>
-<h2 id="the-board">The board</h2>
-<p>One entry sets the board rather than the lights, and names no LED:</p>
-<pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">drive</span><span class="s-punc">=</span><span class="s-value">manual</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">fireplace.py</span></code></pre>
-<div class="scroll"><table>
-<thead><tr><th>Setting</th><th>What it does</th><th>If omitted</th></tr></thead>
-<tbody>
-<tr><td><code>drive</code></td><td><code>manual</code> keeps the drive hidden until you ask for it</td><td>shown at boot</td></tr>
-<tr><td><code>reload</code></td><td><code>manual</code> waits for an eject or <strong>Boot</strong> before playing a save</td><td>played the moment it is saved</td></tr>
-<tr><td><code>program</code></td><td>a Python file to run instead of the effects</td><td>the effects run</td></tr>
-<tr><td><code>args</code></td><td>what to pass that program, divided by <code>|</code></td><td>it is given none</td></tr>
-<tr><td><code>screen</code></td><td>what size of screen is on the SP/CE connector</td><td>no screen</td></tr>
-<tr><td><code>stripDat</code></td><td>how many LEDs are on a WS2812 strip on <strong>DAT</strong>, and after a <code>|</code> the order it takes its colours in</td><td>no strip</td></tr>
-<tr><td><code>stripClk</code></td><td>the same for <strong>CLK</strong></td><td>no strip</td></tr>
-<tr><td><code>stripApa</code></td><td>how many LEDs are on an APA102 strip across both terminals, and after a <code>|</code> its brightness</td><td>no strip</td></tr>
-</tbody></table></div>
-<p>Saving <code>effects.txt</code> is enough on its own: the board notices the save, takes the drive back for a moment, and plays the new effects, exactly as a single press of <strong>Boot</strong> would. Only a save to <code>effects.txt</code> counts, so copying pictures on never interrupts anything. With <code>reload=manual</code> a save waits for an eject or <strong>Boot</strong> instead.</p>
-<h3 id="running-your-own-program">Running your own program</h3>
-<p>A program can sit on this drive or on the board's own filesystem, and its name may include folders: it is looked for here first, then on the board. Where the name is in both, this drive's copy runs.</p>
-<p>If it is missing, or stops with an error, the effects run instead and <code>errors.txt</code> says what happened, so a mistyped name never leaves you with a board that does nothing.</p>
-<p>Saving a file that names a program, while the effects play, restarts the board, which then runs the program as it would from power on.</p>
-<p>The effects stop while a program runs, and the board is busy with it, so <strong>Boot</strong> and ejecting do nothing. The drive is shown anyway, even with <code>drive</code> set to <code>manual</code>, so you can still edit <code>effects.txt</code>. Saving it restarts the board, which then plays whatever it now says; with <code>reload=manual</code>, press <strong>Reset</strong> for the change to take. A program reads its files from this drive even while it is shown, so its pictures and sounds can sit beside it here.</p>
-<p>When the program ends, the board goes back to the effects the rest of the file describes.</p>
-<p><code>screen</code> describes the screen this file's own entries play on, so a program never sees it: it sets its own up. Pass it the size in <code>args</code> if it needs telling.</p>
-<p><code>args</code> passes a program whatever it needs to know, so one program can do different things without being edited. Several are divided by <code>|</code>, and anything with a space or a colon in it goes in quotes:</p>
-<pre class="entry"><code><span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">slideshow.py</span> <span class="s-name">args</span><span class="s-punc">=</span><span class="s-value">posters|3</span>
-<span class="s-target">board</span><span class="s-colon">:</span> <span class="s-name">program</span><span class="s-punc">=</span><span class="s-value">clock.py</span> <span class="s-name">args</span><span class="s-punc">=</span><span class="s-value">"07:30"</span></code></pre>
-<p><strong>If you are writing the program</strong>, it reads them from <code>sys.argv</code>, the way any Python program does, with the first being <code>sys.argv[1]</code>. Thonny passes none when you run the same file from there, so give each one a value to fall back on and the file works either way:</p>
-<pre class="python"><code>args = sys.argv[1:]
-FOLDER = args[0] if args else "posters"</code></pre>
-<h3 id="your-program-in-the-picker">Your program in the picker</h3>
-<p>The picker's <strong>A program</strong> tab lists every Python file at the top of this drive, and describes each one by its opening string, the text in triple quotes at the top of the file. Its first sentence says what the program does, and these lines tell the picker how to show it:</p>
-<pre class="python"><code>'''
-Program: Big clock
-Shows the time.
-Args: Colour, Seconds
-Picture: clock.png
-Section: Signs and displays
-'''</code></pre>
-<div class="scroll"><table>
-<thead><tr><th>Line</th><th>What the picker does with it</th></tr></thead>
-<tbody>
-<tr><td><code>Program: Big clock</code></td><td>names the program, where it would use the file's name</td></tr>
-<tr><td><code>Args: Colour, Seconds</code></td><td>gives each argument a box of its own, and writes <code>args=</code> from them</td></tr>
-<tr><td><code>Picture: clock.png</code></td><td>shows the program by that picture, kept beside it</td></tr>
-<tr><td><code>Section: Signs and displays</code></td><td>lists the program in that section, where it would be listed under <strong>On the drive</strong></td></tr>
-<tr><td><code>Thumbnail: servo</code></td><td>draws a servo for a program with no picture, or <code>motor</code>, or <code>outputs</code> and a pattern such as <code>outputs rainbow</code></td></tr>
-</tbody></table></div>
-<p>Each is optional. Without <code>Picture</code>, the picker shows <code>clock.png</code> beside <code>clock.py</code> where there is one, and <code>clock-2.png</code> beside it as a second screen's. Without <code>Args</code>, a program that reads <code>sys.argv</code> is offered plain boxes to add arguments to.</p>
-<p>A board with a wireless module keeps <code>secrets.py</code> at the top of the drive for your WiFi network's name and password, and puts an empty one back if it is deleted. A program that goes online, importing <code>network</code> or <code>requests</code>, is listed only where the drive holds that file. A file whose opening string starts <code>Drawing:</code> is <a href="#drawing-from-code">a drawing</a>, so it is left out.</p>
-<h2 id="when-something-is-wrong">When something is wrong</h2>
-<p>The board's LED says so, and the more flashes the worse it is:</p>
-<div class="scroll"><table>
-<thead><tr><th>Flashes</th><th>What happened</th></tr></thead>
-<tbody>
-<tr><td>white, once</td><td>the computer was still writing, so the press did nothing; try again in a moment</td></tr>
-<tr><td>blue, twice</td><td>something in <code>effects.txt</code> could not be read; <code>errors.txt</code> says which line</td></tr>
-<tr><td>red, three times</td><td>there was no room to write <code>errors.txt</code>; this drive is full or damaged, so free some space or let a computer repair it</td></tr>
-</tbody></table></div>
-<p>A setting whose value is not what it takes is ignored, with a note in <code>errors.txt</code>, and the effect runs on its usual value for it.</p>
-<h2 id="more-from-pimoroni">More from Pimoroni</h2>
-<h3 id="boards-and-accessories">Boards and accessories</h3>
-<ul><li><a href="https://shop.pimoroni.com/products/mightyfx">Mighty FX</a></li><li><a href="https://shop.pimoroni.com/products/tinyfx">Tiny FX</a></li><li><a href="https://shop.pimoroni.com/products/tiny-fx-w">Tiny FX W</a></li><li><a href="https://shop.pimoroni.com/products/plasma-2350">Plasma 2350</a></li><li><a href="https://shop.pimoroni.com/products/plasma-2350-w">Plasma 2350 W</a></li><li><a href="https://shop.pimoroni.com/collections/tiny-fx">Everything in the range</a></li></ul>
-<h3 id="going-further">Going further</h3>
-<ul><li><a href="https://github.com/pimoroni/picofx">picofx on GitHub</a>, the library these effects come from</li><li><a href="https://badgewa.re/docs">The PicoVector drawing API</a>, for programs that draw on a screen</li></ul>
-</main>
-
-<footer>
-<p>This manual is rebuilt by the board, so edits to it will not stick.</p>
-</footer>
-
-</div>
-</body>
-</html>
-"""
+MANUAL = (53003, '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width, initial-scale=1">\n<title>Plasma 2350</title>\n<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 31.181 31.181\'%3E%3Crect fill=\'%23fff\' width=\'31.181\' height=\'31.181\' rx=\'4.252\' ry=\'4.252\'/%3E%3Cpath d=\'M12.732,4.036H2.361c-.235,0-.425.19-.425.425v22.258c0,.235.19.425.425.425h1.875c.235,0,.425-.19.425-.425v-10.361h7.514c.235,0,.425-.19.425-.425v-1.684', '2350 W</a></li><li><a href="https://shop.pimoroni.com/collections/tiny-fx">Everything in the range</a></li></ul>\n<h3 id="going-further">Going further</h3>\n<ul><li><a href="https://github.com/pimoroni/picofx">picofx on GitHub</a>, the library these effects come from</li><li><a href="https://badgewa.re/docs">The PicoVector drawing API</a>, for programs that draw on a screen</li></ul>\n</main>\n\n<footer>\n<p>This manual is rebuilt by the board, so edits to it will not stick.</p>\n</footer>\n\n</div>\n</body>\n</html>\n', (
+    b'x\xda\xed}kw\xdb\xc8\x95\xe0w\xfd\x8aZ\xe6\xf4\xd8\xee\x90\x14I\xbdiI\xb3n?:\xde\xa4\x13\x9f\xb6wzfs\xfa\xf8\x80D\x91D\x0b\x04\x10\x14(\x8a\x13\xe7\xbf\xef}\xd5\x03 !\xc9\x92\x9d\xee\xcd\xd9'
+    b'\xd9M\x9b\x02\n\xf5\xb8u\xeb\xbe\xef\xad\xf3\xff\x11\xe7\xd3jSh\xb5\xa8\x96\xe9\xe5\xde9\xfe\xa3\xd2(\x9b_tt\xd6\xc1\x07:\x8a\xe1\x9f\xa5\xae"5]D\xa5\xd1\xd5EgU\xcdz\xa7\x1d\xfb8\x8b\x96\xfa\xa2'
+    b"s\x9d\xe8u\x91\x97UGM\xf3\xac\xd2\x194['q\xb5\xb8\x88\xf5u2\xd5=\xfa\xa3\xab\x92,\xa9\x92(\xed\x99i\x94\xea\x8b!vR%U\xaa/\xdf\xa5\x91YFjtp48\xdf\xe7G{\xe7i\x92]"
+    b'\xa9R\xa7\x17\x9d\x04z\xed\xa8E\xa9g\x17\x9d8\xaa\xa2q\xb2\x8c\xe6z\xdf\\\xcf\x7f\x7f\xb3L\xbb\xdf\x1c\xbc\x84\x9f\n~f\xe6\xe2\xc9\xa2\xaa\x8a\xf1\xfe\xfez\xbd\xee\xaf\x0f\xfay9\xdf\x1f\r\x06\x03l\xfcD\xe1'
+    b'<\xbf\xcbo.\x9e\x0c\xd4@\x1d\x0c\xfb\xc3\xd3\xa1\xfc\xf3\xe4\x9b\x83\xd7\xd0O\xa9\xa7\x95\x9a%iz\xf1\xe4\x9b\xd1\xc1l6{\xa2x!O\xa4\x99Z\xe8d\xbe\xa8\xfc\xdf%\xf4v\xd8\x1f\x1d\x8d\xe0\xe7\xc6\xfe\xdc\xe7'
+    b"\xde\x8a\xa8Z\xa8\xf8\xe2\xc9\x0f\xc3Q\xff\xe4`\xd4=\xec\x0f\x0e\x8e\xff0\xea\x1f\x1c\x0f\xa7\xbd>\xac\xb6;\xe8\xf5\x0fGG\xfd\xe1\x19\xff\x0b\xff\xbb\x1e\x8d\xa0\x8b\xd3\xe9\xa0\x8b\r\xe0\x8d}\x81\xff[\x0c\xfb\xa7'G"
+    b'S\xfe\xb4\x8bOz\xd2\x82\xbe\xbf\xee\r\x07\xd8\xf9\xe2\xa4\x7f4<\xbc\xadY\xff\xf8\xf4p:\xa09\xf4\xec\xe8\xfe?\x8b\x1eup\r\xff\x8c\x8e\x0e\x17\xa7\xfd\xc1\xc9\xf0\xe1\xbd\xfd\x9f-p\x8c\xce\xa0\xd5Ywt\xdc'
+    b'?\x1a\x1d\xa7\xbd\xa3\xfe\xf1\xc9Qo\x08\x00=:\xed\x1e\xf5Gg\xc7\xb8\x8e\x93\xe1\xd9\xb4?8\xc6\x1e\x0fF\xfd\xc1\xd1)\xf4\x7f\n\xff\x19\x8c\xa0\xd7\xe1\x01\xfc8\x81\xbf\x868\xc8hx\x08\xff\x19\x0c{\xb8x\xfa'
+    b'\xb5\xe81\xa4\xa0\xc1\xf1\x10\xa1|08\xeb\x0f\xce\xb0\xc5)N3\xed\x1d\xc2\xa7g]\xf8\xe3\xe4\x00~\x0fN\x0e{\xf8\x1b\xf7\x05\x16\x0b\x9f\x1dR\xbfg\xb8\xa8\x13\xfcjH\xbf\xb0\xdf\xb3\xb3\x11\xf6{x\x82\xfd\x8e'
+    b"N\x0f\xe0\x83c\x1a\x99\xa7\x00\xd3\xe2Y\rNa-4\xe1!Lx\x94\xc2_\xc7\xa7]\\\xd9\x08\x97|x\xdc\xa5%\x9f\xe1\x90\xc7'\xb8J\xfc\x01\x9f\xc0L\x87'\xf0\xc9\x91\xf4u\x8c\x0b\x84\xce\x0f`\x90\x11\xfe"
+    b'k\xd1`x\x8c\x1br0\x80\t\xc2\xf2\x0eNh\xb6\x07\xe9a\xff\xf0\x14\x97s::\xec\xd2\xef.\xfd\x06h\x9e\x8c`\xde\x07\xb8.l\x88_\xe0\xbf\x0b^\x13\xbc:\xc5\xfeF\xa78\xf9\x93\x13\x1c\xadG\xc3\n\xa4'
+    b'\x8faI\x07\xb2\xe4\xe1\t\xee\x82\xdf[<_\xf0\x0b\x8f\xb4\xa96x~\xc7e\x9eW\xea\xef{J\xed\x7f\xab\xbe+\xf3\xb5\xd1e\xaf\x88\x12\xa0\x0f\xb1\x9a\xadJ\xa0\x05\xabRw\x95\x99\x96y\x9aN\x80\xba\x00}\x98'
+    b'\xa6\xabX\xc7]5\x83G\xf0\x85\xaa\x16Z\x15p\xd6U\t\xb8\xa3K\xf8;\xca\xa0G\xf8\xbfX\xcf\xa2UZ%\xd9\\U\xb9J\xf1P\xf6\xd5OI\xb5\xc8W\x95J*\x05\xa4I\x1b\x1c\x8a\xfb\x87o\xe3\\\x1b\x95'
+    b'\xc1\x9c\x96Q5]\xf8\xae\xf3L\xf7\xd5\xb7\xfb\xd0\xed4O\xf3\x12\xa8\xd3B/\xf5\x98\xfbTqT^=\xdf\x83\x97\xbd\x1e\xb6\x1e\xab\xdf\xcd\xe8\xff\x9e\xcb\xa3L\xa7\xf8\xechv<;\xe1g@\xb6\xe0\xc9h4:'
+    b'\x1eM\xf8\xc9\x0cW\r\xcf\x8e\xe2\xe3\xa3c\xcd\xcf\xcaU\x8a\x9d\xc53}\xa0\xe5\xc3h:\xd5\xd4n\x10\x9d\xccNN\xf9\xe14\x8f\xb5t9\x8c\x0fgGS~\x0c\r\xcbM\xd0\x94\xc1\xfc\x01h$\xc0*O\xb5\xe9'
+    b'\xf22\t>\xb0R\xb3\x88\x80\xd0G\x15\xfdQ\xe5\x85\xcag\xf4s\x19e\xab\x08V\xb0^\xc0\xbb\xc4\xa8\x89\x86/\x04\xc2er\xad\xb3.\xbf\xa2?`\x87\xaa\xae\x8a\xb2\x98>\xbd\x8e\xd2\x15<\x9ac+\xdc\x03\x9d\xe0'
+    b'\x16\t({\xbd**\xe7\x1aW3\x04\xd0h\x81\x84\x9e\xcd\x80\xc26\x96H\x1d\xc1\xb3\xe8\xf4h0\x88\xf8\x99\x01P\xe0\xb3\x93\xc9\xc1l\x02\xed\xfe\xb1\xb7\xf7?\x97:N"\xf5\xb4\x00>\xa0K\xd3\xab\xef\x16\xee\xd3'
+    b'3B7\x8fx\xc1\xa6\x01\x198\x1b\xc6\xcf\xddC\xde\xb6\xa1\x86m:\xb1O\x19\xca~G\xc2\xad;\x8b\xa2\x83\xc8}/\x9b7\xd2\x07\x87\x07\x13\xfb\xd0m\xdf\xd1\xf1t6=\xb0\x8f\x83\r<\x9d\xc5\x07z`_\xd8'
+    b'-\xb4\xcd\xe5\xb1\x83\xdb\xc9\xd9\xe4\x94\xf1\xac\x06\xb9z\xef\x16v\xfa4\x1a0n\x84\xd0\x9b\x9eE\xa3\x19\r\xf8\x0f\x84\xe0\xb7\xea\xefj\x92\xdf\xf4L\xf2\xdf\xb0\xcbc\xf8]\xc6p(\xe1\xd1sh\xb07\xc9\xe3\r\xc1'
+    b'm\tSH\xb2\xb1\xa2/\x8b(\x8e\xa95\xfd5\x89\xa6W\xf32_e\xf1\x18\x10\xa0|\xca\x00~\xf6\xdc\x9e\x1e\xfb\x14\x16L\x0fg9\x82dx\\\xdc\xec\x03\x9b\x18)\xb3\x81C\xb9\xec\xad\x92\xae\xeaEE\x91\xea'
+    b"\x1e?\xe9\xaa\xce{=\xcf\xb5\xfa\xdfo;]\xf5c>\xc9\xab\xbc\xab\xfe\xa0\xd3k]%\xd3\xa8\xab^\x94 9\x00\xb5\x882\xd3\x03J\x92\xcc\x08'\xfat\x82y\xce7,f\x8c\xd5\xf1i\xa9\x97\xcf\xc3u\xa8h"
+    b'U\xe5\xb5\xc5\x8c\xa0\x89\x02\x8a}\x84\xff\x1eJ\xfb81E\x1a\xc1\x9e\xcc\xcb\x84\xf6z\x1e\x15\xd0\xb4\x7f$\xef\xf1q\x0f&\x0b\x8d*\x8d\xf8\xb7Zf\x06V7+k\x08\xbaL27\x15\x1c\x87\xd1R\xa6\xda\xda\t'
+    b"\xcd\x04\xbb\x82\xad\x90\xc3\x0c\xc76\x895\x90Fe\xaaR\xc3i\x86\xe3\x06\x07\r\x0f\x1f\xd0Se\xf8'l\x1fPNl\x89to\x11\x19x\xb1\xd4k8\x8b\x9aZ\x97\xd1\xb5N\x193\x80*\x1a\x00\xe7\xd5F\xe9\x14"
+    b'NM\x06G>\xa3gQY\xf5" x\x19\x10L\x9c \xf4\x04\xb3\x99F\x19\xd1\xcb\xfc\x9aHG\x94\xa6r\xba\xfb"\xe6\x199fEn@\xb2\xcb\x01\xd4\xdc=\x8f\x06d\x86\x01\xcd\x7f\xe2\x0e\xb1\xf44\x86\x9e\xd3'
+    b'\xe9\xd3\xe1`p\xbdP=\x02\xff3n\x03#\x953\xa0\xfc=\xd8\x04\xbbg\x84\xba\xf5\x11wa!\x9ch\xea\x84\x91\x1a\x00Z\xdc\x00 RX\x0b\xb7\xc03\x1b4\xe8\x95Q\x9c\xac\x00\xf0\x03\xb7\xbd\x0e9\x86\x8c\x1c'
+    b'Cy\x8e8\x8cgFc\xe33zX\x9b\xd1bT?5\xf8\xff\xfa\xc7\xbb>>\xb1C\xa5\xba\xaa`\x0e\xa6\x88\xa6|\xb6\x80\x81\xf3\x9bJ\xdfT=\xd8\xb3\xcc\xcc\xf2r9V\xab\xa2\xd0\xe542z\xeb\x88\x11i'
+    b'\xaa-y\xd0\x98\xd8*\x05|K\x13\x03\x13@\x9e<\x06\xee\x97\xe9\xe7\xc1\xf1\x0e\x0f7\xc0\xd9\x7f\x99&\xf0\xa5k\x07\x92.B\xa4\xd1&\x82&\xdbg\x9e\x17\x10\xebi\x0e,\x9bP\x82\x07\xad}9^\xe0F7\xbf'
+    b'g\x02\xba\xab\x0b\xd8h]\x82>@\xfd\x04\x1d\x99\xd5\x12&\xc9D\xcb\x1d\xdeY\xaao\x10*\x84\xcf=Dd\xd8e\xecY\x97\xeeL\x83\x98l\xb7b\xba*\r\xce\xa1\xc8\x13\xdbd\x0bd{\xbbF\x1d\x8f{k='
+    b'\xb9Jp\xaaU\x94\xa4\xa6\x07O\xafhYn.v\xed{r\x9e+\xa0b\xd9<\xd5\xc8j\xe32Zg\xa1`\x03\x10\x9d\xa7\x9b\x02\x14%8\xd9p\x94A>\xca\x0c\xe8\x1f\x15\x0b+\x06\xe8?@\x83\x8e\xe0\x8e\xc9'
+    b'L4 \x0c\xd3By9V\x9d\x0e\xa1 \x00\xc4.D)\xa1LD\xcd\xedq\x1c\x04\xe7"\xd5\xb3\x8a\x00D$2<AM\x84\xeb\xd1\x01\x1f\x80X\xeb[\x12\xe6\x16Q\t\xc3\x07\r\x81\x9aW\xf9\xf2\x8e\xb6\xf4\xa7'
+    b'\x90\x11w\x00\x10\xf9FFi:\x00\xb5]\x10\xa0\xff5/t\xf6\xb3\xba\xdc\x06\x84\nNQ\x99W@m\x9f\x9e\rb=\x7f\xd6@"\xe9\x08\xba\xc0\xf3\x12\x1e\xe4>\x13e<\xce\x87\xf4\xa3\x7fv\xb4\xebX\x9f\x1e'
+    b'Y\xa2\xb0\x04\x10\xe1\xc9\xf1\x1c\x80\x0e\xcd\xdebH=\x07_\x8d\x1cyA\xbcv\x84\x11X\xd2\xf3\x06-\x19\xda\xce\x85\xce\x04\x9d\x80bq\xd4\xe0u#\xa2<4\xe7\xb3:]\x0bv\xc1!\x7fc\x7fZh&\x8e}'
+    b'\xb0=\xf6\xb01\xf4\x90F\xa4\xa1O\xec\xe1\xdaE\xb0\x08\x1ec\x96s\xba@=\xfd\xcf\x03\xf9\t d\xb1\xbd\xc7}3\xa6\r\x99R#<\x8b\x90<Y\x18\xe1\x8b\xa8\x95\xa8\xc0K\x14\xc5\xfc2f\xd12I\xe1\x8c'
+    b'\xae\x92\xde2\xcfr\xa4\xc5\xa0\x8e\xbc\x7f\xf3\x03\xfc\xd1\xfbQ\xcfWiTv\xd5\x0f:KA\x12y\x99g\x00\x98\x08\xc5j\xdbv\x9b5\xecX\xb3\x95\xfe\x9e=\xff\xe2lk\xb4\xc5\xb7\x80\x8b0\xc2\xf6\x0f,\xce\x14'
+    b'B\x12\xbe\xc4\xd0L\x19\x0e\xee=\xc1\xc3\xed\xf9\x9d\xb2\x94\xb3%\x9f\r\x10\x9d\xecz\x9c\x10pc\x85\x00^H\x9f$f\x92a\xdd|z5hS\x03\xdek\\\xb8\xdb\xefp\xf5\x96\x0e\x06L\xb3)\xe4J\x9fI\x06'
+    b'\x949\xa9\xb6\x8f\xbbg\xe3\xf5\xa3{t\xc44\xca\xf4\x1c\x1a\xd7\xa6\xc7Oi~\xd0\x86%\xfaf\x1b~\nmh\xc8\xb5\xf4}<\x18\xc8W$\xf07?\xa2\x87\xb6_\x12\xfe\x9b-\xe8a{\xafh\xc6\xdb\xcd\xce\xe9'
+    b'u\xb1\xca\xa6\xcd\xd7r\x9a\xa1\x81\xf06|\x9b!cCf\x05@\x06.x\x9d\x18 \xe7\xf4\x00\xe9pD\xe2\xa9eo\xd3\xa8,\x13\x90hy6\xd4\xe8\xc9\xc5\x13\xaf\xa6#\x9bc-/\xdb=\xb5\xdaZNx-'
+    b'\xf0\t\x11\x0e\xf8b\x0b\x8d\x1a\xf8v`iF\x15MR\xc1\x13F,\x18+\x8d\n\x03\x9bm\x7f\x05\x8c\x13\xa4\xd6o\xb6\x8f\xfe\xa1=ph\xe7\xacb\xea\x8d\xc4\x18\x92B\xc6\nq\x15\xbf\x829\xa1>\x93\xda\xe7@'
+    b'\xd8\x1aGDN\xf0\xc9g\x93h\x10\x13\xfe\xfe9\x02\xe7\xc9c\x05N\x99\x93\xe5t\xa3\xe2\x86\xe7AzdU\x8e\x81\\\xc2\xf9\\$iL\x10\xd9\x12\x06\x10\xf8U<\x9e%\xa5k\xf7w\xb5^\x80\xc4F\xf3$\xe1'
+    b'k]F\x05m\xd2\x0c\x94z\x94\xad\xac\x1a\xc6\x8a\x13\xc0C\xed\xab\xde\xd0S\x13a\x15\r\xd6\x17\xf2\x8f\x86\xfc\xd2J\xf5\xea\x1b<\xba\x83\xa3\xc9\xfc\xb6y\xf4W\x93\xfa\xeb\xfa\xc663\xd8\xd6\x0cH:!\xa5\xa0~'
+    b'\x12hm\x0eVL\xe6\xed\xd3\x7f\xf0W\r\x85\x80\xf5\xe6A\xb835\x96\x8c/\xce\xf7\xc5\x12x\xbe/\x8e\x04D\x0c\xf8\x07\xe8\x82\x9a\x02r\x98\x8b\x0e\xea\xc4\x9d\xcb\xbd\xda3\xd1y\xd1\x94\x98E\xee\xa9\x15\xd7:\x97'
+    b'\xe7\x8b\xd1\xe5K\xf9\x0b\xba\x1e]\x9e\xafRr\x17\\\x9eG\xe2$\xf8\x1d\x90Y4\r\xf6H\xb3\xd5q\xe7\xf2{~\xa0\xe4\xc1\xf9~ty\xbe\x0f\x9f4\xbe\x03"\xd4+@\x83\xd50<\xd24\xfe}[kP\xf9'
+    b'\xab\\Z\xf3\xef\xb6\xd6k\xe0%8\xa7(c>\xd5\xb9\xfc\x89\x9f(\x10\xfd\xe9I\xe3K\x11L/\xcfE\xb4m\x8c<\xc9\xa32\xee\x19\xd8\xaf\x98\x87\xa7\x07O\x8c\xfa\xd3\xebW\xdc\x93\xfbn\x1b@F\x00\x04\x93\xa1'
+    b'\xef\xdf\x0b|`*\xee\xf3\xed%\xcc"\x90f\xa2,\xee\xa1<\xde\xb9|\x03\x7f\x929\x10\xff\x0c\xbe\xd9\x87\xf1\xce\xf7\xdd\xf4\xef\xb5"\xe6{\xb0\xbd\xaf\xf9\xc7\x9d+\x80\x83\x02S\xd9\xf0\xf4\xdf\xe4%Lds\xeb\xdc'
+    b'}\xfb\xde\xa4\x84\xb5\x12]\x00\xe6]\xf6\xf2uF|fU\xd6z\xea*\xdbNQ;\x05\xed\x14\xb7k\xdd\xe3E2]\xf4\x80\xf9\x99\x1e\xdb]`\x93\xf1\x11\xf2C#\xa6\x98Vl*\xa3\xd9,\x99\xf6\xc8\xeel\x08'
+    b'\xcc\xc0\xca\x8c\x81\xf1\x01,\x1f\xf8-[\xa5\rA\xdd\xbdm\xeb\xd1\xac\xb5.`o\xf1\x9f\xb66\x13t\xb31(@@\x9a/\x04\x100\xe2w\xf2F\xc9\x1bY\xbai_{T!@{\x82[\xa0\x0f\xeb(C\x00'
+    b'\x88\xd9\xd9>W\xf8\xfc>\xe8\xe2\xba\xc6=3\xa0;\x170-\xd8\x18\xc5\xbf\xef\x7f\\@&\xd0:\x83\x8f\xdf\xf3\x8f;\x91\x0b\xe4!"\x1f\xf6\xbb?\xd3\xdf\xca\x84\x9f\xef\x80\xb7=T\xf2ap\xac\xe4\xd3\xb6/\x81'
+    b"\xce\xa07\x04Fz'\xbf\xdaZ\xa2\xd5\x00\xc7\x98\x95\xc0yQ\xc0\xed\\\xbe\xe2G\n\x1f\x91\xcc\xfbY\xb0%\xc9\x90@\x83\xff>\x80\x04\x05\xc4\xe7N\xb8\x96\xab,\xc3\xd9o\x00\x91\xe8\xd8\x15e>/\xa3e\xe7\xf2"
+    b'G~\xa3\xf0\r\x1d4y\xd3\x06\x07\xeaA\xda\xf4\x90\xed\x07\x94\xfb\xbf\xb0\x0fy\x87\x16\xcej\x17%\xbf\x1b2\xeb\x85\xcezhK\xad\xd0\x8d\xd2KLo]\xe6\xd9\x1c1Zg\xca\xbd@\x91\x97^\xdc\x1fv\xcb\xbc'
+    b'\xd4\xbc\x83E\x02\xbf\xf3,\xe9\\\xfe\x80F\x0b\xda\xc2w\xf2\xecNh\x12\xcc\x99R\xa0\x9akL\x8e\x025\x9c\\zN4"x\xde\x06\xc9yN\xf8\xb4*\xd1\x10\x05\x9c2\'\\\xe2?\xef\x82\x17?\x046\x8d\xbf'
+    b'\x81\x87#+Gy\x01\x83\x07\x86*\x89\x81\xc3\x93k\xbf\x87\xae\xfdN\xdd\xcf\xbf\x18B\xab\xe2\xf2\xc3:Gb\x0b"P\tg,JA?\xb0\xa7\x05\rY\x190\x83\xbcd\xafSDr\x12\xfa\xe75\x1a\xcc\x9cW'
+    b'\nf\xba\xec\xab\xd7\xc0}\xd59\xe2\xff\xa50\x93~uS\x9d\xef\xd3\x13Ej\x08Y\xdd\x92kfZ\x06\x88q\xcd\xa1E\xe0Th\xb8c\x1df\xba\x88\xb29\xb4U3\xbdF\xeb[\x9e\x01P\xd1j_\xf6\xd5\x9f'
+    b's\xd6.3\xad\xc9a\x89~\xc79\xd9\xe9J2\xee\x959l$\xb0\x1cTt\x10\x8f\x10\xaf\xd5:B\x8b{\xd5?\xdf/\x10@#\x02\xd0\xdd\xa2\n\x888\x08\xa8\xdb\xd7W\xe5v\xbekKo\x85U\xc4\xf9\xe3\x97'
+    b"\x8b'\x9c!\x17'&\x02\xe1\x14\xdd\xb5\xb8\xbcH-sr$\x10C\x82\x9f\x86\x94mo\xb5\xcc\xa03\x99\xae\x92\xd3O\n \xc2c\n\xd2\xc6\x15\xf0&\x12\x9c\xe0\x85\x00\xa6\xb8|;C\x1c\xc0\t;m\xd0h\x10"
+    b'8\xd1\x9d\x11]\xe9.\x1cn\xc0ju\x0e|\x00\xce\x1d\xe0{^\xa1\xb4I\x7f\xc0NOA\xff,\x95\xfe\x05\xd5k\xbf\xe90l\x82\xaf"\x9cg\xb1\xaaB\x97p\x94\xae\x11\x0c(\xa2iVW\x11\xc7\xd0\x95\x0c\xbd'
+    b'F\xa4\x9fF\xd0\xa2\xaf\xde\xdd2p\xb5N\xa6\xe4rY\xa0/\xa6\xb2 \x13\x88\xd3\xcbh\x8e\xc244!\xc9\x02\x91\x03\xa1\xe5\xd6\xfdJ\x83\x8a\x80/Z\xb7\x19\x86\x87\xe3\xc08o}\xe0\xcf\x95^\x16\xd5F:L'
+    b'u$gBv\x18=\xa3n\x04\x90FR\x9e\x9b\x03\x02\xc0g\x9a\x17\x1b\xf1\xa4\x07\x87\x04[\xd9\xad\x03d\xc4\x03\x88\xb2y\xd7\xf7\xcd\xc2\xa6\x9a\x83\x96\xcd\\.N\x96\xac\xc11\x02D\xb8N\x00\x1e\x8cBrF\xd7'
+    b'\xa1\tc\x89\xc7\x9e\x19\xcd\x04\xcfv\x96\x98\x856n\xc2\x16\xd4?\xe5+\xd0\x0f\x11k\xc4b\x8e\xdb\xd6\xd8/\xf6Q\xfd\xbb@\xef\xdd\xdb\x97\x7f|\xfdc\x1f\xa3\x9av\x13\x01\xfa\xda\xd0\xa8\x80.\xd0u_\xbd\xd7Z'
+    b'\xed\xd6\x06\xea<\xa4/c\xbc~\xf5\xf6\xc3_\xeacL\xb4u\xc5%\xe8#\x81\xf3\xc5H\xc1sEr\xe0\x8eF\x84\xc7%\x07\x08\x97\x1aaK\xab\xc3\x80\xac]\xf3\xb0zFU\xd33\xfa\x0e\xfbj4\xa5M\x8d\x11'
+    b'J\xf2y\xf0i\xc5E\x07\xb5\xbf\x14@\xe0\x12r&\xbe\x04YqI\xc7\xefu<\xdf:\xa8\xd4\xf0\xcd\x7fr\xff\xfe\xe0\x10R,\xf2\xdc\xe8\xdaq\xb5\x84\x8a\x03@@\x854~\xab=zC{\xa4au\xbaR\x96'
+    b'\x1b\\\x0c\xb1S\xf6\x84\xd2~0!\xa3\x0eh#\xd2\xd4n\x0b`\xf8\x02\xa5\x0e!\x9d\xa8\xd3\xda\x10\t\x1c\x9e\xba\x06\x8c#~\x1fM$\xc6\x04\xbe\x82\xa3\x1e\xeb\xcca+2\xb3*\x9a@o\xf0\x9a\xbcV\xae\x0b8'
+    b'+\xa8\x06#5\xb5\xe0\xf8\xe0\x0f\x98\x07\x06\x08\x91\xbcN\x16r\xb7O\x9b\x05\x0b\xf3\xc81m.9q\xc9E\x8c\xb3\x86V\xf8]T\xc0\xe34\xcf\xaf\x18\x0et\xe8I0\x00lD\x90!\x84,C0)#\xad\xf1'
+    b'R\xfa*\xab\x92\x14\x97iV\xf0\xbc\xaf^\xf0\x8c\x88jO\xa0+\x84A\x06]\x05\xbei\xe4<:\x82IP\xf728\x83\x91\xd5\'\xbfv\xe2f"4\xd6\x96\xbe*|0\xca*I+\x8cMA\r\x8a\xc1\xa1"'
+    b'\x94\x92\x92\xaaB\xa6\x0b;\x86\x01,\xa4\xac\x19\x1e\x98\xec\x8b\xb8 \xf9(\xf9o\x1d\x00\xcb\xa1\x80\x95\xb7\xa9\xa9\x88\xd4\xa6)#\xc0H\xf6p\x8a\x11S\xd4\x07\xdc\xe2\xae\xe0\x15"\x93q0\xc9\x8b\x84Z\x8b\x97\xde\x0b'
+    b'\x1b1Rv\x0c|\xc2\x9d\x00\x11@\x18\t!G\xba\xa2-1EJ\xc2\x02\xac\x1d\x91xA\xfc\x9a\x00L\x929C\x17\xd9\x1f;\x06\xbb\xbc`\xa2&\xb8o\x88\xbd\x08o^\x93]\xe0s\xee\xd0B\xfd\x05\xf3\xb9<'
+    b'\xf3@_\xe4ilD\x0c`\x8c\xd5\xd7\x1a\x8e\x0f\x8d\xbaE\x86_x\xb9\xdcv\x00\\\xdd\x90\xbd\x176\xba)\xbd7a\n\x14\x82\t\xa2\x9c-KU@\xe6\x05$\xc6N\xac\xa8\xd2\x94S\x90\xf1\x81<D\x90\x82\x11'
+    b'\t\x86_B\x1b\x80\xc1`\xe1\x88I\x91k$\x0bA\xd7 \xe0M2!&at:c\xf9n\x0b(\xefq\xab\x90\xa9\xd7\xd1Y\xe8\xa7\xa5Y[\x92\x17\xcc\x81\xb8\xcf\xaa\xd8-t\xbdE=\xbf\xc4H\x0f\xf4q\n'
+    b'Q\x80\xa1\x9e\xf8C:\xa6S\n\xa0\xeb\xbc\xc3\x13g\x88\xf5\xaf%\n\x0e\xcdJ(\x03u\x1a\x03\xaf#\xc4\x97$3\x15\xd0#9\xe6\xe1\x1e\x19\xfe\x0cO\x18\xd0\xf1\xdd\xb2\x0eR]\xc4`\xc2\xf6\xa9\xac\xad\xf3G\x14'
+    b'\xe6<\xe23qD\x9aJ{\xd7\xc1\xaf\x98\x9b\xd0\xfb\x0b\x0e>\x13v\xe2I\xc3\xcb\x85\x86\x155\x80\xc9\xf4_x\x11\x00\xa5\xac\xb1"\x96&\x10u\x16\x186\xe8D`^\xf0\x12\xedT\xb0\xa9t`\xd0g\x03,\x0b'
+    b"\xbd\xed?DS~F\xa2&\x7f\xday\x95\x98+\x10\xef+\xf5\x9a\x81\x00'\x15\xc0_\xa6\x9b\x0eK\x96\xac\x88\xbcI\xe8\xa8\x00\xdd\x88q\x7fjH>M\x81\x93\xc1\xc9\xf3\x80\x08\x04c\xa2\xb9|Zwlz\x9d\xe7"
+    b"Y\x0fI\x1e0\x98\x80\x1f\n\xcd\xb5\x83\xe4Y\xba\xf1,\xb8K\x0cX\x915+'\x81i\xc21\x98LUq\x1e\xd40Y\x81\xea\xf4>\x9aEeB\x83\xbfI\xe0D\xe576\xf6G$\xac\x1ce;\x1a\x85\x08X"
+    b'\xe4\x99be\xb9+\x9d#\x933&\xb4\xca\x0cH(M\x85\x8cwb5\x8e\x98\x82\x90\x80\x8a\x93r\xc7\xb2M \xaf\xcaN\xf2\x89u2\x1bR9X\\\x0c\x1a#\xd0\xaa\xb6\xe1\xc6\xd8\xaf(\xe9\x18\xf7y\xe5I5'
+    b'\x8e\x03CO6@hqGQ\x00]#wDF\x878\xc2.\xaa\x00\x08B\x02`\xe8+]T(\xaf\x91\x08\xc0\x0b\xc6\x88Ss\x85\xf1\x93\x14|Pj$s,\x13[q\x03#\xb3\xb07\xc4\xe4\xfe\x96\xb8\xb6'
+    b'\xcb\x8e\\\x13\xd7v\x88\x9a\r\xdaz\x8b\xa8Fa^\x82\xac\xc4G\xae2\x1b^\xcb\x8e9P\x9f\x89\xea\xafs\x16\xa9\xd8\xd6\xc7\x00b|,I\xe4!>!\xda\xb8\x17X\xf1\r\xb1J9z3Dq\xe6\x8f\xd8\x04'
+    b'8\xe9\xf83D\x1a+\x84\x11\xd1\xc0s\x1b\xd1\x86tk\n\tk\x0c\x95\xf5;\xd2\xcbL$\x10j\xf2\x84\x0f\x99\x13g\x1aa\xabt\xee\x91\xe1 G\xf5\x9bN\x1c0\xd3\x18\xa9N\x08M\xcb\x91\xe0Y\xfe\x94\xb4x'
+    b'\x14#\xa2\t\x89\xb9\x19\xcd\x83P\xcb\xca-"5\xc0\x114S\xfcRT2+k\xbd\xac\xca\xf4\xf7\xef\xd1\xc3\xc58#f\x02\xd2\r\x1d\xe2\xbf \xf5\x00\x9f;%\x15\xf7\x0c\xbbw\xd1Pq\x97h<\xfb\x91+\x19'
+    b'\x1c[\x127F\xe5\\V\x1f@\xcew\x87s\xee\xab\xff`p\xa0\xb0\x83\x8e\x1fP\xa0\xf2,P\x95\xd1\r\x05\n\x1a\x9d\xf6H\xb0BH FI\xa1\xbe\x05?XY,u\x83\xd1\x04\xbe`\x9a\x9d\x93\xe1\x81\xe4t'
+    b'\xde\xb1\x0c-\x92\x15[\x12\x9b,\x93\xb9\xca+\x8aGD\xd4\xbc\xfa\xf7\xce=\x18A\x17Q3\xa0\x19\xb8boZp\x98J\xf4R8\x05\n\x9b\xcc\x94\xcb\xfc\x1a$avR;\xe2\xc1\xf3)\x97k\x04\x13n\x13\x00'
+    b'L\x8c \x96\xd9z\xa2\x8dD\r\x8d\x19\xc0\xbf\x85!\xe3;\x90\xbb\x9as\xc2\x84\x18\x02\xce4E\x16.\x94\xd5ReG\xaf\x11\x06p\n\xe1\xe8fi\x1e\x89\x08)\x14\x1b6Y\x08\xb6#Ch\x91\xb2\xf0\x99F\x15'
+    b'\xec\xe7|\xa5\xfb\xbf\x98-\xfd\xb4+22\x9a/\x17\x1bX\x7f\xb5\xe0\xad\xac\x93\x95*\x9fk\n\xec\xae\x91\xac\xfb8\xb3\x98|a\x1c\x868\xf6\xf0\x18u\x84\x9c\x9d\x9b\x02Z\xda7\x12\x1a\xd1\xb9\xfc\xb7\xb4z\x8e\xd2'
+    b"\xfc\xbf\xcd\xab\xe7\xc0\xfc\xa1\xcd\xa5j4\xc5s\xc1\rY\xad\xb0'<\xf8\xa4\xf1\x05Q\x88\xce\xe5\xb8\xa5C>\x18\xdc%\xff\xbe\xd7\xe8\xa1\xb2\x14\x8e\xcdp\x06h\x95\xba\xbe~\x01\xd4\xad\xeb'\n\xf9*\xaa\x1e\xb5\x90"
+    b'\x120t\x92\xaf?\xae#\xd2\xb2\xdb\x97a\n\x8d\x06\xc6]Ca\xc8G\xe7\xf2b\xf7K"\x84\x9d\xcbA\xff\xe0\xd6\xeeS\x9d\xcd\xab\xc5\xc3\xfb?\x18\xc8\xeb\xbd\x16h\x95\xf3\xc9\x1d\x13 \x7f\xdbC\xc7?\x1a|\xf3'
+    b'\xa8}(V\xa9\xf9\xca\x1bp\xdc\x82u(G\xb0%\x9a\x08\x0c\x87\xe6d\xeep\xf6\x15\xbb%\xd9R\x80\x94\x035 6\xd6!Q!\xb2(\xd4\x1eN\xd9\x06\xf9CW\xcds+\xdf\xa0\xf6\xe5\xad\x17Bz\x1a\x0c\x17'
+    b'Z\x13\x93v\xa4\xf7\xbd}\x832\x01\xf1D\xb2\xb0\xb2JKGye@\x1f`6\x8b\x1c\x99O\xca\xef,\xe5\x12\x05\x90\xec\xb7h5\x84&\xb2\x1c\x12\xeaP+\x84URd\xb1A\x1d6J\x89\xa7\xa3T\n\x9a1'
+    b"\x92&\xe3\x05\x06\x06\x8d\xa5\xec\xa6z\xaeP\xa2\xcf\x88\x84\xb1\\j\xac\xc1'\xe0\xc9\xce\x8c@\xdcY\x84\x16\xe4\xd3H\xdeI\xef&=\xda\x99\x17\xac\x92\x05B\x0cY\xe3\xb1\xf7U\xd1\xb4\xef\xedrOnK\x88\xb7\xfb"
+    b'\xfbEV\xc4\xe7?~\xff\x1dIU!k\xf5\xd2!\x9d\x19\xfa%\n)\x89.(\x7f\xf3f\xf2\xc6\x92E\x85D/6\xfa \xe3\xe3%\xb3\x8d\xe0>\xbeY\x0b\xb7\xcf\xa3\x80\xfeL?\x8a\xf8\xfds\xe8^\xe3\xd8-'
+    b'\x0eh\xb7\xee\n\xaeX\x1c\xd0^}\xc7g)\x90aI\x83\xd5 k\x83.\xe8\x8dv\x92\xfa\xc3\xd0\x0c\x03e(\xd2\r\xc0I\x01l\x98LKq6\xe7U\t\xff[\xd8Q\xcf\xf7\xe17\xfeM\xaa\x94\xc8\x93\xee\xe1'
+    b'\xdb\x99\x02i\xa3"?\x13>\xda\xc7\x8f\xf7+\t\xd8\xa9$b\x87z\x8ce\xdf\x84\xa8\xca\xc2\xf11\xfc\xcf\x93\x8f\xae\x1a\xa0\xbe8\x04\tj\x05\x14\x06\xce\xdc\xa0\x7f\x844\x85\xa8\xa94\x1f\xf2/\x1c\xad\xd1\xbb\x8d\xaf'
+    b'\xa8w\xcf\x89\xc6\xd8\x8bInzq2G}J\xdftIv\xb6*\x01\xc9\x98\xecX\xc9r\x17\xa8!=\x90W\xa2uT\x0cli\x8ei\x15sX\x0c\xa7#\x06\x9b\xd1%_\x83\xa2\xc3\xbdA\x8f\x84v\x9f\xd9\xd4'
+    b'\xc5\xa8"{A\xeb\x90\x1c3s\xd7\x90(\xa6!:\xa5\xa4\xc3f\x08\xce\x084\xf8tb\xb7\xf1\xceA\xf7y\x13\xe1_\xc2\x12q\xd3>R.\xf9\xcd\xb3\xdb\xbd;\xd61\xec9\xe1b\xf7Z,\xfa<t1\xa0*'
+    b',\x1f\xb5\x9aY*6\xcaGI@\x8f]\xc6lv:8\x1c<j!\xc0\xb6\xabdz\xcf}\xb9u1|d\x1eN\xb5\x0f\x1f\xb5\x0e\xf2`~]\xb6r\xd4&\xcd\xbd\xe4\xd0+\xd4\x03q\xa8\xb1*\xd9:\x8br'
+    b'JWm4\x9e~\x90\xcfPz\xe8\xaa\xe9&\x82\xffN\xa0\xcf\xae*Ve\x81\xa6g,\x98\x00j<< 7,bg\x97=\xb5\xd0>\xcfSl\x8f\x9eh\xf5\x176\xaa\x00q\xf5\xfa\xbe\xe8\xacs\n\xb6\x00\xe1'
+    b'\xad\xeb\xbd\x0e\r\x11\x8dL\x08\xa0_{\xe2\xcf\x08\xc4\xb1\x02\x99\xcc\x18\x14\xe5\xd4\xe6<YGh\xccy\xd8[B\x9fx\xe6\x9b\xb2\x1f\xe9\xe7(\xda\xf2\x88\x99\x9f,:\xdfY\xceC\x97\x81u4\x90\xd5WD*f'
+    b"\xd2\xb7\xc72\n\x8b\xde\xe2\x0e\xa1u\xd3\x13p'\xc3:knd\xc3)X\xbc\x02\x82\x8e\xf9\x00\xec>P\xdb\xbdR(\x1fZ\xa5\xaeu\x96nj\x9a\xb90\x1a4-HFz\x8e\xc6\xe5\xed9\xcc\xd1\xb0\xf3\xb7\x15"
+    b'\xecU\xbaQd\x84+M%\xce=\xe2\rd\xb0D\x93\xf25\xda\x1e\xdc\x10\xec\xfb \x9e\x82h\xc1\x96\xb2\xa6\xe9\x86=KY\x04b-\x88\xd5\x04o\x9e\x8d\x01T\xe04s|\x98\xa1\xa8;\xf3\x023\t<.\x9b'
+    b'\x1f{CA9g\x1c#\xb34\x1bZ\xd8\xf8\xc6\xb0\x12W\x12\x9a\x89\xa8C\xb4U\xa1q\x02\x04\xd3u\xae\xb2\xd5r\x82\xd6\x1bL.\x88\xd9>\xc9\xa0\xf8\xe4\xe0`c\x17\xca\xc4x\x8b\xd4\x0c-U>\x8c\x93US'
+    b'\x8a5J%\xfd\x804\x1e\xf2\xc8g\x1e\x8c\xf05\xee\x93\xe1X\x10X\x05<\xa4\x1cy\xea\x94\xf5\x95\x12v!\xcf\xc6\x0f\x92v\xefE\xf7\x18S\x1eNVN\xff_\xa1{\xf7\xe0\xda_\x95A\x0c\x8e>\r\xfb\xa3\xdf'
+    b'6\xb4\x86m<\xe2}\x0e\xda6\xc5PN4\xaa\xbb.W\x9cB\x99\xc9\xe2\x9b\xd7DXN\xc3A\xb3\xaa\xe1\xc3\xebT\xc0\x9a\xee\xb9\x1d\x99m\x03\xd2\xd8O,\xca\x8d\xf8U\x98\x1e\xaf\xb6\xe2\xcc\xb0\xa8\x8e\xb1\xeeW'
+    b'6\xa4K\xc4\x05\xd9SI3\xc1y\xaf%FC\xaf\x99\xc9`\xba\x96\xb4$\x8f\xb8\r\xc2@\x11\x19\x8f\xb48\xd5\xbaB\xbb\x99\xa4M\xd1\x08\xa0c\x17\xfaa\xac\xa1"1\r&\xd0\x1aDN\x0c\xe0\xfe\xca\x16\xc3\xc6'
+    b'\xa9U\xd6\xd4qo\xa5\n\x97\xd9\xd4\x06ZU\x07+Q5\x9a\xd3\x9f\xac\x84e\x1a\xe6<\xac\xb5\xd8\xd1\x8f\xe0\xea\xaen\x08I]\x0fBb\x8b\x05\x9c\xaf\x8bA\xfda\xbc\xaa6\x17t\x84\xef1\x98\x98$\xef="'
+    b"\x93\xe9/:\x8f\x19\xec\xe7\xe23\xa6@\xed\xb5\xb9\x18\xd5\x1f\xb33-\x18\xf0\x8b\xcd\xed\xa3\xd1\x7f[i\xd2\xe2\x1e\t';\xf5\xe1\xce\xa9\x7fY\xa0\x8a\xb2rO\x94\xb4\xdd'Kz\xbc\x05E\xfe\xe4\xe32\xc9.\x90"
+    b'*\xef~\x19\xdd\xc0\xcb\xed\x1e\xedW\xa3\x1do\xe8\x93\xc1\xe1=\x97\xf3\x11\xe9\xc9\x96)\xc2\xa8\xf65\xef\xe8K\xb4\xd2\x07\x1e\xb2\xdb\xbb\xfd\x1a\xc7\xa9\x9d\xeap\x1a\xc9#\x07\xd37T\x1f\xae\xf1\x14\x83\x90\xee\x9e\x01('
+    b'\x0fq\xbe\xdc=\x05*\xde\x00|\xa5\x15_\x10\xd1\x185\xda\xdf\x02z\x0c\xef7\x89\xdbQc\xc7DwQD\n^\xf88\xcdW8\xf7;\x97\xd5\x00\x19}\xd6\\\x8c\xa9tq\xf7\x12$\xd3\xe8#I\xbe\xbb\xc7\x05'
+    b'\xee\xf9\xd1\x8d=l\x8c\x82/#\x14\xc3}\x93\x06\xc8I\x13m\xef\xa0\xe5\xe3vd\xd7p\xd6\xa2\xec\xa3\xcdx\xba\xc7\x9cOw\x90B\xf8\xd278\xbeu\xc6\xa3\xdbg|\xb0c\xc6-\x86\xb6mI\xe3K\xa4\x9f\xfd'
+    b'\x93\xc5\x13\xef4\xd8\x86\xf9\xc5\xe8h\xd7\xeeo?F\x8bD\xf0\xb4u\xb7\x17\xe6z\xf7`\x8b\xd5\x16\x832\xd1\x16-!\x84\xbb\xfb\x14\x8b\x97\xe0\xde\xe4\xec\x91#}\x19R\xfd\xd0I\x00\xe4>"m\xb8\x83\xc84\xa9'
+    b"\xf2g\xc3; C\xc6\x9d\xb0v\xd0\xcc'\x1fo\x91Ak\xae\x00\xf5\x05\xe5\xd2\xdbO\xea\xfdr8\xc5@\xf4\x81\x8d$\xa0`d\xb1O\xdc\x087\xbbk\x9f5\xc4\xba\xc0\x92\xd4`\x01a\x08]\xc8t\xbb2\xb8\x8a"
+    b'\x88\x0eZ\xdd\x8e\xfd\xa9\xa8[>\xf7f\xaf8\xf7\xbe\xc9\xca\x9ag8\xb07\x0f\xc2z[\xa6\x1f076\xa7\xf0\x97h\xcb\x117\xefX\xb5JJ*\xc68mR\xc5\xc8\xe1\xc4naN\xf40\x14\x9b\x03\xc4\x18\xed'
+    b',q-Xp\x9b\xaf\x8a\xc1\x91\x95:\xe9\xc6s\xeb\xfeN1l\xabC7\xa9\x10 9\xc5-9#SecX\xd9\xf8\xc4\x06\xa15&\x9c|E\xa3\xce\xe3-\xf3G\xd1`\xf0%\\\x0c\x02\xf3[\xe6*r\xfa'
+    b"W\tTxQ\x8f`\x93\x94>\xeb\xc0'\xfc\x16\x1b*\xee\x95\x18\x10\xa8\xac\x81\x94\x9eL\xb2 \xf6\x80Jd\xb1!\x81s68qw\xa6\xd7\xd6\xe0\x9c\xb81$?\xce\x85\x00\xd4\xac\x8eA\x1a\x15\xdb\x91WU_"
+    b'I\x1a\xf0\x92\xdd\xb6\xb5\xce(\xd9g\x99\x18\xceO\x0b\xac\xc4[!j\x12([7D<&\xf9\xbbf\xab\xde%\xdbq\xc8"\xe6qk\x1d\x84|\xf8\xf5/\xd9\x9f@B\x0e\xbd\x9as\x98\x83\x04T\x12\xb49\x9e\x8d'
+    b'\xac\xbd\x12\xd8\x00\x9d\xa2\xad\x1a\xed\xb7\xf1.\xa3\xf8L\xec\xbcp\xda\x0b\t&(5\xec\xa9I\xe6Y\x94>\xeeh}mK\xe0\xc1\xa3\x0eVc\x13v#\xfe\xad\xa2\xadl\xd9\x0c\x89/\xee\xd88$\xe7\xb09.\xde'
+    b'\x15\xfe^\xe7\xd0n\xce\xe9,\xaa\xd0\xb16Tf\x8e#%a\x7f\xb0\xdc+\xa5\xc4D\xe9\x15\xecb\x90\x82Ayg\x18\xccI\x1b\x8f\x89pl1\xa0~=6p\xfcbJ\xc5\x00x$\x17\x15\xd8e\x8f\xb4\xac\x82'
+    b"\x83K\xd7\x94c\x189\x14E\xe6b\x08}\xd8\xbeN\x85\x98\xc2@\xf8i\x9ac\xd4&\x87\x90\xb2u=\xcb\xd5dUU9%KR\xa6\xc1c\xf1\xe5\xe87\x8c/\xdbHp\xcbT\xeb\x9a\xca\xc3'=\xba\xdd\x01\x1e"
+    b"jS\x0f\x1f\xe4\xb4=>\xcd\x12#\xc4\x84\xdb\xcfBB\xf97\xaa\xaaSA\x0eob\xbd\xe8K\x11\x93/\xba}-\xc1A\xb5\xa2\x1c5\xda\x1d\n{\xccPB\xdf\x94\xb8\x08\x9d\xd4G'\x93JDr\xf6\x8b\xa4\xde"
+    b'\xc1a\x93\x00{\x9b\x13\x03t\x98rq\r\xa63\xd8xh\xca.\nM2\xc1\xb8\xe8\x11\x9cED\x10l\x9a\x89\xe4\xada\x06\x04\x85-{.\xe2\xbd\xc0\xe2\xd8\x10\x8f&\x8a\xb4\x12}h\xe9\x80\xc4\xdf\xb1\x14K\x11'
+    b'-6t\x87ZS\xe3"2\xb5\xc9\xa1e\xc8\xd3D\x1c\xac\xb6\xd0$\xb3.\xd7.\x8a\x03\x9cq\x81)\xdb\xa9\xaa\x12\x16\xf5\xa6\xc0\xcaK\x1b\xb8\xe8\xf2\xe2k99\xd7D\xfd\xbe\xa2\xb0\xf7\xebF.\x08^}}\x9f'
+    b"\xd4\xd7\t\x03>\xbe\x9dPY\xf4\xfd:\x93g\xfc\xfb\xe2\xce\xba\xef\x91\xb1\xef:~\x11\xb0\xcf\x1c\xd8'\xfb\xb9}6\xaf\x8d\xa7\x18\xa2\xf7|Dl|\xa2\xab\xb5\xe6\xcck\x10\xd0\x8d=^\x8c\xdex\x8e\x10\xbf\xa5M"
+    b'\xc5U6\x98jHR~fc\x02\xd2\x08C\x16rJF\xb0\x81\x01\x9cf\x81\xc5\xa4A\x97/(\x9fah\xa3\x02*\xfa\xdc\x08a\xe2\xe3\x0c\r\x97y^-\xd2M]\xb0}H}\xa1\x1aQl\x1a\t\x82(\x01'
+    b'\xfe\x80\xb2\x14\xad\xbe\x80Y\x98tq\x88\xed\x14eX \x92\xdd[\x02\x06\x82\xb2\x10\xcb\x88\xf5>*Q\x14\x8c\xc1q\x86\x11GL\x93(\xc3\xd9\\\xf65l\x93\x083$\x0f\x93\xce\x8c\xc1\x16T\x8e\xc1\x10e\x1b\xff'
+    b':\xd1\xb0\x1ez_Q\x17\x05Y\xe1\x13\xc6\x8e|\xaa\x85\x8b\xfds\x83\xa4\x9c\xf5\xe6\xf3\xaaP\xd5\x19p\xc8\xc1\xd0\x8f\xbc\x99\xa6$U3\x8f\xc1j\x83\x14ec%XB\x1b~\xd7\xe50W|\xc4\xc6\x128q]'
+    b'5\xb2u?\xa4\x15\x068ez\x1eU\x88 4\x1a\xa7OS\x0c0\x0eF\x0c\x89\xf3\x10C\x1bM8iCyy\x9e\xf1Qlv\xdd\x90\xd70=\x05<\xb4\xabD\xe9\x7fb\xb6\\m\x8d\xaf\xbc\x9b\xad\xf1B|'
+    b'l\xdb\x16\x17q\xb1\xd5\xc3\xcb)\xc5\x10\x8e\x88\x9d\x9b\x1dw\xa7\xa2\xea\xfbj\x93\x05\xe9\x10r\xeaZh(mLQ\xf4\x98\xc6S2K6\x9e\x91\xe4\xb1=|`,%\xf8\x82\xca\x94d"\xd4\xd8bDn#\xb7'
+    b'?\x11\xe9\x07s\xb6j\xfbH\xa6\x04LT y\xca\x06Jc2\x15\x90\xe3 P\xda&W\xf2]\x17\xfd\x9a\xe36\xc0\xcf T\xaa\x1b\x84%\x99\x05\xd7.@\x9aFHE\x9b \xaa\xdd\x023\xd7P\xb7\xef{+'
+    b'o\x9d\xb4\xc6\x1aU\x0c"\xfek\x90\xd3\xfc\xfc\x86\xa7X?{;:\xad%Lp+O\xfe\xed\x8c\xcb Q:\xed\xbbM\xb5\x08\xea\x10\x84\xa9\x8ca!\x01\xd4*\x7f\xc9\x13II\xe3\x9cCda\xda\xcd\x8a\xb4\xc6'
+    b"4\xb9\xd2\xe48\xc9\xf9\x12\x92\x0f\xc4\x08'%f\x07\x13\x0c5U\x05\xca|\xe2\x02\xde\x13e\xc6\xfb\xfb\xf3\xa4Z\xac&} \xfe\xfb\xb6\x18\x17\xfc\x98\xe6\xb3\x9b\xfdI\x9aO\xf6\xb1\x9c\x95}\xf0\xe3\xeb\x17\xaf~x"
+    b'\xdd_b\x95\xa6\xa4\xfa\xc3jR\xab \xd0\x95\xdc\x08\x89\x93Q\xef\xe9f\x8bz0M[\xb6D\x90\xbe\x81\xac\x1a3B\xd6\xbe$\x16\xa1 U\x97\x8f]\x96\xfc\xab\x17\x1f\xea\x15T\\\xfa\xfc\x9f\xfe\xe8^ \xbd\xf9'
+    b'\xe9\xfd\xe8t8\x92<\x0e\xce\x0e\xa4\xd4\xc7H\xe1]Z\x92Z+\xd1\x94\x08\xedyN\xb6b:g2\x81\xb1Cq+\xebn\x9f\x17x\xf32\xbdr\xc9\xfc/2\xf5\xe2\xdd\x8b\xe1\xa0>0\xc6\xf1uy\\2b'
+    b'\xb1\xe2\xcf\x81HA\xc8!\x7f\x12\xe6\xaft\xc3q^\x14\x91\x1f\x87\x1bs\x1a\x8c\t\x021\xd1T"\xeaE\xd7\x8a\x16b\xd9#q\xa5\x99\x83\xccZ\xd1\x07\xcda\x82\x12\xb5\x84\x9a\x10\xa7\x0e\xc9\x9c\x12\xc3\xb6B\x9b!'
+    b'k\xb3n}\xb0\xa4$\x9b\xdb\xd4\xf1\xbc\xbc\xa2\xd8AN\xf2E\xfd\xe9a\x82\x80-\x87\xf0\xf9\xa2\x80\xb0\xdd[\x13\x0b?K\x0c\xdf\xfb\xd7\xca]l\xc8\x11\xf7w\xaa\xfe\xc4\x04\xc8yU\x7f\x00\x81\xe2\xfe.\xd5\xc6Y'
+    b'r\xbe/\xefj\x11\xfc\xa7\x86\xb7\xc4\x82q7G\xcd~\x02\xdep\xe7\xc7\xc3\xdep\xd0\xfc\xde\x9b\xc5y\x8d\xb7\xf7p<\xe8\r\xb7\xc2!R\xb4\xf5\xdeT\x9b\xae\x0f\xf7\xa5\xf8_\x12\x9f\xbaR?\x8e\xcf\xd5\x92<`'
+    b'\xb1\x17\x7f\xee\x93\xc2r\xb9\x93\xf64\xa9\x92\xa7\x16A\x16[\x98\xb8\xb7M\xac\x16\x9cf\xe3|M\x81|\xef\xac\xda\xac\xa6Q{\xca\x06B\xae\xbd\xcaR[\xd5\x87\xe9\x07\x855\x13\x7f\xa0\xd5\xaf\x13\xa3\xbd*W\x9f\xe3'
+    b'\xc5\xf0\xf0\xf0\xd3\xc9\xd17\x8e\xb2\x05\xd5\xa1\x9eH\xcc2\x11.\xbc6\x89j7\xc95^\xae\xa0`\r\x1e\xe1\xaaE\x0c\x0b\x19\x81\xb1\x04\x8a+5Y\x0f\x98%jz\xa3V& \xa4\x8e\x13!\xc1\xa5\xcc|q\xac'
+    b'P\xd6\xb8\xaf!X\x1f\x82k\xf9\x90\xb7\x03\xe5\xd5\x16\x87\x88\x9b\xfdk\xd1\xaf\xa4\x12K\xd4\xa2\\5\xf0\xbe_\x06\x02\x11\xd5\xf2S.B\x94$\x8d\xe7(=\xab].e9`\xc48$S\xd3\xd5\x0e\x08Y\x03\x8b'
+    b'E\x01\x9c\x7f\xc8Me\x17\x19\xa4\xaf:.cl*F\xc9\xb5!AJ\xe1t\x8czL\xac\xd1\x99\xd4C`>B\xb8\xf8\xd6\x16\x1f\x12(H\xf5\x16\x81EPT\xc3\xa04\x80\xd8H\x83$U\xc3Mf?\x94\n'
+    b'\xe0\xbeT\x1eW!w\xa1J\ryx\xbe}\x8a&\xee\x91T\xe93\x12>_\xf7\xc6a,\xb1\xf8\x99P\x1c\xdd\x81\xe5\xb0]\x17\xc7\x83O>\x98\xa4.\x1bm\xa7\xc1\x92T$\x8a\xdd]%yE\x91s9\xba\xb6'
+    b'd\xd7\xbb\xfd\x97\xaf}!Q\x9f\xba+\xf3\x92\xb2\xbc^\x9a\x90\xca\xa3|:\x00{\xa5\x04\x08\x16\x12\x93z/X\xf5\xa6&&\xfcJ\x1c]\xa6\xfe`\xdbT\xff\xe8\xb0\xdd:\x1fI\xfdB\xc6TZ\x8f\x15\xfc]\x85'
+    b":\xa9\xcc\x15\xdc`\x14\x94\x1d\x95,\x12aC\x11\x95\xd9\x99\xadR\x17\x9b\xdd\xcc#n\xab'\\\xd7\x83a\x1bX\x1a\x1e\xf5Oi\x08\\\x85U\xc8d\xef\x98\x1c\xd9@q[\xc6\xce\xc8\x1e\xca\x8d\x85}\xf5R\nu"
+    b'\xf8\xa2\x19~Mh2\xd2\x94\xcb\xc29-\x12\xa6\x1eZ\x91\xb1\xb0)\x97\x97\xa3\x0225\xa3\xd7}\nA\x7fF\x12\xf0Z2wia\xbf\x99<`\xbaS)\xc9\xb3&\xdb\x1ft\xd5\x19\xfc\x0f\x94E2U\x9e\x0c'
+    b"\x98\xd3/$\x81\xd6\xa7\xd0\x0b\xcf\xf7\x1f\xb6GJ\x82T\xb03X\xd1\xa7\x1dc\xed+B\xd94yl\n\xf22A\x16\xb5%\x0f\x95+r'\xcc\xd2\xa4\xb0\x95\\0\xc9\x9f3\x1e\xb0*\x1dOP\x9agyk\xff"
+    b'\x80U\x80 \xcd\xfe\xdd\x85}\xc5\xaa\n\xfb\xefz"z\xf3i\xd3\xfc\n\x8b\xf3\x94\x16\x86-\x90\xe3\x9bov\xc9w\xb6\x9e\x0f\xdb\xb3\x10pX\xf0\x8d?\x9c\x87n|\xe0E\xa5_\x1b\xa5\n\xb6\x07k&7:\xfd'
+    b'\x18\xe7+@\xc66 b\xc9E\xa9\x14\x89\xad\xad\x95\x0c\xcb\xe9H\x1a^\x15\xa1\xe5\x81r\xc3\x16Q:\xe3\xa3fA\xce\xc9$\x1e\x9b\xee\x03u\xa0\x02\xba-\x86\xb1\xd0^\xa7u\x10\xa8\xa1\x01\xed|"D_P\x98'
+    b'\xf2S\xa8\xe4\xa3q\xb5B\xb7\xf6\x8cc\xb5>\xa1%hKB\x9f\xcd\xbeB\xa2v\xc8\x15Z<\xbb\xee\xe0>\x94u\x9c=.\xeeh\x9e\xccn\xcfw\xa3\xadz\xe8\xe4:dU\xe8\xc3 \x9d\xbb\x14\xd6\xbbae\xcf'
+    b"\xeaC'\xf3\xed\xa7;\xdc\xec\x93\xf9\xc3;\x97s\xf8\x88\x9d\xa0\x8b\xd4\xbf\xe2^\xa4\xf9<\xef\x17\xce#\xfe\x88\x8d\xa8\x1e5\x0f{\xc4\x7f\xc3\xa0\x0266\xbd2\x01\xb0\xb6#\xe5\x1c\xfdC\xd7\x04\x13~\xabr\xee\xe0"
+    b',\xc8H\xc8\xbd\xe7\xae\x83\xb5r\x127\xfe6(\x0e\xe8"\x82\xf8\x12g\xeb}\xe4A\xa4\xb2\x06\x96\rkh\x9a\x01M\xdd\xa2\xc9\xb6\x02\xb8Y\xa2\x1d\xc0\xcd<(\x88\xa3#\xf1\xd7{&\xe5YQ_\xed"\xce$'
+    b'\xd9\t\xc9\xa52f\x93\x8d\xe2\x9a\xe4\xc4)\xec(|\xb5&\x90l\xb2\x1cc}U\x0eD\xd51\x96\xf5\xe1:\x90X\xc3\x12\x15\xa1\xcc\xe6\x19\x82\xd0\xc5\x05bm\x9d\xbe\x9dl\x80\x02.$\x90V\x14\xb3\xc2Y4X'
+    b'>\xc6A\xb9\xa2\x8e\x9d\x0f\xd54\xa6x)\xd6\x92\x8c\x9faN\x95\xcc\xb1 \xa9M\x8b$\x01\x99M\xa5*NJ\x0ei\x94p\x0f4\rs\x1e\xf9REX\x93\xd1\xaam\xb8\x13\x17<\xd5O\xc4W\xc4\xb5Y\xa0\x1f'
+    b'\x97\xa1l\'\x13D\x0f\xdbz\x8b\x12\xef\xc8\xc2\xb0\x91kA\xb9\x14`]\xb0\xdduO\xc9g\xa6"`\xa1Z\xf3\xf0L\x04\xe2\x1d\xbb\xb8\xf8,\xc0Ey\xe2\x9c=\xbb\xddc\xd6\x81\x94\xe7\xc5\xc5F7\xda\xa2\xcb\xfb'
+    b'c\x91g\xf3\x0b\x94)j\xdd\xa2Q\xeccd>\xe2\xfdf[o\xef\x97\xc9$\xc4\xe4\x8eu\xb4[\xddn\xcd\x10\x9c\xc1\x14t\xf9[\x86\xc5W\x10u\xfe\x85$\x91\x7f\x1dV\xfe\xc0p%\x87\xdd\xb7-F\x90\xfc\xa1'
+    b'\xcb)\x16y\x95\x9b[\x87x|\xf4\xa3\xab1\xd4\x12\xfc\xeb\x89\x99\x18-\xf0\x12\xe8\x0cv\x12M\xe1\xdf\xbf}c+\xe1\xc6\x9a\xde\n\xef\xc0\xa2\xa21q-K\xfdCr"\x05\xdd)\x96\xcei#\xde"\xdeHB'
+    b'\x91a\x15\x83\xd3E\xc0\xd7\x0c{l\xdc\xe4\xdb*D0\xe0\x1a\xae\x96\x07\xd8\xdc\xffw\x7f\xfe\xbe\xab\xfe\xd7\xbb\xd7\xdf#W\x83\xe9\x93\r\x9b\xc5\x95 m\x9f,\xce\xb6l\xea6\xedv\xfaW\x8d\x8cI\xadi\xba"'
+    b'b\x9d\xdb\xaa0\x0b[x]\x8bQ\xa7.\x9e\x04D\x0f\xfdv%\xad\xc0\x86b\x04@i\xd2B\xf1\xe7\xd9\xf8\n\x17C\xc5v\xcd\x9cL\xe3\xc4\xea5\xd5\x1a\xc4\xeb\x11\xc6\x9e\xce^\x0cG\xa1\xea\xec\xb64A\xe3N'
+    b'#\xe1\xea`Pk\xca\xd70\xa0\xe1\xb7\xaf^\xb3$\x86\xfb\xc8\xd5\xa4\xdd\xa5/\xce\xdaN\x86\xf8&F\x84\xcc\x1c!Lr\x04\xde\xb2c+\xefzJ\x1f\xae\x17\x15s\x91%\xd1\xba\x8cR\x06\xc6\x83G\xa9q!a'
+    b'\x18H\xee\x8a&"\xc1g\x90\xf6\x9b\\\xa2\x8e[\x8d0\xd4@\x00\xa4\x9a>4\xcdk\x0c$\x97AV\x14\xe3\x19\x00M.L\x81]\xd7\x14\xe6im:\xd8\xa6\\\xd2\xed\xe6\xb5"\x8d\xe1\xa7N\xcc\xc2\xe5\xda\x98-'
+    b'\xea\x80\xfb"[\xb6[\t\xc2\x8d\x84%\x9a3\xdd\xbd\x90T\xe2\xf0\xed\xab\x17.\xc9\xa1\xce\xf5\x02v\x89\x9b\xe8\xfcnyP}\x86\x9dE4\t\xb9\xaf\x84Cx\xc8\x04\xe2\x84<\x91b\r@\x92\xeaxLQz\xc5'
+    b'\xa0\x0f\xa3\xa4z\x8dw\x9fq\x14\x04\xcc\xf3\x81Q\xab\xbf}\xde\t\x8b\x0fY\xe7\xeeA\x02\xa4{\xe8H\xb4\x7f\xb7\xae#\xd8\xed/1L\x0b3\x08#\x9d\x1b\x14\x08]Y\x11\xdf$\xc6\xc5\xf6Y\r\x89D\xed\x10\xdd'
+    b"'\x9b\xf7\x10\x12\xa0\xd7\xac0\xf43\x88\x93\x0eO\xdd\x04\xbe\x99\xf2\xfdbr\xb3\x15Vl\n\xf4\x0f\x03\xa4I\x8b\xfe\xc1\xa7$\x97\xba\xfb\xc1\x8d#Q#\x88\xf2_\x15\x0b1\x0c\xe17\x81\x85_&\x0ey\xef\xffo"
+    b'\xc4\xaf\xbc\x11\xfd\xa3O\xb7\xd4\xf9\x13\xe7:\xba1\xf2\xdc\xfaw\xeb\xf5\xd8%\xfc\x88\x9c\xca\xf5\n\xbf\x92\x9day\x0eUL]Fx\'\xc84]\xc5Zd<\x13HeiRU0\x1c]V\xc8\x06" %\xae'
+    b'x1U7K7AQx\x19\xaa\xe6\x92\x0b\xeetT?Y\x16\xdb\xf0\xba\xda\x10/\xf6Pg\xb9\x18\x1e\x82+\xbe8tP*\xf3g\xcd\x14e\x80\x95N\x03\x97\x91Z\x15Rkvt8`\x9f\xc1d\xa3\x0eF'
+    b'\x83\xd0m@Q\xedt\xffBh6+\xf3\xa2\xc0\xac\xb7J\\\x82X\xdb-\x08\xdb\xe0:tD]\xa9B>\xd2\xba\xba\xbb\xeb\xe2l\xd0\x0c\\\xf0\x97#\xa5\xc9R\xae\x93\xcb@\x86\xf3\xf1ya\xb9\xe6\xa5^\xe6\xe5'
+    b'\x86\xae\x1c[\xd2l\xf9\xba*{i#I#\x88\x04(\x06\xc2L\xdd%\x898_\xda)\xf6hF\xf6J$\xbc\xbeE\x0ciRs\x90\x9c\x86(\x87\xccVi\xda\xabyN0\xf5Y\x02\x03\xf0\x96J=[\x19\x91'
+    b'\x1c1\xa05\xaf\xf4-\x81\x1a\xcf\t0\x01\xc6\x05\xee\xd1\xda}\x8f<}\x92I\xe5R\x02\x12\x051\xceF\x043{\xd5\x14_\xa5v<\xf8\xe3w\xc8\x9aXB\xef\xd6M\x86\x12n\xeb.\xe9\n\xb6$\xf44]\xa0'
+    b'\x04\xeb\xc2o\x19\x0e\x94\xd7\xe3nC\xf2\xf0\xfa\x10x\xa91"\x88\xc4\xf8\x88\xe8\x98\x8e\xeb\x06\xaf\xfb]\xb7k\x83\xc8\xdd\xbdn\xe2\xf8N\xf8r\x0f\x0eue\x1eZ\x9a\x00-\xc2p\x03{g\x9a\x8c\x18\xb2lg\xbb'
+    b'\x1b\xc3O\xe9\x8ce\x7f\x84\x05ot\xc6\x99\xcfb\xbed\xb9W\xaez k%\xab_\x1a\xc4ye\x83i\xf9R*\xbe\xc3\xc7\xc2\xe3JnpJJ\x1f<i\x9d\xeb\x1aU\xcaUe\xef\x1c\xe2i\xfa\xaa\x8f<\x9b'
+    b'\xad\xc1*VH\xfb\x9f\xeb\xb6~\xac\x9d\xb0\x8c\nP(\xcc\x176\x16\x02\xadq\xc1\xe6\xd6\xca\xa5\xb7<\xd3\xbf5+\x97\x83\xc5W\xe3\xcfX\xa9\xc6\xf4\x8b\xcd\x9d\x97`\x14\x84\xbev\xcd\xbfS\xf6\xc3=:N\x18g'
+    b'}-\x81:\xcb\x02\x14FrQ#\xff\xc0\xbbC\xf6\xf6b=#\xcc{\n\x07\xe6\x1a\xaf\xfa\x03e\xb8\x00\n\xf6l\xbc\xa7\xe0\xff\xf8i\x1f\xe3\xdb/\xf8\xcb>\xf9\xc8\xc2\x97\x94\x0e\xf8\xf4Y[\xfbr>y::'
+    b':\xea\xaa\xe1\xf1\xa0\xab\x0e\x07\xb5\x864\x8b\xa7\xf4\xdf\xfe4)\xa1\xab\xa7\xc3\xd1@\xda\x02\xf7\xf9\xbd\x1a\x0e\xd4\xb7\xea\xa9\xccJ}\xa3\x0e\x9e={\xd6"\xef\xe3:\xc2\\\x13\xa0y\x9e\x14\xf3\x80\xac\x04 \xfd\x16\xff'
+    b'\xb2\xe5\x9bt\x03\x95\xb5K\xe0\x97\xc6\xf3R\xab4\xb8X>wV\xe5Fa\xbe\x13Ps\xd2#ql&\x17tO1\xe5|\n\x03\x0c.R\x13:E1iL@\xc3\xea\xbaD\x8c\xe4\x1e\xc0)\xd9\x0b$7\xbd'
+    b'6\xb2\x84N\x05\x11\xd3\xeerT\xbc\x93,\xf6\xf7\xedl\x03\x085\x9a\xfe\xf6Qu\xc6\xa2\xe6iu1Jx\xcdR\xdd(B\x8a\rr\x04\xec\x9f\x82\xf5\xa8p\xa6\r\xfc\x93\x95\xca\xb5\x08b\xe2\xa8\xdb\x95jD\xc0'
+    b'\x9b\x91j\x84\xc0_=)[)7\x8dQ\xca*1.KY\xe1l\xc0\x89\xe0\xdb\xb6"\xe3\xd2\x1a\xdc\x1e1\x19\xa5\xbbf(@\x8d\x98\xa3t\xcaK\x98\x81\xcc \xa9\xfal]\x98\xeaX2"\xea\xbc4\x88\x9f\xbc'
+    b'\xc3U\x18,\x8b\\Ku7\xdcn__\x10 \xf96\xb3\x1c\xa3\x1b\xe2\x01H?d\x12\x17S\xd2\xda]F\xcc\xcc\x05\x03\xce\xd6\xd1\xa6\xceqB\x11\x8c\x19\xb8\xbb\x0b\xd9fN\xb1u\x85/\x8c\xa20-\xb9J\t'
+    b'\xce~ve\xcf.#\xad\x08q]\xc5\xebg\xdeE\xe2\x90\xc5p\x9bi\xc5\xb8\xe9\xf91\xa3\xc7\xc6=w m\x11H|\x01k\x80\xf92\xba\xb2\xc99\xb2s.\xa8\xc5\x1a\xbe\xb6\xb6\x92\x95x\xf5\xb7\x15\x1eZk'
+    b"\x9a\x15\xe9\xf19\xd7\x84\xae\\\x1cc\r%\xdd\xa9\xa8c$\xe2\x10]\xbdG2\x9fG\xb5\xe0~\x13\xbbX\x94G\xe8\xb2)/\x84\xd9\x15Z\x02\xdd'\xa3s\x1f[=\xed\xec\xcf\xd0>\x89\xee\x81\xce3g\xb1\x9dp"
+    b'!"\xb4\x87!%\x12\x9b2\x00\x18o@\xf93\x97\xb2\xd0K\x7f\xcf\x85\x15\x90)\xca\x1a\xafU\xa5\xfc\x99\xae\x97-\xady\x8e\xa7\xb2\xef.\xf9\x0b\xef^\xa4\xacn*a\x92\xcbU\x98\xb5\xdb\xae\x1b\x8eb\xa2\xa3\x84'
+    b'\xef\xa8(M4Vp\xa1T\xf5_VF.n\x17<t\xf9rmH\xe8\xd1\xcf^\x97.r\x9c\xbb6\xd0D3\xcd&\x1c!\xbd)W\xe2.I\xcc\xb3wK\xe2\x94v\xec\x08)r\xcc\x12\xc5/\x1dme\xbd'
+    b'\xd5*\x1ey\xcf\xf0rG\xc9)\xbf\x8f\xb5x\xf3p\x0b\x96y\xbc\xc2\xecGX\xee\xc6\x03\xb2q\x97{\x18;\xc6\x90\x95;T\x0bD\xe4\xd8\x95\x90qu\x04$z\xbeH\x98\xc1\x88\x06\xd2\xbd\xa7\n\x82\x04P\x8a\xec'
+    b' \xb7\x10{X\xe67\x80S\x99+\x89\xa5\xcb\x83J\xf5\x9c\xe7\xc4\x94\xc5\x02\x95\xe3\x1a\x88\x16\xa13\x1d\x8d\xabl)o\xd8\x85m&\x86\x10;"[MAw\xc7e\x9d\xee\xb2\\\x1b\xde-\xd1\xd1B\xb0Dm\xf7'
+    b'r>\xa5>\xb9\xf0H\x1f\x1a+\xb0\xee\xd1-\xb7X-P\xba\xed\\F\xfe:\xde\xe8\xb2+\xe1\xef\xb2\xba\xba\x06]S\xb0\xa3P|\xc7\xb5\x06\x17\x1b\x8b\x91\xb1N\xb5\xf1\x02Z\xb1\x19zv\x1eR>Q\x8a\xc6!'
+    b"\xa6a\xc7([v\x05\xaf\x19\xb0\xc4z%\xa4\xdf\xde\x12\xcc\xc5a8\xe4\x1a\xb3#\x83\xc1\xad\xe9\x80\xa3\xe1\xb1H4*IHn|\xc8>\x13P\xf4\x10Pe&\xbe\xf4\x89n\x1a\xd5;\x8a:\xd4%\xd0'O\x9e"
+    b'\xec\xd9\xc9\xab\x1f\x91\xf2\xef\xd1\x7fy\xcb\xe6x\xfb\xae-\x02\xdfu\x98\x86A\x93\x12\xec\xdf\xdf{\x0b\xe2\xd6X}\xbb\xc7w4\x8c\xe5\x8e\x83=\xe8\xb8E\xf0\xc3\x0f\xc2*\x1f\xd9\x86s\xef\x16Q\x19M\x89Fa*'
+    b'\xe42\xff%\xb1\xa6\x9b8t\xe1\xbdl\xe408\xe1\xd0\xa6\x08\xe4x\xc77\xb9\x93\x16\xfa\x06O\x8c\xddl\xc9\xd9\xc8$\xc8\xc7]z>\xd9(\xbe\x118\xa9\x92(\xed\xd6\xaeS\xc0\xa3\x96\xb9\xf2\x1f\xb4\x9f\xcd\xa8}'
+    b'\xbc\x9d\x1a\x83\xf6\xf1_\x97\xc9(\x96,\xdc\x05\xd4\xff\\\x82>\tf\x18hd\xef\xf1\x94K{\x99\x17\xd0\r\xd03\xe6\x80\x92\xc9\xf9\x82\xaeM\x97\xebo\x0crC89\x00\xa8+\xech\xa2\xe7\t\xdf>\xdd\xf5\xd9'
+    b'&.i\xcf\xa1\rP\x9d\xcf3P\xd3\xa2:\x97\x7f}\x15m\x90~\x8e\xd5\xc1\xc0\xfc\xfc\xaf\x99\xfe\xb6\xb7\xd7\xb2\xf6?\xa3\xec0V\xa3\xe5\xcf_\xe2\xee\x96\xdff\xb9\xbb]\xd7\xe6\xc9\xc5\xab&\xa4\xf0A\xdc\xff\xb9'
+    b"\xf5wxB'\xb2\x83S_\xe8~\xbb\x04\xeb\xc0\x99\x82\xfc\xb6\xf6\x183\x93\xa5\xc24\x89\xa9\xd5\xae\xe1^\x01\xcb\x1c\xf7F\x15\x18\x98p\x92\x81\xd8\xe2\x1a\x0c\x07K\xc7\t\xdf\xcb\xb5\xf0\xeeF\xf8-\xaf=]\xdbg"
+    b'\xa5<1\x19\xf3\xa5\xba\xf5\xbbf_\xc3IH\xb4\tW\xc9\x99\x7f\xf6\xe4a7\x91\xbd:\xbe\x1b\xa8\x8fLA,\x99\x0e\xeeK\xa5[s\xa9\x92\x06[\xd7\xc4"GB\x19q\xe7_\xa7\x1cF\xed.\xa2\x96\x80\\\x97'
+    b'\xf5\xf7\x98\xd35jC\xb0\x9f\xa48\x1a+7D\x9e\xbar1\\\xed\xb2_BB\x02W\x1c\x95W*\x99\xf9\xecv\xf9\x96\xf4\x03\x1b\xab\x88\xc6|w}/\xb6\xce\xc2kT\xe2\x9cS\x9b\xf03DV\xea\\\x06\xb5'
+    b'\xfax\xb0\xbf\xfeZ@d\xd7\xb8}\x14\x9d`\xdc-\x8a\x96\xb0n\xdf\x8c8\xd1\x0bW7\xd1\xe6W\x8e\x99\xd7\x8b\xc8\x8d\xe2\xa4\xa1$\x87\x89$:p\xc1\x1aZ+\xca\x06R>.\x0b\xd7\xba\x08\xb3\xf2x\x82A\xfd'
+    b'&1\\\xb0\xd8*\xd6\x0b?5\xe7\xb6oH\xeet\xa9\xb9\xc3p\x91W,["\xc6"\xda\xa4\xd4\xf3H\xf8:\xe6\xa0\x86]7\x14\xdeP\xfe\xdb\x88H%Y;"G\x81\xf4\xac%O\xe4a\\\xe8;\xa0X('
+    b'c\x1c\x19k\xc3\xfe\xf9\xb3/Ly(\xc9\xac_Hp\x9b\xfd\xd0\x96\xdcxp\xb0\xd4m49HCs\xd7\x9b\x00\xb2x\xfb6#\n\xa19lB\xaaC\xebA\x96\xf3\xee\x19P\xa0\xd2\x8d\x97\t\xe8K\xb99\xe4'
+    b'\x17\x0c\xc1 \xd2\xe5t\xc9\xc6\xd5S\x84\x0bb\x0ec\xf2\xc8C\xee\xbe\xa8\xb3\x96\xc5&2\x11\xfa\xd8y\t\xf7J\xa1\xe3\x99I\xdc\x15\x95o\xfau\x12\r\t\x1a\x0f\xdf\xd7e\x94\xad\\\x10]\x8b\xdb\xd6*1\x0f\x96'
+    b'\x0e\x12\x89\x91j5A\xff\xfa\xf9r\x02\xc6]\xee\x08\x0b"&L.XK\xf0p\x91\xc41\x108v\xfbI\xea\xaf\xd4\x93\xf07G\xf2]:\x18\xee\x95W\xed\x05\xb75\x9ak\xee3\x07.\xb5\'\xf1kt8\xc8'
+    b'\xaa$\x8e\xab\xefh\x10\xeb\xc5\x12\xb1\x01\xfdW\x92\xe2H\xc2\xab\xf4.\xc1Nd\xbb\xa2\x1a\xd0\x92\xa7G\xfe\xc1\xf6$2\x8b\x11\xcd{@C\xf7\x17&\xdd\xad\xb2\x90\x08\x07\x16\x8aZ\xa2[`\xb5h\x1d\x12N\x8b\xd9'
+    b'N\xca\x8b(\xb7\x0f\xab\xa91\xa7\x94\x89\xddRO\xcc}\xcc\xeb\xe4"\xc5|\xbfO[8w\x98\x84\\\x1f\xdb\x1a\xff\xbdY`w^s\x90\x01W\xcb\x89\xbb\xa5d\xc3\xae\\\xca\xa5\xdc=\xc0\x8eQ\xd2\x03k\xe5c'
+    b'\xb0\x80\xce\x8e\xfa3bWa\xc5\xadY^\xad\x96!n\xc5\n\xe3\x92\xe5\x93\xac6\xf7\xbb\x8b]\xf8J\x0f\xb5-&ic\x16 iX\x07\xe73\x87\xf0\xc5\x13\xee\x80N\xa3n\x84\xa4V\x90\x87\xc1\x95L\xb8\x158'
+    b'\x08\x89P\xe2\xbce\x9a\xadU0\xc4\xfd/&3\xc6\xf4\xb0\xe04\xaa2\x19\x15\xc3\xf35w\xc7\x01\xf7\x01I+\x99:\x99\xed\x1aM\xf6\xb6\x92\x80P \x92\xb28B\x95\xcfp7\xb8\xec\xdaz\xfd\x9d\xbfX\xdfD'
+    b'S\xcc\xc7\xa5"\x1a\xc2\x8d\xa9\x84/"\xf2n\x12BE\xf70\x08\x8d\xea\x12\x19\t\xebm]\x91\xad\xc3erJ\xbf\xc1\xd5\xbb\xa8\x15X#\xab\x1c\xe4\x12*W\x05\x19\x19X1\xe9\xab\x9fBo\x02\x12\xc3\x8b:\xdd'
+    b'\x93\xc1?\x87\xfc\t\xf9\xa9\xc7\r\xb4\x9b\xec~\x14\xc3\xa9\xabp\xe5H\x9d\xab``\xad\x86d\xc2J\xaaF\x00\x90\x8d\x08j7\x98\x87\xc6\xb7]\x11@c\x9b*\xedc\x8cHVm\x0b-\xc2\xdb\xe2\xadM\xd0*\xc7'
+    b'\x98\x0cO\xc5\x9c\xfc\xcc\x9e\x18I\x86Z\x05\xe2\xf7\xdb\x99\x0c&\x96u\xae\xd6\xc8\xee\x1f2\xf9\x02|\xd1\xca\xdbmZ\x97\x1dY\xbf\xb3\x96:\x11J.k\xa6m4$\x1a\x897\x18\xe8C\xf3e\x84\x90\x92\xeeT\x82'
+    b'\x8c\xad\xcd\x92\xecOu\xe7\xf3\x1d\x17\xbe\xbb\xc0\x1af7\xd8.\x93 r\xc7\x07\xbc\x13\xcbN\x1e\x8fE\xd7J\xea5\xbdE\x0c\x95\x08_\xe77\xb0\x9b\xcdj\x15W\x9fd_x\xbe\xa6\xf8\xef\x9a\x1d\xd7\x8eAE\xbd'
+    b'm\xa1m\xdb\x05\xf6\xd9\xac1\x02\x90\x9f\xac\xcc\xc6\xda\xc1\xd9\x03\xb8\x13\x8fkbp\x9c;`\x887\x83JZZ\x8b!\xda\xdeq\x91x_ih\x06\x0ee\x1c\xceT\xcb\xd5\x0e\xf1\x82f\x81\xfb@\x18N>)\x1d'
+    b"'U\xeb\x81w!N\xe4\x9d\xbe\x15\xaeL\x93B\x07w\x06\x94\x1b\xf1\xe4y\xdd\x95\xb8}\xf8\xbbB\xa5,x~\xd4\x9c\xfa+\xf0\xb1\xae\x0b{\xb1k.e\x08\xfdy\xe5\x9a\xa9\x1c2\x9e\xda\xa2\xc9\xc1\xc9eh\xd1"
+    b"\xa6\x89\x0c\xb4\xb0Em\x02\rYl\xa2\xa8`\x1aG\x02$\x94'ao\x95C\x89\x9f\xac\xa3\xddN\x81\x03v\xfd\xf6\x93VM\xe4\xbbv\xf9\xe3\xf6\x05\xb9\x84\xe1\xb1\x06\xd9!\x99h\xd3\xac(\x14\n(\xbeU\xcd_"
+    b'n#\x8a\x84\x1ei\xb1)QT\x93\x0bm\xb7\xd3\xe4\x03i4\xc9\x02D\x8eH#\xb2:<:\x08\xdf\xa1\xc8\x95T>\x04\xc2y\x85\x02A\r-\x1d\xbe|\x07\x17\x95n\xcc=l-Eq\xfd<jx\xc2\x9d\xe4'
+    b'\xea*\x93\xcb#(\x87&\xa0\xc5p(\xe2dF\xc5\x04+.2d\\x\x19W_D,F3\xdf{\xb1v\xa3\x9c\xd0*(\x8a``\x8df6_\xb6\xa0T\xdcRL\xf0\x12\xd2\xc5\x1b\x99\xe0\xcd\xb4y\xa5\xcd'
+    b'\xaf\xa3\x08>ZM\xf3\xe9-NM\xdb=\x12o\xda\x83s\xbbrt\xa2\x9bO\x07wXI~uxp~\xe0W\x85Egp2>\x18tZS\x0f\xea\xa59\xad\xbd\xd8\x06+\xf8\x15ZA\x9fk\xc2\xdb\xb2U'
+    b'D\xe1\x84FlL\x1f\xa6z\xed/+\x92t\x15\x14\x9aEk\xb3\x87\t\x99m\xe0\xd7gk\n\x9f\xa0zg\x7f\x1d\xfe\x1c\xf8\xa7A\xd9\xd9\xd83L\xf6M2\xfc\xe1\xbc\xad\xd3\x90\x95\x00$e6\xaa@\x82^\xf8'
+    b'\x16\xa3\x88oq\x82\xa3\xc5\xa9\x0e\x8dKd}\xc1Z\n\xae\xa4\x8bq\xc5W\x86f\xcc;<\x89\xb8O\xeaB\xf9\xa9\x8f\x7f\xde{\xf3\x97?\xbdz\xfd#<\xc5\x97\x7f\x1d\xfcLv\\lG.\xe3\x8e jgw'
+    b')c\x92\x1d\x05d\xbd$\xa3\xaa\xc6\xec\xc7\xed\\\xfe\x17\x15\\\x15p\x8a\xdd\xbf\x90\x8b\x90\x82\xab\xa9\nW\xeb\xd7\x85(7\xb7\x94|\xbeXW\xd5\xa6\xb5\x87\x1a\xb6\x98\xbb\xa4\xd2\x9cge\x12\x93\xeb\x18\x81\x83\xac\xb8'
+    b'\x12\xeb\xfeb\xc6\x85J\xdfT4U\xd0k\xa0k&d[#0\xf0\xf9\x06\x00\xb1\xb2\x01i\xa3\xea\xad^\xd8\x0b9\x1e\xe3\x92\xec\x9c\xb1\xde_W\xa0K\x1c\xdf\xe4a\xcc\xd9\xd3\x98\xdc\xcb)\xfc\x8e\xfb\x1f\xab\xef\x92'
+    b"9G-\xed\xbd'\xc3a%.\x9c\xfe\xde\x0b\xd8\xc9\xb1z)U\xc8\xdf\xb3/g\xef\x9d\x8d\xd5\x95\xd3\x9d\xcd\xf7\xdes~\xd7X\xbdO\xe6\x92\xca\x1f'\x86D\x95\x1d~\xe2\xfb\x9b\xaa\xfe\x94\x90U!\xb0S\x05K"
+    b'\x8e]\x00LR\xdd\xdbH\xb5\xbd\xea\xa6"\xcc\x02p\xb0\x03]\x9f\x96\xc4\xd2\xab\xad\x1c(\xd2\x00~\xd0\xaan\xef\x04as\xc8\xe0\x1e08<+2"\xa1\xf0~S+\rHa\xf4\x18bm\x029\xe1\xc2\x85\xac'
+    b'\t=h/\x86\xb9\xbdo\xcdy\x18\xb7\xff\x16\xf9\x00\xdd\xd9*d\x83\xc1$0S\x84\xb5\xd6\xb1nA\x88\xe6\xa0|4\xc3AmL\x8d\xb1Y\x83\r\xf8\xe3-\xdc\tE\xdfH\x8d59\xe9\x7f\xc9\xbcJ\xdf\xb0\x8c'
+    b'\xec\x98\xe2\x87\xc5j9\xc9\xa2$\x1dSFX\xde\x9c\x97DO\xf2K1\x0e8\xb1J\xac\xee\x0e,\xbe\xa8R\xeeC\x8e\x82\xc7 Aa\x08b\xe8T\xf5\xf59\xea\x95\x04\xa5\xa9\xdau\x83\xe3\x1d\x86\x92\xd7r=x'
+    b'^ \xdc\xa2\x94\xcd\x01>\rY0\xa0\xc6\xc1\xe40\xf1\xd6K\x11\xc9\x06~\xd8\xfd\xae\xbd\xdd8K\xaaU\x9d9\x01\xc5\x85*\x04\xad{\xa3\x1d\xbd\xe1\xf5\x01A\xb62\x8b\xd9OLs\xce/\xbcx\xdb\rv\xc0\x06'
+    b']\xc5f7{\xa6\xa9\x90(\x1bKms8N\x9a\xc4_\xbc\xcc\xcb\x1e3|\x108\xf9X\xa7\x10Au\x9d\x80\x12\x85\xfa\x12\x07\x8a\x89\xd9\xda\xa6\x99\xc3t+\x13\x80a\x9b\xceK:\x13\xe0\x00\x99B~J\xde$'
+    b' \x83W\xc8v\x85j\xb0\x91\t\x08!\x86\xb4\x88\xc9i\xc5\xd9\xc1zYT\x1c6\xc3\xb9\xba\xd6\xca\x10\xc3\x94H\x02o\xc4^\xb1w1\xe3 0\x8e\xa3\xf3\xd2\x86\x8c\xba\x15>Y\xa2\xdf\xcbT\x1e\xbeR\x81\x1c+'
+    b'\x03\xa2\xa5*\x8c\x94"C=e\xde\xd3x\xcc\xc4$\x08fM\xb9\xc0\xbbc\xa8v\x87O\xd5\xc2\xbfv\xe4\xa0\xb8\x00.\x8e\xfbr\x05\xb4\xc9\x07\x8cW\xd5\xd5\x9cR(&\xf50\xb4\x97\x14\x8d^bzk<\xfb\x1d'
+    b"V\x1f\xdd\x0b\n\xf8.)y.(G\x1e\x16B\x95b\xae\xde\xc6@\xf1V\xe1\xa5a\x00G#\xda\xedg\x17*|c=\x88!C\xb3v\x9d{p0\xd0\xac+\xa45\xe4\xa9\xacU\xb9\xe3\xd8ON\x95'k\x83"
+    b"\xc8\xb8.\xfb\x85\x15\xff8\x89\xad\xd5\xe3\xb9B7\x1d\xfb\xfc\xd0\xed'v\xcf\x1d\xd4\x92\x0b\xbbR\x01;\xcf(<H\xb3[\xad\x98)\r\x88\x14\x1b\xcf\xea\xf3\xbb\xec\\h\xe5H\x93\x9d\x9e\x04\xa94\x8b\x97j\xa1p"
+    b'Rs\x7f\x94\\%\x00\x082\xe5\x8f\xd9\xc2\xb8\xb7\xe4yy\x9b\x05j\xf5+\xbc,\x13\x04\x8a\x08#~\xd9\xc26\xc3\x81p\x99^_M5\xdf\x05 \xc0.u\x11%e\x83\t\xb6\x92\xe6\x176\xf0Z\x0e\x0b\xcb\xe7'
+    b'R\xd1\xd7\xd6\xbf\x14\xe7\x01\xfc\xffy\x96\x97\xf7\x8f\x1a\xf5\xf8*\x17\x0cH\xaa\x02\xc9\x0e\x94\xe5(\xe3\xb1S\xad~x\x10\xc5\xf9\xe8\xd9\xeb\x01:\x97?\x10\xda\xa3D\xf1N\x9e\xd5k\xd5\xd2\x99\xe1[\x1c\xa3\xe9\x14P'
+    b'+G[H\xe7\xf2;z\xce\xec\xcd?\x17\x89}\x95^\x9e\xa7\xc9\xe5\xd6\x05\x05\xc0z\x8a\xbe\x1d\x9b\xef)(\x81\xe2\x022\xed/\xd1q\xb0\x99\xdd\xc0\x8c\xe8\x97z\xf3\x9fH\x10\xce\xf7\xb1\x9f\xcf\xec\x0b\x80O=}'
+    b'\x80\x7f\x1f\xdbOov\xd3[\xbb\xae\xd4O\x0f\xee\xac\xa0\xe4\xd2\x1e&\x97v.\x83L\xd3/\xd1!\xce\xb0\x96\xbc\xfa\xb9\x9dN\x81\x98Iu.\xbb\xea\xce\xe5k\x1f4&j\x19\x85\x83\xfa\xbe\xf7a\x9f\x1d\xa2\xccs'
+    b'"\xec\xab\x12Oi\xe7\xf2\xfb\x9c\x12\x0b\xf9\xcf;\xd0\xa2\xfd\xde\x8a\xce%\xff\x8b\x18\xee\xaf\xa9\xe8Jd\x01\xdf\x89\xc1\xba\x92\xbf~m\xc9\xf8\xdc\xbe\xfcI\x14\xcf\xf5:\xea\x97z?\xce\xa7\x86\xc3\x1b@`\xca\xff\x83'
+    b'\xd3\xb5l\x8c\xe9\x8bwoy4<K6\xbe\xd7^\xed\x1a\xad\xd9\xa7h\xed\x89\x1e\x1et\xcd\x06\xc6"\xcer8\xcb\xa5p\x1ft\x1b\x90\x85\x96C\xc51K\xa8b\x99\xdb\x99~\x81\x16\xa1\xd1\x8d$\x17\x94\x80\x91\xba'
+    b'S\xe5\xe6\n\x0479\xc9\xfb\xb6\xd3=Kp\xf6\x85s\xec/\xaa%\x0c\xff\x7f\x01L\xc7jC'
+))
