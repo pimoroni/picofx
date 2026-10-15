@@ -64,6 +64,20 @@ class TinyFX:
     WIRELESS = __has_network()
 
     def __init__(self, init_i2c=True, i2c_freq=100000, init_wav=True, wav_root="/", sensor=None):
+        # What a build claims starts empty, so one that raises partway hands back what it
+        # took before the error reaches the caller. Left to the collector, the boot button's
+        # handler would hold the board, and with it the receiver's state machine
+        self.__switch = None
+        self.__sensor = None
+        self.__wav = None
+
+        try:
+            self.__build(init_i2c, i2c_freq, init_wav, wav_root, sensor)
+        except BaseException:
+            self.__release()
+            raise
+
+    def __build(self, init_i2c, i2c_freq, init_wav, wav_root, sensor):
         # Set up the mono and RGB LED outputs
         self.outputs = [PWMLED(out, gamma=self.OUTPUT_GAMMA) for out in self.OUT_PINS]
         self.rgb = RGBLED(*self.RGB_PINS, invert=False, gamma=self.RGB_GAMMA)
@@ -89,7 +103,6 @@ class TinyFX:
         self.__sensor = build_sensor(sensor, self.SENSOR_PIN, self.SENSOR_PIO, self.SENSOR_SM)
 
         # Set up the wav (and tone) player, if the user wants
-        self.__wav = None
         if init_wav:
             self.__wav = WavPlayer(0, self.I2S_BCLK_PIN, self.I2S_LRCLK_PIN, self.I2S_DATA_PIN, self.AMP_EN_PIN, root=wav_root)
 
@@ -184,6 +197,14 @@ class TinyFX:
 
     def shutdown(self):
         self.clear()
+        self.__release()
+
+    def __release(self):
+        # Hands back what a build claimed, and runs over a build that stopped partway
+
+        # The handler holds this board, so detached, a board left behind can be collected
+        if self.__switch is not None:
+            self.__switch.irq(handler=None)
 
         # A receiver hands its state machine and PIO program back as it is collected,
         # so stop it, drop it and collect now: a board built after this takes the same

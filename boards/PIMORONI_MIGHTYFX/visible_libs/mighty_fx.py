@@ -108,6 +108,26 @@ class MightyFX:
     def __init__(self, spce_a=None, spce_b=None, strip_l=None, strip_r=None,
                  servo_l=None, servo_r=None, sensor=None, init_i2c=True, i2c_freq=100000,
                  init_wav=True, wav_root="/"):
+        # What a build claims starts empty, so one that raises partway hands back what it
+        # took before the error reaches the caller. Left to the collector, the boot button's
+        # handler would hold the board, and with it every state machine the board took
+        self.spce_a = self.spce_b = None
+        self.__switch = None
+        self.__sensor = None
+        self.__wav = None
+        self.__rail_en = None
+        self.__strips = {}
+        self.__servos = {}
+
+        try:
+            self.__build(spce_a, spce_b, strip_l, strip_r, servo_l, servo_r, sensor,
+                         init_i2c, i2c_freq, init_wav, wav_root)
+        except BaseException:
+            self.__release()
+            raise
+
+    def __build(self, spce_a, spce_b, strip_l, strip_r, servo_l, servo_r, sensor,
+                init_i2c, i2c_freq, init_wav, wav_root):
         # A canvas claim has no object to finalise it, so a run that skipped shutdown()
         # leaves the SRAM held. Nothing of this program holds any yet.
         release_buffers()
@@ -176,7 +196,6 @@ class MightyFX:
         # Set up the wav (and tone) player, if the user wants. Its refills come from Python
         # between screen frames, which two screens playing GIFs held up by as much as 100ms,
         # so the ring holds twice that
-        self.__wav = None
         if init_wav:
             self.__wav = WavPlayer(0, self.I2S_BCLK_PIN, self.I2S_LRCLK_PIN, self.I2S_DATA_PIN, self.AMP_EN_PIN,
                                    root=wav_root, ibuf_ms=200)
@@ -186,8 +205,6 @@ class MightyFX:
 
         # A strip carries its length and a servo its calibration, so one setting names
         # the role and what it needs. Anything else is left alone, no pin claimed.
-        self.__strips = {}
-        self.__servos = {}
         for letter, pin, strip, servo, port, backlight in (
                 ("L", self.SERVO_STRIP_L, strip_l, servo_l, self.spce_a, self.SPCE_A_BL_PIN),
                 ("R", self.SERVO_STRIP_R, strip_r, servo_r, self.spce_b, self.SPCE_B_BL_PIN)):
@@ -379,6 +396,16 @@ class MightyFX:
 
     def shutdown(self):
         self.clear()
+        self.__release()
+
+    def __release(self):
+        # Hands back what a build claimed, in the order the hardware wants, and runs over
+        # a build that stopped partway, which has no ports where it failed before them
+        ports = [port for port in (self.spce_a, self.spce_b) if port is not None]
+
+        # The handler holds this board, so detached, a board left behind can be collected
+        if self.__switch is not None:
+            self.__switch.irq(handler=None)
 
         # Stop and collect the receiver now, so the next board's takes the same PIO slot
         if hasattr(self.__sensor, "stop"):
@@ -387,7 +414,7 @@ class MightyFX:
             gc.collect()
 
         # A motor left driving keeps going, so both stop before their shared power goes
-        for port in (self.spce_a, self.spce_b):
+        for port in ports:
             if port.driver is not None:
                 for motor in port.driver.motors:
                     motor.disable()
@@ -397,7 +424,8 @@ class MightyFX:
         for servo in self.__servos.values():
             servo.disable()
 
-        self.disable_rail()
+        if self.__rail_en is not None:
+            self.disable_rail()
 
         # Hand each strip's state machine and DMA channel back now, so the next board's
         # strips can take the same slots. Left to the collector, a stale reference to a
@@ -407,17 +435,17 @@ class MightyFX:
         self.__strips.clear()
         gc.collect()
 
-        self.spce_a.backlight_off()
-        self.spce_b.backlight_off()
+        for port in ports:
+            port.backlight_off()
 
         # A panel keeps scanning its frame, so anything later driving the backlight
         # would show it again. After the light is out, so nothing is seen going dark.
-        self.spce_a.stop_panels()
-        self.spce_b.stop_panels()
+        for port in ports:
+            port.stop_panels()
 
         # Give the DMA channels back now, so repeated screens do not exhaust the 16
-        self.spce_a.release()
-        self.spce_b.release()
+        for port in ports:
+            port.release()
 
         # No screen draws from a canvas now, so the SRAM goes back
         release_buffers()
