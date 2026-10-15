@@ -460,11 +460,13 @@ class WavPlayer:
             self.__writes_seen = __drive_writes()
 
     def __end_hold(self):
-        # Puts back the hold the sound replaced and lets any write it held go
-        if self.__holding is not None:
-            __hold_writes(self.__holding)
-            __release_writes()
+        # Puts back the hold the sound replaced and lets any write it held go. Read once, as
+        # the I2S callback ends the hold too and can land between a test and its use
+        holding = self.__holding
+        if holding is not None:
             self.__holding = None
+            __hold_writes(holding)
+            __release_writes()
 
     def __write_arrived(self):
         # Whether the computer began writing since the last refill. Busy turns true as its
