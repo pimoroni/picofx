@@ -24,25 +24,28 @@ class SweepFX(Updateable):
         # does for the effects that travel one way and wrap. In microseconds, since a
         # slow speed moves less than a millisecond a tick
         self.__offset_us = 0
-        self.__held_ms = 0
+        self.__held_us = 0
         self.__head = 0.0
 
-    def __hold_ms(self, end):
+    def __hold_us(self, end):
         """The dwell owed at an end, which is every million of the offset."""
         hold = self.hold
         if isinstance(hold, (tuple, list)):
             # The far end is the odd million, the near end the even one
             hold = hold[0] if (end // 1_000_000) % 2 else hold[1]
-        return int(hold * 1000)
+        return int(hold * 1_000_000)
 
     def tick(self, delta_ms):
-        if self.__held_ms > 0:
-            self.__held_ms -= delta_ms
-            if self.__held_ms > 0:
+        elapsed_us = delta_ms * 1000
+        if self.__held_us > 0:
+            self.__held_us -= elapsed_us
+            if self.__held_us > 0:
                 return
-            self.__held_ms = 0
+            # The hold ended partway through this tick, which moves for what is left of it
+            elapsed_us = -self.__held_us
+            self.__held_us = 0
 
-        step = int(delta_ms * 1000 * self.speed)
+        step = int(elapsed_us * self.speed)
         offset = self.__offset_us + step
 
         # The end this step is heading for, and whether it arrives. Nothing is clamped
@@ -56,10 +59,12 @@ class SweepFX(Updateable):
             reached = offset <= end
 
         if reached:
-            held = self.__hold_ms(end)
+            # The hold starts as the end is reached, partway through this tick, so the
+            # time spent past the end counts towards it
+            held = self.__hold_us(end) - elapsed_us * abs(offset - end) // abs(step)
             if held > 0:
                 offset = end
-                self.__held_ms = held
+                self.__held_us = held
 
         self.__offset_us = offset % 2_000_000
         # Whole milliseconds, so the product below stays a small int on a long strip
@@ -70,7 +75,7 @@ class SweepFX(Updateable):
 
     def reset(self):
         self.__offset_us = 0
-        self.__held_ms = 0
+        self.__held_us = 0
         self.__head = 0.0
 
     def __call__(self, pos):
