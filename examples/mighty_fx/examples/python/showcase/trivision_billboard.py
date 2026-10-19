@@ -234,7 +234,7 @@ try:
                 started = None
                 settled.restart()
 
-        elif settled.has_elapsed():
+        elif settled.is_due():
             started = now
 
         else:
