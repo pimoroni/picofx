@@ -105,7 +105,15 @@ levels: tuple[float]
 levels(levels: float | list[float]) -> None
 curves: tuple[Curve]
 curves(curves: Curve | list[Curve]) -> None
+
+# Timing
+target_ms: int          # The period start() was given, in milliseconds
+target_fps: float
+measured_ms: int        # The time between the last two frames, in milliseconds
+measured_fps: float
 ```
+
+`start()` takes its rate to the nearest millisecond, so `target_fps` says the rate actually held, such as 30.3 for `start(30)`. Comparing the measured figures with the targets shows whether a player is keeping up, as the `multi_fx.py` example prints.
 
 `levels` scales what each channel's effect asks for, so one effect can drive several outputs at different brightnesses. `ColourPlayer` adds `colours`, the colour each channel shows a mono effect's brightness in.
 
@@ -141,8 +149,8 @@ class StaticFX:
 
 For creating dynamic effects, classes can inherit from two types, `Updateable` and `Cycling`:
 
-* `Updateable` gives an effect the `ticks_ms(delta_ms)` function, letting the effect change over time.
-* `Cycling` is an extension of `Updateable` that pre-implements a cycling counter within `ticks_ms` giving the `__call__` method access to a `__offset` variable that counts up from 0.0 to 1.0 and repeats.
+* `Updateable` gives an effect the `tick(delta_ms)` function, which the player calls once a frame with its frame period in milliseconds, letting the effect change over time.
+* `Cycling` is an extension of `Updateable` that pre-implements a cycling counter within `tick` giving the `__call__` method access to a `__offset` variable that counts up from 0.0 to 1.0 and repeats.
 
 
 ### Offering an effect to an effects file

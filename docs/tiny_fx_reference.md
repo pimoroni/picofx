@@ -10,6 +10,7 @@ This is the library reference for the [Pimoroni Tiny FX](https://shop.pimoroni.c
 - [Setting the RGB LED Output](#setting-the-rgb-led-output)
 - [Using the Sensor Connector](#using-the-sensor-connector)
 - [Reading Voltage](#reading-voltage)
+- [Pacing a Loop](#pacing-a-loop)
 - [Effects System](#effects-system)
   - [Program Lifecycle](#program-lifecycle)
 - [`TinyFX` Reference](#tinyfx-reference)
@@ -19,6 +20,7 @@ This is the library reference for the [Pimoroni Tiny FX](https://shop.pimoroni.c
 - [`WavPlayer` Reference](#wavplayer-reference)
   - [Constants](#constants-1)
   - [Functions](#functions-1)
+- [`timing` Reference](#timing-reference)
 
 
 ## Getting Started
@@ -192,6 +194,41 @@ voltage = tiny.read_voltage(SAMPLES)
 print("Voltage =", round(voltage, 2))
 ```
 
+
+## Pacing a Loop
+
+A program that does its own work in a loop, such as reading a sensor, can hold that loop to a steady rate with a `Pacer`, from the `timing` module. Give it the time between passes in seconds, or a rate with `fps=`, and call `hold()` at the end of each pass. It waits out whatever is left of the interval, so the time the pass itself took is not added on top:
+
+```python
+from timing import Pacer
+
+pacer = Pacer(0.1)      # Ten passes a second
+
+while not tiny.boot_pressed():
+    print("Voltage =", round(tiny.read_voltage(50), 2))
+    pacer.hold()
+```
+
+A pass that overruns drops the whole intervals it missed, so the loop never runs faster than asked in order to catch up. `elapsed` gives the milliseconds since the loop began, for movement worked out from time, and `delta` the milliseconds the last pass counts as, for movement stepped once a pass.
+
+Where something in the loop is due less often than the loop runs, a `Roller` says when it is next due:
+
+```python
+from timing import Roller
+
+report = Roller(5)      # Due every 5 seconds
+
+while not tiny.boot_pressed():
+    if report.is_due():
+        print("Voltage =", round(tiny.read_voltage(50), 2))
+        report.advance()
+
+    # ... do other things here, since nothing waits for the report to be due
+```
+
+`advance()` moves the deadline on from where it was, so a report read late keeps its spacing, and `restart()` starts the interval again from now. Effect players keep their own time, so a program that only runs players needs neither.
+
+
 ## Effects System
 
 To make it easier to run multiple effects simultaneously, the `PicoFX` library was created. This library hands LED control over to two classes, a `MonoPlayer` and a `ColourPlayer`, which each get assigned a range of effects objects. For more information about this, refer to the [PicoFX Library Reference](https://github.com/pimoroni/picofx/blob/main/picofx/README.md).
@@ -323,7 +360,7 @@ wav: WavPlayer
 ```python
 # Initialisation
 TinyFX(init_i2c: bool=True,
-       i2c_freq: int=100000,
+       i2c_freq: int=100000,     # Hz
        init_wav: bool=True,
        wav_root: string="/",
        sensor: string=None)
@@ -427,3 +464,39 @@ position() -> int | None
 A tone or 16-bit WAV fades in as it starts, and `pause()` and `stop()` fade it out over `FADE_MS` before taking effect, so `is_paused()` turns true once the fade has played out.
 
 `position()` says how far into the current WAV playback has reached, in bytes, or `None` where no WAV is under way. Passing it back to `play_wav()` as `position` picks up from there.
+
+
+## `timing` Reference
+
+Intervals are given in seconds, or as a rate with `fps=`, and each is held to the nearest millisecond. Everything read back is in milliseconds.
+
+```python
+# A loop's rate
+Pacer(interval: float=None, fps: float=None)
+restart(interval: float=None, fps: float=None) -> None
+hold() -> None
+@property
+elapsed -> int          # Since the loop began, or since restart()
+@property
+delta -> int            # What the last pass counts as, in whole intervals where one is set
+@property
+target_ms -> int | None
+@property
+target_fps -> float | None
+@property
+measured_ms -> int      # What the last pass really took, its wait included
+@property
+measured_fps -> float
+
+# When something is next due
+Roller(interval: float=None, fps: float=None)
+restart(interval: float=None, fps: float=None) -> None
+advance(seconds: float=None) -> None
+advance_ms(ms: int) -> None
+is_due() -> bool
+
+# A rate in milliseconds, or None where neither is given
+rate_ms(interval: float, fps: float) -> int | None
+```
+
+A `Pacer` waits with `sleep_ms()`, which can wander by around ten milliseconds on a busy board, so an effect player, which runs from a hardware timer, holds a fast rate more evenly.

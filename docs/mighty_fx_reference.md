@@ -16,6 +16,7 @@ This is the library reference for the [Pimoroni Mighty FX](https://shop.pimoroni
 - [Using the Sensor Connector](#using-the-sensor-connector)
 - [Playing Sound](#playing-sound)
 - [Reading Voltage](#reading-voltage)
+- [Pacing a Loop](#pacing-a-loop)
 - [Effects System](#effects-system)
 - [`MightyFX` Reference](#mightyfx-reference)
   - [Constants](#constants)
@@ -85,6 +86,8 @@ Each RGB output's three channels are also available alone, through the `led_r`, 
 # Light whichever channel a mono LED on output 1 reaches
 mighty.monos[0].on()
 ```
+
+Code written for Tiny FX's mono outputs, where `tiny.one` is a single LED, takes `mighty.monos[0]` here, since `mighty.one` is a whole RGB output.
 
 
 ## The L and R Connectors
@@ -244,6 +247,21 @@ print("Voltage =", round(voltage, 2))
 ```
 
 
+## Pacing a Loop
+
+A program that does its own work in a loop can hold it to a steady rate with a `Pacer`, and know when something in it is next due with a `Roller`, both from the `timing` module. They work as on Tiny FX, described in the [Tiny FX Library Reference](/docs/tiny_fx_reference.md#pacing-a-loop):
+
+```python
+from timing import Pacer
+
+pacer = Pacer(0.1)      # Ten passes a second
+
+while not mighty.boot_pressed():
+    print("Voltage =", round(mighty.read_voltage(50), 2))
+    pacer.hold()
+```
+
+
 ## Effects System
 
 To make it easier to run multiple effects simultaneously, the `PicoFX` library hands LED control over to players, which each get assigned a range of effects objects: a `ColourPlayer` for the RGB outputs, and a `StripPlayer` for each strip. The program lifecycle is the same as on Tiny FX, described in the [Tiny FX Library Reference](/docs/tiny_fx_reference.md#program-lifecycle).
@@ -317,13 +335,13 @@ spce_b: SPCEPort
 # Initialisation
 MightyFX(spce_a: int=None,
          spce_b: int=None,
-         strip_l: int | tuple=None,
-         strip_r: int | tuple=None,
+         strip_l: int | tuple=None,     # LED count, or (count, colour order)
+         strip_r: int | tuple=None,     # such as (30, "rgb")
          servo_l: int=None,
          servo_r: int=None,
          sensor: string=None,
          init_i2c: bool=True,
-         i2c_freq: int=100000,
+         i2c_freq: int=100000,          # Hz
          init_wav: bool=True,
          wav_root: string="/")
 @classmethod
