@@ -165,22 +165,22 @@ class Updateable:
 class Cycling(Updateable):
     def __init__(self, speed):
         self.speed = speed
-        self.__offset_ms = 0
+        self.__offset_us = 0    # Microseconds, since a slow speed moves less than a millisecond a tick
         self.__offset = 0
 
     def tick(self, delta_ms):
-        self.__offset_ms = (self.__offset_ms + int(delta_ms * self.speed)) % 1000
-        self.__offset = self.__offset_ms / 1000
+        self.__offset_us = (self.__offset_us + int(delta_ms * 1000 * self.speed)) % 1_000_000
+        self.__offset = self.__offset_us / 1_000_000
 
     def reset(self):
-        self.__offset_ms = 0
+        self.__offset_us = 0
         self.__offset = 0
 
 
 class CyclingAction(Updateable):
     def __init__(self, speed):
         self.speed = speed
-        self.__offset_ms = 0
+        self.__offset_us = 0
         self.__offset = 0
 
     def next(self):
@@ -190,18 +190,18 @@ class CyclingAction(Updateable):
         pass
 
     def tick(self, delta_ms):
-        self.__offset_ms += int(delta_ms * self.speed)
-        if self.__offset_ms >= 1000:
-            self.__offset_ms -= 1000
+        self.__offset_us += int(delta_ms * 1000 * self.speed)
+        if self.__offset_us >= 1_000_000:
+            self.__offset_us -= 1_000_000
             self.next()
-        elif self.__offset_ms < 0:
-            self.__offset_ms += 1000
+        elif self.__offset_us < 0:
+            self.__offset_us += 1_000_000
             self.prev()
 
-        self.__offset = self.__offset_ms / 1000
+        self.__offset = self.__offset_us / 1_000_000
 
     def reset(self):
-        self.__offset_ms = 0
+        self.__offset_us = 0
         self.__offset = 0
 
 
