@@ -514,28 +514,25 @@ class ColourPlayer(ChromaticPlayer):
         super().__init__(rgb_leds)
 
     def __show(self):
-        # Fetched once a frame, where each output would otherwise look them up again
-        effects = self.__effects
-        data = self.__data
-        levels = self.__levels
-        curves = self.__curves
-        colours = self.__colours
-        leds = self.__leds
+        # The lists are read from self each time, since fetching them once a frame as the other
+        # players do takes this frame past the slots a board keeps on the C stack
+        is_instance = isinstance
+        tuple_type = tuple
         for i in range(self.__num_leds):
-            if effects[i] is not None:
-                value = effects[i](*data[i])
-                level = levels[i]
+            if self.__effects[i] is not None:
+                value = self.__effects[i](*self.__data[i])
+                level = self.__levels[i]
 
-                if isinstance(value, tuple):
+                if is_instance(value, tuple_type):
                     # A colour effect brings its own colour, so only the level applies
-                    leds[i].set_rgb(value[0] * level, value[1] * level, value[2] * level)
+                    self.__leds[i].set_rgb(value[0] * level, value[1] * level, value[2] * level)
                 else:
                     # A mono effect gives a 0.0 to 1.0 level to scale the channel's colour by
                     value *= level
-                    if curves[i] is not None:
+                    if self.__curves[i] is not None:
                         value = self.__followed(i, value)
-                    r, g, b = colours[i]
-                    leds[i].set_rgb(r * value, g * value, b * value)
+                    r, g, b = self.__colours[i]
+                    self.__leds[i].set_rgb(r * value, g * value, b * value)
 
 
 class StripPlayer(ChromaticPlayer):
@@ -550,13 +547,16 @@ class StripPlayer(ChromaticPlayer):
         curves = self.__curves
         colours = self.__colours
         strip = self.__leds
+        is_instance = isinstance
+        tuple_type = tuple
+        to_int = int
         for i in range(self.__num_leds):
             if effects[i] is not None:
                 value = effects[i](*data[i])
                 level = levels[i]
 
                 # Indexed one at a time, a genexp here allocating once a LED a frame
-                if isinstance(value, tuple):
+                if is_instance(value, tuple_type):
                     r = value[0] * level
                     g = value[1] * level
                     b = value[2] * level
@@ -570,7 +570,7 @@ class StripPlayer(ChromaticPlayer):
                     b = colour[2] * value
 
                 # The strip is driven through a C binding, which wants whole numbers
-                strip.set_rgb(i, int(r), int(g), int(b))
+                strip.set_rgb(i, to_int(r), to_int(g), to_int(b))
 
         # A strip shows nothing until its frame is sent, once a frame
         self.__leds.update()
