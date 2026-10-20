@@ -88,7 +88,8 @@ class PWMLED(PseudoLED):
         self.__led = PWM(Pin(pin), freq=self.FREQUENCY, duty_u16=0, invert=invert)
 
     def brightness(self, brightness):
-        super().brightness(brightness)
+        # Clamped here, not through PseudoLED.brightness, the call costing more than the clamp
+        self.__brightness = min(1.0, max(0.0, brightness))
         self.__led.duty_u16(int(pow(self.__brightness, self.__gamma) * 65535 + 0.5))
 
     def on(self):
