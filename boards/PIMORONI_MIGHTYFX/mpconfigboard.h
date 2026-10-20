@@ -32,6 +32,9 @@
 // significant digits, so a float summed over hours drifts.
 #define MICROPY_OBJ_REPR                        (MICROPY_OBJ_REPR_C)
 
+// The interpreter's hottest helpers run from SRAM, where from flash each cache miss stalls them
+#define MICROPY_HW_VM_IN_RAM                    (1)
+
 #if defined(PIMORONI_FX_DRIVE)
 
 // USB mass storage exposes only the FX drive's volume, the FAT region at the end of flash,

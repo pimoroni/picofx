@@ -8,6 +8,9 @@
 // megabyte the networking firmware needs on the W variant. The port passes them to the
 // linker as defsyms and defines them here itself, so setting them again is an error.
 
+// The interpreter's hottest helpers run from SRAM, where from flash each cache miss stalls them
+#define MICROPY_HW_VM_IN_RAM                    (1)
+
 #if defined(MICROPY_PY_NETWORK_CYW43)
 
 // CYW43 driver configuration.
