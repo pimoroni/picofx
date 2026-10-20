@@ -8,6 +8,10 @@ set(MICROPY_FROZEN_MANIFEST ${MICROPY_BOARD_DIR}/manifest.py)
 
 set(MICROPY_C_HEAP_SIZE 4096)
 
+# The software float routines run from SRAM, where from flash they can share XIP cache sets with the
+# interpreter's hottest code, depending on where the rest of the firmware moves them
+list(APPEND MICROPY_DEF_BOARD "PICO_FLOAT_IN_RAM=1")
+
 # The flash split, in order: firmware, the filesystem, and the FX drive's FAT volume to the end of
 # flash where the variant carries one. There is no ROMFS, so the port defaults that partition to
 # nothing. The filesystem follows the firmware with or without the volume, so a uf2 rewriting it
