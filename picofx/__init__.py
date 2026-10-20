@@ -475,7 +475,9 @@ class MonoPlayer(EffectPlayer):
         leds = self.__leds
         for i in range(self.__num_leds):
             if effects[i] is not None:
-                value = effects[i](*data[i]) * levels[i]
+                # Unpacking an empty tuple allocates, so a channel with no data is called bare
+                item = data[i]
+                value = (effects[i](*item) if item else effects[i]()) * levels[i]
                 if curves[i] is not None:
                     value = self.__followed(i, value)
                 leds[i].brightness(value)
@@ -520,7 +522,8 @@ class ColourPlayer(ChromaticPlayer):
         tuple_type = tuple
         for i in range(self.__num_leds):
             if self.__effects[i] is not None:
-                value = self.__effects[i](*self.__data[i])
+                item = self.__data[i]
+                value = self.__effects[i](*item) if item else self.__effects[i]()
                 level = self.__levels[i]
 
                 if is_instance(value, tuple_type):
@@ -552,7 +555,8 @@ class StripPlayer(ChromaticPlayer):
         to_int = int
         for i in range(self.__num_leds):
             if effects[i] is not None:
-                value = effects[i](*data[i])
+                item = data[i]
+                value = effects[i](*item) if item else effects[i]()
                 level = levels[i]
 
                 # Indexed one at a time, a genexp here allocating once a LED a frame
