@@ -34,6 +34,15 @@ int mp_hal_is_pin_reserved(int n);
 // the spidisplay module's frame conversion. A Python thread would conflict badly with both.
 #define MICROPY_PY_THREAD                       (0)
 
+// A function whose locals exceed this size has its call frame allocated on the GC heap, and each
+// one freed sends the allocator's search back to the start of the heap. 18 keeps the per-LED
+// functions on the C stack instead, so they nest less deeply.
+#define VM_MAX_STATE_ON_STACK                   (sizeof(mp_uint_t) * 18)
+
+// Floats are held in the object word, so float maths allocates nothing. They keep about six
+// significant digits, so a float summed over hours drifts.
+#define MICROPY_OBJ_REPR                        (MICROPY_OBJ_REPR_C)
+
 // USB mass storage exposes only the FX drive's volume, the FAT region at the end of flash,
 // whose offset and size mpconfigboard.cmake passes with the rest of the flash split. Defining
 // the offset keeps the standard LittleFS boot; mounting the volume is board code's job. The

@@ -28,6 +28,10 @@
 // clears them all with room. Those functions take C stack instead, so they nest less deeply.
 #define VM_MAX_STATE_ON_STACK                   (sizeof(mp_uint_t) * 18)
 
+// Floats are held in the object word, so float maths allocates nothing. They keep about six
+// significant digits, so a float summed over hours drifts.
+#define MICROPY_OBJ_REPR                        (MICROPY_OBJ_REPR_C)
+
 #if defined(PIMORONI_FX_DRIVE)
 
 // USB mass storage exposes only the FX drive's volume, the FAT region at the end of flash,
