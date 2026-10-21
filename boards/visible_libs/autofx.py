@@ -2894,9 +2894,12 @@ def __place_canvases(shows):
 def __wants_full_size(entries, board):
     """
     Whether the file's screens reserve for converting a full-size image each, which
-    lets two stream as a pair from PSRAM and costs one screen about a third of its
-    speed. Where the heap is PSRAM a drawing on either takes the smaller reserve, so
-    its canvas fits in SRAM, one SRAM source being enough to pair (__place_canvases()).
+    costs one screen about a third of its speed. Where the heap is PSRAM it is taken
+    only where some scene streams two screens the smaller reserve cannot convert in
+    time, either turned a quarter or both full colour, and never beside a drawing,
+    which takes the smaller reserve so its canvas fits in SRAM (__place_canvases()).
+    An animation converts fast from its palette, a sequence's frames count as full
+    colour, and a picture is sent once.
 
     Read from the file rather than from what a scene happens to show: a pair shares
     out one reservation and both screens have to agree on it, so it cannot follow
@@ -2909,7 +2912,27 @@ def __wants_full_size(entries, board):
     named.update(entry.channels[0].name for entry in on_screens)
     if len(named) < 2:
         return False
-    return not (__HEAP_IN_PSRAM and any(entry.effect == "graphics" for entry in on_screens))
+
+    # A heap in SRAM keeps the reserve two screens have always taken
+    if not __HEAP_IN_PSRAM:
+        return True
+    if any(entry.effect == "graphics" for entry in on_screens):
+        return False
+
+    # What each scene streams on each screen, its own entries over the always-on ones
+    streaming = [entry for entry in on_screens if entry.effect in ("gif", "sequence")]
+    always = {entry.channels[0].name: entry for entry in streaming if entry.scene is None}
+    for scene in {entry.scene for entry in streaming} - {None} or {None}:
+        shown = dict(always)
+        shown.update((entry.channels[0].name, entry) for entry in streaming
+                     if entry.scene == scene)
+        if len(shown) < 2:
+            continue
+        if any((entry.channels[0].rotation or 0) in (90, 270) for entry in shown.values()):
+            return True
+        if all(entry.effect == "sequence" for entry in shown.values()):
+            return True
+    return False
 
 
 def __screen_on(fx, name, line, problems, size, full_size=False):
