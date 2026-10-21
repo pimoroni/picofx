@@ -442,8 +442,11 @@ class ScreenShow:
 
     def service(self):
         """This show's frame on its own, where nothing else is due beside it."""
-        if not self.wants():
-            return
+        if self.wants():
+            self.send()
+
+    def send(self):
+        """Stream the frame due, which stage() may have converted ahead."""
         self.__due = False
         self.__redraw = False
         self.screen.update(self.player.image, rotation=self.rotation, mirror=self.mirror,
@@ -1851,9 +1854,9 @@ def __play(fx, volume, path, errors, playing, sounding=(), maker=None):
 PLAYER_FPS = 50
 
 
-# Whether two screens will stream together. Set false where a pair was refused,
-# which is a fact about how the screens were built and will not change while they
-# are the screens there are
+# Whether two screens will stream together. Set false where a pair was refused, and
+# true again by a new scene or a new file, the refusal being about how the screens
+# were built or about the sources a scene gives them, neither of which changes within one
 __PAIRING = True
 
 
@@ -1884,12 +1887,15 @@ def __service_shows(shows, between=None):
             for show in due:
                 show.lit()
             return True
-        # Screens built too differently to share a stream, which update_pair says
-        # for itself. A staged frame is still waiting on each, and update() sends
-        # it, so the fall-through below shows them rather than losing the frame
+        # Screens built too differently to share a stream, or two PSRAM sources the
+        # smaller reserve cannot convert together, which update_pair says for itself.
+        # A staged frame is still waiting on each, so each is sent rather than lost
         except ValueError as e:
             __PAIRING = False
             print("the screens are being drawn one at a time: {}".format(e))
+            for show in due:
+                show.send()
+            return True
 
     for show in due:
         show.service()
@@ -2611,11 +2617,11 @@ def __screen_gone(screen):
         return False
 
 
-def __hardware_changed(fx, declared, for_pair=False):
+def __hardware_changed(fx, declared, full_size=False):
     """
     Whether the board entry no longer matches what is running: a strip added,
     dropped or resized, a screen's size changed, a panel swapped for another, or a
-    file that has gained or lost its second screen, all of which have to come up
+    file whose screens now want the other reserve, all of which have to come up
     again to be talked to. Asked of a running board on a reload, so what is running
     is this module's own record of what it built.
     """
@@ -2640,7 +2646,7 @@ def __hardware_changed(fx, declared, for_pair=False):
     if not __SCREENS:
         return False
     from screens import Reserve
-    wanted = Reserve.FULL_SIZE_IMAGES if for_pair else Reserve.CANVAS_SPACE
+    wanted = Reserve.FULL_SIZE_IMAGES if full_size else Reserve.CANVAS_SPACE
 
     for name in __screen_kinds():
         asked = declared.get(name)
@@ -2649,8 +2655,8 @@ def __hardware_changed(fx, declared, for_pair=False):
             continue
         if asked is not None and asked != known[1]:
             return True
-        # A screen reserves for a pair or for one, and update_pair refuses two that
-        # disagree, so a file that has gained or lost its second wants both rebuilt
+        # A screen reserves for full-size images or for canvas space, and update_pair
+        # refuses two that disagree, so a file wanting the other wants both rebuilt
         if known[0].__reserve != wanted:
             return True
         if __screen_gone(known[0]):
@@ -2752,6 +2758,10 @@ def __resolve_strips(entries, lengths, has_strips, problems, said=()):
 # reload that still names one repaints it instead of blanking it first
 __SCREENS = {}
 
+# Whether the heap is PSRAM, the RP2350's window from 0x11000000, where a drawing gains
+# from a canvas in SRAM. id() is an object's address on this port
+__HEAP_IN_PSRAM = 0x11000000 <= id(bytearray(16)) < 0x12000000
+
 
 def __screen_shown(name):
     """The selector as the board declares it, or with the port letter back in capitals."""
@@ -2844,8 +2854,49 @@ def __make_drawing(code, target, at, channel, screen, settings, fps, asleep, pro
     return None
 
 
-def __wants_pair(entries, board):
-    """Whether the file sets up two screens, which is what decides their reserve.
+def __place_canvases(shows):
+    """
+    Move each drawing to a canvas in SRAM while one fits, the largest first, where the
+    heap is PSRAM, since a drawing clears and paints there in a fraction of the time.
+
+    Run once every panel of the file holds its workspace, as canvases and workspaces
+    share one region and a workspace claimed after a canvas could find no room. The
+    last file's canvases are released first, all together, nothing else holding them.
+    A drawing keeps the frame its setup drew, copied across.
+    """
+    if not __HEAP_IN_PSRAM:
+        return
+
+    import picovector
+    import spidisplay
+
+    spidisplay.release_buffers()
+
+    drawings = [show.player for show in shows if isinstance(show.player, __Graphics)]
+    # Sizes paired with positions, so the sort compares numbers and never a player, and
+    # of two the same size the one earlier in the file comes first
+    order = sorted(((player.image.width * player.image.height, -index)
+                    for index, player in enumerate(drawings)), reverse=True)
+
+    for pixels, negated in order:
+        player = drawings[-negated]
+        width, height = player.image.width, player.image.height
+        try:
+            buffer = spidisplay.buffer(pixels * spidisplay.PIXEL_BYTES)
+        # Left in PSRAM, where it already draws
+        except ValueError:
+            continue
+        # The bytes themselves, as a blit blends and is a few levels off in places
+        buffer[:] = memoryview(player.image)
+        player.image = picovector.image(width, height, buffer)
+
+
+def __wants_full_size(entries, board):
+    """
+    Whether the file's screens reserve for converting a full-size image each, which
+    lets two stream as a pair from PSRAM and costs one screen about a third of its
+    speed. Where the heap is PSRAM a drawing on either takes the smaller reserve, so
+    its canvas fits in SRAM, one SRAM source being enough to pair (__place_canvases()).
 
     Read from the file rather than from what a scene happens to show: a pair shares
     out one reservation and both screens have to agree on it, so it cannot follow
@@ -2853,20 +2904,19 @@ def __wants_pair(entries, board):
     """
     kinds = __screen_kinds()
     named = {name for name in kinds if board.get(name) and board.get(name) != HUB}
-    named.update(entry.channels[0].name for entry in entries
-                 if entry.channels and entry.channels[0].name in kinds)
-    return len(named) > 1
+    on_screens = [entry for entry in entries
+                  if entry.channels and entry.channels[0].name in kinds]
+    named.update(entry.channels[0].name for entry in on_screens)
+    if len(named) < 2:
+        return False
+    return not (__HEAP_IN_PSRAM and any(entry.effect == "graphics" for entry in on_screens))
 
 
-def __screen_on(fx, name, line, problems, size, for_pair=False):
+def __screen_on(fx, name, line, problems, size, full_size=False):
     """
     The panel a selector name reaches, built once and kept: construction resets the
     glass, so a screen is only ever constructed the first time it is asked for, at
     the board entry's size for it or 2.8 unsaid, size being unreadable from a panel.
-
-    Two screens reserve for converting a full-size image each, which is what lets
-    them stream as a pair; one screen presents about a third faster without it,
-    the recipe being measured to hold a pair rather than to suit a single wire.
     """
     known = __SCREENS.get(name)
     if known is not None:
@@ -2903,7 +2953,7 @@ def __screen_on(fx, name, line, problems, size, for_pair=False):
 
     try:
         screen = SCREEN_TYPES[size](
-            port, reserve=Reserve.FULL_SIZE_IMAGES if for_pair
+            port, reserve=Reserve.FULL_SIZE_IMAGES if full_size
             else Reserve.CANVAS_SPACE)
     except Exception as e:      # noqa: BLE001
         problems.append("line {}: {} could not start: {}".format(line, shown, e))
@@ -3176,9 +3226,11 @@ def __build_shows(entries, fx, board, problems, build=True):
     naming a program wants: its screen entries are answered when it is read, and the
     panels and players wait until the program gives the board back.
     """
+    global __PAIRING
+
     shows = []
     built = set()
-    for_pair = __wants_pair(entries, board)
+    full_size = __wants_full_size(entries, board)
 
     hub = __hub_port(board)
 
@@ -3275,7 +3327,7 @@ def __build_shows(entries, fx, board, problems, build=True):
             screen = __hub_stream(fx, places, board, entry.line, problems)
         else:
             screen = __screen_on(fx, name, entry.line, problems, board.get(name),
-                                 for_pair)
+                                 full_size)
         if screen is None:
             continue
 
@@ -3346,6 +3398,10 @@ def __build_shows(entries, fx, board, problems, build=True):
     # nothing to say about which screens are still wanted. A hub's positions share
     # one backlight, which the hub's light answers for
     if build:
+        # A pair the last file's sources refused is tried again with this file's
+        __PAIRING = True
+        __place_canvases(shows)
+
         names = {used for _, used in built}
         for name, (screen, _) in __SCREENS.items():
             if name not in names and not name.startswith(HUB):
@@ -3911,6 +3967,11 @@ def __apply_scene(players, shows, sounds, scene):
     carrying on: their effects are built in their own pass and so are never among a
     scene's, and an effect that keeps no offset has nothing to begin again.
     """
+    global __PAIRING
+
+    # A pair the last scene's sources refused is tried again with this scene's
+    __PAIRING = True
+
     if scene.restart:
         for source in scene.sources:
             begin = getattr(source, "reset", None)
@@ -4100,7 +4161,7 @@ def load(text, fx, maker=None, volume=None):
     # declarations. The strip record goes first, so nothing here still holds a strip
     # when shutdown() collects them, and the screens die with their ports
     if maker is not None and not callable(fx) and \
-            __hardware_changed(fx, board, __wants_pair(screen_entries, board)):
+            __hardware_changed(fx, board, __wants_full_size(screen_entries, board)):
         __STRIPS.clear()
         __SCREENS.clear()
         __HUB.clear()
