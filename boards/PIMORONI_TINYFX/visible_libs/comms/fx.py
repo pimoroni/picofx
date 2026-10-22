@@ -1,7 +1,7 @@
 from comms.protocol import DEVICE_TINY_FX, FXTarget
 
-# Imported so a board driving the bus finds it beside the target
-from comms.protocol import TinyFXControl  # noqa: F401
+# Imported so a board driving the bus finds them beside the target
+from comms.protocol import MightyFXControl, TinyFXControl  # noqa: F401
 
 
 # Device Side (receive)
