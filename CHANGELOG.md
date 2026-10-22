@@ -19,6 +19,7 @@
 * A timer callback arriving after `stop()` no longer updates the LEDs
 * The players and colour effects allocate less and draw faster
 * A setter given too many values says how many it was given
+* package.json lists every module, and the package includes the licence
 
 1.1.2
 -----
