@@ -31,8 +31,7 @@ from picofx.colour import (BLACK, BLUE, COOL, COLOUR_EFFECTS, CYAN, GREEN, MAGEN
                            PINK, PURPLE, RED, WARM, WHITE, YELLOW)
 from picofx.mono import MONO_EFFECTS, NoneFX
 
-# The drive a connected computer sees. Making it writable long enough to leave a
-# report belongs to whatever manages that volume, not here.
+# The drive a connected computer sees
 MOUNT_DIR = "/fx"
 CONFIG_PATH = MOUNT_DIR + "/effects.txt"
 ERRORS_PATH = MOUNT_DIR + "/errors.txt"
@@ -1655,7 +1654,7 @@ def __in_line_order(problems):
 def report(problems, path, running=True):
     """
     Write the problems where the user is already looking, or clear the file when
-    there are none, so its presence is the message. Needs the volume writable.
+    there are none, so its presence is the message.
 
     Returns whether they were written. A caller that cannot write them has only the
     outputs left to say anything with, which is a different signal from one whose
@@ -1834,8 +1833,7 @@ def __play(fx, volume, path, errors, playing, sounding=(), maker=None):
             problems.append("the FX drive is full, so {} is out of date; delete a "
                             "picture or sound from the drive to let it "
                             "rebuild".format(name))
-        with volume.writable():
-            wrote = report(problems, errors, bool(players or shows or sounds))
+        wrote = report(problems, errors, bool(players or shows or sounds))
 
     # A drive that is full, damaged or absent all end here, the report having had
     # nowhere to go, and the outputs are then the only thing left to say it with
@@ -2196,8 +2194,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         # went wrong is said where the user is looking
         if volume.exposed():
             volume.withdraw()
-        with volume.writable():
-            wrote = report(problems, errors, bool(players or shows or sounds))
+        wrote = report(problems, errors, bool(players or shows or sounds))
         if problems:
             indicate(fx, PROBLEM if wrote else UNREPORTED)
         begin_scenes()

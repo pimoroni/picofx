@@ -1,14 +1,14 @@
 """
-The FX drive: a small FAT partition holding effects.txt, editable from a connected
+The FX drive is a small FAT partition holding effects.txt, editable from a connected
 computer over USB mass storage, and room for the assets a program reads. The mount
 is read-write whenever the board holds the drive, and released while the computer
 does, so the two writers can never meet. While the computer holds it, the mount
 point is a read-only view read straight from the flash, so a program still finds
 its files there.
 
-The drive is shown at boot and controlled by the button from then on: a double press
-of the button passed to service() shows or hides it, and hiding it, or ejecting it on
-the computer, re-reads the file. An eject does not show it again.
+The drive is shown at boot and controlled from then on by the button passed to
+service(). A double press shows or hides it, and hiding it, or ejecting it on the
+computer, re-reads the file. An eject does not show it again.
 """
 
 import binascii
@@ -50,8 +50,8 @@ __S_IFREG = 0x8000
 __ENOTDIR = 20
 __EROFS = 30
 
-# How much of a shipped document is compared. Anything shorter is read to the end;
-# anything longer is met at both ends, measured at 40ms against 424ms for a mount.
+# How much of a shipped document is compared. A shorter one is read to the end, and a
+# longer one is met at both ends
 __READ_TO_END = 4096
 __EDGE = 512
 
@@ -64,10 +64,10 @@ __ATTR_READ_ONLY = 0x01
 DOUBLE_PRESS_MS = 400
 
 # service() events. HIDDEN, EJECTED and RELOADED all mean the drive is back with the
-# board and effects.txt can be read. They differ in what should happen next: HIDDEN
-# and EJECTED leave it hidden, since a user who hid or ejected it is done, while
-# RELOADED wants it shown again once the caller has read the file. BUSY is a request
-# refused because the computer was mid-write; the user retries once it finishes.
+# board and effects.txt can be read. HIDDEN and EJECTED leave it hidden, since a user
+# who hid or ejected it is done, while RELOADED wants it shown again once the caller
+# has read the file. BUSY is a request refused because the computer was mid-write,
+# which the user retries once it finishes.
 IDLE = 0
 SHOWN = 1
 HIDDEN = 2
@@ -82,7 +82,7 @@ SETTLE_MS = 1500
 # How long the board stays off the bus before rejoining, on the second reload and after.
 # The first activation of the runtime USB device disconnects and reconnects by itself,
 # with the 50ms hold TinyUSB applies, so only a later expose() waits here. Measured
-# working on macOS 15.5 and Windows 11 at this value; not tried lower.
+# working on macOS 15.5 and Windows 11 at this value, and not tried lower.
 __OFF_BUS_MS = 500
 
 # How long after a bus reset the computer may take to enumerate the board before
@@ -90,23 +90,22 @@ __OFF_BUS_MS = 500
 # effects standing aside for good
 ENUMERATION_LIMIT_MS = 3000
 
-# How often the save watcher compares effects.txt's directory entry while the
-# computer holds the drive. Every kind of save updates the entry, where copying
-# other files onto the drive never does, so this is what "the file was saved"
-# looks like from the board. A change must be seen on two polls in a row before
-# it counts, so a half-finished save or a read torn by a host write cannot act.
+# How often the save watcher compares effects.txt's directory entry while the computer
+# holds the drive. Every kind of save updates the entry, and copying other files never
+# does. A change counts once two polls in a row see it, so a half-finished save or a
+# read torn by a host write cannot act.
 WATCH_POLL_MS = 500
 
 __exposed = False
-__was_pressed = False
-__last_edge = None
-__withdrawn = False
+__was_pressed = False   # The button as the last service() call saw it
+__last_edge = None      # When a press began that a second may make a double, else None
+__withdrawn = False     # Whether the drive has been taken back, so expose() rejoins the bus
 __watching = False
-__entry_seen = None
-__entry_pending = None
-__watch_at = None
-__watch_buffer = None
-__reset_at = None
+__entry_seen = None     # effects.txt's directory entry as last shown or acted on
+__entry_pending = None  # A changed entry seen once, counting when the next look matches it
+__watch_at = None       # When service() last looked at the entry
+__watch_buffer = None   # The block __effects_entry() reads into, made once
+__reset_at = None       # When the last bus reset came, None once enumeration is over
 __on_reset = None
 __save_timer = None
 
@@ -116,22 +115,19 @@ __wireless = False
 
 
 def __ends(text):
-    """A document's length and the two ends __holds() compares, the whole of a short one."""
+    # A document's length and the two ends __holds() compares, the whole of a short one
     if len(text) <= __READ_TO_END:
         return len(text), text, ""
     return len(text), text[:__EDGE], text[-__EDGE:]
 
 
 def __holds(path, size, head, tail):
-    """Whether the file is size long, starting with head and ending with tail.
-
-    Size first, so a missing or half-written file answers without a read. A long
-    document is met at both ends, since reading the manual to the end costs about
-    400ms on this volume and every mount and every button press would pay it. What
-    that trades away is a rebuilt document differing only in its middle at exactly the
-    same length, which nothing here produces. Every document is ASCII, which the build
-    tools enforce, so a length in characters is a length in bytes.
-    """
+    # Whether the file is size long, starting with head and ending with tail. Size first, so
+    # a missing or half-written file answers without a read. A long document is met at both
+    # ends, since reading the manual to the end took 424ms per mount on a Mighty FX against
+    # 40ms for its ends, and every mount and button press would pay it. That misses only a
+    # rebuild differing in its middle at the same length, which nothing here produces. Every
+    # document is ASCII, enforced by the build tools, so its length in characters is in bytes
     try:
         if os.stat(path)[6] != size:
             return False
@@ -145,7 +141,7 @@ def __holds(path, size, head, tail):
 
 
 def __inflate(packed, f):
-    """Write a zlib stream to the open file, a chunk at a time."""
+    # Write a zlib stream to the open file, a chunk at a time
     # BytesIO reads a frozen bytes object in place, where a read() of the whole
     # stream would put the page on the heap
     stream = deflate.DeflateIO(io.BytesIO(packed), deflate.ZLIB)
@@ -158,7 +154,7 @@ def __inflate(packed, f):
 
 
 def __encode(packed, f):
-    """Write a zlib stream to the open file as base64, a chunk at a time."""
+    # Write a zlib stream to the open file as base64, a chunk at a time
     # A multiple of three bytes encodes without padding, so the chunks join up
     step = __INFLATE_CHUNK // 4 * 3
     view = memoryview(packed)
@@ -166,25 +162,25 @@ def __encode(packed, f):
         f.write(binascii.b2a_base64(view[at:at + step], newline=False))
 
 
-# The shipped documents the last mount left stale for want of room, for autofx to
-# say beside the file's own problems: a console line reaches nobody with only the
-# drive in front of them
+# Filled by __heal(), emptied by each mount
 __unhealed = []
 
 
 def unhealed():
-    """The shipped documents the last mount could not bring up to date."""
+    """
+    The shipped documents the last mount could not bring up to date, for a caller to
+    report on the drive itself, since a console line reaches nobody with only the drive
+    in front of them.
+    """
     return tuple(__unhealed)
 
 
 def __heal(fs, name, document):
-    """Put a shipped file back on the drive, unless it is already there.
-
-    The document is its text, or a packed page from fx_editor or fx_manual, which is its
-    length, its two ends and its zlib stream. A packed page may also carry the opening and
-    closing of a page that inflates itself in the browser, and is then written as
-    those around its stream in base64, the length and ends being that page's.
-    """
+    # Put a shipped file back on the drive, unless it is already there. The document is its
+    # text, or a packed page from fx_editor or fx_manual, which is its length, its two ends
+    # and its zlib stream. A packed page may also carry the opening and closing of a page
+    # that inflates itself in the browser, and is then written as those around its stream
+    # in base64, the length and ends being that page's
     path = MOUNT_POINT + "/" + name
     packed = None
     opening = closing = None
@@ -236,9 +232,9 @@ def __heal(fs, name, document):
 
 
 def __remove_tree(path):
-    """Remove a file, or a directory and everything in it, ignoring what will not go."""
+    # Remove a file, or a directory and everything in it, ignoring what will not go
     try:
-        if os.stat(path)[0] & 0x4000:
+        if os.stat(path)[0] & __S_IFDIR:
             for name in os.listdir(path):
                 __remove_tree(path + b"/" + name)
             os.rmdir(path)
@@ -249,17 +245,11 @@ def __remove_tree(path):
 
 
 def __sweep_host_litter():
-    """
-    Remove what a computer leaves on the drive that the board has no use for.
-
-    Chromium writes a save through a .crswap beside the file and renames on close,
-    so one still present is a save the drive left with, unfinished by definition.
-    macOS writes a ._ sidecar beside every file it touches and a .fseventsd
-    directory at the root, neither of which anything here reads.
-
-    Names are listed as bytes, undecoded. Listed as str, one name outside ASCII can
-    raise UnicodeError for the whole listing, and the drive would never be shown.
-    """
+    # Remove what a computer leaves on the drive that the board has no use for. Chromium
+    # saves through a .crswap and renames on close, so one still present is an unfinished
+    # save. macOS writes a ._ sidecar beside every file it touches and a .fseventsd folder
+    # at the root. Names are listed as bytes, since listed as str one name outside ASCII
+    # raises UnicodeError for the whole listing, and the drive would never be shown
     root = MOUNT_POINT.encode()
     for name in os.listdir(root):
         lower = name.lower()
@@ -268,7 +258,7 @@ def __sweep_host_litter():
 
 
 def __has_boot_signature(bdev):
-    """Whether sector zero still ends 0x55 0xAA, so something formatted this once."""
+    # Whether sector zero still ends 0x55 0xAA, so something formatted this once
     sector = bytearray(512)
     try:
         bdev.readblocks(0, sector)
@@ -280,8 +270,8 @@ def __has_boot_signature(bdev):
 def mount(screens=True, wireless=False):
     """
     Mount the drive read-write at /fx, rebuilding it when the filesystem is blank,
-    effects.txt is missing, or either shipped document differs from the text the
-    board carries. Returns whether the drive ended up mounted.
+    effects.txt is missing, or any shipped document differs from the text the board
+    carries. Returns whether the drive ended up mounted.
 
     `screens` is False for a board found to have no screen ports, which is then given
     the catalogue without them where its pages carry one. `wireless` is True for a board
@@ -300,9 +290,9 @@ def mount(screens=True, wireless=False):
             return True
         if e.args[0] != errno.ENODEV:
             raise
-        # A volume that still carries a boot signature was formatted by someone, so
-        # it is damaged rather than blank. Formatting would take the user's files
-        # with it; leave it alone and let the computer offer to repair it
+        # A volume that still carries a boot signature was formatted by someone, so it is
+        # damaged rather than blank. Formatting would take the user's files with it, so it
+        # is left alone for the computer to offer a repair
         if __has_boot_signature(bdev):
             print("the FX drive is damaged, so it has been left alone")
             print("connect a computer and let it repair or format the drive")
@@ -313,7 +303,7 @@ def mount(screens=True, wireless=False):
         fs.label(VOLUME_LABEL)
     __mount_examples()
     if MOUNT_POINT not in sys.path:
-        # A module at the top of the drive, the WiFi credentials, imports after the board's own
+        # The drive's modules import after the board's own, the WiFi credentials among them
         sys.path.append(MOUNT_POINT)
     try:
         os.stat(FILE_PATH)
@@ -322,12 +312,10 @@ def mount(screens=True, wireless=False):
             with open(FILE_PATH, "w") as f:
                 f.write(fx_defaults.EFFECTS)
         except OSError:
-            # A full drive with the file already deleted. Unguarded this reaches
-            # main.py and the board plays nothing, where mounting anyway leaves the
-            # drive there to be emptied and autofx to say it could not be read.
-            # The empty file the failed write leaves behind has to go: an empty
-            # effects.txt is a board asked to stay dark, and it would keep this
-            # mount from restoring the default once there is room again
+            # A full drive with the file already deleted. Raising would leave nothing
+            # playing, where mounting anyway leaves the drive to be emptied. The empty
+            # file a failed write leaves has to go, as an empty effects.txt asks for a
+            # dark board and would stop this mount restoring the default
             print("the FX drive is full, so effects.txt could not be restored")
             print("delete a file from the drive and the default comes back")
             try:
@@ -354,28 +342,9 @@ def path(name):
     return MOUNT_POINT + "/" + name
 
 
-class __Writable:
-    def __enter__(self):
-        return MOUNT_POINT
-
-    def __exit__(self, *args):
-        return False
-
-
-def writable():
-    """
-    A block in which the drive may be written. The mount is read-write whenever the
-    board holds the drive, so the block changes nothing; it marks the writes that
-    must not happen while the computer has it, where they raise OSError.
-    """
-    return __Writable()
-
-
 class __FatReader:
-    """
-    The drive's FAT12 or FAT16 tables and folders, read straight from its flash
-    with no FatFs involved, so they read on while the computer holds the drive.
-    """
+    # The drive's FAT12 or FAT16 tables and folders, read straight from its flash
+    # with no FatFs involved, so they read on while the computer holds the drive
 
     # FAT directory entries and the attribute bits read from them
     __ENTRY_SIZE = 32
@@ -463,11 +432,9 @@ class __FatReader:
         return self.__u16(entry, 26)
 
     def __runs_from(self, cluster, size=None):
-        """
-        A cluster chain as runs of contiguous flash, each (position in the file, offset
-        on the drive, length). Without a size the chain is followed to its end, as a
-        directory's is. A chain leaving the volume, looping or ending early raises.
-        """
+        # A cluster chain as runs of contiguous flash, each (position in the file, offset
+        # on the drive, length). Without a size the chain is followed to its end, as a
+        # directory's is. A chain leaving the volume, looping or ending early raises
         runs = []
         position = 0
         steps = 0
@@ -493,13 +460,14 @@ class __FatReader:
 
     @staticmethod
     def __checksum(entry):
+        # The checksum of the 8.3 name that each of its long name entries carries
         total = 0
         for byte in entry[:11]:
             total = (((total & 1) << 7) + (total >> 1) + byte) & 0xFF
         return total
 
     def __long_name_part(self, entry):
-        """A long name entry's UTF-16 units."""
+        # A long name entry's UTF-16 units
         return b"".join(bytes(entry[start:end]) for start, end in self.__LONG_NAME_SPANS)
 
     @staticmethod
@@ -511,7 +479,7 @@ class __FatReader:
         return units if end < 0 else units[:end]
 
     def __decoded(self, units):
-        """A long name's UTF-16 units as text, or None where one is beyond what chr() takes."""
+        # A long name's UTF-16 units as text, or None where one is beyond what chr() takes
         name = ""
         for at in range(0, len(units), 2):
             code = self.__u16(units, at)
@@ -523,12 +491,14 @@ class __FatReader:
 
     @staticmethod
     def __units_of(text):
-        """Text as the UTF-16 units a long name stores it in."""
+        # Text as the UTF-16 units a long name stores it in
         units = bytearray()
         for character in text:
             code = ord(character)
-            halves = (code,) if code <= 0xFFFF else \
-                (0xD800 + ((code - 0x10000) >> 10), 0xDC00 + ((code - 0x10000) & 0x3FF))
+            if code <= 0xFFFF:
+                halves = (code,)
+            else:
+                halves = (0xD800 + ((code - 0x10000) >> 10), 0xDC00 + ((code - 0x10000) & 0x3FF))
             for half in halves:
                 units.append(half & 0xFF)
                 units.append(half >> 8)
@@ -538,6 +508,7 @@ class __FatReader:
     def __short_name(entry):
         base = bytes(entry[:8]).rstrip(b" ")
         extension = bytes(entry[8:11]).rstrip(b" ")
+        # A name starting 0xE5 is stored as 0x05, since 0xE5 marks a deleted entry
         if base[:1] == b"\x05":
             base = b"\xe5" + base[1:]
         # A lowercase 8.3 name is stored in capitals with these flags, and no long name
@@ -552,11 +523,9 @@ class __FatReader:
             return None
 
     def __entries(self, runs):
-        """
-        Each entry in a directory as its drive offset, its bytes and its long name as
-        UTF-16 units, None where it has none. Deleted entries and the volume label are
-        left out.
-        """
+        # Each entry in a directory as its drive offset, its bytes and its long name as
+        # UTF-16 units, None where it has none. Deleted entries and the volume label are
+        # left out
         parts = None
         checksum = None
         window = bytearray(self.__WINDOW)
@@ -599,18 +568,29 @@ class __FatReader:
                     continue
                 yield at, entry, long_name
 
+    @staticmethod
+    def __ascii_lowered(units):
+        # The units with A to Z lowered and every other unit as stored, as str.lower() lowers
+        lowered = bytearray(units)
+        for at in range(0, len(lowered), 2):
+            if lowered[at + 1] == 0 and 0x41 <= lowered[at] <= 0x5A:
+                lowered[at] += 0x20
+        return lowered
+
     def __find_in(self, runs, wanted):
-        """
-        The drive offset and bytes of the entry named `wanted` in a directory, matched
-        by its long name or its short one, ASCII case ignored. None where it is absent.
-        """
-        # Long names are compared as stored, so none need be decoded, the bytes lowered on
-        # both sides alike
-        wanted_units = self.__units_of(wanted).lower()
+        # The drive offset and bytes of the entry named `wanted` in a directory, matched
+        # by its long name or its short one, ASCII case ignored. None where it is absent
+
+        # Long names are compared as stored, so none need be decoded. wanted arrives lowered,
+        # and bytes.lower() is the quick test, but it also lowers bytes of units beyond ASCII,
+        # so a long name it passes is confirmed unit by unit
+        wanted_units = self.__units_of(wanted)
+        quick_units = wanted_units.lower()
         # A short name is eight characters, a dot and three more at most
         could_be_short = len(wanted) <= 12
         for at, entry, long_name in self.__entries(runs):
-            if long_name is not None and long_name.lower() == wanted_units:
+            if long_name is not None and long_name.lower() == quick_units \
+                    and self.__ascii_lowered(long_name) == wanted_units:
                 return at, entry
             if could_be_short:
                 short_name = self.__short_name(entry)
@@ -619,11 +599,9 @@ class __FatReader:
         return None
 
     def __find(self, name, directory=False):
-        """
-        The drive offset and bytes of the entry a path leads to, through any folders.
-        `directory` says what the last part must be, None taking either.
-        """
-        runs =[(0, self.__root_at, self.__root_bytes)]
+        # The drive offset and bytes of the entry a path leads to, through any folders.
+        # `directory` says what the last part must be, None taking either
+        runs = [(0, self.__root_at, self.__root_bytes)]
         parts = [part for part in name.split("/") if part]
         if not parts or ".." in parts:
             raise OSError(errno.ENOENT)
@@ -648,7 +626,7 @@ class __FatReader:
         return not [part for part in path.split("/") if part and part != "."]
 
     def __runs_of_directory(self, path):
-        """Where a folder's entries sit, the root being a fixed region before the data."""
+        # Where a folder's entries sit, the root being a fixed region before the data
         if self.__is_root(path):
             return [(0, self.__root_at, self.__root_bytes)]
         _, entry = self.__find(path, directory=True)
@@ -683,13 +661,12 @@ class __FatReader:
 
 class Stream(__FatReader):
     """
-    A file on the drive read straight from its flash, which reads on while the
-    computer holds the drive. The board's mount is released at every handover and
-    a file opened through it goes stale, so this finds the file's clusters once,
-    from the tables on the flash, and reads them directly from then on.
-
-    Read-only, and blind to the computer rewriting the file, which reads as whatever
-    then fills its clusters. changed() says when that has happened.
+    A file on the drive read straight from its flash, which reads on while the computer
+    holds the drive. A file opened through the board's mount goes stale at every
+    handover, so this finds the file's clusters once, from the tables on the flash, and
+    reads them directly from then on. Read-only, and blind to the computer rewriting
+    the file, which reads as whatever then fills its clusters. changed() says when that
+    has happened.
     """
 
     def __init__(self, name):
@@ -770,10 +747,10 @@ class Stream(__FatReader):
 def stream(name):
     """
     Open a file on the drive for reading in a form that reads on while the computer
-    holds the drive. None where it cannot be found that way, which leaves the mount to
-    answer, and a file the computer then takes will not read on. That is a name
-    differing in case beyond ASCII, a path through "..", or a volume the computer
-    reformatted as something other than FAT12 or FAT16.
+    holds the drive. None where it cannot be found that way, for a name differing in
+    case beyond ASCII, a path through "..", or a volume the computer reformatted as
+    other than FAT12 or FAT16. The mount then answers, and a file the computer then
+    takes will not read on.
     """
     try:
         return Stream(name)
@@ -786,12 +763,10 @@ __CHANGED_BENEATH = "the FX drive changed while this file was being read"
 
 
 class __View:
-    """
-    The drive read straight from its flash, mounted at the mount point while the
-    computer holds the drive so a program still finds its files by path. Read-only.
-    Finding a file waits while the computer writes, and a file read once it writes
-    raises OSError.
-    """
+    # The drive read straight from its flash, mounted at the mount point while the
+    # computer holds the drive so a program still finds its files by path. Read-only.
+    # Finding a file waits while the computer writes, and a file read once it writes
+    # raises OSError
 
     def __init__(self):
         self.__cwd = ""
@@ -802,7 +777,7 @@ class __View:
     @staticmethod
     def __settled(lookup, path):
         # Looks again where a write landed during the lookup, since nothing it found has
-        # reached the program yet. Returns what it found and the write count it holds for
+        # reached the program yet. Returns what it found and the write count it was found under
         while True:
             while rp2.is_msc_busy():
                 time.sleep_ms(10)
@@ -817,6 +792,7 @@ class __View:
                 return found, writes
 
     def mount(self, readonly, mkfs):
+        # vfs.mount() and vfs.umount() call these, and there is nothing to set up
         pass
 
     def umount(self):
@@ -867,12 +843,10 @@ class __View:
 
 
 class __Examples:
-    """
-    The drive's examples folder, mounted at /examples so an example finds its files by
-    the same path on every board, those without a drive keeping the folder on their
-    own filesystem. Each call is passed on to whatever is mounted at the mount point,
-    the board's own mount or the view, and answers as that does.
-    """
+    # The drive's examples folder, mounted at /examples so an example finds its files by
+    # the same path on every board, those without a drive keeping the folder on their
+    # own filesystem. Each call is passed on to whatever is mounted at the mount point,
+    # the board's own mount or the view, and answers as that does
 
     def __init__(self):
         self.__cwd = ""
@@ -882,6 +856,7 @@ class __Examples:
         return (EXAMPLES_DIR + path).rstrip("/")
 
     def mount(self, readonly, mkfs):
+        # vfs.mount() and vfs.umount() call these, and there is nothing to set up
         pass
 
     def umount(self):
@@ -922,7 +897,7 @@ class __Examples:
 
 
 def __restore_secrets():
-    """Write the empty WiFi credentials where the drive has none."""
+    # Write the empty WiFi credentials where the drive has none
     try:
         os.stat(SECRETS_PATH)
     except OSError:
@@ -939,7 +914,7 @@ def __restore_secrets():
 
 
 def __mount_examples():
-    """Mount the examples folder at /examples, once, staying through every handover."""
+    # Mount the examples folder at /examples, once, staying through every handover
     try:
         vfs.mount(__Examples(), EXAMPLES_MOUNT_POINT)
     except OSError as e:
@@ -950,24 +925,22 @@ def __mount_examples():
 
 def watch(enabled):
     """
-    Whether a save to effects.txt re-reads it without waiting for an eject, which
-    is the file's own reload=auto. service() answers a save with RELOADED, exactly
-    as it answers a single press.
+    Set whether a save to effects.txt re-reads it without waiting for an eject.
+    service() then answers a save with RELOADED, exactly as it answers a single press.
     """
     global __watching
     __watching = bool(enabled)
 
 
 def __effects_entry():
-    """
-    The bytes that change when effects.txt is saved: time, date, first cluster and
-    size from its directory entry, read straight from the flash, so the volume the
-    computer holds is never touched. None where the volume or the entry is absent.
-    """
+    # The bytes that change when effects.txt is saved: time, date, first cluster and
+    # size from its directory entry, read straight from the flash, so the volume the
+    # computer holds is never touched. None where the volume or the entry is absent
     global __watch_buffer
 
     bdev = rp2.Flash(msc=True)
     if __watch_buffer is None:
+        # The flash's block size, ioctl 5 being BLOCK_SIZE
         __watch_buffer = bytearray(bdev.ioctl(5, 0))
     block = __watch_buffer
     size = len(block)
@@ -982,7 +955,7 @@ def __effects_entry():
         root_entries = block[17] | (block[18] << 8)
         fat_sectors = block[22] | (block[23] << 8)
 
-        # The FAT12 root directory sits behind the reserved sectors and the FATs,
+        # The FAT12 or FAT16 root directory sits behind the reserved sectors and the FATs,
         # at a fixed size, 32 bytes an entry
         start = (reserved + fats * fat_sectors) * sector
         loaded = None
@@ -1000,10 +973,8 @@ def __effects_entry():
 
 
 def __entry_settled():
-    """
-    Whether effects.txt's directory entry has changed and read the same on two
-    looks in a row, so a save has landed. Each call is one look.
-    """
+    # Whether effects.txt's directory entry has changed and read the same on two
+    # looks in a row, so a save has landed. Each call is one look
     global __entry_seen, __entry_pending
     entry = __effects_entry()
     if __entry_seen is None:
@@ -1018,7 +989,7 @@ def __entry_settled():
 
 
 def __reset_if_saved(_timer):
-    """The save watcher for while nothing calls service(), run by reset_on_save()."""
+    # The save watcher for while nothing calls service(), run by reset_on_save()
     global __entry_pending
     # Timer callbacks arrive via the scheduler, so one already in flight at deinit
     # can still run after the watcher is turned off
@@ -1033,7 +1004,7 @@ def __reset_if_saved(_timer):
 
 def reset_on_save(enabled):
     """
-    Whether a save that watch() would answer resets the board instead, for a caller
+    Set whether a save that watch() would answer resets the board instead, for a caller
     that hands the board to something which never calls service(). A soft timer does
     the polling, so it runs wherever the computer can save at all, the USB task
     being scheduled the same way. An eject resets nothing.
@@ -1053,8 +1024,9 @@ def exposed():
 
 def busy():
     """
-    Whether the computer is mid-transfer. Worth standing aside for: a transfer costs
-    a running effect most of a tenth of a second in one hitch, which reads as a lurch.
+    Whether the computer is mid-transfer. Worth standing aside for, since a transfer
+    costs a running effect on a Mighty FX most of a tenth of a second in one hitch,
+    which reads as a lurch.
     """
     return __exposed and rp2.is_msc_busy()
 
@@ -1065,8 +1037,8 @@ def enumerating():
 
     Enumeration's replies are due within tens of milliseconds, and the board answers
     them between other scheduled work, so anything busy on the board stands aside
-    until it is over. A reset can come at any time: a rejoin, the computer waking, or
-    a port it reset after an error.
+    until it is over. A reset can come at any time, from a rejoin, the computer
+    waking, or a port it reset after an error.
     """
     global __reset_at
     if __reset_at is None:
@@ -1090,6 +1062,7 @@ def on_bus_reset(callback):
 
 
 def __bus_reset():
+    # The reset callback __rejoin_bus() configures, run in the USB task
     global __reset_at
     __reset_at = time.ticks_ms()
     if __on_reset is not None:
@@ -1097,14 +1070,12 @@ def __bus_reset():
 
 
 def __rejoin_bus():
-    """
-    Leave the USB bus and return, so the computer enumerates the board afresh.
-
-    A computer that missed the media leaving keeps serving its old view of the volume
-    and fails every read that reaches the device, and nothing on its side recovers.
-    Leaving the bus it cannot miss. The serial console drops and returns with it, and
-    macOS reports the drive as not ejected properly, which is true.
-    """
+    # Leave the USB bus and return, so the computer enumerates the board afresh.
+    #
+    # A computer that missed the media leaving keeps serving its old view of the volume
+    # and fails every read that reaches the device, and nothing on its side recovers.
+    # Leaving the bus it cannot miss. The serial console drops and returns with it, and
+    # macOS reports the drive as not ejected properly, which is true
     usbd = machine.USBDevice()
     if usbd.active():
         usbd.active(False)
@@ -1127,10 +1098,10 @@ def expose():
 
     After a withdraw, also rejoins the USB bus, so the computer enumerates the board
     afresh and reads the drive as it now is. Not at boot, when nothing has been taken
-    back. Effects run from a timer and carry on through the rejoin; anything the
-    caller drives itself, a screen being the one, holds its last frame.
+    back. Effects run from a timer and carry on through the rejoin. Anything the
+    caller drives itself, such as a screen, holds its last frame.
     """
-    global __exposed, __withdrawn
+    global __exposed, __withdrawn, __entry_seen, __entry_pending, __watch_at
     if __exposed:
         return False
     rejoin = __withdrawn
@@ -1147,7 +1118,6 @@ def expose():
     if rejoin:
         __rejoin_bus()
     __exposed = True
-    global __entry_seen, __entry_pending, __watch_at
     __entry_seen = __effects_entry() if __watching else None
     __entry_pending = None
     __watch_at = None
@@ -1187,18 +1157,16 @@ def service(pressed):
     try an edit without putting the drive away. Either answers BUSY instead while
     the computer is mid-write, and the user retries once it finishes.
 
-    Returns IDLE, SHOWN, HIDDEN, EJECTED, BUSY or RELOADED. HIDDEN, EJECTED and
-    RELOADED all mean the board holds the drive and effects.txt can be read; only
-    RELOADED expects the caller to show it again afterwards.
+    Returns one of the events declared above.
 
     With watch() on, a save landing on effects.txt answers RELOADED as a single
     press does, read from the file's directory entry, so nothing else written to
     the drive ever takes it back.
 
-    Note that a single press cannot be told from the first of a double until the
-    double press window has passed, so it lands DOUBLE_PRESS_MS after the release.
+    A single press cannot be told from the first of a double until the double press
+    window has passed, so it lands DOUBLE_PRESS_MS after the release.
     """
-    global __was_pressed, __last_edge
+    global __was_pressed, __last_edge, __watch_at, __entry_pending
     if __exposed and rp2.msc_ejected():
         withdraw()
         return EJECTED
@@ -1237,7 +1205,6 @@ def service(pressed):
 
     # The save watcher, under everything the button asked for
     if event == IDLE and __exposed and __watching:
-        global __watch_at, __entry_pending
         if rp2.is_msc_busy():
             # A save may still be in flight, so nothing seen counts yet
             __entry_pending = None
