@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Christopher Parrott for Pimoroni Ltd
+# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
 #
 # SPDX-License-Identifier: MIT
 
@@ -8,6 +8,8 @@ from picofx import Updateable
 
 
 class RandomFX(Updateable):
+    """A new random brightness applied to every output each interval."""
+
     NAME = "random"
     CALLED = None
     TAKES = ("interval", "brightness_min", "brightness_max")
@@ -33,7 +35,7 @@ class RandomFX(Updateable):
 
 
 class RandomEachFX(Updateable):
-    """A random brightness for every output, all changing together each interval. """
+    """A new random brightness for each individual output every interval."""
 
     NAME = "random_each"
     CALLED = "position"

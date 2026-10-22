@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Christopher Parrott for Pimoroni Ltd
+# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
 #
 # SPDX-License-Identifier: MIT
 
@@ -14,8 +14,8 @@ from .static import StaticFX
 from .sweep import SweepFX
 from .traffic import TrafficLightFX
 
-# Every effect here drives a plain light, and declares NAME as it is known outside
-# code, CALLED as how a channel gets its callable, and TAKES as its settings.
+# The effects that give a brightness. Each declares NAME as the word it is known by, CALLED for
+# how a channel gets its callable and TAKES for its settings
 MONO_EFFECTS = [
     BinaryCounterFX,
     BlinkFX,

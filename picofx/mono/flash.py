@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Christopher Parrott for Pimoroni Ltd
+# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
 #
 # SPDX-License-Identifier: MIT
 
@@ -6,6 +6,8 @@ from picofx import Cycling
 
 
 class FlashFX(Cycling):
+    """A burst of quick flashes each cycle shared by every output it drives."""
+
     NAME = "flash"
     CALLED = None
     TAKES = ("speed", "flashes", "window", "phase", "duty")
@@ -37,6 +39,8 @@ class FlashFX(Cycling):
 
 
 class FlashSequenceFX(Cycling):
+    """A burst of quick flashes each cycle that travels along the outputs."""
+
     NAME = "flash_sequence"
     CALLED = "position"
     TAKES = ("speed", "length", "flashes", "window", "phase", "duty")

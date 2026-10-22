@@ -1,8 +1,10 @@
-# SPDX-FileCopyrightText: 2024 Christopher Parrott for Pimoroni Ltd
+# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
 #
 # SPDX-License-Identifier: MIT
 
 class StaticFX:
+    """A steady brightness that never changes."""
+
     NAME = "static"
     CALLED = None
     TAKES = ("brightness",)

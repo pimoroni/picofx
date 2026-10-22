@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Christopher Parrott for Pimoroni Ltd
+# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
 #
 # SPDX-License-Identifier: MIT
 
@@ -6,6 +6,8 @@ from picofx import Updateable
 
 
 class TrafficLightFX(Updateable):
+    """A traffic light that steps from red through red and amber to green and then amber."""
+
     NAME = "traffic_light"
     CALLED = ("red", "amber", "green")
     TAKES = ("red_interval", "red_amber_interval", "green_interval", "amber_interval")
@@ -18,7 +20,7 @@ class TrafficLightFX(Updateable):
             ((0, 1, 0), int(amber_interval * 1000))         # Amber
         ]
         self.__index = 0  # Start with Red state
-        self.__time = 0  # Track time of last state change
+        self.__time = 0  # Track time since the last state change
         self.__state = list(self.__states[self.__index][0])
         self.__interval = self.__states[self.__index][1]
 

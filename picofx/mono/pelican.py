@@ -6,29 +6,28 @@ from picofx import Updateable
 
 
 class PelicanCrossingFX(Updateable):
-    """A pelican crossing: the traffic lights, and the two figures pedestrians read.
+    """A pelican crossing's traffic lights and the two figures pedestrians read.
 
-    Runs on its own clock rather than on demand, so the crossing comes round in its
-    own time. The amber and the walking figure flash together, which is the phase a
-    pelican has in place of red and amber.
+    It cycles by itself, needing no button press. The amber and the walking figure flash
+    together, the phase a pelican has in place of red and amber.
     """
 
     NAME = "pelican_crossing"
     CALLED = ("red", "amber", "green", "stop", "walk")
     TAKES = ("red_interval", "flashing_interval", "green_interval", "amber_interval")
 
-    FLASHING_CYCLE = 0.25
+    FLASHING_CYCLE = 0.25   # Seconds for one flash, on and off
 
     def __init__(self, red_interval=8, flashing_interval=6, green_interval=20, amber_interval=3):
-        # Traffic red, amber and green, then the figures: stop and walk. The figures
-        # follow the traffic, so nothing sets them beyond the state they belong to
+        # Each state lights traffic red, amber and green, then the stop and walk figures, for
+        # its interval. The figures follow the traffic, so nothing sets them beyond their state
         self.__states = [
             ((1, 0, 0, 0, 1), int(red_interval * 1000)),        # Stopped, and crossing
             ((0, 1, 0, 0, 1), int(flashing_interval * 1000)),   # Both flashing, crossing ends
             ((0, 0, 1, 1, 0), int(green_interval * 1000)),      # Traffic moving
             ((0, 1, 0, 1, 0), int(amber_interval * 1000))       # Traffic clearing
         ]
-        self.__flashing = 1  # The state whose amber and figure flash
+        self.__flashing_index = 1  # The state whose amber and figure flash
         self.__index = 0
         self.__time = 0
         self.__state = list(self.__states[self.__index][0])
@@ -69,7 +68,7 @@ class PelicanCrossingFX(Updateable):
             self.__state = list(self.__states[self.__index][0])
             self.__interval = self.__states[self.__index][1]
 
-        if self.__index == self.__flashing:
+        if self.__index == self.__flashing_index:
             # One clock for both, so the amber and the figure are never out of step
             lit = self.__states[self.__index][0]
             dark = ((self.__time / 1000) % self.FLASHING_CYCLE) >= (self.FLASHING_CYCLE / 2)

@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Christopher Parrott for Pimoroni Ltd
+# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
 #
 # SPDX-License-Identifier: MIT
 
@@ -6,6 +6,8 @@ from picofx import Cycling, rgb_from_hsv
 
 
 class RainbowFX(Cycling):
+    """A cycle through the rainbow shared by every output it drives."""
+
     NAME = "rainbow"
     CHROMATIC = True
     CALLED = None
@@ -22,6 +24,8 @@ class RainbowFX(Cycling):
 
 
 class RainbowWaveFX(Cycling):
+    """A cycle through the rainbow that travels along the outputs."""
+
     NAME = "rainbow_wave"
     CHROMATIC = True
     CALLED = "position"

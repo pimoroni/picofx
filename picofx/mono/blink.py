@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Christopher Parrott for Pimoroni Ltd
+# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
 #
 # SPDX-License-Identifier: MIT
 
@@ -6,6 +6,8 @@ from picofx import Cycling
 
 
 class BlinkFX(Cycling):
+    """A blink on and off shared by every output it drives."""
+
     NAME = "blink"
     CALLED = None
     TAKES = ("speed", "phase", "duty")
@@ -21,6 +23,8 @@ class BlinkFX(Cycling):
 
 
 class BlinkWaveFX(Cycling):
+    """A blink that travels along the outputs with each a step behind the one before."""
+
     NAME = "blink_wave"
     CALLED = "position"
     TAKES = ("speed", "length", "phase", "duty")

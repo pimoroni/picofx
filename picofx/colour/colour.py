@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Christopher Parrott for Pimoroni Ltd
+# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
 #
 # SPDX-License-Identifier: MIT
 
@@ -6,6 +6,8 @@ from picofx import rgb_from_hsv
 
 
 class RGBFX:
+    """A steady colour set by its red, green and blue."""
+
     NAME = "rgb"
     CHROMATIC = True
     CALLED = None
@@ -51,6 +53,8 @@ class RGBFX:
 
 
 class HSVFX:
+    """A steady colour set by its hue, saturation and value."""
+
     NAME = "hsv"
     CHROMATIC = True
     CALLED = None
@@ -62,8 +66,8 @@ class HSVFX:
         self.__val = val
         self.__mix()
 
+    # Mix HSV into RGB, calculated whenever a setting changes
     def __mix(self):
-        """Mix HSV into RGB, calculated whenever a setting changes."""
         r, g, b = rgb_from_hsv(self.__hue, self.__sat, self.__val)
         self.__rgb = (int(r * 255), int(g * 255), int(b * 255))
 

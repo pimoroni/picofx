@@ -3,6 +3,8 @@
 # SPDX-License-Identifier: MIT
 
 class NoneFX:
+    """An effect that keeps its outputs dark."""
+
     NAME = "none"
     CALLED = None
     TAKES = ()

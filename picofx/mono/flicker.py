@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Christopher Parrott for Pimoroni Ltd
+# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
 #
 # SPDX-License-Identifier: MIT
 
@@ -8,6 +8,8 @@ from picofx import Updateable
 
 
 class FlickerFX(Updateable):
+    """A flicker shared by every output it drives, all dimming at the same moments."""
+
     NAME = "flicker"
     CALLED = None
     TAKES = ("brightness", "dimness", "bright_min", "bright_max", "dim_min", "dim_max")
@@ -53,7 +55,7 @@ class FlickerFX(Updateable):
 
 
 class FlickerEachFX(Updateable):
-    """A flicker for every output, each dipping at its own moments. """
+    """A flicker for every output, each dimming at its own moments."""
 
     NAME = "flicker_each"
     CALLED = "position"

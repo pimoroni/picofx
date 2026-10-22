@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Christopher Parrott for Pimoroni Ltd
+# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
 #
 # SPDX-License-Identifier: MIT
 
@@ -11,6 +11,8 @@ TAU = math.pi * 2
 
 
 class PulseFX(Cycling):
+    """A smooth rise and fall in brightness shared by every output it drives."""
+
     NAME = "pulse"
     CALLED = None
     TAKES = ("speed", "phase")
@@ -25,6 +27,8 @@ class PulseFX(Cycling):
 
 
 class PulseWaveFX(Cycling):
+    """A smooth rise and fall in brightness that travels along the outputs."""
+
     NAME = "pulse_wave"
     CALLED = "position"
     TAKES = ("speed", "length", "phase")

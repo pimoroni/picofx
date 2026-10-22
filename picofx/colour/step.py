@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Christopher Parrott for Pimoroni Ltd
+# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
 #
 # SPDX-License-Identifier: MIT
 
@@ -6,6 +6,8 @@ from picofx import Updateable, rgb_from_hsv
 
 
 class HueStepFX(Updateable):
+    """A colour that jumps to the next of its evenly spaced hues each interval."""
+
     NAME = "hue_step"
     CHROMATIC = True
     CALLED = None
@@ -23,8 +25,8 @@ class HueStepFX(Updateable):
         self.__stale = False
         self.__mix()
 
+    # Mix HSV into RGB, calculated whenever the step or a setting changes
     def __mix(self):
-        """Mix HSV into RGB, calculated whenever the step or a setting changes."""
         hue = (self.__start_hue + (self.__current_step / self.__steps)) % 1.0
         r, g, b = rgb_from_hsv(hue, self.__sat, self.__val)
         self.__rgb = (int(r * 255), int(g * 255), int(b * 255))

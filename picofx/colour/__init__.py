@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Christopher Parrott for Pimoroni Ltd
+# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
 #
 # SPDX-License-Identifier: MIT
 
@@ -37,8 +37,8 @@ H_WHITE = (0, 0, 1)
 H_COOL = (0.566, 0.624, 1)
 H_BLACK = (0, 0, 0)
 
-# Every effect here brings its own colour, and declares NAME as it is known outside
-# code, CALLED as how a channel gets its callable, and TAKES as its settings.
+# The effects that bring their own colour, which each says with CHROMATIC. Each also declares
+# NAME as the word it is known by, CALLED for how a channel gets its callable and TAKES for its settings
 COLOUR_EFFECTS = [
     RGBFX,
     HSVFX,
