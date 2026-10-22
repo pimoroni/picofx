@@ -6,29 +6,36 @@ from picofx import Updateable
 
 
 class SweepFX(Updateable):
-    """A light that sweeps across the outputs and bounces back at each end. """
+    """A light that sweeps across the outputs and bounces back at each end."""
 
     NAME = "sweep"
     CALLED = "position"
     TAKES = ("speed", "length", "extent", "hold")
 
     def __init__(self, speed=1, length=1, extent=1.0, hold=0):
+        # Does the light have a width? Each frame divides by it
+        if extent <= 0:
+            raise ValueError(f"extent is {extent}. Give the light's width in outputs as a number above 0, such as 1")
+
         self.speed = speed
         self.length = length
         self.extent = extent
-        # Seconds of dwell at each end, one value for both or a (far, near) pair.
-        # Counted in real time, so it does not shrink as the speed rises, which is
-        # what lets it be set against a trail the outputs are leaving
+        # Seconds to wait at each end, one value for both or a (far, near) pair. Counted in
+        # real time, so a faster sweep waits as long and the wait can be set to outlast a trail
         self.hold = hold
-        # Counts a pass out and a pass back, so a speed means the same here as it
-        # does for the effects that travel one way and wrap. In microseconds, since a
-        # slow speed moves less than a millisecond a tick
+
+        # A crossing out and a crossing back, a million each, so a speed of 1 crosses once a second
+        # as a wrapping effect cycles once. Microseconds, since a slow speed moves under 1ms a tick
         self.__offset_us = 0
+
+        # The wait still owed at the end the sweep is resting on
         self.__held_us = 0
+
+        # Where the centre of the light is, in outputs
         self.__head = 0.0
 
+    # The wait owed at an end, each end falling on a whole million of the offset
     def __hold_us(self, end):
-        """The dwell owed at an end, which is every million of the offset."""
         hold = self.hold
         if isinstance(hold, (tuple, list)):
             # The far end is the odd million, the near end the even one
@@ -41,15 +48,14 @@ class SweepFX(Updateable):
             self.__held_us -= elapsed_us
             if self.__held_us > 0:
                 return
-            # The hold ended partway through this tick, which moves for what is left of it
+            # What is left of this tick after the hold ended partway through it
             elapsed_us = -self.__held_us
             self.__held_us = 0
 
         step = int(elapsed_us * self.speed)
         offset = self.__offset_us + step
 
-        # The end this step is heading for, and whether it arrives. Nothing is clamped
-        # where no dwell is set, so a sweep without one travels exactly as it always did
+        # The end this step is heading for, and whether it gets there
         reached = False
         if step > 0:
             end = (self.__offset_us // 1_000_000 + 1) * 1_000_000
@@ -59,9 +65,11 @@ class SweepFX(Updateable):
             reached = offset <= end
 
         if reached:
-            # The hold starts as the end is reached, partway through this tick, so the
-            # time spent past the end counts towards it
+            # Time spent past the end counts towards the hold, which starts as the end is
+            # reached partway through this tick
             held = self.__hold_us(end) - elapsed_us * abs(offset - end) // abs(step)
+
+            # Is a wait owed? Without one the sweep passes the end untouched
             if held > 0:
                 offset = end
                 self.__held_us = held
