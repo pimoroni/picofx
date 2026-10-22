@@ -1,5 +1,21 @@
 # Changelog
 
+1.1.3
+-----
+
+**PicoFX library**
+
+* Breaking: `target_ms`, `target_fps`, `measured_ms` and `measured_fps` are now properties
+* Add ChromaticPlayer, shared by ColourPlayer and StripPlayer, with `colours` to tint a mono effect
+* Add `levels` and `curves` to every player, with `ease()` and `fade()` to make a curve
+* Add DisabledLED, for an LED that cannot light as another pin uses its PWM channel
+* Add `in_use_by` to every LED, and `leds`, `on()` and `off()` to RGBLED
+* `start()` rounds its rate to the nearest millisecond, and a paired chain shares it
+* Effects keep their speed at every frame rate
+* A timer callback arriving after `stop()` no longer updates the LEDs
+* The players allocate less and draw faster
+* A setter given too many values says how many it was given
+
 1.1.2
 -----
 
