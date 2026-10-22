@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Christopher Parrott for Pimoroni Ltd
+# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
 #
 # SPDX-License-Identifier: MIT
 
@@ -8,6 +8,12 @@ from picofx import Updateable
 
 
 class RandomFX(Updateable):
+    """A new random brightness applied to every output each interval."""
+
+    NAME = "random"
+    CALLED = None
+    TAKES = ("interval", "brightness_min", "brightness_max")
+
     def __init__(self, interval=0.05, brightness_min=0.0, brightness_max=1.0):
         self.interval = interval
         self.brightness_min = brightness_min
