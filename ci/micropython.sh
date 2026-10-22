@@ -4,10 +4,15 @@ MICROPYTHON_FLAVOUR="pimoroni"
 MICROPYTHON_VERSION="fx-1.29.0"
 
 PIMORONI_PICO_FLAVOUR="pimoroni"
-PIMORONI_PICO_VERSION="bbb1792856c7c8f9939a28e134021447b32f5bbb"
+PIMORONI_PICO_VERSION="5ed5cb4ac34fd231251343cb10fc07247c95e738"
 
 PIMORONI_AYE_ARR_FLAVOUR="pimoroni"
 PIMORONI_AYE_ARR_VERSION="v1.0.1"
+
+PIMORONI_PICOVECTOR_VERSION="v3.1.0"
+
+PIMORONI_SPIDISPLAY_FLAVOUR="pimoroni"
+PIMORONI_SPIDISPLAY_VERSION="main"
 
 PIMORONI_LSM6DS3_FLAVOUR="pimoroni"
 PIMORONI_LSM6DS3_VERSION="v0.0.3"
@@ -40,6 +45,31 @@ function ci_pimoroni_pico_clone {
     cd "$CI_BUILD_ROOT"
 }
 
+function ci_pimoroni_picovector_clone {
+    log_inform "Using Pimoroni PicoVector pimoroni/$PIMORONI_PICOVECTOR_VERSION"
+    git clone https://github.com/pimoroni/picovector-micropython "$CI_BUILD_ROOT/picovector-micropython"
+    git -C "$CI_BUILD_ROOT/picovector-micropython" checkout $PIMORONI_PICOVECTOR_VERSION
+    git -C "$CI_BUILD_ROOT/picovector-micropython" submodule update --init
+}
+
+# Read from the board's own cmake so a new board needs no list here. An unknown
+# board answers yes, leaving ci_cmake_configure to report the bad name.
+function ci_board_uses_picovector {
+    BOARD_CMAKE="$CI_PROJECT_ROOT/boards/$1/micropython.cmake"
+    [ ! -f "$BOARD_CMAKE" ] || grep -qi picovector "$BOARD_CMAKE"
+}
+
+function ci_pimoroni_spidisplay_clone {
+    log_inform "Using Pimoroni SPIDisplay $PIMORONI_SPIDISPLAY_FLAVOUR/$PIMORONI_SPIDISPLAY_VERSION"
+    git clone https://github.com/$PIMORONI_SPIDISPLAY_FLAVOUR/spidisplay "$CI_BUILD_ROOT/spidisplay"
+    git -C "$CI_BUILD_ROOT/spidisplay" checkout $PIMORONI_SPIDISPLAY_VERSION
+}
+
+function ci_board_uses_spidisplay {
+    BOARD_CMAKE="$CI_PROJECT_ROOT/boards/$1/micropython.cmake"
+    [ ! -f "$BOARD_CMAKE" ] || grep -qi spidisplay "$BOARD_CMAKE"
+}
+
 function ci_pimoroni_qwstpad_clone {
     log_inform "Using Pimoroni QwSTPad $PIMORONI_QWSTPAD_FLAVOUR/$PIMORONI_QWSTPAD_VERSION"
     git clone https://github.com/$PIMORONI_QWSTPAD_FLAVOUR/qwstpad-micropython "$CI_BUILD_ROOT/qwstpad-micropython"
@@ -62,6 +92,16 @@ function ci_pimoroni_aye_arr_clone {
     cd "$CI_BUILD_ROOT/aye_arr" || return 1
     git checkout $PIMORONI_AYE_ARR_VERSION
     cd "$CI_BUILD_ROOT"
+}
+
+# Hosted pure-Python packages a board names in its own board-packages.list, each cloned
+# under its module name so require() finds the manifest.py inside it. Adding one is a row
+# in that list rather than a function here.
+function ci_fetch_packages {
+    LIST=$1
+    [ -f "$LIST" ] || return 0
+    log_inform "Packages from $LIST"
+    python3 "$CI_PROJECT_ROOT/ci/board_packages.py" fetch --list "$LIST" --dest "$CI_BUILD_ROOT/lib"
 }
 
 function ci_micropython_clone {
@@ -98,13 +138,31 @@ function ci_apt_install_build_deps {
     sudo apt update && sudo apt install ccache
 }
 
+# Takes an optional board, which limits the clones to what that board builds
+# with. Without one every dependency is cloned, which is what a local build root
+# shared between boards wants.
 function ci_prepare_all {
+    BOARD=$1
     ci_tools_clone
     ci_micropython_clone
     ci_pimoroni_pico_clone
+    if [ -z "$BOARD" ] || ci_board_uses_picovector "$BOARD"; then
+        ci_pimoroni_picovector_clone
+    else
+        log_inform "Skipping PicoVector: $BOARD does not build with it"
+    fi
+    if [ -z "$BOARD" ] || ci_board_uses_spidisplay "$BOARD"; then
+        ci_pimoroni_spidisplay_clone
+    else
+        log_inform "Skipping SPIDisplay: $BOARD does not build with it"
+    fi
     ci_pimoroni_aye_arr_clone
     ci_pimoroni_lsm6ds3_clone
     ci_pimoroni_qwstpad_clone
+    # Every board's packages where none was named, as the clones above are unconditional
+    for LIST in "$CI_PROJECT_ROOT"/boards/${BOARD:-*}/board-packages.list; do
+        ci_fetch_packages "$LIST"
+    done
     ci_micropython_build_mpy_cross
 }
 
@@ -141,6 +199,9 @@ function ci_cmake_configure {
     -DPICO_NO_COPRO_DIS=1 \
     -DPICOTOOL_FETCH_FROM_GIT_PATH="$TOOLS_DIR/picotool" \
     -DPIMORONI_PICO_PATH="$CI_BUILD_ROOT/pimoroni-pico" \
+    -DPICOVECTOR_MICROPYTHON_DIR="$CI_BUILD_ROOT/picovector-micropython" \
+    -DPICOVECTOR_DIR="$CI_BUILD_ROOT/picovector" \
+    -DSPIDISPLAY_DIR="$CI_BUILD_ROOT/spidisplay" \
     -DCI_BUILD_ROOT="$CI_BUILD_ROOT" \
     -DPIMORONI_TOOLS_DIR="$TOOLS_DIR" \
     -DUSER_C_MODULES="$MICROPY_BOARD_DIR/micropython.cmake" \
@@ -181,6 +242,9 @@ function ci_cmake_build {
     if [ -f "$BUILD_DIR/firmware-with-libs-and-examples.uf2" ]; then
         log_inform "Copying -with-libs-and-examples .uf2 to $(pwd)/$CI_RELEASE_FILENAME-with-libs-and-examples.uf2"
         cp "$BUILD_DIR/firmware-with-libs-and-examples.uf2" $CI_RELEASE_FILENAME-with-libs-and-examples.uf2
+    elif [ -f "$BUILD_DIR/firmware-romfs-with-libs-and-examples.uf2" ]; then
+        log_inform "Copying -romfs-with-libs-and-examples .uf2 to $(pwd)/$CI_RELEASE_FILENAME-with-libs-and-examples.uf2"
+        cp "$BUILD_DIR/firmware-romfs-with-libs-and-examples.uf2" $CI_RELEASE_FILENAME-with-libs-and-examples.uf2
     fi
 }
 
