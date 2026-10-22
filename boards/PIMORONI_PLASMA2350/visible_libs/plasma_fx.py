@@ -12,7 +12,7 @@ from ports import ScreenPort
 from spidisplay import release_buffers
 
 
-# What wake() lit, kept alive: a PWM object that is collected stops driving
+# The PWM objects wake() lit, held here since one that is collected stops driving its pin
 __waking = []
 
 
@@ -209,7 +209,6 @@ class PlasmaFX:
     def wake(cls):
         """Light the board's LED dim white before there is a board, so seconds of importing do not read as a dead one."""
         duty = int(65535 * cls.WAKE_LEVEL)
-        # Held at module level, since a PWM that is collected stops driving its pin
         for pin in cls.RGB_PINS:
             __waking.append(PWM(Pin(pin), freq=PWMLED.FREQUENCY, duty_u16=duty, invert=True))
 

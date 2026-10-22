@@ -299,7 +299,7 @@ class MightyFX:
     SCREENS = (("screenA", "spce_a"), ("screenB", "spce_b"))
 
     # Whether the board has a wireless module, so the FX drive offers the WiFi credentials and
-    # the programs that go online
+    # the programs that go online. Every Mighty FX carries one
     WIRELESS = True
 
     # How long a strip takes to power up once the rail is on, and miss any frame sent sooner.
@@ -626,9 +626,9 @@ class MightyFX:
         self.clear()
         self.__release()
 
-    # Hands back what a build claimed, in the order the hardware wants, and runs over a build
-    # that stopped partway, which has no ports where it failed before them
     def __release(self):
+        # Hands back what a build claimed, in the order the hardware wants, and runs over a build
+        # that stopped partway, which has no ports where it failed before them
         ports = [port for port in (self.spce_a, self.spce_b) if port is not None]
 
         # The handler holds this board, so once detached a board left behind can be collected
