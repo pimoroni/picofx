@@ -25,11 +25,11 @@
 
 // USB mass storage exposes only the FX drive's volume, the FAT region at the end of flash,
 // whose offset and size mpconfigboard.cmake passes with the rest of the flash split. Defining
-// the offset keeps the standard LittleFS boot; mounting the volume is board code's job. The
+// the offset keeps the standard LittleFS boot, and board code mounts the volume. The
 // volume stays invisible to the host until rp2.enable_msc() is called.
 #define MICROPY_HW_USB_MSC                      (1)
 #define MICROPY_HW_USB_MSC_INQUIRY_VENDOR_STRING   "Pimoroni"
-#define MICROPY_HW_USB_MSC_INQUIRY_PRODUCT_STRING  "TinyFX Drive"
+#define MICROPY_HW_USB_MSC_INQUIRY_PRODUCT_STRING  "Tiny FX Drive"
 
 // FAT file names pass to and from Python as UTF-8. A computer writes its long names in Unicode,
 // and read through a code page one accented name breaks listing the whole folder.
