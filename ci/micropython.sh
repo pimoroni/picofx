@@ -4,7 +4,8 @@ MICROPYTHON_FLAVOUR="micropython"
 MICROPYTHON_VERSION="v1.28.0"
 
 PIMORONI_PICO_FLAVOUR="pimoroni"
-PIMORONI_PICO_VERSION="main"
+# Pinned before pimoroni-pico #1151, whose bindings need a MicroPython newer than v1.28.0
+PIMORONI_PICO_VERSION="12b15d0bb4e0d535a0f1538e7c7b373101f88a20"
 
 PIMORONI_AYE_ARR_FLAVOUR="pimoroni"
 PIMORONI_AYE_ARR_VERSION="v1.0.0"
