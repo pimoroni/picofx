@@ -8,7 +8,15 @@ message(STATUS "dir2uf2/py_decl: Using Python ${Python_EXECUTABLE}")
 
 set(UF2_STAGING_DIR "${CMAKE_CURRENT_BINARY_DIR}/filesystem")
 
-# Convert supplies paths to absolute, for a quieter life
+# Set --sparse for RP2350 builds
+if(PICO_PLATFORM STREQUAL "rp2350")
+    message(STATUS "dir2uf2: Building sparse UF2 (rp2350 only)")
+    set(UF2_SPARSE "--sparse")
+else()
+    set(UF2_SPARSE "")
+endif()
+
+# Convert supplied paths to absolute, for a quieter life
 get_filename_component(PIMORONI_UF2_MANIFEST ${PIMORONI_UF2_MANIFEST} REALPATH)
 
 if (EXISTS "${PIMORONI_TOOLS_DIR}/py_decl/py_decl.py")
@@ -20,6 +28,7 @@ if (EXISTS "${PIMORONI_TOOLS_DIR}/py_decl/py_decl.py")
     )
 endif()
 
+# Build and append the LittleFS filesystem to the UF2 in blockdev "MicroPython"
 if (EXISTS "${PIMORONI_TOOLS_DIR}/dir2uf2/dir2uf2" AND EXISTS "${PIMORONI_UF2_MANIFEST}" AND EXISTS "${UF2_STAGING_SCRIPT}")
     MESSAGE(STATUS "dir2uf2: Using manifest ${PIMORONI_UF2_MANIFEST}.")
     MESSAGE(STATUS "dir2uf2: Using root ${UF2_STAGING_DIR}.")
@@ -27,17 +36,10 @@ if (EXISTS "${PIMORONI_TOOLS_DIR}/dir2uf2/dir2uf2" AND EXISTS "${PIMORONI_UF2_MA
     # Create filesystem directory
     file(MAKE_DIRECTORY ${UF2_STAGING_DIR})
 
-    # Set --sparse for RP2350 builds
-    if(PICO_PLATFORM STREQUAL "rp2350")
-        message(STATUS "dir2uf2: Building sparse UF2 (rp2350 only)")
-        set(UF2_SPARSE "--sparse")
-    else()
-        set(UF2_SPARSE "")
-    endif()
 
     # Add a target to prep the staging filesystem
     add_custom_target("${MICROPY_TARGET}-staging" ALL
-        COMMAND bash "${UF2_STAGING_SCRIPT}" "${UF2_STAGING_DIR}"
+        COMMAND CI_BUILD_ROOT=${CI_BUILD_ROOT} bash "${UF2_STAGING_SCRIPT}" "${UF2_STAGING_DIR}"
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "dir2uf2: Preparing staging filesystem."
         DEPENDS ${MICROPY_TARGET}
@@ -45,10 +47,11 @@ if (EXISTS "${PIMORONI_TOOLS_DIR}/dir2uf2/dir2uf2" AND EXISTS "${PIMORONI_UF2_MA
 
     # Add a target to prep the build
     add_custom_target("${MICROPY_TARGET}-with-libs-and-examples.uf2" ALL
-        COMMAND ${Python_EXECUTABLE} "${PIMORONI_TOOLS_DIR}/dir2uf2/dir2uf2" --fs-compact ${UF2_SPARSE} --append-to "${MICROPY_TARGET}.uf2" --manifest "${PIMORONI_UF2_MANIFEST}" --filename with-libs-and-examples.uf2 "${UF2_STAGING_DIR}"
+        COMMAND ${Python_EXECUTABLE} "${PIMORONI_TOOLS_DIR}/dir2uf2/dir2uf2" --verbose --fs-blockdev MicroPython --fs-compact ${UF2_SPARSE} --append-to "${MICROPY_TARGET}.uf2" --manifest "${PIMORONI_UF2_MANIFEST}" --filename with-libs-and-examples.uf2 "${UF2_STAGING_DIR}"
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "dir2uf2: Appending filesystem to ${MICROPY_TARGET}.uf2."
         DEPENDS ${MICROPY_TARGET}
+        DEPENDS "${MICROPY_TARGET}.uf2"
         DEPENDS "${MICROPY_TARGET}-staging"
     )
 endif()
