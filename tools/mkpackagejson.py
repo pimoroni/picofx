@@ -10,7 +10,7 @@ def repo_url(remote):
     repo = remote.removeprefix("git@github.com:").removeprefix("https://github.com/")
     repo = repo.removesuffix(".git")
     if len(repo.split("/")) != 2:
-        raise argparse.ArgumentTypeError(f"\"{remote}\" is not a valid GitHub URL")
+        raise argparse.ArgumentTypeError(f'"{remote}" is not a valid GitHub URL')
     return repo
 
 parser = argparse.ArgumentParser()

@@ -148,7 +148,7 @@ rgb.led_b.on()
 time.sleep(1)
 ```
 
-This can be useful for if you wish to connect up additional mono LEDs (the RGB connector can actually accept a Mono connector without any rewiring), though note that the gamma value for the RGB output is slightly different to that of the mono outputs.
+This can be useful for connecting up additional mono LEDs. The RGB connector accepts a single mono connector without any rewiring, which then lights from its red channel. Note that the RGB output uses a gamma of 2.2, where the mono outputs use 2.8, so the same brightness can look slightly different on each.
 
 
 ## Using the Sensor Connector
@@ -209,7 +209,7 @@ while not tiny.boot_pressed():
     pacer.hold()
 ```
 
-A pass that overruns drops the whole intervals it missed, so the loop never runs faster than asked in order to catch up. `elapsed` gives the milliseconds since the loop began, for movement worked out from time, and `delta` the milliseconds the last pass counts as, for movement stepped once a pass.
+A pass that overruns drops the whole intervals it missed, so the loop never runs faster than asked in order to catch up. `elapsed` gives the milliseconds since the loop began, for movement calculated from time, and `delta` the milliseconds the last pass counts as, for movement stepped once a pass.
 
 Where something in the loop is due less often than the loop runs, a `Roller` says when it is next due:
 
@@ -459,7 +459,7 @@ is_paused() -> bool
 position() -> int | None
 ```
 
-`ibuf_ms` grows the player's buffer to hold at least that many milliseconds of whatever plays, for a program whose refills can be held up, such as one drawing to screens.
+`ibuf_ms` grows the player's buffer to hold at least that many milliseconds of whatever plays, for a program whose refills can be held up.
 
 A tone or 16-bit WAV fades in as it starts, and `pause()` and `stop()` fade it out over `FADE_MS` before taking effect, so `is_paused()` turns true once the fade has played out.
 
@@ -499,4 +499,4 @@ is_due() -> bool
 rate_ms(interval: float, fps: float) -> int | None
 ```
 
-A `Pacer` waits with `sleep_ms()`, which can wander by around ten milliseconds on a busy board, so an effect player, which runs from a hardware timer, holds a fast rate more evenly.
+A `Pacer` waits with `sleep_ms()`, which wanders on a busy board. An effect player runs from a hardware timer, so it holds a fast rate more evenly.

@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Christopher Parrott for Pimoroni Ltd
+# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
 #
 # SPDX-License-Identifier: MIT
 
@@ -13,7 +13,7 @@ from picofx import PWMLED, RGBLED
 from sensor import build_sensor
 
 
-# What wake() lit, kept alive: a PWM object that is collected stops driving
+# The PWM objects wake() lit, held here since one that is collected stops driving its pin
 __waking = []
 
 
@@ -26,6 +26,8 @@ def __has_network():
 
 
 class TinyFX:
+    """The Tiny FX board, with its six mono outputs, RGB output, sensor connector and audio."""
+
     OUT_PINS = (3, 2, 4, 5, 8, 9)
     RGB_PINS = (13, 14, 15)
 
@@ -56,7 +58,7 @@ class TinyFX:
     OUTPUT_GAMMA = 2.8      # Even steps of brightness, chosen by eye on a slow fade
     RGB_GAMMA = 2.2         # sRGB, for even hues, chosen by eye on a rainbow
 
-    # What wake() lights the outputs to: dim enough to read as alive, not as an effect
+    # What wake() lights the outputs to, dim enough to read as alive and not as an effect
     WAKE_LEVEL = 0.1
 
     # Whether the board has a wireless module, so the FX drive offers the WiFi credentials and
@@ -98,8 +100,7 @@ class TinyFX:
         # Set up the internal voltage sensor
         self.__v_sense = ADC(Pin(self.V_SENSE_PIN))
 
-        # Set up whatever the sensor connector was declared as. Nothing is claimed
-        # where nothing was asked for, leaving the pin free for a dupont cable
+        # Set up whatever the sensor connector was declared as
         self.__sensor = build_sensor(sensor, self.SENSOR_PIN, self.SENSOR_PIO, self.SENSOR_SM)
 
         # Set up the wav (and tone) player, if the user wants
@@ -131,7 +132,6 @@ class TinyFX:
     def wake(cls):
         """Light every output dim before there is a board, so seconds of importing do not read as a dead one."""
         duty = int(65535 * cls.WAKE_LEVEL)
-        # Held at module level, since a PWM that is collected stops driving its pin
         for pin in cls.OUT_PINS + cls.RGB_PINS:
             __waking.append(PWM(Pin(pin), freq=PWMLED.FREQUENCY, duty_u16=duty))
 
@@ -140,10 +140,8 @@ class TinyFX:
 
     def boot_taps(self):
         """
-        How many times the button has been pressed since this was last asked, the
-        presses taken as they are read. Caught by interrupt, so a tap that begins
-        and ends inside one long frame still counts where boot_pressed() would
-        miss it, and two inside one are two rather than one.
+        How many times the button has been pressed since this was last asked. Caught by
+        interrupt, so a tap inside one long frame counts where boot_pressed() would miss it.
         """
         taken = self.__taps
         self.__taps = 0

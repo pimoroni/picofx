@@ -4,29 +4,21 @@
 
 from machine import Pin
 
-# The roles the sensor connector can take, passed to a board as sensor=.
-# The connector carries one signal, so a board takes one of these at a time.
-#
-# ANALOG: an analog sensor, read as a voltage through pimoroni's Analog
-# PIR:    a motion sensor, read as a level through a pulled-up input
-# IR:     the infrared receiver, decoded by aye_arr on a state machine the board picks
-#
-# A board started without sensor= claims nothing, leaving the connector's pin
-# free for anything wired to it through the dupont cable.
-
-ANALOG = "analog"
-PIR = "pir"
-IR = "ir"
+# The roles the sensor connector can take, passed to a board as sensor=. The connector
+# carries one signal, so a board takes one of these at a time.
+ANALOG = "analog"   # An analog sensor, read as a voltage through pimoroni's Analog
+PIR = "pir"         # A motion sensor, read as a level through a pulled-up input
+IR = "ir"           # The infrared receiver, decoded by aye_arr on a state machine the board picks
 
 ROLES = (ANALOG, PIR, IR)
 
 
 def build_sensor(role, pin, pio, sm):
     """
-    What the connector was declared as, built on its pin, or None where a board was
-    started without a role. A receiver is started here, holding its state machine
-    until the board shuts down.
+    Build what the connector was declared as on its pin, or None for no role. A receiver
+    is started here, holding its state machine until the board shuts down.
     """
+    # No role claims nothing, leaving the pin free for anything wired to the connector
     if role is None:
         return None
 

@@ -6,9 +6,11 @@ from comms.protocol import MightyFXControl, TinyFXControl  # noqa: F401
 
 # Device Side (receive)
 class TinyFXTarget(FXTarget):
+    """A Tiny FX answering on the bus whose outputs a TinyFXControl sets."""
+
     DEVICE_ID = DEVICE_TINY_FX
 
     def __init__(self, tiny_fx, address):
-        # Six outputs, then the RGB's three channels, in the order a TinyFXControl sends them
+        # Six outputs then the RGB's three channels, in the order a TinyFXControl sends them
         super().__init__(tiny_fx, address,
                          tiny_fx.outputs + [tiny_fx.rgb.led_r, tiny_fx.rgb.led_g, tiny_fx.rgb.led_b])

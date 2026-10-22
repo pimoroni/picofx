@@ -16,7 +16,7 @@ else()
     set(UF2_SPARSE "")
 endif()
 
-# Convert supplies paths to absolute, for a quieter life
+# Convert supplied paths to absolute, for a quieter life
 get_filename_component(PIMORONI_UF2_MANIFEST ${PIMORONI_UF2_MANIFEST} REALPATH)
 
 if (EXISTS "${PIMORONI_TOOLS_DIR}/py_decl/py_decl.py")

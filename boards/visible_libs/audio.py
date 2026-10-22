@@ -42,6 +42,8 @@ def __ramp(samples: ptr16, count: int, gain: int, step: int):
 
 
 class WavReader:
+    """A WAV file's header parsed and its sample data read, from a path or an already-open file."""
+
     def __init__(self, file):
         # A path is opened here and closed by close(). An already-open file is
         # the caller's to close, so one handle can be played many times
@@ -114,6 +116,8 @@ class WavReader:
 
 
 class WavPlayer:
+    """A player for WAV files and pure tones out of an I2S amplifier."""
+
     # Internal states
     PLAY = 0
     PAUSE = 1
@@ -145,8 +149,8 @@ class WavPlayer:
     # each flash write stalling the audio beneath it
     WRITE_HOLD_MS = 500
 
-    # ibuf_ms, where given, grows the I2S ring to hold at least that much of whatever plays,
-    # sized from its byte rate as it starts, for a board whose refills can be held up
+    # ibuf_ms grows the I2S ring to hold at least that many milliseconds of whatever plays, for a
+    # board whose refills can be held up. The ring is sized from the sound's byte rate as it starts
     def __init__(self, id, sck_pin, ws_pin, sd_pin, amp_enable=None, ibuf_len=INTERNAL_BUFFER_LENGTH, root="/", ibuf_ms=None):
         self.__id = id
         self.__sck_pin = sck_pin
@@ -201,13 +205,13 @@ class WavPlayer:
     def set_root(self, root):
         self.__root = root.rstrip("/") + "/"
 
-    # Where the file object has a changed() method, the WAV calls it before returning after
-    # the computer's writes to the USB drive, and ends instead if it answers True
+    # A file object with a changed() method is asked it before the WAV comes back from the
+    # computer's writes to the USB drive. The WAV ends instead where it answers True
     def play_wav(self, wav_file, loop=False, position=0):
         self.__stop_i2s()                                       # Stop any active playback and terminate the I2S instance
 
         # Parse the WAV file, returning the necessary parameters to initialise I2S communication.
-        # A string names a file under root; anything else is an already-open WAV file
+        # A string names a file under root, and anything else is an already-open WAV file
         if isinstance(wav_file, str):
             try:
                 self.__wav_file = WavReader(self.__root + wav_file)
@@ -218,13 +222,14 @@ class WavPlayer:
         self.__loop_wav = loop                                  # Record if the user wants the file to loop
         self._loop_count = 0                                    # Count loops for debugging purposes
 
-        # Pick up part way through, from a position() a caller kept. Sought here,
-        # before the I2S callback starts reading, so nothing races the seek
         channels = 1 if self.__wav_file.format == I2S.MONO else 2
         self.__fade_length = max(1, self.__wav_file.sample_rate * channels * self.FADE_MS // 1000)
         self.__fade = 0
         self.__fading_out = 0
         self.__arm_hold(__DriveFile is not None and isinstance(self.__wav_file.wav_file, __DriveFile))
+
+        # Is there a position() a caller kept to pick up from? Sought here before the I2S
+        # callback starts reading, so nothing races the seek
         if position:
             self.__wav_file.seek(position)
             # Mid-waveform, so it fades in or it clicks. The fade reads 16-bit samples
@@ -347,9 +352,8 @@ class WavPlayer:
 
     def position(self):
         """
-        How far into the current WAV's data playback has reached, in bytes, for
-        play_wav() to pick up from later. None where no WAV is under way: paused
-        counts, ended or flushing does not.
+        How far into the current WAV's data playback has reached, in bytes, for play_wav() to
+        pick up from later. None where no WAV is playing or paused.
         """
         if self.__mode != WavPlayer.MODE_WAV or self.__wav_file is None:
             return None
@@ -469,9 +473,8 @@ class WavPlayer:
             __release_writes()
 
     def __write_arrived(self):
-        # Whether the computer began writing since the last refill. Busy turns true as its
-        # first write is held, before the flash changes, and stays true a second after the
-        # last, so while busy only a write landing counts, such as a copy already under way
+        # Whether the computer began writing since the last refill. Busy turns true as its first
+        # write is held and stays true a second after its last, so while busy only a write landing counts
         busy = __drive_busy()
         writes = __drive_writes()
         arrived = busy and (not self.__was_busy or writes != self.__writes_seen)
@@ -487,7 +490,7 @@ class WavPlayer:
             __release_writes()
         elif not __drive_busy():
             self.__was_busy = False
-            # A WAV whose file can say the computer rewrote it ends where it did
+            # A WAV ends here where its file's changed() answers that the computer rewrote it
             changed = getattr(self.__wav_file.wav_file, "changed", None) \
                 if self.__mode == WavPlayer.MODE_WAV else None
             if changed is not None and changed():
@@ -538,9 +541,9 @@ class WavPlayer:
         # PLAY
         if self.__state == WavPlayer.PLAY:
             if self.__mode == WavPlayer.MODE_WAV:
-                # The computer's first write is held until the WAV is quiet, fading out where it
-                # can. One from the USB drive then ends, its reads safe only while the write is
-                # held, and any other stands aside until the computer has finished
+                # The computer's first write is held until the WAV is quiet, fading out where it can.
+                # A WAV read from the USB drive then ends, as its reads are safe only while the write
+                # is held. Any other stands aside until the computer has finished
                 if self.__holding is not None and not self.__stopping and not self.__standing_aside \
                         and self.__write_arrived():
                     self.__stopping = self.__from_drive
@@ -574,9 +577,8 @@ class WavPlayer:
 
                     num_read = self.__wav_file.readinto(self.__wav_samples_mv)  # Single shot playback
                 except OSError:
-                    # The file went away beneath the player, a drive file replaced by
-                    # the computer being the way that happens. The sound ends cleanly
-                    # rather than raising out of the callback
+                    # The file went away beneath the player, as a drive file the computer
+                    # replaced does, so the sound ends cleanly here
                     self.__end_sound()
                     self.__write(self.__silence_samples)
                     return

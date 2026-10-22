@@ -2,14 +2,16 @@ import struct
 from machine import I2CTarget, disable_irq, enable_irq
 from picofx import PseudoLED, RGBLED
 
-# Register Constants. The device ID says which board is answering
+# Register Constants
 DEVICE_TINY_FX = 0x2f
 DEVICE_MIGHTY_FX = 0x30
 VERSION = 0x01
 
 
-# Host Side (transmission). A board of the kind named by DEVICE_ID, reached over I2C
+# Host Side (transmission)
 class FXControl:
+    """A board of the kind named by DEVICE_ID that is sent its LED levels over I2C as a player sets them."""
+
     DEVICE_ID = None
     NAME = ""
 
@@ -34,7 +36,7 @@ class FXControl:
         self.__buf = bytearray(4 * len(channels))
         self.__i2c = i2c
         self.__addr = address
-        self.__paired = None    # The end of an EffectPlayer's chain, which start() walks
+        self.__paired = None    # The end of the chain an EffectPlayer's start() walks
 
         self.__tick()
 
@@ -47,7 +49,7 @@ class FXControl:
     def shutdown(self):
         self.clear()
 
-    # Called by the EffectPlayer this is paired with, after its effects have updated
+    # Called by the paired EffectPlayer once its effects have updated
     def __tick(self, _=None):
         for index, led in enumerate(self.__leds):
             struct.pack_into("f", self.__buf, index * 4, led.__brightness)
@@ -58,6 +60,8 @@ class FXControl:
 
 
 class TinyFXControl(FXControl):
+    """A Tiny FX reached over I2C that offers its six outputs and RGB output for a player to drive."""
+
     DEVICE_ID = DEVICE_TINY_FX
     NAME = "Tiny FX"
 
@@ -96,11 +100,13 @@ class TinyFXControl(FXControl):
 
 
 class MightyFXControl(FXControl):
+    """A Mighty FX reached over I2C that offers its seven RGB outputs for a player to drive."""
+
     DEVICE_ID = DEVICE_MIGHTY_FX
     NAME = "Mighty FX"
 
     def __init__(self, i2c, address, debug=True):
-        # Seven RGB outputs, the same shape the board itself offers, and their 21 channels
+        # Seven RGB outputs as the board itself offers them, then their 21 channels
         self.outputs = [RGBLED(PseudoLED(), PseudoLED(), PseudoLED()) for _ in range(7)]
         self.monos = [led for output in self.outputs for led in output.leds]
 
@@ -135,8 +141,10 @@ class MightyFXControl(FXControl):
         return self.outputs[6]
 
 
-# Device Side (receive). The board offering itself up to whoever is driving the bus
+# Device Side (receive)
 class FXTarget:
+    """A board answering on the bus that sets its LEDs from each frame a control sends."""
+
     DEVICE_ID = None
 
     def __init__(self, board, address, channels):
@@ -149,13 +157,13 @@ class FXTarget:
             size += struct.calcsize("f")
         self.__mem = bytearray(size)
 
-        # A write is copied out whole as it ends, and the board's loop takes its own copy of
+        # Each write is copied out whole as it ends and the board's loop takes its own copy of
         # that, so neither reads a frame the next write has started to overwrite
         self.__received = bytearray(size)
         self.__frame = bytearray(size)
 
-        # Initialise the read-only registers. The ID is held on the instance, which the
-        # interrupt reads faster than the class
+        # Initialise the read-only registers. The ID is held on the instance as the interrupt
+        # reads that faster than the class
         self.__device_id = self.DEVICE_ID
         self.__mem[0] = self.__device_id
         self.__mem[1] = VERSION
