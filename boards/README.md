@@ -9,6 +9,12 @@ A tiny stamp-sized LED driver for model making and construction kit projects. Bu
 * The standard build: MicroPython with the PicoFX library and examples. Tiny FX ships with this build.
 * The `w` variant: the same for Tiny FX W, adding WiFi and Bluetooth.
 
+## Pimoroni Mighty FX
+
+A programmable, RP2350-based controller board that goes further with effects by adding motion and screens. Built from `PIMORONI_MIGHTYFX`:
+
+* The standard build: MicroPython with the PicoFX library and examples, for writing your own programs.
+
 ## Shared Between the Boards
 
 * `visible_libs`: libraries copied to each board's `/lib`, beside the board's own.
