@@ -10,8 +10,7 @@ cppmem.set_mode(cppmem.MICROPYTHON)
 gc.threshold(200_000)
 
 # Write main.py where it is missing, so a fresh board runs its default program without one
-# shipping in the image. An empty main.py is left alone, as the way to ask for a quiet board.
-# A board without fx_defaults carries its main.py in the image
+# shipping in the image. An empty main.py is left alone, as the way to ask for a quiet board
 try:
     os.stat("main.py")
 except OSError:
@@ -20,4 +19,11 @@ except OSError:
         with open("main.py", "w") as f:
             f.write(fx_defaults.MAIN)
     except ImportError:
+        # A build without fx_defaults ships its main.py in the image
         pass
+    except OSError:
+        # A full filesystem. The empty main.py a failed write leaves would ask for a quiet board
+        try:
+            os.remove("main.py")
+        except OSError:
+            pass

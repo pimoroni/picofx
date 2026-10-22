@@ -2,27 +2,26 @@
 #
 # SPDX-License-Identifier: MIT
 
-# What a fresh board starts from, one constant per file it fills. EFFECTS, README and
-# SECRETS go on the FX drive and are rebuilt by fx_drive, SECRETS only by firmware with
-# networking; MAIN goes to the filesystem root and is rebuilt by boot.py. Each board
-# carries its own copy of this file.
+# The hand-written files a fresh board writes for itself, one constant per file. Every
+# board folder has its own version of this module. EFFECTS, README and SECRETS go on the
+# FX drive and are rebuilt by fx_drive, SECRETS only on a board with a wireless module.
+# MAIN goes to the filesystem root and is rebuilt by boot.py.
 #
-# These are the only copies a drive build has. Nothing ships main.py or secrets.py in
-# its image, so a board writes its own on first boot. The builds without the drive ship
-# the examples' secrets.py, which holds the same settings as SECRETS.
+# A drive build ships no main.py or secrets.py, so these are its only copies. The builds
+# without the drive ship the examples' secrets.py, which holds the same settings as SECRETS.
 #
-# They live here rather than inside fx_drive.py so edits to the wording show up on
-# their own in a diff. Ordinary quotes are fine inside these; only a literal triple
-# quote would need escaping.
+# Kept apart from fx_drive.py so a change of wording shows on its own in a diff. Only a
+# literal triple quote needs escaping inside these.
 #
-# README is a card, and the manual it points at is fx_manual.py, generated from
-# manual/MANUAL.md and not written by hand.
+# The drive's generated files, the manual and the picker's pages, are in fx_manual.py and
+# fx_editor.py instead, built by tools/build_manual.py and tools/build_editor.py
 
+# In single quotes, as the program it holds opens with a docstring
 MAIN = '''\
 from tiny_fx import TinyFX
 
-# Light the outputs first: importing the effects machinery below takes a few
-# seconds, and this says the board is alive while it happens
+# Light the outputs first, since importing the effects machinery below takes a
+# few seconds and this says the board is alive meanwhile
 TinyFX.wake()
 
 import autofx
@@ -35,8 +34,8 @@ Plug the board into a computer and the drive appears. Edit effects.txt, eject th
 drive, and the new effects start straight away. Press "Boot" once to try an edit
 without putting the drive away, or twice to hide it and bring it back.
 
-Replace this file with your own program if you would rather write code; deleting it
-brings this one back, and an empty one leaves the board quiet.
+Replace this file with your own program if you would rather write code. Deleting
+it brings this one back, and an empty one leaves the board quiet.
 """
 
 autofx.run(TinyFX, volume=fx_drive)
@@ -89,8 +88,8 @@ This README is rebuilt by the board, so edits to it will not stick.
 """
 
 # Empty, for the user to fill in. Written only where the drive has none, so their edits stay
-SECRETS = '''\
+SECRETS = """\
 # Your WiFi network's name and password, for the programs that go online
 WIFI_SSID = ""
 WIFI_PASSWORD = ""
-'''
+"""
