@@ -9,14 +9,13 @@ from machine import PWM, Pin, Timer
 
 PICOFX_VERSION = "1.1.3"
 
-# How many halvings an eased curve takes to look arrived, judged on lit outputs
-# rather than from a tolerance. A curve's length is how long it takes to get there
-# either way, so an ease and a fade of the same length finish together.
+# An eased curve halves its distance this many times over its length, which looks
+# arrived on a lit output, so it finishes with a fade of the same length
 SETTLE = 6
 
 
-# What a channel does between where it is and where its effect has asked it to be: the
-# seconds it takes each way, and whether it crosses at a steady rate or eases in
+# How a channel moves to what its effect asks for. rise and fall are the seconds each
+# way, and straight is whether it crosses at a steady rate or eases in
 Curve = namedtuple("Curve", ("rise", "fall", "straight"))
 
 
@@ -56,8 +55,12 @@ def rgb_from_hsv(h, s, v):
     return v, p, v * (1.0 - s * f)
 
 
-# A pseudo LED class for storing brightness. For use in comms
 class PseudoLED:
+    """
+    An LED stand-in that stores a brightness without driving a pin. Comms sends
+    its brightness it to another board, and PWMLED and DisabledLED build on it.
+    """
+
     # None when the LED is free to light, otherwise the reason it cannot
     in_use_by = None
 
@@ -77,9 +80,12 @@ class PseudoLED:
         self.brightness(1 - self.__brightness)
 
 
-# A basic wrapper for PWM with regular on/off and toggle functions from Pin
-# Intended to be used for driving LEDs with brightness control & compatibility with Pin
 class PWMLED(PseudoLED):
+    """
+    A basic wrapper for PWM with regular on/off and toggle functions from Pin.
+    Intended to be used for driving LEDs with brightness control & compatibility with Pin.
+    """
+
     FREQUENCY = 1000
 
     def __init__(self, pin, invert=False, gamma=1):
@@ -92,29 +98,20 @@ class PWMLED(PseudoLED):
         self.__brightness = min(1.0, max(0.0, brightness))
         self.__led.duty_u16(int(pow(self.__brightness, self.__gamma) * 65535 + 0.5))
 
-    def on(self):
-        self.brightness(1)
 
-    def off(self):
-        self.brightness(0)
-
-    def toggle(self):
-        self.brightness(1 - self.__brightness)
-
-
-# A stand-in for an LED whose pin or PWM channel another function holds.
-# Turning it off works, so board-wide clear() and shutdown() pass through.
-# The first attempt to light it prints the reason; it stays dark throughout.
 class DisabledLED(PseudoLED):
+    """
+    An LED that cannot light, as another pin uses its PWM channel. It drives its pin to the off
+    level and prints why on the first attempt to light it, while turning it off passes quietly.
+    """
+
     def __init__(self, pin, invert=False, reason=None):
         super().__init__()
-        self.in_use_by = reason if reason is not None else f"GPIO {pin} cannot light, another function on the board holding it."
+        self.in_use_by = reason if reason is not None else f"GPIO {pin} cannot light, as another pin uses its PWM channel."
         self.__warned = False
 
-        # Held at its off level rather than left as it was. A PWM channel shared
-        # between two GPIOs reaches both once both select PWM, so a pin left in that
-        # function shows the other's signal on an LED this class says is dark, and one
-        # left floating glows faintly.
+        # Drive the pin to its off level, since being left as PWM will make it show the
+        # signal of the other GPIO on its channel, or will glow faintly if left floating
         Pin(pin, Pin.OUT, value=invert)
 
     def brightness(self, brightness):
@@ -125,6 +122,8 @@ class DisabledLED(PseudoLED):
 
 
 class RGBLED:
+    """Three LEDs driven together as red, green and blue, each from a pin or any PseudoLED."""
+
     def __init__(self, r, g, b, invert=True, gamma=1):
         self.led_r = r if isinstance(r, PseudoLED) else PWMLED(r, invert=invert, gamma=gamma)
         self.led_g = g if isinstance(g, PseudoLED) else PWMLED(g, invert=invert, gamma=gamma)
@@ -153,6 +152,8 @@ class RGBLED:
 
 
 class Updateable:
+    """The base of an effect that changes over time, its player calling tick() once a frame with the frame period in milliseconds."""
+
     def __init__(self):
         pass
 
@@ -164,6 +165,8 @@ class Updateable:
 
 
 class Cycling(Updateable):
+    """An Updateable whose __offset counts from 0.0 to 1.0 and repeats, at speed cycles a second."""
+
     def __init__(self, speed):
         self.speed = speed
         self.__offset_us = 0    # Microseconds, since a slow speed moves less than a millisecond a tick
@@ -179,6 +182,8 @@ class Cycling(Updateable):
 
 
 class CyclingAction(Updateable):
+    """An Updateable that calls next() each time it completes a cycle forwards and prev() backwards, at speed cycles a second."""
+
     def __init__(self, speed):
         self.speed = speed
         self.__offset_us = 0
@@ -207,9 +212,12 @@ class CyclingAction(Updateable):
 
 
 class EffectPlayer:
+    """The base of the players, calling each channel's effect once a frame on a timer and showing what it returns."""
+
     DEFAULT_FPS = 100
 
     def __init__(self, leds, num_leds=None):
+        # Check if an LED count was given. Only an object holding many LEDs needs to provide this, such as a strip
         if num_leds is None:
             self.__leds = leds if isinstance(leds, (tuple, list)) else [leds]
             self.__num_leds = len(self.__leds)
@@ -224,39 +232,38 @@ class EffectPlayer:
         # A per channel scale on the output of an effect
         self.__levels = [1.0] * self.__num_leds
 
-        # Whether each channel's effect brings its own colour, which a curve refuses
+        # Whether each channel's effect brings its own colour, so cannot take a curve
         self.__chromatic = [False] * self.__num_leds
 
-        # A per channel lag, for a channel that should behave like a bulb rather
-        # than an LED, with what it is currently showing so it can be moved along
+        # How each channel follows its effect, None following it at once
         self.__curves = [None] * self.__num_leds
+
+        # What each curved channel is showing, for its curve to move on from
         self.__showing = [0.0] * self.__num_leds
 
-        self.__period = 1000
+        self.__period_ms = 1000
         self.__timer = Timer()
         self.__paired = None
         self.__running = False
         self.__last = time.ticks_ms()
-        self.__measured = 0
+        self.__measured_ms = 0
 
     def start(self, fps=DEFAULT_FPS, force=False):
         if not self.is_running() or force:
             self.stop()
 
-            # To the nearest millisecond and floored at one, as every rate here
-            # is: truncation ran a 60fps request at 62.5, and a rate past a
-            # millisecond a tick became a period of zero
-            self.__period = max(1, int(1000 / fps + 0.5))
+            # Rounded to the nearest millisecond, and floored at one so a rate past 1000fps still ticks
+            self.__period_ms = max(1, int(1000 / fps + 0.5))
 
             # Each paired player ticks the next, so the whole chain runs on this
             # timer and every one of them measures time by this period
             partner = self.__paired
             while partner is not None:
-                partner.__period = self.__period
+                partner.__period_ms = self.__period_ms
                 partner = partner.__paired
 
             self.__last = time.ticks_ms()
-            self.__timer.init(mode=Timer.PERIODIC, period=self.__period, callback=self.__update)
+            self.__timer.init(mode=Timer.PERIODIC, period=self.__period_ms, callback=self.__update)
             self.__running = True
 
     def stop(self, reset_fx=False):
@@ -272,24 +279,25 @@ class EffectPlayer:
     def __show(self):
         pass
 
+    # Pair another player to update straight after this one, using this player's or its parent's timer
     def pair(self, player):
         self.__paired = player
 
     @property
     def target_ms(self):
-        return self.__period
+        return self.__period_ms
 
     @property
     def measured_ms(self):
-        return self.__measured
+        return self.__measured_ms
 
     @property
     def target_fps(self):
-        return 1000 / self.__period
+        return 1000 / self.__period_ms
 
     @property
     def measured_fps(self):
-        return 1000 / self.__measured if self.__measured > 0 else float("inf")
+        return 1000 / self.__measured_ms if self.__measured_ms > 0 else float("inf")
 
     def __update(self, timer):
         # Timer callbacks arrive via the scheduler, so one already in-flight
@@ -300,7 +308,7 @@ class EffectPlayer:
     def __tick(self, timer):
         try:
             for ufx in self.__updateables:
-                ufx.tick(self.__period)
+                ufx.tick(self.__period_ms)
 
             self.__show()
 
@@ -311,7 +319,7 @@ class EffectPlayer:
             raise e
 
         now = time.ticks_ms()
-        self.__measured = time.ticks_diff(now, self.__last)
+        self.__measured_ms = time.ticks_diff(now, self.__last)
         self.__last = now
 
     @property
@@ -320,7 +328,7 @@ class EffectPlayer:
 
     @effects.setter
     def effects(self, effect_list):
-        effect_list = self.__to_channel_list(effect_list, "effect_list")
+        effect_list = self.__to_channel_list(effect_list, "effects")
 
         self.__updateables = set()
         for i, item in enumerate(effect_list):
@@ -332,9 +340,8 @@ class EffectPlayer:
             if item is None:
                 continue
 
-            # An effect that brings its own colour says so, and a curve has nothing
-            # to move on one: refused here and in the curves setter, whichever is
-            # set second, so the tick never has to ask
+            # Does the effect bring its own colour? A curve cannot follow one, so this and the
+            # curves setter each refuse the pairing, whichever is set second, and the tick never checks
             owner = item[0] if isinstance(item, tuple) and item else item
             if getattr(owner, "CHROMATIC", False):
                 self.__chromatic[i] = True
@@ -358,7 +365,7 @@ class EffectPlayer:
                 if isinstance(first, Updateable):
                     self.__updateables.add(first)   # Add it to the updateables set
 
-                    # Are there are other elements, and is the second element callable?
+                    # Are there other elements, and is the second element callable?
                     if rest and callable(rest[0]):
                         # Assume the effect function is the second element, and the first is its parent class. All elements that follow are data
                         self.__effects[i] = rest[0]
@@ -381,11 +388,11 @@ class EffectPlayer:
             self.__chromatic[i] = False
 
     def __to_channel_list(self, values, name):
-        # Passes a list of values through or applies one value for every channel
+        # A list holds a value per channel. Anything else is one value for every channel, a tuple included
         values = values if isinstance(values, list) else [values] * self.__num_leds
 
         if len(values) > self.__num_leds:
-            raise ValueError(f"`{name}` must have a length less or equal to {self.__num_leds}")
+            raise ValueError(f"{name} has {len(values)} entries for {self.__num_leds} channels. Give at most {self.__num_leds}, or one value for every channel")
 
         return values
 
@@ -412,11 +419,8 @@ class EffectPlayer:
     def curves(self, curves):
         """How a channel reaches what its effect asks for, or None to reach it at once.
 
-        Made by ease() or fade(), each taking the seconds it takes, or a rise and a
-        fall for a channel that comes up and goes out at different rates.
-
-        A mono effect's level is what a curve moves. An effect that brings its own
-        colour refuses one, levels being the setting that reaches both kinds.
+        Made by ease() or fade(), taking one length for both ways or a rise and a fall.
+        A mono effect's level is what a curve moves, so a colour effect cannot take one.
         """
         curves = self.__to_channel_list(curves, "curves")
 
@@ -440,30 +444,29 @@ class EffectPlayer:
         for i in range(len(curves), self.__num_leds):
             self.__curves[i] = None
 
+    # What a curved channel shows this frame, moved toward what its effect asks for. A
+    # caller skips this where no curve is set, the call costing more than the check
     def __followed(self, index, value):
-        """What a channel shows this frame, having been moved toward what its effect asked for.
-
-        A curve's length is how long the channel takes to arrive, whether it eases
-        into place or crosses at a steady rate, and neither depends on the frame rate.
-        Called per curved channel per frame. A caller skips it where no curve is
-        set, the call costing more than the check.
-        """
+        # Its fields are read by index, which costs less than by name
         curve = self.__curves[index]
         showing = self.__showing[index]
         rising = value > showing
         seconds = curve[0] if rising else curve[1]
         if seconds > 0:
+            # Both scale by the period, so a curve takes its length at any frame rate
             if curve[2]:
-                step = self.__period / (seconds * 1000)
+                step = self.__period_ms / (seconds * 1000)
                 value = min(value, showing + step) if rising else max(value, showing - step)
             else:
-                value = value + (showing - value) * 2 ** (-(self.__period * SETTLE) / (seconds * 1000))
+                value = value + (showing - value) * 2 ** (-(self.__period_ms * SETTLE) / (seconds * 1000))
 
         self.__showing[index] = value
         return value
 
 
 class MonoPlayer(EffectPlayer):
+    """A player for single colour LEDs, showing each channel's effect as a brightness."""
+
     def __init__(self, mono_leds):
         super().__init__(mono_leds)
 
@@ -503,7 +506,7 @@ class ChromaticPlayer(EffectPlayer):
 
         for i, colour in enumerate(colours):
             if not isinstance(colour, (tuple, list)) or len(colour) != 3:
-                raise TypeError("each colour must be a tuple of three numbers")
+                raise TypeError(f"colour {i} is {colour!r}. Give each colour as a tuple of three numbers from 0 to 255")
 
             self.__colours[i] = tuple(min(255, max(0, c)) for c in colour)
 
@@ -513,6 +516,8 @@ class ChromaticPlayer(EffectPlayer):
 
 
 class ColourPlayer(ChromaticPlayer):
+    """A player for RGB LEDs, showing a colour effect as it is and a mono effect in its channel's colour."""
+
     def __init__(self, rgb_leds):
         super().__init__(rgb_leds)
 
@@ -540,6 +545,8 @@ class ColourPlayer(ChromaticPlayer):
 
 
 class StripPlayer(ChromaticPlayer):
+    """A player for a WS2812 or APA102 strip, one channel per LED, sending the strip its frame each time it draws one."""
+
     def __init__(self, led_strip, num_leds=60):
         super().__init__(led_strip, num_leds)
 
@@ -560,7 +567,7 @@ class StripPlayer(ChromaticPlayer):
                 value = effects[i](*item) if item else effects[i]()
                 level = levels[i]
 
-                # Indexed one at a time, a genexp here allocating once a LED a frame
+                # Indexed one at a time, a genexp here allocating once an LED a frame
                 if is_instance(value, tuple_type):
                     r = value[0] * level
                     g = value[1] * level
@@ -578,4 +585,4 @@ class StripPlayer(ChromaticPlayer):
                 strip.set_rgb(i, to_int(r), to_int(g), to_int(b))
 
         # A strip shows nothing until its frame is sent, once a frame
-        self.__leds.update()
+        strip.update()
