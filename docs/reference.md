@@ -8,7 +8,9 @@ This is the library reference for the [Pimoroni Tiny FX](https://shop.pimoroni.c
 - [Reading the User Button](#reading-the-user-button)
 - [Setting the Mono LED Outputs](#setting-the-mono-led-outputs)
 - [Setting the RGB LED Output](#setting-the-rgb-led-output)
+- [Using the Sensor Connector](#using-the-sensor-connector)
 - [Reading Voltage](#reading-voltage)
+- [Pacing a Loop](#pacing-a-loop)
 - [Effects System](#effects-system)
   - [Program Lifecycle](#program-lifecycle)
 - [`TinyFX` Reference](#tinyfx-reference)
@@ -18,6 +20,7 @@ This is the library reference for the [Pimoroni Tiny FX](https://shop.pimoroni.c
 - [`WavPlayer` Reference](#wavplayer-reference)
   - [Constants](#constants-1)
   - [Functions](#functions-1)
+- [`timing` Reference](#timing-reference)
 
 
 ## Getting Started
@@ -40,10 +43,16 @@ Tiny FX has one user button, labelled **Boot**. This can be read using the `boot
 state_boot = tiny.boot_pressed()
 ```
 
+This reports the button's state at the moment it is asked, so a tap that starts and ends between two reads is missed. `boot_taps()` instead counts presses as they happen, and returns how many there have been since it was last called:
+
+```python
+taps = tiny.boot_taps()
+```
+
 
 ## Setting the Mono LED Outputs
 
-Tiny FX has six outputs for controlling chains of mono LEDs, labelled **1**, **2**, **3**, **4**, **5**, and **6**. These can be accessed either through the `outputs` list, or by individual properties, which return `PWMLED` objects:
+Tiny FX has six outputs for mono LEDs, labelled **1**, **2**, **3**, **4**, **5**, and **6**, each lighting every LED wired to it together. These can be accessed either through the `outputs` list, or by individual properties, which return `PWMLED` objects:
 
 ```python
 one = tiny.outputs[0]
@@ -72,7 +81,7 @@ time.sleep(1)
 
 ## Setting the RGB LED Output
 
-Tiny FX has a single RGB output for controlling chains of RGB LEDs, labelled **RGB**. This can be accessed through the `rgb` variable, which returns a `RGBLED` object:
+Tiny FX has a single output for non-addressable RGB LEDs, labelled **RGB**, lighting every LED wired to it in the same colour. This can be accessed through the `rgb` variable, which returns a `RGBLED` object:
 
 ```python
 rgb = tiny.rgb
@@ -82,55 +91,96 @@ This `RGBLED` object offers two functions to control its associated output, `set
 
 ```python
 # Turn the rgb output to red
-tiny.rgb.set_rgb(255, 0, 0)
-# tiny.rgb.set_hsv(0, 1, 1)
+rgb.set_rgb(255, 0, 0)
+# rgb.set_hsv(0, 1, 1)
 time.sleep(1)
 
 # Turn the rgb output to green
-tiny.rgb.set_rgb(0, 255, 0)
-# tiny.rgb.set_hsv(0.333, 1, 1)
+rgb.set_rgb(0, 255, 0)
+# rgb.set_hsv(0.333, 1, 1)
 time.sleep(1)
 
 # Turn the rgb output to blue
-tiny.rgb.set_rgb(0, 0, 255)
-# tiny.rgb.set_hsv(0.666, 1, 1)
+rgb.set_rgb(0, 0, 255)
+# rgb.set_hsv(0.666, 1, 1)
 time.sleep(1)
 
 # Turn the rgb output to white
-tiny.rgb.set_rgb(255, 255, 255)
-# tiny.rgb.set_hsv(0, 0, 1)
+rgb.set_rgb(255, 255, 255)
+# rgb.set_hsv(0, 0, 1)
 time.sleep(1)
+```
+
+There are also `on()` and `off()`. `on()` sets every channel to full, giving white, and `off()` is the same as `set_rgb(0, 0, 0)`.
+
+```python
+# Turn the rgb output on, then off again
+rgb.on()
+time.sleep(1)
+rgb.off()
 ```
 
 It is also possible to control the individual outputs of the RGB connection by accessing the `led_r`, `led_g`, `led_b` variables on the `RGBLED`, giving access to the internal `PWMLED` objects used.
 
 ```python
 # Turn the rgb output to red
-tiny.rgb.led_r.on()
-tiny.rgb.led_g.off()
-tiny.rgb.led_b.off()
+rgb.led_r.on()
+rgb.led_g.off()
+rgb.led_b.off()
 time.sleep(1)
 
 # Turn the rgb output to green
-tiny.rgb.led_r.off()
-tiny.rgb.led_g.on()
-tiny.rgb.led_b.off()
+rgb.led_r.off()
+rgb.led_g.on()
+rgb.led_b.off()
 time.sleep(1)
 
 # Turn the rgb output to blue
-tiny.rgb.led_r.off()
-tiny.rgb.led_g.off()
-tiny.rgb.led_b.on()
+rgb.led_r.off()
+rgb.led_g.off()
+rgb.led_b.on()
 time.sleep(1)
 
 # Turn the rgb output to white
-tiny.rgb.led_r.on()
-tiny.rgb.led_g.on()
-tiny.rgb.led_b.on()
+rgb.led_r.on()
+rgb.led_g.on()
+rgb.led_b.on()
 time.sleep(1)
 ```
 
-This can be useful for if you wish to connect up additional mono LEDs (the RGB connector can actually accept a Mono connector without any rewiring), though note that the gamma value for the RGB output is slightly different to that of the mono outputs.
+This can be useful for connecting up additional mono LEDs. The RGB connector accepts a single mono connector without any rewiring, which then lights from its red channel. Note that the RGB output uses a gamma of 2.2, where the mono outputs use 2.8, so the same brightness can look slightly different on each.
+
+
+## Using the Sensor Connector
+
+Tiny FX has a connector for a single sensor, carrying one signal alongside ground and 3.3V. Two accessories are made for it, the PIR Stick and the IR Receiver, and the signal can also be read as an analog voltage. The board sets each of these up for you when told which one to use:
+
+```python
+from sensor import ANALOG, PIR, IR
+
+tiny = TinyFX(sensor=ANALOG)
+```
+
+What the board set up is then available through `sensor`:
+
+| role | what `sensor` gives you |
+| --- | --- |
+| `ANALOG` | an `Analog`, read with `read_voltage()`, which optionally takes a `samples` count |
+| `PIR` | a `Pin`, already an input with its pull-up set, read with `value()` |
+| `IR` | a `NECRemoteReceiver` from the `aye_arr` library, already started, ready to `bind()` a remote and `decode()` |
+
+Letting the board set up `IR` is especially worthwhile, as the receiver needs a PIO state machine and the board knows which ones are free.
+
+```python
+from aye_arr.nec.remotes import PimoroniRemote
+
+tiny = TinyFX(sensor=IR)
+
+receiver = tiny.sensor
+receiver.bind(PimoroniRemote())
+```
+
+Without `sensor=`, the board leaves the connector alone, and reading `sensor` raises an error saying so. To use the connector some other way, its pin number is available as `SENSOR_PIN`.
 
 
 ## Reading Voltage
@@ -143,6 +193,41 @@ SAMPLES = 50        # The number of measurements to take per reading, to reduce 
 voltage = tiny.read_voltage(SAMPLES)
 print("Voltage =", round(voltage, 2))
 ```
+
+
+## Pacing a Loop
+
+A program that does its own work in a loop, such as reading a sensor, can hold that loop to a steady rate with a `Pacer`, from the `timing` module. Give it the time between passes in seconds, or a rate with `fps=`, and call `hold()` at the end of each pass. It waits out whatever is left of the interval, so the time the pass itself took is not added on top:
+
+```python
+from timing import Pacer
+
+pacer = Pacer(0.1)      # Ten passes a second
+
+while not tiny.boot_pressed():
+    print("Voltage =", round(tiny.read_voltage(50), 2))
+    pacer.hold()
+```
+
+A pass that overruns drops the whole intervals it missed, so the loop never runs faster than asked in order to catch up. `elapsed` gives the milliseconds since the loop began, for movement calculated from time, and `delta` the milliseconds the last pass counts as, for movement stepped once a pass.
+
+Where something in the loop is due less often than the loop runs, a `Roller` says when it is next due:
+
+```python
+from timing import Roller
+
+report = Roller(5)      # Due every 5 seconds
+
+while not tiny.boot_pressed():
+    if report.is_due():
+        print("Voltage =", round(tiny.read_voltage(50), 2))
+        report.advance()
+
+    # ... do other things here, since nothing waits for the report to be due
+```
+
+`advance()` moves the deadline on from where it was, so a report read late keeps its spacing, and `restart()` starts the interval again from now. Effect players keep their own time, so a program that only runs players needs neither.
+
 
 ## Effects System
 
@@ -275,14 +360,19 @@ wav: WavPlayer
 ```python
 # Initialisation
 TinyFX(init_i2c: bool=True,
+       i2c_freq: int=100000,     # Hz
        init_wav: bool=True,
-       wav_root: string="/")
+       wav_root: string="/",
+       sensor: string=None)
 
 # Interaction
 boot_pressed() -> bool
+boot_taps() -> int
 
 # Sensing
 read_voltage(samples: int=1) -> float
+@property
+sensor -> Analog | Pin | NECRemoteReceiver
 
 # Access
 @property
@@ -331,6 +421,10 @@ INTERNAL_BUFFER_LENGTH = WAV_BUFFER_LENGTH * 2
 TONE_SAMPLE_RATE = 44_100
 TONE_BITS_PER_SAMPLE = 16
 TONE_FULL_WAVES = 2
+
+# How long a tone or 16-bit WAV takes to fade in or out, where starting or stopping
+# mid-waveform would click
+FADE_MS = 40
 ```
 
 
@@ -339,23 +433,67 @@ TONE_FULL_WAVES = 2
 ```python
 # Initialisation
 WavPlayer(id: int,
-          sck_pin: Pin,
-          ws_pin: Pin,
-          sd_pin: Pin,
-          amp_enable: Pin=None,
+          sck_pin: int,
+          ws_pin: int,
+          sd_pin: int,
+          amp_enable: int=None,
           ibuf_len: int=INTERNAL_BUFFER_LENGTH,
-          root: string="/")
+          root: string="/",
+          ibuf_ms: int=None)
 deinit() -> None
 
 # Directories
 set_root(root: string) -> None
 
 # Player Control
-play_wav(wav_file: string, loop: bool=False) -> None
+play_wav(wav_file: string | file, loop: bool=False, position: int=0) -> None
 play_tone(frequency: float, amplitude: float, shape: int=TONE_SINE) -> None
 pause() -> None
 resume() -> None
 stop() -> None
 is_playing() -> bool
 is_paused() -> bool
+position() -> int | None
 ```
+
+`ibuf_ms` grows the player's buffer to hold at least that many milliseconds of whatever plays, for a program whose refills can be held up.
+
+A tone or 16-bit WAV fades in as it starts, and `pause()` and `stop()` fade it out over `FADE_MS` before taking effect, so `is_paused()` turns true once the fade has played out.
+
+`position()` says how far into the current WAV playback has reached, in bytes, or `None` where no WAV is under way. Passing it back to `play_wav()` as `position` picks up from there.
+
+
+## `timing` Reference
+
+Intervals are given in seconds, or as a rate with `fps=`, and each is held to the nearest millisecond. Everything read back is in milliseconds.
+
+```python
+# A loop's rate
+Pacer(interval: float=None, fps: float=None)
+restart(interval: float=None, fps: float=None) -> None
+hold() -> None
+@property
+elapsed -> int          # Since the loop began, or since restart()
+@property
+delta -> int            # What the last pass counts as, in whole intervals where one is set
+@property
+target_ms -> int | None
+@property
+target_fps -> float | None
+@property
+measured_ms -> int      # What the last pass really took, its wait included
+@property
+measured_fps -> float
+
+# When something is next due
+Roller(interval: float=None, fps: float=None)
+restart(interval: float=None, fps: float=None) -> None
+advance(seconds: float=None) -> None
+advance_ms(ms: int) -> None
+is_due() -> bool
+
+# A rate in milliseconds, or None where neither is given
+rate_ms(interval: float, fps: float) -> int | None
+```
+
+A `Pacer` waits with `sleep_ms()`, which wanders on a busy board. An effect player runs from a hardware timer, so it holds a fast rate more evenly.
