@@ -1,7 +1,7 @@
 // Board and hardware specific configuration
 #ifndef MICROPY_HW_BOARD_NAME
 // Might be defined by mpconfigvariant.cmake
-#define MICROPY_HW_BOARD_NAME                   "Pimoroni MightyFX"
+#define MICROPY_HW_BOARD_NAME                   "Pimoroni Mighty FX"
 #endif
 
 // The flash partition sizes come from mpconfigboard.cmake, as the port passes them to the

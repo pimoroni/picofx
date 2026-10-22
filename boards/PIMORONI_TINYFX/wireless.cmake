@@ -3,7 +3,7 @@
 # Override the MicroPython board name
 # And set basic options which are expanded upon in mpconfigboard.h
 list(APPEND MICROPY_DEF_BOARD
-    "MICROPY_HW_BOARD_NAME=\"Pimoroni TinyFX W\""
+    "MICROPY_HW_BOARD_NAME=\"Pimoroni Tiny FX W\""
     "MICROPY_PY_NETWORK=1"
 )
 

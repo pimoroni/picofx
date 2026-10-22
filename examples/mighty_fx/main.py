@@ -20,7 +20,7 @@ mighty = MightyFX()
 player = ColourPlayer(mighty.outputs)   # Create a new effect player to control MightyFX's RGB output
 
 
-# Create a PulseWaveFX effect
+# Create a RainbowWaveFX effect
 wave = RainbowWaveFX(speed=RAINBOW_SPEED,
                      length=RAINBOW_LENGTH,
                      sat=RAINBOW_SATURATION,

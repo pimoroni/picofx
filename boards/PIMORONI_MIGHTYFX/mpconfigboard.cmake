@@ -18,7 +18,7 @@ set(PICO_NUM_GPIOS 48)
 # Override the MicroPython board name
 # And set basic options which are expanded upon in mpconfigboard.h
 list(APPEND MICROPY_DEF_BOARD
-    "MICROPY_HW_BOARD_NAME=\"Pimoroni MightyFX\""
+    "MICROPY_HW_BOARD_NAME=\"Pimoroni Mighty FX\""
     "MICROPY_PY_NETWORK=1"
     "MICROPY_PY_NETWORK_PPP_LWIP=1"
 )
