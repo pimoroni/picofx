@@ -14,7 +14,7 @@ from spidisplay import release_buffers
 from ports import ScreenPort
 
 
-# What wake() lit, kept alive: a PWM object that is collected stops driving
+# The PWM objects wake() lit, held here since one that is collected stops driving its pin
 __waking = []
 
 
@@ -87,8 +87,8 @@ class SPCEPort(ScreenPort):
     def hub_selects(self):
         """The connector's five GPIOs, as the chip selects a hub addresses panels with.
 
-        Only a connector declared SPCE.HUB_SELECTS offers them, the declaration being what
-        says it is spent on another port's screens.
+        Only a connector declared SPCE.HUB_SELECTS offers them, as that declaration spends
+        it on another port's screens.
         """
         if self.mode != SPCE.HUB_SELECTS:
             raise ValueError(f"SP/CE {self.name} is not declared SPCE.HUB_SELECTS, so its "
@@ -143,8 +143,8 @@ class SPCEPort(ScreenPort):
 
     @property
     def __bus(self):
-        # Refused rather than built, a screen given an explicit cs never reading the
-        # lines above. Made again after a release(), as the port's own does.
+        # Refused on a port that is not a screen port, and made again after a release() as
+        # the screen port's own bus is
         if self.mode != SPCE.SCREEN:
             raise ValueError(f"SP/CE {self.name} is not a screen port, so it has no display bus")
 
@@ -228,6 +228,8 @@ class __ClusterServo:
 
 
 class MightyFX:
+    """The Mighty FX board, with its seven RGB outputs, its connectors and its audio."""
+
     OUT_PINS = (
         (3, 0, 1),
         (4, 5, 2),
@@ -280,8 +282,8 @@ class MightyFX:
     SPCE_B_MOTOR_SM = 1
     SERVO_SM = 2
 
-    # LEDs built past the length asked for and driven dark: a flash write pauses the
-    # transfer sending a frame partway, breaking it apart, and the overrun lands on these
+    # LEDs built past the length asked for and driven dark. A flash write pauses the transfer
+    # partway through a frame, and the overrun lands on these
     STRIP_FLUSH_LEDS = 2
 
     # The order a strip takes its red, green and blue in where its declaration names none,
@@ -318,7 +320,7 @@ class MightyFX:
 
     RGB_COLOUR_NAMES = ("red", "green", "blue")
 
-    # What wake() lights the outputs to: dim enough to read as alive, not as an effect
+    # What wake() lights the outputs to, dim enough to read as alive and not as an effect
     WAKE_LEVEL = 0.1
 
     def __init__(self, spce_a=None, spce_b=None, strip_l=None, strip_r=None,
@@ -385,7 +387,7 @@ class MightyFX:
         for letter, pin, strip, servo in (
                 ("L", self.SERVO_STRIP_L, strip_l, servo_l),
                 ("R", self.SERVO_STRIP_R, strip_r, servo_r)):
-            # Tested against None: ANGULAR is zero, so the commonest calibration reads as no servo
+            # Tested against None, as ANGULAR is zero and the commonest calibration would read as no servo
             if strip is not None and servo is not None:
                 raise ValueError(f"The {letter} connector carries one signal, so it cannot be a strip and a servo at once. Declare strip_{letter.lower()} or servo_{letter.lower()}.")
 
@@ -400,10 +402,9 @@ class MightyFX:
             elif servo is not None:
                 declared_servos.append((letter, pin, servo))
 
-        # The servos share one cluster, which leaves each connector's PWM channel to the
-        # screen backlight it shares that channel with. Built before the motor drivers, as
-        # the first cluster on the PIO sets which 32 pins it reaches, and the servos' reach
-        # holds either port's pins too
+        # The servos share one cluster, leaving each connector's PWM channel to the backlight it
+        # shares. It is built before the motor drivers, as the first cluster on the PIO sets the
+        # 32 pins it reaches, and the servos' window holds either port's pins too
         if declared_servos:
             from servo import Calibration, ServoCluster
             self.__servo_cluster = ServoCluster(self.CLUSTER_PIO, self.SERVO_SM,
@@ -417,7 +418,7 @@ class MightyFX:
 
         # The rail stays down until enable_rail(), so nothing on the header is live before then
 
-        # Each port owns its bus and pins; screens are created against them
+        # Each port owns its bus and pins, and screens are created against them
         self.spce_a = SPCEPort("A", spce_a, self.SPCE_A_PINS, self.CLUSTER_PIO, self.SPCE_A_MOTOR_SM)
         self.spce_b = SPCEPort("B", spce_b, self.SPCE_B_PINS, self.CLUSTER_PIO, self.SPCE_B_MOTOR_SM)
 
@@ -448,7 +449,7 @@ class MightyFX:
         # Set up the internal voltage sensor
         self.__v_sense = ADC(Pin(self.V_SENSE_PIN))
 
-        # Nothing is claimed where nothing was asked for, leaving the pin free
+        # Set up whatever the sensor connector was declared as
         self.__sensor = build_sensor(sensor, self.SENSOR_PIN, self.SENSOR_PIO, self.SENSOR_SM)
 
         # Set up the wav (and tone) player, if the user wants. Its refills come from Python
@@ -482,7 +483,6 @@ class MightyFX:
     def wake(cls):
         """Light every output dim white before there is a board, so seconds of importing do not read as a dead one."""
         duty = int(65535 * cls.WAKE_LEVEL)
-        # Held at module level, since a PWM that is collected stops driving its pin
         for pins in cls.OUT_PINS:
             for pin in pins:
                 __waking.append(PWM(Pin(pin), freq=PWMLED.FREQUENCY, duty_u16=duty))
@@ -497,7 +497,7 @@ class MightyFX:
         return taken
 
     def __switch_pressed(self, _pin):
-        # Each bounce is another falling edge; anything inside the window is the same press
+        # Each bounce is another falling edge, and anything inside the window is the same press
         now = time.ticks_ms()
         if time.ticks_diff(now, self.__tapped_at) > self.BOOT_DEBOUNCE_MS:
             self.__tapped_at = now
@@ -626,12 +626,12 @@ class MightyFX:
         self.clear()
         self.__release()
 
+    # Hands back what a build claimed, in the order the hardware wants, and runs over a build
+    # that stopped partway, which has no ports where it failed before them
     def __release(self):
-        # Hands back what a build claimed, in the order the hardware wants, and runs over
-        # a build that stopped partway, which has no ports where it failed before them
         ports = [port for port in (self.spce_a, self.spce_b) if port is not None]
 
-        # The handler holds this board, so detached, a board left behind can be collected
+        # The handler holds this board, so once detached a board left behind can be collected
         if self.__switch is not None:
             self.__switch.irq(handler=None)
 

@@ -6,6 +6,8 @@ from comms.protocol import MightyFXControl, TinyFXControl  # noqa: F401
 
 # Device Side (receive)
 class MightyFXTarget(FXTarget):
+    """A Mighty FX answering on the bus whose outputs a MightyFXControl sets."""
+
     DEVICE_ID = DEVICE_MIGHTY_FX
 
     def __init__(self, mighty_fx, address):
