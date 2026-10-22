@@ -1,5 +1,26 @@
 # Changelog
 
+1.1.3
+-----
+
+**PicoFX library**
+
+* Breaking: `target_ms`, `target_fps`, `measured_ms` and `measured_fps` are now properties
+* Breaking: TrafficLightFX drops `fade_rate` and `amber_flashing`, for `curves` and PelicanCrossingFX
+* Add ChromaticPlayer, shared by ColourPlayer and StripPlayer, with `colours` to tint a mono effect
+* Add `levels` and `curves` to every player, with `ease()` and `fade()` to make a curve
+* Add DisabledLED, for an LED that cannot light as another pin uses its PWM channel
+* Add `in_use_by` to every LED, and `leds`, `on()` and `off()` to RGBLED
+* Add PelicanCrossingFX, SweepFX, FlickerEachFX and RandomEachFX
+* Add NAME, CALLED and TAKES to every effect, saying what it is called and what settings it takes
+* Add ORANGE, PURPLE and PINK, with their HSV forms
+* `start()` rounds its rate to the nearest millisecond, and a paired chain shares it
+* Effects keep their speed at every frame rate
+* A timer callback arriving after `stop()` no longer updates the LEDs
+* The players and colour effects allocate less and draw faster
+* A setter given too many values says how many it was given
+* package.json lists every module, and the package includes the licence
+
 1.1.2
 -----
 

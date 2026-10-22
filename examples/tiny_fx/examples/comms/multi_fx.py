@@ -87,8 +87,8 @@ try:
     while player.is_running() and not tiny.boot_pressed():
         # Report the update rates and timings, so we know if the effects
         # system can handle the number of boards being controlled
-        print(f"Measured fps: {player.measured_fps():.2f}, Target fps: {player.target_fps():.2f}", end=", ")
-        print(f"Measured ms: {player.measured_ms()}, Target ms: {player.target_ms()}")
+        print(f"Measured fps: {player.measured_fps:.2f}, Target fps: {player.target_fps:.2f}", end=", ")
+        print(f"Measured ms: {player.measured_ms}, Target ms: {player.target_ms}")
         time.sleep(0.5)
 
 # End the program by shutting down the board

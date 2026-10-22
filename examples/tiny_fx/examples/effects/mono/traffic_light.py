@@ -1,10 +1,14 @@
 from tiny_fx import TinyFX
 
-from picofx import MonoPlayer
+from picofx import MonoPlayer, ease
 from picofx.mono import TrafficLightFX
 
 """
 Play a traffic light sequence on TinyFX's outputs.
+
+The three lights ease on and off rather than switching, which is how the filament
+lamps in a real signal behave. Softening belongs to the outputs, so it is set on the
+player and works the same for any effect.
 
 Press "Boot" to exit the program.
 """
@@ -16,11 +20,14 @@ player = MonoPlayer(tiny.outputs)                   # Create a new effect player
 
 # Effects
 traffic = TrafficLightFX(red_interval=5,            # The time (in seconds) to stay on Red
-                         red_amber_interval=2.5,    # The time (in seconds) to stay on Red+Amber (or Amber Flashing if enabled)
+                         red_amber_interval=2.5,    # The time (in seconds) to stay on Red+Amber
                          green_interval=5,          # The time (in seconds) to stay on Green
-                         amber_interval=2.5,        # The time (in seconds) to stay on Amber
-                         fade_rate=0.01,            # How quickly the lights respond to changes. Low values are more like bulbs
-                         amber_flashing=False)      # Whether to have Amber be flashing rather than Red+Amber, as some traffic lights use
+                         amber_interval=2.5)        # The time (in seconds) to stay on Amber
+
+
+# How long each output takes to reach what the effect asks for. A single value
+# covers every output, and ease() is the curve a warming filament follows
+player.curves = ease(0.3)
 
 
 # Set up the traffic light effect to play.
