@@ -38,7 +38,7 @@ qa:
 	tox -e qa
 
 package.json:
-	./tools/mkpackagejson.py --ver ${LIBRARY_VERSION} --repo ${REPO} src/
+	./tools/mkpackagejson.py --ver ${LIBRARY_VERSION} --repo ${REPO} picofx/
 
 pytest:
 	tox -e py
