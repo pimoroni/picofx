@@ -1,0 +1,6 @@
+# Hosted pure-Python packages frozen into this board. ci/micropython.sh fetches each into
+# $CI_BUILD_ROOT/lib under its module name, and manifest.py pulls them in with require().
+# Pin ref to a tag or a full sha.
+#
+# url                       ref
+pimoroni/lte-micropython    v1.1.0
