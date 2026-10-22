@@ -17,11 +17,17 @@ jobs:
       matrix:
         include:
           - name: TinyFX
+            basename: tiny_fx
             shortname: tiny_fx
             board: PIMORONI_TINYFX
           - name: TinyFX W
+            basename: tiny_fx
             shortname: tiny_fx_w
             board: PIMORONI_TINYFX
+          - name: MightyFX
+            basename: mighty_fx
+            shortname: mighty_fx
+            board: PIMORONI_MIGHTYFX
 
     env:
       RELEASE_FILE: ${{matrix.shortname}}-${{github.event.release.tag_name || github.sha}}
@@ -58,10 +64,10 @@ jobs:
       shell: bash
       run: |
         mkdir -p ${{env.EX_DIR}}
-        cp -v -r picofx/examples/tiny_fx/. ${{env.EX_DIR}}
-        rm -v ${{env.EX_DIR}}/README.md
-        rm -v -r ${{env.EX_DIR}}/examples/audio/photon_sword
-        rm -v ${{env.EX_DIR}}/examples/audio/photon_sword.py
+        cp -v -r picofx/examples/${{matrix.basename}}/. ${{env.EX_DIR}}
+        rm -v -f ${{env.EX_DIR}}/README.md
+        rm -v -r -f ${{env.EX_DIR}}/examples/audio/photon_sword
+        rm -v -f ${{env.EX_DIR}}/examples/audio/photon_sword.py
 
     - name: "Append W example content"
       if: matrix.shortname == 'tiny_fx_w'
@@ -71,7 +77,7 @@ jobs:
         rm -v -f ${{env.EX_DIR}}/README.md
 
     - name: Libs .zip artifact
-      if: matrix.shortname == 'tiny_fx'
+      if: matrix.shortname != 'tiny_fx_w'
       uses: actions/upload-artifact@v7
       with:
         name: ${{env.RELEASE_FILE}}-libraries-only
@@ -92,7 +98,7 @@ jobs:
         (cd picofx/ex_temp && zip -r "$GITHUB_WORKSPACE/${{env.RELEASE_FILE}}-examples-only.zip" .)
 
     - name: "Release: Upload the libraries .zip"
-      if: github.event_name == 'release' && matrix.shortname == 'tiny_fx'
+      if: github.event_name == 'release' && matrix.shortname != 'tiny_fx_w'
       uses: softprops/action-gh-release@v3
       with:
         files: ${{env.RELEASE_FILE}}-libraries-only.zip

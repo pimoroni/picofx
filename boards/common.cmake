@@ -28,6 +28,34 @@ if (EXISTS "${PIMORONI_TOOLS_DIR}/py_decl/py_decl.py")
     )
 endif()
 
+# Generate a .bin file containing the data for ROMFS
+if (EXISTS "${MICROPY_DIR}/tools/mpremote/mpremote.py" AND EXISTS "${PIMORONI_ROMFS_DIR}")
+    get_filename_component(PIMORONI_ROMFS_DIR ${PIMORONI_ROMFS_DIR} REALPATH)
+    MESSAGE("mpremote romfs build: Using root ${PIMORONI_ROMFS_DIR}.")
+    MESSAGE("mpremote romfs build: Outputting filesystem binary: ${CMAKE_BINARY_DIR}/${MICROPY_TARGET}-romfs.bin")
+    add_custom_target("${MICROPY_TARGET}-romfs.bin" ALL
+        COMMAND ${Python_EXECUTABLE} "${MICROPY_DIR}/tools/mpremote/mpremote.py" romfs --output "${CMAKE_BINARY_DIR}/${MICROPY_TARGET}-romfs.bin" build "${PIMORONI_ROMFS_DIR}"
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "mpremote romfs build: Packing ROMFS filesystem to ${MICROPY_TARGET}-romfs.bin."
+        DEPENDS ${MICROPY_TARGET}
+        DEPENDS "${MICROPY_TARGET}-verify"
+    )
+endif()
+
+# Append the ROMFS .bin file to the UF2 in blockdev "ROMFS"
+if (EXISTS "${PIMORONI_TOOLS_DIR}/dir2uf2/dir2uf2" AND EXISTS "${PIMORONI_ROMFS_DIR}")
+    MESSAGE("dir2uf2: Using ROMFS binary: ${CMAKE_BINARY_DIR}/${MICROPY_TARGET}-romfs.bin")
+    add_custom_target("${MICROPY_TARGET}-romfs.uf2" ALL
+        COMMAND ${Python_EXECUTABLE} "${PIMORONI_TOOLS_DIR}/dir2uf2/dir2uf2" --fs-blockdev ROMFS ${UF2_SPARSE} --append-to "${MICROPY_TARGET}.uf2" --filename romfs.uf2 "${CMAKE_BINARY_DIR}/${MICROPY_TARGET}-romfs.bin"
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "dir2uf2: Appending ROMFS to ${MICROPY_TARGET}.uf2."
+        DEPENDS ${MICROPY_TARGET}
+        DEPENDS "${MICROPY_TARGET}-romfs.bin"
+        DEPENDS "${MICROPY_TARGET}.uf2"
+        DEPENDS "${MICROPY_TARGET}-verify"
+    )
+endif()
+
 # Build and append the LittleFS filesystem to the UF2 in blockdev "MicroPython"
 if (EXISTS "${PIMORONI_TOOLS_DIR}/dir2uf2/dir2uf2" AND EXISTS "${PIMORONI_UF2_MANIFEST}" AND EXISTS "${UF2_STAGING_SCRIPT}")
     MESSAGE(STATUS "dir2uf2: Using manifest ${PIMORONI_UF2_MANIFEST}.")
@@ -45,13 +73,19 @@ if (EXISTS "${PIMORONI_TOOLS_DIR}/dir2uf2/dir2uf2" AND EXISTS "${PIMORONI_UF2_MA
         DEPENDS ${MICROPY_TARGET}
         DEPENDS "${MICROPY_TARGET}-verify")
 
+    if(EXISTS "${PIMORONI_ROMFS_DIR}")
+        set(UF2_EXT "-romfs.uf2")
+    else()
+        set(UF2_EXT ".uf2")
+    endif()
+
     # Add a target to prep the build
     add_custom_target("${MICROPY_TARGET}-with-libs-and-examples.uf2" ALL
-        COMMAND ${Python_EXECUTABLE} "${PIMORONI_TOOLS_DIR}/dir2uf2/dir2uf2" --verbose --fs-blockdev MicroPython --fs-compact ${UF2_SPARSE} --append-to "${MICROPY_TARGET}.uf2" --manifest "${PIMORONI_UF2_MANIFEST}" --filename with-libs-and-examples.uf2 "${UF2_STAGING_DIR}"
+        COMMAND ${Python_EXECUTABLE} "${PIMORONI_TOOLS_DIR}/dir2uf2/dir2uf2" --verbose --fs-blockdev MicroPython --fs-compact ${UF2_SPARSE} --append-to "${MICROPY_TARGET}${UF2_EXT}" --manifest "${PIMORONI_UF2_MANIFEST}" --filename with-libs-and-examples.uf2 "${UF2_STAGING_DIR}"
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "dir2uf2: Appending filesystem to ${MICROPY_TARGET}.uf2."
+        COMMENT "dir2uf2: Appending filesystem to ${MICROPY_TARGET}${UF2_EXT}."
         DEPENDS ${MICROPY_TARGET}
-        DEPENDS "${MICROPY_TARGET}.uf2"
+        DEPENDS "${MICROPY_TARGET}${UF2_EXT}"
         DEPENDS "${MICROPY_TARGET}-staging"
     )
 endif()
