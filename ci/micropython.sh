@@ -1,14 +1,19 @@
 export TERM=${TERM:="xterm-256color"}
 
-MICROPYTHON_FLAVOUR="micropython"
-MICROPYTHON_VERSION="v1.28.0"
+MICROPYTHON_FLAVOUR="pimoroni"
+MICROPYTHON_VERSION="fx-1.29.0"
 
 PIMORONI_PICO_FLAVOUR="pimoroni"
-# Pinned before pimoroni-pico #1151, whose bindings need a MicroPython newer than v1.28.0
-PIMORONI_PICO_VERSION="12b15d0bb4e0d535a0f1538e7c7b373101f88a20"
+PIMORONI_PICO_VERSION="bbb1792856c7c8f9939a28e134021447b32f5bbb"
 
 PIMORONI_AYE_ARR_FLAVOUR="pimoroni"
-PIMORONI_AYE_ARR_VERSION="v1.0.0"
+PIMORONI_AYE_ARR_VERSION="v1.0.1"
+
+PIMORONI_LSM6DS3_FLAVOUR="pimoroni"
+PIMORONI_LSM6DS3_VERSION="v0.0.3"
+
+PIMORONI_QWSTPAD_FLAVOUR="pimoroni"
+PIMORONI_QWSTPAD_VERSION="v0.0.1"
 
 PY_DECL_VERSION="v0.0.5"
 DIR2UF2_VERSION="v0.1.0"
@@ -32,6 +37,22 @@ function ci_pimoroni_pico_clone {
     cd "$CI_BUILD_ROOT/pimoroni-pico" || return 1
     git checkout $PIMORONI_PICO_VERSION
     git submodule update --init
+    cd "$CI_BUILD_ROOT"
+}
+
+function ci_pimoroni_qwstpad_clone {
+    log_inform "Using Pimoroni QwSTPad $PIMORONI_QWSTPAD_FLAVOUR/$PIMORONI_QWSTPAD_VERSION"
+    git clone https://github.com/$PIMORONI_QWSTPAD_FLAVOUR/qwstpad-micropython "$CI_BUILD_ROOT/qwstpad-micropython"
+    cd "$CI_BUILD_ROOT/qwstpad-micropython" || return 1
+    git checkout $PIMORONI_QWSTPAD_VERSION
+    cd "$CI_BUILD_ROOT"
+}
+
+function ci_pimoroni_lsm6ds3_clone {
+    log_inform "Using Pimoroni LSM6DS3 $PIMORONI_LSM6DS3_FLAVOUR/$PIMORONI_LSM6DS3_VERSION"
+    git clone https://github.com/$PIMORONI_LSM6DS3_FLAVOUR/lsm6ds3-micropython "$CI_BUILD_ROOT/lsm6ds3-micropython"
+    cd "$CI_BUILD_ROOT/lsm6ds3-micropython" || return 1
+    git checkout $PIMORONI_LSM6DS3_VERSION
     cd "$CI_BUILD_ROOT"
 }
 
@@ -82,6 +103,8 @@ function ci_prepare_all {
     ci_micropython_clone
     ci_pimoroni_pico_clone
     ci_pimoroni_aye_arr_clone
+    ci_pimoroni_lsm6ds3_clone
+    ci_pimoroni_qwstpad_clone
     ci_micropython_build_mpy_cross
 }
 
@@ -118,6 +141,7 @@ function ci_cmake_configure {
     -DPICO_NO_COPRO_DIS=1 \
     -DPICOTOOL_FETCH_FROM_GIT_PATH="$TOOLS_DIR/picotool" \
     -DPIMORONI_PICO_PATH="$CI_BUILD_ROOT/pimoroni-pico" \
+    -DCI_BUILD_ROOT="$CI_BUILD_ROOT" \
     -DPIMORONI_TOOLS_DIR="$TOOLS_DIR" \
     -DUSER_C_MODULES="$MICROPY_BOARD_DIR/micropython.cmake" \
     -DMICROPY_BOARD_DIR="$MICROPY_BOARD_DIR" \
@@ -144,7 +168,7 @@ function ci_cmake_build {
     fi
 
     ccache --zero-stats || true
-    cmake --build $BUILD_DIR -j 2
+    cmake --build $BUILD_DIR -j 2 || return $?
     ccache --show-stats || true
 
     if [ -z ${CI_RELEASE_FILENAME+x} ]; then
