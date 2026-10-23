@@ -605,7 +605,7 @@ class __Graphics:
         self.__begin()
 
     def __begin(self):
-        """Run the module body and the first frame, raising as the file does."""
+        # Run the module body and the first frame, raising as the file does
         import builtins
 
         original = builtins.__import__
@@ -665,7 +665,7 @@ class __Graphics:
         return True
 
     def __stop(self, error):
-        """Keep the last frame and say why, once; the loop around this carries on."""
+        # Keep the last frame and say why, once; the loop around this carries on
         self.__stopped = True
         trace = io.StringIO()
         sys.print_exception(error, trace)
@@ -846,7 +846,7 @@ class Sound:
 
 
 def __split_quoted(text):
-    """Whitespace-separated tokens, with quoted runs kept whole and their quotes removed."""
+    # Whitespace-separated tokens, with quoted runs kept whole and their quotes removed
     tokens = []
     token = ""
     quote = None
@@ -886,7 +886,7 @@ def __unquoted(text, char):
 
 
 def __strip_comment(line):
-    """Everything before an unquoted #."""
+    # Everything before an unquoted #
     quote = None
     for index, char in enumerate(line):
         if quote:
@@ -900,23 +900,21 @@ def __strip_comment(line):
 
 
 def __is_number(text):
-    """A run of digits with at most one leading dash, which int() reads as written."""
+    # A run of digits with at most one leading dash, which int() reads as written
     return (text[1:] if text[:1] == "-" else text).isdigit()
 
 
 def __drive_letter(text, index):
-    """
-    Whether the colon at index belongs to a drive letter, as a path pasted from a
-    computer carries. Such a path cannot name anything on a board, but it is one
-    value rather than a second colon, so it is read and answered as a value.
-    """
+    # Whether the colon at index belongs to a drive letter, as a path pasted from a
+    # computer carries. Such a path cannot name anything on a board, but it is one
+    # value rather than a second colon, so it is read and answered as a value
     letter = text[index - 1:index]
     stands_alone = letter.isalpha() and not text[index - 2:index - 1].isalpha()
     return stands_alone and text[index + 1:index + 2] in ("\\", "/")
 
 
 def __unclosed_quote(text):
-    """Whether a quote is opened and never closed, which would swallow the colon."""
+    # Whether a quote is opened and never closed, which would swallow the colon
     quote = None
     for char in text:
         if quote:
@@ -928,12 +926,10 @@ def __unclosed_quote(text):
 
 
 def __glue(text):
-    """
-    Spaces around a range dash, an equals or a pipe removed, so 'out1 - 7',
-    'level = 50%' and 'ease = 0.05 | 0.3' read as written without them. Commas are
-    left alone: a space after one is what separates 'level=0.5, 2 level=0.8' into two
-    outputs rather than two values.
-    """
+    # Spaces around a range dash, an equals or a pipe removed, so 'out1 - 7',
+    # 'level = 50%' and 'ease = 0.05 | 0.3' read as written without them. Commas are
+    # left alone: a space after one is what separates 'level=0.5, 2 level=0.8' into two
+    # outputs rather than two values
     out = []
     quote = None
 
@@ -977,7 +973,7 @@ def __number(text):
 
 
 def __colour(text):
-    """An (r, g, b) tuple from a name or six-digit hex, or None."""
+    # An (r, g, b) tuple from a name or six-digit hex, or None
     name = text.strip().lower()
     if name in COLOURS:
         return COLOURS[name]
@@ -991,7 +987,7 @@ def __colour(text):
 
 
 def __value(text):
-    """An effect setting's value: a number, a boolean, or the text as given."""
+    # An effect setting's value: a number, a boolean, or the text as given
     lowered = text.lower()
     if lowered in ("true", "yes", "on"):
         return True
@@ -1002,7 +998,7 @@ def __value(text):
 
 
 def __scene_time(word):
-    """The seconds a heading's setting names, in seconds or minutes, or None where it names no time."""
+    # The seconds a heading's setting names, in seconds or minutes, or None where it names no time
     unit = word[-1:].lower()
     if unit not in ("s", "m"):
         return None
@@ -1013,12 +1009,12 @@ def __scene_time(word):
 
 
 def __is_scene_setting(word):
-    """Whether a word would be a setting if it sat after the heading's colon."""
+    # Whether a word would be a setting if it sat after the heading's colon
     return word.lower() == "restart" or __scene_time(word) is not None
 
 
 def __degrees(text):
-    """A fraction of a turn from 0 to 360 written with 'deg', or None if it is not."""
+    # A fraction of a turn from 0 to 360 written with 'deg', or None if it is not
     if not isinstance(text, str) or not text.lower().endswith("deg"):
         return None
 
@@ -1092,7 +1088,7 @@ def __value_fault(kind, value):
 
 
 def __expand_hub(spec, token, line, problems):
-    """The hub positions one selector item covers, lettered as the silk letters them."""
+    # The hub positions one selector item covers, lettered as the silk letters them
     first, dash, last = spec.partition("-")
     if first not in HUB_POSITIONS or len(first) != 1 or \
             (dash and (last not in HUB_POSITIONS or len(last) != 1)):
@@ -1209,7 +1205,8 @@ SCREEN_SETTINGS = ("backlight", "rotation", "mirror", "offset", "background",
 
 
 def __apply_channel_setting(channels, key, raw, line, problems):
-    """Set a left-side setting on the channels an item covered, one value or a list."""
+    # Set a left-side setting on the channels an item covered, one value or a list
+
     # An offset is one value in two parts, so it takes the pipe that divides a value
     # rather than the comma that divides one value per output. A * centres that side,
     # which is what leaving the whole setting out does to both
@@ -1322,7 +1319,7 @@ def __apply_channel_setting(channels, key, raw, line, problems):
 
 
 def __parse_selector(text, line, problems):
-    """The left of the colon: channel items, each carrying its own settings."""
+    # The left of the colon: channel items, each carrying its own settings
     channels = []
     recent = []
     prefix = ""
@@ -1361,10 +1358,8 @@ def __parse_selector(text, line, problems):
 
 
 def __parse_effect(tokens, line, problems, needs_effect=True):
-    """
-    The right of the colon: an effect name then its settings. Each token carries the
-    line it was written on, since an entry may run over several.
-    """
+    # The right of the colon: an effect name then its settings. Each token carries the
+    # line it was written on, since an entry may run over several
     effect = None
     settings = {}
     lines = {}
@@ -1630,7 +1625,7 @@ def parse(text):
 
 
 def __about_line(problem):
-    """The line a problem is about. Those about the board as a whole come first."""
+    # The line a problem is about. Those about the board as a whole come first
     if problem.startswith("line "):
         number = problem[5:].split(":", 1)[0]
         if number.isdigit():
@@ -1701,7 +1696,7 @@ def report(problems, path, running=True):
 
 
 def __indicators(fx):
-    """The LEDs a signal shows on: the outputs, or the board's own LED where it has none."""
+    # The LEDs a signal shows on: the outputs, or the board's own LED where it has none
     if fx.outputs:
         return fx.outputs
     rgb = getattr(fx, "rgb", None)
@@ -1709,11 +1704,9 @@ def __indicators(fx):
 
 
 def __flashed(fx):
-    """
-    The LEDs a flash shows on: the indicators, and the board's own LED beside its outputs too,
-    where mono outputs alone would show the count and not the colour. The board's LED takes
-    no part in the spot, sitting outside the line the outputs make.
-    """
+    # The LEDs a flash shows on: the indicators, and the board's own LED beside its outputs too,
+    # where mono outputs alone would show the count and not the colour. The board's LED takes
+    # no part in the spot, sitting outside the line the outputs make
     lights = __indicators(fx)
     rgb = getattr(fx, "rgb", None)
     return lights if rgb is None or rgb in lights else lights + [rgb]
@@ -1743,13 +1736,11 @@ def indicate(fx, pattern=PROBLEM):
 
 
 def __play(fx, volume, path, errors, playing, sounding=(), maker=None):
-    """
-    Stop what is playing, read the file again, and play what it now says.
-
-    Takes a board or something that makes one, and hands the board back: the file is
-    what declares a strip, so on the first read there is nothing built yet. `maker`
-    is passed through to load(), which rebuilds the board where its entry changed.
-    """
+    # Stop what is playing, read the file again, and play what it now says.
+    #
+    # Takes a board or something that makes one, and hands the board back: the file is
+    # what declares a strip, so on the first read there is nothing built yet. `maker`
+    # is passed through to load(), which rebuilds the board where its entry changed
     for player in playing:
         player.stop()
     # The players held the strips. A board rebuilt below for a changed entry claims
@@ -1906,12 +1897,10 @@ def __service_shows(shows, between=None):
 
 
 def __start(players, fx):
-    """
-    A paired player is ticked by its partner, so only the head starts a timer.
-
-    The strip header's rail comes up here as well, where a strip was built: the
-    board leaves it down until asked, and this is when something starts driving it.
-    """
+    # A paired player is ticked by its partner, so only the head starts a timer.
+    #
+    # The strip header's rail comes up here as well, where a strip was built: the
+    # board leaves it down until asked, and this is when something starts driving it
     if __STRIPS:
         rail = getattr(fx, "enable_rail", None)
         if rail is not None:
@@ -1921,22 +1910,20 @@ def __start(players, fx):
 
 
 def __resume(players, fx):
-    """
-    Start the players again after a pass of the spot, over dark outputs.
-
-    The spot leaves every output it did not carry at its resting floor, and a
-    player writes only the outputs an effect drives, so one the file never names
-    would keep that floor for good. Darkening first costs the driven outputs one
-    frame, which the players paint over. The outputs only, since clear() would
-    take a strip's player with it.
-    """
+    # Start the players again after a pass of the spot, over dark outputs.
+    #
+    # The spot leaves every output it did not carry at its resting floor, and a
+    # player writes only the outputs an effect drives, so one the file never names
+    # would keep that floor for good. Darkening first costs the driven outputs one
+    # frame, which the players paint over. The outputs only, since clear() would
+    # take a strip's player with it
     for output in __indicators(fx):
         output.off()
     __start(players, fx)
 
 
 def __spot(fx, lit):
-    """The indicator at lit at the travelling level, the rest at the resting floor."""
+    # The indicator at lit at the travelling level, the rest at the resting floor
     colour, floor, spot = TRANSFER
     for index, output in enumerate(__indicators(fx)):
         level = spot if index == lit else floor
@@ -1947,18 +1934,16 @@ def __spot(fx, lit):
 
 
 def __handover(fx, to_board):
-    """
-    The drive changing hands, said with one pass of the spot a transfer travels.
-
-    A double press reloads the board exactly as a single press does, so without
-    this nothing on the outputs tells the two apart. Which way the spot runs says
-    which way the drive went, reading the outputs as the line they are: the first
-    sits by the USB connector and the last at the far end, so a pass towards the
-    end is the board taking the drive and one towards the connector is the
-    computer taking it. A transfer travels the first way, into the board, which
-    is the only direction it can mean: the drive reports a write and never a
-    read. Half the transfer's step, so the whole pass is brief.
-    """
+    # The drive changing hands, said with one pass of the spot a transfer travels.
+    #
+    # A double press reloads the board exactly as a single press does, so without
+    # this nothing on the outputs tells the two apart. Which way the spot runs says
+    # which way the drive went, reading the outputs as the line they are: the first
+    # sits by the USB connector and the last at the far end, so a pass towards the
+    # end is the board taking the drive and one towards the connector is the
+    # computer taking it. A transfer travels the first way, into the board, which
+    # is the only direction it can mean: the drive reports a write and never a
+    # read. Half the transfer's step, so the whole pass is brief
     count = len(__indicators(fx))
     order = range(count) if to_board else range(count - 1, -1, -1)
     for lit in order:
@@ -1967,21 +1952,19 @@ def __handover(fx, to_board):
 
 
 def __transfer_frame(fx, at):
-    """
-    One frame of the wait shown while the computer is copying: a spot travelling the
-    indicators over a resting floor, so a transfer reads as something happening rather
-    than as the board having stopped.
-
-    Driven from the caller's own loop rather than a player, since the players are
-    stopped for the duration, and stepped from the clock so a frame the transfer
-    delays does not slow the travel down.
-
-    Nothing is sent to a strip meanwhile. A frame reaches one as a single timed
-    run of bits, and a flash write pauses the transfer sending it partway, which
-    breaks it apart into the wrong colours or into a run that overruns the LEDs
-    declared into one nothing addresses afterwards. Every frame sent is another
-    that can be torn, so the strips are left holding what they have.
-    """
+    # One frame of the wait shown while the computer is copying: a spot travelling the
+    # indicators over a resting floor, so a transfer reads as something happening rather
+    # than as the board having stopped.
+    #
+    # Driven from the caller's own loop rather than a player, since the players are
+    # stopped for the duration, and stepped from the clock so a frame the transfer
+    # delays does not slow the travel down.
+    #
+    # Nothing is sent to a strip meanwhile. A frame reaches one as a single timed
+    # run of bits, and a flash write pauses the transfer sending it partway, which
+    # breaks it apart into the wrong colours or into a run that overruns the LEDs
+    # declared into one nothing addresses afterwards. Every frame sent is another
+    # that can be torn, so the strips are left holding what they have
     lights = __indicators(fx)
     if len(lights) == 1:
         __spot(fx, 0 if at % TRANSFER_PERIOD_MS >= TRANSFER_PERIOD_MS - TRANSFER_STEP_MS else -1)
@@ -2006,12 +1989,10 @@ def __candidates(name):
 
 
 def __read_program(name, problems):
-    """
-    The source of a program the file named, or None if there is none to read.
-
-    Read before the drive is shown, since exposing it unmounts the mount point and a
-    program kept on the drive could not be opened once the computer has it.
-    """
+    # The source of a program the file named, or None if there is none to read.
+    #
+    # Read before the drive is shown, since exposing it unmounts the mount point and a
+    # program kept on the drive could not be opened once the computer has it
     found = []
     for candidate in __candidates(name):
         try:
@@ -2038,7 +2019,8 @@ def __read_program(name, problems):
 
 
 def __run_program(name, source, args, problems):
-    """Run what was read, and say so if it stops rather than letting it take the board."""
+    # Run what was read, and say so if it stops rather than letting it take the board
+
     # The file's arguments arrive the way a program receives them anywhere, so the same
     # file runs unchanged from an editor, where sys.argv is empty and a program falls
     # back to its own constants. sys is built in and its argv cannot be rebound, so the
@@ -2592,14 +2574,12 @@ PRESENCE_PROBE_MS = 40
 
 
 def __screen_gone(screen):
-    """
-    Whether a panel that was brought up has stopped answering.
-
-    One unplugged and put back has lost the TEON its bringup set, so it asserts
-    nothing. Nothing is sent to find out: a screen owning its line keeps TE on
-    from bringup, so any edge at all is the panel still being there. One with no
-    signal to read cannot be told about either way, so it counts as present.
-    """
+    # Whether a panel that was brought up has stopped answering.
+    #
+    # One unplugged and put back has lost the TEON its bringup set, so it asserts
+    # nothing. Nothing is sent to find out: a screen owning its line keeps TE on
+    # from bringup, so any edge at all is the panel still being there. One with no
+    # signal to read cannot be told about either way, so it counts as present
     if not screen.__v_sync:
         return False
     try:
@@ -2788,11 +2768,9 @@ def __find_image(name, line, problems):
 
 
 def __read_drawing(path, target, at, problems):
-    """
-    A graphics file compiled against its own name, or None with the reason said.
-    Compiled while the entries are read, so a file that will not parse is answered
-    at load, and kept as a code object so a restart never goes back to the drive.
-    """
+    # A graphics file compiled against its own name, or None with the reason said.
+    # Compiled while the entries are read, so a file that will not parse is answered
+    # at load, and kept as a code object so a restart never goes back to the drive
     try:
         with open(path) as handle:
             source = handle.read()
@@ -2809,7 +2787,7 @@ def __read_drawing(path, target, at, problems):
 
 
 def __make_drawing(code, target, at, channel, screen, settings, fps, asleep, problems):
-    """The player for a graphics entry: its canvas, its ground, and the file begun."""
+    # The player for a graphics entry: its canvas, its ground, and the file begun
     import picovector
 
     # The canvas fills the panel as the entry mounts it, so the drawing works in the
@@ -2846,15 +2824,13 @@ def __make_drawing(code, target, at, channel, screen, settings, fps, asleep, pro
 
 
 def __place_canvases(shows):
-    """
-    Move each drawing to a canvas in SRAM while one fits, the largest first, where the
-    heap is PSRAM, since a drawing clears and paints there in a fraction of the time.
-
-    Run once every panel of the file holds its workspace, as canvases and workspaces
-    share one region and a workspace claimed after a canvas could find no room. The
-    last file's canvases are released first, all together, nothing else holding them.
-    A drawing keeps the frame its setup drew, copied across.
-    """
+    # Move each drawing to a canvas in SRAM while one fits, the largest first, where the
+    # heap is PSRAM, since a drawing clears and paints there in a fraction of the time.
+    #
+    # Run once every panel of the file holds its workspace, as canvases and workspaces
+    # share one region and a workspace claimed after a canvas could find no room. The
+    # last file's canvases are released first, all together, nothing else holding them.
+    # A drawing keeps the frame its setup drew, copied across
     if not __HEAP_IN_PSRAM:
         return
 
@@ -2927,11 +2903,9 @@ def __wants_full_size(entries, board):
 
 
 def __screen_on(fx, name, line, problems, size, full_size=False):
-    """
-    The panel a selector name reaches, built once and kept: construction resets the
-    glass, so a screen is only ever constructed the first time it is asked for, at
-    the board entry's size for it or 2.8 unsaid, size being unreadable from a panel.
-    """
+    # The panel a selector name reaches, built once and kept: construction resets the
+    # glass, so a screen is only ever constructed the first time it is asked for, at
+    # the board entry's size for it or 2.8 unsaid, size being unreadable from a panel
     known = __SCREENS.get(name)
     if known is not None:
         screen, built_size = known
@@ -2978,7 +2952,7 @@ def __screen_on(fx, name, line, problems, size, full_size=False):
 
 
 def __screen_entry_fits(entry, fx, hub, board, problems):
-    """Whether an entry names one screen this board has, declared with its size."""
+    # Whether an entry names one screen this board has, declared with its size
     name = entry.channels[0].name
 
     if len(entry.channels) > 1:
@@ -3017,7 +2991,7 @@ def __screen_entry_fits(entry, fx, hub, board, problems):
 
 
 def __hub_entry_fits(entry, places, hub, board, problems):
-    """Whether an entry's hub positions are on a declared hub, sized, and all one size."""
+    # Whether an entry's hub positions are on a declared hub, sized, and all one size
     shown = __hub_shown(places)
 
     if hub is None:
@@ -3049,7 +3023,7 @@ def __hub_entry_fits(entry, places, hub, board, problems):
 
 
 def __hub_panel(fx, place, size, problems):
-    """The panel at one hub position, built once and kept, or None where none answered."""
+    # The panel at one hub position, built once and kept, or None where none answered
     known = __SCREENS.get(place)
     if known is not None:
         return known[0]
@@ -3074,11 +3048,9 @@ def __hub_panel(fx, place, size, problems):
 
 
 def __hub_stream(fx, places, board, line, problems):
-    """
-    The stream an entry's positions play through: a subset of the group for their panel
-    size. Every declared position is built the first time the hub is asked for, one
-    group per size, so the hub's light knows every panel it waits on.
-    """
+    # The stream an entry's positions play through: a subset of the group for their panel
+    # size. Every declared position is built the first time the hub is asked for, one
+    # group per size, so the hub's light knows every panel it waits on
     if not __HUB:
         problems.append("line {}: the board was not set up with the Screen Hub".format(line))
         return None
@@ -3110,7 +3082,7 @@ def __hub_stream(fx, places, board, line, problems):
 
 
 def __agree_hub_backlight(shows, problems):
-    """Report hub entries playing at once that ask for different backlights."""
+    # Report hub entries playing at once that ask for different backlights
     asking = sorted((show for show in shows if show.hub is not None and
                      show.backlight is not None), key=lambda show: show.line)
     scenes = {show.scene for show in shows if show.hub is not None} - {None}
@@ -3170,13 +3142,13 @@ def __pending_shows(problems):
 
 
 def __in_kilobytes(count):
-    """Kilobytes, rounded up, matching how picovector reports a GIF's own limit: the
-    two messages can land in the same file and comparing them should need no sums."""
+    # Kilobytes, rounded up, matching how picovector reports a GIF's own limit: the
+    # two messages can land in the same file and comparing them should need no sums
     return "{}KB".format((count + 1023) // 1024)
 
 
 def __asked_for(error):
-    """The bytes an allocation wanted, from a MemoryError that says so."""
+    # The bytes an allocation wanted, from a MemoryError that says so
     for word in reversed(str(error).replace(",", " ").split()):
         if word.isdigit():
             return int(word)
@@ -3184,12 +3156,11 @@ def __asked_for(error):
 
 
 def __too_big(at, target, effect, error):
-    """Why a picture would not fit, and what to do about it.
-
-    A player already reports the sizes and says an animation is stored whole, so where
-    it has, only what this file adds is written: another screen draws on the same
-    memory, which is what makes one picture play and two fail.
-    """
+    # Why a picture would not fit, and what to do about it.
+    #
+    # A player already reports the sizes and says an animation is stored whole, so where
+    # it has, only what this file adds is written: another screen draws on the same
+    # memory, which is what makes one picture play and two fail
     said = str(error).strip()
     if "was free" in said:
         # The player has sized it up and said why an animation wants so much
@@ -3426,12 +3397,10 @@ def __build_shows(entries, fx, board, problems, build=True):
 
 
 def __open_sound(path, stream):
-    """
-    A handle the player can read for the whole run. The drive's mount ends whenever
-    a computer takes the drive, so a file there is read from the flash, or held in
-    memory where the drive cannot find it that way. The board never gives up its
-    own filesystem, so a file there is read as it plays.
-    """
+    # A handle the player can read for the whole run. The drive's mount ends whenever
+    # a computer takes the drive, so a file there is read from the flash, or held in
+    # memory where the drive cannot find it that way. The board never gives up its
+    # own filesystem, so a file there is read as it plays
     if path.startswith(MOUNT_DIR + "/"):
         handle = stream(path[len(MOUNT_DIR) + 1:]) if stream is not None else None
         if handle is not None:
@@ -3794,7 +3763,7 @@ def __check_settings(entry, taken, problems):
 
 
 def __build_effect(entry, count, problems):
-    """The effect an entry asks for, or None if it could not be made."""
+    # The effect an entry asks for, or None if it could not be made
     known = EFFECTS.get(entry.effect)
     if known is None:
         # An entry that named none at all has already been reported as such, and
@@ -3833,7 +3802,7 @@ def __build_effect(entry, count, problems):
 
 
 def __callables(effect, how, count, entry, problems):
-    """One callable per channel, in the order the entry wrote them."""
+    # One callable per channel, in the order the entry wrote them
     if how is None:
         return [effect] * count
     if how == "position":
@@ -3849,18 +3818,16 @@ def __callables(effect, how, count, entry, problems):
 
 
 def __curve(curve, seconds):
-    """One curve's setting as a player takes it, the file having written one part or two."""
+    # One curve's setting as a player takes it, the file having written one part or two
     return curve(*seconds) if isinstance(seconds, tuple) else curve(seconds)
 
 
 def __assemble(entries, slots, effects, levels, colours, curves, claimed, problems):
-    """
-    Fill one scene's arrays from its entries, or the always-on set's from those
-    before any heading. Claims span every call, since scenes take turns with the
-    same hardware but different channels on it would fight. Returns the slots
-    driven here, which is what a switch must know to clear, and the effects built,
-    which is what a restart begins again.
-    """
+    # Fill one scene's arrays from its entries, or the always-on set's from those
+    # before any heading. Claims span every call, since scenes take turns with the
+    # same hardware but different channels on it would fight. Returns the slots
+    # driven here, which is what a switch must know to clear, and the effects built,
+    # which is what a restart begins again
     driven = set()
     sources = []
 
