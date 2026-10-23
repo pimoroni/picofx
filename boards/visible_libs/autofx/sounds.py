@@ -12,11 +12,6 @@ from .vocabulary import AUDIO_EFFECTS, EFFECTS, MOUNT_DIR, SCREEN_EFFECTS
 from .parser import Channel
 from .checks import check_settings, find_image
 
-# The longest a sound paused for the board joining the bus is given to fade out of the
-# player's ring before the player shuts down, which a board may make a few hundred
-# milliseconds long
-SOUND_FADE_MS = 400
-
 
 class Sound:
     """
@@ -31,6 +26,12 @@ class Sound:
     reached and picks up from there on its next turn; one that had already ended
     starts again from the top.
     """
+
+    # The longest a sound paused for the board joining the bus is given to fade out of
+    # the player's ring before the player shuts down, which a board may make a few
+    # hundred milliseconds long
+    FADE_MS = 400
+
     def __init__(self, wav, handle, loop, scene=None):
         self.wav = wav
         self.handle = handle
@@ -104,7 +105,7 @@ class Sound:
             return
         # Faded out before it stops, a cut mid-waveform clicking
         self.wav.pause()
-        deadline = time.ticks_add(time.ticks_ms(), SOUND_FADE_MS)
+        deadline = time.ticks_add(time.ticks_ms(), self.FADE_MS)
         while not self.wav.is_paused() and time.ticks_diff(deadline, time.ticks_ms()) > 0:
             time.sleep_ms(5)
         at = self.wav.position()
