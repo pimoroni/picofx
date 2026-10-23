@@ -397,6 +397,9 @@ class ScreenShow:
         # Whether this show has the panel. Only a scene takes it away, so a file
         # without scenes never has to say so
         self.live = True
+        # The other show of a pair update_pair refused, which is never tried again, since
+        # neither show's sources change
+        self.refused_with = None
 
     def wants(self):
         """
@@ -1845,12 +1848,6 @@ def __play(fx, volume, path, errors, playing, sounding=(), maker=None):
 PLAYER_FPS = 50
 
 
-# Whether two screens will stream together. Set false where a pair was refused, and
-# true again by a new scene or a new file, the refusal being about how the screens
-# were built or about the sources a scene gives them, neither of which changes within one
-__PAIRING = True
-
-
 def __service_shows(shows, between=None):
     """
     One pass of every screen that has the panel, answering whether one was drawn.
@@ -1865,11 +1862,10 @@ def __service_shows(shows, between=None):
     stops the pass when it answers true, so a press waits out one screen rather
     than all of them. A pair is one stream and cannot be interrupted part way.
     """
-    global __PAIRING
-
     due = [show for show in shows if show.live and show.wants()]
 
-    if __PAIRING and len(due) == 2 and due[0].screen.port is not due[1].screen.port:
+    if len(due) == 2 and due[0].screen.port is not due[1].screen.port \
+            and due[0].refused_with is not due[1]:
         from screens import update_pair
         try:
             for show in due:
@@ -1882,7 +1878,7 @@ def __service_shows(shows, between=None):
         # smaller reserve cannot convert together, which update_pair says for itself.
         # A staged frame is still waiting on each, so each is sent rather than lost
         except ValueError as e:
-            __PAIRING = False
+            due[0].refused_with, due[1].refused_with = due[1], due[0]
             print("the screens are being drawn one at a time: {}".format(e))
             for show in due:
                 show.send()
@@ -3211,8 +3207,6 @@ def __build_shows(entries, fx, board, problems, build=True):
     naming a program wants: its screen entries are answered when it is read, and the
     panels and players wait until the program gives the board back.
     """
-    global __PAIRING
-
     shows = []
     built = set()
     full_size = __wants_full_size(entries, board)
@@ -3383,8 +3377,6 @@ def __build_shows(entries, fx, board, problems, build=True):
     # nothing to say about which screens are still wanted. A hub's positions share
     # one backlight, which the hub's light answers for
     if build:
-        # A pair the last file's sources refused is tried again with this file's
-        __PAIRING = True
         __place_canvases(shows)
 
         names = {used for _, used in built}
@@ -3948,11 +3940,6 @@ def __apply_scene(players, shows, sounds, scene):
     carrying on: their effects are built in their own pass and so are never among a
     scene's, and an effect that keeps no offset has nothing to begin again.
     """
-    global __PAIRING
-
-    # A pair the last scene's sources refused is tried again with this scene's
-    __PAIRING = True
-
     if scene.restart:
         for source in scene.sources:
             begin = getattr(source, "reset", None)
