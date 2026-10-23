@@ -23,7 +23,7 @@ cp -r -v "$CI_BUILD_ROOT/spidisplay/src/." "$TARGET/lib"
 cp -v "$CI_BUILD_ROOT/pimoroni-pico/micropython/modules_py/spce.py" "$TARGET/lib"
 
 # autofx plays the FX drive, which only the drive variant carries
-rm -v "$TARGET/lib/autofx.py"
+rm -rv "$TARGET/lib/autofx"
 
 # Remove any markdown files
 find "$TARGET" -type f -name '*.md' -exec rm -v {} \;

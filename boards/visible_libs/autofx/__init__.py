@@ -573,13 +573,13 @@ class __Still:
 
 def user_trace(error):
     """
-    The traceback of an error raised in a user's own code, less the frames from this
-    file, which are the machinery that ran it and are not the user's to read.
+    The traceback of an error raised in a user's own code, less the frames from autofx's
+    own files, which are the machinery that ran it and are not the user's to read.
     """
     trace = io.StringIO()
     sys.print_exception(error, trace)
     return "\n".join(line for line in trace.getvalue().rstrip().split("\n")
-                     if "autofx.py" not in line)
+                     if "autofx/" not in line)
 
 
 class __Graphics:

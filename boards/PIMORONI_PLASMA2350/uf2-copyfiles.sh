@@ -11,7 +11,7 @@ mkdir -p "$TARGET/lib"
 cp -r -v "$SCRIPT_PATH/../../picofx" "$TARGET/lib"
 cp -r -v "$SCRIPT_PATH/visible_libs/." "$TARGET/lib"
 cp -r -v "$SCRIPT_PATH/../visible_libs/." "$TARGET/lib"
-rm -v "$TARGET/lib/autofx.py"
+rm -rv "$TARGET/lib/autofx"
 
 # Remove any markdown files
 find "$TARGET" -type f -name '*.md' -exec rm -v {} \;

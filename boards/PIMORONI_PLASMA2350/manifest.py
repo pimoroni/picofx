@@ -42,5 +42,5 @@ freeze("./fx_libs/")
 # The effects player and the screen library are frozen on this board. Its heap is the
 # chip's SRAM alone, and compiling either from /lib at import would take most of it.
 # The screen library is the spidisplay repository's own, cloned beside this one.
-freeze("../visible_libs/", "autofx.py")
+freeze("../visible_libs/", "autofx")
 freeze("$(BOARD_DIR)/../../../spidisplay/src")

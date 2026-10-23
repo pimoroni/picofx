@@ -63,7 +63,7 @@ jobs:
     # autofx plays the FX drive, which only the drive variants carry, frozen into their firmware
     - name: "Leave autofx out of the libraries"
       shell: bash
-      run: rm -v ${{env.LIBS_DIR}}/lib/autofx.py
+      run: rm -rv ${{env.LIBS_DIR}}/lib/autofx
 
     - name: "Assemble example content"
       shell: bash
