@@ -571,6 +571,17 @@ class __Still:
         pass                    # One picture is always on its first frame
 
 
+def user_trace(error):
+    """
+    The traceback of an error raised in a user's own code, less the frames from this
+    file, which are the machinery that ran it and are not the user's to read.
+    """
+    trace = io.StringIO()
+    sys.print_exception(error, trace)
+    return "\n".join(line for line in trace.getvalue().rstrip().split("\n")
+                     if "autofx.py" not in line)
+
+
 class __Graphics:
     """
     A drawing standing where a player does: the file's draw(canvas, elapsed) paints
@@ -670,12 +681,8 @@ class __Graphics:
     def __stop(self, error):
         # Keep the last frame and say why, once; the loop around this carries on
         self.__stopped = True
-        trace = io.StringIO()
-        sys.print_exception(error, trace)
-        lines = [line for line in trace.getvalue().rstrip().split("\n")
-                 if "autofx.py" not in line]
         message = ("the drawing {} stopped, so its screen keeps its last "
-                   "frame:\n{}".format(self.__name, "\n".join(lines)))
+                   "frame:\n{}".format(self.__name, user_trace(error)))
         print(message)
         # Where the reader is already looking, while the board holds the volume;
         # exposed, the mount is gone and there is nowhere to write. Appended rather
@@ -2034,14 +2041,9 @@ def __run_program(name, source, args, problems):
     # take the board down with it
     except Exception as e:      # noqa: BLE001
         # The traceback, since a line number is what makes a program fixable by
-        # someone with no way to see a console. Frames from this file are the
-        # machinery that ran it and are not the user's to read
-        trace = io.StringIO()
-        sys.print_exception(e, trace)
-        lines = [line for line in trace.getvalue().rstrip().split("\n")
-                 if "autofx.py" not in line]
+        # someone with no way to see a console
         problems.append("the program {} stopped, so the effects are running "
-                        "instead:\n{}".format(name, "\n".join(lines)))
+                        "instead:\n{}".format(name, user_trace(e)))
     finally:
         sys.argv.clear()
 
@@ -2808,14 +2810,9 @@ def __make_drawing(code, target, at, channel, screen, settings, fps, asleep, pro
     except MemoryError as e:
         problems.append(__too_big(at, target, "graphics", e))
     # The traceback, since this is the user's own code and a line number is what
-    # makes it fixable; frames from this file are the machinery that ran it
+    # makes it fixable
     except Exception as e:      # noqa: BLE001
-        trace = io.StringIO()
-        sys.print_exception(e, trace)
-        lines = [line for line in trace.getvalue().rstrip().split("\n")
-                 if "autofx.py" not in line]
-        problems.append("line {}: {} could not start:\n{}".format(
-            at, target, "\n".join(lines)))
+        problems.append("line {}: {} could not start:\n{}".format(at, target, user_trace(e)))
     return None
 
 
