@@ -161,6 +161,28 @@ def __encode(packed, f):
         f.write(binascii.b2a_base64(view[at:at + step], newline=False))
 
 
+def __pages(screens):
+    # Each packed page's name on the drive and its document, the catalogue without the
+    # screens for a board found to have no screen ports
+    catalogue = fx_editor.CATALOGUE
+    if not screens:
+        catalogue = getattr(fx_editor, "CATALOGUE_WITHOUT_SCREENS", catalogue)
+    return ((MANUAL_NAME, fx_manual.MANUAL), (PICKER_NAME, fx_editor.PICKER),
+            (EDITOR_NAME, fx_editor.EDITOR), (CATALOGUE_NAME, catalogue))
+
+
+def __write_page(document, f):
+    # Write a packed page to the open file. A page that inflates itself in the browser
+    # carries its opening and closing, and its stream goes between them in base64
+    if len(document) == 6:
+        _, _, _, packed, opening, closing = document
+        f.write(opening)
+        __encode(packed, f)
+        f.write(closing)
+    else:
+        __inflate(document[3], f)
+
+
 # Filled by __heal(), emptied by each mount
 __unhealed = []
 
@@ -176,19 +198,13 @@ def unhealed():
 
 def __heal(fs, name, document):
     # Put a shipped file back on the drive, unless it is already there. The document is its
-    # text, or a packed page from fx_editor or fx_manual, which is its length, its two ends
-    # and its zlib stream. A packed page may also carry the opening and closing of a page
-    # that inflates itself in the browser, and is then written as those around its stream
-    # in base64, the length and ends being that page's
+    # text, or a packed page from fx_editor or fx_manual, which opens with its length and
+    # its two ends, those of the page as written to the drive
     path = MOUNT_POINT + "/" + name
-    packed = None
-    opening = closing = None
     if isinstance(document, str):
         size, head, tail = __ends(document)
-    elif len(document) == 6:
-        size, head, tail, packed, opening, closing = document
     else:
-        size, head, tail, packed = document
+        size, head, tail = document[:3]
     if __holds(path, size, head, tail):
         return
     # A document that will not fit is left as it stands: stale and whole beats
@@ -212,15 +228,11 @@ def __heal(fs, name, document):
     except OSError:
         pass
     try:
-        with open(path, "w" if packed is None else "wb") as f:
-            if packed is None:
+        with open(path, "w" if isinstance(document, str) else "wb") as f:
+            if isinstance(document, str):
                 f.write(document)
-            elif opening is None:
-                __inflate(packed, f)
             else:
-                f.write(opening)
-                __encode(packed, f)
-                f.write(closing)
+                __write_page(document, f)
         fs.chmod(name, __ATTR_READ_ONLY, __ATTR_READ_ONLY)
     except OSError:
         # A full drive has nowhere to put it. The board comes up regardless, since a
@@ -325,13 +337,8 @@ def mount(screens=True, wireless=False):
         __restore_secrets()
     del __unhealed[:]
     __heal(fs, README_NAME, fx_defaults.README)
-    __heal(fs, MANUAL_NAME, fx_manual.MANUAL)
-    __heal(fs, PICKER_NAME, fx_editor.PICKER)
-    __heal(fs, EDITOR_NAME, fx_editor.EDITOR)
-    catalogue = fx_editor.CATALOGUE
-    if not screens:
-        catalogue = getattr(fx_editor, "CATALOGUE_WITHOUT_SCREENS", catalogue)
-    __heal(fs, CATALOGUE_NAME, catalogue)
+    for name, document in __pages(screens):
+        __heal(fs, name, document)
     __sweep_host_litter()
     return True
 
