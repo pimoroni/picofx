@@ -24,6 +24,7 @@ import argparse
 import ast
 import base64
 import glob
+import hashlib
 import json
 import os
 import re
@@ -93,6 +94,13 @@ SHELLED = ("PICKER", "EDITOR")
 
 # How many characters of each end of a page a mount compares
 EDGE = 512
+
+# The last line of every page on the drive, the hash of its content. A mount judges a page by its
+# length and its two ends, so a change that kept the length and fell in the middle would pass for
+# current, as the shell's closing alone is longer than an end. The hash puts every change in the tail
+STAMP_HTML = "<!-- content {} -->\n"
+STAMP_SCRIPT = "// content {}\n"
+STAMP_DIGITS = 16
 
 # How many bytes of a zlib stream go on one line of the module
 BYTES_PER_LINE = 64
@@ -317,23 +325,39 @@ def catalogue(repo_dir, board_dir, board, offer_screens=True):
             "var CATALOGUE = " + json.dumps(tables, indent=1) + ";\n")
 
 
+def stamp_style(name):
+    """The comment a page's stamp is written as, a script's or a page's."""
+    return STAMP_SCRIPT if name.startswith("CATALOGUE") else STAMP_HTML
+
+
+def stamp(name, text):
+    """The last line a page ends with on the drive, the hash of its content."""
+    return stamp_style(name).format(hashlib.sha256(text.encode("ascii")).hexdigest()[:STAMP_DIGITS])
+
+
 def embed(name, text, shell=False):
     """One page as a tuple of its length, its two ends and its zlib stream.
 
     A shelled page adds its shell's opening and closing, and its length and ends are those of
-    the shell as the drive will hold it.
+    the shell as the drive will hold it. Either way the page ends with stamp(), inside the
+    stream for a plain page and after the closing for a shelled one.
     """
     if not text.isascii():
         stray = sorted({c for c in text if not c.isascii()})
         sys.exit("{} contains {}, and it has to be ASCII to reach the drive a "
                  "piece at a time".format(name, ", ".join(repr(c) for c in stray)))
+    if not shell:
+        drive = text + stamp(name, text)
+        packed = zlib.compress(drive.encode("ascii"), 9)
+        lines = ["    {!r}".format(packed[at:at + BYTES_PER_LINE])
+                 for at in range(0, len(packed), BYTES_PER_LINE)]
+        return "{} = ({}, {!r}, {!r}, (\n{}\n))\n".format(
+            name, len(drive), drive[:EDGE], drive[-EDGE:], "\n".join(lines))
     packed = zlib.compress(text.encode("ascii"), 9)
     lines = ["    {!r}".format(packed[at:at + BYTES_PER_LINE])
              for at in range(0, len(packed), BYTES_PER_LINE)]
-    if not shell:
-        return "{} = ({}, {!r}, {!r}, (\n{}\n))\n".format(
-            name, len(text), text[:EDGE], text[-EDGE:], "\n".join(lines))
     opening, closing = shell_ends(text)
+    closing += stamp(name, text)
     drive = opening + base64.b64encode(packed).decode("ascii") + closing
     return "{} = ({}, {!r}, {!r}, (\n{}\n), {!r}, {!r})\n".format(
         name, len(drive), drive[:EDGE], drive[-EDGE:], "\n".join(lines),
@@ -371,6 +395,11 @@ def unpacked(module_text):
             shelled.add(name)
         if (size, head, tail) != (len(drive), drive[:EDGE], drive[-EDGE:]):
             sys.exit("{} carries a length or ends that are not its page's".format(name))
+        # A plain page carries its stamp in the stream, which the page itself goes without
+        if name not in shelled:
+            text = text[:text.rfind(stamp_style(name).split("{}")[0])]
+        if not drive.endswith(stamp(name, text)):
+            sys.exit("{} does not end with the hash of its content".format(name))
         pages[name] = text
     return pages, shelled
 

@@ -46,9 +46,10 @@ def __holds(path, size, head, tail):
     # Whether the file is size long, starting with head and ending with tail. Size first, so
     # a missing or half-written file answers without a read. A long document is met at both
     # ends, since reading the manual to the end took 424ms per mount on a Mighty FX against
-    # 40ms for its ends, and every mount and button press would pay it. That misses only a
-    # rebuild differing in its middle at the same length, which nothing here produces. Every
-    # document is ASCII, enforced by the build tools, so its length in characters is in bytes
+    # 40ms for its ends, and every mount and button press would pay it. A page that changed
+    # only in its middle at the same length would pass, so the build tools end every page
+    # with a hash of its content. Every document is ASCII, enforced by the build tools, so its
+    # length in characters is in bytes
     try:
         if os.stat(path)[6] != size:
             return False
