@@ -336,6 +336,11 @@ def mount(screens=True, wireless=False):
     return True
 
 
+def __remount():
+    # Mount again with what the board last told mount()
+    return mount(__screens, __wireless)
+
+
 class __FatReader:
     # The drive's FAT12 or FAT16 tables and folders, read straight from its flash
     # with no FatFs involved, so they read on while the computer holds the drive
@@ -1157,7 +1162,7 @@ def withdraw():
         vfs.umount(MOUNT_POINT)
     except OSError:
         pass
-    mount(__screens, __wireless)
+    __remount()
     return True
 
 
