@@ -23,8 +23,8 @@ except ImportError:
 """
 A class for playing Wav files out of an I2S audio amp. It can also play pure tones.
 Where the board shows a USB drive to a computer, a sound fades out while the computer
-writes to it and returns after. A Wav read from that drive ends instead, as the computer
-may be rewriting the file beneath it.
+writes to it and returns after. A Wav opened by path while the computer holds the drive
+ends instead, since it cannot be read once the computer writes.
 This code is based heavily on the work of Mike Teachman, at:
 https://github.com/miketeachman/micropython-i2s-examples/blob/master/examples/wavplayer.py
 """

@@ -33,7 +33,6 @@ MANUAL_NAME = "MANUAL.html"
 PICKER_NAME = "PICKER.html"
 EDITOR_NAME = "EDITOR.html"
 CATALOGUE_NAME = "catalogue.js"
-ERRORS_PATH = MOUNT_POINT + "/errors.txt"
 SECRETS_PATH = MOUNT_POINT + "/secrets.py"
 
 # The drive's examples folder, and where it is also mounted
@@ -104,7 +103,7 @@ __watching = False
 __entry_seen = None     # effects.txt's directory entry as last shown or acted on
 __entry_pending = None  # A changed entry seen once, counting when the next look matches it
 __watch_at = None       # When service() last looked at the entry
-__watch_buffer = None   # The block __effects_entry() reads into, made once
+__watch_reader = None   # The reader the save watcher keeps while the drive is shown
 __reset_at = None       # When the last bus reset came, None once enumeration is over
 __on_reset = None
 __save_timer = None
@@ -337,11 +336,6 @@ def mount(screens=True, wireless=False):
     return True
 
 
-def path(name):
-    """Where a file on the drive lives, so nothing has to name the mount point."""
-    return MOUNT_POINT + "/" + name
-
-
 class __FatReader:
     # The drive's FAT12 or FAT16 tables and folders, read straight from its flash
     # with no FatFs involved, so they read on while the computer holds the drive
@@ -364,6 +358,11 @@ class __FatReader:
         self.__flash = rp2.Flash(msc=True)
         self.__fat_window = bytearray(self.__WINDOW)
         self.__fat_window_at = None
+        self.__boot = bytearray(36)
+        self.__signature = bytearray(2)
+        # Made by the first __root_entry_bytes(), since only the save watcher calls it
+        self.__probe = None
+        self.__root_window = None
         self.__read_layout()
 
     def __read(self, offset, length):
@@ -380,8 +379,10 @@ class __FatReader:
         return data[at] | (data[at + 1] << 8) | (data[at + 2] << 16) | (data[at + 3] << 24)
 
     def __read_layout(self):
-        boot = self.__read(0, 36)
-        if self.__read(510, 2) != b"\x55\xaa":
+        boot = self.__boot
+        self.__flash.readblocks(0, boot, 0)
+        self.__flash.readblocks(0, self.__signature, 510)
+        if self.__signature != b"\x55\xaa":
             raise OSError(errno.ENODEV)
         sector = self.__u16(boot, 11)
         per_cluster = boot[13]
@@ -632,8 +633,8 @@ class __FatReader:
         _, entry = self.__find(path, directory=True)
         return self.__runs_from(self.__first_cluster(entry))
 
-    def kind(self, path):
-        """The stat mode and size of what a path names."""
+    def __kind(self, path):
+        # The stat mode and size of what a path names
         if self.__is_root(path):
             return __S_IFDIR, 0
         _, entry = self.__find(path, directory=None)
@@ -641,8 +642,8 @@ class __FatReader:
             return __S_IFDIR, 0
         return __S_IFREG, self.__u32(entry, 28)
 
-    def listing(self, path):
-        """A folder's contents as (name, stat mode, size), its own . and .. left out."""
+    def __listing(self, path):
+        # A folder's contents as (name, stat mode, size), its own . and .. left out
         listed = []
         for _, entry, long_name in self.__entries(self.__runs_of_directory(path)):
             name = (self.__decoded(long_name) if long_name else None) or self.__short_name(entry)
@@ -654,8 +655,40 @@ class __FatReader:
                 listed.append((name, __S_IFREG, self.__u32(entry, 28)))
         return listed
 
-    def capacity(self):
-        """The cluster size and count, which is what statvfs() reports."""
+    def __root_entry_bytes(self, short_name, start, end):
+        # Bytes start to end of the root folder's entry with this 11-byte short name, or None
+        flash = self.__flash
+        if self.__root_window is None:
+            self.__probe = bytearray(36)
+            self.__root_window = bytearray(self.__WINDOW)
+
+        # A reformat by the computer changes the boot sector's fields, so the layout is read again
+        flash.readblocks(0, self.__probe, 0)
+        flash.readblocks(0, self.__signature, 510)
+        if self.__signature != b"\x55\xaa":
+            return None
+        if self.__probe != self.__boot:
+            self.__read_layout()
+
+        window = self.__root_window
+        first, second = short_name[0], short_name[1]
+        root_end = self.__root_at + self.__root_bytes
+        for at in range(self.__root_at, root_end, self.__WINDOW):
+            count = min(self.__WINDOW, root_end - at)
+            flash.readblocks(0, window if count == self.__WINDOW else memoryview(window)[:count], at)
+            for into in range(0, count, self.__ENTRY_SIZE):
+                lead = window[into]
+                if lead == 0x00:
+                    return None
+                # Two bytes are tested before the name is sliced, as names often share a first
+                # letter and each slice is an allocation
+                if lead == first and window[into + 1] == second \
+                        and window[into:into + 11] == short_name:
+                    return window[into + start:into + end]
+        return None
+
+    def __capacity(self):
+        # The cluster size and count, which is what statvfs() reports
         return self.__cluster_bytes, self.__clusters
 
 
@@ -807,20 +840,20 @@ class __View:
                            message=__CHANGED_BENEATH)
 
     def stat(self, path):
-        (mode, size), _ = self.__settled(lambda name: __FatReader().kind(name), self.__resolve(path))
+        (mode, size), _ = self.__settled(lambda name: __FatReader().__kind(name), self.__resolve(path))
         return (mode, 0, 0, 0, 0, 0, size, 0, 0, 0)
 
     def ilistdir(self, path):
-        listed, _ = self.__settled(lambda name: __FatReader().listing(name), self.__resolve(path))
+        listed, _ = self.__settled(lambda name: __FatReader().__listing(name), self.__resolve(path))
         return iter([(name, mode, 0, size) for name, mode, size in listed])
 
     def statvfs(self, _path):
-        cluster_bytes, clusters = __FatReader().capacity()
+        cluster_bytes, clusters = __FatReader().__capacity()
         return (cluster_bytes, cluster_bytes, clusters, 0, 0, 0, 0, 0, 0, 255)
 
     def chdir(self, path):
         path = self.__resolve(path)
-        if self.__settled(lambda name: __FatReader().kind(name), path)[0][0] != __S_IFDIR:
+        if self.__settled(lambda name: __FatReader().__kind(name), path)[0][0] != __S_IFDIR:
             raise OSError(__ENOTDIR)
         self.__cwd = "/" + "/".join(part for part in path.split("/") if part)
         if self.__cwd == "/":
@@ -932,44 +965,27 @@ def watch(enabled):
     __watching = bool(enabled)
 
 
+def __short_form(name):
+    # A name that fits 8.3 as the 11 bytes its directory entry stores
+    base, _, extension = name.upper().partition(".")
+    return (base + "        ")[:8].encode() + (extension + "   ")[:3].encode()
+
+
+# effects.txt's short name, which the save watcher matches its directory entry by
+__EFFECTS_SHORT = __short_form(FILE_PATH.rsplit("/", 1)[1])
+
+
 def __effects_entry():
     # The bytes that change when effects.txt is saved: time, date, first cluster and
     # size from its directory entry, read straight from the flash, so the volume the
     # computer holds is never touched. None where the volume or the entry is absent
-    global __watch_buffer
-
-    bdev = rp2.Flash(msc=True)
-    if __watch_buffer is None:
-        # The flash's block size, ioctl 5 being BLOCK_SIZE
-        __watch_buffer = bytearray(bdev.ioctl(5, 0))
-    block = __watch_buffer
-    size = len(block)
-
+    global __watch_reader
     try:
-        bdev.readblocks(0, block)
-        if block[510] != 0x55 or block[511] != 0xAA:
-            return None
-        sector = block[11] | (block[12] << 8)
-        reserved = block[14] | (block[15] << 8)
-        fats = block[16]
-        root_entries = block[17] | (block[18] << 8)
-        fat_sectors = block[22] | (block[23] << 8)
-
-        # The FAT12 or FAT16 root directory sits behind the reserved sectors and the FATs,
-        # at a fixed size, 32 bytes an entry
-        start = (reserved + fats * fat_sectors) * sector
-        loaded = None
-        for offset in range(start, start + root_entries * 32, 32):
-            wanted = offset // size
-            if wanted != loaded:
-                bdev.readblocks(wanted, block)
-                loaded = wanted
-            at = offset % size
-            if block[at:at + 11] == b"EFFECTS TXT":
-                return bytes(block[at + 22:at + 32])
+        if __watch_reader is None:
+            __watch_reader = __FatReader()
+        return __watch_reader.__root_entry_bytes(__EFFECTS_SHORT, 22, 32)
     except OSError:
         return None
-    return None
 
 
 def __entry_settled():
@@ -1025,8 +1041,8 @@ def exposed():
 def busy():
     """
     Whether the computer is mid-transfer. Worth standing aside for, since a transfer
-    costs a running effect on a Mighty FX most of a tenth of a second in one hitch,
-    which reads as a lurch.
+    costs anything running from a timer on a Mighty FX most of a tenth of a second in
+    one hitch, which reads as a lurch.
     """
     return __exposed and rp2.is_msc_busy()
 
@@ -1098,8 +1114,8 @@ def expose():
 
     After a withdraw, also rejoins the USB bus, so the computer enumerates the board
     afresh and reads the drive as it now is. Not at boot, when nothing has been taken
-    back. Effects run from a timer and carry on through the rejoin. Anything the
-    caller drives itself, such as a screen, holds its last frame.
+    back. Anything the caller runs from a timer carries on through the rejoin.
+    Anything it drives itself, such as a screen, holds its last frame.
     """
     global __exposed, __withdrawn, __entry_seen, __entry_pending, __watch_at
     if __exposed:
@@ -1111,10 +1127,7 @@ def expose():
     except OSError:
         pass
     rp2.enable_msc()
-    try:
-        vfs.mount(__View(), MOUNT_POINT)
-    except OSError:
-        pass                # Still in use, which leaves a program without the drive's files
+    vfs.mount(__View(), MOUNT_POINT)
     if rejoin:
         __rejoin_bus()
     __exposed = True
@@ -1129,7 +1142,7 @@ def withdraw():
     Take the drive back from the computer and re-read it, waiting out any
     write still in flight. Returns True when effects.txt may have changed.
     """
-    global __exposed, __withdrawn
+    global __exposed, __withdrawn, __watch_reader
     if not __exposed:
         return False
     deadline = time.ticks_add(time.ticks_ms(), SETTLE_MS)
@@ -1138,6 +1151,7 @@ def withdraw():
     rp2.disable_msc()
     __exposed = False
     __withdrawn = True
+    __watch_reader = None
     # The view goes first, since mount() takes a mount point already in use as done
     try:
         vfs.umount(MOUNT_POINT)

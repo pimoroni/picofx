@@ -31,7 +31,9 @@ from picofx.colour import (BLACK, BLUE, COOL, COLOUR_EFFECTS, CYAN, GREEN, MAGEN
                            PINK, PURPLE, RED, WARM, WHITE, YELLOW)
 from picofx.mono import MONO_EFFECTS, NoneFX
 
-# The drive a connected computer sees
+# The files autofx reads and reports to. On a board with an FX drive the first two are
+# fx_drive's MOUNT_POINT and FILE_PATH, kept here too since autofx also runs without a
+# drive, where they are run()'s defaults. errors.txt is autofx's own
 MOUNT_DIR = "/fx"
 CONFIG_PATH = MOUNT_DIR + "/effects.txt"
 ERRORS_PATH = MOUNT_DIR + "/errors.txt"
@@ -2131,10 +2133,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         return fx, players, shows, sounds, scenes, problems
 
     # A save landing on effects.txt answers as a single press does, unless the file
-    # says reload=manual; the older volumes some harnesses hand in have no watch
-    watcher = getattr(volume, "watch", None)
-    if watcher is not None:
-        watcher(settings.get("reload") != "manual")
+    # says reload=manual
+    volume.watch(settings.get("reload") != "manual")
 
     # Enumeration after a bus reset has deadlines the players' ticks would make the board
     # miss, so they stop the moment one arrives, from the USB task itself, and the loop
@@ -2147,9 +2147,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         for player in players:
             player.stop()
 
-    enumerating = getattr(volume, "enumerating", None)
-    if enumerating is not None:
-        volume.on_bus_reset(quiet)
+    volume.on_bus_reset(quiet)
 
     # The drive goes up before any program runs, since a program that works never
     # returns. Otherwise a mistyped name would leave no way back but a reflash, so a
@@ -2175,15 +2173,12 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         if source is not None:
             # Nothing here looks at the drive until the program ends, so a save that
             # would reload the file resets the board instead, which then reads it as at
-            # power on. The older volumes some harnesses hand in cannot
-            reset_on_save = getattr(volume, "reset_on_save", None)
-            if reset_on_save is not None:
-                reset_on_save(True)
+            # power on
+            volume.reset_on_save(True)
             try:
                 __run_program(program, source, settings.get("args", ()), problems)
             finally:
-                if reset_on_save is not None:
-                    reset_on_save(False)
+                volume.reset_on_save(False)
 
         # The board is the effects' again, so the screen entries put off for the
         # program are built now, before the report, so anything wrong with them is in it
@@ -2281,8 +2276,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                 paused = False
                 sounds_aside = False
                 idle_since = None
-                if watcher is not None:
-                    watcher(settings.get("reload") != "manual")
+                volume.watch(settings.get("reload") != "manual")
                 if event == volume.RELOADED:
                     # A single press asks to try an edit without putting the drive
                     # away, so it goes back once the file has been read, and before
@@ -2307,7 +2301,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
             # hitch, so the effects stand aside for it and something of the board's
             # own travels the outputs instead of the show lurching through. So they do
             # for enumeration, which a reset seen since the last pass is the start of
-            settling = reset_seen or (enumerating is not None and enumerating())
+            settling = reset_seen or volume.enumerating()
             reset_seen = False
             if volume.busy() or settling:
                 idle_since = None
@@ -3455,7 +3449,7 @@ def __build_sounds(entries, fx, problems, volume=None):
     takes the volume.
     """
     sounds = []
-    stream = getattr(volume, "stream", None)
+    stream = volume.stream if volume is not None else None
     taken = set()
     # A board without audio raises from the property, naming the setting to change
     try:
