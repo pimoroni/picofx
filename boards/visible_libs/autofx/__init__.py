@@ -164,8 +164,8 @@ class ScreenShow:
         # Whether this show has the panel. Only a scene takes it away, so a file
         # without scenes never has to say so
         self.live = True
-        # The other show of a pair update_pair refused, which is never tried again, since
-        # neither show's sources change
+        # The other show of a pair update_pair refused, which is not tried again until a
+        # scene changes
         self.refused_with = None
 
     def wants(self):
@@ -2213,6 +2213,11 @@ def __apply_scene(players, shows, sounds, scene):
     carrying on: their effects are built in their own pass and so are never among a
     scene's, and an effect that keeps no offset has nothing to begin again.
     """
+    # A refused pair is tried again. update_pair judges a pair by conversion times it
+    # measures, so a pair near the limit can pass on another try
+    for show in shows:
+        show.refused_with = None
+
     if scene.restart:
         for source in scene.sources:
             begin = getattr(source, "reset", None)
