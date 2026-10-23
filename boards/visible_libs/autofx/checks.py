@@ -8,11 +8,11 @@
 
 import os
 
-from .vocabulary import (BOARD_SETTINGS, __BRIGHTNESS, HUB, MOUNT_DIR, __ORDER, PAIRED_SETTINGS,
+from .vocabulary import (BOARD_SETTINGS, BRIGHTNESS, HUB, MOUNT_DIR, ORDER, PAIRED_SETTINGS,
                          SCREEN_SIZES, SETTINGS)
-from .hardware import (__BOARD_BRIGHTNESS, __BOARD_HUB, __BOARD_STRIPS, __hub_example, __hub_port,
-                       __hub_shown, __screen_kinds, __screen_port, __screen_shown, __strip_shown)
-from .parser import __expand, __number, __shown, __unquoted, __value_fault
+from .hardware import (BOARD_BRIGHTNESS, BOARD_HUB, BOARD_STRIPS, hub_example, hub_port, hub_shown,
+                       screen_kinds, screen_port, screen_shown, strip_shown)
+from .parser import expand, read_number, unquoted, value_fault, value_shown
 
 
 def __degrees(text):
@@ -20,13 +20,13 @@ def __degrees(text):
     if not isinstance(text, str) or not text.lower().endswith("deg"):
         return None
 
-    number = __number(text[:-3])
+    number = read_number(text[:-3])
     if number is None or not 0.0 <= number <= 360.0:
         return None
     return number / 360.0
 
 
-def __candidates(name):
+def candidates(name):
     """Where a file the effects file names may be, the drive's copy first."""
     # A path is taken as written, since a doubled separator would otherwise fold and
     # '/prog.py' would quietly find the drive's copy. A plain name looks on the drive
@@ -42,14 +42,14 @@ def __candidates(name):
     return (MOUNT_DIR + "/" + name, name)
 
 
-def __find_image(name, line, problems):
+def find_image(name, line, problems):
     """
     The file or folder a screen entry names, or None if there is none to play. The
     drive's copy wins, as a program's does, and for the same reason: it is the one
     the reader can see and edit.
     """
     found = []
-    for candidate in __candidates(name):
+    for candidate in candidates(name):
         try:
             os.stat(candidate)
             found.append(candidate)
@@ -67,7 +67,7 @@ def __find_image(name, line, problems):
     return found[0]
 
 
-def __check_board(entry, has_strips, problems, lines):
+def check_board(entry, has_strips, problems, lines):
     """
     The board settings the entry carries, with anything it cannot use dropped. A
     board entry names no effect, so nothing else would ever look at these: a typo in
@@ -87,12 +87,12 @@ def __check_board(entry, has_strips, problems, lines):
             places = []
             prefix = ""
             for part in key.split(","):
-                named, prefix = __expand(part, prefix, at, problems)
+                named, prefix = expand(part, prefix, at, problems)
                 places.extend(named)
-            text = value if isinstance(value, str) else __shown(value)
+            text = value if isinstance(value, str) else value_shown(value)
             if text not in SCREEN_SIZES:
                 problems.append("line {}: the board's {} is {}, it takes {}".format(
-                    at, __hub_shown(places) if places else key, __shown(value),
+                    at, hub_shown(places) if places else key, value_shown(value),
                     ", ".join(SCREEN_SIZES)))
                 continue
             for place in places:
@@ -100,16 +100,16 @@ def __check_board(entry, has_strips, problems, lines):
                 written[place] = at
             continue
 
-        kinds = [kind for kind, _prop, _shown in __BOARD_STRIPS]
-        screens = __screen_kinds()
+        kinds = [kind for kind, _prop, _shown in BOARD_STRIPS]
+        screens = screen_kinds()
         if key not in BOARD_SETTINGS and key not in kinds and key not in screens:
             if not has_strips and key.startswith("strip"):
                 problems.append("line {}: this board has no strip connectors, so it "
-                                "has no {}".format(at, __strip_shown(key)))
+                                "has no {}".format(at, strip_shown(key)))
                 continue
             if not screens and key.startswith("screen"):
                 problems.append("line {}: this board has no screen connectors, so it "
-                                "has no {}".format(at, __screen_shown(key)))
+                                "has no {}".format(at, screen_shown(key)))
                 continue
             problems.append("line {}: the board has no setting '{}', it takes {}".format(
                 at, key, ", ".join(sorted(list(BOARD_SETTINGS) + kinds + screens))))
@@ -117,7 +117,7 @@ def __check_board(entry, has_strips, problems, lines):
 
         # Whatever it was written as, since a setting limited to named values is
         # compared against them and a program is a file name
-        text = value if isinstance(value, str) else __shown(value)
+        text = value if isinstance(value, str) else value_shown(value)
 
         # A program's arguments are divided by the pipe that divides any value into
         # parts, and each one reaches the program as it was written. Read here so they
@@ -130,34 +130,34 @@ def __check_board(entry, has_strips, problems, lines):
         # name, and this entry keeps its values as written, so it is read here
         if key in kinds:
             length, _divider, order = text.partition("|")
-            number = __number(length)
+            number = read_number(length)
             fault = ("expected a number" if number is None
-                     else __value_fault("count", number))
+                     else value_fault("count", number))
             if fault is not None:
                 problems.append("line {}: the board's {} is {}, {}".format(
-                    at, __strip_shown(key), __shown(length), fault))
+                    at, strip_shown(key), value_shown(length), fault))
                 continue
 
             # A strip with a brightness of its own takes it as written, or the board's own
             # where none is. A wrong one still leaves the strip its length, so it plays at
             # the board's own
-            if key in __BOARD_BRIGHTNESS:
+            if key in BOARD_BRIGHTNESS:
                 after = order.strip()
-                shown = __strip_shown(key)
-                brightness = __number(after) if after else None
+                shown = strip_shown(key)
+                brightness = read_number(after) if after else None
                 if after.isalpha():
                     problems.append("line {}: the board's {} takes its colours in one order, "
                                     "so what follows its length is its brightness, such as "
                                     "'{}={}|50%'".format(at, shown, shown, int(number)))
                     brightness = None
                 elif after and (brightness is None or
-                                __value_fault("fraction", brightness) is not None):
+                                value_fault("fraction", brightness) is not None):
                     problems.append("line {}: the board's {} has its brightness as {}, so "
                                     "give it from 0% to 100%, such as '{}={}|50%'".format(
-                                        at, shown, __shown(after), shown, int(number)))
+                                        at, shown, value_shown(after), shown, int(number)))
                     brightness = None
                 settings[key] = int(number)
-                settings[key + __BRIGHTNESS] = brightness
+                settings[key + BRIGHTNESS] = brightness
                 continue
 
             # The strip takes its colours in the order written, or the board's own order
@@ -168,25 +168,25 @@ def __check_board(entry, has_strips, problems, lines):
                 problems.append("line {}: the board's {} has its colours in the order {}, "
                                 "so give the letters r, g and b in the order the strip "
                                 "takes them, such as '{}={}|rgb'".format(
-                                    at, __strip_shown(key), __shown(order),
-                                    __strip_shown(key), int(number)))
+                                    at, strip_shown(key), value_shown(order),
+                                    strip_shown(key), int(number)))
                 order = ""
             settings[key] = int(number)
-            settings[key + __ORDER] = order or None
+            settings[key + ORDER] = order or None
             continue
 
         if key in screens:
-            allowed = SCREEN_SIZES + (HUB,) if __BOARD_HUB[0] else SCREEN_SIZES
+            allowed = SCREEN_SIZES + (HUB,) if BOARD_HUB[0] else SCREEN_SIZES
         else:
             allowed = BOARD_SETTINGS[key]
         if allowed is not None:
             if text.lower() not in allowed:
                 problems.append("line {}: the board's {} is {}, it takes {}".format(
-                    at, key, __shown(value), ", ".join(allowed)))
+                    at, key, value_shown(value), ", ".join(allowed)))
                 continue
             text = text.lower()          # So the caller compares against one spelling
 
-        elif "\\" in text or __unquoted(text, ":") >= 0:
+        elif "\\" in text or unquoted(text, ":") >= 0:
             base = text.replace("\\", "/").rsplit("/", 1)[-1]
             problems.append("line {}: '{}' is a path on your computer. Correct it to "
                             "'{}'".format(at, text, base))
@@ -203,28 +203,28 @@ def __check_board(entry, has_strips, problems, lines):
 
 # Where a hub and a screen were both played on, which of them was refused, kept among the
 # board settings under a name no file can write so their entries are not answered twice
-__REFUSED = " refused"
+REFUSED = " refused"
 
 
-def __check_hub(board, lines, entries, problems):
+def check_hub(board, lines, entries, problems):
     """
     Settle what the board entries say about a hub against what the entries play on. A
     hub nothing plays on is dropped, as a strip is, and a screen declared on the connector
     the hub's selects take is dropped where nothing plays on it. Where both are played on,
     either could be the mistake, so neither plays.
     """
-    hub = __hub_port(board)
+    hub = hub_port(board)
     places = sorted(key for key in board if key.startswith(HUB))
     named = {channel.name for entry in entries for channel in entry.channels}
 
     if hub is None:
-        if places and not __BOARD_HUB[0]:
+        if places and not BOARD_HUB[0]:
             problems.append("line {}: this board cannot carry a Screen Hub, so it has no "
-                            "{}".format(lines[places[0]], __hub_shown(places)))
+                            "{}".format(lines[places[0]], hub_shown(places)))
         elif places:
             problems.append("line {}: the board entry gives {} a size, but no connector has "
                             "the hub. Write it like {}".format(
-                                lines[places[0]], __hub_shown(places), __hub_example()))
+                                lines[places[0]], hub_shown(places), hub_example()))
         for place in places:
             board.pop(place)
         return
@@ -236,10 +236,10 @@ def __check_hub(board, lines, entries, problems):
         return
 
     # The hub takes one connector for its panels and the other for their selects
-    for name in __screen_kinds():
+    for name in screen_kinds():
         if name == hub or board.get(name) is None:
             continue
-        port_name = __screen_port(name)[1]
+        port_name = screen_port(name)[1]
 
         if board[name] == HUB:
             problems.append("line {}: the board entry gives both connectors the hub, which "
@@ -250,18 +250,18 @@ def __check_hub(board, lines, entries, problems):
             # Nothing says which of the two is wired, so neither is driven
             problems.append("line {}: the hub takes both connectors, so {} and the hub "
                             "cannot both play. Keep one".format(
-                                lines[name], __screen_shown(name)))
+                                lines[name], screen_shown(name)))
             for setting in places + [hub, name]:
                 board.pop(setting)
-            board[__REFUSED] = (HUB, name)
+            board[REFUSED] = (HUB, name)
         else:
             problems.append("line {}: SP/CE {} carries the hub's selects, so {} has no "
                             "screen of its own".format(lines[name], port_name,
-                                                       __screen_shown(name)))
+                                                       screen_shown(name)))
             board.pop(name)
 
 
-def __check_settings(entry, taken, problems):
+def check_settings(entry, taken, problems):
     """
     The settings the effect takes, with anything it cannot use dropped so it runs on
     its own defaults. Everything reaching an effect from here is of the kind it wants,
@@ -294,13 +294,13 @@ def __check_settings(entry, taken, problems):
         if isinstance(value, tuple):
             fault = None
             for part in value:
-                fault = __value_fault(kind, part)
+                fault = value_fault(kind, part)
                 if fault is not None:
                     break
             if fault is not None:
                 problems.append("line {}: {}'s {} is '{}', {}".format(
                     at, entry.effect, key,
-                    "|".join(__shown(part) for part in value), fault))
+                    "|".join(value_shown(part) for part in value), fault))
             else:
                 settings[key] = value
             continue
@@ -313,10 +313,10 @@ def __check_settings(entry, taken, problems):
             if turn is not None:
                 value = turn
 
-        fault = __value_fault(kind, value)
+        fault = value_fault(kind, value)
         if fault is not None:
             problems.append("line {}: {}'s {} is {}, {}".format(
-                at, entry.effect, key, __shown(value), fault))
+                at, entry.effect, key, value_shown(value), fault))
             continue
 
         # Each effect gets the type it was written for: a count as an integer, which

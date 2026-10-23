@@ -10,7 +10,7 @@ import time
 
 from .vocabulary import AUDIO_EFFECTS, EFFECTS, MOUNT_DIR, SCREEN_EFFECTS
 from .parser import Channel
-from .checks import __check_settings, __find_image
+from .checks import check_settings, find_image
 
 # The longest a sound paused for the board joining the bus is given to fade out of the
 # player's ring before the player shuts down, which a board may make a few hundred
@@ -171,7 +171,7 @@ def __open_sound(path, stream):
     return open(path, "rb")
 
 
-def __build_sounds(entries, fx, problems, volume=None):
+def build_sounds(entries, fx, problems, volume=None):
     """
     A sound per audio entry: one before any heading playing throughout, and one per
     scene taking the speaker while its scene shows. The file is found here, while
@@ -209,7 +209,7 @@ def __build_sounds(entries, fx, problems, volume=None):
                 problems.append("line {}: {} says nothing about a sound, so it was "
                                 "ignored".format(entry.line, setting))
 
-        settings = __check_settings(entry, AUDIO_EFFECTS[entry.effect], problems)
+        settings = check_settings(entry, AUDIO_EFFECTS[entry.effect], problems)
 
         target = settings.get("file")
         if target is None:
@@ -225,7 +225,7 @@ def __build_sounds(entries, fx, problems, volume=None):
             continue
 
         at = entry.lines.get("file", entry.line)
-        path = __find_image(target, at, problems)
+        path = find_image(target, at, problems)
         if path is None:
             continue
 
@@ -246,7 +246,7 @@ def __build_sounds(entries, fx, problems, volume=None):
     return sounds
 
 
-def __cue_sound(sounds, scene):
+def cue_sound(sounds, scene):
     """
     Give the speaker to the sound this scene wants: its own, or the one from before
     any heading where it brings none. The one giving it up remembers where it

@@ -11,14 +11,14 @@ from picofx.mono import NoneFX
 
 from .vocabulary import (AUDIO, BOARD, COMPONENTS, EFFECTS, HUB, OUTPUT_SETTINGS, SCREEN_EFFECTS,
                          SCREEN_SETTINGS)
-from .hardware import (__after, __board, __BOARD_SCREENS, __BOARD_STRIPS, __BOARD_TAKES,
-                       __channel_shown, channels, __hardware_changed, __HUB, __hub_declared,
-                       __hub_port, __learn_board, __resolve_strips, __SCREENS, __strip_of,
-                       __strip_shown, __STRIPS, strips)
-from .parser import __in_line_order, parse
-from .checks import __check_board, __check_hub, __check_settings
-from .shows import __build_shows, __PENDING_SHOWS, __settle_hub, __wants_full_size
-from .sounds import __build_sounds, __cue_sound
+from .hardware import (after_length, BOARD_SCREENS, BOARD_STRIPS, BOARD_TAKES, build_board,
+                       BUILT_HUB, BUILT_SCREENS, BUILT_STRIPS, channel_shown, channels,
+                       hardware_changed, hub_declared, hub_port, learn_board, resolve_strips,
+                       strip_of, strip_shown, strips)
+from .parser import in_line_order, parse
+from .checks import check_board, check_hub, check_settings
+from .shows import build_shows, DEFERRED_SHOWS, settle_hub, wants_full_size
+from .sounds import build_sounds, cue_sound
 
 
 class Scene:
@@ -53,19 +53,19 @@ def __build_effect(entry, count, problems):
     if known is None:
         # An entry that named none at all has already been reported as such, and
         # saying the missing name is not an effect only shows the reader an internal
-        if entry.effect in SCREEN_EFFECTS and not __BOARD_SCREENS:
+        if entry.effect in SCREEN_EFFECTS and not BOARD_SCREENS:
             problems.append("line {}: {} plays on a screen, and this board has none".format(
                 entry.line, entry.effect))
         elif entry.effect in SCREEN_EFFECTS:
             problems.append("line {}: {} plays on a screen, such as '{}: {} "
                             "file=anim.gif'".format(entry.line, entry.effect,
-                                                    __BOARD_SCREENS[0][2], entry.effect))
+                                                    BOARD_SCREENS[0][2], entry.effect))
         elif entry.effect is not None:
             problems.append("line {}: '{}' is not an effect".format(entry.line, entry.effect))
         return None, None, None
 
     cls, kind, how, taken = known
-    settings = __check_settings(entry, taken, problems)
+    settings = check_settings(entry, taken, problems)
 
     # A wave spans the group unless told otherwise. Being called with a position is
     # not the same as spreading over one: binary_counter is handed a bit, not a share
@@ -125,7 +125,7 @@ def __assemble(entries, slots, effects, levels, colours, curves, claimed, proble
         missing = [channel.name for channel in entry.channels if channel.name not in slots]
         if missing:
             problems.append("line {}: this board has no {}".format(
-                entry.line, ", ".join(__channel_shown(name) for name in missing)))
+                entry.line, ", ".join(channel_shown(name) for name in missing)))
 
         for key in SCREEN_SETTINGS:
             if any(getattr(channel, key) is not None for channel in entry.channels):
@@ -199,7 +199,7 @@ def __assemble(entries, slots, effects, levels, colours, curves, claimed, proble
     return driven, sources
 
 
-def __apply_scene(players, shows, sounds, scene):
+def apply_scene(players, shows, sounds, scene):
     """
     Point the players, shows and sounds at one scene. Its arrays already carry the
     always-on entries and turn off what other scenes drive, so this is an exchange
@@ -265,14 +265,14 @@ def __apply_scene(players, shows, sounds, scene):
         else:
             show.rest()
 
-    __settle_hub(shows)
+    settle_hub(shows)
 
     # Beginning again reaches the scene's sound too, which forgets where it was up to
     if scene.restart:
         for sound in sounds:
             if sound.scene == scene.key:
                 sound.restart()
-    __cue_sound(sounds, scene)
+    cue_sound(sounds, scene)
 
 
 def load(text, fx, maker=None, volume=None):
@@ -293,9 +293,9 @@ def load(text, fx, maker=None, volume=None):
     file came from, whose sounds play on while a computer holds it.
     """
     # The board is learned first, so the parser's examples name its own parts
-    __learn_board(fx)
+    learn_board(fx)
     entries, problems = parse(text)
-    has_strips = bool(__BOARD_STRIPS)
+    has_strips = bool(BOARD_STRIPS)
 
     # Board entries are settings rather than effects, a heading begins a scene, and
     # a screen name routes its whole entry to the screens, so a mistyped one is
@@ -329,7 +329,7 @@ def load(text, fx, maker=None, volume=None):
             if entry.scene is not None:
                 problems.append("line {}: the board entry is about the board, so it "
                                 "sits outside every scene".format(entry.line))
-            given = __check_board(entry, has_strips, problems, board_lines)
+            given = check_board(entry, has_strips, problems, board_lines)
             # A board entry may be written more than once, so where the arguments were
             # written is kept rather than checked here: the program may name a later line
             if "args" in given:
@@ -362,28 +362,28 @@ def load(text, fx, maker=None, volume=None):
             grouped[entry.scene].append(entry)
 
     # Drop the length of any strip no entry plays on, so its connector stays off
-    used = {__strip_of(channel.name) for group in grouped.values() for entry in group
+    used = {strip_of(channel.name) for group in grouped.values() for entry in group
             for channel in entry.channels}
-    for kind, _prop, _shown in __BOARD_STRIPS:
+    for kind, _prop, _shown in BOARD_STRIPS:
         if kind not in used:
             board.pop(kind, None)
-            board.pop(kind + __after(kind), None)
+            board.pop(kind + after_length(kind), None)
 
     # A strip taking another's terminals cannot play beside it. The other plays, being the
     # commoner build, and this one's entries go unanswered past the reason given here
     left_off = set()
-    for kind, taken in __BOARD_TAKES:
+    for kind, taken in BOARD_TAKES:
         playing = [other for other in taken if board.get(other)]
         if board.get(kind) and playing:
-            others = " and ".join(__strip_shown(other) for other in playing)
+            others = " and ".join(strip_shown(other) for other in playing)
             problems.append("line {}: {} uses the same terminals as {}, so it is left off. "
                             "Take {} off the board line to play it".format(
-                                board_lines[kind], __strip_shown(kind), others, others))
+                                board_lines[kind], strip_shown(kind), others, others))
             board.pop(kind)
-            board.pop(kind + __after(kind), None)
+            board.pop(kind + after_length(kind), None)
             left_off.add(kind)
 
-    __check_hub(board, board_lines, screen_entries, problems)
+    check_hub(board, board_lines, screen_entries, problems)
 
     # Arguments with nothing to receive them, which nothing else would report
     if args_line is not None and not board.get("program"):
@@ -403,28 +403,28 @@ def load(text, fx, maker=None, volume=None):
     # declarations. The strip record goes first, so nothing here still holds a strip
     # when shutdown() collects them, and the screens die with their ports
     if maker is not None and not callable(fx) and \
-            __hardware_changed(fx, board, __wants_full_size(screen_entries, board)):
-        __STRIPS.clear()
-        __SCREENS.clear()
-        __HUB.clear()
+            hardware_changed(fx, board, wants_full_size(screen_entries, board)):
+        BUILT_STRIPS.clear()
+        BUILT_SCREENS.clear()
+        BUILT_HUB.clear()
         fx.shutdown()
         fx = maker
 
     # The board comes up here, now that its own entry has been read: a strip's length
     # is declared at construction, and this is the first point it is known
-    fx = __board(fx, board, problems)
+    fx = build_board(fx, board, problems)
     mono, colour = channels(fx)
 
     # The hub built with the board is recorded once, so a reload compares against it
-    if not __HUB and __hub_port(board) is not None and \
+    if not BUILT_HUB and hub_port(board) is not None and \
             getattr(type(fx), "hub", None) is not None:
-        __HUB.update(__hub_declared(board))
-        __HUB["groups"] = {}
+        BUILT_HUB.update(hub_declared(board))
+        BUILT_HUB["groups"] = {}
 
     # The strips the file asked for, taken before its channel names are resolved: a
     # bare strip name stands for a run whose length only the board entry knows
     built, failed = strips(fx, board, problems)
-    __resolve_strips(entries, board, has_strips, problems, failed | left_off)
+    resolve_strips(entries, board, has_strips, problems, failed | left_off)
 
     # Every kind of channel this board offers, as the names each player's slots take.
     # A strip is one kind per connector, since each is a player writing to its own
@@ -528,16 +528,16 @@ def load(text, fx, maker=None, volume=None):
     # about to be replaced. They are built when it gives the board back instead, which
     # is where a program that is missing, that stops, or that returns all end up
     if board.get("program"):
-        __PENDING_SHOWS[:] = [(screen_entries, fx, board)]
-        shows = __build_shows(screen_entries, fx, board, problems, build=False)
+        DEFERRED_SHOWS[:] = [(screen_entries, fx, board)]
+        shows = build_shows(screen_entries, fx, board, problems, build=False)
     else:
-        __PENDING_SHOWS[:] = []
-        shows = __build_shows(screen_entries, fx, board, problems)
+        DEFERRED_SHOWS[:] = []
+        shows = build_shows(screen_entries, fx, board, problems)
 
     # Opening a file is all a sound costs, so a named program defers nothing here:
     # its handle waits, opened while the board is sure to hold the drive
-    sounds = __build_sounds(audio_entries, fx, problems, volume)
+    sounds = build_sounds(audio_entries, fx, problems, volume)
 
     # Found in the order the work happens, which is every line the parser read and
     # then every entry the loader built, so a reader gets them in the file's order
-    return fx, players, shows, sounds, scenes, board, __in_line_order(problems)
+    return fx, players, shows, sounds, scenes, board, in_line_order(problems)

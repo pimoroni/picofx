@@ -7,7 +7,7 @@
 
 from .vocabulary import (BOARD, CHANNEL_KINDS, COLOURS, COMPONENTS, CURVES, HUB, HUB_POSITIONS,
                          OUTPUT_SETTINGS, SCREEN_SETTINGS, TILING, TILING_ALSO)
-from .hardware import __BOARD_EXAMPLE
+from .hardware import BOARD_EXAMPLE
 
 # An angle takes everything a fraction does and degrees besides, so its message is
 # built from the same words and the two cannot drift apart on what they share
@@ -98,7 +98,7 @@ def __split_quoted(text):
     return tokens
 
 
-def __unquoted(text, char):
+def unquoted(text, char):
     """Where the first unquoted char sits, or -1. Quoted values may contain it."""
     quote = None
     for index, this in enumerate(text):
@@ -180,7 +180,7 @@ def __glue(text):
     return "".join(out)
 
 
-def __number(text):
+def read_number(text):
     """A float from a plain number or a percentage, or None if it is neither."""
     text = text.strip()
     scale = 1.0
@@ -220,7 +220,7 @@ def __value(text):
         return True
     if lowered in ("false", "no", "off"):
         return False
-    number = __number(text)
+    number = read_number(text)
     return text if number is None else number
 
 
@@ -229,7 +229,7 @@ def __scene_time(word):
     unit = word[-1:].lower()
     if unit not in ("s", "m"):
         return None
-    number = __number(word[:-1])
+    number = read_number(word[:-1])
     if number is None or unit == "s":
         return number
     return number * 60
@@ -240,7 +240,7 @@ def __is_scene_setting(word):
     return word.lower() == "restart" or __scene_time(word) is not None
 
 
-def __shown(value):
+def value_shown(value):
     """A setting's value as the user would recognise it, quoted where it is text."""
     if isinstance(value, str):
         return "'{}'".format(value)
@@ -251,7 +251,7 @@ def __shown(value):
     return text[:-2] if text.endswith(".0") else text
 
 
-def __value_fault(kind, value):
+def value_fault(kind, value):
     """
     What is wrong with a value for a setting of this kind, or None if nothing is.
     Serves both sides of the colon, so a level and a duty answer the same way.
@@ -318,7 +318,7 @@ def __expand_hub(spec, token, line, problems):
     return [HUB + HUB_POSITIONS[at] for at in range(start, end + step, step)]
 
 
-def __expand(token, prefix, line, problems):
+def expand(token, prefix, line, problems):
     """The channel names one selector item covers, and the prefix later items inherit."""
     item = token.lower()
 
@@ -348,8 +348,8 @@ def __expand(token, prefix, line, problems):
         # Nothing established a name, so the correction carries whatever else was
         # written: a bare number keeps its number, a bare component keeps that. A board
         # that numbers no outputs takes its own LED's name in place of the number
-        named = "out" + (digits or "1") if __BOARD_EXAMPLE[0].startswith("out") \
-            else __BOARD_EXAMPLE[0]
+        named = "out" + (digits or "1") if BOARD_EXAMPLE[0].startswith("out") \
+            else BOARD_EXAMPLE[0]
         correction = named + ("." + suffix if suffix else "")
         problems.append("line {}: '{}' has no output name before its number. Correct "
                         "it to '{}'".format(line, token, correction))
@@ -417,7 +417,7 @@ def __apply_channel_setting(channels, key, raw, line, problems):
             if part == "*":
                 pair.append(None)
                 continue
-            number = __number(part)
+            number = read_number(part)
             if number is None:
                 good = False
                 break
@@ -478,13 +478,13 @@ def __apply_channel_setting(channels, key, raw, line, problems):
                 continue
 
             parts = raw_value.split("|")
-            seconds = [__number(part) for part in parts]
+            seconds = [read_number(part) for part in parts]
             fault = None
             if len(parts) > 2:
                 fault = "expected the seconds it takes, in one part or two"
             else:
                 for part, value in zip(parts, seconds):
-                    fault = __value_fault("seconds", part if value is None else value)
+                    fault = value_fault("seconds", part if value is None else value)
                     if fault is not None:
                         break
 
@@ -500,9 +500,9 @@ def __apply_channel_setting(channels, key, raw, line, problems):
         # -1 is not quietly taken as off. The channel keeps its default meanwhile
         kind = CHANNEL_KINDS[key]
         value = __value(raw_value)
-        fault = __value_fault(kind, value)
+        fault = value_fault(kind, value)
         if fault is not None:
-            problems.append("line {}: {} is {}, {}".format(line, key, __shown(value), fault))
+            problems.append("line {}: {} is {}, {}".format(line, key, value_shown(value), fault))
         elif kind == "quarter":
             setattr(channel, key, int(value))
         elif kind == "boolean":
@@ -541,7 +541,7 @@ def __parse_selector(text, line, problems):
         for item in token.split(","):
             if not item:
                 continue
-            names, prefix = __expand(item, prefix, line, problems)
+            names, prefix = expand(item, prefix, line, problems)
             for name in names:
                 channel = Channel(name)
                 channels.append(channel)
@@ -753,7 +753,7 @@ def parse(text):
                 "the rest of the line was ignored".format(number + 1, written))
             continue
 
-        colon = __unquoted(line, ":")
+        colon = unquoted(line, ":")
         if colon >= 0:
             close()
             pending = None
@@ -764,12 +764,12 @@ def parse(text):
             # One colon divides the outputs from the effect. A second is someone
             # reading it as a separator between every part, so say what the shape is
             # rather than complaining about whatever the stray colon stuck itself to
-            second = __unquoted(remainder, ":")
+            second = unquoted(remainder, ":")
             if second >= 0 and not __drive_letter(remainder, second):
                 problems.append(
                     "line {}: this has more than one ':'. Settings for the outputs go "
                     "before it and the effect after, such as "
-                    "'{} colour=warm: blink'".format(number + 1, __BOARD_EXAMPLE[0]))
+                    "'{} colour=warm: blink'".format(number + 1, BOARD_EXAMPLE[0]))
                 continue
 
             if not selector:
@@ -799,7 +799,7 @@ def parse(text):
             problems.append(
                 "line {}: '{}' has no ':'. The outputs go before it and the effect "
                 "after, such as '{} colour=warm: blink'".format(number + 1, written,
-                                                               __BOARD_EXAMPLE[0]))
+                                                                BOARD_EXAMPLE[0]))
             explained = True
 
     close()
@@ -826,7 +826,7 @@ def __about_line(problem):
     return -1
 
 
-def __in_line_order(problems):
+def in_line_order(problems):
     """
     In the order a reader meets them in the file, since they are found in the order
     the work happens: everything the parser saw, then everything the loader did.

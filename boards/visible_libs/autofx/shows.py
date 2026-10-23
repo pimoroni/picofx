@@ -15,15 +15,15 @@ import time
 
 from .vocabulary import (CURVES, EFFECTS, ERRORS_PATH, HUB, HUB_POSITIONS, SCREEN_EFFECTS,
                          SCREEN_SIZES)
-from .hardware import (__BOARD_HUB, __BOARD_SCREENS, __HUB, __hub_example, __hub_port, __hub_shown,
-                       __port_classes, __screen_kinds, __screen_port, __screen_shown, __SCREENS)
-from .parser import __shown
-from .checks import __check_settings, __find_image, __REFUSED
+from .hardware import (BOARD_HUB, BOARD_SCREENS, BUILT_HUB, BUILT_SCREENS, hub_example, hub_port,
+                       hub_shown, port_classes, screen_kinds, screen_port, screen_shown)
+from .parser import value_shown
+from .checks import check_settings, find_image, REFUSED
 
 # Where a problem found after the file was read is written, which run() sets to
 # whatever it was told to report to. A drawing is the one thing that can stop long
 # after load, so it is the only writer of this
-__REPORTING_TO = [ERRORS_PATH]
+REPORTING_TO = [ERRORS_PATH]
 
 
 class ScreenShow:
@@ -156,7 +156,7 @@ class ScreenShow:
         self.__redraw = True
 
 
-class __HubLight:
+class HubLight:
     """
     A Screen Hub's one backlight, shared by every position. It lights once every panel
     holds a frame, so no panel shows what an earlier run left on it, and stays lit across
@@ -219,7 +219,7 @@ class __HubLight:
         self.__first().brightness(1.0 if self.value is None else self.value)
 
 
-class __Still:
+class Still:
     """One image, standing where a player does for a screen that shows a file."""
     def __init__(self, image):
         self.image = image
@@ -252,7 +252,7 @@ def user_trace(error):
                      if "autofx/" not in line)
 
 
-class __Graphics:
+class Graphics:
     """
     A drawing standing where a player does: the file's draw(canvas, elapsed) paints
     a canvas the size of the panel, at fps or as often as the screen takes a frame.
@@ -386,7 +386,7 @@ class __Graphics:
             self.__stop(e)
 
 
-def __service_shows(shows, between=None):
+def service_shows(shows, between=None):
     """
     One pass of every screen that has the panel, answering whether one was drawn.
 
@@ -473,8 +473,8 @@ def __make_drawing(code, target, at, channel, screen, settings, fps, asleep, pro
               if channel.background is not None else picovector.color.black)
 
     try:
-        return __Graphics(target, code, picovector.image(width, height), ground,
-                          __REPORTING_TO[0], fps=fps, paused=asleep)
+        return Graphics(target, code, picovector.image(width, height), ground,
+                          REPORTING_TO[0], fps=fps, paused=asleep)
     # Sized and answered as a picture that will not fit is, the two landing in the
     # same file, though only the canvas is this entry's to make smaller
     except MemoryError as e:
@@ -502,7 +502,7 @@ def __place_canvases(shows):
 
     spidisplay.release_buffers()
 
-    drawings = [show.player for show in shows if isinstance(show.player, __Graphics)]
+    drawings = [show.player for show in shows if isinstance(show.player, Graphics)]
     # Sizes paired with positions, so the sort compares numbers and never a player, and
     # of two the same size the one earlier in the file comes first
     order = sorted(((player.image.width * player.image.height, -index)
@@ -521,7 +521,7 @@ def __place_canvases(shows):
         player.image = picovector.image(width, height, buffer)
 
 
-def __wants_full_size(entries, board):
+def wants_full_size(entries, board):
     """
     Whether the file's screens reserve for converting a full-size image each, which
     costs one screen about a third of its speed. Where the heap is PSRAM it is taken
@@ -535,7 +535,7 @@ def __wants_full_size(entries, board):
     out one reservation and both screens have to agree on it, so it cannot follow
     the content.
     """
-    kinds = __screen_kinds()
+    kinds = screen_kinds()
     named = {name for name in kinds if board.get(name) and board.get(name) != HUB}
     on_screens = [entry for entry in entries
                   if entry.channels and entry.channels[0].name in kinds]
@@ -569,20 +569,20 @@ def __screen_on(fx, name, line, problems, size, full_size=False):
     # The panel a selector name reaches, built once and kept: construction resets the
     # glass, so a screen is only ever constructed the first time it is asked for, at
     # the board entry's size for it or 2.8 unsaid, size being unreadable from a panel
-    known = __SCREENS.get(name)
+    known = BUILT_SCREENS.get(name)
     if known is not None:
         screen, built_size = known
         if size is not None and size != built_size:
             problems.append("{} is already running as a {} screen, so its new size "
                             "needs the board turning off and on".format(
-                                __screen_shown(name), built_size))
+                                screen_shown(name), built_size))
         return screen
 
-    SPCE, SPCEPort = __port_classes(fx)
+    SPCE, SPCEPort = port_classes(fx)
 
-    attr, port_name = __screen_port(name)
+    attr, port_name = screen_port(name)
     port = getattr(fx, attr)
-    shown = __screen_shown(name)
+    shown = screen_shown(name)
 
     if port.mode is None:
         # The port was never declared, so it becomes a screen port here: the same
@@ -610,7 +610,7 @@ def __screen_on(fx, name, line, problems, size, full_size=False):
         problems.append("line {}: {} could not start: {}".format(line, shown, e))
         return None
 
-    __SCREENS[name] = (screen, size)
+    BUILT_SCREENS[name] = (screen, size)
     return screen
 
 
@@ -623,23 +623,23 @@ def __screen_entry_fits(entry, fx, hub, board, problems):
         return False
 
     # The hub has both connectors, one for its panels and one for their selects
-    port = __screen_port(name)
+    port = screen_port(name)
     if hub is not None and port is not None:
         if name == hub:
             problems.append("line {}: {} is a Screen Hub, so name its panels hubA to "
-                            "hub{}".format(entry.line, __screen_shown(name),
+                            "hub{}".format(entry.line, screen_shown(name),
                                            HUB_POSITIONS[-1].upper()))
         else:
             problems.append("line {}: SP/CE {} carries the hub's selects, so {} has no "
-                            "screen".format(entry.line, port[1], __screen_shown(name)))
+                            "screen".format(entry.line, port[1], screen_shown(name)))
         return False
 
     if port is None or getattr(fx, port[0], None) is None:
-        offered = [shown for _kind, prop, shown in __BOARD_SCREENS
+        offered = [shown for _kind, prop, shown in BOARD_SCREENS
                    if getattr(fx, prop, None) is not None]
         if offered:
             problems.append("line {}: this board has no {}, it has {}".format(
-                entry.line, __screen_shown(name), " and ".join(offered)))
+                entry.line, screen_shown(name), " and ".join(offered)))
         else:
             problems.append("line {}: this board has no screens".format(entry.line))
         return False
@@ -647,7 +647,7 @@ def __screen_entry_fits(entry, fx, hub, board, problems):
     # A panel cannot say what size it is, and driven as the wrong one it shows nonsense
     if board.get(name) is None:
         problems.append("line {}: {} needs its size. Write it like 'board: {}=2.8'".format(
-            entry.line, __screen_shown(name), __screen_shown(name)))
+            entry.line, screen_shown(name), screen_shown(name)))
         return False
 
     return True
@@ -655,27 +655,27 @@ def __screen_entry_fits(entry, fx, hub, board, problems):
 
 def __hub_entry_fits(entry, places, hub, board, problems):
     # Whether an entry's hub positions are on a declared hub, sized, and all one size
-    shown = __hub_shown(places)
+    shown = hub_shown(places)
 
     if hub is None:
-        if not __BOARD_HUB[0]:
+        if not BOARD_HUB[0]:
             problems.append("line {}: this board cannot carry a Screen Hub, so it has no "
                             "{}".format(entry.line, shown))
         else:
             problems.append("line {}: {} is on a Screen Hub, so the board entry needs one. "
-                            "Write it like {}".format(entry.line, shown, __hub_example()))
+                            "Write it like {}".format(entry.line, shown, hub_example()))
         return False
 
     missing = [place for place in places if place not in board]
     if missing:
         problems.append("line {}: {} needs its size. Write it like 'board: {}=2.8'".format(
-            entry.line, __hub_shown(missing), __hub_shown(missing)))
+            entry.line, hub_shown(missing), hub_shown(missing)))
         return False
 
     # One stream carries one panel size, so positions of two sizes are two entries
     sizes = [size for size in SCREEN_SIZES if any(board[place] == size for place in places)]
     if len(sizes) > 1:
-        split = [__hub_shown([place for place in places if board[place] == size])
+        split = [hub_shown([place for place in places if board[place] == size])
                  for size in sizes]
         problems.append("line {}: {} mixes {} panels, which cannot share one stream, so "
                         "write them as two entries, {}".format(
@@ -687,13 +687,13 @@ def __hub_entry_fits(entry, places, hub, board, problems):
 
 def __hub_panel(fx, place, size, problems):
     # The panel at one hub position, built once and kept, or None where none answered
-    known = __SCREENS.get(place)
+    known = BUILT_SCREENS.get(place)
     if known is not None:
         return known[0]
 
     from screens import SCREEN_TYPES
 
-    shown = __hub_shown([place])
+    shown = hub_shown([place])
     try:
         port = getattr(fx.hub, place[len(HUB):])
         screen = SCREEN_TYPES[size](port)
@@ -706,7 +706,7 @@ def __hub_panel(fx, place, size, problems):
         problems.append("{} could not start: {}".format(shown, e))
         return None
 
-    __SCREENS[place] = (screen, size)
+    BUILT_SCREENS[place] = (screen, size)
     return screen
 
 
@@ -714,14 +714,14 @@ def __hub_stream(fx, places, board, line, problems):
     # The stream an entry's positions play through: a subset of the group for their panel
     # size. Every declared position is built the first time the hub is asked for, one
     # group per size, so the hub's light knows every panel it waits on
-    if not __HUB:
+    if not BUILT_HUB:
         problems.append("line {}: the board was not set up with the Screen Hub".format(line))
         return None
 
-    groups = __HUB["groups"]
+    groups = BUILT_HUB["groups"]
     if not groups:
         from screens import ScreenGroup
-        sizes = __HUB["sizes"]
+        sizes = BUILT_HUB["sizes"]
         for size in SCREEN_SIZES:
             fitted = sorted(place for place in sizes if sizes[place] == size)
             panels = [__hub_panel(fx, place, size, problems) for place in fitted]
@@ -733,12 +733,12 @@ def __hub_stream(fx, places, board, line, problems):
             except Exception as e:      # noqa: BLE001
                 problems.append("the hub's {} panels could not be driven together: "
                                 "{}".format(size, e))
-        built = {place: __SCREENS[place][0] for place in sizes if place in __SCREENS}
+        built = {place: BUILT_SCREENS[place][0] for place in sizes if place in BUILT_SCREENS}
         if built:
-            __HUB["light"] = __HubLight(built, sizes, groups)
+            BUILT_HUB["light"] = HubLight(built, sizes, groups)
 
     group = groups.get(board[places[0]])
-    members = [__SCREENS[place][0] for place in places if place in __SCREENS]
+    members = [BUILT_SCREENS[place][0] for place in places if place in BUILT_SCREENS]
     if group is None or not members:
         return None
     return group.subset(*members)
@@ -760,16 +760,16 @@ def __agree_hub_backlight(shows, problems):
                 # A percentage, since single precision shows 60% back as 0.59999996
                 problems.append("line {}: the hub's panels share one backlight, so {} takes "
                                 "the {}% from line {}".format(
-                                    show.line, __hub_shown(show.places),
+                                    show.line, hub_shown(show.places),
                                     int(together[0].backlight * 100 + 0.5), together[0].line))
 
 
-def __settle_hub(shows):
+def settle_hub(shows):
     """
     Give the hub's light the shows now live on it: the backlight the first of them asks
     for, positions none of them hold cleared to black, and dark where none is live.
     """
-    light = __HUB.get("light")
+    light = BUILT_HUB.get("light")
     if light is None:
         return
 
@@ -785,21 +785,21 @@ def __settle_hub(shows):
 
 
 # The screen entries a named program deferred, as one (entries, fx, board) or nothing
-__PENDING_SHOWS = []
+DEFERRED_SHOWS = []
 
 
-def __pending_shows(problems):
+def pending_shows(problems):
     """The shows a program put off, built now it has given the board back."""
-    if not __PENDING_SHOWS:
+    if not DEFERRED_SHOWS:
         return []
 
-    entries, fx, board = __PENDING_SHOWS.pop()
+    entries, fx, board = DEFERRED_SHOWS.pop()
 
     # The entries were checked when the file was read, so anything wrong with them is
     # already reported and would otherwise be said twice. What is new here is whatever
     # only building can find, a panel that will not start or content that will not play
     found = []
-    shows = __build_shows(entries, fx, board, found)
+    shows = build_shows(entries, fx, board, found)
     problems.extend(problem for problem in found if problem not in problems)
     return shows
 
@@ -866,7 +866,7 @@ def __too_big(at, target, effect, error):
     return "line {}: {}{} {}".format(at, head, join, advice)
 
 
-def __build_shows(entries, fx, board, problems, build=True):
+def build_shows(entries, fx, board, problems, build=True):
     """
     A show per screen entry: the panel it names and the player feeding it.
 
@@ -876,9 +876,9 @@ def __build_shows(entries, fx, board, problems, build=True):
     """
     shows = []
     built = set()
-    full_size = __wants_full_size(entries, board)
+    full_size = wants_full_size(entries, board)
 
-    hub = __hub_port(board)
+    hub = hub_port(board)
 
     for entry in entries:
         channel = entry.channels[0]
@@ -892,7 +892,7 @@ def __build_shows(entries, fx, board, problems, build=True):
             continue
 
         # A hub and a screen both played on have been refused together, and said once
-        if (HUB if on_hub else name) in board.get(__REFUSED, ()):
+        if (HUB if on_hub else name) in board.get(REFUSED, ()):
             continue
 
         if on_hub:
@@ -924,14 +924,14 @@ def __build_shows(entries, fx, board, problems, build=True):
         # carries the value across
         if channel.level is not None:
             problems.append("line {}: a screen has no level. Correct it to "
-                            "'backlight={}'".format(entry.line, __shown(channel.level)))
+                            "'backlight={}'".format(entry.line, value_shown(channel.level)))
 
         for setting in CURVES:
             if getattr(channel, setting) is not None:
                 problems.append("line {}: {} is for the outputs, so it was ignored".format(
                     entry.line, setting))
 
-        settings = __check_settings(entry, SCREEN_EFFECTS[entry.effect], problems)
+        settings = check_settings(entry, SCREEN_EFFECTS[entry.effect], problems)
 
         # A sequence names a folder where the others name a file, and neither works
         # without one
@@ -952,7 +952,7 @@ def __build_shows(entries, fx, board, problems, build=True):
             continue
 
         at = entry.lines.get(wanted, entry.line)
-        path = __find_image(target, at, problems)
+        path = find_image(target, at, problems)
         if path is None:
             continue
 
@@ -977,7 +977,7 @@ def __build_shows(entries, fx, board, problems, build=True):
         if screen is None:
             continue
 
-        light = __HUB.get("light") if on_hub else None
+        light = BUILT_HUB.get("light") if on_hub else None
 
         # fps and interval both name the pace, one the inverse of the other, so a
         # slideshow can say seconds and an animation can say a rate
@@ -1027,7 +1027,7 @@ def __build_shows(entries, fx, board, problems, build=True):
                                         paused=asleep)
             else:
                 import picovector
-                player = __Still(picovector.image.load(path))
+                player = Still(picovector.image.load(path))
         except MemoryError as e:
             problems.append(__too_big(at, target, entry.effect, e))
             continue
@@ -1047,7 +1047,7 @@ def __build_shows(entries, fx, board, problems, build=True):
         __place_canvases(shows)
 
         names = {used for _, used in built}
-        for name, (screen, _) in __SCREENS.items():
+        for name, (screen, _) in BUILT_SCREENS.items():
             if name not in names and not name.startswith(HUB):
                 screen.backlight.off()
         __agree_hub_backlight(shows, problems)

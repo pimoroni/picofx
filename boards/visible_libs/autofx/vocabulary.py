@@ -147,8 +147,8 @@ BOARD_SETTINGS = {"drive": ("manual",), "reload": ("manual", "auto"),
 
 # What follows a strip's length, as 'stripL=60|rgb' or 'stripApa=144|50%', kept among the
 # board settings under the strip's name and one of these, which no file can write
-__ORDER = " order"
-__BRIGHTNESS = " brightness"
+ORDER = " order"
+BRIGHTNESS = " brightness"
 
 # What each left-side setting's value must be. level and backlight answer alike,
 # both being how bright something is; colour, background and offset have shapes of

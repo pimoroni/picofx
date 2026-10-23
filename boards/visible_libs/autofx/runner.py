@@ -14,13 +14,13 @@ from picofx import RGBLED
 from picofx.colour import BLUE, RED, WHITE
 
 from .vocabulary import CONFIG_PATH, ERRORS_PATH
-from .hardware import __HUB, __SCREENS, __STRIPS
-from .parser import __in_line_order
-from .checks import __candidates
-from .shows import (__PENDING_SHOWS, __pending_shows, __REPORTING_TO, __service_shows, __settle_hub,
+from .hardware import BUILT_HUB, BUILT_SCREENS, BUILT_STRIPS
+from .parser import in_line_order
+from .checks import candidates
+from .shows import (DEFERRED_SHOWS, pending_shows, REPORTING_TO, service_shows, settle_hub,
                     user_trace)
-from .sounds import __cue_sound
-from .loader import __apply_scene, load
+from .sounds import cue_sound
+from .loader import apply_scene, load
 
 # Short of full, which is uncomfortable on an indicator at arm's length and buys no
 # legibility across a room
@@ -84,7 +84,7 @@ def report(problems, path, running=True):
 
     # In file order, since the reader has the file open beside this. load() has
     # ordered its own already, but run() appends a program's troubles afterwards
-    problems = __in_line_order(problems)
+    problems = in_line_order(problems)
 
     for problem in problems:
         print(problem)
@@ -179,9 +179,9 @@ def __play(fx, volume, path, errors, playing, sounding=(), maker=None):
         # The panels go out with the lights. Left lit they are the one thing still
         # showing the file that has just been set aside, and a screen an entry no
         # longer names would stay lit for good
-        for screen, _size in __SCREENS.values():
+        for screen, _size in BUILT_SCREENS.values():
             screen.backlight.off()
-        light = __HUB.get("light")
+        light = BUILT_HUB.get("light")
         if light is not None:
             light.off()
         rail = getattr(fx, "disable_rail", None)
@@ -232,8 +232,8 @@ def __play(fx, volume, path, errors, playing, sounding=(), maker=None):
 
     # Without a volume nothing here will run the program, so the screen entries it
     # deferred are wanted now rather than never
-    if volume is None and __PENDING_SHOWS:
-        shows = __pending_shows(problems)
+    if volume is None and DEFERRED_SHOWS:
+        shows = pending_shows(problems)
 
     if volume is None:
         wrote = report(problems, errors, bool(players or shows or sounds))
@@ -268,7 +268,7 @@ def __start(players, fx):
     #
     # The strip header's rail comes up here as well, where a strip was built: the
     # board leaves it down until asked, and this is when something starts driving it
-    if __STRIPS:
+    if BUILT_STRIPS:
         rail = getattr(fx, "enable_rail", None)
         if rail is not None:
             rail()
@@ -345,7 +345,7 @@ def __read_program(name, problems):
     # Read before the drive is shown, since exposing it unmounts the mount point and a
     # program kept on the drive could not be opened once the computer has it
     found = []
-    for candidate in __candidates(name):
+    for candidate in candidates(name):
         try:
             with open(candidate) as handle:
                 found.append(handle.read())
@@ -425,7 +425,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
 
     # A drawing that stops does so long after this returned its problems, so it writes
     # its own, and this is how it knows where they go
-    __REPORTING_TO[0] = errors
+    REPORTING_TO[0] = errors
 
     # A board that asks its hardware which of its parts it has does so once, before any is read
     board = fx if isinstance(fx, type) else type(fx)
@@ -448,12 +448,12 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         scene_at = 0
         scene_deadline = None
         if scenes:
-            __apply_scene(players, shows, sounds, scenes[0])
+            apply_scene(players, shows, sounds, scenes[0])
             if scenes[0].hold:
                 scene_deadline = time.ticks_add(time.ticks_ms(), int(scenes[0].hold * 1000))
         else:
-            __cue_sound(sounds, None)
-            __settle_hub(shows)
+            cue_sound(sounds, None)
+            settle_hub(shows)
 
     if volume is None:
         begin_scenes()
@@ -510,7 +510,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
 
         # The board is the effects' again, so the screen entries put off for the
         # program are built now, before the report, so anything wrong with them is in it
-        shows = __pending_shows(problems)
+        shows = pending_shows(problems)
 
         # Here because the program could not be found or run, or because it finished
         # by itself. Either way the effects take the board back, and anything that
@@ -614,14 +614,14 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                 begin_scenes()
                 __start(players, fx)
                 # A frame each as the lights start, so the panels come back with them
-                __service_shows(shows)
+                service_shows(shows)
 
             # The rotation, standing aside with everything else while a transfer runs
             if scene_deadline is not None and not paused and \
                     time.ticks_diff(time.ticks_ms(), scene_deadline) >= 0:
                 scene_at = (scene_at + 1) % len(scenes)
                 scene = scenes[scene_at]
-                __apply_scene(players, shows, sounds, scene)
+                apply_scene(players, shows, sounds, scene)
                 scene_deadline = (time.ticks_add(time.ticks_ms(), int(scene.hold * 1000))
                                   if scene.hold else None)
 
@@ -669,7 +669,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
 
                 # A frame can cost longer than the double press window, so the
                 # button is answered between the screens rather than after them all
-                drew = __service_shows(shows, lambda: watch() != volume.IDLE)
+                drew = service_shows(shows, lambda: watch() != volume.IDLE)
 
             if event == volume.BUSY:
                 # A press the computer's writing blocked otherwise looks exactly like
@@ -694,10 +694,10 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         # is never going to be built now
         for player in players:
             player.stop()
-        __SCREENS.clear()
-        __STRIPS.clear()
-        __HUB.clear()
-        __PENDING_SHOWS.clear()
+        BUILT_SCREENS.clear()
+        BUILT_STRIPS.clear()
+        BUILT_HUB.clear()
+        DEFERRED_SHOWS.clear()
         fx.shutdown()
 
         # Tidying up after it, each on its own, since neither can undo the above
