@@ -10,7 +10,7 @@
 # A drive build ships no main.py or secrets.py, so these are its only copies. The builds
 # without the drive ship the examples' secrets.py, which holds the same settings as SECRETS.
 #
-# Kept apart from fx_drive.py so a change of wording shows on its own in a diff. Only a
+# Kept apart from fx_drive so a change of wording shows on its own in a diff. Only a
 # literal triple quote needs escaping inside these.
 #
 # The drive's generated files, the manual and the picker's pages, are in fx_manual.py and
