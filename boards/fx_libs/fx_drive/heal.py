@@ -8,8 +8,8 @@ import vfs
 
 import fx_defaults
 
-from .fat import __ENOTDIR, __S_IFDIR
-from .pages import __pages, __write_page
+from .fat import ENOTDIR, S_IFDIR
+from .pages import pages, write_page
 
 MOUNT_POINT = "/fx"
 FILE_PATH = MOUNT_POINT + "/effects.txt"
@@ -111,7 +111,7 @@ def __heal(fs, name, document):
             if isinstance(document, str):
                 f.write(document)
             else:
-                __write_page(document, f)
+                write_page(document, f)
         fs.chmod(name, __ATTR_READ_ONLY, __ATTR_READ_ONLY)
     except OSError:
         # A full drive has nowhere to put it. The board comes up regardless, since a
@@ -124,7 +124,7 @@ def __heal(fs, name, document):
 def __remove_tree(path):
     # Remove a file, or a directory and everything in it, ignoring what will not go
     try:
-        if os.stat(path)[0] & __S_IFDIR:
+        if os.stat(path)[0] & S_IFDIR:
             for name in os.listdir(path):
                 __remove_tree(path + b"/" + name)
             os.rmdir(path)
@@ -216,22 +216,24 @@ def mount(screens=True, wireless=False):
         __restore_secrets()
     del __unhealed[:]
     __heal(fs, README_NAME, fx_defaults.README)
-    for name, document in __pages(screens):
+    for name, document in pages(screens):
         __heal(fs, name, document)
     __sweep_host_litter()
     return True
 
 
-def __remount():
-    # Mount again with what the board last told mount()
+def remount():
+    """Mount again with what the board last told mount()."""
     return mount(__screens, __wireless)
 
 
-class __Examples:
-    # The drive's examples folder, mounted at /examples so an example finds its files by
-    # the same path on every board, those without a drive keeping the folder on their
-    # own filesystem. Each call is passed on to whatever is mounted at the mount point,
-    # the board's own mount or the view, and answers as that does
+class Examples:
+    """
+    The drive's examples folder, mounted at /examples so an example finds its files by
+    the same path on every board, those without a drive keeping the folder on their
+    own filesystem. Each call is passed on to whatever is mounted at the mount point,
+    the board's own mount or the view, and answers as that does
+    """
 
     def __init__(self):
         self.__cwd = ""
@@ -261,8 +263,8 @@ class __Examples:
 
     def chdir(self, path):
         target = self.__target(path)
-        if not os.stat(target)[0] & __S_IFDIR:
-            raise OSError(__ENOTDIR)
+        if not os.stat(target)[0] & S_IFDIR:
+            raise OSError(ENOTDIR)
         self.__cwd = target[len(EXAMPLES_DIR):]
 
     def getcwd(self):
@@ -301,7 +303,7 @@ def __restore_secrets():
 def __mount_examples():
     # Mount the examples folder at /examples, once, staying through every handover
     try:
-        vfs.mount(__Examples(), EXAMPLES_MOUNT_POINT)
+        vfs.mount(Examples(), EXAMPLES_MOUNT_POINT)
     except OSError as e:
         # Already mounted answers EPERM
         if e.args[0] != errno.EPERM:

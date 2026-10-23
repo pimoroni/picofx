@@ -5,15 +5,15 @@ import rp2
 import time
 
 # The stat modes of a folder and a file
-__S_IFDIR = 0x4000
-__S_IFREG = 0x8000
+S_IFDIR = 0x4000
+S_IFREG = 0x8000
 
 # The error numbers VfsFat gives these, which MicroPython's errno does not name
-__ENOTDIR = 20
-__EROFS = 30
+ENOTDIR = 20
+EROFS = 30
 
 
-class __FatReader:
+class FatReader:
     # The drive's FAT12 or FAT16 tables and folders, read straight from its flash
     # with no FatFs involved, so they read on while the computer holds the drive
 
@@ -37,9 +37,6 @@ class __FatReader:
         self.__fat_window_at = None
         self.__boot = bytearray(36)
         self.__signature = bytearray(2)
-        # Made by the first __root_entry_bytes(), since only the save watcher calls it
-        self.__probe = None
-        self.__root_window = None
         self.__read_layout()
 
     def __read(self, offset, length):
@@ -299,6 +296,19 @@ class __FatReader:
                 runs = self.__runs_from(self.__first_cluster(entry))
         return at, entry
 
+
+class Lookup(FatReader):
+    """
+    A reader answering the view and the save watcher with what a path names, a folder's
+    contents, the drive's capacity and one root entry's bytes.
+    """
+
+    def __init__(self):
+        super().__init__()
+        # Made by the first root_entry_bytes(), since only the save watcher calls it
+        self.__probe = None
+        self.__root_window = None
+
     @staticmethod
     def __is_root(path):
         return not [part for part in path.split("/") if part and part != "."]
@@ -310,30 +320,30 @@ class __FatReader:
         _, entry = self.__find(path, directory=True)
         return self.__runs_from(self.__first_cluster(entry))
 
-    def __kind(self, path):
-        # The stat mode and size of what a path names
+    def kind(self, path):
+        """The stat mode and size of what a path names."""
         if self.__is_root(path):
-            return __S_IFDIR, 0
+            return S_IFDIR, 0
         _, entry = self.__find(path, directory=None)
         if entry[11] & self.__ATTR_DIRECTORY:
-            return __S_IFDIR, 0
-        return __S_IFREG, self.__u32(entry, 28)
+            return S_IFDIR, 0
+        return S_IFREG, self.__u32(entry, 28)
 
-    def __listing(self, path):
-        # A folder's contents as (name, stat mode, size), its own . and .. left out
+    def listing(self, path):
+        """A folder's contents as (name, stat mode, size), its own . and .. left out."""
         listed = []
         for _, entry, long_name in self.__entries(self.__runs_of_directory(path)):
             name = (self.__decoded(long_name) if long_name else None) or self.__short_name(entry)
             if name is None or name in (".", ".."):
                 continue
             if entry[11] & self.__ATTR_DIRECTORY:
-                listed.append((name, __S_IFDIR, 0))
+                listed.append((name, S_IFDIR, 0))
             else:
-                listed.append((name, __S_IFREG, self.__u32(entry, 28)))
+                listed.append((name, S_IFREG, self.__u32(entry, 28)))
         return listed
 
-    def __root_entry_bytes(self, short_name, start, end):
-        # Bytes start to end of the root folder's entry with this 11-byte short name, or None
+    def root_entry_bytes(self, short_name, start, end):
+        """Bytes start to end of the root folder's entry with this 11-byte short name, or None."""
         flash = self.__flash
         if self.__root_window is None:
             self.__probe = bytearray(36)
@@ -364,12 +374,12 @@ class __FatReader:
                     return window[into + start:into + end]
         return None
 
-    def __capacity(self):
-        # The cluster size and count, which is what statvfs() reports
+    def capacity(self):
+        """The cluster size and count, which is what statvfs() reports."""
         return self.__cluster_bytes, self.__clusters
 
 
-class Stream(__FatReader):
+class Stream(FatReader):
     """
     A file on the drive read straight from its flash, which reads on while the computer
     holds the drive. A file opened through the board's mount goes stale at every
@@ -468,15 +478,16 @@ def stream(name):
         return None
 
 
-# What a read raises once the computer has written to the drive since its file was opened
-__CHANGED_BENEATH = "the FX drive changed while this file was being read"
+class View:
+    """
+    The drive read straight from its flash, mounted at the mount point while the
+    computer holds the drive so a program still finds its files by path. Read-only.
+    Finding a file waits while the computer writes, and a file read once it writes
+    raises OSError.
+    """
 
-
-class __View:
-    # The drive read straight from its flash, mounted at the mount point while the
-    # computer holds the drive so a program still finds its files by path. Read-only.
-    # Finding a file waits while the computer writes, and a file read once it writes
-    # raises OSError
+    # What a read raises once the computer has written to the drive since its file was opened
+    __CHANGED_BENEATH = "the FX drive changed while this file was being read"
 
     def __init__(self):
         self.__cwd = ""
@@ -510,28 +521,28 @@ class __View:
 
     def open(self, path, mode):
         if "w" in mode or "a" in mode or "x" in mode or "+" in mode:
-            raise OSError(__EROFS)
+            raise OSError(EROFS)
         stream, writes = self.__settled(Stream, self.__resolve(path))
         # Read in C, every read checking the write count against this one
         return rp2.MSCFile(stream.extents(), stream.size, writes, text="b" not in mode,
-                           message=__CHANGED_BENEATH)
+                           message=self.__CHANGED_BENEATH)
 
     def stat(self, path):
-        (mode, size), _ = self.__settled(lambda name: __FatReader().__kind(name), self.__resolve(path))
+        (mode, size), _ = self.__settled(lambda name: Lookup().kind(name), self.__resolve(path))
         return (mode, 0, 0, 0, 0, 0, size, 0, 0, 0)
 
     def ilistdir(self, path):
-        listed, _ = self.__settled(lambda name: __FatReader().__listing(name), self.__resolve(path))
+        listed, _ = self.__settled(lambda name: Lookup().listing(name), self.__resolve(path))
         return iter([(name, mode, 0, size) for name, mode, size in listed])
 
     def statvfs(self, _path):
-        cluster_bytes, clusters = __FatReader().__capacity()
+        cluster_bytes, clusters = Lookup().capacity()
         return (cluster_bytes, cluster_bytes, clusters, 0, 0, 0, 0, 0, 0, 255)
 
     def chdir(self, path):
         path = self.__resolve(path)
-        if self.__settled(lambda name: __FatReader().__kind(name), path)[0][0] != __S_IFDIR:
-            raise OSError(__ENOTDIR)
+        if self.__settled(lambda name: Lookup().kind(name), path)[0][0] != S_IFDIR:
+            raise OSError(ENOTDIR)
         self.__cwd = "/" + "/".join(part for part in path.split("/") if part)
         if self.__cwd == "/":
             self.__cwd = ""
@@ -540,13 +551,13 @@ class __View:
         return self.__cwd or "/"
 
     def mkdir(self, _path):
-        raise OSError(__EROFS)
+        raise OSError(EROFS)
 
     def remove(self, _path):
-        raise OSError(__EROFS)
+        raise OSError(EROFS)
 
     def rename(self, _old_path, _new_path):
-        raise OSError(__EROFS)
+        raise OSError(EROFS)
 
     def rmdir(self, _path):
-        raise OSError(__EROFS)
+        raise OSError(EROFS)

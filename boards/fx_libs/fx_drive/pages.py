@@ -38,9 +38,11 @@ def __encode(packed, f):
         f.write(binascii.b2a_base64(view[at:at + step], newline=False))
 
 
-def __pages(screens):
-    # Each packed page's name on the drive and its document, the catalogue without the
-    # screens for a board found to have no screen ports
+def pages(screens):
+    """
+    Each packed page's name on the drive and its document, the catalogue without the
+    screens for a board found to have no screen ports.
+    """
     catalogue = fx_editor.CATALOGUE
     if not screens:
         catalogue = getattr(fx_editor, "CATALOGUE_WITHOUT_SCREENS", catalogue)
@@ -48,9 +50,11 @@ def __pages(screens):
             (EDITOR_NAME, fx_editor.EDITOR), (CATALOGUE_NAME, catalogue))
 
 
-def __write_page(document, f):
-    # Write a packed page to the open file. A page that inflates itself in the browser
-    # carries its opening and closing, and its stream goes between them in base64
+def write_page(document, f):
+    """
+    Write a packed page to the open file. A page that inflates itself in the browser
+    carries its opening and closing, and its stream goes between them in base64.
+    """
     if len(document) == 6:
         _, _, _, packed, opening, closing = document
         f.write(opening)

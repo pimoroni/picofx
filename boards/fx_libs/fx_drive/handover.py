@@ -6,8 +6,8 @@ import time
 import rp2
 import vfs
 
-from .fat import __FatReader, __View
-from .heal import FILE_PATH, MOUNT_POINT, __remount
+from .fat import Lookup, View
+from .heal import FILE_PATH, MOUNT_POINT, remount
 
 DOUBLE_PRESS_MS = 400
 
@@ -83,8 +83,8 @@ def __effects_entry():
     global __watch_reader
     try:
         if __watch_reader is None:
-            __watch_reader = __FatReader()
-        return __watch_reader.__root_entry_bytes(__EFFECTS_SHORT, 22, 32)
+            __watch_reader = Lookup()
+        return __watch_reader.root_entry_bytes(__EFFECTS_SHORT, 22, 32)
     except OSError:
         return None
 
@@ -228,7 +228,7 @@ def expose():
     except OSError:
         pass
     rp2.enable_msc()
-    vfs.mount(__View(), MOUNT_POINT)
+    vfs.mount(View(), MOUNT_POINT)
     if rejoin:
         __rejoin_bus()
     __exposed = True
@@ -258,7 +258,7 @@ def withdraw():
         vfs.umount(MOUNT_POINT)
     except OSError:
         pass
-    __remount()
+    remount()
     return True
 
 
