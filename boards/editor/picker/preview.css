@@ -1,0 +1,38 @@
+/* The direction toggle, a .stoggle drawn in the accent colour while on */
+.chosen .direction {
+  margin-left: auto;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  padding: var(--space-2) var(--space-4);
+  font: 600 var(--text-s) var(--font);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  cursor: pointer;
+
+  &.on {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+
+  svg path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &:disabled {
+    color: var(--dim);
+    opacity: .4;
+    cursor: default;
+  }
+}
+
+.chosen .who .direction {
+  flex: none;
+}

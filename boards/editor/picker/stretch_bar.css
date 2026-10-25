@@ -1,0 +1,210 @@
+/* After a stretch's "Nothing" and its count, what shows through from Always on, ruled off */
+.sec .says .beneath {
+  font-weight: 400;
+  color: var(--dim);
+  margin-left: .45em;
+  padding-left: .45em;
+  border-left: 1px solid var(--line-strong);
+}
+
+.sec.narrow .says {
+  font-size: var(--text-xs);
+}
+
+/* Split into, on a strip's chosen stretch beside its Reverse, in the screens' button style. It is
+   one outlined group read as a sentence, words then number then the buttons that act, divided as
+   the screens' segmented choices are. The screens' rules are repeated for the pages with none */
+.chosen .who .stretchtools {
+  display: inline-flex;
+  margin-left: auto;
+  flex: none;
+
+  /* On a phone the group may narrow to the panel, its buttons wrapping onto a second row */
+  @media (max-width: 40rem) {
+    flex: 0 1 auto;
+    min-width: 0;
+
+    .toolset {
+      flex-wrap: wrap;
+    }
+  }
+}
+
+.stretchtools .toolsays,
+.stretchtools .toolact {
+  white-space: nowrap;
+}
+
+.stretchtools .toolset {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--panel);
+  font: 600 var(--text-s) var(--font);
+}
+
+.stretchtools .toolsays {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-4) 0 var(--space-4);
+  color: var(--dim);
+
+  /* On a phone the group's words give way to its icon, so the group keeps one line. The words
+     stay for a screen reader, and the number's label says them too */
+  @media (max-width: 40rem) {
+    gap: 0;
+    font-size: 0;
+
+    > span {
+      font-size: var(--text-s);
+    }
+  }
+}
+
+.stretchtools .toolset input[type=number] {
+  width: 2.6rem;
+  margin: var(--space-1) var(--space-3) var(--space-1) 0;
+  padding: var(--space-1) var(--space-2);
+  font: inherit;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  text-align: center;
+}
+
+.stretchtools .toolact {
+  border: 0;
+  border-left: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--panel);
+  padding: var(--space-2) var(--space-4);
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+
+  &:hover:enabled {
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+  }
+
+  &:disabled {
+    color: var(--dim);
+    opacity: .5;
+    cursor: default;
+  }
+}
+
+/* A zoomed bar scrolls, and a little room keeps its stretches off the scrollbar */
+.scroller.zoomed .bar {
+  padding-bottom: var(--space-3);
+}
+
+/* A cut's label near either end of a bar is turned inward, so it never overhangs the bar */
+.sec .cut.nearstart::after {
+  left: 0;
+  transform: none;
+}
+
+.sec .cut.nearend::after {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+/* A strip's LEDs are beads on a wire in its stretches' cards. Each card draws the wire behind its
+   own beads, over its background, and the bar's wire joins the cards from the lead block to the
+   ring. --bead, --gap, --gapdrawn, --fill and --apart are set for the room each LED has, --apart
+   running from 1 for beads apart at full size to 0 for one continuous strip. --beadtall, --wire,
+   --end and --wiremiddle stay the same */
+.stripcards {
+  position: relative;
+
+  > .sec {
+    z-index: 1;
+  }
+}
+
+.stripwire {
+  position: absolute;
+  background: var(--line-strong);
+  pointer-events: none;
+}
+
+.wireend {
+  flex: 0 0 auto;
+  width: max(8px, calc(var(--end) * .8));
+  position: relative;
+  align-self: stretch;
+  z-index: 1;
+
+  .lead {
+    position: absolute;
+    left: 2px;
+    top: calc(var(--wiremiddle) - var(--end) * .31);
+    width: calc(var(--end) * .42);
+    height: calc(var(--end) * .62);
+    border-radius: calc(var(--end) * .13);
+    background: #8f8a81;
+  }
+
+  .tail {
+    position: absolute;
+    right: 2px;
+    top: calc(var(--wiremiddle) - var(--end) * .29);
+    width: calc(var(--end) * .58);
+    height: calc(var(--end) * .58);
+    box-sizing: border-box;
+    border: max(1.2px, calc(var(--end) * .14)) solid var(--dashed);
+    border-radius: 50%;
+    background: #fff;
+  }
+}
+
+.stripbeads {
+  display: flex;
+  align-items: center;
+  margin: var(--space-4) 3px var(--space-3);
+  padding: 3px 0;
+  border-radius: var(--radius);
+  background: linear-gradient(var(--line-strong), var(--line-strong)) center/100% var(--wire) no-repeat;
+
+  /* A stretch set to Nothing. Its beads sit on the stripes Nothing wears elsewhere, inside a broken
+     line, and show what the board does there */
+  &.unset {
+    outline: 1.4px dashed var(--dashed);
+    outline-offset: -1px;
+    background: linear-gradient(var(--line-strong), var(--line-strong)) center/100% var(--wire) no-repeat,
+                repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 6px, var(--line) 6px, var(--line) 12px);
+  }
+}
+
+/* The places a stretch can be cut are spread across the same width as its beads */
+.stripcards .sec .cuts {
+  left: 3px;
+  right: 3px;
+}
+
+.stripbeads i {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+}
+
+/* A bead narrows with its room but keeps its height, so the cards never change height on a zoom,
+   and its corners close up with the gap so joined beads make a square, even strip. A gap under a
+   pixel is drawn as a whole one filled with the beads' colour, deepening as --fill rises to 1. The
+   fill is the bead drawn again half a gap and half a pixel to either side, so no seam is left */
+.stripbeads b {
+  --filled: color-mix(in srgb, currentColor calc(var(--fill) * 100%), transparent);
+  display: block;
+  width: min(var(--beadtall), calc(100% - var(--gapdrawn)));
+  height: var(--beadtall);
+  border-radius: calc(min(5px, var(--bead) * .22) * var(--apart));
+  background: var(--unlit);
+  color: var(--unlit);
+  box-shadow: inset 0 0 0 calc(1px * var(--apart)) rgba(0, 0, 0, .12),
+              calc(var(--gapdrawn) / 2 + .5px) 0 0 0 var(--filled),
+              calc(var(--gapdrawn) / -2 - .5px) 0 0 0 var(--filled);
+}
