@@ -1,0 +1,11 @@
+i2c_target.py
+lib/*.py
+lib/comms/*.py
+lib/picofx/*.py
+lib/picofx/colour/*.py
+lib/picofx/mono/*.py
+lib/aye_arr/*.py
+lib/aye_arr/nec/*.py
+lib/aye_arr/nec/remotes/*.py
+lib/aye_arr/pulse/*.py
+lib/aye_arr/pulse/pio/*.py
