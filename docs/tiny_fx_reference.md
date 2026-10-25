@@ -367,6 +367,8 @@ TinyFX(init_i2c: bool=True,
        init_wav: bool=True,
        wav_root: string="/",
        sensor: string=None)
+@classmethod
+wake() -> None
 
 # Interaction
 boot_pressed() -> bool

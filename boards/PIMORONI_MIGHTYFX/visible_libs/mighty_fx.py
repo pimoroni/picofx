@@ -5,13 +5,17 @@
 import gc
 import time
 
-from machine import ADC, Pin
+from machine import ADC, PWM, Pin
 from pimoroni_i2c import PimoroniI2C
-from picofx import RGBLED, DisabledLED
+from picofx import PWMLED, RGBLED, DisabledLED
 from sensor import build_sensor
 from audio import WavPlayer
 from spidisplay import release_buffers
 from ports import ScreenPort
+
+
+# The PWM objects wake() lit, held here since one that is collected stops driving its pin
+__waking = []
 
 
 class SPCE:
@@ -304,6 +308,10 @@ class MightyFX:
     # SPCEPort
     SCREENS = (("screenA", "spce_a"), ("screenB", "spce_b"))
 
+    # Whether the board has a wireless module, so the FX drive offers the WiFi credentials and
+    # the programs that go online. Every Mighty FX carries one
+    WIRELESS = True
+
     # How long a strip takes to power up once the rail is on, and miss any frame sent sooner.
     # A 64 LED panel took one after 5ms and not after 2ms, so this is double that
     RAIL_SETTLE_MS = 10
@@ -321,6 +329,9 @@ class MightyFX:
     RGB_GAMMA = 2.2         # sRGB, for even hues, chosen by eye on a rainbow
 
     RGB_COLOUR_NAMES = ("red", "green", "blue")
+
+    # What wake() lights the outputs to, dim enough to read as alive and not as an effect
+    WAKE_LEVEL = 0.1
 
     def __init__(self, spce_a=None, spce_b=None, strip_l=None, strip_r=None,
                  servo_l=None, servo_r=None, sensor=None, init_i2c=True, i2c_freq=100000,
@@ -477,6 +488,14 @@ class MightyFX:
         if gpio < 32:
             return gpio % 16
         return 16 + ((gpio - 32) % 8)
+
+    @classmethod
+    def wake(cls):
+        """Light every output dim white before there is a board, so seconds of importing do not read as a dead one."""
+        duty = int(65535 * cls.WAKE_LEVEL)
+        for pins in cls.OUT_PINS:
+            for pin in pins:
+                __waking.append(PWM(Pin(pin), freq=PWMLED.FREQUENCY, duty_u16=duty))
 
     def boot_pressed(self):
         return self.__switch.value() == 0
