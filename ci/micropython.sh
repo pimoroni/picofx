@@ -9,8 +9,9 @@ PIMORONI_PICO_VERSION="5ed5cb4ac34fd231251343cb10fc07247c95e738"
 PIMORONI_AYE_ARR_FLAVOUR="pimoroni"
 PIMORONI_AYE_ARR_VERSION="v1.0.1"
 
-# v3.1.0 with image files closed when they fail to open as a PNG or JPEG
-PIMORONI_PICOVECTOR_VERSION="v3.1.0-close-patch"
+# v3.1.0 with a pixel format chosen at build time. A board setting PV_PIXEL_FORMAT 2 gets RGBA4444
+# canvases, and every other builds as v3.1.0 does
+PIMORONI_PICOVECTOR_VERSION="rgba4444-pixel-format"
 
 PIMORONI_SPIDISPLAY_FLAVOUR="pimoroni"
 PIMORONI_SPIDISPLAY_VERSION="main"
