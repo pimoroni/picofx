@@ -28,6 +28,16 @@
 * A sound takes a `volume`, and a scene can set its screens or sound to `none`
 * A scene can name the scene that follows it with `then`, and the IR remote and PIR Stick can start a scene through `remote:` and `motion:` entries
 
+**FX drive**
+
+* Add the FX drive, a USB drive holding effects.txt that the board plays at power on and again a few seconds after each save
+* Add FX drive builds of Tiny FX, Tiny FX W, Mighty FX and Plasma 2350
+* Each drive build comes with a -full uf2 that writes the whole board, FX drive included, and a -with-libs uf2 that updates the firmware and libraries and keeps the drive
+* A drive build writes its own main.py, which lights the outputs dim with `wake()` while autofx loads, and a wireless board's drive holds the WiFi credentials file
+* Pressing BOOT twice hides the drive, and twice again brings it back
+* The WAV player fades out while a computer writes to the FX drive, and returns once it finishes
+* The outputs show a bar while autofx loads the effects file
+
 **Tiny FX**
 
 * Breaking: `i2c` and `wav` raise when the board was created without them, where `wav` was None and `i2c` was missing
