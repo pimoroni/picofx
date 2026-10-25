@@ -9,6 +9,9 @@
 # A drive build ships no main.py or secrets.py, so these are its only copies. The W build without
 # the drive ships the examples' secrets.py, which holds the same settings as SECRETS. Only a
 # literal triple quote needs escaping inside these.
+#
+# The drive's generated files, the manual and the picker's pages, are in fx_manual.py and
+# fx_editor.py instead, built by tools/build_manual.py and tools/build_editor.py
 
 # In single quotes, as the program it holds has a docstring in double quotes
 MAIN = '''\
@@ -34,8 +37,13 @@ it brings this one back, and an empty one leaves the board quiet.
 autofx.run(TinyFX, volume=fx_drive)
 '''
 
-# What a fresh board plays
+# Exactly what the picker writes for its opening looks, so a fresh board's file opens in
+# the picker as those looks. Replace it only with the picker's own output, or the picker
+# reads it as a file written by hand
 EFFECTS = """\
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+
 out1-6: pulse_wave speed=-0.51 length=8
 rgb: rainbow speed=0.39
 """
@@ -43,24 +51,23 @@ rgb: rainbow speed=0.39
 README = """\
 Tiny FX
 =======
-Edit effects.txt to change what the lights do and save it, and the board plays
-the change a few seconds later. One line per set of outputs:
+Open PICKER.html on this drive in Chrome or Edge to choose what the lights and
+the speaker play. Press "Open FX drive" and choose this drive, pick a look from
+the cards, then press "Save to board". The board plays it a few seconds later.
 
-  out1-6: pulse_wave speed=0.5
-  rgb: rainbow speed=0.3
+MANUAL.html on this drive shows you around the picker and everything else the
+board can do, and opens in any browser.
 
 If a save does not seem to take, press "Boot" once or eject this drive, since a
-computer does not always write the file out straight away. Press "Boot" twice to
-hide the drive, and twice again to bring it back.
-
-Deleting effects.txt restores the default; emptying it leaves the board dark.
+computer does not always finish writing to a drive straight away. Press "Boot"
+twice to hide the drive, and twice again to bring it back.
 
 When something is wrong, the outputs flash. The RGB output shows the colour:
 
   white, once         the computer was still writing, so the press did nothing.
                       Try again in a moment
-  blue, twice         something in effects.txt could not be read. errors.txt
-                      says which line
+  blue, twice         something saved could not be read. "Check board" in the
+                      picker, or errors.txt on this drive, says what
   red, three times    there was no room to write errors.txt. This drive is full
                       or damaged, so free some space or let a computer repair it
 
@@ -68,6 +75,10 @@ While the computer is copying to this drive, a dim light travels along the
 outputs in place of the effects, which come back a moment after it finishes.
 While the board starts up or loads a save, a dim bar fills and empties along the
 outputs until the effects begin.
+
+The picker saves to effects.txt, which can also be edited by hand. EDITOR.html
+helps with that, and the manual describes every line. Deleting effects.txt
+restores the default, and emptying it leaves the board dark.
 
 This README is rebuilt by the board, so edits to it will not stick.
 """
