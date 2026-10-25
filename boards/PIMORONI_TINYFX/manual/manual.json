@@ -1,0 +1,28 @@
+{
+ "numbered_outputs": true,
+ "terms": {
+  "BOARD_TITLE": "Tiny FX",
+  "BOARD_HAS": "Six mono outputs, one RGB output, a speaker",
+  "TRAVELLING_LIGHT": "dim light",
+  "PROGRAMS_OFFERED": "what a remote, a sensor or a speaker brings",
+  "ENTRY_TARGETS": "the outputs",
+  "OUTPUT": "output",
+  "OUTPUTS": "outputs",
+  "OUTPUTS_HEADING": "Outputs",
+  "ONE_OUTPUT": "out1",
+  "THREE_OUTPUTS": "out1-3",
+  "FIVE_OUTPUTS": "out1-5",
+  "ALL_OUTPUTS": "out1-6",
+  "COLOUR_SETTING_FOR": "the RGB output when its effect brings no colour",
+  "MONO_EFFECTS_FOR": "any output, or for one of the RGB output's red, green and blue",
+  "COLOUR_EFFECTS_HEADING": "For the RGB output only, since these bring their own colour",
+  "FLAME_OUTPUTS": "out1-6",
+  "COLOUR_OUTPUT": "rgb",
+  "SOUND_THROUGH": "its speaker",
+  "DRIVE_SIZE": "2.5MB, or 2MB on the Tiny FX W",
+  "COPIED_FILES": "sounds",
+  "EXAMPLE_PROGRAM": "examples/python/effects/mono/sweep_trail.py",
+  "EXAMPLES_URL": "https://github.com/pimoroni/picofx/tree/main/examples/tiny_fx",
+  "FLASH_COLOUR_ON": "The RGB output"
+ }
+}
