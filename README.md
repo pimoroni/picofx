@@ -79,9 +79,9 @@ There are two types of .uf2 file to pick from:
 
 ### Firmware Only
 
-* `mighty_fx-vX.X.X-micropython.uf2`
-* `tiny_fx-vX.X.X-micropython.uf2`
-* `tiny_fx_w-vX.X.X-micropython.uf2`
+* `mighty_fx-vX.X.X-pimoroni-micropython.uf2`
+* `tiny_fx-vX.X.X-pimoroni-micropython.uf2`
+* `tiny_fx_w-vX.X.X-pimoroni-micropython.uf2`
 
 This build type includes only the firmware needed for Mighty and Tiny FX to function. You will need to manually update the `lib/picofx` library afterwards to get the latest features and bug fixes.
 
@@ -89,9 +89,9 @@ This build type includes only the firmware needed for Mighty and Tiny FX to func
 
 :warning: **This option will overwrite the entire contents of your Mighty and Tiny FX! Be sure to back up files to your PC before installing!**
 
-* `mighty_fx-vX.X.X-micropython-with-libs-and-examples.uf2`
-* `tiny_fx-vX.X.X-micropython-with-libs-and-examples.uf2`
-* `tiny_fx_w-vX.X.X-micropython-with-libs-and-examples.uf2`
+* `mighty_fx-vX.X.X-pimoroni-micropython-with-libs-and-examples.uf2`
+* `tiny_fx-vX.X.X-pimoroni-micropython-with-libs-and-examples.uf2`
+* `tiny_fx_w-vX.X.X-pimoroni-micropython-with-libs-and-examples.uf2`
 
 This build type contains the firmware for Mighty and Tiny FX, library files to easily create effects, and examples to get you going.
 

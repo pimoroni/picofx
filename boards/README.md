@@ -20,11 +20,11 @@ A programmable, RP2350-based controller board that goes further with effects by 
 
 ## Pimoroni Plasma 2350
 
-`PIMORONI_PLASMA2350` holds the picker page for Plasma 2350's FX drive. Its standard firmware comes from the [plasma repository](https://github.com/pimoroni/plasma).
+`PIMORONI_PLASMA2350` builds Plasma 2350's FX drive firmware, one build serving the 2350 W too. Its standard firmware comes from the [plasma repository](https://github.com/pimoroni/plasma).
 
 ## Shared Between the Boards
 
-* `fx_libs`: the FX drive, frozen into each `drive` variant beside the board's own pages, manual and defaults.
+* `fx_libs`: the FX drive, frozen into each build that carries it beside the board's own pages, manual and defaults.
 * `visible_libs`: libraries copied to each board's `/lib`, beside the board's own. `autofx`, which plays `effects.txt`, is left out of `/lib` and frozen into each build carrying the FX drive.
 * `frozen_libs`: modules frozen into every build.
 * `editor`: the picker and editor pages, assembled for each board by `tools/build_editor.py`.
