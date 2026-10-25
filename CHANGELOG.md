@@ -34,6 +34,13 @@
 * A drive build writes its own main.py, which lights the outputs dim with `wake()` while autofx loads, and a wireless board's drive holds the WiFi credentials file
 * Pressing BOOT twice hides the drive, and twice again brings it back
 * The WAV player fades out while a computer writes to the FX drive, and returns once it finishes
+* The FX drive carries the picker, a web page opened from the drive in Chrome or Edge, which chooses and previews effects and saves them to the board
+* It also carries a text editor that offers each effect and setting as you type, and a manual of every effect and setting, both opened in a browser
+* The FX drive keeps pictures, drawings and sounds in their own folders and the user's programs in `programs`, making each where it is missing
+* The picker's Programs tab copies an example into `programs` to be changed, and duplicates or deletes the user's own programs
+* A drawing can offer styles, chosen with `style=` in the effects file or in the picker, which shows a thumbnail of each
+* Two screens can show one picture or drawing together, written as `screenA,B` in the effects file or chosen with the picker's Paired toggle
+* tools/build_editor.py and tools/build_manual.py build each board's picker and manual from shared parts, and CI checks every board's are rebuilt
 
 **Tiny FX**
 
