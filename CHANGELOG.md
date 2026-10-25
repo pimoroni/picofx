@@ -21,6 +21,13 @@
 * A setter given too many values says how many it was given
 * package.json lists every module, and the package includes the licence
 
+**autofx module**
+
+* Add autofx, which reads an effects file and plays it on a board's outputs, strips, screens and speaker, reporting each line it cannot use in errors.txt with what to write instead
+* An effects file sets each output's effect and settings, with levels, colours, fades and eases, plays scenes in turn, and shows pictures, animations and drawings on Mighty FX's screens
+* A sound takes a `volume`, and a scene can set its screens or sound to `none`
+* A scene can name the scene that follows it with `then`, and the IR remote and PIR Stick can start a scene through `remote:` and `motion:` entries
+
 **Tiny FX**
 
 * Breaking: `i2c` and `wav` raise when the board was created without them, where `wav` was None and `i2c` was missing
@@ -45,6 +52,7 @@
 * An output whose PWM channel a `SPCE.GPIO_PWM` connector takes becomes a `DisabledLED`, which says why when asked to light
 * Mighty FX answers on I2C as an FX target, and `MightyFXControl` drives one from another board
 * Networking, Bluetooth and `lte` for a Clipper are frozen into the firmware, and `spce` with its `MotorDriver` is copied to `/lib`
+* `STRIPS` and `SCREENS` name the board's strip connectors and screen ports
 
 1.1.2
 -----
