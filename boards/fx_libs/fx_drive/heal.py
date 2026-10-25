@@ -9,6 +9,7 @@ import vfs
 import fx_defaults
 
 from .fat import ENOTDIR, S_IFDIR
+from .pages import pages, write_page
 
 MOUNT_POINT = "/fx"
 FILE_PATH = MOUNT_POINT + "/effects.txt"
@@ -21,21 +22,42 @@ EXAMPLES_MOUNT_POINT = "/examples"
 
 VOLUME_LABEL = "FX"
 
+# How much of a shipped document is compared. A shorter one is read to the end, and a
+# longer one is met at both ends
+__READ_TO_END = 4096
+__EDGE = 512
+
 # FAT attribute bits, per VfsFat.chmod.
 __ATTR_READ_ONLY = 0x01
 
 # What the board told mount() it has, for the remount when the computer hands the drive back
+__screens = True
 __wireless = False
 
 
-def __holds(path, text):
-    # Whether the file holds exactly the text. Size first, so a missing or half-written file
-    # answers without a read. Every document is ASCII, so its length in characters is in bytes
+def __ends(text):
+    # A document's length and the two ends __holds() compares, the whole of a short one
+    if len(text) <= __READ_TO_END:
+        return len(text), text, ""
+    return len(text), text[:__EDGE], text[-__EDGE:]
+
+
+def __holds(path, size, head, tail):
+    # Whether the file is size long, starting with head and ending with tail. Size first, so
+    # a missing or half-written file answers without a read. A long document is met at both
+    # ends, since reading the manual to the end took 424ms per mount on a Mighty FX against
+    # 40ms for its ends, and every mount and button press would pay it. A page that changed
+    # only in its middle at the same length would pass, so the build tools end every page
+    # with a hash of its content. Every document is ASCII, enforced by the build tools, so its
+    # length in characters is in bytes
     try:
-        if os.stat(path)[6] != len(text):
+        if os.stat(path)[6] != size:
             return False
         with open(path) as f:
-            return f.read() == text
+            if f.read(len(head)) != head:
+                return False
+            f.seek(size - len(tail))
+            return f.read(len(tail)) == tail
     except OSError:
         return False
 
@@ -54,9 +76,15 @@ def unhealed():
 
 
 def __heal(fs, name, document):
-    # Put a shipped file back on the drive, unless it is already there
+    # Put a shipped file back on the drive, unless it is already there. The document is its
+    # text, or a packed page from fx_editor or fx_manual, which opens with its length and
+    # its two ends, those of the page as written to the drive
     path = MOUNT_POINT + "/" + name
-    if __holds(path, document):
+    if isinstance(document, str):
+        size, head, tail = __ends(document)
+    else:
+        size, head, tail = document[:3]
+    if __holds(path, size, head, tail):
         return
     # A document that will not fit is left as it stands: stale and whole beats
     # part-written, and opening for write would truncate it before failing
@@ -67,7 +95,7 @@ def __heal(fs, name, document):
             room += os.stat(path)[6]
         except OSError:
             pass
-        if room < len(document):
+        if room < size:
             print("the FX drive is full, so {} was left as it was".format(name))
             __unhealed.append(name)
             return
@@ -79,8 +107,11 @@ def __heal(fs, name, document):
     except OSError:
         pass
     try:
-        with open(path, "w") as f:
-            f.write(document)
+        with open(path, "w" if isinstance(document, str) else "wb") as f:
+            if isinstance(document, str):
+                f.write(document)
+            else:
+                write_page(document, f)
         fs.chmod(name, __ATTR_READ_ONLY, __ATTR_READ_ONLY)
     except OSError:
         # A full drive has nowhere to put it. The board comes up regardless, since a
@@ -126,17 +157,18 @@ def __has_boot_signature(bdev):
     return sector[510] == 0x55 and sector[511] == 0xAA
 
 
-def mount(wireless=False):
+def mount(screens=True, wireless=False):
     """
     Mount the drive read-write at /fx, rebuilding it when the filesystem is blank,
     effects.txt is missing, or any shipped document differs from the text the board
     carries. Returns whether the drive ended up mounted.
 
-    `wireless` is True for a board with a wireless module, which is given the WiFi
-    credentials.
+    `screens` is False for a board found to have no screen ports, which is then given
+    the catalogue without them where its pages carry one. `wireless` is True for a board
+    with a wireless module, which is given the WiFi credentials.
     """
-    global __wireless
-    __wireless = wireless
+    global __screens, __wireless
+    __screens, __wireless = screens, wireless
     bdev = rp2.Flash(msc=True)
     fs = vfs.VfsFat(bdev)
     try:
@@ -184,13 +216,15 @@ def mount(wireless=False):
         __restore_secrets()
     del __unhealed[:]
     __heal(fs, README_NAME, fx_defaults.README)
+    for name, document in pages(screens):
+        __heal(fs, name, document)
     __sweep_host_litter()
     return True
 
 
 def remount():
     """Mount again with what the board last told mount()."""
-    return mount(__wireless)
+    return mount(__screens, __wireless)
 
 
 class Examples:

@@ -9,6 +9,9 @@
 #
 # These are the only copies. Nothing ships main.py or secrets.py in the image, so a board
 # writes its own on first boot and there is no second version to drift from.
+#
+# The drive's generated files, the manual and the picker's pages, are in fx_manual.py and
+# fx_editor.py instead, built by tools/build_manual.py and tools/build_editor.py
 
 # In single quotes, as the program it holds opens with a docstring
 MAIN = '''\
@@ -35,8 +38,13 @@ it brings this one back, and an empty one leaves the board quiet.
 autofx.run(PlasmaFX, volume=fx_drive)
 '''
 
-# What a fresh board plays
+# Exactly what the picker writes for its Rainbow look on the board's LED, so a fresh
+# board's file opens in the picker as that look. Change it with the picker's own output,
+# or the picker reads it as a file written by hand
 EFFECTS = """\
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+
 rgb: rainbow speed=0.39
 """
 
@@ -48,6 +56,9 @@ the change a few seconds later. One line per strip, or for the board's own LED:
 
   board: stripDat=60
   stripDat: rainbow_wave speed=0.3
+
+MANUAL.html on this drive has the rest, and opens in a browser: every effect and
+what it takes, the screen, running a program, and showing scenes in turn.
 
 If a save does not seem to take, press "Boot" once or eject this drive, since a
 computer does not always write the file out straight away. Press "Boot" twice to
