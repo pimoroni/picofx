@@ -35,9 +35,13 @@ class ScreenShow:
     """
     def __init__(self, screen, player, channel, scene=None, places=None, hub=None, line=0):
         import picovector
+        from screens import update_pair
 
         self.screen = screen
         self.player = player
+        # Held here, where the screens module is certainly loaded, so a pair imports nothing
+        # each frame
+        self.__update_pair = update_pair
         self.scene = scene
         # The selector names this show draws on, one for a screen or several on a hub,
         # which is what a scene switch hands over
@@ -85,8 +89,8 @@ class ScreenShow:
             self.__due = self.player.has_advanced() or self.__redraw
         return self.__due
 
-    def stage(self):
-        """Convert the frame due, for update_pair() to stream beside another's."""
+    def __stage(self):
+        # Convert the frame due, for update_pair() to stream beside another's
         self.__due = False
         self.__redraw = False
         self.screen.prepare(self.player.image, rotation=self.rotation,
@@ -94,13 +98,10 @@ class ScreenShow:
                             offset=self.offset, tile=self.tile,
                             bg_color=self.background)
 
-    def lit(self):
-        """
-        Light the panel once it holds the frame and never before, since its memory
-        still has whatever was last sent and lighting first shows the picture that has
-        gone. on() is for a panel an earlier reload took dark, which a fresh one
-        ignores.
-        """
+    def __light(self):
+        # Light the panel once it holds the frame and never before, since its memory
+        # still has whatever was last sent and lighting first shows the picture that has
+        # gone. on() is for a panel an earlier reload took dark, which a fresh one ignores
         if self.__lit:
             return
         self.__lit = True
@@ -115,19 +116,30 @@ class ScreenShow:
         self.screen.backlight.on()
         self.screen.brightness(1.0 if self.backlight is None else self.backlight)
 
+    def send_with(self, other):
+        """
+        Stream this show's frame and another's at once, each on its own port, and light each
+        once it holds its frame. Raises as update_pair() does where the two cannot share.
+        """
+        self.__stage()
+        other.__stage()
+        self.__update_pair(self.screen, other.screen)
+        self.__light()
+        other.__light()
+
     def service(self):
         """This show's frame on its own, where nothing else is due beside it."""
         if self.wants():
             self.send()
 
     def send(self):
-        """Stream the frame due, which stage() may have converted ahead."""
+        """Stream the frame due, which send_with() may have converted already."""
         self.__due = False
         self.__redraw = False
         self.screen.update(self.player.image, rotation=self.rotation, mirror=self.mirror,
                            pixel_double=self.pixel_double, offset=self.offset,
                            tile=self.tile, bg_color=self.background)
-        self.lit()
+        self.__light()
 
     def pause(self):
         """Hold the player where it is, for a transfer."""
@@ -190,7 +202,7 @@ class HubLight:
             if self.__lit:
                 self.__apply()
 
-    def show(self, held):
+    def cover(self, held):
         """Clear the positions nothing holds to black, or go dark where nothing is held."""
         if not held:
             self.off()
@@ -411,13 +423,8 @@ def service_shows(shows, between=None):
 
     if len(due) == 2 and due[0].screen.port is not due[1].screen.port \
             and due[0].refused_with is not due[1]:
-        from screens import update_pair
         try:
-            for show in due:
-                show.stage()
-            update_pair(due[0].screen, due[1].screen)
-            for show in due:
-                show.lit()
+            due[0].send_with(due[1])
             return True
         # Screens built too differently to share a stream, or two PSRAM sources the
         # smaller reserve cannot convert together, which update_pair says for itself.
@@ -788,14 +795,14 @@ def settle_hub(shows):
 
     asking = [show.backlight for show in live if show.backlight is not None]
     light.ask(asking[0] if asking else None)
-    light.show(held)
+    light.cover(held)
 
 
 # The screen entries a named program deferred, as one (entries, fx, board) or nothing
 DEFERRED_SHOWS = []
 
 
-def pending_shows(problems):
+def build_deferred_shows(problems):
     """The shows a program put off, built now it has given the board back."""
     if not DEFERRED_SHOWS:
         return []

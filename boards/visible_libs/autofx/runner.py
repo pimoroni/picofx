@@ -17,7 +17,7 @@ from .vocabulary import CONFIG_PATH, ERRORS_PATH
 from .hardware import BUILT_HUB, BUILT_SCREENS, BUILT_STRIPS, forget_built
 from .parser import in_line_order
 from .checks import copies
-from .shows import (DEFERRED_SHOWS, pending_shows, REPORTING_TO, service_shows, settle_hub,
+from .shows import (build_deferred_shows, DEFERRED_SHOWS, REPORTING_TO, service_shows, settle_hub,
                     user_trace)
 from .sounds import cue_sound
 from .loader import apply_scene, load
@@ -160,14 +160,13 @@ def __tell(fx, problems, errors, running):
         indicate(fx, PROBLEM if wrote else UNREPORTED)
 
 
-def __play(fx, volume, path, errors, playing, sounding=(), maker=None):
+def __reload(fx, volume, path, errors, playing, sounding=(), maker=None):
     # Stop what is playing, read the file again, and play what it now says.
     #
     # Takes a board or something that makes one, and hands the board back, since the file
     # is what declares a strip and on the first read nothing is built yet. `maker` is
     # passed through to load(), which rebuilds the board where its entry changed
-    for player in playing:
-        player.stop()
+    __stop(playing)
     # The players held the strips. A board rebuilt below for a changed entry claims
     # their state machines again, which a strip still referenced would refuse
     playing.clear()
@@ -240,7 +239,7 @@ def __play(fx, volume, path, errors, playing, sounding=(), maker=None):
     # Without a volume nothing here will run the program, so the screen entries it
     # deferred are wanted now rather than never
     if volume is None and DEFERRED_SHOWS:
-        shows = pending_shows(problems)
+        shows = build_deferred_shows(problems)
 
     if volume is not None:
         # A shipped document the mount left stale is said here too, errors.txt being
@@ -261,6 +260,12 @@ def __play(fx, volume, path, errors, playing, sounding=(), maker=None):
 # and taking most of their time. Effects tick by elapsed time, so the rate is
 # smoothness alone.
 PLAYER_FPS = 50
+
+
+def __stop(players):
+    # Every player stopped, each writing nothing more until it is started again
+    for player in players:
+        player.stop()
 
 
 def __start(players, fx):
@@ -434,7 +439,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         volume.mount(screens=bool(getattr(board, "SCREENS", ())),
                      wireless=getattr(board, "WIRELESS", False))
 
-    fx, players, shows, sounds, scenes, settings, problems = __play(
+    fx, players, shows, sounds, scenes, settings, problems = __reload(
         fx, volume, path, errors, [], (), maker)
 
     scene_at = 0
@@ -473,14 +478,13 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     def quiet():
         nonlocal reset_seen
         reset_seen = True
-        for player in players:
-            player.stop()
+        __stop(players)
 
     volume.on_bus_reset(quiet)
 
     # The drive goes up before any program runs, since a program that works never
     # returns. Otherwise a mistyped name would leave no way back but a reflash, so a
-    # named program overrides drive=manual and __play says as much
+    # named program overrides drive=manual and __reload says as much
     program = settings.get("program")
     drive_up = program or settings.get("drive") != "manual"
 
@@ -510,7 +514,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
 
         # The board is the effects' again, so the screen entries put off for the
         # program are built now, before the report, so anything wrong with them is in it
-        shows = pending_shows(problems)
+        shows = build_deferred_shows(problems)
 
         # Here because the program could not be found or run, or because it finished
         # by itself. Either way the effects take the board back, and anything that
@@ -531,6 +535,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     # those instead. The rest are polled, and sampled around each screen as well
     pressed = False
     pending = volume.IDLE
+    taps = None
+    taps_of = None              # The board taps was looked up on
 
     def watch():
         """
@@ -539,15 +545,18 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         window, and an event held back until the next pass reads as the button
         being slow. The first event stands until the loop has taken it.
 
-        The board is asked for its tap each time, since a rebuild hands back a new
-        board whose interrupt replaces the old one's, and a method held from before
-        would never hear another press.
+        The board's tap is looked up again whenever the board changes, since a rebuild
+        hands back a new board whose interrupt replaces the old one's, and a method
+        held from before would never hear another press.
         """
-        nonlocal pending, pressed
+        nonlocal pending, pressed, taps, taps_of
         if pending != volume.IDLE:
             return pending
 
-        taps = getattr(fx, "boot_taps", None)
+        # Looked up once per board, since each lookup makes a new bound method
+        if taps_of is not fx:
+            taps = getattr(fx, "boot_taps", None)
+            taps_of = fx
         if taps is None:
             pending = volume.service(pressed or fx.boot_pressed())
             pressed = False
@@ -584,18 +593,16 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                 # The drive has gone to the computer and the effects carry on. They
                 # stand aside for the pass, as they do for a transfer, and take the
                 # outputs back after it
-                for player in players:
-                    player.stop()
+                __stop(players)
                 __handover(fx, False)
                 __resume(players, fx)
 
             if event in (volume.HIDDEN, volume.EJECTED, volume.RELOADED):
                 if event == volume.HIDDEN:
                     # Before the reload, which darkens everything and would swallow it
-                    for player in players:
-                        player.stop()
+                    __stop(players)
                     __handover(fx, True)
-                fx, players, shows, sounds, scenes, settings, problems = __play(
+                fx, players, shows, sounds, scenes, settings, problems = __reload(
                     fx, volume, path, errors, players, sounds, maker)
                 # A program only runs from a start, so a file that now names one restarts
                 # the board, which then runs it as it does at power on
@@ -640,8 +647,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                         sound.pause()
                     sounds_aside = True
                 if not paused:
-                    for player in players:
-                        player.stop()
+                    __stop(players)
                     for show in shows:
                         show.pause()
                     paused = True
@@ -692,8 +698,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         # shutdown() releases the screen ports and the header's rail, so neither
         # record of what is running may outlive them, and anything a program put off
         # is never going to be built now
-        for player in players:
-            player.stop()
+        __stop(players)
         forget_built()
         DEFERRED_SHOWS.clear()
         fx.shutdown()
