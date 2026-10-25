@@ -154,7 +154,8 @@ stripDat fade=0.8: blink speed=0.5
 stripDat1-3 ease=0.05|1.2: blink speed=1
 ```
 
-Softening belongs to the LED, not to the effect, so it works on any effect.
+Softening belongs to the LED, not to the effect, so it works on any effect. The
+effects that bring their own colour are the exception, and play without it.
 
 ## Effects
 

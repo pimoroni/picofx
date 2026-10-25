@@ -154,6 +154,15 @@ def __assemble(entries, slots, effects, levels, colours, curves, claimed, proble
         if not wanted:
             continue
 
+        # A player refuses a curve on an effect bringing its own colour, which would cost
+        # the whole file, so the entry plays without one
+        curved = kind != "colour"
+        if not curved:
+            for setting in ("ease", "fade"):
+                if any(getattr(channel, setting) is not None for channel, _, _, _ in wanted):
+                    problems.append("line {}: {} brings its own colour, so it plays without {}".format(
+                        entry.line, entry.effect, setting))
+
         sources.append(effect)
 
         for channel, where, _, _ in wanted:
@@ -189,9 +198,9 @@ def __assemble(entries, slots, effects, levels, colours, curves, claimed, proble
             driven.add((where, index))
             if channel.level is not None:
                 levels[where][index] = channel.level
-            if channel.ease is not None:
+            if curved and channel.ease is not None:
                 curves[where][index] = __curve(ease, channel.ease)
-            elif channel.fade is not None:
+            elif curved and channel.fade is not None:
                 curves[where][index] = __curve(fade, channel.fade)
             if channel.colour is not None and where in colours:
                 colours[where][index] = channel.colour
