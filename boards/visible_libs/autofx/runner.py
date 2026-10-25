@@ -246,7 +246,7 @@ def __play(fx, volume, path, errors, playing, sounding=(), maker=None):
         # A shipped document the mount left stale is said here too, errors.txt being
         # where a reader with only the drive in front of them will look
         for name in volume.unhealed():
-            problems.append("the FX drive is full, so {} is out of date; delete a "
+            problems.append("the FX drive is full, so {} is out of date. Delete a "
                             "picture or sound from the drive to let it "
                             "rebuild".format(name))
     __tell(fx, problems, errors, bool(players or shows or sounds))

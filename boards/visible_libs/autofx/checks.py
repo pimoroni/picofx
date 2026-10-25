@@ -83,6 +83,8 @@ def check_board(entry, has_strips, problems, lines):
     """
     settings = {}
     written = {}
+    kinds = [kind for kind, _prop, _shown in BOARD_STRIPS]
+    screens = screen_kinds()
 
     for key, value in entry.settings.items():
         at = entry.lines.get(key, entry.line)
@@ -105,8 +107,6 @@ def check_board(entry, has_strips, problems, lines):
                 written[place] = at
             continue
 
-        kinds = [kind for kind, _prop, _shown in BOARD_STRIPS]
-        screens = screen_kinds()
         if key not in BOARD_SETTINGS and key not in kinds and key not in screens:
             if not has_strips and key.startswith("strip"):
                 problems.append("line {}: this board has no strip connectors, so it "

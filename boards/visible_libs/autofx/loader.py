@@ -411,7 +411,7 @@ def load(text, fx, maker=None, volume=None):
     # is shut down and the build below makes its replacement from the file's own
     # declarations
     if maker is not None and not callable(fx) and \
-            hardware_changed(fx, board, wants_full_size(screen_entries, board)):
+            hardware_changed(board, wants_full_size(screen_entries, board)):
         forget_built()
         fx.shutdown()
         fx = maker

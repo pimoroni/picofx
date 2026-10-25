@@ -7,6 +7,12 @@
 # and hub are recorded here once built. A name goes back into a message as the board
 # declares it.
 #
+# A board class may declare STRIPS, STRIP_BRIGHTNESS, STRIP_TAKES, STRIP_FLUSH_LEDS, SCREENS
+# with a <PORT>_PINS for each port, OUT_PINS, RGB_PINS, hub, WIRELESS and detect(), and all of
+# them are optional. A board has outputs, clear(), shutdown() and boot_pressed() or
+# boot_taps(), and may have rgb, wav, enable_rail() and disable_rail(). One with screens
+# defines SPCE and SPCEPort in its own module.
+#
 # Its records are shared with the files that import them. Each is changed in place and
 # never rebound
 
@@ -190,8 +196,10 @@ def build_board(fx, settings, problems):
 # built once, a reload keeping the one it has, so this is what a changed strip is answered against
 BUILT_STRIPS = {}
 
-# The hub the board was built with, as the screen selector whose connector carries it and
-# each position's size, empty where the board has none
+# The hub the board was built with, empty where it has none. The loader records "port", the
+# screen selector whose connector carries it, and "sizes", each position's, and adds "groups"
+# for the shows to fill with one broadcast group per panel size. The shows add "light", the
+# hub's one backlight
 BUILT_HUB = {}
 
 
@@ -277,7 +285,7 @@ def __screen_gone(screen):
         return False
 
 
-def hardware_changed(fx, declared, full_size=False):
+def hardware_changed(declared, full_size=False):
     """
     Whether the board entry no longer matches what is running, so the board has to come
     up again to be talked to. A strip added, dropped or resized counts, as do a screen's
@@ -292,7 +300,6 @@ def hardware_changed(fx, declared, full_size=False):
             asked_hub.get("sizes") != BUILT_HUB.get("sizes"):
         return True
 
-    learn_board(fx)
     for kind, _prop, _shown in BOARD_STRIPS:
         asked = declared.get(kind)
         running = BUILT_STRIPS.get(kind)
