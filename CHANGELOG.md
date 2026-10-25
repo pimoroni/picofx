@@ -32,6 +32,7 @@
 * The multi sensor stick's accelerometer and the QwSTPad are frozen into the firmware
 * A board that fails partway through being built hands back what it had claimed
 * The libraries and examples zips attach to a GitHub release
+* The examples move into `examples/python/`
 
 1.1.2
 -----
