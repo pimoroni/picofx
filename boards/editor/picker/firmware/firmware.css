@@ -1,0 +1,140 @@
+/* The sheet the Update available button opens. Its foot keeps the downloads in view while the notes
+   scroll */
+body:has(>dialog.firmwaresheet[open]) {
+  overflow: hidden;
+}
+
+.firmwaresheet {
+  width: min(40rem, 100% - 2rem);
+  max-height: min(44rem, 96vh);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-xl);
+  background: var(--bg);
+  color: var(--ink);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .25);
+
+  &[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  &::backdrop {
+    background: rgba(25, 27, 29, .55);
+  }
+}
+
+.firmwaresheethead,
+.firmwaresheetfoot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  background: var(--panel);
+}
+
+.firmwaresheethead {
+  padding: var(--space-6) var(--space-6);
+  border-bottom: 1px solid var(--line);
+
+  h2 {
+    font-size: var(--text-xl);
+    margin: 0 auto 0 0;
+  }
+}
+
+.firmwaresheetfoot {
+  padding: var(--space-5) var(--space-6);
+  border-top: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.firmwarescroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--space-2) var(--space-6) var(--space-6);
+  font-size: var(--text-m);
+
+  p {
+    margin: var(--space-4) 0;
+  }
+
+  h3 {
+    font-size: var(--text-l);
+    margin: var(--space-6) 0 var(--space-3);
+  }
+
+  h4 {
+    font-size: var(--text-m);
+    margin: var(--space-4) 0 var(--space-1);
+  }
+
+  ul,
+  ol {
+    margin: var(--space-2) 0 var(--space-3);
+    padding-left: var(--space-7);
+  }
+
+  li {
+    margin: var(--space-1) 0;
+  }
+
+  a {
+    color: var(--accent);
+  }
+
+  .firmwarenote {
+    color: var(--dim);
+  }
+}
+
+.firmwarewarnings {
+  margin: var(--space-4) 0 var(--space-2);
+  padding: var(--space-2) var(--space-6);
+  border-radius: var(--radius-l);
+  background: var(--hold-bg);
+  color: var(--hold);
+  font-weight: 600;
+}
+
+.firmwarescroll .firmwarewarnings + h3 {
+  margin-top: var(--space-6);
+}
+
+.firmwarefootsays {
+  flex: 1;
+  min-width: 0;
+  color: var(--dim);
+  font-size: var(--text-m);
+  overflow-wrap: anywhere;
+
+  a {
+    color: var(--accent);
+  }
+}
+
+.firmwareget {
+  padding: var(--space-4) var(--space-6);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+  font-size: var(--text-m);
+
+  &.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 600;
+  }
+
+  &:hover {
+    filter: brightness(1.05);
+  }
+}

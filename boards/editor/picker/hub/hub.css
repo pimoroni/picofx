@@ -1,0 +1,121 @@
+.hublead .boardicon {
+  color: var(--screenA);
+}
+
+.hublead.on .boardicon {
+  color: #fff;
+}
+
+/* The hub is one box across both connectors, in the colour of the one its screens come through,
+   with its six positions in a row under its band */
+.hubbox {
+  grid-column: 1/-1;
+  --hub: #1f6feb;
+  --hubwash: rgba(31, 111, 235, .06);
+
+  &.b {
+    --hub: #a44ad0;
+    --hubwash: rgba(164, 74, 208, .06);
+  }
+}
+
+.placename {
+  position: absolute;
+  top: .35rem;
+  left: .5rem;
+  font-size: var(--text-m);
+  line-height: 1.3rem;
+  color: var(--hub);
+}
+
+.placesays {
+  font-size: var(--text-xs);
+  color: var(--dim);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.place .boardremove {
+  padding: var(--space-1) var(--space-3);
+}
+
+.placenone .boardadd {
+  font-size: var(--text-xs);
+  padding: var(--space-2) var(--space-3);
+}
+
+.hubsettings {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-5);
+  align-items: center;
+  min-height: 2rem;
+
+  .opt {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: var(--text-m);
+    color: var(--dim);
+    cursor: pointer;
+
+    input[type=number] {
+      font: inherit;
+      font-size: var(--text-m);
+      width: 4rem;
+      padding: var(--space-2) var(--space-3);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-s);
+    }
+  }
+}
+
+.hubpace {
+  margin: 0;
+  width: 100%;
+  font-size: var(--text-m);
+  color: var(--dim);
+  min-height: 1.1rem;
+}
+
+body.setupall .hubsettings {
+  opacity: .35;
+  pointer-events: none;
+}
+
+.hubsettings .sshowing {
+  text-align: left;
+  margin: 0 0 var(--space-2);
+}
+
+/* How fast the hub plays, in a box of its own under the positions */
+.hubbox .hubpace:not(.quiet) {
+  margin: var(--space-1) 0 var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius);
+  border-left: 3px solid var(--hub);
+  background: color-mix(in srgb, var(--hub) 7%, transparent);
+  color: var(--ink);
+  font-size: var(--text-m);
+}
+
+.assets.hubbed .asset.hubb .pick button.lit {
+  background: var(--screenB);
+}
+
+.ledtab[data-panel=screensPanel] .accswatch.hubswatch {
+  display: grid;
+  grid-template-columns: repeat(3, 1rem);
+  grid-auto-rows: 1rem;
+  gap: var(--space-1);
+  height: 2.15rem;
+}
+
+.ledtab[data-panel=screensPanel] .hubswatch .screencell {
+  width: 1rem;
+  height: 1rem;
+  border-radius: var(--radius-xs);
+}
