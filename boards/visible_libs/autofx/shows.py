@@ -18,7 +18,7 @@ from .vocabulary import (CURVES, EFFECTS, ERRORS_PATH, HUB, HUB_POSITIONS, SCREE
 from .hardware import (BOARD_HUB, BOARD_SCREENS, BUILT_HUB, BUILT_SCREENS, hub_example, hub_port,
                        hub_shown, port_classes, screen_kinds, screen_port, screen_shown)
 from .parser import value_shown
-from .checks import check_settings, find_image, REFUSED
+from .checks import check_settings, find_file, REFUSED
 
 # Where a problem found after the file was read is written, which run() sets to
 # whatever it was told to report to. A drawing is the one thing that can stop long
@@ -27,7 +27,8 @@ REPORTING_TO = [ERRORS_PATH]
 
 
 class ScreenShow:
-    """One panel and the player feeding it, serviced from the caller's own loop.
+    """
+    One panel and the player feeding it, serviced from the caller's own loop.
 
     The player holds the clock, so service() may be called as often as the caller
     likes and a frame goes to the glass only when it changes.
@@ -73,7 +74,7 @@ class ScreenShow:
 
     def wants(self):
         """
-        Whether a frame is due: the player has moved on, or the panel has been put
+        Whether a frame is due, because the player has moved on or the panel was put
         aside and needs its picture back. A still moves once and never again, so
         nothing else would light it a second time.
 
@@ -95,8 +96,8 @@ class ScreenShow:
 
     def lit(self):
         """
-        Light the panel, once it holds the frame and never before: its memory still
-        has whatever was last sent, so lighting first shows the picture that has
+        Light the panel once it holds the frame and never before, since its memory
+        still has whatever was last sent and lighting first shows the picture that has
         gone. on() is for a panel an earlier reload took dark, which a fresh one
         ignores.
         """
@@ -129,20 +130,24 @@ class ScreenShow:
         self.lit()
 
     def pause(self):
+        """Hold the player where it is, for a transfer."""
         self.player.pause()
 
     def wait(self):
-        """Put aside while another show has the panel, which draws over this one's frame
-        and may light it to another level."""
+        """
+        Put aside while another show has the panel, which draws over this one's frame
+        and may light it to another level.
+        """
         self.player.pause()
         self.__lit = False
         self.__redraw = True
 
     def resume(self):
+        """Play on after pause(), wait() or rest()."""
         self.player.play()
 
     def rest(self):
-        """Put aside by a scene switch: paused and dark, relighting on return."""
+        """Put aside by a scene switch, paused and dark until it returns."""
         self.player.pause()
         # A hub's positions share one backlight, which the hub turns off itself
         if self.hub is None:
@@ -254,13 +259,13 @@ def user_trace(error):
 
 class Graphics:
     """
-    A drawing standing where a player does: the file's draw(canvas, elapsed) paints
-    a canvas the size of the panel, at fps or as often as the screen takes a frame.
+    A drawing standing where a player does, the file's draw(canvas, elapsed) painting
+    a canvas the size of the panel at fps or as often as the screen takes a frame.
 
     The module body is the setup, run once here and again on a restart, from a code
     object kept so neither ever needs the drive. Its imports are held to IMPORTS,
     which catches a pasted program reaching for hardware the effects are already
-    driving; it is a mistake caught, not a boundary, since builtins cannot be
+    driving. That is a mistake caught, not a boundary, since builtins cannot be
     restricted on this port. A draw() that raises keeps its last frame on the glass
     and says why once, with everything around it carrying on.
     """
@@ -280,7 +285,7 @@ class Graphics:
         self.__stopped = False
         self.__pushed = False
         self.__seen = None
-        # Elapsed accumulates in whole ms rather than running from a start tick: a
+        # Elapsed accumulates in whole ms rather than running from a start tick. A
         # drawing has no cycle to reduce by, so a fixed origin would outlive the
         # ticks range on a board left running
         self.__elapsed_ms = 0
@@ -349,14 +354,14 @@ class Graphics:
         return True
 
     def __stop(self, error):
-        # Keep the last frame and say why, once; the loop around this carries on
+        # Keep the last frame and say why, once, while the loop around this carries on
         self.__stopped = True
         message = ("the drawing {} stopped, so its screen keeps its last "
                    "frame:\n{}".format(self.__name, user_trace(error)))
         print(message)
-        # Where the reader is already looking, while the board holds the volume;
-        # exposed, the mount is gone and there is nowhere to write. Appended rather
-        # than written, so a drive with no room left keeps the account it has
+        # Where the reader is already looking, while the board holds the volume. Once
+        # the drive is shown the mount is gone and there is nowhere to write. Appended
+        # rather than written, so a drive with no room left keeps the account it has
         try:
             with open(self.__errors, "a") as handle:
                 handle.write("\n" + message + "\n")
@@ -374,7 +379,7 @@ class Graphics:
             self.__playing = True
 
     def to_first(self):
-        """Begin again: the setup runs afresh on a cleared canvas, at elapsed zero."""
+        """Begin again, the setup running afresh on a cleared canvas at elapsed zero."""
         self.__stopped = False
         self.__pushed = False
         self.__seen = None
@@ -391,10 +396,8 @@ def service_shows(shows, between=None):
     One pass of every screen that has the panel, answering whether one was drawn.
 
     Two panels on their own ports stream together in about the time one of them
-    takes alone, so a frame due on each is sent as a pair. Measured at 58ms
-    against 110ms for the two in turn, and 89ms against 155ms with the players
-    running. Placement stays per screen, prepare() holding each frame until both
-    are ready.
+    takes alone, so a frame due on each is sent as a pair. Placement stays per
+    screen, prepare() holding each frame until both are ready.
 
     `between` is asked after each screen where they are drawn one at a time, and
     stops the pass when it answers true, so a press waits out one screen rather
@@ -455,7 +458,7 @@ def __read_drawing(path, target, at, problems):
 
 
 def __make_drawing(code, target, at, channel, screen, settings, fps, asleep, problems):
-    # The player for a graphics entry: its canvas, its ground, and the file begun
+    # The player for a graphics entry, with its canvas made, its ground set and the file begun
     import picovector
 
     # The canvas fills the panel as the entry mounts it, so the drawing works in the
@@ -531,9 +534,9 @@ def wants_full_size(entries, board):
     An animation converts fast from its palette, a sequence's frames count as full
     colour, and a picture is sent once.
 
-    Read from the file rather than from what a scene happens to show: a pair shares
-    out one reservation and both screens have to agree on it, so it cannot follow
-    the content.
+    Read from the file rather than from what a scene happens to show, since a pair
+    shares out one reservation and both screens have to agree on it, so it cannot
+    follow the content.
     """
     kinds = screen_kinds()
     named = {name for name in kinds if board.get(name) and board.get(name) != HUB}
@@ -566,9 +569,9 @@ def wants_full_size(entries, board):
 
 
 def __screen_on(fx, name, line, problems, size, full_size=False):
-    # The panel a selector name reaches, built once and kept: construction resets the
-    # glass, so a screen is only ever constructed the first time it is asked for, at
-    # the board entry's size for it or 2.8 unsaid, size being unreadable from a panel
+    # The panel a selector name reaches, built once and kept since construction resets
+    # the glass. It is built the first time it is asked for, at the board entry's size
+    # for it or 2.8 unsaid, size being unreadable from a panel
     known = BUILT_SCREENS.get(name)
     if known is not None:
         screen, built_size = known
@@ -585,7 +588,7 @@ def __screen_on(fx, name, line, problems, size, full_size=False):
     shown = screen_shown(name)
 
     if port.mode is None:
-        # The port was never declared, so it becomes a screen port here: the same
+        # The port was never declared, so it becomes a screen port here, by the same
         # construction a program would make, made because the file asked for it
         pins = getattr(type(fx), attr.upper() + "_PINS")
         port = SPCEPort(port_name, SPCE.SCREEN, pins)
@@ -598,8 +601,7 @@ def __screen_on(fx, name, line, problems, size, full_size=False):
     if size is None:
         size = "2.8"
 
-    # Read here rather than at the top of the file, which also runs on a board with no
-    # screens module to import
+    # Imported here, since this file also runs on a board with no screens module
     from screens import SCREEN_TYPES, Reserve
 
     try:
@@ -711,7 +713,7 @@ def __hub_panel(fx, place, size, problems):
 
 
 def __hub_stream(fx, places, board, line, problems):
-    # The stream an entry's positions play through: a subset of the group for their panel
+    # The stream an entry's positions play through, a subset of the group for their panel
     # size. Every declared position is built the first time the hub is asked for, one
     # group per size, so the hub's light knows every panel it waits on
     if not BUILT_HUB:
@@ -766,8 +768,9 @@ def __agree_hub_backlight(shows, problems):
 
 def settle_hub(shows):
     """
-    Give the hub's light the shows now live on it: the backlight the first of them asks
-    for, positions none of them hold cleared to black, and dark where none is live.
+    Give the hub's light the shows now live on it, taking the backlight the first of
+    them asks for and clearing the positions none of them hold to black, or dark where
+    none is live.
     """
     light = BUILT_HUB.get("light")
     if light is None:
@@ -805,7 +808,7 @@ def pending_shows(problems):
 
 
 def __in_kilobytes(count):
-    # Kilobytes, rounded up, matching how picovector reports a GIF's own limit: the
+    # Kilobytes, rounded up, matching how picovector reports a GIF's own limit, since the
     # two messages can land in the same file and comparing them should need no sums
     return "{}KB".format((count + 1023) // 1024)
 
@@ -822,7 +825,7 @@ def __too_big(at, target, effect, error):
     # Why a picture would not fit, and what to do about it.
     #
     # A player already reports the sizes and says an animation is stored whole, so where
-    # it has, only what this file adds is written: another screen draws on the same
+    # it has, only what this file adds is written. Another screen draws on the same
     # memory, which is what makes one picture play and two fail
     said = str(error).strip()
     if "was free" in said:
@@ -840,7 +843,7 @@ def __too_big(at, target, effect, error):
             room = "needs {} and {} was free".format(
                 __in_kilobytes(wanted), __in_kilobytes(spare))
         else:
-            # More free than was asked for, so the total was never the problem: what
+            # More free than was asked for, so the total was never the problem. What
             # was left is in pieces smaller than the one piece a picture needs
             room = ("needs {} in one piece and the {} free is in smaller "
                     "pieces".format(__in_kilobytes(wanted), __in_kilobytes(spare)))
@@ -848,8 +851,8 @@ def __too_big(at, target, effect, error):
         join = ". Both screens share that memory."
     else:
         # picovector says by how much a GIF misses its own limit and what to do about
-        # it, which is a fixed ceiling rather than a shortage: nothing to add but the
-        # file, so its own "cannot load GIF" opening comes off
+        # it, a fixed ceiling and not a shortage. Nothing is added but the file, so its
+        # own "cannot load GIF" opening comes off
         if said.startswith("cannot load ") and ": " in said:
             said = said.split(": ", 1)[1]
         return "line {}: {}: {}".format(at, target, said)
@@ -868,10 +871,10 @@ def __too_big(at, target, effect, error):
 
 def build_shows(entries, fx, board, problems, build=True):
     """
-    A show per screen entry: the panel it names and the player feeding it.
+    A show per screen entry, pairing the panel it names with the player feeding it.
 
     Without `build` the entries are checked and nothing is made, which is what a file
-    naming a program wants: its screen entries are answered when it is read, and the
+    naming a program wants. Its screen entries are answered when it is read, and the
     panels and players wait until the program gives the board back.
     """
     shows = []
@@ -902,7 +905,7 @@ def build_shows(entries, fx, board, problems, build=True):
             continue
 
         # Named twice in one scene is already reported as a repeat, so the later
-        # entry only skips; the same screen in two scenes takes turns
+        # entry only skips. The same screen in two scenes takes turns
         if any((entry.scene, place) in built for place in places):
             continue
 
@@ -952,7 +955,7 @@ def build_shows(entries, fx, board, problems, build=True):
             continue
 
         at = entry.lines.get(wanted, entry.line)
-        path = find_image(target, at, problems)
+        path = find_file(target, at, problems)
         if path is None:
             continue
 
@@ -964,7 +967,7 @@ def build_shows(entries, fx, board, problems, build=True):
             if code is None:
                 continue
 
-        # Everything above is the entry being read, which a check wants; everything
+        # Everything above is the entry being read, which a check wants. Everything
         # below resets a panel or decodes content, which only a build does
         if not build:
             continue
@@ -994,7 +997,7 @@ def build_shows(entries, fx, board, problems, build=True):
             else:
                 fps = 1.0 / interval
 
-        # A scene's show waits for its scene; the first scene's is woken by the
+        # A scene's show waits for its scene. The first scene's is woken by the
         # first apply, so every scene starts its content from the top
         asleep = entry.scene is not None
 

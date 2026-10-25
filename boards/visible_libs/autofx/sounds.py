@@ -10,26 +10,23 @@ import time
 
 from .vocabulary import AUDIO_EFFECTS, EFFECTS, MOUNT_DIR, SCREEN_EFFECTS
 from .parser import Channel
-from .checks import check_settings, find_image
+from .checks import check_settings, find_file
 
 
 class Sound:
     """
-    One WAV playing beside the effects: the player it runs on, the file it reads,
-    and whether it starts again when it ends. A file on the drive is read straight
-    from the flash, so it plays through a handover, and the player stands it aside
-    while the computer writes. One the computer rewrites goes silent until the next
-    reload, since what it reads is no longer that sound.
+    One WAV playing beside the effects, with the player it runs on, the file it reads
+    and whether it starts again when it ends. A file on the drive is read straight from
+    the flash, so it plays through a handover, and the player stands it aside while the
+    computer writes. One the computer rewrites goes silent until the next reload.
 
-    The board plays one sound at a time, so the sounds share the player and `live`
-    says which of them has it. One put aside by a scene switch remembers where it
-    reached and picks up from there on its next turn; one that had already ended
-    starts again from the top.
+    The board plays one sound at a time, so the sounds share the player and `live` says
+    which of them has it. One set aside by a scene switch picks up where it reached on
+    its next turn, and one that had already ended starts again from the top.
     """
 
-    # The longest a sound paused for the board joining the bus is given to fade out of
-    # the player's ring before the player shuts down, which a board may make a few
-    # hundred milliseconds long
+    # How long a sound paused for the board joining the bus may take to fade out of the
+    # player's ring, which a board may make a few hundred milliseconds long
     FADE_MS = 400
 
     def __init__(self, wav, handle, loop, scene=None):
@@ -38,19 +35,20 @@ class Sound:
         self.loop = loop
         self.scene = scene
         self.live = False
-        self.__at = None
-        self.__moved = None
+        self.__at = None        # The position the stall watch last saw
+        self.__moved = None     # When that position last changed
         self.__from = 0         # Where the next start picks up, 0 being the top
         self.__gone = False     # Whether the computer changed the file since load
         self.__held = False     # Whether joining the bus stopped it part way through
 
     def start(self):
+        """Take the speaker, playing from where this sound was set aside or from the top."""
         if self.__gone:
             return
         try:
             self.wav.play_wav(self.handle, loop=self.loop, position=self.__from)
         except (OSError, ValueError) as e:
-            # Unreadable as a WAV, however it came to be: nothing plays until a
+            # Unreadable as a WAV, however it came to be, so nothing plays until a
             # reload brings a readable one
             print("the sound could not start, and waits for the next reload:", e)
         self.__from = 0
@@ -58,12 +56,8 @@ class Sound:
 
     def service(self):
         """
-        Watch a playing sound for progress, and start it again where it stalls.
-        The player feeds its buffers over a chain of I2S callbacks, and a lost
-        callback ends the chain: the state stays playing while nothing sounds.
-        A restart from the held position rebuilds the player, and the chain
-        with it. Half a second of stillness says stalled; a sound that ended
-        reports no position and is left alone.
+        Watch a playing sound and start it again from where it stalls. Half a second
+        without progress counts as a stall, and a sound that has ended is left alone.
         """
         if not self.live:
             self.__at = None
@@ -80,6 +74,8 @@ class Sound:
             return
         if time.ticks_diff(now, self.__moved) < 500:
             return
+        # The player feeds its buffers over a chain of I2S callbacks, and one lost ends the
+        # chain with the state still playing. A restart from here rebuilds both
         self.__from = at
         self.__moved = now
         print("the sound stalled, and starts again from where it stopped")
@@ -94,10 +90,11 @@ class Sound:
         self.__from = self.wav.position() or 0
         self.live = False
 
-    # The player is shared, so a sound standing aside while the board joins the bus only
-    # touches it while the speaker is its own. It stops outright, as the effects do, and
-    # resume() picks up where it was
     def pause(self):
+        """
+        Stop outright for the board joining the bus, as the effects do, for resume() to
+        pick up. The player is shared, so only the sound with the speaker touches it.
+        """
         if not self.live:
             return
         # None is a sound that had already ended, which joining the bus leaves ended
@@ -116,7 +113,8 @@ class Sound:
             self.__held = True
 
     def resume(self):
-        # The watch starts afresh: the position stood still through the pause
+        """Play on from where pause() stopped, unless the computer has replaced the file."""
+        # The stall watch starts afresh, the position having stood still through the pause
         self.__at = None
         if self.__file_changed():
             return
@@ -145,9 +143,9 @@ class Sound:
             self.start()
 
     def close(self):
-        # Neither half may stop the other, nor whatever is tidying up after this: a
-        # player mid-transfer and a handle on a volume the computer has taken are both
-        # reached here, and there is nothing left to save either way
+        # Neither half may stop the other, nor whatever tidies up after this. A player
+        # mid-transfer and a handle on a volume the computer has taken both reach here,
+        # with nothing left to save either way
         try:
             self.wav.deinit()
         except Exception as e:      # noqa: BLE001
@@ -174,10 +172,9 @@ def __open_sound(path, stream):
 
 def build_sounds(entries, fx, problems, volume=None):
     """
-    A sound per audio entry: one before any heading playing throughout, and one per
-    scene taking the speaker while its scene shows. The file is found here, while
-    the board holds the drive, which is what lets it stream on after a computer
-    takes the volume.
+    A sound per audio entry. One before any heading plays throughout, and a scene's
+    takes the speaker while its scene shows. The file is found here, while the board
+    holds the drive, so it streams on after a computer takes the volume.
     """
     sounds = []
     stream = volume.stream if volume is not None else None
@@ -226,7 +223,7 @@ def build_sounds(entries, fx, problems, volume=None):
             continue
 
         at = entry.lines.get("file", entry.line)
-        path = find_image(target, at, problems)
+        path = find_file(target, at, problems)
         if path is None:
             continue
 
@@ -249,10 +246,8 @@ def build_sounds(entries, fx, problems, volume=None):
 
 def cue_sound(sounds, scene):
     """
-    Give the speaker to the sound this scene wants: its own, or the one from before
-    any heading where it brings none. The one giving it up remembers where it
-    reached, so a long sound picks up where it left off on its next turn, and one
-    that had ended starts again from the top.
+    Give the speaker to the sound this scene wants, its own or else the one from before
+    any heading, and set every other sound aside where it reached for its next turn.
     """
     wanted = None
     for sound in sounds:
@@ -265,7 +260,7 @@ def cue_sound(sounds, scene):
         if sound is not wanted:
             sound.set_aside()
 
-    # One already playing carries on: the scene it also serves has come round again,
-    # or it is the always-on sound outlasting a scene with none of its own
+    # One already playing carries on. Its scene has come round again, or it is the
+    # always-on sound outlasting a scene with none of its own
     if wanted is not None and not wanted.live:
         wanted.start()

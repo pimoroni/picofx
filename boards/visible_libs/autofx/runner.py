@@ -32,13 +32,13 @@ FLASH_MS = 150
 # What the indicators say where a file cannot, as (colour, level, times, period). A
 # board carries indicator LEDs shadowing its outputs, or one LED of its own where it
 # has no outputs, so colour reaches a user whatever they have wired in and is what
-# they read first; the count reaches anyone whose indicators are removed. Both climb
+# they read first. The count reaches anyone whose indicators are removed. Both climb
 # with how much trouble the reader is in, and red lands on the one condition with
 # nothing else to say it, errors.txt speaking for the blue and the drive itself for
 # the white. Never red against green, the pair most often confused by eye.
 #
 # White lights three channels and still reads dimmer than one channel does at the
-# same level, so its own is set by eye rather than calculated.
+# same level, so its own is set by eye.
 
 BLOCKED = (WHITE, 0.5, 1, FLASH_MS)              # The computer was mid-write, nothing happened
 PROBLEM = (BLUE, INDICATOR_LEVEL, 2, FLASH_MS)   # Written down as well, in errors.txt
@@ -48,7 +48,7 @@ UNREPORTED = (RED, INDICATOR_LEVEL, 3, FLASH_MS)  # Nowhere to write it, so this
 # White is the computer's colour here, a spot travelling the outputs while it works
 # and one bright flash of every output where it refused a press, so the flash reads
 # on top. The spot stays below BLOCKED's level for that reason, and the floor stays
-# above the point an output stops being visibly lit, measured at 12 of 255.
+# above the point an output stops being visibly lit.
 TRANSFER = (WHITE, 0.1, 0.35)
 
 # How long the spot spends on each output, and how long the whole thing is held on
@@ -62,7 +62,7 @@ TRANSFER_HOLD_MS = 500
 TRANSFER_PERIOD_MS = 840
 
 # What one pass of the spot costs as the drive changes hands, per output. Half the
-# transfer's step: this says something happened rather than that it is still going
+# transfer's step, since this says something happened rather than that it is still going
 HANDOVER_STEP_MS = TRANSFER_STEP_MS // 2
 
 
@@ -92,8 +92,7 @@ def report(problems, path, running=True):
     try:
         with open(path, "w") as handle:
             # General, since a named program that will not run is reported here too
-            # and the effects file may have read perfectly. The second line is not
-            # always true: a file that fails whole leaves nothing running at all
+            # and the effects file may have read perfectly
             handle.write("These are the problems the board found.\n")
             handle.write("{}. Fix them and eject again.\n\n".format(
                 "Everything else is running" if running else "Nothing is running"))
@@ -114,7 +113,7 @@ def report(problems, path, running=True):
 
 
 def __indicators(fx):
-    # The LEDs a signal shows on: the outputs, or the board's own LED where it has none
+    # The LEDs a signal shows on, the outputs or else the board's own LED
     if fx.outputs:
         return fx.outputs
     rgb = getattr(fx, "rgb", None)
@@ -122,9 +121,9 @@ def __indicators(fx):
 
 
 def __flashed(fx):
-    # The LEDs a flash shows on: the indicators, and the board's own LED beside its outputs too,
-    # where mono outputs alone would show the count and not the colour. The board's LED takes
-    # no part in the spot, sitting outside the line the outputs make
+    # The LEDs a flash shows on, the indicators and the board's own LED beside its outputs,
+    # since mono outputs alone would show the count and not the colour. That LED takes no
+    # part in the spot, sitting outside the line the outputs make
     lights = __indicators(fx)
     rgb = getattr(fx, "rgb", None)
     return lights if rgb is None or rgb in lights else lights + [rgb]
@@ -156,9 +155,9 @@ def indicate(fx, pattern=PROBLEM):
 def __play(fx, volume, path, errors, playing, sounding=(), maker=None):
     # Stop what is playing, read the file again, and play what it now says.
     #
-    # Takes a board or something that makes one, and hands the board back: the file is
-    # what declares a strip, so on the first read there is nothing built yet. `maker`
-    # is passed through to load(), which rebuilds the board where its entry changed
+    # Takes a board or something that makes one, and hands the board back, since the file
+    # is what declares a strip and on the first read nothing is built yet. `maker` is
+    # passed through to load(), which rebuilds the board where its entry changed
     for player in playing:
         player.stop()
     # The players held the strips. A board rebuilt below for a changed entry claims
@@ -172,7 +171,7 @@ def __play(fx, volume, path, errors, playing, sounding=(), maker=None):
 
     # clear() covers a strip as well as the outputs, and a strip holds its last frame
     # once nothing is writing it, so a file that no longer names one leaves it dark.
-    # The rail follows the players: down here with everything stopped, up again in
+    # The rail follows the players, down here with everything stopped and up again in
     # __start() once something is driving the header
     if not callable(fx):
         fx.clear()
@@ -226,7 +225,7 @@ def __play(fx, volume, path, errors, playing, sounding=(), maker=None):
                 "would leave no way to change one back")
 
     # Nothing declared anything, the file being unreadable or its loading having
-    # failed, and the board still has to come up: it is what answers on the lights
+    # failed, and the board still has to come up, being what answers on the lights
     if callable(fx):
         fx = fx()
 
@@ -257,17 +256,17 @@ def __play(fx, volume, path, errors, playing, sounding=(), maker=None):
 
 
 # What the players are ticked at. picofx defaults to 100, which a board driving
-# screens as well cannot afford: the timer runs on the same core as the frames, and
-# at 100 a frame measured 214ms against 44ms with the players stopped, where 50
-# costs 87ms. Effects tick by elapsed time, so the rate is smoothness alone.
+# screens as well cannot afford, the timer running on the same core as the frames
+# and taking most of their time. Effects tick by elapsed time, so the rate is
+# smoothness alone.
 PLAYER_FPS = 50
 
 
 def __start(players, fx):
     # A paired player is ticked by its partner, so only the head starts a timer.
     #
-    # The strip header's rail comes up here as well, where a strip was built: the
-    # board leaves it down until asked, and this is when something starts driving it
+    # The strip header's rail comes up here as well, where a strip was built, since the
+    # board leaves it down until asked and this is when something starts driving it
     if BUILT_STRIPS:
         rail = getattr(fx, "enable_rail", None)
         if rail is not None:
@@ -305,12 +304,10 @@ def __handover(fx, to_board):
     #
     # A double press reloads the board exactly as a single press does, so without
     # this nothing on the outputs tells the two apart. Which way the spot runs says
-    # which way the drive went, reading the outputs as the line they are: the first
-    # sits by the USB connector and the last at the far end, so a pass towards the
-    # end is the board taking the drive and one towards the connector is the
-    # computer taking it. A transfer travels the first way, into the board, which
-    # is the only direction it can mean: the drive reports a write and never a
-    # read. Half the transfer's step, so the whole pass is brief
+    # which way the drive went, reading the outputs as a line from the USB connector
+    # to the far end. A pass towards the end is the board taking the drive, the way
+    # a transfer travels since the drive reports only writes, and one towards the
+    # connector is the computer taking it
     count = len(__indicators(fx))
     order = range(count) if to_board else range(count - 1, -1, -1)
     for lit in order:
@@ -319,7 +316,7 @@ def __handover(fx, to_board):
 
 
 def __transfer_frame(fx, at):
-    # One frame of the wait shown while the computer is copying: a spot travelling the
+    # One frame of the wait shown while the computer is copying, a spot travelling the
     # indicators over a resting floor, so a transfer reads as something happening rather
     # than as the board having stopped.
     #
@@ -359,9 +356,8 @@ def __read_program(name, problems):
                         "instead".format(name))
         return None
 
-    # The drive's copy is the one that runs, being the one the reader can see and
-    # edit. A copy elsewhere taking its place is a trap: edits to the visible file
-    # would do nothing and nothing would say why
+    # The drive's copy runs, so a copy on the board's own filesystem is worth saying,
+    # since edits made to it would do nothing
     if len(found) > 1:
         problems.append("{} is on the drive and on the board's own filesystem, so "
                         "the drive's copy is the one that runs".format(name))
@@ -370,15 +366,14 @@ def __read_program(name, problems):
 
 
 def __run_program(name, source, args, problems):
-    # Run what was read, and say so if it stops rather than letting it take the board
-
+    # Run what was read, and say so if it stops rather than letting it take the board.
+    #
     # The file's arguments arrive the way a program receives them anywhere, so the same
     # file runs unchanged from an editor, where sys.argv is empty and a program falls
-    # back to its own constants. sys is built in and its argv cannot be rebound, so the
-    # list is filled in place; it outlives the program, so it is emptied afterwards or a
-    # reload would inherit the last one's arguments. The name sits at [0] as it does
-    # everywhere, which is why a program reads argv[1:] and never argv[0]: no editor
-    # supplies one.
+    # back to its own constants. sys.argv cannot be rebound, so it is filled in place and
+    # emptied after, or a reload would inherit the last program's arguments. The name
+    # sits at [0] as it does everywhere, and a program reads argv[1:], since no editor
+    # supplies one
     sys.argv[:] = [name] + list(args)
 
     try:
@@ -406,14 +401,14 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     `fx` is a board or something that makes one, a board class being the usual thing,
     since a strip's length is declared at construction and the file is what names it.
 
-    With one, the drive is shown at boot and the button is watched from then on: a
+    With one, the drive is shown at boot and the button is watched from then on. A
     double press shows or hides it, a single press re-reads the file and puts the
     drive back, and hiding or ejecting re-reads it and leaves it away, since a user
     who ejected is done with it. This does not return.
 
     The effects stand aside while the computer is copying, and the outputs answer for
-    themselves where there is no file to answer in: a problem written down, a problem
-    with nowhere to write it, and a press refused mid-write.
+    themselves where there is no file to answer in, for a problem written down, a
+    problem with nowhere to write it and a press refused mid-write.
 
     A board entry can name a program to run instead, and can keep the drive hidden
     until the button asks for it. A screen entry is serviced from this loop, so
@@ -484,8 +479,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     drive_up = program or settings.get("drive") != "manual"
 
     # A program runs instead of the effects, as the file's own setting says, so they
-    # are never started rather than started and stopped: reading the program and
-    # showing the drive both take long enough for a flash of them to be seen
+    # are never started, since reading the program and showing the drive both take long
+    # enough for a flash of them to be seen
     if not program:
         begin_scenes()
         __start(players, fx)
@@ -531,7 +526,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
 
     # A quick tap can start and end inside one screen's service, which a level read
     # between frames never sees. A board catching presses by interrupt is asked for
-    # those instead; the rest are polled, and sampled around each screen as well
+    # those instead. The rest are polled, and sampled around each screen as well
     pressed = False
     pending = volume.IDLE
 
@@ -542,9 +537,9 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         window, and an event held back until the next pass reads as the button
         being slow. The first event stands until the loop has taken it.
 
-        The board is asked for its tap each time rather than once: a rebuild hands
-        back a new board whose interrupt replaces the old one's, so a method held
-        from before would never hear another press.
+        The board is asked for its tap each time, since a rebuild hands back a new
+        board whose interrupt replaces the old one's, and a method held from before
+        would never hear another press.
         """
         nonlocal pending, pressed
         if pending != volume.IDLE:
@@ -580,9 +575,9 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
             pending = volume.IDLE
 
             if event == volume.SHOWN:
-                # Nothing else happens here: the drive has gone to the computer and
-                # the effects carry on. They stand aside for the pass, as they do
-                # for a transfer, and take the outputs back after it
+                # The drive has gone to the computer and the effects carry on. They
+                # stand aside for the pass, as they do for a transfer, and take the
+                # outputs back after it
                 for player in players:
                     player.stop()
                 __handover(fx, False)
@@ -625,10 +620,10 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                 scene_deadline = (time.ticks_add(time.ticks_ms(), int(scene.hold * 1000))
                                   if scene.hold else None)
 
-            # A transfer costs a running effect most of a tenth of a second in one
-            # hitch, so the effects stand aside for it and something of the board's
-            # own travels the outputs instead of the show lurching through. So they do
-            # for enumeration, which a reset seen since the last pass is the start of
+            # The effects stand aside for a transfer, whose hitch volume.busy() describes,
+            # and something of the board's own travels the outputs instead of the show
+            # lurching through. So they do for enumeration, which a reset seen since the
+            # last pass is the start of
             settling = reset_seen or volume.enumerating()
             reset_seen = False
             if volume.busy() or settling:
@@ -680,8 +675,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
 
             # A pass that drew goes straight round, since the next frame may
             # already be due and a wait would then be added to every frame the
-            # screens send. Nothing here needs answering sooner than the wait:
-            # the lights run from a timer, and a press is latched until it is read
+            # screens send. Nothing here needs answering sooner than the wait, as
+            # the lights run from a timer and a press is latched until it is read
             if not drew:
                 time.sleep_ms(interval_ms)
     finally:

@@ -24,23 +24,17 @@ COLOURS = {
 
 COMPONENTS = ("r", "g", "b")
 
-# The one name on the left that is not a channel. Its entry carries settings about
-# the board rather than an effect, so it is the only one with no effect name.
+# The one name on the left that is not a channel, its entry holding board settings
 BOARD = "board"
 
-# The player kinds that write the board's own outputs. A strip has a player of its
-# own and reaches none of them, so a file playing only there leaves the outputs to
-# whatever last wrote them
+# The player kinds that write the board's own outputs. A strip's player reaches none of
+# them, so a file playing only strips leaves the outputs as they were
 OUTPUT_KINDS = ("mono", "colour")
 
 
-# Each effect, the kind of channel it drives, how a channel gets its callable, and
-# the settings it takes, read from picofx's own lists rather than named again here.
-# An effect declares the last two, so one added to picofx is offered by this file
-# without it being edited, and one whose settings change cannot go stale here.
-# CALLED is None where one effect serves every channel, "position" where it is called
-# with the channel's place in the group, and a tuple where it names a method per
-# channel. A class with no NAME is not offered.
+# Each effect as its class, the kind of channel it drives, its CALLED and its TAKES, read
+# from picofx's own lists, so an effect added or changed there is offered here as it is.
+# A class with no NAME is not offered.
 EFFECTS = {}
 for _kind, _registry in (("mono", MONO_EFFECTS), ("colour", COLOUR_EFFECTS)):
     for _effect in _registry:
@@ -48,13 +42,11 @@ for _kind, _registry in (("mono", MONO_EFFECTS), ("colour", COLOUR_EFFECTS)):
         if _name is not None:
             EFFECTS[_name] = (_effect, _kind, _effect.CALLED, _effect.TAKES)
 
-# Each screen effect and the settings it takes. A screen shows images where an output
-# lights, so these never mix with EFFECTS. "gif" plays an animated GIF at the delays
-# the file declares unless fps names one; "image" holds one still; "sequence" plays a
-# folder of image files in the order their names number them, at the delay each name
-# declares unless fps names one; "graphics" runs a Python file's draw(canvas, elapsed),
-# the module body running once as its setup. All of them look on the drive first,
-# then the board.
+# Each screen effect and the settings it takes, kept apart from EFFECTS since a screen shows
+# images where an output lights. "gif" plays an animated GIF and "sequence" a folder of
+# images in the order their names number them, each at its own delays unless fps names one.
+# "image" holds one still, and "graphics" runs a Python file's draw(canvas, elapsed) after
+# running its module body once. Each looks on the drive first, then the board.
 SCREEN_EFFECTS = {
     "gif": ("file", "fps", "interval", "loop", "ping_pong", "first_as_last", "hold"),
     "graphics": ("file", "fps", "interval", "width", "height"),
@@ -72,22 +64,18 @@ HUB_POSITIONS = "abcdef"
 # from the panel itself
 SCREEN_SIZES = ("2.8", "1.54")
 
-# The one selector that plays sound. "wav" streams a file for as long as it lasts,
-# or for good with loop=true. The file is found at load, while the board is sure to
-# hold the drive, and read from the flash from then on, so it plays on after a
-# computer takes the volume, where opening it later would find no drive at all.
+# The one selector that plays sound, "wav" streaming a file once or with loop=true for good
 AUDIO = "audio"
 AUDIO_EFFECTS = {
     "wav": ("file", "loop"),
 }
 
-# What a setting's value must be. A name means the same thing wherever it appears, so
-# its kind is stated once here. "count" is a whole number of 1 or more, each one
-# dividing or repeating something, where "whole" may be zero or negative. "angle" is a
-# fraction that takes degrees as well. "span" is a distance
-# across the outputs, which nothing divides by at zero. "colour" is read by
-# the parser, which turns it into tuples. "name" is a file name kept as written.
-# "quarter" serves the left of the colon, a quarter turn for how a screen is mounted.
+# What each effect setting's value must be, stated once since a name means the same thing
+# wherever it appears. "count" is a whole number of 1 or more, since each divides or repeats
+# something, where "whole" may be zero or negative. "angle" is a fraction that takes degrees
+# as well, and "span" a distance across the outputs that may be zero, since nothing divides
+# by it. "colour" is a name or hex the parser turns into a tuple, and "name" a file name
+# kept as written. CHANNEL_KINDS below adds "quarter", a quarter turn for a mounted screen.
 SETTINGS = {
     "speed": "number",
     "phase": "fraction",
@@ -135,13 +123,11 @@ SETTINGS = {
 PAIRED_SETTINGS = (("bright_min", "bright_max"), ("dim_min", "dim_max"),
                    ("brightness_min", "brightness_max"))
 
-# What a board entry takes, and the values a setting is limited to. A program is a
-# file name, so it is answered when it is looked for rather than here. A screen's
-# size is a fact about the hardware, set once here where an entry's settings vary
-# per scene, and a strip's length is the same: it is the one channel count the board
-# cannot discover for itself. Each screen port the board declares is a setting too, taking
-# a panel size or, where the board can carry one, the hub, and so is each strip, its value
-# a number rather than one of a set of words.
+# What a board entry takes, and the values a setting is limited to, None taking any. A
+# program is a file name, answered when it is looked for. A screen's size and a strip's
+# length are facts about the hardware the board cannot discover, set once in the board
+# entry where an entry's settings vary per scene. So each screen port the board declares is
+# a setting too, taking a panel size or the hub, and each strip, taking a number.
 BOARD_SETTINGS = {"drive": ("manual",), "reload": ("manual", "auto"),
                   "program": None, "args": None}
 
@@ -150,15 +136,15 @@ BOARD_SETTINGS = {"drive": ("manual",), "reload": ("manual", "auto"),
 ORDER = " order"
 BRIGHTNESS = " brightness"
 
-# What each left-side setting's value must be. level and backlight answer alike,
-# both being how bright something is; colour, background and offset have shapes of
-# their own and are read where they are applied
+# What each left-side setting's value must be. level and backlight answer alike, both being
+# how bright something is. colour, background and offset have shapes of their own and are
+# read where they are applied
 CHANNEL_KINDS = {"level": "fraction", "fade": "seconds", "ease": "seconds",
                  "backlight": "fraction", "rotation": "quarter", "mirror": "boolean",
                  "pixel_double": "boolean"}
 
-# The two ways a channel may follow its effect, which are one setting written two ways:
-# 'fade' crosses at a steady rate, 'ease' settles into place as a filament does
+# The two ways a channel may follow its effect, one setting written two ways. 'fade' crosses
+# at a steady rate and 'ease' settles into place as a filament does
 CURVES = ("fade", "ease")
 
 # How a picture repeats on one side of a screen, and the spellings someone reaching
@@ -167,7 +153,7 @@ TILING = ("off", "repeat", "mirror")
 TILING_ALSO = {"true": "repeat", "yes": "repeat", "on": "repeat",
                "false": "off", "no": "off", "1": "repeat", "0": "off"}
 
-# Which of those belong to an output and which to a screen, for saying so
+# Which left-side settings belong to an output and which to a screen, for saying so
 OUTPUT_SETTINGS = ("level", "colour", "fade", "ease")
 SCREEN_SETTINGS = ("backlight", "rotation", "mirror", "offset", "background",
                    "pixel_double", "tile")

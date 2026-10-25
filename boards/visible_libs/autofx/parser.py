@@ -2,8 +2,24 @@
 #
 # SPDX-License-Identifier: MIT
 
-# The parser, reading an effects file into entries that name their channels and effect.
-# It knows nothing of the board beyond the example its messages give.
+# The parser, reading the effects file a user edits into entries a board can play, one
+# entry per set of outputs, such as
+#
+#   out1-6 level=0.5: pulse_wave speed=0.6
+#   out3.g: blink speed=1.0 duty=0.3
+#   screenA: gif file="anim.gif"
+#
+# A [Heading: 30s] begins a scene that shows for its time. Scenes take turns, and entries
+# before the first heading are always on.
+#
+# Output settings sit left of the colon and effect settings right of it. An entry runs
+# until the next selector, so its settings may be laid over several lines. Everything a
+# user reads says output where the code says channel, a channel being a slot in a player
+# and an output the connector a channel drives.
+#
+# It knows nothing of the board beyond the example its messages give. It reports names,
+# which the loader resolves, and never raises. A line it cannot read is reported and
+# skipped, so one bad edit costs its own entry and not the whole file.
 
 from .vocabulary import (BOARD, CHANNEL_KINDS, COLOURS, COMPONENTS, CURVES, HUB, HUB_POSITIONS,
                          OUTPUT_SETTINGS, SCREEN_SETTINGS, TILING, TILING_ALSO)
@@ -19,7 +35,7 @@ class Channel:
     """One channel an entry names, with whatever settings were attached to it."""
 
     # Every setting that may sit left of the colon, so a channel copied when a bare
-    # strip name expands cannot quietly lose one. Checked against __init__ on the host.
+    # strip name expands cannot quietly lose one
     SETTINGS = ("level", "colour", "fade", "ease", "rotation", "backlight", "mirror",
                 "offset", "background", "pixel_double", "tile")
 
@@ -29,8 +45,8 @@ class Channel:
         self.colour = None
         self.fade = None
         self.ease = None
-        # A screen's own, sitting left of the colon with level and colour: how it is
-        # mounted and lit, and how its content is placed
+        # A screen's own, sitting left of the colon with level and colour, for how it
+        # is mounted and lit and how its content is placed
         self.rotation = None
         self.backlight = None
         self.mirror = None
@@ -40,8 +56,10 @@ class Channel:
         self.tile = None
 
     def like(self, name):
-        """The same channel under another name, which is how a bare strip name
-        becomes the run of LEDs it stands for."""
+        """
+        The same channel under another name, which is how a bare strip name becomes the
+        run of LEDs it stands for.
+        """
         made = Channel(name)
         for setting in self.SETTINGS:
             setattr(made, setting, getattr(self, setting))
@@ -62,9 +80,10 @@ class Entry:
         # and a problem belongs to the line the reader has to go and edit
         self.lines = {}
         # The scene this entry belongs to, or None for one before any heading, which
-        # is always on. A heading itself is an entry whose heading carries (name,
-        # seconds) and nothing else
+        # is always on
         self.scene = None
+        # A heading is an entry of its own, holding the scene's name, hold and restart,
+        # and whether its mistake was answered already. None for any other entry
         self.heading = None
 
     def __repr__(self):
@@ -155,8 +174,8 @@ def __unclosed_quote(text):
 def __glue(text):
     # Spaces around a range dash, an equals or a pipe removed, so 'out1 - 7',
     # 'level = 50%' and 'ease = 0.05 | 0.3' read as written without them. Commas are
-    # left alone: a space after one is what separates 'level=0.5, 2 level=0.8' into two
-    # outputs rather than two values
+    # left alone, since a space after one is what separates 'level=0.5, 2 level=0.8'
+    # into two outputs rather than two values
     out = []
     quote = None
 
@@ -214,7 +233,7 @@ def __colour(text):
 
 
 def __value(text):
-    # An effect setting's value: a number, a boolean, or the text as given
+    # An effect setting's value as a number, a boolean or the text as given
     lowered = text.lower()
     if lowered in ("true", "yes", "on"):
         return True
@@ -225,7 +244,7 @@ def __value(text):
 
 
 def __scene_time(word):
-    # The seconds a heading's setting names, in seconds or minutes, or None where it names no time
+    # The seconds a heading's time names, written in seconds or minutes, or None for no time
     unit = word[-1:].lower()
     if unit not in ("s", "m"):
         return None
@@ -346,8 +365,8 @@ def expand(token, prefix, line, problems):
         prefix = item[:len(item) - len(digits)]
     elif not prefix:
         # Nothing established a name, so the correction carries whatever else was
-        # written: a bare number keeps its number, a bare component keeps that. A board
-        # that numbers no outputs takes its own LED's name in place of the number
+        # written. A bare number keeps its number and a bare component keeps that. A
+        # board that numbers no outputs takes its own LED's name in place of the number
         named = "out" + (digits or "1") if BOARD_EXAMPLE[0].startswith("out") \
             else BOARD_EXAMPLE[0]
         correction = named + ("." + suffix if suffix else "")
@@ -512,7 +531,7 @@ def __apply_channel_setting(channels, key, raw, line, problems):
 
 
 def __parse_selector(text, line, problems):
-    # The left of the colon: channel items, each carrying its own settings
+    # The left of the colon, as channel items each carrying its own settings
     channels = []
     recent = []
     prefix = ""
@@ -551,7 +570,7 @@ def __parse_selector(text, line, problems):
 
 
 def __parse_effect(tokens, line, problems, needs_effect=True):
-    # The right of the colon: an effect name then its settings. Each token carries the
+    # The right of the colon, as an effect name then its settings. Each token carries the
     # line it was written on, since an entry may run over several
     effect = None
     settings = {}
@@ -620,7 +639,7 @@ def __parse_effect(tokens, line, problems, needs_effect=True):
 
 
 def parse(text):
-    """Read the effects file. Returns (entries, problems); it never raises."""
+    """Read the effects file. Returns (entries, problems), and never raises."""
     entries = []
     problems = []
     pending = None
@@ -745,8 +764,8 @@ def parse(text):
 
         # A comment can eat a value, which is what a hex colour pasted with its '#'
         # does. Ending in '=' is what tells that from an ordinary trailing comment,
-        # and it has to come first: after another entry the line reads as one of its
-        # continuations, and the answer would be about an empty colour
+        # and it has to come first, since after another entry the line reads as one of
+        # its continuations and the answer would be about an empty colour
         if len(cut) < len(raw_line) and line.endswith("="):
             problems.append(
                 "line {}: '{}' has nothing after the '='. A '#' starts a comment, so "
@@ -805,7 +824,7 @@ def parse(text):
     close()
 
     # Where the comment took a value's tail and what remained failed on its own
-    # terms, nothing else names the cause: 'colour=red,#00ff00' answers about 'red,'
+    # terms, nothing else names the cause, as 'colour=red,#00ff00' answers about 'red,'
     if jammed:
         named = []
         for problem in problems:
@@ -829,13 +848,11 @@ def __about_line(problem):
 def in_line_order(problems):
     """
     In the order a reader meets them in the file, since they are found in the order
-    the work happens: everything the parser saw, then everything the loader did.
-
-    Reading the line once per problem rather than through a sort key, which
-    MicroPython recomputes on every comparison, and the position keeps one line's own
-    order.
+    the work happens, everything the parser saw and then everything the loader did.
     """
-    ordered = [(__about_line(problem), position, problem)
+    # The line is read once per problem, since MicroPython recomputes a sort key on
+    # every comparison, and the position keeps one line's own order
+    ordered =[(__about_line(problem), position, problem)
                for position, problem in enumerate(problems)]
     ordered.sort()
     return [problem for _, _, problem in ordered]

@@ -42,11 +42,10 @@ def candidates(name):
     return (MOUNT_DIR + "/" + name, name)
 
 
-def find_image(name, line, problems):
+def find_file(name, line, problems):
     """
-    The file or folder a screen entry names, or None if there is none to play. The
-    drive's copy wins, as a program's does, and for the same reason: it is the one
-    the reader can see and edit.
+    The file or folder an entry names, or None if there is none to play. The drive's
+    copy wins where the board has one too, as it does for a program.
     """
     found = []
     for candidate in candidates(name):
@@ -70,8 +69,8 @@ def find_image(name, line, problems):
 def check_board(entry, has_strips, problems, lines):
     """
     The board settings the entry carries, with anything it cannot use dropped. A
-    board entry names no effect, so nothing else would ever look at these: a typo in
-    'drive' or 'program' would leave a board acting as though the line were absent.
+    board entry names no effect, so nothing else would ever look at these, and a typo
+    in 'drive' or 'program' would leave a board acting as though the line were absent.
 
     The line each setting kept was written on goes into `lines`, for the checks that
     compare settings across board entries.
@@ -305,9 +304,8 @@ def check_settings(entry, taken, problems):
                 settings[key] = value
             continue
 
-        # A hue is the one setting the user has an outside source for, and every
-        # colour picker gives it in degrees, so those are taken and turned into the
-        # fraction the effect wants
+        # A hue is the one setting a user copies from elsewhere, and colour pickers give it
+        # in degrees, so degrees are taken too and turned into the fraction the effect wants
         if kind == "angle":
             turn = __degrees(value)
             if turn is not None:
@@ -319,8 +317,8 @@ def check_settings(entry, taken, problems):
                 at, entry.effect, key, value_shown(value), fault))
             continue
 
-        # Each effect gets the type it was written for: a count as an integer, which
-        # several of them require, and a boolean however the user chose to spell it
+        # Each effect gets the type it was written for. A count is an integer, which several
+        # require, and a boolean is one however the user spelt it
         if kind in ("count", "whole", "quarter"):
             settings[key] = int(value)
         elif kind == "boolean":

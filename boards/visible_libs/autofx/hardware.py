@@ -16,29 +16,26 @@ from picofx import RGBLED
 
 from .vocabulary import BRIGHTNESS, COMPONENTS, HUB, HUB_POSITIONS, ORDER
 
-# A strip's LEDs are named like the outputs, so 'stripL1-10' is a range of them and
-# the bare name is the whole run. One kind of channel per connector, since each is a
-# player of its own writing to its own strip. The board declares its strips, and those of
-# the board being loaded are kept here as (kind, property, name as written), the kind being
-# the name in lower case
+# The strips the board being loaded declares, as (kind, property, name as written), the kind
+# being the name in lower case. Each is a player of its own, so a strip is one kind of channel
 BOARD_STRIPS = []
 
-# The board's strips taking a brightness after their length where the rest take a colour
-# order, and each strip taking other strips' terminals as (kind, other kinds), so it cannot
-# play beside them. An APA102 has one brightness for the whole strip and one colour order,
-# and takes data and clock both
+# The strips taking a brightness after their length where the rest take a colour order, as an
+# APA102 does, having one brightness for the whole strip and one colour order
 BOARD_BRIGHTNESS = []
+
+# Each strip taking other strips' terminals, as (kind, other kinds), so it cannot play beside
+# them, as an APA102 takes data and clock both
 BOARD_TAKES = []
 
-# The selector the parser's examples name: an output by number where the board numbers its
+# The selector the parser's examples name, an output by number where the board numbers its
 # outputs, or else its own LED, or else its first strip
 BOARD_EXAMPLE = ["out4"]
 
-# The selector names that reach a screen. The board declares its screen ports, and those of the
-# board being loaded are kept here as (kind, property, name as written), the kind being the name
-# in lower case, with whether the board can carry a Screen Hub
+# The screen ports the board being loaded declares, as (kind, property, name as written), the
+# kind being the name in lower case
 BOARD_SCREENS = []
-BOARD_HUB = [False]
+BOARD_HUB = [False]     # Whether the board can carry a Screen Hub
 
 
 def hub_shown(places):
@@ -89,7 +86,7 @@ def learn_board(fx):
     Keep the strips and screen ports the board declares, and whether it can carry a Screen
     Hub, for everything that names them.
 
-    Asked of the class, so no board need exist yet and no property is evaluated:
+    Asked of the class, so no board need exist yet and no property is evaluated.
     MicroPython's dir() and getattr() both run a property's getter, and one that
     answers by raising would read as an absent connector.
     """
@@ -153,7 +150,7 @@ def screen_port(kind):
 
 def build_board(fx, settings, problems):
     """
-    The board to play on: whatever the caller handed in, or one built here from what
+    The board to play on, either what the caller handed in or one built here from what
     the file declared.
 
     A board that will not take the file's declarations still has to come up, since it
@@ -193,8 +190,8 @@ def build_board(fx, settings, problems):
 # built once, a reload keeping the one it has, so this is what a changed strip is answered against
 BUILT_STRIPS = {}
 
-# The hub the board was built with: the screen selector whose connector carries it, and
-# each position's size. Empty where the board has none
+# The hub the board was built with, as the screen selector whose connector carries it and
+# each position's size, empty where the board has none
 BUILT_HUB = {}
 
 
@@ -269,7 +266,7 @@ def __screen_gone(screen):
     # Whether a panel that was brought up has stopped answering.
     #
     # One unplugged and put back has lost the TEON its bringup set, so it asserts
-    # nothing. Nothing is sent to find out: a screen owning its line keeps TE on
+    # nothing. Nothing is sent to find out, since a screen owning its line keeps TE on
     # from bringup, so any edge at all is the panel still being there. One with no
     # signal to read cannot be told about either way, so it counts as present
     if not screen.__v_sync:
@@ -282,11 +279,11 @@ def __screen_gone(screen):
 
 def hardware_changed(fx, declared, full_size=False):
     """
-    Whether the board entry no longer matches what is running: a strip added,
-    dropped or resized, a screen's size changed, a panel swapped for another, or a
-    file whose screens now want the other reserve, all of which have to come up
-    again to be talked to. Asked of a running board on a reload, so what is running
-    is this module's own record of what it built.
+    Whether the board entry no longer matches what is running, so the board has to come
+    up again to be talked to. A strip added, dropped or resized counts, as do a screen's
+    size changing, a panel swapped for another and a file whose screens now want the
+    other reserve. Asked of a running board on a reload, so what is running is this
+    module's own record of what it built.
     """
     # A hub added, dropped, moved to the other connector or given another size at a
     # position is declared at construction, as a strip is
@@ -337,8 +334,8 @@ def strip_of(name):
 
 def strip_shown(kind):
     """
-    The strip as the reader writes it, as the board declares it, or for one the board has not
-    got its last letter in capitals, as a connector letter is written.
+    The strip as the reader writes it, which is as the board declares it. One the board has
+    not got is given its last letter in capitals, as a connector letter is written.
     """
     for known, _prop, shown in BOARD_STRIPS:
         if known == kind:
@@ -347,7 +344,7 @@ def strip_shown(kind):
 
 
 def channel_shown(name):
-    """A channel name as the reader writes it, a strip's with its capitals back and its LEDs after."""
+    """A channel name as the reader writes it, a strip's with its capitals and its LEDs after."""
     letters = name
     while letters and not letters[-1].isalpha():
         letters = letters[:-1]
@@ -363,8 +360,7 @@ def resolve_strips(entries, lengths, has_strips, problems, said=()):
     than as its selectors are parsed, since the board entry carrying the length is
     read in this pass.
 
-    Anything already said for is passed in, a strip the board would not set up having
-    been reported where that was found.
+    said holds the strips already reported, such as one the board would not set up.
     """
     said = set(said)
 
@@ -381,7 +377,7 @@ def resolve_strips(entries, lengths, has_strips, problems, said=()):
             count = lengths.get(kind)
 
             if not count:
-                # Once per strip: a range names its LEDs one by one, and whatever is
+                # Once per strip, as a range names its LEDs one by one, and whatever is
                 # wrong is wrong for all of them at once
                 if kind not in said:
                     said.add(kind)
@@ -417,7 +413,7 @@ def resolve_strips(entries, lengths, has_strips, problems, said=()):
         entry.channels = resolved
 
 
-# The screens already built, kept across reloads: construction resets a panel, so a
+# The screens already built, kept across reloads since construction resets a panel, so a
 # reload that still names one repaints it instead of blanking it first
 BUILT_SCREENS = {}
 

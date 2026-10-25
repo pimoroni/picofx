@@ -22,7 +22,7 @@ from .sounds import build_sounds, cue_sound
 
 
 class Scene:
-    """One named scene: its content in the form the players take, ready to switch to."""
+    """One named scene, holding its content in the form the players take, ready to switch to."""
     def __init__(self, name, line, hold, restart=False):
         self.name = name
         self.key = name.lower()
@@ -30,16 +30,15 @@ class Scene:
         self.hold = hold            # Seconds it shows for, or None to hold forever
         self.restart = restart      # Whether its content begins again on every entry
         # Whether its heading has already been answered, so one mistake is not
-        # reported twice: a heading missing its colon has no time either
+        # reported twice, as a heading missing its colon has no time either
         self.advised = False
         self.effects = None
         self.levels = None
         self.colours = None
         self.curves = None
         self.driven = set()         # The slots this scene fills, which a switch clears
-        # What this scene's entries built, one per entry, which is what a restart
-        # has to reach: a travelling effect hands the player a closure and keeps the
-        # object the offset lives on
+        # What this scene's entries built, one per entry, for a restart to reach. A
+        # travelling effect hands the player a closure and keeps its offset on this object
         self.sources = []
 
     def __repr__(self):
@@ -51,8 +50,8 @@ def __build_effect(entry, count, problems):
     # The effect an entry asks for, or None if it could not be made
     known = EFFECTS.get(entry.effect)
     if known is None:
-        # An entry that named none at all has already been reported as such, and
-        # saying the missing name is not an effect only shows the reader an internal
+        # An entry that named no effect at all has been answered already, so it is
+        # left alone here
         if entry.effect in SCREEN_EFFECTS and not BOARD_SCREENS:
             problems.append("line {}: {} plays on a screen, and this board has none".format(
                 entry.line, entry.effect))
@@ -68,7 +67,7 @@ def __build_effect(entry, count, problems):
     settings = check_settings(entry, taken, problems)
 
     # A wave spans the group unless told otherwise. Being called with a position is
-    # not the same as spreading over one: binary_counter is handed a bit, not a share
+    # not the same as spreading over one, as binary_counter is handed a bit, not a share
     if how == "position" and "length" in taken and "length" not in settings:
         settings["length"] = count
 
@@ -87,7 +86,9 @@ def __build_effect(entry, count, problems):
 
 
 def __callables(effect, how, count, entry, problems):
-    # One callable per channel, in the order the entry wrote them
+    # One callable per channel, in the order the entry wrote them. how is the effect's
+    # CALLED, None where one effect serves every channel, "position" where it is called with
+    # each channel's place, and otherwise the method each channel calls
     if how is None:
         return [effect] * count
     if how == "position":
@@ -144,8 +145,8 @@ def __assemble(entries, slots, effects, levels, colours, curves, claimed, proble
             if slot is None:
                 continue
             if kind == "colour" and slot[0] == "mono":
-                # A mono channel cannot show a colour, but a colour channel or a strip can
-                # play a mono effect: the player draws it in the channel's own tint
+                # A mono channel cannot show a colour, though a colour channel or a strip
+                # can play a mono effect
                 problems.append("line {}: {} brings its own colour, which {} cannot show".format(
                     entry.line, entry.effect, channel.name))
             else:
@@ -160,8 +161,8 @@ def __assemble(entries, slots, effects, levels, colours, curves, claimed, proble
         if not curved:
             for setting in ("ease", "fade"):
                 if any(getattr(channel, setting) is not None for channel, _, _, _ in wanted):
-                    problems.append("line {}: {} brings its own colour, so it plays without {}".format(
-                        entry.line, entry.effect, setting))
+                    problems.append("line {}: {} brings its own colour, so it plays without "
+                                    "{}".format(entry.line, entry.effect, setting))
 
         sources.append(effect)
 
@@ -190,7 +191,7 @@ def __assemble(entries, slots, effects, levels, colours, curves, claimed, proble
             for part in parts:
                 claimed[part] = (entry.line, channel.name)
 
-        # The channel decides which player it belongs to, not the effect: a colour
+        # The channel decides which player it belongs to, not the effect, so a colour
         # channel playing a mono effect shows it in that channel's tint
         given = __callables(effect, how, count, entry, problems)
         for channel, where, index, position in wanted:
@@ -214,9 +215,9 @@ def apply_scene(players, shows, sounds, scene):
     always-on entries and turn off what other scenes drive, so this is an exchange
     of lists the players read on their next tick.
 
-    A scene told to restart begins its own content again, the always-on entries
-    carrying on: their effects are built in their own pass and so are never among a
-    scene's, and an effect that keeps no offset has nothing to begin again.
+    A scene told to restart begins its own content again while the always-on entries
+    carry on, their effects being built in their own pass and never among a scene's.
+    An effect that keeps no offset has nothing to begin again.
     """
     # A refused pair is tried again. update_pair judges a pair by conversion times it
     # measures, so a pair near the limit can pass on another try
@@ -241,13 +242,11 @@ def apply_scene(players, shows, sounds, scene):
         if player.kind in scene.colours:
             player.colours = scene.colours[player.kind]
 
-    # A screen another scene was using goes dark unless this one, or an always-on
-    # entry, is still on it: the glass keeps its frame, the light says it is over
-    # One show at a time may have a panel, and a screen may be named by an always-on
-    # entry and by a scene both. The scene's own takes it while the scene shows, as a
-    # scene takes an always-on output, and the always-on one has it the rest of the time
-    # Held by place, since a hub's show covers several positions. An always-on show a
-    # scene takes one position from sits the scene out, its other positions cleared
+    # One show at a time may have a panel, and a screen may be named by an always-on entry
+    # and by a scene both. The scene's own takes it while the scene shows, as a scene takes
+    # an always-on output, and the always-on one has it the rest of the time. Held by place,
+    # since a hub's show covers several positions, so an always-on show a scene takes one
+    # position from sits the scene out
     holding = {}
     for show in shows:
         if show.scene is None:
@@ -272,6 +271,7 @@ def apply_scene(players, shows, sounds, scene):
             # Another show has this panel, so it stays lit and this one just waits
             show.wait()
         else:
+            # No show has this panel now, so it goes dark, the glass keeping its frame
             show.rest()
 
     settle_hub(shows)
@@ -296,7 +296,7 @@ def load(text, fx, maker=None, volume=None):
     Where it makes one, the board is built here rather than by the caller, once the
     file's own board entry has been read, so what the file declares reaches the
     constructor. A board built already is used as it is, unless `maker` says what
-    would build its replacement: then a board entry that no longer matches the
+    would build its replacement. Then a board entry that no longer matches the
     running hardware shuts the board down and a fresh one is built, as a restart
     would. Without a maker the change is reported instead. `volume` is the drive the
     file came from, whose sounds play on while a computer holds it.
@@ -340,7 +340,7 @@ def load(text, fx, maker=None, volume=None):
                                 "sits outside every scene".format(entry.line))
             given = check_board(entry, has_strips, problems, board_lines)
             # A board entry may be written more than once, so where the arguments were
-            # written is kept rather than checked here: the program may name a later line
+            # written is kept for checking once all are read, the program perhaps coming later
             if "args" in given:
                 args_line = entry.lines.get("args", entry.line)
             board.update(given)
@@ -407,7 +407,7 @@ def load(text, fx, maker=None, volume=None):
                                 "will not show. Write it like '[{}: 30s]'".format(
                                     scene.line, scene.name, scene.name))
 
-    # A changed board entry gets a fresh board, as a restart would: the running one
+    # A changed board entry gets a fresh board, as a restart would. The running one
     # is shut down and the build below makes its replacement from the file's own
     # declarations. The strip record goes first, so nothing here still holds a strip
     # when shutdown() collects them, and the screens die with their ports
@@ -419,8 +419,8 @@ def load(text, fx, maker=None, volume=None):
         fx.shutdown()
         fx = maker
 
-    # The board comes up here, now that its own entry has been read: a strip's length
-    # is declared at construction, and this is the first point it is known
+    # The board comes up here, now that its own entry has been read, since a strip's
+    # length is declared at construction and this is the first point it is known
     fx = build_board(fx, board, problems)
     mono, colour = channels(fx)
 
@@ -430,14 +430,13 @@ def load(text, fx, maker=None, volume=None):
         BUILT_HUB.update(hub_declared(board))
         BUILT_HUB["groups"] = {}
 
-    # The strips the file asked for, taken before its channel names are resolved: a
-    # bare strip name stands for a run whose length only the board entry knows
+    # The strips the file asked for, taken before its channel names are resolved, since
+    # a bare strip name stands for a run whose length only the board entry knows
     built, failed = strips(fx, board, problems)
     resolve_strips(entries, board, has_strips, problems, failed | left_off)
 
-    # Every kind of channel this board offers, as the names each player's slots take.
-    # A strip is one kind per connector, since each is a player writing to its own
-    names = [("mono", [name for name, _ in mono]), ("colour", [name for name, _ in colour])]
+    # Every kind of channel this board offers, as the names each player's slots take
+    names =[("mono", [name for name, _ in mono]), ("colour", [name for name, _ in colour])]
 
     # LEDs the board builds past the length a strip was asked for, to catch a frame
     # torn by a flash write before it overruns onto a strip's last real LED. Their
@@ -477,8 +476,8 @@ def load(text, fx, maker=None, volume=None):
                                                  claimed, problems)
         union |= scene.driven
 
-    # A slot any scene drives goes dark in the scenes that do not drive it, and dark
-    # is an effect: None means "not driven", which keeps whatever was showing
+    # A slot any scene drives goes dark in the scenes that do not drive it. Dark is an
+    # effect, since None means "not driven", which keeps whatever was showing
     off = NoneFX()
     for scene in scenes:
         for kind, index in union - scene.driven - always:
@@ -518,10 +517,9 @@ def load(text, fx, maker=None, volume=None):
         if wanted(kind):
             players.append(filled(StripPlayer(strip, num_leds=count + spare), kind))
 
-    # The spare LEDs are driven dark rather than left alone, in every scene: an
-    # effect of None is a slot nothing writes, which is what would let a torn frame
-    # stay lit there. Set once the players are decided, so a strip nothing plays on
-    # is still a strip with no player
+    # The spare LEDs are driven dark in every scene, since an effect of None is a slot
+    # nothing writes, which would let a torn frame stay lit there. Set once the players
+    # are decided, so a strip nothing plays on is still a strip with no player
     for kind, _, count in built:
         for index in range(count, count + spare):
             effects[kind][index] = off
@@ -543,8 +541,8 @@ def load(text, fx, maker=None, volume=None):
         DEFERRED_SHOWS[:] = []
         shows = build_shows(screen_entries, fx, board, problems)
 
-    # Opening a file is all a sound costs, so a named program defers nothing here:
-    # its handle waits, opened while the board is sure to hold the drive
+    # Opening a file is all a sound costs, so a named program defers nothing here. Its
+    # handle waits, opened while the board is sure to hold the drive
     sounds = build_sounds(audio_entries, fx, problems, volume)
 
     # Found in the order the work happens, which is every line the parser read and
