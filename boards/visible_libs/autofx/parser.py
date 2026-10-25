@@ -131,20 +131,6 @@ def unquoted(text, char):
     return -1
 
 
-def __strip_comment(line):
-    # Everything before an unquoted #
-    quote = None
-    for index, char in enumerate(line):
-        if quote:
-            if char == quote:
-                quote = None
-        elif char in "\"'":
-            quote = char
-        elif char == "#":
-            return line[:index]
-    return line
-
-
 def __is_number(text):
     # A run of digits with at most one leading dash, which int() reads as written
     return (text[1:] if text[:1] == "-" else text).isdigit()
@@ -677,7 +663,8 @@ def parse(text):
     jammed = set()
 
     for number, raw_line in enumerate(text.split("\n")):
-        cut = __strip_comment(raw_line)
+        comment = unquoted(raw_line, "#")
+        cut = raw_line if comment < 0 else raw_line[:comment]
         written = cut.strip()           # Quoted back as typed, since gluing moves it
         line = __glue(written)
 

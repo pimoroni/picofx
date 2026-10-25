@@ -12,9 +12,9 @@ from picofx.mono import NoneFX
 from .vocabulary import (AUDIO, BOARD, COMPONENTS, EFFECTS, HUB, OUTPUT_SETTINGS, SCREEN_EFFECTS,
                          SCREEN_SETTINGS)
 from .hardware import (after_length, BOARD_SCREENS, BOARD_STRIPS, BOARD_TAKES, build_board,
-                       BUILT_HUB, BUILT_SCREENS, BUILT_STRIPS, channel_shown, channels,
-                       hardware_changed, hub_declared, hub_port, learn_board, resolve_strips,
-                       strip_of, strip_shown, strips)
+                       BUILT_HUB, channel_shown, channels, forget_built, hardware_changed,
+                       hub_declared, hub_port, learn_board, resolve_strips, strip_of, strip_shown,
+                       strips)
 from .parser import in_line_order, parse
 from .checks import check_board, check_hub, check_settings
 from .shows import build_shows, DEFERRED_SHOWS, settle_hub, wants_full_size
@@ -409,13 +409,10 @@ def load(text, fx, maker=None, volume=None):
 
     # A changed board entry gets a fresh board, as a restart would. The running one
     # is shut down and the build below makes its replacement from the file's own
-    # declarations. The strip record goes first, so nothing here still holds a strip
-    # when shutdown() collects them, and the screens die with their ports
+    # declarations
     if maker is not None and not callable(fx) and \
             hardware_changed(fx, board, wants_full_size(screen_entries, board)):
-        BUILT_STRIPS.clear()
-        BUILT_SCREENS.clear()
-        BUILT_HUB.clear()
+        forget_built()
         fx.shutdown()
         fx = maker
 

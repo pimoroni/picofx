@@ -403,6 +403,10 @@ def service_shows(shows, between=None):
     stops the pass when it answers true, so a press waits out one screen rather
     than all of them. A pair is one stream and cannot be interrupted part way.
     """
+    # Called on every pass of the loop, so a board with no screens builds nothing
+    if not shows:
+        return False
+
     due = [show for show in shows if show.live and show.wants()]
 
     if len(due) == 2 and due[0].screen.port is not due[1].screen.port \

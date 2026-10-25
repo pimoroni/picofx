@@ -418,6 +418,16 @@ def resolve_strips(entries, lengths, has_strips, problems, said=()):
 BUILT_SCREENS = {}
 
 
+def forget_built():
+    """
+    Forget every strip, screen and hub built, before the board is shut down for a rebuild
+    or a stop, so nothing here still holds one when shutdown() releases it.
+    """
+    BUILT_STRIPS.clear()
+    BUILT_SCREENS.clear()
+    BUILT_HUB.clear()
+
+
 def screen_shown(name):
     """The selector as the board declares it, or with the port letter back in capitals."""
     for kind, _prop, shown in BOARD_SCREENS:

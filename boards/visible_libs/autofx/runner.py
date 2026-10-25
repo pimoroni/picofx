@@ -14,9 +14,9 @@ from picofx import RGBLED
 from picofx.colour import BLUE, RED, WHITE
 
 from .vocabulary import CONFIG_PATH, ERRORS_PATH
-from .hardware import BUILT_HUB, BUILT_SCREENS, BUILT_STRIPS
+from .hardware import BUILT_HUB, BUILT_SCREENS, BUILT_STRIPS, forget_built
 from .parser import in_line_order
-from .checks import candidates
+from .checks import copies
 from .shows import (DEFERRED_SHOWS, pending_shows, REPORTING_TO, service_shows, settle_hub,
                     user_trace)
 from .sounds import cue_sound
@@ -152,6 +152,14 @@ def indicate(fx, pattern=PROBLEM):
         time.sleep_ms(period_ms)
 
 
+def __tell(fx, problems, errors, running):
+    # Write the problems down and flash how bad they are. A drive that is full, damaged
+    # or absent leaves the report nowhere to go, and the outputs then say it alone
+    wrote = report(problems, errors, running)
+    if problems:
+        indicate(fx, PROBLEM if wrote else UNREPORTED)
+
+
 def __play(fx, volume, path, errors, playing, sounding=(), maker=None):
     # Stop what is playing, read the file again, and play what it now says.
     #
@@ -234,21 +242,14 @@ def __play(fx, volume, path, errors, playing, sounding=(), maker=None):
     if volume is None and DEFERRED_SHOWS:
         shows = pending_shows(problems)
 
-    if volume is None:
-        wrote = report(problems, errors, bool(players or shows or sounds))
-    else:
+    if volume is not None:
         # A shipped document the mount left stale is said here too, errors.txt being
         # where a reader with only the drive in front of them will look
         for name in volume.unhealed():
             problems.append("the FX drive is full, so {} is out of date; delete a "
                             "picture or sound from the drive to let it "
                             "rebuild".format(name))
-        wrote = report(problems, errors, bool(players or shows or sounds))
-
-    # A drive that is full, damaged or absent all end here, the report having had
-    # nowhere to go, and the outputs are then the only thing left to say it with
-    if problems:
-        indicate(fx, PROBLEM if wrote else UNREPORTED)
+    __tell(fx, problems, errors, bool(players or shows or sounds))
 
     # Started by the caller, which is the only one that knows whether a program is
     # about to take the board over
@@ -341,15 +342,17 @@ def __read_program(name, problems):
     #
     # Read before the drive is shown, since exposing it unmounts the mount point and a
     # program kept on the drive could not be opened once the computer has it
-    found = []
-    for candidate in candidates(name):
+    found = copies(name)
+    source = None
+    if found:
+        # Only the copy that runs is read, since a program can be large
         try:
-            with open(candidate) as handle:
-                found.append(handle.read())
+            with open(found[0]) as handle:
+                source = handle.read()
         except OSError:
-            continue
+            pass
 
-    if not found:
+    if source is None:
         # What is running is said here rather than in the report's heading, which
         # speaks for the file as a whole and is right about it either way
         problems.append("there is no program called {}, so the effects are running "
@@ -362,7 +365,7 @@ def __read_program(name, problems):
         problems.append("{} is on the drive and on the board's own filesystem, so "
                         "the drive's copy is the one that runs".format(name))
 
-    return found[0]
+    return source
 
 
 def __run_program(name, source, args, problems):
@@ -438,7 +441,10 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     scene_deadline = None
 
     def begin_scenes():
-        """Enter the first scene and set its clock, for a boot and every reload."""
+        """
+        Enter the first scene, set its clock and start the players, for a boot and every
+        reload.
+        """
         nonlocal scene_at, scene_deadline
         scene_at = 0
         scene_deadline = None
@@ -449,10 +455,10 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         else:
             cue_sound(sounds, None)
             settle_hub(shows)
+        __start(players, fx)
 
     if volume is None:
         begin_scenes()
-        __start(players, fx)
         return fx, players, shows, sounds, scenes, problems
 
     # A save landing on effects.txt answers as a single press does, unless the file
@@ -483,7 +489,6 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     # enough for a flash of them to be seen
     if not program:
         begin_scenes()
-        __start(players, fx)
 
     # Read while the board still holds the drive, since exposing it takes the mount
     # point away and a program kept there would have nothing left to open
@@ -512,11 +517,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         # went wrong is said where the user is looking
         if volume.exposed():
             volume.withdraw()
-        wrote = report(problems, errors, bool(players or shows or sounds))
-        if problems:
-            indicate(fx, PROBLEM if wrote else UNREPORTED)
-        begin_scenes()
-        __start(players, fx)            # Never started above, whether the program ran or not
+        __tell(fx, problems, errors, bool(players or shows or sounds))
+        begin_scenes()                  # Never started above, whether the program ran or not
         if drive_up:
             volume.expose()
 
@@ -567,6 +569,10 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                     pending = event
         return pending
 
+    def interrupted():
+        """Whether watch() has an event waiting, which stops a pass of the screens."""
+        return watch() != volume.IDLE
+
     # A stop from the REPL arrives as an exception, and without this the outputs
     # keep whatever they were last written and the computer keeps the drive
     try:
@@ -607,7 +613,6 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                     # behind it
                     volume.expose()
                 begin_scenes()
-                __start(players, fx)
                 # A frame each as the lights start, so the panels come back with them
                 service_shows(shows)
 
@@ -664,7 +669,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
 
                 # A frame can cost longer than the double press window, so the
                 # button is answered between the screens rather than after them all
-                drew = service_shows(shows, lambda: watch() != volume.IDLE)
+                drew = service_shows(shows, interrupted)
 
             if event == volume.BUSY:
                 # A press the computer's writing blocked otherwise looks exactly like
@@ -689,9 +694,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         # is never going to be built now
         for player in players:
             player.stop()
-        BUILT_SCREENS.clear()
-        BUILT_STRIPS.clear()
-        BUILT_HUB.clear()
+        forget_built()
         DEFERRED_SHOWS.clear()
         fx.shutdown()
 

@@ -27,10 +27,6 @@ COMPONENTS = ("r", "g", "b")
 # The one name on the left that is not a channel, its entry holding board settings
 BOARD = "board"
 
-# The player kinds that write the board's own outputs. A strip's player reaches none of
-# them, so a file playing only strips leaves the outputs as they were
-OUTPUT_KINDS = ("mono", "colour")
-
 
 # Each effect as its class, the kind of channel it drives, its CALLED and its TAKES, read
 # from picofx's own lists, so an effect added or changed there is offered here as it is.

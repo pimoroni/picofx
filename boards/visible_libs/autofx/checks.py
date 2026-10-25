@@ -26,8 +26,9 @@ def __degrees(text):
     return number / 360.0
 
 
-def candidates(name):
-    """Where a file the effects file names may be, the drive's copy first."""
+def __candidates(name):
+    # Where a file the effects file names may be, the drive's copy first.
+    #
     # A path is taken as written, since a doubled separator would otherwise fold and
     # '/prog.py' would quietly find the drive's copy. A plain name looks on the drive
     # first, that being the one the reader can see and edit
@@ -42,19 +43,24 @@ def candidates(name):
     return (MOUNT_DIR + "/" + name, name)
 
 
-def find_file(name, line, problems):
-    """
-    The file or folder an entry names, or None if there is none to play. The drive's
-    copy wins where the board has one too, as it does for a program.
-    """
+def copies(name):
+    """The places a file the effects file names exists, the drive's copy first."""
     found = []
-    for candidate in candidates(name):
+    for candidate in __candidates(name):
         try:
             os.stat(candidate)
             found.append(candidate)
         except OSError:
             continue
+    return found
 
+
+def find_file(name, line, problems):
+    """
+    The file or folder an entry names, or None if there is none to play. The drive's
+    copy wins where the board has one too, as it does for a program.
+    """
+    found = copies(name)
     if not found:
         problems.append("line {}: there is no {} on the drive or the board".format(line, name))
         return None
