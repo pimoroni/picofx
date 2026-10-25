@@ -197,7 +197,7 @@ For creating dynamic effects, classes can inherit from two types, `Updateable` a
 
 ### Offering an effect to an effects file
 
-On MightyFX, an effect can also be written by name in `effects.txt`. An effect offers itself by declaring three class attributes:
+An effect can also be written by name in an effects file, which `autofx` reads and plays. An effect offers itself by declaring three class attributes:
 
 * `NAME` is the word an entry writes. An effect without one is not offered.
 * `CALLED` is how a channel gets its callable: `None` where one object serves every channel, `"position"` where it is called with the channel's place in the group, and a tuple of method names where it names one per channel, as `traffic_light` names `red`, `amber` and `green`.
