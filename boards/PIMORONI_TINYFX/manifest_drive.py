@@ -5,6 +5,6 @@ include("manifest.py")
 freeze("../fx_libs/")
 freeze("./fx_libs/")
 
-# The effects player is frozen on this board. Its heap is the chip's SRAM alone, and
+# autofx is frozen on this board. Its heap is the chip's SRAM alone, and
 # compiling it from /lib at import would take most of it
 freeze("../visible_libs/", "autofx")

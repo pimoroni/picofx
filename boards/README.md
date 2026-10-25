@@ -25,7 +25,7 @@ A programmable, RP2350-based controller board that goes further with effects by 
 ## Shared Between the Boards
 
 * `fx_libs`: the FX drive, frozen into each `drive` variant beside the board's own pages, manual and defaults.
-* `visible_libs`: libraries copied to each board's `/lib`, beside the board's own, and the effects player that reads `effects.txt`, which only the `drive` variants carry, frozen in.
+* `visible_libs`: libraries copied to each board's `/lib`, beside the board's own. `autofx`, which plays `effects.txt`, is left out of `/lib` and frozen into each build carrying the FX drive.
 * `frozen_libs`: modules frozen into every build.
 * `editor`: the picker and editor pages, assembled for each board by `tools/build_editor.py`.
 * `manual`: the parts of the FX drive's manual, assembled for each board by `tools/build_manual.py`.

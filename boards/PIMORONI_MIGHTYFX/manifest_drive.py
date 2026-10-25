@@ -5,7 +5,7 @@ include("manifest.py")
 freeze("../fx_libs/")
 freeze("./fx_libs/")
 
-# The effects player and the screen libraries are frozen in, since the drive leaves the
+# autofx and the screen libraries are frozen in, since the drive leaves the
 # filesystem too small to hold them
 freeze("../visible_libs/", "autofx")
 freeze("$(BOARD_DIR)/../../../spidisplay/src", ("logging.py", "st7789.py"))
