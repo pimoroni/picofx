@@ -31,7 +31,7 @@
 * The WAV player fades tones and 16-bit WAVs in and out, resumes from `position()`, and turns the amplifier off while silent
 * The multi sensor stick's accelerometer and the QwSTPad are frozen into the firmware
 * A board that fails partway through being built hands back what it had claimed
-* The libraries and examples zips attach to a GitHub release
+* The uf2s and the libraries and examples zips attach to a GitHub release, named for its tag as release files have been
 
 **Mighty FX**
 
