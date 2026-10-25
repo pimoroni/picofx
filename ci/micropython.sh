@@ -11,8 +11,9 @@ PIMORONI_AYE_ARR_FLAVOUR="pimoroni"
 # while a screen is being sent a frame
 PIMORONI_AYE_ARR_VERSION="patch/receive-by-dma"
 
-# v3.1.0 with image files closed when they fail to open as a PNG or JPEG
-PIMORONI_PICOVECTOR_VERSION="v3.1.0-close-patch"
+# v3.1.0 with a pixel format chosen at build time, and picovector's later fixes. A board setting
+# PV_PIXEL_FORMAT 2 gets RGBA4444 canvases, and every other board builds as v3.1.0 does
+PIMORONI_PICOVECTOR_VERSION="rgba4444-pixel-format"
 
 PIMORONI_SPIDISPLAY_FLAVOUR="pimoroni"
 PIMORONI_SPIDISPLAY_VERSION="main"
