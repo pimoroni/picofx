@@ -68,6 +68,13 @@ jobs:
         submodules: true
         path: ${{ env.CI_PROJECT_ROOT }}
 
+    # A release rebuilds the editor pages to show its version without the committed pages' "preview"
+    - name: "Release: Editor pages"
+      if: github.event_name == 'release'
+      shell: bash
+      run: |
+        python3 $CI_PROJECT_ROOT/tools/build_editor.py --release ${{ github.event.release.tag_name }} $CI_PROJECT_ROOT/boards/${{ matrix.board }}
+
     - name: "Install Arm GNU Toolchain (arm-none-eabi-gcc)"
       uses: carlosperate/arm-none-eabi-gcc-action@v1
       with:
