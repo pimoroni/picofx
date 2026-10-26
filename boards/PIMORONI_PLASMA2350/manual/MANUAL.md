@@ -657,9 +657,9 @@ means a more serious one:
 
 | Flashes | What happened |
 | --- | --- |
-| white, once | the computer was still writing, so the press did nothing; try again in a moment |
-| blue, twice | something in `effects.txt` could not be read; `errors.txt` says which line |
-| red, three times | there was no room to write `errors.txt`; this drive is full or damaged, so free some space or let a computer repair it |
+| white, once | the computer was still writing, so the press was ignored. Try again in a moment |
+| blue, twice | a line in `effects.txt` could not be read, or a drawing failed. `errors.txt` names the line. A drawing's error appears there once the board has the drive back |
+| red, three times | there was no room to write `errors.txt`. This drive is full or damaged, so free some space or repair it from a computer |
 
 A setting with an invalid value is ignored and noted in `errors.txt`,
 and the effect uses its default instead.
