@@ -55,6 +55,7 @@
 * `STRIPS` and `SCREENS` name the board's strip connectors and screen ports
 * Add the Mighty FX examples for its onboard functions, effects and audio
 * Add the Mighty FX examples for the IR remote, Qw/ST sensors, WiFi and comms
+* Add the Mighty FX examples for motor drivers, servos, LED strips and GPIO
 
 1.1.2
 -----
