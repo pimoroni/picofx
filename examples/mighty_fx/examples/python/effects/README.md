@@ -112,7 +112,7 @@ Play a traffic light sequence on three of MightyFX's colours.
 
 ## Colour Effect Examples
 
-These play on each of MightyFX's outputs as a whole colour.
+These play on each of MightyFX's outputs as a whole colour. The last three, Sweep Trail, Traffic Light and Pelican Crossing, play mono effects, which bring no colour of their own, so the player draws each one in a colour it gives the output.
 
 ### Static RGB
 [colour/static_rgb.py](colour/static_rgb.py)
