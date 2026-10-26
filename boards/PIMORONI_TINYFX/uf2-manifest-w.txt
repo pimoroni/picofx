@@ -6,9 +6,11 @@ examples/programs/effects/*.py
 examples/programs/effects/mono/*.py
 examples/programs/effects/colour/*.py
 examples/programs/function/*.py
+examples/programs/qwst/*.py
 examples/programs/showcase/*.py
 examples/programs/audio/race_start.py
 examples/programs/audio/fair_use_encounters.py
+examples/programs/audio/wav_player.py
 examples/programs/infrared/*.py
 examples/programs/infrared/mono/*.py
 examples/programs/infrared/colour/*.py
