@@ -43,6 +43,7 @@
 * An output whose PWM channel a `SPCE.GPIO_PWM` connector takes becomes a `DisabledLED`, which says why when asked to light
 * Mighty FX answers on I2C as an FX target, and `MightyFXControl` drives one from another board
 * Networking, Bluetooth and `lte` for a Clipper are frozen into the firmware, and `spce` with its `MotorDriver` is copied to `/lib`
+* Add the Mighty FX examples for its onboard functions, effects and audio
 
 1.1.2
 -----
