@@ -6,6 +6,11 @@ examples/programs/effects/colour/*.py
 examples/programs/effects/mono/*.py
 examples/programs/audio/*.py
 examples/programs/function/*.py
+examples/programs/comms/*.py
+examples/programs/qwst/*.py
+examples/programs/infrared/colour/*.py
+examples/programs/infrared/mono/*.py
+examples/programs/wireless/*.py
 lib/*.py
 lib/comms/*.py
 lib/screens/*.py

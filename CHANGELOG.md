@@ -44,6 +44,7 @@
 * Mighty FX answers on I2C as an FX target, and `MightyFXControl` drives one from another board
 * Networking, Bluetooth, `lte` for a Clipper, and `spce` with its `MotorDriver` are frozen into the firmware
 * Add the Mighty FX examples for its onboard functions, effects and audio
+* Add the Mighty FX examples for the IR remote, Qw/ST sensors, WiFi and comms
 
 1.1.2
 -----
