@@ -22,6 +22,7 @@ examples/programs/screens/layout/*.py
 examples/programs/screens/pair/*.py
 examples/programs/screens/hub/*.py
 examples/programs/screens/playback/*.py
+examples/programs/showcase/*.py
 examples/pictures/*.gif
 examples/pictures/*.png
 examples/pictures/billboards/portrait/*.png
