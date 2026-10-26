@@ -16,6 +16,7 @@ The examples are grouped into folders by what they show, and each folder has a R
 - [LED Strip Examples](#led-strip-examples)
 - [GPIO Examples](#gpio-examples)
 - [Screen Examples](#screen-examples)
+- [Showcase Examples](#showcase-examples)
 
 
 ## Function Examples
@@ -88,3 +89,9 @@ These are micropython examples for using Mighty FX's SP/CE ports as general purp
 [examples/programs/screens](examples/programs/screens)
 
 These are micropython examples for the screens Mighty FX can drive from its SP/CE ports, one panel at a time, as a pair, or across a hub.
+
+
+## Showcase Examples
+[examples/programs/showcase](examples/programs/showcase)
+
+These are micropython examples that bring together what the individual board and screen examples show to make complete projects.
