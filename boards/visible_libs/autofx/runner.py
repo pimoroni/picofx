@@ -18,7 +18,7 @@ from .hardware import BUILT_HUB, BUILT_SCREENS, BUILT_STRIPS, forget_built
 from .parser import in_line_order
 from .checks import copies
 from .shows import (build_deferred_shows, DEFERRED_SHOWS, REPORTING_TO, service_shows, settle_hub,
-                    user_trace)
+                    STOPPED, UNWRITTEN, user_trace)
 from .sounds import cue_sound
 from .loader import apply_scene, load, restart_always
 from .triggers import Triggers
@@ -260,12 +260,21 @@ def __reload(fx, volume, path, errors, playing, showing, sounding=(), maker=None
         shows = build_deferred_shows(problems)
 
     if volume is not None:
-        # A shipped document the mount left stale is said here too, errors.txt being
+        # A shipped document the mount left stale is said here too, since errors.txt is
         # where a reader with only the drive in front of them will look
         for name in volume.unhealed():
             problems.append("the FX drive is full, so {} is out of date. Delete a "
                             "picture or sound from the drive to let it "
                             "rebuild".format(name))
+
+    # What stopped while the computer held the drive is said now that the board has it back
+    problems.extend(UNWRITTEN)
+    del UNWRITTEN[:]
+
+    # The bar stops before the drive can go back, as enumeration has deadlines its frames
+    # could make the board miss, and the board holds the steady light until the effects start
+    __stop_loading_bar()
+    __show_loading(fx)
     __tell(fx, problems, errors, bool(players or shows or sounds))
 
     # Started by the caller, which is the only one that knows whether a program is
@@ -871,6 +880,15 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                 # A frame can cost longer than the double press window, so the
                 # button is answered between the screens rather than after them all
                 drew = service_shows(shows, interrupted)
+
+                # Has a drawing or sound stopped? Nothing else shows it, so the outputs flash while
+                # the effects stand aside, as they do when the drive changes hands
+                if STOPPED:
+                    del STOPPED[:]
+                    __stop(players)
+                    indicate(fx, PROBLEM)
+                    if not (held or standby):
+                        __resume(players, fx)
 
             if event == volume.BUSY:
                 # A press the computer's writing blocked otherwise looks exactly like

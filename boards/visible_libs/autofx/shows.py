@@ -18,9 +18,32 @@ from .parser import value_shown
 from .checks import check_settings, find_file, read_fault, REFUSED
 
 # Where a problem found after the file was read is written, which run() sets to
-# whatever it was told to report to. A drawing is the one thing that can stop long
-# after load, so it is the only writer of this
+# whatever it was told to report to. A drawing or a sound can stop long after load,
+# and report_stop() is then the only thing that writes to that file
 REPORTING_TO = [ERRORS_PATH]
+
+# The drawings and sounds that stopped since the run loop last looked, which it flashes for
+STOPPED = []
+
+# What stopped drawings and sounds said while the computer held the drive. The next
+# reload writes it down, since there is nowhere to write it until the board has the drive back
+UNWRITTEN = []
+
+
+def report_stop(path, name, message, later):
+    """
+    Say that something stopped while the board played, and have the run loop flash for
+    it. Where the computer holds the drive, `later` waits for the next reload instead.
+    """
+    print(message)
+    STOPPED.append(name)
+    # Appended rather than written, so a drive with no room left keeps the account it has
+    try:
+        with open(path, "a") as handle:
+            handle.write("\n" + message + "\n")
+    # The computer holds the drive, or the drive is full
+    except OSError:
+        UNWRITTEN.append(later)
 
 
 class ScreenShow:
@@ -368,12 +391,14 @@ class Graphics:
     # all of which have owners while a drawing plays beside them
     IMPORTS = ("math", "random", "time", "picovector")
 
-    def __init__(self, name, code, width, height, background, errors, fps=None, paused=False):
+    def __init__(self, name, code, width, height, background, errors, fps=None, paused=False,
+                 line=0):
         # The canvas, made to this size and handed over by begin()
         self.width = width
         self.height = height
         self.image = None
         self.__name = name
+        self.__line = line          # The entry's, which a stop's message names
         self.__code = code
         self.__background = background
         self.__errors = errors
@@ -456,19 +481,15 @@ class Graphics:
         return True
 
     def __stop(self, error):
-        # Keep the last frame and say why, once, while the loop around this carries on
+        # Keep the last frame and say why, once, while the loop around this carries on.
+        # The drawing will have begun again by the time a reload writes the later account
         self.__stopped = True
-        message = ("the drawing {} stopped, so its screen keeps its last "
-                   "frame:\n{}".format(self.__name, user_trace(error)))
-        print(message)
-        # Where the reader is already looking, while the board holds the volume. Once
-        # the drive is shown the mount is gone and there is nowhere to write. Appended
-        # rather than written, so a drive with no room left keeps the account it has
-        try:
-            with open(self.__errors, "a") as handle:
-                handle.write("\n" + message + "\n")
-        except OSError:
-            pass
+        trace = user_trace(error)
+        report_stop(self.__errors, self.__name,
+                    "line {}: the drawing {} stopped, so its screen keeps its last "
+                    "frame:\n{}".format(self.__line, self.__name, trace),
+                    "line {}: the drawing {} failed while it played:\n{}".format(
+                        self.__line, self.__name, trace))
 
     def pause(self):
         if self.__playing:
@@ -564,7 +585,7 @@ def __read_drawing(path, target, at, problems):
         return None
 
 
-def __make_drawing(code, target, channels, screens, settings, fps, asleep):
+def __make_drawing(code, target, at, channels, screens, settings, fps, asleep):
     # The player for a drawing entry, sized and with its background set, for
     # __begin_drawings() to begin once its canvas is made
     import picovector
@@ -592,7 +613,7 @@ def __make_drawing(code, target, channels, screens, settings, fps, asleep):
                   if channel.background is not None else picovector.color.black)
 
     return Graphics(target, code, width, height, background, REPORTING_TO[0], fps=fps,
-                    paused=asleep)
+                    paused=asleep, line=at)
 
 
 def __begin_drawings(waiting, shows, built, problems):
@@ -1240,7 +1261,7 @@ def build_shows(entries, fx, board, problems, build=True):
 
         # A drawing is begun once every panel is built, on the canvas it keeps
         if entry.effect == "drawing":
-            player = __make_drawing(code, target, channels, screens, settings, fps, asleep)
+            player = __make_drawing(code, target, at, channels, screens, settings, fps, asleep)
             show = ScreenShow(screens, player, channels, entry.scene, places, light, entry.line)
             shows.append(show)
             waiting.append((show, at, target, entry.scene))
