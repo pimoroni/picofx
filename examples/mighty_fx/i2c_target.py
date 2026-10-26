@@ -15,7 +15,7 @@ with a unique address and press reset to set it running.
 Your Mighty FX will now appear to your I2C host board as an I2C device at the
 address you have given, and can be controlled by it.
 
-Refer to dual_mighty_fx.py in the comms examples for how to control your Mighty FX Target.
+Refer to the Mighty FX Host example for details of how to control your Mighty FX Target.
 """
 
 # Constants
