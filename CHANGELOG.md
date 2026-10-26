@@ -43,6 +43,7 @@
 * Fixed WAV files with tags before their audio not playing
 * The examples move into `examples/programs/`
 * The examples using the sensor connector take what it holds from `sensor=`
+* The sensor and voltage meters and the sensor wave keep their rate with `Pacer`
 
 **Mighty FX**
 

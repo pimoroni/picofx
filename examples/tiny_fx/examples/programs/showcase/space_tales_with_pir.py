@@ -1,6 +1,5 @@
-import time
-
 from sensor import PIR
+from timing import Roller
 from tiny_fx import TinyFX
 
 from picofx import MonoPlayer
@@ -15,7 +14,6 @@ Press "Boot" to exit the program.
 
 # Constants
 PIR_TIMEOUT = 10      # The time to wait before turning off the lights after the PIR sensor stops detecting motion (in seconds)
-PIR_TIMEOUT_MS = (PIR_TIMEOUT * 1000)
 
 # Variables
 tiny = TinyFX(sensor=PIR)           # Create a new TinyFX object, with a PIR on its sensor connector
@@ -34,8 +32,8 @@ player.effects = [
     None
 ]
 
-# Record the start time of the program
-last_motion = time.ticks_ms()
+# When to turn off the lights, pushed back each time the PIR sensor detects motion
+lights_out = Roller(PIR_TIMEOUT)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
@@ -45,13 +43,11 @@ try:
         # Has motion been detected?
         if pir.value() == 1:
             player.start()   # Start the effects running
-            last_motion = time.ticks_ms()
+            lights_out.restart()
 
-        if player.is_running():
-            elapsed_time = time.ticks_diff(time.ticks_ms(), last_motion)
-            if elapsed_time > PIR_TIMEOUT_MS:
-                player.stop(reset_fx=True)
-                tiny.clear()
+        if player.is_running() and lights_out.is_due():
+            player.stop(reset_fx=True)
+            tiny.clear()
 
 # Stop any running effects and turn off all the outputs
 finally:
