@@ -11,6 +11,10 @@ The examples are grouped by what they show, a folder each, and every folder has 
 - [Qw/ST Examples](#qwst-examples)
 - [Wireless Examples](#wireless-examples)
 - [Comms Examples](#comms-examples)
+- [Motor Examples](#motor-examples)
+- [Servo Examples](#servo-examples)
+- [LED Strip Examples](#led-strip-examples)
+- [GPIO Examples](#gpio-examples)
 
 
 ## Function Examples
@@ -53,3 +57,27 @@ These are micropython examples for driving Mighty FX from information obtained o
 [examples/python/comms](examples/python/comms)
 
 These are micropython examples for controlling other boards from Mighty FX over I2C.
+
+
+## Motor Examples
+[examples/python/motors](examples/python/motors)
+
+These are micropython examples for driving motors from a motor driver on one of Mighty FX's SP/CE connectors.
+
+
+## Servo Examples
+[examples/python/servos](examples/python/servos)
+
+These are micropython examples for driving a servo from Mighty FX's L and R connectors.
+
+
+## LED Strip Examples
+[examples/python/strips](examples/python/strips)
+
+These are micropython examples for driving an LED strip from Mighty FX's L and R connectors.
+
+
+## GPIO Examples
+[examples/python/gpio](examples/python/gpio)
+
+These are micropython examples for using Mighty FX's SP/CE ports as general purpose inputs and outputs.
