@@ -1,0 +1,290 @@
+import sys
+import time
+from mighty_fx import MightyFX, SPCE
+from timing import Pacer
+from screens import SCREEN_TYPES
+from picovector import color, font, image, rect, shape
+
+"""
+Draw a nixie tube with each digit lighting up inside the glass. The digit carrying
+current glows red-orange through the anode mesh.
+
+The glass, the nine unlit cathodes and the glow at the tube's foot never change, so they are drawn
+once into the background every frame starts from. A frame is that background, the lit cathode
+over it, three filters, and the front of the glass.
+
+Press "Boot" to exit the program.
+"""
+
+# Constants for drawing
+TUBE_FONT = "/rom/fonts/AlumniSansPinstripe.af"
+ANTIALIAS = image.X4                # A vector face needs it, and a line a pixel wide is all edge
+NEON = color.rgb(255, 102, 34)      # The red-orange a nixie's neon glows. rgb(120, 190, 255) is an argon tube
+CORE = color.rgb(255, 170, 102)     # And the paler middle of it, along the wire itself
+BACKGROUND = color.black            # Behind the tube
+
+# An unlit cathode is bare metal, drawn opaque so crossing digits never build up to the lit colour
+CATHODE_FRONT = (51, 43, 36)        # At the front of the stack, warmed by the neon behind it
+CATHODE_BACK = (22, 20, 18)         # And at the back, further into the dark
+
+# The stack, front cathode first, in an order tubes commonly use so the ones in front hide the lit one
+# least. One further back shows smaller and a little higher, the tube being seen from just above
+ORDER = (6, 7, 5, 8, 4, 3, 9, 2, 0, 1)
+DEPTH_SCALE = 0.978
+DEPTH_Y = 1
+DIGIT_H = 185                       # The drawn height of the front cathode's digit, in panel pixels
+LIT = 255                           # The cathode carrying current
+REF = 200                           # A size to measure the face at, its em box inside the scratch
+
+# The tube, a glass cylinder stood on its pins, domed at the top and flat at the foot. Its lengths
+# are for a panel 320 pixels tall, and scale down with a shorter one
+TUBE_W = 130
+TUBE_TOP = 6
+TUBE_FOOT = 292                     # Where the glass ends and the pins begin
+FOOT_CORNER = 8
+TINT = color.rgb(34, 17, 0)         # The glass, warmed by what is inside it
+RIM = color.rgb(255, 221, 170)      # What catches the light on the glass
+SHADE = 18                          # How far in from the wall the glass darkens, which rounds the cylinder
+SHADE_DARK = 170                    # How dark it is at the wall itself, of 255
+PINS = 11
+PIN = color.rgb(119, 102, 85)
+BOARD = color.rgb(17, 17, 17)       # What the tube is stood in
+ROD = color.rgb(68, 60, 52)         # The supports down either side of the stack
+MICA = color.rgb(102, 94, 85)       # The spacers the stack is held between
+
+# What the glow reaches besides the cathode itself
+ENVELOPE = 60                       # The glass down either side of the tube, catching a little of it
+BASE_GLOW = 110                     # The gas low in the tube, where the cathodes' leads gather
+BASE_ROWS = 34                      # How far up that reaches, falling away over the distance
+SHEATH = 2                          # How far the neon's sheath reaches past the wire, in panel pixels
+SHEATH_LEVEL = 0.28                 # Its brightness against the core's
+
+# The filters over the whole frame, the neon's glow, the anode mesh in front of it, and the glass
+GLOW_FROM = 100                     # The brightness a pixel glows from, well above an unlit cathode's
+GLOW = 220                          # How much of the halo is added back, 255 being all of it
+GLOW_SPREAD = 10                    # How far it reaches, in panel pixels
+MESH = 4                            # Every this many rows and columns is darkened
+MESH_DARK = 30                      # By this much, of 255
+CURVE = 80                          # How far the picture falls away at the edges
+
+COUNT_MS = 1000                     # A digit a second, this being the seconds place of a clock
+CHANGE_MS = 200                     # One digit going out as the next comes up, both seen together
+
+# Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
+# what the effects file passes in args, the size first
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 0 if not sys.argv[2:] else int(sys.argv[2])
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
+# Create a MightyFX object with SP/CE A set up for a screen
+mighty = MightyFX(spce_a=SPCE.SCREEN)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
+
+# Drawn as the panel is turned
+canvas = screen.canvas()
+WIDTH, HEIGHT = canvas.width, canvas.height
+canvas.antialias = ANTIALIAS
+
+# The tube and its digit scaled to the panel's height, so the tube keeps its shape on a shorter panel
+SCALE = HEIGHT / 320
+DIGIT_H, TUBE_W, TUBE_TOP, TUBE_FOOT, FOOT_CORNER, SHADE, BASE_ROWS = (
+    round(length * SCALE) for length in (DIGIT_H, TUBE_W, TUBE_TOP, TUBE_FOOT, FOOT_CORNER, SHADE, BASE_ROWS))
+
+CATHODES = len(ORDER)
+DEPTH_OF = {digit: depth for depth, digit in enumerate(ORDER)}
+# Each depth's unlit colour, stepped from the front cathode's to the back one's
+UNLIT = tuple(color.rgb(*(round(front + (back - front) * depth / (CATHODES - 1))
+                          for front, back in zip(CATHODE_FRONT, CATHODE_BACK)))
+              for depth in range(CATHODES))
+
+# The background is drawn once, and first the scratch for the measurement below
+stack = image(WIDTH, HEIGHT)
+stack.antialias = ANTIALIAS
+# The face goes on both, as a cathode is drawn onto the background while unlit and onto the frame once lit
+stack.font = canvas.font = font.load(TUBE_FONT)
+BLANK = bytes(len(stack.raw))   # A cleared stack's bytes, copied in to wipe it before a measurement
+
+
+def lettering_rows(letters, size, at):
+    """
+    Measure the first and last rows these characters fill.
+
+    A face's metrics are not where its lettering lands.
+    """
+    stack.raw[:] = BLANK
+    stack.pen = color.white
+    stack.text(letters, at, at, size)
+
+    filled = bytes(stack.raw)
+    return ((len(filled) - len(filled.lstrip(b"\0"))) // stack.stride,
+            (len(filled.rstrip(b"\0")) - 1) // stack.stride)
+
+
+TOP, BOTTOM = lettering_rows("8", REF, 0)
+SIZE = REF * DIGIT_H / (BOTTOM - TOP + 1)
+LETTERING_DOWN = TOP / REF  # How far below the y it is drawn at a digit's lettering starts, per unit of size
+ADVANCE = {digit: stack.measure_text(str(digit), font_size=SIZE)[0] for digit in ORDER}
+print(f"a digit {DIGIT_H} tall at font size {SIZE:.0f}, over a stack {CATHODES} deep")
+
+
+def place(digit):
+    """
+    Where a cathode's digit is drawn and at what size, for its depth.
+
+    Every digit is centred so the count does not walk across the tube.
+    """
+    depth = DEPTH_OF[digit]
+    size = SIZE * DEPTH_SCALE ** depth
+    return ((WIDTH - ADVANCE[digit] * size / SIZE) / 2,
+            (HEIGHT - DIGIT_H * size / SIZE) / 2 - LETTERING_DOWN * size - DEPTH_Y * depth, size)
+
+
+TUBE_X = (WIDTH - TUBE_W) // 2
+TUBE_R = TUBE_W / 2
+TUBE_CX = WIDTH / 2
+DOME_CY = TUBE_TOP + TUBE_R
+SIDE = TUBE_FOOT - DOME_CY          # The length of the straight wall, under the dome
+GLASS = shape.rounded_rectangle(TUBE_X, TUBE_TOP, TUBE_W, TUBE_FOOT - TUBE_TOP,
+                                TUBE_R, TUBE_R, FOOT_CORNER, FOOT_CORNER)
+
+# The front of the glass, drawn over everything else and made once
+FRONT = (
+    # The outline, and a fainter line just inside it where the wall's thickness shows
+    (RIM.with_alpha(80), shape.rounded_rectangle(TUBE_X, TUBE_TOP, TUBE_W, TUBE_FOOT - TUBE_TOP,
+                                                 TUBE_R, TUBE_R, FOOT_CORNER, FOOT_CORNER).stroke(1.5)),
+    (RIM.with_alpha(30), shape.rounded_rectangle(TUBE_X + 3, TUBE_TOP + 3, TUBE_W - 6, TUBE_FOOT - TUBE_TOP - 5,
+                                                 TUBE_R - 3, TUBE_R - 3, FOOT_CORNER - 2,
+                                                 FOOT_CORNER - 2).stroke(1)),
+    # A streak down the lit side, a faint wide one with a bright narrow one in it, and a thinner one opposite
+    (RIM.with_alpha(22), shape.rounded_rectangle(TUBE_X + 8 * SCALE, DOME_CY - 6 * SCALE, 7 * SCALE, SIDE - 20 * SCALE, 3.5 * SCALE)),
+    (RIM.with_alpha(150), shape.rounded_rectangle(TUBE_X + 10.5 * SCALE, DOME_CY + 24 * SCALE, 2, SIDE - 80 * SCALE, 1)),
+    (RIM.with_alpha(55), shape.rounded_rectangle(TUBE_X + TUBE_W - 11 * SCALE, DOME_CY + 40 * SCALE, 2, SIDE - 120 * SCALE, 1)),
+    # The dome catching the light on both shoulders, and the foot where the glass turns under
+    (RIM.with_alpha(110), shape.arc(TUBE_CX, DOME_CY, TUBE_R - 9 * SCALE, TUBE_R - 6 * SCALE, -62, -24)),
+    (RIM.with_alpha(40), shape.arc(TUBE_CX, DOME_CY, TUBE_R - 9 * SCALE, TUBE_R - 7 * SCALE, 30, 52)),
+    (RIM.with_alpha(60), shape.rounded_rectangle(TUBE_X + 10 * SCALE, TUBE_FOOT - 3, TUBE_W - 20 * SCALE, 1.5, 0.75)),
+)
+
+# The tip on top of the dome, where the tube was sealed, dark glass with the light on one side of it
+TIP_RECT = (TUBE_CX - 9 * SCALE, TUBE_TOP - 5 * SCALE, 18 * SCALE, 13 * SCALE, 8 * SCALE, 8 * SCALE, 3 * SCALE, 3 * SCALE)
+TIP = ((color.rgb(68, 51, 34), shape.rounded_rectangle(*TIP_RECT)),
+       (RIM.with_alpha(80), shape.rounded_rectangle(*TIP_RECT).stroke(1)),
+       (RIM.with_alpha(140), shape.rounded_rectangle(TUBE_CX - 5 * SCALE, TUBE_TOP - 3 * SCALE, 3 * SCALE, 7 * SCALE, 1.5 * SCALE)))
+
+# The eight places round the digit its sheath is drawn at
+SHEATH_AT = tuple((dx, dy) for dx in (-SHEATH, 0, SHEATH) for dy in (-SHEATH, 0, SHEATH) if dx or dy)
+
+
+def build():
+    """Draw the background every frame starts from, the tube with its unlit stack and the glow beyond the cathodes."""
+    stack.pen = BACKGROUND
+    stack.clear()
+
+    # The pins, from the foot of the glass into the board, and the board
+    board_y = TUBE_FOOT + round(16 * SCALE)
+    stack.pen = PIN
+    for pin in range(PINS):
+        stack.vspan(round(TUBE_X + 14 * SCALE + pin * (TUBE_W - 28 * SCALE) / (PINS - 1)), TUBE_FOOT, board_y - TUBE_FOOT)
+    stack.pen = BOARD
+    stack.rectangle(rect(0, board_y, WIDTH, HEIGHT - board_y))
+
+    # The glass, darkening towards its walls as a cylinder does
+    stack.pen = TINT
+    stack.shape(GLASS)
+    wall = TUBE_FOOT - round(DOME_CY)
+    for step in range(SHADE):
+        stack.pen = BACKGROUND.with_alpha(round(SHADE_DARK * (1 - step / SHADE) ** 2))
+        stack.vspan(TUBE_X + step, round(DOME_CY), wall - FOOT_CORNER // 2)
+        stack.vspan(TUBE_X + TUBE_W - 1 - step, round(DOME_CY), wall - FOOT_CORNER // 2)
+        stack.shape(shape.arc(TUBE_CX, DOME_CY, TUBE_R - step - 1, TUBE_R - step, -90, 90))
+
+    # And the light of the gas held in it, down the walls and gathered at the foot
+    stack.pen = NEON.with_alpha(ENVELOPE)
+    stack.vspan(TUBE_X + 1, round(DOME_CY), wall - FOOT_CORNER)
+    stack.vspan(TUBE_X + TUBE_W - 2, round(DOME_CY), wall - FOOT_CORNER)
+    for row in range(BASE_ROWS):
+        stack.pen = NEON.with_alpha(round(BASE_GLOW * (1 - row / BASE_ROWS) ** 2))
+        stack.hspan(TUBE_X + 3, TUBE_FOOT - 2 - row, TUBE_W - 6)
+
+    # The supports down either side of the stack, and the spacers it is held between. A spacer is a disc
+    # seen from just above, so the top of it shows as a thin ellipse
+    top = (HEIGHT - DIGIT_H) // 2 - round(12 * SCALE)
+    bottom = (HEIGHT + DIGIT_H) // 2 + round(8 * SCALE)
+    stack.pen = ROD
+    stack.vspan(TUBE_X + round(18 * SCALE), top, TUBE_FOOT - top)
+    stack.vspan(TUBE_X + TUBE_W - round(19 * SCALE), top, TUBE_FOOT - top)
+    for y in (top - 2, bottom + 2):
+        stack.pen = MICA.with_alpha(150)
+        stack.shape(shape.ellipse(TUBE_CX, y, TUBE_R - 12 * SCALE, 3))
+        stack.pen = MICA
+        stack.shape(shape.ellipse(TUBE_CX, y, TUBE_R - 12 * SCALE, 3).stroke(1))
+
+    for pen, part in TIP:
+        stack.pen = pen
+        stack.shape(part)
+
+    # Back to front, so a nearer cathode crosses over those behind it
+    for depth in range(CATHODES - 1, -1, -1):
+        x, y, size = place(ORDER[depth])
+        stack.pen = UNLIT[depth]
+        stack.text(str(ORDER[depth]), x, y, size)
+
+
+def draw(showing):
+    """
+    Draw one frame, the background, the cathode or two carrying current, and the tube.
+
+    The digit coming on and the one going out arrive in showing, each with its brightness.
+    """
+    # The background is cleared under first, as its blended pixels fall a little short of opaque
+    # and the previous frame would show through them
+    canvas.pen = BACKGROUND
+    canvas.clear()
+    canvas.blit(stack, 0, 0)
+
+    # A lit cathode goes over the whole stack, as neon outshines the wires in front. Its sheath is the
+    # digit around the wire, its core the digit on it
+    for digit, level in showing:
+        if level:
+            x, y, size = place(digit)
+            canvas.pen = NEON.with_alpha(round(level * SHEATH_LEVEL))
+            for dx, dy in SHEATH_AT:
+                canvas.text(str(digit), x + dx, y + dy, size)
+            canvas.pen = CORE.with_alpha(level)
+            canvas.text(str(digit), x, y, size)
+
+    # The bloom goes on the opaque frame, as on a transparent one it lifts channels past their alpha
+    canvas.bloom(GLOW_FROM, GLOW, GLOW_SPREAD)
+    canvas.grid(MESH, MESH_DARK)
+    canvas.vignette(CURVE)
+    for pen, glass in FRONT:
+        canvas.pen = pen
+        canvas.shape(glass)
+
+
+marked = time.ticks_ms()
+build()
+print(f"{CATHODES} cathodes drawn, the nine unlit ones into the background, in"
+      f" {time.ticks_diff(time.ticks_ms(), marked)}ms")
+
+shown = None
+pacer = Pacer(0.01)
+
+# Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
+try:
+    while not mighty.boot_pressed():
+        elapsed = pacer.elapsed
+        count, into = divmod(elapsed, COUNT_MS)
+        # A tube switches quickly, and for that moment the cathode losing the current still glows
+        up = min(1.0, into / CHANGE_MS)
+        showing = ((count % 10, round(LIT * up)), ((count - 1) % 10, round(LIT * (1 - up))))
+        if showing != shown:
+            draw(showing)
+            screen.update(canvas)
+            shown = showing
+
+        pacer.hold()
+
+# Stop any running effects and turn off all the outputs
+finally:
+    mighty.shutdown()
