@@ -62,11 +62,11 @@ Deleting effects.txt restores the default; emptying it leaves the board dark.
 When something is wrong the outputs say so, and the more flashes the worse it is.
 The RGB output shows the colour:
 
-  white, once         the computer was still writing, so the press did nothing;
-                      try again in a moment
-  blue, twice         something in effects.txt could not be read; errors.txt
+  white, once         the computer was still writing, so the press did nothing.
+                      Try again in a moment
+  blue, twice         something in effects.txt could not be read. errors.txt
                       says which line
-  red, three times    there was no room to write errors.txt; this drive is full
+  red, three times    there was no room to write errors.txt. This drive is full
                       or damaged, so free some space or let a computer repair it
 
 While the computer is copying to this drive the effects stand aside for a dim
