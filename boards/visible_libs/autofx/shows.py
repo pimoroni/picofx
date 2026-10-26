@@ -274,11 +274,11 @@ class Graphics:
     A drawing standing where a player does, the file's draw(canvas, elapsed) painting
     a canvas the size of the panel at fps or as often as the screen takes a frame.
 
-    The module body is the setup, run once here and again on a restart, from a code
-    object kept so neither ever needs the drive. Its imports are held to IMPORTS,
-    which catches a pasted program reaching for hardware the effects are already
-    driving. That is a mistake caught, not a boundary, since builtins cannot be
-    restricted on this port. A draw() that raises keeps its last frame on the glass
+    The module body is the setup, run once begin() hands over the canvas and again on a
+    restart, from a code object kept so neither ever needs the drive. Its imports are
+    held to IMPORTS, which catches a pasted program reaching for hardware the effects
+    are already driving. That is a mistake caught, not a boundary, since builtins cannot
+    be restricted on this port. A draw() that raises keeps its last frame on the glass
     and says why once, with everything around it carrying on.
     """
 
@@ -286,8 +286,11 @@ class Graphics:
     # all of which have owners while a drawing plays beside them
     IMPORTS = ("math", "random", "time", "picovector")
 
-    def __init__(self, name, code, canvas, ground, errors, fps=None, paused=False):
-        self.image = canvas
+    def __init__(self, name, code, width, height, ground, errors, fps=None, paused=False):
+        # The canvas, made to this size and handed over by begin()
+        self.width = width
+        self.height = height
+        self.image = None
         self.__name = name
         self.__code = code
         self.__ground = ground
@@ -302,6 +305,11 @@ class Graphics:
         # ticks range on a board left running
         self.__elapsed_ms = 0
         self.__playing = not paused
+        self.__last = None
+
+    def begin(self, canvas):
+        """Begin on the canvas the drawing paints for its whole run, raising as the file does."""
+        self.image = canvas
         self.__last = time.ticks_ms()
         self.__begin()
 
@@ -468,8 +476,8 @@ def __read_drawing(path, target, at, problems):
         return None
 
 
-def __make_drawing(code, target, at, channel, screen, settings, fps, asleep, problems):
-    # The player for a graphics entry, with its canvas made, its ground set and the file begun
+def __make_drawing(code, target, channel, screen, settings, fps, asleep):
+    # The player for a graphics entry, sized and with its ground set, begun once its canvas is made
     import picovector
 
     # The canvas fills the panel as the entry mounts it, so the drawing works in the
@@ -486,53 +494,64 @@ def __make_drawing(code, target, at, channel, screen, settings, fps, asleep, pro
     ground = (picovector.color.rgb(*channel.background)
               if channel.background is not None else picovector.color.black)
 
-    try:
-        return Graphics(target, code, picovector.image(width, height), ground,
-                          REPORTING_TO[0], fps=fps, paused=asleep)
-    # Sized and answered as a picture that will not fit is, the two landing in the
-    # same file, though only the canvas is this entry's to make smaller
-    except MemoryError as e:
-        problems.append(__too_big(at, target, "graphics", e))
-    # The traceback, since this is the user's own code and a line number is what
-    # makes it fixable
-    except Exception as e:      # noqa: BLE001
-        problems.append("line {}: {} could not start:\n{}".format(at, target, user_trace(e)))
-    return None
+    return Graphics(target, code, width, height, ground, REPORTING_TO[0], fps=fps,
+                    paused=asleep)
 
 
-def __place_canvases(shows):
-    # Move each drawing to a canvas in SRAM while one fits, the largest first, where the
-    # heap is PSRAM, since a drawing clears and paints there in a fraction of the time.
+def __begin_drawings(waiting, shows, built, problems):
+    # Give each drawing the canvas it paints for its whole run and begin it, the largest
+    # first, dropping one that cannot start. Where the heap is PSRAM a canvas goes in SRAM
+    # while one fits, since a drawing clears and paints there in a fraction of the time.
     #
     # Run once every panel of the file holds its workspace, as canvases and workspaces
-    # share one region and a workspace claimed after a canvas could find no room. The
-    # last file's canvases are released first, all together, nothing else holding them.
-    # A drawing keeps the frame its setup drew, copied across
-    if not __HEAP_IN_PSRAM:
-        return
-
+    # share one region and a workspace claimed after a canvas could find no room
     import picovector
-    import spidisplay
 
-    spidisplay.release_buffers()
+    if __HEAP_IN_PSRAM:
+        import spidisplay
+        # The last file's canvases, released all together, nothing else holding them
+        spidisplay.release_buffers()
 
-    drawings = [show.player for show in shows if isinstance(show.player, Graphics)]
     # Sizes paired with positions, so the sort compares numbers and never a player, and
     # of two the same size the one earlier in the file comes first
-    order = sorted(((player.image.width * player.image.height, -index)
-                    for index, player in enumerate(drawings)), reverse=True)
+    order = sorted(((show.player.width * show.player.height, -index)
+                    for index, (show, _, _, _) in enumerate(waiting)), reverse=True)
 
+    # The SRAM a drawing that could not start was given. The region is only released
+    # whole, and every drawing after it is no larger, so the next one takes it over
+    spare = None
     for pixels, negated in order:
-        player = drawings[-negated]
-        width, height = player.image.width, player.image.height
+        show, at, target, scene = waiting[-negated]
+        player = show.player
+        buffer = None
+        if __HEAP_IN_PSRAM:
+            buffer, spare = spare, None
+            if buffer is None:
+                try:
+                    buffer = spidisplay.buffer(pixels * spidisplay.PIXEL_BYTES)
+                # Drawn on a canvas from the heap instead
+                except ValueError:
+                    pass
         try:
-            buffer = spidisplay.buffer(pixels * spidisplay.PIXEL_BYTES)
-        # Left in PSRAM, where it already draws
-        except ValueError:
-            continue
-        # The bytes themselves, as a blit blends and is a few levels off in places
-        buffer[:] = memoryview(player.image)
-        player.image = picovector.image(width, height, buffer)
+            if buffer is None:
+                canvas = picovector.image(player.width, player.height)
+            else:
+                canvas = picovector.image(player.width, player.height, buffer)
+            player.begin(canvas)
+        # Sized and answered as a picture that will not fit is, the two landing in the
+        # same file, though only the canvas is this entry's to make smaller
+        except MemoryError as e:
+            problems.append(__too_big(at, target, "graphics", e))
+            shows.remove(show)
+            built.difference_update((scene, place) for place in show.places)
+            spare = buffer
+        # The traceback, since this is the user's own code and a line number is what
+        # makes it fixable
+        except Exception as e:      # noqa: BLE001
+            problems.append("line {}: {} could not start:\n{}".format(at, target, user_trace(e)))
+            shows.remove(show)
+            built.difference_update((scene, place) for place in show.places)
+            spare = buffer
 
 
 def wants_full_size(entries, board):
@@ -541,7 +560,7 @@ def wants_full_size(entries, board):
     costs one screen about a third of its speed. Where the heap is PSRAM it is taken
     only where some scene streams two screens the smaller reserve cannot convert in
     time, either turned a quarter or both full colour, and never beside a drawing,
-    which takes the smaller reserve so its canvas fits in SRAM (__place_canvases()).
+    which takes the smaller reserve so its canvas fits in SRAM (__begin_drawings()).
     An animation converts fast from its palette, a sequence's frames count as full
     colour, and a picture is sent once.
 
@@ -891,6 +910,8 @@ def build_shows(entries, fx, board, problems, build=True):
     """
     shows = []
     built = set()
+    # The drawings built, each with its entry's line, file and scene, begun at the end
+    waiting = []
     full_size = wants_full_size(entries, board)
 
     hub = hub_port(board)
@@ -1013,14 +1034,14 @@ def build_shows(entries, fx, board, problems, build=True):
         # first apply, so every scene starts its content from the top
         asleep = entry.scene is not None
 
+        # A drawing is begun once every panel is built, on the canvas it keeps
         if entry.effect == "graphics":
-            player = __make_drawing(code, target, at, channel, screen, settings,
-                                    fps, asleep, problems)
-            if player is None:
-                continue
+            player = __make_drawing(code, target, channel, screen, settings, fps, asleep)
+            show = ScreenShow(screen, player, channel, entry.scene, places, light, entry.line)
+            shows.append(show)
+            waiting.append((show, at, target, entry.scene))
+            # Taken now, so a repeat in its scene skips, and given back if it cannot start
             built.update((entry.scene, place) for place in places)
-            shows.append(ScreenShow(screen, player, channel, entry.scene, places, light,
-                                    entry.line))
             continue
 
         try:
@@ -1059,7 +1080,7 @@ def build_shows(entries, fx, board, problems, build=True):
     # nothing to say about which screens are still wanted. A hub's positions share
     # one backlight, which the hub's light answers for
     if build:
-        __place_canvases(shows)
+        __begin_drawings(waiting, shows, built, problems)
 
         names = {used for _, used in built}
         for name, (screen, _) in BUILT_SCREENS.items():
