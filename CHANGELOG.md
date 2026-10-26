@@ -47,6 +47,7 @@
 * Add the Mighty FX examples for the IR remote, Qw/ST sensors, WiFi and comms
 * Add the Mighty FX examples for motor drivers, servos, LED strips and GPIO
 * Add the Mighty FX examples for screens and the Screen Hub, with the pictures they show
+* Add the Mighty FX showcases, bringing the examples together as projects
 
 1.1.2
 -----
