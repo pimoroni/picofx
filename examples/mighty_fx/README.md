@@ -7,6 +7,10 @@ The examples are grouped by what they show, a folder each, and every folder has 
 - [Function Examples](#function-examples)
 - [Effect Examples](#effect-examples)
 - [Audio Examples](#audio-examples)
+- [Infrared Examples](#infrared-examples)
+- [Qw/ST Examples](#qwst-examples)
+- [Wireless Examples](#wireless-examples)
+- [Comms Examples](#comms-examples)
 
 
 ## Function Examples
@@ -25,3 +29,27 @@ These are micropython examples for the effects Mighty FX can play on its seven R
 [examples/python/audio](examples/python/audio)
 
 These are micropython examples for the audio Mighty FX can play through its onboard amplifier.
+
+
+## Infrared Examples
+[examples/python/infrared](examples/python/infrared)
+
+These are micropython examples for controlling Mighty FX from a Pimoroni Aye Arr Remote, with an IR Stick connected to its sensor connector.
+
+
+## Qw/ST Examples
+[examples/python/qwst](examples/python/qwst)
+
+These are micropython examples for driving Mighty FX from a sensor plugged into its Qw/ST connector.
+
+
+## Wireless Examples
+[examples/python/wireless](examples/python/wireless)
+
+These are micropython examples for driving Mighty FX from information obtained over WiFi.
+
+
+## Comms Examples
+[examples/python/comms](examples/python/comms)
+
+These are micropython examples for controlling other boards from Mighty FX over I2C.
