@@ -46,6 +46,7 @@
 * Add the Mighty FX examples for its onboard functions, effects and audio
 * Add the Mighty FX examples for the IR remote, Qw/ST sensors, WiFi and comms
 * Add the Mighty FX examples for motor drivers, servos, LED strips and GPIO
+* Add the Mighty FX examples for screens and the Screen Hub, with the pictures they show, most taking a 1.54" screen as well as a 2.8" and a rotation in args
 
 1.1.2
 -----
