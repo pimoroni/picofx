@@ -51,7 +51,7 @@ try:
             # Whilst playing animate the outputs
             for i in range(len(tiny.outputs)):
                 tiny.outputs[i].on()
-                time.sleep(0.05)
+                time.sleep(ANIMATION_SLEEP)
 
         # Loop forever, again
         while True:
@@ -84,7 +84,7 @@ try:
                     # Whilst playing animate the outputs
                     for i in range(len(tiny.outputs)):
                         tiny.outputs[len(tiny.outputs) - i - 1].off()
-                        time.sleep(0.05)
+                        time.sleep(ANIMATION_SLEEP)
 
                 # Break out of the inner loop
                 break
