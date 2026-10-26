@@ -1,6 +1,6 @@
-from timing import Pacer
 from mighty_fx import MightyFX
 from sensor import ANALOG
+from timing import Pacer
 
 """
 Use MightyFX's RGB outputs as a bargraph to show the voltage measured from a sensor

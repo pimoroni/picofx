@@ -1,5 +1,5 @@
-from timing import Pacer
 from mighty_fx import MightyFX
+from timing import Pacer
 
 """
 Use MightyFX's RGB outputs as a bargraph to show the voltage that is powering the board.

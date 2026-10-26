@@ -1,8 +1,8 @@
 import time
 
-from timing import Pacer
 from lsm6ds3 import LSM6DS3
 from mighty_fx import MightyFX
+from timing import Pacer
 
 """
 Use MightyFX's RGB outputs as a spirit level, read from an accelerometer on Qw/ST.

@@ -1,5 +1,5 @@
-from timing import Pacer
 from sensor import ANALOG
+from timing import Pacer
 from tiny_fx import TinyFX
 
 from picofx import MonoPlayer

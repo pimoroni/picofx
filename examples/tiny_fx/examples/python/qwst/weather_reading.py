@@ -1,7 +1,7 @@
 import time
 
-from timing import Pacer
 from breakout_bme280 import BreakoutBME280
+from timing import Pacer
 from tiny_fx import TinyFX
 
 """

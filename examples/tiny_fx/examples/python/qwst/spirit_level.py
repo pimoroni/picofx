@@ -1,7 +1,7 @@
 import time
 
-from timing import Pacer
 from lsm6ds3 import LSM6DS3
+from timing import Pacer
 from tiny_fx import TinyFX
 
 """

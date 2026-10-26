@@ -1,8 +1,8 @@
 import time
 
-from timing import Pacer
 from breakout_bme280 import BreakoutBME280
 from mighty_fx import MightyFX
+from timing import Pacer
 
 """
 Show the temperature on MightyFX's RGB outputs as a bargraph, read from a weather

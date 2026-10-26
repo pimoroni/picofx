@@ -1,5 +1,5 @@
-from timing import Pacer
 from breakout_ltr559 import BreakoutLTR559
+from timing import Pacer
 from tiny_fx import TinyFX
 
 from picofx import MonoPlayer

@@ -1,6 +1,6 @@
-from timing import Pacer
 from breakout_ltr559 import BreakoutLTR559
 from mighty_fx import MightyFX
+from timing import Pacer
 
 from picofx import ColourPlayer
 from picofx.mono import FlickerFX
