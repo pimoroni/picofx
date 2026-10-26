@@ -26,7 +26,7 @@ Section: Transport signs
 # gantry signal is square, which is the 1.54" panel's own shape; on a 2.8" it is centred and the rest of the
 # panel is left as the housing around it
 SCREEN = Screen280
-ROTATION = 90                   # A signal is drawn landscape and turned a quarter onto its panel
+ROTATION = 0                    # 0 or 180, portrait so both panel sizes sit edge to edge across a gantry
 
 # Panel pixels across one lamp of the matrix. An aperture reads as round from about six pixels up, so this
 # is the finest matrix the panel holds, and it puts a real signal's resolution inside the face
@@ -108,7 +108,6 @@ if not screens:
 
 # A group holds the lanes to one refresh, so a setting reaches all of them on one frame and any tear band
 # crawls along the gantry. A group of one is still a gantry, so however many answered are driven the same way.
-# A signal is drawn landscape, and the group turns it a quarter onto every panel
 gantry = ScreenGroup(*screens, rotation=ROTATION)
 
 # The distinct aspects each setting calls for, over the lanes that answered, calculated once. This is what
@@ -122,9 +121,9 @@ for setting in GANTRY:
 
     ASPECTS_IN.append(distinct)
 
-# One canvas serves every lane, drawn again for each aspect a setting calls for. Landscape and turned a
-# quarter onto the panels. On the heap, not in SRAM, a gantry redrawing only when it changes
-WIDTH, HEIGHT = screens[0].height, screens[0].width
+# One canvas serves every lane, drawn again for each aspect a setting calls for, portrait as the panels
+# are. On the heap, not in SRAM, a gantry redrawing only when it changes
+WIDTH, HEIGHT = screens[0].width, screens[0].height
 canvas = image(WIDTH, HEIGHT)
 
 # The signal is square and as large as the panel allows, centred, so the housing is whatever is left
