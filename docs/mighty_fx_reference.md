@@ -222,7 +222,7 @@ What the board set up is then available through `sensor`:
 | --- | --- |
 | `ANALOG` | an `Analog`, read with `read_voltage()`, which optionally takes a `samples` count |
 | `PIR` | a `Pin`, already an input with its pull-up set, read with `value()` |
-| `IR` | a `NECRemoteReceiver` from the `aye_arr` library, already started, ready to `bind()` a remote and `decode()` |
+| `IR` | a `NECRemoteReceiver` from the `aye_arr` library, ready to `bind()` a remote, `start()` listening and `decode()` |
 
 Without `sensor=`, the board leaves the connector alone, and reading `sensor` raises an error saying so.
 

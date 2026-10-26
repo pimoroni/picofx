@@ -30,7 +30,7 @@ SAT_STEP = 0.01         # The amount that saturation will change by with each pr
 VAL_STEP = 0.05         # The amount that value will change by with each press / repeat
 
 # Variables
-tiny = TinyFX(sensor=IR)           # Create a new TinyFX object, with the infrared receiver on its sensor connector
+tiny = TinyFX(sensor=IR)            # Create a new TinyFX object, with the infrared receiver on its sensor connector
 led = tiny.rgb                      # Get a reference to the RGB output of TinyFX
 hue = 0
 sat = 0
@@ -87,12 +87,14 @@ remote.bind("LEFT", (adjust_sat, -SAT_STEP))
 remote.bind("UP", (adjust_val, VAL_STEP))
 remote.bind("DOWN", (adjust_val, -VAL_STEP))
 
-# Take the receiver the board set up, and bind the remote to it.
+# Take the receiver the board set up, and bind the remote to it
 receiver = tiny.sensor
 receiver.bind(remote)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
+    receiver.start()    # Start listening for the remote
+
     # Loop forever
     while True:
         # Decode any IR pulses received since the last time this was called.

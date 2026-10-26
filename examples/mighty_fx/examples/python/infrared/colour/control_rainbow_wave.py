@@ -94,14 +94,15 @@ remote.bind("LEFT", (adjust_length, -LENGTH_STEP))
 remote.bind("UP", (adjust_val, VAL_STEP))
 remote.bind("DOWN", (adjust_val, -VAL_STEP))
 
-# Take the receiver the board set up, and bind the remote to it.
+# Take the receiver the board set up, and bind the remote to it
 receiver = mighty.sensor
 receiver.bind(remote)
 
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
-    player.start()   # Start the effects running
+    receiver.start()    # Start listening for the remote
+    player.start()      # Start the effects running
 
     # Loop until the effect stops or the "Boot" button is pressed
     while player.is_running() and not mighty.boot_pressed():

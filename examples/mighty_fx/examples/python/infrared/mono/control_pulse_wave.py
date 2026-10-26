@@ -73,13 +73,14 @@ remote.bind("CLOCKWISE", (adjust_speed, SPEED_MULT))
 remote.bind("RIGHT", (adjust_length, LENGTH_STEP))
 remote.bind("LEFT", (adjust_length, -LENGTH_STEP))
 
-# Take the receiver the board set up, and bind the remote to it.
+# Take the receiver the board set up, and bind the remote to it
 receiver = mighty.sensor
 receiver.bind(remote)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
-    player.start()   # Start the effects running
+    receiver.start()    # Start listening for the remote
+    player.start()      # Start the effects running
 
     # Loop until the effect stops or the "Boot" button is pressed
     while not mighty.boot_pressed():

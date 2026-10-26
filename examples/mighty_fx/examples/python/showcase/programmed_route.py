@@ -302,7 +302,7 @@ remote.bind("RECORD", on_record, on_repeat=None)
 remote.bind("PLAY_PAUSE", on_play, on_repeat=None)
 remote.bind("RETURN_UNDO", on_undo, on_repeat=None)
 
-# Take the receiver the board set up, and bind the remote to it.
+# Take the receiver the board set up, and bind the remote to it
 receiver = mighty.sensor
 receiver.bind(remote)
 
@@ -311,7 +311,8 @@ print("Press RECORD to take a route down, then PLAY to drive it")
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
-    player.start()
+    receiver.start()    # Start listening for the remote
+    player.start()      # Start the effects running
 
     while not mighty.boot_pressed():
         receiver.decode()

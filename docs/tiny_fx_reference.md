@@ -167,7 +167,7 @@ What the board set up is then available through `sensor`:
 | --- | --- |
 | `ANALOG` | an `Analog`, read with `read_voltage()`, which optionally takes a `samples` count |
 | `PIR` | a `Pin`, already an input with its pull-up set, read with `value()` |
-| `IR` | a `NECRemoteReceiver` from the `aye_arr` library, already started, ready to `bind()` a remote and `decode()` |
+| `IR` | a `NECRemoteReceiver` from the `aye_arr` library, ready to `bind()` a remote, `start()` listening and `decode()` |
 
 Letting the board set up `IR` is especially worthwhile, as the receiver needs a PIO state machine and the board knows which ones are free.
 
@@ -178,7 +178,10 @@ tiny = TinyFX(sensor=IR)
 
 receiver = tiny.sensor
 receiver.bind(PimoroniRemote())
+receiver.start()
 ```
+
+The board stops the receiver when it shuts down.
 
 Without `sensor=`, the board leaves the connector alone, and reading `sensor` raises an error saying so. To use the connector some other way, its pin number is available as `SENSOR_PIN`.
 

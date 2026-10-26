@@ -24,7 +24,7 @@ PIR_TIMEOUT_MS = (PIR_TIMEOUT * 1000)
 tiny = TinyFX(sensor=PIR)           # Create a new TinyFX object, with a PIR on its sensor connector
 player = MonoPlayer(tiny.outputs)   # Create a new effect player to control TinyFX's mono outputs
 
-# Set up a pin for reading the PIR sensor connected to TinyFX
+# Take the PIR sensor the board set up on its sensor connector
 pir = tiny.sensor
 
 # Set up the effects to play

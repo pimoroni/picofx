@@ -96,14 +96,15 @@ remote.bind("DOWN", on_press=(drive, -DRIVE_SPEED), on_release=stop)
 remote.bind("LEFT", on_press=(spin, -TURN_SPEED), on_release=stop)
 remote.bind("RIGHT", on_press=(spin, TURN_SPEED), on_release=stop)
 
-# Take the receiver the board set up, and bind the remote to it.
+# Take the receiver the board set up, and bind the remote to it
 receiver = mighty.sensor
 receiver.bind(remote)
 
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
-    player.start()   # Start the lights running
+    receiver.start()    # Start listening for the remote
+    player.start()      # Start the lights running
 
     # Loop until the "Boot" button is pressed
     while not mighty.boot_pressed():

@@ -23,7 +23,7 @@ BRIGHTNESS = 1.0                    # The initial brightess of each channel (fro
 BRIGHTNESS_STEP = 0.02              # The amount to change the brightness by when fading
 
 # Variables
-tiny = TinyFX(sensor=IR)           # Create a new TinyFX object, with the infrared receiver on its sensor connector
+tiny = TinyFX(sensor=IR)            # Create a new TinyFX object, with the infrared receiver on its sensor connector
 player = MonoPlayer(tiny.outputs)   # Create a new effect player to control TinyFX's mono outputs
 
 
@@ -63,14 +63,15 @@ remote.bind("4_CYAN", on_press=None, on_short=(toggle_mono, 4), on_repeat=(fade_
 remote.bind("5_MAGENTA", on_press=None, on_short=(toggle_mono, 5), on_repeat=(fade_mono, 5))
 remote.bind("6_YELLOW", on_press=None, on_short=(toggle_mono, 6), on_repeat=(fade_mono, 6))
 
-# Take the receiver the board set up, and bind the remote to it.
+# Take the receiver the board set up, and bind the remote to it
 receiver = tiny.sensor
 receiver.bind(remote)
 
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
-    player.start()   # Start the effects running
+    receiver.start()    # Start listening for the remote
+    player.start()      # Start the effects running
 
     # Loop until the effect stops or the "Boot" button is pressed
     while not tiny.boot_pressed():

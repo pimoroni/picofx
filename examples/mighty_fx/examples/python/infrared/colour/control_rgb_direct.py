@@ -41,12 +41,14 @@ remote.bind("8_WHITE", (set_outputs, WHITE))
 remote.bind("9_COOL", (set_outputs, COOL))
 remote.bind("OK_STOP", (set_outputs, BLACK))
 
-# Take the receiver the board set up, and bind the remote to it.
+# Take the receiver the board set up, and bind the remote to it
 receiver = mighty.sensor
 receiver.bind(remote)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
+    receiver.start()    # Start listening for the remote
+
     # Loop until the effect stops or the "Boot" button is pressed
     while not mighty.boot_pressed():
         # Decode any IR pulses received since the last time this was called.

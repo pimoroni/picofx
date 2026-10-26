@@ -66,14 +66,15 @@ remote.bind("5_MAGENTA", on_press=None, on_short=(toggle_output, 5), on_repeat=(
 remote.bind("6_YELLOW", on_press=None, on_short=(toggle_output, 6), on_repeat=(fade_output, 6))
 remote.bind("7_WARM", on_press=None, on_short=(toggle_output, 7), on_repeat=(fade_output, 7))
 
-# Take the receiver the board set up, and bind the remote to it.
+# Take the receiver the board set up, and bind the remote to it
 receiver = mighty.sensor
 receiver.bind(remote)
 
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
-    player.start()   # Start the effects running
+    receiver.start()    # Start listening for the remote
+    player.start()      # Start the effects running
 
     # Loop until the effect stops or the "Boot" button is pressed
     while not mighty.boot_pressed():

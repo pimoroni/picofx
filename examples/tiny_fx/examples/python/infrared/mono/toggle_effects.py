@@ -22,7 +22,7 @@ Thumbnail: outputs mono
 """
 
 # Variables
-tiny = TinyFX(sensor=IR)           # Create a new TinyFX object, with the infrared receiver on its sensor connector
+tiny = TinyFX(sensor=IR)            # Create a new TinyFX object, with the infrared receiver on its sensor connector
 player = MonoPlayer(tiny.outputs)   # Create a new effect player to control TinyFX's mono outputs
 
 # Set up the effects to play
@@ -61,13 +61,14 @@ remote.bind("2_GREEN", on_press=(toggle_channel, 5), on_repeat=None)
 remote.bind("3_BLUE", on_press=(toggle_channel, 2), on_repeat=None)
 remote.bind("4_CYAN", on_press=(toggle_channel, 1), on_repeat=None)
 
-# Take the receiver the board set up, and bind the remote to it.
+# Take the receiver the board set up, and bind the remote to it
 receiver = tiny.sensor
 receiver.bind(remote)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
-    player.start()
+    receiver.start()    # Start listening for the remote
+    player.start()      # Start the effects running
 
     # Loop until the "Boot" button is pressed
     while not tiny.boot_pressed():

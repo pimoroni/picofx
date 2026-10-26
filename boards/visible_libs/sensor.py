@@ -16,7 +16,7 @@ ROLES = (ANALOG, PIR, IR)
 def build_sensor(role, pin, pio, sm):
     """
     Build what the connector was declared as on its pin, or None for no role. A receiver
-    is started here, holding its state machine until the board shuts down.
+    holds its state machine until the board shuts down, and is left for the program to start.
     """
     # No role claims nothing, leaving the pin free for anything wired to the connector
     if role is None:
@@ -31,8 +31,6 @@ def build_sensor(role, pin, pio, sm):
 
     if role == IR:
         from aye_arr.nec import NECRemoteReceiver
-        built = NECRemoteReceiver(pin, pio, sm)
-        built.start()
-        return built
+        return NECRemoteReceiver(pin, pio, sm)
 
     raise ValueError(f"'{role}' is not a sensor role. Pass sensor=ANALOG, sensor=PIR or sensor=IR, imported from sensor")
