@@ -51,9 +51,10 @@ SKIES = ((0.0, color.rgb(124, 184, 242)), (0.2, color.rgb(180, 204, 234)),
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
-# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
+# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it.
+# rotation is how the panel is mounted, which every frame then takes without naming it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = ScreenType(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
 city = image.load(ART)
 palette = city.palette
@@ -127,7 +128,7 @@ try:
 
         # Doubled to cover the panel and tiled sideways, the sky filling everything the city
         # does not cover
-        screen.update(city, rotation=ROTATION, pixel_double=True, tile=(True, False),
+        screen.update(city, pixel_double=True, tile=(True, False),
                       bg_color=sky_shades[darkness * (SKY_STEPS - 1) // 255],
                       offset=(-frames * STEP, 0))
         frames += 1

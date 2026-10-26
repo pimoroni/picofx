@@ -64,9 +64,10 @@ ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 # Create a MightyFX object with both SP/CE ports set up for screens, and a panel on each
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 
-# A pair holds both panels to one refresh rate and keeps their scans together
-pair = ScreenPair(ScreenType(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES),
-                  ScreenType(mighty.spce_b, reserve=Reserve.FULL_SIZE_IMAGES))
+# A pair holds both panels to one refresh rate and keeps their scans together. rotation is
+# how the panels are mounted, which every frame then takes without naming it
+pair = ScreenPair(ScreenType(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION),
+                  ScreenType(mighty.spce_b, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION))
 first, second = pair.screens
 
 hexagons = first.canvas(HEX_W, HEX_H)
@@ -175,8 +176,7 @@ try:
 
         # Two images and an offset each, in one call: the hexagons drift on the diagonal
         # and the blocks sideways, from one tile setting they happen to share
-        pair.update(hexagons, blocks, rotation=ROTATION,
-                    offset=((-hex_at, -hex_at), (-block_at, 0)), tile=True)
+        pair.update(hexagons, blocks, offset=((-hex_at, -hex_at), (-block_at, 0)), tile=True)
         frames += 1
 
 # Stop any running effects and turn off all the outputs

@@ -40,9 +40,10 @@ LEAN = 150                       # How far a band slides over the poster's heigh
 BANDS = ((30, 26, 10, 2.0, True), (96, 9, 6, 3.5, True), (150, 34, 14, 1.6, False),
          (206, 14, 8, 2.2, True), (232, 30, 12, 1.4, False))
 
-# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
+# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it.
+# rotation is how the panel is mounted, which every frame then takes without naming it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = Screen280(mighty.spce_a, rotation=ROTATION)
 canvas = screen.canvas(screen.width, screen.height)
 WIDE, TALL = canvas.width, canvas.height
 
@@ -108,7 +109,7 @@ try:
             canvas.blit(poster, rect(0, 0, poster.width, poster.height), rect(0, 0, WIDE, TALL))
             canvas.blit(pane, 0, 0)
             laid = time.ticks_diff(time.ticks_ms(), marked)
-            screen.update(canvas, rotation=ROTATION)
+            screen.update(canvas)
             print(f"poster {player.frame} laid under the pane in {laid}ms")
 
 # Stop any running effects and turn off all the outputs

@@ -19,10 +19,11 @@ Press "Boot" to exit the program.
 GIF_PATH = "/examples/assets/pirate_coin.gif"   # The GIF to play
 ROTATION = 90                              # Quarter turn, to suit how the screens are mounted
 
-# Create a MightyFX object with both SP/CE ports set up for screens, and a 2.8" screen on each
+# Create a MightyFX object with both SP/CE ports set up for screens, and a 2.8" screen on each.
+# rotation is how the panels are mounted, which every frame then takes without naming it
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
-pair = ScreenPair(Screen280(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES),
-                  Screen280(mighty.spce_b, reserve=Reserve.FULL_SIZE_IMAGES))
+pair = ScreenPair(Screen280(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION),
+                  Screen280(mighty.spce_b, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION))
 
 # A GIF carries a delay for each frame but no clock, so a player is what walks them
 player = GIFPlayer(GIF_PATH)
@@ -35,7 +36,7 @@ try:
     while not mighty.boot_pressed():
         # One call reaches both panels, so only send when the frame changes
         if player.has_advanced():
-            pair.update(player.image, rotation=ROTATION, bg_color=ground)
+            pair.update(player.image, bg_color=ground)
 
 # Stop any running effects and turn off all the outputs
 finally:

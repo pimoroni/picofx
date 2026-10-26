@@ -284,11 +284,12 @@ mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 
 # A screen refuses to be created where no panel answered on its port, so one panel flies a
 # world on its own and a second brings the other alongside. The reserve is what a pair needs
-# to convert two sources on one frame; a lone screen simply does not draw on it
+# to convert two sources on one frame; a lone screen simply does not draw on it. rotation is
+# how the panels are mounted, which every frame then takes without naming it
 screens = []
 for port in (mighty.spce_a, mighty.spce_b):
     try:
-        screens.append(ScreenType(port, reserve=Reserve.FULL_SIZE_IMAGES))
+        screens.append(ScreenType(port, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION))
     except ValueError as e:
         print(e)
 
@@ -316,12 +317,11 @@ try:
     while not leaving:
         if pair is not None:
             first, second = leading, (leading + 1) % len(WORLDS)
-            pair.update(tiles[first], tiles[second], rotation=ROTATION,
+            pair.update(tiles[first], tiles[second],
                         offset=(flown(WORLDS[first], places[first]),
                                 flown(WORLDS[second], places[second])), tile=True)
         else:
-            screens[0].update(tiles[leading], rotation=ROTATION,
-                              offset=flown(WORLDS[leading], places[leading]), tile=True)
+            screens[0].update(tiles[leading], offset=flown(WORLDS[leading], places[leading]), tile=True)
 
         # Judged on release, a press being impossible to tell from a hold until it ends
         if mighty.boot_pressed():

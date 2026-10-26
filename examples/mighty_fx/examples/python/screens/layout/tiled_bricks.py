@@ -34,9 +34,10 @@ GROUT = color.rgb(196, 188, 172)
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
-# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
+# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it.
+# rotation is how the panel is mounted, which every frame then takes without naming it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = ScreenType(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
 # Two courses of one brick, and the driver makes a wall of it
 wall = screen.canvas(BRICK_W, BRICK_H * 2)
@@ -72,8 +73,7 @@ try:
     while not mighty.boot_pressed():
         # Sliding the wall proves there is no seam in it: the courses run on for ever in
         # both directions, from those three bricks
-        screen.update(wall, rotation=ROTATION,
-                      offset=(-frames * STEP, -frames * STEP), tile=True)
+        screen.update(wall, offset=(-frames * STEP, -frames * STEP), tile=True)
         frames += 1
 
 # Stop any running effects and turn off all the outputs

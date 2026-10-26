@@ -35,9 +35,10 @@ FPS = 8                          # The rate the pattern itself animates at
 STEP = 2                         # Pixels the field travels each frame
 TURN = 50                        # Frames a change of direction takes
 
-# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
+# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it.
+# rotation is how the panel is mounted, which every frame then takes without naming it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = Screen280(mighty.spce_a, rotation=ROTATION)
 
 player = SequencePlayer(FRAMES, fps=FPS)
 WIDE = player.image.width        # The tile, and so how far the field travels across before it repeats
@@ -78,8 +79,7 @@ steps = moves()
 try:
     while not mighty.boot_pressed():
         # The tile fills the panel wherever the field has reached, the read wrapping on both axes
-        screen.update(player.image, rotation=ROTATION,
-                      offset=(-across, -down), tile=(True, True))
+        screen.update(player.image, offset=(-across, -down), tile=(True, True))
         step_across, step_down = next(steps)
         across += step_across
         down += step_down

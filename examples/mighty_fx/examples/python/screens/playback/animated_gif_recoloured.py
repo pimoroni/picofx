@@ -32,9 +32,10 @@ REPORTS = (color.rgb(0, 255, 64), color.rgb(255, 196, 40),
            color.rgb(255, 64, 48), color.rgb(64, 200, 255))
 
 # Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it. The
-# reserve is what keeps a source larger than the panel ahead of the wire
+# reserve is what keeps a source larger than the panel ahead of the wire, and rotation is how
+# the panel is mounted, which every frame then takes without naming it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES)
+screen = Screen280(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION)
 
 # The scan has two ends, a whole body and a whole skeleton, so it turns around rather than
 # jumping from one to the other
@@ -74,7 +75,7 @@ try:
                 pass_number += 1
                 report(REPORTS[pass_number % len(REPORTS)])
 
-            screen.update(player.image, rotation=ROTATION)
+            screen.update(player.image)
 
 # Stop any running effects and turn off all the outputs
 finally:

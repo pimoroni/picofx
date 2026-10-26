@@ -24,10 +24,11 @@ DWELL = 3.0                      # Seconds a poster is up for
 AHEAD = 4                        # How far along the folder the second panel reads, so the two never match
 
 # Create a MightyFX object with both SP/CE ports set up for screens, and a 2.8" screen on
-# each. Two screens each converting their own full-size poster is what the reserve buys.
+# each. Two screens each converting their own full-size poster is what the reserve buys, and
+# rotation is how the panels are mounted, which every frame then takes without naming it
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
-pair = ScreenPair(Screen280(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES),
-                  Screen280(mighty.spce_b, reserve=Reserve.FULL_SIZE_IMAGES))
+pair = ScreenPair(Screen280(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION),
+                  Screen280(mighty.spce_b, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION))
 
 player = SequencePlayer(POSTERS, fps=1 / DWELL)
 print(f"{player.frames} posters, {DWELL}s each, the second panel {AHEAD} along")
@@ -37,7 +38,7 @@ try:
     while not mighty.boot_pressed():
         # One call sends both panels, so neither is ever left showing what the other has moved on from
         if player.has_advanced():
-            pair.update(player.image, player.image_at((player.frame + AHEAD) % player.frames), rotation=ROTATION)
+            pair.update(player.image, player.image_at((player.frame + AHEAD) % player.frames))
 
 # Stop any running effects and turn off all the outputs
 finally:

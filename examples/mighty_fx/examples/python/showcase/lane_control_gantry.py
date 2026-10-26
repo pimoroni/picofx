@@ -107,8 +107,9 @@ if not screens:
     raise RuntimeError("No panels answered! Check the hub is plugged into SP/CE A, with its panels on the hub rather than on the board")
 
 # A group holds the lanes to one refresh, so a setting reaches all of them on one frame and any tear band
-# crawls along the gantry. A group of one is still a gantry, so however many answered are driven the same way
-gantry = ScreenGroup(*screens)
+# crawls along the gantry. A group of one is still a gantry, so however many answered are driven the same way.
+# A signal is drawn landscape, and the group turns it a quarter onto every panel
+gantry = ScreenGroup(*screens, rotation=ROTATION)
 
 # The distinct aspects each setting calls for, over the lanes that answered, calculated once. This is what
 # makes a setting cost a write per aspect, not per lane
@@ -464,9 +465,8 @@ def send(setting, on_the_left):
     """
     for aspect in ASPECTS_IN[setting]:
         draw_signal(aspect, on_the_left)
-        gantry.update(canvas, rotation=ROTATION,
-                      to=tuple(screen for screen, showing in zip(screens, GANTRY[setting])
-                               if showing == aspect))
+        gantry.update(canvas, to=tuple(screen for screen, showing in zip(screens, GANTRY[setting])
+                                       if showing == aspect))
 
 
 started = time.ticks_ms()

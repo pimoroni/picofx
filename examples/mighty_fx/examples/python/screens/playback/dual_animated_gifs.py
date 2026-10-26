@@ -27,10 +27,11 @@ GIF_PATH_B = "/examples/assets/medscan.gif"         # The GIF to play on the scr
 ROTATION = 90                                       # Quarter turn, to suit how the screens are mounted
 
 # Create a MightyFX object with both SP/CE ports set up for screens, and a 2.8" screen on
-# each. Two screens each converting their own full-size frame is what the reserve buys.
+# each. Two screens each converting their own full-size frame is what the reserve buys, and
+# rotation is how the panels are mounted, which every frame then takes without naming it
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
-pair = ScreenPair(Screen280(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES),
-                  Screen280(mighty.spce_b, reserve=Reserve.FULL_SIZE_IMAGES))
+pair = ScreenPair(Screen280(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION),
+                  Screen280(mighty.spce_b, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION))
 
 # A player each, since the two GIFs declare their own delays and are different lengths. The scan
 # sweeps one way only, so it plays as a ping-pong and sweeps back down: run forward, its last frame
@@ -51,7 +52,7 @@ try:
         # one redundant redraw: a player's position comes from the clock and never from how
         # often it was asked
         if player_a.has_advanced() or player_b.has_advanced():
-            pair.update(player_a.image, player_b.image, rotation=ROTATION, bg_color=grounds)
+            pair.update(player_a.image, player_b.image, bg_color=grounds)
 
 # Stop any running effects and turn off all the outputs
 finally:

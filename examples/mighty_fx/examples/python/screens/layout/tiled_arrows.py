@@ -35,9 +35,10 @@ MODES = (True, Tile.MIRROR)
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
-# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
+# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it.
+# rotation is how the panel is mounted, which every frame then takes without naming it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = ScreenType(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
 # One wedge, which the driver repeats to fill the panel
 wedge = screen.canvas(TILE, TILE)
@@ -70,7 +71,7 @@ try:
             shown = across
 
         # Down the panel the tile joins itself, so only the across axis ever changes
-        screen.update(wedge, rotation=ROTATION, tile=(across, True))
+        screen.update(wedge, tile=(across, True))
         frames += 1
 
 # Stop any running effects and turn off all the outputs

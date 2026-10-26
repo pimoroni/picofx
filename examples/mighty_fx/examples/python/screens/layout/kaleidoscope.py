@@ -51,9 +51,10 @@ JEWELS = (shape.circle(0, 0, 1), shape.regular_polygon(0, 0, 1, 3),
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
-# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
+# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it.
+# rotation is how the panel is mounted, which every frame then takes without naming it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = ScreenType(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
 # The window has to be a quarter of the panel for its four reflections to fill the panel
 # exactly, so it comes from the panel and not from a pair of numbers. The quarter turn
@@ -141,7 +142,7 @@ try:
         # The offset puts the folds in the right place: a window placed one of itself along
         # and down lands the middle of the circle in the middle of the panel. Without it a
         # fold runs through the middle instead.
-        screen.update(wheel[frames // HOLD % FRAMES], rotation=ROTATION,
+        screen.update(wheel[frames // HOLD % FRAMES],
                       offset=(TILE_W, TILE_H), tile=Tile.MIRROR, bg_color=GROUND)
         frames += 1
 

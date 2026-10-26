@@ -31,11 +31,12 @@ mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_SELECTS)
 # The hub hands out a port per chip select it reaches, whether or not a panel is on the end
 # of it. One that is not there refuses to be created, so build them all and keep whichever
 # answered: a hub does not have to be full to be used. They share one backlight line and a
-# poster reaches them one at a time, so reveal_together holds it until all of them have one
+# poster reaches them one at a time, so reveal_together holds it until all of them have one.
+# rotation is how the panels are mounted, which every frame then takes without naming it
 panels = []
 for port in mighty.hub.ports:
     try:
-        panels.append(Screen280(port, reveal_together=True))
+        panels.append(Screen280(port, reveal_together=True, rotation=ROTATION))
     except ValueError:
         pass
 
@@ -55,7 +56,7 @@ try:
         if player.has_advanced():
             marked = time.ticks_ms()
             for index, panel in enumerate(panels):
-                panel.update(player.image_at((player.frame + index) % player.frames), rotation=ROTATION)
+                panel.update(player.image_at((player.frame + index) % player.frames))
 
             print(f"the change rippled across {len(panels)} panels in"
                   f" {time.ticks_diff(time.ticks_ms(), marked)}ms")

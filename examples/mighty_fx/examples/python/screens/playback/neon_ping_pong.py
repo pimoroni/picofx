@@ -26,9 +26,10 @@ ROTATION = 90                    # Quarter turn, to suit how the screen is mount
 FPS = 8                          # The rate to play at, a folder of images declaring none
 HOLD = 0.4                       # Seconds to dwell where it turns around, at each end
 
-# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
+# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it.
+# rotation is how the panel is mounted, which every frame then takes without naming it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = Screen280(mighty.spce_a, rotation=ROTATION)
 
 # hold takes one value for both ends, or two for the far end and then back at the start
 player = SequencePlayer(FRAMES, fps=FPS, ping_pong=True, hold=HOLD)
@@ -39,7 +40,7 @@ try:
     while not mighty.boot_pressed():
         # The screen refreshes faster than the animation changes, so only send a new frame
         if player.has_advanced():
-            screen.update(player.image, rotation=ROTATION)
+            screen.update(player.image)
 
 # Stop any running effects and turn off all the outputs
 finally:

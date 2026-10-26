@@ -23,9 +23,10 @@ GIF_PATH = "/examples/assets/pirate_coin.gif"   # The GIF to play
 ROTATION = 90                    # Quarter turn, to suit how the screen is mounted
 HOLD = 1.0                       # Seconds to dwell at each end, both being the coin face
 
-# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
+# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it.
+# rotation is how the panel is mounted, which every frame then takes without naming it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = Screen280(mighty.spce_a, rotation=ROTATION)
 
 # ping_pong needs somewhere to turn around, and first_as_last needs a turn to put its extra
 # frame at, so a plain forward loop refuses both
@@ -39,7 +40,7 @@ try:
     while not mighty.boot_pressed():
         # The screen refreshes faster than the GIF changes, so only send a new frame
         if player.has_advanced():
-            screen.update(player.image, rotation=ROTATION, bg_color=ground)
+            screen.update(player.image, bg_color=ground)
 
 # Stop any running effects and turn off all the outputs
 finally:

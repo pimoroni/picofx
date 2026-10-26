@@ -43,9 +43,10 @@ INK = color.rgb(236, 240, 248)
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
-# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
+# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it.
+# rotation is how the panel is mounted, which every frame then takes without naming it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = ScreenType(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
 # The quarter turn swaps the panel's sides, so this is the picture as it is mounted
 PANEL_W, PANEL_H = screen.height, screen.width
@@ -130,12 +131,12 @@ try:
                 draw_card(small, 1, *DOUBLED_LINES)
 
         if state == 0:
-            screen.update(sharp, rotation=ROTATION)
+            screen.update(sharp)
         elif state == 1:
             # At its own size and centred, which is the whole of what the source holds
-            screen.update(small, rotation=ROTATION, bg_color=BAND)
+            screen.update(small, bg_color=BAND)
         else:
-            screen.update(small, rotation=ROTATION, pixel_double=True)
+            screen.update(small, pixel_double=True)
         frames += 1
 
 # Stop any running effects and turn off all the outputs

@@ -84,9 +84,10 @@ GLOW_ALPHA = 40                         # What the innermost ring adds, of 255; 
 DOME_LIGHT = 190                        # The core a lit lamp shows, and the light unlit glass catches
 CONSOLE_PAD = 2                         # How far the plate under the line reaches past what sits on it
 
-# Create a MightyFX object with SP/CE A set up for a screen, and its RGB outputs for the line
+# Create a MightyFX object with SP/CE A set up for a screen, and its RGB outputs for the line.
+# rotation is how the panel is mounted, which every frame then takes without naming it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = Screen280(mighty.spce_a, rotation=ROTATION)
 
 # Half the panel each way, doubled by update(): a quarter of the pixels for the same picture
 canvas = screen.canvas(screen.height // 2, screen.width // 2)
@@ -426,7 +427,7 @@ try:
             mighty.outputs[index].set_rgb(hue.r * level, hue.g * level, hue.b * level)
 
         draw(elapsed, live)
-        screen.update(canvas, rotation=ROTATION, pixel_double=True)
+        screen.update(canvas, pixel_double=True)
         pacer.hold()
 
 # Stop any running effects and turn off all the outputs
