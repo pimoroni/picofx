@@ -3,23 +3,23 @@
 These are micropython examples for Mighty FX's onboard functions, being its Boot button, its voltage sense and its sensor connector.
 
 - [Examples](#examples)
-  - [Count Taps](#count-taps)
   - [Read Button](#read-button)
+  - [Count Taps](#count-taps)
   - [Sensor Meter](#sensor-meter)
   - [Voltage Meter](#voltage-meter)
 
 
 ## Examples
 
-### Count Taps
-[count_taps.py](count_taps.py)
-
-Count taps of MightyFX's Boot button, including the ones that happen while the board is busy, and show the count on its RGB outputs.
-
 ### Read Button
 [read_button.py](read_button.py)
 
 Show the state of MightyFX's Boot button on its RGB outputs.
+
+### Count Taps
+[count_taps.py](count_taps.py)
+
+Count taps of MightyFX's Boot button, including the ones that happen while the board is busy, and show the count on its RGB outputs.
 
 ### Sensor Meter
 [sensor_meter.py](sensor_meter.py)

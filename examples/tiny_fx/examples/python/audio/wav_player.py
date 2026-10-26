@@ -3,13 +3,13 @@ from tiny_fx import TinyFX
 from picofx.colour import GREEN
 
 """
-Play a WAV file saved locally to the Tiny FX
+Play a WAV file saved locally to TinyFX.
 
 The RGB output says which state the board is in: a quarter white while it waits, and
 green while a file plays. The board takes a moment to start, and a press before the
 white appears is not seen, so the light is what says the button is live.
 
-Press Boot to power up, and press Boot to power down
+Press "Boot" to play the file, and again to stop it.
 """
 
 # Constants

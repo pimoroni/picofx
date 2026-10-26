@@ -4,6 +4,7 @@ These are micropython examples for the Pimoroni [TinyFX](https://shop.pimoroni.c
 
 - [Function Examples](#function-examples)
   - [Read Button](#read-button)
+  - [Count Taps](#count-taps)
   - [Sensor Meter](#sensor-meter)
   - [Voltage Meter](#voltage-meter)
 - [Mono Effect Examples](#mono-effect-examples)
@@ -18,6 +19,9 @@ These are micropython examples for the Pimoroni [TinyFX](https://shop.pimoroni.c
   - [Pulse Wave](#pulse-wave)
   - [Binary Counter](#binary-counter)
   - [Traffic Light](#traffic-light)
+  - [Pelican Crossing](#pelican-crossing)
+  - [Sweep](#sweep)
+  - [Sweep Trail](#sweep-trail)
 - [Colour Effect Examples](#colour-effect-examples)
   - [Static RGB](#static-rgb)
   - [Static HSV](#static-hsv)
@@ -29,16 +33,24 @@ These are micropython examples for the Pimoroni [TinyFX](https://shop.pimoroni.c
   - [Race Start](#race-start)
   - [Encounters](#encounters)
   - [Photon Sword](#photon-sword)
+  - [WAV Player](#wav-player)
 - [Infrared Examples (Mono)](#infrared-examples-mono)
   - [Control Channels](#control-channels)
-- [Control Pulse Wave](#control-pulse-wave)
-- [Toggle Effects](#toggle-effects)
+  - [Control Pulse Wave](#control-pulse-wave)
+  - [Toggle Effects](#toggle-effects)
 - [Infrared Examples (Colour)](#infrared-examples-colour)
   - [Control RGB (Direct)](#control-rgb-direct)
   - [Control RGB (FX)](#control-rgb-fx)
   - [Control HSV (Direct)](#control-hsv-direct)
   - [Control HSV (FX)](#control-hsv-fx)
   - [Control Rainbow](#control-rainbow)
+- [Qw/ST Examples](#qwst-examples)
+  - [Light Level](#light-level)
+  - [Weather Reading](#weather-reading)
+  - [Spirit Level](#spirit-level)
+- [Comms Examples](#comms-examples)
+  - [Dual FX](#dual-fx)
+  - [Multi FX](#multi-fx)
 - [Showcase Examples](#showcase-examples)
   - [Rescue Vehicle](#rescue-vehicle)
   - [Sensor Wave](#sensor-wave)
@@ -53,6 +65,12 @@ These are micropython examples for the Pimoroni [TinyFX](https://shop.pimoroni.c
 [function/read_button.py](examples/python/function/read_button.py)
 
 Show the state of TinyFX's Boot button on its RGB output.
+
+
+### Count Taps
+[function/count_taps.py](examples/python/function/count_taps.py)
+
+Count taps of TinyFX's Boot button, including the ones made while the board is busy, and show the count on its mono outputs.
 
 
 ### Sensor Meter
@@ -135,6 +153,24 @@ Play an incrementing binary counter on TinyFX's outputs.
 Play a traffic light sequence on TinyFX's outputs.
 
 
+### Pelican Crossing
+[effects/mono/pelican_crossing.py](examples/python/effects/mono/pelican_crossing.py)
+
+Play a pelican crossing sequence on five of TinyFX's outputs, three for the traffic lights and two for the pedestrian figures.
+
+
+### Sweep
+[effects/mono/sweep.py](examples/python/effects/mono/sweep.py)
+
+Sweep a light back and forth across TinyFX's outputs.
+
+
+### Sweep Trail
+[effects/mono/sweep_trail.py](examples/python/effects/mono/sweep_trail.py)
+
+Sweep a light back and forth across TinyFX's outputs, leaving a trail behind it.
+
+
 ## Colour Effect Examples
 
 ### Static RGB
@@ -151,6 +187,7 @@ Show a static colour on TinyFX's RGB output, using HSV.
 
 ### Blink
 [effects/colour/blink.py](examples/python/effects/colour/blink.py)
+
 Play a blinking sequence effect on TinyFX's RGB output. Each blink in the sequence can be a different colour.
 
 
@@ -197,6 +234,12 @@ Grab yourself an MSA301 and attach it to the Qw/St connector.
 This example needs the directory `photon_sword` copied over to your TinyFX.
 
 
+### WAV Player
+[audio/wav_player.py](examples/python/audio/wav_player.py)
+
+Play a WAV file saved to your TinyFX each time Boot is pressed, with the RGB output showing when it is ready and when it is playing.
+
+
 ## Infrared Examples (Mono)
 
 ### Control Channels
@@ -206,14 +249,14 @@ Turn each of Tiny FX's mono outputs on and off by pressing the number buttons
 on the Pimoroni Aye Arr Remote, and hold to adjust their brightness.
 
 
-## Control Pulse Wave
+### Control Pulse Wave
 [infrared/mono/control_pulse_wave.py](examples/python/infrared/mono/control_pulse_wave.py)
 
 Play a wave of pulses on TinyFX's outputs that is controllable
 by the directional buttons on a Pimoroni Aye Arr Remote.
 
 
-## Toggle Effects
+### Toggle Effects
 [infrared/mono/toggle_effects.py](examples/python/infrared/mono/toggle_effects.py)
 
 Play effects for each "postcard" on the Tales Of The Space Age set, and turn them on and off by pressing the number buttons on the Pimoroni Aye Arr Remote.
@@ -251,6 +294,40 @@ Play a rainbow effect on TinyFX's RGB output that is controllable
 by the directional buttons on a Pimoroni Aye Arr Remote.
 
 
+## Qw/ST Examples
+
+### Light Level
+[qwst/light_level.py](examples/python/qwst/light_level.py)
+
+Bring TinyFX's lights up when the room gets dark, read from an LTR559 light sensor on Qw/ST.
+
+
+### Weather Reading
+[qwst/weather_reading.py](examples/python/qwst/weather_reading.py)
+
+Show the temperature on TinyFX's RGB output, read from a BME280 weather sensor on Qw/ST.
+
+
+### Spirit Level
+[qwst/spirit_level.py](examples/python/qwst/spirit_level.py)
+
+Use TinyFX's mono outputs as a spirit level, read from a multi sensor stick or another LSM6DS3 accelerometer on Qw/ST.
+
+
+## Comms Examples
+
+### Dual FX
+[comms/dual_fx.py](examples/python/comms/dual_fx.py)
+
+Play wave and rainbow animations across the outputs of this TinyFX and a second one connected by Qw/ST, which runs [i2c_target.py](i2c_target.py). Disconnect or cut the cable's red power wire first.
+
+
+### Multi FX
+[comms/multi_fx.py](examples/python/comms/multi_fx.py)
+
+Play wave and rainbow animations across the outputs of this TinyFX and several more connected by Qw/ST cables and hubs, each running [i2c_target.py](i2c_target.py) at its own address. Disconnect or cut the cables' red power wires first.
+
+
 ## Showcase Examples
 
 ### Rescue Vehicle
@@ -262,7 +339,7 @@ Play an alternating flashing sequence on two of TinyFX's outputs, recreating the
 ### Sensor Wave
 [showcase/sensor_wave.py](examples/python/showcase/sensor_wave.py)
 
-Play a wave of pulses on TinyFX's outputs, who's speed is controlled by a sensor.
+Play a wave of pulses on TinyFX's outputs, whose speed is controlled by a sensor.
 
 
 ### Ship Thrusters
@@ -278,7 +355,7 @@ Play effects for each space themed "postcard".
 
 
 ### Space Tales with PIR Sensor
-[showcase/space_tales_pir.py](examples/python/showcase/space_tales_with_pir.py)
+[showcase/space_tales_with_pir.py](examples/python/showcase/space_tales_with_pir.py)
 
 Play effects for each space themed "postcard" when someone walks past. A PIR sensor is used to activate the effect, which will turn off after a certain time.
 

@@ -11,8 +11,7 @@ Plug a BME280 breakout into the Qw/ST connector. The board makes the bus itself,
 tiny.i2c, so the sensor takes that and nothing else needs setting up.
 
 The colour runs from blue at the cold end of the range, through purple, to red at the
-warm end. The
-pressure and humidity the sensor also reports are printed.
+warm end. The pressure and humidity the sensor also reports are printed.
 
 Press "Boot" to exit the program.
 
