@@ -1,7 +1,6 @@
 import time
 
-from machine import Pin
-from pimoroni import Analog
+from sensor import ANALOG
 from tiny_fx import TinyFX
 
 from picofx import MonoPlayer
@@ -22,9 +21,8 @@ SLEEP = 0.1         # The time to sleep between each voltage measurement
 
 
 # Variables
-tiny = TinyFX()                         # Create a new TinyFX object to interact with the board
+tiny = TinyFX(sensor=ANALOG)            # Create a new TinyFX object, with an analog sensor on its connector
 player = MonoPlayer(tiny.outputs)       # Create a new effect player to control TinyFX's mono outputs
-sensor = Analog(Pin(tiny.SENSOR_PIN))   # Create a new Analog object for reading the sensor connector
 
 
 # Create a PulseWaveFX effect
@@ -52,7 +50,7 @@ try:
     # Loop until the effect stops or the "Boot" button is pressed
     while player.is_running() and not tiny.boot_pressed():
         # Read the voltage output by the sensor
-        voltage = sensor.read_voltage(SAMPLES)
+        voltage = tiny.sensor.read_voltage(SAMPLES)
 
         # Print out the sensor value to a sensible number of decimal places
         print("Voltage =", round(voltage, 2))

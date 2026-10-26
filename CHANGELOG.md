@@ -33,6 +33,7 @@
 * A board that fails partway through being built hands back what it had claimed
 * The libraries and examples zips attach to a GitHub release
 * The examples move into `examples/python/`
+* The examples using the sensor connector take what it holds from `sensor=`
 
 1.1.2
 -----
