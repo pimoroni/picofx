@@ -16,7 +16,7 @@ Be sure to leave the red power wire disconnected / cut to avoid potential damage
 to your devices, caused by the boards all trying the power each other.
 
 All connected Tiny's should be running the i2c_target.py example (save it as main.py
-to have it run from power-up), and each should have a unique address.
+to have it run from power-up). Give each its own address, counting up from 68.
 
 Press "Boot" to exit the program.
 """
@@ -69,9 +69,11 @@ rgb_player.effects = [rainbow(i) for i in range(len(rgbs))]
 
 # Create a class that can be paired with an EffectPlayer, to update all connected Tiny's
 class Updater:
-    def __update(self, timer):
+    __paired = None     # Nothing follows this in the chain of players
+
+    def __tick(self, timer):
         for i2c_tiny in i2c_tinys:
-            i2c_tiny.__update(timer)
+            i2c_tiny.__tick(timer)
 
 
 player.pair(rgb_player)     # Pair the RGB player with the Mono player so they run in sync

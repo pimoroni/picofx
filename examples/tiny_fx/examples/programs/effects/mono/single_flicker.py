@@ -14,7 +14,7 @@ tiny = TinyFX()                     # Create a new TinyFX object to interact wit
 player = MonoPlayer(tiny.outputs)   # Create a new effect player to control TinyFX's mono outputs
 
 
-# Create and set up a blink effect to play
+# Create and set up a flicker effect to play
 player.effects = [
     FlickerFX(brightness=1.0,       # The brightness to use when being bright (from 0.0 to 1.0)
               dimness=0.5,          # How much to dim the brightness by (from 0.0 to 1.0) when being dim

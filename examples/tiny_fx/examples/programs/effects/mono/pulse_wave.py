@@ -17,7 +17,7 @@ player = MonoPlayer(tiny.outputs)   # Create a new effect player to control Tiny
 # Create a PulseWaveFX effect
 wave = PulseWaveFX(speed=1.0,       # The speed to pulse at, with 1.0 being 1 second
                    length=6.0,      # The length of the wave before positions repeat. Usually the number of outputs (6)
-                   phase=0.0)       # How far through the blink to start the effect (from 0.0 to 1.0)
+                   phase=0.0)       # How far through the pulse to start the effect (from 0.0 to 1.0)
 
 
 # Set up the wave effect to play. Each output has a different position
