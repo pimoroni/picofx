@@ -17,7 +17,7 @@ tiny = TinyFX()                     # Create a new TinyFX object to interact wit
 player = MonoPlayer(tiny.outputs)   # Create a new effect player to control TinyFX's mono outputs
 
 
-# Create and set up a blink effect to play
+# Create and set up a static effect to play
 player.effects = [
     StaticFX(BRIGHTNESS),
 

@@ -35,6 +35,7 @@
 * The examples move into `examples/python/`
 * The examples using the sensor connector take what it holds from `sensor=`
 * The sensor and voltage meters and the sensor wave keep their rate with `Pacer`
+* Fixed the I2C target example raising as it ends, and answering at an address the multi board example does not look for
 
 1.1.2
 -----
