@@ -45,6 +45,7 @@
 * Networking, Bluetooth, `lte` for a Clipper, and `spce` with its `MotorDriver` are frozen into the firmware
 * Add the Mighty FX examples for its onboard functions, effects and audio
 * Add the Mighty FX examples for the IR remote, Qw/ST sensors, WiFi and comms
+* Add the Mighty FX examples for motor drivers, servos, LED strips and GPIO
 
 1.1.2
 -----
