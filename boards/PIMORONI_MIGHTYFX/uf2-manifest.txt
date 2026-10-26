@@ -1,6 +1,11 @@
 main.py
 i2c_target.py
 secrets.py
+examples/python/effects/*.py
+examples/python/effects/colour/*.py
+examples/python/effects/mono/*.py
+examples/python/audio/*.py
+examples/python/function/*.py
 lib/*.py
 lib/comms/*.py
 lib/screens/*.py

@@ -1,0 +1,60 @@
+from mighty_fx import MightyFX
+from timing import Pacer
+
+"""
+Use Mighty FX's RGB outputs as a bargraph to show the voltage that is powering the board.
+
+The board runs from USB or from a LiPo, whichever is higher, so the scale covers both.
+A full bar is USB, and a battery falls down the bar as it discharges.
+
+The top output of the bar is lit as far into its step as the reading has gone, so the bar
+moves smoothly. The hue runs from red at the bottom through amber to green at the top.
+
+Press "Boot" to exit the program.
+"""
+
+# Constants
+BRIGHTNESS = 0.6            # The brightness to set the outputs
+MIN_VOLTAGE = 3.5           # The bottom of the meter, in volts, being a LiPo near empty
+MAX_VOLTAGE = 5.5           # The top of the meter, in volts, being USB at its highest
+SAMPLES = 50                # The number of measurements to take per reading, to reduce noise
+INTERVAL = 0.1              # How often to take a voltage measurement, in seconds
+LOW_HUE = 0.0               # The hue of the lowest output, being red
+HIGH_HUE = 0.333            # The hue of the highest, being green by way of amber
+
+# Variables
+mighty = MightyFX()         # Create a new MightyFX object to interact with the board
+
+
+# Reading a sensor takes time of its own, so a pacer holds the readings to the interval
+pacer = Pacer(INTERVAL)
+
+# Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
+try:
+    while not mighty.boot_pressed():
+        # Read the voltage powering the board
+        voltage = mighty.read_voltage(SAMPLES)
+
+        # Print out the voltage sense value to a sensible number of decimal places
+        print("Voltage =", round(voltage, 2))
+
+        # Convert the voltage to a percentage of the min to max we want to show
+        percent = (voltage - MIN_VOLTAGE) / (MAX_VOLTAGE - MIN_VOLTAGE)
+
+        # How much of the bar the reading fills, in outputs
+        filled = min(len(mighty.outputs), max(0.0, percent * len(mighty.outputs)))
+
+        # Update all the outputs
+        for i in range(len(mighty.outputs)):
+            # Full below the top of the bar, part lit at the top, and out above it
+            level = min(1.0, max(0.0, filled - i))
+
+            # Spread the hue between the two ends, so the ramp fits any number of outputs
+            hue = LOW_HUE + (HIGH_HUE - LOW_HUE) * i / (len(mighty.outputs) - 1)
+            mighty.outputs[i].set_hsv(hue, 1.0, BRIGHTNESS * level)
+
+        pacer.hold()
+
+# Turn off all the outputs
+finally:
+    mighty.shutdown()
