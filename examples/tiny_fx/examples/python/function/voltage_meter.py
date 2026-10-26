@@ -18,8 +18,7 @@ INTERVAL = 0.1      # How often to take a voltage measurement, in seconds
 tiny = TinyFX()                         # Create a new TinyFX object to interact with the board
 
 
-# Reading a sensor takes time of its own, so a pacer holds the readings to the
-# interval rather than adding it to each one, as sleeping the whole interval would
+# Reading a sensor takes time of its own, so a pacer holds the readings to the interval
 pacer = Pacer(INTERVAL)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)

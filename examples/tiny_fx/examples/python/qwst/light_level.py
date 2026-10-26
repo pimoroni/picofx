@@ -45,8 +45,7 @@ ltr.get_reading()
 player.effects = [FlickerFX() for _ in tiny.outputs]
 
 
-# Reading a sensor takes time of its own, so a pacer holds the readings to the
-# interval rather than adding it to each one, as sleeping the whole interval would
+# Reading a sensor takes time of its own, so a pacer holds the readings to the interval
 pacer = Pacer(INTERVAL)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)

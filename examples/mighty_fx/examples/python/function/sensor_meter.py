@@ -30,8 +30,7 @@ HIGH_HUE = 0.0      # The hue of the highest, coming back down the wheel to red
 mighty = MightyFX(sensor=ANALOG)    # Create a new MightyFX object, with an analog sensor on its connector
 
 
-# Reading a sensor takes time of its own, so a pacer holds the readings to the
-# interval rather than adding it to each one, as sleeping the whole interval would
+# Reading a sensor takes time of its own, so a pacer holds the readings to the interval
 pacer = Pacer(INTERVAL)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)

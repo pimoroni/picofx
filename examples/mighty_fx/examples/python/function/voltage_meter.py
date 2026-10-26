@@ -28,8 +28,7 @@ HIGH_HUE = 0.333        # The hue of the highest, being green by way of amber
 mighty = MightyFX()         # Create a new MightyFX object to interact with the board
 
 
-# Reading a sensor takes time of its own, so a pacer holds the readings to the
-# interval rather than adding it to each one, as sleeping the whole interval would
+# Reading a sensor takes time of its own, so a pacer holds the readings to the interval
 pacer = Pacer(INTERVAL)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)

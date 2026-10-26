@@ -27,7 +27,7 @@ MAX_SPEED = 20                  # The maximum speed multiplier that the melody w
 SAMPLES = 5                     # The number of measurements to take of the analog sensor, to reduce noise
 
 # Variables
-tiny = TinyFX(sensor=ANALOG if USE_SENSOR else None)    # Create a new TinyFX object, with the sensor only where one is wired
+tiny = TinyFX(sensor=ANALOG if USE_SENSOR else None)    # Create a new TinyFX object, with the sensor only if one is attached
 index = 0                       # The index of the tone to play
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
