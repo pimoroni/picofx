@@ -92,13 +92,17 @@ NOTES = (("Stands A to E are on the near side of the road, past the taxi rank. P
 # Create a MightyFX object with both SP/CE ports set up for screens
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 
+# A portrait television is drawn as the panel already is, and a landscape one turned a quarter onto it.
+# Either way the board runs down the canvas, and a pair stacks its panels one above the other
+ROTATION = 0 if PORTRAIT else 90
+
 # A screen refuses to be created where no panel answered on its port, so one panel runs the board on
 # its own and a second lengthens it. The reserve is what a pair needs to convert an image out of the
 # heap, which is where a board longer than a panel has to live
 screens = []
 for port in (mighty.spce_a, mighty.spce_b):
     try:
-        screens.append(Screen280(port, reserve=Reserve.FULL_SIZE_IMAGES))
+        screens.append(Screen280(port, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION))
     except ValueError as e:
         print(e)
 
@@ -111,12 +115,11 @@ if not screens:
 # showing the new page while the other still held the old. Working out how takes a few seconds
 pair = ScreenPair(*screens) if len(screens) == 2 else None
 
-# A television hung portrait is drawn the way the panel already is; one the usual way up is drawn
-# landscape and turned a quarter onto it. Either way the board runs down the canvas and a pair stacks its
-# panels one above the other: at rotation 90 the canvas's x becomes the panel's long axis, so it is the
-# canvas's y that runs down the wall. PANEL_ROWS is what one panel shows
-ROTATION = 0 if PORTRAIT else 90
-TURNS = tuple(ROTATION + 180 * (port == TURNED) for port in range(2))
+# Only a pair has a panel mounted turned round, so only the pair overrides the rotation its screens were
+# built with, adding half a turn on the one TURNED names. A lone panel hangs upright and keeps its own
+TURNS = tuple(screen.rotation + 180 * (port == TURNED) for port, screen in enumerate(screens))
+
+# PANEL_ROWS is what one panel shows
 PANEL_ROWS = screens[0].height if PORTRAIT else screens[0].width
 WIDTH = screens[0].width if PORTRAIT else screens[0].height
 HEIGHT = PANEL_ROWS * len(screens)
@@ -253,7 +256,7 @@ BADGE_X = STAND_X + STAND_W + GAP
 PILL_X = BADGE_X + (BADGE_W - PILL_W) // 2   # A whole pixel, a pill on a half landing 1px narrower
 MARK_X = PILL_X + PAD + MARK_R
 
-print(f"Bus board on {len(screens)} of 2 SP/CE ports at {TURNS[:len(screens)]},"
+print(f"Bus board on {len(screens)} of 2 SP/CE ports at {TURNS if pair else screens[0].rotation},"
       f" a {WIDTH}x{HEIGHT} canvas,"
       f" {ROWS} rows of {ROW_H}px asked {ROW_MIN} in {len(BANDS)} band(s),"
       f" lettering {LETTER_H}px at size {ROW_SIZE:.1f},"
@@ -417,13 +420,10 @@ try:
         if frame != shown:
             draw(page, now)
             if pair is None:
-                screens[0].update(canvas, rotation=ROTATION)
+                screens[0].update(canvas)
             else:
-                # One canvas reaches both panels, the second showing it from where the first left off.
-                # A negative offset places the source above the panel and the converter clips to it, so
-                # no second buffer and no copy is needed to split the board. It holds whichever way the
-                # panel is turned: at 180 the source runs the other way down it, which is what turning
-                # it round asks for
+                # One canvas reaches both panels, the second offset up by a panel to show the rest of the
+                # board. That needs no second buffer, and holds whichever way a panel is turned
                 pair.update(canvas, rotation=TURNS, offset=((0, 0), (0, -PANEL_ROWS)))
             shown = frame
 
