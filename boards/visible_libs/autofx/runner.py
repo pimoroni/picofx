@@ -18,7 +18,7 @@ from .hardware import BUILT_HUB, BUILT_SCREENS, BUILT_STRIPS, forget_built
 from .parser import in_line_order
 from .checks import copies
 from .shows import (build_deferred_shows, DEFERRED_SHOWS, REPORTING_TO, service_shows, settle_hub,
-                    user_trace)
+                    STOPPED, UNWRITTEN, user_trace)
 from .sounds import cue_sound
 from .loader import apply_scene, load
 
@@ -248,6 +248,11 @@ def __reload(fx, volume, path, errors, playing, sounding=(), maker=None):
             problems.append("the FX drive is full, so {} is out of date. Delete a "
                             "picture or sound from the drive to let it "
                             "rebuild".format(name))
+
+    # A drawing that stopped while the computer held the drive is said now, the board
+    # having it back
+    problems.extend(UNWRITTEN)
+    del UNWRITTEN[:]
     __tell(fx, problems, errors, bool(players or shows or sounds))
 
     # Started by the caller, which is the only one that knows whether a program is
@@ -676,6 +681,15 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                 # A frame can cost longer than the double press window, so the
                 # button is answered between the screens rather than after them all
                 drew = service_shows(shows, interrupted)
+
+                # Has a drawing stopped? Its screen keeps its last frame and nothing else
+                # moves, so the outputs say it, the effects standing aside as they do for
+                # the drive changing hands
+                if STOPPED:
+                    del STOPPED[:]
+                    __stop(players)
+                    indicate(fx, PROBLEM)
+                    __resume(players, fx)
 
             if event == volume.BUSY:
                 # A press the computer's writing blocked otherwise looks exactly like
