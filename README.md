@@ -86,6 +86,7 @@ This build type contains the firmware for Mighty and Tiny FX, library files to e
 There are many examples to get you started with Tiny FX (and other boards), located in the examples folder of this repository:
 
 * [Examples: Tiny FX](/examples/tiny_fx/README.md)
+* [Examples: Tiny FX W](/examples/tiny_fx_w/README.md)
 * [Examples: Plasma](/examples/plasma/README.md)
 
 
