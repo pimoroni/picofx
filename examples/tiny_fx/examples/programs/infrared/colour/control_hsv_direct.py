@@ -95,8 +95,8 @@ receiver.bind(remote)
 try:
     receiver.start()    # Start listening for the remote
 
-    # Loop forever
-    while True:
+    # Loop until the "Boot" button is pressed
+    while not tiny.boot_pressed():
         # Decode any IR pulses received since the last time this was called.
         # This should be done as frequently as possible to avoid feeling sluggish
         receiver.decode()

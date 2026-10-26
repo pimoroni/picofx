@@ -27,7 +27,7 @@ tiny = TinyFX(sensor=IR)            # Create a new TinyFX object, with the infra
 player = MonoPlayer(tiny.outputs)   # Create a new effect player to control TinyFX's mono outputs
 
 
-# Create and set up a blink effect to play
+# Create and set up a static effect to play on every output
 player.effects = [
     StaticFX(BRIGHTNESS),
     StaticFX(BRIGHTNESS),
@@ -74,7 +74,7 @@ try:
     player.start()      # Start the effects running
 
     # Loop until the effect stops or the "Boot" button is pressed
-    while not tiny.boot_pressed():
+    while player.is_running() and not tiny.boot_pressed():
         # Decode any IR pulses received since the last time this was called.
         # This should be done as frequently as possible to avoid inputs feeling sluggish
         receiver.decode()
