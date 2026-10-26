@@ -42,6 +42,7 @@
 * The uf2s and the libraries and examples zips attach to a GitHub release, named for its tag as release files have been
 * Fixed WAV files with tags before their audio not playing
 * The examples move into `examples/programs/`
+* The examples using the sensor connector take what it holds from `sensor=`
 
 **Mighty FX**
 
