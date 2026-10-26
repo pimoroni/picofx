@@ -25,6 +25,13 @@ from .checks import check_settings, find_file, REFUSED
 # after load, so it is the only writer of this
 REPORTING_TO = [ERRORS_PATH]
 
+# The drawings that stopped since the run loop last looked, which it flashes for
+STOPPED = []
+
+# What stopped drawings said while the computer held the drive, for the next reload to
+# write down, there being nowhere to write it until the board has the drive back
+UNWRITTEN = []
+
 
 class ScreenShow:
     """
@@ -286,12 +293,14 @@ class Graphics:
     # all of which have owners while a drawing plays beside them
     IMPORTS = ("math", "random", "time", "picovector")
 
-    def __init__(self, name, code, width, height, ground, errors, fps=None, paused=False):
+    def __init__(self, name, code, width, height, ground, errors, fps=None, paused=False,
+                 line=0):
         # The canvas, made to this size and handed over by begin()
         self.width = width
         self.height = height
         self.image = None
         self.__name = name
+        self.__line = line          # The entry's, which a stop's message names
         self.__code = code
         self.__ground = ground
         self.__errors = errors
@@ -376,17 +385,21 @@ class Graphics:
     def __stop(self, error):
         # Keep the last frame and say why, once, while the loop around this carries on
         self.__stopped = True
-        message = ("the drawing {} stopped, so its screen keeps its last "
-                   "frame:\n{}".format(self.__name, user_trace(error)))
+        trace = user_trace(error)
+        message = ("line {}: the drawing {} stopped, so its screen keeps its last "
+                   "frame:\n{}".format(self.__line, self.__name, trace))
         print(message)
-        # Where the reader is already looking, while the board holds the volume. Once
-        # the drive is shown the mount is gone and there is nowhere to write. Appended
+        STOPPED.append(self.__name)
+        # Where the reader is already looking, while the board holds the volume. Appended
         # rather than written, so a drive with no room left keeps the account it has
         try:
             with open(self.__errors, "a") as handle:
                 handle.write("\n" + message + "\n")
+        # The computer holds the drive, so the mount is gone, and the reload that brings
+        # it back writes this down. The drawing will have begun again by then
         except OSError:
-            pass
+            UNWRITTEN.append("line {}: the drawing {} failed while it played:\n{}".format(
+                self.__line, self.__name, trace))
 
     def pause(self):
         if self.__playing:
@@ -476,7 +489,7 @@ def __read_drawing(path, target, at, problems):
         return None
 
 
-def __make_drawing(code, target, channel, screen, settings, fps, asleep):
+def __make_drawing(code, target, at, channel, screen, settings, fps, asleep):
     # The player for a graphics entry, sized and with its ground set, begun once its canvas is made
     import picovector
 
@@ -495,7 +508,7 @@ def __make_drawing(code, target, channel, screen, settings, fps, asleep):
               if channel.background is not None else picovector.color.black)
 
     return Graphics(target, code, width, height, ground, REPORTING_TO[0], fps=fps,
-                    paused=asleep)
+                    paused=asleep, line=at)
 
 
 def __begin_drawings(waiting, shows, built, problems):
@@ -1036,7 +1049,7 @@ def build_shows(entries, fx, board, problems, build=True):
 
         # A drawing is begun once every panel is built, on the canvas it keeps
         if entry.effect == "graphics":
-            player = __make_drawing(code, target, channel, screen, settings, fps, asleep)
+            player = __make_drawing(code, target, at, channel, screen, settings, fps, asleep)
             show = ScreenShow(screen, player, channel, entry.scene, places, light, entry.line)
             shows.append(show)
             waiting.append((show, at, target, entry.scene))
