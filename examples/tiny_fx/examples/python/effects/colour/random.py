@@ -20,7 +20,7 @@ tiny = TinyFX()                         # Create a new TinyFX object to interact
 player = MonoPlayer(tiny.rgb.leds)      # Create a new effect player to control TinyFX's RGB output as mono outputs
 
 
-# Create and set up a blink effect to play
+# Create and set up a random effect to play
 player.effects = [
     RandomFX(interval=INTERVAL,
              brightness_min=BRIGHTNESS_MIN,

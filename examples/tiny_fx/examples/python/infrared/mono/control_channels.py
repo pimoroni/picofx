@@ -27,7 +27,7 @@ tiny = TinyFX(sensor=IR)            # Create a new TinyFX object, with the infra
 player = MonoPlayer(tiny.outputs)   # Create a new effect player to control TinyFX's mono outputs
 
 
-# Create and set up a blink effect to play
+# Create and set up a static effect to play on every output
 player.effects = [
     StaticFX(BRIGHTNESS),
     StaticFX(BRIGHTNESS),
