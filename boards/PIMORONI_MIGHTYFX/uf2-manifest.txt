@@ -11,6 +11,10 @@ examples/programs/qwst/*.py
 examples/programs/infrared/colour/*.py
 examples/programs/infrared/mono/*.py
 examples/programs/wireless/*.py
+examples/programs/motors/*.py
+examples/programs/servos/*.py
+examples/programs/strips/*.py
+examples/programs/gpio/*.py
 lib/*.py
 lib/comms/*.py
 lib/screens/*.py
