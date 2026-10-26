@@ -5,9 +5,11 @@ examples/python/effects/*.py
 examples/python/effects/mono/*.py
 examples/python/effects/colour/*.py
 examples/python/function/*.py
+examples/python/qwst/*.py
 examples/python/showcase/*.py
 examples/python/audio/race_start.py
 examples/python/audio/fair_use_encounters.py
+examples/python/audio/wav_player.py
 examples/python/infrared/*.py
 examples/python/infrared/mono/*.py
 examples/python/infrared/colour/*.py

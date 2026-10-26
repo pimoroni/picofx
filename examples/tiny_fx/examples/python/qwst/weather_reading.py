@@ -1,0 +1,66 @@
+import time
+
+from breakout_bme280 import BreakoutBME280
+from timing import Pacer
+from tiny_fx import TinyFX
+
+"""
+Show the temperature on Tiny FX's RGB output, read from a weather sensor on Qw/ST.
+
+Plug a BME280 breakout into the Qw/ST connector, which the board sets up as tiny.i2c.
+
+The colour runs from blue at the cold end of the range, through purple, to red at the
+warm end. The pressure and humidity the sensor also reports are printed.
+
+Press "Boot" to exit the program.
+"""
+
+# Constants
+BRIGHTNESS = 0.6    # The brightness to set the RGB output
+MIN_TEMP = 15       # The temperature, in celsius, to show as fully cold
+MAX_TEMP = 30       # The temperature, in celsius, to show as fully warm
+COLD_HUE = 0.666    # The hue shown at and below the min temperature, being blue
+WARM_HUE = 1.0      # The hue shown at and above the max, being red again at the top of the wheel
+INTERVAL = 1.0      # How often to take a sensor reading, in seconds
+SETTLE = 0.1        # The time to give the sensor to make its first measurement
+
+# Variables
+tiny = TinyFX()                     # Create a new TinyFX object to interact with the board
+rgb = tiny.rgb                      # The board's RGB output
+try:
+    bme = BreakoutBME280(tiny.i2c)  # The weather sensor, on the board's Qw/ST bus
+except RuntimeError:
+    raise RuntimeError("No BME280 found on Qw/ST. Plug in a multi sensor stick or another BME280 breakout") from None
+
+# The sensor reports its reset values until it has measured, and reading again does not
+# hurry it, so one read starts it and the wait lets that measurement finish
+bme.read()
+time.sleep(SETTLE)
+
+
+# Reading a sensor takes time of its own, so a pacer holds the readings to the interval
+pacer = Pacer(INTERVAL)
+
+# Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
+try:
+    while not tiny.boot_pressed():
+        temperature, pressure, humidity = bme.read()
+
+        # Print out the readings to a sensible number of decimal places
+        print("Temperature =", round(temperature, 1), "C,",
+              "Pressure =", round(pressure / 100, 1), "hPa,",
+              "Humidity =", round(humidity, 1), "%")
+
+        # Convert the temperature to a percentage of the min to max we want to show,
+        # kept within the range so a colder or warmer room still gives a colour
+        percent = (temperature - MIN_TEMP) / (MAX_TEMP - MIN_TEMP)
+        percent = min(1.0, max(0.0, percent))
+
+        # The hue between the two ends carries the scale, running blue through purple to red
+        rgb.set_hsv(COLD_HUE + (WARM_HUE - COLD_HUE) * percent, 1.0, BRIGHTNESS)
+
+        pacer.hold()
+
+# Turn off all the outputs
+finally:
+    tiny.shutdown()
