@@ -7,18 +7,11 @@ from picovector import color, image
 """
 Drift past a city while the sky turns from noon to midnight and the windows come on.
 
-Nothing is drawn after the load. The city is one 160x120 picture, doubled to cover the panel from a
-quarter of the memory and repeated sideways so the drift has somewhere to come from, and the sky is
-bg_color showing through wherever the picture is transparent. The lighting is the picture's own
-colour table, which the driver composites on its way to the panel, so a change of light is a few
-writes to that table and no drawing at all. It is written only when the light moves, a day being
-much longer than the 256 steps it passes through.
+Nothing is drawn after the load. A 160x120 city is doubled over the panel and tiled sideways, and
+its transparent sky shows bg_color. The light is its colour table, so changing it is a few writes.
 
-Which entry means what is read off the table rather than fixed by index. A colour appearing there
-twice is a window drawn to be lit on its own: the same as its neighbours by day, and each such
-entry waits its own turn after dark, so the city comes on window by window. Of the rest, an entry
-whose red, green and blue sit close together is concrete and fades towards the night, and anything
-with colour in it is glass or signage and gets brighter as the light goes.
+Each entry's role is read off the table. A colour seen twice is a window lit in its own turn after
+dark, a grey is fading concrete, and colour is glass or signage that brightens.
 
 Press "Boot" to exit the program.
 
@@ -51,32 +44,31 @@ SKIES = ((0.0, color.rgb(124, 184, 242)), (0.2, color.rgb(180, 204, 234)),
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
-# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it.
-# rotation is how the panel is mounted, which every frame then takes without naming it
+# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-city = image.load(ART)
-palette = city.palette
+try:
+    city = image.load(ART)
+except (ValueError, OSError):
+    mighty.shutdown()
+    raise RuntimeError(f"'{ART}' is missing or corrupt! Check it is on the board") from None
 
-# At a quarter turn the panel is this way round, and the picture is drawn to cover it doubled, so
-# its feet are already on the bottom edge and only the sideways drift is placed
-PANEL_W, PANEL_H = screen.height, screen.width
+palette = city.palette
 
 sky_shades = color.ramp(SKIES, SKY_STEPS)
 
-# Each entry paired with what it becomes by night, calculated once. A table is always the full 256
-# whatever the picture drew with, so the transparent entry the sky shows through and the opaque
-# black the rest is padded with are both passed over
+# Each entry paired once with its night colour, except the transparent sky and the black padding
 walls = []
 lamps = []
-seen = {}
+seen = set()
 for index in range(city.palette_size):
     daylight = palette[index]
     brightest = max(daylight.r, daylight.g, daylight.b)
     if daylight.a == 0 or brightest == 0:
         continue
 
+    # Is it a grey, and so concrete that fades towards the night tint?
     if brightest - min(daylight.r, daylight.g, daylight.b) <= GREY_SPREAD:
         nightfall = color.mix(NIGHT_TINT, daylight, NIGHT_FALL)
     else:
@@ -90,13 +82,13 @@ for index in range(city.palette_size):
     else:
         walls.append((index, daylight, nightfall))
 
-    seen[shade] = index
+    seen.add(shade)
 
 # When each group of windows comes on, spread over what is left of the light after dusk
 SPAN = (255 - DUSK) // (len(lamps) + 1)
 lit_at = [DUSK + turn * SPAN for turn in range(len(lamps))]
 
-print(f"a {city.width}x{city.height} city doubled over {PANEL_W}x{PANEL_H}, {len(walls)} colours"
+print(f"a {city.width}x{city.height} city doubled over {screen.height}x{screen.width}, {len(walls)} colours"
       f" it is built from and {len(lamps)} groups of windows, coming on from {lit_at[0]} of 255")
 
 frames = 0
@@ -110,14 +102,13 @@ try:
         place = frames % DAY_FRAMES
         darkness = place * 255 // HALF if place < HALF else (DAY_FRAMES - place) * 255 // HALF
 
-        # A day is long and there are only 256 steps in it, so most frames find the table
-        # already saying what they want. Writing it regardless would cost a third of the frame
+        # Has the light moved since the table was written?
         if darkness != lit_to:
             for index, daylight, nightfall in walls:
                 palette[index] = color.mix(daylight, nightfall, darkness)
 
-            # A window darkens with the walls until its turn comes, then takes the rest of the
-            # dusk to reach full
+            # A window darkens with the walls until its turn comes,
+            # then takes the rest of the dusk to reach full
             for turn, (index, daylight, nightfall, lamp) in enumerate(lamps):
                 unlit = color.mix(daylight, nightfall, darkness)
                 since = darkness - lit_at[turn]
@@ -126,8 +117,7 @@ try:
 
             lit_to = darkness
 
-        # Doubled to cover the panel and tiled sideways, the sky filling everything the city
-        # does not cover
+        # Doubled and tiled sideways, with the sky filling what the city leaves
         screen.update(city, pixel_double=True, tile=(True, False),
                       bg_color=sky_shades[darkness * (SKY_STEPS - 1) // 255],
                       offset=(-frames * STEP, 0))

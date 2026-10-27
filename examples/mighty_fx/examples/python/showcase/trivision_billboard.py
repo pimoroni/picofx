@@ -5,8 +5,7 @@ from screens import Screen280
 from picovector import color, image, rect
 
 """
-Draw a trivision billboard, its posters carried on three-sided slats that turn a third at
-a time.
+Draw a trivision billboard, its posters carried on three-sided slats that turn a third at a time.
 
 Press "Boot" to exit the program.
 
@@ -16,49 +15,40 @@ Section: Billboards and panels
 # Constants for drawing
 SLATS = 20                          # How many prisms the board is split into across its width
 TURN_MS = 1600                      # How long a slat takes to turn a third of the way round
-# A turn crosses the board as a wave, which is both what a mechanical board does and what keeps the
-# drawing cheap. Only the slats moving at a given moment are redrawn, and the wider this is set the
-# fewer of them there are at once. Roughly TURN_MS over this many are moving together
+# A turn crosses the board as a wave as on a real board, so only a few slats are redrawn at once
 STAGGER_MS = 200                    # How much later each slat starts turning than the one left of it
 HOLD = 3.0                          # How long a poster faces out before the board turns again
-# The panel is 12 bit, so each channel has 16 levels and a shading ramp crossing one shows as a hard
-# step between neighbouring slats. A slat barely off square on is not visibly turning, so a step
-# there reads as a fault. Shading holds off until SHADE_FROM and then runs to AMBIENT at edge on,
-# which puts every step on a face that is plainly moving and narrowing as well
+# Shading waits for SHADE_FROM, so the steps between a channel's 16 levels
+# fall only on faces plainly turning
 SHADE_FROM = 20                     # How far a face turns before it is shaded at all, in degrees
 AMBIENT = 90                        # How lit it is by edge on, against 255 facing out
 
-# The posters, one to a face, so a third of a turn brings the next one round. Each is fitted to the
-# whole board as it loads, so one shaped differently is stretched, not cropped, and fewer than three
-# are used again in turn
+# One poster to each of a slat's three faces, stretched to the board as it loads
 POSTER_FILES = ("/examples/assets/billboards/landscape/lambo.png",
                 "/examples/assets/billboards/landscape/tufty.png",
                 "/examples/assets/billboards/landscape/frum.png")
-FACES = 3                           # Sides to a slat, and so how many posters the board carries
 
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a)
 
-# The board is wider than it is tall, so the canvas is drawn landscape and every update turns it a quarter
-# turn onto the panel. It comes from the screen, not from image(), which puts it in SRAM instead of on
-# the PSRAM heap, halving both the blit that writes every pixel and the update that reads them back. The
-# posters stay on the heap: only one canvas of this size fits the region
+# Drawn landscape and turned a quarter onto the panel at each update
 canvas = screen.canvas(screen.height, screen.width)
 SLAT = canvas.width // SLATS
 APOTHEM = SLAT / (2 * math.sqrt(3))     # From a slat's axis out to the middle of one of its faces
 
 
 def fitted(path):
-    """One file as a poster the size of the whole board.
-
-    load() decodes straight to the size asked for, which is all most files need. A palettised one
-    ignores that and arrives at its own size, one byte a pixel, so it is blitted into a board sized
-    image instead, which fits it and gives it colour to be shaded with.
     """
-    loaded = image.load(path, canvas.width, canvas.height)
-    if loaded.width == canvas.width and loaded.height == canvas.height and not loaded.has_palette:
-        return loaded
+    One file as a board-sized poster.
+
+    A file smaller than the board arrives at its own size, so it is blitted up to fit.
+    """
+    try:
+        loaded = image.load(path, canvas.width, canvas.height)
+    except (ValueError, OSError):
+        mighty.shutdown()
+        raise RuntimeError(f"'{path}' is missing or corrupt! Check it is on the board") from None
 
     board = image(canvas.width, canvas.height)
     board.blit(loaded, rect(0, 0, loaded.width, loaded.height),
@@ -66,23 +56,19 @@ def fitted(path):
     return board
 
 
-art = [fitted(path) for path in POSTER_FILES]
-posters = [art[face % len(art)] for face in range(FACES)]
+posters = [fitted(path) for path in POSTER_FILES]
 
 
 def showing(turn):
-    """Which faces of a slat show at this rotation, and at what angle, left to right.
+    """
+    Which faces of a slat show at this rotation, and at what angle, left to right.
 
-    A slat is an equilateral prism, so its faces sit 120 degrees apart and at most two ever face
-    out. A face's width projects as the slat's own by the cosine of its angle, and its middle sits
-    APOTHEM by the sine of it from the slat's axis, which slides a face across as it turns.
-
-    The two together are why the wall shows through part way round: with a face square on the slat
-    covers its whole pitch, and with a corner square on it covers only 0.866 of it.
+    A slat is a three-sided prism, so at most two faces show. A face narrows by the cosine of its
+    angle and slides by the sine, which is why the wall shows through part way round.
     """
     faces = []
-    for face in range(FACES):
-        angle = (turn - face * 120 + 180) % 360 - 180
+    for face in range(3):
+        angle = (turn - face * 120 + 180) % 360 - 180   # This face's angle from facing out, folded into -180 to 180
         if -90 < angle < 90:
             faces.append((angle, face))
 
@@ -90,24 +76,17 @@ def showing(turn):
     return faces
 
 
-# One source rect a slat, which never changes, and one target reused for every blit. Building them
-# each frame costs more than the blits do: forty of them is enough allocation to bring the collector
-# in, and on a heap this size that is not cheap
+# One source rect a slat and one target reused, so a frame allocates nothing
 sources = [rect(slat * SLAT, 0, SLAT, canvas.height) for slat in range(SLATS)]
 target = rect(0, 0, SLAT, canvas.height)
 drawn = [None] * SLATS      # What each slat was last drawn at, so a still one is left alone
 
 
 def draw(turns):
-    """Redraw the slats whose rotation changed, and hand back how many that was.
+    """
+    Redraw the slats whose rotation changed and their neighbours, and return how many.
 
-    The panel takes a whole frame however little of it changed, so narrowing the write buys
-    nothing. Narrowing the draw does: a slat costs about 2.5ms, and with the turn crossing the
-    board as a wave only a handful are moving at once.
-
-    The neighbours of a changed slat are redrawn too. A turning slat overhangs its own pitch by up
-    to a pixel, so blanking a pitch takes a slice of whatever is beside it. The slat outside
-    the wave is square on and overhangs nothing, which stops that spreading any further.
+    A turning slat overhangs its pitch by up to a pixel, so blanking it clips whatever is beside it.
     """
     changed = [slat for slat in range(SLATS) if turns[slat] != drawn[slat]]
     if not changed:
@@ -116,8 +95,8 @@ def draw(turns):
     touched = sorted({beside for slat in changed
                       for beside in (slat - 1, slat, slat + 1) if 0 <= beside < SLATS})
 
-    # Every pitch blanked before any face is drawn, or a slat would blank its neighbour's overhang
-    # after that neighbour had drawn it
+    # Every pitch blanked before any face is drawn, or a slat would blank
+    # its neighbour's overhang after that neighbour had drawn it
     canvas.pen = color.black
     for slat in touched:
         canvas.rectangle(rect(slat * SLAT, 0, SLAT, canvas.height))
@@ -153,8 +132,7 @@ turned = 0
 turning = False
 pacer = Pacer(0.01)                 # Its elapsed time counts from the start of the turn in progress
 
-# When the board is next due to turn. The hold runs from the moment the last turn
-# finished rather than on a fixed beat, which is what restart() starts again
+# When the board is next due to turn. The hold runs from the end of the last turn
 settled = Roller(HOLD)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)

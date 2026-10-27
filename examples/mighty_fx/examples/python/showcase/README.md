@@ -27,7 +27,7 @@ The posters the two billboards show live with the other example art in [assets/b
 ## Roadworks Sign
 [roadworks_sign.py](roadworks_sign.py)
 
-Draw a roadworks sign, the kind towed to the side of a road: amber lamps behind a dark face, holding a message, not scrolling it.
+Draw a roadworks sign, the kind towed to the side of a road, its amber lamps behind a dark face holding a message, not scrolling it.
 
 
 ## Lane Control Gantry
@@ -45,13 +45,13 @@ Draw a flip-dot sign, spelling its message in dots that turn over one column aft
 ## Split Flap Clock
 [split_flap_clock.py](split_flap_clock.py)
 
-Draw a split-flap clock, its digits climbing through the drum a flap at a time as a real board does.
+Draw a split-flap clock, its digits climbing through the drum a flap at a time like a real board.
 
 
 ## Split Flap Departures
 [split_flap_departures.py](split_flap_departures.py)
 
-Draw a split-flap departures board, every card climbing through the drum until it reaches its letter.
+Draw a split-flap departures board, each card climbing through the drum to its letter.
 
 
 ## Departure Board
@@ -63,19 +63,19 @@ Draw a railway departure board across a screen hub, a service to each panel, eve
 ## Departures List
 [departures_list.py](departures_list.py)
 
-Draw a railway departures list on one screen, or spread across a pair with both panels turning their page together.
+Draw a railway departures list on one screen, or across a pair turning their page together.
 
 
 ## Bus Departures
 [bus_departures.py](bus_departures.py)
 
-Draw a bus departure board on a television used for signage: no mechanism simulated, just anti-aliased vector type on a panel plainly being a panel.
+Draw a bus departure board on a television used for signage, antialiased vector type on a panel that is plainly a panel. A second panel lengthens the board, with one listing across both.
 
 
 ## Tram Stop Sign
 [tram_stop_sign.py](tram_stop_sign.py)
 
-Draw a tram stop sign across two screens: amber lamps behind a dark face, in a contiguous band per line, with the next tram pinned and the ones after it cycling underneath.
+Draw a tram stop sign across two screens, amber lamps behind a dark face in a contiguous band per line, with the next tram pinned and the ones after it cycling underneath.
 
 
 ## Trivision Billboard
@@ -87,25 +87,25 @@ Draw a trivision billboard, its posters carried on three-sided slats that turn a
 ## Scrolling Billboard
 [scrolling_billboard.py](scrolling_billboard.py)
 
-Draw a scrolling billboard, its posters carried on a loop and read from the card one at a time.
+Draw a scrolling billboard, its posters carried on a loop and read from the board one at a time.
 
 
 ## CRT Terminal
 [crt_terminal.py](crt_terminal.py)
 
-Draw a green screen terminal, of the kind wheeled up to a minicomputer: an operator typing a command a character at a time and the machine answering a line at a time, on a tube that glows.
+Draw a green screen terminal of the kind wheeled up to a minicomputer. An operator types a command a character at a time and the machine answers a line at a time, on a tube that glows.
 
 
 ## Acrylic Lixie
 [acrylic_lixie.py](acrylic_lixie.py)
 
-Draw a lixie: ten engraved acrylic sheets stacked front to back with a digit on each, an LED under every sheet, and only the one being shown lit.
+Draw a lixie, ten engraved acrylic sheets stacked front to back with a digit on each, an LED under every sheet, and only the one being shown lit.
 
 
 ## Nixie Tube
 [nixie_tube.py](nixie_tube.py)
 
-Draw a nixie tube: ten cathodes bent into digits, stacked front to back inside one glass envelope, and the neon around the one carrying current glowing the colour it is famous for.
+Draw a nixie tube, ten cathodes bent into digits and stacked front to back in a glass cylinder. The one carrying current glows red-orange through the anode mesh.
 
 
 ## Isometric Flight
@@ -117,7 +117,7 @@ Fly for ever over two isometric worlds, each drawn once into a tile the driver r
 ## Programmed Route
 [programmed_route.py](programmed_route.py)
 
-Programme a route into a two wheeled robot with the Aye Arr Remote, then watch it drive what it was told, its wheels turned by a continuous rotation servo on each of the L and R connectors.
+Programme a two wheeled robot's route with the Aye Arr Remote, then watch it drive what it was told.
 
 
 ## Skyline
@@ -129,4 +129,4 @@ Drift past a city while the sky turns from noon to midnight and the windows come
 ## Status Panel
 [status_panel.py](status_panel.py)
 
-Draw a status panel for the company that made the board: the wordmark over a cycling ribbon, the coin as a badge, a few statuses, and the seven RGB outputs standing in for the line the board came down.
+Draw a status panel for the company that made the board, a wordmark over a cycling ribbon, a coin badge, a few statuses, and the seven RGB outputs as its production line.

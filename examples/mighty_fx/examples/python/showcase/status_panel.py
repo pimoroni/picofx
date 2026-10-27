@@ -8,9 +8,8 @@ from screens import Screen280
 from picovector import color, font, image, rect, shape
 
 """
-Draw a status panel for the company that made the board: the wordmark over a cycling ribbon,
-the coin as a badge, a few statuses, and the seven RGB outputs standing in for the line the
-board came down.
+Draw a status panel for the company that made the board, a wordmark over a cycling ribbon, a
+coin badge, a few statuses, and the seven RGB outputs as its production line.
 
 Everything is drawn at half the panel's size and doubled on the way out, so every pixel on the
 glass is a square of four, for a quarter of the canvas and a quarter of the drawing. The ribbon
@@ -18,7 +17,7 @@ is dithered along its own direction, since 16 levels a channel turn a gradient i
 
 The seven outputs are a production line, one stage live at a time with its lamp lit on the glass
 and its LED lit on the board below. One level per output, read by both, so the two cannot drift
-apart. The interface is built once and blitted as the ground, so a frame draws only what moves.
+apart. The interface is built once and blitted as the background, so a frame draws only what moves.
 
 Press "Boot" to exit the program.
 
@@ -27,18 +26,16 @@ Section: Billboards and panels
 
 # Constants for drawing
 EMBLEM = "/examples/assets/pirate_coin_emblem.gif"
-WORDMARK_FACE = "/rom/fonts/PoppinsBlack.af"  # A vector face, drawn large and reduced: part of the render
-# Poppins Black's ink, measured on the board: 0.309 of the size asked for, starting 0.697 of it below the y it
-# is drawn at. Neither is the em box, which is far taller than the space here, so the wordmark is sized and
-# placed from the ink instead of being clipped by the box
-INK_TALL = 0.309
-INK_DOWN = 0.697
-BODY_FACE = "winds"                     # The narrowest pixel face, which is what the statuses need
+WORDMARK_FACE = "/rom/fonts/PoppinsBlack.af"  # A vector face, drawn large and reduced with the render
+# Poppins Black's measured lettering, its height and where it starts below the drawn y, as fractions of the size
+LETTERING_TALL = 0.309
+LETTERING_DOWN = 0.697
+BODY_FACE = font.winds                  # The narrowest pixel face, which is what the statuses need
 ROTATION = 90                           # Quarter turn, to suit how the screen is mounted
 REDUCE = 2                              # The render is drawn this much larger and reduced onto the canvas
 
-INK = color.black                       # The type, the bullets and the wordmark
-GROUND = color.white
+TEXT_COLOUR = color.black               # The type, the bullets and the wordmark
+BACKGROUND = color.white
 RULE = color.rgb(150, 150, 150)         # Structure and the numbers, which are not content
 PLATE = color.rgb(228, 228, 228)        # Behind the badge and under the line, light so the screen stays white
 PLATE_EDGE = color.rgb(190, 190, 190)
@@ -50,8 +47,7 @@ PLATE_R = 3                             # Corner radius, in the interface's own 
 WORDMARK = "PIMORONI"
 TAGLINE = "PURVEYORS OF MAKER GOODS"
 
-# The ribbon under the wordmark: two hues, both turning at the same rate, so the pair keeps its relationship
-# while the colour travels
+# The ribbon, two hues turning at one rate so the pair keeps its relationship
 RIBBON_MS = 9000                        # One turn of the wheel
 RIBBON_SPREAD = 70                      # How far apart the two hues sit on it, of 255
 RIBBON_SAT = 255
@@ -59,12 +55,10 @@ RIBBON_VALUE = 210                      # Short of full, a hue at 255 having lit
 RIBBON_STEP = 2                         # Pixels a band, the gradient being drawn band by band
 RIBBON_DITHER = 8                       # Jitter on every other band, which scatters the panel's own banding
 
-# The statuses: a label, what it says, and the colour that carries. A state is coloured for what it means and
-# a count is not a state, so a number stays in the type's own ink. Measured, not estimated: the longest is 100
-# of the 160 the interface has, which lets the bullets sit this close to the badge
-STATE_GOOD = color.rgb(0, 136, 0)       # Both on the panel's own grid of 16 levels a channel, and both short
-STATE_BAD = color.rgb(204, 0, 0)        # of full, a saturated hue having little to give against white
-STATUSES = (("CREW ON DUTY", "40", INK),
+# The statuses, each a label, its value and the colour it carries. A count stays in the text colour
+STATE_GOOD = color.rgb(0, 136, 0)       # Whole levels of the 16 the screens drive a channel at, and both
+STATE_BAD = color.rgb(204, 0, 0)        # short of full, as a saturated hue gives little against white
+STATUSES = (("CREW ON DUTY", "40", TEXT_COLOUR),
             ("FOOD VAN", "NOT HERE", STATE_BAD),
             ("ROOF", "NOT LEAKING", STATE_GOOD))
 
@@ -74,47 +68,46 @@ HEADING = "ASSEMBLY LINE"               # What the row of lamps is, since seven 
 STAGE_MS = 900                          # How long a stage holds before the board moves on
 DIM = 0.08                              # What every output but the live one holds, so the line is never dark
 LAMP_R = 3
-# The light on the plate is drawn as rings rather than added by bloom(). That lifts what is
-# already bright, so a saturated red or blue lamp gets no glow at all: its luminance is below any
-# threshold the paler hues need to be lifted at
+# The lamp's light is drawn as rings, as bloom() lifts only what is bright
+# and leaves a saturated red or blue unlit
 GLOW_R = LAMP_R + 3                     # How far a lit lamp's light reaches onto the plate around it
 SPRITE_R = GLOW_R + 1                   # And the pixel of clear margin past it the sprite keeps
 GLOW_STEPS = 5                          # Rings it is built from, drawn largest first so they build inwards
-GLOW_ALPHA = 40                         # What the innermost ring adds, of 255; each outer one a share of it
+GLOW_ALPHA = 40                         # What the innermost ring adds out of 255, each outer one a share of it
 DOME_LIGHT = 190                        # The core a lit lamp shows, and the light unlit glass catches
 CONSOLE_PAD = 2                         # How far the plate under the line reaches past what sits on it
 
-# Create a MightyFX object with SP/CE A set up for a screen, and its RGB outputs for the line.
-# rotation is how the panel is mounted, which every frame then takes without naming it
+# Create a MightyFX object with SP/CE A set up for a screen, and its RGB outputs for the line
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a, rotation=ROTATION)
 
-# Half the panel each way, doubled by update(): a quarter of the pixels for the same picture
+# Half the panel each way and doubled by update(), a quarter of the pixels for the same picture
 canvas = screen.canvas(screen.height // 2, screen.width // 2)
 WIDTH, HEIGHT = canvas.width, canvas.height
 wordmark_face = font.load(WORDMARK_FACE)
-body_face = getattr(font, BODY_FACE)
-canvas.font = body_face
+canvas.font = BODY_FACE
 
-player = GIFPlayer(EMBLEM)
+try:
+    player = GIFPlayer(EMBLEM)
+except OSError:
+    mighty.shutdown()
+    raise RuntimeError(f"'{EMBLEM}' is missing! Check it is on the board") from None
 
-LINE_H = body_face.height + 1           # One line of type to the next
+LINE_H = BODY_FACE.height + 1           # One line of type to the next
 RIBBON_TOP = 22                         # The render above it is a wordmark and nothing else
-RIBBON_H = body_face.height + 1
+RIBBON_H = BODY_FACE.height + 1
 BODY_TOP = RIBBON_TOP + RIBBON_H + 4    # Clear of the ribbon, so the badge reads as an object of its own
 PLATE_PAD = 3
 BADGE_AT = (4, BODY_TOP)
 STATUS_LEFT = BADGE_AT[0] + player.width + PLATE_PAD + 3
 COIN_AT = rect(BADGE_AT[0], BADGE_AT[1], player.width, player.height)
 
-NUMBER_TOP = HEIGHT - body_face.height  # The numbers sit at the foot, the lamps above them
+NUMBER_TOP = HEIGHT - BODY_FACE.height  # The numbers sit at the foot, the lamps above them
 NUMBER_NUDGE = 1                        # A digit reads better a pixel right of its lamp's centre
 LAMP_Y = NUMBER_TOP - LAMP_R - 1
-HEADING_TOP = LAMP_Y - LAMP_R - body_face.height - 2
-STATUS_DOWN = 1                         # The statuses sit a pixel below the badge's own top, which is what
-                                        # squares them against it, not against the plate behind it
-BULLET_DOWN = 5                         # Where a bullet sits against its line, which is nearer the middle
-                                        # of the type than the top of the space it is given
+HEADING_TOP = LAMP_Y - LAMP_R - BODY_FACE.height - 2
+STATUS_DOWN = 1                         # Squares the statuses against the badge, not its plate
+BULLET_DOWN = 5                         # Near the middle of the type, not the top of its line
 ROW_INSET = 4                           # Nudges the lamps if the panel and the connectors do not line up
 CELL_W = (WIDTH - ROW_INSET * 2) / len(STAGES)
 
@@ -123,68 +116,55 @@ CONSOLE_AT = (1, HEADING_TOP - CONSOLE_PAD)
 CONSOLE_W = WIDTH - 2
 CONSOLE_H = HEIGHT - CONSOLE_AT[1] - 1
 
-# The ground: everything that never changes
-ground = image(WIDTH, HEIGHT)
-ground.font = body_face
-ground.antialias = image.X4
+# The background, everything that never changes
+background = image(WIDTH, HEIGHT)
+background.font = BODY_FACE
+background.antialias = image.X4
 
 
-# Measuring needs a font set, and setting one leaves it set, so it is asked of an image of its own. Asking the
-# ground would leave the ground drawing in whichever face was measured last, and the statuses are drawn on it
+# A scratch image to measure on, so the background's font is never changed
 asker = image(8, 8)
 
 
 def measure(face, text, size):
-    """The advance a drawing of the text takes. Any image answers the same, so a scratch one is asked."""
+    """The advance a drawing of the text takes."""
     asker.font = face
     return asker.measure_text(text, font_size=size)[0]
 
 
-__blanks = {}
-
-
 def glyph_blanks(face, glyph, size, tall, down):
-    """The blank a glyph carries before and after its ink, out of the advance it takes.
-
-    Centring on measure_text leaves a string off centre: what it returns is the advance, and a glyph's ink
-    stops short of its own by whatever the face leaves around it. On an interface this wide that shows.
-
-    Only the two end glyphs need measuring, advances adding up without kerning, and answers are kept.
     """
-    kept = __blanks.get((glyph, size))
-    if kept:
-        return kept
+    Measure the blank a glyph carries before and after its lettering, as measure_text returns the advance.
 
+    Only the two end glyphs need it.
+    """
     advance = measure(face, glyph, size)
     scratch = image(round(advance) + 8, round(tall))
     scratch.antialias = image.X4
     scratch.font = face
-    scratch.pen = INK
+    scratch.pen = TEXT_COLOUR
     scratch.text(glyph, 4, down, font_size=size)
 
     raw, stride = scratch.raw, scratch.stride
     left, right = scratch.width, -1
     for y in range(scratch.height):
         row = bytes(raw[y * stride:y * stride + scratch.width * 4])
-        inked = row.lstrip(b"\0")
-        if not inked:
+        drawn = row.lstrip(b"\0")
+        if not drawn:
             continue
 
-        left = min(left, (len(row) - len(inked)) // 4)
+        left = min(left, (len(row) - len(drawn)) // 4)
         right = max(right, (len(row.rstrip(b"\0")) - 1) // 4)
 
     if right < 0:
-        # A glyph that inks nothing, a space among them, has no blank of its own to report. Answering from an
-        # empty scratch would hand back its whole width and throw the line across the interface
-        __blanks[(glyph, size)] = (0, 0)
-    else:
-        __blanks[(glyph, size)] = (left - 4, advance - (right - 4) - 1)
+        # A glyph that draws nothing has no blank, or the line would be thrown across the interface
+        return 0, 0
 
-    return __blanks[(glyph, size)]
+    return left - 4, advance - (right - 4) - 1
 
 
-def centred_on_ink(face, text, size, tall, down, across=None):
-    """The x to draw the text at for its ink to sit centred, calculated once, not every frame."""
+def centred_on_lettering(face, text, size, tall, down, across=None):
+    """Find the x to draw the text at for its lettering to sit centred, calculated once, not every frame."""
     before = glyph_blanks(face, text[0], size, tall, down)[0]
     after = glyph_blanks(face, text[-1], size, tall, down)[1]
     return ((across or WIDTH) - (measure(face, text, size) - before - after)) / 2 - before
@@ -195,12 +175,11 @@ def cell_centre(index):
     return ROW_INSET + CELL_W * (index + 0.5)
 
 
-def plate(render, x, y, w, h, screws=True):
-    """A raised plate, in the interface's coordinates: a shadow, a face, a lit inside edge, and screws.
+def plate(render, x, y, w, h):
+    """
+    Draw a raised plate in the interface's coordinates, shadow, face, lit edge and screws.
 
-    Both plates come from here, so the badge and the line read as parts of one machine. None of it is pixel
-    aligned by design. It is drawn at twice the size and reduced, so an edge lands between two of the panel's
-    pixels and arrives as shading, which is what a picture of a real plate does.
+    It is drawn at twice size so its edges reduce to shading.
     """
     box = (x * REDUCE, y * REDUCE, w * REDUCE, h * REDUCE)
     corner = PLATE_R * REDUCE
@@ -215,99 +194,80 @@ def plate(render, x, y, w, h, screws=True):
     render.pen = PLATE_EDGE
     render.shape(shape.rounded_rectangle(*box, corner).stroke(2))
 
-    if screws:
-        for across in (x + PLATE_R, x + w - PLATE_R):
-            for down in (y + PLATE_R, y + h - PLATE_R):
-                render.pen = SCREW
-                render.circle(across * REDUCE, down * REDUCE, 1.4 * REDUCE)
-                render.pen = PLATE_BEVEL
-                render.circle(across * REDUCE, down * REDUCE, 0.5 * REDUCE)
+    for across in (x + PLATE_R, x + w - PLATE_R):
+        for down in (y + PLATE_R, y + h - PLATE_R):
+            render.pen = SCREW
+            render.circle(across * REDUCE, down * REDUCE, 1.4 * REDUCE)
+            render.pen = PLATE_BEVEL
+            render.circle(across * REDUCE, down * REDUCE, 0.5 * REDUCE)
 
 
 def build_render():
-    """The rendered half of the interface, drawn large and reduced onto the ground.
-
-    Everything here is continuous tone: a vector wordmark, a plate behind the badge, and a plate carrying
-    the line with a rail and a housing for each lamp. Built once, so it costs nothing per frame.
-    """
+    """Render the continuous-tone half, wordmark and plates, large and reduce it onto the background once."""
     render = image(WIDTH * REDUCE, HEIGHT * REDUCE)
     render.antialias = image.X4
     render.font = wordmark_face
-    render.pen = GROUND
+    render.pen = BACKGROUND
     render.clear()
 
-    render.pen = INK
+    render.pen = TEXT_COLOUR
     room = RIBBON_TOP * REDUCE - 6                       # The render's own pixels, above the ribbon
-    size = room / INK_TALL
+    size = room / LETTERING_TALL
     wide = measure(wordmark_face, WORDMARK, size)
     across = render.width - 8
     if wide > across:                                    # A heavy face runs out of width before height
         size *= across / wide
 
-    # Measured at the same y it is drawn at: this face inks below the line it is given, so a scratch only as
-    # tall as the wordmark holds the ink only if the draw is placed the same way
-    down = 3 - INK_DOWN * size
-    render.text(WORDMARK, centred_on_ink(wordmark_face, WORDMARK, size, room + 8, down, render.width),
+    # Measured at the y it is drawn at, as this face draws below its line
+    down = 3 - LETTERING_DOWN * size
+    render.text(WORDMARK, centred_on_lettering(wordmark_face, WORDMARK, size, room + 8, down, render.width),
                 down, font_size=size)
 
     plate(render, BADGE_AT[0] - PLATE_PAD, BADGE_AT[1] - PLATE_PAD,
           player.width + PLATE_PAD * 2, player.height + PLATE_PAD * 2)
 
-    # One plate under the heading, the lamps and their numbers, so the three read as an instrument and not as
-    # text with lights beneath it
+    # One plate under the heading, lamps and numbers, so the three read as one instrument
     plate(render, CONSOLE_AT[0], CONSOLE_AT[1], CONSOLE_W, CONSOLE_H)
 
-    # The rail the lamps sit on, drawn first so each housing breaks it: seven lights in a row say nothing on
-    # their own, and a track between them says a board travels from one to the next
+    # The rail is drawn first so each housing breaks it, which shows a board travels between lamps
     render.pen = PLATE_EDGE
     render.rectangle(cell_centre(0) * REDUCE, LAMP_Y * REDUCE - 1,
                      (cell_centre(len(STAGES) - 1) - cell_centre(0)) * REDUCE, 2)
 
-    ground.blit(render, rect(0, 0, render.width, render.height), rect(0, 0, WIDTH, HEIGHT), image.BILINEAR)
+    background.blit(render, rect(0, 0, render.width, render.height), rect(0, 0, WIDTH, HEIGHT), image.BILINEAR)
     del render
     gc.collect()
 
 
-def build_ground():
-    """The render, then the pixel accurate type over it: the statuses and the lamps' numbers.
-
-    The type is drawn after the reduction and never through it, so it stays exactly as its face draws it. That
-    is the division the whole screen is built on: what is a picture is rendered, and what has to be read is
-    not.
-    """
+def build_background():
+    """Lay the render, then the pixel-accurate type over it, as what is read is never reduced."""
     build_render()
 
+    # Each status as a bullet, its label in the text colour and its state in its own
     for index, (label, state, tone) in enumerate(STATUSES):
         top = BODY_TOP + STATUS_DOWN + index * LINE_H
         lead = f"{label} = "
-        ground.pen = INK
-        ground.rectangle(STATUS_LEFT, top + BULLET_DOWN, 3, 3)
-        ground.text(lead, STATUS_LEFT + 6, top, 1)
-        ground.pen = tone
-        ground.text(state, STATUS_LEFT + 6 + measure(body_face, lead, 1), top, 1)
+        background.pen = TEXT_COLOUR
+        background.rectangle(STATUS_LEFT, top + BULLET_DOWN, 3, 3)
+        background.text(lead, STATUS_LEFT + 6, top, 1)
+        background.pen = tone
+        background.text(state, STATUS_LEFT + 6 + measure(BODY_FACE, lead, 1), top, 1)
 
     # The numbers, which are read, not looked at, so they are type and not part of the render
-    ground.pen = RULE
+    background.pen = RULE
     for index in range(len(STAGES)):
         number = str(index + 1)
-        ground.text(number, cell_centre(index) - ground.measure_text(number, font_size=1)[0] / 2
+        background.text(number, cell_centre(index) - background.measure_text(number, font_size=1)[0] / 2
                     + NUMBER_NUDGE, NUMBER_TOP, 1)
 
 
 def lamp_origin(index):
-    """The interface pixel a lamp's sprite is blitted at. The lamps are spaced to match the connectors, so a
-    centre falls between two pixels. The whole part places the sprite and the fraction is drawn into it, which
-    keeps the row evenly spaced without asking a blit for a fractional position."""
+    """The whole pixel a lamp's sprite is blitted at, as the sprite carries its centre's fraction."""
     return int(cell_centre(index)) - SPRITE_R, LAMP_Y - SPRITE_R
 
 
 def build_lamp(index, lit):
-    """One lamp as a small rendered picture: its housing, its light, and the halo around it.
-
-    A lamp is drawn rather than blitted per frame for the same reason the plates are: at twice the size and
-    reduced, so the housing's edge and the light spilling from it arrive as shading. Outside itself the sprite
-    is transparent, so it lays over the plate the ground already carries.
-    """
+    """Render one lamp, housing, light and halo, at twice size, reduced to a sprite clear outside it."""
     origin = lamp_origin(index)
     side = SPRITE_R * 2
     render = image(side * REDUCE, side * REDUCE)
@@ -317,17 +277,14 @@ def build_lamp(index, lit):
     inside = (LAMP_R + 1) * REDUCE      # The housing's inside edge, where its rim begins
 
     if lit:
-        # The plate around a lit lamp takes its colour, strongest against the housing. The outermost ring is
-        # the faintest and stops short of the sprite's edge: a ring cut off by the edge leaves a straight run
-        # of colour along it, which reads as loose pixels beside the lamp
+        # The plate around a lit lamp takes its colour, and the outer ring stops short of the sprite's edge
         for step in range(GLOW_STEPS):
             reach = GLOW_R - step * (GLOW_R - LAMP_R - 1) / GLOW_STEPS
             render.pen = LIT_HUES[index].with_alpha(GLOW_ALPHA * (step + 1) // GLOW_STEPS)
             render.circle(at[0], at[1], reach * REDUCE)
 
-    # The rim is a disc with the housing's face laid inside it, and the light inside that. Stroking a ring one
-    # pixel wide instead leaves it part covered where it crosses a pixel diagonally, and there it takes the
-    # light's colour and reads as a stray beside its solid grey neighbours
+    # The rim is a disc with the face and light inside it,
+    # as a one-pixel stroked ring takes the light's colour on its diagonals
     render.pen = PLATE_EDGE
     render.circle(at[0], at[1], inside + REDUCE)
     render.pen = PLATE                  # Opaque, so the rail passing behind the lamp stops at it
@@ -351,13 +308,12 @@ def build_lamp(index, lit):
 
 
 def draw_ribbon(elapsed):
-    """The ribbon, band by band: two hues that cycle together, dithered along the way across.
-
-    Drawn every frame rather than baked, the colour being the thing that moves. Every other band is nudged by
-    half a level of the panel's own grid, which turns the bands 12 bit colour would otherwise show into a
-    stipple.
     """
-    turn = (elapsed % RIBBON_MS) * 255 // RIBBON_MS
+    Draw the ribbon band by band, two hues cycling together.
+
+    Every other band is nudged half a level, which stipples the banding.
+    """
+    turn = (elapsed % RIBBON_MS) * 255 // RIBBON_MS     # How far round the wheel the ribbon has turned, of 255
     for band in range(0, WIDTH, RIBBON_STEP):
         across = band / WIDTH
         hue = turn + round(RIBBON_SPREAD * across)
@@ -365,31 +321,30 @@ def draw_ribbon(elapsed):
         canvas.pen = color.hsv(hue, RIBBON_SAT, min(255, value))
         canvas.rectangle(band, RIBBON_TOP, RIBBON_STEP, RIBBON_H)
 
-    canvas.pen = GROUND
+    canvas.pen = BACKGROUND
     canvas.text(TAGLINE, TAGLINE_AT, RIBBON_TOP, 1)
 
 
 def levels_at(elapsed):
-    """Which stage is live, and how brightly each output is lit: that one full and every other just alive."""
+    """Which stage is live, and each output's level, that one full and the rest just alive."""
     live = (elapsed // STAGE_MS) % len(STAGES)
     return live, tuple(1.0 if index == live else DIM for index in range(len(STAGES)))
 
 
-# Values short of full: a hue at 255 washes out against a white ground, the yellows most of all. That is what
-# an output is set to and what an unlit lamp is tinted with; a lit one goes to full, having light of its own
+# Values short of full, as a hue at 255 washes out against white. A lit lamp goes to full
 HUES = tuple(color.hsv(index * 255 // len(STAGES), 255, 210) for index in range(len(STAGES)))
 LIT_HUES = tuple(color.hsv(index * 255 // len(STAGES), 255, 255) for index in range(len(STAGES)))
 
 
 def draw(elapsed, live):
-    """One frame: the ground, the ribbon, the badge, what the line is doing, and the seven lamps."""
-    canvas.blit(ground, 0, 0)
+    """Draw one frame, the background, the ribbon, the badge, the line's heading and the lamps."""
+    canvas.blit(background, 0, 0)
     draw_ribbon(elapsed)
     canvas.blit(player.image, COIN_AT)
 
     # The heading says what the lamps are, and names the stage that is live, so a number on a lamp means
     # something to somebody reading the screen cold
-    canvas.pen = INK
+    canvas.pen = TEXT_COLOUR
     canvas.text(HEADINGS[live], HEADING_AT[live], HEADING_TOP, 1)
 
     for index in range(len(STAGES)):
@@ -397,13 +352,13 @@ def draw(elapsed, live):
 
 
 marked = time.ticks_ms()
-build_ground()
+build_background()
 
-# What the ribbon and the lamps are labelled with, and where each sits to be centred on its own ink. Measured
-# once here, not every frame, a string's width being fixed once its face is
+# Labels for the ribbon and the lamps, measured once and centred on their lettering
 HEADINGS = tuple(f"{HEADING} = {stage}" for stage in STAGES)
-TAGLINE_AT = centred_on_ink(body_face, TAGLINE, 1, body_face.height + 2, 0)
-HEADING_AT = tuple(centred_on_ink(body_face, text, 1, body_face.height + 2, 0) for text in HEADINGS)
+TAGLINE_AT = centred_on_lettering(BODY_FACE, TAGLINE, 1, BODY_FACE.height + 2, 0)
+HEADING_AT = tuple(centred_on_lettering(BODY_FACE, text, 1, BODY_FACE.height + 2, 0) for text in HEADINGS)
+
 # Two sprites an output, since a lamp is either the stage the board is at or one of the rest
 lamps = tuple((build_lamp(index, False), build_lamp(index, True)) for index in range(len(STAGES)))
 print(f"a {WIDTH}x{HEIGHT} interface doubled onto the panel, badge {player.width}px,"

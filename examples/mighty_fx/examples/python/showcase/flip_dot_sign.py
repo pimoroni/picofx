@@ -5,8 +5,7 @@ from screens import Screen280
 from picovector import color, font, image, mat3, shape
 
 """
-Draw a flip-dot sign, spelling its message in dots that turn over one column after the
-next.
+Draw a flip-dot sign, spelling its message in dots that turn over one column after the next.
 
 Press "Boot" to exit the program.
 
@@ -14,16 +13,13 @@ Section: Mechanical and glowing displays
 """
 
 # Constants for drawing
-# match is the bolder face that still fits, a wider one running a five character line off a board
-# this size. dir(font) lists all 37
-SIGN_FONT = "match"                 # The lettering, drawn one pixel to a dot
+SIGN_FONT = font.match              # The boldest face that fits five characters a line, a pixel to a dot
 CELL = 10                           # The dot pitch in pixels, which sets how much the sign holds
-DOT_SIDES = 8                       # Octagonal dots, as one type has. Set it to 16 for the round type
+DOT_SIDES = 8                       # Octagonal dots, as one type has. 16 gives the round type, which shows from a CELL of about 14
 DOT_TWIST = 22.5                    # Turns the octagon so its flats face up and along, as a real one sits
 DOT_INSET = 1                       # How much of the frame shows between one dot and the next
 FLIP_AXIS = 45                      # The angle of the diagonal a dot turns about, corner to corner
-# Two posts to a cell, one at either end of the diagonal across the turning axis, and the dark face
-# rests against the one opposite the lit face's
+# Two posts a cell across the turning axis, the dark face resting on the one opposite the lit face's
 STOP_ANGLE = 135                    # The post the lit face rests against, bottom left as seen
 PIN_SHARE = 0.25                    # A post's size against the dot's, so detail grows with the pitch
 FLIP_STEPS = 6                      # How many faces a turn is drawn with, one to a frame
@@ -31,8 +27,7 @@ LIT = color.rgb(240, 230, 40)       # A dot showing its yellow face
 UNLIT = color.rgb(48, 46, 44)       # And its dark one, which a real dot still shows plainly
 STOP = color.rgb(90, 88, 84)        # The posts, lighter than either face so they read as parts
 FRAME = color.black                 # What the dots are set into
-# A frame takes about 65ms, nearly all of it reaching the panel, so these are set in whole frames: a
-# turn spanning fewer arrives in two or three steps however smooth the sum is
+# Set in whole frames, as a turn spanning fewer arrives in two or three steps
 FLIP_MS = 420                       # How long one dot takes to turn over
 SWEEP_MS = 70                       # How much later each column starts turning than the one before
 HOLD = 4.0                          # How long a message stays up once the board has settled
@@ -50,35 +45,29 @@ MESSAGES = (
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a)
 
-# The sign is wider than it is tall, so the canvas is drawn landscape and every update turns it a
-# quarter turn onto the panel. It comes from the screen, not from image(), which puts it in
-# SRAM instead of on the PSRAM heap, halving what the update pays per pixel
+# Drawn landscape and turned a quarter onto the panel at each update
 canvas = screen.canvas(screen.height, screen.width)
 columns = canvas.width // CELL
 rows = canvas.height // CELL
 
-# One pixel to a dot, which is what the lettering is drawn at: the sign's own resolution
-sign_font = getattr(font, SIGN_FONT)
+# One pixel to a dot, the sign's own resolution, for the lettering
 pattern = image(columns, rows)
 
 DOT = CELL - DOT_INSET * 2
 
-# A radius that reaches the dot's flats to the edge of its tile, not its corners, and a half pixel
-# across to sit the shape on the pixel grid. Without the offset one corner comes out square instead of
-# chamfered. Eight pixels of dot is the smallest that chamfers evenly, which CELL and DOT_INSET are set for
+# A radius reaching the flats to the tile's edge, and a half-pixel nudge that keeps every corner
+# chamfered. CELL and DOT_INSET give the eight pixels that chamfer evenly
 REACH = 1.0 / math.cos(math.pi / DOT_SIDES)
 NUDGE = 0.5
 
-# The post in whole pixels, so a wider pitch carries a larger one, not the same two pixels
-# sitting in a bigger dot. It is drawn as an octagon like the dot, which at this size comes out a
-# square with its corners off, and that is what a post looks like
+# A post in whole pixels grows with the pitch. Its octagon comes out a square with cut corners
 PIN_PIXELS = max(2, round(DOT * PIN_SHARE))
 PIN_AT = PIN_PIXELS // 2
 PIN_REACH = 1.0 / math.cos(math.pi / 8)
 
 
 def post(tile, angle):
-    """One of a cell's two posts, where it is seen. The carrier holds them, so they never move."""
+    """Draw one of a cell's two posts, where it is seen. The carrier holds them, so they never move."""
     seen = math.radians(angle)
     x = PIN_AT if math.cos(seen) < 0 else DOT - PIN_AT - PIN_PIXELS
     y = PIN_AT if math.sin(seen) < 0 else DOT - PIN_AT - PIN_PIXELS
@@ -91,18 +80,11 @@ def post(tile, angle):
 
 
 def faces(colour, stop_angle):
-    """A face at every step of its turn, from flat on to edge on.
+    """
+    Bake a face at every step of its turn, from flat on to edge on.
 
-    A dot turns about the diagonal between two of its corners, so the face narrows across that
-    line and not down the panel. The axis itself has nothing to see.
-
-    Each cell holds two posts, one at either end of the other diagonal, and the dot's travel runs
-    between them. Whichever it is resting against shows on top of the face, while the far one is
-    covered by it, until the face turns far enough to be narrower than the gap and both come into
-    view. Turning over swaps which is which, so each face has its own and stop_angle is that one.
-
-    Baking the steps means a turning dot costs the same single blit a still one does, and each
-    tile carries the frame around the dot so nothing underneath has to be redrawn first.
+    A dot turns about one diagonal, so it narrows across that line. stop_angle is the post it
+    rests on at the other's end. Each tile carries its frame, so a turning dot costs one blit.
     """
     middle = DOT / 2
     steps = []
@@ -116,22 +98,18 @@ def faces(colour, stop_angle):
 
         radius = middle * REACH
 
-        # At rest the squash does nothing, and composing three turns rather than one moves the
-        # rasterising by a pixel, which costs the dot a row of its chamfer. So a face at rest is
-        # placed with the single turn its shape actually needs
+        # A face at rest takes the single turn it needs, as composing three shifts
+        # the rasteriser a pixel and costs a row of chamfer
         if squash == 1.0:
             placing = mat3().translate(middle + NUDGE, middle).rotate(DOT_TWIST)
         else:
             placing = mat3().translate(middle + NUDGE, middle).rotate(FLIP_AXIS) \
                             .scale(1, squash).rotate(DOT_TWIST - FLIP_AXIS)
 
-        # Both posts are drawn, the far one first so the face covers it while the face is wide, and
-        # the near one last so it always shows. Part way over the face is narrow and covers neither,
-        # which is when both are in view
+        # The far post first so a wide face covers it, and the near one last so it always shows
         post(tile, stop_angle + 180)
 
-        # A polygon at any roundness, since the circle primitive picks its own side count and comes
-        # out a row short at one end
+        # A polygon, as the circle primitive comes out a row short at one end
         dot = shape.regular_polygon(0, 0, radius, DOT_SIDES)
         dot.transform = placing
         tile.pen = colour
@@ -154,20 +132,20 @@ def dot_at(index):
 
 
 def pattern_states(lines):
-    """The message drawn at the sign's own resolution, read back as one state a dot.
+    """
+    Draw the message at the sign's resolution and read it back as a state a dot.
 
-    Anything can be drawn into the pattern, not only lettering, since what reaches the sign is
-    whichever pixels came out lit.
+    Anything drawn here reaches the sign.
     """
     pattern.pen = color.black
     pattern.clear()
     pattern.pen = color.white
-    pattern.font = sign_font
+    pattern.font = SIGN_FONT
 
-    top = (rows - sign_font.height * len(lines)) // 2
+    top = (rows - SIGN_FONT.height * len(lines)) // 2
     for line, text in enumerate(lines):
         width = int(pattern.measure_text(text)[0])
-        pattern.text(text, (columns - width) // 2, top + line * sign_font.height)
+        pattern.text(text, (columns - width) // 2, top + line * SIGN_FONT.height)
 
     raw = pattern.raw
     stride = pattern.stride
@@ -182,17 +160,13 @@ def pattern_states(lines):
 
 
 def show(index, lit):
-    """A dot at rest, showing one face or the other."""
+    """Draw a dot at rest, showing one face or the other."""
     x, y = dot_at(index)
     canvas.blit(lit_steps[0] if lit else unlit_steps[0], x, y)
 
 
 def turning(index, phase):
-    """A dot part way over, at whichever step of its turn it has reached.
-
-    The face changes at halfway, which is the moment a real dot passes edge-on and the other side
-    comes into view, so each half runs the steps in its own direction.
-    """
+    """Draw a dot part way over. The face changes at halfway, when a real dot passes edge-on."""
     x, y = dot_at(index)
     if phase < 0.5:
         lit = states[index]
@@ -205,10 +179,10 @@ def turning(index, phase):
 
 
 def schedule(wanted):
-    """How far into the sweep each dot that has to change starts turning, each column later than the last.
+    """
+    How far into the sweep each dot that has to change starts turning, each column later than the last.
 
-    Only the dots that differ are given one, so the sign turns over what the message changed and
-    leaves the rest standing, which makes a real board rattle in patches.
+    Only what the message changed turns.
     """
     flips = []
     for index in range(columns * rows):
@@ -254,13 +228,13 @@ settled = Roller(HOLD)
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        # The panel is only written while something is turning. A settled sign holds its frame, as
-        # a real one holds its dots with nothing driving them
+        # Write the panel only while something turns, as a settled sign holds its frame
         if flips:
             flips = advance(flips, pacer.elapsed)
             screen.update(canvas, rotation=90)
 
             if not flips:
+                # The sweep is done, so the sign stands at the new message
                 states = targets
                 settled.restart()
 

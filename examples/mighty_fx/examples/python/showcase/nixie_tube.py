@@ -5,12 +5,12 @@ from screens import Screen280
 from picovector import color, font, image, rect, shape
 
 """
-Draw a nixie tube: ten cathodes bent into digits and stacked front to back in a glass cylinder,
-the one carrying current glowing red-orange through the anode mesh.
+Draw a nixie tube, ten cathodes bent into digits and stacked front to back in a glass cylinder.
+The one carrying current glows red-orange through the anode mesh.
 
 The glass, the nine unlit cathodes and the glow at the tube's foot never change, so they are drawn
-once into the ground every frame starts from. A frame is that ground, the lit cathode over it, three
-filters, and the front of the glass.
+once into the background every frame starts from. A frame is that background, the lit cathode
+over it, three filters, and the front of the glass.
 
 Press "Boot" to exit the program.
 
@@ -22,10 +22,9 @@ TUBE_FONT = "/rom/fonts/AlumniSansPinstripe.af"
 ANTIALIAS = image.X4                # A vector face needs it, and a line a pixel wide is all edge
 NEON = color.rgb(255, 102, 34)      # The red-orange a nixie's neon glows. rgb(120, 190, 255) is an argon tube
 CORE = color.rgb(255, 170, 102)     # And the paler middle of it, along the wire itself
-GROUND = color.black                # Behind the tube
+BACKGROUND = color.black            # Behind the tube
 
-# An unlit cathode is bare metal, drawn opaque. Drawn in the neon's colour at a low alpha, ten digits
-# crossing would build up towards the lit colour and hide the one being shown
+# An unlit cathode is bare metal, drawn opaque so crossing digits never build up to the lit colour
 CATHODE_FRONT = (51, 43, 36)        # At the front of the stack, warmed by the neon behind it
 CATHODE_BACK = (22, 20, 18)         # And at the back, further into the dark
 
@@ -34,11 +33,9 @@ CATHODE_BACK = (22, 20, 18)         # And at the back, further into the dark
 ORDER = (6, 7, 5, 8, 4, 3, 9, 2, 0, 1)
 DEPTH_SCALE = 0.978
 DEPTH_Y = 1
-DIGIT_H = 185                       # The ink height of the front cathode's digit, in panel pixels
+DIGIT_H = 185                       # The drawn height of the front cathode's digit, in panel pixels
 LIT = 255                           # The cathode carrying current
-# A size to measure the face at, its ink scaling with it from there. Its em box has to fit the scratch,
-# or the measurement reports the ink that landed and not the ink the face would have drawn
-REF = 200
+REF = 200                           # A size to measure the face at, its em box inside the scratch
 
 # The tube, a glass cylinder stood on its pins, domed at the top and flat at the foot
 TUBE_W = 130
@@ -71,9 +68,7 @@ MESH_DARK = 30                      # By this much, of 255
 CURVE = 80                          # How far the picture falls away at the edges
 
 COUNT_MS = 1000                     # A digit a second, this being the seconds place of a clock
-# One digit going out as the next comes up. Drawing a frame costs about 95ms of that, so a change lands in
-# a frame or two, which is what a tube does, and both digits are seen together on the way
-CHANGE_MS = 200
+CHANGE_MS = 200                     # One digit going out as the next comes up, both seen together
 
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
@@ -85,25 +80,24 @@ canvas.antialias = ANTIALIAS
 
 CATHODES = len(ORDER)
 DEPTH_OF = {digit: depth for depth, digit in enumerate(ORDER)}
+# Each depth's unlit colour, stepped from the front cathode's to the back one's
 UNLIT = tuple(color.rgb(*(round(front + (back - front) * depth / (CATHODES - 1))
                           for front, back in zip(CATHODE_FRONT, CATHODE_BACK)))
               for depth in range(CATHODES))
 
-# The ground, drawn once. Panel sized, and it stands in as the scratch the measurement below is taken on
-# before it holds the ground
+# The background is drawn once, and first the scratch for the measurement below
 stack = image(WIDTH, HEIGHT)
 stack.antialias = ANTIALIAS
-# The face goes on both, a cathode being drawn onto the ground while it is unlit and onto the frame once it is
+# The face goes on both, as a cathode is drawn onto the background while unlit and onto the frame once lit
 stack.font = canvas.font = font.load(TUBE_FONT)
-BLANK = bytes(len(stack.raw))
+BLANK = bytes(len(stack.raw))   # A cleared stack's bytes, copied in to wipe it before a measurement
 
 
-def ink_rows(letters, size, at):
-    """The first and last rows a drawing of these characters inks, taken off the scratch.
+def lettering_rows(letters, size, at):
+    """
+    Measure the first and last rows these characters fill.
 
-    Both ends of the buffer are stripped whole, which is two C calls where a row at a time over a panel is
-    a second and a half of allocation. Read off a drawing, the face's own metrics being the em box and the
-    advance, and neither is the ink.
+    A face's metrics are not where its lettering lands.
     """
     stack.raw[:] = BLANK
     stack.pen = color.white
@@ -114,24 +108,23 @@ def ink_rows(letters, size, at):
             (len(filled.rstrip(b"\0")) - 1) // stack.stride)
 
 
-TOP, BOTTOM = ink_rows("8", REF, 0)
+TOP, BOTTOM = lettering_rows("8", REF, 0)
 SIZE = REF * DIGIT_H / (BOTTOM - TOP + 1)
-INK_DOWN = TOP / REF        # How far below the y it is drawn at a digit's ink starts, per unit of size
+LETTERING_DOWN = TOP / REF  # How far below the y it is drawn at a digit's lettering starts, per unit of size
 ADVANCE = {digit: stack.measure_text(str(digit), font_size=SIZE)[0] for digit in ORDER}
 print(f"a digit {DIGIT_H} tall at font size {SIZE:.0f}, over a stack {CATHODES} deep")
 
 
 def place(digit):
-    """Where a cathode's digit is drawn, and at what size, for its depth in the stack.
+    """
+    Where a cathode's digit is drawn and at what size, for its depth.
 
-    Every digit is centred, as a tube's cathodes are, so the count does not walk across the tube as the
-    shapes change width. The em box a digit is drawn in is taller than the tube, so the y it is drawn at
-    is where its ink has to land less how far below that y the ink starts.
+    Every digit is centred so the count does not walk across the tube.
     """
     depth = DEPTH_OF[digit]
     size = SIZE * DEPTH_SCALE ** depth
     return ((WIDTH - ADVANCE[digit] * size / SIZE) / 2,
-            (HEIGHT - DIGIT_H * size / SIZE) / 2 - INK_DOWN * size - DEPTH_Y * depth, size)
+            (HEIGHT - DIGIT_H * size / SIZE) / 2 - LETTERING_DOWN * size - DEPTH_Y * depth, size)
 
 
 TUBE_X = (WIDTH - TUBE_W) // 2
@@ -142,8 +135,7 @@ SIDE = TUBE_FOOT - DOME_CY          # The length of the straight wall, under the
 GLASS = shape.rounded_rectangle(TUBE_X, TUBE_TOP, TUBE_W, TUBE_FOOT - TUBE_TOP,
                                 TUBE_R, TUBE_R, FOOT_CORNER, FOOT_CORNER)
 
-# The front of the glass, drawn over the mesh and everything behind it. Made once, a shape built per frame
-# being an allocation
+# The front of the glass, drawn over everything else and made once
 FRONT = (
     # The outline, and a fainter line just inside it where the wall's thickness shows
     (RIM.with_alpha(80), shape.rounded_rectangle(TUBE_X, TUBE_TOP, TUBE_W, TUBE_FOOT - TUBE_TOP,
@@ -166,16 +158,13 @@ TIP = ((color.rgb(68, 51, 34), shape.rounded_rectangle(TUBE_CX - 9, TUBE_TOP - 5
        (RIM.with_alpha(80), shape.rounded_rectangle(TUBE_CX - 9, TUBE_TOP - 5, 18, 13, 8, 8, 3, 3).stroke(1)),
        (RIM.with_alpha(140), shape.rounded_rectangle(TUBE_CX - 5, TUBE_TOP - 3, 3, 7, 1.5)))
 
+# The eight places round the digit its sheath is drawn at
 SHEATH_AT = tuple((dx, dy) for dx in (-SHEATH, 0, SHEATH) for dy in (-SHEATH, 0, SHEATH) if dx or dy)
 
 
-def build(light):
-    """The tube and its stack unlit, and what the glow reaches besides the cathodes.
-
-    This is the ground a frame starts from, so it holds everything that does not change: nine of the ten
-    cathodes are always unlit, and the tenth is drawn again over the top.
-    """
-    stack.pen = GROUND
+def build():
+    """Draw the background every frame starts from, the tube with its unlit stack and the glow beyond the cathodes."""
+    stack.pen = BACKGROUND
     stack.clear()
 
     # The pins, from the foot of the glass into the board, and the board
@@ -191,17 +180,17 @@ def build(light):
     stack.shape(GLASS)
     wall = TUBE_FOOT - round(DOME_CY)
     for step in range(SHADE):
-        stack.pen = GROUND.with_alpha(round(SHADE_DARK * (1 - step / SHADE) ** 2))
+        stack.pen = BACKGROUND.with_alpha(round(SHADE_DARK * (1 - step / SHADE) ** 2))
         stack.vspan(TUBE_X + step, round(DOME_CY), wall - FOOT_CORNER // 2)
         stack.vspan(TUBE_X + TUBE_W - 1 - step, round(DOME_CY), wall - FOOT_CORNER // 2)
         stack.shape(shape.arc(TUBE_CX, DOME_CY, TUBE_R - step - 1, TUBE_R - step, -90, 90))
 
     # And the light of the gas held in it, down the walls and gathered at the foot
-    stack.pen = light.with_alpha(ENVELOPE)
+    stack.pen = NEON.with_alpha(ENVELOPE)
     stack.vspan(TUBE_X + 1, round(DOME_CY), wall - FOOT_CORNER)
     stack.vspan(TUBE_X + TUBE_W - 2, round(DOME_CY), wall - FOOT_CORNER)
     for row in range(BASE_ROWS):
-        stack.pen = light.with_alpha(round(BASE_GLOW * (1 - row / BASE_ROWS) ** 2))
+        stack.pen = NEON.with_alpha(round(BASE_GLOW * (1 - row / BASE_ROWS) ** 2))
         stack.hspan(TUBE_X + 3, TUBE_FOOT - 2 - row, TUBE_W - 6)
 
     # The supports down either side of the stack, and the spacers it is held between. A spacer is a disc
@@ -221,38 +210,37 @@ def build(light):
         stack.pen = pen
         stack.shape(part)
 
+    # Back to front, so a nearer cathode crosses over those behind it
     for depth in range(CATHODES - 1, -1, -1):
         x, y, size = place(ORDER[depth])
         stack.pen = UNLIT[depth]
         stack.text(str(ORDER[depth]), x, y, size)
 
 
-def draw(showing, light):
-    """One frame: the ground, the cathode or two carrying current, and the tube over both.
-
-    showing pairs a digit with its brightness, so a change is the one going out and the one coming up
-    drawn together, each at its own place in the stack.
+def draw(showing):
     """
-    # The ground is cleared under first. Its blended pixels fall a little short of opaque, so without the clear
-    # the previous frame shows through them
-    canvas.pen = GROUND
+    Draw one frame, the background, the cathode or two carrying current, and the tube.
+
+    The digit coming on and the one going out arrive in showing, each with its brightness.
+    """
+    # The background is cleared under first, as its blended pixels fall a little short of opaque
+    # and the previous frame would show through them
+    canvas.pen = BACKGROUND
     canvas.clear()
     canvas.blit(stack, 0, 0)
 
-    # A lit cathode is drawn over the whole stack. In a tube the neon outshines the wires in front of it by
-    # far more than a panel's range can show, so drawn behind them it reads as hidden. Its sheath is the
-    # digit again around the wire, and its core the digit on the wire
+    # A lit cathode goes over the whole stack, as neon outshines the wires in front. Its sheath is the
+    # digit around the wire, its core the digit on it
     for digit, level in showing:
         if level:
             x, y, size = place(digit)
-            canvas.pen = light.with_alpha(round(level * SHEATH_LEVEL))
+            canvas.pen = NEON.with_alpha(round(level * SHEATH_LEVEL))
             for dx, dy in SHEATH_AT:
                 canvas.text(str(digit), x + dx, y + dy, size)
             canvas.pen = CORE.with_alpha(level)
             canvas.text(str(digit), x, y, size)
 
-    # The bloom goes on the frame, which is opaque. On an image with transparency it would lift a channel
-    # above that pixel's alpha, which blit relies on never happening
+    # The bloom goes on the opaque frame, as on a transparent one it lifts channels past their alpha
     canvas.bloom(GLOW_FROM, GLOW, GLOW_SPREAD)
     canvas.grid(MESH, MESH_DARK)
     canvas.vignette(CURVE)
@@ -262,8 +250,8 @@ def draw(showing, light):
 
 
 marked = time.ticks_ms()
-build(NEON)
-print(f"{CATHODES} cathodes drawn, the nine unlit ones into the ground, in"
+build()
+print(f"{CATHODES} cathodes drawn, the nine unlit ones into the background, in"
       f" {time.ticks_diff(time.ticks_ms(), marked)}ms")
 
 shown = None
@@ -278,7 +266,7 @@ try:
         up = min(1.0, into / CHANGE_MS)
         showing = ((count % 10, round(LIT * up)), ((count - 1) % 10, round(LIT * (1 - up))))
         if showing != shown:
-            draw(showing, NEON)
+            draw(showing)
             screen.update(canvas)
             shown = showing
 

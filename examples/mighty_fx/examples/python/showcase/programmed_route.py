@@ -9,25 +9,18 @@ from picofx.colour import BLUE, CYAN, GREEN, MAGENTA, RED, WHITE, YELLOW
 from picofx.mono import PulseFX, StaticFX
 
 """
-Programme a route into a two wheeled robot with the Aye Arr Remote, then watch it drive
-what it was told, its wheels turned by a continuous rotation servo on each of the L and
-R connectors.
+Programme a two wheeled robot's route with the Aye Arr Remote, then watch it drive what it was told.
 
 A route is a list of movements, each a direction and how many cycles to hold it for. It
-is entered on the remote a movement at a time: press a direction, then the digits of a
-number, then the next direction, which ends the one before it.
+is entered on the remote a movement at a time, as a direction then the digits of a number.
+The next direction ends the one before it.
 
-The outputs say what is happening without anyone watching the console. They pulse red
-while a route is being taken down, and flash on every press that was taken. While the
-route is driven the movement's length is lit dim, a bright light travels it a cycle at
-a time, and what it has been through holds a shade between the two, so a two cycle
-movement lights two and a five cycle one lights five. A
-movement longer than there are outputs fills them and starts again, so a long one can be
-counted in pages. Each movement takes the next colour in turn, so a
-route of short movements still shows where one ends and the next begins.
+The outputs pulse red while a route is taken down, and flash on every press. While driving, a
+movement's length is lit dim, a bright light travels it a cycle at a time, and passed cycles hold
+a shade between. A longer movement pages across the outputs, and each takes the next colour.
 
-An IR Stick should be connected to the Sensor port, and a continuous rotation servo to
-each of the L and R connectors.
+An IR Stick should be connected to the Sensor port,
+and a continuous rotation servo to each of the L and R connectors.
 
 Actions:
 - RECORD Button = Start or stop taking a route down
@@ -53,9 +46,7 @@ BLIP_LEVEL = 0.3        # How brightly they flash, dim enough to read against th
 DIM_LEVEL = 0.05        # What a light rests at to show how long a movement is
 PASSED_LEVEL = 0.25     # What a light holds once the movement has been through it
 
-# The colour each movement of a route is driven in, taken in turn. A movement of one
-# cycle lights one output for a moment, which is the same picture every time, so the
-# colour is what says a new movement has begun
+# Each movement's colour, taken in turn so even one-cycle movements show where each begins
 ROUTE_COLOURS = (GREEN, CYAN, BLUE, MAGENTA, YELLOW)
 
 # Variables
@@ -86,10 +77,8 @@ def show(colour, levels, steady=False):
     player.levels = levels
 
 
-# Function to say that a press was taken. A remote gives nothing back by itself, so
-# without this a button that did nothing and one that did look the same. It ends in the
-# main loop rather than here: sleeping inside a remote callback is time decode() is not
-# running, and a frame arriving then is lost
+# Function to flash a press as taken, since a remote gives no feedback. The main loop ends the
+# flash, as sleeping in a callback loses frames
 def blip():
     global blipping
     player.effects = StaticFX()
@@ -99,9 +88,8 @@ def blip():
     blip_over.restart()
 
 
-# The movements a route can be made of. The wheels face opposite ways on a robot, so
-# driving asks one for a speed and the other for its negative, and turning on the spot
-# asks both for the same
+# The movements a route can be made of.
+# The wheels face opposite ways, so driving gives one a negated speed
 def forwards():
     mighty.servo_l.value(SPEED)
     mighty.servo_r.value(-SPEED)
@@ -154,9 +142,7 @@ def perform(name, cycles, index):
     colour = ROUTE_COLOURS[index % len(ROUTE_COLOURS)]
     print(f"[{index + 1}/{len(route)}] {name} for {cycles} cycles")
 
-    # The colour and the effect are set once for the movement, and only the levels move
-    # from here: an effect assigned every pass builds a new one and rebuilds the
-    # player's channels each time, which is fifty of each a second for nothing
+    # Set the colour and effect once a movement, as assigning an effect rebuilds the channels
     show(colour, 0.0, steady=True)
 
     MOVEMENTS[name]()
@@ -166,10 +152,7 @@ def perform(name, cycles, index):
         if mighty.boot_pressed() or not playing:
             return False
 
-        # The movement's own length is lit dim and a bright light travels it a cycle
-        # at a time, so the bar is as long as this movement rather than the last one.
-        # A movement longer than there are outputs fills them and starts again, the
-        # final page being as long as what is left of it
+        # Light the movement's length dim and run a bright light along it, paging past the end
         cycle = int(held / CYCLE_TIME)
         position = cycle % lights
         page_length = min(lights, cycles - (cycle // lights) * lights)
@@ -264,6 +247,7 @@ def on_play():
         on_record()
 
     was_driving = playing
+    # Driving starts only where a route has been taken down
     playing = not playing and bool(route)
     if not playing:
         halt()
@@ -293,7 +277,7 @@ def on_undo():
         print(" - nothing to undo")
 
 
-# Create the remote and setup up what each of the buttons will do
+# Create the remote and set up what each of the buttons will do
 remote = PimoroniRemote()
 remote.on_known = on_known
 remote.bind("UP", (on_movement, "FORWARDS"), on_repeat=None)
@@ -330,6 +314,7 @@ try:
                 if not perform(name, cycles, index):
                     break
             else:
+                # Reached only when no movement was stopped early
                 print("--- route driven ---")
 
             playing = False

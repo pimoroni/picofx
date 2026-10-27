@@ -4,8 +4,7 @@ from screens import Reserve, Screen280, ScreenPair
 from picovector import color, font, image, rect
 
 """
-Draw a railway departures list on one screen, or spread across a pair with both panels
-turning their page together.
+Draw a railway departures list on one screen, or across a pair turning their page together.
 
 Press "Boot" to exit the program.
 
@@ -13,10 +12,10 @@ Section: Transport signs
 """
 
 # Constants for drawing
-BOARD_FONT = "nope"                 # The listing's dot-matrix lettering. dir(font) lists all 37
+BOARD_FONT = font.nope              # The listing's dot-matrix lettering. dir(font) lists them all
 PRINTED_HEADING = True              # Show the column headings printed on the board's face, or lit on a module
-HEADING_FONT = "smart"              # What they are printed in, being lettering the board does not light
-LARGE_FONT = "winds"                # The board's own lettering, at the top and the foot
+HEADING_FONT = font.smart           # What they are printed in, being lettering the board does not light
+LARGE_FONT = font.winds             # The board's own lettering, at the top and the foot
 AMBER = color.rgb(255, 176, 0)      # The colour of a lit lamp
 HEADING = color.rgb(255, 240, 220)  # Printed lettering, which a real board sets apart from what it lights
 MATRIX = color.rgb(20, 20, 16)      # The unlit face of a matrix module, against the black bars between them
@@ -28,11 +27,9 @@ PAD = 2                             # Space inside a module, above and below its
 PAGE_HOLD = 8.0                     # How long the board holds a page for, in seconds
 HEADINGS_ROW = 1                    # Where the column headings sit in the stack of modules
 FIRST_ROW = 2                       # And where the listing starts, the module below them
-CLOCK_START = (14, 5, 0)            # The time the board counts on from, MightyFX having no clock to read
+CLOCK_START = (14, 5, 0)            # The time the board counts on from, Mighty FX having no clock to read
 
-# The board's content, made up but for the stations. A service fills a row, and its via line and
-# each line of its note fill one more each; a platform heading stands on its own. So an entry's
-# height varies, which is what paging has to work out, and a note stays with the train it is about.
+# Made up but for the stations. A service takes a row, and its via and each note line one more
 ENTRIES = (
     {"departs": "14:02", "destination": "Leeds", "platform": "4A", "status": "Exp 14:07"},
     {"departs": "14:10", "destination": "Manchester Piccadilly", "platform": "2A", "status": "On time"},
@@ -52,12 +49,8 @@ ENTRIES = (
 # Create a MightyFX object with both SP/CE ports set up for screens
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 
-# A screen refuses to be created where no panel answered on its port, and claims nothing when
-# it does, so one panel runs the board on its own and a second widens it. The reserve is what
-# a pair needs to convert full-size images; a lone screen simply does not draw on it.
-#
-# A 2.8" either way, the four columns needing its longer edge across: a 1.54" leaves the
-# destination 77px, about ten characters, so all but the shortest name comes out an ellipsis
+# A screen refuses to be created where no panel answers, so one panel runs the board and a
+# second widens it. A 2.8" either way, as a 1.54" leaves the destination about ten characters
 screens = []
 for port in (mighty.spce_a, mighty.spce_b):
     try:
@@ -69,22 +62,14 @@ if not screens:
     mighty.shutdown()
     raise RuntimeError("No panels answered! Plug a screen into SP/CE A, and a second into SP/CE B to spread the board across two")
 
-# Two panels are one board, so a page has to turn on both at the same moment. A pair holds
-# them to one refresh rate and writes them on the same frame, where two screens written one
-# after the other would leave one showing the new page while the other still held the old.
-# Working out how takes a few seconds when the pair is created.
+# A pair turns the page on both panels on one frame. Working out how takes a few seconds
 pair = ScreenPair(*screens) if len(screens) == 2 else None
 
-# The board is wider than it is tall, so each canvas is drawn landscape and every update turns
-# it a quarter turn onto the panel. A pair carries two pages at once, so it draws two
-board_font = getattr(font, BOARD_FONT)
-heading_font = getattr(font, HEADING_FONT)
-large_font = getattr(font, LARGE_FONT)
+# A canvas per panel, drawn landscape and turned a quarter at each update
 canvases = [image(screens[0].height, screens[0].width) for _ in screens]
 
-# Where the columns fall, measured from the widest thing each carries rather than counted in
-# characters, so a different BOARD_FONT moves them instead of overrunning them
-canvases[0].font = board_font
+# Column positions measured from the widest thing each carries, so another BOARD_FONT moves them
+canvases[0].font = BOARD_FONT
 time_width = int(canvases[0].measure_text("00:00")[0])
 plat_width = int(canvases[0].measure_text("Plat")[0])
 status_width = int(canvases[0].measure_text("Cancelled")[0])
@@ -98,27 +83,20 @@ wide_width = canvases[0].width - INSET - destination_x   # For the lines with no
 
 def module_height(scale):
     """The height of one matrix module, lettering and the space around it."""
-    return board_font.height * scale + PAD * 2
+    return BOARD_FONT.height * scale + PAD * 2
 
 
 def layout(canvas):
-    """Where every module sits on the panel, top to bottom, and how many listing rows there are.
+    """
+    Return where every module sits from top to bottom, and how many listing rows there are.
 
-    A board is assembled from matrix units of two heights. The thick ones carry the large
-    lettering, so one sits at the top for the board's name and one at the foot for the page
-    count and the clock, with the column headings and the listing on thin ones between them.
-    How many rows there are comes from the panel's own height and BOARD_FONT's, so a taller
-    face costs rows.
-
-    Pixels left over after the stack widen the bars evenly, so the modules sit across the whole
-    panel and any last pixel is a black sliver at the bottom rather than a border at both ends.
-
-    Every module is sized from BOARD_FONT, the modules being one unit whatever they carry, so a
-    taller LARGE_FONT is clipped by the module it sits on.
+    Thick modules carry the large lettering at the top and foot. Thin ones carry the headings
+    and listing, as many as the panel and BOARD_FONT allow. Spare pixels widen the bars evenly, and
+    a taller LARGE_FONT is clipped by its module.
     """
     thick = module_height(LARGE_SCALE)
     thin = module_height(1)
-    rows = max(1, (canvas.height - thick * 2 - thin - BAR * 3) // (thin + BAR))
+    rows = max(1, (canvas.height - thick * 2 - thin - BAR * 2) // (thin + BAR))
 
     heights = [thick, thin] + [thin] * rows + [thick]
     slack = canvas.height - sum(heights) - BAR * (len(heights) - 1)
@@ -134,8 +112,8 @@ def layout(canvas):
 
 
 def bounds(place, x, width, scale=1):
-    """A rect covering lettering inside one module, for text that needs bounds to align in."""
-    return rect(x, place[0] + PAD, width, board_font.height * scale)
+    """The rect covering lettering inside one module, for text that needs bounds to align in."""
+    return rect(x, place[0] + PAD, width, BOARD_FONT.height * scale)
 
 
 def entry_rows(entry):
@@ -147,7 +125,7 @@ def entry_rows(entry):
 
 
 def paginate(rows):
-    """The entries split into pages, each filling the listing without splitting an entry."""
+    """Split the entries into pages, each filling the listing without splitting an entry."""
     pages = []
     page = []
     used = 0
@@ -169,22 +147,19 @@ def paginate(rows):
 places, rows = layout(canvases[0])
 pages = paginate(rows)
 
-# Printed lettering is not held to a module, so it sits centred in the band between the one above
-# and the listing below, which lets HEADING_FONT be taller than the listing's own lettering
+# Printed lettering sits centred in the band between modules, so HEADING_FONT may be taller
 band_top = places[HEADINGS_ROW - 1][0] + places[HEADINGS_ROW - 1][1]
-headings_y = band_top + (places[FIRST_ROW][0] - band_top - heading_font.height) // 2
+headings_y = band_top + (places[FIRST_ROW][0] - band_top - HEADING_FONT.height) // 2
 
 print(f"Board on {len(screens)} of 2 SP/CE ports, {rows} rows a page, {len(pages)} pages of departures")
 
 
 def draw(canvas, number, clock):
-    """One page of the listing on the canvas, with its number and the time at the foot."""
+    """Draw one page of the listing on the canvas, with its number and the time at the foot."""
     canvas.pen = color.black
     canvas.clear()
 
-    # Every module face first, lit or not: the modules are there whether they are showing
-    # anything, and the black bars between them are what makes each row its own. The column
-    # headings get none, being printed on the board's face rather than shown on a module
+    # A module face for every row first, lit or not, but none behind the printed headings
     canvas.pen = MATRIX
     for index, (y, height) in enumerate(places):
         if index != HEADINGS_ROW or not PRINTED_HEADING:
@@ -192,14 +167,13 @@ def draw(canvas, number, clock):
 
     # The board's name, at double size on the thick module at the top
     canvas.pen = AMBER
-    canvas.font = large_font
+    canvas.font = LARGE_FONT
     canvas.text("Departures", bounds(places[0], INSET, canvas.width - INSET * 2, LARGE_SCALE),
                 font_size=LARGE_SCALE)
 
-    # The column headings, printed on the board's face or lit on a module of their own. A
-    # position is passed as loose arguments: text() takes at= as a vec2 or as x and y, and
-    # silently continues at the caret where a plain (x, y) tuple is handed to it
-    face = heading_font if PRINTED_HEADING else board_font
+    # The column headings, printed on the board's face or lit on a module of their own. Positions
+    # go as loose x and y, as text() ignores an (x, y) tuple
+    face = HEADING_FONT if PRINTED_HEADING else BOARD_FONT
     text_y = headings_y if PRINTED_HEADING else places[HEADINGS_ROW][0] + PAD
     canvas.font = face
     canvas.pen = HEADING if PRINTED_HEADING else AMBER
@@ -208,15 +182,11 @@ def draw(canvas, number, clock):
     canvas.text("Plat", rect(plat_x, text_y, plat_width, face.height), align=(image.RIGHT, image.TOP))
     canvas.text("Status", rect(status_x, text_y, status_width, face.height), align=(image.RIGHT, image.TOP))
 
-    # The listing, an entry at a time, each taking as many rows as it needs. A page was built
-    # to fit, so the row count is only reached by the last entry on it
-    canvas.font = board_font
+    # The listing, an entry at a time, each taking as many rows as it needs. A page was built to fit
+    canvas.font = BOARD_FONT
     canvas.pen = AMBER
     row = 0
     for entry in pages[number]:
-        if row >= rows:
-            break
-
         if "heading" in entry:
             canvas.text(entry["heading"], bounds(places[FIRST_ROW + row], destination_x, wide_width),
                         overflow=image.ELLIPSES)
@@ -226,8 +196,7 @@ def draw(canvas, number, clock):
         place = places[FIRST_ROW + row]
         canvas.text(entry["departs"], INSET, place[0] + PAD)
 
-        # The destination is truncated with an ellipsis where it will not fit, as a real board
-        # does rather than shrinking the lettering
+        # The destination, cut with an ellipsis where it will not fit
         canvas.text(entry["destination"], bounds(place, destination_x, destination_width),
                     overflow=image.ELLIPSES)
         canvas.text(entry["platform"], bounds(place, plat_x, plat_width), align=(image.RIGHT, image.TOP))
@@ -237,15 +206,12 @@ def draw(canvas, number, clock):
         # The via line and the note sit under their service, indented to the destination column
         # and running on into the platform and status columns, which are empty beside them
         for text in ((entry["via"],) if entry.get("via") else ()) + entry.get("note", ()):
-            if row >= rows:
-                break
-
             canvas.text(text, bounds(places[FIRST_ROW + row], destination_x, wide_width),
                         overflow=image.ELLIPSES)
             row += 1
 
     # The page count and the clock share the thick module at the foot, as a real board does
-    canvas.font = large_font
+    canvas.font = LARGE_FONT
     foot = bounds(places[-1], INSET, canvas.width - INSET * 2, LARGE_SCALE)
     canvas.text(f"Page {number + 1} of {len(pages)}", foot, font_size=LARGE_SCALE)
     canvas.text(clock, foot, font_size=LARGE_SCALE, align=(image.RIGHT, image.TOP))
@@ -269,11 +235,11 @@ shown = None
 try:
     while not mighty.boot_pressed():
         if turn.is_due():
+            # On by as many pages as there are panels, so a pair never shows one twice
             page = (page + len(canvases)) % len(pages)
             turn.advance()
 
-        # The board is drawn again whenever the page or the second changes, which is what makes
-        # the clock tick. Nothing else on it moves, so the rest of the time it is left alone
+        # Draw the board again when the page or the second changes, which ticks the clock
         clock = clock_at(pacer.elapsed)
         frame = (page, clock)
         if frame != shown:

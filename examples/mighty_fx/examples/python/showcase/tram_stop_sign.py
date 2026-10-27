@@ -4,18 +4,13 @@ from screens import Reserve, Screen280, ScreenPair
 from picovector import color, font, image, rect
 
 """
-Draw a tram stop sign across two screens: amber lamps behind a dark face, in a contiguous
+Draw a tram stop sign across two screens, amber lamps behind a dark face in a contiguous
 band per line, with the next tram pinned and the ones after it cycling underneath.
 
-Two things here are in no other example. The rows scroll vertically, so a sign with two
-service rows can list five trams while always showing the next one. And the notice scrolls
-horizontally, because it is longer than the sign, which is the sign's own answer to being
-narrower than what it has to say.
+The rows scroll vertically, so two service rows list five trams while always showing the
+next. The notice is longer than the sign, so it scrolls horizontally.
 
-Each band is drawn into a pane of its own, so a band really is a window: anything reaching
-past its edges is outside the image and simply not there. That is what lets a row slide
-without being clipped by hand, and it is what lets one band be redrawn without the others,
-which is what makes the scroll affordable.
+Each band is drawn into its own pane, which clips a sliding row and lets one band redraw alone.
 
 Press "Boot" to exit the program.
 
@@ -26,7 +21,7 @@ Section: Transport signs
 LAMP = 4                        # Panel pixels across one lamp
 APERTURE = 0.6                  # The lit hole, as a fraction of a lamp's width
 SOFTEN = 0.8                    # Panel pixels the aperture's edge fades over
-SIGN_FONT = "sins"              # A narrow face: its own pixels are lamps, so its width sets the message
+SIGN_FONT = font.sins           # A narrow face whose pixels are lamps, so its width sets the message
 CLOCK_SCALE = 2                 # Pixel fonts scale by whole numbers, and the clock is the biggest thing
 BAND_GAP = 3                    # Lamps of plain face between one band and the next
 MARGIN = 2                      # Lamps of face down either side of a band
@@ -34,22 +29,17 @@ MARGIN = 2                      # Lamps of face down either side of a band
 LIT = color.rgb(255, 170, 0)    # A lit lamp. Amber is the only colour these signs use
 BAND = color.rgb(17, 17, 17)    # The recessed strip a band's lamps sit in
 FACE = color.black              # And the sign's own face, above, below and between the bands
-# An unlit lamp. It has to be brighter than the band behind it, not merely a different hue: at 12 bits
-# rgb(34, 17, 0) and rgb(17, 17, 17) both come to the same total, so the lamps were there and
-# invisible, the eye reading brightness rather than colour at this size
-UNLIT = color.rgb(68, 34, 0)
+UNLIT = color.rgb(68, 34, 0)    # An unlit lamp is brighter than the band behind it,
+                                # as at this size the eye reads brightness
 
-# A panel's bezel is not the same on every edge, so a pair reads as one sign with its two narrowest edges
-# together, which means mounting one of them turned round. This is which: 0 for the panel on SP/CE A, 1 for
-# the one on B, or None where both are the same way up. The frame turns with the panel
-TURNED = 0
+TURNED = 0                      # One panel of a pair is mounted turned round, so their narrowest bezels meet.
+                                # 0 for SP/CE A, 1 for B, or None
 
-CLOCK_START = (11, 30, 40)      # The time the sign counts on from, MightyFX having no clock to read
+CLOCK_START = (11, 30, 40)      # The time the sign counts on from, Mighty FX having no clock to read
 DWELL = 4.0                     # How long a cycling row stands before the next tram slides up, in seconds
-# How far each scroll travels a frame. A whole lamp is the only even step a matrix can make, so both are
-# counted in frames rather than timed: timed, they move by whatever the frame rate leaves them and land
-# unevenly. The notice can take two, being read across the sign; a row sliding through its band wants
-# one, the slide itself being the thing on show
+
+# Lamps a scroll moves a frame, since whole lamps are the only even step.
+# The notice takes two and a sliding row one
 NOTICE_LAMPS = 2
 SLIDE_LAMPS = 1
 
@@ -68,10 +58,8 @@ NOTICE = ("Please let passengers off before boarding."
 # Create a MightyFX object with both SP/CE ports set up for screens, and a 2.8" screen on each
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 
-# The two panels are one sign, so both have to carry the same frame of a scroll. A pair holds them to one
-# refresh rate and writes them together, where two screens written one after the other would leave the
-# notice a step further along on one than the other. Working out how takes a few seconds. The reserve is
-# what a pair needs to convert an image out of the heap, which is where a sign wider than a panel has to live
+# A pair writes both panels together, so the notice is in step across them. Working out how takes a few
+# seconds, and the reserve lets it convert from the heap
 pair = ScreenPair(Screen280(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES),
                   Screen280(mighty.spce_b, reserve=Reserve.FULL_SIZE_IMAGES))
 
@@ -81,10 +69,8 @@ TURNS = tuple(90 + 180 * (port == TURNED) for port in range(2))
 PANEL_W = pair.screens[0].height
 HEIGHT = pair.screens[0].width
 
-# Where the panels meet, their two bezels hold the active areas apart. The canvas carries that gap so
-# that neither panel shows it: content crossing the seam then lands where it would on one long sign
-# rather than being pulled apart by the bezels. Tune it by eye, the notice crossing the join being the
-# pattern that shows it: 16 came off the glass, from evenly spaced dots drawn a row per candidate
+# The bezels where the panels meet hide a gap, set by eye.
+# The canvas carries it so content crosses the seam as on one sign
 SEAM = 16
 WIDTH = PANEL_W * 2 + SEAM
 canvas = image(WIDTH, HEIGHT)
@@ -94,24 +80,19 @@ COLUMNS = WIDTH // LAMP
 ROWS = HEIGHT // LAMP
 BAND_W = COLUMNS - MARGIN * 2
 
-sign_font = getattr(font, SIGN_FONT)
 sizer = image(COLUMNS, 1)
-sizer.font = sign_font
+sizer.font = SIGN_FONT
 ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789:."
 
 
-def ink_extent(letters, scale):
-    """Which rows these letters' ink covers, drawn from a common origin.
-
-    Read off a drawing, because the height a pixel font reports is its declared box: it carries ascender
-    and descender space no character reaches, and a band sized to it is taller than the lettering needs.
-    """
-    span = sign_font.height * scale * 2
+def lettering_extent(letters, scale):
+    """Measure which rows these letters fill. A face's metrics are not where they land."""
+    span = SIGN_FONT.height * scale * 2
     probe = image(span, span)
     probe.pen = color.black
     probe.clear()
     probe.pen = color.white
-    probe.font = sign_font
+    probe.font = SIGN_FONT
     for letter in letters:
         probe.text(letter, 0, 0, scale)
 
@@ -120,10 +101,10 @@ def ink_extent(letters, scale):
     return rows[0], rows[-1] - rows[0] + 1
 
 
-TEXT_TOP, TEXT_H = ink_extent(ALPHABET, 1)
-CLOCK_TOP, CLOCK_H = ink_extent("0123456789:", CLOCK_SCALE)
+TEXT_TOP, TEXT_H = lettering_extent(ALPHABET, 1)
+CLOCK_TOP, CLOCK_H = lettering_extent("0123456789:", CLOCK_SCALE)
 
-# Four bands: the pinned tram, the cycling one, the notice and the clock. Their heights come from the
+# Four bands, the pinned tram, the cycling one, the notice and the clock. Their heights come from the
 # lettering each carries, and what is left over becomes an even margin above and below
 PINNED, CYCLING, NOTICE_BAND, CLOCK = 0, 1, 2, 3
 BAND_H = (TEXT_H, TEXT_H, TEXT_H, CLOCK_H)
@@ -136,21 +117,19 @@ for height in BAND_H:
 
 BOTTOM = BAND_Y[-1] + BAND_H[-1]
 
-# A pane per band, which is where its own lamps are drawn. Its edges are the window: a row sliding through
-# it reaches past them and is simply not in the image, so nothing has to be clipped and no band can draw
-# into its neighbour
+# A pane per band, whose edges clip whatever slides past them
 panes = [image(BAND_W, height) for height in BAND_H]
 for pane in panes:
-    pane.font = sign_font
+    pane.font = SIGN_FONT
 
-# Where each pane goes on the canvas, and where the mask has to be laid over it again. Built once: a rect is
-# an object, and making them per frame allocates enough to bring a collection round mid-scroll
+# Where each pane goes and the mask over it, built once so a frame allocates nothing
 PANE_FROM = [rect(0, 0, BAND_W, height) for height in BAND_H]
 PANE_TO = [rect(MARGIN * LAMP, y * LAMP, BAND_W * LAMP, height * LAMP)
            for y, height in zip(BAND_Y, BAND_H)]
 
 print(f"Tram sign turned {TURNS}, {COLUMNS}x{ROWS} lamps at {LAMP}px, bands of {BAND_H} at {BAND_Y}")
 
+# Warn of any tram or clock wider than its band, as the pane would cut it short
 for stand, line, towards, when in TRAMS:
     needs = int(sizer.measure_text(f"{stand}. {line} {towards} {when}", font_size=1)[0])
     if needs > BAND_W:
@@ -162,11 +141,7 @@ if CLOCK_W > BAND_W:
 
 
 def bake_band(height):
-    """One band's mask: an aperture over every lamp across it, and the band's face between them.
-
-    A pixel at a time, which covers the aperture and the face around it in one rule. Opaque is what the
-    tile carries and clear is what it leaves.
-    """
+    """Bake one band's mask, an aperture over every lamp and the band's face between, a pixel at a time."""
     tile = image(BAND_W * LAMP, height * LAMP)
     tile.pen = color.transparent
     tile.clear()
@@ -185,11 +160,10 @@ def bake_band(height):
 
 
 def bake_mask():
-    """The sign's face: clear to begin with, a band laid in per line, then everything else filled.
+    """
+    Bake the sign's face, clear to begin with, a band laid in per line, then the rest filled.
 
-    It has to be this way round. Drawing composites, so a transparent pen cannot take an opaque ground back
-    to clear: filling the face first and clearing under the bands leaves every aperture shut. The bands
-    carry every opaque pixel they cover, and the face around them is filled afterwards.
+    It starts clear, as a transparent pen cannot clear an opaque background back.
     """
     face = image(WIDTH, HEIGHT)
     face.pen = color.transparent
@@ -214,47 +188,42 @@ def bake_mask():
 
 mask = bake_mask()
 NOTICE_W = int(sizer.measure_text(NOTICE, font_size=1)[0])
-CYCLES = len(TRAMS) - 1
+CYCLES = len(TRAMS) - 1         # The trams that take turns on the cycling row
 
 
 def show(index):
-    """One band onto the canvas: its lamps scaled up, then the mask laid over them again.
-
-    Only the band's own rows, which is the point of the panes. Both blits cost about 730ns a pixel on a
-    canvas this size, the heap being some 2.4 times slower than the fast SRAM a smaller canvas would fit in,
-    so covering the whole panel every frame costs 193ms where the notice's own band costs 27ms.
-    """
+    """Draw one band onto the canvas, its lamps scaled up and the mask over them, touching only its rows."""
     canvas.blit(panes[index], PANE_FROM[index], PANE_TO[index], image.NEAREST)
     canvas.blit(mask, PANE_TO[index], PANE_TO[index], image.NEAREST)
 
 
 def clear(pane):
-    """A pane back to unlit lamps, ready to be drawn on again."""
+    """Put a pane back to unlit lamps, ready to be drawn on again."""
     pane.pen = UNLIT
     pane.clear()
     pane.pen = LIT
 
 
 def draw_tram(pane, y, tram):
-    """One tram on a pane: its stand and line to the left, its destination after them, time to the right."""
+    """Draw one tram on a pane, its stand, line and destination to the left and its time to the right."""
     stand, line, towards, when = tram
     pane.text(f"{stand}. {line} {towards}", 0, y - TEXT_TOP, 1)
-    wide = int(sizer.measure_text(tram[3], font_size=1)[0])
+    wide = int(sizer.measure_text(when, font_size=1)[0])
     pane.text(when, BAND_W - wide, y - TEXT_TOP, 1)
 
 
 def draw_pinned():
-    """The next tram, which never cycles, so it is never the one that has scrolled away."""
+    """Draw the next tram, which never cycles and so is never the one that has scrolled away."""
     clear(panes[PINNED])
     draw_tram(panes[PINNED], 0, TRAMS[0])
     show(PINNED)
 
 
 def draw_cycling(step, lift):
-    """The trams after the next, in turn.
+    """
+    Draw the trams after the next in turn.
 
-    During a slide both are drawn, one leaving upward and one arriving from below. The pane's own edges are
-    what hide the parts of each that fall outside the band, so neither reaches the row above.
+    During a slide one leaves and one arrives, the pane's edges clipping both.
     """
     pane = panes[CYCLING]
     clear(pane)
@@ -268,7 +237,7 @@ def draw_cycling(step, lift):
 
 
 def draw_notice(travelled):
-    """The notice, in from the right and out to the left, its own width plus the sign's being one pass."""
+    """Draw the notice, in from the right and out to the left, its width and the sign's being one pass."""
     pane = panes[NOTICE_BAND]
     clear(pane)
     pane.text(NOTICE, BAND_W - travelled % (NOTICE_W + BAND_W), -TEXT_TOP, 1)
@@ -276,7 +245,7 @@ def draw_notice(travelled):
 
 
 def draw_clock(seconds):
-    """The time, centred, and the biggest lettering on the sign. Counted on from CLOCK_START."""
+    """Draw the time centred, the biggest lettering on the sign. Counted on from CLOCK_START."""
     hours, minutes, start = CLOCK_START
     total = (hours * 3600 + minutes * 60 + start + seconds) % 86400
     reading = f"{total // 3600:02d}:{total // 60 % 60:02d}:{total % 60:02d}"
@@ -289,24 +258,20 @@ def draw_clock(seconds):
 
 
 def send():
-    """The canvas to both panels, on the same frame."""
-    # One canvas reaches both panels, the second showing it from where the first left off. A negative
-    # offset places the source left of the panel and the converter clips to it, and it does so whichever
-    # way the panel is turned: at 270 the source runs the other way across it, which is exactly what
-    # turning it round asks for
+    """Send the canvas to both panels, on the same frame."""
+    # The second panel shows the canvas from where the first left off, whichever way it is turned
     pair.update(canvas, rotation=TURNS, offset=((0, 0), (-(PANEL_W + SEAM), 0)))
 
 
-# The face first, so the margins and the gaps between bands carry the sign's own colour: from here on the
-# band blits only ever touch their own rows
+# The face first, so the margins and gaps carry the sign's colour
 canvas.pen = FACE
 canvas.clear()
 draw_pinned()
 
 pacer = Pacer()                 # The sign's clock, with no rate, as every scroll is counted in frames
 travelled = 0
-step = 0
-lift = None
+step = 0                        # How many times the cycling row has moved on
+lift = None                     # How far its row has climbed, or None while it stands
 standing = Roller(DWELL)
 shown = (None, None, None)
 draw_cycling(step, lift)
@@ -328,8 +293,7 @@ try:
                 lift = None
                 standing.restart()
 
-        # Only what changed is redrawn. The notice moves every frame; the cycling row moves during a slide,
-        # and the clock when the second turns over
+        # Only what changed is redrawn, the notice every frame
         if (step, lift) != shown[:2]:
             draw_cycling(step, lift)
 

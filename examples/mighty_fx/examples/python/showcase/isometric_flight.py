@@ -9,10 +9,9 @@ from screens import SCREEN_TYPES, Reserve, ScreenPair
 """
 Fly for ever over two isometric worlds, each drawn once into a tile the driver repeats.
 
-Both come off one height field, a few sine terms whose cycles all complete across the tile, so
-the ground meets itself at every edge and tile=True repeats it without a seam. The hills take
-that height as it stands; the terraces snap it to a few levels, which turns every slope into a
-fold. Nothing is drawn after startup, and the flight is the offset growing.
+Both come off one height field of sine terms whose cycles complete across the tile, so
+tile=True repeats it without a seam. The hills use it as it is, and the terraces snap it to
+levels so every slope folds. Nothing is drawn after startup.
 
 One panel carries a world and a second carries the other, so a pair is both at once. An example
 that takes the button has to give a way back, so leaving it is a hold.
@@ -32,26 +31,22 @@ TURN_WIDE = 700             # Frames the slow half of a wander takes to come rou
 TURN_TIGHT = 260            # And the quick half, which bends the course inside the slow one
 STEP = 1                    # Pixels a descending view drops each frame, twice that across
 
-# The lattice: a corner sits at (p * CELL_W / 2, q * CELL_H / 2), and a cell's centre at the
-# same spacing on the other parity, which interlocks them. Both counts are the tile's own
-# repeat, so a corner looked up past the edge is the one that wraps to it
+# The lattice, a corner at (p * CELL_W / 2, q * CELL_H / 2) and a centre on the other parity.
+# Both counts are the tile's repeat, so a corner past the edge wraps
 P_PERIOD = TILE_W // (CELL_W // 2)
 Q_PERIOD = TILE_H // (CELL_H // 2)
 HALF_W, HALF_H = CELL_W // 2, CELL_H // 2
 
 
 def field(p, q):
-    """The height at lattice corner (p, q), 0 for the lowest ground and 1 for the highest.
-
-    Every term completes a whole number of cycles across the tile, on both axes, so the field
-    meets itself exactly at the edges and either world tiles without a crack.
-    """
+    """The height at lattice corner (p, q), 0 for the lowest ground and 1 for the highest."""
     across, down = p / P_PERIOD, q / Q_PERIOD
     total = (0.5 * math.sin(2 * math.pi * across)
              + 0.5 * math.sin(2 * math.pi * down)
              + 0.3 * math.sin(2 * math.pi * (across + down))
              + 0.3 * math.sin(2 * math.pi * (2 * across - down))
              + 0.2 * math.sin(2 * math.pi * (across - 2 * down)))
+    # The weights sum to 1.8, so this brings the total from -1.8 to 1.8 into 0 to 1
     return (total / 1.8 + 1) / 2
 
 
@@ -72,17 +67,13 @@ def tinted(rgb, factor):
 
 
 def scattered(u, v, spacing):
-    """One cell in spacing, spread about and not sitting on a grid."""
+    """Whether this cell is one in spacing, spread about and not sitting on a grid."""
     scatter = ((u % P_PERIOD + 1) * 2654435761) ^ ((v % Q_PERIOD + 1) * 2246822519)
     return scatter % spacing == 0
 
 
 def growing(u, v, line):
-    """Whether this part of the map carries props, on its own broad scale.
-
-    They gather into groups instead of standing one to a field, so where they grow is a slow
-    field of its own and which cell holds one is the scatter above.
-    """
+    """Whether this part of the map carries props, a slow field of its own so they gather into groups."""
     across, down = u / P_PERIOD, v / Q_PERIOD
     return (math.sin(2 * math.pi * (across + 0.25))
             + math.sin(2 * math.pi * (down - 0.1))) / 2 > line
@@ -95,20 +86,16 @@ def facet_of(cx, cy, north, east, south, west):
 
 
 def lit_by(tilt, shades, spread):
-    """Which of a world's shades a facet takes, from how far the ground tilts across it.
-
-    A facet tilts away from wherever the ground rises, so the light it takes follows the
-    difference across it.
-    """
+    """Which of a world's shades a facet takes, from how far the ground tilts across it."""
     shade = int(len(shades) / 2 + tilt / spread)
     return shades[0 if shade < 0 else (len(shades) - 1 if shade >= len(shades) else shade)]
 
 
 def hill_cell(land, tile, u, v):
-    """One sloping cell of grass. Returns where a tree grows on it, or None.
+    """
+    Draw one sloping cell of grass, and return where a tree grows on it or None.
 
-    Props are left to the caller: one stands taller than the cells in front of it, which are
-    painted after this one and would bury it.
+    The caller adds props, which cells drawn later would bury.
     """
     cx, cy = u * HALF_W, v * HALF_H
     relief = land["relief"]
@@ -119,8 +106,7 @@ def hill_cell(land, tile, u, v):
     mean = (north + east + south + west) / 4
     hue = land["hues"][1] if mean > relief / 2 else land["hues"][0]
 
-    # Every other cell is drawn darker, so the field reads as a checkerboard the way the
-    # era's did
+    # Every other cell darker, a checkerboard the way the era's were
     tilt = (east - west) + 0.5 * (south - north)
     lit = lit_by(tilt, land["shades"], 3.2) * (1.0 if v % 2 else land["checker"])
 
@@ -137,16 +123,13 @@ def hill_cell(land, tile, u, v):
 
 
 def terrace_cell(land, tile, u, v):
-    """One flat or folded cell of terrace. Returns where a spire stands on it, or None.
-
-    The snap to a level is what turns the field's slopes into steps: four corners on one
-    level come out flat, and corners straddling two come out as a hard fold between them.
-    """
+    """Draw one flat or folded cell of terrace, and return where a spire stands on it or None."""
     cx, cy = u * HALF_W, v * HALF_H
     levels, relief = land["levels"], land["relief"]
     lift = relief / (levels - 1)
 
     def level(du, dv):
+        """The level, 0 to levels - 1, the field reaches at the corner this far from the cell."""
         return min(levels - 1, int(raw(u + du, v + dv) * levels))
 
     north, east, south, west = level(0, -1), level(1, 0), level(0, 1), level(-1, 0)
@@ -167,11 +150,7 @@ def terrace_cell(land, tile, u, v):
 
 
 def draw_tree(land, tile, cx, ground_y):
-    """A fir on the ground: shadow, trunk, then two tiers of needles.
-
-    The lit tier is drawn narrower and up to the left over the shaded one, so the tree has a
-    side the light comes from.
-    """
+    """Draw a fir, shadow, trunk, then two tiers of needles, the lit tier narrower and up to the left."""
     tall, wide, trunk = land["prop_h"], land["prop_w"], land["trunk_h"]
     tile.pen = land["foot"]
     tile.shape(shape.ellipse(cx, ground_y + 1, wide, wide // 2))
@@ -188,7 +167,7 @@ def draw_tree(land, tile, cx, ground_y):
 
 
 def draw_spire(land, tile, cx, ground_y):
-    """A lit spire on the ground, standing on a dark foot."""
+    """Draw a lit spire on the ground, standing on a dark foot."""
     tall, wide = land["prop_h"], land["prop_w"]
     tile.pen = land["foot"]
     tile.shape(shape.ellipse(cx, ground_y + 1, wide, wide // 2))
@@ -201,12 +180,8 @@ def draw_spire(land, tile, cx, ground_y):
                              vec2(cx - wide + 2, ground_y - 2)]))
 
 
-# The two worlds. Each carries its relief and palette, the cell and prop it is painted with,
-# and how the view crosses it: "wander" keeps bending its heading, "descend" holds a line.
-#
-# Antialiasing is a world's own choice, and it is affordable either way since both tiles are drawn
-# before the loop. Smooth ground gains from it; the terraces lose, their seams being one pixel of
-# bright over dark ground, which softening spreads and dims
+# The two worlds, each with its relief, palette, cell and prop painters and its motion. Antialiasing
+# suits the hills and blurs the terraces' one-pixel seams
 HILLS = {"name": "rolling hills", "cell": hill_cell, "prop": draw_tree, "motion": "wander",
          "antialias": image.X4,
          "relief": 44, "hues": ((36, 172, 108), (196, 216, 96)), "checker": 0.74, "seam": 0.55,
@@ -231,11 +206,10 @@ WORLDS = (HILLS, TERRACES)
 
 
 def build(land):
-    """Draw one world's whole tile, back to front, and return it.
+    """
+    Draw one world's tile back to front, then its props in the same order.
 
-    The loops run past every edge, so ground crossing one is completed by its wrapped
-    neighbour and the repeat has no seam to find. Props go on afterwards, in the order their
-    cells were drawn, so each is covered by the props in front of it and by none of the ground.
+    The tile is drawn past every edge, so wrapped neighbours complete it.
     """
     print(f"> Drawing the {land['name']} ...")
     tile = image(TILE_W, TILE_H)
@@ -254,10 +228,10 @@ def build(land):
 
 
 def flown(land, place):
-    """Move a world's view on by one frame, and answer the offset to read its tile at.
+    """
+    Move a world's view on a frame, and return the offset to read its tile at.
 
-    Any offset is valid with tiling on, so a course never has to be brought back inside the
-    tile and can be whatever suits the world.
+    Any offset is valid with tiling on.
     """
     place["frames"] += 1
     if land["motion"] == "descend":
@@ -282,10 +256,8 @@ ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 # Create a MightyFX object with both SP/CE ports set up for screens
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 
-# A screen refuses to be created where no panel answered on its port, so one panel flies a
-# world on its own and a second brings the other alongside. The reserve is what a pair needs
-# to convert two sources on one frame; a lone screen simply does not draw on it. rotation is
-# how the panels are mounted, which every frame then takes without naming it
+# A screen refuses to be created where no panel answers, so one panel flies a world and a second
+# brings the other. The reserve lets a pair convert both
 screens = []
 for port in (mighty.spce_a, mighty.spce_b):
     try:
@@ -298,8 +270,7 @@ if not screens:
     raise RuntimeError("No panels answered! Plug a screen into SP/CE A, and a second into"
                        " SP/CE B to fly both worlds at once")
 
-# Two panels are two worlds shown together, so they are held to one refresh rate and written
-# on the same frame. Working out how takes a few seconds when the pair is created
+# A pair shows both worlds on one frame. Working out how takes a few seconds
 pair = ScreenPair(*screens) if len(screens) == 2 else None
 
 tiles = [build(land) for land in WORLDS]
