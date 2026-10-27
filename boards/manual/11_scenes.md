@@ -33,5 +33,6 @@ round, instead of carrying on from where they were left:
 __THREE_OUTPUTS__: flash_sequence flashes=3
 ```
 
-The board entry belongs outside every scene. A single scene with no time simply
-shows for ever, and ejecting this drive always starts again at the first scene.
+The board entry belongs outside every scene. A single scene with no time shows
+for ever, and every reload, from a save, an eject or a press of **Boot**, starts
+again at the first scene.

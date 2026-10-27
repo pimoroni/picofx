@@ -10,7 +10,7 @@ There is one colon in an entry. Which __OUTPUTS__, and how bright or what colour
 they are, go before it. The effect and its own settings go after.
 
 Settings you leave out take their usual value. A `#` starts a comment. An entry
-can run on over several lines so long as the colon is on the first; indenting
+can run on over several lines so long as the colon is on the first, and indenting
 changes nothing.
 
 <!-- if screens -->

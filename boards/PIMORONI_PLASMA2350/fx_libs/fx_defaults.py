@@ -77,8 +77,9 @@ it is:
   red, three times    there was no room to write errors.txt. This drive is full
                       or damaged, so free some space or let a computer repair it
 
-While the computer is copying to this drive the effects stand aside and the
-board's LED holds a dim white, and they come back a moment after it finishes.
+While the computer is copying to this drive the effects stand aside, the board's
+LED glowing a dim white with a brighter blink, and come back a moment after it
+finishes.
 
 This README is rebuilt by the board, so edits to it will not stick.
 """

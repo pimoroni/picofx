@@ -80,7 +80,8 @@ When something is wrong the lights say so, and the more flashes the worse it is:
                       or damaged, so free some space or let a computer repair it
 
 While the computer is copying to this drive the effects stand aside for a dim
-white travelling along the outputs, and come back a moment after it finishes.
+white light travelling along the outputs, and come back a moment after it
+finishes.
 
 This README is rebuilt by the board, so edits to it will not stick.
 """

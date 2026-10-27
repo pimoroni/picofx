@@ -12,7 +12,7 @@ The board's LED says so, and the more flashes the worse it is:
 | --- | --- |
 | white, once | the computer was still writing, so the press did nothing. Try again in a moment |
 <!-- if screens -->
-| blue, twice | something in `effects.txt` could not be read, or a drawing failed. `errors.txt` says which line, a drawing's once Boot is pressed or the drive ejected |
+| blue, twice | something in `effects.txt` could not be read, or a drawing failed. `errors.txt` says which line, a drawing's once the board has the drive back |
 <!-- end -->
 <!-- if not screens -->
 | blue, twice | something in `effects.txt` could not be read. `errors.txt` says which line |

@@ -9,11 +9,10 @@ cannot say what size it is, so tell the board:
 board: __SCREEN__=1.54
 ```
 
-That is a board entry, which sets the board rather than the lights and is one of
-a handful covered under [The board](#the-board).
+That is a board entry, one of a handful covered under [The board](#the-board).
 
-The sizes are 2.8 and 1.54, and a screen plays nothing until its size is given.
-Changing it needs the board turned off and on again before the new size takes.
+The sizes are 2.8 and 1.54, in inches across the panel, and a screen plays
+nothing until its size is given.
 
 <!-- if hub -->
 ### A Screen Hub
@@ -113,8 +112,7 @@ __SCREEN__: gif file="wave.gif" ping_pong=yes hold=1.5|0.5
 ```
 
 A file is looked for on this drive first, then on the board itself, and the name
-may include folders. There is little room here, so pictures usually live on the
-board.
+may include folders.
 
 <!-- board screen_notes -->
 
@@ -148,7 +146,7 @@ def draw(canvas, elapsed):
 ```
 
 `draw` is called with a canvas the size of the screen, kept between calls, and
-the seconds since the drawing started; whatever it has drawn when it returns is
+the seconds since the drawing started. Whatever it has drawn when it returns is
 what the screen shows. The rest of the file runs once, when the drawing starts,
 so that is the place to build anything `draw` uses. `fps` or `interval` sets the
 pace, and leaving both out draws as often as the screen takes a frame.
@@ -162,13 +160,11 @@ In a scene, the drawing's clock stops while the scene is away, and a scene with
 `restart` runs the whole file again from a blank canvas. The rotation, offset
 and other screen settings place a drawing as they place a picture, with
 `pixel_double` also making the canvas half size, which draws faster and uses a
-quarter of the memory; a stated `width` or `height` is still used as written.
+quarter of the memory.
 
-A drawing can load pictures, `picovector.image.load("/faces.png")`, best done
-once in the setup. Name them from the board's own filesystem, with the leading
-`/`: this drive comes and goes with the computer, so a picture kept here may be
-missing just when a scene's `restart` runs the file again. The drawing itself is
-safe wherever it lives, read once and kept.
+A drawing can load pictures, such as `picovector.image.load("/fx/faces.png")` for
+one on this drive, best done once in the setup. The drawing itself is read once
+and kept.
 
 A drawing may import `math`, `random`, `time` and `picovector`. The board's own
 modules stay with the effects running around it, so a program pasted in that

@@ -29,9 +29,9 @@ starts a comment, so one left on a colour hides the rest of the line.
 ### Fade and ease
 
 `fade` and `ease` take the seconds a change takes to get there. `fade` crosses
-evenly, which is what a stage light does; `ease` goes quickly at first and slows
-as it arrives, which is how a bulb warms and is the one that looks natural on a
-light switching on and off.
+evenly, as a stage light does. `ease` goes quickly at first and slows as it
+arrives, as a bulb warms, and looks the more natural on a light switching on and
+off.
 
 An __OUTPUT__ follows one way or the other, so a line takes one of them and not
 both. Two numbers divided by `|` give the rise and the fall their own lengths,
@@ -42,5 +42,6 @@ __ALL_OUTPUTS__ fade=0.8: blink speed=0.5
 __THREE_OUTPUTS__ ease=0.05|1.2: blink speed=1
 ```
 
-Softening belongs to the __OUTPUT__, not to the effect, so it works on any effect. The
-effects that bring their own colour are the exception, and play without it.
+`fade` and `ease` belong to the __OUTPUT__, not to the effect, so they work on any
+effect. The effects that bring their own colour are the exception, and play
+without them.

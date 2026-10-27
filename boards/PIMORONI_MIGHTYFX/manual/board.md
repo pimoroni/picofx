@@ -1,15 +1,16 @@
 <!-- block picker_tabs -->
 
-Two tabs sit under the page's header. **The effects** sets the lights, screens
-and sound: pick a stretch of outputs or LEDs, tap a look from the cards to play
-on it, and slide its settings until it suits. A run can be cut into stretches
-that each play a look of their own. **Edit board** sets up what is built: the
-order the lights are wired in, how many LEDs a strip has, which size each screen
-is, and a Screen Hub. The pictures, drawings and sounds on this drive are offered
-on the Screens and Sound tabs, where files can be copied onto the drive and
-deleted from it. Press the plus to split what you have into scenes that take
-turns, each with its own looks, pictures and sound; what **Always on** holds plays
-under every scene.
+Two tabs sit under the page's header, **The effects** and **A program**. The
+effects sets the lights, screens and sound: pick a stretch of outputs or LEDs,
+tap a look from the cards to play on it, and slide its settings until it suits.
+A run can be cut into stretches that each play a look of their own. **Edit
+board**, at the end of the lights' tabs, sets up what is built: the order the
+lights are wired in, how many LEDs a strip has, which size each screen is, and a
+Screen Hub. The pictures, drawings and sounds on this drive are offered on the
+Screens and Sound tabs, where files can be copied onto the drive and deleted from
+it. Press the plus to split what you have into scenes that take turns, each with
+its own looks, pictures and sound. What **Always on** holds plays under every
+scene.
 
 <!-- block entry_examples -->
 
@@ -64,9 +65,9 @@ one you are not using is powered too.
 
 <!-- block screen_notes -->
 
-A screen draws about twenty frames a second at best, and effects on the outputs
-take time from it, so a file asking for more keeps its timing by dropping
-frames. Ask for twenty or fewer and it plays every one.
+A screen draws fewer frames a second than the lights, and effects on the outputs
+take time from it, so a file asking for more than it can draw keeps its timing
+by dropping frames.
 
 <!-- block scene_example -->
 
@@ -93,7 +94,6 @@ out1-7 colour=warm: pulse
 
 | Folder | What is in it |
 | --- | --- |
-| `examples/python/effects` | changing from one set of effects to another as time passes |
 | `examples/python/effects/mono` | one output at a time, and the effects that travel across several |
 | `examples/python/effects/colour` | the same in colour, with traffic lights and crossings |
 | `examples/python/function` | the Boot button, the sensor connector and the supply voltage |
@@ -109,9 +109,9 @@ out1-7 colour=warm: pulse
 | `examples/python/screens/hub` | more than two, through a hub |
 | `examples/python/audio` | playing a wav file |
 | `examples/python/motors` | driving a pair of motors |
-| `examples/python/servos` | sweeping a servo on the L connector |
-| `examples/python/strips` | a rainbow along an LED strip |
-| `examples/python/gpio` | using SP/CE pins as plain inputs and outputs |
+| `examples/python/servos` | servos on the L and R connectors, alone, in a pair and steered by remote |
+| `examples/python/strips` | a rainbow along an LED strip, and filling one an LED at a time |
+| `examples/python/gpio` | using SP/CE pins as plain inputs and outputs, and fading LEDs on them |
 | `examples/python/wireless` | colours fetched over WiFi |
 | `examples/python/comms` | several boards working together |
 | `examples/python/showcase` | larger builds that put several of these together |
@@ -124,6 +124,7 @@ board: program=examples/python/screens/playback/animated_gif.py
 board: program=examples/python/showcase/flip_dot_sign.py
 ```
 
-Anything under `screens`, `audio`, `motors`, `servos`, `strips`, `infrared` or
-`qwst` needs that hardware attached, `wireless` needs a WiFi network, and some of
-the showcase ones want pictures or a network of their own.
+Anything under `screens`, `audio`, `motors`, `servos`, `strips`, `gpio`,
+`infrared` or `qwst` needs that hardware attached, `wireless` needs a WiFi
+network, `comms` a second board, and some of the showcase ones want pictures or
+a network of their own.

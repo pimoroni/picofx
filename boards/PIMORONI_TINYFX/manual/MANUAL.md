@@ -15,11 +15,11 @@ with the new effects running, so you can keep editing.
 If a save does not seem to take, press **Boot** once or eject this drive, since
 a computer does not always write the file out straight away. Press **Boot** twice
 to hide the drive, and twice again to bring it back.
-A dim light runs along the outputs each time, towards the USB
-connector as the computer takes the drive and away from it as the board takes it
-back, so a double press is never mistaken for a single one.
+At each double press a dim light runs along the outputs, towards the
+USB connector as the computer takes the drive and away from it as the board
+takes it back, so a double press is never mistaken for a single one.
 
-Deleting `effects.txt` restores the default; emptying it leaves the board dark.
+Deleting `effects.txt` restores the default. Emptying it leaves the board dark.
 
 While the computer is copying to this drive the effects stand aside for a
 dim light travelling along the outputs, and come back a moment after
@@ -40,15 +40,16 @@ Edge, press **Open FX drive** and choose this drive, and the page reads the file
 the board is playing, so you carry on from where it is. The file it will write
 is shown at the foot of the page, so nothing about it is hidden.
 
-Two tabs sit under the page's header. **The effects** sets the lights and
-sound: pick a stretch of outputs, tap a look from the cards to play on it, and
-slide its settings until it suits. A run can be cut into stretches that each
-play a look of their own. **Edit board** sets the order the lights are wired in,
-and moving the RGB output across to the mono side breaks it into three plain
-lights. The sounds on this drive are offered on the Sound tab, where files can
-be copied onto the drive and deleted from it. Press the plus to split what you
-have into scenes that take turns, each with its own looks and sound; what
-**Always on** holds plays under every scene.
+Two tabs sit under the page's header, **The effects** and **A program**. The
+effects sets the lights and sound: pick a stretch of outputs, tap a look from
+the cards to play on it, and slide its settings until it suits. A run can be cut
+into stretches that each play a look of their own. **Edit board**, at the end of
+the lights' tabs, sets the order the lights are wired in, and moving the RGB
+output across to the mono side breaks it into three plain lights. The sounds on
+this drive are offered on the Sound tab, where files can be copied onto the
+drive and deleted from it. Press the plus to split what you have into scenes
+that take turns, each with its own looks and sound. What **Always on** holds
+plays under every scene.
 
 **A program** runs one of the board's programs in place of the effects:
 what a remote, a sensor or a speaker brings,
@@ -57,12 +58,12 @@ Pick one and save, and the board restarts to run it. [Your program in the picker
 says how a program of yours describes itself there.
 
 **Save to board** writes the file, and the board picks it up a few seconds later.
-Its arrow opens the save's settings: untick "Play saves without an eject" and the
-board waits instead until this drive is ejected, or **Boot** is pressed once, and
+Its arrow opens the save's settings. Untick "Play saves without an eject" and the
+board waits for an eject or a single press of **Boot**, which is `reload=manual`.
 "Keep the drive hidden at start" is `drive=manual`. **Check board** reads
 `errors.txt` back and shows what the board made of each line. On a Mac each save
-shows "Disk Not Ejected Properly" once and a Finder window on this drive closes;
-the drive comes back on its own a few seconds later and the page carries on.
+shows "Disk Not Ejected Properly" once and a Finder window on this drive closes.
+The drive comes back on its own a few seconds later and the page carries on.
 
 The page reaches the drive only in Chrome, Edge or another browser built on
 Chromium. Safari and Firefox cannot write to a drive from a page, so there it
@@ -78,20 +79,22 @@ asks before replacing a file it has not read.
 Every word is coloured by the part it plays, and as you type it offers what fits
 where you are:
 the outputs
-at the start of a line, the effects after the colon, then that effect's own settings and the values each one takes. A line
-underneath says what shape a value wants. Tab or Enter takes what is offered,
-Escape leaves it, and Ctrl+Space asks for it again.
+at the start of a line, the effects after the colon, then that effect's own
+settings and the values each one takes. A line underneath says what shape a
+value wants. Tab or Enter takes what is offered, Escape leaves it, and
+Ctrl+Space asks for it again.
 
-A name it does not know is underlined, an effect that is not one or a setting the
+It underlines a name it does not know, such as a misspelt effect or a setting the
 effect does not take. Values are left alone, since a percentage, a colour and a
 list all live there and the board is the one that reads them. "Put it on the
 board" writes the file and "Did it work?" reads `errors.txt` back, as the picker
 does.
 
 It offers only what this board provides, so anything the firmware gains appears
-without the page changing. It saves the way the picker does, in one click from a
-Chromium browser and by download from Safari or Firefox, and it needs
-`catalogue.js` beside it, which is why both live on this drive together.
+without the page changing. It saves in one click from a Chromium browser, as the
+picker does, and from Safari or Firefox by a download you then copy onto this
+drive. It needs `catalogue.js` beside it, which is why both live on this drive
+together.
 
 ## Writing an entry
 
@@ -109,7 +112,7 @@ There is one colon in an entry. Which outputs, and how bright or what colour
 they are, go before it. The effect and its own settings go after.
 
 Settings you leave out take their usual value. A `#` starts a comment. An entry
-can run on over several lines so long as the colon is on the first; indenting
+can run on over several lines so long as the colon is on the first, and indenting
 changes nothing.
 
 ## Outputs
@@ -163,9 +166,9 @@ starts a comment, so one left on a colour hides the rest of the line.
 ### Fade and ease
 
 `fade` and `ease` take the seconds a change takes to get there. `fade` crosses
-evenly, which is what a stage light does; `ease` goes quickly at first and slows
-as it arrives, which is how a bulb warms and is the one that looks natural on a
-light switching on and off.
+evenly, as a stage light does. `ease` goes quickly at first and slows as it
+arrives, as a bulb warms, and looks the more natural on a light switching on and
+off.
 
 An output follows one way or the other, so a line takes one of them and not
 both. Two numbers divided by `|` give the rise and the fall their own lengths,
@@ -176,14 +179,14 @@ out1-6 fade=0.8: blink speed=0.5
 out1-3 ease=0.05|1.2: blink speed=1
 ```
 
-Softening belongs to the output, not to the effect, so it works on any effect. The
-effects that bring their own colour are the exception, and play without it.
+`fade` and `ease` belong to the output, not to the effect, so they work on any
+effect. The effects that bring their own colour are the exception, and play
+without them.
 
 ## Effects
 
 Every setting can be left out, and the board fills in the value shown against it
-below. The few with none shown have nothing to fall back on, and each is covered
-where its effect is.
+below.
 
 ### For any output, or for one of the RGB output's red, green and blue
 
@@ -215,12 +218,12 @@ where its effect is.
 | `rainbow` | `speed=1` `sat=1` `val=1` |
 | `rainbow_wave` | `speed=1` `length=1` `sat=1` `val=1` |
 | `hue_step` | `interval=1` `hue=0` `sat=1` `val=1` `steps=6` |
-| `rgb_blink` | `colour` `speed=1` `phase=0` `duty=0.5` |
+| `rgb_blink` | `colour=red` `speed=1` `phase=0` `duty=0.5` |
 
 ### Which ones travel
 
 The ones ending `_wave`, `_sequence` and `_counter`, and `sweep`, travel across
-the outputs you name; the rest do the same thing on every one.
+the outputs you name. The rest do the same thing on every one.
 
 The ones ending `_each` give every output its own: `flicker_each` dips each at
 its own moments, as flames do, and `random_each` gives each its own brightness.
@@ -230,10 +233,9 @@ its own moments, as flames do, and `random_each` gives each its own brightness.
 out1-6: flicker_each dimness=0.6
 ```
 
-An effect that drives several outputs takes them in the order given in its own
-section below, so naming fewer than it drives lights the first of them and
-leaves the rest out. Naming more than it drives is a mistake, and `errors.txt`
-says so.
+`traffic_light` and `pelican_crossing` take their outputs in the order given
+below, so naming fewer lights the first of them and leaves the rest out. Naming
+more is a mistake, and `errors.txt` says so.
 
 ### Traffic lights and crossings
 
@@ -268,7 +270,7 @@ pass. Its `hold` waits at each end, in seconds, giving a trail time to clear
 before the light comes back over it:
 
 ```entry
-out1-6 ease=0.4: sweep speed=1 length=6 extent=1 hold=1
+out1-6 ease=0.4: sweep speed=1 extent=1 hold=1
 ```
 
 Give `extent` a whole number of outputs, such as 1 or 2. In between it dims as
@@ -277,9 +279,8 @@ reads as stepping. 1 is the tightest that travels smoothly.
 
 ### Blinking through colours
 
-`rgb_blink` takes one colour, or several to blink through in turn, divided by
-`|` since a comma would mean one colour for each output. It has no colour of its
-own, so give it at least one:
+`rgb_blink` blinks one colour, or several in turn, divided by `|` since a comma
+would mean one colour for each output. Without one it blinks red:
 
 ```entry
 rgb: rgb_blink colour=red|warm|ff8040 speed=0.5
@@ -295,7 +296,8 @@ The settings measured in seconds are `interval`, `hold`, flicker's `bright_min`,
 and `pelican_crossing` each take. `length`, `flashes`, `steps`, `count` and
 `step` are plain counts, and a negative `step` counts down.
 
-The rest run from 0 to 1, written 0.5 or 50% as you prefer. `window` is one of
+`red`, `green` and `blue` run from 0 to 255. The rest run from 0 to 1, written 0.5
+or 50% as you prefer. `window` is one of
 them, being the share of a cycle the flashes happen in. `hue` takes degrees as
 well, written 180deg, which is what a colour picker gives you.
 
@@ -318,9 +320,7 @@ audio: wav file=ambience.wav loop=yes
 | --- | --- |
 | `wav` | `file` `loop=no` |
 
-The file plays once as the board starts, or over and over with `loop`. The board
-plays one sound at a time, so each scene takes one `audio` entry, and one more may
-sit before any heading.
+The file plays once each time the effects start, or over and over with `loop`.
 
 A file is looked for on this drive first, then on the board itself. The board
 opens it before this drive is shown, so a computer taking the drive does not stop
@@ -328,11 +328,13 @@ the sound. While the computer is copying to this drive the sound waits in silenc
 with the effects, and a file replaced under a playing sound stays silent until
 the next reload.
 
-An ordinary uncompressed WAV plays, mono or stereo; MP3 does not. This drive
-holds 2.5MB, so a lower sample rate fits more: a minute of 16-bit 22kHz
-mono takes about 2.6MB, and the same at 8kHz under 1MB.
+An ordinary uncompressed WAV plays, mono or stereo, and MP3 does not. This drive
+holds 2.5MB, or 2MB on the Tiny FX W, so a lower sample rate fits more. A minute of 16-bit mono
+takes about 2.6MB at 22kHz and under 1MB at 8kHz.
 
-An `audio` entry inside a scene plays while that scene shows, and one before any
+The board plays one sound at a time, so each scene takes one `audio` entry, and
+one more may sit before any heading. An `audio` entry inside a scene plays while
+that scene shows, and one before any
 heading plays whenever the showing scene brings no sound of its own. A sound
 put aside by a scene change picks up where it left off when its turn comes back,
 and one that had already finished starts again from the top. A scene with
@@ -377,12 +379,13 @@ round, instead of carrying on from where they were left:
 out1-3: flash_sequence flashes=3
 ```
 
-The board entry belongs outside every scene. A single scene with no time simply
-shows for ever, and ejecting this drive always starts again at the first scene.
+The board entry belongs outside every scene. A single scene with no time shows
+for ever, and every reload, from a save, an eject or a press of **Boot**, starts
+again at the first scene.
 
 ## The board
 
-One entry sets the board rather than the lights, and names no output:
+One entry is about the board itself, and names no output:
 
 ```entry
 board: drive=manual program=fireplace.py
@@ -390,8 +393,8 @@ board: drive=manual program=fireplace.py
 
 | Setting | What it does | If omitted |
 | --- | --- | --- |
-| `drive` | `manual` keeps the drive hidden until you ask for it | shown at boot |
-| `reload` | `manual` waits for an eject or **Boot** before playing a save | played the moment it is saved |
+| `drive` | `manual` keeps the drive hidden until **Boot** is pressed twice | shown at boot |
+| `reload` | `manual` waits for an eject or **Boot** before playing a save | played a few seconds after it is saved |
 | `program` | a Python file to run instead of the effects | the effects run |
 | `args` | what to pass that program, divided by `\|` | it is given none |
 
@@ -419,7 +422,7 @@ which then runs the program as it would from power on.
 The effects stop while a program runs, and the board is busy with it, so
 **Boot** and ejecting do nothing. The drive is shown anyway, even with `drive`
 set to `manual`, so you can still edit `effects.txt`. Saving it restarts the
-board, which then plays whatever it now says; with `reload=manual`, press
+board, which then plays whatever it now says. With `reload=manual`, press
 **Reset** for the change to take. A program reads its files from this drive even
 while it is shown, so its pictures and sounds can sit beside it here.
 
@@ -499,6 +502,7 @@ download:
 | `examples/python/qwst` | light, tilt and weather from Qw/ST breakouts |
 | `examples/python/audio` | sound alongside the lights |
 | `examples/python/comms` | several boards working together |
+| `examples/python/wireless` | colours fetched over WiFi, on the Tiny FX W |
 | `examples/python/showcase` | larger builds that put several of these together |
 
 Three to start with:
@@ -509,8 +513,8 @@ board: program=examples/python/effects/colour/rainbow.py
 board: program=examples/python/showcase/ship_thrusters.py
 ```
 
-Anything under `infrared` or `qwst` needs that hardware attached, and `comms`
-wants a second board. The audio examples' sounds are not on the board, to leave
+Anything under `infrared` or `qwst` needs that hardware attached, `wireless` a
+WiFi network, and `comms` a second board. The audio examples' sounds are not on the board, to leave
 this drive its room.
 
 The full set, with what each one does, is in the

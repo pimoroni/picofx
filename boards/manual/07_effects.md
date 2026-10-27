@@ -1,8 +1,7 @@
 ## Effects
 
 Every setting can be left out, and the board fills in the value shown against it
-below. The few with none shown have nothing to fall back on, and each is covered
-where its effect is.
+below.
 
 ### For __MONO_EFFECTS_FOR__
 
@@ -34,12 +33,12 @@ where its effect is.
 | `rainbow` | `speed=1` `sat=1` `val=1` |
 | `rainbow_wave` | `speed=1` `length=1` `sat=1` `val=1` |
 | `hue_step` | `interval=1` `hue=0` `sat=1` `val=1` `steps=6` |
-| `rgb_blink` | `colour` `speed=1` `phase=0` `duty=0.5` |
+| `rgb_blink` | `colour=red` `speed=1` `phase=0` `duty=0.5` |
 
 ### Which ones travel
 
 The ones ending `_wave`, `_sequence` and `_counter`, and `sweep`, travel across
-the __OUTPUTS__ you name; the rest do the same thing on every one.
+the __OUTPUTS__ you name. The rest do the same thing on every one.
 
 The ones ending `_each` give every __OUTPUT__ its own: `flicker_each` dips each at
 its own moments, as flames do, and `random_each` gives each its own brightness.
@@ -49,10 +48,9 @@ its own moments, as flames do, and `random_each` gives each its own brightness.
 __FLAME_OUTPUTS__: flicker_each dimness=0.6
 ```
 
-An effect that drives several __OUTPUTS__ takes them in the order given in its own
-section below, so naming fewer than it drives lights the first of them and
-leaves the rest out. Naming more than it drives is a mistake, and `errors.txt`
-says so.
+`traffic_light` and `pelican_crossing` take their __OUTPUTS__ in the order given
+below, so naming fewer lights the first of them and leaves the rest out. Naming
+more is a mistake, and `errors.txt` says so.
 
 ### Traffic lights and crossings
 
@@ -87,7 +85,7 @@ pass. Its `hold` waits at each end, in seconds, giving a trail time to clear
 before the light comes back over it:
 
 ```entry
-__ALL_OUTPUTS__ ease=0.4: sweep speed=1 length=__OUTPUT_COUNT__ extent=1 hold=1
+__ALL_OUTPUTS__ ease=0.4: sweep speed=1 extent=1 hold=1
 ```
 
 Give `extent` a whole number of __OUTPUTS__, such as 1 or 2. In between it dims as
@@ -96,9 +94,8 @@ reads as stepping. 1 is the tightest that travels smoothly.
 
 ### Blinking through colours
 
-`rgb_blink` takes one colour, or several to blink through in turn, divided by
-`|` since a comma would mean one colour for each __OUTPUT__. It has no colour of its
-own, so give it at least one:
+`rgb_blink` blinks one colour, or several in turn, divided by `|` since a comma
+would mean one colour for each __OUTPUT__. Without one it blinks red:
 
 ```entry
 __COLOUR_OUTPUT__: rgb_blink colour=red|warm|ff8040 speed=0.5
@@ -114,7 +111,8 @@ The settings measured in seconds are `interval`, `hold`, flicker's `bright_min`,
 and `pelican_crossing` each take. `length`, `flashes`, `steps`, `count` and
 `step` are plain counts, and a negative `step` counts down.
 
-The rest run from 0 to 1, written 0.5 or 50% as you prefer. `window` is one of
+`red`, `green` and `blue` run from 0 to 255. The rest run from 0 to 1, written 0.5
+or 50% as you prefer. `window` is one of
 them, being the share of a cycle the flashes happen in. `hue` takes degrees as
 well, written 180deg, which is what a colour picker gives you.
 

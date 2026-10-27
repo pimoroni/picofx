@@ -16,7 +16,7 @@ __STRIP__: rainbow_wave speed=0.3
 
 <!-- board strips_notes -->
 
-Each LED shows a colour of its own, so `__STRIP__5.r` is not a thing to write; set
+Each LED shows a colour of its own, so `__STRIP__5.r` is not a thing to write. Set
 `colour` on the LEDs instead, as __COLOUR_TAKER__ takes it.
 
 Most strips take their colours as green, red, then blue, and the board sends

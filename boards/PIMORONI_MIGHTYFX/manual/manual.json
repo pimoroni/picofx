@@ -1,7 +1,7 @@
 {
  "numbered_outputs": true,
  "terms": {
-  "BOARD_TITLE": "MightyFX",
+  "BOARD_TITLE": "Mighty FX",
   "BOARD_HAS": "Seven outputs, two screen connectors",
   "TRAVELLING_LIGHT": "dim white light",
   "PROGRAMS_OFFERED": "the showcase signs, screen pieces, and what a remote, a sensor, a speaker or a motor brings",
@@ -13,10 +13,9 @@
   "THREE_OUTPUTS": "out1-3",
   "FIVE_OUTPUTS": "out1-5",
   "ALL_OUTPUTS": "out1-7",
-  "OUTPUT_COUNT": "7",
   "COLOUR_SETTING_FOR": "effects that bring no colour",
   "MONO_EFFECTS_FOR": "an output, or for one of its red, green and blue",
-  "COLOUR_EFFECTS_HEADING": "For an output only, since these bring their own colour",
+  "COLOUR_EFFECTS_HEADING": "For a whole output or a strip's LEDs, since these bring their own colour",
   "FLAME_OUTPUTS": "out1-7 colour=ff5a00",
   "COLOUR_OUTPUT": "out1",
   "STRIP": "stripL",
@@ -28,7 +27,7 @@
   "COPIED_FILES": "pictures",
   "EXAMPLE_PROGRAM": "examples/python/effects/colour/rainbow_wave.py",
   "EXAMPLES_URL": "https://github.com/pimoroni/picofx/tree/main/examples/mighty_fx",
-  "SCREEN_SETTINGS_UNSEEN": "`screenA` and `screenB` describe the screens this file's own entries play on, so a program never sees them",
+  "SCREEN_SETTINGS_UNSEEN": "A program never sees `screenA` and `screenB`, which set up the screens for this file's own entries",
   "FLASH_COLOUR_ON": "Every output"
  }
 }

@@ -8,12 +8,12 @@ If a save does not seem to take, press **Boot** once or eject this drive, since
 a computer does not always write the file out straight away. Press **Boot** twice
 to hide the drive, and twice again to bring it back.
 <!-- if outputs -->
-A __TRAVELLING_LIGHT__ runs along the outputs each time, towards the USB
-connector as the computer takes the drive and away from it as the board takes it
-back, so a double press is never mistaken for a single one.
+At each double press a __TRAVELLING_LIGHT__ runs along the outputs, towards the
+USB connector as the computer takes the drive and away from it as the board
+takes it back, so a double press is never mistaken for a single one.
 <!-- end -->
 
-Deleting `effects.txt` restores the default; emptying it leaves the board dark.
+Deleting `effects.txt` restores the default. Emptying it leaves the board dark.
 
 <!-- if outputs -->
 While the computer is copying to this drive the effects stand aside for a

@@ -1,14 +1,15 @@
 <!-- block picker_tabs -->
 
-Two tabs sit under the page's header. **The effects** sets the lights and
-sound: pick a stretch of outputs, tap a look from the cards to play on it, and
-slide its settings until it suits. A run can be cut into stretches that each
-play a look of their own. **Edit board** sets the order the lights are wired in,
-and moving the RGB output across to the mono side breaks it into three plain
-lights. The sounds on this drive are offered on the Sound tab, where files can
-be copied onto the drive and deleted from it. Press the plus to split what you
-have into scenes that take turns, each with its own looks and sound; what
-**Always on** holds plays under every scene.
+Two tabs sit under the page's header, **The effects** and **A program**. The
+effects sets the lights and sound: pick a stretch of outputs, tap a look from
+the cards to play on it, and slide its settings until it suits. A run can be cut
+into stretches that each play a look of their own. **Edit board**, at the end of
+the lights' tabs, sets the order the lights are wired in, and moving the RGB
+output across to the mono side breaks it into three plain lights. The sounds on
+this drive are offered on the Sound tab, where files can be copied onto the
+drive and deleted from it. Press the plus to split what you have into scenes
+that take turns, each with its own looks and sound. What **Always on** holds
+plays under every scene.
 
 <!-- block entry_examples -->
 
@@ -72,6 +73,7 @@ rgb colour=warm: pulse
 | `examples/python/qwst` | light, tilt and weather from Qw/ST breakouts |
 | `examples/python/audio` | sound alongside the lights |
 | `examples/python/comms` | several boards working together |
+| `examples/python/wireless` | colours fetched over WiFi, on the Tiny FX W |
 | `examples/python/showcase` | larger builds that put several of these together |
 
 Three to start with:
@@ -82,6 +84,6 @@ board: program=examples/python/effects/colour/rainbow.py
 board: program=examples/python/showcase/ship_thrusters.py
 ```
 
-Anything under `infrared` or `qwst` needs that hardware attached, and `comms`
-wants a second board. The audio examples' sounds are not on the board, to leave
+Anything under `infrared` or `qwst` needs that hardware attached, `wireless` a
+WiFi network, and `comms` a second board. The audio examples' sounds are not on the board, to leave
 this drive its room.

@@ -20,12 +20,12 @@ Pick one and save, and the board restarts to run it. [Your program in the picker
 says how a program of yours describes itself there.
 
 **Save to board** writes the file, and the board picks it up a few seconds later.
-Its arrow opens the save's settings: untick "Play saves without an eject" and the
-board waits instead until this drive is ejected, or **Boot** is pressed once, and
+Its arrow opens the save's settings. Untick "Play saves without an eject" and the
+board waits for an eject or a single press of **Boot**, which is `reload=manual`.
 "Keep the drive hidden at start" is `drive=manual`. **Check board** reads
 `errors.txt` back and shows what the board made of each line. On a Mac each save
-shows "Disk Not Ejected Properly" once and a Finder window on this drive closes;
-the drive comes back on its own a few seconds later and the page carries on.
+shows "Disk Not Ejected Properly" once and a Finder window on this drive closes.
+The drive comes back on its own a few seconds later and the page carries on.
 
 The page reaches the drive only in Chrome, Edge or another browser built on
 Chromium. Safari and Firefox cannot write to a drive from a page, so there it

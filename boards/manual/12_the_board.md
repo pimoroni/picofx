@@ -1,6 +1,6 @@
 ## The board
 
-One entry sets the board rather than the lights, and names no __OUTPUT__:
+One entry is about the board itself, and names no __OUTPUT__:
 
 ```entry
 board: drive=manual program=fireplace.py
@@ -8,8 +8,8 @@ board: drive=manual program=fireplace.py
 
 | Setting | What it does | If omitted |
 | --- | --- | --- |
-| `drive` | `manual` keeps the drive hidden until you ask for it | shown at boot |
-| `reload` | `manual` waits for an eject or **Boot** before playing a save | played the moment it is saved |
+| `drive` | `manual` keeps the drive hidden until **Boot** is pressed twice | shown at boot |
+| `reload` | `manual` waits for an eject or **Boot** before playing a save | played a few seconds after it is saved |
 | `program` | a Python file to run instead of the effects | the effects run |
 | `args` | what to pass that program, divided by `\|` | it is given none |
 <!-- if screens -->
@@ -48,7 +48,7 @@ which then runs the program as it would from power on.
 The effects stop while a program runs, and the board is busy with it, so
 **Boot** and ejecting do nothing. The drive is shown anyway, even with `drive`
 set to `manual`, so you can still edit `effects.txt`. Saving it restarts the
-board, which then plays whatever it now says; with `reload=manual`, press
+board, which then plays whatever it now says. With `reload=manual`, press
 **Reset** for the change to take. A program reads its files from this drive even
 while it is shown, so its pictures and sounds can sit beside it here.
 
@@ -56,8 +56,8 @@ When the program ends, the board goes back to the effects the rest of the file
 describes.
 
 <!-- if screens -->
-__SCREEN_SETTINGS_UNSEEN__:
-it sets its own up. Pass it the size in `args` if it
+__SCREEN_SETTINGS_UNSEEN__.
+It sets its own up, so pass it the size in `args` if it
 needs telling.
 <!-- end -->
 
