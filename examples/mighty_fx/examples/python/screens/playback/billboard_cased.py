@@ -59,7 +59,7 @@ print(f"{player.frames} posters, {DWELL}s each")
 def band(across, half, feather, levels, tone):
     """A diagonal band whose edges fade, as a stack of narrower bands over one another.
 
-    There is no gradient fill, so the ramp comes from covering the middle more times than the edges.
+    Each band is translucent, so the middle, covered most often, comes out strongest.
     """
     passes = max(1, feather // 2)
     unit = max(4, round(levels * LEVEL / passes))
