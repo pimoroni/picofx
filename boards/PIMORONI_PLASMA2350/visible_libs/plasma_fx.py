@@ -43,6 +43,8 @@ class SPCEPort(ScreenPort):
 
 
 class PlasmaFX:
+    """The Plasma 2350 board, with its two LED terminals, its RGB LED and, on the 2350, its SP/CE connector."""
+
     LED_DATA_PIN = 15
     LED_CLK_PIN = 14
 
@@ -63,13 +65,13 @@ class PlasmaFX:
     SPCE_MOSI_PIN = 11
     SPCE_BL_PIN = 7
 
-    # The one connector, its port lettered A, which a file names screen
+    # The one connector, its port lettered A
     SPCE_A_PINS = (SPCE_DC_PIN, SPCE_CS_PIN, SPCE_SCK_PIN, SPCE_MOSI_PIN, SPCE_BL_PIN)
 
     STRIP_PIO = 0
 
-    # LEDs built past the length asked for and driven dark: a flash write pauses the
-    # transfer sending a frame partway, breaking it apart, and the overrun lands on these
+    # LEDs built past the length asked for and driven dark. A flash write pauses the transfer
+    # partway through a frame, and the overrun lands on these
     STRIP_FLUSH_LEDS = 2
 
     # The order a WS2812 strip takes its red, green and blue in where its declaration names
@@ -95,12 +97,12 @@ class PlasmaFX:
     # the programs that go online. Set by detect() on a 2350 W
     WIRELESS = False
 
-    # The 2350 W's wireless module: power enable, data, chip select and clock. None of these
-    # pins is connected on the 2350
+    # The 2350 W's wireless module's power enable, data, chip select and clock pins, none
+    # of them connected on the 2350
     WIRELESS_PINS = (23, 24, 25, 29)
 
-    # How long the module has to answer after power-up. It answers within 20ms; its driver
-    # allows 250ms, which every 2350 would wait out
+    # How long the module has to answer after power-up. Its driver allows 250ms, which every
+    # 2350 would wait out
     WIRELESS_START_MS = 100
 
     # What the module's test register reads once it has started, 0xFEEDBEAD with its halves
@@ -113,7 +115,7 @@ class PlasmaFX:
 
     RGB_GAMMA = 2.2         # sRGB, for even hues, chosen by eye on a rainbow
 
-    # What wake() lights the board's LED to: dim enough to read as alive, not as an effect
+    # What wake() lights the board's LED to, dim enough to read as alive and not as an effect
     WAKE_LEVEL = 0.1
 
     def __init__(self, spce_a=None, strip_dat=None, strip_clk=None, strip_apa=None,
@@ -136,12 +138,11 @@ class PlasmaFX:
         # leaves the SRAM held. Nothing of this program holds any yet.
         release_buffers()
 
-        # No outputs of its own: the board's RGB LED, active low, is the one light every
-        # file can reach
+        # No outputs, so the board's RGB LED, active low, is its one light
         self.outputs = []
         self.rgb = RGBLED(*self.RGB_PINS, invert=True, gamma=self.RGB_GAMMA)
 
-        # The port owns its bus and pins; a screen is created against it
+        # The port owns its bus and pins, and a screen is created against it
         self.spce_a = SPCEPort("A", spce_a, self.SPCE_A_PINS)
 
         # Set up the i2c for Qw/st, if the user wants
@@ -159,8 +160,6 @@ class PlasmaFX:
 
         self.__button_a = Pin(self.SW_A_PIN, Pin.IN, Pin.PULL_UP)
 
-        # A WS2812 strip takes a data line, so each terminal can carry one, strip_dat and
-        # strip_clk. An APA102 strip takes both terminals, data and clock, as strip_apa.
         # A strip is sent a frame only by update(). A refresh of its own would resend it
         # through every flash write, and a frame sent during one is torn
         if strip_apa is not None:
@@ -199,7 +198,7 @@ class PlasmaFX:
     def __apa_declared(cls, strip):
         # An APA102 strip is declared as its length, or as (length, brightness) with the
         # brightness from 0 to 1, returned in the strip's own steps, or None to leave the
-        # plasma module's. Anything above nothing keeps a step, so a dim strip stays lit
+        # plasma module's. Anything above 0 keeps at least one step, so a dim strip stays lit
         length, brightness = strip if isinstance(strip, (tuple, list)) else (strip, None)
         if brightness is None:
             return length, None
@@ -225,13 +224,13 @@ class PlasmaFX:
 
     @classmethod
     def __wireless_fitted(cls):
-        # Once something has brought the wireless driver up, the module may be in use and is left
-        # powered. The driver read the module's own MAC address where it found one
         try:
             import network
         except ImportError:
             return cls.__wireless_answers()
         wlan = network.WLAN(network.STA_IF)
+        # Has something brought the driver up? The module may then be in use, so it stays
+        # powered and the MAC address the driver read answers instead
         if wlan.active():
             return wlan.config("mac") != bytes(6)
         return cls.__wireless_answers()
@@ -289,7 +288,7 @@ class PlasmaFX:
         return taken
 
     def __switch_pressed(self, _pin):
-        # Each bounce is another falling edge; anything inside the window is the same press
+        # Each bounce is another falling edge, and anything inside the window is the same press
         now = time.ticks_ms()
         if time.ticks_diff(now, self.__tapped_at) > self.BOOT_DEBOUNCE_MS:
             self.__tapped_at = now
@@ -345,7 +344,7 @@ class PlasmaFX:
         self.__strips.clear()
         gc.collect()
 
-        # The handler holds this board, so detached, a board left behind can be collected
+        # The handler holds this board, so once detached a board left behind can be collected
         if self.__switch is not None:
             self.__switch.irq(handler=None)
 
