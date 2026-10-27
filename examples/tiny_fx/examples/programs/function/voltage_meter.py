@@ -2,7 +2,7 @@ from timing import Pacer
 from tiny_fx import TinyFX
 
 """
-Use TinyFX's mono outputs as a bargraph to show the voltage that is powering the board.
+Use Tiny FX's mono outputs as a bargraph to show the voltage that is powering the board.
 
 The top output of the bar is lit as far into its step as the reading has gone, so the bar
 moves smoothly.

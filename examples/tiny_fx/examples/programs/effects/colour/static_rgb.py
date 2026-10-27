@@ -4,7 +4,7 @@ from picofx import ColourPlayer
 from picofx.colour import RGBFX
 
 """
-Show a static colour on TinyFX's RGB output.
+Show a static colour on Tiny FX's RGB output.
 
 Press "Boot" to exit the program.
 """
@@ -16,7 +16,7 @@ B = 0       # The amount of blue (from 0 to 255)
 
 # Variables
 tiny = TinyFX()                     # Create a new TinyFX object
-player = ColourPlayer(tiny.rgb)     # Create a new effect player to control TinyFX's RGB output
+player = ColourPlayer(tiny.rgb)     # Create a new effect player to control Tiny FX's RGB output
 
 # Set up the colour effect to play
 player.effects = RGBFX(R, G, B)
