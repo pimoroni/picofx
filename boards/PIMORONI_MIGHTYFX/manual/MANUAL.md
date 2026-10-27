@@ -770,8 +770,8 @@ Anything under `screens`, `audio`, `motors`, `servos`, `strips`, `infrared` or
 `qwst` needs that hardware attached, `wireless` needs a WiFi network, and some of
 the showcase ones want pictures or a network of their own.
 
-The full set, with what each one does, is on
-[GitHub](https://github.com/pimoroni/picofx).
+The full set, with what each one does, is in the
+[examples README on GitHub](https://github.com/pimoroni/picofx/tree/main/examples/mighty_fx).
 
 ## When something is wrong
 

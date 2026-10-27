@@ -138,6 +138,6 @@ download:
 
 <!-- board examples_on_board -->
 
-The full set, with what each one does, is on
-[GitHub](https://github.com/pimoroni/picofx).
+The full set, with what each one does, is in the
+[examples README on GitHub](__EXAMPLES_URL__).
 <!-- end -->

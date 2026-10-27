@@ -23,6 +23,7 @@
   "DRIVE_SIZE": "2.5MB",
   "COPIED_FILES": "sounds",
   "EXAMPLE_PROGRAM": "examples/python/effects/mono/sweep_trail.py",
+  "EXAMPLES_URL": "https://github.com/pimoroni/picofx/tree/main/examples/tiny_fx",
   "FLASH_COLOUR_ON": "The RGB output"
  }
 }

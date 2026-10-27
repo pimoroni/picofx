@@ -513,8 +513,8 @@ Anything under `infrared` or `qwst` needs that hardware attached, and `comms`
 wants a second board. The audio examples' sounds are not on the board, to leave
 this drive its room.
 
-The full set, with what each one does, is on
-[GitHub](https://github.com/pimoroni/picofx).
+The full set, with what each one does, is in the
+[examples README on GitHub](https://github.com/pimoroni/picofx/tree/main/examples/tiny_fx).
 
 ## When something is wrong
 
