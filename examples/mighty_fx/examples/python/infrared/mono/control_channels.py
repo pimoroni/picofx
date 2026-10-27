@@ -77,7 +77,7 @@ try:
     player.start()      # Start the effects running
 
     # Loop until the effect stops or the "Boot" button is pressed
-    while not mighty.boot_pressed():
+    while player.is_running() and not mighty.boot_pressed():
         # Decode any IR pulses received since the last time this was called.
         # This should be done as frequently as possible to avoid inputs feeling sluggish
         receiver.decode()
