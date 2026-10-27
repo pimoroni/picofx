@@ -1,7 +1,7 @@
 import sys
-import time
 
 from mighty_fx import MightyFX, SPCE
+from timing import Pacer
 from screens import SCREEN_TYPES
 from picovector import color, font, image, shape, tween, vec2
 
@@ -100,7 +100,7 @@ for index, (name, moved) in enumerate(tweens):
 
 print(f"{len(tweens)} curves, {SAMPLES} points each, a marker every {CYCLE_MS}ms")
 
-started = time.ticks_ms()
+pacer = Pacer()
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
@@ -108,7 +108,7 @@ try:
         canvas.blit(backdrop, 0, 0)
 
         # Where every marker is, all of them reading the one progress
-        progress = (time.ticks_diff(time.ticks_ms(), started) % CYCLE_MS) / CYCLE_MS
+        progress = (pacer.elapsed % CYCLE_MS) / CYCLE_MS
 
         canvas.pen = MARKER
         for index, (_, moved) in enumerate(tweens):

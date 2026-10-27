@@ -1,5 +1,5 @@
-import time
 from mighty_fx import MightyFX, SPCE
+from timing import Pacer, Roller
 from screens import SCREEN_TYPES
 from picovector import color, font, image, rect
 
@@ -284,25 +284,24 @@ for index, panel in enumerate(panels):
     # The next page to show, which stays at the first where a service only has one
     pages[index] = 1 % count
 
-started = time.ticks_ms()
-due = [time.ticks_add(started, int((index + 1) * stagger * 1000)) for index in range(len(panels))]
+# Each panel's first turn falls at its own share of the stagger, and every one after it PAGE_HOLD on
+turns = [Roller((index + 1) * stagger) for index in range(len(panels))]
+pacer = Pacer(0.02)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        now = time.ticks_ms()
-
         for index, panel in enumerate(panels):
-            if time.ticks_diff(now, due[index]) < 0:
+            if not turns[index].is_due():
                 continue
 
             count = draw(index, pages[index])
             panel.update(canvas)
 
             pages[index] = (pages[index] + 1) % count
-            due[index] = time.ticks_add(due[index], int(PAGE_HOLD * 1000))
+            turns[index].advance(PAGE_HOLD)
 
-        time.sleep_ms(20)
+        pacer.hold()
 
 # Stop any running effects and turn off all the outputs
 finally:

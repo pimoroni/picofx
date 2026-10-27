@@ -1,5 +1,5 @@
-import time
 from mighty_fx import MightyFX, SPCE
+from timing import Pacer, Roller
 from screens import Reserve, Screen280, ScreenPair
 from picovector import color, font, image, rect
 
@@ -303,30 +303,30 @@ canvas.pen = FACE
 canvas.clear()
 draw_pinned()
 
-started = time.ticks_ms()
+pacer = Pacer()                 # The sign's clock, with no rate, as every scroll is counted in frames
 travelled = 0
 step = 0
 lift = None
-stood_from = time.ticks_ms()
+standing = Roller(DWELL)
 shown = (None, None, None)
 draw_cycling(step, lift)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        elapsed = time.ticks_diff(time.ticks_ms(), started) / 1000
+        elapsed = pacer.elapsed / 1000
         second = int(elapsed)
 
         # A row stands for its dwell, then climbs out a lamp at a time and the next follows it up
         if lift is None:
-            if time.ticks_diff(time.ticks_ms(), stood_from) >= int(DWELL * 1000):
+            if standing.is_due():
                 step += 1
                 lift = 0
         else:
             lift += SLIDE_LAMPS
             if lift >= BAND_H[CYCLING]:
                 lift = None
-                stood_from = time.ticks_ms()
+                standing.restart()
 
         # Only what changed is redrawn. The notice moves every frame; the cycling row moves during a slide,
         # and the clock when the second turns over

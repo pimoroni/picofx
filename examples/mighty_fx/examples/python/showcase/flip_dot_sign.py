@@ -1,6 +1,6 @@
 import math
-import time
 from mighty_fx import MightyFX, SPCE
+from timing import Pacer, Roller
 from screens import Screen280
 from picovector import color, font, image, mat3, shape
 
@@ -204,8 +204,8 @@ def turning(index, phase):
     canvas.blit(lit_steps[step] if lit else unlit_steps[step], x, y)
 
 
-def schedule(wanted, now):
-    """A start time for every dot that has to change, each column later than the one before.
+def schedule(wanted):
+    """How far into the sweep each dot that has to change starts turning, each column later than the last.
 
     Only the dots that differ are given one, so the sign turns over what the message changed and
     leaves the rest standing, which makes a real board rattle in patches.
@@ -213,22 +213,22 @@ def schedule(wanted, now):
     flips = []
     for index in range(columns * rows):
         if wanted[index] != states[index]:
-            flips.append((index, time.ticks_add(now, (index % columns) * SWEEP_MS)))
+            flips.append((index, (index % columns) * SWEEP_MS))
 
     return flips
 
 
-def advance(flips, now):
+def advance(flips, elapsed):
     """Draw every dot mid-turn, and hand back the ones still turning."""
     turning_still = []
     for index, start in flips:
-        elapsed = time.ticks_diff(now, start)
-        if elapsed < 0:
+        into = elapsed - start
+        if into < 0:
             turning_still.append((index, start))       # Its column has not come round yet
-        elif elapsed >= FLIP_MS:
+        elif into >= FLIP_MS:
             show(index, targets[index])
         else:
-            turning(index, elapsed / FLIP_MS)
+            turning(index, into / FLIP_MS)
             turning_still.append((index, start))
 
     return turning_still
@@ -245,31 +245,32 @@ print(f"{columns} by {rows} dots at a {CELL}px pitch, {len(MESSAGES)} messages")
 
 message = 0
 targets = pattern_states(MESSAGES[0])
-flips = schedule(targets, time.ticks_ms())
-settled_at = time.ticks_ms()
+flips = schedule(targets)
+
+# The pacer's elapsed time counts from the start of the sweep in progress
+pacer = Pacer(0.01)
+settled = Roller(HOLD)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        now = time.ticks_ms()
-
         # The panel is only written while something is turning. A settled sign holds its frame, as
         # a real one holds its dots with nothing driving them
         if flips:
-            flips = advance(flips, now)
+            flips = advance(flips, pacer.elapsed)
             screen.update(canvas, rotation=90)
 
             if not flips:
                 states = targets
-                settled_at = time.ticks_add(now, int(HOLD * 1000))
+                settled.restart()
 
-        elif time.ticks_diff(now, settled_at) >= 0:
+        elif settled.is_due():
             message = (message + 1) % len(MESSAGES)
             targets = pattern_states(MESSAGES[message])
-            flips = schedule(targets, now)
+            flips = schedule(targets)
+            pacer.restart()
 
-        else:
-            time.sleep_ms(10)
+        pacer.hold()
 
 # Stop any running effects and turn off all the outputs
 finally:

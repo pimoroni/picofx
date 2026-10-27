@@ -1,5 +1,5 @@
-import time
 from mighty_fx import MightyFX, SPCE
+from timing import Pacer, Roller
 from screens import Screen280
 from picovector import image, rect
 
@@ -101,16 +101,15 @@ read_into(HEIGHT, POSTER_FILES[1 % len(POSTER_FILES)])
 screen.update(canvas, offset=(0, 0))
 
 behind = 1                          # The poster in the lower half, and so the next one up
-started = None
-due = time.ticks_add(time.ticks_ms(), int(DWELL * 1000))
+scrolling = False
+pacer = Pacer(0.01)                 # Its elapsed time counts from the start of the scroll in progress
+dwell = Roller(DWELL)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        now = time.ticks_ms()
-
-        if started is not None:
-            part = min(1.0, time.ticks_diff(now, started) / SCROLL_MS)
+        if scrolling:
+            part = min(1.0, pacer.elapsed / SCROLL_MS)
 
             at = round(HEIGHT * travelled(part))
             screen.update(canvas, offset=(0, -at))
@@ -118,14 +117,14 @@ try:
             if part >= 1.0:
                 behind = (behind + 1) % len(POSTER_FILES)
                 advance(behind)
-                started = None
-                due = time.ticks_add(time.ticks_ms(), int(DWELL * 1000))
+                scrolling = False
+                dwell.restart()
 
-        elif time.ticks_diff(now, due) >= 0:
-            started = now
+        elif dwell.is_due():
+            scrolling = True
+            pacer.restart()
 
-        else:
-            time.sleep_ms(10)
+        pacer.hold()
 
 # Stop any running effects and turn off all the outputs
 finally:

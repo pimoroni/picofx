@@ -1,7 +1,7 @@
 import sys
-import time
 
 from mighty_fx import MightyFX, SPCE
+from timing import Roller
 from screens import SCREEN_TYPES
 from picovector import color, font, image, rect
 
@@ -53,7 +53,7 @@ content_height = (MARGIN * 2) + sum(face.height + LINE_GAP for _, face in fonts)
 travel = max(0, content_height - screen.height)
 scroll_y = 0.0
 speed = -SCROLL_SPEED
-moving_at = time.ticks_ms()     # When the list may move again, so each end gets its rest
+resting = Roller()              # When the list may move again, so each end gets its rest
 
 print(f"{len(fonts)} faces, {fonts[0][1].height}px to {fonts[-1][1].height}px,"
       f" {content_height}px of list on a {screen.height}px panel")
@@ -96,12 +96,12 @@ try:
 
         # Turn round at each end rather than jumping back to the start, resting there first
         # so the faces at the top and bottom of the list can be read
-        if travel and time.ticks_diff(time.ticks_ms(), moving_at) >= 0:
+        if travel and resting.is_due():
             scroll_y += speed
             if scroll_y <= -travel or scroll_y >= 0:
                 scroll_y = max(-travel, min(0.0, scroll_y))
                 speed = -speed
-                moving_at = time.ticks_add(time.ticks_ms(), int(HOLD * 1000))
+                resting.restart(HOLD)
 
         # The corner enlargement, over the list rather than in place of it: the faces below
         # stay at the size they draw at, and this only says what the smallest ones look like

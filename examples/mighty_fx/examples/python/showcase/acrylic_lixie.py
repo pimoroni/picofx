@@ -1,5 +1,6 @@
 import time
 from mighty_fx import MightyFX, SPCE
+from timing import Pacer
 from screens import Screen280
 from picovector import color, font, image, shape
 
@@ -163,12 +164,12 @@ build(light)
 print(f"{SHEETS} sheets drawn unlit in {time.ticks_diff(time.ticks_ms(), marked)}ms")
 
 shown = None
-started = time.ticks_ms()
+pacer = Pacer(0.01)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        elapsed = time.ticks_diff(time.ticks_ms(), started)
+        elapsed = pacer.elapsed
         count, into = divmod(elapsed, COUNT_MS)
         if count >= SHEETS:
             # A pass through every digit is done, so the LEDs take the next colour and the stack, which
@@ -176,7 +177,7 @@ try:
             turn = (turn + 1) % len(COLOURS)
             light = COLOURS[turn]
             build(light)
-            started = time.ticks_ms()
+            pacer.restart()
             continue
 
         # A sheet's LED switches quickly, and for that moment the sheet losing it still has some light
@@ -187,7 +188,7 @@ try:
             screen.update(canvas)
             shown = showing
 
-        time.sleep_ms(10)
+        pacer.hold()
 
 # Stop any running effects and turn off all the outputs
 finally:

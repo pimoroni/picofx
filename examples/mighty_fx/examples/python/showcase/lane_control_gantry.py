@@ -1,5 +1,5 @@
-import time
 from mighty_fx import MightyFX, SPCE
+from timing import Pacer
 from screens import Screen280, ScreenGroup
 from picovector import color, font, image, rect, shape
 
@@ -468,13 +468,13 @@ def send(setting, on_the_left):
                                        if showing == aspect))
 
 
-started = time.ticks_ms()
+pacer = Pacer(0.02)                 # The gantry's clock, looking for a change every 20ms
 shown = None
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        elapsed = time.ticks_diff(time.ticks_ms(), started)
+        elapsed = pacer.elapsed
         frame = (int(elapsed / (HOLD * 1000)) % len(GANTRY), bool(elapsed // FLASH_MS % 2))
 
         # Nothing moves on a gantry, so it is only drawn again when the setting or the lamps change
@@ -482,7 +482,7 @@ try:
             send(*frame)
             shown = frame
 
-        time.sleep_ms(20)
+        pacer.hold()
 
 # Stop any running effects and turn off all the outputs
 finally:

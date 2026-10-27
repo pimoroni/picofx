@@ -1,5 +1,5 @@
-import time
 from mighty_fx import MightyFX, SPCE
+from timing import Pacer, Roller
 from screens import Screen280
 from picovector import color, font, image, rect, shape
 
@@ -337,12 +337,14 @@ def call_up(index):
 
 call_up(0)
 page = 0
-due = None
+standing = False                    # Whether every card has come to rest on the page
+pacer = Pacer(0.01)                 # Its elapsed time counts from the call-up of the page in progress
+next_page = Roller(HOLD)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        now = time.ticks_ms()
+        now = pacer.elapsed
         drew = False
         resting = True
 
@@ -356,7 +358,7 @@ try:
                     continue
 
                 resting = False
-                part = min(1.0, time.ticks_diff(now, started) / FLAP_MS)
+                part = min(1.0, (now - started) / FLAP_MS)
                 step = (showing_at[row][card] + 1) % len(card_drum[card])
                 falling(row, card, showing_at[row][card], step, part)
                 drew = True
@@ -368,15 +370,17 @@ try:
 
         if drew:
             screen.update(canvas, rotation=90)
-        elif resting and due is None:
+        elif resting and not standing:
             # The page has settled, so it stands from now
-            due = time.ticks_add(now, int(HOLD * 1000))
-        elif resting and time.ticks_diff(now, due) >= 0:
+            standing = True
+            next_page.restart()
+        elif resting and next_page.is_due():
             page = (page + 1) % len(PAGES)
             call_up(page)
-            due = None
-        else:
-            time.sleep_ms(10)
+            standing = False
+            pacer.restart()
+
+        pacer.hold()
 
 # Stop any running effects and turn off all the outputs
 finally:

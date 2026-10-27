@@ -1,5 +1,5 @@
-import time
 from mighty_fx import MightyFX, SPCE
+from timing import Pacer, Roller
 from screens import Reserve, Screen280, ScreenPair
 from picovector import color, font, image, rect, shape
 
@@ -268,9 +268,9 @@ def clock_text(minute):
     return f"{minute // 60:02d}:{minute % 60:02d}"
 
 
-def board_minute():
+def board_minute(elapsed):
     """What the board's clock reads, counted on from CLOCK_START."""
-    elapsed = time.ticks_diff(time.ticks_ms(), started) * CLOCK_RATE // 60000
+    elapsed = elapsed * CLOCK_RATE // 60000
     return (CLOCK_START[0] * 60 + CLOCK_START[1] + elapsed) % 1440
 
 
@@ -402,20 +402,21 @@ def draw(number, now):
                 font_size=NOTE_SIZE, line_height=NOTE_SPACING)
 
 
-started = time.ticks_ms()
+# The pacer is the board's clock and holds it to a look every 20ms. The roller turns the page
+pacer = Pacer(0.02)
+turn = Roller(PAGE_HOLD)
 page = 0
-turn_due = time.ticks_add(started, int(PAGE_HOLD * 1000))
 shown = None
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        if time.ticks_diff(time.ticks_ms(), turn_due) >= 0:
+        if turn.is_due():
             page += 1
-            turn_due = time.ticks_add(turn_due, int(PAGE_HOLD * 1000))
+            turn.advance()
 
         # Nothing on the board moves, so it is only drawn again when the minute or the page changes
-        now = board_minute()
+        now = board_minute(pacer.elapsed)
         frame = (now, page)
         if frame != shown:
             draw(page, now)
@@ -427,7 +428,7 @@ try:
                 pair.update(canvas, rotation=TURNS, offset=((0, 0), (0, -PANEL_ROWS)))
             shown = frame
 
-        time.sleep_ms(20)
+        pacer.hold()
 
 # Stop any running effects and turn off all the outputs
 finally:

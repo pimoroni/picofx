@@ -1,7 +1,7 @@
 import sys
-import time
 
 from mighty_fx import MightyFX, SPCE
+from timing import Pacer
 from screens import SCREEN_TYPES
 from picovector import color, image, mat3, shape
 
@@ -61,7 +61,7 @@ SHAPES = (shape.rectangle(-1, -1, 2, 2), shape.rectangle(-1, -1, 2, 2).stroke(ST
 
 print(f"{len(SHAPES)} shapes in a {ACROSS}x{DOWN} grid, {SIZE:.0f}px each")
 
-started = time.ticks_ms()
+pacer = Pacer()
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
@@ -69,7 +69,7 @@ try:
         canvas.pen = GROUND
         canvas.clear()
 
-        turned = time.ticks_diff(time.ticks_ms(), started) / TURN_MS * 360
+        turned = pacer.elapsed / TURN_MS * 360
         for index, drawing in enumerate(SHAPES):
             # oklch asks for a hue at a lightness, so every cell reads as bright as the
             # next: hsv would hand back yellows that glare and blues that sink

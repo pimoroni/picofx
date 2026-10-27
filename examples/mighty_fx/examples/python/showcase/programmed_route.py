@@ -1,9 +1,8 @@
-import time
-
 from aye_arr.nec.remotes import PimoroniRemote
 from mighty_fx import MightyFX
 from sensor import IR
 from servo import CONTINUOUS
+from timing import Pacer, Roller
 
 from picofx import ColourPlayer
 from picofx.colour import BLUE, CYAN, GREEN, MAGENTA, RED, WHITE, YELLOW
@@ -73,7 +72,9 @@ player.effects = PulseFX(speed=1.0)
 player.levels = 0.0
 
 showing = (RED, 0.0, False)
-blip_until = 0
+pacer = Pacer(CHECK_TIME)           # Both loops look at the button and the remote on this
+blip_over = Roller(BLIP_MS / 1000)
+blipping = False
 
 
 # Function to hold a set of lights, remembered so a flash can hand them back
@@ -90,11 +91,12 @@ def show(colour, levels, steady=False):
 # main loop rather than here: sleeping inside a remote callback is time decode() is not
 # running, and a frame arriving then is lost
 def blip():
-    global blip_until
+    global blipping
     player.effects = StaticFX()
     player.colours = WHITE
     player.levels = BLIP_LEVEL
-    blip_until = time.ticks_add(time.ticks_ms(), BLIP_MS)
+    blipping = True
+    blip_over.restart()
 
 
 # The movements a route can be made of. The wheels face opposite ways on a robot, so
@@ -184,8 +186,9 @@ def perform(name, cycles, index):
 
         player.levels = levels
 
-        time.sleep(CHECK_TIME)
-        held += CHECK_TIME
+        # Count each pass as the time it took, so a movement lasts as long as it says
+        pacer.hold()
+        held += pacer.delta / 1000
 
     return True
 
@@ -318,8 +321,8 @@ try:
         receiver.decode()
 
         # Put a flash out once it has been seen, which is the main loop's job
-        if blip_until and time.ticks_diff(time.ticks_ms(), blip_until) >= 0:
-            blip_until = 0
+        if blipping and blip_over.is_due():
+            blipping = False
             show(*showing)
 
         if playing:
@@ -333,7 +336,7 @@ try:
             halt()
             show(GREEN, 0.0)
 
-        time.sleep(CHECK_TIME)
+        pacer.hold()
 
 # Stop the wheels, drop the connectors' power and turn off all the outputs
 finally:

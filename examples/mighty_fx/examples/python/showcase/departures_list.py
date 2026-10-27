@@ -1,5 +1,5 @@
-import time
 from mighty_fx import MightyFX, SPCE
+from timing import Pacer, Roller
 from screens import Reserve, Screen280, ScreenPair
 from picovector import color, font, image, rect
 
@@ -251,29 +251,30 @@ def draw(canvas, number, clock):
     canvas.text(clock, foot, font_size=LARGE_SCALE, align=(image.RIGHT, image.TOP))
 
 
-def clock_at(started):
+def clock_at(elapsed):
     """The time the board is showing, counted on from CLOCK_START."""
-    elapsed = time.ticks_diff(time.ticks_ms(), started) // 1000
+    elapsed //= 1000
     hours, minutes, seconds = CLOCK_START
     total = (hours * 3600 + minutes * 60 + seconds + elapsed) % 86400
     return f"{total // 3600:02d}:{total // 60 % 60:02d}:{total % 60:02d}"
 
 
-started = time.ticks_ms()
+# The pacer is the board's clock and holds it to a look every 20ms. The roller turns the page
+pacer = Pacer(0.02)
+turn = Roller(PAGE_HOLD)
 page = 0
-turn_due = time.ticks_add(started, int(PAGE_HOLD * 1000))
 shown = None
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        if time.ticks_diff(time.ticks_ms(), turn_due) >= 0:
+        if turn.is_due():
             page = (page + len(canvases)) % len(pages)
-            turn_due = time.ticks_add(turn_due, int(PAGE_HOLD * 1000))
+            turn.advance()
 
         # The board is drawn again whenever the page or the second changes, which is what makes
         # the clock tick. Nothing else on it moves, so the rest of the time it is left alone
-        clock = clock_at(started)
+        clock = clock_at(pacer.elapsed)
         frame = (page, clock)
         if frame != shown:
             # Each panel shows the next page on, so a pair reads left to right as one longer board
@@ -287,7 +288,7 @@ try:
 
             shown = frame
 
-        time.sleep_ms(20)
+        pacer.hold()
 
 # Stop any running effects and turn off all the outputs
 finally:

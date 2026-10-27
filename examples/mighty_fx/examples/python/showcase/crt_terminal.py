@@ -1,5 +1,5 @@
-import time
 from mighty_fx import MightyFX, SPCE
+from timing import Pacer, Roller
 from screens import Screen280
 from picovector import color, font, image, rect, shape
 
@@ -240,14 +240,14 @@ def draw(cursor_on):
 entry = 0                   # Which line of the session is being written
 typed = 0                   # And how much of it has arrived, where the operator is typing it
 served = 0                  # Counts what has reached the tube, so a redraw is never missed
-held_to = time.ticks_ms()   # When the terminal is next free to write, a pause sitting further off
-started = time.ticks_ms()
+held = Roller()             # When the terminal is next free to write, at once to begin with
+pacer = Pacer(0.01)
 shown = None
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        if time.ticks_diff(time.ticks_ms(), held_to) >= 0:
+        if held.is_due():
             if entry >= len(SESSION):
                 # The session is over, so the operator turns the tube out and it starts again
                 del lines[:]
@@ -263,25 +263,25 @@ try:
                 if typed == len(line):
                     newline()
                     entry, typed = entry + 1, 0
-                    held_to = time.ticks_add(time.ticks_ms(), THINK_MS)
+                    held.restart(THINK_MS / 1000)
             else:
                 # The machine's answer, a line to a frame, which makes it faster than the typing
                 print_line(SESSION[entry])
                 entry, served = entry + 1, served + 1
                 if entry >= len(SESSION):
-                    held_to = time.ticks_add(time.ticks_ms(), END_MS)
+                    held.restart(END_MS / 1000)
                 elif SESSION[entry].startswith(PROMPT):
-                    held_to = time.ticks_add(time.ticks_ms(), READ_MS)
+                    held.restart(READ_MS / 1000)
 
         # A frame is the whole page drawn again, so one is only worth drawing where something changed
-        elapsed = time.ticks_diff(time.ticks_ms(), started)
+        elapsed = pacer.elapsed
         frame = (served, bool(elapsed // CURSOR_MS % 2))
         if frame != shown:
             draw(frame[1])
             screen.update(canvas, rotation=90)
             shown = frame
 
-        time.sleep_ms(10)
+        pacer.hold()
 
 # Stop any running effects and turn off all the outputs
 finally:

@@ -1,7 +1,6 @@
 import math
-import time
 from mighty_fx import MightyFX, SPCE
-from timing import Roller
+from timing import Pacer, Roller
 from screens import Screen280
 from picovector import color, font, image, rect, shape
 
@@ -197,7 +196,8 @@ draw(turns)
 screen.update(canvas, rotation=90)
 
 turned = 0
-started = None
+turning = False
+pacer = Pacer(0.01)                 # Its elapsed time counts from the start of the turn in progress
 
 # When the board is next due to turn. The hold runs from the moment the last turn
 # finished rather than on a fixed beat, which is what restart() starts again
@@ -206,13 +206,12 @@ settled = Roller(HOLD)
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        now = time.ticks_ms()
-
         # A turn runs until every slat has finished its own, each starting after the one before it
-        if started is not None:
+        if turning:
+            wave = pacer.elapsed
             done = True
             for slat in range(SLATS):
-                elapsed = time.ticks_diff(now, time.ticks_add(started, slat * STAGGER_MS))
+                elapsed = wave - slat * STAGGER_MS
                 if elapsed < 0:
                     part = 0.0
                     done = False
@@ -231,14 +230,14 @@ try:
             if done:
                 turned = (turned + 120) % 360
                 turns = [turned] * SLATS
-                started = None
+                turning = False
                 settled.restart()
 
         elif settled.is_due():
-            started = now
+            turning = True
+            pacer.restart()
 
-        else:
-            time.sleep_ms(10)
+        pacer.hold()
 
 # Stop any running effects and turn off all the outputs
 finally:

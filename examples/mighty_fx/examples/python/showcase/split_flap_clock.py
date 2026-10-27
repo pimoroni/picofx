@@ -1,5 +1,5 @@
-import time
 from mighty_fx import MightyFX, SPCE
+from timing import Pacer
 from screens import Screen280
 from picovector import color, font, image, rect, shape
 
@@ -207,9 +207,9 @@ def falling(flap, from_index, to_index, part):
         canvas.blit(drum, half_of(index, not above), target)
 
 
-def clock_now(started):
+def clock_now(elapsed):
     """The time the board is showing, counted on from CLOCK_START."""
-    elapsed = time.ticks_diff(time.ticks_ms(), started) // 1000
+    elapsed //= 1000
     hours, minutes, seconds = CLOCK_START
     total = (hours * 3600 + minutes * 60 + seconds + elapsed) % 86400
     return f"{total // 3600:02d}{total // 60 % 60:02d}{total % 60:02d}"
@@ -242,7 +242,7 @@ canvas.rectangle(rect(case.x + CORNER, case.y + case.h - 1, case.w - CORNER * 2,
 
 showing = [0] * FLAPS               # Where each card is in the drum, blank to begin with
 wanted = [0] * FLAPS
-turning = [None] * FLAPS            # When the card at this place started falling
+turning = [None] * FLAPS            # When the card at this place started falling, on the pacer's clock
 
 for flap in range(FLAPS):
     settled(flap, 0)
@@ -255,13 +255,13 @@ for position in (1, 3):
         canvas.rectangle(rect(middle - 2, y - 2, 4, 4))
 
 screen.update(canvas, rotation=90)
-started = time.ticks_ms()
+pacer = Pacer(0.01)                 # The board's clock, looking for a change every 10ms
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        now = time.ticks_ms()
-        reading = clock_now(started)
+        now = pacer.elapsed
+        reading = clock_now(now)
 
         # A card only ever climbs, so it keeps flapping until it reaches what it should show
         for flap in range(FLAPS):
@@ -274,7 +274,9 @@ try:
                     turning[flap] = now
                 continue
 
-            part = min(1.0, time.ticks_diff(now, turning[flap]) / FLAP_MS)
+            # The pacer is never restarted, so its elapsed time wraps negative after about 6.2 days, and a
+            # card falling at that moment would start after now. It is taken as having landed
+            part = 1.0 if now < turning[flap] else min(1.0, (now - turning[flap]) / FLAP_MS)
             step = (showing[flap] + 1) % len(DRUM)
             falling(flap, showing[flap], step, part)
             drew = True
@@ -286,8 +288,8 @@ try:
 
         if drew:
             screen.update(canvas, rotation=90)
-        else:
-            time.sleep_ms(10)
+
+        pacer.hold()
 
 # Stop any running effects and turn off all the outputs
 finally:
