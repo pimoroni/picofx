@@ -2,7 +2,7 @@ import math
 from mighty_fx import MightyFX, SPCE
 from timing import Pacer, Roller
 from screens import Screen280
-from picovector import color, font, image, rect, shape
+from picovector import color, image, rect
 
 """
 Draw a trivision billboard, its posters carried on three-sided slats that turn a third at
@@ -27,23 +27,13 @@ HOLD = 3.0                          # How long a poster faces out before the boa
 # which puts every step on a face that is plainly moving and narrowing as well
 SHADE_FROM = 20                     # How far a face turns before it is shaded at all, in degrees
 AMBIENT = 90                        # How lit it is by edge on, against 255 facing out
-POSTER_FONT = "awesome"             # The lettering on the posters. dir(font) lists all 37
-POSTER_SCALE = 3                    # Pixel fonts scale by whole numbers, so 3 is triple size
 
-# Files to put on the faces instead of the drawn posters, as many as there are or none at all. Each is
-# fitted to the whole board as it loads, so one shaped differently is stretched, not cropped, and fewer
-# than three faces' worth are used again in turn. Without them the example says so and draws the posters
+# The posters, one to a face, so a third of a turn brings the next one round. Each is fitted to the
+# whole board as it loads, so one shaped differently is stretched, not cropped, and fewer than three
+# are used again in turn
 POSTER_FILES = ("/examples/assets/billboards/landscape/lambo.png",
                 "/examples/assets/billboards/landscape/tufty.png",
                 "/examples/assets/billboards/landscape/frum.png")
-
-# One poster to a face, so a third of a turn brings the next one round and three turns come back to
-# the first. Drawn here rather than loaded, which lets the board run with no files at all
-POSTERS = (
-    ("SUMMER", color.rgb(216, 72, 32), color.rgb(255, 236, 180), color.rgb(255, 176, 40)),
-    ("SALE", color.rgb(24, 64, 148), color.rgb(240, 248, 255), color.rgb(96, 168, 232)),
-    ("NOW ON", color.rgb(28, 28, 32), color.rgb(248, 232, 96), color.rgb(72, 72, 80)),
-)
 FACES = 3                           # Sides to a slat, and so how many posters the board carries
 
 # Create a MightyFX object with SP/CE A set up for a screen
@@ -57,28 +47,6 @@ screen = Screen280(mighty.spce_a)
 canvas = screen.canvas(screen.height, screen.width)
 SLAT = canvas.width // SLATS
 APOTHEM = SLAT / (2 * math.sqrt(3))     # From a slat's axis out to the middle of one of its faces
-poster_font = getattr(font, POSTER_FONT)
-
-
-def poster(text, ground, ink, accent):
-    """One poster, the size of the whole board, drawn rather than loaded."""
-    face = image(canvas.width, canvas.height)
-    face.pen = ground
-    face.clear()
-
-    # A band behind the lettering, and a rule under it, so a slat's strip still reads as part of
-    # something when it is the only one turned
-    face.pen = accent
-    face.rectangle(rect(0, canvas.height // 3, canvas.width, canvas.height // 3))
-    face.shape(shape.rectangle(0, canvas.height - 12, canvas.width, 6))
-
-    face.font = poster_font
-    face.pen = ink
-    width = int(face.measure_text(text)[0]) * POSTER_SCALE
-    height = poster_font.height * POSTER_SCALE
-    face.text(text, rect((canvas.width - width) // 2, (canvas.height - height) // 2, width, height),
-              font_size=POSTER_SCALE)
-    return face
 
 
 def fitted(path):
@@ -98,22 +66,8 @@ def fitted(path):
     return board
 
 
-def from_files():
-    """The files as posters, or None where any of them is not on this board."""
-    faces = []
-    for path in POSTER_FILES:
-        try:
-            faces.append(fitted(path))
-        except OSError:
-            print(f"{path} is not on this board, so the posters are drawn instead")
-            return None
-
-    return [faces[face % len(faces)] for face in range(FACES)]
-
-
-posters = from_files() if POSTER_FILES else None
-if posters is None:
-    posters = [poster(*entry) for entry in POSTERS]
+art = [fitted(path) for path in POSTER_FILES]
+posters = [art[face % len(art)] for face in range(FACES)]
 
 
 def showing(turn):
@@ -188,7 +142,7 @@ def draw(turns):
     return len(touched)
 
 
-print(f"{SLATS} slats of {SLAT}px, {len(POSTERS)} posters, turning in {TURN_MS}ms")
+print(f"{SLATS} slats of {SLAT}px, {len(POSTER_FILES)} posters, turning in {TURN_MS}ms")
 
 # The board starts with the first poster facing out, and turns a third at a time from there
 turns = [0] * SLATS
