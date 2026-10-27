@@ -5,15 +5,13 @@ from picovector import color, image, shape, vec2
 from screens import SCREEN_TYPES, Tile
 
 """
-Fill the panel from a tile that cannot join itself, and let a mirrored repeat rescue it.
+Fill the panel from a tile whose edges do not meet, using a mirrored repeat so they do.
 
-The tile is a wedge, dark on one side and bright on the other with an arrow across it, so its
-left and right edges have nothing in common and a plain repeat puts bright hard against dark at
-every seam.
+The tile is a wedge, dark on one side and bright on the other with an arrow across it, so a
+plain repeat puts bright hard against dark at every seam.
 
-tile takes a value per axis: Tile.MIRROR reverses every other copy across the panel, turning each
-sideways seam into a reflection, while down the panel the tile joins itself and stays a plain
-repeat. The two modes alternate every few seconds, which is the comparison.
+tile= takes a value per axis. Tile.MIRROR across the panel turns each sideways seam into a
+reflection, and the two modes alternate every few seconds.
 
 Press "Boot" to exit the program.
 """
@@ -23,8 +21,8 @@ ROTATION = 90                    # Quarter turn, to suit how the screen is mount
 TILE = 40                        # The wedge is square, and this is its side
 HOLD = 66                        # Frames each mode is held for, about three seconds
 INSET = 8                        # How far the arrow sits inside the tile
-DARK = (16, 16, 40)              # The wedge's shaded side
-LIGHT = (214, 84, 60)            # And its lit one
+DARK = color.rgb(16, 16, 40)     # The wedge's shaded side
+LIGHT = color.rgb(214, 84, 60)   # And its lit one
 MARK = color.rgb(255, 240, 130)  # The arrow, which points the way the wedge brightens
 ANTIALIAS = image.X4             # Affordable, the tile being drawn once before the loop starts
 
@@ -35,8 +33,7 @@ MODES = (True, Tile.MIRROR)
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
-# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it.
-# rotation is how the panel is mounted, which every frame then takes without naming it
+# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
@@ -47,10 +44,7 @@ print(f"a {TILE}x{TILE} wedge filling {screen.height}x{screen.width}")
 
 # A column at a time from dark to light, so the tile's two sides have nothing in common
 for x in range(TILE):
-    along = x / (TILE - 1)
-    wedge.pen = color.rgb(round(DARK[0] + (LIGHT[0] - DARK[0]) * along),
-                          round(DARK[1] + (LIGHT[1] - DARK[1]) * along),
-                          round(DARK[2] + (LIGHT[2] - DARK[2]) * along))
+    wedge.pen = color.mix(DARK, LIGHT, round(x * 255 / (TILE - 1)))
     wedge.shape(shape.rectangle(x, 0, 1, TILE))
 
 # An arrow pointing the way the wedge brightens, so a reflected copy is plain to see
@@ -60,15 +54,11 @@ wedge.shape(shape.custom([vec2(INSET, INSET),
                           vec2(TILE - INSET, TILE // 2)]))
 
 frames = 0
-shown = None
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
         across = MODES[frames // HOLD % len(MODES)]
-        if across != shown:
-            print("mirrored across" if across == Tile.MIRROR else "repeated across")
-            shown = across
 
         # Down the panel the tile joins itself, so only the across axis ever changes
         screen.update(wedge, tile=(across, True))

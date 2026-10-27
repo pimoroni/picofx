@@ -66,7 +66,7 @@ Draw to whichever screens are plugged in, on one SP/CE port or both. Each screen
 ### Backlight Fade
 [single/backlight_fade.py](single/backlight_fade.py)
 
-Fade a screen's backlight up and down over a still frame. Change up some of the constants below to see what happens.
+Fade a screen's backlight up and down over a still frame.
 
 
 ### Screen Sizes
@@ -80,25 +80,25 @@ Build both screen types explicitly, one on each SP/CE port, and let each panel s
 ### Colour Wheel
 [graphics/color_wheel.py](graphics/color_wheel.py)
 
-Spin a rainbow wheel on a screen. Change up some of the constants below to see what happens.
+Spin a rainbow wheel on a screen.
 
 
 ### Starfield
 [graphics/starfield.py](graphics/starfield.py)
 
-Travel through a star field. Change up some of the constants below to see what happens.
+Travel through a star field.
 
 
 ### Pixel Fonts
 [graphics/pixel_fonts.py](graphics/pixel_fonts.py)
 
-Scroll a line in every pixel font the board has in ROM, smallest first, with each one's height beside its name.
+Scroll a line in every ROM pixel font, smallest first, with each one's height beside its name.
 
 
 ### LED Matrix
 [graphics/led_matrix.py](graphics/led_matrix.py)
 
-Simulate an LED matrix on the panel: content drawn one pixel to a lamp, scaled up, and a baked mask blitted over the top so each lamp reads as a round aperture behind a dark face.
+Show a rainbow as an LED matrix sign, each pixel drawn as a round lamp behind a dark face.
 
 
 ### Shapes
@@ -110,43 +110,43 @@ Draw every shape picovector offers, each one filled and then stroked beside it, 
 ### Paths
 [graphics/paths.py](graphics/paths.py)
 
-Show every setting that decides how a path is drawn, four rows of three.
+Show every setting that decides how a path is drawn, side by side.
 
 
 ### Pens
 [graphics/pens.py](graphics/pens.py)
 
-Fill the same circle six ways, because a pen is not only a colour.
+Fill the same circle with six different pens, from a plain colour to a picture.
 
 
 ### Filters
 [graphics/filters.py](graphics/filters.py)
 
-Show one picture under eleven filters, so the difference is a glance rather than a guess.
+Show one picture under eleven filters side by side, to compare what each one does.
 
 
 ### Colours
 [graphics/colours.py](graphics/colours.py)
 
-Ask the colour module for a set of colours instead of picking them by hand.
+Build colours from the colour module, from even hues to readable text on any background.
 
 
 ### Text Layout
 [graphics/text_layout.py](graphics/text_layout.py)
 
-Let a box place the lettering, instead of working out where to put it.
+Lay text out inside a box, which wraps and aligns it.
 
 
 ### Vector Fonts
 [graphics/vector_fonts.py](graphics/vector_fonts.py)
 
-Draw every vector face in ROM at three sizes, each one writing its own name, a band to a face.
+Draw every vector face in ROM at three sizes, each writing its own name.
 
 
 ### Sprites
 [graphics/sprites.py](graphics/sprites.py)
 
-Put the same sprite on the panel two ways, because one of them can turn it and one cannot.
+Draw the same sprite with blit() and with an image pen, which can also turn it.
 
 
 ### Tweens
@@ -160,7 +160,7 @@ Plot what each easing curve does, with a marker running along every one of them 
 ### Alternating Images
 [images/alternating_images.py](images/alternating_images.py)
 
-Alternate between two .PNG images from a folder, each shown for its own duration. Images must be the same resolution as the screen.
+Alternate between two PNG pictures, each shown for its own time.
 
 ### Poster Ticker
 [images/poster_ticker.py](images/poster_ticker.py)
@@ -173,7 +173,7 @@ Scroll a message across a poster read from a file, in lettering matching the pos
 ### Bouncing Logo
 [layout/bouncing_logo.py](layout/bouncing_logo.py)
 
-Bounce a logo around the screen, recolouring it at each edge while the drifting background shows through its darkest parts. Change up some of the constants below to see what happens.
+Bounce a logo around the screen, recolouring it at each edge while the drifting background shows through its darkest parts.
 
 
 ### Orientations
@@ -185,7 +185,7 @@ Show one mark in all eight ways a panel can carry it.
 ### Pixel Doubled
 [layout/pixel_doubled.py](layout/pixel_doubled.py)
 
-Fill the panel from a source a quarter of its size, and show what that costs.
+Fill the panel from a source a quarter of its size, doubling every pixel.
 
 
 ### Kaleidoscope
@@ -203,7 +203,7 @@ Fill the whole panel with a brick wall drawn from a tile of 32 by 32 pixels.
 ### Tiled Arrows
 [layout/tiled_arrows.py](layout/tiled_arrows.py)
 
-Fill the panel from a tile that cannot join itself, and let a mirrored repeat rescue it.
+Fill the panel from a tile whose edges do not meet, using a mirrored repeat so they do.
 
 
 ## Screen Pair Examples
@@ -211,7 +211,7 @@ Fill the panel from a tile that cannot join itself, and let a mirrored repeat re
 ### Colour Wheel Paired
 [pair/color_wheel_paired.py](pair/color_wheel_paired.py)
 
-Spin a rainbow wheel on a pair of screens held in step. Change up some of the constants below to see what happens.
+Spin a rainbow wheel on a pair of screens held in step.
 
 
 ### Colour Wheel In Turn
@@ -223,13 +223,13 @@ Spin a rainbow wheel on two screens, updated one after the other. Run color_whee
 ### Colour Wheel Facing
 [pair/color_wheel_facing.py](pair/color_wheel_facing.py)
 
-Spin a rainbow wheel on a pair of screens arranged to face each other, one of them mirrored to suit. Change up some of the constants below to see what happens.
+Spin a rainbow wheel on a pair of screens facing each other, one of them mirrored to suit.
 
 
 ### Carpets Paired
 [pair/carpets_paired.py](pair/carpets_paired.py)
 
-Lay a different carpet on each panel of a pair, each tiled from a scrap of a pattern and each drifting its own way.
+Lay a different drifting carpet on each panel of a pair, each tiled from a small scrap of pattern.
 
 
 ### Test Cards Paired
@@ -243,12 +243,12 @@ Turn a test card on each panel of a pair, the second one mirrored against the fi
 ### Chevron Banks
 [hub/chevron_banks.py](hub/chevron_banks.py)
 
-Flash runway chevrons across a screen hub in two interleaved banks, each bank a subset of one group.
+Flash runway chevrons across a screen hub in two interleaved banks, each a subset of one group.
 
 ### Starfield Wall
 [hub/starfield_wall.py](hub/starfield_wall.py)
 
-Travel through a star field, across every panel a screen hub reaches. Change up some of the constants below to see what happens.
+Travel through a star field, across every panel a screen hub reaches.
 
 
 ## Playback Examples
@@ -280,13 +280,13 @@ Recolour a whole animation as it plays, by rewriting the one colour table its fr
 ### Billboard Cased
 [playback/billboard_cased.py](playback/billboard_cased.py)
 
-Show a folder of posters as if each were in a case behind glass, laid over the picture as it goes.
+Show a folder of posters as if each stood in a case behind glass.
 
 
 ### Billboard Folders
 [playback/billboard_folders.py](playback/billboard_folders.py)
 
-Show several folders of posters, the boot button turning to the next poster or moving on to the next folder.
+Show several folders of posters, with Boot moving to the next poster or the next folder.
 
 
 ### Billboard Paired
@@ -322,7 +322,7 @@ Play an animation held as one image file per frame, back and forth.
 ### Traces Scroll
 [playback/traces_scroll.py](playback/traces_scroll.py)
 
-Scroll an animation endlessly across the panel, from a single tile of it, turning between the two axes.
+Scroll an animation built from one tile endlessly across the panel, turning between axes.
 
 
 ### Traces Wall

@@ -6,25 +6,23 @@ from screens import SCREEN_TYPES
 from picovector import color, font
 
 """
-Ask the colour module for a set of colours instead of picking them by hand.
+Build colours from the colour module, from even hues to readable text on any background.
 
-The first two strips are the same eight hues through hsv and through oklch. hsv holds the numbers
-even and lets the lightness wander, so its yellow glares and its blue sinks; oklch holds the
-lightness even, which makes a row of it read as one family.
+The top two strips are the same eight hues through hsv and oklch. hsv lets the lightness wander
+so its yellow glares and its blue sinks, where oklch holds it even.
 
-Under those, three calls that hand back a set: harmony() for hues that belong together, tones()
-for one hue from dark to light, and ramp() for the steps between colours you name. Then
-readable_on(), which picks lettering that can be read against a given ground.
+An amount in this module runs 0 to 255 and not 0 to 1, so mix(a, b, 0.5) hands back a unchanged
+where mix(a, b, 128) is the halfway blend.
 
-One thing to know before using any of them: an amount in this module runs 0 to 255, not 0 to 1,
-so mix(a, b, 0.5) hands back a unchanged where mix(a, b, 128) is the halfway blend.
+The screens drive the panel at 12 bit, so a channel has 16 levels in steps of 17. Two colours
+less than a step apart show as one, and a colour picked on a whole step shows as it was written.
 
 Press "Boot" to exit the program.
 """
 
 # Constants for drawing
-GROUND = color.rgb(10, 12, 16)          # Behind everything
-INK = color.white                       # The headings
+BACKGROUND = color.rgb(10, 12, 16)      # Behind everything
+TEXT_COLOUR = color.white               # The headings
 HUES = 8                                # Swatches in a hue sweep
 LIGHTNESS = 165                         # The lightness oklch holds every hue at
 CHROMA = 110
@@ -32,7 +30,7 @@ BASE_HUE = 25                           # The hue the harmony and tones rows sta
 STEPS = 6                               # Swatches in the tones and ramp rows
 STRIP = 26                              # How tall a strip of swatches is
 GAP = 3                                 # Between a strip and the next heading
-LABEL_FACE = "winds"                    # The narrowest ROM pixel face
+LABEL_FACE = font.winds                 # The narrowest ROM pixel face
 MARGIN = 4
 
 MIXES = (0, 51, 102, 153, 204, 255)      # Amounts to blend at, on the module's own 0 to 255
@@ -51,34 +49,36 @@ mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a)
 
 canvas = screen.canvas()
-label_face = getattr(font, LABEL_FACE)
-canvas.font = label_face
+canvas.font = LABEL_FACE
 
 base = color.oklch(LIGHTNESS, CHROMA, BASE_HUE)
 
 
 def heading(text, down):
-    """A line naming the strip under it, and where that strip starts."""
-    canvas.pen = INK
+    """Draw a line naming the strip under it, returning where that strip starts."""
+    canvas.pen = TEXT_COLOUR
     canvas.text(text, MARGIN, round(down))
-    return down + label_face.height + 1
+    return down + LABEL_FACE.height + 1
 
 
-def strip(colours, down, tall=STRIP):
-    """A row of swatches filling the panel's width, and where the next heading starts."""
+def strip(colours, down):
+    """Draw a row of swatches filling the panel's width, returning where the next heading starts."""
     wide = (canvas.width - MARGIN * 2) / len(colours)
     for index, swatch in enumerate(colours):
         canvas.pen = swatch
-        canvas.rectangle(round(MARGIN + index * wide), round(down), round(wide) + 1, tall)
+        canvas.rectangle(round(MARGIN + index * wide), round(down), round(wide) + 1, STRIP)
 
-    return down + tall + GAP
+    return down + STRIP + GAP
 
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
-    canvas.pen = GROUND
+    canvas.pen = BACKGROUND
     canvas.clear()
 
+    # Draw a heading per colour call and a row of what it returns, each pair moving the next down the panel
+
+    # hsv() takes a hue of 0 to 255, where oklch below takes degrees
     down = heading("hsv: even numbers, wandering lightness", MARGIN)
     down = strip([color.hsv(index * 256 // HUES, 255, 255) for index in range(HUES)], down)
 
@@ -86,9 +86,9 @@ try:
     down = strip([color.oklch(LIGHTNESS, CHROMA, index * 360 / HUES) for index in range(HUES)],
                  down)
 
+    # harmony() hands back the base first, so the complement's copy of it is dropped
     down = heading("harmony: a base, then its triad and complement", down)
-    down = strip((base,) + color.harmony(base, color.TRIAD)
-                 + color.harmony(base, color.COMPLEMENT)[1:], down)
+    down = strip(color.harmony(base, color.TRIAD) + color.harmony(base, color.COMPLEMENT)[1:], down)
 
     down = heading(f"tones: one hue in {STEPS} steps", down)
     down = strip(color.tones(base, STEPS), down)
@@ -99,22 +99,22 @@ try:
     down = heading("mix: an amount of 0 to 255, not 0 to 1", down)
     down = strip([color.mix(MIX_FROM, MIX_TO, amount) for amount in MIXES], down)
 
-    down = heading("readable_on: lettering picked for its ground", down)
+    # readable_on() picks each background's text colour, so its swatch is taller to hold two lines
+    down = heading("readable_on: text picked for its background", down)
     wide = (canvas.width - MARGIN * 2) / len(READ_ON)
-    for index, ground in enumerate(READ_ON):
+    for index, background in enumerate(READ_ON):
         across = MARGIN + index * wide
-        canvas.pen = ground
-        canvas.rectangle(round(across), round(down), round(wide) + 1, STRIP + label_face.height)
+        canvas.pen = background
+        canvas.rectangle(round(across), round(down), round(wide) + 1, STRIP + LABEL_FACE.height)
 
-        # Asked once and used twice: for the lettering, and for what it says about itself
-        legible = color.readable_on(ground, ground)
+        # Asked once, for the lettering and for its own contrast figure
+        legible = color.readable_on(background, background)
         canvas.pen = legible
         canvas.text("readable", round(across + 3), round(down + 3))
-        canvas.text(f"{color.contrast(ground, legible):.1f} to 1",
+        canvas.text(f"{color.contrast(background, legible):.1f} to 1",
                     round(across + 3), round(down + STRIP - 4))
 
     screen.update(canvas)
-    print("seven colour calls, each of them one line")
 
     # Nothing moves, so the panel holds its frame and this only waits
     while not mighty.boot_pressed():

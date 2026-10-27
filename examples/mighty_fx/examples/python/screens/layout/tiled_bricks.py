@@ -10,11 +10,9 @@ Fill the whole panel with a brick wall drawn from a tile of 32 by 32 pixels.
 That tile is a seventy-fifth of the full-size image a wall covering the panel would need, so
 tiling is the difference between an asset that fits anywhere and one that has to be budgeted for.
 
-A running bond is what makes the tile so small: one course is a brick and its mortar, and the
-course above is the same moved sideways by half a brick, so two courses is everything the pattern
-ever does. The brick starting halfway along the upper course finishes on the far side of the tile,
-so it is drawn twice, once at each end. That is the whole trick to a source that tiles, a shape
-crossing an edge having to appear at the opposite edge as well.
+A running bond keeps the tile small, two courses being everything the pattern does. The brick
+starting halfway along the upper course is drawn at both ends of the tile, as a shape crossing an
+edge must appear at the opposite edge too.
 
 Press "Boot" to exit the program.
 """
@@ -34,8 +32,7 @@ GROUT = color.rgb(196, 188, 172)
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
-# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it.
-# rotation is how the panel is mounted, which every frame then takes without naming it
+# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
@@ -46,7 +43,7 @@ print(f"a {BRICK_W}x{BRICK_H * 2} wall tile, {BRICK_W * BRICK_H * 2 * 4 // 1024}
 
 
 def brick(x, y):
-    """One brick at (x, y), its face laid over the mortar with a lit top and dark foot."""
+    """Draw one brick at (x, y), its face laid over the mortar with a lit top and dark foot."""
     width, height = BRICK_W - MORTAR, BRICK_H - MORTAR
     wall.pen = FACE_TOP
     wall.shape(shape.rectangle(x, y, width, height))
@@ -60,8 +57,7 @@ def brick(x, y):
 wall.pen = GROUT
 wall.clear()
 
-# The lower course starts at the edge, the upper one half a brick along. Drawing that one
-# twice, half a brick to either side of the tile, is what carries it across the seam
+# The lower course from the edge, the upper half a brick along and drawn at both ends
 brick(0, 0)
 brick(BRICK_W // 2, BRICK_H)
 brick(BRICK_W // 2 - BRICK_W, BRICK_H)
@@ -71,8 +67,7 @@ frames = 0
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        # Sliding the wall proves there is no seam in it: the courses run on for ever in
-        # both directions, from those three bricks
+        # Slide the wall to show it has no seam
         screen.update(wall, offset=(-frames * STEP, -frames * STEP), tile=True)
         frames += 1
 

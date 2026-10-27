@@ -5,7 +5,9 @@ from screens import SCREEN_TYPES
 from picovector import image, color, shape
 
 """
-Travel through a star field. Change up some of the constants below to see what happens.
+Travel through a star field.
+
+Change up some of the constants below to see what happens.
 
 Press "Boot" to exit the program.
 
@@ -34,9 +36,7 @@ centre_x, centre_y = screen.width / 2, screen.height / 2
 
 class RandomStar:
     def __init__(self):
-        # Create a new star, with initial x, y, and size
-        # Initial x will fall between -WIDTH / 2 and +WIDTH / 2 and y between -HEIGHT/2 and +HEIGHT/2.
-        # These are relative values for now, treating (0, 0) as the centre of the screen
+        # A new star at a random position relative to the screen centre, and its starting size
         self.x = random.randint(0, screen.width) - centre_x
         self.y = random.randint(0, screen.height) - centre_y
         self.size = 0.5
@@ -61,8 +61,7 @@ try:
             s.y *= TRAVEL_SPEED
 
             if s.x <= -centre_x or s.x >= centre_x or s.y <= -centre_y or s.y >= centre_y or s.size >= 5:
-                # This star has fallen off the screen (or rolled dead centre and grown too big!)
-                # Replace it with a new one
+                # Replace a star that has left the screen or grown too big
                 s = RandomStar()
 
             # Grow the star as it travels outward

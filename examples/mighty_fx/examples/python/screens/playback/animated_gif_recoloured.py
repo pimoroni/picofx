@@ -10,12 +10,8 @@ A GIF's frames are indices into a table of colours, and every frame of a sheet r
 table, so writing an entry changes that colour in all of them at once. Here the scan sweeps
 up in green, and each pass comes back in the colour of what it found.
 
-Each entry is rewritten at its own brightness, read once before anything changes: the art is
-drawn as one hue at many levels, so keeping those levels is what keeps the glow and the
-anti-aliasing along every line. A flat colour written over the lot would lose both.
-
-The pass changes colour on the frame the sweep turns around on, which the file holds for half
-a second, so the change is seen while the picture is still rather than during the sweep.
+Each entry keeps its own brightness as read once at the start, which keeps the glow and
+antialiasing a flat colour would lose.
 
 Press "Boot" to exit the program.
 
@@ -26,20 +22,21 @@ Section: Billboards and panels
 GIF_PATH = "/examples/assets/medscan.gif"   # The GIF to play
 ROTATION = 90                    # Quarter turn, to suit how the screen is mounted
 
-# What each pass comes back as, taken in turn. The first is near enough what the file was drawn
-# in, so a run starts looking as its artist left it
+# What each pass comes back as, the first near what the file was drawn in
 REPORTS = (color.rgb(0, 255, 64), color.rgb(255, 196, 40),
            color.rgb(255, 64, 48), color.rgb(64, 200, 255))
 
-# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it. The
-# reserve is what keeps a source larger than the panel ahead of the wire, and rotation is how
-# the panel is mounted, which every frame then takes without naming it
+# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it with the
+# reserve a source larger than the panel needs
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION)
 
-# The scan has two ends, a whole body and a whole skeleton, so it turns around rather than
-# jumping from one to the other
-player = GIFPlayer(GIF_PATH, ping_pong=True)
+# The scan runs body to skeleton, so it plays back and forth
+try:
+    player = GIFPlayer(GIF_PATH, ping_pong=True)
+except OSError:
+    mighty.shutdown()
+    raise RuntimeError(f"'{GIF_PATH}' is missing! Check it is on the board") from None
 
 # The frames share one colour table, so this is the whole animation's colours
 palette = player.palette

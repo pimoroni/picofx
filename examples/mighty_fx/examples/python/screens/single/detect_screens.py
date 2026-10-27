@@ -4,8 +4,8 @@ from screens import SCREEN_TYPES
 from picovector import image, color, shape
 
 """
-Draw to whichever screens are plugged in, on one SP/CE port or both. Each screen counts
-out its own position in dots.
+Draw to whichever screens are plugged in, on one SP/CE port or both.
+Each screen counts out its own position in dots.
 
 Press "Boot" to exit the program.
 
@@ -24,9 +24,7 @@ SCREEN_SIZES = ("2.8", "2.8") if not sys.argv[1:] else (sys.argv[1], sys.argv[-1
 # Create a MightyFX object with both SP/CE ports set up for screens
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 
-# A screen refuses to be created where no panel answered on its port, and claims
-# nothing when it does, so an empty port can be skipped and the rest carry on. The
-# message it raises says which chip select went quiet
+# A screen refuses to be created where no panel answers, so an empty port is skipped and its message printed
 screens = []
 for port, size in zip((mighty.spce_a, mighty.spce_b), SCREEN_SIZES):
     try:
@@ -34,8 +32,7 @@ for port, size in zip((mighty.spce_a, mighty.spce_b), SCREEN_SIZES):
     except ValueError as e:
         print(e)
 
-# A canvas each, since the two ports are free to hold different sizes and a canvas is
-# drawn at the size of the panel it is going to
+# A canvas each, as the two panels may differ in size
 canvases = [image(screen.width, screen.height) for screen in screens]
 
 if not screens:

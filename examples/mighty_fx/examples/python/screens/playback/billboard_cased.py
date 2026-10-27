@@ -3,19 +3,15 @@ import time
 from mighty_fx import MightyFX, SPCE
 from playback import SequencePlayer
 from screens import Screen280
-from picovector import brush, color, image, rect, shape, vec2
+from picovector import brush, color, image, shape, vec2
 
 """
-Show a folder of posters as if each were in a case behind glass, laid over the picture as it
-goes.
+Show a folder of posters as if each stood in a case behind glass.
 
-This is what a canvas is for: drawn into one, anything can go over the poster, and here that is
-a case around the edge and light across the glass. The poster changes and the case does not.
+A canvas lets a case and light across the glass go over the poster, and only the poster changes.
 
-The pane is the same for every poster, so it is drawn once into an image of its own and blitted
-over each. An image starts empty, so what is not drawn stays transparent, and the window is cut
-with brush.erase(), a pen that takes alpha away where it draws, antialiased edge and all. The
-case is opaque because a translucent mark reads only over art that is flat or dark.
+The pane is drawn once into an image of its own and blitted over each poster, its window cut with
+brush.erase(). The case is opaque, as a translucent one reads only over flat or dark art.
 
 Press "Boot" to exit the program.
 
@@ -26,7 +22,7 @@ Section: Billboards and panels
 POSTERS = "/examples/assets/billboards/portrait"   # Shared with the billboard showcases
 ROTATION = 0                     # Portrait, which is the shape these posters are
 DWELL = 3.0                      # Seconds a poster is up for
-LEVEL = 17                       # One of the panel's 16 levels a channel, which is the least that shows
+LEVEL = 17                       # One of the 16 levels the screens drive a channel at, the least that shows
 CASE_WIDE = 4                    # How far the case reaches over the poster
 CASE_ROUND = 10                  # The window's corner, which hides the poster's square one
 GLASS = color.rgb(28, 44, 66)    # What a sheet of glass takes out of what is behind it
@@ -35,29 +31,33 @@ CASE = color.rgb(150, 150, 150)
 CASE_LIT = color.rgb(215, 220, 230)  # Four levels above the case, so the lit edge reads as one
 LEAN = 150                       # How far a band slides over the poster's height, which sets its angle
 
-# Each band: where its middle sits, its half width, how far its edges ramp, how strong its middle is, and
-# whether it is the window reflected or the room. Both are wanted, light being unable to lighten a pale poster
+# Each band's middle, half width, edge ramp, strength in levels, and whether it is the window reflected
+# or the room. Both are wanted, since light cannot lighten a pale poster
 BANDS = ((30, 26, 10, 2.0, True), (96, 9, 6, 3.5, True), (150, 34, 14, 1.6, False),
          (206, 14, 8, 2.2, True), (232, 30, 12, 1.4, False))
 
-# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it.
-# rotation is how the panel is mounted, which every frame then takes without naming it
+# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a, rotation=ROTATION)
-canvas = screen.canvas(screen.width, screen.height)
+canvas = screen.canvas()
 WIDE, TALL = canvas.width, canvas.height
 
-# The pane lives in the heap, the screen's fast region holding the canvas
 pane = image(WIDE, TALL)
 pane.antialias = image.X4
 
 # fps names the rate, the filenames carrying no delays of their own
-player = SequencePlayer(POSTERS, fps=1 / DWELL)
+try:
+    player = SequencePlayer(POSTERS, fps=1 / DWELL)
+except OSError:
+    mighty.shutdown()
+    raise RuntimeError(f"'{POSTERS}' is missing! Check it is on the board") from None
+
 print(f"{player.frames} posters, {DWELL}s each")
 
 
 def band(across, half, feather, levels, tone):
-    """A diagonal band whose edges fade, as a stack of narrower bands over one another.
+    """
+    A diagonal band whose edges fade, as a stack of narrower bands over one another.
 
     Each band is translucent, so the middle, covered most often, comes out strongest.
     """
@@ -71,11 +71,7 @@ def band(across, half, feather, levels, tone):
 
 
 def case():
-    """A filled rectangle with the window erased out of it, laid over the light.
-
-    Built in an image of its own so the erasing cannot reach the light already on the pane, then blitted over
-    it, which is the same order as a case standing in front of glass.
-    """
+    """Cut the case's window away from the pane so its light survives, then lay the case on it."""
     frame = image(WIDE, TALL)
     frame.antialias = image.X4
     frame.pen = CASE
@@ -92,10 +88,10 @@ def case():
                                        TALL - CASE_WIDE * 2, CASE_ROUND).stroke(1))
 
 
+# Create a light reflection across the glass, then the case laid over it
 marked = time.ticks_ms()
 for across, half, feather, levels, lit in BANDS:
     band(across, half, feather, levels, SKY if lit else GLASS)
-
 case()
 print(f"the pane drawn once in {time.ticks_diff(time.ticks_ms(), marked)}ms")
 
@@ -105,8 +101,7 @@ try:
         # A poster and the pane over it, which is two blits
         if player.has_advanced():
             marked = time.ticks_ms()
-            poster = player.image
-            canvas.blit(poster, rect(0, 0, poster.width, poster.height), rect(0, 0, WIDE, TALL))
+            canvas.blit(player.image, 0, 0)
             canvas.blit(pane, 0, 0)
             laid = time.ticks_diff(time.ticks_ms(), marked)
             screen.update(canvas)

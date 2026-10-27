@@ -4,8 +4,9 @@ from screens import SCREEN_TYPES
 from picovector import image, color, shape, mat3
 
 """
-Spin a rainbow wheel on a screen. Change up some of the constants below to see what
-happens.
+Spin a rainbow wheel on a screen.
+
+Change up some of the constants below to see what happens.
 
 Press "Boot" to exit the program.
 
@@ -32,7 +33,6 @@ screen = ScreenType(mighty.spce_a)
 # Access the screen and create a canvas to draw to
 canvas = image(screen.width, screen.height)
 
-# Pre-calculate the screen centre
 centre_x, centre_y = screen.width / 2, screen.height / 2
 
 
@@ -58,7 +58,7 @@ try:
             hue = (i * 255) // 360
             canvas.pen = color.hsv((hue + t) % 256, 255, 255)
 
-            # Rotate the line we originally create, and move it towards the screen centre
+            # Rotate the line we originally created, and move it towards the screen centre
             line.transform = mat3().translate(centre_x, centre_y).rotate(i + r)
 
             # Apply the line with the current pen colour to the canvas

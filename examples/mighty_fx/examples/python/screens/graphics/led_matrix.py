@@ -4,12 +4,10 @@ from screens import SCREEN_TYPES
 from picovector import color, image, rect
 
 """
-Simulate an LED matrix on the panel: content drawn one pixel to a lamp, scaled up, and a
-baked mask blitted over the top so each lamp reads as a round aperture behind a dark face.
+Show a rainbow as an LED matrix sign, each pixel drawn as a round lamp behind a dark face.
 
-Two blits a frame whatever drew the content, so any source can feed it: shapes, text, an
-image, or a player's frame. The content here is the diagonal rainbow the LED matrix boards
-run, which shows the matrix off: every lamp carries its own colour at once.
+It is two blits a frame whatever drew the content, so shapes, text, an image or a player's
+frame can feed it. The rainbow runs diagonally, as on the LED matrix boards.
 
 Press "Boot" to exit the program.
 
@@ -23,9 +21,7 @@ APERTURE = 0.7                  # The lit hole, as a fraction of a lamp's width
 SOFTEN = 1.0                    # Panel pixels the aperture's edge fades over, which rounds it
 MASK = color.black              # The face the lamps are set behind
 RAINBOWS = 1.5                  # Full rainbows across the matrix corner to corner, so how dense it is
-# A matrix moves its pattern in whole lamps, so the only even step is a whole number of them a frame. Timed
-# off the clock instead, the wave lands as 1, 1, 2, 1, 1, 2, which reads as choppy however steady the frames
-LAMPS_A_FRAME = 1
+LAMPS_A_FRAME = 1               # Whole lamps a frame, as a clock-timed step reads as choppy
 
 # Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
@@ -35,21 +31,16 @@ ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a)
 
-# A matrix sign is wider than it is tall, so the canvas is drawn landscape and every update turns it a
-# quarter onto the panel. From the screen, not image(), which puts it in SRAM and halves both the
-# mask read and the frame written
+# Drawn landscape as a matrix sign is wider than tall, and turned a quarter onto the panel at each update
 canvas = screen.canvas(screen.height, screen.width)
 WIDTH, HEIGHT = canvas.width, canvas.height
 
-# The matrix's own size, in lamps. Whatever the lamps do not divide is left as a border, so they stay
-# square and land on whole pixels. A finer lamp buys resolution and loses the round aperture: a 4px lamp
-# comes out a soft square
+# The matrix's size in lamps, any remainder left as a border so the lamps stay square
 COLUMNS = WIDTH // PIXEL
 ROWS = HEIGHT // PIXEL
 LEFT = (WIDTH - COLUMNS * PIXEL) // 2
 TOP = (HEIGHT - ROWS * PIXEL) // 2
-# Lamps one full rainbow covers. Set from the diagonal rather than from the width, so the matrix carries
-# the same rainbow whatever the lamp size
+# Lamps one full rainbow covers, taken from the diagonal so the lamp size does not change it
 CYCLE = round((COLUMNS + ROWS) / RAINBOWS)
 
 # One pixel to a lamp, which is where the content is drawn. Everything else is scaling and masking
@@ -57,14 +48,11 @@ lamps = image(COLUMNS, ROWS)
 
 
 def bake_lamp():
-    """One lamp's mask: clear over the aperture and opaque over the face around it.
-
-    Built a pixel at a time from the distance to the lamp's centre, which is the only way a circle this
-    small comes out even. SOFTEN carrying the edge over a fraction of a pixel is what reads as round.
+    """
+    Bake one lamp's mask, clear over the aperture and opaque around it. It goes a pixel at a
+    time so a circle this small comes out even.
     """
     lamp = image(PIXEL, PIXEL)
-    lamp.pen = color.transparent
-    lamp.clear()
 
     centre = (PIXEL - 1) / 2
     radius = PIXEL * APERTURE / 2
@@ -80,23 +68,15 @@ def bake_lamp():
 
 
 def bake_mask():
-    """The whole panel's mask, laid out a row of lamps at a time.
+    """
+    Bake the panel's mask once and a row at a time, as a blit per lamp per frame is not affordable.
 
-    Baked once. Blitting a lamp per cell every frame is thousands of blits and is not affordable; a row
-    of them costs one blit per column, and the panel then costs one per row.
-
-    Transparent to begin with, the lamps carrying every opaque pixel between them. Filled with the face
-    colour first, the apertures never open: compositing a clear hole over black leaves black, a hole
-    being something a mask is built around rather than punched through.
+    A new image must start transparent, as a clear hole over a filled face leaves the face.
     """
     face = image(WIDTH, HEIGHT)
-    face.pen = color.transparent
-    face.clear()
 
     lamp = bake_lamp()
     strip = image(WIDTH, PIXEL)
-    strip.pen = color.transparent
-    strip.clear()
     for column in range(COLUMNS):
         strip.blit(lamp, LEFT + column * PIXEL, 0)
 
@@ -112,11 +92,7 @@ print(f"LED matrix of {COLUMNS}x{ROWS} lamps, {PIXEL}px each, aperture {round(PI
 
 
 def bake_rainbow():
-    """One full rainbow, a lamp to a pixel, with a matrix width of run-on on the end.
-
-    Long enough that any row can take its own window out of it without running off the end, which is
-    what saves wrapping each one.
-    """
+    """Bake a rainbow a lamp to a pixel, with a matrix width of run-on so no row's window wraps."""
     strip = image(CYCLE + COLUMNS, 1)
     for at in range(strip.width):
         strip.pen = color.hsv(round(at * 256 / CYCLE) & 0xff, 255, 255)
@@ -127,9 +103,7 @@ def bake_rainbow():
 
 rainbow = bake_rainbow()
 
-# Every rect a frame needs, built once. A rect is an object, so making them in the loop allocated 60 a
-# frame. The couple of kilobytes that came to brought a collection round every eighth frame: a 70ms
-# pause in a 90ms frame, which showed as the wave jumping rather than as a slow one
+# Every rect a frame needs, built once so the loop never stalls the wave for a garbage collection
 SCALE_FROM = rect(0, 0, COLUMNS, ROWS)
 SCALE_TO = rect(LEFT, TOP, COLUMNS * PIXEL, ROWS * PIXEL)
 ROW_TO = [rect(0, row, COLUMNS, 1) for row in range(ROWS)]
@@ -137,38 +111,28 @@ ROW_FROM = [rect(offset, 0, COLUMNS, 1) for offset in range(CYCLE)]
 
 
 def draw_lamps(at):
-    """The content, drawn one pixel to a lamp. Anything can go here, this being an ordinary image.
-
-    A GIFPlayer's frame reaches the matrix the same way: blit it into this image at the matrix's own
-    size, and draw() below lights it up.
-
-    The rainbow's hue follows x + y, so a row is the row above it moved along by one lamp and the whole
-    pattern is one strip read from a different place per row. That is a blit a row, where a lamp at a
-    time is a thousand calls a frame here and four thousand at the finest setting.
     """
-    start = round(at) % CYCLE
+    Draw the content one pixel to a lamp. Any image works here, a GIFPlayer's frame included.
+
+    The hue follows x + y, so each row is a single blit of one rainbow strip from its own offset.
+    """
+    start = at % CYCLE
     for row in range(ROWS):
         lamps.blit(rainbow, ROW_FROM[(start + row) % CYCLE], ROW_TO[row])
 
 
 def draw(at):
-    """One frame of the matrix: the content lit up behind its mask.
-
-    A lamp to a block, then the face over the top. NEAREST is what keeps a lamp's edges hard: anything
-    interpolating would smear one lamp into the next and the matrix would read as a blur.
-    """
+    """Draw one frame, scaling each pixel to a hard-edged lamp with NEAREST and masking it."""
     draw_lamps(at)
-
-    # Only where the lamps leave a border: they cover the rest, and the mask covers all of it
-    if LEFT or TOP:
-        canvas.pen = MASK
-        canvas.clear()
-
     canvas.blit(lamps, SCALE_FROM, SCALE_TO, image.NEAREST)
     canvas.blit(mask, 0, 0)
 
 
 travelled = 0
+
+# A PIXEL that leaves a border round the lamps has it filled once here, as nothing draws there
+canvas.pen = MASK
+canvas.clear()
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:

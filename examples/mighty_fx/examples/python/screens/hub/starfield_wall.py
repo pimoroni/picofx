@@ -5,8 +5,9 @@ from screens import SCREEN_TYPES, ScreenGroup
 from picovector import image, color, shape
 
 """
-Travel through a star field, across every panel a screen hub reaches. Change up some of
-the constants below to see what happens.
+Travel through a star field, across every panel a screen hub reaches.
+
+Change up some of the constants below to see what happens.
 
 Press "Boot" to exit the program.
 
@@ -22,14 +23,10 @@ STAR_GROWTH = 0.12
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
-# Create a MightyFX object with a screen hub across both SP/CE ports. One carries the
-# screen bus and the other gives up its five lines as extra chip selects, which is what
-# lets one port drive six panels instead of one
+# Create a MightyFX object driving a screen hub, which takes SP/CE port B for extra chip selects
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_SELECTS)
 
-# The hub hands out a port per chip select it reaches, whether or not a panel is on the end
-# of it. One that is not there refuses to be created, so build them all and keep whichever
-# answered: a hub does not have to be full to be used
+# Build a screen on every hub port and keep those that answer, as a hub need not be full
 panels = []
 for port in mighty.hub.ports:
     try:
@@ -38,14 +35,11 @@ for port in mighty.hub.ports:
         pass
 
 if not panels:
-    # Give the connectors back before saying so. A hub drives its chip selects high,
-    # and one of those is the backlight pin of whatever is plugged into that connector
+    # Release the hub first, as one of its chip selects is a panel's backlight pin
     mighty.shutdown()
     raise RuntimeError("No panels answered! Check the hub is plugged into SP/CE A, with its panels on the hub rather than on the board")
 
-# A group draws one frame to every panel it holds, and holds their refresh rates together so any tear band
-# crawls rather than races across them. One panel is a group too, so however many answered are driven the
-# same way
+# A group draws one frame to every panel it holds, however many answered
 wall = ScreenGroup(*panels)
 print(f"{len(panels)} of {len(mighty.hub.ports)} hub positions answered")
 
@@ -58,9 +52,7 @@ centre_x, centre_y = panels[0].width / 2, panels[0].height / 2
 
 class RandomStar:
     def __init__(self):
-        # Create a new star, with initial x, y, and size
-        # Initial x will fall between -WIDTH / 2 and +WIDTH / 2 and y between -HEIGHT/2 and +HEIGHT/2.
-        # These are relative values for now, treating (0, 0) as the centre of the panel
+        # A new star at a random position relative to the panel centre, and its starting size
         self.x = random.randint(0, panels[0].width) - centre_x
         self.y = random.randint(0, panels[0].height) - centre_y
         self.size = 0.5
@@ -85,8 +77,7 @@ try:
             s.y *= TRAVEL_SPEED
 
             if s.x <= -centre_x or s.x >= centre_x or s.y <= -centre_y or s.y >= centre_y or s.size >= 5:
-                # This star has fallen off the panel (or rolled dead centre and grown too big!)
-                # Replace it with a new one
+                # Replace a star that has left the panel or grown too big
                 s = RandomStar()
 
             # Grow the star as it travels outward

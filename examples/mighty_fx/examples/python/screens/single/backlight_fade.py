@@ -5,8 +5,9 @@ from screens import SCREEN_TYPES
 from picovector import image, color, shape
 
 """
-Fade a screen's backlight up and down over a still frame. Change up some of the constants
-below to see what happens.
+Fade a screen's backlight up and down over a still frame.
+
+Change up some of the constants below to see what happens.
 
 Press "Boot" to exit the program.
 """
@@ -38,9 +39,7 @@ canvas.shape(shape.circle(centre_x, centre_y, centre_x * 0.8))
 canvas.pen = color.black
 canvas.shape(shape.circle(centre_x, centre_y, centre_x * 0.8 - RING_THICKNESS))
 
-# Show that frame before touching the backlight. A backlight stays dark until a frame
-# has reached the glass, so nothing lights up on whatever the panel held at power-on,
-# and asking for a brightness is one of the things that ends the wait
+# Show the frame first, as the backlight stays dark until a frame reaches the glass
 screen.update(canvas)
 
 # Variables to keep track of the fade
@@ -50,9 +49,7 @@ direction = -1
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        # Every screen on a port shares its backlight line, and so its setting. The
-        # steps are evenly spaced to the eye rather than in duty, and every setting
-        # above zero lands somewhere the panel actually answers
+        # Every screen on a port shares its backlight. The steps are spaced evenly to the eye
         screen.backlight.brightness(level / FADE_STEPS)
 
         # Turn around at either end of the fade

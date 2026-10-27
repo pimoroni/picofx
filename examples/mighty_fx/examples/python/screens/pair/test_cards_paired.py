@@ -23,12 +23,12 @@ Press "Boot" to exit the program.
 # Constants
 FIRST_CARD = "/examples/assets/gold_macaw_card.png"
 SECOND_CARD = "/examples/assets/red_macaw_card.png"
-MIRRORED = True          # Whether the second panel mirrors the first, or matches it
-HOLD = 44                # Frames each turn is held for, a little under two seconds
-CAPTION_FACE = "winds"   # The narrowest ROM pixel face, so the plate can be small
-PLATE_TALL = 16          # The plate the caption sits on
-PLATE_PAD = 5            # And how far it reaches past the lettering
-PLATE_UP = 26            # How far the plate sits above the foot of the uncropped square
+MIRRORED = True             # Whether the second panel mirrors the first, or matches it
+HOLD = 44                   # Frames each turn is held for, a little under two seconds
+CAPTION_FACE = font.winds   # The narrowest ROM pixel face, so the plate can be small
+PLATE_TALL = 16             # The plate the caption sits on
+PLATE_PAD = 5               # And how far it reaches past the lettering
+PLATE_UP = 26               # How far the plate sits above the foot of the uncropped square
 
 PLATE = color.rgb(16, 18, 24)
 CAPTION = color.rgb(240, 242, 248)
@@ -45,26 +45,22 @@ mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 # A pair holds both panels to one refresh rate and keeps their scans together
 pair = ScreenPair(ScreenType(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES),
                   ScreenType(mighty.spce_b, reserve=Reserve.FULL_SIZE_IMAGES))
-first, second = pair.screens
+first = pair.screens[0]
 
 try:
     cards = [image.load(FIRST_CARD), image.load(SECOND_CARD)]
 except (ValueError, OSError):
-    raise RuntimeError(f"'{FIRST_CARD}' or '{SECOND_CARD}' is missing or corrupt!"
-                       " Check both are valid PNGs") from None
+    mighty.shutdown()
+    raise RuntimeError(f"'{FIRST_CARD}' or '{SECOND_CARD}' is missing or corrupt! Check both are on the board") from None
 
-# A copy of each to caption, since the caption changes and the cards must not. The heap is
-# the place for them: they are only converted, never drawn to again, and one is larger than
-# the SRAM canvas region holds anyway
-caption_face = getattr(font, CAPTION_FACE)
+# A copy of each card to caption, in the heap as the canvas region cannot hold one
 shown = []
 for card in cards:
     copy = image(card.width, card.height)
-    copy.font = caption_face
+    copy.font = CAPTION_FACE
     shown.append(copy)
 
-# The square that no turn crops is the panel's short side, and the caption belongs inside it.
-# What lies outside is what each turn keeps or loses
+# The caption sits inside the square no turn crops, the panel's short side
 SAFE = min(first.width, first.height)
 EDGE_Y = (cards[0].height - SAFE) // 2
 
@@ -73,7 +69,7 @@ print(f"a pair of {cards[0].width}x{cards[0].height} cards on {first.width}x{fir
 
 
 def draw_card(copy, card, rotation, mirror):
-    """One card with the settings its own panel is about to show it under written across it."""
+    """Caption one card with the settings its own panel is about to show it under."""
     copy.blit(card, 0, 0)
 
     caption = f"rotation={rotation} mirror={mirror}"
@@ -85,19 +81,18 @@ def draw_card(copy, card, rotation, mirror):
     copy.shape(shape.rectangle(middle - wide / 2 - PLATE_PAD, foot,
                                wide + PLATE_PAD * 2, PLATE_TALL))
 
-    # A pixel face draws down from the y it is given, so the lettering is centred on the
-    # plate by the difference between the two heights
+    # Centre the lettering on the plate, as a pixel face draws down from its y
     copy.pen = CAPTION
-    copy.text(caption, middle - wide / 2, foot + (PLATE_TALL - caption_face.height) / 2)
+    copy.text(caption, middle - wide / 2, foot + (PLATE_TALL - CAPTION_FACE.height) / 2)
 
 
 step = -1
 frames = 0
-rotation = TURNS[0]
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
+        # Count frames, and caption both cards again each time the turn moves on
         reached = frames // HOLD % len(TURNS)
         if reached != step:
             step = reached

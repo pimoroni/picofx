@@ -7,11 +7,8 @@ from screens import Screen280
 """
 Show a different poster on every panel a hub can reach, all changing on one clock.
 
-A hub shares one SP/CE port, and one port is one stream, so panels showing different pictures are
-sent one after another: measured on three, 68ms to broadcast one poster to all of them against
-181ms to send a different poster to each. The change therefore ripples across the wall instead of
-landing at once, and there is no ScreenGroup, a group existing to hold panels in phase so they
-can be sent together.
+A hub shares one SP/CE port, so panels with different pictures are sent one after another and the
+change ripples across the wall. There is no ScreenGroup, which sends one frame to every panel.
 
 One player feeds every panel. image_at() reads any frame without moving the player, so panel n
 takes the poster n along the folder and the folder is held once.
@@ -24,15 +21,11 @@ POSTERS = "/examples/assets/billboards/portrait"   # Shared with the billboard s
 ROTATION = 0                     # Portrait, which is the shape these posters are
 DWELL = 3.0                      # Seconds a poster is up for
 
-# SP/CE B gives up its five pins as the chip selects for the panels on SP/CE A, so
-# the board hands back six ports and every panel is brought up and cleared together
+# Create a MightyFX object driving a screen hub, which takes SP/CE port B for extra chip selects
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_SELECTS)
 
-# The hub hands out a port per chip select it reaches, whether or not a panel is on the end
-# of it. One that is not there refuses to be created, so build them all and keep whichever
-# answered: a hub does not have to be full to be used. They share one backlight line and a
-# poster reaches them one at a time, so reveal_together holds it until all of them have one.
-# rotation is how the panels are mounted, which every frame then takes without naming it
+# Build a screen on every hub port and keep those that answer, as a hub need not be full.
+# reveal_together holds the shared backlight until each panel has its poster
 panels = []
 for port in mighty.hub.ports:
     try:
@@ -41,12 +34,16 @@ for port in mighty.hub.ports:
         pass
 
 if not panels:
-    # Give the connectors back before saying so. A hub drives its chip selects high,
-    # and one of those is the backlight pin of whatever is plugged into that connector
+    # Release the hub first, as one of its chip selects is a panel's backlight pin
     mighty.shutdown()
     raise RuntimeError("No panels answered! Check the hub is plugged into SP/CE A, with its panels on the hub rather than on the board")
 
-player = SequencePlayer(POSTERS, fps=1 / DWELL)
+try:
+    player = SequencePlayer(POSTERS, fps=1 / DWELL)
+except OSError:
+    mighty.shutdown()
+    raise RuntimeError(f"'{POSTERS}' is missing! Check it is on the board") from None
+
 print(f"{len(panels)} of {len(mighty.hub.ports)} hub positions answered,"
       f" {player.frames} posters, {DWELL}s each")
 

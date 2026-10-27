@@ -5,14 +5,11 @@ from screens import Screen280, ScreenGroup
 """
 Play one animation across every panel a hub can reach, each showing the same frame.
 
-The pattern was drawn to tile in both directions, so a wall reads as one surface and its pulses
-travel across the joins. Every panel showing the same frame is what makes that work: a frame
-costs the same however many panels are on the hub, the panels latching one stream of pixels
-together, so the rate a wall can hold is the rate one panel can hold.
+The pattern tiles both ways, so a wall reads as one surface. Every panel takes the same stream at
+once, so a frame costs the same however many panels show it.
 
-Two panels butted together hide a band of pixels behind their bezels, so the pattern steps at
-each join. The frames are indexed PNGs, one a frame, which is the choice worth copying. The player
-holds every frame decoded, and an indexed frame takes a quarter of the memory of a truecolour one.
+Bezels hide a band at each join, so the pattern steps there. Indexed PNGs are the choice worth
+copying, since the player holds each at a quarter of a truecolour frame's memory.
 
 Press "Boot" to exit the program.
 
@@ -23,13 +20,10 @@ Section: Across several screens
 FRAMES = "/examples/assets/traces"   # The folder of frames, shared with the scroll example
 FPS = 10                         # The rate to play at, a folder of images declaring none
 
-# SP/CE B gives up its five pins as the chip selects for the panels on SP/CE A, so
-# the board hands back six ports and every panel is brought up and cleared together
+# Create a MightyFX object driving a screen hub, which takes SP/CE port B for extra chip selects
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_SELECTS)
 
-# The hub hands out a port per chip select it reaches, whether or not a panel is on the end
-# of it. One that is not there refuses to be created, so build them all and keep whichever
-# answered: a hub does not have to be full to be used
+# Build a screen on every hub port and keep those that answer, as a hub need not be full
 panels = []
 for port in mighty.hub.ports:
     try:
@@ -38,19 +32,19 @@ for port in mighty.hub.ports:
         pass
 
 if not panels:
-    # Give the connectors back before saying so. A hub drives its chip selects high,
-    # and one of those is the backlight pin of whatever is plugged into that connector
+    # Release the hub first, as one of its chip selects is a panel's backlight pin
     mighty.shutdown()
     raise RuntimeError("No panels answered! Check the hub is plugged into SP/CE A, with its panels on the hub rather than on the board")
 
-# A group plays the one frame onto every panel it holds. One panel is a group too, so
-# however many answered are driven the same way. The rotation these panels are mounted
-# at belongs to the group, a frame reaching all of them being placed once
+# A group plays one frame at one rotation onto every panel it holds, however many answered
 wall = ScreenGroup(*panels, rotation=90)
 print(f"{len(panels)} of {len(mighty.hub.ports)} hub positions answered")
 
-# Every frame decodes when the player is made, so a frame costs nothing to reach afterwards
-player = SequencePlayer(FRAMES, fps=FPS)
+try:
+    player = SequencePlayer(FRAMES, fps=FPS)
+except OSError:
+    mighty.shutdown()
+    raise RuntimeError(f"'{FRAMES}' is missing! Check it is on the board") from None
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:

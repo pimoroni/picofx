@@ -4,8 +4,7 @@ from screens import Screen280
 from picovector import image
 
 """
-Alternate between two .PNG images from a folder, each shown for its own duration. Images
-must be the same resolution as the screen.
+Alternate between two PNG pictures, each shown for its own time.
 
 Press "Boot" to exit the program.
 """
@@ -14,20 +13,21 @@ Press "Boot" to exit the program.
 IMAGE_FOLDER = "/examples/assets"  # The folder the images are in
 FIRST_IMAGE = "gold_macaw_card.png"        # The name of the first image
 SECOND_IMAGE = "red_macaw_card.png"        # The name of the second image
-FIRST_DURATION = 1.5
-SECOND_DURATION = 0.5
+FIRST_DURATION = 1.5                       # Seconds the first image is shown for
+SECOND_DURATION = 0.5                      # And the second
 
 # Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a)
 
 
-# Attempt to load all images in the given folder
+# Load both images
 try:
     first_image = image.load(f"{IMAGE_FOLDER}/{FIRST_IMAGE}")
     second_image = image.load(f"{IMAGE_FOLDER}/{SECOND_IMAGE}")
 except (ValueError, OSError):
-    raise RuntimeError(f"One or both images are missing or corrupt! Check '{FIRST_IMAGE}' and '{SECOND_IMAGE}' are valid PNGs in '{IMAGE_FOLDER}'") from None
+    mighty.shutdown()
+    raise RuntimeError(f"'{IMAGE_FOLDER}/{FIRST_IMAGE}' or '{IMAGE_FOLDER}/{SECOND_IMAGE}' is missing or corrupt! Check both are on the board") from None
 
 showing_second = False
 

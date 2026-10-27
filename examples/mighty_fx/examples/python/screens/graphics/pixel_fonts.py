@@ -6,15 +6,9 @@ from screens import SCREEN_TYPES
 from picovector import color, font, image, rect
 
 """
-Scroll a line in every pixel font the board has in ROM, smallest first, with each one's height
-beside its name.
+Scroll a line in every ROM pixel font, smallest first, with each one's height beside its name.
 
-A pixel font draws at the one size it was designed at, and that size is its height, so the
-list is ordered by it and reads from the smallest face to the largest. dir(font) names them
-all and font.<name> loads and caches each one.
-
-The scroll runs to the end of the list and comes back rather than jumping to the start, so
-every face passes the middle of the panel twice and nothing is missed at a wrap.
+A pixel font draws only at its designed size. dir(font) names every face and font.<name> loads one.
 
 Press "Boot" to exit the program.
 """
@@ -27,7 +21,7 @@ HOLD = 1.5              # Seconds the list rests at each end before turning roun
 LOUPE_TALL = 40         # How deep a patch of the panel's top left corner the box enlarges
 LOUPE_ZOOM = 2          # And how much larger it is drawn
 LOUPE_PAD = 3           # Between the enlargement and its border
-TAG_FACE = "winds"      # The narrowest ROM pixel face, for the tag under the box
+TAG_FACE = font.winds   # The narrowest ROM pixel face, for the tag under the box
 
 # Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
@@ -37,12 +31,10 @@ ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a)
 
-# Access the screen and create a canvas to draw to. canvas() places it in SRAM,
-# which the screen converts from about twice as fast as the regular heap
+# Create a canvas to draw to
 canvas = screen.canvas()
 
-# Every font in ROM, ordered by the size it draws at and then by name, so faces that share a
-# height stay in a settled order
+# Every font in ROM, ordered by height and then name
 fonts = sorted(((name, getattr(font, name)) for name in dir(font)),
                key=lambda pair: (pair[1].height, pair[0]))
 
@@ -58,17 +50,13 @@ resting = Roller()              # When the list may move again, so each end gets
 print(f"{len(fonts)} faces, {fonts[0][1].height}px to {fonts[-1][1].height}px,"
       f" {content_height}px of list on a {screen.height}px panel")
 
-# A pixel face has one size and no other, so the only way to look closer is to magnify the pixels it
-# drew. The corner holds a copy of the panel's own top left, taken after the list is drawn and blitted
-# back at LOUPE_ZOOM. The copy is needed because an image cannot be blitted over itself where it overlaps
-tag_face = getattr(font, TAG_FACE)
+# A box magnifies a copy of the panel's top left, as a pixel face cannot be drawn larger. An image
+# cannot be blitted over itself, hence the copy
 TAG = f"top left corner at x{LOUPE_ZOOM}"
 
-# The box is as wide as its own tag, and the patch it lifts is whatever that leaves at this
-# magnification, so the two always agree however the tag is worded
-asker = image(8, 8)
-asker.font = tag_face
-LOUPE_BOX = rect(0, 0, round(asker.measure_text(TAG)[0]),
+# The box is as wide as its tag, and lifts what that width holds at LOUPE_ZOOM
+canvas.font = TAG_FACE
+LOUPE_BOX = rect(0, 0, round(canvas.measure_text(TAG)[0]),
                  LOUPE_TALL * LOUPE_ZOOM + LOUPE_PAD * 2)
 LOUPE_BOX.x = canvas.width - LOUPE_BOX.w - 1
 
@@ -94,8 +82,7 @@ try:
             canvas.text(f"{name} {face.height}px", MARGIN, y)
             y += face.height + LINE_GAP
 
-        # Turn round at each end rather than jumping back to the start, resting there first
-        # so the faces at the top and bottom of the list can be read
+        # Turn round at each end after a rest, so the first and last faces can be read
         if travel and resting.is_due():
             scroll_y += speed
             if scroll_y <= -travel or scroll_y >= 0:
@@ -103,18 +90,15 @@ try:
                 speed = -speed
                 resting.restart(HOLD)
 
-        # The corner enlargement, over the list rather than in place of it: the faces below
-        # stay at the size they draw at, and this only says what the smallest ones look like
-        lifted.blit(canvas, LOUPE_SOURCE, rect(0, 0, LOUPE_WIDE, LOUPE_TALL))
+        # Enlarge the top left corner into the box
+        lifted.blit(canvas, LOUPE_SOURCE, LOUPE_SOURCE)
 
         canvas.pen = color.white
         canvas.rectangle(LOUPE_BOX.x, LOUPE_BOX.y, LOUPE_BOX.w, LOUPE_BOX.h)
-        canvas.blit(lifted, rect(0, 0, LOUPE_WIDE, LOUPE_TALL), LOUPE_INSIDE)
+        canvas.blit(lifted, LOUPE_SOURCE, LOUPE_INSIDE)
 
-        # Said in words under the box, since the corner otherwise reads as a second list drawn
-        # in larger faces rather than as the same corner seen closer
-        canvas.font = tag_face
-        canvas.pen = color.white
+        # Tag the box, or it reads as a second list in larger faces
+        canvas.font = TAG_FACE
         canvas.text(TAG, LOUPE_BOX.x, LOUPE_BOX.y + LOUPE_BOX.h + 1)
 
         # Update the screen with the latest canvas

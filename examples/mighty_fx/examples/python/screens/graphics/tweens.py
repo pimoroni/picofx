@@ -8,14 +8,10 @@ from picovector import color, font, image, shape, tween, vec2
 """
 Plot what each easing curve does, with a marker running along every one of them at once.
 
-A tween maps a progress, 0 at the start and 1 at the end, onto a value between two
-endpoints. Given a straight line it moves at a steady pace; given a curve it starts slow, or
-overshoots, or settles with a bounce. The curve is chosen when the tween is made and the
-progress is handed to at().
+A tween maps a progress from 0 to 1 onto a value between two endpoints along the curve it
+was made with, and at() takes the progress.
 
-Every family below is shown in its OUT form, which eases towards the end. Each also has an IN
-that eases away from the start and an INOUT that does both, so tween.QUAD_IN and
-tween.QUAD_INOUT sit beside the tween.QUAD_OUT here: thirty curves in all.
+Each family is shown in its OUT form. IN and INOUT forms exist too, such as tween.QUAD_INOUT.
 
 The endpoints do not have to be numbers. A vec2, a rect or a mat3 works as well, so one tween
 can carry a position, a box or a whole transform.
@@ -26,7 +22,7 @@ Section: Drawing from code
 """
 
 # Constants for drawing
-GROUND = color.rgb(10, 12, 16)          # Behind everything
+BACKGROUND = color.rgb(10, 12, 16)      # Behind everything
 GRID = color.rgb(50, 60, 80)            # The box each curve is drawn in
 CURVE = color.rgb(120, 200, 255)        # The curve itself
 MARKER = color.white                    # And where the progress has reached on it
@@ -35,7 +31,7 @@ SAMPLES = 24                            # Points a curve is drawn from
 CYCLE_MS = 2600                         # How long the marker takes to run a curve
 PAD = 4                                 # Between a cell's edge and its box
 TRACE = 1.3                             # How thick a curve is drawn
-LABEL_FACE = "winds"                    # The narrowest ROM pixel face
+LABEL_FACE = font.winds                 # The narrowest ROM pixel face
 
 # One curve per family, each in the form that eases towards the end
 CURVES = (("linear", tween.LINEAR), ("sine", tween.SINE_OUT), ("quad", tween.QUAD_OUT),
@@ -53,10 +49,8 @@ screen = ScreenType(mighty.spce_a)
 
 canvas = screen.canvas()
 canvas.antialias = image.X4
-label_face = getattr(font, LABEL_FACE)
 
-# A tween from 0 to 1 for each curve, built once: what a tween holds is its endpoints and its
-# curve, so the same object answers for any progress it is handed
+# A tween from 0 to 1 for each curve, built once and asked for any progress
 tweens = [(name, tween(0.0, 1.0, easing=easing)) for name, easing in CURVES]
 
 DOWN = -(-len(CURVES) // ACROSS)        # Rows, rounded up
@@ -64,35 +58,32 @@ CELL = canvas.width / ACROSS, canvas.height / DOWN
 
 
 def box(index):
-    """The rectangle a curve is plotted in, and the row of lettering under it."""
+    """Find the rectangle a curve is plotted in, and the row of lettering under it."""
     left = (index % ACROSS) * CELL[0] + PAD
     top = (index // ACROSS) * CELL[1] + PAD
-    return left, top, CELL[0] - PAD * 2, CELL[1] - PAD * 2 - label_face.height
+    return left, top, CELL[0] - PAD * 2, CELL[1] - PAD * 2 - LABEL_FACE.height
 
 
-# Every curve's shape is fixed, so the whole grid is drawn once into an image of its own and
-# blitted as the ground of each frame. Only the markers are drawn per frame
+# Every curve is fixed, so the grid is drawn once and blitted as each frame's background
 backdrop = image(canvas.width, canvas.height)
-backdrop.font = label_face
-backdrop.pen = GROUND
+backdrop.font = LABEL_FACE
+backdrop.pen = BACKGROUND
 backdrop.clear()
 
 for index, (name, moved) in enumerate(tweens):
     left, top, wide, tall = box(index)
 
-    # A box and a row of lettering are both square to the pixels, so they are drawn with
-    # antialiasing off: it would cost them a little sharpness and buy them nothing
+    # Boxes and lettering are square to the pixels, so antialiasing would only soften them
     backdrop.antialias = image.OFF
     backdrop.pen = GRID
     backdrop.rectangle(round(left), round(top), round(wide), round(tall))
     backdrop.pen = MARKER
     backdrop.text(name, round(left), round(top + tall + 1))
 
-    # The curve is the one thing here at an angle, so it alone is worth antialiasing, and it
-    # is one stroked path rather than a run of separate lines. A curve reaching 1 sits at the
-    # top of its box, so an overshoot is drawn above it
+    # Only the curve is at an angle, so only it is antialiased. An overshoot is drawn above its box
     backdrop.antialias = image.X4
     backdrop.pen = CURVE
+    # Sampled across the box, with a value of 1 at its top as y counts down the panel
     traced = [vec2(left + wide * step / (SAMPLES - 1),
                    top + tall * (1 - moved.at(step / (SAMPLES - 1))))
               for step in range(SAMPLES)]

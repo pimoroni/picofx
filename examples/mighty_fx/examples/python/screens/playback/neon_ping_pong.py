@@ -9,13 +9,9 @@ A GIF carries its frames and their delays in one file, and caps itself at 256 co
 folder of images has neither limit and no delays either, so the player is told a rate, and
 frames are ordered by the numbers in their names rather than by the text.
 
-ping_pong plays them forward then back, so three files give six steps of movement, and
-hold dwells where it turns. The arm genuinely stops at each end, so nothing belongs at the
-turn; an animation drawn to loop wants first_as_last there.
+ping_pong plays them forward then back, so three files give six steps. hold dwells at each turn.
 
-Every frame decodes when the player is made, so a sequence costs its whole length
-before it plays a step. These frames are truecolour, which holds four times the memory an
-indexed frame of the same size does.
+Every frame decodes when the player is made. Truecolour takes four times an indexed frame's memory.
 
 Press "Boot" to exit the program.
 """
@@ -26,13 +22,17 @@ ROTATION = 90                    # Quarter turn, to suit how the screen is mount
 FPS = 8                          # The rate to play at, a folder of images declaring none
 HOLD = 0.4                       # Seconds to dwell where it turns around, at each end
 
-# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it.
-# rotation is how the panel is mounted, which every frame then takes without naming it
+# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a, rotation=ROTATION)
 
 # hold takes one value for both ends, or two for the far end and then back at the start
-player = SequencePlayer(FRAMES, fps=FPS, ping_pong=True, hold=HOLD)
+try:
+    player = SequencePlayer(FRAMES, fps=FPS, ping_pong=True, hold=HOLD)
+except OSError:
+    mighty.shutdown()
+    raise RuntimeError(f"'{FRAMES}' is missing! Check it is on the board") from None
+
 print(f"{player.frames} frames, played back and forth at {FPS}fps")
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)

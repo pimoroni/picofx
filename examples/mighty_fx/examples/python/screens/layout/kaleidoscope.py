@@ -11,14 +11,11 @@ from screens import SCREEN_TYPES, Tile
 """
 Turn a kaleidoscope, from a set of small frames drawn once at startup.
 
-tile=Tile.MIRROR reverses every other repeat, so each seam is a reflection and the panel
-shows one quarter of art with three reflections of it meeting at the folds. Each frame is
-the window a kaleidoscope sees, one corner of it the middle of a circle of beads, and a
-whole turn of the beads brings the set back to its first frame so the loop closes exactly.
+tile=Tile.MIRROR reverses every other repeat, so the panel shows one window of art and three
+reflections meeting at the folds. A whole turn of the beads closes the loop exactly.
 
-Drawing before the loop buys the quality: X4 antialiasing costs a few seconds once at
-startup and nothing per frame. Each frame is a quarter of a panel's pixels, which is what
-makes a whole turn of them affordable.
+Every frame is drawn at startup at a quarter of the panel's pixels each, so X4 antialiasing
+costs a few seconds once and nothing per frame.
 
 Press "Boot" to exit the program.
 
@@ -32,16 +29,12 @@ BEADS = 44               # Pieces of colour in the circle
 HOLD = 2                 # Panel frames each one is shown for, which sets the pace
 ANTIALIAS = image.X4     # Affordable here, since every frame is drawn before the loop starts
 
-# A kaleidoscope is held up to the light, so the ground is the light coming through it and
-# the beads are what stands in the way. The inks are jewel colours rather than neons, which
-# is what reads against a lit ground: a bright one washes out against it
-GROUND = color.rgb(242, 236, 222)
-INKS = (color.rgb(214, 40, 96), color.rgb(240, 150, 20), color.rgb(20, 170, 165),
-        color.rgb(110, 70, 210), color.rgb(60, 180, 75), color.rgb(226, 196, 50))
+# The background is the light through a kaleidoscope, and jewel colours read against it where neons wash out
+BACKGROUND = color.rgb(242, 236, 222)
+JEWEL_COLOURS = (color.rgb(214, 40, 96), color.rgb(240, 150, 20), color.rgb(20, 170, 165),
+                 color.rgb(110, 70, 210), color.rgb(60, 180, 75), color.rgb(226, 196, 50))
 
-# One of each jewel, cut at a radius of one about the origin and placed by matrix later. A
-# shape costs far more to make than a matrix does, so the whole set is made here and every
-# bead borrows from it
+# One of each jewel at unit radius about the origin, made once and placed by matrix
 JEWELS = (shape.circle(0, 0, 1), shape.regular_polygon(0, 0, 1, 3),
           shape.regular_polygon(0, 0, 1, 4), shape.regular_polygon(0, 0, 1, 5),
           shape.regular_polygon(0, 0, 1, 6), shape.star(0, 0, 5, 0.45, 1),
@@ -51,61 +44,47 @@ JEWELS = (shape.circle(0, 0, 1), shape.regular_polygon(0, 0, 1, 3),
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
-# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it.
-# rotation is how the panel is mounted, which every frame then takes without naming it
+# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# The window has to be a quarter of the panel for its four reflections to fill the panel
-# exactly, so it comes from the panel and not from a pair of numbers. The quarter turn
-# swaps the sides, this being the panel as it is mounted rather than as it is wired
+# The window is a quarter of the panel as turned, so its four reflections fill it
 TILE_W, TILE_H = screen.height // 2, screen.width // 2
 
-# The circle reaches the window's far corner, the furthest point from the middle that the
-# mirrors show. Taking the radius from the window keeps a pixel of the circle a pixel of the
-# frame, with no scaling anywhere
+# The circle reaches the window's far corner, sized in frame pixels so nothing is scaled
 CIRCLE = round(math.sqrt(TILE_W * TILE_W + TILE_H * TILE_H))
 
-# A real kaleidoscope shows its mirrors as two thin lines where they meet, so the window
-# takes one along each of the edges the folds run down. The reflection lays its own line
-# alongside, which is why one pixel each is enough to read
+# A thin line down each fold, as a real kaleidoscope shows its mirrors. The reflection doubles it
 SEAM = color.rgb(208, 200, 184)
 SEAM_DOWN = shape.rectangle(0, 0, 1, TILE_H)
 SEAM_ACROSS = shape.rectangle(0, 0, TILE_W, 1)
 
 
-# Where every bead sits in the circle, scattered afresh on each run, so no two turns of
-# the kaleidoscope are the same one. Radius goes by the square root of a random number, so
-# the beads spread evenly over the area instead of crowding the middle, and each bead takes
-# a spin of its own to start from
+# Every bead's place, scattered afresh each run.
+# A square-rooted random radius spreads the beads evenly over the area
 STRING = []
 for _ in range(BEADS):
+    # Add a bead at a random place in the circle, with its own size, colour, jewel and tilt
     STRING.append((CIRCLE * math.sqrt(random.random()),
                    random.uniform(0, 2 * math.pi),
                    random.uniform(CIRCLE * 0.025, CIRCLE * 0.1),
-                   random.choice(INKS),
+                   random.choice(JEWEL_COLOURS),
                    random.choice(JEWELS),
                    random.uniform(0, 360)))
 
 
 def draw_window(canvas, turn):
-    """The window as it looks with the beads this far round, in tile pixels.
-
-    Only the beads that reach into the window are drawn. The rest are what the reflections
-    are already showing, so drawing them would be drawing the same beads twice.
-    """
-    canvas.pen = GROUND
+    """Draw the window with the beads this far round, skipping beads the reflections already show."""
+    canvas.pen = BACKGROUND
     canvas.clear()
-    for radius, angle, half, ink, jewel, spin in STRING:
+    for radius, angle, half, colour, jewel, spin in STRING:
         around = angle + 2 * math.pi * turn
         x, y = radius * math.cos(around), radius * math.sin(around)
         if not (-half < x < TILE_W + half and -half < y < TILE_H + half):
             continue
 
-        # A bead turns with the wheel as well as travelling round it, since a jewel carried
-        # round on a real one keeps its face to the middle. The turn goes into the matrix
-        # with the placement, so it costs a jewel with corners nothing over a round one
-        canvas.pen = ink
+        # A bead turns as it travels as on a real wheel, at no extra cost in the matrix
+        canvas.pen = colour
         jewel.transform = mat3().translate(x, y).rotate(spin + turn * 360).scale(half)
         canvas.shape(jewel)
 
@@ -136,14 +115,10 @@ frames = 0
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        # Both axes mirrored, so the panel is four reflections of the window meeting at the
-        # folds, and the window underneath them is the only thing that changes.
-        #
-        # The offset puts the folds in the right place: a window placed one of itself along
-        # and down lands the middle of the circle in the middle of the panel. Without it a
-        # fold runs through the middle instead.
+        # Four mirrored reflections of the window, offset one window along and down
+        # so the circle's middle lands in the panel's middle
         screen.update(wheel[frames // HOLD % FRAMES],
-                      offset=(TILE_W, TILE_H), tile=Tile.MIRROR, bg_color=GROUND)
+                      offset=(TILE_W, TILE_H), tile=Tile.MIRROR, bg_color=BACKGROUND)
         frames += 1
 
 # Stop any running effects and turn off all the outputs
