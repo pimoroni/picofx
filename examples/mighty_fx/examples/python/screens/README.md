@@ -22,6 +22,7 @@ These are micropython examples for the screens Mighty FX can drive from its SP/C
   - [Tweens](#tweens)
 - [Image Examples](#image-examples)
   - [Alternating Images](#alternating-images)
+  - [Poster Ticker](#poster-ticker)
 - [Layout Examples](#layout-examples)
   - [Bouncing Logo](#bouncing-logo)
   - [Orientations](#orientations)
@@ -36,6 +37,7 @@ These are micropython examples for the screens Mighty FX can drive from its SP/C
   - [Carpets Paired](#carpets-paired)
   - [Test Cards Paired](#test-cards-paired)
 - [Screen Hub Examples](#screen-hub-examples)
+  - [Chevron Banks](#chevron-banks)
   - [Starfield Wall](#starfield-wall)
 - [Playback Examples](#playback-examples)
   - [Animated GIF](#animated-gif)
@@ -160,6 +162,11 @@ Plot what each easing curve does, with a marker running along every one of them 
 
 Alternate between two .PNG images from a folder, each shown for its own duration. Images must be the same resolution as the screen.
 
+### Poster Ticker
+[images/poster_ticker.py](images/poster_ticker.py)
+
+Scroll a message across a poster read from a file, in lettering matching the poster's own.
+
 
 ## Layout Examples
 
@@ -232,6 +239,11 @@ Turn a test card on each panel of a pair, the second one mirrored against the fi
 
 
 ## Screen Hub Examples
+
+### Chevron Banks
+[hub/chevron_banks.py](hub/chevron_banks.py)
+
+Flash runway chevrons across a screen hub in two interleaved banks, each bank a subset of one group.
 
 ### Starfield Wall
 [hub/starfield_wall.py](hub/starfield_wall.py)
