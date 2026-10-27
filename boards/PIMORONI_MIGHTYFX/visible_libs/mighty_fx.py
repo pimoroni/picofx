@@ -84,6 +84,16 @@ class SPCEPort(ScreenPort):
         return self.__pins
 
     @property
+    def pins_along(self):
+        """The connector's five GPIOs in the order they sit along it from its GND end, BL, DC, MOSI, SCK, CS.
+
+        For wiring that follows the connector. Only a connector declared SPCE.GPIO or
+        SPCE.GPIO_PWM offers them.
+        """
+        pins = self.pins
+        return (pins[4], pins[0], pins[3], pins[2], pins[1])
+
+    @property
     def hub_selects(self):
         """The connector's five GPIOs, as the chip selects a hub addresses panels with.
 

@@ -15,10 +15,10 @@ STEP_INTERVAL = 0.2     # The time (in seconds) each pin is held high for
 # Variables
 mighty = MightyFX(spce_a=SPCE.GPIO)     # Create a new MightyFX object, spending SP/CE port A on pins
 
-# The connector's five GPIOs, in the order DC, CS, SCK, MOSI, BL. Only a port declared
+# The connector's five GPIOs, in the order they sit along it, BL, DC, MOSI, SCK, CS. Only a port declared
 # SPCE.GPIO or SPCE.GPIO_PWM hands them over, so a connector given up for pins is visible
 # in the call that declared it, and nothing else on the board can claim them behind your back
-lines = mighty.spce_a.pins
+lines = mighty.spce_a.pins_along
 
 # Take every line low to start with
 for line in lines:

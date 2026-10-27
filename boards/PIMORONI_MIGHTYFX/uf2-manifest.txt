@@ -14,6 +14,7 @@ examples/python/wireless/*.py
 examples/python/motors/*.py
 examples/python/servos/*.py
 examples/python/strips/*.py
+examples/python/gpio/*.py
 examples/python/screens/single/*.py
 examples/python/screens/graphics/*.py
 examples/python/screens/images/*.py

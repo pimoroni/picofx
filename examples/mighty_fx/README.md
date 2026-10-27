@@ -14,6 +14,7 @@ The examples are grouped by what they show, a folder each, and every folder has 
 - [Motor Examples](#motor-examples)
 - [Servo Examples](#servo-examples)
 - [LED Strip Examples](#led-strip-examples)
+- [GPIO Examples](#gpio-examples)
 - [Screen Examples](#screen-examples)
 - [Showcase Examples](#showcase-examples)
 
@@ -76,6 +77,12 @@ These are micropython examples for driving a servo from Mighty FX's L and R conn
 [examples/python/strips](examples/python/strips)
 
 These are micropython examples for driving an LED strip from Mighty FX's L and R connectors.
+
+
+## GPIO Examples
+[examples/python/gpio](examples/python/gpio)
+
+These are micropython examples for using Mighty FX's SP/CE ports as general purpose inputs and outputs.
 
 
 ## Screen Examples

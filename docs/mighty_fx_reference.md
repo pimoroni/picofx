@@ -143,7 +143,7 @@ Mighty FX has two SP/CE connectors, **A** and **B**, each declared for the role 
 | role | what the connector does |
 | --- | --- |
 | `SPCE.SCREEN` | drives screens over its own SPI bus and backlight |
-| `SPCE.GPIO` | hands its five pins out through the connector's `pins`, for a breakout to be built from |
+| `SPCE.GPIO` | hands its five pins out through the connector's `pins`, for a breakout to be built from, and through `pins_along` in the order they sit along the connector |
 | `SPCE.GPIO_PWM` | the same, where your own PWM will drive the four data lines |
 | `SPCE.HUB_SELECTS` | gives its five pins to a Screen Hub on the other connector, as the hub's chip selects |
 | `SPCE.MOTOR_DRIVER` | drives a motor driver breakout, which the board builds and hands out through the connector's `driver` |
