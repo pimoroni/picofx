@@ -4,7 +4,7 @@ from picofx import ColourPlayer
 from picofx.colour import HSVFX
 
 """
-Show a static colour on TinyFX's RGB output, using HSV.
+Show a static colour on Tiny FX's RGB output, using HSV.
 
 Press "Boot" to exit the program.
 """
@@ -16,7 +16,7 @@ VAL = 1.0       # The colour's value/brightness (from 0.0 to 1.0)
 
 # Variables
 tiny = TinyFX()                     # Create a new TinyFX object
-player = ColourPlayer(tiny.rgb)     # Create a new effect player to control TinyFX's RGB output
+player = ColourPlayer(tiny.rgb)     # Create a new effect player to control Tiny FX's RGB output
 
 # Set up the colour effect to play
 player.effects = HSVFX(HUE, SAT, VAL)

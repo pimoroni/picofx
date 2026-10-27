@@ -4,17 +4,17 @@ from picofx import ColourPlayer
 from picofx.colour import HueStepFX
 
 """
-Play a stepped hue effect on TinyFX's RGB output.
+Play a stepped hue effect on Tiny FX's RGB output.
 
 Press "Boot" to exit the program.
 """
 
 # Variables
 tiny = TinyFX()                             # Create a new TinyFX object to interact with the board
-player = ColourPlayer(tiny.rgb)             # Create a new effect player to control TinyFX's RGB output
+player = ColourPlayer(tiny.rgb)             # Create a new effect player to control Tiny FX's RGB output
 
 
-# Create and set up a rainbow effect to play
+# Create and set up a hue step effect to play
 player.effects = HueStepFX(interval=1.0,    # The time (in seconds) between each hue step
                            hue=0.0,         # The hue of the colour to start at (from 0.0 to 1.0)
                            sat=1.0,         # The saturation/intensity of the colour (from 0.0 to 1.0)

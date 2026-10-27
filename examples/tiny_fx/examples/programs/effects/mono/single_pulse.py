@@ -4,14 +4,14 @@ from picofx import MonoPlayer
 from picofx.mono import PulseFX
 
 """
-Play a pulsing effect on one of TinyFX's outputs.
+Play a pulsing effect on one of Tiny FX's outputs.
 
 Press "Boot" to exit the program.
 """
 
 # Variables
 tiny = TinyFX()                     # Create a new TinyFX object to interact with the board
-player = MonoPlayer(tiny.outputs)   # Create a new effect player to control TinyFX's mono outputs
+player = MonoPlayer(tiny.outputs)   # Create a new effect player to control Tiny FX's mono outputs
 
 
 # Create and set up a pulse effect to play

@@ -6,7 +6,7 @@ from tiny_fx import TinyFX
 from picofx.colour import BLACK, BLUE, CYAN, GREEN, RED, YELLOW
 
 """
-Play an evocative musical melody with accompanying lights on TinyFX.
+Play an evocative musical melody with accompanying lights on Tiny FX.
 Any resemblance to music you might have heard elsewhere is purely coincidental.
 
 Press "Boot" to exit the program.

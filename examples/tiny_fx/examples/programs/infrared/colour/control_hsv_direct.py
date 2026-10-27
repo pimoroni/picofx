@@ -31,7 +31,7 @@ VAL_STEP = 0.05         # The amount that value will change by with each press /
 
 # Variables
 tiny = TinyFX(sensor=IR)            # Create a new TinyFX object, with the infrared receiver on its sensor connector
-led = tiny.rgb                      # Get a reference to the RGB output of TinyFX
+led = tiny.rgb                      # Get a reference to the RGB output of Tiny FX
 hue = 0
 sat = 0
 val = 0
@@ -68,7 +68,7 @@ def adjust_val(amount):
     print(f"H = {hue:.2}, S = {sat:.2}, V = {val:.2}")
 
 
-# Create the remote and setup up what each of the buttons will do
+# Create the remote and set up what each of the buttons will do
 remote = PimoroniRemote()
 remote.bind("1_RED", (set_hsv, H_RED))
 remote.bind("2_GREEN", (set_hsv, H_GREEN))

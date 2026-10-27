@@ -4,14 +4,14 @@ from picofx import MonoPlayer
 from picofx.mono import BinaryCounterFX
 
 """
-Play an incrementing binary counter on TinyFX's outputs.
+Play an incrementing binary counter on Tiny FX's outputs.
 
 Press "Boot" to exit the program.
 """
 
 # Variables
 tiny = TinyFX()                         # Create a new TinyFX object to interact with the board
-player = MonoPlayer(tiny.outputs)       # Create a new effect player to control TinyFX's mono outputs
+player = MonoPlayer(tiny.outputs)       # Create a new effect player to control Tiny FX's mono outputs
 
 
 # Create a BinaryCounterFX effect

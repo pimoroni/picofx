@@ -4,14 +4,14 @@ from picofx import MonoPlayer
 from picofx.mono import FlashSequenceFX
 
 """
-Play a flashing sequence across TinyFX's outputs.
+Play a flashing sequence across Tiny FX's outputs.
 
 Press "Boot" to exit the program.
 """
 
 # Variables
 tiny = TinyFX()                         # Create a new TinyFX object to interact with the board
-player = MonoPlayer(tiny.outputs)       # Create a new effect player to control TinyFX's mono outputs
+player = MonoPlayer(tiny.outputs)       # Create a new effect player to control Tiny FX's mono outputs
 
 
 # Create a FlashSequenceFX effect
@@ -24,7 +24,7 @@ flashing = FlashSequenceFX(speed=1.0,   # The speed to flash at, with 1.0 being 
 
 
 # Set up the sequence effect to play. Each output has a different position
-# along the wave, with the value being related to the effect's length
+# along the sequence, with the value being related to the effect's length
 player.effects = [
     flashing(0),
     flashing(1),

@@ -5,7 +5,7 @@ from picofx.colour import RainbowFX
 from picofx.mono import PulseWaveFX
 
 """
-Play a wave animation on TinyFX's mono outputs, and a rainbow on its RGB output.
+Play a wave animation on Tiny FX's mono outputs, and a rainbow on its RGB output.
 
 Press "Boot" to exit the program.
 """
@@ -21,8 +21,8 @@ RAINBOW_VALUE = 1.0                     # The value/brightness of the colour (fr
 
 # Variables
 tiny = TinyFX()                         # Create a new TinyFX object to interact with the board
-player = MonoPlayer(tiny.outputs)       # Create a new effect player to control TinyFX's mono outputs
-rgb_player = ColourPlayer(tiny.rgb)     # Create a new effect player to control TinyFX's RGB output
+player = MonoPlayer(tiny.outputs)       # Create a new effect player to control Tiny FX's mono outputs
+rgb_player = ColourPlayer(tiny.rgb)     # Create a new effect player to control Tiny FX's RGB output
 
 
 # Create a PulseWaveFX effect

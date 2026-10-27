@@ -4,7 +4,7 @@ from picofx import ColourPlayer
 from picofx.colour import BLUE, CYAN, GREEN, MAGENTA, RED, YELLOW, RGBBlinkFX
 
 """
-Play a blinking sequence effect on TinyFX's RGB output. Each blink in the sequence can be a different colour.
+Play a blinking sequence effect on Tiny FX's RGB output. Each blink in the sequence can be a different colour.
 
 Press "Boot" to exit the program.
 """
@@ -14,11 +14,11 @@ COLOURS = [RED, YELLOW, GREEN, CYAN, BLUE, MAGENTA]
 
 # Variables
 tiny = TinyFX()                         # Create a new TinyFX object to interact with the board
-player = ColourPlayer(tiny.rgb)         # Create a new effect player to control TinyFX's RGB output
+player = ColourPlayer(tiny.rgb)         # Create a new effect player to control Tiny FX's RGB output
 
 
-# Create and set up a rainbow effect to play
-player.effects = RGBBlinkFX(colour=COLOURS,     # The colour (or colours to blink in sequence)
+# Create and set up a blink effect to play
+player.effects = RGBBlinkFX(colour=COLOURS,     # The colour to blink (or colours, in sequence)
                             speed=0.5)          # The speed to cycle through colours at, with 1.0 being 1 second
 
 
