@@ -36,7 +36,7 @@ FACE = color.black              # And the sign's own face, which the modules are
 # colour
 UNLIT = color.rgb(68, 34, 0)
 
-HOLD = 4.0                     # How long a page of the message stands, in seconds
+HOLD = 8.0                     # How long a page of the message stands, in seconds
 BEACON_R = 12                   # A corner beacon's radius in panel pixels, it being a lamp of its own
 BEACON_MS = 500                 # How long each side's pair stays on for
 BEACON_OFF = color.rgb(51, 17, 0)   # A beacon between flashes, which stays visibly amber, not dark
