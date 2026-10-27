@@ -3,15 +3,11 @@ import time
 from mighty_fx import MightyFX, SPCE
 
 """
-Sweep a pair of motors up and down their speed range together, on a SP/CE connector
+Sweep a pair of motors up and down their speed range together, on a SP/CE port
 spent on a motor driver.
 
-The board builds the driver on the connector, holding the two motors it reaches along
-with the power those share. Both are given the same speed here, following a sine, so a
-cycle runs from a stop out to full forward, back through a stop to full reverse, and round
-again.
-
-The driver comes up unpowered, so nothing wired to it moves until enable() is called.
+Both motors are given the same speed following a sine, so each cycle runs from a stop to
+full forward, back through a stop to full reverse, and round again.
 
 Press "Boot" to exit the program.
 """
@@ -21,7 +17,7 @@ SPEED_EXTENT = 1.0      # How far from zero to drive the motors when sweeping
 
 mighty = MightyFX(spce_a=SPCE.MOTOR_DRIVER)
 
-driver = mighty.spce_a.driver   # The driver on the A connector, and the two motors it holds
+driver = mighty.spce_a.driver   # The driver on port A, and the two motors it holds
 i = 0
 
 driver.enable()             # Power it, which the board leaves off until asked

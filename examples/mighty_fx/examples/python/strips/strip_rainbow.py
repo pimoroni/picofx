@@ -8,13 +8,13 @@ from picofx.colour import RainbowWaveFX
 """
 Run a rainbow along an LED strip on the L connector.
 
-Plug a WS2812 strip into the connector marked L and set LEDS below to however many it
-has, since that is the one thing the board cannot work out for itself. Both L and R
+Plug a WS2812 strip into the connector marked L and set LEDS below to its length. L and R
 share one power rail, so anything on R is live too once enable_rail() is called.
-Press "Boot" to exit the program.
 
 A strip takes the same effects the RGB outputs do, one per LED, so anything under
 picofx.colour or picofx.mono can play here.
+
+Press "Boot" to exit the program.
 """
 
 # Constants

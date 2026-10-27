@@ -4,15 +4,13 @@ from picofx import ColourPlayer, ease
 from picofx.mono import TrafficLightFX
 
 """
-Play a traffic light sequence on three of MightyFX's RGB outputs.
+Play a traffic light sequence on three of Mighty FX's RGB outputs.
 
-TrafficLightFX brings no colour of its own: it reports which of the three lights is
-lit, and each output is set to the colour that light should be. So the signal needs no
-coloured lamps, and changing what red or amber look like is one line here.
+TrafficLightFX brings no colour of its own, so the board supplies each light's colour and
+the signal needs no coloured lamps.
 
-They ease on and off rather than switching, which is how the filament lamps in a real
-signal behave. Softening belongs to the outputs, so it is set on the player and works
-the same for any effect.
+They ease on and off like the filament lamps of a real signal. The easing is set on the
+player, so it works the same for any effect.
 
 Press "Boot" to exit the program.
 """
@@ -25,7 +23,7 @@ GREEN = (0, 210, 140)                   # A blue-green rather than a pure one
 
 # Variables
 mighty = MightyFX()                     # Create a new MightyFX object to interact with the board
-player = ColourPlayer(mighty.outputs)   # Create a new effect player to control MightyFX's RGB outputs
+player = ColourPlayer(mighty.outputs)   # Create a new effect player to control Mighty FX's RGB outputs
 
 
 # Effects
@@ -35,18 +33,15 @@ traffic = TrafficLightFX(red_interval=5,            # The time (in seconds) to s
                          amber_interval=2.5)        # The time (in seconds) to stay on Amber
 
 
-# How long each output takes to reach what the effect asks for. A single value
-# covers every output, and ease() is the curve a warming filament follows
+# How long each output takes to reach its level. One value covers all, along a warming filament's curve
 player.curves = ease(0.3)
 
 
-# The colour each output draws its light in. The outputs after the third play
-# nothing, so the colours they are given never show
+# The colour each output draws its light in
 player.colours = [RED, AMBER, GREEN]
 
 
-# Set up the traffic light effect to play. The 3 lights are assigned to the first 3
-# outputs; the rest are left without one, which the player takes as nothing to play
+# Set up the traffic light effect to play, on the first 3 outputs and nothing on the rest
 player.effects = [
     traffic.red(),
     traffic.amber(),

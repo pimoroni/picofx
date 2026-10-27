@@ -4,18 +4,17 @@ from picofx import MonoPlayer
 from picofx.mono import PulseWaveFX
 
 """
-Play a wave of pulses across every colour of MightyFX's outputs.
+Play a wave of pulses across every colour of Mighty FX's outputs.
 
-They run red, green then blue along each output, so a wave sweeping them fades an
-output's three components up in turn: it passes through red, yellow, white where all three
-are up, then cyan and blue. No colour effect is involved in any of it.
+Each output's red, green and blue fade up in turn as the wave passes, so it runs red,
+yellow, white, cyan, then blue. No colour effect is involved.
 
 Press "Boot" to exit the program.
 """
 
 # Variables
 mighty = MightyFX()                 # Create a new MightyFX object to interact with the board
-player = MonoPlayer(mighty.monos)   # Create a new effect player to control each colour of MightyFX's outputs
+player = MonoPlayer(mighty.monos)   # Create a new effect player to control each colour of Mighty FX's outputs
 
 
 # Create a PulseWaveFX effect

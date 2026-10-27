@@ -11,13 +11,11 @@ from picofx.mono import BlinkFX, StaticFX
 Drive a two wheeled robot from a Pimoroni Aye Arr Remote, its wheels turned by a
 continuous rotation servo on each of the L and R connectors.
 
-A continuous servo takes a speed rather than an angle, from -1.0 to 1.0, and the two
-face opposite ways on a robot, so driving forwards asks one for a speed and the other
-for its negative. Turning on the spot asks both for the same.
+A continuous servo takes a speed from -1.0 to 1.0. The two face opposite ways, so forwards
+asks one for a speed and the other its negative while a spin asks both for the same.
 
-Output 2 is the headlight and output 1 the tail light, lit for the direction being
-driven, and outputs 3 and 4 are amber indicators, lit on the side being turned towards,
-so the robot says which way it is about to go.
+Outputs 1 and 2 are the tail light and headlight lit for the direction driven, and 3 and 4
+amber indicators for the side being turned towards.
 
 An IR Stick should be connected to the Sensor port on Mighty FX.
 
@@ -43,9 +41,8 @@ mighty.servo_l.enable()
 mighty.servo_r.enable()
 
 
-# The lights are played rather than set: the head and tail lights are steady and the
-# indicators blink, and a level of zero is how one is put out. Their colours come from
-# the player, the effects giving a brightness and no colour of their own
+# The lights are played so the indicators can blink, a level of zero putting one out.
+# The player gives each its colour, the effects giving only a brightness
 player = ColourPlayer(mighty.outputs)
 player.effects = [StaticFX(), StaticFX(), BlinkFX(speed=BLINK_SPEED), BlinkFX(speed=BLINK_SPEED)]
 player.colours = [RED, WHITE, AMBER, AMBER]
@@ -90,7 +87,7 @@ def spin(speed):
     mighty.servo_r.value(speed)
 
 
-# Create the remote and setup up what each of the buttons will do
+# Create the remote and set up what each of the buttons will do
 remote = PimoroniRemote()
 remote.bind("UP", on_press=(drive, DRIVE_SPEED), on_release=stop)
 remote.bind("DOWN", on_press=(drive, -DRIVE_SPEED), on_release=stop)

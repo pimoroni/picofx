@@ -3,11 +3,10 @@ from mighty_fx import MightyFX
 from picofx.colour import GREEN
 
 """
-Play a WAV file saved locally to MightyFX.
+Play a WAV file saved locally to Mighty FX.
 
-Output 4 says which state the board is in: a quarter white while it waits, and green
-while a file plays. The board takes a moment to start, and a press before the white
-appears is not seen, so the light is what says the button is live.
+Output 4 is a quarter white while the board waits and green while a file plays. A press
+before the white appears is not seen, so the light says when the button is live.
 
 Press "Boot" to play the file, and again to stop it.
 """
@@ -19,7 +18,7 @@ PLAYING_COLOUR = GREEN                  # Bright enough to read across a room, a
 READY_COLOUR = (64, 64, 64)             # A quarter white, dim enough that playing stands out against it
 
 # Variables
-mighty = MightyFX(wav_root=WAV_ROOT)    # Create a new MightyFX object and tell with where the wav file is located
+mighty = MightyFX(wav_root=WAV_ROOT)    # Create a new MightyFX object and tell it where the wav file is located
 
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
@@ -28,8 +27,7 @@ try:
 
     # Loop forever
     while True:
-        # Has the boot button been tapped? Caught by interrupt, so a tap during
-        # the pause a file takes to start counts rather than being read over
+        # Has the boot button been tapped? Caught by interrupt, so a tap while a file starts still counts
         if mighty.boot_taps():
             # Is nothing playing?
             if not mighty.wav.is_playing():

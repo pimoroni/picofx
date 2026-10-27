@@ -4,7 +4,7 @@ from picofx import ColourPlayer
 from picofx.colour import RGBFX
 
 """
-Show a static colour on all of MightyFX's RGB outputs.
+Show a static colour on all of Mighty FX's RGB outputs.
 
 Press "Boot" to exit the program.
 """
@@ -17,11 +17,10 @@ B = 0       # The amount of blue (from 0 to 255)
 
 # Variables
 mighty = MightyFX()                     # Create a new MightyFX object to interact with the board
-player = ColourPlayer(mighty.outputs)   # Create a new effect player to control MightyFX's RGB outputs
+player = ColourPlayer(mighty.outputs)   # Create a new effect player to control Mighty FX's RGB outputs
 
 
-# Create a static colour effect, then give it to every output. An effect assigned on its own
-# rather than in a list plays on all of them
+# Create a static colour effect. One given on its own and not in a list plays on every output
 static = RGBFX(R, G, B)
 player.effects = static
 

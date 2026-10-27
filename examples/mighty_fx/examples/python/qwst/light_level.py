@@ -6,14 +6,12 @@ from picofx import ColourPlayer
 from picofx.mono import FlickerFX
 
 """
-Bring MightyFX's lights up when the room gets dark, read from a light sensor on Qw/ST.
+Bring Mighty FX's lights up when the room gets dark, read from a light sensor on Qw/ST.
 
-Plug an LTR559 breakout into the Qw/ST connector. The board makes the bus itself, as
-mighty.i2c, so the sensor takes that and nothing else needs setting up.
+Plug an LTR559 breakout into the Qw/ST connector, which the board sets up as mighty.i2c.
 
-The two thresholds are apart on purpose. A single one has the lamps switching back and
-forth whenever the reading sits on it, so the level that turns them on is lower than
-the level that turns them off.
+The lamps come on below LUX_LOW and go off above LUX_HIGH, so a reading that sits near one
+level does not switch them back and forth.
 
 Press "Boot" to exit the program.
 
@@ -30,20 +28,18 @@ LTR559_ADDRESS = 0x23           # The sensor's address on the bus, which is fixe
 
 # Variables
 mighty = MightyFX()                     # Create a new MightyFX object to interact with the board
-player = ColourPlayer(mighty.outputs)   # Create a new effect player to control MightyFX's RGB outputs
+player = ColourPlayer(mighty.outputs)   # Create a new effect player to control Mighty FX's RGB outputs
 
 # Check if the sensor answers on the bus, since a missing one raises nothing
 if LTR559_ADDRESS not in mighty.i2c.scan():
     raise RuntimeError("No LTR559 found on Qw/ST. Plug in a multi sensor stick or another LTR559 breakout")
 ltr = BreakoutLTR559(mighty.i2c)        # The light sensor, on the board's Qw/ST bus
 
-# The sensor's first reading is whatever it held before it was asked to measure, so it
-# is taken and thrown away rather than acted on
+# The first reading holds whatever the sensor had before measuring, so it is thrown away
 ltr.get_reading()
 
 
-# The colour each output draws its light in. A flicker gives a level rather than a
-# colour, so the colour comes from here
+# The colour each output draws its flicker in
 player.colours = LAMP_COLOUR
 
 

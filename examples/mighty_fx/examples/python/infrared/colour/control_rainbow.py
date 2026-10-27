@@ -6,7 +6,7 @@ from picofx import ColourPlayer
 from picofx.colour import RainbowFX
 
 """
-Play a rainbow effect on MightyFX's RGB outputs that is controllable by the
+Play a rainbow effect on Mighty FX's RGB outputs that is controllable by the
 directional buttons on a Pimoroni Aye Arr Remote. One effect drives every output,
 so the whole board cycles together.
 
@@ -28,17 +28,17 @@ STARTING_SPEED = 0.2                # The speed to cycle through colours at, wit
 STARTING_SATURATION = 1.0           # The saturation/intensity of the colour (from 0.0 to 1.0)
 STARTING_VALUE = 1.0                # The value/brightness of the colour (from 0.0 to 1.0)
 
-SPEED_MULT = 1.1                    # The amount to multiply or divide the effects speed by each press / repeat
+SPEED_MULT = 1.1                    # The amount to multiply or divide the effect's speed by each press / repeat
 SAT_STEP = 0.01                     # The amount that saturation will change by with each press / repeat
 VAL_STEP = 0.05                     # The amount that value will change by with each press / repeat
 
 
 # Variables
 mighty = MightyFX(sensor=IR)        # Create a new MightyFX object, with the infrared receiver on its sensor connector
-player = ColourPlayer(mighty.outputs)   # Create a new effect player to control MightyFX's RGB outputs
+player = ColourPlayer(mighty.outputs)   # Create a new effect player to control Mighty FX's RGB outputs
 
 
-# Create and set up a static colour effect to "play"
+# Create and set up a rainbow effect to "play"
 rainbow = RainbowFX(speed=STARTING_SPEED,
                     sat=STARTING_SATURATION,
                     val=STARTING_VALUE)
@@ -66,7 +66,7 @@ def adjust_val(amount):
     print(f"Val = {rainbow.val:.2f}")
 
 
-# Create the remote and setup up what each of the buttons will do
+# Create the remote and set up what each of the buttons will do
 remote = PimoroniRemote()
 remote.bind("ANTICLOCK", (adjust_speed, 1 / SPEED_MULT))
 remote.bind("CLOCKWISE", (adjust_speed, SPEED_MULT))

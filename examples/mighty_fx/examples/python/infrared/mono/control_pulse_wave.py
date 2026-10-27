@@ -6,7 +6,7 @@ from picofx import ColourPlayer
 from picofx.mono import PulseWaveFX
 
 """
-Play a wave of pulses on MightyFX's outputs that is controllable
+Play a wave of pulses on Mighty FX's outputs that is controllable
 by the directional buttons on a Pimoroni Aye Arr Remote.
 
 Actions:
@@ -27,12 +27,12 @@ Thumbnail: outputs pulse
 STARTING_SPEED = 0.2                # The speed to pulse at, with 1.0 being 1 second
 STARTING_LENGTH = 7.0               # The length of the wave before positions repeat. Usually the number of outputs (7)
 
-SPEED_MULT = 1.1                    # The amount to multiply or divide the effects speed by each press / repeat
+SPEED_MULT = 1.1                    # The amount to multiply or divide the effect's speed by each press / repeat
 LENGTH_STEP = 0.1                   # The amount that length will change by with each press / repeat
 
 # Variables
 mighty = MightyFX(sensor=IR)            # Create a new MightyFX object, with the infrared receiver on its sensor connector
-player = ColourPlayer(mighty.outputs)   # Create a new effect player to control MightyFX's RGB outputs
+player = ColourPlayer(mighty.outputs)   # Create a new effect player to control Mighty FX's RGB outputs
 
 
 # Create a PulseWaveFX effect
@@ -52,21 +52,21 @@ player.effects = [
 ]
 
 
-# Function called to change the speed of the colour effect
+# Function called to change the speed of the wave
 def adjust_speed(amount):
     global wave
     wave.speed = max(min(wave.speed * amount, 10), 0.01)
     print(f"Speed = {wave.speed:.2f}")
 
 
-# Function called to change the saturation of the colour
+# Function called to change the length of the wave
 def adjust_length(amount):
     global wave
     wave.length = max(min(wave.length + amount, 20), 1)
     print(f"Length = {wave.length:.2f}")
 
 
-# Create the remote and setup up what each of the buttons will do
+# Create the remote and set up what each of the buttons will do
 remote = PimoroniRemote()
 remote.bind("ANTICLOCK", (adjust_speed, 1 / SPEED_MULT))
 remote.bind("CLOCKWISE", (adjust_speed, SPEED_MULT))

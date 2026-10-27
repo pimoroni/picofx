@@ -8,12 +8,12 @@ from picofx.colour import RED, WHITE
 Drive a two wheeled robot through a fixed sequence of movements, on a driver on SP/CE
 port A.
 
-The same robot the remote controlled example drives, driving itself: forwards, back,
-turns on the spot, and a curve made by giving one wheel more than the other. It runs
-without a remote, so it is the one to reach for when checking a chassis is wired and
-scaled correctly.
+The remote_robot.py robot driving itself through forwards, back, spins and curves, which
+makes it the one for checking a chassis is wired and scaled correctly.
 
-Give it room, or hold it off the ground. Press "Boot" to exit the program.
+Give it room, or hold it off the ground.
+
+Press "Boot" to exit the program.
 
 Section: Moving things
 Thumbnail: motor
@@ -72,8 +72,7 @@ try:
         time.sleep(MOVE_TIME)
         pause()
 
-        # A curve is both wheels forwards with one given less than the other, which
-        # is what a robot does to go round something rather than turn on the spot
+        # A curve drives both wheels forwards, the inside one slower
         print("Curving left")
         wheels(DRIVE_SPEED * CURVE_INNER, DRIVE_SPEED)
         time.sleep(MOVE_TIME)

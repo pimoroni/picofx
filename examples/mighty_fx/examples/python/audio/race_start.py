@@ -5,11 +5,10 @@ from mighty_fx import MightyFX
 from picofx.colour import GREEN, RED
 
 """
-Play a simple boop, boop, boop, beeep countdown sound effect when
-you press Boot on MightyFX. Great for counting down to a race start.
+Plays a simple boop, boop, boop, beeep countdown sound effect when
+you press Boot on Mighty FX. Great for counting down to a race start.
 
-Every output shows a colour, so the countdown lights output 1 red and the start
-lights output 2 green without either needing an LED of that colour in it.
+The countdown lights output 1 red and the start output 2 green.
 
 Section: Sound
 Thumbnail: outputs countdown

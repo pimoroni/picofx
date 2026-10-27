@@ -4,21 +4,19 @@ from picofx import MonoPlayer
 from picofx.mono import PulseFX
 
 """
-Play a pulsing effect on a single colour of a MightyFX output.
+Play a pulsing effect on a single colour of a Mighty FX output.
 
-The effect plays on the first colour of output one, its red, so output one
-fades red up and down and the rest stay dark.
+Output one pulses red and the rest stay dark.
 
 Press "Boot" to exit the program.
 """
 
 # Variables
 mighty = MightyFX()                 # Create a new MightyFX object to interact with the board
-player = MonoPlayer(mighty.monos)   # Create a new effect player to control each colour of MightyFX's outputs
+player = MonoPlayer(mighty.monos)   # Create a new effect player to control each colour of Mighty FX's outputs
 
 
-# Create and set up a pulse effect to play on the first colour. The rest are left without
-# one, which the player takes as nothing to play
+# Create and set up a pulse effect on the first colour, leaving the rest with nothing to play
 player.effects = [
     PulseFX(speed=1.0,              # The speed to pulse at, with 1.0 being 1 second
             phase=0.0),             # How far through the pulse to start the effect (from 0.0 to 1.0)

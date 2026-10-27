@@ -35,134 +35,134 @@ These treat the red, green and blue of each output as a separate mono channel, 2
 ### Static Brightness
 [mono/static_brightness.py](mono/static_brightness.py)
 
-Show a static brightness on a single colour of a MightyFX output.
+Show a static brightness on a single colour of a Mighty FX output.
 
 
 ### Single Blink
 [mono/single_blink.py](mono/single_blink.py)
 
-Play a blinking effect on a single colour of a MightyFX output.
+Play a blinking effect on a single colour of a Mighty FX output.
 
 
 ### Single Flashing
 [mono/single_flashing.py](mono/single_flashing.py)
 
-Play a flashing effect on a single colour of a MightyFX output.
+Play a flashing effect on a single colour of a Mighty FX output.
 
 
 ### Single Flicker
 [mono/single_flicker.py](mono/single_flicker.py)
 
-Play a flickering effect on a single colour of a MightyFX output.
+Play a flickering effect on a single colour of a Mighty FX output.
 
 
 ### Single Pulse
 [mono/single_pulse.py](mono/single_pulse.py)
 
-Play a pulsing effect on a single colour of a MightyFX output.
+Play a pulsing effect on a single colour of a Mighty FX output.
 
 
 ### Single Random
 [mono/single_random.py](mono/single_random.py)
 
-Play a randomly changing brightness effect on a single colour of a MightyFX output.
+Play a randomly changing brightness effect on a single colour of a Mighty FX output.
 
 
 ### Random
 [mono/random.py](mono/random.py)
 
-Play a randomly changing brightness on every colour of MightyFX's outputs.
+Play a randomly changing brightness on every colour of Mighty FX's outputs.
 
 
 ### Blink Wave
 [mono/blink_wave.py](mono/blink_wave.py)
 
-Play a wave of blinks across every colour of MightyFX's outputs.
+Play a wave of blinks across every colour of Mighty FX's outputs.
 
 
 ### Flashing Sequence
 [mono/flashing_sequence.py](mono/flashing_sequence.py)
 
-Play a flashing sequence across every colour of MightyFX's outputs.
+Play a flashing sequence across every colour of Mighty FX's outputs.
 
 
 ### Pulse Wave
 [mono/pulse_wave.py](mono/pulse_wave.py)
 
-Play a wave of pulses across every colour of MightyFX's outputs.
+Play a wave of pulses across every colour of Mighty FX's outputs.
 
 
 ### Sweep
 [mono/sweep.py](mono/sweep.py)
 
-Sweep a light back and forth across every colour of MightyFX's outputs.
+Sweep a light back and forth across every colour of Mighty FX's outputs.
 
 
 ### Binary Counter
 [mono/binary_counter.py](mono/binary_counter.py)
 
-Play an incrementing binary counter across every colour of MightyFX's outputs.
+Play an incrementing binary counter across every colour of Mighty FX's outputs.
 
 
 ### Traffic Light
 [mono/traffic_light.py](mono/traffic_light.py)
 
-Play a traffic light sequence on three of MightyFX's colours.
+Play a traffic light sequence on three of Mighty FX's colours.
 
 
 ## Colour Effect Examples
 
-These play on each of MightyFX's outputs as a whole colour. The last three, Sweep Trail, Traffic Light and Pelican Crossing, play mono effects, which bring no colour of their own, so the player draws each one in a colour it gives the output.
+These play on each of Mighty FX's outputs as a whole colour. The last three, Sweep Trail, Traffic Light and Pelican Crossing, play mono effects, which bring no colour of their own, so the player draws each one in a colour it gives the output.
 
 ### Static RGB
 [colour/static_rgb.py](colour/static_rgb.py)
 
-Show a static colour on all of MightyFX's RGB outputs.
+Show a static colour on all of Mighty FX's RGB outputs.
 
 
 ### Static HSV
 [colour/static_hsv.py](colour/static_hsv.py)
 
-Show a static colour on all of MightyFX's RGB outputs, using HSV.
+Show a static colour on all of Mighty FX's RGB outputs, using HSV.
 
 
 ### Blink
 [colour/blink.py](colour/blink.py)
 
-Chase a blink around MightyFX's seven RGB outputs, each blink a different colour in turn.
+Chase a blink around Mighty FX's seven RGB outputs, each blink a different colour in turn.
 
 
 ### Rainbow
 [colour/rainbow.py](colour/rainbow.py)
 
-Play a rainbow effect on all of MightyFX's RGB outputs.
+Play a rainbow effect on all of Mighty FX's RGB outputs.
 
 
 ### Rainbow Wave
 [colour/rainbow_wave.py](colour/rainbow_wave.py)
 
-Play a rainbow wave animation on MightyFX's RGB outputs.
+Play a rainbow wave animation on Mighty FX's RGB outputs.
 
 
 ### Hue Step
 [colour/hue_step.py](colour/hue_step.py)
 
-Step MightyFX's seven RGB outputs around the colour wheel together, each one holding its own place in it.
+Step Mighty FX's seven RGB outputs around the colour wheel together, each one holding its own place in it.
 
 
 ### Sweep Trail
 [colour/sweep_trail.py](colour/sweep_trail.py)
 
-Sweep a red light back and forth across MightyFX's outputs, leaving a trail behind it, which is the scanner a certain talking car wears across its nose.
+Sweep a red light back and forth across Mighty FX's outputs with a trail behind it, like the scanner a certain talking car wears across its nose.
 
 
 ### Traffic Light
 [colour/traffic_light.py](colour/traffic_light.py)
 
-Play a traffic light sequence on three of MightyFX's RGB outputs.
+Play a traffic light sequence on three of Mighty FX's RGB outputs.
 
 
 ### Pelican Crossing
 [colour/pelican_crossing.py](colour/pelican_crossing.py)
 
-Play a pelican crossing on five of MightyFX's RGB outputs.
+Play a pelican crossing on five of Mighty FX's RGB outputs.

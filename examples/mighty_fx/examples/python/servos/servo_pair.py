@@ -5,7 +5,7 @@ from mighty_fx import MightyFX
 from servo import ANGULAR
 
 """
-Sweep the servos on MightyFX's L and R connectors, together and then opposed.
+Sweep the servos on Mighty FX's L and R connectors, together and then opposed.
 
 Two servos given the same value move as one, which suits a pair of legs or a lift. Two
 given opposite values mirror each other, which suits a gripper or a pair of eyes. The

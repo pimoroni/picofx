@@ -5,12 +5,12 @@ from mighty_fx import MightyFX
 Sweep a servo from end to end on the L connector.
 
 Plug a servo into the connector marked L. Both L and R share one power rail, so
-anything on R is live too once enable_rail() is called. Press "Boot" to exit the
-program.
+anything on R is live too once enable_rail() is called.
 
-L shares a PWM channel with SP/CE A's backlight and R shares one with SP/CE B's, so a
-servo and a screen cannot have the same side. Declaring both is refused, and the
-message names the other connector.
+L shares a PWM channel with SP/CE A's backlight and R with SP/CE B's, so a servo and a
+screen cannot have the same side and declaring both is refused.
+
+Press "Boot" to exit the program.
 """
 
 # Constants

@@ -5,22 +5,16 @@ from mighty_fx import MightyFX
 from timing import Pacer
 
 """
-Use MightyFX's RGB outputs as a spirit level, read from an accelerometer on Qw/ST.
+Use Mighty FX's RGB outputs as a spirit level, read from an accelerometer on Qw/ST.
 
-Plug a multi sensor stick, or another LSM6DS3 breakout, into the Qw/ST connector. The
-board makes the bus itself, as mighty.i2c, so the sensor takes that and nothing else
-needs setting up.
+Plug a multi sensor stick or another LSM6DS3 breakout into the Qw/ST connector, which
+the board sets up as mighty.i2c.
 
-A board lying flat has gravity pulling straight down through it, and tilting it moves
-some of that pull sideways. That sideways part is what places the bubble: it sits on
-the middle output when level and travels towards whichever side is lower, spreading
-across two outputs as it passes between them so it slides rather than hops.
+The bubble sits on the middle output when level and moves towards the lower side, spread
+across two outputs as it passes between them.
 
 The bubble is green while the board is level and reddens as it tilts, so a glance says
 both where it is and how far off it is. Rest the board on something and lift one edge.
-
-Which way to tilt it is set by AXIS, and readings are smoothed on the way in: a bubble
-spread across two outputs shows every fraction of a degree the sensor wobbles by.
 
 Press "Boot" to exit the program.
 
@@ -54,9 +48,8 @@ middle = (len(mighty.outputs) - 1) / 2
 imu.get_readings()
 time.sleep(SETTLE)
 
-# What the bubble is placed by. A single reading jitters by a fraction of a degree,
-# which a bubble spread across two outputs shows plainly, so each new one is mixed into
-# what was there rather than replacing it
+# What places the bubble. Each reading is mixed into the last, since a bubble spread across
+# two outputs shows every fraction of a degree the sensor jitters by
 smoothed = imu.get_readings()[AXIS] / ONE_G
 
 
@@ -71,16 +64,14 @@ try:
         sideways = imu.get_readings()[AXIS] / ONE_G
         smoothed += (sideways - smoothed) * SMOOTHING
 
-        # Where the bubble sits, from the first output to the last, with the middle
-        # one being level
+        # Where the bubble sits from the first output to the last, level in the middle
         tilt = min(1.0, max(-1.0, smoothed / TILT_EXTENT))
         position = middle + tilt * middle
 
         # Level is green and either end is red, so how far off it is reads as colour
         hue = LEVEL_HUE + (TILTED_HUE - LEVEL_HUE) * abs(tilt)
 
-        # Each output lights by how near the bubble is to it, so the bubble spreads
-        # across two as it passes between them rather than stepping from one to the next
+        # Each output lights by how near the bubble is, so it spreads across two between them
         for i, output in enumerate(mighty.outputs):
             nearness = max(0.0, 1.0 - abs(position - i))
             output.set_hsv(hue, 1.0, BRIGHTNESS * nearness)

@@ -5,18 +5,14 @@ from mighty_fx import MightyFX
 from timing import Pacer
 
 """
-Show the temperature on MightyFX's RGB outputs as a bargraph, read from a weather
+Show the temperature on Mighty FX's RGB outputs as a bargraph, read from a weather
 sensor on Qw/ST.
 
-Plug a BME280 breakout into the Qw/ST connector. The board makes the bus itself, as
-mighty.i2c, so the sensor takes that and nothing else needs setting up.
+Plug a BME280 breakout into the Qw/ST connector, which the board sets up as mighty.i2c.
 
-The bar fills from the cold end to the warm one, each output lit in the colour its own
-part of the range stands for, the hue running blue through purple to red. The output at the top
-of the bar is lit as far into its own step as the reading has gone, so the bar moves
-smoothly rather than a whole output at a time. Hold the sensor between your fingers to
-watch it climb. The pressure and
-humidity the sensor also reports are printed.
+The bar fills from blue at the cold end through purple to red at the warm one, its top
+output lit part way so the bar moves smoothly. Hold the sensor between your fingers to watch
+it climb. Pressure and humidity are printed too.
 
 Press "Boot" to exit the program.
 
@@ -40,9 +36,8 @@ try:
 except RuntimeError:
     raise RuntimeError("No BME280 found on Qw/ST. Plug in a multi sensor stick or another BME280 breakout") from None
 
-# The sensor answers with the values its registers hold from reset until it has made a
-# measurement of its own, and reading again does not hurry it. So one read starts it
-# measuring, and the wait is what the reading after it needs to be real
+# The sensor reports its reset values until it has measured and reading again does not
+# hurry it, so one read starts it and the wait lets that measurement finish
 bme.read()
 time.sleep(SETTLE)
 
@@ -60,18 +55,16 @@ try:
               "Pressure =", round(pressure / 100, 1), "hPa,",
               "Humidity =", round(humidity, 1), "%")
 
-        # How much of the bar the reading fills, in outputs rather than as a fraction
+        # How much of the bar the reading fills, in outputs
         percent = (temperature - MIN_TEMP) / (MAX_TEMP - MIN_TEMP)
         filled = min(len(mighty.outputs), max(0.0, percent * len(mighty.outputs)))
 
         # Update all the outputs
         for i in range(len(mighty.outputs)):
-            # An output below the top of the bar is full, the one at the top is lit as
-            # far into its own step as the reading has gone, and the rest are out
+            # Full below the top of the bar, part lit at the top, and out above it
             level = min(1.0, max(0.0, filled - i))
 
-            # The hue between the two ends carries the scale, so no table of colours
-            # is needed and the ramp fits however many outputs a board has
+            # Spread the hue between the two ends, so the ramp fits any number of outputs
             hue = COLD_HUE + (WARM_HUE - COLD_HUE) * i / (len(mighty.outputs) - 1)
             mighty.outputs[i].set_hsv(hue, 1.0, BRIGHTNESS * level)
 

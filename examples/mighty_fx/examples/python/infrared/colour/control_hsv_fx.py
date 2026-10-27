@@ -6,7 +6,7 @@ from picofx import ColourPlayer
 from picofx.colour import H_BLACK, H_BLUE, H_COOL, H_CYAN, H_GREEN, H_MAGENTA, H_RED, H_WARM, H_WHITE, H_YELLOW, HSVFX
 
 """
-Set the colour of MightyFX's seven RGB outputs using the number buttons on the
+Set the colour of Mighty FX's seven RGB outputs using the number buttons on the
 Pimoroni Aye Arr Remote, and change their hue, saturation, and value using the
 directional buttons. This version uses the effects system to interact with them.
 One effect drives every output, so they change together.
@@ -14,6 +14,12 @@ One effect drives every output, so they change together.
 Actions:
 - (1)-(9) Buttons [Press + Hold] = Set Colour
 - OK Button [Press + Hold] = Set Black
+- UP Button [Press + Hold] = Increase Value
+- DOWN Button [Press + Hold] = Decrease Value
+- LEFT Button [Press + Hold] = Decrease Saturation
+- RIGHT Button [Press + Hold] = Increase Saturation
+- ANTICLOCK Button [Press + Hold] = Decrease Hue
+- CLOCKWISE Button [Press + Hold] = Increase Hue
 
 An IR Stick should be connected to the Sensor port on Mighty FX.
 
@@ -30,7 +36,7 @@ VAL_STEP = 0.05         # The amount that value will change by with each press /
 
 # Variables
 mighty = MightyFX(sensor=IR)        # Create a new MightyFX object, with the infrared receiver on its sensor connector
-player = ColourPlayer(mighty.outputs)   # Create a new effect player to control MightyFX's RGB outputs
+player = ColourPlayer(mighty.outputs)   # Create a new effect player to control Mighty FX's RGB outputs
 
 # Create and set up a static colour effect to "play"
 hsv = HSVFX(*H_BLACK)
@@ -65,7 +71,7 @@ def adjust_val(amount):
     print(f"H = {hsv.hue:.2}, S = {hsv.sat:.2}, V = {hsv.val:.2}")
 
 
-# Create the remote and setup up what each of the buttons will do
+# Create the remote and set up what each of the buttons will do
 remote = PimoroniRemote()
 remote.bind("1_RED", (set_hsv, H_RED))
 remote.bind("2_GREEN", (set_hsv, H_GREEN))

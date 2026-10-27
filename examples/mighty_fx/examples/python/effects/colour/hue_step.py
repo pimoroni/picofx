@@ -3,7 +3,7 @@ from picofx import ColourPlayer
 from picofx.colour import HueStepFX
 
 """
-Step MightyFX's seven RGB outputs around the colour wheel together, each one holding its own place in it.
+Step Mighty FX's seven RGB outputs around the colour wheel together, each one holding its own place in it.
 
 Press "Boot" to exit the program.
 """
@@ -17,11 +17,10 @@ VALUE = 1.0         # The value/brightness of the colours (from 0.0 to 1.0)
 
 # Variables
 mighty = MightyFX()                     # Create a new MightyFX object to interact with the board
-player = ColourPlayer(mighty.outputs)   # Create a new effect player to control MightyFX's RGB outputs
+player = ColourPlayer(mighty.outputs)   # Create a new effect player to control Mighty FX's RGB outputs
 
 
-# Set up a stepped hue effect on each output, each starting from a different hue so the
-# whole board moves around the wheel at once without any two outputs matching
+# Set up a stepped hue effect on each output, each starting from its own hue
 num_outputs = len(mighty.outputs)
 player.effects = [HueStepFX(interval=INTERVAL,
                             hue=i / num_outputs,

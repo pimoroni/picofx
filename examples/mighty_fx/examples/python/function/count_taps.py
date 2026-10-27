@@ -3,13 +3,12 @@ import time
 from mighty_fx import MightyFX
 
 """
-Count taps of MightyFX's Boot button, including the ones that happen while the board
-is busy, and show the count on its RGB outputs.
+Count taps of Mighty FX's Boot button and show the count on its RGB outputs, including
+the taps made while the board is busy.
 
-Each pass of the loop sleeps, which stands in for whatever real work a program does
-between one look at the button and the next. Taps are caught by interrupt, so every
-one made during that sleep is counted, where boot_pressed() only ever reports the
-button's state at the moment it is asked.
+Each pass of the loop sleeps in place of real work. Taps are caught by interrupt, so every
+one made during the sleep is counted. boot_pressed() reports only the button's state at
+the moment it is asked.
 
 Tap the button several times during a sleep to see them all arrive together. Hold it
 down to exit the program.

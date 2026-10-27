@@ -6,11 +6,10 @@ from sensor import ANALOG
 from picofx.colour import BLACK, BLUE, CYAN, GREEN, RED, YELLOW
 
 """
-Play an evocative musical melody with accompanying lights on MightyFX.
+Play an evocative musical melody with accompanying lights on Mighty FX.
 Any resemblance to music you might have heard elsewhere is purely coincidental.
 
-Every output shows a colour, so each tone lights one output in a colour of its own,
-where a board with mono outputs needs a separate one to carry the colour.
+Every output shows a colour, so each tone lights one output in a colour of its own.
 
 Press "Boot" to exit the program.
 
@@ -30,7 +29,7 @@ MAX_SPEED = 20                  # The maximum speed multiplier that the melody w
 SAMPLES = 5                     # The number of measurements to take of the analog sensor, to reduce noise
 
 # Variables
-mighty = MightyFX(sensor=ANALOG if USE_SENSOR else None)    # Create a new MightyFX object, with the sensor only where one is wired
+mighty = MightyFX(sensor=ANALOG if USE_SENSOR else None)    # Create a new MightyFX object, with the sensor only if one is attached
 index = 0                       # The index of the tone to play
 
 

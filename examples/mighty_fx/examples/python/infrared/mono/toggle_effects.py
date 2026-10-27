@@ -7,12 +7,11 @@ from picofx.colour import BLUE, CYAN, GREEN, MAGENTA, RED, WARM, YELLOW
 from picofx.mono import BlinkFX, NoneFX, PulseFX, RandomFX, StaticFX
 
 """
-Play a different effect on each of MightyFX's outputs, and turn them on and off by
+Play a different effect on each of Mighty FX's outputs, and turn them on and off by
 pressing the number buttons on the Pimoroni Aye Arr Remote.
 
-Every effect here is a mono one, giving a brightness rather than a colour, so each
-output draws its effect in the colour it was given. That is what makes a flicker read
-as a candle on one output and as a fault light on another.
+Every effect here is mono and gives only a brightness, so each output draws its effect in
+the colour it was given.
 
 Actions:
 - (1)-(7) Button [Press] = Toggle Output
@@ -27,7 +26,7 @@ Thumbnail: outputs mono
 
 # Variables
 mighty = MightyFX(sensor=IR)            # Create a new MightyFX object, with the infrared receiver on its sensor connector
-player = ColourPlayer(mighty.outputs)   # Create a new effect player to control MightyFX's RGB outputs
+player = ColourPlayer(mighty.outputs)   # Create a new effect player to control Mighty FX's RGB outputs
 
 
 # The colour each output draws its effect in, matching the button that toggles it
@@ -53,8 +52,7 @@ def toggle_output(output):
     for i in range(len(mighty.outputs)):
         old_fx = player.effects[i]
         if i == output - 1:
-            # An output that is playing something goes quiet, and one that is quiet
-            # takes its own effect back
+            # Darken an output that is playing, or give a dark one its own effect back
             if type(old_fx) is not NoneFX:
                 new_effects.append(NoneFX())
             else:
@@ -64,7 +62,7 @@ def toggle_output(output):
     player.effects = new_effects
 
 
-# Create the remote and setup up what each of the buttons will do
+# Create the remote and set up what each of the buttons will do
 remote = PimoroniRemote()
 remote.bind("1_RED", on_press=(toggle_output, 1), on_repeat=None)
 remote.bind("2_GREEN", on_press=(toggle_output, 2), on_repeat=None)

@@ -3,7 +3,7 @@ from mighty_fx import MightyFX
 from picofx.colour import GREEN, RED
 
 """
-Show the state of MightyFX's Boot button on its RGB outputs.
+Show the state of Mighty FX's Boot button on its RGB outputs.
 """
 
 # Constants

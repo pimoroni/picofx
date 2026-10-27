@@ -4,21 +4,19 @@ from picofx import MonoPlayer
 from picofx.mono import BlinkFX
 
 """
-Play a blinking effect on a single colour of a MightyFX output.
+Play a blinking effect on a single colour of a Mighty FX output.
 
-The effect plays on the first colour of output one, its red, so output one
-blinks red and the rest stay dark.
+Output one blinks red and the rest stay dark.
 
 Press "Boot" to exit the program.
 """
 
 # Variables
 mighty = MightyFX()                 # Create a new MightyFX object to interact with the board
-player = MonoPlayer(mighty.monos)   # Create a new effect player to control each colour of MightyFX's outputs
+player = MonoPlayer(mighty.monos)   # Create a new effect player to control each colour of Mighty FX's outputs
 
 
-# Create and set up a blink effect to play on the first colour. The rest are left without
-# one, which the player takes as nothing to play
+# Create and set up a blink effect on the first colour, leaving the rest with nothing to play
 player.effects = [
     BlinkFX(speed=1.0,              # The speed to blink at, with 1.0 being 1 second
             phase=0.0,              # How far through the blink to start the effect (from 0.0 to 1.0)

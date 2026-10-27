@@ -4,7 +4,7 @@ from picofx import MonoPlayer
 from picofx.mono import BinaryCounterFX
 
 """
-Play an incrementing binary counter across every colour of MightyFX's outputs.
+Play an incrementing binary counter across every colour of Mighty FX's outputs.
 
 Each output carries three bits, so it steps through eight RGB mixes:
     dark, red, green, yellow, blue, magenta, cyan, white.
@@ -14,7 +14,7 @@ Press "Boot" to exit the program.
 
 # Variables
 mighty = MightyFX()                     # Create a new MightyFX object to interact with the board
-player = MonoPlayer(mighty.monos)       # Create a new effect player to control each colour of MightyFX's outputs
+player = MonoPlayer(mighty.monos)       # Create a new effect player to control each colour of Mighty FX's outputs
 
 
 # Create a BinaryCounterFX effect

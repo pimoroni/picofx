@@ -5,7 +5,7 @@ import requests
 from mighty_fx import MightyFX
 
 """
-Show random colours obtained from the internet on MightyFX's outputs.
+Show random colours obtained from the internet on Mighty FX's outputs.
 
 One colour is asked for per output, so every output shows a different one.
 
@@ -31,7 +31,7 @@ REQUEST_INTERVAL = 5.0                  # The time to sleep between each interne
 
 # Variables
 mighty = MightyFX()                     # Create a new MightyFX object to interact with the board
-wlan = network.WLAN(network.STA_IF)     # Create a new network object for interacting with WiFI
+wlan = network.WLAN(network.STA_IF)     # Create a new network object for interacting with WiFi
 
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)

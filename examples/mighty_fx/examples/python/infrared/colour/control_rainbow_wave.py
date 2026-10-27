@@ -6,13 +6,11 @@ from picofx import ColourPlayer
 from picofx.colour import RainbowWaveFX
 
 """
-Play a rainbow that travels along MightyFX's outputs, controllable by the
+Play a rainbow that travels along Mighty FX's outputs, controllable by the
 directional buttons on a Pimoroni Aye Arr Remote.
 
-Where the rainbow example gives every output the same colour at once, this gives each
-one a different place in the rainbow, so the colours move along the board. The length
-is how many outputs the rainbow spans before it repeats: at seven the whole spectrum
-sits across the board once, and below that it repeats within it.
+Each output takes its own place in the rainbow, so the colours move along the board. The
+length is how many outputs the rainbow spans before it repeats.
 
 Actions:
 - ANTICLOCK [Press + Hold] = Decrease Speed
@@ -42,7 +40,7 @@ VAL_STEP = 0.05                         # The amount that value will change by w
 
 # Variables
 mighty = MightyFX(sensor=IR)            # Create a new MightyFX object, with the infrared receiver on its sensor connector
-player = ColourPlayer(mighty.outputs)   # Create a new effect player to control MightyFX's RGB outputs
+player = ColourPlayer(mighty.outputs)   # Create a new effect player to control Mighty FX's RGB outputs
 
 
 # Create a rainbow wave effect
@@ -85,7 +83,7 @@ def adjust_val(amount):
     print(f"Val = {wave.val:.2f}")
 
 
-# Create the remote and setup up what each of the buttons will do
+# Create the remote and set up what each of the buttons will do
 remote = PimoroniRemote()
 remote.bind("ANTICLOCK", (adjust_speed, 1 / SPEED_MULT))
 remote.bind("CLOCKWISE", (adjust_speed, SPEED_MULT))

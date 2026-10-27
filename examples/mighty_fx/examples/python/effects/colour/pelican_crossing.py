@@ -4,16 +4,14 @@ from picofx import ColourPlayer, ease
 from picofx.mono import PelicanCrossingFX
 
 """
-Play a pelican crossing on five of MightyFX's RGB outputs.
+Play a pelican crossing on five of Mighty FX's RGB outputs.
 
-The first three are the traffic lights and the next two are the figures a pedestrian
-reads, stop and walk. Where an ordinary signal shows red and amber together, a pelican
-flashes its amber and its walking figure, which is the phase telling drivers to go if
-the crossing is clear and pedestrians not to start.
+The first three are the traffic lights and the next two the pedestrian's stop and walk
+figures. A pelican flashes its amber and walking figure where an ordinary signal shows red
+and amber, telling drivers to go if the crossing is clear and pedestrians not to start.
 
-PelicanCrossingFX brings no colour of its own: it reports which lamp is lit, and each
-output is set to the colour that lamp should be. It comes round on its own clock, so
-there is no button to press.
+PelicanCrossingFX brings no colour of its own, so the player gives each output its lamp's
+colour. It runs on its own clock, so there is no button to press.
 
 Press "Boot" to exit the program.
 """
@@ -26,7 +24,7 @@ GREEN = (0, 210, 140)                   # A blue-green rather than a pure one
 
 # Variables
 mighty = MightyFX()                     # Create a new MightyFX object to interact with the board
-player = ColourPlayer(mighty.outputs)   # Create a new effect player to control MightyFX's RGB outputs
+player = ColourPlayer(mighty.outputs)   # Create a new effect player to control Mighty FX's RGB outputs
 
 
 # Effects
@@ -36,13 +34,11 @@ pelican = PelicanCrossingFX(green_interval=20,      # The time (in seconds) traf
                             flashing_interval=6)    # The time (in seconds) the amber and the walking figure flash
 
 
-# How long each output takes to reach what the effect asks for. A single value
-# covers every output, and ease() is the curve a warming filament follows
+# How long each output takes to reach its level. One value covers all, along a warming filament's curve
 player.curves = ease(0.3)
 
 
-# The colour each output draws its lamp in. The two figures take the same red and
-# green the traffic lights use, since that is what a crossing shows
+# The colour each output draws its lamp in, the figures taking the traffic lights' red and green
 player.colours = [RED, AMBER, GREEN, RED, GREEN]
 
 

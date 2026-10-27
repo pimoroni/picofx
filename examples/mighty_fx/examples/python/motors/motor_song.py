@@ -3,16 +3,14 @@ import time
 from mighty_fx import MightyFX, SPCE
 
 """
-Play an evocative musical melody on MightyFX's motors, on a driver on SP/CE port A.
+Play an evocative musical melody on Mighty FX's motors, on a driver on SP/CE port A.
 Any resemblance to music you might have heard elsewhere is purely coincidental.
 
-A motor is switched on and off thousands of times a second, and that switching is
-audible if it happens slowly enough. Setting the frequency to a note's frequency makes
-the coils sing it, which is the same melody the audio example plays through the
-speaker, played by the machinery instead.
+Setting a motor's switching frequency to a note's frequency makes its coils sing that
+note, so this plays the audio example's melody on the machinery.
 
-The motors alternate direction within each note rather than driving one way, so they
-sing without turning. Set STATIONARY to False to hear it while they run.
+The motors alternate direction within each note, so they sing without turning.
+Set STATIONARY to False to hear it while they run.
 
 Press "Boot" to exit the program.
 
@@ -47,8 +45,7 @@ def play(tone, duration):
         motor.frequency(tone)
 
     if STATIONARY:
-        # A note is held by driving one way and then the other, each too briefly to
-        # turn the motor, so the coil sings where the shaft stays put
+        # Alternate direction too briefly to turn the motor, so the coil sings in place
         held = 0
         while held < duration * 1000000:
             for motor in driver.motors:

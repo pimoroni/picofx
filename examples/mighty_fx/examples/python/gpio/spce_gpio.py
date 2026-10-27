@@ -3,9 +3,11 @@ from machine import Pin
 from mighty_fx import MightyFX, SPCE
 
 """
-Borrow a SP/CE connector's five pins as general purpose outputs, and chase a high along them.
+Borrow a SP/CE port's five pins as general purpose outputs, and chase a high along them.
 
-Wire an LED and resistor, or a scope probe, to the pins named below. Press "Boot" to exit the program.
+Wire an LED and resistor or a scope probe to the pins named below.
+
+Press "Boot" to exit the program.
 """
 
 # Constants
@@ -15,9 +17,8 @@ STEP_INTERVAL = 0.2     # The time (in seconds) each pin is held high for
 # Variables
 mighty = MightyFX(spce_a=SPCE.GPIO)     # Create a new MightyFX object, spending SP/CE port A on pins
 
-# The connector's five GPIOs, in the order they sit along it, BL, DC, MOSI, SCK, CS. Only a port declared
-# SPCE.GPIO or SPCE.GPIO_PWM hands them over, so a connector given up for pins is visible
-# in the call that declared it, and nothing else on the board can claim them behind your back
+# The port's five GPIOs in the order they sit along it, BL, DC, MOSI, SCK and CS. Only a port
+# declared SPCE.GPIO or SPCE.GPIO_PWM hands them over, so nothing else on the board can claim them
 lines = mighty.spce_a.pins_along
 
 # Take every line low to start with

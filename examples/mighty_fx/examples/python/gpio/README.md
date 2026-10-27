@@ -18,7 +18,7 @@ Read buttons wired to a SP/CE port's five pins, brightening an RGB output while 
 ### SP/CE GPIO
 [spce_gpio.py](spce_gpio.py)
 
-Borrow a SP/CE connector's five pins as general purpose outputs, and chase a high along them.
+Borrow a SP/CE port's five pins as general purpose outputs, and chase a high along them.
 
 ### SP/CE PWM Fade
 [spce_pwm_fade.py](spce_pwm_fade.py)

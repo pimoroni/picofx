@@ -7,12 +7,11 @@ from picofx.colour import BLUE, CYAN, GREEN, MAGENTA, RED, WARM, YELLOW
 from picofx.mono import StaticFX
 
 """
-Turn each of MightyFX's outputs on and off by pressing the number buttons on the
+Turn each of Mighty FX's outputs on and off by pressing the number buttons on the
 Pimoroni Aye Arr Remote, and hold to adjust their brightness.
 
-Each output lights in the colour its own button is marked with, so pressing the blue
-button lights the blue output. The effect brings no colour of its own: it gives a
-brightness, and the player draws it in the colour the output was given.
+Each output lights in the colour its button is marked with. The effect gives only a
+brightness, which the player draws in that colour.
 
 Actions:
 - (1)-(7) Button [Press] = Toggle Output
@@ -24,12 +23,12 @@ Press "Boot" to exit the program.
 """
 
 # Constants
-BRIGHTNESS = 1.0                        # The initial brightess of each output (from 0.0 to 1.0)
+BRIGHTNESS = 1.0                        # The initial brightness of each output (from 0.0 to 1.0)
 BRIGHTNESS_STEP = 0.02                  # The amount to change the brightness by when fading
 
 # Variables
 mighty = MightyFX(sensor=IR)            # Create a new MightyFX object, with the infrared receiver on its sensor connector
-player = ColourPlayer(mighty.outputs)   # Create a new effect player to control MightyFX's RGB outputs
+player = ColourPlayer(mighty.outputs)   # Create a new effect player to control Mighty FX's RGB outputs
 
 
 # The colour each output draws its light in, matching the button that toggles it
@@ -56,7 +55,7 @@ def fade_output(output):
     print(f"Fade Output #{output}, Brightness: {fx.brightness:.2f}")
 
 
-# Create the remote and setup up what each of the buttons will do
+# Create the remote and set up what each of the buttons will do
 remote = PimoroniRemote()
 remote.bind("1_RED", on_press=None, on_short=(toggle_output, 1), on_repeat=(fade_output, 1))
 remote.bind("2_GREEN", on_press=None, on_short=(toggle_output, 2), on_repeat=(fade_output, 2))

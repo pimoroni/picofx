@@ -8,11 +8,13 @@ from pimoroni import NORMAL_DIR, REVERSED_DIR
 """
 Show what a motor can be told beyond its speed, on a driver on SP/CE port A.
 
-Every setting here is one a real machine needs: which way the motor counts as forwards,
-how much of the speed range does nothing because the motor cannot overcome its own
-friction, how it behaves when asked to stop, and how fast it is switched.
+Every setting here is one a real machine needs, being which way the motor counts as
+forwards, how much of the speed range does nothing because the motor cannot overcome its
+own friction, how it behaves when asked to stop, and how fast it is switched.
 
-The motor turns throughout, so give it room. Press "Boot" to exit the program.
+The motor turns throughout, so give it room.
+
+Press "Boot" to exit the program.
 """
 
 # Constants
@@ -46,8 +48,8 @@ try:
 
         motor.direction(NORMAL_DIR)
 
-        # The part of the range a motor cannot act on, being too slow to turn at all.
-        # Raising it makes a small speed mean the slowest the motor really moves
+        # Speeds inside the deadzone are given as zero, being too slow to turn the motor.
+        # Raising it past the small speed below stops the motor
         motor.deadzone(0.05)
         motor.speed(0.1)
         hold(f"A small speed with a deadzone of {motor.deadzone()}")

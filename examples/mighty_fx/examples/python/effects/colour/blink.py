@@ -3,7 +3,7 @@ from picofx import ColourPlayer
 from picofx.colour import BLUE, CYAN, GREEN, MAGENTA, RED, YELLOW, RGBBlinkFX
 
 """
-Chase a blink around MightyFX's seven RGB outputs, each blink a different colour in turn.
+Chase a blink around Mighty FX's seven RGB outputs, each blink a different colour in turn.
 
 Press "Boot" to exit the program.
 """
@@ -15,7 +15,7 @@ SPEED = 0.5                                             # The speed of one pass 
 
 # Variables
 mighty = MightyFX()                     # Create a new MightyFX object to interact with the board
-player = ColourPlayer(mighty.outputs)   # Create a new effect player to control MightyFX's RGB outputs
+player = ColourPlayer(mighty.outputs)   # Create a new effect player to control Mighty FX's RGB outputs
 
 
 # Set up a blink on each output, a little later than the one before, which turns seven blinks

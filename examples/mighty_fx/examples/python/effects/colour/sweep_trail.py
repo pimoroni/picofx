@@ -4,14 +4,12 @@ from picofx.colour import RED
 from picofx.mono import SweepFX
 
 """
-Sweep a red light back and forth across MightyFX's outputs, leaving a trail behind it,
-which is the scanner a certain talking car wears across its nose.
+Sweep a red light back and forth across Mighty FX's outputs with a trail behind it, like
+the scanner a certain talking car wears across its nose.
 
-SweepFX brings no colour of its own, so the player gives it one: a mono effect on a
-colour output is drawn in whatever that output is set to. The trail is the outputs
-taking their time to go dark, which is a curve on the player rather than anything the
-effect does. The sweep waits at each end until the trail has gone, so it comes back
-over dark outputs rather than over its own trail.
+SweepFX brings no colour of its own, so the player draws it in SCANNER_COLOUR. The trail
+is a slow fade set on the player, so the same two lines add a trail to any effect. The
+sweep holds at each end until the trail clears.
 
 Press "Boot" to exit the program.
 """
@@ -22,7 +20,7 @@ SCANNER_COLOUR = RED                    # The colour the light and its trail are
 
 # Variables
 mighty = MightyFX()                     # Create a new MightyFX object to interact with the board
-player = ColourPlayer(mighty.outputs)   # Create a new effect player to control MightyFX's RGB outputs
+player = ColourPlayer(mighty.outputs)   # Create a new effect player to control Mighty FX's RGB outputs
 
 
 # Create and set up a sweep effect to play
@@ -32,8 +30,7 @@ sweep = SweepFX(speed=1.0,              # The speed to sweep at, with 1.0 being 
                 hold=1.0)               # The seconds to wait at each end, long enough for the trail to clear
 
 
-# How long each output takes to reach what the effect asks for. Coming up quickly and
-# going out slowly is what leaves the trail, and fade() spends that time at a steady rate
+# Outputs come up quickly and go out slowly, which leaves the trail. fade() changes at a steady rate
 player.curves = fade(0.05,              # The seconds an output takes to come up
                      1.0)               # The seconds it takes to go out
 
@@ -42,8 +39,7 @@ player.curves = fade(0.05,              # The seconds an output takes to come up
 player.colours = SCANNER_COLOUR
 
 
-# Set up the sweep effect to play. Each output has a different position
-# for the light to be measured against as it passes
+# Set up the sweep effect to play, each output at its own position for the light to pass
 player.effects = [sweep(position) for position in range(len(mighty.outputs))]
 
 

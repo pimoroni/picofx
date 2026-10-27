@@ -6,7 +6,7 @@ from timing import Pacer
 from servo import ANGULAR
 
 """
-Move a servo smoothly between random positions on MightyFX's L connector.
+Move a servo smoothly between random positions on Mighty FX's L connector.
 
 A servo asked to jump from one angle to another goes as fast as it can and arrives with
 a jolt. Moving it in small steps along a cosine gives it a start and a finish instead,
@@ -40,9 +40,7 @@ start_value = servo.mid_value()
 end_value = random.uniform(-SERVO_EXTENT, SERVO_EXTENT)
 update = 0
 
-# The movement is stepped a count at a time, so its length depends on the steps landing
-# on the rate they were counted for. A pacer holds that where sleeping the interval
-# would add whatever each step costs
+# Each step takes time of its own, so a pacer holds the steps to the rate
 pacer = Pacer(fps=UPDATES)
 
 

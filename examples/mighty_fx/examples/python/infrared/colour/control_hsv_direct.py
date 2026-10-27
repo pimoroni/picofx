@@ -5,7 +5,7 @@ from sensor import IR
 from picofx.colour import H_BLACK, H_BLUE, H_COOL, H_CYAN, H_GREEN, H_MAGENTA, H_RED, H_WARM, H_WHITE, H_YELLOW
 
 """
-Set the colour of MightyFX's seven RGB outputs using the number buttons on the
+Set the colour of Mighty FX's seven RGB outputs using the number buttons on the
 Pimoroni Aye Arr Remote, and change their hue, saturation, and value using the
 directional buttons. This version interacts with the outputs directly.
 
@@ -72,7 +72,7 @@ def adjust_val(amount):
     print(f"H = {hue:.2}, S = {sat:.2}, V = {val:.2}")
 
 
-# Create the remote and setup up what each of the buttons will do
+# Create the remote and set up what each of the buttons will do
 remote = PimoroniRemote()
 remote.bind("1_RED", (set_hsv, H_RED))
 remote.bind("2_GREEN", (set_hsv, H_GREEN))
@@ -102,7 +102,7 @@ try:
     # Loop until the "Boot" button is pressed
     while not mighty.boot_pressed():
         # Decode any IR pulses received since the last time this was called.
-        # This should be done as frequently as possible to avoid feeling sluggish
+        # This should be done as frequently as possible to avoid inputs feeling sluggish
         receiver.decode()
 
 # End the program by stopping any active systems, the receiver among them

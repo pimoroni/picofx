@@ -3,7 +3,7 @@ from picofx import ColourPlayer
 from picofx.colour import RainbowWaveFX
 
 """
-Play a rainbow wave animation on MightyFX's RGB outputs.
+Play a rainbow wave animation on Mighty FX's RGB outputs.
 
 Press "Boot" to exit the program.
 """
@@ -16,8 +16,8 @@ RAINBOW_VALUE = 1.0                     # The value/brightness of the colour (fr
 
 
 # Variables
-mighty = MightyFX()
-player = ColourPlayer(mighty.outputs)   # Create a new effect player to control MightyFX's RGB output
+mighty = MightyFX()                     # Create a new MightyFX object to interact with the board
+player = ColourPlayer(mighty.outputs)   # Create a new effect player to control Mighty FX's RGB outputs
 
 
 # Create a RainbowWaveFX effect

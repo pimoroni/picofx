@@ -4,17 +4,16 @@ from picofx import MonoPlayer
 from picofx.mono import FlashSequenceFX
 
 """
-Play a flashing sequence across every colour of MightyFX's outputs.
+Play a flashing sequence across every colour of Mighty FX's outputs.
 
-The burst of flashes travels along them, and each output's red, green and blue take
-their turn as it passes, so a run of flashes crosses the board changing colour as it goes.
+The burst travels along the colours, so it crosses the board changing colour as it goes.
 
 Press "Boot" to exit the program.
 """
 
 # Variables
 mighty = MightyFX()                     # Create a new MightyFX object to interact with the board
-player = MonoPlayer(mighty.monos)       # Create a new effect player to control each colour of MightyFX's outputs
+player = MonoPlayer(mighty.monos)       # Create a new effect player to control each colour of Mighty FX's outputs
 
 
 # Create a FlashSequenceFX effect

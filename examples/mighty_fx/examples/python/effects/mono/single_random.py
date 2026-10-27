@@ -4,21 +4,19 @@ from picofx import MonoPlayer
 from picofx.mono import RandomFX
 
 """
-Play a randomly changing brightness effect on a single colour of a MightyFX output.
+Play a randomly changing brightness effect on a single colour of a Mighty FX output.
 
-The effect plays on the first colour of output one, its red, so output one
-jumps between random red brightnesses and the rest stay dark.
+Output one jumps between random brightnesses of red and the rest stay dark.
 
 Press "Boot" to exit the program.
 """
 
 # Variables
 mighty = MightyFX()                 # Create a new MightyFX object to interact with the board
-player = MonoPlayer(mighty.monos)   # Create a new effect player to control each colour of MightyFX's outputs
+player = MonoPlayer(mighty.monos)   # Create a new effect player to control each colour of Mighty FX's outputs
 
 
-# Create and set up a random effect to play on the first colour. The rest are left without
-# one, which the player takes as nothing to play
+# Create and set up a random effect on the first colour, leaving the rest with nothing to play
 player.effects = [
     RandomFX(interval=0.05,         # The time (in seconds) between each random brightness
              brightness_min=0.0,    # The min brightness to randomly go down to

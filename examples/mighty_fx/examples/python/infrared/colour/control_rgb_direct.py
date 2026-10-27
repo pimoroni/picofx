@@ -5,7 +5,7 @@ from sensor import IR
 from picofx.colour import BLACK, BLUE, COOL, CYAN, GREEN, MAGENTA, RED, WARM, WHITE, YELLOW
 
 """
-Set the colour of MightyFX's seven RGB outputs using the number buttons on the
+Set the colour of Mighty FX's seven RGB outputs using the number buttons on the
 Pimoroni Aye Arr Remote. This version interacts with the outputs directly.
 
 Actions:
@@ -28,7 +28,7 @@ def set_outputs(colour):
     print(f"Colour = #{colour[0]:02x}{colour[1]:02x}{colour[2]:02x}")
 
 
-# Create the remote and setup up what each of the buttons will do
+# Create the remote and set up what each of the buttons will do
 remote = PimoroniRemote()
 remote.bind("1_RED", (set_outputs, RED))
 remote.bind("2_GREEN", (set_outputs, GREEN))

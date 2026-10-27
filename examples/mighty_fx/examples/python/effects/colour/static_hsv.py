@@ -4,7 +4,7 @@ from picofx import ColourPlayer
 from picofx.colour import HSVFX
 
 """
-Show a static colour on all of MightyFX's RGB outputs, using HSV.
+Show a static colour on all of Mighty FX's RGB outputs, using HSV.
 
 Press "Boot" to exit the program.
 """
@@ -17,11 +17,10 @@ VAL = 1.0       # The colour's value/brightness (from 0.0 to 1.0)
 
 # Variables
 mighty = MightyFX()                     # Create a new MightyFX object to interact with the board
-player = ColourPlayer(mighty.outputs)   # Create a new effect player to control MightyFX's RGB outputs
+player = ColourPlayer(mighty.outputs)   # Create a new effect player to control Mighty FX's RGB outputs
 
 
-# Create a static colour effect, then give it to every output. An effect assigned on its own
-# rather than in a list plays on all of them
+# Create a static colour effect. One given on its own and not in a list plays on every output
 static = HSVFX(HUE, SAT, VAL)
 player.effects = static
 

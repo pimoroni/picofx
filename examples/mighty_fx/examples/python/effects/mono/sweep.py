@@ -4,17 +4,16 @@ from picofx import MonoPlayer
 from picofx.mono import SweepFX
 
 """
-Sweep a light back and forth across every colour of MightyFX's outputs.
+Sweep a light back and forth across every colour of Mighty FX's outputs.
 
-They run red, green then blue along each output, so the light changes colour as it
-travels, passing through each output's three components in turn.
+The light passes each output's red, green and blue in turn, so it changes colour as it travels.
 
 Press "Boot" to exit the program.
 """
 
 # Variables
 mighty = MightyFX()                 # Create a new MightyFX object to interact with the board
-player = MonoPlayer(mighty.monos)   # Create a new effect player to control each colour of MightyFX's outputs
+player = MonoPlayer(mighty.monos)   # Create a new effect player to control each colour of Mighty FX's outputs
 
 
 # Create and set up a sweep effect to play

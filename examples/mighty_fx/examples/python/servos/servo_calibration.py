@@ -2,14 +2,12 @@ from mighty_fx import MightyFX
 from servo import ANGULAR, CONTINUOUS, LINEAR, Calibration
 
 """
-Show the three kinds of servo MightyFX's L and R connectors can drive, and how to
+Show the three kinds of servo Mighty FX's L and R connectors can drive, and how to
 widen or rescale what their values mean.
 
-A servo is declared as one of ANGULAR, LINEAR or CONTINUOUS, and that choice decides
-what value() takes: degrees for an angular one, a distance for a linear one, and a
-speed from -1.0 to 1.0 for a continuous one. Each arrives with a calibration the board
-hands back, which can be adjusted and given again, so a servo travelling further than
-the default is told so rather than guessed at.
+A servo is declared ANGULAR, LINEAR or CONTINUOUS, which decides whether value() takes
+degrees, a distance, or a speed from -1.0 to 1.0. Each has a calibration that can be read,
+adjusted and given back, for a servo that travels further than the default.
 
 Nothing moves here. It prints what each calibration says, to be read against the servo
 in hand before anything is driven.
