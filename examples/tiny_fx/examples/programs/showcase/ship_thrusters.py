@@ -13,7 +13,7 @@ Press "Boot" to exit the program.
 # Constants
 CENTRAL_BRIGHTNESS = 1.0                # The brightness of the central thrusters (from 0.0 to 1.0)
 SIDE_BRIGHTNESS = 0.3                   # The brightness of the side thrusters (from 0.0 to 1.0)
-DIMNESS_PERCENT = 0.1                   # How much to dim the thuster brightness by (from 0.0 to 1.0)
+DIMNESS_PERCENT = 0.1                   # How much to dim the thruster brightness by (from 0.0 to 1.0)
 MIN_BRIGHTNESS_DURATION = 0.2           # The minimum amount of time the thrusters will be at full brightness for (in seconds)
 
 PLANETSHINE_HUE = 0.5                   # The colour of the planetshine (from 0.0 to 1.0)
@@ -23,8 +23,8 @@ PLANETSHINE_VALUE = 1.0                 # The value/brightness of the planetshin
 
 # Variables
 tiny = TinyFX()                         # Create a new TinyFX object
-player = MonoPlayer(tiny.outputs)       # Create a new effect player to control TinyFX's mono outputs
-rgb_player = ColourPlayer(tiny.rgb)     # Create a new effect player to control TinyFX's RGB output
+player = MonoPlayer(tiny.outputs)       # Create a new effect player to control Tiny FX's mono outputs
+rgb_player = ColourPlayer(tiny.rgb)     # Create a new effect player to control Tiny FX's RGB output
 
 # Set up the effects for the thruster banks
 left_centre = FlickerFX(brightness=CENTRAL_BRIGHTNESS,

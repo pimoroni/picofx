@@ -1,6 +1,6 @@
-# TinyFX Micropython Examples <!-- omit in toc -->
+# Tiny FX Micropython Examples <!-- omit in toc -->
 
-These are micropython examples for the Pimoroni [TinyFX](https://shop.pimoroni.com/products/tiny_fx), a stamp-sized light and sound effects controller board for model making, construction kits, and dioramas.
+These are micropython examples for the Pimoroni [Tiny FX](https://shop.pimoroni.com/products/tinyfx), a stamp-sized light and sound effects controller board for model making, construction kits, and dioramas.
 
 The examples are grouped by what they show, a folder each, and every folder has a README describing its examples.
 
