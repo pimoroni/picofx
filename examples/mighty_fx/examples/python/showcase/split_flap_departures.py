@@ -22,9 +22,9 @@ DIGITS = " 0123456789"
 ALPHA = " ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 BOTH = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 FLAP_MS = 150                       # How long one card takes to fall
-HOLD = 7.0                          # How long a page stands before the next one is called up
-# A card sits two levels above the board. The panel is 12 bit, so a channel has 16 levels in steps of
-# 17, and one level up from black reads as barely there against it
+HOLD = 2.0                          # How long a page stands before the next one is called up
+# A card sits two levels above the board. The screens drive the panel at 12 bit, so a channel has 16
+# levels in steps of 17, and one level up from black reads as barely there against it
 CARD = color.rgb(34, 34, 38)        # The face of a card
 INK = color.rgb(238, 238, 232)      # And the lettering on it, and the colons painted beside them
 HEADING = color.rgb(232, 176, 24)   # The column headings, painted on the board, not flapped
@@ -337,7 +337,7 @@ def call_up(index):
 
 call_up(0)
 page = 0
-due = time.ticks_add(time.ticks_ms(), int(HOLD * 1000))
+due = None
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
@@ -368,10 +368,13 @@ try:
 
         if drew:
             screen.update(canvas, rotation=90)
+        elif resting and due is None:
+            # The page has settled, so it stands from now
+            due = time.ticks_add(now, int(HOLD * 1000))
         elif resting and time.ticks_diff(now, due) >= 0:
             page = (page + 1) % len(PAGES)
             call_up(page)
-            due = time.ticks_add(now, int(HOLD * 1000))
+            due = None
         else:
             time.sleep_ms(10)
 

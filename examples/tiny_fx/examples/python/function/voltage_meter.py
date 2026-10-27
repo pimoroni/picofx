@@ -4,6 +4,9 @@ from tiny_fx import TinyFX
 """
 Use TinyFX's mono outputs as a bargraph to show the voltage that is powering the board.
 
+The output at the top of the bar is lit as far into its own step as the reading has
+gone, so the bar moves smoothly rather than a whole output at a time.
+
 Press "Boot" to exit the program.
 """
 
@@ -33,13 +36,15 @@ try:
         # Convert the voltage to a percentage of the min to max we want to show
         percent = (voltage - MIN_VOLTAGE) / (MAX_VOLTAGE - MIN_VOLTAGE)
 
+        # How much of the bar the reading fills, in outputs rather than as a fraction
+        filled = min(len(tiny.outputs), max(0.0, percent * len(tiny.outputs)))
+
         # Update all the outputs
         for i in range(len(tiny.outputs)):
-            # Calculate the voltage level the output represents
-            level = (i + 0.5) / len(tiny.outputs)
-
-            # If the percent is above the level, turn the output on, otherwise turn it off
-            tiny.outputs[i].brightness(BRIGHTNESS if percent >= level else 0)
+            # An output below the top of the bar is full, the one at the top is lit as
+            # far into its own step as the reading has gone, and the rest are out
+            level = min(1.0, max(0.0, filled - i))
+            tiny.outputs[i].brightness(BRIGHTNESS * level)
 
         pacer.hold()
 

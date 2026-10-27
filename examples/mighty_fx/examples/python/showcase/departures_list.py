@@ -259,7 +259,6 @@ def clock_at(started):
     return f"{total // 3600:02d}:{total // 60 % 60:02d}:{total % 60:02d}"
 
 
-# Which page each panel starts on, so a pair reads left to right as one longer board
 started = time.ticks_ms()
 page = 0
 turn_due = time.ticks_add(started, int(PAGE_HOLD * 1000))
@@ -277,6 +276,7 @@ try:
         clock = clock_at(started)
         frame = (page, clock)
         if frame != shown:
+            # Each panel shows the next page on, so a pair reads left to right as one longer board
             for position, canvas in enumerate(canvases):
                 draw(canvas, (page + position) % len(pages), clock)
 

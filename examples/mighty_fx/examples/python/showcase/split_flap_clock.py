@@ -17,8 +17,8 @@ FLAP_FONT = "/rom/fonts/AdventPro-Medium.af"  # A vector face, so it sizes to th
 DRUM = " 0123456789"                # What is on a card, in the order it comes round
 CLOCK_START = (11, 32, 45)          # The time it counts on from, MightyFX having no clock to read
 FLAP_MS = 260                       # How long one card takes to fall
-# A card sits two levels above the board. The panel is 12 bit, so a channel has 16 levels in steps of
-# 17, and one level up from black reads as barely there against it
+# A card sits two levels above the board. The screens drive the panel at 12 bit, so a channel has 16
+# levels in steps of 17, and one level up from black reads as barely there against it
 CARD = color.rgb(34, 34, 38)        # The face of a card
 SHADOW = color.rgb(17, 17, 19)      # The top edge of a card, recessed behind the one in front
 HOUSING = color.rgb(17, 17, 19)     # The case the cards are set into, a level between them and board
