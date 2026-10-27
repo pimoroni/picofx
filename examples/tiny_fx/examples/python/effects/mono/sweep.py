@@ -4,14 +4,14 @@ from picofx import MonoPlayer
 from picofx.mono import SweepFX
 
 """
-Sweep a light back and forth across TinyFX's outputs.
+Sweep a light back and forth across Tiny FX's outputs.
 
 Press "Boot" to exit the program.
 """
 
 # Variables
 tiny = TinyFX()                     # Create a new TinyFX object to interact with the board
-player = MonoPlayer(tiny.outputs)   # Create a new effect player to control TinyFX's mono outputs
+player = MonoPlayer(tiny.outputs)   # Create a new effect player to control Tiny FX's mono outputs
 
 
 # Create and set up a sweep effect to play
@@ -20,8 +20,7 @@ sweep = SweepFX(speed=0.5,          # The speed to sweep at, with 1.0 being one 
                 extent=1.0)         # How far the light reaches from itself, in outputs
 
 
-# Set up the sweep effect to play. Each output has a different position
-# for the light to be measured against as it passes
+# Set up the sweep effect to play, each output at its own position for the light to pass
 player.effects = [
     sweep(0),
     sweep(1),

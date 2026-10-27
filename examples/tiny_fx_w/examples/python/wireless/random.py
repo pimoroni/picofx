@@ -5,7 +5,7 @@ import requests
 from tiny_fx import TinyFX
 
 """
-Show random colours and patterns obtained from the internet on TinyFX's outputs.
+Show random colours and patterns obtained from the internet on Tiny FX's outputs.
 
 This example requires a secrets.py file to be on your board's file system with the credentials of your WiFi network.
 
@@ -30,7 +30,7 @@ REQUEST_INTERVAL = 5.0                  # The time to sleep between each interne
 
 # Variables
 tiny = TinyFX()                         # Create a new TinyFX object to interact with the board
-wlan = network.WLAN(network.STA_IF)     # Create a new network object for interacting with WiFI
+wlan = network.WLAN(network.STA_IF)     # Create a new network object for interacting with WiFi
 
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)

@@ -6,14 +6,14 @@ from tiny_fx import TinyFX
 from picofx.colour import WHITE
 
 """
-Play sounds that react to motion with a TinyFX.
-Grab yourself an MSA301 and attach it to the Qw/St connector.
+Play sounds that react to motion with a Tiny FX.
+Grab yourself an MSA301 and attach it to the Qw/ST connector.
 
-This example needs the directory `photon_sword` copied over to your TinyFX.
+This example needs the directory `photon_sword` copied over to your Tiny FX.
 
 Absolutely definitely not a l&%t s&^@*r.
 
-Press Boot to power up, swing to make do sounds! SWOOSH SWOOOOSH!!! and press Boot to power down
+Press Boot to power up, swing to make sounds! SWOOSH SWOOOOSH!!! and press Boot to power down
 """
 
 # Constants
@@ -22,7 +22,7 @@ ANIMATION_SLEEP = 0.05                      # The time to sleep between each ste
 MSA301_ADDRESS = 0x26                       # The accelerometer's address on the bus
 
 # Variables
-tiny = TinyFX(wav_root="/photon_sword")     # Create a new TinyFX object and tell with where the wav files are located
+tiny = TinyFX(wav_root="/photon_sword")     # Create a new TinyFX object and tell it where the wav files are located
 
 # Check if the accelerometer answers on the bus, since a missing one raises nothing
 if MSA301_ADDRESS not in tiny.i2c.scan():

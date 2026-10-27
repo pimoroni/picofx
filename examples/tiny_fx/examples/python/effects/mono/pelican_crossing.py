@@ -4,12 +4,11 @@ from picofx import MonoPlayer, ease
 from picofx.mono import PelicanCrossingFX
 
 """
-Play a pelican crossing on five of TinyFX's outputs.
+Play a pelican crossing on five of Tiny FX's outputs.
 
-The first three are the traffic lights and the next two are the figures a pedestrian
-reads, stop and walk. Where an ordinary signal shows red and amber together, a pelican
-flashes its amber and its walking figure, which is the phase telling drivers to go if
-the crossing is clear and pedestrians not to start.
+The first three are the traffic lights and the next two the pedestrian's stop and walk
+figures. Where an ordinary signal shows red and amber, a pelican flashes its amber and
+walking figure, telling drivers to go if the crossing is clear and pedestrians not to start.
 
 It comes round on its own clock, so there is no button to press. The lights ease on and
 off, which is how the filament lamps in a real crossing behave.
@@ -19,7 +18,7 @@ Press "Boot" to exit the program.
 
 # Variables
 tiny = TinyFX()                                     # Create a new TinyFX object to interact with the board
-player = MonoPlayer(tiny.outputs)                   # Create a new effect player to control TinyFX's mono outputs
+player = MonoPlayer(tiny.outputs)                   # Create a new effect player to control Tiny FX's mono outputs
 
 
 # Effects
@@ -29,8 +28,7 @@ pelican = PelicanCrossingFX(green_interval=20,      # The time (in seconds) traf
                             flashing_interval=6)    # The time (in seconds) the amber and the walking figure flash
 
 
-# How long each output takes to reach what the effect asks for. A single value
-# covers every output, and ease() is the curve a warming filament follows
+# How long each output takes to reach its level. One value covers all, along a warming filament's curve
 player.curves = ease(0.3)
 
 

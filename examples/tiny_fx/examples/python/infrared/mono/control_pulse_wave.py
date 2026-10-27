@@ -6,7 +6,7 @@ from picofx import MonoPlayer
 from picofx.mono import PulseWaveFX
 
 """
-Play a wave of pulses on TinyFX's outputs that is controllable
+Play a wave of pulses on Tiny FX's outputs that is controllable
 by the directional buttons on a Pimoroni Aye Arr Remote.
 
 Actions:
@@ -32,7 +32,7 @@ LENGTH_STEP = 0.1                   # The amount that length will change by with
 
 # Variables
 tiny = TinyFX(sensor=IR)            # Create a new TinyFX object, with the infrared receiver on its sensor connector
-player = MonoPlayer(tiny.outputs)   # Create a new effect player to control TinyFX's mono outputs
+player = MonoPlayer(tiny.outputs)   # Create a new effect player to control Tiny FX's mono outputs
 
 
 # Create a PulseWaveFX effect
@@ -58,14 +58,14 @@ def adjust_speed(amount):
     print(f"Speed = {wave.speed:.2f}")
 
 
-# Function called to change the saturation of the colour
+# Function called to change the length of the wave
 def adjust_length(amount):
     global wave
     wave.length = max(min(wave.length + amount, 20), 1)
     print(f"Length = {wave.length:.2f}")
 
 
-# Create the remote and setup up what each of the buttons will do
+# Create the remote and set up what each of the buttons will do
 remote = PimoroniRemote()
 remote.bind("ANTICLOCK", (adjust_speed, 1 / SPEED_MULT))
 remote.bind("CLOCKWISE", (adjust_speed, SPEED_MULT))

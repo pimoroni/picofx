@@ -20,7 +20,7 @@ PIR_TIMEOUT = 10      # The time to wait before turning off the lights after the
 
 # Variables
 tiny = TinyFX(sensor=PIR)           # Create a new TinyFX object, with a PIR on its sensor connector
-player = MonoPlayer(tiny.outputs)   # Create a new effect player to control TinyFX's mono outputs
+player = MonoPlayer(tiny.outputs)   # Create a new effect player to control Tiny FX's mono outputs
 
 # Take the PIR sensor the board set up on its sensor connector
 pir = tiny.sensor

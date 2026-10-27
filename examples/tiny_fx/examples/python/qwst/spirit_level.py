@@ -5,22 +5,17 @@ from timing import Pacer
 from tiny_fx import TinyFX
 
 """
-Use TinyFX's mono outputs as a spirit level, read from an accelerometer on Qw/ST.
+Use Tiny FX's mono outputs as a spirit level, read from an accelerometer on Qw/ST.
 
-Plug a multi sensor stick, or another LSM6DS3 breakout, into the Qw/ST connector. The
-board makes the bus itself, as tiny.i2c, so the sensor takes that and nothing else
-needs setting up.
+Plug a multi sensor stick or another LSM6DS3 breakout into the Qw/ST connector, which
+the board sets up as tiny.i2c.
 
-A board lying flat has gravity pulling straight down through it, and tilting it moves
-some of that pull sideways. That sideways part is what places the bubble, which travels
-towards whichever side is lower and spreads across two outputs as it passes between
-them, so it slides rather than hops.
+The bubble moves towards the lower side, spread across two outputs as it passes between
+them.
 
-Six outputs have no middle one, so a level board lights the middle two equally, and the
-RGB output carries how far off level it is: green when it is, reddening as it tilts.
-
-Which way to tilt it is set by AXIS, and readings are smoothed on the way in: a bubble
-spread across two outputs shows every fraction of a degree the sensor wobbles by.
+Six outputs have no middle one, so a level board lights the middle two equally. The RGB
+output shows how far off level it is, green when level and redder as it tilts. Rest the
+board on something and lift one edge.
 
 Press "Boot" to exit the program.
 
@@ -54,9 +49,8 @@ middle = (len(tiny.outputs) - 1) / 2
 imu.get_readings()
 time.sleep(SETTLE)
 
-# What the bubble is placed by. A single reading jitters by a fraction of a degree,
-# which a bubble spread across two outputs shows plainly, so each new one is mixed into
-# what was there rather than replacing it
+# What places the bubble. Each reading is mixed into the last, since a bubble spread across
+# two outputs shows every fraction of a degree the sensor jitters by
 smoothed = imu.get_readings()[AXIS] / ONE_G
 
 
@@ -71,19 +65,16 @@ try:
         sideways = imu.get_readings()[AXIS] / ONE_G
         smoothed += (sideways - smoothed) * SMOOTHING
 
-        # Where the bubble sits, from the first output to the last, with level falling
-        # between the middle two
+        # Where the bubble sits from the first output to the last, level between the middle two
         tilt = min(1.0, max(-1.0, smoothed / TILT_EXTENT))
         position = middle + tilt * middle
 
-        # Each output lights by how near the bubble is to it, so the bubble spreads
-        # across two as it passes between them rather than stepping from one to the next
+        # Each output lights by how near the bubble is, so it spreads across two between them
         for i, output in enumerate(tiny.outputs):
             nearness = max(0.0, 1.0 - abs(position - i))
             output.brightness(BRIGHTNESS * nearness)
 
-        # The mono outputs have no colour to show how far off level it is, so the RGB
-        # output says it instead
+        # The RGB output shows how far off level it is, which the mono outputs cannot
         tiny.rgb.set_hsv(LEVEL_HUE + (TILTED_HUE - LEVEL_HUE) * abs(tilt), 1.0, BRIGHTNESS)
 
         pacer.hold()

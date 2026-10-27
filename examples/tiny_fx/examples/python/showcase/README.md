@@ -15,12 +15,12 @@ This folder contains a collection of *Showcase* examples, that bring together co
 ### Rescue Vehicle
 [rescue_vehicle.py](rescue_vehicle.py)
 
-Play an alternating flashing sequence on two of TinyFX's outputs, recreating the effect of rescue vehicle beacons. The other outputs are static for illuminated head and tail lights.
+Play an alternating flashing sequence on two of Tiny FX's outputs, recreating the effect of rescue vehicle beacons. The other outputs are static for illuminated head and tail lights.
 
 ### Sensor Wave
 [sensor_wave.py](sensor_wave.py)
 
-Play a wave of pulses on TinyFX's outputs, whose speed is controlled by a sensor.
+Play a wave of pulses on Tiny FX's outputs, whose speed is controlled by a sensor.
 
 ### Ship Thrusters
 [ship_thrusters.py](ship_thrusters.py)

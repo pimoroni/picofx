@@ -23,7 +23,7 @@ Thumbnail: outputs mono
 
 # Variables
 tiny = TinyFX(sensor=IR)            # Create a new TinyFX object, with the infrared receiver on its sensor connector
-player = MonoPlayer(tiny.outputs)   # Create a new effect player to control TinyFX's mono outputs
+player = MonoPlayer(tiny.outputs)   # Create a new effect player to control Tiny FX's mono outputs
 
 # Set up the effects to play
 effects = [
@@ -54,7 +54,7 @@ def toggle_channel(channel):
     player.effects = new_effects
 
 
-# Create the remote and setup up what each of the buttons will do
+# Create the remote and set up what each of the buttons will do
 remote = PimoroniRemote()
 remote.bind("1_RED", on_press=(toggle_channel, 6), on_repeat=None)
 remote.bind("2_GREEN", on_press=(toggle_channel, 5), on_repeat=None)

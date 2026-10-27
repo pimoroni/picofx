@@ -6,7 +6,7 @@ from picofx import MonoPlayer
 from picofx.mono import PulseWaveFX
 
 """
-Play a wave of pulses on TinyFX's outputs, who's speed is controlled by a sensor.
+Play a wave of pulses on Tiny FX's outputs, whose speed is controlled by a sensor.
 
 Press "Boot" to exit the program.
 
@@ -24,7 +24,7 @@ INTERVAL = 0.1      # How often to take a voltage measurement, in seconds
 
 # Variables
 tiny = TinyFX(sensor=ANALOG)            # Create a new TinyFX object, with an analog sensor on its connector
-player = MonoPlayer(tiny.outputs)       # Create a new effect player to control TinyFX's mono outputs
+player = MonoPlayer(tiny.outputs)       # Create a new effect player to control Tiny FX's mono outputs
 
 
 # Create a PulseWaveFX effect

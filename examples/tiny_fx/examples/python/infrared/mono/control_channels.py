@@ -19,12 +19,12 @@ Press "Boot" to exit the program.
 """
 
 # Constants
-BRIGHTNESS = 1.0                    # The initial brightess of each channel (from 0.0 to 1.0)
+BRIGHTNESS = 1.0                    # The initial brightness of each channel (from 0.0 to 1.0)
 BRIGHTNESS_STEP = 0.02              # The amount to change the brightness by when fading
 
 # Variables
 tiny = TinyFX(sensor=IR)            # Create a new TinyFX object, with the infrared receiver on its sensor connector
-player = MonoPlayer(tiny.outputs)   # Create a new effect player to control TinyFX's mono outputs
+player = MonoPlayer(tiny.outputs)   # Create a new effect player to control Tiny FX's mono outputs
 
 
 # Create and set up a static effect to play on every output
@@ -54,7 +54,7 @@ def fade_mono(channel):
     print(f"Fade Channel #{channel}, Brightness: {fx.brightness:.2f}")
 
 
-# Create the remote and setup up what each of the buttons will do
+# Create the remote and set up what each of the buttons will do
 remote = PimoroniRemote()
 remote.bind("1_RED", on_press=None, on_short=(toggle_mono, 1), on_repeat=(fade_mono, 1))
 remote.bind("2_GREEN", on_press=None, on_short=(toggle_mono, 2), on_repeat=(fade_mono, 2))

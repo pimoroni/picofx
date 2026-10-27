@@ -4,14 +4,14 @@ from picofx import ColourPlayer
 from picofx.colour import RainbowFX
 
 """
-Play a rainbow effect on TinyFX's RGB output.
+Play a rainbow effect on Tiny FX's RGB output.
 
 Press "Boot" to exit the program.
 """
 
 # Variables
 tiny = TinyFX()                         # Create a new TinyFX object to interact with the board
-player = ColourPlayer(tiny.rgb)         # Create a new effect player to control TinyFX's RGB output
+player = ColourPlayer(tiny.rgb)         # Create a new effect player to control Tiny FX's RGB output
 
 
 # Create and set up a rainbow effect to play

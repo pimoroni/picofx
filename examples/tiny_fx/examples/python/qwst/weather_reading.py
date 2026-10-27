@@ -5,10 +5,9 @@ from timing import Pacer
 from tiny_fx import TinyFX
 
 """
-Show the temperature on TinyFX's RGB output, read from a weather sensor on Qw/ST.
+Show the temperature on Tiny FX's RGB output, read from a weather sensor on Qw/ST.
 
-Plug a BME280 breakout into the Qw/ST connector. The board makes the bus itself, as
-tiny.i2c, so the sensor takes that and nothing else needs setting up.
+Plug a BME280 breakout into the Qw/ST connector, which the board sets up as tiny.i2c.
 
 The colour runs from blue at the cold end of the range, through purple, to red at the
 warm end. The pressure and humidity the sensor also reports are printed.
@@ -36,9 +35,8 @@ try:
 except RuntimeError:
     raise RuntimeError("No BME280 found on Qw/ST. Plug in a multi sensor stick or another BME280 breakout") from None
 
-# The sensor answers with the values its registers hold from reset until it has made a
-# measurement of its own, and reading again does not hurry it. So one read starts it
-# measuring, and the wait is what the reading after it needs to be real
+# The sensor reports its reset values until it has measured, and reading again does not
+# hurry it, so one read starts it and the wait lets that measurement finish
 bme.read()
 time.sleep(SETTLE)
 
@@ -61,8 +59,7 @@ try:
         percent = (temperature - MIN_TEMP) / (MAX_TEMP - MIN_TEMP)
         percent = min(1.0, max(0.0, percent))
 
-        # The hue between the two ends carries the scale, running blue through purple
-        # to red, so no mixing of colours is needed to cross it
+        # The hue between the two ends carries the scale, running blue through purple to red
         rgb.set_hsv(COLD_HUE + (WARM_HUE - COLD_HUE) * percent, 1.0, BRIGHTNESS)
 
         pacer.hold()

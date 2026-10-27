@@ -8,14 +8,14 @@ from picofx.colour import RainbowWaveFX
 from picofx.mono import PulseWaveFX
 
 """
-Play wave and rainbow animations across the outputs of this TinyFX
-and multiple other TinyFX's connected by I2C and running as an I2CTarget.
+Play wave and rainbow animations across the outputs of this Tiny FX
+and multiple other Tiny FX boards connected by I2C and running as an I2CTarget.
 
-For this you will need Qw/ST cables and hubs to connect all of the board together.
+For this you will need Qw/ST cables and hubs to connect all of the boards together.
 Be sure to leave the red power wire disconnected / cut to avoid potential damage
-to your devices, caused by the boards all trying the power each other.
+to your devices, caused by the boards all trying to power each other.
 
-All connected Tiny's should be running the i2c_target.py example (save it as main.py
+All connected Tiny FX boards should be running the i2c_target.py example (save it as main.py
 to have it run from power-up), and each should have a unique address.
 
 A sound played alongside keeps up with about five other boards at an UPDATE_RATE of 30.
@@ -70,7 +70,7 @@ rainbow = RainbowWaveFX(speed=RAINBOW_SPEED,
 rgb_player.effects = [rainbow(i) for i in range(len(rgbs))]
 
 
-# Create a class that can be paired with an EffectPlayer, to update all connected Tiny's
+# Create a class that can be paired with an EffectPlayer, to update all connected Tiny FX boards
 class Updater:
     __paired = None     # Nothing follows this in the chain of players
 
@@ -80,7 +80,7 @@ class Updater:
 
 
 player.pair(rgb_player)     # Pair the RGB player with the Mono player so they run in sync
-rgb_player.pair(Updater())  # Pair a Updater to the RGB player so it sends commands
+rgb_player.pair(Updater())  # Pair an Updater to the RGB player so it sends commands
                             # to the connected boards after all effects have updated
 
 

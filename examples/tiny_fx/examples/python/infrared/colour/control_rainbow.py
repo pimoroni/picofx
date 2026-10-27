@@ -6,7 +6,7 @@ from picofx import ColourPlayer
 from picofx.colour import RainbowFX
 
 """
-Play a rainbow effect on TinyFX's RGB output that is controllable
+Play a rainbow effect on Tiny FX's RGB output that is controllable
 by the directional buttons on a Pimoroni Aye Arr Remote.
 
 Actions:
@@ -37,10 +37,10 @@ VAL_STEP = 0.05                     # The amount that value will change by with 
 
 # Variables
 tiny = TinyFX(sensor=IR)            # Create a new TinyFX object, with the infrared receiver on its sensor connector
-player = ColourPlayer(tiny.rgb)     # Create a new effect player to control TinyFX's RGB output
+player = ColourPlayer(tiny.rgb)     # Create a new effect player to control Tiny FX's RGB output
 
 
-# Create and set up a static colour effect to "play"
+# Create and set up a rainbow effect to play
 rainbow = RainbowFX(speed=STARTING_SPEED,
                     sat=STARTING_SATURATION,
                     val=STARTING_VALUE)
@@ -68,7 +68,7 @@ def adjust_val(amount):
     print(f"Val = {rainbow.val:.2f}")
 
 
-# Create the remote and setup up what each of the buttons will do
+# Create the remote and set up what each of the buttons will do
 remote = PimoroniRemote()
 remote.bind("ANTICLOCK", (adjust_speed, 1 / SPEED_MULT))
 remote.bind("CLOCKWISE", (adjust_speed, SPEED_MULT))

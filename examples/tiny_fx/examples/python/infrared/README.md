@@ -24,7 +24,7 @@ Turn each of Tiny FX's mono outputs on and off by pressing the number buttons on
 ### Control Pulse Wave
 [mono/control_pulse_wave.py](mono/control_pulse_wave.py)
 
-Play a wave of pulses on TinyFX's outputs that is controllable by the directional buttons on a Pimoroni Aye Arr Remote.
+Play a wave of pulses on Tiny FX's outputs that is controllable by the directional buttons on a Pimoroni Aye Arr Remote.
 
 ### Toggle Effects
 [mono/toggle_effects.py](mono/toggle_effects.py)
@@ -57,4 +57,4 @@ Set the colour of Tiny FX's onboard RGB LED using the number buttons on the Pimo
 ### Control Rainbow
 [colour/control_rainbow.py](colour/control_rainbow.py)
 
-Play a rainbow effect on TinyFX's RGB output that is controllable by the directional buttons on a Pimoroni Aye Arr Remote.
+Play a rainbow effect on Tiny FX's RGB output that is controllable by the directional buttons on a Pimoroni Aye Arr Remote.
