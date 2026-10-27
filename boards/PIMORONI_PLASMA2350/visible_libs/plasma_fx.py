@@ -149,11 +149,15 @@ class PlasmaFX:
         if init_i2c:
             self.__i2c = PimoroniI2C(self.I2C_SDA_PIN, self.I2C_SCL_PIN, i2c_freq)
 
-        # A press is caught by interrupt as well as read, so a tap inside a long frame is not missed
-        self.__switch = Pin(self.USER_SW_PIN, Pin.IN, Pin.PULL_UP)
+        # A press is caught by interrupt as well as read, so a tap inside a long frame is not missed.
+        # The board pulls the pin up itself, and adding the internal pull-up keeps a press from ever
+        # reading low on an RP2350 A2, through its erratum E9
+        self.__switch = Pin(self.USER_SW_PIN, Pin.IN)
         self.__taps = 0
         self.__tapped_at = 0
         self.__switch.irq(trigger=Pin.IRQ_FALLING, handler=self.__switch_pressed)
+
+        self.__button_a = Pin(self.SW_A_PIN, Pin.IN, Pin.PULL_UP)
 
         # A WS2812 strip takes a data line, so each terminal can carry one, strip_dat and
         # strip_clk. An APA102 strip takes both terminals, data and clock, as strip_apa.
@@ -274,6 +278,9 @@ class PlasmaFX:
 
     def boot_pressed(self):
         return self.__switch.value() == 0
+
+    def a_pressed(self):
+        return self.__button_a.value() == 0
 
     def boot_taps(self):
         """Presses since this was last asked, caught by interrupt so a tap inside one long frame counts."""
