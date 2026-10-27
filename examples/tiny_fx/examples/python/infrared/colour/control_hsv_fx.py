@@ -14,6 +14,12 @@ to interact with the LED.
 Actions:
 - (1)-(9) Buttons [Press + Hold] = Set Colour
 - OK Button [Press + Hold] = Set Black
+- UP Button [Press + Hold] = Increase Value
+- DOWN Button [Press + Hold] = Decrease Value
+- LEFT Button [Press + Hold] = Decrease Saturation
+- RIGHT Button [Press + Hold] = Increase Saturation
+- ANTICLOCK Button [Press + Hold] = Decrease Hue
+- CLOCKWISE Button [Press + Hold] = Increase Hue
 
 An IR Stick should be connected to the Sensor port on Tiny FX.
 
@@ -27,7 +33,7 @@ VAL_STEP = 0.05         # The amount that value will change by with each press /
 
 # Variables
 tiny = TinyFX(sensor=IR)           # Create a new TinyFX object, with the infrared receiver on its sensor connector
-player = ColourPlayer(tiny.rgb)     # Create a new effect player to control TinyFX's RGB output
+player = ColourPlayer(tiny.rgb)     # Create a new effect player to control Tiny FX's RGB output
 
 # Create and set up a static colour effect to "play"
 hsv = HSVFX(*H_BLACK)
@@ -62,7 +68,7 @@ def adjust_val(amount):
     print(f"H = {hsv.hue:.2}, S = {hsv.sat:.2}, V = {hsv.val:.2}")
 
 
-# Create the remote and setup up what each of the buttons will do
+# Create the remote and set up what each of the buttons will do
 remote = PimoroniRemote()
 remote.bind("1_RED", (set_hsv, H_RED))
 remote.bind("2_GREEN", (set_hsv, H_GREEN))

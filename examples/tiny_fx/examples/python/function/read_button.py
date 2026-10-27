@@ -3,7 +3,7 @@ from tiny_fx import TinyFX
 from picofx.colour import GREEN, RED
 
 """
-Show the state of TinyFX's Boot button on its RGB output.
+Show the state of Tiny FX's Boot button on its RGB output.
 """
 
 # Constants

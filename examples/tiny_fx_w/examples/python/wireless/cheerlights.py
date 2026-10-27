@@ -5,7 +5,7 @@ import requests
 from tiny_fx import TinyFX
 
 """
-Obtain the current CheerLights colour from the internet and show it on TinyFX's RGB output.
+Obtain the current CheerLights colour from the internet and show it on Tiny FX's RGB output.
 For more information about CheerLights, visit: https://cheerlights.com/
 
 This example requires a secrets.py file to be on your board's file system with the credentials of your WiFi network.
@@ -28,7 +28,7 @@ REQUEST_INTERVAL = 5.0                  # The time to sleep between each interne
 
 # Variables
 tiny = TinyFX()                         # Create a new TinyFX object to interact with the board
-wlan = network.WLAN(network.STA_IF)     # Create a new network object for interacting with WiFI
+wlan = network.WLAN(network.STA_IF)     # Create a new network object for interacting with WiFi
 
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
@@ -53,7 +53,7 @@ try:
         json = req.json()
         req.close()
 
-        # Use the second to get the colour components for the RGB output
+        # Split the hex colour into its red, green and blue components
         colour = tuple(int(json["field2"][i:i + 2], 16) for i in (1, 3, 5))
 
         # Set the colour output, and print the values

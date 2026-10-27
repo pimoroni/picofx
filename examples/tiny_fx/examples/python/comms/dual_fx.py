@@ -6,15 +6,15 @@ from picofx.colour import RainbowWaveFX
 from picofx.mono import PulseWaveFX
 
 """
-Play wave and rainbow animations across the outputs of this TinyFX
-and another TinyFX connected by I2C and running as an I2CTarget.
+Play wave and rainbow animations across the outputs of this Tiny FX
+and another Tiny FX connected by I2C and running as an I2CTarget.
 
 For this you will need a Qw/ST cable. Be sure to disconnect / cut the
 red power wire before proceeding. This avoids potential damage to your
 devices, caused by one board trying to power the other.
 
-When ready, connect the Qw/ST cable from this Tiny's Qw/ST port to the
-matching port on your second TinyFX. The second TinyFX should be running
+When ready, connect the Qw/ST cable from this Tiny FX's Qw/ST port to the
+matching port on your second Tiny FX. The second Tiny FX should be running
 the i2c_target.py example. Save it as main.py to make it run at power-up.
 
 Press "Boot" to exit the program.

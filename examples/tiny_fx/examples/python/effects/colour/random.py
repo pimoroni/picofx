@@ -4,7 +4,7 @@ from picofx import MonoPlayer
 from picofx.mono import RandomFX
 
 """
-Play a randomly changing brightness and colour effect on TinyFX's RGB output.
+Play a randomly changing brightness and colour effect on Tiny FX's RGB output.
 
 Press "Boot" to exit the program.
 """

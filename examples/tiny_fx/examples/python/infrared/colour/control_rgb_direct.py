@@ -18,8 +18,8 @@ Press "Boot" to exit the program.
 """
 
 # Variables
-tiny = TinyFX(sensor=IR)           # Create a new TinyFX object, with the infrared receiver on its sensor connector
-rgb = tiny.rgb                      # Get a reference to the RGB output of TinyFX
+tiny = TinyFX(sensor=IR)            # Create a new TinyFX object, with the infrared receiver on its sensor connector
+rgb = tiny.rgb                      # Get a reference to the RGB output of Tiny FX
 
 
 # Function called when a colour button is pressed
@@ -28,7 +28,7 @@ def set_led(colour):
     print(f"Colour = #{colour[0]:02x}{colour[1]:02x}{colour[2]:02x}")
 
 
-# Create the remote and setup up what each of the buttons will do
+# Create the remote and set up what each of the buttons will do
 remote = PimoroniRemote()
 remote.bind("1_RED", (set_led, RED))
 remote.bind("2_GREEN", (set_led, GREEN))

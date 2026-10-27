@@ -3,7 +3,7 @@ from timing import Pacer
 from tiny_fx import TinyFX
 
 """
-Use TinyFX's mono outputs as a bargraph to show the voltage
+Use Tiny FX's mono outputs as a bargraph to show the voltage
 measured from a sensor attached to the sensor connector.
 
 The top output of the bar is lit as far into its step as the
