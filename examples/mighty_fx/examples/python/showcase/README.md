@@ -21,6 +21,7 @@ The posters the two billboards show live with the other example art in [assets/b
 - [Segment Clock](#segment-clock)
 - [Segment Sign](#segment-sign)
 - [Odometer](#odometer)
+- [Lamp Matrix](#lamp-matrix)
 - [Isometric Flight](#isometric-flight)
 - [Programmed Route](#programmed-route)
 - [Skyline](#skyline)
@@ -127,6 +128,12 @@ Draw an LED sign of fourteen-segment characters, three rows of them in windows s
 [odometer.py](odometer.py)
 
 Draw a mechanical odometer, a row of number drums in a brass frame. The last drum turns steadily, and each of the others is carried round as the drum to its right passes from 9 to 0.
+
+
+## Lamp Matrix
+[lamp_matrix.py](lamp_matrix.py)
+
+Draw a stage lighting lamp matrix, a panel of lamps in deep reflector cups running through cues. Tungsten lamps glow up quickly and fade slowly, white hot through orange to a dull red as each filament cools. LAMPS = "led" switches each instantly to one of a handful of colours, or off, instead.
 
 
 ## Isometric Flight
