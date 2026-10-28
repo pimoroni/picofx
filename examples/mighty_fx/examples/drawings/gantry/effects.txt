@@ -1,0 +1,35 @@
+board: screenA=2.8 screenB=2.8
+
+out1-7: rainbow_wave speed=-0.39 length=9
+
+[Blank: 5s]
+screenA: graphics file=gantry_blank.py width=240 height=240 fps=10
+screenB: graphics file=gantry_blank.py width=240 height=240 fps=10
+
+[Open: 5s]
+screenA: graphics file=gantry_open.py width=240 height=240 fps=10
+screenB: graphics file=gantry_open.py width=240 height=240 fps=10
+
+[Sixty: 5s]
+screenA: graphics file=gantry_sixty.py width=240 height=240 fps=10
+screenB: graphics file=gantry_sixty.py width=240 height=240 fps=10
+
+[Forty: 5s]
+screenA: graphics file=gantry_forty.py width=240 height=240 fps=10
+screenB: graphics file=gantry_forty.py width=240 height=240 fps=10
+
+[Keep right: 5s]
+screenA: graphics file=gantry_keep_right.py width=240 height=240 fps=10
+screenB: graphics file=gantry_keep_right.py width=240 height=240 fps=10
+
+[Lane one closing: 5s]
+screenA: graphics file=gantry_closed.py width=240 height=240 fps=10
+screenB: graphics file=gantry_keep_right.py width=240 height=240 fps=10
+
+[Lanes one and two closed: 10s]
+screenA: graphics file=gantry_closed.py width=240 height=240 fps=10
+screenB: graphics file=gantry_closed.py width=240 height=240 fps=10
+
+[National: 5s]
+screenA: graphics file=gantry_national.py width=240 height=240 fps=10
+screenB: graphics file=gantry_national.py width=240 height=240 fps=10
