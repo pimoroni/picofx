@@ -18,6 +18,8 @@ The posters the two billboards show live with the other example art in [assets/b
 - [CRT Terminal](#crt-terminal)
 - [Acrylic Lixie](#acrylic-lixie)
 - [Nixie Tube](#nixie-tube)
+- [Segment Clock](#segment-clock)
+- [Segment Sign](#segment-sign)
 - [Isometric Flight](#isometric-flight)
 - [Programmed Route](#programmed-route)
 - [Skyline](#skyline)
@@ -106,6 +108,18 @@ Draw a lixie, ten engraved acrylic sheets stacked front to back with a digit on 
 [nixie_tube.py](nixie_tube.py)
 
 Draw a nixie tube, ten cathodes bent into digits and stacked front to back in a glass cylinder. The one carrying current glows red-orange through the anode mesh.
+
+
+## Segment Clock
+[segment_clock.py](segment_clock.py)
+
+Draw an LED seven-segment clock, its digits made of bars lit behind a coloured filter.
+
+
+## Segment Sign
+[segment_sign.py](segment_sign.py)
+
+Draw an LED sign of fourteen-segment characters, three rows of them in windows set into a brushed metal case. A row too long for its window scrolls through it.
 
 
 ## Isometric Flight
