@@ -872,10 +872,11 @@ def __too_big(at, target, effect, error):
     # it has, only what this file adds is written. Another screen draws on the same
     # memory, which is what makes one picture play and two fail
     said = str(error).strip()
+    shared = len(BUILT_SCREENS) > 1
     if "was free" in said:
         # The player has sized it up and said why an animation wants so much
         head = said[:-1] if said.endswith(".") else said
-        join = ", and both screens share that memory."
+        join = ", and the screens share that memory." if shared else "."
     elif "allocation failed" in said:
         import gc
         gc.collect()
@@ -892,7 +893,7 @@ def __too_big(at, target, effect, error):
             room = ("needs {} in one piece and the {} free is in smaller "
                     "pieces".format(__in_kilobytes(wanted), __in_kilobytes(spare)))
         head = "{} {}".format(target, room)
-        join = ". Both screens share that memory."
+        join = ". The screens share that memory." if shared else "."
     else:
         # picovector says by how much a GIF misses its own limit and what to do about
         # it, a fixed ceiling and not a shortage. Nothing is added but the file, so its

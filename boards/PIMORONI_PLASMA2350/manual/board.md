@@ -64,13 +64,6 @@ offers none.
 A 2.8 inch panel is mounted upright, 240 wide by 320 tall, so a landscape
 picture is cropped at its sides unless the line turns it, with `rotation=90`.
 
-**A limit for now.** The board's memory is small, and what the last file showed
-can keep its room until a restart. Saving a change from one full-size picture
-to another is refused with a note in `errors.txt`. Turn the board off and on
-with the new file saved and it plays. Animations under about 60KB of frames,
-small pictures, and drawings with `pixel_double=true` change over without a
-restart. The lights are never affected.
-
 <!-- block scene_example -->
 
 ```entry

@@ -160,7 +160,7 @@ def __tell(fx, problems, errors, running):
         indicate(fx, PROBLEM if wrote else UNREPORTED)
 
 
-def __reload(fx, volume, path, errors, playing, sounding=(), maker=None):
+def __reload(fx, volume, path, errors, playing, showing, sounding=(), maker=None):
     # Stop what is playing, read the file again, and play what it now says.
     #
     # Takes a board or something that makes one, and hands the board back, since the file
@@ -170,6 +170,9 @@ def __reload(fx, volume, path, errors, playing, sounding=(), maker=None):
     # The players held the strips. A board rebuilt below for a changed entry claims
     # their state machines again, which a strip still referenced would refuse
     playing.clear()
+    # The shows hold the last file's pictures. A board without PSRAM has no room for the
+    # next file's beside them
+    showing.clear()
 
     # A sound's handle belongs to the file just set aside, so it closes here and
     # the read below opens whatever the file names now
@@ -445,7 +448,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                      wireless=getattr(board, "WIRELESS", False))
 
     fx, players, shows, sounds, scenes, settings, problems = __reload(
-        fx, volume, path, errors, [], (), maker)
+        fx, volume, path, errors, [], [], (), maker)
 
     scene_at = 0
     scene_deadline = None
@@ -607,8 +610,10 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                     # Before the reload, which darkens everything and would swallow it
                     __stop(players)
                     __handover(fx, True)
+                # The pause and resume loops leave this naming one of the last file's shows
+                show = None
                 fx, players, shows, sounds, scenes, settings, problems = __reload(
-                    fx, volume, path, errors, players, sounds, maker)
+                    fx, volume, path, errors, players, shows, sounds, maker)
                 # A program only runs from a start, so a file that now names one restarts
                 # the board, which then runs it as it does at power on
                 if settings.get("program"):
