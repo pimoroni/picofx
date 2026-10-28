@@ -20,6 +20,7 @@ The posters the two billboards show live with the other example art in [assets/b
 - [Nixie Tube](#nixie-tube)
 - [Segment Clock](#segment-clock)
 - [Segment Sign](#segment-sign)
+- [Odometer](#odometer)
 - [Isometric Flight](#isometric-flight)
 - [Programmed Route](#programmed-route)
 - [Skyline](#skyline)
@@ -120,6 +121,12 @@ Draw an LED seven-segment clock, its digits made of bars lit behind a coloured f
 [segment_sign.py](segment_sign.py)
 
 Draw an LED sign of fourteen-segment characters, three rows of them in windows set into a brushed metal case. A row too long for its window scrolls through it.
+
+
+## Odometer
+[odometer.py](odometer.py)
+
+Draw a mechanical odometer, a row of number drums in a brass frame. The last drum turns steadily, and each of the others is carried round as the drum to its right passes from 9 to 0.
 
 
 ## Isometric Flight
