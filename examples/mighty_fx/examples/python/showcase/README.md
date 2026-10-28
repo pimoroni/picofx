@@ -22,9 +22,14 @@ The posters the two billboards show live with the other example art in [assets/b
 - [Segment Sign](#segment-sign)
 - [Odometer](#odometer)
 - [Lamp Matrix](#lamp-matrix)
+- [Oscilloscope](#oscilloscope)
 - [Isometric Flight](#isometric-flight)
 - [Programmed Route](#programmed-route)
 - [Skyline](#skyline)
+- [Laser Show](#laser-show)
+- [Fireplace](#fireplace)
+- [Portal](#portal)
+- [Pool](#pool)
 - [Status Panel](#status-panel)
 
 
@@ -136,6 +141,12 @@ Draw a mechanical odometer, a row of number drums in a brass frame. The last dru
 Draw a stage lighting lamp matrix, a panel of lamps in deep reflector cups running through cues. Tungsten lamps glow up quickly and fade slowly, white hot through orange to a dull red as each filament cools. LAMPS = "led" switches each instantly to one of a handful of colours, or off, instead.
 
 
+## Oscilloscope
+[oscilloscope.py](oscilloscope.py)
+
+Draw an oscilloscope, a beam tracing across its graticule and leaving a fading afterglow on the phosphor. A scrolling sine grows into a square wave a harmonic at a time and melts back, then the scope switches to XY mode for a turning Lissajous figure. SENSOR = True traces the voltage on the sensor connector instead.
+
+
 ## Isometric Flight
 [isometric_flight.py](isometric_flight.py)
 
@@ -152,6 +163,30 @@ Programme a two wheeled robot's route with the Aye Arr Remote, then watch it dri
 [skyline.py](skyline.py)
 
 Drift past a city while the sky turns from noon to midnight and the windows come on.
+
+
+## Laser Show
+[laser_show.py](laser_show.py)
+
+Draw a laser show, beams fanning and sweeping across a dark hall from three projectors along the foot of the stage, leaving a fading sheet behind them as beams through haze do. Each scene switches its projectors on and off as it goes. PORTRAIT = True stands the panel upright, with room for the outer two projectors only.
+
+
+## Fireplace
+[fireplace.py](fireplace.py)
+
+Draw a fire, its flames rising in tongues from hot spots flaring along its bed and burning out unevenly as they climb. Mighty FX's RGB outputs flicker orange with the hot spots in their share of the bed, brightest in the middle, so whatever they light glows as a room does round a fire. The fire fills the panel, leaving the surround to whatever it is mounted in.
+
+
+## Portal
+[portal.py](portal.py)
+
+Draw a portal, glowing arms winding in towards a dark opening inside a shimmering rim, with motes of light falling in faster across them. Each arm dims to black before the opening, so it seems to fall away without end. STONES = True sets it into a stone wall, and RIM_WIDTH and RIM_HEIGHT size it to a cutout in front of the panel.
+
+
+## Pool
+[pool.py](pool.py)
+
+Draw the floor of a small pool seen from above through rippling water, the tiles wobbling as the surface bends the light, and bright lines of light where the surface gathers it. STYLE chooses a modern pool's blue mosaic or a Roman bath's cream stones round an octagon.
 
 
 ## Status Panel
