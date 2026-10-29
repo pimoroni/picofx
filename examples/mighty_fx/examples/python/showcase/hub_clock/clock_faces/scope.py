@@ -12,6 +12,7 @@ A colon is a pair of beam dots beside the digit. showcase/oscilloscope.py draws 
 """
 
 CHANGE_STEPS = 4                    # Frames through a change, the old figure fading over them
+PACED = False                       # Kept to its own frames when the clock is overclocked, as each takes long to draw
 COLON_BLINKS = False                # The colon's dots are held lit
 WRITE_BUDGET = 16                   # Writes a change may take across the panels, so a carry's fades are cut short
 TRACE_SHARE = 0.35                  # How much of a change the beam takes to trace the new figure

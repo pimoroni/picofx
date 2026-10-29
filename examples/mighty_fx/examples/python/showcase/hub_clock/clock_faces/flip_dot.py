@@ -9,6 +9,7 @@ beside the grid. showcase/flip_dot_sign.py is the fuller version.
 
 DIGIT_FONT = "/rom/fonts/smart.ppf"  # A pixel face, a pixel to a disc
 CHANGE_STEPS = 5                    # Frames through a change
+PACED = False                       # Kept to its own frames when the clock is overclocked, so a carry's sweep stays short
 COLON_BLINKS = False                # The colon's discs stay showing yellow
 WRITE_BUDGET = None                 # Every frame of a turn shows, however long a wrap's cascade takes
 CARRY_FROM_LEFT = True              # A carry sweeps the panels left to right as the discs sweep each panel, the seconds keeping their pace

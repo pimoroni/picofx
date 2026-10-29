@@ -12,6 +12,7 @@ NEON = color.rgb(255, 102, 34)      # The red-orange a nixie's neon glows. rgb(1
 CORE = color.rgb(255, 170, 102)     # And the paler middle of it, along the wire itself
 BACKGROUND = color.black            # Behind the tube
 CHANGE_STEPS = 1                    # Frames between one digit and the next, the cathode losing the current still glowing
+PACED = False                       # Kept to its own frames when the clock is overclocked, as each takes long to draw
 
 # An unlit cathode is bare metal, drawn opaque so crossing digits never build up to the lit colour
 CATHODE_FRONT = (51, 43, 36)        # At the front of the stack, warmed by the neon behind it

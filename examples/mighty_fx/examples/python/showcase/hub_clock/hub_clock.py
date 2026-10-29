@@ -1,4 +1,5 @@
 import gc
+import machine
 import sys
 import time
 from mighty_fx import MightyFX, SPCE
@@ -33,26 +34,45 @@ BEAT_MS = 500                       # How long the colons stay lit each second
 LAMP_TEST_MS = 1500                 # How long every segment stays lit at start, as a clock tests its display at power on
 FACES = "/examples/python/showcase/hub_clock/clock_faces"   # Where the faces are on the board's filesystem
 COLONS = (1, 3)                     # The digits of HHMMSS a colon follows, drawn on their right edge
-WRITE_BUDGET = 6                    # Writes a change may take, about 45ms each, before an animated face's steps are cut to fit
-FRAME_MS = 120                      # Between one frame of a panel's change and its next, room for another panel's in between
+WRITE_BUDGET = 6                    # Writes a change may take at the board's own speed, before an animated face's steps are cut to fit
 AHEAD_MS = 2000                     # How far ahead frames are drawn while nothing is being written
 KEEP_FREE = 512 * 1024              # Memory left free after the frames are made, for everything else
+
+# Constants for the panels' wire. Faster than the board's own setting, as six panels share the one wire
+OVERCLOCK = True                    # Whether to raise the system clock and the wire, a panel's write taking about 28ms against 44ms
+BAUDRATE = 37_500_000               # The wire every panel runs at, the fastest the hub's wiring carries
+CPU_FREQ = 225_000_000              # The system clock, the overclock that still divides down to that wire
+BOARD_FREQ = (150_000_000, 48_000_000)  # The system and peripheral clocks Mighty FX runs at, restored on exit
+
+# The clock's pace, by how quickly a panel is written. With quicker writes, frames come closer together
+# and a change takes more of them, half as many again, so it lasts about as long but moves more smoothly
+FRAME_MS = 80 if OVERCLOCK else 120 # Between one frame of a panel's change and its next, room for another panel's in between
+PACE = 1.5 if OVERCLOCK else 1      # How many more frames a change takes than a face asks, and a carry's budget allows
+
+if OVERCLOCK:
+    # The SPI divider only reaches BAUDRATE with the peripheral clock raised to the system clock's. Set
+    # before the board is set up, so its buses start at the new rate
+    machine.freq(CPU_FREQ, CPU_FREQ)
 
 # Create a MightyFX object driving a screen hub, which takes SP/CE port B for extra chip selects
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_SELECTS)
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
-# Build a screen on every hub port and keep those that answer, as a hub need not be full
+# Build a screen on every hub port and keep those that answer, as a hub need not be full. 12-bit named,
+# as BAUDRATE also has a 16-bit setting, which takes a third longer on the wire
+wire = {"baudrate": BAUDRATE, "bitdepth": 12} if OVERCLOCK else {}
 panels = []
 for port in mighty.hub.ports:
     try:
-        panels.append(ScreenType(port))
+        panels.append(ScreenType(port, **wire))
     except ValueError:
         pass
 
 if len(panels) not in (4, 6):
     # Release the hub first, as one of its chip selects is a panel's backlight pin
     mighty.shutdown()
+    if OVERCLOCK:
+        machine.freq(*BOARD_FREQ)
     raise RuntimeError(f"The clock needs four or six panels on the hub, and {len(panels)} answered!")
 
 WIDTH, HEIGHT = panels[0].width, panels[0].height
@@ -64,6 +84,11 @@ face.prepare(WIDTH, HEIGHT)
 COLON_BLINKS = getattr(face, "COLON_BLINKS", True)  # A face may keep its colon steady
 STEPS = getattr(face, "CHANGE_STEPS", 0)            # Frames between one digit and the next, for a face that animates a change
 WRITE_BUDGET = getattr(face, "WRITE_BUDGET", WRITE_BUDGET)  # Or None, for a face whose every step must show
+if not getattr(face, "PACED", True):
+    # A face too slow to draw for the extra frames keeps its own, still written the quicker way
+    PACE = 1
+if WRITE_BUDGET is not None:
+    WRITE_BUDGET = round(WRITE_BUDGET * PACE)
 CARRY_TOGETHER = getattr(face, "CARRY_TOGETHER", False)     # Whether a carry changes every digit at once, as lamps switch
 CARRY_FROM_LEFT = getattr(face, "CARRY_FROM_LEFT", False)   # Whether the rest of a carry runs left to right, as a sign's controller scans
 # The panels left of the rightmost, in the order a carry takes them
@@ -71,10 +96,9 @@ CARRYING = list(range(len(panels) - 1)) if CARRY_FROM_LEFT else list(range(len(p
 
 
 def steps_between(previous, digit):
-    """Count the frames between two digits, which a face may set by how far apart they are."""
-    if hasattr(face, "change_steps"):
-        return face.change_steps(previous, digit)
-    return STEPS
+    """Count the frames between two digits, which a face may set by how far apart they are, at PACE."""
+    steps = face.change_steps(previous, digit) if hasattr(face, "change_steps") else STEPS
+    return round(steps * PACE)
 
 
 def shows(reading, place):
@@ -331,6 +355,9 @@ try:
         draw_ahead(needed(elapsed), all_of_them=False)
         pacer.hold()
 
-# Stop any running effects and turn off all the outputs
+# Stop any running effects and turn off all the outputs, then put the board's clocks back, as they outlast
+# a soft reset and the next program's screens expect them
 finally:
     mighty.shutdown()
+    if OVERCLOCK:
+        machine.freq(*BOARD_FREQ)
