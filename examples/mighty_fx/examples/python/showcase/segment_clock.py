@@ -21,7 +21,7 @@ Section: Mechanical and glowing displays
 
 # Constants for drawing
 CLOCK_START = (11, 32, 45)          # The time it counts on from, Mighty FX having no clock to read
-BLANK_LEADING_ZERO = True           # Whether an hour under ten shows one digit, as an LED clock's does
+BLANK_LEADING_ZERO = False          # Whether an hour under ten shows one digit, where a 24 hour clock shows both
 SECONDS = True                      # Whether the seconds show, the hours and minutes drawing larger without them
 COLON_MS = 500                      # How long the colons stay lit each second
 
