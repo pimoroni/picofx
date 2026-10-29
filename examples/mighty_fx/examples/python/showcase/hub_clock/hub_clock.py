@@ -31,7 +31,7 @@ CLOCK_START = (23, 59, 50)          # The time it counts on from, Mighty FX havi
 FOUR_PANELS_SHOW = "hours"          # What four panels show, "hours" and minutes or minutes and "seconds"
 BLANK_LEADING_ZERO = False          # Whether an hour under ten shows one digit, where a 24 hour clock shows both
 BEAT_MS = 500                       # How long the colons stay lit each second
-LAMP_TEST_MS = 1500                 # How long every segment stays lit at start, as a clock tests its display at power on
+WARM_UP_MS = 1500                   # How long the panels stay dark at start while the first frames are drawn
 FACES = "/examples/python/showcase/hub_clock/clock_faces"   # Where the faces are on the board's filesystem
 COLONS = (1, 3)                     # The digits of HHMMSS a colon follows, drawn on their right edge
 WRITE_BUDGET = 6                    # Writes a change may take at the board's own speed, before an animated face's steps are cut to fit
@@ -75,10 +75,16 @@ if len(panels) not in (4, 6):
         machine.freq(*BOARD_FREQ)
     raise RuntimeError(f"The clock needs four or six panels on the hub, and {len(panels)} answered!")
 
+# The hub's panels share one backlight, kept dark until each holds the time
+panels[0].backlight.off()
+unlit = set(range(len(panels)))
+lit = [False]
+
 WIDTH, HEIGHT = panels[0].width, panels[0].height
 
-# The face is loaded from its own file, so only the chosen one takes memory
-sys.path.append(FACES)
+# The face is loaded from its own file, so only the chosen one takes memory. Its folder goes first on the
+# path, as the drive's root may hold a showcase of the same name
+sys.path.insert(0, FACES)
 face = __import__(THEME)
 face.prepare(WIDTH, HEIGHT)
 COLON_BLINKS = getattr(face, "COLON_BLINKS", True)  # A face may keep its colon steady
@@ -293,30 +299,28 @@ def write_next(elapsed):
         # A panel part way through a change shows no digit yet
         digits[index] = picture[0] if len(picture) == 2 else None
         written[index] = elapsed
+        # The hub's one backlight lights once every panel holds the time, so none shows what it held before
+        unlit.discard(index)
+        if not unlit and not lit[0]:
+            panels[0].backlight.on()
+            panels[0].brightness(1.0)
+            lit[0] = True
     return 0
 
 
-# A lamp test first, every segment lit on every panel, the one frame they all share. Drawn in a spare
-# frame, left among the spares, as the memory the frames leave may not hold another
-lamp_test = spare[0]
-face.draw(lamp_test, shows("888888", 5), True)
-for panel in panels:
-    panel.update(lamp_test, v_sync=False)
-del lamp_test
-
-# The clock's first frames are drawn while the lamp test shows, so it starts with them ready, then as
-# many after them as the lamp test leaves time for, as a frame costs the most the first time it is drawn
-lamp_ends = time.ticks_add(time.ticks_ms(), LAMP_TEST_MS)
-lamp_hold = Pacer(LAMP_TEST_MS / 1000)
+# The clock's first frames are drawn while the panels are dark, so it starts with them ready, then as
+# many after them as WARM_UP_MS leaves time for, as a frame costs the most the first time it is drawn
+warm_until = time.ticks_add(time.ticks_ms(), WARM_UP_MS)
+warm_up = Pacer(WARM_UP_MS / 1000)
 first = showing_at(0)
 draw_ahead([picture for change in pictures(targets, first) for picture in change])
 later = needed(0, first)
 for picture in later:
-    if time.ticks_diff(lamp_ends, time.ticks_ms()) < draw_ms:
+    if time.ticks_diff(warm_until, time.ticks_ms()) < draw_ms:
         break
     if picture not in frames and not draw_picture(picture, later):
         break
-lamp_hold.hold()
+warm_up.hold()
 
 pacer = Pacer(0.01)                 # The clock's pace, looking for a change every 10ms
 
