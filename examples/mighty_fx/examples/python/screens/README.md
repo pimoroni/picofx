@@ -37,6 +37,7 @@ These are micropython examples for the screens Mighty FX can drive from its SP/C
   - [Carpets Paired](#carpets-paired)
   - [Test Cards Paired](#test-cards-paired)
 - [Screen Hub Examples](#screen-hub-examples)
+  - [Detect Hub](#detect-hub)
   - [Chevron Banks](#chevron-banks)
   - [Starfield Wall](#starfield-wall)
 - [Playback Examples](#playback-examples)
@@ -239,6 +240,11 @@ Turn a test card on each panel of a pair, the second one mirrored against the fi
 
 
 ## Screen Hub Examples
+
+### Detect Hub
+[hub/detect_hub.py](hub/detect_hub.py)
+
+Show which panel sits at each position of a screen hub. Every panel is painted its position's colour, with its letter in the top left over one bar for A up to six for F.
 
 ### Chevron Banks
 [hub/chevron_banks.py](hub/chevron_banks.py)
