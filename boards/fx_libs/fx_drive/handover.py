@@ -27,7 +27,7 @@ RELOADED = 5
 # volume back. Ejecting on the computer first is the only guaranteed save.
 SETTLE_MS = 1500
 
-# How long the board stays off the bus before rejoining, on the second reload and after.
+# How long the board stays off the bus before rejoining, at every show but a session's first.
 # The first activation of the runtime USB device disconnects and reconnects by itself,
 # with the 50ms hold TinyUSB applies, so only a later expose() waits here. Measured
 # working on macOS 15.5 and Windows 11 at this value, and not tried lower.
@@ -47,7 +47,6 @@ WATCH_POLL_MS = 500
 __exposed = False
 __was_pressed = False   # The button as the last service() call saw it
 __last_edge = None      # When a press began that a second may make a double, else None
-__withdrawn = False     # Whether the drive has been taken back, so expose() rejoins the bus
 __watching = False
 __entry_seen = None     # effects.txt's directory entry as last shown or acted on
 __entry_pending = None  # A changed entry seen once, counting when the next look matches it
@@ -189,10 +188,11 @@ def __bus_reset():
 def __rejoin_bus():
     # Leave the USB bus and return, so the computer enumerates the board afresh.
     #
-    # A computer that missed the media leaving keeps serving its old view of the volume
-    # and fails every read that reaches the device, and nothing on its side recovers.
-    # Leaving the bus it cannot miss. The serial console drops and returns with it, and
-    # macOS reports the drive as not ejected properly, which is true
+    # A computer can keep its view of the volume from before the board took it back,
+    # serving it, failing reads, or writing it over what the board wrote since, and
+    # nothing on its side recovers. Leaving the bus it cannot miss. The serial console
+    # drops and returns with it, and macOS reports the drive as not ejected properly,
+    # which is true
     usbd = machine.USBDevice()
     if usbd.active():
         usbd.active(False)
@@ -213,24 +213,22 @@ def expose():
     Show the drive to the connected computer, releasing the board's own
     mount while the computer owns it.
 
-    After a withdraw, also rejoins the USB bus, so the computer enumerates the board
-    afresh and reads the drive as it now is. Not at boot, when nothing has been taken
-    back. Anything the caller runs from a timer carries on through the rejoin.
-    Anything it drives itself, such as a screen, holds its last frame.
+    Also rejoins the USB bus, so the computer enumerates the board afresh and reads
+    the drive as it now is. A computer keeps its view across a soft reset, so even a
+    session's first show rejoins. Anything the caller runs from a timer carries on
+    through the rejoin. Anything it drives itself, such as a screen, holds its last
+    frame.
     """
-    global __exposed, __withdrawn, __entry_seen, __entry_pending, __watch_at
+    global __exposed, __entry_seen, __entry_pending, __watch_at
     if __exposed:
         return False
-    rejoin = __withdrawn
-    __withdrawn = False
     try:
         vfs.umount(MOUNT_POINT)
     except OSError:
         pass
     rp2.enable_msc()
     vfs.mount(View(), MOUNT_POINT)
-    if rejoin:
-        __rejoin_bus()
+    __rejoin_bus()
     __exposed = True
     __entry_seen = __effects_entry() if __watching else None
     __entry_pending = None
@@ -243,7 +241,7 @@ def withdraw():
     Take the drive back from the computer and re-read it, waiting out any
     write still in flight. Returns True when effects.txt may have changed.
     """
-    global __exposed, __withdrawn, __watch_reader
+    global __exposed, __watch_reader
     if not __exposed:
         return False
     deadline = time.ticks_add(time.ticks_ms(), SETTLE_MS)
@@ -251,7 +249,6 @@ def withdraw():
         time.sleep_ms(50)
     rp2.disable_msc()
     __exposed = False
-    __withdrawn = True
     __watch_reader = None
     # The view goes first, since mount() takes a mount point already in use as done
     try:
