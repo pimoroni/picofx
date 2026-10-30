@@ -351,7 +351,14 @@ def strip_shown(kind):
 
 
 def channel_shown(name):
-    """A channel name as the reader writes it, a strip's with its capitals and its LEDs after."""
+    """
+    A channel name as the reader writes it, a screen's or a hub position's with its letter in
+    capitals, and a strip's with its capitals and its LEDs after.
+    """
+    if name.startswith("screen"):
+        return screen_shown(name)
+    if name.startswith(HUB) and name[len(HUB):] in HUB_POSITIONS:
+        return hub_shown([name])
     letters = name
     while letters and not letters[-1].isalpha():
         letters = letters[:-1]

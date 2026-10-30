@@ -23,7 +23,7 @@
 
 from .vocabulary import (BOARD, CHANNEL_KINDS, COLOURS, COMPONENTS, CURVES, HUB, HUB_POSITIONS,
                          OUTPUT_SETTINGS, SCREEN_SETTINGS, TILING, TILING_ALSO)
-from .hardware import BOARD_EXAMPLE
+from .hardware import BOARD_EXAMPLE, channel_shown
 
 # An angle takes everything a fraction does and degrees besides, so its message is
 # built from the same words and the two cannot drift apart on what they share
@@ -649,7 +649,7 @@ def parse(text):
                 key = (pending.scene, channel.name)
                 if key in seen:
                     problems.append("line {}: {} was already set on line {}".format(
-                        pending.line, channel.name, seen[key]))
+                        pending.line, channel_shown(channel.name), seen[key]))
                 else:
                     seen[key] = pending.line
 
