@@ -54,3 +54,9 @@ int mp_hal_is_pin_reserved(int n);
 // FAT file names pass to and from Python as UTF-8. A computer writes its long names in Unicode,
 // and read through a code page one accented name breaks listing the whole folder.
 #define MICROPY_FATFS_LFN_UNICODE               (2)
+
+// A soft reset takes the drive back from the computer, as a cold boot leaves it
+#define MICROPY_HW_USB_MSC_UNREADY_ON_SOFT_RESET (1)
+
+// A soft reset keeps the USB connection up, so a console stays attached through it
+#define MICROPY_HW_USB_KEEP_BUS_ON_SOFT_RESET   (1)
