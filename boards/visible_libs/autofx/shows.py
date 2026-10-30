@@ -556,16 +556,15 @@ def __begin_drawings(waiting, shows, built, problems):
         except MemoryError as e:
             problems.append(__too_big(at, target, "graphics", e))
             shows.remove(show)
+            built.difference_update((scene, place) for place in show.places)
             spare = buffer
-            continue
         # The traceback, since this is the user's own code and a line number is what
         # makes it fixable
         except Exception as e:      # noqa: BLE001
             problems.append("line {}: {} could not start:\n{}".format(at, target, user_trace(e)))
             shows.remove(show)
+            built.difference_update((scene, place) for place in show.places)
             spare = buffer
-            continue
-        built.update((scene, place) for place in show.places)
 
 
 def wants_full_size(entries, board):
@@ -1054,6 +1053,8 @@ def build_shows(entries, fx, board, problems, build=True):
             show = ScreenShow(screen, player, channel, entry.scene, places, light, entry.line)
             shows.append(show)
             waiting.append((show, at, target, entry.scene))
+            # Taken now, so a repeat in its scene skips, and given back if it cannot start
+            built.update((entry.scene, place) for place in places)
             continue
 
         try:
