@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Christopher Parrott for Pimoroni Ltd
+# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
 #
 # SPDX-License-Identifier: MIT
 
@@ -6,6 +6,12 @@ from picofx import Updateable
 
 
 class BinaryCounterFX(Updateable):
+    """Each output shows one bit of a counter that adds step every interval."""
+
+    NAME = "binary_counter"
+    CALLED = "position"
+    TAKES = ("interval", "count", "step")
+
     def __init__(self, interval=0.1, count=0, step=1):
         self.interval = interval
         self.counter = count
