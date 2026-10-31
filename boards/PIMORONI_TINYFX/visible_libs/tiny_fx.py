@@ -6,11 +6,23 @@ import gc
 import time
 
 from audio import WavPlayer
-from machine import ADC, Pin
+from machine import ADC, PWM, Pin
 from pimoroni_i2c import PimoroniI2C
 
 from picofx import PWMLED, RGBLED
 from sensor import build_sensor
+
+
+# The PWM objects wake() lit, held here since one that is collected stops driving its pin
+__waking = []
+
+
+def __has_network():
+    try:
+        import network  # noqa: F401
+    except ImportError:
+        return False
+    return True
 
 
 class TinyFX:
@@ -45,6 +57,13 @@ class TinyFX:
 
     OUTPUT_GAMMA = 2.8      # Even steps of brightness, chosen by eye on a slow fade
     RGB_GAMMA = 2.2         # sRGB, for even hues, chosen by eye on a rainbow
+
+    # What wake() lights the outputs to, dim enough to read as alive and not as an effect
+    WAKE_LEVEL = 0.1
+
+    # Whether the board has a wireless module, so the FX drive offers the WiFi credentials and
+    # the programs that go online. Only a W's firmware has networking
+    WIRELESS = __has_network()
 
     def __init__(self, init_i2c=True, i2c_freq=100000, init_wav=True, wav_root="/", sensor=None):
         # What a build claims starts empty, so one that raises partway hands back what it
@@ -108,6 +127,13 @@ class TinyFX:
         if self.__wav is None:
             raise RuntimeError("wav is only accessible if the board was created with init_wav=True")
         return self.__wav
+
+    @classmethod
+    def wake(cls):
+        """Light every output dim before there is a board, so seconds of importing do not read as a dead one."""
+        duty = int(65535 * cls.WAKE_LEVEL)
+        for pin in cls.OUT_PINS + cls.RGB_PINS:
+            __waking.append(PWM(Pin(pin), freq=PWMLED.FREQUENCY, duty_u16=duty))
 
     def boot_pressed(self):
         return self.__switch.value() == 0

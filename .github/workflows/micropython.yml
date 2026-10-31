@@ -21,9 +21,24 @@ jobs:
             shortname: tiny_fx_w
             board: PIMORONI_TINYFX
             variant: w
+          - name: TinyFX with the FX drive
+            shortname: tiny_fx_drive
+            board: PIMORONI_TINYFX
+            variant: drive
+          - name: TinyFX W with the FX drive
+            shortname: tiny_fx_w_drive
+            board: PIMORONI_TINYFX
+            variant: w_drive
           - name: MightyFX
             shortname: mighty_fx
             board: PIMORONI_MIGHTYFX
+          - name: MightyFX with the FX drive
+            shortname: mighty_fx_drive
+            board: PIMORONI_MIGHTYFX
+            variant: drive
+          - name: Plasma 2350
+            shortname: plasma_2350
+            board: PIMORONI_PLASMA2350
 
     env:
       # A release's files carry its tag behind a v, such as tiny_fx-v1.1.1-pimoroni-micropython.uf2,
@@ -91,6 +106,13 @@ jobs:
         name: ${{ env.CI_RELEASE_FILENAME }}-with-libs-and-examples.uf2
         path: ${{ env.CI_BUILD_ROOT }}/${{ env.CI_RELEASE_FILENAME }}-with-libs-and-examples.uf2
 
+    - name: "Artifacts: Upload .uf2 (With FX Drive)"
+      uses: actions/upload-artifact@v7
+      with:
+        name: ${{ env.CI_RELEASE_FILENAME }}-full.uf2
+        path: ${{ env.CI_BUILD_ROOT }}/${{ env.CI_RELEASE_FILENAME }}-full.uf2
+        if-no-files-found: ignore
+
     - name: "Release: Upload .uf2"
       if: github.event_name == 'release'
       uses: softprops/action-gh-release@v3
@@ -102,3 +124,9 @@ jobs:
       uses: softprops/action-gh-release@v3
       with:
         files: ${{ env.CI_BUILD_ROOT }}/${{ env.CI_RELEASE_FILENAME }}-with-libs-and-examples.uf2
+
+    - name: "Release: Upload .uf2 (With FX Drive)"
+      if: github.event_name == 'release'
+      uses: softprops/action-gh-release@v3
+      with:
+        files: ${{ env.CI_BUILD_ROOT }}/${{ env.CI_RELEASE_FILENAME }}-full.uf2

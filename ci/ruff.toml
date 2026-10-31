@@ -66,4 +66,4 @@ lint.ignore = [
 # F401 - a package's __init__.py imports the names the package is used through, so
 #        every one of them is unused where it is written.
 
-lint.per-file-ignores = { "**/autofx/__init__.py" = ["F401"] }
+lint.per-file-ignores = { "**/fx_drive/__init__.py" = ["F401"], "**/autofx/__init__.py" = ["F401"] }
