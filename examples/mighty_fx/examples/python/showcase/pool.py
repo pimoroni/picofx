@@ -1,5 +1,6 @@
 import random
 import sys
+import time
 import micropython
 import spidisplay
 from mighty_fx import MightyFX, SPCE
@@ -9,20 +10,22 @@ from picovector import color, rect
 
 """
 Draw the floor of a small pool seen from above through rippling water, the tiles wobbling as the
-surface bends the light, and bright lines of light where the surface gathers it. STYLE chooses a
-modern pool's blue mosaic or a Roman bath's cream stones round an octagon.
+surface bends the light, and bright lines of light where the surface gathers it. STYLE chooses the
+floor to start on, a modern pool's blue mosaic or a Roman bath's cream stones round an octagon.
 
 The water is a grid of heights, rippled by drops falling at random and the odd splash. At each step
 every cell takes half the sum of its four neighbours less its own height a step before, calmed a
 little, so the ripples spread, cross and reflect from the walls, as in Hugo Elias's water.
 
-Press "Boot" to exit the program.
+Press "Boot" for the other floor, and hold it to exit the program.
 
 Section: Animation
 """
 
 # Constants for drawing
-STYLE = "modern"                                    # The floor, "modern" blue mosaic or "roman" cream stones round an octagon
+STYLE = "modern"                                    # The floor to start on, "modern" blue mosaic or "roman" cream stones round an octagon
+STYLES = ("modern", "roman")                        # The floors "Boot" steps through, in order
+QUIT_MS = 1500                                      # Held at least this long, the button ends the example
 FRAME_RATE = 9                                      # Frames a second, which the board holds
 STEPS = 2                                           # Ripple steps a frame, more for faster ripples
 DROPS = 2                                           # Drops falling on the water each step
@@ -85,9 +88,9 @@ for heights in water:
     heights[:] = bytes(len(heights))
 
 
-def build_floor():
-    """Draw the floor once, a stone at a time, in the chosen STYLE."""
-    if STYLE == "roman":
+def build_floor(style):
+    """Draw the floor a stone at a time in that style, "modern" or "roman"."""
+    if style == "roman":
         floor.pen = color.rgb(*BATH_GROUT)
         floor.clear()
         for row in range(ROWS):
@@ -190,8 +193,9 @@ def show_floor(out: ptr32, floor_pixels: ptr32, width: int, rows: int, floor_w: 
             out[y * width + x] = floor_pixels[(y + border) * floor_w + x + border]
 
 
-# The floor is drawn once, and the panel's edge shown as under still water
-build_floor()
+# The floor is drawn once for each change of style, and the panel's edge shown as under still water
+style_index = STYLES.index(STYLE)
+build_floor(STYLE)
 floor_pixels = floor.raw
 show_floor(pixels, floor_pixels, WIDTH, HEIGHT, FLOOR_W, BORDER)
 
@@ -210,12 +214,34 @@ def draw():
 
 
 pacer = Pacer(fps=FRAME_RATE)       # The pool's clock, holding each frame to the rate
+print(f"Press for the {STYLES[(style_index + 1) % len(STYLES)]} floor, hold {QUIT_MS}ms to finish")
+
+pressed_since = None
+leaving = False
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
-    while not mighty.boot_pressed():
+    while not leaving:
         draw()
         screen.update(canvas, pixel_double=True)
+
+        # Judged on release, a press being impossible to tell from a hold until it ends
+        if mighty.boot_pressed():
+            if pressed_since is None:
+                pressed_since = time.ticks_ms()
+
+        elif pressed_since is not None:
+            held = time.ticks_diff(time.ticks_ms(), pressed_since)
+            pressed_since = None
+            if held >= QUIT_MS:
+                leaving = True
+            else:
+                # The water ripples on over the new floor
+                style_index = (style_index + 1) % len(STYLES)
+                build_floor(STYLES[style_index])
+                show_floor(pixels, floor_pixels, WIDTH, HEIGHT, FLOOR_W, BORDER)
+                print(f"> {STYLES[style_index]}")
+
         pacer.hold()
 
 # Stop any running effects and turn off all the outputs

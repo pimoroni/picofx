@@ -313,7 +313,7 @@ Draw a portal, glowing arms winding in towards a dark opening inside a shimmerin
 
 [pool.py](pool.py)
 
-Draw the floor of a small pool seen from above through rippling water, the tiles wobbling as the surface bends the light, and bright lines of light where the surface gathers it. STYLE chooses a modern pool's blue mosaic or a Roman bath's cream stones round an octagon.
+Draw the floor of a small pool seen from above through rippling water, the tiles wobbling as the surface bends the light, and bright lines of light where the surface gathers it. STYLE chooses the floor to start on, a modern pool's blue mosaic or a Roman bath's cream stones round an octagon, and "Boot" swaps to the other.
 
 <br clear="left">
 
