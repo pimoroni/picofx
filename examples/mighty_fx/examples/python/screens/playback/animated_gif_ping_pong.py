@@ -12,6 +12,8 @@ The coin loops, so first_as_last replays its first frame at the far end for a fu
 hold= sets the wait at each turn, one value for both ends or two.
 
 Press "Boot" to exit the program.
+
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants

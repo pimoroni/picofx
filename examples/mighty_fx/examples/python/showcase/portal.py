@@ -17,6 +17,7 @@ large as fits. Each frame dims the opening a little before drawing, so the motes
 Press "Boot" to exit the program.
 
 Section: Animation
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants for drawing

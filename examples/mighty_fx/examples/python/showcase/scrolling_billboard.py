@@ -12,6 +12,7 @@ Draw a scrolling billboard, its posters carried on a loop and read from the boar
 Press "Boot" to exit the program.
 
 Section: Billboards and panels
+Args: Rotation = 0 or 180
 """
 
 POSTERS = "/examples/assets/billboards/portrait"   # Shared with the billboard examples

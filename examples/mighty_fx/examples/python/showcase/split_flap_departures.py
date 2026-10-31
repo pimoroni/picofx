@@ -10,6 +10,7 @@ Draw a split-flap departures board, each card climbing through the drum to its l
 Press "Boot" to exit the program.
 
 Section: Transport signs
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants for drawing

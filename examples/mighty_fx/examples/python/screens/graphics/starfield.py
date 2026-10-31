@@ -12,6 +12,7 @@ Change up some of the constants below to see what happens.
 Press "Boot" to exit the program.
 
 Section: Animation
+Args: Screen size = 2.8
 """
 
 # Constants for drawing

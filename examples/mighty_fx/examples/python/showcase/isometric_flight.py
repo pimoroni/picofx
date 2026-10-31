@@ -19,6 +19,7 @@ that takes the button has to give a way back, so leaving it is a hold.
 Press "Boot" to swap the worlds over, and hold it to exit the program.
 
 Section: Animation
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants

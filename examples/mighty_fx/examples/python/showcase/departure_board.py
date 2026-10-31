@@ -11,6 +11,7 @@ paging its calling points on its own clock.
 Press "Boot" to exit the program.
 
 Section: Transport signs
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants for drawing

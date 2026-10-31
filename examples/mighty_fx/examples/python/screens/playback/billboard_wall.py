@@ -15,6 +15,8 @@ One player feeds every panel. image_at() reads any frame without moving the play
 takes the poster n along the folder and the folder is held once.
 
 Press "Boot" to exit the program.
+
+Args: Rotation = 0 or 180
 """
 
 # Constants

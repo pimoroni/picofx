@@ -15,6 +15,8 @@ starting halfway along the upper course is drawn at both ends of the tile, as a 
 edge must appear at the opposite edge too.
 
 Press "Boot" to exit the program.
+
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants

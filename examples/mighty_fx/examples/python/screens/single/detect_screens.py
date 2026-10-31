@@ -9,6 +9,8 @@ letter in the top left over one bar for A or two for B. The console lists the sa
 ports, including one where no screen answered.
 
 Press "Boot" to exit the program.
+
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants for drawing

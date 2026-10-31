@@ -20,6 +20,7 @@ costs a few seconds once and nothing per frame.
 Press "Boot" to exit the program.
 
 Section: Animation
+Args: Screen size = 2.8
 """
 
 # Constants

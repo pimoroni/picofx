@@ -17,6 +17,7 @@ a four lane gantry is one or two writes.
 Press "Boot" to exit the program.
 
 Section: Transport signs
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants for drawing

@@ -14,6 +14,8 @@ Every poster decodes when the player is made, before the first shows. Palettised
 that affordable at a quarter of a truecolour one's memory.
 
 Press "Boot" to exit the program.
+
+Args: Rotation = 0 or 180
 """
 
 # Constants

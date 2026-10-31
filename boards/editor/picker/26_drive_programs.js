@@ -55,8 +55,8 @@ var PROGRAM_USES = [["outputs", "{board}\\.(outputs|monos)\\b|ColourPlayer|MonoP
 // A program that looks for a screen on each port runs on one or on two
 var EITHER_SCREEN = "for port in \\({board}\\.spce_a, {board}\\.spce_b\\)";
 
-// The screen size a program reads, with a default where none is given
-var SIZE_ARGUMENT = /^SCREEN_SIZE = "([^"]+)" if not sys\.argv\[1:\] else sys\.argv\[1\]/m;
+// The arguments an Args line names that are offered as a choice, by name. Any other is typed
+var ARGUMENT_KINDS = {"Screen size": "size", "Rotation": "rotation"};
 
 // The name a program gives the board, from the line that makes it, such as mighty = MightyFX()
 var BOARD_MADE = /^(\w+)\s*=\s*\w*FX\(/m;
@@ -90,6 +90,20 @@ function usesInSource(source) {
   return found;
 }
 
+// One argument an Args line names, "Name", "Name = default" or "Name = default or other", the
+// default given unless it is told, and the choices where it names more than one
+function argumentFrom(text) {
+  var split = text.indexOf("=");
+  var name = (split < 0 ? text : text.slice(0, split)).trim();
+  var argument = {name: name, kind: ARGUMENT_KINDS[name] || "text"};
+  if (split >= 0) {
+    var choices = text.slice(split + 1).trim().split(/\s+or\s+/);
+    argument["default"] = choices[0];
+    if (choices.length > 1) argument.choices = choices;
+  }
+  return argument;
+}
+
 // A Python file's opening string, the first one written in triple quotes, or "" where it has none
 function openingString(source) {
   var found = source.match(/("""|''')([\s\S]*?)\1/);
@@ -109,9 +123,7 @@ function programFrom(path, folder, source) {
     var told = line.match(PROGRAM_LINE);
     if (!told) return true;
     if (told[1] === "Program") program.name = told[2];
-    else if (told[1] === "Args") program.args = told[2].split(",").map(function (arg) {
-      return {name: arg.trim(), kind: "text"};
-    });
+    else if (told[1] === "Args") program.args = told[2].split(",").map(argumentFrom);
     else if (told[1] === "Picture") program.picture = told[2];
     else if (told[1] === "Section") program.section = told[2];
     else program.thumbnail = told[2].split(/\s+/).join(":");
@@ -119,13 +131,8 @@ function programFrom(path, folder, source) {
   }).join(" ").split(/\s+/).join(" ").trim();
   var first = said.match(/^(.*?\.)(\s|$)/);
   program.does = first ? first[1] : said;
-  // Without an Args line, what it reads: the screen size, else whatever is given where it reads
-  // sys.argv at all, else nothing
-  if (!program.args) {
-    var size = source.match(SIZE_ARGUMENT);
-    if (size) program.args = [{name: "Screen size", kind: "size", "default": size[1]}];
-    else if (source.indexOf("sys.argv") < 0) program.args = [];
-  }
+  // Without an Args line, one reading sys.argv takes whatever it is given, and any other nothing
+  if (!program.args && source.indexOf("sys.argv") < 0) program.args = [];
   return program;
 }
 

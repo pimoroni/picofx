@@ -19,6 +19,7 @@ filled shape and its stroked twin are built separately below.
 Press "Boot" to exit the program.
 
 Section: Drawing from code
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants for drawing

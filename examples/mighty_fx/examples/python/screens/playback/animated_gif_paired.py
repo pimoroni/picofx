@@ -12,6 +12,8 @@ Both panels are full size and each converts its own frame, so room for two is se
 the screens are made. That is what the reserve is.
 
 Press "Boot" to exit the program.
+
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants

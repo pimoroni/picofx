@@ -16,6 +16,8 @@ Align works on the em box the face declares and not on the drawn letters, and a 
 above its capitals for accents. Top and middle alignment land low for a word without them.
 
 Press "Boot" to exit the program.
+
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants for drawing

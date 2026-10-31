@@ -13,6 +13,7 @@ Press "Boot" to exit the program.
 
 Program: LED matrix
 Section: Animation
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants for drawing

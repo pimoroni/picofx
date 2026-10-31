@@ -17,6 +17,7 @@ Press "Boot" to exit the program.
 
 Program: CRT terminal
 Section: Mechanical and glowing displays
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants for drawing

@@ -20,6 +20,7 @@ its own and blitted over the panel. Erasing on the panel would only take the bac
 Press "Boot" to exit the program.
 
 Section: Drawing from code
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants for drawing

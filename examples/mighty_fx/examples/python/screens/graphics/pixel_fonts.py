@@ -11,6 +11,8 @@ Scroll a line in every ROM pixel font, smallest first, with each one's height be
 A pixel font draws only at its designed size. dir(font) names every face and font.<name> loads one.
 
 Press "Boot" to exit the program.
+
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants

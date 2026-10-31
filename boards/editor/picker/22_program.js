@@ -352,15 +352,15 @@ function programCard(path) {
   return card;
 }
 
-// The screen size a program is shown on: the one it is given, else screen A's, else a 2.8"
+// The screen size a program is shown on: screen A's, else the program's own default, else a 2.8".
+// Its picture was taken at its defaults, so what it is given changes nothing here
 function sizeShown(path) {
-  var program = programNamed(path) || {};
-  var at = (program.args || []).map(function (argument) {
-    return argument.kind;
-  }).indexOf("size");
-  var given = at >= 0 ? (boardSet.args[path] || [])[at] : null;
   var screen = state.screens && state.screens.A;
-  return given || (screen && screen.there && screen.size) || "2.8";
+  if (screen && screen.there && screen.size) return screen.size;
+  var size = ((programNamed(path) || {}).args || []).filter(function (argument) {
+    return argument.kind === "size";
+  })[0];
+  return (size && size.default) || "2.8";
 }
 
 // One captured frame on a module at the program's screen size, turned as the program turns it

@@ -11,6 +11,7 @@ Draw a flip-dot sign, spelling its message in dots that turn over one column aft
 Press "Boot" to exit the program.
 
 Section: Mechanical and glowing displays
+Args: Rotation = 90 or 270
 """
 
 # Constants for drawing

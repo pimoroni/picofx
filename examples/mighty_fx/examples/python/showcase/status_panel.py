@@ -23,6 +23,7 @@ apart. The interface is built once and blitted as the background, so a frame dra
 Press "Boot" to exit the program.
 
 Section: Billboards and panels
+Args: Rotation = 90 or 270
 """
 
 # Constants for drawing

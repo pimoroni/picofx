@@ -9,6 +9,8 @@ colour, with its letter in the top left over one bar for A up to six for F. The 
 the same for every position, including those where no panel answered.
 
 Press "Boot" to exit the program.
+
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants for drawing

@@ -18,6 +18,7 @@ instrument panel would be. METAL_CASE = False leaves it bare on black.
 Press "Boot" to exit the program.
 
 Section: Mechanical and glowing displays
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants for drawing

@@ -10,6 +10,7 @@ Draw a railway departures list on one screen, or across a pair turning their pag
 Press "Boot" to exit the program.
 
 Section: Transport signs
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants for drawing

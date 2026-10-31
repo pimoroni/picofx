@@ -59,8 +59,22 @@ function sizeOffered(argument) {
   return screen && screen.there && screen.size ? screen.size : argument.default;
 }
 
+// The choices an argument of each offered kind gives, as [value, how it is shown]. A rotation
+// offers the four, or those its Args line names
+var ARGUMENT_CHOICES = {
+  size: function () {
+    return SCREEN_SIZES.map(function (inches) { return [inches, inches + "\""]; });
+  },
+  rotation: function (argument) {
+    return (argument.choices || ["0", "90", "180", "270"]).map(function (turn) {
+      return [turn, turn + "&deg;"];
+    });
+  }
+};
+
 // The picked program's arguments: a box for each it names, a screen size chosen from those the
-// firmware knows, or where it names none but reads sys.argv, plain boxes to add and take away
+// firmware knows and a rotation from the four, or where it names none but reads sys.argv, plain
+// boxes to add and take away
 function argsFor(path, locked) {
   var program = programNamed(path);
   var given = boardSet.args[path] || (boardSet.args[path] = []);
@@ -73,15 +87,19 @@ function argsFor(path, locked) {
   taken.forEach(function (argument, at) {
     var label = document.createElement("label");
     label.textContent = argument.name;
-    if (argument.kind === "size") {
-      if (given[at] === undefined) given[at] = sizeOffered(argument);
+    if (ARGUMENT_CHOICES[argument.kind]) {
+      var choices = ARGUMENT_CHOICES[argument.kind](argument);
+      if (given[at] === undefined) {
+        given[at] = argument.kind === "size" ? sizeOffered(argument)
+                                             : argument.default || choices[0][0];
+      }
       var choice = document.createElement("select");
       choice.disabled = !!locked;
-      SCREEN_SIZES.forEach(function (inches) {
+      choices.forEach(function (offered) {
         var option = document.createElement("option");
-        option.value = inches;
-        option.textContent = inches + "\"";
-        option.selected = given[at] === inches;
+        option.value = offered[0];
+        option.innerHTML = offered[1];
+        option.selected = given[at] === offered[0];
         choice.appendChild(option);
       });
       choice.onchange = function () {
@@ -92,6 +110,7 @@ function argsFor(path, locked) {
       box.appendChild(label);
       return;
     }
+    if (given[at] === undefined && "default" in argument) given[at] = argument.default;
     var field = document.createElement("input");
     field.value = given[at] || "";
     field.disabled = !!locked;

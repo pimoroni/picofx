@@ -14,6 +14,8 @@ rotation= suits a panel mounted on its side, and mirror= one seen in a mirror or
 window. The mark is an F with a coloured band on each edge, so one look tells the edges apart.
 
 Press "Boot" to exit the program.
+
+Args: Screen size = 2.8
 """
 
 # Constants

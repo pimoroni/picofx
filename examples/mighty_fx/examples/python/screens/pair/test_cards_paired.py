@@ -18,6 +18,8 @@ Two full-size sources at once is the one case that cannot keep up otherwise, so 
 built with Reserve.FULL_SIZE_IMAGES, a pair needing the same reserve on both.
 
 Press "Boot" to exit the program.
+
+Args: Screen size = 2.8
 """
 
 # Constants

@@ -15,6 +15,7 @@ Each frame copies the band the message crosses back from it, then lays the messa
 Press "Boot" to exit the program.
 
 Section: Billboards and panels
+Args: Rotation = 0 or 180
 """
 
 # Constants

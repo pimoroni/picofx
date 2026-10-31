@@ -16,6 +16,7 @@ dark, a grey is fading concrete, and colour is glass or signage that brightens.
 Press "Boot" to exit the program.
 
 Section: Animation
+Args: Screen size = 2.8, Rotation = 90 or 270
 """
 
 # Constants

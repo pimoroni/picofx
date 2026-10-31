@@ -11,6 +11,7 @@ Draw a trivision billboard, its posters carried on three-sided slats that turn a
 Press "Boot" to exit the program.
 
 Section: Billboards and panels
+Args: Rotation = 90 or 270
 """
 
 # Constants for drawing

@@ -12,6 +12,7 @@ Press "Boot" to exit the program.
 
 Program: Colour wheel
 Section: Animation
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants for drawing

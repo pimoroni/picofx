@@ -8,6 +8,8 @@ from picovector import image
 Alternate between two PNG pictures, each shown for its own time.
 
 Press "Boot" to exit the program.
+
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants

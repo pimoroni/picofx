@@ -14,6 +14,8 @@ Three states go round, a full-size card, the small card at its own size, then th
 doubled. The cost shows wherever the drawing is finer than a two pixel block.
 
 Press "Boot" to exit the program.
+
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants

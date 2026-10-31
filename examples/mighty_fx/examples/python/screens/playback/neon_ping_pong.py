@@ -15,6 +15,8 @@ ping_pong plays them forward then back, so three files give six steps. hold dwel
 Every frame decodes when the player is made. Truecolour takes four times an indexed frame's memory.
 
 Press "Boot" to exit the program.
+
+Args: Screen size = 2.8, Rotation = 90 or 270
 """
 
 # Constants

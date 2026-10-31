@@ -11,6 +11,7 @@ that is plainly a panel. A second panel lengthens the board, with one listing ac
 Press "Boot" to exit the program.
 
 Section: Transport signs
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants for drawing

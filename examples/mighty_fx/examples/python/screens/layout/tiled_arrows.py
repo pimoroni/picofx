@@ -14,6 +14,8 @@ tile= takes a value per axis. Tile.MIRROR across the panel turns each sideways s
 reflection, and the two modes alternate every few seconds.
 
 Press "Boot" to exit the program.
+
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants

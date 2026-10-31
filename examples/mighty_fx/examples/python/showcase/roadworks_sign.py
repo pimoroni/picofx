@@ -14,6 +14,7 @@ its width. The corner beacons are single large lamps drawn over the face.
 Press "Boot" to exit the program.
 
 Section: Transport signs
+Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants for drawing

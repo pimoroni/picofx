@@ -15,6 +15,8 @@ For that the sprite becomes a brush.image pen filling a rectangle whose transfor
 the bottom row does. It costs more than a blit, and can skew or mirror as easily.
 
 Press "Boot" to exit the program.
+
+Args: Screen size = 2.8, Rotation = 0
 """
 
 # Constants for drawing

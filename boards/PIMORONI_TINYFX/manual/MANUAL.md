@@ -460,7 +460,7 @@ does, and these lines tell the picker how to show it:
 '''
 Program: Big clock
 Shows the time.
-Args: Colour, Seconds
+Args: Colour, Seconds = 10
 Picture: clock.png
 Section: Signs and displays
 '''
@@ -469,7 +469,7 @@ Section: Signs and displays
 | Line | What the picker does with it |
 | --- | --- |
 | `Program: Big clock` | names the program, where it would use the file's name |
-| `Args: Colour, Seconds` | gives each argument a box of its own, and writes `args=` from them |
+| `Args: Colour, Seconds = 10` | gives each argument a box of its own, and writes `args=` from them |
 | `Picture: clock.png` | shows the program by that picture, kept beside it |
 | `Section: Signs and displays` | lists the program in that section, where it would be listed under **On the drive** |
 | `Thumbnail: servo` | draws a servo for a program with no picture, or `motor`, or `outputs` and a pattern such as `outputs rainbow` |
@@ -478,6 +478,13 @@ Each is optional. Without `Picture`, the picker shows `clock.png` beside
 `clock.py` where there is one, and `clock-2.png` beside it as a second screen's.
 Without `Args`, a program that reads `sys.argv` is offered plain boxes to add
 arguments to.
+
+A value after `=` in `Args` is what the program falls back on, so the box starts
+with it, and `args=` is left off while every argument still holds its own. An
+argument named `Screen size` is chosen from the sizes the firmware knows, and
+one named `Rotation` from 0, 90, 180 and 270, or from those it names, such as
+`Rotation = 90 or 270`, the first being its own. The picture stays the one taken
+at the defaults, whatever is chosen.
 
 A board with a wireless module keeps `secrets.py` at the top of the drive for
 your WiFi network's name and password, and puts an empty one back if it is

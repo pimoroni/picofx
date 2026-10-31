@@ -28,6 +28,10 @@ jobs:
       shell: bash
       run: source ci/python.sh && qa_examples_check
 
+    - name: Check Example Args Lines
+      shell: bash
+      run: python3 tools/check_example_args.py examples
+
     - name: Lint MicroPython PicoFX
       shell: bash
       run: source ci/python.sh && qa_picofx_check
