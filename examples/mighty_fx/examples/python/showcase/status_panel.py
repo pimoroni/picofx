@@ -33,6 +33,7 @@ LETTERING_TALL = 0.309
 LETTERING_DOWN = 0.697
 BODY_FACE = font.winds                  # The narrowest pixel face, which is what the statuses need
 REDUCE = 2                              # The render is drawn this much larger and reduced onto the canvas
+ROW_INSET = 4                           # Nudges the lamps if the panel and the connectors do not line up
 
 TEXT_COLOUR = color.black               # The type, the bullets and the wordmark
 BACKGROUND = color.white
@@ -112,7 +113,6 @@ LAMP_Y = NUMBER_TOP - LAMP_R - 1
 HEADING_TOP = LAMP_Y - LAMP_R - BODY_FACE.height - 2
 STATUS_DOWN = 1                         # Squares the statuses against the badge, not its plate
 BULLET_DOWN = 5                         # Near the middle of the type, not the top of its line
-ROW_INSET = 4                           # Nudges the lamps if the panel and the connectors do not line up
 CELL_W = (WIDTH - ROW_INSET * 2) / len(STAGES)
 
 # The plate under the line reaches past the heading above it and the numbers below, and to both edges

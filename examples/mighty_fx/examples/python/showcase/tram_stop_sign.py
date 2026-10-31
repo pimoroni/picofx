@@ -34,6 +34,8 @@ UNLIT = color.rgb(68, 34, 0)    # An unlit lamp is brighter than the band behind
 
 TURNED = 0                      # One panel of a pair is mounted turned round, so their narrowest bezels meet.
                                 # 0 for SP/CE A, 1 for B, or None
+SEAM = 16                       # The gap the bezels hide where the panels meet, set by eye, carried on the
+                                # canvas so content crosses it as on one sign
 
 CLOCK_START = (11, 30, 40)      # The time the sign counts on from, Mighty FX having no clock to read
 DWELL = 4.0                     # How long a cycling row stands before the next tram slides up, in seconds
@@ -68,10 +70,6 @@ pair = ScreenPair(Screen280(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES),
 TURNS = tuple(90 + 180 * (port == TURNED) for port in range(2))
 PANEL_W = pair.screens[0].height
 HEIGHT = pair.screens[0].width
-
-# The bezels where the panels meet hide a gap, set by eye.
-# The canvas carries it so content crosses the seam as on one sign
-SEAM = 16
 WIDTH = PANEL_W * 2 + SEAM
 canvas = image(WIDTH, HEIGHT)
 

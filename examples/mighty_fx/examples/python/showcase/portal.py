@@ -62,6 +62,7 @@ RIM_LINE = color.rgb(204, 153, 255)
 RIM_GLOW = color.rgb(153, 68, 255).with_alpha(90)
 STONE_SHADES = ((102, 102, 102), (119, 119, 119), (136, 136, 136), (153, 153, 153))
 MORTAR = color.rgb(34, 34, 34)
+BACKGROUND = color.black                            # Behind the portal where there is no stone wall
 SPILL = (153, 68, 255)                              # The portal's light falling on the stones nearest it
 
 # Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
@@ -278,7 +279,7 @@ def draw(seconds):
 if STONES:
     build_wall()
 else:
-    canvas.pen = color.black
+    canvas.pen = BACKGROUND
     canvas.clear()
 canvas.pen = color.black
 canvas.shape(OPENING_SHAPE)

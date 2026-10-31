@@ -31,9 +31,9 @@ ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 
 # A pair, so both panels change on the one frame. color_wheel_paired.py says what that
-# buys and why it needs the deeper reserve
+# buys and why it needs the deeper reserve. The second panel faces the first, so it is mirrored
 pair = ScreenPair(ScreenType(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION),
-                  ScreenType(mighty.spce_b, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION))
+                  ScreenType(mighty.spce_b, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION, mirror=True))
 
 # Create a canvas the size of either panel as it is turned
 first = pair.screens[0]
@@ -70,8 +70,8 @@ try:
             # Apply the line with the current pen colour to the canvas
             canvas.shape(line)
 
-        # One frame to both panels with a 2-tuple giving each its own setting, so only the second is mirrored
-        pair.update(canvas, mirror=(False, True))
+        # One frame to both panels, each placed as it was made
+        pair.update(canvas)
 
         # Advance both the rotation and the hue
         r += ROTATION_SPEED

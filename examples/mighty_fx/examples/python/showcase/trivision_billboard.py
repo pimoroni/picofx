@@ -23,6 +23,7 @@ HOLD = 3.0                          # How long a poster faces out before the boa
 # fall only on faces plainly turning
 SHADE_FROM = 20                     # How far a face turns before it is shaded at all, in degrees
 AMBIENT = 90                        # How lit it is by edge on, against 255 facing out
+BACKING = color.black               # Behind the slats, showing where one turns away from its neighbours
 
 # One poster to each of a slat's three faces, stretched to the board as it loads
 POSTER_FILES = ("/examples/assets/billboards/landscape/lambo.png",
@@ -101,7 +102,7 @@ def draw(turns):
 
     # Every pitch blanked before any face is drawn, or a slat would blank
     # its neighbour's overhang after that neighbour had drawn it
-    canvas.pen = color.black
+    canvas.pen = BACKING
     for slat in touched:
         canvas.rectangle(rect(slat * SLAT, 0, SLAT, canvas.height))
 

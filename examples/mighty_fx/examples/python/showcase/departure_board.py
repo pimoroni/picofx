@@ -24,6 +24,7 @@ HEADING_FONT = font.smart       # What it is printed in, being lettering the boa
 AMBER = color.rgb(255, 176, 0)  # The colour of a lit lamp
 HEADING = color.rgb(255, 240, 220)  # Printed lettering, which a real board sets apart from what it lights
 MATRIX = color.rgb(20, 20, 16)  # The unlit face of a matrix module, against the black bars between them
+BOARD = color.black             # What the modules are set into, showing as the bars between them
 HEADER_SCALE = 2                # Pixel fonts scale by whole numbers, so 2 is double size
 INSET = 6                       # How far in from the panel's left and right edges lettering starts
 BAR = 3                         # The black bar between one module and the next, in pixels
@@ -174,7 +175,7 @@ def draw(index, page):
     list_lines = rows - 3
     pages = max(1, (len(stops) + list_lines - 1) // list_lines)
 
-    canvas.pen = color.black
+    canvas.pen = BOARD
     canvas.clear()
     canvas.font = BOARD_FONT
 
