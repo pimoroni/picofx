@@ -197,7 +197,7 @@ Lay text out inside a box, which wraps and aligns it.
 
 [graphics/vector_fonts.py](graphics/vector_fonts.py)
 
-Draw every vector face in ROM at three sizes, each writing its own name.
+Draw every vector face in ROM at three sizes, or two on a 1.54" panel, each writing its own name.
 
 <br clear="left">
 

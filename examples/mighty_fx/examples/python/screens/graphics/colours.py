@@ -28,7 +28,7 @@ LIGHTNESS = 165                         # The lightness oklch holds every hue at
 CHROMA = 110
 BASE_HUE = 25                           # The hue the harmony and tones rows start from
 STEPS = 6                               # Swatches in the tones and ramp rows
-STRIP = 26                              # How tall a strip of swatches is
+STRIP = 26                              # How tall a strip of swatches is on a 2.8" panel
 GAP = 3                                 # Between a strip and the next heading
 LABEL_FACE = font.winds                 # The narrowest ROM pixel face
 MARGIN = 4
@@ -51,6 +51,11 @@ screen = ScreenType(mighty.spce_a)
 canvas = screen.canvas()
 canvas.font = LABEL_FACE
 
+# A 1.54" panel is too short for every row, so it leaves out tones, ramp stepping through colours too,
+# and its strips are a little shallower
+EVERY_ROW = SCREEN_SIZE == "2.8"
+STRIP_H = STRIP if EVERY_ROW else STRIP - 6
+
 base = color.oklch(LIGHTNESS, CHROMA, BASE_HUE)
 
 
@@ -66,9 +71,9 @@ def strip(colours, down):
     wide = (canvas.width - MARGIN * 2) / len(colours)
     for index, swatch in enumerate(colours):
         canvas.pen = swatch
-        canvas.rectangle(round(MARGIN + index * wide), round(down), round(wide) + 1, STRIP)
+        canvas.rectangle(round(MARGIN + index * wide), round(down), round(wide) + 1, STRIP_H)
 
-    return down + STRIP + GAP
+    return down + STRIP_H + GAP
 
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
@@ -90,8 +95,9 @@ try:
     down = heading("harmony: a base, then its triad and complement", down)
     down = strip(color.harmony(base, color.TRIAD) + color.harmony(base, color.COMPLEMENT)[1:], down)
 
-    down = heading(f"tones: one hue in {STEPS} steps", down)
-    down = strip(color.tones(base, STEPS), down)
+    if EVERY_ROW:
+        down = heading(f"tones: one hue in {STEPS} steps", down)
+        down = strip(color.tones(base, STEPS), down)
 
     down = heading(f"ramp: {STEPS} steps through colours you name", down)
     down = strip(color.ramp(RAMP, STEPS), down)
@@ -105,14 +111,14 @@ try:
     for index, background in enumerate(READ_ON):
         across = MARGIN + index * wide
         canvas.pen = background
-        canvas.rectangle(round(across), round(down), round(wide) + 1, STRIP + LABEL_FACE.height)
+        canvas.rectangle(round(across), round(down), round(wide) + 1, STRIP_H + LABEL_FACE.height)
 
         # Asked once, for the lettering and for its own contrast figure
         legible = color.readable_on(background, background)
         canvas.pen = legible
         canvas.text("readable", round(across + 3), round(down + 3))
         canvas.text(f"{color.contrast(background, legible):.1f} to 1",
-                    round(across + 3), round(down + STRIP - 4))
+                    round(across + 3), round(down + STRIP_H - 4))
 
     screen.update(canvas)
 

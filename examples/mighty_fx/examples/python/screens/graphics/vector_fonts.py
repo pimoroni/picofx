@@ -7,7 +7,7 @@ from screens import SCREEN_TYPES
 from picovector import color, font, image
 
 """
-Draw every vector face in ROM at three sizes, each writing its own name.
+Draw every vector face in ROM at three sizes, or two on a 1.54" panel, each writing its own name.
 
 A vector face is drawn from outlines, so text() sizes it. A pixel face is fixed (pixel_fonts.py).
 
@@ -25,7 +25,8 @@ TEXT_COLOUR = color.white               # The faces themselves
 RULE = color.rgb(70, 90, 130)           # The lines dividing one face from the next
 FACES = "/rom/fonts"                    # Where the vector faces live
 LABEL_FACE = font.winds                 # A ROM pixel face, so a label never changes size
-SIZES = (15, 22, 29)                    # What each face is drawn at, filling its band
+SIZES = {"2.8": (15, 22, 29),           # What each face is drawn at, filling its band,
+         "1.54": (15, 29)}              # and on a 1.54" panel, whose shorter bands have room for two
 MARGIN = 6
 GAP = 2                                 # Between one line and the next
 BAND_PAD = 2                            # Between a band and the one above it
@@ -34,6 +35,7 @@ SAID_AFTER = 6                          # Between a line and the size said besid
 # Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+DRAWN_AT = SIZES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
@@ -47,7 +49,7 @@ faces = [(name[:-3], font.load(f"{FACES}/{name}"))
          for name in sorted(n for n in os.listdir(FACES) if n.endswith(".af"))]
 
 BAND = canvas.height / len(faces)
-print(f"{len(faces)} vector faces at {SIZES}, {BAND:.0f}px a band:"
+print(f"{len(faces)} vector faces at {DRAWN_AT},{BAND:.0f}px a band:"
       f" {', '.join(name for name, _ in faces)}")
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
@@ -64,7 +66,7 @@ try:
             canvas.rectangle(0, round(index * BAND), canvas.width, 1)
 
         canvas.pen = TEXT_COLOUR
-        for size in SIZES:
+        for size in DRAWN_AT:
             canvas.font = face
             canvas.text(name, MARGIN, round(down), font_size=size)
 

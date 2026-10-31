@@ -1,13 +1,15 @@
 import math
+import sys
 from mighty_fx import MightyFX, SPCE
 from timing import Pacer
-from screens import Screen280
+from screens import SCREEN_TYPES
 from picovector import color, image, rect, shape
 
 """
 Draw a laser show, beams fanning and sweeping across a dark hall from three projectors along the
 foot of the stage. Each scene runs a few seconds, switching its projectors on and off as it goes.
-PORTRAIT = True stands the panel upright, with room for the outer two projectors only.
+PORTRAIT = True stands the panel upright, which like a square 1.54" panel has room for the outer two
+projectors only.
 
 A beam is a line from its projector to the edge of the panel, a wide faint glow under a thin
 bright core. Each frame dims the last a little before drawing, so a sweeping beam leaves a fading
@@ -47,19 +49,24 @@ HALO_W = 6                                          # And across the glow round 
 LENS = 3                                            # A projector's lens radius
 RAISED = 6                                          # How far above the panel's foot a beam starts, a projector's housing reaching down to it
 
+# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = ScreenType(mighty.spce_a)
 
 # Upright as the panel is, or drawn landscape and turned a quarter onto it at each update
 canvas = screen.canvas() if PORTRAIT else screen.canvas(screen.height, screen.width)
 ROTATION = 0 if PORTRAIT else 90
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
+NARROW = WIDTH <= HEIGHT            # Whether the hall is too narrow for the middle projector, being upright or square
 
-# The projectors along the foot of the stage, left, middle and right, the middle one only in landscape
+# The projectors along the foot of the stage, left, middle and right, the middle one only in a wide hall
 PROJECTORS = ((WIDTH * 0.1, HEIGHT - RAISED), (WIDTH * 0.5, HEIGHT - RAISED), (WIDTH * 0.9, HEIGHT - RAISED))
-FITTED = (0, 2) if PORTRAIT else (0, 1, 2)
+FITTED = (0, 2) if NARROW else (0, 1, 2)
 REACH = math.sqrt(WIDTH ** 2 + HEIGHT ** 2)         # Further than any beam can need, for an edge it never meets
 hall = rect(0, 0, WIDTH, HEIGHT)
 DIM_PEN = HALL.with_alpha(DIM)
@@ -155,12 +162,12 @@ def steps(seconds, on):
             beam(projector, aimed(projector, aim), STEP_PENS[projector])
 
 
-# Each scene with the projectors it switches on in turn, a set every SWITCH_SECONDS, in landscape and then in portrait
+# Each scene with the projectors it switches on in turn, a set every SWITCH_SECONDS, in a wide hall and then a narrow one
 RUNNING_ORDER = ((fans, ((1,), (0, 2), (0, 1, 2), (0, 1, 2)), ((0,), (2,), (0, 2), (0, 2))),
                  (scanners, ((0,), (2,), (0, 2), (0, 1, 2)), ((0,), (2,), (0, 2), (0, 2))),
                  (tunnel, ((0, 1, 2),), ((0, 2),)),
                  (steps, ((1,), (0, 2), (0, 1, 2), (1,)), ((0, 2), (2,), (0,), (0, 2))))
-SCENES = tuple((scene, portrait if PORTRAIT else landscape) for scene, landscape, portrait in RUNNING_ORDER)
+SCENES = tuple((scene, narrow if NARROW else wide) for scene, wide, narrow in RUNNING_ORDER)
 CYCLE_MS = round(SCENE_SECONDS * len(SCENES) * 1000)
 
 

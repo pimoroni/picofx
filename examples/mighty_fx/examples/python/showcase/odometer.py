@@ -1,8 +1,9 @@
 import math
 import random
+import sys
 from mighty_fx import MightyFX, SPCE
 from timing import Pacer
-from screens import Screen280
+from screens import SCREEN_TYPES
 from picovector import color, font, image, mat3, rect, shape
 
 """
@@ -24,8 +25,10 @@ SPEED = 1.5                                         # How fast the last drum tur
 DRUMS = 6
 MAKER = "PIMORONI & CO."                            # Engraved above the drums
 UNITS = ("MILES", "TENTHS")                         # And under them, the first under the whole miles and the second under the tenths
+ROTATION = 90                                       # 90 or 270, the odometer being drawn landscape
 
-DRUM_W = 44                                         # Panel pixels across a drum
+# The sizes in panel pixels are for a panel 320 pixels wide, and scale down with a narrower one
+DRUM_W = 44                                        # Panel pixels across a drum
 DRUM_GAP = 4                                        # Between one drum and the next
 DRUM_H = 130                                        # How much of a drum shows, top to bottom
 VIEW = 30                                           # How far round the drum shows above and below its middle, in degrees
@@ -60,14 +63,23 @@ SCREW_HEAD = color.rgb(153, 153, 170)               # And its dome
 SCREW_SLOT = color.rgb(51, 51, 51)
 SLOTS = (30, 110, 165, 75)                          # Each screw's slot, in degrees, tightened by hand so no two alike
 
+# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Drawn landscape and turned a quarter onto the panel at each update
+# Drawn landscape and turned a quarter onto the panel
 canvas = screen.canvas(screen.height, screen.width)
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
+
+# The odometer scaled to the panel's width, so it keeps its shape on a narrower panel
+SCALE = WIDTH / 320
+DRUM_W, DRUM_GAP, DRUM_H, ENGRAVE_SIZE, ENGRAVE_GAP, OPENING_PAD, CORNER, SCREW, SCREW_INSET = (
+    round(length * SCALE) for length in (DRUM_W, DRUM_GAP, DRUM_H, ENGRAVE_SIZE, ENGRAVE_GAP, OPENING_PAD, CORNER, SCREW, SCREW_INSET))
 
 # The drum's radius follows from how much of it shows, and its strip is as long as its circumference
 RADIUS = DRUM_H / 2 / math.sin(math.radians(VIEW))
@@ -264,7 +276,7 @@ try:
                 moved = True
 
         if moved:
-            screen.update(canvas, rotation=90)
+            screen.update(canvas)
 
         pacer.hold()
 

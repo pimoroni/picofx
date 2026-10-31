@@ -1,7 +1,8 @@
+import sys
 import time
 from mighty_fx import MightyFX, SPCE
 from timing import Pacer
-from screens import Screen280
+from screens import SCREEN_TYPES
 from picovector import color, font, image, shape
 
 """
@@ -28,11 +29,10 @@ BACKGROUND = color.black    # Behind the stack, which is a dark box
 # The stack, front sheet first, and the digit each sheet carries in that order
 ORDER = (1, 2, 3, 4, 5, 6, 7, 8, 9, 0)
 DEPTH_SCALE = 0.984         # How much smaller a sheet one place further back appears
-SHEET_W = 226               # The front sheet, the rest being scaled from it
-SHEET_H = 304
+SHEET_INSET = (7, 8)        # The front sheet's edges in from the panel's, across and down, the rest scaled from it
 CORNER = 14                 # How far a sheet's corners are rounded
 EDGE = 2                    # The width of a cut edge, which is the brightest thing on a lit sheet
-DIGIT_H = 186               # The drawn height of the front sheet's digit, in panel pixels
+DIGIT_FILL = 0.612          # How much of the front sheet's height its digit is drawn
 LIT = 255                   # The sheet with its LED on
 GHOST = 20                  # And one without, the engraving picking up a little of its neighbour's light
 REF = 200                   # A size to measure the face at, its lettering scaling with it from there
@@ -54,13 +54,19 @@ CURVE = 70                  # How far the picture falls away at the edges
 COUNT_MS = 1000             # A digit a second, this being the seconds place of a clock
 CHANGE_MS = 220             # One digit going out as the next comes up, so both are seen together
 
+# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = ScreenType(mighty.spce_a)
 
 canvas = screen.canvas()
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
+SHEET_W, SHEET_H = WIDTH - SHEET_INSET[0] * 2, HEIGHT - SHEET_INSET[1] * 2
+DIGIT_H = round(SHEET_H * DIGIT_FILL)   # The front sheet's digit, in panel pixels
 
 SHEETS = len(ORDER)
 # Each digit's place in the stack, front first, and the scale a sheet at that place is drawn at

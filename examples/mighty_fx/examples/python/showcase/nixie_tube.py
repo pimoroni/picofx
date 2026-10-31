@@ -1,7 +1,8 @@
+import sys
 import time
 from mighty_fx import MightyFX, SPCE
 from timing import Pacer
-from screens import Screen280
+from screens import SCREEN_TYPES
 from picovector import color, font, image, rect, shape
 
 """
@@ -37,7 +38,8 @@ DIGIT_H = 185                       # The drawn height of the front cathode's di
 LIT = 255                           # The cathode carrying current
 REF = 200                           # A size to measure the face at, its em box inside the scratch
 
-# The tube, a glass cylinder stood on its pins, domed at the top and flat at the foot
+# The tube, a glass cylinder stood on its pins, domed at the top and flat at the foot. Its lengths
+# are for a panel 320 pixels tall, and scale down with a shorter one
 TUBE_W = 130
 TUBE_TOP = 6
 TUBE_FOOT = 292                     # Where the glass ends and the pins begin
@@ -70,13 +72,22 @@ CURVE = 80                          # How far the picture falls away at the edge
 COUNT_MS = 1000                     # A digit a second, this being the seconds place of a clock
 CHANGE_MS = 200                     # One digit going out as the next comes up, both seen together
 
+# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = ScreenType(mighty.spce_a)
 
 canvas = screen.canvas()
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
+
+# The tube and its digit scaled to the panel's height, so the tube keeps its shape on a shorter panel
+SCALE = HEIGHT / 320
+DIGIT_H, TUBE_W, TUBE_TOP, TUBE_FOOT, FOOT_CORNER, SHADE, BASE_ROWS = (
+    round(length * SCALE) for length in (DIGIT_H, TUBE_W, TUBE_TOP, TUBE_FOOT, FOOT_CORNER, SHADE, BASE_ROWS))
 
 CATHODES = len(ORDER)
 DEPTH_OF = {digit: depth for depth, digit in enumerate(ORDER)}
@@ -144,19 +155,20 @@ FRONT = (
                                                  TUBE_R - 3, TUBE_R - 3, FOOT_CORNER - 2,
                                                  FOOT_CORNER - 2).stroke(1)),
     # A streak down the lit side, a faint wide one with a bright narrow one in it, and a thinner one opposite
-    (RIM.with_alpha(22), shape.rounded_rectangle(TUBE_X + 8, DOME_CY - 6, 7, SIDE - 20, 3.5)),
-    (RIM.with_alpha(150), shape.rounded_rectangle(TUBE_X + 10.5, DOME_CY + 24, 2, SIDE - 80, 1)),
-    (RIM.with_alpha(55), shape.rounded_rectangle(TUBE_X + TUBE_W - 11, DOME_CY + 40, 2, SIDE - 120, 1)),
+    (RIM.with_alpha(22), shape.rounded_rectangle(TUBE_X + 8 * SCALE, DOME_CY - 6 * SCALE, 7 * SCALE, SIDE - 20 * SCALE, 3.5 * SCALE)),
+    (RIM.with_alpha(150), shape.rounded_rectangle(TUBE_X + 10.5 * SCALE, DOME_CY + 24 * SCALE, 2, SIDE - 80 * SCALE, 1)),
+    (RIM.with_alpha(55), shape.rounded_rectangle(TUBE_X + TUBE_W - 11 * SCALE, DOME_CY + 40 * SCALE, 2, SIDE - 120 * SCALE, 1)),
     # The dome catching the light on both shoulders, and the foot where the glass turns under
-    (RIM.with_alpha(110), shape.arc(TUBE_CX, DOME_CY, TUBE_R - 9, TUBE_R - 6, -62, -24)),
-    (RIM.with_alpha(40), shape.arc(TUBE_CX, DOME_CY, TUBE_R - 9, TUBE_R - 7, 30, 52)),
-    (RIM.with_alpha(60), shape.rounded_rectangle(TUBE_X + 10, TUBE_FOOT - 3, TUBE_W - 20, 1.5, 0.75)),
+    (RIM.with_alpha(110), shape.arc(TUBE_CX, DOME_CY, TUBE_R - 9 * SCALE, TUBE_R - 6 * SCALE, -62, -24)),
+    (RIM.with_alpha(40), shape.arc(TUBE_CX, DOME_CY, TUBE_R - 9 * SCALE, TUBE_R - 7 * SCALE, 30, 52)),
+    (RIM.with_alpha(60), shape.rounded_rectangle(TUBE_X + 10 * SCALE, TUBE_FOOT - 3, TUBE_W - 20 * SCALE, 1.5, 0.75)),
 )
 
 # The tip on top of the dome, where the tube was sealed, dark glass with the light on one side of it
-TIP = ((color.rgb(68, 51, 34), shape.rounded_rectangle(TUBE_CX - 9, TUBE_TOP - 5, 18, 13, 8, 8, 3, 3)),
-       (RIM.with_alpha(80), shape.rounded_rectangle(TUBE_CX - 9, TUBE_TOP - 5, 18, 13, 8, 8, 3, 3).stroke(1)),
-       (RIM.with_alpha(140), shape.rounded_rectangle(TUBE_CX - 5, TUBE_TOP - 3, 3, 7, 1.5)))
+TIP_RECT = (TUBE_CX - 9 * SCALE, TUBE_TOP - 5 * SCALE, 18 * SCALE, 13 * SCALE, 8 * SCALE, 8 * SCALE, 3 * SCALE, 3 * SCALE)
+TIP = ((color.rgb(68, 51, 34), shape.rounded_rectangle(*TIP_RECT)),
+       (RIM.with_alpha(80), shape.rounded_rectangle(*TIP_RECT).stroke(1)),
+       (RIM.with_alpha(140), shape.rounded_rectangle(TUBE_CX - 5 * SCALE, TUBE_TOP - 3 * SCALE, 3 * SCALE, 7 * SCALE, 1.5 * SCALE)))
 
 # The eight places round the digit its sheath is drawn at
 SHEATH_AT = tuple((dx, dy) for dx in (-SHEATH, 0, SHEATH) for dy in (-SHEATH, 0, SHEATH) if dx or dy)
@@ -168,10 +180,10 @@ def build():
     stack.clear()
 
     # The pins, from the foot of the glass into the board, and the board
-    board_y = TUBE_FOOT + 16
+    board_y = TUBE_FOOT + round(16 * SCALE)
     stack.pen = PIN
     for pin in range(PINS):
-        stack.vspan(round(TUBE_X + 14 + pin * (TUBE_W - 28) / (PINS - 1)), TUBE_FOOT, board_y - TUBE_FOOT)
+        stack.vspan(round(TUBE_X + 14 * SCALE + pin * (TUBE_W - 28 * SCALE) / (PINS - 1)), TUBE_FOOT, board_y - TUBE_FOOT)
     stack.pen = BOARD
     stack.rectangle(rect(0, board_y, WIDTH, HEIGHT - board_y))
 
@@ -195,16 +207,16 @@ def build():
 
     # The supports down either side of the stack, and the spacers it is held between. A spacer is a disc
     # seen from just above, so the top of it shows as a thin ellipse
-    top = (HEIGHT - DIGIT_H) // 2 - 12
-    bottom = (HEIGHT + DIGIT_H) // 2 + 8
+    top = (HEIGHT - DIGIT_H) // 2 - round(12 * SCALE)
+    bottom = (HEIGHT + DIGIT_H) // 2 + round(8 * SCALE)
     stack.pen = ROD
-    stack.vspan(TUBE_X + 18, top, TUBE_FOOT - top)
-    stack.vspan(TUBE_X + TUBE_W - 19, top, TUBE_FOOT - top)
+    stack.vspan(TUBE_X + round(18 * SCALE), top, TUBE_FOOT - top)
+    stack.vspan(TUBE_X + TUBE_W - round(19 * SCALE), top, TUBE_FOOT - top)
     for y in (top - 2, bottom + 2):
         stack.pen = MICA.with_alpha(150)
-        stack.shape(shape.ellipse(TUBE_CX, y, TUBE_R - 12, 3))
+        stack.shape(shape.ellipse(TUBE_CX, y, TUBE_R - 12 * SCALE, 3))
         stack.pen = MICA
-        stack.shape(shape.ellipse(TUBE_CX, y, TUBE_R - 12, 3).stroke(1))
+        stack.shape(shape.ellipse(TUBE_CX, y, TUBE_R - 12 * SCALE, 3).stroke(1))
 
     for pen, part in TIP:
         stack.pen = pen

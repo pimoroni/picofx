@@ -30,7 +30,7 @@ PAD = 3                                 # Between a box and its neighbour
 INSET = 4                               # Between a box's border and the rect the lettering aligns in
 LABEL_TALL = 9                          # Rows a name takes under its box
 SPILL_TALL = 76                         # The overflow box at the foot of the panel
-BODY_FACE = font.more                   # The tallest ROM pixel face, and it has the accents
+BODY_FACE = font.bacteria               # A ROM pixel face with the accents, short enough to leave room to align in a box
 LABEL_FACE = font.winds                 # The narrowest ROM pixel face, for the names
 
 MESSAGE = "Ähoj"

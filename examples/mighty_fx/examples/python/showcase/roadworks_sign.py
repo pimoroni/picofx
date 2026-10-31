@@ -1,6 +1,7 @@
+import sys
 from mighty_fx import MightyFX, SPCE
 from timing import Pacer
-from screens import Screen280
+from screens import SCREEN_TYPES
 from picovector import color, font, image, rect, shape
 
 """
@@ -23,6 +24,7 @@ SIGN_FONT = font.sins               # A narrow face whose pixels are lamps, so i
 BEZEL = 1                           # Lamps of plain face between one character's module and the next
 LINE_BEZEL = 3                      # And between one row of modules and the next, which a sign leaves wider
 LIT = color.rgb(255, 170, 0)        # A lit lamp. Amber is the only colour these signs use
+ROTATION = 90                       # 90 or 270, the sign being drawn landscape
 
 # A module's face against the sign's, and an unlit lamp against its module
 MODULE = color.rgb(17, 17, 17)      # A module's face, between its lamps
@@ -35,19 +37,35 @@ BEACON_R = 12                       # A corner beacon's radius in panel pixels, 
 BEACON_MS = 500                     # How long each side's pair stays on for
 BEACON_OFF = color.rgb(51, 17, 0)   # A beacon between flashes, which stays visibly amber, not dark
 
-# What the sign says, a page at a time and a line to a row of modules. Lines are centred by whole
-# modules, a module being the smallest thing the sign can move text by
-PAGES = (
-    ("ROADWORKS", "AHEAD", "EXPECT", "DELAYS"),
-    ("LANE", "CLOSURE", "AHEAD", "MERGE LEFT"),
-    ("QUEUE AHEAD", "SLOW DOWN", "20 MPH", "MAX"),
-)
+# What the sign says on each size of screen, a page at a time and a line to a row of modules. Lines are
+# centred by whole modules, a module being the smallest thing the sign can move text by. At these lamps
+# a 2.8" sign holds 11 characters across and a 1.54" one 8, both over 4 lines
+PAGES = {
+    "2.8": (
+        ("ROADWORKS", "AHEAD", "EXPECT", "DELAYS"),
+        ("LANE", "CLOSURE", "AHEAD", "MERGE LEFT"),
+        ("QUEUE AHEAD", "SLOW DOWN", "20 MPH", "MAX"),
+    ),
+    "1.54": (
+        ("ROAD", "WORKS", "AHEAD"),
+        ("EXPECT", "DELAYS"),
+        ("LANE", "CLOSURE", "AHEAD"),
+        ("MERGE", "LEFT"),
+        ("QUEUE", "AHEAD", "SLOW", "DOWN"),
+        ("20 MPH", "MAX"),
+    ),
+}
+
+# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+MESSAGE = PAGES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Drawn landscape and turned a quarter onto the panel at each update
+# Drawn landscape and turned a quarter onto the panel
 canvas = screen.canvas(screen.height, screen.width)
 WIDTH, HEIGHT = canvas.width, canvas.height
 
@@ -100,7 +118,7 @@ TOP = (ROWS - (LINES * PITCH_H - LINE_BEZEL)) // 2
 print(f"Roadworks sign of {ACROSS}x{LINES} modules, {CELL_W}x{CELL_H} lamps each at {LAMP}px,"
       f" so {ACROSS} characters over {LINES} lines."
       f" Its face declares {SIGN_FONT.height} rows and fills {CELL_H} of them")
-for page, lines in enumerate(PAGES):
+for page, lines in enumerate(MESSAGE):
     # Warn of any page with more lines than the sign holds, or a line longer than it
     over = [line for line in lines if len(line) > ACROSS]
     if over or len(lines) > LINES:
@@ -181,7 +199,7 @@ def draw_lamps(page):
     lamps.clear()
     lamps.pen = LIT
 
-    lines = PAGES[page][:LINES]
+    lines = MESSAGE[page][:LINES]
     first = TOP + (LINES - len(lines)) // 2 * PITCH_H
     for line, text in enumerate(lines):
         text = text[:ACROSS]
@@ -214,12 +232,12 @@ try:
     while not mighty.boot_pressed():
         # The page showing and which pair of beacons is lit, all a frame depends on
         elapsed = pacer.elapsed
-        frame = (int(elapsed / (HOLD * 1000)) % len(PAGES), bool(elapsed // BEACON_MS % 2))
+        frame = (int(elapsed / (HOLD * 1000)) % len(MESSAGE), bool(elapsed // BEACON_MS % 2))
 
         # Nothing on the sign moves, so it is only drawn again when the page or the beacons change
         if frame != shown:
             draw(*frame)
-            screen.update(canvas, rotation=90)
+            screen.update(canvas)
             shown = frame
 
         pacer.hold()

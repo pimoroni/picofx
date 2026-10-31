@@ -62,12 +62,12 @@ def chevrons(pen):
     canvas.clear()
 
     canvas.pen = pen
-    reach = WIDTH * 0.35                # How far each arm runs out from the middle
-    thick = HEIGHT / (CHEVRONS * 4)     # How deep each stroke is
     pitch = HEIGHT / CHEVRONS           # Each chevron's share of the panel's height
+    thick = pitch / 4                   # How deep each stroke is
+    reach = pitch - thick               # How far each arm runs out from the middle, and so down, filling the share
     middle = WIDTH / 2
     for index in range(CHEVRONS):
-        top = index * pitch + (pitch - reach - thick) / 2
+        top = index * pitch
         # The outer point, down the right arm and back to the inner point, then out along the left
         canvas.shape(shape.custom([vec2(middle, top), vec2(middle + reach, top + reach),
                                    vec2(middle + reach, top + reach + thick), vec2(middle, top + thick),

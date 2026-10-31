@@ -1,9 +1,10 @@
 import math
+import sys
 import time
 from mighty_fx import MightyFX, SPCE
 from sensor import ANALOG
 from timing import Pacer
-from screens import Screen280
+from screens import SCREEN_TYPES
 from picovector import color, image, rect, shape
 
 """
@@ -23,6 +24,7 @@ Section: Mechanical and glowing displays
 # Constants for drawing
 SENSOR = False                                      # Whether to trace the sensor connector's voltage live
 FRAME_RATE = 8                                      # Frames a second, which the board holds with the beam drawn
+ROTATION = 90                                       # 90 or 270, the scope being drawn landscape
 
 # The demonstration
 SINE_SECONDS = 6                                    # The sine alone, scrolling
@@ -30,7 +32,7 @@ GROW_SECONDS = 8                                    # Growing into a square wave
 MELT_SECONDS = 4                                    # And melting back to the sine
 XY_SECONDS = 8                                      # A Lissajous figure in XY mode
 HARMONICS = 8                                       # Odd harmonics in the square wave at its squarest
-CYCLES = 2.5                                        # Cycles of the sine across the face
+CYCLES = 2.5                                        # Cycles of the sine across a face DIVISIONS wide
 SCROLL = 1.5                                        # How fast the wave scrolls, in radians a second
 WAVE_HEIGHT = 0.3                                   # How far the wave reaches either side of the middle, of the face's height
 FIGURE = (2, 3)                                     # The Lissajous figure's frequencies across and down
@@ -46,7 +48,7 @@ FRAME = color.rgb(17, 17, 17)                       # The dark edge the face sit
 CASE = color.rgb(221, 204, 187)                     # The case round the tube
 
 # Sizes, in panel pixels
-DIVISIONS = (10, 8)                                 # Graticule squares across and down
+DIVISIONS = (10, 8)                                 # Graticule squares across and down, fewer where the panel has no room
 DIVISION = 28                                       # Panel pixels a square
 TICKS = 4                                           # Ticks a square along the middle lines, which DIVISION must divide into
 CORE_W = 1.5                                        # Panel pixels across the beam's core
@@ -66,20 +68,28 @@ TRIGGER_WAIT_MS = 50                                # How long a sweep waits for
 MAX_VOLTAGE = 3.3                                   # The voltage a full reading stands for
 FULL_READING = 65535                                # And that full reading
 
+# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
 # Create a MightyFX object with SP/CE A set up for a screen, and with SENSOR the sensor connector read as a voltage
 mighty = MightyFX(spce_a=SPCE.SCREEN, sensor=ANALOG if SENSOR else None)
-screen = Screen280(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Drawn landscape and turned a quarter onto the panel at each update
+# Drawn landscape and turned a quarter onto the panel
 canvas = screen.canvas(screen.height, screen.width)
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
 
+# As many of the DIVISIONS as fit inside the frame, an even number each way so the middle lines stay on the
+# graticule. 10 by 8 on a 2.8" panel and 8 by 8 on a 1.54" at a DIVISION of 28
+ACROSS, DOWN = (min(wanted, (room - FRAME_W * 2) // DIVISION // 2 * 2) for wanted, room in zip(DIVISIONS, (WIDTH, HEIGHT)))
+
 # The face is a pixel wider and taller than its squares, so the graticule's far lines land on it
-FACE_W, FACE_H = DIVISIONS[0] * DIVISION + 1, DIVISIONS[1] * DIVISION + 1
+FACE_W, FACE_H = ACROSS * DIVISION + 1, DOWN * DIVISION + 1
 LEFT, TOP = (WIDTH - FACE_W) // 2, (HEIGHT - FACE_H) // 2
-MIDDLE_X, MIDDLE_Y = DIVISIONS[0] * DIVISION / 2, DIVISIONS[1] * DIVISION / 2
-SPAN_X, SPAN_Y = DIVISIONS[0] * DIVISION, DIVISIONS[1] * DIVISION
+MIDDLE_X, MIDDLE_Y = ACROSS * DIVISION / 2, DOWN * DIVISION / 2
+SPAN_X, SPAN_Y = ACROSS * DIVISION, DOWN * DIVISION
 
 # The case round the tube is drawn once, as only the face changes from then on
 canvas.pen = CASE
@@ -103,13 +113,13 @@ DIM_PEN = GLASS.with_alpha(DIM)
 def graticule():
     """Draw the graticule over the face, a line every division and ticks along the middle lines."""
     tube.pen = GRID
-    for across in range(DIVISIONS[0] + 1):
+    for across in range(ACROSS + 1):
         tube.vspan(across * DIVISION, 0, FACE_H)
-    for down in range(DIVISIONS[1] + 1):
+    for down in range(DOWN + 1):
         tube.hspan(0, down * DIVISION, FACE_W)
-    for tick in range(DIVISIONS[0] * TICKS):
+    for tick in range(ACROSS * TICKS):
         tube.vspan(tick * DIVISION // TICKS, int(MIDDLE_Y) - 2, 5)
-    for tick in range(DIVISIONS[1] * TICKS):
+    for tick in range(DOWN * TICKS):
         tube.hspan(int(MIDDLE_X) - 2, tick * DIVISION // TICKS, 5)
 
 
@@ -148,7 +158,7 @@ def wave(seconds):
 
     points = []
     for i in range(SEGMENTS + 1):
-        angle = 2 * math.pi * CYCLES * i / SEGMENTS + phase
+        angle = 2 * math.pi * CYCLES * ACROSS / DIVISIONS[0] * i / SEGMENTS + phase
         total = sum(weight * math.sin(harmonic * angle) for harmonic, weight in weights)
         points.append((SPAN_X * i / SEGMENTS, MIDDLE_Y - SPAN_Y * WAVE_HEIGHT * total))
     return points
@@ -219,7 +229,7 @@ try:
     while not mighty.boot_pressed():
         # Kept in whole milliseconds until the fraction is wanted, as a float of hours of running loses it
         draw(pacer.elapsed % CYCLE_MS / 1000)
-        screen.update(canvas, rotation=90)
+        screen.update(canvas)
         pacer.hold()
 
 # Stop any running effects and turn off all the outputs

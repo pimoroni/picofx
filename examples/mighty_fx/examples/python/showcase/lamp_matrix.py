@@ -1,10 +1,11 @@
 import math
 import random
+import sys
 import time
 import micropython
 from mighty_fx import MightyFX, SPCE
 from timing import Pacer
-from screens import Screen280
+from screens import SCREEN_TYPES
 from picovector import brush, color, image, mat3, rect, shape
 
 """
@@ -28,9 +29,8 @@ CUE_SECONDS = 6                                     # How long each lighting cue
 STEP_SECONDS = 0.2                                  # How long a cue holds each step
 FRAME_RATE = 10                                     # Frames a second the cues run at
 
-COLUMNS = 7
-ROWS = 5
 PITCH = 44                                          # Panel pixels from one lamp to the next
+ROTATION = 90                                       # 90 or 270, the matrix being drawn landscape
 RADIUS = 21                                         # A reflector cup's radius
 EMITTER = 0.32                                      # How far an outermost lamp's emitter shows off its cup's middle, of the radius
 PANEL = color.black
@@ -52,14 +52,21 @@ CORE_LIFT = 0.3                                     # How much hotter an emitter
 # layering over the rings before it
 RINGS = (90, 70, 62, 60, 60, 62, 66, 72, 82, 96)
 
+# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Drawn landscape and turned a quarter onto the panel at each update
+# Drawn landscape and turned a quarter onto the panel
 canvas = screen.canvas(screen.height, screen.width)
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
+
+# As many lamps across and down as fit, at a PITCH of 44 7 by 5 on a 2.8" panel and 5 by 5 on a 1.54"
+COLUMNS, ROWS = WIDTH // PITCH, HEIGHT // PITCH
 
 LEFT = (WIDTH - COLUMNS * PITCH) // 2 + PITCH // 2
 TOP = (HEIGHT - ROWS * PITCH) // 2 + PITCH // 2
@@ -319,7 +326,7 @@ try:
                 changed = True
 
         if changed:
-            screen.update(canvas, rotation=90)
+            screen.update(canvas)
 
         frame += 1
         pacer.hold()

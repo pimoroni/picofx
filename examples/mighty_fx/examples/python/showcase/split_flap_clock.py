@@ -1,6 +1,7 @@
+import sys
 from mighty_fx import MightyFX, SPCE
 from timing import Pacer
-from screens import Screen280
+from screens import SCREEN_TYPES
 from picovector import color, font, image, rect, shape
 
 """
@@ -16,6 +17,7 @@ FLAP_FONT = "/rom/fonts/AdventPro-Medium.af"  # A vector face, so it sizes to th
 DRUM = " 0123456789"                    # What is on a card, in the order it comes round
 CLOCK_START = (11, 32, 45)              # The time it counts on from, Mighty FX having no clock to read
 FLAP_MS = 260                           # How long one card takes to fall
+ROTATION = 90                           # 90 or 270, the clock being drawn landscape
 
 # A card sits two levels above the board. The screens drive the panel at 12 bit, so a channel has 16
 # levels in steps of 17, and one level up from black reads as barely there against it
@@ -36,19 +38,24 @@ BEZEL = 8                               # How far the case stands out around the
 MARGIN = 6                              # Around the whole row
 SEPARATOR = 14                          # The colons, which are painted on, not flapped
 ANTIALIAS = image.X2                    # Lettering this size is worth smoothing
-CELL_H = 96                             # How tall a card is
+CARD_ASPECT = 2.28                      # How many times taller a card is than wide
+
+# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Drawn landscape and turned a quarter onto the panel at each update
+# Drawn landscape and turned a quarter onto the panel
 canvas = screen.canvas(screen.height, screen.width)
 WIDTH, HEIGHT = canvas.width, canvas.height
 
-# Six cards and two colons, which is what a clock is
+# Six cards and two colons, which is what a clock is, the cards as wide as the panel allows
 FLAPS = 6
 CELL_W = (WIDTH - MARGIN * 2 - SEPARATOR * 2 - GAP * (FLAPS + 1)) // FLAPS
+CELL_H = round(CELL_W * CARD_ASPECT)
 TOP = (HEIGHT - CELL_H) // 2
 HALF = CELL_H // 2
 
@@ -238,7 +245,7 @@ for position in (1, 3):
     for y in (TOP + HALF // 2, TOP + HALF + HALF // 2):
         canvas.rectangle(rect(middle - 2, y - 2, 4, 4))
 
-screen.update(canvas, rotation=90)
+screen.update(canvas)
 pacer = Pacer(0.01)                 # The board's clock, looking for a change every 10ms
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
@@ -272,7 +279,7 @@ try:
                 turning[flap] = now if showing[flap] != wanted[flap] else None
 
         if drew:
-            screen.update(canvas, rotation=90)
+            screen.update(canvas)
 
         pacer.hold()
 

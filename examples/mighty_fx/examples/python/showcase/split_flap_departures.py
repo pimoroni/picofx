@@ -1,6 +1,7 @@
+import sys
 from mighty_fx import MightyFX, SPCE
 from timing import Pacer, Roller
-from screens import Screen280
+from screens import SCREEN_TYPES
 from picovector import color, font, image, rect, shape
 
 """
@@ -21,6 +22,7 @@ ALPHA = " ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 BOTH = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 FLAP_MS = 150                           # How long one card takes to fall
 HOLD = 2.0                              # How long a page stands before the next one is called up
+ROTATION = 90                           # 90 or 270, the board being drawn landscape
 # A card sits two levels above the board. The screens drive the panel at 12 bit, so a channel has 16
 # levels in steps of 17, and one level up from black reads as barely there against it
 CARD = color.rgb(34, 34, 38)            # The face of a card
@@ -48,26 +50,31 @@ ANTIALIAS = image.X2                    # Lettering off a vector face wants smoo
 # A time is four cards, with its colon painted after the second
 COLUMNS = (("TIME", 4, 2, DIGITS), ("DEST", 6, 0, ALPHA), ("GATE", 3, 0, BOTH))
 
-# What the board shows, a page at a time and a row to a service.
-# A name longer than its column is cut to it, as a real board's would be
-PAGES = (
-    (("11:32", "LONDON", "A42"), ("11:55", "TOKYO", "B32"), ("12:08", "PARIS", "C75"),
-     ("12:24", "MADRID", "A06"), ("12:42", "MOSCOW", "D35"), ("13:05", "MILAN", "B71")),
-    (("13:18", "DUBLIN", "C12"), ("13:40", "VIENNA", "A18"), ("14:02", "BERLIN", "B44"),
-     ("14:15", "OSLO", "D19"), ("14:31", "LISBON", "C63"), ("14:50", "PRAGUE", "A27")),
-    (("15:06", "ATHENS", "B08"), ("15:22", "MALAGA", "D51"), ("15:44", "ZURICH", "A33"),
-     ("16:01", "KRAKOW", "C26"), ("16:20", "SOFIA", "B47"), ("16:38", "RIGA", "D15")),
+# What the board shows, a row to a service and as many to a page as the panel has rows for, 6 on a 2.8"
+# and 8 on a 1.54". A name longer than its column is cut to it, as a real board's would be
+SERVICES = (
+    ("11:32", "LONDON", "A42"), ("11:55", "TOKYO", "B32"), ("12:08", "PARIS", "C75"),
+    ("12:24", "MADRID", "A06"), ("12:42", "MOSCOW", "D35"), ("13:05", "MILAN", "B71"),
+    ("13:18", "DUBLIN", "C12"), ("13:40", "VIENNA", "A18"), ("14:02", "BERLIN", "B44"),
+    ("14:15", "OSLO", "D19"), ("14:31", "LISBON", "C63"), ("14:50", "PRAGUE", "A27"),
+    ("15:06", "ATHENS", "B08"), ("15:22", "MALAGA", "D51"), ("15:44", "ZURICH", "A33"),
+    ("16:01", "KRAKOW", "C26"), ("16:20", "SOFIA", "B47"), ("16:38", "RIGA", "D15"),
+    ("16:55", "GENEVA", "C09"), ("17:10", "NAPLES", "A51"), ("17:28", "PORTO", "D22"),
+    ("17:45", "BERGEN", "B16"), ("18:02", "WARSAW", "C38"), ("18:20", "VENICE", "A64"),
 )
+
+# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Drawn landscape and turned a quarter onto the panel at each update
+# Drawn landscape and turned a quarter onto the panel
 canvas = screen.canvas(screen.height, screen.width)
 WIDTH, HEIGHT = canvas.width, canvas.height
 
-ROWS = len(PAGES[0])
 CARDS = sum(wide for _, wide, _, _drum in COLUMNS)
 
 # Everything across the board that is not a card, so what is left over divides between them
@@ -160,14 +167,15 @@ for name, wide, _, _drum in COLUMNS:
 HEADING_LETTER_H = round(LETTERING_PER_PX * HEADING_SIZE)
 HEADING_TOP = -round(lettering_rows(HEADING_SIZE, "HW8O")[0])
 
+# As many rows as fit under the headings, and the services paged into them
+ROWS = max(1, (HEIGHT - MARGIN * 2 - HEADING_LETTER_H - HEADING_GAP + ROW_GAP) // (CELL_H + ROW_GAP))
+PAGES = [SERVICES[first:first + ROWS] for first in range(0, len(SERVICES), ROWS)]
+
 # Whatever the rows do not need goes under the headings and not the foot of the
 # board, where it reads as a row that failed to draw. HEADING_GAP is the least it may be
 over = HEIGHT - (MARGIN * 2 + HEADING_LETTER_H + ROWS * CELL_H + (ROWS - 1) * ROW_GAP)
 HEADING_H = HEADING_LETTER_H + max(HEADING_GAP, over)
 TOP = MARGIN + HEADING_H
-
-if TOP + ROWS * CELL_H + (ROWS - 1) * ROW_GAP + MARGIN > HEIGHT:
-    raise ValueError(f"{ROWS} rows of {CELL_H}px do not fit: drop a row, or a few pixels off LETTER_MAX")
 
 
 def place(row, card):
@@ -296,20 +304,22 @@ for left in colons:
         canvas.rectangle(rect(middle, top + HALF // 2, dot, dot))
         canvas.rectangle(rect(middle, top + HALF + HALF // 2 - dot, dot, dot))
 
-screen.update(canvas, rotation=90)
+screen.update(canvas)
 
 
 def call_up(index):
     """
     Set every card after the page it should be showing, a column's text starting at its own.
 
-    A colon is painted on the board, so it is dropped from a time before the digits are laid out.
+    A colon is painted on the board, so it is dropped from a time before the digits are laid out. A
+    row past the last service on a page is left blank.
     """
     for row in range(ROWS):
         for card in range(CARDS):
             wanted_at[row][card] = 0
 
-        for (_, wide, _, drum_of), start, text in zip(COLUMNS, starts, PAGES[index][row]):
+        service = PAGES[index][row] if row < len(PAGES[index]) else ()
+        for (_, wide, _, drum_of), start, text in zip(COLUMNS, starts, service):
             letters = text.replace(":", "")
             for offset in range(min(wide, len(letters))):
                 # A character its column is not fitted with cannot be shown, so it stays blank,
@@ -352,7 +362,7 @@ try:
                     turning_at[row][card] = (now if step != wanted_at[row][card] else None)
 
         if drew:
-            screen.update(canvas, rotation=90)
+            screen.update(canvas)
         elif resting and not standing:
             # The page has settled, so it stands from now
             standing = True

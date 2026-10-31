@@ -1,6 +1,7 @@
+import sys
 from mighty_fx import MightyFX, SPCE
 from timing import Pacer, Roller
-from screens import Reserve, Screen280, ScreenPair
+from screens import SCREEN_TYPES, Reserve, ScreenPair
 from picovector import color, font, image, rect, shape
 
 """
@@ -81,6 +82,11 @@ NOTES = (("Stands A to E are on the near side of the road, past the taxi rank."
          ("A time counting down is a tracked vehicle."
           " A time in full is as timetabled and may run early or late."))
 
+# Which screens are on the ports, "2.8" or "1.54", or what the effects file passes in args.
+# A pair wants two of the same size
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
 # Create a MightyFX object with both SP/CE ports set up for screens
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 
@@ -93,7 +99,7 @@ ROTATION = 0 if PORTRAIT else 90
 screens = []
 for port in (mighty.spce_a, mighty.spce_b):
     try:
-        screens.append(Screen280(port, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION))
+        screens.append(ScreenType(port,reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION))
     except ValueError as e:
         print(e)
 
