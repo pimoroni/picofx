@@ -1,0 +1,25 @@
+{
+ "name": "Tiny FX",
+ "examples": true,
+ "outputs": [
+  {"name": "out1", "kind": "mono"},
+  {"name": "out2", "kind": "mono"},
+  {"name": "out3", "kind": "mono"},
+  {"name": "out4", "kind": "mono"},
+  {"name": "out5", "kind": "mono"},
+  {"name": "out6", "kind": "mono"},
+  {"name": "rgb", "kind": "colour", "breaks_out": true}
+ ],
+ "output_words": {
+  "panel": "six mono and one RGB, which can be three",
+  "colour": "RGB output", "colour_says": "any colour",
+  "mono": "Mono lights", "mono_says": "the six outputs, and the RGB's three broken out"
+ },
+ "opening": {"colour": "Rainbow", "mono": "Wave"},
+ "wiring_order": true,
+ "strips": [],
+ "screens": null,
+ "sound": true,
+ "wireless": false,
+ "shell": true
+}

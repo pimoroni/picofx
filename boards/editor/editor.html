@@ -1,0 +1,1423 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>FX Editor</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 31.181 31.181'%3E%3Crect fill='%23fff' width='31.181' height='31.181' rx='4.252' ry='4.252'/%3E%3Cpath d='M12.732,4.036H2.361c-.235,0-.425.19-.425.425v22.258c0,.235.19.425.425.425h1.875c.235,0,.425-.19.425-.425v-10.361h7.514c.235,0,.425-.19.425-.425v-1.684c0-.235-.19-.425-.425-.425h-7.514v-7.254h8.071c.235,0,.425-.19.425-.425v-1.684c0-.235-.19-.425-.425-.425Z'/%3E%3Cpath d='M29.199,26.526l-5.675-11.158,5.296-10.719c.065-.132.058-.288-.02-.413-.078-.125-.214-.201-.361-.201h-1.875c-.161,0-.309.091-.38.235l-4.129,8.273-4.074-8.271c-.071-.145-.219-.237-.381-.237h-1.992c-.147,0-.283.076-.361.201-.078.125-.085.28-.021.412l5.268,10.72-5.646,11.159c-.067.132-.06.289.017.415.078.126.214.203.362.203h1.875c.16,0,.307-.09.379-.233l4.484-8.824,4.484,8.824c.072.143.219.233.379.233h1.992c.148,0,.285-.077.362-.203.078-.126.083-.283.017-.415Z'/%3E%3C/svg%3E">
+<script src="catalogue.js"></script>
+<style>
+:root{
+ --bg:#f5f3ef; --panel:#fff; --ink:#26221e; --dim:#8a8378; --line:#e2ddd4;
+ --accent:#00857d; --accent-ink:#fff; --warn:#b33; --warn-bg:#fbeaea;
+ --target:#1f6feb; --effect:#0a7f78; --value:#a8500a; --scene:#7b3fb8;
+ --comment:#8a8378; --faint:#5d656e;
+}
+*{box-sizing:border-box}
+body{font:16px/1.5 system-ui,sans-serif;margin:0;background:var(--bg);color:var(--ink)}
+header{display:flex;align-items:center;gap:.8rem;padding:.8rem 1.4rem;background:var(--panel);
+ border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header h1{font-size:1.1rem;margin:0 auto 0 0}
+button{font:inherit;padding:.5rem 1rem;border:1px solid var(--line);border-radius:8px;
+ background:var(--panel);cursor:pointer}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+button:disabled{opacity:.4;cursor:default}
+main{max-width:52rem;margin:1.5rem auto;padding:0 1.4rem}
+#status{font-size:.85rem;color:var(--dim)}
+.banner{padding:.8rem 1.1rem;border-radius:10px;margin:1rem 0;background:#e7f2f1}
+.banner.warn{background:var(--warn-bg);color:var(--warn)}
+.banner.hold{background:#fdf3e0;color:#8a6415}
+.banner pre{margin:.4rem 0 0;white-space:pre-wrap;font-size:.85rem}
+/* The board's lights as it lights them while a save is written */
+.spots{display:inline-flex;gap:.3rem;margin-left:.7rem;vertical-align:middle}
+.spots i{display:block;width:.85rem;height:.85rem;border-radius:3px;border:1px solid rgba(138,100,21,.45);
+ background:rgba(138,100,21,.12)}
+.spots i.lit{background:#fff;border-color:#8a6415;box-shadow:0 0 6px 1px rgba(255,255,255,.9)}
+
+.editor{position:relative;background:var(--panel);border:1px solid var(--line);
+ border-radius:14px;overflow:hidden;height:24rem}
+.editor pre, .editor textarea{
+ position:absolute;inset:0;margin:0;padding:1rem 1.2rem;border:0;
+ font:14px/1.6 ui-monospace,Consolas,"Cascadia Mono",monospace;
+ white-space:pre;overflow:auto;tab-size:4;
+}
+.editor pre{pointer-events:none;background:transparent;color:var(--ink);z-index:1;
+ scrollbar-width:none}
+.editor pre::-webkit-scrollbar{display:none}
+.editor textarea{background:transparent;color:transparent;caret-color:var(--ink);
+ resize:none;outline:none;z-index:2}
+.editor textarea::selection{background:rgba(0,133,125,.18)}
+
+.s-target{color:var(--target)}
+.s-effect{color:var(--effect);font-weight:600}
+.s-value{color:var(--value)}
+.s-scene{color:var(--scene);font-weight:600}
+.s-name{color:var(--ink)}
+.s-punc{color:var(--faint)}
+.s-colon{color:var(--ink);font-weight:700}
+.s-comment{color:var(--comment);font-style:italic}
+.s-bad{text-decoration:underline wavy var(--warn);text-decoration-skip-ink:none}
+
+.suggest{position:fixed;z-index:6;background:var(--panel);border:1px solid var(--line);
+ border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.12);min-width:12rem;max-width:24rem;
+ max-height:14rem;overflow:auto;display:none;font:13px/1.5 ui-monospace,Consolas,monospace}
+.suggest.shown{display:block}
+.suggest div{padding:.25rem .8rem;cursor:pointer;display:flex;gap:.8rem;align-items:baseline}
+.suggest div small{color:var(--dim);font:12px/1.4 system-ui,sans-serif;margin-left:auto;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.suggest div.lit{background:var(--accent);color:var(--accent-ink)}
+.suggest div.lit small{color:var(--accent-ink)}
+.suggest div.rule{border-top:1px solid var(--line);margin:.25rem 0;padding:0;cursor:default}
+
+.hint{font-size:.85rem;color:var(--dim);margin:.6rem .2rem;min-height:1.3rem}
+.foot{font-size:.85rem;color:var(--dim);margin:1.2rem .2rem}
+.foot a{color:var(--accent)}
+</style>
+</head>
+<body>
+<header>
+<h1>FX Editor</h1>
+<span id="status">nothing open yet</span>
+<button id="open" class="primary">Open the FX drive</button>
+<button id="save" disabled>Put it on the board</button>
+<button id="check" disabled>Did it work?</button>
+</header>
+<main>
+<div id="banners"></div>
+<div class="editor">
+<pre id="paint"><code id="painted"></code></pre>
+<textarea id="entry" spellcheck="false" autocapitalize="off" autocomplete="off" wrap="off"></textarea>
+<div id="suggest" class="suggest"></div>
+</div>
+<div id="hint" class="hint"></div>
+<p class="foot">One entry per line: which lights, a colon, then the effect.
+The board checks the file when the drive ejects, and "Did it work?" reads what it made
+of each line. Rather pick from cards? <a href="PICKER.html">PICKER.html</a> on this
+drive writes the file for you.</p>
+</main>
+<script>
+"use strict";
+
+// The page still paints without the catalogue beside it; the hint line says why
+// nothing can be offered
+if (typeof CATALOGUE === "undefined") window.CATALOGUE = null;
+
+// ---- what the file may say, from the same tables the board reads ---------------
+
+var TYPE_HINTS = {
+  fraction: "0 to 1, or a percent such as 50%",
+  seconds: "a time in seconds",
+  number: "a number",
+  count: "a whole number",
+  span: "how many lights it spreads over",
+  whole: "a whole number",
+  byte: "0 to 255",
+  angle: "degrees, 0 to 360",
+  colour: "a name such as warm, or six-digit hex with no #",
+  boolean: "true or false",
+  quarter: "0, 90, 180 or 270",
+  name: "a file on this drive"
+};
+
+// The left side's own settings have shapes the type table does not carry
+var CHANNEL_HINTS = {
+  colour: "a name such as warm, or six-digit hex with no #",
+  offset: "where the picture goes, as x|y, * centring that side",
+  background: "the colour around the picture",
+  bg: "the colour around the picture",
+  tile: "repeat or mirror to fill the screen with copies, as across|down"
+};
+
+// The board's own parts: its outputs with their kind, and each strip and screen port as a file
+// writes it with the connector it is on. Without the catalogue the board has none
+var OWN = CATALOGUE ? CATALOGUE.board
+                    : {outputs: [], colour: "", strips: [], screens: [], hub: false, sound: false};
+
+// The outputs a file names by number, out1 onwards, and the others it names by name, such as rgb
+var NUMBERED = OWN.outputs.filter(function (output) { return /^out[0-9]+$/.test(output[0]); });
+var NAMED = OWN.outputs.filter(function (output) { return !/^out[0-9]+$/.test(output[0]); });
+
+// Whether the numbered outputs show colour, each breaking into .r .g .b
+var NUMBERED_COLOUR = NUMBERED.length > 0 &&
+                      NUMBERED.every(function (output) { return output[1] === "colour"; });
+
+// Outputs joined and ranged as a file writes them, the range ending on the board's last output
+var JOINED_EXAMPLE = NUMBERED.length > 5 ? "out1,3,5-" + NUMBERED.length : "out1,2";
+
+var COUNT_WORDS = ["none", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+                   "ten", "eleven", "twelve"];
+
+var TARGETS = [];
+if (NUMBERED.length > 1)
+  TARGETS.push(["out1-" + NUMBERED.length, "all " + COUNT_WORDS[NUMBERED.length] + " outputs"]);
+NAMED.forEach(function (output) { TARGETS.push([output[0], "the " + OWN.colour]); });
+OWN.screens.forEach(function (port) { TARGETS.push([port[0], "a screen on " + port[1]]); });
+if (OWN.hub)
+  TARGETS.push(["hubA", "a screen on a Screen Hub, from hubA to hubF, such as hubA-C"]);
+OWN.strips.forEach(function (strip) { TARGETS.push([strip[0], "an LED strip on " + strip[1]]); });
+if (OWN.sound) TARGETS.push([CATALOGUE.audio, "a sound played beside the effects"]);
+TARGETS.push(["board", "settings for the board itself"],
+             ["[", "a scene heading, [Name: 10s]; entries above the first are always on"]);
+
+var BOARD_HINTS = {
+  drive: "manual keeps the drive hidden until asked for",
+  reload: "manual waits for an eject or Boot before playing a save",
+  program: "a Python file to run instead of the effects",
+  args: "what to pass that program, divided by |"
+};
+OWN.screens.forEach(function (port) {
+  BOARD_HINTS[port[0].toLowerCase()] = "what size of screen is on " + port[1] +
+                                       (OWN.hub ? ", or hub for a Screen Hub" : "");
+});
+OWN.strips.forEach(function (strip, index) {
+  BOARD_HINTS[strip[0].toLowerCase()] = index ? "the same for " + strip[1]
+                                              : "how many LEDs are on a strip plugged into " + strip[1];
+});
+
+// The spelling a completion inserts, where the file reads best in mixed case
+var BOARD_CASE = {};
+OWN.screens.concat(OWN.strips).forEach(function (part) { BOARD_CASE[part[0].toLowerCase()] = part[0]; });
+
+// Check if a word is one of the board's own parts followed by what the pattern takes, such as
+// stripL then 1-10. A pattern matching nothing at all takes the bare name
+function ownPart(word, parts, followed) {
+  var lowered = word.toLowerCase();
+  return parts.some(function (part) {
+    var name = part[0].toLowerCase();
+    return lowered.slice(0, name.length) === name && followed.test(lowered.slice(name.length));
+  });
+}
+
+function targetKind(word) {
+  var lowered = word.toLowerCase();
+  if (lowered === "board") return "board";
+  if (CATALOGUE && lowered === CATALOGUE.audio) return "audio";
+  if (lowered.slice(0, 6) === "screen" || lowered.slice(0, 3) === "hub") return "screen";
+  if (lowered.slice(0, 5) === "strip") return "strip";
+  return "output";
+}
+
+function channelSettings(kind) {
+  // A sound answers to none of the channel settings, autofx saying so where one
+  // is written
+  if (!CATALOGUE || kind === "board" || kind === "audio") return [];
+  if (kind === "screen") return CATALOGUE.screen_settings || [];
+  return CATALOGUE.output_settings || [];
+}
+
+function effectNames(kind) {
+  if (!CATALOGUE) return [];
+  if (kind === "screen") return Object.keys(CATALOGUE.screen_effects);
+  if (kind === "audio") return Object.keys(CATALOGUE.audio_effects);
+  return Object.keys(CATALOGUE.effects);
+}
+
+function effectTakes(name, kind) {
+  if (!CATALOGUE) return null;
+  if (kind === "screen") return CATALOGUE.screen_effects[name.toLowerCase()] || null;
+  if (kind === "audio") return CATALOGUE.audio_effects[name.toLowerCase()] || null;
+  var effect = CATALOGUE.effects[name.toLowerCase()];
+  return effect ? effect.takes : null;
+}
+
+function settingType(name, kind) {
+  if (!CATALOGUE) return null;
+  var lowered = name.toLowerCase();
+  return CATALOGUE.channel_kinds[lowered] ||
+         (kind !== "board" && CATALOGUE.settings[lowered]) || null;
+}
+
+function valuesFor(name, kind) {
+  if (!CATALOGUE) return null;
+  var lowered = name.toLowerCase();
+  if (kind === "board") {
+    // A hub position takes the sizes a screen does, less the hub itself
+    if (OWN.hub && HUB_PLACES.test(lowered))
+      return CATALOGUE.board_settings[OWN.screens[0][0].toLowerCase()].filter(function (size) {
+        return size !== "hub";
+      });
+    var allowed = CATALOGUE.board_settings[lowered];
+    return allowed && allowed.length ? allowed.map(String) : null;
+  }
+  if (lowered === "colour" || lowered === "background" || lowered === "bg")
+    return CATALOGUE.colours;
+  if (lowered === "rotation") return ["0", "90", "180", "270"];
+  if (lowered === "tile") return CATALOGUE.tiling || [];
+  if (settingType(name, kind) === "boolean") return ["true", "false"];
+  return null;
+}
+
+// ---- painting, the same roles the manual gives each word -----------------------
+
+function esc(text) {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function mark(role, text) {
+  return text ? '<span class="' + role + '">' + text + "</span>" : text;
+}
+
+function settingTok(token) {
+  var trailing = "";
+  while (token.slice(-1) === ",") {
+    trailing = "," + trailing;
+    token = token.slice(0, -1);
+  }
+  var at = token.indexOf("=");
+  if (at < 0) return mark("s-name", token) + trailing;
+  return mark("s-name", token.slice(0, at)) + mark("s-punc", "=") +
+         mark("s-value", token.slice(at + 1)) + trailing;
+}
+
+function tokens(text, asWord) {
+  return text.split(/(\s+)/).map(function (word) {
+    return !word.trim() ? word : asWord(word);
+  }).join("");
+}
+
+// What is marked as likely wrong is only what the tables know: names. Values are
+// left unjudged, % and deg and lists living there, and the board stays the judge
+function badWrap(marked) {
+  return '<span class="s-bad">' + marked + "</span>";
+}
+
+// A Screen Hub's positions, lettered A to F as on its silk, singly or as ranges: hubA-C,E
+var HUB_PLACES = /^hub[a-f](-[a-f])?(,[a-f](-[a-f])?)*$/;
+
+function validSelector(word) {
+  var bare = word.toLowerCase().replace(/^,+|,+$/g, "");
+  if (!bare || !CATALOGUE) return true;
+  if (bare === "board" || ownPart(bare, OWN.screens, /^$/)) return true;
+  if (OWN.hub && HUB_PLACES.test(bare)) return true;
+  if (OWN.sound && bare === CATALOGUE.audio) return true;
+  if (ownPart(bare, OWN.strips, /^([0-9][0-9,\-]*)?$/)) return true;
+  if (NUMBERED.length && /^out[0-9][0-9,\-.rgb*]*$/.test(bare)) return true;
+  if (ownPart(bare, NAMED, /^(\.(r|g|b|\*))?$/)) return true;
+  // A group after a comma names its outputs bare: 2, 5-3, 3.r
+  return /^[0-9][0-9,\-]*(\.(r|g|b|\*))?$/.test(bare);
+}
+
+// A setting marked wrong where its name is not allowed, unless it fits the pattern given,
+// as a board entry's hub positions do
+function checkedSetting(word, allowed, pattern) {
+  var marked = settingTok(word);
+  if (!allowed) return marked;
+  var name = word.split("=")[0].replace(/,+$/, "").toLowerCase();
+  if (name === "bg") name = "background";
+  var fits = allowed.indexOf(name) >= 0 || (pattern && pattern.test(name));
+  return fits ? marked : badWrap(marked);
+}
+
+function highlightLine(line, continuation, context, inScene) {
+  var hash = line.indexOf("#");
+  var body = hash < 0 ? line : line.slice(0, hash);
+  var comment = hash < 0 ? "" : mark("s-comment", esc(line.slice(hash)));
+
+  if (!body.trim()) return esc(body) + comment;
+  if (body.replace(/^\s+/, "").slice(0, 1) === "[")
+    return mark("s-scene", esc(body)) + comment;
+
+  var at = body.indexOf(":");
+  if (at < 0) {
+    // A continuation line carries only settings; anything else continues nothing
+    if (!continuation) return badWrap(esc(body)) + comment;
+    var allowed = context && CATALOGUE && context.effect
+                ? effectTakes(context.effect, context.kind) : null;
+    return tokens(esc(body), function (word) {
+      return word.indexOf("=") >= 0 ? checkedSetting(word, allowed) : word;
+    }) + comment;
+  }
+
+  var opening = body.slice(0, at).match(/^\s*([^\s]+)/);
+  var kind = opening ? targetKind(opening[1]) : "output";
+  // Sound does not follow scenes, so its entry belongs above every heading
+  var misplaced = kind === "audio" && inScene;
+  var leftAllowed = CATALOGUE
+                  ? (kind === "board" ? [] : channelSettings(kind)) : null;
+
+  var mono = false;
+  var left = tokens(esc(body.slice(0, at)), function (word) {
+    if (word.indexOf("=") >= 0) return checkedSetting(word, leftAllowed);
+    if (kind === "output" && word.indexOf(".") >= 0) mono = true;
+    var marked = mark("s-target", word);
+    return validSelector(word) && !misplaced ? marked : badWrap(marked);
+  });
+
+  // The first bare word names the effect; a board entry is settings the whole way
+  var named = false;
+  var rightAllowed = CATALOGUE && kind === "board"
+                   ? Object.keys(CATALOGUE.board_settings) : null;
+  var right = tokens(esc(body.slice(at + 1)), function (word) {
+    if (!named && word.indexOf("=") < 0) {
+      named = true;
+      var marked = mark("s-effect", word);
+      if (!CATALOGUE) return marked;
+      if (kind === "board") return badWrap(marked);
+      var name = word.replace(/,+$/, "").toLowerCase();
+      rightAllowed = effectTakes(name, kind);
+      if (!rightAllowed) return badWrap(marked);
+      // A colour effect has nothing to show on a channel driven as a plain light
+      if (mono && CATALOGUE.effects[name].kind === "colour") return badWrap(marked);
+      return marked;
+    }
+    return checkedSetting(word, rightAllowed, kind === "board" ? HUB_PLACES : null);
+  });
+
+  return left + mark("s-colon", ":") + right + comment;
+}
+
+function paint(text) {
+  var open = null;
+  var inScene = false;
+  var painted = text.split("\n").map(function (line) {
+    var body = line.split("#")[0];
+    var context = open;
+    var at = body.indexOf(":");
+    if (body.replace(/^\s+/, "").slice(0, 1) === "[") inScene = true;
+    if (!body.trim() || body.replace(/^\s+/, "").slice(0, 1) === "[") {
+      open = null;
+      context = null;
+    } else if (at >= 0) {
+      var opening = body.slice(0, at).match(/^\s*([^\s]+)/);
+      var effect = null;
+      body.slice(at + 1).split(/\s+/).forEach(function (word) {
+        if (word && word.indexOf("=") < 0 && !effect)
+          effect = word.replace(/,+$/, "");
+      });
+      open = {kind: opening ? targetKind(opening[1]) : "output", effect: effect};
+      context = null;
+    }
+    return highlightLine(line, !!context, context, inScene);
+  });
+  return painted.join("\n") + "\n";
+}
+
+// ---- where the caret stands, for offering what fits there ----------------------
+
+function entryBefore(text, caret) {
+  // The logical entry up to the caret: this line, plus the lines above it that
+  // it continues, since an entry's colon is on its first line
+  var lineStart = text.lastIndexOf("\n", caret - 1) + 1;
+  var lines = [text.slice(lineStart, caret)];
+  while (lineStart > 0 && lines[0].split("#")[0].indexOf(":") < 0) {
+    var previousStart = text.lastIndexOf("\n", lineStart - 2) + 1;
+    var previous = text.slice(previousStart, lineStart - 1).split("#")[0];
+    if (!previous.trim() || previous.replace(/^\s+/, "").slice(0, 1) === "[") break;
+    lines.unshift(previous);
+    lineStart = previousStart;
+    if (previous.indexOf(":") >= 0) break;
+  }
+  return lines.join(" ");
+}
+
+// Which outputs these lines already drive, ranges and components expanded
+function outputsUsed(lines) {
+  var used = {};
+  lines.forEach(function (line) {
+    var body = line.split("#")[0];
+    var at = body.indexOf(":");
+    if (at < 0 || !/^\s*out[0-9]/i.test(body)) return;
+    body.slice(0, at).split(/\s+/).forEach(function (word) {
+      if (word.indexOf("=") >= 0) return;
+      word.toLowerCase().split(",").forEach(function (token) {
+        token = token.replace(/^out/, "").split(".")[0];
+        var range = token.match(/^([0-9]+)-([0-9]+)$/);
+        if (range) {
+          var from = Math.min(+range[1], +range[2]);
+          var to = Math.max(+range[1], +range[2]);
+          for (var n = from; n <= to; n++) used[n] = true;
+        } else if (/^[0-9]+$/.test(token)) {
+          used[+token] = true;
+        }
+      });
+    });
+  });
+  return used;
+}
+
+// The caret's own scene, its line left out, and the always-on section above the
+// first heading. Above the first heading the two are one and the same
+function sceneScope(text, caret) {
+  var lines = text.split("\n");
+  var here = text.slice(0, caret).split("\n").length - 1;
+  function heading(line) {
+    return line.split("#")[0].replace(/^\s+/, "").slice(0, 1) === "[";
+  }
+  var start = 0;
+  for (var up = here; up >= 0; up--)
+    if (heading(lines[up])) { start = up + 1; break; }
+  var end = lines.length;
+  for (var down = here + 1; down < lines.length; down++)
+    if (heading(lines[down])) { end = down; break; }
+  var first = lines.length;
+  for (var scan = 0; scan < lines.length; scan++)
+    if (heading(lines[scan])) { first = scan; break; }
+  return {
+    scene: lines.slice(start, end).filter(function (_, index) {
+      return start + index !== here;
+    }),
+    always: start > 0 ? lines.slice(0, first) : []
+  };
+}
+
+// Check if a word starts the way one of the board's selectors does
+function selectorStart(word) {
+  var lowered = word.toLowerCase();
+  if (lowered.slice(0, 5) === "board") return true;
+  if (NUMBERED.length && /^out[0-9]/.test(lowered)) return true;
+  if (OWN.hub && /^hub[a-f]/.test(lowered)) return true;
+  return ownPart(lowered, OWN.screens.concat(OWN.strips, NAMED), /^/);
+}
+
+function contextAt(text, caret) {
+  var lineStart = text.lastIndexOf("\n", caret - 1) + 1;
+  var line = text.slice(lineStart, caret);
+  if (line.indexOf("#") >= 0) return null;
+  if (line.replace(/^\s+/, "").slice(0, 1) === "[") return null;
+
+  var entry = entryBefore(text, caret);
+  var prefix = line.match(/[^\s:]*$/)[0];
+  var found = {prefix: prefix, target: null, kind: "output", effect: null,
+               comma: false, used: {}};
+
+  // A comma closes its token, so the caret stands at a fresh word
+  if (prefix.slice(-1) === ",") {
+    found.comma = true;
+    found.prefix = prefix = "";
+  }
+
+  var before = entry.slice(0, entry.length - prefix.length);
+  var colon = before.indexOf(":");
+  found.left = colon < 0;
+
+  var opening = entry.match(/^\s*([^\s:]+)/);
+  if (opening) {
+    found.target = opening[1];
+    found.kind = targetKind(opening[1]);
+  }
+
+  // A component anywhere in the selector makes the channel a plain light, so a
+  // colour effect has nothing there to show itself on
+  if (colon >= 0 && found.kind === "output")
+    found.mono = entry.slice(0, entry.indexOf(":")).split(/\s+/).some(function (word) {
+      return word.indexOf("=") < 0 && word.indexOf(".") >= 0;
+    });
+
+  // What the entry already sets, to the end of the caret's line, so a setting
+  // is only ever offered once
+  var lineEnd = text.indexOf("\n", caret);
+  var whole = entry + " " +
+              text.slice(caret, lineEnd < 0 ? text.length : lineEnd).split("#")[0];
+  whole.split(/[\s,]+/).forEach(function (word) {
+    var at = word.indexOf("=");
+    if (at > 0) found.used[word.slice(0, at).toLowerCase()] = true;
+  });
+
+  if (colon < 0) {
+    // A comma before the colon says another output comes next, which is the
+    // writer's to number, so nothing is offered and the hint line explains
+    found.mode = found.comma ? "more" : before.trim() ? "channel" : "target";
+  } else {
+    found.mode = found.kind === "board" ? "setting" : "effect";
+    before.slice(colon + 1).split(/\s+/).forEach(function (word) {
+      if (word && word.indexOf("=") < 0 && !found.effect) {
+        found.effect = word.replace(/,+$/, "");
+        found.mode = "setting";
+      }
+    });
+    // The first word of a new line may start a new entry or carry on the one
+    // above, so both are offered until the word says which
+    if (line.indexOf(":") < 0) {
+      if (line.slice(0, line.length - prefix.length).trim() === "") {
+        found.mode = "fresh";
+      } else {
+        // A first word shaped like a selector settles it: the line is a new
+        // entry still waiting for its colon, not the one above carrying on
+        var starts = line.match(/^\s*([^\s:]+)/);
+        if (starts && selectorStart(starts[1])) {
+          found.target = starts[1];
+          found.kind = targetKind(starts[1]);
+          found.effect = null;
+          found.mode = "channel";
+          found.used = {};
+          line.split(/[\s,]+/).forEach(function (word) {
+            var given = word.indexOf("=");
+            if (given > 0) found.used[word.slice(0, given).toLowerCase()] = true;
+          });
+        }
+      }
+    }
+  }
+
+  var at = found.prefix.indexOf("=");
+  if (at >= 0) {
+    found.mode = "value";
+    found.setting = found.prefix.slice(0, at);
+    found.prefix = found.prefix.slice(at + 1);
+  }
+
+  if (found.mode === "target" || found.mode === "fresh") {
+    var scope = sceneScope(text, caret);
+    found.sceneUsed = outputsUsed(scope.scene);
+    found.alwaysUsed = outputsUsed(scope.always);
+  }
+  return found;
+}
+
+function offers(found) {
+  if (!found) return [];
+  var out = [];
+  var seen = found.prefix.toLowerCase();
+
+  function offer(insert, hint) {
+    if (insert.toLowerCase().slice(0, seen.length) === seen && insert !== found.prefix)
+      out.push({insert: insert, hint: hint || ""});
+  }
+
+  // fade and ease are one setting written two ways, so each rules the other out
+  function unused(name) {
+    if (found.used[name.toLowerCase()]) return false;
+    if (name === "fade" && found.used.ease) return false;
+    if (name === "ease" && found.used.fade) return false;
+    return true;
+  }
+
+  function channelOffers() {
+    channelSettings(found.kind).forEach(function (name) {
+      if (!unused(name)) return;
+      var type = settingType(name, found.kind);
+      offer(name + "=", CHANNEL_HINTS[name] || TYPE_HINTS[type] || "");
+    });
+    offer(": ", "then the effect");
+  }
+
+  function settingOffers() {
+    var takes = found.kind === "board"
+              ? (CATALOGUE ? Object.keys(CATALOGUE.board_settings) : [])
+              : found.effect ? effectTakes(found.effect, found.kind) : null;
+    (takes || []).forEach(function (name) {
+      if (!unused(name)) return;
+      var shown = BOARD_CASE[name] || name;
+      var hint = found.kind === "board" ? BOARD_HINTS[name]
+               : TYPE_HINTS[settingType(name, found.kind)];
+      offer(shown + "=", hint || "");
+    });
+    // A hub's positions are a pattern where the others are names, so one is offered to start
+    if (found.kind === "board" && OWN.hub)
+      offer("hubA=", "the screen size at a Screen Hub position, such as hubA-C=2.8");
+  }
+
+  // A word already naming outputs can take more of them, one colour channel, or
+  // go to its effect. Half-written punctuation leaves the numbers to the writer
+  function selectorOffers() {
+    var numbered = NUMBERED.length > 0 && /^out[0-9]/i.test(found.prefix);
+    var components = (numbered && NUMBERED_COLOUR) || ownPart(found.prefix, NAMED, /^\.$/);
+    if (components && found.prefix.slice(-1) === ".") {
+      offer(found.prefix + "r", "just the red");
+      offer(found.prefix + "g", "just the green");
+      offer(found.prefix + "b", "just the blue");
+      offer(found.prefix + "*", "all three, each its own light");
+      return;
+    }
+    if (/[-.,]$/.test(found.prefix)) return;
+    if (numbered || ownPart(found.prefix, OWN.strips, /^[0-9]/)) {
+      var tail = found.prefix.split(",").pop();
+      offer(found.prefix + ",", "another output after it: " + JOINED_EXAMPLE);
+      if (/^[0-9]+$/.test(tail.replace(/^[a-z]+/i, "")))
+        offer(found.prefix + "-", "a range to another output, run either way");
+      if (numbered && NUMBERED_COLOUR && tail.indexOf(".") < 0)
+        offer(found.prefix + ".", "one colour channel alone: .r .g .b, or .*");
+      offer(found.prefix + ": ", "then the effect");
+    } else if (ownPart(found.prefix, NAMED, /^$/)) {
+      offer(found.prefix + ".", "one colour channel alone: .r .g .b, or .*");
+      offer(found.prefix + ": ", "then the effect");
+    } else if (/^(board|audio)$/i.test(found.prefix) ||
+               ownPart(found.prefix, OWN.screens.concat(OWN.strips), /^$/) ||
+               HUB_PLACES.test(found.prefix.toLowerCase())) {
+      offer(found.prefix + ": ", "then the effect");
+    }
+  }
+
+  // One output by number: the first this scene does not drive yet, and beside it
+  // the first held by the always-on section, which a scene may take over
+  function dynamicOutput() {
+    var free = null;
+    var takeover = null;
+    for (var n = 1; n <= NUMBERED.length; n++) {
+      if (found.sceneUsed[n]) continue;
+      if (found.alwaysUsed[n]) {
+        if (takeover === null) takeover = n;
+      } else if (free === null) {
+        free = n;
+      }
+    }
+    if (free !== null)
+      offer("out" + free, free === 1 ? "one output" : "the next output not used here");
+    if (takeover !== null)
+      offer("out" + takeover, "takes over an always-on output while this scene shows");
+  }
+
+  function freshStarts() {
+    dynamicOutput();
+    TARGETS.forEach(function (pair) { offer(pair[0], pair[1]); });
+    selectorOffers();
+  }
+
+  if (found.mode === "target") {
+    freshStarts();
+
+  } else if (found.mode === "channel") {
+    channelOffers();
+
+  } else if (found.mode === "effect") {
+    effectNames(found.kind).forEach(function (name) {
+      var effect = CATALOGUE.effects[name];
+      if (found.mono && effect && effect.kind === "colour") return;
+      var hint = effect && effect.kind === "colour" ? "brings its own colours" : "";
+      offer(name, hint);
+    });
+
+  } else if (found.mode === "setting") {
+    settingOffers();
+
+  } else if (found.mode === "fresh") {
+    // A new line under an entry: carrying it on comes first, a fresh start after
+    // a dividing line
+    settingOffers();
+    var split = out.length;
+    freshStarts();
+    if (split && out.length > split) out.divider = split;
+
+  } else if (found.mode === "value") {
+    (valuesFor(found.setting, found.kind) || []).forEach(function (value) {
+      offer(value);
+    });
+    // A pipe joins the parts of a value that has them; a comma after a value on
+    // the left starts the next output group
+    if (found.prefix) {
+      var name = found.setting.toLowerCase();
+      var piped = {fade: "rise|fall, each its own seconds",
+                   ease: "rise|fall, each its own seconds",
+                   offset: "x|y, * centring that side",
+                   tile: "across|down",
+                   hold: "one end|the other",
+                   args: "the next argument"};
+      if (piped[name])
+        offer(found.prefix + "|", piped[name]);
+      else if (name === "colour" && found.effect &&
+               found.effect.toLowerCase() === "rgb_blink")
+        offer(found.prefix + "|", "another colour to blink through");
+      if (found.left && found.kind !== "screen" && found.kind !== "board")
+        offer(found.prefix + ",", name === "colour"
+              ? "a colour for each output"
+              : "then another output with settings of its own");
+    }
+  }
+  return out;
+}
+
+function hintFor(found) {
+  if (!found) return "";
+  if (!CATALOGUE)
+    return "catalogue.js is not beside this page, so nothing can be suggested; " +
+           "the copy on the FX drive has it";
+  if (found.mode === "more")
+    return "another output comes next: a number, or a range such as 5-3, " +
+           "then its settings or the colon";
+  if ((found.mode === "target" || found.mode === "fresh") &&
+      /^out[0-9]/i.test(found.prefix))
+    return "outputs join with commas, ranges run either way, and .r .g .b " +
+           "or .* takes one colour channel alone";
+  if (found.mode === "value" || (found.mode === "setting" && found.prefix)) {
+    var name = found.mode === "value" ? found.setting : found.prefix;
+    if (found.kind === "board") return BOARD_HINTS[name.toLowerCase()] || "";
+    // A drawing names a Python file, which belongs in a Python editor
+    if (found.effect === "graphics" && name.toLowerCase().indexOf("file") === 0)
+      return "a Python file with a draw(canvas, elapsed) in it, written in Thonny " +
+             "or VS Code rather than here";
+    var type = settingType(name, found.kind);
+    return type ? name.replace(/,+$/, "") + ": " +
+                  (CHANNEL_HINTS[name.toLowerCase()] || TYPE_HINTS[type]) : "";
+  }
+  if (found.effect) {
+    var takes = effectTakes(found.effect, found.kind);
+    if (takes) return found.effect + " takes: " + takes.join(", ");
+  }
+  if (found.kind === "audio")
+    return "one sound plays at a time, and its entry sits above every scene heading";
+  if (found.mode === "channel")
+    return "before the colon: how the " +
+           (found.kind === "screen" ? "screen is set" : "lights are set");
+  return "";
+}
+
+// ---- the page -----------------------------------------------------------------
+
+var entry = document.getElementById("entry");
+var painted = document.getElementById("painted");
+var paintBox = document.getElementById("paint");
+var suggest = document.getElementById("suggest");
+var hintLine = document.getElementById("hint");
+
+// Every output by number where they all show colour, or else the board's own colour output
+var COLOURED = NUMBERED_COLOUR ? "out1-" + NUMBERED.length
+                               : (NAMED.length ? NAMED[0][0] : "out1-7");
+
+var STARTER = "# One entry per line: which lights, a colon, then the effect.\n" +
+              "# Settings you leave out take their usual value.\n\n" +
+              COLOURED + ": rainbow_wave speed=0.3\n";
+
+var state = {dirHandle: null, fileHandle: null, boardText: null, offered: [], rows: [], lit: 0};
+
+function repaint() {
+  painted.innerHTML = paint(entry.value);
+  // The box grows with the file, a spare row deep, so the text never scrolls
+  // vertically inside it and the page carries a long file instead
+  var rowHeight = parseFloat(getComputedStyle(entry).lineHeight);
+  var wanted = (entry.value.split("\n").length + 1) * rowHeight + 48;
+  paintBox.parentNode.style.height = Math.max(384, wanted) + "px";
+  paintBox.scrollTop = entry.scrollTop;
+  paintBox.scrollLeft = entry.scrollLeft;
+}
+
+// The board's own saving animation, so the page shows what its lights show: one white light
+// travelling the numbered outputs over a dim floor, 120ms a step, or a board without them
+// flashing its own LED for one step in seven. Started by saving() and stopped by the next
+// banner, whatever it says
+var SPOT_STEP_MS = 120;
+var SPOTS = NUMBERED.length || 1;
+var FLASH_STEPS = 7;
+// How long the animation outlives the write: the board holds its light for 500ms after the
+// last write and then runs one pass of half-steps, one per light
+var SAVING_TAIL_MS = 500 + SPOTS * SPOT_STEP_MS / 2;
+var spotTimer = null;
+
+function stopSpots() {
+  if (spotTimer !== null) clearInterval(spotTimer);
+  spotTimer = null;
+}
+
+function saving(text) {
+  banner(text, "hold");
+  var row = document.createElement("span");
+  row.className = "spots";
+  for (var i = 0; i < SPOTS; i++) row.appendChild(document.createElement("i"));
+  document.getElementById("banners").firstChild.appendChild(row);
+  var at = 0;
+  var steps = SPOTS > 1 ? SPOTS : FLASH_STEPS;
+  spotTimer = setInterval(function () {
+    for (var i = 0; i < row.children.length; i++)
+      row.children[i].className = i === (SPOTS > 1 ? at : at - (FLASH_STEPS - 1)) ? "lit" : "";
+    at = (at + 1) % steps;
+  }, SPOT_STEP_MS);
+}
+
+function banner(text, warn, detail) {
+  stopSpots();
+  var box = document.getElementById("banners");
+  box.innerHTML = "";
+  if (!text) return;
+  var note = document.createElement("div");
+  // warn may also be "hold", the amber of a check still running
+  note.className = warn === "hold" ? "banner hold" : warn ? "banner warn" : "banner";
+  note.textContent = text;
+  if (detail) {
+    var lines = document.createElement("pre");
+    lines.textContent = detail;
+    note.appendChild(lines);
+  }
+  box.appendChild(note);
+}
+
+// Where the caret's line sits on the screen, found by mirroring the text up to it
+function caretPlace() {
+  var mirror = document.createElement("div");
+  var styles = getComputedStyle(entry);
+  ["font", "whiteSpace", "tabSize"].forEach(function (key) {
+    mirror.style[key] = styles[key];
+  });
+  mirror.style.position = "absolute";
+  mirror.style.visibility = "hidden";
+  mirror.style.whiteSpace = "pre";
+  var upTo = entry.value.slice(0, entry.selectionStart);
+  mirror.textContent = upTo.slice(upTo.lastIndexOf("\n") + 1);
+  document.body.appendChild(mirror);
+  var width = mirror.offsetWidth;
+  document.body.removeChild(mirror);
+
+  var rect = entry.getBoundingClientRect();
+  var rowHeight = parseFloat(styles.lineHeight);
+  var lineTop = rect.top + parseFloat(styles.paddingTop) +
+                (upTo.split("\n").length - 1) * rowHeight - entry.scrollTop;
+  return {
+    left: rect.left + parseFloat(styles.paddingLeft) + width - entry.scrollLeft,
+    below: lineTop + rowHeight + 2,
+    above: lineTop - 2
+  };
+}
+
+function showSuggestions() {
+  var caret = entry.selectionStart;
+  if (caret !== entry.selectionEnd) return hideSuggestions();
+  var found = contextAt(entry.value, caret);
+  hintLine.textContent = hintFor(found);
+
+  var offered = offers(found);
+  if (!offered.length) return hideSuggestions();
+
+  state.offered = offered;
+  state.found = found;
+  state.lit = 0;
+  state.rows = [];
+  suggest.innerHTML = "";
+  offered.slice(0, 40).forEach(function (one, index) {
+    if (index && index === offered.divider) {
+      var rule = document.createElement("div");
+      rule.className = "rule";
+      suggest.appendChild(rule);
+    }
+    var row = document.createElement("div");
+    var name = document.createElement("span");
+    name.textContent = one.insert;
+    row.appendChild(name);
+    if (one.hint) {
+      var why = document.createElement("small");
+      why.textContent = one.hint;
+      row.appendChild(why);
+    }
+    if (index === 0) row.className = "lit";
+    row.onmousedown = function (event) {
+      event.preventDefault();
+      accept(index);
+    };
+    suggest.appendChild(row);
+    state.rows.push(row);
+  });
+  // Placed below the caret's line, or above it where the screen runs out
+  suggest.style.visibility = "hidden";
+  suggest.className = "suggest shown";
+  var place = caretPlace();
+  var top = place.below;
+  if (top + suggest.offsetHeight > window.innerHeight - 8)
+    top = Math.max(8, place.above - suggest.offsetHeight);
+  suggest.style.top = top + "px";
+  suggest.style.left = Math.max(8, Math.min(place.left,
+      window.innerWidth - suggest.offsetWidth - 8)) + "px";
+  suggest.style.visibility = "";
+}
+
+function hideSuggestions() {
+  suggest.className = "suggest";
+  state.offered = [];
+}
+
+function light(index) {
+  var count = state.rows.length;
+  state.lit = (index + count) % count;
+  state.rows.forEach(function (row, i) {
+    row.className = i === state.lit ? "lit" : "";
+  });
+  state.rows[state.lit].scrollIntoView({block: "nearest"});
+}
+
+function accept(index) {
+  var one = state.offered[index === undefined ? state.lit : index];
+  if (!one) return;
+  var caret = entry.selectionStart;
+  var start = caret - state.found.prefix.length;
+  // The colon closes the word before it, so it steps back over the gap
+  if (one.insert.slice(0, 1) === ":")
+    while (start > 0 && entry.value[start - 1] === " ") start--;
+  entry.focus();
+  entry.setSelectionRange(start, caret);
+  // insertText keeps the undo history; setRangeText is the fallback without it
+  if (!document.execCommand("insertText", false, one.insert))
+    entry.setRangeText(one.insert, start, caret, "end");
+  hideSuggestions();
+  changed();
+}
+
+function changed() {
+  repaint();
+  try { localStorage.setItem("fx-editor-draft", entry.value); } catch (e) {}
+  showSuggestions();
+}
+
+entry.addEventListener("input", changed);
+entry.addEventListener("scroll", function () {
+  paintBox.scrollTop = entry.scrollTop;
+  paintBox.scrollLeft = entry.scrollLeft;
+  hideSuggestions();
+});
+// The dropdown is pinned to the screen, so anything moving under it lets go of it
+window.addEventListener("resize", hideSuggestions);
+window.addEventListener("scroll", function (event) {
+  if (event.target instanceof Node && suggest.contains(event.target)) return;
+  hideSuggestions();
+}, true);
+entry.addEventListener("click", showSuggestions);
+entry.addEventListener("blur", function () {
+  setTimeout(hideSuggestions, 150);
+});
+entry.addEventListener("keydown", function (event) {
+  if (!state.offered.length) {
+    if (event.key === " " && event.ctrlKey) {
+      event.preventDefault();
+      showSuggestions();
+    }
+    return;
+  }
+  if (event.key === "ArrowDown") { event.preventDefault(); light(state.lit + 1); }
+  else if (event.key === "ArrowUp") { event.preventDefault(); light(state.lit - 1); }
+  else if (event.key === "Tab" || event.key === "Enter") {
+    event.preventDefault();
+    accept();
+  }
+  else if (event.key === "Escape") hideSuggestions();
+});
+
+// ---- the drive ------------------------------------------------------------------
+
+// ---- remembering the drive ------------------------------------------------------
+
+// The drive's handle survives in IndexedDB, so after the first visit it is reached
+// with one click and a permission bubble instead of the file dialog every time. A
+// page cannot go looking for the drive itself; remembering the answer is what there
+// is. Anything failing in here falls back to the dialog
+function rememberDrive(handle) {
+  try {
+    var open = indexedDB.open("fx-pages", 1);
+    open.onupgradeneeded = function () { open.result.createObjectStore("handles"); };
+    open.onsuccess = function () {
+      try {
+        open.result.transaction("handles", "readwrite")
+            .objectStore("handles").put(handle, "drive");
+      } catch (e) {}
+    };
+  } catch (e) {}
+}
+
+function rememberedDrive() {
+  return new Promise(function (settle) {
+    try {
+      var open = indexedDB.open("fx-pages", 1);
+      open.onupgradeneeded = function () { open.result.createObjectStore("handles"); };
+      open.onerror = function () { settle(null); };
+      open.onsuccess = function () {
+        try {
+          var ask = open.result.transaction("handles").objectStore("handles").get("drive");
+          ask.onsuccess = function () { settle(ask.result || null); };
+          ask.onerror = function () { settle(null); };
+        } catch (e) { settle(null); }
+      };
+    } catch (e) { settle(null); }
+  });
+}
+
+async function pickDrive() {
+  var kept = await rememberedDrive();
+  if (kept) {
+    try {
+      if (await kept.requestPermission({mode: "readwrite"}) === "granted") {
+        await kept.getFileHandle("effects.txt");
+        return kept;
+      }
+    } catch (e) {}
+  }
+  var picked;
+  try {
+    picked = await window.showDirectoryPicker(
+        kept ? {mode: "readwrite", startIn: kept} : {mode: "readwrite"});
+  } catch (e) {
+    if (e.name === "AbortError") throw e;
+    picked = await window.showDirectoryPicker({mode: "readwrite"});
+  }
+  rememberDrive(picked);
+  return picked;
+}
+
+// Take the drive's effects.txt into the editor, asking first where it would
+// replace something written here, and ready the buttons for a save
+function loadFromDrive(onBoard, status, openLabel) {
+  var held = entry.value.trim();
+  if (onBoard.trim() !== held && (!held || held === STARTER.trim() ||
+      confirm("Load effects.txt from the drive and replace what is written here? " +
+              "Undo (Ctrl+Z) brings your text back."))) {
+    // Through the undo history, so what was here is one Ctrl+Z away
+    entry.focus();
+    entry.setSelectionRange(0, entry.value.length);
+    if (!document.execCommand("insertText", false, onBoard)) entry.value = onBoard;
+    entry.setSelectionRange(0, 0);
+    repaint();
+  }
+  document.getElementById("check").disabled = false;
+  document.getElementById("status").textContent = status;
+  // The next thing to do carries the colour: opening first, then saving
+  var open = document.getElementById("open");
+  open.className = "";
+  open.textContent = openLabel;
+  var save = document.getElementById("save");
+  save.className = "primary";
+  save.disabled = false;
+}
+
+async function connect() {
+  if (!CAN_REACH_A_DRIVE) return connectByInput();
+  var dir = await pickDrive();
+  state.dirHandle = dir;
+  state.fileHandle = await dir.getFileHandle("effects.txt");
+  var onBoard = await (await state.fileHandle.getFile()).text();
+  loadFromDrive(onBoard, "connected to the drive", "Open a different drive");
+}
+
+document.getElementById("open").onclick = async function () {
+  try {
+    await connect();
+    banner("");
+  } catch (e) {
+    if (e.name === "AbortError") return;
+    if (e.name === "NotAnFxDrive") {
+      banner("That folder has no effects.txt, so it does not look like an FX " +
+             "drive. Pick the drive itself, the one named FX.", true);
+      return;
+    }
+    banner("Could not open the drive: " + e.name + ". Is it showing? " +
+           "A double press of Boot brings it back.", true);
+  }
+};
+
+// ---- the drive without handles -------------------------------------------------
+
+// Safari and Firefox cannot hand a page a folder to write to. There the drive is
+// read through a folder chooser, and a save hands effects.txt to the browser's
+// download, which the user places on the drive
+var folderInput = document.createElement("input");
+folderInput.type = "file";
+folderInput.setAttribute("webkitdirectory", "");
+folderInput.style.display = "none";
+document.body.appendChild(folderInput);
+
+var folderSettle = null;
+folderInput.onchange = function () {
+  var files = Array.prototype.slice.call(folderInput.files);
+  folderInput.value = "";
+  var settle = folderSettle;
+  folderSettle = null;
+  if (settle) settle(files);
+};
+// A dismissed dialog answers null, so nothing waits forever on it
+folderInput.oncancel = function () {
+  var settle = folderSettle;
+  folderSettle = null;
+  if (settle) settle(null);
+};
+
+function chooseFolder() {
+  return new Promise(function (settle) {
+    folderSettle = settle;
+    folderInput.click();
+  });
+}
+
+// effects.txt and errors.txt out of the chooser's files, at the drive's root only.
+// Firefox hands back dot entries too, the sidecars and event log a Mac leaves
+function sortFolder(files) {
+  var found = {effects: null, errors: null, drive: null};
+  for (var i = 0; i < files.length; i++) {
+    var parts = (files[i].webkitRelativePath || files[i].name).split("/");
+    if (parts.length !== 2 || parts[1].charAt(0) === ".") continue;
+    found.drive = parts[0];
+    if (parts[1] === "effects.txt") found.effects = files[i];
+    else if (parts[1] === "errors.txt") found.errors = files[i];
+  }
+  return found;
+}
+
+async function connectByInput() {
+  var files = await chooseFolder();
+  if (files === null) {
+    var dropped = new Error("the dialog was dismissed");
+    dropped.name = "AbortError";
+    throw dropped;
+  }
+  var found = sortFolder(files);
+  if (!found.effects) {
+    var refused = new Error("no effects.txt");
+    refused.name = "NotAnFxDrive";
+    throw refused;
+  }
+  state.boardText = await found.effects.text();
+  loadFromDrive(state.boardText,
+                "read from " + (found.drive && found.drive.length > 1 ? found.drive : "the drive"),
+                "Look at the drive again");
+}
+
+// A save with nowhere to write: effects.txt goes to the browser's download, and
+// the banner says where it belongs and how the board answers
+function saveByHand() {
+  var text = entry.value;
+  var onBoard = state.boardText || "";
+  var link = document.createElement("a");
+  link.href = URL.createObjectURL(new Blob([text], {type: "text/plain"}));
+  link.download = "effects.txt";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  state.boardText = text;
+  banner("effects.txt is downloading. Put it on the FX drive in place of the old one" +
+         (playsItself(onBoard)
+          ? ", and the board plays it. Then press 'Did it work?'."
+          : ", then eject the drive or press Boot once, and it plays."));
+}
+
+// Did it work, asked by picking the drive again. Only its answer is taken; what is
+// written on the page stays as it is
+async function askByInput() {
+  banner("Pick the FX drive again, so its answer can be read.", "hold");
+  var files = await chooseFolder();
+  if (files === null) {
+    banner("");
+    return;
+  }
+  var found = sortFolder(files);
+  if (!found.effects) {
+    banner("That folder has no effects.txt, so it does not look like an FX " +
+           "drive. Pick the drive itself, the one named FX.", true);
+    return;
+  }
+  var said = found.errors ? (await found.errors.text()).trim() : null;
+  if (said === CHECKING)
+    banner("The board has not read the file yet. Check effects.txt landed on the " +
+           "drive, then eject it or press Boot once.", "hold");
+  else if (said)
+    banner("The board wasn't happy with some of it:", true, said);
+  else
+    banner("Nothing reported. The board found no problem with the file.");
+}
+
+// Only Chromium browsers can be handed a folder to write to. Elsewhere the drive
+// is read through a folder chooser and a save goes by download, above
+var CAN_REACH_A_DRIVE = typeof window.showDirectoryPicker === "function";
+
+// Edge is named only where it is already on the machine
+var ONE_CLICK_BROWSERS = "Chrome" + (/Win/.test(navigator.platform) ? " or Edge" : "") +
+                         ", or another browser built on Chromium,";
+
+if (!CAN_REACH_A_DRIVE) {
+  banner("This browser cannot write to the drive, so a save downloads effects.txt for " +
+         "you to put on it. " + ONE_CLICK_BROWSERS + " saves straight to the board.");
+}
+
+
+// ---- waiting for the board -----------------------------------------------------
+
+// Only the board writes errors.txt, and only where it has re-read the file, so a
+// change there is proof it acted. It answers a save in about four seconds.
+//
+// Never read effects.txt while waiting. A read of the file just saved holds off the
+// write the computer still has in hand, and the board then waits half a minute to
+// see it, measured 2026-08-22
+// The board answers a save in about four seconds, so silence is worth reporting at
+// six and watching quietly after, rather than sitting on the answer until the last
+// poll. A change to errors.txt is proof either way and ends the wait at once
+var BOARD_SETTLE_MS = 6000;
+var BOARD_WAIT_MS = 15000;
+// How long the drive is given to come back once it has been seen away. The board
+// leaves the USB bus on a reload and a Mac takes about four seconds to mount it
+// again, measured 2026-09-17, with the answer readable the moment it does
+var BOARD_AWAY_MS = 10000;
+var BOARD_POLL_MS = 250;
+
+function playsItself(text) {
+  return !/\breload\s*=\s*manual\b/i.test(text);
+}
+
+// Written into errors.txt before saving, so the board's answer is always a
+// change: it deletes the file where the save reads clean and rewrites it where
+// not, so this line vanishing is the answer either way. Self-describing, since a
+// board that never reads the file leaves it to be found later
+var CHECKING = "The board has not read the file yet.";
+
+// Writes the marker; returns whether it took, a full drive being the reason not
+async function markChecking() {
+  try {
+    var handle = await state.dirHandle.getFileHandle("errors.txt", {create: true});
+    var writable = await handle.createWritable();
+    await writable.write(CHECKING + "\n");
+    await writable.close();
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// Whether the drive is there to be asked, by listing its first entry. A drive that
+// has left the bus mid-reload makes every path vanish at once, so a missing file
+// is only missing while the directory itself still answers
+async function driveAnswers() {
+  try {
+    for await (var entry of state.dirHandle.values()) return true;
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// The text of errors.txt, null where there is none, and false where the drive is
+// away mid-reload and the question cannot be answered yet
+async function readErrors() {
+  try {
+    var handle = await state.dirHandle.getFileHandle("errors.txt");
+    return (await (await handle.getFile()).text()).trim();
+  } catch (e) {
+    if (e.name !== "NotFoundError") return false;
+    return (await driveAnswers()) ? null : false;
+  }
+}
+
+// Polls until errors.txt differs from what it said before the save, calling
+// nothingYet() once the settle time passes, saying the check is still running: an
+// answer can arrive after the settle, so nothing is claimed until the wait is over.
+// Seeing the drive away is proof the board acted, so an unchanged answer after that
+// is a real answer rather than an early one, and the wait is extended once so the
+// answer is not missed while the drive is still on its way back
+async function waitForBoard(before, nothingYet) {
+  var deadline = Date.now() + BOARD_WAIT_MS;
+  var settled = Date.now() + BOARD_SETTLE_MS;
+  var wentAway = false;
+  var told = false;
+  while (Date.now() < deadline) {
+    await new Promise(function (settle) { setTimeout(settle, BOARD_POLL_MS); });
+    var now = await readErrors();
+    if (now === false) {
+      if (!wentAway) deadline = Math.max(deadline, Date.now() + BOARD_AWAY_MS);
+      wentAway = true;
+      continue;
+    }
+    if (now !== before) return now;
+    if (wentAway) return now;
+    if (!told && Date.now() > settled) {
+      nothingYet();
+      told = true;
+    }
+  }
+  return before;
+}
+
+// What to say once the wait is over. Silence cannot be told from a board that has
+// not got there yet, so it is reported as nothing said rather than as all well
+function sayWhatHappened(said, also) {
+  if (said === CHECKING)
+    banner("The board did not pick the save up. Eject the FX drive, or press " +
+           "Boot once, and it plays.", true);
+  else if (said)
+    banner("The board wasn't happy with some of it:", true, said);
+  else
+    banner("Playing on the board. No problems reported." + (also || ""));
+}
+
+document.getElementById("save").onclick = async function () {
+  if (!CAN_REACH_A_DRIVE) {
+    saveByHand();
+    return;
+  }
+  // Both held down until the verdict: a second save cannot land in the wait and race
+  // the first, a check cannot read back the marker this save is about to write, and
+  // the buttons coming back say the board has answered
+  var button = this;
+  var check = document.getElementById("check");
+  try {
+    if (!state.fileHandle) await connect();
+    button.disabled = true;
+    check.disabled = true;
+    var text = entry.value;
+    // The board acts on a save only where the file it is already running asked it to,
+    // so the first save that turns it on still needs an eject
+    var running = await (await state.fileHandle.getFile()).text();
+    saving("Saving to the board...");
+    var errorsBefore = playsItself(running) ? await readErrors() : undefined;
+    // The marker makes the answer an edge even where nothing else changes
+    if (errorsBefore !== undefined && await markChecking()) errorsBefore = CHECKING;
+    var writable = await state.fileHandle.createWritable();
+    await writable.write(text);
+    await writable.close();
+    var back = await (await state.fileHandle.getFile()).text();
+    if (back !== text) throw new Error("the file read back differently");
+    // The board keeps its light travelling for a moment after the last write, then
+    // runs one pass as the drive changes hands, so the page holds its own as long
+    await new Promise(function (settle) { setTimeout(settle, SAVING_TAIL_MS); });
+    // A program running keeps the board busy, so neither an eject nor a press reaches it
+    if (/\bprogram=/.test(running)) {
+      banner("On its way. The board is running a program, so press its Reset button to play "
+             + "this one.");
+      return;
+    }
+    // A board saving on its own that is given a program restarts to run it, so there is no
+    // answer to wait for
+    if (errorsBefore !== undefined && /\bprogram=/.test(text)) {
+      banner("On its way. The board restarts to run the program, which takes a few seconds.");
+      return;
+    }
+    if (errorsBefore === undefined) {
+      banner("On its way. " + (playsItself(text)
+             ? "Eject the FX drive, or press Boot once, to play this one. "
+               + "From now on a save plays on its own."
+             : "Eject the FX drive on this computer, and the board plays it. Double-press "
+               + "Boot to bring the drive back, then ask 'Did it work?'."));
+      return;
+    }
+    banner("Saved. Waiting for the board to pick it up...", "hold");
+    var was = errorsBefore === false ? null : errorsBefore;
+    sayWhatHappened(await waitForBoard(was, function () {
+      banner("Playing on the board. Checking for problems...", "hold");
+    }));
+  } catch (e) {
+    if (e.name === "QuotaExceededError") {
+      // The drive is there, it is simply full: saving writes a temporary copy
+      // first, so it needs the file's size free
+      banner("The FX drive is full, so there was no room to save. Delete a " +
+             "picture or sound from it and try again.", true);
+      return;
+    }
+    state.fileHandle = null;
+    state.dirHandle = null;
+    banner("That didn't reach the board: " + e.name + ". Is the FX drive showing? " +
+           "A double press of Boot brings it back; then try again.", true);
+  } finally {
+    button.disabled = false;
+    check.disabled = false;
+  }
+};
+
+document.getElementById("check").onclick = async function () {
+  if (!CAN_REACH_A_DRIVE) {
+    askByInput();
+    return;
+  }
+  // A blink before the answer, so asking again visibly did something even when
+  // the answer reads the same
+  banner("Asking the board...", "hold");
+  await new Promise(function (settle) { setTimeout(settle, 350); });
+  try {
+    var handle = await state.dirHandle.getFileHandle("errors.txt");
+    var text = await (await handle.getFile()).text();
+    if (text.trim() === CHECKING) {
+      banner("The board has not read the file yet. Eject the FX drive, or press " +
+             "Boot once.", "hold");
+      return;
+    }
+    banner("The board wasn't happy with some of it:", true, text.trim());
+  } catch (e) {
+    if (e.name === "NotFoundError")
+      banner("Nothing reported. The board found no problem with the file.");
+    else
+      banner("Couldn't look: " + e.name + ". Is the drive showing?", true);
+  }
+};
+
+var draft = null;
+try { draft = localStorage.getItem("fx-editor-draft"); } catch (e) {}
+entry.value = draft || STARTER;
+repaint();
+</script>
+</body>
+</html>

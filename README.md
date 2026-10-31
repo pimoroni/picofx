@@ -55,10 +55,11 @@ Mighty FX, and Tiny FX or Plasma 2350 running the FX drive firmware, show a driv
 
 * Connect your board to your computer with a USB-C cable.
 * A drive named "FX" should appear on your computer.
-* Open `effects.txt` from the drive in any text editor and change it.
+* Open `PICKER.html` from the drive in Chrome or Edge to choose effects and save them to the board.
+* Or open `EDITOR.html` to write `effects.txt` with each effect and setting offered as you type, or edit the file in any text editor.
 * Save, and the board plays the change a few seconds later.
 
-`README.txt` on the drive shows the form a line takes, and what the board's flashes mean. Press BOOT twice to hide the drive, and twice again to bring it back.
+`MANUAL.html` on the drive explains every effect and setting, and how to run your own program in place of the effects. Press BOOT twice to hide the drive, and twice again to bring it back.
 
 ### Configuring WiFi
 

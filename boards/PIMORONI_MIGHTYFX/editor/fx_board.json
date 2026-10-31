@@ -1,0 +1,34 @@
+{
+ "name": "Mighty FX",
+ "examples": true,
+ "outputs": [
+  {"name": "out1", "kind": "colour", "breaks_out": true},
+  {"name": "out2", "kind": "colour", "breaks_out": true},
+  {"name": "out3", "kind": "colour", "breaks_out": true},
+  {"name": "out4", "kind": "colour", "breaks_out": true},
+  {"name": "out5", "kind": "colour", "breaks_out": true},
+  {"name": "out6", "kind": "colour", "breaks_out": true},
+  {"name": "out7", "kind": "colour", "breaks_out": true}
+ ],
+ "output_words": {
+  "panel": "seven of them, each one light or three",
+  "colour": "Colour outputs", "colour_says": "no adapter fitted",
+  "mono": "Mono lights", "mono_says": "three to every output broken out"
+ },
+ "opening": {"colour": "Rainbow"},
+ "wiring_order": true,
+ "strips": [
+  {"name": "stripl", "label": "the left strip", "tab": "Left strip", "connector": "L",
+   "says": "its own connector, and its own cutting", "colour": "#c2570f", "leds": 30, "fitted": true},
+  {"name": "stripr", "label": "the right strip", "tab": "Right strip", "connector": "R",
+   "says": "the same again, playing what it likes", "colour": "#8a1f6d", "leds": 18, "fitted": true}
+ ],
+ "screens": {
+  "ports": [{"id": "screena", "label": "Screen A", "connector": "SP/CE A"},
+            {"id": "screenb", "label": "Screen B", "connector": "SP/CE B"}],
+  "hub": true
+ },
+ "sound": true,
+ "wireless": false,
+ "shell": true
+}

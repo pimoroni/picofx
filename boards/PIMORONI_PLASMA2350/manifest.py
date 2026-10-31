@@ -34,7 +34,8 @@ freeze("$(BOARD_DIR)/../../../qwstpad-micropython/src", "qwstpad.py")
 # The SP/CE connector's pins and the classes for its breakouts, from the pimoroni-pico clone
 freeze("$(PORT_DIR)/../../../pimoroni-pico/micropython/modules_py", "spce.py")
 
-# The FX drive: the module every board carrying one shares, and this board's own defaults
+# The FX drive: the module every board carrying one shares, and this board's own pages,
+# manual and defaults
 freeze("../fx_libs/")
 freeze("./fx_libs/")
 

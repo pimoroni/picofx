@@ -8,7 +8,7 @@ A tiny stamp-sized LED driver for model making and construction kit projects. Bu
 
 * The standard build: MicroPython with the PicoFX library and examples. Tiny FX ships with this build.
 * The `w` variant: the same for Tiny FX W, adding WiFi and Bluetooth.
-* The `drive` variant: adds the FX drive, which plays `effects.txt` with no code needed.
+* The `drive` variant: adds the FX drive, which plays `effects.txt` with no code needed and carries the picker, editor and manual.
 * The `w_drive` variant: the FX drive on Tiny FX W.
 
 ## Pimoroni Mighty FX
@@ -24,6 +24,8 @@ A programmable, RP2350-based controller board that goes further with effects by 
 
 ## Shared Between the Boards
 
-* `fx_libs`: the FX drive, frozen into each build that carries it beside the board's own defaults.
+* `fx_libs`: the FX drive, frozen into each build that carries it beside the board's own pages, manual and defaults.
 * `visible_libs`: libraries copied to each board's `/lib`, beside the board's own. `autofx`, which plays `effects.txt`, is left out of `/lib` and frozen into each build carrying the FX drive.
 * `frozen_libs`: modules frozen into every build.
+* `editor`: the picker and editor pages, assembled for each board by `tools/build_editor.py`.
+* `manual`: the parts of the FX drive's manual, assembled for each board by `tools/build_manual.py`.

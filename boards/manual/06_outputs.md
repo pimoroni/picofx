@@ -1,0 +1,47 @@
+## __OUTPUTS_HEADING__
+
+<!-- board naming_outputs -->
+
+<!-- if outputs -->
+Order matters for the effects that travel: they move in the order you write the
+outputs, so list them in the order they appear in your model, which need not be
+number order.
+<!-- end -->
+
+### Setting an __OUTPUT__
+
+Before the colon, and separate from the effect:
+
+| Setting | What it does | If omitted |
+| --- | --- | --- |
+| `level` | how bright, 0 to 1, such as 0.5 or 50% | 1 |
+| `colour` | a name or six-digit hex, for __COLOUR_SETTING_FOR__ | white |
+| `fade` | seconds to follow the effect, at a steady rate | follows at once |
+| `ease` | seconds to follow it, settling in as a bulb does | follows at once |
+
+<!-- board setting_examples -->
+
+Colours by name: red, orange, yellow, green, cyan, blue, purple, magenta, pink,
+warm, white, cool, black. Or the hex a colour picker gives you, with its `#`
+left off, such as ff8040 for an orange paler than the named one. A `#` always
+starts a comment, so one left on a colour hides the rest of the line.
+
+### Fade and ease
+
+`fade` and `ease` take the seconds a change takes to get there. `fade` crosses
+evenly, as a stage light does. `ease` goes quickly at first and slows as it
+arrives, as a bulb warms, and looks the more natural on a light switching on and
+off.
+
+An __OUTPUT__ follows one way or the other, so a line takes one of them and not
+both. Two numbers divided by `|` give the rise and the fall their own lengths,
+a light that comes on quickly and fades out slowly being the usual reason:
+
+```entry
+__ALL_OUTPUTS__ fade=0.8: blink speed=0.5
+__THREE_OUTPUTS__ ease=0.05|1.2: blink speed=1
+```
+
+`fade` and `ease` belong to the __OUTPUT__, not to the effect, so they work on any
+effect. The effects that bring their own colour are the exception, and play
+without them.
