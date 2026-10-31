@@ -9,12 +9,12 @@ PIMORONI_PICO_VERSION="5ed5cb4ac34fd231251343cb10fc07247c95e738"
 PIMORONI_AYE_ARR_FLAVOUR="pimoroni"
 PIMORONI_AYE_ARR_VERSION="v1.0.1"
 
-# The rgba4444-pixel-format branch, v3.1.0 with a pixel format chosen at build time. A board
-# setting PV_PIXEL_FORMAT 2 gets RGBA4444 canvases, and every other builds as v3.1.0 did
-PIMORONI_PICOVECTOR_VERSION="d6d057811de370f90429deb9720ca2ce40488882"
+# v3.1.0 with a pixel format chosen at build time. A board setting PV_PIXEL_FORMAT 2 gets RGBA4444
+# canvases, and every other builds as v3.1.0 does
+PIMORONI_PICOVECTOR_VERSION="rgba4444-pixel-format"
 
 PIMORONI_SPIDISPLAY_FLAVOUR="pimoroni"
-PIMORONI_SPIDISPLAY_VERSION="3c63c04a22ac58a82105820525994217cc381d94"
+PIMORONI_SPIDISPLAY_VERSION="main"
 
 PIMORONI_LSM6DS3_FLAVOUR="pimoroni"
 PIMORONI_LSM6DS3_VERSION="v0.0.3"
