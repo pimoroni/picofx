@@ -23,11 +23,12 @@ Section: Animation
 """
 
 # Constants
-ROTATION = 90            # Quarter turn, to suit how the screen is mounted
-FRAMES = 48              # Frames in a whole turn, and so how smoothly it turns
-BEADS = 44               # Pieces of colour in the circle
-HOLD = 2                 # Panel frames each one is shown for, which sets the pace
-ANTIALIAS = image.X4     # Affordable here, since every frame is drawn before the loop starts
+ROTATION = 90               # Quarter turn, to suit how the screen is mounted
+FRAMES = 48                 # Frames in a whole turn, and so how smoothly it turns
+BEADS = 44                  # Pieces of colour in the circle
+BEAD_SIZES = (0.025, 0.1)   # The smallest and largest bead, as fractions of the circle's radius
+HOLD = 2                    # Panel frames each one is shown for, which sets the pace
+ANTIALIAS = image.X4        # Affordable here, since every frame is drawn before the loop starts
 
 # The background is the light through a kaleidoscope, and jewel colours read against it where neons wash out
 BACKGROUND = color.rgb(242, 236, 222)
@@ -67,7 +68,7 @@ for _ in range(BEADS):
     # Add a bead at a random place in the circle, with its own size, colour, jewel and tilt
     STRING.append((CIRCLE * math.sqrt(random.random()),
                    random.uniform(0, 2 * math.pi),
-                   random.uniform(CIRCLE * 0.025, CIRCLE * 0.1),
+                   random.uniform(CIRCLE * BEAD_SIZES[0], CIRCLE * BEAD_SIZES[1]),
                    random.choice(JEWEL_COLOURS),
                    random.choice(JEWELS),
                    random.uniform(0, 360)))

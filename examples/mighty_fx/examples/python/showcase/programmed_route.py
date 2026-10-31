@@ -41,6 +41,7 @@ SPEED = 0.5             # The speed the wheels drive at
 TURN_SPEED = 0.4        # The speed the wheels turn at, slower being easier to aim
 CYCLE_TIME = 1.0        # The time, in seconds, one cycle of a movement takes
 CHECK_TIME = 0.02       # How often to look at the button and the remote while driving
+PULSE_SPEED = 1.0       # How fast the outputs pulse, with 1.0 being 1 second
 BLIP_MS = 60            # How long the outputs flash to say a press was taken
 BLIP_LEVEL = 0.3        # How brightly they flash, dim enough to read against the pulse
 DIM_LEVEL = 0.05        # What a light rests at to show how long a movement is
@@ -59,7 +60,7 @@ mighty.enable_rail()    # Power the L and R connectors, which stay off until ask
 mighty.servo_l.enable()
 mighty.servo_r.enable()
 
-player.effects = PulseFX(speed=1.0)
+player.effects = PulseFX(speed=PULSE_SPEED)
 player.levels = 0.0
 
 showing = (RED, 0.0, False)
@@ -72,7 +73,7 @@ blipping = False
 def show(colour, levels, steady=False):
     global showing
     showing = (colour, levels, steady)
-    player.effects = StaticFX() if steady else PulseFX(speed=1.0)
+    player.effects = StaticFX() if steady else PulseFX(speed=PULSE_SPEED)
     player.colours = colour
     player.levels = levels
 

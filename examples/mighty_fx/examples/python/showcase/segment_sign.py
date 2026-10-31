@@ -288,7 +288,7 @@ def draw(page, offsets):
     """Draw one frame, the background with the segments each place on the sign lights over it."""
     # Cleared under first. The background's blended pixels fall a little short of opaque, so without the
     # clear the previous frame shows through them
-    canvas.pen = color.black
+    canvas.pen = CASE
     canvas.clear()
     canvas.blit(background, 0, 0)
 

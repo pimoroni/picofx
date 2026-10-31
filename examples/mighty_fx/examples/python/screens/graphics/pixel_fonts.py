@@ -14,14 +14,16 @@ Press "Boot" to exit the program.
 """
 
 # Constants
-MARGIN = 10             # How far the text sits from the screen's left and top edges, in pixels
-LINE_GAP = 2            # The gap between each line of text, in pixels
-SCROLL_SPEED = 1.0      # How far the text scrolls each frame, in pixels
-HOLD = 1.5              # Seconds the list rests at each end before turning round
-LOUPE_TALL = 40         # How deep a patch of the panel's top left corner the box enlarges
-LOUPE_ZOOM = 2          # And how much larger it is drawn
-LOUPE_PAD = 3           # Between the enlargement and its border
-TAG_FACE = font.winds   # The narrowest ROM pixel face, for the tag under the box
+MARGIN = 10                 # How far the text sits from the screen's left and top edges, in pixels
+LINE_GAP = 2                # The gap between each line of text, in pixels
+SCROLL_SPEED = 1.0          # How far the text scrolls each frame, in pixels
+HOLD = 1.5                  # Seconds the list rests at each end before turning round
+LOUPE_TALL = 40             # How deep a patch of the panel's top left corner the box enlarges
+LOUPE_ZOOM = 2              # And how much larger it is drawn
+LOUPE_PAD = 3               # Between the enlargement and its border
+TAG_FACE = font.winds       # The narrowest ROM pixel face, for the tag under the box
+BACKGROUND = color.navy     # Behind the list
+TEXT_COLOUR = color.white   # The list, the box round the enlargement, and its tag
 
 # Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
 # what the effects file passes in args, the size first
@@ -72,10 +74,10 @@ LOUPE_INSIDE = rect(LOUPE_BOX.x + LOUPE_PAD, LOUPE_BOX.y + LOUPE_PAD,
 try:
     while not mighty.boot_pressed():
 
-        # Clear the canvas to navy, and draw in white
-        canvas.pen = color.navy
+        # Clear the canvas, and draw the list over it
+        canvas.pen = BACKGROUND
         canvas.clear()
-        canvas.pen = color.white
+        canvas.pen = TEXT_COLOUR
 
         # Draw a line in each font, spacing them out by their own glyph heights
         y = MARGIN + int(scroll_y)
@@ -95,7 +97,7 @@ try:
         # Enlarge the top left corner into the box
         lifted.blit(canvas, LOUPE_SOURCE, LOUPE_SOURCE)
 
-        canvas.pen = color.white
+        canvas.pen = TEXT_COLOUR
         canvas.rectangle(LOUPE_BOX.x, LOUPE_BOX.y, LOUPE_BOX.w, LOUPE_BOX.h)
         canvas.blit(lifted, LOUPE_SOURCE, LOUPE_INSIDE)
 

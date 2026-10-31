@@ -21,6 +21,8 @@ Section: Across several screens
 # Constants for drawing
 FLASH = 0.5                         # How long each bank stays lit before the other takes over, in seconds
 CHEVRONS = 3                        # How many chevrons each panel carries, one above the next
+STROKE = 0.4                        # How thick a chevron is, of its share of the panel's height
+SPAN = 1.5                          # How wide a chevron is, against that share
 LIT = color.rgb(255, 204, 0)        # A chevron switched on
 UNLIT = color.rgb(51, 51, 34)       # And switched off, still faintly there as a real lamp is
 BACKGROUND = color.black
@@ -66,15 +68,16 @@ def chevrons(pen):
 
     canvas.pen = pen
     pitch = HEIGHT / CHEVRONS           # Each chevron's share of the panel's height
-    thick = pitch / 4                   # How deep each stroke is
-    reach = pitch - thick               # How far each arm runs out from the middle, and so down, filling the share
+    thick = pitch * STROKE              # How deep each stroke is
+    reach = pitch * SPAN / 2            # How far each arm runs out from the middle
+    drop = pitch - thick                # And how far down, so the chevron fills its share
     middle = WIDTH / 2
     for index in range(CHEVRONS):
         top = index * pitch
         # The outer point, down the right arm and back to the inner point, then out along the left
-        canvas.shape(shape.custom([vec2(middle, top), vec2(middle + reach, top + reach),
-                                   vec2(middle + reach, top + reach + thick), vec2(middle, top + thick),
-                                   vec2(middle - reach, top + reach + thick), vec2(middle - reach, top + reach)]))
+        canvas.shape(shape.custom([vec2(middle, top), vec2(middle + reach, top + drop),
+                                   vec2(middle + reach, top + drop + thick), vec2(middle, top + thick),
+                                   vec2(middle - reach, top + drop + thick), vec2(middle - reach, top + drop)]))
     return canvas
 
 

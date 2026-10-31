@@ -20,14 +20,14 @@ Section: Animation
 """
 
 # Constants for drawing
-SCENE_SECONDS = 6                                   # How long each scene runs
-SWITCH_SECONDS = 1.5                                # How long the projectors stay switched as they are, within a scene
-FRAME_RATE = 8                                      # Frames a second the show aims for, which the board nearly holds with the most beams drawn
-DIM = 90                                            # How much of the last frame each frame dims away, of 255, more giving a shorter afterglow
+SCENE_SECONDS = 6                           # How long each scene runs
+SWITCH_SECONDS = 1.5                        # How long the projectors stay switched as they are, within a scene
+FRAME_RATE = 8                              # Frames a second the show aims for, which the board nearly holds with the most beams drawn
+DIM = 90                                    # How much of the last frame each frame dims away, of 255, more giving a shorter afterglow
 # The angles in degrees each projector fires across, left, middle and right, 0 being straight up and positive
 # to the right. The outer two fire into the hall, leaning only a little towards their own wall
 ARCS = ((-15, 70), (-70, 70), (-70, 15))
-ANTIALIAS = image.X4                                # A beam is all edge
+ANTIALIAS = image.X4                        # A beam is all edge
 
 # The screens drive the panel at 12 bit, 16 levels a channel in steps of 17, so the colours sit on those levels
 GREEN = (51, 255, 68)
@@ -35,17 +35,18 @@ RED = (255, 34, 34)
 BLUE = (68, 102, 255)
 CYAN = (34, 238, 255)
 MAGENTA = (255, 51, 221)
-CORE_LIFT = 136                                     # How much paler than its colour a beam's core is, a whole number of levels
-HALO_ALPHA = 60                                     # How strong a beam's glow is, of 255
-HALL = color.black                                  # The dark the beams cross
-HOUSING = color.rgb(68, 68, 68)                     # A projector's housing
-LENS_OFF = color.rgb(34, 34, 34)                    # The lens of a projector switched off
+CORE_LIFT = 136                             # How much paler than its colour a beam's core is, a whole number of levels
+HALO_ALPHA = 60                             # How strong a beam's glow is, of 255
+HALL = color.black                          # The dark the beams cross
+HOUSING = color.rgb(68, 68, 68)             # A projector's housing
+LENS_ON = color.white                       # The lens of a projector switched on
+LENS_OFF = color.rgb(34, 34, 34)            # And switched off
 
 # Sizes, in panel pixels
-CORE_W = 1.5                                        # Across a beam's core
-HALO_W = 6                                          # And across the glow round it
-LENS = 3                                            # A projector's lens radius
-RAISED = 6                                          # How far above the panel's foot a beam starts, a projector's housing reaching down to it
+CORE_W = 1.5                                # Across a beam's core
+HALO_W = 6                                  # And across the glow round it
+LENS = 3                                    # A projector's lens radius
+RAISED = 6                                  # How far above the panel's foot a beam starts, a projector's housing reaching down to it
 
 # Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
 # what the effects file passes in args, the size first
@@ -183,7 +184,7 @@ def draw(seconds):
     for projector in FITTED:
         canvas.pen = HOUSING
         canvas.shape(HOUSINGS[projector])
-        canvas.pen = color.white if projector in on else LENS_OFF
+        canvas.pen = LENS_ON if projector in on else LENS_OFF
         canvas.shape(LENSES[projector])
 
 

@@ -27,6 +27,7 @@ LED_COLOURS = ((255, 34, 17), (255, 136, 0), (51, 255, 68),
                (34, 85, 255), (204, 68, 255))       # The colours an LED lamp can show, any lamp any of them
 CUE_SECONDS = 6                                     # How long each lighting cue runs
 STEP_SECONDS = 0.2                                  # How long a cue holds each step
+SPARKLES = 6                                        # Lamps the sparkle cue lights at a time
 FRAME_RATE = 10                                     # Frames a second the cues run at
 
 PITCH = 44                                          # Panel pixels from one lamp to the next
@@ -248,7 +249,7 @@ def wave(step):
 
 def sparkle(_step):
     """Choose a handful of lamps at random, each in a colour at random."""
-    return {random.randrange(COLUMNS * ROWS): random.randrange(len(LED_COLOURS)) + 1 for _ in range(6)}
+    return {random.randrange(COLUMNS * ROWS): random.randrange(len(LED_COLOURS)) + 1 for _ in range(SPARKLES)}
 
 
 def checker(step):

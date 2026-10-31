@@ -24,6 +24,9 @@ Section: Drawing from code
 
 # Constants for drawing
 OVERLAY = color.rgb(8, 10, 14)          # Laid over the backdrop to calm it
+PLAIN = color.rgb(255, 150, 60)         # What the colour pen fills with
+PLATE = color.rgb(30, 34, 44)           # The opaque plate the erase pen punches through
+LABEL = color.white                     # The name under each circle
 CALM = 150                              # How far down, of 255, so the pens read over it
 ACROSS = 2                              # Cells across an upright panel, swapped with DOWN on its side
 DOWN = 3                                # And down it
@@ -83,7 +86,7 @@ def placed(index):
 
 # Each pen is built already placed on its cell, with the picture centred on its circle. Erase has no pen here
 image_at = middle(3)
-PENS = (("colour", color.rgb(255, 150, 60)),
+PENS = (("colour", PLAIN),
         # Left to right across the middle of the square
         ("linear", brush.gradient(brush.LINEAR, 0.0, 0.5, 1.0, 0.5, SUNSET, placed(1))),
         # From up and left of the middle, so the circle reads as a lit sphere
@@ -120,7 +123,7 @@ try:
 
         if pen is None:
             # An opaque plate, then erase takes alpha away to cut the hole
-            plate.pen = color.rgb(30, 34, 44)
+            plate.pen = PLATE
             plate.clear()
             plate.pen = brush.erase()
             plate.shape(shape.circle(CELL[0] / 2, CELL[1] / 2, RADIUS))
@@ -132,7 +135,7 @@ try:
             canvas.shape(shape.circle(across, down, RADIUS))
 
         # Centred under the circle, taking a letter of this face as six pixels wide
-        canvas.pen = color.white
+        canvas.pen = LABEL
         canvas.text(name, across - len(name) * 3, down + CELL[1] * LABEL_DOWN)
 
     screen.update(canvas)

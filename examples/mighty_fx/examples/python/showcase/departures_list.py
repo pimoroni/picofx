@@ -13,6 +13,7 @@ Section: Transport signs
 """
 
 # Constants for drawing
+TITLE = "Departures"                # The board's name, along the top
 BOARD_FONT = font.nope              # The listing's dot-matrix lettering. dir(font) lists them all
 PRINTED_HEADING = True              # Show the column headings printed on the board's face, or lit on a module
 HEADING_FONT = font.smart           # What they are printed in, being lettering the board does not light
@@ -257,7 +258,7 @@ def draw(canvas, number, clock, since, scrolled):
     # The board's name, at double size on the thick module at the top
     canvas.pen = AMBER
     canvas.font = LARGE_FONT
-    canvas.text("Departures", bounds(places[0], INSET, canvas.width - INSET * 2, LARGE_SCALE),
+    canvas.text(TITLE, bounds(places[0], INSET, canvas.width - INSET * 2, LARGE_SCALE),
                 font_size=LARGE_SCALE)
 
     # The column headings, printed on the board's face or lit on a module of their own. Positions

@@ -18,6 +18,7 @@ Section: Animation
 NUMBER_OF_STARS = 50
 TRAVEL_SPEED = 1.2
 STAR_GROWTH = 0.12
+STAR_LIMIT = 5
 
 # Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
@@ -60,7 +61,7 @@ try:
             s.x *= TRAVEL_SPEED
             s.y *= TRAVEL_SPEED
 
-            if s.x <= -centre_x or s.x >= centre_x or s.y <= -centre_y or s.y >= centre_y or s.size >= 5:
+            if s.x <= -centre_x or s.x >= centre_x or s.y <= -centre_y or s.y >= centre_y or s.size >= STAR_LIMIT:
                 # Replace a star that has left the screen or grown too big
                 s = RandomStar()
 

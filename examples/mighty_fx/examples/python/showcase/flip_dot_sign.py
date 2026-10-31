@@ -1,4 +1,5 @@
 import math
+import sys
 from mighty_fx import MightyFX, SPCE
 from timing import Pacer, Roller
 from screens import Screen280
@@ -41,12 +42,15 @@ MESSAGES = (
     ("WEST", "12:40"),
 )
 
+# How far the screen is turned, 90 or 270 for a landscape sign, or what the effects file passes in args
+ROTATION = 90 if not sys.argv[1:] else int(sys.argv[1])
+
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = Screen280(mighty.spce_a, rotation=ROTATION)
 
-# Drawn landscape and turned a quarter onto the panel at each update
-canvas = screen.canvas(screen.height, screen.width)
+# Drawn landscape and turned a quarter onto the panel
+canvas = screen.canvas()
 columns = canvas.width // CELL
 rows = canvas.height // CELL
 
@@ -231,7 +235,7 @@ try:
         # Write the panel only while something turns, as a settled sign holds its frame
         if flips:
             flips = advance(flips, pacer.elapsed)
-            screen.update(canvas, rotation=90)
+            screen.update(canvas)
 
             if not flips:
                 # The sweep is done, so the sign stands at the new message
