@@ -24,7 +24,6 @@ SIGN_FONT = font.sins               # A narrow face whose pixels are lamps, so i
 BEZEL = 1                           # Lamps of plain face between one character's module and the next
 LINE_BEZEL = 3                      # And between one row of modules and the next, which a sign leaves wider
 LIT = color.rgb(255, 170, 0)        # A lit lamp. Amber is the only colour these signs use
-ROTATION = 90                       # 90 or 270, the sign being drawn landscape
 
 # A module's face against the sign's, and an unlit lamp against its module
 MODULE = color.rgb(17, 17, 17)      # A module's face, between its lamps
@@ -37,16 +36,17 @@ BEACON_R = 12                       # A corner beacon's radius in panel pixels, 
 BEACON_MS = 500                     # How long each side's pair stays on for
 BEACON_OFF = color.rgb(51, 17, 0)   # A beacon between flashes, which stays visibly amber, not dark
 
-# What the sign says on each size of screen, a page at a time and a line to a row of modules. Lines are
-# centred by whole modules, a module being the smallest thing the sign can move text by. At these lamps
-# a 2.8" sign holds 11 characters across and a 1.54" one 8, both over 4 lines
+# What the sign says, a page at a time and a line to a row of modules, worded for a wide sign and for a
+# narrow one. Lines are centred by whole modules, a module being the smallest thing the sign can move
+# text by. At these lamps a 2.8" sign on its side holds 11 characters across over 4 lines, upright 8
+# over 6, and a 1.54" one 8 over 4
 PAGES = {
-    "2.8": (
+    "wide": (
         ("ROADWORKS", "AHEAD", "EXPECT", "DELAYS"),
         ("LANE", "CLOSURE", "AHEAD", "MERGE LEFT"),
         ("QUEUE AHEAD", "SLOW DOWN", "20 MPH", "MAX"),
     ),
-    "1.54": (
+    "narrow": (
         ("ROAD", "WORKS", "AHEAD"),
         ("EXPECT", "DELAYS"),
         ("LANE", "CLOSURE", "AHEAD"),
@@ -56,17 +56,18 @@ PAGES = {
     ),
 }
 
-# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
+# what the effects file passes in args, the size first
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
-MESSAGE = PAGES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Drawn landscape and turned a quarter onto the panel
-canvas = screen.canvas(screen.height, screen.width)
+# Drawn as the panel is turned
+canvas = screen.canvas()
 WIDTH, HEIGHT = canvas.width, canvas.height
 
 # The lamp grid the bands are drawn on, one pixel to a lamp
@@ -114,6 +115,9 @@ ACROSS = (COLUMNS + BEZEL) // PITCH_W
 # The block of modules centred in what is left, so the sign sits square on its own face
 LEFT = (COLUMNS - (ACROSS * PITCH_W - BEZEL)) // 2
 TOP = (ROWS - (LINES * PITCH_H - LINE_BEZEL)) // 2
+
+# The wide wording where every line of it fits across the sign, and the narrow wording otherwise
+MESSAGE = PAGES["wide"] if all(len(line) <= ACROSS for lines in PAGES["wide"] for line in lines) else PAGES["narrow"]
 
 print(f"Roadworks sign of {ACROSS}x{LINES} modules, {CELL_W}x{CELL_H} lamps each at {LAMP}px,"
       f" so {ACROSS} characters over {LINES} lines."

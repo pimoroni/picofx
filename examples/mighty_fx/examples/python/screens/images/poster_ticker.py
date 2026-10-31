@@ -1,3 +1,5 @@
+import sys
+
 from mighty_fx import MightyFX, SPCE
 from screens import Screen280
 from picovector import color, font, image, rect, vec2
@@ -26,9 +28,12 @@ OUTLINE = color.rgb(23, 17, 5)                  # And the dark edge around its l
 EDGE = 2                                        # How far the outline reaches past the lettering, in pixels
 MARGIN = 6                                      # How far the lettering sits above the foot of the poster, in pixels
 
+# How far the screen is turned, 0 or 180 for a portrait poster, or what the effects file passes in args
+ROTATION = 0 if not sys.argv[1:] else int(sys.argv[1])
+
 # Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = Screen280(mighty.spce_a, rotation=ROTATION)
 canvas = screen.canvas()
 canvas.antialias = image.X4
 canvas.font = font.load(MESSAGE_FONT)

@@ -23,16 +23,18 @@ MASK = color.black              # The face the lamps are set behind
 RAINBOWS = 1.5                  # Full rainbows across the matrix corner to corner, so how dense it is
 LAMPS_A_FRAME = 1               # Whole lamps a frame, as a clock-timed step reads as choppy
 
-# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
+# what the effects file passes in args, the size first. A matrix sign is wider than tall, so 90
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = ScreenType(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Drawn landscape as a matrix sign is wider than tall, and turned a quarter onto the panel at each update
-canvas = screen.canvas(screen.height, screen.width)
+# Drawn as the panel is turned
+canvas = screen.canvas()
 WIDTH, HEIGHT = canvas.width, canvas.height
 
 # The matrix's size in lamps, any remainder left as a border so the lamps stay square
@@ -138,7 +140,7 @@ canvas.clear()
 try:
     while not mighty.boot_pressed():
         draw(travelled)
-        screen.update(canvas, rotation=90)
+        screen.update(canvas)
         travelled += LAMPS_A_FRAME
 
 # Stop any running effects and turn off all the outputs

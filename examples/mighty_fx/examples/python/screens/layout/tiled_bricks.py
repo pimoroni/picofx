@@ -18,7 +18,6 @@ Press "Boot" to exit the program.
 """
 
 # Constants
-ROTATION = 90            # Quarter turn, to suit how the screen is mounted
 BRICK_W = 32             # A brick and its mortar, which is the tile's width
 BRICK_H = 16             # A course, two of which is the tile's height
 MORTAR = 3               # How wide the gaps between bricks are
@@ -28,8 +27,10 @@ FACE_TOP = color.rgb(196, 96, 76)     # The weathered top edge of a brick
 FACE_FOOT = color.rgb(132, 48, 38)    # And its shaded foot
 GROUT = color.rgb(196, 188, 172)
 
-# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
+# what the effects file passes in args, the size first
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
@@ -39,7 +40,7 @@ screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 # Two courses of one brick, and the driver makes a wall of it
 wall = screen.canvas(BRICK_W, BRICK_H * 2)
 print(f"a {BRICK_W}x{BRICK_H * 2} wall tile, {BRICK_W * BRICK_H * 2 * 4 // 1024}KB,"
-      f" filling {screen.height}x{screen.width}")
+      f" filling {screen.canvas_size[0]}x{screen.canvas_size[1]}")
 
 
 def brick(x, y):

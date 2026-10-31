@@ -35,8 +35,10 @@ POSITION_COLOURS = (("red", color.rgb(255, 0, 0)),
                     ("magenta", color.rgb(255, 0, 190)),
                     ("cyan", color.rgb(0, 220, 220)))
 
-# Which screen is on every hub position, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on every hub position, "2.8" or "1.54", and how far they are turned, 0, 90, 180 or
+# 270, or what the effects file passes in args, the size first
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 0 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object driving a screen hub, which takes SP/CE port B for extra chip selects
@@ -46,7 +48,7 @@ mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_SELECTS)
 screens = []
 for port in mighty.hub.ports:
     try:
-        screens.append(ScreenType(port))
+        screens.append(ScreenType(port, rotation=ROTATION))
     except ValueError:
         screens.append(None)
 
@@ -58,8 +60,9 @@ if not panels:
 
 print(f"{len(panels)} of {len(mighty.hub.ports)} hub positions answered\n")
 
-# One canvas serves every panel, as they are all the same size
-canvas = image(panels[0].width, panels[0].height)
+# One canvas serves every panel, as they are all the same size and turned the same way. It is a
+# heap image, as six panels' workspaces leave too little SRAM for a canvas there
+canvas = image(*panels[0].canvas_size)
 canvas.antialias = image.X4
 canvas.font = font.load(VECTOR_FACE)
 

@@ -21,7 +21,6 @@ Section: Animation
 
 # Constants for drawing
 STONES = True                                       # Whether the portal is set into a stone wall
-PORTRAIT = False                                    # Whether the panel stands upright, which turns the stones and the default shape with it
 RIM_WIDTH = None                                    # Panel pixels across the rim, None for as large as fits
 RIM_HEIGHT = None                                   # And down it
 FRAME_RATE = 6                                      # Frames a second, which the board holds in every mode
@@ -65,29 +64,29 @@ STONE_SHADES = ((102, 102, 102), (119, 119, 119), (136, 136, 136), (153, 153, 15
 MORTAR = color.rgb(34, 34, 34)
 SPILL = (153, 68, 255)                              # The portal's light falling on the stones nearest it
 
-# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
+# what the effects file passes in args, the size first
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = ScreenType(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Upright as the panel is, or drawn landscape and turned a quarter onto it at each update
-canvas = screen.canvas() if PORTRAIT else screen.canvas(screen.height, screen.width)
-ROTATION = 0 if PORTRAIT else 90
+# Drawn as the panel is turned
+canvas = screen.canvas()
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
 MIDDLE_X, MIDDLE_Y = WIDTH / 2, HEIGHT / 2
 
-# By default the rim is as large as fits inside the stones, or the panel's edge without them. Upright it
-# takes the panel's shape, and on its side it is round
+# By default the rim is round and as large as fits the panel's shorter side, inside the stones or the
+# panel's edge without them, so it is the same size whichever way the panel is turned
 MARGIN = BAND + 2 if STONES else 2
-DEFAULT_HEIGHT = HEIGHT - 2 * MARGIN
-DEFAULT_WIDTH = DEFAULT_HEIGHT * WIDTH / HEIGHT if PORTRAIT else DEFAULT_HEIGHT
-OUTER = (RIM_HEIGHT or DEFAULT_HEIGHT) / 2
+DEFAULT_SIZE = min(WIDTH, HEIGHT) - 2 * MARGIN
+OUTER = (RIM_HEIGHT or DEFAULT_SIZE) / 2
 INNER = OUTER * OPENING
-SQUASH = (RIM_WIDTH or DEFAULT_WIDTH) / 2 / OUTER   # The rim's width against its height
+SQUASH = (RIM_WIDTH or DEFAULT_SIZE) / 2 / OUTER    # The rim's width against its height
 BETWEEN_ARMS = 2 * math.pi / ARMS
 
 
@@ -289,7 +288,7 @@ pacer = Pacer(fps=FRAME_RATE)       # The portal's clock, holding each frame to 
 try:
     while not mighty.boot_pressed():
         draw(pacer.delta / 1000)
-        screen.update(canvas, rotation=ROTATION)
+        screen.update(canvas)
         pacer.hold()
 
 # Stop any running effects and turn off all the outputs

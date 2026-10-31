@@ -16,7 +16,6 @@ Section: Transport signs
 # Constants for drawing
 BOARD_FONT = "/rom/fonts/Oswald.af"  # A condensed vector face, so a destination fits a narrow column
 ANTIALIAS = image.X4                 # What smooths a vector face. OFF is the default, X2 the cheaper step
-PORTRAIT = True                      # A television hung on its side, as signage often is, or the usual way up
 # One panel of a pair is mounted turned round, so their narrowest bezels meet. 0 for SP/CE A, 1 for B, or None
 TURNED = 0
 TITLE = "Departures from here"
@@ -82,24 +81,22 @@ NOTES = (("Stands A to E are on the near side of the road, past the taxi rank."
          ("A time counting down is a tracked vehicle."
           " A time in full is as timetabled and may run early or late."))
 
-# Which screens are on the ports, "2.8" or "1.54", or what the effects file passes in args.
-# A pair wants two of the same size
+# Which screens are on the ports, "2.8" or "1.54", and how far they are turned, 0, 90, 180 or 270,
+# or what the effects file passes in args, the size first. A pair wants two of the same size. Upright
+# is a television hung on its side, as signage often is, and 90 the usual way up
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 0 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with both SP/CE ports set up for screens
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
-
-# A portrait television is drawn as the panel already is, and a landscape one turned a quarter onto it.
-# Either way the board runs down the canvas, and a pair stacks its panels one above the other
-ROTATION = 0 if PORTRAIT else 90
 
 # A screen refuses to be created where no panel answers, so one panel runs the board and a second
 # lengthens it. The reserve lets a pair convert from the heap
 screens = []
 for port in (mighty.spce_a, mighty.spce_b):
     try:
-        screens.append(ScreenType(port,reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION))
+        screens.append(ScreenType(port, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION))
     except ValueError as e:
         print(e)
 
@@ -111,11 +108,11 @@ if not screens:
 pair = ScreenPair(*screens) if len(screens) == 2 else None
 
 # Only a pair turns a panel round, half a turn on the one TURNED names
-TURNS = tuple(screen.rotation + 180 * (port == TURNED) for port, screen in enumerate(screens))
+TURNS = tuple((screen.rotation + 180 * (port == TURNED)) % 360 for port, screen in enumerate(screens))
 
-# PANEL_ROWS is what one panel shows
-PANEL_ROWS = screens[0].height if PORTRAIT else screens[0].width
-WIDTH = screens[0].width if PORTRAIT else screens[0].height
+# The board runs down the canvas whichever way the panels are turned, a pair stacking them one above the
+# other. PANEL_ROWS is what one panel shows
+WIDTH, PANEL_ROWS = screens[0].canvas_size
 HEIGHT = PANEL_ROWS * len(screens)
 canvas = image(WIDTH, HEIGHT)
 

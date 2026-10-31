@@ -25,7 +25,7 @@ Section: Drawing from code
 # Constants for drawing
 OVERLAY = color.rgb(8, 10, 14)          # Laid over the backdrop to calm it
 CALM = 150                              # How far down, of 255, so the pens read over it
-ACROSS = 2                              # Cells across the panel
+ACROSS = 2                              # Cells across an upright panel, swapped with DOWN on its side
 DOWN = 3                                # And down it
 REACH = 0.30                            # A circle's radius, as a fraction of the cell's narrower side
 BLUR = 4                                # How far the blur pen reaches, in pixels
@@ -39,19 +39,24 @@ SUNSET = ((0.0, color.rgb(255, 94, 91)), (0.5, color.rgb(255, 209, 102)),
           (1.0, color.rgb(67, 138, 255)))
 ORB = ((0.0, color.white), (0.35, color.rgb(120, 210, 255)), (1.0, color.rgb(18, 28, 84)))
 
-# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
+# what the effects file passes in args, the size first
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 0 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = ScreenType(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
 canvas = screen.canvas()
 canvas.antialias = image.X4
 canvas.font = LABEL_FACE
 
-CELL = canvas.width / ACROSS, canvas.height / DOWN
+# The grid turns with the panel, so a cell keeps its shape on its side
+UPRIGHT = canvas.width <= canvas.height
+COLUMNS, ROWS = (ACROSS, DOWN) if UPRIGHT else (DOWN, ACROSS)
+CELL = canvas.width / COLUMNS, canvas.height / ROWS
 RADIUS = min(CELL) * REACH
 # A gradient's 0 to 1 square mapped onto a circle's box about the origin
 BOX = mat3().translate(-RADIUS, -RADIUS).scale(RADIUS * 2, RADIUS * 2)
@@ -68,7 +73,7 @@ plate = image(round(CELL[0]), round(CELL[1]))
 
 def middle(index):
     """Find where the cell at that place in the grid centres."""
-    return (index % ACROSS + 0.5) * CELL[0], (index // ACROSS + 0.5) * CELL[1]
+    return (index % COLUMNS + 0.5) * CELL[0], (index // COLUMNS + 0.5) * CELL[1]
 
 
 def placed(index):
@@ -92,10 +97,13 @@ PENS = (("colour", color.rgb(255, 150, 60)),
 
 def backdrop():
     """Cover the panel in calmed detail, for the blur to soften and the erase to reveal."""
-    # The landscape art turned a quarter and flipped, which covers the portrait panel unstretched
-    # and keeps its bright pulse behind the pens
-    canvas.pen = brush.image(backdrop_art,
-                             mat3().translate(canvas.width, canvas.height).scale(1, -1).rotate(90))
+    # The landscape art turned a quarter and flipped to cover an upright panel unstretched, or turned
+    # half round on a panel on its side. Either way its bright pulse sits behind the pens
+    if UPRIGHT:
+        placing = mat3().translate(canvas.width, canvas.height).scale(1, -1).rotate(90)
+    else:
+        placing = mat3().translate(canvas.width, canvas.height).rotate(180)
+    canvas.pen = brush.image(backdrop_art, placing)
     canvas.rectangle(0, 0, canvas.width, canvas.height)
 
     # Taken down so the pens and their names read over it, the detail surviving underneath

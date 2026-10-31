@@ -25,7 +25,6 @@ TERM_FONT = font.ark            # The character ROM. The narrowest ROM face with
 CELL_SCALE = 1                  # How large the character ROM is drawn, in whole steps. 2 gives a bolder
                                 # 20x10 page with unmistakable scanlines, but the session's listing then wraps
 LEADING = 4                     # Blank rows between one line of characters and the next
-ROTATION = 90                   # 90 or 270, the terminal being drawn landscape
 
 # The tube's face, which no CRT fills to its own edge. BORDER is the surround outside it and PAD the
 # unused face inside, between the two keeping the lettering out of the corners the curve darkens most
@@ -94,16 +93,18 @@ SESSION = (
     "00:14 CONNECTED.",
 )
 
-# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
+# what the effects file passes in args, the size first
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Drawn landscape and turned a quarter onto the panel
-canvas = screen.canvas(screen.height, screen.width)
+# Drawn as the panel is turned
+canvas = screen.canvas()
 WIDTH, HEIGHT = canvas.width, canvas.height
 
 probe = image(round(TERM_FONT.height * CELL_SCALE) * 3, round(TERM_FONT.height * CELL_SCALE) * 3)

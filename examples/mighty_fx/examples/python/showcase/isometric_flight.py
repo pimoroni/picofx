@@ -22,7 +22,6 @@ Section: Animation
 """
 
 # Constants
-ROTATION = 90               # Quarter turn, to suit how the screens are mounted
 TILE_W, TILE_H = 320, 256   # The tile's repeat, a screenful of pixels
 CELL_W, CELL_H = 32, 16     # One cell of ground, twice as wide as tall
 QUIT_MS = 1500              # Held at least this long, the button ends the example
@@ -249,8 +248,10 @@ def flown(land, place):
     return -int(place["across"]), -int(place["down"])
 
 
-# Which screen is on the ports, "2.8" or "1.54", or what the effects file passes in args
+# Which screens are on the ports, "2.8" or "1.54", and how far they are turned, 0, 90, 180 or 270,
+# or what the effects file passes in args, the size first. A pair wants two of the same size
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with both SP/CE ports set up for screens

@@ -9,8 +9,6 @@ letter in the top left over one bar for A or two for B. The console lists the sa
 ports, including one where no screen answered.
 
 Press "Boot" to exit the program.
-
-Args: Screen A size, Screen B size
 """
 
 # Constants for drawing
@@ -33,18 +31,20 @@ BARS_TOP = round(MARGIN + CAPITAL_HEIGHT * LETTER_SIZE + MARGIN)
 PORT_COLOURS = (("red", color.rgb(255, 0, 0)),
                 ("green", color.rgb(0, 220, 0)))
 
-# Which screen is on each port, "2.8" or "1.54". The effects file can pass one for both
-# ports, or one each, the ports being free to differ where a pair is not
-SCREEN_SIZES = ("2.8", "2.8") if not sys.argv[1:] else (sys.argv[1], sys.argv[-1])
+# Which screens are on the ports, "2.8" or "1.54", and how far they are turned, 0, 90, 180 or 270,
+# or what the effects file passes in args, the size first
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 0 if not sys.argv[2:] else int(sys.argv[2])
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with both SP/CE ports set up for screens
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 
 # Build a screen on each port, holding None where no screen answers so the list follows the ports
 screens = []
-for port, size in zip((mighty.spce_a, mighty.spce_b), SCREEN_SIZES):
+for port in (mighty.spce_a, mighty.spce_b):
     try:
-        screens.append(SCREEN_TYPES[size](port))
+        screens.append(ScreenType(port, rotation=ROTATION))
     except ValueError:
         screens.append(None)
 
@@ -52,7 +52,10 @@ if not any(screens):
     mighty.shutdown()
     raise RuntimeError("No screens answered! Check one is plugged into SP/CE A or B")
 
-face = font.load(VECTOR_FACE)
+# One canvas serves both, as they are the same size and turned the same way
+canvas = next(screen for screen in screens if screen is not None).canvas()
+canvas.antialias = image.X4
+canvas.font = font.load(VECTOR_FACE)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
@@ -63,11 +66,6 @@ try:
         if screen is None:
             print(f"  {letter:<9} no screen")
             continue
-
-        # A canvas each, as the two screens may differ in size
-        canvas = image(screen.width, screen.height)
-        canvas.antialias = image.X4
-        canvas.font = face
 
         # Fill the canvas with this port's colour, then letter it and count it out in black bars
         canvas.pen = colour

@@ -20,8 +20,6 @@ Section: Transport signs
 """
 
 # Constants for drawing
-ROTATION = 0                       # 0 or 180, portrait so both panel sizes sit edge to edge across a gantry
-
 LAMP = 6                            # Panel pixels a lamp, the smallest that reads as round
 APERTURE = 0.7                      # The lit hole, as a fraction of a lamp's width
 SOFTEN = 1.0                        # Panel pixels the aperture's edge fades over
@@ -77,8 +75,11 @@ GANTRY = (
     (BLANK, BLANK, BLANK, BLANK, BLANK, BLANK),
 )
 
-# Which screen is on every hub position, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on every hub position, "2.8" or "1.54", and how far they are turned, 0, 90, 180 or
+# 270, or what the effects file passes in args, the size first. Upright, both panel sizes sit edge to
+# edge across a gantry
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 0 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with a screen hub across both SP/CE ports. One carries the screen bus and the other
@@ -112,8 +113,8 @@ for setting in GANTRY:
 
     ASPECTS_IN.append(distinct)
 
-# One canvas serves every lane and is drawn again for each aspect a setting calls for, portrait as the panels are
-WIDTH, HEIGHT = screens[0].width, screens[0].height
+# One canvas serves every lane and is drawn again for each aspect a setting calls for, as the panels are turned
+WIDTH, HEIGHT = gantry.canvas_size
 canvas = image(WIDTH, HEIGHT)
 
 # The signal is square and as large as the panel allows, centred, so the housing is whatever is left

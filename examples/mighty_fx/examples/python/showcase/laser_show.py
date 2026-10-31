@@ -8,8 +8,7 @@ from picovector import color, image, rect, shape
 """
 Draw a laser show, beams fanning and sweeping across a dark hall from three projectors along the
 foot of the stage. Each scene runs a few seconds, switching its projectors on and off as it goes.
-PORTRAIT = True stands the panel upright, which like a square 1.54" panel has room for the outer two
-projectors only.
+An upright panel, like a square 1.54" one, has room for the outer two projectors only.
 
 A beam is a line from its projector to the edge of the panel, a wide faint glow under a thin
 bright core. Each frame dims the last a little before drawing, so a sweeping beam leaves a fading
@@ -21,7 +20,6 @@ Section: Animation
 """
 
 # Constants for drawing
-PORTRAIT = False                                    # Whether the panel stands upright, room for two projectors and not three
 SCENE_SECONDS = 6                                   # How long each scene runs
 SWITCH_SECONDS = 1.5                                # How long the projectors stay switched as they are, within a scene
 FRAME_RATE = 8                                      # Frames a second the show aims for, which the board nearly holds with the most beams drawn
@@ -49,17 +47,18 @@ HALO_W = 6                                          # And across the glow round 
 LENS = 3                                            # A projector's lens radius
 RAISED = 6                                          # How far above the panel's foot a beam starts, a projector's housing reaching down to it
 
-# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
+# what the effects file passes in args, the size first
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = ScreenType(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Upright as the panel is, or drawn landscape and turned a quarter onto it at each update
-canvas = screen.canvas() if PORTRAIT else screen.canvas(screen.height, screen.width)
-ROTATION = 0 if PORTRAIT else 90
+# Drawn as the panel is turned
+canvas = screen.canvas()
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
 NARROW = WIDTH <= HEIGHT            # Whether the hall is too narrow for the middle projector, being upright or square
@@ -197,7 +196,7 @@ try:
     while not mighty.boot_pressed():
         # Kept in whole milliseconds until the fraction is wanted, as a float of hours of running loses it
         draw(pacer.elapsed % CYCLE_MS / 1000)
-        screen.update(canvas, rotation=ROTATION)
+        screen.update(canvas)
         pacer.hold()
 
 # Stop any running effects and turn off all the outputs

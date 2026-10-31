@@ -1,4 +1,5 @@
 import math
+import sys
 from mighty_fx import MightyFX, SPCE
 from timing import Pacer, Roller
 from screens import Screen280
@@ -28,11 +29,14 @@ POSTER_FILES = ("/examples/assets/billboards/landscape/lambo.png",
                 "/examples/assets/billboards/landscape/tufty.png",
                 "/examples/assets/billboards/landscape/frum.png")
 
+# How far the board is turned, 90 or 270 for landscape posters, or what the effects file passes in args
+ROTATION = 90 if not sys.argv[1:] else int(sys.argv[1])
+
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = Screen280(mighty.spce_a)
 
-# Drawn landscape and turned a quarter onto the panel at each update
+# Drawn landscape and turned onto the panel at each update
 canvas = screen.canvas(screen.height, screen.width)
 SLAT = canvas.width // SLATS
 APOTHEM = SLAT / (2 * math.sqrt(3))     # From a slat's axis out to the middle of one of its faces
@@ -126,7 +130,7 @@ print(f"{SLATS} slats of {SLAT}px, {len(POSTER_FILES)} posters, turning in {TURN
 # The board starts with the first poster facing out, and turns a third at a time from there
 turns = [0] * SLATS
 draw(turns)
-screen.update(canvas, rotation=90)
+screen.update(canvas, rotation=ROTATION)
 
 turned = 0
 turning = False
@@ -157,7 +161,7 @@ try:
                 turns[slat] = turned + 120 * (1 - math.cos(math.pi * part)) / 2
 
             if draw(turns):
-                screen.update(canvas, rotation=90)
+                screen.update(canvas, rotation=ROTATION)
 
             if done:
                 turned = (turned + 120) % 360

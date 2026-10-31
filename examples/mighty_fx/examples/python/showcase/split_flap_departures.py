@@ -22,7 +22,6 @@ ALPHA = " ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 BOTH = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 FLAP_MS = 150                           # How long one card takes to fall
 HOLD = 2.0                              # How long a page stands before the next one is called up
-ROTATION = 90                           # 90 or 270, the board being drawn landscape
 # A card sits two levels above the board. The screens drive the panel at 12 bit, so a channel has 16
 # levels in steps of 17, and one level up from black reads as barely there against it
 CARD = color.rgb(34, 34, 38)            # The face of a card
@@ -63,16 +62,18 @@ SERVICES = (
     ("17:45", "BERGEN", "B16"), ("18:02", "WARSAW", "C38"), ("18:20", "VENICE", "A64"),
 )
 
-# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
+# what the effects file passes in args, the size first
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Drawn landscape and turned a quarter onto the panel
-canvas = screen.canvas(screen.height, screen.width)
+# Drawn as the panel is turned
+canvas = screen.canvas()
 WIDTH, HEIGHT = canvas.width, canvas.height
 
 CARDS = sum(wide for _, wide, _, _drum in COLUMNS)

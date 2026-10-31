@@ -28,7 +28,6 @@ PAD = 2                             # Space inside a module, above and below its
 PAGE_HOLD = 8.0                     # How long the board holds a page for, in seconds, longer where a line is still to scroll through
 SCROLL_HOLD = 1.5                   # How long a line too long for its place rests at each end, in seconds
 SCROLL_SPEED = 30                   # How fast it scrolls through, in pixels a second
-ROTATION = 90                       # 90 or 270, the board being drawn landscape
 HEADINGS_ROW = 1                    # Where the column headings sit in the stack of modules
 FIRST_ROW = 2                       # And where the listing starts, the module below them
 CLOCK_START = (14, 5, 0)            # The time the board counts on from, Mighty FX having no clock to read
@@ -52,9 +51,10 @@ ENTRIES = (
     {"departs": "14:53", "destination": "Penzance", "platform": "-", "status": "On time"},
 )
 
-# Which screens are on the ports, "2.8" or "1.54", or what the effects file passes in args.
-# A pair wants two of the same size
+# Which screens are on the ports, "2.8" or "1.54", and how far they are turned, 0, 90, 180 or 270,
+# or what the effects file passes in args, the size first. A pair wants two of the same size
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with both SP/CE ports set up for screens
@@ -75,8 +75,8 @@ if not screens:
 # A pair turns the page on both panels on one frame. Working out how takes a few seconds
 pair = ScreenPair(*screens) if len(screens) == 2 else None
 
-# A canvas per panel, drawn landscape and turned a quarter onto it
-canvases = [image(screens[0].height, screens[0].width) for _ in screens]
+# A canvas per panel, drawn as the panels are turned
+canvases = [image(*screens[0].canvas_size) for _ in screens]
 
 # Column positions measured from the widest thing each carries, so another BOARD_FONT moves them
 canvases[0].font = BOARD_FONT

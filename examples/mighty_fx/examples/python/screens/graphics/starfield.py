@@ -2,7 +2,7 @@ import random
 import sys
 from mighty_fx import MightyFX, SPCE
 from screens import SCREEN_TYPES
-from picovector import image, color, shape
+from picovector import color, shape
 
 """
 Travel through a star field.
@@ -27,18 +27,18 @@ ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a)
 
-# Access the screen and create a canvas to draw to
-canvas = image(screen.width, screen.height)
+# Create a canvas to draw to
+canvas = screen.canvas()
 
 # Pre-calculate the screen centre
-centre_x, centre_y = screen.width / 2, screen.height / 2
+centre_x, centre_y = canvas.width / 2, canvas.height / 2
 
 
 class RandomStar:
     def __init__(self):
         # A new star at a random position relative to the screen centre, and its starting size
-        self.x = random.randint(0, screen.width) - centre_x
-        self.y = random.randint(0, screen.height) - centre_y
+        self.x = random.randint(0, canvas.width) - centre_x
+        self.y = random.randint(0, canvas.height) - centre_y
         self.size = 0.5
 
 

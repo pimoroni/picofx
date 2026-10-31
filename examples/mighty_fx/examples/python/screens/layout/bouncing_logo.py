@@ -25,13 +25,15 @@ HUE_SHIFT = 2           # How far the background hue moves each frame, out of 25
 COLORS = (color.rgb(0, 96, 255), color.rgb(255, 32, 96), color.rgb(64, 208, 32),
           color.rgb(255, 176, 0), color.rgb(160, 64, 255))
 
-# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
+# what the effects file passes in args, the size first
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = ScreenType(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
 # A single-frame GIF loads as one sprite, drawn through a colour table that rewriting recolours
 try:
@@ -59,9 +61,10 @@ def recolor(new_color):
         palette[i] = new_color
 
 
-# How far the logo can travel each way, with the panel's sides swapped for its quarter turn
-limit_x = screen.height - logo.width
-limit_y = screen.width - logo.height
+# How far the logo can travel each way, across the panel as it is turned
+wide, tall = screen.canvas_size
+limit_x = wide - logo.width
+limit_y = tall - logo.height
 
 x, y = 0, 0
 step_x, step_y = STEP, STEP
@@ -78,7 +81,7 @@ try:
     while not mighty.boot_pressed():
         # Whatever the logo leaves uncovered takes bg_color,
         # so a drifting background costs no more than a still one
-        screen.update(logo, rotation=90, offset=(x, y),
+        screen.update(logo, offset=(x, y),
                       bg_color=color.hsv(hue, 255, BG_VALUE))
 
         x += step_x

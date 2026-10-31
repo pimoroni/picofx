@@ -1,3 +1,4 @@
+import sys
 import time
 
 from mighty_fx import MightyFX, SPCE
@@ -18,8 +19,10 @@ Press "Boot" to exit the program.
 
 # Constants
 POSTERS = "/examples/assets/billboards/portrait"   # Shared with the billboard showcases
-ROTATION = 0                     # Portrait, which is the shape these posters are
 DWELL = 3.0                      # Seconds a poster is up for
+
+# How far the screens are turned, 0 or 180 for portrait posters, or what the effects file passes in args
+ROTATION = 0 if not sys.argv[1:] else int(sys.argv[1])
 
 # Create a MightyFX object driving a screen hub, which takes SP/CE port B for extra chip selects
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_SELECTS)

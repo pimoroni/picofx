@@ -18,7 +18,6 @@ Section: Across several screens
 """
 
 # Constants
-ROTATION = 0             # Panels upright, side by side
 # The hexagon carpet, at half the size of the tile it was measured from
 HEX_RINGS = ((41, 48), (28, 33), (14, 17))   # Half width and half height, outside in
 HEX_ROW = 51             # How far below one row of hexagons the next one sits
@@ -46,9 +45,11 @@ SEAM = color.rgb(58, 54, 50)
 BLOCK_W = round(BLOCK_H * 1.7320508)
 BLOCK_DEPTH = BLOCK_H * 2
 
-# Which screens are on the ports, "2.8" or "1.54", or what the effects file passes in args.
-# A pair wants two of the same size, each panel holding its own picture
+# Which screens are on the ports, "2.8" or "1.54", and how far they are turned, 0, 90, 180 or 270,
+# or what the effects file passes in args, the size first. A pair wants two of the same size, each
+# panel holding its own picture
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 0 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with both SP/CE ports set up for screens, and a panel on each

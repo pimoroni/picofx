@@ -1,7 +1,7 @@
 import sys
 from mighty_fx import MightyFX, SPCE
 from screens import SCREEN_TYPES
-from picovector import image, color, shape, mat3
+from picovector import color, shape, mat3
 
 """
 Spin a rainbow wheel on a screen.
@@ -22,18 +22,20 @@ HUE_SHIFT = 4
 ROTATION_SPEED = 2
 LINE_THICKNESS = 2
 
-# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
+# what the effects file passes in args, the size first
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 0 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = ScreenType(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Access the screen and create a canvas to draw to
-canvas = image(screen.width, screen.height)
+# Create a canvas to draw to, sized as the screen is turned
+canvas = screen.canvas()
 
-centre_x, centre_y = screen.width / 2, screen.height / 2
+centre_x, centre_y = canvas.width / 2, canvas.height / 2
 
 
 # Variables to keep track of rotation and hue positions

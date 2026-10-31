@@ -21,9 +21,10 @@ HUE_SHIFT = 4
 ROTATION_SPEED = 2
 LINE_THICKNESS = 2
 
-# Which screen is on both ports, "2.8" or "1.54", or what the effects file passes in args.
-# A pair needs both panels the same size
+# Which screen is on both ports, "2.8" or "1.54", and how far they are turned, 0, 90, 180 or 270,
+# or what the effects file passes in args, the size first. A pair needs both panels the same size
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 0 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with both SP/CE ports set up for screens, and one on each
@@ -36,15 +37,15 @@ mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 # Both panels convert inside a single frame's time, which is what the deeper reserve
 # buys, and a pair drawing at full size refuses without it. color_wheel_in_turn.py draws
 # the same wheel without a pair, for comparison.
-pair = ScreenPair(ScreenType(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES),
-                  ScreenType(mighty.spce_b, reserve=Reserve.FULL_SIZE_IMAGES))
+pair = ScreenPair(ScreenType(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION),
+                  ScreenType(mighty.spce_b, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION))
 
-# Create a canvas the size of either panel
+# Create a canvas the size of either panel as it is turned
 first = pair.screens[0]
-canvas = image(first.width, first.height)
+canvas = image(*first.canvas_size)
 
 # Pre-calculate the screen centre
-centre_x, centre_y = first.width / 2, first.height / 2
+centre_x, centre_y = canvas.width / 2, canvas.height / 2
 
 
 # Variables to keep track of rotation and hue positions

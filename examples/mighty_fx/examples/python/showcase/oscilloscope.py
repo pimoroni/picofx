@@ -24,7 +24,6 @@ Section: Mechanical and glowing displays
 # Constants for drawing
 SENSOR = False                                      # Whether to trace the sensor connector's voltage live
 FRAME_RATE = 8                                      # Frames a second, which the board holds with the beam drawn
-ROTATION = 90                                       # 90 or 270, the scope being drawn landscape
 
 # The demonstration
 SINE_SECONDS = 6                                    # The sine alone, scrolling
@@ -36,7 +35,7 @@ CYCLES = 2.5                                        # Cycles of the sine across 
 SCROLL = 1.5                                        # How fast the wave scrolls, in radians a second
 WAVE_HEIGHT = 0.3                                   # How far the wave reaches either side of the middle, of the face's height
 FIGURE = (2, 3)                                     # The Lissajous figure's frequencies across and down
-FIGURE_SIZE = 0.42                                  # How far it reaches from the middle, of the face's height
+FIGURE_SIZE = 0.42                                  # How far it reaches from the middle, of the face's narrower side
 TURN = 0.4                                          # How fast it turns, in radians a second
 
 # The screens drive the panel at 12 bit, 16 levels a channel in steps of 17, so the colours sit on those levels
@@ -48,7 +47,7 @@ FRAME = color.rgb(17, 17, 17)                       # The dark edge the face sit
 CASE = color.rgb(221, 204, 187)                     # The case round the tube
 
 # Sizes, in panel pixels
-DIVISIONS = (10, 8)                                 # Graticule squares across and down, fewer where the panel has no room
+DIVISIONS = (10, 8)                                 # Graticule squares across and down on a panel on its side, swapped upright
 DIVISION = 28                                       # Panel pixels a square
 TICKS = 4                                           # Ticks a square along the middle lines, which DIVISION must divide into
 CORE_W = 1.5                                        # Panel pixels across the beam's core
@@ -68,28 +67,32 @@ TRIGGER_WAIT_MS = 50                                # How long a sweep waits for
 MAX_VOLTAGE = 3.3                                   # The voltage a full reading stands for
 FULL_READING = 65535                                # And that full reading
 
-# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
+# what the effects file passes in args, the size first
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE A set up for a screen, and with SENSOR the sensor connector read as a voltage
 mighty = MightyFX(spce_a=SPCE.SCREEN, sensor=ANALOG if SENSOR else None)
 screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Drawn landscape and turned a quarter onto the panel
-canvas = screen.canvas(screen.height, screen.width)
+# Drawn as the panel is turned
+canvas = screen.canvas()
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
 
 # As many of the DIVISIONS as fit inside the frame, an even number each way so the middle lines stay on the
-# graticule. 10 by 8 on a 2.8" panel and 8 by 8 on a 1.54" at a DIVISION of 28
-ACROSS, DOWN = (min(wanted, (room - FRAME_W * 2) // DIVISION // 2 * 2) for wanted, room in zip(DIVISIONS, (WIDTH, HEIGHT)))
+# graticule. At a DIVISION of 28, 10 by 8 on a 2.8" panel on its side, 8 by 10 upright, and 8 by 8 on a 1.54"
+WANTED = DIVISIONS if WIDTH >= HEIGHT else (DIVISIONS[1], DIVISIONS[0])
+ACROSS, DOWN = (min(wanted, (room - FRAME_W * 2) // DIVISION // 2 * 2) for wanted, room in zip(WANTED, (WIDTH, HEIGHT)))
 
 # The face is a pixel wider and taller than its squares, so the graticule's far lines land on it
 FACE_W, FACE_H = ACROSS * DIVISION + 1, DOWN * DIVISION + 1
 LEFT, TOP = (WIDTH - FACE_W) // 2, (HEIGHT - FACE_H) // 2
 MIDDLE_X, MIDDLE_Y = ACROSS * DIVISION / 2, DOWN * DIVISION / 2
 SPAN_X, SPAN_Y = ACROSS * DIVISION, DOWN * DIVISION
+FIGURE_REACH = min(SPAN_X, SPAN_Y) * FIGURE_SIZE    # So the figure fits the face whichever way it stands
 
 # The case round the tube is drawn once, as only the face changes from then on
 canvas.pen = CASE
@@ -169,8 +172,8 @@ def lissajous(seconds):
     across, down = FIGURE
     phase = seconds * TURN
     steps = SEGMENTS * 2
-    return [(MIDDLE_X + SPAN_Y * FIGURE_SIZE * math.sin(across * 2 * math.pi * i / steps + phase),
-             MIDDLE_Y - SPAN_Y * FIGURE_SIZE * math.sin(down * 2 * math.pi * i / steps))
+    return [(MIDDLE_X + FIGURE_REACH * math.sin(across * 2 * math.pi * i / steps + phase),
+             MIDDLE_Y - FIGURE_REACH * math.sin(down * 2 * math.pi * i / steps))
             for i in range(steps + 1)]
 
 

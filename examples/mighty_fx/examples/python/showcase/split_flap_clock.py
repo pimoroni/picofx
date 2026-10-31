@@ -17,7 +17,6 @@ FLAP_FONT = "/rom/fonts/AdventPro-Medium.af"  # A vector face, so it sizes to th
 DRUM = " 0123456789"                    # What is on a card, in the order it comes round
 CLOCK_START = (11, 32, 45)              # The time it counts on from, Mighty FX having no clock to read
 FLAP_MS = 260                           # How long one card takes to fall
-ROTATION = 90                           # 90 or 270, the clock being drawn landscape
 
 # A card sits two levels above the board. The screens drive the panel at 12 bit, so a channel has 16
 # levels in steps of 17, and one level up from black reads as barely there against it
@@ -40,16 +39,18 @@ SEPARATOR = 14                          # The colons, which are painted on, not 
 ANTIALIAS = image.X2                    # Lettering this size is worth smoothing
 CARD_ASPECT = 2.28                      # How many times taller a card is than wide
 
-# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
+# what the effects file passes in args, the size first
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Drawn landscape and turned a quarter onto the panel
-canvas = screen.canvas(screen.height, screen.width)
+# Drawn as the panel is turned
+canvas = screen.canvas()
 WIDTH, HEIGHT = canvas.width, canvas.height
 
 # Six cards and two colons, which is what a clock is, the cards as wide as the panel allows

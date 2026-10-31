@@ -23,13 +23,15 @@ LOUPE_ZOOM = 2          # And how much larger it is drawn
 LOUPE_PAD = 3           # Between the enlargement and its border
 TAG_FACE = font.winds   # The narrowest ROM pixel face, for the tag under the box
 
-# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
+# what the effects file passes in args, the size first
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 0 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = ScreenType(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
 # Create a canvas to draw to
 canvas = screen.canvas()
@@ -42,13 +44,13 @@ fonts = sorted(((name, getattr(font, name)) for name in dir(font)),
 content_height = (MARGIN * 2) + sum(face.height + LINE_GAP for _, face in fonts)
 
 # How far the list can travel before its last line is on the panel, and which way it is going
-travel = max(0, content_height - screen.height)
+travel = max(0, content_height - canvas.height)
 scroll_y = 0.0
 speed = -SCROLL_SPEED
 resting = Roller()              # When the list may move again, so each end gets its rest
 
 print(f"{len(fonts)} faces, {fonts[0][1].height}px to {fonts[-1][1].height}px,"
-      f" {content_height}px of list on a {screen.height}px panel")
+      f" {content_height}px of list on a {canvas.height}px panel")
 
 # A box magnifies a copy of the panel's top left, as a pixel face cannot be drawn larger. An image
 # cannot be blitted over itself, hence the copy

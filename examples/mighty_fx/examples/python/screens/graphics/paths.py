@@ -36,13 +36,15 @@ JOINS = (("miter", shape.JOIN_MITER), ("round", shape.JOIN_ROUND), ("bevel", sha
 CAPS = (("butt", shape.CAP_BUTT), ("round", shape.CAP_ROUND), ("square", shape.CAP_SQUARE))
 RULES = (("even-odd", image.EVEN_ODD), ("nonzero", image.NON_ZERO))
 
-# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
+# what the effects file passes in args, the size first
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 0 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = ScreenType(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
 canvas = screen.canvas()
 canvas.antialias = image.X4
@@ -84,9 +86,10 @@ def drawn(outline, index, name, flags=None, rule=image.EVEN_ODD, thick=THICKNESS
     canvas.shape(figure)
 
     canvas.fill_rule = image.EVEN_ODD
-    # Centred under the drawing, taking a letter of this face as six pixels wide
+    # Centred under the drawing, taking a letter of this face as six pixels wide, and raised in a short
+    # cell so the name stays inside it
     canvas.pen = LABEL
-    canvas.text(name, across - len(name) * 3, down + CELL[1] * LABEL_DOWN)
+    canvas.text(name, across - len(name) * 3, down + min(CELL[1] * LABEL_DOWN, CELL[1] / 2 - LABEL_FACE.height))
 
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)

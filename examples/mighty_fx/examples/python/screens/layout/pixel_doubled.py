@@ -17,7 +17,6 @@ Press "Boot" to exit the program.
 """
 
 # Constants
-ROTATION = 90            # Quarter turn, to suit how the screen is mounted
 HOLD = 66                # Frames each state is held for, about three seconds
 FACE_PATH = "/rom/fonts/Oswald.af"   # A vector face, so the lettering can be drawn at either size
 INSET = 3                # Border to card edge, in small-source pixels
@@ -34,21 +33,23 @@ CURVE = color.rgb(96, 216, 208)
 FAN = color.rgb(236, 176, 64)
 TEXT_COLOUR = color.rgb(236, 240, 248)
 
-# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
+# what the effects file passes in args, the size first
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# The quarter turn swaps the panel's sides, so this is the picture as it is mounted
-PANEL_W, PANEL_H = screen.height, screen.width
+# The picture as the panel is mounted, a quarter turn swapping its sides
+PANEL_W, PANEL_H = screen.canvas_size
 CARD_W, CARD_H = PANEL_W // 2, PANEL_H // 2
 
 # The small card that pixel_double is for, and the full-size one on the screen's canvas
 small = image(CARD_W, CARD_H)
-sharp = screen.canvas(PANEL_W, PANEL_H)
+sharp = screen.canvas()
 face = font.load(FACE_PATH)
 for card in (small, sharp):
     card.antialias = image.X4

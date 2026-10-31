@@ -25,7 +25,6 @@ CLOCK_START = (11, 32, 45)          # The time it counts on from, Mighty FX havi
 BLANK_LEADING_ZERO = False          # Whether an hour under ten shows one digit, where a 24 hour clock shows both
 SECONDS = True                      # Whether the seconds show, the hours and minutes drawing larger without them
 COLON_MS = 500                      # How long the colons stay lit each second
-ROTATION = 90                       # 90 or 270, the clock being drawn landscape
 
 # A segment is set out in a digit one unit wide between its outer bars' centres, and this many tall
 DIGIT_TALL = 1.8
@@ -100,16 +99,18 @@ LIGHTS = {
     "9": ("a", "b", "c", "d", "f", "g"),
 }
 
-# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
+# what the effects file passes in args, the size first
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Drawn landscape and turned a quarter onto the panel
-canvas = screen.canvas(screen.height, screen.width)
+# Drawn as the panel is turned
+canvas = screen.canvas()
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
 

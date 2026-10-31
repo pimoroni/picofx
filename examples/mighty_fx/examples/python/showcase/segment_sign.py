@@ -34,7 +34,6 @@ SCROLL_MS = 250                     # How long a scrolling row holds each step
 
 # Constants for drawing
 COLUMNS = 7                         # Characters across each row
-ROTATION = 90                       # 90 or 270, the sign being drawn landscape
 
 # A segment is set out in a character one unit wide between its outer bars' centres, and this many tall
 CHARACTER_TALL = 1.6
@@ -107,16 +106,18 @@ LIGHTS = {
 }
 LIGHTS = {character: tuple(names.split()) for character, names in LIGHTS.items()}
 
-# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
+# what the effects file passes in args, the size first
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Drawn landscape and turned a quarter onto the panel
-canvas = screen.canvas(screen.height, screen.width)
+# Drawn as the panel is turned
+canvas = screen.canvas()
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
 

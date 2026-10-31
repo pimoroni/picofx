@@ -1,3 +1,5 @@
+import sys
+
 from mighty_fx import MightyFX, SPCE
 from playback import SequencePlayer
 from screens import Reserve, Screen280, ScreenPair
@@ -14,9 +16,11 @@ Press "Boot" to exit the program.
 
 # Constants
 POSTERS = "/examples/assets/billboards/portrait"   # Shared with the billboard showcases
-ROTATION = 0                     # Portrait, which is the shape these posters are
 DWELL = 3.0                      # Seconds a poster is up for
 AHEAD = 4                        # How far along the folder the second panel reads, so the two never match
+
+# How far the screens are turned, 0 or 180 for portrait posters, or what the effects file passes in args
+ROTATION = 0 if not sys.argv[1:] else int(sys.argv[1])
 
 # Create a MightyFX object with both SP/CE ports set up for screens, and a 2.8" screen on
 # each with the reserve two full-size posters need

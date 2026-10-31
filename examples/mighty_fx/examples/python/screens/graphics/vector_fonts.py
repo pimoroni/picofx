@@ -7,7 +7,7 @@ from screens import SCREEN_TYPES
 from picovector import color, font, image
 
 """
-Draw every vector face in ROM at three sizes, or two on a 1.54" panel, each writing its own name.
+Draw every vector face in ROM at three sizes, or two on a panel too short for three, each writing its own name.
 
 A vector face is drawn from outlines, so text() sizes it. A pixel face is fixed (pixel_fonts.py).
 
@@ -25,21 +25,21 @@ TEXT_COLOUR = color.white               # The faces themselves
 RULE = color.rgb(70, 90, 130)           # The lines dividing one face from the next
 FACES = "/rom/fonts"                    # Where the vector faces live
 LABEL_FACE = font.winds                 # A ROM pixel face, so a label never changes size
-SIZES = {"2.8": (15, 22, 29),           # What each face is drawn at, filling its band,
-         "1.54": (15, 29)}              # and on a 1.54" panel, whose shorter bands have room for two
+SIZES = (15, 22, 29)                    # What each face is drawn at, filling its band, the middle ones left out where it is short
 MARGIN = 6
 GAP = 2                                 # Between one line and the next
 BAND_PAD = 2                            # Between a band and the one above it
 SAID_AFTER = 6                          # Between a line and the size said beside it
 
-# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
+# what the effects file passes in args, the size first
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 0 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
-DRAWN_AT = SIZES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = ScreenType(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
 canvas = screen.canvas()
 canvas.antialias = image.X4
@@ -49,7 +49,13 @@ faces = [(name[:-3], font.load(f"{FACES}/{name}"))
          for name in sorted(n for n in os.listdir(FACES) if n.endswith(".af"))]
 
 BAND = canvas.height / len(faces)
-print(f"{len(faces)} vector faces at {DRAWN_AT},{BAND:.0f}px a band:"
+
+# As many of the SIZES as fit a band, the middle ones left out first, so a short band keeps the extremes
+DRAWN_AT = list(SIZES)
+while len(DRAWN_AT) > 1 and sum(DRAWN_AT) + GAP * (len(DRAWN_AT) - 1) + BAND_PAD > BAND:
+    DRAWN_AT.pop(len(DRAWN_AT) // 2)
+
+print(f"{len(faces)} vector faces at {DRAWN_AT}, {BAND:.0f}px a band:"
       f" {', '.join(name for name, _ in faces)}")
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)

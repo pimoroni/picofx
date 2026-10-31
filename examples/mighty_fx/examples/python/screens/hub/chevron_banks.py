@@ -25,8 +25,10 @@ LIT = color.rgb(255, 204, 0)        # A chevron switched on
 UNLIT = color.rgb(51, 51, 34)       # And switched off, still faintly there as a real lamp is
 BACKGROUND = color.black
 
-# Which screen is on every hub position, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on every hub position, "2.8" or "1.54", and how far they are turned, 0, 90, 180 or
+# 270, or what the effects file passes in args, the size first
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 0 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object driving a screen hub, which takes SP/CE port B for extra chip selects
@@ -45,13 +47,14 @@ if not panels:
     mighty.shutdown()
     raise RuntimeError("No panels answered! Check the hub is plugged into SP/CE A, with its panels on the hub rather than on the board")
 
-wall = ScreenGroup(*panels)
+# A group places every frame at its own rotation, whatever its panels were built with
+wall = ScreenGroup(*panels, rotation=ROTATION)
 
 # Two banks of alternate panels, bound once. A lone panel makes one bank, as a subset needs a member
 banks = [wall.subset(*members) for members in (panels[0::2], panels[1::2]) if members]
 print(f"{len(panels)} of {len(mighty.hub.ports)} hub positions answered, in {len(banks)} bank(s)")
 
-WIDTH, HEIGHT = panels[0].width, panels[0].height
+WIDTH, HEIGHT = wall.canvas_size
 
 
 def chevrons(pen):

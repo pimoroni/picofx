@@ -25,7 +25,6 @@ SPEED = 1.5                                         # How fast the last drum tur
 DRUMS = 6
 MAKER = "PIMORONI & CO."                            # Engraved above the drums
 UNITS = ("MILES", "TENTHS")                         # And under them, the first under the whole miles and the second under the tenths
-ROTATION = 90                                       # 90 or 270, the odometer being drawn landscape
 
 # The sizes in panel pixels are for a panel 320 pixels wide, and scale down with a narrower one
 DRUM_W = 44                                        # Panel pixels across a drum
@@ -63,16 +62,18 @@ SCREW_HEAD = color.rgb(153, 153, 170)               # And its dome
 SCREW_SLOT = color.rgb(51, 51, 51)
 SLOTS = (30, 110, 165, 75)                          # Each screw's slot, in degrees, tightened by hand so no two alike
 
-# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
+# what the effects file passes in args, the size first
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Drawn landscape and turned a quarter onto the panel
-canvas = screen.canvas(screen.height, screen.width)
+# Drawn as the panel is turned
+canvas = screen.canvas()
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
 

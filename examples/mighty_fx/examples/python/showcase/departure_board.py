@@ -1,3 +1,4 @@
+import sys
 from mighty_fx import MightyFX, SPCE
 from timing import Pacer, Roller
 from screens import SCREEN_TYPES
@@ -29,10 +30,6 @@ BAR = 3                         # The black bar between one module and the next,
 PAD = 2                         # Space inside a module, above and below its lettering
 PAGE_HOLD = 6.0                 # How long every panel holds a page for, in seconds
 CALLING_ROW = 3                 # Where the calling points heading sits in the stack of modules
-
-# A panel cannot be asked its size, so every panel is taken as this one and one canvas
-# serves them all. 2.8 is the safer guess, wrapping harmlessly on a 1.54".
-SCREEN_SIZE = "2.8"
 
 # One service to a panel. The stations are real and in order, the rest made up. A platform of
 # "-" is unannounced, and an empty via leaves its row unlit.
@@ -70,6 +67,12 @@ SERVICES = (
                  "Camborne", "Hayle", "St Erth", "Penzance")},
 )
 
+# Which screen is on every hub position, "2.8" or "1.54", and how far they are turned, 0, 90, 180 or
+# 270, or what the effects file passes in args, the size first. One canvas serves every panel
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 0 if not sys.argv[2:] else int(sys.argv[2])
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
 # Create a MightyFX object with a screen hub across both SP/CE ports, one carrying the
 # bus and the other giving up its five lines as extra chip selects
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_SELECTS)
@@ -80,7 +83,7 @@ panels = []
 answered = []
 for index, port in enumerate(mighty.hub.ports):
     try:
-        panels.append(SCREEN_TYPES[SCREEN_SIZE](port, reveal_together=True))
+        panels.append(ScreenType(port, reveal_together=True, rotation=ROTATION))
         answered.append(index)
     except ValueError:
         pass
@@ -135,7 +138,7 @@ def layout(canvas):
 
 
 # One canvas serves every panel, drawn again before each write
-canvas = image(panels[0].width, panels[0].height)
+canvas = image(*panels[0].canvas_size)
 places, rows = layout(canvas)
 
 # Printed lettering sits centred in the band between modules, so HEADING_FONT may be taller.

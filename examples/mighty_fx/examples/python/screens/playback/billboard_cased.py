@@ -1,3 +1,4 @@
+import sys
 import time
 
 from mighty_fx import MightyFX, SPCE
@@ -20,7 +21,6 @@ Section: Billboards and panels
 
 # Constants
 POSTERS = "/examples/assets/billboards/portrait"   # Shared with the billboard showcases
-ROTATION = 0                     # Portrait, which is the shape these posters are
 DWELL = 3.0                      # Seconds a poster is up for
 LEVEL = 17                       # One of the 16 levels the screens drive a channel at, the least that shows
 CASE_WIDE = 4                    # How far the case reaches over the poster
@@ -35,6 +35,9 @@ LEAN = 150                       # How far a band slides over the poster's heigh
 # or the room. Both are wanted, since light cannot lighten a pale poster
 BANDS = ((30, 26, 10, 2.0, True), (96, 9, 6, 3.5, True), (150, 34, 14, 1.6, False),
          (206, 14, 8, 2.2, True), (232, 30, 12, 1.4, False))
+
+# How far the screen is turned, 0 or 180 for portrait posters, or what the effects file passes in args
+ROTATION = 0 if not sys.argv[1:] else int(sys.argv[1])
 
 # Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)

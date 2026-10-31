@@ -17,7 +17,6 @@ Press "Boot" to exit the program.
 """
 
 # Constants
-ROTATION = 90                    # Quarter turn, to suit how the screen is mounted
 TILE = 40                        # The wedge is square, and this is its side
 HOLD = 66                        # Frames each mode is held for, about three seconds
 INSET = 8                        # How far the arrow sits inside the tile
@@ -29,8 +28,10 @@ ANTIALIAS = image.X4             # Affordable, the tile being drawn once before 
 # Plain across, then mirrored across, so the same source is seen both ways
 MODES = (True, Tile.MIRROR)
 
-# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
+# what the effects file passes in args, the size first
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
@@ -40,7 +41,7 @@ screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 # One wedge, which the driver repeats to fill the panel
 wedge = screen.canvas(TILE, TILE)
 wedge.antialias = ANTIALIAS
-print(f"a {TILE}x{TILE} wedge filling {screen.height}x{screen.width}")
+print(f"a {TILE}x{TILE} wedge filling {screen.canvas_size[0]}x{screen.canvas_size[1]}")
 
 # A column at a time from dark to light, so the tile's two sides have nothing in common
 for x in range(TILE):

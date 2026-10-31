@@ -29,23 +29,25 @@ COOLING = 3                                         # The most heat the cooling 
 SMOOTHING = 4                                       # Passes smoothing the cooling, more for broader tongues
 GLOW = (255, 96, 16)                                # The colour the outputs glow, a fire's orange
 GLOW_FLOOR = 0.15                                   # How lit an output stays with no hot spot in its share of the bed
-ROTATION = 90                                       # 90 or 270, the fire being drawn landscape
 
 # The fire's colours as its heat rises from cold, mostly orange to yellow with a pale yellow only where hottest
 STOPS = ((0.0, (0, 0, 0)), (0.28, (0, 0, 0)), (0.34, (170, 34, 0)), (0.45, (240, 110, 0)),
          (0.62, (255, 190, 40)), (0.85, (255, 240, 170)), (1.0, (255, 250, 210)))
 
-# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
+# what the effects file passes in args, the size first
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 90 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Drawn landscape at half the panel's size and turned a quarter onto it. pixel_double=
-# shows each pixel as a block of four, which suits a fire's soft shapes and leaves fewer cells to calculate
-canvas = screen.canvas(screen.height // 2, screen.width // 2)
+# Drawn at half the panel's size as it is turned. pixel_double= shows each pixel as a block of
+# four, which suits a fire's soft shapes and leaves fewer cells to calculate
+wide, tall = screen.canvas_size
+canvas = screen.canvas(wide // 2, tall // 2)
 WIDTH, HEIGHT = canvas.width, canvas.height
 pixels = canvas.raw
 
@@ -92,15 +94,16 @@ def smooth(values: ptr8, spare: ptr8, width: int, height: int):
         values[cell] = spare[cell]
 
 
-# The cooling, a smooth random field as tall as the rows the heat rises through, scaled to 0 to COOLING.
-# It wraps top to bottom, so it can scroll up with the heat for ever
+# The cooling, a smooth random field as tall as the rows the heat rises through, scaled to 0 to COOLING
+# on a fire 120 rows tall, as on a 2.8" panel on its side, and less on a taller one so its flames climb
+# part way into the extra height. It wraps top to bottom, so it can scroll up with the heat for ever
 field = bytearray(random.getrandbits(8) for _ in range(WIDTH * BURNING))
 spare = bytearray(len(field))
 for _ in range(SMOOTHING):
     smooth(field, spare, WIDTH, BURNING)
 lowest, highest = min(field), max(field)
 for cell in range(len(field)):
-    field[cell] = (field[cell] - lowest) * COOLING // (highest - lowest)
+    field[cell] = (field[cell] - lowest) * COOLING * (120 + HEIGHT) // ((highest - lowest) * 2 * HEIGHT)
 cooling = spidisplay.buffer(len(field))
 cooling[:] = field
 del field, spare

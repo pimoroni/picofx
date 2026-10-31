@@ -1,4 +1,5 @@
 import gc
+import sys
 import time
 
 from mighty_fx import MightyFX, SPCE
@@ -31,7 +32,6 @@ WORDMARK_FACE = "/rom/fonts/PoppinsBlack.af"  # A vector face, drawn large and r
 LETTERING_TALL = 0.309
 LETTERING_DOWN = 0.697
 BODY_FACE = font.winds                  # The narrowest pixel face, which is what the statuses need
-ROTATION = 90                           # Quarter turn, to suit how the screen is mounted
 REDUCE = 2                              # The render is drawn this much larger and reduced onto the canvas
 
 TEXT_COLOUR = color.black               # The type, the bullets and the wordmark
@@ -76,6 +76,10 @@ GLOW_STEPS = 5                          # Rings it is built from, drawn largest 
 GLOW_ALPHA = 40                         # What the innermost ring adds out of 255, each outer one a share of it
 DOME_LIGHT = 190                        # The core a lit lamp shows, and the light unlit glass catches
 CONSOLE_PAD = 2                         # How far the plate under the line reaches past what sits on it
+
+# How far the screen is turned, 90 or 270 for a landscape panel, or what the effects file passes in
+# args. Its lamps line up with the outputs below it, so 270 suits a board mounted upside down with it
+ROTATION = 90 if not sys.argv[1:] else int(sys.argv[1])
 
 # Create a MightyFX object with SP/CE A set up for a screen, and its RGB outputs for the line
 mighty = MightyFX(spce_a=SPCE.SCREEN)

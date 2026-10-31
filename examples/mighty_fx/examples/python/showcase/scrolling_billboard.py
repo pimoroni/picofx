@@ -1,4 +1,5 @@
 import os
+import sys
 
 from mighty_fx import MightyFX, SPCE
 from timing import Pacer, Roller
@@ -20,10 +21,13 @@ SCROLL_MS = 4000                    # How long it takes for the next one to come
 # How much of a move ramps at each end, 0 jolting at both and 0.5 all ramp
 RAMP = 0.2
 
+# How far the screen is turned, 0 or 180 for portrait posters, or what the effects file passes in args
+ROTATION = 0 if not sys.argv[1:] else int(sys.argv[1])
+
 
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = Screen280(mighty.spce_a, rotation=ROTATION)
 
 # The loop, every PNG in the folder in name order. Two posters are held at a time, so it can be any length
 try:

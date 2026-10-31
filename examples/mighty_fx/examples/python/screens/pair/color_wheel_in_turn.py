@@ -20,8 +20,10 @@ HUE_SHIFT = 4
 ROTATION_SPEED = 2
 LINE_THICKNESS = 2
 
-# Which screen is on both ports, "2.8" or "1.54", or what the effects file passes in args
+# Which screen is on both ports, "2.8" or "1.54", and how far they are turned, 0, 90, 180 or 270,
+# or what the effects file passes in args, the size first
 SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ROTATION = 0 if not sys.argv[2:] else int(sys.argv[2])
 ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 
 # Create a MightyFX object with both SP/CE ports set up for screens, and one on each
@@ -34,13 +36,13 @@ mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 #
 # What it buys is memory: each screen converts within a frame of its own, so the default
 # reserve keeps up where a pair needs a deeper stage.
-screens = ScreenType(mighty.spce_a), ScreenType(mighty.spce_b)
+screens = ScreenType(mighty.spce_a, rotation=ROTATION), ScreenType(mighty.spce_b, rotation=ROTATION)
 
-# Access the first screen and create a canvas to draw to
-canvas = image(screens[0].width, screens[0].height)
+# Create a canvas to draw to, the size of either screen as it is turned
+canvas = image(*screens[0].canvas_size)
 
 # Pre-calculate the screen centre
-centre_x, centre_y = screens[0].width / 2, screens[0].height / 2
+centre_x, centre_y = canvas.width / 2, canvas.height / 2
 
 
 # Variables to keep track of rotation and hue positions
