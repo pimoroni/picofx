@@ -1,6 +1,7 @@
+import sys
 from mighty_fx import MightyFX, SPCE
 from playback import SequencePlayer
-from screens import Screen280
+from screens import SCREEN_TYPES
 
 """
 Play an animation held as one image file per frame, back and forth.
@@ -22,9 +23,13 @@ ROTATION = 90                    # Quarter turn, to suit how the screen is mount
 FPS = 8                          # The rate to play at, a folder of images declaring none
 HOLD = 0.4                       # Seconds to dwell where it turns around, at each end
 
-# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
+# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
+# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a, rotation=ROTATION)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
 # hold takes one value for both ends, or two for the far end and then back at the start
 try:

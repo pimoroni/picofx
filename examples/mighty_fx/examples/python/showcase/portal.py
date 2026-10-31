@@ -1,8 +1,9 @@
 import math
 import random
+import sys
 from mighty_fx import MightyFX, SPCE
 from timing import Pacer
-from screens import Screen280
+from screens import SCREEN_TYPES
 from picovector import color, image, rect, shape, vec2
 
 """
@@ -64,9 +65,13 @@ STONE_SHADES = ((102, 102, 102), (119, 119, 119), (136, 136, 136), (153, 153, 15
 MORTAR = color.rgb(34, 34, 34)
 SPILL = (153, 68, 255)                              # The portal's light falling on the stones nearest it
 
+# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = ScreenType(mighty.spce_a)
 
 # Upright as the panel is, or drawn landscape and turned a quarter onto it at each update
 canvas = screen.canvas() if PORTRAIT else screen.canvas(screen.height, screen.width)

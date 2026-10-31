@@ -1,7 +1,8 @@
+import sys
 from mighty_fx import MightyFX, SPCE
 from picovector import color
 from playback import GIFPlayer
-from screens import Reserve, Screen280
+from screens import SCREEN_TYPES, Reserve
 
 """
 Recolour a whole animation as it plays, by rewriting the one colour table its frames share.
@@ -26,10 +27,14 @@ ROTATION = 90                    # Quarter turn, to suit how the screen is mount
 REPORTS = (color.rgb(0, 255, 64), color.rgb(255, 196, 40),
            color.rgb(255, 64, 48), color.rgb(64, 200, 255))
 
-# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it with the
+# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
+# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it with the
 # reserve a source larger than the panel needs
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION)
+screen = ScreenType(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION)
 
 # The scan runs body to skeleton, so it plays back and forth
 try:

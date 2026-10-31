@@ -1,9 +1,10 @@
 import random
+import sys
 import micropython
 import spidisplay
 from mighty_fx import MightyFX, SPCE
 from timing import Pacer
-from screens import Screen280
+from screens import SCREEN_TYPES
 
 """
 Draw a fire, and light Mighty FX's RGB outputs with it, so whatever the outputs light flickers with
@@ -28,16 +29,21 @@ COOLING = 3                                         # The most heat the cooling 
 SMOOTHING = 4                                       # Passes smoothing the cooling, more for broader tongues
 GLOW = (255, 96, 16)                                # The colour the outputs glow, a fire's orange
 GLOW_FLOOR = 0.15                                   # How lit an output stays with no hot spot in its share of the bed
+ROTATION = 90                                       # 90 or 270, the fire being drawn landscape
 
 # The fire's colours as its heat rises from cold, mostly orange to yellow with a pale yellow only where hottest
 STOPS = ((0.0, (0, 0, 0)), (0.28, (0, 0, 0)), (0.34, (170, 34, 0)), (0.45, (240, 110, 0)),
          (0.62, (255, 190, 40)), (0.85, (255, 240, 170)), (1.0, (255, 250, 210)))
 
+# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Drawn landscape at half the panel's size and turned a quarter onto it at each update. pixel_double=
+# Drawn landscape at half the panel's size and turned a quarter onto it. pixel_double=
 # shows each pixel as a block of four, which suits a fire's soft shapes and leaves fewer cells to calculate
 canvas = screen.canvas(screen.height // 2, screen.width // 2)
 WIDTH, HEIGHT = canvas.width, canvas.height
@@ -202,7 +208,7 @@ pacer = Pacer(fps=FRAME_RATE)       # The fire's clock, holding each frame to th
 try:
     while not mighty.boot_pressed():
         draw()
-        screen.update(canvas, rotation=90, pixel_double=True)
+        screen.update(canvas, pixel_double=True)
         pacer.hold()
 
 # Stop any running effects and turn off all the outputs

@@ -1,6 +1,7 @@
+import sys
 from mighty_fx import MightyFX, SPCE
 from playback import GIFPlayer
-from screens import Screen280
+from screens import SCREEN_TYPES
 
 """
 Play an animated GIF on a screen, at the frame delays the file was authored with.
@@ -16,11 +17,15 @@ Press "Boot" to exit the program.
 
 # Constants
 GIF_PATH = "/examples/assets/pirate_coin.gif"   # The GIF to play
+ROTATION = 90                                   # Quarter turn, to suit how the screen is mounted
 
-# Create a MightyFX object with SP/CE port A set up for screens,
-# and a 2.8" screen on it turned to suit how it is mounted
+# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
+# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a, rotation=90)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
 # A player walks the frames at the file's own delays, or at a rate given as fps=
 try:

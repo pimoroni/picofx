@@ -1,6 +1,7 @@
+import sys
 from mighty_fx import MightyFX, SPCE
 from playback import GIFPlayer
-from screens import Screen280
+from screens import SCREEN_TYPES
 
 """
 Play an animated GIF forward then back, dwelling at each turn.
@@ -18,9 +19,13 @@ GIF_PATH = "/examples/assets/pirate_coin.gif"   # The GIF to play
 ROTATION = 90                    # Quarter turn, to suit how the screen is mounted
 HOLD = 1.0                       # Seconds to dwell at each end, both being the coin face
 
-# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
+# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
+# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a, rotation=ROTATION)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
 # ping_pong needs somewhere to turn around, and first_as_last needs a turn to put its extra
 # frame at, so a plain forward loop refuses both

@@ -1,6 +1,7 @@
+import sys
 from mighty_fx import MightyFX, SPCE
 from timing import Pacer
-from screens import Screen280, ScreenGroup
+from screens import SCREEN_TYPES, ScreenGroup
 from picovector import color, font, image, rect, shape
 
 """
@@ -19,9 +20,7 @@ Section: Transport signs
 """
 
 # Constants for drawing
-SCREEN = Screen280                  # A panel cannot be asked its size, so the class is named.
-                                    # A signal is square, centred in a housing on a 2.8"
-ROTATION = 0                        # 0 or 180, portrait so both panel sizes sit edge to edge across a gantry
+ROTATION = 0                       # 0 or 180, portrait so both panel sizes sit edge to edge across a gantry
 
 LAMP = 6                            # Panel pixels a lamp, the smallest that reads as round
 APERTURE = 0.7                      # The lit hole, as a fraction of a lamp's width
@@ -78,6 +77,10 @@ GANTRY = (
     (BLANK, BLANK, BLANK, BLANK, BLANK, BLANK),
 )
 
+# Which screen is on every hub position, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
 # Create a MightyFX object with a screen hub across both SP/CE ports. One carries the screen bus and the other
 # gives up its five lines as extra chip selects, which lets one port drive six panels instead of one
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_SELECTS)
@@ -86,7 +89,7 @@ mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_SELECTS)
 screens = []
 for port in mighty.hub.ports:
     try:
-        screens.append(SCREEN(port))
+        screens.append(ScreenType(port))
     except ValueError:
         pass
 

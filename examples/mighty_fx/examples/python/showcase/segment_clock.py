@@ -1,7 +1,8 @@
 import random
+import sys
 from mighty_fx import MightyFX, SPCE
 from timing import Pacer
-from screens import Screen280
+from screens import SCREEN_TYPES
 from picovector import color, font, image, rect, shape, vec2
 
 """
@@ -24,6 +25,7 @@ CLOCK_START = (11, 32, 45)          # The time it counts on from, Mighty FX havi
 BLANK_LEADING_ZERO = False          # Whether an hour under ten shows one digit, where a 24 hour clock shows both
 SECONDS = True                      # Whether the seconds show, the hours and minutes drawing larger without them
 COLON_MS = 500                      # How long the colons stay lit each second
+ROTATION = 90                       # 90 or 270, the clock being drawn landscape
 
 # A segment is set out in a digit one unit wide between its outer bars' centres, and this many tall
 DIGIT_TALL = 1.8
@@ -98,11 +100,15 @@ LIGHTS = {
     "9": ("a", "b", "c", "d", "f", "g"),
 }
 
+# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Drawn landscape and turned a quarter onto the panel at each update
+# Drawn landscape and turned a quarter onto the panel
 canvas = screen.canvas(screen.height, screen.width)
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
@@ -291,7 +297,7 @@ try:
         showing = (clock_now(elapsed), elapsed % 1000 < COLON_MS)
         if showing != shown:
             draw(*showing)
-            screen.update(canvas, rotation=90)
+            screen.update(canvas)
             shown = showing
 
         pacer.hold()

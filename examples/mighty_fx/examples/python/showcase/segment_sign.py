@@ -1,7 +1,8 @@
 import random
+import sys
 from mighty_fx import MightyFX, SPCE
 from timing import Pacer
-from screens import Screen280
+from screens import SCREEN_TYPES
 from picovector import color, image, rect, shape, vec2
 
 """
@@ -33,6 +34,7 @@ SCROLL_MS = 250                     # How long a scrolling row holds each step
 
 # Constants for drawing
 COLUMNS = 7                         # Characters across each row
+ROTATION = 90                       # 90 or 270, the sign being drawn landscape
 
 # A segment is set out in a character one unit wide between its outer bars' centres, and this many tall
 CHARACTER_TALL = 1.6
@@ -105,11 +107,15 @@ LIGHTS = {
 }
 LIGHTS = {character: tuple(names.split()) for character, names in LIGHTS.items()}
 
+# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Drawn landscape and turned a quarter onto the panel at each update
+# Drawn landscape and turned a quarter onto the panel
 canvas = screen.canvas(screen.height, screen.width)
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
@@ -310,7 +316,7 @@ try:
         offsets = tuple(scrolled(row, now - started) for row in page)
         if (page_index, offsets) != shown:
             draw(page, offsets)
-            screen.update(canvas, rotation=90)
+            screen.update(canvas)
             shown = (page_index, offsets)
 
         pacer.hold()

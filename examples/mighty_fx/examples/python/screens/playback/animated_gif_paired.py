@@ -1,6 +1,7 @@
+import sys
 from mighty_fx import MightyFX, SPCE
 from playback import GIFPlayer
-from screens import Reserve, Screen280, ScreenPair
+from screens import SCREEN_TYPES, Reserve, ScreenPair
 
 """
 Play one animated GIF across two screens, both changing frame together.
@@ -17,10 +18,15 @@ Press "Boot" to exit the program.
 GIF_PATH = "/examples/assets/pirate_coin.gif"   # The GIF to play
 ROTATION = 90                              # Quarter turn, to suit how the screens are mounted
 
-# Create a MightyFX object with both SP/CE ports set up for screens, and a 2.8" screen on each
+# Which screens are on the ports, "2.8" or "1.54", or what the effects file passes in args.
+# A pair wants two of the same size
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
+# Create a MightyFX object with both SP/CE ports set up for screens, and a panel on each
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
-pair = ScreenPair(Screen280(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION),
-                  Screen280(mighty.spce_b, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION))
+pair = ScreenPair(ScreenType(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION),
+                  ScreenType(mighty.spce_b, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION))
 
 # A GIF carries a delay for each frame but no clock, so a player is what walks them
 try:

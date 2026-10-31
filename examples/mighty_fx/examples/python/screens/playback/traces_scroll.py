@@ -1,9 +1,10 @@
 import math
+import sys
 
 from mighty_fx import MightyFX, SPCE
 from picovector import tween
 from playback import SequencePlayer
-from screens import Screen280
+from screens import SCREEN_TYPES
 
 """
 Scroll an animation built from one tile endlessly across the panel, turning between axes.
@@ -30,9 +31,13 @@ FPS = 8                 # The rate the pattern itself animates at
 STEP = 2                # Pixels the field travels each frame
 TURN = 50               # Frames a change of direction takes
 
-# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
+# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
+# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a, rotation=ROTATION)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
 try:
     player = SequencePlayer(FRAMES, fps=FPS)

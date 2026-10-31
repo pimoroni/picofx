@@ -1,9 +1,10 @@
 import random
+import sys
 import micropython
 import spidisplay
 from mighty_fx import MightyFX, SPCE
 from timing import Pacer
-from screens import Screen280
+from screens import SCREEN_TYPES
 from picovector import color, rect
 
 """
@@ -32,6 +33,7 @@ CALMING = 7                                         # How slowly ripples die awa
 BENDING = 9                                         # How little the water's slope moves the floor, as a shift, more for less wobble
 LIGHT = 4                                           # How little the water's curve brightens the floor, as a shift, more for fainter light
 LIGHT_THRESHOLD = 4                                 # How far the curve must pass, after the LIGHT shift, before any light shows
+ROTATION = 90                                       # 90 or 270, the pool being drawn landscape
 
 # Sizes, in canvas pixels, each shown as two panel pixels by two
 STONE = 6                                           # Across a tile or stone, its grout included
@@ -46,11 +48,15 @@ TERRACOTTA = ((170, 85, 51), (187, 102, 68), (153, 68, 51))
 BATH_GROUT = (170, 170, 136)
 BATH_WATER = (0.75, 0.875, 0.86)                    # How much of each channel a bath's green water lets through
 
+# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
 # Create a MightyFX object with SP/CE A set up for a screen
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Drawn landscape at half the panel's size and turned a quarter onto it at each update. pixel_double=
+# Drawn landscape at half the panel's size and turned a quarter onto it. pixel_double=
 # shows each pixel as a block of four, which leaves a quarter of the cells to ripple
 canvas = screen.canvas(screen.height // 2, screen.width // 2)
 WIDTH, HEIGHT = canvas.width, canvas.height
@@ -207,7 +213,7 @@ pacer = Pacer(fps=FRAME_RATE)       # The pool's clock, holding each frame to th
 try:
     while not mighty.boot_pressed():
         draw()
-        screen.update(canvas, rotation=90, pixel_double=True)
+        screen.update(canvas, pixel_double=True)
         pacer.hold()
 
 # Stop any running effects and turn off all the outputs

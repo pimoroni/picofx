@@ -1,6 +1,7 @@
+import sys
 import time
 from mighty_fx import MightyFX, SPCE
-from screens import Screen280
+from screens import SCREEN_TYPES
 from picovector import image
 
 """
@@ -16,9 +17,13 @@ SECOND_IMAGE = "red_macaw_card.png"        # The name of the second image
 FIRST_DURATION = 1.5                       # Seconds the first image is shown for
 SECOND_DURATION = 0.5                      # And the second
 
-# Create a MightyFX object with SP/CE port A set up for screens, and a 2.8" screen on it
+# Which screen is on the port, "2.8" or "1.54", or what the effects file passes in args
+SCREEN_SIZE = "2.8" if not sys.argv[1:] else sys.argv[1]
+ScreenType = SCREEN_TYPES[SCREEN_SIZE]
+
+# Create a MightyFX object with SP/CE port A set up for screens, and the screen on it
 mighty = MightyFX(spce_a=SPCE.SCREEN)
-screen = Screen280(mighty.spce_a)
+screen = ScreenType(mighty.spce_a)
 
 
 # Load both images
