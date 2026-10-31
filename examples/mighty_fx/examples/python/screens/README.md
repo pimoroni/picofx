@@ -64,7 +64,7 @@ These are micropython examples for the screens Mighty FX can drive from its SP/C
 
 [single/detect_screens.py](single/detect_screens.py)
 
-Draw to whichever screens are plugged in, on one SP/CE port or both. Each screen counts out its own position in dots.
+Show which screen sits on each SP/CE port. Every screen is painted its port's colour, with its letter in the top left over one bar for A or two for B.
 
 <br clear="left">
 

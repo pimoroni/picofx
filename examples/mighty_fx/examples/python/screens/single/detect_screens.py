@@ -1,11 +1,12 @@
 import sys
 from mighty_fx import MightyFX, SPCE
 from screens import SCREEN_TYPES
-from picovector import image, color, shape
+from picovector import image, color, font
 
 """
-Draw to whichever screens are plugged in, on one SP/CE port or both.
-Each screen counts out its own position in dots.
+Show which screen sits on each SP/CE port. Every screen is painted its port's colour, with its
+letter in the top left over one bar for A or two for B. The console lists the same for both
+ports, including one where no screen answered.
 
 Press "Boot" to exit the program.
 
@@ -13,9 +14,24 @@ Args: Screen A size, Screen B size
 """
 
 # Constants for drawing
-HUE_SHIFT = 2           # How far around the colour wheel to move each frame
-DOT_RADIUS = 14         # The size of the dots counting out a screen's position
-DOT_SPACING = 40        # The gap between the centres of those dots
+MARGIN = 14             # The gap at the screen's left and top, under the letter and between one bar and the next
+LETTER_SIZE = 240       # The size given to text() for the letter
+BAR_WIDTH = 14          # The bars counting out the port, in screen pixels
+BAR_HEIGHT = 44
+VECTOR_FACE = "/rom/fonts/PoppinsBlack.af"
+CAPITAL_TOP = 0.71      # Where this face's capitals start below the y given to text(), as a fraction of the size
+CAPITAL_HEIGHT = 0.29   # And how tall they stand, the same way
+
+# The gap this face leaves before each letter as a fraction of the size, taken off so it sits flush with the bars
+LEFT_BEARINGS = {"A": 0.004, "B": 0.021}
+
+# The letter's capitals start a margin down, and the bars a margin below them
+LETTER_Y = MARGIN - CAPITAL_TOP * LETTER_SIZE
+BARS_TOP = round(MARGIN + CAPITAL_HEIGHT * LETTER_SIZE + MARGIN)
+
+# Each port's colour, A then B, with its name for the console
+PORT_COLOURS = (("red", color.rgb(255, 0, 0)),
+                ("green", color.rgb(0, 220, 0)))
 
 # Which screen is on each port, "2.8" or "1.54". The effects file can pass one for both
 # ports, or one each, the ports being free to differ where a pair is not
@@ -24,46 +40,49 @@ SCREEN_SIZES = ("2.8", "2.8") if not sys.argv[1:] else (sys.argv[1], sys.argv[-1
 # Create a MightyFX object with both SP/CE ports set up for screens
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 
-# A screen refuses to be created where no panel answers, so an empty port is skipped and its message printed
+# Build a screen on each port, holding None where no screen answers so the list follows the ports
 screens = []
 for port, size in zip((mighty.spce_a, mighty.spce_b), SCREEN_SIZES):
     try:
         screens.append(SCREEN_TYPES[size](port))
-    except ValueError as e:
-        print(e)
+    except ValueError:
+        screens.append(None)
 
-# A canvas each, as the two panels may differ in size
-canvases = [image(screen.width, screen.height) for screen in screens]
+if not any(screens):
+    mighty.shutdown()
+    raise RuntimeError("No screens answered! Check one is plugged into SP/CE A or B")
 
-if not screens:
-    print("No screens answered, so there is nothing to draw to. Plug one into SP/CE A or B.")
-
-# Variable to keep track of the hue position
-t = 0
+face = font.load(VECTOR_FACE)
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
-    # Loop until the "Boot" button is pressed, and fall straight through with no screens
-    while screens and not mighty.boot_pressed():
-        for position, (screen, canvas) in enumerate(zip(screens, canvases)):
-            # Fill the canvas with the next colour in the cycle, giving each screen its
-            # own place in the cycle so the two are never showing the same colour
-            canvas.pen = color.hsv((t + position * 128) % 256, 255, 255)
-            canvas.clear()
+    print("  Port      Colour    Bars")
+    for position, screen in enumerate(screens):
+        letter = "AB"[position]
+        name, colour = PORT_COLOURS[position]
+        if screen is None:
+            print(f"  {letter:<9} no screen")
+            continue
 
-            # Count out this screen's position down the middle, one dot for the first
-            # screen that answered and two for the second
-            canvas.pen = color.black
-            centre_x, centre_y = canvas.width / 2, canvas.height / 2
-            for dot in range(position + 1):
-                y = centre_y + (dot - position / 2) * DOT_SPACING
-                canvas.shape(shape.circle(centre_x, y, DOT_RADIUS))
+        # A canvas each, as the two screens may differ in size
+        canvas = image(screen.width, screen.height)
+        canvas.antialias = image.X4
+        canvas.font = face
 
-            # Update this screen with the canvas as it now stands
-            screen.update(canvas)
+        # Fill the canvas with this port's colour, then letter it and count it out in black bars
+        canvas.pen = colour
+        canvas.clear()
+        canvas.pen = color.black
+        canvas.text(letter, MARGIN - LEFT_BEARINGS[letter] * LETTER_SIZE, LETTER_Y, font_size=LETTER_SIZE)
+        for bar in range(position + 1):
+            canvas.rectangle(MARGIN + bar * (BAR_WIDTH + MARGIN), BARS_TOP, BAR_WIDTH, BAR_HEIGHT)
 
-        # Advance the hue
-        t += HUE_SHIFT
+        screen.update(canvas)
+        print(f"  {letter:<9} {name:<9} {position + 1}")
+
+    # Nothing moves, so every screen holds its frame and this only waits
+    while not mighty.boot_pressed():
+        pass
 
 # Stop any running effects and turn off all the outputs
 finally:
