@@ -1,15 +1,21 @@
-# SPDX-FileCopyrightText: 2024 Christopher Parrott for Pimoroni Ltd
+# SPDX-FileCopyrightText: 2026 Christopher Parrott for Pimoroni Ltd
 #
 # SPDX-License-Identifier: MIT
+
+import gc
+import time
 
 from audio import WavPlayer
 from machine import ADC, Pin
 from pimoroni_i2c import PimoroniI2C
 
 from picofx import PWMLED, RGBLED
+from sensor import build_sensor
 
 
 class TinyFX:
+    """The Tiny FX board, with its six mono outputs, RGB output, sensor connector and audio."""
+
     OUT_PINS = (3, 2, 4, 5, 8, 9)
     RGB_PINS = (13, 14, 15)
 
@@ -22,37 +28,107 @@ class TinyFX:
     AMP_EN_PIN = 21
 
     USER_SW_PIN = 22
+
+    # How long after a press its own contact bounce is ignored for
+    BOOT_DEBOUNCE_MS = 40
+
     SENSOR_PIN = 26
+
+    # The infrared receiver decodes on a state machine of its own, taken from PIO 1
+    # so the I2S audio every board builds by default keeps PIO 0 to itself
+    SENSOR_PIO = 1
+    SENSOR_SM = 3
     V_SENSE_PIN = 28
 
     V_SENSE_GAIN = 2
     V_SENSE_DIODE_CORRECTION = 0.3
 
-    OUTPUT_GAMMA = 2.8
-    RGB_GAMMA = 2.2
+    OUTPUT_GAMMA = 2.8      # Even steps of brightness, chosen by eye on a slow fade
+    RGB_GAMMA = 2.2         # sRGB, for even hues, chosen by eye on a rainbow
 
-    def __init__(self, init_i2c=True, i2c_freq=100000, init_wav=True, wav_root="/"):
+    def __init__(self, init_i2c=True, i2c_freq=100000, init_wav=True, wav_root="/", sensor=None):
+        # What a build claims starts empty, so one that raises partway hands back what it
+        # took before the error reaches the caller. Left to the collector, the boot button's
+        # handler would hold the board, and with it the receiver's state machine
+        self.__switch = None
+        self.__sensor = None
+        self.__wav = None
+
+        try:
+            self.__build(init_i2c, i2c_freq, init_wav, wav_root, sensor)
+        except BaseException:
+            self.__release()
+            raise
+
+    def __build(self, init_i2c, i2c_freq, init_wav, wav_root, sensor):
         # Set up the mono and RGB LED outputs
         self.outputs = [PWMLED(out, gamma=self.OUTPUT_GAMMA) for out in self.OUT_PINS]
         self.rgb = RGBLED(*self.RGB_PINS, invert=False, gamma=self.RGB_GAMMA)
 
         # Set up the i2c for Qw/st, if the user wants
+        self.__i2c = None
         if init_i2c:
-            self.i2c = PimoroniI2C(self.I2C_SDA_PIN, self.I2C_SCL_PIN, i2c_freq)
+            self.__i2c = PimoroniI2C(self.I2C_SDA_PIN, self.I2C_SCL_PIN, i2c_freq)
 
-        # Set up the user switch
+        # Set up the user switch. A press is caught by interrupt as well as read as
+        # a level, so a tap inside a long frame is not missed by a program that only
+        # looks between them
         self.__switch = Pin(self.USER_SW_PIN, Pin.IN, Pin.PULL_UP)
+        self.__taps = 0
+        self.__tapped_at = 0
+        self.__switch.irq(trigger=Pin.IRQ_FALLING, handler=self.__switch_pressed)
 
         # Set up the internal voltage sensor
         self.__v_sense = ADC(Pin(self.V_SENSE_PIN))
 
+        # Set up whatever the sensor connector was declared as
+        self.__sensor = build_sensor(sensor, self.SENSOR_PIN, self.SENSOR_PIO, self.SENSOR_SM)
+
         # Set up the wav (and tone) player, if the user wants
-        self.wav = None
         if init_wav:
-            self.wav = WavPlayer(0, self.I2S_BCLK_PIN, self.I2S_LRCLK_PIN, self.I2S_DATA_PIN, self.AMP_EN_PIN, root=wav_root)
+            self.__wav = WavPlayer(0, self.I2S_BCLK_PIN, self.I2S_LRCLK_PIN, self.I2S_DATA_PIN, self.AMP_EN_PIN,
+                                   root=wav_root, ibuf_ms=100)
+
+    @property
+    def sensor(self):
+        """What the sensor connector was declared as, or why there is nothing to hand back."""
+        if self.__sensor is None:
+            raise RuntimeError("sensor is only accessible if the board was created with sensor=ANALOG, sensor=PIR or sensor=IR")
+
+        return self.__sensor
+
+    @property
+    def i2c(self):
+        if self.__i2c is None:
+            raise RuntimeError("i2c is only accessible if the board was created with init_i2c=True")
+        return self.__i2c
+
+    @property
+    def wav(self):
+        if self.__wav is None:
+            raise RuntimeError("wav is only accessible if the board was created with init_wav=True")
+        return self.__wav
 
     def boot_pressed(self):
         return self.__switch.value() == 0
+
+    def boot_taps(self):
+        """
+        How many times the button has been pressed since this was last asked. Caught by
+        interrupt, so a tap inside one long frame counts where boot_pressed() would miss it.
+        """
+        taken = self.__taps
+        self.__taps = 0
+        return taken
+
+    def __switch_pressed(self, _pin):
+        # Contacts bounce, and each bounce is another falling edge. Anything inside
+        # the window is the same press, which matters where a caller reads two
+        # presses in a row as a double
+        now = time.ticks_ms()
+        if time.ticks_diff(now, self.__tapped_at) > self.BOOT_DEBOUNCE_MS:
+            self.__tapped_at = now
+            self.__taps += 1
 
     def read_voltage(self, samples=1):
         val = 0
@@ -90,9 +166,25 @@ class TinyFX:
         for out in self.outputs:
             out.off()
 
-        self.rgb.set_rgb(0, 0, 0)
+        self.rgb.off()
 
     def shutdown(self):
         self.clear()
-        if self.wav:
-            self.wav.deinit()
+        self.__release()
+
+    def __release(self):
+        # Hands back what a build claimed, and runs over a build that stopped partway
+
+        # The handler holds this board, so detached, a board left behind can be collected
+        if self.__switch is not None:
+            self.__switch.irq(handler=None)
+
+        # A receiver hands its state machine and PIO program back as it is collected,
+        # so stop it, drop it and collect now: a board built after this takes the same
+        # slot, where a held one refuses the next receiver its PIO
+        if hasattr(self.__sensor, "stop"):
+            self.__sensor.stop()
+            self.__sensor = None
+            gc.collect()
+        if self.__wav:
+            self.__wav.deinit()

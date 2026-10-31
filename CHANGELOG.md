@@ -21,6 +21,18 @@
 * A setter given too many values says how many it was given
 * package.json lists every module, and the package includes the licence
 
+**Tiny FX**
+
+* Breaking: `i2c` and `wav` raise when the board was created without them, where `wav` was None and `i2c` was missing
+* Built on Pimoroni's MicroPython `fx-1.29.0`, with the interpreter's hottest code and the float routines in SRAM
+* Add `sensor=`, taking `ANALOG`, `PIR` or `IR` from the new `sensor` module, and `sensor` handing back what it built
+* Add `boot_taps()`, counting presses caught by interrupt so a quick tap is not missed
+* Add the `timing` module, with `Pacer` holding a loop to a rate and `Roller` saying when something is next due
+* The WAV player fades tones and 16-bit WAVs in and out, resumes from `position()`, and turns the amplifier off while silent
+* The multi sensor stick's accelerometer and the QwSTPad are frozen into the firmware
+* A board that fails partway through being built hands back what it had claimed
+* The libraries and examples zips attach to a GitHub release
+
 1.1.2
 -----
 
