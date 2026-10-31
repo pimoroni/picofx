@@ -8,7 +8,7 @@ For this you will need a Qw/ST cable. Be sure to disconnect / cut the
 red power wire before proceeding. This avoids potential damage to your
 devices, caused by one board trying to power the other.
 
-When ready, connect the Qw/ST cable from your Tiny's port to the Qw/ST port
+When ready, connect the Qw/ST cable from your Tiny FX's port to the Qw/ST port
 on your I2C host board. Finally, save this program to your Tiny FX as main.py
 with a unique address and press reset to set it running.
 
@@ -19,7 +19,8 @@ Refer to the Tiny FX Host example for details of how to control your Tiny FX Tar
 """
 
 # Constants
-ADDRESS = 0x43                          # The I2C address to use for the target device
+ADDRESS = 68                            # The I2C address to use for the target device, and the
+                                        # first of the run the multi board example expects
 COLOUR = 255, 255, 255                  # The colour (as r, g, b) to set the RGB LED to when powering up
 
 # Variables
@@ -40,4 +41,4 @@ try:
 # End the program by shutting down the board
 finally:
     tiny.shutdown()
-    target.shutdown()
+    target.deinit()

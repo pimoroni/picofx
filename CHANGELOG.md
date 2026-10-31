@@ -32,6 +32,11 @@
 * The multi sensor stick's accelerometer and the QwSTPad are frozen into the firmware
 * A board that fails partway through being built hands back what it had claimed
 * The libraries and examples zips attach to a GitHub release
+* The examples move into `examples/python/`
+* The examples using the sensor connector take what it holds from `sensor=`
+* The sensor and voltage meters and the sensor wave keep their rate with `Pacer`
+* The examples gain PelicanCrossingFX, SweepFX with and without a trail, a WAV player, counting taps, and light, weather and spirit level readings from Qw/ST sensors
+* Fixed the I2C target example raising as it ends, and answering at an address the multi board example does not look for
 
 1.1.2
 -----
