@@ -17,6 +17,8 @@ LOUPE_TALL = 40
 LOUPE_ZOOM = 2
 LOUPE_PAD = 3
 TAG_FACE = font.winds
+BACKGROUND = color.navy     # Behind the list
+TEXT_COLOUR = color.white   # The list, the box round the enlargement, and its tag
 
 fonts = sorted(((name, getattr(font, name)) for name in dir(font)),
                key=lambda pair: (pair[1].height, pair[0]))
@@ -49,9 +51,9 @@ def draw(canvas, elapsed):
         LOUPE_INSIDE = rect(LOUPE_BOX.x + LOUPE_PAD, LOUPE_BOX.y + LOUPE_PAD,
                             LOUPE_WIDE * LOUPE_ZOOM, LOUPE_TALL * LOUPE_ZOOM)
 
-    canvas.pen = color.navy
+    canvas.pen = BACKGROUND
     canvas.clear()
-    canvas.pen = color.white
+    canvas.pen = TEXT_COLOUR
 
     y = MARGIN + int(scroll_y)
     for name, face in fonts:
@@ -67,7 +69,7 @@ def draw(canvas, elapsed):
             due = now + HOLD_MS
 
     lifted.blit(canvas, LOUPE_SOURCE, LOUPE_SOURCE)
-    canvas.pen = color.white
+    canvas.pen = TEXT_COLOUR
     canvas.rectangle(LOUPE_BOX.x, LOUPE_BOX.y, LOUPE_BOX.w, LOUPE_BOX.h)
     canvas.blit(lifted, LOUPE_SOURCE, LOUPE_INSIDE)
 

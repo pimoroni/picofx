@@ -13,6 +13,7 @@ Section: Animation
 NUMBER_OF_STARS = 50
 TRAVEL_SPEED = 1.2
 STAR_GROWTH = 0.12
+STAR_LIMIT = 5
 
 # The canvas's size and centre, and the stars, set on the first call
 width = height = centre_x = centre_y = None
@@ -43,7 +44,7 @@ def draw(canvas, _elapsed):
         s.x *= TRAVEL_SPEED
         s.y *= TRAVEL_SPEED
 
-        if s.x <= -centre_x or s.x >= centre_x or s.y <= -centre_y or s.y >= centre_y or s.size >= 5:
+        if s.x <= -centre_x or s.x >= centre_x or s.y <= -centre_y or s.y >= centre_y or s.size >= STAR_LIMIT:
             s = RandomStar()
 
         s.size += STAR_GROWTH

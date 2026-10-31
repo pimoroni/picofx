@@ -31,14 +31,16 @@ BEZEL = 8
 MARGIN = 6
 SEPARATOR = 14
 ANTIALIAS = image.X2
-CELL_H = 96
+CARD_ASPECT = 2.28                      # How many times taller a card is than wide
 
 # The canvas this drawing expects, a 2.8" screen at rotation=90. The module body cannot see
 # the canvas, and the layout below is built from it, so it is stated and checked on the first call
 WIDTH, HEIGHT = 320, 240
 
+# Six cards and two colons, which is what a clock is, the cards as wide as the panel allows
 FLAPS = 6
 CELL_W = (WIDTH - MARGIN * 2 - SEPARATOR * 2 - GAP * (FLAPS + 1)) // FLAPS
+CELL_H = round(CELL_W * CARD_ASPECT)
 TOP = (HEIGHT - CELL_H) // 2
 HALF = CELL_H // 2
 

@@ -11,9 +11,10 @@ Section: Animation
 # Entry: screenA rotation=90 offset=160|120 tile=mirror bg=F2ECDE: graphics file=kaleidoscope.py width=160 height=120
 
 # Constants
-FRAMES = 48              # Frames in a whole turn, and so how smoothly it turns
-BEADS = 44               # Pieces of colour in the circle
-HOLD = 2                 # Calls each frame is shown for, which sets the pace
+FRAMES = 48                 # Frames in a whole turn, and so how smoothly it turns
+BEADS = 44                  # Pieces of colour in the circle
+BEAD_SIZES = (0.025, 0.1)   # The smallest and largest bead, as fractions of the circle's radius
+HOLD = 2                    # Calls each frame is shown for, which sets the pace
 ANTIALIAS = image.X4
 
 BACKGROUND = color.rgb(242, 236, 222)
@@ -39,7 +40,7 @@ STRING = []
 for _ in range(BEADS):
     STRING.append((CIRCLE * math.sqrt(random.random()),
                    random.uniform(0, 2 * math.pi),
-                   random.uniform(CIRCLE * 0.025, CIRCLE * 0.1),
+                   random.uniform(CIRCLE * BEAD_SIZES[0], CIRCLE * BEAD_SIZES[1]),
                    random.choice(JEWEL_COLOURS),
                    random.choice(JEWELS),
                    random.uniform(0, 360)))

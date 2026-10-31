@@ -15,11 +15,10 @@ BACKGROUND = color.black
 
 ORDER = (1, 2, 3, 4, 5, 6, 7, 8, 9, 0)
 DEPTH_SCALE = 0.984
-SHEET_W = 226
-SHEET_H = 304
+SHEET_INSET = (7, 8)        # The front sheet's edges in from the panel's, across and down, the rest scaled from it
 CORNER = 14
 EDGE = 2
-DIGIT_H = 186
+DIGIT_FILL = 0.612          # How much of the front sheet's height its digit is drawn
 LIT = 255
 GHOST = 20
 REF = 200
@@ -42,6 +41,8 @@ CHANGE_MS = 220
 # The canvas this drawing expects, a 2.8" screen at rotation 0, stated as the stack is
 # built before the first call
 WIDTH, HEIGHT = 240, 320
+SHEET_W, SHEET_H = WIDTH - SHEET_INSET[0] * 2, HEIGHT - SHEET_INSET[1] * 2
+DIGIT_H = round(SHEET_H * DIGIT_FILL)   # The front sheet's digit, in panel pixels
 
 SHEETS = len(ORDER)
 DEPTH_OF = {digit: depth for depth, digit in enumerate(ORDER)}

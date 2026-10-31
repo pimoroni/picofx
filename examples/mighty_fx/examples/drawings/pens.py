@@ -10,8 +10,11 @@ Section: Drawing from code
 
 # Constants for drawing
 OVERLAY = color.rgb(8, 10, 14)
+PLAIN = color.rgb(255, 150, 60)         # What the colour pen fills with
+PLATE = color.rgb(30, 34, 44)           # The opaque plate the erase pen punches through
+LABEL = color.white                     # The name under each circle
 CALM = 150
-ACROSS = 2
+ACROSS = 2                              # Cells across an upright panel, swapped with DOWN on its side
 DOWN = 3
 REACH = 0.30
 BLUR = 4
@@ -31,7 +34,9 @@ try:
 except (ValueError, OSError):
     raise RuntimeError(f"'{BACKDROP}' or '{PICTURE}' is missing or corrupt! Check both are on the drive") from None
 
-# The cell and circle sizes, set on the first call from the canvas
+# The grid, cell and circle sizes, set on the first call from the canvas
+upright = True
+columns = ACROSS
 cell = None
 radius = 0
 drawn = False
@@ -39,7 +44,7 @@ drawn = False
 
 def middle(index):
     """Find where the cell at that place in the grid centres."""
-    return (index % ACROSS + 0.5) * cell[0], (index // ACROSS + 0.5) * cell[1]
+    return (index % columns + 0.5) * cell[0], (index // columns + 0.5) * cell[1]
 
 
 def placed(index, box):
@@ -49,8 +54,13 @@ def placed(index, box):
 
 def backdrop(canvas):
     """Cover the panel in calmed detail, for the blur to soften and the erase to reveal."""
-    canvas.pen = brush.image(backdrop_art,
-                             mat3().translate(canvas.width, canvas.height).scale(1, -1).rotate(90))
+    # The landscape art turned a quarter and flipped to cover an upright panel unstretched, or turned
+    # half round on a panel on its side. Either way its bright pulse sits behind the pens
+    if upright:
+        placing = mat3().translate(canvas.width, canvas.height).scale(1, -1).rotate(90)
+    else:
+        placing = mat3().translate(canvas.width, canvas.height).rotate(180)
+    canvas.pen = brush.image(backdrop_art, placing)
     canvas.rectangle(0, 0, canvas.width, canvas.height)
 
     canvas.pen = OVERLAY.with_alpha(CALM)
@@ -58,7 +68,7 @@ def backdrop(canvas):
 
 
 def draw(canvas, _elapsed):
-    global cell, radius, drawn
+    global upright, columns, cell, radius, drawn
     # Nothing moves, so the pens are drawn once and the canvas keeps them
     if drawn:
         return
@@ -67,13 +77,16 @@ def draw(canvas, _elapsed):
     canvas.antialias = image.X4
     canvas.font = LABEL_FACE
 
-    cell = canvas.width / ACROSS, canvas.height / DOWN
+    # The grid turns with the panel, so a cell keeps its shape on its side
+    upright = canvas.width <= canvas.height
+    columns, rows = (ACROSS, DOWN) if upright else (DOWN, ACROSS)
+    cell = canvas.width / columns, canvas.height / rows
     radius = min(cell) * REACH
     box = mat3().translate(-radius, -radius).scale(radius * 2, radius * 2)
     plate = image(round(cell[0]), round(cell[1]))
 
     image_at = middle(3)
-    pens = (("colour", color.rgb(255, 150, 60)),
+    pens = (("colour", PLAIN),
             ("linear", brush.gradient(brush.LINEAR, 0.0, 0.5, 1.0, 0.5, SUNSET, placed(1, box))),
             ("radial", brush.gradient(brush.RADIAL, 0.35, 0.35, 1.0, 1.0, ORB, placed(2, box))),
             ("image", brush.image(picture, mat3().translate(image_at[0] - picture.width * PAINT / 2,
@@ -89,7 +102,7 @@ def draw(canvas, _elapsed):
 
         if pen is None:
             # An opaque plate, then erase takes alpha away to cut the hole
-            plate.pen = color.rgb(30, 34, 44)
+            plate.pen = PLATE
             plate.clear()
             plate.pen = brush.erase()
             plate.shape(shape.circle(cell[0] / 2, cell[1] / 2, radius))
@@ -100,5 +113,5 @@ def draw(canvas, _elapsed):
             canvas.pen = pen
             canvas.shape(shape.circle(across, down, radius))
 
-        canvas.pen = color.white
+        canvas.pen = LABEL
         canvas.text(name, across - len(name) * 3, down + cell[1] * LABEL_DOWN)

@@ -37,8 +37,11 @@ READ_MS = 1500
 END_MS = 3000
 PROMPT = "> "
 
+# The session, a line to an entry. One opening with PROMPT is typed, every other arrives whole. A tuple
+# is a table, the character filling between its columns and then its rows, the columns spread across the
+# tube. A 2.8" tube is 40 columns wide, and a longer line wraps at a space
 SESSION = (
-    "FX-11 TIMESHARING SYSTEM  V2.4",
+    "FX-11 TIMESHARING SYSTEM V2.4",
     "48K CORE   TAPE 0 READY",
     "",
     "> LOGIN OPERATOR",
@@ -46,28 +49,30 @@ SESSION = (
     "LAST LOGIN 14 MAR 06:12",
     "",
     "> LIST SITES /ACTIVE",
-    "SITE  NAME            STATE         LOAD",
-    "01    HILLSIDE        UP             118",
-    "02    WEIR LANE       UP              94",
-    "03    CROSSGATE       STANDBY          0",
-    "04    TANNERY ROW     UP             207",
+    (" ",
+     ("SITE", "NAME", "STATE", "LOAD"),
+     ("01", "HILLSIDE", "UP", "118"),
+     ("02", "WEIR LANE", "UP", "94"),
+     ("03", "CROSSGATE", "STANDBY", "0"),
+     ("04", "TANNERY ROW", "UP", "207")),
     "4 SITES, 3 ACTIVE, LOAD 419",
     "",
     "> RUN DIAGNOSTIC 3",
-    "CHANNEL 0 ............. PASS",
-    "CHANNEL 1 ............. PASS",
-    "CHANNEL 2 ............. RETRY 2, PASS",
-    "CHANNEL 3 ............. NO CARRIER",
+    (".",
+     ("CHANNEL 0", "PASS"),
+     ("CHANNEL 1", "PASS"),
+     ("CHANNEL 2", "RETRY 2, PASS"),
+     ("CHANNEL 3", "NO CARRIER")),
     "1 FAULT LOGGED TO TAPE 0",
     "",
     "> MAIL",
     "1 MESSAGE WAITING",
     "FROM: NIGHT SHIFT",
-    "CROSSGATE STAYS ON STANDBY UNTIL",
-    "THE WEATHER CLEARS. LEAVE IT BE.",
+    "CROSSGATE STAYS ON STANDBY UNTIL THE WEATHER CLEARS. LEAVE IT BE.",
     "",
     "> LOGOUT",
-    "SESSION ENDED. 00:14 CONNECTED.",
+    "SESSION ENDED.",
+    "00:14 CONNECTED.",
 )
 
 # The canvas this drawing expects, a 2.8" screen at rotation=90, stated as the module body
@@ -108,7 +113,45 @@ FACE = rect(BORDER, BORDER, WIDTH - BORDER * 2, HEIGHT - BORDER * 2)
 CURSOR_UP = CAP_TOP - LETTERING_TOP
 CURSOR_H = CAP_END - CAP_TOP + 1
 
-CHARSET = "".join(sorted({letter for line in SESSION for letter in line} - {" "}))
+
+def gap(width, fill):
+    """A gap between two columns, a run of the fill with a space at either end where there is room."""
+    if width < 3:
+        return " " * width
+    return " " + fill * (width - 2) + " "
+
+
+def table(fill, rows):
+    """
+    Lay a table's rows out as lines across the tube, each column as wide as its widest entry.
+
+    The first column starts at the left edge and the last ends at the right, what is spare spread
+    evenly between them and the last column's padding joining the gap before it.
+    """
+    widths = [max(len(row[column]) for row in rows) for column in range(len(rows[0]))]
+    gaps = len(widths) - 1
+    spare = max(gaps, COLUMNS - sum(widths))
+    laid = []
+    for row in rows:
+        line = ""
+        for column in range(gaps):
+            between = spare // gaps + (column < spare % gaps)
+            if column == gaps - 1:
+                between += widths[gaps] - len(row[gaps])
+            line += row[column] + " " * (widths[column] - len(row[column])) + gap(between, fill)
+        laid.append(line + row[gaps])
+    return laid
+
+
+# The session as the lines the machine prints, each table laid out to this tube's width
+LINES = []
+for part in SESSION:
+    if isinstance(part, str):
+        LINES.append(part)
+    else:
+        LINES.extend(table(part[0], part[1:]))
+
+CHARSET = "".join(sorted({letter for line in LINES for letter in line} - {" "}))
 glyphs = image(CELL_W * len(CHARSET), CELL_H)
 glyphs.font = TERM_FONT
 glyphs.pen = color.transparent
@@ -136,12 +179,28 @@ def newline():
         lines.pop(0)
 
 
-def print_line(text):
-    """Print a whole line from the machine, broken where it is longer than the tube is wide."""
+def wrap():
+    """
+    Carry what does not fit of the line being written onto the lines below, as a terminal does.
+
+    It breaks at the last space that fits, or at the edge for a word longer than the tube is wide.
+    """
     global writing
-    for at in range(0, max(len(text), 1), COLUMNS):
-        writing = text[at:at + COLUMNS]
+    while len(writing) > COLUMNS:
+        space = writing.rfind(" ", 0, COLUMNS + 1)
+        cut, rest = (space, space + 1) if space > 0 else (COLUMNS, COLUMNS)
+        carried = writing[rest:]
+        writing = writing[:cut]
         newline()
+        writing = carried
+
+
+def print_line(text):
+    """Print a whole line from the machine, an empty one as a blank line."""
+    global writing
+    writing = text
+    wrap()
+    newline()
 
 
 def put(canvas, text, row):
@@ -182,7 +241,7 @@ def page(canvas, cursor_on):
         canvas.noise(GRAIN, 0)
 
 
-entry = 0                   # Which line of the session is being written
+entry = 0                   # Which of the session's lines is being written
 typed = 0                   # And how much of it has arrived, where the operator is typing it
 served = 0                  # Counts what has reached the tube, so a redraw is never missed
 due = 0                     # When the terminal is next free to write, in elapsed ms
@@ -197,25 +256,27 @@ def draw(canvas, elapsed):
 
     now = elapsed * 1000
     if now >= due:
-        if entry >= len(SESSION):
+        if entry >= len(LINES):
             del lines[:]
             writing = ""
             entry, typed, served = 0, 0, served + 1
-        elif SESSION[entry].startswith(PROMPT):
-            line = SESSION[entry]
-            typed = min(typed + CPS, len(line))
-            writing = line[:typed]
+        elif LINES[entry].startswith(PROMPT):
+            line = LINES[entry]
+            arrived = line[typed:typed + CPS]
+            typed += len(arrived)
+            writing += arrived
+            wrap()
             served += 1
             if typed == len(line):
                 newline()
                 entry, typed = entry + 1, 0
                 due = now + THINK_MS
         else:
-            print_line(SESSION[entry])
+            print_line(LINES[entry])
             entry, served = entry + 1, served + 1
-            if entry >= len(SESSION):
+            if entry >= len(LINES):
                 due = now + END_MS
-            elif SESSION[entry].startswith(PROMPT):
+            elif LINES[entry].startswith(PROMPT):
                 due = now + READ_MS
 
     # The canvas keeps the last page, so one is only drawn where something changed

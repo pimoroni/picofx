@@ -11,9 +11,11 @@ Section: Across several screens
 # Constants for drawing
 BANK = 0                            # Which bank this panel is, 0 or 1, the two lit in turn
 FLASH_MS = 500                      # How long each bank stays lit before the other takes over
-CHEVRONS = 3
-LIT = color.rgb(255, 204, 0)
-UNLIT = color.rgb(51, 51, 34)
+CHEVRONS = 3                        # How many chevrons each panel carries, one above the next
+STROKE = 0.4                        # How thick a chevron is, of its share of the panel's height
+SPAN = 1.5                          # How wide a chevron is, against that share
+LIT = color.rgb(255, 204, 0)        # A chevron switched on
+UNLIT = color.rgb(51, 51, 34)       # And switched off, still faintly there as a real lamp is
 BACKGROUND = color.black
 
 # Both states, drawn on the first call from the canvas's size
@@ -29,15 +31,17 @@ def chevrons(width, height, pen):
     picture.clear()
 
     picture.pen = pen
-    reach = width * 0.35
-    thick = height / (CHEVRONS * 4)
-    pitch = height / CHEVRONS
+    pitch = height / CHEVRONS           # Each chevron's share of the panel's height
+    thick = pitch * STROKE              # How deep each stroke is
+    reach = pitch * SPAN / 2            # How far each arm runs out from the middle
+    drop = pitch - thick                # And how far down, so the chevron fills its share
     middle = width / 2
     for index in range(CHEVRONS):
-        top = index * pitch + (pitch - reach - thick) / 2
-        picture.shape(shape.custom([vec2(middle, top), vec2(middle + reach, top + reach),
-                                    vec2(middle + reach, top + reach + thick), vec2(middle, top + thick),
-                                    vec2(middle - reach, top + reach + thick), vec2(middle - reach, top + reach)]))
+        top = index * pitch
+        # The outer point, down the right arm and back to the inner point, then out along the left
+        picture.shape(shape.custom([vec2(middle, top), vec2(middle + reach, top + drop),
+                                    vec2(middle + reach, top + drop + thick), vec2(middle, top + thick),
+                                    vec2(middle - reach, top + drop + thick), vec2(middle - reach, top + drop)]))
     return picture
 
 

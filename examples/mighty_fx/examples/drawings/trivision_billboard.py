@@ -16,6 +16,7 @@ STAGGER_MS = 200
 HOLD_MS = 3000
 SHADE_FROM = 20
 AMBIENT = 90
+BACKING = color.black               # Behind the slats, showing where one turns away from its neighbours
 
 POSTER_FILES = ("/examples/assets/billboards/landscape/lambo.png",
                 "/examples/assets/billboards/landscape/tufty.png",
@@ -70,7 +71,7 @@ def redraw(canvas, turns):
     touched = sorted({beside for slat in changed
                       for beside in (slat - 1, slat, slat + 1) if 0 <= beside < SLATS})
 
-    canvas.pen = color.black
+    canvas.pen = BACKING
     for slat in touched:
         canvas.rectangle(rect(slat * SLAT, 0, SLAT, HEIGHT))
 

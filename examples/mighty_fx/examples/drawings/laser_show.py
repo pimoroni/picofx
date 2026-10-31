@@ -10,14 +10,13 @@ Section: Animation
 # Entry: screenA rotation=90: graphics file=laser_show.py fps=8   (a 2.8" screen)
 
 # Constants for drawing
-PORTRAIT = False                                    # Whether the panel stands upright, room for two projectors and not three
-SCENE_SECONDS = 6                                   # How long each scene runs
-SWITCH_SECONDS = 1.5                                # How long the projectors stay switched as they are, within a scene
-DIM = 90                                            # How much of the last frame each frame dims away, of 255, more giving a shorter afterglow
+SCENE_SECONDS = 6                           # How long each scene runs
+SWITCH_SECONDS = 1.5                        # How long the projectors stay switched as they are, within a scene
+DIM = 90                                    # How much of the last frame each frame dims away, of 255, more giving a shorter afterglow
 # The angles in degrees each projector fires across, left, middle and right, 0 being straight up and positive
 # to the right. The outer two fire into the hall, leaning only a little towards their own wall
 ARCS = ((-15, 70), (-70, 70), (-70, 15))
-ANTIALIAS = image.X4                                # A beam is all edge
+ANTIALIAS = image.X4                        # A beam is all edge
 
 # The screens drive the panel at 12 bit, 16 levels a channel in steps of 17, so the colours sit on those levels
 GREEN = (51, 255, 68)
@@ -25,25 +24,27 @@ RED = (255, 34, 34)
 BLUE = (68, 102, 255)
 CYAN = (34, 238, 255)
 MAGENTA = (255, 51, 221)
-CORE_LIFT = 136                                     # How much paler than its colour a beam's core is, a whole number of levels
-HALO_ALPHA = 60                                     # How strong a beam's glow is, of 255
-HALL = color.black                                  # The dark the beams cross
-HOUSING = color.rgb(68, 68, 68)                     # A projector's housing
-LENS_OFF = color.rgb(34, 34, 34)                    # The lens of a projector switched off
+CORE_LIFT = 136                             # How much paler than its colour a beam's core is, a whole number of levels
+HALO_ALPHA = 60                             # How strong a beam's glow is, of 255
+HALL = color.black                          # The dark the beams cross
+HOUSING = color.rgb(68, 68, 68)             # A projector's housing
+LENS_ON = color.white                       # The lens of a projector switched on
+LENS_OFF = color.rgb(34, 34, 34)            # And switched off
 
 # Sizes, in panel pixels
-CORE_W = 1.5                                        # Across a beam's core
-HALO_W = 6                                          # And across the glow round it
-LENS = 3                                            # A projector's lens radius
-RAISED = 6                                          # How far above the panel's foot a beam starts, a projector's housing reaching down to it
+CORE_W = 1.5                                # Across a beam's core
+HALO_W = 6                                  # And across the glow round it
+LENS = 3                                    # A projector's lens radius
+RAISED = 6                                  # How far above the panel's foot a beam starts, a projector's housing reaching down to it
 
-# The canvas this drawing expects, a 2.8" screen at rotation=90, or at rotation=0 with PORTRAIT. The module
-# body cannot see the canvas, and the layout below is built from it, so it is stated and checked on the first call
-WIDTH, HEIGHT = (240, 320) if PORTRAIT else (320, 240)
+# The canvas this drawing expects, a 2.8" screen at rotation=90. The module body cannot see the
+# canvas, and the layout below is built from it, so it is stated and checked on the first call
+WIDTH, HEIGHT = 320, 240
+NARROW = WIDTH <= HEIGHT            # Whether the hall is too narrow for the middle projector, being upright or square
 
-# The projectors along the foot of the stage, left, middle and right, the middle one only in landscape
+# The projectors along the foot of the stage, left, middle and right, the middle one only in a wide hall
 PROJECTORS = ((WIDTH * 0.1, HEIGHT - RAISED), (WIDTH * 0.5, HEIGHT - RAISED), (WIDTH * 0.9, HEIGHT - RAISED))
-FITTED = (0, 2) if PORTRAIT else (0, 1, 2)
+FITTED = (0, 2) if NARROW else (0, 1, 2)
 REACH = math.sqrt(WIDTH ** 2 + HEIGHT ** 2)         # Further than any beam can need, for an edge it never meets
 hall = rect(0, 0, WIDTH, HEIGHT)
 DIM_PEN = HALL.with_alpha(DIM)
@@ -139,12 +140,12 @@ def steps(canvas, seconds, on):
             beam(canvas, projector, aimed(projector, aim), STEP_PENS[projector])
 
 
-# Each scene with the projectors it switches on in turn, a set every SWITCH_SECONDS, in landscape and then in portrait
+# Each scene with the projectors it switches on in turn, a set every SWITCH_SECONDS, in a wide hall and then a narrow one
 RUNNING_ORDER = ((fans, ((1,), (0, 2), (0, 1, 2), (0, 1, 2)), ((0,), (2,), (0, 2), (0, 2))),
                  (scanners, ((0,), (2,), (0, 2), (0, 1, 2)), ((0,), (2,), (0, 2), (0, 2))),
                  (tunnel, ((0, 1, 2),), ((0, 2),)),
                  (steps, ((1,), (0, 2), (0, 1, 2), (1,)), ((0, 2), (2,), (0,), (0, 2))))
-SCENES = tuple((scene, portrait if PORTRAIT else landscape) for scene, landscape, portrait in RUNNING_ORDER)
+SCENES = tuple((scene, narrow if NARROW else wide) for scene, wide, narrow in RUNNING_ORDER)
 CYCLE = SCENE_SECONDS * len(SCENES)            # Seconds before the show repeats
 
 
@@ -161,7 +162,7 @@ def draw_show(canvas, seconds):
     for projector in FITTED:
         canvas.pen = HOUSING
         canvas.shape(HOUSINGS[projector])
-        canvas.pen = color.white if projector in on else LENS_OFF
+        canvas.pen = LENS_ON if projector in on else LENS_OFF
         canvas.shape(LENSES[projector])
 
 
@@ -173,7 +174,7 @@ def draw(canvas, elapsed):
     if not started:
         if (canvas.width, canvas.height) != (WIDTH, HEIGHT):
             raise ValueError(f'this drawing is laid out for {WIDTH}x{HEIGHT}, a 2.8" screen at '
-                             f"rotation={0 if PORTRAIT else 90}, and was given {canvas.width}x{canvas.height}")
+                             f"rotation=90, and was given {canvas.width}x{canvas.height}")
         canvas.antialias = ANTIALIAS
         canvas.pen = HALL
         canvas.clear()

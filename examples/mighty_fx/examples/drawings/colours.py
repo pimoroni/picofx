@@ -16,7 +16,7 @@ LIGHTNESS = 165                         # The lightness oklch holds every hue at
 CHROMA = 110
 BASE_HUE = 25                           # The hue the harmony and tones rows start from
 STEPS = 6                               # Swatches in the tones and ramp rows
-STRIP = 26                              # How tall a strip of swatches is
+STRIP = 26                              # How tall a strip of swatches is on a panel with room for every row
 GAP = 3                                 # Between a strip and the next heading
 LABEL_FACE = font.winds                 # The narrowest ROM pixel face
 MARGIN = 4
@@ -31,6 +31,12 @@ RAMP = ((0.0, color.rgb(255, 90, 40)), (0.5, color.rgb(250, 210, 90)),
 base = color.oklch(LIGHTNESS, CHROMA, BASE_HUE)
 drawn = False
 
+# Set on the first call from the canvas. A panel under 320 tall, a 1.54" or a 2.8" on its side, is too
+# short for every row, so it leaves out tones, ramp stepping through colours too, and its strips are a
+# little shallower
+EVERY_ROW = True
+STRIP_H = STRIP
+
 
 def heading(canvas, text, down):
     """Draw a line naming the strip under it, returning where that strip starts."""
@@ -44,17 +50,20 @@ def strip(canvas, colours, down):
     wide = (canvas.width - MARGIN * 2) / len(colours)
     for index, swatch in enumerate(colours):
         canvas.pen = swatch
-        canvas.rectangle(round(MARGIN + index * wide), round(down), round(wide) + 1, STRIP)
+        canvas.rectangle(round(MARGIN + index * wide), round(down), round(wide) + 1, STRIP_H)
 
-    return down + STRIP + GAP
+    return down + STRIP_H + GAP
 
 
 def draw(canvas, _elapsed):
-    global drawn
+    global drawn, EVERY_ROW, STRIP_H
     # Nothing moves, so the page is drawn once and the canvas keeps it
     if drawn:
         return
     drawn = True
+
+    EVERY_ROW = canvas.height >= 320
+    STRIP_H = STRIP if EVERY_ROW else STRIP - 6
 
     canvas.font = LABEL_FACE
     canvas.pen = BACKGROUND
@@ -71,8 +80,9 @@ def draw(canvas, _elapsed):
     down = strip(canvas, color.harmony(base, color.TRIAD) + color.harmony(base, color.COMPLEMENT)[1:],
                  down)
 
-    down = heading(canvas, f"tones: one hue in {STEPS} steps", down)
-    down = strip(canvas, color.tones(base, STEPS), down)
+    if EVERY_ROW:
+        down = heading(canvas, f"tones: one hue in {STEPS} steps", down)
+        down = strip(canvas, color.tones(base, STEPS), down)
 
     down = heading(canvas, f"ramp: {STEPS} steps through colours you name", down)
     down = strip(canvas, color.ramp(RAMP, STEPS), down)
@@ -85,10 +95,10 @@ def draw(canvas, _elapsed):
     for index, background in enumerate(READ_ON):
         across = MARGIN + index * wide
         canvas.pen = background
-        canvas.rectangle(round(across), round(down), round(wide) + 1, STRIP + LABEL_FACE.height)
+        canvas.rectangle(round(across), round(down), round(wide) + 1, STRIP_H + LABEL_FACE.height)
 
         legible = color.readable_on(background, background)
         canvas.pen = legible
         canvas.text("readable", round(across + 3), round(down + 3))
         canvas.text(f"{color.contrast(background, legible):.1f} to 1",
-                    round(across + 3), round(down + STRIP - 4))
+                    round(across + 3), round(down + STRIP_H - 4))

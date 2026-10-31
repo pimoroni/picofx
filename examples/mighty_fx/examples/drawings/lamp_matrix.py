@@ -16,9 +16,8 @@ LED_COLOURS = ((255, 34, 17), (255, 136, 0), (51, 255, 68),
                (34, 85, 255), (204, 68, 255))       # The colours an LED lamp can show, any lamp any of them
 CUE_SECONDS = 6                                     # How long each lighting cue runs
 STEP_SECONDS = 0.2                                  # How long a cue holds each step
+SPARKLES = 6                                        # Lamps the sparkle cue lights at a time
 
-COLUMNS = 7
-ROWS = 5
 PITCH = 44                                          # Panel pixels from one lamp to the next
 RADIUS = 21                                         # A reflector cup's radius
 EMITTER = 0.32                                      # How far an outermost lamp's emitter shows off its cup's middle, of the radius
@@ -44,6 +43,9 @@ RINGS = (90, 70, 62, 60, 60, 62, 66, 72, 82, 96)
 # The canvas this drawing expects, a 2.8" screen at rotation=90. The module body cannot see
 # the canvas, and the layout below is built from it, so it is stated and checked on the first call
 WIDTH, HEIGHT = 320, 240
+
+# As many lamps across and down as fit, 7 by 5 at a PITCH of 44
+COLUMNS, ROWS = WIDTH // PITCH, HEIGHT // PITCH
 
 LEFT = (WIDTH - COLUMNS * PITCH) // 2 + PITCH // 2
 TOP = (HEIGHT - ROWS * PITCH) // 2 + PITCH // 2
@@ -223,7 +225,7 @@ def wave(step):
 
 def sparkle(_step):
     """Choose a handful of lamps at random, each in a colour at random."""
-    return {random.randrange(COLUMNS * ROWS): random.randrange(len(LED_COLOURS)) + 1 for _ in range(6)}
+    return {random.randrange(COLUMNS * ROWS): random.randrange(len(LED_COLOURS)) + 1 for _ in range(SPARKLES)}
 
 
 def checker(step):

@@ -17,6 +17,7 @@ LETTERING_TALL = 0.309
 LETTERING_DOWN = 0.697
 BODY_FACE = font.winds
 REDUCE = 2
+ROW_INSET = 4                           # Nudges the lamps if the panel and the connectors do not line up
 
 TEXT_COLOUR = color.black
 BACKGROUND = color.white
@@ -85,7 +86,6 @@ LAMP_Y = NUMBER_TOP - LAMP_R - 1
 HEADING_TOP = LAMP_Y - LAMP_R - BODY_FACE.height - 2
 STATUS_DOWN = 1
 BULLET_DOWN = 5
-ROW_INSET = 4
 CELL_W = (WIDTH - ROW_INSET * 2) / len(STAGES)
 
 CONSOLE_AT = (1, HEADING_TOP - CONSOLE_PAD)

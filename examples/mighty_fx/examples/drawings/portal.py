@@ -11,64 +11,64 @@ Section: Animation
 # Entry: screenA rotation=90: graphics file=portal.py fps=6   (a 2.8" screen)
 
 # Constants for drawing
-STONES = True                                       # Whether the portal is set into a stone wall
-PORTRAIT = False                                    # Whether the panel stands upright, which turns the stones and the default shape with it
-RIM_WIDTH = None                                    # Panel pixels across the rim, None for as large as fits
-RIM_HEIGHT = None                                   # And down it
-DIM = 60                                            # How much of the last frame each frame dims away, of 255, more giving shorter streaks
+STONES = True                       # Whether the portal is set into a stone wall
+RIM_WIDTH = None                    # Panel pixels across the rim, None for as large as fits
+RIM_HEIGHT = None                   # And down it
+DIM = 60                            # How much of the last frame each frame dims away, of 255, more giving shorter streaks
 ANTIALIAS = image.X4
 
 # The portal's movement
-ARMS = 5                                            # Glowing arms winding in
-TURNS = 0.8                                         # How far round an arm winds from the rim to the opening
-SPIN = 0.9                                          # How fast the arms turn, in radians a second
-MOTES = 40                                          # Motes of light falling in across the arms
-FALL = 0.4                                          # How fast a mote falls, of an arm's winding a second
-MOTE_CURL = 0.4                                     # How far round a mote winds as it falls, of an arm's winding, less falling in more directly
-OPENING = 0.34                                      # The dark opening's size, of the rim's
+ARMS = 5                            # Glowing arms winding in
+TURNS = 0.8                         # How far round an arm winds from the rim to the opening
+SPIN = 0.9                          # How fast the arms turn, in radians a second
+MOTES = 40                          # Motes of light falling in across the arms
+FALL = 0.4                          # How fast a mote falls, of an arm's winding a second
+MOTE_CURL = 0.4                     # How far round a mote winds as it falls, of an arm's winding, less falling in more directly
+OPENING = 0.34                      # The dark opening's size, of the rim's
 
 # Sizes, in panel pixels
-GLOW_W = 11                                         # Across an arm's glow at the rim, narrowing towards the opening
-CORE_W = 2                                          # Across its bright core
-RIM_W = 3                                           # Across the rim's bright line
-MOTE_W = 2.5                                        # Across a mote's streak at the rim
-BAND = 20                                           # How deep the ring of stones round the rim is
-COURSE = 22                                         # How tall a course of stones in the wall is
+GLOW_W = 11                         # Across an arm's glow at the rim, narrowing towards the opening
+CORE_W = 2                          # Across its bright core
+RIM_W = 3                           # Across the rim's bright line
+MOTE_W = 2.5                        # Across a mote's streak at the rim
+BAND = 20                           # How deep the ring of stones round the rim is
+COURSE = 22                         # How tall a course of stones in the wall is
 
 # Detail
-POINTS = 30                                         # Steps along an arm from the rim to the opening
-LENGTHS = 5                                         # Lengths an arm is drawn in, a colour each, which POINTS must divide into
-RIM_STEPS = 48                                      # Points round the rim
-RIM_SHAKE = 0.04                                    # How far in a point on the rim strays each frame, of the rim's size
-RING_STONES = 22                                    # Stones in the ring round the rim
+POINTS = 30                         # Steps along an arm from the rim to the opening
+LENGTHS = 5                         # Lengths an arm is drawn in, a colour each, which POINTS must divide into
+RIM_STEPS = 48                      # Points round the rim
+RIM_SHAKE = 0.04                    # How far in a point on the rim strays each frame, of the rim's size
+RING_STONES = 22                    # Stones in the ring round the rim
 
 # The screens drive the panel at 12 bit, 16 levels a channel in steps of 17, so the colours sit on those levels.
-# From the rim in, an arm's colours dim towards black, and a mote's pale to white and go out at the opening
+# From the rim in, an arm's colours dim towards the opening's dark, and a mote's pale to white and go out there
+VOID = (0, 0, 0)                    # The opening's dark, which the arms fall into and each frame dims back to
 ARM_COLOURS = ((1.0, (102, 51, 255)), (0.65, (204, 68, 255)), (0.4, (255, 170, 238)),
-               (0.2, (119, 34, 136)), (0.0, (0, 0, 0)))
+               (0.2, (119, 34, 136)), (0.0, VOID))
 MOTE_COLOURS = ((1.0, (102, 51, 255)), (0.6, (204, 68, 255)), (0.35, (255, 170, 238)),
-                (0.18, (255, 255, 255)), (0.0, (0, 0, 0)))
-GLOW_ALPHA = 70                                     # How strong an arm's glow is, of 255
+                (0.18, (255, 255, 255)), (0.0, VOID))
+GLOW_ALPHA = 70                     # How strong an arm's glow is, of 255
 RIM_LINE = color.rgb(204, 153, 255)
 RIM_GLOW = color.rgb(153, 68, 255).with_alpha(90)
 STONE_SHADES = ((102, 102, 102), (119, 119, 119), (136, 136, 136), (153, 153, 153))
 MORTAR = color.rgb(34, 34, 34)
-SPILL = (153, 68, 255)                              # The portal's light falling on the stones nearest it
+BACKGROUND = color.black            # Behind the portal where there is no stone wall
+SPILL = (153, 68, 255)              # The portal's light falling on the stones nearest it
 
-# The canvas this drawing expects, a 2.8" screen upright or at rotation=90. The module body cannot see
-# the canvas, and the layout below is built from it, so it is stated and checked on the first call
-WIDTH, HEIGHT = (240, 320) if PORTRAIT else (320, 240)
+# The canvas this drawing expects, a 2.8" screen at rotation=90. The module body cannot see the
+# canvas, and the layout below is built from it, so it is stated and checked on the first call
+WIDTH, HEIGHT = 320, 240
 canvas = None                       # The canvas draw() is given, kept for the functions below
 MIDDLE_X, MIDDLE_Y = WIDTH / 2, HEIGHT / 2
 
-# By default the rim is as large as fits inside the stones, or the panel's edge without them. Upright it
-# takes the panel's shape, and on its side it is round
+# By default the rim is round and as large as fits the panel's shorter side, inside the stones or the
+# panel's edge without them, so it is the same size whichever way the panel is turned
 MARGIN = BAND + 2 if STONES else 2
-DEFAULT_HEIGHT = HEIGHT - 2 * MARGIN
-DEFAULT_WIDTH = DEFAULT_HEIGHT * WIDTH / HEIGHT if PORTRAIT else DEFAULT_HEIGHT
-OUTER = (RIM_HEIGHT or DEFAULT_HEIGHT) / 2
+DEFAULT_SIZE = min(WIDTH, HEIGHT) - 2 * MARGIN
+OUTER = (RIM_HEIGHT or DEFAULT_SIZE) / 2
 INNER = OUTER * OPENING
-SQUASH = (RIM_WIDTH or DEFAULT_WIDTH) / 2 / OUTER   # The rim's width against its height
+SQUASH = (RIM_WIDTH or DEFAULT_SIZE) / 2 / OUTER    # The rim's width against its height
 BETWEEN_ARMS = 2 * math.pi / ARMS
 
 
@@ -115,7 +115,7 @@ RIM_DIRECTIONS = [(math.cos(2 * math.pi * step / RIM_STEPS), math.sin(2 * math.p
 RIM_LINE_OUTER = OUTER - RIM_W * 1.5                # Where the rim's line sits at its widest, its glow reaching the edge
 OPEN_PATH = shape.ALIGN_CENTER | shape.PATH_OPEN
 OPENING_SHAPE = shape.ellipse(MIDDLE_X, MIDDLE_Y, OUTER * SQUASH, OUTER)
-DIM_PEN = color.black.with_alpha(DIM)
+DIM_PEN = color.rgb(*VOID).with_alpha(DIM)
 
 
 def draw_arm(spun):
@@ -263,8 +263,8 @@ def draw(given, elapsed):
     global canvas, last
     if last is None:
         if (given.width, given.height) != (WIDTH, HEIGHT):
-            raise ValueError(f'this drawing is laid out for {WIDTH}x{HEIGHT}, a 2.8" screen '
-                             f"{'upright' if PORTRAIT else 'at rotation=90'}, and was given {given.width}x{given.height}")
+            raise ValueError(f'this drawing is laid out for {WIDTH}x{HEIGHT}, a 2.8" screen at '
+                             f"rotation=90, and was given {given.width}x{given.height}")
         canvas = given
         canvas.antialias = ANTIALIAS
 
@@ -272,9 +272,9 @@ def draw(given, elapsed):
         if STONES:
             build_wall()
         else:
-            canvas.pen = color.black
+            canvas.pen = BACKGROUND
             canvas.clear()
-        canvas.pen = color.black
+        canvas.pen = color.rgb(*VOID)
         canvas.shape(OPENING_SHAPE)
         last = elapsed
 

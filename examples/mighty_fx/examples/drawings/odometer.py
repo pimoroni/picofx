@@ -86,25 +86,25 @@ def digit_rows(size):
     return filled[0], filled[-1]
 
 
-def printed(ink):
+def printed(colour):
     """Draw a drum's ten digits flat, one above the next, on a strip as long as the drum is round."""
     strip = image(DRUM_W, STRIP_H)
     strip.antialias = ANTIALIAS
     strip.pen = color.rgb(*FACE)
     strip.clear()
     strip.font = digit_font
-    strip.pen = ink
+    strip.pen = colour
     for digit in range(10):
         wide = strip.measure_text(str(digit), font_size=SIZE)[0]
-        strip.text(str(digit), (DRUM_W - wide) / 2, digit * CELL_H + (CELL_H - DIGIT_INK) / 2 - INK_TOP, SIZE)
+        strip.text(str(digit), (DRUM_W - wide) / 2, digit * CELL_H + (CELL_H - DIGIT_TALL) / 2 - LETTERING_TOP, SIZE)
     return strip
 
 
 # The digits are sized on their drawn height, a face's size being its em box
 top, bottom = digit_rows(100)
 SIZE = 100 * CELL_H * DIGIT_FILL / (bottom - top + 1)
-INK_TOP, ink_bottom = digit_rows(SIZE)
-DIGIT_INK = ink_bottom - INK_TOP + 1
+LETTERING_TOP, lettering_bottom = digit_rows(SIZE)
+DIGIT_TALL = lettering_bottom - LETTERING_TOP + 1
 strips = [printed(DIGIT)] * (DRUMS - 1) + [printed(LAST_DIGIT)]
 
 # Where on its strip each row of a drum looks, as an arc's length from the drum's middle. A row at a

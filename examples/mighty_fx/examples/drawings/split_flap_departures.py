@@ -38,20 +38,23 @@ ANTIALIAS = image.X2
 
 COLUMNS = (("TIME", 4, 2, DIGITS), ("DEST", 6, 0, ALPHA), ("GATE", 3, 0, BOTH))
 
-PAGES = (
-    (("11:32", "LONDON", "A42"), ("11:55", "TOKYO", "B32"), ("12:08", "PARIS", "C75"),
-     ("12:24", "MADRID", "A06"), ("12:42", "MOSCOW", "D35"), ("13:05", "MILAN", "B71")),
-    (("13:18", "DUBLIN", "C12"), ("13:40", "VIENNA", "A18"), ("14:02", "BERLIN", "B44"),
-     ("14:15", "OSLO", "D19"), ("14:31", "LISBON", "C63"), ("14:50", "PRAGUE", "A27")),
-    (("15:06", "ATHENS", "B08"), ("15:22", "MALAGA", "D51"), ("15:44", "ZURICH", "A33"),
-     ("16:01", "KRAKOW", "C26"), ("16:20", "SOFIA", "B47"), ("16:38", "RIGA", "D15")),
+# What the board shows, a row to a service and as many to a page as the panel has rows for, 6 on a 2.8".
+# A name longer than its column is cut to it, as a real board's would be
+SERVICES = (
+    ("11:32", "LONDON", "A42"), ("11:55", "TOKYO", "B32"), ("12:08", "PARIS", "C75"),
+    ("12:24", "MADRID", "A06"), ("12:42", "MOSCOW", "D35"), ("13:05", "MILAN", "B71"),
+    ("13:18", "DUBLIN", "C12"), ("13:40", "VIENNA", "A18"), ("14:02", "BERLIN", "B44"),
+    ("14:15", "OSLO", "D19"), ("14:31", "LISBON", "C63"), ("14:50", "PRAGUE", "A27"),
+    ("15:06", "ATHENS", "B08"), ("15:22", "MALAGA", "D51"), ("15:44", "ZURICH", "A33"),
+    ("16:01", "KRAKOW", "C26"), ("16:20", "SOFIA", "B47"), ("16:38", "RIGA", "D15"),
+    ("16:55", "GENEVA", "C09"), ("17:10", "NAPLES", "A51"), ("17:28", "PORTO", "D22"),
+    ("17:45", "BERGEN", "B16"), ("18:02", "WARSAW", "C38"), ("18:20", "VENICE", "A64"),
 )
 
 # The canvas this drawing expects, a 2.8" screen at rotation=90. The module body cannot see
 # the canvas, and the layout below is built from it, so it is stated and checked on the first call
 WIDTH, HEIGHT = 320, 240
 
-ROWS = len(PAGES[0])
 CARDS = sum(wide for _, wide, _, _drum in COLUMNS)
 
 spare = MARGIN * 2 + COLUMN_GAP * (len(COLUMNS) - 1)
@@ -134,12 +137,13 @@ del ruler
 HEADING_LETTER_H = round(LETTERING_PER_PX * HEADING_SIZE)
 HEADING_TOP = -round(lettering_rows(HEADING_SIZE, "HW8O")[0])
 
+# As many rows as fit under the headings, and the services paged into them
+ROWS = max(1, (HEIGHT - MARGIN * 2 - HEADING_LETTER_H - HEADING_GAP + ROW_GAP) // (CELL_H + ROW_GAP))
+PAGES = [SERVICES[first:first + ROWS] for first in range(0, len(SERVICES), ROWS)]
+
 over = HEIGHT - (MARGIN * 2 + HEADING_LETTER_H + ROWS * CELL_H + (ROWS - 1) * ROW_GAP)
 HEADING_H = HEADING_LETTER_H + max(HEADING_GAP, over)
 TOP = MARGIN + HEADING_H
-
-if TOP + ROWS * CELL_H + (ROWS - 1) * ROW_GAP + MARGIN > HEIGHT:
-    raise ValueError(f"{ROWS} rows of {CELL_H}px do not fit: drop a row, or a few pixels off LETTER_MAX")
 
 
 def place(row, card):
@@ -263,12 +267,18 @@ turning_at = [[None] * CARDS for _ in range(ROWS)]  # When each started falling,
 
 
 def call_up(index):
-    """Set every card after the page it should be showing, a column's text starting at its own."""
+    """
+    Set every card after the page it should be showing, a column's text starting at its own.
+
+    A colon is painted on the board, so it is dropped from a time before the digits are laid out. A
+    row past the last service on a page is left blank.
+    """
     for row in range(ROWS):
         for card in range(CARDS):
             wanted_at[row][card] = 0
 
-        for (_, wide, _, drum_of), start, text in zip(COLUMNS, starts, PAGES[index][row]):
+        service = PAGES[index][row] if row < len(PAGES[index]) else ()
+        for (_, wide, _, drum_of), start, text in zip(COLUMNS, starts, service):
             letters = text.replace(":", "")
             for offset in range(min(wide, len(letters))):
                 wanted_at[row][start + offset] = max(0, drum_of.find(letters[offset]))

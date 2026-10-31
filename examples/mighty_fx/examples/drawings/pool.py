@@ -10,7 +10,9 @@ Section: Animation
 # Entry: screenA rotation=90 pixel_double=true: graphics file=pool.py fps=9   (a 2.8" screen)
 
 # Constants for drawing
-STYLE = "modern"                                    # The floor, "modern" blue mosaic or "roman" cream stones round an octagon
+# The floor, "modern" blue mosaic or "roman" cream stones round an octagon. The example swaps them on a press of
+# "Boot", which a drawing has no way to read, so STYLE alone chooses it
+STYLE = "modern"
 STEPS = 2                                           # Ripple steps a frame, more for faster ripples
 DROPS = 2                                           # Drops falling on the water each step
 DROP_DEPTH = 30                                     # How deep a drop dents the water, its middle seventeen times this
@@ -57,9 +59,9 @@ CELLS = WIDTH * HEIGHT
 water = [bytearray(CELLS * 4), bytearray(CELLS * 4)]
 
 
-def build_floor():
-    """Draw the floor once, a stone at a time, in the chosen STYLE."""
-    if STYLE == "roman":
+def build_floor(style):
+    """Draw the floor a stone at a time in that style, "modern" or "roman"."""
+    if style == "roman":
         floor.pen = color.rgb(*BATH_GROUT)
         floor.clear()
         for row in range(ROWS):
@@ -163,7 +165,7 @@ def show_floor(out: ptr32, floor_pixels: ptr32, width: int, rows: int, floor_w: 
 
 
 # The floor is drawn once
-build_floor()
+build_floor(STYLE)
 floor_pixels = floor.raw
 shown = False
 

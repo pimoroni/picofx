@@ -19,34 +19,35 @@ PAGES = (
     ("MAIN", "ENGINE", "START"),
     ("WE HAVE", "LIFTOFF", "T+00.01"),
 )
-HOLD_MS = 2000                      # How long a page holds before its rows scroll, and again after
-SCROLL_MS = 250                     # How long a scrolling row holds each step
+HOLD_MS = 2000                          # How long a page holds before its rows scroll, and again after
+SCROLL_MS = 250                         # How long a scrolling row holds each step
 
 # Constants for drawing
-COLUMNS = 7                         # Characters across each row
+COLUMNS = 7                             # Characters across each row
 
 # A segment is set out in a character one unit wide between its outer bars' centres, and this many tall
 CHARACTER_TALL = 1.6
-STROKE = 0.14                       # How thick a bar is
-SEGMENT_GAP = 0.03                  # Between one bar and the next, along the line they meet on
-DIAGONAL = 0.09                     # How wide a diagonal is, along a row
-POINT = 0.09                        # The decimal point's radius
-SLANT = 0.1                         # How far the top of a character leans over its foot, per unit of height
-SPACING = 0.32                      # Between one character and the next, the decimal point sitting in it
-ANTIALIAS = image.X4                # A diagonal is all edge
+STROKE = 0.14                           # How thick a bar is
+SEGMENT_GAP = 0.03                      # Between one bar and the next, along the line they meet on
+DIAGONAL = 0.09                         # How wide a diagonal is, along a row
+POINT = 0.09                            # The decimal point's radius
+SLANT = 0.1                             # How far the top of a character leans over its foot, per unit of height
+SPACING = 0.32                          # Between one character and the next, the decimal point sitting in it
+ANTIALIAS = image.X4                    # A diagonal is all edge
 
 # The case
-METAL_CASE = True                   # Whether the windows are set into a brushed metal case, or stand bare on black
-BORDER = 8                          # Panel pixels between the panel's edge and the windows
-WINDOW_GAP = 10                     # Between one window and the next
-WINDOW_PAD = 4                      # Between a window's edge and its characters
-CORNER = 4                          # How far a window's corners are rounded
-METAL = color.rgb(85, 85, 102)      # The case, a gunmetal brushed metal
+METAL_CASE = True                       # Whether the windows are set into a brushed metal case, or stand bare on black
+BORDER = 8                              # Panel pixels between the panel's edge and the windows
+WINDOW_GAP = 10                         # Between one window and the next
+WINDOW_PAD = 4                          # Between a window's edge and its characters
+CORNER = 4                              # How far a window's corners are rounded
+METAL = color.rgb(85, 85, 102)          # The case, a gunmetal brushed metal
+CASE = color.black                      # Or bare, where METAL_CASE is False
 BRIGHTER = color.rgb(136, 136, 153).with_alpha(60)  # A brush mark catching the light
 DARKER = color.rgb(34, 34, 51).with_alpha(60)       # And one in shadow
-STREAKS = 4                         # Brush marks a row of the metal carries
-EDGE_LIT = color.rgb(153, 153, 170)         # An edge facing up and to the left, the light being above
-EDGE_SHADED = color.rgb(17, 17, 17)         # And one facing away from it
+STREAKS = 4                             # Brush marks a row of the metal carries
+EDGE_LIT = color.rgb(153, 153, 170)     # An edge facing up and to the left, the light being above
+EDGE_SHADED = color.rgb(17, 17, 17)     # And one facing away from it
 
 # The colour each row's lit segments glow, top row first, which its window and unlit segments take
 # theirs from. Red, green and amber, and a row more for each colour added
@@ -222,7 +223,7 @@ def scrolled(row, into):
 # The background every frame starts from, the case with its windows and every segment unlit
 background = image(WIDTH, HEIGHT)
 background.antialias = ANTIALIAS
-background.pen = METAL if METAL_CASE else color.black
+background.pen = METAL if METAL_CASE else CASE
 background.clear()
 
 if METAL_CASE:
@@ -264,7 +265,7 @@ def draw_page(canvas, page, offsets):
     """Draw one frame, the background with the segments each place on the sign lights over it."""
     # Cleared under first. The background's blended pixels fall a little short of opaque, so without the
     # clear the previous frame shows through them
-    canvas.pen = color.black
+    canvas.pen = CASE
     canvas.antialias = ANTIALIAS
     canvas.clear()
     canvas.blit(background, 0, 0)

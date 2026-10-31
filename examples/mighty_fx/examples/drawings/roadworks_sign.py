@@ -26,11 +26,24 @@ BEACON_R = 12
 BEACON_MS = 500
 BEACON_OFF = color.rgb(51, 17, 0)
 
-PAGES = (
-    ("ROADWORKS", "AHEAD", "EXPECT", "DELAYS"),
-    ("LANE", "CLOSURE", "AHEAD", "MERGE LEFT"),
-    ("QUEUE AHEAD", "SLOW DOWN", "20 MPH", "MAX"),
-)
+# What the sign says, a page at a time and a line to a row of modules, worded for a wide sign and for a
+# narrow one. Lines are centred by whole modules, a module being the smallest thing the sign can move
+# text by. At these lamps a 2.8" sign on its side holds 11 characters across over 4 lines
+PAGES = {
+    "wide": (
+        ("ROADWORKS", "AHEAD", "EXPECT", "DELAYS"),
+        ("LANE", "CLOSURE", "AHEAD", "MERGE LEFT"),
+        ("QUEUE AHEAD", "SLOW DOWN", "20 MPH", "MAX"),
+    ),
+    "narrow": (
+        ("ROAD", "WORKS", "AHEAD"),
+        ("EXPECT", "DELAYS"),
+        ("LANE", "CLOSURE", "AHEAD"),
+        ("MERGE", "LEFT"),
+        ("QUEUE", "AHEAD", "SLOW", "DOWN"),
+        ("20 MPH", "MAX"),
+    ),
+}
 
 # The canvas this drawing expects, a 2.8" screen at rotation=90, stated as the mask is
 # baked before the first call
@@ -76,6 +89,9 @@ ACROSS = (COLUMNS + BEZEL) // PITCH_W
 
 LEFT = (COLUMNS - (ACROSS * PITCH_W - BEZEL)) // 2
 TOP = (ROWS - (LINES * PITCH_H - LINE_BEZEL)) // 2
+
+# The wide wording where every line of it fits across the sign, and the narrow wording otherwise
+MESSAGE = PAGES["wide"] if all(len(line) <= ACROSS for lines in PAGES["wide"] for line in lines) else PAGES["narrow"]
 
 
 def bake_module():
@@ -145,7 +161,7 @@ def draw_lamps(page):
     lamps.clear()
     lamps.pen = LIT
 
-    lines = PAGES[page][:LINES]
+    lines = MESSAGE[page][:LINES]
     first = TOP + (LINES - len(lines)) // 2 * PITCH_H
     for line, text in enumerate(lines):
         text = text[:ACROSS]
@@ -177,7 +193,7 @@ def draw(canvas, elapsed):
                          f"rotation=90, and was given {canvas.width}x{canvas.height}")
 
     now = int(elapsed * 1000)
-    frame = (now // HOLD_MS % len(PAGES), bool(now // BEACON_MS % 2))
+    frame = (now // HOLD_MS % len(MESSAGE), bool(now // BEACON_MS % 2))
 
     # Nothing on the sign moves, so it is only drawn again when the page or the beacons change
     if frame != shown:

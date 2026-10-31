@@ -64,15 +64,16 @@ def smooth(values: ptr8, spare: ptr8, width: int, height: int):
         values[cell] = spare[cell]
 
 
-# The cooling, a smooth random field as tall as the rows the heat rises through, scaled to 0 to COOLING.
-# It wraps top to bottom, so it can scroll up with the heat for ever
+# The cooling, a smooth random field as tall as the rows the heat rises through, scaled to 0 to COOLING
+# on a fire 120 rows tall, as on a 2.8" panel on its side, and less on a taller one so its flames reach as
+# far up it. It wraps top to bottom, so it can scroll up with the heat for ever
 field = bytearray(random.getrandbits(8) for _ in range(WIDTH * BURNING))
 spare = bytearray(len(field))
 for _ in range(SMOOTHING):
     smooth(field, spare, WIDTH, BURNING)
 lowest, highest = min(field), max(field)
 for cell in range(len(field)):
-    field[cell] = (field[cell] - lowest) * COOLING // (highest - lowest)
+    field[cell] = (field[cell] - lowest) * COOLING * 120 // ((highest - lowest) * HEIGHT)
 cooling = field
 del spare
 

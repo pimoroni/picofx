@@ -17,11 +17,11 @@ GROW_SECONDS = 8                                    # Growing into a square wave
 MELT_SECONDS = 4                                    # And melting back to the sine
 XY_SECONDS = 8                                      # A Lissajous figure in XY mode
 HARMONICS = 8                                       # Odd harmonics in the square wave at its squarest
-CYCLES = 2.5                                        # Cycles of the sine across the face
+CYCLES = 2.5                                        # Cycles of the sine across a face DIVISIONS wide
 SCROLL = 1.5                                        # How fast the wave scrolls, in radians a second
 WAVE_HEIGHT = 0.3                                   # How far the wave reaches either side of the middle, of the face's height
 FIGURE = (2, 3)                                     # The Lissajous figure's frequencies across and down
-FIGURE_SIZE = 0.42                                  # How far it reaches from the middle, of the face's height
+FIGURE_SIZE = 0.42                                  # How far it reaches from the middle, of the face's narrower side
 TURN = 0.4                                          # How fast it turns, in radians a second
 
 # The screens drive the panel at 12 bit, 16 levels a channel in steps of 17, so the colours sit on those levels
@@ -33,7 +33,7 @@ FRAME = color.rgb(17, 17, 17)                       # The dark edge the face sit
 CASE = color.rgb(221, 204, 187)                     # The case round the tube
 
 # Sizes, in panel pixels
-DIVISIONS = (10, 8)                                 # Graticule squares across and down
+DIVISIONS = (10, 8)                                 # Graticule squares across and down on a panel on its side, swapped upright
 DIVISION = 28                                       # Panel pixels a square
 TICKS = 4                                           # Ticks a square along the middle lines, which DIVISION must divide into
 CORE_W = 1.5                                        # Panel pixels across the beam's core
@@ -49,11 +49,17 @@ ANTIALIAS = image.X4                                # A beam is all edge, so it 
 # the canvas, and the layout below is built from it, so it is stated and checked on the first call
 WIDTH, HEIGHT = 320, 240
 
+# As many of the DIVISIONS as fit inside the frame, an even number each way so the middle lines stay on the
+# graticule. At a DIVISION of 28, 10 by 8 on a 2.8" panel on its side
+WANTED = DIVISIONS if WIDTH >= HEIGHT else (DIVISIONS[1], DIVISIONS[0])
+ACROSS, DOWN = (min(wanted, (room - FRAME_W * 2) // DIVISION // 2 * 2) for wanted, room in zip(WANTED, (WIDTH, HEIGHT)))
+
 # The face is a pixel wider and taller than its squares, so the graticule's far lines land on it
-FACE_W, FACE_H = DIVISIONS[0] * DIVISION + 1, DIVISIONS[1] * DIVISION + 1
+FACE_W, FACE_H = ACROSS * DIVISION + 1, DOWN * DIVISION + 1
 LEFT, TOP = (WIDTH - FACE_W) // 2, (HEIGHT - FACE_H) // 2
-MIDDLE_X, MIDDLE_Y = DIVISIONS[0] * DIVISION / 2, DIVISIONS[1] * DIVISION / 2
-SPAN_X, SPAN_Y = DIVISIONS[0] * DIVISION, DIVISIONS[1] * DIVISION
+MIDDLE_X, MIDDLE_Y = ACROSS * DIVISION / 2, DOWN * DIVISION / 2
+SPAN_X, SPAN_Y = ACROSS * DIVISION, DOWN * DIVISION
+FIGURE_REACH = min(SPAN_X, SPAN_Y) * FIGURE_SIZE    # So the figure fits the face whichever way it stands
 whole_face = rect(0, 0, FACE_W, FACE_H)
 
 HALO_PEN = HALO.with_alpha(HALO_ALPHA)
@@ -63,13 +69,13 @@ DIM_PEN = GLASS.with_alpha(DIM)
 def graticule():
     """Draw the graticule over the face, a line every division and ticks along the middle lines."""
     tube.pen = GRID
-    for across in range(DIVISIONS[0] + 1):
+    for across in range(ACROSS + 1):
         tube.vspan(across * DIVISION, 0, FACE_H)
-    for down in range(DIVISIONS[1] + 1):
+    for down in range(DOWN + 1):
         tube.hspan(0, down * DIVISION, FACE_W)
-    for tick in range(DIVISIONS[0] * TICKS):
+    for tick in range(ACROSS * TICKS):
         tube.vspan(tick * DIVISION // TICKS, int(MIDDLE_Y) - 2, 5)
-    for tick in range(DIVISIONS[1] * TICKS):
+    for tick in range(DOWN * TICKS):
         tube.hspan(int(MIDDLE_X) - 2, tick * DIVISION // TICKS, 5)
 
 
@@ -108,7 +114,7 @@ def wave(seconds):
 
     points = []
     for i in range(SEGMENTS + 1):
-        angle = 2 * math.pi * CYCLES * i / SEGMENTS + phase
+        angle = 2 * math.pi * CYCLES * ACROSS / DIVISIONS[0] * i / SEGMENTS + phase
         total = sum(weight * math.sin(harmonic * angle) for harmonic, weight in weights)
         points.append((SPAN_X * i / SEGMENTS, MIDDLE_Y - SPAN_Y * WAVE_HEIGHT * total))
     return points
@@ -119,8 +125,8 @@ def lissajous(seconds):
     across, down = FIGURE
     phase = seconds * TURN
     steps = SEGMENTS * 2
-    return [(MIDDLE_X + SPAN_Y * FIGURE_SIZE * math.sin(across * 2 * math.pi * i / steps + phase),
-             MIDDLE_Y - SPAN_Y * FIGURE_SIZE * math.sin(down * 2 * math.pi * i / steps))
+    return [(MIDDLE_X + FIGURE_REACH * math.sin(across * 2 * math.pi * i / steps + phase),
+             MIDDLE_Y - FIGURE_REACH * math.sin(down * 2 * math.pi * i / steps))
             for i in range(steps + 1)]
 
 
