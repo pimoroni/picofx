@@ -34,6 +34,7 @@ The posters the two billboards show live with the other example art in [assets/b
   - [Fireplace](#fireplace)
   - [Portal](#portal)
   - [Pool](#pool)
+  - [Creature Eyes](#creature-eyes)
 - [Moving Things](#moving-things)
   - [Programmed Route](#programmed-route)
 
@@ -314,6 +315,17 @@ Draw a portal, glowing arms winding in towards a dark opening inside a shimmerin
 [pool.py](pool.py)
 
 Draw the floor of a small pool seen from above through rippling water, the tiles wobbling as the surface bends the light, and bright lines of light where the surface gathers it. STYLE chooses the floor to start on, a modern pool's blue mosaic or a Roman bath's cream stones round an octagon, and "Boot" swaps to the other.
+
+<br clear="left">
+
+
+### Creature Eyes
+<img src="creature_eyes.png" align="left" alt="Creature Eyes">
+<img src="creature_eyes-2.png" align="left" alt="Creature Eyes, second screen">
+
+[creature_eyes.py](creature_eyes.py)
+
+Draw a creature's eyes looking about, an eye on each SP/CE port's screen, darting from spot to spot, holding there a while and blinking now and then. CREATURE chooses the cat, owl, goat, alien, robot or zombie, each with its own eyes and its own way of looking about, and "Boot" steps to the next.
 
 <br clear="left">
 
