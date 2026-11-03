@@ -1,6 +1,5 @@
 import sys
 from mighty_fx import MightyFX, SPCE
-from timing import Roller
 from screens import SCREEN_TYPES, ScreenGroup
 from picovector import color, image, shape, vec2
 
@@ -85,19 +84,19 @@ def chevrons(pen):
 # Each state is drawn once, so changing over is only the writes
 lit, unlit = chevrons(LIT), chevrons(UNLIT)
 
-flash = Roller()                    # When the banks next change over, at once to begin with
 showing = 0                         # Which bank is lit
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
-    while not mighty.boot_pressed():
-        if flash.is_due():
-            # One write per bank, the lit one and the dark one, however many panels each holds
-            for index, bank in enumerate(banks):
-                bank.update(lit if index == showing else unlit)
+    while not mighty.boot_taps():
+        # One write per bank, the lit one and the dark one, however many panels each holds
+        for index, bank in enumerate(banks):
+            bank.update(lit if index == showing else unlit)
 
-            showing = (showing + 1) % 2
-            flash.restart(FLASH)
+        showing = (showing + 1) % 2
+
+        # Wait out the flash, keeping every panel measured so the next writes go out promptly
+        wall.idle(int(FLASH * 1000))
 
 # Turn off the panels and all the outputs
 finally:

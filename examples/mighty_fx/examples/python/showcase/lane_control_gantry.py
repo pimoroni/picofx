@@ -87,11 +87,11 @@ ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 # gives up its five lines as extra chip selects, which lets one port drive six panels instead of one
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.HUB_SELECTS)
 
-# Build a screen on every hub port and keep those that answer, as a hub need not be full
+# Build a screen on every hub port at the gantry's rotation, keeping those that answer as a hub need not be full
 screens = []
 for port in mighty.hub.ports:
     try:
-        screens.append(ScreenType(port))
+        screens.append(ScreenType(port, rotation=ROTATION))
     except ValueError:
         pass
 
@@ -100,9 +100,6 @@ if not screens:
     # backlight pin of whatever is plugged into that port
     mighty.shutdown()
     raise RuntimeError("No panels answered! Check the hub is plugged into SP/CE A, with its panels on the hub rather than on the board")
-
-# A group holds however many lanes answered to one refresh, so a setting reaches all on one frame
-gantry = ScreenGroup(*screens, rotation=ROTATION)
 
 # The distinct aspects each setting needs over the lanes that answered, so a setting costs a write per aspect
 ASPECTS_IN = []
@@ -114,9 +111,8 @@ for setting in GANTRY:
 
     ASPECTS_IN.append(distinct)
 
-# One canvas serves every lane and is drawn again for each aspect a setting calls for, as the panels are turned
-WIDTH, HEIGHT = gantry.canvas_size
-canvas = image(WIDTH, HEIGHT)
+# Each signal is drawn at the size of a panel as it is turned
+WIDTH, HEIGHT = screens[0].canvas_size
 
 # The signal is square and as large as the panel allows, centred, so the housing is whatever is left
 SIGNAL = min(WIDTH, HEIGHT)
@@ -391,8 +387,13 @@ def draw_arrow(towards):
                     MIDDLE, MIDDLE, STROKE, ACROSS, trim)
 
 
-def draw_signal(aspect, on_the_left):
-    """Draw one signal on the canvas, its aspect on the matrix, the mask over it, then the corner lamps."""
+def flashes(aspect):
+    """Whether an aspect flashes its corner lamps, which only a closed lane does."""
+    return aspect is not None and aspect[0] == "closed"
+
+
+def draw_signal(canvas, aspect, on_the_left):
+    """Draw one signal on a canvas, its aspect on the matrix, the mask over it, then the corner lamps."""
     lamps.pen = UNLIT
     lamps.clear()
     if aspect is not None:
@@ -411,35 +412,56 @@ def draw_signal(aspect, on_the_left):
 
     # Corner lamps are bolted to the face over the mask, and flash only for a closed lane.
     # The first two are the left pair, lit when on_the_left is true
-    flashing = aspect is not None and aspect[0] == "closed"
     for index, lamp in enumerate(CORNER_LAMPS):
-        canvas.pen = RED if flashing and (index < 2) == on_the_left else CORNER_OFF
+        canvas.pen = RED if flashes(aspect) and (index < 2) == on_the_left else CORNER_OFF
         canvas.shape(lamp)
 
 
+# Every signal the gantry shows, drawn once so a setting costs only its writes. A closed lane has one
+# for each pair of corner lamps lit, and any other aspect just the one
+SIGNALS = {}
+for aspects in ASPECTS_IN:
+    for aspect in aspects:
+        for on_the_left in ((False, True) if flashes(aspect) else (False,)):
+            if (aspect, on_the_left) not in SIGNALS:
+                SIGNALS[(aspect, on_the_left)] = image(WIDTH, HEIGHT)
+                draw_signal(SIGNALS[(aspect, on_the_left)], aspect, on_the_left)
+
+# A group holds however many lanes answered to one refresh, so a setting reaches all on one frame. It is
+# built once the signals are drawn, so its first frame follows straight on from bringing the lanes into step
+gantry = ScreenGroup(*screens, rotation=ROTATION)
+
+# Whether each setting flashes, so one that does not is sent once and held
+FLASHES_IN = [any(flashes(aspect) for aspect in aspects) for aspects in ASPECTS_IN]
+
+
 def send(setting, on_the_left):
-    """Send one setting to the gantry an aspect at a time, to every lane showing it."""
+    """Send one setting to the gantry a signal at a time, to every lane showing it."""
     for aspect in ASPECTS_IN[setting]:
-        draw_signal(aspect, on_the_left)
-        gantry.update(canvas, to=tuple(screen for screen, showing in zip(screens, GANTRY[setting])
-                                       if showing == aspect))
+        gantry.update(SIGNALS[(aspect, flashes(aspect) and on_the_left)],
+                      to=tuple(screen for screen, showing in zip(screens, GANTRY[setting]) if showing == aspect))
 
 
-pacer = Pacer(0.02)                 # The gantry's clock, looking for a change every 20ms
+pacer = Pacer()                     # The gantry's clock, which every setting and flash is timed from
 shown = None
 
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
-    while not mighty.boot_pressed():
+    while not mighty.boot_taps():
         elapsed = pacer.elapsed
-        frame = (int(elapsed / (HOLD * 1000)) % len(GANTRY), bool(elapsed // FLASH_MS % 2))
+        setting = int(elapsed / (HOLD * 1000)) % len(GANTRY)
+        on_the_left = bool(elapsed // FLASH_MS % 2)
 
-        # Sent again at every flash even where no lamp flashes, which keeps the group's panels in phase
+        # A setting that flashes changes at every flash, and any other only with the setting
+        frame = (setting, on_the_left if FLASHES_IN[setting] else None)
         if frame != shown:
-            send(*frame)
+            send(setting, on_the_left)
             shown = frame
 
-        pacer.hold()
+        # Wait for the next flash or setting, whichever is sooner, keeping every lane measured so its writes go out promptly
+        elapsed = pacer.elapsed
+        hold_ms = int(HOLD * 1000)
+        gantry.idle(min(FLASH_MS - elapsed % FLASH_MS, hold_ms - elapsed % hold_ms))
 
 # Stop any running effects and turn off all the outputs
 finally:
