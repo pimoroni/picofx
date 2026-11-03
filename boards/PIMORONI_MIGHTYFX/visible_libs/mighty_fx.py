@@ -97,14 +97,16 @@ class SPCEPort(ScreenPort):
     def hub_selects(self):
         """The connector's five GPIOs, as the chip selects a hub addresses panels with.
 
-        Only a connector declared SPCE.HUB_SELECTS offers them, as that declaration spends
-        it on another port's screens.
+        They come in the order of the hub's B to F labels, CS, SCK, MOSI, DC, BL. Only a
+        connector declared SPCE.HUB_SELECTS offers them, as that declaration spends it on
+        another port's screens.
         """
         if self.mode != SPCE.HUB_SELECTS:
             raise ValueError(f"SP/CE {self.name} is not declared SPCE.HUB_SELECTS, so its "
                              "pins are not a hub's chip selects")
 
-        return self.__pins
+        pins = self.__pins
+        return (pins[1], pins[2], pins[3], pins[0], pins[4])
 
     @property
     def driver(self):
