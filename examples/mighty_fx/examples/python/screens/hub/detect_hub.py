@@ -62,9 +62,8 @@ if not panels:
 
 print(f"{len(panels)} of {len(mighty.hub.ports)} hub positions answered\n")
 
-# One canvas serves every panel, as they are all the same size and turned the same way. It is a
-# heap image, as six panels' workspaces leave too little SRAM for a canvas there
-canvas = image(*panels[0].canvas_size)
+# One canvas serves every panel, as they are all the same size and turned the same way
+canvas = panels[0].canvas()
 canvas.antialias = image.X4
 canvas.font = font.load(VECTOR_FACE)
 

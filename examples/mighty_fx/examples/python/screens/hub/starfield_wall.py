@@ -2,7 +2,7 @@ import random
 import sys
 from mighty_fx import MightyFX, SPCE
 from screens import SCREEN_TYPES, ScreenGroup
-from picovector import image, color, shape
+from picovector import color, shape
 
 """
 Travel through a star field, across every panel a screen hub reaches.
@@ -46,7 +46,7 @@ wall = ScreenGroup(*panels)
 print(f"{len(panels)} of {len(mighty.hub.ports)} hub positions answered")
 
 # Access the first panel and create a canvas to draw to
-canvas = image(panels[0].width, panels[0].height)
+canvas = panels[0].canvas()
 
 # Pre-calculate the panel centre
 centre_x, centre_y = panels[0].width / 2, panels[0].height / 2
