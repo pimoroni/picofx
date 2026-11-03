@@ -11,6 +11,7 @@ ANTIALIAS = image.X4                # A vector face needs it, and a line a pixel
 BACKGROUND = color.black            # Behind the stack, which is a dark box
 COLON_BLINKS = True                 # Whether the colon blinks with the seconds, or stays lit
 CHANGE_STEPS = 2                    # Frames between one digit and the next, the old sheet dimming as the new one lights
+DRAW_IN_SRAM = True                 # Drawn in an SRAM canvas where there is room, its drawing being slow in PSRAM
 # The LEDs' colour. (255, 90, 170) is pink, (255, 150, 60) amber and (140, 255, 190) green
 LED = color.rgb(80, 170, 255)       # Ice blue, the colour these are usually seen in
 

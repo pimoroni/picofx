@@ -1,5 +1,6 @@
 import gc
 import machine
+import spidisplay
 import sys
 import time
 from mighty_fx import MightyFX, SPCE
@@ -99,6 +100,15 @@ CARRY_TOGETHER = getattr(face, "CARRY_TOGETHER", False)     # Whether a carry ch
 CARRY_FROM_LEFT = getattr(face, "CARRY_FROM_LEFT", False)   # Whether the rest of a carry runs left to right, as a sign's controller scans
 # The panels left of the rightmost, in the order a carry takes them
 CARRYING = list(range(len(panels) - 1)) if CARRY_FROM_LEFT else list(range(len(panels) - 2, -1, -1))
+
+# A face slow to draw may ask for a canvas in SRAM, where it draws in about half the time, each frame
+# then copied into its place in PSRAM. Drawn in PSRAM as before where the panels leave SRAM no room
+sram_canvas = None
+if getattr(face, "DRAW_IN_SRAM", False):
+    try:
+        sram_canvas = image(WIDTH, HEIGHT, spidisplay.buffer(WIDTH * HEIGHT * 4))
+    except ValueError:
+        pass
 
 
 def steps_between(previous, digit):
@@ -233,11 +243,14 @@ def draw_picture(picture, order):
             return False
         frame = frames.pop(latest)
 
+    canvas = frame if sram_canvas is None else sram_canvas
     if len(picture) == 2:
-        face.draw(frame, *picture)
+        face.draw(canvas, *picture)
     else:
         digit, colon_lit, previous, step, full = picture
-        face.draw(frame, digit, colon_lit, previous, step / (full + 1))
+        face.draw(canvas, digit, colon_lit, previous, step / (full + 1))
+    if sram_canvas is not None:
+        frame.raw[:] = sram_canvas.raw
     frames[picture] = frame
     draw_ms = (draw_ms * 3 + time.ticks_diff(time.ticks_ms(), began)) / 4
     return True
