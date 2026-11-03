@@ -67,7 +67,8 @@ wide, tall = screen.canvas_size
 limit_x = wide - logo.width
 limit_y = tall - logo.height
 
-x, y = 0, 0
+# Start a third of the way along the top, off the diagonal, so on a square panel it does not run corner to corner
+x, y = limit_x // 3, 0
 step_x, step_y = STEP, STEP
 index = 0
 hue = 0
