@@ -27,6 +27,7 @@ def build_sensor(role, pin, pio, sm):
         return Analog(Pin(pin))
 
     if role == PIR:
+        # Pulled up, so a connector with nothing plugged in reads as motion and a program plays without a sensor
         return Pin(pin, Pin.IN, Pin.PULL_UP)
 
     if role == IR:
