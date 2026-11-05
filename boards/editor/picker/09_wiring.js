@@ -112,11 +112,9 @@ function renderConnectors() {
   var said = document.createElement("p");
   said.className = "wiresay";
   said.innerHTML = astray.length
-    ? "<b>" + astray.length + " of " + side.order.length + "</b> lights are out of the order " +
-      "they are wired in, their numbers in bold. Hover over a light or a connector to " +
-      "highlight its wire."
-    : "Every light is in the order it is wired. Hover over a light or a connector to " +
-      "highlight its wire.";
+    ? "<b>" + astray.length + " of " + side.order.length + "</b> lights are out of wiring " +
+      "order, numbered in bold. Hover over a light or connector to highlight its wire."
+    : "All lights are in wiring order. Hover over a light or connector to highlight its wire.";
   box.appendChild(said);
   // The connectors sit lower by whatever the cutting and the bar took beyond them, the
   // lines running on down, so setting up leaves the section its size

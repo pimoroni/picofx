@@ -803,7 +803,7 @@ function renderKept() {
   var head = document.createElement("div");
   head.className = "keptsay";
   head.textContent = "Also " + (state.scenes.length ? "in this scene" : "in the file") +
-                     ", kept as written:";
+                     ", not editable here:";
   box.appendChild(head);
   keptNow.forEach(function (one, at) {
     if (one.text === null) return;
@@ -849,7 +849,7 @@ function markKeptLights() {
         for (var lamp = section.from; lamp <= section.to; lamp++) {
           if (named[lamp]) {
             cell.classList.add("keptlamp");
-            cell.title = "played by a line kept as written: " + named[lamp][0].text;
+            cell.title = "used by a line the picker cannot edit: " + named[lamp][0].text;
             return;
           }
         }
@@ -861,7 +861,7 @@ function markKeptLights() {
     box.querySelectorAll(".lamp").forEach(function (lamp, at) {
       if (!named[at]) return;
       lamp.classList.add("keptlamp");
-      lamp.title = "played by a line kept as written: " + named[at][0].text;
+      lamp.title = "used by a line the picker cannot edit: " + named[at][0].text;
     });
   });
 }
@@ -896,9 +896,9 @@ connectSteps.push(async function () {
     var kept = readEffects(text).slots.reduce(function (count, slot) {
       return count + slot.kept.filter(function (one) { return one.text !== null; }).length;
     }, 0);
-    var open = confirm("This file was not written by this page. Open what's on the board? " +
-                       (kept === 1 ? "One line" : kept + " lines") + " would be kept as " +
-                       "written. Cancel starts fresh, and saving then replaces the file.");
+    var open = confirm("This file was not written by the picker. Open it anyway? " +
+                       (kept === 1 ? "One line" : kept + " lines") + " would be kept " +
+                       "unchanged. Cancel to start fresh, replacing the file when you save.");
     if (!open) {
       rememberRead(text);
       return;

@@ -272,8 +272,7 @@ driveParts.push({
 function hubSwitch() {
   var row = document.createElement("div");
   row.className = "hubswitch" + (setupOn ? "" : " locked");
-  row.title = setupOn ? "" : "How the board is built, the same in every scene. Edit board to " +
-                             "change it";
+  row.title = setupOn ? "" : "Board setup, shared by every scene. Use Edit board to change it";
   var lead = document.createElement("span");
   lead.className = "hublead" + (state.hub.on ? "" : " on");
   lead.appendChild(boardIcon());
@@ -340,7 +339,7 @@ function placeTile(place) {
     size.appendChild(option);
   });
   size.disabled = !setupOn;
-  size.title = "Which panel is at " + place + ", which is the same for every scene";
+  size.title = "Panel at " + place + ", shared by every scene";
   size.onclick = function (event) { event.stopPropagation(); };
   size.onchange = function () {
     state.hub.sizes[place] = size.value;
@@ -397,19 +396,19 @@ function hubPace() {
   var still = sends.filter(function (send) { return kindOf(send.playing.shows) === "image"; });
   var said = [];
   if (moving.length > 1) {
-    said.push(namesSaid(moving) + " share the hub's speed, so each animation plays slower " +
-              "than it would alone.");
+    said.push(namesSaid(moving) + " share the hub's speed, so " +
+              "each animation plays slower than on its own.");
   } else if (moving.length === 1) {
     var together = moving[0].places.length;
     said.push(namesSaid(moving) + (together > 1 ? (together === 2 ? " both" : " all") +
-              " play their animation at once, as fast as a single screen."
+              " play the same animation together, as fast as a single screen."
                                                 : " plays its animation at full speed."));
   }
   if (still.length)
     said.push(namesSaid(still) + (still.length > 1 || still[0].places.length > 1 ? " show"
                                                                                   : " shows") +
-              " a still picture, sent once" + (moving.length ? ", costing the rest nothing."
-                                                             : ", so nothing slows."));
+              " a still picture, sent once" + (moving.length ? ", with no cost to the others."
+                                                             : ", so nothing slows down."));
   var apart = apartSaid(sends);
   if (apart) said.push(apart);
   var pace = document.createElement("p");
@@ -442,8 +441,8 @@ function renderHubHead() {
       port.appendChild(option);
     });
   port.className = "inband";
-  port.title = "Which connector the hub's SPI is plugged into, and which its Selects, as " +
-               "printed on the hub";
+  port.title = "Which connectors the hub's SPI and Selects " +
+               "are plugged into, as labelled on the hub";
   port.onchange = function () { state.hub.port = port.value; draw(); };
   head.appendChild(port);
   var fitted = document.createElement("small");

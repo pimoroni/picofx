@@ -111,7 +111,7 @@ function playsItself(text) {
   return !/\breload\s*=\s*manual\b/i.test(text);
 }
 
-var CHECKING = "The board has not read the file yet.";
+var CHECKING = "The board has not loaded the file yet.";
 
 async function markChecking() {
   try {
@@ -169,12 +169,12 @@ async function waitForBoard(before, nothingYet) {
 
 function sayWhatHappened(said, also) {
   if (said === CHECKING)
-    banner("No answer from the board yet. Eject the FX drive, or press Boot " +
-           "once, and it plays. If the lights already changed, this computer is " +
-           "showing the page an old copy of the drive: press the board's Reset " +
-           "button to see what it wrote.", true);
+    banner("No response from the board yet. Eject the FX drive or press Boot " +
+           "once to play the save. If the lights have already changed, the " +
+           "board has played it but this computer is showing an old copy of the " +
+           "drive. Press Reset on the board so the computer sees what it wrote.", true);
   else if (said)
-    banner("The board wasn't happy with some of it:", true, said);
+    banner("The board reported problems:", true, said);
   else
     banner("Playing on the board. No problems reported." + (also || ""));
 }
@@ -186,12 +186,13 @@ async function openDrive(fresh) {
   } catch (e) {
     if (e.name === "AbortError") return;
     if (e.name === "NotAnFxDrive") {
-      banner("That folder has no effects.txt, so it does not look like an FX " +
-             "drive. Pick the drive itself, the one named FX.", true);
+      banner("That folder has no effects.txt, so it is " +
+             "not an FX drive. Choose the drive named FX.", true);
       return;
     }
-    banner("Could not open the drive: " + e.name + ". Is it showing? " +
-           "A double press of Boot brings it back.", true);
+    banner("Could not open the drive (" + e.name + "). Check the FX " +
+           "drive is showing on this computer, and double-press Boot if " +
+           "it is not. If the browser asked for permission, choose Allow.", true);
   }
 }
 
@@ -211,8 +212,7 @@ var WROTE_KEY = "fx-picker-wrote";
 
 // What a save asks where the file on the board has changed since this page read it
 function overwriteQuestion() {
-  return "The file on the board has changed since this page read it, so saving replaces " +
-         "those changes. Save over it?";
+  return "The file on the board has changed since it was opened here. Overwrite those changes?";
 }
 
 // What the parts below read off a drive once it is open, each awaited in the order the parts come
@@ -299,8 +299,8 @@ function renderPreview() {
   var note = document.getElementById("previewNote");
   if (note) {
     note.hidden = !stale;
-    note.textContent = stale === 1 ? "One line the board named has changed since it was read."
-                                   : stale + " lines the board named have changed since.";
+    note.textContent = stale === 1 ? "One reported line has since changed."
+                                   : stale + " reported lines have since changed.";
   }
 }
 
@@ -324,38 +324,36 @@ document.getElementById("save").onclick = async function () {
     await writable.write(text);
     await writable.close();
     var back = await (await drive.fileHandle.getFile()).text();
-    if (back !== text) throw new Error("the file read back differently");
+    if (back !== text) throw new Error("the saved file did not match when read back");
     try { localStorage.setItem(WROTE_KEY, text); } catch (e) {}
     // The marks were about the file the board had, which this one replaces
     takeAnswer(null, text);
     await new Promise(function (settle) { setTimeout(settle, SAVING_TAIL_MS); });
     // Said once, where this save is the first to hide the drive
     var hides = /\bdrive=manual\b/.test(text) && !/\bdrive=manual\b/.test(onBoard)
-      ? " The drive stays hidden the next time the board starts: double-press Boot " +
-        "to bring it back."
+      ? " The drive will be hidden next time the board starts. Double-press Boot to show it."
       : "";
     // A program running keeps the board busy, so neither an eject nor a press reaches it
     if (/\bprogram=/.test(onBoard)) {
-      banner("On its way. The board is running a program, so press its Reset button to play " +
-             "this one." + hides);
+      banner("Saved. The board is running a program, so press Reset to play this change." + hides);
       return;
     }
     // A board saving on its own that is given a program restarts to run it, so there is no
     // answer to wait for
     if (errorsBefore !== undefined && /\bprogram=/.test(text)) {
-      banner("On its way. The board restarts to run the program, which takes a few seconds." +
+      banner("Saved. The board is restarting to run the program." +
              hides);
       return;
     }
     if (errorsBefore === undefined) {
-      banner("On its way. " + (playsItself(text)
-             ? "Eject the FX drive, or press Boot once, to play this one. " +
-               "From now on a save plays on its own."
-             : "Eject the FX drive on this computer, and the board plays it. Double-press " +
-               "Boot to bring the drive back, then press 'Check board'.") + hides);
+      banner("Saved. " + (playsItself(text)
+             ? "Eject the FX drive or press Boot once to play " +
+               "it. Future saves will play automatically."
+             : "Eject the FX drive to play it. Then double-press " +
+               "Boot to show the drive again and press 'Check board'.") + hides);
       return;
     }
-    banner("Saved. Waiting for the board to pick it up...", "hold");
+    banner("Saved. Waiting for the board to load it...", "hold");
     var was = errorsBefore === false ? null : errorsBefore;
     var said = await waitForBoard(was, function () {
       banner("Playing on the board. Checking for problems...", "hold");
@@ -365,14 +363,13 @@ document.getElementById("save").onclick = async function () {
   } catch (e) {
     if (e.name === "AbortError") return;
     if (e.name === "QuotaExceededError") {
-      banner("The FX drive is full, so there was no room to save. Delete a " +
-             "picture or sound from it and try again.", true);
+      banner("The FX drive is full. Delete a picture, sound or program and try again.", true);
       return;
     }
     drive.fileHandle = null;
     drive.dirHandle = null;
-    banner("That didn't reach the board: " + e.name + ". Is the FX drive showing? " +
-           "A double press of Boot brings it back; then try again.", true);
+    banner("The save did not reach the board (" + e.name + "). Check the FX drive " +
+           "is showing, double-press Boot if it is not, then try again.", true);
   } finally {
     button.disabled = !drive.fileHandle;
     check.disabled = !drive.fileHandle;
@@ -381,22 +378,21 @@ document.getElementById("save").onclick = async function () {
 
 // The answer and the file it is about are read together, the board having finished with both
 document.getElementById("check").onclick = async function () {
-  banner("Asking the board...", "hold");
+  banner("Checking...", "hold");
   await new Promise(function (settle) { setTimeout(settle, 350); });
   try {
     var about = await (await drive.fileHandle.getFile()).text();
     var said = await readErrors();
     if (said === false) throw {name: "NotReadable"};
     if (said === CHECKING) {
-      banner("The board has not read the file yet. Eject the FX drive, or press " +
-             "Boot once.", "hold");
+      banner("The board has not loaded the file yet. Eject the FX drive or press Boot once.", "hold");
       return;
     }
-    if (said) banner("The board wasn't happy with some of it:", true, said);
-    else banner("All good. The board read the file and found nothing wrong.");
+    if (said) banner("The board reported problems:", true, said);
+    else banner("No problems reported.");
     takeAnswer(said, about);
   } catch (e) {
-    banner("Couldn't look: " + e.name + ". Is the drive showing?", true);
+    banner("Could not read the drive (" + e.name + "). Is it showing?", true);
   }
 };
 
@@ -404,5 +400,5 @@ document.getElementById("open").onclick = function () { openDrive(false); };
 
 if (!CAN_REACH_A_DRIVE) {
   document.getElementById("open").disabled = true;
-  banner("This page reaches the drive only in Chrome or Edge.");
+  banner("This page needs Chrome or Edge to reach the drive.");
 }

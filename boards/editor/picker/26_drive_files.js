@@ -78,8 +78,8 @@ async function addFiles(kinds, what, takes) {
   } catch (e) {
     // A dismissed dialog says nothing. Anything else is the browser refusing the files
     if (e.name !== "AbortError")
-      banner("The browser would not open those files (" + e.message + "). Copy them to " +
-             "another folder, such as Downloads, and add them from there.", true);
+      banner("The browser could not open those files (" + e.message + "). " +
+             "Copy them to another folder, such as Downloads, and try again.", true);
     return;
   }
   var landed = 0;
@@ -121,12 +121,12 @@ async function addFiles(kinds, what, takes) {
     return /\.py$/i.test(name) && !mediaNamed(name);
   });
   if (refused.length && landed)
-    banner(landed + " copied; these did not arrive: " + refused.join(", "), true);
+    banner(landed + " copied. These could not be copied: " + refused.join(", "), true);
   else if (refused.length)
-    banner("Nothing arrived: " + refused.join(", "), true);
+    banner("Nothing copied: " + refused.join(", "), true);
   else if (unoffered.length)
-    banner(unoffered.join(", ") + " copied, but only a drawing is offered here, and a " +
-           "drawing's opening string starts with Drawing: and its name.", true);
+    banner(unoffered.join(", ") + " copied, but only drawings appear here. " +
+           "A drawing's opening string starts with Drawing: and its name.", true);
   else if (landed)
     banner(landed + " " + what + " copied to the drive.");
   draw();

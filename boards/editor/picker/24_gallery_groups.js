@@ -11,11 +11,11 @@
 var LOOK_GROUPS = [
   {name: "Along the lights", says: "travelling from one end to the other",
    looks: ["Rainbow", "Wave", "Scanner", "Chase", "Marquee"]},
-  {name: "Ready-made", says: "made from the other looks",
+  {name: "Ready-made", says: "combinations of other looks",
    looks: ["Campfire", "Emergency", "Party"]},
   {name: "All together", says: "every light the same",
    looks: ["Solid", "Colour cycle", "Colour steps", "Breathe", "Blink"]},
-  {name: "Each its own", says: "every light playing a part of its own",
+  {name: "Individual", says: "each light plays its own part",
    looks: ["Sparkle", "Counter", "Traffic light", "Pelican crossing"]}
 ];
 

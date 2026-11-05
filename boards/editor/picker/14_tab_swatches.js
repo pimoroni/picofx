@@ -22,7 +22,7 @@ function liveSwatch(swatch, panel) {
       });
     }});
   });
-  swatch.title = "what its lights are showing now";
+  swatch.title = "what the lights are showing";
 }
 
 LED_PANELS.forEach(function (panel) { tabSwatches[panel] = liveSwatch; });

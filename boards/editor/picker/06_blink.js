@@ -57,7 +57,7 @@ chosenSteps.push(function (where, run) {
     chip.type = "button";
     chip.className = "blinkchip" + (at === blinks.at ? " on" : "");
     chip.style.setProperty("--chip", hex);
-    chip.title = (at === blinks.at ? "the colour the picker below is changing, " : "change ") +
+    chip.title = (at === blinks.at ? "the colour being edited below, " : "change ") +
                  (blinkNamed(hex) || hex);
     chip.onclick = function () { choose(at); };
     row.appendChild(chip);
@@ -84,7 +84,7 @@ chosenSteps.push(function (where, run) {
   more.type = "button";
   more.className = "blinkmore";
   more.textContent = "+ another colour";
-  more.title = "blink through several colours in turn, one a beat";
+  more.title = "blink through several colours in turn, one colour per blink";
   // The colour added is a copy of the last, a custom one included, to be changed from there
   more.onclick = function () {
     var mine = live();

@@ -703,9 +703,9 @@ function landLook(run, at, name) {
     }
     if (clashing.length) {
       var lines = clashing.map(function (one) { return one.text; }).join("\n");
-      if (!confirm((clashing.length === 1 ? "A line kept as written already plays some of " +
-                    "these lights:" : "Lines kept as written already play some of these " +
-                    "lights:") + "\n\n" + lines + "\n\nTake " +
+      if (!confirm((clashing.length === 1 ? "A line the picker " +
+                    "cannot edit already uses some of these lights:" : "Lines the picker cannot " +
+                    "edit already use some of these lights:") + "\n\n" + lines + "\n\nTake " +
                    (clashing.length === 1 ? "it" : "them") + " out of the file and play " +
                    name + " instead?")) return;
       keptNow = keptNow.filter(function (one) { return clashing.indexOf(one) < 0; });
@@ -748,8 +748,8 @@ function lookCard(isMono, look, on) {
   name.textContent = look.name || "Nothing";
   card.appendChild(name);
 
-  card.title = look.name ? look.name + ": play it on the stretch being worked on"
-                         : "leave a stretch dark";
+  card.title = look.name ? look.name + ": apply it to the selected stretch"
+                         : "turn a stretch off";
   card.onclick = function () {
     var run = galleryRun(isMono);
     landLook(run, stretchFor(run, isMono), look.name);
@@ -1043,7 +1043,7 @@ function renderBar(where, run) {
     if (at < run.sections.length - 1) {
       var edge = document.createElement("div");
       edge.className = "edge";
-      edge.title = "drag to move this cut, or take it out below";
+      edge.title = "drag to move this cut, or click \u00d7 to remove it";
       edge.onmousedown = function (event) {
         event.preventDefault();
         remember(run);
@@ -1058,7 +1058,7 @@ function renderBar(where, run) {
       var drop = document.createElement("button");
       drop.className = "drop";
       drop.textContent = "\u00d7";
-      drop.title = "take this cut out, joining the two stretches";
+      drop.title = "remove this cut and join the two stretches";
       drop.onmousedown = function (event) { event.stopPropagation(); };
       drop.onclick = function (event) {
         event.stopPropagation();
@@ -1100,8 +1100,8 @@ function crossing(out, colour) {
   var made = document.createElement("button");
   made.className = "cross boardarrow";
   var says = colour
-    ? "break " + outputSaid(out) + " into three mono lights"
-    : "put " + outputSaid(out) + " back to one colour light";
+    ? "split " + outputSaid(out) + " into three mono lights"
+    : "rejoin " + outputSaid(out) + " as one colour light";
   made.title = says;
   made.setAttribute("aria-label", says);
   made.innerHTML = "<svg viewBox='0 0 16 16' width='12' height='12' fill='none' " +

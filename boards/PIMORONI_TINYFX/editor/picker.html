@@ -1619,7 +1619,7 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
 </div>
 
 <details open>
- <summary>The file this writes</summary>
+ <summary>The file to be saved</summary>
  <p class="previewnote" id="previewNote" hidden></p>
  <pre class="file" id="preview"></pre>
 </details>
@@ -2104,11 +2104,11 @@ function canPlay(look, target) {
 
 // Why not, in the words of the thing that cannot happen
 function whyNot(look, target) {
-  if (!target.colour && !look.onMono) return "this look is all colour, and " +
+  if (!target.colour && !look.onMono) return "this look needs colour, and " +
                                              target.label.toLowerCase() + " is mono";
   if (target.count === 1 && look.alone === false)
-    return "this look is shaped to several lights";
-  if (target.kind === "run" && !look.spans) return "this look is shaped to separate lights";
+    return "this look needs several lights";
+  if (target.kind === "run" && !look.spans) return "this look needs separate lights";
   return "play this on " + target.label.toLowerCase();
 }
 
@@ -3183,9 +3183,9 @@ function landLook(run, at, name) {
     }
     if (clashing.length) {
       var lines = clashing.map(function (one) { return one.text; }).join("\n");
-      if (!confirm((clashing.length === 1 ? "A line kept as written already plays some of " +
-                    "these lights:" : "Lines kept as written already play some of these " +
-                    "lights:") + "\n\n" + lines + "\n\nTake " +
+      if (!confirm((clashing.length === 1 ? "A line the picker " +
+                    "cannot edit already uses some of these lights:" : "Lines the picker cannot " +
+                    "edit already use some of these lights:") + "\n\n" + lines + "\n\nTake " +
                    (clashing.length === 1 ? "it" : "them") + " out of the file and play " +
                    name + " instead?")) return;
       keptNow = keptNow.filter(function (one) { return clashing.indexOf(one) < 0; });
@@ -3228,8 +3228,8 @@ function lookCard(isMono, look, on) {
   name.textContent = look.name || "Nothing";
   card.appendChild(name);
 
-  card.title = look.name ? look.name + ": play it on the stretch being worked on"
-                         : "leave a stretch dark";
+  card.title = look.name ? look.name + ": apply it to the selected stretch"
+                         : "turn a stretch off";
   card.onclick = function () {
     var run = galleryRun(isMono);
     landLook(run, stretchFor(run, isMono), look.name);
@@ -3523,7 +3523,7 @@ function renderBar(where, run) {
     if (at < run.sections.length - 1) {
       var edge = document.createElement("div");
       edge.className = "edge";
-      edge.title = "drag to move this cut, or take it out below";
+      edge.title = "drag to move this cut, or click \u00d7 to remove it";
       edge.onmousedown = function (event) {
         event.preventDefault();
         remember(run);
@@ -3538,7 +3538,7 @@ function renderBar(where, run) {
       var drop = document.createElement("button");
       drop.className = "drop";
       drop.textContent = "\u00d7";
-      drop.title = "take this cut out, joining the two stretches";
+      drop.title = "remove this cut and join the two stretches";
       drop.onmousedown = function (event) { event.stopPropagation(); };
       drop.onclick = function (event) {
         event.stopPropagation();
@@ -3580,8 +3580,8 @@ function crossing(out, colour) {
   var made = document.createElement("button");
   made.className = "cross boardarrow";
   var says = colour
-    ? "break " + outputSaid(out) + " into three mono lights"
-    : "put " + outputSaid(out) + " back to one colour light";
+    ? "split " + outputSaid(out) + " into three mono lights"
+    : "rejoin " + outputSaid(out) + " as one colour light";
   made.title = says;
   made.setAttribute("aria-label", says);
   made.innerHTML = "<svg viewBox='0 0 16 16' width='12' height='12' fill='none' " +
@@ -4026,7 +4026,7 @@ function renderScenes() {
                    "stroke-linecap='round'/></svg>" +
                    (state.scenes.length ? "another scene" : "split into scenes");
   plus.title = state.scenes.length ? "Add another scene"
-                                   : "Split this into scenes that take turns";
+                                   : "Split into scenes that play in turn";
   plus.onclick = addScene;
   box.appendChild(plus);
 
@@ -4068,7 +4068,7 @@ function sceneTab(which, slot, name, says) {
     var shut = document.createElement("span");
     shut.className = "shut";
     shut.textContent = "\u00d7";
-    shut.title = "Take this scene out";
+    shut.title = "Remove this scene";
     shut.onclick = function (e) { e.stopPropagation(); removeScene(which); };
     title.appendChild(shut);
   }
@@ -4127,7 +4127,7 @@ function renderSceneRow() {
   var name = document.createElement("input");
   name.type = "text";
   name.value = scene.name;
-  name.title = "What this scene is called, which is its heading in the file";
+  name.title = "Scene name";
   name.dataset.focus = "scene-name";
   name.oninput = function () {
     // The brackets and the colon are the heading's own punctuation
@@ -4163,8 +4163,8 @@ function renderSceneRow() {
   tick.checked = scene.restart;
   tick.onchange = function () { scene.restart = tick.checked; draw(); };
   again.appendChild(tick);
-  again.appendChild(document.createTextNode("from the start each turn"));
-  again.title = "Its effects begin again every time the scene comes round";
+  again.appendChild(document.createTextNode("restart each time"));
+  again.title = "Restart this scene's effects each time it plays";
   row.appendChild(again);
 
   box.appendChild(row);
@@ -4799,7 +4799,7 @@ function renderStripBar(where, run) {
     if (at < run.sections.length - 1) {
       var edge = document.createElement("div");
       edge.className = "edge";
-      edge.title = "drag to move this cut, or click to take it out and join the two";
+      edge.title = "drag to move this cut, or click to remove it";
       edge.onmousedown = function (e) {
         e.preventDefault();
         // The bar is rebuilt on every move, so what is held onto is where it lives and
@@ -4811,7 +4811,7 @@ function renderStripBar(where, run) {
       var drop = document.createElement("button");
       drop.className = "drop";
       drop.textContent = "\u00d7";
-      drop.title = "take this cut out, joining the two stretches";
+      drop.title = "remove this cut and join the two stretches";
       drop.onmousedown = function (e) { e.stopPropagation(); };
       drop.onclick = function (e) {
         e.stopPropagation();
@@ -4986,7 +4986,7 @@ var STRIP_MOST = 300;
 
 // The orders a strip can take its colours in, as the file writes them after its length,
 // the board's own being written as nothing
-var STRIP_ORDERS = [["", "GRB, as most strips"], ["rgb", "RGB"], ["rbg", "RBG"],
+var STRIP_ORDERS = [["", "GRB (most strips)"], ["rgb", "RGB"], ["rbg", "RBG"],
                     ["gbr", "GBR"], ["brg", "BRG"], ["bgr", "BGR"]];
 
 // The brightnesses a strip with one of its own can be given, as the file writes them after its
@@ -5007,7 +5007,7 @@ function stripChipChoice(run) {
       if ((run.order || "") === pair[0]) option.selected = true;
       choice.appendChild(option);
     });
-    choice.title = "The order the strip takes its colours in. Change it if red shows as another colour";
+    choice.title = "The strip's colour order. Change it if red shows as another colour";
     choice.onchange = function () {
       stripSet(run, {order: choice.value});
       draw();
@@ -5021,11 +5021,11 @@ function stripChipChoice(run) {
   offered.forEach(function (brightness) {
     var option = document.createElement("option");
     option.value = brightness;
-    option.textContent = stripPercent(brightness) + (brightness === run.made ? ", as made" : "");
+    option.textContent = stripPercent(brightness) + (brightness === run.made ? " (default)" : "");
     if (brightness === run.brightness) option.selected = true;
     choice.appendChild(option);
   });
-  choice.title = "The strip's own brightness for its whole length, under each stretch's level";
+  choice.title = "Overall strip brightness, applied on top of each stretch's level";
   choice.onchange = function () {
     stripSet(run, {brightness: Number(choice.value)});
     draw();
@@ -5088,7 +5088,7 @@ function renderStripChip(where, run) {
   box.appendChild(chip);
   var says = document.createElement("span");
   says.className = "says";
-  says.textContent = "the same in every scene, being how the board is built";
+  says.textContent = "shared by every scene";
   box.appendChild(says);
 }
 
@@ -5222,19 +5222,19 @@ function renderTools(where, run) {
   split.appendChild(toolNumber(ways, 1, Math.max(2, wide), where + "-ways",
                                function (value) { run.ways = value; }));
   var parts = toolAct("stretches", wide < 2 || ways < 2, "split",
-                      "cut the picked stretch into " + ways + " equal parts");
+                      "split the selected stretch into " + ways + " equal parts");
   parts.onclick = function () { divide(run, Math.min(ways, wide)); };
   split.appendChild(parts);
   var lengths = toolAct("lights each", ways >= wide, "lengths",
-                        "cut the picked stretch every " + ways +
-                        (ways === 1 ? " light" : " lights") + ", a shorter one last where " +
-                        "they do not divide it evenly");
+                        "split the selected stretch every " + ways +
+                        (ways === 1 ? " light" : " lights") + ", with a " +
+                        "shorter last stretch if it does not divide evenly");
   lengths.onclick = function () { divideLengths(run, ways); };
   split.appendChild(lengths);
   row.appendChild(split);
 
   var join = toolButton("&#10231;", "Join all", run.sections.length < 2, "join",
-                        "one stretch the whole length, playing what the picked one plays");
+                        "merge into one stretch, keeping the selected stretch's look");
   join.onclick = function () { joinAll(run); };
   row.appendChild(join);
 
@@ -5257,9 +5257,9 @@ function renderTools(where, run) {
   });
   repeat.appendChild(chips);
   var along = toolAct("to the end", run.picked + many > run.sections.length, "repeat",
-                      "the picked stretch" + (many === 1 ? "" : many === 2
+                      "the selected stretch" + (many === 1 ? "" : many === 2
                         ? " and the one after it" : " and the " + (many - 1) + " after it") +
-                      ", repeated along to the end of the run in place of what is there");
+                      ", repeated to the end of the run, replacing what is there");
   along.onclick = function () { fill(run, many); };
   repeat.appendChild(along);
   // Pointed at, the bar outlines what it copies and fades what it would replace
@@ -5774,7 +5774,7 @@ function renderColourPick(box, run) {
   }
   var kept = customColours[remembered];
   if (kept) custom.style.setProperty("--picked", atBrightness(kept.colour, kept.level));
-  custom.title = "any hue and how deep it is, at a brightness of its own";
+  custom.title = "any hue and saturation, with its own brightness";
   var ctag = document.createElement("b");
   ctag.textContent = "custom";
   custom.appendChild(ctag);
@@ -5845,8 +5845,8 @@ function renderColourPick(box, run) {
   hex.maxLength = 7;
   hex.spellcheck = false;
   hex.value = atBrightness(section.colour || "#ffffff", section.level);
-  hex.title = "the colour as it is written, at its brightness. Paste one in and its hue " +
-              "and depth land on the field, and how bright it is on the brightness below";
+  hex.title = "the colour as written, at its brightness. Paste a colour " +
+              "in to set the hue, saturation and brightness below";
   hex.oninput = function () {
     var said = hex.value.replace("#", "").trim();
     if (!/^[0-9a-fA-F]{6}$/.test(said)) return;
@@ -5873,7 +5873,7 @@ function renderColourPick(box, run) {
   var preview = document.createElement("div");
   preview.className = "scustompreview";
   preview.style.background = atBrightness(section.colour || "#ffffff", section.level);
-  preview.title = "The colour as it is written, at its brightness";
+  preview.title = "The colour as written, at its brightness";
   side.appendChild(preview);
   holds.appendChild(side);
   wrap.appendChild(holds);
@@ -5915,8 +5915,8 @@ chosenSteps.push(function (where, run) {
   if (memo) {
     var note = document.createElement("div");
     note.className = "standin";
-    note.textContent = look.name + ", in place of " + memo.look + ", which mono lights " +
-                       "cannot play. Put back, it plays " + memo.look + " again.";
+    note.textContent = look.name + ", replacing " + memo.look + ", " +
+                       "which mono lights cannot play. Rejoin to restore " + memo.look + ".";
     box.querySelector(".chosen").appendChild(note);
   }
   // A count of stops may depend on the stretch, as Spread's lengths do on its lights
@@ -6204,11 +6204,11 @@ function directionToggle(run, section) {
                      (section.reversed && moves ? " on" : "");
   button.setAttribute("aria-pressed", section.reversed && moves ? "true" : "false");
   button.disabled = !moves;
-  button.title = !moves ? (!look ? "Which end it starts from, once it has a look that runs"
+  button.title = !moves ? (!look ? "Which end it starts from, for looks that travel"
                                  : widthOf(section) < 2 ? "One light has no direction"
                                  : look.name + " looks the same from either end")
-               : section.reversed ? "Starting from the far end, running back"
-                                  : "Starting from the near end, running on";
+               : section.reversed ? "Travels from the far end"
+                                  : "Travels from the near end";
   button.innerHTML = "<svg width='28' height='13' viewBox='0 0 28 13' aria-hidden='true'>" +
     (section.reversed
       ? "<rect x='19' y='2.5' width='8' height='8' rx='2' fill='currentColor'/>" +
@@ -6448,8 +6448,7 @@ chosenSteps.push(function (where, run) {
     var drawn = SETTING_ICONS[label.textContent];
     if (!drawn || label.querySelector(".settingicon")) return;
     if (label.textContent === "Fade") {
-      label.title = "how long each light takes to come on and go off, written as ease, a fade " +
-                    "that slows as it arrives";
+      label.title = "how long each light takes to fade on and off, eased so it slows at the end";
     }
     label.classList.add("withicon");
     label.insertAdjacentHTML("afterbegin", "<svg class='settingicon' viewBox='0 0 16 16' " +
@@ -6543,7 +6542,7 @@ chosenSteps.push(function (where, run) {
     chip.type = "button";
     chip.className = "blinkchip" + (at === blinks.at ? " on" : "");
     chip.style.setProperty("--chip", hex);
-    chip.title = (at === blinks.at ? "the colour the picker below is changing, " : "change ") +
+    chip.title = (at === blinks.at ? "the colour being edited below, " : "change ") +
                  (blinkNamed(hex) || hex);
     chip.onclick = function () { choose(at); };
     row.appendChild(chip);
@@ -6570,7 +6569,7 @@ chosenSteps.push(function (where, run) {
   more.type = "button";
   more.className = "blinkmore";
   more.textContent = "+ another colour";
-  more.title = "blink through several colours in turn, one a beat";
+  more.title = "blink through several colours in turn, one colour per blink";
   // The colour added is a copy of the last, a custom one included, to be changed from there
   more.onclick = function () {
     var mine = live();
@@ -6770,7 +6769,7 @@ function unmark() {
 function boardBox(panel, parts) {
   var box = document.createElement("span");
   box.className = "chip boardchip " + BOARD_CHIP_CLASSES[panel];
-  box.title = "How the board is built, which is the same in every scene";
+  box.title = "Board setup, shared by every scene";
   box.appendChild(boardIcon());
   parts.forEach(function (part) {
     box.appendChild(typeof part === "string" ? document.createTextNode(part) : part);
@@ -6819,7 +6818,7 @@ function renderOutFacts() {
     var hint = document.createElement("span");
     hint.className = "hint";
     var breaking = breakingOutputs();
-    hint.textContent = "Drag a light to where it sits in your build." +
+    hint.textContent = "Drag each light to match its position in your build." +
       (breaking.length > 1 ? " Arrows split an output into three mono lights, or rejoin them."
        : breaking.length ? " The arrow on " + outputSaid(breaking[0]) + " splits it into three " +
                            "mono lights, or rejoins them." : "");
@@ -6881,7 +6880,7 @@ function stripDrop(run) {
   drop.type = "button";
   drop.className = "drop";
   drop.textContent = "\u00d7";
-  drop.title = "Take this strip out of every scene";
+  drop.title = "Remove this strip from every scene";
   drop.onclick = function () { dropStrip(run); };
   return drop;
 }
@@ -6928,7 +6927,7 @@ function renderLeds(where, run) {
     if (says) box.removeChild(says);
     var chip = box.querySelector(".chip");
     chip.className = "chip boardchip " + BOARD_CHIP_CLASSES[panel];
-    chip.title = "How the board is built, which is the same in every scene";
+    chip.title = "Board setup, shared by every scene";
     chip.insertBefore(boardIcon(), chip.firstChild);
     chip.appendChild(stripDrop(run));
   } else {
@@ -7071,11 +7070,9 @@ function renderConnectors() {
   var said = document.createElement("p");
   said.className = "wiresay";
   said.innerHTML = astray.length
-    ? "<b>" + astray.length + " of " + side.order.length + "</b> lights are out of the order " +
-      "they are wired in, their numbers in bold. Hover over a light or a connector to " +
-      "highlight its wire."
-    : "Every light is in the order it is wired. Hover over a light or a connector to " +
-      "highlight its wire.";
+    ? "<b>" + astray.length + " of " + side.order.length + "</b> lights are out of wiring " +
+      "order, numbered in bold. Hover over a light or connector to highlight its wire."
+    : "All lights are in wiring order. Hover over a light or connector to highlight its wire.";
   box.appendChild(said);
   // The connectors sit lower by whatever the cutting and the bar took beyond them, the
   // lines running on down, so setting up leaves the section its size
@@ -7391,12 +7388,12 @@ function renderSoundTab() {
     : !state.scanned
       ? "reading the drive..."
     : !(state.sounds.length || state.sound || state.soundKept)
-      ? "no sounds on the drive yet; drop a wav onto it"
+      ? "no sounds on the drive yet. Drop a WAV file onto it"
     : !state.scenes.length
-      ? "one wav, playing on while the lights run"
+      ? "one WAV file, playing alongside the lights"
     : state.at < 0
-      ? "played in any scene that brings no sound of its own"
-      : "played while this scene shows, picking up where it left off";
+      ? "plays in any scene without its own sound"
+      : "plays while this scene shows, resuming where it left off";
 
   // How the sound is played rather than which one it is, so it sits above them,
   // where a screen keeps its settings
@@ -7405,8 +7402,8 @@ function renderSoundTab() {
   again.textContent = "on repeat";
   again.disabled = !state.sound;
   again.title = state.sound
-    ? "Start it again as it ends, instead of playing once as the board starts"
-    : "Nothing is playing, so there is nothing to repeat";
+    ? "Loop the sound instead of playing it once"
+    : "No sound chosen";
   again.onclick = function () { state.soundLoop = !state.soundLoop; draw(); };
   var above = document.createElement("div");
   above.style.margin = "0 0 .7rem";
@@ -7588,7 +7585,7 @@ async function profileSound(name, handle) {
     var file = await handle.getFile();
     var head = new DataView(await file.slice(0, 8192).arrayBuffer());
     if (head.getUint32(0) !== 0x52494646 || head.getUint32(8) !== 0x57415645)
-      throw new Error("not a wav");
+      throw new Error("not a WAV file");
     var at = 12;
     var byteRate = 0;
     var bits = 16;
@@ -7870,7 +7867,7 @@ function liveSwatch(swatch, panel) {
       });
     }});
   });
-  swatch.title = "what its lights are showing now";
+  swatch.title = "what the lights are showing";
 }
 
 LED_PANELS.forEach(function (panel) { tabSwatches[panel] = liveSwatch; });
@@ -7990,7 +7987,7 @@ function playsItself(text) {
   return !/\breload\s*=\s*manual\b/i.test(text);
 }
 
-var CHECKING = "The board has not read the file yet.";
+var CHECKING = "The board has not loaded the file yet.";
 
 async function markChecking() {
   try {
@@ -8048,12 +8045,12 @@ async function waitForBoard(before, nothingYet) {
 
 function sayWhatHappened(said, also) {
   if (said === CHECKING)
-    banner("No answer from the board yet. Eject the FX drive, or press Boot " +
-           "once, and it plays. If the lights already changed, this computer is " +
-           "showing the page an old copy of the drive: press the board's Reset " +
-           "button to see what it wrote.", true);
+    banner("No response from the board yet. Eject the FX drive or press Boot " +
+           "once to play the save. If the lights have already changed, the " +
+           "board has played it but this computer is showing an old copy of the " +
+           "drive. Press Reset on the board so the computer sees what it wrote.", true);
   else if (said)
-    banner("The board wasn't happy with some of it:", true, said);
+    banner("The board reported problems:", true, said);
   else
     banner("Playing on the board. No problems reported." + (also || ""));
 }
@@ -8065,12 +8062,13 @@ async function openDrive(fresh) {
   } catch (e) {
     if (e.name === "AbortError") return;
     if (e.name === "NotAnFxDrive") {
-      banner("That folder has no effects.txt, so it does not look like an FX " +
-             "drive. Pick the drive itself, the one named FX.", true);
+      banner("That folder has no effects.txt, so it is " +
+             "not an FX drive. Choose the drive named FX.", true);
       return;
     }
-    banner("Could not open the drive: " + e.name + ". Is it showing? " +
-           "A double press of Boot brings it back.", true);
+    banner("Could not open the drive (" + e.name + "). Check the FX " +
+           "drive is showing on this computer, and double-press Boot if " +
+           "it is not. If the browser asked for permission, choose Allow.", true);
   }
 }
 
@@ -8090,8 +8088,7 @@ var WROTE_KEY = "fx-picker-wrote";
 
 // What a save asks where the file on the board has changed since this page read it
 function overwriteQuestion() {
-  return "The file on the board has changed since this page read it, so saving replaces " +
-         "those changes. Save over it?";
+  return "The file on the board has changed since it was opened here. Overwrite those changes?";
 }
 
 // What the parts below read off a drive once it is open, each awaited in the order the parts come
@@ -8178,8 +8175,8 @@ function renderPreview() {
   var note = document.getElementById("previewNote");
   if (note) {
     note.hidden = !stale;
-    note.textContent = stale === 1 ? "One line the board named has changed since it was read."
-                                   : stale + " lines the board named have changed since.";
+    note.textContent = stale === 1 ? "One reported line has since changed."
+                                   : stale + " reported lines have since changed.";
   }
 }
 
@@ -8203,38 +8200,36 @@ document.getElementById("save").onclick = async function () {
     await writable.write(text);
     await writable.close();
     var back = await (await drive.fileHandle.getFile()).text();
-    if (back !== text) throw new Error("the file read back differently");
+    if (back !== text) throw new Error("the saved file did not match when read back");
     try { localStorage.setItem(WROTE_KEY, text); } catch (e) {}
     // The marks were about the file the board had, which this one replaces
     takeAnswer(null, text);
     await new Promise(function (settle) { setTimeout(settle, SAVING_TAIL_MS); });
     // Said once, where this save is the first to hide the drive
     var hides = /\bdrive=manual\b/.test(text) && !/\bdrive=manual\b/.test(onBoard)
-      ? " The drive stays hidden the next time the board starts: double-press Boot " +
-        "to bring it back."
+      ? " The drive will be hidden next time the board starts. Double-press Boot to show it."
       : "";
     // A program running keeps the board busy, so neither an eject nor a press reaches it
     if (/\bprogram=/.test(onBoard)) {
-      banner("On its way. The board is running a program, so press its Reset button to play " +
-             "this one." + hides);
+      banner("Saved. The board is running a program, so press Reset to play this change." + hides);
       return;
     }
     // A board saving on its own that is given a program restarts to run it, so there is no
     // answer to wait for
     if (errorsBefore !== undefined && /\bprogram=/.test(text)) {
-      banner("On its way. The board restarts to run the program, which takes a few seconds." +
+      banner("Saved. The board is restarting to run the program." +
              hides);
       return;
     }
     if (errorsBefore === undefined) {
-      banner("On its way. " + (playsItself(text)
-             ? "Eject the FX drive, or press Boot once, to play this one. " +
-               "From now on a save plays on its own."
-             : "Eject the FX drive on this computer, and the board plays it. Double-press " +
-               "Boot to bring the drive back, then press 'Check board'.") + hides);
+      banner("Saved. " + (playsItself(text)
+             ? "Eject the FX drive or press Boot once to play " +
+               "it. Future saves will play automatically."
+             : "Eject the FX drive to play it. Then double-press " +
+               "Boot to show the drive again and press 'Check board'.") + hides);
       return;
     }
-    banner("Saved. Waiting for the board to pick it up...", "hold");
+    banner("Saved. Waiting for the board to load it...", "hold");
     var was = errorsBefore === false ? null : errorsBefore;
     var said = await waitForBoard(was, function () {
       banner("Playing on the board. Checking for problems...", "hold");
@@ -8244,14 +8239,13 @@ document.getElementById("save").onclick = async function () {
   } catch (e) {
     if (e.name === "AbortError") return;
     if (e.name === "QuotaExceededError") {
-      banner("The FX drive is full, so there was no room to save. Delete a " +
-             "picture or sound from it and try again.", true);
+      banner("The FX drive is full. Delete a picture, sound or program and try again.", true);
       return;
     }
     drive.fileHandle = null;
     drive.dirHandle = null;
-    banner("That didn't reach the board: " + e.name + ". Is the FX drive showing? " +
-           "A double press of Boot brings it back; then try again.", true);
+    banner("The save did not reach the board (" + e.name + "). Check the FX drive " +
+           "is showing, double-press Boot if it is not, then try again.", true);
   } finally {
     button.disabled = !drive.fileHandle;
     check.disabled = !drive.fileHandle;
@@ -8260,22 +8254,21 @@ document.getElementById("save").onclick = async function () {
 
 // The answer and the file it is about are read together, the board having finished with both
 document.getElementById("check").onclick = async function () {
-  banner("Asking the board...", "hold");
+  banner("Checking...", "hold");
   await new Promise(function (settle) { setTimeout(settle, 350); });
   try {
     var about = await (await drive.fileHandle.getFile()).text();
     var said = await readErrors();
     if (said === false) throw {name: "NotReadable"};
     if (said === CHECKING) {
-      banner("The board has not read the file yet. Eject the FX drive, or press " +
-             "Boot once.", "hold");
+      banner("The board has not loaded the file yet. Eject the FX drive or press Boot once.", "hold");
       return;
     }
-    if (said) banner("The board wasn't happy with some of it:", true, said);
-    else banner("All good. The board read the file and found nothing wrong.");
+    if (said) banner("The board reported problems:", true, said);
+    else banner("No problems reported.");
     takeAnswer(said, about);
   } catch (e) {
-    banner("Couldn't look: " + e.name + ". Is the drive showing?", true);
+    banner("Could not read the drive (" + e.name + "). Is it showing?", true);
   }
 };
 
@@ -8283,7 +8276,7 @@ document.getElementById("open").onclick = function () { openDrive(false); };
 
 if (!CAN_REACH_A_DRIVE) {
   document.getElementById("open").disabled = true;
-  banner("This page reaches the drive only in Chrome or Edge.");
+  banner("This page needs Chrome or Edge to reach the drive.");
 }
 
 // ---- the board's own settings -----------------------------------------------------------------
@@ -8413,7 +8406,7 @@ function argsFor(path, locked) {
       gone.type = "button";
       gone.className = "progless";
       gone.innerHTML = "&times;";
-      gone.title = "Take this argument away";
+      gone.title = "Remove this argument";
       gone.disabled = !!locked;
       gone.onclick = function () {
         given.splice(at, 1);
@@ -8429,7 +8422,7 @@ function argsFor(path, locked) {
     more.className = "progmore";
     more.textContent = "+ an argument";
     more.disabled = !!locked;
-    more.title = "Something to pass the program, which it reads from sys.argv";
+    more.title = "Passed to the program in sys.argv";
     more.onclick = function () {
       given.push("");
       draw();
@@ -8461,8 +8454,8 @@ function programNote() {
   note.appendChild(document.createTextNode(
     "The board runs " + (program && program.name ? program.name + " (" + boardSet.program + ")"
                                                  : boardSet.program) +
-    " in place of the effects. They are kept, and play if it is missing or stops, when " +
-    "errors.txt says why."));
+    " instead of the effects. The effects are kept, and play if the " +
+    "program is missing or stops, with the reason in errors.txt."));
 }
 
 drawSteps.after.push(function () {
@@ -8483,8 +8476,8 @@ function renderSceneSettings() {
   if (state.at < 0 && state.scenes.length) {
     var note = document.createElement("div");
     note.className = "sceneset alwaysnote";
-    note.textContent = "Always on plays under every scene. A scene that sets the same lights, " +
-                       "screen or sound takes them over while it shows.";
+    note.textContent = "Always on plays under every scene. A scene that uses the " +
+                       "same lights, screen or sound overrides it while showing.";
     // One line, as the row it stands in for is, the whole of it in the tip where it is cut
     note.title = note.textContent;
     document.getElementById("sceneSettings").appendChild(note);
@@ -8500,8 +8493,8 @@ function renderSceneSettings() {
   if (!ticked) return;
   row.replaceChild(toggle("&#8630;", "Restart", scene.restart,
                           function (on) { scene.restart = on; },
-                          "Its effects begin again every time the scene comes round, " +
-                          "instead of carrying on where they left off"),
+                          "Restart this scene's effects each time it " +
+                          "plays, instead of resuming where they left off"),
                    ticked);
 }
 
@@ -8531,12 +8524,12 @@ function saveMenu() {
     menu.appendChild(label);
   }
   choice("Play saves without an eject",
-         boardSet.program ? "a save restarts the board, which then runs the program afresh"
-                          : "the save that first turns this on still needs one",
+         boardSet.program ? "saving restarts the board and runs the program"
+                          : "the first save after turning this on still needs an eject",
          boardSet.reload, function (on) { boardSet.reload = on; }, null);
-  choice("Keep the drive hidden at start", "double-press Boot to bring it back",
+  choice("Keep the drive hidden at start", "double-press Boot to show it",
          boardSet.driveHidden, function (on) { boardSet.driveHidden = on; },
-         driveMeansSomething() ? null : "shown anyway while a program runs");
+         driveMeansSomething() ? null : "always shown while a program runs");
 }
 
 (function () {
@@ -8546,7 +8539,7 @@ function saveMenu() {
   arrow.id = "saveArrow";
   arrow.className = "savearrow";
   arrow.textContent = "\u25be";
-  arrow.title = "How the board takes a save";
+  arrow.title = "Save settings";
   save.parentNode.insertBefore(arrow, save.nextSibling);
   var menu = document.createElement("div");
   menu.id = "saveMenu";
@@ -8981,9 +8974,9 @@ function heroNote(path) {
   note.appendChild(boardIcon());
   var said = document.createElement("span");
   said.textContent = path
-    ? "The board runs " + path.split("/").pop() + " in place of the effects. They are kept, and " +
-      "play if it is missing or stops, when errors.txt says why."
-    : "No program chosen, so the board plays the effects. Pick one below to run it in their place.";
+    ? "The board runs " + path.split("/").pop() + " instead of the effects. The effects are " +
+      "kept, and play if the program is missing or stops, with the reason in errors.txt."
+    : "No program chosen, so the board plays the effects. Choose one below to run it instead.";
   note.appendChild(said);
   if (path) {
     var none = document.createElement("button");
@@ -9018,7 +9011,7 @@ function programHero(path) {
     var taken = ["outputs"];
     if (SCREEN_PORTS.length) taken.push(SCREEN_PORTS.length > 1 ? "screens" : "screen");
     if (BOARD.sound) taken.push("sound");
-    waiting.innerHTML = "<h3>Choose a program</h3><p>Each takes the whole board, its " +
+    waiting.innerHTML = "<h3>Choose a program</h3><p>A program takes over the whole board, its " +
                         spoken(taken) + ", while it runs.</p>";
     body.appendChild(waiting);
     return hero;
@@ -9027,9 +9020,9 @@ function programHero(path) {
   words.className = "progwords";
   var program = programNamed(path) || {};
   words.innerHTML = "<h3>" + escapeHtml(programTitle(path)) + "</h3>" +
-                    "<p>" + escapeHtml(program.does || "Says nothing about itself.") + "</p>" +
+                    "<p>" + escapeHtml(program.does || "No description.") + "</p>" +
                     "<p class='progwhere'>" + escapeHtml(path) +
-                    (program.example ? ", comes with the board" : ", on the drive") + "</p>";
+                    (program.example ? ", built in" : ", on the drive") + "</p>";
   // What it uses, each drawn and named, as the filter below names them
   var uses = document.createElement("div");
   uses.className = "herouses";
@@ -9054,8 +9047,8 @@ function renderProgramView() {
     var closed = document.createElement("p");
     closed.className = "prognone";
     closed.textContent = CAN_REACH_A_DRIVE ? "Open the FX drive to see the programs on it."
-                                           : "This browser cannot open the FX drive, so its " +
-                                             "programs cannot be listed. Chrome and Edge can.";
+                                           : "This browser cannot open the FX drive, so " +
+                                             "programs cannot be listed. Use Chrome or Edge.";
     programView.appendChild(closed);
     return;
   }
@@ -9095,7 +9088,7 @@ function renderProgramView() {
   if (!shown) {
     var none = document.createElement("p");
     none.className = "prognone";
-    none.textContent = listed ? "Every program here needs something not ticked."
+    none.textContent = listed ? "Every program here needs hardware that is not ticked."
                               : "There are no programs on this drive.";
     programView.appendChild(none);
   }
@@ -9359,11 +9352,11 @@ function scenesInTheTab() {
 var LOOK_GROUPS = [
   {name: "Along the lights", says: "travelling from one end to the other",
    looks: ["Rainbow", "Wave", "Scanner", "Chase", "Marquee"]},
-  {name: "Ready-made", says: "made from the other looks",
+  {name: "Ready-made", says: "combinations of other looks",
    looks: ["Campfire", "Emergency", "Party"]},
   {name: "All together", says: "every light the same",
    looks: ["Solid", "Colour cycle", "Colour steps", "Breathe", "Blink"]},
-  {name: "Each its own", says: "every light playing a part of its own",
+  {name: "Individual", says: "each light plays its own part",
    looks: ["Sparkle", "Counter", "Traffic light", "Pelican crossing"]}
 ];
 
@@ -9593,7 +9586,7 @@ chosenSteps.push(function (where, run) {
       // A signal's timing is its seconds already, typed past the slider's ends as it is
       widest = Math.max(String(range.min).length, String(range.max).length) + 2;
       cells = figureCells(figureSaid(Number(range.value)), "s",
-                          "seconds, typed exactly, past the slider's ends too", function (typed) {
+                          "seconds, typed exactly, beyond the slider's range if needed", function (typed) {
         var mine = live();
         mine.timings = Object.assign({}, mine.timings);
         mine.timings[timing] = Math.round(typed * 100) / 100;
@@ -9626,7 +9619,7 @@ chosenSteps.push(function (where, run) {
         var typedHere = section.exact && section.exact[slider];
         var value = typedHere ? typedHere.value : settingIn(sectionLines(run, section, look), key);
         cells = figureCells(figureSaid(way.show(value)), way.unit,
-                            "the file's " + key + ", typed exactly, past the slider's ends too",
+                            "the file's " + key + ", typed exactly, beyond the slider's range if needed",
                             function (typed) {
           var wanted = way.take(typed);
           var mine = live();
@@ -9685,7 +9678,7 @@ chosenSteps.push(function (where, run) {
   handle.type = "button";
   handle.className = "figurehandle";
   handle.textContent = figuresOpen ? "\u203a" : "\u2039";
-  handle.title = figuresOpen ? "hide the figures" : "show each setting's figure, to type one in";
+  handle.title = figuresOpen ? "hide values" : "show values";
   handle.setAttribute("aria-expanded", figuresOpen ? "true" : "false");
   handle.style.gridRow = "1 / span " + ranges.length;
   handle.onclick = function () {
@@ -9779,8 +9772,8 @@ async function addFiles(kinds, what, takes) {
   } catch (e) {
     // A dismissed dialog says nothing. Anything else is the browser refusing the files
     if (e.name !== "AbortError")
-      banner("The browser would not open those files (" + e.message + "). Copy them to " +
-             "another folder, such as Downloads, and add them from there.", true);
+      banner("The browser could not open those files (" + e.message + "). " +
+             "Copy them to another folder, such as Downloads, and try again.", true);
     return;
   }
   var landed = 0;
@@ -9822,12 +9815,12 @@ async function addFiles(kinds, what, takes) {
     return /\.py$/i.test(name) && !mediaNamed(name);
   });
   if (refused.length && landed)
-    banner(landed + " copied; these did not arrive: " + refused.join(", "), true);
+    banner(landed + " copied. These could not be copied: " + refused.join(", "), true);
   else if (refused.length)
-    banner("Nothing arrived: " + refused.join(", "), true);
+    banner("Nothing copied: " + refused.join(", "), true);
   else if (unoffered.length)
-    banner(unoffered.join(", ") + " copied, but only a drawing is offered here, and a " +
-           "drawing's opening string starts with Drawing: and its name.", true);
+    banner(unoffered.join(", ") + " copied, but only drawings appear here. " +
+           "A drawing's opening string starts with Drawing: and its name.", true);
   else if (landed)
     banner(landed + " " + what + " copied to the drive.");
   draw();
@@ -10921,7 +10914,7 @@ function renderKept() {
   var head = document.createElement("div");
   head.className = "keptsay";
   head.textContent = "Also " + (state.scenes.length ? "in this scene" : "in the file") +
-                     ", kept as written:";
+                     ", not editable here:";
   box.appendChild(head);
   keptNow.forEach(function (one, at) {
     if (one.text === null) return;
@@ -10967,7 +10960,7 @@ function markKeptLights() {
         for (var lamp = section.from; lamp <= section.to; lamp++) {
           if (named[lamp]) {
             cell.classList.add("keptlamp");
-            cell.title = "played by a line kept as written: " + named[lamp][0].text;
+            cell.title = "used by a line the picker cannot edit: " + named[lamp][0].text;
             return;
           }
         }
@@ -10979,7 +10972,7 @@ function markKeptLights() {
     box.querySelectorAll(".lamp").forEach(function (lamp, at) {
       if (!named[at]) return;
       lamp.classList.add("keptlamp");
-      lamp.title = "played by a line kept as written: " + named[at][0].text;
+      lamp.title = "used by a line the picker cannot edit: " + named[at][0].text;
     });
   });
 }
@@ -11014,9 +11007,9 @@ connectSteps.push(async function () {
     var kept = readEffects(text).slots.reduce(function (count, slot) {
       return count + slot.kept.filter(function (one) { return one.text !== null; }).length;
     }, 0);
-    var open = confirm("This file was not written by this page. Open what's on the board? " +
-                       (kept === 1 ? "One line" : kept + " lines") + " would be kept as " +
-                       "written. Cancel starts fresh, and saving then replaces the file.");
+    var open = confirm("This file was not written by the picker. Open it anyway? " +
+                       (kept === 1 ? "One line" : kept + " lines") + " would be kept " +
+                       "unchanged. Cancel to start fresh, replacing the file when you save.");
     if (!open) {
       rememberRead(text);
       return;

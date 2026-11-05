@@ -572,7 +572,7 @@ function renderStripBar(where, run) {
     if (at < run.sections.length - 1) {
       var edge = document.createElement("div");
       edge.className = "edge";
-      edge.title = "drag to move this cut, or click to take it out and join the two";
+      edge.title = "drag to move this cut, or click to remove it";
       edge.onmousedown = function (e) {
         e.preventDefault();
         // The bar is rebuilt on every move, so what is held onto is where it lives and
@@ -584,7 +584,7 @@ function renderStripBar(where, run) {
       var drop = document.createElement("button");
       drop.className = "drop";
       drop.textContent = "\u00d7";
-      drop.title = "take this cut out, joining the two stretches";
+      drop.title = "remove this cut and join the two stretches";
       drop.onmousedown = function (e) { e.stopPropagation(); };
       drop.onclick = function (e) {
         e.stopPropagation();
@@ -759,7 +759,7 @@ var STRIP_MOST = 300;
 
 // The orders a strip can take its colours in, as the file writes them after its length,
 // the board's own being written as nothing
-var STRIP_ORDERS = [["", "GRB, as most strips"], ["rgb", "RGB"], ["rbg", "RBG"],
+var STRIP_ORDERS = [["", "GRB (most strips)"], ["rgb", "RGB"], ["rbg", "RBG"],
                     ["gbr", "GBR"], ["brg", "BRG"], ["bgr", "BGR"]];
 
 // The brightnesses a strip with one of its own can be given, as the file writes them after its
@@ -780,7 +780,7 @@ function stripChipChoice(run) {
       if ((run.order || "") === pair[0]) option.selected = true;
       choice.appendChild(option);
     });
-    choice.title = "The order the strip takes its colours in. Change it if red shows as another colour";
+    choice.title = "The strip's colour order. Change it if red shows as another colour";
     choice.onchange = function () {
       stripSet(run, {order: choice.value});
       draw();
@@ -794,11 +794,11 @@ function stripChipChoice(run) {
   offered.forEach(function (brightness) {
     var option = document.createElement("option");
     option.value = brightness;
-    option.textContent = stripPercent(brightness) + (brightness === run.made ? ", as made" : "");
+    option.textContent = stripPercent(brightness) + (brightness === run.made ? " (default)" : "");
     if (brightness === run.brightness) option.selected = true;
     choice.appendChild(option);
   });
-  choice.title = "The strip's own brightness for its whole length, under each stretch's level";
+  choice.title = "Overall strip brightness, applied on top of each stretch's level";
   choice.onchange = function () {
     stripSet(run, {brightness: Number(choice.value)});
     draw();
@@ -861,7 +861,7 @@ function renderStripChip(where, run) {
   box.appendChild(chip);
   var says = document.createElement("span");
   says.className = "says";
-  says.textContent = "the same in every scene, being how the board is built";
+  says.textContent = "shared by every scene";
   box.appendChild(says);
 }
 
@@ -995,19 +995,19 @@ function renderTools(where, run) {
   split.appendChild(toolNumber(ways, 1, Math.max(2, wide), where + "-ways",
                                function (value) { run.ways = value; }));
   var parts = toolAct("stretches", wide < 2 || ways < 2, "split",
-                      "cut the picked stretch into " + ways + " equal parts");
+                      "split the selected stretch into " + ways + " equal parts");
   parts.onclick = function () { divide(run, Math.min(ways, wide)); };
   split.appendChild(parts);
   var lengths = toolAct("lights each", ways >= wide, "lengths",
-                        "cut the picked stretch every " + ways +
-                        (ways === 1 ? " light" : " lights") + ", a shorter one last where " +
-                        "they do not divide it evenly");
+                        "split the selected stretch every " + ways +
+                        (ways === 1 ? " light" : " lights") + ", with a " +
+                        "shorter last stretch if it does not divide evenly");
   lengths.onclick = function () { divideLengths(run, ways); };
   split.appendChild(lengths);
   row.appendChild(split);
 
   var join = toolButton("&#10231;", "Join all", run.sections.length < 2, "join",
-                        "one stretch the whole length, playing what the picked one plays");
+                        "merge into one stretch, keeping the selected stretch's look");
   join.onclick = function () { joinAll(run); };
   row.appendChild(join);
 
@@ -1030,9 +1030,9 @@ function renderTools(where, run) {
   });
   repeat.appendChild(chips);
   var along = toolAct("to the end", run.picked + many > run.sections.length, "repeat",
-                      "the picked stretch" + (many === 1 ? "" : many === 2
+                      "the selected stretch" + (many === 1 ? "" : many === 2
                         ? " and the one after it" : " and the " + (many - 1) + " after it") +
-                      ", repeated along to the end of the run in place of what is there");
+                      ", repeated to the end of the run, replacing what is there");
   along.onclick = function () { fill(run, many); };
   repeat.appendChild(along);
   // Pointed at, the bar outlines what it copies and fades what it would replace
@@ -1547,7 +1547,7 @@ function renderColourPick(box, run) {
   }
   var kept = customColours[remembered];
   if (kept) custom.style.setProperty("--picked", atBrightness(kept.colour, kept.level));
-  custom.title = "any hue and how deep it is, at a brightness of its own";
+  custom.title = "any hue and saturation, with its own brightness";
   var ctag = document.createElement("b");
   ctag.textContent = "custom";
   custom.appendChild(ctag);
@@ -1618,8 +1618,8 @@ function renderColourPick(box, run) {
   hex.maxLength = 7;
   hex.spellcheck = false;
   hex.value = atBrightness(section.colour || "#ffffff", section.level);
-  hex.title = "the colour as it is written, at its brightness. Paste one in and its hue " +
-              "and depth land on the field, and how bright it is on the brightness below";
+  hex.title = "the colour as written, at its brightness. Paste a colour " +
+              "in to set the hue, saturation and brightness below";
   hex.oninput = function () {
     var said = hex.value.replace("#", "").trim();
     if (!/^[0-9a-fA-F]{6}$/.test(said)) return;
@@ -1646,7 +1646,7 @@ function renderColourPick(box, run) {
   var preview = document.createElement("div");
   preview.className = "scustompreview";
   preview.style.background = atBrightness(section.colour || "#ffffff", section.level);
-  preview.title = "The colour as it is written, at its brightness";
+  preview.title = "The colour as written, at its brightness";
   side.appendChild(preview);
   holds.appendChild(side);
   wrap.appendChild(holds);
@@ -1688,8 +1688,8 @@ chosenSteps.push(function (where, run) {
   if (memo) {
     var note = document.createElement("div");
     note.className = "standin";
-    note.textContent = look.name + ", in place of " + memo.look + ", which mono lights " +
-                       "cannot play. Put back, it plays " + memo.look + " again.";
+    note.textContent = look.name + ", replacing " + memo.look + ", " +
+                       "which mono lights cannot play. Rejoin to restore " + memo.look + ".";
     box.querySelector(".chosen").appendChild(note);
   }
   // A count of stops may depend on the stretch, as Spread's lengths do on its lights
@@ -1977,11 +1977,11 @@ function directionToggle(run, section) {
                      (section.reversed && moves ? " on" : "");
   button.setAttribute("aria-pressed", section.reversed && moves ? "true" : "false");
   button.disabled = !moves;
-  button.title = !moves ? (!look ? "Which end it starts from, once it has a look that runs"
+  button.title = !moves ? (!look ? "Which end it starts from, for looks that travel"
                                  : widthOf(section) < 2 ? "One light has no direction"
                                  : look.name + " looks the same from either end")
-               : section.reversed ? "Starting from the far end, running back"
-                                  : "Starting from the near end, running on";
+               : section.reversed ? "Travels from the far end"
+                                  : "Travels from the near end";
   button.innerHTML = "<svg width='28' height='13' viewBox='0 0 28 13' aria-hidden='true'>" +
     (section.reversed
       ? "<rect x='19' y='2.5' width='8' height='8' rx='2' fill='currentColor'/>" +
@@ -2221,8 +2221,7 @@ chosenSteps.push(function (where, run) {
     var drawn = SETTING_ICONS[label.textContent];
     if (!drawn || label.querySelector(".settingicon")) return;
     if (label.textContent === "Fade") {
-      label.title = "how long each light takes to come on and go off, written as ease, a fade " +
-                    "that slows as it arrives";
+      label.title = "how long each light takes to fade on and off, eased so it slows at the end";
     }
     label.classList.add("withicon");
     label.insertAdjacentHTML("afterbegin", "<svg class='settingicon' viewBox='0 0 16 16' " +

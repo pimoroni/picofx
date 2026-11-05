@@ -269,7 +269,7 @@ function renderScreenBoxes() {
     var drop = document.createElement("button");
     drop.className = "drop";
     drop.textContent = "\u00d7";
-    drop.title = "Take this screen out of every scene";
+    drop.title = "Remove this screen from every scene";
     drop.onclick = function () {
       screen.there = false;
       // Every scene's choice for it goes too, since nothing is left to show them
@@ -290,7 +290,7 @@ function renderScreenBoxes() {
     if (!screen.size) {
       var quiet = document.createElement("option");
       quiet.value = "";
-      quiet.textContent = "size as fitted";
+      quiet.textContent = "fitted size";
       quiet.selected = true;
       size.appendChild(quiet);
     }
@@ -306,7 +306,7 @@ function renderScreenBoxes() {
       draw();
     };
     size.className = "inband";
-    size.title = "Which panel is plugged in, which is the same for every scene";
+    size.title = "Panel fitted, shared by every scene";
     head.insertBefore(size, drop);
 
     body.appendChild(panelPreview(screen));
@@ -316,7 +316,7 @@ function renderScreenBoxes() {
     body.insertBefore(showingLine(screen, letter), body.querySelector(".looksettings"));
     body.insertBefore(lightRow(screen.look.backlight, function (value) {
       screen.look.backlight = value;
-    }, "backlight", "How brightly " + screenShown(letter).replace("Screen", "screen") + " is lit, in this scene"), body.firstChild);
+    }, "backlight", "Backlight brightness for " + screenShown(letter).replace("Screen", "screen") + " in this scene"), body.firstChild);
 
     // What the file already says for this screen, where the picker did not write it
     // and no picture can stand for it. It is a line of its own under the settings
@@ -324,7 +324,7 @@ function renderScreenBoxes() {
       var keep = document.createElement("button");
       keep.className = "keep" + (screen.shows === "keep" ? " picked" : "");
       keep.title = screen.kept;
-      keep.innerHTML = "<b>Leave it as it is</b><code>" + screen.kept + "</code>";
+      keep.innerHTML = "<b>Keep as is</b><code>" + screen.kept + "</code>";
       keep.onclick = function () { screen.shows = "keep"; draw(); };
       side.appendChild(keep);
     }
@@ -344,8 +344,8 @@ function renderAssets() {
     : !state.scanned
       ? "reading the drive..."
       : state.media.length
-        ? "one set of pictures, each able to go to A, to B, or to both"
-        : "no pictures on the drive yet; drop a gif, png, jpg or drawing onto it";
+        ? "one set of pictures, each shown on A, B or both"
+        : "no pictures on the drive yet. Drop a GIF, PNG, JPEG or drawing onto it";
   state.media.forEach(function (media) {
     var name = media.name;
     var on = {};
@@ -715,7 +715,7 @@ function renderScreensParts() {
   // The band is the screen's coloured box, so it wears the board's chip like the others
   head.querySelectorAll(".screen-box h3").forEach(function (band) {
     band.insertBefore(boardIcon(), band.firstChild);
-    band.title = "How the board is built, which is the same in every scene";
+    band.title = "Board setup, shared by every scene";
   });
   // Whether a screen is fitted and its size are the board's
   if (!setupOn) {

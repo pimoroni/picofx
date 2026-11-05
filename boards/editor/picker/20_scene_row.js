@@ -12,8 +12,8 @@ function renderSceneSettings() {
   if (state.at < 0 && state.scenes.length) {
     var note = document.createElement("div");
     note.className = "sceneset alwaysnote";
-    note.textContent = "Always on plays under every scene. A scene that sets the same lights, " +
-                       "screen or sound takes them over while it shows.";
+    note.textContent = "Always on plays under every scene. A scene that uses the " +
+                       "same lights, screen or sound overrides it while showing.";
     // One line, as the row it stands in for is, the whole of it in the tip where it is cut
     note.title = note.textContent;
     document.getElementById("sceneSettings").appendChild(note);
@@ -29,7 +29,7 @@ function renderSceneSettings() {
   if (!ticked) return;
   row.replaceChild(toggle("&#8630;", "Restart", scene.restart,
                           function (on) { scene.restart = on; },
-                          "Its effects begin again every time the scene comes round, " +
-                          "instead of carrying on where they left off"),
+                          "Restart this scene's effects each time it " +
+                          "plays, instead of resuming where they left off"),
                    ticked);
 }

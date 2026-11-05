@@ -174,7 +174,7 @@ function renderScenes() {
                    "stroke-linecap='round'/></svg>" +
                    (state.scenes.length ? "another scene" : "split into scenes");
   plus.title = state.scenes.length ? "Add another scene"
-                                   : "Split this into scenes that take turns";
+                                   : "Split into scenes that play in turn";
   plus.onclick = addScene;
   box.appendChild(plus);
 
@@ -216,7 +216,7 @@ function sceneTab(which, slot, name, says) {
     var shut = document.createElement("span");
     shut.className = "shut";
     shut.textContent = "\u00d7";
-    shut.title = "Take this scene out";
+    shut.title = "Remove this scene";
     shut.onclick = function (e) { e.stopPropagation(); removeScene(which); };
     title.appendChild(shut);
   }
@@ -275,7 +275,7 @@ function renderSceneRow() {
   var name = document.createElement("input");
   name.type = "text";
   name.value = scene.name;
-  name.title = "What this scene is called, which is its heading in the file";
+  name.title = "Scene name";
   name.dataset.focus = "scene-name";
   name.oninput = function () {
     // The brackets and the colon are the heading's own punctuation
@@ -311,8 +311,8 @@ function renderSceneRow() {
   tick.checked = scene.restart;
   tick.onchange = function () { scene.restart = tick.checked; draw(); };
   again.appendChild(tick);
-  again.appendChild(document.createTextNode("from the start each turn"));
-  again.title = "Its effects begin again every time the scene comes round";
+  again.appendChild(document.createTextNode("restart each time"));
+  again.title = "Restart this scene's effects each time it plays";
   row.appendChild(again);
 
   box.appendChild(row);

@@ -410,9 +410,9 @@ function heroNote(path) {
   note.appendChild(boardIcon());
   var said = document.createElement("span");
   said.textContent = path
-    ? "The board runs " + path.split("/").pop() + " in place of the effects. They are kept, and " +
-      "play if it is missing or stops, when errors.txt says why."
-    : "No program chosen, so the board plays the effects. Pick one below to run it in their place.";
+    ? "The board runs " + path.split("/").pop() + " instead of the effects. The effects are " +
+      "kept, and play if the program is missing or stops, with the reason in errors.txt."
+    : "No program chosen, so the board plays the effects. Choose one below to run it instead.";
   note.appendChild(said);
   if (path) {
     var none = document.createElement("button");
@@ -447,7 +447,7 @@ function programHero(path) {
     var taken = ["outputs"];
     if (SCREEN_PORTS.length) taken.push(SCREEN_PORTS.length > 1 ? "screens" : "screen");
     if (BOARD.sound) taken.push("sound");
-    waiting.innerHTML = "<h3>Choose a program</h3><p>Each takes the whole board, its " +
+    waiting.innerHTML = "<h3>Choose a program</h3><p>A program takes over the whole board, its " +
                         spoken(taken) + ", while it runs.</p>";
     body.appendChild(waiting);
     return hero;
@@ -456,9 +456,9 @@ function programHero(path) {
   words.className = "progwords";
   var program = programNamed(path) || {};
   words.innerHTML = "<h3>" + escapeHtml(programTitle(path)) + "</h3>" +
-                    "<p>" + escapeHtml(program.does || "Says nothing about itself.") + "</p>" +
+                    "<p>" + escapeHtml(program.does || "No description.") + "</p>" +
                     "<p class='progwhere'>" + escapeHtml(path) +
-                    (program.example ? ", comes with the board" : ", on the drive") + "</p>";
+                    (program.example ? ", built in" : ", on the drive") + "</p>";
   // What it uses, each drawn and named, as the filter below names them
   var uses = document.createElement("div");
   uses.className = "herouses";
@@ -483,8 +483,8 @@ function renderProgramView() {
     var closed = document.createElement("p");
     closed.className = "prognone";
     closed.textContent = CAN_REACH_A_DRIVE ? "Open the FX drive to see the programs on it."
-                                           : "This browser cannot open the FX drive, so its " +
-                                             "programs cannot be listed. Chrome and Edge can.";
+                                           : "This browser cannot open the FX drive, so " +
+                                             "programs cannot be listed. Use Chrome or Edge.";
     programView.appendChild(closed);
     return;
   }
@@ -524,7 +524,7 @@ function renderProgramView() {
   if (!shown) {
     var none = document.createElement("p");
     none.className = "prognone";
-    none.textContent = listed ? "Every program here needs something not ticked."
+    none.textContent = listed ? "Every program here needs hardware that is not ticked."
                               : "There are no programs on this drive.";
     programView.appendChild(none);
   }

@@ -426,11 +426,11 @@ function canPlay(look, target) {
 
 // Why not, in the words of the thing that cannot happen
 function whyNot(look, target) {
-  if (!target.colour && !look.onMono) return "this look is all colour, and " +
+  if (!target.colour && !look.onMono) return "this look needs colour, and " +
                                              target.label.toLowerCase() + " is mono";
   if (target.count === 1 && look.alone === false)
-    return "this look is shaped to several lights";
-  if (target.kind === "run" && !look.spans) return "this look is shaped to separate lights";
+    return "this look needs several lights";
+  if (target.kind === "run" && !look.spans) return "this look needs separate lights";
   return "play this on " + target.label.toLowerCase();
 }
 

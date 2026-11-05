@@ -25,12 +25,12 @@ function saveMenu() {
     menu.appendChild(label);
   }
   choice("Play saves without an eject",
-         boardSet.program ? "a save restarts the board, which then runs the program afresh"
-                          : "the save that first turns this on still needs one",
+         boardSet.program ? "saving restarts the board and runs the program"
+                          : "the first save after turning this on still needs an eject",
          boardSet.reload, function (on) { boardSet.reload = on; }, null);
-  choice("Keep the drive hidden at start", "double-press Boot to bring it back",
+  choice("Keep the drive hidden at start", "double-press Boot to show it",
          boardSet.driveHidden, function (on) { boardSet.driveHidden = on; },
-         driveMeansSomething() ? null : "shown anyway while a program runs");
+         driveMeansSomething() ? null : "always shown while a program runs");
 }
 
 (function () {
@@ -40,7 +40,7 @@ function saveMenu() {
   arrow.id = "saveArrow";
   arrow.className = "savearrow";
   arrow.textContent = "\u25be";
-  arrow.title = "How the board takes a save";
+  arrow.title = "Save settings";
   save.parentNode.insertBefore(arrow, save.nextSibling);
   var menu = document.createElement("div");
   menu.id = "saveMenu";

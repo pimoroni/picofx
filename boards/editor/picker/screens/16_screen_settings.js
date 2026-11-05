@@ -523,7 +523,7 @@ function orientationFold(key, held) {
   var turn = Number(held.turn || 0);
   var rotation = segment([0, 90, 180, 270].map(function (value) {
     return [value, rotationMark(value) + value + "&deg;"];
-  }), turn, function (value) { setTurn(held, value); }, "Which way up the screen is mounted");
+  }), turn, function (value) { setTurn(held, value); }, "Screen rotation");
   rotation.classList.add("rotationseg");
   var mirror = toggle("&#8646;", "Mirror", look.mirror, function (on) { look.mirror = on; },
                       "Flip the picture left to right");
@@ -563,7 +563,7 @@ function placementFold(key, held, size) {
   var where = pictureOffset(look, held.shows, size, held.turn);
   var anchor = document.createElement("span");
   anchor.className = "sanchor";
-  anchor.title = "Where the picture sits, worked out from its size and the panel's";
+  anchor.title = "Picture position, calculated from its size and the panel's";
   ANCHOR_NAMES.forEach(function (name, at) {
     var point = document.createElement("button");
     point.type = "button";
@@ -588,8 +588,8 @@ function placementFold(key, held, size) {
   }
   var x = numberBox(where.x, "centre", typed("x"));
   var y = numberBox(where.y, "centre", typed("y"));
-  x.title = "Pixels from the left, empty to centre";
-  y.title = "Pixels from the top, empty to centre";
+  x.title = "Pixels from the left. Leave empty to centre";
+  y.title = "Pixels from the top. Leave empty to centre";
   x.className = y.className = "sxy";
   // Tiling is set for each side, so a picture can be spread across and left alone down. Both
   // sides share one line, each named by its arrow, the choices in words
@@ -599,14 +599,13 @@ function placementFold(key, held, size) {
                       look[side] || "off",
                       function (value) { look[side] = value; },
                       "Fill the screen " + (down ? "top to bottom" : "left to right") +
-                      " with copies; mirror turns every other one round, so any picture joins up");
+                      " with copies. Mirror flips every other copy, so the edges always join up");
     seg.classList.add(down ? "tiledown" : "tileacross");
     return seg;
   }
   var double = toggle(DOUBLE_GLYPH, "Pixel double", look.double,
                       function (on) { look.double = on; },
-                      "Draw each pixel twice as wide and tall, so a half size picture fills " +
-                      "the screen");
+                      "Draw each pixel at double size, so a half size picture fills the screen");
   // Where it sits, then how it fills: a line each, or two halves where the section is wide
   var body = document.createElement("div");
   body.className = "ssplit";
@@ -685,7 +684,7 @@ function backgroundFold(key, held) {
   // swatch is chosen, custom coming back to it
   if (open) look.customBg = look.bg;
   if (look.customBg) custom.style.setProperty("--picked", look.customBg);
-  custom.title = "custom: any colour, from the field or as a hex";
+  custom.title = "custom: pick a colour or type a hex code";
   var customTag = document.createElement("b");
   customTag.textContent = "custom";
   custom.appendChild(customTag);
@@ -737,7 +736,7 @@ function backgroundFold(key, held) {
     hex.maxLength = 7;
     hex.spellcheck = false;
     hex.value = look.bg;
-    hex.title = "The background exactly as typed, dark colours included";
+    hex.title = "Use the background colour exactly as typed, including dark colours";
     hex.onchange = function () {
       var said = hex.value.replace("#", "").trim().toLowerCase();
       if (/^[0-9a-f]{6}$/.test(said)) look.bg = "#" + said;
@@ -778,8 +777,8 @@ function backgroundFold(key, held) {
   bright.appendChild(document.createTextNode("brightness"));
   bright.appendChild(slider);
   bright.appendChild(figure);
-  bright.title = chosen === "black" ? "Black has no brightness to set"
-                                    : "How bright the background is, apart from the backlight";
+  bright.title = chosen === "black" ? "Brightness does not apply to black"
+                                    : "Background brightness, separate from the backlight";
   body.appendChild(bright);
   return foldSection(key, "Background", groundSaid(look.bg), body);
 }
@@ -794,7 +793,7 @@ function playbackSaid(held, look) {
             : kindOf(held.shows) === "folder" ? "pace from names" : "pace from file"];
   said.push(look.loop ? "loop" : "once");
   if (held.pingpong) said.push("ping pong");
-  if (look.whole && firstAsLastAllowed(held, look)) said.push("first as last");
+  if (look.whole && firstAsLastAllowed(held, look)) said.push("first frame as last");
   if ((held.hold || look.holdBack) && holdAllowed(held, look))
     said.push("hold " + (held.hold || 0) + " s" +
               (look.holdBack && secondHoldAllowed(held, look) ? " and " + look.holdBack + " s"
@@ -822,8 +821,7 @@ function drawingFold(key, held) {
                         if (flips) look.every = Math.round(100 / look.every) / 100;
                         look.pace = value;
                       },
-                      "Frames a second, seconds between frames, or as often as the screen takes " +
-                      "a frame");
+                      "Frames per second, seconds per frame, or as fast as the screen allows");
   var every = look.pace === "saved" ? null : numberBox(look.every, "", function (value) {
     if (Number(value) > 0) look.every = Number(value);
   }, look.pace === "interval" ? 0.05 : 1);
@@ -833,9 +831,9 @@ function drawingFold(key, held) {
                         });
   canvas.querySelector("[data-value=whole]").title = "As big as the screen";
   canvas.querySelector("[data-value=half]").title =
-    "Half as wide and tall as the screen, a quarter of the memory. With pixel double it " +
-    "fills the screen";
-  canvas.querySelector("[data-value=set]").title = "A size in pixels, placed as a small picture is";
+    "Half the screen's width and height, using a quarter " +
+    "of the memory. With Pixel double it fills the screen";
+  canvas.querySelector("[data-value=set]").title = "A custom size in pixels, positioned like a small picture";
   // The speed, then the canvas: stacked, or two halves where the section is wide
   var body = document.createElement("div");
   body.className = "ssplit";
@@ -873,8 +871,8 @@ function playbackFold(key, held, media) {
                         if (flips) look.every = Math.round(100 / look.every) / 100;
                         look.pace = value;
                       },
-                      "Frames a second, seconds between frames, or the delays " +
-                      (media.kind === "folder" ? "the pictures' names give" : "the file was saved with"));
+                      "Frames per second, seconds per frame, or the delays " +
+                      (media.kind === "folder" ? "written in each picture's file name" : "saved in the file"));
   var every = look.pace === "saved" ? null : numberBox(look.every, "", function (value) {
     // Nothing, zero or less is no pace, so the figure there stays
     if (Number(value) > 0) look.every = Number(value);
@@ -890,16 +888,16 @@ function playbackFold(key, held, media) {
            "Start again after the last frame"),
     toggle("&#8644;", "Ping pong", held.pingpong, function (on) { held.pingpong = on; },
            "Play forwards then backwards"),
-    toggle("&#8676;", "First as last", look.whole, function (on) { look.whole = on; },
+    toggle("&#8676;", "First frame as last", look.whole, function (on) { look.whole = on; },
            firstAsLastAllowed(held, look)
-             ? "Play the first frame again at the end, for an animation drawn to loop"
-             : "Needs ping pong, or loop off: a forward loop has no end to play it at",
+             ? "Repeat the first frame at the end, so an animation drawn as a loop plays the whole way round, forwards then back, in Ping pong"
+             : "Needs Ping pong, or Loop off",
            !firstAsLastAllowed(held, look))));
 
   var hold = document.createElement("span");
   hold.className = "shold" + (holdAllowed(held, look) ? "" : " off");
-  hold.title = holdAllowed(held, look) ? "Seconds to wait where it turns around"
-                                       : "Needs loop or ping pong, somewhere to turn around";
+  hold.title = holdAllowed(held, look) ? "Pause at each end, in seconds"
+                                       : "Needs Loop or Ping pong";
   hold.appendChild(named("Hold"));
   var atEnd = numberBox(held.hold, "0", function (value) {
     held.hold = value && Number(value) > 0 ? value : "";
@@ -1005,7 +1003,7 @@ function renderScreensTab() {
     if (!chip || !size) return;
     var fact = document.createElement("span");
     fact.className = "bandfact";
-    fact.title = "How the board is built, which is the same in every scene";
+    fact.title = "Board setup, shared by every scene";
     band.insertBefore(fact, size);
     fact.appendChild(chip);
     fact.appendChild(size);

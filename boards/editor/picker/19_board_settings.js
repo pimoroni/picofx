@@ -126,7 +126,7 @@ function argsFor(path, locked) {
       gone.type = "button";
       gone.className = "progless";
       gone.innerHTML = "&times;";
-      gone.title = "Take this argument away";
+      gone.title = "Remove this argument";
       gone.disabled = !!locked;
       gone.onclick = function () {
         given.splice(at, 1);
@@ -142,7 +142,7 @@ function argsFor(path, locked) {
     more.className = "progmore";
     more.textContent = "+ an argument";
     more.disabled = !!locked;
-    more.title = "Something to pass the program, which it reads from sys.argv";
+    more.title = "Passed to the program in sys.argv";
     more.onclick = function () {
       given.push("");
       draw();
@@ -174,8 +174,8 @@ function programNote() {
   note.appendChild(document.createTextNode(
     "The board runs " + (program && program.name ? program.name + " (" + boardSet.program + ")"
                                                  : boardSet.program) +
-    " in place of the effects. They are kept, and play if it is missing or stops, when " +
-    "errors.txt says why."));
+    " instead of the effects. The effects are kept, and play if the " +
+    "program is missing or stops, with the reason in errors.txt."));
 }
 
 drawSteps.after.push(function () {

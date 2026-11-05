@@ -23,12 +23,12 @@ function renderSoundTab() {
     : !state.scanned
       ? "reading the drive..."
     : !(state.sounds.length || state.sound || state.soundKept)
-      ? "no sounds on the drive yet; drop a wav onto it"
+      ? "no sounds on the drive yet. Drop a WAV file onto it"
     : !state.scenes.length
-      ? "one wav, playing on while the lights run"
+      ? "one WAV file, playing alongside the lights"
     : state.at < 0
-      ? "played in any scene that brings no sound of its own"
-      : "played while this scene shows, picking up where it left off";
+      ? "plays in any scene without its own sound"
+      : "plays while this scene shows, resuming where it left off";
 
   // How the sound is played rather than which one it is, so it sits above them,
   // where a screen keeps its settings
@@ -37,8 +37,8 @@ function renderSoundTab() {
   again.textContent = "on repeat";
   again.disabled = !state.sound;
   again.title = state.sound
-    ? "Start it again as it ends, instead of playing once as the board starts"
-    : "Nothing is playing, so there is nothing to repeat";
+    ? "Loop the sound instead of playing it once"
+    : "No sound chosen";
   again.onclick = function () { state.soundLoop = !state.soundLoop; draw(); };
   var above = document.createElement("div");
   above.style.margin = "0 0 .7rem";
@@ -220,7 +220,7 @@ async function profileSound(name, handle) {
     var file = await handle.getFile();
     var head = new DataView(await file.slice(0, 8192).arrayBuffer());
     if (head.getUint32(0) !== 0x52494646 || head.getUint32(8) !== 0x57415645)
-      throw new Error("not a wav");
+      throw new Error("not a WAV file");
     var at = 12;
     var byteRate = 0;
     var bits = 16;

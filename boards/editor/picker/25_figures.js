@@ -173,7 +173,7 @@ chosenSteps.push(function (where, run) {
       // A signal's timing is its seconds already, typed past the slider's ends as it is
       widest = Math.max(String(range.min).length, String(range.max).length) + 2;
       cells = figureCells(figureSaid(Number(range.value)), "s",
-                          "seconds, typed exactly, past the slider's ends too", function (typed) {
+                          "seconds, typed exactly, beyond the slider's range if needed", function (typed) {
         var mine = live();
         mine.timings = Object.assign({}, mine.timings);
         mine.timings[timing] = Math.round(typed * 100) / 100;
@@ -206,7 +206,7 @@ chosenSteps.push(function (where, run) {
         var typedHere = section.exact && section.exact[slider];
         var value = typedHere ? typedHere.value : settingIn(sectionLines(run, section, look), key);
         cells = figureCells(figureSaid(way.show(value)), way.unit,
-                            "the file's " + key + ", typed exactly, past the slider's ends too",
+                            "the file's " + key + ", typed exactly, beyond the slider's range if needed",
                             function (typed) {
           var wanted = way.take(typed);
           var mine = live();
@@ -265,7 +265,7 @@ chosenSteps.push(function (where, run) {
   handle.type = "button";
   handle.className = "figurehandle";
   handle.textContent = figuresOpen ? "\u203a" : "\u2039";
-  handle.title = figuresOpen ? "hide the figures" : "show each setting's figure, to type one in";
+  handle.title = figuresOpen ? "hide values" : "show values";
   handle.setAttribute("aria-expanded", figuresOpen ? "true" : "false");
   handle.style.gridRow = "1 / span " + ranges.length;
   handle.onclick = function () {

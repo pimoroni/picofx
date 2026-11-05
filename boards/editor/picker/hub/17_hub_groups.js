@@ -199,7 +199,7 @@ hubHeadSteps.push(function () {
   });
   var row = lightRow(state.hubLight, function (value) { state.hubLight = value; },
                      "backlight, every screen on the hub",
-                     "How brightly the hub's screens are lit, all six together, in this scene");
+                     "Backlight brightness for all six hub screens in this scene");
   row.classList.add("hublightrow");
   row.querySelector(".lightopt").classList.add("hublight");
   body.insertBefore(row, body.firstChild);
@@ -250,9 +250,9 @@ hubHeadSteps.push(function () {
       button.title = !fits ? "Group " + number + " holds " +
                              state.hub.sizes[membersOfGroup(number)[0]] + "\" panels, and " +
                              place + " is " + state.hub.sizes[place] + "\""
-                   : inIt ? "Take " + place + " out of group " + number + ", keeping what it shows"
+                   : inIt ? "Remove " + place + " from group " + number + ", keeping what it shows"
                           : "Put " + place + " in group " + number +
-                            (membersOfGroup(number).length ? ", showing what it shows" : "");
+                            (membersOfGroup(number).length ? ", to show what the group shows" : "");
       button.onclick = function (event) {
         event.stopPropagation();
         joinOrLeave(place, number);

@@ -61,7 +61,7 @@ function unmark() {
 function boardBox(panel, parts) {
   var box = document.createElement("span");
   box.className = "chip boardchip " + BOARD_CHIP_CLASSES[panel];
-  box.title = "How the board is built, which is the same in every scene";
+  box.title = "Board setup, shared by every scene";
   box.appendChild(boardIcon());
   parts.forEach(function (part) {
     box.appendChild(typeof part === "string" ? document.createTextNode(part) : part);
@@ -110,7 +110,7 @@ function renderOutFacts() {
     var hint = document.createElement("span");
     hint.className = "hint";
     var breaking = breakingOutputs();
-    hint.textContent = "Drag a light to where it sits in your build." +
+    hint.textContent = "Drag each light to match its position in your build." +
       (breaking.length > 1 ? " Arrows split an output into three mono lights, or rejoin them."
        : breaking.length ? " The arrow on " + outputSaid(breaking[0]) + " splits it into three " +
                            "mono lights, or rejoins them." : "");
@@ -172,7 +172,7 @@ function stripDrop(run) {
   drop.type = "button";
   drop.className = "drop";
   drop.textContent = "\u00d7";
-  drop.title = "Take this strip out of every scene";
+  drop.title = "Remove this strip from every scene";
   drop.onclick = function () { dropStrip(run); };
   return drop;
 }
@@ -219,7 +219,7 @@ function renderLeds(where, run) {
     if (says) box.removeChild(says);
     var chip = box.querySelector(".chip");
     chip.className = "chip boardchip " + BOARD_CHIP_CLASSES[panel];
-    chip.title = "How the board is built, which is the same in every scene";
+    chip.title = "Board setup, shared by every scene";
     chip.insertBefore(boardIcon(), chip.firstChild);
     chip.appendChild(stripDrop(run));
   } else {
