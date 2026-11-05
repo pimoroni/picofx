@@ -22,6 +22,7 @@ SWEEP_EXTENT = 60.0     # How far from zero to move the servos, in degrees
 STEP_INTERVAL = 0.02    # The time, in seconds, between each step of the sweep
 STEPS = 10              # How many steps a stepped sweep takes to cross
 STEP_HOLD = 0.3         # The time, in seconds, to hold each step of a stepped sweep
+END_HOLD = 1.0          # The time, in seconds, to hold the middle and each end
 
 # Variables
 mighty = MightyFX(servo_l=ANGULAR, servo_r=ANGULAR)
@@ -38,15 +39,15 @@ try:
         print("To the middle, then each end")
         mighty.servo_l.to_mid()
         mighty.servo_r.to_mid()
-        time.sleep(1)
+        time.sleep(END_HOLD)
 
         mighty.servo_l.to_min()
         mighty.servo_r.to_min()
-        time.sleep(1)
+        time.sleep(END_HOLD)
 
         mighty.servo_l.to_max()
         mighty.servo_r.to_max()
-        time.sleep(1)
+        time.sleep(END_HOLD)
 
         # A smooth sweep with both servos on the same value, moving as one
         print("Sweeping together")

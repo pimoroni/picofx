@@ -27,6 +27,7 @@ except ImportError:
 COLOUR_NAMES = ("R", "G", "B")
 CONNECTION_INTERVAL = 1.0               # The time to sleep between each connection check
 REQUEST_INTERVAL = 5.0                  # The time to sleep between each internet request
+CHEERLIGHTS_URL = "http://api.thingspeak.com/channels/1417/field/2/last.json"   # Where the current CheerLights colour is read from
 
 # Variables
 tiny = TinyFX()                         # Create a new TinyFX object to interact with the board
@@ -51,7 +52,7 @@ try:
     # Loop forever
     while True:
         # Get the current CheerLights colour from the internet
-        req = requests.get("http://api.thingspeak.com/channels/1417/field/2/last.json")
+        req = requests.get(CHEERLIGHTS_URL)
         json = req.json()
         req.close()
 

@@ -18,6 +18,8 @@ Thumbnail: outputs countdown
 TONES = (440, 440, 440, 880, 0)         # The tones to play in order (0 means silence)
 DURATIONS = (0.5, 0.5, 0.5, 1.5, 2.0)   # The duration of each tone (in seconds)
 OUTPUTS = (1, 1, 1, 2, 0)               # Which output to light with each tone
+READY_COLOUR = WHITE                    # The RGB output while the board waits for a press
+VOLUME = 1.0                            # How loud the tones play (from 0.0 to 1.0)
 
 # Variables
 tiny = TinyFX()                 # Create a new TinyFX object to interact with the board
@@ -26,7 +28,7 @@ tiny = TinyFX()                 # Create a new TinyFX object to interact with th
 try:
     # Loop forever
     while True:
-        tiny.rgb.set_rgb(*WHITE)    # Show that the program is ready
+        tiny.rgb.set_rgb(*READY_COLOUR)     # Show that the program is ready
 
         # Wait for the Boot button to be pressed
         while not tiny.boot_pressed():
@@ -41,7 +43,7 @@ try:
 
             # Play the next tone
             if tone:
-                tiny.wav.play_tone(tone, 1.0, tiny.wav.TONE_SQUARE)
+                tiny.wav.play_tone(tone, VOLUME, tiny.wav.TONE_SQUARE)
 
             # Turn on just the output for the next tone
             tiny.clear()

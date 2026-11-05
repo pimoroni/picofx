@@ -27,6 +27,7 @@ MONO_NAMES = ("One", "Two", "Three", "Four", "Five", "Six")
 COLOUR_NAMES = ("R", "G", "B")
 CONNECTION_INTERVAL = 1.0               # The time to sleep between each connection check
 REQUEST_INTERVAL = 5.0                  # The time to sleep between each internet request
+COLOURS_URL = "https://random-flat-colors.vercel.app/api/random?count="     # Where random colours are read from, how many added on the end
 
 # Variables
 tiny = TinyFX()                         # Create a new TinyFX object to interact with the board
@@ -51,7 +52,7 @@ try:
     # Loop forever
     while True:
         # Get two colours from the internet
-        req = requests.get("https://random-flat-colors.vercel.app/api/random?count=2")
+        req = requests.get(f"{COLOURS_URL}2")
         json = req.json()
         req.close()
 

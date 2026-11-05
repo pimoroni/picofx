@@ -2,7 +2,7 @@ import time
 
 from mighty_fx import MightyFX
 
-from picofx.colour import GREEN, RED
+from picofx.colour import GREEN, RED, WHITE
 
 """
 Plays a simple boop, boop, boop, beeep countdown sound effect when
@@ -19,6 +19,8 @@ TONES = (440, 440, 440, 880, 0)         # The tones to play in order (0 means si
 DURATIONS = (0.5, 0.5, 0.5, 1.5, 2.0)   # The duration of each tone (in seconds)
 OUTPUTS = (1, 1, 1, 2, 0)               # Which output to light with each tone (0 means none)
 COLOURS = (RED, RED, RED, GREEN, RED)   # Which colour to light that output in
+READY_COLOUR = WHITE                    # Every output while the board waits for a press
+VOLUME = 1.0                            # How loud the tones play (from 0.0 to 1.0)
 
 # Variables
 mighty = MightyFX()             # Create a new MightyFX object to interact with the board
@@ -29,7 +31,7 @@ try:
     while True:
         # Show that the program is ready
         for output in mighty.outputs:
-            output.on()
+            output.set_rgb(*READY_COLOUR)
 
         # Wait for the Boot button to be pressed
         while not mighty.boot_pressed():
@@ -44,7 +46,7 @@ try:
 
             # Play the next tone
             if tone:
-                mighty.wav.play_tone(tone, 1.0, mighty.wav.TONE_SQUARE)
+                mighty.wav.play_tone(tone, VOLUME, mighty.wav.TONE_SQUARE)
 
             # Light just the output for the next tone, in that tone's colour
             mighty.clear()

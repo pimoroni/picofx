@@ -14,6 +14,7 @@ Press "Boot" to exit the program.
 
 # Constants
 SPEED_EXTENT = 1.0      # How far from zero to drive the motors when sweeping
+STEP_INTERVAL = 0.02    # The time, in seconds, between each step of the sweep
 
 mighty = MightyFX(spce_a=SPCE.MOTOR_DRIVER)
 
@@ -29,7 +30,7 @@ try:
         for motor in driver.motors:
             motor.speed(speed)
         i = (i + 1) % 360
-        time.sleep(0.02)
+        time.sleep(STEP_INTERVAL)
 
 # Stop the motors and turn off all the outputs
 finally:
