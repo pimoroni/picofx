@@ -20,9 +20,14 @@ Press Boot to power up, swing to make sounds! SWOOSH SWOOOOSH!!! and press Boot 
 TRIGGER_DELTA = 1.0                         # How much movement change is needed to trigger a swinging sound
 ANIMATION_SLEEP = 0.05                      # The time to sleep between each step of the start and finish animations
 MSA301_ADDRESS = 0x26                       # The accelerometer's address on the bus
+READY_COLOUR = WHITE                        # The RGB output while the sword waits to be powered up
+WAV_ROOT = "/photon_sword"                  # The folder the sound files are in
+START_SOUND = "ps-start.wav"                # The sound played when powering up
+IDLE_SOUND = "ps-idle.wav"                  # The sound looped while waiting to swing
+FINISH_SOUND = "ps-finish.wav"              # The sound played when powering down
 
 # Variables
-tiny = TinyFX(wav_root="/photon_sword")     # Create a new TinyFX object and tell it where the wav files are located
+tiny = TinyFX(wav_root=WAV_ROOT)            # Create a new TinyFX object and tell it where the wav files are located
 
 # Check if the accelerometer answers on the bus, since a missing one raises nothing
 if MSA301_ADDRESS not in tiny.i2c.scan():
@@ -38,7 +43,7 @@ msa.enable_interrupts(BreakoutMSA301.FREEFALL | BreakoutMSA301.ORIENTATION)
 try:
     # Loop forever
     while True:
-        tiny.rgb.set_rgb(*WHITE)    # Show that the program is ready
+        tiny.rgb.set_rgb(*READY_COLOUR)     # Show that the program is ready
 
         # Wait for the Boot button to be pressed
         while not tiny.boot_pressed():
@@ -46,7 +51,7 @@ try:
         tiny.clear()                # Show that the program is running
 
         # Play the start sound and wait for it to finish
-        tiny.wav.play_wav("ps-start.wav")
+        tiny.wav.play_wav(START_SOUND)
         while tiny.wav.is_playing():
             # Whilst playing animate the outputs
             for i in range(len(tiny.outputs)):
@@ -58,7 +63,7 @@ try:
 
             # If nothing is playing, play a looping idle sound
             if not tiny.wav.is_playing():
-                tiny.wav.play_wav("ps-idle.wav", True)
+                tiny.wav.play_wav(IDLE_SOUND, True)
 
             # Read acceleration data from the MSA301
             this_axes = msa.get_x_axis(), msa.get_y_axis(), msa.get_z_axis()
@@ -79,7 +84,7 @@ try:
 
             # Check if the boot button has been pressed
             if tiny.boot_pressed():
-                tiny.wav.play_wav("ps-finish.wav")
+                tiny.wav.play_wav(FINISH_SOUND)
                 while tiny.wav.is_playing():
                     # Whilst playing animate the outputs
                     for i in range(len(tiny.outputs)):
