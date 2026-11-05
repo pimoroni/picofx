@@ -31,7 +31,18 @@
 * The WAV player fades tones and 16-bit WAVs in and out, resumes from `position()`, and turns the amplifier off while silent
 * The multi sensor stick's accelerometer and the QwSTPad are frozen into the firmware
 * A board that fails partway through being built hands back what it had claimed
-* The libraries and examples zips attach to a GitHub release
+* The uf2s and the libraries and examples zips attach to a GitHub release, named for its tag as release files have been
+
+**Mighty FX**
+
+* Add Mighty FX, an RP2350 board with seven RGB outputs, two SP/CE connectors, L and R connectors, a sensor connector and audio, built on Pimoroni's MicroPython `fx-1.29.0` with its heap in PSRAM
+* Each SP/CE connector is declared for its role, `SPCE.SCREEN`, `SPCE.GPIO`, `SPCE.GPIO_PWM`, `SPCE.HUB_SELECTS` or `SPCE.MOTOR_DRIVER`, and a screen connector beside a `HUB_SELECTS` one builds a Screen Hub
+* Screens are driven by the spidisplay module, with picovector for drawing and fonts held in a ROMFS
+* The L and R connectors take an LED strip or a servo each, on a shared rail that stays off until `enable_rail()`
+* Servos and motor drivers run on PIO clusters, so they take no PWM channel from the outputs or the screens
+* An output whose PWM channel a `SPCE.GPIO_PWM` connector takes becomes a `DisabledLED`, saying why when lit
+* Mighty FX answers on I2C as an FX target, and `MightyFXControl` drives one from another board
+* Networking, Bluetooth, `lte` for a Clipper, and `spce` with its `MotorDriver` are frozen into the firmware
 
 1.1.2
 -----
