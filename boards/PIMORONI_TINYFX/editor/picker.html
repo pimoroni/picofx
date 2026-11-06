@@ -8848,6 +8848,8 @@ function paintThumb(g, kind, seed, canvas, uses) {
                 bar: ["#2b5cff", "#28e0e0", "#22c65a", "#ffd21f", "#3a3f44", "#3a3f44", "#3a3f44"],
                 melody: ["#9a46ff", "#3a3f44", "#ff36c8", "#9a46ff", "#3a3f44", "#2b5cff", "#ff36c8"],
                 countdown: ["#ff2d1a", "#ff2d1a", "#ff2d1a", "#22c65a", "#3a3f44", "#3a3f44", "#3a3f44"],
+                solid: ["#ff36c8", "#ff36c8", "#ff36c8", "#ff36c8", "#ff36c8", "#ff36c8", "#ff36c8"],
+                random: ["#e67e22", "#1abc9c", "#9b59b6", "#f1c40f", "#3498db", "#e74c3c", "#2ecc71"],
                 off: ["#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44"]};
     var row = inks[kind.slice("outputs:".length)] || inks.mono;
     var lamps = lampsDrawn(uses);
