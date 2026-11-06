@@ -403,7 +403,7 @@ eject or a press of **Boot** instead.
 
 A program can be on this drive or on the board's own filesystem, and its name
 can include folders. The board looks here first, then on the
-board, so `program=examples/python/effects/mono/sweep_trail.py` runs one of the
+board, so `program=examples/programs/effects/mono/sweep_trail.py` runs one of the
 examples the board comes with.
 If both have a file with that name, the one on this drive
 runs.
@@ -446,7 +446,7 @@ FOLDER = args[0] if args else "posters"
 
 The picker's **A program** tab lists every Python file at the top of this
 drive and in its `programs` folder,
-beside the examples in its `examples/python` folder,
+beside the examples in its `examples/programs` folder,
 and describes each one from its opening string, the text in triple quotes at
 the top of the file. The first sentence says what the program does, and these
 lines control how the picker shows it:
@@ -493,7 +493,7 @@ your WiFi network's name and password, and restores an empty one if it is
 deleted. Programs that go online, importing `network` or `requests`, are listed
 only when the drive has that file.
 An example is listed only in the section it names.
-`examples/python/sections.txt` sets the order of the sections, one per line:
+`examples/programs/sections.txt` sets the order of the sections, one per line:
 its name, then a `|` and a description.
 
 ### What is already on the board
@@ -503,23 +503,23 @@ download:
 
 | Folder | What is in it |
 | --- | --- |
-| `examples/python/effects/mono` | one output at a time, and the effects that travel across several |
-| `examples/python/effects/colour` | the RGB output |
-| `examples/python/function` | the button, the sensor connector and the supply voltage |
-| `examples/python/infrared/mono` | effects chosen with an infrared remote |
-| `examples/python/infrared/colour` | the same on the RGB output |
-| `examples/python/qwst` | light, tilt and temperature from Qw/ST breakouts |
-| `examples/python/audio` | sound alongside the lights |
-| `examples/python/comms` | several boards working together |
-| `examples/python/wireless` | colours fetched over WiFi, on the Tiny FX W |
-| `examples/python/showcase` | larger builds that put several of these together |
+| `examples/programs/effects/mono` | one output at a time, and the effects that travel across several |
+| `examples/programs/effects/colour` | the RGB output |
+| `examples/programs/function` | the button, the sensor connector and the supply voltage |
+| `examples/programs/infrared/mono` | effects chosen with an infrared remote |
+| `examples/programs/infrared/colour` | the same on the RGB output |
+| `examples/programs/qwst` | light, tilt and temperature from Qw/ST breakouts |
+| `examples/programs/audio` | sound alongside the lights |
+| `examples/programs/comms` | several boards working together |
+| `examples/programs/wireless` | colours fetched over WiFi, on the Tiny FX W |
+| `examples/programs/showcase` | larger builds that put several of these together |
 
 Three to start with:
 
 ```entry
-board: program=examples/python/effects/mono/sweep_trail.py
-board: program=examples/python/effects/colour/rainbow.py
-board: program=examples/python/showcase/ship_thrusters.py
+board: program=examples/programs/effects/mono/sweep_trail.py
+board: program=examples/programs/effects/colour/rainbow.py
+board: program=examples/programs/showcase/ship_thrusters.py
 ```
 
 Examples under `infrared` or `qwst` need that hardware attached, `wireless` needs a WiFi network,

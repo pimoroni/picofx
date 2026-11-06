@@ -93,34 +93,34 @@ out1-7 colour=warm: pulse
 
 | Folder | What is in it |
 | --- | --- |
-| `examples/python/effects/mono` | one output at a time, and the effects that travel across several |
-| `examples/python/effects/colour` | the same in colour, with traffic lights and crossings |
-| `examples/python/function` | the Boot button, the sensor connector and the supply voltage |
-| `examples/python/infrared/mono` | effects chosen with an infrared remote |
-| `examples/python/infrared/colour` | the same in colour |
-| `examples/python/qwst` | light, tilt and temperature from Qw/ST breakouts |
-| `examples/python/screens/single` | one screen, its backlight, and finding what is attached |
-| `examples/python/screens/playback` | animated GIFs and slideshows |
-| `examples/python/screens/graphics` | drawing from code: text, colour wheels, a starfield |
-| `examples/python/screens/images` | still pictures |
-| `examples/python/screens/layout` | placing a picture on the screen |
-| `examples/python/screens/pair` | two screens working together |
-| `examples/python/screens/hub` | more than two, through a hub |
-| `examples/python/audio` | playing a wav file |
-| `examples/python/motors` | driving a pair of motors |
-| `examples/python/servos` | servos on the L and R connectors, alone, in a pair and steered by remote |
-| `examples/python/strips` | a rainbow along an LED strip, and filling one an LED at a time |
-| `examples/python/gpio` | using SP/CE pins as plain inputs and outputs, and fading LEDs on them |
-| `examples/python/wireless` | colours fetched over WiFi |
-| `examples/python/comms` | several boards working together |
-| `examples/python/showcase` | larger builds that put several of these together |
+| `examples/programs/effects/mono` | one output at a time, and the effects that travel across several |
+| `examples/programs/effects/colour` | the same in colour, with traffic lights and crossings |
+| `examples/programs/function` | the Boot button, the sensor connector and the supply voltage |
+| `examples/programs/infrared/mono` | effects chosen with an infrared remote |
+| `examples/programs/infrared/colour` | the same in colour |
+| `examples/programs/qwst` | light, tilt and temperature from Qw/ST breakouts |
+| `examples/programs/screens/single` | one screen, its backlight, and finding what is attached |
+| `examples/programs/screens/playback` | animated GIFs and slideshows |
+| `examples/programs/screens/graphics` | drawing from code: text, colour wheels, a starfield |
+| `examples/programs/screens/images` | still pictures |
+| `examples/programs/screens/layout` | placing a picture on the screen |
+| `examples/programs/screens/pair` | two screens working together |
+| `examples/programs/screens/hub` | more than two, through a hub |
+| `examples/programs/audio` | playing a wav file |
+| `examples/programs/motors` | driving a pair of motors |
+| `examples/programs/servos` | servos on the L and R connectors, alone, in a pair and steered by remote |
+| `examples/programs/strips` | a rainbow along an LED strip, and filling one an LED at a time |
+| `examples/programs/gpio` | using SP/CE pins as plain inputs and outputs, and fading LEDs on them |
+| `examples/programs/wireless` | colours fetched over WiFi |
+| `examples/programs/comms` | several boards working together |
+| `examples/programs/showcase` | larger builds that put several of these together |
 
 Three to start with:
 
 ```entry
-board: program=examples/python/effects/colour/sweep_trail.py
-board: program=examples/python/screens/playback/animated_gif.py
-board: program=examples/python/showcase/flip_dot_sign.py
+board: program=examples/programs/effects/colour/sweep_trail.py
+board: program=examples/programs/screens/playback/animated_gif.py
+board: program=examples/programs/showcase/flip_dot_sign.py
 ```
 
 Examples under `screens`, `audio`, `motors`, `servos`, `strips`, `gpio`,

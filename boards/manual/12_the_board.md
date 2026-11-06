@@ -83,7 +83,7 @@ FOLDER = args[0] if args else "posters"
 The picker's **A program** tab lists every Python file at the top of this
 drive and in its `programs` folder,
 <!-- if examples -->
-beside the examples in its `examples/python` folder,
+beside the examples in its `examples/programs` folder,
 <!-- end -->
 and describes each one from its opening string, the text in triple quotes at
 the top of the file. The first sentence says what the program does, and these
@@ -134,7 +134,7 @@ deleted. Programs that go online, importing `network` or `requests`, are listed
 only when the drive has that file.
 <!-- if examples -->
 An example is listed only in the section it names.
-`examples/python/sections.txt` sets the order of the sections, one per line:
+`examples/programs/sections.txt` sets the order of the sections, one per line:
 its name, then a `|` and a description.
 <!-- end -->
 <!-- if screens -->

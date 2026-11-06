@@ -14,7 +14,7 @@
 // the sections and says what each holds.
 
 // Where the drive keeps its examples, on a board that carries them
-var EXAMPLES_ROOT = BOARD.examples ? "examples/python/" : "";
+var EXAMPLES_ROOT = BOARD.examples ? "examples/programs/" : "";
 
 // The folder at the top of the drive for the user's own programs, where a customised example goes
 var OWN_FOLDER = "programs";

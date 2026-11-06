@@ -14,42 +14,42 @@ The examples are grouped by what they show, a folder each, and every folder has 
 
 
 ## Function Examples
-[examples/python/function](examples/python/function)
+[examples/programs/function](examples/programs/function)
 
 These are micropython examples for Tiny FX's onboard functions, being its Boot button, its sensor header and its voltage sense.
 
 
 ## Effect Examples
-[examples/python/effects](examples/python/effects)
+[examples/programs/effects](examples/programs/effects)
 
 These are micropython examples for the effects Tiny FX can play on its six mono outputs and its RGB output.
 
 
 ## Audio Examples
-[examples/python/audio](examples/python/audio)
+[examples/programs/audio](examples/programs/audio)
 
 These are micropython examples for the audio Tiny FX can play through its onboard amplifier.
 
 
 ## Infrared Examples
-[examples/python/infrared](examples/python/infrared)
+[examples/programs/infrared](examples/programs/infrared)
 
 These are micropython examples for controlling Tiny FX from a Pimoroni Aye Arr Remote, with an IR Stick connected to its sensor connector.
 
 
 ## Qw/ST Examples
-[examples/python/qwst](examples/python/qwst)
+[examples/programs/qwst](examples/programs/qwst)
 
 These are micropython examples for driving Tiny FX from a sensor plugged into its Qw/ST connector.
 
 
 ## Comms Examples
-[examples/python/comms](examples/python/comms)
+[examples/programs/comms](examples/programs/comms)
 
 These are micropython examples for controlling other Tiny FX boards from this one over I2C.
 
 
 ## Showcase Examples
-[examples/python/showcase](examples/python/showcase)
+[examples/programs/showcase](examples/programs/showcase)
 
 This folder contains a collection of *Showcase* examples, that bring together concepts presented by the other examples to create functional projects.

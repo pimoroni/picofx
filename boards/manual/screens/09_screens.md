@@ -175,7 +175,7 @@ there too, with its line number, and a drawing that stops partway leaves its
 last frame on the screen while everything else keeps running.
 
 <!-- if examples -->
-The examples under `examples/python/screens/graphics` show what PicoVector can draw,
+The examples under `examples/programs/screens/graphics` show what PicoVector can draw,
 and a program that needs the whole board, not just one screen, is
 <!-- end -->
 <!-- if not examples -->

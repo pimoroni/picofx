@@ -64,23 +64,23 @@ rgb colour=warm: pulse
 
 | Folder | What is in it |
 | --- | --- |
-| `examples/python/effects/mono` | one output at a time, and the effects that travel across several |
-| `examples/python/effects/colour` | the RGB output |
-| `examples/python/function` | the button, the sensor connector and the supply voltage |
-| `examples/python/infrared/mono` | effects chosen with an infrared remote |
-| `examples/python/infrared/colour` | the same on the RGB output |
-| `examples/python/qwst` | light, tilt and temperature from Qw/ST breakouts |
-| `examples/python/audio` | sound alongside the lights |
-| `examples/python/comms` | several boards working together |
-| `examples/python/wireless` | colours fetched over WiFi, on the Tiny FX W |
-| `examples/python/showcase` | larger builds that put several of these together |
+| `examples/programs/effects/mono` | one output at a time, and the effects that travel across several |
+| `examples/programs/effects/colour` | the RGB output |
+| `examples/programs/function` | the button, the sensor connector and the supply voltage |
+| `examples/programs/infrared/mono` | effects chosen with an infrared remote |
+| `examples/programs/infrared/colour` | the same on the RGB output |
+| `examples/programs/qwst` | light, tilt and temperature from Qw/ST breakouts |
+| `examples/programs/audio` | sound alongside the lights |
+| `examples/programs/comms` | several boards working together |
+| `examples/programs/wireless` | colours fetched over WiFi, on the Tiny FX W |
+| `examples/programs/showcase` | larger builds that put several of these together |
 
 Three to start with:
 
 ```entry
-board: program=examples/python/effects/mono/sweep_trail.py
-board: program=examples/python/effects/colour/rainbow.py
-board: program=examples/python/showcase/ship_thrusters.py
+board: program=examples/programs/effects/mono/sweep_trail.py
+board: program=examples/programs/effects/colour/rainbow.py
+board: program=examples/programs/showcase/ship_thrusters.py
 ```
 
 Examples under `infrared` or `qwst` need that hardware attached, `wireless` needs a WiFi network,
