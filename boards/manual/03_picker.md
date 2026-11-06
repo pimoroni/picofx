@@ -19,7 +19,7 @@ effects.
 Pick one and save, and the board restarts to run it. [Your program in the picker](#your-program-in-the-picker)
 says how a program of yours describes itself there.
 
-**Save to board** writes the file, and the board picks it up a few seconds later.
+**Save to board** writes the file, and the board loads it a few seconds later.
 Its arrow opens the save's settings. Untick "Play saves without an eject" and the
 board waits for an eject or a single press of **Boot**, which is `reload=manual`.
 "Keep the drive hidden at start" is `drive=manual`. **Check board** reads

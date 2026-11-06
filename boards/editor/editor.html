@@ -102,15 +102,15 @@ if (typeof CATALOGUE === "undefined") window.CATALOGUE = null;
 // ---- what the file may say, from the same tables the board reads ---------------
 
 var TYPE_HINTS = {
-  fraction: "0 to 1, or a percent such as 50%",
-  seconds: "a time in seconds",
+  fraction: "0 to 1, or a percentage such as 50%",
+  seconds: "seconds",
   number: "a number",
   count: "a whole number",
-  span: "how many lights it spreads over",
+  span: "the number of lights it covers",
   whole: "a whole number",
   byte: "0 to 255",
   angle: "degrees, 0 to 360",
-  colour: "a name such as warm, or six-digit hex with no #",
+  colour: "a colour name such as warm, or a six-digit hex code without #",
   boolean: "true or false",
   quarter: "0, 90, 180 or 270",
   name: "a file on this drive"
@@ -118,11 +118,11 @@ var TYPE_HINTS = {
 
 // The left side's own settings have shapes the type table does not carry
 var CHANNEL_HINTS = {
-  colour: "a name such as warm, or six-digit hex with no #",
-  offset: "where the picture goes, as x|y, * centring that side",
-  background: "the colour around the picture",
-  bg: "the colour around the picture",
-  tile: "repeat or mirror to fill the screen with copies, as across|down"
+  colour: "a colour name such as warm, or a six-digit hex code without #",
+  offset: "the picture's position as x|y, with * to centre on that axis",
+  background: "the colour behind the picture",
+  bg: "the colour behind the picture",
+  tile: "repeat or mirror copies to fill the screen, as across|down"
 };
 
 // The board's own parts: its outputs with their kind, and each strip and screen port as a file
@@ -150,25 +150,24 @@ if (NUMBERED.length > 1)
 NAMED.forEach(function (output) { TARGETS.push([output[0], "the " + OWN.colour]); });
 OWN.screens.forEach(function (port) { TARGETS.push([port[0], "a screen on " + port[1]]); });
 if (OWN.hub)
-  TARGETS.push(["hubA", "a screen on a Screen Hub, from hubA to hubF, such as hubA-C"]);
+  TARGETS.push(["hubA", "a Screen Hub position, hubA to hubF, or a range such as hubA-C"]);
 OWN.strips.forEach(function (strip) { TARGETS.push([strip[0], "an LED strip on " + strip[1]]); });
-if (OWN.sound) TARGETS.push([CATALOGUE.audio, "a sound played beside the effects"]);
-TARGETS.push(["board", "settings for the board itself"],
-             ["[", "a scene heading, [Name: 10s]; entries above the first are always on"]);
+if (OWN.sound) TARGETS.push([CATALOGUE.audio, "a sound to play alongside the effects"]);
+TARGETS.push(["board", "board settings"],
+             ["[", "a scene heading such as [Name: 10s]. Entries above the first heading are always on"]);
 
 var BOARD_HINTS = {
-  drive: "manual keeps the drive hidden until asked for",
-  reload: "manual waits for an eject or Boot before playing a save",
+  drive: "manual keeps the drive hidden until Boot is double-pressed",
+  reload: "manual plays a save only after an eject or a press of Boot",
   program: "a Python file to run instead of the effects",
-  args: "what to pass that program, divided by |"
+  args: "arguments for that program, separated by |"
 };
 OWN.screens.forEach(function (port) {
-  BOARD_HINTS[port[0].toLowerCase()] = "what size of screen is on " + port[1] +
+  BOARD_HINTS[port[0].toLowerCase()] = "the size of the screen on " + port[1] +
                                        (OWN.hub ? ", or hub for a Screen Hub" : "");
 });
-OWN.strips.forEach(function (strip, index) {
-  BOARD_HINTS[strip[0].toLowerCase()] = index ? "the same for " + strip[1]
-                                              : "how many LEDs are on a strip plugged into " + strip[1];
+OWN.strips.forEach(function (strip) {
+  BOARD_HINTS[strip[0].toLowerCase()] = "the number of LEDs on the strip plugged into " + strip[1];
 });
 
 // The spelling a completion inserts, where the file reads best in mixed case
@@ -610,23 +609,23 @@ function offers(found) {
     var numbered = NUMBERED.length > 0 && /^out[0-9]/i.test(found.prefix);
     var components = (numbered && NUMBERED_COLOUR) || ownPart(found.prefix, NAMED, /^\.$/);
     if (components && found.prefix.slice(-1) === ".") {
-      offer(found.prefix + "r", "just the red");
-      offer(found.prefix + "g", "just the green");
-      offer(found.prefix + "b", "just the blue");
-      offer(found.prefix + "*", "all three, each its own light");
+      offer(found.prefix + "r", "the red channel only");
+      offer(found.prefix + "g", "the green channel only");
+      offer(found.prefix + "b", "the blue channel only");
+      offer(found.prefix + "*", "all three channels, each as its own light");
       return;
     }
     if (/[-.,]$/.test(found.prefix)) return;
     if (numbered || ownPart(found.prefix, OWN.strips, /^[0-9]/)) {
       var tail = found.prefix.split(",").pop();
-      offer(found.prefix + ",", "another output after it: " + JOINED_EXAMPLE);
+      offer(found.prefix + ",", "another output, such as " + JOINED_EXAMPLE);
       if (/^[0-9]+$/.test(tail.replace(/^[a-z]+/i, "")))
-        offer(found.prefix + "-", "a range to another output, run either way");
+        offer(found.prefix + "-", "a range of outputs, in either direction");
       if (numbered && NUMBERED_COLOUR && tail.indexOf(".") < 0)
-        offer(found.prefix + ".", "one colour channel alone: .r .g .b, or .*");
+        offer(found.prefix + ".", "a single colour channel, .r .g or .b, or .* for all three separately");
       offer(found.prefix + ": ", "then the effect");
     } else if (ownPart(found.prefix, NAMED, /^$/)) {
-      offer(found.prefix + ".", "one colour channel alone: .r .g .b, or .*");
+      offer(found.prefix + ".", "a single colour channel, .r .g or .b, or .* for all three separately");
       offer(found.prefix + ": ", "then the effect");
     } else if (/^(board|audio)$/i.test(found.prefix) ||
                ownPart(found.prefix, OWN.screens.concat(OWN.strips), /^$/) ||
@@ -649,9 +648,9 @@ function offers(found) {
       }
     }
     if (free !== null)
-      offer("out" + free, free === 1 ? "one output" : "the next output not used here");
+      offer("out" + free, free === 1 ? "one output" : "the next output not used in this scene");
     if (takeover !== null)
-      offer("out" + takeover, "takes over an always-on output while this scene shows");
+      offer("out" + takeover, "an always-on output, taken over while this scene plays");
   }
 
   function freshStarts() {
@@ -670,7 +669,7 @@ function offers(found) {
     effectNames(found.kind).forEach(function (name) {
       var effect = CATALOGUE.effects[name];
       if (found.mono && effect && effect.kind === "colour") return;
-      var hint = effect && effect.kind === "colour" ? "brings its own colours" : "";
+      var hint = effect && effect.kind === "colour" ? "has its own colours" : "";
       offer(name, hint);
     });
 
@@ -693,9 +692,9 @@ function offers(found) {
     // the left starts the next output group
     if (found.prefix) {
       var name = found.setting.toLowerCase();
-      var piped = {fade: "rise|fall, each its own seconds",
-                   ease: "rise|fall, each its own seconds",
-                   offset: "x|y, * centring that side",
+      var piped = {fade: "rise|fall, in seconds each",
+                   ease: "rise|fall, in seconds each",
+                   offset: "x|y, with * to centre on that axis",
                    tile: "across|down",
                    hold: "one end|the other",
                    args: "the next argument"};
@@ -707,7 +706,7 @@ function offers(found) {
       if (found.left && found.kind !== "screen" && found.kind !== "board")
         offer(found.prefix + ",", name === "colour"
               ? "a colour for each output"
-              : "then another output with settings of its own");
+              : "another output, with its own settings");
     }
   }
   return out;
@@ -716,22 +715,20 @@ function offers(found) {
 function hintFor(found) {
   if (!found) return "";
   if (!CATALOGUE)
-    return "catalogue.js is not beside this page, so nothing can be suggested; " +
-           "the copy on the FX drive has it";
+    return "no suggestions, as catalogue.js is missing. " +
+           "Open this page from the FX drive, which has it";
   if (found.mode === "more")
-    return "another output comes next: a number, or a range such as 5-3, " +
-           "then its settings or the colon";
+    return "next output: a number or a range such as 5-3, then its settings or a colon";
   if ((found.mode === "target" || found.mode === "fresh") &&
       /^out[0-9]/i.test(found.prefix))
-    return "outputs join with commas, ranges run either way, and .r .g .b " +
-           "or .* takes one colour channel alone";
+    return "join outputs with commas, write ranges in either direction, " +
+           "and use .r .g .b or .* for single colour channels";
   if (found.mode === "value" || (found.mode === "setting" && found.prefix)) {
     var name = found.mode === "value" ? found.setting : found.prefix;
     if (found.kind === "board") return BOARD_HINTS[name.toLowerCase()] || "";
     // A drawing names a Python file, which belongs in a Python editor
     if (found.effect === "graphics" && name.toLowerCase().indexOf("file") === 0)
-      return "a Python file with a draw(canvas, elapsed) in it, written in Thonny " +
-             "or VS Code rather than here";
+      return "a Python file with a draw(canvas, elapsed) function, written in Thonny or VS Code";
     var type = settingType(name, found.kind);
     return type ? name.replace(/,+$/, "") + ": " +
                   (CHANNEL_HINTS[name.toLowerCase()] || TYPE_HINTS[type]) : "";
@@ -741,10 +738,10 @@ function hintFor(found) {
     if (takes) return found.effect + " takes: " + takes.join(", ");
   }
   if (found.kind === "audio")
-    return "one sound plays at a time, and its entry sits above every scene heading";
+    return "one sound plays at a time. Put its entry above the first scene heading";
   if (found.mode === "channel")
-    return "before the colon: how the " +
-           (found.kind === "screen" ? "screen is set" : "lights are set");
+    return "settings before the colon apply to the " +
+           (found.kind === "screen" ? "screen" : "lights");
   return "";
 }
 
@@ -761,7 +758,7 @@ var COLOURED = NUMBERED_COLOUR ? "out1-" + NUMBERED.length
                                : (NAMED.length ? NAMED[0][0] : "out1-7");
 
 var STARTER = "# One entry per line: which lights, a colon, then the effect.\n" +
-              "# Settings you leave out take their usual value.\n\n" +
+              "# Settings you leave out use their defaults.\n\n" +
               COLOURED + ": rainbow_wave speed=0.3\n";
 
 var state = {dirHandle: null, fileHandle: null, boardText: null, offered: [], rows: [], lit: 0};
@@ -1038,8 +1035,7 @@ async function pickDrive() {
 function loadFromDrive(onBoard, where) {
   var held = entry.value.trim();
   if (onBoard.trim() !== held && (!held || held === STARTER.trim() ||
-      confirm("Load effects.txt from the drive and replace what is written here? " +
-              "Undo (Ctrl+Z) brings your text back."))) {
+      confirm("Replace the text here with effects.txt from the drive? Press Ctrl+Z to undo."))) {
     // Through the undo history, so what was here is one Ctrl+Z away
     entry.focus();
     entry.setSelectionRange(0, entry.value.length);
