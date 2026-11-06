@@ -12,7 +12,7 @@ The posters the two billboards show live with the other example art in [pictures
   - [Departures List](#departures-list)
   - [Bus Departures](#bus-departures)
   - [Tram Stop Sign](#tram-stop-sign)
-- [Mechanical and Glowing Displays](#mechanical-and-glowing-displays)
+- [Retro Displays](#retro-displays)
   - [Flip Dot Sign](#flip-dot-sign)
   - [Split Flap Clock](#split-flap-clock)
   - [CRT Terminal](#crt-terminal)
@@ -27,7 +27,7 @@ The posters the two billboards show live with the other example art in [pictures
   - [Trivision Billboard](#trivision-billboard)
   - [Scrolling Billboard](#scrolling-billboard)
   - [Status Panel](#status-panel)
-- [Animation](#animation)
+- [Animated Scenes](#animated-scenes)
   - [Isometric Flight](#isometric-flight)
   - [Skyline](#skyline)
   - [Laser Show](#laser-show)
@@ -41,7 +41,7 @@ The posters the two billboards show live with the other example art in [pictures
 
 ## Transport Signs
 
-Departure boards and signs by the road and the track.
+Departure boards and road signs.
 
 ### Roadworks Sign
 <img src="roadworks_sign.png" align="left" alt="Roadworks Sign">
@@ -116,9 +116,9 @@ Draw a tram stop sign across two screens, amber lamps behind a dark face in a co
 <br clear="left">
 
 
-## Mechanical and Glowing Displays
+## Retro Displays
 
-Flaps, dots and tubes, as the real ones look.
+Mechanical, glowing and segment displays.
 
 ### Flip Dot Sign
 <img src="flip_dot_sign.png" align="left" alt="Flip Dot Sign">
@@ -222,7 +222,7 @@ Draw an oscilloscope, a beam tracing across its graticule and leaving a fading a
 
 ## Billboards and Panels
 
-Posters and panels that change as you watch.
+Posters and signs that change on screen.
 
 ### Trivision Billboard
 <img src="trivision_billboard.png" align="left" alt="Trivision Billboard">
@@ -254,9 +254,9 @@ Draw a status panel for the company that made the board, a wordmark over a cycli
 <br clear="left">
 
 
-## Animation
+## Animated Scenes
 
-Pictures in motion, drawn as they play.
+Drawn in code.
 
 ### Isometric Flight
 <img src="isometric_flight.png" align="left" alt="Isometric Flight">

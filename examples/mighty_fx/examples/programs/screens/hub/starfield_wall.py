@@ -11,7 +11,7 @@ Change up some of the constants below to see what happens.
 
 Press "Boot" to exit the program.
 
-Section: Across several screens
+Section: Multi-screen
 Args: Screen size = 2.8
 """
 

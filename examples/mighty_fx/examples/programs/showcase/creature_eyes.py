@@ -23,7 +23,7 @@ Nothing is drawn while the eyes hold still, so the board idles between darts.
 
 Press "Boot" for the next creature, and hold it to exit the program.
 
-Section: Animation
+Section: Animated scenes
 Args: Screen size = 2.8, Rotation = 90
 """
 

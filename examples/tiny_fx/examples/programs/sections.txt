@@ -1,7 +1,8 @@
-# The picker's program tab, a section a line in the order shown: its name, then after a | what it
-# holds. An example joins a section with a "Section:" line in its opening string. A section an
-# example names that is not listed here comes after these, with nothing said of it
-With the remote | the effects, steered from the IR remote
-With a sensor | the lights following what a sensor reads
-Sound | lights to a soundtrack
-Over WiFi | the lights following what the internet says, on the W
+# Sections for the example programs in the picker, in the order they appear.
+# Each line is a section name and a short description.
+# An example joins a section with a "Section:" line in its opening string.
+# A section not listed here appears after these, without a description.
+With the remote | effects controlled with the IR remote
+With a sensor | lights that respond to a sensor
+Sound | sound effects and melodies with lights
+Over WiFi | lights controlled from the internet, on Tiny FX W

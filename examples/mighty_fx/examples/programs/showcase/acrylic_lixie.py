@@ -18,7 +18,7 @@ The glow goes on the frame, which is opaque, and not on any sheet.
 
 Press "Boot" to exit the program.
 
-Section: Mechanical and glowing displays
+Section: Retro displays
 Args: Screen size = 2.8, Rotation = 0
 """
 

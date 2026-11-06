@@ -19,7 +19,7 @@ little, so the ripples spread, cross and reflect from the walls, as in Hugo Elia
 
 Press "Boot" for the other floor, and hold it to exit the program.
 
-Section: Animation
+Section: Animated scenes
 Args: Screen size = 2.8, Rotation = 90
 """
 

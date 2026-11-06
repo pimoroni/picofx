@@ -14,7 +14,7 @@ one spanning the wall would need each panel's own slice, and a write each.
 
 Press "Boot" to exit the program.
 
-Section: Across several screens
+Section: Multi-screen
 Args: Screen size = 2.8, Rotation = 0
 """
 

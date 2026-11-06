@@ -11,7 +11,7 @@ Change up some of the constants below to see what happens.
 Press "Boot" to exit the program.
 
 Program: Colour wheel
-Section: Animation
+Section: Animated scenes
 Args: Screen size = 2.8, Rotation = 0
 """
 

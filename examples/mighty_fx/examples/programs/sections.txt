@@ -1,14 +1,15 @@
-# The picker's program tab, a section a line in the order shown: its name, then after a | what it
-# holds. An example joins a section with a "Section:" line in its opening string. A section an
-# example names that is not listed here comes after these, with nothing said of it
-Transport signs | departure boards and signs by the road and the track
-Mechanical and glowing displays | flaps, dots and tubes, as the real ones look
-Billboards and panels | posters and panels that change as you watch
-Animation | pictures in motion, drawn as they play
-Across several screens | one picture spread over a pair or a wall
-Drawing from code | what the drawing library can do
-With the remote | the effects, steered from the IR remote
-With a sensor | the lights following what a sensor reads
-Sound | lights to a soundtrack
-Over WiFi | the lights following what the internet says
+# Sections for the example programs in the picker, in the order they appear.
+# Each line is a section name and a short description.
+# An example joins a section with a "Section:" line in its opening string.
+# A section not listed here appears after these, without a description.
+Transport signs | departure boards and road signs
+Retro displays | mechanical, glowing and segment displays
+Billboards and panels | posters and signs that change on screen
+Animated scenes | drawn in code
+Multi-screen | pictures spread across two screens or a Screen Hub
+Graphics | shapes, pens, fonts and filters
+With the remote | effects controlled with the IR remote
+With a sensor | lights that respond to a sensor
+Sound | sound effects and melodies with lights
+Over WiFi | lights controlled from the internet
 Moving things | servos and motors

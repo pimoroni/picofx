@@ -9,7 +9,7 @@ Draw a split-flap clock, its digits climbing through the drum a flap at a time l
 
 Press "Boot" to exit the program.
 
-Section: Mechanical and glowing displays
+Section: Retro displays
 Args: Screen size = 2.8, Rotation = 90
 """
 

@@ -16,7 +16,7 @@ face beside an example, or on the drive, loads exactly the same way.
 
 Press "Boot" to exit the program.
 
-Section: Drawing from code
+Section: Graphics
 Args: Screen size = 2.8, Rotation = 0
 """
 

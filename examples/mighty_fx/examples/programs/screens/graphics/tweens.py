@@ -18,7 +18,7 @@ can carry a position, a box or a whole transform.
 
 Press "Boot" to exit the program.
 
-Section: Drawing from code
+Section: Graphics
 Args: Screen size = 2.8, Rotation = 0
 """
 

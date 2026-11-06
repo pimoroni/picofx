@@ -16,7 +16,7 @@ then filtered once. No ROM face is fixed pitch, so the characters are baked into
 Press "Boot" to exit the program.
 
 Program: CRT terminal
-Section: Mechanical and glowing displays
+Section: Retro displays
 Args: Screen size = 2.8, Rotation = 90
 """
 

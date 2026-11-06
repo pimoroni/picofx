@@ -18,7 +18,7 @@ share of the bed.
 
 Press "Boot" to exit the program.
 
-Section: Animation
+Section: Animated scenes
 Args: Screen size = 2.8, Rotation = 90
 """
 

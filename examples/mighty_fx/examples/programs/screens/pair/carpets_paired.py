@@ -14,7 +14,7 @@ Each tile is about a ninth of the full-panel image it replaces, and the drift is
 
 Press "Boot" to exit the program.
 
-Section: Across several screens
+Section: Multi-screen
 Args: Screen size = 2.8, Rotation = 0
 """
 

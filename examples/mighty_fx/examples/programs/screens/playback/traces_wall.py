@@ -15,7 +15,7 @@ copying, since the player holds each at a quarter of a truecolour frame's memory
 
 Press "Boot" to exit the program.
 
-Section: Across several screens
+Section: Multi-screen
 Args: Rotation = 90 or 270
 """
 

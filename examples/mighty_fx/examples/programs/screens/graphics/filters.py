@@ -16,7 +16,7 @@ glitch, grid, noise, onebit, palette_dither, saturation, vignette, wave and zoom
 
 Press "Boot" to exit the program.
 
-Section: Drawing from code
+Section: Graphics
 Args: Screen size = 2.8, Rotation = 0
 """
 

@@ -16,7 +16,7 @@ sheet behind it, as a beam seen through haze seems to.
 
 Press "Boot" to exit the program.
 
-Section: Animation
+Section: Animated scenes
 Args: Screen size = 2.8, Rotation = 90
 """
 

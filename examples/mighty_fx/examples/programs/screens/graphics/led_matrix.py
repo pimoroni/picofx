@@ -12,7 +12,7 @@ frame can feed it. The rainbow runs diagonally, as on the LED matrix boards.
 Press "Boot" to exit the program.
 
 Program: LED matrix
-Section: Animation
+Section: Animated scenes
 Args: Screen size = 2.8, Rotation = 90
 """
 

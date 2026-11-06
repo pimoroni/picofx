@@ -18,7 +18,7 @@ from then on a frame only copies those drawings into place.
 
 Press "Boot" to exit the program.
 
-Section: Mechanical and glowing displays
+Section: Retro displays
 Args: Screen size = 2.8, Rotation = 90
 """
 
