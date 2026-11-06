@@ -11486,15 +11486,6 @@ function thumbCanvas(kind, seed, uses) {
   return canvas;
 }
 
-// The outputs a program's lamps are drawn for: all of them, but a colour output among mono ones
-// only where the program uses it
-function lampsDrawn(uses) {
-  var mixed = BOARD.outputs.some(function (output) { return output.kind === "mono"; });
-  return BOARD.outputs.filter(function (output) {
-    return !mixed || output.kind === "mono" || uses.indexOf("rgb") >= 0;
-  });
-}
-
 // A lamp's colour on a mono output, a warm white as bright as the colour, an unlit lamp unchanged
 function monoInk(ink) {
   if (ink === "#3a3f44") return ink;
@@ -11714,13 +11705,23 @@ function paintThumb(g, kind, seed, canvas, uses) {
                 random: ["#e67e22", "#1abc9c", "#9b59b6", "#f1c40f", "#3498db", "#e74c3c", "#2ecc71"],
                 off: ["#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44"]};
     var row = inks[kind.slice("outputs:".length)] || inks.mono;
-    var lamps = lampsDrawn(uses);
+    var lamps = BOARD.outputs;
+    // On a board with mono outputs and a colour one, the colour lamp sits two rows below the rest as
+    // on the board, and a lamp is lit only where the program uses its kind of output
+    var mixed = lamps.some(function (output) { return output.kind === "mono"; }) &&
+                lamps.some(function (output) { return output.kind !== "mono"; });
+    var usesMono = !mixed || uses.indexOf("outputs") >= 0;
+    var usesColour = !mixed || uses.indexOf("rgb") >= 0;
     lamps.forEach(function (output, at) {
+      var isMono = output.kind === "mono";
       var ink = row[Math.min(at, row.length - 1)];
-      g.fillStyle = output.kind === "mono" ? monoInk(ink) : ink;
+      if (!(isMono ? usesMono : usesColour)) ink = "#3a3f44";
+      // A program lighting only the colour output shows its pattern's first colour there
+      else if (!isMono && !usesMono) ink = row[0];
+      g.fillStyle = isMono ? monoInk(ink) : ink;
       g.beginPath();
-      g.arc(lamps.length > 1 ? 17 + at * 21 * 6 / (lamps.length - 1) : W / 2, H / 2, 7.5, 0,
-            Math.PI * 2);
+      g.arc(lamps.length > 1 ? 17 + at * 21 * 6 / (lamps.length - 1) : W / 2,
+            H / 2 + (mixed ? (isMono ? -21 : 21) : 0), 7.5, 0, Math.PI * 2);
       g.fill();
     });
     return;

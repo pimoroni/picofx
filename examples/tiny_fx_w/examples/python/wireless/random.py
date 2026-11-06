@@ -12,6 +12,7 @@ This example requires a secrets.py file to be on your board's file system with t
 Press "Boot" to exit the program.
 
 Section: Over WiFi
+Thumbnail: outputs random
 """
 
 try:
