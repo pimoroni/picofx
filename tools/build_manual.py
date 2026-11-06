@@ -20,6 +20,9 @@ string, pipe tables, links, inline code and bold. A fence's info string reaches
 the HTML as a class, which is how the checks find the lines that must parse.
 
     python3 tools/build_manual.py boards/PIMORONI_MIGHTYFX
+
+The page's header shows picofx's version as the editor pages do, "preview" after it unless
+--release names the release being built.
 """
 
 import argparse
@@ -30,7 +33,7 @@ import os
 import re
 import sys
 
-from build_editor import embed
+from build_editor import embed, shown_version
 
 TEMPLATE_NAME = "manual_template.html"
 
@@ -217,9 +220,11 @@ def render(found):
     for kind, payload in found:
         if kind == "heading":
             level, text = payload
+            # The title is shown in the page's header, not the body
+            if level == 1:
+                continue
             anchor = slug(text)
-            if level > 1:
-                contents.append((level, anchor, text))
+            contents.append((level, anchor, text))
             out.append('<h{0} id="{1}">{2}</h{0}>'.format(level, anchor, inline(text)))
 
         elif kind == "paragraph":
@@ -401,7 +406,7 @@ def assemble(board_dir, repo_dir):
     return text
 
 
-def build(markdown, tools_dir):
+def build(markdown, tools_dir, version):
     found = blocks(markdown.split("\n"))
     body, contents = render(found)
 
@@ -412,6 +417,7 @@ def build(markdown, tools_dir):
         template = f.read()
 
     page = template.replace("{{TITLE}}", html.escape(title, quote=False))
+    page = page.replace("{{VERSION}}", html.escape(version, quote=False))
     page = page.replace("{{CONTENTS}}", table_of_contents(contents))
     page = page.replace("{{BODY}}", body)
 
@@ -427,12 +433,14 @@ def build(markdown, tools_dir):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--release", metavar="VERSION",
+                        help="the release being built, which must be picofx's version")
     parser.add_argument("board_dir", help="a board directory holding manual/manual.json")
     args = parser.parse_args()
 
     tools_dir = os.path.dirname(os.path.abspath(__file__))
     markdown = assemble(args.board_dir, os.path.dirname(tools_dir))
-    page = build(markdown, tools_dir)
+    page = build(markdown, tools_dir, shown_version(os.path.dirname(tools_dir), args.release))
 
     source = os.path.join(args.board_dir, "manual", "MANUAL.md")
     with open(source, "w", encoding="utf-8", newline="\n") as f:
