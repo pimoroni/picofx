@@ -668,7 +668,7 @@ function programHero(path) {
     customise.onclick = async function () {
       try {
         var copy = await copyProgram(path);
-        PROGRAMS = await drivePrograms(drive.dirHandle);
+        PROGRAMS = await drivePrograms(drive.dirHandle, true);
         boardSet.program = copy;
         boardSet.lastProgram = copy;
         banner("Copied to " + copy + " on the FX drive. Open it in Thonny or another editor to " +

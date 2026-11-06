@@ -10549,7 +10549,7 @@ function programHero(path) {
     customise.onclick = async function () {
       try {
         var copy = await copyProgram(path);
-        PROGRAMS = await drivePrograms(drive.dirHandle);
+        PROGRAMS = await drivePrograms(drive.dirHandle, true);
         boardSet.program = copy;
         boardSet.lastProgram = copy;
         banner("Copied to " + copy + " on the FX drive. Open it in Thonny or another editor to " +
@@ -11515,7 +11515,7 @@ function programFrom(path, folder, source) {
   var opening = openingString(source);
   if (/^Drawing:/.test(opening)) return null;
   var program = {path: path, folder: folder,
-                 example: !!EXAMPLES_ROOT && path.indexOf(EXAMPLES_ROOT) === 0,
+                 example: isExample(path),
                  name: null, does: "", args: null, picture: null, section: null, thumbnail: null,
                  needs: EXAMPLE_NEEDS[folder.split("/")[0]] || null, uses: usesInSource(source)};
   var said = opening.split("\n").filter(function (line) {
@@ -11602,21 +11602,34 @@ async function picturesOf(program, pictures) {
   return found;
 }
 
-// Every program on the drive, the program tab counting them in as they are read
-async function drivePrograms(dir) {
+// Whether a path is one of the drive's examples
+function isExample(path) {
+  return !!EXAMPLES_ROOT && path.indexOf(EXAMPLES_ROOT) === 0;
+}
+
+// Every program on the drive, the program tab counting them in as they are read. With ownOnly
+// only the user's own are read again and the examples kept as they were
+async function drivePrograms(dir, ownOnly) {
   var files = [], pictures = {}, found = [];
-  SECTIONS = [];
   driveHasCredentials = false;
-  Object.keys(PICTURES).forEach(function (path) { PICTURES[path].forEach(URL.revokeObjectURL); });
-  PICTURES = {};
+  Object.keys(PICTURES).forEach(function (path) {
+    if (ownOnly && isExample(path)) return;
+    PICTURES[path].forEach(URL.revokeObjectURL);
+    delete PICTURES[path];
+  });
   await filesIn(dir, "", "", false, files, pictures);
   var own = await folderAt(dir, [OWN_FOLDER]);
   if (own) await filesIn(own, OWN_FOLDER + "/", "", false, files, pictures);
-  var examples = EXAMPLES_ROOT ? await folderAt(dir, EXAMPLES_ROOT.split("/").filter(Boolean))
-                               : null;
-  if (examples) await filesIn(examples, EXAMPLES_ROOT, "", true, files, pictures);
-  programsReading = [0, files.length];
-  renderProgramView();
+  if (ownOnly) {
+    found = PROGRAMS.filter(function (program) { return program.example; });
+  } else {
+    SECTIONS = [];
+    var examples = EXAMPLES_ROOT ? await folderAt(dir, EXAMPLES_ROOT.split("/").filter(Boolean))
+                                 : null;
+    if (examples) await filesIn(examples, EXAMPLES_ROOT, "", true, files, pictures);
+    programsReading = [0, files.length];
+    renderProgramView();
+  }
   for (var i = 0; i < files.length; i++) {
     try {
       var source = await (await files[i][2].getFile()).text();
@@ -11629,15 +11642,64 @@ async function drivePrograms(dir) {
     } catch (e) {
       // One that will not read is left out, as if it were not there
     }
-    programsReading[0] = i + 1;
-    if (i % 8 === 7) renderProgramView();
+    if (programsReading) {
+      programsReading[0] = i + 1;
+      if (i % 8 === 7) renderProgramView();
+    }
   }
   programsReading = null;
   var urls = [];
   Object.keys(PICTURES).forEach(function (path) { urls = urls.concat(PICTURES[path]); });
   loadThumbs(urls);
+  ownSeen = await ownState(dir);
   return found;
 }
+
+// The user's own programs and pictures as last read, by name, size and time saved
+var ownSeen = "";
+
+// The user's own programs and pictures as they are now, by name, size and time saved, cheap to
+// take as no file is read
+async function ownState(dir) {
+  var seen = [];
+  async function note(folder, path) {
+    for await (var pair of folder.entries()) {
+      if (pair[1].kind !== "file" || !/\.(py|png)$/i.test(pair[0])) continue;
+      var file = await pair[1].getFile();
+      seen.push(path + pair[0] + " " + file.size + " " + file.lastModified);
+    }
+  }
+  await note(dir, "");
+  var own = await folderAt(dir, [OWN_FOLDER]);
+  if (own) await note(own, OWN_FOLDER + "/");
+  return seen.sort().join("\n");
+}
+
+// Forget a chosen program the drive no longer holds, as it is no longer there to run
+function forgetMissingPrograms() {
+  if (boardSet.program && !programNamed(boardSet.program)) boardSet.program = null;
+  if (boardSet.lastProgram && !programNamed(boardSet.lastProgram)) boardSet.lastProgram = null;
+}
+
+// Read the user's own programs again where they have changed on the drive, as the effects' media
+// are, so a program saved from an editor shows without opening the drive again
+var programsBusy = false;
+async function rescanPrograms() {
+  if (!drive.dirHandle || programsBusy || programsReading) return;
+  programsBusy = true;
+  try {
+    if (await ownState(drive.dirHandle) !== ownSeen) {
+      PROGRAMS = await drivePrograms(drive.dirHandle, true);
+      forgetMissingPrograms();
+      draw();
+    }
+  } catch (e) {
+    // A drive that went away is read again when it is opened
+  }
+  programsBusy = false;
+}
+
+setInterval(rescanPrograms, 5000);
 
 // Copy a program into OWN_FOLDER for the user to change, with its pictures renamed to match. An
 // example keeps its name where it is free, and the user's own always takes a new one, its number
@@ -11696,17 +11758,14 @@ async function removeProgram(path) {
     banner("Could not delete " + name + ": " + e.name + ". Is the drive showing?", true);
     return;
   }
-  PROGRAMS = await drivePrograms(drive.dirHandle);
-  if (boardSet.program === path) boardSet.program = null;
-  if (boardSet.lastProgram === path) boardSet.lastProgram = null;
+  PROGRAMS = await drivePrograms(drive.dirHandle, true);
+  forgetMissingPrograms();
   draw();
 }
 
 connectSteps.push(async function () {
   PROGRAMS = await drivePrograms(drive.dirHandle);
-  // A program the page had chosen that this drive does not hold is no longer there to run
-  if (boardSet.program && !programNamed(boardSet.program)) boardSet.program = null;
-  if (boardSet.lastProgram && !programNamed(boardSet.lastProgram)) boardSet.lastProgram = null;
+  forgetMissingPrograms();
   draw();
 });
 
