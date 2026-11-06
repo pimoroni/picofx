@@ -336,6 +336,62 @@ function renderScreenBoxes() {
 // one before: the hub's positions, the whole pictures, the hub's groups
 var assetSteps = [];
 
+// The gallery's group for whatever the example folders' sections do not name
+var OTHER_EXAMPLES = "Example pictures";
+
+// Whether each of the gallery's groups is open, by name, for those folded or opened
+var groupsOpen = {};
+
+// Whether a group is open, the user's own starting open and the examples' sections folded
+function groupOpen(name) {
+  return name in groupsOpen ? groupsOpen[name] : name === OWN_GROUP;
+}
+
+// A picture's name as the page shows it, without the folders it sits in
+function nameShown(name) {
+  return name.slice(name.lastIndexOf("/") + 1);
+}
+
+// The gallery's pictures by group, as [name, what it holds, pictures]: the user's own, then each
+// example folder's sections in its sections.txt's order, then the examples none of them names
+function mediaGroups() {
+  var left = state.media.filter(function (media) { return isExampleMedia(media.name); });
+  var groups = [[OWN_GROUP, "your own pictures and drawings", state.media.filter(function (media) {
+    return !isExampleMedia(media.name);
+  })]];
+  EXAMPLE_FOLDERS.forEach(function (kind) {
+    (exampleSections[kind] || []).forEach(function (section) {
+      var held = left.filter(function (media) { return sectionHolds(section, media.name); });
+      left = left.filter(function (media) { return held.indexOf(media) < 0; });
+      groups.push([section[0], section[1], held]);
+    });
+  });
+  groups.push([OTHER_EXAMPLES, "", left]);
+  // The user's own group stays where it is empty, being where pictures are added
+  return groups.filter(function (group, at) { return !at || group[2].length; });
+}
+
+// A group's heading, pressed to fold or open it
+function groupHead(group) {
+  var open = groupOpen(group[0]);
+  var head = document.createElement("button");
+  head.type = "button";
+  head.className = "gallery-head foldhead" + (open ? " open" : "");
+  head.setAttribute("aria-expanded", open);
+  head.appendChild(document.createTextNode(group[0]));
+  if (group[1]) {
+    var says = document.createElement("span");
+    says.className = "says";
+    says.textContent = group[1];
+    head.appendChild(says);
+  }
+  head.onclick = function () {
+    groupsOpen[group[0]] = !open;
+    draw();
+  };
+  return head;
+}
+
 function renderAssets() {
   var box = document.getElementById("assets");
   box.textContent = "";
@@ -346,7 +402,26 @@ function renderAssets() {
       : state.media.length
         ? "one set of pictures, each shown on A, B or both"
         : "no pictures on the drive yet. Drop a GIF, PNG, JPEG or drawing onto it";
-  state.media.forEach(function (media) {
+  // The pictures are grouped only where the drive has examples among them
+  var grouped = state.media.some(function (media) { return isExampleMedia(media.name); });
+  var groups = grouped ? mediaGroups() : [[OWN_GROUP, "", state.media]];
+  groups.forEach(function (group) {
+    if (grouped) box.appendChild(groupHead(group));
+    if (grouped && !groupOpen(group[0])) return;
+    group[2].forEach(assetTile);
+    if (group[0] === OWN_GROUP) adder();
+  });
+  assetSteps.forEach(function (step) { step(); });
+
+  function adder() {
+    if (state.fileHandle)
+      box.appendChild(adderTile("add pictures or drawings",
+        {description: "Pictures and drawings the board can play",
+         accept: {"image/png": [".gif", ".png", ".jpg", ".jpeg"], "text/x-python": [".py"]}},
+        "pictures", /\.(gif|png|jpe?g|py)$/i));
+  }
+
+  function assetTile(media) {
     var name = media.name;
     var on = {};
     SCREENS.forEach(function (l) {
@@ -354,6 +429,7 @@ function renderAssets() {
     });
     var cell = document.createElement("div");
     cell.className = "asset" + (on.A && on.B ? " onAB" : on.A ? " onA" : on.B ? " onB" : "");
+    cell.dataset.name = name;
     var face = document.createElement("div");
     face.className = "face";
     var art = mediaArt(name);
@@ -378,7 +454,7 @@ function renderAssets() {
     cell.title = name;
     var label = document.createElement("div");
     label.className = "label";
-    label.textContent = name;
+    label.textContent = nameShown(name);
     face.appendChild(label);
     var pick = document.createElement("div");
     pick.className = "pick";
@@ -402,15 +478,10 @@ function renderAssets() {
       pick.appendChild(button);
     });
     cell.appendChild(pick);
-    cell.appendChild(binButton(name, media.kind));
+    // An example comes back when the board's examples are flashed again, so it keeps no bin
+    if (!isExampleMedia(name)) cell.appendChild(binButton(name, media.kind));
     box.appendChild(cell);
-  });
-  if (state.fileHandle)
-    box.appendChild(adderTile("add pictures or drawings",
-      {description: "Pictures and drawings the board can play",
-       accept: {"image/png": [".gif", ".png", ".jpg", ".jpeg"], "text/x-python": [".py"]}},
-      "pictures", /\.(gif|png|jpe?g|py)$/i));
-  assetSteps.forEach(function (step) { step(); });
+  }
 }
 
 function mediaNamed(name) {

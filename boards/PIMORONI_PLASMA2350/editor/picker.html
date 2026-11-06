@@ -1498,6 +1498,16 @@ body.setupall .lightrow{opacity:.35;pointer-events:none}
 .assets{align-items:end}
 /* The tile adding pictures is as tall as the row it ends */
 .assets .adder{align-self:stretch}
+/* A group's heading across the gallery, pressed to fold or open it, its arrow the panels' */
+.assets .foldhead{grid-column:1/-1;margin:.4rem 0 -.3rem;padding:0;border:0;border-radius:0;
+ background:none;color:var(--ink);font-size:.92rem;text-align:left}
+.assets .foldhead:first-child{margin-top:0}
+.assets .foldhead .says{font:400 .8rem system-ui,sans-serif;color:var(--dim)}
+.assets .foldhead::before{content:"";width:.42rem;height:.42rem;flex-shrink:0;
+ border-right:2px solid var(--dim);border-bottom:2px solid var(--dim);
+ transform:rotate(45deg) translate(-1px,-1px);transition:transform .12s}
+.assets .foldhead.open::before{transform:rotate(-135deg) translate(-2px,-2px)}
+.assets .foldhead:hover::before{border-color:var(--accent)}
 .asset .face.wholeface{height:auto}
 .asset .face.wholeface img{position:relative;inset:auto;object-fit:fill;flex:none;
  image-rendering:pixelated}
@@ -7611,6 +7621,62 @@ function renderScreenBoxes() {
 // one before: the hub's positions, the whole pictures, the hub's groups
 var assetSteps = [];
 
+// The gallery's group for whatever the example folders' sections do not name
+var OTHER_EXAMPLES = "Example pictures";
+
+// Whether each of the gallery's groups is open, by name, for those folded or opened
+var groupsOpen = {};
+
+// Whether a group is open, the user's own starting open and the examples' sections folded
+function groupOpen(name) {
+  return name in groupsOpen ? groupsOpen[name] : name === OWN_GROUP;
+}
+
+// A picture's name as the page shows it, without the folders it sits in
+function nameShown(name) {
+  return name.slice(name.lastIndexOf("/") + 1);
+}
+
+// The gallery's pictures by group, as [name, what it holds, pictures]: the user's own, then each
+// example folder's sections in its sections.txt's order, then the examples none of them names
+function mediaGroups() {
+  var left = state.media.filter(function (media) { return isExampleMedia(media.name); });
+  var groups = [[OWN_GROUP, "your own pictures and drawings", state.media.filter(function (media) {
+    return !isExampleMedia(media.name);
+  })]];
+  EXAMPLE_FOLDERS.forEach(function (kind) {
+    (exampleSections[kind] || []).forEach(function (section) {
+      var held = left.filter(function (media) { return sectionHolds(section, media.name); });
+      left = left.filter(function (media) { return held.indexOf(media) < 0; });
+      groups.push([section[0], section[1], held]);
+    });
+  });
+  groups.push([OTHER_EXAMPLES, "", left]);
+  // The user's own group stays where it is empty, being where pictures are added
+  return groups.filter(function (group, at) { return !at || group[2].length; });
+}
+
+// A group's heading, pressed to fold or open it
+function groupHead(group) {
+  var open = groupOpen(group[0]);
+  var head = document.createElement("button");
+  head.type = "button";
+  head.className = "gallery-head foldhead" + (open ? " open" : "");
+  head.setAttribute("aria-expanded", open);
+  head.appendChild(document.createTextNode(group[0]));
+  if (group[1]) {
+    var says = document.createElement("span");
+    says.className = "says";
+    says.textContent = group[1];
+    head.appendChild(says);
+  }
+  head.onclick = function () {
+    groupsOpen[group[0]] = !open;
+    draw();
+  };
+  return head;
+}
+
 function renderAssets() {
   var box = document.getElementById("assets");
   box.textContent = "";
@@ -7621,7 +7687,26 @@ function renderAssets() {
       : state.media.length
         ? "one set of pictures, each shown on A, B or both"
         : "no pictures on the drive yet. Drop a GIF, PNG, JPEG or drawing onto it";
-  state.media.forEach(function (media) {
+  // The pictures are grouped only where the drive has examples among them
+  var grouped = state.media.some(function (media) { return isExampleMedia(media.name); });
+  var groups = grouped ? mediaGroups() : [[OWN_GROUP, "", state.media]];
+  groups.forEach(function (group) {
+    if (grouped) box.appendChild(groupHead(group));
+    if (grouped && !groupOpen(group[0])) return;
+    group[2].forEach(assetTile);
+    if (group[0] === OWN_GROUP) adder();
+  });
+  assetSteps.forEach(function (step) { step(); });
+
+  function adder() {
+    if (state.fileHandle)
+      box.appendChild(adderTile("add pictures or drawings",
+        {description: "Pictures and drawings the board can play",
+         accept: {"image/png": [".gif", ".png", ".jpg", ".jpeg"], "text/x-python": [".py"]}},
+        "pictures", /\.(gif|png|jpe?g|py)$/i));
+  }
+
+  function assetTile(media) {
     var name = media.name;
     var on = {};
     SCREENS.forEach(function (l) {
@@ -7629,6 +7714,7 @@ function renderAssets() {
     });
     var cell = document.createElement("div");
     cell.className = "asset" + (on.A && on.B ? " onAB" : on.A ? " onA" : on.B ? " onB" : "");
+    cell.dataset.name = name;
     var face = document.createElement("div");
     face.className = "face";
     var art = mediaArt(name);
@@ -7653,7 +7739,7 @@ function renderAssets() {
     cell.title = name;
     var label = document.createElement("div");
     label.className = "label";
-    label.textContent = name;
+    label.textContent = nameShown(name);
     face.appendChild(label);
     var pick = document.createElement("div");
     pick.className = "pick";
@@ -7677,15 +7763,10 @@ function renderAssets() {
       pick.appendChild(button);
     });
     cell.appendChild(pick);
-    cell.appendChild(binButton(name, media.kind));
+    // An example comes back when the board's examples are flashed again, so it keeps no bin
+    if (!isExampleMedia(name)) cell.appendChild(binButton(name, media.kind));
     box.appendChild(cell);
-  });
-  if (state.fileHandle)
-    box.appendChild(adderTile("add pictures or drawings",
-      {description: "Pictures and drawings the board can play",
-       accept: {"image/png": [".gif", ".png", ".jpg", ".jpeg"], "text/x-python": [".py"]}},
-      "pictures", /\.(gif|png|jpe?g|py)$/i));
-  assetSteps.forEach(function (step) { step(); });
+  }
 }
 
 function mediaNamed(name) {
@@ -9026,6 +9107,8 @@ function playbackFold(key, held, media) {
 function pictureSaid(name) {
   var media = mediaNamed(name);
   if (media && media.kind === "drawing") return media.drawing.title;
+  // A slideshow of the user's own is a path from the drive's top, an example plainly its name
+  if (isExampleMedia(name)) return nameShown(name);
   return media && media.kind === "folder" ? "/" + name : name;
 }
 
@@ -9135,8 +9218,8 @@ function chosenAfresh(held) {
 // rows in line. The name, a still's type and the size show over the picture on hover
 assetSteps.push(function () {
   document.getElementById("assets").classList.add("wholeassets");
-  document.querySelectorAll("#assets .asset").forEach(function (cell, at) {
-    var media = state.media[at];
+  document.querySelectorAll("#assets .asset").forEach(function (cell) {
+    var media = mediaNamed(cell.dataset.name);
     var art = media && mediaArt(media.name);
     var face = cell.querySelector(".face");
     var img = face && face.querySelector("img");
@@ -9162,15 +9245,16 @@ assetSteps.push(function () {
     face.style.height = high + "px";
     img.style.cssText = small ? "width:" + art.w + "px;height:" + art.h + "px"
                               : "width:100%;height:100%";
-    var dot = media.name.lastIndexOf(".");
+    var file = nameShown(media.name);
+    var dot = file.lastIndexOf(".");
     var still = media.kind === "image";
     var label = face.querySelector(".label");
-    // A slideshow is a folder, so it is named as one, a path from the drive's top
+    // A slideshow is a folder, so it is named as one
     var shown = media.kind === "folder" ? pictureSaid(media.name)
-              : dot > 0 ? media.name.slice(0, dot) : media.name;
+              : dot > 0 ? file.slice(0, dot) : file;
     if (label) {
       label.innerHTML = "<b>" + shown + "</b><br>" +
-        [still && dot > 0 ? media.name.slice(dot + 1) : null, art.w + " \u00d7 " + art.h]
+        [still && dot > 0 ? file.slice(dot + 1) : null, art.w + " \u00d7 " + art.h]
           .filter(Boolean).join(" \u00b7 ");
     }
   });
@@ -11243,8 +11327,42 @@ var scanBusy = false;
 // The top of the drive is read too, so a file dropped there still plays
 var MEDIA_FOLDERS = {pictures: /\.(gif|png|jpe?g)$/i, drawings: /\.py$/i, sounds: /\.wav$/i};
 
+// The folders of examples the walk reads, under examples/ on a board that carries them. Each file
+// is offered by its path from the top of the drive, which is how an effects line names it
+var EXAMPLE_FOLDERS = BOARD.examples ? ["pictures"] : [];
+
+// Each example folder's sections, as [name, what it holds, members], in its sections.txt's order.
+// A member is a path from the top of the drive, a file or a slideshow's folder, or folder/* for
+// each file in that folder on its own
+var exampleSections = {};
+
 // The folder each file or slideshow the walk found sits in, so it is deleted from there
 var mediaHome = {};
+
+// The sections an example folder's sections.txt lists, a line each as its name, a |, what it holds,
+// another | and its members split by commas, each made a path from the top of the drive
+function exampleSectionsFrom(text, root) {
+  return sectionsFrom(text).map(function (section) {
+    var parts = section[1].split("|");
+    var members = parts.length > 1 ? parts[1].split(",") : [];
+    return [section[0], parts[0].trim(), members.map(function (member) {
+      return member.trim();
+    }).filter(Boolean).map(function (member) { return root + member; })];
+  });
+}
+
+// Whether a file or folder is one of the drive's examples
+function isExampleMedia(name) {
+  return name.indexOf("examples/") === 0;
+}
+
+// Whether a section's members name a file or folder, itself or as one of a folder's files
+function sectionHolds(section, name) {
+  var folder = name.slice(0, name.lastIndexOf("/") + 1);
+  return section[2].some(function (member) {
+    return member === name || member === folder + "*";
+  });
+}
 
 // The folder a file of this name is added to, or null for the top of the drive
 function mediaFolderFor(name) {
@@ -11263,19 +11381,32 @@ async function scanMedia(dir) {
   // The drive's own folders, which are never a slideshow
   var kept = Object.keys(MEDIA_FOLDERS).concat([OWN_FOLDER, "examples",
                                                 "System Volume Information"]);
+  var sections = {};
+  // Whether a part takes the entry, the first that does keeping it
+  async function taken(name, handle) {
+    for (var at = 0; at < driveParts.length; at++) {
+      var part = driveParts[at];
+      var take = handle.kind === "file" ? part.file : part.folder;
+      if (take && await take(name, handle)) return true;
+    }
+    return false;
+  }
   async function offer(folder, top) {
     for await (var pair of folder.entries()) {
       var name = pair[0], handle = pair[1];
       // A name in a media folder and at the top is the folder's, read first
       if (name in homes || (top && handle.kind !== "file" && kept.indexOf(name) >= 0)) continue;
-      for (var at = 0; at < driveParts.length; at++) {
-        var part = driveParts[at];
-        var take = handle.kind === "file" ? part.file : part.folder;
-        if (take && await take(name, handle)) {
-          homes[name] = folder;
-          break;
-        }
-      }
+      if (await taken(name, handle)) homes[name] = folder;
+    }
+  }
+  // A folder no part takes is walked into, as is one its sections split into files
+  async function offerExamples(folder, path, split) {
+    for await (var pair of folder.entries()) {
+      var named = path + pair[0], handle = pair[1];
+      if (handle.kind !== "file" && split.indexOf(named + "/*") >= 0)
+        await offerExamples(handle, named + "/", split);
+      else if (!await taken(named, handle) && handle.kind !== "file")
+        await offerExamples(handle, named + "/", split);
     }
   }
   try {
@@ -11289,16 +11420,35 @@ async function scanMedia(dir) {
       if (folder) await offer(folder, false);
     }
     await offer(dir, true);
+    for (var kind of EXAMPLE_FOLDERS) {
+      var examples = await folderAt(dir, ["examples", kind]);
+      if (!examples) continue;
+      var root = "examples/" + kind + "/";
+      sections[kind] = [];
+      try {
+        var listed = await (await examples.getFileHandle("sections.txt")).getFile();
+        sections[kind] = exampleSectionsFrom(await listed.text(), root);
+      } catch (e) {
+        // Without sections.txt every example is in one group of its own
+      }
+      var split = [].concat.apply([], sections[kind].map(function (section) {
+        return section[2];
+      }));
+      await offerExamples(examples, root, split);
+    }
   } finally {
     scanBusy = false;
   }
   mediaHome = homes;
+  exampleSections = sections;
   driveParts.forEach(function (part) { if (part.land) part.land(); });
   state.scanned = true;
 }
 
 function driveSaid() {
-  return JSON.stringify(driveParts.map(function (part) { return part.said ? part.said() : ""; }));
+  return JSON.stringify([exampleSections].concat(driveParts.map(function (part) {
+    return part.said ? part.said() : "";
+  })));
 }
 
 async function rescanMedia() {

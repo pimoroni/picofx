@@ -483,8 +483,8 @@ assetSteps.push(function () {
   var box = document.getElementById("assets");
   box.classList.toggle("hubbed", state.hub.on);
   if (!state.hub.on) return;
-  box.querySelectorAll(".asset").forEach(function (cell, at) {
-    var name = state.media[at].name;
+  box.querySelectorAll(".asset").forEach(function (cell) {
+    var name = cell.dataset.name;
     var on = HUB_PLACES.filter(function (place) {
       return placeThere(place) && state.places[place].shows === name;
     });

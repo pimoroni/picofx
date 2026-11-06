@@ -12,8 +12,42 @@ var scanBusy = false;
 // The top of the drive is read too, so a file dropped there still plays
 var MEDIA_FOLDERS = {pictures: /\.(gif|png|jpe?g)$/i, drawings: /\.py$/i, sounds: /\.wav$/i};
 
+// The folders of examples the walk reads, under examples/ on a board that carries them. Each file
+// is offered by its path from the top of the drive, which is how an effects line names it
+var EXAMPLE_FOLDERS = BOARD.examples ? ["pictures"] : [];
+
+// Each example folder's sections, as [name, what it holds, members], in its sections.txt's order.
+// A member is a path from the top of the drive, a file or a slideshow's folder, or folder/* for
+// each file in that folder on its own
+var exampleSections = {};
+
 // The folder each file or slideshow the walk found sits in, so it is deleted from there
 var mediaHome = {};
+
+// The sections an example folder's sections.txt lists, a line each as its name, a |, what it holds,
+// another | and its members split by commas, each made a path from the top of the drive
+function exampleSectionsFrom(text, root) {
+  return sectionsFrom(text).map(function (section) {
+    var parts = section[1].split("|");
+    var members = parts.length > 1 ? parts[1].split(",") : [];
+    return [section[0], parts[0].trim(), members.map(function (member) {
+      return member.trim();
+    }).filter(Boolean).map(function (member) { return root + member; })];
+  });
+}
+
+// Whether a file or folder is one of the drive's examples
+function isExampleMedia(name) {
+  return name.indexOf("examples/") === 0;
+}
+
+// Whether a section's members name a file or folder, itself or as one of a folder's files
+function sectionHolds(section, name) {
+  var folder = name.slice(0, name.lastIndexOf("/") + 1);
+  return section[2].some(function (member) {
+    return member === name || member === folder + "*";
+  });
+}
 
 // The folder a file of this name is added to, or null for the top of the drive
 function mediaFolderFor(name) {
@@ -32,19 +66,32 @@ async function scanMedia(dir) {
   // The drive's own folders, which are never a slideshow
   var kept = Object.keys(MEDIA_FOLDERS).concat([OWN_FOLDER, "examples",
                                                 "System Volume Information"]);
+  var sections = {};
+  // Whether a part takes the entry, the first that does keeping it
+  async function taken(name, handle) {
+    for (var at = 0; at < driveParts.length; at++) {
+      var part = driveParts[at];
+      var take = handle.kind === "file" ? part.file : part.folder;
+      if (take && await take(name, handle)) return true;
+    }
+    return false;
+  }
   async function offer(folder, top) {
     for await (var pair of folder.entries()) {
       var name = pair[0], handle = pair[1];
       // A name in a media folder and at the top is the folder's, read first
       if (name in homes || (top && handle.kind !== "file" && kept.indexOf(name) >= 0)) continue;
-      for (var at = 0; at < driveParts.length; at++) {
-        var part = driveParts[at];
-        var take = handle.kind === "file" ? part.file : part.folder;
-        if (take && await take(name, handle)) {
-          homes[name] = folder;
-          break;
-        }
-      }
+      if (await taken(name, handle)) homes[name] = folder;
+    }
+  }
+  // A folder no part takes is walked into, as is one its sections split into files
+  async function offerExamples(folder, path, split) {
+    for await (var pair of folder.entries()) {
+      var named = path + pair[0], handle = pair[1];
+      if (handle.kind !== "file" && split.indexOf(named + "/*") >= 0)
+        await offerExamples(handle, named + "/", split);
+      else if (!await taken(named, handle) && handle.kind !== "file")
+        await offerExamples(handle, named + "/", split);
     }
   }
   try {
@@ -58,16 +105,35 @@ async function scanMedia(dir) {
       if (folder) await offer(folder, false);
     }
     await offer(dir, true);
+    for (var kind of EXAMPLE_FOLDERS) {
+      var examples = await folderAt(dir, ["examples", kind]);
+      if (!examples) continue;
+      var root = "examples/" + kind + "/";
+      sections[kind] = [];
+      try {
+        var listed = await (await examples.getFileHandle("sections.txt")).getFile();
+        sections[kind] = exampleSectionsFrom(await listed.text(), root);
+      } catch (e) {
+        // Without sections.txt every example is in one group of its own
+      }
+      var split = [].concat.apply([], sections[kind].map(function (section) {
+        return section[2];
+      }));
+      await offerExamples(examples, root, split);
+    }
   } finally {
     scanBusy = false;
   }
   mediaHome = homes;
+  exampleSections = sections;
   driveParts.forEach(function (part) { if (part.land) part.land(); });
   state.scanned = true;
 }
 
 function driveSaid() {
-  return JSON.stringify(driveParts.map(function (part) { return part.said ? part.said() : ""; }));
+  return JSON.stringify([exampleSections].concat(driveParts.map(function (part) {
+    return part.said ? part.said() : "";
+  })));
 }
 
 async function rescanMedia() {

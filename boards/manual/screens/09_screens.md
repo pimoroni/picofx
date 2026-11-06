@@ -87,6 +87,13 @@ in their names. Pictures can be PNG, JPEG or GIF. `file` or `folder` must
 always be given. The board looks for it in this drive's `pictures` folder, where
 the picker adds pictures, then at the top of the drive.
 
+<!-- if examples -->
+The example pictures are in the `examples/pictures` folder. To use one in an
+entry, include the folder in its name, such as
+`file=examples/pictures/medscan.gif`. The picker shows them on its Screens tab,
+below your own pictures.
+<!-- end -->
+
 `fps` is frames per second and `interval` is seconds per frame, so use whichever
 suits: `fps=12` for an animation, `interval=30` for a slideshow. Either replaces
 the file's saved delays, and leaving both out keeps them. `loop` is true unless

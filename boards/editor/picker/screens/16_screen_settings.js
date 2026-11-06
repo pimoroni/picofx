@@ -922,6 +922,8 @@ function playbackFold(key, held, media) {
 function pictureSaid(name) {
   var media = mediaNamed(name);
   if (media && media.kind === "drawing") return media.drawing.title;
+  // A slideshow of the user's own is a path from the drive's top, an example plainly its name
+  if (isExampleMedia(name)) return nameShown(name);
   return media && media.kind === "folder" ? "/" + name : name;
 }
 
@@ -1031,8 +1033,8 @@ function chosenAfresh(held) {
 // rows in line. The name, a still's type and the size show over the picture on hover
 assetSteps.push(function () {
   document.getElementById("assets").classList.add("wholeassets");
-  document.querySelectorAll("#assets .asset").forEach(function (cell, at) {
-    var media = state.media[at];
+  document.querySelectorAll("#assets .asset").forEach(function (cell) {
+    var media = mediaNamed(cell.dataset.name);
     var art = media && mediaArt(media.name);
     var face = cell.querySelector(".face");
     var img = face && face.querySelector("img");
@@ -1058,15 +1060,16 @@ assetSteps.push(function () {
     face.style.height = high + "px";
     img.style.cssText = small ? "width:" + art.w + "px;height:" + art.h + "px"
                               : "width:100%;height:100%";
-    var dot = media.name.lastIndexOf(".");
+    var file = nameShown(media.name);
+    var dot = file.lastIndexOf(".");
     var still = media.kind === "image";
     var label = face.querySelector(".label");
-    // A slideshow is a folder, so it is named as one, a path from the drive's top
+    // A slideshow is a folder, so it is named as one
     var shown = media.kind === "folder" ? pictureSaid(media.name)
-              : dot > 0 ? media.name.slice(0, dot) : media.name;
+              : dot > 0 ? file.slice(0, dot) : file;
     if (label) {
       label.innerHTML = "<b>" + shown + "</b><br>" +
-        [still && dot > 0 ? media.name.slice(dot + 1) : null, art.w + " \u00d7 " + art.h]
+        [still && dot > 0 ? file.slice(dot + 1) : null, art.w + " \u00d7 " + art.h]
           .filter(Boolean).join(" \u00b7 ");
     }
   });

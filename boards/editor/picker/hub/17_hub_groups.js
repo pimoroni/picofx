@@ -140,8 +140,8 @@ drawSteps.before.push(settleGroups);
 assetSteps.push(function () {
   if (!state.hub.on) return;
   var targets = sendTargets();
-  document.querySelectorAll("#assets .asset").forEach(function (cell, at) {
-    var name = state.media[at].name;
+  document.querySelectorAll("#assets .asset").forEach(function (cell) {
+    var name = cell.dataset.name;
     var pick = cell.querySelector(".pick");
     pick.textContent = "";
     targets.forEach(function (target) {
