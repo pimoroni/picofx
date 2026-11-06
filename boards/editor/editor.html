@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>FX Editor</title>
+<title>__BOARD_NAME__ Editor</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 31.181 31.181'%3E%3Crect fill='%23fff' width='31.181' height='31.181' rx='4.252' ry='4.252'/%3E%3Cpath d='M12.732,4.036H2.361c-.235,0-.425.19-.425.425v22.258c0,.235.19.425.425.425h1.875c.235,0,.425-.19.425-.425v-10.361h7.514c.235,0,.425-.19.425-.425v-1.684c0-.235-.19-.425-.425-.425h-7.514v-7.254h8.071c.235,0,.425-.19.425-.425v-1.684c0-.235-.19-.425-.425-.425Z'/%3E%3Cpath d='M29.199,26.526l-5.675-11.158,5.296-10.719c.065-.132.058-.288-.02-.413-.078-.125-.214-.201-.361-.201h-1.875c-.161,0-.309.091-.38.235l-4.129,8.273-4.074-8.271c-.071-.145-.219-.237-.381-.237h-1.992c-.147,0-.283.076-.361.201-.078.125-.085.28-.021.412l5.268,10.72-5.646,11.159c-.067.132-.06.289.017.415.078.126.214.203.362.203h1.875c.16,0,.307-.09.379-.233l4.484-8.824,4.484,8.824c.072.143.219.233.379.233h1.992c.148,0,.285-.077.362-.203.078-.126.083-.283.017-.415Z'/%3E%3C/svg%3E">
 <script src="catalogue.js"></script>
 <style>
@@ -15,15 +15,14 @@
 *{box-sizing:border-box}
 body{font:16px/1.5 system-ui,sans-serif;margin:0;background:var(--bg);color:var(--ink)}
 header{display:flex;align-items:center;gap:.8rem;padding:.8rem 1.4rem;background:var(--panel);
- border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+ border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;flex-wrap:wrap}
 header h1{font-size:1.1rem;margin:0 auto 0 0}
 header h1 .version{font-size:.8rem;font-weight:400;color:var(--dim)}
-button{font:inherit;padding:.5rem 1rem;border:1px solid var(--line);border-radius:8px;
- background:var(--panel);cursor:pointer}
+button{font:inherit;font-size:.88rem;padding:.42rem .85rem;border:1px solid var(--line);
+ border-radius:8px;background:var(--panel);color:var(--ink);cursor:pointer;white-space:nowrap}
 button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
 button:disabled{opacity:.4;cursor:default}
 main{max-width:52rem;margin:1.5rem auto;padding:0 1.4rem}
-#status{font-size:.85rem;color:var(--dim)}
 .banner{padding:.8rem 1.1rem;border-radius:10px;margin:1rem 0;background:#e7f2f1}
 .banner.warn{background:var(--warn-bg);color:var(--warn)}
 .banner.hold{background:#fdf3e0;color:#8a6415}
@@ -76,11 +75,10 @@ main{max-width:52rem;margin:1.5rem auto;padding:0 1.4rem}
 </head>
 <body>
 <header>
-<h1>FX Editor <span class="version">__VERSION__</span></h1>
-<span id="status">nothing open yet</span>
-<button id="open" class="primary">Open the FX drive</button>
-<button id="save" disabled>Put it on the board</button>
-<button id="check" disabled>Did it work?</button>
+<h1>__BOARD_NAME__ Editor <span class="version">__VERSION__</span></h1>
+<button id="open" class="primary">Open FX drive</button>
+<button id="save" disabled>Save to board</button>
+<button id="check" disabled>Check board</button>
 </header>
 <main>
 <div id="banners"></div>
@@ -91,9 +89,8 @@ main{max-width:52rem;margin:1.5rem auto;padding:0 1.4rem}
 </div>
 <div id="hint" class="hint"></div>
 <p class="foot">One entry per line: which lights, a colon, then the effect.
-The board checks the file when the drive ejects, and "Did it work?" reads what it made
-of each line. Rather pick from cards? <a href="PICKER.html">PICKER.html</a> on this
-drive writes the file for you.</p>
+After a save, Check board shows any problems the board found. To pick effects from
+cards instead, open <a href="PICKER.html">PICKER.html</a> on this drive.</p>
 </main>
 <script>
 "use strict";
@@ -1038,7 +1035,7 @@ async function pickDrive() {
 
 // Take the drive's effects.txt into the editor, asking first where it would
 // replace something written here, and ready the buttons for a save
-function loadFromDrive(onBoard, status, openLabel) {
+function loadFromDrive(onBoard, where) {
   var held = entry.value.trim();
   if (onBoard.trim() !== held && (!held || held === STARTER.trim() ||
       confirm("Load effects.txt from the drive and replace what is written here? " +
@@ -1051,11 +1048,12 @@ function loadFromDrive(onBoard, status, openLabel) {
     repaint();
   }
   document.getElementById("check").disabled = false;
-  document.getElementById("status").textContent = status;
-  // The next thing to do carries the colour: opening first, then saving
+  // The next thing to do carries the colour: opening first, then saving. The drive button
+  // says in its tip which drive is open
   var open = document.getElementById("open");
   open.className = "";
-  open.textContent = openLabel;
+  open.textContent = "Change drive";
+  open.title = where + ". Open a different one";
   var save = document.getElementById("save");
   save.className = "primary";
   save.disabled = false;
@@ -1067,7 +1065,8 @@ async function connect() {
   state.dirHandle = dir;
   state.fileHandle = await dir.getFileHandle("effects.txt");
   var onBoard = await (await state.fileHandle.getFile()).text();
-  loadFromDrive(onBoard, "connected to the drive", "Open a different drive");
+  loadFromDrive(onBoard, "Connected to " +
+                (dir.name && dir.name.length > 1 ? dir.name : "the FX drive"));
 }
 
 document.getElementById("open").onclick = async function () {
@@ -1077,12 +1076,13 @@ document.getElementById("open").onclick = async function () {
   } catch (e) {
     if (e.name === "AbortError") return;
     if (e.name === "NotAnFxDrive") {
-      banner("That folder has no effects.txt, so it does not look like an FX " +
-             "drive. Pick the drive itself, the one named FX.", true);
+      banner("That folder has no effects.txt, so it is " +
+             "not an FX drive. Choose the drive named FX.", true);
       return;
     }
-    banner("Could not open the drive: " + e.name + ". Is it showing? " +
-           "A double press of Boot brings it back.", true);
+    banner("Could not open the drive (" + e.name + "). Check the FX " +
+           "drive is showing on this computer, and double-press Boot if " +
+           "it is not. If the browser asked for permission, choose Allow.", true);
   }
 };
 
@@ -1147,9 +1147,8 @@ async function connectByInput() {
     throw refused;
   }
   state.boardText = await found.effects.text();
-  loadFromDrive(state.boardText,
-                "read from " + (found.drive && found.drive.length > 1 ? found.drive : "the drive"),
-                "Look at the drive again");
+  loadFromDrive(state.boardText, "Read from " +
+                (found.drive && found.drive.length > 1 ? found.drive : "the FX drive"));
 }
 
 // A save with nowhere to write: effects.txt goes to the browser's download, and
@@ -1166,14 +1165,14 @@ function saveByHand() {
   state.boardText = text;
   banner("effects.txt is downloading. Put it on the FX drive in place of the old one" +
          (playsItself(onBoard)
-          ? ", and the board plays it. Then press 'Did it work?'."
-          : ", then eject the drive or press Boot once, and it plays."));
+          ? ", and the board plays it. Then press 'Check board'."
+          : ", then eject the drive or press Boot once to play it."));
 }
 
-// Did it work, asked by picking the drive again. Only its answer is taken; what is
+// Check board, asked by choosing the drive again. Only its answer is taken, and what is
 // written on the page stays as it is
 async function askByInput() {
-  banner("Pick the FX drive again, so its answer can be read.", "hold");
+  banner("Choose the FX drive again to read the board's report.", "hold");
   var files = await chooseFolder();
   if (files === null) {
     banner("");
@@ -1181,18 +1180,18 @@ async function askByInput() {
   }
   var found = sortFolder(files);
   if (!found.effects) {
-    banner("That folder has no effects.txt, so it does not look like an FX " +
-           "drive. Pick the drive itself, the one named FX.", true);
+    banner("That folder has no effects.txt, so it is " +
+           "not an FX drive. Choose the drive named FX.", true);
     return;
   }
   var said = found.errors ? (await found.errors.text()).trim() : null;
   if (said === CHECKING)
-    banner("The board has not read the file yet. Check effects.txt landed on the " +
+    banner("The board has not loaded the file yet. Check effects.txt is on the " +
            "drive, then eject it or press Boot once.", "hold");
   else if (said)
-    banner("The board wasn't happy with some of it:", true, said);
+    banner("The board reported problems:", true, said);
   else
-    banner("Nothing reported. The board found no problem with the file.");
+    banner("No problems reported.");
 }
 
 // Only Chromium browsers can be handed a folder to write to. Elsewhere the drive
@@ -1235,8 +1234,9 @@ function playsItself(text) {
 // Written into errors.txt before saving, so the board's answer is always a
 // change: it deletes the file where the save reads clean and rewrites it where
 // not, so this line vanishing is the answer either way. Self-describing, since a
-// board that never reads the file leaves it to be found later
-var CHECKING = "The board has not read the file yet.";
+// board that never reads the file leaves it to be found later. It must match the
+// picker's, as either page reads the marker the other wrote
+var CHECKING = "The board has not loaded the file yet.";
 
 // Writes the marker; returns whether it took, a full drive being the reason not
 async function markChecking() {
@@ -1308,10 +1308,12 @@ async function waitForBoard(before, nothingYet) {
 // not got there yet, so it is reported as nothing said rather than as all well
 function sayWhatHappened(said, also) {
   if (said === CHECKING)
-    banner("The board did not pick the save up. Eject the FX drive, or press " +
-           "Boot once, and it plays.", true);
+    banner("No response from the board yet. Eject the FX drive or press Boot " +
+           "once to play the save. If the lights have already changed, the " +
+           "board has played it but this computer is showing an old copy of the " +
+           "drive. Press Reset on the board so the computer sees what it wrote.", true);
   else if (said)
-    banner("The board wasn't happy with some of it:", true, said);
+    banner("The board reported problems:", true, said);
   else
     banner("Playing on the board. No problems reported." + (also || ""));
 }
@@ -1342,31 +1344,34 @@ document.getElementById("save").onclick = async function () {
     await writable.write(text);
     await writable.close();
     var back = await (await state.fileHandle.getFile()).text();
-    if (back !== text) throw new Error("the file read back differently");
+    if (back !== text) {
+      var differs = new Error("effects.txt reads back different");
+      differs.name = "NotWhatWasSaved";
+      throw differs;
+    }
     // The board keeps its light travelling for a moment after the last write, then
     // runs one pass as the drive changes hands, so the page holds its own as long
     await new Promise(function (settle) { setTimeout(settle, SAVING_TAIL_MS); });
     // A program running keeps the board busy, so neither an eject nor a press reaches it
     if (/\bprogram=/.test(running)) {
-      banner("On its way. The board is running a program, so press its Reset button to play "
-             + "this one.");
+      banner("Saved. The board is running a program, so press Reset to play this change.");
       return;
     }
     // A board saving on its own that is given a program restarts to run it, so there is no
     // answer to wait for
     if (errorsBefore !== undefined && /\bprogram=/.test(text)) {
-      banner("On its way. The board restarts to run the program, which takes a few seconds.");
+      banner("Saved. The board is restarting to run the program.");
       return;
     }
     if (errorsBefore === undefined) {
-      banner("On its way. " + (playsItself(text)
-             ? "Eject the FX drive, or press Boot once, to play this one. "
-               + "From now on a save plays on its own."
-             : "Eject the FX drive on this computer, and the board plays it. Double-press "
-               + "Boot to bring the drive back, then ask 'Did it work?'."));
+      banner("Saved. " + (playsItself(text)
+             ? "Eject the FX drive or press Boot once to play it. Future saves will play "
+               + "automatically."
+             : "Eject the FX drive to play it. Then double-press Boot to show the drive again "
+               + "and press 'Check board'."));
       return;
     }
-    banner("Saved. Waiting for the board to pick it up...", "hold");
+    banner("Saved. Waiting for the board to load it...", "hold");
     var was = errorsBefore === false ? null : errorsBefore;
     sayWhatHappened(await waitForBoard(was, function () {
       banner("Playing on the board. Checking for problems...", "hold");
@@ -1375,14 +1380,17 @@ document.getElementById("save").onclick = async function () {
     if (e.name === "QuotaExceededError") {
       // The drive is there, it is simply full: saving writes a temporary copy
       // first, so it needs the file's size free
-      banner("The FX drive is full, so there was no room to save. Delete a " +
-             "picture or sound from it and try again.", true);
+      banner("The FX drive is full. Delete a picture, sound or program and try again.", true);
       return;
     }
     state.fileHandle = null;
     state.dirHandle = null;
-    banner("That didn't reach the board: " + e.name + ". Is the FX drive showing? " +
-           "A double press of Boot brings it back; then try again.", true);
+    if (e.name === "NotWhatWasSaved")
+      banner("The file on the drive did not match what was saved. Check the FX drive is " +
+             "showing, then try again.", true);
+    else
+      banner("The save did not reach the board (" + e.name + "). Check the FX drive " +
+             "is showing, double-press Boot if it is not, then try again.", true);
   } finally {
     button.disabled = false;
     check.disabled = false;
@@ -1396,22 +1404,22 @@ document.getElementById("check").onclick = async function () {
   }
   // A blink before the answer, so asking again visibly did something even when
   // the answer reads the same
-  banner("Asking the board...", "hold");
+  banner("Checking...", "hold");
   await new Promise(function (settle) { setTimeout(settle, 350); });
   try {
     var handle = await state.dirHandle.getFileHandle("errors.txt");
     var text = await (await handle.getFile()).text();
     if (text.trim() === CHECKING) {
-      banner("The board has not read the file yet. Eject the FX drive, or press " +
-             "Boot once.", "hold");
+      banner("The board has not loaded the file yet. Eject the FX drive or press Boot once.",
+             "hold");
       return;
     }
-    banner("The board wasn't happy with some of it:", true, text.trim());
+    banner("The board reported problems:", true, text.trim());
   } catch (e) {
     if (e.name === "NotFoundError")
-      banner("Nothing reported. The board found no problem with the file.");
+      banner("No problems reported.");
     else
-      banner("Couldn't look: " + e.name + ". Is the drive showing?", true);
+      banner("Could not read the drive (" + e.name + "). Is it showing?", true);
   }
 };
 

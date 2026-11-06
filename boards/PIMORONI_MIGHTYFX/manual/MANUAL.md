@@ -87,9 +87,8 @@ Ctrl+Space asks for it again.
 
 It underlines a name it does not know, such as a misspelt effect or a setting the
 effect does not take. Values are left alone, since a percentage, a colour and a
-list all live there and the board is the one that reads them. "Put it on the
-board" writes the file and "Did it work?" reads `errors.txt` back, as the picker
-does.
+list all live there and the board is the one that reads them. **Save to board**
+writes the file and **Check board** reads `errors.txt` back, as in the picker.
 
 It offers only what this board provides, so anything the firmware gains appears
 without the page changing. It saves in one click from a Chromium browser, as the

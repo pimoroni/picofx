@@ -485,7 +485,8 @@ def main():
     sources = {"CATALOGUE": generated[catalogue_path],
                "PICKER": generated[os.path.join(editor_dir, "picker.html")]}
     with open(os.path.join(repo_dir, SHARED_EDITOR), encoding="utf-8", newline="") as f:
-        sources["EDITOR"] = f.read().replace("__VERSION__", version)
+        sources["EDITOR"] = f.read().replace("__BOARD_NAME__", board["name"]).replace(
+            "__VERSION__", version)
     declared = board_declares(args.board_dir)
     if declared and declared["detect"]:
         sources["CATALOGUE_WITHOUT_SCREENS"] = catalogue(repo_dir, args.board_dir, board,

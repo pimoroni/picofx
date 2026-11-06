@@ -10761,6 +10761,8 @@ function playsItself(text) {
   return !/\breload\s*=\s*manual\b/i.test(text);
 }
 
+// The marker a save writes into errors.txt for the board to clear. It must match the editor's, as
+// either page reads the marker the other wrote
 var CHECKING = "The board has not loaded the file yet.";
 
 async function markChecking() {
