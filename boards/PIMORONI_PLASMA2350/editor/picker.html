@@ -10108,7 +10108,9 @@ function paintThumb(g, kind, seed, canvas, uses) {
       image.src = src;
     }
     var drawn = function () {
-      var scale = Math.max(W / image.width, H / image.height);
+      // One taller than wide is shown whole, as cropping it to fill would lose its top and foot
+      var upright = image.height > image.width;
+      var scale = (upright ? Math.min : Math.max)(W / image.width, H / image.height);
       g.imageSmoothingEnabled = true;
       g.drawImage(image, (W - image.width * scale) / 2, (H - image.height * scale) / 2,
                   image.width * scale, image.height * scale);
