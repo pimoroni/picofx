@@ -792,7 +792,7 @@ function featureFilter() {
   var row = document.createElement("div");
   row.className = "featurefilter";
   var said = document.createElement("span");
-  said.textContent = "Plugged in:";
+  said.textContent = "With:";
   row.appendChild(said);
   var chips = chipFeatures();
   chips.forEach(function (feature) {
@@ -812,7 +812,11 @@ function featureFilter() {
     };
     row.appendChild(chip);
   });
-  // Every chip on, or every chip off for ticking what is to hand
+  // Every chip on, or every chip off for ticking what is to hand, the two kept together where the
+  // row wraps
+  var clears = document.createElement("div");
+  clears.className = "featureclears";
+  row.appendChild(clears);
   [["all", function () { return []; }],
    ["none", function () { return chips.map(function (feature) { return feature[0]; }); }]]
     .forEach(function (one) {
@@ -824,7 +828,7 @@ function featureFilter() {
         unhad = one[1]();
         draw();
       };
-      row.appendChild(choice);
+      clears.appendChild(choice);
     });
   return row;
 }

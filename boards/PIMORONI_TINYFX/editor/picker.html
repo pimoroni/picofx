@@ -1025,7 +1025,8 @@ canvas.progthumb{display:block;background:#222}
  font:inherit;font-size:.78rem;cursor:pointer}
 .featurechip:hover{border-color:var(--board)}
 .featurechip.on{background:var(--board);border-color:var(--board);color:#fff}
-.featureclear{border:0;background:none;color:var(--board);font:inherit;font-size:.78rem;
+.featureclears{display:flex;gap:.25rem}
+.featureclear{border:0;padding:0 .15rem;background:none;color:var(--board);font:inherit;font-size:.78rem;
  text-decoration:underline;cursor:pointer}
 .prognone{font-size:.86rem;color:var(--dim)}
 .effectsface{display:flex;align-items:center;justify-content:center;background:#1c1f22;
@@ -9254,7 +9255,7 @@ function featureFilter() {
   var row = document.createElement("div");
   row.className = "featurefilter";
   var said = document.createElement("span");
-  said.textContent = "Plugged in:";
+  said.textContent = "With:";
   row.appendChild(said);
   var chips = chipFeatures();
   chips.forEach(function (feature) {
@@ -9274,7 +9275,11 @@ function featureFilter() {
     };
     row.appendChild(chip);
   });
-  // Every chip on, or every chip off for ticking what is to hand
+  // Every chip on, or every chip off for ticking what is to hand, the two kept together where the
+  // row wraps
+  var clears = document.createElement("div");
+  clears.className = "featureclears";
+  row.appendChild(clears);
   [["all", function () { return []; }],
    ["none", function () { return chips.map(function (feature) { return feature[0]; }); }]]
     .forEach(function (one) {
@@ -9286,7 +9291,7 @@ function featureFilter() {
         unhad = one[1]();
         draw();
       };
-      row.appendChild(choice);
+      clears.appendChild(choice);
     });
   return row;
 }
