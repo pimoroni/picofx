@@ -347,6 +347,8 @@ MightyFX(spce_a: int=None,
          i2c_freq: int=100000,          # Hz
          init_wav: bool=True,
          wav_root: string="/")
+@classmethod
+wake() -> None
 
 # Interaction
 boot_pressed() -> bool

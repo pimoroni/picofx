@@ -367,6 +367,8 @@ TinyFX(init_i2c: bool=True,
        init_wav: bool=True,
        wav_root: string="/",
        sensor: string=None)
+@classmethod
+wake() -> None
 
 # Interaction
 boot_pressed() -> bool
@@ -428,6 +430,9 @@ TONE_FULL_WAVES = 2
 # How long a tone or 16-bit WAV takes to fade in or out, where starting or stopping
 # mid-waveform would click
 FADE_MS = 40
+
+# How long a write to the FX drive waits while a sound fades out
+WRITE_HOLD_MS = 500
 ```
 
 

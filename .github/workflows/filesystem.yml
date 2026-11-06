@@ -61,6 +61,11 @@ jobs:
         cp -v -r ${{env.ROOT_DIR}}/../aye_arr/aye_arr ${{env.LIBS_DIR}}/lib
         find ${{env.LIBS_DIR}} -type f -name '*.md' -exec rm -v {} \;
 
+    # autofx plays the FX drive, which only the drive variants carry, frozen into their firmware
+    - name: "Leave autofx out of the libraries"
+      shell: bash
+      run: rm -rv ${{env.LIBS_DIR}}/lib/autofx
+
     - name: "Assemble example content"
       shell: bash
       run: |
