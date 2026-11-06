@@ -1,23 +1,24 @@
 ## When something is wrong
 
 <!-- if outputs -->
-The lights say so, and the more flashes the worse it is. __FLASH_COLOUR_ON__
-shows the colour:
+The lights flash to show a problem, and more flashes means a more serious
+one. __FLASH_COLOUR_ON__ shows the colour:
 <!-- end -->
 <!-- if not outputs -->
-The board's LED says so, and the more flashes the worse it is:
+The board's LED flashes to show a problem, and more flashes
+means a more serious one:
 <!-- end -->
 
 | Flashes | What happened |
 | --- | --- |
-| white, once | the computer was still writing, so the press did nothing. Try again in a moment |
+| white, once | the computer was still writing, so the press was ignored. Try again in a moment |
 <!-- if screens -->
-| blue, twice | something in `effects.txt` could not be read, or a drawing failed. `errors.txt` says which line, a drawing's once the board has the drive back |
+| blue, twice | a line in `effects.txt` could not be read, or a drawing failed. `errors.txt` names the line. A drawing's error appears there once the board has the drive back |
 <!-- end -->
 <!-- if not screens -->
-| blue, twice | something in `effects.txt` could not be read. `errors.txt` says which line |
+| blue, twice | a line in `effects.txt` could not be read. `errors.txt` names the line |
 <!-- end -->
-| red, three times | there was no room to write `errors.txt`. This drive is full or damaged, so free some space or let a computer repair it |
+| red, three times | there was no room to write `errors.txt`. This drive is full or damaged, so free some space or repair it from a computer |
 
-A setting whose value is not what it takes is ignored, with a note in
-`errors.txt`, and the effect runs on its usual value for it.
+A setting with an invalid value is ignored and noted in `errors.txt`,
+and the effect uses its default instead.

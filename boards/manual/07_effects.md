@@ -1,7 +1,6 @@
 ## Effects
 
-Every setting can be left out, and the board fills in the value shown against it
-below.
+Every setting is optional. Left out, it uses the default shown below.
 
 ### For __MONO_EFFECTS_FOR__
 
@@ -35,42 +34,42 @@ below.
 | `hue_step` | `interval=1` `hue=0` `sat=1` `val=1` `steps=6` |
 | `rgb_blink` | `colour=red` `speed=1` `phase=0` `duty=0.5` |
 
-### Which ones travel
+### Effects that travel
 
-The ones ending `_wave`, `_sequence` and `_counter`, and `sweep`, travel across
-the __OUTPUTS__ you name. The rest do the same thing on every one.
+Effects ending in `_wave`, `_sequence` and `_counter`, and `sweep`, travel
+across the __OUTPUTS__ you name. The others do the same thing on each one.
 
-The ones ending `_each` give every __OUTPUT__ its own: `flicker_each` dips each at
-its own moments, as flames do, and `random_each` gives each its own brightness.
-`flicker` and `random` do the same to all of them at once, as one light would:
+Effects ending in `_each` treat each __OUTPUT__ separately: `flicker_each` dips
+each one at its own moments, like flames, and `random_each` gives each its own
+brightness. `flicker` and `random` affect them all together, like a single light:
 
 ```entry
 __FLAME_OUTPUTS__: flicker_each dimness=0.6
 ```
 
-`traffic_light` and `pelican_crossing` take their __OUTPUTS__ in the order given
-below, so naming fewer lights the first of them and leaves the rest out. Naming
-more is a mistake, and `errors.txt` says so.
+`traffic_light` and `pelican_crossing` use their __OUTPUTS__ in the order given
+below. With fewer, they light only the first ones. Naming more is an error,
+reported in `errors.txt`.
 
 ### Traffic lights and crossings
 
-`traffic_light` wants three __OUTPUTS__, and lights them red, amber and green in
-that order. It switches instantly, so add `ease` for the lamps of a real signal:
+`traffic_light` needs three __OUTPUTS__, lit red, amber and green in that order.
+It switches instantly, so add `ease` to look like a real signal's lamps:
 
 ```entry
 __THREE_OUTPUTS__ ease=0.3: traffic_light
 ```
 
-`pelican_crossing` wants five __OUTPUTS__: the same three, then the two figures a
-pedestrian reads, stop and walk. In place of red and amber it flashes the amber
-and the walking figure together, as a pelican does while a crossing ends. It
-comes round on its own clock, there being no button to press:
+`pelican_crossing` needs five __OUTPUTS__: the same three, then the pedestrian's
+stop and walk figures. Instead of red and amber, it flashes amber and the walk
+figure together, as a real pelican crossing does before it changes back. It
+cycles on its own timer, as there is no button to press:
 
 ```entry
 __FIVE_OUTPUTS__ ease=0.3: pelican_crossing green_interval=20 red_interval=8
 ```
 
-Three __OUTPUTS__ on `pelican_crossing` is its traffic lights on their own:
+With three __OUTPUTS__, `pelican_crossing` plays its traffic lights only:
 
 ```entry
 __THREE_OUTPUTS__: pelican_crossing
@@ -78,24 +77,24 @@ __THREE_OUTPUTS__: pelican_crossing
 
 ### Sweep
 
-`sweep` is a light that crosses the __OUTPUTS__ and turns back at each end, the back
-and forth a scanner does. Its `extent` is how far it reaches from itself, in
-__OUTPUTS__, and its `speed` counts one crossing as the travelling effects count one
-pass. Its `hold` waits at each end, in seconds, giving a trail time to clear
-before the light comes back over it:
+`sweep` is a light that travels across the __OUTPUTS__ and turns back at each end,
+like a scanner. `extent` sets how far its glow reaches either side, in __OUTPUTS__,
+and `speed` counts one crossing as one cycle, as the other travelling effects count
+one pass. `hold` pauses at each end, in seconds, giving the trail time to fade
+before the light returns:
 
 ```entry
 __ALL_OUTPUTS__ ease=0.4: sweep speed=1 extent=1 hold=1
 ```
 
-Give `extent` a whole number of __OUTPUTS__, such as 1 or 2. In between it dims as
-the light passes between two __OUTPUTS__ and brightens as it lands on one, which
-reads as stepping. 1 is the tightest that travels smoothly.
+Give `extent` a whole number of __OUTPUTS__, such as 1 or 2. A value in between
+makes the light dim between __OUTPUTS__ and brighten on each, so it appears to
+step. 1 is the smallest that travels smoothly.
 
 ### Blinking through colours
 
-`rgb_blink` blinks one colour, or several in turn, divided by `|` since a comma
-would mean one colour for each __OUTPUT__. Without one it blinks red:
+`rgb_blink` blinks one colour, or several in turn separated by `|`, as a comma
+would give each __OUTPUT__ its own colour. Without a colour it blinks red:
 
 ```entry
 __COLOUR_OUTPUT__: rgb_blink colour=red|warm|ff8040 speed=0.5
@@ -103,20 +102,19 @@ __COLOUR_OUTPUT__: rgb_blink colour=red|warm|ff8040 speed=0.5
 
 ### What the settings mean
 
-`speed` is cycles a second: 1 goes round once a second, 0.5 once every two, 2
-twice a second. A negative speed runs the cycle backwards.
+`speed` is cycles per second: 1 is once a second, 0.5 once every two seconds,
+2 twice a second. A negative speed runs the cycle backwards.
 
 The settings measured in seconds are `interval`, `hold`, flicker's `bright_min`,
 `bright_max`, `dim_min` and `dim_max`, and the four intervals `traffic_light`
 and `pelican_crossing` each take. `length`, `flashes`, `steps`, `count` and
-`step` are plain counts, and a negative `step` counts down.
+`step` are whole numbers, and a negative `step` counts down.
 
-`red`, `green` and `blue` run from 0 to 255. The rest run from 0 to 1, written 0.5
-or 50% as you prefer. `window` is one of
-them, being the share of a cycle the flashes happen in. `hue` takes degrees as
-well, written 180deg, which is what a colour picker gives you.
+`red`, `green` and `blue` run from 0 to 255. The rest run from 0 to 1, written as
+0.5 or 50%. These include `window`, the share of each cycle the flashes happen in.
+`hue` also takes degrees, such as 180deg, as a colour picker shows them.
 
-**If you write Python**, an effect of your own can join this list and be written
-here like any other. The library reference on
-[GitHub](https://github.com/pimoroni/picofx/blob/main/picofx/README.md) says how,
-under Effects System.
+**If you write Python**, you can add your own effect to this list and use it like
+any other. The library reference on
+[GitHub](https://github.com/pimoroni/picofx/blob/main/picofx/README.md) explains
+how, under Effects System.

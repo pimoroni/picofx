@@ -1,16 +1,15 @@
 <!-- block picker_tabs -->
 
-Two tabs sit under the page's header, **The effects** and **A program**. The
-effects sets the lights, screens and sound: pick a stretch of outputs or LEDs,
-tap a look from the cards to play on it, and slide its settings until it suits.
-A run can be cut into stretches that each play a look of their own. **Edit
-board**, at the end of the lights' tabs, sets up what is built: the order the
-lights are wired in, how many LEDs a strip has, which size each screen is, and a
-Screen Hub. The pictures, drawings and sounds on this drive are offered on the
-Screens and Sound tabs, where files can be copied onto the drive and deleted from
-it. Press the plus to split what you have into scenes that take turns, each with
-its own looks, pictures and sound. What **Always on** holds plays under every
-scene.
+The picker has two tabs, **The effects** and **A program**. **The effects**
+controls the lights, screens and sound: select a stretch of outputs or LEDs,
+choose a look from the cards, and adjust its settings. A run can be split into
+stretches, each playing its own look. **Edit board**, at the end of the lights'
+tabs, sets up your hardware: the order the lights are wired in, the number of
+LEDs on each strip, each screen's size, and a Screen Hub. The Screens and Sound
+tabs list the pictures, drawings and sounds on this drive, and can copy files
+onto the drive or delete them. Press **+** to split your setup into scenes that
+play in turn, each with its own looks, pictures and sound. Anything on the
+**Always on** tab plays under every scene.
 
 <!-- block entry_examples -->
 
@@ -28,18 +27,18 @@ out3 level=50%: pulse speed=0.6
 | `out1` | one output |
 | `out1,3,5` | three of them |
 | `out1-7` | all seven |
-| `out7-1` | all seven, the other way round |
-| `out2,1,5-7` | mixed, and in the order you write them |
+| `out7-1` | all seven, in reverse order |
+| `out2,1,5-7` | a mix, played in the order written |
 
-An output shows colour. Its red, green and blue can be driven separately as
-three plain lights instead:
+Each output is a colour light. Its red, green and blue channels can also be
+driven separately, as three mono lights:
 
 | Written | Means |
 | --- | --- |
-| `out3.r` | just the red |
-| `out3.*` | all three of them, red, green then blue |
+| `out3.r` | the red channel only |
+| `out3.*` | all three channels, in the order red, green, blue |
 | `out1-7.*` | all 21, from 1's red to 7's blue |
-| `out7-1.*` | all 21 the other way round, from 7's blue to 1's red |
+| `out7-1.*` | all 21 in reverse order, from 7's blue to 1's red |
 
 <!-- block setting_examples -->
 
@@ -53,21 +52,21 @@ out1-7 ease=0.4: blink speed=0.5
 
 <!-- block strips_intro -->
 
-A strip of WS2812 LEDs plugs into the connector marked **L** or **R**, and its
-LEDs take the same effects, colours and levels the outputs do. Tell the board
-how long it is first, since that is the one thing it cannot work out for itself:
+A WS2812 LED strip plugs into the connector marked **L** or **R**, and its LEDs
+take the same effects, colours and levels as the outputs. First tell the board
+how many LEDs the strip has, as it cannot detect this:
 
 <!-- block strips_notes -->
 
-`stripR` is the same for the other connector. Both share one power supply, so a
-strip on either lights the small LED between them, and anything plugged into the
-one you are not using is powered too.
+`stripR` does the same for the other connector. Both connectors share one power
+supply, so a strip on either lights the small LED between them, and the unused
+connector is powered too.
 
 <!-- block screen_notes -->
 
-A screen draws fewer frames a second than the lights, and effects on the outputs
-take time from it, so a file asking for more than it can draw keeps its timing
-by dropping frames.
+A screen updates less often than the lights, and effects on the outputs take
+time from it. If a file asks for more frames than the screen can draw, it drops
+frames to keep its timing.
 
 <!-- block scene_example -->
 
@@ -81,13 +80,13 @@ out1-7 colour=warm: pulse
 
 <!-- block screen_settings -->
 
-| `screenA` | what size of screen is on SP/CE A, or `hub` for a Screen Hub | no screen |
-| `screenB` | the same for SP/CE B | no screen |
-| `hubA` to `hubF` | what size of screen is at each of a Screen Hub's positions | no screen there |
+| `screenA` | the size of the screen on SP/CE A, or `hub` for a Screen Hub | no screen |
+| `screenB` | the size of the screen on SP/CE B | no screen |
+| `hubA` to `hubF` | the size of the screen at each Screen Hub position | no screen there |
 
 <!-- block strip_settings -->
 
-| `stripL` | how many LEDs are on a strip plugged into **L**, and after a `\|` the order it takes its colours in | no strip |
+| `stripL` | the number of LEDs on the strip plugged into **L**, then after a `\|` its colour order | no strip |
 | `stripR` | the same for **R** | no strip |
 
 <!-- block examples_on_board -->
@@ -124,7 +123,7 @@ board: program=examples/python/screens/playback/animated_gif.py
 board: program=examples/python/showcase/flip_dot_sign.py
 ```
 
-Anything under `screens`, `audio`, `motors`, `servos`, `strips`, `gpio`,
-`infrared` or `qwst` needs that hardware attached, `wireless` needs a WiFi
-network, `comms` a second board, and some of the showcase ones want pictures or
-a network of their own.
+Examples under `screens`, `audio`, `motors`, `servos`, `strips`, `gpio`,
+`infrared` or `qwst` need that hardware attached. `wireless` needs a WiFi
+network, `comms` needs a second board, and some showcase examples need their
+own pictures or network.

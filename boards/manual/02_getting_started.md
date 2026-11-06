@@ -1,37 +1,37 @@
 ## Getting started
 
-Edit `effects.txt` to change what the lights do and save it, and the board plays
-the change a few seconds later. The drive disappears for a moment and comes back
-with the new effects running, so you can keep editing.
+Edit `effects.txt` and save it to change what the lights do. A few seconds later
+the drive disappears briefly, then comes back with the new effects running, so
+you can keep editing.
 
-If a save does not seem to take, press **Boot** once or eject this drive, since
-a computer does not always write the file out straight away. Press **Boot** twice
-to hide the drive, and twice again to bring it back.
+If a save does not seem to work, press **Boot** once or eject this drive, as a
+computer does not always write the file straight away. Double-press **Boot** to
+hide the drive, and double-press it again to show it.
 <!-- if outputs -->
-At each double press a __TRAVELLING_LIGHT__ runs along the outputs, towards the
-USB connector as the computer takes the drive and away from it as the board
-takes it back, so a double press is never mistaken for a single one.
+Each double press runs a __TRAVELLING_LIGHT__ along the outputs, towards the
+USB connector when the drive is shown and away from it when it is hidden.
 <!-- end -->
 
-Deleting `effects.txt` restores the default. Emptying it leaves the board dark.
+Deleting `effects.txt` restores the default file. Emptying it turns everything
+off.
 
 <!-- if outputs -->
-While the computer is copying to this drive the effects stand aside for a
-__TRAVELLING_LIGHT__ travelling along the outputs, and come back a moment after
-it finishes.
+While the computer copies files to this drive, the effects pause and a
+__TRAVELLING_LIGHT__ travels along the outputs. The effects resume shortly
+after the copy finishes.
 <!-- end -->
 <!-- if not outputs -->
-While the computer is copying to this drive the effects stand aside, the board's
-LED glowing a dim white with a brighter blink, and come back a moment after it
-finishes.
+While the computer copies files to this drive, the effects pause and the board's
+LED glows dim white with a brighter blink. The effects resume shortly after the
+copy finishes.
 <!-- end -->
 
-**Would you rather not write the file at all? `PICKER.html` on this drive writes
-it for you. See [the picker](#the-picker). `EDITOR.html` beside it is a place to
-write it with the names offered as you type. See [the editor](#the-editor).**
+**Prefer not to write the file by hand? `PICKER.html` on this drive writes it
+for you. See [the picker](#the-picker). `EDITOR.html` helps you write it,
+suggesting names as you type. See [the editor](#the-editor).**
 
 <!-- if examples -->
-**The board also carries programs that run as they are, from single effects to
-whole builds, and one line in `effects.txt` starts any of them. See
-[what is already on the board](#what-is-already-on-the-board).**
+**The board also comes with ready-made programs, from single effects to whole
+builds, and one line in `effects.txt` runs any of them. See [what is already
+on the board](#what-is-already-on-the-board).**
 <!-- end -->

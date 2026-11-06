@@ -1,21 +1,18 @@
 ## The editor
 
-`EDITOR.html` on this drive is `effects.txt` in a window that knows the format.
-Every word is coloured by the part it plays, and as you type it offers what fits
-where you are:
-__ENTRY_TARGETS__
-at the start of a line, the effects after the colon, then that effect's own
-settings and the values each one takes. A line underneath says what shape a
-value wants. Tab or Enter takes what is offered, Escape leaves it, and
-Ctrl+Space asks for it again.
+`EDITOR.html` on this drive is a text editor for `effects.txt` that understands
+its format. Each word is coloured by its role, and as you type it suggests what
+fits: __ENTRY_TARGETS__ at the start of a line, the effects after the colon,
+then that effect's settings and their values. A hint below the text describes
+the value expected. Tab or Enter accepts a suggestion, Escape dismisses it, and
+Ctrl+Space shows suggestions again.
 
-It underlines a name it does not know, such as a misspelt effect or a setting the
-effect does not take. Values are left alone, since a percentage, a colour and a
-list all live there and the board is the one that reads them. **Save to board**
-writes the file and **Check board** reads `errors.txt` back, as in the picker.
+It underlines names it does not recognise, such as a misspelt effect or a setting
+the effect does not take. Values are not checked, as the board reads them itself.
+**Save to board** writes the file and **Check board** reads `errors.txt`, as in
+the picker.
 
-It offers only what this board provides, so anything the firmware gains appears
-without the page changing. It saves in one click from a Chromium browser, as the
-picker does, and from Safari or Firefox by a download you then copy onto this
-drive. It needs `catalogue.js` beside it, which is why both live on this drive
-together.
+It suggests only what this board's firmware provides, so new firmware features
+appear without the page changing. It saves in one click from a Chromium browser,
+as the picker does, and from Safari or Firefox as a download you then copy onto
+this drive. It needs `catalogue.js`, which sits beside it on this drive.

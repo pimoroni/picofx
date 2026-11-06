@@ -1,15 +1,14 @@
 <!-- block picker_tabs -->
 
-Two tabs sit under the page's header, **The effects** and **A program**. The
-effects sets the lights and sound: pick a stretch of outputs, tap a look from
-the cards to play on it, and slide its settings until it suits. A run can be cut
-into stretches that each play a look of their own. **Edit board**, at the end of
-the lights' tabs, sets the order the lights are wired in, and moving the RGB
-output across to the mono side breaks it into three plain lights. The sounds on
-this drive are offered on the Sound tab, where files can be copied onto the
-drive and deleted from it. Press the plus to split what you have into scenes
-that take turns, each with its own looks and sound. What **Always on** holds
-plays under every scene.
+The picker has two tabs, **The effects** and **A program**. **The effects**
+controls the lights and sound: select a stretch of outputs, choose a look from
+the cards, and adjust its settings. A run can be split into stretches, each
+playing its own look. **Edit board**, at the end of the lights' tabs, sets the
+order the lights are wired in, and moving the RGB output across to the mono side
+splits it into three mono lights. The Sound tab lists the sounds on this drive,
+and can copy files onto the drive or delete them. Press **+** to split your
+setup into scenes that play in turn, each with its own looks and sound. Anything
+on the **Always on** tab plays under every scene.
 
 <!-- block entry_examples -->
 
@@ -28,18 +27,18 @@ out3 level=50%: pulse speed=0.6
 | `out1` | one output |
 | `out1,3,5` | three of them |
 | `out1-6` | all six |
-| `out6-1` | all six, the other way round |
-| `out2,1,5-6` | mixed, and in the order you write them |
+| `out6-1` | all six, in reverse order |
+| `out2,1,5-6` | a mix, played in the order written |
 | `rgb` | the RGB output |
 
-The RGB output shows colour. Its red, green and blue can be driven separately as
-three plain lights instead, and named alongside the others:
+The RGB output is a colour light. Its red, green and blue channels can also be
+driven separately, as three mono lights named alongside the others:
 
 | Written | Means |
 | --- | --- |
-| `rgb.r` | just the red |
-| `rgb.*` | all three of them, red, green then blue |
-| `out1-6,rgb.*` | all nine plain lights |
+| `rgb.r` | the red channel only |
+| `rgb.*` | all three channels, in the order red, green, blue |
+| `out1-6,rgb.*` | all nine mono lights |
 
 <!-- block setting_examples -->
 
@@ -84,6 +83,6 @@ board: program=examples/python/effects/colour/rainbow.py
 board: program=examples/python/showcase/ship_thrusters.py
 ```
 
-Anything under `infrared` or `qwst` needs that hardware attached, `wireless` a
-WiFi network, and `comms` a second board. The audio examples' sounds are not on the board, to leave
-this drive its room.
+Examples under `infrared` or `qwst` need that hardware attached, `wireless` needs a WiFi network,
+and `comms` needs a second board. The audio examples' sounds are not included, to save space on
+this drive.

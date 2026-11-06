@@ -1,36 +1,38 @@
 ## The picker
 
 `PICKER.html` on this drive writes `effects.txt` for you. Open it in Chrome or
-Edge, press **Open FX drive** and choose this drive, and the page reads the file
-the board is playing, so you carry on from where it is. The file it will write
-is shown at the foot of the page, so nothing about it is hidden.
+Edge, press **Open FX drive** and choose this drive, and the page loads the file
+the board is playing, so you can carry on from there. A preview of the file it
+will write is at the foot of the page.
 
 <!-- board picker_tabs -->
 
 <!-- if examples -->
-**A program** runs one of the board's programs in place of the effects:
-__PROGRAMS_OFFERED__,
-beside any programs of your own on this drive.
+**A program** runs one of the board's programs instead of the effects:
+__PROGRAMS_OFFERED__, as well as any of your own programs on this
+drive.
 <!-- end -->
 <!-- if not examples -->
-**A program** runs one of your own programs on this drive in place of the
+**A program** runs one of your own programs on this drive instead of the
 effects.
 <!-- end -->
-Pick one and save, and the board restarts to run it. [Your program in the picker](#your-program-in-the-picker)
-says how a program of yours describes itself there.
+Choose one and save, and the board restarts to run it. [Your program in the
+picker](#your-program-in-the-picker) explains how your own programs appear there.
 
 **Save to board** writes the file, and the board loads it a few seconds later.
-Its arrow opens the save's settings. Untick "Play saves without an eject" and the
-board waits for an eject or a single press of **Boot**, which is `reload=manual`.
-"Keep the drive hidden at start" is `drive=manual`. **Check board** reads
-`errors.txt` back and shows what the board made of each line. On a Mac each save
-shows "Disk Not Ejected Properly" once and a Finder window on this drive closes.
-The drive comes back on its own a few seconds later and the page carries on.
+The arrow beside it opens the save settings. Untick "Play saves without an eject"
+and the board waits for an eject or a single press of **Boot**, which is
+`reload=manual`. "Keep the drive hidden at start" is `drive=manual`. **Check
+board** reads `errors.txt` and shows any problems the board found with each line.
+On a Mac, each save shows "Disk Not Ejected Properly" once and closes any Finder
+window on this drive. The drive comes back a few seconds later and the page
+continues.
 
-The page reaches the drive only in Chrome, Edge or another browser built on
-Chromium. Safari and Firefox cannot write to a drive from a page, so there it
-says so, and `effects.txt` can still be changed in any text editor.
+The page can only reach the drive in Chrome, Edge or another Chromium-based
+browser. Safari and Firefox cannot write to a drive from a web page, so the
+picker says so there, but `effects.txt` can still be edited in any text
+editor.
 
-What the picker writes is an ordinary `effects.txt`: anything it makes can be
-edited by hand afterwards. A line it cannot write itself is kept as it is, and it
-asks before replacing a file it has not read.
+The picker writes an ordinary `effects.txt`, so anything it makes can be edited
+by hand afterwards. Lines the picker cannot edit are kept unchanged, and it asks
+before replacing a file it has not read.

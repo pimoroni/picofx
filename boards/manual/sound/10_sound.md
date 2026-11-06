@@ -1,7 +1,7 @@
 ## Sound
 
-The board plays a WAV file through __SOUND_THROUGH__, alongside whatever
-else it is doing:
+The board plays a WAV file through __SOUND_THROUGH__, alongside
+everything else:
 
 ```entry
 audio: wav file=chimes.wav
@@ -12,23 +12,22 @@ audio: wav file=ambience.wav loop=yes
 | --- | --- |
 | `wav` | `file` `loop=no` |
 
-The file plays once each time the effects start, or over and over with `loop`.
+The file plays once each time the effects start, or repeatedly with `loop`.
 
-A file is looked for on this drive first, then on the board itself. The board
-opens it before this drive is shown, so a computer taking the drive does not stop
-the sound. While the computer is copying to this drive the sound waits in silence
-with the effects, and a file replaced under a playing sound stays silent until
-the next reload.
+The board looks for the file on this drive first, then on the board itself. It
+opens the file before this drive is shown, so the sound keeps playing when the
+drive appears on a computer. While the computer copies files to this drive, the
+sound pauses with the effects, and replacing a file while it plays silences it
+until the next reload.
 
-An ordinary uncompressed WAV plays, mono or stereo, and MP3 does not. This drive
+Use an uncompressed WAV file, mono or stereo. MP3 is not supported. This drive
 holds __DRIVE_SIZE__, so a lower sample rate fits more. A minute of 16-bit mono
 takes about 2.6MB at 22kHz and under 1MB at 8kHz.
 
 The board plays one sound at a time, so each scene takes one `audio` entry, and
-one more may sit before any heading. An `audio` entry inside a scene plays while
-that scene shows, and one before any
-heading plays whenever the showing scene brings no sound of its own. A sound
-put aside by a scene change picks up where it left off when its turn comes back,
-and one that had already finished starts again from the top. A scene with
-`restart` starts its sound from the top every time, along with everything else
-it holds.
+one more can go before the first heading. An `audio` entry in a scene plays
+while that scene plays, and one before the first heading plays in any scene
+without its own sound. A sound paused by a scene change resumes where it left
+off when its scene returns, and one that had finished starts again from the
+beginning. A scene with `restart` starts its sound from the beginning every
+time, along with everything else in it.

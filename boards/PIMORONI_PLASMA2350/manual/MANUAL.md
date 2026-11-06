@@ -2,90 +2,89 @@
 
 # Plasma 2350
 
-Two LED terminals, a screen connector on the 2350, and a text file that drives them.
-Edit `effects.txt` on this drive and save it, and the board plays the change a
-few seconds later. No code needed, though there is room for it when you want it.
+Two LED terminals, a screen connector on the 2350, and a text file that controls them. Edit `effects.txt` on this
+drive and save it, and the board plays the change a few seconds later. No code
+is needed, though you can write your own programs when you want to.
 
 ## Getting started
 
-Edit `effects.txt` to change what the lights do and save it, and the board plays
-the change a few seconds later. The drive disappears for a moment and comes back
-with the new effects running, so you can keep editing.
+Edit `effects.txt` and save it to change what the lights do. A few seconds later
+the drive disappears briefly, then comes back with the new effects running, so
+you can keep editing.
 
-If a save does not seem to take, press **Boot** once or eject this drive, since
-a computer does not always write the file out straight away. Press **Boot** twice
-to hide the drive, and twice again to bring it back.
+If a save does not seem to work, press **Boot** once or eject this drive, as a
+computer does not always write the file straight away. Double-press **Boot** to
+hide the drive, and double-press it again to show it.
 
-Deleting `effects.txt` restores the default. Emptying it leaves the board dark.
+Deleting `effects.txt` restores the default file. Emptying it turns everything
+off.
 
-While the computer is copying to this drive the effects stand aside, the board's
-LED glowing a dim white with a brighter blink, and come back a moment after it
-finishes.
+While the computer copies files to this drive, the effects pause and the board's
+LED glows dim white with a brighter blink. The effects resume shortly after the
+copy finishes.
 
-**Would you rather not write the file at all? `PICKER.html` on this drive writes
-it for you. See [the picker](#the-picker). `EDITOR.html` beside it is a place to
-write it with the names offered as you type. See [the editor](#the-editor).**
+**Prefer not to write the file by hand? `PICKER.html` on this drive writes it
+for you. See [the picker](#the-picker). `EDITOR.html` helps you write it,
+suggesting names as you type. See [the editor](#the-editor).**
 
 ## The picker
 
 `PICKER.html` on this drive writes `effects.txt` for you. Open it in Chrome or
-Edge, press **Open FX drive** and choose this drive, and the page reads the file
-the board is playing, so you carry on from where it is. The file it will write
-is shown at the foot of the page, so nothing about it is hidden.
+Edge, press **Open FX drive** and choose this drive, and the page loads the file
+the board is playing, so you can carry on from there. A preview of the file it
+will write is at the foot of the page.
 
-Two tabs sit under the page's header, **The effects** and **A program**. The
-effects sets the strips, the board's LED and the screen: pick a stretch of LEDs,
-tap a look from the cards to play on it, and slide its settings until it suits.
-A strip can be cut into stretches that each play a look of their own. **Edit
-board**, at the end of the lights' tabs, sets up what is built: which strips are
-fitted, how many LEDs each has, and which size the screen is. The pictures and
-drawings on this drive are offered on the Screens tab, where files can be copied
-onto the drive and deleted from it. Press the plus to split what you have into
-scenes that take turns, each with its own looks and pictures. What **Always on**
-holds plays under every scene.
+The picker has two tabs, **The effects** and **A program**. **The effects**
+controls the strips, the board's LED and the screen: select a stretch of LEDs,
+choose a look from the cards, and adjust its settings. A strip can be split into
+stretches, each playing its own look. **Edit board**, at the end of the lights'
+tabs, sets up your hardware: which strips are fitted, the number of LEDs on
+each, and the screen's size. The Screens tab lists the pictures and drawings on
+this drive, and can copy files onto the drive or delete them. Press **+** to
+split your setup into scenes that play in turn, each with its own looks and
+pictures. Anything on the **Always on** tab plays under every scene.
 
-**A program** runs one of your own programs on this drive in place of the
+**A program** runs one of your own programs on this drive instead of the
 effects.
-Pick one and save, and the board restarts to run it. [Your program in the picker](#your-program-in-the-picker)
-says how a program of yours describes itself there.
+Choose one and save, and the board restarts to run it. [Your program in the
+picker](#your-program-in-the-picker) explains how your own programs appear there.
 
 **Save to board** writes the file, and the board loads it a few seconds later.
-Its arrow opens the save's settings. Untick "Play saves without an eject" and the
-board waits for an eject or a single press of **Boot**, which is `reload=manual`.
-"Keep the drive hidden at start" is `drive=manual`. **Check board** reads
-`errors.txt` back and shows what the board made of each line. On a Mac each save
-shows "Disk Not Ejected Properly" once and a Finder window on this drive closes.
-The drive comes back on its own a few seconds later and the page carries on.
+The arrow beside it opens the save settings. Untick "Play saves without an eject"
+and the board waits for an eject or a single press of **Boot**, which is
+`reload=manual`. "Keep the drive hidden at start" is `drive=manual`. **Check
+board** reads `errors.txt` and shows any problems the board found with each line.
+On a Mac, each save shows "Disk Not Ejected Properly" once and closes any Finder
+window on this drive. The drive comes back a few seconds later and the page
+continues.
 
-The page reaches the drive only in Chrome, Edge or another browser built on
-Chromium. Safari and Firefox cannot write to a drive from a page, so there it
-says so, and `effects.txt` can still be changed in any text editor.
+The page can only reach the drive in Chrome, Edge or another Chromium-based
+browser. Safari and Firefox cannot write to a drive from a web page, so the
+picker says so there, but `effects.txt` can still be edited in any text
+editor.
 
-What the picker writes is an ordinary `effects.txt`: anything it makes can be
-edited by hand afterwards. A line it cannot write itself is kept as it is, and it
-asks before replacing a file it has not read.
+The picker writes an ordinary `effects.txt`, so anything it makes can be edited
+by hand afterwards. Lines the picker cannot edit are kept unchanged, and it asks
+before replacing a file it has not read.
 
 ## The editor
 
-`EDITOR.html` on this drive is `effects.txt` in a window that knows the format.
-Every word is coloured by the part it plays, and as you type it offers what fits
-where you are:
-the strips, the board's LED and the screen
-at the start of a line, the effects after the colon, then that effect's own
-settings and the values each one takes. A line underneath says what shape a
-value wants. Tab or Enter takes what is offered, Escape leaves it, and
-Ctrl+Space asks for it again.
+`EDITOR.html` on this drive is a text editor for `effects.txt` that understands
+its format. Each word is coloured by its role, and as you type it suggests what
+fits: the strips, the board's LED and the screen at the start of a line, the effects after the colon,
+then that effect's settings and their values. A hint below the text describes
+the value expected. Tab or Enter accepts a suggestion, Escape dismisses it, and
+Ctrl+Space shows suggestions again.
 
-It underlines a name it does not know, such as a misspelt effect or a setting the
-effect does not take. Values are left alone, since a percentage, a colour and a
-list all live there and the board is the one that reads them. **Save to board**
-writes the file and **Check board** reads `errors.txt` back, as in the picker.
+It underlines names it does not recognise, such as a misspelt effect or a setting
+the effect does not take. Values are not checked, as the board reads them itself.
+**Save to board** writes the file and **Check board** reads `errors.txt`, as in
+the picker.
 
-It offers only what this board provides, so anything the firmware gains appears
-without the page changing. It saves in one click from a Chromium browser, as the
-picker does, and from Safari or Firefox by a download you then copy onto this
-drive. It needs `catalogue.js` beside it, which is why both live on this drive
-together.
+It suggests only what this board's firmware provides, so new firmware features
+appear without the page changing. It saves in one click from a Chromium browser,
+as the picker does, and from Safari or Firefox as a download you then copy onto
+this drive. It needs `catalogue.js`, which sits beside it on this drive.
 
 ## Writing an entry
 
@@ -98,15 +97,14 @@ stripDat: rainbow_wave speed=0.3 length=30
 rgb level=50%: pulse speed=0.6
 ```
 
-There is one colon in an entry. Which LEDs, and how bright or what colour
-they are, go before it. The effect and its own settings go after.
+Each entry has one colon. Before it go the LEDs and their brightness or
+colour. After it go the effect and its settings.
 
-Settings you leave out take their usual value. A `#` starts a comment. An entry
-can run on over several lines so long as the colon is on the first, and indenting
-changes nothing.
+Settings you leave out use their defaults. A `#` starts a comment. An entry can
+span several lines as long as the colon is on the first, and indentation does not
+matter.
 
-A screen is named the same way and plays pictures instead of lighting up. See
-[Screens](#screens).
+Screens are named the same way and play pictures. See [Screens](#screens).
 
 ## The board's LED
 
@@ -119,14 +117,14 @@ rgb: rainbow speed=0.3
 
 ### Setting an LED
 
-Before the colon, and separate from the effect:
+These go before the colon, separate from the effect:
 
 | Setting | What it does | If omitted |
 | --- | --- | --- |
-| `level` | how bright, 0 to 1, such as 0.5 or 50% | 1 |
-| `colour` | a name or six-digit hex, for effects that bring no colour | white |
-| `fade` | seconds to follow the effect, at a steady rate | follows at once |
-| `ease` | seconds to follow it, settling in as a bulb does | follows at once |
+| `level` | brightness, 0 to 1, such as 0.5 or 50% | 1 |
+| `colour` | a colour name or six-digit hex code, for effects that bring no colour | white |
+| `fade` | seconds to fade between changes, at a steady rate | changes instantly |
+| `ease` | seconds to ease between changes, slowing at the end like a bulb | changes instantly |
 
 ```entry
 stripDat level=50%: pulse
@@ -135,35 +133,33 @@ rgb colour=ff8040: static
 stripDat ease=0.4: blink speed=0.5
 ```
 
-Colours by name: red, orange, yellow, green, cyan, blue, purple, magenta, pink,
-warm, white, cool, black. Or the hex a colour picker gives you, with its `#`
-left off, such as ff8040 for an orange paler than the named one. A `#` always
-starts a comment, so one left on a colour hides the rest of the line.
+Colour names: red, orange, yellow, green, cyan, blue, purple, magenta, pink,
+warm, white, cool, black. Or a hex code from a colour picker, without its `#`,
+such as ff8040 for a paler orange. A `#` always starts a comment, so leaving it
+on a colour hides the rest of the line.
 
 ### Fade and ease
 
-`fade` and `ease` take the seconds a change takes to get there. `fade` crosses
-evenly, as a stage light does. `ease` goes quickly at first and slows as it
-arrives, as a bulb warms, and looks the more natural on a light switching on and
-off.
+`fade` and `ease` set how many seconds a change takes. `fade` changes at a
+steady rate, like a stage light. `ease` changes quickly at first and slows
+towards the end, like a warming bulb, and looks more natural on a light
+switching on and off.
 
-An LED follows one way or the other, so a line takes one of them and not
-both. Two numbers divided by `|` give the rise and the fall their own lengths,
-a light that comes on quickly and fades out slowly being the usual reason:
+An LED uses one or the other, so a line takes `fade` or `ease`, not
+both. Two numbers separated by `|` set the rise and fall separately, for
+example a light that comes on quickly and fades out slowly:
 
 ```entry
 stripDat fade=0.8: blink speed=0.5
 stripDat1-3 ease=0.05|1.2: blink speed=1
 ```
 
-`fade` and `ease` belong to the LED, not to the effect, so they work on any
-effect. The effects that bring their own colour are the exception, and play
-without them.
+`fade` and `ease` belong to the LED, not the effect, so they work with any
+effect, except effects that set their own colours.
 
 ## Effects
 
-Every setting can be left out, and the board fills in the value shown against it
-below.
+Every setting is optional. Left out, it uses the default shown below.
 
 ### For any LED
 
@@ -197,42 +193,42 @@ below.
 | `hue_step` | `interval=1` `hue=0` `sat=1` `val=1` `steps=6` |
 | `rgb_blink` | `colour=red` `speed=1` `phase=0` `duty=0.5` |
 
-### Which ones travel
+### Effects that travel
 
-The ones ending `_wave`, `_sequence` and `_counter`, and `sweep`, travel across
-the LEDs you name. The rest do the same thing on every one.
+Effects ending in `_wave`, `_sequence` and `_counter`, and `sweep`, travel
+across the LEDs you name. The others do the same thing on each one.
 
-The ones ending `_each` give every LED its own: `flicker_each` dips each at
-its own moments, as flames do, and `random_each` gives each its own brightness.
-`flicker` and `random` do the same to all of them at once, as one light would:
+Effects ending in `_each` treat each LED separately: `flicker_each` dips
+each one at its own moments, like flames, and `random_each` gives each its own
+brightness. `flicker` and `random` affect them all together, like a single light:
 
 ```entry
 stripDat colour=ff5a00: flicker_each dimness=0.6
 ```
 
-`traffic_light` and `pelican_crossing` take their LEDs in the order given
-below, so naming fewer lights the first of them and leaves the rest out. Naming
-more is a mistake, and `errors.txt` says so.
+`traffic_light` and `pelican_crossing` use their LEDs in the order given
+below. With fewer, they light only the first ones. Naming more is an error,
+reported in `errors.txt`.
 
 ### Traffic lights and crossings
 
-`traffic_light` wants three LEDs, and lights them red, amber and green in
-that order. It switches instantly, so add `ease` for the lamps of a real signal:
+`traffic_light` needs three LEDs, lit red, amber and green in that order.
+It switches instantly, so add `ease` to look like a real signal's lamps:
 
 ```entry
 stripDat1-3 ease=0.3: traffic_light
 ```
 
-`pelican_crossing` wants five LEDs: the same three, then the two figures a
-pedestrian reads, stop and walk. In place of red and amber it flashes the amber
-and the walking figure together, as a pelican does while a crossing ends. It
-comes round on its own clock, there being no button to press:
+`pelican_crossing` needs five LEDs: the same three, then the pedestrian's
+stop and walk figures. Instead of red and amber, it flashes amber and the walk
+figure together, as a real pelican crossing does before it changes back. It
+cycles on its own timer, as there is no button to press:
 
 ```entry
 stripDat1-5 ease=0.3: pelican_crossing green_interval=20 red_interval=8
 ```
 
-Three LEDs on `pelican_crossing` is its traffic lights on their own:
+With three LEDs, `pelican_crossing` plays its traffic lights only:
 
 ```entry
 stripDat1-3: pelican_crossing
@@ -240,24 +236,24 @@ stripDat1-3: pelican_crossing
 
 ### Sweep
 
-`sweep` is a light that crosses the LEDs and turns back at each end, the back
-and forth a scanner does. Its `extent` is how far it reaches from itself, in
-LEDs, and its `speed` counts one crossing as the travelling effects count one
-pass. Its `hold` waits at each end, in seconds, giving a trail time to clear
-before the light comes back over it:
+`sweep` is a light that travels across the LEDs and turns back at each end,
+like a scanner. `extent` sets how far its glow reaches either side, in LEDs,
+and `speed` counts one crossing as one cycle, as the other travelling effects count
+one pass. `hold` pauses at each end, in seconds, giving the trail time to fade
+before the light returns:
 
 ```entry
 stripDat ease=0.4: sweep speed=1 extent=1 hold=1
 ```
 
-Give `extent` a whole number of LEDs, such as 1 or 2. In between it dims as
-the light passes between two LEDs and brightens as it lands on one, which
-reads as stepping. 1 is the tightest that travels smoothly.
+Give `extent` a whole number of LEDs, such as 1 or 2. A value in between
+makes the light dim between LEDs and brighten on each, so it appears to
+step. 1 is the smallest that travels smoothly.
 
 ### Blinking through colours
 
-`rgb_blink` blinks one colour, or several in turn, divided by `|` since a comma
-would mean one colour for each LED. Without one it blinks red:
+`rgb_blink` blinks one colour, or several in turn separated by `|`, as a comma
+would give each LED its own colour. Without a colour it blinks red:
 
 ```entry
 rgb: rgb_blink colour=red|warm|ff8040 speed=0.5
@@ -265,32 +261,31 @@ rgb: rgb_blink colour=red|warm|ff8040 speed=0.5
 
 ### What the settings mean
 
-`speed` is cycles a second: 1 goes round once a second, 0.5 once every two, 2
-twice a second. A negative speed runs the cycle backwards.
+`speed` is cycles per second: 1 is once a second, 0.5 once every two seconds,
+2 twice a second. A negative speed runs the cycle backwards.
 
 The settings measured in seconds are `interval`, `hold`, flicker's `bright_min`,
 `bright_max`, `dim_min` and `dim_max`, and the four intervals `traffic_light`
 and `pelican_crossing` each take. `length`, `flashes`, `steps`, `count` and
-`step` are plain counts, and a negative `step` counts down.
+`step` are whole numbers, and a negative `step` counts down.
 
-`red`, `green` and `blue` run from 0 to 255. The rest run from 0 to 1, written 0.5
-or 50% as you prefer. `window` is one of
-them, being the share of a cycle the flashes happen in. `hue` takes degrees as
-well, written 180deg, which is what a colour picker gives you.
+`red`, `green` and `blue` run from 0 to 255. The rest run from 0 to 1, written as
+0.5 or 50%. These include `window`, the share of each cycle the flashes happen in.
+`hue` also takes degrees, such as 180deg, as a colour picker shows them.
 
-**If you write Python**, an effect of your own can join this list and be written
-here like any other. The library reference on
-[GitHub](https://github.com/pimoroni/picofx/blob/main/picofx/README.md) says how,
-under Effects System.
+**If you write Python**, you can add your own effect to this list and use it like
+any other. The library reference on
+[GitHub](https://github.com/pimoroni/picofx/blob/main/picofx/README.md) explains
+how, under Effects System.
 
 ## LED strips
 
 The two screw terminals are marked **DAT** and **CLK**. A WS2812 strip needs
 only a data line, so one can go on each terminal: `stripDat` and `stripClk`. An
-APA102 strip needs both, data and clock, so it is the one strip on the board,
-`stripApa`. A strip's LEDs take the same effects, colours and levels the board's
-LED does. Tell the board how long a strip is first, since that is the one thing
-it cannot work out for itself:
+APA102 strip needs both data and clock, so it is the only strip on the board,
+`stripApa`. A strip's LEDs take the same effects, colours and levels as the
+board's LED. First tell the board how many LEDs each strip has, as it cannot
+detect this:
 
 ```entry
 board: stripDat=60
@@ -302,54 +297,53 @@ stripDat: rainbow_wave speed=0.3
 | `stripDat` | every LED on the strip |
 | `stripDat5` | one of them |
 | `stripDat1-10` | the first ten |
-| `stripDat60-1` | all sixty, the other way round, for a strip mounted backwards |
+| `stripDat60-1` | all sixty in reverse order, for a strip mounted backwards |
 
-`stripClk` and `stripApa` are named the same way. An APA102 strip has a
-brightness of its own for the whole strip, at about half unless the board line
-says otherwise, such as `stripApa=144|75%`. The effects' own levels apply on top of
-it.
+`stripClk` and `stripApa` are set the same way. An APA102 strip also has an overall
+brightness, about half by default, set after its length on the board line, such as
+`stripApa=144|75%`. The effects' own levels apply on top of it.
 
 `stripApa` and the WS2812 strips cannot play at once, since they use the same
-terminals. A file naming both plays the WS2812 strips and says so in
-`errors.txt`.
+terminals. A file naming both plays the WS2812 strips and reports the
+conflict in `errors.txt`.
 
-Each LED shows a colour of its own, so `stripDat5.r` is not a thing to write. Set
-`colour` on the LEDs instead, as the board's LED takes it.
+Each LED is one colour light, so `stripDat5.r` is not valid. Set `colour` on the
+LEDs instead, as the board's LED takes it.
 
-Most strips take their colours as green, red, then blue, and the board sends
-them that way. If yours shows another colour where you asked for red, it takes
-them in another order: write the letters `r`, `g` and `b` after its length in
-the order it wants them, such as `stripDat=60|rgb`.
+Most strips take their colours in the order green, red, blue, and the board
+sends them that way. If yours shows a different colour when you ask for red,
+it uses another order: write the letters `r`, `g` and `b` after its length in
+the order it needs, such as `stripDat=60|rgb`.
 
 ## Screens
 
 ### Naming screens
 
-A screen on the SP/CE connector is named `screen`. A screen
-cannot say what size it is, so tell the board:
+A screen on the SP/CE connector is named `screen`. The board cannot detect a screen's size,
+so tell it:
 
 ```entry
 board: screen=1.54
 ```
 
-That is a board entry, one of a handful covered under [The board](#the-board).
+That is a board entry, covered under [The board](#the-board).
 
-The sizes are 2.8 and 1.54, in inches across the panel, and a screen plays
-nothing until its size is given.
+The sizes are 2.8 and 1.54, in inches across the panel, and a screen shows
+nothing until its size is set.
 
 ### Setting a screen
 
-Before the colon, and separate from what it plays:
+These go before the colon, separate from what it plays:
 
 | Setting | What it does | If omitted |
 | --- | --- | --- |
 | `rotation` | 0, 90, 180 or 270, for how the screen is mounted | 0 |
-| `backlight` | how brightly it is lit, 0 to 1, such as 0.5 or 50% | 1 |
+| `backlight` | backlight brightness, 0 to 1, such as 0.5 or 50% | 1 |
 | `mirror` | true to flip the picture left to right | no |
-| `offset` | where to put the picture, as `x\|y` | centred |
-| `background` | the colour around it, or `bg` for short | black |
-| `pixel_double` | true to draw each pixel twice as wide and tall, so a half size picture fills the screen | no |
-| `tile` | `repeat` or `mirror` to fill the screen with copies of the picture, as `across\|down` | off |
+| `offset` | the picture's position, as `x\|y` | centred |
+| `background` | the colour behind the picture, or `bg` for short | black |
+| `pixel_double` | true to draw each pixel at double size, so a half size picture fills the screen | no |
+| `tile` | `repeat` or `mirror` copies to fill the screen, as `across\|down` | off |
 
 ```entry
 screen rotation=90: gif file="clock.gif"
@@ -357,15 +351,14 @@ screen offset=*|20 bg=black: image file=logo.png
 screen tile=repeat: image file=bricks.png
 ```
 
-A picture is centred unless `offset` puts it somewhere, and a `*` in place of
-either number centres that side.
+A picture is centred unless `offset` places it, and a `*` in place of either
+number centres it on that axis.
 
-`tile` fills the screen with a small picture instead of leaving a background
-around it. `repeat` lays copies side by side, so a picture drawn to join up at
-its edges makes a pattern with no seam in it, and `mirror` turns every other
-copy round, which joins any picture up whether it was drawn to or not. One
-value covers both directions and two set them apart, `tile=mirror|off`
-spreading a picture across the screen and leaving its height alone.
+`tile` fills the screen with copies of a small picture instead of a
+background. `repeat` lays copies side by side, so a picture drawn to join up
+at its edges makes a seamless pattern. `mirror` flips every other copy, so the
+edges always join up. One value sets both directions, and two set them
+separately: `tile=mirror|off` tiles across the screen only.
 
 ### Pictures
 
@@ -381,50 +374,52 @@ screen: image file=logo.png
 screen: sequence folder=photos interval=30
 ```
 
-`gif` plays an animated GIF at the delays it was saved with, `image` holds one
-picture, and `sequence` plays a folder of them in the order their names number
-them. Pictures can be PNG, JPEG or GIF. There is nothing to play without `file`
-or `folder`, so those two always have to be given.
+`gif` plays an animated GIF at its saved frame delays, `image` shows one
+picture, and `sequence` plays a folder of pictures in the order of the numbers
+in their names. Pictures can be PNG, JPEG or GIF. `file` or `folder` must
+always be given.
 
-`fps` is frames a second and `interval` is the seconds between them, so use
-whichever suits: `fps=12` for an animation, `interval=30` for a slideshow.
-Either one replaces the delays the file was saved with, and leaving out both
-keeps them. `loop` is true unless you set it false, which stops on the last
-frame. `ping_pong` plays back and forth instead of starting over, which suits an
-animation with two ends, such as an arm flexing.
+`fps` is frames per second and `interval` is seconds per frame, so use whichever
+suits: `fps=12` for an animation, `interval=30` for a slideshow. Either replaces
+the file's saved delays, and leaving both out keeps them. `loop` is true unless
+set to false, which stops on the last frame. `ping_pong` plays forwards then
+backwards instead of starting over, which suits an animation with two ends, such
+as an arm flexing.
 
-An animation drawn to loop has no such ends, its last frame leading back into
-its first. Add `first_as_last=yes` for one of those and the whole loop is played
-in each direction, so a spinning coin winds all the way round and back:
+An animation drawn as a loop has no such ends, as its last frame leads back into
+its first. Add `first_as_last=yes` to repeat the first frame at the end, so the
+whole loop plays in each direction and a spinning coin turns all the way round
+and back:
 
 ```entry
 screen: gif file="coin.gif" ping_pong=yes first_as_last=yes
 ```
 
-`hold` is the seconds to wait where it turns around, so a ping-pong pauses at
-each end instead of bouncing straight off. One value serves both ends, or write
-each with a `|`:
+`hold` is the pause in seconds at each end, so a ping-pong rests before turning
+back. One value sets both ends, or set each with a `|`:
 
 ```entry
 screen: gif file="wave.gif" ping_pong=yes hold=1
 screen: gif file="wave.gif" ping_pong=yes hold=1.5|0.5
 ```
 
-A file is looked for on this drive first, then on the board itself, and the name
-may include folders.
+The board looks for a file on this drive first, then on the board itself, and
+the name can include folders.
 
 The Plasma 2350 W has no SP/CE connector, so it takes no screen, and the picker
 offers none.
 
 A 2.8 inch panel is mounted upright, 240 wide by 320 tall, so a landscape
-picture is cropped at its sides unless the line turns it, with `rotation=90`.
+picture is cropped at the sides unless the line rotates it with
+`rotation=90`.
 
 ### Drawing from code
 
-**This one is for Python writers.** A screen can play a drawing instead of a
-picture: a Python file with one function in it, drawn beside everything else in
-this file, so the lights keep their effects,
-and a scene puts the drawing on and off with everything else it holds.
+**This section is for Python writers.** A screen can play a drawing instead of
+a picture: a Python file with one function in it, drawn alongside everything
+else in this file, so the lights keep their effects,
+and a scene shows and hides the drawing along with everything else in
+it.
 
 | Plays | Settings |
 | --- | --- |
@@ -446,38 +441,37 @@ def draw(canvas, elapsed):
 ```
 
 `draw` is called with a canvas the size of the screen, kept between calls, and
-the seconds since the drawing started. Whatever it has drawn when it returns is
-what the screen shows. The rest of the file runs once, when the drawing starts,
-so that is the place to build anything `draw` uses. `fps` or `interval` sets the
-pace, and leaving both out draws as often as the screen takes a frame.
+the seconds since the drawing started. The screen shows whatever it has drawn
+when it returns. The rest of the file runs once, when the drawing starts, so set
+up anything `draw` uses there. `fps` or `interval` sets the frame rate, and
+leaving both out draws as fast as the screen allows.
 
-`width` and `height` size the canvas by hand, in pixels, and are honoured as
-written whatever else is set. A small canvas draws faster and is placed like a
-small picture, so `offset` puts it somewhere and `tile=repeat` fills the screen
-with it.
+`width` and `height` set the canvas size in pixels, overriding any other
+setting. A small canvas draws faster and is placed like a small picture, so
+`offset` positions it and `tile=repeat` fills the screen with it.
 
-In a scene, the drawing's clock stops while the scene is away, and a scene with
-`restart` runs the whole file again from a blank canvas. The rotation, offset
-and other screen settings place a drawing as they place a picture, with
-`pixel_double` also making the canvas half size, which draws faster and uses a
+In a scene, the drawing's clock pauses while another scene plays, and a scene
+with `restart` runs the whole file again from a blank canvas. `rotation`,
+`offset` and the other screen settings place a drawing as they do a picture,
+and `pixel_double` also halves the canvas size, which draws faster and uses a
 quarter of the memory.
 
 A drawing can load pictures, such as `picovector.image.load("/fx/faces.png")` for
-one on this drive, best done once in the setup. The drawing itself is read once
-and kept.
+one on this drive. Do this once, in the setup. The drawing file itself is read
+once and kept in memory.
 
-A drawing may import `math`, `random`, `time` and `picovector`. The board's own
-modules stay with the effects running around it, so a program pasted in that
-reaches for the pins is refused, with a note in `errors.txt`. A mistake anywhere
-in the file lands there too, with its line, and a drawing that stops partway
-keeps its last frame on the screen while everything else carries on.
+A drawing can import `math`, `random`, `time` and `picovector`. The board's own
+modules are reserved for the effects, so a pasted program that tries to use the
+pins is refused, with a note in `errors.txt`. Any error in the file is reported
+there too, with its line number, and a drawing that stops partway leaves its
+last frame on the screen while everything else keeps running.
 
-A program that wants the whole board instead of one screen is
+A program that needs the whole board, not just one screen, is
 [a program](#running-your-own-program), not a drawing.
 
-The picker offers a drawing on its Screens tab where the drawing's opening string
-starts with `Drawing:` and its name, and keeps it out of its programs. It cannot
-run the drawing, so it shows it by a face instead, which two more lines can set:
+The picker lists a drawing on its Screens tab, not with its programs, when the
+drawing's opening string starts with `Drawing:` and its name. It cannot run the
+drawing, so it shows an icon for it instead, which two more lines can set:
 
 ```python
 '''
@@ -488,14 +482,15 @@ Colour: orange
 '''
 ```
 
-`Icon` is any one character, an emoji included, and `Colour` one of the colour
-words or a hex. A drawing naming neither is shown by its initial, on a colour
-taken from its name.
+`Icon` is any single character, including an emoji, and `Colour` is a colour
+name or hex code. A drawing that sets neither shows its initial, on a colour
+chosen from its name.
 
 ## Scenes
 
-A file can hold several sets of effects and show them one after another. A
-heading in square brackets begins one, and says how long it shows for:
+A file can hold several sets of effects, called scenes, and play them one
+after another. A heading in square brackets starts each scene and sets how
+long it plays:
 
 ```entry
 [Daytime: 30s]
@@ -505,39 +500,39 @@ stripDat: rainbow_wave speed=0.3
 stripDat colour=ff5a00: flicker_each
 ```
 
-The name is everything before the `:` and may be anything you like, spaces
-included. The time is in seconds, `30s`, or in minutes, `10m`. Scenes take turns
-in the order they are written, then start again.
+The name is everything before the `:` and can be anything, including spaces. The
+time is in seconds, `30s`, or minutes, `10m`. Scenes play in the order written,
+then repeat.
 
-Entries before the first heading are always on, whatever is showing, so anything
-that should never change goes there:
+Entries before the first heading are always on, whichever scene is playing, so
+put anything that should never change there:
 
 ```entry
 rgb: static brightness=0.2
 ```
 
-While a scene shows, an LED it does not name goes dark if any other scene
-uses it, and is left alone if none of them do. A scene may name an LED that
-is always on, and takes it over for as long as it shows.
+While a scene plays, an LED it does not name goes dark if another scene
+uses it, and is left alone otherwise. A scene can name an always-on LED and
+takes it over while the scene plays.
 
-A screen behaves the same way: its picture stays put but the light goes out
-while another scene has the board, and comes back when its own returns.
+Screens behave the same way: the picture stays, but the backlight turns off
+while another scene plays, and comes back when its own scene returns.
 
-Add `restart` to a heading and its effects begin again every time it comes
-round, instead of carrying on from where they were left:
+Add `restart` to a heading to restart that scene's effects each time it
+plays, instead of resuming where they left off:
 
 ```entry
 [Beacon: 5s restart]
 stripDat1-3: flash_sequence flashes=3
 ```
 
-The board entry belongs outside every scene. A single scene with no time shows
-for ever, and every reload, from a save, an eject or a press of **Boot**, starts
-again at the first scene.
+The board entry goes before any scene heading. A single scene with no time plays
+forever, and every reload, whether from a save, an eject or a press of **Boot**,
+starts again from the first scene.
 
 ## The board
 
-One entry is about the board itself, and names no LED:
+One entry sets up the board itself, and names no LED:
 
 ```entry
 board: drive=manual program=fireplace.py
@@ -545,62 +540,60 @@ board: drive=manual program=fireplace.py
 
 | Setting | What it does | If omitted |
 | --- | --- | --- |
-| `drive` | `manual` keeps the drive hidden until **Boot** is pressed twice | shown at boot |
-| `reload` | `manual` waits for an eject or **Boot** before playing a save | played a few seconds after it is saved |
-| `program` | a Python file to run instead of the effects | the effects run |
-| `args` | what to pass that program, divided by `\|` | it is given none |
-| `screen` | what size of screen is on the SP/CE connector | no screen |
-| `stripDat` | how many LEDs are on a WS2812 strip on **DAT**, and after a `\|` the order it takes its colours in | no strip |
+| `drive` | `manual` keeps the drive hidden until **Boot** is double-pressed | shown at boot |
+| `reload` | `manual` plays a save only after an eject or a press of **Boot** | plays a few seconds after saving |
+| `program` | a Python file to run instead of the effects | the effects play |
+| `args` | arguments for that program, separated by `\|` | none |
+| `screen` | the size of the screen on the SP/CE connector | no screen |
+| `stripDat` | the number of LEDs on a WS2812 strip on **DAT**, then after a `\|` its colour order | no strip |
 | `stripClk` | the same for **CLK** | no strip |
-| `stripApa` | how many LEDs are on an APA102 strip across both terminals, and after a `\|` its brightness | no strip |
+| `stripApa` | the number of LEDs on an APA102 strip across both terminals, then after a `\|` its brightness | no strip |
 
-Saving `effects.txt` is enough on its own: the board notices the save, takes the
-drive back for a moment, and plays the new effects, exactly as a single press of
-**Boot** would. Only a save to `effects.txt` counts, so copying
-pictures on never interrupts anything. With `reload=manual` a save waits
-for an eject or **Boot** instead.
+Saving `effects.txt` is all it takes: the board detects the save, briefly takes
+the drive back, and plays the new effects, just as a single press of **Boot**
+would. Only saving `effects.txt` triggers this, so copying pictures onto
+the drive never interrupts anything. With `reload=manual`, a save waits for an
+eject or a press of **Boot** instead.
 
 ### Running your own program
 
-A program can sit on this drive or on the board's own filesystem, and its name
-may include folders: it is looked for here first, then on the
+A program can be on this drive or on the board's own filesystem, and its name
+can include folders. The board looks here first, then on the
 board.
-Where the name is in both, this drive's copy runs.
+If both have a file with that name, the one on this drive
+runs.
 
-If it is missing, or stops with an error, the effects run instead and
-`errors.txt` says what happened, so a mistyped name never leaves you with a
-board that does nothing.
+If the program is missing or stops with an error, the effects play instead
+and `errors.txt` explains why, so a mistyped name never leaves the board
+doing nothing.
 
-Saving a file that names a program, while the effects play, restarts the board,
-which then runs the program as it would from power on.
+Saving a file that names a program while the effects are playing restarts the
+board, which then runs the program as it would at power-on.
 
-The effects stop while a program runs, and the board is busy with it, so
-**Boot** and ejecting do nothing. The drive is shown anyway, even with `drive`
-set to `manual`, so you can still edit `effects.txt`. Saving it restarts the
-board, which then plays whatever it now says. With `reload=manual`, press
-**Reset** for the change to take. A program reads its files from this drive even
-while it is shown, so its pictures and sounds can sit beside it here.
+The effects stop while a program runs, and **Boot** and ejecting do nothing. The
+drive is always shown, even with `drive=manual`, so you can still edit
+`effects.txt`. Saving it restarts the board with the new file. With
+`reload=manual`, press **Reset** to apply the change. A program can read files
+from this drive while it is shown, so its pictures and sounds can sit beside it
+here.
 
-When the program ends, the board goes back to the effects the rest of the file
-describes.
+When the program ends, the board plays the effects in the rest of the file.
 
-A program never sees `screen`, which sets up the screen for this file's own entries.
-It sets its own up, so pass it the size in `args` if it
-needs telling.
+A program never sees `screen`, which sets up the screen for this file's own entries. It sets up its own screens, so
+pass it the size in `args` if it needs it.
 
-`args` passes a program whatever it needs to know, so one program can do
-different things without being edited. Several are divided by `|`, and anything
-with a space or a colon in it goes in quotes:
+`args` passes values to a program, so one program can behave differently
+without being edited. Separate several with `|`, and put anything containing a
+space or a colon in quotes:
 
 ```entry
 board: program=slideshow.py args=posters|3
 board: program=clock.py args="07:30"
 ```
 
-**If you are writing the program**, it reads them from `sys.argv`, the way any
-Python program does, with the first being `sys.argv[1]`. Thonny passes none when
-you run the same file from there, so give each one a value to fall back on and
-the file works either way:
+**If you are writing the program**, read them from `sys.argv` as in any Python
+program, starting at `sys.argv[1]`. Thonny passes none when you run the file
+from there, so give each one a default and the file works either way:
 
 ```python
 args = sys.argv[1:]
@@ -611,9 +604,9 @@ FOLDER = args[0] if args else "posters"
 
 The picker's **A program** tab lists every Python file at the top of this
 drive,
-and describes each one by its opening string, the text in
-triple quotes at the top of the file. Its first sentence says what the program
-does, and these lines tell the picker how to show it:
+and describes each one from its opening string, the text in triple quotes at
+the top of the file. The first sentence says what the program does, and these
+lines control how the picker shows it:
 
 ```python
 '''
@@ -627,43 +620,43 @@ Section: Signs and displays
 
 | Line | What the picker does with it |
 | --- | --- |
-| `Program: Big clock` | names the program, where it would use the file's name |
+| `Program: Big clock` | names the program, in place of its file name |
 | `Args: Colour, Seconds = 10` | gives each argument a box of its own, and writes `args=` from them |
-| `Picture: clock.png` | shows the program by that picture, kept beside it |
-| `Section: Signs and displays` | lists the program in that section, where it would be listed under **On the drive** |
+| `Picture: clock.png` | shows that picture for the program, kept beside it |
+| `Section: Signs and displays` | lists the program in that section, not under **On the drive** |
 | `Thumbnail: servo` | draws a servo for a program with no picture, or `motor`, or `outputs` and a pattern such as `outputs rainbow` |
 
-Each is optional. Without `Picture`, the picker shows `clock.png` beside
-`clock.py` where there is one, and `clock-2.png` beside it as a second screen's.
-Without `Args`, a program that reads `sys.argv` is offered plain boxes to add
-arguments to.
+Each is optional. Without `Picture`, the picker shows `clock.png` for `clock.py`
+if it exists, and `clock-2.png` as a second screen's picture. Without `Args`, a
+program that reads `sys.argv` gets empty boxes for adding arguments.
 
-A value after `=` in `Args` is what the program falls back on, so the box starts
-with it, and `args=` is left off while every argument still holds its own. An
-argument named `Screen size` is chosen from the sizes the firmware knows, and
-one named `Rotation` from 0, 90, 180 and 270, or from those it names, such as
-`Rotation = 90 or 270`, the first being its own. The picture stays the one taken
-at the defaults, whatever is chosen.
+A value after `=` in `Args` is the program's default, so the box starts with it,
+and `args=` is left out while every argument keeps its default. An argument
+named `Screen size` offers the sizes the firmware knows, and one named
+`Rotation` offers 0, 90, 180 and 270, or the values it lists, such as `Rotation
+= 90 or 270`, the first being the default. The picture always shows the program
+at its defaults.
 
 A board with a wireless module keeps `secrets.py` at the top of the drive for
-your WiFi network's name and password, and puts an empty one back if it is
-deleted. A program that goes online, importing `network` or `requests`, is listed
-only where the drive holds that file.
-A file whose opening string starts `Drawing:` is [a drawing](#drawing-from-code),
-so it is left out.
+your WiFi network's name and password, and restores an empty one if it is
+deleted. Programs that go online, importing `network` or `requests`, are listed
+only when the drive has that file.
+A file whose opening string starts with `Drawing:` is [a
+drawing](#drawing-from-code), so it is not listed.
 
 ## When something is wrong
 
-The board's LED says so, and the more flashes the worse it is:
+The board's LED flashes to show a problem, and more flashes
+means a more serious one:
 
 | Flashes | What happened |
 | --- | --- |
-| white, once | the computer was still writing, so the press did nothing. Try again in a moment |
-| blue, twice | something in `effects.txt` could not be read, or a drawing failed. `errors.txt` says which line, a drawing's once the board has the drive back |
-| red, three times | there was no room to write `errors.txt`. This drive is full or damaged, so free some space or let a computer repair it |
+| white, once | the computer was still writing, so the press was ignored. Try again in a moment |
+| blue, twice | a line in `effects.txt` could not be read, or a drawing failed. `errors.txt` names the line. A drawing's error appears there once the board has the drive back |
+| red, three times | there was no room to write `errors.txt`. This drive is full or damaged, so free some space or repair it from a computer |
 
-A setting whose value is not what it takes is ignored, with a note in
-`errors.txt`, and the effect runs on its usual value for it.
+A setting with an invalid value is ignored and noted in `errors.txt`,
+and the effect uses its default instead.
 
 ## More from Pimoroni
 

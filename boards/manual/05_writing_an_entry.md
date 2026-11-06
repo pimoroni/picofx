@@ -6,14 +6,13 @@
 
 <!-- board entry_examples -->
 
-There is one colon in an entry. Which __OUTPUTS__, and how bright or what colour
-they are, go before it. The effect and its own settings go after.
+Each entry has one colon. Before it go the __OUTPUTS__ and their brightness or
+colour. After it go the effect and its settings.
 
-Settings you leave out take their usual value. A `#` starts a comment. An entry
-can run on over several lines so long as the colon is on the first, and indenting
-changes nothing.
+Settings you leave out use their defaults. A `#` starts a comment. An entry can
+span several lines as long as the colon is on the first, and indentation does not
+matter.
 
 <!-- if screens -->
-A screen is named the same way and plays pictures instead of lighting up. See
-[Screens](#screens).
+Screens are named the same way and play pictures. See [Screens](#screens).
 <!-- end -->
