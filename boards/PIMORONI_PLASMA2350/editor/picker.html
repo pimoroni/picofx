@@ -11572,10 +11572,9 @@ function argsRead(value) {
 
 // The program a file runs, opening the program tab with it chosen, where the page knows the
 // program and writes its arguments back as the file has them. Otherwise both stay on the board
-// line as written, and the page opens on the effects
+// line as written, and the page opens on the effects. A file running no program leaves the tab open
 function readProgram(named, argued) {
   boardSet.program = null;
-  onProgramPage = false;
   if (!named) {
     if (argued) boardResidue.push(argued);
     return;
@@ -11590,6 +11589,7 @@ function readProgram(named, argued) {
     onProgramPage = true;
     return;
   }
+  onProgramPage = false;
   boardSet.args[path] = kept;
   boardResidue.push(named);
   if (argued) boardResidue.push(argued);
