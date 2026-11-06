@@ -4,7 +4,7 @@
 
 # The checks between the parser and what is built. A board entry and a hub are held to what
 # the board declares and an entry's settings to their kinds. A file an entry names is looked
-# for on the drive and then on the board.
+# for in its kind's folder and then as named, each on the drive and then on the board.
 
 import os
 
@@ -55,12 +55,15 @@ def copies(name):
     return found
 
 
-def find_file(name, line, problems):
+def find_file(name, line, problems, folder=None):
     """
-    The file or folder an entry names, or None if there is none to play. The drive's
-    copy wins where the board has one too, as it does for a program.
+    The file or folder an entry names, or None if there is none to play. A plain name is
+    looked for in the folder first, then as named. The drive's copy wins where the board
+    has one too, as it does for a program.
     """
-    found = copies(name)
+    found = copies(folder + "/" + name) if folder and "/" not in name else []
+    if not found:
+        found = copies(name)
     if not found:
         problems.append("line {}: there is no {} on the drive or the board".format(line, name))
         return None

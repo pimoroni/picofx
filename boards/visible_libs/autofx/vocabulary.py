@@ -66,6 +66,11 @@ AUDIO_EFFECTS = {
     "wav": ("file", "loop"),
 }
 
+# The drive folder each effect's file is looked for in before the top of the drive, so a file
+# is named without its folder in either place
+FOLDERS = {"gif": "pictures", "image": "pictures", "sequence": "pictures", "graphics": "drawings",
+           "wav": "sounds"}
+
 # What each effect setting's value must be, stated once since a name means the same thing
 # wherever it appears. "count" is a whole number of 1 or more, since each divides or repeats
 # something, where "whole" may be zero or negative. "angle" is a fraction that takes degrees

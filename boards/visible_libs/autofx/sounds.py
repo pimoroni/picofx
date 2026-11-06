@@ -8,7 +8,7 @@
 import io
 import time
 
-from .vocabulary import AUDIO_EFFECTS, EFFECTS, MOUNT_DIR, SCREEN_EFFECTS
+from .vocabulary import AUDIO_EFFECTS, EFFECTS, FOLDERS, MOUNT_DIR, SCREEN_EFFECTS
 from .parser import Channel
 from .checks import check_settings, find_file
 
@@ -223,7 +223,7 @@ def build_sounds(entries, fx, problems, volume=None):
             continue
 
         at = entry.lines.get("file", entry.line)
-        path = find_file(target, at, problems)
+        path = find_file(target, at, problems, FOLDERS[entry.effect])
         if path is None:
             continue
 

@@ -13,8 +13,8 @@ import io
 import sys
 import time
 
-from .vocabulary import (CURVES, EFFECTS, ERRORS_PATH, HUB, HUB_POSITIONS, SCREEN_EFFECTS,
-                         SCREEN_SIZES)
+from .vocabulary import (CURVES, EFFECTS, ERRORS_PATH, FOLDERS, HUB, HUB_POSITIONS,
+                         SCREEN_EFFECTS, SCREEN_SIZES)
 from .hardware import (BOARD_HUB, BOARD_SCREENS, BUILT_HUB, BUILT_SCREENS, hub_example, hub_port,
                        hub_shown, port_classes, screen_kinds, screen_port, screen_shown)
 from .parser import value_shown
@@ -1001,7 +1001,7 @@ def build_shows(entries, fx, board, problems, build=True):
             continue
 
         at = entry.lines.get(wanted, entry.line)
-        path = find_file(target, at, problems)
+        path = find_file(target, at, problems, FOLDERS[entry.effect])
         if path is None:
             continue
 

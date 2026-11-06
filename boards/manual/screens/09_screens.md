@@ -84,7 +84,8 @@ __SCREEN__: sequence folder=photos interval=30
 `gif` plays an animated GIF at its saved frame delays, `image` shows one
 picture, and `sequence` plays a folder of pictures in the order of the numbers
 in their names. Pictures can be PNG, JPEG or GIF. `file` or `folder` must
-always be given.
+always be given. The board looks for it in this drive's `pictures` folder, where
+the picker adds pictures, then at the top of the drive.
 
 `fps` is frames per second and `interval` is seconds per frame, so use whichever
 suits: `fps=12` for an animation, `interval=30` for a slideshow. Either replaces
@@ -161,9 +162,11 @@ with `restart` runs the whole file again from a blank canvas. `rotation`,
 and `pixel_double` also halves the canvas size, which draws faster and uses a
 quarter of the memory.
 
-A drawing can load pictures, such as `picovector.image.load("/fx/faces.png")` for
-one on this drive. Do this once, in the setup. The drawing file itself is read
-once and kept in memory.
+The board looks for the drawing in this drive's `drawings` folder, where the
+picker adds drawings, then at the top of the drive. It can load pictures, such
+as `picovector.image.load("/fx/pictures/faces.png")` for one in the `pictures`
+folder. Do this once, in the setup. The drawing file itself is read once and
+kept in memory.
 
 A drawing can import `math`, `random`, `time` and `picovector`. The board's own
 modules are reserved for the effects, so a pasted program that tries to use the

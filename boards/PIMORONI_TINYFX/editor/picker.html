@@ -9815,25 +9815,60 @@ state.scanned = false;
 
 var scanBusy = false;
 
+// The folders a picture, a drawing and a sound are kept in, each added file going into its own.
+// The top of the drive is read too, so a file dropped there still plays
+var MEDIA_FOLDERS = {pictures: /\.(gif|png|jpe?g)$/i, drawings: /\.py$/i, sounds: /\.wav$/i};
+
+// The folder each file or slideshow the walk found sits in, so it is deleted from there
+var mediaHome = {};
+
+// The folder a file of this name is added to, or null for the top of the drive
+function mediaFolderFor(name) {
+  return Object.keys(MEDIA_FOLDERS).filter(function (folder) {
+    return MEDIA_FOLDERS[folder].test(name);
+  })[0] || null;
+}
+
 async function scanMedia(dir) {
   // One walk at a time, built aside and landed whole, so a redraw mid-scan never sees half a
   // drive and two walks can never lace their findings together
   if (scanBusy) return;
   scanBusy = true;
   driveParts.forEach(function (part) { if (part.begin) part.begin(); });
-  try {
-    for await (var pair of dir.entries()) {
+  var homes = Object.create(null);
+  // The drive's own folders, which are never a slideshow
+  var kept = Object.keys(MEDIA_FOLDERS).concat([OWN_FOLDER, "examples",
+                                                "System Volume Information"]);
+  async function offer(folder, top) {
+    for await (var pair of folder.entries()) {
       var name = pair[0], handle = pair[1];
-      if (handle.kind !== "file" && name === "System Volume Information") continue;
+      // A name in a media folder and at the top is the folder's, read first
+      if (name in homes || (top && handle.kind !== "file" && kept.indexOf(name) >= 0)) continue;
       for (var at = 0; at < driveParts.length; at++) {
         var part = driveParts[at];
         var take = handle.kind === "file" ? part.file : part.folder;
-        if (take && await take(name, handle)) break;
+        if (take && await take(name, handle)) {
+          homes[name] = folder;
+          break;
+        }
       }
     }
+  }
+  try {
+    for (var named of Object.keys(MEDIA_FOLDERS)) {
+      var folder = null;
+      try {
+        folder = await dir.getDirectoryHandle(named);
+      } catch (e) {
+        // A drive without that folder keeps nothing of that kind in one
+      }
+      if (folder) await offer(folder, false);
+    }
+    await offer(dir, true);
   } finally {
     scanBusy = false;
   }
+  mediaHome = homes;
   driveParts.forEach(function (part) { if (part.land) part.land(); });
   state.scanned = true;
 }
@@ -9902,11 +9937,14 @@ async function addFiles(kinds, what, takes) {
         continue;
       }
       file = await picked[i].getFile();
+      var into = mediaFolderFor(file.name);
+      var home = into ? await state.dirHandle.getDirectoryHandle(into, {create: true})
+                      : state.dirHandle;
       var existing = null;
-      try { existing = await state.dirHandle.getFileHandle(file.name); } catch (e) {}
+      try { existing = await home.getFileHandle(file.name); } catch (e) {}
       if (existing && !confirm(file.name + " is already on the drive. Replace it?"))
         continue;
-      var handle = await state.dirHandle.getFileHandle(file.name, {create: true});
+      var handle = await home.getFileHandle(file.name, {create: true});
       var writable = await handle.createWritable();
       await writable.write(file);
       await writable.close();
@@ -9945,7 +9983,7 @@ async function removeFromDrive(name, kind) {
     : "Delete " + name + " from the FX drive?";
   if (!confirm(said)) return;
   try {
-    await state.dirHandle.removeEntry(name, {recursive: kind === "folder"});
+    await (mediaHome[name] || state.dirHandle).removeEntry(name, {recursive: kind === "folder"});
   } catch (e) {
     banner("Could not delete " + name + ": " + e.name + ". Is the drive showing?", true);
     return;
