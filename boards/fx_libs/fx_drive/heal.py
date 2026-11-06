@@ -33,6 +33,7 @@ __ATTR_READ_ONLY = 0x01
 # What the board told mount() it has, for the remount when the computer hands the drive back
 __screens = True
 __wireless = False
+__sound = True
 
 
 def __ends(text):
@@ -157,18 +158,20 @@ def __has_boot_signature(bdev):
     return sector[510] == 0x55 and sector[511] == 0xAA
 
 
-def mount(screens=True, wireless=False):
+def mount(screens=True, wireless=False, sound=True):
     """
     Mount the drive read-write at /fx, rebuilding it when the filesystem is blank,
     effects.txt is missing, or any shipped document differs from the text the board
     carries. Returns whether the drive ended up mounted.
 
     `screens` is False for a board found to have no screen ports, which is then given
-    the catalogue without them where its pages carry one. `wireless` is True for a board
-    with a wireless module, which is given the WiFi credentials.
+    the catalogue without them where its pages carry one, and no pictures or drawings
+    folder. `wireless` is True for a board with a wireless module, which is given the
+    WiFi credentials. `sound` is False for a board that cannot play sound, which is given
+    no sounds folder.
     """
-    global __screens, __wireless
-    __screens, __wireless = screens, wireless
+    global __screens, __wireless, __sound
+    __screens, __wireless, __sound = screens, wireless, sound
     bdev = rp2.Flash(msc=True)
     fs = vfs.VfsFat(bdev)
     try:
@@ -214,6 +217,7 @@ def mount(screens=True, wireless=False):
                 pass
     if wireless:
         __restore_secrets()
+    __make_folders(screens, sound)
     del __unhealed[:]
     __heal(fs, README_NAME, fx_defaults.README)
     for name, document in pages(screens):
@@ -224,7 +228,7 @@ def mount(screens=True, wireless=False):
 
 def remount():
     """Mount again with what the board last told mount()."""
-    return mount(__screens, __wireless)
+    return mount(__screens, __wireless, __sound)
 
 
 class Examples:
@@ -298,6 +302,22 @@ def __restore_secrets():
                 os.remove(SECRETS_PATH)
             except OSError:
                 pass
+
+
+def __make_folders(screens, sound):
+    # Make the folders the user's own files go in where the drive has none, so it shows where
+    # each belongs, only for parts the board has. One already there is left as it is
+    folders = ["programs"]
+    if screens:
+        folders += ["pictures", "drawings"]
+    if sound:
+        folders.append("sounds")
+    for folder in folders:
+        try:
+            os.mkdir(MOUNT_POINT + "/" + folder)
+        except OSError:
+            # Already there, or a full drive, where the picker makes it as a file is added
+            pass
 
 
 def __mount_examples():

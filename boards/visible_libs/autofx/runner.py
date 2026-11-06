@@ -445,7 +445,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
 
     if volume is not None:
         volume.mount(screens=bool(getattr(board, "SCREENS", ())),
-                     wireless=getattr(board, "WIRELESS", False))
+                     wireless=getattr(board, "WIRELESS", False), sound=hasattr(board, "wav"))
 
     fx, players, shows, sounds, scenes, settings, problems = __reload(
         fx, volume, path, errors, [], [], (), maker)
