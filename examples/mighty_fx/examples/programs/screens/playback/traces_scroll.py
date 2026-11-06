@@ -21,7 +21,7 @@ player's clock and the scroll on the frame count.
 
 Press "Boot" to exit the program.
 
-Section: Animated scenes
+Section: Patterns
 Args: Screen size = 2.8, Rotation = 90
 """
 

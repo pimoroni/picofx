@@ -6,6 +6,7 @@ Transport signs | departure boards and road signs
 Retro displays | mechanical, glowing and segment displays
 Billboards and panels | posters and signs that change on screen
 Animated scenes | drawn in code
+Patterns | moving rainbows, tiles and logos
 Multi-screen | pictures spread across two screens or a Screen Hub
 Graphics | shapes, pens, fonts and filters
 With the remote | effects controlled with the IR remote
