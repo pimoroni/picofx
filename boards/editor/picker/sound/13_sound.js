@@ -56,7 +56,7 @@ function renderSoundTab() {
   row.appendChild(soundTile(null));
   if (state.fileHandle)
     row.appendChild(adderTile("add sounds",
-      {description: "Sounds the board plays", accept: {"audio/wav": [".wav"]}},
+      {description: "Sounds the board can play", accept: {"audio/wav": [".wav"]}},
       "sounds", /\.wav$/i));
   box.appendChild(row);
 }
@@ -68,7 +68,7 @@ function soundKeptTile() {
   tile.innerHTML = "<svg viewBox='0 0 104 30' preserveAspectRatio='none'><rect x='0' " +
                    "y='14' width='104' height='2' rx='1' fill='#c9c3b9'/></svg>";
   var title = document.createElement("b");
-  title.textContent = "As it is";
+  title.textContent = "Keep as is";
   tile.appendChild(title);
   var says = document.createElement("small");
   says.textContent = state.soundKept.slice(0, 40);

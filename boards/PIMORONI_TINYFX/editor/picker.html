@@ -1842,7 +1842,7 @@ var LOOKS = [
     }
   },
   {
-    name: "Campfire", mood: "Embers to blaze", spans: true, onMono: true,
+    name: "Campfire", mood: "Intensity", spans: true, onMono: true,
     strip: ["#812200", "#c43a00", "#ff5a00", "#ff8c1a", "#ff5a00", "#c43a00", "#812200"],
     entries: function (target, pace, mood) {
       return [target.selector + " colour=ff5a00: flicker_each brightness=" + lerp(0.5, 1, mood) +
@@ -1945,7 +1945,7 @@ var LOOKS = [
   {
     // Five lamps in the crossing's own colours, landed on the first five playing
     // outputs; any beyond them are told to stay dark, and fewer take fewer lamps
-    name: "Pelican crossing", mood: "How soft the change is", spans: false, onMono: true,
+    name: "Pelican crossing", mood: "Fade", spans: false, onMono: true,
     strip: ["#ff0000", "#ff7800", "#00d28c", "#ff0000", "#00d28c", "#111111", "#111111"],
     entries: function (target, pace, mood) {
       var scale = lerp(2, 0.4, pace);
@@ -3025,7 +3025,7 @@ function outputSaid(out) {
 function colourOutputsSaid() {
   var colour = [];
   OUTPUTS.forEach(function (output, out) { if (!output.mono) colour.push(out); });
-  return colour.length === 1 ? outputSaid(colour[0]) : "the colour outputs";
+  return colour.length === 1 ? outputSaid(colour[0]) : "the colour lights";
 }
 
 // What a stretch plays on, as though it ran from its near end
@@ -3185,8 +3185,8 @@ function landLook(run, at, name) {
       var lines = clashing.map(function (one) { return one.text; }).join("\n");
       if (!confirm((clashing.length === 1 ? "A line the picker " +
                     "cannot edit already uses some of these lights:" : "Lines the picker cannot " +
-                    "edit already use some of these lights:") + "\n\n" + lines + "\n\nTake " +
-                   (clashing.length === 1 ? "it" : "them") + " out of the file and play " +
+                    "edit already use some of these lights:") + "\n\n" + lines + "\n\nRemove " +
+                   (clashing.length === 1 ? "it" : "them") + " from the file and play " +
                    name + " instead?")) return;
       keptNow = keptNow.filter(function (one) { return clashing.indexOf(one) < 0; });
     }
@@ -7421,7 +7421,7 @@ function renderSoundTab() {
   row.appendChild(soundTile(null));
   if (state.fileHandle)
     row.appendChild(adderTile("add sounds",
-      {description: "Sounds the board plays", accept: {"audio/wav": [".wav"]}},
+      {description: "Sounds the board can play", accept: {"audio/wav": [".wav"]}},
       "sounds", /\.wav$/i));
   box.appendChild(row);
 }
@@ -7433,7 +7433,7 @@ function soundKeptTile() {
   tile.innerHTML = "<svg viewBox='0 0 104 30' preserveAspectRatio='none'><rect x='0' " +
                    "y='14' width='104' height='2' rx='1' fill='#c9c3b9'/></svg>";
   var title = document.createElement("b");
-  title.textContent = "As it is";
+  title.textContent = "Keep as is";
   tile.appendChild(title);
   var says = document.createElement("small");
   says.textContent = state.soundKept.slice(0, 40);
@@ -9354,7 +9354,7 @@ var LOOK_GROUPS = [
    looks: ["Rainbow", "Wave", "Scanner", "Chase", "Marquee"]},
   {name: "Ready-made", says: "combinations of other looks",
    looks: ["Campfire", "Emergency", "Party"]},
-  {name: "All together", says: "every light the same",
+  {name: "All together", says: "every light shows the same",
    looks: ["Solid", "Colour cycle", "Colour steps", "Breathe", "Blink"]},
   {name: "Individual", says: "each light plays its own part",
    looks: ["Sparkle", "Counter", "Traffic light", "Pelican crossing"]}
@@ -9602,7 +9602,7 @@ chosenSteps.push(function (where, run) {
     } else if (slider === "level") {
       var bright = section.level === undefined ? 1 : section.level;
       cells = figureCells(String(Math.round(bright * 100)), "%",
-                          "how bright, typed as a percentage", function (typed) {
+                          "brightness, typed as a percentage", function (typed) {
         live().level = Math.max(0.01, Math.min(1, typed / 100));
       });
     } else if (slider === "pace" || slider === "mood") {
@@ -10926,7 +10926,7 @@ function renderKept() {
     var drop = document.createElement("button");
     drop.className = "keptdrop";
     drop.textContent = "\u00d7";
-    drop.title = "Take this line out of the file";
+    drop.title = "Remove this line from the file";
     drop.onclick = function () {
       keptNow.splice(at, 1);
       draw();

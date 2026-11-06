@@ -13,7 +13,7 @@ var LOOK_GROUPS = [
    looks: ["Rainbow", "Wave", "Scanner", "Chase", "Marquee"]},
   {name: "Ready-made", says: "combinations of other looks",
    looks: ["Campfire", "Emergency", "Party"]},
-  {name: "All together", says: "every light the same",
+  {name: "All together", says: "every light shows the same",
    looks: ["Solid", "Colour cycle", "Colour steps", "Breathe", "Blink"]},
   {name: "Individual", says: "each light plays its own part",
    looks: ["Sparkle", "Counter", "Traffic light", "Pelican crossing"]}

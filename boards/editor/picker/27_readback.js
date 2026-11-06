@@ -815,7 +815,7 @@ function renderKept() {
     var drop = document.createElement("button");
     drop.className = "keptdrop";
     drop.textContent = "\u00d7";
-    drop.title = "Take this line out of the file";
+    drop.title = "Remove this line from the file";
     drop.onclick = function () {
       keptNow.splice(at, 1);
       draw();

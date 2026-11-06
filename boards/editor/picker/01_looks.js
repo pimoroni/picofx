@@ -164,7 +164,7 @@ var LOOKS = [
     }
   },
   {
-    name: "Campfire", mood: "Embers to blaze", spans: true, onMono: true,
+    name: "Campfire", mood: "Intensity", spans: true, onMono: true,
     strip: ["#812200", "#c43a00", "#ff5a00", "#ff8c1a", "#ff5a00", "#c43a00", "#812200"],
     entries: function (target, pace, mood) {
       return [target.selector + " colour=ff5a00: flicker_each brightness=" + lerp(0.5, 1, mood) +
@@ -267,7 +267,7 @@ var LOOKS = [
   {
     // Five lamps in the crossing's own colours, landed on the first five playing
     // outputs; any beyond them are told to stay dark, and fewer take fewer lamps
-    name: "Pelican crossing", mood: "How soft the change is", spans: false, onMono: true,
+    name: "Pelican crossing", mood: "Fade", spans: false, onMono: true,
     strip: ["#ff0000", "#ff7800", "#00d28c", "#ff0000", "#00d28c", "#111111", "#111111"],
     entries: function (target, pace, mood) {
       var scale = lerp(2, 0.4, pace);

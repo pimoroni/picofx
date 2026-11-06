@@ -189,7 +189,7 @@ chosenSteps.push(function (where, run) {
     } else if (slider === "level") {
       var bright = section.level === undefined ? 1 : section.level;
       cells = figureCells(String(Math.round(bright * 100)), "%",
-                          "how bright, typed as a percentage", function (typed) {
+                          "brightness, typed as a percentage", function (typed) {
         live().level = Math.max(0.01, Math.min(1, typed / 100));
       });
     } else if (slider === "pace" || slider === "mood") {

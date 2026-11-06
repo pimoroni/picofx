@@ -545,7 +545,7 @@ function outputSaid(out) {
 function colourOutputsSaid() {
   var colour = [];
   OUTPUTS.forEach(function (output, out) { if (!output.mono) colour.push(out); });
-  return colour.length === 1 ? outputSaid(colour[0]) : "the colour outputs";
+  return colour.length === 1 ? outputSaid(colour[0]) : "the colour lights";
 }
 
 // What a stretch plays on, as though it ran from its near end
@@ -705,8 +705,8 @@ function landLook(run, at, name) {
       var lines = clashing.map(function (one) { return one.text; }).join("\n");
       if (!confirm((clashing.length === 1 ? "A line the picker " +
                     "cannot edit already uses some of these lights:" : "Lines the picker cannot " +
-                    "edit already use some of these lights:") + "\n\n" + lines + "\n\nTake " +
-                   (clashing.length === 1 ? "it" : "them") + " out of the file and play " +
+                    "edit already use some of these lights:") + "\n\n" + lines + "\n\nRemove " +
+                   (clashing.length === 1 ? "it" : "them") + " from the file and play " +
                    name + " instead?")) return;
       keptNow = keptNow.filter(function (one) { return clashing.indexOf(one) < 0; });
     }

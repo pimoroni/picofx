@@ -198,7 +198,7 @@ hubHeadSteps.push(function () {
     if (says && held && held.shows) says.textContent = pictureSaid(held.shows);
   });
   var row = lightRow(state.hubLight, function (value) { state.hubLight = value; },
-                     "backlight, every screen on the hub",
+                     "shared backlight",
                      "Backlight brightness for all six hub screens in this scene");
   row.classList.add("hublightrow");
   row.querySelector(".lightopt").classList.add("hublight");

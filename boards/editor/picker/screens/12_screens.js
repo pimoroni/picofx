@@ -340,7 +340,7 @@ function renderAssets() {
   var box = document.getElementById("assets");
   box.textContent = "";
   document.getElementById("screensSays").textContent = !state.fileHandle
-    ? "open the FX drive to see the pictures on it"
+    ? "open the FX drive to see its pictures and drawings"
     : !state.scanned
       ? "reading the drive..."
       : state.media.length
@@ -407,7 +407,7 @@ function renderAssets() {
   });
   if (state.fileHandle)
     box.appendChild(adderTile("add pictures or drawings",
-      {description: "Pictures and drawings the board plays",
+      {description: "Pictures and drawings the board can play",
        accept: {"image/png": [".gif", ".png", ".jpg", ".jpeg"], "text/x-python": [".py"]}},
       "pictures", /\.(gif|png|jpe?g|py)$/i));
   assetSteps.forEach(function (step) { step(); });

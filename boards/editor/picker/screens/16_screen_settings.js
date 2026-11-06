@@ -750,7 +750,7 @@ function backgroundFold(key, held) {
     var preview = document.createElement("div");
     preview.className = "scustompreview";
     preview.style.background = look.bg;
-    preview.title = "The background as it will be drawn";
+    preview.title = "How the background will look";
     side.appendChild(preview);
     holds.appendChild(side);
     body.appendChild(holds);
@@ -790,7 +790,7 @@ function backgroundFold(key, held) {
 function playbackSaid(held, look) {
   var said = [look.pace === "fps" ? look.every + " fps"
             : look.pace === "interval" ? "frame every " + look.every + " s"
-            : kindOf(held.shows) === "folder" ? "pace from names" : "pace from file"];
+            : kindOf(held.shows) === "folder" ? "timing from file names" : "timing from file"];
   said.push(look.loop ? "loop" : "once");
   if (held.pingpong) said.push("ping pong");
   if (look.whole && firstAsLastAllowed(held, look)) said.push("first frame as last");
