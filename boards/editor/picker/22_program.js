@@ -695,7 +695,6 @@ drawSteps.after.push(function () {
   document.body.dataset.pageway = "headsplit";
   renderPageSwitch();
   renderProgramView();
-  scenesAsCards();
   scenesInTheTab();
   headerOnOneLine();
   // The effects' live swatch in the tabs is made after the page painted, so it is painted now
@@ -716,13 +715,6 @@ function loadThumbs(sources) {
     };
     image.src = src;
   });
-}
-
-// The scenes are always a grid of cards, the way into another one the grid's last tile
-function scenesAsCards() {
-  var bar = document.getElementById("tabs");
-  bar.classList.add("wrapped");
-  if (state.scenes.length) document.getElementById("sceneBody").classList.add("loose");
 }
 
 // Split under the header, the tabs stand over the page's column. Where the window is wide
@@ -764,7 +756,7 @@ function headerOnOneLine() {
 window.addEventListener("resize", headerOnOneLine);
 
 // Before there are scenes, the way into them is the effects tab's own, at its end, so no row is
-// kept above the gallery for it. Once there are scenes their tabs are that row, as they were
+// kept above the gallery for it. Once there are scenes their cards take that place, as they did
 function scenesInTheTab() {
   var into = !state.scenes.length && !onProgramPage &&
              document.querySelector("#headSwitch .cover[data-page=effects]");

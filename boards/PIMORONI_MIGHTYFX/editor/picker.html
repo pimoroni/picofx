@@ -358,26 +358,24 @@ footer{max-width:60rem;margin:0 auto 2rem;padding:0 1.4rem;font-size:.8rem;color
 .lamp.chan.single.kin{outline:none}
 
 
-/* Scenes take turns, so they are tabs: the bar is only drawn once there is more
-   than the one everything starts in, and the plus is always there */
-.tabbar{display:flex;flex-wrap:wrap;align-items:stretch;gap:.45rem;margin:.4rem 0 0}
-.tab{flex:0 0 auto;display:flex;flex-direction:column;justify-content:center;
- gap:.3rem;width:8.2rem;padding:.4rem .55rem;border:1px solid var(--line);
- border-radius:9px 9px 0 0;border-bottom-color:var(--line);background:#f1efeb;
- cursor:pointer;text-align:left;margin-bottom:-1px;min-height:3.4rem;overflow:hidden}
+/* Scenes take turns, so they are a grid of cards over the frame they open, one card a
+   scene. The bar is only drawn once there is more than the one everything starts in, and
+   the way into another scene is always its last tile, stretched to the cards' height */
+.tabbar{display:grid;gap:.45rem;margin:.4rem 0 .5rem;
+ grid-template-columns:repeat(auto-fill,minmax(8.4rem,1fr))}
+.tab{display:flex;flex-direction:column;justify-content:center;gap:.3rem;
+ padding:.4rem .55rem;border:1px solid var(--line);border-radius:9px;background:#f1efeb;
+ cursor:pointer;text-align:left;min-height:3.4rem;overflow:hidden}
 .tab b,.tab small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tab:hover{border-color:var(--dim)}
-/* The one being edited joins the area below it, as a browser tab joins its page */
-.tab.on{background:var(--panel);border-color:var(--line);border-bottom-color:var(--panel);
- box-shadow:inset 0 3px 0 var(--accent)}
+/* The one being edited carries the band the header's chosen tab does, painted in the
+   background under a top border made clear, so its contents never move */
+.tab.on{border-color:var(--line);border-top-color:transparent;
+ background:linear-gradient(var(--accent),var(--accent)) 0 0 / 100% 3px no-repeat border-box,
+            var(--panel)}
 .tab.on b{color:var(--ink)}
-.tabbar.wrapped{display:grid;gap:.45rem;margin-bottom:.5rem;
- grid-template-columns:repeat(auto-fill,minmax(8.4rem,1fr))}
-.tabbar.wrapped .tab{width:auto;border-radius:9px;margin-bottom:0}
-.tabbar.wrapped .plus{margin:0;width:100%;min-height:3.4rem;justify-content:center;
- border-style:dashed}
-.tabbar.wrapped .tab.on{border-color:var(--accent);border-bottom-color:var(--accent)}
-.scenebody.framed.loose{border-radius:12px}
+.tabbar .plus{margin:0;width:100%;min-height:3.4rem;align-self:stretch;
+ justify-content:center;border-style:dashed}
 .tab .look{display:flex;width:100%;height:.32rem;border-radius:2px;overflow:hidden;
  background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 3px,#e0dbd2 3px,#e0dbd2 6px)}
 .tab .look span{flex:1}
@@ -395,8 +393,8 @@ footer{max-width:60rem;margin:0 auto 2rem;padding:0 1.4rem;font-size:.8rem;color
 .plus:hover{background:rgba(15,138,114,.16);border-color:var(--accent)}
 .plus svg{display:block}
 
-/* Everything inside the frame belongs to the tab above it */
-.scenebody{border:1px solid transparent;border-radius:0 12px 12px 12px;padding:0}
+/* Everything inside the frame belongs to the card picked above it */
+.scenebody{border:1px solid transparent;border-radius:12px;padding:0}
 .scenebody.framed{border-color:var(--line);background:var(--panel);
  padding:.9rem 1rem 1.1rem;margin-bottom:1rem}
 .scenebody.framed .panel{background:#faf9f7}
@@ -1072,14 +1070,6 @@ body[data-pageway^=head] header h1{margin-right:0}
  background:linear-gradient(var(--band),var(--band)) 0 0 / 100% 3px no-repeat border-box,
             var(--bg)}
 .headswitch.headtabs .cover[data-page=program].on{--band:var(--board)}
-/* The way into another scene is the grid's last tile, stretched to the cards' height as they
-   are, the pill it is drawn from centring itself instead */
-body[data-pageway] #tabs.tabbar.wrapped .plus{align-self:stretch}
-/* A scene card's inset shadow curls into its corners, so it is taken off */
-body[data-pageway] #tabs.tabbar.wrapped .tab.on{border-color:var(--line);
- border-top-color:transparent;box-shadow:none;
- background:linear-gradient(var(--accent),var(--accent)) 0 0 / 100% 3px no-repeat border-box,
-            var(--panel)}
 .headswitch.headtabs .cover[data-page=program].on b{color:var(--board)}
 @media (max-width:1180px){
  .headswitch.headtabs{margin-top:.5rem}
@@ -4007,19 +3997,9 @@ function renderScenes() {
   plus.onclick = addScene;
   box.appendChild(plus);
 
-  // The frame is what says these belong to the tab, so it appears with the tabs
+  // The frame is what says these belong to the picked card, so it appears with the cards
   var frame = document.getElementById("sceneBody");
   frame.className = "scenebody" + (state.scenes.length ? " framed" : "");
-
-  // Whether the tabs still sit on one row decides whether one of them can join the
-  // frame below, so it is measured rather than guessed
-  var tabs = box.querySelectorAll(".tab");
-  var plusTop = box.querySelector(".plus").offsetTop;
-  var wrapped = tabs.length > 1 &&
-                (tabs[tabs.length - 1].offsetTop > tabs[0].offsetTop ||
-                 plusTop > tabs[0].offsetTop);
-  box.classList.toggle("wrapped", wrapped);
-  if (wrapped && state.scenes.length) frame.classList.add("loose");
 }
 
 function sceneTab(which, slot, name, says) {
@@ -12043,7 +12023,6 @@ drawSteps.after.push(function () {
   document.body.dataset.pageway = "headsplit";
   renderPageSwitch();
   renderProgramView();
-  scenesAsCards();
   scenesInTheTab();
   headerOnOneLine();
   // The effects' live swatch in the tabs is made after the page painted, so it is painted now
@@ -12064,13 +12043,6 @@ function loadThumbs(sources) {
     };
     image.src = src;
   });
-}
-
-// The scenes are always a grid of cards, the way into another one the grid's last tile
-function scenesAsCards() {
-  var bar = document.getElementById("tabs");
-  bar.classList.add("wrapped");
-  if (state.scenes.length) document.getElementById("sceneBody").classList.add("loose");
 }
 
 // Split under the header, the tabs stand over the page's column. Where the window is wide
@@ -12112,7 +12084,7 @@ function headerOnOneLine() {
 window.addEventListener("resize", headerOnOneLine);
 
 // Before there are scenes, the way into them is the effects tab's own, at its end, so no row is
-// kept above the gallery for it. Once there are scenes their tabs are that row, as they were
+// kept above the gallery for it. Once there are scenes their cards take that place, as they did
 function scenesInTheTab() {
   var into = !state.scenes.length && !onProgramPage &&
              document.querySelector("#headSwitch .cover[data-page=effects]");

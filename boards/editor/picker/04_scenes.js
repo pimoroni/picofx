@@ -178,19 +178,9 @@ function renderScenes() {
   plus.onclick = addScene;
   box.appendChild(plus);
 
-  // The frame is what says these belong to the tab, so it appears with the tabs
+  // The frame is what says these belong to the picked card, so it appears with the cards
   var frame = document.getElementById("sceneBody");
   frame.className = "scenebody" + (state.scenes.length ? " framed" : "");
-
-  // Whether the tabs still sit on one row decides whether one of them can join the
-  // frame below, so it is measured rather than guessed
-  var tabs = box.querySelectorAll(".tab");
-  var plusTop = box.querySelector(".plus").offsetTop;
-  var wrapped = tabs.length > 1 &&
-                (tabs[tabs.length - 1].offsetTop > tabs[0].offsetTop ||
-                 plusTop > tabs[0].offsetTop);
-  box.classList.toggle("wrapped", wrapped);
-  if (wrapped && state.scenes.length) frame.classList.add("loose");
 }
 
 function sceneTab(which, slot, name, says) {
