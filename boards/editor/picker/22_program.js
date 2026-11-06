@@ -145,12 +145,12 @@ function programTitle(path) {
 
 // ---- thumbnails ----------------------------------------------------------------------------------
 // A thumbnail is a screen's shape at half a 2.8" panel's pixels, smooth, as a picture is, a captured
-// frame or a drive program's own. The starfield, the drive's prompt and the machines are drawn at a
-// fifth of a panel's pixels, blocky on purpose
+// frame or a drive program's own. The starfield and the drive's prompt are drawn at a fifth of a
+// panel's pixels, blocky on purpose
 
 var THUMB_W = 64, THUMB_H = 48;
 var PICTURE_W = 160, PICTURE_H = 120;
-var BLOCKY = ["stars", "drive", "servo", "motor"];
+var BLOCKY = ["stars", "drive"];
 var thumbImages = {};
 
 function thumbCanvas(kind, seed, uses) {
@@ -180,6 +180,140 @@ function monoInk(ink) {
   level = Math.max(0.3, level);
   return "rgb(" + Math.round(255 * level) + "," + Math.round(217 * level) + "," +
          Math.round(160 * level) + ")";
+}
+
+// A rectangle with rounded corners, filled
+function fillRounded(g, x, y, w, h, r) {
+  g.beginPath();
+  g.moveTo(x + r, y);
+  g.arcTo(x + w, y, x + w, y + h, r);
+  g.arcTo(x + w, y + h, x, y + h, r);
+  g.arcTo(x, y + h, x, y, r);
+  g.arcTo(x, y, x + w, y, r);
+  g.closePath();
+  g.fill();
+}
+
+// What marks a machine's motion
+var MOTION = "#ffd21f";
+
+// A turn along part of an ellipse from one angle to another, backwards being anticlockwise, with
+// a head at its end pointing along it
+function drawTurn(g, x, y, rx, ry, from, to, backwards) {
+  g.strokeStyle = MOTION;
+  g.lineWidth = 2.5;
+  g.lineCap = "round";
+  g.beginPath(); g.ellipse(x, y, rx, ry, 0, from, to, backwards); g.stroke();
+  var way = backwards ? -1 : 1;
+  var tipX = x + rx * Math.cos(to), tipY = y + ry * Math.sin(to);
+  var alongX = -rx * Math.sin(to) * way, alongY = ry * Math.cos(to) * way;
+  var length = Math.sqrt(alongX * alongX + alongY * alongY);
+  alongX /= length;
+  alongY /= length;
+  g.fillStyle = MOTION;
+  g.beginPath();
+  g.moveTo(tipX + alongX * 6, tipY + alongY * 6);
+  g.lineTo(tipX - alongY * 4.5 - alongX * 2, tipY + alongX * 4.5 - alongY * 2);
+  g.lineTo(tipX + alongY * 4.5 - alongX * 2, tipY - alongX * 4.5 - alongY * 2);
+  g.fill();
+}
+
+// A wheel seen edge on, upright and centred on its axle, with its turn beside it to the right
+function drawWheel(g, x, y) {
+  g.fillStyle = "#62666e";
+  fillRounded(g, x - 7.5, y - 42, 15, 84, 7.5);
+  g.fillStyle = "#7c8089";
+  for (var tread = -35; tread < 37; tread += 5) g.fillRect(x - 5.5, y + tread, 11, 2);
+  drawTurn(g, x + 17.5, y, 6, 24, Math.PI * 0.34, Math.PI * 2.1, false);
+}
+
+// A servo's colours, its body's translucent blue lighter towards the top, and its white horn
+var BLUE = "#2f62d6", BLUE_DARK = "#1d43a6", BLUE_LIGHT = "#5d8bef", WHITE = "#eef1f5";
+
+// A micro servo from the side, its body's top left corner at (x, y - 4), its spline on top and the
+// wires out of its lower left. Its horn, where it has one, is long to the right of the spline
+function drawServo(g, x, y, horn) {
+  g.lineWidth = 3;
+  g.lineCap = "round";
+  [["#f2a33a", -4], ["#d0352b", 0], ["#6b4228", 4]].forEach(function (wire) {
+    g.strokeStyle = wire[0];
+    g.beginPath();
+    g.moveTo(x + 4, y + 36 + wire[1]);
+    g.bezierCurveTo(x - 14, y + 36 + wire[1], x - 22, y + 44 + wire[1], x - 30, y + 58);
+    g.stroke();
+  });
+  // The mounting tabs, through the body a little above its middle
+  g.fillStyle = BLUE_DARK;
+  g.fillRect(x - 15, y + 6, 98, 9);
+  g.fillStyle = BLUE;
+  g.fillRect(x - 15, y + 6, 98, 6);
+  // The body steps in twice towards the top, each step drawn before the one below so it hides its
+  // rounded foot. The upper step is lighter and lit along its top edge
+  g.fillStyle = BLUE_LIGHT;
+  fillRounded(g, x + 4, y - 22, 26, 14, 4);
+  g.fillStyle = "#4677e3";
+  fillRounded(g, x + 2, y - 14, 50, 14, 2);
+  g.fillStyle = "#7aa0f2";
+  g.fillRect(x + 4, y - 14, 46, 2);
+  g.fillStyle = BLUE_DARK;
+  fillRounded(g, x, y - 4, 68, 54, 3);
+  g.fillStyle = BLUE;
+  fillRounded(g, x, y - 4, 68, 50, 3);
+  g.fillStyle = WHITE;
+  g.fillRect(x + 12.5, y - 30, 9, 9);
+  if (horn) {
+    g.fillRect(x + 11.5, y - 33, 11, 6);
+    g.fillRect(x + 9.5, y - 38, 42, 5);
+  }
+}
+
+// The servo's sweep, part of a turn round its spline, across the front of its horn
+function drawSweep(g, x, y) {
+  drawTurn(g, x + 17, y - 36, 36, 8, Math.PI * 0.95, Math.PI * 0.12, true);
+}
+
+// A gearmotor's colours, its can's silver, the gearbox's brass and the end cap's plastic
+var SILVER = "#c3cad3", SILVER_LIGHT = "#dfe4ea", BRASS = "#d9a93a", BRASS_DARK = "#a77d1f",
+    PLASTIC = "#4b5058";
+
+// A micro metal gearmotor from the side at a height, its pins and end cap to the left, then its
+// can, its gearbox and the shaft
+function drawMotor(g, y) {
+  g.fillStyle = SILVER;
+  g.fillRect(12, y - 13, 10, 3);
+  g.fillRect(12, y + 10, 10, 3);
+  g.fillStyle = PLASTIC;
+  fillRounded(g, 19, y - 20, 13, 40, 3);
+  // The can, lighter along its top, with two slots pressed into its side
+  g.fillStyle = SILVER;
+  fillRounded(g, 28, y - 22, 56, 44, 5);
+  g.fillStyle = SILVER_LIGHT;
+  fillRounded(g, 28, y - 22, 56, 12, 5);
+  g.fillStyle = SILVER;
+  g.fillRect(28, y - 14, 56, 4);
+  g.strokeStyle = "#8d96a1";
+  g.lineWidth = 3;
+  g.lineCap = "round";
+  g.beginPath(); g.moveTo(46, y - 4); g.lineTo(64, y - 4); g.moveTo(46, y + 9); g.lineTo(64, y + 9);
+  g.stroke();
+  // The gears between the gearbox's plates, then the rods holding the plates apart
+  g.fillStyle = "#6f757e";
+  g.fillRect(86, y - 15, 28, 30);
+  g.fillStyle = "#a3a9b1";
+  for (var tooth = 87; tooth < 113; tooth += 3) g.fillRect(tooth, y - 13, 1.4, 26);
+  g.fillStyle = BRASS_DARK;
+  g.fillRect(84, y - 21, 34, 4);
+  g.fillRect(84, y + 17, 34, 4);
+  [[83, 7], [98, 5], [113, 7]].forEach(function (plate) {
+    g.fillStyle = BRASS_DARK;
+    g.fillRect(plate[0], y - 24, plate[1], 48);
+    g.fillStyle = BRASS;
+    g.fillRect(plate[0], y - 24, plate[1] - 2, 46);
+  });
+  g.fillStyle = SILVER;
+  g.fillRect(120, y - 4, 28, 8);
+  g.fillStyle = SILVER_LIGHT;
+  g.fillRect(121, y - 3, 25, 2);
 }
 
 // A repeatable scatter, so a thumbnail is the same every time it is drawn
@@ -266,6 +400,64 @@ function paintThumb(g, kind, seed, canvas, uses) {
     });
     return;
   }
+  // A servo, sweeping, in a pair or driving a wheel
+  if (/^servo(:|$)/.test(kind)) {
+    fill("#16181b");
+    if (kind === "servo:pair") {
+      // Two sweeping, the second mirrored so its horn and sweep run the other way
+      [1, -1].forEach(function (side) {
+        g.save();
+        g.translate(side > 0 ? 2 : 158, 24);
+        g.scale(0.66 * side, 0.66);
+        drawServo(g, 30, 52, true);
+        drawSweep(g, 30, 52);
+        g.restore();
+      });
+    } else if (kind === "servo:wheel") {
+      // A continuous servo laid on its side, wires below, driving a wheel. The spline's end lands
+      // at (24, 17) once turned, which the whole is lifted by to put the axle level
+      g.save();
+      g.translate(82, 67);
+      g.scale(0.86, 0.86);
+      g.translate(0, -17);
+      g.save();
+      g.scale(1, -1);
+      g.rotate(Math.PI / 2);
+      drawServo(g, -34, 6, false);
+      g.restore();
+      drawWheel(g, 31.5, 17);
+      g.restore();
+    } else {
+      drawServo(g, 46, 58, true);
+      if (kind === "servo:sweep") drawSweep(g, 46, 58);
+    }
+    return;
+  }
+  // A gearmotor driving a wheel, or under notes for one that plays
+  if (/^motor(:|$)/.test(kind)) {
+    fill("#16181b");
+    if (kind === "motor:song") {
+      drawMotor(g, 72);
+      g.fillStyle = MOTION;
+      g.strokeStyle = MOTION;
+      g.lineWidth = 2;
+      [[40, 26], [60, 18], [80, 28]].forEach(function (note) {
+        g.beginPath(); g.ellipse(note[0], note[1], 5, 3.6, -0.4, 0, Math.PI * 2); g.fill();
+        g.beginPath(); g.moveTo(note[0] + 4.4, note[1] - 1); g.lineTo(note[0] + 4.4, note[1] - 16);
+        g.stroke();
+      });
+      return;
+    }
+    // Drawn smaller about the card's middle, to leave the wheel and its turn room on the right
+    g.save();
+    g.translate(72, 60);
+    g.scale(0.94, 0.94);
+    g.translate(-80, -60);
+    drawMotor(g, 60);
+    drawWheel(g, 142, 60);
+    g.restore();
+    return;
+  }
   switch (kind) {
   case "shot":
     // A captured frame not yet read from the drive, as the ground it is drawn on
@@ -285,23 +477,6 @@ function paintThumb(g, kind, seed, canvas, uses) {
     g.fillStyle = "#8a93a0";
     g.font = "bold 16px monospace";
     g.fillText(">_", 22, 30);
-    break;
-  case "servo":
-  case "motor":
-    fill("#e9e6e0");
-    g.strokeStyle = "#56708f";
-    g.fillStyle = "#56708f";
-    g.lineWidth = 3;
-    if (kind === "servo") {
-      g.fillRect(18, 22, 28, 16);
-      g.beginPath(); g.moveTo(32, 22); g.lineTo(44, 8); g.stroke();
-    } else {
-      g.beginPath(); g.arc(32, 24, 13, 0, Math.PI * 2); g.stroke();
-      for (i = 0; i < 6; i++) {
-        g.beginPath(); g.moveTo(32, 24);
-        g.lineTo(32 + Math.cos(i) * 13, 24 + Math.sin(i) * 13); g.stroke();
-      }
-    }
     break;
   default:
     fill("#ddd");

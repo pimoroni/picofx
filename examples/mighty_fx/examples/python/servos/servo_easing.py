@@ -17,7 +17,7 @@ Set USE_COSINE to False to travel at a steady rate and feel the difference.
 Press "Boot" to exit the program.
 
 Section: Moving things
-Thumbnail: servo
+Thumbnail: servo sweep
 """
 
 # Constants

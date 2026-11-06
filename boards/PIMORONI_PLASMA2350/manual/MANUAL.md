@@ -624,7 +624,7 @@ Section: Signs and displays
 | `Args: Colour, Seconds = 10` | gives each argument a box of its own, and writes `args=` from them |
 | `Picture: clock.png` | shows that picture for the program, kept beside it |
 | `Section: Signs and displays` | lists the program in that section, not under **On the drive** |
-| `Thumbnail: servo` | draws a servo for a program with no picture, or `motor`, or `outputs` and a pattern such as `outputs rainbow` |
+| `Thumbnail: servo` | draws a servo for a program with no picture, `servo pair` two of them, or `motor`, or `outputs` and a pattern such as `outputs rainbow` |
 
 Each is optional. Without `Picture`, the picker shows `clock.png` for `clock.py`
 if it exists, and `clock-2.png` as a second screen's picture. Without `Args`, a

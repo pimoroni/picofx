@@ -15,7 +15,7 @@ Set STATIONARY to False to hear it while they run.
 Press "Boot" to exit the program.
 
 Section: Moving things
-Thumbnail: motor
+Thumbnail: motor song
 """
 
 # Constants

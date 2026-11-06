@@ -33,7 +33,7 @@ Actions:
 Press "Boot" to exit the program.
 
 Section: Moving things
-Thumbnail: servo
+Thumbnail: servo wheel
 """
 
 # Constants
