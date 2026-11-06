@@ -11,7 +11,7 @@ directional buttons. This version interacts with the outputs directly.
 
 Actions:
 - (1)-(9) Button [Press + Hold] = Set Colour
-- OK_STOP Button [Press + Hold] = Set Black
+- OK Button [Press + Hold] = Set Black
 - UP Button [Press + Hold] = Increase Value
 - DOWN Button [Press + Hold] = Decrease Value
 - LEFT Button [Press + Hold] = Decrease Saturation
