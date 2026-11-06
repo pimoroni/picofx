@@ -17,6 +17,7 @@ body{font:16px/1.5 system-ui,sans-serif;margin:0;background:var(--bg);color:var(
 header{display:flex;align-items:center;gap:.8rem;padding:.8rem 1.4rem;background:var(--panel);
  border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
 header h1{font-size:1.1rem;margin:0 auto 0 0}
+header h1 .version{font-size:.8rem;font-weight:400;color:var(--dim)}
 button{font:inherit;padding:.5rem 1rem;border:1px solid var(--line);border-radius:8px;
  background:var(--panel);cursor:pointer}
 button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
@@ -75,7 +76,7 @@ main{max-width:52rem;margin:1.5rem auto;padding:0 1.4rem}
 </head>
 <body>
 <header>
-<h1>FX Editor</h1>
+<h1>FX Editor <span class="version">__VERSION__</span></h1>
 <span id="status">nothing open yet</span>
 <button id="open" class="primary">Open the FX drive</button>
 <button id="save" disabled>Put it on the board</button>

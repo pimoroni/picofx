@@ -18,6 +18,12 @@ description or anything the catalogue reads.
 
 --check writes nothing and fails if a generated file is stale. It compares the module's
 pages once inflated, since two zlib builds need not compress the same text to the same bytes.
+
+Both pages show picofx's version after their heading, followed by "preview" in the committed pages.
+A release build passes --release with its tag, which must be that version, and its pages show the
+version alone.
+
+    python3 tools/build_editor.py --release 1.1.3 boards/PIMORONI_MIGHTYFX
 """
 
 import argparse
@@ -126,6 +132,24 @@ FEATURE_FOLDERS = {
 # The picker's parts are its script, so the page closes after the last of them
 PICKER_END = "</script>\n</body>\n</html>\n"
 
+# The module that holds picofx's version, from the repository's root
+VERSION_SOURCE = os.path.join("picofx", "__init__.py")
+
+
+def shown_version(repo_dir, release):
+    """The version the pages show, picofx's own, and "preview" after it unless this is its
+    release."""
+    with open(os.path.join(repo_dir, VERSION_SOURCE), encoding="utf-8") as f:
+        found = re.search(r'^PICOFX_VERSION = "([^"]+)"', f.read(), re.MULTILINE)
+    if not found:
+        sys.exit("{} has no PICOFX_VERSION".format(VERSION_SOURCE))
+    version = found.group(1)
+    if release is None:
+        return version + " preview"
+    if release != version:
+        sys.exit("releasing {} but picofx is {}".format(release, version))
+    return version
+
 
 def board_parts(picker_folders, board):
     """The board's numbered parts in number order, from the shared parts and any of its own, a
@@ -149,8 +173,9 @@ def board_parts(picker_folders, board):
     return sorted(parts, key=os.path.basename)
 
 
-def picker(board_dir, repo_dir):
-    """picker.html, from page.html and the numbered parts after it, with the board filled in."""
+def picker(board_dir, repo_dir, version):
+    """picker.html, from page.html and the numbered parts after it, with the board and the
+    version filled in."""
     with open(os.path.join(board_dir, "editor", DESCRIPTION_NAME), encoding="utf-8") as f:
         board = json.load(f)
     check_board(board_dir, board)
@@ -162,6 +187,7 @@ def picker(board_dir, repo_dir):
         with open(part, encoding="utf-8") as f:
             text += f.read()
     text = text.replace("__BOARD_NAME__", board["name"])
+    text = text.replace("__VERSION__", version)
     text = text.replace("__BOARD__", json.dumps(board, indent=1))
     text += PICKER_END
     left = sorted(set(re.findall(r"__[A-Z_]+__", text)))
@@ -433,10 +459,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true",
                         help="write nothing, and fail if a generated file is stale")
+    parser.add_argument("--release", metavar="VERSION",
+                        help="the release being built, which must be picofx's version")
     parser.add_argument("board_dir", help="a board directory holding editor/")
     args = parser.parse_args()
 
     repo_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    version = shown_version(repo_dir, args.release)
     editor_dir = os.path.join(args.board_dir, "editor")
     module = os.path.join(args.board_dir, "fx_libs", MODULE_NAME)
 
@@ -445,7 +474,7 @@ def main():
     with open(os.path.join(editor_dir, DESCRIPTION_NAME), encoding="utf-8") as f:
         board = json.load(f)
     catalogue_path = os.path.join(editor_dir, "catalogue.js")
-    generated = {os.path.join(editor_dir, "picker.html"): picker(args.board_dir, repo_dir),
+    generated = {os.path.join(editor_dir, "picker.html"): picker(args.board_dir, repo_dir, version),
                  catalogue_path: catalogue(repo_dir, args.board_dir, board)}
 
     # A board with no FX drive modules carries no FX drive, so it takes the pages alone
@@ -456,7 +485,7 @@ def main():
     sources = {"CATALOGUE": generated[catalogue_path],
                "PICKER": generated[os.path.join(editor_dir, "picker.html")]}
     with open(os.path.join(repo_dir, SHARED_EDITOR), encoding="utf-8", newline="") as f:
-        sources["EDITOR"] = f.read()
+        sources["EDITOR"] = f.read().replace("__VERSION__", version)
     declared = board_declares(args.board_dir)
     if declared and declared["detect"]:
         sources["CATALOGUE_WITHOUT_SCREENS"] = catalogue(repo_dir, args.board_dir, board,
