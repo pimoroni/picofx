@@ -765,7 +765,8 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
 .bin{position:absolute;top:2px;right:2px;z-index:2;width:1.2rem;height:1.2rem;
  border-radius:5px;background:rgba(20,20,22,.7);color:#fff;line-height:1.2rem;
  text-align:center;font-size:.8rem;cursor:pointer;opacity:0;transition:opacity .12s}
-.asset:hover .bin,.asset:focus-within .bin,.sound:hover .bin{opacity:1}
+.asset:hover .bin,.asset:focus-within .bin,.sound:hover .bin,.progcard:hover .bin,
+.progcard:focus-within .bin{opacity:1}
 .bin:hover{background:#b4443a}
 .sound{position:relative}
 
@@ -980,8 +981,9 @@ canvas.progthumb{display:block;background:#222}
 .proghero .programnote{margin:0;border:0;border-bottom:1.5px dashed var(--board);border-radius:0;
  align-items:center;box-sizing:border-box;min-height:calc(2 * 1.5 * .85rem + 1.1rem)}
 .proghero .programnote span{flex:1}
-.progchoosenone{flex:none;font:inherit;font-size:.8rem;padding:.2rem .6rem;border:1px solid var(--board);
- border-radius:7px;background:#fff;color:var(--board);cursor:pointer}
+.progchoosenone,.progcustomise{flex:none;font:inherit;font-size:.8rem;padding:.2rem .6rem;
+ border:1px solid var(--board);border-radius:7px;background:#fff;color:var(--board);cursor:pointer}
+.progcustomise{margin:0 0 .45rem}
 .herobody{display:flex;gap:1.1rem;align-items:flex-start;padding:.8rem}
 .progpicture{flex:none;width:16rem;height:210px;display:flex;align-items:center;
  justify-content:center}

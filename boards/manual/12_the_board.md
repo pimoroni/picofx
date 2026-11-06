@@ -81,11 +81,9 @@ FOLDER = args[0] if args else "posters"
 ### Your program in the picker
 
 The picker's **A program** tab lists every Python file at the top of this
+drive and in its `programs` folder,
 <!-- if examples -->
-drive beside the examples in its `examples/python` folder,
-<!-- end -->
-<!-- if not examples -->
-drive,
+beside the examples in its `examples/python` folder,
 <!-- end -->
 and describes each one from its opening string, the text in triple quotes at
 the top of the file. The first sentence says what the program does, and these
@@ -119,6 +117,16 @@ named `Screen size` offers the sizes the firmware knows, and one named
 `Rotation` offers 0, 90, 180 and 270, or the values it lists, such as `Rotation
 = 90 or 270`, the first being the default. The picture always shows the program
 at its defaults.
+<!-- if examples -->
+
+To change an example, choose it and press **Customise**. The picker copies it
+and its pictures into `programs`, under a new name if that one is taken, and
+chooses the copy. Open the copy from the drive in Thonny or another editor, then
+press **Save to board** to run it.
+<!-- end -->
+
+To delete one of your own programs from the drive, press the cross in the
+corner of its card. One in `programs` takes its pictures with it.
 
 A board with a wireless module keeps `secrets.py` at the top of the drive for
 your WiFi network's name and password, and restores an empty one if it is

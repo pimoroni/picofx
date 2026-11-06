@@ -29,7 +29,10 @@ function offeredGroups() {
   }));
   return groups.map(function (group) {
     var paths = group[1].map(function (one) { return one.path; });
-    paths.sort(function (a, b) { return programTitle(a) < programTitle(b) ? -1 : 1; });
+    // Numbers in titles counted, so name 2 comes before name 10
+    paths.sort(function (a, b) {
+      return programTitle(a).localeCompare(programTitle(b), undefined, {numeric: true});
+    });
     return [group[0], paths];
   }).filter(function (group) { return group[1].length; });
 }
@@ -531,6 +534,18 @@ function programCard(path) {
     if (boardSet.program) boardSet.lastProgram = path;
     draw();
   };
+  // The user's own can be deleted from the drive, as the effects' pictures and sounds can
+  if (!(programNamed(path) || {}).example) {
+    var bin = document.createElement("span");
+    bin.className = "bin";
+    bin.textContent = "\u00d7";
+    bin.title = "Delete " + path.split("/").pop() + " from the FX drive";
+    bin.onclick = function (e) {
+      e.stopPropagation();
+      removeProgram(path);
+    };
+    card.appendChild(bin);
+  }
   return card;
 }
 
@@ -641,6 +656,32 @@ function programHero(path) {
                     "<p>" + escapeHtml(program.does || "No description.") + "</p>" +
                     "<p class='progwhere'>" + escapeHtml(path) +
                     (program.example ? ", built in" : ", on the drive") + "</p>";
+  // A program can be copied to the user's own folder, picked in its place, to change in an editor.
+  // An example is customised, and one of the user's own duplicated
+  if (drive.dirHandle) {
+    var customise = document.createElement("button");
+    customise.type = "button";
+    customise.className = "progcustomise";
+    customise.textContent = program.example ? "Customise" : "Duplicate";
+    customise.title = "Copy this " + (program.example ? "example" : "program") + " to the " +
+                      OWN_FOLDER + " folder on the FX drive, to change in an editor.";
+    customise.onclick = async function () {
+      try {
+        var copy = await copyProgram(path);
+        PROGRAMS = await drivePrograms(drive.dirHandle);
+        boardSet.program = copy;
+        boardSet.lastProgram = copy;
+        banner("Copied to " + copy + " on the FX drive. Open it in Thonny or another editor to " +
+               "change it.");
+      } catch (e) {
+        banner(e.name === "QuotaExceededError"
+          ? "The FX drive is full. Delete something from it and try again."
+          : "Could not copy " + path.split("/").pop() + " (" + e.message + ").", true);
+      }
+      draw();
+    };
+    words.appendChild(customise);
+  }
   // What it uses, each drawn and named, as the filter below names them
   var uses = document.createElement("div");
   uses.className = "herouses";

@@ -1,9 +1,9 @@
 
 // ---- the programs on the drive ------------------------------------------------------------------
-// Opening the drive reads the programs it holds, every Python file at its top level and under
-// EXAMPLES_ROOT, so the page offers what this drive carries and nothing it does not. A file whose
-// opening string starts "Drawing:" is a drawing for a screen, not a program, so it is left out, as
-// is the WiFi credentials file at the top level.
+// Opening the drive reads the programs it holds, every Python file at its top level, in OWN_FOLDER
+// and under EXAMPLES_ROOT, so the page offers what this drive carries and nothing it does not. A
+// file whose opening string starts "Drawing:" is a drawing for a screen, not a program, so it is
+// left out, as is the WiFi credentials file at the top level.
 //
 // Every program is read the same way. Lines in its opening string say how to show it: "Program:"
 // its name, "Args:" what it takes, "Picture:" a picture beside it to show it by, "Section:" the
@@ -15,6 +15,9 @@
 
 // Where the drive keeps its examples, on a board that carries them
 var EXAMPLES_ROOT = BOARD.examples ? "examples/python/" : "";
+
+// The folder at the top of the drive for the user's own programs, where a customised example goes
+var OWN_FOLDER = "programs";
 
 // The program tab's sections, as [name, what it holds], in sections.txt's order
 var SECTIONS = [];
@@ -171,7 +174,7 @@ async function filesIn(dir, path, folder, deep, files, pictures) {
                               deep, files, pictures);
     } else if (/\.png$/i.test(name)) {
       pictures[path + name] = handle;
-    } else if (!deep && /^secrets\.py$/i.test(name)) {
+    } else if (!path && /^secrets\.py$/i.test(name)) {
       // The WiFi credentials, which programs import, are not a program
       driveHasCredentials = true;
     } else if (/\.py$/i.test(name)) {
@@ -211,6 +214,8 @@ async function drivePrograms(dir) {
   Object.keys(PICTURES).forEach(function (path) { PICTURES[path].forEach(URL.revokeObjectURL); });
   PICTURES = {};
   await filesIn(dir, "", "", false, files, pictures);
+  var own = await folderAt(dir, [OWN_FOLDER]);
+  if (own) await filesIn(own, OWN_FOLDER + "/", "", false, files, pictures);
   var examples = EXAMPLES_ROOT ? await folderAt(dir, EXAMPLES_ROOT.split("/").filter(Boolean))
                                : null;
   if (examples) await filesIn(examples, EXAMPLES_ROOT, "", true, files, pictures);
@@ -236,6 +241,69 @@ async function drivePrograms(dir) {
   Object.keys(PICTURES).forEach(function (path) { urls = urls.concat(PICTURES[path]); });
   loadThumbs(urls);
   return found;
+}
+
+// Copy a program into OWN_FOLDER for the user to change, with its pictures renamed to match. An
+// example keeps its name where it is free, and the user's own always takes a new one, its number
+// counted on, so name_2 duplicates as the first of name_3, name_4 and on that is free. Its Section
+// line is dropped so the copy is listed as the user's own. Returns the copy's path
+async function copyProgram(path) {
+  var parts = path.split("/");
+  var name = parts.pop();
+  var own = !(programNamed(path) || {}).example;
+  var stem = name.replace(/\.py$/i, "");
+  var base = own ? stem.replace(/_\d+$/, "") : stem;
+  var from = await folderAt(drive.dirHandle, parts);
+  var source = await (await (await from.getFileHandle(name)).getFile()).text();
+  var into = await drive.dirHandle.getDirectoryHandle(OWN_FOLDER, {create: true});
+  var taken = {};
+  for await (var entry of into.keys()) taken[entry.toLowerCase()] = true;
+  if (own) taken[base.toLowerCase() + ".py"] = true;
+  var copy = base;
+  for (var count = 2; taken[copy.toLowerCase() + ".py"]; count++) copy = base + "_" + count;
+  var written = [[copy + ".py", source.replace(/^[ \t]*Section:.*\r?\n/m, "")]];
+  for (var suffix of [".png", "-2.png"]) {
+    try {
+      written.push([copy + suffix, await (await from.getFileHandle(stem + suffix)).getFile()]);
+    } catch (e) {
+      // A program without that picture has none to copy
+    }
+  }
+  for (var i = 0; i < written.length; i++) {
+    var writable = await (await into.getFileHandle(written[i][0], {create: true})).createWritable();
+    await writable.write(written[i][1]);
+    await writable.close();
+  }
+  return OWN_FOLDER + "/" + copy + ".py";
+}
+
+// Delete one of the user's own programs from the drive, once asked. In OWN_FOLDER its pictures go
+// with it, while at the top of the drive they are left, as the effects may show them too
+async function removeProgram(path) {
+  var parts = path.split("/");
+  var name = parts.pop();
+  if (!confirm("Delete " + name + " from the FX drive?")) return;
+  try {
+    var dir = await folderAt(drive.dirHandle, parts);
+    await dir.removeEntry(name);
+    if (parts.join("/") === OWN_FOLDER) {
+      var stem = name.replace(/\.py$/i, "");
+      for (var picture of [stem + ".png", stem + "-2.png"]) {
+        try {
+          await dir.removeEntry(picture);
+        } catch (e) {
+          // One without that picture has none to delete
+        }
+      }
+    }
+  } catch (e) {
+    banner("Could not delete " + name + ": " + e.name + ". Is the drive showing?", true);
+    return;
+  }
+  PROGRAMS = await drivePrograms(drive.dirHandle);
+  if (boardSet.program === path) boardSet.program = null;
+  if (boardSet.lastProgram === path) boardSet.lastProgram = null;
+  draw();
 }
 
 connectSteps.push(async function () {
