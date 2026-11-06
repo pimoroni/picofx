@@ -501,11 +501,10 @@ function stretchWriting(run, texts, span) {
 
   // A look with colours of its own, as Party's sets or a tone its slider picks, writes them with
   // no colour chosen, so each look is tried with the line's colour and then with none
-  var looks = everyLook();
   var tries = [];
   [{colour: colour, custom: custom}, {colour: null, custom: false}].forEach(function (chosen) {
     [false, true].forEach(function (back) {
-      looks.forEach(function (look) { tries.push({look: look, chosen: chosen, back: back}); });
+      LOOKS.forEach(function (look) { tries.push({look: look, chosen: chosen, back: back}); });
     });
   });
   for (var t = 0; t < tries.length; t++) {

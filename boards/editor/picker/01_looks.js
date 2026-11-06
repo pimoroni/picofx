@@ -239,29 +239,27 @@ var LOOKS = [
   },
   {
     // Two banks flashing against each other with a quiet gap between, landed on the
-    // playing outputs in their order, so a lightbar of any width works
-    name: "Emergency", mood: "Red and blue to amber", spans: false, onMono: true,
+    // playing outputs in their order, so a lightbar of any width works. The slider sets the
+    // flashes in each burst, one to five, three in the middle
+    name: "Emergency", mood: "Flashes", detents: 5, spans: false, onMono: true,
     strip: ["#dd2222", "#2222dd", "#dd2222", "#111111", "#2222dd", "#dd2222", "#2222dd"],
     entries: function (target, pace, mood) {
-      var speed = lerp(0.6, 2.5, pace);
-      var amber = mood > 0.75;
+      var flash = ": flash speed=" + lerp(0.6, 2.5, pace) + " flashes=" +
+                  Math.round(lerp(1, 5, mood)) + " window=0.5";
       var playing = target.playing;
       var half = playing.length === 1 ? 1 : Math.floor(playing.length / 2);
-      var left = playing.slice(0, half);
-      var right = playing.slice(playing.length - half);
-      var gap = playing.slice(half, playing.length - half);
-      var lines = [nameSet(target, left) + " colour=" + (amber ? "yellow" : "red") +
-                   ": flash speed=" + speed + " flashes=3 window=0.5"];
-      if (right.length && playing.length > 1)
-        lines.push(nameSet(target, right) + " colour=" + (amber ? "yellow" : "blue") +
-                   ": flash speed=" + speed + " flashes=3 window=0.5 phase=0.5");
-      if (gap.length && playing.length > 1)
-        lines.push(nameSet(target, gap) + ": none");
+      var lines = [nameSet(target, playing.slice(0, half)) + " colour=red" + flash];
+      if (playing.length > 1) {
+        lines.push(nameSet(target, playing.slice(playing.length - half)) + " colour=blue" +
+                   flash + " phase=0.5");
+        var gap = playing.slice(half, playing.length - half);
+        if (gap.length) lines.push(nameSet(target, gap) + ": none");
+      }
       return lines;
     },
     alone: function (target, pace, mood) {
-      return [target.selector + " colour=" + (mood > 0.75 ? "yellow" : "red") +
-              ": flash speed=" + lerp(0.6, 2.5, pace) + " flashes=3 window=0.5"];
+      return [target.selector + " colour=red: flash speed=" + lerp(0.6, 2.5, pace) +
+              " flashes=" + Math.round(lerp(1, 5, mood)) + " window=0.5"];
     }
   },
   {
@@ -288,8 +286,9 @@ var LOOKS = [
   },
   {
     // Three colours chase each other across whatever plays it: the lights split into
-    // three sets, each flashing in its own colour a third of a beat apart
-    name: "Party", mood: "Colour", spans: true, onMono: true,
+    // three sets, each flashing in its own colour a third of a beat apart. The slider picks
+    // one of five sets of three colours, stopping at each
+    name: "Party", mood: "Palette", detents: 5, spans: true, onMono: true,
     strip: ["#ff00ff", "#ffff00", "#00ffff", "#ff00ff", "#ffff00", "#00ffff", "#ff00ff"],
     entries: function (target, pace, mood) {
       var speed = lerp(1, 4, pace);
@@ -322,70 +321,8 @@ var LOOKS = [
   }
 ];
 
-// Looks whose colour is not in the file at all: the board fetches it and plays what
-// it is told. Only a wireless board is offered them
-var NET_LOOKS = [
-  {
-    name: "CheerLights", mood: "How hard it lands", spans: true, onMono: false,
-    net: true, says: "the colour everyone is sending to cheerlights.com",
-    strip: ["#e02020", "#e08a20", "#20b060", "#2060e0", "#8a20e0", "#e02090", "#20c0c0"],
-    entries: function (target, pace, mood) {
-      return [target.selector + " ease=" + lerp(1.5, 0.1, mood) +
-              ": cheerlights every=" + Math.round(lerp(60, 5, pace)) + "s"];
-    },
-    alone: function (target, pace, mood) {
-      return [target.selector + " ease=" + lerp(1.5, 0.1, mood) +
-              ": cheerlights every=" + Math.round(lerp(60, 5, pace)) + "s"];
-    }
-  },
-  {
-    name: "Time of day", mood: "Dawn to dusk", spans: true, onMono: true,
-    net: true, says: "the clock the board sets itself by, drawn across the run",
-    strip: ["#12204a", "#3a3f7a", "#c06a3a", "#ffb060", "#ffe6b0", "#7ea8d8", "#12204a"],
-    entries: function (target, pace, mood) {
-      return [target.selector + " ease=" + lerp(2, 0.2, pace) +
-              ": clock length=" + span(target.count, mood) + " warmth=" + lerp(0, 1, mood)];
-    },
-    alone: function (target, pace, mood) {
-      return [target.selector + " ease=" + lerp(2, 0.2, pace) +
-              ": clock warmth=" + lerp(0, 1, mood)];
-    }
-  },
-  {
-    name: "Weather", mood: "Calm to stormy", spans: true, onMono: true,
-    net: true, says: "what it is doing outside, taken from a forecast",
-    strip: ["#9fb6c4", "#c8d6df", "#7f97a8", "#e8eef2", "#6d8496", "#b6c8d4", "#8fa6b6"],
-    entries: function (target, pace, mood) {
-      return [target.selector + " ease=" + lerp(1.2, 0.15, mood) +
-              ": weather every=" + Math.round(lerp(30, 2, pace)) + "m" +
-              " length=" + span(target.count, mood)];
-    },
-    alone: function (target, pace) {
-      return [target.selector + ": weather every=" + Math.round(lerp(30, 2, pace)) + "m"];
-    }
-  },
-  {
-    name: "Whatever I send it", mood: "How long it holds", spans: true, onMono: true,
-    net: true, says: "a colour posted to the board's own address",
-    strip: ["#00857d", "#00857d", "#efece6", "#00857d", "#efece6", "#00857d", "#00857d"],
-    entries: function (target, pace, mood) {
-      return [target.selector + " ease=" + lerp(1, 0.05, pace) +
-              ": posted hold=" + Math.round(lerp(5, 300, mood)) + "s"];
-    },
-    alone: function (target, pace, mood) {
-      return [target.selector + " ease=" + lerp(1, 0.05, pace) +
-              ": posted hold=" + Math.round(lerp(5, 300, mood)) + "s"];
-    }
-  }
-];
-
-// The looks this board offers
-function everyLook() {
-  return LOOKS.concat(BOARD.wireless ? NET_LOOKS : []);
-}
-
 function lookNamed(id) {
-  return everyLook().filter(function (l) { return (l.id || l.name) === id; })[0] || null;
+  return LOOKS.filter(function (l) { return (l.id || l.name) === id; })[0] || null;
 }
 
 // What a look is kept as, which is its own id where it has one and its name otherwise

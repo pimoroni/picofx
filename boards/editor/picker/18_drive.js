@@ -324,7 +324,11 @@ document.getElementById("save").onclick = async function () {
     await writable.write(text);
     await writable.close();
     var back = await (await drive.fileHandle.getFile()).text();
-    if (back !== text) throw new Error("the saved file did not match when read back");
+    if (back !== text) {
+      var differs = new Error("effects.txt reads back different");
+      differs.name = "NotWhatWasSaved";
+      throw differs;
+    }
     try { localStorage.setItem(WROTE_KEY, text); } catch (e) {}
     // The marks were about the file the board had, which this one replaces
     takeAnswer(null, text);
@@ -368,8 +372,12 @@ document.getElementById("save").onclick = async function () {
     }
     drive.fileHandle = null;
     drive.dirHandle = null;
-    banner("The save did not reach the board (" + e.name + "). Check the FX drive " +
-           "is showing, double-press Boot if it is not, then try again.", true);
+    if (e.name === "NotWhatWasSaved")
+      banner("The file on the drive did not match what was saved. Check the FX drive is " +
+             "showing, then try again.", true);
+    else
+      banner("The save did not reach the board (" + e.name + "). Check the FX drive " +
+             "is showing, double-press Boot if it is not, then try again.", true);
   } finally {
     button.disabled = !drive.fileHandle;
     check.disabled = !drive.fileHandle;

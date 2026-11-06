@@ -18,32 +18,6 @@ LOOKS.splice(LOOKS.indexOf(lookNamed("Rainbow")) + 1, 0, {
   }
 });
 
-// Emergency's second setting is the flashes in each burst, one to five, three in the
-// middle. It was red and blue to amber, which is a choice of two and not a scale
-(function (emergency) {
-  function flashes(mood) { return Math.round(lerp(1, 5, mood)); }
-  emergency.mood = "Flashes";
-  emergency.detents = 5;
-  emergency.entries = function (target, pace, mood) {
-    var flash = ": flash speed=" + lerp(0.6, 2.5, pace) + " flashes=" + flashes(mood) +
-                " window=0.5";
-    var playing = target.playing;
-    var half = playing.length === 1 ? 1 : Math.floor(playing.length / 2);
-    var lines = [nameSet(target, playing.slice(0, half)) + " colour=red" + flash];
-    if (playing.length > 1) {
-      lines.push(nameSet(target, playing.slice(playing.length - half)) + " colour=blue" +
-                 flash + " phase=0.5");
-      var gap = playing.slice(half, playing.length - half);
-      if (gap.length) lines.push(nameSet(target, gap) + ": none");
-    }
-    return lines;
-  };
-  emergency.alone = function (target, pace, mood) {
-    return [target.selector + " colour=red: flash speed=" + lerp(0.6, 2.5, pace) +
-            " flashes=" + flashes(mood) + " window=0.5"];
-  };
-}(lookNamed("Emergency")));
-
 // The same, stepping between evenly spaced hues, picofx's hue_step
 LOOKS.splice(LOOKS.indexOf(lookNamed("Colour cycle")) + 1, 0, {
   name: "Colour steps", mood: "Steps", detents: 10, spans: true, onMono: false,
@@ -233,10 +207,6 @@ Object.keys(SIGNAL_TIMINGS).forEach(function (name) {
     });
   };
 });
-
-// Party's slider picks one of five sets of three colours, so it is its Palette, stopping at each
-lookNamed("Party").mood = "Palette";
-lookNamed("Party").detents = 5;
 
 // Rainbow's and Wave's Spread is the length of one pass of the wave in lights, longer to the
 // right as every slider's setting rises to the right. It stops at whole lights, from about a little over half the stretch to twice it
