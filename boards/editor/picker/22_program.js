@@ -45,6 +45,29 @@ function groupSays(title) {
   return listed ? listed[1] : "";
 }
 
+// The program tab's groups that are folded, by name, every group starting open
+var programsFolded = {};
+
+// A group's heading, pressed to fold or open it, its name and what the group holds beside it
+function foldHead(title, says, open, toggle) {
+  var head = document.createElement("button");
+  head.type = "button";
+  head.className = "gallery-head foldhead" + (open ? " open" : "");
+  head.setAttribute("aria-expanded", open);
+  head.appendChild(document.createTextNode(title));
+  if (says) {
+    var said = document.createElement("span");
+    said.className = "says";
+    said.textContent = says;
+    head.appendChild(said);
+  }
+  head.onclick = function () {
+    toggle();
+    draw();
+  };
+  return head;
+}
+
 // Round holes cut through a filled shape, one at each point, as a path's own subpaths
 function holes(points, radius) {
   return points.map(function (at) {
@@ -728,16 +751,11 @@ function renderProgramView() {
     var kept = paths.filter(passesFilter);
     if (!kept.length) return;
     shown += kept.length;
-    var heading = document.createElement("div");
-    heading.className = "gallery-head";
-    heading.appendChild(document.createTextNode(title));
-    if (groupSays(title)) {
-      var says = document.createElement("span");
-      says.className = "says";
-      says.textContent = groupSays(title);
-      heading.appendChild(says);
-    }
-    programView.appendChild(heading);
+    var open = !programsFolded[title];
+    programView.appendChild(foldHead(title, groupSays(title), open, function () {
+      programsFolded[title] = open;
+    }));
+    if (!open) return;
     var grid = document.createElement("div");
     grid.className = "proggrid";
     kept.forEach(function (path) { grid.appendChild(programCard(path)); });

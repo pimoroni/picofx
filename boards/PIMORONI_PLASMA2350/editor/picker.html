@@ -1498,16 +1498,17 @@ body.setupall .lightrow{opacity:.35;pointer-events:none}
 .assets{align-items:end}
 /* The tile adding pictures is as tall as the row it ends */
 .assets .adder{align-self:stretch}
-/* A group's heading across the gallery, pressed to fold or open it, its arrow the panels' */
-.assets .foldhead{grid-column:1/-1;margin:.4rem 0 -.3rem;padding:0;border:0;border-radius:0;
- background:none;color:var(--ink);font-size:.92rem;text-align:left}
-.assets .foldhead:first-child{margin-top:0}
-.assets .foldhead .says{font:400 .8rem system-ui,sans-serif;color:var(--dim)}
-.assets .foldhead::before{content:"";width:.42rem;height:.42rem;flex-shrink:0;
+/* A group's heading, pressed to fold or open it, its arrow the panels' */
+.foldhead{padding:0;border:0;border-radius:0;background:none;color:var(--ink);text-align:left}
+.foldhead::before{content:"";width:.42rem;height:.42rem;flex-shrink:0;
  border-right:2px solid var(--dim);border-bottom:2px solid var(--dim);
  transform:rotate(45deg) translate(-1px,-1px);transition:transform .12s}
-.assets .foldhead.open::before{transform:rotate(-135deg) translate(-2px,-2px)}
-.assets .foldhead:hover::before{border-color:var(--accent)}
+.foldhead.open::before{transform:rotate(-135deg) translate(-2px,-2px)}
+.foldhead:hover::before{border-color:var(--accent)}
+/* Across the Screens gallery's grid */
+.assets .foldhead{grid-column:1/-1;margin:.4rem 0 -.3rem;font-size:.92rem}
+.assets .foldhead:first-child{margin-top:0}
+.assets .foldhead .says{font:400 .8rem system-ui,sans-serif;color:var(--dim)}
 .asset .face.wholeface{height:auto}
 .asset .face.wholeface img{position:relative;inset:auto;object-fit:fill;flex:none;
  image-rendering:pixelated}
@@ -7656,27 +7657,6 @@ function mediaGroups() {
   return groups.filter(function (group, at) { return !at || group[2].length; });
 }
 
-// A group's heading, pressed to fold or open it
-function groupHead(group) {
-  var open = groupOpen(group[0]);
-  var head = document.createElement("button");
-  head.type = "button";
-  head.className = "gallery-head foldhead" + (open ? " open" : "");
-  head.setAttribute("aria-expanded", open);
-  head.appendChild(document.createTextNode(group[0]));
-  if (group[1]) {
-    var says = document.createElement("span");
-    says.className = "says";
-    says.textContent = group[1];
-    head.appendChild(says);
-  }
-  head.onclick = function () {
-    groupsOpen[group[0]] = !open;
-    draw();
-  };
-  return head;
-}
-
 function renderAssets() {
   var box = document.getElementById("assets");
   box.textContent = "";
@@ -7691,8 +7671,13 @@ function renderAssets() {
   var grouped = state.media.some(function (media) { return isExampleMedia(media.name); });
   var groups = grouped ? mediaGroups() : [[OWN_GROUP, "", state.media]];
   groups.forEach(function (group) {
-    if (grouped) box.appendChild(groupHead(group));
-    if (grouped && !groupOpen(group[0])) return;
+    var open = groupOpen(group[0]);
+    if (grouped) {
+      box.appendChild(foldHead(group[0], group[1], open, function () {
+        groupsOpen[group[0]] = !open;
+      }));
+    }
+    if (grouped && !open) return;
     group[2].forEach(assetTile);
     if (group[0] === OWN_GROUP) adder();
   });
@@ -10011,6 +9996,29 @@ function groupSays(title) {
   return listed ? listed[1] : "";
 }
 
+// The program tab's groups that are folded, by name, every group starting open
+var programsFolded = {};
+
+// A group's heading, pressed to fold or open it, its name and what the group holds beside it
+function foldHead(title, says, open, toggle) {
+  var head = document.createElement("button");
+  head.type = "button";
+  head.className = "gallery-head foldhead" + (open ? " open" : "");
+  head.setAttribute("aria-expanded", open);
+  head.appendChild(document.createTextNode(title));
+  if (says) {
+    var said = document.createElement("span");
+    said.className = "says";
+    said.textContent = says;
+    head.appendChild(said);
+  }
+  head.onclick = function () {
+    toggle();
+    draw();
+  };
+  return head;
+}
+
 // Round holes cut through a filled shape, one at each point, as a path's own subpaths
 function holes(points, radius) {
   return points.map(function (at) {
@@ -10694,16 +10702,11 @@ function renderProgramView() {
     var kept = paths.filter(passesFilter);
     if (!kept.length) return;
     shown += kept.length;
-    var heading = document.createElement("div");
-    heading.className = "gallery-head";
-    heading.appendChild(document.createTextNode(title));
-    if (groupSays(title)) {
-      var says = document.createElement("span");
-      says.className = "says";
-      says.textContent = groupSays(title);
-      heading.appendChild(says);
-    }
-    programView.appendChild(heading);
+    var open = !programsFolded[title];
+    programView.appendChild(foldHead(title, groupSays(title), open, function () {
+      programsFolded[title] = open;
+    }));
+    if (!open) return;
     var grid = document.createElement("div");
     grid.className = "proggrid";
     kept.forEach(function (path) { grid.appendChild(programCard(path)); });

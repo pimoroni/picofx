@@ -371,27 +371,6 @@ function mediaGroups() {
   return groups.filter(function (group, at) { return !at || group[2].length; });
 }
 
-// A group's heading, pressed to fold or open it
-function groupHead(group) {
-  var open = groupOpen(group[0]);
-  var head = document.createElement("button");
-  head.type = "button";
-  head.className = "gallery-head foldhead" + (open ? " open" : "");
-  head.setAttribute("aria-expanded", open);
-  head.appendChild(document.createTextNode(group[0]));
-  if (group[1]) {
-    var says = document.createElement("span");
-    says.className = "says";
-    says.textContent = group[1];
-    head.appendChild(says);
-  }
-  head.onclick = function () {
-    groupsOpen[group[0]] = !open;
-    draw();
-  };
-  return head;
-}
-
 function renderAssets() {
   var box = document.getElementById("assets");
   box.textContent = "";
@@ -406,8 +385,13 @@ function renderAssets() {
   var grouped = state.media.some(function (media) { return isExampleMedia(media.name); });
   var groups = grouped ? mediaGroups() : [[OWN_GROUP, "", state.media]];
   groups.forEach(function (group) {
-    if (grouped) box.appendChild(groupHead(group));
-    if (grouped && !groupOpen(group[0])) return;
+    var open = groupOpen(group[0]);
+    if (grouped) {
+      box.appendChild(foldHead(group[0], group[1], open, function () {
+        groupsOpen[group[0]] = !open;
+      }));
+    }
+    if (grouped && !open) return;
     group[2].forEach(assetTile);
     if (group[0] === OWN_GROUP) adder();
   });

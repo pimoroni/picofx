@@ -1498,16 +1498,17 @@ body.setupall .lightrow{opacity:.35;pointer-events:none}
 .assets{align-items:end}
 /* The tile adding pictures is as tall as the row it ends */
 .assets .adder{align-self:stretch}
-/* A group's heading across the gallery, pressed to fold or open it, its arrow the panels' */
-.assets .foldhead{grid-column:1/-1;margin:.4rem 0 -.3rem;padding:0;border:0;border-radius:0;
- background:none;color:var(--ink);font-size:.92rem;text-align:left}
-.assets .foldhead:first-child{margin-top:0}
-.assets .foldhead .says{font:400 .8rem system-ui,sans-serif;color:var(--dim)}
-.assets .foldhead::before{content:"";width:.42rem;height:.42rem;flex-shrink:0;
+/* A group's heading, pressed to fold or open it, its arrow the panels' */
+.foldhead{padding:0;border:0;border-radius:0;background:none;color:var(--ink);text-align:left}
+.foldhead::before{content:"";width:.42rem;height:.42rem;flex-shrink:0;
  border-right:2px solid var(--dim);border-bottom:2px solid var(--dim);
  transform:rotate(45deg) translate(-1px,-1px);transition:transform .12s}
-.assets .foldhead.open::before{transform:rotate(-135deg) translate(-2px,-2px)}
-.assets .foldhead:hover::before{border-color:var(--accent)}
+.foldhead.open::before{transform:rotate(-135deg) translate(-2px,-2px)}
+.foldhead:hover::before{border-color:var(--accent)}
+/* Across the Screens gallery's grid */
+.assets .foldhead{grid-column:1/-1;margin:.4rem 0 -.3rem;font-size:.92rem}
+.assets .foldhead:first-child{margin-top:0}
+.assets .foldhead .says{font:400 .8rem system-ui,sans-serif;color:var(--dim)}
 .asset .face.wholeface{height:auto}
 .asset .face.wholeface img{position:relative;inset:auto;object-fit:fill;flex:none;
  image-rendering:pixelated}
