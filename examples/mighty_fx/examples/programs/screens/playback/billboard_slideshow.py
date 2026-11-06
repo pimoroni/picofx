@@ -16,6 +16,8 @@ that affordable at a quarter of a truecolour one's memory.
 Press "Boot" to exit the program.
 
 Args: Rotation = 0 or 180
+
+Section: Billboards and panels
 """
 
 # Constants

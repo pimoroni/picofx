@@ -26,6 +26,10 @@ Actions:
 - RIGHT Button [Hold] = Spin right
 
 Press "Boot" to exit the program.
+
+Program: Remote servo robot
+Section: Moving things
+Thumbnail: servo wheel
 """
 
 # Constants

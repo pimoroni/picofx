@@ -15,6 +15,8 @@ the file's corner, so another GIF lands on its own background.
 Press "Boot" to exit the program.
 
 Args: Screen size = 2.8, Rotation = 90
+
+Section: Billboards and panels
 """
 
 # Constants

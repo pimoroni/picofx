@@ -2,6 +2,7 @@
 # Each line is a section name and a short description.
 # An example joins a section with a "Section:" line in its opening string.
 # A section not listed here appears after these, without a description.
+Model lighting | thrusters, beacons and lit postcards
 With the remote | effects controlled with the IR remote
 With a sensor | lights that respond to a sensor
 Sound | sound effects and melodies with lights

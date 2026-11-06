@@ -11,6 +11,9 @@ L shares a PWM channel with SP/CE A's backlight and R with SP/CE B's, so a servo
 screen cannot have the same side and declaring both is refused.
 
 Press "Boot" to exit the program.
+
+Section: Moving things
+Thumbnail: servo sweep
 """
 
 # Constants

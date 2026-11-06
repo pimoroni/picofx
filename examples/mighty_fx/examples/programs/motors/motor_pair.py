@@ -10,6 +10,9 @@ Both motors are given the same speed following a sine, so each cycle runs from a
 full forward, back through a stop to full reverse, and round again.
 
 Press "Boot" to exit the program.
+
+Section: Moving things
+Thumbnail: motor
 """
 
 # Constants
