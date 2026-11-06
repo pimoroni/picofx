@@ -4,7 +4,7 @@ These are micropython examples for driving Tiny FX from a sensor plugged into it
 
 - [Examples](#examples)
   - [Light Level](#light-level)
-  - [Weather Reading](#weather-reading)
+  - [Temperature Reading](#temperature-reading)
   - [Spirit Level](#spirit-level)
 
 
@@ -15,10 +15,10 @@ These are micropython examples for driving Tiny FX from a sensor plugged into it
 
 Bring Tiny FX's lights up when the room gets dark, read from an LTR559 light sensor on Qw/ST.
 
-### Weather Reading
-[weather_reading.py](weather_reading.py)
+### Temperature Reading
+[temperature_reading.py](temperature_reading.py)
 
-Show the temperature on Tiny FX's RGB output, read from a BME280 weather sensor on Qw/ST.
+Show the temperature on Tiny FX's RGB output, read from a BME280 environment sensor on Qw/ST.
 
 ### Spirit Level
 [spirit_level.py](spirit_level.py)

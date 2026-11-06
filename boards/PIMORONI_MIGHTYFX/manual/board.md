@@ -98,7 +98,7 @@ out1-7 colour=warm: pulse
 | `examples/python/function` | the Boot button, the sensor connector and the supply voltage |
 | `examples/python/infrared/mono` | effects chosen with an infrared remote |
 | `examples/python/infrared/colour` | the same in colour |
-| `examples/python/qwst` | light, tilt and weather from Qw/ST breakouts |
+| `examples/python/qwst` | light, tilt and temperature from Qw/ST breakouts |
 | `examples/python/screens/single` | one screen, its backlight, and finding what is attached |
 | `examples/python/screens/playback` | animated GIFs and slideshows |
 | `examples/python/screens/graphics` | drawing from code: text, colour wheels, a starfield |

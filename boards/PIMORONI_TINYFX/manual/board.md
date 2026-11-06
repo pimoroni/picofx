@@ -69,7 +69,7 @@ rgb colour=warm: pulse
 | `examples/python/function` | the button, the sensor connector and the supply voltage |
 | `examples/python/infrared/mono` | effects chosen with an infrared remote |
 | `examples/python/infrared/colour` | the same on the RGB output |
-| `examples/python/qwst` | light, tilt and weather from Qw/ST breakouts |
+| `examples/python/qwst` | light, tilt and temperature from Qw/ST breakouts |
 | `examples/python/audio` | sound alongside the lights |
 | `examples/python/comms` | several boards working together |
 | `examples/python/wireless` | colours fetched over WiFi, on the Tiny FX W |

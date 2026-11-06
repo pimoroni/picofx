@@ -5,7 +5,7 @@ from timing import Pacer
 from tiny_fx import TinyFX
 
 """
-Show the temperature on Tiny FX's RGB output, read from a weather sensor on Qw/ST.
+Show the temperature on Tiny FX's RGB output, read from an environment sensor on Qw/ST.
 
 Plug a BME280 breakout into the Qw/ST connector, which the board sets up as tiny.i2c.
 
@@ -15,7 +15,7 @@ warm end. The pressure and humidity the sensor also reports are printed.
 Press "Boot" to exit the program.
 
 Section: With a sensor
-Thumbnail: outputs bar
+Thumbnail: outputs temperature
 """
 
 # Constants
@@ -31,7 +31,7 @@ SETTLE = 0.1        # The time to give the sensor to make its first measurement
 tiny = TinyFX()                     # Create a new TinyFX object to interact with the board
 rgb = tiny.rgb                      # The board's RGB output
 try:
-    bme = BreakoutBME280(tiny.i2c)  # The weather sensor, on the board's Qw/ST bus
+    bme = BreakoutBME280(tiny.i2c)  # The environment sensor, on the board's Qw/ST bus
 except RuntimeError:
     raise RuntimeError("No BME280 found on Qw/ST. Plug in a multi sensor stick or another BME280 breakout") from None
 

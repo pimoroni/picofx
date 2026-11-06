@@ -4,7 +4,7 @@ These are micropython examples for driving Mighty FX from a sensor plugged into 
 
 - [Examples](#examples)
   - [Light Level](#light-level)
-  - [Weather Reading](#weather-reading)
+  - [Temperature Reading](#temperature-reading)
   - [Spirit Level](#spirit-level)
 
 
@@ -15,10 +15,10 @@ These are micropython examples for driving Mighty FX from a sensor plugged into 
 
 Bring Mighty FX's lights up when the room gets dark, read from a light sensor on Qw/ST.
 
-### Weather Reading
-[weather_reading.py](weather_reading.py)
+### Temperature Reading
+[temperature_reading.py](temperature_reading.py)
 
-Show the temperature on Mighty FX's RGB outputs as a bargraph, read from a weather sensor on Qw/ST.
+Show the temperature on Mighty FX's RGB outputs as a bargraph, read from an environment sensor on Qw/ST.
 
 ### Spirit Level
 [spirit_level.py](spirit_level.py)

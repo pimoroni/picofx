@@ -5,8 +5,8 @@ from mighty_fx import MightyFX
 from timing import Pacer
 
 """
-Show the temperature on Mighty FX's RGB outputs as a bargraph, read from a weather
-sensor on Qw/ST.
+Show the temperature on Mighty FX's RGB outputs as a bargraph, read
+from an environment sensor on Qw/ST.
 
 Plug a BME280 breakout into the Qw/ST connector, which the board sets up as mighty.i2c.
 
@@ -17,7 +17,7 @@ it climb. Pressure and humidity are printed too.
 Press "Boot" to exit the program.
 
 Section: With a sensor
-Thumbnail: outputs bar
+Thumbnail: outputs temperature
 """
 
 # Constants
@@ -32,7 +32,7 @@ WARM_HUE = 1.0      # The hue of the warmest, being red again at the top of the 
 # Variables
 mighty = MightyFX()                     # Create a new MightyFX object to interact with the board
 try:
-    bme = BreakoutBME280(mighty.i2c)    # The weather sensor, on the board's Qw/ST bus
+    bme = BreakoutBME280(mighty.i2c)    # The environment sensor, on the board's Qw/ST bus
 except RuntimeError:
     raise RuntimeError("No BME280 found on Qw/ST. Plug in a multi sensor stick or another BME280 breakout") from None
 
