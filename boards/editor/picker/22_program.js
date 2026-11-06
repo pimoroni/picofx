@@ -144,21 +144,17 @@ function programTitle(path) {
 }
 
 // ---- thumbnails ----------------------------------------------------------------------------------
-// A thumbnail is a screen's shape at half a 2.8" panel's pixels, smooth, as a picture is, a captured
-// frame or a drive program's own. The starfield and the drive's prompt are drawn at a fifth of a
-// panel's pixels, blocky on purpose
+// A thumbnail is a screen's shape at half a 2.8" panel's pixels, drawn or a picture, a captured
+// frame or a drive program's own
 
-var THUMB_W = 64, THUMB_H = 48;
-var PICTURE_W = 160, PICTURE_H = 120;
-var BLOCKY = ["stars", "drive"];
+var THUMB_W = 160, THUMB_H = 120;
 var thumbImages = {};
 
 function thumbCanvas(kind, seed, uses) {
-  var blocky = BLOCKY.indexOf(kind) >= 0;
   var canvas = document.createElement("canvas");
-  canvas.width = blocky ? THUMB_W : PICTURE_W;
-  canvas.height = blocky ? THUMB_H : PICTURE_H;
-  canvas.className = blocky ? "progthumb" : "progthumb picture";
+  canvas.width = THUMB_W;
+  canvas.height = THUMB_H;
+  canvas.className = "progthumb";
   paintThumb(canvas.getContext("2d"), kind, seed || 1, canvas, uses || []);
   return canvas;
 }
@@ -466,19 +462,22 @@ function paintThumb(g, kind, seed, canvas, uses) {
     fill("#111");
     break;
   case "stars":
+    // Stars on a grid of 64 by 48, each a square of it, so the field is as coarse at any size
     fill("#02030a");
+    var cell = W / 64;
     for (i = 0; i < 60; i++) {
       var far = chance();
       g.fillStyle = far < 0.8 ? "#8a93b8" : "#ffffff";
-      g.fillRect(Math.floor(chance() * W), Math.floor(chance() * H), far < 0.9 ? 1 : 2, 1);
+      g.fillRect(Math.floor(chance() * 64) * cell, Math.floor(chance() * 48) * cell,
+                 (far < 0.9 ? 1 : 2) * cell, cell);
     }
     break;
   case "drive":
     // A program of the user's own that names no picture, shown as a prompt waiting for code
     fill("#1c1f22");
     g.fillStyle = "#8a93a0";
-    g.font = "bold 16px monospace";
-    g.fillText(">_", 22, 30);
+    g.font = "bold 40px monospace";
+    g.fillText(">_", 55, 75);
     break;
   default:
     fill("#ddd");
