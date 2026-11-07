@@ -14,7 +14,7 @@
 *{box-sizing:border-box}
 body{font:16px/1.5 system-ui,sans-serif;margin:0;background:var(--bg);color:var(--ink)}
 header{display:flex;align-items:center;gap:.8rem;padding:.8rem 1.4rem;background:var(--panel);
- border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;flex-wrap:wrap}
+ border-bottom:1px solid var(--line);position:relative;flex-wrap:wrap}
 header h1{font-size:1.1rem;margin:0 auto 0 0}
 header h1 .version{font-size:.8rem;font-weight:400;color:var(--dim)}
 button{font:inherit;padding:.4rem .75rem;border:1px solid var(--line);border-radius:8px;
@@ -866,11 +866,31 @@ select{font:inherit;font-size:.85rem;padding:.25rem .3rem;border:1px solid var(-
 /* Saving in the header, the next thing to do filled in the page's colour */
 :root{--warn:#b33;--warn-bg:#fbeaea}
 header #status{margin-left:auto}
-header button{font:inherit;font-size:.88rem;padding:.42rem .85rem;border:1px solid var(--line);
- border-radius:8px;background:var(--panel);color:var(--ink);cursor:pointer}
-header button.primary{background:var(--accent);color:#fff;border-color:var(--accent);
- font-weight:600}
-header button:disabled{opacity:.4;cursor:default}
+header button,.floatbar button{font:inherit;font-size:.88rem;padding:.42rem .85rem;
+ border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);
+ cursor:pointer}
+header button.primary,.floatbar button.primary{background:var(--accent);color:#fff;
+ border-color:var(--accent);font-weight:600}
+header button:disabled,.floatbar button:disabled{opacity:.4;cursor:default}
+/* The slim bar along the top once the header has scrolled away, with the header's buttons */
+.floatbar{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;
+ grid-template-columns:1fr auto 1fr;align-items:center;gap:.8rem;padding:.45rem 1.4rem;
+ background:var(--panel);border-bottom:1px solid var(--line);
+ box-shadow:0 2px 10px rgba(0,0,0,.08);transform:translateY(-100%);visibility:hidden;
+ transition:transform .15s,visibility .15s}
+.floatbar.shown{transform:none;visibility:visible}
+.floatname{font-weight:600;font-size:.95rem;white-space:nowrap}
+.floatsaid{flex:1;min-width:0;font-size:.85rem;color:var(--dim);white-space:nowrap;
+ overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.floatsaid.warn{color:var(--warn)}
+.floatsaid.hold{color:#8a6415}
+.floatleft{display:flex;align-items:center;gap:.8rem;min-width:0}
+.floatwhere{white-space:nowrap;font-size:.9rem}
+.floatwhere small{margin-left:.45rem;color:var(--dim);font-size:.85rem}
+.floatbuttons{display:flex;align-items:center;gap:.8rem;justify-self:end;position:relative}
+.floatstand{display:inline-block;visibility:hidden}
+.floatstand[data-stands-for=saveMenu]{display:none}
+@media (max-width:40rem){.floatname,.floatwhere small{display:none}}
 
 /* A line the board named, marked in the file where the page still writes it as the board read
    it, the board's words after it */
@@ -934,9 +954,8 @@ body.programmed #looks,body.programmed #tabs,body.programmed #sceneSettings,
 body.programmed #tabStack>.panel:not(#boardPanel){opacity:.3}
 
 /* A. The save button's menu, and what the board runs above the gallery */
-header{position:relative}
-header .savearrow{padding:.42rem .45rem;margin-left:-.7rem;border-top-left-radius:0;
- border-bottom-left-radius:0}
+header .savearrow,.floatbar .savearrow{padding:.42rem .45rem;margin-left:-.7rem;
+ border-top-left-radius:0;border-bottom-left-radius:0}
 .savemenu{position:absolute;right:1rem;top:100%;z-index:6;width:19rem;background:#fff;
  border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 22px rgba(0,0,0,.12);
  padding:.5rem .7rem}

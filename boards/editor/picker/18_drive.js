@@ -30,8 +30,12 @@ function saving(text) {
   }, SPOT_STEP_MS);
 }
 
+// The parts that also show what banner() says, each given its text and warn as banner() is
+var bannerSteps = [];
+
 function banner(text, warn, detail) {
   stopSpots();
+  bannerSteps.forEach(function (step) { step(text, warn); });
   var box = document.getElementById("banner");
   box.textContent = "";
   if (!text) return;
