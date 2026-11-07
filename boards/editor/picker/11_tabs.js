@@ -44,6 +44,36 @@ function showChosen() {
   // The looks stay where they are and stand back, so the tabs do not move under the
   // pointer, where the section shown is one they mean nothing for
   document.body.classList.toggle("nolooks", !chosenTakesLooks());
+  // Under the sections, the looks go in the box of the one they are for, as a screen's pictures do
+  if (document.body.classList.contains("looksbelow") && chosenTakesLooks()) {
+    document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
+  }
+}
+
+// With the looks in the box of the section they are for, the shared place is held at the tallest
+// box with the looks counted in, whichever box has them, so choosing a tab still moves nothing.
+// Run after every part has drawn, the boxes then being their full height
+function holdTabsPlace() {
+  if (!document.body.classList.contains("looksbelow")) return;
+  var stack = document.getElementById("tabStack");
+  var looks = document.getElementById("looks");
+  // What the looks add to a box, measured as the box with them less the box without, as the
+  // margins either side of them count too
+  var holder = looks.parentNode;
+  var withLooks = holder.getBoundingClientRect().height;
+  var after = looks.nextSibling;
+  holder.removeChild(looks);
+  var extra = withLooks - holder.getBoundingClientRect().height;
+  holder.insertBefore(looks, after);
+  stack.style.minHeight = "";
+  var tallest = 0;
+  TAB_PANELS.forEach(function (panel) {
+    var node = document.getElementById(panel);
+    var high = node.getBoundingClientRect().height;
+    if (LED_PANELS.indexOf(panel) >= 0 && !node.contains(looks)) high += extra;
+    tallest = Math.max(tallest, high);
+  });
+  stack.style.minHeight = tallest + "px";
 }
 
 // A tab's swatch, drawn by whichever part has that panel
@@ -141,4 +171,11 @@ drawSteps.after.push(function () {
   LED_PANELS.forEach(function (panel) {
     stack.appendChild(document.getElementById(panel));
   });
+
+  // Trying the looks under the tabs' sections, as the screens' pictures and the programs sit
+  // under what they are for, with ?below on the page's address
+  if (/[?&]below\b/.test(location.search)) {
+    document.body.classList.add("looksbelow");
+    document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
+  }
 }());

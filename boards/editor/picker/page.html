@@ -1288,6 +1288,8 @@ details[open]>summary .accswatch{display:none}
    the one it held, so it picks another and scrolls to hold that: the page jumped though
    nothing changed height. Nothing above the tabs moves, so the page holds itself */
 html{overflow-anchor:none}
+/* The scrollbar's room is kept whether the page scrolls or not, so a short tab does not widen it */
+html{scrollbar-gutter:stable}
 .tabstack{display:grid}
 .tabstack>.panel{grid-area:1/1;margin:0;align-self:start}
 .tabstack>.tabhidden{visibility:hidden;pointer-events:none}
@@ -1567,6 +1569,9 @@ body.setupall .lightrow{opacity:.35;pointer-events:none}
 /* The looks stand back where the tab shown is one they mean nothing for, staying where
    they are so the tabs do not move */
 body.nolooks #looks{opacity:.3;pointer-events:none}
+/* In the box of the section they are for, the looks are hidden with it, every section keeping
+   its place so the tabs' place stays as tall as the tallest */
+body.looksbelow #looks{margin-top:1.2rem}
 /* The gallery inside the tabs: the looks, the pictures and the sounds in one place, only
    the chosen tab's seen, the place as tall as the tallest */
 .galleryslot{display:grid;margin-bottom:1.2rem}

@@ -1288,6 +1288,8 @@ details[open]>summary .accswatch{display:none}
    the one it held, so it picks another and scrolls to hold that: the page jumped though
    nothing changed height. Nothing above the tabs moves, so the page holds itself */
 html{overflow-anchor:none}
+/* The scrollbar's room is kept whether the page scrolls or not, so a short tab does not widen it */
+html{scrollbar-gutter:stable}
 .tabstack{display:grid}
 .tabstack>.panel{grid-area:1/1;margin:0;align-self:start}
 .tabstack>.tabhidden{visibility:hidden;pointer-events:none}
@@ -1567,6 +1569,9 @@ body.setupall .lightrow{opacity:.35;pointer-events:none}
 /* The looks stand back where the tab shown is one they mean nothing for, staying where
    they are so the tabs do not move */
 body.nolooks #looks{opacity:.3;pointer-events:none}
+/* In the box of the section they are for, the looks are hidden with it, every section keeping
+   its place so the tabs' place stays as tall as the tallest */
+body.looksbelow #looks{margin-top:1.2rem}
 /* The gallery inside the tabs: the looks, the pictures and the sounds in one place, only
    the chosen tab's seen, the place as tall as the tallest */
 .galleryslot{display:grid;margin-bottom:1.2rem}
@@ -7213,6 +7218,36 @@ function showChosen() {
   // The looks stay where they are and stand back, so the tabs do not move under the
   // pointer, where the section shown is one they mean nothing for
   document.body.classList.toggle("nolooks", !chosenTakesLooks());
+  // Under the sections, the looks go in the box of the one they are for, as a screen's pictures do
+  if (document.body.classList.contains("looksbelow") && chosenTakesLooks()) {
+    document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
+  }
+}
+
+// With the looks in the box of the section they are for, the shared place is held at the tallest
+// box with the looks counted in, whichever box has them, so choosing a tab still moves nothing.
+// Run after every part has drawn, the boxes then being their full height
+function holdTabsPlace() {
+  if (!document.body.classList.contains("looksbelow")) return;
+  var stack = document.getElementById("tabStack");
+  var looks = document.getElementById("looks");
+  // What the looks add to a box, measured as the box with them less the box without, as the
+  // margins either side of them count too
+  var holder = looks.parentNode;
+  var withLooks = holder.getBoundingClientRect().height;
+  var after = looks.nextSibling;
+  holder.removeChild(looks);
+  var extra = withLooks - holder.getBoundingClientRect().height;
+  holder.insertBefore(looks, after);
+  stack.style.minHeight = "";
+  var tallest = 0;
+  TAB_PANELS.forEach(function (panel) {
+    var node = document.getElementById(panel);
+    var high = node.getBoundingClientRect().height;
+    if (LED_PANELS.indexOf(panel) >= 0 && !node.contains(looks)) high += extra;
+    tallest = Math.max(tallest, high);
+  });
+  stack.style.minHeight = tallest + "px";
 }
 
 // A tab's swatch, drawn by whichever part has that panel
@@ -7310,6 +7345,13 @@ drawSteps.after.push(function () {
   LED_PANELS.forEach(function (panel) {
     stack.appendChild(document.getElementById(panel));
   });
+
+  // Trying the looks under the tabs' sections, as the screens' pictures and the programs sit
+  // under what they are for, with ?below on the page's address
+  if (/[?&]below\b/.test(location.search)) {
+    document.body.classList.add("looksbelow");
+    document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
+  }
 }());
 
 // ---- a Screens tab ------------------------------------------------------------------------
@@ -13302,6 +13344,9 @@ function rememberRead(text) {
 // ---- the page, started ---------------------------------------------------------------------------
 // Every part is in place, so the always-on tab takes what they hold and the page is drawn once,
 // then the lights are set going, or held on one frame where motion is turned down
+
+// Last of the draw's steps, every part having drawn
+drawSteps.after.push(holdTabsPlace);
 
 state.always.body = capture();
 workOn(chosenTab);
