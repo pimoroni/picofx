@@ -336,15 +336,15 @@ function renderScreenBoxes() {
 // one before: the hub's positions, the whole pictures, the hub's groups
 var assetSteps = [];
 
-// The gallery's group for whatever the example folders' sections do not name
-var OTHER_EXAMPLES = "Example pictures";
+// The gallery's group for whatever each example folder's sections do not name
+var OTHER_EXAMPLES = {drawings: "Example drawings", pictures: "Example pictures"};
 
 // Whether each of the gallery's groups is open, by name, for those folded or opened
 var groupsOpen = {};
 
-// Whether a group is open, the user's own starting open and the examples' sections folded
-function groupOpen(name) {
-  return name in groupsOpen ? groupsOpen[name] : name === OWN_GROUP;
+// Whether a group is open, each starting as its folder's sections say
+function groupOpen(group) {
+  return group[0] in groupsOpen ? groupsOpen[group[0]] : !group[3];
 }
 
 // A picture's name as the page shows it, without the folders it sits in
@@ -352,21 +352,29 @@ function nameShown(name) {
   return name.slice(name.lastIndexOf("/") + 1);
 }
 
-// The gallery's pictures by group, as [name, what it holds, pictures]: the user's own, then each
-// example folder's sections in its sections.txt's order, then the examples none of them names
+// The gallery's pictures by group, as [name, what it holds, pictures, whether it starts folded]:
+// the user's own, then each example folder's sections in its sections.txt's order, any other a
+// drawing names, and the examples none of them holds
 function mediaGroups() {
-  var left = state.media.filter(function (media) { return isExampleMedia(media.name); });
   var groups = [[OWN_GROUP, "your own pictures and drawings", state.media.filter(function (media) {
     return !isExampleMedia(media.name);
-  })]];
+  }), false]];
   EXAMPLE_FOLDERS.forEach(function (kind) {
-    (exampleSections[kind] || []).forEach(function (section) {
-      var held = left.filter(function (media) { return sectionHolds(section, media.name); });
-      left = left.filter(function (media) { return held.indexOf(media) < 0; });
-      groups.push([section[0], section[1], held]);
+    var root = "examples/" + kind + "/";
+    var left = state.media.filter(function (media) { return media.name.indexOf(root) === 0; });
+    var sections = (exampleSections[kind] || []).slice();
+    left.forEach(function (media) {
+      var named = media.drawing && media.drawing.section;
+      if (named && !sections.some(function (section) { return section[0] === named; }))
+        sections.push([named, "", [], false]);
     });
+    sections.forEach(function (section) {
+      var held = left.filter(function (media) { return sectionHolds(section, media); });
+      left = left.filter(function (media) { return held.indexOf(media) < 0; });
+      groups.push([section[0], section[1], held, section[3]]);
+    });
+    groups.push([OTHER_EXAMPLES[kind], "", left, kind !== "drawings"]);
   });
-  groups.push([OTHER_EXAMPLES, "", left]);
   // The user's own group stays where it is empty, being where pictures are added
   return groups.filter(function (group, at) { return !at || group[2].length; });
 }
@@ -383,9 +391,9 @@ function renderAssets() {
         : "no pictures on the drive yet. Drop a GIF, PNG, JPEG or drawing onto it";
   // The pictures are grouped only where the drive has examples among them
   var grouped = state.media.some(function (media) { return isExampleMedia(media.name); });
-  var groups = grouped ? mediaGroups() : [[OWN_GROUP, "", state.media]];
+  var groups = grouped ? mediaGroups() : [[OWN_GROUP, "", state.media, false]];
   groups.forEach(function (group) {
-    var open = groupOpen(group[0]);
+    var open = groupOpen(group);
     if (grouped) {
       box.appendChild(foldHead(group[0], group[1], open, function () {
         groupsOpen[group[0]] = !open;
@@ -671,9 +679,29 @@ driveParts.push({
   },
   land: function () {
     mediaFound.sort(function (a, b) { return a.name < b.name ? -1 : 1; });
+    // A drawing's thumbnail is the PNG of its name beside it, as a program's is, and is no picture
+    // of its own. Only in a drawings folder, a PNG at the top of the drive being a picture
+    function inDrawings(one) {
+      return isExampleMedia(one.name) || (mediaHome[one.name] || {}).name === "drawings";
+    }
+    var thumbs = {};
+    mediaFound.forEach(function (one) {
+      if (one.kind === "image" && inDrawings(one)) thumbs[one.name] = one;
+    });
+    mediaFound.forEach(function (one) {
+      var thumb = one.kind === "drawing" && inDrawings(one) &&
+                  thumbs[one.name.replace(/\.py$/i, ".png")];
+      if (!thumb) return;
+      one.thumbHandle = thumb.handle;
+      thumb.taken = true;
+    });
+    mediaFound = mediaFound.filter(function (one) { return !one.taken; });
     state.media = mediaFound;
-    // A drawing cannot run in the page, so it is shown by a face made from its opening string
-    mediaFound.forEach(function (one) { if (one.kind === "drawing") madeDrawing(one.name); });
+    // A drawing cannot run in the page, so one without a thumbnail is shown by a face made from
+    // its opening string
+    mediaFound.forEach(function (one) {
+      if (one.kind === "drawing" && !one.thumbHandle) madeDrawing(one.name);
+    });
   },
   said: function () {
     return JSON.stringify(state.media.map(function (m) { return m.name + m.kind; }));
@@ -750,7 +778,8 @@ function mediaArt(name) {
   var held = state.art[name];
   if (held) return held.ratio ? held : null;
   var media = mediaNamed(name);
-  var handle = media && (media.kind === "folder" ? media.thumbHandle : media.handle);
+  // A slideshow and a drawing are shown by a thumbnail, a picture by itself
+  var handle = media && (media.thumbHandle || media.handle);
   if (!handle) return null;
   // Held empty while it waits, so each is asked for once
   state.art[name] = {url: null, ratio: 0};

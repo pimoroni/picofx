@@ -7641,15 +7641,15 @@ function renderScreenBoxes() {
 // one before: the hub's positions, the whole pictures, the hub's groups
 var assetSteps = [];
 
-// The gallery's group for whatever the example folders' sections do not name
-var OTHER_EXAMPLES = "Example pictures";
+// The gallery's group for whatever each example folder's sections do not name
+var OTHER_EXAMPLES = {drawings: "Example drawings", pictures: "Example pictures"};
 
 // Whether each of the gallery's groups is open, by name, for those folded or opened
 var groupsOpen = {};
 
-// Whether a group is open, the user's own starting open and the examples' sections folded
-function groupOpen(name) {
-  return name in groupsOpen ? groupsOpen[name] : name === OWN_GROUP;
+// Whether a group is open, each starting as its folder's sections say
+function groupOpen(group) {
+  return group[0] in groupsOpen ? groupsOpen[group[0]] : !group[3];
 }
 
 // A picture's name as the page shows it, without the folders it sits in
@@ -7657,21 +7657,29 @@ function nameShown(name) {
   return name.slice(name.lastIndexOf("/") + 1);
 }
 
-// The gallery's pictures by group, as [name, what it holds, pictures]: the user's own, then each
-// example folder's sections in its sections.txt's order, then the examples none of them names
+// The gallery's pictures by group, as [name, what it holds, pictures, whether it starts folded]:
+// the user's own, then each example folder's sections in its sections.txt's order, any other a
+// drawing names, and the examples none of them holds
 function mediaGroups() {
-  var left = state.media.filter(function (media) { return isExampleMedia(media.name); });
   var groups = [[OWN_GROUP, "your own pictures and drawings", state.media.filter(function (media) {
     return !isExampleMedia(media.name);
-  })]];
+  }), false]];
   EXAMPLE_FOLDERS.forEach(function (kind) {
-    (exampleSections[kind] || []).forEach(function (section) {
-      var held = left.filter(function (media) { return sectionHolds(section, media.name); });
-      left = left.filter(function (media) { return held.indexOf(media) < 0; });
-      groups.push([section[0], section[1], held]);
+    var root = "examples/" + kind + "/";
+    var left = state.media.filter(function (media) { return media.name.indexOf(root) === 0; });
+    var sections = (exampleSections[kind] || []).slice();
+    left.forEach(function (media) {
+      var named = media.drawing && media.drawing.section;
+      if (named && !sections.some(function (section) { return section[0] === named; }))
+        sections.push([named, "", [], false]);
     });
+    sections.forEach(function (section) {
+      var held = left.filter(function (media) { return sectionHolds(section, media); });
+      left = left.filter(function (media) { return held.indexOf(media) < 0; });
+      groups.push([section[0], section[1], held, section[3]]);
+    });
+    groups.push([OTHER_EXAMPLES[kind], "", left, kind !== "drawings"]);
   });
-  groups.push([OTHER_EXAMPLES, "", left]);
   // The user's own group stays where it is empty, being where pictures are added
   return groups.filter(function (group, at) { return !at || group[2].length; });
 }
@@ -7688,9 +7696,9 @@ function renderAssets() {
         : "no pictures on the drive yet. Drop a GIF, PNG, JPEG or drawing onto it";
   // The pictures are grouped only where the drive has examples among them
   var grouped = state.media.some(function (media) { return isExampleMedia(media.name); });
-  var groups = grouped ? mediaGroups() : [[OWN_GROUP, "", state.media]];
+  var groups = grouped ? mediaGroups() : [[OWN_GROUP, "", state.media, false]];
   groups.forEach(function (group) {
-    var open = groupOpen(group[0]);
+    var open = groupOpen(group);
     if (grouped) {
       box.appendChild(foldHead(group[0], group[1], open, function () {
         groupsOpen[group[0]] = !open;
@@ -7976,9 +7984,29 @@ driveParts.push({
   },
   land: function () {
     mediaFound.sort(function (a, b) { return a.name < b.name ? -1 : 1; });
+    // A drawing's thumbnail is the PNG of its name beside it, as a program's is, and is no picture
+    // of its own. Only in a drawings folder, a PNG at the top of the drive being a picture
+    function inDrawings(one) {
+      return isExampleMedia(one.name) || (mediaHome[one.name] || {}).name === "drawings";
+    }
+    var thumbs = {};
+    mediaFound.forEach(function (one) {
+      if (one.kind === "image" && inDrawings(one)) thumbs[one.name] = one;
+    });
+    mediaFound.forEach(function (one) {
+      var thumb = one.kind === "drawing" && inDrawings(one) &&
+                  thumbs[one.name.replace(/\.py$/i, ".png")];
+      if (!thumb) return;
+      one.thumbHandle = thumb.handle;
+      thumb.taken = true;
+    });
+    mediaFound = mediaFound.filter(function (one) { return !one.taken; });
     state.media = mediaFound;
-    // A drawing cannot run in the page, so it is shown by a face made from its opening string
-    mediaFound.forEach(function (one) { if (one.kind === "drawing") madeDrawing(one.name); });
+    // A drawing cannot run in the page, so one without a thumbnail is shown by a face made from
+    // its opening string
+    mediaFound.forEach(function (one) {
+      if (one.kind === "drawing" && !one.thumbHandle) madeDrawing(one.name);
+    });
   },
   said: function () {
     return JSON.stringify(state.media.map(function (m) { return m.name + m.kind; }));
@@ -8055,7 +8083,8 @@ function mediaArt(name) {
   var held = state.art[name];
   if (held) return held.ratio ? held : null;
   var media = mediaNamed(name);
-  var handle = media && (media.kind === "folder" ? media.thumbHandle : media.handle);
+  // A slideshow and a drawing are shown by a thumbnail, a picture by itself
+  var handle = media && (media.thumbHandle || media.handle);
   if (!handle) return null;
   // Held empty while it waits, so each is asked for once
   state.art[name] = {url: null, ratio: 0};
@@ -9322,8 +9351,9 @@ function pictureOffset(look, shows, size, turn) {
 // ---- drawings -------------------------------------------------------------------------------------
 // A drawing is a Python file drawn on a screen, drawing file=rings.py. It is listed only where
 // its opening string begins "Drawing:", which gives its name, then a line describing it, then
-// optionally Icon:, any Unicode character, and Colour:, one of the board's colour words or a hex.
-// A Python file without that line is not listed, whether drawing or program. The page cannot run
+// optionally Icon:, any Unicode character, Colour:, one of the board's colour words or a hex, and
+// Section:, the gallery section an example drawing is listed in. A Python file without that first
+// line is not listed, whether drawing or program. The page cannot run
 // one, so a drawing is shown by its icon on its colour, or its initial where it names no icon,
 // the colour where it names none coming from its name
 
@@ -9348,9 +9378,9 @@ function drawingSaid(docstring) {
   var lines = docstring.split("\n");
   var named = lines[0].match(/^Drawing:\s*(.+)$/);
   if (!named) return null;
-  var said = {title: named[1].trim(), description: "", icon: "", colour: ""};
+  var said = {title: named[1].trim(), description: "", icon: "", colour: "", section: ""};
   lines.slice(1).forEach(function (line) {
-    var field = line.match(/^(Icon|Colour):\s*(.+)$/);
+    var field = line.match(/^(Icon|Colour|Section):\s*(.+)$/);
     if (field) said[field[1].toLowerCase()] = field[2].trim();
     else if (!said.description) said.description = line.trim();
   });
@@ -9372,11 +9402,23 @@ var drawingArts = {};
 function drawingArt(name, wide, high) {
   var key = name + "|" + wide + "|" + high;
   if (drawingArts[key]) return drawingArts[key];
-  var drawing = mediaNamed(name).drawing;
+  var media = mediaNamed(name);
+  var drawing = media.drawing;
   var canvas = document.createElement("canvas");
   canvas.width = wide;
   canvas.height = high;
   var g = canvas.getContext("2d");
+  // A thumbnail covers the canvas once it has loaded, the face standing in until then
+  var thumb = media.thumbHandle ? mediaArt(name) : null;
+  var loaded = thumb ? artImage(thumb) : null;
+  if (loaded) {
+    var scale = Math.max(wide / loaded.naturalWidth, high / loaded.naturalHeight);
+    var drawnWide = loaded.naturalWidth * scale;
+    var drawnHigh = loaded.naturalHeight * scale;
+    g.drawImage(loaded, (wide - drawnWide) / 2, (high - drawnHigh) / 2, drawnWide, drawnHigh);
+    drawingArts[key] = {url: canvas.toDataURL(), w: wide, h: high, ratio: wide / high};
+    return drawingArts[key];
+  }
   g.fillStyle = drawingInk(drawing, name);
   g.fillRect(0, 0, wide, high);
   g.fillStyle = "#fff";
@@ -9385,8 +9427,9 @@ function drawingArt(name, wide, high) {
   var glyph = Math.round(Math.min(wide, high) * 0.46);
   g.font = drawing.icon ? glyph + "px 'Segoe UI Symbol', system-ui" : "bold " + glyph + "px system-ui";
   g.fillText(drawing.icon || drawing.title[0], wide / 2, high / 2);
-  drawingArts[key] = {url: canvas.toDataURL(), w: wide, h: high, ratio: wide / high};
-  return drawingArts[key];
+  var face = {url: canvas.toDataURL(), w: wide, h: high, ratio: wide / high};
+  if (!media.thumbHandle) drawingArts[key] = face;
+  return face;
 }
 
 // Its face as a square, for the tab's swatch. Made afresh each time the drive is read, since the
@@ -10280,7 +10323,7 @@ assetSteps.push(function () {
     var img = face && face.querySelector("img");
     // A drawing is its icon on its colour, or its initial, square, tagged as a drawing, its name
     // and description on hover
-    if (media && media.kind === "drawing" && face) {
+    if (media && media.kind === "drawing" && !media.thumbHandle && face) {
       var drawing = media.drawing;
       face.className = "face drawingface";
       face.style.height = face.getBoundingClientRect().width + "px";
@@ -10294,7 +10337,8 @@ assetSteps.push(function () {
     }
     if (!art || !art.w || !img) return;
     var wide = face.getBoundingClientRect().width;
-    var small = art.w < wide;
+    // A drawing's thumbnail fills the tile, being a stand-in at no size of its own
+    var small = art.w < wide && media.kind !== "drawing";
     var high = small ? Math.max(wide, art.h) : wide * art.h / art.w;
     face.classList.add("wholeface");
     face.style.height = high + "px";
@@ -10307,7 +10351,11 @@ assetSteps.push(function () {
     // A slideshow is a folder, so it is named as one
     var shown = media.kind === "folder" ? pictureSaid(media.name)
               : dot > 0 ? file.slice(0, dot) : file;
-    if (label) {
+    // A drawing shown by its thumbnail is named and described as its opening string says, the
+    // thumbnail's size not being the canvas it draws on
+    if (label && media.kind === "drawing") {
+      label.innerHTML = "<b>" + media.drawing.title + "</b><br>" + media.drawing.description;
+    } else if (label) {
       label.innerHTML = "<b>" + shown + "</b><br>" +
         [still && dot > 0 ? file.slice(dot + 1) : null, art.w + " \u00d7 " + art.h]
           .filter(Boolean).join(" \u00b7 ");
@@ -12341,8 +12389,13 @@ function renderPageSwitch() {
   body.parentNode.insertBefore(programView, body.nextSibling);
 }());
 
-drawSteps.after.push(function () {
+// Before anything is drawn, as the effects' parts measure themselves and measure nothing while
+// the program page hides them
+drawSteps.before.push(function () {
   document.body.classList.toggle("programpage", onProgramPage);
+});
+
+drawSteps.after.push(function () {
   document.body.dataset.pageway = "headsplit";
   renderPageSwitch();
   renderProgramView();
@@ -12785,27 +12838,32 @@ var scanBusy = false;
 // The top of the drive is read too, so a file dropped there still plays
 var MEDIA_FOLDERS = {pictures: /\.(gif|png|jpe?g)$/i, drawings: /\.py$/i, sounds: /\.wav$/i};
 
-// The folders of examples the walk reads, under examples/ on a board that carries them. Each file
-// is offered by its path from the top of the drive, which is how an effects line names it
-var EXAMPLE_FOLDERS = BOARD.examples ? ["pictures"] : [];
+// The folders of examples the walk reads, under examples/ on a board that carries them, in the
+// order the gallery shows their sections. Each file is offered by its path from the top of the
+// drive, which is how an effects line names it
+var EXAMPLE_FOLDERS = BOARD.examples ? ["drawings", "pictures"] : [];
 
-// Each example folder's sections, as [name, what it holds, members], in its sections.txt's order.
-// A member is a path from the top of the drive, a file or a slideshow's folder, or folder/* for
-// each file in that folder on its own
+// Each example folder's sections, as [name, what it holds, members, whether it starts folded], in
+// its sections.txt's order. A drawing joins a section with a Section: line, as a program does, and
+// a drawing section starts folded where sections.txt marks it so. A picture is a member by path, a
+// file or a slideshow's folder, or folder/* for each file in that folder on its own, and a picture
+// section starts folded
 var exampleSections = {};
 
 // The folder each file or slideshow the walk found sits in, so it is deleted from there
 var mediaHome = {};
 
-// The sections an example folder's sections.txt lists, a line each as its name, a |, what it holds,
-// another | and its members split by commas, each made a path from the top of the drive
-function exampleSectionsFrom(text, root) {
+// The sections an example folder's sections.txt lists, a line each as its name, a | and what it
+// holds, then after another | "folded" for drawings, or the members split by commas for pictures
+function exampleSectionsFrom(text, root, kind) {
   return sectionsFrom(text).map(function (section) {
     var parts = section[1].split("|");
-    var members = parts.length > 1 ? parts[1].split(",") : [];
+    var third = (parts[1] || "").trim();
+    if (kind === "drawings") return [section[0], parts[0].trim(), [], third === "folded"];
+    var members = third ? third.split(",") : [];
     return [section[0], parts[0].trim(), members.map(function (member) {
       return member.trim();
-    }).filter(Boolean).map(function (member) { return root + member; })];
+    }).filter(Boolean).map(function (member) { return root + member; }), true];
   });
 }
 
@@ -12814,11 +12872,13 @@ function isExampleMedia(name) {
   return name.indexOf("examples/") === 0;
 }
 
-// Whether a section's members name a file or folder, itself or as one of a folder's files
-function sectionHolds(section, name) {
-  var folder = name.slice(0, name.lastIndexOf("/") + 1);
+// Whether a section holds a drawing that names it, or a picture its members name, itself or as
+// one of a folder's files
+function sectionHolds(section, media) {
+  if (media.drawing) return media.drawing.section === section[0];
+  var folder = media.name.slice(0, media.name.lastIndexOf("/") + 1);
   return section[2].some(function (member) {
-    return member === name || member === folder + "*";
+    return member === media.name || member === folder + "*";
   });
 }
 
@@ -12885,7 +12945,7 @@ async function scanMedia(dir) {
       sections[kind] = [];
       try {
         var listed = await (await examples.getFileHandle("sections.txt")).getFile();
-        sections[kind] = exampleSectionsFrom(await listed.text(), root);
+        sections[kind] = exampleSectionsFrom(await listed.text(), root, kind);
       } catch (e) {
         // Without sections.txt every example is in one group of its own
       }

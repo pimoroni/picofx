@@ -942,8 +942,13 @@ function renderPageSwitch() {
   body.parentNode.insertBefore(programView, body.nextSibling);
 }());
 
-drawSteps.after.push(function () {
+// Before anything is drawn, as the effects' parts measure themselves and measure nothing while
+// the program page hides them
+drawSteps.before.push(function () {
   document.body.classList.toggle("programpage", onProgramPage);
+});
+
+drawSteps.after.push(function () {
   document.body.dataset.pageway = "headsplit";
   renderPageSwitch();
   renderProgramView();

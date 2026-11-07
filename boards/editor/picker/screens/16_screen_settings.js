@@ -82,8 +82,9 @@ function pictureOffset(look, shows, size, turn) {
 // ---- drawings -------------------------------------------------------------------------------------
 // A drawing is a Python file drawn on a screen, drawing file=rings.py. It is listed only where
 // its opening string begins "Drawing:", which gives its name, then a line describing it, then
-// optionally Icon:, any Unicode character, and Colour:, one of the board's colour words or a hex.
-// A Python file without that line is not listed, whether drawing or program. The page cannot run
+// optionally Icon:, any Unicode character, Colour:, one of the board's colour words or a hex, and
+// Section:, the gallery section an example drawing is listed in. A Python file without that first
+// line is not listed, whether drawing or program. The page cannot run
 // one, so a drawing is shown by its icon on its colour, or its initial where it names no icon,
 // the colour where it names none coming from its name
 
@@ -108,9 +109,9 @@ function drawingSaid(docstring) {
   var lines = docstring.split("\n");
   var named = lines[0].match(/^Drawing:\s*(.+)$/);
   if (!named) return null;
-  var said = {title: named[1].trim(), description: "", icon: "", colour: ""};
+  var said = {title: named[1].trim(), description: "", icon: "", colour: "", section: ""};
   lines.slice(1).forEach(function (line) {
-    var field = line.match(/^(Icon|Colour):\s*(.+)$/);
+    var field = line.match(/^(Icon|Colour|Section):\s*(.+)$/);
     if (field) said[field[1].toLowerCase()] = field[2].trim();
     else if (!said.description) said.description = line.trim();
   });
@@ -132,11 +133,23 @@ var drawingArts = {};
 function drawingArt(name, wide, high) {
   var key = name + "|" + wide + "|" + high;
   if (drawingArts[key]) return drawingArts[key];
-  var drawing = mediaNamed(name).drawing;
+  var media = mediaNamed(name);
+  var drawing = media.drawing;
   var canvas = document.createElement("canvas");
   canvas.width = wide;
   canvas.height = high;
   var g = canvas.getContext("2d");
+  // A thumbnail covers the canvas once it has loaded, the face standing in until then
+  var thumb = media.thumbHandle ? mediaArt(name) : null;
+  var loaded = thumb ? artImage(thumb) : null;
+  if (loaded) {
+    var scale = Math.max(wide / loaded.naturalWidth, high / loaded.naturalHeight);
+    var drawnWide = loaded.naturalWidth * scale;
+    var drawnHigh = loaded.naturalHeight * scale;
+    g.drawImage(loaded, (wide - drawnWide) / 2, (high - drawnHigh) / 2, drawnWide, drawnHigh);
+    drawingArts[key] = {url: canvas.toDataURL(), w: wide, h: high, ratio: wide / high};
+    return drawingArts[key];
+  }
   g.fillStyle = drawingInk(drawing, name);
   g.fillRect(0, 0, wide, high);
   g.fillStyle = "#fff";
@@ -145,8 +158,9 @@ function drawingArt(name, wide, high) {
   var glyph = Math.round(Math.min(wide, high) * 0.46);
   g.font = drawing.icon ? glyph + "px 'Segoe UI Symbol', system-ui" : "bold " + glyph + "px system-ui";
   g.fillText(drawing.icon || drawing.title[0], wide / 2, high / 2);
-  drawingArts[key] = {url: canvas.toDataURL(), w: wide, h: high, ratio: wide / high};
-  return drawingArts[key];
+  var face = {url: canvas.toDataURL(), w: wide, h: high, ratio: wide / high};
+  if (!media.thumbHandle) drawingArts[key] = face;
+  return face;
 }
 
 // Its face as a square, for the tab's swatch. Made afresh each time the drive is read, since the
@@ -1040,7 +1054,7 @@ assetSteps.push(function () {
     var img = face && face.querySelector("img");
     // A drawing is its icon on its colour, or its initial, square, tagged as a drawing, its name
     // and description on hover
-    if (media && media.kind === "drawing" && face) {
+    if (media && media.kind === "drawing" && !media.thumbHandle && face) {
       var drawing = media.drawing;
       face.className = "face drawingface";
       face.style.height = face.getBoundingClientRect().width + "px";
@@ -1054,7 +1068,8 @@ assetSteps.push(function () {
     }
     if (!art || !art.w || !img) return;
     var wide = face.getBoundingClientRect().width;
-    var small = art.w < wide;
+    // A drawing's thumbnail fills the tile, being a stand-in at no size of its own
+    var small = art.w < wide && media.kind !== "drawing";
     var high = small ? Math.max(wide, art.h) : wide * art.h / art.w;
     face.classList.add("wholeface");
     face.style.height = high + "px";
@@ -1067,7 +1082,11 @@ assetSteps.push(function () {
     // A slideshow is a folder, so it is named as one
     var shown = media.kind === "folder" ? pictureSaid(media.name)
               : dot > 0 ? file.slice(0, dot) : file;
-    if (label) {
+    // A drawing shown by its thumbnail is named and described as its opening string says, the
+    // thumbnail's size not being the canvas it draws on
+    if (label && media.kind === "drawing") {
+      label.innerHTML = "<b>" + media.drawing.title + "</b><br>" + media.drawing.description;
+    } else if (label) {
       label.innerHTML = "<b>" + shown + "</b><br>" +
         [still && dot > 0 ? file.slice(dot + 1) : null, art.w + " \u00d7 " + art.h]
           .filter(Boolean).join(" \u00b7 ");

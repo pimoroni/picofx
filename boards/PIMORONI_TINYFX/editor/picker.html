@@ -9416,8 +9416,13 @@ function renderPageSwitch() {
   body.parentNode.insertBefore(programView, body.nextSibling);
 }());
 
-drawSteps.after.push(function () {
+// Before anything is drawn, as the effects' parts measure themselves and measure nothing while
+// the program page hides them
+drawSteps.before.push(function () {
   document.body.classList.toggle("programpage", onProgramPage);
+});
+
+drawSteps.after.push(function () {
   document.body.dataset.pageway = "headsplit";
   renderPageSwitch();
   renderProgramView();
@@ -9860,27 +9865,32 @@ var scanBusy = false;
 // The top of the drive is read too, so a file dropped there still plays
 var MEDIA_FOLDERS = {pictures: /\.(gif|png|jpe?g)$/i, drawings: /\.py$/i, sounds: /\.wav$/i};
 
-// The folders of examples the walk reads, under examples/ on a board that carries them. Each file
-// is offered by its path from the top of the drive, which is how an effects line names it
-var EXAMPLE_FOLDERS = BOARD.examples ? ["pictures"] : [];
+// The folders of examples the walk reads, under examples/ on a board that carries them, in the
+// order the gallery shows their sections. Each file is offered by its path from the top of the
+// drive, which is how an effects line names it
+var EXAMPLE_FOLDERS = BOARD.examples ? ["drawings", "pictures"] : [];
 
-// Each example folder's sections, as [name, what it holds, members], in its sections.txt's order.
-// A member is a path from the top of the drive, a file or a slideshow's folder, or folder/* for
-// each file in that folder on its own
+// Each example folder's sections, as [name, what it holds, members, whether it starts folded], in
+// its sections.txt's order. A drawing joins a section with a Section: line, as a program does, and
+// a drawing section starts folded where sections.txt marks it so. A picture is a member by path, a
+// file or a slideshow's folder, or folder/* for each file in that folder on its own, and a picture
+// section starts folded
 var exampleSections = {};
 
 // The folder each file or slideshow the walk found sits in, so it is deleted from there
 var mediaHome = {};
 
-// The sections an example folder's sections.txt lists, a line each as its name, a |, what it holds,
-// another | and its members split by commas, each made a path from the top of the drive
-function exampleSectionsFrom(text, root) {
+// The sections an example folder's sections.txt lists, a line each as its name, a | and what it
+// holds, then after another | "folded" for drawings, or the members split by commas for pictures
+function exampleSectionsFrom(text, root, kind) {
   return sectionsFrom(text).map(function (section) {
     var parts = section[1].split("|");
-    var members = parts.length > 1 ? parts[1].split(",") : [];
+    var third = (parts[1] || "").trim();
+    if (kind === "drawings") return [section[0], parts[0].trim(), [], third === "folded"];
+    var members = third ? third.split(",") : [];
     return [section[0], parts[0].trim(), members.map(function (member) {
       return member.trim();
-    }).filter(Boolean).map(function (member) { return root + member; })];
+    }).filter(Boolean).map(function (member) { return root + member; }), true];
   });
 }
 
@@ -9889,11 +9899,13 @@ function isExampleMedia(name) {
   return name.indexOf("examples/") === 0;
 }
 
-// Whether a section's members name a file or folder, itself or as one of a folder's files
-function sectionHolds(section, name) {
-  var folder = name.slice(0, name.lastIndexOf("/") + 1);
+// Whether a section holds a drawing that names it, or a picture its members name, itself or as
+// one of a folder's files
+function sectionHolds(section, media) {
+  if (media.drawing) return media.drawing.section === section[0];
+  var folder = media.name.slice(0, media.name.lastIndexOf("/") + 1);
   return section[2].some(function (member) {
-    return member === name || member === folder + "*";
+    return member === media.name || member === folder + "*";
   });
 }
 
@@ -9960,7 +9972,7 @@ async function scanMedia(dir) {
       sections[kind] = [];
       try {
         var listed = await (await examples.getFileHandle("sections.txt")).getFile();
-        sections[kind] = exampleSectionsFrom(await listed.text(), root);
+        sections[kind] = exampleSectionsFrom(await listed.text(), root, kind);
       } catch (e) {
         // Without sections.txt every example is in one group of its own
       }
