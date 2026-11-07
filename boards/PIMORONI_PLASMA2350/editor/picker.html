@@ -9996,8 +9996,15 @@ function groupSays(title) {
   return listed ? listed[1] : "";
 }
 
-// The program tab's groups that are folded, by name, every group starting open
+// Whether each of the program tab's groups is folded, by name, for those folded or opened
 var programsFolded = {};
+
+// Whether a group is folded, a section sections.txt marks folded starting so and every other open
+function programGroupFolded(title) {
+  if (title in programsFolded) return programsFolded[title];
+  var listed = SECTIONS.filter(function (one) { return one[0] === title; })[0];
+  return !!(listed && listed[2]);
+}
 
 // A group's heading, pressed to fold or open it, its name and what the group holds beside it
 function foldHead(title, says, open, toggle) {
@@ -10702,7 +10709,7 @@ function renderProgramView() {
     var kept = paths.filter(passesFilter);
     if (!kept.length) return;
     shown += kept.length;
-    var open = !programsFolded[title];
+    var open = !programGroupFolded(title);
     programView.appendChild(foldHead(title, groupSays(title), open, function () {
       programsFolded[title] = open;
     }));
@@ -11611,7 +11618,8 @@ var EXAMPLES_ROOT = BOARD.examples ? "examples/programs/" : "";
 // The folder at the top of the drive for the user's own programs, where a customised example goes
 var OWN_FOLDER = "programs";
 
-// The program tab's sections, as [name, what it holds], in sections.txt's order
+// The program tab's sections, as [name, what it holds, whether it starts folded], in sections.txt's
+// order
 var SECTIONS = [];
 
 // Each program's pictures as object URLs, by its path: its own, and a second screen's after it
@@ -11773,7 +11781,11 @@ async function filesIn(dir, path, folder, deep, files, pictures) {
       if (!deep || folder) files.push([path + name, folder, handle]);
     } else if (name === "sections.txt" && deep && !folder) {
       try {
-        SECTIONS = sectionsFrom(await (await handle.getFile()).text());
+        // A third column of "folded" starts the section folded
+        SECTIONS = sectionsFrom(await (await handle.getFile()).text()).map(function (section) {
+          var parts = section[1].split("|");
+          return [section[0], parts[0].trim(), (parts[1] || "").trim() === "folded"];
+        });
       } catch (e) {
         SECTIONS = [];
       }

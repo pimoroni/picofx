@@ -13,7 +13,7 @@ the screens are made. That is what the reserve is.
 
 Press "Boot" to exit the program.
 
-Section: Multi-screen
+Section: Two screens
 Args: Screen size = 2.8, Rotation = 90
 """
 

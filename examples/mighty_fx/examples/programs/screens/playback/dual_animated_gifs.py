@@ -17,7 +17,7 @@ background down its sides and the scan's overrun is split between edges.
 
 Press "Boot" to exit the program.
 
-Section: Multi-screen
+Section: Two screens
 Args: Screen size = 2.8, Rotation = 90
 """
 

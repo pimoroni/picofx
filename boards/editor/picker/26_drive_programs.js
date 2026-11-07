@@ -19,7 +19,8 @@ var EXAMPLES_ROOT = BOARD.examples ? "examples/programs/" : "";
 // The folder at the top of the drive for the user's own programs, where a customised example goes
 var OWN_FOLDER = "programs";
 
-// The program tab's sections, as [name, what it holds], in sections.txt's order
+// The program tab's sections, as [name, what it holds, whether it starts folded], in sections.txt's
+// order
 var SECTIONS = [];
 
 // Each program's pictures as object URLs, by its path: its own, and a second screen's after it
@@ -181,7 +182,11 @@ async function filesIn(dir, path, folder, deep, files, pictures) {
       if (!deep || folder) files.push([path + name, folder, handle]);
     } else if (name === "sections.txt" && deep && !folder) {
       try {
-        SECTIONS = sectionsFrom(await (await handle.getFile()).text());
+        // A third column of "folded" starts the section folded
+        SECTIONS = sectionsFrom(await (await handle.getFile()).text()).map(function (section) {
+          var parts = section[1].split("|");
+          return [section[0], parts[0].trim(), (parts[1] || "").trim() === "folded"];
+        });
       } catch (e) {
         SECTIONS = [];
       }

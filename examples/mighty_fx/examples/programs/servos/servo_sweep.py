@@ -12,7 +12,7 @@ screen cannot have the same side and declaring both is refused.
 
 Press "Boot" to exit the program.
 
-Section: Moving things
+Section: Motors and servos
 Thumbnail: servo sweep
 """
 

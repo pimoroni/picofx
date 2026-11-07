@@ -13,7 +13,7 @@ same sweep is played both ways here so the difference is plain to watch.
 
 Press "Boot" to exit the program.
 
-Section: Moving things
+Section: Motors and servos
 Thumbnail: servo pair
 """
 

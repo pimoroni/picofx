@@ -11,7 +11,7 @@ full forward, back through a stop to full reverse, and round again.
 
 Press "Boot" to exit the program.
 
-Section: Moving things
+Section: Motors and servos
 Thumbnail: motor
 """
 

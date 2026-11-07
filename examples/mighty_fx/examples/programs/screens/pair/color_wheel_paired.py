@@ -13,7 +13,7 @@ Press "Boot" to exit the program.
 Program: Colour wheel paired
 Args: Screen size = 2.8, Rotation = 0
 
-Section: Multi-screen
+Section: Two screens
 """
 
 # Constants for drawing

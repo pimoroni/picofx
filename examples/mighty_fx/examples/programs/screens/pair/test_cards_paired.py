@@ -19,7 +19,7 @@ built with Reserve.FULL_SIZE_IMAGES, a pair needing the same reserve on both.
 
 Press "Boot" to exit the program.
 
-Section: Multi-screen
+Section: Two screens
 Args: Screen size = 2.8
 """
 

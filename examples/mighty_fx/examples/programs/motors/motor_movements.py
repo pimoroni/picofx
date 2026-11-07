@@ -15,7 +15,7 @@ Give it room, or hold it off the ground.
 
 Press "Boot" to exit the program.
 
-Section: Moving things
+Section: Motors and servos
 Thumbnail: motor
 """
 

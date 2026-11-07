@@ -45,8 +45,15 @@ function groupSays(title) {
   return listed ? listed[1] : "";
 }
 
-// The program tab's groups that are folded, by name, every group starting open
+// Whether each of the program tab's groups is folded, by name, for those folded or opened
 var programsFolded = {};
+
+// Whether a group is folded, a section sections.txt marks folded starting so and every other open
+function programGroupFolded(title) {
+  if (title in programsFolded) return programsFolded[title];
+  var listed = SECTIONS.filter(function (one) { return one[0] === title; })[0];
+  return !!(listed && listed[2]);
+}
 
 // A group's heading, pressed to fold or open it, its name and what the group holds beside it
 function foldHead(title, says, open, toggle) {
@@ -751,7 +758,7 @@ function renderProgramView() {
     var kept = paths.filter(passesFilter);
     if (!kept.length) return;
     shown += kept.length;
-    var open = !programsFolded[title];
+    var open = !programGroupFolded(title);
     programView.appendChild(foldHead(title, groupSays(title), open, function () {
       programsFolded[title] = open;
     }));
