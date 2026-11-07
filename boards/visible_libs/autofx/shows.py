@@ -518,12 +518,15 @@ def __begin_drawings(waiting, shows, built, problems):
     #
     # Run once every panel of the file holds its workspace, as canvases and workspaces
     # share one region and a workspace claimed after a canvas could find no room
-    import picovector
-
     if __HEAP_IN_PSRAM:
         import spidisplay
         # The last file's canvases, released all together, nothing else holding them
         spidisplay.release_buffers()
+
+    # A board without screens has no picovector, so a file with no drawings stops here
+    if not waiting:
+        return
+    import picovector
 
     # Sizes paired with positions, so the sort compares numbers and never a player, and
     # of two the same size the one earlier in the file comes first
