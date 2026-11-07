@@ -749,11 +749,12 @@ function renderProgramView() {
     return;
   }
   // Each Python file is read off the drive in turn, which takes a while, so the count is shown
-  if (programsReading) {
+  // once the files are counted
+  if (programsReading || !programsKnown) {
     var reading = document.createElement("p");
     reading.className = "prognone";
-    reading.textContent = "Reading the Python files on the drive, " + programsReading[0] + " of " +
-                          programsReading[1] + "...";
+    reading.textContent = "Reading the Python files on the drive" + (programsReading
+      ? ", " + programsReading[0] + " of " + programsReading[1] + "..." : "...");
     programView.appendChild(reading);
     return;
   }

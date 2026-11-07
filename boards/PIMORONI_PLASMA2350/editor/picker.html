@@ -10769,11 +10769,12 @@ function renderProgramView() {
     return;
   }
   // Each Python file is read off the drive in turn, which takes a while, so the count is shown
-  if (programsReading) {
+  // once the files are counted
+  if (programsReading || !programsKnown) {
     var reading = document.createElement("p");
     reading.className = "prognone";
-    reading.textContent = "Reading the Python files on the drive, " + programsReading[0] + " of " +
-                          programsReading[1] + "...";
+    reading.textContent = "Reading the Python files on the drive" + (programsReading
+      ? ", " + programsReading[0] + " of " + programsReading[1] + "..." : "...");
     programView.appendChild(reading);
     return;
   }
@@ -12054,7 +12055,7 @@ async function drivePrograms(dir, ownOnly) {
       if (i % 8 === 7) renderProgramView();
     }
   }
-  programsReading = null;
+  if (!ownOnly) programsReading = null;
   Object.keys(PICTURES).forEach(function (path) {
     if (read[path] !== PICTURES[path]) PICTURES[path].forEach(URL.revokeObjectURL);
   });
@@ -12096,7 +12097,8 @@ function forgetMissingPrograms() {
 // are, so a program saved from an editor shows without opening the drive again
 var programsBusy = false;
 async function rescanPrograms() {
-  if (!drive.dirHandle || programsBusy || programsReading) return;
+  // Not until every program has been read once, as the examples are kept from that read
+  if (!drive.dirHandle || programsBusy || !programsKnown) return;
   programsBusy = true;
   try {
     if (await ownState(drive.dirHandle) !== ownSeen) {

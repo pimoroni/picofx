@@ -258,7 +258,7 @@ async function drivePrograms(dir, ownOnly) {
       if (i % 8 === 7) renderProgramView();
     }
   }
-  programsReading = null;
+  if (!ownOnly) programsReading = null;
   Object.keys(PICTURES).forEach(function (path) {
     if (read[path] !== PICTURES[path]) PICTURES[path].forEach(URL.revokeObjectURL);
   });
@@ -300,7 +300,8 @@ function forgetMissingPrograms() {
 // are, so a program saved from an editor shows without opening the drive again
 var programsBusy = false;
 async function rescanPrograms() {
-  if (!drive.dirHandle || programsBusy || programsReading) return;
+  // Not until every program has been read once, as the examples are kept from that read
+  if (!drive.dirHandle || programsBusy || !programsKnown) return;
   programsBusy = true;
   try {
     if (await ownState(drive.dirHandle) !== ownSeen) {
