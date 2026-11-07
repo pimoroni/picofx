@@ -1508,10 +1508,12 @@ body.setupall .lightrow{opacity:.35;pointer-events:none}
  transform:rotate(45deg) translate(-1px,-1px);transition:transform .12s}
 .foldhead.open::before{transform:rotate(-135deg) translate(-2px,-2px)}
 .foldhead:hover::before{border-color:var(--accent)}
-/* Across the Screens gallery's grid */
-.assets .foldhead{grid-column:1/-1;margin:.4rem 0 -.3rem;font-size:.92rem}
-.assets .foldhead:first-child{margin-top:0}
-.assets .foldhead .says{font:400 .8rem system-ui,sans-serif;color:var(--dim)}
+/* Across the Screens gallery's grid and the Sound tab's row */
+.assets .foldhead,.sounds .foldhead{grid-column:1/-1;flex-basis:100%;margin:.4rem 0 -.3rem;
+ font-size:.92rem}
+.assets .foldhead:first-child,.sounds .foldhead:first-child{margin-top:0}
+.assets .foldhead .says,.sounds .foldhead .says{font:400 .8rem system-ui,sans-serif;
+ color:var(--dim)}
 .asset .face.wholeface{height:auto}
 .asset .face.wholeface img{position:relative;inset:auto;object-fit:fill;flex:none;
  image-rendering:pixelated}
@@ -7644,44 +7646,14 @@ function renderScreenBoxes() {
 // one before: the hub's positions, the whole pictures, the hub's groups
 var assetSteps = [];
 
-// The gallery's group for whatever each example folder's sections do not name
-var OTHER_EXAMPLES = {drawings: "Example drawings", pictures: "Example pictures"};
-
-// Whether each of the gallery's groups is open, by name, for those folded or opened
-var groupsOpen = {};
-
-// Whether a group is open, each starting as its folder's sections say
-function groupOpen(group) {
-  return group[0] in groupsOpen ? groupsOpen[group[0]] : !group[3];
-}
-
-// A picture's name as the page shows it, without the folders it sits in
-function nameShown(name) {
-  return name.slice(name.lastIndexOf("/") + 1);
-}
-
-// The gallery's pictures by group, as [name, what it holds, pictures, whether it starts folded]:
-// the user's own, then each example folder's sections in its sections.txt's order, any other a
-// drawing names, and the examples none of them holds
+// The gallery's pictures by group: the user's own, then the example drawings' groups and the
+// example pictures'
 function mediaGroups() {
   var groups = [[OWN_GROUP, "your own pictures and drawings", state.media.filter(function (media) {
     return !isExampleMedia(media.name);
   }), false]];
-  EXAMPLE_FOLDERS.forEach(function (kind) {
-    var root = "examples/" + kind + "/";
-    var left = state.media.filter(function (media) { return media.name.indexOf(root) === 0; });
-    var sections = (exampleSections[kind] || []).slice();
-    left.forEach(function (media) {
-      var named = media.drawing && media.drawing.section;
-      if (named && !sections.some(function (section) { return section[0] === named; }))
-        sections.push([named, "", [], false]);
-    });
-    sections.forEach(function (section) {
-      var held = left.filter(function (media) { return sectionHolds(section, media); });
-      left = left.filter(function (media) { return held.indexOf(media) < 0; });
-      groups.push([section[0], section[1], held, section[3]]);
-    });
-    groups.push([OTHER_EXAMPLES[kind], "", left, kind !== "drawings"]);
+  ["drawings", "pictures"].forEach(function (kind) {
+    groups = groups.concat(exampleGroups(kind, state.media));
   });
   // The user's own group stays where it is empty, being where pictures are added
   return groups.filter(function (group, at) { return !at || group[2].length; });
@@ -7697,8 +7669,8 @@ function renderAssets() {
       : state.media.length
         ? "one set of pictures, each shown on A, B or both"
         : "no pictures on the drive yet. Drop a GIF, PNG, JPEG or drawing onto it";
-  // The pictures are grouped only where the drive has examples among them
-  var grouped = state.media.some(function (media) { return isExampleMedia(media.name); });
+  // Grouped once the drive is open, the user's own always heading the gallery
+  var grouped = !!state.fileHandle;
   var groups = grouped ? mediaGroups() : [[OWN_GROUP, "", state.media, false]];
   groups.forEach(function (group) {
     var open = groupOpen(group);
@@ -8243,12 +8215,32 @@ function renderSoundTab() {
   var names = state.sounds.slice();
   if (state.sound && names.indexOf(state.sound) < 0) names.unshift(state.sound);
   if (state.soundKept) row.appendChild(soundKeptTile());
-  names.forEach(function (name) { row.appendChild(soundTile(name)); });
   row.appendChild(soundTile(null));
-  if (state.fileHandle)
-    row.appendChild(adderTile("add sounds",
-      {description: "Sounds the board can play", accept: {"audio/wav": [".wav"]}},
-      "sounds", /\.wav$/i));
+  // Grouped once the drive is open, the user's own always first
+  var grouped = !!state.fileHandle;
+  var files = names.map(function (name) { return {name: name}; });
+  var groups = [[OWN_GROUP, "your own sounds", files.filter(function (one) {
+    return !isExampleMedia(one.name);
+  }), false]];
+  groups = groups.concat(exampleGroups("sounds", files));
+  groups.forEach(function (group, at) {
+    if (at && !group[2].length) return;
+    // Kept apart from the Screens tab's groups, the user's own sharing its name
+    var kept = ["sound:" + group[0]].concat(group.slice(1));
+    var open = groupOpen(kept);
+    if (grouped) {
+      row.appendChild(foldHead(group[0], group[1], open, function () {
+        groupsOpen[kept[0]] = !open;
+      }));
+    }
+    if (grouped && !open) return;
+    group[2].forEach(function (one) { row.appendChild(soundTile(one.name)); });
+    if (at) return;
+    if (state.fileHandle)
+      row.appendChild(adderTile("add sounds",
+        {description: "Sounds the board can play", accept: {"audio/wav": [".wav"]}},
+        "sounds", /\.wav$/i));
+  });
   box.appendChild(row);
 }
 
@@ -8293,7 +8285,7 @@ function plainSoundTile(name) {
                      "y='14' width='104' height='2' rx='1' fill='" + colour + "'/></svg>";
   }
   var title = document.createElement("b");
-  title.textContent = name || "Silence";
+  title.textContent = name ? nameShown(name) : "Silence";
   tile.appendChild(title);
   var says = document.createElement("small");
   says.textContent = !name ? "nothing plays"
@@ -8310,7 +8302,10 @@ function plainSoundTile(name) {
     }
     draw();
   };
-  if (name && state.sounds.indexOf(name) >= 0) tile.appendChild(binButton(name, "wav"));
+  // An example comes back when the board's examples are flashed again, so it keeps no bin
+  if (name && state.sounds.indexOf(name) >= 0 && !isExampleMedia(name)) {
+    tile.appendChild(binButton(name, "wav"));
+  }
   return tile;
 }
 
@@ -8502,7 +8497,7 @@ function withHearButton(tile, name) {
   button.className = "hear" + (playing ? " playing" : "");
   button.setAttribute("role", "button");
   button.textContent = playing ? "\u25a0" : "\u25b6";
-  button.title = (playing ? "Stop " : "Play ") + name + " here";
+  button.title = (playing ? "Stop " : "Play ") + nameShown(name) + " here";
   button.onclick = function (event) {
     event.stopPropagation();
     hear(name);
@@ -8631,7 +8626,7 @@ tabSwatches.soundPanel = function (swatch) {
     swatch.appendChild(mark);
     swatch.classList.add("repeats");
   }
-  swatch.title = state.sound + (state.soundLoop ? ", on repeat" : "");
+  swatch.title = nameShown(state.sound) + (state.soundLoop ? ", on repeat" : "");
 };
 
 // Under the tab's name, the kind of sound playing, which a tone will join once the board
@@ -11509,8 +11504,8 @@ drawSteps.after.push(saveMenu);
 // The programs at the top of the drive that name no section, the group they make
 var OWN_GROUP = "On the drive";
 
-// The offered programs by group, as [name, paths]: the drive's own, then sections.txt's sections
-// in its order, then any other a program names, each group's programs by title
+// The offered programs by group, as [name, paths]: the drive's own, always, then sections.txt's
+// sections in its order, then any other a program names, each group's programs by title
 function offeredGroups() {
   var runnable = PROGRAMS.filter(function (one) {
     return driveHasCredentials || one.uses.indexOf("wifi") < 0;
@@ -11530,7 +11525,7 @@ function offeredGroups() {
       return programTitle(a).localeCompare(programTitle(b), undefined, {numeric: true});
     });
     return [group[0], paths];
-  }).filter(function (group) { return group[1].length; });
+  }).filter(function (group, at) { return !at || group[1].length; });
 }
 
 // What a group's heading says after its name, as the looks' groups do, a section's from
@@ -12259,13 +12254,22 @@ function renderProgramView() {
   function group(title, paths) {
     listed += paths.length;
     var kept = paths.filter(passesFilter);
-    if (!kept.length) return;
+    // The user's own is always there, as the effects' are, saying how to start one where empty
+    var own = title === OWN_GROUP;
+    if (!kept.length && !own) return;
     shown += kept.length;
     var open = !programGroupFolded(title);
     programView.appendChild(foldHead(title, groupSays(title), open, function () {
       programsFolded[title] = open;
     }));
     if (!open) return;
+    if (own && !paths.length) {
+      var empty = document.createElement("p");
+      empty.className = "prognone";
+      empty.textContent = "None yet. Customise an example to make one.";
+      programView.appendChild(empty);
+    }
+    if (!kept.length) return;
     var grid = document.createElement("div");
     grid.className = "proggrid";
     kept.forEach(function (path) { grid.appendChild(programCard(path)); });
@@ -12894,23 +12898,23 @@ var scanBusy = false;
 // The top of the drive is read too, so a file dropped there still plays
 var MEDIA_FOLDERS = {pictures: /\.(gif|png|jpe?g)$/i, drawings: /\.py$/i, sounds: /\.wav$/i};
 
-// The folders of examples the walk reads, under examples/ on a board that carries them, in the
-// order the gallery shows their sections. Each file is offered by its path from the top of the
-// drive, which is how an effects line names it
-var EXAMPLE_FOLDERS = BOARD.examples ? ["drawings", "pictures"] : [];
+// The folders of examples the walk reads, under examples/ on a board that carries them. Each file
+// is offered by its path from the top of the drive, which is how an effects line names it
+var EXAMPLE_FOLDERS = BOARD.examples ? ["drawings", "pictures", "sounds"] : [];
 
 // Each example folder's sections, as [name, what it holds, members, whether it starts folded], in
 // its sections.txt's order. A drawing joins a section with a Section: line, as a program does, and
-// a drawing section starts folded where sections.txt marks it so. A picture is a member by path, a
-// file or a slideshow's folder, or folder/* for each file in that folder on its own, and a picture
-// section starts folded
+// a drawing section starts folded where sections.txt marks it so. A picture or a sound is a member
+// by path, a file or a slideshow's folder, or folder/* for each file in that folder on its own,
+// and its section starts folded
 var exampleSections = {};
 
 // The folder each file or slideshow the walk found sits in, so it is deleted from there
 var mediaHome = {};
 
 // The sections an example folder's sections.txt lists, a line each as its name, a | and what it
-// holds, then after another | "folded" for drawings, or the members split by commas for pictures
+// holds. After another | a drawing section may say "folded", and a section of pictures or sounds
+// lists its members split by commas
 function exampleSectionsFrom(text, root, kind) {
   return sectionsFrom(text).map(function (section) {
     var parts = section[1].split("|");
@@ -12926,6 +12930,45 @@ function exampleSectionsFrom(text, root, kind) {
 // Whether a file or folder is one of the drive's examples
 function isExampleMedia(name) {
   return name.indexOf("examples/") === 0;
+}
+
+// A file's name as the page shows it, without the folders it sits in
+function nameShown(name) {
+  return name.slice(name.lastIndexOf("/") + 1);
+}
+
+// The group for whatever each example folder's sections do not name
+var OTHER_EXAMPLES = {drawings: "Example drawings", pictures: "Example pictures",
+                      sounds: "Example sounds"};
+
+// Whether each group of the drive's files is open, by name, for those folded or opened
+var groupsOpen = {};
+
+// Whether a group, as [name, what it holds, files, whether it starts folded], is open, each
+// starting as its folder's sections say
+function groupOpen(group) {
+  return group[0] in groupsOpen ? groupsOpen[group[0]] : !group[3];
+}
+
+// An example folder's files by group, as [name, what it holds, files, whether it starts folded]:
+// its sections in its sections.txt's order, any other a drawing names, and those none of them
+// holds. Each file is as the walk lists it, with its name and, for a drawing, what it says
+function exampleGroups(kind, files) {
+  var root = "examples/" + kind + "/";
+  var left = files.filter(function (one) { return one.name.indexOf(root) === 0; });
+  var sections = (exampleSections[kind] || []).slice();
+  left.forEach(function (one) {
+    var named = one.drawing && one.drawing.section;
+    if (named && !sections.some(function (section) { return section[0] === named; }))
+      sections.push([named, "", [], false]);
+  });
+  var groups = sections.map(function (section) {
+    var held = left.filter(function (one) { return sectionHolds(section, one); });
+    left = left.filter(function (one) { return held.indexOf(one) < 0; });
+    return [section[0], section[1], held, section[3]];
+  });
+  groups.push([OTHER_EXAMPLES[kind], "", left, kind !== "drawings"]);
+  return groups;
 }
 
 // Whether a section holds a drawing that names it, or a picture its members name, itself or as

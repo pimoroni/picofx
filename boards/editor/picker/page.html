@@ -1508,10 +1508,12 @@ body.setupall .lightrow{opacity:.35;pointer-events:none}
  transform:rotate(45deg) translate(-1px,-1px);transition:transform .12s}
 .foldhead.open::before{transform:rotate(-135deg) translate(-2px,-2px)}
 .foldhead:hover::before{border-color:var(--accent)}
-/* Across the Screens gallery's grid */
-.assets .foldhead{grid-column:1/-1;margin:.4rem 0 -.3rem;font-size:.92rem}
-.assets .foldhead:first-child{margin-top:0}
-.assets .foldhead .says{font:400 .8rem system-ui,sans-serif;color:var(--dim)}
+/* Across the Screens gallery's grid and the Sound tab's row */
+.assets .foldhead,.sounds .foldhead{grid-column:1/-1;flex-basis:100%;margin:.4rem 0 -.3rem;
+ font-size:.92rem}
+.assets .foldhead:first-child,.sounds .foldhead:first-child{margin-top:0}
+.assets .foldhead .says,.sounds .foldhead .says{font:400 .8rem system-ui,sans-serif;
+ color:var(--dim)}
 .asset .face.wholeface{height:auto}
 .asset .face.wholeface img{position:relative;inset:auto;object-fit:fill;flex:none;
  image-rendering:pixelated}

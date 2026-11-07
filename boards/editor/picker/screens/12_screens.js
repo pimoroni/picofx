@@ -336,44 +336,14 @@ function renderScreenBoxes() {
 // one before: the hub's positions, the whole pictures, the hub's groups
 var assetSteps = [];
 
-// The gallery's group for whatever each example folder's sections do not name
-var OTHER_EXAMPLES = {drawings: "Example drawings", pictures: "Example pictures"};
-
-// Whether each of the gallery's groups is open, by name, for those folded or opened
-var groupsOpen = {};
-
-// Whether a group is open, each starting as its folder's sections say
-function groupOpen(group) {
-  return group[0] in groupsOpen ? groupsOpen[group[0]] : !group[3];
-}
-
-// A picture's name as the page shows it, without the folders it sits in
-function nameShown(name) {
-  return name.slice(name.lastIndexOf("/") + 1);
-}
-
-// The gallery's pictures by group, as [name, what it holds, pictures, whether it starts folded]:
-// the user's own, then each example folder's sections in its sections.txt's order, any other a
-// drawing names, and the examples none of them holds
+// The gallery's pictures by group: the user's own, then the example drawings' groups and the
+// example pictures'
 function mediaGroups() {
   var groups = [[OWN_GROUP, "your own pictures and drawings", state.media.filter(function (media) {
     return !isExampleMedia(media.name);
   }), false]];
-  EXAMPLE_FOLDERS.forEach(function (kind) {
-    var root = "examples/" + kind + "/";
-    var left = state.media.filter(function (media) { return media.name.indexOf(root) === 0; });
-    var sections = (exampleSections[kind] || []).slice();
-    left.forEach(function (media) {
-      var named = media.drawing && media.drawing.section;
-      if (named && !sections.some(function (section) { return section[0] === named; }))
-        sections.push([named, "", [], false]);
-    });
-    sections.forEach(function (section) {
-      var held = left.filter(function (media) { return sectionHolds(section, media); });
-      left = left.filter(function (media) { return held.indexOf(media) < 0; });
-      groups.push([section[0], section[1], held, section[3]]);
-    });
-    groups.push([OTHER_EXAMPLES[kind], "", left, kind !== "drawings"]);
+  ["drawings", "pictures"].forEach(function (kind) {
+    groups = groups.concat(exampleGroups(kind, state.media));
   });
   // The user's own group stays where it is empty, being where pictures are added
   return groups.filter(function (group, at) { return !at || group[2].length; });
@@ -389,8 +359,8 @@ function renderAssets() {
       : state.media.length
         ? "one set of pictures, each shown on A, B or both"
         : "no pictures on the drive yet. Drop a GIF, PNG, JPEG or drawing onto it";
-  // The pictures are grouped only where the drive has examples among them
-  var grouped = state.media.some(function (media) { return isExampleMedia(media.name); });
+  // Grouped once the drive is open, the user's own always heading the gallery
+  var grouped = !!state.fileHandle;
   var groups = grouped ? mediaGroups() : [[OWN_GROUP, "", state.media, false]];
   groups.forEach(function (group) {
     var open = groupOpen(group);

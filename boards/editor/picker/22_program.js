@@ -13,8 +13,8 @@
 // The programs at the top of the drive that name no section, the group they make
 var OWN_GROUP = "On the drive";
 
-// The offered programs by group, as [name, paths]: the drive's own, then sections.txt's sections
-// in its order, then any other a program names, each group's programs by title
+// The offered programs by group, as [name, paths]: the drive's own, always, then sections.txt's
+// sections in its order, then any other a program names, each group's programs by title
 function offeredGroups() {
   var runnable = PROGRAMS.filter(function (one) {
     return driveHasCredentials || one.uses.indexOf("wifi") < 0;
@@ -34,7 +34,7 @@ function offeredGroups() {
       return programTitle(a).localeCompare(programTitle(b), undefined, {numeric: true});
     });
     return [group[0], paths];
-  }).filter(function (group) { return group[1].length; });
+  }).filter(function (group, at) { return !at || group[1].length; });
 }
 
 // What a group's heading says after its name, as the looks' groups do, a section's from
@@ -763,13 +763,22 @@ function renderProgramView() {
   function group(title, paths) {
     listed += paths.length;
     var kept = paths.filter(passesFilter);
-    if (!kept.length) return;
+    // The user's own is always there, as the effects' are, saying how to start one where empty
+    var own = title === OWN_GROUP;
+    if (!kept.length && !own) return;
     shown += kept.length;
     var open = !programGroupFolded(title);
     programView.appendChild(foldHead(title, groupSays(title), open, function () {
       programsFolded[title] = open;
     }));
     if (!open) return;
+    if (own && !paths.length) {
+      var empty = document.createElement("p");
+      empty.className = "prognone";
+      empty.textContent = "None yet. Customise an example to make one.";
+      programView.appendChild(empty);
+    }
+    if (!kept.length) return;
     var grid = document.createElement("div");
     grid.className = "proggrid";
     kept.forEach(function (path) { grid.appendChild(programCard(path)); });

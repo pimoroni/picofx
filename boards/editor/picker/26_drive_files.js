@@ -12,23 +12,23 @@ var scanBusy = false;
 // The top of the drive is read too, so a file dropped there still plays
 var MEDIA_FOLDERS = {pictures: /\.(gif|png|jpe?g)$/i, drawings: /\.py$/i, sounds: /\.wav$/i};
 
-// The folders of examples the walk reads, under examples/ on a board that carries them, in the
-// order the gallery shows their sections. Each file is offered by its path from the top of the
-// drive, which is how an effects line names it
-var EXAMPLE_FOLDERS = BOARD.examples ? ["drawings", "pictures"] : [];
+// The folders of examples the walk reads, under examples/ on a board that carries them. Each file
+// is offered by its path from the top of the drive, which is how an effects line names it
+var EXAMPLE_FOLDERS = BOARD.examples ? ["drawings", "pictures", "sounds"] : [];
 
 // Each example folder's sections, as [name, what it holds, members, whether it starts folded], in
 // its sections.txt's order. A drawing joins a section with a Section: line, as a program does, and
-// a drawing section starts folded where sections.txt marks it so. A picture is a member by path, a
-// file or a slideshow's folder, or folder/* for each file in that folder on its own, and a picture
-// section starts folded
+// a drawing section starts folded where sections.txt marks it so. A picture or a sound is a member
+// by path, a file or a slideshow's folder, or folder/* for each file in that folder on its own,
+// and its section starts folded
 var exampleSections = {};
 
 // The folder each file or slideshow the walk found sits in, so it is deleted from there
 var mediaHome = {};
 
 // The sections an example folder's sections.txt lists, a line each as its name, a | and what it
-// holds, then after another | "folded" for drawings, or the members split by commas for pictures
+// holds. After another | a drawing section may say "folded", and a section of pictures or sounds
+// lists its members split by commas
 function exampleSectionsFrom(text, root, kind) {
   return sectionsFrom(text).map(function (section) {
     var parts = section[1].split("|");
@@ -44,6 +44,45 @@ function exampleSectionsFrom(text, root, kind) {
 // Whether a file or folder is one of the drive's examples
 function isExampleMedia(name) {
   return name.indexOf("examples/") === 0;
+}
+
+// A file's name as the page shows it, without the folders it sits in
+function nameShown(name) {
+  return name.slice(name.lastIndexOf("/") + 1);
+}
+
+// The group for whatever each example folder's sections do not name
+var OTHER_EXAMPLES = {drawings: "Example drawings", pictures: "Example pictures",
+                      sounds: "Example sounds"};
+
+// Whether each group of the drive's files is open, by name, for those folded or opened
+var groupsOpen = {};
+
+// Whether a group, as [name, what it holds, files, whether it starts folded], is open, each
+// starting as its folder's sections say
+function groupOpen(group) {
+  return group[0] in groupsOpen ? groupsOpen[group[0]] : !group[3];
+}
+
+// An example folder's files by group, as [name, what it holds, files, whether it starts folded]:
+// its sections in its sections.txt's order, any other a drawing names, and those none of them
+// holds. Each file is as the walk lists it, with its name and, for a drawing, what it says
+function exampleGroups(kind, files) {
+  var root = "examples/" + kind + "/";
+  var left = files.filter(function (one) { return one.name.indexOf(root) === 0; });
+  var sections = (exampleSections[kind] || []).slice();
+  left.forEach(function (one) {
+    var named = one.drawing && one.drawing.section;
+    if (named && !sections.some(function (section) { return section[0] === named; }))
+      sections.push([named, "", [], false]);
+  });
+  var groups = sections.map(function (section) {
+    var held = left.filter(function (one) { return sectionHolds(section, one); });
+    left = left.filter(function (one) { return held.indexOf(one) < 0; });
+    return [section[0], section[1], held, section[3]];
+  });
+  groups.push([OTHER_EXAMPLES[kind], "", left, kind !== "drawings"]);
+  return groups;
 }
 
 // Whether a section holds a drawing that names it, or a picture its members name, itself or as

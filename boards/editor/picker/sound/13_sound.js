@@ -52,12 +52,32 @@ function renderSoundTab() {
   var names = state.sounds.slice();
   if (state.sound && names.indexOf(state.sound) < 0) names.unshift(state.sound);
   if (state.soundKept) row.appendChild(soundKeptTile());
-  names.forEach(function (name) { row.appendChild(soundTile(name)); });
   row.appendChild(soundTile(null));
-  if (state.fileHandle)
-    row.appendChild(adderTile("add sounds",
-      {description: "Sounds the board can play", accept: {"audio/wav": [".wav"]}},
-      "sounds", /\.wav$/i));
+  // Grouped once the drive is open, the user's own always first
+  var grouped = !!state.fileHandle;
+  var files = names.map(function (name) { return {name: name}; });
+  var groups = [[OWN_GROUP, "your own sounds", files.filter(function (one) {
+    return !isExampleMedia(one.name);
+  }), false]];
+  groups = groups.concat(exampleGroups("sounds", files));
+  groups.forEach(function (group, at) {
+    if (at && !group[2].length) return;
+    // Kept apart from the Screens tab's groups, the user's own sharing its name
+    var kept = ["sound:" + group[0]].concat(group.slice(1));
+    var open = groupOpen(kept);
+    if (grouped) {
+      row.appendChild(foldHead(group[0], group[1], open, function () {
+        groupsOpen[kept[0]] = !open;
+      }));
+    }
+    if (grouped && !open) return;
+    group[2].forEach(function (one) { row.appendChild(soundTile(one.name)); });
+    if (at) return;
+    if (state.fileHandle)
+      row.appendChild(adderTile("add sounds",
+        {description: "Sounds the board can play", accept: {"audio/wav": [".wav"]}},
+        "sounds", /\.wav$/i));
+  });
   box.appendChild(row);
 }
 
@@ -102,7 +122,7 @@ function plainSoundTile(name) {
                      "y='14' width='104' height='2' rx='1' fill='" + colour + "'/></svg>";
   }
   var title = document.createElement("b");
-  title.textContent = name || "Silence";
+  title.textContent = name ? nameShown(name) : "Silence";
   tile.appendChild(title);
   var says = document.createElement("small");
   says.textContent = !name ? "nothing plays"
@@ -119,7 +139,10 @@ function plainSoundTile(name) {
     }
     draw();
   };
-  if (name && state.sounds.indexOf(name) >= 0) tile.appendChild(binButton(name, "wav"));
+  // An example comes back when the board's examples are flashed again, so it keeps no bin
+  if (name && state.sounds.indexOf(name) >= 0 && !isExampleMedia(name)) {
+    tile.appendChild(binButton(name, "wav"));
+  }
   return tile;
 }
 
@@ -311,7 +334,7 @@ function withHearButton(tile, name) {
   button.className = "hear" + (playing ? " playing" : "");
   button.setAttribute("role", "button");
   button.textContent = playing ? "\u25a0" : "\u25b6";
-  button.title = (playing ? "Stop " : "Play ") + name + " here";
+  button.title = (playing ? "Stop " : "Play ") + nameShown(name) + " here";
   button.onclick = function (event) {
     event.stopPropagation();
     hear(name);
@@ -440,7 +463,7 @@ tabSwatches.soundPanel = function (swatch) {
     swatch.appendChild(mark);
     swatch.classList.add("repeats");
   }
-  swatch.title = state.sound + (state.soundLoop ? ", on repeat" : "");
+  swatch.title = nameShown(state.sound) + (state.soundLoop ? ", on repeat" : "");
 };
 
 // Under the tab's name, the kind of sound playing, which a tone will join once the board
