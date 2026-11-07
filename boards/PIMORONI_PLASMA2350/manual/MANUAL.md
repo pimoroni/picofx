@@ -424,10 +424,10 @@ it.
 
 | Plays | Settings |
 | --- | --- |
-| `graphics` | `file` `fps` `interval` `width` `height` |
+| `drawing` | `file` `fps` `interval` `width` `height` |
 
 ```entry
-screen: graphics file=rings.py
+screen: drawing file=rings.py
 ```
 
 ```python

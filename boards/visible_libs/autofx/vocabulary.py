@@ -41,11 +41,11 @@ for _kind, _registry in (("mono", MONO_EFFECTS), ("colour", COLOUR_EFFECTS)):
 # Each screen effect and the settings it takes, kept apart from EFFECTS since a screen shows
 # images where an output lights. "gif" plays an animated GIF and "sequence" a folder of
 # images in the order their names number them, each at its own delays unless fps names one.
-# "image" holds one still, and "graphics" runs a Python file's draw(canvas, elapsed) after
+# "image" holds one still, and "drawing" runs a Python file's draw(canvas, elapsed) after
 # running its module body once. Each looks on the drive first, then the board.
 SCREEN_EFFECTS = {
+    "drawing": ("file", "fps", "interval", "width", "height"),
     "gif": ("file", "fps", "interval", "loop", "ping_pong", "first_as_last", "hold"),
-    "graphics": ("file", "fps", "interval", "width", "height"),
     "image": ("file",),
     "sequence": ("folder", "fps", "interval", "loop", "ping_pong", "first_as_last", "hold"),
 }
@@ -68,7 +68,7 @@ AUDIO_EFFECTS = {
 
 # The drive folder each effect's file is looked for in before the top of the drive, so a file
 # is named without its folder in either place
-FOLDERS = {"gif": "pictures", "image": "pictures", "sequence": "pictures", "graphics": "drawings",
+FOLDERS = {"gif": "pictures", "image": "pictures", "sequence": "pictures", "drawing": "drawings",
            "wav": "sounds"}
 
 # What each effect setting's value must be, stated once since a name means the same thing

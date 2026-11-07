@@ -136,10 +136,10 @@ it.
 
 | Plays | Settings |
 | --- | --- |
-| `graphics` | `file` `fps` `interval` `width` `height` |
+| `drawing` | `file` `fps` `interval` `width` `height` |
 
 ```entry
-__SCREEN__: graphics file=rings.py
+__SCREEN__: drawing file=rings.py
 ```
 
 ```python

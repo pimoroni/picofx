@@ -191,6 +191,13 @@ var CATALOGUE = {
   }
  },
  "screen_effects": {
+  "drawing": [
+   "file",
+   "fps",
+   "interval",
+   "width",
+   "height"
+  ],
   "gif": [
    "file",
    "fps",
@@ -199,13 +206,6 @@ var CATALOGUE = {
    "ping_pong",
    "first_as_last",
    "hold"
-  ],
-  "graphics": [
-   "file",
-   "fps",
-   "interval",
-   "width",
-   "height"
   ],
   "image": [
    "file"

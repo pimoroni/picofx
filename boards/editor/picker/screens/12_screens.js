@@ -551,7 +551,7 @@ boardLineSteps.before.push(function () {
 function screenPlaying(parts, body, letter) {
   var playing = Object.assign({}, body.screens[letter]);
   var look = playing.look = freshLook();
-  var source = {gif: "file", image: "file", graphics: "file", sequence: "folder"}[parts.effect];
+  var source = {gif: "file", image: "file", drawing: "file", sequence: "folder"}[parts.effect];
   if (!source || !parts.right[source]) return null;
   playing.shows = unquoted(parts.right[source]);
 

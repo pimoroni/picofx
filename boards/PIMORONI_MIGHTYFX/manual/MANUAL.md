@@ -468,10 +468,10 @@ it.
 
 | Plays | Settings |
 | --- | --- |
-| `graphics` | `file` `fps` `interval` `width` `height` |
+| `drawing` | `file` `fps` `interval` `width` `height` |
 
 ```entry
-screenA: graphics file=rings.py
+screenA: drawing file=rings.py
 ```
 
 ```python

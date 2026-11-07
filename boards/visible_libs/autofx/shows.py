@@ -471,7 +471,7 @@ __HEAP_IN_PSRAM = 0x11000000 <= id(bytearray(16)) < 0x12000000
 
 
 def __read_drawing(path, target, at, problems):
-    # A graphics file compiled against its own name, or None with the reason said.
+    # A drawing compiled against its own name, or None with the reason said.
     # Compiled while the entries are read, so a file that will not parse is answered
     # at load, and kept as a code object so a restart never goes back to the drive
     try:
@@ -490,7 +490,7 @@ def __read_drawing(path, target, at, problems):
 
 
 def __make_drawing(code, target, at, channel, screen, settings, fps, asleep):
-    # The player for a graphics entry, sized and with its ground set, begun once its canvas is made
+    # The player for a drawing entry, sized and with its ground set, begun once its canvas is made
     import picovector
 
     # The canvas fills the panel as the entry mounts it, so the drawing works in the
@@ -554,7 +554,7 @@ def __begin_drawings(waiting, shows, built, problems):
         # Sized and answered as a picture that will not fit is, the two landing in the
         # same file, though only the canvas is this entry's to make smaller
         except MemoryError as e:
-            problems.append(__too_big(at, target, "graphics", e))
+            problems.append(__too_big(at, target, "drawing", e))
             shows.remove(show)
             built.difference_update((scene, place) for place in show.places)
             spare = buffer
@@ -592,7 +592,7 @@ def wants_full_size(entries, board):
     # A heap in SRAM keeps the reserve two screens have always taken
     if not __HEAP_IN_PSRAM:
         return True
-    if any(entry.effect == "graphics" for entry in on_screens):
+    if any(entry.effect == "drawing" for entry in on_screens):
         return False
 
     # What each scene streams on each screen, its own entries over the always-on ones
@@ -904,7 +904,7 @@ def __too_big(at, target, effect, error):
     if effect in ("gif", "sequence"):
         advice = ("Try fewer frames, or frames half the size with pixel_double=true, "
                   "which costs a quarter as much.")
-    elif effect == "graphics":
+    elif effect == "drawing":
         # A drawing's canvas is the entry's to size, where a picture's is the file's
         advice = ("Try a smaller canvas with width= and height=, or pixel_double=true, "
                   "which halves both.")
@@ -992,7 +992,7 @@ def build_shows(entries, fx, board, problems, build=True):
             if "file" not in entry.settings and "folder" not in entry.settings:
                 if wanted == "folder":
                     example = "folder=/frames"
-                elif entry.effect == "graphics":
+                elif entry.effect == "drawing":
                     example = "file=clock.py"
                 else:
                     example = "file=anim.gif"
@@ -1008,7 +1008,7 @@ def build_shows(entries, fx, board, problems, build=True):
         # A drawing is read and compiled while the entries are checked, so a file
         # that will not parse is answered whether or not anything is built
         code = None
-        if entry.effect == "graphics":
+        if entry.effect == "drawing":
             code = __read_drawing(path, target, at, problems)
             if code is None:
                 continue
@@ -1048,7 +1048,7 @@ def build_shows(entries, fx, board, problems, build=True):
         asleep = entry.scene is not None
 
         # A drawing is begun once every panel is built, on the canvas it keeps
-        if entry.effect == "graphics":
+        if entry.effect == "drawing":
             player = __make_drawing(code, target, at, channel, screen, settings, fps, asleep)
             show = ScreenShow(screen, player, channel, entry.scene, places, light, entry.line)
             shows.append(show)

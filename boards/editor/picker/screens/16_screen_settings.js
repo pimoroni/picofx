@@ -80,7 +80,7 @@ function pictureOffset(look, shows, size, turn) {
 }
 
 // ---- drawings -------------------------------------------------------------------------------------
-// A drawing is a Python file drawn on a screen, graphics file=rings.py. It is listed only where
+// A drawing is a Python file drawn on a screen, drawing file=rings.py. It is listed only where
 // its opening string begins "Drawing:", which gives its name, then a line describing it, then
 // optionally Icon:, any Unicode character, and Colour:, one of the board's colour words or a hex.
 // A Python file without that line is not listed, whether drawing or program. The page cannot run
@@ -398,7 +398,7 @@ function lookEntry(selector, playing, look, light, size) {
   var where = pictureOffset(look, playing.shows, size, playing.turn);
   var left = [selector].concat(placingTokens(playing.turn, look, light, where)).join(" ");
   var what = kind === "folder" ? "sequence folder=" : kind === "gif" ? "gif file="
-           : kind === "drawing" ? "graphics file=" : "image file=";
+           : kind === "drawing" ? "drawing file=" : "image file=";
   return [left + ":", what + quoted(playing.shows)]
     .concat(playingTokens(playing, look, kind, size)).join(" ");
 }
