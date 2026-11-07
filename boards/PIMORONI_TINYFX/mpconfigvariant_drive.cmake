@@ -1,6 +1,6 @@
-# The FX drive: a FAT volume the board shows over USB, which effects.txt lives on, and autofx
-# frozen in to play it. The flash split for it is in mpconfigboard.cmake, and the volume's place
-# in mpconfigboard.h
+# The FX drive: a FAT volume the board shows over USB, which effects.txt, the picker and the
+# manual live on, and autofx frozen in to play it. The flash split for it is in
+# mpconfigboard.cmake, and the volume's place in mpconfigboard.h
 list(APPEND MICROPY_DEF_BOARD
     "PIMORONI_FX_DRIVE=1"
 )
