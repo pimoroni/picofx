@@ -48,20 +48,24 @@ function groupGallery() {
   var holder = document.createElement("div");
   holder.className = "groupedlooks";
   groups.forEach(function (group, at) {
+    // Each heading folds its group, all starting open. Nothing sits beside the first heading
+    // and not in it, so it is never folded away
     var head = document.createElement("div");
-    head.className = "gallery-head";
-    head.appendChild(document.createTextNode(group.name));
-    if (group.says) {
-      var says = document.createElement("span");
-      says.className = "says";
-      says.textContent = group.says;
-      head.appendChild(says);
-    }
+    head.className = "gallery-head lookshead";
+    var key = "looks:" + group.name;
+    var open = groupOpen([key, "", [], false]);
+    var fold = foldHead(group.name, group.says, open, function () {
+      groupsOpen[key] = !open;
+    });
+    // The row is the heading here, the button only its part that folds
+    fold.classList.remove("gallery-head");
+    head.appendChild(fold);
     if (at === 0 && nothing) {
       nothing.classList.add("small");
       head.appendChild(nothing);
     }
     holder.appendChild(head);
+    if (!open) return;
     var row = document.createElement("div");
     row.className = "gallery";
     row.dataset.group = group.name;
