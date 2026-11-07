@@ -430,7 +430,7 @@ def load(text, fx, maker=None, volume=None):
     # The strips the file asked for, taken before its channel names are resolved, since
     # a bare strip name stands for a run whose length only the board entry knows
     built, failed = strips(fx, board, problems)
-    resolve_strips(entries, board, has_strips, problems, failed | left_off)
+    resolve_strips(entries, board, problems, failed | left_off)
 
     # Every kind of channel this board offers, as the names each player's slots take
     names =[("mono", [name for name, _ in mono]), ("colour", [name for name, _ in colour])]

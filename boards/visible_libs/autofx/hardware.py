@@ -367,7 +367,7 @@ def channel_shown(name):
     return strip_shown(letters) + name[len(letters):]
 
 
-def resolve_strips(entries, lengths, has_strips, problems, said=()):
+def resolve_strips(entries, lengths, problems, said=()):
     """
     Expand a bare strip name into the run of LEDs it stands for, and answer a file
     naming a strip the board entry gave no length. Done as the file is loaded rather
@@ -395,13 +395,9 @@ def resolve_strips(entries, lengths, has_strips, problems, said=()):
                 # wrong is wrong for all of them at once
                 if kind not in said:
                     said.add(kind)
-                    if not has_strips:
-                        problems.append("line {}: this board has no strip connectors, "
-                                        "so it has no {}".format(entry.line, shown))
-                    else:
-                        problems.append("line {}: {} needs its length before it can "
-                                        "play. Write it like 'board: {}=60'".format(
-                                            entry.line, shown, shown))
+                    problems.append("line {}: {} needs its length before it can play. "
+                                    "Write it like 'board: {}=60'".format(
+                                        entry.line, shown, shown))
                 continue
 
             tail = channel.name[len(kind):]
