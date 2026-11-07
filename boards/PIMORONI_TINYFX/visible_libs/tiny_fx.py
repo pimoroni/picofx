@@ -84,7 +84,7 @@ class TinyFX:
         self.outputs = [PWMLED(out, gamma=self.OUTPUT_GAMMA) for out in self.OUT_PINS]
         self.rgb = RGBLED(*self.RGB_PINS, invert=False, gamma=self.RGB_GAMMA)
 
-        # Set up the i2c for Qw/st, if the user wants
+        # Set up the i2c for Qw/ST, if the user wants
         self.__i2c = None
         if init_i2c:
             self.__i2c = PimoroniI2C(self.I2C_SDA_PIN, self.I2C_SCL_PIN, i2c_freq)

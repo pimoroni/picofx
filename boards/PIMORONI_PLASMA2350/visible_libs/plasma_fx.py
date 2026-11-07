@@ -145,7 +145,7 @@ class PlasmaFX:
         # The port owns its bus and pins, and a screen is created against it
         self.spce_a = SPCEPort("A", spce_a, self.SPCE_A_PINS)
 
-        # Set up the i2c for Qw/st, if the user wants
+        # Set up the i2c for Qw/ST, if the user wants
         self.__i2c = None
         if init_i2c:
             self.__i2c = PimoroniI2C(self.I2C_SDA_PIN, self.I2C_SCL_PIN, i2c_freq)

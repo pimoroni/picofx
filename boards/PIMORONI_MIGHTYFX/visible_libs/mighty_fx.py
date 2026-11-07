@@ -447,7 +447,7 @@ class MightyFX:
             from screens import ScreenHub
             self.__hub = ScreenHub(screen_port, extra_cs=selects_port.hub_selects)
 
-        # Set up the i2c for Qw/st, if the user wants
+        # Set up the i2c for Qw/ST, if the user wants
         self.__i2c = None
         if init_i2c:
             self.__i2c = PimoroniI2C(self.I2C_SDA_PIN, self.I2C_SCL_PIN, i2c_freq)
