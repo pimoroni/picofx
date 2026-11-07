@@ -768,6 +768,10 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
 .asset:hover .bin,.asset:focus-within .bin,.sound:hover .bin,.progcard:hover .bin,
 .progcard:focus-within .bin{opacity:1}
 .bin:hover{background:#b4443a}
+/* A copy beside the bin, or in the bin's place on an example, which has none */
+.copytile{right:1.6rem}
+.copytile.alone{right:2px}
+.copytile:hover{background:var(--accent)}
 .sound{position:relative}
 
 .screens-head{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1rem}
@@ -981,9 +985,8 @@ canvas.progthumb{display:block;background:#222}
 .proghero .programnote{margin:0;border:0;border-bottom:1.5px dashed var(--board);border-radius:0;
  align-items:center;box-sizing:border-box;min-height:calc(2 * 1.5 * .85rem + 1.1rem)}
 .proghero .programnote span{flex:1}
-.progchoosenone,.progcustomise{flex:none;font:inherit;font-size:.8rem;padding:.2rem .6rem;
+.progchoosenone{flex:none;font:inherit;font-size:.8rem;padding:.2rem .6rem;
  border:1px solid var(--board);border-radius:7px;background:#fff;color:var(--board);cursor:pointer}
-.progcustomise{margin:0 0 .45rem}
 .herobody{display:flex;gap:1.1rem;align-items:flex-start;padding:.8rem}
 .progpicture{flex:none;width:16rem;height:210px;display:flex;align-items:center;
  justify-content:center}

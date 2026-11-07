@@ -271,11 +271,72 @@ async function removeFromDrive(name, kind) {
   if (file) file.open = false;
 }());
 
+// A file or folder in a folder of the drive, or null where it holds neither by that name
+async function entryIn(folder, name) {
+  try {
+    return await folder.getFileHandle(name);
+  } catch (e) {
+    try {
+      return await folder.getDirectoryHandle(name);
+    } catch (e2) {
+      return null;
+    }
+  }
+}
+
+// The files effects.txt names, found ahead of the walk so what the screens and the speaker show is
+// there while the rest of the drive is read. Each is looked for as autofx looks, in its kind's
+// folder and then at the top of the drive, or by its path from the top. A drawing's thumbnail comes
+// with it. The walk lands everything afterwards
+async function scanNamed(dir, text) {
+  var names = [];
+  var named = /\b(?:file|folder)=(?:"([^"]+)"|(\S+))/g;
+  for (var found = named.exec(text); found; found = named.exec(text)) {
+    names.push(found[1] || found[2]);
+  }
+  if (!names.length || scanBusy) return;
+  driveParts.forEach(function (part) { if (part.begin) part.begin(); });
+  var homes = Object.create(null);
+  async function offerIn(folder, file, name) {
+    var handle = await entryIn(folder, file);
+    if (!handle) return false;
+    for (var at = 0; at < driveParts.length; at++) {
+      var take = handle.kind === "file" ? driveParts[at].file : driveParts[at].folder;
+      if (take && await take(name, handle)) {
+        homes[name] = folder;
+        return true;
+      }
+    }
+    return false;
+  }
+  for (var name of names) {
+    var parts = name.split("/");
+    var file = parts.pop();
+    var places = parts.length ? [parts] : [[mediaFolderFor(file) || "pictures"], []];
+    for (var place of places) {
+      var folder = await folderAt(dir, place);
+      if (!folder || !await offerIn(folder, file, name)) continue;
+      if (/\.py$/i.test(file)) {
+        await offerIn(folder, file.replace(/\.py$/i, ".png"), name.replace(/\.py$/i, ".png"));
+      }
+      break;
+    }
+  }
+  mediaHome = homes;
+  driveParts.forEach(function (part) { if (part.land) part.land(); });
+}
+
 connectSteps.push(async function () {
   state.fileHandle = drive.fileHandle;
   draw();
-  await scanMedia(drive.dirHandle);
+  try {
+    await scanNamed(drive.dirHandle, await (await drive.fileHandle.getFile()).text());
+  } catch (e) {
+    // The walk finds them with the rest
+  }
   draw();
+  // Walked without holding up the steps after, so effects.txt is read back meanwhile
+  scanMedia(drive.dirHandle).then(draw, function () {});
 });
 
 setInterval(rescanMedia, 5000);

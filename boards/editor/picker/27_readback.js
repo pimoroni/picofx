@@ -176,6 +176,25 @@ function readProgram(named, argued) {
   if (argued) boardResidue.push(argued);
 }
 
+// A program the file names before the drive's programs are read, as [program=, args=]. It waits on
+// the board line as written, so a save in the meantime keeps it
+var programWaiting = null;
+
+// Read the waiting program as readProgram() would have, once the programs are known, unless one
+// was chosen in the meantime. Still unknown, it stays on the board line and the page where it is
+function readWaitingProgram() {
+  if (!programWaiting) return;
+  var named = programWaiting[0], argued = programWaiting[1];
+  programWaiting = null;
+  if (boardSet.program) return;
+  boardResidue = boardResidue.filter(function (token) {
+    return token !== named && token !== argued;
+  });
+  var page = onProgramPage;
+  readProgram(named, argued);
+  if (!boardSet.program) onProgramPage = page;
+}
+
 // Take a file into the page: the board line, the scenes, and every entry kept in its scene
 function absorbFile(text) {
   var parsed = readEffects(text);
@@ -195,6 +214,7 @@ function absorbFile(text) {
     else boardResidue.push(token);
   });
   readProgram(named, argued);
+  programWaiting = named && !boardSet.program && !programsKnown ? [named, argued] : null;
   boardComments = parsed.comments;
 
   function bodyKeeping(kept) {

@@ -872,6 +872,51 @@ function drawingFold(key, held) {
   return foldSection(key, "Drawing", said.join(", "), body);
 }
 
+// A drawing's tile can copy it to the user's own drawings folder, to change in an editor, where it
+// takes the original's place on any screen or hub position showing it in this scene. An example is
+// customised, and one of the user's own duplicated
+function drawingCopyTile(name) {
+  return copyTile(isExampleMedia(name), nameShown(name), "drawings", async function () {
+    try {
+      var copy = await copyDrawing(name);
+      var held = SCREENS.map(function (letter) { return state.screens[letter]; });
+      if (state.places) held = held.concat(Object.keys(state.places).map(function (place) {
+        return state.places[place];
+      }));
+      held.forEach(function (one) {
+        if (one.shows !== name) return;
+        // The copy keeps the turn the original was given, so it shows as the original did
+        if (one.turns && name in one.turns) one.turns[copy] = one.turns[name];
+        one.shows = copy;
+        if ("lastShows" in one) one.lastShows = copy;
+      });
+      banner("Copied to drawings/" + copy + " on the FX drive. Open it in Thonny or another " +
+             "editor to change it.");
+    } catch (e) {
+      banner(e.name === "QuotaExceededError"
+        ? "The FX drive is full. Delete something from it and try again."
+        : "Could not copy " + nameShown(name) + " (" + e.message + ").", true);
+    }
+    draw();
+  });
+}
+
+// Copy a drawing into the drawings folder, its thumbnail with it, and read the drive again so the
+// copy is listed. Returns the copy's name
+async function copyDrawing(name) {
+  var dir = state.dirHandle;
+  var example = isExampleMedia(name);
+  var from = example ? await folderAt(dir, name.split("/").slice(0, -1)) : mediaHome[name] || dir;
+  var into = await dir.getDirectoryHandle("drawings", {create: true});
+  var copy = await copyToOwn(from, nameShown(name), into, !example, [".png"]);
+  // A walk already under way would miss the copy, so the drive is read until it is listed
+  for (var tries = 0; tries < 20 && !mediaNamed(copy); tries++) {
+    await scanMedia(dir);
+    if (!mediaNamed(copy)) await new Promise(function (settle) { setTimeout(settle, 100); });
+  }
+  return copy;
+}
+
 function playbackFold(key, held, media) {
   var look = held.look;
   // A folder whose names say no delay has nothing to play at its own pace
@@ -959,8 +1004,8 @@ function showingLine(held, letter) {
   if (media && media.kind === "drawing") {
     var size = state.hub.on ? state.hub.sizes[letter] : state.screens[letter].size;
     var canvas = canvasPixels(held.look, size, held.turn);
-    line.innerHTML = "drawing <b>" + picture + "</b><small>canvas, " + canvas[0] + " \u00d7 " +
-                     canvas[1] + "</small>";
+    line.innerHTML = "drawing <b>" + nameShown(picture) + "</b><small>canvas, " + canvas[0] +
+                     " \u00d7 " + canvas[1] + "</small>";
     return line;
   }
   var kind = media ? {image: "picture", gif: "gif", folder: "slideshow"}[media.kind] : null;

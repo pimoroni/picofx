@@ -537,6 +537,21 @@ var programView = null;
 // with none chosen, and the file says program= only once one is
 var onProgramPage = false;
 
+// A tile's copy, in the bin's place on an example, which has none, or beside the bin on the user's
+// own. An example is customised and one of the user's own duplicated, into the folder named
+function copyTile(example, file, folder, copy) {
+  var tile = document.createElement("span");
+  tile.className = "bin copytile" + (example ? " alone" : "");
+  tile.textContent = "\u29c9";
+  tile.title = (example ? "Customise a copy of " : "Duplicate ") + file + " in the " + folder +
+               " folder";
+  tile.onclick = function (e) {
+    e.stopPropagation();
+    copy();
+  };
+  return tile;
+}
+
 // A program as a card, as the looks are, its thumbnail over its name, and what it uses as a row
 // of small drawings along the foot of the thumbnail
 function programCard(path) {
@@ -564,8 +579,26 @@ function programCard(path) {
     if (boardSet.program) boardSet.lastProgram = path;
     draw();
   };
+  // A copy to change, which takes the original's place where it was chosen
+  var example = !!(programNamed(path) || {}).example;
+  var file = path.split("/").pop();
+  if (drive.dirHandle) card.appendChild(copyTile(example, file, OWN_FOLDER, async function () {
+    try {
+      var copy = await copyProgram(path);
+      PROGRAMS = await drivePrograms(drive.dirHandle, true);
+      if (boardSet.program === path) boardSet.program = copy;
+      if (boardSet.lastProgram === path) boardSet.lastProgram = copy;
+      banner("Copied to " + copy + " on the FX drive. Open it in Thonny or another editor to " +
+             "change it.");
+    } catch (e) {
+      banner(e.name === "QuotaExceededError"
+        ? "The FX drive is full. Delete something from it and try again."
+        : "Could not copy " + path.split("/").pop() + " (" + e.message + ").", true);
+    }
+    draw();
+  }));
   // The user's own can be deleted from the drive, as the effects' pictures and sounds can
-  if (!(programNamed(path) || {}).example) {
+  if (!example) {
     var bin = document.createElement("span");
     bin.className = "bin";
     bin.textContent = "\u00d7";
@@ -686,32 +719,6 @@ function programHero(path) {
                     "<p>" + escapeHtml(program.does || "No description.") + "</p>" +
                     "<p class='progwhere'>" + escapeHtml(path) +
                     (program.example ? ", built in" : ", on the drive") + "</p>";
-  // A program can be copied to the user's own folder, picked in its place, to change in an editor.
-  // An example is customised, and one of the user's own duplicated
-  if (drive.dirHandle) {
-    var customise = document.createElement("button");
-    customise.type = "button";
-    customise.className = "progcustomise";
-    customise.textContent = program.example ? "Customise" : "Duplicate";
-    customise.title = "Copy this " + (program.example ? "example" : "program") + " to the " +
-                      OWN_FOLDER + " folder on the FX drive, to change in an editor.";
-    customise.onclick = async function () {
-      try {
-        var copy = await copyProgram(path);
-        PROGRAMS = await drivePrograms(drive.dirHandle, true);
-        boardSet.program = copy;
-        boardSet.lastProgram = copy;
-        banner("Copied to " + copy + " on the FX drive. Open it in Thonny or another editor to " +
-               "change it.");
-      } catch (e) {
-        banner(e.name === "QuotaExceededError"
-          ? "The FX drive is full. Delete something from it and try again."
-          : "Could not copy " + path.split("/").pop() + " (" + e.message + ").", true);
-      }
-      draw();
-    };
-    words.appendChild(customise);
-  }
   // What it uses, each drawn and named, as the filter below names them
   var uses = document.createElement("div");
   uses.className = "herouses";

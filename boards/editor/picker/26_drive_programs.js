@@ -221,11 +221,13 @@ function isExample(path) {
 async function drivePrograms(dir, ownOnly) {
   var files = [], pictures = {}, found = [];
   driveHasCredentials = false;
-  Object.keys(PICTURES).forEach(function (path) {
-    if (ownOnly && isExample(path)) return;
-    PICTURES[path].forEach(URL.revokeObjectURL);
-    delete PICTURES[path];
-  });
+  // The pictures read now, landed whole at the end, so those showing stay until replaced
+  var read = {};
+  if (ownOnly) {
+    Object.keys(PICTURES).forEach(function (path) {
+      if (isExample(path)) read[path] = PICTURES[path];
+    });
+  }
   await filesIn(dir, "", "", false, files, pictures);
   var own = await folderAt(dir, [OWN_FOLDER]);
   if (own) await filesIn(own, OWN_FOLDER + "/", "", false, files, pictures);
@@ -246,7 +248,7 @@ async function drivePrograms(dir, ownOnly) {
       if (program) {
         found.push(program);
         var shown = await picturesOf(program, pictures);
-        if (shown.length) PICTURES[program.path] = shown;
+        if (shown.length) read[program.path] = shown;
       }
     } catch (e) {
       // One that will not read is left out, as if it were not there
@@ -257,6 +259,10 @@ async function drivePrograms(dir, ownOnly) {
     }
   }
   programsReading = null;
+  Object.keys(PICTURES).forEach(function (path) {
+    if (read[path] !== PICTURES[path]) PICTURES[path].forEach(URL.revokeObjectURL);
+  });
+  PICTURES = read;
   var urls = [];
   Object.keys(PICTURES).forEach(function (path) { urls = urls.concat(PICTURES[path]); });
   loadThumbs(urls);
@@ -310,30 +316,26 @@ async function rescanPrograms() {
 
 setInterval(rescanPrograms, 5000);
 
-// Copy a program into OWN_FOLDER for the user to change, with its pictures renamed to match. An
-// example keeps its name where it is free, and the user's own always takes a new one, its number
-// counted on, so name_2 duplicates as the first of name_3, name_4 and on that is free. Its Section
-// line is dropped so the copy is listed as the user's own. Returns the copy's path
-async function copyProgram(path) {
-  var parts = path.split("/");
-  var name = parts.pop();
-  var own = !(programNamed(path) || {}).example;
+// Copy a Python file from one folder into the user's own, with the pictures named after it renamed
+// to match, for the user to change. An example keeps its name where it is free, and the user's own
+// always takes a new one, its number counted on, so name_2 duplicates as the first of name_3,
+// name_4 and on that is free. Its Section line is dropped so the copy is listed as the user's own.
+// Returns the copy's file name
+async function copyToOwn(from, name, into, own, suffixes) {
   var stem = name.replace(/\.py$/i, "");
   var base = own ? stem.replace(/_\d+$/, "") : stem;
-  var from = await folderAt(drive.dirHandle, parts);
   var source = await (await (await from.getFileHandle(name)).getFile()).text();
-  var into = await drive.dirHandle.getDirectoryHandle(OWN_FOLDER, {create: true});
   var taken = {};
   for await (var entry of into.keys()) taken[entry.toLowerCase()] = true;
   if (own) taken[base.toLowerCase() + ".py"] = true;
   var copy = base;
   for (var count = 2; taken[copy.toLowerCase() + ".py"]; count++) copy = base + "_" + count;
   var written = [[copy + ".py", source.replace(/^[ \t]*Section:.*\r?\n/m, "")]];
-  for (var suffix of [".png", "-2.png"]) {
+  for (var suffix of suffixes) {
     try {
       written.push([copy + suffix, await (await from.getFileHandle(stem + suffix)).getFile()]);
     } catch (e) {
-      // A program without that picture has none to copy
+      // A file without that picture has none to copy
     }
   }
   for (var i = 0; i < written.length; i++) {
@@ -341,7 +343,18 @@ async function copyProgram(path) {
     await writable.write(written[i][1]);
     await writable.close();
   }
-  return OWN_FOLDER + "/" + copy + ".py";
+  return copy + ".py";
+}
+
+// Copy a program into OWN_FOLDER for the user to change, its pictures with it. Returns the copy's
+// path
+async function copyProgram(path) {
+  var parts = path.split("/");
+  var name = parts.pop();
+  var from = await folderAt(drive.dirHandle, parts);
+  var into = await drive.dirHandle.getDirectoryHandle(OWN_FOLDER, {create: true});
+  var own = !(programNamed(path) || {}).example;
+  return OWN_FOLDER + "/" + await copyToOwn(from, name, into, own, [".png", "-2.png"]);
 }
 
 // Delete one of the user's own programs from the drive, once asked. In OWN_FOLDER its pictures go
@@ -372,8 +385,58 @@ async function removeProgram(path) {
   draw();
 }
 
+// Whether the open drive's programs have been read, which takes a while as each file is read whole
+var programsKnown = false;
+
+// The program effects.txt names is read first, so the file is read back with it known, and the rest
+// without holding up the steps after
 connectSteps.push(async function () {
-  PROGRAMS = await drivePrograms(drive.dirHandle);
-  forgetMissingPrograms();
-  draw();
+  programsKnown = false;
+  await readNamedProgram();
+  readDrivePrograms();
 });
+
+// The program effects.txt's board line names, read on its own as the list of programs to begin with
+async function readNamedProgram() {
+  try {
+    var text = await (await drive.fileHandle.getFile()).text();
+    var named = text.match(/^\s*board\s*:.*?\bprogram=("[^"]+"|\S+)/im);
+    if (!named) return;
+    var path = named[1].replace(/^"|"$/g, "");
+    var parts = path.split("/");
+    var name = parts.pop();
+    var folder = await folderAt(drive.dirHandle, parts);
+    var source = await (await (await folder.getFileHandle(name)).getFile()).text();
+    // An example's folder below EXAMPLES_ROOT, as the walk records it
+    var below = isExample(path) ? path.slice(EXAMPLES_ROOT.length) : "";
+    var program = programFrom(path, below.slice(0, Math.max(below.lastIndexOf("/"), 0)), source);
+    if (!program) return;
+    PROGRAMS = [program];
+    // Its pictures with it, found beside it as the walk would find them
+    var beside = parts.length ? parts.join("/") + "/" : "";
+    var stem = name.replace(/\.py$/i, "");
+    var pictures = {};
+    for (var picture of [program.picture || stem + ".png", stem + "-2.png"]) {
+      try {
+        pictures[beside + picture] = await folder.getFileHandle(picture);
+      } catch (e) {
+        // One it has not got
+      }
+    }
+    var shown = await picturesOf(program, pictures);
+    if (shown.length) {
+      PICTURES[path] = shown;
+      loadThumbs(shown);
+    }
+  } catch (e) {
+    // Found with the rest, or not at all
+  }
+}
+
+async function readDrivePrograms() {
+  PROGRAMS = await drivePrograms(drive.dirHandle);
+  programsKnown = true;
+  forgetMissingPrograms();
+  readWaitingProgram();
+  draw();
+}

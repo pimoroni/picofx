@@ -472,6 +472,7 @@ function renderAssets() {
     cell.appendChild(pick);
     // An example comes back when the board's examples are flashed again, so it keeps no bin
     if (!isExampleMedia(name)) cell.appendChild(binButton(name, media.kind));
+    if (media.kind === "drawing" && state.fileHandle) cell.appendChild(drawingCopyTile(name));
     box.appendChild(cell);
   }
 }

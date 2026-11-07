@@ -768,6 +768,10 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
 .asset:hover .bin,.asset:focus-within .bin,.sound:hover .bin,.progcard:hover .bin,
 .progcard:focus-within .bin{opacity:1}
 .bin:hover{background:#b4443a}
+/* A copy beside the bin, or in the bin's place on an example, which has none */
+.copytile{right:1.6rem}
+.copytile.alone{right:2px}
+.copytile:hover{background:var(--accent)}
 .sound{position:relative}
 
 .screens-head{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1rem}
@@ -981,9 +985,8 @@ canvas.progthumb{display:block;background:#222}
 .proghero .programnote{margin:0;border:0;border-bottom:1.5px dashed var(--board);border-radius:0;
  align-items:center;box-sizing:border-box;min-height:calc(2 * 1.5 * .85rem + 1.1rem)}
 .proghero .programnote span{flex:1}
-.progchoosenone,.progcustomise{flex:none;font:inherit;font-size:.8rem;padding:.2rem .6rem;
+.progchoosenone{flex:none;font:inherit;font-size:.8rem;padding:.2rem .6rem;
  border:1px solid var(--board);border-radius:7px;background:#fff;color:var(--board);cursor:pointer}
-.progcustomise{margin:0 0 .45rem}
 .herobody{display:flex;gap:1.1rem;align-items:flex-start;padding:.8rem}
 .progpicture{flex:none;width:16rem;height:210px;display:flex;align-items:center;
  justify-content:center}
@@ -7758,6 +7761,7 @@ function renderAssets() {
     cell.appendChild(pick);
     // An example comes back when the board's examples are flashed again, so it keeps no bin
     if (!isExampleMedia(name)) cell.appendChild(binButton(name, media.kind));
+    if (media.kind === "drawing" && state.fileHandle) cell.appendChild(drawingCopyTile(name));
     box.appendChild(cell);
   }
 }
@@ -9071,6 +9075,51 @@ function drawingFold(key, held) {
   return foldSection(key, "Drawing", said.join(", "), body);
 }
 
+// A drawing's tile can copy it to the user's own drawings folder, to change in an editor, where it
+// takes the original's place on any screen or hub position showing it in this scene. An example is
+// customised, and one of the user's own duplicated
+function drawingCopyTile(name) {
+  return copyTile(isExampleMedia(name), nameShown(name), "drawings", async function () {
+    try {
+      var copy = await copyDrawing(name);
+      var held = SCREENS.map(function (letter) { return state.screens[letter]; });
+      if (state.places) held = held.concat(Object.keys(state.places).map(function (place) {
+        return state.places[place];
+      }));
+      held.forEach(function (one) {
+        if (one.shows !== name) return;
+        // The copy keeps the turn the original was given, so it shows as the original did
+        if (one.turns && name in one.turns) one.turns[copy] = one.turns[name];
+        one.shows = copy;
+        if ("lastShows" in one) one.lastShows = copy;
+      });
+      banner("Copied to drawings/" + copy + " on the FX drive. Open it in Thonny or another " +
+             "editor to change it.");
+    } catch (e) {
+      banner(e.name === "QuotaExceededError"
+        ? "The FX drive is full. Delete something from it and try again."
+        : "Could not copy " + nameShown(name) + " (" + e.message + ").", true);
+    }
+    draw();
+  });
+}
+
+// Copy a drawing into the drawings folder, its thumbnail with it, and read the drive again so the
+// copy is listed. Returns the copy's name
+async function copyDrawing(name) {
+  var dir = state.dirHandle;
+  var example = isExampleMedia(name);
+  var from = example ? await folderAt(dir, name.split("/").slice(0, -1)) : mediaHome[name] || dir;
+  var into = await dir.getDirectoryHandle("drawings", {create: true});
+  var copy = await copyToOwn(from, nameShown(name), into, !example, [".png"]);
+  // A walk already under way would miss the copy, so the drive is read until it is listed
+  for (var tries = 0; tries < 20 && !mediaNamed(copy); tries++) {
+    await scanMedia(dir);
+    if (!mediaNamed(copy)) await new Promise(function (settle) { setTimeout(settle, 100); });
+  }
+  return copy;
+}
+
 function playbackFold(key, held, media) {
   var look = held.look;
   // A folder whose names say no delay has nothing to play at its own pace
@@ -9158,8 +9207,8 @@ function showingLine(held, letter) {
   if (media && media.kind === "drawing") {
     var size = state.hub.on ? state.hub.sizes[letter] : state.screens[letter].size;
     var canvas = canvasPixels(held.look, size, held.turn);
-    line.innerHTML = "drawing <b>" + picture + "</b><small>canvas, " + canvas[0] + " \u00d7 " +
-                     canvas[1] + "</small>";
+    line.innerHTML = "drawing <b>" + nameShown(picture) + "</b><small>canvas, " + canvas[0] +
+                     " \u00d7 " + canvas[1] + "</small>";
     return line;
   }
   var kind = media ? {image: "picture", gif: "gif", folder: "slideshow"}[media.kind] : null;
@@ -10536,6 +10585,21 @@ var programView = null;
 // with none chosen, and the file says program= only once one is
 var onProgramPage = false;
 
+// A tile's copy, in the bin's place on an example, which has none, or beside the bin on the user's
+// own. An example is customised and one of the user's own duplicated, into the folder named
+function copyTile(example, file, folder, copy) {
+  var tile = document.createElement("span");
+  tile.className = "bin copytile" + (example ? " alone" : "");
+  tile.textContent = "\u29c9";
+  tile.title = (example ? "Customise a copy of " : "Duplicate ") + file + " in the " + folder +
+               " folder";
+  tile.onclick = function (e) {
+    e.stopPropagation();
+    copy();
+  };
+  return tile;
+}
+
 // A program as a card, as the looks are, its thumbnail over its name, and what it uses as a row
 // of small drawings along the foot of the thumbnail
 function programCard(path) {
@@ -10563,8 +10627,26 @@ function programCard(path) {
     if (boardSet.program) boardSet.lastProgram = path;
     draw();
   };
+  // A copy to change, which takes the original's place where it was chosen
+  var example = !!(programNamed(path) || {}).example;
+  var file = path.split("/").pop();
+  if (drive.dirHandle) card.appendChild(copyTile(example, file, OWN_FOLDER, async function () {
+    try {
+      var copy = await copyProgram(path);
+      PROGRAMS = await drivePrograms(drive.dirHandle, true);
+      if (boardSet.program === path) boardSet.program = copy;
+      if (boardSet.lastProgram === path) boardSet.lastProgram = copy;
+      banner("Copied to " + copy + " on the FX drive. Open it in Thonny or another editor to " +
+             "change it.");
+    } catch (e) {
+      banner(e.name === "QuotaExceededError"
+        ? "The FX drive is full. Delete something from it and try again."
+        : "Could not copy " + path.split("/").pop() + " (" + e.message + ").", true);
+    }
+    draw();
+  }));
   // The user's own can be deleted from the drive, as the effects' pictures and sounds can
-  if (!(programNamed(path) || {}).example) {
+  if (!example) {
     var bin = document.createElement("span");
     bin.className = "bin";
     bin.textContent = "\u00d7";
@@ -10685,32 +10767,6 @@ function programHero(path) {
                     "<p>" + escapeHtml(program.does || "No description.") + "</p>" +
                     "<p class='progwhere'>" + escapeHtml(path) +
                     (program.example ? ", built in" : ", on the drive") + "</p>";
-  // A program can be copied to the user's own folder, picked in its place, to change in an editor.
-  // An example is customised, and one of the user's own duplicated
-  if (drive.dirHandle) {
-    var customise = document.createElement("button");
-    customise.type = "button";
-    customise.className = "progcustomise";
-    customise.textContent = program.example ? "Customise" : "Duplicate";
-    customise.title = "Copy this " + (program.example ? "example" : "program") + " to the " +
-                      OWN_FOLDER + " folder on the FX drive, to change in an editor.";
-    customise.onclick = async function () {
-      try {
-        var copy = await copyProgram(path);
-        PROGRAMS = await drivePrograms(drive.dirHandle, true);
-        boardSet.program = copy;
-        boardSet.lastProgram = copy;
-        banner("Copied to " + copy + " on the FX drive. Open it in Thonny or another editor to " +
-               "change it.");
-      } catch (e) {
-        banner(e.name === "QuotaExceededError"
-          ? "The FX drive is full. Delete something from it and try again."
-          : "Could not copy " + path.split("/").pop() + " (" + e.message + ").", true);
-      }
-      draw();
-    };
-    words.appendChild(customise);
-  }
   // What it uses, each drawn and named, as the filter below names them
   var uses = document.createElement("div");
   uses.className = "herouses";
@@ -11649,11 +11705,72 @@ async function removeFromDrive(name, kind) {
   if (file) file.open = false;
 }());
 
+// A file or folder in a folder of the drive, or null where it holds neither by that name
+async function entryIn(folder, name) {
+  try {
+    return await folder.getFileHandle(name);
+  } catch (e) {
+    try {
+      return await folder.getDirectoryHandle(name);
+    } catch (e2) {
+      return null;
+    }
+  }
+}
+
+// The files effects.txt names, found ahead of the walk so what the screens and the speaker show is
+// there while the rest of the drive is read. Each is looked for as autofx looks, in its kind's
+// folder and then at the top of the drive, or by its path from the top. A drawing's thumbnail comes
+// with it. The walk lands everything afterwards
+async function scanNamed(dir, text) {
+  var names = [];
+  var named = /\b(?:file|folder)=(?:"([^"]+)"|(\S+))/g;
+  for (var found = named.exec(text); found; found = named.exec(text)) {
+    names.push(found[1] || found[2]);
+  }
+  if (!names.length || scanBusy) return;
+  driveParts.forEach(function (part) { if (part.begin) part.begin(); });
+  var homes = Object.create(null);
+  async function offerIn(folder, file, name) {
+    var handle = await entryIn(folder, file);
+    if (!handle) return false;
+    for (var at = 0; at < driveParts.length; at++) {
+      var take = handle.kind === "file" ? driveParts[at].file : driveParts[at].folder;
+      if (take && await take(name, handle)) {
+        homes[name] = folder;
+        return true;
+      }
+    }
+    return false;
+  }
+  for (var name of names) {
+    var parts = name.split("/");
+    var file = parts.pop();
+    var places = parts.length ? [parts] : [[mediaFolderFor(file) || "pictures"], []];
+    for (var place of places) {
+      var folder = await folderAt(dir, place);
+      if (!folder || !await offerIn(folder, file, name)) continue;
+      if (/\.py$/i.test(file)) {
+        await offerIn(folder, file.replace(/\.py$/i, ".png"), name.replace(/\.py$/i, ".png"));
+      }
+      break;
+    }
+  }
+  mediaHome = homes;
+  driveParts.forEach(function (part) { if (part.land) part.land(); });
+}
+
 connectSteps.push(async function () {
   state.fileHandle = drive.fileHandle;
   draw();
-  await scanMedia(drive.dirHandle);
+  try {
+    await scanNamed(drive.dirHandle, await (await drive.fileHandle.getFile()).text());
+  } catch (e) {
+    // The walk finds them with the rest
+  }
   draw();
+  // Walked without holding up the steps after, so effects.txt is read back meanwhile
+  scanMedia(drive.dirHandle).then(draw, function () {});
 });
 
 setInterval(rescanMedia, 5000);
@@ -11880,11 +11997,13 @@ function isExample(path) {
 async function drivePrograms(dir, ownOnly) {
   var files = [], pictures = {}, found = [];
   driveHasCredentials = false;
-  Object.keys(PICTURES).forEach(function (path) {
-    if (ownOnly && isExample(path)) return;
-    PICTURES[path].forEach(URL.revokeObjectURL);
-    delete PICTURES[path];
-  });
+  // The pictures read now, landed whole at the end, so those showing stay until replaced
+  var read = {};
+  if (ownOnly) {
+    Object.keys(PICTURES).forEach(function (path) {
+      if (isExample(path)) read[path] = PICTURES[path];
+    });
+  }
   await filesIn(dir, "", "", false, files, pictures);
   var own = await folderAt(dir, [OWN_FOLDER]);
   if (own) await filesIn(own, OWN_FOLDER + "/", "", false, files, pictures);
@@ -11905,7 +12024,7 @@ async function drivePrograms(dir, ownOnly) {
       if (program) {
         found.push(program);
         var shown = await picturesOf(program, pictures);
-        if (shown.length) PICTURES[program.path] = shown;
+        if (shown.length) read[program.path] = shown;
       }
     } catch (e) {
       // One that will not read is left out, as if it were not there
@@ -11916,6 +12035,10 @@ async function drivePrograms(dir, ownOnly) {
     }
   }
   programsReading = null;
+  Object.keys(PICTURES).forEach(function (path) {
+    if (read[path] !== PICTURES[path]) PICTURES[path].forEach(URL.revokeObjectURL);
+  });
+  PICTURES = read;
   var urls = [];
   Object.keys(PICTURES).forEach(function (path) { urls = urls.concat(PICTURES[path]); });
   loadThumbs(urls);
@@ -11969,30 +12092,26 @@ async function rescanPrograms() {
 
 setInterval(rescanPrograms, 5000);
 
-// Copy a program into OWN_FOLDER for the user to change, with its pictures renamed to match. An
-// example keeps its name where it is free, and the user's own always takes a new one, its number
-// counted on, so name_2 duplicates as the first of name_3, name_4 and on that is free. Its Section
-// line is dropped so the copy is listed as the user's own. Returns the copy's path
-async function copyProgram(path) {
-  var parts = path.split("/");
-  var name = parts.pop();
-  var own = !(programNamed(path) || {}).example;
+// Copy a Python file from one folder into the user's own, with the pictures named after it renamed
+// to match, for the user to change. An example keeps its name where it is free, and the user's own
+// always takes a new one, its number counted on, so name_2 duplicates as the first of name_3,
+// name_4 and on that is free. Its Section line is dropped so the copy is listed as the user's own.
+// Returns the copy's file name
+async function copyToOwn(from, name, into, own, suffixes) {
   var stem = name.replace(/\.py$/i, "");
   var base = own ? stem.replace(/_\d+$/, "") : stem;
-  var from = await folderAt(drive.dirHandle, parts);
   var source = await (await (await from.getFileHandle(name)).getFile()).text();
-  var into = await drive.dirHandle.getDirectoryHandle(OWN_FOLDER, {create: true});
   var taken = {};
   for await (var entry of into.keys()) taken[entry.toLowerCase()] = true;
   if (own) taken[base.toLowerCase() + ".py"] = true;
   var copy = base;
   for (var count = 2; taken[copy.toLowerCase() + ".py"]; count++) copy = base + "_" + count;
   var written = [[copy + ".py", source.replace(/^[ \t]*Section:.*\r?\n/m, "")]];
-  for (var suffix of [".png", "-2.png"]) {
+  for (var suffix of suffixes) {
     try {
       written.push([copy + suffix, await (await from.getFileHandle(stem + suffix)).getFile()]);
     } catch (e) {
-      // A program without that picture has none to copy
+      // A file without that picture has none to copy
     }
   }
   for (var i = 0; i < written.length; i++) {
@@ -12000,7 +12119,18 @@ async function copyProgram(path) {
     await writable.write(written[i][1]);
     await writable.close();
   }
-  return OWN_FOLDER + "/" + copy + ".py";
+  return copy + ".py";
+}
+
+// Copy a program into OWN_FOLDER for the user to change, its pictures with it. Returns the copy's
+// path
+async function copyProgram(path) {
+  var parts = path.split("/");
+  var name = parts.pop();
+  var from = await folderAt(drive.dirHandle, parts);
+  var into = await drive.dirHandle.getDirectoryHandle(OWN_FOLDER, {create: true});
+  var own = !(programNamed(path) || {}).example;
+  return OWN_FOLDER + "/" + await copyToOwn(from, name, into, own, [".png", "-2.png"]);
 }
 
 // Delete one of the user's own programs from the drive, once asked. In OWN_FOLDER its pictures go
@@ -12031,11 +12161,61 @@ async function removeProgram(path) {
   draw();
 }
 
+// Whether the open drive's programs have been read, which takes a while as each file is read whole
+var programsKnown = false;
+
+// The program effects.txt names is read first, so the file is read back with it known, and the rest
+// without holding up the steps after
 connectSteps.push(async function () {
-  PROGRAMS = await drivePrograms(drive.dirHandle);
-  forgetMissingPrograms();
-  draw();
+  programsKnown = false;
+  await readNamedProgram();
+  readDrivePrograms();
 });
+
+// The program effects.txt's board line names, read on its own as the list of programs to begin with
+async function readNamedProgram() {
+  try {
+    var text = await (await drive.fileHandle.getFile()).text();
+    var named = text.match(/^\s*board\s*:.*?\bprogram=("[^"]+"|\S+)/im);
+    if (!named) return;
+    var path = named[1].replace(/^"|"$/g, "");
+    var parts = path.split("/");
+    var name = parts.pop();
+    var folder = await folderAt(drive.dirHandle, parts);
+    var source = await (await (await folder.getFileHandle(name)).getFile()).text();
+    // An example's folder below EXAMPLES_ROOT, as the walk records it
+    var below = isExample(path) ? path.slice(EXAMPLES_ROOT.length) : "";
+    var program = programFrom(path, below.slice(0, Math.max(below.lastIndexOf("/"), 0)), source);
+    if (!program) return;
+    PROGRAMS = [program];
+    // Its pictures with it, found beside it as the walk would find them
+    var beside = parts.length ? parts.join("/") + "/" : "";
+    var stem = name.replace(/\.py$/i, "");
+    var pictures = {};
+    for (var picture of [program.picture || stem + ".png", stem + "-2.png"]) {
+      try {
+        pictures[beside + picture] = await folder.getFileHandle(picture);
+      } catch (e) {
+        // One it has not got
+      }
+    }
+    var shown = await picturesOf(program, pictures);
+    if (shown.length) {
+      PICTURES[path] = shown;
+      loadThumbs(shown);
+    }
+  } catch (e) {
+    // Found with the rest, or not at all
+  }
+}
+
+async function readDrivePrograms() {
+  PROGRAMS = await drivePrograms(drive.dirHandle);
+  programsKnown = true;
+  forgetMissingPrograms();
+  readWaitingProgram();
+  draw();
+}
 
 // ---- reading the board's file back ----------------------------------------------------------
 // Opening the drive reads effects.txt into the page. Every line is either read into the page's
@@ -12214,6 +12394,25 @@ function readProgram(named, argued) {
   if (argued) boardResidue.push(argued);
 }
 
+// A program the file names before the drive's programs are read, as [program=, args=]. It waits on
+// the board line as written, so a save in the meantime keeps it
+var programWaiting = null;
+
+// Read the waiting program as readProgram() would have, once the programs are known, unless one
+// was chosen in the meantime. Still unknown, it stays on the board line and the page where it is
+function readWaitingProgram() {
+  if (!programWaiting) return;
+  var named = programWaiting[0], argued = programWaiting[1];
+  programWaiting = null;
+  if (boardSet.program) return;
+  boardResidue = boardResidue.filter(function (token) {
+    return token !== named && token !== argued;
+  });
+  var page = onProgramPage;
+  readProgram(named, argued);
+  if (!boardSet.program) onProgramPage = page;
+}
+
 // Take a file into the page: the board line, the scenes, and every entry kept in its scene
 function absorbFile(text) {
   var parsed = readEffects(text);
@@ -12233,6 +12432,7 @@ function absorbFile(text) {
     else boardResidue.push(token);
   });
   readProgram(named, argued);
+  programWaiting = named && !boardSet.program && !programsKnown ? [named, argued] : null;
   boardComments = parsed.comments;
 
   function bodyKeeping(kept) {
