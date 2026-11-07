@@ -55,6 +55,7 @@ the change a few seconds later. One line per strip, or for the board's own LED:
 
   board: stripDat=60
   stripDat: rainbow_wave speed=0.3
+  rgb: rainbow speed=0.3
 
 MANUAL.html on this drive has the rest, and opens in a browser: every effect and
 what it takes, the screen, running a program, and showing scenes one after

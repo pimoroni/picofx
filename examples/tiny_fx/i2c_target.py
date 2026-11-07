@@ -15,7 +15,7 @@ with a unique address and press reset to set it running.
 Your Tiny FX will now appear to your I2C host board as an I2C device at the
 address you have given, and can be controlled by it.
 
-Refer to the Tiny FX Host example for details of how to control your Tiny FX Target.
+Refer to the comms examples for details of how to control your Tiny FX Target.
 """
 
 # Constants
