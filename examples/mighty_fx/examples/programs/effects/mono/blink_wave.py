@@ -6,7 +6,7 @@ from picofx.mono import BlinkWaveFX
 """
 Play a wave of blinks across every colour of Mighty FX's outputs.
 
-Half the colours are lit at once, so as the wave passes each output runs red, yellow,
+Half the colours are lit at once, so as the wave passes, each output runs red, yellow,
 white, then cyan, blue and dark.
 
 Press "Boot" to exit the program.

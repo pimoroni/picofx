@@ -280,7 +280,7 @@ places = [{"across": 0.0, "down": 0.0, "frames": 0} for _ in WORLDS]
 
 # Which world is on the first panel. The other follows it, so one number says where both are
 leading = 0
-print(f"{len(screens)} panel(s): press for the next world, hold {QUIT_MS}ms to finish")
+print(f"{len(screens)} panel(s): press Boot for the next world, hold it {QUIT_MS}ms to finish")
 
 pressed_since = None
 leaving = False

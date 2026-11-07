@@ -92,7 +92,7 @@ for index, (name, moved) in enumerate(tweens):
               for step in range(SAMPLES)]
     backdrop.shape(shape.custom(traced).stroke(TRACE, shape.ALIGN_CENTER | shape.PATH_OPEN))
 
-print(f"{len(tweens)} curves, {SAMPLES} points each, a marker every {CYCLE_MS}ms")
+print(f"{len(tweens)} curves, {SAMPLES} points each, a marker running each curve in {CYCLE_MS}ms")
 
 pacer = Pacer()
 

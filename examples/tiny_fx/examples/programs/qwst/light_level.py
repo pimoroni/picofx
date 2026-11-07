@@ -6,7 +6,7 @@ from picofx import MonoPlayer
 from picofx.mono import FlickerFX
 
 """
-Bring Tiny FX's lights up when the room gets dark, read from a light sensor on Qw/ST.
+Bring Tiny FX's lights up when the room gets dark, using a light sensor on Qw/ST.
 
 Plug an LTR559 breakout into the Qw/ST connector, which the board sets up as tiny.i2c.
 

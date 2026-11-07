@@ -399,7 +399,7 @@ index = names.index(CREATURE)
 creature, eyes = choose(names[index], 0)
 pacer = Pacer(fps=FRAME_RATE)       # The eyes' clock, holding each pass to the rate
 now = 0                             # Milliseconds the eyes have been moving, added up from each pass
-print(f"{len(screens)} panel(s): press for the next creature, hold {QUIT_MS}ms to finish")
+print(f"{len(screens)} panel(s): press Boot for the next creature, hold it {QUIT_MS}ms to finish")
 
 shown = None
 pressed_since = None

@@ -29,7 +29,7 @@ Play the effects described by effects.txt on the FX drive.
 
 Plug the board into a computer and the drive appears. Edit effects.txt, eject the
 drive, and the new effects start straight away. Press "Boot" once to try an edit
-without putting the drive away, or twice to hide it and bring it back.
+without putting the drive away, or twice to hide the drive and twice again to bring it back.
 
 Replace this file with your own program if you would rather write code. Deleting
 it brings this one back, and an empty one leaves the board quiet.

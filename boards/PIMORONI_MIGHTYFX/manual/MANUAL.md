@@ -278,8 +278,8 @@ step. 1 is the smallest that travels smoothly.
 
 ### Blinking through colours
 
-`rgb_blink` blinks one colour, or several in turn separated by `|`, as a comma
-would give each output its own colour. Without a colour it blinks red:
+`rgb_blink` blinks one colour, or several in turn separated by `|`. A comma
+instead would give each output its own colour. Without a colour it blinks red:
 
 ```entry
 out1: rgb_blink colour=red|warm|ff8040 speed=0.5
@@ -664,7 +664,7 @@ here.
 
 When the program ends, the board plays the effects in the rest of the file.
 
-A program never sees `screenA` and `screenB`, which set up the screens for this file's own entries. It sets up its own screens, so
+A program never sees `screenA` and `screenB`, which set up the screens for the entries in `effects.txt`. It sets up its own screens, so
 pass it the size in `args` if it needs it.
 
 `args` passes values to a program, so one program can behave differently

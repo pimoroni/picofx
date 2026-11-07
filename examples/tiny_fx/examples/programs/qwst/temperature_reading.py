@@ -5,7 +5,7 @@ from timing import Pacer
 from tiny_fx import TinyFX
 
 """
-Show the temperature on Tiny FX's RGB output, read from an environment sensor on Qw/ST.
+Show the temperature on Tiny FX's RGB output, using an environment sensor on Qw/ST.
 
 Plug a BME280 breakout into the Qw/ST connector, which the board sets up as tiny.i2c.
 

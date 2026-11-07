@@ -17,7 +17,7 @@ Outputs 1 and 2 are the tail light and headlight lit for the direction driven, a
 amber indicators for the side being turned towards.
 
 A motor driver should be connected to SP/CE port A, and an IR Stick to the Sensor
-port. Port B drives one the same way, declared as spce_b and reached as mighty.spce_b.driver.
+port. A motor driver on port B works the same way, declared as spce_b and reached as mighty.spce_b.driver.
 
 Actions:
 - UP Button [Hold] = Drive forwards

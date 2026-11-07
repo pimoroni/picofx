@@ -232,7 +232,7 @@ def __reload(fx, volume, path, errors, playing, showing, sounding=(), maker=None
         if settings.get("program") and settings.get("drive") == "manual":
             problems.append(
                 "the drive is shown anyway, since a program is named and hiding it "
-                "would leave no way to change one back")
+                "would leave no way to edit the file")
 
     # Nothing declared anything, the file being unreadable or its loading having
     # failed, and the board still has to come up, being what answers on the lights

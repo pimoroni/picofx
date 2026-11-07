@@ -5,8 +5,8 @@ from mighty_fx import MightyFX
 from timing import Pacer
 
 """
-Show the temperature on Mighty FX's RGB outputs as a bargraph, read
-from an environment sensor on Qw/ST.
+Show the temperature on Mighty FX's RGB outputs as a bargraph, using
+an environment sensor on Qw/ST.
 
 Plug a BME280 breakout into the Qw/ST connector, which the board sets up as mighty.i2c.
 

@@ -9,7 +9,7 @@ Play a traffic light sequence on three of Mighty FX's RGB outputs.
 TrafficLightFX brings no colour of its own, so the board supplies each light's colour and
 the signal needs no coloured lamps.
 
-They ease on and off like the filament lamps of a real signal. The easing is set on the
+The lights ease on and off like the filament lamps of a real signal. The easing is set on the
 player, so it works the same for any effect.
 
 Press "Boot" to exit the program.

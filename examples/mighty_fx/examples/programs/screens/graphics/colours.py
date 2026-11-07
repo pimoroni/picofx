@@ -11,8 +11,8 @@ Build colours from the colour module, from even hues to readable text on any bac
 The top two strips are the same eight hues through hsv and oklch. hsv lets the lightness wander
 so its yellow glares and its blue sinks, where oklch holds it even.
 
-An amount in this module runs 0 to 255 and not 0 to 1, so mix(a, b, 0.5) hands back a unchanged
-where mix(a, b, 128) is the halfway blend.
+An amount in this module runs 0 to 255 and not 0 to 1, so mix(a, b, 0.5) hands back the first colour
+unchanged where mix(a, b, 128) is the halfway blend.
 
 The screens drive the panel at 12 bit, so a channel has 16 levels in steps of 17. Two colours
 less than a step apart show as one, and a colour picked on a whole step shows as it was written.

@@ -151,8 +151,8 @@ class PlasmaFX:
             self.__i2c = PimoroniI2C(self.I2C_SDA_PIN, self.I2C_SCL_PIN, i2c_freq)
 
         # A press is caught by interrupt as well as read, so a tap inside a long frame is not missed.
-        # The board pulls the pin up itself, and adding the internal pull-up keeps a press from ever
-        # reading low on an RP2350 A2, through its erratum E9
+        # The board pulls the pin up itself. The internal pull-up stays off, since on an RP2350 A2
+        # its erratum E9 would keep a press from ever reading low
         self.__switch = Pin(self.USER_SW_PIN, Pin.IN)
         self.__taps = 0
         self.__tapped_at = 0
@@ -210,7 +210,7 @@ class PlasmaFX:
 
     @classmethod
     def wake(cls):
-        """Light the board's LED dim white before there is a board, so seconds of importing do not read as a dead one."""
+        """Light the board's LED dim white before the board object is created, so the board does not look dead while the imports take a few seconds."""
         duty = int(65535 * cls.WAKE_LEVEL)
         for pin in cls.RGB_PINS:
             __waking.append(PWM(Pin(pin), freq=PWMLED.FREQUENCY, duty_u16=duty, invert=True))

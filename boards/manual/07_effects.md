@@ -93,8 +93,8 @@ step. 1 is the smallest that travels smoothly.
 
 ### Blinking through colours
 
-`rgb_blink` blinks one colour, or several in turn separated by `|`, as a comma
-would give each __OUTPUT__ its own colour. Without a colour it blinks red:
+`rgb_blink` blinks one colour, or several in turn separated by `|`. A comma
+instead would give each __OUTPUT__ its own colour. Without a colour it blinks red:
 
 ```entry
 __COLOUR_OUTPUT__: rgb_blink colour=red|warm|ff8040 speed=0.5

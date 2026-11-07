@@ -5,7 +5,7 @@ from timing import Pacer
 from tiny_fx import TinyFX
 
 """
-Use Tiny FX's mono outputs as a spirit level, read from an accelerometer on Qw/ST.
+Use Tiny FX's mono outputs as a spirit level, driven by an accelerometer on Qw/ST.
 
 Plug a multi sensor stick or another LSM6DS3 breakout into the Qw/ST connector, which
 the board sets up as tiny.i2c.

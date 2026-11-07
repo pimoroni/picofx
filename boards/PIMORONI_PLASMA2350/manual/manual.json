@@ -21,6 +21,6 @@
   "SCREEN_NAMING": "A screen on the SP/CE connector is named `screen`",
   "SCREEN": "screen",
   "COPIED_FILES": "pictures",
-  "SCREEN_SETTINGS_UNSEEN": "A program never sees `screen`, which sets up the screen for this file's own entries"
+  "SCREEN_SETTINGS_UNSEEN": "A program never sees `screen`, which sets up the screen for the entries in `effects.txt`"
  }
 }

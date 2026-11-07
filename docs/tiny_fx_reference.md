@@ -166,7 +166,7 @@ What the board set up is then available through `sensor`:
 | role | what `sensor` gives you |
 | --- | --- |
 | `ANALOG` | an `Analog`, read with `read_voltage()`, which optionally takes a `samples` count |
-| `PIR` | a `Pin`, already an input with its pull-up set, read with `value()`. With nothing plugged in it reads 1, as motion, so a program plays without a sensor |
+| `PIR` | a `Pin`, already an input with its pull-up set, read with `value()`. With nothing plugged in it reads 1 for motion, so a program plays without a sensor |
 | `IR` | a `NECRemoteReceiver` from the `aye_arr` library, ready to `bind()` a remote, `start()` listening and `decode()` |
 
 Letting the board set up `IR` is especially worthwhile, as the receiver needs a PIO state machine and the board knows which ones are free.

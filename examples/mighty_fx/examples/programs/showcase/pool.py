@@ -215,7 +215,7 @@ def draw():
 
 
 pacer = Pacer(fps=FRAME_RATE)       # The pool's clock, holding each frame to the rate
-print(f"Press for the {STYLES[(style_index + 1) % len(STYLES)]} floor, hold {QUIT_MS}ms to finish")
+print(f"Press Boot for the {STYLES[(style_index + 1) % len(STYLES)]} floor, hold it {QUIT_MS}ms to finish")
 
 pressed_since = None
 leaving = False

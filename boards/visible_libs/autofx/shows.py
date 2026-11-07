@@ -330,7 +330,7 @@ class Graphics:
 
         def guarded(name, *args, **kwargs):
             if name.split(".")[0] not in self.IMPORTS:
-                raise ImportError("a drawing can import {}, so {} was refused".format(
+                raise ImportError("a drawing can only import {}, so {} was refused".format(
                     ", ".join(self.IMPORTS), name))
             return original(name, *args, **kwargs)
 

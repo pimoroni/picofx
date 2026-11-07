@@ -11,7 +11,7 @@ Nothing is drawn after the load. A 160x120 city is doubled over the panel and ti
 its transparent sky shows bg_color. The light is its colour table, so changing it is a few writes.
 
 Each entry's role is read off the table. A colour seen twice is a window lit in its own turn after
-dark, a grey is fading concrete, and colour is glass or signage that brightens.
+dark, a grey is fading concrete, and any other colour is glass or signage that brightens.
 
 Press "Boot" to exit the program.
 

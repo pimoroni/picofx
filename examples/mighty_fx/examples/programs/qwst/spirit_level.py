@@ -5,7 +5,7 @@ from mighty_fx import MightyFX
 from timing import Pacer
 
 """
-Use Mighty FX's RGB outputs as a spirit level, read from an accelerometer on Qw/ST.
+Use Mighty FX's RGB outputs as a spirit level, driven by an accelerometer on Qw/ST.
 
 Plug a multi sensor stick or another LSM6DS3 breakout into the Qw/ST connector, which
 the board sets up as mighty.i2c.

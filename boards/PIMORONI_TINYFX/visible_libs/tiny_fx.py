@@ -130,7 +130,7 @@ class TinyFX:
 
     @classmethod
     def wake(cls):
-        """Light every output dim before there is a board, so seconds of importing do not read as a dead one."""
+        """Light every output dim before the board object is created, so the board does not look dead while the imports take a few seconds."""
         duty = int(65535 * cls.WAKE_LEVEL)
         for pin in cls.OUT_PINS + cls.RGB_PINS:
             __waking.append(PWM(Pin(pin), freq=PWMLED.FREQUENCY, duty_u16=duty))

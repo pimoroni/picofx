@@ -493,7 +493,7 @@ class MightyFX:
 
     @classmethod
     def wake(cls):
-        """Light every output dim white before there is a board, so seconds of importing do not read as a dead one."""
+        """Light every output dim white before the board object is created, so the board does not look dead while the imports take a few seconds."""
         duty = int(65535 * cls.WAKE_LEVEL)
         for pins in cls.OUT_PINS:
             for pin in pins:

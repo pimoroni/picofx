@@ -9,7 +9,7 @@ Show two different posters at once, one on each of a pair of screens, both chang
 
 Two SP/CE ports are two streams, so a pair shows a different poster on each for one panel's cost.
 
-One player feeds both. image_at() reads a frame without moving it, so the second panel runs ahead.
+One player feeds both. image_at() reads a frame without moving the player, so the second panel runs ahead.
 
 Press "Boot" to exit the program.
 

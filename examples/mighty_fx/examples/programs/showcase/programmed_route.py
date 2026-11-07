@@ -17,7 +17,7 @@ The next direction ends the one before it.
 
 The outputs pulse red while a route is taken down, and flash on every press. While driving, a
 movement's length is lit dim, a bright light travels it a cycle at a time, and passed cycles hold
-a shade between. A longer movement pages across the outputs, and each takes the next colour.
+a shade between. A longer movement pages across the outputs, and each movement takes the next colour.
 
 An IR Stick should be connected to the Sensor port,
 and a continuous rotation servo to each of the L and R connectors.

@@ -13,14 +13,14 @@ These are micropython examples for driving Tiny FX from a sensor plugged into it
 ### Light Level
 [light_level.py](light_level.py)
 
-Bring Tiny FX's lights up when the room gets dark, read from an LTR559 light sensor on Qw/ST.
+Bring Tiny FX's lights up when the room gets dark, using an LTR559 light sensor on Qw/ST.
 
 ### Temperature Reading
 [temperature_reading.py](temperature_reading.py)
 
-Show the temperature on Tiny FX's RGB output, read from a BME280 environment sensor on Qw/ST.
+Show the temperature on Tiny FX's RGB output, using a BME280 environment sensor on Qw/ST.
 
 ### Spirit Level
 [spirit_level.py](spirit_level.py)
 
-Use Tiny FX's mono outputs as a spirit level, read from a multi sensor stick or another LSM6DS3 accelerometer on Qw/ST.
+Use Tiny FX's mono outputs as a spirit level, driven by a multi sensor stick or another LSM6DS3 accelerometer on Qw/ST.
