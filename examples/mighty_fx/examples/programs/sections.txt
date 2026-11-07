@@ -5,12 +5,15 @@
 Transport signs | departure boards and road signs
 Retro displays | mechanical, glowing and segment displays
 Billboards and panels | posters and signs that change on screen
+Pictures and GIFs | showing pictures and playing animated GIFs
 Animated scenes | drawn in code
 Patterns | moving rainbows, tiles and logos
 Multi-screen | pictures spread across two screens or a Screen Hub
-Graphics | shapes, pens, fonts and filters
+Graphics | shapes, colours, text, sprites and filters
+Layout | tiling, doubling and turning the picture
 With the remote | effects controlled with the IR remote
 With a sensor | lights that respond to a sensor
 Sound | sound effects and melodies with lights
 Over WiFi | lights controlled from the internet
 Moving things | servos and motors
+Screen checks | which screen or panel is where

@@ -16,6 +16,7 @@ the bottom row does. It costs more than a blit, and can skew or mirror as easily
 
 Press "Boot" to exit the program.
 
+Section: Graphics
 Args: Screen size = 2.8, Rotation = 0
 """
 

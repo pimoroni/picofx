@@ -16,6 +16,7 @@ edge must appear at the opposite edge too.
 
 Press "Boot" to exit the program.
 
+Section: Layout
 Args: Screen size = 2.8, Rotation = 90
 """
 

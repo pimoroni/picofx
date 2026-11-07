@@ -16,6 +16,7 @@ Every frame decodes when the player is made. Truecolour takes four times an inde
 
 Press "Boot" to exit the program.
 
+Section: Pictures and GIFs
 Args: Screen size = 2.8, Rotation = 90 or 270
 """
 

@@ -15,6 +15,7 @@ reflection, and the two modes alternate every few seconds.
 
 Press "Boot" to exit the program.
 
+Section: Layout
 Args: Screen size = 2.8, Rotation = 90
 """
 

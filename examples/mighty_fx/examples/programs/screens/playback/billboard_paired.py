@@ -13,6 +13,7 @@ One player feeds both. image_at() reads a frame without moving it, so the second
 
 Press "Boot" to exit the program.
 
+Section: Multi-screen
 Args: Rotation = 0 or 180
 """
 

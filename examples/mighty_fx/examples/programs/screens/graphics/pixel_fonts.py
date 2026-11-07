@@ -12,6 +12,7 @@ A pixel font draws only at its designed size. dir(font) names every face and fon
 
 Press "Boot" to exit the program.
 
+Section: Graphics
 Args: Screen size = 2.8, Rotation = 0
 """
 

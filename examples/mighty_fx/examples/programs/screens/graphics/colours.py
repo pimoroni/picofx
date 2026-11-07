@@ -19,6 +19,7 @@ less than a step apart show as one, and a colour picked on a whole step shows as
 
 Press "Boot" to exit the program.
 
+Section: Graphics
 Args: Screen size = 2.8, Rotation = 0
 """
 

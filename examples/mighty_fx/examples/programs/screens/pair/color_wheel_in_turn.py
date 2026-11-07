@@ -10,6 +10,7 @@ color_wheel_paired.py to see what a pair does differently.
 Press "Boot" to exit the program.
 
 Program: Colour wheel in turn
+Section: Multi-screen
 Args: Screen size = 2.8, Rotation = 0
 """
 

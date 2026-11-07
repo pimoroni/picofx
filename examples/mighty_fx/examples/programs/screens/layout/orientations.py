@@ -15,6 +15,7 @@ window. The mark is an F with a coloured band on each edge, so one look tells th
 
 Press "Boot" to exit the program.
 
+Section: Layout
 Args: Screen size = 2.8
 """
 

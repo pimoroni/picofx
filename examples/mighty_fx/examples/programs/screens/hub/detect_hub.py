@@ -10,6 +10,7 @@ the same for every position, including those where no panel answered.
 
 Press "Boot" to exit the program.
 
+Section: Screen checks
 Args: Screen size = 2.8, Rotation = 0
 """
 

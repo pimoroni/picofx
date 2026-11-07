@@ -14,6 +14,8 @@ The button is judged on release, as a press cannot be told from a hold until it 
 poster comes from to_frame(), since advance() refuses a player with a rate.
 
 Press "Boot" for the next poster, hold it to change folder, and hold it two seconds to exit.
+
+Section: Billboards and panels
 """
 
 # Constants, each a folder with the rotation its posters want and how long each is up

@@ -16,7 +16,7 @@ antialiasing a flat colour would lose.
 
 Press "Boot" to exit the program.
 
-Section: Billboards and panels
+Section: Pictures and GIFs
 Args: Screen size = 2.8, Rotation = 90
 """
 

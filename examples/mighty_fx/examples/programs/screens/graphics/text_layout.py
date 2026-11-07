@@ -17,6 +17,7 @@ above its capitals for accents. Top and middle alignment land low for a word wit
 
 Press "Boot" to exit the program.
 
+Section: Graphics
 Args: Screen size = 2.8, Rotation = 0
 """
 

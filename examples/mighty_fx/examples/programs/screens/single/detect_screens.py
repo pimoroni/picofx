@@ -10,6 +10,7 @@ ports, including one where no screen answered.
 
 Press "Boot" to exit the program.
 
+Section: Screen checks
 Args: Screen size = 2.8, Rotation = 0
 """
 

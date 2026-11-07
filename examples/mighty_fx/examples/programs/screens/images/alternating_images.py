@@ -9,6 +9,7 @@ Alternate between two PNG pictures, each shown for its own time.
 
 Press "Boot" to exit the program.
 
+Section: Pictures and GIFs
 Args: Screen size = 2.8, Rotation = 0
 """
 

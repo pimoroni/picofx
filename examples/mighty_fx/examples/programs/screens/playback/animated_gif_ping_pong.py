@@ -13,6 +13,7 @@ hold= sets the wait at each turn, one value for both ends or two.
 
 Press "Boot" to exit the program.
 
+Section: Pictures and GIFs
 Args: Screen size = 2.8, Rotation = 90
 """
 
