@@ -4,6 +4,7 @@ from picofx import PseudoLED, RGBLED
 
 # Register Constants
 DEVICE_TINY_FX = 0x2f
+DEVICE_MIGHTY_FX = 0x30
 VERSION = 0x01
 
 
@@ -96,6 +97,48 @@ class TinyFXControl(FXControl):
     @property
     def six(self):
         return self.outputs[5]
+
+
+class MightyFXControl(FXControl):
+    """A Mighty FX reached over I2C that offers its seven RGB outputs for a player to drive."""
+
+    DEVICE_ID = DEVICE_MIGHTY_FX
+    NAME = "Mighty FX"
+
+    def __init__(self, i2c, address, debug=True):
+        # Seven RGB outputs as the board itself offers them, then their 21 channels
+        self.outputs = [RGBLED(PseudoLED(), PseudoLED(), PseudoLED()) for _ in range(7)]
+        self.monos = [led for output in self.outputs for led in output.leds]
+
+        super().__init__(i2c, address, self.monos, debug)
+
+    @property
+    def one(self):
+        return self.outputs[0]
+
+    @property
+    def two(self):
+        return self.outputs[1]
+
+    @property
+    def three(self):
+        return self.outputs[2]
+
+    @property
+    def four(self):
+        return self.outputs[3]
+
+    @property
+    def five(self):
+        return self.outputs[4]
+
+    @property
+    def six(self):
+        return self.outputs[5]
+
+    @property
+    def seven(self):
+        return self.outputs[6]
 
 
 # Device Side (receive)
