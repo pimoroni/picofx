@@ -573,7 +573,7 @@ function renderStripBar(where, run) {
   // where it is on the screen. The buttons do the same in steps, which is what says the
   // zooming is there at all
   scroller.onwheel = function (e) {
-    if (run.count <= 12) return;
+    if (run.count <= ZOOMS_OVER) return;
     e.preventDefault();
     // The wheel holds the light under the pointer; the buttons hold the middle of what
     // is on screen, since a button press has no place on the run to hold onto
@@ -603,7 +603,7 @@ function stripZoomAndSteps(row, run) {
 
   // Zooming is only any use where there are more lights than a panel can show. The
   // buttons hold the middle of the view, since a press has no place on the run to hold
-  if (run.count > 12) {
+  if (run.count > ZOOMS_OVER) {
     row.appendChild(iconButton(GLASS_OUT, "Zoom out", zoomOf(run) <= 1.001,
                                function () {
                                  zoomTo(run, zoomOf(run) / 1.6, middleOfView(run));
@@ -839,8 +839,7 @@ function renderStripChip(where, run) {
 // The drawing finds a bar by which of two runs it is for. Here a bar is found by the strip's
 // own id, so these stand in for those two
 
-// The most lights a strip can have and not be zoomed, which the zoom buttons are
-// hidden at. Must match their test, `run.count > 12`
+// The most lights a strip can have and not be zoomed, which the zoom buttons are hidden at
 var ZOOMS_OVER = 12;
 
 function middleOfView(run) {

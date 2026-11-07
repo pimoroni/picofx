@@ -20,8 +20,7 @@
 MAIN = '''\
 from mighty_fx import MightyFX
 
-# Light the outputs first, since importing the effects machinery below takes a
-# few seconds and this says the board is alive meanwhile
+# Light the outputs first, so the board shows it is on during the slow imports below
 MightyFX.wake()
 
 import autofx
@@ -61,7 +60,7 @@ the change a few seconds later. One line per set of outputs:
 
 MANUAL.html on this drive has the rest, and opens in a browser: every effect and
 what it takes, the screens, playing sound, running a program, and showing scenes
-in turn.
+one after another.
 
 If a save does not seem to take, press "Boot" once or eject this drive, since a
 computer does not always write the file out straight away. Press "Boot" twice to
@@ -69,19 +68,18 @@ hide the drive, and twice again to bring it back.
 
 Deleting effects.txt restores the default; emptying it leaves the board dark.
 
-When something is wrong the lights say so, and the more flashes the worse it is:
+When something is wrong, the lights flash:
 
   white, once         the computer was still writing, so the press did nothing.
                       Try again in a moment
   blue, twice         something in effects.txt could not be read, or a drawing
-                      failed. errors.txt says which line, a drawing's once
-                      "Boot" is pressed or this drive ejected
+                      failed. errors.txt says which line. For a drawing it says
+                      so once "Boot" is pressed or this drive is ejected
   red, three times    there was no room to write errors.txt. This drive is full
                       or damaged, so free some space or let a computer repair it
 
-While the computer is copying to this drive the effects stand aside for a dim
-white light travelling along the outputs, and come back a moment after it
-finishes.
+While the computer is copying to this drive, a dim white light travels along the
+outputs in place of the effects, which come back a moment after it finishes.
 
 This README is rebuilt by the board, so edits to it will not stick.
 """

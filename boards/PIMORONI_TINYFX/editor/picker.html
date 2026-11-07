@@ -3998,7 +3998,7 @@ function renderScenes() {
                    "stroke-linecap='round'/></svg>" +
                    (state.scenes.length ? "another scene" : "split into scenes");
   plus.title = state.scenes.length ? "Add another scene"
-                                   : "Split into scenes that play in turn";
+                                   : "Split into scenes that play one after another";
   plus.onclick = addScene;
   box.appendChild(plus);
 
@@ -4762,7 +4762,7 @@ function renderStripBar(where, run) {
   // where it is on the screen. The buttons do the same in steps, which is what says the
   // zooming is there at all
   scroller.onwheel = function (e) {
-    if (run.count <= 12) return;
+    if (run.count <= ZOOMS_OVER) return;
     e.preventDefault();
     // The wheel holds the light under the pointer; the buttons hold the middle of what
     // is on screen, since a button press has no place on the run to hold onto
@@ -4792,7 +4792,7 @@ function stripZoomAndSteps(row, run) {
 
   // Zooming is only any use where there are more lights than a panel can show. The
   // buttons hold the middle of the view, since a press has no place on the run to hold
-  if (run.count > 12) {
+  if (run.count > ZOOMS_OVER) {
     row.appendChild(iconButton(GLASS_OUT, "Zoom out", zoomOf(run) <= 1.001,
                                function () {
                                  zoomTo(run, zoomOf(run) / 1.6, middleOfView(run));
@@ -5028,8 +5028,7 @@ function renderStripChip(where, run) {
 // The drawing finds a bar by which of two runs it is for. Here a bar is found by the strip's
 // own id, so these stand in for those two
 
-// The most lights a strip can have and not be zoomed, which the zoom buttons are
-// hidden at. Must match their test, `run.count > 12`
+// The most lights a strip can have and not be zoomed, which the zoom buttons are hidden at
 var ZOOMS_OVER = 12;
 
 function middleOfView(run) {
@@ -6499,7 +6498,7 @@ chosenSteps.push(function (where, run) {
   more.type = "button";
   more.className = "blinkmore";
   more.textContent = "+ another colour";
-  more.title = "blink through several colours in turn, one colour per blink";
+  more.title = "blink through several colours, one per blink";
   // The colour added is a copy of the last, a custom one included, to be changed from there
   more.onclick = function () {
     var mine = live();
@@ -11714,8 +11713,8 @@ function renderKept() {
 
   var head = document.createElement("div");
   head.className = "keptsay";
-  head.textContent = "Also " + (state.scenes.length ? "in this scene" : "in the file") +
-                     ", not editable here:";
+  head.textContent = "Lines " + (state.scenes.length ? "in this scene" : "in the file") +
+                     " the picker cannot edit:";
   box.appendChild(head);
   keptNow.forEach(function (one, at) {
     if (one.text === null) return;

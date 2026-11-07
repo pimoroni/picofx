@@ -84,7 +84,7 @@ chosenSteps.push(function (where, run) {
   more.type = "button";
   more.className = "blinkmore";
   more.textContent = "+ another colour";
-  more.title = "blink through several colours in turn, one colour per blink";
+  more.title = "blink through several colours, one per blink";
   // The colour added is a copy of the last, a custom one included, to be changed from there
   more.onclick = function () {
     var mine = live();

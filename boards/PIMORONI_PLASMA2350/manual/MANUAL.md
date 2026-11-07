@@ -41,7 +41,7 @@ stretches, each playing its own look. **Edit board**, at the end of the lights'
 tabs, sets up your hardware: which strips are fitted, the number of LEDs on
 each, and the screen's size. The Screens tab lists the pictures and drawings on
 this drive, and can copy files onto the drive or delete them. Press **+** to
-split your setup into scenes that play in turn, each with its own looks and
+split your setup into scenes that play one after another, each with its own looks and
 pictures. Anything on the **Always on** tab plays under every scene.
 
 **A program** runs one of your own programs on this drive instead of the
@@ -252,7 +252,7 @@ step. 1 is the smallest that travels smoothly.
 
 ### Blinking through colours
 
-`rgb_blink` blinks one colour, or several in turn separated by `|`. A comma
+`rgb_blink` blinks one colour, or several in sequence separated by `|`. A comma
 instead would give each LED its own colour. Without a colour it blinks red:
 
 ```entry

@@ -822,8 +822,8 @@ function renderKept() {
 
   var head = document.createElement("div");
   head.className = "keptsay";
-  head.textContent = "Also " + (state.scenes.length ? "in this scene" : "in the file") +
-                     ", not editable here:";
+  head.textContent = "Lines " + (state.scenes.length ? "in this scene" : "in the file") +
+                     " the picker cannot edit:";
   box.appendChild(head);
   keptNow.forEach(function (one, at) {
     if (one.text === null) return;

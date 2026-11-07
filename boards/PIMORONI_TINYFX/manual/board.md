@@ -7,7 +7,7 @@ playing its own look. **Edit board**, at the end of the lights' tabs, sets the
 order the lights are wired in, and moving the RGB output across to the mono side
 splits it into three mono lights. The Sound tab lists the sounds on this drive,
 and can copy files onto the drive or delete them. Press **+** to split your
-setup into scenes that play in turn, each with its own looks and sound. Anything
+setup into scenes that play one after another, each with its own looks and sound. Anything
 on the **Always on** tab plays under every scene.
 
 <!-- block entry_examples -->

@@ -328,7 +328,7 @@ function differences(send, from) {
   function looped(tokens) {
     return tokens.filter(function (t) { return !/^(fps|interval|width|height)=/.test(t); });
   }
-  if (paced(played).join() !== paced(basePlayed).join()) words.push("paced differently");
+  if (paced(played).join() !== paced(basePlayed).join()) words.push("timed differently");
   if (sized(played).join() !== sized(basePlayed).join()) words.push("drawn on another canvas");
   if (looped(played).join() !== looped(basePlayed).join()) words.push("played differently");
   return words;

@@ -8,7 +8,7 @@ tabs, sets up your hardware: the order the lights are wired in, the number of
 LEDs on each strip, each screen's size, and a Screen Hub. The Screens and Sound
 tabs list the pictures, drawings and sounds on this drive, and can copy files
 onto the drive or delete them. Press **+** to split your setup into scenes that
-play in turn, each with its own looks, pictures and sound. Anything on the
+play one after another, each with its own looks, pictures and sound. Anything on the
 **Always on** tab plays under every scene.
 
 <!-- block entry_examples -->
@@ -106,7 +106,7 @@ out1-7 colour=warm: pulse
 | `examples/programs/screens/layout` | placing a picture on the screen |
 | `examples/programs/screens/pair` | two screens working together |
 | `examples/programs/screens/hub` | more than two, through a hub |
-| `examples/programs/audio` | playing a wav file |
+| `examples/programs/audio` | playing a WAV file |
 | `examples/programs/motors` | driving a pair of motors |
 | `examples/programs/servos` | servos on the L and R connectors, alone, in a pair and steered by remote |
 | `examples/programs/strips` | a rainbow along an LED strip, and filling one an LED at a time |

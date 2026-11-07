@@ -174,7 +174,7 @@ function renderScenes() {
                    "stroke-linecap='round'/></svg>" +
                    (state.scenes.length ? "another scene" : "split into scenes");
   plus.title = state.scenes.length ? "Add another scene"
-                                   : "Split into scenes that play in turn";
+                                   : "Split into scenes that play one after another";
   plus.onclick = addScene;
   box.appendChild(plus);
 

@@ -613,13 +613,13 @@ function placementFold(key, held, size) {
                       look[side] || "off",
                       function (value) { look[side] = value; },
                       "Fill the screen " + (down ? "top to bottom" : "left to right") +
-                      " with copies. Mirror flips every other copy, so the edges always join up");
+                      " with copies. Mirror flips every other copy to join up the edges");
     seg.classList.add(down ? "tiledown" : "tileacross");
     return seg;
   }
   var double = toggle(DOUBLE_GLYPH, "Pixel double", look.double,
                       function (on) { look.double = on; },
-                      "Draw each pixel at double size, so a half size picture fills the screen");
+                      "Draw each pixel at double size");
   // Where it sits, then how it fills: a line each, or two halves where the section is wide
   var body = document.createElement("div");
   body.className = "ssplit";
@@ -949,7 +949,7 @@ function playbackFold(key, held, media) {
            "Play forwards then backwards"),
     toggle("&#8676;", "First frame as last", look.whole, function (on) { look.whole = on; },
            firstAsLastAllowed(held, look)
-             ? "Repeat the first frame at the end, so an animation drawn as a loop plays the whole way round, forwards then back, in Ping pong"
+             ? "Repeat the first frame at the end"
              : "Needs Ping pong, or Loop off",
            !firstAsLastAllowed(held, look))));
 

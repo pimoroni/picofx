@@ -47,7 +47,7 @@ playing its own look. **Edit board**, at the end of the lights' tabs, sets the
 order the lights are wired in, and moving the RGB output across to the mono side
 splits it into three mono lights. The Sound tab lists the sounds on this drive,
 and can copy files onto the drive or delete them. Press **+** to split your
-setup into scenes that play in turn, each with its own looks and sound. Anything
+setup into scenes that play one after another, each with its own looks and sound. Anything
 on the **Always on** tab plays under every scene.
 
 **A program** runs one of the board's programs instead of the effects:
@@ -274,7 +274,7 @@ step. 1 is the smallest that travels smoothly.
 
 ### Blinking through colours
 
-`rgb_blink` blinks one colour, or several in turn separated by `|`. A comma
+`rgb_blink` blinks one colour, or several in sequence separated by `|`. A comma
 instead would give each output its own colour. Without a colour it blinks red:
 
 ```entry

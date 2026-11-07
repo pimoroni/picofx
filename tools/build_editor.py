@@ -179,7 +179,7 @@ def picker(board_dir, repo_dir, version):
     with open(os.path.join(board_dir, "editor", DESCRIPTION_NAME), encoding="utf-8") as f:
         board = json.load(f)
     check_board(board_dir, board)
-    shared =os.path.join(repo_dir, SHARED_PARTS)
+    shared = os.path.join(repo_dir, SHARED_PARTS)
     own = os.path.join(board_dir, "editor", "picker")
     with open(os.path.join(shared, "page.html"), encoding="utf-8") as f:
         text = f.read()
