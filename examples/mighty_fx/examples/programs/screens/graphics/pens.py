@@ -140,7 +140,7 @@ try:
         canvas.text(name, across - len(name) * 3, down + CELL[1] * LABEL_DOWN)
 
     screen.update(canvas)
-    print(f"six pens, {RADIUS:.0f}px across each cell of {CELL[0]:.0f}x{CELL[1]:.0f}")
+    print(f"six pens, {RADIUS:.0f}px in radius, in cells of {CELL[0]:.0f}x{CELL[1]:.0f}")
 
     # Nothing moves, so the panel holds its frame and this only waits
     while not mighty.boot_pressed():

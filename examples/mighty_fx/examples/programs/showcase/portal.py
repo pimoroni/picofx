@@ -47,7 +47,7 @@ COURSE = 22                         # How tall a course of stones in the wall is
 
 # Detail
 POINTS = 30                         # Steps along an arm from the rim to the opening
-LENGTHS = 5                         # Lengths an arm is drawn in, a colour each, which POINTS must divide into
+LENGTHS = 5                         # Lengths an arm is drawn in, a colour each, which must divide into POINTS
 RIM_STEPS = 48                      # Points round the rim
 RIM_SHAKE = 0.04                    # How far in a point on the rim strays each frame, of the rim's size
 RING_STONES = 22                    # Stones in the ring round the rim

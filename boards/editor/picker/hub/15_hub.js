@@ -171,7 +171,7 @@ function hubPlacesNamed(selector) {
 }
 
 // The hub the board line declares, read into the page, which writes those tokens itself from
-// then on. Left alone where the line declares none
+// then on. Turned off where the line declares none
 function readHubBoard() {
   var port = null;
   var sizes = {};

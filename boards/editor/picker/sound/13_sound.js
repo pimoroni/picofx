@@ -409,7 +409,7 @@ function renderSound() {
   var box = document.getElementById("sound");
   var says = document.getElementById("soundSays");
   var row = box.querySelector(".sounds");
-  var explains = /^(one wav|played)/.test(says.textContent);
+  var explains = /^(one WAV|plays)/.test(says.textContent);
   if (row && explains) row.title = says.textContent.charAt(0).toUpperCase() +
                                    says.textContent.slice(1);
   says.hidden = explains;

@@ -1,15 +1,16 @@
 
 // ---- reading the board's file back ----------------------------------------------------------
 // Opening the drive reads effects.txt into the page. Every line is either read into the page's
-// own settings or kept word for word in its scene, so a file comes back without loss (the design
-// is in READBACK.md). This first step reads the board line and the scenes, and keeps every
-// entry; the steps after it read screens, sound and the lights out of the kept lines.
+// own settings or kept word for word in its scene, so a file comes back without loss. This first
+// step reads the board line and the scenes, and keeps every entry; the steps after it read
+// screens, sound and the lights out of the kept lines.
 
 // The lines this page writes of its own accord, which a file read back does not keep
 var PAGE_LINES = HEADER.split("\n").filter(Boolean).concat(["# Nothing is playing yet."]);
 
-// The board settings this page holds itself. Every other token on the board line is kept
+// The tokens on the board line that this page does not hold itself, kept as written
 var boardResidue = [];
+// The comments written above the board line
 var boardComments = [];
 
 // The kept entries of the scene on show, each its text and the comments written above it, and
@@ -469,8 +470,8 @@ function orderImplied(bodies) {
         return place.channel !== null && !OUTPUTS[place.out].mono;
       })) return;
       var outputs = places.map(function (place) { return place.out + 1; });
-      // A look that deals its lights out names gapped sets such as 1,4,7, which say nothing of
-      // the wiring, so only a list with no gaps counts, and one going both up and down needs it
+      // A look that deals its lights out names gapped sets such as 1,4,7, which say nothing of the
+      // wiring, so a list counts if it has no gaps or runs both up and down. Only the second needs it
       var steps = outputs.slice(1).map(function (out, at) { return out - outputs[at]; });
       if (steps.some(function (step) { return Math.abs(step) !== 1; }) &&
           !(steps.some(function (step) { return step > 0; }) &&
@@ -487,7 +488,7 @@ function orderImplied(bodies) {
   });
 }
 
-// Whether a set of lamps is one run from end to end, whichever way it was named
+// The ends of a set of lamps with no gap, whichever way it was named, or null where it has one
 function spanOf(lamps) {
   var sorted = lamps.slice().sort(function (a, b) { return a - b; });
   for (var i = 1; i < sorted.length; i++) {

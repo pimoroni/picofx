@@ -31,7 +31,7 @@ POSTER_FILES = ("/examples/pictures/billboards/landscape/lambo.png",
                 "/examples/pictures/billboards/landscape/tufty.png",
                 "/examples/pictures/billboards/landscape/frum.png")
 
-# How far the board is turned, 90 or 270 for landscape posters, or what the effects file passes in args
+# How far the screen is turned, 90 or 270 for landscape posters, or what the effects file passes in args
 ROTATION = 90 if not sys.argv[1:] else int(sys.argv[1])
 
 # Create a MightyFX object with SP/CE A set up for a screen

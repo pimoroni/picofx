@@ -10,7 +10,7 @@ from picofx.colour import (BLACK, BLUE, COOL, COLOUR_EFFECTS, CYAN, GREEN, MAGEN
 from picofx.mono import MONO_EFFECTS
 
 # On a board with an FX drive the first two are fx_drive's MOUNT_POINT and FILE_PATH, kept
-# here too since autofx also runs without a drive, where they are run()'s defaults.
+# here too since autofx also runs without a drive. The last two are run()'s defaults, and
 # errors.txt is autofx's own
 MOUNT_DIR = "/fx"
 CONFIG_PATH = MOUNT_DIR + "/effects.txt"
@@ -74,8 +74,8 @@ FOLDERS = {"gif": "pictures", "image": "pictures", "sequence": "pictures", "draw
 # What each effect setting's value must be, stated once since a name means the same thing
 # wherever it appears. "count" is a whole number of 1 or more, since each divides or repeats
 # something, where "whole" may be zero or negative. "angle" is a fraction that takes degrees
-# as well, and "span" a distance across the outputs that may be zero, since nothing divides
-# by it. "colour" is a name or hex the parser turns into a tuple, and "name" a file name
+# as well, and "span" a distance across the outputs above zero, since an effect divides by
+# it. "colour" is a name or hex the parser turns into a tuple, and "name" a file name
 # kept as written. CHANNEL_KINDS below adds "quarter", a quarter turn for a mounted screen.
 SETTINGS = {
     "speed": "number",

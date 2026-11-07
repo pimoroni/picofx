@@ -25,7 +25,7 @@ player = ColourPlayer(mighty.outputs)   # Create a new effect player to control 
 
 # Create and set up a sweep effect to play
 sweep = SweepFX(speed=1.0,              # The speed to sweep at, with 1.0 being one crossing a second
-                length=7.0,             # How many outputs the light crosses. Usually the number of them (7)
+                length=7.0,             # How many outputs the light crosses, usually all of them (7)
                 extent=1.0,             # How far the light reaches from itself, in outputs
                 hold=1.0)               # The seconds to wait at each end, long enough for the trail to clear
 

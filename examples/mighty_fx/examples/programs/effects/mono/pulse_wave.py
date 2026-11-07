@@ -19,7 +19,7 @@ player = MonoPlayer(mighty.monos)   # Create a new effect player to control each
 
 # Create a PulseWaveFX effect
 wave = PulseWaveFX(speed=1.0,                   # The speed to pulse at, with 1.0 being 1 second
-                   length=len(mighty.monos),    # The length of the wave before positions repeat. Usually the number of them (21)
+                   length=len(mighty.monos),    # The length of the wave before positions repeat. Usually the number of outputs (21)
                    phase=0.0)                   # How far through the pulse to start the effect (from 0.0 to 1.0)
 
 

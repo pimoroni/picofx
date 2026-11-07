@@ -61,7 +61,7 @@ CELL = canvas.width / ACROSS, canvas.height / DOWN
 
 
 def box(index):
-    """Find the rectangle a curve is plotted in, and the row of lettering under it."""
+    """Find the rectangle a curve is plotted in, leaving a row under it for the name."""
     left = (index % ACROSS) * CELL[0] + PAD
     top = (index // ACROSS) * CELL[1] + PAD
     return left, top, CELL[0] - PAD * 2, CELL[1] - PAD * 2 - LABEL_FACE.height

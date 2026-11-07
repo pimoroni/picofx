@@ -31,4 +31,4 @@ This example needs the directory `photon_sword` copied over to your Tiny FX.
 ### WAV Player
 [wav_player.py](wav_player.py)
 
-Play a WAV file saved to your Tiny FX each time Boot is pressed, with the RGB output showing when it is ready and when it is playing.
+Play a WAV file saved to your Tiny FX when Boot is pressed, and stop it when Boot is pressed again. The RGB output shows when the board is ready and when the file is playing.

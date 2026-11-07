@@ -10,7 +10,7 @@ var boardSet = {reload: true, driveHidden: false, program: null, args: {}};
 
 // The programs on the drive, read once a drive is open, its own and the examples alike: each one's
 // path, name, what it does, the arguments it takes, its section and thumbnail, and what it uses and
-// needs. 26_drive_programs.js reads them
+// needs. drivePrograms() in 26_drive_programs.js reads them
 var PROGRAMS = [];
 
 // The program at a path, or null where the drive holds none there

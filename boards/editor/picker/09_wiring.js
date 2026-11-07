@@ -1,9 +1,9 @@
 
 // ---- the wiring, while the board is set up ------------------------------------------------
-// In the outputs' own panel and only while the board is set up, the board's seven connectors along the bottom, each colour output one pin and
-// each broken-out one three, a faint line from every pin to the lamp it feeds, brought
-// forward by pointing at the lamp or the connector, a moved lamp sliding to its new place,
-// and the lamps out of the order they are wired in with their numbers in bold.
+// In the outputs' own panel and only while the board is set up, the board's connectors along the
+// bottom, each colour output one pin and each broken-out one three, a faint line from every pin to
+// the lamp it feeds, brought forward by pointing at the lamp or the connector, a moved lamp sliding
+// to its new place, and the lamps out of the order they are wired in with their numbers in bold.
 
 var SLIDE_MS = 420;
 

@@ -16,7 +16,6 @@ These examples requires a `secrets.py` file to be on your board's file system wi
 ### Random
 [wireless/random.py](examples/programs/wireless/random.py)
 
-Show the state of Tiny FX's Boot button on its RGB output.
 Show random colours and patterns obtained from the internet on Tiny FX's outputs.
 
 

@@ -28,7 +28,8 @@ pelican = PelicanCrossingFX(green_interval=20,      # The time (in seconds) traf
                             flashing_interval=6)    # The time (in seconds) the amber and the walking figure flash
 
 
-# How long each output takes to reach its level. One value covers all, along a warming filament's curve
+# How long each output takes to reach what the effect asks for. A single value
+# covers every output, and ease() is the curve a warming filament follows
 player.curves = ease(0.3)
 
 

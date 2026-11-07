@@ -50,7 +50,7 @@ ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# The window is a quarter of the panel as turned, so its four reflections fill it
+# The window is a quarter of the panel as turned, so it and its three reflections fill it
 TILE_W, TILE_H = screen.height // 2, screen.width // 2
 
 # The circle reaches the window's far corner, sized in frame pixels so nothing is scaled
@@ -117,7 +117,7 @@ frames = 0
 # Wrap the code in a try block, to catch any exceptions (including KeyboardInterrupt)
 try:
     while not mighty.boot_pressed():
-        # Four mirrored reflections of the window, offset one window along and down
+        # Show the window and its three mirrored reflections, offset one window along and down
         # so the circle's middle lands in the panel's middle
         screen.update(wheel[frames // HOLD % FRAMES],
                       offset=(TILE_W, TILE_H), tile=Tile.MIRROR, bg_color=BACKGROUND)

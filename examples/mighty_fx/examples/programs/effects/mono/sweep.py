@@ -18,7 +18,7 @@ player = MonoPlayer(mighty.monos)   # Create a new effect player to control each
 
 # Create and set up a sweep effect to play
 sweep = SweepFX(speed=0.5,                      # The speed to sweep at, with 1.0 being one crossing a second
-                length=len(mighty.monos),       # How many of them the light crosses. Usually the number of them (21)
+                length=len(mighty.monos),       # How many outputs the light crosses, usually all of them (21)
                 extent=2.0)                     # How far the light reaches from itself, in outputs
 
 

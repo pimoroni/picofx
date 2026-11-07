@@ -276,7 +276,7 @@ def service(pressed):
     the drive ever takes it back.
 
     A single press cannot be told from the first of a double until the double press
-    window has passed, so it lands DOUBLE_PRESS_MS after the release.
+    window has passed, so it lands DOUBLE_PRESS_MS after the press began.
     """
     global __was_pressed, __last_edge, __watch_at, __entry_pending
     if __exposed and rp2.msc_ejected():

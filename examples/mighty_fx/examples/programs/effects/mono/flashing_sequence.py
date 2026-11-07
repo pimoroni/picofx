@@ -18,7 +18,7 @@ player = MonoPlayer(mighty.monos)       # Create a new effect player to control 
 
 # Create a FlashSequenceFX effect
 flashing = FlashSequenceFX(speed=1.0,                   # The speed to flash at, with 1.0 being 1 second
-                           length=len(mighty.monos),    # The length of the sequence before positions repeat. Usually the number of them (21)
+                           length=len(mighty.monos),    # The length of the sequence before positions repeat. Usually the number of outputs (21)
                            flashes=2,                   # The number of flashes to do within that time
                            window=0.2,                  # How much of the flash time to perform the flashes in
                            phase=0.0,                   # How far through the flash cycle to start the effect (from 0.0 to 1.0)

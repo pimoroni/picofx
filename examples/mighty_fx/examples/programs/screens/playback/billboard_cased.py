@@ -75,7 +75,7 @@ def band(across, half, feather, levels, tone):
 
 
 def case():
-    """Cut the case's window away from the pane so its light survives, then lay the case on it."""
+    """Cut the window out of the case so the pane's light shows through, then lay the case on the pane."""
     frame = image(WIDE, TALL)
     frame.antialias = image.X4
     frame.pen = CASE

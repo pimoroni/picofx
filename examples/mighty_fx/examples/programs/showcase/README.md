@@ -284,7 +284,7 @@ Drift past a city while the sky turns from noon to midnight and the windows come
 
 [laser_show.py](laser_show.py)
 
-Draw a laser show, beams fanning and sweeping across a dark hall from three projectors along the foot of the stage, leaving a fading sheet behind them as beams through haze do. Each scene switches its projectors on and off as it goes. PORTRAIT = True stands the panel upright, with room for the outer two projectors only.
+Draw a laser show, beams fanning and sweeping across a dark hall from three projectors along the foot of the stage, leaving a fading sheet behind them as beams through haze do. Each scene switches its projectors on and off as it goes. An upright or square panel has room for the outer two projectors only.
 
 <br clear="left">
 

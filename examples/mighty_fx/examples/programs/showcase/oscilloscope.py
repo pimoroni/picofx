@@ -50,7 +50,7 @@ CASE = color.rgb(221, 204, 187)                     # The case round the tube
 # Sizes, in panel pixels
 DIVISIONS = (10, 8)                                 # Graticule squares across and down on a panel on its side, swapped upright
 DIVISION = 28                                       # Panel pixels a square
-TICKS = 4                                           # Ticks a square along the middle lines, which DIVISION must divide into
+TICKS = 4                                           # Ticks a square along the middle lines, which must divide into DIVISION
 CORE_W = 1.5                                        # Panel pixels across the beam's core
 HALO_W = 5                                          # And across the glow round it
 HALO_ALPHA = 70                                     # How strong that glow is, of 255

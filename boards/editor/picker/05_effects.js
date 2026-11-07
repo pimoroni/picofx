@@ -1247,12 +1247,10 @@ var WORDS = {
 };
 
 // Eight hues thirty or sixty degrees apart, then the white axis with pink on it. Black is
-// not offered: it says a lamp is off, which brightness says and Nothing says better
+// left out, since brightness and Nothing say a lamp is off better
 var SWATCHES = ["red", "orange", "yellow", "green", "cyan", "blue", "purple", "magenta",
                 "pink", "warm", "white", "cool"];
 
-// The swatches a stretch is offered. Black is none of them, being a light turned off, which
-// a look that blinks through colours can want as one of its turns
 // The swatches a stretch offers. A blink through several colours offers black too, as a turn
 // with the light off
 function swatchesFor(run, section) {

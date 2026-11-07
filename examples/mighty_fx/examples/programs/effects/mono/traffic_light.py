@@ -27,7 +27,8 @@ traffic = TrafficLightFX(red_interval=5,            # The time (in seconds) to s
                          amber_interval=2.5)        # The time (in seconds) to stay on Amber
 
 
-# How long each output takes to reach its level. One value covers all, along a warming filament's curve
+# How long each output takes to reach what the effect asks for. A single value
+# covers every output, and ease() is the curve a warming filament follows
 player.curves = ease(0.3)
 
 

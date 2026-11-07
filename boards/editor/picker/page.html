@@ -838,7 +838,7 @@ select{font:inherit;font-size:.85rem;padding:.25rem .3rem;border:1px solid var(-
 .banner.warn{background:var(--warn-bg);color:var(--warn)}
 .banner.hold{background:#fdf3e0;color:#8a6415}
 .banner pre{margin:.4rem 0 0;white-space:pre-wrap;font-size:.85rem}
-/* The seven outputs as the board lights them while a save is written */
+/* The board's outputs as it lights them while a save is written */
 .spots{display:inline-flex;gap:.3rem;margin-left:.7rem;vertical-align:middle}
 .spots i{display:block;width:.85rem;height:.85rem;border-radius:3px;border:1px solid rgba(138,100,21,.45);
  background:rgba(138,100,21,.12)}
@@ -1211,7 +1211,7 @@ body.setupall #soundPanel{opacity:.35;pointer-events:none}
 .soundsays{margin:0 0 .8rem}
 
 /* ---- the wiring, while the board is set up ----
-   The board's seven connectors under both sides of the outputs, a faint line from every
+   The board's connectors under both sides of the outputs, a faint line from every
    pin to its lamp, never none, brought forward by pointing at the lamp or the connector */
 #outPanel.wired{position:relative}
 #outPanel.wired .sides{position:relative;z-index:1}
@@ -1219,7 +1219,7 @@ body.setupall #soundPanel{opacity:.35;pointer-events:none}
    way, and the connectors sit straight under the lamps they feed */
 #outPanel.wired #outCut,#outPanel.wired #outBar,#outPanel.wired #monoCut,
 #outPanel.wired #monoBar{display:none}
-/* The seven sit in one strip, the board's edge, and a connector is its pins and its
+/* The connectors sit in one strip, the board's edge, and a connector is its pins and its
    number with nothing round it. Drawn as a box it read as a thing to pick up: someone went
    to drag one next to the lamps it feeds to uncross the wires */
 .wireconnectors{display:flex;justify-content:space-between;gap:.5rem;margin:2.8rem 0 0;
@@ -1632,7 +1632,7 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
  <div id="looks"></div>
 
  <details class="panel" id="outPanel" open>
-  <summary>The outputs<span class="says">seven of them, each one light or three</span></summary>
+  <summary>The outputs<span class="says"></span></summary>
   <div class="facts" id="outFacts"></div>
   <div class="sides" id="sides">
    <div class="side" id="sideA">

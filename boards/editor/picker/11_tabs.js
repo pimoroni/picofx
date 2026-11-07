@@ -1,9 +1,9 @@
 
 // ---- the LED sections as tabs -----------------------------------------------------------
-// Outputs, the left strip and the right strip as tabs just under the gallery, one section
-// shown at a time, so the one being worked on is never a scroll away. Choosing a tab makes
-// it the one worked on, so the gallery is for it, and each tab says in a small swatch what
-// its section plays. Screens stay below as sections, the gallery meaning nothing for them.
+// The outputs and each strip as tabs just under the gallery, one section shown at a time, so
+// the one being worked on is never a scroll away. Choosing a tab makes it the one worked on,
+// so the gallery is for it, and each tab says in a small swatch what its section plays.
+// Screens stay below as sections, the gallery meaning nothing for them.
 //
 // The tabs sit under the gallery and not with the scene tabs, and are drawn as a row of
 // names with a line under the chosen one, so they read as parts of one board and not as
