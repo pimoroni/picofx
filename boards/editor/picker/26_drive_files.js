@@ -276,7 +276,7 @@ async function addFiles(kinds, what, takes) {
     banner("Nothing copied: " + refused.join(", "), true);
   else if (unoffered.length)
     banner(unoffered.join(", ") + " copied, but only drawings appear here. " +
-           "A drawing's opening string starts with Drawing: and its name.", true);
+           "A drawing's opening string has a Drawing: line with its name.", true);
   else if (landed)
     banner(landed + " " + what + " copied to the drive.");
   draw();

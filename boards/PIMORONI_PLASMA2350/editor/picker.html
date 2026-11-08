@@ -8320,12 +8320,12 @@ function pictureOffset(look, shows, size, turn) {
 
 // ---- drawings -------------------------------------------------------------------------------------
 // A drawing is a Python file drawn on a screen, drawing file=rings.py. It is listed only where
-// its opening string begins "Drawing:", which gives its name, then a line describing it, then
-// optionally Icon:, any Unicode character, Colour:, one of the board's colour words or a hex, and
-// Section:, the gallery section an example drawing is listed in. A Python file without that first
-// line is not listed, whether drawing or program. The page cannot run
-// one, so a drawing is shown by its icon on its colour, or its initial where it names no icon,
-// the colour where it names none coming from its name
+// its opening string has a "Drawing:" line giving its name, read as a program's lines are. Other
+// lines may give Icon:, any Unicode character, Colour:, one of the board's colour words or a hex,
+// and Section:, the gallery section an example drawing is listed in. The first sentence of the
+// rest describes it. A Python file without a Drawing: line is not listed, whether drawing or
+// program. The page cannot run one, so a drawing is shown by its icon on its colour, or its
+// initial where it names no icon, the colour where it names none coming from its name
 
 // A number from a name, the same each time, past the first draws which barely move between
 // names of one length
@@ -8343,17 +8343,21 @@ function nameHue(name) {
   return (hash >>> 0) % 360;
 }
 
+// A line of a drawing's opening string that says how to show it
+var DRAWING_LINE = /^\s*(Drawing|Icon|Colour|Section):\s*(.+?)\s*$/;
+
 // What an opening string says of a drawing, or null for a file that is not one
 function drawingSaid(docstring) {
-  var lines = docstring.split("\n");
-  var named = lines[0].match(/^Drawing:\s*(.+)$/);
-  if (!named) return null;
-  var said = {title: named[1].trim(), description: "", icon: "", colour: "", section: ""};
-  lines.slice(1).forEach(function (line) {
-    var field = line.match(/^(Icon|Colour|Section):\s*(.+)$/);
-    if (field) said[field[1].toLowerCase()] = field[2].trim();
-    else if (!said.description) said.description = line.trim();
-  });
+  var said = {title: "", description: "", icon: "", colour: "", section: ""};
+  var rest = docstring.split("\n").filter(function (line) {
+    var field = line.match(DRAWING_LINE);
+    if (!field) return true;
+    said[field[1] === "Drawing" ? "title" : field[1].toLowerCase()] = field[2];
+    return false;
+  }).join(" ").split(/\s+/).join(" ").trim();
+  if (!said.title) return null;
+  var first = rest.match(/^(.*?\.)(\s|$)/);
+  said.description = first ? first[1] : rest;
   return said;
 }
 
@@ -11865,7 +11869,7 @@ async function addFiles(kinds, what, takes) {
     banner("Nothing copied: " + refused.join(", "), true);
   else if (unoffered.length)
     banner(unoffered.join(", ") + " copied, but only drawings appear here. " +
-           "A drawing's opening string starts with Drawing: and its name.", true);
+           "A drawing's opening string has a Drawing: line with its name.", true);
   else if (landed)
     banner(landed + " " + what + " copied to the drive.");
   draw();
@@ -11972,8 +11976,8 @@ setInterval(rescanMedia, 5000);
 // ---- the programs on the drive ------------------------------------------------------------------
 // Opening the drive reads the programs it holds, every Python file at its top level, in OWN_FOLDER
 // and under EXAMPLES_ROOT, so the page offers what this drive carries and nothing it does not. A
-// file whose opening string starts "Drawing:" is a drawing for a screen, not a program, so it is
-// left out, as is the WiFi credentials file at the top level.
+// file whose opening string has a "Drawing:" line is a drawing for a screen, not a program, so it
+// is left out, as is the WiFi credentials file at the top level.
 //
 // Every program is read the same way. Lines in its opening string say how to show it: "Program:"
 // its name, "Args:" what it takes, "Picture:" a picture beside it to show it by, "Section:" the
@@ -12088,7 +12092,7 @@ function openingString(source) {
 // at the top of the drive) and its source, or null for a drawing
 function programFrom(path, folder, source) {
   var opening = openingString(source);
-  if (/^Drawing:/.test(opening)) return null;
+  if (/^\s*Drawing:/m.test(opening)) return null;
   var program = {path: path, folder: folder,
                  example: isExample(path),
                  name: null, does: "", args: null, picture: null, section: null, thumbnail: null,

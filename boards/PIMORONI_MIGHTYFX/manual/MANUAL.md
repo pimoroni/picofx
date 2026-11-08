@@ -527,13 +527,15 @@ and a program that needs the whole board, not just one screen, is
 [a program](#running-your-own-program), not a drawing.
 
 The picker lists a drawing on its Screens tab, not with its programs, when the
-drawing's opening string starts with `Drawing:` and its name. It cannot run the
-drawing, so it shows an icon for it instead, which two more lines can set:
+drawing's opening string has a `Drawing:` line with its name, and describes it
+by the string's first sentence. It cannot run the drawing, so it shows an icon
+for it instead, which two more lines can set:
 
 ```python
 '''
+Draw rings that grow and fade, in the four colours.
+
 Drawing: Rings
-Rings that grow and fade, in the four colours.
 Icon: *
 Colour: orange
 '''
@@ -747,7 +749,7 @@ only when the drive has that file.
 An example is listed only in the section it names.
 `examples/programs/sections.txt` sets the order of the sections, one per line:
 its name, then a `|` and a description.
-A file whose opening string starts with `Drawing:` is [a
+A file whose opening string has a `Drawing:` line is [a
 drawing](#drawing-from-code), so it is not listed.
 
 ### What is already on the board

@@ -201,13 +201,15 @@ A program that needs the whole board, not just one screen, is
 [a program](#running-your-own-program), not a drawing.
 
 The picker lists a drawing on its Screens tab, not with its programs, when the
-drawing's opening string starts with `Drawing:` and its name. It cannot run the
-drawing, so it shows an icon for it instead, which two more lines can set:
+drawing's opening string has a `Drawing:` line with its name, and describes it
+by the string's first sentence. It cannot run the drawing, so it shows an icon
+for it instead, which two more lines can set:
 
 ```python
 '''
+Draw rings that grow and fade, in the four colours.
+
 Drawing: Rings
-Rings that grow and fade, in the four colours.
 Icon: *
 Colour: orange
 '''

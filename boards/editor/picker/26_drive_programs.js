@@ -2,8 +2,8 @@
 // ---- the programs on the drive ------------------------------------------------------------------
 // Opening the drive reads the programs it holds, every Python file at its top level, in OWN_FOLDER
 // and under EXAMPLES_ROOT, so the page offers what this drive carries and nothing it does not. A
-// file whose opening string starts "Drawing:" is a drawing for a screen, not a program, so it is
-// left out, as is the WiFi credentials file at the top level.
+// file whose opening string has a "Drawing:" line is a drawing for a screen, not a program, so it
+// is left out, as is the WiFi credentials file at the top level.
 //
 // Every program is read the same way. Lines in its opening string say how to show it: "Program:"
 // its name, "Args:" what it takes, "Picture:" a picture beside it to show it by, "Section:" the
@@ -118,7 +118,7 @@ function openingString(source) {
 // at the top of the drive) and its source, or null for a drawing
 function programFrom(path, folder, source) {
   var opening = openingString(source);
-  if (/^Drawing:/.test(opening)) return null;
+  if (/^\s*Drawing:/m.test(opening)) return null;
   var program = {path: path, folder: folder,
                  example: isExample(path),
                  name: null, does: "", args: null, picture: null, section: null, thumbnail: null,

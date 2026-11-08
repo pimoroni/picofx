@@ -483,13 +483,15 @@ A program that needs the whole board, not just one screen, is
 [a program](#running-your-own-program), not a drawing.
 
 The picker lists a drawing on its Screens tab, not with its programs, when the
-drawing's opening string starts with `Drawing:` and its name. It cannot run the
-drawing, so it shows an icon for it instead, which two more lines can set:
+drawing's opening string has a `Drawing:` line with its name, and describes it
+by the string's first sentence. It cannot run the drawing, so it shows an icon
+for it instead, which two more lines can set:
 
 ```python
 '''
+Draw rings that grow and fade, in the four colours.
+
 Drawing: Rings
-Rings that grow and fade, in the four colours.
 Icon: *
 Colour: orange
 '''
@@ -657,7 +659,7 @@ A board with a wireless module keeps `secrets.py` directly on the drive for
 your WiFi network's name and password, and restores an empty one if it is
 deleted. Programs that go online, importing `network` or `requests`, are listed
 only when the drive has that file.
-A file whose opening string starts with `Drawing:` is [a
+A file whose opening string has a `Drawing:` line is [a
 drawing](#drawing-from-code), so it is not listed.
 
 ## When something is wrong

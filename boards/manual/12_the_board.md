@@ -138,7 +138,7 @@ An example is listed only in the section it names.
 its name, then a `|` and a description.
 <!-- end -->
 <!-- if screens -->
-A file whose opening string starts with `Drawing:` is [a
+A file whose opening string has a `Drawing:` line is [a
 drawing](#drawing-from-code), so it is not listed.
 <!-- end -->
 
