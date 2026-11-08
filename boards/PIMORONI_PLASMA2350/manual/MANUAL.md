@@ -465,7 +465,9 @@ setting. A small canvas draws faster and is placed like a small picture, so
 where the entry sets none. A drawing drawn in several styles lists them in a
 `Styles` line of its opening string, such as `Styles: cat, owl, goat`, the
 first being the one it takes where none is set, and the picker offers them as
-a choice.
+a choice. A drawing with more than one choice to make gives a `Styles` line
+for each, and the entry joins its choices with a dash, such as
+`style=ember-bare`.
 
 In a scene, the drawing's clock pauses while another scene plays, and a scene
 with `restart` runs the whole file again from a blank canvas. `rotation`,

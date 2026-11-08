@@ -117,8 +117,10 @@ function drawingSaid(docstring) {
     var field = line.match(DRAWING_LINE);
     if (!field) return true;
     if (field[1] === "Styles") {
-      // The styles it can be drawn in, the first being the one it takes where none is chosen
-      said.styles = field[2].split(",").map(function (style) { return style.trim(); }).filter(Boolean);
+      // A choice the drawing offers, a line each, the first in a line being the one it takes
+      // where none is chosen
+      var choices = field[2].split(",").map(function (style) { return style.trim(); }).filter(Boolean);
+      if (choices.length) said.styles.push(choices);
     } else if (field[1] === "Defaults") {
       field[2].split(",").map(argumentFrom).forEach(function (setting) {
         said.defaults[setting.name] = setting;
@@ -149,6 +151,7 @@ var drawingArts = {};
 function drawingArt(name, wide, high, style) {
   // Kept by the thumbnail it is made from, so a style's found on a later read of the drive
   // replaces the drawing's that stood in for it. One still loading is stood in for, and not kept
+  style = styleNamed(mediaNamed(name), style);
   var styleThumbs = (mediaNamed(name) || {}).styleThumbs || {};
   var styled = !!style && !!styleThumbs[style];
   var key = name + "|" + wide + "|" + high + "|" + (styled ? style : "");
@@ -906,19 +909,28 @@ function drawingFold(key, held) {
   var whole = document.createElement("div");
   var madeFor = madeForLine(held);
   if (madeFor) whole.appendChild(madeFor);
-  // A drawing drawn in styles of its own offers them, its first being the one it takes unchosen.
-  // A style is the file's own text, so it is escaped for the button's label
+  // A drawing drawn in styles of its own offers them, a row for each of its Styles: lines stacked
+  // beside the one label, a line's first being the one it takes unchosen. A style is the file's own
+  // text, so it is escaped for the button's label
   var media = held.shows ? mediaNamed(held.shows) : null;
-  var styles = media && media.drawing ? media.drawing.styles : [];
-  if (styles.length > 1) {
-    var chosen = look.style || styles[0];
-    whole.appendChild(sline(named("Style"), segment(styles.map(function (style) {
+  var drawing = media && media.drawing;
+  var chosen = drawing ? styleChoices(drawing, look.style) : [];
+  var offered = [];
+  var rows = document.createElement("span");
+  rows.className = "sstylerows";
+  (drawing ? drawing.styles : []).forEach(function (line, at) {
+    if (line.length < 2) return;
+    rows.appendChild(segment(line.map(function (style) {
       return [style, style.replace(/&/g, "&amp;").replace(/</g, "&lt;")];
-    }), chosen, function (value) {
-      look.style = value === styles[0] ? "" : value;
-    }, "The style this drawing is drawn in")));
-    said.unshift(chosen);
-  }
+    }), chosen[at], function (value) {
+      var picked = styleChoices(drawing, look.style);
+      picked[at] = value;
+      look.style = styleWord(drawing, picked);
+    }, "The style this drawing is drawn in"));
+    offered.push(chosen[at]);
+  });
+  if (offered.length) whole.appendChild(sline(named("Style"), rows));
+  said = offered.concat(said);
   whole.appendChild(body);
   return foldSection(key, "Drawing", said.join(", "), whole);
 }
@@ -993,10 +1005,9 @@ async function copyDrawing(name) {
   var example = isExampleMedia(name);
   var from = example ? await folderAt(dir, name.split("/").slice(0, -1)) : mediaHome[name] || dir;
   var into = await dir.getDirectoryHandle("drawings", {create: true});
-  var drawing = (mediaNamed(name) || {}).drawing;
-  var styles = drawing ? drawing.styles.slice(1) : [];
+  var styled = Object.keys((mediaNamed(name) || {}).styleThumbs || {});
   var copy = await copyToOwn(from, nameShown(name), into, !example, [".png"].concat(
-    styles.map(function (style) { return "-" + style + ".png"; })));
+    styled.map(function (style) { return "-" + style + ".png"; })));
   // A walk already under way would miss the copy, so the drive is read until it is listed
   for (var tries = 0; tries < 20 && !mediaNamed(copy); tries++) {
     await scanMedia(dir);
@@ -1238,6 +1249,47 @@ function paceForChosen(held) {
   if (!media || media.kind !== "folder") return;
   held.look.pace = media.named ? "saved" : "fps";
   held.look.every = 5;
+}
+
+// The choices a style word makes, one from each of the drawing's Styles: lines, a line's first
+// where the word names none of its. The word joins its choices with dashes, in any order
+function styleChoices(drawing, style) {
+  var words = style ? style.split("-") : [];
+  return drawing.styles.map(function (line) {
+    return words.filter(function (word) { return line.indexOf(word) >= 0; })[0] || line[0];
+  });
+}
+
+// The style word for these choices, in the lines' order, a line's first left out, so a drawing
+// drawn as it is unchosen writes no style
+function styleWord(drawing, choices) {
+  return choices.filter(function (choice, at) { return choice !== drawing.styles[at][0]; }).join("-");
+}
+
+// Every style word a drawing could be drawn in but its first, each one a thumbnail can be named for
+function styleWords(drawing) {
+  var words = [[]];
+  drawing.styles.forEach(function (line) {
+    var grown = [];
+    words.forEach(function (word) {
+      line.forEach(function (choice, at) { grown.push(at ? word.concat([choice]) : word); });
+    });
+    words = grown;
+  });
+  return words.filter(function (word) { return word.length; }).map(function (word) {
+    return word.join("-");
+  });
+}
+
+// The style word of the thumbnail nearest a style, whatever order its choices were written in. A
+// style without a thumbnail of its own drops its last choice until one has, so ember-bare-oval
+// is shown by ember-bare's or ember's, and by the drawing's own where none has one
+function styleNamed(media, style) {
+  if (!style || !media || !media.drawing) return style;
+  var choices = styleWord(media.drawing, styleChoices(media.drawing, style)).split("-");
+  var thumbs = media.styleThumbs || {};
+  while (choices.length && !thumbs[choices.join("-")]) choices.pop();
+  return choices.join("-");
 }
 
 // Set a drawing newly chosen to the turn and doubling its Defaults: line asks for. Doubling is off

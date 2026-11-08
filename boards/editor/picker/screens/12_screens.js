@@ -653,7 +653,8 @@ driveParts.push({
     mediaFound.sort(function (a, b) { return a.name < b.name ? -1 : 1; });
     // A drawing's thumbnail is the PNG of its name beside it, as a program's is, and is no picture
     // of its own. Each of its other styles may have one too, its name with a dash and the style
-    // added. Only in a drawings folder, a PNG at the top of the drive being a picture
+    // word added, such as rings-blue-wide.png. Only in a drawings folder, a PNG at the top of the
+    // drive being a picture
     function inDrawings(one) {
       return isExampleMedia(one.name) || (mediaHome[one.name] || {}).name === "drawings";
     }
@@ -668,7 +669,7 @@ driveParts.push({
       one.thumbHandle = thumb.handle;
       thumb.taken = true;
       one.styleThumbs = {};
-      (one.drawing.styles || []).slice(1).forEach(function (style) {
+      styleWords(one.drawing).forEach(function (style) {
         var styled = thumbs[one.name.replace(/\.py$/i, "-" + style + ".png")];
         if (!styled) return;
         one.styleThumbs[style] = styled.handle;
@@ -781,6 +782,7 @@ function readNextPicture() {
 function mediaArt(name, style) {
   var media = mediaNamed(name);
   // A drawing in a style with a thumbnail of its own is shown by that, held under its name and style
+  style = styleNamed(media, style);
   var styled = style && media && media.styleThumbs ? media.styleThumbs[style] : null;
   var key = styled ? name + "#" + style : name;
   var held = state.art[key];
