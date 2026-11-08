@@ -9,10 +9,13 @@ how an unlit segment still shows faintly through the filter. A frame is that bac
 lit segments over it.
 
 The window is set into a brushed gunmetal case, printed with what each pair of digits shows, as an
-instrument panel would be. METAL_CASE = False leaves it bare on black.
+instrument panel would be. COLOUR chooses red, amber or green, and METAL_CASE = False leaves it
+bare on black.
 
 Drawing: Segment clock
 Defaults: Rotation = 90
+Styles: red, amber, green
+Styles: cased, bare
 Section: Retro displays
 """
 
@@ -32,9 +35,22 @@ COLON_SPACING = 0.35                # And added either side of a colon
 MARGIN = 8                          # Panel pixels around the window, and between it and the digits
 CORNER = 4                          # How far the window's corners are rounded
 
-# The colour a lit segment glows, which the filter and the unlit segments take theirs from.
-# (255, 153, 0) is an amber display and (51, 255, 68) a green one
-LED = (255, 34, 17)
+# Each colour a display comes in, the colour a lit segment glows, which the filter and the unlit
+# segments take theirs from, and the plaque a label is printed on to suit it
+LEDS = {"red": ((255, 34, 17), (153, 34, 34)), "amber": ((255, 153, 0), (153, 85, 0)),
+        "green": ((51, 255, 68), (17, 119, 34))}
+COLOUR = "red"                      # The display's colour, a name from LEDS, unless the entry's style names one
+METAL_CASE = True                   # Whether the window is set into a brushed metal case, unless the entry's style says bare
+
+# The entry's style, its choices joined by a dash, such as amber-bare, each a colour or cased or bare
+for choice in style.split("-") if style else ():
+    if choice in LEDS:
+        COLOUR = choice
+    elif choice in ("cased", "bare"):
+        METAL_CASE = choice == "cased"
+    else:
+        raise ValueError(f"'{choice}' is not one of the styles! Use {', '.join(LEDS)}, cased or bare")
+LED, PLAQUE_RGB = LEDS[COLOUR]
 
 
 def dimmed(fraction):
@@ -55,7 +71,6 @@ CASE = color.black
 ANTIALIAS = image.X4                # Every bar is slanted, so its edges want smoothing
 
 # The metal case
-METAL_CASE = True                   # Whether the window is set into a brushed metal case, or stands bare on black
 METAL = color.rgb(85, 85, 102)      # The case, a gunmetal brushed metal
 BRIGHTER = color.rgb(136, 136, 153).with_alpha(60)  # A brush mark catching the light
 DARKER = color.rgb(34, 34, 51).with_alpha(60)       # And one in shadow
@@ -66,7 +81,7 @@ LABELS = ("HOUR", "MIN", "SEC")     # Printed over each pair of digits
 CAPTION = "PRESENT TIME"            # And under the window
 LABEL_FONT = "/rom/fonts/Oswald.af"  # A condensed face, so a label sits over its pair of digits
 LABEL_SIZE = 22                     # The lettering's em height, in panel pixels
-PLAQUE = color.rgb(153, 34, 34)     # The red a label is printed on
+PLAQUE = color.rgb(*PLAQUE_RGB)     # What a label is printed on
 CAPTION_PLATE = color.black         # And the plate the caption is printed on
 LETTERING = color.rgb(238, 238, 221)
 PLATE_PAD = 4                       # Panel pixels around the lettering on a plate

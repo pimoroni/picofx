@@ -12,11 +12,12 @@ little, so the ripples spread, cross and reflect from the walls, as in Hugo Elia
 
 Drawing: Pool
 Defaults: Rotation = 90, Pixel double = true
+Styles: modern, roman
 Section: Animated scenes
 """
 
 # Constants for drawing
-STYLE = "modern"                                    # The floor, "modern" blue mosaic or "roman" cream stones round an octagon
+STYLE = style or "modern"                           # The floor, the entry's style where it sets one, "modern" blue mosaic or "roman" cream stones round an octagon
 STEPS = 2                                          # Ripple steps a frame, more for faster ripples
 DROPS = 2                                           # Drops falling on the water each step
 DROP_DEPTH = 30                                     # How deep a drop dents the water, its middle seventeen times this

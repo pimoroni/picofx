@@ -12,6 +12,7 @@ METAL_CASE = False leaves the windows bare on black.
 
 Drawing: Segment sign
 Defaults: Rotation = 90
+Styles: cased, bare
 Section: Retro displays
 """
 
@@ -42,7 +43,9 @@ SPACING = 0.32                          # Between one character and the next, th
 ANTIALIAS = image.X4                    # A diagonal is all edge
 
 # The case
-METAL_CASE = True                       # Whether the windows are set into a brushed metal case, or stand bare on black
+METAL_CASE = style != "bare"            # Whether the windows are set into a brushed metal case, or stand bare on black where the entry's style says bare
+if style not in (None, "cased", "bare"):
+    raise ValueError(f"'{style}' is not one of the styles! Use cased or bare")
 BORDER = 8                              # Panel pixels between the panel's edge and the windows
 WINDOW_GAP = 10                         # Between one window and the next
 WINDOW_PAD = 4                          # Between a window's edge and its characters

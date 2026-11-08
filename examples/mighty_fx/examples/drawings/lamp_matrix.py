@@ -12,11 +12,12 @@ from then on a frame only copies those drawings into place.
 
 Drawing: Lamp matrix
 Defaults: Rotation = 90, Pixel double = false
+Styles: tungsten, led
 Section: Retro displays
 """
 
 # Constants for drawing
-LAMPS = "tungsten"                                  # "tungsten" for filament lamps, or "led" to switch instantly in colour
+LAMPS = style or "tungsten"                         # The entry's style where it sets one, "tungsten" for filament lamps, or "led" to switch instantly in colour
 LED_COLOURS = ((255, 34, 17), (255, 136, 0), (51, 255, 68),
                (34, 85, 255), (204, 68, 255))       # The colours an LED lamp can show, any lamp any of them
 CUE_SECONDS = 6                                     # How long each lighting cue runs
@@ -247,7 +248,7 @@ def checker(step):
 CUES = (chase, sweep, wave, sparkle, checker)
 
 if LAMPS not in ("tungsten", "led"):
-    raise ValueError(f'LAMPS is {LAMPS!r}. Set it to "tungsten" or "led"')
+    raise ValueError(f'LAMPS is {LAMPS!r}. Set it or style= to "tungsten" or "led"')
 TUNGSTEN = LAMPS == "tungsten"
 
 # The screen stays dark until its first frame, so every stage of each lamp is drawn first
