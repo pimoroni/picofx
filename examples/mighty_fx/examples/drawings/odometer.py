@@ -11,6 +11,7 @@ drum on screen then copies the row of the strip that faces it on the curve, whic
 together towards the top and bottom, as a real drum does.
 
 Drawing: Odometer
+Defaults: Rotation = 90
 Section: Retro displays
 """
 

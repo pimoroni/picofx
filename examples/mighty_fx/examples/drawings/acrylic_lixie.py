@@ -11,6 +11,7 @@ The nine unlit sheets are drawn once into every frame's background, and the lit 
 The glow goes on the frame, which is opaque, and not on any sheet.
 
 Drawing: Acrylic lixie
+Defaults: Rotation = 0, Pixel double = false
 Section: Retro displays
 """
 

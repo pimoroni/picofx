@@ -12,6 +12,7 @@ The window is set into a brushed gunmetal case, printed with what each pair of d
 instrument panel would be. METAL_CASE = False leaves it bare on black.
 
 Drawing: Segment clock
+Defaults: Rotation = 90
 Section: Retro displays
 """
 

@@ -9,6 +9,7 @@ once into the background every frame starts from. A frame is that background, th
 over it, three filters, and the front of the glass.
 
 Drawing: Nixie tube
+Defaults: Rotation = 0, Pixel double = false
 Section: Retro displays
 """
 

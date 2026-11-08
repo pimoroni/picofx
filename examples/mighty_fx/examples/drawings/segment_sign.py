@@ -11,6 +11,7 @@ the background every frame starts from, so an unlit one still shows faintly thro
 METAL_CASE = False leaves the windows bare on black.
 
 Drawing: Segment sign
+Defaults: Rotation = 90
 Section: Retro displays
 """
 

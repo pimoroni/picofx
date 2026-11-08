@@ -4,6 +4,7 @@ from picovector import color, font, image, rect, shape
 Draw a split-flap clock with each digit flipping through to the next.
 
 Drawing: Split-flap clock
+Defaults: Rotation = 90
 Section: Retro displays
 """
 

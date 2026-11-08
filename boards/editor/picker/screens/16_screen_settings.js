@@ -105,15 +105,23 @@ function nameHue(name) {
 }
 
 // A line of a drawing's opening string that says how to show it
-var DRAWING_LINE = /^\s*(Drawing|Icon|Colour|Section):\s*(.+?)\s*$/;
+var DRAWING_LINE = /^\s*(Drawing|Icon|Colour|Section|Defaults):\s*(.+?)\s*$/;
 
-// What an opening string says of a drawing, or null for a file that is not one
+// What an opening string says of a drawing, or null for a file that is not one. Its defaults are
+// the Defaults: line's settings by name, written as a program's Args: line is, such as "Rotation =
+// 90 or 270, Pixel double = true"
 function drawingSaid(docstring) {
-  var said = {title: "", description: "", icon: "", colour: "", section: ""};
+  var said = {title: "", description: "", icon: "", colour: "", section: "", defaults: {}};
   var rest = docstring.split("\n").filter(function (line) {
     var field = line.match(DRAWING_LINE);
     if (!field) return true;
-    said[field[1] === "Drawing" ? "title" : field[1].toLowerCase()] = field[2];
+    if (field[1] === "Defaults") {
+      field[2].split(",").map(argumentFrom).forEach(function (setting) {
+        said.defaults[setting.name] = setting;
+      });
+    } else {
+      said[field[1] === "Drawing" ? "title" : field[1].toLowerCase()] = field[2];
+    }
     return false;
   }).join(" ").split(/\s+/).join(" ").trim();
   if (!said.title) return null;
@@ -873,7 +881,45 @@ function drawingFold(key, held) {
             : look.pace === "interval" ? "frame every " + look.every + " s" : "every frame",
               look.canvas === "set" ? look.canvasW + " \u00d7 " + look.canvasH
             : look.canvas === "half" ? "half size" : "whole screen"];
-  return foldSection(key, "Drawing", said.join(", "), body);
+  var whole = document.createElement("div");
+  var madeFor = madeForLine(held);
+  if (madeFor) whole.appendChild(madeFor);
+  whole.appendChild(body);
+  return foldSection(key, "Drawing", said.join(", "), whole);
+}
+
+// A line warning that a drawing is turned or doubled otherwise than its Defaults: line says it
+// suits, with a button setting it back, or null. A single turn is only where it starts, so only a
+// turn outside a list is warned of
+function madeForLine(held) {
+  var media = held.shows ? mediaNamed(held.shows) : null;
+  if (!media || !media.drawing) return null;
+  var turns = drawingTurns(media.drawing);
+  var turnWrong = !!turns && turns.length > 1 && turns.indexOf(Number(held.turn || 0)) < 0;
+  // Doubled is right only on the half-size canvas, and full resolution only on the whole screen
+  var doubled = drawingDoubled(media.drawing);
+  var doubleWrong = doubled === true ? !(held.look.double && held.look.canvas === "half")
+                  : doubled === false ? held.look.double || held.look.canvas === "half" : false;
+  if (!turnWrong && !doubleWrong) return null;
+  var said = [];
+  if (turnWrong) said.push(turns.map(function (turn) { return turn + "\u00b0"; }).join(" or "));
+  if (doubleWrong) said.push(doubled ? "pixel doubling at half size" : "full resolution");
+  var use = document.createElement("button");
+  use.type = "button";
+  use.className = "stoggle";
+  use.textContent = "Apply";
+  use.title = "Set the rotation and pixel doubling this drawing is made for";
+  use.onclick = function () {
+    if (turnWrong) setTurn(held, turns[0]);
+    if (doubleWrong) {
+      held.look.double = doubled;
+      held.look.canvas = doubled ? "half" : "whole";
+    }
+    draw();
+  };
+  var line = sline(named("Made for " + said.join(", ")), use);
+  line.classList.add("smadefor");
+  return line;
 }
 
 // A drawing's tile can copy it to the user's own drawings folder, to change in an editor, where it
@@ -1078,11 +1124,13 @@ function renderScreensTab() {
 
 // A picture newly chosen starts at the turn it was last given on this screen, and a picture
 // never turned here keeps the turn the screen already has, so a turn can be set on an empty
-// screen before anything is put on it. A slideshow newly chosen plays at five a second
-// unless its names say their own
+// screen before anything is put on it. A drawing never turned here starts at the turn its
+// Defaults: line gives. A slideshow newly chosen plays at five a second unless its names say
+// their own
 function chosenAfresh(held) {
   if (held.shows === held.lastShows) return;
   paceForChosen(held);
+  settingsForChosen(held);
   if (held.shows && held.turns[held.shows] !== undefined) held.turn = held.turns[held.shows];
   if (held.shows) held.turns[held.shows] = held.turn;
   held.lastShows = held.shows;
@@ -1152,4 +1200,36 @@ function paceForChosen(held) {
   if (!media || media.kind !== "folder") return;
   held.look.pace = media.named ? "saved" : "fps";
   held.look.every = 5;
+}
+
+// Set a drawing newly chosen to the turn and doubling its Defaults: line asks for. Doubling is off
+// where it does not ask, as a drawing sizes itself to its canvas and doubled draws at half size.
+// A doubled drawing takes the half-size canvas, which doubles to fill the screen
+function settingsForChosen(held) {
+  var media = held.shows ? mediaNamed(held.shows) : null;
+  if (!media || !media.drawing) return;
+  var turns = drawingTurns(media.drawing);
+  if (turns && held.turns[held.shows] === undefined) held.turn = turns[0];
+  held.look.double = drawingDoubled(media.drawing) === true;
+  held.look.canvas = held.look.double ? "half" : "whole";
+}
+
+// The turns a drawing's Defaults: line gives, the one it starts at first, or null where it gives
+// none. One turn alone is only where it starts, as a program's single Rotation is, and a list is
+// the only turns it suits
+function drawingTurns(drawing) {
+  var rotation = drawing.defaults.Rotation;
+  if (!rotation || rotation["default"] === undefined) return null;
+  var turns = (rotation.choices || [rotation["default"]]).map(Number).filter(function (turn) {
+    return [0, 90, 180, 270].indexOf(turn) >= 0;
+  });
+  return turns.length ? turns : null;
+}
+
+// Whether a drawing's Defaults: line asks for pixel doubling, true or false, or null where it says
+// neither and suits both
+function drawingDoubled(drawing) {
+  var doubled = drawing.defaults["Pixel double"];
+  if (!doubled || (doubled["default"] !== "true" && doubled["default"] !== "false")) return null;
+  return doubled["default"] === "true";
 }

@@ -545,6 +545,16 @@ Colour: orange
 name or hex code. A drawing that sets neither shows its initial, on a colour
 chosen from its name.
 
+A `Defaults` line gives the screen settings the drawing is made for, written as
+a program's `Args` line is, such as `Defaults: Rotation = 90 or 270, Pixel
+double = true`. One rotation is where the drawing starts, and a list is the
+only rotations it suits, the first being where it starts. When the drawing is
+chosen, the picker turns the screen that way unless the drawing has been turned
+on that screen before, and doubles its pixels on a half-size canvas only where
+the line asks. `Pixel double = false` marks a drawing that needs the screen's
+full resolution. While the drawing is turned or doubled otherwise than the line
+says it suits, its Drawing settings say so, with a button to set it back.
+
 ## Sound
 
 The board plays a WAV file through its onboard amplifier, alongside

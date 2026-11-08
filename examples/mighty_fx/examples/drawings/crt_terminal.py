@@ -10,6 +10,7 @@ Filters rewrite the pixels they cover, so the page is held as text and drawn in 
 then filtered once. No ROM face is fixed pitch, so the characters are baked into a strip of cells.
 
 Drawing: CRT terminal
+Defaults: Rotation = 90
 Section: Retro displays
 """
 
