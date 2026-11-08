@@ -40,7 +40,7 @@ Edge, press **Open FX drive** and choose this drive, and the page loads the file
 the board is playing, so you can carry on from there. A preview of the file it
 will write is at the foot of the page.
 
-The picker has two tabs, **The effects** and **A program**. **The effects**
+The picker has two tabs, **Effects** and **Programs**. **Effects**
 controls the lights, screens and sound: select a stretch of outputs or LEDs,
 choose a look from the cards, and adjust its settings. A run can be split into
 stretches, each playing its own look. **Edit board**, at the end of the lights'
@@ -51,9 +51,8 @@ onto the drive or delete them. Press **+** to split your setup into scenes that
 play one after another, each with its own looks, pictures and sound. Anything on the
 **Always on** tab plays under every scene.
 
-**A program** runs one of the board's programs instead of the effects:
-the showcase signs, screen pieces, and what a remote, a sensor, a speaker or a motor brings, as well as any of your own programs on this
-drive.
+**Programs** lists the board's programs, the showcase signs, screen pieces, and what a remote, a sensor, a speaker or a motor brings, and any of
+your own programs on this drive, to run instead of the effects.
 Choose one and save, and the board restarts to run it. [Your program in the
 picker](#your-program-in-the-picker) explains how your own programs appear there.
 
@@ -419,7 +418,7 @@ screenA: sequence folder=photos interval=30
 picture, and `sequence` plays a folder of pictures in the order of the numbers
 in their names. Pictures can be PNG, JPEG or GIF. `file` or `folder` must
 always be given. The board looks for it in this drive's `pictures` folder, where
-the picker adds pictures, then at the top of the drive.
+the picker adds pictures, then directly on the drive.
 
 The example pictures are in the `examples/pictures` folder. To use one in an
 entry, include the folder in its name, such as
@@ -512,7 +511,7 @@ and `pixel_double` also halves the canvas size, which draws faster and uses a
 quarter of the memory.
 
 The board looks for the drawing in this drive's `drawings` folder, where the
-picker adds drawings, then at the top of the drive. It can load pictures, such
+picker adds drawings, then directly on the drive. It can load pictures, such
 as `picovector.image.load("/fx/pictures/faces.png")` for one in the `pictures`
 folder. Do this once, in the setup. The drawing file itself is read once and
 kept in memory.
@@ -561,7 +560,7 @@ audio: wav file=ambience.wav loop=yes
 The file plays once each time the effects start, or repeatedly with `loop`.
 
 The board looks for the file in this drive's `sounds` folder, where the picker
-adds sounds, then at the top of the drive, then on the board itself. It
+adds sounds, then directly on the drive, then on the board itself. It
 opens the file before this drive is shown, so the sound keeps playing when the
 drive appears on a computer. While the computer copies files to this drive, the
 sound pauses with the effects, and replacing a file while it plays silences it
@@ -697,12 +696,12 @@ FOLDER = args[0] if args else "posters"
 
 ### Your program in the picker
 
-The picker's **A program** tab lists every Python file at the top of this
+The picker's **Programs** tab lists every Python file directly on this
 drive and in its `programs` folder,
 beside the examples in its `examples/programs` folder,
-and describes each one from its opening string, the text in triple quotes at
-the top of the file. The first sentence says what the program does, and these
-lines control how the picker shows it:
+and describes each one from its opening string, the text in triple quotes that
+opens the file. The first sentence says what the program does, and these lines
+control how the picker shows it:
 
 ```python
 '''
@@ -741,7 +740,7 @@ press **Save to board** to run it.
 To delete one of your own programs from the drive, press the cross in the
 corner of its card. One in `programs` takes its pictures with it.
 
-A board with a wireless module keeps `secrets.py` at the top of the drive for
+A board with a wireless module keeps `secrets.py` directly on the drive for
 your WiFi network's name and password, and restores an empty one if it is
 deleted. Programs that go online, importing `network` or `requests`, are listed
 only when the drive has that file.

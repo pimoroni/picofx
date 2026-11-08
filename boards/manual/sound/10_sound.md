@@ -15,7 +15,7 @@ audio: wav file=ambience.wav loop=yes
 The file plays once each time the effects start, or repeatedly with `loop`.
 
 The board looks for the file in this drive's `sounds` folder, where the picker
-adds sounds, then at the top of the drive, then on the board itself. It
+adds sounds, then directly on the drive, then on the board itself. It
 opens the file before this drive is shown, so the sound keeps playing when the
 drive appears on a computer. While the computer copies files to this drive, the
 sound pauses with the effects, and replacing a file while it plays silences it

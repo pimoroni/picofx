@@ -80,14 +80,14 @@ FOLDER = args[0] if args else "posters"
 
 ### Your program in the picker
 
-The picker's **A program** tab lists every Python file at the top of this
+The picker's **Programs** tab lists every Python file directly on this
 drive and in its `programs` folder,
 <!-- if examples -->
 beside the examples in its `examples/programs` folder,
 <!-- end -->
-and describes each one from its opening string, the text in triple quotes at
-the top of the file. The first sentence says what the program does, and these
-lines control how the picker shows it:
+and describes each one from its opening string, the text in triple quotes that
+opens the file. The first sentence says what the program does, and these lines
+control how the picker shows it:
 
 ```python
 '''
@@ -128,7 +128,7 @@ press **Save to board** to run it.
 To delete one of your own programs from the drive, press the cross in the
 corner of its card. One in `programs` takes its pictures with it.
 
-A board with a wireless module keeps `secrets.py` at the top of the drive for
+A board with a wireless module keeps `secrets.py` directly on the drive for
 your WiFi network's name and password, and restores an empty one if it is
 deleted. Programs that go online, importing `network` or `requests`, are listed
 only when the drive has that file.

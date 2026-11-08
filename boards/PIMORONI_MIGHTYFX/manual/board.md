@@ -1,6 +1,6 @@
 <!-- block picker_tabs -->
 
-The picker has two tabs, **The effects** and **A program**. **The effects**
+The picker has two tabs, **Effects** and **Programs**. **Effects**
 controls the lights, screens and sound: select a stretch of outputs or LEDs,
 choose a look from the cards, and adjust its settings. A run can be split into
 stretches, each playing its own look. **Edit board**, at the end of the lights'

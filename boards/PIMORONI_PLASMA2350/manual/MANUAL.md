@@ -34,7 +34,7 @@ Edge, press **Open FX drive** and choose this drive, and the page loads the file
 the board is playing, so you can carry on from there. A preview of the file it
 will write is at the foot of the page.
 
-The picker has two tabs, **The effects** and **A program**. **The effects**
+The picker has two tabs, **Effects** and **Programs**. **Effects**
 controls the strips, the board's LED and the screen: select a stretch of LEDs,
 choose a look from the cards, and adjust its settings. A strip can be split into
 stretches, each playing its own look. **Edit board**, at the end of the lights'
@@ -44,7 +44,7 @@ this drive, and can copy files onto the drive or delete them. Press **+** to
 split your setup into scenes that play one after another, each with its own looks and
 pictures. Anything on the **Always on** tab plays under every scene.
 
-**A program** runs one of your own programs on this drive instead of the
+**Programs** lists your own programs on this drive, to run instead of the
 effects.
 Choose one and save, and the board restarts to run it. [Your program in the
 picker](#your-program-in-the-picker) explains how your own programs appear there.
@@ -378,7 +378,7 @@ screen: sequence folder=photos interval=30
 picture, and `sequence` plays a folder of pictures in the order of the numbers
 in their names. Pictures can be PNG, JPEG or GIF. `file` or `folder` must
 always be given. The board looks for it in this drive's `pictures` folder, where
-the picker adds pictures, then at the top of the drive.
+the picker adds pictures, then directly on the drive.
 
 `fps` is frames per second and `interval` is seconds per frame, so use whichever
 suits: `fps=12` for an animation, `interval=30` for a slideshow. Either replaces
@@ -468,7 +468,7 @@ and `pixel_double` also halves the canvas size, which draws faster and uses a
 quarter of the memory.
 
 The board looks for the drawing in this drive's `drawings` folder, where the
-picker adds drawings, then at the top of the drive. It can load pictures, such
+picker adds drawings, then directly on the drive. It can load pictures, such
 as `picovector.image.load("/fx/pictures/faces.png")` for one in the `pictures`
 folder. Do this once, in the setup. The drawing file itself is read once and
 kept in memory.
@@ -615,11 +615,11 @@ FOLDER = args[0] if args else "posters"
 
 ### Your program in the picker
 
-The picker's **A program** tab lists every Python file at the top of this
+The picker's **Programs** tab lists every Python file directly on this
 drive and in its `programs` folder,
-and describes each one from its opening string, the text in triple quotes at
-the top of the file. The first sentence says what the program does, and these
-lines control how the picker shows it:
+and describes each one from its opening string, the text in triple quotes that
+opens the file. The first sentence says what the program does, and these lines
+control how the picker shows it:
 
 ```python
 '''
@@ -653,7 +653,7 @@ at its defaults.
 To delete one of your own programs from the drive, press the cross in the
 corner of its card. One in `programs` takes its pictures with it.
 
-A board with a wireless module keeps `secrets.py` at the top of the drive for
+A board with a wireless module keeps `secrets.py` directly on the drive for
 your WiFi network's name and password, and restores an empty one if it is
 deleted. Programs that go online, importing `network` or `requests`, are listed
 only when the drive has that file.

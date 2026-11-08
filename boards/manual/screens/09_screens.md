@@ -85,7 +85,7 @@ __SCREEN__: sequence folder=photos interval=30
 picture, and `sequence` plays a folder of pictures in the order of the numbers
 in their names. Pictures can be PNG, JPEG or GIF. `file` or `folder` must
 always be given. The board looks for it in this drive's `pictures` folder, where
-the picker adds pictures, then at the top of the drive.
+the picker adds pictures, then directly on the drive.
 
 <!-- if examples -->
 The example pictures are in the `examples/pictures` folder. To use one in an
@@ -180,7 +180,7 @@ and `pixel_double` also halves the canvas size, which draws faster and uses a
 quarter of the memory.
 
 The board looks for the drawing in this drive's `drawings` folder, where the
-picker adds drawings, then at the top of the drive. It can load pictures, such
+picker adds drawings, then directly on the drive. It can load pictures, such
 as `picovector.image.load("/fx/pictures/faces.png")` for one in the `pictures`
 folder. Do this once, in the setup. The drawing file itself is read once and
 kept in memory.

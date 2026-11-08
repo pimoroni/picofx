@@ -911,8 +911,8 @@ function renderPageSwitch() {
   inHeader.className = "headswitch headsplit headtabs";
   // Two tabs, what runs picked, each showing what it would run, small in the header where the
   // page's name is, taking no room from the page
-  [["effects", "The effects"],
-   ["program", "A program", program ? programTitle(program) : ""]].forEach(function (one) {
+  [["effects", "Effects"],
+   ["program", "Programs", program ? programTitle(program) : ""]].forEach(function (one) {
     // A tab holds the scenes' button, and a button cannot hold another, so a tab is a plain
     // element taking the click and the keyboard
     var cover = document.createElement("div");

@@ -8,12 +8,11 @@ will write is at the foot of the page.
 <!-- board picker_tabs -->
 
 <!-- if examples -->
-**A program** runs one of the board's programs instead of the effects:
-__PROGRAMS_OFFERED__, as well as any of your own programs on this
-drive.
+**Programs** lists the board's programs, __PROGRAMS_OFFERED__, and any of
+your own programs on this drive, to run instead of the effects.
 <!-- end -->
 <!-- if not examples -->
-**A program** runs one of your own programs on this drive instead of the
+**Programs** lists your own programs on this drive, to run instead of the
 effects.
 <!-- end -->
 Choose one and save, and the board restarts to run it. [Your program in the

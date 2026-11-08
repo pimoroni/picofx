@@ -80,7 +80,7 @@ drawSteps.after.push(function () {
             : !state.scenes.length ? ""
             : state.at < 0 ? "Always on" : state.scenes[state.at].name;
   floatBar.querySelector(".floatwhere").innerHTML =
-    "<b>" + (onProgramPage ? "A program" : "The effects") + "</b>" +
+    "<b>" + (onProgramPage ? "Programs" : "Effects") + "</b>" +
     (shown ? "<small>" + escapeHtml(shown) + "</small>" : "");
 });
 
