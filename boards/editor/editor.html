@@ -728,7 +728,7 @@ function hintFor(found) {
     if (found.kind === "board") return BOARD_HINTS[name.toLowerCase()] || "";
     // A drawing names a Python file, which belongs in a Python editor
     if (found.effect === "drawing" && name.toLowerCase().indexOf("file") === 0)
-      return "a Python file with a draw(canvas, elapsed) function, written in Thonny or VS Code";
+      return "a Python file with a draw() function, written in Thonny or VS Code";
     var type = settingType(name, found.kind);
     return type ? name.replace(/,+$/, "") + ": " +
                   (CHANNEL_HINTS[name.toLowerCase()] || TYPE_HINTS[type]) : "";

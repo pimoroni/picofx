@@ -146,18 +146,28 @@ __SCREEN__: drawing file=rings.py
 # rings.py
 from picovector import color, shape
 
-def draw(canvas, elapsed):
+middle_x = canvas.width / 2
+middle_y = canvas.height / 2
+
+def draw():
     canvas.pen = color.black
     canvas.clear()
     canvas.pen = color.rgb(255, 160, 40)
-    canvas.shape(shape.circle(120, 160, 20 + 10 * (elapsed % 3)))
+    canvas.shape(shape.circle(middle_x, middle_y, 20 + (ticks % 3000) / 100))
 ```
 
-`draw` is called with a canvas the size of the screen, kept between calls, and
-the seconds since the drawing started. The screen shows whatever it has drawn
-when it returns. The rest of the file runs once, when the drawing starts, so set
-up anything `draw` uses there. `fps` or `interval` sets the frame rate, and
-leaving both out draws as fast as the screen allows.
+`draw` is called for each frame, and the screen shows whatever it has drawn
+when it returns. It can use three names the board provides. `canvas` is the
+image to draw on, the size of the screen and kept between frames. `ticks` is
+the milliseconds since the drawing started, so `ticks / 1000` is the time in
+seconds, and `ticks_delta` is the milliseconds since the last frame. `fps` or
+`interval` sets the frame rate, and leaving both out draws as fast as the
+screen allows.
+
+The rest of the file runs once, when the drawing starts, so set up anything
+`draw` uses there. `canvas` is ready by then, so the setup can size things to
+the screen, as `middle_x` and `middle_y` are here, or paint a background for
+`draw` to build on.
 
 `width` and `height` set the canvas size in pixels, overriding any other
 setting. A small canvas draws faster and is placed like a small picture, so
