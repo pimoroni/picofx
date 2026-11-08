@@ -13,7 +13,8 @@ how an unlit segment still shows faintly through the filter. A frame is that bac
 lit segments over it.
 
 The window is set into a brushed gunmetal case, printed with what each pair of digits shows, as an
-instrument panel would be. METAL_CASE = False leaves it bare on black.
+instrument panel would be. COLOUR chooses red, amber or green, and METAL_CASE = False leaves it
+bare on black.
 
 Press "Boot" to exit the program.
 
@@ -37,9 +38,16 @@ COLON_SPACING = 0.35                # And added either side of a colon
 MARGIN = 8                          # Panel pixels around the window, and between it and the digits
 CORNER = 4                          # How far the window's corners are rounded
 
-# The colour a lit segment glows, which the filter and the unlit segments take theirs from.
-# (255, 153, 0) is an amber display and (51, 255, 68) a green one
-LED = (255, 34, 17)
+# Each colour a display comes in, the colour a lit segment glows, which the filter and the unlit
+# segments take theirs from, and the plaque a label is printed on to suit it
+LEDS = {"red": ((255, 34, 17), (153, 34, 34)), "amber": ((255, 153, 0), (153, 85, 0)),
+        "green": ((51, 255, 68), (17, 119, 34))}
+COLOUR = "red"                      # The display's colour, a name from LEDS
+
+# Is COLOUR one of them?
+if COLOUR not in LEDS:
+    raise ValueError(f"'{COLOUR}' is not one of the colours! Set COLOUR to {', '.join(LEDS)}")
+LED, PLAQUE_RGB = LEDS[COLOUR]
 
 
 def dimmed(fraction):
@@ -71,7 +79,7 @@ LABELS = ("HOUR", "MIN", "SEC")     # Printed over each pair of digits
 CAPTION = "PRESENT TIME"            # And under the window
 LABEL_FONT = "/rom/fonts/Oswald.af"  # A condensed face, so a label sits over its pair of digits
 LABEL_SIZE = 22                     # The lettering's em height, in panel pixels
-PLAQUE = color.rgb(153, 34, 34)     # The red a label is printed on
+PLAQUE = color.rgb(*PLAQUE_RGB)     # What a label is printed on
 CAPTION_PLATE = color.black         # And the plate the caption is printed on
 LETTERING = color.rgb(238, 238, 221)
 PLATE_PAD = 4                       # Panel pixels around the lettering on a plate

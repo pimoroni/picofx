@@ -9,7 +9,8 @@ from picovector import color, image, rect, shape, vec2
 """
 Draw a glowing portal with arms spiralling into a dark opening and specks of light
 falling in. Each arm dims to black before the opening, so it seems to fall away without
-end. STONES = True sets the portal into a stone wall.
+end. SCHEME chooses its colours, violet, ember, ice or emerald, and STONES = True sets it
+into a stone wall.
 
 RIM_WIDTH and RIM_HEIGHT size the portal to a cutout in front of the panel, and by default it is as
 large as fits. Each frame dims the opening a little before drawing, so the motes leave fading streaks.
@@ -21,6 +22,7 @@ Args: Screen size = 2.8, Rotation = 90
 """
 
 # Constants for drawing
+SCHEME = "violet"                   # The portal's colours, a name from SCHEMES
 STONES = True                       # Whether the portal is set into a stone wall
 RIM_WIDTH = None                    # Panel pixels across the rim, None for as large as fits
 RIM_HEIGHT = None                   # And down it
@@ -53,19 +55,31 @@ RIM_SHAKE = 0.04                    # How far in a point on the rim strays each 
 RING_STONES = 22                    # Stones in the ring round the rim
 
 # The screens drive the panel at 12 bit, 16 levels a channel in steps of 17, so the colours sit on those levels.
+# Each scheme is an arm's colours at the rim, part way in, at its brightest and deep in, then the rim's line
+# and its glow, which also falls on the stones nearest it
+SCHEMES = {
+    "violet": ((102, 51, 255), (204, 68, 255), (255, 170, 238), (119, 34, 136), (204, 153, 255), (153, 68, 255)),
+    "ember": ((238, 68, 34), (255, 136, 51), (255, 221, 136), (119, 17, 17), (255, 187, 85), (238, 85, 17)),
+    "ice": ((68, 119, 204), (136, 204, 255), (238, 238, 255), (51, 34, 136), (204, 238, 255), (85, 153, 238)),
+    "emerald": ((0, 153, 85), (0, 204, 119), (238, 255, 221), (17, 85, 17), (170, 255, 34), (0, 204, 119)),
+}
+
+# Is SCHEME one of them?
+if SCHEME not in SCHEMES:
+    raise ValueError(f"'{SCHEME}' is not one of the schemes! Set SCHEME to {', '.join(SCHEMES)}")
+EDGE, PART_WAY, BRIGHTEST, DEEP, RIM_RGB, GLOW_RGB = SCHEMES[SCHEME]
+
 # From the rim in, an arm's colours dim towards the opening's dark, and a mote's pale to white and go out there
 VOID = (0, 0, 0)                    # The opening's dark, which the arms fall into and each frame dims back to
-ARM_COLOURS = ((1.0, (102, 51, 255)), (0.65, (204, 68, 255)), (0.4, (255, 170, 238)),
-               (0.2, (119, 34, 136)), (0.0, VOID))
-MOTE_COLOURS = ((1.0, (102, 51, 255)), (0.6, (204, 68, 255)), (0.35, (255, 170, 238)),
-                (0.18, (255, 255, 255)), (0.0, VOID))
+ARM_COLOURS = ((1.0, EDGE), (0.65, PART_WAY), (0.4, BRIGHTEST), (0.2, DEEP), (0.0, VOID))
+MOTE_COLOURS = ((1.0, EDGE), (0.6, PART_WAY), (0.35, BRIGHTEST), (0.18, (255, 255, 255)), (0.0, VOID))
 GLOW_ALPHA = 70                     # How strong an arm's glow is, of 255
-RIM_LINE = color.rgb(204, 153, 255)
-RIM_GLOW = color.rgb(153, 68, 255).with_alpha(90)
+RIM_LINE = color.rgb(*RIM_RGB)
+RIM_GLOW = color.rgb(*GLOW_RGB).with_alpha(90)
 STONE_SHADES = ((102, 102, 102), (119, 119, 119), (136, 136, 136), (153, 153, 153))
 MORTAR = color.rgb(34, 34, 34)
 BACKGROUND = color.black            # Behind the portal where there is no stone wall
-SPILL = (153, 68, 255)              # The portal's light falling on the stones nearest it
+SPILL = GLOW_RGB                    # The portal's light falling on the stones nearest it
 
 # Which screen is on the port, "2.8" or "1.54", and how far it is turned, 0, 90, 180 or 270, or
 # what the effects file passes in args, the size first
