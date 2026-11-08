@@ -376,19 +376,21 @@ def user_trace(error):
 
 class Graphics:
     """
-    A drawing standing where a player does, the file's draw() painting a canvas the size
-    of the panel at fps or as often as the screen takes a frame.
+    A drawing standing where a player does. The file's draw() paints a canvas sized to the
+    panel, at fps or as often as the screen takes a frame.
 
-    The file finds canvas, ticks and ticks_delta in its globals. ticks is the whole ms
-    the drawing has played, and ticks_delta the ms since the last draw(), both set
-    before each one so the frame sees a single moment.
+    The file finds canvas, style, ticks and ticks_delta in its globals. `style` is the
+    entry's style= as written, or None. `ticks` is the whole ms the drawing has
+    played, and ticks_delta the ms since the last draw(). Both are set before each
+    draw(), so the frame sees a single moment.
 
     The module body is the setup, run once begin() hands over the canvas and again on a
-    restart, from a code object kept so neither ever needs the drive. Its imports are
-    held to IMPORTS, which catches a pasted program reaching for hardware the effects
-    are already driving. That is a mistake caught, not a boundary, since builtins cannot
-    be restricted on this port. A draw() that raises keeps its last frame on the glass
-    and says why once, with everything around it carrying on.
+    restart, from a code object kept so neither ever needs the drive. The setup's
+    imports are held to IMPORTS, which catches a pasted program reaching for hardware
+    the effects are already driving. That is a mistake caught, not a boundary, since
+    builtins cannot be restricted on this port. An import inside draw() is not
+    checked. A draw() that raises keeps its last frame on the glass and says why once,
+    while everything around it carries on.
 
     A draw() that returns False has painted nothing new, so no frame is sent for it.
     Any other answer sends the canvas, a draw() that returns nothing included.
@@ -399,7 +401,7 @@ class Graphics:
     IMPORTS = ("math", "random", "time", "picovector")
 
     def __init__(self, name, code, width, height, background, errors, fps=None, paused=False,
-                 line=0):
+                 line=0, style=None):
         # The canvas, made to this size and handed over by begin()
         self.width = width
         self.height = height
@@ -407,6 +409,7 @@ class Graphics:
         self.__name = name
         self.__line = line          # The entry's, which a stop's message names
         self.__code = code
+        self.__style = style
         self.__background = background
         self.__errors = errors
         self.__frame_ms = None if not fps else max(1, int(1000 / fps))
@@ -447,8 +450,8 @@ class Graphics:
         self.image.pen = self.__background
         self.image.clear()
 
-        namespace = {"__name__": self.__name, "__file__": self.__name,
-                     "canvas": self.image, "ticks": 0, "ticks_delta": 0}
+        namespace = {"__name__": self.__name, "__file__": self.__name, "canvas": self.image,
+                     "style": self.__style, "ticks": 0, "ticks_delta": 0}
         builtins.__import__ = checked_import
         try:
             exec(self.__code, namespace)
@@ -634,7 +637,7 @@ def __make_drawing(code, target, at, channels, screens, settings, fps, asleep):
                   if channel.background is not None else picovector.color.black)
 
     return Graphics(target, code, width, height, background, REPORTING_TO[0], fps=fps,
-                    paused=asleep, line=at)
+                    paused=asleep, line=at, style=settings.get("style"))
 
 
 def __begin_drawings(waiting, shows, built, problems):

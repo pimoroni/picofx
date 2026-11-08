@@ -73,7 +73,7 @@ for _kind, _registry in (("mono", MONO_EFFECTS), ("colour", COLOUR_EFFECTS)):
 # looks on the drive first, then the board. "none" shows only the background, so a scene
 # can take a screen from the always-on entries.
 SCREEN_EFFECTS = {
-    "drawing": ("file", "fps", "interval", "width", "height"),
+    "drawing": ("file", "fps", "interval", "width", "height", "style"),
     "gif": ("file", "fps", "interval", "loop", "ping_pong", "first_as_last", "hold"),
     "image": ("file",),
     "none": (),
@@ -102,12 +102,10 @@ AUDIO_EFFECTS = {
 FOLDERS = {"gif": "pictures", "image": "pictures", "sequence": "pictures", "drawing": "drawings",
            "wav": "sounds"}
 
-# What each effect setting's value must be, stated once since a name means the same thing
-# wherever it appears. "count" is a whole number of 1 or more, since each divides or repeats
-# something, where "whole" may be zero or negative. "angle" is a fraction that takes degrees
-# as well, and "span" a distance across the outputs above zero, since an effect divides by
-# it. "colour" is a name or hex the parser turns into a tuple, and "name" a file name
-# kept as written. CHANNEL_KINDS below adds "quarter", a quarter turn for a mounted screen.
+# What each effect setting's value must be. "count" is a whole number of 1 or more and
+# "whole" any whole number. "angle" also takes degrees, "span" is a distance above zero,
+# "colour" a name or hex, "name" a file name kept as written and "word" a drawing's style.
+# CHANNEL_KINDS below adds "quarter", a quarter turn for a mounted screen.
 SETTINGS = {
     "speed": "number",
     "phase": "fraction",
@@ -150,6 +148,7 @@ SETTINGS = {
     "first_as_last": "boolean",
     "width": "count",
     "height": "count",
+    "style": "word",
 }
 
 # Pairs of settings that bound a range, the smaller named first
