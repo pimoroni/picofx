@@ -1097,8 +1097,12 @@ assetSteps.push(function () {
     var art = media && mediaArt(media.name);
     var face = cell.querySelector(".face");
     var img = face && face.querySelector("img");
+    // A drawing's description is its tooltip, as a program's is, too long to show over its tile
+    if (media && media.kind === "drawing" && media.drawing.description) {
+      cell.title = media.drawing.description;
+    }
     // A drawing is its icon on its colour, or its initial, square, tagged as a drawing, its name
-    // and description on hover
+    // on hover
     if (media && media.kind === "drawing" && !media.thumbHandle && face) {
       var drawing = media.drawing;
       face.className = "face drawingface";
@@ -1108,7 +1112,7 @@ assetSteps.push(function () {
         (drawing.icon ? "<span class='drawingicon'>" + drawing.icon + "</span>"
                       : "<span class='drawingletter'>" + drawing.title[0] + "</span>") +
         "<span class='drawingtitle'>" + drawing.title + "</span>" +
-        "<div class='label'><b>" + drawing.title + "</b><br>" + drawing.description + "</div>";
+        "<div class='label'><b>" + drawing.title + "</b></div>";
       return;
     }
     if (!art || !art.w || !img) return;
@@ -1127,10 +1131,10 @@ assetSteps.push(function () {
     // A slideshow is a folder, so it is named as one
     var shown = media.kind === "folder" ? pictureSaid(media.name)
               : dot > 0 ? file.slice(0, dot) : file;
-    // A drawing shown by its thumbnail is named and described as its opening string says, the
-    // thumbnail's size not being the canvas it draws on
+    // A drawing shown by its thumbnail is named as its opening string says, the thumbnail's size
+    // not being the canvas it draws on
     if (label && media.kind === "drawing") {
-      label.innerHTML = "<b>" + media.drawing.title + "</b><br>" + media.drawing.description;
+      label.innerHTML = "<b>" + media.drawing.title + "</b>";
     } else if (label) {
       label.innerHTML = "<b>" + shown + "</b><br>" +
         [still && dot > 0 ? file.slice(dot + 1) : null, art.w + " \u00d7 " + art.h]
