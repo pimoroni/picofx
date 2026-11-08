@@ -281,6 +281,11 @@ def value_fault(kind, value):
             return None
         return "expected a file name, such as anim.gif"
 
+    if kind == "word":
+        if isinstance(value, str):
+            return None
+        return "expected a word, such as goat"
+
     if kind == "quarter":
         if isinstance(value, float) and value in (0.0, 90.0, 180.0, 270.0):
             return None

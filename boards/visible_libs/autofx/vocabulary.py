@@ -44,7 +44,7 @@ for _kind, _registry in (("mono", MONO_EFFECTS), ("colour", COLOUR_EFFECTS)):
 # "image" holds one still, and "drawing" runs a Python file's draw() after running its
 # module body once. Each looks on the drive first, then the board.
 SCREEN_EFFECTS = {
-    "drawing": ("file", "fps", "interval", "width", "height"),
+    "drawing": ("file", "fps", "interval", "width", "height", "style"),
     "gif": ("file", "fps", "interval", "loop", "ping_pong", "first_as_last", "hold"),
     "image": ("file",),
     "sequence": ("folder", "fps", "interval", "loop", "ping_pong", "first_as_last", "hold"),
@@ -75,8 +75,9 @@ FOLDERS = {"gif": "pictures", "image": "pictures", "sequence": "pictures", "draw
 # wherever it appears. "count" is a whole number of 1 or more, since each divides or repeats
 # something, where "whole" may be zero or negative. "angle" is a fraction that takes degrees
 # as well, and "span" a distance across the outputs above zero, since an effect divides by
-# it. "colour" is a name or hex the parser turns into a tuple, and "name" a file name
-# kept as written. CHANNEL_KINDS below adds "quarter", a quarter turn for a mounted screen.
+# it. "colour" is a name or hex the parser turns into a tuple, "name" a file name kept as
+# written, and "word" a drawing's style, which only the drawing itself can check.
+# CHANNEL_KINDS below adds "quarter", a quarter turn for a mounted screen.
 SETTINGS = {
     "speed": "number",
     "phase": "fraction",
@@ -118,6 +119,7 @@ SETTINGS = {
     "first_as_last": "boolean",
     "width": "count",
     "height": "count",
+    "style": "word",
 }
 
 # Settings written as a pair, the smaller named first
