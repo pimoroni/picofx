@@ -569,7 +569,8 @@ function screenPlaying(parts, body, letter) {
     } else if (key === "width" || key === "height") {
       look.canvas = "set";
       look[key === "width" ? "canvasW" : "canvasH"] = Number(value);
-    } else understood = false;
+    } else if (key === "style") look.style = value;
+    else understood = false;
   });
   return understood ? playing : null;
 }
@@ -651,7 +652,8 @@ driveParts.push({
   land: function () {
     mediaFound.sort(function (a, b) { return a.name < b.name ? -1 : 1; });
     // A drawing's thumbnail is the PNG of its name beside it, as a program's is, and is no picture
-    // of its own. Only in a drawings folder, a PNG at the top of the drive being a picture
+    // of its own. Each of its other styles may have one too, its name with a dash and the style
+    // added. Only in a drawings folder, a PNG at the top of the drive being a picture
     function inDrawings(one) {
       return isExampleMedia(one.name) || (mediaHome[one.name] || {}).name === "drawings";
     }
@@ -665,9 +667,28 @@ driveParts.push({
       if (!thumb) return;
       one.thumbHandle = thumb.handle;
       thumb.taken = true;
+      one.styleThumbs = {};
+      (one.drawing.styles || []).slice(1).forEach(function (style) {
+        var styled = thumbs[one.name.replace(/\.py$/i, "-" + style + ".png")];
+        if (!styled) return;
+        one.styleThumbs[style] = styled.handle;
+        styled.taken = true;
+      });
     });
     mediaFound = mediaFound.filter(function (one) { return !one.taken; });
     state.media = mediaFound;
+    Object.keys(state.art).forEach(function (key) {
+      if (state.art[key].gone) delete state.art[key];
+    });
+    // A drawing given its face before its thumbnail was found, a read catching it part way
+    // through being copied, takes the thumbnail now
+    mediaFound.forEach(function (one) {
+      if (one.kind !== "drawing" || !one.thumbHandle || !(state.art[one.name] || {}).face) return;
+      delete state.art[one.name];
+      Object.keys(drawingArts).forEach(function (key) {
+        if (key.indexOf(one.name + "|") === 0) delete drawingArts[key];
+      });
+    });
     // A drawing cannot run in the page, so one without a thumbnail is shown by a face made from
     // its opening string
     mediaFound.forEach(function (one) {
@@ -683,7 +704,15 @@ driveParts.push({
         if (body.screens[letter].shows === name) body.screens[letter].shows = null;
       });
     });
-    delete state.art[name];
+    // Everything drawn from it goes too, its styles' thumbnails and its previews, so a new file
+    // given its name starts afresh
+    Object.keys(state.art).forEach(function (key) {
+      if (key === name || key.indexOf(name + "#") === 0) delete state.art[key];
+    });
+    Object.keys(drawingArts).forEach(function (key) {
+      if (key.indexOf(name + "|") === 0) delete drawingArts[key];
+    });
+    delete shownBefore[name];
   }
 });
 
@@ -738,25 +767,33 @@ function readNextPicture() {
       probe.onerror = function () { settle(); };
       probe.src = url;
     });
-  }, function () {}).then(function () {
+  }, function () {
+    // The file is gone, deleted while still listed, so it is asked for again once the drive is
+    // next read, where one that would not load is not
+    if (state.art[next.name]) state.art[next.name].gone = true;
+  }).then(function () {
     pictureReading = null;
     draw();
     readNextPicture();
   });
 }
 
-function mediaArt(name) {
-  var held = state.art[name];
-  if (held) return held.ratio ? held : null;
+function mediaArt(name, style) {
   var media = mediaNamed(name);
+  // A drawing in a style with a thumbnail of its own is shown by that, held under its name and style
+  var styled = style && media && media.styleThumbs ? media.styleThumbs[style] : null;
+  var key = styled ? name + "#" + style : name;
+  var held = state.art[key];
+  // The drawing's own thumbnail stands in while a style's loads, so the screen keeps a picture
+  if (held) return held.ratio ? held : styled ? mediaArt(name) : null;
   // A slideshow and a drawing are shown by a thumbnail, a picture by itself
-  var handle = media && (media.thumbHandle || media.handle);
+  var handle = styled || (media && (media.thumbHandle || media.handle));
   if (!handle) return null;
   // Held empty while it waits, so each is asked for once
-  state.art[name] = {url: null, ratio: 0};
-  pictureQueue.push({name: name, handle: handle});
+  state.art[key] = {url: null, ratio: 0};
+  pictureQueue.push({name: key, handle: handle});
   setTimeout(readNextPicture, 0);
-  return null;
+  return styled ? mediaArt(name) : null;
 }
 
 // ---- drawing the tab -------------------------------------------------------------------------
@@ -787,7 +824,8 @@ tabSwatches.screensPanel = function (swatch) {
     var screen = state.screens[letter];
     var cell = document.createElement("span");
     cell.className = "screencell " + letter.toLowerCase();
-    var art = screen.there && screen.shows ? mediaArt(screen.shows) : null;
+    var art = screen.there && screen.shows
+              ? mediaArt(screen.shows, screen.look && screen.look.style) : null;
     if (art) cell.style.backgroundImage = "url(" + art.url + ")";
     if (!screen.there) cell.classList.add("absent");
     else if (!art) cell.classList.add("blank");

@@ -196,7 +196,8 @@ var CATALOGUE = {
    "fps",
    "interval",
    "width",
-   "height"
+   "height",
+   "style"
   ],
   "gif": [
    "file",
@@ -267,7 +268,8 @@ var CATALOGUE = {
   "ping_pong": "boolean",
   "first_as_last": "boolean",
   "width": "count",
-  "height": "count"
+  "height": "count",
+  "style": "word"
  },
  "colours": [
   "black",

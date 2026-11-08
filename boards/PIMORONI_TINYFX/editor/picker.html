@@ -10356,12 +10356,25 @@ async function addFiles(kinds, what, takes) {
 }
 
 async function removeFromDrive(name, kind) {
+  // A drawing in the drawings folder takes its thumbnails with it, its own and each style's, as a
+  // program in the programs folder takes its pictures. Left, they would be listed as pictures
+  var media = kind === "drawing" ? mediaNamed(name) : null;
+  var thumbs = [];
+  if (media && media.thumbHandle) {
+    var stem = name.replace(/\.py$/i, "");
+    thumbs.push(stem + ".png");
+    Object.keys(media.styleThumbs || {}).forEach(function (style) {
+      thumbs.push(stem + "-" + style + ".png");
+    });
+  }
   var said = kind === "folder"
     ? "Delete the folder " + name + " and every picture in it from the FX drive?"
     : "Delete " + name + " from the FX drive?";
   if (!confirm(said)) return;
   try {
-    await (mediaHome[name] || state.dirHandle).removeEntry(name, {recursive: kind === "folder"});
+    var home = mediaHome[name] || state.dirHandle;
+    await home.removeEntry(name, {recursive: kind === "folder"});
+    await removePictures(home, thumbs);
   } catch (e) {
     banner("Could not delete " + name + ": " + e.name + ". Is the drive showing?", true);
     return;
@@ -10812,6 +10825,17 @@ async function copyProgram(path) {
   return OWN_FOLDER + "/" + await copyToOwn(from, name, into, own, [".png", "-2.png"]);
 }
 
+// Delete the pictures beside a file, skipping any it does not have
+async function removePictures(dir, names) {
+  for (var picture of names) {
+    try {
+      await dir.removeEntry(picture);
+    } catch (e) {
+      // One without that picture has none to delete
+    }
+  }
+}
+
 // Delete one of the user's own programs from the drive, once asked. In OWN_FOLDER its pictures go
 // with it, while at the top of the drive they are left, as the effects may show them too
 async function removeProgram(path) {
@@ -10823,13 +10847,7 @@ async function removeProgram(path) {
     await dir.removeEntry(name);
     if (parts.join("/") === OWN_FOLDER) {
       var stem = name.replace(/\.py$/i, "");
-      for (var picture of [stem + ".png", stem + "-2.png"]) {
-        try {
-          await dir.removeEntry(picture);
-        } catch (e) {
-          // One without that picture has none to delete
-        }
-      }
+      await removePictures(dir, [stem + ".png", stem + "-2.png"]);
     }
   } catch (e) {
     banner("Could not delete " + name + ": " + e.name + ". Is the drive showing?", true);

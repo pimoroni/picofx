@@ -283,12 +283,25 @@ async function addFiles(kinds, what, takes) {
 }
 
 async function removeFromDrive(name, kind) {
+  // A drawing in the drawings folder takes its thumbnails with it, its own and each style's, as a
+  // program in the programs folder takes its pictures. Left, they would be listed as pictures
+  var media = kind === "drawing" ? mediaNamed(name) : null;
+  var thumbs = [];
+  if (media && media.thumbHandle) {
+    var stem = name.replace(/\.py$/i, "");
+    thumbs.push(stem + ".png");
+    Object.keys(media.styleThumbs || {}).forEach(function (style) {
+      thumbs.push(stem + "-" + style + ".png");
+    });
+  }
   var said = kind === "folder"
     ? "Delete the folder " + name + " and every picture in it from the FX drive?"
     : "Delete " + name + " from the FX drive?";
   if (!confirm(said)) return;
   try {
-    await (mediaHome[name] || state.dirHandle).removeEntry(name, {recursive: kind === "folder"});
+    var home = mediaHome[name] || state.dirHandle;
+    await home.removeEntry(name, {recursive: kind === "folder"});
+    await removePictures(home, thumbs);
   } catch (e) {
     banner("Could not delete " + name + ": " + e.name + ". Is the drive showing?", true);
     return;

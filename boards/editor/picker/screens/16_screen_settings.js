@@ -22,7 +22,7 @@
 var LOOK_START = {backlight: 1, mirror: false, anchor: 4, x: "", y: "", bg: "#000000",
                   customBg: "", double: false, tile: "off", tileDown: "off", pace: "saved",
                   every: 5, loop: true, whole: false, holdBack: "", canvas: "whole",
-                  canvasW: 120, canvasH: 120};
+                  canvasW: 120, canvasH: 120, style: ""};
 
 function freshLook() { return Object.assign({}, LOOK_START); }
 
@@ -105,17 +105,21 @@ function nameHue(name) {
 }
 
 // A line of a drawing's opening string that says how to show it
-var DRAWING_LINE = /^\s*(Drawing|Icon|Colour|Section|Defaults):\s*(.+?)\s*$/;
+var DRAWING_LINE = /^\s*(Drawing|Icon|Colour|Section|Defaults|Styles):\s*(.+?)\s*$/;
 
 // What an opening string says of a drawing, or null for a file that is not one. Its defaults are
 // the Defaults: line's settings by name, written as a program's Args: line is, such as "Rotation =
 // 90 or 270, Pixel double = true"
 function drawingSaid(docstring) {
-  var said = {title: "", description: "", icon: "", colour: "", section: "", defaults: {}};
+  var said = {title: "", description: "", icon: "", colour: "", section: "", defaults: {},
+              styles: []};
   var rest = docstring.split("\n").filter(function (line) {
     var field = line.match(DRAWING_LINE);
     if (!field) return true;
-    if (field[1] === "Defaults") {
+    if (field[1] === "Styles") {
+      // The styles it can be drawn in, the first being the one it takes where none is chosen
+      said.styles = field[2].split(",").map(function (style) { return style.trim(); }).filter(Boolean);
+    } else if (field[1] === "Defaults") {
       field[2].split(",").map(argumentFrom).forEach(function (setting) {
         said.defaults[setting.name] = setting;
       });
@@ -142,8 +146,13 @@ var drawingArts = {};
 
 // A drawing's face at a canvas's size, for where a picture's pixels are drawn: its colour filling
 // the canvas and its icon or initial in the middle, the canvas the size the drawing draws at
-function drawingArt(name, wide, high) {
-  var key = name + "|" + wide + "|" + high;
+function drawingArt(name, wide, high, style) {
+  // Kept by the thumbnail it is made from, so a style's found on a later read of the drive
+  // replaces the drawing's that stood in for it. One still loading is stood in for, and not kept
+  var styleThumbs = (mediaNamed(name) || {}).styleThumbs || {};
+  var styled = !!style && !!styleThumbs[style];
+  var key = name + "|" + wide + "|" + high + "|" + (styled ? style : "");
+  var waiting = styled && !(state.art[name + "#" + style] || {}).ratio;
   if (drawingArts[key]) return drawingArts[key];
   var media = mediaNamed(name);
   var drawing = media.drawing;
@@ -151,16 +160,19 @@ function drawingArt(name, wide, high) {
   canvas.width = wide;
   canvas.height = high;
   var g = canvas.getContext("2d");
-  // A thumbnail covers the canvas once it has loaded, the face standing in until then
-  var thumb = media.thumbHandle ? mediaArt(name) : null;
+  // A thumbnail covers the canvas once it has loaded. Until then there is nothing to show, so a
+  // screen keeps what it showed before, and only a drawing with no thumbnail shows its face
+  var thumb = media.thumbHandle ? mediaArt(name, style) : null;
   var loaded = thumb ? artImage(thumb) : null;
+  if (media.thumbHandle && !loaded) return null;
   if (loaded) {
     var scale = Math.max(wide / loaded.naturalWidth, high / loaded.naturalHeight);
     var drawnWide = loaded.naturalWidth * scale;
     var drawnHigh = loaded.naturalHeight * scale;
     g.drawImage(loaded, (wide - drawnWide) / 2, (high - drawnHigh) / 2, drawnWide, drawnHigh);
-    drawingArts[key] = {url: canvas.toDataURL(), w: wide, h: high, ratio: wide / high};
-    return drawingArts[key];
+    var made = {url: canvas.toDataURL(), w: wide, h: high, ratio: wide / high};
+    if (!waiting) drawingArts[key] = made;
+    return made;
   }
   g.fillStyle = drawingInk(drawing, name);
   g.fillRect(0, 0, wide, high);
@@ -182,6 +194,7 @@ function madeDrawing(name) {
     if (key.indexOf(name + "|") === 0) delete drawingArts[key];
   });
   state.art[name] = drawingArt(name, 240, 240);
+  state.art[name].face = true;
 }
 
 // ---- drawing a look on the module -------------------------------------------------------------
@@ -325,16 +338,24 @@ function nextGifFrame(playing, gif) {
   }).catch(function () {});
 }
 
+// What each file last showed on a screen, composed with its look, by name
+var shownBefore = {};
+
 // A screen module drawn with its picture composed with its look, a gif playing in it
 function panelPreview(screen) {
-  var art = screen.look && screen.shows && screen.shows !== "keep" ? mediaArt(screen.shows)
+  var style = screen.look ? screen.look.style : "";
+  var art = screen.look && screen.shows && screen.shows !== "keep" ? mediaArt(screen.shows, style)
                                                                      : null;
   // A drawing is drawn at its canvas's size, then placed and doubled as a picture is
   if (art && kindOf(screen.shows) === "drawing") {
     var canvas = canvasPixels(screen.look, screen.size, screen.turn);
-    art = drawingArt(screen.shows, canvas[0], canvas[1]);
+    art = drawingArt(screen.shows, canvas[0], canvas[1], style);
   }
   var made = art ? composedArt(screen, screen.look, art) : null;
+  // A picture still loading leaves the screen showing what it last showed of that file, so a new
+  // style or setting does not blank it for a moment
+  if (made) shownBefore[screen.shows] = made;
+  else if (screen.shows && shownBefore[screen.shows]) made = shownBefore[screen.shows];
   if (!made) return panelDrawing(screen);
   var name = "~look" + Object.keys(state.art).length;
   state.art[name] = made;
@@ -408,6 +429,7 @@ function playingTokens(playing, look, kind, size) {
     var scale = look.double ? 2 : 1;
     if (canvas[0] !== Math.floor(panel[0] / scale) || canvas[1] !== Math.floor(panel[1] / scale))
       tokens.push("width=" + canvas[0], "height=" + canvas[1]);
+    if (look.style) tokens.push("style=" + look.style);
     return tokens;
   }
   if (!look.loop) tokens.push("loop=false");
@@ -884,6 +906,19 @@ function drawingFold(key, held) {
   var whole = document.createElement("div");
   var madeFor = madeForLine(held);
   if (madeFor) whole.appendChild(madeFor);
+  // A drawing drawn in styles of its own offers them, its first being the one it takes unchosen.
+  // A style is the file's own text, so it is escaped for the button's label
+  var media = held.shows ? mediaNamed(held.shows) : null;
+  var styles = media && media.drawing ? media.drawing.styles : [];
+  if (styles.length > 1) {
+    var chosen = look.style || styles[0];
+    whole.appendChild(sline(named("Style"), segment(styles.map(function (style) {
+      return [style, style.replace(/&/g, "&amp;").replace(/</g, "&lt;")];
+    }), chosen, function (value) {
+      look.style = value === styles[0] ? "" : value;
+    }, "The style this drawing is drawn in")));
+    said.unshift(chosen);
+  }
   whole.appendChild(body);
   return foldSection(key, "Drawing", said.join(", "), whole);
 }
@@ -951,14 +986,17 @@ function drawingCopyTile(name) {
   });
 }
 
-// Copy a drawing into the drawings folder, its thumbnail with it, and read the drive again so the
+// Copy a drawing into the drawings folder, its thumbnails with it, and read the drive again so the
 // copy is listed. Returns the copy's name
 async function copyDrawing(name) {
   var dir = state.dirHandle;
   var example = isExampleMedia(name);
   var from = example ? await folderAt(dir, name.split("/").slice(0, -1)) : mediaHome[name] || dir;
   var into = await dir.getDirectoryHandle("drawings", {create: true});
-  var copy = await copyToOwn(from, nameShown(name), into, !example, [".png"]);
+  var drawing = (mediaNamed(name) || {}).drawing;
+  var styles = drawing ? drawing.styles.slice(1) : [];
+  var copy = await copyToOwn(from, nameShown(name), into, !example, [".png"].concat(
+    styles.map(function (style) { return "-" + style + ".png"; })));
   // A walk already under way would miss the copy, so the drive is read until it is listed
   for (var tries = 0; tries < 20 && !mediaNamed(copy); tries++) {
     await scanMedia(dir);
@@ -1212,6 +1250,7 @@ function settingsForChosen(held) {
   if (turns && held.turns[held.shows] === undefined) held.turn = turns[0];
   held.look.double = drawingDoubled(media.drawing) === true;
   held.look.canvas = held.look.double ? "half" : "whole";
+  held.look.style = "";
 }
 
 // The turns a drawing's Defaults: line gives, the one it starts at first, or null where it gives

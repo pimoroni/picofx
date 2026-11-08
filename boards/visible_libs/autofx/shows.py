@@ -281,9 +281,10 @@ class Graphics:
     A drawing standing where a player does, the file's draw() painting a canvas the size
     of the panel at fps or as often as the screen takes a frame.
 
-    The file finds canvas, ticks and ticks_delta in its globals. ticks is the whole ms
-    the drawing has played, and ticks_delta the ms since the last draw(), both set
-    before each one so the frame sees a single moment.
+    The file finds canvas, style, ticks and ticks_delta in its globals. style is the
+    entry's style= as written, or None. ticks is the whole ms the drawing has played,
+    and ticks_delta the ms since the last draw(), both set before each one so the frame
+    sees a single moment.
 
     The module body is the setup, run once begin() hands over the canvas and again on a
     restart, from a code object kept so neither ever needs the drive. Its imports are
@@ -298,7 +299,7 @@ class Graphics:
     IMPORTS = ("math", "random", "time", "picovector")
 
     def __init__(self, name, code, width, height, ground, errors, fps=None, paused=False,
-                 line=0):
+                 line=0, style=None):
         # The canvas, made to this size and handed over by begin()
         self.width = width
         self.height = height
@@ -306,6 +307,7 @@ class Graphics:
         self.__name = name
         self.__line = line          # The entry's, which a stop's message names
         self.__code = code
+        self.__style = style
         self.__ground = ground
         self.__errors = errors
         self.__frame_ms = None if not fps else max(1, int(1000 / fps))
@@ -346,8 +348,8 @@ class Graphics:
         self.image.pen = self.__ground
         self.image.clear()
 
-        namespace = {"__name__": self.__name, "__file__": self.__name,
-                     "canvas": self.image, "ticks": 0, "ticks_delta": 0}
+        namespace = {"__name__": self.__name, "__file__": self.__name, "canvas": self.image,
+                     "style": self.__style, "ticks": 0, "ticks_delta": 0}
         builtins.__import__ = guarded
         try:
             exec(self.__code, namespace)
@@ -524,7 +526,7 @@ def __make_drawing(code, target, at, channel, screen, settings, fps, asleep):
               if channel.background is not None else picovector.color.black)
 
     return Graphics(target, code, width, height, ground, REPORTING_TO[0], fps=fps,
-                    paused=asleep, line=at)
+                    paused=asleep, line=at, style=settings.get("style"))
 
 
 def __begin_drawings(waiting, shows, built, problems):

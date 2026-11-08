@@ -424,7 +424,7 @@ it.
 
 | Plays | Settings |
 | --- | --- |
-| `drawing` | `file` `fps` `interval` `width` `height` |
+| `drawing` | `file` `fps` `interval` `width` `height` `style` |
 
 ```entry
 screen: drawing file=rings.py
@@ -460,6 +460,12 @@ the screen, as `middle_x` and `middle_y` are here, or paint a background for
 `width` and `height` set the canvas size in pixels, overriding any other
 setting. A small canvas draws faster and is placed like a small picture, so
 `offset` positions it and `tile=repeat` fills the screen with it.
+
+`style` passes a word to the drawing, which finds it as `style`, or `None`
+where the entry sets none. A drawing drawn in several styles lists them in a
+`Styles` line of its opening string, such as `Styles: cat, owl, goat`, the
+first being the one it takes where none is set, and the picker offers them as
+a choice.
 
 In a scene, the drawing's clock pauses while another scene plays, and a scene
 with `restart` runs the whole file again from a blank canvas. `rotation`,
