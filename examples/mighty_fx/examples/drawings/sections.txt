@@ -1,0 +1,9 @@
+# Sections for the example drawings on the picker's Screens tab, in the order they appear.
+# Each line is a section name and a short description.
+# Add "| folded" after the description to start that section folded.
+# A drawing joins a section with a "Section:" line in its opening string.
+# A section not listed here appears after these, without a description.
+Transport signs | departure boards and road signs
+Retro displays | mechanical, glowing and segment displays
+Billboards and panels | posters and signs that change on screen
+Animated scenes | drawn in code

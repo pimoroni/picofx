@@ -1,0 +1,254 @@
+from picovector import color, font, image, rect, shape
+
+"""
+Draw a split-flap clock with each digit flipping through to the next.
+
+Drawing: Split-flap clock
+Section: Retro displays
+"""
+
+# Constants for drawing
+FLAP_FONT = "/rom/fonts/AdventPro-Medium.af"  # A vector face, so it sizes to the card
+DRUM = " 0123456789"                    # What is on a card, in the order it comes round
+CLOCK_START = (11, 32, 45)              # The time it counts on from, Mighty FX having no clock to read
+FLAP_MS = 260                           # How long one card takes to fall
+
+# A card sits two levels above the board. The screens drive the panel at 12 bit, so a channel has 16
+# levels in steps of 17, and one level up from black reads as barely there against it
+CARD = color.rgb(34, 34, 38)            # The face of a card
+SHADOW = color.rgb(17, 17, 19)          # The top edge of a card, recessed behind the one in front
+HOUSING = color.rgb(17, 17, 19)         # The case the cards are set into, a level between them and board
+KEYLINE = color.rgb(51, 51, 56)         # The case edge, which finds it against the board
+HIGHLIGHT = color.rgb(85, 85, 92)       # A lit edge along the top of the case, light coming from above
+TEXT_COLOUR = color.rgb(238, 238, 232)  # And the lettering on it
+SPLIT = color.rgb(8, 8, 9)              # The line the cards are hinged on, and the gaps between them
+BOARD = color.black                     # What the cards are set into
+GAP = 4                                 # Between one card and the next
+SPLIT_H = 2                             # How thick the hinge line reads
+EDGE = 3                                # Under this a falling card shows its thickness, not its face
+CORNER = 6                              # How far the outer corners of a card are rounded off
+SHADOW_H = 3                            # How deep the shadow on a card top reads
+BEZEL = 8                               # How far the case stands out around the cards
+MARGIN = 6                              # Around the whole row
+SEPARATOR = 14                          # The colons, which are painted on, not flapped
+ANTIALIAS = image.X2                    # Lettering this size is worth smoothing
+CARD_ASPECT = 2.28                      # How many times taller a card is than wide
+
+# The canvas is the size of the screen, as the effects file turns it
+WIDTH, HEIGHT = canvas.width, canvas.height
+
+# Six cards and two colons, which is what a clock is, the cards as wide as the panel allows
+FLAPS = 6
+CELL_W = (WIDTH - MARGIN * 2 - SEPARATOR * 2 - GAP * (FLAPS + 1)) // FLAPS
+CELL_H = round(CELL_W * CARD_ASPECT)
+TOP = (HEIGHT - CELL_H) // 2
+HALF = CELL_H // 2
+
+flap_font = font.load(FLAP_FONT)
+
+
+def lettering_extent(size):
+    """
+    Measure which rows a digit fills at this size, font_size being the em height.
+
+    The probe is generous as text() clips to its rect.
+    """
+    tall = round(size) * 2
+    probe = image(CELL_W * 2, tall)
+    probe.pen = color.black
+    probe.clear()
+    probe.pen = color.white
+    probe.font = flap_font
+    probe.antialias = ANTIALIAS
+    probe.text("8", rect(0, 0, CELL_W * 2, tall), font_size=size)
+
+    raw, stride = probe.raw, probe.stride
+    drawn = [y for y in range(tall)
+             if any(raw[y * stride + x * 4] > 60 for x in range(CELL_W * 2))]
+    return (drawn[0], drawn[-1]) if drawn else None
+
+
+def card_size():
+    """
+    Find the largest lettering a card can carry, sized on what it draws.
+
+    One probe prices every size, as drawn height and width both scale with it.
+    """
+    canvas.font = flap_font
+    probe = 48
+    per_pixel = max(canvas.measure_text(letter, font_size=probe)[0] for letter in DRUM) / probe
+    extent = lettering_extent(probe)
+    if extent is None:
+        return probe
+    lettering_per_pixel = (extent[1] - extent[0] + 1) / probe
+    return min((CELL_H - SPLIT_H * 2) / lettering_per_pixel, (CELL_W - GAP * 2) / per_pixel)
+
+
+def lettering_top(size):
+    """Find where to draw the lettering so it centres on a card, not its em box."""
+    extent = lettering_extent(size)
+    if extent is None:
+        return round((CELL_H - size) / 2)
+    return (CELL_H - (extent[1] - extent[0] + 1)) // 2 - extent[0]
+
+
+SIZE = card_size()
+LETTERING_TOP = lettering_top(SIZE)
+EM_BOX = round(SIZE) + 2          # What a text rect has to cover, text() clipping to it
+
+# Every character of the drum drawn once to a card of its own, so a flap is a blit.
+# The two halves of a card fall separately
+drum = image(CELL_W * len(DRUM), CELL_H)
+drum.pen = SPLIT
+drum.clear()
+drum.font = flap_font
+drum.antialias = ANTIALIAS
+
+for index, letter in enumerate(DRUM):
+    left = index * CELL_W
+    # Rounded away from the hinge and square against it, the radii running clockwise from top left
+    drum.pen = CARD
+    drum.shape(shape.rounded_rectangle(rect(left, 0, CELL_W, HALF - SPLIT_H // 2),
+                                       CORNER, CORNER, 0, 0))
+    drum.shape(shape.rounded_rectangle(rect(left, HALF + SPLIT_H - SPLIT_H // 2,
+                                            CELL_W, HALF - SPLIT_H), 0, 0, CORNER, CORNER))
+
+    # Each card's top edge is shadowed into the drum once, the lower half's by the hinge
+    drum.pen = SHADOW
+    drum.rectangle(rect(left, 0, CELL_W, SHADOW_H))
+    drum.rectangle(rect(left, HALF + SPLIT_H - SPLIT_H // 2, CELL_W, SHADOW_H))
+
+    wide = drum.measure_text(letter, font_size=SIZE)[0]
+    drum.pen = TEXT_COLOUR
+    # text() clips to its rect, so the rect starts above the card and covers the em box
+    drum.text(letter, rect(left + round((CELL_W - wide) / 2), LETTERING_TOP, CELL_W, EM_BOX),
+              font_size=SIZE)
+
+# Where each card sits, and where the colons go between them
+places = []
+at = MARGIN + GAP
+for position in range(FLAPS):
+    places.append(at)
+    at += CELL_W + GAP
+    if position % 2 == 1 and position < FLAPS - 1:
+        at += SEPARATOR
+
+source = rect(0, 0, CELL_W, HALF)
+target = rect(0, 0, CELL_W, HALF)
+
+
+def half_of(index, lower):
+    """The upper or lower half of one drum card, as a source rect."""
+    source.x = index * CELL_W
+    source.y = HALF if lower else 0
+    return source
+
+
+def settled(flap, index):
+    """A card at rest, both halves showing the same character."""
+    target.x, target.w = places[flap], CELL_W
+    for lower in (False, True):
+        target.y, target.h = TOP + (HALF if lower else 0), HALF
+        canvas.blit(drum, half_of(index, lower), target)
+
+
+def falling(flap, from_index, to_index, part):
+    """
+    Draw a card part way down.
+
+    Its front falls with the old upper half and its back rises with the new lower half,
+    while the new upper half waits behind it.
+    """
+    target.x, target.w = places[flap], CELL_W
+
+    # The new upper half stands behind for the whole fall,
+    # drawn every frame so no sliver outlives the card
+    target.y, target.h = TOP, HALF
+    canvas.blit(drum, half_of(to_index, False), target)
+
+    if part < 0.5:
+        showing, above, index = round(HALF * (1 - part * 2)), True, from_index
+    else:
+        showing, above, index = round(HALF * (part - 0.5) * 2), False, to_index
+
+    if showing <= 0:
+        return
+
+    target.y = TOP + HALF - showing if above else TOP + HALF
+    target.h = showing
+
+    # A card near edge on shows its thickness, as a half squashed to a row or two smears
+    if showing <= EDGE:
+        canvas.pen = SPLIT
+        canvas.rectangle(target)
+    else:
+        canvas.blit(drum, half_of(index, not above), target)
+
+
+def clock_now(elapsed):
+    """The time the board is showing, counted on from CLOCK_START."""
+    elapsed //= 1000
+    hours, minutes, seconds = CLOCK_START
+    total = (hours * 3600 + minutes * 60 + seconds + elapsed) % 86400
+    return f"{total // 3600:02d}{total // 60 % 60:02d}{total % 60:02d}"
+
+
+# The board comes up blank and climbs to the time, as a real one does from cold
+canvas.pen = BOARD
+canvas.clear()
+
+# The case is drawn once, as a falling card writes only inside its own column
+case = rect(places[0] - BEZEL, TOP - BEZEL,
+            places[-1] + CELL_W + BEZEL - (places[0] - BEZEL), CELL_H + BEZEL * 2)
+
+# A keyline, then the dark face inset over it so the case reads by its lit edge
+canvas.pen = KEYLINE
+canvas.shape(shape.rounded_rectangle(case, CORNER, CORNER, CORNER, CORNER))
+canvas.pen = HOUSING
+canvas.shape(shape.rounded_rectangle(rect(case.x + 1, case.y + 1, case.w - 2, case.h - 2),
+                                     CORNER, CORNER, CORNER, CORNER))
+
+# Brightest along the top and black along the bottom, so the light reads as coming from above
+canvas.pen = HIGHLIGHT
+canvas.rectangle(rect(case.x + CORNER, case.y, case.w - CORNER * 2, 1))
+canvas.pen = BOARD
+canvas.rectangle(rect(case.x + CORNER, case.y + case.h - 1, case.w - CORNER * 2, 1))
+
+showing = [0] * FLAPS               # Where each card is in the drum, blank to begin with
+wanted = [0] * FLAPS
+turning = [None] * FLAPS            # When the card at this place started falling, in the drawing's ticks
+
+for flap in range(FLAPS):
+    settled(flap, 0)
+
+# The colons, painted on the board between the pairs, not carried on a card
+canvas.pen = TEXT_COLOUR
+for position in (1, 3):
+    middle = places[position] + CELL_W + GAP + SEPARATOR // 2
+    for y in (TOP + HALF // 2, TOP + HALF + HALF // 2):
+        canvas.rectangle(rect(middle - 2, y - 2, 4, 4))
+
+
+def draw():
+    """Draw the clock for the time the drawing has played, only the cards that are falling."""
+    reading = clock_now(ticks)
+
+    # A card only ever climbs, so it keeps flapping until it reaches what it should show
+    for flap in range(FLAPS):
+        wanted[flap] = DRUM.index(reading[flap])
+
+    for flap in range(FLAPS):
+        if turning[flap] is None:
+            if showing[flap] != wanted[flap]:
+                turning[flap] = ticks
+            continue
+
+        part = min(1.0, (ticks - turning[flap]) / FLAP_MS)
+        step = (showing[flap] + 1) % len(DRUM)
+        falling(flap, showing[flap], step, part)
+
+        # Landed, so it falls again at once where the card still has further to climb
+        if part >= 1.0:
+            showing[flap] = step
+            settled(flap, step)
+            turning[flap] = ticks if showing[flap] != wanted[flap] else None
