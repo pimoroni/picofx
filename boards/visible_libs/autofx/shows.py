@@ -376,8 +376,12 @@ def user_trace(error):
 
 class Graphics:
     """
-    A drawing standing where a player does, the file's draw(canvas, elapsed) painting
-    a canvas the size of the panel at fps or as often as the screen takes a frame.
+    A drawing standing where a player does, the file's draw() painting a canvas the size
+    of the panel at fps or as often as the screen takes a frame.
+
+    The file finds canvas, ticks and ticks_delta in its globals. ticks is the whole ms
+    the drawing has played, and ticks_delta the ms since the last draw(), both set
+    before each one so the frame sees a single moment.
 
     The module body is the setup, run once begin() hands over the canvas and again on a
     restart, from a code object kept so neither ever needs the drive. Its imports are
@@ -385,6 +389,9 @@ class Graphics:
     are already driving. That is a mistake caught, not a boundary, since builtins cannot
     be restricted on this port. A draw() that raises keeps its last frame on the glass
     and says why once, with everything around it carrying on.
+
+    A draw() that returns False has painted nothing new, so no frame is sent for it.
+    Any other answer sends the canvas, a draw() that returns nothing included.
     """
 
     # What drawing needs, and nothing that reaches the pins, the ports or the drive,
@@ -404,6 +411,8 @@ class Graphics:
         self.__errors = errors
         self.__frame_ms = None if not fps else max(1, int(1000 / fps))
         self.__draw = None
+        self.__globals = None       # The file's, where each frame's ticks are set
+        self.__drawn_ms = 0         # The elapsed ms the last draw() was given
         self.__stopped = False
         self.__pushed = False
         self.__seen = None
@@ -432,7 +441,14 @@ class Graphics:
                     ", ".join(self.IMPORTS), name))
             return original(name, *args, **kwargs)
 
-        namespace = {"__name__": self.__name, "__file__": self.__name}
+        # Clear the canvas to the background, so beginning again gives a blank canvas to a
+        # drawing that paints incrementally. It comes before the file runs, so what the
+        # file paints as it loads is kept
+        self.image.pen = self.__background
+        self.image.clear()
+
+        namespace = {"__name__": self.__name, "__file__": self.__name,
+                     "canvas": self.image, "ticks": 0, "ticks_delta": 0}
         builtins.__import__ = checked_import
         try:
             exec(self.__code, namespace)
@@ -441,16 +457,16 @@ class Graphics:
 
         draw = namespace.get("draw")
         if not callable(draw):
-            raise ValueError("it has no draw(canvas, elapsed) for the screen to call")
+            raise ValueError("it has no draw() for the screen to call")
 
-        # A cleared background, so beginning again means a blank canvas for a drawing
-        # that paints incrementally, and the first frame is drawn before anything
-        # is sent, so a file that cannot draw is answered at load
-        self.image.pen = self.__background
-        self.image.clear()
-        draw(self.image, 0.0)
+        # The first frame is drawn before anything is sent,
+        # so a file that cannot draw is answered at load
+        draw()
         self.__draw = draw
+        self.__globals = namespace
+        self.__drawn_ms = 0
         self.__seen = 0             # The frame just drawn is the first step's
+        self.__unchanged = False    # The first frame is always sent, whatever draw() answered
 
     def __tick(self):
         now = time.ticks_ms()
@@ -461,7 +477,7 @@ class Graphics:
         if self.__stopped:
             return False
         if not self.__pushed:
-            self.__pushed = True        # The frame the setup drew
+            self.__pushed = True        # The frame begin() drew
             return True
         if not self.__playing:
             return False
@@ -473,12 +489,17 @@ class Graphics:
                 return False
             self.__seen = step
 
+        # Set from autofx's own count, as the file may assign either name itself
+        self.__globals["ticks"] = self.__elapsed_ms
+        self.__globals["ticks_delta"] = self.__elapsed_ms - self.__drawn_ms
+        self.__drawn_ms = self.__elapsed_ms
         try:
-            self.__draw(self.image, self.__elapsed_ms / 1000)
+            # Only False says nothing new was painted, so a draw() with no return still sends
+            self.__unchanged = self.__draw() is False
         except Exception as e:      # noqa: BLE001
             self.__stop(e)
             return False
-        return True
+        return not self.__unchanged
 
     def __stop(self, error):
         # Keep the last frame and say why, once, while the loop around this carries on.

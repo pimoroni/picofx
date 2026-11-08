@@ -68,15 +68,15 @@ for _kind, _registry in (("mono", MONO_EFFECTS), ("colour", COLOUR_EFFECTS)):
         if _name is not None:
             EFFECTS[_name] = (_effect, _kind, _effect.CALLED, _effect.TAKES)
 
-# Each screen effect and the settings it takes, kept apart from EFFECTS since a screen shows
-# images where an output lights. "gif" plays an animated GIF and "sequence" a folder of
-# images in the order their names number them, each at its own delays unless fps names one.
-# "image" holds one still, and "drawing" runs a Python file's draw(canvas, elapsed) after
-# running its module body once. Each looks on the drive first, then the board.
+# Each screen effect and the settings it takes. "gif" plays an animated GIF, "sequence" a
+# folder of numbered images, "image" one still and "drawing" a Python file's draw(). Each
+# looks on the drive first, then the board. "none" shows only the background, so a scene
+# can take a screen from the always-on entries.
 SCREEN_EFFECTS = {
     "drawing": ("file", "fps", "interval", "width", "height"),
     "gif": ("file", "fps", "interval", "loop", "ping_pong", "first_as_last", "hold"),
     "image": ("file",),
+    "none": (),
     "sequence": ("folder", "fps", "interval", "loop", "ping_pong", "first_as_last", "hold"),
 }
 
