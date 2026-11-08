@@ -38,7 +38,7 @@ mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
 # few seconds when the pair is created, and it goes on correcting as the program runs.
 #
 # Both panels convert inside a single frame's time, which is what the deeper reserve
-# buys, and a pair drawing at full size refuses without it. color_wheel_in_turn.py draws
+# buys, and a pair drawing at full size refuses without it. color_wheel_unpaired.py draws
 # the same wheel without a pair, for comparison.
 pair = ScreenPair(ScreenType(mighty.spce_a, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION),
                   ScreenType(mighty.spce_b, reserve=Reserve.FULL_SIZE_IMAGES, rotation=ROTATION))

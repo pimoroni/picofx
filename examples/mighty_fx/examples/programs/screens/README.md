@@ -45,7 +45,7 @@ These are micropython examples for the screens Mighty FX can drive from its SP/C
   - [Animated GIF (Paired)](#animated-gif-paired)
   - [Animated GIF (Ping Pong)](#animated-gif-ping-pong)
   - [Body Scanner](#body-scanner)
-  - [Billboard Cased](#billboard-cased)
+  - [Street Billboard](#street-billboard)
   - [Billboard (Folders)](#billboard-folders)
   - [Billboard (Paired)](#billboard-paired)
   - [Billboard (Slideshow)](#billboard-slideshow)
@@ -213,9 +213,9 @@ Draw a sprite with blit() and with an image pen that can also rotate it.
 
 
 ### Easing Curves
-<img src="graphics/tweens.png" align="left" alt="Easing Curves">
+<img src="graphics/easing_curves.png" align="left" alt="Easing Curves">
 
-[graphics/tweens.py](graphics/tweens.py)
+[graphics/easing_curves.py](graphics/easing_curves.py)
 
 Plot every easing curve with a marker moving along each one.
 
@@ -320,10 +320,10 @@ Spin a rainbow wheel on two screens that are redrawn together.
 
 
 ### Colour Wheel (Unpaired)
-<img src="pair/color_wheel_in_turn.png" align="left" alt="Colour Wheel (Unpaired)">
-<img src="pair/color_wheel_in_turn-2.png" align="left" alt="Colour Wheel (Unpaired), second screen">
+<img src="pair/color_wheel_unpaired.png" align="left" alt="Colour Wheel (Unpaired)">
+<img src="pair/color_wheel_unpaired-2.png" align="left" alt="Colour Wheel (Unpaired), second screen">
 
-[pair/color_wheel_in_turn.py](pair/color_wheel_in_turn.py)
+[pair/color_wheel_unpaired.py](pair/color_wheel_unpaired.py)
 
 Spin a rainbow wheel on two screens that are redrawn one after the other. Run color_wheel_paired.py to see what a pair does differently.
 
@@ -342,10 +342,10 @@ Spin a rainbow wheel on two facing screens with one of them mirrored.
 
 
 ### Drifting Carpets
-<img src="pair/carpets_paired.png" align="left" alt="Drifting Carpets">
-<img src="pair/carpets_paired-2.png" align="left" alt="Drifting Carpets, second screen">
+<img src="pair/drifting_carpets.png" align="left" alt="Drifting Carpets">
+<img src="pair/drifting_carpets-2.png" align="left" alt="Drifting Carpets, second screen">
 
-[pair/carpets_paired.py](pair/carpets_paired.py)
+[pair/drifting_carpets.py](pair/drifting_carpets.py)
 
 Drift a different patterned carpet across each of two screens.
 
@@ -438,10 +438,10 @@ Change the colours of an animated GIF as it plays.
 <br clear="left">
 
 
-### Billboard Cased
-<img src="playback/billboard_cased.png" align="left" alt="Billboard Cased">
+### Street Billboard
+<img src="playback/street_billboard.png" align="left" alt="Street Billboard">
 
-[playback/billboard_cased.py](playback/billboard_cased.py)
+[playback/street_billboard.py](playback/street_billboard.py)
 
 Show a folder of posters as if each stood in a case behind glass.
 
