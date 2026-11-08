@@ -7,8 +7,7 @@ from timing import Pacer
 from screens import SCREEN_TYPES
 
 """
-Draw a fire, and light Mighty FX's RGB outputs with it, so whatever the outputs light flickers with
-the flames as a room does round a fire.
+Draw a fire and flicker the RGB outputs with it like firelight in a room.
 
 The fire is a grid of heat. Hot spots flare at random along its bed, bunched towards the middle,
 and at each step every cell takes the average of itself and the cells below it. A smooth field of

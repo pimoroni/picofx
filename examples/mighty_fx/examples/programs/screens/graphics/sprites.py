@@ -6,7 +6,7 @@ from screens import SCREEN_TYPES
 from picovector import brush, color, font, image, mat3, rect, shape, spritesheet
 
 """
-Draw the same sprite with blit() and with an image pen, which can also turn it.
+Draw a sprite with blit() and with an image pen that can also rotate it.
 
 blit() copies a sprite into a rectangle and scales it to whatever size that rectangle is,
 which is the cheap way and what the top row does. What it will not do is turn one.

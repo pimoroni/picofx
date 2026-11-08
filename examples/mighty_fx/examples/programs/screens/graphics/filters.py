@@ -6,7 +6,7 @@ from screens import SCREEN_TYPES
 from picovector import color, font, image, rect
 
 """
-Show one picture under eleven filters side by side, to compare what each one does.
+Compare eleven filters on the same picture.
 
 A filter rewrites every pixel of the image it is called on, so each cell is filtered in a
 small image of its own and blitted into place.

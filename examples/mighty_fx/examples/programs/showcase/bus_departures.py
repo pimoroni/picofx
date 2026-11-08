@@ -5,8 +5,8 @@ from screens import SCREEN_TYPES, Reserve, ScreenPair
 from picovector import color, font, image, rect, shape
 
 """
-Draw a bus departure board on a television used for signage, antialiased vector type on a panel
-that is plainly a panel. A second panel lengthens the board, with one listing across both.
+Draw a bus departure board as shown on a TV screen at a bus station. A second panel
+lengthens the board, with one listing across both.
 
 Press "Boot" to exit the program.
 

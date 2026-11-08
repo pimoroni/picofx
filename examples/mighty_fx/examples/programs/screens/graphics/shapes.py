@@ -6,7 +6,7 @@ from screens import SCREEN_TYPES
 from picovector import color, image, mat3, shape
 
 """
-Draw every shape picovector offers, each one filled and then stroked beside it, all turning.
+Spin every built-in shape both filled and outlined.
 
 Each row reads in pairs, a rectangle, a circle, an ellipse, a star, a squircle, a pie, an
 arc, and a triangle as the plainest regular polygon.

@@ -5,7 +5,7 @@ from playback import SequencePlayer
 from screens import Screen280
 
 """
-Show several folders of posters, with Boot moving to the next poster or the next folder.
+Show posters from several folders and skip to the next poster or folder with Boot.
 
 A player holds one sequence, so several folders are several players with their own settings. The
 landscape folder takes a quarter turn and the portrait one none.
@@ -15,6 +15,7 @@ poster comes from to_frame(), since advance() refuses a player with a rate.
 
 Press "Boot" for the next poster, hold it to change folder, and hold it two seconds to exit.
 
+Program: Billboard (folders)
 Section: Billboards and panels
 """
 

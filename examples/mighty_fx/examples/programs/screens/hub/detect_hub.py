@@ -4,7 +4,7 @@ from screens import SCREEN_TYPES
 from picovector import image, color, font
 
 """
-Show which panel sits at each position of a screen hub. Every panel is painted its position's
+Show which screen is in each position on a Screen Hub. Every panel is painted its position's
 colour, with its letter in the top left over one bar for A up to six for F. The console lists
 the same for every position, including those where no panel answered.
 

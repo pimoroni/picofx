@@ -4,7 +4,7 @@ from screens import SCREEN_TYPES, ScreenGroup
 from picovector import color, image, shape, vec2
 
 """
-Flash runway chevrons across a screen hub in two interleaved banks, each a subset of one group.
+Flash runway chevrons on alternating sets of screens across a Screen Hub.
 
 subset() names some of a group's panels, and is bound once here and reused. Writing a
 subset keeps the whole group's refresh rates held together, where writing a member's own

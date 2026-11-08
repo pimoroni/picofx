@@ -6,7 +6,7 @@ from screens import SCREEN_TYPES
 from picovector import color, font
 
 """
-Build colours from the colour module, from even hues to readable text on any background.
+Mix evenly spaced hues and pick text colours that stay readable on any background.
 
 The top two strips are the same eight hues through hsv and oklch. hsv lets the lightness wander
 so its yellow glares and its blue sinks, where oklch holds it even.

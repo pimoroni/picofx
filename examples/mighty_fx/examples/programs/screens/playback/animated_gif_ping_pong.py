@@ -4,7 +4,7 @@ from playback import GIFPlayer
 from screens import SCREEN_TYPES
 
 """
-Play an animated GIF forward then back, dwelling at each turn.
+Play an animated GIF forwards then backwards with a pause at each end.
 
 ping_pong walks the frames forward then back, so an animation with two ends never jumps.
 The coin loops, so first_as_last replays its first frame at the far end for a full turn each way.
@@ -13,6 +13,7 @@ hold= sets the wait at each turn, one value for both ends or two.
 
 Press "Boot" to exit the program.
 
+Program: Animated GIF (ping pong)
 Section: Pictures and GIFs
 Args: Screen size = 2.8, Rotation = 90
 """

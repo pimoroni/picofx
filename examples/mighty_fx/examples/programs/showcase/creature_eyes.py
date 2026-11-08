@@ -9,9 +9,8 @@ from screens import SCREEN_TYPES, ScreenPair
 from picovector import color, image, shape, vec2
 
 """
-Draw a creature's eyes looking about, an eye on each SP/CE port's screen, darting from spot to spot,
-holding there a while and blinking now and then. CREATURE chooses the cat, owl, goat, alien, robot or
-zombie, each with its own eyes and its own way of looking about.
+Draw a creature's eyes on two screens as they look around and blink. CREATURE chooses the cat,
+owl, goat, alien, robot or zombie, each with its own eyes and its own way of looking about.
 
 Both panels show the one frame. Eyes facing forward show it as drawn, a goat's eyes either side of its
 head mirror the second panel, and the alien's eyes slanting outwards mirror the first, so its outer

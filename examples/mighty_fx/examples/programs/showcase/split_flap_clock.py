@@ -5,7 +5,7 @@ from screens import SCREEN_TYPES
 from picovector import color, font, image, rect, shape
 
 """
-Draw a split-flap clock, its digits climbing through the drum a flap at a time like a real board.
+Draw a split-flap clock with each digit flipping through to the next.
 
 Press "Boot" to exit the program.
 

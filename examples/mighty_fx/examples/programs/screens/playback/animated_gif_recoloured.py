@@ -5,7 +5,7 @@ from playback import GIFPlayer
 from screens import SCREEN_TYPES, Reserve
 
 """
-Recolour a whole animation as it plays, by rewriting the one colour table its frames share.
+Change the colours of an animated GIF as it plays.
 
 A GIF's frames are indices into a table of colours, and every frame of a sheet reads the same
 table, so writing an entry changes that colour in all of them at once. Here the scan sweeps
@@ -16,6 +16,7 @@ antialiasing a flat colour would lose.
 
 Press "Boot" to exit the program.
 
+Program: Body scanner
 Section: Pictures and GIFs
 Args: Screen size = 2.8, Rotation = 90
 """

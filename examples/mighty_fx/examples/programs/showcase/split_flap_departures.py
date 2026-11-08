@@ -5,7 +5,7 @@ from screens import SCREEN_TYPES
 from picovector import color, font, image, rect, shape
 
 """
-Draw a split-flap departures board, each card climbing through the drum to its letter.
+Draw a split-flap departures board with each letter flipping into place.
 
 Press "Boot" to exit the program.
 

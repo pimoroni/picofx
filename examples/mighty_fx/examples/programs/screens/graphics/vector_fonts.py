@@ -7,7 +7,7 @@ from screens import SCREEN_TYPES
 from picovector import color, font, image
 
 """
-Draw every vector face in ROM at three sizes, or two on a panel too short for three, each writing its own name.
+Write each built-in vector font's name in that font at several sizes.
 
 A vector face is drawn from outlines, so text() sizes it. A pixel face is fixed (pixel_fonts.py).
 

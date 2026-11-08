@@ -5,8 +5,7 @@ from screens import SCREEN_TYPES
 from picovector import color, font, image, rect
 
 """
-Draw a railway departure board across a screen hub, a service to each panel, every one
-paging its calling points on its own clock.
+Draw a railway departure board across a Screen Hub with one train on each screen.
 
 Press "Boot" to exit the program.
 

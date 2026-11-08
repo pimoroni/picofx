@@ -9,9 +9,9 @@ from screens import SCREEN_TYPES
 from picovector import color, rect
 
 """
-Draw the floor of a small pool seen from above through rippling water, the tiles wobbling as the
-surface bends the light, and bright lines of light where the surface gathers it. STYLE chooses the
-floor to start on, a modern pool's blue mosaic or a Roman bath's cream stones round an octagon.
+Draw the floor of a pool through rippling water that throws bright lines of
+light over the tiles. STYLE chooses the floor to start on, a modern pool's
+blue mosaic or a Roman bath's cream stones round an octagon.
 
 The water is a grid of heights, rippled by drops falling at random and the odd splash. At each step
 every cell takes half the sum of its four neighbours less its own height a step before, calmed a

@@ -7,7 +7,7 @@ from playback import SequencePlayer
 from screens import SCREEN_TYPES
 
 """
-Scroll an animation built from one tile endlessly across the panel, turning between axes.
+Scroll an animated pattern that curves between horizontal and vertical.
 
 The pattern tiles both ways, so with tile= the offset can grow for ever and the tile goes
 straight to the panel with no canvas.
@@ -21,6 +21,7 @@ player's clock and the scroll on the frame count.
 
 Press "Boot" to exit the program.
 
+Program: Circuit traces
 Section: Patterns
 Args: Screen size = 2.8, Rotation = 90
 """

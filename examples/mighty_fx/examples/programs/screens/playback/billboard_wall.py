@@ -6,7 +6,7 @@ from playback import SequencePlayer
 from screens import Screen280
 
 """
-Show a different poster on every panel a hub can reach, all changing on one clock.
+Show a different poster on every screen of a Screen Hub and change them all together.
 
 A hub shares one SP/CE port, so panels with different pictures are sent one after another and the
 change ripples across the wall. There is no ScreenGroup, which sends one frame to every panel.
@@ -16,6 +16,7 @@ takes the poster n along the folder and the folder is held once.
 
 Press "Boot" to exit the program.
 
+Program: Billboard (wall)
 Section: Multi-screen
 Args: Rotation = 0 or 180
 """

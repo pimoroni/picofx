@@ -5,8 +5,8 @@ from screens import SCREEN_TYPES
 from picovector import color, font, image, rect, shape
 
 """
-Draw a green screen terminal of the kind wheeled up to a minicomputer. An operator types a
-command a character at a time and the machine answers a line at a time, on a tube that glows.
+Draw an old green-screen computer terminal. An operator types a command a character at a time and
+the machine answers a line at a time, on a tube that glows.
 
 The tube is three filters over plain lettering, scanlines fading into the corners, a bloom and a grain.
 

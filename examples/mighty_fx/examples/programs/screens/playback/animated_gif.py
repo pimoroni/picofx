@@ -4,7 +4,7 @@ from playback import GIFPlayer
 from screens import SCREEN_TYPES
 
 """
-Play an animated GIF on a screen, at the frame delays the file was authored with.
+Play an animated GIF on a screen with the timing saved in the file.
 
 The coin's colours sit on the 16 levels the screens drive a channel at, where a photograph
 exported straight to a GIF falls between them and bands into patches.
@@ -14,6 +14,7 @@ the file's corner, so another GIF lands on its own background.
 
 Press "Boot" to exit the program.
 
+Program: Animated GIF
 Args: Screen size = 2.8, Rotation = 90
 
 Section: Pictures and GIFs

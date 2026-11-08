@@ -7,7 +7,7 @@ from screens import SCREEN_TYPES
 from picovector import color, font, image, mat3, rect, shape
 
 """
-Draw a mechanical odometer, a row of number drums in a brass frame. The last drum turns
+Draw a mechanical odometer with number drums rolling in a brass frame. The last drum turns
 steadily, and each of the others is carried round as the drum to its right passes from 9 to 0.
 
 A drum's ten digits are drawn once, flat, as a strip as long as its circumference. Each row of the

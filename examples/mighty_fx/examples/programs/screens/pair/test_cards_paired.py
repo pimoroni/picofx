@@ -5,7 +5,7 @@ from picovector import color, font, image, shape
 from screens import SCREEN_TYPES, Reserve, ScreenPair
 
 """
-Turn a test card on each panel of a pair, the second one mirrored against the first.
+Step a test card through each rotation on two screens that mirror each other.
 
 Every placement setting a screen takes, a pair takes one of per screen, so mirror=(False, True)
 is one call that leaves one panel as drawn and flips the other. Set the panels beside each other

@@ -5,12 +5,13 @@ from screens import SCREEN_TYPES, ScreenGroup
 from picovector import color, shape
 
 """
-Travel through a star field, across every panel a screen hub reaches.
+Travel through a star field across every screen on a Screen Hub.
 
 Change up some of the constants below to see what happens.
 
 Press "Boot" to exit the program.
 
+Program: Starfield (wall)
 Section: Multi-screen
 Args: Screen size = 2.8
 """

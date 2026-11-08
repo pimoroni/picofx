@@ -5,7 +5,7 @@ from screens import SCREEN_TYPES, Reserve, ScreenPair
 from picovector import color, font, image, rect
 
 """
-Draw a railway departures list on one screen, or across a pair turning their page together.
+Draw a railway departures list on one screen or on two screens that change page together.
 
 Press "Boot" to exit the program.
 

@@ -6,8 +6,7 @@ from screens import SCREEN_TYPES
 from picovector import color, font, image, shape
 
 """
-Draw a lixie, ten engraved acrylic sheets stacked front to back with a digit on each, an LED
-under every sheet, and only the one being shown lit.
+Draw a lixie display that lights one engraved acrylic sheet at a time to show each digit.
 
 The engraving lets the light out, so a lit sheet reads as its digit in fine bright lines while the
 nine unlit ones stay a faint tracery. A sheet further back looks a size smaller, so the edges nest.

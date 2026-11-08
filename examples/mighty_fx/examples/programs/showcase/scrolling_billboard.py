@@ -7,7 +7,7 @@ from screens import Screen280
 from picovector import image, rect
 
 """
-Draw a scrolling billboard, its posters carried on a loop and read from the board one at a time.
+Draw a scrolling billboard that rolls its posters past one at a time.
 
 Press "Boot" to exit the program.
 

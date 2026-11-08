@@ -7,9 +7,9 @@ from screens import SCREEN_TYPES
 from picovector import color, image, rect, shape, vec2
 
 """
-Draw a portal, glowing arms winding in towards a dark opening and turning steadily, with motes of
-light falling in faster across them. Each arm dims to black before the opening, so it seems to fall
-away without end. STONES = True sets the portal into a stone wall.
+Draw a glowing portal with arms spiralling into a dark opening and specks of light
+falling in. Each arm dims to black before the opening, so it seems to fall away without
+end. STONES = True sets the portal into a stone wall.
 
 RIM_WIDTH and RIM_HEIGHT size the portal to a cutout in front of the panel, and by default it is as
 large as fits. Each frame dims the opening a little before drawing, so the motes leave fading streaks.

@@ -5,8 +5,7 @@ from screens import SCREEN_TYPES
 from picovector import color, font, image, rect, shape
 
 """
-Draw a roadworks sign, the kind towed to the side of a road, its amber lamps behind a dark
-face holding a message, not scrolling it.
+Draw a roadside roadworks sign with its message in amber lamps.
 
 Each character has its own matrix module with a bezel all round, on a fixed pitch whatever
 its width. The corner beacons are single large lamps drawn over the face.

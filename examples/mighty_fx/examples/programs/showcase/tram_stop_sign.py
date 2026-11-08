@@ -4,8 +4,7 @@ from screens import Reserve, Screen280, ScreenPair
 from picovector import color, font, image, rect
 
 """
-Draw a tram stop sign across two screens, amber lamps behind a dark face in a contiguous
-band per line, with the next tram pinned and the ones after it cycling underneath.
+Draw a tram stop sign across two screens with the next tram at the top and later ones cycling below.
 
 The rows scroll vertically, so two service rows list five trams while always showing the
 next. The notice is longer than the sign, so it scrolls horizontally.

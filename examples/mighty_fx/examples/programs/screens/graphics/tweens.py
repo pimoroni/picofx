@@ -6,7 +6,7 @@ from screens import SCREEN_TYPES
 from picovector import color, font, image, shape, tween, vec2
 
 """
-Plot what each easing curve does, with a marker running along every one of them at once.
+Plot every easing curve with a marker moving along each one.
 
 A tween maps a progress from 0 to 1 onto a value between two endpoints along the curve it
 was made with, and at() takes the progress.
@@ -18,6 +18,7 @@ can carry a position, a box or a whole transform.
 
 Press "Boot" to exit the program.
 
+Program: Easing curves
 Section: Graphics
 Args: Screen size = 2.8, Rotation = 0
 """

@@ -4,7 +4,7 @@ from playback import GIFPlayer
 from screens import SCREEN_TYPES, Reserve, ScreenPair
 
 """
-Play one animated GIF across two screens, both changing frame together.
+Play the same animated GIF in step on two screens.
 
 A pair presents its panels together, so one call sends the frame to both from a single player.
 
@@ -13,6 +13,7 @@ the screens are made. That is what the reserve is.
 
 Press "Boot" to exit the program.
 
+Program: Animated GIF (paired)
 Section: Two screens
 Args: Screen size = 2.8, Rotation = 90
 """

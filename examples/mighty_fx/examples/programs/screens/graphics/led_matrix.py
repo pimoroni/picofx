@@ -4,7 +4,7 @@ from screens import SCREEN_TYPES
 from picovector import color, image, rect
 
 """
-Show a rainbow as an LED matrix sign, each pixel drawn as a round lamp behind a dark face.
+Show a rainbow on an LED matrix sign made of round lamps.
 
 The sign costs two blits a frame whatever drew the content, so shapes, text, an image or a player's
 frame can feed it. The rainbow runs diagonally, as on the LED matrix boards.

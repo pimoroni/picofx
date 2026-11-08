@@ -5,7 +5,7 @@ from picovector import color, font, image, rect, shape
 from screens import SCREEN_TYPES
 
 """
-Fill the panel from a source a quarter of its size, doubling every pixel.
+Fill the screen by doubling every pixel of a picture half its width and height.
 
 pixel_double= draws every source pixel as a two by two block, so an image half the panel's width
 and half its height covers all of it, for a quarter of the memory and of the pixels to convert.

@@ -4,12 +4,12 @@ from screens import SCREEN_TYPES
 from picovector import image, color, shape, mat3
 
 """
-Spin a rainbow wheel on two screens, updated one after the other. Run
+Spin a rainbow wheel on two screens that are redrawn one after the other. Run
 color_wheel_paired.py to see what a pair does differently.
 
 Press "Boot" to exit the program.
 
-Program: Colour wheel in turn
+Program: Colour wheel (unpaired)
 Section: Two screens
 Args: Screen size = 2.8, Rotation = 0
 """

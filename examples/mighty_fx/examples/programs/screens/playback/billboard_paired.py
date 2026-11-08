@@ -5,7 +5,7 @@ from playback import SequencePlayer
 from screens import Reserve, Screen280, ScreenPair
 
 """
-Show two different posters at once, one on each of a pair of screens, both changing together.
+Show a different poster on each of two screens and change them together.
 
 Two SP/CE ports are two streams, so a pair shows a different poster on each for one panel's cost.
 
@@ -13,6 +13,7 @@ One player feeds both. image_at() reads a frame without moving the player, so th
 
 Press "Boot" to exit the program.
 
+Program: Billboard (paired)
 Section: Two screens
 Args: Rotation = 0 or 180
 """

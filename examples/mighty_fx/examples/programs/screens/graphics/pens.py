@@ -6,7 +6,7 @@ from screens import SCREEN_TYPES
 from picovector import brush, color, font, image, mat3, rect, shape
 
 """
-Fill the same circle with six different pens, from a plain colour to a picture.
+Fill a circle with six pens ranging from a plain colour to a picture.
 
 A colour, a linear gradient, a radial one, an image, a blur that takes what is already
 under it, and an erase that takes the pixels away. The last two only make sense over

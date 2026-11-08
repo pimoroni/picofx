@@ -6,7 +6,7 @@ from screens import SCREEN_TYPES
 from picovector import color, font, image, mat3, shape, vec2
 
 """
-Show every setting that decides how a path is drawn, side by side.
+Compare the settings that change how a path is drawn.
 
 The rows show where a stroke sits against its edge, how segments join at a corner, how an
 open line ends, and which parts a fill counts as inside. The pentagram's middle is enclosed

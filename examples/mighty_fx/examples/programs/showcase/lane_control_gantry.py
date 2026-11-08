@@ -5,7 +5,7 @@ from screens import SCREEN_TYPES, ScreenGroup
 from picovector import color, font, image, rect, shape
 
 """
-Draw a motorway lane control gantry, a signal to a lane, working through a lane closure.
+Draw the lane signals on a motorway gantry as they close a lane.
 
 A signal is a square RGB lamp matrix with a lamp in each corner. The aspect is drawn at
 the matrix's resolution and scaled up so each pixel fills one lamp, under a baked mask. The

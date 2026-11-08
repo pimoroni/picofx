@@ -6,7 +6,7 @@ from screens import SCREEN_TYPES
 from picovector import color, font, image, rect
 
 """
-Scroll a line in every ROM pixel font, smallest first, with each one's height beside its name.
+Scroll a line of text in each built-in pixel font from smallest to largest.
 
 A pixel font draws only at its designed size. dir(font) names every face and font.<name> loads one.
 

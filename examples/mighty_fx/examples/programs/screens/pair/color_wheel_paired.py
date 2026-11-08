@@ -4,13 +4,13 @@ from screens import SCREEN_TYPES, Reserve, ScreenPair
 from picovector import image, color, shape, mat3
 
 """
-Spin a rainbow wheel on a pair of screens held in step.
+Spin a rainbow wheel on two screens that are redrawn together.
 
 Change up some of the constants below to see what happens.
 
 Press "Boot" to exit the program.
 
-Program: Colour wheel paired
+Program: Colour wheel (paired)
 Args: Screen size = 2.8, Rotation = 0
 
 Section: Two screens

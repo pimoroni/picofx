@@ -7,7 +7,7 @@ from picovector import color, image, shape, vec2
 from screens import SCREEN_TYPES, Reserve, ScreenPair
 
 """
-Fly for ever over two isometric worlds, each drawn once into a tile the driver repeats.
+Fly endlessly over two isometric worlds.
 
 Both come off one height field of sine terms whose cycles complete across the tile, so
 tile=True repeats it without a seam. The hills use it as it is, and the terraces snap it to

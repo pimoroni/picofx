@@ -6,8 +6,8 @@ from screens import SCREEN_TYPES
 from picovector import color, font, image, rect, shape
 
 """
-Draw a nixie tube, ten cathodes bent into digits and stacked front to back in a glass cylinder.
-The one carrying current glows red-orange through the anode mesh.
+Draw a nixie tube with each digit lighting up inside the glass. The digit carrying
+current glows red-orange through the anode mesh.
 
 The glass, the nine unlit cathodes and the glow at the tube's foot never change, so they are drawn
 once into the background every frame starts from. A frame is that background, the lit cathode

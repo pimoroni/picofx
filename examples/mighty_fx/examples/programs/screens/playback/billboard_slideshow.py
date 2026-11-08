@@ -5,7 +5,7 @@ from playback import SequencePlayer
 from screens import Screen280
 
 """
-Show a folder of posters, one at a time, sent straight to the panel.
+Show a folder of posters one at a time.
 
 The simplest thing a player does, a folder walked on a clock. Nothing is drawn over the
 picture, so nothing needs a canvas.
@@ -15,6 +15,7 @@ that affordable at a quarter of a truecolour one's memory.
 
 Press "Boot" to exit the program.
 
+Program: Billboard (slideshow)
 Args: Rotation = 0 or 180
 
 Section: Billboards and panels

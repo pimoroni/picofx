@@ -48,7 +48,7 @@ Departure boards and road signs.
 
 [roadworks_sign.py](roadworks_sign.py)
 
-Draw a roadworks sign, the kind towed to the side of a road, its amber lamps behind a dark face holding a message, not scrolling it.
+Draw a roadside roadworks sign with its message in amber lamps.
 
 <br clear="left">
 
@@ -58,7 +58,7 @@ Draw a roadworks sign, the kind towed to the side of a road, its amber lamps beh
 
 [lane_control_gantry.py](lane_control_gantry.py)
 
-Draw a motorway lane control gantry, a signal to a lane, working through a lane closure.
+Draw the lane signals on a motorway gantry as they close a lane.
 
 <br clear="left">
 
@@ -68,7 +68,7 @@ Draw a motorway lane control gantry, a signal to a lane, working through a lane 
 
 [split_flap_departures.py](split_flap_departures.py)
 
-Draw a split-flap departures board, each card climbing through the drum to its letter.
+Draw a split-flap departures board with each letter flipping into place.
 
 <br clear="left">
 
@@ -78,7 +78,7 @@ Draw a split-flap departures board, each card climbing through the drum to its l
 
 [departure_board.py](departure_board.py)
 
-Draw a railway departure board across a screen hub, a service to each panel, every one paging its calling points on its own clock.
+Draw a railway departure board across a Screen Hub with one train on each screen.
 
 <br clear="left">
 
@@ -89,7 +89,7 @@ Draw a railway departure board across a screen hub, a service to each panel, eve
 
 [departures_list.py](departures_list.py)
 
-Draw a railway departures list on one screen, or across a pair turning their page together.
+Draw a railway departures list on one screen or on two screens that change page together.
 
 <br clear="left">
 
@@ -100,7 +100,7 @@ Draw a railway departures list on one screen, or across a pair turning their pag
 
 [bus_departures.py](bus_departures.py)
 
-Draw a bus departure board on a television used for signage, antialiased vector type on a panel that is plainly a panel. A second panel lengthens the board, with one listing across both.
+Draw a bus departure board as shown on a TV screen at a bus station. A second panel lengthens the board, with one listing across both.
 
 <br clear="left">
 
@@ -111,7 +111,7 @@ Draw a bus departure board on a television used for signage, antialiased vector 
 
 [tram_stop_sign.py](tram_stop_sign.py)
 
-Draw a tram stop sign across two screens, amber lamps behind a dark face in a contiguous band per line, with the next tram pinned and the ones after it cycling underneath.
+Draw a tram stop sign across two screens with the next tram at the top and later ones cycling below.
 
 <br clear="left">
 
@@ -125,7 +125,7 @@ Mechanical, glowing and segment displays.
 
 [flip_dot_sign.py](flip_dot_sign.py)
 
-Draw a flip-dot sign, spelling its message in dots that turn over one column after the next.
+Draw a flip-dot sign that spells its message by flipping one column of dots at a time.
 
 <br clear="left">
 
@@ -135,7 +135,7 @@ Draw a flip-dot sign, spelling its message in dots that turn over one column aft
 
 [split_flap_clock.py](split_flap_clock.py)
 
-Draw a split-flap clock, its digits climbing through the drum a flap at a time like a real board.
+Draw a split-flap clock with each digit flipping through to the next.
 
 <br clear="left">
 
@@ -145,7 +145,7 @@ Draw a split-flap clock, its digits climbing through the drum a flap at a time l
 
 [crt_terminal.py](crt_terminal.py)
 
-Draw a green screen terminal of the kind wheeled up to a minicomputer. An operator types a command a character at a time and the machine answers a line at a time, on a tube that glows.
+Draw an old green-screen computer terminal. An operator types a command a character at a time and the machine answers a line at a time, on a tube that glows.
 
 <br clear="left">
 
@@ -155,7 +155,7 @@ Draw a green screen terminal of the kind wheeled up to a minicomputer. An operat
 
 [acrylic_lixie.py](acrylic_lixie.py)
 
-Draw a lixie, ten engraved acrylic sheets stacked front to back with a digit on each, an LED under every sheet, and only the one being shown lit.
+Draw a lixie display that lights one engraved acrylic sheet at a time to show each digit.
 
 <br clear="left">
 
@@ -165,7 +165,7 @@ Draw a lixie, ten engraved acrylic sheets stacked front to back with a digit on 
 
 [nixie_tube.py](nixie_tube.py)
 
-Draw a nixie tube, ten cathodes bent into digits and stacked front to back in a glass cylinder. The one carrying current glows red-orange through the anode mesh.
+Draw a nixie tube with each digit lighting up inside the glass. The digit carrying current glows red-orange through the anode mesh.
 
 <br clear="left">
 
@@ -175,7 +175,7 @@ Draw a nixie tube, ten cathodes bent into digits and stacked front to back in a 
 
 [segment_clock.py](segment_clock.py)
 
-Draw an LED seven-segment clock, its digits made of bars lit behind a coloured filter.
+Draw a seven-segment LED clock behind a coloured filter.
 
 <br clear="left">
 
@@ -185,7 +185,7 @@ Draw an LED seven-segment clock, its digits made of bars lit behind a coloured f
 
 [segment_sign.py](segment_sign.py)
 
-Draw an LED sign of fourteen-segment characters, three rows of them in windows set into a brushed metal case. A row too long for its window scrolls through it.
+Draw a three-line fourteen-segment LED sign in a brushed metal case. A row too long for its window scrolls through it.
 
 <br clear="left">
 
@@ -195,7 +195,7 @@ Draw an LED sign of fourteen-segment characters, three rows of them in windows s
 
 [odometer.py](odometer.py)
 
-Draw a mechanical odometer, a row of number drums in a brass frame. The last drum turns steadily, and each of the others is carried round as the drum to its right passes from 9 to 0.
+Draw a mechanical odometer with number drums rolling in a brass frame. The last drum turns steadily, and each of the others is carried round as the drum to its right passes from 9 to 0.
 
 <br clear="left">
 
@@ -205,7 +205,7 @@ Draw a mechanical odometer, a row of number drums in a brass frame. The last dru
 
 [lamp_matrix.py](lamp_matrix.py)
 
-Draw a stage lighting lamp matrix, a panel of lamps in deep reflector cups running through cues. Tungsten lamps glow up quickly and fade slowly, white hot through orange to a dull red as each filament cools. LAMPS = "led" switches each instantly to one of a handful of colours, or off, instead.
+Draw a grid of stage lamps running through a light show. Tungsten lamps glow up quickly and fade slowly, white hot through orange to a dull red as each filament cools. LAMPS = "led" switches each instantly to one of a handful of colours, or off, instead.
 
 <br clear="left">
 
@@ -215,7 +215,7 @@ Draw a stage lighting lamp matrix, a panel of lamps in deep reflector cups runni
 
 [oscilloscope.py](oscilloscope.py)
 
-Draw an oscilloscope, a beam tracing across its graticule and leaving a fading afterglow on the phosphor. A scrolling sine grows into a square wave a harmonic at a time and melts back, then the scope switches to XY mode for a turning Lissajous figure. SENSOR = True traces the voltage on the sensor connector instead.
+Draw an oscilloscope tracing waves that slowly fade on the screen. A scrolling sine grows into a square wave a harmonic at a time and melts back, then the scope switches to XY mode for a turning Lissajous figure. SENSOR = True traces the voltage on the sensor connector instead.
 
 <br clear="left">
 
@@ -229,7 +229,7 @@ Posters and signs that change on screen.
 
 [trivision_billboard.py](trivision_billboard.py)
 
-Draw a trivision billboard, its posters carried on three-sided slats that turn a third at a time.
+Draw a trivision billboard whose three-sided slats turn to change the poster.
 
 <br clear="left">
 
@@ -239,7 +239,7 @@ Draw a trivision billboard, its posters carried on three-sided slats that turn a
 
 [scrolling_billboard.py](scrolling_billboard.py)
 
-Draw a scrolling billboard, its posters carried on a loop and read from the board one at a time.
+Draw a scrolling billboard that rolls its posters past one at a time.
 
 <br clear="left">
 
@@ -249,7 +249,7 @@ Draw a scrolling billboard, its posters carried on a loop and read from the boar
 
 [status_panel.py](status_panel.py)
 
-Draw a status panel for the company that made the board, a wordmark over a cycling ribbon, a coin badge, a few statuses, and the seven RGB outputs as its production line.
+Draw a Pimoroni status panel with the RGB outputs lighting in step with its production line.
 
 <br clear="left">
 
@@ -264,7 +264,7 @@ Drawn in code.
 
 [isometric_flight.py](isometric_flight.py)
 
-Fly for ever over two isometric worlds, each drawn once into a tile the driver repeats.
+Fly endlessly over two isometric worlds.
 
 <br clear="left">
 
@@ -284,7 +284,7 @@ Drift past a city while the sky turns from noon to midnight and the windows come
 
 [laser_show.py](laser_show.py)
 
-Draw a laser show, beams fanning and sweeping across a dark hall from three projectors along the foot of the stage, leaving a fading sheet behind them as beams through haze do. Each scene switches its projectors on and off as it goes. An upright or square panel has room for the outer two projectors only.
+Draw a laser show of beams fanning and sweeping across a dark hall. Each scene switches its projectors on and off as it goes. An upright or square panel has room for the outer two projectors only.
 
 <br clear="left">
 
@@ -294,7 +294,7 @@ Draw a laser show, beams fanning and sweeping across a dark hall from three proj
 
 [fireplace.py](fireplace.py)
 
-Draw a fire, its flames rising in tongues from hot spots flaring along its bed and burning out unevenly as they climb. Mighty FX's RGB outputs flicker orange with the hot spots in their share of the bed, brightest in the middle, so whatever they light glows as a room does round a fire. The fire fills the panel, leaving the surround to whatever it is mounted in.
+Draw a fire and flicker the RGB outputs with it like firelight in a room. The fire fills the panel, leaving the surround to whatever it is mounted in.
 
 <br clear="left">
 
@@ -304,7 +304,7 @@ Draw a fire, its flames rising in tongues from hot spots flaring along its bed a
 
 [portal.py](portal.py)
 
-Draw a portal, glowing arms winding in towards a dark opening inside a shimmering rim, with motes of light falling in faster across them. Each arm dims to black before the opening, so it seems to fall away without end. STONES = True sets it into a stone wall, and RIM_WIDTH and RIM_HEIGHT size it to a cutout in front of the panel.
+Draw a glowing portal with arms spiralling into a dark opening and specks of light falling in. Each arm dims to black before the opening, so it seems to fall away without end. STONES = True sets it into a stone wall, and RIM_WIDTH and RIM_HEIGHT size it to a cutout in front of the panel.
 
 <br clear="left">
 
@@ -314,7 +314,7 @@ Draw a portal, glowing arms winding in towards a dark opening inside a shimmerin
 
 [pool.py](pool.py)
 
-Draw the floor of a small pool seen from above through rippling water, the tiles wobbling as the surface bends the light, and bright lines of light where the surface gathers it. STYLE chooses the floor to start on, a modern pool's blue mosaic or a Roman bath's cream stones round an octagon, and "Boot" swaps to the other.
+Draw the floor of a pool through rippling water that throws bright lines of light over the tiles. STYLE chooses the floor to start on, a modern pool's blue mosaic or a Roman bath's cream stones round an octagon, and "Boot" swaps to the other.
 
 <br clear="left">
 
@@ -325,7 +325,7 @@ Draw the floor of a small pool seen from above through rippling water, the tiles
 
 [creature_eyes.py](creature_eyes.py)
 
-Draw a creature's eyes looking about, an eye on each SP/CE port's screen, darting from spot to spot, holding there a while and blinking now and then. CREATURE chooses the cat, owl, goat, alien, robot or zombie, each with its own eyes and its own way of looking about, and "Boot" steps to the next.
+Draw a creature's eyes on two screens as they look around and blink. CREATURE chooses the cat, owl, goat, alien, robot or zombie, each with its own eyes and its own way of looking about, and "Boot" steps to the next.
 
 <br clear="left">
 
@@ -337,4 +337,4 @@ Servos and motors.
 ### Programmed Route
 [programmed_route.py](programmed_route.py)
 
-Programme a two wheeled robot's route with the Aye Arr Remote, then watch it drive what it was told.
+Program a route into a two-wheeled robot with the IR remote and watch it drive.

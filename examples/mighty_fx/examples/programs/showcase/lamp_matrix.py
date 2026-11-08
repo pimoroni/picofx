@@ -9,9 +9,9 @@ from screens import SCREEN_TYPES
 from picovector import brush, color, image, mat3, rect, shape
 
 """
-Draw a stage lighting lamp matrix, a panel of lamps in deep reflector cups running through cues.
-Tungsten lamps glow up quickly and fade slowly, white hot through orange to a dull red as each
-filament cools. LAMPS = "led" switches each instantly to one of a handful of colours, or off, instead.
+Draw a grid of stage lamps running through a light show. Tungsten lamps glow up quickly and fade
+slowly, white hot through orange to a dull red as each filament cools. LAMPS = "led" switches each
+instantly to one of a handful of colours, or off, instead.
 
 Every stage of a lamp's glow is drawn once when the program starts, before anything is shown, and
 from then on a frame only copies those drawings into place.

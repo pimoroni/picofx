@@ -4,7 +4,7 @@ from playback import SequencePlayer
 from screens import SCREEN_TYPES
 
 """
-Play an animation held as one image file per frame, back and forth.
+Play a folder of picture frames forwards then backwards.
 
 A GIF carries its frames and their delays in one file, and caps itself at 256 colours. A
 folder of images has neither limit and no delays either, so the player is told a rate, and
@@ -16,6 +16,7 @@ Every frame decodes when the player is made. Truecolour takes four times an inde
 
 Press "Boot" to exit the program.
 
+Program: Neon Rosie
 Section: Pictures and GIFs
 Args: Screen size = 2.8, Rotation = 90 or 270
 """

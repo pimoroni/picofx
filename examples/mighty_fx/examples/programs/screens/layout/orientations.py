@@ -5,7 +5,7 @@ from picovector import color, font, image, shape
 from screens import SCREEN_TYPES, Reserve
 
 """
-Show one mark in all eight ways a panel can carry it.
+Show the eight ways a picture can be rotated and mirrored on a screen.
 
 rotation= turns the picture in quarter steps and mirror= flips it, and together they give every
 orientation. The cycle is the four turns, then the four turns of the mirrored mark.

@@ -6,7 +6,7 @@ from screens import SCREEN_TYPES
 from picovector import color, font, image, rect, shape, vec2
 
 """
-Draw an LED seven-segment clock, its digits made of bars lit behind a coloured filter.
+Draw a seven-segment LED clock behind a coloured filter.
 
 Every segment, lit or not, is drawn once into the background every frame starts from, which is
 how an unlit segment still shows faintly through the filter. A frame is that background with the

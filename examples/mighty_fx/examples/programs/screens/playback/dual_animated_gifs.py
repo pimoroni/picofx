@@ -4,7 +4,7 @@ from playback import GIFPlayer
 from screens import SCREEN_TYPES, Reserve, ScreenPair
 
 """
-Play a different animated GIF on each of two screens, each its own size, length and rate.
+Play two animated GIFs of different sizes, lengths and speeds on two screens.
 
 A player holds one animation's position, so two animations need two. Each takes its position
 from the clock, so loops of different periods drift in and out of step.
@@ -17,6 +17,7 @@ background down its sides and the scan's overrun is split between edges.
 
 Press "Boot" to exit the program.
 
+Program: Animated GIF (dual)
 Section: Two screens
 Args: Screen size = 2.8, Rotation = 90
 """

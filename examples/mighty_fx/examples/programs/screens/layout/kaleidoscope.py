@@ -9,7 +9,7 @@ from picovector import color, image, mat3, shape
 from screens import SCREEN_TYPES, Tile
 
 """
-Turn a kaleidoscope, from a set of small frames drawn once at startup.
+Turn a kaleidoscope of coloured beads.
 
 tile=Tile.MIRROR reverses every other repeat, so the panel shows one window of art and three
 reflections meeting at the folds. A whole turn of the beads closes the loop exactly.

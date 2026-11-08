@@ -19,7 +19,7 @@ These are micropython examples for the screens Mighty FX can drive from its SP/C
   - [Text Layout](#text-layout)
   - [Vector Fonts](#vector-fonts)
   - [Sprites](#sprites)
-  - [Tweens](#tweens)
+  - [Easing Curves](#easing-curves)
 - [Image Examples](#image-examples)
   - [Alternating Images](#alternating-images)
   - [Poster Ticker](#poster-ticker)
@@ -31,29 +31,29 @@ These are micropython examples for the screens Mighty FX can drive from its SP/C
   - [Tiled Bricks](#tiled-bricks)
   - [Tiled Arrows](#tiled-arrows)
 - [Screen Pair Examples](#screen-pair-examples)
-  - [Colour Wheel Paired](#colour-wheel-paired)
-  - [Colour Wheel In Turn](#colour-wheel-in-turn)
-  - [Colour Wheel Facing](#colour-wheel-facing)
-  - [Carpets Paired](#carpets-paired)
+  - [Colour Wheel (Paired)](#colour-wheel-paired)
+  - [Colour Wheel (Unpaired)](#colour-wheel-unpaired)
+  - [Colour Wheel (Facing)](#colour-wheel-facing)
+  - [Drifting Carpets](#drifting-carpets)
   - [Test Cards Paired](#test-cards-paired)
 - [Screen Hub Examples](#screen-hub-examples)
   - [Detect Hub](#detect-hub)
   - [Chevron Banks](#chevron-banks)
-  - [Starfield Wall](#starfield-wall)
+  - [Starfield (Wall)](#starfield-wall)
 - [Playback Examples](#playback-examples)
   - [Animated GIF](#animated-gif)
-  - [Animated GIF Paired](#animated-gif-paired)
-  - [Animated GIF Ping Pong](#animated-gif-ping-pong)
-  - [Animated GIF Recoloured](#animated-gif-recoloured)
+  - [Animated GIF (Paired)](#animated-gif-paired)
+  - [Animated GIF (Ping Pong)](#animated-gif-ping-pong)
+  - [Body Scanner](#body-scanner)
   - [Billboard Cased](#billboard-cased)
-  - [Billboard Folders](#billboard-folders)
-  - [Billboard Paired](#billboard-paired)
-  - [Billboard Slideshow](#billboard-slideshow)
-  - [Billboard Wall](#billboard-wall)
-  - [Dual Animated GIFs](#dual-animated-gifs)
-  - [Neon Ping Pong](#neon-ping-pong)
-  - [Traces Scroll](#traces-scroll)
-  - [Traces Wall](#traces-wall)
+  - [Billboard (Folders)](#billboard-folders)
+  - [Billboard (Paired)](#billboard-paired)
+  - [Billboard (Slideshow)](#billboard-slideshow)
+  - [Billboard (Wall)](#billboard-wall)
+  - [Animated GIF (Dual)](#animated-gif-dual)
+  - [Neon Rosie](#neon-rosie)
+  - [Circuit Traces](#circuit-traces)
+  - [Circuit Traces (Wall)](#circuit-traces-wall)
 
 
 ## Single Screen Examples
@@ -117,7 +117,7 @@ Travel through a star field.
 
 [graphics/pixel_fonts.py](graphics/pixel_fonts.py)
 
-Scroll a line in every ROM pixel font, smallest first, with each one's height beside its name.
+Scroll a line of text in each built-in pixel font from smallest to largest.
 
 <br clear="left">
 
@@ -127,7 +127,7 @@ Scroll a line in every ROM pixel font, smallest first, with each one's height be
 
 [graphics/led_matrix.py](graphics/led_matrix.py)
 
-Show a rainbow as an LED matrix sign, each pixel drawn as a round lamp behind a dark face.
+Show a rainbow on an LED matrix sign made of round lamps.
 
 <br clear="left">
 
@@ -137,7 +137,7 @@ Show a rainbow as an LED matrix sign, each pixel drawn as a round lamp behind a 
 
 [graphics/shapes.py](graphics/shapes.py)
 
-Draw every shape picovector offers, each one filled and then stroked beside it, all turning.
+Spin every built-in shape both filled and outlined.
 
 <br clear="left">
 
@@ -147,7 +147,7 @@ Draw every shape picovector offers, each one filled and then stroked beside it, 
 
 [graphics/paths.py](graphics/paths.py)
 
-Show every setting that decides how a path is drawn, side by side.
+Compare the settings that change how a path is drawn.
 
 <br clear="left">
 
@@ -157,7 +157,7 @@ Show every setting that decides how a path is drawn, side by side.
 
 [graphics/pens.py](graphics/pens.py)
 
-Fill the same circle with six different pens, from a plain colour to a picture.
+Fill a circle with six pens ranging from a plain colour to a picture.
 
 <br clear="left">
 
@@ -167,7 +167,7 @@ Fill the same circle with six different pens, from a plain colour to a picture.
 
 [graphics/filters.py](graphics/filters.py)
 
-Show one picture under eleven filters side by side, to compare what each one does.
+Compare eleven filters on the same picture.
 
 <br clear="left">
 
@@ -177,7 +177,7 @@ Show one picture under eleven filters side by side, to compare what each one doe
 
 [graphics/colours.py](graphics/colours.py)
 
-Build colours from the colour module, from even hues to readable text on any background.
+Mix evenly spaced hues and pick text colours that stay readable on any background.
 
 <br clear="left">
 
@@ -187,7 +187,7 @@ Build colours from the colour module, from even hues to readable text on any bac
 
 [graphics/text_layout.py](graphics/text_layout.py)
 
-Lay text out inside a box, which wraps and aligns it.
+Wrap and align text inside a box.
 
 <br clear="left">
 
@@ -197,7 +197,7 @@ Lay text out inside a box, which wraps and aligns it.
 
 [graphics/vector_fonts.py](graphics/vector_fonts.py)
 
-Draw every vector face in ROM at three sizes, or two on a panel too short for three, each writing its own name.
+Write each built-in vector font's name in that font at several sizes.
 
 <br clear="left">
 
@@ -207,17 +207,17 @@ Draw every vector face in ROM at three sizes, or two on a panel too short for th
 
 [graphics/sprites.py](graphics/sprites.py)
 
-Draw the same sprite with blit() and with an image pen, which can also turn it.
+Draw a sprite with blit() and with an image pen that can also rotate it.
 
 <br clear="left">
 
 
-### Tweens
-<img src="graphics/tweens.png" align="left" alt="Tweens">
+### Easing Curves
+<img src="graphics/tweens.png" align="left" alt="Easing Curves">
 
 [graphics/tweens.py](graphics/tweens.py)
 
-Plot what each easing curve does, with a marker running along every one of them at once.
+Plot every easing curve with a marker moving along each one.
 
 <br clear="left">
 
@@ -229,7 +229,7 @@ Plot what each easing curve does, with a marker running along every one of them 
 
 [images/alternating_images.py](images/alternating_images.py)
 
-Alternate between two PNG pictures, each shown for its own time.
+Switch between two PNG pictures shown for different lengths of time.
 
 <br clear="left">
 
@@ -239,7 +239,7 @@ Alternate between two PNG pictures, each shown for its own time.
 
 [images/poster_ticker.py](images/poster_ticker.py)
 
-Scroll a message across a poster read from a file, in lettering matching the poster's own.
+Scroll a message across a poster in lettering that matches it.
 
 <br clear="left">
 
@@ -251,7 +251,7 @@ Scroll a message across a poster read from a file, in lettering matching the pos
 
 [layout/bouncing_logo.py](layout/bouncing_logo.py)
 
-Bounce a logo around the screen, recolouring it at each edge while the drifting background shows through its darkest parts.
+Bounce a logo around the screen and change its colour at each edge.
 
 <br clear="left">
 
@@ -261,7 +261,7 @@ Bounce a logo around the screen, recolouring it at each edge while the drifting 
 
 [layout/orientations.py](layout/orientations.py)
 
-Show one mark in all eight ways a panel can carry it.
+Show the eight ways a picture can be rotated and mirrored on a screen.
 
 <br clear="left">
 
@@ -271,7 +271,7 @@ Show one mark in all eight ways a panel can carry it.
 
 [layout/pixel_doubled.py](layout/pixel_doubled.py)
 
-Fill the panel from a source a quarter of its size, doubling every pixel.
+Fill the screen by doubling every pixel of a picture half its width and height.
 
 <br clear="left">
 
@@ -281,7 +281,7 @@ Fill the panel from a source a quarter of its size, doubling every pixel.
 
 [layout/kaleidoscope.py](layout/kaleidoscope.py)
 
-Turn a kaleidoscope, from a set of small frames drawn once at startup.
+Turn a kaleidoscope of coloured beads.
 
 <br clear="left">
 
@@ -301,53 +301,53 @@ Fill the whole panel with a brick wall drawn from a tile of 32 by 32 pixels.
 
 [layout/tiled_arrows.py](layout/tiled_arrows.py)
 
-Fill the panel from a tile whose edges do not meet, using a mirrored repeat so they do.
+Fill the screen with a tile mirrored on every other copy to make its edges line up.
 
 <br clear="left">
 
 
 ## Screen Pair Examples
 
-### Colour Wheel Paired
-<img src="pair/color_wheel_paired.png" align="left" alt="Colour Wheel Paired">
-<img src="pair/color_wheel_paired-2.png" align="left" alt="Colour Wheel Paired, second screen">
+### Colour Wheel (Paired)
+<img src="pair/color_wheel_paired.png" align="left" alt="Colour Wheel (Paired)">
+<img src="pair/color_wheel_paired-2.png" align="left" alt="Colour Wheel (Paired), second screen">
 
 [pair/color_wheel_paired.py](pair/color_wheel_paired.py)
 
-Spin a rainbow wheel on a pair of screens held in step.
+Spin a rainbow wheel on two screens that are redrawn together.
 
 <br clear="left">
 
 
-### Colour Wheel In Turn
-<img src="pair/color_wheel_in_turn.png" align="left" alt="Colour Wheel In Turn">
-<img src="pair/color_wheel_in_turn-2.png" align="left" alt="Colour Wheel In Turn, second screen">
+### Colour Wheel (Unpaired)
+<img src="pair/color_wheel_in_turn.png" align="left" alt="Colour Wheel (Unpaired)">
+<img src="pair/color_wheel_in_turn-2.png" align="left" alt="Colour Wheel (Unpaired), second screen">
 
 [pair/color_wheel_in_turn.py](pair/color_wheel_in_turn.py)
 
-Spin a rainbow wheel on two screens, updated one after the other. Run color_wheel_paired.py to see what a pair does differently.
+Spin a rainbow wheel on two screens that are redrawn one after the other. Run color_wheel_paired.py to see what a pair does differently.
 
 <br clear="left">
 
 
-### Colour Wheel Facing
-<img src="pair/color_wheel_facing.png" align="left" alt="Colour Wheel Facing">
-<img src="pair/color_wheel_facing-2.png" align="left" alt="Colour Wheel Facing, second screen">
+### Colour Wheel (Facing)
+<img src="pair/color_wheel_facing.png" align="left" alt="Colour Wheel (Facing)">
+<img src="pair/color_wheel_facing-2.png" align="left" alt="Colour Wheel (Facing), second screen">
 
 [pair/color_wheel_facing.py](pair/color_wheel_facing.py)
 
-Spin a rainbow wheel on a pair of screens facing each other, one of them mirrored to suit.
+Spin a rainbow wheel on two facing screens with one of them mirrored.
 
 <br clear="left">
 
 
-### Carpets Paired
-<img src="pair/carpets_paired.png" align="left" alt="Carpets Paired">
-<img src="pair/carpets_paired-2.png" align="left" alt="Carpets Paired, second screen">
+### Drifting Carpets
+<img src="pair/carpets_paired.png" align="left" alt="Drifting Carpets">
+<img src="pair/carpets_paired-2.png" align="left" alt="Drifting Carpets, second screen">
 
 [pair/carpets_paired.py](pair/carpets_paired.py)
 
-Lay a different drifting carpet on each panel of a pair, each tiled from a small scrap of pattern.
+Drift a different patterned carpet across each of two screens.
 
 <br clear="left">
 
@@ -358,7 +358,7 @@ Lay a different drifting carpet on each panel of a pair, each tiled from a small
 
 [pair/test_cards_paired.py](pair/test_cards_paired.py)
 
-Turn a test card on each panel of a pair, the second one mirrored against the first.
+Step a test card through each rotation on two screens that mirror each other.
 
 <br clear="left">
 
@@ -370,7 +370,7 @@ Turn a test card on each panel of a pair, the second one mirrored against the fi
 
 [hub/detect_hub.py](hub/detect_hub.py)
 
-Show which panel sits at each position of a screen hub. Every panel is painted its position's colour, with its letter in the top left over one bar for A up to six for F.
+Show which screen is in each position on a Screen Hub. Every panel is painted its position's colour, with its letter in the top left over one bar for A up to six for F.
 
 <br clear="left">
 
@@ -380,17 +380,17 @@ Show which panel sits at each position of a screen hub. Every panel is painted i
 
 [hub/chevron_banks.py](hub/chevron_banks.py)
 
-Flash runway chevrons across a screen hub in two interleaved banks, each a subset of one group.
+Flash runway chevrons on alternating sets of screens across a Screen Hub.
 
 <br clear="left">
 
 
-### Starfield Wall
-<img src="hub/starfield_wall.png" align="left" alt="Starfield Wall">
+### Starfield (Wall)
+<img src="hub/starfield_wall.png" align="left" alt="Starfield (Wall)">
 
 [hub/starfield_wall.py](hub/starfield_wall.py)
 
-Travel through a star field, across every panel a screen hub reaches.
+Travel through a star field across every screen on a Screen Hub.
 
 <br clear="left">
 
@@ -402,38 +402,38 @@ Travel through a star field, across every panel a screen hub reaches.
 
 [playback/animated_gif.py](playback/animated_gif.py)
 
-Play an animated GIF on a screen, at the frame delays the file was authored with.
+Play an animated GIF on a screen with the timing saved in the file.
 
 <br clear="left">
 
 
-### Animated GIF Paired
-<img src="playback/animated_gif_paired.png" align="left" alt="Animated GIF Paired">
-<img src="playback/animated_gif_paired-2.png" align="left" alt="Animated GIF Paired, second screen">
+### Animated GIF (Paired)
+<img src="playback/animated_gif_paired.png" align="left" alt="Animated GIF (Paired)">
+<img src="playback/animated_gif_paired-2.png" align="left" alt="Animated GIF (Paired), second screen">
 
 [playback/animated_gif_paired.py](playback/animated_gif_paired.py)
 
-Play one animated GIF across two screens, both changing frame together.
+Play the same animated GIF in step on two screens.
 
 <br clear="left">
 
 
-### Animated GIF Ping Pong
-<img src="playback/animated_gif_ping_pong.png" align="left" alt="Animated GIF Ping Pong">
+### Animated GIF (Ping Pong)
+<img src="playback/animated_gif_ping_pong.png" align="left" alt="Animated GIF (Ping Pong)">
 
 [playback/animated_gif_ping_pong.py](playback/animated_gif_ping_pong.py)
 
-Play an animated GIF forward then back, dwelling at each turn.
+Play an animated GIF forwards then backwards with a pause at each end.
 
 <br clear="left">
 
 
-### Animated GIF Recoloured
-<img src="playback/animated_gif_recoloured.png" align="left" alt="Animated GIF Recoloured">
+### Body Scanner
+<img src="playback/animated_gif_recoloured.png" align="left" alt="Body Scanner">
 
 [playback/animated_gif_recoloured.py](playback/animated_gif_recoloured.py)
 
-Recolour a whole animation as it plays, by rewriting the one colour table its frames share.
+Change the colours of an animated GIF as it plays.
 
 <br clear="left">
 
@@ -448,83 +448,83 @@ Show a folder of posters as if each stood in a case behind glass.
 <br clear="left">
 
 
-### Billboard Folders
-<img src="playback/billboard_folders.png" align="left" alt="Billboard Folders">
+### Billboard (Folders)
+<img src="playback/billboard_folders.png" align="left" alt="Billboard (Folders)">
 
 [playback/billboard_folders.py](playback/billboard_folders.py)
 
-Show several folders of posters, with Boot moving to the next poster or the next folder.
+Show posters from several folders and skip to the next poster or folder with Boot.
 
 <br clear="left">
 
 
-### Billboard Paired
-<img src="playback/billboard_paired.png" align="left" alt="Billboard Paired">
-<img src="playback/billboard_paired-2.png" align="left" alt="Billboard Paired, second screen">
+### Billboard (Paired)
+<img src="playback/billboard_paired.png" align="left" alt="Billboard (Paired)">
+<img src="playback/billboard_paired-2.png" align="left" alt="Billboard (Paired), second screen">
 
 [playback/billboard_paired.py](playback/billboard_paired.py)
 
-Show two different posters at once, one on each of a pair of screens, both changing together.
+Show a different poster on each of two screens and change them together.
 
 <br clear="left">
 
 
-### Billboard Slideshow
-<img src="playback/billboard_slideshow.png" align="left" alt="Billboard Slideshow">
+### Billboard (Slideshow)
+<img src="playback/billboard_slideshow.png" align="left" alt="Billboard (Slideshow)">
 
 [playback/billboard_slideshow.py](playback/billboard_slideshow.py)
 
-Show a folder of posters, one at a time, sent straight to the panel.
+Show a folder of posters one at a time.
 
 <br clear="left">
 
 
-### Billboard Wall
-<img src="playback/billboard_wall.png" align="left" alt="Billboard Wall">
+### Billboard (Wall)
+<img src="playback/billboard_wall.png" align="left" alt="Billboard (Wall)">
 
 [playback/billboard_wall.py](playback/billboard_wall.py)
 
-Show a different poster on every panel a hub can reach, all changing on one clock.
+Show a different poster on every screen of a Screen Hub and change them all together.
 
 <br clear="left">
 
 
-### Dual Animated GIFs
-<img src="playback/dual_animated_gifs.png" align="left" alt="Dual Animated GIFs">
-<img src="playback/dual_animated_gifs-2.png" align="left" alt="Dual Animated GIFs, second screen">
+### Animated GIF (Dual)
+<img src="playback/dual_animated_gifs.png" align="left" alt="Animated GIF (Dual)">
+<img src="playback/dual_animated_gifs-2.png" align="left" alt="Animated GIF (Dual), second screen">
 
 [playback/dual_animated_gifs.py](playback/dual_animated_gifs.py)
 
-Play a different animated GIF on each of two screens, each its own size, length and rate.
+Play two animated GIFs of different sizes, lengths and speeds on two screens.
 
 <br clear="left">
 
 
-### Neon Ping Pong
-<img src="playback/neon_ping_pong.png" align="left" alt="Neon Ping Pong">
+### Neon Rosie
+<img src="playback/neon_ping_pong.png" align="left" alt="Neon Rosie">
 
 [playback/neon_ping_pong.py](playback/neon_ping_pong.py)
 
-Play an animation held as one image file per frame, back and forth.
+Play a folder of picture frames forwards then backwards.
 
 <br clear="left">
 
 
-### Traces Scroll
-<img src="playback/traces_scroll.png" align="left" alt="Traces Scroll">
+### Circuit Traces
+<img src="playback/traces_scroll.png" align="left" alt="Circuit Traces">
 
 [playback/traces_scroll.py](playback/traces_scroll.py)
 
-Scroll an animation built from one tile endlessly across the panel, turning between axes.
+Scroll an animated pattern that curves between horizontal and vertical.
 
 <br clear="left">
 
 
-### Traces Wall
-<img src="playback/traces_wall.png" align="left" alt="Traces Wall">
+### Circuit Traces (Wall)
+<img src="playback/traces_wall.png" align="left" alt="Circuit Traces (Wall)">
 
 [playback/traces_wall.py](playback/traces_wall.py)
 
-Play one animation across every panel a hub can reach, each showing the same frame.
+Play the same animation on every screen of a Screen Hub.
 
 <br clear="left">

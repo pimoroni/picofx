@@ -6,8 +6,8 @@ from screens import SCREEN_TYPES
 from picovector import color, image, rect, shape, vec2
 
 """
-Draw an LED sign of fourteen-segment characters, three rows of them in windows set into a
-brushed metal case. A row too long for its window scrolls through it.
+Draw a three-line fourteen-segment LED sign in a brushed metal case.
+A row too long for its window scrolls through it.
 
 Fourteen segments split a seven-segment digit's middle bar in two and add a vertical in two
 halves and four diagonals, which is enough to spell. Every segment, lit or not, is drawn once into

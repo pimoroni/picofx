@@ -5,7 +5,7 @@ from picovector import color, shape, vec2
 from screens import SCREEN_TYPES, Reserve, ScreenPair
 
 """
-Lay a different drifting carpet on each panel of a pair, each tiled from a small scrap of pattern.
+Drift a different patterned carpet across each of two screens.
 
 A pair takes every placement setting once per screen, so one call sends two images and an
 offset each. The hexagons drift on the diagonal and the blocks sideways.
@@ -14,6 +14,7 @@ Each tile is about a ninth of the full-panel image it replaces, and the drift is
 
 Press "Boot" to exit the program.
 
+Program: Drifting carpets
 Section: Multi-screen
 Args: Screen size = 2.8, Rotation = 0
 """

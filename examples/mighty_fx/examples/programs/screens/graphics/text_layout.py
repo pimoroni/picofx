@@ -6,7 +6,7 @@ from screens import SCREEN_TYPES
 from picovector import color, font, image, rect
 
 """
-Lay text out inside a box, which wraps and aligns it.
+Wrap and align text inside a box.
 
 text() takes a rect instead of a position, and align says which corner or edge the lettering
 settles against, nine combinations of a horizontal and a vertical, all here at once. The last box

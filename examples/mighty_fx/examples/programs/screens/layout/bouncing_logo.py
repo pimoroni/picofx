@@ -5,8 +5,7 @@ from screens import SCREEN_TYPES
 from picovector import color, spritesheet
 
 """
-Bounce a logo around the screen, recolouring it at each edge
-while the drifting background shows through its darkest parts.
+Bounce a logo around the screen and change its colour at each edge.
 
 Change up some of the constants below to see what happens.
 

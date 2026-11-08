@@ -6,9 +6,9 @@ from screens import SCREEN_TYPES
 from picovector import color, image, rect, shape
 
 """
-Draw a laser show, beams fanning and sweeping across a dark hall from three projectors along the
-foot of the stage. Each scene runs a few seconds, switching its projectors on and off as it goes.
-An upright panel, like a square 1.54" one, has room for the outer two projectors only.
+Draw a laser show of beams fanning and sweeping across a dark hall. Each scene runs a few
+seconds, switching its projectors on and off as it goes. An upright panel, like a square 1.54" one,
+has room for the outer two projectors only.
 
 A beam is a line from its projector to the edge of the panel, a wide faint glow under a thin
 bright core. Each frame dims the last a little before drawing, so a sweeping beam leaves a fading

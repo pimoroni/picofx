@@ -5,7 +5,7 @@ from screens import SCREEN_TYPES
 from picovector import image
 
 """
-Alternate between two PNG pictures, each shown for its own time.
+Switch between two PNG pictures shown for different lengths of time.
 
 Press "Boot" to exit the program.
 

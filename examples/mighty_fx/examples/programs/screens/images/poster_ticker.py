@@ -5,7 +5,7 @@ from screens import Screen280
 from picovector import color, font, image, rect, vec2
 
 """
-Scroll a message across a poster read from a file, in lettering matching the poster's own.
+Scroll a message across a poster in lettering that matches it.
 
 load_into() reads a file into an image that already exists, keeping that image's size and
 colour. The copy here is full colour, so a palettised poster arrives as colour that can be

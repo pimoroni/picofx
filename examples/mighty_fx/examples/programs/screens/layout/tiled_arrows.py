@@ -5,7 +5,7 @@ from picovector import color, image, shape, vec2
 from screens import SCREEN_TYPES, Tile
 
 """
-Fill the panel from a tile whose edges do not meet, using a mirrored repeat so they do.
+Fill the screen with a tile mirrored on every other copy to make its edges line up.
 
 The tile is a wedge, dark on one side and bright on the other with an arrow across it, so a
 plain repeat puts bright hard against dark at every seam.

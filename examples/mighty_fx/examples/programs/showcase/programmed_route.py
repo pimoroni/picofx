@@ -9,7 +9,7 @@ from picofx.colour import BLUE, CYAN, GREEN, MAGENTA, RED, WHITE, YELLOW
 from picofx.mono import PulseFX, StaticFX
 
 """
-Programme a two wheeled robot's route with the Aye Arr Remote, then watch it drive what it was told.
+Program a route into a two-wheeled robot with the IR remote and watch it drive.
 
 A route is a list of movements, each a direction and how many cycles to hold it for. It
 is entered on the remote a movement at a time, as a direction then the digits of a number.

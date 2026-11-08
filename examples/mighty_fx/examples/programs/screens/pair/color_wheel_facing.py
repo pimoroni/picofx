@@ -4,13 +4,13 @@ from screens import SCREEN_TYPES, Reserve, ScreenPair
 from picovector import image, color, shape, mat3
 
 """
-Spin a rainbow wheel on a pair of screens facing each other, one of them mirrored to suit.
+Spin a rainbow wheel on two facing screens with one of them mirrored.
 
 Change up some of the constants below to see what happens.
 
 Press "Boot" to exit the program.
 
-Program: Colour wheel facing
+Program: Colour wheel (facing)
 Section: Two screens
 Args: Screen size = 2.8, Rotation = 0
 """

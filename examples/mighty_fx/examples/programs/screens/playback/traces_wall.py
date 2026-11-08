@@ -5,7 +5,7 @@ from playback import SequencePlayer
 from screens import Screen280, ScreenGroup
 
 """
-Play one animation across every panel a hub can reach, each showing the same frame.
+Play the same animation on every screen of a Screen Hub.
 
 The pattern tiles both ways, so a wall reads as one surface. Every panel takes the same stream at
 once, so a frame costs the same however many panels show it.
@@ -15,6 +15,7 @@ copying, since the player holds each at a quarter of a truecolour frame's memory
 
 Press "Boot" to exit the program.
 
+Program: Circuit traces (wall)
 Section: Multi-screen
 Args: Rotation = 90 or 270
 """

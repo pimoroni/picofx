@@ -6,7 +6,7 @@ from screens import Screen280
 from picovector import color, image, rect
 
 """
-Draw a trivision billboard, its posters carried on three-sided slats that turn a third at a time.
+Draw a trivision billboard whose three-sided slats turn to change the poster.
 
 Press "Boot" to exit the program.
 
