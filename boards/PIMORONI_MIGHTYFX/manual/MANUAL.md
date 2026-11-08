@@ -775,7 +775,7 @@ Three to start with:
 ```entry
 board: program=examples/programs/effects/colour/sweep_trail.py
 board: program=examples/programs/screens/playback/animated_gif.py
-board: program=examples/programs/showcase/flip_dot_sign.py
+board: program=examples/programs/showcase/retro_displays/flip_dot_sign.py
 ```
 
 Examples under `screens`, `audio`, `motors`, `servos`, `strips`, `gpio`,

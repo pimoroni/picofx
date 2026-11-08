@@ -2,7 +2,7 @@
 
 This folder contains a collection of *Showcase* examples, that bring together concepts presented by individual board and screen examples to create functional projects.
 
-The posters the two billboards show live with the other example art in [pictures/billboards](../pictures/billboards), portrait and landscape in a folder each: the scrolling one walks the portrait ones, the trivision one turns the three landscape.
+The posters the billboards show live with the other example art in [pictures/billboards](../../pictures/billboards), portrait and landscape in a folder each: the scrolling and street ones walk the portrait ones, the trivision one turns the three landscape.
 
 - [Transport Signs](#transport-signs)
   - [Roadworks Sign](#roadworks-sign)
@@ -26,6 +26,7 @@ The posters the two billboards show live with the other example art in [pictures
 - [Billboards and Panels](#billboards-and-panels)
   - [Trivision Billboard](#trivision-billboard)
   - [Scrolling Billboard](#scrolling-billboard)
+  - [Street Billboard](#street-billboard)
   - [Status Panel](#status-panel)
 - [Animated Scenes](#animated-scenes)
   - [Isometric Flight](#isometric-flight)
@@ -44,9 +45,9 @@ The posters the two billboards show live with the other example art in [pictures
 Departure boards and road signs.
 
 ### Roadworks Sign
-<img src="roadworks_sign.png" align="left" alt="Roadworks Sign">
+<img src="transport_signs/roadworks_sign.png" align="left" alt="Roadworks Sign">
 
-[roadworks_sign.py](roadworks_sign.py)
+[transport_signs/roadworks_sign.py](transport_signs/roadworks_sign.py)
 
 Draw a roadside roadworks sign with its message in amber lamps.
 
@@ -54,9 +55,9 @@ Draw a roadside roadworks sign with its message in amber lamps.
 
 
 ### Lane Control Gantry
-<img src="lane_control_gantry.png" align="left" alt="Lane Control Gantry">
+<img src="transport_signs/lane_control_gantry.png" align="left" alt="Lane Control Gantry">
 
-[lane_control_gantry.py](lane_control_gantry.py)
+[transport_signs/lane_control_gantry.py](transport_signs/lane_control_gantry.py)
 
 Draw the lane signals on a motorway gantry as they close a lane.
 
@@ -64,9 +65,9 @@ Draw the lane signals on a motorway gantry as they close a lane.
 
 
 ### Split Flap Departures
-<img src="split_flap_departures.png" align="left" alt="Split Flap Departures">
+<img src="transport_signs/split_flap_departures.png" align="left" alt="Split Flap Departures">
 
-[split_flap_departures.py](split_flap_departures.py)
+[transport_signs/split_flap_departures.py](transport_signs/split_flap_departures.py)
 
 Draw a split-flap departures board with each letter flipping into place.
 
@@ -74,9 +75,9 @@ Draw a split-flap departures board with each letter flipping into place.
 
 
 ### Departure Board
-<img src="departure_board.png" align="left" alt="Departure Board">
+<img src="transport_signs/departure_board.png" align="left" alt="Departure Board">
 
-[departure_board.py](departure_board.py)
+[transport_signs/departure_board.py](transport_signs/departure_board.py)
 
 Draw a railway departure board across a Screen Hub with one train on each screen.
 
@@ -84,10 +85,10 @@ Draw a railway departure board across a Screen Hub with one train on each screen
 
 
 ### Departures List
-<img src="departures_list.png" align="left" alt="Departures List">
-<img src="departures_list-2.png" align="left" alt="Departures List, second screen">
+<img src="transport_signs/departures_list.png" align="left" alt="Departures List">
+<img src="transport_signs/departures_list-2.png" align="left" alt="Departures List, second screen">
 
-[departures_list.py](departures_list.py)
+[transport_signs/departures_list.py](transport_signs/departures_list.py)
 
 Draw a railway departures list on one screen or on two screens that change page together.
 
@@ -95,10 +96,10 @@ Draw a railway departures list on one screen or on two screens that change page 
 
 
 ### Bus Departures
-<img src="bus_departures.png" align="left" alt="Bus Departures">
-<img src="bus_departures-2.png" align="left" alt="Bus Departures, second screen">
+<img src="transport_signs/bus_departures.png" align="left" alt="Bus Departures">
+<img src="transport_signs/bus_departures-2.png" align="left" alt="Bus Departures, second screen">
 
-[bus_departures.py](bus_departures.py)
+[transport_signs/bus_departures.py](transport_signs/bus_departures.py)
 
 Draw a bus departure board as shown on a TV screen at a bus station. A second panel lengthens the board, with one listing across both.
 
@@ -106,10 +107,10 @@ Draw a bus departure board as shown on a TV screen at a bus station. A second pa
 
 
 ### Tram Stop Sign
-<img src="tram_stop_sign.png" align="left" alt="Tram Stop Sign">
-<img src="tram_stop_sign-2.png" align="left" alt="Tram Stop Sign, second screen">
+<img src="transport_signs/tram_stop_sign.png" align="left" alt="Tram Stop Sign">
+<img src="transport_signs/tram_stop_sign-2.png" align="left" alt="Tram Stop Sign, second screen">
 
-[tram_stop_sign.py](tram_stop_sign.py)
+[transport_signs/tram_stop_sign.py](transport_signs/tram_stop_sign.py)
 
 Draw a tram stop sign across two screens with the next tram at the top and later ones cycling below.
 
@@ -121,9 +122,9 @@ Draw a tram stop sign across two screens with the next tram at the top and later
 Mechanical, glowing and segment displays.
 
 ### Flip Dot Sign
-<img src="flip_dot_sign.png" align="left" alt="Flip Dot Sign">
+<img src="retro_displays/flip_dot_sign.png" align="left" alt="Flip Dot Sign">
 
-[flip_dot_sign.py](flip_dot_sign.py)
+[retro_displays/flip_dot_sign.py](retro_displays/flip_dot_sign.py)
 
 Draw a flip-dot sign that spells its message by flipping one column of dots at a time.
 
@@ -131,9 +132,9 @@ Draw a flip-dot sign that spells its message by flipping one column of dots at a
 
 
 ### Split Flap Clock
-<img src="split_flap_clock.png" align="left" alt="Split Flap Clock">
+<img src="retro_displays/split_flap_clock.png" align="left" alt="Split Flap Clock">
 
-[split_flap_clock.py](split_flap_clock.py)
+[retro_displays/split_flap_clock.py](retro_displays/split_flap_clock.py)
 
 Draw a split-flap clock with each digit flipping through to the next.
 
@@ -141,9 +142,9 @@ Draw a split-flap clock with each digit flipping through to the next.
 
 
 ### CRT Terminal
-<img src="crt_terminal.png" align="left" alt="CRT Terminal">
+<img src="retro_displays/crt_terminal.png" align="left" alt="CRT Terminal">
 
-[crt_terminal.py](crt_terminal.py)
+[retro_displays/crt_terminal.py](retro_displays/crt_terminal.py)
 
 Draw an old green-screen computer terminal. An operator types a command a character at a time and the machine answers a line at a time, on a tube that glows.
 
@@ -151,9 +152,9 @@ Draw an old green-screen computer terminal. An operator types a command a charac
 
 
 ### Acrylic Lixie
-<img src="acrylic_lixie.png" align="left" alt="Acrylic Lixie">
+<img src="retro_displays/acrylic_lixie.png" align="left" alt="Acrylic Lixie">
 
-[acrylic_lixie.py](acrylic_lixie.py)
+[retro_displays/acrylic_lixie.py](retro_displays/acrylic_lixie.py)
 
 Draw a lixie display that lights one engraved acrylic sheet at a time to show each digit.
 
@@ -161,9 +162,9 @@ Draw a lixie display that lights one engraved acrylic sheet at a time to show ea
 
 
 ### Nixie Tube
-<img src="nixie_tube.png" align="left" alt="Nixie Tube">
+<img src="retro_displays/nixie_tube.png" align="left" alt="Nixie Tube">
 
-[nixie_tube.py](nixie_tube.py)
+[retro_displays/nixie_tube.py](retro_displays/nixie_tube.py)
 
 Draw a nixie tube with each digit lighting up inside the glass. The digit carrying current glows red-orange through the anode mesh.
 
@@ -171,9 +172,9 @@ Draw a nixie tube with each digit lighting up inside the glass. The digit carryi
 
 
 ### Segment Clock
-<img src="segment_clock.png" align="left" alt="Segment Clock">
+<img src="retro_displays/segment_clock.png" align="left" alt="Segment Clock">
 
-[segment_clock.py](segment_clock.py)
+[retro_displays/segment_clock.py](retro_displays/segment_clock.py)
 
 Draw a seven-segment LED clock behind a coloured filter.
 
@@ -181,9 +182,9 @@ Draw a seven-segment LED clock behind a coloured filter.
 
 
 ### Segment Sign
-<img src="segment_sign.png" align="left" alt="Segment Sign">
+<img src="retro_displays/segment_sign.png" align="left" alt="Segment Sign">
 
-[segment_sign.py](segment_sign.py)
+[retro_displays/segment_sign.py](retro_displays/segment_sign.py)
 
 Draw a three-line fourteen-segment LED sign in a brushed metal case. A row too long for its window scrolls through it.
 
@@ -191,9 +192,9 @@ Draw a three-line fourteen-segment LED sign in a brushed metal case. A row too l
 
 
 ### Odometer
-<img src="odometer.png" align="left" alt="Odometer">
+<img src="retro_displays/odometer.png" align="left" alt="Odometer">
 
-[odometer.py](odometer.py)
+[retro_displays/odometer.py](retro_displays/odometer.py)
 
 Draw a mechanical odometer with number drums rolling in a brass frame. The last drum turns steadily, and each of the others is carried round as the drum to its right passes from 9 to 0.
 
@@ -201,9 +202,9 @@ Draw a mechanical odometer with number drums rolling in a brass frame. The last 
 
 
 ### Lamp Matrix
-<img src="lamp_matrix.png" align="left" alt="Lamp Matrix">
+<img src="retro_displays/lamp_matrix.png" align="left" alt="Lamp Matrix">
 
-[lamp_matrix.py](lamp_matrix.py)
+[retro_displays/lamp_matrix.py](retro_displays/lamp_matrix.py)
 
 Draw a grid of stage lamps running through a light show. Tungsten lamps glow up quickly and fade slowly, white hot through orange to a dull red as each filament cools. LAMPS = "led" switches each instantly to one of a handful of colours, or off, instead.
 
@@ -211,9 +212,9 @@ Draw a grid of stage lamps running through a light show. Tungsten lamps glow up 
 
 
 ### Oscilloscope
-<img src="oscilloscope.png" align="left" alt="Oscilloscope">
+<img src="retro_displays/oscilloscope.png" align="left" alt="Oscilloscope">
 
-[oscilloscope.py](oscilloscope.py)
+[retro_displays/oscilloscope.py](retro_displays/oscilloscope.py)
 
 Draw an oscilloscope tracing waves that slowly fade on the screen. A scrolling sine grows into a square wave a harmonic at a time and melts back, then the scope switches to XY mode for a turning Lissajous figure. SENSOR = True traces the voltage on the sensor connector instead.
 
@@ -225,9 +226,9 @@ Draw an oscilloscope tracing waves that slowly fade on the screen. A scrolling s
 Posters and signs that change on screen.
 
 ### Trivision Billboard
-<img src="trivision_billboard.png" align="left" alt="Trivision Billboard">
+<img src="billboards/trivision_billboard.png" align="left" alt="Trivision Billboard">
 
-[trivision_billboard.py](trivision_billboard.py)
+[billboards/trivision_billboard.py](billboards/trivision_billboard.py)
 
 Draw a trivision billboard whose three-sided slats turn to change the poster.
 
@@ -235,11 +236,21 @@ Draw a trivision billboard whose three-sided slats turn to change the poster.
 
 
 ### Scrolling Billboard
-<img src="scrolling_billboard.png" align="left" alt="Scrolling Billboard">
+<img src="billboards/scrolling_billboard.png" align="left" alt="Scrolling Billboard">
 
-[scrolling_billboard.py](scrolling_billboard.py)
+[billboards/scrolling_billboard.py](billboards/scrolling_billboard.py)
 
 Draw a scrolling billboard that rolls its posters past one at a time.
+
+<br clear="left">
+
+
+### Street Billboard
+<img src="billboards/street_billboard.png" align="left" alt="Street Billboard">
+
+[billboards/street_billboard.py](billboards/street_billboard.py)
+
+Show a folder of posters as if each stood in a case behind glass.
 
 <br clear="left">
 
@@ -259,10 +270,10 @@ Draw a Pimoroni status panel with the RGB outputs lighting in step with its prod
 Drawn in code.
 
 ### Isometric Flight
-<img src="isometric_flight.png" align="left" alt="Isometric Flight">
-<img src="isometric_flight-2.png" align="left" alt="Isometric Flight, second screen">
+<img src="animated_scenes/isometric_flight.png" align="left" alt="Isometric Flight">
+<img src="animated_scenes/isometric_flight-2.png" align="left" alt="Isometric Flight, second screen">
 
-[isometric_flight.py](isometric_flight.py)
+[animated_scenes/isometric_flight.py](animated_scenes/isometric_flight.py)
 
 Fly endlessly over two isometric worlds.
 
@@ -270,9 +281,9 @@ Fly endlessly over two isometric worlds.
 
 
 ### Skyline
-<img src="skyline.png" align="left" alt="Skyline">
+<img src="animated_scenes/skyline.png" align="left" alt="Skyline">
 
-[skyline.py](skyline.py)
+[animated_scenes/skyline.py](animated_scenes/skyline.py)
 
 Drift past a city while the sky turns from noon to midnight and the windows come on.
 
@@ -280,9 +291,9 @@ Drift past a city while the sky turns from noon to midnight and the windows come
 
 
 ### Laser Show
-<img src="laser_show.png" align="left" alt="Laser Show">
+<img src="animated_scenes/laser_show.png" align="left" alt="Laser Show">
 
-[laser_show.py](laser_show.py)
+[animated_scenes/laser_show.py](animated_scenes/laser_show.py)
 
 Draw a laser show of beams fanning and sweeping across a dark hall. Each scene switches its projectors on and off as it goes. An upright or square panel has room for the outer two projectors only.
 
@@ -290,9 +301,9 @@ Draw a laser show of beams fanning and sweeping across a dark hall. Each scene s
 
 
 ### Fireplace
-<img src="fireplace.png" align="left" alt="Fireplace">
+<img src="animated_scenes/fireplace.png" align="left" alt="Fireplace">
 
-[fireplace.py](fireplace.py)
+[animated_scenes/fireplace.py](animated_scenes/fireplace.py)
 
 Draw a fire and flicker the RGB outputs with it like firelight in a room. The fire fills the panel, leaving the surround to whatever it is mounted in.
 
@@ -300,9 +311,9 @@ Draw a fire and flicker the RGB outputs with it like firelight in a room. The fi
 
 
 ### Portal
-<img src="portal.png" align="left" alt="Portal">
+<img src="animated_scenes/portal.png" align="left" alt="Portal">
 
-[portal.py](portal.py)
+[animated_scenes/portal.py](animated_scenes/portal.py)
 
 Draw a glowing portal with arms spiralling into a dark opening and specks of light falling in. Each arm dims to black before the opening, so it seems to fall away without end. STONES = True sets it into a stone wall, and RIM_WIDTH and RIM_HEIGHT size it to a cutout in front of the panel.
 
@@ -310,9 +321,9 @@ Draw a glowing portal with arms spiralling into a dark opening and specks of lig
 
 
 ### Pool
-<img src="pool.png" align="left" alt="Pool">
+<img src="animated_scenes/pool.png" align="left" alt="Pool">
 
-[pool.py](pool.py)
+[animated_scenes/pool.py](animated_scenes/pool.py)
 
 Draw the floor of a pool through rippling water that throws bright lines of light over the tiles. STYLE chooses the floor to start on, a modern pool's blue mosaic or a Roman bath's cream stones round an octagon, and "Boot" swaps to the other.
 
@@ -320,10 +331,10 @@ Draw the floor of a pool through rippling water that throws bright lines of ligh
 
 
 ### Creature Eyes
-<img src="creature_eyes.png" align="left" alt="Creature Eyes">
-<img src="creature_eyes-2.png" align="left" alt="Creature Eyes, second screen">
+<img src="animated_scenes/creature_eyes.png" align="left" alt="Creature Eyes">
+<img src="animated_scenes/creature_eyes-2.png" align="left" alt="Creature Eyes, second screen">
 
-[creature_eyes.py](creature_eyes.py)
+[animated_scenes/creature_eyes.py](animated_scenes/creature_eyes.py)
 
 Draw a creature's eyes on two screens as they look around and blink. CREATURE chooses the cat, owl, goat, alien, robot or zombie, each with its own eyes and its own way of looking about, and "Boot" steps to the next.
 

@@ -45,7 +45,6 @@ These are micropython examples for the screens Mighty FX can drive from its SP/C
   - [Animated GIF (Paired)](#animated-gif-paired)
   - [Animated GIF (Ping Pong)](#animated-gif-ping-pong)
   - [Body Scanner](#body-scanner)
-  - [Street Billboard](#street-billboard)
   - [Billboard (Folders)](#billboard-folders)
   - [Billboard (Paired)](#billboard-paired)
   - [Billboard (Slideshow)](#billboard-slideshow)
@@ -434,16 +433,6 @@ Play an animated GIF forwards then backwards with a pause at each end.
 [playback/animated_gif_recoloured.py](playback/animated_gif_recoloured.py)
 
 Change the colours of an animated GIF as it plays.
-
-<br clear="left">
-
-
-### Street Billboard
-<img src="playback/street_billboard.png" align="left" alt="Street Billboard">
-
-[playback/street_billboard.py](playback/street_billboard.py)
-
-Show a folder of posters as if each stood in a case behind glass.
 
 <br clear="left">
 
