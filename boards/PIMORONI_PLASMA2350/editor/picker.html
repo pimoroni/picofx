@@ -7932,6 +7932,8 @@ function screenPlaying(parts, body, letter) {
     } else if (key === "style") look.style = value;
     else understood = false;
   });
+  // A drawing doubled with no size given has the half-size canvas the board gives it
+  if (parts.effect === "drawing" && look.double && look.canvas !== "set") look.canvas = "half";
   return understood ? playing : null;
 }
 
