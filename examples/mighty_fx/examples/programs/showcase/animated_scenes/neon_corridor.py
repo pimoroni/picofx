@@ -30,7 +30,6 @@ QUIT_MS = 1500                      # Held at least this long, the button ends t
 FRAME_RATE = 10                     # Frames a second, which the board holds at full size
 SPEED = "normal"                    # How fast the walk goes, a name from SPEEDS
 SPEEDS = {"slow": 35, "normal": 70, "fast": 120, "ludicrous": 240}      # Depth steps a second at each pace
-PIXEL_DOUBLE = False                # Whether to draw at half the panel's width and height and show each pixel as a block of four
 
 # The corridor's shape
 OBLONG = False                      # Whether the corridor stretches to the panel's shape, or stays square and shows more of its walls on the longer side
@@ -78,9 +77,8 @@ ScreenType = SCREEN_TYPES[SCREEN_SIZE]
 mighty = MightyFX(spce_a=SPCE.SCREEN)
 screen = ScreenType(mighty.spce_a, rotation=ROTATION)
 
-# Drawn as the panel is turned, at half the width and height when doubled
-wide, tall = screen.canvas_size
-canvas = screen.canvas(wide // 2, tall // 2) if PIXEL_DOUBLE else screen.canvas()
+# Drawn as the panel is turned
+canvas = screen.canvas()
 WIDTH, HEIGHT = canvas.width, canvas.height
 pixels = canvas.raw
 
@@ -290,7 +288,7 @@ leaving = False
 try:
     while not leaving:
         draw(pacer.delta)
-        screen.update(canvas, pixel_double=PIXEL_DOUBLE)
+        screen.update(canvas)
 
         # Judged on release, a press being impossible to tell from a hold until it ends
         if mighty.boot_pressed():
