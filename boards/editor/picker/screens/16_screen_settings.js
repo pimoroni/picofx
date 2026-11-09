@@ -1129,6 +1129,8 @@ function lookSections(key, held, size) {
   if (!picture) return sections;
   sections.appendChild(placementFold(key, held, size));
   sections.appendChild(backgroundFold(key, held));
+  // Is this a pair's second screen? It plays as the first does, so only its placing is offered
+  if (key === "screen" + SCREENS[SCREENS.length - 1] && screensPaired()) return sections;
   var media = mediaNamed(picture);
   if (media && media.kind === "drawing") sections.appendChild(drawingFold(key, held));
   else if (media && media.kind !== "image") sections.appendChild(playbackFold(key, held, media));

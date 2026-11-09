@@ -431,8 +431,9 @@ function renderAssets() {
         // Tapping the lit one again takes the picture off this scene's screen,
         // falling back to what the file said where there is something to go back
         // to. A scene showing nothing on a screen leaves it as the scene before
-        // left it, which the cross in the header cannot say for one scene alone
-        var screen = state.screens[letter];
+        // left it, which the cross in the header cannot say for one scene alone. A pair's
+        // second screen shows what its first does, so either button changes the first
+        var screen = state.screens[screensPaired() ? SCREENS[0] : letter];
         screen.shows = screen.shows !== name ? name
                      : screen.kept ? "keep" : null;
         draw();
@@ -460,9 +461,11 @@ function kindOf(shows) {
 }
 
 // What a screen's entry says in a scene: its look, or the line kept as the file had it. A hub
-// writes its positions' entries in place of the screens'
+// writes its positions' entries in place of the screens', and a pair writes one entry for both
+// where the first screen's would go
 function screenEntry(letter, body) {
   if (state.hub.on) return null;
+  if (pairWritten(body)) return letter === SCREENS[0] ? pairEntry(body) : null;
   var screen = state.screens[letter];
   var playing = body.screens[letter];
   if (!screen.there || !playing.shows) return null;

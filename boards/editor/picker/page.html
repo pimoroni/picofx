@@ -778,6 +778,10 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
 .sound{position:relative}
 
 .screens-head{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1rem}
+/* The pair toggle under each screen's panel, made as a hub position's group numbers are, and in
+   both screens' colours while on */
+.pairplace{display:flex;flex-direction:column;align-items:center;gap:.15rem}
+.groupseg button.pairon{background:linear-gradient(90deg,#1f6feb,#a44ad0)}
 .screen-box{border:2px solid var(--line);border-radius:10px;overflow:hidden}
 .screen-box.a{border-color:#1f6feb}
 .screen-box.b{border-color:#a44ad0}
