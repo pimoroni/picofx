@@ -1,11 +1,12 @@
 
 // ---- the LED sections as tabs -----------------------------------------------------------
-// The outputs and each strip as tabs just under the gallery, one section shown at a time, so
-// the one being worked on is never a scroll away. Choosing a tab makes it the one worked on,
-// so the gallery is for it, and each tab says in a small swatch what its section plays.
-// Screens stay below as sections, the gallery meaning nothing for them.
+// The outputs and each strip as tabs, one section shown at a time, so the one being worked on
+// is never a scroll away. Choosing a tab makes it the one worked on, and the gallery goes in
+// its box, as the screens' pictures and the programs sit under what they are for. Each tab
+// says in a small swatch what its section plays. ?above on the page's address keeps the
+// gallery above the tabs.
 //
-// The tabs sit under the gallery and not with the scene tabs, and are drawn as a row of
+// The tabs sit in the scene's body and not with the scene tabs, and are drawn as a row of
 // names with a line under the chosen one, so they read as parts of one board and not as
 // another row of scenes. Setting up the board is one button at the end of the tabs, and
 // keeps to them: the whole board is being set up, a section at a time, and the tabs stay
@@ -172,9 +173,8 @@ drawSteps.after.push(function () {
     stack.appendChild(document.getElementById(panel));
   });
 
-  // Trying the looks under the tabs' sections, as the screens' pictures and the programs sit
-  // under what they are for, with ?below on the page's address
-  if (/[?&]below\b/.test(location.search)) {
+  // The looks go in the box of the chosen section, unless the page's address asks for them above
+  if (!/[?&]above\b/.test(location.search)) {
     document.body.classList.add("looksbelow");
     document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
   }
