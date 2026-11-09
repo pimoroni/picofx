@@ -909,6 +909,8 @@ function drawingFold(key, held) {
   var whole = document.createElement("div");
   var madeFor = madeForLine(held);
   if (madeFor) whole.appendChild(madeFor);
+  var halfSize = halfSizeLine();
+  if (halfSize) whole.appendChild(halfSize);
   // A drawing drawn in styles of its own offers them, a row for each of its Styles: lines stacked
   // beside the one label, a line's first being the one it takes unchosen. A style is the file's own
   // text, so it is escaped for the button's label
@@ -966,6 +968,38 @@ function madeForLine(held) {
   };
   var line = sline(named("Made for " + said.join(", ")), use);
   line.classList.add("smadefor");
+  return line;
+}
+
+// A line suggesting half size or pairing where both screens show a drawing and are not paired,
+// unless both are pixel doubled at half size, with a button setting both to that, or null. Two
+// larger canvases do not fit the fast memory together, so one draws more slowly. A drawing whose
+// Defaults: line asks for full resolution is made for it, so no line is shown
+function halfSizeLine() {
+  if (SCREENS.length < 2 || state.hub.on || screensPaired()) return null;
+  var both = SCREENS.slice(0, 2).map(function (letter) { return state.screens[letter]; });
+  var drawings = both.every(function (held) {
+    var media = held.there && held.shows ? mediaNamed(held.shows) : null;
+    return !!media && !!media.drawing && drawingDoubled(media.drawing) !== false;
+  });
+  // Is either not doubled at half size? Doubling and half size are judged together, as madeForLine() does
+  var larger = both.some(function (held) { return !(held.look.double && held.look.canvas === "half"); });
+  if (!drawings || !larger) return null;
+  var use = document.createElement("button");
+  use.type = "button";
+  use.className = "stoggle";
+  use.textContent = "Apply";
+  use.title = "Set both drawings to pixel doubling at half size";
+  use.onclick = function () {
+    both.forEach(function (held) {
+      held.look.double = true;
+      held.look.canvas = "half";
+    });
+    draw();
+  };
+  var line = sline(named("Two drawings run faster at half size or paired"), use);
+  line.classList.add("smadefor");
+  line.title = "Two drawings at full size do not both fit the board's fast memory.";
   return line;
 }
 
