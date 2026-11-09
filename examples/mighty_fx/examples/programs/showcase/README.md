@@ -35,6 +35,7 @@ The posters the billboards show live with the other example art in [pictures/bil
   - [Fireplace](#fireplace)
   - [Portal](#portal)
   - [Pool](#pool)
+  - [Neon Corridor](#neon-corridor)
   - [Creature Eyes](#creature-eyes)
 - [Moving Things](#moving-things)
   - [Programmed Route](#programmed-route)
@@ -326,6 +327,16 @@ Draw a glowing portal with arms spiralling into a dark opening and specks of lig
 [animated_scenes/pool.py](animated_scenes/pool.py)
 
 Draw the floor of a pool through rippling water that throws bright lines of light over the tiles. STYLE chooses the floor to start on, a modern pool's blue mosaic or a Roman bath's cream stones round an octagon, and "Boot" swaps to the other.
+
+<br clear="left">
+
+
+### Neon Corridor
+<img src="animated_scenes/neon_corridor.png" align="left" alt="Neon Corridor">
+
+[animated_scenes/neon_corridor.py](animated_scenes/neon_corridor.py)
+
+Walk without end down a corridor of neon, as rings of light come out of the haze towards you and a bright light shines at the far end. SCHEME sets its colours to neon, plaid, emerald, magenta or blueprint, and "Boot" steps to the next. SPEED sets a slow, normal, fast or ludicrous pace, and OBLONG = True stretches the corridor to the panel's shape.
 
 <br clear="left">
 
