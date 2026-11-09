@@ -43,6 +43,11 @@
 * An output whose PWM channel a `SPCE.GPIO_PWM` connector takes becomes a `DisabledLED`, which says why when asked to light
 * Mighty FX answers on I2C as an FX target, and `MightyFXControl` drives one from another board
 * Networking, Bluetooth and `lte` for a Clipper are frozen into the firmware, and `spce` with its `MotorDriver` is copied to `/lib`
+* Add the Mighty FX examples for its onboard functions, effects and audio
+* Add the Mighty FX examples for the IR remote, Qw/ST sensors, WiFi and comms
+* Add the Mighty FX examples for motor drivers, servos, LED strips and GPIO
+* Add the Mighty FX examples for screens and the Screen Hub, with the pictures they show, most taking a 1.54" screen as well as a 2.8" and a rotation in args
+* Add the Mighty FX showcases, bringing the examples together as projects
 
 1.1.2
 -----
