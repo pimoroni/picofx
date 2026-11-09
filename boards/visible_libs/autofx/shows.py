@@ -15,8 +15,8 @@ import time
 
 from .vocabulary import (CURVES, EFFECTS, ERRORS_PATH, FOLDERS, HUB, HUB_POSITIONS,
                          SCREEN_EFFECTS, SCREEN_SIZES)
-from .hardware import (BOARD_HUB, BOARD_SCREENS, BUILT_HUB, BUILT_SCREENS, hub_example, hub_port,
-                       hub_shown, port_classes, screen_kinds, screen_port, screen_shown)
+from .hardware import (BOARD_HUB, BOARD_SCREENS, BUILT_HUB, BUILT_PAIR, BUILT_SCREENS, hub_example,
+                       hub_port, hub_shown, port_classes, screen_kinds, screen_port, screen_shown)
 from .parser import value_shown
 from .checks import check_settings, find_file, REFUSED
 
@@ -138,12 +138,45 @@ class ScreenShow:
             screen.backlight.on()
             screen.brightness(1.0 if backlight is None else backlight)
 
-    def __stream_with(self, index, other, other_index):
+    def __stream_with(self, index, other, other_index, aligned):
         # Stream a frame on one of this show's screens and one on another show's screen, or
-        # on this show's other screen, at once
-        self.__stage(index)
-        other.__stage(other_index)
-        self.__update_pair(self.screens[index], other.screens[other_index])
+        # on this show's other screen, at once. aligned= true, where the pair covers both
+        # screens, also holds the panels' refreshes together
+        first, second = self.screens[index], other.screens[other_index]
+        pair = BUILT_PAIR[0] if BUILT_PAIR else None
+        if pair is not None and not (first in pair.screens and second in pair.screens):
+            pair = None
+
+        if pair is None or not aligned:
+            # Is the pair still holding the panels? Its padding outlasts a frame staged
+            # outside it, so it is handed back first
+            if pair is not None and pair.is_aligned():
+                pair.stop_aligning()
+            self.__stage(index)
+            other.__stage(other_index)
+            self.__update_pair(first, second)
+            return
+
+        # Was the pair stopped for a frame outside it? It is calibrated already, so holding
+        # again costs one resync
+        if not pair.is_aligned():
+            pair.start_aligning()
+
+        # The pair takes each setting as a value for each of its screens, in its order
+        ordered = [(self, index), (other, other_index)]
+        if pair.screens[0] is not first:
+            ordered.reverse()
+        (show_a, at_a), (show_b, at_b) = ordered
+        rotation_a, mirror_a, double_a, offset_a, tile_a, background_a = show_a.__placements[at_a]
+        rotation_b, mirror_b, double_b, offset_b, tile_b, background_b = show_b.__placements[at_b]
+
+        # Two Nones or two Falses would read as one setting's x and y, so where neither
+        # screen sets one the default is passed
+        offset = None if offset_a is None and offset_b is None else (offset_a, offset_b)
+        tile = False if tile_a is False and tile_b is False else (tile_a, tile_b)
+        pair.update(show_a.player.image, show_b.player.image, rotation=(rotation_a, rotation_b),
+                    mirror=(mirror_a, mirror_b), pixel_double=(double_a, double_b),
+                    offset=offset, tile=tile, bg_color=(background_a, background_b))
 
     def send_with(self, other):
         """
@@ -153,7 +186,12 @@ class ScreenShow:
         self.__due = self.__redraw = False
         other.__due = other.__redraw = False
 
-        self.__stream_with(0, other, 0)
+        # Two drawings at one pace are due together every frame, so the pair can hold their
+        # panels together. Content at other paces often sends one screen alone, which hands
+        # back the pair's padding and costs a resync on the next frame the two share
+        aligned = (isinstance(self.player, Graphics) and isinstance(other.player, Graphics)
+                   and self.player.frame_ms == other.player.frame_ms)
+        self.__stream_with(0, other, 0, aligned)
         self.__light()
         other.__light()
 
@@ -165,13 +203,13 @@ class ScreenShow:
     def send(self):
         """
         Stream the frame due, which send_with() may have converted already. Two screens of
-        this show's own go as a pair, or one at a time where they are refused.
+        this show's own go as a pair, held together, or one at a time where they are refused.
         """
         self.__due = False
         self.__redraw = False
         if len(self.screens) == 2 and self.refused_with is not self:
             try:
-                self.__stream_with(0, self, 1)
+                self.__stream_with(0, self, 1, True)
                 self.__light()
                 return
             # A refused pair drops its staged frames, so each screen updates on its own below
@@ -358,6 +396,11 @@ class Graphics:
         self.__elapsed_ms = 0
         self.__playing = not paused
         self.__last = None
+
+    @property
+    def frame_ms(self):
+        """The ms between frames, or None for as often as the screen takes one."""
+        return self.__frame_ms
 
     def begin(self, canvas):
         """Begin on the canvas the drawing paints for its whole run, raising as the file does."""
@@ -632,6 +675,40 @@ def __begin_drawings(waiting, shows, built, problems):
             shows.remove(show)
             built.difference_update((scene, place) for place in show.places)
             spare = buffer
+
+
+def __pair_screens(shows):
+    # Build the ScreenPair that holds the two SP/CE screens' refreshes together, once
+    # some scene shows both, so its four seconds of calibration are spent at load and
+    # never part way through a scene
+    if BUILT_PAIR:
+        return
+
+    # Check if any scene streams both, from one entry or as two drawings side by side
+    on_ports = [show for show in shows if show.hub is None]
+    drawn = [show for show in on_ports if len(show.screens) == 1 and isinstance(show.player, Graphics)]
+    together = any(len(show.screens) == 2 for show in on_ports) or any(
+        first.screens[0] is not second.screens[0]
+        and (first.scene is None or second.scene is None or first.scene == second.scene)
+        for first in drawn for second in drawn)
+    if not together:
+        return
+
+    screens = [BUILT_SCREENS[kind][0] for kind, _prop, _shown in BOARD_SCREENS
+               if kind in BUILT_SCREENS]
+    if len(screens) != 2:
+        return
+
+    from screens import ScreenPair
+    # A pair that cannot hold the panels together logs why and is not kept. update_pair()
+    # then streams them unaligned, and nothing asks for another calibration
+    try:
+        pair = ScreenPair(screens[0], screens[1])
+    except Exception as e:      # noqa: BLE001
+        print("the screens are sent without holding their refreshes together: {}".format(e))
+        return
+    if pair.is_aligned():
+        BUILT_PAIR.append(pair)
 
 
 def wants_full_size(entries, board):
@@ -1177,6 +1254,7 @@ def build_shows(entries, fx, board, problems, build=True):
     # one backlight, which the hub's light answers for
     if build:
         __begin_drawings(waiting, shows, built, problems)
+        __pair_screens(shows)
 
         names = {used for _, used in built}
         for name, (screen, _) in BUILT_SCREENS.items():
