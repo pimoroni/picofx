@@ -78,6 +78,14 @@ NOTES = (("Stands A to E are on the near side of the road, past the taxi rank."
 # its side, as signage often is, and 90 the usual way up
 WIDTH, HEIGHT = canvas.width, canvas.height
 
+# The sizes above are in pixels of a 2.8 inch panel, and scale with a canvas pixel doubled
+SCALE = min(1, min(WIDTH, HEIGHT) / 240)
+(LETTER_H, TITLE_H, STATUS_H, STRIP_H, NOTE_H, MARGIN, PAD, ROW_PAD, ROW_DROP, GAP, CORNER, TITLE_GAP,
+ LIST_GAP) = (max(1, round(length * SCALE)) for length in (LETTER_H, TITLE_H, STATUS_H, STRIP_H, NOTE_H, MARGIN, PAD,
+                                                            ROW_PAD, ROW_DROP, GAP, CORNER, TITLE_GAP, LIST_GAP))
+MARK_AIR = round(MARK_AIR * SCALE)  # Can round to nothing, where a pixel of air would leave a small mark too small
+RING = max(1, round(2 * SCALE))     # The ring mark's stroke
+
 board_font = font.load(BOARD_FONT)
 canvas.font = board_font
 canvas.antialias = ANTIALIAS
@@ -252,12 +260,13 @@ def draw_mark(kind, mark, centre_y):
         # Three bars centred on their own height and on whole rows,
         # as on half rows they thicken and their gaps close
         thick = round(MARK_R * 2 / 5)
-        top = round(centre_y - (thick * 5 - 2) / 2)
+        gap = max(1, thick - 1)             # A row at least, as bars a row thick would otherwise touch
+        top = round(centre_y - (thick * 3 + gap * 2) / 2)
         for step in range(3):
-            canvas.rectangle(rect(MARK_X - MARK_R, top + step * (thick * 2 - 1), MARK_W, thick))
+            canvas.rectangle(rect(MARK_X - MARK_R, top + step * (thick + gap), MARK_W, thick))
     else:
         # Stroked inwards, a stroke growing outwards from the radius by default and so overflowing
-        canvas.shape(shape.circle(MARK_X, centre_y, MARK_R).stroke(2, shape.ALIGN_INNER))
+        canvas.shape(shape.circle(MARK_X, centre_y, MARK_R).stroke(RING, shape.ALIGN_INNER))
 
 
 def draw_row(index, entry, now):

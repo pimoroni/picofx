@@ -123,6 +123,10 @@ if CREATURE not in CREATURES:
 
 canvas.antialias = image.X4
 
+# The eye's sizes are for a SQUARE canvas, and scale with a smaller one such as one pixel doubled
+SCALE = min(1, min(canvas.width, canvas.height) / SQUARE)
+SHADOW_DROP = SHADOW_DROP * SCALE
+
 
 def between(span):
     """Pick a number at random between the two in span."""
@@ -158,9 +162,9 @@ def draw_iris(creature, x, y):
     for streak in range(STREAKS):
         angle = streak * 2 * math.pi / STREAKS
         across, down = math.cos(angle) * radius, math.sin(angle) * radius
-        canvas.shape(shape.line(x + across * 0.4, y + down * 0.4, x + across * 0.82, y + down * 0.82, 1.5))
+        canvas.shape(shape.line(x + across * 0.4, y + down * 0.4, x + across * 0.82, y + down * 0.82, 1.5 * SCALE))
     canvas.pen = creature["inner_ring"]
-    canvas.shape(shape.circle(x, y, radius * 0.52).stroke(3))
+    canvas.shape(shape.circle(x, y, radius * 0.52).stroke(3 * SCALE))
 
     canvas.pen = creature["pupil"]
     if creature["pupil_shape"] == "slit":
@@ -184,8 +188,8 @@ def draw_eye(creature, gaze, openness):
     canvas.clear()
 
     # The eyeball, larger than any opening as the lids cover the rest, turned by the tilt as the lids are
-    ball_x = max(creature["front"], creature["back"]) + 4
-    ball_y = max(creature["top"] * (1 + creature["lid_follow"]), creature["bottom"]) + 6
+    ball_x = max(creature["front"], creature["back"]) + 4 * SCALE
+    ball_y = max(creature["top"] * (1 + creature["lid_follow"]), creature["bottom"]) + 6 * SCALE
     canvas.pen = creature["white"]
     canvas.shape(outline([(cx + math.cos(step * math.pi / 24) * ball_x, cy + math.sin(step * math.pi / 24) * ball_y)
                           for step in range(48)], cx, cy, turn))
@@ -245,12 +249,12 @@ def draw_block(creature, gaze, openness):
     cx = canvas.width / 2 + look_x * creature["reach"][0]
     cy = canvas.height / 2 + look_y * creature["reach"][1]
     w = creature["size"][0] * (1 - 0.15 * abs(look_x))
-    h = max(10, creature["size"][1] * (1 - 0.1 * abs(look_y)) * openness)
+    h = max(10 * SCALE, creature["size"][1] * (1 - 0.1 * abs(look_y)) * openness)
     corner = min(creature["corner"], h / 2)
 
     canvas.pen = creature["surround"]
     canvas.clear()
-    for grow, alpha in ((24, 20), (14, 40), (6, 80)):
+    for grow, alpha in ((24 * SCALE, 20), (14 * SCALE, 40), (6 * SCALE, 80)):
         canvas.pen = creature["glow"].with_alpha(alpha)
         canvas.shape(shape.rounded_rectangle(cx - w / 2 - grow, cy - h / 2 - grow, w + grow * 2, h + grow * 2,
                                              corner + grow))
@@ -328,11 +332,20 @@ class Eyes:
         return self.looking(now), self.openness(now)
 
 
+# The keys of DEFAULTS and CREATURES that hold a size, which choose() scales
+LENGTHS = ("front", "back", "top", "bottom", "iris_radius", "pupil_radius", "glint", "reach", "whole",
+           "size", "corner")
+
+
 def choose(name, now):
-    """Build a creature from DEFAULTS and its entry, widened to suit the panel, and the Eyes that move it."""
+    """Build a creature from DEFAULTS and its entry, scaled and widened to suit the canvas, and the Eyes that move it."""
     creature = dict(DEFAULTS)
     creature.update(CREATURES[name])
-    extra = max(0, canvas.width - SQUARE) * creature["widen"] / 2
+    for key in LENGTHS:
+        if key in creature:
+            value = creature[key]
+            creature[key] = tuple(part * SCALE for part in value) if isinstance(value, tuple) else value * SCALE
+    extra = max(0, canvas.width - SQUARE * SCALE) * creature["widen"] / 2
     creature["front"] += extra
     creature["back"] += extra
     creature["reach"] = (creature["reach"][0] + extra / 2, creature["reach"][1])

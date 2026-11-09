@@ -114,6 +114,12 @@ LIGHTS = {
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
 
+# The sizes in panel pixels above are for a 2.8 inch panel, and scale with a canvas pixel doubled
+PANEL_SCALE = min(1, min(WIDTH, HEIGHT) / 240)
+MARGIN, CORNER, LABEL_SIZE = MARGIN * PANEL_SCALE, CORNER * PANEL_SCALE, LABEL_SIZE * PANEL_SCALE
+PLATE_PAD, PLATE_GAP = round(PLATE_PAD * PANEL_SCALE), round(PLATE_GAP * PANEL_SCALE)
+BEVEL = max(1, round(2 * PANEL_SCALE))  # How far the case's lit and shaded edges reach round the window
+
 HALF = STROKE / 2
 MIDDLE = DIGIT_TALL / 2
 
@@ -192,7 +198,7 @@ def capital_rows():
     Read off a drawing, as the face's em box leaves room above its capitals for accents. A row counts
     where it is at least half covered, so a faint antialiased edge weighs the same at the top as the foot.
     """
-    probe = image(LABEL_SIZE * 2, LABEL_SIZE * 2)
+    probe = image(round(LABEL_SIZE * 2), round(LABEL_SIZE * 2))
     probe.raw[:] = bytes(len(probe.raw))
     probe.font = background.font
     probe.antialias = ANTIALIAS
@@ -229,10 +235,10 @@ if METAL_CASE:
 
     # The window is set in, so its edge is shaded along the top and lit along the bottom
     background.pen = EDGE_SHADED
-    background.shape(shape.rounded_rectangle(rect(window.x - 2, window.y - 2, window.w + 2, window.h + 2),
+    background.shape(shape.rounded_rectangle(rect(window.x - BEVEL, window.y - BEVEL, window.w + BEVEL, window.h + BEVEL),
                                              CORNER, CORNER, CORNER, CORNER))
     background.pen = EDGE_LIT
-    background.shape(shape.rounded_rectangle(rect(window.x, window.y, window.w + 2, window.h + 2),
+    background.shape(shape.rounded_rectangle(rect(window.x, window.y, window.w + BEVEL, window.h + BEVEL),
                                              CORNER, CORNER, CORNER, CORNER))
 
     # A plate holds its lettering's capitals with the same space above as below

@@ -50,6 +50,11 @@ RINGS = (90, 70, 62, 60, 60, 62, 66, 72, 82, 96)
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
 
+# The sizes above are for a 2.8 inch panel, and scale with a canvas pixel doubled
+SCALE = min(1, min(WIDTH, HEIGHT) / 240)
+PITCH = round(PITCH * SCALE)
+RADIUS, RIM_W = RADIUS * SCALE, RIM_W * SCALE
+
 # As many lamps across and down as fit. At a PITCH of 44, 7 by 5 on a 2.8" panel on its side, 5 by 7
 # upright, and 5 by 5 on a 1.54"
 COLUMNS, ROWS = WIDTH // PITCH, HEIGHT // PITCH
@@ -137,9 +142,9 @@ for row in range(ROWS):
                                           RADIUS * (1 - 0.8 * part)))
         # The unlit bulb, a dark ring round dull glass
         background.pen = BULB_RING
-        background.shape(shape.circle(emitter_x, emitter_y, 5))
+        background.shape(shape.circle(emitter_x, emitter_y, 5 * SCALE))
         background.pen = BULB_GLASS
-        background.shape(shape.circle(emitter_x, emitter_y, 3))
+        background.shape(shape.circle(emitter_x, emitter_y, 3 * SCALE))
         background.blit(rim_line, x - SIDE // 2, y - SIDE // 2)
 dither(background.raw, WIDTH, HEIGHT, background.stride, BAYER)
 
@@ -171,9 +176,9 @@ def lit(column, row, colour, strength, core):
         patch.shape(shape.circle(x + (emitter_x - x) * part, y + (emitter_y - y) * part,
                                  RADIUS * (1 - 0.7 * part)))
     patch.pen = tint.with_alpha(round(255 * strength))
-    patch.shape(shape.circle(emitter_x, emitter_y, 5))
+    patch.shape(shape.circle(emitter_x, emitter_y, 5 * SCALE))
     patch.pen = color.rgb(*core).with_alpha(round(255 * strength))
-    patch.shape(shape.circle(emitter_x, emitter_y, 3))
+    patch.shape(shape.circle(emitter_x, emitter_y, 3 * SCALE))
 
     patch.blit(rim_line, 0, 0)
     dither(patch.raw, SIDE, SIDE, patch.stride, BAYER)

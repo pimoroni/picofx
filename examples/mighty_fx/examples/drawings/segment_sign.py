@@ -110,6 +110,11 @@ LIGHTS = {character: tuple(names.split()) for character, names in LIGHTS.items()
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
 
+# The sizes in panel pixels above are for a 2.8 inch panel, and scale with a canvas pixel doubled
+PANEL_SCALE = min(1, min(WIDTH, HEIGHT) / 240)
+BORDER, WINDOW_GAP, WINDOW_PAD = (round(length * PANEL_SCALE) for length in (BORDER, WINDOW_GAP, WINDOW_PAD))
+CORNER = CORNER * PANEL_SCALE
+
 HALF = STROKE / 2
 MIDDLE = CHARACTER_TALL / 2
 

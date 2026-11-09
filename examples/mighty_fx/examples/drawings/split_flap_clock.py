@@ -38,6 +38,11 @@ CARD_ASPECT = 2.28                      # How many times taller a card is than w
 # The canvas is the size of the screen, as the effects file turns it
 WIDTH, HEIGHT = canvas.width, canvas.height
 
+# The sizes above are in pixels of a 2.8 inch panel, and scale with a canvas pixel doubled
+SCALE = min(1, min(WIDTH, HEIGHT) / 240)
+GAP, SPLIT_H, EDGE, CORNER, SHADOW_H, BEZEL, MARGIN, SEPARATOR = (
+    max(1, round(length * SCALE)) for length in (GAP, SPLIT_H, EDGE, CORNER, SHADOW_H, BEZEL, MARGIN, SEPARATOR))
+
 # Six cards and two colons, which is what a clock is, the cards as wide as the panel allows
 FLAPS = 6
 CELL_W = (WIDTH - MARGIN * 2 - SEPARATOR * 2 - GAP * (FLAPS + 1)) // FLAPS
@@ -227,7 +232,8 @@ canvas.pen = TEXT_COLOUR
 for position in (1, 3):
     middle = places[position] + CELL_W + GAP + SEPARATOR // 2
     for y in (TOP + HALF // 2, TOP + HALF + HALF // 2):
-        canvas.rectangle(rect(middle - 2, y - 2, 4, 4))
+        dot = max(1, round(2 * SCALE))
+        canvas.rectangle(rect(middle - dot, y - dot, dot * 2, dot * 2))
 
 
 def draw():

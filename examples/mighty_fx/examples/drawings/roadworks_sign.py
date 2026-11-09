@@ -54,6 +54,12 @@ PAGES = {
 # The canvas is the size of the screen, as the effects file turns it
 WIDTH, HEIGHT = canvas.width, canvas.height
 
+# The sizes in panel pixels above are for a 2.8 inch panel, and scale with a canvas pixel doubled so
+# the sign holds as many lamps
+SCALE = min(1, min(WIDTH, HEIGHT) / 240)
+LAMP = max(2, round(LAMP * SCALE))
+SOFTEN, BEACON_R = SOFTEN * SCALE, round(BEACON_R * SCALE)
+
 # The lamp grid the bands are drawn on, one pixel to a lamp
 COLUMNS = WIDTH // LAMP
 ROWS = HEIGHT // LAMP

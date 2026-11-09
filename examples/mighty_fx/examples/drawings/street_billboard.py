@@ -1,4 +1,4 @@
-from picovector import brush, color, image, shape, vec2
+from picovector import brush, color, image, rect, shape, vec2
 
 """
 Show a folder of posters as if each stood in a case behind glass.
@@ -36,6 +36,12 @@ BANDS = ((30, 26, 10, 2.0, True), (96, 9, 6, 3.5, True), (150, 34, 14, 1.6, Fals
 
 # The canvas is the size of the screen, as the effects file turns it
 WIDE, TALL = canvas.width, canvas.height
+
+# The sizes above are in pixels of a 2.8 inch panel, and scale with a canvas pixel doubled
+SCALE = min(1, min(WIDE, TALL) / 240)
+CASE_WIDE, CASE_ROUND, LEAN = round(CASE_WIDE * SCALE), CASE_ROUND * SCALE, LEAN * SCALE
+BANDS = tuple((across * SCALE, half * SCALE, round(feather * SCALE), levels, lit)
+              for across, half, feather, levels, lit in BANDS)
 
 pane = image(WIDE, TALL)
 pane.antialias = image.X4
@@ -97,6 +103,11 @@ def draw():
     up = int(ticks // (DWELL * 1000)) % len(POSTER_NAMES)
     if up != shown:
         # A poster and the pane over it, which is two blits
-        canvas.blit(poster(up), 0, 0)
+        picture = poster(up)
+        if picture.width == WIDE and picture.height == TALL:
+            canvas.blit(picture, 0, 0)
+        else:
+            # A canvas pixel doubled is smaller than the poster, so it is blitted to fit
+            canvas.blit(picture, rect(0, 0, picture.width, picture.height), rect(0, 0, WIDE, TALL), image.BILINEAR)
         canvas.blit(pane, 0, 0)
         shown = up

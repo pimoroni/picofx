@@ -61,6 +61,12 @@ SERVICES = (
 # The canvas is the size of the screen, as the effects file turns it
 WIDTH, HEIGHT = canvas.width, canvas.height
 
+# The sizes above are in pixels of a 2.8 inch panel, and scale with a canvas pixel doubled
+SCALE = min(1, min(WIDTH, HEIGHT) / 240)
+(GAP, COLUMN_GAP, COLON_W, CARD_PAD, ROW_GAP, SPLIT_H, EDGE, CORNER, MARGIN, HEADING_GAP, LETTER_MAX) = (
+    max(1, round(length * SCALE)) for length in (GAP, COLUMN_GAP, COLON_W, CARD_PAD, ROW_GAP, SPLIT_H, EDGE, CORNER,
+                                                 MARGIN, HEADING_GAP, LETTER_MAX))
+
 CARDS = sum(wide for _, wide, _, _drum in COLUMNS)
 
 # Everything across the board that is not a card, so what is left over divides between them

@@ -38,7 +38,9 @@ MESSAGES = (
     ("WEST", "12:40"),
 )
 
-# The canvas is the size of the screen, as the effects file turns it
+# The canvas is the size of the screen, as the effects file turns it. The pitch is for a 2.8 inch
+# panel, and scales with a canvas pixel doubled so the sign holds as many dots
+CELL = max(4, round(CELL * min(1, min(canvas.width, canvas.height) / 240)))
 columns = canvas.width // CELL
 rows = canvas.height // CELL
 
@@ -56,10 +58,13 @@ NUDGE = 0.5
 PIN_PIXELS = max(2, round(DOT * PIN_SHARE))
 PIN_AT = PIN_PIXELS // 2
 PIN_REACH = 1.0 / math.cos(math.pi / 8)
+POSTS = DOT >= 6                    # Whether a dot is large enough to show its posts, which would swamp a smaller one
 
 
 def post(tile, angle):
     """Draw one of a cell's two posts, where it is seen. The carrier holds them, so they never move."""
+    if not POSTS:
+        return
     seen = math.radians(angle)
     x = PIN_AT if math.cos(seen) < 0 else DOT - PIN_AT - PIN_PIXELS
     y = PIN_AT if math.sin(seen) < 0 else DOT - PIN_AT - PIN_PIXELS
