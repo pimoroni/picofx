@@ -338,6 +338,16 @@ class Still:
         pass                    # One picture is always on its first frame
 
 
+class SharedCanvas:
+    """
+    A canvas in SRAM that drawings of different scenes take turns on, since only one of
+    them plays at a time. Each has its own image over it, keeping its pen and settings.
+    """
+    def __init__(self, memory):
+        self.memory = memory        # The SRAM, a memoryview at least the largest drawing's size
+        self.holder = None          # The drawing whose pixels it holds now
+
+
 def user_trace(error):
     """
     The traceback of an error raised in a user's own code, less the frames from autofx's
@@ -396,11 +406,21 @@ class Graphics:
         self.__elapsed_ms = 0
         self.__playing = not paused
         self.__last = None
+        self.__shared = None        # The SharedCanvas taken in turns, or None for a canvas of its own
+        self.__kept = None          # This drawing's pixels while another has the shared canvas
 
     @property
     def frame_ms(self):
         """The ms between frames, or None for as often as the screen takes one."""
         return self.__frame_ms
+
+    def share(self, shared, nbytes):
+        """
+        Take turns on a SharedCanvas with drawings of other scenes, keeping this drawing's
+        nbytes of pixels aside while one of them has it. Called before begin().
+        """
+        self.__shared = shared
+        self.__kept = bytearray(nbytes)
 
     def begin(self, canvas):
         """Begin on the canvas the drawing paints for its whole run, raising as the file does."""
@@ -408,9 +428,23 @@ class Graphics:
         self.__last = time.ticks_ms()
         self.__begin()
 
+    def __claim(self):
+        # Take the shared canvas from the drawing that last had it, putting its pixels aside
+        # and this one's back, before anything here draws on the canvas or a screen reads it
+        shared = self.__shared
+        if shared is None or shared.holder is self:
+            return
+        holder = shared.holder
+        if holder is not None:
+            holder.__kept[:] = shared.memory[:len(holder.__kept)]
+        shared.memory[:len(self.__kept)] = self.__kept
+        shared.holder = self
+
     def __begin(self):
         # Run the module body and the first frame, raising as the file does
         import builtins
+
+        self.__claim()
 
         original = builtins.__import__
 
@@ -467,6 +501,7 @@ class Graphics:
                 return False
             self.__seen = step
 
+        self.__claim()
         # Set from autofx's own count, as the file may assign either name itself
         self.__globals["ticks"] = self.__elapsed_ms
         self.__globals["ticks_delta"] = self.__elapsed_ms - self.__drawn_ms
@@ -503,6 +538,8 @@ class Graphics:
             self.__playing = False
 
     def play(self):
+        # A scene returning to its screen sends the frame it left, which has to be back first
+        self.__claim()
         if not self.__playing:
             self.__last = time.ticks_ms()
             self.__playing = True
@@ -618,10 +655,37 @@ def __make_drawing(code, target, at, channels, screens, settings, fps, asleep):
                     paused=asleep, line=at, style=settings.get("style"))
 
 
+def __drawing_groups(waiting):
+    # The drawings in groups that can take turns on one canvas, largest group first, each
+    # a list of positions in waiting. An always-on drawing plays in every scene, so it is
+    # a group alone. A scene's drawings take turns with other scenes', the largest of each
+    # scene in the first group, the next largest in the second, and so on. Sizes are paired
+    # with positions so a sort compares numbers, and of two the same size the earlier
+    # entry in the file comes first
+    sizes = [show.player.width * show.player.height for show, _, _, _ in waiting]
+    groups = [[index] for index, (_, _, _, scene) in enumerate(waiting) if scene is None]
+
+    by_scene = {}
+    for index, (_, _, _, scene) in enumerate(waiting):
+        if scene is not None:
+            by_scene.setdefault(scene, []).append((-sizes[index], index))
+    ranked = [[index for _, index in sorted(entries)] for entries in by_scene.values()]
+    rank = 0
+    while any(rank < len(indices) for indices in ranked):
+        groups.append([indices[rank] for indices in ranked if rank < len(indices)])
+        rank += 1
+
+    order = sorted((-max(sizes[index] for index in group), min(group), position)
+                   for position, group in enumerate(groups))
+    return [groups[position] for _, _, position in order], sizes
+
+
 def __begin_drawings(waiting, shows, built, problems):
-    # Give each drawing the canvas it paints for its whole run and begin it, the largest
-    # first, dropping one that cannot start. Where the heap is PSRAM a canvas goes in SRAM
-    # while one fits, since a drawing clears and paints there in a fraction of the time.
+    # Give each drawing the canvas it paints for its whole run and begin it, dropping one
+    # that cannot start. Where the heap is PSRAM, a canvas goes in SRAM while one fits,
+    # since a drawing clears and paints there in a fraction of the time. Drawings of
+    # different scenes take turns on one, each keeping its pixels aside while another
+    # scene plays, so every scene's drawing can run from SRAM.
     #
     # Run once every panel of the file holds its workspace, as canvases and workspaces
     # share one region and a workspace claimed after a canvas could find no room
@@ -635,45 +699,52 @@ def __begin_drawings(waiting, shows, built, problems):
         return
     import picovector
 
-    # Sizes paired with positions, so the sort compares numbers and never a player, and
-    # of two the same size the one earlier in the file comes first
-    order = sorted(((show.player.width * show.player.height, -index)
-                    for index, (show, _, _, _) in enumerate(waiting)), reverse=True)
+    groups, sizes = __drawing_groups(waiting)
 
-    # The SRAM a drawing that could not start was given. The region is only released
-    # whole, and every drawing after it is no larger, so the next one takes it over
+    # The SRAM a group none of whose drawings could start was given. The region is only
+    # released whole, so a later group takes it over where it is large enough
     spare = None
-    for pixels, negated in order:
-        show, at, target, scene = waiting[-negated]
-        player = show.player
+    for group in groups:
         buffer = None
         if __HEAP_IN_PSRAM:
-            buffer, spare = spare, None
-            if buffer is None:
+            needed = max(sizes[index] for index in group) * spidisplay.PIXEL_BYTES
+            if spare is not None and len(spare) >= needed:
+                buffer, spare = spare, None
+            else:
                 try:
-                    buffer = spidisplay.buffer(pixels * spidisplay.PIXEL_BYTES)
-                # Drawn on a canvas from the heap instead
+                    buffer = spidisplay.buffer(needed)
+                # Drawn on canvases from the heap instead
                 except ValueError:
                     pass
-        try:
-            if buffer is None:
-                canvas = picovector.image(player.width, player.height)
-            else:
-                canvas = picovector.image(player.width, player.height, buffer)
-            player.begin(canvas)
-        # Sized and answered as a picture that will not fit is, the two landing in the
-        # same file, though only the canvas is this entry's to make smaller
-        except MemoryError as e:
-            problems.append(__too_big(at, target, "drawing", e))
-            shows.remove(show)
-            built.difference_update((scene, place) for place in show.places)
-            spare = buffer
-        # The traceback, since this is the user's own code and a line number is what
-        # makes it fixable
-        except Exception as e:      # noqa: BLE001
-            problems.append("line {}: {} could not start:\n{}".format(at, target, user_trace(e)))
-            shows.remove(show)
-            built.difference_update((scene, place) for place in show.places)
+        shared = SharedCanvas(buffer) if buffer is not None and len(group) > 1 else None
+
+        started = False
+        for index in group:
+            show, at, target, scene = waiting[index]
+            player = show.player
+            try:
+                if buffer is None:
+                    canvas = picovector.image(player.width, player.height)
+                else:
+                    nbytes = sizes[index] * spidisplay.PIXEL_BYTES
+                    canvas = picovector.image(player.width, player.height, buffer[:nbytes])
+                    if shared is not None:
+                        player.share(shared, nbytes)
+                player.begin(canvas)
+                started = True
+            # Sized and answered as a picture that will not fit is, the two landing in the
+            # same file, though only the canvas is this entry's to make smaller
+            except MemoryError as e:
+                problems.append(__too_big(at, target, "drawing", e))
+                shows.remove(show)
+                built.difference_update((scene, place) for place in show.places)
+            # The traceback, since this is the user's own code and a line number is what
+            # makes it fixable
+            except Exception as e:      # noqa: BLE001
+                problems.append("line {}: {} could not start:\n{}".format(at, target, user_trace(e)))
+                shows.remove(show)
+                built.difference_update((scene, place) for place in show.places)
+        if buffer is not None and not started:
             spare = buffer
 
 
