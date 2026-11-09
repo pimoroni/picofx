@@ -12,7 +12,7 @@ RIM_WIDTH and RIM_HEIGHT size the portal to a cutout in front of the panel, and 
 large as fits. Each frame dims the opening a little before drawing, so the motes leave fading streaks.
 
 Drawing: Portal
-Defaults: Rotation = 90, Pixel double = false
+Defaults: Rotation = 90
 Styles: violet, ember, ice, emerald
 Styles: walled, bare
 Styles: round, oval

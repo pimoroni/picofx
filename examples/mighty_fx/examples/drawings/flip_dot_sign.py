@@ -5,7 +5,7 @@ from picovector import color, font, image, mat3, shape
 Draw a flip-dot sign that spells its message by flipping one column of dots at a time.
 
 Drawing: Flip-dot sign
-Defaults: Rotation = 90 or 270, Pixel double = false
+Defaults: Rotation = 90 or 270
 Section: Retro displays
 """
 

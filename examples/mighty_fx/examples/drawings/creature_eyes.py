@@ -16,7 +16,7 @@ rotation=270 with mirror=true.
 Nothing is drawn while the eye holds still.
 
 Drawing: Creature eyes
-Defaults: Rotation = 90, Pixel double = false
+Defaults: Rotation = 90
 Styles: cat, owl, goat, alien, robot, zombie
 Section: Animated scenes
 """

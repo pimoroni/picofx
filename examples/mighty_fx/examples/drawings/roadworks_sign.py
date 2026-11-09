@@ -7,7 +7,7 @@ Each character has its own matrix module with a bezel all round, on a fixed pitc
 its width. The corner beacons are single large lamps drawn over the face.
 
 Drawing: Roadworks sign
-Defaults: Rotation = 90, Pixel double = false
+Defaults: Rotation = 90
 Section: Transport signs
 """
 

@@ -10,7 +10,7 @@ The afterglow is the previous frame dimmed a little each time, so the beam is on
 where it is now.
 
 Drawing: Oscilloscope
-Defaults: Rotation = 90, Pixel double = false
+Defaults: Rotation = 90
 Section: Retro displays
 """
 

@@ -11,7 +11,7 @@ with its depth, its nearest line and the far light on it. Each frame then moves 
 the quarter's colours up in a palette, and mirrors them into the other three quarters.
 
 Drawing: Neon Corridor
-Defaults: Rotation = 90, Pixel double = false
+Defaults: Rotation = 90
 Styles: neon, plaid, emerald, magenta, blueprint
 Styles: square, oblong
 Styles: normal, slow, fast, ludicrous

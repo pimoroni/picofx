@@ -11,7 +11,7 @@ Every stage of a lamp's glow is drawn once when the drawing starts, before anyth
 from then on a frame only copies those drawings into place.
 
 Drawing: Lamp matrix
-Defaults: Rotation = 90, Pixel double = false
+Defaults: Rotation = 90
 Styles: tungsten, led
 Section: Retro displays
 """
