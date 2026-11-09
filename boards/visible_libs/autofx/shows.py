@@ -625,21 +625,29 @@ def __read_drawing(path, target, at, problems):
         return None
 
 
-def __make_drawing(code, target, at, channel, screen, settings, fps, asleep):
+def __make_drawing(code, target, at, channels, screens, settings, fps, asleep):
     # The player for a drawing entry, sized and with its ground set, begun once its canvas is made
     import picovector
 
     # The canvas fills the panel as the entry mounts it, so the drawing works in the
     # orientation the reader sees, and pixel_double halves it as it doubles a picture.
+    # Of two screens, the one wanting the larger canvas sizes it, so the drawing is drawn
+    # for the larger and placed on the smaller, the first screen named winning a tie
+    width, height = 0, 0
+    for channel, screen in zip(channels, screens):
+        across, down = screen.width, screen.height
+        if (channel.rotation or 0) in (90, 270):
+            across, down = down, across
+        if channel.pixel_double:
+            across, down = across // 2, down // 2
+        if across * down > width * height:
+            width, height = across, down
+
     # A width or height the entry states is used as written, whatever else is set
-    width, height = screen.width, screen.height
-    if (channel.rotation or 0) in (90, 270):
-        width, height = height, width
-    if channel.pixel_double:
-        width, height = width // 2, height // 2
     width = settings.get("width") or width
     height = settings.get("height") or height
 
+    channel = channels[0]
     ground = (picovector.color.rgb(*channel.background)
               if channel.background is not None else picovector.color.black)
 
@@ -1248,7 +1256,6 @@ def build_shows(entries, fx, board, problems, build=True):
             channels = entry.channels
         if None in screens:
             continue
-        screen = screens[0]
 
         light = BUILT_HUB.get("light") if on_hub else None
 
@@ -1273,7 +1280,7 @@ def build_shows(entries, fx, board, problems, build=True):
 
         # A drawing is begun once every panel is built, on the canvas it keeps
         if entry.effect == "drawing":
-            player = __make_drawing(code, target, at, channel, screen, settings, fps, asleep)
+            player = __make_drawing(code, target, at, channels, screens, settings, fps, asleep)
             show = ScreenShow(screens, player, channels, entry.scene, places, light, entry.line)
             shows.append(show)
             waiting.append((show, at, target, entry.scene))

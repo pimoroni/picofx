@@ -136,8 +136,35 @@ function pairWritten(body) {
   return !!first.shows && first.shows !== "keep" && second.shows === first.shows;
 }
 
+// Of a pair's two screens, the one whose canvas is larger after its own turn and pixel_double,
+// as the board sizes a drawing shown on both, the first screen winning a tie
+function pairLarger(playings) {
+  var areas = SCREENS.map(function (letter, at) {
+    var panel = panelPixels(state.screens[letter].size, playings[at].turn);
+    var scale = playings[at].look && playings[at].look.double ? 2 : 1;
+    return Math.floor(panel[0] / scale) * Math.floor(panel[1] / scale);
+  });
+  return areas[1] > areas[0] ? 1 : 0;
+}
+
+// A paired drawing as the larger screen sizes its canvas: Screen A's playing, which the pair
+// shares, at the larger screen's turn and pixel_double, and that screen's size
+function pairSized(playings) {
+  var larger = pairLarger(playings);
+  var look = Object.assign({}, playings[0].look || freshLook(),
+                           {double: !!(playings[larger].look && playings[larger].look.double)});
+  return {playing: Object.assign({}, playings[0], {turn: playings[larger].turn}), look: look,
+          size: state.screens[SCREENS[larger]].size};
+}
+
+// The canvas a paired drawing is drawn on
+function pairCanvas(playings) {
+  var sized = pairSized(playings);
+  return canvasPixels(sized.look, sized.size, sized.playing.turn);
+}
+
 // A pair's one entry: both screens named, each setting given once or once for each screen,
-// and what plays as Screen A plays it
+// and what plays as Screen A plays it, a drawing's canvas sized by the larger screen
 function pairEntry(body) {
   var said = SCREENS.map(function (letter) {
     var playing = body.screens[letter];
@@ -162,11 +189,18 @@ function pairEntry(body) {
 
   var playing = body.screens[SCREENS[0]];
   var look = playing.look || freshLook();
+  var size = state.screens[SCREENS[0]].size;
   var kind = kindOf(playing.shows);
+  if (kind === "drawing") {
+    var sized = pairSized(SCREENS.map(function (letter) { return body.screens[letter]; }));
+    playing = sized.playing;
+    look = sized.look;
+    size = sized.size;
+  }
   var what = kind === "folder" ? "sequence folder=" : kind === "gif" ? "gif file="
            : kind === "drawing" ? "drawing file=" : "image file=";
   return [left.join(" ") + ":", what + quoted(playing.shows)]
-    .concat(playingTokens(playing, look, kind, state.screens[SCREENS[0]].size)).join(" ");
+    .concat(playingTokens(playing, look, kind, size)).join(" ");
 }
 
 // ---- reading the file back ---------------------------------------------------------------------
@@ -221,6 +255,12 @@ function readPairedScreens(bodies) {
         state.screens[letter].there = true;
         state.screens[letter].size = sizes[letter].size;
       });
+      // Does a drawing give no size of its own? Its canvas is then the larger screen's, halved
+      // where that screen is doubled, the screens' sizes being the file's by now
+      if (parts.effect === "drawing" && !parts.right.width && !parts.right.height) {
+        var doubled = playings[pairLarger(playings)].look.double;
+        playings.forEach(function (playing) { playing.look.canvas = doubled ? "half" : "whole"; });
+      }
       var trial = {screens: {}, screensPaired: true};
       SCREENS.forEach(function (letter, at) { trial.screens[letter] = playings[at]; });
       if (!pairWritten(trial) || pairEntry(trial) !== one.text) {

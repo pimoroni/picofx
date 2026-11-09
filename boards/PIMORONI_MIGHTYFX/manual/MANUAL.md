@@ -421,8 +421,8 @@ Settings can also follow each screen's name, so this is the same entry:
 screenA rotation=90 screenB rotation=270 mirror=true: drawing file=creature_eyes.py style=goat
 ```
 
-A drawing is drawn once for both screens, at the size of the first screen
-named. In a scene, the entry belongs to that scene like any other, so another
+A drawing is drawn once for both screens, at the size of the larger, and the
+smaller screen shows it placed by its own settings. In a scene, the entry belongs to that scene like any other, so another
 scene can show something different on each screen. On the picker's Screens
 tab, Paired writes this entry, Screen B showing what Screen A shows. The picker
 also writes it for the same picture or slideshow on both screens, played the

@@ -1102,7 +1102,10 @@ function showingLine(held, letter) {
   // A drawing is drawn, not shown, on a canvas
   if (media && media.kind === "drawing") {
     var size = state.hub.on ? state.hub.sizes[letter] : state.screens[letter].size;
-    var canvas = canvasPixels(held.look, size, held.turn);
+    // A pair draws once, on the canvas its larger screen sizes
+    var canvas = !state.hub.on && screensPaired()
+               ? pairCanvas(SCREENS.map(function (one) { return state.screens[one]; }))
+               : canvasPixels(held.look, size, held.turn);
     line.innerHTML = "drawing <b>" + nameShown(picture) + "</b><small>canvas, " + canvas[0] +
                      " \u00d7 " + canvas[1] + "</small>";
     return line;
