@@ -8,14 +8,17 @@ nine unlit ones stay a faint tracery. A sheet further back looks a size smaller,
 
 The nine unlit sheets are drawn once into every frame's background, and the lit one straight onto it.
 
-The glow goes on the frame, which is opaque, and not on any sheet.
+The glow goes on the frame, which is opaque, and not on any sheet. COLOUR chooses the LEDs' colour,
+ice, pink, amber or green.
 
 Drawing: Acrylic lixie
 Defaults: Rotation = 0
+Styles: ice, pink, amber, green
 Section: Retro displays
 """
 
 # Constants for drawing
+COLOUR = "ice"              # The LEDs' colour, a name from COLOURS, unless the entry's style names one
 LIXIE_FONT = "/rom/fonts/AlumniSansPinstripe.af"
 ANTIALIAS = image.X4        # A vector face needs it, and a line a pixel wide is all edge
 BACKGROUND = color.black    # Behind the stack, which is a dark box
@@ -31,11 +34,13 @@ LIT = 255                   # The sheet with its LED on
 GHOST = 20                  # And one without, the engraving picking up a little of its neighbour's light
 REF = 200                   # A size to measure the face at, its lettering scaling with it from there
 
-# The LEDs under the sheets, one colour for each pass through the digits
-COLOURS = (color.rgb(80, 170, 255),     # Ice blue, which is the colour these are usually seen in
-           color.rgb(255, 90, 170),     # Pink
-           color.rgb(255, 150, 60),     # Amber, for the tube it stands in for
-           color.rgb(140, 255, 190))    # Green
+# The colours of the LEDs under the sheets
+COLOURS = {
+    "ice": color.rgb(80, 170, 255),     # Ice blue, which is the colour these are usually seen in
+    "pink": color.rgb(255, 90, 170),
+    "amber": color.rgb(255, 150, 60),   # For the tube it stands in for
+    "green": color.rgb(140, 255, 190),
+}
 SPILL = 150                 # The light entering along the bottom edge, out of the base
 FOOT = 34                   # How far up it reaches, falling away over that distance
 
@@ -47,6 +52,17 @@ CURVE = 70                  # How far the picture falls away at the edges
 
 COUNT_MS = 1000             # A digit a second, this being the seconds place of a clock
 CHANGE_MS = 220             # One digit going out as the next comes up, so both are seen together
+
+# The entry's style, which names a colour
+if style:
+    if style not in COLOURS:
+        raise ValueError(f"'{style}' is not one of the styles! Use {', '.join(COLOURS)}")
+    COLOUR = style
+
+# Is COLOUR one of them?
+if COLOUR not in COLOURS:
+    raise ValueError(f"'{COLOUR}' is not one of the colours! Set COLOUR to {', '.join(COLOURS)}")
+LIGHT = COLOURS[COLOUR]
 
 # The canvas is the size of the screen, as the effects file turns it
 WIDTH, HEIGHT = canvas.width, canvas.height
@@ -147,30 +163,21 @@ def draw_stack(showing, light):
     canvas.vignette(CURVE)
 
 
-turn = 0
-light = COLOURS[turn]
-build(light)
+build(LIGHT)
 
 shown = None
-pass_start = 0              # The ticks the pass through the digits started at
 
 
 def draw():
     """Draw the stack for the time the drawing has played, only where a sheet's brightness changes."""
-    global turn, light, shown, pass_start
-    # Which digit the count is on, and how far into it
-    count, into = divmod(ticks - pass_start, COUNT_MS)
-    if count >= SHEETS:
-        # A pass is done, so the LEDs take the next colour and the stack is drawn again
-        turn = (turn + 1) % len(COLOURS)
-        light = COLOURS[turn]
-        build(light)
-        pass_start += SHEETS * COUNT_MS
-        return
+    global shown
+    # Which digit the count is on, and how far into it. The count goes round the stack again and
+    # again, the last digit going out as the first comes up
+    count, into = divmod(ticks % (SHEETS * COUNT_MS), COUNT_MS)
 
     # A sheet's LED switches quickly, and for that moment the sheet losing it still has some light
     up = min(1.0, into / CHANGE_MS)
     showing = ((ORDER[count], round(LIT * up)), (ORDER[count - 1], round(LIT * (1 - up))))
     if showing != shown:
-        draw_stack(showing, light)
+        draw_stack(showing, LIGHT)
         shown = showing
