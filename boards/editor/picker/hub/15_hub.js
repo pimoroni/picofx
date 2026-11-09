@@ -99,13 +99,18 @@ function placesSaid(places) {
 // What a position plays, as a key: positions with the same key are one entry, and one stream.
 // Panels of different sizes are sent apart, so the size is part of it. They are one send where
 // the file would say the same for them, so a setting a picture does not take, such as a still's
-// pace, or one the page only remembers, such as the last custom colour, never splits them
+// pace, or one the page only remembers, such as the last custom colour, never splits them.
+//
+// One entry plays one drawing on every position it names, where entries of their own each run
+// it afresh, so a drawing joins others only in a numbered group
 function playingKey(playing, place) {
   var look = playing.look || LOOK_START;
   var size = state.hub.sizes[place];
   var where = pictureOffset(look, playing.shows, size, playing.turn);
-  return [size, playing.shows].concat(placingTokens(playing.turn, look, 1, where))
-    .concat(playingTokens(playing, look, kindOf(playing.shows), size)).join("|");
+  var kind = kindOf(playing.shows);
+  var alone = kind === "drawing" && GROUP_NUMBERS.indexOf(playing.group) < 0 ? [place] : [];
+  return [size, playing.shows].concat(alone, placingTokens(playing.turn, look, 1, where))
+    .concat(playingTokens(playing, look, kind, size)).join("|");
 }
 
 // The positions of one scene, gathered into what each different picture is sent to

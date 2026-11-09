@@ -33,6 +33,10 @@ six as on one. A picture can only go to screens of one size, so give 2.8 and
 1.54 positions separate entries. A position with nothing to show in a scene
 stays black.
 
+A drawing named on several positions in one entry is drawn once and shown on
+all of them. For a drawing that runs on its own on each position, give each one
+its own entry. The picker writes one entry for the positions of a group.
+
 All six share one backlight, so `backlight` applies to the whole hub. The first
 entry to set it wins, and `errors.txt` reports any conflict between entries
 playing at once. Each scene can set its own.
