@@ -248,17 +248,24 @@ function ci_cmake_build {
     log_inform "Copying .uf2 to $(pwd)/$CI_RELEASE_FILENAME.uf2"
     cp "$BUILD_DIR/firmware.uf2" $CI_RELEASE_FILENAME.uf2
 
-    if [ -f "$BUILD_DIR/firmware-with-libs-and-examples.uf2" ]; then
-        log_inform "Copying -with-libs-and-examples .uf2 to $(pwd)/$CI_RELEASE_FILENAME-with-libs-and-examples.uf2"
-        cp "$BUILD_DIR/firmware-with-libs-and-examples.uf2" $CI_RELEASE_FILENAME-with-libs-and-examples.uf2
-    elif [ -f "$BUILD_DIR/firmware-romfs-with-libs-and-examples.uf2" ]; then
-        log_inform "Copying -romfs-with-libs-and-examples .uf2 to $(pwd)/$CI_RELEASE_FILENAME-with-libs-and-examples.uf2"
-        cp "$BUILD_DIR/firmware-romfs-with-libs-and-examples.uf2" $CI_RELEASE_FILENAME-with-libs-and-examples.uf2
-    fi
-
     # A drive variant's whole board, its FX drive included. A build without a drive has none,
     # and the ls failing would stop the CI shell, which runs with pipefail
     FULL_UF2=$(ls "$BUILD_DIR"/firmware*-with-libs-and-examples-drive-full.uf2 2>/dev/null | head -1 || true)
+
+    # A drive build's examples are on its FX drive, which only the -full image writes
+    LIBS_SUFFIX=with-libs-and-examples
+    if [ -n "$FULL_UF2" ]; then
+        LIBS_SUFFIX=with-libs
+    fi
+
+    if [ -f "$BUILD_DIR/firmware-with-libs-and-examples.uf2" ]; then
+        log_inform "Copying -with-libs-and-examples .uf2 to $(pwd)/$CI_RELEASE_FILENAME-$LIBS_SUFFIX.uf2"
+        cp "$BUILD_DIR/firmware-with-libs-and-examples.uf2" $CI_RELEASE_FILENAME-$LIBS_SUFFIX.uf2
+    elif [ -f "$BUILD_DIR/firmware-romfs-with-libs-and-examples.uf2" ]; then
+        log_inform "Copying -romfs-with-libs-and-examples .uf2 to $(pwd)/$CI_RELEASE_FILENAME-$LIBS_SUFFIX.uf2"
+        cp "$BUILD_DIR/firmware-romfs-with-libs-and-examples.uf2" $CI_RELEASE_FILENAME-$LIBS_SUFFIX.uf2
+    fi
+
     if [ -n "$FULL_UF2" ]; then
         log_inform "Copying -drive-full .uf2 to $(pwd)/$CI_RELEASE_FILENAME-full.uf2"
         cp "$FULL_UF2" $CI_RELEASE_FILENAME-full.uf2
