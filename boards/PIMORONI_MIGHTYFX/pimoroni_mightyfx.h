@@ -33,6 +33,24 @@
 #define PIMORONI_MIGHTYFX_USER_SW_PIN 18
 #define PIMORONI_MIGHTYFX_PSRAM_CS_PIN 19
 
+// --- CLOCK ---
+// 225MHz, from the SDK's vcocalc.py. The SPI divides clk_peri by an even number, so a screen
+// driven at 37.5MHz needs clk_peri raised to the system clock and that clock a multiple of 75MHz.
+// 225MHz is the only one between the stock 150MHz and 300MHz.
+#ifndef SYS_CLK_HZ
+#define PLL_SYS_REFDIV 2
+#define PLL_SYS_VCO_FREQ_HZ (1350000000)
+#define PLL_SYS_POSTDIV1 6
+#define PLL_SYS_POSTDIV2 1
+#define SYS_CLK_HZ (225000000)
+#endif
+
+// Raise the core to 1.20V for the overclock, before the system clock moves onto the PLL
+#ifndef SYS_CLK_VREG_VOLTAGE_AUTO_ADJUST
+#define SYS_CLK_VREG_VOLTAGE_AUTO_ADJUST 1
+#define SYS_CLK_VREG_VOLTAGE_MIN VREG_VOLTAGE_1_20
+#endif
+
 // --- UART ---
 #ifndef PICO_DEFAULT_UART
 #define PICO_DEFAULT_UART 0
@@ -87,9 +105,15 @@
 #define CYW43_WL_GPIO_LED_PIN 0
 #endif
 
+// Keeps the cyw43 bus inside the chip's 50MHz limit, at a sixth of the 225MHz system clock
+#ifndef CYW43_PIO_CLOCK_DIV_INT
+#define CYW43_PIO_CLOCK_DIV_INT 3
+#endif
+
 // --- FLASH ---
 #define PICO_BOOT_STAGE2_CHOOSE_W25Q080 1
 
+// Also caps the running flash clock at the system clock over this divider, 112.5MHz
 #ifndef PICO_FLASH_SPI_CLKDIV
 #define PICO_FLASH_SPI_CLKDIV 2
 #endif

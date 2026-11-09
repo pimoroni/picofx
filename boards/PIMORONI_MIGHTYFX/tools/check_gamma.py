@@ -101,7 +101,10 @@ def wait_for_press():
         time.sleep_ms(20)
 
 
-machine.freq(150_000_000, 150_000_000)
+# The SPI divides the peripheral clock by an even number, so 37.5MHz needs it raised to the
+# system clock. Put back after the stages, as it outlasts a soft reset
+board_freq = machine.freq()
+machine.freq(board_freq, board_freq)
 time.sleep(0.02)
 
 mighty = MightyFX(spce_a=SPCE.SCREEN, spce_b=SPCE.SCREEN)
@@ -123,6 +126,7 @@ for tunings in STAGES:
     wait_for_press()
 
 mighty.shutdown()
+machine.freq(board_freq, 48_000_000)
 
 print("Stages shown, SP/CE A then B:")
 for index, tunings in enumerate(STAGES):
