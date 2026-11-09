@@ -427,14 +427,19 @@ def resolve_strips(entries, lengths, problems, said=()):
 # reload that still names one repaints it instead of blanking it first
 BUILT_SCREENS = {}
 
+# The ScreenPair over the two SP/CE screens, or nothing until a file first shows both
+# together. Kept with the screens, since building one calibrates for about four seconds
+BUILT_PAIR = []
+
 
 def forget_built():
     """
-    Forget every strip, screen and hub built, before the board is shut down for a rebuild
-    or a stop, so nothing here still holds one when shutdown() releases it.
+    Forget every strip, screen, pair and hub built, before the board is shut down for a
+    rebuild or a stop, so nothing here still holds one when shutdown() releases it.
     """
     BUILT_STRIPS.clear()
     BUILT_SCREENS.clear()
+    del BUILT_PAIR[:]
     BUILT_HUB.clear()
 
 
