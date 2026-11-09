@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{TITLE}} Manual</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 31.181 31.181'%3E%3Crect fill='%23fff' width='31.181' height='31.181' rx='4.252' ry='4.252'/%3E%3Cpath d='M12.732,4.036H2.361c-.235,0-.425.19-.425.425v22.258c0,.235.19.425.425.425h1.875c.235,0,.425-.19.425-.425v-10.361h7.514c.235,0,.425-.19.425-.425v-1.684c0-.235-.19-.425-.425-.425h-7.514v-7.254h8.071c.235,0,.425-.19.425-.425v-1.684c0-.235-.19-.425-.425-.425Z'/%3E%3Cpath d='M29.199,26.526l-5.675-11.158,5.296-10.719c.065-.132.058-.288-.02-.413-.078-.125-.214-.201-.361-.201h-1.875c-.161,0-.309.091-.38.235l-4.129,8.273-4.074-8.271c-.071-.145-.219-.237-.381-.237h-1.992c-.147,0-.283.076-.361.201-.078.125-.085.28-.021.412l5.268,10.72-5.646,11.159c-.067.132-.06.289.017.415.078.126.214.203.362.203h1.875c.16,0,.307-.09.379-.233l4.484-8.824,4.484,8.824c.072.143.219.233.379.233h1.992c.148,0,.285-.077.362-.203.078-.126.083-.283.017-.415Z'/%3E%3C/svg%3E">
+<style>
+/* The palette, header and panels match the picker's and the editor's */
+:root {
+  color-scheme: light;
+
+  --bg: #f5f3ef;
+  --panel: #fff;
+  --ink: #26221e;
+  --dim: #8a8378;
+  --line: #e2ddd4;
+  --accent: #00857d;
+  --code-ink: #1d4f5c;
+  --entry: #0a7f78;
+
+  /* Three roles, matching the shape at the top of the manual: what is being
+     driven, what drives it, and the values given to either. The editor uses the same colours */
+  --target: #1f6feb;
+  --effect: #0a7f78;
+  --value: #a8500a;
+  --scene: #7b3fb8;
+  --faint: #5d656e;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.62 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.8rem 1.4rem;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  flex-wrap: wrap;
+}
+
+header h1 { font-size: 1.1rem; line-height: 1.5; margin: 0 auto 0 0; }
+header h1 .version { font-size: 0.8rem; font-weight: 400; color: var(--dim); }
+
+header a {
+  font-size: 0.88rem;
+  padding: 0.42rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--ink);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+header a:hover { border-color: var(--accent); color: var(--accent); }
+
+.page {
+  max-width: 68rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.4rem 4rem;
+  display: grid;
+  gap: 2.5rem;
+  /* A plain 1fr grows to fit its widest table or example, so minmax(0, ...) keeps them scrolling
+     in their own boxes */
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 62rem) {
+  .page { grid-template-columns: 15rem minmax(0, 1fr); }
+  /* The sidebar stretches to the row so the box inside it has somewhere to travel;
+     a sticky element in a start-aligned grid item cannot move at all. It sits below the
+     header, which is sticky too. */
+  .contents {
+    position: sticky;
+    top: 4.6rem;
+    max-height: calc(100vh - 6rem);
+    overflow-y: auto;
+  }
+}
+
+.contents {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+  font-size: 0.9rem;
+}
+
+.contents h2 {
+  margin: 0 0 0.6rem;
+  font-size: 0.75rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--dim);
+  border: 0;
+}
+
+.contents ul { list-style: none; margin: 0; padding: 0; }
+.contents li { margin: 0.18rem 0; }
+.contents a { color: var(--ink); text-decoration: none; }
+.contents a:hover { color: var(--accent); text-decoration: underline; }
+
+.contents summary {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.contents summary::-webkit-details-marker { display: none; }
+
+/* The triangle is drawn rather than a glyph, so it turns with the section. */
+.contents summary::before {
+  content: "";
+  flex: none;
+  width: 0;
+  height: 0;
+  border-left: 0.32rem solid var(--dim);
+  border-top: 0.26rem solid transparent;
+  border-bottom: 0.26rem solid transparent;
+  transition: transform 0.12s ease;
+}
+
+.contents details[open] > summary::before { transform: rotate(90deg); }
+
+.contents details > ul {
+  margin: 0.15rem 0 0.4rem 0.95rem;
+  font-size: 0.85rem;
+}
+
+main { min-width: 0; }
+
+h2 {
+  font-size: 1.45rem;
+  margin: 2.6rem 0 0.9rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--line);
+}
+
+main h2:first-child { margin-top: 0; }
+
+h3 {
+  font-size: 1.1rem;
+  margin: 1.9rem 0 0.7rem;
+  color: var(--dim);
+}
+
+/* A heading jumped to clears the sticky header */
+h2:target, h3:target { scroll-margin-top: 5rem; }
+
+p { margin: 0 0 1rem; }
+
+a { color: var(--accent); }
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+  color: var(--code-ink);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 0.25rem;
+  padding: 0.05rem 0.3rem;
+}
+
+pre {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--line);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  margin: 0 0 1.15rem;
+  overflow-x: auto;
+}
+
+pre.entry { border-left-color: var(--entry); }
+
+pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.s-target { color: var(--target); }
+.s-effect { color: var(--effect); font-weight: 600; }
+.s-value { color: var(--value); }
+.s-scene { color: var(--scene); font-weight: 600; }
+.s-name { color: var(--ink); }
+.s-punc { color: var(--faint); }
+/* The colon is the one division the format has, so it carries weight the '=' does not */
+.s-colon { color: var(--ink); font-weight: 700; }
+
+.scroll { overflow-x: auto; margin: 0 0 1.3rem; }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.94rem;
+}
+
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--line);
+}
+
+th {
+  font-size: 0.75rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--dim);
+  border-bottom-width: 2px;
+}
+
+tbody tr:last-child td { border-bottom: 0; }
+td:first-child { white-space: nowrap; }
+
+.rebuilt {
+  grid-column: 1 / -1;
+  margin-top: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.92rem;
+  color: var(--dim);
+}
+
+.rebuilt h2 {
+  font-size: 0.75rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin: 0 0 0.5rem;
+  padding: 0;
+  border: 0;
+}
+
+main ul { margin: 0 0 1.2rem; padding-left: 1.2rem; }
+main li { margin: 0.25rem 0; }
+
+.rebuilt p { margin: 0; }
+
+footer {
+  padding: 1.1rem 1.4rem 1.25rem;
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  color: #6b655c;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+footer .maker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+}
+
+footer .brand { display: flex; align-items: center; gap: 0.75rem; }
+footer .brand > svg { flex: none; width: 2.75rem; height: 2.75rem; }
+footer .brand b { display: block; color: var(--ink); font-size: 0.94rem; }
+footer .heart { width: 0.75rem; height: 0.7rem; vertical-align: -1px; }
+
+footer nav { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-right: -0.6rem; }
+
+footer nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0 0.6rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+footer nav a:hover { text-decoration: underline; }
+
+footer .company {
+  margin: 0.9rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid #eeeae3;
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+</style>
+</head>
+<body>
+<header>
+<h1>{{TITLE}} Manual <span class="version">{{VERSION}}</span></h1>
+<a href="PICKER.html">Picker</a>
+<a href="EDITOR.html">Editor</a>
+</header>
+<div class="page">
+
+<div class="sidebar">
+{{CONTENTS}}
+</div>
+
+<main>
+{{BODY}}
+</main>
+
+<div class="rebuilt">
+<p>This manual is rebuilt by the board, so edits to it will not stick.</p>
+</div>
+
+</div>
+
+<footer>
+<div class="maker">
+<div class="brand">
+<svg viewBox="0 0 134.36 134.36" role="img" aria-label="Pimoroni"><circle cx="67.18" cy="67.18" r="66.4" fill="#fff" stroke="#e2ddd4" stroke-width="2.4"/><path fill="#26221e" d="M101.42,36.32c-.91,.01-1.8,.09-2.68,.21-1.53-10.4-10.37-19.59-22.59-22.25-11.59-2.52-22.86,1.57-28.86,9.52-1.99-.59-4.1-.9-6.29-.87-11.64,.14-20.96,9.69-20.82,21.33,.11,8.84,4.8,16.31,12.15,19.34,3.14,8.28-19.15,27.98,3.79,47.05,.58,.48,1.64,.11,1.57-.43-.15-1.26,.71-2.87,1.21-3.93,.77-1.62,3.12-1.62,3.78,.03,2.4,5.99,11.48,11.99,17.51,14.36,1.1,.43,1.74-.11,1.45-.82-.52-1.27-.59-2.94-.43-4.4,.17-1.57,2.13-2.68,3.97-1.25,4.26,3.31,11.73,5.01,19.05,3.93,.49-.07,1.05-.67,.59-1.22-1.15-1.4-1.55-3.03-.93-4.18,.58-1.08,1.3-1.25,2.82-1.72,3.51-1.1,8.46-6.45,8.86-11.94,.02-.28,.28-.46,.54-.37,1.16,.39,1.9,2.24,2.5,1.59,1.94-2.11,3.1-10.19,2.67-13.4-.05-.41,.46-.65,.72-.33,.93,1.15,2.08,1.65,2.36,1.19,1.86-2.52,2.32-6.48,2.36-9.92,9.29-2.3,16.13-10.72,16-20.7-.14-11.64-9.69-20.96-21.33-20.82Zm-42.01-4.09c1.31-5.05,7.37-7.84,13.54-6.23,6.17,1.6,10.11,7,8.79,12.04-.87,3.36-3.86,5.72-7.58,6.45l-.66,2.54c-.69,2.35-2.31,2.58-4.39,2.15,.1-.11,.18-.24,.21-.39l.73-3.59c.09-.44-.2-.87-.64-.96-.44-.09-.87,.19-.96,.64l-.73,3.6c-.03,.13-.02,.26,.02,.38-.34-.09-.7-.2-1.05-.3-.63-.18-1.23-.37-1.78-.58v-.03l1.1-3.5c.13-.43-.11-.89-.54-1.02-.43-.13-.89,.11-1.02,.54l-1.03,3.33c-1.37-.8-2.08-1.92-1.51-3.88l.59-2.2c-2.63-2.42-3.92-5.77-3.08-8.97Zm11.31,60.55c-.75,1.7-2.78,2.96-4.71,3.72l-.05-1.66c-.04-1.38-1.33-2.51-2.88-2.53-1.55-.02-2.78,1.08-2.74,2.45l.08,2.55c-1.67-.09-4.32-.66-6.05-1.31-6.34-2.39-10.45-8.13-8.56-12.42,.88-1.99,3.36-1.41,5.15-.67l-.84,2.03c-.52,1.27,.23,2.73,1.69,3.24,1.46,.52,3.07-.1,3.59-1.37l.53-1.28c.99,.51,2.49,1.1,3.98,1.36,6.67,1.15,12.04,1.8,10.79,5.87Zm9.51-4.37c-5.62-.58-8.1-9.69-19.54-6.19-9.01-10.38-16.84-5.02-23.94-5.39,3.5-7.17,5.89-16.28,4.9-21.56,3.56-1.56,15.09-5.53,24.76,4.87,7.17-2.11,15.5-2.57,25.09,6.8,.09,9.45-4.9,22.13-11.26,21.48Zm-26.63-25.51c-2.18-.61-4.45,.66-5.06,2.84-.61,2.18,.66,4.44,2.84,5.06,2.18,.61,4.45-.66,5.06-2.84,.61-2.18-.66-4.44-2.84-5.06Zm20.29,4.79c-2.18-.61-4.45,.66-5.06,2.84-.61,2.18,.66,4.45,2.84,5.06,2.18,.61,4.45-.66,5.06-2.84,.61-2.18-.66-4.44-2.84-5.06Zm-8.09-28.81c1.75,.2,3.32-1.06,3.53-2.8,.2-1.75-1.06-3.33-2.8-3.53-1.75-.2-3.33,1.05-3.53,2.8-.2,1.75,1.05,3.33,2.8,3.53Zm7.6,1.58c1.75,.2,3.33-1.06,3.53-2.8,.2-1.75-1.05-3.33-2.8-3.53-1.75-.2-3.32,1.05-3.53,2.8-.2,1.75,1.06,3.33,2.8,3.53Z"/></svg>
+<div><b>{{TITLE}} by Pimoroni</b>Made with <svg class="heart" viewBox="0 0 24 22" role="img" aria-label="love"><path fill="#c8382e" d="M12 21.6 10.3 20C4.2 14.5 0 10.7 0 6.3 0 2.7 2.8 0 6.4 0c2 0 4 .9 5.6 2.4C13.6.9 15.6 0 17.6 0 21.2 0 24 2.7 24 6.3c0 4.4-4.2 8.2-10.3 13.7Z"/></svg> in Sheffield, UK.</div>
+</div>
+<nav aria-label="More pages"><a href="PICKER.html">Picker</a><a href="EDITOR.html">Editor</a><a href="https://pimoroni.com">pimoroni.com</a></nav>
+</div>
+<p class="company">Pimoroni Ltd., Unit 1, Parkway Business Park, Parkway Drive, Sheffield, S9 4WN, United Kingdom. Registered in England and Wales. Company No. 07510759. VAT Reg No. GB 140 8707 21</p>
+</footer>
+</body>
+</html>
