@@ -97,9 +97,15 @@ WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
 MIDDLE_X, MIDDLE_Y = WIDTH / 2, HEIGHT / 2
 
+# The sizes above are for a 2.8 inch panel, and scale with a shorter canvas or one pixel doubled
+SCALE = min(WIDTH, HEIGHT) / 240
+GLOW_W, CORE_W, RIM_W, MOTE_W, BAND = (size * SCALE for size in (GLOW_W, CORE_W, RIM_W, MOTE_W, BAND))
+RIM_WIDTH = RIM_WIDTH and RIM_WIDTH * SCALE
+RIM_HEIGHT = RIM_HEIGHT and RIM_HEIGHT * SCALE
+
 # By default the rim is round and as large as fits the panel's shorter side, inside the stones or the
 # panel's edge without them, so it is the same size whichever way the panel is turned
-MARGIN = BAND + 2 if STONES else 2
+MARGIN = (BAND if STONES else 0) + 2 * SCALE
 DEFAULT_SIZE = min(WIDTH, HEIGHT) - 2 * MARGIN
 if OVAL:
     RIM_WIDTH, RIM_HEIGHT = WIDTH - 2 * MARGIN, HEIGHT - 2 * MARGIN
@@ -126,7 +132,7 @@ def placed(angle, distance):
 # An arm is a logarithmic spiral, its distance out shrinking by the same share for every step round, so
 # it winds evenly from just inside the rim to the opening, its glow staying inside the rim
 WINDING = TURNS * 2 * math.pi
-ARM_OUTER = OUTER - GLOW_W / 2 - 2
+ARM_OUTER = OUTER - GLOW_W / 2 - 2 * SCALE
 SHRINK = math.log(ARM_OUTER / INNER) / WINDING
 
 # Each step along the first arm, from the rim in, as it sits before turning. Every arm is this one turned
@@ -223,26 +229,34 @@ def build_wall():
     canvas.antialias = image.OFF
     canvas.pen = MORTAR
     canvas.clear()
-    for row, top in enumerate(range(-4, HEIGHT, COURSE)):
+    # The wall is laid out in a 2.8 inch panel's pixels and scaled as each stone is drawn, so its
+    # random draws are the same at any size and so is the pattern they make
+    def scaled(left, upper, right, lower):
+        """Make a rectangle from its edges in a 2.8 inch panel's pixels, scaled to the canvas, at least a pixel each way."""
+        return rect(round(left * SCALE), round(upper * SCALE), max(1, round(right * SCALE) - round(left * SCALE)),
+                    max(1, round(lower * SCALE) - round(upper * SCALE)))
+
+    for row, top in enumerate(range(-4, math.ceil(HEIGHT / SCALE), COURSE)):
         x = -random.randint(0, 30) - (20 if row % 2 else 0)
-        while x < WIDTH:
+        while x * SCALE < WIDTH:
             width = random.randint(34, 58)
             base = random.choice(STONE_SHADES)
             left, right, upper, lower = x + 1, x + width - 1, top + 1, top + COURSE - 1
             # Lit along the top and left and shaded along the bottom and right, then a few flecks
             canvas.pen = shade(base, -34)
-            canvas.rectangle(rect(left, upper, right - left, lower - upper))
+            canvas.rectangle(scaled(left, upper, right, lower))
             canvas.pen = shade(base, 34)
-            canvas.rectangle(rect(left, upper, right - left - 1, lower - upper - 1))
+            canvas.rectangle(scaled(left, upper, right - 1, lower - 1))
             canvas.pen = color.rgb(*base)
-            canvas.rectangle(rect(left + 1, upper + 1, right - left - 2, lower - upper - 2))
+            canvas.rectangle(scaled(left + 1, upper + 1, right - 1, lower - 1))
             for _ in range(4):
                 canvas.pen = shade(base, random.choice((-17, -34, 17)))
-                canvas.rectangle(rect(random.randint(left + 2, right - 3), random.randint(upper + 2, lower - 3), random.choice((1, 2)), 1))
+                fleck_x, fleck_y = random.randint(left + 2, right - 3), random.randint(upper + 2, lower - 3)
+                canvas.rectangle(scaled(fleck_x, fleck_y, fleck_x + random.choice((1, 2)), fleck_y + 1))
             x += width
 
     canvas.pen = MORTAR
-    canvas.shape(shape.ellipse(MIDDLE_X, MIDDLE_Y, (OUTER + BAND + 2) * SQUASH, OUTER + BAND + 2))
+    canvas.shape(shape.ellipse(MIDDLE_X, MIDDLE_Y, (OUTER + BAND + 2 * SCALE) * SQUASH, OUTER + BAND + 2 * SCALE))
     canvas.antialias = ANTIALIAS
     for stone in range(RING_STONES):
         # A small gap either side of each stone for the mortar to show through
@@ -254,16 +268,17 @@ def build_wall():
         canvas.pen = color.rgb(*base)
         canvas.shape(shape.custom(inner + outer))
         canvas.pen = shade(base, -34)
-        canvas.shape(shape.custom(outer).stroke(1.5, OPEN_PATH))
+        canvas.shape(shape.custom(outer).stroke(1.5 * SCALE, OPEN_PATH))
         canvas.pen = shade(base, 34)
-        canvas.shape(shape.custom(inner).stroke(1.5, OPEN_PATH))
+        canvas.shape(shape.custom(inner).stroke(1.5 * SCALE, OPEN_PATH))
         for _ in range(3):
-            fleck = placed(random.uniform(first + 0.03, last - 0.03), OUTER + random.uniform(4, BAND - 4))
+            fleck = placed(random.uniform(first + 0.03, last - 0.03),
+                           OUTER + random.uniform(4, BAND / SCALE - 4) * SCALE)
             canvas.pen = shade(base, random.choice((-17, -34, 17)))
             canvas.rectangle(rect(int(fleck.x), int(fleck.y), 2, 1))
 
     # The portal's light on the stones, fading with distance from the rim
-    for reach, alpha in ((4, 70), (10, 40), (18, 22)):
+    for reach, alpha in ((4 * SCALE, 70), (10 * SCALE, 40), (18 * SCALE, 22)):
         canvas.pen = color.rgb(*SPILL).with_alpha(alpha)
         canvas.shape(shape.ellipse(MIDDLE_X, MIDDLE_Y, (OUTER + reach / 2) * SQUASH, OUTER + reach / 2).stroke(reach, shape.ALIGN_CENTER))
 

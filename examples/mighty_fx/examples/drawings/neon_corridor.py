@@ -154,6 +154,7 @@ def build_table(table):
     """
     # The far light's dot and halo by distance in quarter pixels, then its rays. Both are in quarter levels, with 60 as full
     quarters = 4 * HALF                 # A half-width of the corridor, in quarter pixels
+    ray_reach = 1.2 * HALF / 120        # How far a ray reaches either side of its line, 1.2 pixels of a 2.8 inch panel
     glare_length = int(2 * sqrt(WIDTH * WIDTH + HEIGHT * HEIGHT)) + 1
     glare = [int(60 * (exp(-step / (DOT * quarters)) + 0.55 * exp(-step / (HALO * quarters)))) for step in range(glare_length)]
     rays = [48 * exp(-step / (RAY * quarters)) for step in range(glare_length)]
@@ -188,7 +189,7 @@ def build_table(table):
             from_middle = int(4 * sqrt(x * x + y * y))
             level = glare[from_middle]
             to_corner = abs(x * REACH_Y - y * REACH_X) / corner_length
-            strength = max(0, 1 - min(x, y) / 1.2) + max(0, 1 - to_corner / 1.2)
+            strength = max(0, 1 - min(x, y) / ray_reach) + max(0, 1 - to_corner / ray_reach)
             if strength:
                 level += int(rays[from_middle] * strength)
             light = (min(level, 60) + dither[((down & 1) << 1) | (across & 1)]) >> 2

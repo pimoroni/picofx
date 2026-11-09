@@ -51,6 +51,14 @@ CHANGE_MS = 220             # One digit going out as the next comes up, so both 
 # The canvas is the size of the screen, as the effects file turns it
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
+
+# The lengths above are for a canvas 320 pixels tall, and scale with a shorter one or one pixel doubled
+SCALE = HEIGHT / 320
+SHEET_INSET = (SHEET_INSET[0] * SCALE, SHEET_INSET[1] * SCALE)
+CORNER, EDGE, REF = CORNER * SCALE, EDGE * SCALE, REF * SCALE
+FOOT = max(1, round(FOOT * SCALE))
+GLOW_SPREAD = max(1, round(GLOW_SPREAD * SCALE))
+
 SHEET_W, SHEET_H = WIDTH - SHEET_INSET[0] * 2, HEIGHT - SHEET_INSET[1] * 2
 DIGIT_H = round(SHEET_H * DIGIT_FILL)   # The front sheet's digit, in panel pixels
 

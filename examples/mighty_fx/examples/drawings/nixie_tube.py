@@ -71,10 +71,16 @@ CHANGE_MS = 200                     # One digit going out as the next comes up, 
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
 
-# The tube and its digit scaled to the panel's height, so the tube keeps its shape on a shorter panel
+# The tube and its digit scaled to the canvas's height, so the tube keeps its shape on a shorter panel
+# or a canvas pixel doubled
 SCALE = HEIGHT / 320
 DIGIT_H, TUBE_W, TUBE_TOP, TUBE_FOOT, FOOT_CORNER, SHADE, BASE_ROWS = (
     round(length * SCALE) for length in (DIGIT_H, TUBE_W, TUBE_TOP, TUBE_FOOT, FOOT_CORNER, SHADE, BASE_ROWS))
+REF = REF * SCALE
+DEPTH_Y = DEPTH_Y * SCALE
+SHEATH = max(1, round(SHEATH * SCALE))
+GLOW_SPREAD = max(1, round(GLOW_SPREAD * SCALE))
+MESH = max(2, round(MESH * SCALE))
 
 CATHODES = len(ORDER)
 DEPTH_OF = {digit: depth for depth, digit in enumerate(ORDER)}
@@ -200,9 +206,9 @@ def build():
     stack.vspan(TUBE_X + TUBE_W - round(19 * SCALE), top, TUBE_FOOT - top)
     for y in (top - 2, bottom + 2):
         stack.pen = MICA.with_alpha(150)
-        stack.shape(shape.ellipse(TUBE_CX, y, TUBE_R - 12 * SCALE, 3))
+        stack.shape(shape.ellipse(TUBE_CX, y, TUBE_R - 12 * SCALE, 3 * SCALE))
         stack.pen = MICA
-        stack.shape(shape.ellipse(TUBE_CX, y, TUBE_R - 12 * SCALE, 3).stroke(1))
+        stack.shape(shape.ellipse(TUBE_CX, y, TUBE_R - 12 * SCALE, 3 * SCALE).stroke(1))
 
     for pen, part in TIP:
         stack.pen = pen

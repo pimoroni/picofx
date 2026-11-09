@@ -38,7 +38,7 @@ CASE = color.rgb(221, 204, 187)                     # The case round the tube
 # Sizes, in panel pixels
 DIVISIONS = (10, 8)                                 # Graticule squares across and down on a panel on its side, swapped upright
 DIVISION = 28                                       # Panel pixels a square
-TICKS = 4                                           # Ticks a square along the middle lines, which must divide into DIVISION
+TICKS = 4                                           # Ticks a square along the middle lines, evenly spaced where they divide into DIVISION
 CORE_W = 1.5                                        # Panel pixels across the beam's core
 HALO_W = 5                                          # And across the glow round it
 HALO_ALPHA = 70                                     # How strong that glow is, of 255
@@ -53,6 +53,13 @@ ANTIALIAS = image.X4                                # A beam is all edge, so it 
 # The canvas is the size of the screen, as the effects file turns it
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
+
+# The sizes above are for a 2.8 inch panel, and scale with a canvas pixel doubled
+SCALE = min(WIDTH, HEIGHT) / 240
+DIVISION = round(DIVISION * SCALE)
+CORE_W, HALO_W, CORNER = CORE_W * SCALE, HALO_W * SCALE, CORNER * SCALE
+FRAME_W = max(1, round(FRAME_W * SCALE))
+TICK_REACH = max(1, round(2 * SCALE))               # How far a tick reaches either side of its middle line
 
 # As many of the DIVISIONS as fit inside the frame, an even number each way so the middle lines stay on the
 # graticule. At a DIVISION of 28, 10 by 8 on a 2.8" panel on its side, 8 by 10 upright, and 8 by 8 on a 1.54"
@@ -94,9 +101,9 @@ def graticule():
     for down in range(DOWN + 1):
         tube.hspan(0, down * DIVISION, FACE_W)
     for tick in range(ACROSS * TICKS):
-        tube.vspan(tick * DIVISION // TICKS, int(MIDDLE_Y) - 2, 5)
+        tube.vspan(tick * DIVISION // TICKS, int(MIDDLE_Y) - TICK_REACH, TICK_REACH * 2 + 1)
     for tick in range(DOWN * TICKS):
-        tube.hspan(int(MIDDLE_X) - 2, tick * DIVISION // TICKS, 5)
+        tube.hspan(int(MIDDLE_X) - TICK_REACH, tick * DIVISION // TICKS, TICK_REACH * 2 + 1)
 
 
 def trace(points):

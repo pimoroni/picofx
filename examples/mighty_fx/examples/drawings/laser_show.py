@@ -39,16 +39,21 @@ HOUSING = color.rgb(68, 68, 68)             # A projector's housing
 LENS_ON = color.white                       # The lens of a projector switched on
 LENS_OFF = color.rgb(34, 34, 34)            # And switched off
 
-# Sizes, in panel pixels
+# Sizes, in pixels of a 2.8 inch panel on its side
 CORE_W = 1.5                                # Across a beam's core
 HALO_W = 6                                  # And across the glow round it
 LENS = 3                                    # A projector's lens radius
 RAISED = 6                                  # How far above the panel's foot a beam starts, a projector's housing reaching down to it
+HOUSING_W = 16                              # Across a projector's housing
 
 # The canvas is the size of the screen, as the effects file turns it
 WIDTH, HEIGHT = canvas.width, canvas.height
 canvas.antialias = ANTIALIAS
 NARROW = WIDTH <= HEIGHT            # Whether the hall is too narrow for the middle projector, being upright or square
+
+# The sizes above scale with a shorter canvas or one pixel doubled
+SCALE = min(WIDTH, HEIGHT) / 240
+CORE_W, HALO_W, LENS, RAISED, HOUSING_W = (size * SCALE for size in (CORE_W, HALO_W, LENS, RAISED, HOUSING_W))
 
 # The projectors along the foot of the stage, left, middle and right, the middle one only in a wide hall
 PROJECTORS = ((WIDTH * 0.1, HEIGHT - RAISED), (WIDTH * 0.5, HEIGHT - RAISED), (WIDTH * 0.9, HEIGHT - RAISED))
@@ -59,8 +64,9 @@ dim_pen = HALL.with_alpha(0)        # The dark laid over the last frame, set for
 undimmed = 0                        # The ms the hall has gone without its dark laid over it
 
 # Every projector's housing and lens made once, a shape built per frame being an allocation
-HOUSINGS = [shape.rounded_rectangle(rect(x - 8, y - 4, 16, RAISED + 4), 2, 2, 2, 2) for x, y in PROJECTORS]
-LENSES = [shape.circle(x, y - 2, LENS) for x, y in PROJECTORS]
+HOUSINGS = [shape.rounded_rectangle(rect(x - HOUSING_W / 2, y - 4 * SCALE, HOUSING_W, RAISED + 4 * SCALE),
+                                    *([2 * SCALE] * 4)) for x, y in PROJECTORS]
+LENSES = [shape.circle(x, y - 2 * SCALE, LENS) for x, y in PROJECTORS]
 
 
 def pens(colour):
