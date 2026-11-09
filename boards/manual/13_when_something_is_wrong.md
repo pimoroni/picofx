@@ -22,3 +22,9 @@ means a more serious one:
 
 A setting with an invalid value is ignored and noted in `errors.txt`,
 and the effect uses its default instead.
+
+A drive that cannot be repaired can be returned to how it shipped by
+installing the board's `-full` firmware from the
+[picofx releases](https://github.com/pimoroni/picofx/releases/latest).
+This erases everything on the drive, so copy off anything you want to
+keep first.
