@@ -35,53 +35,62 @@ UNWRITTEN = []
 
 class ScreenShow:
     """
-    One panel and the player feeding it, serviced from the caller's own loop.
+    The panels an entry names and the player feeding them, serviced from the caller's own
+    loop. Two screens named in one entry show the same frames, each placed by its own
+    channel, and are sent as a pair.
 
     The player holds the clock, so service() may be called as often as the caller
     likes and a frame goes to the glass only when it changes.
     """
-    def __init__(self, screen, player, channel, scene=None, places=None, hub=None, line=0):
-        import picovector
+    def __init__(self, screens, player, channels, scene=None, places=None, hub=None, line=0):
         from screens import update_pair
 
-        self.screen = screen
+        self.screens = screens
         self.player = player
         # Held here, where the screens module is certainly loaded, so a pair imports nothing
         # each frame
         self.__update_pair = update_pair
         self.scene = scene
-        # The selector names this show draws on, one for a screen or several on a hub,
+        # The selector names this show draws on, one for each screen or several on a hub,
         # which is what a scene switch hands over
-        self.places = tuple(places) if places else (channel.name,)
+        self.places = tuple(places) if places else tuple(channel.name for channel in channels)
         # The hub's one backlight where this show is on a hub, which lights and dims for
         # every position at once, so this show never turns it off itself
         self.hub = hub
         self.line = line
-        self.rotation = channel.rotation if channel.rotation is not None else 0
-        self.mirror = bool(channel.mirror)
-        self.offset = channel.offset
-        self.pixel_double = bool(channel.pixel_double)
-        # The words a file writes, turned into the driver's own values here, which is
-        # the one place a screen is certainly present to have them
-        if channel.tile is None:
-            self.tile = False
-        else:
-            from screens import Tile
-            modes = {"off": Tile.OFF, "repeat": Tile.REPEAT, "mirror": Tile.MIRROR}
-            self.tile = tuple(modes[word] for word in channel.tile)
-        self.background = (picovector.color.rgb(*channel.background)
-                           if channel.background is not None else picovector.color.black)
-        # The brightness the entry asks for, or None for full
-        self.backlight = channel.backlight
+        # Each screen's placement, in the order prepare() and update() take them
+        self.__placements = [self.__placement(channel) for channel in channels]
+        # The brightness asked for on each screen, or None for full. A hub's positions agree
+        # on the first
+        self.__backlights = [channel.backlight for channel in channels]
+        self.backlight = channels[0].backlight
         self.__lit = False
         self.__redraw = False
         self.__due = False
         # Whether this show has the panel. Only a scene takes it away, so a file
         # without scenes never has to say so
         self.live = True
-        # The other show of a pair update_pair refused, which is not tried again until a
-        # scene changes
+        # The other show of a pair update_pair refused, or this one where its own two
+        # screens were refused, which is not tried again until a scene changes
         self.refused_with = None
+
+    @staticmethod
+    def __placement(channel):
+        # Read one screen's rotation, mirror, pixel_double, offset, tile and background
+        import picovector
+
+        # The words a file writes, turned into the driver's own values here, which is
+        # the one place a screen is certainly present to have them
+        if channel.tile is None:
+            tile = False
+        else:
+            from screens import Tile
+            modes = {"off": Tile.OFF, "repeat": Tile.REPEAT, "mirror": Tile.MIRROR}
+            tile = tuple(modes[word] for word in channel.tile)
+        background = (picovector.color.rgb(*channel.background)
+                      if channel.background is not None else picovector.color.black)
+        return (channel.rotation if channel.rotation is not None else 0, bool(channel.mirror),
+                bool(channel.pixel_double), channel.offset, tile, background)
 
     def wants(self):
         """
@@ -96,14 +105,19 @@ class ScreenShow:
             self.__due = self.player.has_advanced() or self.__redraw
         return self.__due
 
-    def __stage(self):
-        # Convert the frame due, for update_pair() to stream beside another's
-        self.__due = False
-        self.__redraw = False
-        self.screen.prepare(self.player.image, rotation=self.rotation,
-                            mirror=self.mirror, pixel_double=self.pixel_double,
-                            offset=self.offset, tile=self.tile,
-                            bg_color=self.background)
+    def __stage(self, index):
+        # Convert the frame due for one screen, for update_pair() to stream beside another's
+        rotation, mirror, pixel_double, offset, tile, background = self.__placements[index]
+        self.screens[index].prepare(self.player.image, rotation=rotation, mirror=mirror,
+                                    pixel_double=pixel_double, offset=offset, tile=tile,
+                                    bg_color=background)
+
+    def __update(self, index):
+        # Stream the frame due to one screen on its own
+        rotation, mirror, pixel_double, offset, tile, background = self.__placements[index]
+        self.screens[index].update(self.player.image, rotation=rotation, mirror=mirror,
+                                   pixel_double=pixel_double, offset=offset, tile=tile,
+                                   bg_color=background)
 
     def __light(self):
         # Light the panel once it holds the frame and never before, since its memory
@@ -120,17 +134,26 @@ class ScreenShow:
 
         # on() waits a scan before lighting a dark line, but relights at the level last
         # set, so the entry's own level follows it, full where it gives none
-        self.screen.backlight.on()
-        self.screen.brightness(1.0 if self.backlight is None else self.backlight)
+        for screen, backlight in zip(self.screens, self.__backlights):
+            screen.backlight.on()
+            screen.brightness(1.0 if backlight is None else backlight)
+
+    def __stream_with(self, index, other, other_index):
+        # Stream a frame on one of this show's screens and one on another show's screen, or
+        # on this show's other screen, at once
+        self.__stage(index)
+        other.__stage(other_index)
+        self.__update_pair(self.screens[index], other.screens[other_index])
 
     def send_with(self, other):
         """
         Stream this show's frame and another's at once, each on its own port, and light each
         once it holds its frame. Raises as update_pair() does where the two cannot share.
         """
-        self.__stage()
-        other.__stage()
-        self.__update_pair(self.screen, other.screen)
+        self.__due = self.__redraw = False
+        other.__due = other.__redraw = False
+
+        self.__stream_with(0, other, 0)
         self.__light()
         other.__light()
 
@@ -140,12 +163,23 @@ class ScreenShow:
             self.send()
 
     def send(self):
-        """Stream the frame due, which send_with() may have converted already."""
+        """
+        Stream the frame due, which send_with() may have converted already. Two screens of
+        this show's own go as a pair, or one at a time where they are refused.
+        """
         self.__due = False
         self.__redraw = False
-        self.screen.update(self.player.image, rotation=self.rotation, mirror=self.mirror,
-                           pixel_double=self.pixel_double, offset=self.offset,
-                           tile=self.tile, bg_color=self.background)
+        if len(self.screens) == 2 and self.refused_with is not self:
+            try:
+                self.__stream_with(0, self, 1)
+                self.__light()
+                return
+            # A refused pair drops its staged frames, so each screen updates on its own below
+            except ValueError as e:
+                self.refused_with = self
+                print("the screens are being drawn one at a time: {}".format(e))
+        for index in range(len(self.screens)):
+            self.__update(index)
         self.__light()
 
     def pause(self):
@@ -170,7 +204,8 @@ class ScreenShow:
         self.player.pause()
         # A hub's positions share one backlight, which the hub turns off itself
         if self.hub is None:
-            self.screen.backlight.off()
+            for screen in self.screens:
+                screen.backlight.off()
         self.__lit = False
         self.__redraw = True
 
@@ -460,7 +495,10 @@ def service_shows(shows, between=None):
 
     due = [show for show in shows if show.live and show.wants()]
 
-    if len(due) == 2 and due[0].screen.port is not due[1].screen.port \
+    # Are two shows of one screen each due on different ports? A show of two screens sends
+    # its own pair
+    if len(due) == 2 and len(due[0].screens) == len(due[1].screens) == 1 \
+            and due[0].screens[0].port is not due[1].screens[0].port \
             and due[0].refused_with is not due[1]:
         try:
             due[0].send_with(due[1])
@@ -606,7 +644,7 @@ def wants_full_size(entries, board):
     named = {name for name in kinds if board.get(name) and board.get(name) != HUB}
     on_screens = [entry for entry in entries
                   if entry.channels and entry.channels[0].name in kinds]
-    named.update(entry.channels[0].name for entry in on_screens)
+    named.update(channel.name for entry in on_screens for channel in entry.channels)
     if len(named) < 2:
         return False
 
@@ -616,18 +654,20 @@ def wants_full_size(entries, board):
     if any(entry.effect == "drawing" for entry in on_screens):
         return False
 
-    # What each scene streams on each screen, its own entries over the always-on ones
+    # What each scene streams on each screen, its own entries over the always-on ones,
+    # with the channel that places it there
     streaming = [entry for entry in on_screens if entry.effect in ("gif", "sequence")]
-    always = {entry.channels[0].name: entry for entry in streaming if entry.scene is None}
+    always = {channel.name: (entry, channel) for entry in streaming if entry.scene is None
+              for channel in entry.channels}
     for scene in {entry.scene for entry in streaming} - {None} or {None}:
         shown = dict(always)
-        shown.update((entry.channels[0].name, entry) for entry in streaming
-                     if entry.scene == scene)
+        shown.update((channel.name, (entry, channel)) for entry in streaming
+                     if entry.scene == scene for channel in entry.channels)
         if len(shown) < 2:
             continue
-        if any((entry.channels[0].rotation or 0) in (90, 270) for entry in shown.values()):
+        if any((channel.rotation or 0) in (90, 270) for _, channel in shown.values()):
             return True
-        if all(entry.effect == "sequence" for entry in shown.values()):
+        if all(entry.effect == "sequence" for entry, _ in shown.values()):
             return True
     return False
 
@@ -681,12 +721,22 @@ def __screen_on(fx, name, line, problems, size, full_size=False):
 
 
 def __screen_entry_fits(entry, fx, hub, board, problems):
-    # Whether an entry names one screen this board has, declared with its size
-    name = entry.channels[0].name
+    # Whether every screen an entry names is one this board has, declared with its size.
+    # Each is checked, so an entry with a mistake on both screens reports both, and a
+    # board with none says so once
+    found = []
+    fits = True
+    for channel in entry.channels:
+        if not __screen_fits(entry, channel.name, fx, hub, board, found):
+            fits = False
+    for problem in found:
+        if problem not in problems:
+            problems.append(problem)
+    return fits
 
-    if len(entry.channels) > 1:
-        problems.append("line {}: name one screen per entry".format(entry.line))
-        return False
+
+def __screen_fits(entry, name, fx, hub, board, problems):
+    # Whether one screen an entry names is on this board, declared with its size
 
     # The hub has both connectors, one for its panels and one for their selects
     port = screen_port(name)
@@ -1039,13 +1089,18 @@ def build_shows(entries, fx, board, problems, build=True):
         if not build:
             continue
 
+        # Is it on a hub? A hub's positions are one stream placed by the entry's first
+        # channel, where each screen named is its own panel placed by its own
         if on_hub:
-            screen = __hub_stream(fx, places, board, entry.line, problems)
+            screens = [__hub_stream(fx, places, board, entry.line, problems)]
+            channels = [channel]
         else:
-            screen = __screen_on(fx, name, entry.line, problems, board.get(name),
-                                 full_size)
-        if screen is None:
+            screens = [__screen_on(fx, one.name, entry.line, problems, board.get(one.name),
+                                   full_size) for one in entry.channels]
+            channels = entry.channels
+        if None in screens:
             continue
+        screen = screens[0]
 
         light = BUILT_HUB.get("light") if on_hub else None
 
@@ -1071,7 +1126,7 @@ def build_shows(entries, fx, board, problems, build=True):
         # A drawing is begun once every panel is built, on the canvas it keeps
         if entry.effect == "drawing":
             player = __make_drawing(code, target, at, channel, screen, settings, fps, asleep)
-            show = ScreenShow(screen, player, channel, entry.scene, places, light, entry.line)
+            show = ScreenShow(screens, player, channels, entry.scene, places, light, entry.line)
             shows.append(show)
             waiting.append((show, at, target, entry.scene))
             # Taken now, so a repeat in its scene skips, and given back if it cannot start
@@ -1106,7 +1161,7 @@ def build_shows(entries, fx, board, problems, build=True):
             continue
 
         built.update((entry.scene, place) for place in places)
-        shows.append(ScreenShow(screen, player, channel, entry.scene, places, light,
+        shows.append(ScreenShow(screens, player, channels, entry.scene, places, light,
                                 entry.line))
 
     # A screen the file no longer names keeps its last frame but goes dark, since

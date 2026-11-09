@@ -67,6 +67,29 @@ at its edges makes a seamless pattern. `mirror` flips every other copy, so the
 edges always join up. One value sets both directions, and two set them
 separately: `tile=mirror|off` tiles across the screen only.
 
+<!-- if two_screens -->
+### Both screens at once
+
+One entry can name both screens, as `screenA,B`, to show the same picture or
+drawing on each. They play in step, frame for frame, and each screen keeps its
+own settings. One value applies to both screens, or give one for each,
+separated by a comma:
+
+```entry
+screenA,B rotation=90,270 mirror=false,true: drawing file=creature_eyes.py style=goat
+```
+
+Settings can also follow each screen's name, so this is the same entry:
+
+```entry
+screenA rotation=90 screenB rotation=270 mirror=true: drawing file=creature_eyes.py style=goat
+```
+
+A drawing is drawn once for both screens, at the size of the first screen
+named. In a scene, the entry belongs to that scene like any other, so another
+scene can show something different on each screen.
+<!-- end -->
+
 ### Pictures
 
 | Plays | Settings |

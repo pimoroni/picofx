@@ -341,6 +341,10 @@ def expand(token, prefix, line, problems):
         spec = item[len(HUB):] if item.startswith(HUB) else item
         return __expand_hub(spec, token, line, problems), HUB
 
+    # A bare letter after a screen carries the screen on, so screenA,B names both
+    if prefix.startswith("screen") and len(item) == 1 and item.isalpha():
+        return ["screen" + item], prefix
+
     suffix = ""
     if "." in item:
         item, _, suffix = item.partition(".")
@@ -407,61 +411,79 @@ def expand(token, prefix, line, problems):
     return names, prefix
 
 
+def __read_offset(raw, line, problems):
+    # One screen's offset as an (x, y) pair, or None with the reason said. A * centres
+    # that side, which is what leaving the whole setting out does to both
+    parts = [part.strip() for part in raw.split("|")]
+    pair = []
+    good = len(parts) == 2
+    for part in parts if good else ():
+        if part == "*":
+            pair.append(None)
+            continue
+        number = read_number(part)
+        if number is None:
+            good = False
+            break
+        pair.append(int(number))
+    if not good:
+        problems.append("line {}: offset is '{}', expected x|y such as "
+                        "offset=10|20 or *|20".format(line, raw))
+        return None
+    return tuple(pair)
+
+
+def __read_tile(raw, line, problems):
+    # One screen's tiling as a word for each side, or None with the reason said.
+    # Tiling is one value in two parts as an offset is, and one part given covers
+    # both. The picture repeats from wherever the offset put it, so a panel is filled
+    # by a source smaller than it is
+    parts = [part.strip().lower() for part in raw.split("|")]
+    if len(parts) == 1:
+        parts = parts * 2
+
+    words = [TILING_ALSO.get(part, part) for part in parts]
+    if len(words) != 2 or any(word not in TILING for word in words):
+        problems.append("line {}: tile is '{}', expected {} such as tile=repeat "
+                        "for both sides or tile=repeat|off for one".format(
+                            line, raw, " or ".join(TILING)))
+        return None
+    return tuple(words)
+
+
 def __apply_channel_setting(channels, key, raw, line, problems):
     # Set a left-side setting on the channels an item covered, one value or a list
 
     # An offset is one value in two parts, so it takes the pipe that divides a value
-    # rather than the comma that divides one value per output. A * centres that side,
-    # which is what leaving the whole setting out does to both
-    if key == "offset":
-        if "," in raw:
-            problems.append("line {}: offset is one value in two parts, so it takes a "
-                            "'|'. Correct it to 'offset={}'".format(
-                                line, raw.replace(",", "|")))
-            return
-
-        parts = [part.strip() for part in raw.split("|")]
-        pair = []
-        good = len(parts) == 2
-        for part in parts if good else ():
-            if part == "*":
-                pair.append(None)
-                continue
-            number = read_number(part)
-            if number is None:
-                good = False
-                break
-            pair.append(int(number))
-        if not good:
-            problems.append("line {}: offset is '{}', expected x|y such as "
-                            "offset=10|20 or *|20".format(line, raw))
-        else:
-            for channel in channels:
-                channel.offset = tuple(pair)
+    # rather than the comma that divides one value per output. Does one screen's offset
+    # have a comma, which can only be the mistake?
+    if key == "offset" and len(channels) == 1 and "," in raw:
+        problems.append("line {}: offset is one value in two parts, so it takes a "
+                        "'|'. Correct it to 'offset={}'".format(line, raw.replace(",", "|")))
         return
 
-    # Tiling is one value in two parts as an offset is, a side each, and one part
-    # given covers both. The picture repeats from wherever the offset put it, so a
-    # panel is filled by a source smaller than it is
-    if key == "tile":
-        parts = [part.strip().lower() for part in raw.split("|")]
-        if len(parts) == 1:
-            parts = parts * 2
-
-        words = [TILING_ALSO.get(part, part) for part in parts]
-        if len(words) != 2 or any(word not in TILING for word in words):
-            problems.append("line {}: tile is '{}', expected {} such as tile=repeat "
-                            "for both sides or tile=repeat|off for one".format(
-                                line, raw, " or ".join(TILING)))
-        else:
-            for channel in channels:
-                channel.tile = tuple(words)
-        return
-
+    # The word a count of values is given in, screens for a screen entry
+    named = "screens" if all(channel.name.startswith("screen") or channel.name.startswith(HUB)
+                             for channel in channels) else "outputs"
     values = raw.split(",")
     if len(values) > 1 and len(values) != len(channels):
-        problems.append("line {}: {} was given {} values for {} outputs".format(
-            line, key, len(values), len(channels)))
+        problems.append("line {}: {} was given {} values for {} {}".format(
+            line, key, len(values), len(channels), named))
+
+    # Is it a setting in two parts, read for each screen?
+    if key in ("offset", "tile"):
+        read = __read_offset if key == "offset" else __read_tile
+        if len(values) == 1:
+            # One value covers every screen and is read once, so a mistake in it is said once
+            value = read(raw.strip(), line, problems)
+            pairs = [(channel, value) for channel in channels]
+        else:
+            pairs = [(channel, read(part.strip(), line, problems))
+                     for channel, part in zip(channels, values)]
+        for channel, value in pairs:
+            if value is not None:
+                setattr(channel, key, value)
+        return
 
     for index, channel in enumerate(channels):
         raw_value = values[index] if index < len(values) else (values[0] if len(values) == 1 else None)
@@ -844,7 +866,7 @@ def in_line_order(problems):
     """
     # The line is read once per problem, since MicroPython recomputes a sort key on
     # every comparison, and the position keeps one line's own order
-    ordered =[(__about_line(problem), position, problem)
+    ordered = [(__about_line(problem), position, problem)
                for position, problem in enumerate(problems)]
     ordered.sort()
     return [problem for _, _, problem in ordered]

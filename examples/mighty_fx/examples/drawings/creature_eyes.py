@@ -6,11 +6,12 @@ from picovector import color, image, shape, vec2
 Draw a creature's eye as it looks around and blinks. CREATURE chooses the cat, owl, goat, alien,
 robot or zombie, each with its own eyes and its own way of looking about.
 
-For a pair of eyes, play it on both screens. The cat, owl, robot and zombie look forward, so both
-screens show it as drawn. A goat's eyes are either side of its head, so the second screen is
-mirrored, and the alien's slant outwards, so the first is, its outer corners then at the outside of
-the pair with SP/CE A on the left. A panel mirrors along its own width, so a mirrored screen on its
-side takes half a turn more, rotation=270 with mirror=true. Each eye looks about on its own.
+For a pair of eyes, name both screens in one entry, such as screenA,B, so the two look about
+together. The cat, owl, robot and zombie look forward, so both screens show it as drawn. A goat's
+eyes are either side of its head, so the second screen is mirrored, and the alien's slant outwards,
+so the first is, its outer corners then at the outside of the pair with SP/CE A on the left. A
+panel mirrors along its own width, so a mirrored screen on its side takes half a turn more,
+rotation=270 with mirror=true.
 
 Nothing is drawn while the eye holds still.
 
