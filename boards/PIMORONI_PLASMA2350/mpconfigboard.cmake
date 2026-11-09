@@ -1,0 +1,43 @@
+# cmake file for the Pimoroni Plasma 2350 and 2350 W, one build serving both. The board header
+# is the W's, as the plasma repository builds it, wireless included.
+set(PICO_BOARD "pimoroni_plasma2350w")
+set(PICO_BOARD_HEADER_DIRS ${CMAKE_CURRENT_LIST_DIR})
+set(PICO_PLATFORM "rp2350")
+
+set(MICROPY_PY_LWIP ON)
+set(MICROPY_PY_NETWORK_CYW43 ON)
+set(MICROPY_PY_BLUETOOTH ON)
+set(MICROPY_BLUETOOTH_BTSTACK ON)
+set(MICROPY_PY_BLUETOOTH_CYW43 ON)
+
+# Board specific version of the frozen manifest
+set(MICROPY_FROZEN_MANIFEST ${MICROPY_BOARD_DIR}/manifest.py)
+
+# Where ci/micropython.sh fetched this board's hosted packages. It reaches the manifest as
+# $(LIB_DIR), every MICROPY_MANIFEST_* variable arriving there with the prefix stripped
+set(MICROPY_MANIFEST_LIB_DIR ${CI_BUILD_ROOT}/lib)
+
+set(MICROPY_C_HEAP_SIZE 4096)
+
+# The flash split, in order: firmware, the filesystem, and the FX drive's FAT volume to the end
+# of flash. There is no ROMFS, nothing on this board reading one. The filesystem follows the
+# firmware, so a uf2 rewriting it never reaches the volume. The port reads the filesystem's base
+# and size and the volume's place from here, so mpconfigboard.h sets none of them.
+# FLASH_SIZE_BYTES repeats PICO_FLASH_SIZE_BYTES from pimoroni_plasma2350w.h, which is not
+# scanned into a cmake variable until after this file is read, so the two must agree.
+math(EXPR FLASH_SIZE_BYTES "4 * 1024 * 1024")
+math(EXPR FIRMWARE_SIZE_BYTES "1664 * 1024")
+math(EXPR CONFIG_FAT_SIZE_BYTES "2048 * 1024")
+
+if(NOT DEFINED MICROPY_HW_FLASH_STORAGE_BYTES)
+    math(EXPR MICROPY_HW_FLASH_STORAGE_BYTES
+         "${FLASH_SIZE_BYTES} - ${FIRMWARE_SIZE_BYTES} - ${CONFIG_FAT_SIZE_BYTES}")
+endif()
+
+list(APPEND MICROPY_DEF_BOARD "MICROPY_HW_FLASH_STORAGE_BASE=${FIRMWARE_SIZE_BYTES}")
+
+math(EXPR CONFIG_FAT_OFFSET "${FIRMWARE_SIZE_BYTES} + ${MICROPY_HW_FLASH_STORAGE_BYTES}")
+list(APPEND MICROPY_DEF_BOARD
+    "MICROPY_HW_USB_MSC_FLASH_OFFSET=${CONFIG_FAT_OFFSET}"
+    "MICROPY_HW_USB_MSC_FLASH_BYTES=${CONFIG_FAT_SIZE_BYTES}"
+)

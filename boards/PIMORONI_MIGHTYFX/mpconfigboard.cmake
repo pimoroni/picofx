@@ -50,11 +50,20 @@ set(MICROPY_BLUETOOTH_BTSTACK ON)
 # MICROPY_PY_BLUETOOTH_CYW43 = 1
 set(MICROPY_PY_BLUETOOTH_CYW43 ON)
 
-# Firmware, then a read-only ROMFS for the fonts, then the filesystem. The port reads this split
-# from here, so mpconfigboard.h sets none of it. FLASH_SIZE_BYTES must match PICO_FLASH_SIZE_BYTES
-# in pimoroni_mightyfx.h, which the SDK has not read into cmake by this point
+# Firmware, then a read-only ROMFS for the fonts, then the filesystem, then the FX drive's volume
+# to the end of flash where the variant has one. The filesystem starts in the same place either
+# way, so the variants differ only in its size. The port reads this split from here, so
+# mpconfigboard.h sets none of it. FLASH_SIZE_BYTES must match PICO_FLASH_SIZE_BYTES in
+# pimoroni_mightyfx.h, which the SDK has not read into cmake by this point
 math(EXPR FLASH_SIZE_BYTES "16 * 1024 * 1024")
 math(EXPR FIRMWARE_SIZE_BYTES "2 * 1024 * 1024")
+
+# This file is read before the variant's own, so the variant is what to test rather than what
+# it defines
+math(EXPR CONFIG_FAT_SIZE_BYTES "0")
+if(MICROPY_BOARD_VARIANT STREQUAL "drive")
+    math(EXPR CONFIG_FAT_SIZE_BYTES "13056 * 1024")
+endif()
 
 if(NOT DEFINED MICROPY_HW_ROMFS_BYTES)
     math(EXPR MICROPY_HW_ROMFS_BYTES "768 * 1024")
@@ -62,12 +71,20 @@ endif()
 
 if(NOT DEFINED MICROPY_HW_FLASH_STORAGE_BYTES)
     math(EXPR MICROPY_HW_FLASH_STORAGE_BYTES
-         "${FLASH_SIZE_BYTES} - ${FIRMWARE_SIZE_BYTES} - ${MICROPY_HW_ROMFS_BYTES}")
+         "${FLASH_SIZE_BYTES} - ${FIRMWARE_SIZE_BYTES} - ${MICROPY_HW_ROMFS_BYTES} - ${CONFIG_FAT_SIZE_BYTES}")
 endif()
 
 # The port puts the ROMFS just below the filesystem's base, so setting the base places both
 math(EXPR FLASH_STORAGE_BASE "${FIRMWARE_SIZE_BYTES} + ${MICROPY_HW_ROMFS_BYTES}")
 list(APPEND MICROPY_DEF_BOARD "MICROPY_HW_FLASH_STORAGE_BASE=${FLASH_STORAGE_BASE}")
+
+if(CONFIG_FAT_SIZE_BYTES GREATER 0)
+    math(EXPR CONFIG_FAT_OFFSET "${FLASH_STORAGE_BASE} + ${MICROPY_HW_FLASH_STORAGE_BYTES}")
+    list(APPEND MICROPY_DEF_BOARD
+        "MICROPY_HW_USB_MSC_FLASH_OFFSET=${CONFIG_FAT_OFFSET}"
+        "MICROPY_HW_USB_MSC_FLASH_BYTES=${CONFIG_FAT_SIZE_BYTES}"
+    )
+endif()
 
 # The port links the SDK's hardware_psram from here and takes the chip select and size from
 # pimoroni_mightyfx.h, so neither is repeated here. MICROPY_HW_PSRAM_CS_PIN is only wanted by

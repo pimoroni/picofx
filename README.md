@@ -10,9 +10,13 @@ This repository is home to the PicoFX library, as well as MicroPython builds for
 - [Introduction](#introduction)
 - [Get Mighty and Tiny FX](#get-mighty-and-tiny-fx)
 - [Programming Mighty and Tiny FX](#programming-mighty-and-tiny-fx)
+- [Changing Effects Without Code](#changing-effects-without-code)
+  - [Configuring WiFi](#configuring-wifi)
 - [Download MicroPython for Mighty and Tiny FX](#download-micropython-for-mighty-and-tiny-fx)
-  - [Firmware Only](#firmware-only)
-  - [With Libraries and Examples](#with-libraries-and-examples)
+  - [With the FX Drive](#with-the-fx-drive)
+  - [Without the FX Drive](#without-the-fx-drive)
+    - [Firmware Only](#firmware-only)
+    - [With Libraries and Examples](#with-libraries-and-examples)
 - [Flashing the Firmware](#flashing-the-firmware)
 - [Examples](#examples)
 - [Documentation](#documentation)
@@ -34,26 +38,75 @@ Tiny FX is a programmable, RP2040-based controller board for adding smart light 
 
 ## Programming Mighty and Tiny FX
 
-All Mighty and Tiny FX boards come pre-flashed with MicroPython and the libraries and examples needed to get you started.
+All Mighty and Tiny FX boards come pre-flashed with MicroPython and the libraries and examples needed to get you started. Tiny FX runs an example by default, while Mighty FX plays the effects described on its FX drive, which you can change without writing any code (see [Changing Effects Without Code](#changing-effects-without-code)).
 
 To program Mighty and Tiny FX you'll need to use an interpreter such as [Thonny](https://thonny.org/), which is available for Windows, Mac and Linux.
 
 * Connect Mighty or Tiny FX to your computer with a USB-C cable.
 * Make sure you have 'MicroPython (Raspberry Pi Pico)' or 'MicroPython (RP2040)' selected as your interpreter in the bottom right of Thonny.
 * You'll probably also want the 'Files' window open (View > Files), so you can browse the files on the device.
-* Mighty and Tiny FX run an example by default, so you'll need to press the stop button in Thonny to interrupt it before you can browse files or run code on the board.
+* Mighty and Tiny FX run something by default, so you'll need to press the stop button in Thonny to interrupt it before you can browse files or run code on the board.
 
 If you're new to working with RP2040 boards, this Learn Guide goes into more detail about how to install and use Thonny.
 
 * [Getting Started with Pico](https://learn.pimoroni.com/article/getting-started-with-pico)
 
+## Changing Effects Without Code
+
+Mighty FX, and Tiny FX or Plasma 2350 running the FX drive firmware, show a drive named "FX" when connected to a computer. Its `effects.txt` file describes what the lights do, and the board plays it at power on. Plasma 2350's standard firmware comes from the [plasma repository](https://github.com/pimoroni/plasma), while its FX drive firmware is built here.
+
+* Connect your board to your computer with a USB-C cable.
+* A drive named "FX" should appear on your computer.
+* Open `effects.txt` from the drive in any text editor and change it.
+* Save, and the board plays the change a few seconds later.
+
+`README.txt` on the drive shows the form a line takes, and what the board's flashes mean. Press BOOT twice to hide the drive, and twice again to bring it back.
+
+### Configuring WiFi
+
+On Mighty FX, and Tiny FX W or Plasma 2350 W running the FX drive firmware:
+
+* Connect your board to your computer with a USB-C cable.
+* A drive named "FX" should appear on your computer.
+* Edit the file `secrets.py` and fill in your WiFi credentials.
+* Programs that go online will now find them.
+
 ## Download MicroPython for Mighty and Tiny FX
 
 If you wish to update your board to the latest firmware or restore it back to a factory state, you can grab the latest release from [https://github.com/pimoroni/picofx/releases/latest](https://github.com/pimoroni/picofx/releases/latest)
 
+Each board has a build with the FX drive, for changing effects without code (see [Changing Effects Without Code](#changing-effects-without-code)), and a build without it. Both run your own programs.
+
+| Board | With the FX drive | Without the FX drive |
+| --- | --- | --- |
+| Mighty FX | `mighty_fx_drive` | `mighty_fx` |
+| Tiny FX | `tiny_fx_drive` | `tiny_fx` |
+| Tiny FX W | `tiny_fx_w_drive` | `tiny_fx_w` |
+| Plasma 2350 | `plasma_2350_drive` | from the [plasma repository](https://github.com/pimoroni/plasma) |
+
+### With the FX Drive
+
+There are three types of .uf2 file to pick from, depending on what should happen to the FX drive:
+
+* `<board>_drive-vX.X.X-pimoroni-micropython-full.uf2`
+
+  Writes the whole board, including the FX drive with its starting `effects.txt` and examples. Use it to install the FX drive firmware, or to return the drive to how it shipped.
+
+  :warning: **This option will replace everything on the FX drive! Be sure to copy `effects.txt` and any files you added to your PC before installing!**
+
+* `<board>_drive-vX.X.X-pimoroni-micropython-with-libs.uf2`
+
+  Updates the firmware and libraries, and keeps the FX drive as it is. The examples on the drive are not updated, so newer ones can be downloaded from the [examples folder](#examples).
+
+* `<board>_drive-vX.X.X-pimoroni-micropython.uf2`
+
+  Updates only the firmware, leaving the libraries and the FX drive as they are. The libraries can fall behind the firmware, so `with-libs` is usually the better choice.
+
+### Without the FX Drive
+
 There are two types of .uf2 file to pick from:
 
-### Firmware Only
+#### Firmware Only
 
 * `mighty_fx-vX.X.X-pimoroni-micropython.uf2`
 * `tiny_fx-vX.X.X-pimoroni-micropython.uf2`
@@ -61,7 +114,7 @@ There are two types of .uf2 file to pick from:
 
 This build type includes only the firmware needed for Mighty and Tiny FX to function. You will need to manually update the `lib/picofx` library afterwards to get the latest features and bug fixes.
 
-### With Libraries and Examples
+#### With Libraries and Examples
 
 :warning: **This option will overwrite the entire contents of your Mighty and Tiny FX! Be sure to back up files to your PC before installing!**
 
@@ -79,7 +132,7 @@ This build type contains the firmware for Mighty and Tiny FX, library files to e
 
 3. Drag and drop one of the .uf2 files to the "RP2350" or "RPI-RP2" drive that appears.
 
-4. After the copy completes your board should reset and, if you used the `with-libs-and-examples` variant, should start playing a light sequence on the board's RGB and mono outputs.
+4. After the copy completes your board should reset and, if you used the `with-libs-and-examples` variant or a build with the FX drive, should start playing a light sequence on the board's RGB and mono outputs.
 
 ## Examples
 
