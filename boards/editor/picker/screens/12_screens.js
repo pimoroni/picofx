@@ -533,6 +533,10 @@ boardLineSteps.before.push(function () {
 function screenPlaying(parts, body, letter) {
   var playing = Object.assign({}, body.screens[letter]);
   var look = playing.look = freshLook();
+  // A line says all its screen does, so nothing is left from what the screen held before
+  playing.turn = 0;
+  playing.pingpong = false;
+  playing.hold = "";
   var source = {gif: "file", image: "file", drawing: "file", sequence: "folder"}[parts.effect];
   if (!source || !parts.right[source]) return null;
   playing.shows = unquoted(parts.right[source]);
