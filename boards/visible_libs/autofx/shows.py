@@ -391,6 +391,9 @@ class Graphics:
     are already driving. That is a mistake caught, not a boundary, since builtins cannot
     be restricted on this port. A draw() that raises keeps its last frame on the glass
     and says why once, with everything around it carrying on.
+
+    A draw() that returns False has painted nothing new, so no frame is sent for it.
+    Any other answer sends the canvas, a draw() that returns nothing included.
     """
 
     # What drawing needs, and nothing that reaches the pins, the ports or the drive,
@@ -424,11 +427,17 @@ class Graphics:
         self.__last = None
         self.__shared = None        # The SharedCanvas taken in turns, or None for a canvas of its own
         self.__kept = None          # This drawing's pixels while another has the shared canvas
+        self.__unchanged = False
 
     @property
     def frame_ms(self):
         """The ms between frames, or None for as often as the screen takes one."""
         return self.__frame_ms
+
+    @property
+    def unchanged(self):
+        """Whether the last draw() answered False, leaving the canvas as the screen has it."""
+        return self.__unchanged
 
     def share(self, shared, nbytes):
         """
@@ -495,6 +504,7 @@ class Graphics:
         self.__globals = namespace
         self.__drawn_ms = 0
         self.__seen = 0             # The frame just drawn is the first step's
+        self.__unchanged = False    # The first frame is always sent, whatever draw() answered
 
     def __tick(self):
         now = time.ticks_ms()
@@ -523,11 +533,12 @@ class Graphics:
         self.__globals["ticks_delta"] = self.__elapsed_ms - self.__drawn_ms
         self.__drawn_ms = self.__elapsed_ms
         try:
-            self.__draw()
+            # Only False says nothing new was painted, so a draw() with no return still sends
+            self.__unchanged = self.__draw() is False
         except Exception as e:      # noqa: BLE001
             self.__stop(e)
             return False
-        return True
+        return not self.__unchanged
 
     def __stop(self, error):
         # Keep the last frame and say why, once, while the loop around this carries on.
@@ -565,6 +576,26 @@ class Graphics:
             self.__stop(e)
 
 
+def __held_with(show, shows):
+    # The drawing held together with this one as a pair that has nothing new this pass, or
+    # None. Sending this one alone would hand back the pair's hold on the panels, so the
+    # other's frame goes again beside it
+    if not BUILT_PAIR or len(show.screens) != 1 or not isinstance(show.player, Graphics):
+        return None
+    held = BUILT_PAIR[0].screens
+    if show.screens[0] not in held:
+        return None
+
+    for other in shows:
+        if other is not show and other.live and len(other.screens) == 1 \
+                and other.screens[0] in held and other.screens[0] is not show.screens[0] \
+                and isinstance(other.player, Graphics) and other.player.unchanged \
+                and other.player.frame_ms == show.player.frame_ms \
+                and other.refused_with is not show:
+            return other
+    return None
+
+
 def service_shows(shows, between=None):
     """
     One pass of every screen that has the panel, answering whether one was drawn.
@@ -572,6 +603,9 @@ def service_shows(shows, between=None):
     Two panels on their own ports stream together in about the time one of them
     takes alone, so a frame due on each is sent as a pair. Placement stays per
     screen, prepare() holding each frame until both are ready.
+
+    A drawing with nothing new sends no frame. Two drawings held together as a pair are
+    both sent where either has one, and neither where both have nothing new.
 
     `between` is asked after each screen where they are drawn one at a time, and
     stops the pass when it answers true, so a press waits out one screen rather
@@ -582,6 +616,12 @@ def service_shows(shows, between=None):
         return False
 
     due = [show for show in shows if show.live and show.wants()]
+
+    # Is one drawing of a held pair due alone, the other having nothing new?
+    if len(due) == 1:
+        partner = __held_with(due[0], shows)
+        if partner is not None:
+            due.append(partner)
 
     # Are two shows of one screen each due on different ports? A show of two screens sends
     # its own pair

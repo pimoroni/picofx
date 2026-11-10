@@ -732,6 +732,11 @@ seconds, and `ticks_delta` is the milliseconds since the last frame. `fps` or
 `interval` sets the frame rate, and leaving both out draws as fast as the
 screen allows.
 
+A drawing with nothing new to show can return `False` from `draw`, and the
+board then sends no frame. A clock that changes once a second can check what
+it last drew and return `False` the rest of the time, leaving the board free
+for the lights and the other screen.
+
 The rest of the file runs once, when the drawing starts, so set up anything
 `draw` uses there. `canvas` is ready by then, so the setup can size things to
 the screen, as `middle_x` and `middle_y` are here, or paint a background for
