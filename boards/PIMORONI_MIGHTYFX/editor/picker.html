@@ -617,8 +617,12 @@ th{font-weight:600;color:var(--dim);font-size:.76rem}
  border-radius:9px;cursor:pointer}
 .card.nothing.small .face{width:2.4rem;height:auto;min-height:1.7rem}
 .card.nothing.small .name{padding:.3rem .65rem;font-size:.8rem;align-self:center}
-/* The sound's Loop and silence on one line above its tiles */
+/* The sound's Loop, volume and silence on one line above its tiles */
 .soundhead{display:flex;align-items:center;margin:0 0 .7rem}
+.soundvolume{flex:1;display:flex;align-items:center;gap:.5rem;margin:0 .9rem;font-size:.82rem;
+ color:var(--dim)}
+.soundvolume input[type=range]{flex:1;min-width:4rem;accent-color:var(--accent)}
+.soundvolume input:disabled{opacity:.35}
 /* Always on's note stands where a scene's settings do, as tall, so nothing moves between them */
 .sceneset{min-height:2rem}
 .sceneset.alwaysnote{display:block;line-height:2rem;font-size:.84rem;color:var(--dim);
@@ -8310,7 +8314,7 @@ if (SCREENS.length) {
 
 // ---- a Sound tab ----------------------------------------------------------------------------
 // One wav at a time, chosen from a row of tiles each showing its shape and how long it runs,
-// with whether it loops and silence on a line above them.
+// with whether it loops, its volume and silence on a line above them.
 //
 // The drawing asks of its page the sounds on the drive, and each scene keeping its own sound.
 // The board takes one per scene, and the one in the always-on tab plays in any scene that
@@ -8319,6 +8323,7 @@ if (SCREENS.length) {
 
 state.sound = null;
 state.soundLoop = false;
+state.soundVolume = 100;
 state.soundKept = null;
 state.sounds = [];
 state.soundInfo = {};
@@ -8352,6 +8357,7 @@ function renderSoundTab() {
   var above = document.createElement("div");
   above.style.margin = "0 0 .7rem";
   above.appendChild(again);
+  above.appendChild(volumeSlider());
   box.appendChild(above);
 
   var row = document.createElement("div");
@@ -8390,6 +8396,36 @@ function renderSoundTab() {
   box.appendChild(row);
 }
 
+// The volume the board plays the sound at, a percentage in steps of five
+function volumeSlider() {
+  var slider = document.createElement("input");
+  slider.type = "range";
+  slider.min = 0;
+  slider.max = 100;
+  slider.step = 5;
+  slider.value = state.soundVolume;
+  slider.disabled = !state.sound;
+  var figure = document.createElement("span");
+  figure.className = "lightfigure";
+  figure.textContent = slider.value + "%";
+  slider.oninput = function () { figure.textContent = slider.value + "%"; };
+  slider.onchange = function () {
+    state.soundVolume = Number(slider.value);
+    // A sound being heard here follows the slider
+    if (hearing.audio && hearing.name === state.sound) {
+      hearing.audio.volume = state.soundVolume / 100;
+    }
+    draw();
+  };
+  var volume = document.createElement("label");
+  volume.className = "opt soundvolume";
+  volume.appendChild(document.createTextNode("volume"));
+  volume.appendChild(slider);
+  volume.appendChild(figure);
+  volume.title = state.sound ? "How loud the board plays the sound" : "No sound chosen";
+  return volume;
+}
+
 function soundKeptTile() {
   var tile = document.createElement("button");
   tile.className = "sound" + (state.sound ? "" : " picked");
@@ -8405,6 +8441,7 @@ function soundKeptTile() {
   tile.onclick = function () {
     state.sound = null;
     state.soundLoop = false;
+    state.soundVolume = 100;
     draw();
   };
   return tile;
@@ -8444,6 +8481,7 @@ function plainSoundTile(name) {
     if (name) state.soundKept = null;
     if (!name) {
       state.soundLoop = false;
+      state.soundVolume = 100;
       state.soundKept = null;
     }
     draw();
@@ -8458,7 +8496,8 @@ function plainSoundTile(name) {
 function soundLine(body) {
   if (body.sound)
     return "audio: wav file=" + quoted(body.sound) +
-           (body.soundLoop ? " loop=true" : "");
+           (body.soundLoop ? " loop=true" : "") +
+           (body.soundVolume < 100 ? " volume=" + body.soundVolume + "%" : "");
   return body.soundKept;
 }
 
@@ -8472,17 +8511,20 @@ bodyParts.push({
   capture: function (body) {
     body.sound = state.sound;
     body.soundLoop = state.soundLoop;
+    body.soundVolume = state.soundVolume;
     body.soundKept = state.soundKept;
   },
   apply: function (body) {
     if (!("sound" in body)) return;
     state.sound = body.sound;
     state.soundLoop = body.soundLoop;
+    state.soundVolume = body.soundVolume;
     state.soundKept = body.soundKept;
   },
   blank: function (body) {
     body.sound = null;
     body.soundLoop = false;
+    body.soundVolume = 100;
     body.soundKept = null;
   },
   hasContent: function (body) { return !!body.sound; },
@@ -8501,14 +8543,20 @@ function readSound(bodies) {
     body.kept = body.kept.filter(function (one) {
       var parts = entryParts(one.text);
       if (!parts || parts.selector !== "audio" || parts.effect !== "wav" || body.sound ||
-          !Object.keys(parts.right).every(function (key) { return key === "file" || key === "loop"; })) {
+          !Object.keys(parts.right).every(function (key) {
+            return key === "file" || key === "loop" || key === "volume";
+          })) {
         return true;
       }
+      // A volume written any other way than the slider writes it fails the match below, and
+      // its line is kept as it is
+      var percent = /^(\d+)%$/.exec(parts.right.volume || "");
       var sounding = {sound: unquoted(parts.right.file), soundLoop: parts.right.loop === "true",
-                      soundKept: null};
+                      soundVolume: percent ? Number(percent[1]) : 100, soundKept: null};
       if (!sounding.sound || soundLine(sounding) !== one.text) return true;
       body.sound = sounding.sound;
       body.soundLoop = sounding.soundLoop;
+      body.soundVolume = sounding.soundVolume;
       if (one.comments.length) body.notes[one.text] = one.comments;
       return false;
     });
@@ -8537,6 +8585,7 @@ driveParts.push({
       if (body.sound === name) {
         body.sound = null;
         body.soundLoop = false;
+        body.soundVolume = 100;
       }
     });
     delete state.soundInfo[name];
@@ -8621,6 +8670,8 @@ async function hear(name) {
   try {
     var url = URL.createObjectURL(await soundHandles[name].getFile());
     audio = new Audio(url);
+    // The chosen sound is heard at its volume, any other as recorded
+    if (name === state.sound) audio.volume = state.soundVolume / 100;
     hearing = {name: name, audio: audio, url: url};
     audio.onended = function () {
       if (hearing.audio === audio) stopHearing();
@@ -8711,8 +8762,9 @@ function soundTile(name) {
 
 // The tab in the page's style. What the scene does with its sound is the row's tip, no other
 // tab opening on a sentence; the sentence stays only where there are no sounds to show, since
-// it is then all there is. Repeat is a toggle with its icon, as the screens' Loop is, and
-// silence the small card Nothing is in the gallery, at the end of that line
+// it is then all there is. Repeat is a toggle with its icon, as the screens' Loop is, the
+// volume a slider beside it, and silence the small card Nothing is in the gallery, at the end
+// of that line
 function renderSound() {
   renderSoundTab();
   var box = document.getElementById("sound");
@@ -8775,7 +8827,8 @@ tabSwatches.soundPanel = function (swatch) {
     swatch.appendChild(mark);
     swatch.classList.add("repeats");
   }
-  swatch.title = nameShown(state.sound) + (state.soundLoop ? ", on repeat" : "");
+  swatch.title = nameShown(state.sound) + (state.soundLoop ? ", on repeat" : "") +
+                 (state.soundVolume < 100 ? ", " + state.soundVolume + "% volume" : "");
 };
 
 // Under the tab's name, the kind of sound playing, which a tone will join once the board
