@@ -166,7 +166,9 @@ async function folderAt(dir, parts) {
 // it where deep, walked in name order
 async function filesIn(dir, path, folder, deep, files, pictures) {
   var entries = [];
-  for await (var pair of dir.entries()) entries.push(pair);
+  for await (var pair of dir.entries()) {
+    if (!isHiddenName(pair[0])) entries.push(pair);
+  }
   entries.sort(function (a, b) { return a[0] < b[0] ? -1 : 1; });
   for (var i = 0; i < entries.length; i++) {
     var name = entries[i][0], handle = entries[i][1];
@@ -279,7 +281,8 @@ async function ownState(dir) {
   var seen = [];
   async function note(folder, path) {
     for await (var pair of folder.entries()) {
-      if (pair[1].kind !== "file" || !/\.(py|png)$/i.test(pair[0])) continue;
+      if (pair[1].kind !== "file" || isHiddenName(pair[0]) || !/\.(py|png)$/i.test(pair[0]))
+        continue;
       var file = await pair[1].getFile();
       seen.push(path + pair[0] + " " + file.size + " " + file.lastModified);
     }

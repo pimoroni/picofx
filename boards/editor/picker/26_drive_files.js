@@ -12,6 +12,12 @@ var scanBusy = false;
 // The top of the drive is read too, so a file dropped there still plays
 var MEDIA_FOLDERS = {pictures: /\.(gif|png|jpe?g)$/i, drawings: /\.py$/i, sounds: /\.wav$/i};
 
+// Whether a name on the drive is hidden, such as the ._ file macOS writes beside each file it
+// copies, or its .Trashes and .fseventsd folders. A walk of the drive passes these by
+function isHiddenName(name) {
+  return name.charAt(0) === ".";
+}
+
 // The folders of examples the walk reads, under examples/ on a board that carries them. Each file
 // is offered by its path from the top of the drive, which is how an effects line names it
 var EXAMPLE_FOLDERS = BOARD.examples ? ["drawings", "pictures", "sounds"] : [];
@@ -125,6 +131,7 @@ async function scanMedia(dir) {
   async function offer(folder, top) {
     for await (var pair of folder.entries()) {
       var name = pair[0], handle = pair[1];
+      if (isHiddenName(name)) continue;
       // A name in a media folder and at the top is the folder's, read first
       if (name in homes || (top && handle.kind !== "file" && kept.indexOf(name) >= 0)) continue;
       if (await taken(name, handle)) homes[name] = folder;
@@ -134,6 +141,7 @@ async function scanMedia(dir) {
   async function offerExamples(folder, path, split) {
     for await (var pair of folder.entries()) {
       var named = path + pair[0], handle = pair[1];
+      if (isHiddenName(pair[0])) continue;
       if (handle.kind !== "file" && split.indexOf(named + "/*") >= 0)
         await offerExamples(handle, named + "/", split);
       else if (!await taken(named, handle) && handle.kind !== "file")

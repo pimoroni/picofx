@@ -651,7 +651,8 @@ driveParts.push({
   },
   folder: async function (name, handle) {
     for await (var inner of handle.entries()) {
-      if (inner[1].kind === "file" && /\.(gif|png|jpe?g)$/i.test(inner[0])) {
+      if (inner[1].kind === "file" && !isHiddenName(inner[0]) &&
+          /\.(gif|png|jpe?g)$/i.test(inner[0])) {
         mediaFound.push({ name: name, kind: "folder", thumbHandle: inner[1] });
         return true;
       }
