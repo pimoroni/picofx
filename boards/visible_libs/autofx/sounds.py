@@ -11,6 +11,7 @@ import time
 from .vocabulary import AUDIO_EFFECTS, EFFECTS, FOLDERS, MOUNT_DIR, SCREEN_EFFECTS
 from .parser import Channel
 from .checks import check_settings, find_file
+from .shows import report_stop, REPORTING_TO
 
 
 class Sound:
@@ -18,7 +19,8 @@ class Sound:
     One WAV playing beside the effects, with the player it runs on, the file it reads
     and whether it starts again when it ends. A file on the drive is read straight from
     the flash, so it plays through a handover, and the player stands it aside while the
-    computer writes. One the computer rewrites goes silent until the next reload.
+    computer writes. One the computer rewrites goes silent until the next reload, and so
+    does one that fails to start, which reports itself against its line.
 
     The board plays one sound at a time, so the sounds share the player and `live` says
     which of them has it. One set aside by a scene switch picks up where it reached on
@@ -29,28 +31,37 @@ class Sound:
     # player's ring, which a board may make a few hundred milliseconds long
     FADE_MS = 400
 
-    def __init__(self, wav, handle, loop, scene=None):
+    def __init__(self, wav, handle, loop, scene=None, name="", line=0):
         self.wav = wav
         self.handle = handle
         self.loop = loop
         self.scene = scene
         self.live = False
+        self.__name = name      # The file as the entry names it
+        self.__line = line      # The line of the entry's file=, which a failure names
         self.__at = None        # The position the stall watch last saw
         self.__moved = None     # When that position last changed
         self.__from = 0         # Where the next start picks up, 0 being the top
         self.__gone = False     # Whether the computer changed the file since load
+        self.__failed = False   # Whether a start failed since load
         self.__held = False     # Whether joining the bus stopped it part way through
 
     def start(self):
         """Take the speaker, playing from where this sound was set aside or from the top."""
-        if self.__gone:
+        if self.__gone or self.__failed:
             return
         try:
             self.wav.play_wav(self.handle, loop=self.loop, position=self.__from)
         except (OSError, ValueError) as e:
             # Unreadable as a WAV, however it came to be, so nothing plays until a
-            # reload brings a readable one
-            print("the sound could not start, and waits for the next reload:", e)
+            # reload brings a readable one. Said once, not on every turn of its scene
+            self.__failed = True
+            self.live = False
+            report_stop(REPORTING_TO[0], self.__name,
+                        "line {}: {} stopped playing, and stays silent until the next "
+                        "reload: {}".format(self.__line, self.__name, e),
+                        "line {}: {} stopped playing: {}".format(self.__line, self.__name, e))
+            return
         self.__from = 0
         self.live = True
 
@@ -174,7 +185,8 @@ def build_sounds(entries, fx, problems, volume=None):
     """
     A sound per audio entry. One before any heading plays throughout, and a scene's
     takes the speaker while its scene shows. The file is found here, while the board
-    holds the drive, so it streams on after a computer takes the volume.
+    holds the drive, so it streams on after a computer takes the volume. Its header is
+    read here too, so a file the player cannot play is reported against its line.
     """
     sounds = []
     stream = volume.stream if volume is not None else None
@@ -184,6 +196,10 @@ def build_sounds(entries, fx, problems, volume=None):
         wav = fx.wav
     except (AttributeError, RuntimeError):
         wav = None
+
+    # Only a board with audio carries the player's module
+    if wav is not None:
+        from audio import WavReader
 
     for entry in entries:
         if wav is None:
@@ -238,8 +254,19 @@ def build_sounds(entries, fx, problems, volume=None):
                             "playing.".format(at, target))
             continue
 
+        try:
+            WavReader(handle)
+        except (OSError, ValueError) as e:
+            problems.append("line {}: {} cannot be played: {}".format(at, target, e))
+            try:
+                handle.close()
+            except OSError:
+                pass
+            continue
+
         taken.add(entry.scene)
-        sounds.append(Sound(wav, handle, bool(settings.get("loop", False)), entry.scene))
+        sounds.append(Sound(wav, handle, bool(settings.get("loop", False)), entry.scene,
+                            target, at))
 
     return sounds
 

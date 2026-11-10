@@ -21,16 +21,32 @@ from .parser import value_shown
 from .checks import check_settings, find_file, REFUSED
 
 # Where a problem found after the file was read is written, which run() sets to
-# whatever it was told to report to. A drawing is the one thing that can stop long
-# after load, so it is the only writer of this
+# whatever it was told to report to. A drawing or a sound can stop long after load,
+# and report_stop() is the only writer of this
 REPORTING_TO = [ERRORS_PATH]
 
-# The drawings that stopped since the run loop last looked, which it flashes for
+# The drawings and sounds that stopped since the run loop last looked, which it flashes for
 STOPPED = []
 
-# What stopped drawings said while the computer held the drive, for the next reload to
-# write down, there being nowhere to write it until the board has the drive back
+# What stopped drawings and sounds said while the computer held the drive, for the next
+# reload to write down, there being nowhere to write it until the board has the drive back
 UNWRITTEN = []
+
+
+def report_stop(path, name, message, later):
+    """
+    Say that something stopped while the board played, and have the run loop flash for
+    it. Where the computer holds the drive, `later` waits for the next reload instead.
+    """
+    print(message)
+    STOPPED.append(name)
+    # Appended rather than written, so a drive with no room left keeps the account it has
+    try:
+        with open(path, "a") as handle:
+            handle.write("\n" + message + "\n")
+    # The computer holds the drive, so the mount is gone
+    except OSError:
+        UNWRITTEN.append(later)
 
 
 class ScreenShow:
@@ -514,23 +530,15 @@ class Graphics:
         return True
 
     def __stop(self, error):
-        # Keep the last frame and say why, once, while the loop around this carries on
+        # Keep the last frame and say why, once, while the loop around this carries on.
+        # The drawing will have begun again by the time a reload writes the later account
         self.__stopped = True
         trace = user_trace(error)
-        message = ("line {}: the drawing {} stopped, so its screen keeps its last "
-                   "frame:\n{}".format(self.__line, self.__name, trace))
-        print(message)
-        STOPPED.append(self.__name)
-        # Where the reader is already looking, while the board holds the volume. Appended
-        # rather than written, so a drive with no room left keeps the account it has
-        try:
-            with open(self.__errors, "a") as handle:
-                handle.write("\n" + message + "\n")
-        # The computer holds the drive, so the mount is gone, and the reload that brings
-        # it back writes this down. The drawing will have begun again by then
-        except OSError:
-            UNWRITTEN.append("line {}: the drawing {} failed while it played:\n{}".format(
-                self.__line, self.__name, trace))
+        report_stop(self.__errors, self.__name,
+                    "line {}: the drawing {} stopped, so its screen keeps its last "
+                    "frame:\n{}".format(self.__line, self.__name, trace),
+                    "line {}: the drawing {} failed while it played:\n{}".format(
+                        self.__line, self.__name, trace))
 
     def pause(self):
         if self.__playing:

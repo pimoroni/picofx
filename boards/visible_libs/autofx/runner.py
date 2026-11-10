@@ -687,9 +687,9 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                 # button is answered between the screens rather than after them all
                 drew = service_shows(shows, interrupted)
 
-                # Has a drawing stopped? Its screen keeps its last frame and nothing else
-                # moves, so the outputs say it, the effects standing aside as they do for
-                # the drive changing hands
+                # Has a drawing or a sound stopped? Nothing else on the board shows it, so
+                # the outputs flash while the effects stand aside, as they do for the drive
+                # changing hands
                 if STOPPED:
                     del STOPPED[:]
                     __stop(players)
