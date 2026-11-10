@@ -178,6 +178,9 @@ def draw():
     # A sheet's LED switches quickly, and for that moment the sheet losing it still has some light
     up = min(1.0, into / CHANGE_MS)
     showing = ((ORDER[count], round(LIT * up)), (ORDER[count - 1], round(LIT * (1 - up))))
-    if showing != shown:
-        draw_stack(showing, LIGHT)
-        shown = showing
+    # Is this what the screen already shows?
+    if showing == shown:
+        return False                # Nothing new, so no frame is sent
+
+    draw_stack(showing, LIGHT)
+    shown = showing

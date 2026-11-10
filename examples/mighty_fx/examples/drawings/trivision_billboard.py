@@ -128,6 +128,9 @@ settled_at = 0
 def draw():
     """Draw the board for the time the drawing has played, only the slats that are turning."""
     global turns, turned, turning, turn_from, settled_at
+    # Slats are only drawn during a turn, so a board standing at a poster has nothing new to send
+    changed = turning
+
     # A turn runs until every slat has finished its own, each starting after the one before it
     if turning:
         wave = ticks - turn_from
@@ -157,3 +160,5 @@ def draw():
     elif ticks - settled_at >= HOLD * 1000:
         turning = True
         turn_from = ticks
+
+    return changed

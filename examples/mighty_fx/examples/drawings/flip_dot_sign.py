@@ -224,6 +224,8 @@ settled_at = 0
 def draw():
     """Draw the sign for the time the drawing has played, only the dots that are turning."""
     global message, targets, flips, states, swept_from, settled_at
+    # Dots only turn during a sweep, so a sign standing at its message has nothing new to send
+    changed = bool(flips)
     if flips:
         flips = advance(flips, ticks - swept_from)
 
@@ -237,3 +239,5 @@ def draw():
         targets = pattern_states(MESSAGES[message])
         flips = schedule(targets)
         swept_from = ticks
+
+    return changed

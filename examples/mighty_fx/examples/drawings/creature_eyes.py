@@ -365,8 +365,10 @@ def draw():
     if eyes.blink_at is not None and eyes.blink_at > ticks - ticks_delta and ticks - eyes.blink_at >= BLINK_MS[0]:
         openness = 0.0
 
-    # Is this any different from what the screen shows?
+    # Is this what the screen already shows?
     moment = (round(gaze[0], 3), round(gaze[1], 3), round(openness, 2))
-    if moment != shown:
-        DRAWINGS.get(creature["draw"], draw_eye)(creature, gaze, openness)
-        shown = moment
+    if moment == shown:
+        return False                # Nothing new, so no frame is sent
+
+    DRAWINGS.get(creature["draw"], draw_eye)(creature, gaze, openness)
+    shown = moment

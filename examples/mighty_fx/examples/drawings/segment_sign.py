@@ -306,6 +306,9 @@ def draw():
 
     page = pages[page_index]
     offsets = tuple(scrolled(row, ticks - started) for row in page)
-    if (page_index, offsets) != shown:
-        draw_page(page, offsets)
-        shown = (page_index, offsets)
+    # Is this what the screen already shows?
+    if (page_index, offsets) == shown:
+        return False                # Nothing new, so no frame is sent
+
+    draw_page(page, offsets)
+    shown = (page_index, offsets)

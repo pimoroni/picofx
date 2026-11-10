@@ -303,12 +303,14 @@ def draw():
     clock = clock_at(ticks)
     since = ticks - turned_at
     frame = (page, clock, tuple(scroll_offset(*strip, since) for strip in page_strips[page]))
-    if frame != shown:
-        # Has the page turned since the last frame?
-        if shown is None or page != shown[0]:
-            moving.clear()
-            draw_page(canvas, page, clock, since, moving)
-        else:
-            draw_moving(canvas, page, clock, since, moving)
+    if frame == shown:
+        return False                # Nothing new, so no frame is sent
 
-        shown = frame
+    # Has the page turned since the last frame?
+    if shown is None or page != shown[0]:
+        moving.clear()
+        draw_page(canvas, page, clock, since, moving)
+    else:
+        draw_moving(canvas, page, clock, since, moving)
+
+    shown = frame

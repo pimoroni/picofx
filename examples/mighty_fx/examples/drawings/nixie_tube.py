@@ -264,6 +264,9 @@ def draw():
     # A tube switches quickly, and for that moment the cathode losing the current still glows
     up = min(1.0, into / CHANGE_MS)
     showing = ((count % 10, round(LIT * up)), ((count - 1) % 10, round(LIT * (1 - up))))
-    if showing != shown:
-        draw_tube(showing)
-        shown = showing
+    # Is this what the screen already shows?
+    if showing == shown:
+        return False                # Nothing new, so no frame is sent
+
+    draw_tube(showing)
+    shown = showing

@@ -244,12 +244,14 @@ def draw():
     for flap in range(FLAPS):
         wanted[flap] = DRUM.index(reading[flap])
 
+    changed = False
     for flap in range(FLAPS):
         if turning[flap] is None:
             if showing[flap] != wanted[flap]:
                 turning[flap] = ticks
             continue
 
+        changed = True
         part = min(1.0, (ticks - turning[flap]) / FLAP_MS)
         step = (showing[flap] + 1) % len(DRUM)
         falling(flap, showing[flap], step, part)
@@ -259,3 +261,6 @@ def draw():
             showing[flap] = step
             settled(flap, step)
             turning[flap] = ticks if showing[flap] != wanted[flap] else None
+
+    # No frame is sent while every card is at rest
+    return changed

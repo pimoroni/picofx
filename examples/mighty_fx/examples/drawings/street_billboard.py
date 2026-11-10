@@ -101,13 +101,16 @@ def draw():
     """Draw the poster due for the time the drawing has played, only when it changes."""
     global shown
     up = int(ticks // (DWELL * 1000)) % len(POSTER_NAMES)
-    if up != shown:
-        # A poster and the pane over it, which is two blits
-        picture = poster(up)
-        if picture.width == WIDE and picture.height == TALL:
-            canvas.blit(picture, 0, 0)
-        else:
-            # A canvas pixel doubled is smaller than the poster, so it is blitted to fit
-            canvas.blit(picture, rect(0, 0, picture.width, picture.height), rect(0, 0, WIDE, TALL), image.BILINEAR)
-        canvas.blit(pane, 0, 0)
-        shown = up
+    # Is this the poster the screen already shows?
+    if up == shown:
+        return False                # Nothing new, so no frame is sent
+
+    # A poster and the pane over it, which is two blits
+    picture = poster(up)
+    if picture.width == WIDE and picture.height == TALL:
+        canvas.blit(picture, 0, 0)
+    else:
+        # A canvas pixel doubled is smaller than the poster, so it is blitted to fit
+        canvas.blit(picture, rect(0, 0, picture.width, picture.height), rect(0, 0, WIDE, TALL), image.BILINEAR)
+    canvas.blit(pane, 0, 0)
+    shown = up

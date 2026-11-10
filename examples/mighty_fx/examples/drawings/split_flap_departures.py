@@ -364,3 +364,6 @@ def draw():
         page = (page + 1) % len(PAGES)
         call_up(page)
         standing = False
+
+    # No frame is sent while every card is at rest
+    return not resting

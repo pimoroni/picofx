@@ -340,6 +340,9 @@ def draw():
     # Nothing on the board moves, so it is only drawn again when the minute or the page changes
     now = board_minute(ticks)
     frame = (now, int(ticks // (PAGE_HOLD * 1000)))
-    if frame != shown:
-        draw_board(frame[1], now)
-        shown = frame
+    # Is this what the screen already shows?
+    if frame == shown:
+        return False                # Nothing new, so no frame is sent
+
+    draw_board(frame[1], now)
+    shown = frame

@@ -299,6 +299,9 @@ def draw():
     """Draw the clock for the time the drawing has played, only where the reading or the colons change."""
     global shown
     showing = (clock_now(ticks), ticks % 1000 < COLON_MS)
-    if showing != shown:
-        draw_reading(*showing)
-        shown = showing
+    # Is this what the screen already shows?
+    if showing == shown:
+        return False                # Nothing new, so no frame is sent
+
+    draw_reading(*showing)
+    shown = showing

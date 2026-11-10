@@ -219,6 +219,8 @@ def draw():
     frame = (int(ticks / (HOLD * 1000)) % len(MESSAGE), bool(ticks // BEACON_MS % 2))
 
     # Nothing on the sign moves, so it is only drawn again when the page or the beacons change
-    if frame != shown:
-        draw_sign(*frame)
-        shown = frame
+    if frame == shown:
+        return False                # Nothing new, so no frame is sent
+
+    draw_sign(*frame)
+    shown = frame

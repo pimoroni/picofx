@@ -299,6 +299,8 @@ def draw():
 
     # A frame is the whole page drawn again, so one is only worth drawing where something changed
     frame = (served, bool(ticks // CURSOR_MS % 2))
-    if frame != shown:
-        draw_page(frame[1])
-        shown = frame
+    if frame == shown:
+        return False                # Nothing new, so no frame is sent
+
+    draw_page(frame[1])
+    shown = frame
