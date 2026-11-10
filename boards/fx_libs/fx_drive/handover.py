@@ -41,7 +41,8 @@ ENUMERATION_LIMIT_MS = 3000
 # How often the save watcher compares effects.txt's directory entry while the computer
 # holds the drive. Every kind of save updates the entry, and copying other files never
 # does. A change counts once two polls in a row see it, so a half-finished save or a
-# read torn by a host write cannot act.
+# read torn by a host write cannot act. A poll only reads the entry where the computer
+# has written since the last, which is what keeps it out of a screen's frame.
 WATCH_POLL_MS = 500
 
 __exposed = False
@@ -50,7 +51,8 @@ __last_edge = None      # When a press began that a second may make a double, el
 __watching = False
 __entry_seen = None     # effects.txt's directory entry as last shown or acted on
 __entry_pending = None  # A changed entry seen once, counting when the next look matches it
-__watch_at = None       # When service() last looked at the entry
+__writes_seen = None    # The computer's write count at the last look, None before the first
+__watch_at = None       # When service() last polled
 __watch_reader = None   # The reader the save watcher keeps while the drive is shown
 __reset_at = None       # When the last bus reset came, None once enumeration is over
 __on_reset = None
@@ -90,9 +92,20 @@ def __effects_entry():
 
 def __entry_settled():
     # Whether effects.txt's directory entry has changed and read the same on two
-    # looks in a row, so a save has landed. Each call is one look
-    global __entry_seen, __entry_pending
+    # looks in a row, so a save has landed. Each call is one poll
+    global __entry_seen, __entry_pending, __writes_seen
+
+    # Has the computer written nothing since the last look, with no change waiting on a
+    # second one? The entry cannot have moved, and reading it takes longer than a
+    # screen's frame has to spare
+    writes = rp2.msc_write_count()
+    if writes == __writes_seen and __entry_pending is None:
+        return False
+
+    # The count is read before the entry, so a write landing between the two moves the
+    # count past what is kept here and the next poll looks again
     entry = __effects_entry()
+    __writes_seen = writes
     if __entry_seen is None:
         __entry_seen = entry
     elif entry != __entry_seen:
@@ -219,7 +232,7 @@ def expose():
     through the rejoin. Anything it drives itself, such as a screen, holds its last
     frame.
     """
-    global __exposed, __entry_seen, __entry_pending, __watch_at
+    global __exposed, __entry_seen, __entry_pending, __writes_seen, __watch_at
     if __exposed:
         return False
     try:
@@ -230,6 +243,8 @@ def expose():
     vfs.mount(View(), MOUNT_POINT)
     __rejoin_bus()
     __exposed = True
+    # Counted before the entry is read, as every poll does. Not watching, the first poll looks
+    __writes_seen = rp2.msc_write_count() if __watching else None
     __entry_seen = __effects_entry() if __watching else None
     __entry_pending = None
     __watch_at = None
