@@ -322,7 +322,8 @@ drive appears on a computer. While the computer copies files to this drive, the
 sound pauses with the effects, and replacing a file while it plays silences it
 until the next reload.
 
-Use an uncompressed WAV file, mono or stereo. MP3 is not supported. This drive
+Use an uncompressed 16-bit or 32-bit WAV file, mono or stereo. MP3 is not
+supported, and nor are 8-bit or 24-bit WAV files. This drive
 holds 2.5MB, or 2MB on the Tiny FX W, so a lower sample rate fits more. A minute of 16-bit mono
 takes about 2.6MB at 22kHz and under 1MB at 8kHz.
 
@@ -537,6 +538,7 @@ one. The RGB output shows the colour:
 | --- | --- |
 | white, once | the computer was still writing, so the press was ignored. Try again in a moment |
 | blue, twice | a line in `effects.txt` could not be read. `errors.txt` names the line |
+| blue, twice | a sound could not be played. `errors.txt` names the line. A sound's error appears there once the board has the drive back |
 | red, three times | there was no room to write `errors.txt`. This drive is full or damaged, so free some space or repair it from a computer |
 
 A setting with an invalid value is ignored and noted in `errors.txt`,

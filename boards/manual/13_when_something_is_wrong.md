@@ -18,6 +18,9 @@ means a more serious one:
 <!-- if not screens -->
 | blue, twice | a line in `effects.txt` could not be read. `errors.txt` names the line |
 <!-- end -->
+<!-- if sound -->
+| blue, twice | a sound could not be played. `errors.txt` names the line. A sound's error appears there once the board has the drive back |
+<!-- end -->
 | red, three times | there was no room to write `errors.txt`. This drive is full or damaged, so free some space or repair it from a computer |
 
 A setting with an invalid value is ignored and noted in `errors.txt`,

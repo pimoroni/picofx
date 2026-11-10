@@ -21,7 +21,8 @@ drive appears on a computer. While the computer copies files to this drive, the
 sound pauses with the effects, and replacing a file while it plays silences it
 until the next reload.
 
-Use an uncompressed WAV file, mono or stereo. MP3 is not supported. This drive
+Use an uncompressed 16-bit or 32-bit WAV file, mono or stereo. MP3 is not
+supported, and nor are 8-bit or 24-bit WAV files. This drive
 holds __DRIVE_SIZE__, so a lower sample rate fits more. A minute of 16-bit mono
 takes about 2.6MB at 22kHz and under 1MB at 8kHz.
 
