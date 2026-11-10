@@ -163,6 +163,9 @@ class WavPlayer:
     # since each flash write stalls the audio
     WRITE_HOLD_MS = 500
 
+    # The gain that leaves samples as they are, which the volume scaling skips
+    FULL_GAIN = 32768
+
     # ibuf_ms grows the I2S ring to hold at least that many milliseconds of whatever plays, for a
     # board whose refills can be held up. The ring is sized from the sound's byte rate as it starts
     def __init__(self, id, sck_pin, ws_pin, sd_pin, amp_enable=None, ibuf_len=INTERNAL_BUFFER_LENGTH, root="/", ibuf_ms=None):
@@ -190,6 +193,7 @@ class WavPlayer:
         self.__mode = WavPlayer.MODE_WAV
         self.__wav_file = None
         self.__loop_wav = False
+        self.__gain = self.FULL_GAIN    # The volume as a gain in 32768ths
         self.__fade_length = 0          # The samples a fade takes at the current sound's rate
         self.__fade = 0                 # Samples still to rise from silence
         self.__fading_out = 0           # Samples still to fall to silence, the player pausing after
@@ -218,6 +222,20 @@ class WavPlayer:
 
     def set_root(self, root):
         self.__root = root.rstrip("/") + "/"
+
+    @property
+    def volume(self):
+        """
+        The volume of tones and 16-bit WAVs, from 0.0 for silence to 1.0 for the sound as
+        recorded. A change reaches a playing sound at its next refill. A 32-bit WAV ignores it.
+        """
+        return self.__gain / self.FULL_GAIN
+
+    @volume.setter
+    def volume(self, volume):
+        if volume < 0.0 or volume > 1.0:
+            raise ValueError("volume out of range. Expected 0.0 to 1.0")
+        self.__gain = int(volume * self.FULL_GAIN + 0.5)
 
     # Where the file object has a changed() method, the WAV ends once the computer's writes to
     # the USB drive finish if it answers True, and comes back otherwise
@@ -437,6 +455,10 @@ class WavPlayer:
 
         self.__state = WavPlayer.NONE   # Return to the none state
 
+    def __quieten(self, samples, length):
+        # Scale 16-bit samples to the volume. Callers skip this at full volume
+        __ramp(samples, length // 2, self.__gain, 0)
+
     def __fade_in(self, samples, length):
         # Each sample still to rise is scaled by how far into the fade it falls
         step = 32768 // self.__fade_length
@@ -582,6 +604,8 @@ class WavPlayer:
                             if num_read == 0:
                                 _ = self.__wav_file.seek(0)    # Play again, so advance to first byte of sample data
                                 self._loop_count += 1
+                        if self.__gain != self.FULL_GAIN and self.__wav_file.bits_per_sample == 16:
+                            self.__quieten(self.__wav_samples_mv, loop_read)
                         if self.__fade:
                             self.__fade_in(self.__wav_samples_mv, loop_read)
                         if self.__fading_out:
@@ -598,6 +622,8 @@ class WavPlayer:
                     return
 
                 if num_read:
+                    if self.__gain != self.FULL_GAIN and self.__wav_file.bits_per_sample == 16:
+                        self.__quieten(self.__wav_samples_mv, num_read)
                     if self.__fade:
                         self.__fade_in(self.__wav_samples_mv, num_read)
                     if self.__fading_out:
@@ -623,10 +649,12 @@ class WavPlayer:
                     self.__standing_aside = True
                     if not self.__fading_out:
                         self.__fading_out = self.__fade_length
-                if self.__fade or self.__fading_out:
-                    # The tone's buffer repeats, so a fade scales a copy of it
+                if self.__fade or self.__fading_out or self.__gain != self.FULL_GAIN:
+                    # The tone's buffer repeats, so the volume and a fade scale a copy of it
                     scaled = self.__tone_scaled
                     scaled[:] = self.__tone_samples
+                    if self.__gain != self.FULL_GAIN:
+                        self.__quieten(scaled, len(scaled))
                     if self.__fade:
                         self.__fade_in(scaled, len(scaled))
                     if self.__fading_out:
