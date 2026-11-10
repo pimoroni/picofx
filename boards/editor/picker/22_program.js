@@ -591,9 +591,7 @@ function programCard(path) {
       banner("Copied to " + copy + " on the FX drive. Open it in Thonny or another editor to " +
              "change it.");
     } catch (e) {
-      banner(e.name === "QuotaExceededError"
-        ? "The FX drive is full. Delete something from it and try again."
-        : "Could not copy " + path.split("/").pop() + " (" + e.message + ").", true);
+      banner("Could not copy " + path.split("/").pop() + ". " + await driveTrouble(e, path), true);
     }
     draw();
   }));

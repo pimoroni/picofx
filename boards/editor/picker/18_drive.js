@@ -140,6 +140,20 @@ async function driveAnswers() {
   }
 }
 
+// The reason a change to the drive failed, as a sentence to follow one saying what failed. The
+// drive may be full, or gone, such as when the board is unplugged while the page holds it, or the
+// file named may be gone from a drive still showing. Any other error is given as the browser
+// words it
+async function driveTrouble(e, name) {
+  if (e.name === "QuotaExceededError")
+    return "The FX drive is full. Delete something from it and try again.";
+  if (!await driveAnswers())
+    return "The FX drive is not showing. Check the board is plugged in, and double-press Boot " +
+           "if the drive does not appear.";
+  if (e.name === "NotFoundError" && name) return nameShown(name) + " is no longer on the FX drive.";
+  return e.message || e.name;
+}
+
 async function readErrors() {
   try {
     var handle = await state.dirHandle.getFileHandle("errors.txt");

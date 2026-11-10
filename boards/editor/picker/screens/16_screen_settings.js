@@ -1024,9 +1024,7 @@ function drawingCopyTile(name) {
       banner("Copied to drawings/" + copy + " on the FX drive. Open it in Thonny or another " +
              "editor to change it.");
     } catch (e) {
-      banner(e.name === "QuotaExceededError"
-        ? "The FX drive is full. Delete something from it and try again."
-        : "Could not copy " + nameShown(name) + " (" + e.message + ").", true);
+      banner("Could not copy " + nameShown(name) + ". " + await driveTrouble(e, name), true);
     }
     draw();
   });

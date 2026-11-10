@@ -233,13 +233,15 @@ async function addFiles(kinds, what, takes) {
   } catch (e) {
     // A dismissed dialog says nothing. Anything else is the browser refusing the files
     if (e.name !== "AbortError")
-      banner("The browser could not open those files (" + e.message + "). " +
-             "Copy them to another folder, such as Downloads, and try again.", true);
+      banner("The browser could not open those files. Copy them to another folder, such as " +
+             "Downloads, and try again.", true);
     return;
   }
   var landed = 0;
   var arrived = [];
   var refused = [];
+  // The first error a copy met, said after the files refused
+  var trouble = null;
   for (var i = 0; i < picked.length; i++) {
     var file;
     try {
@@ -265,6 +267,7 @@ async function addFiles(kinds, what, takes) {
       arrived.push(file.name);
     } catch (e) {
       refused.push(file ? file.name : "a file");
+      trouble = trouble || e;
       if (e.name === "QuotaExceededError") {
         refused = refused.concat(picked.slice(i + 1).map(function (p) { return p.name; }));
         banner("The FX drive filled up: " + landed + " " + what + " copied, no room for " +
@@ -278,10 +281,11 @@ async function addFiles(kinds, what, takes) {
   var unoffered = arrived.filter(function (name) {
     return /\.py$/i.test(name) && !mediaNamed(name);
   });
+  var reason = trouble ? ". " + await driveTrouble(trouble) : "";
   if (refused.length && landed)
-    banner(landed + " copied. These could not be copied: " + refused.join(", "), true);
+    banner(landed + " copied. These could not be copied: " + refused.join(", ") + reason, true);
   else if (refused.length)
-    banner("Nothing copied: " + refused.join(", "), true);
+    banner("Nothing copied: " + refused.join(", ") + reason, true);
   else if (unoffered.length)
     banner(unoffered.join(", ") + " copied, but only drawings appear here. " +
            "A drawing's opening string has a Drawing: line with its name.", true);
@@ -311,7 +315,7 @@ async function removeFromDrive(name, kind) {
     await home.removeEntry(name, {recursive: kind === "folder"});
     await removePictures(home, thumbs);
   } catch (e) {
-    banner("Could not delete " + name + ": " + e.name + ". Is the drive showing?", true);
+    banner("Could not delete " + name + ". " + await driveTrouble(e, name), true);
     return;
   }
   store();

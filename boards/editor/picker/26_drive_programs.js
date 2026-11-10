@@ -386,7 +386,7 @@ async function removeProgram(path) {
       await removePictures(dir, [stem + ".png", stem + "-2.png"]);
     }
   } catch (e) {
-    banner("Could not delete " + name + ": " + e.name + ". Is the drive showing?", true);
+    banner("Could not delete " + name + ". " + await driveTrouble(e, name), true);
     return;
   }
   PROGRAMS = await drivePrograms(drive.dirHandle, true);
