@@ -603,9 +603,11 @@ audio: wav file=ambience.wav loop=yes
 
 | Plays | Settings |
 | --- | --- |
-| `wav` | `file` `loop=no` |
+| `wav` | `file` `loop=no` `volume=1` |
 
 The file plays once each time the effects start, or repeatedly with `loop`.
+`volume` sets how loud it plays, from 0 to 1 or as a percentage, such as
+`volume=50%`.
 
 The board looks for the file in this drive's `sounds` folder, where the picker
 adds sounds, then directly on the drive, then on the board itself. It

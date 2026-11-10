@@ -225,7 +225,8 @@ var CATALOGUE = {
  "audio_effects": {
   "wav": [
    "file",
-   "loop"
+   "loop",
+   "volume"
   ]
  },
  "settings": {
@@ -265,6 +266,7 @@ var CATALOGUE = {
   "folder": "name",
   "fps": "number",
   "loop": "boolean",
+  "volume": "fraction",
   "ping_pong": "boolean",
   "first_as_last": "boolean",
   "width": "count",

@@ -60,10 +60,11 @@ HUB_POSITIONS = "abcdef"
 # from the panel itself
 SCREEN_SIZES = ("2.8", "1.54")
 
-# The one selector that plays sound, "wav" streaming a file once or with loop=true for good
+# The one selector that plays sound, "wav" streaming a file once or with loop=true for good,
+# at full volume unless volume= names a fraction of it
 AUDIO = "audio"
 AUDIO_EFFECTS = {
-    "wav": ("file", "loop"),
+    "wav": ("file", "loop", "volume"),
 }
 
 # The drive folder each effect's file is looked for in before the top of the drive, so a file
@@ -115,6 +116,7 @@ SETTINGS = {
     "folder": "name",
     "fps": "number",
     "loop": "boolean",
+    "volume": "fraction",
     "ping_pong": "boolean",
     "first_as_last": "boolean",
     "width": "count",

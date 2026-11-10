@@ -31,7 +31,7 @@ class Sound:
     # player's ring, which a board may make a few hundred milliseconds long
     FADE_MS = 400
 
-    def __init__(self, wav, handle, loop, scene=None, name="", line=0):
+    def __init__(self, wav, handle, loop, scene=None, name="", line=0, loudness=1.0):
         self.wav = wav
         self.handle = handle
         self.loop = loop
@@ -39,6 +39,7 @@ class Sound:
         self.live = False
         self.__name = name      # The file as the entry names it
         self.__line = line      # The line of the entry's file=, which a failure names
+        self.__loudness = loudness      # The entry's volume=, from 0.0 to 1.0
         self.__at = None        # The position the stall watch last saw
         self.__moved = None     # When that position last changed
         self.__from = 0         # Where the next start picks up, 0 being the top
@@ -51,6 +52,8 @@ class Sound:
         if self.__gone or self.__failed:
             return
         try:
+            # The sounds share the player, so each sets its own volume as it takes the speaker
+            self.wav.volume = self.__loudness
             self.wav.play_wav(self.handle, loop=self.loop, position=self.__from)
         except (OSError, ValueError) as e:
             # Unreadable as a WAV, however it came to be, so nothing plays until a
@@ -266,7 +269,7 @@ def build_sounds(entries, fx, problems, volume=None):
 
         taken.add(entry.scene)
         sounds.append(Sound(wav, handle, bool(settings.get("loop", False)), entry.scene,
-                            target, at))
+                            target, at, settings.get("volume", 1.0)))
 
     return sounds
 
