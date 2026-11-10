@@ -45,6 +45,9 @@ def __ramp(samples: ptr16, count: int, gain: int, step: int):
 class WavReader:
     """A WAV file's header parsed and its sample data read, from a path or an already-open file."""
 
+    # The longest format chunk, which WAVE_FORMAT_EXTENSIBLE writes
+    FORMAT_LENGTH = 40
+
     def __init__(self, file):
         # A path is opened here and closed by close(). An already-open file is
         # the caller's to close, so one handle can be played many times
@@ -57,48 +60,58 @@ class WavReader:
         self._parse(self.wav_file)
 
     def _parse(self, wav_file):
-        chunk_ID = wav_file.read(4)
-        if chunk_ID != b"RIFF":
-            raise ValueError("WAV chunk ID invalid")
-        _ = wav_file.read(4)                            # chunk_size
+        if wav_file.read(4) != b"RIFF":
+            raise ValueError("not a WAV file")
+        _ = wav_file.read(4)                            # riff_size
         if wav_file.read(4) != b"WAVE":
-            raise ValueError("WAV format invalid")
-        sub_chunk1_ID = wav_file.read(4)
-        if sub_chunk1_ID != b"fmt ":
-            raise ValueError("WAV sub chunk 1 ID invalid")
-        _ = wav_file.read(4)                            # sub_chunk1_size
-        _ = struct.unpack("<H", wav_file.read(2))[0]    # audio_format
-        num_channels = struct.unpack("<H", wav_file.read(2))[0]
+            raise ValueError("not a WAV file")
 
-        if num_channels == 1:
-            self.format = I2S.MONO
-        else:
-            self.format = I2S.STEREO
+        # Each chunk is an ID and a size, padded to an even length. Only the format and the
+        # samples are read, and anything else is stepped over, such as the LIST chunk an
+        # audio editor keeps its tags in
+        has_format = False
+        while True:
+            header = wav_file.read(8)
+            if len(header) < 8:
+                raise ValueError("no audio data found" if has_format else "not a WAV file")
+            chunk_id = header[:4]
+            chunk_size = struct.unpack("<I", header[4:])[0]
+            chunk_start = wav_file.tell()
 
-        self.sample_rate = struct.unpack("<I", wav_file.read(4))[0]
-        # if sample_rate != 44_100 and sample_rate != 48_000:
-        #    raise ValueError(f"WAV sample rate of {sample_rate} invalid. Only 44.1KHz or 48KHz audio are supported")
+            if chunk_id == b"fmt ":
+                self.__read_format(wav_file.read(min(chunk_size, self.FORMAT_LENGTH)))
+                has_format = True
+            elif chunk_id == b"data":
+                if not has_format:
+                    raise ValueError("not a WAV file")
+                self.offset = chunk_start
+                self.size = chunk_size
+                break
 
-        _ = struct.unpack("<I", wav_file.read(4))[0]    # byte_rate
-        _ = struct.unpack("<H", wav_file.read(2))[0]    # block_align
-        self.bits_per_sample = struct.unpack("<H", wav_file.read(2))[0]
-
-        # usually the sub chunk2 ID ("data") comes next, but
-        # some online MP3->WAV converters add
-        # binary data before "data".  So, read a fairly large
-        # block of bytes and search for "data".
-
-        binary_block = wav_file.read(200)
-        offset = binary_block.find(b"data")
-        if offset == -1:
-            raise ValueError("WAV sub chunk 2 ID not found")
-
-        self.offset = offset + 44
-
-        wav_file.seek(offset + 40)
-        self.size = struct.unpack("<I", wav_file.read(4))[0]
+            wav_file.seek(chunk_start + chunk_size + (chunk_size & 1))
 
         wav_file.seek(self.offset)
+
+    def __read_format(self, fields):
+        if len(fields) < 16:
+            raise ValueError("not a WAV file")
+        audio_format, num_channels, self.sample_rate, _, _, self.bits_per_sample = \
+            struct.unpack_from("<HHIIHH", fields)     # byte_rate and block_align unused
+
+        # WAVE_FORMAT_EXTENSIBLE carries the real format code at the start of its sub-format
+        if audio_format == 0xFFFE and len(fields) >= 26:
+            audio_format = struct.unpack_from("<H", fields, 24)[0]
+
+        # PCM, at the two sample sizes the I2S peripheral takes
+        if audio_format != 1 or self.bits_per_sample not in (16, 32):
+            raise ValueError("only 16-bit or 32-bit PCM audio is supported")
+        if num_channels not in (1, 2):
+            raise ValueError("only mono or stereo audio is supported")
+
+        self.format = I2S.MONO if num_channels == 1 else I2S.STEREO
+
+        # if sample_rate != 44_100 and sample_rate != 48_000:
+        #    raise ValueError(f"WAV sample rate of {sample_rate} invalid. Only 44.1KHz or 48KHz audio are supported")
 
     def seek(self, pos):
         return self.wav_file.seek(pos + self.offset)
