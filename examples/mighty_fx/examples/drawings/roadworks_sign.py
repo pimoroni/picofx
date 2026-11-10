@@ -197,23 +197,15 @@ def draw_lamps(page):
             lamps.text(letter, start + column * PITCH_W + (CELL_W - wide) // 2, y - LETTERING_TOP, 1)
 
 
-def draw_sign(page, on_the_left):
-    """Draw one frame of the sign, the message lit up behind its face, and the beacons on the face itself."""
-    draw_lamps(page)
-    canvas.blit(lamps, SCALE_FROM, SCALE_TO, image.NEAREST)
-    canvas.blit(mask, 0, 0)
-
-    # Beacons go over the mask, bolted to the face. The first two are the left pair
-    for index, beacon in enumerate(BEACONS):
-        canvas.pen = LIT if (index < 2) == on_the_left else BEACON_OFF
-        canvas.shape(beacon)
-
-
 shown = None
 
 
 def draw():
-    """Draw the sign for the time the drawing has played, only where the page or the beacons change."""
+    """
+    Draw the sign for the time the drawing has played, only where the page or the beacons change.
+
+    The message is lit up behind the sign's face, and the beacons go on the face itself.
+    """
     global shown
     # The page showing and which pair of beacons is lit, all a frame depends on
     frame = (int(ticks / (HOLD * 1000)) % len(MESSAGE), bool(ticks // BEACON_MS % 2))
@@ -222,5 +214,13 @@ def draw():
     if frame == shown:
         return False                # Nothing new, so no frame is sent
 
-    draw_sign(*frame)
+    page, on_the_left = frame
+    draw_lamps(page)
+    canvas.blit(lamps, SCALE_FROM, SCALE_TO, image.NEAREST)
+    canvas.blit(mask, 0, 0)
+
+    # Beacons go over the mask, bolted to the face. The first two are the left pair
+    for index, beacon in enumerate(BEACONS):
+        canvas.pen = LIT if (index < 2) == on_the_left else BEACON_OFF
+        canvas.shape(beacon)
     shown = frame

@@ -221,12 +221,26 @@ def build():
         stack.text(str(ORDER[depth]), x, y, size)
 
 
-def draw_tube(showing):
-    """
-    Draw one frame, the background, the cathode or two carrying current, and the tube.
+build()
+shown = None
 
-    The digit coming on and the one going out arrive in showing, each with its brightness.
+
+def draw():
     """
+    Draw the tube for the time the drawing has played, only where a cathode's brightness changes.
+
+    A frame is the background, the cathode or two carrying current, and the tube.
+    """
+    global shown
+    count, into = divmod(ticks, COUNT_MS)
+    # A tube switches quickly, and for that moment the cathode losing the current still glows. The
+    # digit coming on and the one going out each have their brightness
+    up = min(1.0, into / CHANGE_MS)
+    showing = ((count % 10, round(LIT * up)), ((count - 1) % 10, round(LIT * (1 - up))))
+    # Is this what the screen already shows?
+    if showing == shown:
+        return False                # Nothing new, so no frame is sent
+
     # The background is cleared under first, as its blended pixels fall a little short of opaque
     # and the previous frame would show through them
     canvas.pen = BACKGROUND
@@ -251,22 +265,4 @@ def draw_tube(showing):
     for pen, glass in FRONT:
         canvas.pen = pen
         canvas.shape(glass)
-
-
-build()
-shown = None
-
-
-def draw():
-    """Draw the tube for the time the drawing has played, only where a cathode's brightness changes."""
-    global shown
-    count, into = divmod(ticks, COUNT_MS)
-    # A tube switches quickly, and for that moment the cathode losing the current still glows
-    up = min(1.0, into / CHANGE_MS)
-    showing = ((count % 10, round(LIT * up)), ((count - 1) % 10, round(LIT * (1 - up))))
-    # Is this what the screen already shows?
-    if showing == shown:
-        return False                # Nothing new, so no frame is sent
-
-    draw_tube(showing)
     shown = showing

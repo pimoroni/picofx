@@ -144,12 +144,30 @@ def build(light):
         sheet(stack, ORDER[depth], unlit)
 
 
-def draw_stack(showing, light):
-    """
-    Draw one frame, the stack, the sheet or two with light in them, and the glow.
+build(LIGHT)
 
-    The digit coming on and the one going out arrive in showing, each with its brightness.
+shown = None
+
+
+def draw():
     """
+    Draw the stack for the time the drawing has played, only where a sheet's brightness changes.
+
+    A frame is the stack, the sheet or two with light in them, and the glow.
+    """
+    global shown
+    # Which digit the count is on, and how far into it. The count goes round the stack again and
+    # again, the last digit going out as the first comes up
+    count, into = divmod(ticks % (SHEETS * COUNT_MS), COUNT_MS)
+
+    # A sheet's LED switches quickly, and for that moment the sheet losing it still has some light.
+    # The digit coming on and the one going out each have their brightness
+    up = min(1.0, into / CHANGE_MS)
+    showing = ((ORDER[count], round(LIT * up)), (ORDER[count - 1], round(LIT * (1 - up))))
+    # Is this what the screen already shows?
+    if showing == shown:
+        return False                # Nothing new, so no frame is sent
+
     # The background is cleared under first, as its blended pixels fall a little short of opaque
     # and the previous frame would show through them
     canvas.pen = BACKGROUND
@@ -157,30 +175,8 @@ def draw_stack(showing, light):
     canvas.blit(stack, 0, 0)
     for digit, level in showing:
         if level:
-            sheet(canvas, digit, light.with_alpha(level))
+            sheet(canvas, digit, LIGHT.with_alpha(level))
 
     canvas.bloom(GLOW_FROM, GLOW, GLOW_SPREAD)
     canvas.vignette(CURVE)
-
-
-build(LIGHT)
-
-shown = None
-
-
-def draw():
-    """Draw the stack for the time the drawing has played, only where a sheet's brightness changes."""
-    global shown
-    # Which digit the count is on, and how far into it. The count goes round the stack again and
-    # again, the last digit going out as the first comes up
-    count, into = divmod(ticks % (SHEETS * COUNT_MS), COUNT_MS)
-
-    # A sheet's LED switches quickly, and for that moment the sheet losing it still has some light
-    up = min(1.0, into / CHANGE_MS)
-    showing = ((ORDER[count], round(LIT * up)), (ORDER[count - 1], round(LIT * (1 - up))))
-    # Is this what the screen already shows?
-    if showing == shown:
-        return False                # Nothing new, so no frame is sent
-
-    draw_stack(showing, LIGHT)
     shown = showing

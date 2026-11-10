@@ -158,7 +158,6 @@ RIM_DIRECTIONS = [(math.cos(2 * math.pi * step / RIM_STEPS), math.sin(2 * math.p
 RIM_LINE_OUTER = OUTER - RIM_W * 1.5                # Where the rim's line sits at its widest, its glow reaching the edge
 OPEN_PATH = shape.ALIGN_CENTER | shape.PATH_OPEN
 OPENING_SHAPE = shape.ellipse(MIDDLE_X, MIDDLE_Y, OUTER * SQUASH, OUTER)
-dim_pen = color.rgb(*VOID).with_alpha(0)    # The dark laid over the opening, set for each frame from the time since the last
 undimmed = 0                                # The ms the opening has gone without its dark laid over it
 
 
@@ -287,11 +286,35 @@ motes = [Mote() for _ in range(MOTES)]
 spun = 0.0                          # How far the arms have turned, wrapping at the angle between two arms
 
 
-def draw_portal(seconds):
-    """Draw one frame, the opening dimmed, the arms turned further by the seconds since the last, the motes, and the rim."""
-    global spun
+# Only the opening is drawn to and dimmed from now on, so the wall or the black round it is drawn once
+if STONES:
+    build_wall()
+else:
+    canvas.pen = BACKGROUND
+    canvas.clear()
+canvas.pen = color.rgb(*VOID)
+canvas.shape(OPENING_SHAPE)
+
+
+def draw():
+    """
+    Draw the portal moved on by the time since the last frame, the streaks fading by time whatever the frame rate.
+
+    A frame is the opening dimmed, the arms turned further, the motes, and the rim.
+    """
+    global spun, undimmed
+    undimmed += ticks_delta
+    alpha = round(255 * (1 - (1 - DIM / 255) ** (undimmed / DIM_MS)))
+    # Whether the dark owed takes a channel down a level. A fainter one leaves the streaks short of
+    # black, so at a fast frame rate it is saved up for a later frame
+    if alpha < DIM_LEAST:
+        alpha = 0
+    else:
+        undimmed = 0
+
+    seconds = ticks_delta / 1000
     spun = (spun + SPIN * seconds) % BETWEEN_ARMS
-    canvas.pen = dim_pen
+    canvas.pen = color.rgb(*VOID).with_alpha(alpha)
     canvas.shape(OPENING_SHAPE)
 
     for arm in range(ARMS):
@@ -307,28 +330,3 @@ def draw_portal(seconds):
     canvas.antialias = ANTIALIAS
     canvas.pen = RIM_LINE
     canvas.shape(shape.custom(rim).stroke(RIM_W, shape.ALIGN_CENTER))
-
-
-# Only the opening is drawn to and dimmed from now on, so the wall or the black round it is drawn once
-if STONES:
-    build_wall()
-else:
-    canvas.pen = BACKGROUND
-    canvas.clear()
-canvas.pen = color.rgb(*VOID)
-canvas.shape(OPENING_SHAPE)
-
-
-def draw():
-    """Draw the portal moved on by the time since the last frame, the streaks fading by time whatever the frame rate."""
-    global dim_pen, undimmed
-    undimmed += ticks_delta
-    alpha = round(255 * (1 - (1 - DIM / 255) ** (undimmed / DIM_MS)))
-    # Whether the dark owed takes a channel down a level. A fainter one leaves the streaks short of
-    # black, so at a fast frame rate it is saved up for a later frame
-    if alpha < DIM_LEAST:
-        alpha = 0
-    else:
-        undimmed = 0
-    dim_pen = color.rgb(*VOID).with_alpha(alpha)
-    draw_portal(ticks_delta / 1000)

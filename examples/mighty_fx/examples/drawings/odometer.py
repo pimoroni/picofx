@@ -147,18 +147,6 @@ source = rect(0, 0, DRUM_W, 1)
 target = rect(0, 0, DRUM_W, 1)
 
 
-def draw_drum(drum, turned):
-    """Draw a drum turned this many digits round from 0, copying each row from where it faces on the strip."""
-    strip = strips[drum]
-    middle = turned * CELL_H + CELL_H / 2
-    target.x = LEFT + drum * (DRUM_W + DRUM_GAP)
-    for row, arc in enumerate(facing):
-        source.y = int((middle + arc) % STRIP_H)
-        target.y = TOP + row
-        canvas.blit(strip, source, target)
-    canvas.blit(shade, target.x, TOP)
-
-
 def positions(whole, fraction):
     """
     Calculate how far round each drum has turned, left to right, for a count in the last drum's units.
@@ -252,6 +240,15 @@ def draw():
     turned = positions(START + whole, thousandths / 1000)
 
     for drum in range(DRUMS):
-        if turned[drum] != shown[drum]:
-            draw_drum(drum, turned[drum])
-            shown[drum] = turned[drum]
+        if turned[drum] == shown[drum]:
+            continue
+
+        # A drum turned this many digits round from 0 copies each row from where it faces on the strip
+        middle = turned[drum] * CELL_H + CELL_H / 2
+        target.x = LEFT + drum * (DRUM_W + DRUM_GAP)
+        for row, arc in enumerate(facing):
+            source.y = int((middle + arc) % STRIP_H)
+            target.y = TOP + row
+            canvas.blit(strips[drum], source, target)
+        canvas.blit(shade, target.x, TOP)
+        shown[drum] = turned[drum]

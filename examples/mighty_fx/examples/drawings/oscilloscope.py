@@ -89,7 +89,6 @@ tube.pen = GLASS
 tube.rectangle(whole_face)
 
 HALO_PEN = HALO.with_alpha(HALO_ALPHA)
-dim_pen = GLASS.with_alpha(0)       # The glass laid over the old trace, set for each frame from the time since the last
 undimmed = 0                        # The ms the trace has gone without the glass laid over it
 
 
@@ -161,22 +160,13 @@ WAVE_SECONDS = SINE_SECONDS + GROW_SECONDS + MELT_SECONDS
 CYCLE_MS = round((WAVE_SECONDS + XY_SECONDS) * 1000)
 
 
-def draw_scope(seconds):
-    """Draw one frame this far into the demonstration, the old trace dimmed, the graticule, and the beam where it is now."""
-    tube.pen = dim_pen
-    tube.rectangle(whole_face)
-    graticule()
-
-    # Whether the demonstration is on the wave or the figure, cutting between them as a real scope switches to XY
-    if seconds < WAVE_SECONDS:
-        trace(wave(seconds))
-    else:
-        trace(lissajous(seconds - WAVE_SECONDS))
-
-
 def draw():
-    """Draw the scope for the time the drawing has played, the afterglow fading by time whatever the frame rate."""
-    global dim_pen, undimmed
+    """
+    Draw the scope for the time the drawing has played, the afterglow fading by time whatever the frame rate.
+
+    A frame is the old trace dimmed, the graticule, and the beam where it is now.
+    """
+    global undimmed
     undimmed += ticks_delta
     alpha = round(255 * (1 - (1 - DIM / 255) ** (undimmed / DIM_MS)))
     # Whether the glass owed takes a channel down a level. A fainter one leaves the trace short of
@@ -185,6 +175,14 @@ def draw():
         alpha = 0
     else:
         undimmed = 0
-    dim_pen = GLASS.with_alpha(alpha)
+    tube.pen = GLASS.with_alpha(alpha)
+    tube.rectangle(whole_face)
+    graticule()
+
     # Kept in whole milliseconds until the fraction is wanted, as a float of hours of running loses it
-    draw_scope(ticks % CYCLE_MS / 1000)
+    seconds = ticks % CYCLE_MS / 1000
+    # Whether the demonstration is on the wave or the figure, cutting between them as a real scope switches to XY
+    if seconds < WAVE_SECONDS:
+        trace(wave(seconds))
+    else:
+        trace(lissajous(seconds - WAVE_SECONDS))

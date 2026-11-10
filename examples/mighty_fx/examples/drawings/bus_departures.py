@@ -292,11 +292,26 @@ def draw_row(index, entry, now):
     draw_mark(kind, mark, y + MARK_CY)
 
 
-def draw_board(number, now):
-    """Draw the whole board, the header band, the column headings, a page of the listing and the note."""
+shown = None
+
+
+def draw():
+    """
+    Draw the board for the time the drawing has played, only where the minute or the page changes.
+
+    A frame is the whole board, the header band, the column headings, a page of the listing and the note.
+    """
+    global shown
+    # Nothing on the board moves, so it is only drawn again when the minute or the page changes
+    now = board_minute(ticks)
+    frame = (now, int(ticks // (PAGE_HOLD * 1000)))
+    # Is this what the screen already shows?
+    if frame == shown:
+        return False                # Nothing new, so no frame is sent
+
     due = departures(now)
     pages = max(1, (len(due) + ROWS - 1) // ROWS)
-    number %= pages
+    number = frame[1] % pages
 
     canvas.pen = BODY
     canvas.clear()
@@ -329,20 +344,4 @@ def draw_board(number, now):
     canvas.pen = NOTE_TEXT
     canvas.text(NOTES[number % len(NOTES)], rect(MARGIN, NOTE_Y, WIDTH - MARGIN * 2, NOTE_BOX),
                 font_size=NOTE_SIZE, line_height=NOTE_SPACING)
-
-
-shown = None
-
-
-def draw():
-    """Draw the board for the time the drawing has played, only where the minute or the page changes."""
-    global shown
-    # Nothing on the board moves, so it is only drawn again when the minute or the page changes
-    now = board_minute(ticks)
-    frame = (now, int(ticks // (PAGE_HOLD * 1000)))
-    # Is this what the screen already shows?
-    if frame == shown:
-        return False                # Nothing new, so no frame is sent
-
-    draw_board(frame[1], now)
     shown = frame

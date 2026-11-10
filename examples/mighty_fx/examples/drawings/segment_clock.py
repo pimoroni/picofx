@@ -275,14 +275,28 @@ def clock_now(elapsed):
     return reading[:DIGITS]
 
 
-def draw_reading(reading, colons_lit):
-    """Draw one frame, the background with the segments each character lights over it."""
+shown = None
+
+
+def draw():
+    """
+    Draw the clock for the time the drawing has played, only where the reading or the colons change.
+
+    A frame is the background with the segments each character lights over it.
+    """
+    global shown
+    showing = (clock_now(ticks), ticks % 1000 < COLON_MS)
+    # Is this what the screen already shows?
+    if showing == shown:
+        return False                # Nothing new, so no frame is sent
+
     # Cleared under first. The background's blended pixels fall a little short of opaque, so without the
     # clear the previous frame shows through them
     canvas.pen = CASE
     canvas.clear()
     canvas.blit(background, 0, 0)
 
+    reading, colons_lit = showing
     canvas.pen = LIT
     for bars, character in zip(digits, reading):
         for name in LIGHTS[character]:
@@ -290,18 +304,4 @@ def draw_reading(reading, colons_lit):
     if colons_lit:
         for dot in colons:
             canvas.shape(dot)
-
-
-shown = None
-
-
-def draw():
-    """Draw the clock for the time the drawing has played, only where the reading or the colons change."""
-    global shown
-    showing = (clock_now(ticks), ticks % 1000 < COLON_MS)
-    # Is this what the screen already shows?
-    if showing == shown:
-        return False                # Nothing new, so no frame is sent
-
-    draw_reading(*showing)
     shown = showing

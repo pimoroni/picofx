@@ -60,7 +60,6 @@ PROJECTORS = ((WIDTH * 0.1, HEIGHT - RAISED), (WIDTH * 0.5, HEIGHT - RAISED), (W
 FITTED = (0, 2) if NARROW else (0, 1, 2)
 REACH = math.sqrt(WIDTH ** 2 + HEIGHT ** 2)         # Further than any beam can need, for an edge it never meets
 hall = rect(0, 0, WIDTH, HEIGHT)
-dim_pen = HALL.with_alpha(0)        # The dark laid over the last frame, set for each frame from the time since the last
 undimmed = 0                        # The ms the hall has gone without its dark laid over it
 
 # Every projector's housing and lens made once, a shape built per frame being an allocation
@@ -164,11 +163,30 @@ SCENES = tuple((scene, narrow if NARROW else wide) for scene, wide, narrow in RU
 CYCLE_MS = round(SCENE_SECONDS * len(SCENES) * 1000)
 
 
-def draw_show(seconds):
-    """Draw one frame, the last dimmed into the hall, then the beams of the scene running now."""
-    canvas.pen = dim_pen
+canvas.pen = HALL
+canvas.clear()
+
+
+def draw():
+    """
+    Draw the show for the time the drawing has played, the afterglow fading by time whatever the frame rate.
+
+    A frame is the last one dimmed into the hall, then the beams of the scene running now.
+    """
+    global undimmed
+    undimmed += ticks_delta
+    alpha = round(255 * (1 - (1 - DIM / 255) ** (undimmed / DIM_MS)))
+    # Whether the dark owed takes a channel down a level. A fainter one leaves the beams' sheets short
+    # of black, so at a fast frame rate it is saved up for a later frame
+    if alpha < DIM_LEAST:
+        alpha = 0
+    else:
+        undimmed = 0
+    canvas.pen = HALL.with_alpha(alpha)
     canvas.rectangle(hall)
 
+    # Kept in whole milliseconds until the fraction is wanted, as a float of hours of running loses it
+    seconds = ticks % CYCLE_MS / 1000
     scene, switching = SCENES[int(seconds / SCENE_SECONDS) % len(SCENES)]
     on = switching[int(seconds % SCENE_SECONDS / SWITCH_SECONDS) % len(switching)]
     scene(seconds, on)
@@ -179,23 +197,3 @@ def draw_show(seconds):
         canvas.shape(HOUSINGS[projector])
         canvas.pen = LENS_ON if projector in on else LENS_OFF
         canvas.shape(LENSES[projector])
-
-
-canvas.pen = HALL
-canvas.clear()
-
-
-def draw():
-    """Draw the show for the time the drawing has played, the afterglow fading by time whatever the frame rate."""
-    global dim_pen, undimmed
-    undimmed += ticks_delta
-    alpha = round(255 * (1 - (1 - DIM / 255) ** (undimmed / DIM_MS)))
-    # Whether the dark owed takes a channel down a level. A fainter one leaves the beams' sheets short
-    # of black, so at a fast frame rate it is saved up for a later frame
-    if alpha < DIM_LEAST:
-        alpha = 0
-    else:
-        undimmed = 0
-    dim_pen = HALL.with_alpha(alpha)
-    # Kept in whole milliseconds until the fraction is wanted, as a float of hours of running loses it
-    draw_show(ticks % CYCLE_MS / 1000)

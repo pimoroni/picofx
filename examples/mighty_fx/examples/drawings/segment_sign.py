@@ -275,8 +275,28 @@ for ghost, row in zip(GHOST, cells):
             background.shape(segment)
 
 
-def draw_page(page, offsets):
-    """Draw one frame, the background with the segments each place on the sign lights over it."""
+page_index = 0
+started = 0                         # When the page showing came up, in the drawing's ticks
+shown = None
+
+
+def draw():
+    """
+    Draw the sign for the time the drawing has played, only where the page or a row's scroll changes.
+
+    A frame is the background with the segments each place on the sign lights over it.
+    """
+    global page_index, started, shown
+    if ticks - started >= page_ms(pages[page_index]):
+        page_index = (page_index + 1) % len(pages)
+        started = ticks
+
+    page = pages[page_index]
+    offsets = tuple(scrolled(row, ticks - started) for row in page)
+    # Is this what the screen already shows?
+    if (page_index, offsets) == shown:
+        return False                # Nothing new, so no frame is sent
+
     # Cleared under first. The background's blended pixels fall a little short of opaque, so without the
     # clear the previous frame shows through them
     canvas.pen = CASE
@@ -290,25 +310,4 @@ def draw_page(page, offsets):
                 canvas.shape(bars[name])
             if point:
                 canvas.shape(bars["dp"])
-
-
-page_index = 0
-started = 0                         # When the page showing came up, in the drawing's ticks
-shown = None
-
-
-def draw():
-    """Draw the sign for the time the drawing has played, only where the page or a row's scroll changes."""
-    global page_index, started, shown
-    if ticks - started >= page_ms(pages[page_index]):
-        page_index = (page_index + 1) % len(pages)
-        started = ticks
-
-    page = pages[page_index]
-    offsets = tuple(scrolled(row, ticks - started) for row in page)
-    # Is this what the screen already shows?
-    if (page_index, offsets) == shown:
-        return False                # Nothing new, so no frame is sent
-
-    draw_page(page, offsets)
     shown = (page_index, offsets)
