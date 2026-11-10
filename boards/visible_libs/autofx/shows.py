@@ -641,9 +641,12 @@ def service_shows(shows, between=None):
                 show.send()
             return True
 
+    waiting = len(due)
     for show in due:
-        show.service()
-        if between is not None and between():
+        show.send()
+        waiting -= 1
+        # Is another screen still to come? After the last, the caller looks for itself
+        if waiting and between is not None and between():
             break
 
     return bool(due)
