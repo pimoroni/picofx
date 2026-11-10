@@ -30,12 +30,16 @@
 
 * { box-sizing: border-box; }
 
+/* Hold the footer at the foot of the window when the page is shorter than it */
 body {
   margin: 0;
   padding: 0;
   background: var(--bg);
   color: var(--ink);
   font: 16px/1.62 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 header {
@@ -70,6 +74,7 @@ header a:hover,
 footer nav a:hover { border-color: var(--accent); color: var(--accent); }
 
 .page {
+  width: 100%;
   max-width: 68rem;
   margin: 0 auto;
   padding: 1.5rem 1.4rem 4rem;
@@ -293,6 +298,7 @@ main li { margin: 0.25rem 0; }
 .rebuilt p { margin: 0; }
 
 footer {
+  margin-top: auto;
   padding: 1.1rem 1.4rem 1.25rem;
   background: var(--panel);
   border-top: 1px solid var(--line);
