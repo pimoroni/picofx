@@ -5,6 +5,7 @@
   {"name": "rgb", "kind": "colour", "breaks_out": false}
  ],
  "output_words": {
+  "tab": "LED",
   "panel": "the board's own RGB LED",
   "colour": "RGB LED", "colour_says": "any colour",
   "mono": "Mono lights", "mono_says": ""

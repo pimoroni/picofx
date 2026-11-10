@@ -12,7 +12,7 @@
 // keeps to them: the whole board is being set up, a section at a time, and the tabs stay
 // live to move between sections while it is.
 
-var TAB_NAMES = {outPanel: "Outputs"};
+var TAB_NAMES = {outPanel: BOARD.output_words.tab};
 BOARD.strips.forEach(function (strip) { TAB_NAMES[strip.name + "Panel"] = strip.tab; });
 
 // The sections with a tab, the LED ones and any other a page adds. A board whose strips are what it

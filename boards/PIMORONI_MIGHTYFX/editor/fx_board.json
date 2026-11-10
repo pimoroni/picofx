@@ -11,6 +11,7 @@
   {"name": "out7", "kind": "colour", "breaks_out": true}
  ],
  "output_words": {
+  "tab": "Outputs",
   "panel": "seven of them, each one light or three",
   "colour": "Colour outputs", "colour_says": "no adapter fitted",
   "mono": "Mono lights", "mono_says": "three to every output broken out"
