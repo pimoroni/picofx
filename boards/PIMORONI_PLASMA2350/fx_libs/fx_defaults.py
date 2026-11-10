@@ -50,36 +50,35 @@ rgb: rainbow speed=0.39
 README = """\
 Plasma 2350
 ===========
-Edit effects.txt to change what the lights do and save it, and the board plays
-the change a few seconds later. One line per strip, or for the board's own LED:
+Open PICKER.html on this drive in Chrome or Edge to choose what the strips, the
+board's LED and the screen play. Press "Open FX drive" and choose this drive,
+pick a look from the cards, then press "Save to board". The board plays it a few
+seconds later.
 
-  board: stripDat=60
-  stripDat: rainbow_wave speed=0.3
-  rgb: rainbow speed=0.3
-
-MANUAL.html on this drive has the rest, and opens in a browser: every effect and
-what it takes, the screen, running a program, and showing scenes one after
-another.
+MANUAL.html on this drive shows you around the picker and everything else the
+board can do, and opens in any browser.
 
 If a save does not seem to take, press "Boot" once or eject this drive, since a
-computer does not always write the file out straight away. Press "Boot" twice to
-hide the drive, and twice again to bring it back.
-
-Deleting effects.txt restores the default; emptying it leaves the board dark.
+computer does not always finish writing to a drive straight away. Press "Boot"
+twice to hide the drive, and twice again to bring it back.
 
 When something is wrong, the board's LED flashes:
 
   white, once         the computer was still writing, so the press did nothing.
                       Try again in a moment
-  blue, twice         something in effects.txt could not be read, or a drawing
-                      failed. errors.txt says which line. For a drawing it says
-                      so once "Boot" is pressed or this drive is ejected
+  blue, twice         something saved could not be read, or a drawing failed.
+                      "Check board" in the picker shows what. For a drawing it
+                      says so once "Boot" is pressed or this drive is ejected
   red, three times    there was no room to write errors.txt. This drive is full
                       or damaged, so free some space or let a computer repair it
 
 While the computer is copying to this drive, the board's LED glows a dim white
 with a brighter blink in place of the effects, which come back a moment after it
 finishes.
+
+The picker saves to effects.txt, which can also be edited by hand. EDITOR.html
+helps with that, and the manual describes every line. Deleting effects.txt
+restores the default, and emptying it leaves the board dark.
 
 This README is rebuilt by the board, so edits to it will not stick.
 """

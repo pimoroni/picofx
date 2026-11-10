@@ -2,78 +2,220 @@
 
 # Tiny FX
 
-Six mono outputs, one RGB output, a speaker, and a text file that controls them. Edit `effects.txt` on this
-drive and save it, and the board plays the change a few seconds later. No code
-is needed, though you can write your own programs when you want to.
+Six mono outputs, one RGB output, a speaker, and a page on this drive that sets them all up for you. Open the
+picker, choose your looks and save, and you'll see them play a few seconds
+later. No code is needed, though you can write your own programs whenever you
+want to.
 
 ## Getting started
 
-Edit `effects.txt` and save it to change what the lights do. A few seconds later
-the drive disappears briefly, then comes back with the new effects running, so
-you can keep editing.
+The quickest way to start is the picker. Open it in Chrome or Edge, with
+[[Picker]] at the top of this page or `PICKER.html` on this drive, then press
+[[Open FX drive]] and choose this drive. Choose a look from the cards and press
+[[Save to board]]. A few seconds later the drive disappears briefly, then comes
+back with your changes playing. [The picker](#the-picker) shows you everything
+else it can do.
 
 If a save does not seem to work, press **Boot** once or eject this drive, as a
-computer does not always write the file straight away. Double-press **Boot** to
-hide the drive, and double-press it again to show it.
+computer does not always finish writing to a drive straight away.
+
+You can hide the drive when you don't need it. Double-press **Boot** to hide it,
+and double-press again to bring it back.
 Each double press runs a dim light along the outputs, towards the
 USB connector when the drive is shown and away from it when it is hidden.
-
-Deleting `effects.txt` restores the default file. Emptying it turns everything
-off.
 
 While the computer copies files to this drive, the effects pause and a
 dim light travels along the outputs. The effects resume shortly
 after the copy finishes.
 
-**Prefer not to write the file by hand? `PICKER.html` on this drive writes it
-for you. See [the picker](#the-picker). `EDITOR.html` helps you write it,
-suggesting names as you type. See [the editor](#the-editor).**
-
 **The board also comes with ready-made programs, from single effects to whole
-builds, and one line in `effects.txt` runs any of them. See [what is already
-on the board](#what-is-already-on-the-board).**
+builds, and the picker can run any of them. See [what is already on the
+board](#what-is-already-on-the-board).**
 
 ## The picker
 
-`PICKER.html` on this drive writes `effects.txt` for you. Open it in Chrome or
-Edge, press **Open FX drive** and choose this drive, and the page loads the file
-the board is playing, so you can carry on from there. A preview of the file it
-will write is at the foot of the page.
+The picker is where you choose what your board plays, from the looks on its
+lights to a whole program. You'll be greeted with whatever the board is playing
+right now, so you can carry on from there. Nothing reaches the board until you
+press [[Save to board]], so feel free to try things out.
 
-The picker has two tabs, **Effects** and **Programs**. **Effects**
-controls the lights and sound: select a stretch of outputs, choose a look from
-the cards, and adjust its settings. A run can be split into stretches, each
-playing its own look. **Edit board**, at the end of the lights' tabs, sets the
-order the lights are wired in, and moving the RGB output across to the mono side
-splits it into three mono lights. The Sound tab lists the sounds on this drive,
-and can copy files onto the drive or delete them. Press **+** to split your
-setup into scenes that play one after another, each with its own looks and sound. Anything
-on the **Always on** tab plays under every scene.
+### The page: Getting around
+
+Along the top are [[Open FX drive]], [[Save to board]] and [[Check board]]. Below
+them are two large tabs. **Effects** is where you'll spend most of your time, and
+**Programs** runs a program instead.
+
+```picker
+header: Tiny FX Picker
+pages: *Effects, Programs
+tabs: *Outputs=mono Wave, Sound
+```
+
+Under **Effects** you'll find **Outputs** for the lights and **Sound** for the
+speaker. Each tab shows a small preview of what it's playing, and [[Edit board]]
+sits at the end of the row.
+
+### Lights: Choosing a look
+
+On **Outputs** you'll see your lights, and below them a bar showing what each
+stretch of them plays.
+
+When your board is new, the picker opens on **Outputs**. The six mono outputs are
+one stretch playing Wave, and the RGB output has a stretch of its own playing
+Rainbow.
+
+```picker
+badge: Wiring, the RGB output is one colour light
+mono: *Wave 6
+colour RGB: Rainbow 1
+tools:
+settings: Wave, on outputs 1 to 6, Brightness 100, Speed 45, Spread 50
+cards mono Along the lights: *Wave, Scanner, Chase, Marquee
+```
+
+Click the bar, or any light, to select that stretch. Then click a card in the
+gallery to play that look there.
+
+The cards are grouped by how they play. **Along the lights** travel from one end
+to the other, **Ready-made** looks combine several others, **All together** shows
+the same on every light, and **Individual** gives each light its own part. Cards
+with a small palette let you choose the colour, and [[Nothing]] turns the stretch
+off.
+
+The selected stretch's settings sit just above the gallery. Every look has a
+brightness, and most also have a speed and a setting of their own. A look that
+takes a colour shows a row of colours to choose from, with [[custom]] for any
+other. [[Reverse]] changes which end a travelling look starts from. If you want
+an exact figure, the arrow at the right of the sliders opens a drawer to type it
+in.
+
+### Lights: Cutting into stretches
+
+To play more than one look, cut the bar into stretches. Hover over the bar where
+you want a cut, between two lights, and click.
+
+Try it between mono lights 3 and 4. You'll have two stretches, both still playing
+Wave. Click the right-hand one and choose Sparkle, and lights 4 to 6 start to
+twinkle.
+
+```picker
+mono: Wave 3, *Sparkle 3
+colour RGB: Rainbow 1
+tools:
+settings: Sparkle, on outputs 4 to 6, Brightness 100
+cards mono Individual: *Sparkle, Counter, Traffic light, Pelican crossing
+```
+
+Drag a cut to move it, or click the cross on it to remove it.
+
+The tools under the bar do the same in one go. [[Split into]] cuts the selected
+stretch into a number of equal [[stretches]], or into stretches of so many
+[[lights each]]. [[Join all]] puts the bar back to one stretch. [[Repeat]] takes
+the number of stretches you set, starting with the selected one, and repeats
+them to the end. The arrows above the bar undo and redo.
+
+### Board: Setting up your hardware
+
+Press [[Edit board]] to tell the picker about your hardware. Everything else
+fades while you're there, and [[Done]] takes you back.
+
+Look out for the chip icon on [[Edit board]]. The picker marks every board
+setting with it, such as the order your lights are wired in. These settings
+describe your hardware, so they're shared by every scene.
+
+```picker
+tabs editing: *Outputs=mono Wave, Sound
+badge: Wiring, the RGB output is one colour light | Drag each light to match its position in your build.
+wiring mono Wave: 1, 2, 3, 4, 5, 6 | RGB
+```
+
+Drag each light to match where it sits in your build, so a look that travels
+moves the right way. The arrow on the RGB output moves it across to the mono side
+as three mono lights, or brings them back as one colour light.
+
+### Sound: Choosing a sound
+
+Once the drive is open, the **Sound** tab lists the WAV files on it. Choose one
+to play alongside the lights, or [[Silence]] for none. [[Loop]] repeats it
+instead of playing it once, and the volume slider sets how loud the board plays
+it. To add your own, drop a WAV file onto the tab and the picker copies it onto
+the drive.
+
+```picker
+sounds: *rain.wav, doorbell.wav, Silence
+```
+
+### Scenes: Playing one after another
+
+Press [[+ split into scenes]] to have the board play one setup after another.
+Each scene gets its own tab, with a name, how many seconds it shows for and
+everything it plays. [[+ another scene]] adds one, the cross on a tab removes
+it, and you can drag the tabs to change the order. [[Restart]] makes a scene
+start its effects from the beginning each time it plays, instead of carrying on
+where they left off.
+
+```picker
+pages: *Effects, Programs
+scenes: Always on, *Scene 1 10s
+```
+
+Anything on the **Always on** tab plays under every scene. A scene that plays on
+the same part of the board takes over from it while that scene shows.
+
+### Programs: Running a program
 
 **Programs** lists the board's programs, what a remote, a sensor or a speaker brings, and any of
 your own programs on this drive, to run instead of the effects.
-Choose one and save, and the board restarts to run it. [Your program in the
-picker](#your-program-in-the-picker) explains how your own programs appear there.
+Choose one and save, and the board restarts to run it. The **With** buttons above
+the list name the hardware the programs use, so turn off anything you don't have
+and you'll only see programs that work without it. [[Choose none]] goes back to
+the effects. [Your program in the picker](#your-program-in-the-picker) explains
+how your own programs appear there.
 
-**Save to board** writes the file, and the board loads it a few seconds later.
-The arrow beside it opens the save settings. Untick "Play saves without an eject"
-and the board waits for an eject or a single press of **Boot**, which is
-`reload=manual`. "Keep the drive hidden at start" is `drive=manual`. **Check
-board** reads `errors.txt` and shows any problems the board found with each line.
+```picker
+pages: Effects, *Programs=Ship thrusters
+note: ship_thrusters.py
+with: remote, Qw/ST, speaker
+programs Model lighting | thrusters, beacons and lit postcards: Rescue vehicle, *Ship thrusters, Space tales
+```
+
+### Saving: Sending to the board
+
+[[Save to board]] writes your changes, and the board loads them a few seconds
+later. The picker tells you when the board is playing your save, and whether it
+found any problems. [[Check board]] asks the board again at any time.
+
+The arrow beside [[Save to board]] opens the save settings. Untick "Play saves
+without an eject" and the board waits for an eject or a single press of
+**Boot**. Tick "Keep the drive hidden at start" and the drive stays hidden until
+**Boot** is double-pressed.
+
+```picker
+header: Tiny FX Picker | Playing on the board. No problems reported.
+savemenu:
+```
+
 On a Mac, each save shows "Disk Not Ejected Properly" once and closes any Finder
-window on this drive. The drive comes back a few seconds later and the page
-continues.
+window on this drive. Don't worry, the drive comes back a few seconds later and
+the page carries on.
 
 The page can only reach the drive in Chrome, Edge or another Chromium-based
 browser. Safari and Firefox cannot write to a drive from a web page, so the
-picker says so there, but `effects.txt` can still be edited in any text
-editor.
+picker says so there. [The editor](#the-editor) can still save from them, as a
+download.
 
-The picker writes an ordinary `effects.txt`, so anything it makes can be edited
-by hand afterwards. Lines the picker cannot edit are kept unchanged, and it asks
-before replacing a file it has not read.
+<!-- contents fold -->
 
 ## The editor
+
+The picker saves everything into one text file on this drive, `effects.txt`, and
+shows the file it will write at the foot of the page. The file can also be edited
+by hand in any text editor, and [writing an entry](#writing-an-entry) and the
+sections after it describe its format. The picker keeps lines it cannot edit
+unchanged, and asks before replacing a file it has not read.
+
+Deleting `effects.txt` restores the default file. Emptying it turns everything
+off.
 
 `EDITOR.html` on this drive is a text editor for `effects.txt` that understands
 its format. Each word is coloured by its role, and as you type it suggests what
@@ -182,7 +324,9 @@ effect, except effects that set their own colours.
 
 Every setting is optional. Left out, it uses the default shown below.
 
-### For any output, or for one of the RGB output's red, green and blue
+### Brightness effects
+
+These work for any output, or for one of the RGB output's red, green and blue.
 
 | Effect | Settings |
 | --- | --- |
@@ -203,7 +347,9 @@ Every setting is optional. Left out, it uses the default shown below.
 | `traffic_light` | `red_interval=10` `red_amber_interval=5` `green_interval=10` `amber_interval=5` |
 | `pelican_crossing` | `red_interval=8` `flashing_interval=6` `green_interval=20` `amber_interval=3` |
 
-### For the RGB output only, since these bring their own colour
+### Colour effects
+
+These bring their own colour, so they work only for the RGB output.
 
 | Effect | Settings |
 | --- | --- |
@@ -395,6 +541,9 @@ board: drive=manual program=fireplace.py
 | `program` | a Python file to run instead of the effects | the effects play |
 | `args` | arguments for that program, separated by `\|` | none |
 
+The picker's save settings write the first two. "Keep the drive hidden at start"
+is `drive=manual`, and unticking "Play saves without an eject" is `reload=manual`.
+
 Saving `effects.txt` is all it takes: the board detects the save, briefly takes
 the drive back, and plays the new effects, just as a single press of **Boot**
 would. Only saving `effects.txt` triggers this, so copying sounds onto
@@ -530,6 +679,8 @@ this drive.
 
 The full list, with a description of each, is in the
 [examples README on GitHub](https://github.com/pimoroni/picofx/tree/main/examples/tiny_fx).
+
+<!-- contents Help -->
 
 ## When something is wrong
 

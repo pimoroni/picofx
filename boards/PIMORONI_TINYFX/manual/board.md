@@ -1,14 +1,64 @@
 <!-- block picker_tabs -->
 
-The picker has two tabs, **Effects** and **Programs**. **Effects**
-controls the lights and sound: select a stretch of outputs, choose a look from
-the cards, and adjust its settings. A run can be split into stretches, each
-playing its own look. **Edit board**, at the end of the lights' tabs, sets the
-order the lights are wired in, and moving the RGB output across to the mono side
-splits it into three mono lights. The Sound tab lists the sounds on this drive,
-and can copy files onto the drive or delete them. Press **+** to split your
-setup into scenes that play one after another, each with its own looks and sound. Anything
-on the **Always on** tab plays under every scene.
+```picker
+header: Tiny FX Picker
+pages: *Effects, Programs
+tabs: *Outputs=mono Wave, Sound
+```
+
+Under **Effects** you'll find **Outputs** for the lights and **Sound** for the
+speaker. Each tab shows a small preview of what it's playing, and [[Edit board]]
+sits at the end of the row.
+
+<!-- block picker_first_look -->
+
+When your board is new, the picker opens on **Outputs**. The six mono outputs are
+one stretch playing Wave, and the RGB output has a stretch of its own playing
+Rainbow.
+
+```picker
+badge: Wiring, the RGB output is one colour light
+mono: *Wave 6
+colour RGB: Rainbow 1
+tools:
+settings: Wave, on outputs 1 to 6, Brightness 100, Speed 45, Spread 50
+cards mono Along the lights: *Wave, Scanner, Chase, Marquee
+```
+
+<!-- block picker_first_cut -->
+
+Try it between mono lights 3 and 4. You'll have two stretches, both still playing
+Wave. Click the right-hand one and choose Sparkle, and lights 4 to 6 start to
+twinkle.
+
+```picker
+mono: Wave 3, *Sparkle 3
+colour RGB: Rainbow 1
+tools:
+settings: Sparkle, on outputs 4 to 6, Brightness 100
+cards mono Individual: *Sparkle, Counter, Traffic light, Pelican crossing
+```
+
+<!-- block picker_board -->
+
+```picker
+tabs editing: *Outputs=mono Wave, Sound
+badge: Wiring, the RGB output is one colour light | Drag each light to match its position in your build.
+wiring mono Wave: 1, 2, 3, 4, 5, 6 | RGB
+```
+
+Drag each light to match where it sits in your build, so a look that travels
+moves the right way. The arrow on the RGB output moves it across to the mono side
+as three mono lights, or brings them back as one colour light.
+
+<!-- block picker_programs_picture -->
+
+```picker
+pages: Effects, *Programs=Ship thrusters
+note: ship_thrusters.py
+with: remote, Qw/ST, speaker
+programs Model lighting | thrusters, beacons and lit postcards: Rescue vehicle, *Ship thrusters, Space tales
+```
 
 <!-- block entry_examples -->
 

@@ -12,6 +12,9 @@ board: drive=manual program=fireplace.py
 | `reload` | `manual` plays a save only after an eject or a press of **Boot** | plays a few seconds after saving |
 | `program` | a Python file to run instead of the effects | the effects play |
 | `args` | arguments for that program, separated by `\|` | none |
+
+The picker's save settings write the first two. "Keep the drive hidden at start"
+is `drive=manual`, and unticking "Play saves without an eject" is `reload=manual`.
 <!-- if screens -->
 <!-- board screen_settings -->
 <!-- end -->

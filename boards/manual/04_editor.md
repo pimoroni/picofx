@@ -1,4 +1,15 @@
+<!-- contents fold -->
+
 ## The editor
+
+The picker saves everything into one text file on this drive, `effects.txt`, and
+shows the file it will write at the foot of the page. The file can also be edited
+by hand in any text editor, and [writing an entry](#writing-an-entry) and the
+sections after it describe its format. The picker keeps lines it cannot edit
+unchanged, and asks before replacing a file it has not read.
+
+Deleting `effects.txt` restores the default file. Emptying it turns everything
+off.
 
 `EDITOR.html` on this drive is a text editor for `effects.txt` that understands
 its format. Each word is coloured by its role, and as you type it suggests what

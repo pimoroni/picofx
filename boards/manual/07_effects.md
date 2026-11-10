@@ -2,7 +2,9 @@
 
 Every setting is optional. Left out, it uses the default shown below.
 
-### For __MONO_EFFECTS_FOR__
+### Brightness effects
+
+These work for __MONO_EFFECTS_FOR__.
 
 | Effect | Settings |
 | --- | --- |
@@ -23,7 +25,9 @@ Every setting is optional. Left out, it uses the default shown below.
 | `traffic_light` | `red_interval=10` `red_amber_interval=5` `green_interval=10` `amber_interval=5` |
 | `pelican_crossing` | `red_interval=8` `flashing_interval=6` `green_interval=20` `amber_interval=3` |
 
-### __COLOUR_EFFECTS_HEADING__
+### Colour effects
+
+__COLOUR_EFFECTS_NOTE__
 
 | Effect | Settings |
 | --- | --- |

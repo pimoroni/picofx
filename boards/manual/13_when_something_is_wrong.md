@@ -1,3 +1,5 @@
+<!-- contents Help -->
+
 ## When something is wrong
 
 <!-- if outputs -->

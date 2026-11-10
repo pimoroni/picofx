@@ -3,6 +3,7 @@
  "terms": {
   "BOARD_TITLE": "Tiny FX",
   "BOARD_HAS": "Six mono outputs, one RGB output, a speaker",
+  "LIGHTS_TABS": "On **Outputs**",
   "TRAVELLING_LIGHT": "dim light",
   "PROGRAMS_OFFERED": "what a remote, a sensor or a speaker brings",
   "ENTRY_TARGETS": "the outputs",
@@ -15,7 +16,7 @@
   "ALL_OUTPUTS": "out1-6",
   "COLOUR_SETTING_FOR": "the RGB output when its effect brings no colour",
   "MONO_EFFECTS_FOR": "any output, or for one of the RGB output's red, green and blue",
-  "COLOUR_EFFECTS_HEADING": "For the RGB output only, since these bring their own colour",
+  "COLOUR_EFFECTS_NOTE": "These bring their own colour, so they work only for the RGB output.",
   "FLAME_OUTPUTS": "out1-6",
   "COLOUR_OUTPUT": "rgb",
   "SOUND_THROUGH": "its speaker",

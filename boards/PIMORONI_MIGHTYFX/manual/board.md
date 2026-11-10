@@ -1,15 +1,84 @@
 <!-- block picker_tabs -->
 
-The picker has two tabs, **Effects** and **Programs**. **Effects**
-controls the lights, screens and sound: select a stretch of outputs or LEDs,
-choose a look from the cards, and adjust its settings. A run can be split into
-stretches, each playing its own look. **Edit board**, at the end of the lights'
-tabs, sets up your hardware: the order the lights are wired in, the number of
-LEDs on each strip, each screen's size, and a Screen Hub. The Screens and Sound
-tabs list the pictures, drawings and sounds on this drive, and can copy files
-onto the drive or delete them. Press **+** to split your setup into scenes that
-play one after another, each with its own looks, pictures and sound. Anything on the
-**Always on** tab plays under every scene.
+```picker
+header: Mighty FX Picker
+pages: *Effects, Programs
+tabs: *Outputs=Rainbow, Left strip, Right strip, Screens=2.8" 1.54", Sound
+```
+
+Under **Effects** you'll find a tab for each part of the board. **Outputs**,
+**Left strip** and **Right strip** are for the lights, followed by **Screens** and
+**Sound**. Each tab shows a small preview of what it's playing, and [[Edit board]]
+sits at the end of the row.
+
+<!-- block picker_first_look -->
+
+When your board is new, the picker opens on **Outputs** with all seven outputs as
+one stretch, playing Rainbow.
+
+```picker
+badge: Wiring, every output is one colour light
+colour: *Rainbow 7
+tools:
+settings: Rainbow, on outputs 1 to 7, Brightness 100, Speed 45, Spread 50
+cards Along the lights: *Rainbow, Wave, Scanner, Chase, Marquee
+```
+
+<!-- block picker_first_cut -->
+
+Try it between lights 4 and 5. You'll have two stretches, both still playing
+Rainbow. Click the right-hand one and choose Solid, and lights 5 to 7 turn
+yellow.
+
+```picker
+colour: Rainbow 4, *Solid 3
+tools:
+settings: Solid, on outputs 5 to 7, colour yellow, Brightness 100
+cards All together: *Solid, Colour cycle, Colour steps, Breathe, Blink
+```
+
+<!-- block picker_board -->
+
+```picker
+tabs editing: *Outputs=Rainbow, Left strip, Right strip, Screens=2.8" 1.54", Sound
+badge: Wiring, every output is one colour light | Drag each light to match its position in your build. Arrows split an output into three mono lights, or rejoin them.
+wiring Rainbow: 1, 2, 3, 4, 5, 6, 7
+```
+
+On **Outputs**, drag each light to match where it sits in your build, so a look
+that travels moves the right way. The arrows split an output into three mono
+lights, or join them back into one colour light.
+
+On **Left strip** and **Right strip**, set how many LEDs each strip has and its
+colour order, which needs changing if red shows as another colour. The cross
+removes a strip you haven't fitted.
+
+```picker
+tabs editing: Outputs=Rainbow, *Left strip, Right strip, Screens=2.8" 1.54", Sound
+stripsetup: 30
+```
+
+On **Screens**, choose a screen on each connector or a Screen Hub across both,
+and the size of each screen.
+
+<!-- block picker_screens_picture -->
+
+```picker
+screenmode:
+screen A: 2.8 inch, skyline.png
+screen B: 1.54 inch, pirate_coin.gif
+pictures: acrylic_lixie, skyline.png=A, gold_macaw_card.png, medscan.gif, pirate_coin.gif=B
+```
+
+<!-- block picker_programs_picture -->
+
+```picker
+pages: Effects, *Programs=Flip dot sign
+note: flip_dot_sign.py
+hero: Flip dot sign | Draw a flip-dot sign that spells its message by flipping one column of dots at a time. | examples/programs/showcase/retro_displays/flip_dot_sign.py, built in
+with: screen, 2 screens, hub, remote, servos
+programs Retro displays | mechanical, glowing and segment displays: Acrylic lixie, CRT terminal, *Flip dot sign, Lamp matrix, Nixie tube
+```
 
 <!-- block entry_examples -->
 

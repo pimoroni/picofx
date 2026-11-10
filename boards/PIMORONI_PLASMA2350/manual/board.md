@@ -1,14 +1,70 @@
 <!-- block picker_tabs -->
 
-The picker has two tabs, **Effects** and **Programs**. **Effects**
-controls the strips, the board's LED and the screen: select a stretch of LEDs,
-choose a look from the cards, and adjust its settings. A strip can be split into
-stretches, each playing its own look. **Edit board**, at the end of the lights'
-tabs, sets up your hardware: which strips are fitted, the number of LEDs on
-each, and the screen's size. The Screens tab lists the pictures and drawings on
-this drive, and can copy files onto the drive or delete them. Press **+** to
-split your setup into scenes that play one after another, each with its own looks and
-pictures. Anything on the **Always on** tab plays under every scene.
+```picker
+header: Plasma 2350 Picker
+pages: *Effects, Programs
+tabs: *DAT strip, CLK strip, ~APA102 strip, LED=Rainbow, Screens=2.8"
+```
+
+Under **Effects** you'll find **DAT strip**, **CLK strip** and **APA102 strip**
+for the strips, **LED** for the board's own light, and **Screens**. Each tab
+shows a small preview of what it's playing, and [[Edit board]] sits at the end
+of the row.
+
+<!-- block picker_first_look -->
+
+When your board is new, the picker opens on **DAT strip** with all 66 LEDs as one
+stretch, playing nothing yet. The board's own LED, on the **LED** tab, plays
+Rainbow.
+
+```picker
+badge strip: Strip, 66 LEDs, GRB
+strip: *Nothing 66
+tools:
+settings: Nothing, on LEDs 1 to 66 of the strip on DAT
+cards Along the lights: Rainbow, Wave, Scanner, Chase, Marquee, *Nothing
+```
+
+<!-- block picker_first_cut -->
+
+Choose Rainbow first, then try a cut about halfway along. You'll have two
+stretches, both playing Rainbow. Click the right-hand one and choose Scanner, and
+a light starts sweeping along that half.
+
+```picker
+badge strip: Strip, 66 LEDs, GRB
+strip: Rainbow 33, *Scanner 33
+tools:
+settings: Scanner, on LEDs 34 to 66 of the strip on DAT, colour red, Brightness 100, Speed 50
+cards Along the lights: Rainbow, Wave, *Scanner, Chase, Marquee
+```
+
+<!-- block picker_board -->
+
+```picker
+tabs editing: *DAT strip, CLK strip, ~APA102 strip, LED=Rainbow, Screens=2.8"
+stripsetup: 66
+```
+
+Choose which strips are fitted, then set how many LEDs each has and its colour
+order, which needs changing if red shows as another colour. An APA102 strip uses
+both terminals, so it replaces the other two. On **Screens**, set the size of
+the screen.
+
+<!-- block picker_screens_picture -->
+
+```picker
+screen: 2.8 inch, logo.png
+pictures: logo.png=A, sunset.jpg, waves.gif
+```
+
+<!-- block picker_programs_picture -->
+
+```picker
+pages: Effects, *Programs=My lights
+note: my_lights.py
+programs On the drive | your own programs: *My lights
+```
 
 <!-- block entry_examples -->
 

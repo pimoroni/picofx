@@ -3,6 +3,7 @@
  "terms": {
   "BOARD_TITLE": "Plasma 2350",
   "BOARD_HAS": "Two LED terminals, a screen connector on the 2350",
+  "LIGHTS_TABS": "On a strip's tab or **LED**",
   "ENTRY_TARGETS": "the strips, the board's LED and the screen",
   "OUTPUT": "LED",
   "OUTPUTS": "LEDs",
@@ -13,7 +14,7 @@
   "ALL_OUTPUTS": "stripDat",
   "COLOUR_SETTING_FOR": "effects that bring no colour",
   "MONO_EFFECTS_FOR": "any LED",
-  "COLOUR_EFFECTS_HEADING": "For any LED, bringing their own colour",
+  "COLOUR_EFFECTS_NOTE": "These bring their own colour, and work for any LED.",
   "FLAME_OUTPUTS": "stripDat colour=ff5a00",
   "COLOUR_OUTPUT": "rgb",
   "STRIP": "stripDat",

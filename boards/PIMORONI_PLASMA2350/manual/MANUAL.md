@@ -2,72 +2,218 @@
 
 # Plasma 2350
 
-Two LED terminals, a screen connector on the 2350, and a text file that controls them. Edit `effects.txt` on this
-drive and save it, and the board plays the change a few seconds later. No code
-is needed, though you can write your own programs when you want to.
+Two LED terminals, a screen connector on the 2350, and a page on this drive that sets them all up for you. Open the
+picker, choose your looks and save, and you'll see them play a few seconds
+later. No code is needed, though you can write your own programs whenever you
+want to.
 
 ## Getting started
 
-Edit `effects.txt` and save it to change what the lights do. A few seconds later
-the drive disappears briefly, then comes back with the new effects running, so
-you can keep editing.
+The quickest way to start is the picker. Open it in Chrome or Edge, with
+[[Picker]] at the top of this page or `PICKER.html` on this drive, then press
+[[Open FX drive]] and choose this drive. Choose a look from the cards and press
+[[Save to board]]. A few seconds later the drive disappears briefly, then comes
+back with your changes playing. [The picker](#the-picker) shows you everything
+else it can do.
 
 If a save does not seem to work, press **Boot** once or eject this drive, as a
-computer does not always write the file straight away. Double-press **Boot** to
-hide the drive, and double-press it again to show it.
+computer does not always finish writing to a drive straight away.
 
-Deleting `effects.txt` restores the default file. Emptying it turns everything
-off.
+You can hide the drive when you don't need it. Double-press **Boot** to hide it,
+and double-press again to bring it back.
 
 While the computer copies files to this drive, the effects pause and the board's
 LED glows dim white with a brighter blink. The effects resume shortly after the
 copy finishes.
 
-**Prefer not to write the file by hand? `PICKER.html` on this drive writes it
-for you. See [the picker](#the-picker). `EDITOR.html` helps you write it,
-suggesting names as you type. See [the editor](#the-editor).**
-
 ## The picker
 
-`PICKER.html` on this drive writes `effects.txt` for you. Open it in Chrome or
-Edge, press **Open FX drive** and choose this drive, and the page loads the file
-the board is playing, so you can carry on from there. A preview of the file it
-will write is at the foot of the page.
+The picker is where you choose what your board plays, from the looks on its
+lights to a whole program. You'll be greeted with whatever the board is playing
+right now, so you can carry on from there. Nothing reaches the board until you
+press [[Save to board]], so feel free to try things out.
 
-The picker has two tabs, **Effects** and **Programs**. **Effects**
-controls the strips, the board's LED and the screen: select a stretch of LEDs,
-choose a look from the cards, and adjust its settings. A strip can be split into
-stretches, each playing its own look. **Edit board**, at the end of the lights'
-tabs, sets up your hardware: which strips are fitted, the number of LEDs on
-each, and the screen's size. The Screens tab lists the pictures and drawings on
-this drive, and can copy files onto the drive or delete them. Press **+** to
-split your setup into scenes that play one after another, each with its own looks and
-pictures. Anything on the **Always on** tab plays under every scene.
+### The page: Getting around
+
+Along the top are [[Open FX drive]], [[Save to board]] and [[Check board]]. Below
+them are two large tabs. **Effects** is where you'll spend most of your time, and
+**Programs** runs a program instead.
+
+```picker
+header: Plasma 2350 Picker
+pages: *Effects, Programs
+tabs: *DAT strip, CLK strip, ~APA102 strip, LED=Rainbow, Screens=2.8"
+```
+
+Under **Effects** you'll find **DAT strip**, **CLK strip** and **APA102 strip**
+for the strips, **LED** for the board's own light, and **Screens**. Each tab
+shows a small preview of what it's playing, and [[Edit board]] sits at the end
+of the row.
+
+### Lights: Choosing a look
+
+On a strip's tab or **LED** you'll see your lights, and below them a bar showing what each
+stretch of them plays.
+
+When your board is new, the picker opens on **DAT strip** with all 66 LEDs as one
+stretch, playing nothing yet. The board's own LED, on the **LED** tab, plays
+Rainbow.
+
+```picker
+badge strip: Strip, 66 LEDs, GRB
+strip: *Nothing 66
+tools:
+settings: Nothing, on LEDs 1 to 66 of the strip on DAT
+cards Along the lights: Rainbow, Wave, Scanner, Chase, Marquee, *Nothing
+```
+
+Click the bar, or any light, to select that stretch. Then click a card in the
+gallery to play that look there.
+
+The cards are grouped by how they play. **Along the lights** travel from one end
+to the other, **Ready-made** looks combine several others, **All together** shows
+the same on every light, and **Individual** gives each light its own part. Cards
+with a small palette let you choose the colour, and [[Nothing]] turns the stretch
+off.
+
+The selected stretch's settings sit just above the gallery. Every look has a
+brightness, and most also have a speed and a setting of their own. A look that
+takes a colour shows a row of colours to choose from, with [[custom]] for any
+other. [[Reverse]] changes which end a travelling look starts from. If you want
+an exact figure, the arrow at the right of the sliders opens a drawer to type it
+in.
+
+### Lights: Cutting into stretches
+
+To play more than one look, cut the bar into stretches. Hover over the bar where
+you want a cut, between two lights, and click.
+
+Choose Rainbow first, then try a cut about halfway along. You'll have two
+stretches, both playing Rainbow. Click the right-hand one and choose Scanner, and
+a light starts sweeping along that half.
+
+```picker
+badge strip: Strip, 66 LEDs, GRB
+strip: Rainbow 33, *Scanner 33
+tools:
+settings: Scanner, on LEDs 34 to 66 of the strip on DAT, colour red, Brightness 100, Speed 50
+cards Along the lights: Rainbow, Wave, *Scanner, Chase, Marquee
+```
+
+Drag a cut to move it, or click the cross on it to remove it.
+
+The tools under the bar do the same in one go. [[Split into]] cuts the selected
+stretch into a number of equal [[stretches]], or into stretches of so many
+[[lights each]]. [[Join all]] puts the bar back to one stretch. [[Repeat]] takes
+the number of stretches you set, starting with the selected one, and repeats
+them to the end. The arrows above the bar undo and redo.
+On a long strip, the magnifier buttons zoom in so each LED is easier to reach.
+
+### Board: Setting up your hardware
+
+Press [[Edit board]] to tell the picker about your hardware. Everything else
+fades while you're there, and [[Done]] takes you back.
+
+Look out for the chip icon on [[Edit board]]. The picker marks every board
+setting with it, such as the order your lights are wired in. These settings
+describe your hardware, so they're shared by every scene.
+
+```picker
+tabs editing: *DAT strip, CLK strip, ~APA102 strip, LED=Rainbow, Screens=2.8"
+stripsetup: 66
+```
+
+Choose which strips are fitted, then set how many LEDs each has and its colour
+order, which needs changing if red shows as another colour. An APA102 strip uses
+both terminals, so it replaces the other two. On **Screens**, set the size of
+the screen.
+
+### Screens: Showing a picture
+
+Once the drive is open, the pictures and drawings on it appear on the
+**Screens** tab, under the screen. Press the button under a picture to show it
+there. Each screen has its own settings for the picture it shows, such as its
+backlight, rotation and position, and the timing of an animation.
+
+```picker
+screen: 2.8 inch, logo.png
+pictures: logo.png=A, sunset.jpg, waves.gif
+```
+
+To add your own, drop GIF, PNG or JPEG files or drawings onto the **add pictures
+or drawings** tile, and the picker copies them onto the drive. Each picture has a
+button to delete it from the drive.
+
+### Scenes: Playing one after another
+
+Press [[+ split into scenes]] to have the board play one setup after another.
+Each scene gets its own tab, with a name, how many seconds it shows for and
+everything it plays. [[+ another scene]] adds one, the cross on a tab removes
+it, and you can drag the tabs to change the order. [[Restart]] makes a scene
+start its effects from the beginning each time it plays, instead of carrying on
+where they left off.
+
+```picker
+pages: *Effects, Programs
+scenes: Always on, *Scene 1 10s
+```
+
+Anything on the **Always on** tab plays under every scene. A scene that plays on
+the same part of the board takes over from it while that scene shows.
+
+### Programs: Running a program
 
 **Programs** lists your own programs on this drive, to run instead of the
 effects.
-Choose one and save, and the board restarts to run it. [Your program in the
-picker](#your-program-in-the-picker) explains how your own programs appear there.
+Choose one and save, and the board restarts to run it. The **With** buttons above
+the list name the hardware the programs use, so turn off anything you don't have
+and you'll only see programs that work without it. [[Choose none]] goes back to
+the effects. [Your program in the picker](#your-program-in-the-picker) explains
+how your own programs appear there.
 
-**Save to board** writes the file, and the board loads it a few seconds later.
-The arrow beside it opens the save settings. Untick "Play saves without an eject"
-and the board waits for an eject or a single press of **Boot**, which is
-`reload=manual`. "Keep the drive hidden at start" is `drive=manual`. **Check
-board** reads `errors.txt` and shows any problems the board found with each line.
+```picker
+pages: Effects, *Programs=My lights
+note: my_lights.py
+programs On the drive | your own programs: *My lights
+```
+
+### Saving: Sending to the board
+
+[[Save to board]] writes your changes, and the board loads them a few seconds
+later. The picker tells you when the board is playing your save, and whether it
+found any problems. [[Check board]] asks the board again at any time.
+
+The arrow beside [[Save to board]] opens the save settings. Untick "Play saves
+without an eject" and the board waits for an eject or a single press of
+**Boot**. Tick "Keep the drive hidden at start" and the drive stays hidden until
+**Boot** is double-pressed.
+
+```picker
+header: Plasma 2350 Picker | Playing on the board. No problems reported.
+savemenu:
+```
+
 On a Mac, each save shows "Disk Not Ejected Properly" once and closes any Finder
-window on this drive. The drive comes back a few seconds later and the page
-continues.
+window on this drive. Don't worry, the drive comes back a few seconds later and
+the page carries on.
 
 The page can only reach the drive in Chrome, Edge or another Chromium-based
 browser. Safari and Firefox cannot write to a drive from a web page, so the
-picker says so there, but `effects.txt` can still be edited in any text
-editor.
+picker says so there. [The editor](#the-editor) can still save from them, as a
+download.
 
-The picker writes an ordinary `effects.txt`, so anything it makes can be edited
-by hand afterwards. Lines the picker cannot edit are kept unchanged, and it asks
-before replacing a file it has not read.
+<!-- contents fold -->
 
 ## The editor
+
+The picker saves everything into one text file on this drive, `effects.txt`, and
+shows the file it will write at the foot of the page. The file can also be edited
+by hand in any text editor, and [writing an entry](#writing-an-entry) and the
+sections after it describe its format. The picker keeps lines it cannot edit
+unchanged, and asks before replacing a file it has not read.
+
+Deleting `effects.txt` restores the default file. Emptying it turns everything
+off.
 
 `EDITOR.html` on this drive is a text editor for `effects.txt` that understands
 its format. Each word is coloured by its role, and as you type it suggests what
@@ -161,7 +307,9 @@ effect, except effects that set their own colours.
 
 Every setting is optional. Left out, it uses the default shown below.
 
-### For any LED
+### Brightness effects
+
+These work for any LED.
 
 | Effect | Settings |
 | --- | --- |
@@ -182,7 +330,9 @@ Every setting is optional. Left out, it uses the default shown below.
 | `traffic_light` | `red_interval=10` `red_amber_interval=5` `green_interval=10` `amber_interval=5` |
 | `pelican_crossing` | `red_interval=8` `flashing_interval=6` `green_interval=20` `amber_interval=3` |
 
-### For any LED, bringing their own colour
+### Colour effects
+
+These bring their own colour, and work for any LED.
 
 | Effect | Settings |
 | --- | --- |
@@ -577,6 +727,9 @@ board: drive=manual program=fireplace.py
 | `reload` | `manual` plays a save only after an eject or a press of **Boot** | plays a few seconds after saving |
 | `program` | a Python file to run instead of the effects | the effects play |
 | `args` | arguments for that program, separated by `\|` | none |
+
+The picker's save settings write the first two. "Keep the drive hidden at start"
+is `drive=manual`, and unticking "Play saves without an eject" is `reload=manual`.
 | `screen` | the size of the screen on the SP/CE connector | no screen |
 | `stripDat` | the number of LEDs on a WS2812 strip on **DAT**, then after a `\|` its colour order | no strip |
 | `stripClk` | the same for **CLK** | no strip |
@@ -679,6 +832,8 @@ deleted. Programs that go online, importing `network` or `requests`, are listed
 only when the drive has that file.
 A file whose opening string has a `Drawing:` line is [a
 drawing](#drawing-from-code), so it is not listed.
+
+<!-- contents Help -->
 
 ## When something is wrong
 

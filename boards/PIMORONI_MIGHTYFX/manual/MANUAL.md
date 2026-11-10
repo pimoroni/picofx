@@ -2,79 +2,284 @@
 
 # Mighty FX
 
-Seven outputs, two screen connectors, and a text file that controls them. Edit `effects.txt` on this
-drive and save it, and the board plays the change a few seconds later. No code
-is needed, though you can write your own programs when you want to.
+Seven outputs, two screen connectors, and a page on this drive that sets them all up for you. Open the
+picker, choose your looks and save, and you'll see them play a few seconds
+later. No code is needed, though you can write your own programs whenever you
+want to.
 
 ## Getting started
 
-Edit `effects.txt` and save it to change what the lights do. A few seconds later
-the drive disappears briefly, then comes back with the new effects running, so
-you can keep editing.
+The quickest way to start is the picker. Open it in Chrome or Edge, with
+[[Picker]] at the top of this page or `PICKER.html` on this drive, then press
+[[Open FX drive]] and choose this drive. Choose a look from the cards and press
+[[Save to board]]. A few seconds later the drive disappears briefly, then comes
+back with your changes playing. [The picker](#the-picker) shows you everything
+else it can do.
 
 If a save does not seem to work, press **Boot** once or eject this drive, as a
-computer does not always write the file straight away. Double-press **Boot** to
-hide the drive, and double-press it again to show it.
+computer does not always finish writing to a drive straight away.
+
+You can hide the drive when you don't need it. Double-press **Boot** to hide it,
+and double-press again to bring it back.
 Each double press runs a dim white light along the outputs, towards the
 USB connector when the drive is shown and away from it when it is hidden.
-
-Deleting `effects.txt` restores the default file. Emptying it turns everything
-off.
 
 While the computer copies files to this drive, the effects pause and a
 dim white light travels along the outputs. The effects resume shortly
 after the copy finishes.
 
-**Prefer not to write the file by hand? `PICKER.html` on this drive writes it
-for you. See [the picker](#the-picker). `EDITOR.html` helps you write it,
-suggesting names as you type. See [the editor](#the-editor).**
-
 **The board also comes with ready-made programs, from single effects to whole
-builds, and one line in `effects.txt` runs any of them. See [what is already
-on the board](#what-is-already-on-the-board).**
+builds, and the picker can run any of them. See [what is already on the
+board](#what-is-already-on-the-board).**
 
 ## The picker
 
-`PICKER.html` on this drive writes `effects.txt` for you. Open it in Chrome or
-Edge, press **Open FX drive** and choose this drive, and the page loads the file
-the board is playing, so you can carry on from there. A preview of the file it
-will write is at the foot of the page.
+The picker is where you choose what your board plays, from the looks on its
+lights to a whole program. You'll be greeted with whatever the board is playing
+right now, so you can carry on from there. Nothing reaches the board until you
+press [[Save to board]], so feel free to try things out.
 
-The picker has two tabs, **Effects** and **Programs**. **Effects**
-controls the lights, screens and sound: select a stretch of outputs or LEDs,
-choose a look from the cards, and adjust its settings. A run can be split into
-stretches, each playing its own look. **Edit board**, at the end of the lights'
-tabs, sets up your hardware: the order the lights are wired in, the number of
-LEDs on each strip, each screen's size, and a Screen Hub. The Screens and Sound
-tabs list the pictures, drawings and sounds on this drive, and can copy files
-onto the drive or delete them. Press **+** to split your setup into scenes that
-play one after another, each with its own looks, pictures and sound. Anything on the
-**Always on** tab plays under every scene.
+### The page: Getting around
+
+Along the top are [[Open FX drive]], [[Save to board]] and [[Check board]]. Below
+them are two large tabs. **Effects** is where you'll spend most of your time, and
+**Programs** runs a program instead.
+
+```picker
+header: Mighty FX Picker
+pages: *Effects, Programs
+tabs: *Outputs=Rainbow, Left strip, Right strip, Screens=2.8" 1.54", Sound
+```
+
+Under **Effects** you'll find a tab for each part of the board. **Outputs**,
+**Left strip** and **Right strip** are for the lights, followed by **Screens** and
+**Sound**. Each tab shows a small preview of what it's playing, and [[Edit board]]
+sits at the end of the row.
+
+### Lights: Choosing a look
+
+On **Outputs**, **Left strip** or **Right strip** you'll see your lights, and below them a bar showing what each
+stretch of them plays.
+
+When your board is new, the picker opens on **Outputs** with all seven outputs as
+one stretch, playing Rainbow.
+
+```picker
+badge: Wiring, every output is one colour light
+colour: *Rainbow 7
+tools:
+settings: Rainbow, on outputs 1 to 7, Brightness 100, Speed 45, Spread 50
+cards Along the lights: *Rainbow, Wave, Scanner, Chase, Marquee
+```
+
+Click the bar, or any light, to select that stretch. Then click a card in the
+gallery to play that look there.
+
+The cards are grouped by how they play. **Along the lights** travel from one end
+to the other, **Ready-made** looks combine several others, **All together** shows
+the same on every light, and **Individual** gives each light its own part. Cards
+with a small palette let you choose the colour, and [[Nothing]] turns the stretch
+off.
+
+The selected stretch's settings sit just above the gallery. Every look has a
+brightness, and most also have a speed and a setting of their own. A look that
+takes a colour shows a row of colours to choose from, with [[custom]] for any
+other. [[Reverse]] changes which end a travelling look starts from. If you want
+an exact figure, the arrow at the right of the sliders opens a drawer to type it
+in.
+
+### Lights: Cutting into stretches
+
+To play more than one look, cut the bar into stretches. Hover over the bar where
+you want a cut, between two lights, and click.
+
+Try it between lights 4 and 5. You'll have two stretches, both still playing
+Rainbow. Click the right-hand one and choose Solid, and lights 5 to 7 turn
+yellow.
+
+```picker
+colour: Rainbow 4, *Solid 3
+tools:
+settings: Solid, on outputs 5 to 7, colour yellow, Brightness 100
+cards All together: *Solid, Colour cycle, Colour steps, Breathe, Blink
+```
+
+Drag a cut to move it, or click the cross on it to remove it.
+
+The tools under the bar do the same in one go. [[Split into]] cuts the selected
+stretch into a number of equal [[stretches]], or into stretches of so many
+[[lights each]]. [[Join all]] puts the bar back to one stretch. [[Repeat]] takes
+the number of stretches you set, starting with the selected one, and repeats
+them to the end. The arrows above the bar undo and redo.
+On a long strip, the magnifier buttons zoom in so each LED is easier to reach.
+
+### Board: Setting up your hardware
+
+Press [[Edit board]] to tell the picker about your hardware. Everything else
+fades while you're there, and [[Done]] takes you back.
+
+Look out for the chip icon on [[Edit board]]. The picker marks every board
+setting with it, such as the order your lights are wired in. These settings
+describe your hardware, so they're shared by every scene.
+
+```picker
+tabs editing: *Outputs=Rainbow, Left strip, Right strip, Screens=2.8" 1.54", Sound
+badge: Wiring, every output is one colour light | Drag each light to match its position in your build. Arrows split an output into three mono lights, or rejoin them.
+wiring Rainbow: 1, 2, 3, 4, 5, 6, 7
+```
+
+On **Outputs**, drag each light to match where it sits in your build, so a look
+that travels moves the right way. The arrows split an output into three mono
+lights, or join them back into one colour light.
+
+On **Left strip** and **Right strip**, set how many LEDs each strip has and its
+colour order, which needs changing if red shows as another colour. The cross
+removes a strip you haven't fitted.
+
+```picker
+tabs editing: Outputs=Rainbow, *Left strip, Right strip, Screens=2.8" 1.54", Sound
+stripsetup: 30
+```
+
+On **Screens**, choose a screen on each connector or a Screen Hub across both,
+and the size of each screen.
+
+### Screens: Showing a picture
+
+Once the drive is open, the pictures and drawings on it appear on the
+**Screens** tab, under the screen. Press the button under a picture to show it
+there. Each screen has its own settings for the picture it shows, such as its
+backlight, rotation and position, and the timing of an animation.
+
+```picker
+screenmode:
+screen A: 2.8 inch, skyline.png
+screen B: 1.54 inch, pirate_coin.gif
+pictures: acrylic_lixie, skyline.png=A, gold_macaw_card.png, medscan.gif, pirate_coin.gif=B
+```
+
+To add your own, drop GIF, PNG or JPEG files or drawings onto the **add pictures
+or drawings** tile, and the picker copies them onto the drive. Each picture has a
+button to delete it from the drive.
+
+With two screens, each picture has an [[A]] and a [[B]] button, one for each
+screen. To show the same thing on both, press [[Paired]] on either screen. Screen
+B then shows whatever Screen A shows, in step and at the same speed, while each
+screen keeps its own rotation and position. This matters most for a drawing,
+which then runs once for both screens, so both show the same random choices.
+Press [[Paired]] again to set them apart. Each scene can pair the screens or not.
+
+### Screens: Using a Screen Hub
+
+A Screen Hub plugs into both screen connectors and drives up to six screens, at
+the positions A to F printed on the hub. To set one up, press [[Edit board]], open
+**Screens** and choose **A Screen Hub across both**. Then pick which connector
+carries the hub's SPI and which its Selects, as labelled on the hub, and set the
+size of the screen at each position.
+
+Back on **Screens**, the positions sit side by side under one shared backlight.
+Each picture has a button for every position, or for every group once you've
+made some, and [[all]] shows it everywhere.
+
+To show one picture across several screens, put them in a group with the 1, 2
+and 3 buttons under each position. A group is set as one, with one picture,
+rotation and look, and the board sends that picture to all its screens at once,
+so an animation plays as fast as on a single screen. Positions showing different
+animations take turns, so each plays more slowly, and the picker says when that
+happens. A group holds screens of one size, and each scene can group the hub its
+own way.
+
+```picker
+screenmode: hub
+hub: SPI on A, Selects on B
+places: A=acrylic_lixie 1, B=acrylic_lixie 1, C=acrylic_lixie 1, D, E, F
+pictures: acrylic_lixie=1, skyline.png, gold_macaw_card.png, medscan.gif
+```
+
+### Sound: Choosing a sound
+
+Once the drive is open, the **Sound** tab lists the WAV files on it. Choose one
+to play alongside the lights, or [[Silence]] for none. [[Loop]] repeats it
+instead of playing it once, and the volume slider sets how loud the board plays
+it. To add your own, drop a WAV file onto the tab and the picker copies it onto
+the drive.
+
+```picker
+sounds: *rain.wav, doorbell.wav, Silence
+```
+
+### Scenes: Playing one after another
+
+Press [[+ split into scenes]] to have the board play one setup after another.
+Each scene gets its own tab, with a name, how many seconds it shows for and
+everything it plays. [[+ another scene]] adds one, the cross on a tab removes
+it, and you can drag the tabs to change the order. [[Restart]] makes a scene
+start its effects from the beginning each time it plays, instead of carrying on
+where they left off.
+
+```picker
+pages: *Effects, Programs
+scenes: Always on, *Scene 1 10s
+```
+
+Anything on the **Always on** tab plays under every scene. A scene that plays on
+the same part of the board takes over from it while that scene shows.
+
+### Programs: Running a program
 
 **Programs** lists the board's programs, the showcase signs, screen pieces, and what a remote, a sensor, a speaker or a motor brings, and any of
 your own programs on this drive, to run instead of the effects.
-Choose one and save, and the board restarts to run it. [Your program in the
-picker](#your-program-in-the-picker) explains how your own programs appear there.
+Choose one and save, and the board restarts to run it. The **With** buttons above
+the list name the hardware the programs use, so turn off anything you don't have
+and you'll only see programs that work without it. [[Choose none]] goes back to
+the effects. [Your program in the picker](#your-program-in-the-picker) explains
+how your own programs appear there.
 
-**Save to board** writes the file, and the board loads it a few seconds later.
-The arrow beside it opens the save settings. Untick "Play saves without an eject"
-and the board waits for an eject or a single press of **Boot**, which is
-`reload=manual`. "Keep the drive hidden at start" is `drive=manual`. **Check
-board** reads `errors.txt` and shows any problems the board found with each line.
+```picker
+pages: Effects, *Programs=Flip dot sign
+note: flip_dot_sign.py
+hero: Flip dot sign | Draw a flip-dot sign that spells its message by flipping one column of dots at a time. | examples/programs/showcase/retro_displays/flip_dot_sign.py, built in
+with: screen, 2 screens, hub, remote, servos
+programs Retro displays | mechanical, glowing and segment displays: Acrylic lixie, CRT terminal, *Flip dot sign, Lamp matrix, Nixie tube
+```
+
+### Saving: Sending to the board
+
+[[Save to board]] writes your changes, and the board loads them a few seconds
+later. The picker tells you when the board is playing your save, and whether it
+found any problems. [[Check board]] asks the board again at any time.
+
+The arrow beside [[Save to board]] opens the save settings. Untick "Play saves
+without an eject" and the board waits for an eject or a single press of
+**Boot**. Tick "Keep the drive hidden at start" and the drive stays hidden until
+**Boot** is double-pressed.
+
+```picker
+header: Mighty FX Picker | Playing on the board. No problems reported.
+savemenu:
+```
+
 On a Mac, each save shows "Disk Not Ejected Properly" once and closes any Finder
-window on this drive. The drive comes back a few seconds later and the page
-continues.
+window on this drive. Don't worry, the drive comes back a few seconds later and
+the page carries on.
 
 The page can only reach the drive in Chrome, Edge or another Chromium-based
 browser. Safari and Firefox cannot write to a drive from a web page, so the
-picker says so there, but `effects.txt` can still be edited in any text
-editor.
+picker says so there. [The editor](#the-editor) can still save from them, as a
+download.
 
-The picker writes an ordinary `effects.txt`, so anything it makes can be edited
-by hand afterwards. Lines the picker cannot edit are kept unchanged, and it asks
-before replacing a file it has not read.
+<!-- contents fold -->
 
 ## The editor
+
+The picker saves everything into one text file on this drive, `effects.txt`, and
+shows the file it will write at the foot of the page. The file can also be edited
+by hand in any text editor, and [writing an entry](#writing-an-entry) and the
+sections after it describe its format. The picker keeps lines it cannot edit
+unchanged, and asks before replacing a file it has not read.
+
+Deleting `effects.txt` restores the default file. Emptying it turns everything
+off.
 
 `EDITOR.html` on this drive is a text editor for `effects.txt` that understands
 its format. Each word is coloured by its role, and as you type it suggests what
@@ -186,7 +391,9 @@ effect, except effects that set their own colours.
 
 Every setting is optional. Left out, it uses the default shown below.
 
-### For an output, or for one of its red, green and blue
+### Brightness effects
+
+These work for an output, or for one of its red, green and blue.
 
 | Effect | Settings |
 | --- | --- |
@@ -207,7 +414,9 @@ Every setting is optional. Left out, it uses the default shown below.
 | `traffic_light` | `red_interval=10` `red_amber_interval=5` `green_interval=10` `amber_interval=5` |
 | `pelican_crossing` | `red_interval=8` `flashing_interval=6` `green_interval=20` `amber_interval=3` |
 
-### For a whole output or a strip's LEDs, since these bring their own colour
+### Colour effects
+
+These bring their own colour, so they work only for a whole output or a strip's LEDs.
 
 | Effect | Settings |
 | --- | --- |
@@ -687,6 +896,9 @@ board: drive=manual program=fireplace.py
 | `reload` | `manual` plays a save only after an eject or a press of **Boot** | plays a few seconds after saving |
 | `program` | a Python file to run instead of the effects | the effects play |
 | `args` | arguments for that program, separated by `\|` | none |
+
+The picker's save settings write the first two. "Keep the drive hidden at start"
+is `drive=manual`, and unticking "Play saves without an eject" is `reload=manual`.
 | `screenA` | the size of the screen on SP/CE A, or `hub` for a Screen Hub | no screen |
 | `screenB` | the size of the screen on SP/CE B | no screen |
 | `hubA` to `hubF` | the size of the screen at each Screen Hub position | no screen there |
@@ -845,6 +1057,8 @@ own pictures or network.
 
 The full list, with a description of each, is in the
 [examples README on GitHub](https://github.com/pimoroni/picofx/tree/main/examples/mighty_fx).
+
+<!-- contents Help -->
 
 ## When something is wrong
 

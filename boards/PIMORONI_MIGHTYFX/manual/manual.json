@@ -3,6 +3,7 @@
  "terms": {
   "BOARD_TITLE": "Mighty FX",
   "BOARD_HAS": "Seven outputs, two screen connectors",
+  "LIGHTS_TABS": "On **Outputs**, **Left strip** or **Right strip**",
   "TRAVELLING_LIGHT": "dim white light",
   "PROGRAMS_OFFERED": "the showcase signs, screen pieces, and what a remote, a sensor, a speaker or a motor brings",
   "ENTRY_TARGETS": "the outputs and screens",
@@ -15,7 +16,7 @@
   "ALL_OUTPUTS": "out1-7",
   "COLOUR_SETTING_FOR": "effects that bring no colour",
   "MONO_EFFECTS_FOR": "an output, or for one of its red, green and blue",
-  "COLOUR_EFFECTS_HEADING": "For a whole output or a strip's LEDs, since these bring their own colour",
+  "COLOUR_EFFECTS_NOTE": "These bring their own colour, so they work only for a whole output or a strip's LEDs.",
   "FLAME_OUTPUTS": "out1-7 colour=ff5a00",
   "COLOUR_OUTPUT": "out1",
   "STRIP": "stripL",

@@ -34,8 +34,12 @@ import re
 import sys
 
 from build_editor import embed, shown_version
+from manual_mockups import CHIP_BUTTONS, CHIP_ICON, picker_mockup
 
 TEMPLATE_NAME = "manual_template.html"
+
+# The styles for the pictures of the picker, kept beside the module that draws them
+MOCKUP_STYLES_NAME = "manual_mockups.css"
 
 # The parts every board's manual shares, from the repository's root
 SHARED_PARTS = os.path.join("boards", "manual")
@@ -60,6 +64,12 @@ FEATURES = {
     "sound": lambda board: bool(board["sound"]),
     "examples": lambda board: bool(board["examples"]),
 }
+
+# A control on the picker's page, written [[Save to board]] and drawn as the picker's button
+BUTTON = re.compile(r"\[\[([^\]]+)\]\]")
+
+# A label in the contents list over the sections after it, written <!-- contents The label -->
+GROUP = re.compile(r"^<!-- contents (.+) -->$")
 
 CONDITION = re.compile(r"<!-- if (not )?(\w+) -->")
 CONDITION_END = "<!-- end -->"
@@ -86,11 +96,19 @@ def slug(text):
     return re.sub(r"-+", "-", re.sub(r"[^a-z0-9]+", "-", text.lower())).strip("-")
 
 
+def button(match):
+    """A [[name]] control as the picker draws it, with the chip where the picker has one."""
+    name = match.group(1)
+    return '<span class="button">{}{}</span>'.format(
+        CHIP_ICON if name in CHIP_BUTTONS else "", name)
+
+
 def inline(text):
     """Inline markup, escaped first so the source cannot inject markup of its own."""
     escaped = html.escape(text, quote=False)
     escaped = re.sub(r"`([^`]+)`", r"<code>\1</code>", escaped)
     escaped = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", escaped)
+    escaped = BUTTON.sub(button, escaped)
     return re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2">\1</a>', escaped)
 
 
@@ -176,6 +194,9 @@ def blocks(lines):
 
         if not line.strip():
             index += 1
+        elif GROUP.match(line):
+            found.append(("group", GROUP.match(line).group(1)))
+            index += 1
         elif line.startswith("```"):
             language = line[3:].strip()
             index += 1
@@ -218,12 +239,19 @@ def render(found):
     contents = []
 
     for kind, payload in found:
+        # A group only labels the contents list, so it adds nothing to the page itself
+        if kind == "group":
+            contents.append((0, None, payload))
+            continue
         if kind == "heading":
             level, text = payload
             # The title is shown in the page's header, not the body
             if level == 1:
                 continue
             anchor = slug(text)
+            # A second heading with the same anchor could never be reached by a link
+            if any(anchor == taken for _, taken, _ in contents):
+                sys.exit("two headings are both {!r}".format(text))
             contents.append((level, anchor, text))
             out.append('<h{0} id="{1}">{2}</h{0}>'.format(level, anchor, inline(text)))
 
@@ -236,6 +264,9 @@ def render(found):
 
         elif kind == "code":
             language, body = payload
+            if language == "picker":
+                out.append(picker_mockup(body))
+                continue
             escaped = [html.escape(line, quote=False) for line in body]
             if language in ("entry", "shape"):
                 escaped = [highlight(line, language == "shape") for line in escaped]
@@ -257,31 +288,56 @@ def render(found):
     return "\n".join(out), contents
 
 
+def contents_entry(anchor, text, under, opened):
+    """One section in the contents list, a details holding its subsections where it has any."""
+    link = '<a href="#{}">{}</a>'.format(anchor, inline(text))
+    if not under:
+        return "<li>{}</li>".format(link)
+    return "<li><details{}><summary>{}</summary><ul>{}</ul></details></li>".format(
+        " open" if opened else "", link, "".join(under))
+
+
 def table_of_contents(contents):
-    """Sections, each folding its subsections away until asked for.
+    """Sections in their groups, each folding its subsections away until asked for.
 
     A section with subsections becomes a details, so opening and closing needs no
     script. Its summary holds the section link, and following that link opens the
-    section on the way past, which is what someone clicking a heading wants.
+    section on the way past, which is what someone clicking a heading wants. The
+    sections before the first group start open, as the ones a new reader wants first.
+
+    A group named "fold" has no label. Its first section holds the rest of the group's
+    sections inside it, shut, each with its own subsections a level further in, so a
+    reader who wants them knows where to look and one who does not passes them by.
     """
     sections = []
     for level, anchor, text in contents:
-        if level == 2 or not sections:
-            sections.append((anchor, text, []))
+        if level in (0, 2) or not sections:
+            sections.append((level, anchor, text, []))
         else:
-            sections[-1][2].append((anchor, text))
+            sections[-1][3].append('<li><a href="#{}">{}</a></li>'.format(anchor, inline(text)))
 
     items = ['<nav class="contents"><h2>Contents</h2><ul>']
-    for anchor, text, under in sections:
-        link = '<a href="#{}">{}</a>'.format(anchor, inline(text))
-        if not under:
-            items.append("<li>{}</li>".format(link))
+    groups = 0
+    folding = None
+    for level, anchor, text, under in sections:
+        if level == 0:
+            if folding:
+                items.append(contents_entry(*folding, opened=False))
+            folding = None
+            groups += 1
+            if text == "fold":
+                folding = []
+            else:
+                items.append('<li class="group">{}</li>'.format(inline(text)))
             continue
-        items.append("<li><details><summary>{}</summary><ul>".format(link))
-        for sub_anchor, sub_text in under:
-            items.append('<li><a href="#{}">{}</a></li>'.format(
-                sub_anchor, inline(sub_text)))
-        items.append("</ul></details></li>")
+        if folding == []:
+            folding = [anchor, text, under]
+        elif folding:
+            folding[2] = folding[2] + [contents_entry(anchor, text, under, opened=False)]
+        else:
+            items.append(contents_entry(anchor, text, under, opened=groups == 0))
+    if folding:
+        items.append(contents_entry(*folding, opened=False))
     items.append("</ul></nav>")
     return "\n".join(items)
 
@@ -420,6 +476,8 @@ def build(markdown, tools_dir, version):
     page = page.replace("{{VERSION}}", html.escape(version, quote=False))
     page = page.replace("{{CONTENTS}}", table_of_contents(contents))
     page = page.replace("{{BODY}}", body)
+    with open(os.path.join(tools_dir, MOCKUP_STYLES_NAME), encoding="utf-8") as f:
+        page = page.replace("{{MOCKUP_STYLES}}", f.read().strip())
 
     # fx_drive compares and writes the page a piece at a time, counting characters
     # against a file counting bytes, so one character has to be one byte.
