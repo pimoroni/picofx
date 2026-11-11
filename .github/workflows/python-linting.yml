@@ -51,3 +51,10 @@ jobs:
         for description in boards/*/editor/fx_board.json; do
           python3 tools/build_editor.py --check "${description%/editor/fx_board.json}"
         done
+
+    - name: Check Each Board's Examples Index Is Rebuilt
+      shell: bash
+      run: |
+        for description in boards/*/editor/fx_board.json; do
+          python3 tools/build_examples_index.py --check "${description%/editor/fx_board.json}"
+        done
