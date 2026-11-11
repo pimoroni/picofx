@@ -10316,7 +10316,7 @@ var scanBusy = false;
 var MEDIA_FOLDERS = {pictures: /\.(gif|png|jpe?g)$/i, drawings: /\.py$/i, sounds: /\.wav$/i};
 
 // Whether a name on the drive is hidden, such as the ._ file macOS writes beside each file it
-// copies, or its .Trashes and .fseventsd folders. A walk of the drive passes these by
+// copies, or its .Trashes and .fseventsd. A walk of the drive passes these by
 function isHiddenName(name) {
   return name.charAt(0) === ".";
 }

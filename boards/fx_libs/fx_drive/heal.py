@@ -29,6 +29,22 @@ __EDGE = 512
 
 # FAT attribute bits, per VfsFat.chmod.
 __ATTR_READ_ONLY = 0x01
+__ATTR_HIDDEN = 0x02
+__ATTR_SYSTEM = 0x04
+
+# The folder macOS logs the drive's changes in, writing to it after every save. A file named
+# no_log inside it asks macOS to keep no log
+__MAC_LOG_FOLDER = ".fseventsd"
+__NO_LOG = b"no_log"
+
+# The name of macOS's bin on the drive. A file of this name leaves macOS nowhere to keep one,
+# so Finder asks first and then deletes a file at once. A bin kept on a drive this small
+# fills it with files the user believes are gone
+__MAC_BIN = ".Trashes"
+
+# The empty files __mark_for_mac() makes, as paths from the drive's root. .metadata_never_index
+# asks Spotlight not to index the drive, which it otherwise does after a save
+__MAC_MARKERS = (".metadata_never_index", __MAC_LOG_FOLDER + "/no_log", __MAC_BIN)
 
 # What the board told mount() it has, for the remount when the computer hands the drive back
 __screens = True
@@ -138,14 +154,104 @@ def __remove_tree(path):
 def __sweep_host_litter():
     # Remove what a computer leaves on the drive that the board has no use for. Chromium
     # saves through a .crswap and renames on close, so one still present is an unfinished
-    # save. macOS writes a ._ sidecar beside every file it touches and a .fseventsd folder
-    # at the root. Names are listed as bytes, since listed as str one name outside ASCII
-    # raises UnicodeError for the whole listing, and the drive would never be shown
+    # save. macOS writes a ._ sidecar beside every file it touches, and its log folder and
+    # its bin each have a sweep of their own. Names are listed as bytes, since listed as str
+    # one name outside ASCII raises UnicodeError for the whole listing, and the drive would
+    # never be shown
     root = MOUNT_POINT.encode()
     for name in os.listdir(root):
         lower = name.lower()
-        if lower.endswith(b".crswap") or name.startswith(b"._") or lower == b".fseventsd":
+        if lower == __MAC_LOG_FOLDER.encode():
+            __sweep_mac_log(root + b"/" + name)
+        elif lower == __MAC_BIN.lower().encode():
+            __sweep_mac_bin(root + b"/" + name)
+        elif lower.endswith(b".crswap") or name.startswith(b"._"):
             __remove_tree(root + b"/" + name)
+
+
+def __sweep_mac_log(path):
+    # Remove macOS's log of the drive's changes. A .fseventsd holding no_log is the one
+    # __mark_for_mac() made, so it stays and only what else is in it goes
+    try:
+        names = os.listdir(path)
+    except OSError:
+        # A file of that name stops the folder being made, so it goes
+        __remove_tree(path)
+        return
+    # Is this macOS's own log, holding no no_log?
+    if __NO_LOG not in [name.lower() for name in names]:
+        # It goes whole, and __mark_for_mac() makes the board's in its place
+        __remove_tree(path)
+        return
+    for name in names:
+        if name.lower() != __NO_LOG:
+            __remove_tree(path + b"/" + name)
+
+
+def __holds_files(path):
+    # Whether a folder has a file anywhere in it, searching the folders inside it too. A ._
+    # sidecar holds only macOS's metadata and does not count. A folder that cannot be read
+    # answers True, so it is never taken for empty
+    try:
+        for name in os.listdir(path):
+            if name.startswith(b"._"):
+                continue
+            inner = path + b"/" + name
+            if not os.stat(inner)[0] & S_IFDIR or __holds_files(inner):
+                return True
+    except OSError:
+        return True
+    return False
+
+
+def __sweep_mac_bin(path):
+    # Remove macOS's bin once no file is left in it, so __mark_for_mac() can put its file
+    # there. An emptied bin still holds a folder for each user, so only files count. A bin
+    # holding files is the user's to empty or restore from, and is left alone
+    try:
+        # Is it already the board's file?
+        if not os.stat(path)[0] & S_IFDIR:
+            return
+    except OSError:
+        return
+    if not __holds_files(path):
+        __remove_tree(path)
+
+
+def __mark_for_mac(fs):
+    # Make the files that ask macOS not to write to the drive, where they are missing. Each
+    # write macOS makes after a save holds back the save watcher, so a save plays later on
+    # a Mac. A full drive goes without them, and macOS writes to it as it did before
+    made = []
+    try:
+        os.mkdir(MOUNT_POINT + "/" + __MAC_LOG_FOLDER)
+        made.append(__MAC_LOG_FOLDER)
+    except OSError:
+        # Already there, or a full drive
+        pass
+    for name in __MAC_MARKERS:
+        path = MOUNT_POINT + "/" + name
+        try:
+            os.stat(path)
+            continue
+        except OSError:
+            pass
+        try:
+            with open(path, "w"):
+                pass
+            made.append(name)
+        except OSError:
+            # A full drive, or a .fseventsd that could not be made
+            pass
+    # Hide what this mount made. Hidden and system together keep a name out of Windows
+    # Explorer even where it shows hidden files. Setting them rewrites the directory entry
+    # whether or not they change, so a file that was already there is left as it is
+    for name in made:
+        try:
+            # A path from the volume's root, as a program may have changed the current folder
+            fs.chmod("/" + name, __ATTR_HIDDEN | __ATTR_SYSTEM, __ATTR_HIDDEN | __ATTR_SYSTEM)
+        except OSError:
+            pass
 
 
 def __has_boot_signature(bdev):
@@ -223,6 +329,7 @@ def mount(screens=True, wireless=False, sound=True):
     for name, document in pages(screens):
         __heal(fs, name, document)
     __sweep_host_litter()
+    __mark_for_mac(fs)
     return True
 
 
