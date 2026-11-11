@@ -127,6 +127,7 @@ FEATURE_FOLDERS = {
     "screens": lambda board: bool(board["screens"]),
     "hub": lambda board: bool(board["screens"] and board["screens"]["hub"]),
     "sound": lambda board: bool(board["sound"]),
+    "discover": lambda board: "examples_index" in board,
 }
 
 # The picker's parts are its script, so the page closes after the last of them

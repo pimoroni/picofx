@@ -1643,6 +1643,117 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
 /* Setting up is the last thing on the tabs' row, at its far end */
 .ledtabs .gap{flex:1}
 .ledtabs .setupbutton{align-self:center}
+
+/* Examples to discover: the line where a tab's examples start, the gallery over the page, and
+   the marks and bins on the examples on the drive. --discover is the tab's own colour */
+.discoverbar{margin:.8rem 0 .4rem}
+#assets>.discoverbar,#assets>.discoverdivide{grid-column:1/-1;width:100%;flex-basis:100%}
+.sounds>.discoverbar{grid-column:1/-1;flex-basis:100%;width:100%}
+.discoverprimary{background:var(--discover,var(--accent));border-color:var(--discover,var(--accent));
+ color:var(--accent-ink);font-weight:600}
+.discoverprimary:hover:not(:disabled){filter:brightness(1.08)}
+.discoverprogress{height:4px;border-radius:2px;background:rgba(0,0,0,.09);overflow:hidden;
+ margin:.45rem 0 .1rem;max-width:22rem}
+.discoverprogress>span{display:block;height:100%;background:var(--discover,var(--accent));
+ transition:width .3s ease}
+.discovernotice{display:flex;align-items:center;gap:.35rem;margin-top:.35rem;font-size:.84rem;
+ color:var(--accent)}
+.discovernotice.hold{color:#a8740f}
+.discovernotice.warn,.discoverwarn{color:#b4443a}
+.discovermark{display:inline-flex;width:1rem;height:1rem;flex:none}
+.discovermark svg{width:100%;height:100%}
+/* A rule with words in it: "Examples" in its middle where a tab's examples start, and a kind's
+   name at its left, lighter, where the drawings or the pictures start within them */
+.discoverdivide{display:flex;align-items:center;gap:.7rem;margin:.7rem 0 .1rem;color:var(--dim);
+ font-size:.72rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase}
+.discoverdivide::before,.discoverdivide::after{content:"";flex:1;border-top:1px solid var(--line)}
+.discoverdivide.minor{margin-top:.6rem;font-size:.66rem;font-weight:600;opacity:.8}
+.discoverdivide.minor::before{display:none}
+.discoverbar>.discoverdivide{margin:0 0 .7rem}
+/* The Discover button the width of the tab, and the one line under it, one height whatever it
+   says, the words cut short rather than wrapped, the bar's place kept while it is hidden */
+.discoverwide{display:flex;align-items:center;justify-content:center;gap:.55rem;width:100%;
+ padding:.75rem 1rem;border:0;border-radius:10px;background:var(--discover,var(--accent));
+ color:#fff;font-size:.98rem;font-weight:600}
+.discoverwide:hover{filter:brightness(1.08)}
+.discoverwideicon{display:inline-flex;width:1.35rem;height:1.35rem}
+.discoverwideicon svg{width:100%;height:100%}
+.discovercountchip{background:rgba(255,255,255,.25);border-radius:999px;padding:0 .5rem;
+ font-size:.8rem}
+.discoverupdaterow{display:grid;grid-template-columns:minmax(0,1fr) minmax(6rem,12rem) auto auto;
+ align-items:center;gap:.8rem;height:2.4rem;margin-top:.55rem;font-size:.86rem;color:var(--dim)}
+.discoverrowsaid{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.discoverupdaterow>.discovernotice{margin:0}
+.discoverupdaterow>.discoverprogress{margin:0;max-width:none}
+.discoverupdaterow>.discoverprogress.discoveridle{visibility:hidden}
+.discoverupdaterow button{padding:.25rem .65rem;font-size:.8rem;white-space:nowrap}
+/* A mark in an example's corner, Update or the firmware it needs, stepping left on hover to clear
+   the bin and copy tile shown there */
+.discoverbusy{opacity:.6}
+.discoverpill{position:absolute;top:4px;right:4px;z-index:3;display:flex;align-items:center;
+ gap:.2rem;padding:.05rem .4rem;border-radius:999px;background:rgba(25,27,29,.78);color:#fff;
+ font-size:.66rem;line-height:1.4;pointer-events:none;transition:right .12s}
+.discoverpill.update{background:var(--accent);pointer-events:auto;cursor:pointer}
+.discoverpill.update:hover{filter:brightness(1.1)}
+.discoverpill.newer{background:#8a8378}
+.progcard:hover>.discoverpill,.asset:hover>.discoverpill{right:2.9rem}
+.sound:hover>.discoverpill{right:1.6rem}
+.discovershade .discoveroffer:hover>.discoverpill{right:4px}
+/* The gallery over the page, its head and foot kept in view while its cards scroll */
+body.discovermodal{overflow:hidden}
+.discovershade{position:fixed;inset:0;z-index:100;background:rgba(25,27,29,.55);
+ display:flex;align-items:center;justify-content:center;padding:2vh 1rem}
+.discoversheet{display:flex;flex-direction:column;width:100%;max-width:60rem;height:100%;
+ max-height:56rem;background:var(--bg);border-radius:14px;overflow:hidden;
+ box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.discoversheethead{display:flex;align-items:center;gap:.8rem;padding:.9rem 1.2rem;
+ background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.discoversheethead h2{font-size:1.05rem;margin:0 auto 0 0}
+.discoverfilter{font:inherit;font-size:.88rem;padding:.35rem .6rem;border:1px solid var(--line);
+ border-radius:8px;background:var(--panel);min-width:13rem}
+.discoverchips{padding:.55rem 1.2rem;margin:0;background:var(--panel);
+ border-bottom:1px solid var(--line)}
+.discoverscroll{flex:1;min-height:0;overflow:auto;padding:.4rem 1.2rem 1.2rem}
+.discoverwaiting{min-height:100%;display:flex;flex-direction:column;align-items:center;
+ justify-content:center;gap:.4rem;color:var(--dim);font-size:.92rem;text-align:center}
+.discoverwaiting p{margin:0}
+.discoverwaiting .discoverprogress{width:18rem;max-width:80%}
+.discoverhead{font-size:.95rem;margin:1rem 0 .55rem;color:var(--ink)}
+.discovergrid{margin-top:.8rem}
+.discoverhead+.discovergrid{margin-top:0}
+.discoveroffer{position:relative;cursor:pointer;user-select:none}
+.discoveroffer:focus-visible{outline:2px solid var(--discover);outline-offset:2px}
+.discoveroffer.picked{border-color:var(--discover);box-shadow:0 0 0 2px var(--discover)}
+.discoveroffer.newer{opacity:.5;cursor:default}
+.discovertick{position:absolute;top:.4rem;left:.4rem;z-index:4;width:1.15rem;height:1.15rem;
+ margin:0;accent-color:var(--discover);cursor:pointer;opacity:0;transition:opacity .15s}
+.discoveroffer:hover .discovertick,.discoveroffer.picked .discovertick,
+.discovertick:focus-visible{opacity:1}
+/* A program's icons sit along its thumbnail's foot, whatever follows the thumbnail */
+.discoverthumbwrap{position:relative}
+.discoverthumbwrap .proguses{top:auto;bottom:4px}
+/* A drawing's face is a program thumbnail's shape, a tall picture shown whole on dark either side.
+   Every card there is a picture or drawing, so none needs the tag, and its name is under it */
+.discoverdrawings .asset .face{height:auto;aspect-ratio:4/3;background:#111}
+.discoverdrawings .asset .face img{object-fit:contain}
+.discovershade .asset .kind,.discovershade .asset .label,
+.discovershade .asset .drawingtitle{display:none}
+.discovershade .asset .progname{display:block}
+.discoverkind{position:absolute;left:4px;bottom:4px;z-index:2;font-size:.62rem;padding:0 .35rem;
+ border-radius:4px;background:rgba(25,27,29,.75);color:#fff}
+.discoversounds .sound{width:auto}
+.discoversounds .sound .hear{z-index:3}
+/* What an example does, two lines kept for it so every card in a row is one height */
+.discoverdoes{display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;
+ overflow:hidden;height:2.6em;line-height:1.3;margin:-.2rem .55rem .5rem;font-size:.76rem;
+ color:var(--dim)}
+.discoverhint{color:var(--dim);font-size:.88rem}
+.discoversheetfoot{display:flex;align-items:center;gap:1rem;padding:.8rem 1.2rem;
+ background:var(--panel);border-top:1px solid var(--line)}
+.discoverfootsays{flex:1;min-width:0}
+.discoverfootsays b{font-weight:600}
+.discoverfootsays .discovernotice{margin:0}
+.discoversheetfoot .discoverprimary{padding:.55rem 1.4rem;font-size:.95rem}
 </style>
 </head>
 <body>
@@ -7548,7 +7659,8 @@ function plainSoundTile(name) {
     }
     draw();
   };
-  // An example comes back when the board's examples are flashed again, so it keeps no bin
+  // An example keeps no bin here, as flashing the board's examples again brings it back. Where the
+  // board's examples can be discovered, discover/29_discover_sound.js gives it one
   if (name && state.sounds.indexOf(name) >= 0 && !isExampleMedia(name)) {
     tile.appendChild(binButton(name, "wav"));
   }
@@ -7819,8 +7931,13 @@ function soundTile(name) {
     nothing.className = "nothingface";
     tile.replaceChild(nothing, drawn);
   }
+  soundTileSteps.forEach(function (step) { step(tile, name); });
   return withHearButton(tile, name);
 }
+
+// What the parts after this one add to each sound's tile, each given the tile and its sound's
+// name, null for silence
+var soundTileSteps = [];
 
 // The tab in the page's style. What the scene does with its sound is the row's tip, no other
 // tab opening on a sentence; the sentence stays only where there are no sounds to show, since
@@ -7829,6 +7946,7 @@ function soundTile(name) {
 // of that line
 function renderSound() {
   renderSoundTab();
+  soundSteps.forEach(function (step) { step(); });
   var box = document.getElementById("sound");
   var says = document.getElementById("soundSays");
   var row = box.querySelector(".sounds");
@@ -7865,6 +7983,9 @@ function renderSound() {
   head.appendChild(silence);
   row.removeChild(quiet);
 }
+
+// What the parts after this one add to the Sound tab once its tiles are made
+var soundSteps = [];
 
 // The tab's swatch is the shape of the sound playing, or silence
 tabSwatches.soundPanel = function (swatch) {
@@ -8406,9 +8527,15 @@ var boardSet = {reload: true, driveHidden: false, program: null, args: {}};
 // needs. drivePrograms() in 26_drive_programs.js reads them
 var PROGRAMS = [];
 
-// The program at a path, or null where the drive holds none there
+// Lookups for programs the page shows that the drive does not hold, each given a path and
+// returning its program or null
+var programsElsewhere = [];
+
+// The program at a path, or null where neither the drive nor a lookup holds one there
 function programNamed(path) {
-  return PROGRAMS.filter(function (one) { return one.path === path; })[0] || null;
+  var found = PROGRAMS.filter(function (one) { return one.path === path; })[0];
+  for (var at = 0; !found && at < programsElsewhere.length; at++) found = programsElsewhere[at](path);
+  return found || null;
 }
 
 // A program's arguments as the file takes them, each one quoted where a space or a colon would
@@ -9284,8 +9411,12 @@ function programCard(path) {
     };
     card.appendChild(bin);
   }
+  programCardSteps.forEach(function (step) { step(card, path); });
   return card;
 }
+
+// What the parts after this one add to each program card, each given the card and its path
+var programCardSteps = [];
 
 // The screen size a program is shown on: screen A's, else the program's own default, else a 2.8".
 // Its picture was taken at its defaults, so what it is given changes nothing here
@@ -9468,7 +9599,11 @@ function renderProgramView() {
                               : "There are no programs on this drive.";
     programView.appendChild(none);
   }
+  programViewSteps.forEach(function (step) { step(); });
 }
+
+// What the parts after this one add to the program tab once its programs are listed
+var programViewSteps = [];
 
 // ---- choosing by what is to hand ----------------------------------------------------------------
 // A chip for each thing an offered program can use, all on to begin with. A chip turned off is
@@ -10585,8 +10720,9 @@ setInterval(rescanMedia, 5000);
 //
 // Every program is read the same way. Lines in its opening string say how to show it: "Program:"
 // its name, "Args:" what it takes, "Picture:" a picture beside it to show it by, "Section:" the
-// program tab's section it is offered in, and "Thumbnail:" what its thumbnail draws where it has no
-// picture. The first sentence of the rest says what it does. What it uses is read from its source,
+// program tab's section it is offered in, "Thumbnail:" what its thumbnail draws where it has no
+// picture, and "Firmware:" the lowest firmware it runs on. The first sentence of the rest says what
+// it does. What it uses is read from its source,
 // and an example's folder says what it needs attached. A picture is the one named, else name.png
 // beside it, and name-2.png beside it is a second screen's. sections.txt in EXAMPLES_ROOT orders
 // the sections and says what each holds.
@@ -10644,7 +10780,7 @@ var ARGUMENT_KINDS = {"Screen size": "size", "Rotation": "rotation"};
 var BOARD_MADE = /^(\w+)\s*=\s*\w*FX\(/m;
 
 // The lines of an opening string that say how to show the program
-var PROGRAM_LINE = /^\s*(Program|Args|Picture|Section|Thumbnail):\s*(.+?)\s*$/;
+var PROGRAM_LINE = /^\s*(Program|Args|Picture|Section|Thumbnail|Firmware):\s*(.+?)\s*$/;
 
 // A pattern with the program's name for the board put in place of {board}, one matching nothing
 // where the program makes no board
@@ -10708,6 +10844,7 @@ function programFrom(path, folder, source) {
     else if (told[1] === "Args") program.args = told[2].split(",").map(argumentFrom);
     else if (told[1] === "Picture") program.picture = told[2];
     else if (told[1] === "Section") program.section = told[2];
+    else if (told[1] === "Firmware") program.firmware = told[2];
     else program.thumbnail = told[2].split(/\s+/).join(":");
     return false;
   }).join(" ").split(/\s+/).join(" ").trim();

@@ -607,8 +607,12 @@ function programCard(path) {
     };
     card.appendChild(bin);
   }
+  programCardSteps.forEach(function (step) { step(card, path); });
   return card;
 }
+
+// What the parts after this one add to each program card, each given the card and its path
+var programCardSteps = [];
 
 // The screen size a program is shown on: screen A's, else the program's own default, else a 2.8".
 // Its picture was taken at its defaults, so what it is given changes nothing here
@@ -791,7 +795,11 @@ function renderProgramView() {
                               : "There are no programs on this drive.";
     programView.appendChild(none);
   }
+  programViewSteps.forEach(function (step) { step(); });
 }
+
+// What the parts after this one add to the program tab once its programs are listed
+var programViewSteps = [];
 
 // ---- choosing by what is to hand ----------------------------------------------------------------
 // A chip for each thing an offered program can use, all on to begin with. A chip turned off is

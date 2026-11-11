@@ -441,7 +441,8 @@ function renderAssets() {
       pick.appendChild(button);
     });
     cell.appendChild(pick);
-    // An example comes back when the board's examples are flashed again, so it keeps no bin
+    // An example keeps no bin here, as flashing the board's examples again brings it back. Where
+    // the board's examples can be discovered, discover/29_discover_screens.js gives it one
     if (!isExampleMedia(name)) cell.appendChild(binButton(name, media.kind));
     if (media.kind === "drawing" && state.fileHandle) cell.appendChild(drawingCopyTile(name));
     box.appendChild(cell);

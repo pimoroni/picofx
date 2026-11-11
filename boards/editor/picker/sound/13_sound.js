@@ -173,7 +173,8 @@ function plainSoundTile(name) {
     }
     draw();
   };
-  // An example comes back when the board's examples are flashed again, so it keeps no bin
+  // An example keeps no bin here, as flashing the board's examples again brings it back. Where the
+  // board's examples can be discovered, discover/29_discover_sound.js gives it one
   if (name && state.sounds.indexOf(name) >= 0 && !isExampleMedia(name)) {
     tile.appendChild(binButton(name, "wav"));
   }
@@ -444,8 +445,13 @@ function soundTile(name) {
     nothing.className = "nothingface";
     tile.replaceChild(nothing, drawn);
   }
+  soundTileSteps.forEach(function (step) { step(tile, name); });
   return withHearButton(tile, name);
 }
+
+// What the parts after this one add to each sound's tile, each given the tile and its sound's
+// name, null for silence
+var soundTileSteps = [];
 
 // The tab in the page's style. What the scene does with its sound is the row's tip, no other
 // tab opening on a sentence; the sentence stays only where there are no sounds to show, since
@@ -454,6 +460,7 @@ function soundTile(name) {
 // of that line
 function renderSound() {
   renderSoundTab();
+  soundSteps.forEach(function (step) { step(); });
   var box = document.getElementById("sound");
   var says = document.getElementById("soundSays");
   var row = box.querySelector(".sounds");
@@ -490,6 +497,9 @@ function renderSound() {
   head.appendChild(silence);
   row.removeChild(quiet);
 }
+
+// What the parts after this one add to the Sound tab once its tiles are made
+var soundSteps = [];
 
 // The tab's swatch is the shape of the sound playing, or silence
 tabSwatches.soundPanel = function (swatch) {

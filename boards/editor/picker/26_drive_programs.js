@@ -7,8 +7,9 @@
 //
 // Every program is read the same way. Lines in its opening string say how to show it: "Program:"
 // its name, "Args:" what it takes, "Picture:" a picture beside it to show it by, "Section:" the
-// program tab's section it is offered in, and "Thumbnail:" what its thumbnail draws where it has no
-// picture. The first sentence of the rest says what it does. What it uses is read from its source,
+// program tab's section it is offered in, "Thumbnail:" what its thumbnail draws where it has no
+// picture, and "Firmware:" the lowest firmware it runs on. The first sentence of the rest says what
+// it does. What it uses is read from its source,
 // and an example's folder says what it needs attached. A picture is the one named, else name.png
 // beside it, and name-2.png beside it is a second screen's. sections.txt in EXAMPLES_ROOT orders
 // the sections and says what each holds.
@@ -66,7 +67,7 @@ var ARGUMENT_KINDS = {"Screen size": "size", "Rotation": "rotation"};
 var BOARD_MADE = /^(\w+)\s*=\s*\w*FX\(/m;
 
 // The lines of an opening string that say how to show the program
-var PROGRAM_LINE = /^\s*(Program|Args|Picture|Section|Thumbnail):\s*(.+?)\s*$/;
+var PROGRAM_LINE = /^\s*(Program|Args|Picture|Section|Thumbnail|Firmware):\s*(.+?)\s*$/;
 
 // A pattern with the program's name for the board put in place of {board}, one matching nothing
 // where the program makes no board
@@ -130,6 +131,7 @@ function programFrom(path, folder, source) {
     else if (told[1] === "Args") program.args = told[2].split(",").map(argumentFrom);
     else if (told[1] === "Picture") program.picture = told[2];
     else if (told[1] === "Section") program.section = told[2];
+    else if (told[1] === "Firmware") program.firmware = told[2];
     else program.thumbnail = told[2].split(/\s+/).join(":");
     return false;
   }).join(" ").split(/\s+/).join(" ").trim();

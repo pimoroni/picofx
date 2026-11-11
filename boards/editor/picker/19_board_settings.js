@@ -13,9 +13,15 @@ var boardSet = {reload: true, driveHidden: false, program: null, args: {}};
 // needs. drivePrograms() in 26_drive_programs.js reads them
 var PROGRAMS = [];
 
-// The program at a path, or null where the drive holds none there
+// Lookups for programs the page shows that the drive does not hold, each given a path and
+// returning its program or null
+var programsElsewhere = [];
+
+// The program at a path, or null where neither the drive nor a lookup holds one there
 function programNamed(path) {
-  return PROGRAMS.filter(function (one) { return one.path === path; })[0] || null;
+  var found = PROGRAMS.filter(function (one) { return one.path === path; })[0];
+  for (var at = 0; !found && at < programsElsewhere.length; at++) found = programsElsewhere[at](path);
+  return found || null;
 }
 
 // A program's arguments as the file takes them, each one quoted where a space or a colon would

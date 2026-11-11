@@ -105,7 +105,7 @@ function nameHue(name) {
 }
 
 // A line of a drawing's opening string that says how to show it
-var DRAWING_LINE = /^\s*(Drawing|Icon|Colour|Section|Defaults|Styles):\s*(.+?)\s*$/;
+var DRAWING_LINE = /^\s*(Drawing|Icon|Colour|Section|Defaults|Styles|Firmware):\s*(.+?)\s*$/;
 
 // What an opening string says of a drawing, or null for a file that is not one. Its defaults are
 // the Defaults: line's settings by name, written as a program's Args: line is, such as "Rotation =
