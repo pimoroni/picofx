@@ -284,7 +284,7 @@ def apply_scene(players, shows, sounds, scene):
     cue_sound(sounds, scene)
 
 
-def load(text, fx, maker=None, volume=None):
+def load(text, fx, maker=None, volume=None, on_built=None):
     """
     Read the effects file. Returns the board it plays on, the players it describes,
     the shows its screen entries play, the sounds its audio entries name, its
@@ -300,6 +300,9 @@ def load(text, fx, maker=None, volume=None):
     running hardware shuts the board down and a fresh one is built, as a restart
     would. Without a maker the change is reported instead. `volume` is the drive the
     file came from, whose sounds play on while a computer holds it.
+
+    `on_built` is called with the board as soon as it is built, before the screens,
+    which take most of a load.
     """
     # The board is learned first, so the parser's examples name its own parts
     learn_board(fx)
@@ -419,6 +422,8 @@ def load(text, fx, maker=None, volume=None):
     # The board comes up here, now that its own entry has been read, since a strip's
     # length is declared at construction and this is the first point it is known
     fx = build_board(fx, board, problems)
+    if on_built is not None:
+        on_built(fx)
     mono, colour = channels(fx)
 
     # The hub built with the board is recorded once, so a reload compares against it

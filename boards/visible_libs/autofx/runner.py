@@ -65,6 +65,31 @@ TRANSFER_PERIOD_MS = 840
 # transfer's step, since this says something happened rather than that it is still going
 HANDOVER_STEP_MS = TRANSFER_STEP_MS // 2
 
+# Shown while the file loads, as (colour, level), since a file with screens can take many
+# seconds. The transfer's colour and resting level, so both read as the board at work
+LOADING = TRANSFER[:2]
+
+# The level of the bar that runs along the indicators while a load builds, the transfer's
+# travelling level, so a load that is working shows change
+LOADING_BAR_LEVEL = TRANSFER[2]
+
+# How long the bar holds each frame
+LOADING_FRAME_MS = 100
+
+# How long a board with a single indicator holds it lit, and then resting, in turn
+SINGLE_BLINK_MS = 700
+
+# The bar's frame, -1 before the first. Frames below the indicator count grow it from the USB
+# connector end, and the rest shrink it from that end until it is gone
+BAR_FRAME = [-1]
+
+# When the bar started and when it last moved, by time.ticks_ms()
+BAR_STARTED_MS = [0]
+BAR_MOVED_MS = [0]
+
+# The timer moving the bar, held from the board being built until the effects start
+BAR_TIMER = []
+
 
 def report(problems, path, running=True):
     """
@@ -196,6 +221,7 @@ def __reload(fx, volume, path, errors, playing, showing, sounding=(), maker=None
         rail = getattr(fx, "disable_rail", None)
         if rail is not None:
             rail()
+        __show_loading(fx)
 
     text = None
     players, shows, sounds, scenes, settings, problems = [], [], [], [], {}, []
@@ -219,7 +245,8 @@ def __reload(fx, volume, path, errors, playing, showing, sounding=(), maker=None
 
     if text is not None:
         try:
-            fx, players, shows, sounds, scenes, settings, problems = load(text, fx, maker, volume)
+            fx, players, shows, sounds, scenes, settings, problems = load(
+                text, fx, maker, volume, __run_loading_bar)
         # A file a user typed must never be able to take the board down. Anything
         # load does not report itself costs the whole file, where its own reporting
         # costs one entry, but the drive and the button survive to be edited again
@@ -256,6 +283,11 @@ def __reload(fx, volume, path, errors, playing, showing, sounding=(), maker=None
     # having it back
     problems.extend(UNWRITTEN)
     del UNWRITTEN[:]
+
+    # The bar stops before the drive can go back, as enumeration has deadlines its frames
+    # could make the board miss, and the board holds the steady light until the effects start
+    __stop_loading_bar()
+    __show_loading(fx)
     __tell(fx, problems, errors, bool(players or shows or sounds))
 
     # Started by the caller, which is the only one that knows whether a program is
@@ -350,6 +382,79 @@ def __transfer_frame(fx, at):
         __spot(fx, (at // TRANSFER_STEP_MS) % len(lights))
 
 
+def __show_loading(fx):
+    # Light every indicator at the level the bar rests on, so the board reads as working from
+    # the moment a load begins
+    BAR_FRAME[0] = -1
+    for output in __flashed(fx):
+        __light_loading(output, LOADING[1])
+
+
+def __run_loading_bar(fx):
+    # Light the board as loading and start the bar running along its indicators, once the
+    # board is built. Not before, since a board rebuilt for a changed entry is shut down first
+    # and a frame landing then would write to outputs already released
+    __show_loading(fx)
+    BAR_STARTED_MS[0] = time.ticks_ms()
+    from machine import Timer
+    timer = Timer()
+    BAR_TIMER.append(timer)
+    timer.init(mode=Timer.PERIODIC, period=LOADING_FRAME_MS,
+               callback=lambda _timer: __step_loading(fx))
+
+
+def __stop_loading_bar():
+    # Stop the bar's timer, which left running would go on writing the outputs
+    while BAR_TIMER:
+        BAR_TIMER.pop().deinit()
+
+
+def __step_loading(fx):
+    # Move the bar on a frame. Its head runs from the USB connector end to the far end, then
+    # its tail follows until it catches up, and it repeats
+    lights = __indicators(fx)
+    if not lights:
+        return
+
+    # Frames held up by one long step of the load arrive together once it ends, and only the
+    # first of them moves the bar, so it carries on from where it stopped rather than jumping
+    now = time.ticks_ms()
+    if time.ticks_diff(now, BAR_MOVED_MS[0]) < LOADING_FRAME_MS // 2:
+        return
+    BAR_MOVED_MS[0] = now
+
+    # Check if the board has a single indicator, which has no room for a bar
+    count = len(lights)
+    if count == 1:
+        lit = time.ticks_diff(now, BAR_STARTED_MS[0]) // SINGLE_BLINK_MS % 2 == 0
+        __light_loading(lights[0], LOADING_BAR_LEVEL if lit else LOADING[1])
+        return
+
+    frame = (BAR_FRAME[0] + 1) % (2 * count)
+    BAR_FRAME[0] = frame
+    first, last = (0, frame) if frame < count else (frame - count + 1, count - 1)
+    for index, output in enumerate(lights):
+        __light_loading(output, LOADING_BAR_LEVEL if first <= index <= last else LOADING[1])
+
+
+def __light_loading(output, level):
+    # One indicator in the loading colour at the level given
+    colour = LOADING[0]
+    if isinstance(output, RGBLED):
+        output.set_rgb(colour[0] * level, colour[1] * level, colour[2] * level)
+    else:
+        output.brightness(level)
+
+
+def __end_loading(fx):
+    # Darken what __show_loading() lit, before the players or a program take the outputs.
+    # A player writes only the outputs an effect drives, so one the file never names would
+    # otherwise stay lit
+    __stop_loading_bar()
+    for output in __flashed(fx):
+        output.off()
+
+
 def __read_program(name, problems):
     # The source of a program the file named, or None if there is none to read.
     #
@@ -424,7 +529,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
 
     The effects stand aside while the computer is copying, and the outputs answer for
     themselves where there is no file to answer in, for a problem written down, a
-    problem with nowhere to write it and a press refused mid-write.
+    problem with nowhere to write it and a press refused mid-write. A bar runs along
+    them while the file loads.
 
     A board entry can name a program to run instead, and can keep the drive hidden
     until the button asks for it. A screen entry is serviced from this loop, so
@@ -468,6 +574,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         else:
             cue_sound(sounds, None)
             settle_hub(shows)
+        __end_loading(fx)
         __start(players, fx)
 
     if volume is None:
@@ -515,6 +622,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
             # would reload the file resets the board instead, which then reads it as at
             # power on
             volume.reset_on_save(True)
+            __end_loading(fx)
             try:
                 __run_program(program, source, settings.get("args", ()), problems)
             finally:
@@ -522,6 +630,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
 
         # The board is the effects' again, so the screen entries put off for the
         # program are built now, before the report, so anything wrong with them is in it
+        __show_loading(fx)
         shows = build_deferred_shows(problems)
 
         # Here because the program could not be found or run, or because it finished
@@ -718,6 +827,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         # record of what is running may outlive them, and anything a program put off
         # is never going to be built now
         __stop(players)
+        __stop_loading_bar()
         forget_built()
         DEFERRED_SHOWS.clear()
         fx.shutdown()

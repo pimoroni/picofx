@@ -74,7 +74,8 @@ When something is wrong, the board's LED flashes:
 
 While the computer is copying to this drive, the board's LED glows a dim white
 with a brighter blink in place of the effects, which come back a moment after it
-finishes.
+finishes. While the board starts up or loads a save, its LED blinks slowly
+between dim and bright white until the effects begin.
 
 The picker saves to effects.txt, which can also be edited by hand. EDITOR.html
 helps with that, and the manual describes every line. Deleting effects.txt

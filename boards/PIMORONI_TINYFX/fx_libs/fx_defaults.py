@@ -76,6 +76,8 @@ When something is wrong, the outputs flash. The RGB output shows the colour:
 
 While the computer is copying to this drive, a dim light travels along the
 outputs in place of the effects, which come back a moment after it finishes.
+While the board starts up or loads a save, a dim bar fills and empties along the
+outputs until the effects begin.
 
 The picker saves to effects.txt, which can also be edited by hand. EDITOR.html
 helps with that, and the manual describes every line. Deleting effects.txt

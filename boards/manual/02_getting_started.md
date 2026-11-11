@@ -7,6 +7,15 @@ The quickest way to start is the picker. Open it in Chrome or Edge, with
 back with your changes playing. [The picker](#the-picker) shows you everything
 else it can do.
 
+<!-- if outputs -->
+While the board starts up or loads your changes, a dim bar of light fills and
+empties along the outputs until the effects begin.
+<!-- end -->
+<!-- if not outputs -->
+While the board starts up or loads your changes, its LED blinks slowly between
+dim and bright white until the effects begin.
+<!-- end -->
+
 If a save does not seem to work, press **Boot** once or eject this drive, as a
 computer does not always finish writing to a drive straight away.
 
