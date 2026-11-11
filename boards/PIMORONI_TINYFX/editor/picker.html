@@ -187,10 +187,9 @@ button.round svg{display:block}
  font:600 1.02rem system-ui,sans-serif}
 .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(9.4rem,1fr));
  gap:.7rem;margin:0 0 .3rem}
-.card{border:2px solid var(--line);border-radius:11px;overflow:hidden;cursor:grab;
+.card{border:2px solid var(--line);border-radius:11px;overflow:hidden;cursor:pointer;
  background:var(--panel);transition:transform .08s,border-color .12s}
 .card:hover{transform:translateY(-2px)}
-.card:active{cursor:grabbing}
 .card.picked{border-color:var(--accent)}
 .card .face{height:2.9rem;display:flex;background:var(--dark)}
 .card .face span{flex:1}
@@ -199,12 +198,7 @@ button.round svg{display:block}
 .card .name{padding:.42rem .65rem .52rem;font:600 .85rem system-ui,sans-serif;
  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card.picked .name{color:var(--accent)}
-.card.dragged{opacity:.45}
 
-/* While a look is being carried, every stretch that could take it says so */
-body.carrying .sec{outline:2px dashed rgba(0,133,125,.4);outline-offset:-3px}
-.sec.landing{outline:2px solid var(--accent);outline-offset:-3px}
-.run svg .span.landing{fill:rgba(0,133,125,.22)}
 .tuning{display:grid;grid-template-columns:auto 1fr;gap:.25rem .7rem;align-items:center}
 .tuning label{font-size:.8rem;color:var(--dim);white-space:nowrap}
 .tuning input[type=range]{width:100%;accent-color:var(--accent)}
@@ -272,9 +266,9 @@ footer .company{margin:.9rem 0 0;padding-top:.75rem;border-top:1px solid #eeeae3
  margin-right:.5rem}
 .lamps{gap:0}
 /* A lamp is what is picked up and placed, so a box only means that these lamps happen
-   to sit next to each other and share a connector */
-.lamp{cursor:grab}
-.lamp:active{cursor:grabbing}
+   to sit next to each other and share a connector. Only Edit board lets a lamp move */
+body.setupall .lamp{cursor:grab}
+body.setupall .lamp:active{cursor:grabbing}
 .lamp.carried{opacity:.35}
 .lamp.landing{box-shadow:-3px 0 0 var(--accent)}
 .lamp.landing.after{box-shadow:3px 0 0 var(--accent)}
