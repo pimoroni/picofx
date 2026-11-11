@@ -3282,10 +3282,12 @@ document.addEventListener("mousemove", function (event) {
 });
 
 document.addEventListener("mouseup", function () {
+  // End a drag at any release, including one that swallowed a stretch and let go of its cut
+  // already. Otherwise every later click on the bar is taken for the end of a drag
+  if (dragged) window.setTimeout(function () { dragged = false; }, 0);
   if (!holding) return;
   holding = null;
   draw();
-  window.setTimeout(function () { dragged = false; }, 0);
 });
 
 // A look given to a stretch. A line kept as written that already plays some of its lights is
