@@ -93,7 +93,8 @@ function sizeFits(place, number) {
   return !others.length || state.hub.sizes[others[0]] === state.hub.sizes[place];
 }
 
-// Joining takes what the group shows, a first member setting it; leaving keeps what it shows
+// Joining takes what the group shows, and leaving keeps what it shows. A group showing nothing
+// takes what the joining position shows instead, so joining never loses a picture
 function joinOrLeave(place, number) {
   if (groupOf(place) === number) {
     state.places[place].group = place;
@@ -102,7 +103,8 @@ function joinOrLeave(place, number) {
   }
   var others = membersOfGroup(number).filter(function (other) { return other !== place; });
   state.places[place].group = number;
-  placePicked = others.length ? others[0] : place;
+  var groupShows = others.length && state.places[others[0]].shows;
+  placePicked = others.length && (groupShows || !state.places[place].shows) ? others[0] : place;
 }
 
 // What the picked position was given goes to the rest of its group before anything is drawn
@@ -252,7 +254,10 @@ hubHeadSteps.push(function () {
                              place + " is " + state.hub.sizes[place] + "\""
                    : inIt ? "Remove " + place + " from group " + number + ", keeping what it shows"
                           : "Put " + place + " in group " + number +
-                            (membersOfGroup(number).length ? ", to show what the group shows" : "");
+                            (!membersOfGroup(number).length ? ""
+                             : state.places[membersOfGroup(number)[0]].shows
+                               ? ", to show what the group shows"
+                               : state.places[place].shows ? ", taking what " + place + " shows" : "");
       button.onclick = function (event) {
         event.stopPropagation();
         joinOrLeave(place, number);
