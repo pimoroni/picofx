@@ -42,11 +42,13 @@ for _kind, _registry in (("mono", MONO_EFFECTS), ("colour", COLOUR_EFFECTS)):
 # images where an output lights. "gif" plays an animated GIF and "sequence" a folder of
 # images in the order their names number them, each at its own delays unless fps names one.
 # "image" holds one still, and "drawing" runs a Python file's draw() after running its
-# module body once. Each looks on the drive first, then the board.
+# module body once. Each looks on the drive first, then the board. "none" shows black, which
+# lets a scene take a screen from the always-on entries and show nothing there.
 SCREEN_EFFECTS = {
     "drawing": ("file", "fps", "interval", "width", "height", "style"),
     "gif": ("file", "fps", "interval", "loop", "ping_pong", "first_as_last", "hold"),
     "image": ("file",),
+    "none": (),
     "sequence": ("folder", "fps", "interval", "loop", "ping_pong", "first_as_last", "hold"),
 }
 
@@ -61,9 +63,11 @@ HUB_POSITIONS = "abcdef"
 SCREEN_SIZES = ("2.8", "1.54")
 
 # The one selector that plays sound, "wav" streaming a file once or with loop=true for good,
-# at full volume unless volume= names a fraction of it
+# at full volume unless volume= names a fraction of it. "none" plays nothing, which lets a
+# scene silence the always-on sound
 AUDIO = "audio"
 AUDIO_EFFECTS = {
+    "none": (),
     "wav": ("file", "loop", "volume"),
 }
 

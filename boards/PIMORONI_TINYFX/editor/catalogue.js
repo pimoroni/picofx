@@ -211,6 +211,7 @@ var CATALOGUE = {
   "image": [
    "file"
   ],
+  "none": [],
   "sequence": [
    "folder",
    "fps",
@@ -223,6 +224,7 @@ var CATALOGUE = {
  },
  "audio": "audio",
  "audio_effects": {
+  "none": [],
   "wav": [
    "file",
    "loop",

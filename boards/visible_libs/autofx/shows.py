@@ -1269,27 +1269,29 @@ def build_shows(entries, fx, board, problems, build=True):
         settings = check_settings(entry, SCREEN_EFFECTS[entry.effect], problems)
 
         # A sequence names a folder where the others name a file, and neither works
-        # without one
+        # without one. none shows black and names neither
         wanted = "folder" if "folder" in SCREEN_EFFECTS[entry.effect] else "file"
         target = settings.get(wanted)
-        if target is None:
-            # A source that was refused, or written under the other key, has been
-            # reported already, and one mistake gets one message
-            if "file" not in entry.settings and "folder" not in entry.settings:
-                if wanted == "folder":
-                    example = "folder=/frames"
-                elif entry.effect == "drawing":
-                    example = "file=clock.py"
-                else:
-                    example = "file=anim.gif"
-                problems.append("line {}: {} needs a {} to play, such as {}".format(
-                    entry.line, entry.effect, wanted, example))
-            continue
-
         at = entry.lines.get(wanted, entry.line)
-        path = find_file(target, at, problems, FOLDERS[entry.effect])
-        if path is None:
-            continue
+        path = None
+        if entry.effect != "none":
+            if target is None:
+                # A source that was refused, or written under the other key, has been
+                # reported already, and one mistake gets one message
+                if "file" not in entry.settings and "folder" not in entry.settings:
+                    if wanted == "folder":
+                        example = "folder=/frames"
+                    elif entry.effect == "drawing":
+                        example = "file=clock.py"
+                    else:
+                        example = "file=anim.gif"
+                    problems.append("line {}: {} needs a {} to play, such as {}".format(
+                        entry.line, entry.effect, wanted, example))
+                continue
+
+            path = find_file(target, at, problems, FOLDERS[entry.effect])
+            if path is None:
+                continue
 
         # A drawing is read and compiled while the entries are checked, so a file
         # that will not parse is answered whether or not anything is built
@@ -1364,6 +1366,11 @@ def build_shows(entries, fx, board, problems, build=True):
                                         first_as_last=settings.get("first_as_last", False),
                                         hold=settings.get("hold", 0),
                                         paused=asleep)
+            elif entry.effect == "none":
+                # One pixel on the screen's background, black unless bg= names another, as
+                # the hub clears a position nothing holds
+                import picovector
+                player = Still(picovector.image(1, 1))
             else:
                 import picovector
                 player = Still(picovector.image.load(path))

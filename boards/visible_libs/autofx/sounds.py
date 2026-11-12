@@ -170,6 +170,39 @@ class Sound:
             pass
 
 
+class Silence:
+    """
+    A scene's own silence, from `audio: none`. It takes the speaker as a sound does, setting
+    every other sound aside, and plays nothing.
+    """
+
+    live = False
+
+    def __init__(self, scene=None):
+        self.scene = scene
+
+    def start(self):
+        pass
+
+    def service(self):
+        pass
+
+    def set_aside(self):
+        pass
+
+    def pause(self):
+        pass
+
+    def resume(self):
+        pass
+
+    def restart(self):
+        pass
+
+    def close(self):
+        pass
+
+
 def __open_sound(path, stream):
     # A handle the player can read for the whole run. The drive's mount ends whenever
     # a computer takes the drive, so a file there is read from the flash, or held in
@@ -227,6 +260,13 @@ def build_sounds(entries, fx, problems, volume=None):
                                 "ignored".format(entry.line, setting))
 
         settings = check_settings(entry, AUDIO_EFFECTS[entry.effect], problems)
+
+        # A silence takes its scene's one sound as a WAV would, and needs no file
+        if entry.effect == "none":
+            if entry.scene not in taken:
+                taken.add(entry.scene)
+                sounds.append(Silence(entry.scene))
+            continue
 
         target = settings.get("file")
         if target is None:
