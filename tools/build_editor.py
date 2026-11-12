@@ -21,7 +21,7 @@ pages once inflated, since two zlib builds need not compress the same text to th
 
 Both pages show picofx's version after their heading, followed by "preview" in the committed pages.
 A release build passes --release with its tag, which must be that version, and its pages show the
-version alone.
+version alone. It refuses a picker whose Discover fetches examples from a branch other than main.
 
     python3 tools/build_editor.py --release 1.1.3 boards/PIMORONI_MIGHTYFX
 """
@@ -151,6 +151,25 @@ def shown_version(repo_dir, release):
     if release != version:
         sys.exit("releasing {} but picofx is {}".format(release, version))
     return version
+
+
+# The branch a picker with Discover fetches examples from. A release ships it on every board for
+# good, so a release takes it from main
+DISCOVER_BRANCH = re.compile(r'^var DISCOVER_BRANCH = "([^"]*)";$', re.MULTILINE)
+RELEASE_BRANCH = "main"
+
+
+def check_release_branch(page):
+    """Refuse a release whose picker fetches its examples from a branch other than main."""
+    if "DISCOVER_BRANCH" not in page:
+        return
+    found = DISCOVER_BRANCH.search(page)
+    if not found:
+        sys.exit("picker.html has Discover, but its DISCOVER_BRANCH line could not be read")
+    if found.group(1) != RELEASE_BRANCH:
+        sys.exit("Discover fetches examples from {}, and a release takes them from {}. Set "
+                 "DISCOVER_BRANCH in boards/editor/picker/discover/28_discover.js".format(
+                     found.group(1), RELEASE_BRANCH))
 
 
 def board_parts(picker_folders, board):
@@ -478,6 +497,8 @@ def main():
     catalogue_path = os.path.join(editor_dir, "catalogue.js")
     generated = {os.path.join(editor_dir, "picker.html"): picker(args.board_dir, repo_dir, version),
                  catalogue_path: catalogue(repo_dir, args.board_dir, board)}
+    if args.release:
+        check_release_branch(generated[os.path.join(editor_dir, "picker.html")])
 
     # A board with no FX drive modules carries no FX drive, so it takes the pages alone
     if not os.path.isdir(os.path.dirname(module)):
