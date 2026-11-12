@@ -11,3 +11,6 @@ freeze("../visible_libs/", "autofx")
 freeze("$(BOARD_DIR)/../../../spidisplay/src", ("logging.py", "st7789.py"))
 package("screens", base_path="$(BOARD_DIR)/../../../spidisplay/src")
 freeze("$(PORT_DIR)/../../../pimoroni-pico/micropython/modules_py", "spce.py")
+
+# aye_arr is frozen in too. Its many small files take far more of the filesystem than their size
+package("aye_arr", base_path="$(BOARD_DIR)/../../../aye_arr")

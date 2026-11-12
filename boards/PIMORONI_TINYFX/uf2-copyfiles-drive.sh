@@ -11,5 +11,8 @@ bash "$SCRIPT_PATH/uf2-copyfiles.sh" "$TARGET" || exit 1
 # The board writes its own main.py, which plays the FX drive
 rm -v "$TARGET/main.py"
 
+# aye_arr is frozen into the firmware
+rm -r -v "$TARGET/lib/aye_arr"
+
 # The examples go on the FX drive instead, by drive-copyfiles.sh
 rm -r -v "$TARGET/examples"

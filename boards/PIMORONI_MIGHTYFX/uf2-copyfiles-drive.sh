@@ -11,7 +11,7 @@ bash "$SCRIPT_PATH/uf2-copyfiles.sh" "$TARGET" || exit 1
 # The board writes its own main.py, which plays the FX drive
 rm -v "$TARGET/main.py"
 rm -v "$TARGET/lib/logging.py" "$TARGET/lib/spce.py" "$TARGET/lib/st7789.py"
-rm -r -v "$TARGET/lib/screens"
+rm -r -v "$TARGET/lib/screens" "$TARGET/lib/aye_arr"
 
 # The examples and their art go on the FX drive instead, by drive-copyfiles.sh
 rm -r -v "$TARGET/examples"
