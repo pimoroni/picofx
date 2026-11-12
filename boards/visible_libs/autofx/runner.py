@@ -745,7 +745,9 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
             # The rotation, standing aside with everything else while a transfer runs
             if scene_deadline is not None and not paused and \
                     time.ticks_diff(time.ticks_ms(), scene_deadline) >= 0:
-                scene_at = (scene_at + 1) % len(scenes)
+                # The scene its heading names after 'then', or the next in order
+                after = scenes[scene_at].after
+                scene_at = after if after is not None else (scene_at + 1) % len(scenes)
                 scene = scenes[scene_at]
                 apply_scene(players, shows, sounds, scene)
                 scene_deadline = (time.ticks_add(time.ticks_ms(), int(scene.hold * 1000))

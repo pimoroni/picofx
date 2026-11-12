@@ -84,7 +84,8 @@ class Entry:
         # is always on
         self.scene = None
         # A heading is an entry of its own, holding the scene's name, hold and restart,
-        # and whether its mistake was answered already. None for any other entry
+        # the scene it goes to after, and whether its mistake was answered already. None
+        # for any other entry
         self.heading = None
         # A remote: or motion: entry's name, and what it gives each trigger as
         # (trigger, what it does, line). None and empty for any other entry
@@ -763,7 +764,21 @@ def parse(text):
             restart = False
             advised = False
 
-            for word in rest.split():
+            # "then" ends the settings, and the rest of the heading is the name of the scene
+            # this one goes to when its time is up, whatever words that name holds
+            words = rest.split()
+            after = None
+            for at, word in enumerate(words):
+                if word.lower() == "then":
+                    after = " ".join(words[at + 1:]) or None
+                    if after is None:
+                        problems.append("line {}: 'then' needs the name of the scene to go to "
+                                        "after this one, such as '[{}: 30s then Night]'".format(
+                                            number + 1, name or "Day"))
+                    words = words[:at]
+                    break
+
+            for word in words:
                 seconds = __scene_time(word)
                 if word.lower() == "restart":
                     restart = True
@@ -800,7 +815,7 @@ def parse(text):
 
             heading = Entry(number + 1)
             heading.heading = {"name": name, "hold": hold, "restart": restart,
-                               "advised": advised}
+                               "after": after, "advised": advised}
             entries.append(heading)
             scene = name.lower()
             continue

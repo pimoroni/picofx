@@ -30,6 +30,10 @@ class Scene:
         self.line = line
         self.hold = hold            # Seconds it shows for, or None to hold forever
         self.restart = restart      # Whether its content begins again on every entry
+        # The scene its heading names after 'then', and that scene's place in the turns once
+        # it is found. None where it goes on to the next in order
+        self.after_name = None
+        self.after = None
         # What the sensor's triggers do while it shows, as {trigger: (step, scene's place)},
         # the place given only for a step to a scene. Always on's are the board's
         self.triggers = {}
@@ -482,6 +486,7 @@ def load(text, fx, maker=None, volume=None, on_built=None):
                 scene = Scene(name, entry.line, entry.heading["hold"],
                               entry.heading["restart"])
                 scene.advised = entry.heading["advised"]
+                scene.after_name = entry.heading["after"]
                 known[scene.key] = scene
                 scenes.append(scene)
                 grouped[scene.key] = []
@@ -559,6 +564,20 @@ def load(text, fx, maker=None, volume=None, on_built=None):
     if args_line is not None and not board.get("program"):
         problems.append("line {}: args needs a program to give them to. Write it like "
                         "'board: program=demo.py args=first|second'".format(args_line))
+
+    # The scene each timed scene names after 'then', found by name as a heading is
+    for scene in scenes:
+        if scene.after_name is None:
+            continue
+        target = known.get(scene.after_name.lower())
+        if target is None:
+            problems.append("line {}: [{}] goes on to '{}', but no scene is called that".format(
+                scene.line, scene.name, scene.after_name))
+        elif scene.hold is None:
+            problems.append("line {}: [{}] names no time, so it never goes on to [{}]".format(
+                scene.line, scene.name, target.name))
+        else:
+            scene.after = scenes.index(target)
 
     # What the sensor's triggers do, Always on's kept with the board settings where it gives any
     triggers = __read_triggers(trigger_entries, scenes, known, board, problems)
