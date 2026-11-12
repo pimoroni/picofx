@@ -7,7 +7,9 @@ PIMORONI_PICO_FLAVOUR="pimoroni"
 PIMORONI_PICO_VERSION="5ed5cb4ac34fd231251343cb10fc07247c95e738"
 
 PIMORONI_AYE_ARR_FLAVOUR="pimoroni"
-PIMORONI_AYE_ARR_VERSION="v1.0.1"
+# v1.0.1 with the receiver taking pulses off the state machine by DMA, so a press arrives whole
+# while a screen is being sent a frame
+PIMORONI_AYE_ARR_VERSION="patch/receive-by-dma"
 
 # v3.1.0 with a pixel format chosen at build time. A board setting PV_PIXEL_FORMAT 2 gets RGBA4444
 # canvases, and every other builds as v3.1.0 does
