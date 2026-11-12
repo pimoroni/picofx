@@ -12,6 +12,6 @@ computer, re-reads the file. An eject does not show it again.
 """
 
 from .fat import Stream, stream
-from .heal import FILE_PATH, MOUNT_POINT, mount, unhealed
+from .heal import FILE_PATH, MOUNT_POINT, unhealed
 from .handover import (BUSY, EJECTED, HIDDEN, IDLE, RELOADED, SHOWN, busy, enumerating, expose,
-                       exposed, on_bus_reset, reset_on_save, service, watch, withdraw)
+                       exposed, mount, on_bus_reset, reset_on_save, service, watch, withdraw)

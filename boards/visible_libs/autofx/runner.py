@@ -700,7 +700,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         return watch() != volume.IDLE
 
     # A stop from the REPL arrives as an exception, and without this the outputs
-    # keep whatever they were last written and the computer keeps the drive
+    # keep whatever they were last written
     try:
         while True:
             event = watch()
@@ -821,8 +821,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     finally:
         # Darkening the board comes first and nothing fallible stands in front of it.
         # A stop from the REPL arrives as an interrupt and the next one lands wherever
-        # this has reached, so a step that waits, such as handing the drive back while
-        # a computer is mid-write, would otherwise leave the outputs lit for good.
+        # this has reached, so a step that waits would otherwise leave the outputs lit.
         # shutdown() releases the screen ports and the header's rail, so neither
         # record of what is running may outlive them, and anything a program put off
         # is never going to be built now
@@ -832,14 +831,13 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
         DEFERRED_SHOWS.clear()
         fx.shutdown()
 
-        # Tidying up after it, each on its own, since neither can undo the above
+        # Tidying up after it, each sound on its own, since none can undo the above
         for sound in sounds:
             try:
                 sound.close()
             except Exception as e:      # noqa: BLE001
                 print("a sound would not close:", e)
-        try:
-            if volume.exposed():
-                volume.withdraw()
-        except Exception as e:      # noqa: BLE001
-            print("the drive would not go back to the board:", e)
+
+        # A drive that is shown stays with the computer. Taking it back here would leave
+        # the board connected with its drive gone, which macOS waits on for as long as
+        # the board stays connected. volume.mount() takes it back at the next start
