@@ -1230,8 +1230,11 @@ programCardSteps.push(function (card, path) {
   if (pill) card.appendChild(pill);
 });
 
-// The examples line goes where the example programs start, once they are listed
-programViewSteps.push(function () { discoverPlaceBar(programView, "program"); });
+// The examples line goes where the example programs start, once they are listed, on a board whose
+// drive keeps example programs
+programViewSteps.push(function () {
+  if (EXAMPLES_ROOT) discoverPlaceBar(programView, "program");
+});
 
 // ---- what is to hand, in the program gallery ----------------------------------------------------
 

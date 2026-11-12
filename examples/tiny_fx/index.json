@@ -1,0 +1,603 @@
+{
+ "format": 1,
+ "examples": [
+  {
+   "path": "examples/programs/audio/fair_use_encounters.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/audio/fair_use_encounters.py",
+     "size": 2553,
+     "hash": "e7aeb9b4139c8bd2f930c43ad1d6bf6089c3b6da",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/audio/photon_sword.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/audio/photon_sword.py",
+     "size": 4030,
+     "hash": "f7694190b784ba750b4f0c2a1e2e5cdc0fee1a2c",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/audio/race_start.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/audio/race_start.py",
+     "size": 1978,
+     "hash": "00b31a0df234325c3aa39e4bec83605d60ed009d",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/audio/wav_player.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/audio/wav_player.py",
+     "size": 1706,
+     "hash": "c18c3d287573dd45f1f6834a63ec3e5e404a2e14",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/comms/dual_fx.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/comms/dual_fx.py",
+     "size": 3360,
+     "hash": "164ba25061305674fca1b8d048081bd162baefd5",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/comms/multi_fx.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/comms/multi_fx.py",
+     "size": 4509,
+     "hash": "74ae560027d1be989511edef90daf5d4888145c6",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/effects/colour/blink.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/effects/colour/blink.py",
+     "size": 1207,
+     "hash": "0396fa283e2cbf3b12fcc5d44d04a61b59d44ce5",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/effects/colour/hue_step.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/effects/colour/hue_step.py",
+     "size": 1330,
+     "hash": "18d69aaf3860f1db332bdc3bdbb982067586dcf7",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/effects/colour/rainbow.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/effects/colour/rainbow.py",
+     "size": 1128,
+     "hash": "8dac83a30ae44cc497fc3946ed2d1c479d548c4c",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/effects/colour/random.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/effects/colour/random.py",
+     "size": 1529,
+     "hash": "c4eab040991697efc4276dd13222d48915c99347",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/effects/colour/static_hsv.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/effects/colour/static_hsv.py",
+     "size": 1018,
+     "hash": "bfb4a0e66473766a166a67f1ac31112b4f6576fb",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/effects/colour/static_rgb.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/effects/colour/static_rgb.py",
+     "size": 969,
+     "hash": "b905dd44144175b52321df1cfb75779fcc04445f",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/effects/mono/binary_counter.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/effects/mono/binary_counter.py",
+     "size": 1139,
+     "hash": "5b9872127ac1a6e305e294b1de97e79e5fbedf30",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/effects/mono/blink_wave.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/effects/mono/blink_wave.py",
+     "size": 1436,
+     "hash": "a826e9836e6fba64a3201ff1b2c94df24f0cd11a",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/effects/mono/flashing_sequence.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/effects/mono/flashing_sequence.py",
+     "size": 1711,
+     "hash": "ab11a0f3fce3a8891b8009a9a338b857c5b8e5f1",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/effects/mono/pelican_crossing.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/effects/mono/pelican_crossing.py",
+     "size": 2129,
+     "hash": "dd558931a2bba3ef7a38ec0d291685535c7e743a",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/effects/mono/pulse_wave.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/effects/mono/pulse_wave.py",
+     "size": 1351,
+     "hash": "f28359cdb538555ce761d789209e7d1bc15729d2",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/effects/mono/single_blink.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/effects/mono/single_blink.py",
+     "size": 1259,
+     "hash": "ae69f5074587b6fe208bece651a5f8b93eb58023",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/effects/mono/single_flashing.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/effects/mono/single_flashing.py",
+     "size": 1451,
+     "hash": "51dbd5c0405abfec061d3657601e62c9e1287c7c",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/effects/mono/single_flicker.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/effects/mono/single_flicker.py",
+     "size": 1552,
+     "hash": "5fb75b34de3c0441a69e45cbc96a2771fb4ad481",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/effects/mono/single_pulse.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/effects/mono/single_pulse.py",
+     "size": 1173,
+     "hash": "661a9c9080286a301ae41cb2e014cd6a9c4d32a6",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/effects/mono/single_random.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/effects/mono/single_random.py",
+     "size": 1258,
+     "hash": "6ee39ba453c555a9a1421909b0e9964556145fe8",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/effects/mono/static_brightness.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/effects/mono/static_brightness.py",
+     "size": 1085,
+     "hash": "14963a6213268cdfe13bc8bab322f907d446f5e0",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/effects/mono/sweep.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/effects/mono/sweep.py",
+     "size": 1302,
+     "hash": "a7018653fd06c4433e64fa8cfb307d997cb9f78a",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/effects/mono/sweep_trail.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/effects/mono/sweep_trail.py",
+     "size": 1832,
+     "hash": "8f01637f9ef6295dab05b5c6485a7cabeb1a7fe2",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/effects/mono/traffic_light.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/effects/mono/traffic_light.py",
+     "size": 1844,
+     "hash": "f5988011f6eab7e98b286ad54019803f4c552e48",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/function/count_taps.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/function/count_taps.py",
+     "size": 1322,
+     "hash": "6498b6e14af45e10904f62bd263b52e6dd71161e",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/function/read_button.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/function/read_button.py",
+     "size": 730,
+     "hash": "1a3e4c0d449ffcb236a10e587b1ac26b21821f4f",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/function/sensor_meter.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/function/sensor_meter.py",
+     "size": 1986,
+     "hash": "bdd24124bcc0c0ce16b5bc58a3e9f1c797d1d5d9",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/function/voltage_meter.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/function/voltage_meter.py",
+     "size": 1874,
+     "hash": "4c29190e65fe5d9d472dc4db9ae61eab5509ec89",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/infrared/colour/control_hsv_direct.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/infrared/colour/control_hsv_direct.py",
+     "size": 3743,
+     "hash": "67884191a15bedd2383f9ca073c9386b12f1417c",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/infrared/colour/control_hsv_fx.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/infrared/colour/control_hsv_fx.py",
+     "size": 3978,
+     "hash": "db7f5d6d3acbfb08d93bcf2ad83ca11570cbca2a",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/infrared/colour/control_rainbow.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/infrared/colour/control_rainbow.py",
+     "size": 3490,
+     "hash": "2415bad7e11135d6f2e1d23050a188cd337e065e",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/infrared/colour/control_rgb_direct.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/infrared/colour/control_rgb_direct.py",
+     "size": 2028,
+     "hash": "739b778afefb2ae88d43052e7406be65b57ec03b",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/infrared/colour/control_rgb_fx.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/infrared/colour/control_rgb_fx.py",
+     "size": 2325,
+     "hash": "8a4d26a532f62349b4940c9ed205a765a3ba7975",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/infrared/mono/control_channels.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/infrared/mono/control_channels.py",
+     "size": 3109,
+     "hash": "7c1ba362548bfde93378d9cae421ac205f8c93de",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/infrared/mono/control_pulse_wave.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/infrared/mono/control_pulse_wave.py",
+     "size": 3061,
+     "hash": "913d6a16c1d1ae4af6edefa73e4e49d42b51c346",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/infrared/mono/toggle_effects.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/infrared/mono/toggle_effects.py",
+     "size": 2434,
+     "hash": "91b3940a838a850119d9b984458fa18601af0c37",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/qwst/light_level.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/qwst/light_level.py",
+     "size": 2390,
+     "hash": "1272fdda4b6bdc667dc8d8a0ba55b25fed6d6c73",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/qwst/spirit_level.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/qwst/spirit_level.py",
+     "size": 3381,
+     "hash": "a6502add5b38253225152c8c64a4727753094c72",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/qwst/temperature_reading.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/qwst/temperature_reading.py",
+     "size": 2751,
+     "hash": "b77f24d6bec56b43961923622e67a91d13eae711",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/showcase/rescue_vehicle.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/showcase/rescue_vehicle.py",
+     "size": 1751,
+     "hash": "913c0ad95871b9d33811d0cebb06d02dc1cf42be",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/showcase/sensor_wave.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/showcase/sensor_wave.py",
+     "size": 2539,
+     "hash": "a50f8a108de7e5f79ff21feb0d4214438f19233f",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/showcase/ship_thrusters.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/showcase/ship_thrusters.py",
+     "size": 2924,
+     "hash": "9e8ed283b3d3aeecb216ea5a27f7a11364659f6a",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/showcase/space_tales.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/showcase/space_tales.py",
+     "size": 1038,
+     "hash": "a3e98a85819bceb242b2b4ff014af6e3b16a2ae2",
+     "was": []
+    }
+   ]
+  },
+  {
+   "path": "examples/programs/showcase/space_tales_with_pir.py",
+   "kind": "program",
+   "firmware": "1.1.3",
+   "files": [
+    {
+     "path": "examples/programs/showcase/space_tales_with_pir.py",
+     "size": 1742,
+     "hash": "78dee38fe6b60c6b2d5ce4ccf62cb347532514f0",
+     "was": []
+    }
+   ]
+  }
+ ]
+}

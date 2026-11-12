@@ -1,6 +1,7 @@
 {
  "name": "Tiny FX",
  "examples": true,
+ "examples_index": "examples/tiny_fx/index.json",
  "outputs": [
   {"name": "out1", "kind": "mono"},
   {"name": "out2", "kind": "mono"},
