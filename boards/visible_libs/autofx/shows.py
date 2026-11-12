@@ -1008,11 +1008,14 @@ def __hub_entry_fits(entry, places, hub, board, problems):
     return True
 
 
-def __hub_panel(fx, place, size, problems):
-    # The panel at one hub position, built once and kept, or None where none answered
+def __hub_panel(fx, place, size, problems, absent):
+    # The panel at one hub position, built once and kept, or None where none answered. A
+    # position already in absent is not tried again, so each is probed and reported once
     known = BUILT_SCREENS.get(place)
     if known is not None:
         return known[0]
+    if place in absent:
+        return None
 
     from screens import SCREEN_TYPES
 
@@ -1024,19 +1027,22 @@ def __hub_panel(fx, place, size, problems):
     except ValueError:
         problems.append("{} is on the board entry but no panel answered there. Check it is "
                         "seated, or take it off the board entry".format(shown))
+        absent.add(place)
         return None
     except Exception as e:      # noqa: BLE001
         problems.append("{} could not start: {}".format(shown, e))
+        absent.add(place)
         return None
 
     BUILT_SCREENS[place] = (screen, size)
     return screen
 
 
-def __hub_stream(fx, places, board, line, problems):
+def __hub_stream(fx, places, board, line, problems, absent):
     # The stream an entry's positions play through, a subset of the group for their panel
     # size. Every declared position is built the first time the hub is asked for, one
-    # group per size, so the hub's light knows every panel it waits on
+    # group per size, so the hub's light knows every panel it waits on. A hub with no
+    # panel answering is asked again by each entry, where absent stops a second probe
     if not BUILT_HUB:
         problems.append("line {}: the board was not set up with the Screen Hub".format(line))
         return None
@@ -1047,7 +1053,7 @@ def __hub_stream(fx, places, board, line, problems):
         sizes = BUILT_HUB["sizes"]
         for size in SCREEN_SIZES:
             fitted = sorted(place for place in sizes if sizes[place] == size)
-            panels = [__hub_panel(fx, place, size, problems) for place in fitted]
+            panels = [__hub_panel(fx, place, size, problems, absent) for place in fitted]
             panels = [panel for panel in panels if panel is not None]
             if not panels:
                 continue
@@ -1201,6 +1207,8 @@ def build_shows(entries, fx, board, problems, build=True):
     """
     shows = []
     built = set()
+    # The hub positions tried in this build that gave no panel
+    absent = set()
     # The drawings built, each with its entry's line, file and scene, begun at the end
     waiting = []
     full_size = wants_full_size(entries, board)
@@ -1299,7 +1307,7 @@ def build_shows(entries, fx, board, problems, build=True):
         # Is it on a hub? A hub's positions are one stream placed by the entry's first
         # channel, where each screen named is its own panel placed by its own
         if on_hub:
-            screens = [__hub_stream(fx, places, board, entry.line, problems)]
+            screens = [__hub_stream(fx, places, board, entry.line, problems, absent)]
             channels = [channel]
         else:
             screens = [__screen_on(fx, one.name, entry.line, problems, board.get(one.name),
