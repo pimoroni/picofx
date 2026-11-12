@@ -113,6 +113,13 @@ bodyParts.push({
       return !!(body.places && (body.places[place].shows || body.places[place].off));
     });
   },
+  sets: function (body) {
+    var set = state.hub.on && placesThere().some(function (place) {
+      var held = body.places && body.places[place];
+      return held && (held.shows || held.off);
+    });
+    return set ? ["hub", "Screen Hub"] : null;
+  },
   // The hub is read off the board line before any screen's line, a screen through it writing none
   readBoard: readHubBoard,
   read: readHubLines

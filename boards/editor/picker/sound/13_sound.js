@@ -248,6 +248,11 @@ bodyParts.push({
     body.soundOff = false;
   },
   hasContent: function (body) { return !!(body.sound || body.soundOff); },
+  sets: function (body) {
+    return body.sound || body.soundKept ? ["sound", "Sound"]
+         : body.soundOff ? ["sound", "Silence"] : null;
+  },
+  named: function (body) { return body.sound ? [nameShown(body.sound)] : []; },
   // A scene's sound is its first line
   entries: function (body, lines) {
     var sound = "sound" in body ? soundLine(body) : null;

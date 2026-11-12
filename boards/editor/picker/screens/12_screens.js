@@ -594,6 +594,18 @@ bodyParts.push({
       return !!(body.screens && (body.screens[letter].shows || body.screens[letter].off));
     });
   },
+  sets: function (body) {
+    var set = !state.hub.on && SCREENS.some(function (letter) {
+      var held = body.screens && body.screens[letter];
+      return held && (held.shows || held.off);
+    });
+    return set ? ["screens", "Screens"] : null;
+  },
+  named: function (body) {
+    return SCREENS.map(function (letter) { return body.screens && body.screens[letter].shows; })
+      .filter(function (shows) { return shows && shows !== "keep"; })
+      .map(pictureSaid);
+  },
   // A scene's screens are written after its lamps
   entries: function (body, lines) {
     SCREENS.forEach(function (letter) {

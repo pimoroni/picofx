@@ -58,14 +58,24 @@ function boardTokens(text) {
 }
 
 // A scene heading, as autofx reads one. Where a word is neither a time nor restart, the heading
-// is kept as written, since writing it again would lose it
+// is kept as written, since writing it again would lose it. "then" ends the settings, and the
+// rest of the heading after it is the name of the scene after, whatever words it holds, so a
+// scene called "then" or "restart" can be named there (proposed, which autofx does not read yet)
 function readHeading(line) {
   var inner = line.slice(1, -1);
   var colon = inner.indexOf(":");
   var name = (colon < 0 ? inner : inner.slice(0, colon)).trim();
-  var heading = {name: name, seconds: null, restart: false, written: line};
+  var heading = {name: name, seconds: null, restart: false, after: null, line: line,
+                 written: line};
   var odd = false;
-  (colon < 0 ? "" : inner.slice(colon + 1)).split(/\s+/).forEach(function (word) {
+  var settings = colon < 0 ? "" : inner.slice(colon + 1);
+  var then = settings.match(/(^|\s)then(\s+|$)/i);
+  if (then) {
+    heading.after = settings.slice(then.index + then[0].length).trim();
+    settings = settings.slice(0, then.index);
+    if (!heading.after) odd = true;
+  }
+  settings.split(/\s+/).forEach(function (word) {
     if (!word) return;
     // A time in seconds or in minutes, held as seconds. Minutes are kept as written, the page
     // writing seconds, until the scene's time is changed
@@ -231,6 +241,15 @@ function absorbFile(text) {
             waits: heading.seconds === null, restart: heading.restart,
             comments: slot.comments, read: heading, body: bodyKeeping(slot.kept)};
   });
+  // A scene after is named, and taken as the first scene of that name. A name no scene has
+  // leaves its heading as written
+  state.scenes.forEach(function (scene) {
+    if (!scene.read.after) return;
+    var named = state.scenes.filter(function (other) { return other.name === scene.read.after; })[0];
+    if (named) scene.then = sceneMark(named);
+    else scene.read.written = scene.read.line;
+  });
+  settleLoneScene();
   var bodies = [state.always.body].concat(state.scenes.map(function (scene) { return scene.body; }));
   bodies.forEach(function (body) { body.notes = body.notes || {}; });
   bodyParts.forEach(function (part) { if (part.readBoard) part.readBoard(); });

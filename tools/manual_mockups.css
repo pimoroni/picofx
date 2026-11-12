@@ -162,35 +162,89 @@
 .mockup .tabsound { display: block; width: 2.6rem; height: 1.35rem; }
 .mockup .tabrow .button { margin: 0 0 0.4rem auto; }
 
-/* The scene tabs and a scene's own settings */
-.mockup .scenetabs { display: flex; flex-wrap: wrap; gap: 0.45rem; }
-
-.mockup .scenetab {
-  position: relative;
-  min-width: 8.5rem;
-  padding: 0.55rem 0.6rem 0.35rem;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #ebe7e0;
-  font-size: 0.8rem;
-  font-weight: 600;
+/* The scenes: a grey tray that is Always on, its own card the first column and each scene a card
+   in its colour, then the folder tab holding the selected scene's settings */
+.mockup .scenetray {
+  display: flex;
+  gap: 0.45rem;
+  padding: 0.45rem;
+  border: 1px solid #cfc9bf;
+  border-radius: 12px;
+  background: #e6e3de;
 }
 
-.mockup .scenetab.picked { background: #fff; border-top: 2px solid var(--accent); }
-.mockup .scenetab small { display: block; font-size: 0.68rem; font-weight: 400; color: var(--dim); }
-.mockup .scenestripe { position: absolute; top: 4px; left: 6px; right: 6px; height: 4px; border-radius: 2px; }
-.mockup .scenetab .cross { position: absolute; right: 7px; top: 9px; color: var(--dim); font-weight: 400; }
+.mockup .scenetray.picked { border-color: #6f6a62; box-shadow: 0 0 0 1px #6f6a62; }
 
-.mockup .scenetab.add {
+.mockup .alwayscard {
   display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 8.4rem;
+  flex: none;
+  padding: 0.4rem 0.55rem 0.4rem 0.3rem;
+  border-right: 1px dashed #bdb7ad;
+  font-size: 0.78rem;
+  color: #8f8a82;
+}
+
+.mockup .alwayscard b { color: var(--ink); }
+.mockup .scenecards { flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(8.4rem, 1fr)); gap: 0.45rem; }
+
+.mockup .scenecard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-height: 4.6rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--line);
+  border-top-color: transparent;
+  border-radius: 9px;
+  background: linear-gradient(var(--scene), var(--scene)) 0 0 / 100% 4px no-repeat border-box,
+              color-mix(in srgb, var(--scene) 16%, #fbfaf8);
+  font-size: 0.78rem;
+  color: color-mix(in srgb, var(--scene) 65%, #2b2a28);
+}
+
+.mockup .scenecard.picked {
+  background: linear-gradient(var(--scene), var(--scene)) 0 0 / 100% 4px no-repeat border-box,
+              color-mix(in srgb, var(--scene) 7%, #fff);
+  border-color: var(--scene);
+  border-top-color: transparent;
+  box-shadow: 0 0 0 1px var(--scene);
+}
+
+.mockup .scenecard b { display: flex; align-items: center; color: var(--ink); }
+.mockup .scenecard small, .mockup .alwayscard small { font-size: 0.68rem; color: var(--dim); }
+.mockup .scenecard .grip { width: 8px; height: 12px; margin-left: auto; fill: var(--dim); opacity: 0.55; }
+.mockup .parts { display: flex; min-height: 18px; }
+.mockup .partsicon { width: 18px; height: 18px; fill: currentColor; }
+
+.mockup .scenecard.add {
   align-items: center;
   justify-content: center;
   border-style: dashed;
+  border-top-color: rgba(15, 138, 114, 0.4);
   background: #e6f3f1;
   color: var(--accent);
+  font-weight: 600;
 }
 
-.mockup .scenerow { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin-top: 0.9rem; }
+.mockup .scenefold { display: flex; align-items: flex-end; gap: 0.8rem; margin-top: 0.6rem; border-bottom: 1.5px solid var(--scene); }
+.mockup .scenefold > .button { margin-left: auto; margin-bottom: 0.3rem; }
+.mockup .scenefold > .small { margin-bottom: 0.45rem; }
+
+.mockup .scenetab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: -1.5px;
+  padding: 0.45rem 0.9rem 0.35rem;
+  border: 1.5px solid var(--scene);
+  border-bottom: 0;
+  border-top-color: transparent;
+  border-radius: 9px 9px 0 0;
+  background: linear-gradient(var(--scene), var(--scene)) 0 0 / 100% 4px no-repeat border-box, #fff;
+}
 
 /* The board settings, each marked with the chip */
 .mockup .badgerow { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin: 0.9rem 0 0.6rem; }

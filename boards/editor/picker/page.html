@@ -398,30 +398,71 @@ body.setupall .lamp:active{cursor:grabbing}
 
 /* Scenes take turns, so they are a grid of cards over the frame they open, one card a
    scene. The bar is only drawn once there is more than the one everything starts in, and
-   the way into another scene is always its last tile, stretched to the cards' height */
-.tabbar{display:grid;gap:.45rem;margin:.4rem 0 .5rem;
+   the way into another scene is always its last tile, stretched to the cards' height. The
+   cards sit in a tray that is Always on, since it plays under every scene, and Always on's
+   own card is the tray's first column, running down every row */
+/* --cardheight is a scene card's three rows, which the add button matches when it stands alone */
+.tabbar{--cardheight:4.75rem;display:grid;gap:.45rem;margin:.4rem 0 .5rem;
  grid-template-columns:repeat(auto-fill,minmax(8.4rem,1fr))}
-.tab{display:flex;flex-direction:column;justify-content:center;gap:.3rem;
- padding:.4rem .55rem;border:1px solid var(--line);border-radius:9px;background:#f1efeb;
- cursor:pointer;text-align:left;min-height:3.4rem;overflow:hidden}
+.tabbar.tray{padding:.45rem;background:#e6e3de;border:1px solid #cfc9bf;border-radius:12px}
+/* Choosing Always on rings the whole tray, which stays grey */
+.tabbar.tray:has(.always.on){border-color:#6f6a62;
+ box-shadow:0 0 0 1px #6f6a62,0 0 0 4px rgba(111,106,98,.2)}
+/* Each card carries its scene's colour as a band along the top and a tint behind, painted in
+   the background under a top border made clear, so its contents never move */
+.tab{--band:linear-gradient(var(--scene),var(--scene));--tall:4px;
+ --tint:color-mix(in srgb,var(--scene) 16%,#fbfaf8);position:relative;
+ display:flex;flex-direction:column;justify-content:center;gap:.3rem;
+ padding:.4rem .55rem;border:1px solid var(--line);border-top-color:transparent;
+ border-radius:9px;cursor:pointer;text-align:left;min-height:var(--cardheight);overflow:hidden;
+ background:var(--band) 0 0 / 100% var(--tall) no-repeat border-box,var(--tint)}
 .tab b,.tab small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tab:hover{border-color:var(--dim)}
-/* The one being edited carries the band the header's chosen tab does, painted in the
-   background under a top border made clear, so its contents never move */
-.tab.on{border-color:var(--line);border-top-color:transparent;
- background:linear-gradient(var(--accent),var(--accent)) 0 0 / 100% 3px no-repeat border-box,
-            var(--panel)}
-.tab.on b{color:var(--ink)}
-.tabbar .plus{margin:0;width:100%;min-height:3.4rem;align-self:stretch;
+.tab:hover{border-color:var(--dim);border-top-color:transparent}
+/* The one being edited is ringed in its scene's colour, as the page rings anything chosen, over
+   a lighter tint */
+.tab.on,.tab.on:hover{--tint:color-mix(in srgb,var(--scene) 7%,#fff);
+ border-color:var(--scene);border-top-color:transparent;
+ box-shadow:0 0 0 1px var(--scene),0 0 0 4px color-mix(in srgb,var(--scene) 22%,transparent)}
+.tab.always,.tab.always:hover,.tab.always.on{grid-column:1;min-height:0;background:none;
+ justify-content:flex-start;align-items:flex-start;gap:.2rem;padding:.4rem .55rem .4rem .3rem;
+ border:0;border-right:1px dashed #bdb7ad;border-radius:0;box-shadow:none}
+.tab.always .role{font-size:.64rem}
+.tab.always .says{color:var(--ink);white-space:normal;line-height:1.3}
+/* A pale colour, such as the remote's white, has a darker edge under its band and a darker ring
+   when chosen, so both show against the page */
+.tab.pale{--edge:color-mix(in srgb,var(--scene) 72%,#2b2a28);
+ background:var(--band) 0 0 / 100% var(--tall) no-repeat border-box,
+            linear-gradient(var(--edge),var(--edge)) 0 0 / 100% calc(var(--tall) + 1px) no-repeat
+            border-box,var(--tint)}
+.tab.pale.on{border-color:var(--edge);border-top-color:transparent;
+ box-shadow:0 0 0 1px var(--edge),0 0 0 4px color-mix(in srgb,var(--edge) 22%,transparent)}
+.tabbar .plus.wide{min-height:0;padding:.3rem .7rem}
+.tabbar .plus{margin:0;width:100%;min-height:var(--cardheight);align-self:stretch;box-sizing:border-box;
  justify-content:center;border-style:dashed}
-.tab .look{display:flex;width:100%;height:.32rem;border-radius:2px;overflow:hidden;
- background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 3px,#e0dbd2 3px,#e0dbd2 6px)}
-.tab .look span{flex:1}
-.tab b{font:600 .78rem/1.3 system-ui,sans-serif;color:var(--ink)}
+.tab b{display:flex;align-items:center;gap:.4rem;
+ font:600 .78rem/1.3 system-ui,sans-serif;color:var(--ink)}
+.tab .cardname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tab .grip{width:8px;height:12px;flex:none;margin-left:auto;fill:var(--dim);opacity:.55;cursor:grab}
+.tab:hover .grip{opacity:1}
+.partsset{display:inline-flex;gap:.3rem;flex-shrink:0}
+/* Drawn at 18px, the size the programs page draws them, where six fit across a card */
+.partsset .featureicon{width:18px;height:18px}
 .tab small{font-size:.68rem;color:var(--dim)}
-.tab .shut{float:right;border:0;background:none;color:var(--dim);cursor:pointer;
- font-size:.85rem;line-height:1;padding:0 0 0 .3rem}
-.tab .shut:hover{color:#b4443a}
+/* The remote's number buttons that go to a scene, each a ring of its colour round a white face,
+   in the card's bottom right corner. 0's ring is the rainbow round it on the remote */
+.irbadge{display:inline-flex;align-items:center;justify-content:center;flex:none;
+ width:1.15rem;height:1.15rem;border-radius:50%;background:#fff;box-sizing:border-box;
+ border:2.5px solid var(--ring);font:800 .62rem/1 system-ui,sans-serif;color:#000}
+.irbadge.zero{border:2.5px solid transparent;background:linear-gradient(#fff,#fff) padding-box,
+ conic-gradient(#ed1c24,#f7941d,#fff200,#8dc63f,#00a651,#00aeef,#0072bc,#2e3192,#92278f,
+                #ec008c,#ed1c24) border-box}
+/* A scene card's icons row, as tall as an icon even where it has none, and its last row, how it
+   ends at the left and its remote number at the right, as tall as a number, so every card's rows
+   line up */
+.tab .cardparts{display:flex;align-items:center;min-height:18px}
+.tab .cardturn{display:flex;align-items:center;gap:.4rem;min-height:1.15rem}
+.tab .cardturn small{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tab .irbadges{display:flex;gap:.15rem;margin-left:auto}
 .tab.carried{opacity:.4}
 .tab.landing{box-shadow:-2px 0 0 var(--accent)}
 .plus{margin-left:auto;align-self:center;display:flex;align-items:center;gap:.35rem;
@@ -431,10 +472,33 @@ body.setupall .lamp:active{cursor:grabbing}
 .plus:hover{background:rgba(15,138,114,.16);border-color:var(--accent)}
 .plus svg{display:block}
 
-/* Everything inside the frame belongs to the card picked above it */
+/* The picked scene's settings sit in a folder tab joined to the top left of its frame, one
+   size for every scene and for Always on's note, so the frame never moves between them. What
+   the page says about the scene, and the way to remove it, sit beside the tab */
+.scenetabrow{display:flex;align-items:flex-end;gap:.8rem}
+.scenetabrow[hidden]{display:none}
+.scenetab{position:relative;z-index:1;flex:none;width:40rem;max-width:75%;height:3rem;
+ box-sizing:border-box;display:flex;align-items:center;margin-bottom:-1.5px;
+ padding:.35rem .9rem .2rem;border:1.5px solid var(--frame);border-bottom:0;
+ border-top-color:transparent;border-radius:9px 9px 0 0;
+ background:var(--frameband) 0 0 / 100% 4px no-repeat border-box,var(--panel)}
+.scenetab #sceneSettings{width:100%}
+.sceneaside{flex:1;min-width:0;height:2.6rem;box-sizing:border-box;display:flex;
+ align-items:center;gap:.5rem;padding-bottom:.3rem}
+.sceneplace{margin-right:auto;font-size:.72rem;color:var(--dim);
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* A warning may take two lines, as it says why */
+.sceneplace.warn{color:var(--warn);white-space:normal;line-height:1.2;max-height:2.4em}
+.sceneset input.invalid,.sceneset input.invalid:focus{border-color:var(--warn);
+ outline:2px solid var(--warn-bg)}
+.sceneremove{flex:none;white-space:nowrap;font:600 .75rem system-ui,sans-serif;border:1px solid var(--line);
+ background:var(--panel);border-radius:7px;padding:.3rem .65rem;color:var(--ink);cursor:pointer}
+.sceneremove:hover{border-color:#b4443a;color:#b4443a}
+
+/* Everything inside the frame belongs to the card picked above it, outlined in its colour */
 .scenebody{border:1px solid transparent;border-radius:12px;padding:0}
-.scenebody.framed{border-color:var(--line);background:var(--panel);
- padding:.9rem 1rem 1.1rem;margin-bottom:1rem}
+.scenebody.framed{border:1.5px solid var(--frame);border-top-left-radius:0;
+ background:var(--panel);padding:.9rem 1rem 1.1rem;margin-bottom:1rem}
 .scenebody.framed .panel{background:#faf9f7}
 
 /* What one scene is called, and how long it holds */
@@ -568,7 +632,7 @@ th{font-weight:600;color:var(--dim);font-size:.76rem}
    and nothing inside it moves when the first scene is added. Its border is there, unseen,
    before */
 .scenebody.framed{margin-left:-1rem;margin-right:-1rem}
-.tabbar{margin-left:-1rem;margin-right:-1rem}
+.tabbar,.scenetabrow{margin-left:-1rem;margin-right:-1rem}
 .s-scene{color:#7b3fb8;font-weight:600}
 
 /* Which way a stretch runs, at the end of the line naming it, greyed where its look is the
@@ -648,10 +712,17 @@ th{font-weight:600;color:var(--dim);font-size:.76rem}
  color:var(--dim)}
 .soundvolume input[type=range]{flex:1;min-width:4rem;accent-color:var(--accent)}
 .soundvolume input:disabled{opacity:.35}
-/* Always on's note stands where a scene's settings do, as tall, so nothing moves between them */
+/* Always on's note stands in the frame's tab where a scene's settings do, set small enough
+   that its two lines fit the tab */
 .sceneset{min-height:2rem}
-.sceneset.alwaysnote{display:block;line-height:2rem;font-size:.84rem;color:var(--dim);
- white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scenetab .sceneset{margin:0;flex-wrap:nowrap}
+.scenetab .sceneset input[type=text]{width:10rem}
+/* How the scene ends and the scene after it, chosen in the inputs' style */
+.sceneset select{border:1px solid var(--line);border-radius:7px;background:#fff;
+ padding:.3rem .35rem;font:inherit;color:var(--ink);min-width:0}
+.sceneset select.scenethen{max-width:9rem;font-weight:600}
+.sceneset.alwaysnote{display:flex;align-items:center;font-size:.74rem;line-height:1.35;
+ color:var(--dim)}
 /* The tools under a run, in the screens' button style. Split and Repeat are each one outlined
    group read as a sentence, words then number then the buttons that act, divided as the
    screens' segmented choices are. The screens' rules are repeated for the pages with none */
@@ -1024,7 +1095,7 @@ header button:disabled,.floatbar button:disabled{opacity:.4;cursor:default}
  color:var(--board);font-size:.85rem}
 .programnote .boardicon{margin-top:.2rem}
 .programnote[hidden]{display:none}
-body.programmed #looks,body.programmed #tabs,body.programmed #sceneSettings,
+body.programmed #looks,body.programmed #tabs,body.programmed #sceneTabRow,
 body.programmed #tabStack>.panel:not(#boardPanel){opacity:.3}
 
 /* A. The save button's menu, and what the board runs above the gallery */
@@ -1067,7 +1138,8 @@ header .boardchip .boardicon{color:currentColor}
 /* An effects page or a program page. The program page takes the effects view's place whole */
 .programview{display:none}
 body.programpage .programview{display:block}
-body.programpage #tabs,body.programpage #sceneBody,body.programpage #programNote{display:none}
+body.programpage #tabs,body.programpage #sceneTabRow,body.programpage #sceneBody,
+body.programpage #programNote{display:none}
 canvas.progthumb{display:block;background:#222}
 /* The chosen program, or the space it will take, the same size either way so choosing one moves
    nothing on the page. What the board runs is said along its top */
@@ -1265,7 +1337,7 @@ body.scenesintab #looks>.shelf{margin-top:0}
 
 /* The board being set up from a section: the scenes, the looks and every run's cutting
    stand back, and every section's board settings open at once */
-body.setupall #tabs,body.setupall #sceneSettings,
+body.setupall #tabs,body.setupall #sceneTabRow,
 body.setupall #looks,body.setupall [id$=Cut],body.setupall [id$=Bar],
 body.setupall [id$=Tools],body.setupall [id$=Chosen]{opacity:.35;pointer-events:none}
 /* On the Screens tab, what each scene shows stands back: the pictures, which one is
@@ -1830,8 +1902,11 @@ body.discovermodal{overflow:hidden}
 
 <div id="banner"></div>
 <div class="tabbar" id="tabs"></div>
+<div class="scenetabrow" id="sceneTabRow" hidden>
+ <div class="scenetab"><div id="sceneSettings"></div></div>
+ <div class="sceneaside" id="sceneAside"></div>
+</div>
 <div class="scenebody" id="sceneBody">
- <div id="sceneSettings"></div>
 
 
  <div id="looks"></div>

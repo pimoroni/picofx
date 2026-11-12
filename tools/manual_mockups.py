@@ -260,29 +260,56 @@ def mockup_tabs(text, editing):
     return '<div class="tabrow{}">{}{}</div>'.format(" editing" if editing else "", "".join(tabs), end)
 
 
+# Each scene's colour, the Aye Arr Remote's number button in its place, as the picker gives them
+SCENE_COLOURS = ("#ed1c24", "#00a651", "#2e3192", "#00aeef", "#ec008c", "#fff200", "#fbad5d",
+                 "#d9d6d0", "#84c1ff")
+
+# The picker's icon for the outputs, three lights over a line, and the grip a card is dragged by
+LIGHTS_ICON = ('<svg class="partsicon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="3.8" '
+               'cy="10" r="3"/><circle cx="12" cy="10" r="3"/><circle cx="20.2" cy="10" r="3"/>'
+               '<path d="M1.5 18h21" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>')
+GRIP_ICON = ('<svg class="grip" viewBox="0 0 8 12" aria-hidden="true"><circle cx="2" cy="2" r="1.1"/>'
+             '<circle cx="6" cy="2" r="1.1"/><circle cx="2" cy="6" r="1.1"/><circle cx="6" cy="6" '
+             'r="1.1"/><circle cx="2" cy="10" r="1.1"/><circle cx="6" cy="10" r="1.1"/></svg>')
+
+
 def mockup_scenes(text):
-    """The scene tabs, written as "Always on, *Scene 1 10s", and under them the selected scene's
-    own settings."""
-    tabs = []
-    settings = ""
-    for item, selected in selected_items(text):
+    """The scenes, written as "Always on, *Scene 1 10s", a scene without a time waiting. They are
+    drawn as the picker's tray, Always on's card its first column and each scene a card in its
+    colour, and under them the folder tab holding the selected one's own settings."""
+    items = list(selected_items(text))
+    scenes = [(item, selected) for item, selected in items if item != "Always on"]
+    always_picked = any(selected for item, selected in items if item == "Always on")
+    cards = []
+    tab = ""
+    for at, (item, selected) in enumerate(scenes):
         name, _, seconds = item.rpartition(" ")
         if not (seconds.endswith("s") and seconds[:-1].isdigit()):
             name, seconds = item, ""
-        stripe = ('<i class="scenestripe {}"></i>'.format(HATCH) if not seconds else
-                  '<i class="scenestripe" style="background:{}"></i>'.format(
-                      gradient(LOOK_COLOURS["Rainbow"])))
-        small = seconds if seconds else "under every scene"
-        cross = '<span class="cross">&#215;</span>' if seconds else ""
-        tabs.append('<span class="scenetab{}">{}{}{}<small>{}</small></span>'.format(
-            " picked" if selected else "", stripe, html.escape(name), cross, html.escape(small)))
-        if selected and seconds:
-            settings = ('<div class="scenerow"><span class="field wide">{}</span><span class="dim">'
-                        'shows for</span><span class="field">{}</span><span class="dim">seconds'
-                        '</span><span class="button">&#8630; Restart</span></div>').format(
-                            html.escape(name), seconds[:-1])
-    tabs.append('<span class="scenetab add">+ another scene</span>')
-    return '<div class="scenetabs">{}</div>{}'.format("".join(tabs), settings)
+        colour = SCENE_COLOURS[at % len(SCENE_COLOURS)]
+        cards.append('<span class="scenecard{}" style="--scene:{}"><b>{}{}</b><span class="parts">{}'
+                     '</span><small>{}</small></span>'.format(
+                         " picked" if selected else "", colour, html.escape(name), GRIP_ICON,
+                         LIGHTS_ICON, html.escape(seconds or "waits")))
+        if selected:
+            ending = ('<span class="field">{}</span><span class="dim">s, then</span><span class="field'
+                      '">the next scene</span>'.format(seconds[:-1]) if seconds else "")
+            tab = ('<div class="scenefold" style="--scene:{}"><div class="scenetab"><span class="field '
+                   'wide">{}</span><span class="dim">{}</span>{}<span class="button">&#8630; Restart'
+                   '</span></div><span class="dim small">Scene {} of {}</span><span class="button">'
+                   'Remove scene</span></div>').format(colour, html.escape(name),
+                                                       "shows for" if seconds else "waits", ending,
+                                                       at + 1, len(scenes))
+    if always_picked:
+        tab = ('<div class="scenefold" style="--scene:#8f8a82"><div class="scenetab"><span class="dim">'
+               'Always on plays under every scene. A scene that uses the same lights, screen or '
+               'sound overrides it while showing.</span></div><span class="dim small">Under {} '
+               'scene{}</span></div>').format(len(scenes), "" if len(scenes) == 1 else "s")
+    always = ('<span class="alwayscard"><b>Always on</b><small>Plays under every scene</small>'
+              '<span class="parts">{}</span></span>').format(LIGHTS_ICON)
+    cards.append('<span class="scenecard add">+ another scene</span>')
+    return '<div class="scenetray{}">{}<div class="scenecards">{}</div></div>{}'.format(
+        " picked" if always_picked else "", always, "".join(cards), tab)
 
 
 def mockup_badge(text, kind):
