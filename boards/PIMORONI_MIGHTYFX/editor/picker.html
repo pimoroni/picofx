@@ -1474,6 +1474,85 @@ html{scrollbar-gutter:stable}
 .ledtab .soundoutline{display:block;width:100%;height:100%}
 .ledtab[data-panel=soundPanel] .soundswatch.silent{height:2.15rem;border-radius:3px;
  background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 3px,#e0dbd2 3px,#e0dbd2 6px)}
+
+/* The Sensor tab has no swatch, its name and what is fitted under it saying all there is. The
+   remote sits in the middle of the section with its buttons' rows down either side, each row
+   centred on its leader's height and the same width, so each side reads as one column */
+.ledtab[data-panel=sensorPanel] .sensorswatch{display:none}
+/* A sixth tab leaves the row short of room, so Edit board keeps one line and only the lights'
+   stripes narrow, never past the names above them */
+#ledTabs:has([data-panel=sensorPanel]){gap:1.1rem}
+#ledTabs:has([data-panel=sensorPanel]) .setupbutton{white-space:nowrap;flex:none}
+#ledTabs:has([data-panel=sensorPanel]) .ledtab:not(:is([data-panel=screensPanel],
+ [data-panel=soundPanel],[data-panel=sensorPanel])){flex:0 1 8rem}
+#ledTabs:has([data-panel=sensorPanel]) .ledtab:not(:is([data-panel=screensPanel],
+ [data-panel=soundPanel],[data-panel=sensorPanel]))>.accswatch{width:100%}
+#ledTabs:has([data-panel=sensorPanel]) .ledtab:is([data-panel=screensPanel],[data-panel=soundPanel],
+ [data-panel=sensorPanel]){flex:none}
+.boardchip.sensor{background:var(--board)}
+/* As tall as while editing, when it holds the choice of what is fitted, so the remote below stays
+   put as the board is edited, as a strip's box does */
+#sensorFacts .chip{box-sizing:border-box;min-height:33px}
+.remotediagram{display:grid;grid-template-columns:1fr var(--middle) 1fr;margin-top:.6rem}
+.remoteside{position:relative}
+.remoterow{position:absolute;display:flex;align-items:center;justify-content:space-between;
+ gap:.5rem;width:min(16rem,100%);height:27px;box-sizing:border-box;padding:0 .3rem 0 .55rem;
+ border:1px solid var(--line);border-radius:7px;background:var(--panel);font-size:.8rem;
+ white-space:nowrap;overflow:hidden}
+.remoteside.left .remoterow{right:0;flex-direction:row-reverse;padding:0 .55rem 0 .3rem}
+.remoteside.right .remoterow{left:0}
+.remoterow small{flex:none;color:var(--dim);font-size:.72rem}
+/* A row's words start where a choice's words do, inside the choice's own inset */
+.remoterow b{display:flex;align-items:center;gap:.3rem;padding:0 4px;
+ font:600 .78rem system-ui,sans-serif;overflow:hidden;text-overflow:ellipsis}
+.remoterow select{min-width:0;flex:0 1 auto;max-width:11rem;border:0;background:none;padding:0;
+ font:600 .78rem system-ui,sans-serif;color:var(--ink);cursor:pointer;text-overflow:ellipsis}
+.remoterow:not(.lit){border-style:dashed;background:none}
+.remoterow:not(.lit) select,.remoterow:not(.lit) b{font-weight:400;color:var(--dim)}
+/* A row a scene leaves to Always on is striped and dashed, as a lamp it leaves to Always on is */
+.remoterow.under{border:1px dashed #a9a49b;
+ background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
+/* A button the board keeps the same in every scene is solid and marked with a padlock, apart
+   from the dashed rows that can be chosen */
+.remoterow.fixed{background:#fbf0cf;border:1px solid #d9b54a}
+.remoterow.fixed b{color:#6b5413}
+.remoterow.fixed .padlock{width:11px;height:11px;flex:none;color:#a07c18}
+.remoterow.hot{border-color:var(--ink)}
+.remoteleader{fill:none;stroke-width:.6;stroke-linejoin:round}
+.remoteleader.hot{stroke-width:1}
+/* A PIR Stick's trigger: a heading, its figure and name level with the leader, over a box holding
+   what it does and then its delay. On the left both sit against the Stick */
+.pirside{position:absolute;display:flex;flex-direction:column;gap:.35rem;width:min(20rem,100%)}
+.remoteside.left .pirside{right:0}
+.remoteside.right .pirside{left:0}
+/* The heading's name sits by the leader and its figure at the outer edge, so the two sides
+   mirror each other */
+.pirhead{display:flex;align-items:center;justify-content:space-between;gap:.45rem;height:34px;
+ padding:0 .3rem;font:600 .9rem system-ui,sans-serif;color:var(--ink)}
+.remoteside.right .pirhead{flex-direction:row-reverse}
+.pirquestion.idle{opacity:.45}
+.remoterow.pirbox,.remoteside.left .remoterow.pirbox{position:static;height:auto;
+ flex-direction:column;align-items:stretch;justify-content:flex-start;gap:.35rem;width:100%;
+ padding:.45rem .6rem .5rem;overflow:visible}
+/* Every piece of a PIR box's lines, words, choices and the seconds field, is one size on one
+   line height, so the words sit level with what they label */
+.pirtiming{display:flex;align-items:center;flex-wrap:wrap;gap:.35rem;color:var(--dim);
+ white-space:nowrap}
+.pirtiming>*,.pirtiming small{font:400 .78rem/1.6rem system-ui,sans-serif}
+.pirtiming select{height:1.6rem;max-width:9rem;padding:0;border:0;background:none;
+ font-weight:600;color:var(--ink);cursor:pointer}
+.pirtiming input[type=number]{width:3.4rem;height:1.6rem;box-sizing:border-box;padding:0 .35rem;
+ border:1px solid var(--line);border-radius:6px;color:var(--ink);background:#fff}
+.motionfigure{width:28px;height:28px;flex:none;fill:currentColor;stroke:currentColor;
+ stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.remotecover{fill:transparent}
+.remotecover.choosable{cursor:pointer}
+.remotecover.hot{fill:rgba(0,0,0,.08)}
+.sensorwords{text-align:center;margin:.8rem auto 0;max-width:40rem}
+.sensorwords p{margin:.3rem 0;font-size:.82rem}
+.sensorwords p.dim{color:var(--dim)}
+.sensorwords p.warn{color:var(--warn)}
+.sensorwords .plus{margin:.5rem auto 0}
 /* On repeat, a loop in the corner on a white spot, so it reads over the outline */
 .ledtab .soundswatch .repeatmark{position:absolute;right:2px;bottom:2px;width:.8rem;
  height:.8rem;padding:1px;box-sizing:border-box;color:var(--dim);background:#fff;
@@ -2050,6 +2129,7 @@ var BOARD = {
   "hub": true
  },
  "sound": true,
+ "sensor": true,
  "shell": true
 };
 
@@ -10019,6 +10099,1288 @@ drawSteps.after.push(function () {
 TAB_NAMES.soundPanel = "Sound";
 TAB_PANELS.push("soundPanel");
 keptOpen("soundPanel");
+
+// ---- the Sensor tab -----------------------------------------------------------------------------
+// What is on the sensor connector and what it does, as a tab after Sound. Only what is fitted is
+// board setup, chosen in Edit board. What each of a remote's buttons does is set on the Always on
+// tab for every scene, and a scene can change any button while it shows, as it can any light.
+// Two buttons are the board's in every scene: OK / Stop puts it in standby and wakes it, so there
+// is always a way to stop it, and Play / Pause holds the effects where they stand.
+
+// What the sensor connector can have on it: [kind, as the choice says it, under the tab's name,
+// where it sits]
+var SENSOR_KINDS = [["none", "nothing", "none", ""],
+                    ["ir", "an Aye Arr Remote", "Aye Arr",
+                     "through an IR Receiver Stick on the sensor connector"],
+                    ["pir", "a PIR Stick", "PIR Stick", "on the sensor connector"]];
+
+state.sensorKind = "none";
+// The choices of the tab being edited, by button, where it changes what a button does
+state.remote = {};
+// The buttons the file gave twice in the tab being edited, whose second lines are kept as written
+state.remoteRepeats = [];
+
+BOARD_CHIP_CLASSES.sensorPanel = "sensor";
+
+function sensorFacts() {
+  return SENSOR_KINDS.filter(function (one) { return one[0] === state.sensorKind; })[0];
+}
+
+function remoteFitted() { return state.sensorKind === "ir"; }
+function pirFitted() { return state.sensorKind === "pir"; }
+
+// A PIR Stick's two triggers, chosen for as a remote's buttons are, and held with them
+var MOTION_TRIGGERS = ["MOTION_STARTS", "MOTION_STOPS"];
+
+// Whether what a trigger belongs to is fitted, a button the remote and motion the PIR Stick
+function triggerFitted(trigger) {
+  return MOTION_TRIGGERS.indexOf(trigger) >= 0 ? pirFitted() : remoteFitted();
+}
+
+// The triggers of what is fitted, in the order their lines are written
+function fittedTriggers() {
+  return pirFitted() ? MOTION_TRIGGERS
+       : remoteFitted() ? REMOTE_BUTTONS.map(function (button) { return button[0]; }) : [];
+}
+
+// ---- what each button does --------------------------------------------------------------------
+// A choice is a word: nothing, order (a number's scene by place), next, previous, first, restart,
+// or scene: and a scene's own mark, which keeps the button on that scene when it moves. The board's
+// own two buttons are standby and pause. A number is bound to the scene in its place, as the
+// scene's colour is its button's, so a number only goes there or does nothing
+
+function isNumber(button) { return /^\d_/.test(button); }
+
+// The buttons that do the same in every scene, and what they do
+var REMOTE_FIXED = {OK_STOP: ["standby", "Standby and wake, in every scene"],
+                    PLAY_PAUSE: ["pause", "Pause the effects where they stand, in every scene"]};
+
+// A scene can wait for a button while a remote is fitted
+sceneCanWait = function () { return remoteFitted() || pirFitted(); };
+sceneWaitsFor = function () { return pirFitted() ? "motion" : "a button"; };
+
+// The scenes a scene goes to on what is fitted, from each trigger's choice in that scene: its
+// own, then Always on's, then the trigger's default. The tab being edited holds its choices in
+// state.remote rather than its body
+sceneTriggerLeads = function (at) {
+  var count = state.scenes.length;
+  var always = state.at < 0 ? state.remote : state.always.body && state.always.body.remote || {};
+  var body = state.scenes[at].body;
+  var own = at === state.at ? state.remote : body && body.remote || {};
+  var leads = [];
+  fittedTriggers().forEach(function (trigger) {
+    if (REMOTE_FIXED[trigger]) return;
+    var choice = own[trigger] !== undefined ? own[trigger]
+               : always[trigger] !== undefined ? always[trigger] : remoteDefault(trigger);
+    var scene = choice === "order" ? sceneInOrder(trigger)
+              : choice.indexOf("scene:") === 0 ? sceneMarked(choice.slice(6)) : null;
+    if (scene) leads.push(state.scenes.indexOf(scene));
+    else if (choice === "next") leads.push((at + 1) % count);
+    else if (choice === "previous") leads.push((at + count - 1) % count);
+    else if (choice === "first") leads.push(0);
+  });
+  return leads;
+};
+
+// What a button does where Always on chooses nothing else: a number goes to the scene in its
+// place, 0 to the tenth, and the side arrows step back and on. With no scenes none of them has
+// anywhere to go
+function remoteDefault(button) {
+  if (/^\d_/.test(button)) return "order";
+  if (!state.scenes.length) return "nothing";
+  if (button === "LEFT") return "previous";
+  if (button === "RIGHT") return "next";
+  return "nothing";
+}
+
+// The scene a number goes to in order, 0 being the tenth
+function sceneInOrder(button) {
+  var number = Number(button.charAt(0));
+  return state.scenes[(number || 10) - 1] || null;
+}
+
+// What a button does on the tab being edited, as {choice, from}. From is own where the tab
+// chooses it, always where a scene leaves it to Always on, and fixed for the board's own buttons
+function remoteResolved(button) {
+  if (REMOTE_FIXED[button]) return {choice: REMOTE_FIXED[button][0], from: "fixed"};
+  if (state.remote[button] !== undefined) return {choice: state.remote[button], from: "own"};
+  if (state.at < 0) return {choice: remoteDefault(button), from: "own"};
+  var always = state.always.body && state.always.body.remote || {};
+  return {choice: always[button] !== undefined ? always[button] : remoteDefault(button),
+          from: "always"};
+}
+
+// What a choice does, in the words a row says it, or "" where it does nothing. A scene is said
+// as one, so it is not taken for a step or Standby that a scene's name happens to match
+function remoteSays(choice, button) {
+  if (choice === "order") {
+    var scene = sceneInOrder(button);
+    return scene ? "Scene: " + scene.name : "";
+  }
+  if (choice.indexOf("scene:") === 0) {
+    var marked = sceneMarked(choice.slice(6));
+    return marked ? "Scene: " + marked.name : "";
+  }
+  // Restart begins the scene showing again, or Always on's effects where there are no scenes
+  if (choice === "restart") {
+    return state.at >= 0 ? "Scene: " + state.scenes[state.at].name + ", from the start"
+         : state.scenes.length ? "Restart the scene showing" : "Restart the effects";
+  }
+  return {nothing: "", next: "Next scene", previous: "Previous scene", first: "First scene",
+          standby: "Standby", pause: "Pause"}[choice];
+}
+
+// Whether going to a scene while it shows does something other than begin it again. Going to a
+// scene starts it, which begins its effects again where it restarts, and otherwise starts only
+// its time again. A waiting scene that does not restart has neither to do
+function sceneSelfDiffers(scene) {
+  return !scene.waits && !sceneRestarts(scene);
+}
+
+// The trigger in this tab that goes to the scene showing, which waits and does not restart, so
+// does nothing, or null
+function triggerDoingNothing() {
+  if (state.at < 0) return null;
+  var showing = state.scenes[state.at];
+  if (sceneRestarts(showing) || sceneSelfDiffers(showing)) return null;
+  return fittedTriggers().filter(function (trigger) {
+    return state.remote[trigger] === "scene:" + sceneMark(showing);
+  })[0] || null;
+}
+
+// Whether a button does anything on the tab being edited
+function remoteDoes(button) {
+  return triggerFitted(button) && remoteSays(remoteResolved(button).choice, button) !== "";
+}
+
+// The number button bound to a scene by its place, which its card wears while a remote is fitted
+// and Always on leaves the number going there. None past the tenth scene
+sceneNumbers = function (scene) {
+  var at = state.scenes.indexOf(scene);
+  if (!remoteFitted() || at > 9) return [];
+  var button = REMOTE_BUTTONS.filter(function (one) {
+    return one[0].charAt(0) === String((at + 1) % 10) && isNumber(one[0]);
+  })[0][0];
+  var always = state.at < 0 ? state.remote : state.always.body && state.always.body.remote || {};
+  return always[button] === "nothing" ? [] : [(at + 1) % 10];
+};
+
+// A button's name as a reader says it, such as "1 Red" or "OK / Stop"
+function remoteWords(name) {
+  if (name === "ANTICLOCK") return "Anticlockwise";
+  if (name === "MOTION_STARTS") return "Motion starts";
+  if (name === "MOTION_STOPS") return "Motion stops";
+  var words = name.split("_").map(function (word) {
+    if (/^\d$/.test(word) || word === "OK") return word;
+    return word.charAt(0) + word.slice(1).toLowerCase();
+  });
+  return /^\d_/.test(name) ? words.join(" ") : words.join(" / ");
+}
+
+// The colour of a button's leader while it does something
+function remoteInk(name) {
+  if (name === "8_WHITE") return "#a7a9ac";
+  if (name === "6_YELLOW") return "#e0cf00";
+  if (name === "0_RAINBOW") return "#92278f";
+  var number = /^(\d)_/.exec(name);
+  return number ? REMOTE_COLOURS[Number(number[1]) - 1] : "#808285";
+}
+
+// A row's choice of what its button does. On a scene's tab the first choice leaves it to
+// Always on, saying what that does, its row's stripes saying whose it is
+function remoteRowChoice(row, button) {
+  var resolved = remoteResolved(button);
+  var choice = document.createElement("select");
+  choice.dataset.choice = button;
+  function option(parent, value, words) {
+    var one = document.createElement("option");
+    one.value = value;
+    one.textContent = words;
+    parent.appendChild(one);
+  }
+  var own = choice;
+  if (state.at >= 0) {
+    var always = state.always.body && state.always.body.remote || {};
+    var under = always[button] !== undefined ? always[button] : remoteDefault(button);
+    var kept = document.createElement("optgroup");
+    kept.label = "As Always on";
+    option(kept, "", remoteSays(under, button) || "Nothing");
+    choice.appendChild(kept);
+    own = document.createElement("optgroup");
+    own.label = "In this scene";
+    choice.appendChild(own);
+    row.title = "Striped where it does what Always on sets";
+  }
+  // A number goes to the scene in its place or does nothing
+  if (isNumber(button)) {
+    option(own, "order", "Scene: " + sceneInOrder(button).name);
+    option(own, "nothing", "Nothing");
+  } else if (!state.scenes.length) {
+    // With no scenes there is nothing to go to, only Always on's effects to begin again
+    option(own, "nothing", "Nothing");
+    option(own, "restart", remoteSays("restart", button));
+  } else {
+    option(own, "nothing", "Nothing");
+    var showing = state.at >= 0 ? state.scenes[state.at] : null;
+    // A file's choice of the scene showing where that does nothing is kept, for its note to say why
+    var keptNothing = showing && resolved.from === "own" && !sceneRestarts(showing) &&
+                      !sceneSelfDiffers(showing) && resolved.choice === "scene:" + sceneMark(showing);
+    var scenes = document.createElement("optgroup");
+    scenes.label = "Go to a scene";
+    state.scenes.forEach(function (scene) {
+      // The scene showing is offered from the start, and as itself only where that differs
+      if (scene !== showing || sceneSelfDiffers(scene) || keptNothing) {
+        option(scenes, "scene:" + sceneMark(scene), "Scene: " + scene.name);
+      }
+      if (scene === showing) option(scenes, "restart", remoteSays("restart", button));
+    });
+    choice.appendChild(scenes);
+    var steps = document.createElement("optgroup");
+    steps.label = "Step";
+    [["next", "Next scene"], ["previous", "Previous scene"], ["first", "First scene"]]
+      .concat(showing ? [] : [["restart", remoteSays("restart", button)]])
+      .forEach(function (step) { option(steps, step[0], step[1]); });
+    choice.appendChild(steps);
+  }
+  choice.value = resolved.from === "own" ? resolved.choice : "";
+  // Going to the scene showing where that begins it again reads as from the start
+  if (showing && choice.value === "scene:" + sceneMark(showing) && sceneRestarts(showing)) {
+    choice.value = "restart";
+  }
+  // The whole choice, which a narrow row can cut short
+  if (choice.selectedOptions.length) choice.title = choice.selectedOptions[0].textContent;
+  choice.onchange = function () {
+    var value = choice.value;
+    // Always on choosing a button's default, or a scene choosing Always on's, keeps no choice
+    if (value === "") delete state.motionTiming[button];
+    if (value === "" || (state.at < 0 && value === remoteDefault(button))) delete state.remote[button];
+    else state.remote[button] = value;
+    settleSceneRow(button);
+    draw();
+  };
+  row.appendChild(choice);
+}
+
+// ---- the remote with a row for each button ----------------------------------------------------
+// The remote in the middle, its buttons' rows down either side, each joined to its button by a
+// leader in the button's colour while it does something. The art is drawn at REMOTE_SCALE pixels
+// to its unit, the leaders taking REMOTE_REACH units beyond its body on each side
+
+var REMOTE_SCALE = 4.3;
+var REMOTE_REACH = 16;
+var REMOTE_BODY = {left: 71.26, right: 126.45, top: 23.5, bottom: 146};
+var REMOTE_ROW_PX = 27;
+
+// A leader from a row's edge to its button, level to where it turns, then at 45 degrees onto the
+// button's edge for a middle one
+function remoteLeader(row) {
+  var at = remoteArtAt(row[0]);
+  var left = row[1] === "left";
+  var from = left ? REMOTE_BODY.left - REMOTE_REACH : REMOTE_BODY.right + REMOTE_REACH;
+  var reach = REMOTE_ART_RADIUS;
+  if (Math.abs(row[2] - at.y) < 0.01) return "M" + from + " " + at.y + " H" + (left ? at.x - reach : at.x + reach);
+  var lean = reach * Math.SQRT1_2;
+  var endX = left ? at.x - lean : at.x + lean;
+  var endY = row[2] > at.y ? at.y + lean : at.y - lean;
+  var turn = left ? endX - Math.abs(row[2] - endY) : endX + Math.abs(row[2] - endY);
+  return "M" + from + " " + row[2] + " H" + turn.toFixed(2) + " L" + endX.toFixed(2) + " " +
+         endY.toFixed(2);
+}
+
+// With no remote fitted the whole remote is washed. Fitted, each button doing nothing is darkened
+// and washed, as is a join unless both its ends are in use. The art is drawn twice under two
+// masks that are each other's opposite, so nothing stacks
+var REMOTE_WASHED = " opacity='0.35'";
+var REMOTE_IDLE = " filter='url(#raDark)' opacity='0.5'";
+var REMOTE_MASK = "x='60' y='15' width='80' height='140'";
+
+function remoteMask(id, lit, flipped) {
+  function paint(colour) { return flipped ? (colour === "#fff" ? "#000" : "#fff") : colour; }
+  function circle(name) {
+    var at = remoteArtAt(name);
+    return "<circle cx='" + at.x + "' cy='" + at.y + "' r='" + REMOTE_ART_RADIUS + "'/>";
+  }
+  var idle = REMOTE_BUTTONS.map(function (button) { return button[0]; }).filter(function (name) {
+    return lit.indexOf(name) < 0;
+  });
+  var idleJoins = REMOTE_ART_JOINS.filter(function (one) {
+    return lit.indexOf(one[1]) < 0 || lit.indexOf(one[2]) < 0;
+  });
+  // A join runs up under the buttons at its ends, so the buttons in use go back in after it
+  return "<mask id='" + id + "' maskUnits='userSpaceOnUse' " + REMOTE_MASK + ">" +
+         "<rect " + REMOTE_MASK + " fill='" + paint("#fff") + "'/>" +
+         "<g fill='" + paint("#000") + "'>" + idle.map(circle).join("") +
+         idleJoins.map(function (one) { return "<path d='" + remoteArtJoin(one[0]) + "'/>"; }).join("") +
+         "</g><g fill='" + paint("#fff") + "'>" + lit.map(circle).join("") + "</g></mask>";
+}
+
+function remoteLayers() {
+  var lit = REMOTE_BUTTONS.map(function (button) { return button[0]; }).filter(remoteDoes);
+  // Darkening halves each channel
+  var defs = "<defs><g id='raArt'>" + remoteArt() + "</g>" +
+             "<filter id='raDark'><feComponentTransfer><feFuncR type='linear' slope='0.5'/>" +
+             "<feFuncG type='linear' slope='0.5'/><feFuncB type='linear' slope='0.5'/>" +
+             "</feComponentTransfer></filter>";
+  if (!remoteFitted()) return defs + "</defs><use href='#raArt'" + REMOTE_WASHED + "/>";
+  return defs + remoteMask("raFull", lit, false) + remoteMask("raRest", lit, true) +
+         "</defs><use href='#raArt'" + REMOTE_IDLE + " mask='url(#raRest)'/>" +
+         "<use href='#raArt' mask='url(#raFull)'/>";
+}
+
+function remoteDiagram() {
+  var width = REMOTE_BODY.right - REMOTE_BODY.left + 2 * REMOTE_REACH;
+  var height = REMOTE_BODY.bottom - REMOTE_BODY.top;
+  var diagram = document.createElement("div");
+  diagram.className = "remotediagram";
+  diagram.style.height = Math.round(height * REMOTE_SCALE) + "px";
+  diagram.style.setProperty("--middle", Math.round(width * REMOTE_SCALE) + "px");
+
+  var fitted = remoteFitted();
+  var leaders = "", covers = "";
+  REMOTE_ROWS.forEach(function (row) {
+    leaders += "<path class='remoteleader' data-button='" + row[0] + "' d='" + remoteLeader(row) +
+               "' stroke='" + (remoteDoes(row[0]) ? remoteInk(row[0]) : "#d6d3cd") + "'/>";
+  });
+  // Each button's cover is clear, there to be hovered and clicked to choose for
+  REMOTE_BUTTONS.forEach(function (button) {
+    var at = remoteArtAt(button[0]);
+    covers += "<circle class='remotecover" + (fitted && !REMOTE_FIXED[button[0]] ? " choosable" : "") +
+              "' data-button='" + button[0] + "' cx='" + at.x + "' cy='" + at.y + "' r='" +
+              (REMOTE_ART_RADIUS + 0.2) + "'/>";
+  });
+  var middle = document.createElement("div");
+  middle.className = "remotemiddle";
+  middle.innerHTML = "<svg viewBox='" + (REMOTE_BODY.left - REMOTE_REACH) + " " + REMOTE_BODY.top +
+                     " " + width + " " + height + "' width='100%' height='100%' role='img' " +
+                     "aria-label='The Aye Arr Remote'>" + remoteLayers() + leaders + covers + "</svg>";
+
+  var sides = {left: document.createElement("div"), right: document.createElement("div")};
+  sides.left.className = "remoteside left";
+  sides.right.className = "remoteside right";
+  REMOTE_ROWS.forEach(function (row) {
+    var resolved = remoteResolved(row[0]);
+    var slot = document.createElement("div");
+    // A row a scene leaves to Always on is striped, as the page marks everything Always on plays
+    slot.className = "remoterow" + (remoteDoes(row[0]) ? " lit" : "") +
+                     (fitted && resolved.from === "always" ? " under" : "") +
+                     (resolved.from === "fixed" ? " fixed" : "");
+    slot.dataset.button = row[0];
+    slot.style.top = Math.round((row[2] - REMOTE_BODY.top) * REMOTE_SCALE - REMOTE_ROW_PX / 2) + "px";
+    slot.appendChild(small(remoteWords(row[0])));
+    // A number with no scene in its place has nothing to choose until there is one
+    var unbound = isNumber(row[0]) && !sceneInOrder(row[0]);
+    if (fitted && resolved.from !== "fixed" && !unbound) {
+      remoteRowChoice(slot, row[0]);
+    } else {
+      var said = document.createElement("b");
+      // 0 is bound to the tenth scene
+      said.textContent = !fitted ? "" : unbound ? "No scene " + (Number(row[0].charAt(0)) || 10)
+                                                : remoteSays(resolved.choice, row[0]);
+      slot.appendChild(said);
+      if (resolved.from === "fixed" && fitted) {
+        slot.title = REMOTE_FIXED[row[0]][1];
+        said.insertAdjacentHTML("afterbegin", "<svg class='padlock' viewBox='0 0 12 12' " +
+          "aria-hidden='true'><rect x='2' y='5' width='8' height='6' rx='1.2' fill='currentColor'/>" +
+          "<path d='M4 5V3.6a2 2 0 0 1 4 0V5' fill='none' stroke='currentColor' stroke-width='1.4'/>" +
+          "</svg>");
+      }
+    }
+    sides[row[1]].appendChild(slot);
+  });
+  diagram.appendChild(sides.left);
+  diagram.appendChild(middle);
+  diagram.appendChild(sides.right);
+
+  // A row and its button light together, and clicking a button opens its row's choice. With no
+  // remote fitted there is nothing to choose, so nothing lights
+  if (!fitted) return diagram;
+  function hot(name, on) {
+    diagram.querySelectorAll("[data-button='" + name + "']").forEach(function (one) {
+      one.classList.toggle("hot", on);
+    });
+  }
+  diagram.querySelectorAll("[data-button]").forEach(function (one) {
+    one.addEventListener("mouseenter", function () { hot(one.dataset.button, true); });
+    one.addEventListener("mouseleave", function () { hot(one.dataset.button, false); });
+  });
+  diagram.querySelectorAll(".remotecover.choosable").forEach(function (cover) {
+    cover.addEventListener("click", function () {
+      var chooser = diagram.querySelector("select[data-choice='" + cover.dataset.button + "']");
+      chooser.focus();
+      // Opening the list outright needs a browser that has showPicker
+      try { chooser.showPicker(); } catch (refused) {}
+    });
+  });
+  return diagram;
+}
+
+// ---- the section ---------------------------------------------------------------------------------
+
+function sensorSaid(words, dim) {
+  var said = document.createElement("p");
+  said.textContent = words;
+  if (dim) said.className = "dim";
+  return said;
+}
+
+// The box saying what is on the sensor connector, a choice while the board is being set up
+function sensorBox() {
+  var facts = document.getElementById("sensorFacts");
+  facts.textContent = "";
+  var fitted = sensorFacts();
+  var parts = ["Sensor"];
+  if (canEdit("sensorPanel")) {
+    var choice = document.createElement("select");
+    SENSOR_KINDS.forEach(function (kind) {
+      var option = document.createElement("option");
+      option.value = kind[0];
+      option.textContent = kind[1];
+      choice.appendChild(option);
+    });
+    choice.value = state.sensorKind;
+    choice.onchange = function () {
+      state.sensorKind = choice.value;
+      draw();
+    };
+    parts.push(choice);
+    if (fitted[3]) parts.push(small(fitted[3]));
+  } else {
+    parts.push(small(state.sensorKind === "none" ? "nothing on the sensor connector"
+                                                 : fitted[1] + ", " + fitted[3]));
+  }
+  facts.appendChild(boardBox("sensorPanel", parts));
+  if (!canEdit("sensorPanel") && state.sensorKind === "none") {
+    var hint = document.createElement("span");
+    hint.className = "hint";
+    hint.textContent = "Edit board to fit one.";
+    facts.appendChild(hint);
+  }
+}
+
+// ---- the PIR Stick with a row for each trigger --------------------------------------------------
+// The PIR Stick's artwork in the middle as the remote's is, with a row for motion starting on its
+// left and one for motion stopping on its right, level with its sensor
+
+var PIR_STICK = {width: 22.692, height: 77.102};
+
+var PIR_SCALE = 3.3;
+var PIR_REACH = 14.6;
+// Each trigger's row, motion starting on the left and stopping on the right, both level with the
+// sensor's middle, as [trigger, side, height in the drawing]
+var PIR_ROWS = [["MOTION_STARTS", "left", 11.883], ["MOTION_STOPS", "right", 11.883]];
+// The sensor's outer edges across the drawing, where the leaders end
+var PIR_SENSOR = {left: 0.703, right: 21.989};
+// The height of a trigger's heading, which sits level with its leader
+var PIR_HEAD_PX = 34;
+
+// A figure beside each row's name, someone running with speed streaks behind them for motion
+// starting, and standing still for it stopping, the two built alike. The streaks step left down
+// the runner's back, past the 16 unit square, so the figures' box reaches further left. Each head
+// is classed as a filled part, so a part icon can draw the figure too
+var MOTION_FIGURES = {
+  MOTION_STARTS: "<circle class='f' cx='10' cy='2.6' r='1.9'/><path d='M9.4 5.6 7.8 10.4 6 13.5 " +
+                 "2.8 14.6M7.8 10.4l3.3 1.7 1.2 3.4M9.4 5.6 5.7 7.6 4.4 10M9.4 5.6l2.5 2.8 3 .6' " +
+                 "fill='none'/><path d='M2.8 4h2.6M.3 7.5h2.4M-.2 11h2' fill='none' " +
+                 "stroke-width='1.2'/>",
+  MOTION_STOPS: "<circle class='f' cx='8' cy='2.1' r='1.9'/><path d='M8 5.1v4.6M8 9.7l-1.5 " +
+                "6M8 9.7l1.5 6M8 5.9 4.3 9.8M8 5.9l3.7 3.9' fill='none'/>"
+};
+var MOTION_FIGURE_BOX = "-1.2 -0.6 17.2 17.2";
+
+// The PIR Stick's icon on a scene's card, the figure for motion starting on the part icons' grid,
+// as the Stick reacts to people moving
+PART_DRAWINGS.pir = "<g transform='translate(2.4 1.5) scale(1.27)' stroke-width='1.4'>" +
+                    MOTION_FIGURES.MOTION_STARTS + "</g>";
+
+function motionFigure(trigger) {
+  var figure = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  figure.setAttribute("viewBox", MOTION_FIGURE_BOX);
+  figure.setAttribute("class", "motionfigure");
+  figure.setAttribute("aria-hidden", "true");
+  figure.innerHTML = MOTION_FIGURES[trigger];
+  return figure;
+}
+
+// ---- a delay on motion's triggers ---------------------------------------------------------------
+// Each of motion's triggers can wait seconds before doing what it does, and the opposite edge
+// coming first cancels it unless told not to, so a scare can wait a moment after someone arrives
+// whether or not they stay. A delay belongs to its row, so changing one in a scene makes the row
+// the scene's own. The tab being edited keeps its rows' delays as {after, cancel}
+
+state.motionTiming = {};
+
+var MOTION_TIMING_DEFAULT = {after: 0, cancel: true};
+
+// The question a delay asks of the opposite edge, which "cancel this" or "finish this first"
+// answers
+var MOTION_CANCELLED_BY = {MOTION_STARTS: "If motion stops first?",
+                           MOTION_STOPS: "If motion starts again first?"};
+
+// A trigger's delay on the tab being edited: the tab's own where the row is its own, or Always
+// on's where a scene leaves the row to it
+function motionTiming(trigger) {
+  var own = state.at < 0 || state.remote[trigger] !== undefined;
+  var held = own ? state.motionTiming
+                 : state.always.body && state.always.body.motionTiming || {};
+  return held[trigger] || MOTION_TIMING_DEFAULT;
+}
+
+// Change a trigger's delay on the tab being edited, a scene taking the row as its own with what it
+// did as Always on
+function setMotionTiming(trigger, change) {
+  // Read before the scene takes the row, which would hide Always on's delay behind its own
+  var timing = JSON.parse(JSON.stringify(motionTiming(trigger)));
+  if (state.at >= 0 && state.remote[trigger] === undefined) {
+    state.remote[trigger] = remoteResolved(trigger).choice;
+  }
+  Object.keys(change).forEach(function (key) { timing[key] = change[key]; });
+  if (timing.after === 0 && timing.cancel) delete state.motionTiming[trigger];
+  else state.motionTiming[trigger] = timing;
+  settleSceneRow(trigger);
+  draw();
+}
+
+// Hand a scene's row back to Always on where its choice and delay match Always on's, so a row is
+// only a scene's own where it does something different
+function settleSceneRow(trigger) {
+  if (state.at < 0 || state.remote[trigger] === undefined) return;
+  var always = state.always.body && state.always.body.remote || {};
+  var under = always[trigger] !== undefined ? always[trigger] : remoteDefault(trigger);
+  var alwaysTimings = state.always.body && state.always.body.motionTiming || {};
+  var own = state.motionTiming[trigger] || MOTION_TIMING_DEFAULT;
+  var held = alwaysTimings[trigger] || MOTION_TIMING_DEFAULT;
+  if (state.remote[trigger] !== under || own.after !== held.after || own.cancel !== held.cancel) {
+    return;
+  }
+  delete state.remote[trigger];
+  delete state.motionTiming[trigger];
+}
+
+// A PIR box's two lines: "Trigger [what it does] after [3] s", then the question of the opposite
+// edge, greyed while there is no wait, so the box keeps its size
+function motionLines(trigger, box) {
+  var timing = motionTiming(trigger);
+  var line = document.createElement("div");
+  line.className = "pirtiming piraction";
+  line.appendChild(small("Trigger"));
+  remoteRowChoice(line, trigger);
+  box.appendChild(line);
+  line.appendChild(small("after"));
+  var seconds = document.createElement("input");
+  seconds.type = "number";
+  seconds.min = 0;
+  seconds.step = 0.5;
+  seconds.value = timing.after;
+  seconds.title = "Seconds to wait before doing it";
+  seconds.onchange = function () {
+    setMotionTiming(trigger, {after: Math.max(0, Number(seconds.value) || 0)});
+  };
+  line.appendChild(seconds);
+  line.appendChild(small("s"));
+  var asked = document.createElement("div");
+  asked.className = "pirtiming pirquestion" + (timing.after > 0 ? "" : " idle");
+  asked.appendChild(small(MOTION_CANCELLED_BY[trigger]));
+  var cancels = document.createElement("select");
+  cancels.className = "pircancel";
+  [["yes", "cancel this"], ["no", "finish this first"]].forEach(function (answer) {
+    var option = document.createElement("option");
+    option.value = answer[0];
+    option.textContent = answer[1];
+    cancels.appendChild(option);
+  });
+  cancels.value = timing.cancel ? "yes" : "no";
+  cancels.disabled = !(timing.after > 0);
+  if (cancels.disabled) asked.title = "Asked once it waits";
+  cancels.onchange = function () { setMotionTiming(trigger, {cancel: cancels.value === "yes"}); };
+  asked.appendChild(cancels);
+  box.appendChild(asked);
+}
+
+function pirDiagram() {
+  var width = PIR_STICK.width + 2 * PIR_REACH;
+  var diagram = document.createElement("div");
+  diagram.className = "remotediagram";
+  diagram.style.height = Math.round(PIR_STICK.height * PIR_SCALE) + "px";
+  diagram.style.setProperty("--middle", Math.round(width * PIR_SCALE) + "px");
+  // Each leader runs from the sensor's edge out to its side's row
+  var leaders = PIR_ROWS.map(function (row) {
+    var path = row[1] === "left"
+      ? "M" + -PIR_REACH + " " + row[2] + " H" + PIR_SENSOR.left
+      : "M" + PIR_SENSOR.right + " " + row[2] + " H" + (PIR_STICK.width + PIR_REACH);
+    return "<path class='remoteleader' data-button='" + row[0] + "' d='" + path + "' stroke='" +
+           (remoteDoes(row[0]) ? "#808285" : "#d6d3cd") + "'/>";
+  }).join("");
+  var middle = document.createElement("div");
+  middle.className = "remotemiddle";
+  middle.innerHTML = "<svg viewBox='" + -PIR_REACH + " 0 " + width + " " + PIR_STICK.height + "' " +
+                     "width='100%' height='100%' role='img' aria-label='The PIR Stick'>" +
+                     PIR_ART.join("") +
+                     leaders + "</svg>";
+  var sides = {left: document.createElement("div"), right: document.createElement("div")};
+  sides.left.className = "remoteside left";
+  sides.right.className = "remoteside right";
+  // Each trigger has a heading across its box, its name by the leader and its figure at the outer
+  // edge, and under it a box holding what it does with its delay, striped where a scene leaves it
+  // to Always on as a remote's row is
+  PIR_ROWS.forEach(function (row) {
+    var resolved = remoteResolved(row[0]);
+    var side = document.createElement("div");
+    side.className = "pirside";
+    side.style.top = Math.round(row[2] * PIR_SCALE - PIR_HEAD_PX / 2) + "px";
+    var head = document.createElement("div");
+    head.className = "pirhead";
+    head.appendChild(motionFigure(row[0]));
+    head.appendChild(document.createTextNode(remoteWords(row[0])));
+    side.appendChild(head);
+    var box = document.createElement("div");
+    box.className = "remoterow pirbox" + (remoteDoes(row[0]) ? " lit" : "") +
+                    (resolved.from === "always" ? " under" : "");
+    box.dataset.button = row[0];
+    motionLines(row[0], box);
+    side.appendChild(box);
+    sides[row[1]].appendChild(side);
+  });
+  diagram.appendChild(sides.left);
+  diagram.appendChild(middle);
+  diagram.appendChild(sides.right);
+  return diagram;
+}
+
+function renderSensor() {
+  sensorBox();
+  var box = document.getElementById("sensor");
+  box.textContent = "";
+  var words = document.createElement("div");
+  words.className = "sensorwords";
+  if (pirFitted()) {
+    box.appendChild(pirDiagram());
+    words.appendChild(sensorSaid(state.at < 0
+      ? "What motion starting and stopping does in every scene. A scene can change either while " +
+        "it shows."
+      : "Striped rows do what Always on sets. Choose one to change it in this scene."));
+    sensorNotes(words);
+    box.appendChild(words);
+    return;
+  }
+  box.appendChild(remoteDiagram());
+  if (!remoteFitted()) {
+    words.appendChild(sensorSaid("The sensor connector takes one thing at a time, such as the " +
+                                 "Aye Arr Remote through an IR Receiver Stick.", true));
+  } else if (state.at < 0) {
+    words.appendChild(sensorSaid("What each button does in every scene. A scene can change any " +
+                                 "of them while it shows."));
+    if (!state.scenes.length) {
+      words.appendChild(sensorSaid("With scenes, the numbers go to them and the arrows step " +
+                                   "through them.", true));
+      var split = document.createElement("button");
+      split.className = "plus";
+      split.textContent = "split into scenes";
+      split.onclick = addScene;
+      words.appendChild(split);
+    }
+  } else {
+    words.appendChild(sensorSaid("Striped buttons do what Always on sets. Choose one to change " +
+                                 "it in this scene."));
+  }
+  sensorNotes(words);
+  box.appendChild(words);
+}
+
+// The warnings under the sensor's diagram, for what the file gave that the page cannot use as it is
+function sensorNotes(words) {
+  // A trigger going to the scene showing, which waits and does not restart
+  var idle = triggerDoingNothing();
+  if (idle) {
+    var showing = state.scenes[state.at].name;
+    var nothing = sensorSaid(remoteWords(idle) + " does nothing here, as " + showing + " is " +
+                             "already showing and waits. Choose \"Scene: " + showing + ", from " +
+                             "the start\" to begin it again.");
+    nothing.className = "warn";
+    words.appendChild(nothing);
+  }
+  // A button the file gave twice in this tab, whose second line is kept as written
+  if (fittedTriggers().length && state.remoteRepeats.length) {
+    var repeated = sensorSaid((state.remoteRepeats.length === 1 ? "" : "Each of ") +
+      state.remoteRepeats.map(remoteWords).join(", ") + " is given twice in the file here. The " +
+      "page uses the first and keeps the second line as it is.");
+    repeated.className = "warn";
+    words.appendChild(repeated);
+  }
+}
+
+// ---- what the file says ---------------------------------------------------------------------------
+// What is fitted is the board line's sensor=ir or sensor=pir. A remote: line holds buttons as the
+// remote names them, each with what it does: nothing, a step, or scene and the scene's name. Like
+// board: lines, remote: lines add up, and a button given twice in one tab is a repeat. The page
+// writes a line for each button, so a name needs no quotes, and reads several to a line, where a
+// name runs on to the next button or is quoted. Always on's lines are above the first heading and a
+// scene's under its own (proposed, which autofx does not read yet)
+
+var REMOTE_STEPS = ["nothing", "next", "previous", "first", "restart"];
+
+// A button's line, or null where the choice names a scene no longer there
+function remoteLine(button, choice) {
+  var said = choice;
+  var scene = choice === "order" ? sceneInOrder(button)
+            : choice.indexOf("scene:") === 0 ? sceneMarked(choice.slice(6)) : null;
+  if (choice.indexOf("scene:") === 0 && !scene) return null;
+  if (scene) {
+    said = "scene " + scene.name.trim();
+    // A name holding = or a quote is quoted, as it would otherwise read as the next button
+    if (/[="']/.test(scene.name)) said = scene.name.indexOf("\"") < 0 ? "\"" + said + "\"" : "'" + said + "'";
+  }
+  // A PIR Stick's triggers are motion: starts= and stops=
+  var motion = MOTION_TRIGGERS.indexOf(button) >= 0;
+  return (motion ? "motion: " + button.slice(7).toLowerCase() : "remote: " + button.toLowerCase()) +
+         "=" + said;
+}
+
+// A trigger's whole line, with a motion trigger's delay after it where it has one
+function triggerLine(trigger, choice, timing) {
+  var line = remoteLine(trigger, choice);
+  if (!line || !timing || !timing.after) return line;
+  return line + " after=" + timing.after + "s" + (timing.cancel ? "" : " cancel=no");
+}
+
+// A remote: line's buttons and what each does, as [button, words]. A word with no = carries on
+// the words before it, so an unquoted scene name runs on to the next button
+function remotePairs(text) {
+  var pairs = [];
+  boardTokens(text).forEach(function (token) {
+    var equals = token.indexOf("=");
+    if (equals > 0 && !/^["']/.test(token)) {
+      pairs.push([token.slice(0, equals).toUpperCase(), token.slice(equals + 1)]);
+    } else if (pairs.length) {
+      pairs[pairs.length - 1][1] += " " + token;
+    } else {
+      pairs.push([null, token]);
+    }
+  });
+  return pairs.map(function (pair) { return [pair[0], unquoted(pair[1].trim())]; });
+}
+
+// What a line's words choose for its button, or null where the page cannot hold it
+function remoteChoiceRead(button, said) {
+  if (REMOTE_FIXED[button]) return null;
+  if (REMOTE_STEPS.indexOf(said.toLowerCase()) >= 0) {
+    // A number only goes to its own scene or does nothing
+    return isNumber(button) && said.toLowerCase() !== "nothing" ? null : said.toLowerCase();
+  }
+  var named = /^scene\s+(.+)$/i.exec(said);
+  if (!named) return null;
+  var scene = state.scenes.filter(function (one) { return one.name.trim() === named[1].trim(); })[0];
+  if (!scene) return null;
+  if (isNumber(button)) return sceneInOrder(button) === scene ? "order" : null;
+  return "scene:" + sceneMark(scene);
+}
+
+boardLineSteps.after.push(function (line) {
+  if (state.sensorKind === "none") return line;
+  return (line || "board:") + " sensor=" + state.sensorKind;
+});
+
+// Read what is fitted from the board line, the token taken so it is not written twice
+function readSensorBoard() {
+  state.sensorKind = "none";
+  boardResidue = boardResidue.filter(function (token) {
+    var fitted = /^sensor=(ir|pir)$/i.exec(token);
+    if (fitted) state.sensorKind = fitted[1].toLowerCase();
+    return !fitted;
+  });
+}
+
+// Take each body's remote: lines, or motion: lines for a PIR Stick, that the page can hold as its
+// choices. A line is taken whole or not at all: one with a trigger the page cannot hold, or one the
+// tab already gave, stays as written, as does every line for what is not fitted. A repeated
+// trigger is noted for the tab
+function readRemoteLines(bodies) {
+  var entry = pirFitted() ? /^motion:(.*)$/i : /^remote:(.*)$/i;
+  var triggers = fittedTriggers();
+  bodies.forEach(function (body) {
+    body.remote = {};
+    body.remoteRepeats = [];
+    if (!triggers.length) return;
+    var given = [];
+    body.motionTiming = {};
+    body.kept = body.kept.filter(function (one) {
+      var line = entry.exec(one.text || "");
+      if (!line) return true;
+      var choices = {};
+      var timings = {};
+      var held = true;
+      var last = null;
+      remotePairs(line[1]).forEach(function (pair) {
+        // A motion trigger's after= and cancel= are its delay, belonging to the trigger before them
+        if (pirFitted() && (pair[0] === "AFTER" || pair[0] === "CANCEL")) {
+          var timing = timings[last] || JSON.parse(JSON.stringify(MOTION_TIMING_DEFAULT));
+          var seconds = /^(\d+(?:\.\d+)?)s?$/i.exec(pair[1]);
+          var cancel = pair[1].toLowerCase();
+          if (!last || (pair[0] === "AFTER" ? !seconds : cancel !== "yes" && cancel !== "no")) {
+            held = false;
+            return;
+          }
+          if (pair[0] === "AFTER") timing.after = Number(seconds[1]);
+          else timing.cancel = cancel === "yes";
+          timings[last] = timing;
+          return;
+        }
+        var button = pair[0] && pirFitted() ? "MOTION_" + pair[0] : pair[0];
+        last = button;
+        if (button && given.indexOf(button) >= 0) {
+          if (body.remoteRepeats.indexOf(button) < 0) body.remoteRepeats.push(button);
+          held = false;
+        }
+        if (button) given.push(button);
+        var known = button && triggers.indexOf(button) >= 0;
+        var choice = known ? remoteChoiceRead(button, pair[1]) : null;
+        if (choice === null) held = false;
+        else choices[button] = choice;
+      });
+      if (!held) return true;
+      // A line's comments go above the first of the lines it is written back as
+      Object.keys(choices).forEach(function (button, at) {
+        body.remote[button] = choices[button];
+        if (timings[button]) body.motionTiming[button] = timings[button];
+        if (at === 0 && one.comments.length) {
+          body.notes[triggerLine(button, choices[button], timings[button])] = one.comments;
+        }
+      });
+      return false;
+    });
+  });
+}
+
+// A scene keeps its own choices of what buttons do, as it keeps its looks. A scene's card shows
+// the remote's icon where it changes any button, and Always on's where a remote is fitted
+bodyParts.push({
+  capture: function (body) {
+    body.remote = JSON.parse(JSON.stringify(state.remote));
+    body.remoteRepeats = state.remoteRepeats.slice();
+    body.motionTiming = JSON.parse(JSON.stringify(state.motionTiming));
+  },
+  apply: function (body) {
+    state.remoteRepeats = (body.remoteRepeats || []).slice();
+    state.motionTiming = JSON.parse(JSON.stringify(body.motionTiming || {}));
+    state.remote = JSON.parse(JSON.stringify(body.remote || {}));
+    // A number only goes to the scene in its place or does nothing
+    Object.keys(state.remote).forEach(function (button) {
+      if (isNumber(button) && ["order", "nothing"].indexOf(state.remote[button]) < 0) {
+        delete state.remote[button];
+      }
+    });
+  },
+  sets: function (body, always) {
+    if (!fittedTriggers().length) return null;
+    var changed = body.remote && Object.keys(body.remote).length;
+    return always || changed ? [pirFitted() ? "pir" : "remote", "Sensor"] : null;
+  },
+  // A tab's remote: or motion: lines come after its other lines, in the order of the triggers
+  // A trigger with a delay but no choice of its own does what its default does
+  entries: function (body, lines) {
+    if (!body.remote) return lines;
+    var timings = body.motionTiming || {};
+    fittedTriggers().forEach(function (trigger) {
+      var choice = body.remote[trigger];
+      if (choice === undefined && timings[trigger]) choice = remoteDefault(trigger);
+      var line = choice === undefined ? null : triggerLine(trigger, choice, timings[trigger]);
+      if (line) lines.push(line);
+    });
+    return lines;
+  },
+  // Splitting into scenes leaves what the triggers do with Always on, where it holds in every
+  // scene, and the first scene starts with no choices of its own
+  split: function (always, first) {
+    first.remote = {};
+    first.remoteRepeats = [];
+    first.motionTiming = {};
+  },
+  readBoard: readSensorBoard,
+  read: readRemoteLines
+});
+
+// The tab has no swatch, its name and what is fitted under it saying all there is
+tabSwatches.sensorPanel = function (swatch) {
+  swatch.textContent = "";
+  swatch.className = "accswatch sensorswatch";
+};
+
+function sensorUnderName() {
+  var tab = document.querySelector("#ledTabs .ledtab[data-panel=sensorPanel]");
+  if (!tab || tab.querySelector(".tabname")) return;
+  var named = document.createElement("span");
+  named.className = "tabname";
+  named.appendChild(tab.querySelector("b"));
+  var kind = document.createElement("small");
+  kind.className = "tabunder";
+  kind.textContent = sensorFacts()[2];
+  named.appendChild(kind);
+  tab.insertBefore(named, tab.firstChild);
+}
+
+drawSteps.after.push(function () {
+  sensorUnderName();
+  renderSensor();
+});
+
+(function () {
+  var panel = document.createElement("details");
+  panel.className = "panel";
+  panel.id = "sensorPanel";
+  panel.open = true;
+  panel.innerHTML = "<summary>Sensor</summary><div class='facts' id='sensorFacts'></div>" +
+                    "<div id='sensor'></div>";
+  var after = document.getElementById(TAB_PANELS[TAB_PANELS.length - 1]);
+  after.parentNode.insertBefore(panel, after.nextSibling);
+}());
+
+TAB_NAMES.sensorPanel = "Sensor";
+TAB_PANELS.push("sensorPanel");
+keptOpen("sensorPanel");
+
+// ---- the Aye Arr Remote, drawn from its artwork -----------------------------------------------
+// The remote as its artwork draws it, in the artwork's own units, one element a line, for the
+// Sensor tab to lay its buttons' rows beside. Its three bitmaps, the rotate buttons' rainbows and
+// the 0 button's ring, are drawn as arcs in their places, which stay sharp at any size.
+
+// Every button: its name as aye_arr's PimoroniRemote names it, its column, its row in the
+// remote's own layout, and what its face is
+var REMOTE_BUTTONS = [
+  ["ANTICLOCK", 0, 320, "turn"], ["UP", 1, 320, "up"], ["CLOCKWISE", 2, 320, "turn"],
+  ["LEFT", 0, 630, "side"], ["OK_STOP", 1, 630, "stop"], ["RIGHT", 2, 630, "side"],
+  ["RETURN_UNDO", 0, 940, "undo"], ["DOWN", 1, 940, "down"], ["MENU_ACTION", 2, 940, "menu"],
+  ["1_RED", 0, 1248, "#ed1c24"], ["2_GREEN", 1, 1248, "#00a651"], ["3_BLUE", 2, 1248, "#2e3192"],
+  ["4_CYAN", 0, 1557, "#00aeef"], ["5_MAGENTA", 1, 1557, "#ec008c"],
+  ["6_YELLOW", 2, 1557, "#fff200"],
+  ["7_WARM", 0, 1866, "#fbad5d"], ["8_WHITE", 1, 1866, "#ffffff"], ["9_COOL", 2, 1866, "#84c1ff"],
+  ["RECORD", 0, 2176, "record"], ["0_RAINBOW", 1, 2176, "rainbow"],
+  ["PLAY_PAUSE", 2, 2176, "play"]];
+
+// An annulus's slice from one angle to another, in degrees clockwise from the top
+function remoteArc(x, y, inner, outer, from, to) {
+  function at(radius, degrees) {
+    var turn = (degrees - 90) * Math.PI / 180;
+    return (x + radius * Math.cos(turn)).toFixed(2) + " " + (y + radius * Math.sin(turn)).toFixed(2);
+  }
+  var large = to - from > 180 ? 1 : 0;
+  return "<path d='M" + at(outer, from) + " A" + outer + " " + outer + " 0 " + large + " 1 " +
+         at(outer, to) + " L" + at(inner, to) + " A" + inner + " " + inner + " 0 " + large +
+         " 0 " + at(inner, from) + "Z'";
+}
+
+// A run of colours around a ring, each slice overlapping the next by a degree so no seam shows
+function remoteRainbow(x, y, inner, outer, from, to, colours) {
+  var step = (to - from) / colours.length;
+  return colours.map(function (colour, at) {
+    return remoteArc(x, y, inner, outer, from + at * step,
+                     Math.min(to, from + (at + 1) * step + 1)) + " fill='" + colour + "'/>";
+  }).join("");
+}
+
+var REMOTE_ART = [
+  "<defs>",
+  "<linearGradient id='ra-gradient' x1='115.157' y1='86.774' x2='115.157' y2='93.926' gradientUnits='userSpaceOnUse'>",
+  "<stop offset='0' stop-color='#2e3191'/>",
+  "<stop offset='.108' stop-color='#33368c'/>",
+  "<stop offset='.248' stop-color='#444581'/>",
+  "<stop offset='.408' stop-color='#5f5e6e'/>",
+  "<stop offset='.581' stop-color='#858154'/>",
+  "<stop offset='.765' stop-color='#b5ad32'/>",
+  "<stop offset='.955' stop-color='#f0e30a'/>",
+  "<stop offset='1' stop-color='#fff100'/>",
+  "</linearGradient>",
+  "<linearGradient id='ra-gradient-2' x1='99.213' y1='86.774' x2='99.213' y2='93.926' gradientUnits='userSpaceOnUse'>",
+  "<stop offset='0' stop-color='#00a551'/>",
+  "<stop offset='.09' stop-color='#089e53'/>",
+  "<stop offset='.237' stop-color='#218d59'/>",
+  "<stop offset='.423' stop-color='#497163'/>",
+  "<stop offset='.64' stop-color='#804a70'/>",
+  "<stop offset='.881' stop-color='#c51a81'/>",
+  "<stop offset='1' stop-color='#eb008b'/>",
+  "</linearGradient>",
+  "<linearGradient id='ra-gradient-3' x1='83.268' y1='86.774' x2='83.268' y2='93.926' gradientUnits='userSpaceOnUse'>",
+  "<stop offset='0' stop-color='#ec1c24'/>",
+  "<stop offset='.111' stop-color='#d92733'/>",
+  "<stop offset='.336' stop-color='#a9445d'/>",
+  "<stop offset='.654' stop-color='#5b749f'/>",
+  "<stop offset='1' stop-color='#00adee'/>",
+  "</linearGradient>",
+  "<linearGradient id='ra-gradient-4' x1='87.254' y1='111.805' x2='95.226' y2='111.805' gradientUnits='userSpaceOnUse'>",
+  "<stop offset='0' stop-color='#ffac5c'/>",
+  "<stop offset='.166' stop-color='#ffbe7f'/>",
+  "<stop offset='.447' stop-color='#ffd9b6'/>",
+  "<stop offset='.69' stop-color='#fed'/>",
+  "<stop offset='.882' stop-color='#fffaf6'/>",
+  "<stop offset='1' stop-color='#fff'/>",
+  "</linearGradient>",
+  "<linearGradient id='ra-gradient-5' x1='1860.671' y1='111.805' x2='1868.644' y2='111.805' gradientTransform='translate(1971.842) rotate(-180) scale(1 -1)' gradientUnits='userSpaceOnUse'>",
+  "<stop offset='0' stop-color='#84bfff'/>",
+  "<stop offset='1' stop-color='#fff'/>",
+  "</linearGradient>",
+  "</defs>",
+  "<g>",
+  "<path fill='#fff' d='M83.161,144.753c-6.169,0-11.188-5.017-11.188-11.183V32.737c0-4.086,3.326-7.41,7.415-7.41h39.652c4.088,0,7.415,3.324,7.415,7.41v100.833c0,6.166-5.019,11.183-11.188,11.183h-32.104Z'/>",
+  "<path fill='#bbbdbf' d='M119.038,26.036c3.688,0,6.706,3.016,6.706,6.702v100.833c0,5.76-4.716,10.473-10.48,10.473h-32.104c-5.764,0-10.48-4.713-10.48-10.473V32.737c0-3.686,3.018-6.702,6.706-6.702h39.652M119.038,24.618h-39.652c-4.479,0-8.124,3.642-8.124,8.119v100.833c0,6.556,5.337,11.89,11.898,11.89h32.104c6.56,0,11.898-5.334,11.898-11.89V32.737c0-4.477-3.644-8.119-8.124-8.119h0Z'/>",
+  "</g>",
+  "<circle fill='#652d90' opacity='.3' cx='83.268' cy='68.895' r='6.378'/>",
+  "<path fill='#d0d2d3' d='M75.295,78.881v37.242c0,1.566,1.269,2.835,2.835,2.835h10.276c1.566,0,2.835,1.269,2.835,2.835v8.602c0,1.566,1.269,2.835,2.835,2.835h10.276c1.566,0,2.835-1.269,2.835-2.835v-8.602c0-1.566,1.269-2.835,2.835-2.835h10.276c1.566,0,2.835-1.269,2.835-2.835v-37.242c0-1.566-1.269-2.835-2.835-2.835h-42.165c-1.566,0-2.835,1.269-2.835,2.835Z'/>",
+  "<path fill='#fff' d='M99.213,105.428c-3.517,0-6.378,2.861-6.378,6.378s2.861,6.378,6.378,6.378,6.378-2.861,6.378-6.378-2.861-6.378-6.378-6.378Z'/>",
+  "<path fill='#ffac5c' d='M83.268,105.428c-3.517,0-6.378,2.861-6.378,6.378s2.861,6.378,6.378,6.378,6.378-2.861,6.378-6.378-2.861-6.378-6.378-6.378Z'/>",
+  "<path fill='#bbbdbf' d='M115.157,48.213h-6.732c-1.566,0-2.835-1.269-2.835-2.835v-5.091h-12.756v5.091c0,1.566-1.269,2.835-2.835,2.835h-6.732v12.756h6.732c1.566,0,2.835,1.269,2.835,2.835v5.091h12.756v-5.091c0-1.566,1.269-2.835,2.835-2.835h6.732v-12.756Z'/>",
+  "<circle fill='#e6e7e8' cx='99.213' cy='40.287' r='6.378'/>",
+  "<circle fill='#e6e7e8' cx='83.268' cy='54.591' r='6.378'/>",
+  "<circle fill='#e6e7e8' cx='115.157' cy='54.591' r='6.378'/>",
+  "<circle fill='#e6e7e8' cx='99.213' cy='68.895' r='6.378'/>",
+  "<g>",
+  "<path fill='#bbbdbf' d='M106.299,40.287h0v5.091c0,1.172.954,2.126,2.126,2.126h6.732c2.533,0,4.753,1.34,6.006,3.344-1.691-8.565-9.071-15.285-18.381-16.672,2.1,1.231,3.516,3.506,3.516,6.111Z'/>",
+  "<path fill='#bbbdbf' d='M83.268,47.504h6.732c1.172,0,2.126-.954,2.126-2.126v-5.091h0c0-2.605,1.417-4.88,3.516-6.111-9.311,1.387-16.69,8.108-18.381,16.672,1.253-2.004,3.474-3.344,6.006-3.344Z'/>",
+  "</g>",
+  "<path d='M99.213,60.969c-3.517,0-6.378-2.861-6.378-6.378s2.861-6.378,6.378-6.378,6.378,2.861,6.378,6.378-2.861,6.378-6.378,6.378Z'/>",
+  "<circle fill='#00a551' opacity='.3' cx='115.157' cy='126.109' r='6.378'/>",
+  "<path fill='#00a551' d='M99.213,89.576c-3.517,0-6.378-2.861-6.378-6.378s2.861-6.378,6.378-6.378,6.378,2.861,6.378,6.378-2.861,6.378-6.378,6.378Z'/>",
+  "<path fill='#fff' d='M99.213,49.63c-2.735,0-4.961,2.225-4.961,4.96s2.225,4.961,4.961,4.961,4.96-2.225,4.96-4.961-2.225-4.96-4.96-4.96Z'/>",
+  "<path fill='#eb008b' d='M99.213,103.88c-3.517,0-6.378-2.861-6.378-6.378s2.861-6.378,6.378-6.378,6.378,2.861,6.378,6.378-2.861,6.378-6.378,6.378Z'/>",
+  "<path fill='#2e3191' d='M115.157,89.576c-3.517,0-6.378-2.861-6.378-6.378s2.861-6.378,6.378-6.378,6.378,2.861,6.378,6.378-2.861,6.378-6.378,6.378Z'/>",
+  "<path fill='#fff100' d='M115.157,103.88c-3.517,0-6.378-2.861-6.378-6.378s2.861-6.378,6.378-6.378,6.378,2.861,6.378,6.378-2.861,6.378-6.378,6.378Z'/>",
+  "<circle fill='#84bfff' cx='115.157' cy='111.806' r='6.378'/>",
+  "<circle fill='#ec1c24' opacity='.3' cx='83.268' cy='126.109' r='6.378'/>",
+  "<circle fill='#f6921e' opacity='.3' cx='115.157' cy='68.895' r='6.378'/>",
+  "<path fill='#ec1c24' d='M83.268,89.576c-3.517,0-6.378-2.861-6.378-6.378s2.861-6.378,6.378-6.378,6.378,2.861,6.378,6.378-2.861,6.378-6.378,6.378Z'/>",
+  "<path fill='#00adee' d='M83.268,103.88c-3.517,0-6.378-2.861-6.378-6.378s2.861-6.378,6.378-6.378,6.378,2.861,6.378,6.378-2.861,6.378-6.378,6.378Z'/>",
+  "<path fill='#fff' d='M99.213,121.149c-2.735,0-4.961,2.225-4.961,4.961s2.225,4.96,4.961,4.96,4.96-2.225,4.96-4.96-2.225-4.961-4.96-4.961Z'/>",
+  "<path fill='url(#ra-gradient)' d='M120.438,86.774h-10.561c.692,1.02,1.097,2.251,1.097,3.576s-.405,2.556-1.097,3.576h10.561c-.692-1.02-1.097-2.251-1.097-3.576s.405-2.556,1.097-3.576Z'/>",
+  "<path fill='url(#ra-gradient-2)' d='M104.493,86.774h-10.561c.692,1.02,1.097,2.251,1.097,3.576s-.405,2.556-1.097,3.576h10.561c-.692-1.02-1.097-2.251-1.097-3.576s.405-2.556,1.097-3.576Z'/>",
+  "<path fill='url(#ra-gradient-3)' d='M88.548,86.774h-10.561c.692,1.02,1.097,2.251,1.097,3.576s-.405,2.556-1.097,3.576h10.561c-.692-1.02-1.097-2.251-1.097-3.576s.405-2.556,1.097-3.576Z'/>",
+  "<circle fill='#be1e2d' cx='83.27' cy='126.112' r='2.48'/>",
+  "<path fill='#006838' d='M111.614,128.66c-.116,0-.232-.029-.338-.086-.229-.124-.371-.363-.371-.623v-3.685c0-.26.142-.499.371-.623.228-.124.506-.113.724.029l2.834,1.843c.201.131.323.354.323.594s-.121.463-.323.594l-2.834,1.843c-.117.076-.251.115-.386.115Z'/>",
+  "<path fill='#006838' d='M116.575,128.66c-.391,0-.709-.317-.709-.709v-3.685c0-.391.317-.709.709-.709s.709.317.709.709v3.685c0,.391-.317.709-.709.709Z'/>",
+  "<path fill='#006838' d='M118.701,128.66c-.391,0-.709-.317-.709-.709v-3.685c0-.391.317-.709.709-.709s.709.317.709.709v3.685c0,.391-.317.709-.709.709Z'/>",
+  "<path fill='#652d90' d='M84.685,66.485h-2.126v-.709c0-.287-.173-.545-.438-.655-.265-.11-.57-.049-.772.154l-1.417,1.417c-.277.277-.277.725,0,1.002l1.417,1.417c.136.135.317.208.501.208.091,0,.183-.018.271-.054.265-.11.438-.368.438-.655v-.708h2.126c.781,0,1.417.636,1.417,1.417s-.636,1.417-1.417,1.417h-2.835c-.391,0-.709.317-.709.709s.317.709.709.709h2.835c1.563,0,2.835-1.272,2.835-2.835s-1.272-2.835-2.835-2.835Z'/>",
+  "<g>",
+  "<circle fill='#f6921e' cx='115.157' cy='66.769' r='.992'/>",
+  "<circle fill='#f6921e' cx='116.999' cy='69.958' r='.992'/>",
+  "<circle fill='#f6921e' cx='113.316' cy='69.958' r='.992'/>",
+  "</g>",
+  "<rect x='96.803' y='52.181' width='4.819' height='4.819' rx='.992' ry='.992'/>",
+  "<path d='M96.568,126.136v-.017c0-1.727,1.072-3.08,2.654-3.08,1.574,0,2.637,1.336,2.637,3.062v.017c0,1.727-1.063,3.079-2.654,3.079s-2.637-1.335-2.637-3.062ZM100.515,126.136v-.017c0-1.08-.527-1.897-1.31-1.897s-1.293.791-1.293,1.88v.017c0,1.089.519,1.897,1.31,1.897s1.293-.8,1.293-1.88Z'/>",
+  "<path fill='#fff' d='M83.268,92.541c-2.735,0-4.961,2.225-4.961,4.961s2.225,4.96,4.961,4.96,4.96-2.225,4.96-4.96-2.225-4.961-4.96-4.961Z'/>",
+  "<path d='M83.667,99.205h-2.45c-.349,0-.638-.255-.638-.604,0-.272.11-.485.306-.715l2.586-3.003c.247-.289.434-.442.817-.442.349,0,.63.272.63.621v3.079h.315c.298,0,.536.238.536.536s-.238.528-.536.528h-.315v.714c0,.349-.281.621-.63.621s-.621-.272-.621-.621v-.714ZM83.667,98.142v-1.854l-1.582,1.854h1.582Z'/>",
+  "<g>",
+  "<path d='M79.236,137.944c0-.149.12-.269.269-.269s.269.12.269.269v.025c.131-.177.312-.308.591-.308.442,0,.864.347.864.98v.007c0,.634-.414.98-.864.98-.287,0-.464-.131-.591-.283v.566c0,.149-.12.269-.269.269s-.269-.12-.269-.269v-1.968ZM80.691,138.649v-.007c0-.315-.212-.524-.464-.524s-.46.209-.46.524v.007c0,.315.209.524.46.524s.464-.206.464-.524Z'/>",
+  "<path d='M81.532,137.244c0-.156.131-.251.301-.251s.301.095.301.251v.007c0,.156-.131.255-.301.255s-.301-.099-.301-.255v-.007ZM81.564,137.944c0-.149.12-.269.269-.269s.269.12.269.269v1.402c0,.149-.121.269-.269.269s-.269-.12-.269-.269v-1.402Z'/>",
+  "<path d='M82.52,137.944c0-.149.12-.269.269-.269s.269.12.269.269v.021c.124-.159.287-.304.559-.304.248,0,.435.11.534.301.167-.195.365-.301.623-.301.4,0,.641.241.641.697v.988c0,.149-.12.269-.269.269s-.269-.12-.269-.269v-.811c0-.255-.113-.386-.315-.386s-.326.131-.326.386v.811c0,.149-.12.269-.269.269s-.269-.12-.269-.269v-.811c0-.255-.113-.386-.315-.386s-.326.131-.326.386v.811c0,.149-.12.269-.269.269s-.269-.12-.269-.269v-1.402Z'/>",
+  "<path d='M85.706,138.656v-.007c0-.545.439-.988,1.03-.988.588,0,1.023.436,1.023.98v.007c0,.545-.439.988-1.03.988-.588,0-1.023-.435-1.023-.981ZM87.228,138.656v-.007c0-.28-.202-.524-.499-.524-.308,0-.492.237-.492.517v.007c0,.28.202.524.499.524.308,0,.492-.237.492-.517Z'/>",
+  "<path d='M88.062,137.944c0-.149.12-.269.269-.269s.269.12.269.269v.085c.078-.184.205-.354.365-.354.166,0,.262.11.262.262,0,.142-.092.227-.202.251-.272.064-.425.273-.425.655v.503c0,.149-.12.269-.269.269s-.269-.12-.269-.269v-1.402Z'/>",
+  "<path d='M89.309,138.656v-.007c0-.545.439-.988,1.03-.988.588,0,1.023.436,1.023.98v.007c0,.545-.439.988-1.03.988-.588,0-1.023-.435-1.023-.981ZM90.831,138.656v-.007c0-.28-.202-.524-.499-.524-.308,0-.492.237-.492.517v.007c0,.28.202.524.499.524.308,0,.492-.237.492-.517Z'/>",
+  "<path d='M91.665,137.944c0-.149.12-.269.269-.269s.269.12.269.269v.021c.124-.159.283-.304.556-.304.407,0,.645.269.645.705v.98c0,.149-.121.269-.269.269s-.269-.12-.269-.269v-.811c0-.255-.121-.386-.326-.386s-.336.131-.336.386v.811c0,.149-.12.269-.269.269s-.269-.12-.269-.269v-1.402Z'/>",
+  "<path d='M93.777,137.244c0-.156.131-.251.301-.251s.301.095.301.251v.007c0,.156-.131.255-.301.255s-.301-.099-.301-.255v-.007ZM93.809,137.944c0-.149.121-.269.269-.269s.269.12.269.269v1.402c0,.149-.12.269-.269.269s-.269-.12-.269-.269v-1.402Z'/>",
+  "<path d='M95.031,139.006c.177,0,.308.131.308.301v.007c0,.17-.131.301-.308.301s-.308-.131-.308-.301v-.007c0-.17.131-.301.308-.301Z'/>",
+  "<path d='M95.528,138.656v-.007c0-.542.414-.988.995-.988.287,0,.489.078.648.212.035.028.085.092.085.184,0,.135-.11.241-.244.241-.071,0-.124-.028-.156-.053-.096-.074-.195-.12-.336-.12-.269,0-.46.237-.46.517v.007c0,.29.188.524.481.524.142,0,.251-.05.354-.131.028-.021.081-.05.145-.05.127,0,.227.103.227.23,0,.071-.032.127-.078.17-.159.145-.361.244-.672.244-.57,0-.988-.439-.988-.981Z'/>",
+  "<path d='M97.409,138.656v-.007c0-.545.439-.988,1.03-.988.587,0,1.023.436,1.023.98v.007c0,.545-.439.988-1.03.988-.587,0-1.023-.435-1.023-.981ZM98.931,138.656v-.007c0-.28-.202-.524-.499-.524-.308,0-.492.237-.492.517v.007c0,.28.202.524.499.524.308,0,.492-.237.492-.517Z'/>",
+  "<path d='M99.765,137.944c0-.149.12-.269.269-.269s.269.12.269.269v.021c.124-.159.287-.304.559-.304.248,0,.436.11.535.301.166-.195.365-.301.623-.301.4,0,.641.241.641.697v.988c0,.149-.12.269-.269.269s-.269-.12-.269-.269v-.811c0-.255-.113-.386-.315-.386s-.326.131-.326.386v.811c0,.149-.121.269-.269.269s-.269-.12-.269-.269v-.811c0-.255-.113-.386-.315-.386s-.326.131-.326.386v.811c0,.149-.12.269-.269.269s-.269-.12-.269-.269v-1.402Z'/>",
+  "<path d='M102.837,139.764l1.384-2.892c.039-.081.103-.124.188-.124.113,0,.209.095.209.202,0,.039-.014.078-.025.103l-1.384,2.892c-.039.082-.103.124-.188.124-.113,0-.209-.096-.209-.202,0-.039.014-.078.025-.103Z'/>",
+  "<path d='M104.825,137.244c0-.156.131-.251.301-.251s.301.095.301.251v.007c0,.156-.131.255-.301.255s-.301-.099-.301-.255v-.007ZM104.857,137.944c0-.149.121-.269.269-.269s.269.12.269.269v1.402c0,.149-.12.269-.269.269s-.269-.12-.269-.269v-1.402Z'/>",
+  "<path d='M105.813,137.944c0-.149.12-.269.269-.269s.269.12.269.269v.085c.078-.184.205-.354.365-.354.167,0,.262.11.262.262,0,.142-.092.227-.202.251-.273.064-.425.273-.425.655v.503c0,.149-.12.269-.269.269s-.269-.12-.269-.269v-1.402Z'/>",
+  "<path d='M107.206,137.944c0-.149.12-.269.269-.269s.269.12.269.269v.085c.078-.184.205-.354.365-.354.167,0,.262.11.262.262,0,.142-.092.227-.202.251-.273.064-.425.273-.425.655v.503c0,.149-.12.269-.269.269s-.269-.12-.269-.269v-1.402Z'/>",
+  "<path d='M109.445,139.637c-.57,0-.991-.4-.991-.981v-.007c0-.542.386-.988.938-.988.634,0,.914.521.914.913,0,.156-.11.259-.251.259h-1.065c.053.244.223.372.464.372.149,0,.273-.046.382-.127.039-.028.074-.042.131-.042.12,0,.209.092.209.212,0,.071-.032.124-.071.159-.166.142-.382.23-.658.23ZM109.792,138.497c-.032-.241-.174-.404-.4-.404-.223,0-.368.159-.411.404h.811Z'/>",
+  "<path d='M110.629,137.944c0-.149.12-.269.269-.269s.269.12.269.269v.021c.124-.159.287-.304.559-.304.248,0,.436.11.535.301.166-.195.365-.301.623-.301.4,0,.641.241.641.697v.988c0,.149-.12.269-.269.269s-.269-.12-.269-.269v-.811c0-.255-.113-.386-.315-.386s-.326.131-.326.386v.811c0,.149-.121.269-.269.269s-.269-.12-.269-.269v-.811c0-.255-.113-.386-.315-.386s-.326.131-.326.386v.811c0,.149-.12.269-.269.269s-.269-.12-.269-.269v-1.402Z'/>",
+  "<path d='M113.814,138.656v-.007c0-.545.439-.988,1.03-.988.587,0,1.023.436,1.023.98v.007c0,.545-.439.988-1.03.988-.587,0-1.023-.435-1.023-.981ZM115.336,138.656v-.007c0-.28-.202-.524-.499-.524-.308,0-.492.237-.492.517v.007c0,.28.202.524.499.524.308,0,.492-.237.492-.517Z'/>",
+  "<path d='M116.259,139.056v-.899h-.018c-.127,0-.23-.103-.23-.23s.103-.23.23-.23h.018v-.237c0-.149.12-.269.269-.269s.269.12.269.269v.237h.237c.127,0,.23.103.23.23s-.103.23-.23.23h-.237v.811c0,.124.053.184.173.184.018,0,.053-.003.064-.003.12,0,.223.099.223.223,0,.095-.063.173-.138.202-.099.039-.191.053-.308.053-.329,0-.552-.131-.552-.57Z'/>",
+  "<path d='M118.398,139.637c-.57,0-.991-.4-.991-.981v-.007c0-.542.386-.988.938-.988.634,0,.913.521.913.913,0,.156-.11.259-.251.259h-1.066c.053.244.223.372.464.372.149,0,.272-.046.382-.127.039-.028.074-.042.131-.042.121,0,.209.092.209.212,0,.071-.032.124-.071.159-.167.142-.382.23-.658.23ZM118.745,138.497c-.032-.241-.173-.404-.4-.404-.223,0-.368.159-.411.404h.811Z'/>",
+  "</g>",
+  "<g>",
+  "<path d='M83.543,30.96l.864-1.951c.06-.135.17-.216.318-.216h.032c.149,0,.255.081.315.216l.864,1.951c.018.039.028.074.028.11,0,.145-.113.262-.259.262-.127,0-.212-.074-.262-.188l-.167-.39h-1.09l-.173.407c-.046.106-.138.17-.251.17-.142,0-.251-.113-.251-.255,0-.039.014-.078.032-.117ZM85.075,30.273l-.343-.818-.344.818h.687Z'/>",
+  "<path d='M86.688,30.355l-.8-1.087c-.039-.053-.067-.117-.067-.195,0-.145.12-.262.272-.262.124,0,.202.067.269.167l.602.867.612-.875c.067-.099.149-.163.262-.163.166,0,.265.117.265.265,0,.074-.035.142-.071.191l-.8,1.08v.715c0,.152-.121.272-.273.272s-.273-.12-.273-.272v-.705Z'/>",
+  "<path d='M88.39,31.038v-1.933c0-.152.12-.273.273-.273h1.374c.134,0,.244.11.244.244s-.11.241-.244.241h-1.104v.502h.945c.135,0,.244.11.244.244s-.11.241-.244.241h-.945v.52h1.122c.135,0,.244.11.244.244s-.11.241-.244.241h-1.391c-.152,0-.273-.12-.273-.273Z'/>",
+  "<path d='M91.511,30.96l.864-1.951c.06-.135.17-.216.318-.216h.032c.149,0,.255.081.315.216l.864,1.951c.018.039.028.074.028.11,0,.145-.113.262-.259.262-.127,0-.212-.074-.262-.188l-.167-.39h-1.09l-.173.407c-.046.106-.138.17-.251.17-.142,0-.251-.113-.251-.255,0-.039.014-.078.032-.117ZM93.044,30.273l-.343-.818-.344.818h.687Z'/>",
+  "<path d='M94.275,29.105c0-.152.12-.273.273-.273h.86c.315,0,.559.089.722.251.138.138.212.333.212.566v.007c0,.389-.195.63-.496.754l.379.46c.053.067.089.124.089.209,0,.152-.127.251-.259.251-.124,0-.205-.06-.269-.142l-.531-.673h-.436v.542c0,.152-.12.272-.272.272s-.273-.12-.273-.272v-1.954ZM95.372,30.036c.266,0,.418-.142.418-.35v-.007c0-.233-.163-.354-.428-.354h-.542v.712h.552Z'/>",
+  "<path d='M96.748,29.105c0-.152.12-.273.272-.273h.86c.315,0,.559.089.722.251.138.138.212.333.212.566v.007c0,.389-.195.63-.496.754l.379.46c.053.067.088.124.088.209,0,.152-.127.251-.258.251-.124,0-.206-.06-.269-.142l-.531-.673h-.435v.542c0,.152-.12.272-.273.272s-.272-.12-.272-.272v-1.954ZM97.846,30.036c.265,0,.418-.142.418-.35v-.007c0-.233-.163-.354-.428-.354h-.542v.712h.552Z'/>",
+  "<path d='M100.196,29.105c0-.152.12-.273.273-.273h.86c.315,0,.559.089.722.251.138.138.212.333.212.566v.007c0,.389-.195.63-.496.754l.379.46c.053.067.089.124.089.209,0,.152-.127.251-.259.251-.124,0-.205-.06-.269-.142l-.531-.673h-.436v.542c0,.152-.12.272-.272.272s-.273-.12-.273-.272v-1.954ZM101.293,30.036c.266,0,.418-.142.418-.35v-.007c0-.233-.163-.354-.428-.354h-.542v.712h.552Z'/>",
+  "<path d='M102.669,31.038v-1.933c0-.152.12-.273.273-.273h1.374c.134,0,.244.11.244.244s-.11.241-.244.241h-1.104v.502h.945c.135,0,.244.11.244.244s-.11.241-.244.241h-.945v.52h1.122c.135,0,.244.11.244.244s-.11.241-.244.241h-1.391c-.152,0-.273-.12-.273-.273Z'/>",
+  "<path d='M104.954,29.091c0-.152.12-.273.272-.273h.06c.117,0,.198.06.248.142l.658,1.073.662-1.076c.057-.092.135-.138.244-.138h.06c.152,0,.272.12.272.273v1.968c0,.152-.12.272-.272.272-.149,0-.269-.124-.269-.272v-1.236l-.478.736c-.057.085-.127.138-.227.138s-.17-.053-.227-.138l-.471-.726v1.232c0,.149-.121.266-.269.266s-.266-.117-.266-.266v-1.975Z'/>",
+  "<path d='M107.832,30.079v-.007c0-.705.556-1.281,1.32-1.281s1.313.57,1.313,1.274v.007c0,.705-.556,1.281-1.321,1.281s-1.313-.57-1.313-1.274ZM109.896,30.079v-.007c0-.425-.312-.779-.75-.779s-.743.347-.743.772v.007c0,.425.312.779.75.779s.743-.347.743-.772Z'/>",
+  "<path d='M111.335,29.335h-.524c-.138,0-.251-.113-.251-.251s.113-.251.251-.251h1.593c.138,0,.251.113.251.251s-.113.251-.251.251h-.524v1.724c0,.152-.121.272-.273.272s-.273-.12-.273-.272v-1.724Z'/>",
+  "<path d='M112.966,31.038v-1.933c0-.152.12-.273.272-.273h1.374c.135,0,.244.11.244.244s-.11.241-.244.241h-1.104v.502h.945c.135,0,.244.11.244.244s-.11.241-.244.241h-.945v.52h1.122c.135,0,.244.11.244.244s-.11.241-.244.241h-1.391c-.152,0-.272-.12-.272-.273Z'/>",
+  "</g>",
+  "<g>",
+  "<path d='M118.661,53.858l-2.835-2.587c-.29-.265-.709-.333-1.069-.175s-.592.515-.592.908v5.174c0,.393.232.749.592.908.129.057.265.084.4.084.243,0,.483-.089.669-.259l2.835-2.587c.206-.188.323-.454.323-.733s-.117-.545-.323-.733Z'/>",
+  "<path fill='#58595b' d='M112.04,54.591c0,1.172.954,2.126,2.126,2.126v-4.252c-1.172,0-2.126.954-2.126,2.126Z'/>",
+  "<path fill='#bbbdbf' d='M116.291,54.591c0-1.172-.954-2.126-2.126-2.126v4.252c1.172,0,2.126-.954,2.126-2.126Z'/>",
+  "</g>",
+  "<g>",
+  "<path d='M103.244,68.536c-.148-.382-.516-.634-.925-.634h-6.212c-.409,0-.777.252-.925.634s-.046.815.256,1.092l3.106,2.835c.189.173.429.259.669.259s.479-.086.669-.259l3.106-2.835c.302-.276.404-.71.256-1.092Z'/>",
+  "<path fill='#58595b' d='M99.213,67.194c.391,0,.709.318.709.709h1.382c0-.293-.238-.531-.531-.531h-.247c-.003-.007-.004-.015-.007-.022l.173-.173c.208-.208.208-.544,0-.751-.208-.208-.544-.208-.751,0l-.173.173c-.007-.003-.015-.004-.022-.007v-.247c0-.293-.238-.531-.531-.531s-.531.238-.531.531v.247c-.007.003-.015.004-.022.007l-.173-.173c-.208-.208-.544-.208-.751,0-.208.208-.208.544,0,.751l.174.174c-.003.007-.004.015-.007.021h-.247c-.293,0-.531.238-.531.531h1.382c0-.391.318-.709.709-.709Z'/>",
+  "<path fill='#bbbdbf' d='M97.654,68.434h.247c.003.007.004.015.007.022l-.174.174c-.208.208-.208.544,0,.751.104.104.24.156.376.156s.272-.052.376-.156l.174-.174c.007.003.015.004.022.007v.247c0,.293.238.531.531.531s.531-.238.531-.531v-.247c.007-.003.015-.004.021-.007l.174.174c.104.104.24.156.376.156s.272-.052.376-.156c.208-.208.208-.544,0-.751l-.173-.173c.003-.007.004-.015.007-.022h.247c.293,0,.531-.238.531-.531h-1.382c0,.391-.318.709-.709.709s-.709-.318-.709-.709h-1.382c0,.293.238.531.531.531Z'/>",
+  "</g>",
+  "<g>",
+  "<path d='M83.668,51.096c-.36-.159-.779-.09-1.069.175l-2.835,2.587c-.206.188-.323.454-.323.733s.117.545.323.733l2.835,2.587c.186.17.426.259.669.259.135,0,.271-.028.4-.084.36-.159.592-.515.592-.908v-5.174c0-.393-.232-.749-.592-.908Z'/>",
+  "<path fill='#58595b' d='M86.386,54.591c0-1.172-.954-2.126-2.126-2.126v.708c.781,0,1.417.636,1.417,1.417s-.636,1.417-1.417,1.417v.708c1.172,0,2.126-.954,2.126-2.126Z'/>",
+  "<path fill='#bbbdbf' d='M84.26,56.008c-.781,0-1.417-.636-1.417-1.417s.636-1.417,1.417-1.417c0,0,0,0,0,0v-.708s0,0,0,0c-1.172,0-2.126.954-2.126,2.126s.954,2.126,2.126,2.126c0,0,0,0,0,0v-.708s0,0,0,0Z'/>",
+  "</g>",
+  "<g>",
+  "<path d='M102.991,39.55l-3.106-2.835c-.381-.348-.964-.348-1.345,0l-3.106,2.835c-.304.278-.406.714-.258,1.098.149.384.519.637.93.637h6.212c.412,0,.781-.253.93-.637.149-.384.046-.82-.258-1.098Z'/>",
+  "<path fill='#58595b' d='M99.213,42.343c-.584,0-1.06-.474-1.063-1.057h-1.877c.003.291.239.526.53.526h.728c.031.098.07.192.116.282l-.515.515c-.208.208-.208.544,0,.751.104.104.24.156.376.156s.272-.052.376-.156l.515-.515c.09.047.184.085.282.117v.728c0,.293.238.531.531.531s.531-.238.531-.531v-.728c.098-.031.192-.07.282-.116l.515.515c.104.104.24.156.376.156s.272-.052.376-.156c.208-.208.208-.544,0-.751l-.515-.515c.047-.09.085-.184.116-.282h.728c.291,0,.527-.235.53-.526h-1.877c-.003.584-.478,1.057-1.062,1.057Z'/>",
+  "<path fill='#bbbdbf' d='M101.622,40.748h-.728c-.031-.098-.07-.192-.117-.282l.515-.515c.208-.208.208-.544,0-.751-.208-.208-.544-.208-.751,0l-.515.515c-.09-.047-.184-.085-.282-.116v-.728c0-.293-.238-.531-.531-.531s-.531.238-.531.531v.728c-.098.031-.192.07-.282.117l-.515-.515c-.208-.208-.544-.208-.751,0-.208.208-.208.544,0,.751l.515.515c-.047.09-.085.184-.117.282h-.728c-.293,0-.531.238-.531.531,0,.002.001.004.001.006h1.877s0-.004,0-.006c0-.586.477-1.063,1.063-1.063s1.063.477,1.063,1.063c0,.002,0,.004,0,.006h1.877s.001-.004.001-.006c0-.293-.238-.531-.531-.531Z'/>",
+  "</g>",
+  "<path fill='#e6e7e8' d='M120.07,39.591c-.299-2.19-2.093-3.956-4.286-4.225-1.383-.17-2.67.232-3.659.999-.595.462-1.41.489-2.079.144l-.013-.007c-.887,1.198-1.371,2.711-1.229,4.347.254,2.932,2.562,5.368,5.479,5.758,1.843.246,3.554-.3,4.854-1.34-.002-.004-.005-.008-.007-.013-.367-.671-.357-1.492.084-2.117.692-.98,1.038-2.22.857-3.547Z'/>",
+  "<path fill='url(#ra-gradient-4)' d='M91.24,115.386c1.509,0,2.894.527,3.986,1.404v-9.967c-1.092.876-2.477,1.404-3.986,1.404s-2.894-.527-3.986-1.404v9.967c1.092-.876,2.477-1.404,3.986-1.404Z'/>",
+  "<path fill='url(#ra-gradient-5)' d='M107.185,108.225c1.509,0,2.894-.527,3.986-1.404v9.967c-1.092-.876-2.477-1.404-3.986-1.404s-2.894.527-3.986,1.404v-9.967c1.092.876,2.477,1.404,3.986,1.404Z'/>",
+  "<path fill='#fff' d='M115.158,106.845c-2.735,0-4.961,2.225-4.961,4.961s2.225,4.96,4.961,4.96,4.96-2.225,4.96-4.96-2.225-4.961-4.96-4.961Z'/>",
+  "<path d='M113.423,114.47c-.179-.111-.306-.298-.306-.536,0-.34.281-.595.621-.595.128,0,.238.042.34.102.306.179.578.264.953.264.732,0,1.123-.553,1.208-1.353-.289.247-.689.408-1.208.408-1.293,0-2.127-.715-2.127-1.922v-.017c0-1.199.927-2.084,2.271-2.084.8,0,1.267.196,1.718.646.425.426.706,1.072.706,2.246v.017c0,1.931-.91,3.25-2.603,3.25-.664,0-1.131-.153-1.574-.425ZM116.264,110.787v-.017c0-.527-.391-.91-1.046-.91-.646,0-1.012.374-1.012.902v.017c0,.527.391.893,1.038.893s1.021-.374,1.021-.885Z'/>",
+  "<path fill='#fff' d='M83.268,106.845c-2.735,0-4.961,2.225-4.961,4.961s2.225,4.96,4.961,4.96,4.96-2.225,4.96-4.96-2.225-4.961-4.96-4.961Z'/>",
+  "<path d='M81.745,113.849l2.212-3.879h-2.28c-.315,0-.57-.247-.57-.562s.255-.57.57-.57h3.232c.366,0,.596.213.596.587,0,.196-.077.434-.187.638l-2.39,4.338c-.17.315-.374.442-.63.442-.349,0-.672-.213-.672-.587,0-.111.051-.289.119-.408Z'/>",
+  "<path fill='#fff' d='M83.268,78.238c-2.735,0-4.961,2.225-4.961,4.961s2.225,4.96,4.961,4.96,4.96-2.225,4.96-4.96-2.225-4.961-4.96-4.961Z'/>",
+  "<path d='M82.931,81.473l-.459.119c-.068.017-.162.034-.23.034-.306,0-.57-.255-.57-.562,0-.264.17-.485.434-.562l.842-.247c.247-.068.434-.111.613-.111h.017c.357,0,.646.289.646.646v4.798c0,.357-.289.646-.646.646s-.646-.289-.646-.646v-4.117Z'/>",
+  "<path fill='#fff' d='M115.158,92.541c-2.735,0-4.961,2.225-4.961,4.961s2.225,4.96,4.961,4.96,4.96-2.225,4.96-4.96-2.225-4.961-4.96-4.961Z'/>",
+  "<path fill='#fff' d='M115.158,78.238c-2.735,0-4.961,2.225-4.961,4.961s2.225,4.96,4.961,4.96,4.96-2.225,4.96-4.96-2.225-4.961-4.96-4.961Z'/>",
+  "<path fill='#fff' d='M99.213,78.238c-2.735,0-4.961,2.225-4.961,4.961s2.225,4.96,4.961,4.96,4.96-2.225,4.96-4.96-2.225-4.961-4.96-4.961Z'/>",
+  "<path fill='#fff' d='M99.213,92.541c-2.735,0-4.961,2.225-4.961,4.961s2.225,4.96,4.961,4.96,4.96-2.225,4.96-4.96-2.225-4.961-4.96-4.961Z'/>",
+  "<path d='M113.189,85.608c-.119-.102-.221-.281-.221-.468,0-.34.289-.629.629-.629.187,0,.315.076.417.162.34.289.698.442,1.165.442.493,0,.842-.281.842-.723v-.017c0-.485-.434-.757-1.166-.757h-.204c-.306,0-.562-.255-.562-.562,0-.178.077-.332.281-.536l1.157-1.165h-1.829c-.306,0-.561-.255-.561-.562s.255-.562.561-.562h2.901c.383,0,.664.221.664.579,0,.323-.153.502-.391.731l-1.166,1.115c.808.136,1.599.562,1.599,1.667v.017c0,1.123-.817,1.948-2.144,1.948-.851,0-1.489-.264-1.973-.68Z'/>",
+  "<path d='M97.27,84.91l1.693-1.386c.74-.604,1.029-.936,1.029-1.429,0-.502-.332-.774-.8-.774-.374,0-.638.162-.97.519-.085.094-.238.187-.442.187-.332,0-.595-.264-.595-.595,0-.145.06-.298.153-.408.477-.553,1.038-.876,1.939-.876,1.234,0,2.05.723,2.05,1.837v.017c0,.995-.51,1.489-1.565,2.305l-.97.749h2.076c.315,0,.57.255.57.57s-.255.562-.57.562h-3.232c-.408,0-.706-.23-.706-.621,0-.255.119-.476.34-.655Z'/>",
+  "<path d='M97.299,100.03c-.153-.111-.264-.281-.264-.502,0-.34.281-.63.621-.63.153,0,.255.042.357.119.366.264.715.383,1.131.383.553,0,.961-.298.961-.825v-.017c0-.51-.434-.808-1.055-.808-.502,0-.723.153-.902.153-.187,0-.332-.076-.595-.264-.178-.127-.255-.306-.238-.527l.119-2.016c.017-.315.264-.562.579-.562h2.586c.315,0,.579.264.579.579s-.264.57-.579.57h-2.008l-.068,1.029c.238-.06.451-.102.783-.102,1.174,0,2.084.562,2.084,1.906v.017c0,1.259-.91,2.059-2.22,2.059-.825,0-1.395-.221-1.872-.562Z'/>",
+  "<path d='M113.508,99.954c-.434-.434-.706-1.072-.706-2.254v-.017c0-1.838.833-3.25,2.612-3.25.595,0,1.08.145,1.438.357.204.119.34.298.34.561,0,.34-.281.604-.621.604-.111,0-.229-.042-.323-.094-.272-.153-.519-.238-.876-.238-.74,0-1.114.595-1.199,1.378.298-.196.647-.383,1.234-.383,1.182,0,2.093.655,2.093,1.897v.017c0,1.217-.978,2.059-2.271,2.059-.774,0-1.302-.221-1.718-.638ZM116.196,98.593v-.017c0-.502-.391-.868-1.038-.868s-1.021.357-1.021.859v.017c0,.502.391.885,1.038.885s1.021-.366,1.021-.876Z'/>",
+  "<path fill='#e6e7e8' d='M88.392,36.502s-.009.004-.013.007c-.67.345-1.484.318-2.079-.144-.989-.767-2.275-1.169-3.659-.999-2.194.269-3.987,2.035-4.286,4.225-.181,1.327.165,2.567.857,3.547.441.625.452,1.445.084,2.117l-.007.013c1.299,1.04,3.011,1.586,4.854,1.34,2.917-.39,5.226-2.826,5.479-5.758.141-1.635-.343-3.149-1.229-4.347Z'/>",
+  "<path d='M85.819,37.594c-1.996,0-3.715,1.187-4.502,2.89l-.584-.272c-.26-.121-.567-.074-.778.12s-.285.496-.187.765l.686,1.884c.105.288.377.466.666.466.081,0,.162-.014.242-.043l1.884-.686c.269-.098.453-.349.466-.635s-.149-.552-.408-.673l-.702-.327c.56-1.22,1.791-2.071,3.219-2.071.391,0,.709-.317.709-.709s-.317-.709-.709-.709Z'/>",
+  "<path d='M118.471,40.332c-.211-.194-.518-.241-.778-.12l-.584.273c-.787-1.703-2.506-2.89-4.502-2.89-.391,0-.709.317-.709.709s.317.709.709.709c1.428,0,2.659.851,3.219,2.071l-.702.327c-.26.121-.421.387-.408.673s.196.537.466.635l1.884.686c.08.029.162.043.242.043.289,0,.561-.179.666-.466l.686-1.884c.098-.269.024-.571-.187-.765Z'/>",
+  "<path fill='#fff' d='M99.213,106.845c-2.735,0-4.961,2.225-4.961,4.961s2.225,4.96,4.961,4.96,4.96-2.225,4.96-4.96-2.225-4.961-4.96-4.961Z'/>",
+  "<path d='M96.917,113.16v-.017c0-.723.332-1.148.961-1.438-.459-.281-.757-.664-.757-1.302v-.017c0-.91.833-1.633,2.093-1.633s2.092.715,2.092,1.633v.017c0,.638-.297,1.021-.757,1.302.604.315.961.698.961,1.404v.017c0,1.106-.979,1.752-2.297,1.752s-2.297-.68-2.297-1.718ZM100.243,113.058v-.017c0-.459-.434-.731-1.029-.731s-1.029.272-1.029.731v.017c0,.408.383.74,1.029.74s1.029-.323,1.029-.74ZM100.064,110.548v-.017c0-.366-.315-.698-.851-.698s-.851.323-.851.689v.017c0,.417.332.732.851.732s.851-.306.851-.723Z'/>"
+];
+// Where each button sits in the art, by the rows and columns of REMOTE_BUTTONS
+var REMOTE_ART_COLUMNS = [83.268, 99.213, 115.157];
+var REMOTE_ART_ROWS = {320: 40.287, 630: 54.591, 940: 68.895, 1248: 83.198, 1557: 97.502,
+                       1866: 111.806, 2176: 126.109};
+var REMOTE_ART_RADIUS = 6.378;
+
+// Each button's row beside the remote, and its height in the art, as the labelled artwork sets
+// them out. A middle button's row sits half a row off its own, so its leader runs between the
+// buttons beside it
+var REMOTE_ROWS = [
+  ["ANTICLOCK", "left", 40.287], ["UP", "left", 47.439], ["LEFT", "left", 54.591],
+  ["OK_STOP", "left", 61.743], ["RETURN_UNDO", "left", 68.895], ["1_RED", "left", 83.198],
+  ["2_GREEN", "left", 90.35], ["4_CYAN", "left", 97.502], ["7_WARM", "left", 111.806],
+  ["8_WHITE", "left", 118.958], ["RECORD", "left", 126.109],
+  ["CLOCKWISE", "right", 40.287], ["RIGHT", "right", 54.591], ["DOWN", "right", 61.743],
+  ["MENU_ACTION", "right", 68.895], ["3_BLUE", "right", 83.198], ["5_MAGENTA", "right", 90.35],
+  ["6_YELLOW", "right", 97.502], ["9_COOL", "right", 111.806], ["0_RAINBOW", "right", 118.958],
+  ["PLAY_PAUSE", "right", 126.109]];
+
+// A button's centre in the art
+function remoteArtAt(name) {
+  var button = REMOTE_BUTTONS.filter(function (one) { return one[0] === name; })[0];
+  return {x: REMOTE_ART_COLUMNS[button[1]], y: REMOTE_ART_ROWS[button[2]]};
+}
+
+// The rainbow blended across this many slices, so a ring sweeps where ten colours would band
+function remoteBlend(steps, closed) {
+  var ends = closed ? REMOTE_RAINBOW.concat([REMOTE_RAINBOW[0]]) : REMOTE_RAINBOW;
+  var blended = [];
+  for (var i = 0; i < steps; i++) {
+    var along = i / (steps - 1) * (ends.length - 1);
+    var from = Math.min(Math.floor(along), ends.length - 2);
+    var a = hexRgb(ends[from]), b = hexRgb(ends[from + 1]), part = along - from;
+    blended.push("rgb(" + [0, 1, 2].map(function (at) {
+      return Math.round(a[at] + (b[at] - a[at]) * part);
+    }).join(",") + ")");
+  }
+  return blended;
+}
+
+// The rotate buttons' rainbows, under the faces and the pad the art lays over them
+function remoteArtTurns() {
+  var anticlock = remoteArtAt("ANTICLOCK"), clockwise = remoteArtAt("CLOCKWISE");
+  return remoteRainbow(anticlock.x, anticlock.y, 4, REMOTE_ART_RADIUS, 225, 420,
+                       remoteBlend(40, false)) +
+         remoteRainbow(clockwise.x, clockwise.y, 4, REMOTE_ART_RADIUS, 300, 495,
+                       remoteBlend(40, false));
+}
+
+// The 0 button's ring, which has to follow the numbers' pad or the pad hides it
+function remoteArtZero() {
+  var zero = remoteArtAt("0_RAINBOW");
+  return remoteRainbow(zero.x, zero.y, 4.5, REMOTE_ART_RADIUS, 0, 360, remoteBlend(72, true));
+}
+
+// The joins the art runs between numbers, found by where each path starts, and the two buttons
+// each joins
+var REMOTE_ART_JOINS = [["M88.548,86.774", "1_RED", "4_CYAN"],
+                        ["M104.493,86.774", "2_GREEN", "5_MAGENTA"],
+                        ["M120.438,86.774", "3_BLUE", "6_YELLOW"],
+                        ["M91.24,115.386", "7_WARM", "8_WHITE"],
+                        ["M107.185,108.225", "8_WHITE", "9_COOL"]];
+
+// A join's own outline, which a clip can take without any of the pad around it
+function remoteArtJoin(start) {
+  var line = REMOTE_ART.filter(function (one) { return one.indexOf("d='" + start) >= 0; })[0];
+  return line.match(/d='([^']*)'/)[1];
+}
+
+// The art as svg markup, each rainbow where the artwork has its bitmap: the rotate buttons' after
+// the remote's body, the 0 ring after the 9 button's ring
+function remoteArt() {
+  var body = REMOTE_ART.indexOf("</g>") + 1;
+  var nine = remoteArtAt("9_COOL");
+  var afterNine = REMOTE_ART.map(function (line) {
+    return line.indexOf("cx='" + nine.x + "' cy='" + nine.y + "'") >= 0;
+  }).indexOf(true) + 1;
+  return REMOTE_ART.slice(0, body).join("") + remoteArtTurns() +
+         REMOTE_ART.slice(body, afterNine).join("") + remoteArtZero() +
+         REMOTE_ART.slice(afterNine).join("");
+}
+
+
+// ---- the PIR Stick, drawn from its artwork ------------------------------------------------------
+// The PIR Stick as its artwork draws it, in the artwork's own units, 22.692 across and 77.102
+// high, one element a line. The page shows through the board's mounting hole. The artwork's style
+// classes are written as fills, as a style in the page would reach every drawing on it
+var PIR_ART = [
+  // The board, with its mounting hole
+  "<path d='M19.85,0H2.842C1.277,0,.008,1.269.008,2.835v71.008c-.117,1.683,1.152,3.142,2.835,3.26,0,0,17.008,0,17.008,0,1.683-.117,2.952-1.577,2.835-3.26,0,0,0-71.008,0-71.008,0-1.565-1.269-2.835-2.835-2.835ZM11.346,35.291c-1.957,0-3.543-1.586-3.543-3.543s1.586-3.543,3.543-3.543,3.543,1.586,3.543,3.543-1.586,3.543-3.543,3.543Z'/>",
+  // The silkscreen: minus, plus, OUT, the adjuster's arc and the arrows under the sensor
+  "<rect fill='#fff' x='18.802' y='57.835' width='1.417' height='4.11' transform='translate(79.4 40.38) rotate(90)'/>",
+  "<polygon fill='#fff' points='5.266 59.181 3.92 59.181 3.92 57.835 2.502 57.835 2.502 59.181 1.156 59.181 1.156 60.599 2.502 60.599 2.502 61.945 3.92 61.945 3.92 60.599 5.266 60.599 5.266 59.181'/>",
+  "<path fill='#fff' d='M8.347,54.892c-.824,0-1.297.517-1.297,1.417v1.553c0,.896.473,1.411,1.297,1.411s1.292-.515,1.292-1.411v-1.553c0-.9-.471-1.417-1.292-1.417ZM7.731,56.309c0-.496.207-.748.615-.748.405,0,.61.252.61.748v1.553c0,.492-.206.742-.61.742-.408,0-.615-.25-.615-.742v-1.553Z'/>",
+  "<path fill='#fff' d='M12.457,54.934h-.24c-.087,0-.218.06-.218.224v2.536c0,.802-.305.91-.604.91-.39,0-.616-.149-.616-.91v-2.536c0-.164-.134-.224-.224-.224h-.24c-.087,0-.217.06-.217.224v2.507c0,1.007.485,1.608,1.297,1.608.805,0,1.285-.602,1.285-1.608v-2.507c0-.164-.134-.224-.224-.224Z'/>",
+  "<path fill='#fff' d='M15.445,54.934h-2.159c-.164,0-.224.134-.224.224v.228c0,.088.06.218.224.218h.736v3.404c0,.164.134.224.224.224h.239c.087,0,.218-.06.218-.224v-3.404h.742c.164,0,.224-.134.224-.224v-.228c0-.088-.06-.218-.224-.218Z'/>",
+  "<path fill='#fff' d='M21.164,41.895c-1.534-3.508-5.583-5.664-9.857-5.256-3.546.344-6.764,2.686-8.198,5.965-.028.065-.042.133-.042.199,0,.191.111.373.297.454.064.028.132.042.198.042.191,0,.374-.111.455-.298,1.276-2.919,4.156-4.805,7.337-4.805s6.061,1.886,7.337,4.805c.053.122.153.218.277.265.124.048.261.043.383-.011l1.562-.709c.247-.112.358-.402.25-.651Z'/>",
+  "<path fill='#fff' d='M5.402,25.439h-1.044v-.684c0-.208-.252-.312-.399-.165l-.849.849h-.594v-.685c0-.208-.252-.312-.399-.165l-1.182,1.182c-.091.091-.091.239,0,.33l1.182,1.182c.147.147.399.043.399-.165v-.686h.591l.853.853c.147.147.399.043.399-.165v-.687h1.044c.274,0,.496-.222.496-.496s-.222-.496-.496-.496Z'/>",
+  "<path fill='#fff' d='M21.775,25.77l-1.182-1.182c-.147-.147-.399-.043-.399.165v.687h-.591l-.852-.852c-.147-.147-.399-.043-.399.165v.687h-1.044c-.274,0-.496.222-.496.496s.222.496.496.496h1.044v.684c0,.208.252.312.399.165l.849-.849h.594v.684c0,.208.252.312.399.165l1.182-1.182c.091-.091.091-.239,0-.33Z'/>",
+  // The connector, its pins and its pads
+  "<path fill='#e8a000' d='M9.344,64.688h-1.647c-.085,0-.155-.07-.155-.155v-3.773c0-.085.07-.155.155-.155h1.647c.085,0,.155.07.155.155v3.773c0,.085-.07.155-.155.155Z'/>",
+  "<path fill='#e8a000' d='M12.179,64.688h-1.647c-.085,0-.155-.07-.155-.155v-3.773c0-.085.07-.155.155-.155h1.647c.085,0,.155.07.155.155v3.773c0,.085-.07.155-.155.155Z'/>",
+  "<path fill='#e8a000' d='M15.013,64.688h-1.647c-.085,0-.155-.07-.155-.155v-3.773c0-.085.07-.155.155-.155h1.647c.085,0,.155.07.155.155v3.773c0,.085-.07.155-.155.155Z'/>",
+  "<path fill='#e8a000' d='M6.531,76.037h-3.39c-.08,0-.145-.065-.145-.146v-5.657c0-.08.065-.146.145-.146h3.39c.08,0,.145.065.145.146v5.657c0,.08-.065.146-.145.146Z'/>",
+  "<path fill='#e8a000' d='M19.57,76.037h-3.391c-.08,0-.144-.065-.144-.146v-5.657c0-.08.064-.146.144-.146h3.391c.08,0,.145.065.145.146v5.657c0,.08-.065.146-.145.146Z'/>",
+  "<rect fill='#ffebad' x='4.268' y='63.638' width='14.173' height='12.047'/>",
+  // The part on the left edge, on its pads
+  "<path fill='#e8a000' d='M4.127,45.354v2.551c0,.078-.064.142-.143.142H1.151c-.078,0-.143-.063-.143-.142v-2.551c0-.078.064-.142.143-.142h2.834c.078,0,.143.063.143.142Z'/>",
+  "<path fill='#e8a000' d='M4.127,50.173v2.551c0,.078-.064.142-.143.142H1.151c-.078,0-.143-.063-.143-.142v-2.551c0-.078.064-.142.143-.142h2.834c.078,0,.143.063.143.142Z'/>",
+  "<rect fill='#6b523b' x='1.434' y='46.772' width='2.268' height='4.535'/>",
+  "<rect fill='#999' x='1.434' y='50.173' width='2.268' height='1.134'/>",
+  "<rect fill='#999' x='1.434' y='46.772' width='2.268' height='1.134'/>",
+  // The part on the right edge, on its pads
+  "<path fill='#e8a000' d='M21.702,45.354v2.551c0,.078-.064.142-.143.142h-2.834c-.078,0-.143-.063-.143-.142v-2.551c0-.078.064-.142.143-.142h2.834c.078,0,.143.063.143.142Z'/>",
+  "<path fill='#e8a000' d='M21.702,50.173v2.551c0,.078-.064.142-.143.142h-2.834c-.078,0-.143-.063-.143-.142v-2.551c0-.078.064-.142.143-.142h2.834c.078,0,.143.063.143.142Z'/>",
+  "<rect fill='#575757' x='19.008' y='46.773' width='2.268' height='4.535'/>",
+  "<rect fill='#999' x='19.009' y='50.173' width='2.268' height='1.134'/>",
+  "<rect fill='#999' x='19.009' y='46.772' width='2.268' height='1.134'/>",
+  // The sensor, on its pads
+  "<path fill='#e8a000' d='M15.475.858h4.217c.083,0,.15.067.15.15v6.77c0,.083-.067.15-.15.15h-4.218c-.083,0-.15-.067-.15-.15V1.01c0-.084.068-.151.151-.151Z'/>",
+  "<path fill='#e8a000' d='M9.238.858h4.217c.083,0,.15.067.15.15v6.77c0,.083-.067.15-.15.15h-4.218c-.083,0-.15-.067-.15-.15V1.01c0-.084.068-.151.151-.151Z'/>",
+  "<path fill='#e8a000' d='M3.002.858h4.217c.083,0,.15.067.15.15v6.77c0,.083-.067.15-.15.15H3.001c-.083,0-.15-.067-.15-.15V1.01c0-.084.068-.151.151-.151Z'/>",
+  "<path fill='#e8a000' d='M3.001,15.883h4.218c.083,0,.15.067.15.15v6.769c0,.084-.068.151-.151.151H3.001c-.083,0-.15-.067-.15-.15v-6.77c0-.083.067-.15.15-.15Z'/>",
+  "<path fill='#e8a000' d='M9.237,15.883h4.218c.083,0,.15.067.15.15v6.769c0,.084-.068.151-.151.151h-4.217c-.083,0-.15-.067-.15-.15v-6.77c0-.083.067-.15.15-.15Z'/>",
+  "<path fill='#e8a000' d='M15.474,15.883h4.218c.083,0,.15.067.15.15v6.769c0,.084-.068.151-.151.151h-4.217c-.083,0-.15-.067-.15-.15v-6.77c0-.083.067-.15.15-.15Z'/>",
+  "<path fill='#222' d='M6.372,1.536h9.921c2.972,0,5.386,2.413,5.386,5.386v9.922c0,2.972-2.413,5.385-5.385,5.385H6.372c-2.972,0-5.386-2.413-5.386-5.386V6.922C.987,3.949,3.4,1.536,6.372,1.536Z'/>",
+  "<path fill='#444' d='M16.294,1.82c2.813,0,5.102,2.289,5.102,5.102v9.921c0,2.813-2.289,5.102-5.102,5.102H6.372c-2.813,0-5.102-2.289-5.102-5.102V6.922C1.27,4.109,3.559,1.82,6.372,1.82h9.921M16.294,1.253H6.372C3.241,1.253.703,3.791.703,6.922v9.921c0,3.131,2.538,5.669,5.669,5.669h9.921c3.131,0,5.669-2.538,5.669-5.669V6.922c0-3.131-2.538-5.669-5.669-5.669h0Z'/>",
+  "<path fill='#222' d='M6.372,2.953h9.921c2.19,0,3.969,1.778,3.969,3.969v9.922c0,2.19-1.778,3.968-3.968,3.968H6.373c-2.19,0-3.969-1.778-3.969-3.969V6.921c0-2.19,1.778-3.968,3.968-3.968Z'/>",
+  "<path fill='#444' d='M16.294,3.237c2.032,0,3.685,1.653,3.685,3.685v9.921c0,2.032-1.653,3.685-3.685,3.685H6.372c-2.032,0-3.685-1.653-3.685-3.685V6.922c0-2.032,1.653-3.685,3.685-3.685h9.921M16.294,2.67H6.372c-2.348,0-4.252,1.904-4.252,4.252v9.921c0,2.348,1.904,4.252,4.252,4.252h9.921c2.348,0,4.252-1.904,4.252-4.252V6.922c0-2.348-1.904-4.252-4.252-4.252h0Z'/>",
+  // The adjuster, on its pads
+  "<rect fill='#e8a000' x='8.945' y='39.835' width='4.802' height='4.52' rx='.15' ry='.15'/>",
+  "<path fill='#e8a000' d='M6.817,49.467h3.389c.08,0,.145.065.145.145v3.392c0,.08-.065.145-.145.145h-3.39c-.08,0-.145-.065-.145-.145v-3.391c0-.08.065-.146.146-.146Z'/>",
+  "<path fill='#e8a000' d='M12.487,49.467h3.389c.08,0,.145.065.145.145v3.392c0,.08-.065.145-.145.145h-3.39c-.08,0-.145-.065-.145-.145v-3.391c0-.08.065-.146.146-.146Z'/>",
+  "<path fill='#c7c7c7' d='M7.67,41.102c-.313,0-.567.254-.567.567v1.2s0,7.237,0,7.237v1.2c0,.313.254.567.567.567h7.37c.313,0,.567-.254.567-.567v-1.2s0-7.237,0-7.237v-1.2c0-.313-.254-.567-.567-.567h-7.37Z'/>",
+  "<circle fill='#999' cx='11.355' cy='46.205' r='4.252'/>",
+  "<polygon fill='#575757' points='13.26 45.354 12.205 45.354 12.205 44.3 12.205 43.37 10.505 43.37 10.505 44.3 10.505 45.354 9.451 45.354 8.52 45.354 8.52 47.055 9.451 47.055 10.505 47.055 10.505 48.109 10.505 49.039 12.205 49.039 12.205 48.109 12.205 47.055 13.26 47.055 14.19 47.055 14.19 45.354 13.26 45.354'/>"
+];
 
 // ---- the LED tabs' swatches, live ------------------------------------------------------------
 // Each LED tab's swatch a small copy of its section's lamps, painted every frame from the

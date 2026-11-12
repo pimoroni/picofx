@@ -1474,6 +1474,85 @@ html{scrollbar-gutter:stable}
 .ledtab .soundoutline{display:block;width:100%;height:100%}
 .ledtab[data-panel=soundPanel] .soundswatch.silent{height:2.15rem;border-radius:3px;
  background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 3px,#e0dbd2 3px,#e0dbd2 6px)}
+
+/* The Sensor tab has no swatch, its name and what is fitted under it saying all there is. The
+   remote sits in the middle of the section with its buttons' rows down either side, each row
+   centred on its leader's height and the same width, so each side reads as one column */
+.ledtab[data-panel=sensorPanel] .sensorswatch{display:none}
+/* A sixth tab leaves the row short of room, so Edit board keeps one line and only the lights'
+   stripes narrow, never past the names above them */
+#ledTabs:has([data-panel=sensorPanel]){gap:1.1rem}
+#ledTabs:has([data-panel=sensorPanel]) .setupbutton{white-space:nowrap;flex:none}
+#ledTabs:has([data-panel=sensorPanel]) .ledtab:not(:is([data-panel=screensPanel],
+ [data-panel=soundPanel],[data-panel=sensorPanel])){flex:0 1 8rem}
+#ledTabs:has([data-panel=sensorPanel]) .ledtab:not(:is([data-panel=screensPanel],
+ [data-panel=soundPanel],[data-panel=sensorPanel]))>.accswatch{width:100%}
+#ledTabs:has([data-panel=sensorPanel]) .ledtab:is([data-panel=screensPanel],[data-panel=soundPanel],
+ [data-panel=sensorPanel]){flex:none}
+.boardchip.sensor{background:var(--board)}
+/* As tall as while editing, when it holds the choice of what is fitted, so the remote below stays
+   put as the board is edited, as a strip's box does */
+#sensorFacts .chip{box-sizing:border-box;min-height:33px}
+.remotediagram{display:grid;grid-template-columns:1fr var(--middle) 1fr;margin-top:.6rem}
+.remoteside{position:relative}
+.remoterow{position:absolute;display:flex;align-items:center;justify-content:space-between;
+ gap:.5rem;width:min(16rem,100%);height:27px;box-sizing:border-box;padding:0 .3rem 0 .55rem;
+ border:1px solid var(--line);border-radius:7px;background:var(--panel);font-size:.8rem;
+ white-space:nowrap;overflow:hidden}
+.remoteside.left .remoterow{right:0;flex-direction:row-reverse;padding:0 .55rem 0 .3rem}
+.remoteside.right .remoterow{left:0}
+.remoterow small{flex:none;color:var(--dim);font-size:.72rem}
+/* A row's words start where a choice's words do, inside the choice's own inset */
+.remoterow b{display:flex;align-items:center;gap:.3rem;padding:0 4px;
+ font:600 .78rem system-ui,sans-serif;overflow:hidden;text-overflow:ellipsis}
+.remoterow select{min-width:0;flex:0 1 auto;max-width:11rem;border:0;background:none;padding:0;
+ font:600 .78rem system-ui,sans-serif;color:var(--ink);cursor:pointer;text-overflow:ellipsis}
+.remoterow:not(.lit){border-style:dashed;background:none}
+.remoterow:not(.lit) select,.remoterow:not(.lit) b{font-weight:400;color:var(--dim)}
+/* A row a scene leaves to Always on is striped and dashed, as a lamp it leaves to Always on is */
+.remoterow.under{border:1px dashed #a9a49b;
+ background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
+/* A button the board keeps the same in every scene is solid and marked with a padlock, apart
+   from the dashed rows that can be chosen */
+.remoterow.fixed{background:#fbf0cf;border:1px solid #d9b54a}
+.remoterow.fixed b{color:#6b5413}
+.remoterow.fixed .padlock{width:11px;height:11px;flex:none;color:#a07c18}
+.remoterow.hot{border-color:var(--ink)}
+.remoteleader{fill:none;stroke-width:.6;stroke-linejoin:round}
+.remoteleader.hot{stroke-width:1}
+/* A PIR Stick's trigger: a heading, its figure and name level with the leader, over a box holding
+   what it does and then its delay. On the left both sit against the Stick */
+.pirside{position:absolute;display:flex;flex-direction:column;gap:.35rem;width:min(20rem,100%)}
+.remoteside.left .pirside{right:0}
+.remoteside.right .pirside{left:0}
+/* The heading's name sits by the leader and its figure at the outer edge, so the two sides
+   mirror each other */
+.pirhead{display:flex;align-items:center;justify-content:space-between;gap:.45rem;height:34px;
+ padding:0 .3rem;font:600 .9rem system-ui,sans-serif;color:var(--ink)}
+.remoteside.right .pirhead{flex-direction:row-reverse}
+.pirquestion.idle{opacity:.45}
+.remoterow.pirbox,.remoteside.left .remoterow.pirbox{position:static;height:auto;
+ flex-direction:column;align-items:stretch;justify-content:flex-start;gap:.35rem;width:100%;
+ padding:.45rem .6rem .5rem;overflow:visible}
+/* Every piece of a PIR box's lines, words, choices and the seconds field, is one size on one
+   line height, so the words sit level with what they label */
+.pirtiming{display:flex;align-items:center;flex-wrap:wrap;gap:.35rem;color:var(--dim);
+ white-space:nowrap}
+.pirtiming>*,.pirtiming small{font:400 .78rem/1.6rem system-ui,sans-serif}
+.pirtiming select{height:1.6rem;max-width:9rem;padding:0;border:0;background:none;
+ font-weight:600;color:var(--ink);cursor:pointer}
+.pirtiming input[type=number]{width:3.4rem;height:1.6rem;box-sizing:border-box;padding:0 .35rem;
+ border:1px solid var(--line);border-radius:6px;color:var(--ink);background:#fff}
+.motionfigure{width:28px;height:28px;flex:none;fill:currentColor;stroke:currentColor;
+ stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.remotecover{fill:transparent}
+.remotecover.choosable{cursor:pointer}
+.remotecover.hot{fill:rgba(0,0,0,.08)}
+.sensorwords{text-align:center;margin:.8rem auto 0;max-width:40rem}
+.sensorwords p{margin:.3rem 0;font-size:.82rem}
+.sensorwords p.dim{color:var(--dim)}
+.sensorwords p.warn{color:var(--warn)}
+.sensorwords .plus{margin:.5rem auto 0}
 /* On repeat, a loop in the corner on a white spot, so it reads over the outline */
 .ledtab .soundswatch .repeatmark{position:absolute;right:2px;bottom:2px;width:.8rem;
  height:.8rem;padding:1px;box-sizing:border-box;color:var(--dim);background:#fff;

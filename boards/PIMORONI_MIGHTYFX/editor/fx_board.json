@@ -31,5 +31,6 @@
   "hub": true
  },
  "sound": true,
+ "sensor": true,
  "shell": true
 }
