@@ -489,16 +489,12 @@ async function discoverListed(entry, written, fresh, was) {
     if (was && was !== path) {
       delete PICTURES[was];
       if (boardSet.program === was) boardSet.program = path;
-      if (boardSet.lastProgram === was) boardSet.lastProgram = path;
       if (boardSet.args[was]) {
         boardSet.args[path] = boardSet.args[was];
         delete boardSet.args[was];
       }
     }
-    if (fresh && program) {
-      boardSet.program = path;
-      boardSet.lastProgram = path;
-    }
+    if (fresh && program) boardSet.program = path;
     return;
   }
   delete discoverDrawings[path];

@@ -177,7 +177,6 @@ function readProgram(named, argued) {
   boardSet.args[path] = given;
   if (programNamed(path) && argsWritten(path) === (argued ? argued.slice("args=".length) : "")) {
     boardSet.program = path;
-    boardSet.lastProgram = path;
     onProgramPage = true;
     return;
   }

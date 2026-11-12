@@ -576,7 +576,6 @@ function programCard(path) {
   // Picked again, the program is put back, leaving none chosen
   card.onclick = function () {
     boardSet.program = boardSet.program === path ? null : path;
-    if (boardSet.program) boardSet.lastProgram = path;
     draw();
   };
   // A copy to change, which takes the original's place where it was chosen
@@ -587,7 +586,6 @@ function programCard(path) {
       var copy = await copyProgram(path);
       PROGRAMS = await drivePrograms(drive.dirHandle, true);
       if (boardSet.program === path) boardSet.program = copy;
-      if (boardSet.lastProgram === path) boardSet.lastProgram = copy;
       banner("Copied to " + copy + " on the FX drive. Open it in Thonny or another editor to " +
              "change it.");
     } catch (e) {
@@ -912,7 +910,7 @@ function effectsFace() {
 function renderPageSwitch() {
   var inHeader = document.getElementById("headSwitch");
   inHeader.textContent = "";
-  var program = boardSet.program || boardSet.lastProgram;
+  var program = boardSet.program;
   // Split under the header, the tabs are drawn as the tabs off its foot are
   inHeader.className = "headswitch headsplit headtabs";
   // Two tabs, what runs picked, each showing what it would run, small in the header where the

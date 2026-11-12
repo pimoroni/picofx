@@ -12462,7 +12462,6 @@ function programCard(path) {
   // Picked again, the program is put back, leaving none chosen
   card.onclick = function () {
     boardSet.program = boardSet.program === path ? null : path;
-    if (boardSet.program) boardSet.lastProgram = path;
     draw();
   };
   // A copy to change, which takes the original's place where it was chosen
@@ -12473,7 +12472,6 @@ function programCard(path) {
       var copy = await copyProgram(path);
       PROGRAMS = await drivePrograms(drive.dirHandle, true);
       if (boardSet.program === path) boardSet.program = copy;
-      if (boardSet.lastProgram === path) boardSet.lastProgram = copy;
       banner("Copied to " + copy + " on the FX drive. Open it in Thonny or another editor to " +
              "change it.");
     } catch (e) {
@@ -12798,7 +12796,7 @@ function effectsFace() {
 function renderPageSwitch() {
   var inHeader = document.getElementById("headSwitch");
   inHeader.textContent = "";
-  var program = boardSet.program || boardSet.lastProgram;
+  var program = boardSet.program;
   // Split under the header, the tabs are drawn as the tabs off its foot are
   inHeader.className = "headswitch headsplit headtabs";
   // Two tabs, what runs picked, each showing what it would run, small in the header where the
@@ -14093,7 +14091,6 @@ async function ownState(dir) {
 // Forget a chosen program the drive no longer holds, as it is no longer there to run
 function forgetMissingPrograms() {
   if (boardSet.program && !programNamed(boardSet.program)) boardSet.program = null;
-  if (boardSet.lastProgram && !programNamed(boardSet.lastProgram)) boardSet.lastProgram = null;
 }
 
 // Read the user's own programs again where they have changed on the drive, as the effects' media
@@ -14425,7 +14422,6 @@ function readProgram(named, argued) {
   boardSet.args[path] = given;
   if (programNamed(path) && argsWritten(path) === (argued ? argued.slice("args=".length) : "")) {
     boardSet.program = path;
-    boardSet.lastProgram = path;
     onProgramPage = true;
     return;
   }

@@ -298,7 +298,6 @@ async function ownState(dir) {
 // Forget a chosen program the drive no longer holds, as it is no longer there to run
 function forgetMissingPrograms() {
   if (boardSet.program && !programNamed(boardSet.program)) boardSet.program = null;
-  if (boardSet.lastProgram && !programNamed(boardSet.lastProgram)) boardSet.lastProgram = null;
 }
 
 // Read the user's own programs again where they have changed on the drive, as the effects' media
