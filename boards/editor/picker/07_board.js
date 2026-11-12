@@ -123,3 +123,39 @@ function boardLine() {
   boardLineSteps.after.forEach(function (step) { line = step(line); });
   return line;
 }
+
+// ---- what is not fitted, in a comment of the page's own ---------------------------------
+// The board line names a strip or screen only where a scene plays on it, so one taken off in
+// Edit board writes the same file as one fitted and left unused. Where something the board fits
+// by default has been taken off, the page lists it by the name its tab or box shows in a comment
+// of its own, which autofx passes over, and reads it back so a reload does not fit it again
+
+var NOT_FITTED = "# Not fitted: ";
+
+// The names the file listed as not fitted, in lower case, or null where it had no such comment
+var notFittedRead = null;
+
+// The names of what the board fits by default and has been taken off, each part adding a step
+var notFittedSteps = [];
+
+// A strip as the board describes it, with its tab's name and whether it is fitted by default
+function stripDescribed(run) {
+  return BOARD.strips.filter(function (strip) { return strip.name === run.name; })[0];
+}
+
+notFittedSteps.push(function () {
+  return runs.filter(function (run) {
+    return run.strip && !run.there && stripDescribed(run).fitted;
+  }).map(function (run) { return stripDescribed(run).tab; });
+});
+
+function notFittedLine() {
+  var names = [];
+  notFittedSteps.forEach(function (step) { names = names.concat(step()); });
+  return names.length ? NOT_FITTED + names.join(", ") : null;
+}
+
+// Whether the file listed a strip or screen as not fitted, by the name its tab or box shows
+function saidNotFitted(name) {
+  return notFittedRead.indexOf(name.toLowerCase()) >= 0;
+}

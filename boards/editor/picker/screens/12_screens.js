@@ -633,6 +633,13 @@ boardLineSteps.before.push(function () {
   });
 });
 
+// A screen taken off in Edit board, for the page's comment on what is not fitted. On a Screen Hub
+// the ports are the hub's, so neither is listed
+notFittedSteps.push(function () {
+  if (state.hub.on) return [];
+  return SCREENS.filter(function (letter) { return !state.screens[letter].there; }).map(screenShown);
+});
+
 // ---- reading the file back ----------------------------------------------------------------------
 
 // A screen's line as the settings of the screen it names, or null where one is not understood
@@ -705,6 +712,13 @@ function screenPlaying(parts, body, letter) {
 
 // Try each kept line of each body as a screen, moving those that write back exactly
 function readScreens(bodies) {
+  // A file listing what was taken off has the screens it names off and the others fitted. A line
+  // read for a screen below fits it again
+  if (notFittedRead) {
+    SCREENS.forEach(function (letter) {
+      state.screens[letter].there = !saidNotFitted(screenShown(letter));
+    });
+  }
   var sizes = {};
   boardResidue.forEach(function (token) {
     var named = token.match(/^(screen[ab]?)=(2\.8|1\.54)$/i);

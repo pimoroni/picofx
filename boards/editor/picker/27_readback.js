@@ -105,7 +105,11 @@ function readEffects(text) {
 
     if (line.charAt(0) === "#") {
       if (line.indexOf(WIRED) === 0) parsed.wiring = line.slice(WIRED.length).trim();
-      else if (PAGE_LINES.indexOf(line) < 0) comments.push(raw.replace(/\s+$/, ""));
+      else if (line.indexOf(NOT_FITTED) === 0) {
+        parsed.notFitted = line.slice(NOT_FITTED.length).split(",").map(function (name) {
+          return name.trim().toLowerCase();
+        }).filter(Boolean);
+      } else if (PAGE_LINES.indexOf(line) < 0) comments.push(raw.replace(/\s+$/, ""));
       return;
     }
 
@@ -209,6 +213,7 @@ function readWaitingProgram() {
 function absorbFile(text) {
   var parsed = readEffects(text);
   wiringRead = parsed.wiring || null;
+  notFittedRead = parsed.notFitted || null;
 
   boardSet.reload = true;
   boardSet.driveHidden = false;
@@ -679,6 +684,14 @@ function readLights(bodies) {
       if (run.strip && !lengths[run.name]) stripSet(run, {there: false});
     });
   }
+  // A file listing what was taken off says the rest are as the board fits them by default
+  if (notFittedRead) {
+    runs.forEach(function (run) {
+      if (!run.strip || lengths[run.name]) return;
+      var strip = stripDescribed(run);
+      stripSet(run, {there: strip.fitted && !saidNotFitted(strip.tab)});
+    });
+  }
   var stripsRead = {};
   var broken = outputsBrokenOut(bodies);
   var said = wiringRead && orderSaid(wiringRead);
@@ -813,10 +826,15 @@ boardLineSteps.after.push(function (line) {
   return line;
 });
 
-// Under the header, the wiring where it is not number order, then the comments above the board line
+// Under the header, the wiring where it is not number order and what has been taken off, then the
+// comments above the board line
 fileHead.under.push(function () {
   var wired = wiringLine();
   return wired ? [wired] : [];
+});
+fileHead.under.push(function () {
+  var off = notFittedLine();
+  return off ? [off] : [];
 });
 fileHead.above.push(function () { return boardComments; });
 
