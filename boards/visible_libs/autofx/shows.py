@@ -70,9 +70,15 @@ class ScreenShow:
         # The selector names this show draws on, one for each screen or several on a hub,
         # which is what a scene switch hands over
         self.places = tuple(places) if places else tuple(channel.name for channel in channels)
+        # The places it draws on while a scene shows, every one until a scene takes some for
+        # its own, the rest playing on
+        self.shown = self.places
         # The hub's one backlight where this show is on a hub, which lights and dims for
         # every position at once, so this show never turns it off itself
         self.hub = hub
+        # A hub show's stream through every one of its positions, kept while it plays
+        # through some of them
+        self.__whole = screens[0] if hub is not None else None
         self.line = line
         # Each screen's placement, in the order prepare() and update() take them
         self.__placements = [self.__placement(channel) for channel in channels]
@@ -145,14 +151,55 @@ class ScreenShow:
 
         # Check if the backlight is the hub's, which waits for every position
         if self.hub is not None:
-            self.hub.drawn(self.places)
+            self.hub.drawn(self.shown)
             return
 
         # on() waits a scan before lighting a dark line, but relights at the level last
         # set, so the entry's own level follows it, full where it gives none
-        for screen, backlight in zip(self.screens, self.__backlights):
-            screen.backlight.on()
-            screen.brightness(1.0 if backlight is None else backlight)
+        for index in self.__drawn():
+            self.screens[index].backlight.on()
+            backlight = self.__backlights[index]
+            self.screens[index].brightness(1.0 if backlight is None else backlight)
+
+    def __drawn(self):
+        # The indexes of the screens this show draws on, a hub show's one stream being
+        # remade for the positions it has
+        if self.hub is not None:
+            return [0]
+        return [index for index, place in enumerate(self.places) if place in self.shown]
+
+    def single(self):
+        """
+        The one screen this show draws on now, which may be one of a pair a scene has taken
+        the other of, or None where it draws on two or is on a hub.
+        """
+        if self.hub is not None:
+            return None
+        drawn = self.__drawn()
+        return self.screens[drawn[0]] if len(drawn) == 1 else None
+
+    @staticmethod
+    def __hub_part(places):
+        # The stream through some of a hub show's positions, which are one panel size
+        sizes = BUILT_HUB["sizes"]
+        members = [BUILT_SCREENS[place][0] for place in places if place in BUILT_SCREENS]
+        return BUILT_HUB["groups"][sizes[places[0]]].subset(*members)
+
+    def hold(self, places):
+        """
+        Draw on only these of the show's places while a scene shows, another show having
+        taken the rest. live says whether any is left. A show drawing on fewer places, or
+        more, draws and lights them again.
+        """
+        held = tuple(place for place in self.places if place in places)
+        self.live = bool(held)
+        if not held or held == self.shown:
+            return
+        self.shown = held
+        if self.hub is not None:
+            self.screens = [self.__whole if held == self.places else self.__hub_part(held)]
+        self.__lit = False
+        self.__redraw = True
 
     def __stream_with(self, index, other, other_index, aligned):
         # Stream a frame on one of this show's screens and one on another show's screen, or
@@ -207,7 +254,9 @@ class ScreenShow:
         # back the pair's padding and costs a resync on the next frame the two share
         aligned = (isinstance(self.player, Graphics) and isinstance(other.player, Graphics)
                    and self.player.frame_ms == other.player.frame_ms)
-        self.__stream_with(0, other, 0, aligned)
+        # Each sends on its one screen, which for a pair a scene has taken half of is its
+        # screen left over
+        self.__stream_with(self.__drawn()[0], other, other.__drawn()[0], aligned)
         self.__light()
         other.__light()
 
@@ -223,7 +272,8 @@ class ScreenShow:
         """
         self.__due = False
         self.__redraw = False
-        if len(self.screens) == 2 and self.refused_with is not self:
+        drawn = self.__drawn()
+        if len(drawn) == 2 and self.refused_with is not self:
             try:
                 self.__stream_with(0, self, 1, True)
                 self.__light()
@@ -232,7 +282,7 @@ class ScreenShow:
             except ValueError as e:
                 self.refused_with = self
                 print("the screens are being drawn one at a time: {}".format(e))
-        for index in range(len(self.screens)):
+        for index in drawn:
             self.__update(index)
         self.__light()
 
@@ -253,13 +303,17 @@ class ScreenShow:
         """Play on after pause(), wait() or rest()."""
         self.player.play()
 
-    def rest(self):
-        """Put aside by a scene switch, paused and dark until it returns."""
+    def rest(self, places):
+        """
+        Put aside by a scene switch, paused until it returns, and dark on these of its places,
+        which no other show has.
+        """
         self.player.pause()
         # A hub's positions share one backlight, which the hub turns off itself
         if self.hub is None:
-            for screen in self.screens:
-                screen.backlight.off()
+            for screen, place in zip(self.screens, self.places):
+                if place in places:
+                    screen.backlight.off()
         self.__lit = False
         self.__redraw = True
 
@@ -580,15 +634,17 @@ def __held_with(show, shows):
     # The drawing held together with this one as a pair that has nothing new this pass, or
     # None. Sending this one alone would hand back the pair's hold on the panels, so the
     # other's frame goes again beside it
-    if not BUILT_PAIR or len(show.screens) != 1 or not isinstance(show.player, Graphics):
+    screen = show.single()
+    if not BUILT_PAIR or screen is None or not isinstance(show.player, Graphics):
         return None
     held = BUILT_PAIR[0].screens
-    if show.screens[0] not in held:
+    if screen not in held:
         return None
 
     for other in shows:
-        if other is not show and other.live and len(other.screens) == 1 \
-                and other.screens[0] in held and other.screens[0] is not show.screens[0] \
+        theirs = other.single()
+        if other is not show and other.live and theirs is not None \
+                and theirs in held and theirs is not screen \
                 and isinstance(other.player, Graphics) and other.player.unchanged \
                 and other.player.frame_ms == show.player.frame_ms \
                 and other.refused_with is not show:
@@ -623,10 +679,10 @@ def service_shows(shows, between=None):
         if partner is not None:
             due.append(partner)
 
-    # Are two shows of one screen each due on different ports? A show of two screens sends
-    # its own pair
-    if len(due) == 2 and len(due[0].screens) == len(due[1].screens) == 1 \
-            and due[0].screens[0].port is not due[1].screens[0].port \
+    # Are two shows each drawing on one screen due on different ports? A show drawing on two
+    # screens sends its own pair
+    singles = [show.single() for show in due] if len(due) == 2 else []
+    if singles and None not in singles and singles[0].port is not singles[1].port \
             and due[0].refused_with is not due[1]:
         try:
             due[0].send_with(due[1])
@@ -1107,7 +1163,7 @@ def settle_hub(shows):
                   key=lambda show: show.line)
     held = set()
     for show in live:
-        held.update(show.places)
+        held.update(show.shown)
 
     asking = [show.backlight for show in live if show.backlight is not None]
     light.ask(asking[0] if asking else None)

@@ -444,8 +444,8 @@ def apply_scene(players, shows, sounds, scene):
     # One show at a time may have a panel, and a screen may be named by an always-on entry
     # and by a scene both. The scene's own takes it while the scene shows, as a scene takes
     # an always-on output, and the always-on one has it the rest of the time. Held by place,
-    # since a hub's show covers several positions, so an always-on show a scene takes one
-    # position from sits the scene out
+    # since a pair's show covers two screens and a hub's several positions, so an always-on
+    # show a scene takes one place from plays on through the rest
     holding = {}
     for show in shows:
         if show.scene is None:
@@ -456,22 +456,22 @@ def apply_scene(players, shows, sounds, scene):
             for place in show.places:
                 holding[place] = show
 
-    live = {show for show in shows
-            if all(holding.get(place) is show for place in show.places)}
-    lit = {place for show in live for place in show.places}
+    for show in shows:
+        show.hold([place for place in show.places if holding.get(place) is show])
 
     for show in shows:
-        show.live = show in live
         if show.live:
             if scene.restart and show.scene == scene.key:
                 show.restart()
             show.resume()
-        elif any(place in lit for place in show.places):
-            # Another show has this panel, so it stays lit and this one just waits
-            show.wait()
+            continue
+        # Another show has these panels, so they stay lit and this one just waits. One
+        # no show has now goes dark, the glass keeping its frame
+        dark = [place for place in show.places if place not in holding]
+        if dark:
+            show.rest(dark)
         else:
-            # No show has this panel now, so it goes dark, the glass keeping its frame
-            show.rest()
+            show.wait()
 
     settle_hub(shows)
 
