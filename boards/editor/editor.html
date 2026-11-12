@@ -1248,9 +1248,10 @@ if (!CAN_REACH_A_DRIVE) {
 var BOARD_SETTLE_MS = 6000;
 var BOARD_WAIT_MS = 15000;
 // How long the drive is given to come back once it has been seen away. The board
-// leaves the USB bus on a reload and a Mac takes about four seconds to mount it
-// again, measured 2026-09-17, with the answer readable the moment it does
-var BOARD_AWAY_MS = 10000;
+// leaves the USB bus as it takes a save, and gives the drive back once the file is
+// loaded. A file of 18 drawings kept it from a Mac for 24 seconds, measured
+// 2026-11-12, with the answer readable the moment the drive mounts
+var BOARD_AWAY_MS = 30000;
 var BOARD_POLL_MS = 250;
 
 function playsItself(text) {
