@@ -317,6 +317,49 @@ def trigger_delay(scenes, board, at, trigger):
     return held.get(trigger + " after", (0, True))
 
 
+def __unreached_scenes(scenes, board):
+    """
+    The places of the scenes nothing leads to from the first, as a list, and the scene the
+    first scene's turns stop at where that is what leaves them out, or None. A scene leads on
+    by its time to the scene after it, and by each trigger of the sensor fitted.
+    """
+    if not scenes:
+        return [], None
+    sensor = board.get("sensor")
+    triggers = [trigger for kind, names in TRIGGERS.items()
+                if TRIGGER_SENSOR[kind] == sensor for trigger in names]
+    reached = [False] * len(scenes)
+    reached[0] = True
+    waiting = [0]
+    while waiting:
+        at = waiting.pop()
+        leads = []
+        if scenes[at].hold is not None:
+            after = scenes[at].after
+            leads.append(after if after is not None else (at + 1) % len(scenes))
+        for trigger in triggers:
+            what, place = trigger_does(scenes, board, at, trigger)
+            if what == "scene":
+                leads.append(place)
+        for place in leads:
+            if not reached[place]:
+                reached[place] = True
+                waiting.append(place)
+    unreached = [at for at in range(len(scenes)) if not reached[at]]
+    if not unreached or triggers:
+        return unreached, None
+
+    # Without a sensor the turns are one line from the first scene, and a scene with no time
+    # ends it
+    at = 0
+    seen = [False] * len(scenes)
+    while not seen[at] and scenes[at].hold is not None:
+        seen[at] = True
+        after = scenes[at].after
+        at = after if after is not None else (at + 1) % len(scenes)
+    return unreached, scenes[at] if scenes[at].hold is None else None
+
+
 def __trigger_default(trigger):
     # What a trigger does where no file gives it anything, as the page shows: a number goes to
     # the scene in its place, 0 to the tenth, the side arrows step back and on, and the rest
@@ -579,6 +622,19 @@ def load(text, fx, maker=None, volume=None, on_built=None):
         else:
             scene.after = scenes.index(target)
 
+    # Check if a scene's time leads back to itself, where nothing changes unless it restarts
+    for at, scene in enumerate(scenes):
+        if scene.hold is None or scene.restart:
+            continue
+        if len(scenes) == 1:
+            problems.append("line {}: [{}] is the only scene, so nothing changes when its {:g}s "
+                            "are up. Add restart to begin it again, or leave out the "
+                            "time".format(scene.line, scene.name, scene.hold))
+        elif scene.after == at:
+            problems.append("line {}: [{}] goes back to itself without restart, so nothing "
+                            "changes when its {:g}s are up. Add restart to begin it again, or "
+                            "leave out the time".format(scene.line, scene.name, scene.hold))
+
     # What the sensor's triggers do, Always on's kept with the board settings where it gives any
     triggers = __read_triggers(trigger_entries, scenes, known, board, problems)
     if triggers.get(None):
@@ -600,14 +656,23 @@ def load(text, fx, maker=None, volume=None, on_built=None):
                                 "again".format(scene.line, scene.name, kind, trigger, kind,
                                                trigger))
 
-    # Without a sensor the turns move by time alone, so a scene without one stops them. A
-    # sensor's triggers can move them on, so a scene may wait for one
-    if len(scenes) > 1 and not board.get("sensor"):
-        for scene in scenes:
-            if scene.hold is None and not scene.advised:
-                problems.append("line {}: [{}] names no time, so the scenes after it "
-                                "will not show. Write it like '[{}: 30s]'".format(
-                                    scene.line, scene.name, scene.name))
+    # Check if any scene never shows, as nothing going on from the first scene leads to it. A
+    # scene that waits forever is fine where the scenes before it have all shown
+    unreached, stopper = __unreached_scenes(scenes, board)
+    if unreached:
+        names = [scenes[at].name for at in unreached]
+        shown = "[{}]".format(names[0]) if len(names) == 1 else \
+            "[{}] and [{}]".format("], [".join(names[:-1]), names[-1])
+        verb, them = ("never shows", "it") if len(names) == 1 else ("never show", "them")
+        if stopper is not None:
+            if not stopper.advised:
+                problems.append("line {}: {} {}, as [{}] waits forever before {}. Write it like "
+                                "'[{}: 30s]' to go on to {}".format(
+                                    stopper.line, shown, verb, stopper.name, them,
+                                    stopper.name, them))
+        else:
+            problems.append("line {}: {} {}, as no scene goes on to {}".format(
+                scenes[unreached[0]].line, shown, verb, them))
 
     # A changed board entry gets a fresh board, as a restart would. The running one
     # is shut down and the build below makes its replacement from the file's own
