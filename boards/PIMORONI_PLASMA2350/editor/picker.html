@@ -75,6 +75,8 @@ main{width:100%;max-width:60rem;margin:1.4rem auto;padding:0 1.4rem;flex-grow:1}
 /* Zoomed in, the bar is wider than the room it has and scrolls inside it. The padding
    and the pull back up leave the labels above a cut somewhere to be drawn */
 .scroller{overflow-x:auto;overflow-y:hidden;padding-top:1.2rem;margin-top:-1.2rem}
+/* That pull reaches over the buttons in the row above, so they sit on top to take their clicks */
+.head.cutting button{position:relative;z-index:1}
 .scroller::-webkit-scrollbar{height:9px}
 .scroller::-webkit-scrollbar-thumb{background:#cfc9bf;border-radius:99px}
 .scroller::-webkit-scrollbar-track{background:#f0eeea;border-radius:99px}
