@@ -1222,14 +1222,23 @@ function renderScreensTab() {
 }
 
 // A picture newly chosen starts at the turn it was last given on this screen, and a picture
-// never turned here keeps the turn the screen already has, so a turn can be set on an empty
+// never turned here keeps the turn the screen has for pictures, so a turn can be set on an empty
 // screen before anything is put on it. A drawing never turned here starts at the turn its
 // Defaults: line gives. A slideshow newly chosen plays at five a second unless its names say
 // their own
 function chosenAfresh(held) {
   if (held.shows === held.lastShows) return;
+  var wasDrawing = !!held.lastShows && kindOf(held.lastShows) === "drawing";
+  // The turn the screen has for pictures, which a drawing's own turn leaves alone. A file gives a
+  // turn only on each line, so until a picture shows here it is 0, as for a line with none
+  if (!wasDrawing) held.pictureTurn = held.turn;
   paceForChosen(held);
   settingsForChosen(held);
+  // Check if a picture takes over from a drawing, whose turn and doubling were its own
+  if (wasDrawing && held.shows && held.shows !== "keep" && kindOf(held.shows) !== "drawing") {
+    held.turn = held.pictureTurn;
+    held.look.double = false;
+  }
   if (held.shows && held.turns[held.shows] !== undefined) held.turn = held.turns[held.shows];
   if (held.shows) held.turns[held.shows] = held.turn;
   held.lastShows = held.shows;

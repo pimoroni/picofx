@@ -24,7 +24,7 @@ HUB_PLACES.forEach(function (place) {
   state.hub.sizes[place] = "2.8";
   // off= is a scene turning the position off with `none`, as a screen's is
   state.places[place] = {shows: null, turn: 0, pingpong: false, hold: "", fps: 5,
-                         turns: {}, lastShows: null, off: false};
+                         turns: {}, lastShows: null, off: false, pictureTurn: 0};
 });
 
 // The position whose settings are shown under the hub

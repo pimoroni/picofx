@@ -48,7 +48,7 @@ SCREENS.forEach(function (letter) {
   // off= is a scene turning the screen off with `none`, showing black in place of a picture
   state.screens[letter] = {there: true, size: letter === "A" ? "2.8" : "1.54", turn: 0,
                            carried: "", pingpong: false, hold: "", fps: 5, shows: null,
-                           kept: null, turns: {}, lastShows: null, off: false};
+                           kept: null, turns: {}, lastShows: null, off: false, pictureTurn: 0};
 });
 
 // A picture newly chosen on a screen starts as chosenAfresh says. What the screen showed when
