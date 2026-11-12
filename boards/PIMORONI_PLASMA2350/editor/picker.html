@@ -100,6 +100,25 @@ button.round svg{display:block}
 .sec .lit{display:block;height:1.5rem;border-radius:6px 6px 0 0}
 .sec .lit.nothing{background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,
  #e4e0d9 6px,#e4e0d9 12px)}
+/* Where a scene sets nothing and Always on shows through, the content shows in full with the
+   stripes of nothing over or around it, here over Always on's colours or over dark where the
+   stretch is off */
+:root{--through:repeating-linear-gradient(45deg,rgba(240,238,234,.75),rgba(240,238,234,.75) 6px,
+ transparent 6px,transparent 12px)}
+.sec .lit.through{position:relative;overflow:hidden}
+.sec .lit.through > span{position:absolute;top:0;bottom:0;overflow:hidden}
+.sec .lit.through > span > span{position:absolute;top:0;bottom:0}
+.sec .lit.through > .off{background:#2a2d30}
+.sec .lit.through > .empty{background:#e4e0d9}
+.sec .lit.through::after{content:"";position:absolute;inset:0;background:var(--through)}
+/* A screen's settings that show Always on's values in a scene, greyed and not to be changed here */
+.frozen{opacity:.45}
+.frozen button,.frozen input{cursor:default}
+/* A screen showing Always on's picture in a scene, in the striped and dashed frame its lamps wear */
+.holder.under{border:1px dashed #a9a49b;border-radius:8px;
+ background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
+/* Under the chosen stretch's name, what the board plays where the scene leaves it empty */
+.chosen .underhint{font-size:.8rem;color:var(--dim);margin:.25rem 0 0}
 /* Cutting happens in the coloured band only. The name below it is always plain
    section, so a stretch cut every light still has somewhere to be clicked and picked */
 .sec .cuts{position:absolute;top:0;left:0;right:0;height:1.5rem;pointer-events:none}
@@ -126,6 +145,10 @@ button.round svg{display:block}
  padding:0 .3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
  text-align:center}
 .sec .says em{font-style:normal;font-weight:400;color:var(--dim)}
+/* After a stretch's "Nothing" and its count, what shows through from Always on, set apart by a
+   rule */
+.sec .says .beneath{font-weight:400;color:var(--dim);margin-left:.45em;padding-left:.45em;
+ border-left:1px solid #c9c3b9}
 .sec.narrow .says{font-size:.6rem}
 
 /* A cut that is already there: dragged to move it along the run, or taken out by the
@@ -174,6 +197,10 @@ button.round svg{display:block}
 .lamp.landing{border-color:var(--accent);box-shadow:-2px 0 0 var(--accent)}
 .lamp i{display:block;width:1.5rem;height:1.5rem;border-radius:50%;
  box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
+/* A lamp set to Nothing. Its tile wears the stripes Nothing wears elsewhere, and its light shows
+   what the board does there, in a scene Always on's look in full or dark */
+.lamp.unset{border-style:dashed;border-color:#a9a49b;
+ background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
 .lamp b{display:block;font:400 .66rem/1.6 system-ui,sans-serif;color:var(--dim);
  text-align:center}
 
@@ -763,6 +790,28 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
  background:rgba(20,20,22,.82);color:#fff;opacity:0;transition:opacity .12s;
  pointer-events:none;z-index:1}
 .asset:hover .label,.asset:focus-within .label{opacity:1}
+/* Off in a scene's gallery: a small card at the end of the first heading, as Nothing is in the
+   looks, its face black and its screens' buttons at its end */
+.assets .offhead,.sounds .offhead{grid-column:1/-1;flex-basis:100%;display:flex;
+ align-items:center;gap:.6rem;margin:.4rem 0 -.3rem}
+.assets .offhead:first-child,.sounds .offhead:first-child{margin-top:0}
+.assets .offhead .foldhead,.sounds .offhead .foldhead{margin:0}
+.offhead .card.nothing.small{flex-shrink:0}
+/* Silence's face, a sound with nothing in it, as long as a sound tile's preview */
+.card.nothing .face.silenceface{background:#fff;display:flex;align-items:center;width:7.4rem;
+ border-right:1px solid var(--line)}
+.card.nothing .face.silenceface svg{display:block;width:100%;height:1.7rem}
+.offhead .card.nothing.small .name{overflow:visible}
+.card.nothing.small.offasset{cursor:default;flex-shrink:0}
+.card.nothing.small.offasset:hover{transform:none}
+.card.nothing.small.offasset .face{background:#000;flex-shrink:0;width:auto;display:flex;
+ align-items:center;padding:0 .7rem;color:#c8cdd0;font:600 .8rem system-ui,sans-serif}
+.offasset .pick{display:flex;align-items:stretch;border-left:1px solid var(--line)}
+.offasset .pick button{border:0;border-radius:0;padding:0 .55rem;font-size:.75rem;
+ background:var(--panel)}
+.offasset .pick button+button{border-left:1px solid var(--line)}
+.offasset .pick button.lit{background:#1f6feb;color:#fff}
+.offasset .pick button.lit.b{background:#a44ad0}
 .asset .pick{display:flex;border-top:1px solid var(--line)}
 .asset .pick button{flex:1;border:0;border-radius:0;padding:.2rem;font-size:.75rem;
  font-weight:700;color:var(--dim);background:var(--panel)}
@@ -839,6 +888,9 @@ select{font:inherit;font-size:.85rem;padding:.25rem .3rem;border:1px solid var(-
  border-radius:10px;background:var(--panel);text-align:left;cursor:pointer}
 .sound:hover{border-color:var(--dim)}
 .sound.picked{border-color:var(--accent)}
+/* Always on's sound, playing in a scene with none of its own, in the striped and dashed frame */
+.sound.under{border-style:dashed;border-color:#a9a49b;
+ background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
 .sound svg{display:block;width:100%;height:1.8rem}
 .sound b{display:block;font:600 .74rem/1.5 system-ui,sans-serif;color:var(--ink);
  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1227,6 +1279,8 @@ body.setupall #soundPanel{opacity:.35;pointer-events:none}
 .accswatch.soundswatch{align-items:center;gap:1px;box-shadow:none;height:.9rem;width:3.2rem}
 .soundswatch span{flex:1;background:var(--accent);border-radius:1px;min-height:2px}
 .soundswatch.silent{height:.2rem;background:#c9c3b9;border-radius:1px}
+.soundswatch.under{border:1px dashed #a9a49b;
+ background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 3px,#e0dbd2 3px,#e0dbd2 6px)}
 .soundsays{margin:0 0 .8rem}
 
 /* ---- the wiring, while the board is set up ----
@@ -1364,14 +1418,27 @@ html{scrollbar-gutter:stable}
  background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 7px,#e4e0d9 7px,#e4e0d9 14px)}
 .sound b{padding:.3rem .5rem 0}
 .sound small{display:block;padding:0 .5rem .35rem}
-/* A screen fitted with no picture chosen is a white tile, as an empty sound is, so it
-   reads apart from one not fitted, which is striped */
+/* A screen showing nothing wears the stripes of nothing, as a lamp playing nothing and an empty
+   sound do, and one dark because another scene shows on it is dark, as such a lamp is */
+.ledtab[data-panel=screensPanel] .screencell.nothing{box-shadow:none;
+ background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 3px,#e0dbd2 3px,#e0dbd2 6px)}
+.ledtab[data-panel=screensPanel] .screencell.dark{background:#2a2d30;box-shadow:none}
+/* A screen showing a picture with no thumbnail yet, a white tile */
 .ledtab[data-panel=screensPanel] .screencell.blank{background:#fff;
  box-shadow:inset 0 0 0 1px var(--line)}
 .screencell.a{--cell:#1f6feb}
 .screencell.b{--cell:#a44ad0}
-.screencell.absent{background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 3px,
- #e0dbd2 3px,#e0dbd2 6px);box-shadow:none}
+/* Hardware not fitted is an empty place in a dashed outline. A screen or hub position, being
+   square, is also crossed through once, and a strip's bar is too thin for a cross */
+:root{--cross:linear-gradient(to top right,transparent calc(50% - .7px),#c9c3b9 calc(50% - .7px),
+ #c9c3b9 calc(50% + .7px),transparent calc(50% + .7px))}
+.screencell.absent,.ledtab[data-panel=screensPanel] .screencell.absent{
+ background:var(--cross) transparent;box-shadow:none;outline:1px dashed #a9a49b;outline-offset:-1px}
+.accswatch.liveswatch.absent{background:transparent;box-shadow:none;
+ outline:1px dashed #a9a49b;outline-offset:-1px}
+/* A screen a scene turns off is black, and one showing Always on's picture has the stripes of
+   nothing over it, as the lamps and bars do */
+.ledtab[data-panel=screensPanel] .screencell.off{background:#000;box-shadow:none}
 .screenssays{margin:0 0 .8rem}
 .screen-box h3 .boardicon{color:#fff;opacity:.9}
 .screen-box select:disabled,.screen-box button:disabled{opacity:.75;cursor:default}
@@ -1420,7 +1487,7 @@ html{scrollbar-gutter:stable}
 .place.empty:hover{background:none}
 .placenone{display:flex;align-items:center;justify-content:center;width:100%;
  aspect-ratio:1;border-radius:6px;font-size:.72rem;color:var(--dim);
- background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 5px,#e0dbd2 5px,#e0dbd2 10px)}
+ background:var(--cross) transparent;outline:1px dashed #a9a49b;outline-offset:-1px}
 .placedrop{position:absolute;top:.3rem;right:.2rem;width:1.3rem;height:1.3rem;padding:0;
  border:0;border-radius:5px;background:var(--hub);color:#fff;font-size:.95rem;line-height:1}
 .placefit{position:absolute;bottom:2.1rem;border:1.5px solid var(--hub);border-radius:7px;
@@ -3252,13 +3319,78 @@ function litRun(run) {
         out[which] = lit
           ? {level: Math.max(0, Math.min(1, lit.level)),
              ink: lamp.colour ? lit.ink : "#ffd9a0"}
-          : {level: 0, ink: "#3a3f44", nothing: true};
+          : litUnder(run, which, lamp);
       }
     });
   } finally {
     previewingStrip = false;
   }
   return out;
+}
+
+// What a lamp the scene plays nothing on shows, marked unset= for its tile. It plays Always on's
+// look where Always on has one there, and is off where another scene plays on it, as the board
+// has it
+function litUnder(run, which, lamp) {
+  var under = lampUnder(run.name, which);
+  if (under && under.always) {
+    var section = under.always;
+    // Always on's lamps keep their own walks, so a scene's stretch never steps one on
+    var store = walks["always " + run.name] || (walks["always " + run.name] = {});
+    var walk = store[which] || (store[which] = {});
+    var lit = livePlay(lookNamed(section.look), section, beat, which - section.from,
+                       widthOf(section), walk);
+    return {level: Math.max(0, Math.min(1, lit.level)), ink: lamp.colour ? lit.ink : "#ffd9a0",
+            always: true, unset: true};
+  }
+  return {level: 0, ink: "#3a3f44", nothing: true, off: !!(under && under.off), unset: true};
+}
+
+// What a lamp's tip says after its name where the scene plays nothing on it
+function underSaid(run, which) {
+  var under = lampUnder(run.name, which);
+  if (under && under.always) return ", playing " + lookNamed(under.always.look).name +
+                                    " from Always on";
+  if (under && under.off) return ", off here and lit only in " + spoken(namesOf(under.off));
+  return ", playing Nothing";
+}
+
+// What a stretch the scene plays nothing on shows instead, or null where nothing plays on any of
+// its lamps. The result holds a short note to follow the cell's "Nothing", a tip, and what each
+// lamp shows, as "off", null or Always on's stretch and the lamp's place in it
+function stretchUnder(run, section) {
+  var looks = [], scenes = [], lamps = [], played = 0;
+  for (var at = section.from; at <= section.to; at++) {
+    var under = lampUnder(run.name, at);
+    lamps.push(!under ? null : under.off ? "off"
+             : {section: under.always, at: at - under.always.from});
+    if (!under) continue;
+    played++;
+    if (under.always) {
+      var name = lookNamed(under.always.look).name;
+      if (looks.indexOf(name) < 0) looks.push(name);
+    } else {
+      namesOf(under.off).forEach(function (name) {
+        if (scenes.indexOf(name) < 0) scenes.push(name);
+      });
+    }
+  }
+  if (!played) return null;
+  var whole = played === widthOf(section);
+  var showing = lamps.filter(function (one) { return one && one !== "off"; }).length;
+  var notes = [];
+  if (looks.length) notes.push("Always on's " + spoken(looks) +
+                               (showing < widthOf(section) ? " on " + showing : ""));
+  // The scenes are named for what uses the lights anywhere in the file, never for which came first
+  if (scenes.length) notes.push((looks.length || !whole ? (played - showing) + " off" : "off") +
+                                ", lit only in " + spoken(scenes));
+  var tips = [];
+  if (looks.length) tips.push("Always on's " + spoken(looks) + " plays " +
+                              (whole && !scenes.length ? "here" : "on some of these lights") +
+                              " in this scene.");
+  if (scenes.length) tips.push((looks.length ? "The rest is off here" : "Off here") +
+                               " and lit only in " + spoken(scenes) + ".");
+  return {note: notes.join(" and "), tip: tips.join(" "), lamps: lamps};
 }
 
 function inkAt(lit) {
@@ -3372,8 +3504,11 @@ function lookCard(isMono, look, on) {
   name.textContent = look.name || "Nothing";
   card.appendChild(name);
 
+  // In a scene, a stretch playing nothing shows Always on's look or goes dark as the board decides,
+  // so Nothing there is not the same as off
   card.title = look.name ? look.name + ": apply it to the selected stretch"
-                         : "turn a stretch off";
+             : state.at >= 0 ? "Play nothing of this scene's own on the selected stretch"
+             : "turn a stretch off";
   card.onclick = function () {
     var run = galleryRun(isMono);
     landLook(run, stretchFor(run, isMono), look.name);
@@ -3513,8 +3648,8 @@ function renderRun(where, run) {
       one.onmouseenter = function () { showKin(lamp.out, true); };
       one.onmouseleave = function () { showKin(lamp.out, false); };
     }
-    one.title = selectorFor(lamp) + ", playing " +
-                (lookNamed(run.sections[mine].look) || {name: "Nothing"}).name;
+    var playing = lookNamed(run.sections[mine].look);
+    one.title = selectorFor(lamp) + (playing ? ", playing " + playing.name : underSaid(run, at));
     one.onclick = function () {
       pick(run, mine);
       draw();
@@ -3534,6 +3669,7 @@ function renderRun(where, run) {
     faces.forEach(function (face, at) {
       var one = all[at] || {level: 0, ink: "#e4e0d9"};
       face.style.background = one.nothing ? "#2a2d30" : inkAt(one);
+      face.parentNode.classList.toggle("unset", !!one.unset);
       face.style.boxShadow = one.level > 0.05
         ? "inset 0 0 0 1px rgba(0,0,0,.2), 0 0 " + (3 + one.level * 8).toFixed(1) +
           "px rgba(255,217,160," + (one.level * 0.5).toFixed(2) + ")"
@@ -3621,6 +3757,58 @@ function washFor(run, section, look) {
   return stretchWash(look, section, run, !!first && !first.colour);
 }
 
+// A stretch's coloured band. One the scene plays nothing on keeps the stripes of nothing, over a
+// window onto Always on's own band where Always on plays there and over dark where it is off
+function washOf(run, section, look, under) {
+  var wash = document.createElement("span");
+  if (look || !under) {
+    wash.className = "lit" + (look ? "" : " nothing");
+    if (look) wash.style.background = washFor(run, section, look);
+    return wash;
+  }
+  wash.className = "lit through";
+  // Each run of lamps that show one thing is one pane
+  var wide = under.lamps.length;
+  var start = 0;
+  while (start < wide) {
+    var end = start + 1;
+    while (end < wide && sameShowing(under.lamps[end], under.lamps[start])) end++;
+    wash.appendChild(paneOnto(run, under.lamps[start], start, end, wide));
+    start = end;
+  }
+  return wash;
+}
+
+// Whether two lamps show the same thing under a scene: nothing, off, or one Always on stretch
+function sameShowing(one, other) {
+  return one === other ||
+         !!(one && other && one.section && other.section && one.section === other.section);
+}
+
+// A pane over lamps start to end of a stretch wide lamps across. Over Always on's stretch it holds
+// that stretch's whole band, moved so the lamps under the pane line up with their own part of it
+function paneOnto(run, shows, start, end, wide) {
+  var pane = document.createElement("span");
+  pane.style.left = (start * 100 / wide) + "%";
+  pane.style.width = ((end - start) * 100 / wide) + "%";
+  if (!shows) pane.className = "empty";
+  else if (shows === "off") pane.className = "off";
+  else {
+    var band = document.createElement("span");
+    band.style.width = (widthOf(shows.section) * 100 / (end - start)) + "%";
+    band.style.left = (-shows.at * 100 / (end - start)) + "%";
+    band.style.background = washFor(run, shows.section, lookNamed(shows.section.look));
+    pane.appendChild(band);
+  }
+  return pane;
+}
+
+// The note under a cell's "Nothing" saying what shows through from Always on, or nothing where
+// the stretch shows nothing at all
+function beneath(under) {
+  return under ? "<span class='beneath'>" + escapeHtml(under.note) + "</span>" : "";
+}
+
 function renderBar(where, run) {
   var box = document.getElementById(where);
   box.textContent = "";
@@ -3638,15 +3826,14 @@ function renderBar(where, run) {
                  targetFor(run, section).selector;
 
     var look = lookNamed(section.look);
-    var wash = document.createElement("span");
-    wash.className = "lit" + (look ? "" : " nothing");
-    if (look) wash.style.background = washFor(run, section, look);
-    cell.appendChild(wash);
+    var under = look ? null : stretchUnder(run, section);
+    cell.appendChild(washOf(run, section, look, under));
+    if (under) cell.title = under.tip;
 
     var says = document.createElement("span");
     says.className = "says";
-    says.innerHTML = (look ? look.name : "Nothing") + " <em>" + widthOf(section) +
-                     "</em>";
+    says.innerHTML = (look ? look.name : "Nothing") + " <em>" + widthOf(section) + "</em>" +
+                     beneath(under);
     cell.appendChild(says);
 
     // Where this stretch can be cut, one place between two lamps
@@ -4107,6 +4294,53 @@ function slotAt(which) { return which < 0 ? state.always : state.scenes[which]; 
 
 function allBodies() {
   return [state.always.body].concat(state.scenes.map(function (scene) { return scene.body; }));
+}
+
+// ---- what a scene leaves to Always on -------------------------------------------------------
+// The board plays Always on under every scene. Where a scene plays nothing of its own on a lamp,
+// the board plays Always on's look there, and where Always on plays nothing either, it turns the
+// lamp off if another scene plays on it. A scene tab shows the same, so its lamps look as the
+// board will light them
+
+// The scenes other than the one being edited, whose bodies are as they were last stored
+function otherScenes() {
+  return state.scenes.filter(function (scene, at) { return at !== state.at; });
+}
+
+function namesOf(scenes) { return scenes.map(function (scene) { return scene.name; }); }
+
+// Grey out settings that show Always on's values in a scene, which are set on the Always on tab
+function frozen(node) {
+  node.classList.add("frozen");
+  node.title = "Set on the Always on tab";
+  node.querySelectorAll("button, input, select").forEach(function (control) {
+    control.disabled = true;
+  });
+}
+
+// The stretch of a stored body's run that covers one lamp and plays a look, or null. A look
+// this page does not offer writes no line, so its stretch plays nothing
+function stretchPlaying(body, runName, at) {
+  var run = body && body.runs[runName];
+  if (!run) return null;
+  for (var i = 0; i < run.sections.length; i++) {
+    var section = run.sections[i];
+    if (section.from <= at && at <= section.to) return lookNamed(section.look) ? section : null;
+  }
+  return null;
+}
+
+// What the board plays on a lamp the scene being edited plays nothing on. The result holds
+// always=, Always on's stretch over the lamp, or off=, every other scene that plays on it where
+// Always on does not. It is null where nothing plays on the lamp, and on the Always on tab
+function lampUnder(runName, at) {
+  if (state.at < 0) return null;
+  var section = stretchPlaying(state.always.body, runName, at);
+  if (section) return {always: section};
+  var by = otherScenes().filter(function (scene) {
+    return stretchPlaying(scene.body, runName, at);
+  });
+  return by.length ? {off: by} : null;
 }
 
 function store() { slotAt(state.at).body = capture(); }
@@ -4718,6 +4952,29 @@ function wireRun(run) {
                                  " " + (high + ROOM * 2),
                         preserveAspectRatio: "xMinYMid meet"});
 
+  // A stretch set to Nothing sits on the stripes Nothing wears elsewhere, inside a broken line, as
+  // an output's lamp does. Its beads show what the board does there
+  var stripes = "unset-" + run.name;
+  var defs = tag("defs", {});
+  var pattern = tag("pattern", {id: stripes, patternUnits: "userSpaceOnUse", width: 6, height: 6,
+                                patternTransform: "rotate(-45)"});
+  pattern.appendChild(tag("rect", {width: 6, height: 6, fill: "#e4e0d9"}));
+  pattern.appendChild(tag("rect", {width: 3, height: 6, fill: "#f0eeea"}));
+  defs.appendChild(pattern);
+  svg.appendChild(defs);
+  if (run.there !== false) {
+    run.sections.forEach(function (section) {
+      if (lookNamed(section.look)) return;
+      spanRows(section, place).forEach(function (row) {
+        svg.appendChild(tag("rect", {"class": "unset", x: row.low - GAP / 2, y: row.y - 2.2,
+                                     width: row.high - row.low + SIZE + GAP,
+                                     height: SIZE + 4.4, rx: 4, fill: "url(#" + stripes + ")",
+                                     stroke: "#a9a49b", "stroke-width": 0.7,
+                                     "stroke-dasharray": "2 1.5"}));
+      });
+    });
+  }
+
   for (var r = 0; r < rows - 1; r++) {
     var atRight = r % 2 === 0;
     var x = atRight ? EDGE + wide : EDGE;
@@ -4798,7 +5055,8 @@ function wireRun(run) {
   return {svg: svg, paint: function (all) {
     for (var n = 0; n < beads.length; n++) {
       var one = all[n] || {level: 0, ink: "#e4e0d9"};
-      beads[n].setAttribute("fill", one.nothing ? "#e4e0d9" : inkAt(one));
+      // A bead playing nothing is drawn unlit, as an output's lamp is
+      beads[n].setAttribute("fill", one.nothing ? "#2a2d30" : inkAt(one));
     }
   }};
 }
@@ -4877,14 +5135,13 @@ function renderStripBar(where, run) {
     // a still palette does not stand for one anyway. So a stretch is washed in a
     // colour of its look and named, and the run below is where it is watched
     var look = lookNamed(section.look);
-    var wash = document.createElement("span");
-    wash.className = "lit" + (look ? "" : " nothing");
-    if (look) wash.style.background = stretchWash(look, section, run, run.mono);
-    cell.appendChild(wash);
+    var under = look ? null : stretchUnder(run, section);
+    cell.appendChild(washOf(run, section, look, under));
+    if (under) cell.title += ". " + under.tip;
 
     var says = document.createElement("span");
     says.className = "says";
-    says.innerHTML = (look ? look.name : "Nothing") + " <em>" + wide + "</em>";
+    says.innerHTML = (look ? look.name : "Nothing") + " <em>" + wide + "</em>" + beneath(under);
     cell.appendChild(says);
 
     // Where this stretch could be cut, one click to a place between two lights
@@ -6563,6 +6820,7 @@ chosenSteps.push(function (where, run) {
   var section = run && run.sections[run.picked];
   if (!who || !section) return;
   var look = lookNamed(section.look);
+  var under = look ? null : stretchUnder(run, section);
   who.innerHTML = "";
   var named = document.createElement("b");
   named.textContent = look ? look.name : "Nothing";
@@ -6570,6 +6828,13 @@ chosenSteps.push(function (where, run) {
   var reversed = section.reversed && runsAWay(look, forwardTargetFor(run, section), section);
   who.appendChild(document.createTextNode(" on " + wherePlays(run, section, reversed)));
   who.title = targetFor(run, section).selector;
+  // A stretch the scene leaves empty says what the board plays there, and how to change it
+  if (under) {
+    var hint = document.createElement("div");
+    hint.className = "underhint";
+    hint.textContent = under.tip + " Choose a look to give this scene its own.";
+    who.parentNode.insertBefore(hint, who.nextSibling);
+  }
 });
 
 chosenSteps.push(function (where, run) {
@@ -7548,9 +7813,10 @@ function screenButton(letter) {
 
 state.screens = {};
 SCREENS.forEach(function (letter) {
+  // off= is a scene turning the screen off with `none`, showing black in place of a picture
   state.screens[letter] = {there: true, size: letter === "A" ? "2.8" : "1.54", turn: 0,
                            carried: "", pingpong: false, hold: "", fps: 5, shows: null,
-                           kept: null, turns: {}, lastShows: null};
+                           kept: null, turns: {}, lastShows: null, off: false};
 });
 
 // A picture newly chosen on a screen starts as chosenAfresh says. What the screen showed when
@@ -7663,7 +7929,7 @@ function panelDrawing(screen) {
   var art = screen.art || (screen.shows && screen.shows !== "keep" ? mediaArt(screen.shows) : null);
 
   parts.push(svgTag("rect", {x: litX, y: litY, width: litW, height: litH,
-                             fill: art ? GROUND_INK : EMPTY_INK}));
+                             fill: art ? GROUND_INK : screen.off ? "#000000" : EMPTY_INK}));
   parts.push(svgTag("rect", {x: litX - 0.4, y: litY + litH, width: litW + 0.8,
                              height: Math.max(0, up(made.panel[1]) - (litY + litH) - 0.4),
                              fill: CHIN_INK}));
@@ -7680,6 +7946,10 @@ function panelDrawing(screen) {
                                "text-anchor": "middle", fill: "#8b959b",
                                "font-size": 4, "font-family": "system-ui"},
                       "on the board"));
+  } else if (screen.off) {
+    parts.push(svgTag("text", {x: litX + litW / 2, y: litY + litH / 2 + 1.4,
+                               "text-anchor": "middle", fill: "#5d666c",
+                               "font-size": 4, "font-family": "system-ui"}, "off"));
   } else {
     parts.push(svgTag("text", {x: litX + litW / 2, y: litY + litH / 2 + 1.4,
                                "text-anchor": "middle", fill: "#8b959b",
@@ -7812,14 +8082,28 @@ function renderScreenBoxes() {
     size.title = "Panel fitted, shared by every scene";
     head.insertBefore(size, drop);
 
-    body.appendChild(panelPreview(screen));
+    body.appendChild(previewInScene(screen, letter));
 
-    // The look's sections, what it shows above them, and its backlight across the top
-    body.appendChild(lookSections("screen" + letter, screen, screen.size));
-    body.insertBefore(showingLine(screen, letter), body.querySelector(".looksettings"));
-    body.insertBefore(lightRow(screen.look.backlight, function (value) {
+    // The look's sections, what it shows above them, and its backlight across the top. A screen
+    // showing Always on's picture plays it in Always on's settings, so it shows those, greyed
+    var under = screen.shows ? null : screenUnder(letter);
+    var held = screen;
+    if (under && under.always) {
+      var always = state.always.body.screens[letter];
+      held = Object.assign({}, screen, {shows: null, turn: always.turn || 0,
+                                        look: always.look || screen.look});
+    }
+    var sections = lookSections("screen" + letter, held, screen.size);
+    var light = lightRow(held.look.backlight, function (value) {
       screen.look.backlight = value;
-    }, "backlight", "Backlight brightness for " + screenShown(letter).replace("Screen", "screen") + " in this scene"), body.firstChild);
+    }, "backlight", "Backlight brightness for " + screenShown(letter).replace("Screen", "screen") + " in this scene");
+    if (held !== screen) {
+      frozen(sections);
+      frozen(light);
+    }
+    body.appendChild(sections);
+    body.insertBefore(showingLine(screen, letter), body.querySelector(".looksettings"));
+    body.insertBefore(light, body.firstChild);
 
     // What the file already says for this screen, where the picker did not write it
     // and no picture can stand for it. It is a line of its own under the settings
@@ -7833,6 +8117,19 @@ function renderScreenBoxes() {
     }
     box.appendChild(side);
   });
+}
+
+// A screen's preview. One the scene shows nothing on shows Always on's picture faded where the board
+// plays it there, in Always on's own settings
+function previewInScene(screen, letter) {
+  var under = screen.shows ? null : screenUnder(letter);
+  if (!under || !under.always) return panelPreview(screen);
+  var always = state.always.body.screens[letter];
+  var drawing = panelPreview(Object.assign({}, screen, {shows: always.shows, turn: always.turn || 0,
+                                                        look: always.look || screen.look}));
+  drawing.classList.add("under");
+  drawing.title = "Always on's picture, which shows here in this scene";
+  return drawing;
 }
 
 // The pictures on the drive, each with what it is on. The parts below add to them, each after the
@@ -7865,18 +8162,63 @@ function renderAssets() {
   // Grouped once the drive is open, the user's own always heading the gallery
   var grouped = !!state.fileHandle;
   var groups = grouped ? mediaGroups() : [[OWN_GROUP, "", state.media, false]];
-  groups.forEach(function (group) {
+  // In a scene, Off is a card made small at the end of the first heading, as Nothing is in the
+  // looks, so it is never folded away. Without headings it has a line of its own. On the Always
+  // on tab it keeps its place unseen, so the gallery does not move between tabs
+  if (!grouped) {
+    var alone = document.createElement("div");
+    alone.className = "offhead";
+    alone.appendChild(offCard());
+    box.appendChild(alone);
+  }
+  groups.forEach(function (group, at) {
     var open = groupOpen(group);
     if (grouped) {
-      box.appendChild(foldHead(group[0], group[1], open, function () {
+      var fold = foldHead(group[0], group[1], open, function () {
         groupsOpen[group[0]] = !open;
-      }));
+      });
+      if (at === 0) {
+        var head = document.createElement("div");
+        head.className = "offhead";
+        head.appendChild(fold);
+        head.appendChild(offCard());
+        box.appendChild(head);
+      } else {
+        box.appendChild(fold);
+      }
     }
     if (grouped && !open) return;
     group[2].forEach(assetTile);
     if (group[0] === OWN_GROUP) adder();
   });
   assetSteps.forEach(function (step) { step(); });
+
+  // The small Off card, black, whose buttons turn a screen off in this scene. A hub gives it its
+  // positions' buttons in place of these
+  function offCard() {
+    var cell = document.createElement("div");
+    cell.className = "card nothing small offasset";
+    cell.title = "Turn a screen off in this scene";
+    if (state.at < 0) cell.style.visibility = "hidden";
+    cell.innerHTML = "<div class='face'>Off</div>";
+    var pick = document.createElement("div");
+    pick.className = "pick";
+    SCREENS.forEach(function (letter) {
+      var screen = state.screens[letter];
+      var button = document.createElement("button");
+      button.textContent = screenButton(letter);
+      button.className = screen.off ? "lit" + (letter === "B" ? " b" : "") : "";
+      button.disabled = !screen.there;
+      button.onclick = function () {
+        screen.off = !screen.off;
+        if (screen.off) screen.shows = null;
+        draw();
+      };
+      pick.appendChild(button);
+    });
+    cell.appendChild(pick);
+    return cell;
+  }
 
   function adder() {
     if (state.fileHandle)
@@ -7939,6 +8281,7 @@ function renderAssets() {
         var screen = state.screens[screensPaired() ? SCREENS[0] : letter];
         screen.shows = screen.shows !== name ? name
                      : screen.kept ? "keep" : null;
+        screen.off = false;
         draw();
       };
       pick.appendChild(button);
@@ -7972,10 +8315,18 @@ function screenEntry(letter, body) {
   if (pairWritten(body)) return letter === SCREENS[0] ? pairEntry(body) : null;
   var screen = state.screens[letter];
   var playing = body.screens[letter];
-  if (!screen.there || !playing.shows) return null;
+  if (!screen.there) return null;
+  if (playing.off) return offEntry(SCREEN_NAMES[letter], (playing.look || freshLook()).backlight);
+  if (!playing.shows) return null;
   if (playing.shows === "keep") return playing.kept;
   var look = playing.look || freshLook();
   return lookEntry(SCREEN_NAMES[letter], playing, look, look.backlight, screen.size);
+}
+
+// The line that turns a screen or hub positions off in a scene, showing black at the backlight given
+function offEntry(selector, backlight) {
+  return selector + (backlight < 1 ? " backlight=" + Math.round(backlight * 100) + "%" : "") +
+         ": none";
 }
 
 // ---- each scene keeps what its screens show ---------------------------------------------------
@@ -7986,7 +8337,8 @@ bodyParts.push({
     SCREENS.forEach(function (letter) {
       var screen = state.screens[letter];
       body.screens[letter] = {shows: screen.shows, kept: screen.kept, pingpong: screen.pingpong,
-                              hold: screen.hold, fps: screen.fps, turn: screen.turn};
+                              hold: screen.hold, fps: screen.fps, turn: screen.turn,
+                              off: screen.off};
     });
   },
   apply: function (body) {
@@ -7995,14 +8347,20 @@ bodyParts.push({
       var screen = state.screens[letter];
       Object.assign(screen, body.screens[letter]);
       screen.turn = body.screens[letter].turn || 0;
+      screen.off = !!body.screens[letter].off;
       screen.lastShows = screen.shows;
     });
   },
   blank: function (body) {
-    SCREENS.forEach(function (letter) { body.screens[letter].shows = null; });
+    SCREENS.forEach(function (letter) {
+      body.screens[letter].shows = null;
+      body.screens[letter].off = false;
+    });
   },
   hasContent: function (body) {
-    return SCREENS.some(function (letter) { return !!(body.screens && body.screens[letter].shows); });
+    return SCREENS.some(function (letter) {
+      return !!(body.screens && (body.screens[letter].shows || body.screens[letter].off));
+    });
   },
   // A scene's screens are written after its lamps
   entries: function (body, lines) {
@@ -8025,7 +8383,7 @@ boardLineSteps.before.push(function () {
   SCREENS.forEach(function (letter) {
     var screen = state.screens[letter];
     var used = screen.there && bodies.some(function (body) {
-      return body && body.screens && body.screens[letter].shows;
+      return body && body.screens && (body.screens[letter].shows || body.screens[letter].off);
     });
     screensFitted[SCREEN_NAMES[letter].toLowerCase()] = used ? screen.size : "";
   });
@@ -8041,6 +8399,19 @@ function screenPlaying(parts, body, letter) {
   playing.turn = 0;
   playing.pingpong = false;
   playing.hold = "";
+  playing.off = false;
+  // none turns the screen off, taking only a backlight
+  if (parts.effect === "none") {
+    var known = Object.keys(parts.left).every(function (key) { return key === "backlight"; }) &&
+                !Object.keys(parts.right).length;
+    if (!known) return null;
+    var light = parts.left.backlight;
+    if (light !== undefined)
+      look.backlight = /%$/.test(light) ? parseFloat(light) / 100 : Number(light);
+    playing.shows = null;
+    playing.off = true;
+    return playing;
+  }
   var source = {gif: "file", image: "file", drawing: "file", sequence: "folder"}[parts.effect];
   if (!source || !parts.right[source]) return null;
   playing.shows = unquoted(parts.right[source]);
@@ -8102,7 +8473,8 @@ function readScreens(bodies) {
     body.kept = body.kept.filter(function (one) {
       var parts = entryParts(one.text);
       var letter = parts && screenLetter(parts.selector);
-      if (!letter || !sizes[letter] || body.screens[letter].shows) return true;
+      if (!letter || !sizes[letter] || body.screens[letter].shows || body.screens[letter].off)
+        return true;
       var playing = screenPlaying(parts, body, letter);
       if (!playing) return true;
 
@@ -8340,16 +8712,27 @@ tabSwatches.screensPanel = function (swatch) {
     var screen = state.screens[letter];
     var cell = document.createElement("span");
     cell.className = "screencell " + letter.toLowerCase();
-    var art = screen.there && screen.shows
-              ? mediaArt(screen.shows, screen.look && screen.look.style) : null;
-    if (art) cell.style.backgroundImage = "url(" + art.url + ")";
+    // A screen the scene turns off is black, and one showing Always on's picture shows it in the
+    // broken line the lamps and previews wear
+    var under = screen.there && !screen.shows ? screenUnder(letter) : null;
+    var shown = screen.shows || (under && under.always) || null;
+    var art = screen.there && shown && shown !== "keep"
+              ? mediaArt(shown, screen.look && screen.look.style) : null;
+    // Always on's picture wears the stripes of nothing over it
+    if (art) cell.style.backgroundImage = (under && under.always ? "var(--through), " : "") +
+                                          "url(" + art.url + ")";
     if (!screen.there) cell.classList.add("absent");
-    else if (!art) cell.classList.add("blank");
+    else if (screen.off) cell.classList.add("off");
+    // A picture with no thumbnail yet is a white tile, its screen showing something
+    else if (!art) cell.classList.add(shown ? "blank"
+                                      : under && (under.off || under.stopped) ? "dark" : "nothing");
     swatch.appendChild(cell);
   });
   swatch.title = SCREENS.map(function (letter) {
     var screen = state.screens[letter];
-    var said = !screen.there ? "not fitted" : screen.shows || "nothing";
+    var under = screen.there && !screen.shows ? screenUnder(letter) : null;
+    var said = !screen.there ? "not fitted" : screen.off ? "off"
+             : screen.shows || (under && under.always ? "Always on's " + under.always : "nothing");
     return SCREENS.length > 1 ? letter + ": " + said : said;
   }).join(", ");
 };
@@ -8414,6 +8797,9 @@ if (SCREENS.length) {
 function liveSwatch(swatch, panel) {
   swatch.textContent = "";
   swatch.className = "accswatch liveswatch";
+  // A strip not fitted is crossed through, as a screen not fitted is, its lamps playing nothing
+  var absent = runsOfPanel(panel).every(function (run) { return run.strip && run.there === false; });
+  if (absent) swatch.classList.add("absent");
   runsOfPanel(panel).forEach(function (run) {
     var cells = run.lamps.map(function () {
       var cell = document.createElement("span");
@@ -8422,10 +8808,12 @@ function liveSwatch(swatch, panel) {
     });
     painters.push({run: run, paint: function (all) {
       // A lamp playing nothing lets the swatch's own stripes through, as a still swatch
-      // shows nothing, where drawn dark it read as a lamp set to black
+      // shows nothing, where drawn dark it read as a lamp set to black. A lamp a scene turns
+      // off is one set to black, so it is drawn dark
       cells.forEach(function (cell, at) {
         var one = all[at];
-        cell.style.background = !one || one.nothing ? "transparent" : inkAt(one);
+        cell.style.background = one && one.off ? "#2a2d30"
+                              : !one || one.nothing ? "transparent" : inkAt(one);
       });
     }});
   });
@@ -9561,10 +9949,25 @@ function showingLine(held, letter) {
   var picture = held.shows && held.shows !== "keep" ? held.shows : null;
   // Nothing showing takes the same two lines a picture does, so nothing under it moves when one
   // is chosen
+  var press = "press " + screenButton(letter) + " under a picture below to show it here";
   if (!picture) {
     line.classList.add("empty");
-    line.innerHTML = (state.scenes.length ? "nothing chosen for this scene" : "nothing showing") +
-                     "<small>press " + screenButton(letter) + " under a picture below to show it here</small>";
+    var under = held.shows ? null : screenUnder(letter);
+    if (held.off) {
+      line.innerHTML = "off in this scene<small>black, at the backlight set above</small>";
+    } else if (under && under.always) {
+      var shown = under.always === "keep" ? "the line kept from the file"
+                                          : "<b>" + pictureSaid(under.always) + "</b>";
+      line.innerHTML = "showing " + shown + " from Always on<small>" + press + " instead</small>";
+    } else if (under) {
+      line.innerHTML = "backlight off in this scene<small>" + (under.off
+        ? "lit only in " + escapeHtml(spoken(namesOf(under.off)))
+        : "Always on's pair stops while this scene shows on " + screenShown(under.stopped)) +
+        "</small>";
+    } else {
+      line.innerHTML = (state.scenes.length ? "nothing chosen for this scene" : "nothing showing") +
+                       "<small>" + press + "</small>";
+    }
     return line;
   }
   var media = mediaNamed(picture);
@@ -9874,6 +10277,12 @@ screensHeadSteps.after.push(function () {
   if (SCREENS.length < 2 || state.hub.on) return;
   var fitted = SCREENS.every(function (letter) { return state.screens[letter].there; });
   if (!fitted) return;
+  // A scene pairs only its own pictures, so while either screen shows Always on's the toggles stay
+  // in place but cannot be pressed
+  var fromAlways = SCREENS.filter(function (letter) {
+    var under = state.screens[letter].shows ? null : screenUnder(letter);
+    return under && under.always;
+  });
   SCREENS.forEach(function (letter) {
     var body = document.querySelector("#screensHead .screen-box." + letter.toLowerCase() + " .body");
     if (!body) return;
@@ -9892,6 +10301,11 @@ screensHeadSteps.after.push(function () {
       togglePair();
       draw();
     };
+    if (fromAlways.length) {
+      button.disabled = true;
+      button.className = "";
+      button.title = "Pairs this scene's own pictures on both screens";
+    }
     segment.appendChild(button);
     place.appendChild(segment);
 
@@ -9899,7 +10313,10 @@ screensHeadSteps.after.push(function () {
     // match, being sent as a pair until a setting after the file differs
     var said = document.createElement("small");
     said.className = "groupsaid";
-    said.textContent = screensPaired() ? "paired with " + screenShown(other)
+    // The screen showing Always on's picture already says so in its own line below
+    said.textContent = fromAlways.indexOf(letter) >= 0 ? "not available"
+                     : fromAlways.length ? screenShown(fromAlways[0]) + " from Always on"
+                     : screensPaired() ? "paired with " + screenShown(other)
                      : picturesMatch(state.screens[letter], state.screens[other])
                        ? "matches " + screenShown(other) : "on its own";
     place.appendChild(said);
@@ -9935,6 +10352,25 @@ function pairWritten(body) {
   var second = body.screens[SCREENS[1]];
   if (!body.screensPaired) return picturesMatch(first, second);
   return !!first.shows && first.shows !== "keep" && second.shows === first.shows;
+}
+
+// What the board shows on a screen the scene being edited shows nothing on. The result holds
+// always=, Always on's picture, or stopped=, the screen this scene takes from Always on's pair,
+// which stops the whole pair for the scene, or off=, every other scene that shows on it where
+// Always on does not. It is null where nothing shows there, on the Always on tab and on a hub
+function screenUnder(letter) {
+  if (state.at < 0 || state.hub.on || state.screens[letter].off) return null;
+  var always = state.always.body;
+  var shown = always.screens && always.screens[letter].shows;
+  if (shown) {
+    var places = pairWritten(always) ? SCREENS : [letter];
+    var taken = places.filter(function (one) { return state.screens[one].shows; })[0];
+    return taken ? {stopped: taken} : {always: shown};
+  }
+  var by = otherScenes().filter(function (scene) {
+    return scene.body.screens && (scene.body.screens[letter].shows || scene.body.screens[letter].off);
+  });
+  return by.length ? {off: by} : null;
 }
 
 // Of a pair's two screens, the one whose canvas is larger after its own turn and pixel_double,

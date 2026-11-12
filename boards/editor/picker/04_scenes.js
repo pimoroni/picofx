@@ -113,6 +113,53 @@ function allBodies() {
   return [state.always.body].concat(state.scenes.map(function (scene) { return scene.body; }));
 }
 
+// ---- what a scene leaves to Always on -------------------------------------------------------
+// The board plays Always on under every scene. Where a scene plays nothing of its own on a lamp,
+// the board plays Always on's look there, and where Always on plays nothing either, it turns the
+// lamp off if another scene plays on it. A scene tab shows the same, so its lamps look as the
+// board will light them
+
+// The scenes other than the one being edited, whose bodies are as they were last stored
+function otherScenes() {
+  return state.scenes.filter(function (scene, at) { return at !== state.at; });
+}
+
+function namesOf(scenes) { return scenes.map(function (scene) { return scene.name; }); }
+
+// Grey out settings that show Always on's values in a scene, which are set on the Always on tab
+function frozen(node) {
+  node.classList.add("frozen");
+  node.title = "Set on the Always on tab";
+  node.querySelectorAll("button, input, select").forEach(function (control) {
+    control.disabled = true;
+  });
+}
+
+// The stretch of a stored body's run that covers one lamp and plays a look, or null. A look
+// this page does not offer writes no line, so its stretch plays nothing
+function stretchPlaying(body, runName, at) {
+  var run = body && body.runs[runName];
+  if (!run) return null;
+  for (var i = 0; i < run.sections.length; i++) {
+    var section = run.sections[i];
+    if (section.from <= at && at <= section.to) return lookNamed(section.look) ? section : null;
+  }
+  return null;
+}
+
+// What the board plays on a lamp the scene being edited plays nothing on. The result holds
+// always=, Always on's stretch over the lamp, or off=, every other scene that plays on it where
+// Always on does not. It is null where nothing plays on the lamp, and on the Always on tab
+function lampUnder(runName, at) {
+  if (state.at < 0) return null;
+  var section = stretchPlaying(state.always.body, runName, at);
+  if (section) return {always: section};
+  var by = otherScenes().filter(function (scene) {
+    return stretchPlaying(scene.body, runName, at);
+  });
+  return by.length ? {off: by} : null;
+}
+
 function store() { slotAt(state.at).body = capture(); }
 
 function switchTo(which) {

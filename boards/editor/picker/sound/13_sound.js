@@ -14,12 +14,32 @@ state.soundVolume = 100;
 state.soundKept = null;
 state.sounds = [];
 state.soundInfo = {};
+// Whether the scene silences the speaker with `audio: none`, which only a scene needs, where
+// Always on has a sound to silence
+state.soundOff = false;
+
+// The sound Always on plays in the scene being edited, where the scene has none of its own. It is
+// null on the Always on tab, in a scene with its own sound or silence and where Always on has none
+function soundUnder() {
+  if (state.at < 0 || state.sound || state.soundKept || state.soundOff) return null;
+  return state.always.body.sound || null;
+}
+
+// Whether the scene being edited can silence Always on's sound, there being one to silence
+function canSilence() { return state.at >= 0 && !!state.always.body.sound; }
 
 // The Sound tab's row of sounds and its setting, which renderSound below puts in the page's style
 function renderSoundTab() {
   var box = document.getElementById("sound");
   box.textContent = "";
-  document.getElementById("soundSays").textContent = !state.fileHandle
+  var under = soundUnder();
+  document.getElementById("soundSays").textContent = under
+    ? "Always on's " + nameShown(under) + " plays on through this scene. Choose a sound to " +
+      "give this scene its own, or Silence to quieten it"
+    : state.soundOff
+    ? "this scene is silent. Always on's " + nameShown(state.always.body.sound) + " stops while " +
+      "it shows"
+    : !state.fileHandle
     ? "open the FX drive to see the sounds on it"
     : !state.scanned
       ? "reading the drive..."
@@ -90,7 +110,9 @@ function volumeSlider() {
   slider.min = 0;
   slider.max = 100;
   slider.step = 5;
-  slider.value = state.soundVolume;
+  // A scene playing Always on's sound shows Always on's volume, greyed, as a screen its backlight
+  var under = soundUnder();
+  slider.value = under ? state.always.body.soundVolume : state.soundVolume;
   slider.disabled = !state.sound;
   var figure = document.createElement("span");
   figure.className = "lightfigure";
@@ -110,6 +132,7 @@ function volumeSlider() {
   volume.appendChild(slider);
   volume.appendChild(figure);
   volume.title = state.sound ? "How loud the board plays the sound" : "No sound chosen";
+  if (under) frozen(volume);
   return volume;
 }
 
@@ -134,12 +157,16 @@ function soundKeptTile() {
   return tile;
 }
 
-// A sound's tile, which soundTile below draws the sound on
+// A sound's tile, which soundTile below draws the sound on. Always on's sound, playing in a scene
+// with none of its own, wears the striped frame a screen showing Always on's picture wears
 function plainSoundTile(name) {
-  var picked = name === null ? !state.sound && !state.soundKept : state.sound === name;
+  var picked = name === null ? !state.sound && !state.soundKept && !state.soundOff
+                             : state.sound === name;
   var info = name ? state.soundInfo[name] : null;
   var tile = document.createElement("button");
-  tile.className = "sound" + (picked ? " picked" : "") + (name ? "" : " quiet");
+  var under = name !== null && name === soundUnder();
+  tile.className = "sound" + (picked ? " picked" : "") + (name ? "" : " quiet") +
+                   (under ? " under" : "");
   var colour = picked ? "#0f8a72" : "#c9c3b9";
   if (name && info && info.bars) {
     var cells = [];
@@ -165,6 +192,7 @@ function plainSoundTile(name) {
   tile.appendChild(says);
   tile.onclick = function () {
     state.sound = name;
+    state.soundOff = false;
     if (name) state.soundKept = null;
     if (!name) {
       state.soundLoop = false;
@@ -182,6 +210,7 @@ function plainSoundTile(name) {
 }
 
 function soundLine(body) {
+  if (body.soundOff) return "audio: none";
   if (body.sound)
     return "audio: wav file=" + quoted(body.sound) +
            (body.soundLoop ? " loop=true" : "") +
@@ -201,6 +230,7 @@ bodyParts.push({
     body.soundLoop = state.soundLoop;
     body.soundVolume = state.soundVolume;
     body.soundKept = state.soundKept;
+    body.soundOff = state.soundOff;
   },
   apply: function (body) {
     if (!("sound" in body)) return;
@@ -208,14 +238,16 @@ bodyParts.push({
     state.soundLoop = body.soundLoop;
     state.soundVolume = body.soundVolume;
     state.soundKept = body.soundKept;
+    state.soundOff = !!body.soundOff;
   },
   blank: function (body) {
     body.sound = null;
     body.soundLoop = false;
     body.soundVolume = 100;
     body.soundKept = null;
+    body.soundOff = false;
   },
-  hasContent: function (body) { return !!body.sound; },
+  hasContent: function (body) { return !!(body.sound || body.soundOff); },
   // A scene's sound is its first line
   entries: function (body, lines) {
     var sound = "sound" in body ? soundLine(body) : null;
@@ -230,6 +262,13 @@ function readSound(bodies) {
   bodies.forEach(function (body) {
     body.kept = body.kept.filter(function (one) {
       var parts = entryParts(one.text);
+      // A scene's silence is read as itself
+      if (parts && parts.selector === "audio" && one.text === "audio: none" && !body.sound &&
+          !body.soundOff) {
+        body.soundOff = true;
+        if (one.comments.length) body.notes[one.text] = one.comments;
+        return false;
+      }
       if (!parts || parts.selector !== "audio" || parts.effect !== "wav" || body.sound ||
           !Object.keys(parts.right).every(function (key) {
             return key === "file" || key === "loop" || key === "volume";
@@ -415,6 +454,13 @@ function loudnessInk(loud) {
   }).join(",") + ")";
 }
 
+// The bars of a sound with nothing in it, a thin band in the quietest colour
+function silentBars() {
+  var bars = [];
+  for (var i = 0; i < SOUND_SAMPLES; i++) bars.push(0.04);
+  return bars;
+}
+
 function soundOutline(bars) {
   var wide = 100, high = 40, middle = high / 2, last = bars.length - 1;
   var id = "loudness" + (outlinesMade++);
@@ -467,7 +513,10 @@ function renderSound() {
   var explains = /^(one WAV|plays)/.test(says.textContent);
   if (row && explains) row.title = says.textContent.charAt(0).toUpperCase() +
                                    says.textContent.slice(1);
-  says.hidden = explains;
+  // With scenes, a sentence one tab shows and another does not keeps its place unseen, so the tab
+  // does not move between them
+  says.hidden = explains && !state.scenes.length;
+  says.style.visibility = explains ? "hidden" : "";
 
   var again = box.querySelector("button.again");
   var head = again && again.parentNode;
@@ -477,9 +526,12 @@ function renderSound() {
   // The screens' toggle, drawn here as well since not every page has the screens
   var loop = document.createElement("button");
   loop.type = "button";
-  loop.className = "stoggle" + (state.soundLoop && state.sound ? " on" : "");
+  // A scene playing Always on's sound shows Always on's loop, greyed
+  var under = soundUnder();
+  var looping = under ? state.always.body.soundLoop : state.soundLoop && state.sound;
+  loop.className = "stoggle" + (looping ? " on" : "") + (under ? " frozen" : "");
   loop.innerHTML = "<span aria-hidden='true'>&#8635;</span> Loop";
-  loop.title = again.title;
+  loop.title = under ? "Set on the Always on tab" : again.title;
   loop.disabled = !state.sound;
   loop.onclick = function () {
     state.soundLoop = !state.soundLoop;
@@ -489,13 +541,42 @@ function renderSound() {
 
   var quiet = row && row.querySelector(".sound.quiet");
   if (!quiet) return;
-  var silence = document.createElement("div");
-  silence.className = "card nothing small" + (quiet.classList.contains("picked") ? " picked" : "");
-  silence.title = quiet.title || "play no sound";
-  silence.innerHTML = "<div class='face'></div><div class='name'>Silence</div>";
-  silence.onclick = quiet.onclick;
-  head.appendChild(silence);
+  // Nothing writes no sound for the scene, so Always on's plays through where it has one, as
+  // Nothing does on the lights
+  var nothing = document.createElement("div");
+  nothing.className = "card nothing small" + (quiet.classList.contains("picked") ? " picked" : "");
+  nothing.title = canSilence() ? "Play nothing of this scene's own" : "Play no sound";
+  nothing.innerHTML = "<div class='face'></div><div class='name'>Nothing</div>";
+  nothing.onclick = quiet.onclick;
+  head.appendChild(nothing);
   row.removeChild(quiet);
+
+  // Silence, `audio: none`, is the scene choosing no sound over Always on's. It is a small card at
+  // the end of the first heading, as Off is in the screens' gallery, or on a line of its own where
+  // there are no headings. Where there is nothing to silence it keeps its place unseen, so the tab
+  // does not move between scenes
+  var silence = document.createElement("div");
+  if (!canSilence()) silence.style.visibility = "hidden";
+  silence.className = "card nothing small" + (state.soundOff ? " picked" : "");
+  silence.title = "Play no sound in this scene";
+  // Its face is a sound with nothing in it, drawn as a tile draws a near-silent file
+  silence.innerHTML = "<div class='face silenceface'></div><div class='name'>Silence</div>";
+  silence.querySelector(".face").appendChild(soundOutline(silentBars()));
+  silence.onclick = function () {
+    state.sound = null;
+    state.soundKept = null;
+    state.soundLoop = false;
+    state.soundVolume = 100;
+    state.soundOff = true;
+    draw();
+  };
+  var line = document.createElement("div");
+  line.className = "offhead";
+  var first = row.querySelector(".foldhead");
+  if (first) row.insertBefore(line, first);
+  else row.insertBefore(line, row.firstChild);
+  if (first) line.appendChild(first);
+  line.appendChild(silence);
 }
 
 // What the parts after this one add to the Sound tab once its tiles are made
@@ -505,10 +586,24 @@ var soundSteps = [];
 tabSwatches.soundPanel = function (swatch) {
   swatch.textContent = "";
   swatch.className = "accswatch soundswatch";
-  var info = state.sound ? state.soundInfo[state.sound] : null;
+  var under = soundUnder();
+  // The scene's Silence is the flat line its card shows
+  if (state.soundOff) {
+    swatch.appendChild(soundOutline(silentBars()));
+    swatch.title = "silence";
+    return;
+  }
+  var info = state.sound ? state.soundInfo[state.sound] : under ? state.soundInfo[under] : null;
   if (!info) {
     swatch.classList.add("silent");
-    swatch.title = "silence";
+    swatch.title = under ? "Always on's " + nameShown(under) : "nothing";
+    return;
+  }
+  // Always on's sound is drawn faded, as its looks are on the lamps
+  if (under) {
+    swatch.appendChild(soundOutline(info.bars));
+    swatch.classList.add("under");
+    swatch.title = "Always on's " + nameShown(under);
     return;
   }
   swatch.appendChild(soundOutline(info.bars));
@@ -538,7 +633,8 @@ function kindUnderName() {
   named.appendChild(tab.querySelector("b"));
   var kind = document.createElement("small");
   kind.className = "tabunder";
-  kind.textContent = state.sound || state.soundKept ? "wav" : "silence";
+  kind.textContent = state.sound || state.soundKept ? "wav" : state.soundOff ? "silence"
+                   : soundUnder() ? "Always on" : "nothing";
   named.appendChild(kind);
   tab.insertBefore(named, tab.firstChild);
 }

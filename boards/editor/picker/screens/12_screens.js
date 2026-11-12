@@ -45,9 +45,10 @@ function screenButton(letter) {
 
 state.screens = {};
 SCREENS.forEach(function (letter) {
+  // off= is a scene turning the screen off with `none`, showing black in place of a picture
   state.screens[letter] = {there: true, size: letter === "A" ? "2.8" : "1.54", turn: 0,
                            carried: "", pingpong: false, hold: "", fps: 5, shows: null,
-                           kept: null, turns: {}, lastShows: null};
+                           kept: null, turns: {}, lastShows: null, off: false};
 });
 
 // A picture newly chosen on a screen starts as chosenAfresh says. What the screen showed when
@@ -160,7 +161,7 @@ function panelDrawing(screen) {
   var art = screen.art || (screen.shows && screen.shows !== "keep" ? mediaArt(screen.shows) : null);
 
   parts.push(svgTag("rect", {x: litX, y: litY, width: litW, height: litH,
-                             fill: art ? GROUND_INK : EMPTY_INK}));
+                             fill: art ? GROUND_INK : screen.off ? "#000000" : EMPTY_INK}));
   parts.push(svgTag("rect", {x: litX - 0.4, y: litY + litH, width: litW + 0.8,
                              height: Math.max(0, up(made.panel[1]) - (litY + litH) - 0.4),
                              fill: CHIN_INK}));
@@ -177,6 +178,10 @@ function panelDrawing(screen) {
                                "text-anchor": "middle", fill: "#8b959b",
                                "font-size": 4, "font-family": "system-ui"},
                       "on the board"));
+  } else if (screen.off) {
+    parts.push(svgTag("text", {x: litX + litW / 2, y: litY + litH / 2 + 1.4,
+                               "text-anchor": "middle", fill: "#5d666c",
+                               "font-size": 4, "font-family": "system-ui"}, "off"));
   } else {
     parts.push(svgTag("text", {x: litX + litW / 2, y: litY + litH / 2 + 1.4,
                                "text-anchor": "middle", fill: "#8b959b",
@@ -309,14 +314,28 @@ function renderScreenBoxes() {
     size.title = "Panel fitted, shared by every scene";
     head.insertBefore(size, drop);
 
-    body.appendChild(panelPreview(screen));
+    body.appendChild(previewInScene(screen, letter));
 
-    // The look's sections, what it shows above them, and its backlight across the top
-    body.appendChild(lookSections("screen" + letter, screen, screen.size));
-    body.insertBefore(showingLine(screen, letter), body.querySelector(".looksettings"));
-    body.insertBefore(lightRow(screen.look.backlight, function (value) {
+    // The look's sections, what it shows above them, and its backlight across the top. A screen
+    // showing Always on's picture plays it in Always on's settings, so it shows those, greyed
+    var under = screen.shows ? null : screenUnder(letter);
+    var held = screen;
+    if (under && under.always) {
+      var always = state.always.body.screens[letter];
+      held = Object.assign({}, screen, {shows: null, turn: always.turn || 0,
+                                        look: always.look || screen.look});
+    }
+    var sections = lookSections("screen" + letter, held, screen.size);
+    var light = lightRow(held.look.backlight, function (value) {
       screen.look.backlight = value;
-    }, "backlight", "Backlight brightness for " + screenShown(letter).replace("Screen", "screen") + " in this scene"), body.firstChild);
+    }, "backlight", "Backlight brightness for " + screenShown(letter).replace("Screen", "screen") + " in this scene");
+    if (held !== screen) {
+      frozen(sections);
+      frozen(light);
+    }
+    body.appendChild(sections);
+    body.insertBefore(showingLine(screen, letter), body.querySelector(".looksettings"));
+    body.insertBefore(light, body.firstChild);
 
     // What the file already says for this screen, where the picker did not write it
     // and no picture can stand for it. It is a line of its own under the settings
@@ -330,6 +349,19 @@ function renderScreenBoxes() {
     }
     box.appendChild(side);
   });
+}
+
+// A screen's preview. One the scene shows nothing on shows Always on's picture faded where the board
+// plays it there, in Always on's own settings
+function previewInScene(screen, letter) {
+  var under = screen.shows ? null : screenUnder(letter);
+  if (!under || !under.always) return panelPreview(screen);
+  var always = state.always.body.screens[letter];
+  var drawing = panelPreview(Object.assign({}, screen, {shows: always.shows, turn: always.turn || 0,
+                                                        look: always.look || screen.look}));
+  drawing.classList.add("under");
+  drawing.title = "Always on's picture, which shows here in this scene";
+  return drawing;
 }
 
 // The pictures on the drive, each with what it is on. The parts below add to them, each after the
@@ -362,18 +394,63 @@ function renderAssets() {
   // Grouped once the drive is open, the user's own always heading the gallery
   var grouped = !!state.fileHandle;
   var groups = grouped ? mediaGroups() : [[OWN_GROUP, "", state.media, false]];
-  groups.forEach(function (group) {
+  // In a scene, Off is a card made small at the end of the first heading, as Nothing is in the
+  // looks, so it is never folded away. Without headings it has a line of its own. On the Always
+  // on tab it keeps its place unseen, so the gallery does not move between tabs
+  if (!grouped) {
+    var alone = document.createElement("div");
+    alone.className = "offhead";
+    alone.appendChild(offCard());
+    box.appendChild(alone);
+  }
+  groups.forEach(function (group, at) {
     var open = groupOpen(group);
     if (grouped) {
-      box.appendChild(foldHead(group[0], group[1], open, function () {
+      var fold = foldHead(group[0], group[1], open, function () {
         groupsOpen[group[0]] = !open;
-      }));
+      });
+      if (at === 0) {
+        var head = document.createElement("div");
+        head.className = "offhead";
+        head.appendChild(fold);
+        head.appendChild(offCard());
+        box.appendChild(head);
+      } else {
+        box.appendChild(fold);
+      }
     }
     if (grouped && !open) return;
     group[2].forEach(assetTile);
     if (group[0] === OWN_GROUP) adder();
   });
   assetSteps.forEach(function (step) { step(); });
+
+  // The small Off card, black, whose buttons turn a screen off in this scene. A hub gives it its
+  // positions' buttons in place of these
+  function offCard() {
+    var cell = document.createElement("div");
+    cell.className = "card nothing small offasset";
+    cell.title = "Turn a screen off in this scene";
+    if (state.at < 0) cell.style.visibility = "hidden";
+    cell.innerHTML = "<div class='face'>Off</div>";
+    var pick = document.createElement("div");
+    pick.className = "pick";
+    SCREENS.forEach(function (letter) {
+      var screen = state.screens[letter];
+      var button = document.createElement("button");
+      button.textContent = screenButton(letter);
+      button.className = screen.off ? "lit" + (letter === "B" ? " b" : "") : "";
+      button.disabled = !screen.there;
+      button.onclick = function () {
+        screen.off = !screen.off;
+        if (screen.off) screen.shows = null;
+        draw();
+      };
+      pick.appendChild(button);
+    });
+    cell.appendChild(pick);
+    return cell;
+  }
 
   function adder() {
     if (state.fileHandle)
@@ -436,6 +513,7 @@ function renderAssets() {
         var screen = state.screens[screensPaired() ? SCREENS[0] : letter];
         screen.shows = screen.shows !== name ? name
                      : screen.kept ? "keep" : null;
+        screen.off = false;
         draw();
       };
       pick.appendChild(button);
@@ -469,10 +547,18 @@ function screenEntry(letter, body) {
   if (pairWritten(body)) return letter === SCREENS[0] ? pairEntry(body) : null;
   var screen = state.screens[letter];
   var playing = body.screens[letter];
-  if (!screen.there || !playing.shows) return null;
+  if (!screen.there) return null;
+  if (playing.off) return offEntry(SCREEN_NAMES[letter], (playing.look || freshLook()).backlight);
+  if (!playing.shows) return null;
   if (playing.shows === "keep") return playing.kept;
   var look = playing.look || freshLook();
   return lookEntry(SCREEN_NAMES[letter], playing, look, look.backlight, screen.size);
+}
+
+// The line that turns a screen or hub positions off in a scene, showing black at the backlight given
+function offEntry(selector, backlight) {
+  return selector + (backlight < 1 ? " backlight=" + Math.round(backlight * 100) + "%" : "") +
+         ": none";
 }
 
 // ---- each scene keeps what its screens show ---------------------------------------------------
@@ -483,7 +569,8 @@ bodyParts.push({
     SCREENS.forEach(function (letter) {
       var screen = state.screens[letter];
       body.screens[letter] = {shows: screen.shows, kept: screen.kept, pingpong: screen.pingpong,
-                              hold: screen.hold, fps: screen.fps, turn: screen.turn};
+                              hold: screen.hold, fps: screen.fps, turn: screen.turn,
+                              off: screen.off};
     });
   },
   apply: function (body) {
@@ -492,14 +579,20 @@ bodyParts.push({
       var screen = state.screens[letter];
       Object.assign(screen, body.screens[letter]);
       screen.turn = body.screens[letter].turn || 0;
+      screen.off = !!body.screens[letter].off;
       screen.lastShows = screen.shows;
     });
   },
   blank: function (body) {
-    SCREENS.forEach(function (letter) { body.screens[letter].shows = null; });
+    SCREENS.forEach(function (letter) {
+      body.screens[letter].shows = null;
+      body.screens[letter].off = false;
+    });
   },
   hasContent: function (body) {
-    return SCREENS.some(function (letter) { return !!(body.screens && body.screens[letter].shows); });
+    return SCREENS.some(function (letter) {
+      return !!(body.screens && (body.screens[letter].shows || body.screens[letter].off));
+    });
   },
   // A scene's screens are written after its lamps
   entries: function (body, lines) {
@@ -522,7 +615,7 @@ boardLineSteps.before.push(function () {
   SCREENS.forEach(function (letter) {
     var screen = state.screens[letter];
     var used = screen.there && bodies.some(function (body) {
-      return body && body.screens && body.screens[letter].shows;
+      return body && body.screens && (body.screens[letter].shows || body.screens[letter].off);
     });
     screensFitted[SCREEN_NAMES[letter].toLowerCase()] = used ? screen.size : "";
   });
@@ -538,6 +631,19 @@ function screenPlaying(parts, body, letter) {
   playing.turn = 0;
   playing.pingpong = false;
   playing.hold = "";
+  playing.off = false;
+  // none turns the screen off, taking only a backlight
+  if (parts.effect === "none") {
+    var known = Object.keys(parts.left).every(function (key) { return key === "backlight"; }) &&
+                !Object.keys(parts.right).length;
+    if (!known) return null;
+    var light = parts.left.backlight;
+    if (light !== undefined)
+      look.backlight = /%$/.test(light) ? parseFloat(light) / 100 : Number(light);
+    playing.shows = null;
+    playing.off = true;
+    return playing;
+  }
   var source = {gif: "file", image: "file", drawing: "file", sequence: "folder"}[parts.effect];
   if (!source || !parts.right[source]) return null;
   playing.shows = unquoted(parts.right[source]);
@@ -599,7 +705,8 @@ function readScreens(bodies) {
     body.kept = body.kept.filter(function (one) {
       var parts = entryParts(one.text);
       var letter = parts && screenLetter(parts.selector);
-      if (!letter || !sizes[letter] || body.screens[letter].shows) return true;
+      if (!letter || !sizes[letter] || body.screens[letter].shows || body.screens[letter].off)
+        return true;
       var playing = screenPlaying(parts, body, letter);
       if (!playing) return true;
 
@@ -837,16 +944,27 @@ tabSwatches.screensPanel = function (swatch) {
     var screen = state.screens[letter];
     var cell = document.createElement("span");
     cell.className = "screencell " + letter.toLowerCase();
-    var art = screen.there && screen.shows
-              ? mediaArt(screen.shows, screen.look && screen.look.style) : null;
-    if (art) cell.style.backgroundImage = "url(" + art.url + ")";
+    // A screen the scene turns off is black, and one showing Always on's picture shows it in the
+    // broken line the lamps and previews wear
+    var under = screen.there && !screen.shows ? screenUnder(letter) : null;
+    var shown = screen.shows || (under && under.always) || null;
+    var art = screen.there && shown && shown !== "keep"
+              ? mediaArt(shown, screen.look && screen.look.style) : null;
+    // Always on's picture wears the stripes of nothing over it
+    if (art) cell.style.backgroundImage = (under && under.always ? "var(--through), " : "") +
+                                          "url(" + art.url + ")";
     if (!screen.there) cell.classList.add("absent");
-    else if (!art) cell.classList.add("blank");
+    else if (screen.off) cell.classList.add("off");
+    // A picture with no thumbnail yet is a white tile, its screen showing something
+    else if (!art) cell.classList.add(shown ? "blank"
+                                      : under && (under.off || under.stopped) ? "dark" : "nothing");
     swatch.appendChild(cell);
   });
   swatch.title = SCREENS.map(function (letter) {
     var screen = state.screens[letter];
-    var said = !screen.there ? "not fitted" : screen.shows || "nothing";
+    var under = screen.there && !screen.shows ? screenUnder(letter) : null;
+    var said = !screen.there ? "not fitted" : screen.off ? "off"
+             : screen.shows || (under && under.always ? "Always on's " + under.always : "nothing");
     return SCREENS.length > 1 ? letter + ": " + said : said;
   }).join(", ");
 };

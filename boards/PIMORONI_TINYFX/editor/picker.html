@@ -100,6 +100,25 @@ button.round svg{display:block}
 .sec .lit{display:block;height:1.5rem;border-radius:6px 6px 0 0}
 .sec .lit.nothing{background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,
  #e4e0d9 6px,#e4e0d9 12px)}
+/* Where a scene sets nothing and Always on shows through, the content shows in full with the
+   stripes of nothing over or around it, here over Always on's colours or over dark where the
+   stretch is off */
+:root{--through:repeating-linear-gradient(45deg,rgba(240,238,234,.75),rgba(240,238,234,.75) 6px,
+ transparent 6px,transparent 12px)}
+.sec .lit.through{position:relative;overflow:hidden}
+.sec .lit.through > span{position:absolute;top:0;bottom:0;overflow:hidden}
+.sec .lit.through > span > span{position:absolute;top:0;bottom:0}
+.sec .lit.through > .off{background:#2a2d30}
+.sec .lit.through > .empty{background:#e4e0d9}
+.sec .lit.through::after{content:"";position:absolute;inset:0;background:var(--through)}
+/* A screen's settings that show Always on's values in a scene, greyed and not to be changed here */
+.frozen{opacity:.45}
+.frozen button,.frozen input{cursor:default}
+/* A screen showing Always on's picture in a scene, in the striped and dashed frame its lamps wear */
+.holder.under{border:1px dashed #a9a49b;border-radius:8px;
+ background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
+/* Under the chosen stretch's name, what the board plays where the scene leaves it empty */
+.chosen .underhint{font-size:.8rem;color:var(--dim);margin:.25rem 0 0}
 /* Cutting happens in the coloured band only. The name below it is always plain
    section, so a stretch cut every light still has somewhere to be clicked and picked */
 .sec .cuts{position:absolute;top:0;left:0;right:0;height:1.5rem;pointer-events:none}
@@ -126,6 +145,10 @@ button.round svg{display:block}
  padding:0 .3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
  text-align:center}
 .sec .says em{font-style:normal;font-weight:400;color:var(--dim)}
+/* After a stretch's "Nothing" and its count, what shows through from Always on, set apart by a
+   rule */
+.sec .says .beneath{font-weight:400;color:var(--dim);margin-left:.45em;padding-left:.45em;
+ border-left:1px solid #c9c3b9}
 .sec.narrow .says{font-size:.6rem}
 
 /* A cut that is already there: dragged to move it along the run, or taken out by the
@@ -174,6 +197,10 @@ button.round svg{display:block}
 .lamp.landing{border-color:var(--accent);box-shadow:-2px 0 0 var(--accent)}
 .lamp i{display:block;width:1.5rem;height:1.5rem;border-radius:50%;
  box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
+/* A lamp set to Nothing. Its tile wears the stripes Nothing wears elsewhere, and its light shows
+   what the board does there, in a scene Always on's look in full or dark */
+.lamp.unset{border-style:dashed;border-color:#a9a49b;
+ background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
 .lamp b{display:block;font:400 .66rem/1.6 system-ui,sans-serif;color:var(--dim);
  text-align:center}
 
@@ -763,6 +790,28 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
  background:rgba(20,20,22,.82);color:#fff;opacity:0;transition:opacity .12s;
  pointer-events:none;z-index:1}
 .asset:hover .label,.asset:focus-within .label{opacity:1}
+/* Off in a scene's gallery: a small card at the end of the first heading, as Nothing is in the
+   looks, its face black and its screens' buttons at its end */
+.assets .offhead,.sounds .offhead{grid-column:1/-1;flex-basis:100%;display:flex;
+ align-items:center;gap:.6rem;margin:.4rem 0 -.3rem}
+.assets .offhead:first-child,.sounds .offhead:first-child{margin-top:0}
+.assets .offhead .foldhead,.sounds .offhead .foldhead{margin:0}
+.offhead .card.nothing.small{flex-shrink:0}
+/* Silence's face, a sound with nothing in it, as long as a sound tile's preview */
+.card.nothing .face.silenceface{background:#fff;display:flex;align-items:center;width:7.4rem;
+ border-right:1px solid var(--line)}
+.card.nothing .face.silenceface svg{display:block;width:100%;height:1.7rem}
+.offhead .card.nothing.small .name{overflow:visible}
+.card.nothing.small.offasset{cursor:default;flex-shrink:0}
+.card.nothing.small.offasset:hover{transform:none}
+.card.nothing.small.offasset .face{background:#000;flex-shrink:0;width:auto;display:flex;
+ align-items:center;padding:0 .7rem;color:#c8cdd0;font:600 .8rem system-ui,sans-serif}
+.offasset .pick{display:flex;align-items:stretch;border-left:1px solid var(--line)}
+.offasset .pick button{border:0;border-radius:0;padding:0 .55rem;font-size:.75rem;
+ background:var(--panel)}
+.offasset .pick button+button{border-left:1px solid var(--line)}
+.offasset .pick button.lit{background:#1f6feb;color:#fff}
+.offasset .pick button.lit.b{background:#a44ad0}
 .asset .pick{display:flex;border-top:1px solid var(--line)}
 .asset .pick button{flex:1;border:0;border-radius:0;padding:.2rem;font-size:.75rem;
  font-weight:700;color:var(--dim);background:var(--panel)}
@@ -839,6 +888,9 @@ select{font:inherit;font-size:.85rem;padding:.25rem .3rem;border:1px solid var(-
  border-radius:10px;background:var(--panel);text-align:left;cursor:pointer}
 .sound:hover{border-color:var(--dim)}
 .sound.picked{border-color:var(--accent)}
+/* Always on's sound, playing in a scene with none of its own, in the striped and dashed frame */
+.sound.under{border-style:dashed;border-color:#a9a49b;
+ background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
 .sound svg{display:block;width:100%;height:1.8rem}
 .sound b{display:block;font:600 .74rem/1.5 system-ui,sans-serif;color:var(--ink);
  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1227,6 +1279,8 @@ body.setupall #soundPanel{opacity:.35;pointer-events:none}
 .accswatch.soundswatch{align-items:center;gap:1px;box-shadow:none;height:.9rem;width:3.2rem}
 .soundswatch span{flex:1;background:var(--accent);border-radius:1px;min-height:2px}
 .soundswatch.silent{height:.2rem;background:#c9c3b9;border-radius:1px}
+.soundswatch.under{border:1px dashed #a9a49b;
+ background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 3px,#e0dbd2 3px,#e0dbd2 6px)}
 .soundsays{margin:0 0 .8rem}
 
 /* ---- the wiring, while the board is set up ----
@@ -1364,14 +1418,27 @@ html{scrollbar-gutter:stable}
  background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 7px,#e4e0d9 7px,#e4e0d9 14px)}
 .sound b{padding:.3rem .5rem 0}
 .sound small{display:block;padding:0 .5rem .35rem}
-/* A screen fitted with no picture chosen is a white tile, as an empty sound is, so it
-   reads apart from one not fitted, which is striped */
+/* A screen showing nothing wears the stripes of nothing, as a lamp playing nothing and an empty
+   sound do, and one dark because another scene shows on it is dark, as such a lamp is */
+.ledtab[data-panel=screensPanel] .screencell.nothing{box-shadow:none;
+ background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 3px,#e0dbd2 3px,#e0dbd2 6px)}
+.ledtab[data-panel=screensPanel] .screencell.dark{background:#2a2d30;box-shadow:none}
+/* A screen showing a picture with no thumbnail yet, a white tile */
 .ledtab[data-panel=screensPanel] .screencell.blank{background:#fff;
  box-shadow:inset 0 0 0 1px var(--line)}
 .screencell.a{--cell:#1f6feb}
 .screencell.b{--cell:#a44ad0}
-.screencell.absent{background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 3px,
- #e0dbd2 3px,#e0dbd2 6px);box-shadow:none}
+/* Hardware not fitted is an empty place in a dashed outline. A screen or hub position, being
+   square, is also crossed through once, and a strip's bar is too thin for a cross */
+:root{--cross:linear-gradient(to top right,transparent calc(50% - .7px),#c9c3b9 calc(50% - .7px),
+ #c9c3b9 calc(50% + .7px),transparent calc(50% + .7px))}
+.screencell.absent,.ledtab[data-panel=screensPanel] .screencell.absent{
+ background:var(--cross) transparent;box-shadow:none;outline:1px dashed #a9a49b;outline-offset:-1px}
+.accswatch.liveswatch.absent{background:transparent;box-shadow:none;
+ outline:1px dashed #a9a49b;outline-offset:-1px}
+/* A screen a scene turns off is black, and one showing Always on's picture has the stripes of
+   nothing over it, as the lamps and bars do */
+.ledtab[data-panel=screensPanel] .screencell.off{background:#000;box-shadow:none}
 .screenssays{margin:0 0 .8rem}
 .screen-box h3 .boardicon{color:#fff;opacity:.9}
 .screen-box select:disabled,.screen-box button:disabled{opacity:.75;cursor:default}
@@ -1420,7 +1487,7 @@ html{scrollbar-gutter:stable}
 .place.empty:hover{background:none}
 .placenone{display:flex;align-items:center;justify-content:center;width:100%;
  aspect-ratio:1;border-radius:6px;font-size:.72rem;color:var(--dim);
- background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 5px,#e0dbd2 5px,#e0dbd2 10px)}
+ background:var(--cross) transparent;outline:1px dashed #a9a49b;outline-offset:-1px}
 .placedrop{position:absolute;top:.3rem;right:.2rem;width:1.3rem;height:1.3rem;padding:0;
  border:0;border-radius:5px;background:var(--hub);color:#fff;font-size:.95rem;line-height:1}
 .placefit{position:absolute;bottom:2.1rem;border:1.5px solid var(--hub);border-radius:7px;
@@ -3231,13 +3298,78 @@ function litRun(run) {
         out[which] = lit
           ? {level: Math.max(0, Math.min(1, lit.level)),
              ink: lamp.colour ? lit.ink : "#ffd9a0"}
-          : {level: 0, ink: "#3a3f44", nothing: true};
+          : litUnder(run, which, lamp);
       }
     });
   } finally {
     previewingStrip = false;
   }
   return out;
+}
+
+// What a lamp the scene plays nothing on shows, marked unset= for its tile. It plays Always on's
+// look where Always on has one there, and is off where another scene plays on it, as the board
+// has it
+function litUnder(run, which, lamp) {
+  var under = lampUnder(run.name, which);
+  if (under && under.always) {
+    var section = under.always;
+    // Always on's lamps keep their own walks, so a scene's stretch never steps one on
+    var store = walks["always " + run.name] || (walks["always " + run.name] = {});
+    var walk = store[which] || (store[which] = {});
+    var lit = livePlay(lookNamed(section.look), section, beat, which - section.from,
+                       widthOf(section), walk);
+    return {level: Math.max(0, Math.min(1, lit.level)), ink: lamp.colour ? lit.ink : "#ffd9a0",
+            always: true, unset: true};
+  }
+  return {level: 0, ink: "#3a3f44", nothing: true, off: !!(under && under.off), unset: true};
+}
+
+// What a lamp's tip says after its name where the scene plays nothing on it
+function underSaid(run, which) {
+  var under = lampUnder(run.name, which);
+  if (under && under.always) return ", playing " + lookNamed(under.always.look).name +
+                                    " from Always on";
+  if (under && under.off) return ", off here and lit only in " + spoken(namesOf(under.off));
+  return ", playing Nothing";
+}
+
+// What a stretch the scene plays nothing on shows instead, or null where nothing plays on any of
+// its lamps. The result holds a short note to follow the cell's "Nothing", a tip, and what each
+// lamp shows, as "off", null or Always on's stretch and the lamp's place in it
+function stretchUnder(run, section) {
+  var looks = [], scenes = [], lamps = [], played = 0;
+  for (var at = section.from; at <= section.to; at++) {
+    var under = lampUnder(run.name, at);
+    lamps.push(!under ? null : under.off ? "off"
+             : {section: under.always, at: at - under.always.from});
+    if (!under) continue;
+    played++;
+    if (under.always) {
+      var name = lookNamed(under.always.look).name;
+      if (looks.indexOf(name) < 0) looks.push(name);
+    } else {
+      namesOf(under.off).forEach(function (name) {
+        if (scenes.indexOf(name) < 0) scenes.push(name);
+      });
+    }
+  }
+  if (!played) return null;
+  var whole = played === widthOf(section);
+  var showing = lamps.filter(function (one) { return one && one !== "off"; }).length;
+  var notes = [];
+  if (looks.length) notes.push("Always on's " + spoken(looks) +
+                               (showing < widthOf(section) ? " on " + showing : ""));
+  // The scenes are named for what uses the lights anywhere in the file, never for which came first
+  if (scenes.length) notes.push((looks.length || !whole ? (played - showing) + " off" : "off") +
+                                ", lit only in " + spoken(scenes));
+  var tips = [];
+  if (looks.length) tips.push("Always on's " + spoken(looks) + " plays " +
+                              (whole && !scenes.length ? "here" : "on some of these lights") +
+                              " in this scene.");
+  if (scenes.length) tips.push((looks.length ? "The rest is off here" : "Off here") +
+                               " and lit only in " + spoken(scenes) + ".");
+  return {note: notes.join(" and "), tip: tips.join(" "), lamps: lamps};
 }
 
 function inkAt(lit) {
@@ -3351,8 +3483,11 @@ function lookCard(isMono, look, on) {
   name.textContent = look.name || "Nothing";
   card.appendChild(name);
 
+  // In a scene, a stretch playing nothing shows Always on's look or goes dark as the board decides,
+  // so Nothing there is not the same as off
   card.title = look.name ? look.name + ": apply it to the selected stretch"
-                         : "turn a stretch off";
+             : state.at >= 0 ? "Play nothing of this scene's own on the selected stretch"
+             : "turn a stretch off";
   card.onclick = function () {
     var run = galleryRun(isMono);
     landLook(run, stretchFor(run, isMono), look.name);
@@ -3492,8 +3627,8 @@ function renderRun(where, run) {
       one.onmouseenter = function () { showKin(lamp.out, true); };
       one.onmouseleave = function () { showKin(lamp.out, false); };
     }
-    one.title = selectorFor(lamp) + ", playing " +
-                (lookNamed(run.sections[mine].look) || {name: "Nothing"}).name;
+    var playing = lookNamed(run.sections[mine].look);
+    one.title = selectorFor(lamp) + (playing ? ", playing " + playing.name : underSaid(run, at));
     one.onclick = function () {
       pick(run, mine);
       draw();
@@ -3513,6 +3648,7 @@ function renderRun(where, run) {
     faces.forEach(function (face, at) {
       var one = all[at] || {level: 0, ink: "#e4e0d9"};
       face.style.background = one.nothing ? "#2a2d30" : inkAt(one);
+      face.parentNode.classList.toggle("unset", !!one.unset);
       face.style.boxShadow = one.level > 0.05
         ? "inset 0 0 0 1px rgba(0,0,0,.2), 0 0 " + (3 + one.level * 8).toFixed(1) +
           "px rgba(255,217,160," + (one.level * 0.5).toFixed(2) + ")"
@@ -3600,6 +3736,58 @@ function washFor(run, section, look) {
   return stretchWash(look, section, run, !!first && !first.colour);
 }
 
+// A stretch's coloured band. One the scene plays nothing on keeps the stripes of nothing, over a
+// window onto Always on's own band where Always on plays there and over dark where it is off
+function washOf(run, section, look, under) {
+  var wash = document.createElement("span");
+  if (look || !under) {
+    wash.className = "lit" + (look ? "" : " nothing");
+    if (look) wash.style.background = washFor(run, section, look);
+    return wash;
+  }
+  wash.className = "lit through";
+  // Each run of lamps that show one thing is one pane
+  var wide = under.lamps.length;
+  var start = 0;
+  while (start < wide) {
+    var end = start + 1;
+    while (end < wide && sameShowing(under.lamps[end], under.lamps[start])) end++;
+    wash.appendChild(paneOnto(run, under.lamps[start], start, end, wide));
+    start = end;
+  }
+  return wash;
+}
+
+// Whether two lamps show the same thing under a scene: nothing, off, or one Always on stretch
+function sameShowing(one, other) {
+  return one === other ||
+         !!(one && other && one.section && other.section && one.section === other.section);
+}
+
+// A pane over lamps start to end of a stretch wide lamps across. Over Always on's stretch it holds
+// that stretch's whole band, moved so the lamps under the pane line up with their own part of it
+function paneOnto(run, shows, start, end, wide) {
+  var pane = document.createElement("span");
+  pane.style.left = (start * 100 / wide) + "%";
+  pane.style.width = ((end - start) * 100 / wide) + "%";
+  if (!shows) pane.className = "empty";
+  else if (shows === "off") pane.className = "off";
+  else {
+    var band = document.createElement("span");
+    band.style.width = (widthOf(shows.section) * 100 / (end - start)) + "%";
+    band.style.left = (-shows.at * 100 / (end - start)) + "%";
+    band.style.background = washFor(run, shows.section, lookNamed(shows.section.look));
+    pane.appendChild(band);
+  }
+  return pane;
+}
+
+// The note under a cell's "Nothing" saying what shows through from Always on, or nothing where
+// the stretch shows nothing at all
+function beneath(under) {
+  return under ? "<span class='beneath'>" + escapeHtml(under.note) + "</span>" : "";
+}
+
 function renderBar(where, run) {
   var box = document.getElementById(where);
   box.textContent = "";
@@ -3617,15 +3805,14 @@ function renderBar(where, run) {
                  targetFor(run, section).selector;
 
     var look = lookNamed(section.look);
-    var wash = document.createElement("span");
-    wash.className = "lit" + (look ? "" : " nothing");
-    if (look) wash.style.background = washFor(run, section, look);
-    cell.appendChild(wash);
+    var under = look ? null : stretchUnder(run, section);
+    cell.appendChild(washOf(run, section, look, under));
+    if (under) cell.title = under.tip;
 
     var says = document.createElement("span");
     says.className = "says";
-    says.innerHTML = (look ? look.name : "Nothing") + " <em>" + widthOf(section) +
-                     "</em>";
+    says.innerHTML = (look ? look.name : "Nothing") + " <em>" + widthOf(section) + "</em>" +
+                     beneath(under);
     cell.appendChild(says);
 
     // Where this stretch can be cut, one place between two lamps
@@ -4086,6 +4273,53 @@ function slotAt(which) { return which < 0 ? state.always : state.scenes[which]; 
 
 function allBodies() {
   return [state.always.body].concat(state.scenes.map(function (scene) { return scene.body; }));
+}
+
+// ---- what a scene leaves to Always on -------------------------------------------------------
+// The board plays Always on under every scene. Where a scene plays nothing of its own on a lamp,
+// the board plays Always on's look there, and where Always on plays nothing either, it turns the
+// lamp off if another scene plays on it. A scene tab shows the same, so its lamps look as the
+// board will light them
+
+// The scenes other than the one being edited, whose bodies are as they were last stored
+function otherScenes() {
+  return state.scenes.filter(function (scene, at) { return at !== state.at; });
+}
+
+function namesOf(scenes) { return scenes.map(function (scene) { return scene.name; }); }
+
+// Grey out settings that show Always on's values in a scene, which are set on the Always on tab
+function frozen(node) {
+  node.classList.add("frozen");
+  node.title = "Set on the Always on tab";
+  node.querySelectorAll("button, input, select").forEach(function (control) {
+    control.disabled = true;
+  });
+}
+
+// The stretch of a stored body's run that covers one lamp and plays a look, or null. A look
+// this page does not offer writes no line, so its stretch plays nothing
+function stretchPlaying(body, runName, at) {
+  var run = body && body.runs[runName];
+  if (!run) return null;
+  for (var i = 0; i < run.sections.length; i++) {
+    var section = run.sections[i];
+    if (section.from <= at && at <= section.to) return lookNamed(section.look) ? section : null;
+  }
+  return null;
+}
+
+// What the board plays on a lamp the scene being edited plays nothing on. The result holds
+// always=, Always on's stretch over the lamp, or off=, every other scene that plays on it where
+// Always on does not. It is null where nothing plays on the lamp, and on the Always on tab
+function lampUnder(runName, at) {
+  if (state.at < 0) return null;
+  var section = stretchPlaying(state.always.body, runName, at);
+  if (section) return {always: section};
+  var by = otherScenes().filter(function (scene) {
+    return stretchPlaying(scene.body, runName, at);
+  });
+  return by.length ? {off: by} : null;
 }
 
 function store() { slotAt(state.at).body = capture(); }
@@ -4697,6 +4931,29 @@ function wireRun(run) {
                                  " " + (high + ROOM * 2),
                         preserveAspectRatio: "xMinYMid meet"});
 
+  // A stretch set to Nothing sits on the stripes Nothing wears elsewhere, inside a broken line, as
+  // an output's lamp does. Its beads show what the board does there
+  var stripes = "unset-" + run.name;
+  var defs = tag("defs", {});
+  var pattern = tag("pattern", {id: stripes, patternUnits: "userSpaceOnUse", width: 6, height: 6,
+                                patternTransform: "rotate(-45)"});
+  pattern.appendChild(tag("rect", {width: 6, height: 6, fill: "#e4e0d9"}));
+  pattern.appendChild(tag("rect", {width: 3, height: 6, fill: "#f0eeea"}));
+  defs.appendChild(pattern);
+  svg.appendChild(defs);
+  if (run.there !== false) {
+    run.sections.forEach(function (section) {
+      if (lookNamed(section.look)) return;
+      spanRows(section, place).forEach(function (row) {
+        svg.appendChild(tag("rect", {"class": "unset", x: row.low - GAP / 2, y: row.y - 2.2,
+                                     width: row.high - row.low + SIZE + GAP,
+                                     height: SIZE + 4.4, rx: 4, fill: "url(#" + stripes + ")",
+                                     stroke: "#a9a49b", "stroke-width": 0.7,
+                                     "stroke-dasharray": "2 1.5"}));
+      });
+    });
+  }
+
   for (var r = 0; r < rows - 1; r++) {
     var atRight = r % 2 === 0;
     var x = atRight ? EDGE + wide : EDGE;
@@ -4777,7 +5034,8 @@ function wireRun(run) {
   return {svg: svg, paint: function (all) {
     for (var n = 0; n < beads.length; n++) {
       var one = all[n] || {level: 0, ink: "#e4e0d9"};
-      beads[n].setAttribute("fill", one.nothing ? "#e4e0d9" : inkAt(one));
+      // A bead playing nothing is drawn unlit, as an output's lamp is
+      beads[n].setAttribute("fill", one.nothing ? "#2a2d30" : inkAt(one));
     }
   }};
 }
@@ -4856,14 +5114,13 @@ function renderStripBar(where, run) {
     // a still palette does not stand for one anyway. So a stretch is washed in a
     // colour of its look and named, and the run below is where it is watched
     var look = lookNamed(section.look);
-    var wash = document.createElement("span");
-    wash.className = "lit" + (look ? "" : " nothing");
-    if (look) wash.style.background = stretchWash(look, section, run, run.mono);
-    cell.appendChild(wash);
+    var under = look ? null : stretchUnder(run, section);
+    cell.appendChild(washOf(run, section, look, under));
+    if (under) cell.title += ". " + under.tip;
 
     var says = document.createElement("span");
     says.className = "says";
-    says.innerHTML = (look ? look.name : "Nothing") + " <em>" + wide + "</em>";
+    says.innerHTML = (look ? look.name : "Nothing") + " <em>" + wide + "</em>" + beneath(under);
     cell.appendChild(says);
 
     // Where this stretch could be cut, one click to a place between two lights
@@ -6542,6 +6799,7 @@ chosenSteps.push(function (where, run) {
   var section = run && run.sections[run.picked];
   if (!who || !section) return;
   var look = lookNamed(section.look);
+  var under = look ? null : stretchUnder(run, section);
   who.innerHTML = "";
   var named = document.createElement("b");
   named.textContent = look ? look.name : "Nothing";
@@ -6549,6 +6807,13 @@ chosenSteps.push(function (where, run) {
   var reversed = section.reversed && runsAWay(look, forwardTargetFor(run, section), section);
   who.appendChild(document.createTextNode(" on " + wherePlays(run, section, reversed)));
   who.title = targetFor(run, section).selector;
+  // A stretch the scene leaves empty says what the board plays there, and how to change it
+  if (under) {
+    var hint = document.createElement("div");
+    hint.className = "underhint";
+    hint.textContent = under.tip + " Choose a look to give this scene its own.";
+    who.parentNode.insertBefore(hint, who.nextSibling);
+  }
 });
 
 chosenSteps.push(function (where, run) {
@@ -7496,12 +7761,32 @@ state.soundVolume = 100;
 state.soundKept = null;
 state.sounds = [];
 state.soundInfo = {};
+// Whether the scene silences the speaker with `audio: none`, which only a scene needs, where
+// Always on has a sound to silence
+state.soundOff = false;
+
+// The sound Always on plays in the scene being edited, where the scene has none of its own. It is
+// null on the Always on tab, in a scene with its own sound or silence and where Always on has none
+function soundUnder() {
+  if (state.at < 0 || state.sound || state.soundKept || state.soundOff) return null;
+  return state.always.body.sound || null;
+}
+
+// Whether the scene being edited can silence Always on's sound, there being one to silence
+function canSilence() { return state.at >= 0 && !!state.always.body.sound; }
 
 // The Sound tab's row of sounds and its setting, which renderSound below puts in the page's style
 function renderSoundTab() {
   var box = document.getElementById("sound");
   box.textContent = "";
-  document.getElementById("soundSays").textContent = !state.fileHandle
+  var under = soundUnder();
+  document.getElementById("soundSays").textContent = under
+    ? "Always on's " + nameShown(under) + " plays on through this scene. Choose a sound to " +
+      "give this scene its own, or Silence to quieten it"
+    : state.soundOff
+    ? "this scene is silent. Always on's " + nameShown(state.always.body.sound) + " stops while " +
+      "it shows"
+    : !state.fileHandle
     ? "open the FX drive to see the sounds on it"
     : !state.scanned
       ? "reading the drive..."
@@ -7572,7 +7857,9 @@ function volumeSlider() {
   slider.min = 0;
   slider.max = 100;
   slider.step = 5;
-  slider.value = state.soundVolume;
+  // A scene playing Always on's sound shows Always on's volume, greyed, as a screen its backlight
+  var under = soundUnder();
+  slider.value = under ? state.always.body.soundVolume : state.soundVolume;
   slider.disabled = !state.sound;
   var figure = document.createElement("span");
   figure.className = "lightfigure";
@@ -7592,6 +7879,7 @@ function volumeSlider() {
   volume.appendChild(slider);
   volume.appendChild(figure);
   volume.title = state.sound ? "How loud the board plays the sound" : "No sound chosen";
+  if (under) frozen(volume);
   return volume;
 }
 
@@ -7616,12 +7904,16 @@ function soundKeptTile() {
   return tile;
 }
 
-// A sound's tile, which soundTile below draws the sound on
+// A sound's tile, which soundTile below draws the sound on. Always on's sound, playing in a scene
+// with none of its own, wears the striped frame a screen showing Always on's picture wears
 function plainSoundTile(name) {
-  var picked = name === null ? !state.sound && !state.soundKept : state.sound === name;
+  var picked = name === null ? !state.sound && !state.soundKept && !state.soundOff
+                             : state.sound === name;
   var info = name ? state.soundInfo[name] : null;
   var tile = document.createElement("button");
-  tile.className = "sound" + (picked ? " picked" : "") + (name ? "" : " quiet");
+  var under = name !== null && name === soundUnder();
+  tile.className = "sound" + (picked ? " picked" : "") + (name ? "" : " quiet") +
+                   (under ? " under" : "");
   var colour = picked ? "#0f8a72" : "#c9c3b9";
   if (name && info && info.bars) {
     var cells = [];
@@ -7647,6 +7939,7 @@ function plainSoundTile(name) {
   tile.appendChild(says);
   tile.onclick = function () {
     state.sound = name;
+    state.soundOff = false;
     if (name) state.soundKept = null;
     if (!name) {
       state.soundLoop = false;
@@ -7664,6 +7957,7 @@ function plainSoundTile(name) {
 }
 
 function soundLine(body) {
+  if (body.soundOff) return "audio: none";
   if (body.sound)
     return "audio: wav file=" + quoted(body.sound) +
            (body.soundLoop ? " loop=true" : "") +
@@ -7683,6 +7977,7 @@ bodyParts.push({
     body.soundLoop = state.soundLoop;
     body.soundVolume = state.soundVolume;
     body.soundKept = state.soundKept;
+    body.soundOff = state.soundOff;
   },
   apply: function (body) {
     if (!("sound" in body)) return;
@@ -7690,14 +7985,16 @@ bodyParts.push({
     state.soundLoop = body.soundLoop;
     state.soundVolume = body.soundVolume;
     state.soundKept = body.soundKept;
+    state.soundOff = !!body.soundOff;
   },
   blank: function (body) {
     body.sound = null;
     body.soundLoop = false;
     body.soundVolume = 100;
     body.soundKept = null;
+    body.soundOff = false;
   },
-  hasContent: function (body) { return !!body.sound; },
+  hasContent: function (body) { return !!(body.sound || body.soundOff); },
   // A scene's sound is its first line
   entries: function (body, lines) {
     var sound = "sound" in body ? soundLine(body) : null;
@@ -7712,6 +8009,13 @@ function readSound(bodies) {
   bodies.forEach(function (body) {
     body.kept = body.kept.filter(function (one) {
       var parts = entryParts(one.text);
+      // A scene's silence is read as itself
+      if (parts && parts.selector === "audio" && one.text === "audio: none" && !body.sound &&
+          !body.soundOff) {
+        body.soundOff = true;
+        if (one.comments.length) body.notes[one.text] = one.comments;
+        return false;
+      }
       if (!parts || parts.selector !== "audio" || parts.effect !== "wav" || body.sound ||
           !Object.keys(parts.right).every(function (key) {
             return key === "file" || key === "loop" || key === "volume";
@@ -7897,6 +8201,13 @@ function loudnessInk(loud) {
   }).join(",") + ")";
 }
 
+// The bars of a sound with nothing in it, a thin band in the quietest colour
+function silentBars() {
+  var bars = [];
+  for (var i = 0; i < SOUND_SAMPLES; i++) bars.push(0.04);
+  return bars;
+}
+
 function soundOutline(bars) {
   var wide = 100, high = 40, middle = high / 2, last = bars.length - 1;
   var id = "loudness" + (outlinesMade++);
@@ -7949,7 +8260,10 @@ function renderSound() {
   var explains = /^(one WAV|plays)/.test(says.textContent);
   if (row && explains) row.title = says.textContent.charAt(0).toUpperCase() +
                                    says.textContent.slice(1);
-  says.hidden = explains;
+  // With scenes, a sentence one tab shows and another does not keeps its place unseen, so the tab
+  // does not move between them
+  says.hidden = explains && !state.scenes.length;
+  says.style.visibility = explains ? "hidden" : "";
 
   var again = box.querySelector("button.again");
   var head = again && again.parentNode;
@@ -7959,9 +8273,12 @@ function renderSound() {
   // The screens' toggle, drawn here as well since not every page has the screens
   var loop = document.createElement("button");
   loop.type = "button";
-  loop.className = "stoggle" + (state.soundLoop && state.sound ? " on" : "");
+  // A scene playing Always on's sound shows Always on's loop, greyed
+  var under = soundUnder();
+  var looping = under ? state.always.body.soundLoop : state.soundLoop && state.sound;
+  loop.className = "stoggle" + (looping ? " on" : "") + (under ? " frozen" : "");
   loop.innerHTML = "<span aria-hidden='true'>&#8635;</span> Loop";
-  loop.title = again.title;
+  loop.title = under ? "Set on the Always on tab" : again.title;
   loop.disabled = !state.sound;
   loop.onclick = function () {
     state.soundLoop = !state.soundLoop;
@@ -7971,13 +8288,42 @@ function renderSound() {
 
   var quiet = row && row.querySelector(".sound.quiet");
   if (!quiet) return;
-  var silence = document.createElement("div");
-  silence.className = "card nothing small" + (quiet.classList.contains("picked") ? " picked" : "");
-  silence.title = quiet.title || "play no sound";
-  silence.innerHTML = "<div class='face'></div><div class='name'>Silence</div>";
-  silence.onclick = quiet.onclick;
-  head.appendChild(silence);
+  // Nothing writes no sound for the scene, so Always on's plays through where it has one, as
+  // Nothing does on the lights
+  var nothing = document.createElement("div");
+  nothing.className = "card nothing small" + (quiet.classList.contains("picked") ? " picked" : "");
+  nothing.title = canSilence() ? "Play nothing of this scene's own" : "Play no sound";
+  nothing.innerHTML = "<div class='face'></div><div class='name'>Nothing</div>";
+  nothing.onclick = quiet.onclick;
+  head.appendChild(nothing);
   row.removeChild(quiet);
+
+  // Silence, `audio: none`, is the scene choosing no sound over Always on's. It is a small card at
+  // the end of the first heading, as Off is in the screens' gallery, or on a line of its own where
+  // there are no headings. Where there is nothing to silence it keeps its place unseen, so the tab
+  // does not move between scenes
+  var silence = document.createElement("div");
+  if (!canSilence()) silence.style.visibility = "hidden";
+  silence.className = "card nothing small" + (state.soundOff ? " picked" : "");
+  silence.title = "Play no sound in this scene";
+  // Its face is a sound with nothing in it, drawn as a tile draws a near-silent file
+  silence.innerHTML = "<div class='face silenceface'></div><div class='name'>Silence</div>";
+  silence.querySelector(".face").appendChild(soundOutline(silentBars()));
+  silence.onclick = function () {
+    state.sound = null;
+    state.soundKept = null;
+    state.soundLoop = false;
+    state.soundVolume = 100;
+    state.soundOff = true;
+    draw();
+  };
+  var line = document.createElement("div");
+  line.className = "offhead";
+  var first = row.querySelector(".foldhead");
+  if (first) row.insertBefore(line, first);
+  else row.insertBefore(line, row.firstChild);
+  if (first) line.appendChild(first);
+  line.appendChild(silence);
 }
 
 // What the parts after this one add to the Sound tab once its tiles are made
@@ -7987,10 +8333,24 @@ var soundSteps = [];
 tabSwatches.soundPanel = function (swatch) {
   swatch.textContent = "";
   swatch.className = "accswatch soundswatch";
-  var info = state.sound ? state.soundInfo[state.sound] : null;
+  var under = soundUnder();
+  // The scene's Silence is the flat line its card shows
+  if (state.soundOff) {
+    swatch.appendChild(soundOutline(silentBars()));
+    swatch.title = "silence";
+    return;
+  }
+  var info = state.sound ? state.soundInfo[state.sound] : under ? state.soundInfo[under] : null;
   if (!info) {
     swatch.classList.add("silent");
-    swatch.title = "silence";
+    swatch.title = under ? "Always on's " + nameShown(under) : "nothing";
+    return;
+  }
+  // Always on's sound is drawn faded, as its looks are on the lamps
+  if (under) {
+    swatch.appendChild(soundOutline(info.bars));
+    swatch.classList.add("under");
+    swatch.title = "Always on's " + nameShown(under);
     return;
   }
   swatch.appendChild(soundOutline(info.bars));
@@ -8020,7 +8380,8 @@ function kindUnderName() {
   named.appendChild(tab.querySelector("b"));
   var kind = document.createElement("small");
   kind.className = "tabunder";
-  kind.textContent = state.sound || state.soundKept ? "wav" : "silence";
+  kind.textContent = state.sound || state.soundKept ? "wav" : state.soundOff ? "silence"
+                   : soundUnder() ? "Always on" : "nothing";
   named.appendChild(kind);
   tab.insertBefore(named, tab.firstChild);
 }
@@ -8054,6 +8415,9 @@ keptOpen("soundPanel");
 function liveSwatch(swatch, panel) {
   swatch.textContent = "";
   swatch.className = "accswatch liveswatch";
+  // A strip not fitted is crossed through, as a screen not fitted is, its lamps playing nothing
+  var absent = runsOfPanel(panel).every(function (run) { return run.strip && run.there === false; });
+  if (absent) swatch.classList.add("absent");
   runsOfPanel(panel).forEach(function (run) {
     var cells = run.lamps.map(function () {
       var cell = document.createElement("span");
@@ -8062,10 +8426,12 @@ function liveSwatch(swatch, panel) {
     });
     painters.push({run: run, paint: function (all) {
       // A lamp playing nothing lets the swatch's own stripes through, as a still swatch
-      // shows nothing, where drawn dark it read as a lamp set to black
+      // shows nothing, where drawn dark it read as a lamp set to black. A lamp a scene turns
+      // off is one set to black, so it is drawn dark
       cells.forEach(function (cell, at) {
         var one = all[at];
-        cell.style.background = !one || one.nothing ? "transparent" : inkAt(one);
+        cell.style.background = one && one.off ? "#2a2d30"
+                              : !one || one.nothing ? "transparent" : inkAt(one);
       });
     }});
   });

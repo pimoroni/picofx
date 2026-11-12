@@ -22,8 +22,9 @@ state.hub = {on: false, port: "A", sizes: {}, was: {}};
 state.places = {};
 HUB_PLACES.forEach(function (place) {
   state.hub.sizes[place] = "2.8";
+  // off= is a scene turning the position off with `none`, as a screen's is
   state.places[place] = {shows: null, turn: 0, pingpong: false, hold: "", fps: 5,
-                         turns: {}, lastShows: null};
+                         turns: {}, lastShows: null, off: false};
 });
 
 // The position whose settings are shown under the hub
@@ -38,8 +39,39 @@ function placesThere() { return HUB_PLACES.filter(placeThere); }
 // with its look and the hub's shared light
 function asScreen(place) {
   var held = state.places[place];
-  return {size: state.hub.sizes[place], turn: held.turn, shows: held.shows,
+  return {size: state.hub.sizes[place], turn: held.turn, shows: held.shows, off: held.off,
           look: Object.assign({}, held.look, {backlight: state.hubLight})};
+}
+
+// What the board shows on a position the scene being edited shows nothing on. The result holds
+// always=, Always on's settings for the position, or stopped=, a position this scene takes from
+// the same Always on entry, which stops that entry for the scene, or off=, every other scene that
+// shows there where Always on does not. It is null where nothing shows, and on the Always on tab
+function placeUnder(place) {
+  var mine = state.places[place];
+  if (state.at < 0 || !state.hub.on || mine.shows || mine.off) return null;
+  var always = state.always.body;
+  var held = always.places && always.places[place];
+  if (held && held.shows) {
+    var send = placeGroups(always).filter(function (one) {
+      return one.places.indexOf(place) >= 0;
+    })[0];
+    var taken = (send ? send.places : [place]).filter(function (one) {
+      return state.places[one].shows || state.places[one].off;
+    })[0];
+    return taken ? {stopped: taken} : {always: held};
+  }
+  var by = otherScenes().filter(function (scene) {
+    var theirs = scene.body.places && scene.body.places[place];
+    return theirs && (theirs.shows || theirs.off);
+  });
+  return by.length ? {off: by} : null;
+}
+
+// A position shown as a screen in Always on's settings and light, for one the scene leaves to it
+function asAlwaysScreen(place, held) {
+  return {size: state.hub.sizes[place], turn: held.turn || 0, shows: held.shows,
+          look: Object.assign({}, held.look, {backlight: state.always.body.hubLight})};
 }
 
 // The connector's own colour, A blue and B purple, which the hub takes from the one its
@@ -57,7 +89,7 @@ bodyParts.push({
     HUB_PLACES.forEach(function (place) {
       var held = state.places[place];
       body.places[place] = {shows: held.shows, pingpong: held.pingpong, hold: held.hold,
-                            fps: held.fps, turn: held.turn};
+                            fps: held.fps, turn: held.turn, off: held.off};
     });
   },
   apply: function (body) {
@@ -66,14 +98,20 @@ bodyParts.push({
       var held = state.places[place];
       Object.assign(held, body.places[place]);
       held.turn = body.places[place].turn || 0;
+      held.off = !!body.places[place].off;
       held.lastShows = held.shows;
     });
   },
   blank: function (body) {
-    HUB_PLACES.forEach(function (place) { body.places[place].shows = null; });
+    HUB_PLACES.forEach(function (place) {
+      body.places[place].shows = null;
+      body.places[place].off = false;
+    });
   },
   hasContent: function (body) {
-    return HUB_PLACES.some(function (place) { return !!(body.places && body.places[place].shows); });
+    return HUB_PLACES.some(function (place) {
+      return !!(body.places && (body.places[place].shows || body.places[place].off));
+    });
   },
   // The hub is read off the board line before any screen's line, a screen through it writing none
   readBoard: readHubBoard,
@@ -137,9 +175,31 @@ function hubEntry(group) {
                    state.hub.sizes[group.places[0]]);
 }
 
+// The lines turning hub positions off in a scene, one for each group and one for each position on
+// its own, so the groups read back as they were written
+function offHubEntries(body) {
+  var byGroup = {};
+  var groups = [];
+  placesThere().forEach(function (place) {
+    var held = body.places && body.places[place];
+    if (!held || !held.off) return;
+    var group = held.group || place;
+    if (!byGroup[group]) {
+      byGroup[group] = [];
+      groups.push(group);
+    }
+    byGroup[group].push(place);
+  });
+  return groups.map(function (group) {
+    return {places: byGroup[group], line: offEntry("hub" + placesSaid(byGroup[group]), state.hubLight)};
+  });
+}
+
 bodyParts.push({
   entries: function (body, lines) {
-    if (state.hub.on) placeGroups(body).forEach(function (group) { lines.push(hubEntry(group)); });
+    if (!state.hub.on) return lines;
+    placeGroups(body).forEach(function (group) { lines.push(hubEntry(group)); });
+    offHubEntries(body).forEach(function (one) { lines.push(one.line); });
     return lines;
   }
 });
@@ -214,7 +274,7 @@ function readHubLines(bodies) {
       var parts = entryParts(one.text);
       var places = parts && hubPlacesNamed(parts.selector);
       if (!places || places.some(function (place) {
-        return !state.hub.sizes[place] || body.places[place].shows;
+        return !state.hub.sizes[place] || body.places[place].shows || body.places[place].off;
       })) return true;
 
       var playing = screenPlaying(parts, {screens: {X: {}}}, "X");
@@ -223,19 +283,23 @@ function readHubLines(bodies) {
       if (lightSet && light !== state.hubLight) return true;
 
       var trial = {places: JSON.parse(JSON.stringify(body.places))};
-      var group = places.length > 1 ? String(numbered + 1) : places[0];
+      var group = places.length > 1 ? String(numbered + 1) : null;
       places.forEach(function (place) {
         trial.places[place] = Object.assign({}, trial.places[place], {
           shows: playing.shows, turn: playing.turn || 0, pingpong: !!playing.pingpong,
-          hold: playing.hold || "", look: Object.assign({}, playing.look), group: group});
+          hold: playing.hold || "", look: Object.assign({}, playing.look),
+          group: group || place, off: playing.off});
       });
       var wasLight = state.hubLight;
       state.hubLight = light;
-      var written = placeGroups(trial).filter(function (one) {
-        return one.places.join() === places.slice().sort(function (a, b) {
-          return HUB_PLACES.indexOf(a) - HUB_PLACES.indexOf(b);
-        }).join();
-      }).map(hubEntry)[0];
+      var named = places.slice().sort(function (a, b) {
+        return HUB_PLACES.indexOf(a) - HUB_PLACES.indexOf(b);
+      }).join();
+      var written = playing.off
+        ? offHubEntries(trial).filter(function (one) { return one.places.join() === named; })
+            .map(function (one) { return one.line; })[0]
+        : placeGroups(trial).filter(function (one) { return one.places.join() === named; })
+            .map(hubEntry)[0];
       if (written !== one.text) {
         state.hubLight = wasLight;
         return true;
@@ -243,7 +307,7 @@ function readHubLines(bodies) {
 
       body.places = trial.places;
       lightSet = true;
-      if (places.length > 1) numbered++;
+      if (group) numbered++;
       if (one.comments.length) body.notes[one.text] = one.comments;
       return false;
     });
@@ -352,11 +416,19 @@ function placeTile(place) {
   };
   top.appendChild(size);
 
-  var drawing = panelPreview(asScreen(place));
+  // A position the scene leaves to Always on shows Always on's picture in the striped frame
+  var under = placeUnder(place);
+  var drawing = panelPreview(under && under.always ? asAlwaysScreen(place, under.always)
+                                                   : asScreen(place));
+  if (under && under.always) drawing.classList.add("under");
   tile.appendChild(drawing);
   var says = document.createElement("small");
   says.className = "placesays";
-  says.textContent = held.shows || "nothing";
+  // One in a group of the scene's own says it is Always on's here, the line under it naming the group
+  says.textContent = held.off ? "off"
+                   : under && under.always ? (inNumberedGroup(place) ? "Always on's " : "") +
+                                             pictureSaid(under.always.shows)
+                   : under ? "off in this scene" : held.shows || "nothing";
   tile.appendChild(says);
   if (setupOn) {
     var drop = document.createElement("button");
@@ -389,7 +461,14 @@ function placeSettings() {
   settings.className = "hubsettings";
   if (!placeThere(placePicked)) return settings;
   var held = state.places[placePicked];
-  settings.appendChild(lookSections("place" + placePicked, held, state.hub.sizes[placePicked]));
+  // A position showing Always on's picture shows Always on's settings, greyed
+  var under = placeUnder(placePicked);
+  var shown = under && under.always ? Object.assign({}, held, {shows: null, turn: under.always.turn || 0,
+                                                               look: under.always.look || held.look})
+                                    : held;
+  var sections = lookSections("place" + placePicked, shown, state.hub.sizes[placePicked]);
+  if (shown !== held) frozen(sections);
+  settings.appendChild(sections);
   return settings;
 }
 
@@ -488,7 +567,7 @@ assetSteps.push(function () {
   var box = document.getElementById("assets");
   box.classList.toggle("hubbed", state.hub.on);
   if (!state.hub.on) return;
-  box.querySelectorAll(".asset").forEach(function (cell) {
+  box.querySelectorAll(".asset:not(.offasset)").forEach(function (cell) {
     var name = cell.dataset.name;
     var on = HUB_PLACES.filter(function (place) {
       return placeThere(place) && state.places[place].shows === name;
@@ -528,6 +607,61 @@ assetSteps.push(function () {
 
 // ---- the tab --------------------------------------------------------------------------------
 
+// The Off card's buttons are the hub's groups and positions on their own where a hub is on, then
+// all, as a picture's are. A group turns off as one, and turning it back on empties it, breaking it
+// up where splitsOverAlways() says, as taking a group's picture off does
+assetSteps.push(function () {
+  var cell = document.querySelector("#assets .offasset");
+  if (!cell || !state.hub.on) return;
+  cell.title = "Turn a hub position or group off in this scene";
+  var pick = cell.querySelector(".pick");
+  pick.textContent = "";
+
+  function turn(places, off) {
+    var breaking = off ? [] : breakingUp(places);
+    places.forEach(function (place) {
+      var held = state.places[place];
+      held.off = off;
+      if (off) held.shows = null;
+    });
+    breaking.forEach(function (place) { state.places[place].group = place; });
+  }
+
+  sendTargets().forEach(function (target) {
+    var off = target.places.every(function (place) { return state.places[place].off; });
+    var button = document.createElement("button");
+    button.type = "button";
+    button.textContent = target.name;
+    button.className = off ? "lit" : "";
+    if (off && target.ink) button.style.background = target.ink;
+    button.title = target.ink ? "Group " + target.name + ", " + placesSaid(target.places)
+                              : target.name + ", on its own";
+    button.onclick = function () {
+      placePicked = target.places[0];
+      turn(target.places, !off);
+      draw();
+    };
+    pick.appendChild(button);
+  });
+
+  // Every position at once, keeping the groups, or back on everywhere where all are off
+  var everywhere = placesThere().length && placesThere().every(function (place) {
+    return state.places[place].off;
+  });
+  var all = document.createElement("button");
+  all.type = "button";
+  all.textContent = "all";
+  all.className = everywhere ? "lit" : "";
+  all.title = everywhere ? "Back on at every position"
+                         : "Off at every group and every position on its own, keeping the groups";
+  all.disabled = !placesThere().length;
+  all.onclick = function () {
+    turn(placesThere(), !everywhere);
+    draw();
+  };
+  pick.appendChild(all);
+});
+
 // The tab's swatch is the hub's six positions, each showing what it shows, where a hub is on
 var screensSwatch = tabSwatches.screensPanel;
 
@@ -539,15 +673,25 @@ tabSwatches.screensPanel = function (swatch) {
     var held = state.places[place];
     var cell = document.createElement("span");
     cell.className = "screencell " + hubInk();
-    var art = placeThere(place) && held.shows ? mediaArt(held.shows) : null;
-    if (art) cell.style.backgroundImage = "url(" + art.url + ")";
+    // Off is black, and Always on's picture wears the stripes of nothing, as on two screens
+    var under = placeThere(place) ? placeUnder(place) : null;
+    var shown = held.shows || (under && under.always ? under.always.shows : null);
+    var art = placeThere(place) && shown ? mediaArt(shown) : null;
+    if (art) cell.style.backgroundImage = (under && under.always ? "var(--through), " : "") +
+                                          "url(" + art.url + ")";
     if (!placeThere(place)) cell.classList.add("absent");
-    else if (!art) cell.classList.add("blank");
+    else if (held.off) cell.classList.add("off");
+    // A picture with no thumbnail yet is a white tile, its position showing something
+    else if (!art) cell.classList.add(shown ? "blank"
+                                      : under && (under.off || under.stopped) ? "dark" : "nothing");
     swatch.appendChild(cell);
   });
   swatch.title = HUB_PLACES.map(function (place) {
-    return place + ": " + (!placeThere(place) ? "no panel" : state.places[place].shows ||
-                                                              "nothing");
+    var held = state.places[place];
+    var under = placeThere(place) ? placeUnder(place) : null;
+    return place + ": " + (!placeThere(place) ? "no panel" : held.off ? "off"
+                           : held.shows || (under && under.always ? "Always on's " +
+                                            under.always.shows : "nothing"));
   }).join(", ");
 };
 

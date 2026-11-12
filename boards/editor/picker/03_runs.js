@@ -630,13 +630,78 @@ function litRun(run) {
         out[which] = lit
           ? {level: Math.max(0, Math.min(1, lit.level)),
              ink: lamp.colour ? lit.ink : "#ffd9a0"}
-          : {level: 0, ink: "#3a3f44", nothing: true};
+          : litUnder(run, which, lamp);
       }
     });
   } finally {
     previewingStrip = false;
   }
   return out;
+}
+
+// What a lamp the scene plays nothing on shows, marked unset= for its tile. It plays Always on's
+// look where Always on has one there, and is off where another scene plays on it, as the board
+// has it
+function litUnder(run, which, lamp) {
+  var under = lampUnder(run.name, which);
+  if (under && under.always) {
+    var section = under.always;
+    // Always on's lamps keep their own walks, so a scene's stretch never steps one on
+    var store = walks["always " + run.name] || (walks["always " + run.name] = {});
+    var walk = store[which] || (store[which] = {});
+    var lit = livePlay(lookNamed(section.look), section, beat, which - section.from,
+                       widthOf(section), walk);
+    return {level: Math.max(0, Math.min(1, lit.level)), ink: lamp.colour ? lit.ink : "#ffd9a0",
+            always: true, unset: true};
+  }
+  return {level: 0, ink: "#3a3f44", nothing: true, off: !!(under && under.off), unset: true};
+}
+
+// What a lamp's tip says after its name where the scene plays nothing on it
+function underSaid(run, which) {
+  var under = lampUnder(run.name, which);
+  if (under && under.always) return ", playing " + lookNamed(under.always.look).name +
+                                    " from Always on";
+  if (under && under.off) return ", off here and lit only in " + spoken(namesOf(under.off));
+  return ", playing Nothing";
+}
+
+// What a stretch the scene plays nothing on shows instead, or null where nothing plays on any of
+// its lamps. The result holds a short note to follow the cell's "Nothing", a tip, and what each
+// lamp shows, as "off", null or Always on's stretch and the lamp's place in it
+function stretchUnder(run, section) {
+  var looks = [], scenes = [], lamps = [], played = 0;
+  for (var at = section.from; at <= section.to; at++) {
+    var under = lampUnder(run.name, at);
+    lamps.push(!under ? null : under.off ? "off"
+             : {section: under.always, at: at - under.always.from});
+    if (!under) continue;
+    played++;
+    if (under.always) {
+      var name = lookNamed(under.always.look).name;
+      if (looks.indexOf(name) < 0) looks.push(name);
+    } else {
+      namesOf(under.off).forEach(function (name) {
+        if (scenes.indexOf(name) < 0) scenes.push(name);
+      });
+    }
+  }
+  if (!played) return null;
+  var whole = played === widthOf(section);
+  var showing = lamps.filter(function (one) { return one && one !== "off"; }).length;
+  var notes = [];
+  if (looks.length) notes.push("Always on's " + spoken(looks) +
+                               (showing < widthOf(section) ? " on " + showing : ""));
+  // The scenes are named for what uses the lights anywhere in the file, never for which came first
+  if (scenes.length) notes.push((looks.length || !whole ? (played - showing) + " off" : "off") +
+                                ", lit only in " + spoken(scenes));
+  var tips = [];
+  if (looks.length) tips.push("Always on's " + spoken(looks) + " plays " +
+                              (whole && !scenes.length ? "here" : "on some of these lights") +
+                              " in this scene.");
+  if (scenes.length) tips.push((looks.length ? "The rest is off here" : "Off here") +
+                               " and lit only in " + spoken(scenes) + ".");
+  return {note: notes.join(" and "), tip: tips.join(" "), lamps: lamps};
 }
 
 function inkAt(lit) {
@@ -750,8 +815,11 @@ function lookCard(isMono, look, on) {
   name.textContent = look.name || "Nothing";
   card.appendChild(name);
 
+  // In a scene, a stretch playing nothing shows Always on's look or goes dark as the board decides,
+  // so Nothing there is not the same as off
   card.title = look.name ? look.name + ": apply it to the selected stretch"
-                         : "turn a stretch off";
+             : state.at >= 0 ? "Play nothing of this scene's own on the selected stretch"
+             : "turn a stretch off";
   card.onclick = function () {
     var run = galleryRun(isMono);
     landLook(run, stretchFor(run, isMono), look.name);
@@ -891,8 +959,8 @@ function renderRun(where, run) {
       one.onmouseenter = function () { showKin(lamp.out, true); };
       one.onmouseleave = function () { showKin(lamp.out, false); };
     }
-    one.title = selectorFor(lamp) + ", playing " +
-                (lookNamed(run.sections[mine].look) || {name: "Nothing"}).name;
+    var playing = lookNamed(run.sections[mine].look);
+    one.title = selectorFor(lamp) + (playing ? ", playing " + playing.name : underSaid(run, at));
     one.onclick = function () {
       pick(run, mine);
       draw();
@@ -912,6 +980,7 @@ function renderRun(where, run) {
     faces.forEach(function (face, at) {
       var one = all[at] || {level: 0, ink: "#e4e0d9"};
       face.style.background = one.nothing ? "#2a2d30" : inkAt(one);
+      face.parentNode.classList.toggle("unset", !!one.unset);
       face.style.boxShadow = one.level > 0.05
         ? "inset 0 0 0 1px rgba(0,0,0,.2), 0 0 " + (3 + one.level * 8).toFixed(1) +
           "px rgba(255,217,160," + (one.level * 0.5).toFixed(2) + ")"
@@ -999,6 +1068,58 @@ function washFor(run, section, look) {
   return stretchWash(look, section, run, !!first && !first.colour);
 }
 
+// A stretch's coloured band. One the scene plays nothing on keeps the stripes of nothing, over a
+// window onto Always on's own band where Always on plays there and over dark where it is off
+function washOf(run, section, look, under) {
+  var wash = document.createElement("span");
+  if (look || !under) {
+    wash.className = "lit" + (look ? "" : " nothing");
+    if (look) wash.style.background = washFor(run, section, look);
+    return wash;
+  }
+  wash.className = "lit through";
+  // Each run of lamps that show one thing is one pane
+  var wide = under.lamps.length;
+  var start = 0;
+  while (start < wide) {
+    var end = start + 1;
+    while (end < wide && sameShowing(under.lamps[end], under.lamps[start])) end++;
+    wash.appendChild(paneOnto(run, under.lamps[start], start, end, wide));
+    start = end;
+  }
+  return wash;
+}
+
+// Whether two lamps show the same thing under a scene: nothing, off, or one Always on stretch
+function sameShowing(one, other) {
+  return one === other ||
+         !!(one && other && one.section && other.section && one.section === other.section);
+}
+
+// A pane over lamps start to end of a stretch wide lamps across. Over Always on's stretch it holds
+// that stretch's whole band, moved so the lamps under the pane line up with their own part of it
+function paneOnto(run, shows, start, end, wide) {
+  var pane = document.createElement("span");
+  pane.style.left = (start * 100 / wide) + "%";
+  pane.style.width = ((end - start) * 100 / wide) + "%";
+  if (!shows) pane.className = "empty";
+  else if (shows === "off") pane.className = "off";
+  else {
+    var band = document.createElement("span");
+    band.style.width = (widthOf(shows.section) * 100 / (end - start)) + "%";
+    band.style.left = (-shows.at * 100 / (end - start)) + "%";
+    band.style.background = washFor(run, shows.section, lookNamed(shows.section.look));
+    pane.appendChild(band);
+  }
+  return pane;
+}
+
+// The note under a cell's "Nothing" saying what shows through from Always on, or nothing where
+// the stretch shows nothing at all
+function beneath(under) {
+  return under ? "<span class='beneath'>" + escapeHtml(under.note) + "</span>" : "";
+}
+
 function renderBar(where, run) {
   var box = document.getElementById(where);
   box.textContent = "";
@@ -1016,15 +1137,14 @@ function renderBar(where, run) {
                  targetFor(run, section).selector;
 
     var look = lookNamed(section.look);
-    var wash = document.createElement("span");
-    wash.className = "lit" + (look ? "" : " nothing");
-    if (look) wash.style.background = washFor(run, section, look);
-    cell.appendChild(wash);
+    var under = look ? null : stretchUnder(run, section);
+    cell.appendChild(washOf(run, section, look, under));
+    if (under) cell.title = under.tip;
 
     var says = document.createElement("span");
     says.className = "says";
-    says.innerHTML = (look ? look.name : "Nothing") + " <em>" + widthOf(section) +
-                     "</em>";
+    says.innerHTML = (look ? look.name : "Nothing") + " <em>" + widthOf(section) + "</em>" +
+                     beneath(under);
     cell.appendChild(says);
 
     // Where this stretch can be cut, one place between two lamps

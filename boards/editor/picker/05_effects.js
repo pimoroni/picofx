@@ -357,6 +357,29 @@ function wireRun(run) {
                                  " " + (high + ROOM * 2),
                         preserveAspectRatio: "xMinYMid meet"});
 
+  // A stretch set to Nothing sits on the stripes Nothing wears elsewhere, inside a broken line, as
+  // an output's lamp does. Its beads show what the board does there
+  var stripes = "unset-" + run.name;
+  var defs = tag("defs", {});
+  var pattern = tag("pattern", {id: stripes, patternUnits: "userSpaceOnUse", width: 6, height: 6,
+                                patternTransform: "rotate(-45)"});
+  pattern.appendChild(tag("rect", {width: 6, height: 6, fill: "#e4e0d9"}));
+  pattern.appendChild(tag("rect", {width: 3, height: 6, fill: "#f0eeea"}));
+  defs.appendChild(pattern);
+  svg.appendChild(defs);
+  if (run.there !== false) {
+    run.sections.forEach(function (section) {
+      if (lookNamed(section.look)) return;
+      spanRows(section, place).forEach(function (row) {
+        svg.appendChild(tag("rect", {"class": "unset", x: row.low - GAP / 2, y: row.y - 2.2,
+                                     width: row.high - row.low + SIZE + GAP,
+                                     height: SIZE + 4.4, rx: 4, fill: "url(#" + stripes + ")",
+                                     stroke: "#a9a49b", "stroke-width": 0.7,
+                                     "stroke-dasharray": "2 1.5"}));
+      });
+    });
+  }
+
   for (var r = 0; r < rows - 1; r++) {
     var atRight = r % 2 === 0;
     var x = atRight ? EDGE + wide : EDGE;
@@ -437,7 +460,8 @@ function wireRun(run) {
   return {svg: svg, paint: function (all) {
     for (var n = 0; n < beads.length; n++) {
       var one = all[n] || {level: 0, ink: "#e4e0d9"};
-      beads[n].setAttribute("fill", one.nothing ? "#e4e0d9" : inkAt(one));
+      // A bead playing nothing is drawn unlit, as an output's lamp is
+      beads[n].setAttribute("fill", one.nothing ? "#2a2d30" : inkAt(one));
     }
   }};
 }
@@ -516,14 +540,13 @@ function renderStripBar(where, run) {
     // a still palette does not stand for one anyway. So a stretch is washed in a
     // colour of its look and named, and the run below is where it is watched
     var look = lookNamed(section.look);
-    var wash = document.createElement("span");
-    wash.className = "lit" + (look ? "" : " nothing");
-    if (look) wash.style.background = stretchWash(look, section, run, run.mono);
-    cell.appendChild(wash);
+    var under = look ? null : stretchUnder(run, section);
+    cell.appendChild(washOf(run, section, look, under));
+    if (under) cell.title += ". " + under.tip;
 
     var says = document.createElement("span");
     says.className = "says";
-    says.innerHTML = (look ? look.name : "Nothing") + " <em>" + wide + "</em>";
+    says.innerHTML = (look ? look.name : "Nothing") + " <em>" + wide + "</em>" + beneath(under);
     cell.appendChild(says);
 
     // Where this stretch could be cut, one click to a place between two lights
@@ -2202,6 +2225,7 @@ chosenSteps.push(function (where, run) {
   var section = run && run.sections[run.picked];
   if (!who || !section) return;
   var look = lookNamed(section.look);
+  var under = look ? null : stretchUnder(run, section);
   who.innerHTML = "";
   var named = document.createElement("b");
   named.textContent = look ? look.name : "Nothing";
@@ -2209,6 +2233,13 @@ chosenSteps.push(function (where, run) {
   var reversed = section.reversed && runsAWay(look, forwardTargetFor(run, section), section);
   who.appendChild(document.createTextNode(" on " + wherePlays(run, section, reversed)));
   who.title = targetFor(run, section).selector;
+  // A stretch the scene leaves empty says what the board plays there, and how to change it
+  if (under) {
+    var hint = document.createElement("div");
+    hint.className = "underhint";
+    hint.textContent = under.tip + " Choose a look to give this scene its own.";
+    who.parentNode.insertBefore(hint, who.nextSibling);
+  }
 });
 
 chosenSteps.push(function (where, run) {

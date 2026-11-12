@@ -127,6 +127,7 @@ function settleGroups() {
     held.turn = from.turn;
     held.pingpong = from.pingpong;
     held.hold = from.hold;
+    held.off = from.off;
     held.lastShows = from.shows;
     if (from.shows) held.turns[from.shows] = from.turn;
     Object.assign(held.look, from.look);
@@ -137,12 +138,27 @@ drawSteps.before.push(settleGroups);
 
 // ---- pictures go to groups ---------------------------------------------------------------------
 
+// Whether a group of the scene being edited, left showing nothing, would show different things on
+// its members, Always on showing on some of them. A group showing nothing writes nothing, so only
+// such a group is broken up when it is emptied, and elsewhere it is kept for its next picture
+function splitsOverAlways(places) {
+  var always = state.at >= 0 && state.always.body.places;
+  return !!always && places.some(function (place) { return always[place] && always[place].shows; });
+}
+
+// The positions of numbered groups among those given that splitsOverAlways() breaks up
+function breakingUp(places) {
+  return places.filter(function (place) {
+    return inNumberedGroup(place) && splitsOverAlways(membersOf(place));
+  });
+}
+
 // Under each picture, the groups and the positions on their own, then all. A picture on a
 // group shows on every member, and pressing it again takes it off
 assetSteps.push(function () {
   if (!state.hub.on) return;
   var targets = sendTargets();
-  document.querySelectorAll("#assets .asset").forEach(function (cell) {
+  document.querySelectorAll("#assets .asset:not(.offasset)").forEach(function (cell) {
     var name = cell.dataset.name;
     var pick = cell.querySelector(".pick");
     pick.textContent = "";
@@ -160,7 +176,13 @@ assetSteps.push(function () {
                                 : target.name + ", on its own";
       button.onclick = function () {
         placePicked = target.places[0];
+        var breaking = shown ? breakingUp(target.places) : [];
         state.places[placePicked].shows = shown ? null : name;
+        state.places[placePicked].off = false;
+        breaking.forEach(function (place) {
+          state.places[place].shows = null;
+          state.places[place].group = place;
+        });
         draw();
       };
       pick.appendChild(button);
@@ -174,12 +196,16 @@ assetSteps.push(function () {
     all.type = "button";
     all.className = "all" + (everywhere ? " lit" : "");
     all.textContent = "all";
-    all.title = "On every group and every position on its own, keeping the groups";
+    all.title = everywhere ? "Off every position"
+                           : "On every group and every position on its own, keeping the groups";
     all.disabled = !placesThere().length;
     all.onclick = function () {
+      var breaking = everywhere ? breakingUp(placesThere()) : [];
       placesThere().forEach(function (place) {
         state.places[place].shows = everywhere ? null : name;
+        state.places[place].off = false;
       });
+      breaking.forEach(function (place) { state.places[place].group = place; });
       draw();
     };
     pick.appendChild(all);
@@ -199,11 +225,23 @@ hubHeadSteps.push(function () {
     var held = state.places[tile.dataset.place];
     if (says && held && held.shows) says.textContent = pictureSaid(held.shows);
   });
-  var row = lightRow(state.hubLight, function (value) { state.hubLight = value; },
+  // A scene showing nothing of its own on the hub, where Always on shows something, plays it in
+  // Always on's light, so the row shows that light, greyed
+  var mine = placesThere().some(function (place) {
+    return state.places[place].shows || state.places[place].off;
+  });
+  var always = placesThere().some(function (place) {
+    var under = placeUnder(place);
+    return under && under.always;
+  });
+  var fromAlways = always && !mine;
+  var row = lightRow(fromAlways ? state.always.body.hubLight : state.hubLight,
+                     function (value) { state.hubLight = value; },
                      "shared backlight",
                      "Backlight brightness for all six hub screens in this scene");
   row.classList.add("hublightrow");
   row.querySelector(".lightopt").classList.add("hublight");
+  if (fromAlways) frozen(row);
   body.insertBefore(row, body.firstChild);
 });
 
@@ -266,6 +304,12 @@ hubHeadSteps.push(function () {
       numbers.appendChild(button);
     });
     tile.appendChild(numbers);
+    // A position showing Always on's picture is grouped as Always on groups it, so its numbers are
+    // greyed, unless it is in a group of the scene's own, which it can still leave here. One the
+    // scene leaves empty says what the board does there
+    var under = placeUnder(place);
+    var inherited = !!(under && under.always);
+    if (inherited && !ink) frozen(numbers);
     // Which screens it shares a group with, as a range the way the file names them, so a full
     // group still fits: "grouped with B-F". A group of one says so, its number being lit. A
     // position on its own says which it matches, being sent with them until a setting differs
@@ -273,7 +317,10 @@ hubHeadSteps.push(function () {
     var matching = (sentWith[place] || []).filter(function (other) { return other !== place; });
     var said = document.createElement("small");
     said.className = "groupsaid";
-    said.textContent = ink ? (others.length ? "grouped with " + placesSaid(others)
+    said.textContent = inherited && !ink ? "from Always on"
+                     : under && under.off ? "lit only in " + spoken(namesOf(under.off))
+                     : under && under.stopped ? "Always on's group stops"
+                     : ink ? (others.length ? "grouped with " + placesSaid(others)
                                             : "alone in group " + groupOf(place))
                      : matching.length ? "matches " + placesSaid(matching) : "on its own";
     if (ink) said.style.color = ink;

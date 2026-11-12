@@ -1123,10 +1123,25 @@ function showingLine(held, letter) {
   var picture = held.shows && held.shows !== "keep" ? held.shows : null;
   // Nothing showing takes the same two lines a picture does, so nothing under it moves when one
   // is chosen
+  var press = "press " + screenButton(letter) + " under a picture below to show it here";
   if (!picture) {
     line.classList.add("empty");
-    line.innerHTML = (state.scenes.length ? "nothing chosen for this scene" : "nothing showing") +
-                     "<small>press " + screenButton(letter) + " under a picture below to show it here</small>";
+    var under = held.shows ? null : screenUnder(letter);
+    if (held.off) {
+      line.innerHTML = "off in this scene<small>black, at the backlight set above</small>";
+    } else if (under && under.always) {
+      var shown = under.always === "keep" ? "the line kept from the file"
+                                          : "<b>" + pictureSaid(under.always) + "</b>";
+      line.innerHTML = "showing " + shown + " from Always on<small>" + press + " instead</small>";
+    } else if (under) {
+      line.innerHTML = "backlight off in this scene<small>" + (under.off
+        ? "lit only in " + escapeHtml(spoken(namesOf(under.off)))
+        : "Always on's pair stops while this scene shows on " + screenShown(under.stopped)) +
+        "</small>";
+    } else {
+      line.innerHTML = (state.scenes.length ? "nothing chosen for this scene" : "nothing showing") +
+                       "<small>" + press + "</small>";
+    }
     return line;
   }
   var media = mediaNamed(picture);

@@ -73,6 +73,12 @@ screensHeadSteps.after.push(function () {
   if (SCREENS.length < 2 || state.hub.on) return;
   var fitted = SCREENS.every(function (letter) { return state.screens[letter].there; });
   if (!fitted) return;
+  // A scene pairs only its own pictures, so while either screen shows Always on's the toggles stay
+  // in place but cannot be pressed
+  var fromAlways = SCREENS.filter(function (letter) {
+    var under = state.screens[letter].shows ? null : screenUnder(letter);
+    return under && under.always;
+  });
   SCREENS.forEach(function (letter) {
     var body = document.querySelector("#screensHead .screen-box." + letter.toLowerCase() + " .body");
     if (!body) return;
@@ -91,6 +97,11 @@ screensHeadSteps.after.push(function () {
       togglePair();
       draw();
     };
+    if (fromAlways.length) {
+      button.disabled = true;
+      button.className = "";
+      button.title = "Pairs this scene's own pictures on both screens";
+    }
     segment.appendChild(button);
     place.appendChild(segment);
 
@@ -98,7 +109,10 @@ screensHeadSteps.after.push(function () {
     // match, being sent as a pair until a setting after the file differs
     var said = document.createElement("small");
     said.className = "groupsaid";
-    said.textContent = screensPaired() ? "paired with " + screenShown(other)
+    // The screen showing Always on's picture already says so in its own line below
+    said.textContent = fromAlways.indexOf(letter) >= 0 ? "not available"
+                     : fromAlways.length ? screenShown(fromAlways[0]) + " from Always on"
+                     : screensPaired() ? "paired with " + screenShown(other)
                      : picturesMatch(state.screens[letter], state.screens[other])
                        ? "matches " + screenShown(other) : "on its own";
     place.appendChild(said);
@@ -134,6 +148,25 @@ function pairWritten(body) {
   var second = body.screens[SCREENS[1]];
   if (!body.screensPaired) return picturesMatch(first, second);
   return !!first.shows && first.shows !== "keep" && second.shows === first.shows;
+}
+
+// What the board shows on a screen the scene being edited shows nothing on. The result holds
+// always=, Always on's picture, or stopped=, the screen this scene takes from Always on's pair,
+// which stops the whole pair for the scene, or off=, every other scene that shows on it where
+// Always on does not. It is null where nothing shows there, on the Always on tab and on a hub
+function screenUnder(letter) {
+  if (state.at < 0 || state.hub.on || state.screens[letter].off) return null;
+  var always = state.always.body;
+  var shown = always.screens && always.screens[letter].shows;
+  if (shown) {
+    var places = pairWritten(always) ? SCREENS : [letter];
+    var taken = places.filter(function (one) { return state.screens[one].shows; })[0];
+    return taken ? {stopped: taken} : {always: shown};
+  }
+  var by = otherScenes().filter(function (scene) {
+    return scene.body.screens && (scene.body.screens[letter].shows || scene.body.screens[letter].off);
+  });
+  return by.length ? {off: by} : null;
 }
 
 // Of a pair's two screens, the one whose canvas is larger after its own turn and pixel_double,

@@ -658,13 +658,14 @@ def mockup_pictures(text, letters, targets):
 
 
 def mockup_sounds(text, looping):
-    """The sounds on the drive, written as their names with Silence among them, the selected one
-    marked with a *. Loop and Silence sit on one line above the sounds, as the picker has them."""
+    """The sounds on the drive, written as their names with Nothing among them, the selected one
+    marked with a *. Loop and Nothing sit on one line above the sounds, as the picker has them
+    before there are scenes, and Silence is read as Nothing."""
     cards = []
-    silence = False
+    nothing = False
     for name, selected in selected_items(text):
-        if name == "Silence":
-            silence = selected
+        if name in ("Nothing", "Silence"):
+            nothing = selected
             continue
         # A sound's preview is its outline, loud peaks red over a quiet blue line
         heights = [95, 70, 100, 60, 90, 80, 100, 65, 95, 85, 100, 70, 90, 75, 100, 60, 85, 95]
@@ -677,10 +678,10 @@ def mockup_sounds(text, looping):
     return ('<div class="soundhead"><span class="button{}">&#8635; Loop</span><span class="soundvolume">'
             '<span class="dim">volume</span><span class="slider"><i style="width:100%"></i></span>'
             '<span>100%</span></span><span class="nothingcard{}">'
-            '<i class="{}"></i>Silence</span></div><div class="galleryhead"><span class="fold">'
+            '<i class="{}"></i>Nothing</span></div><div class="galleryhead"><span class="fold">'
             '&#8963;</span>On the drive<span class="dim">your own sounds</span></div>'
             '<div class="sounds">{}</div>').format(" on" if looping else "",
-                                                   " picked" if silence else "", HATCH,
+                                                   " picked" if nothing else "", HATCH,
                                                    "".join(cards))
 
 

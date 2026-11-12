@@ -100,6 +100,25 @@ button.round svg{display:block}
 .sec .lit{display:block;height:1.5rem;border-radius:6px 6px 0 0}
 .sec .lit.nothing{background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,
  #e4e0d9 6px,#e4e0d9 12px)}
+/* Where a scene sets nothing and Always on shows through, the content shows in full with the
+   stripes of nothing over or around it, here over Always on's colours or over dark where the
+   stretch is off */
+:root{--through:repeating-linear-gradient(45deg,rgba(240,238,234,.75),rgba(240,238,234,.75) 6px,
+ transparent 6px,transparent 12px)}
+.sec .lit.through{position:relative;overflow:hidden}
+.sec .lit.through > span{position:absolute;top:0;bottom:0;overflow:hidden}
+.sec .lit.through > span > span{position:absolute;top:0;bottom:0}
+.sec .lit.through > .off{background:#2a2d30}
+.sec .lit.through > .empty{background:#e4e0d9}
+.sec .lit.through::after{content:"";position:absolute;inset:0;background:var(--through)}
+/* A screen's settings that show Always on's values in a scene, greyed and not to be changed here */
+.frozen{opacity:.45}
+.frozen button,.frozen input{cursor:default}
+/* A screen showing Always on's picture in a scene, in the striped and dashed frame its lamps wear */
+.holder.under{border:1px dashed #a9a49b;border-radius:8px;
+ background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
+/* Under the chosen stretch's name, what the board plays where the scene leaves it empty */
+.chosen .underhint{font-size:.8rem;color:var(--dim);margin:.25rem 0 0}
 /* Cutting happens in the coloured band only. The name below it is always plain
    section, so a stretch cut every light still has somewhere to be clicked and picked */
 .sec .cuts{position:absolute;top:0;left:0;right:0;height:1.5rem;pointer-events:none}
@@ -126,6 +145,10 @@ button.round svg{display:block}
  padding:0 .3rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
  text-align:center}
 .sec .says em{font-style:normal;font-weight:400;color:var(--dim)}
+/* After a stretch's "Nothing" and its count, what shows through from Always on, set apart by a
+   rule */
+.sec .says .beneath{font-weight:400;color:var(--dim);margin-left:.45em;padding-left:.45em;
+ border-left:1px solid #c9c3b9}
 .sec.narrow .says{font-size:.6rem}
 
 /* A cut that is already there: dragged to move it along the run, or taken out by the
@@ -174,6 +197,10 @@ button.round svg{display:block}
 .lamp.landing{border-color:var(--accent);box-shadow:-2px 0 0 var(--accent)}
 .lamp i{display:block;width:1.5rem;height:1.5rem;border-radius:50%;
  box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
+/* A lamp set to Nothing. Its tile wears the stripes Nothing wears elsewhere, and its light shows
+   what the board does there, in a scene Always on's look in full or dark */
+.lamp.unset{border-style:dashed;border-color:#a9a49b;
+ background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
 .lamp b{display:block;font:400 .66rem/1.6 system-ui,sans-serif;color:var(--dim);
  text-align:center}
 
@@ -763,6 +790,28 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
  background:rgba(20,20,22,.82);color:#fff;opacity:0;transition:opacity .12s;
  pointer-events:none;z-index:1}
 .asset:hover .label,.asset:focus-within .label{opacity:1}
+/* Off in a scene's gallery: a small card at the end of the first heading, as Nothing is in the
+   looks, its face black and its screens' buttons at its end */
+.assets .offhead,.sounds .offhead{grid-column:1/-1;flex-basis:100%;display:flex;
+ align-items:center;gap:.6rem;margin:.4rem 0 -.3rem}
+.assets .offhead:first-child,.sounds .offhead:first-child{margin-top:0}
+.assets .offhead .foldhead,.sounds .offhead .foldhead{margin:0}
+.offhead .card.nothing.small{flex-shrink:0}
+/* Silence's face, a sound with nothing in it, as long as a sound tile's preview */
+.card.nothing .face.silenceface{background:#fff;display:flex;align-items:center;width:7.4rem;
+ border-right:1px solid var(--line)}
+.card.nothing .face.silenceface svg{display:block;width:100%;height:1.7rem}
+.offhead .card.nothing.small .name{overflow:visible}
+.card.nothing.small.offasset{cursor:default;flex-shrink:0}
+.card.nothing.small.offasset:hover{transform:none}
+.card.nothing.small.offasset .face{background:#000;flex-shrink:0;width:auto;display:flex;
+ align-items:center;padding:0 .7rem;color:#c8cdd0;font:600 .8rem system-ui,sans-serif}
+.offasset .pick{display:flex;align-items:stretch;border-left:1px solid var(--line)}
+.offasset .pick button{border:0;border-radius:0;padding:0 .55rem;font-size:.75rem;
+ background:var(--panel)}
+.offasset .pick button+button{border-left:1px solid var(--line)}
+.offasset .pick button.lit{background:#1f6feb;color:#fff}
+.offasset .pick button.lit.b{background:#a44ad0}
 .asset .pick{display:flex;border-top:1px solid var(--line)}
 .asset .pick button{flex:1;border:0;border-radius:0;padding:.2rem;font-size:.75rem;
  font-weight:700;color:var(--dim);background:var(--panel)}
@@ -839,6 +888,9 @@ select{font:inherit;font-size:.85rem;padding:.25rem .3rem;border:1px solid var(-
  border-radius:10px;background:var(--panel);text-align:left;cursor:pointer}
 .sound:hover{border-color:var(--dim)}
 .sound.picked{border-color:var(--accent)}
+/* Always on's sound, playing in a scene with none of its own, in the striped and dashed frame */
+.sound.under{border-style:dashed;border-color:#a9a49b;
+ background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
 .sound svg{display:block;width:100%;height:1.8rem}
 .sound b{display:block;font:600 .74rem/1.5 system-ui,sans-serif;color:var(--ink);
  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1227,6 +1279,8 @@ body.setupall #soundPanel{opacity:.35;pointer-events:none}
 .accswatch.soundswatch{align-items:center;gap:1px;box-shadow:none;height:.9rem;width:3.2rem}
 .soundswatch span{flex:1;background:var(--accent);border-radius:1px;min-height:2px}
 .soundswatch.silent{height:.2rem;background:#c9c3b9;border-radius:1px}
+.soundswatch.under{border:1px dashed #a9a49b;
+ background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 3px,#e0dbd2 3px,#e0dbd2 6px)}
 .soundsays{margin:0 0 .8rem}
 
 /* ---- the wiring, while the board is set up ----
@@ -1364,14 +1418,27 @@ html{scrollbar-gutter:stable}
  background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 7px,#e4e0d9 7px,#e4e0d9 14px)}
 .sound b{padding:.3rem .5rem 0}
 .sound small{display:block;padding:0 .5rem .35rem}
-/* A screen fitted with no picture chosen is a white tile, as an empty sound is, so it
-   reads apart from one not fitted, which is striped */
+/* A screen showing nothing wears the stripes of nothing, as a lamp playing nothing and an empty
+   sound do, and one dark because another scene shows on it is dark, as such a lamp is */
+.ledtab[data-panel=screensPanel] .screencell.nothing{box-shadow:none;
+ background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 3px,#e0dbd2 3px,#e0dbd2 6px)}
+.ledtab[data-panel=screensPanel] .screencell.dark{background:#2a2d30;box-shadow:none}
+/* A screen showing a picture with no thumbnail yet, a white tile */
 .ledtab[data-panel=screensPanel] .screencell.blank{background:#fff;
  box-shadow:inset 0 0 0 1px var(--line)}
 .screencell.a{--cell:#1f6feb}
 .screencell.b{--cell:#a44ad0}
-.screencell.absent{background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 3px,
- #e0dbd2 3px,#e0dbd2 6px);box-shadow:none}
+/* Hardware not fitted is an empty place in a dashed outline. A screen or hub position, being
+   square, is also crossed through once, and a strip's bar is too thin for a cross */
+:root{--cross:linear-gradient(to top right,transparent calc(50% - .7px),#c9c3b9 calc(50% - .7px),
+ #c9c3b9 calc(50% + .7px),transparent calc(50% + .7px))}
+.screencell.absent,.ledtab[data-panel=screensPanel] .screencell.absent{
+ background:var(--cross) transparent;box-shadow:none;outline:1px dashed #a9a49b;outline-offset:-1px}
+.accswatch.liveswatch.absent{background:transparent;box-shadow:none;
+ outline:1px dashed #a9a49b;outline-offset:-1px}
+/* A screen a scene turns off is black, and one showing Always on's picture has the stripes of
+   nothing over it, as the lamps and bars do */
+.ledtab[data-panel=screensPanel] .screencell.off{background:#000;box-shadow:none}
 .screenssays{margin:0 0 .8rem}
 .screen-box h3 .boardicon{color:#fff;opacity:.9}
 .screen-box select:disabled,.screen-box button:disabled{opacity:.75;cursor:default}
@@ -1420,7 +1487,7 @@ html{scrollbar-gutter:stable}
 .place.empty:hover{background:none}
 .placenone{display:flex;align-items:center;justify-content:center;width:100%;
  aspect-ratio:1;border-radius:6px;font-size:.72rem;color:var(--dim);
- background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 5px,#e0dbd2 5px,#e0dbd2 10px)}
+ background:var(--cross) transparent;outline:1px dashed #a9a49b;outline-offset:-1px}
 .placedrop{position:absolute;top:.3rem;right:.2rem;width:1.3rem;height:1.3rem;padding:0;
  border:0;border-radius:5px;background:var(--hub);color:#fff;font-size:.95rem;line-height:1}
 .placefit{position:absolute;bottom:2.1rem;border:1.5px solid var(--hub);border-radius:7px;
