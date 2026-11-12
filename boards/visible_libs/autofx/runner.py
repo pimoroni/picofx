@@ -20,7 +20,8 @@ from .checks import copies
 from .shows import (build_deferred_shows, DEFERRED_SHOWS, REPORTING_TO, service_shows, settle_hub,
                     STOPPED, UNWRITTEN, user_trace)
 from .sounds import cue_sound
-from .loader import apply_scene, load
+from .loader import apply_scene, load, restart_always
+from .triggers import Triggers
 
 # Short of full, which is uncomfortable on an indicator at arm's length and buys no
 # legibility across a room
@@ -293,6 +294,24 @@ def __reload(fx, volume, path, errors, playing, showing, sounding=(), maker=None
     # Started by the caller, which is the only one that knows whether a program is
     # about to take the board over
     return fx, players, shows, sounds, scenes, settings, problems
+
+
+# How long each of a hub's groups is given to measure its panels in, while the effects are
+# held or the board is asleep. A group only measures a panel where the call has a refresh to
+# spare, so the loop's own pause is too short, and a press waits up to this long to be read.
+IDLE_MS = 100
+
+
+def __wait(ms, idle):
+    # The loop's pause between passes. While the remote holds the effects or the board is
+    # asleep, a hub's groups pass it measuring their panels' tearing effect instead, as panels
+    # nothing measures drift out of step and need walking back in when frames start again
+    groups = list(BUILT_HUB.get("groups", {}).values()) if idle else []
+    if not groups:
+        time.sleep_ms(ms)
+        return
+    for group in groups:
+        group.idle(max(ms, IDLE_MS))
 
 
 # What the players are ticked at. picofx defaults to 100, which a board driving
@@ -647,6 +666,99 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
     sounds_aside = False
     idle_since = None
 
+    # What the sensor connector's remote or PIR Stick asks for, set up once the board is the
+    # effects' own, a program having had it until now. held is the remote's Play / Pause
+    # holding the effects where they stand, and standby its OK / Stop putting the board
+    # dark, each until pressed again. held_left is the scene's time still to run
+    triggers = Triggers(fx, settings, scenes)
+    triggers_of = fx
+    held = False
+    held_left = None
+    standby = False
+
+    def go_to(at, again=None):
+        """
+        Show the scene in place `at`, from its start: its time, and its effects too where it
+        restarts or `again` says so. Going to the scene showing starts it again the same way.
+        """
+        nonlocal scene_at, scene_deadline
+        scene_at = at
+        scene = scenes[at]
+        apply_scene(players, shows, sounds, scene, again)
+        scene_deadline = (time.ticks_add(time.ticks_ms(), int(scene.hold * 1000))
+                          if scene.hold else None)
+        triggers.shown(at)
+
+    def hold_effects(on):
+        """Hold the effects, screens and sound where they stand, or let them carry on."""
+        nonlocal held, held_left, scene_deadline
+        held = on
+        if on:
+            __stop(players)
+            for show in shows:
+                show.pause()
+            for sound in sounds:
+                sound.pause()
+            held_left = (time.ticks_diff(scene_deadline, time.ticks_ms())
+                         if scene_deadline is not None else None)
+            return
+        __start(players, fx)
+        for show in shows:
+            if show.live:
+                show.resume()
+        for sound in sounds:
+            sound.resume()
+        if held_left is not None:
+            scene_deadline = time.ticks_add(time.ticks_ms(), max(0, held_left))
+
+    def sleep(on):
+        """Put the board dark until woken, or wake it into the scene it left, from its start."""
+        nonlocal standby
+        standby = on
+        if on:
+            __stop(players)
+            fx.clear()
+            for show in shows:
+                show.rest(show.places)
+            light = BUILT_HUB.get("light")
+            if light is not None:
+                light.off()
+            for sound in sounds:
+                sound.pause()
+            return
+        __resume(players, fx)
+        for sound in sounds:
+            sound.resume()
+        if scenes:
+            go_to(scene_at, False)
+        else:
+            for show in shows:
+                show.resume()
+            settle_hub(shows)
+
+    def act(what, place):
+        """Do what a trigger asks. Asleep, only OK / Stop is answered, waking the board."""
+        if what == "standby":
+            if held:
+                hold_effects(False)
+            sleep(not standby)
+            return
+        if standby:
+            return
+        if what == "pause":
+            hold_effects(not held)
+            return
+        # A scene changing, or beginning again, plays, so a hold ends first
+        if held:
+            hold_effects(False)
+        if what == "restart":
+            if place is None:
+                restart_always(players, shows, sounds)
+            else:
+                go_to(place, True)
+        elif what == "scene":
+            go_to(place)
+
     # A quick tap can start and end inside one screen's service, which a level read
     # between frames never sees. A board catching presses by interrupt is asked for
     # those instead. The rest are polled, and sampled around each screen as well
@@ -712,7 +824,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                 # outputs back after it
                 __stop(players)
                 __handover(fx, False)
-                __resume(players, fx)
+                if not (held or standby):
+                    __resume(players, fx)
 
             if event in (volume.HIDDEN, volume.EJECTED, volume.RELOADED):
                 if event == volume.HIDDEN:
@@ -731,6 +844,15 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                 paused = False
                 sounds_aside = False
                 idle_since = None
+                held = standby = False
+                held_left = None
+                # A rebuilt board has a new sensor to listen to, where the same board's
+                # sensor keeps listening for the file read again
+                if fx is not triggers_of:
+                    triggers = Triggers(fx, settings, scenes)
+                    triggers_of = fx
+                else:
+                    triggers.reload(settings, scenes)
                 volume.watch(settings.get("reload") != "manual")
                 if event == volume.RELOADED:
                     # A single press asks to try an edit without putting the drive
@@ -742,16 +864,17 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                 # A frame each as the lights start, so the panels come back with them
                 service_shows(shows)
 
-            # The rotation, standing aside with everything else while a transfer runs
-            if scene_deadline is not None and not paused and \
+            # What a press of the remote or the PIR Stick asks for
+            for what, place in triggers.service():
+                act(what, place)
+
+            # The rotation, standing aside with everything else while a transfer runs, the
+            # effects are held or the board is asleep
+            if scene_deadline is not None and not (paused or held or standby) and \
                     time.ticks_diff(time.ticks_ms(), scene_deadline) >= 0:
                 # The scene its heading names after 'then', or the next in order
                 after = scenes[scene_at].after
-                scene_at = after if after is not None else (scene_at + 1) % len(scenes)
-                scene = scenes[scene_at]
-                apply_scene(players, shows, sounds, scene)
-                scene_deadline = (time.ticks_add(time.ticks_ms(), int(scene.hold * 1000))
-                                  if scene.hold else None)
+                go_to(after if after is not None else (scene_at + 1) % len(scenes))
 
             # The effects stand aside for a transfer, whose hitch volume.busy() describes,
             # and something of the board's own travels the outputs instead of the show
@@ -776,21 +899,26 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                 if idle_since is None:
                     idle_since = time.ticks_ms()
                 elif time.ticks_diff(time.ticks_ms(), idle_since) >= TRANSFER_HOLD_MS:
-                    # The sound goes first again, its ring filling before the screens'
-                    # first frames can hold up its refills
-                    for sound in sounds:
-                        sound.resume()
                     sounds_aside = False
-                    __resume(players, fx)
-                    for show in shows:
-                        if show.live:
-                            show.resume()
                     paused = False
+                    # Effects held or asleep stay as the remote left them. The sound goes
+                    # first again, its ring filling before the screens' first frames can
+                    # hold up its refills
+                    if standby:
+                        fx.clear()
+                    elif not held:
+                        for sound in sounds:
+                            sound.resume()
+                        __resume(players, fx)
+                        for show in shows:
+                            if show.live:
+                                show.resume()
 
             drew = False
             if paused:
                 __transfer_frame(fx, time.ticks_ms())
-            else:
+            # Asleep, nothing is sent, as a screen sent its frame would light again
+            elif not standby:
                 for sound in sounds:
                     sound.service()
 
@@ -805,7 +933,8 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
                     del STOPPED[:]
                     __stop(players)
                     indicate(fx, PROBLEM)
-                    __resume(players, fx)
+                    if not (held or standby):
+                        __resume(players, fx)
 
             if event == volume.BUSY:
                 # A press the computer's writing blocked otherwise looks exactly like
@@ -819,7 +948,7 @@ def run(fx, volume=None, path=CONFIG_PATH, errors=ERRORS_PATH, interval_ms=20):
             # screens send. Nothing here needs answering sooner than the wait, as
             # the lights run from a timer and a press is latched until it is read
             if not drew:
-                time.sleep_ms(interval_ms)
+                __wait(interval_ms, held or standby)
     finally:
         # Darkening the board comes first and nothing fallible stands in front of it.
         # A stop from the REPL arrives as an interrupt and the next one lands wherever

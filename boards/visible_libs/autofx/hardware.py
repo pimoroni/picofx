@@ -181,6 +181,18 @@ def build_board(fx, settings, problems):
         for kind, prop, _shown in BOARD_SCREENS:
             declared[prop] = SPCE.SCREEN if kind == hub else SPCE.HUB_SELECTS
 
+    # The sensor connector's role is declared at construction too, the board building the
+    # receiver or the input itself. What was asked is kept, so a reload asking the same is
+    # no change, whether or not the board could take it
+    sensor = settings.get("sensor")
+    BUILT_SENSOR[:] = [sensor] if sensor else []
+    if sensor:
+        if getattr(fx, "SENSOR_PIN", None) is None:
+            problems.append("sensor={} needs a sensor connector, which this board does not "
+                            "have".format(sensor))
+        else:
+            declared["sensor"] = sensor
+
     if not declared:
         return fx()
 
@@ -195,6 +207,9 @@ def build_board(fx, settings, problems):
 # order or brightness that followed the length, or None where the board chose it. A board is
 # built once, a reload keeping the one it has, so this is what a changed strip is answered against
 BUILT_STRIPS = {}
+
+# What the board entry's sensor= asked for when the board was built, or empty for nothing
+BUILT_SENSOR = []
 
 # The hub the board was built with, empty where it has none. The loader records "port", the
 # screen selector whose connector carries it, and "sizes", each position's, and adds "groups"
@@ -298,6 +313,10 @@ def hardware_changed(declared, full_size=False):
     asked_hub = hub_declared(declared)
     if asked_hub.get("port") != BUILT_HUB.get("port") or \
             asked_hub.get("sizes") != BUILT_HUB.get("sizes"):
+        return True
+
+    # A sensor added, dropped or swapped for the other kind is built at construction too
+    if declared.get("sensor") != (BUILT_SENSOR[0] if BUILT_SENSOR else None):
         return True
 
     for kind, _prop, _shown in BOARD_STRIPS:
@@ -441,6 +460,7 @@ def forget_built():
     BUILT_SCREENS.clear()
     del BUILT_PAIR[:]
     BUILT_HUB.clear()
+    del BUILT_SENSOR[:]
 
 
 def screen_shown(name):

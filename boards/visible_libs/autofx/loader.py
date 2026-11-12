@@ -373,32 +373,43 @@ def __trigger_default(trigger):
     return ("nothing", None)
 
 
-def trigger_does(scenes, board, at, trigger):
+def trigger_given(scenes, board, at, trigger):
     """
-    What a trigger does while the scene in place `at` shows, as (what, place). `what` is
-    "scene" with the place of the scene to go to, "restart" with `at`, "standby" or "pause",
-    or None where it does nothing. The scene's own choice comes first, then Always on's, then
-    what the trigger does where no file gives it anything. The steps wrap at either end.
-
-    With no scenes, restart begins Always on's effects again and its place is None. Nothing
-    else has a scene to go to.
+    What a trigger is given while the scene in place `at` shows, as (what, place) before any
+    step is taken. The scene's own choice comes first, then Always on's, then what the trigger
+    does where no file gives it anything. The board's own two buttons are "standby" and "pause".
     """
     if trigger == "ok_stop":
         return ("standby", None)
     if trigger == "play_pause":
         return ("pause", None)
-    if not scenes:
-        given = board.get(ALWAYS_TRIGGERS, {}).get(trigger)
-        return ("restart", None) if given and given[0] == "restart" else (None, None)
-
-    own = scenes[at].triggers if 0 <= at < len(scenes) else {}
+    own = scenes[at].triggers if scenes and 0 <= at < len(scenes) else {}
     always = board.get(ALWAYS_TRIGGERS, {})
-    what, place = own.get(trigger) or always.get(trigger) or __trigger_default(trigger)
+    return own.get(trigger) or always.get(trigger) or __trigger_default(trigger)
+
+
+def trigger_does(scenes, board, at, trigger):
+    """
+    What a trigger does while the scene in place `at` shows, as (what, place). `what` is
+    "scene" with the place of the scene to go to, "restart" with `at`, "standby" or "pause",
+    or None where it does nothing. Next goes on as the scene's time would, to the scene its
+    heading names after 'then' or the next in order. The steps wrap at either end.
+
+    With no scenes, restart begins Always on's effects again and its place is None. Nothing
+    else has a scene to go to.
+    """
+    what, place = trigger_given(scenes, board, at, trigger)
+    if what in ("standby", "pause"):
+        return (what, None)
+    if not scenes:
+        return ("restart", None) if what == "restart" else (None, None)
+
     count = len(scenes)
     if what == "scene":
         return ("scene", place) if place < count else (None, None)
     if what == "next":
-        return ("scene", (at + 1) % count)
+        after = scenes[at].after
+        return ("scene", after if after is not None else (at + 1) % count)
     if what == "previous":
         return ("scene", (at - 1) % count)
     if what == "first":
@@ -408,7 +419,7 @@ def trigger_does(scenes, board, at, trigger):
     return (None, None)
 
 
-def apply_scene(players, shows, sounds, scene):
+def apply_scene(players, shows, sounds, scene, restart=None):
     """
     Point the players, shows and sounds at one scene. Its arrays already carry the
     always-on entries and turn off what other scenes drive, so this is an exchange
@@ -416,14 +427,17 @@ def apply_scene(players, shows, sounds, scene):
 
     A scene told to restart begins its own content again while the always-on entries
     carry on, their effects being built in their own pass and never among a scene's.
-    An effect that keeps no offset has nothing to begin again.
+    An effect that keeps no offset has nothing to begin again. `restart=` begins it
+    again or not whatever its heading says, for a trigger that restarts the scene.
     """
+    again = scene.restart if restart is None else restart
+
     # A refused pair is tried again. update_pair judges a pair by conversion times it
     # measures, so a pair near the limit can pass on another try
     for show in shows:
         show.refused_with = None
 
-    if scene.restart:
+    if again:
         for source in scene.sources:
             begin = getattr(source, "reset", None)
             if begin is not None:
@@ -461,7 +475,7 @@ def apply_scene(players, shows, sounds, scene):
 
     for show in shows:
         if show.live:
-            if scene.restart and show.scene == scene.key:
+            if again and show.scene == scene.key:
                 show.restart()
             show.resume()
             continue
@@ -476,11 +490,27 @@ def apply_scene(players, shows, sounds, scene):
     settle_hub(shows)
 
     # Beginning again reaches the scene's sound too, which forgets where it was up to
-    if scene.restart:
+    if again:
         for sound in sounds:
             if sound.scene == scene.key:
                 sound.restart()
     cue_sound(sounds, scene)
+
+
+def restart_always(players, shows, sounds):
+    """
+    Begin every effect, show and sound again, for a file with no scenes whose trigger
+    restarts what it plays.
+    """
+    for player in players:
+        for effect in player.effects:
+            begin = getattr(effect, "reset", None)
+            if begin is not None:
+                begin()
+    for show in shows:
+        show.restart()
+    for sound in sounds:
+        sound.restart()
 
 
 def load(text, fx, maker=None, volume=None, on_built=None):
