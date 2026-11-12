@@ -330,7 +330,11 @@ var CATALOGUE = {
    "auto"
   ],
   "program": null,
-  "args": null
+  "args": null,
+  "sensor": [
+   "ir",
+   "pir"
+  ]
  },
  "board": {
   "outputs": [

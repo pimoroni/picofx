@@ -9,13 +9,14 @@
 from picofx import ColourPlayer, MonoPlayer, StripPlayer, ease, fade
 from picofx.mono import NoneFX
 
-from .vocabulary import (AUDIO, BOARD, COMPONENTS, EFFECTS, HUB, OUTPUT_SETTINGS, SCREEN_EFFECTS,
-                         SCREEN_SETTINGS)
+from .vocabulary import (ALWAYS_TRIGGERS, AUDIO, BOARD, COMPONENTS, EFFECTS, HUB, MOTION,
+                         OUTPUT_SETTINGS, REMOTE, SCREEN_EFFECTS, SCREEN_SETTINGS,
+                         TRIGGER_SENSOR, TRIGGER_STEPS, TRIGGER_TIMING, TRIGGERS, TRIGGERS_FIXED)
 from .hardware import (after_length, BOARD_SCREENS, BOARD_STRIPS, BOARD_TAKES, build_board,
                        BUILT_HUB, channel_shown, channels, forget_built, hardware_changed,
                        hub_declared, hub_port, learn_board, resolve_strips, strip_of, strip_shown,
                        strips)
-from .parser import in_line_order, parse
+from .parser import in_line_order, parse, read_number
 from .checks import check_board, check_hub, check_settings
 from .shows import build_shows, DEFERRED_SHOWS, settle_hub, wants_full_size
 from .sounds import build_sounds, cue_sound
@@ -29,6 +30,9 @@ class Scene:
         self.line = line
         self.hold = hold            # Seconds it shows for, or None to hold forever
         self.restart = restart      # Whether its content begins again on every entry
+        # What the sensor's triggers do while it shows, as {trigger: (step, scene's place)},
+        # the place given only for a step to a scene. Always on's are the board's
+        self.triggers = {}
         # Whether its heading has already been answered, so one mistake is not
         # reported twice, as a heading missing its colon has no time either
         self.advised = False
@@ -209,6 +213,154 @@ def __assemble(entries, slots, effects, levels, colours, curves, claimed, proble
     return driven, sources
 
 
+def __read_triggers(entries, scenes, known, board, problems):
+    """
+    What each remote: and motion: entry gives its triggers, as {scene key: {trigger: (step,
+    scene's place)}}, Always on's under None. A motion trigger's delay is kept under the
+    trigger's name and " after", as (seconds, whether the opposite edge cancels it). An
+    entry for what the board line does not fit, a trigger it does not have, or a step it
+    cannot take is reported and left out.
+    """
+    held = {}
+    for entry in entries:
+        sensor = TRIGGER_SENSOR[entry.trigger]
+        if board.get("sensor") != sensor:
+            problems.append("line {}: {} needs 'board: sensor={}' to say what is on the "
+                            "sensor connector".format(entry.line, entry.trigger, sensor))
+            continue
+        names = TRIGGERS[entry.trigger]
+        last = None
+        for trigger, does, at in entry.given:
+            # A motion trigger's delay, after the trigger it belongs to
+            if entry.trigger == MOTION and trigger in TRIGGER_TIMING:
+                __read_timing(held.setdefault(entry.scene, {}), last, trigger, does, at, problems)
+                continue
+            last = None
+            if trigger is None:
+                problems.append("line {}: '{}' needs a name before it, such as "
+                                "'{}: {}=first'".format(at, does, entry.trigger, names[0]))
+                continue
+            if trigger not in names:
+                problems.append("line {}: {} has no '{}', it takes {}".format(
+                    at, entry.trigger, trigger, ", ".join(names)))
+                continue
+            if trigger in TRIGGERS_FIXED:
+                problems.append("line {}: {} is the board's own in every scene, so it cannot "
+                                "be given here".format(at, trigger))
+                continue
+
+            word = does.lower()
+            if word in TRIGGER_STEPS:
+                result = (word, None)
+            elif word.startswith("scene "):
+                target = known.get(does[6:].strip().lower())
+                if target is None:
+                    problems.append("line {}: {} goes to '{}', but no scene is called "
+                                    "that".format(at, trigger, does[6:].strip()))
+                    continue
+                result = ("scene", scenes.index(target))
+            else:
+                problems.append("line {}: {} is '{}', it takes {} or scene and a scene's "
+                                "name".format(at, trigger, does, ", ".join(TRIGGER_STEPS)))
+                continue
+
+            # A number is bound to the scene in its place, 0 to the tenth
+            if trigger[0].isdigit():
+                own = (int(trigger[0]) or 10) - 1
+                if result[0] != "nothing" and result != ("scene", own):
+                    shown = "[{}]".format(scenes[own].name) if own < len(scenes) else \
+                            "the scene in place {}".format(own + 1)
+                    problems.append("line {}: {} goes to {} or does nothing".format(
+                        at, trigger, shown))
+                    continue
+
+            held.setdefault(entry.scene, {})[trigger] = result
+            last = trigger
+    return held
+
+
+def __read_timing(given, trigger, setting, value, at, problems):
+    # A motion trigger's after= or cancel=, into what a scene gives its triggers
+    if trigger is None:
+        problems.append("line {}: {} needs a trigger before it, such as 'motion: starts=first "
+                        "{}={}'".format(at, setting, setting, value))
+        return
+    timing = list(given.get(trigger + " after", (0, True)))
+    if setting == "after":
+        seconds = read_number(value[:-1] if value.lower().endswith("s") else value)
+        if seconds is None or seconds < 0:
+            problems.append("line {}: after is how long {} waits, such as 3s, so it cannot be "
+                            "'{}'".format(at, trigger, value))
+            return
+        timing[0] = seconds
+    elif value.lower() in ("yes", "no"):
+        timing[1] = value.lower() == "yes"
+    else:
+        problems.append("line {}: cancel is yes or no, whether the opposite edge cancels {}, "
+                        "so it cannot be '{}'".format(at, trigger, value))
+        return
+    given[trigger + " after"] = tuple(timing)
+
+
+def trigger_delay(scenes, board, at, trigger):
+    """
+    How a motion trigger waits while the scene in place `at` shows, as (seconds, whether the
+    opposite edge coming first cancels it). A scene giving the trigger its own choice gives
+    its own delay, or none, and one leaving it to Always on takes Always on's.
+    """
+    own = scenes[at].triggers if scenes and 0 <= at < len(scenes) else {}
+    held = own if trigger in own else board.get(ALWAYS_TRIGGERS, {})
+    return held.get(trigger + " after", (0, True))
+
+
+def __trigger_default(trigger):
+    # What a trigger does where no file gives it anything, as the page shows: a number goes to
+    # the scene in its place, 0 to the tenth, the side arrows step back and on, and the rest
+    # do nothing
+    if trigger[0].isdigit():
+        return ("scene", (int(trigger[0]) or 10) - 1)
+    if trigger == "left":
+        return ("previous", None)
+    if trigger == "right":
+        return ("next", None)
+    return ("nothing", None)
+
+
+def trigger_does(scenes, board, at, trigger):
+    """
+    What a trigger does while the scene in place `at` shows, as (what, place). `what` is
+    "scene" with the place of the scene to go to, "restart" with `at`, "standby" or "pause",
+    or None where it does nothing. The scene's own choice comes first, then Always on's, then
+    what the trigger does where no file gives it anything. The steps wrap at either end.
+
+    With no scenes, restart begins Always on's effects again and its place is None. Nothing
+    else has a scene to go to.
+    """
+    if trigger == "ok_stop":
+        return ("standby", None)
+    if trigger == "play_pause":
+        return ("pause", None)
+    if not scenes:
+        given = board.get(ALWAYS_TRIGGERS, {}).get(trigger)
+        return ("restart", None) if given and given[0] == "restart" else (None, None)
+
+    own = scenes[at].triggers if 0 <= at < len(scenes) else {}
+    always = board.get(ALWAYS_TRIGGERS, {})
+    what, place = own.get(trigger) or always.get(trigger) or __trigger_default(trigger)
+    count = len(scenes)
+    if what == "scene":
+        return ("scene", place) if place < count else (None, None)
+    if what == "next":
+        return ("scene", (at + 1) % count)
+    if what == "previous":
+        return ("scene", (at - 1) % count)
+    if what == "first":
+        return ("scene", 0)
+    if what == "restart":
+        return ("restart", at)
+    return (None, None)
+
+
 def apply_scene(players, shows, sounds, scene):
     """
     Point the players, shows and sounds at one scene. Its arrays already carry the
@@ -319,6 +471,7 @@ def load(text, fx, maker=None, volume=None, on_built=None):
     grouped = {None: []}
     screen_entries = []
     audio_entries = []
+    trigger_entries = []
     args_line = None
 
     for entry in entries:
@@ -335,6 +488,11 @@ def load(text, fx, maker=None, volume=None, on_built=None):
             else:
                 problems.append("line {}: [{}] was already begun on line {}".format(
                     entry.line, name, already.line))
+            continue
+
+        # A trigger entry is read once every scene is known, as it names them
+        if entry.trigger is not None:
+            trigger_entries.append(entry)
             continue
 
         if len(entry.channels) == 1 and entry.channels[0].name == BOARD:
@@ -402,8 +560,30 @@ def load(text, fx, maker=None, volume=None, on_built=None):
         problems.append("line {}: args needs a program to give them to. Write it like "
                         "'board: program=demo.py args=first|second'".format(args_line))
 
-    # Rotation is by time and time alone for now, so a scene without one stops it
-    if len(scenes) > 1:
+    # What the sensor's triggers do, Always on's kept with the board settings where it gives any
+    triggers = __read_triggers(trigger_entries, scenes, known, board, problems)
+    if triggers.get(None):
+        board[ALWAYS_TRIGGERS] = triggers[None]
+    for scene in scenes:
+        scene.triggers = triggers.get(scene.key, {})
+
+    # Check if a waiting scene that does not restart gives a trigger of its own going to itself.
+    # Going to a scene starts its time again, or begins it again where it restarts, so here the
+    # trigger has nothing to do
+    for at, scene in enumerate(scenes):
+        if scene.hold is not None or scene.restart:
+            continue
+        for trigger in sorted(scene.triggers):
+            if scene.triggers[trigger] == ("scene", at):
+                kind = MOTION if trigger in TRIGGERS[MOTION] else REMOTE
+                problems.append("line {}: [{}] waits, so {}: {} going to it while it shows does "
+                                "nothing. Write it like '{}: {}=restart' to begin it "
+                                "again".format(scene.line, scene.name, kind, trigger, kind,
+                                               trigger))
+
+    # Without a sensor the turns move by time alone, so a scene without one stops them. A
+    # sensor's triggers can move them on, so a scene may wait for one
+    if len(scenes) > 1 and not board.get("sensor"):
         for scene in scenes:
             if scene.hold is None and not scene.advised:
                 problems.append("line {}: [{}] names no time, so the scenes after it "

@@ -337,6 +337,10 @@ var CATALOGUE = {
   ],
   "program": null,
   "args": null,
+  "sensor": [
+   "ir",
+   "pir"
+  ],
   "screen": [
    "2.8",
    "1.54"

@@ -27,6 +27,36 @@ COMPONENTS = ("r", "g", "b")
 # The one name on the left that is not a channel, its entry holding board settings
 BOARD = "board"
 
+# The two names on the left for what the sensor connector's triggers do, each holding settings
+# as the board entry does, a trigger's name then what it does. remote: is for the Aye Arr
+# Remote's buttons, named as aye_arr's PimoroniRemote names them, and motion: for a PIR Stick
+REMOTE = "remote"
+MOTION = "motion"
+TRIGGERS = {
+    REMOTE: ("anticlock", "up", "clockwise", "left", "ok_stop", "right", "return_undo", "down",
+             "menu_action", "1_red", "2_green", "3_blue", "4_cyan", "5_magenta", "6_yellow",
+             "7_warm", "8_white", "9_cool", "record", "0_rainbow", "play_pause"),
+    MOTION: ("starts", "stops"),
+}
+
+# What sensor= on the board line names for each trigger entry, so each answers only its own
+TRIGGER_SENSOR = {REMOTE: "ir", MOTION: "pir"}
+
+# The buttons that do the same in every scene, standby and wake, and pausing the effects, so
+# a file cannot give them anything else
+TRIGGERS_FIXED = ("ok_stop", "play_pause")
+
+# What a trigger can do besides going to a scene, which is written as scene and its name
+TRIGGER_STEPS = ("nothing", "next", "previous", "first", "restart")
+
+# A motion trigger's delay, written after it on its line: after= the seconds it waits, and
+# cancel= whether the opposite edge coming first cancels it, which it does unless cancel=no
+TRIGGER_TIMING = ("after", "cancel")
+
+# Where the board settings keep what Always on gives the triggers, under a name no file can
+# write, as ORDER and BRIGHTNESS are
+ALWAYS_TRIGGERS = " triggers"
+
 
 # Each effect as its class, the kind of channel it drives, its CALLED and its TAKES, read
 # from picofx's own lists, so an effect added or changed there is offered here as it is.
@@ -138,7 +168,7 @@ PAIRED_SETTINGS = (("bright_min", "bright_max"), ("dim_min", "dim_max"),
 # entry where an entry's settings vary per scene. So each screen port the board declares is
 # a setting too, taking a panel size or the hub, and each strip, taking a number.
 BOARD_SETTINGS = {"drive": ("manual",), "reload": ("manual", "auto"),
-                  "program": None, "args": None}
+                  "program": None, "args": None, "sensor": ("ir", "pir")}
 
 # What follows a strip's length, as 'stripL=60|rgb' or 'stripApa=144|50%', kept among the
 # board settings under the strip's name and one of these, which no file can write

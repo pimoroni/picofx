@@ -22,7 +22,8 @@
 # skipped, so one bad edit costs its own entry and not the whole file.
 
 from .vocabulary import (BOARD, CHANNEL_KINDS, COLOURS, COMPONENTS, CURVES, HUB, HUB_POSITIONS,
-                         OUTPUT_SETTINGS, SCREEN_SETTINGS, TILING, TILING_ALSO)
+                         OUTPUT_SETTINGS, SCREEN_SETTINGS, TILING, TILING_ALSO, TRIGGER_TIMING,
+                         TRIGGERS)
 from .hardware import BOARD_EXAMPLE, channel_shown
 
 # An angle takes everything a fraction does and degrees besides, so its message is
@@ -85,6 +86,10 @@ class Entry:
         # A heading is an entry of its own, holding the scene's name, hold and restart,
         # and whether its mistake was answered already. None for any other entry
         self.heading = None
+        # A remote: or motion: entry's name, and what it gives each trigger as
+        # (trigger, what it does, line). None and empty for any other entry
+        self.trigger = None
+        self.given = []
 
     def __repr__(self):
         return "Entry(line={}, {}, {}, {})".format(
@@ -651,6 +656,21 @@ def __parse_effect(tokens, line, problems, needs_effect=True):
     return effect, settings, lines
 
 
+def __trigger_pairs(tokens):
+    # A trigger entry's settings as (trigger, what it does, line). A word with no '=' carries
+    # on the one before it, so a scene's name needs no quotes, running on to the next trigger
+    pairs = []
+    for token, line in tokens:
+        key, equals, value = token.partition("=")
+        if equals and key:
+            pairs.append([key.strip().lower(), value.strip(), line])
+        elif pairs:
+            pairs[-1][1] = (pairs[-1][1] + " " + token).strip()
+        else:
+            pairs.append([None, token, line])
+    return pairs
+
+
 def parse(text):
     """Read the effects file. Returns (entries, problems), and never raises."""
     entries = []
@@ -662,6 +682,23 @@ def parse(text):
 
     def close():
         if pending is None:
+            return
+
+        # A trigger entry is settings as the board entry is, and may be written more than
+        # once, but a trigger given twice in one scene is a repeat
+        if pending.trigger is not None:
+            pending.given = __trigger_pairs(pending_tokens)
+            for trigger, _does, at in pending.given:
+                key = (pending.scene, pending.trigger, trigger)
+                # A delay belongs to the trigger before it, so it is never a repeat itself
+                if trigger is None or trigger in TRIGGER_TIMING:
+                    continue
+                if key in seen:
+                    problems.append("line {}: {} was already given on line {}".format(
+                        at, trigger, seen[key]))
+                else:
+                    seen[key] = at
+            entries.append(pending)
             return
 
         # A board entry carries settings and no effect, and may be written more than
@@ -812,7 +849,11 @@ def parse(text):
 
             pending = Entry(number + 1)
             pending.scene = scene
-            pending.channels = __parse_selector(selector, number + 1, problems)
+            # A trigger entry names no outputs, so it is not read as them
+            if selector.strip().lower() in TRIGGERS:
+                pending.trigger = selector.strip().lower()
+            else:
+                pending.channels = __parse_selector(selector, number + 1, problems)
             pending_tokens = [(token, number + 1) for token in __split_quoted(remainder)]
         elif pending is not None:
             pending_tokens.extend((token, number + 1) for token in __split_quoted(line))
