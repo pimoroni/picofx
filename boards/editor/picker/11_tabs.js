@@ -32,6 +32,12 @@ function chosenTakesLooks() {
          runsOfPanel(chosenTab).every(function (run) { return run.there !== false; });
 }
 
+// A look goes to the stretch being worked on, so that stays in the section shown. Pressing Done in
+// Edit board and changing scene each put back a stretch of their own, which can be another tab's
+drawSteps.before.push(function () {
+  if (!setupOn && chosenTakesLooks()) workOn(chosenTab);
+});
+
 // Every tab's section stays laid out in one shared place, only the chosen one seen, so the
 // place is as tall as the tallest and choosing a tab never moves what is below it
 function showChosen() {
