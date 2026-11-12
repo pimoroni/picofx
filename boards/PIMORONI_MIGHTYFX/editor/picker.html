@@ -9370,7 +9370,7 @@ tabSwatches.screensPanel = function (swatch) {
     else if (screen.off) cell.classList.add("off");
     // A picture with no thumbnail yet is a white tile, its screen showing something
     else if (!art) cell.classList.add(shown ? "blank"
-                                      : under && (under.off || under.stopped) ? "dark" : "nothing");
+                                      : under && under.off ? "dark" : "nothing");
     swatch.appendChild(cell);
   });
   swatch.title = SCREENS.map(function (letter) {
@@ -11463,23 +11463,15 @@ function asScreen(place) {
 }
 
 // What the board shows on a position the scene being edited shows nothing on. The result holds
-// always=, Always on's settings for the position, or stopped=, a position this scene takes from
-// the same Always on entry, which stops that entry for the scene, or off=, every other scene that
-// shows there where Always on does not. It is null where nothing shows, and on the Always on tab
+// always=, Always on's settings for the position, which plays on there even where the scene
+// takes another position of its group, or off=, every other scene that shows there where Always
+// on does not. It is null where nothing shows, and on the Always on tab
 function placeUnder(place) {
   var mine = state.places[place];
   if (state.at < 0 || !state.hub.on || mine.shows || mine.off) return null;
   var always = state.always.body;
   var held = always.places && always.places[place];
-  if (held && held.shows) {
-    var send = placeGroups(always).filter(function (one) {
-      return one.places.indexOf(place) >= 0;
-    })[0];
-    var taken = (send ? send.places : [place]).filter(function (one) {
-      return state.places[one].shows || state.places[one].off;
-    })[0];
-    return taken ? {stopped: taken} : {always: held};
-  }
+  if (held && held.shows) return {always: held};
   var by = otherScenes().filter(function (scene) {
     var theirs = scene.body.places && scene.body.places[place];
     return theirs && (theirs.shows || theirs.off);
@@ -12109,7 +12101,7 @@ tabSwatches.screensPanel = function (swatch) {
     else if (held.off) cell.classList.add("off");
     // A picture with no thumbnail yet is a white tile, its position showing something
     else if (!art) cell.classList.add(shown ? "blank"
-                                      : under && (under.off || under.stopped) ? "dark" : "nothing");
+                                      : under && under.off ? "dark" : "nothing");
     swatch.appendChild(cell);
   });
   swatch.title = HUB_PLACES.map(function (place) {
@@ -13280,10 +13272,8 @@ function showingLine(held, letter) {
                                           : "<b>" + pictureSaid(under.always) + "</b>";
       line.innerHTML = "showing " + shown + " from Always on<small>" + press + " instead</small>";
     } else if (under) {
-      line.innerHTML = "backlight off in this scene<small>" + (under.off
-        ? "lit only in " + escapeHtml(spoken(namesOf(under.off)))
-        : "Always on's pair stops while this scene shows on " + screenShown(under.stopped)) +
-        "</small>";
+      line.innerHTML = "backlight off in this scene<small>lit only in " +
+                       escapeHtml(spoken(namesOf(under.off))) + "</small>";
     } else {
       line.innerHTML = (state.scenes.length ? "nothing chosen for this scene" : "nothing showing") +
                        "<small>" + press + "</small>";
@@ -13843,7 +13833,6 @@ hubHeadSteps.push(function () {
     said.className = "groupsaid";
     said.textContent = inherited && !ink ? "from Always on"
                      : under && under.off ? "lit only in " + spoken(namesOf(under.off))
-                     : under && under.stopped ? "Always on's group stops"
                      : ink ? (others.length ? "grouped with " + placesSaid(others)
                                             : "alone in group " + groupOf(place))
                      : matching.length ? "matches " + placesSaid(matching) : "on its own";
@@ -14105,18 +14094,14 @@ function pairWritten(body) {
 }
 
 // What the board shows on a screen the scene being edited shows nothing on. The result holds
-// always=, Always on's picture, or stopped=, the screen this scene takes from Always on's pair,
-// which stops the whole pair for the scene, or off=, every other scene that shows on it where
-// Always on does not. It is null where nothing shows there, on the Always on tab and on a hub
+// always=, Always on's picture, which plays on there even where the scene takes the other screen
+// of Always on's pair, or off=, every other scene that shows on it where Always on does not. It
+// is null where nothing shows there, on the Always on tab and on a hub
 function screenUnder(letter) {
   if (state.at < 0 || state.hub.on || state.screens[letter].off) return null;
   var always = state.always.body;
   var shown = always.screens && always.screens[letter].shows;
-  if (shown) {
-    var places = pairWritten(always) ? SCREENS : [letter];
-    var taken = places.filter(function (one) { return state.screens[one].shows; })[0];
-    return taken ? {stopped: taken} : {always: shown};
-  }
+  if (shown) return {always: shown};
   var by = otherScenes().filter(function (scene) {
     return scene.body.screens && (scene.body.screens[letter].shows || scene.body.screens[letter].off);
   });

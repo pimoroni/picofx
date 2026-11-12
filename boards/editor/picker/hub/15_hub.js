@@ -44,23 +44,15 @@ function asScreen(place) {
 }
 
 // What the board shows on a position the scene being edited shows nothing on. The result holds
-// always=, Always on's settings for the position, or stopped=, a position this scene takes from
-// the same Always on entry, which stops that entry for the scene, or off=, every other scene that
-// shows there where Always on does not. It is null where nothing shows, and on the Always on tab
+// always=, Always on's settings for the position, which plays on there even where the scene
+// takes another position of its group, or off=, every other scene that shows there where Always
+// on does not. It is null where nothing shows, and on the Always on tab
 function placeUnder(place) {
   var mine = state.places[place];
   if (state.at < 0 || !state.hub.on || mine.shows || mine.off) return null;
   var always = state.always.body;
   var held = always.places && always.places[place];
-  if (held && held.shows) {
-    var send = placeGroups(always).filter(function (one) {
-      return one.places.indexOf(place) >= 0;
-    })[0];
-    var taken = (send ? send.places : [place]).filter(function (one) {
-      return state.places[one].shows || state.places[one].off;
-    })[0];
-    return taken ? {stopped: taken} : {always: held};
-  }
+  if (held && held.shows) return {always: held};
   var by = otherScenes().filter(function (scene) {
     var theirs = scene.body.places && scene.body.places[place];
     return theirs && (theirs.shows || theirs.off);
@@ -690,7 +682,7 @@ tabSwatches.screensPanel = function (swatch) {
     else if (held.off) cell.classList.add("off");
     // A picture with no thumbnail yet is a white tile, its position showing something
     else if (!art) cell.classList.add(shown ? "blank"
-                                      : under && (under.off || under.stopped) ? "dark" : "nothing");
+                                      : under && under.off ? "dark" : "nothing");
     swatch.appendChild(cell);
   });
   swatch.title = HUB_PLACES.map(function (place) {

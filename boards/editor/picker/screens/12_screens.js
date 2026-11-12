@@ -969,7 +969,7 @@ tabSwatches.screensPanel = function (swatch) {
     else if (screen.off) cell.classList.add("off");
     // A picture with no thumbnail yet is a white tile, its screen showing something
     else if (!art) cell.classList.add(shown ? "blank"
-                                      : under && (under.off || under.stopped) ? "dark" : "nothing");
+                                      : under && under.off ? "dark" : "nothing");
     swatch.appendChild(cell);
   });
   swatch.title = SCREENS.map(function (letter) {

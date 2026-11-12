@@ -151,18 +151,14 @@ function pairWritten(body) {
 }
 
 // What the board shows on a screen the scene being edited shows nothing on. The result holds
-// always=, Always on's picture, or stopped=, the screen this scene takes from Always on's pair,
-// which stops the whole pair for the scene, or off=, every other scene that shows on it where
-// Always on does not. It is null where nothing shows there, on the Always on tab and on a hub
+// always=, Always on's picture, which plays on there even where the scene takes the other screen
+// of Always on's pair, or off=, every other scene that shows on it where Always on does not. It
+// is null where nothing shows there, on the Always on tab and on a hub
 function screenUnder(letter) {
   if (state.at < 0 || state.hub.on || state.screens[letter].off) return null;
   var always = state.always.body;
   var shown = always.screens && always.screens[letter].shows;
-  if (shown) {
-    var places = pairWritten(always) ? SCREENS : [letter];
-    var taken = places.filter(function (one) { return state.screens[one].shows; })[0];
-    return taken ? {stopped: taken} : {always: shown};
-  }
+  if (shown) return {always: shown};
   var by = otherScenes().filter(function (scene) {
     return scene.body.screens && (scene.body.screens[letter].shows || scene.body.screens[letter].off);
   });

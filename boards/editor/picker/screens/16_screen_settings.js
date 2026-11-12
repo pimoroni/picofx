@@ -1134,10 +1134,8 @@ function showingLine(held, letter) {
                                           : "<b>" + pictureSaid(under.always) + "</b>";
       line.innerHTML = "showing " + shown + " from Always on<small>" + press + " instead</small>";
     } else if (under) {
-      line.innerHTML = "backlight off in this scene<small>" + (under.off
-        ? "lit only in " + escapeHtml(spoken(namesOf(under.off)))
-        : "Always on's pair stops while this scene shows on " + screenShown(under.stopped)) +
-        "</small>";
+      line.innerHTML = "backlight off in this scene<small>lit only in " +
+                       escapeHtml(spoken(namesOf(under.off))) + "</small>";
     } else {
       line.innerHTML = (state.scenes.length ? "nothing chosen for this scene" : "nothing showing") +
                        "<small>" + press + "</small>";

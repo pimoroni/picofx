@@ -319,7 +319,6 @@ hubHeadSteps.push(function () {
     said.className = "groupsaid";
     said.textContent = inherited && !ink ? "from Always on"
                      : under && under.off ? "lit only in " + spoken(namesOf(under.off))
-                     : under && under.stopped ? "Always on's group stops"
                      : ink ? (others.length ? "grouped with " + placesSaid(others)
                                             : "alone in group " + groupOf(place))
                      : matching.length ? "matches " + placesSaid(matching) : "on its own";
