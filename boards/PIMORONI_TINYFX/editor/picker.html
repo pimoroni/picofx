@@ -5749,42 +5749,42 @@ var STRIP_BRIGHTNESSES = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
 
 function stripPercent(brightness) { return Math.round(brightness * 100) + "%"; }
 
-// What follows a strip's length on the board line, its brightness or its colour order, as the
-// choice on its chip
 function stripChipChoice(run) {
-  var choice = document.createElement("select");
   if (run.made === null) {
-    STRIP_ORDERS.forEach(function (pair) {
-      var option = document.createElement("option");
-      option.value = pair[0];
-      option.textContent = pair[1];
-      if ((run.order || "") === pair[0]) option.selected = true;
-      choice.appendChild(option);
-    });
-    choice.title = "The strip's colour order. Change it if red shows as another colour";
-    choice.onchange = function () {
-      stripSet(run, {order: choice.value});
-      draw();
-    };
-    return choice;
+    return h("select", {title: "The strip's colour order. Change it if red shows as another colour",
+                        onchange: function (event) {
+                          stripSet(run, {order: event.target.value});
+                          draw();
+                        }},
+      STRIP_ORDERS.map(function (pair) {
+        return h("option", {value: pair[0], selected: (run.order || "") === pair[0]}, pair[1]);
+      }));
   }
-  // A brightness read from a file stays offered, though the list does not hold it
-  var offered = STRIP_BRIGHTNESSES.indexOf(run.brightness) < 0 ?
-    STRIP_BRIGHTNESSES.concat([run.brightness]).sort(function (a, b) { return a - b; }) :
-    STRIP_BRIGHTNESSES;
-  offered.forEach(function (brightness) {
-    var option = document.createElement("option");
-    option.value = brightness;
-    option.textContent = stripPercent(brightness) + (brightness === run.made ? " (default)" : "");
-    if (brightness === run.brightness) option.selected = true;
-    choice.appendChild(option);
-  });
-  choice.title = "Overall strip brightness, applied on top of each stretch's level";
-  choice.onchange = function () {
-    stripSet(run, {brightness: Number(choice.value)});
-    draw();
-  };
-  return choice;
+  var offered = STRIP_BRIGHTNESSES.indexOf(run.brightness) < 0
+    ? STRIP_BRIGHTNESSES.concat([run.brightness]).sort(function (a, b) { return a - b; })
+    : STRIP_BRIGHTNESSES;
+  return h("select", {title: "Overall strip brightness, applied on top of each stretch's level",
+                      onchange: function (event) {
+                        stripSet(run, {brightness: Number(event.target.value)});
+                        draw();
+                      }},
+    offered.map(function (brightness) {
+      return h("option", {value: brightness, selected: brightness === run.brightness},
+               stripPercent(brightness) + (brightness === run.made ? " (default)" : ""));
+    }));
+}
+
+function stripLengthField(run) {
+  return h("input", {type: "number", min: STRIP_FEWEST, max: STRIP_MOST, value: run.leds,
+                     "aria-label": "LEDs on " + run.label,
+                     onchange: function (event) {
+                       var want = Math.max(STRIP_FEWEST, Math.min(STRIP_MOST,
+                                           parseInt(event.target.value, 10) || STRIP_FEWEST));
+                       if (want === run.leds) return;
+                       stripSet(run, {leds: want});
+                       settle();
+                       draw();
+                     }});
 }
 
 // The same as words, where the chip cannot be changed
@@ -5814,38 +5814,6 @@ function readStripTail(run, tail) {
   return brightness >= 0 && brightness <= 1 ? {brightness: brightness} : null;
 }
 
-// A strip's chip, its length and its order to set, which the board's setup shows while it is on
-function renderStripChip(where, run) {
-  var box = document.getElementById(where);
-  box.textContent = "";
-  var chip = document.createElement("div");
-  chip.className = "chip strip";
-  chip.appendChild(document.createTextNode("Strip"));
-  var count = document.createElement("input");
-  count.type = "number";
-  count.min = STRIP_FEWEST;
-  count.max = STRIP_MOST;
-  count.value = run.leds;
-  count.onchange = function () {
-    var want = Math.max(STRIP_FEWEST, Math.min(STRIP_MOST, parseInt(count.value, 10) ||
-                                                           STRIP_FEWEST));
-    if (want === run.leds) return;
-    stripSet(run, {leds: want});
-    settle();
-    draw();
-  };
-  chip.appendChild(count);
-  var unit = document.createElement("small");
-  unit.textContent = "LEDs";
-  chip.appendChild(unit);
-  chip.appendChild(stripChipChoice(run));
-  box.appendChild(chip);
-  var says = document.createElement("span");
-  says.className = "says";
-  says.textContent = "shared by every scene";
-  box.appendChild(says);
-}
-
 // ---- zooming a strip's bar --------------------------------------------------------------------
 // The drawing finds a bar by which of two runs it is for. Here a bar is found by the strip's
 // own id, so these stand in for those two
@@ -5870,7 +5838,6 @@ drawSteps.after.push(function () {
   }
   runs.filter(function (run) { return run.strip; }).forEach(function (run) {
     renderLeds(run.id + "Leds", run);
-    if (run.there) document.getElementById(run.id + "Leds").appendChild(panelTools(run));
     renderStretches(run.id + "Bar", run);
     document.getElementById(run.id + "Chosen").textContent = "";
     if (run === active) {
@@ -6732,59 +6699,39 @@ function unmark() {
   });
 }
 
-// A section's coloured box, the chip icon inside it with whatever the fact says
 function boardBox(panel, parts) {
-  var box = document.createElement("span");
-  box.className = "chip boardchip " + BOARD_CHIP_CLASSES[panel];
-  box.title = "Board setup, shared by every scene";
-  box.appendChild(boardIcon());
-  parts.forEach(function (part) {
-    box.appendChild(typeof part === "string" ? document.createTextNode(part) : part);
-  });
-  return box;
+  return h("span", {class: "chip boardchip " + BOARD_CHIP_CLASSES[panel],
+                    title: "Board setup, shared by every scene"}, boardIcon(), parts);
 }
 
 function small(words) {
-  var said = document.createElement("small");
-  said.textContent = words;
-  return said;
+  return h("small", {}, words);
 }
 
-// The board's chip, three legs a side, set three apart as the smallest spacing that still
-// reads as legs at 16px
 function boardIcon() {
-  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", "0 0 14 14");
-  svg.setAttribute("width", "13");
-  svg.setAttribute("height", "13");
-  svg.setAttribute("class", "boardicon");
-  svg.setAttribute("aria-hidden", "true");
-  svg.innerHTML = "<rect x='3' y='3' width='8' height='8' rx='1' fill='none' " +
-                  "stroke='currentColor' stroke-width='1.3'/>" +
-                  "<path d='M4 0.8V3M7 0.8V3M10 0.8V3M4 11v2.2M7 11v2.2M10 11v2.2" +
-                  "M0.8 4H3M0.8 7H3M0.8 10H3M11 4h2.2M11 7h2.2M11 10h2.2' " +
-                  "stroke='currentColor' stroke-width='1.3' stroke-linecap='round'/>";
-  return svg;
+  return h("svg:svg", {viewBox: "0 0 14 14", width: 13, height: 13, class: "boardicon", "aria-hidden": "true",
+                       html: "<rect x='3' y='3' width='8' height='8' rx='1' fill='none' " +
+                             "stroke='currentColor' stroke-width='1.3'/>" +
+                             "<path d='M4 0.8V3M7 0.8V3M10 0.8V3M4 11v2.2M7 11v2.2M10 11v2.2" +
+                             "M0.8 4H3M0.8 7H3M0.8 10H3M11 4h2.2M11 7h2.2M11 10h2.2' " +
+                             "stroke='currentColor' stroke-width='1.3' stroke-linecap='round'/>"});
 }
 
 // ---- the facts, in place --------------------------------------------------------------------
 
 function renderOutFacts() {
-  var box = document.getElementById("outFacts");
-  box.textContent = "";
-  box.appendChild(boardBox("outPanel", ["Wiring", small(brokenSaid())]));
+  var hint = null;
   if (canEdit("outPanel")) {
-    var hint = document.createElement("span");
-    hint.className = "hint";
     var breaking = breakingOutputs();
-    hint.textContent = "Drag each light to match its position in your build." +
+    var said = "Drag each light to match its position in your build." +
       (breaking.length > 1 ? " Arrows split an output into three mono lights, or rejoin them."
        : breaking.length ? " The arrow on " + outputSaid(breaking[0]) + " splits it into three " +
                            "mono lights, or rejoins them." : "");
-    hint.title = hint.textContent;
-    box.appendChild(hint);
+    hint = h("span", {class: "hint", title: said}, said);
   }
-  if (!setupOn) box.appendChild(panelTools(active.strip ? lastOutputRun : active));
+  replace(document.getElementById("outFacts"),
+          boardBox("outPanel", ["Wiring", small(brokenSaid())]), hint,
+          setupOn ? null : panelTools(active.strip ? lastOutputRun : active));
 }
 
 // What a strip is built as, its length and what follows it on the board line
@@ -6834,79 +6781,36 @@ function dropStrip(run) {
   draw();
 }
 
-// The cross on a strip's chip while the board is edited, as a screen has on its own
-function stripDrop(run) {
-  var drop = document.createElement("button");
-  drop.type = "button";
-  drop.className = "drop";
-  drop.textContent = "\u00d7";
-  drop.title = "Remove this strip from every scene";
-  drop.onclick = function () { dropStrip(run); };
-  return drop;
-}
 
-// A strip not fitted offers to be added, which only editing the board can take up, or says
-// why it cannot be
-function renderStripOut(box, run, panel) {
-  box.textContent = "";
-  box.appendChild(boardBox(panel, ["Strip", small("not fitted")]));
+function stripOut(run, panel) {
   var blocked = stripBlockedBy(run);
-  if (blocked) {
-    var why = document.createElement("span");
-    why.className = "stripblocked says";
-    why.textContent = blocked;
-    box.appendChild(why);
-    return;
-  }
-  var add = document.createElement("button");
-  add.type = "button";
-  add.className = "addstrip";
-  add.textContent = "add this strip";
-  add.disabled = !canEdit(panel);
-  add.onclick = function () {
-    stripThere(run, true);
-    workOn(panel);
-    draw();
-  };
-  box.appendChild(add);
+  return [boardBox(panel, ["Strip", small("not fitted")]),
+          blocked ? h("span", {class: "stripblocked says"}, blocked)
+                  : h("button", {type: "button", class: "addstrip", disabled: !canEdit(panel),
+                                 onclick: function () {
+                                   stripThere(run, true);
+                                   workOn(panel);
+                                   draw();
+                                 }}, "add this strip")];
 }
 
 function renderLeds(where, run) {
-  var box = document.getElementById(where);
   var panel = run.id + "Panel";
   document.getElementById(panel).classList.toggle("stripout", !run.there);
-  if (!run.there) {
-    renderStripOut(box, run, panel);
-    return;
-  }
-  // The strip's own count box is already the board's, so the icon goes inside it and it
-  // takes the strip's colour
-  if (canEdit(panel)) {
-    renderStripChip(where, run);
-    var says = box.querySelector(".says");
-    if (says) box.removeChild(says);
-    var chip = box.querySelector(".chip");
-    chip.className = "chip boardchip " + BOARD_CHIP_CLASSES[panel];
-    chip.title = "Board setup, shared by every scene";
-    chip.insertBefore(boardIcon(), chip.firstChild);
-    chip.appendChild(stripDrop(run));
-  } else {
-    box.textContent = "";
-    box.appendChild(boardBox(panel, ["Strip", small(stripBuilt(run))]));
-  }
+  var chip = !run.there ? stripOut(run, panel)
+           : canEdit(panel) ? boardBox(panel, ["Strip", stripLengthField(run), small("LEDs"), stripChipChoice(run),
+                                               h("button", {type: "button", class: "drop",
+                                                            title: "Remove this strip from every scene",
+                                                            onclick: function () { dropStrip(run); }}, "\u00d7")])
+           : boardBox(panel, ["Strip", small(stripBuilt(run))]);
+  replace(document.getElementById(where), chip, run.there ? panelTools(run) : null);
 }
 
 // ---- turning setup on ------------------------------------------------------------------------
 
 function setupButton(label, on, act) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "setupbutton" + (on ? " on" : "");
-  // The board's chip, as every board setting wears it, since this is where they open
-  button.appendChild(boardIcon());
-  button.appendChild(document.createTextNode(label));
-  button.addEventListener("click", act);
-  return button;
+  return h("button", {type: "button", class: "setupbutton" + (on ? " on" : ""), "aria-pressed": on ? "true" : "false",
+                      onclick: act}, boardIcon(), label);
 }
 
 drawSteps.after.push(function () {

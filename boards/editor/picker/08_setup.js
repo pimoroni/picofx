@@ -1,9 +1,10 @@
+import {h, replace} from "./00_dom.js";
 import {
   active, blank, draw, drawSteps, lampKey, outputSaid, paintAll, pick, pickOutput, runs, sectionAt
 } from "./03_runs.js";
 import {panelTools} from "./04_led_panels.js";
 import {allBodies, apply, slotAt, state, store} from "./04_scenes.js";
-import {STRIPS, renderStripChip, stripChipShown, stripSet} from "./05_effects.js";
+import {STRIPS, stripChipChoice, stripChipShown, stripLengthField, stripSet} from "./05_effects.js";
 import {breakingOutputs, brokenSaid} from "./07_board.js";
 import {workOn} from "./10_led_sections.js";
 import {lastOutputRun, showChosen} from "./11_tabs.js";
@@ -70,59 +71,39 @@ function unmark() {
   });
 }
 
-// A section's coloured box, the chip icon inside it with whatever the fact says
 export function boardBox(panel, parts) {
-  var box = document.createElement("span");
-  box.className = "chip boardchip " + BOARD_CHIP_CLASSES[panel];
-  box.title = "Board setup, shared by every scene";
-  box.appendChild(boardIcon());
-  parts.forEach(function (part) {
-    box.appendChild(typeof part === "string" ? document.createTextNode(part) : part);
-  });
-  return box;
+  return h("span", {class: "chip boardchip " + BOARD_CHIP_CLASSES[panel],
+                    title: "Board setup, shared by every scene"}, boardIcon(), parts);
 }
 
 export function small(words) {
-  var said = document.createElement("small");
-  said.textContent = words;
-  return said;
+  return h("small", {}, words);
 }
 
-// The board's chip, three legs a side, set three apart as the smallest spacing that still
-// reads as legs at 16px
 export function boardIcon() {
-  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", "0 0 14 14");
-  svg.setAttribute("width", "13");
-  svg.setAttribute("height", "13");
-  svg.setAttribute("class", "boardicon");
-  svg.setAttribute("aria-hidden", "true");
-  svg.innerHTML = "<rect x='3' y='3' width='8' height='8' rx='1' fill='none' " +
-                  "stroke='currentColor' stroke-width='1.3'/>" +
-                  "<path d='M4 0.8V3M7 0.8V3M10 0.8V3M4 11v2.2M7 11v2.2M10 11v2.2" +
-                  "M0.8 4H3M0.8 7H3M0.8 10H3M11 4h2.2M11 7h2.2M11 10h2.2' " +
-                  "stroke='currentColor' stroke-width='1.3' stroke-linecap='round'/>";
-  return svg;
+  return h("svg:svg", {viewBox: "0 0 14 14", width: 13, height: 13, class: "boardicon", "aria-hidden": "true",
+                       html: "<rect x='3' y='3' width='8' height='8' rx='1' fill='none' " +
+                             "stroke='currentColor' stroke-width='1.3'/>" +
+                             "<path d='M4 0.8V3M7 0.8V3M10 0.8V3M4 11v2.2M7 11v2.2M10 11v2.2" +
+                             "M0.8 4H3M0.8 7H3M0.8 10H3M11 4h2.2M11 7h2.2M11 10h2.2' " +
+                             "stroke='currentColor' stroke-width='1.3' stroke-linecap='round'/>"});
 }
 
 // ---- the facts, in place --------------------------------------------------------------------
 
 function renderOutFacts() {
-  var box = document.getElementById("outFacts");
-  box.textContent = "";
-  box.appendChild(boardBox("outPanel", ["Wiring", small(brokenSaid())]));
+  var hint = null;
   if (canEdit("outPanel")) {
-    var hint = document.createElement("span");
-    hint.className = "hint";
     var breaking = breakingOutputs();
-    hint.textContent = "Drag each light to match its position in your build." +
+    var said = "Drag each light to match its position in your build." +
       (breaking.length > 1 ? " Arrows split an output into three mono lights, or rejoin them."
        : breaking.length ? " The arrow on " + outputSaid(breaking[0]) + " splits it into three " +
                            "mono lights, or rejoins them." : "");
-    hint.title = hint.textContent;
-    box.appendChild(hint);
+    hint = h("span", {class: "hint", title: said}, said);
   }
-  if (!setupOn) box.appendChild(panelTools(active.strip ? lastOutputRun : active));
+  replace(document.getElementById("outFacts"),
+          boardBox("outPanel", ["Wiring", small(brokenSaid())]), hint,
+          setupOn ? null : panelTools(active.strip ? lastOutputRun : active));
 }
 
 // What a strip is built as, its length and what follows it on the board line
@@ -172,79 +153,36 @@ export function dropStrip(run) {
   draw();
 }
 
-// The cross on a strip's chip while the board is edited, as a screen has on its own
-function stripDrop(run) {
-  var drop = document.createElement("button");
-  drop.type = "button";
-  drop.className = "drop";
-  drop.textContent = "\u00d7";
-  drop.title = "Remove this strip from every scene";
-  drop.onclick = function () { dropStrip(run); };
-  return drop;
-}
 
-// A strip not fitted offers to be added, which only editing the board can take up, or says
-// why it cannot be
-function renderStripOut(box, run, panel) {
-  box.textContent = "";
-  box.appendChild(boardBox(panel, ["Strip", small("not fitted")]));
+function stripOut(run, panel) {
   var blocked = stripBlockedBy(run);
-  if (blocked) {
-    var why = document.createElement("span");
-    why.className = "stripblocked says";
-    why.textContent = blocked;
-    box.appendChild(why);
-    return;
-  }
-  var add = document.createElement("button");
-  add.type = "button";
-  add.className = "addstrip";
-  add.textContent = "add this strip";
-  add.disabled = !canEdit(panel);
-  add.onclick = function () {
-    stripThere(run, true);
-    workOn(panel);
-    draw();
-  };
-  box.appendChild(add);
+  return [boardBox(panel, ["Strip", small("not fitted")]),
+          blocked ? h("span", {class: "stripblocked says"}, blocked)
+                  : h("button", {type: "button", class: "addstrip", disabled: !canEdit(panel),
+                                 onclick: function () {
+                                   stripThere(run, true);
+                                   workOn(panel);
+                                   draw();
+                                 }}, "add this strip")];
 }
 
 export function renderLeds(where, run) {
-  var box = document.getElementById(where);
   var panel = run.id + "Panel";
   document.getElementById(panel).classList.toggle("stripout", !run.there);
-  if (!run.there) {
-    renderStripOut(box, run, panel);
-    return;
-  }
-  // The strip's own count box is already the board's, so the icon goes inside it and it
-  // takes the strip's colour
-  if (canEdit(panel)) {
-    renderStripChip(where, run);
-    var says = box.querySelector(".says");
-    if (says) box.removeChild(says);
-    var chip = box.querySelector(".chip");
-    chip.className = "chip boardchip " + BOARD_CHIP_CLASSES[panel];
-    chip.title = "Board setup, shared by every scene";
-    chip.insertBefore(boardIcon(), chip.firstChild);
-    chip.appendChild(stripDrop(run));
-  } else {
-    box.textContent = "";
-    box.appendChild(boardBox(panel, ["Strip", small(stripBuilt(run))]));
-  }
+  var chip = !run.there ? stripOut(run, panel)
+           : canEdit(panel) ? boardBox(panel, ["Strip", stripLengthField(run), small("LEDs"), stripChipChoice(run),
+                                               h("button", {type: "button", class: "drop",
+                                                            title: "Remove this strip from every scene",
+                                                            onclick: function () { dropStrip(run); }}, "\u00d7")])
+           : boardBox(panel, ["Strip", small(stripBuilt(run))]);
+  replace(document.getElementById(where), chip, run.there ? panelTools(run) : null);
 }
 
 // ---- turning setup on ------------------------------------------------------------------------
 
 export function setupButton(label, on, act) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "setupbutton" + (on ? " on" : "");
-  // The board's chip, as every board setting wears it, since this is where they open
-  button.appendChild(boardIcon());
-  button.appendChild(document.createTextNode(label));
-  button.addEventListener("click", act);
-  return button;
+  return h("button", {type: "button", class: "setupbutton" + (on ? " on" : ""), "aria-pressed": on ? "true" : "false",
+                      onclick: act}, boardIcon(), label);
 }
 
 drawSteps.after.push(function () {

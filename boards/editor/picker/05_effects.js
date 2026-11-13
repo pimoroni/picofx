@@ -1,3 +1,4 @@
+import {h} from "./00_dom.js";
 import {BOARD, LOOKS, canPlay, keyOf, lerp, lookLines, lookNamed, nameSet, r2} from "./01_looks.js";
 import {COLOURED, lampTarget, lookLit} from "./02_preview.js";
 import {
@@ -5,7 +6,6 @@ import {
   drawSteps, forwardTargetFor, isChannel, joinedItems, levelled, mono, nextOutput, outputSaid,
   outs, paintAll, pickOutput, rangeItem, runs, sectionAt, settle, wiring
 } from "./03_runs.js";
-import {panelTools} from "./04_led_panels.js";
 import {carried} from "./04_scenes.js";
 import {BLINK, blinkList, blinkWord} from "./06_blink.js";
 import {renderLeds} from "./08_setup.js";
@@ -416,42 +416,42 @@ var STRIP_BRIGHTNESSES = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
 
 function stripPercent(brightness) { return Math.round(brightness * 100) + "%"; }
 
-// What follows a strip's length on the board line, its brightness or its colour order, as the
-// choice on its chip
-function stripChipChoice(run) {
-  var choice = document.createElement("select");
+export function stripChipChoice(run) {
   if (run.made === null) {
-    STRIP_ORDERS.forEach(function (pair) {
-      var option = document.createElement("option");
-      option.value = pair[0];
-      option.textContent = pair[1];
-      if ((run.order || "") === pair[0]) option.selected = true;
-      choice.appendChild(option);
-    });
-    choice.title = "The strip's colour order. Change it if red shows as another colour";
-    choice.onchange = function () {
-      stripSet(run, {order: choice.value});
-      draw();
-    };
-    return choice;
+    return h("select", {title: "The strip's colour order. Change it if red shows as another colour",
+                        onchange: function (event) {
+                          stripSet(run, {order: event.target.value});
+                          draw();
+                        }},
+      STRIP_ORDERS.map(function (pair) {
+        return h("option", {value: pair[0], selected: (run.order || "") === pair[0]}, pair[1]);
+      }));
   }
-  // A brightness read from a file stays offered, though the list does not hold it
-  var offered = STRIP_BRIGHTNESSES.indexOf(run.brightness) < 0 ?
-    STRIP_BRIGHTNESSES.concat([run.brightness]).sort(function (a, b) { return a - b; }) :
-    STRIP_BRIGHTNESSES;
-  offered.forEach(function (brightness) {
-    var option = document.createElement("option");
-    option.value = brightness;
-    option.textContent = stripPercent(brightness) + (brightness === run.made ? " (default)" : "");
-    if (brightness === run.brightness) option.selected = true;
-    choice.appendChild(option);
-  });
-  choice.title = "Overall strip brightness, applied on top of each stretch's level";
-  choice.onchange = function () {
-    stripSet(run, {brightness: Number(choice.value)});
-    draw();
-  };
-  return choice;
+  var offered = STRIP_BRIGHTNESSES.indexOf(run.brightness) < 0
+    ? STRIP_BRIGHTNESSES.concat([run.brightness]).sort(function (a, b) { return a - b; })
+    : STRIP_BRIGHTNESSES;
+  return h("select", {title: "Overall strip brightness, applied on top of each stretch's level",
+                      onchange: function (event) {
+                        stripSet(run, {brightness: Number(event.target.value)});
+                        draw();
+                      }},
+    offered.map(function (brightness) {
+      return h("option", {value: brightness, selected: brightness === run.brightness},
+               stripPercent(brightness) + (brightness === run.made ? " (default)" : ""));
+    }));
+}
+
+export function stripLengthField(run) {
+  return h("input", {type: "number", min: STRIP_FEWEST, max: STRIP_MOST, value: run.leds,
+                     "aria-label": "LEDs on " + run.label,
+                     onchange: function (event) {
+                       var want = Math.max(STRIP_FEWEST, Math.min(STRIP_MOST,
+                                           parseInt(event.target.value, 10) || STRIP_FEWEST));
+                       if (want === run.leds) return;
+                       stripSet(run, {leds: want});
+                       settle();
+                       draw();
+                     }});
 }
 
 // The same as words, where the chip cannot be changed
@@ -481,38 +481,6 @@ export function readStripTail(run, tail) {
   return brightness >= 0 && brightness <= 1 ? {brightness: brightness} : null;
 }
 
-// A strip's chip, its length and its order to set, which the board's setup shows while it is on
-export function renderStripChip(where, run) {
-  var box = document.getElementById(where);
-  box.textContent = "";
-  var chip = document.createElement("div");
-  chip.className = "chip strip";
-  chip.appendChild(document.createTextNode("Strip"));
-  var count = document.createElement("input");
-  count.type = "number";
-  count.min = STRIP_FEWEST;
-  count.max = STRIP_MOST;
-  count.value = run.leds;
-  count.onchange = function () {
-    var want = Math.max(STRIP_FEWEST, Math.min(STRIP_MOST, parseInt(count.value, 10) ||
-                                                           STRIP_FEWEST));
-    if (want === run.leds) return;
-    stripSet(run, {leds: want});
-    settle();
-    draw();
-  };
-  chip.appendChild(count);
-  var unit = document.createElement("small");
-  unit.textContent = "LEDs";
-  chip.appendChild(unit);
-  chip.appendChild(stripChipChoice(run));
-  box.appendChild(chip);
-  var says = document.createElement("span");
-  says.className = "says";
-  says.textContent = "shared by every scene";
-  box.appendChild(says);
-}
-
 // ---- zooming a strip's bar --------------------------------------------------------------------
 // The drawing finds a bar by which of two runs it is for. Here a bar is found by the strip's
 // own id, so these stand in for those two
@@ -537,7 +505,6 @@ drawSteps.after.push(function () {
   }
   runs.filter(function (run) { return run.strip; }).forEach(function (run) {
     renderLeds(run.id + "Leds", run);
-    if (run.there) document.getElementById(run.id + "Leds").appendChild(panelTools(run));
     renderStretches(run.id + "Bar", run);
     document.getElementById(run.id + "Chosen").textContent = "";
     if (run === active) {
