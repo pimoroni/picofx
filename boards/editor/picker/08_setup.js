@@ -99,7 +99,7 @@ function renderOutFacts() {
       (breaking.length > 1 ? " Arrows split an output into three mono lights, or rejoin them."
        : breaking.length ? " The arrow on " + outputSaid(breaking[0]) + " splits it into three " +
                            "mono lights, or rejoins them." : "");
-    hint = h("span", {class: "hint", title: said}, said);
+    hint = h("small", {title: said}, said);
   }
   replace(document.getElementById("outFacts"),
           boardBox("outPanel", ["Wiring", small(brokenSaid())]), hint,
@@ -157,8 +157,8 @@ export function dropStrip(run) {
 function stripOut(run, panel) {
   var blocked = stripBlockedBy(run);
   return [boardBox(panel, ["Strip", small("not fitted")]),
-          blocked ? h("span", {class: "stripblocked says"}, blocked)
-                  : h("button", {type: "button", class: "addstrip", disabled: !canEdit(panel),
+          blocked ? h("small", {}, blocked)
+                  : h("button", {type: "button", disabled: !canEdit(panel),
                                  onclick: function () {
                                    stripThere(run, true);
                                    workOn(panel);
@@ -168,7 +168,7 @@ function stripOut(run, panel) {
 
 export function renderLeds(where, run) {
   var panel = run.id + "Panel";
-  document.getElementById(panel).classList.toggle("stripout", !run.there);
+  document.getElementById(panel).toggleAttribute("data-absent", !run.there);
   var chip = !run.there ? stripOut(run, panel)
            : canEdit(panel) ? boardBox(panel, ["Strip", stripLengthField(run), small("LEDs"), stripChipChoice(run),
                                                h("button", {type: "button", class: "drop",

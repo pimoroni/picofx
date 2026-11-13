@@ -1,21 +1,18 @@
-.panelhead {
+.panel > header {
   display: flex;
   align-items: center;
   gap: .5rem;
   min-height: 33px;
   margin: 0 0 .2rem;
-  padding: 0;
-  border: 0;
-  background: none;
-  font-size: var(--text-m);
   color: var(--dim);
+  font-size: var(--text-m);
 
-  .chip {
+  > .chip {
     flex: none;
     white-space: nowrap;
   }
 
-  .hint {
+  > small {
     flex: 1 1 0;
     width: 0;
     min-width: 0;
@@ -26,59 +23,68 @@
     text-overflow: ellipsis;
   }
 
-  input {
-    width: 4.5rem;
-    padding: .24rem .4rem;
-    font: inherit;
-  }
-
-  .tools {
+  > [role=group] {
     display: flex;
     align-items: center;
     gap: .35rem;
     margin-left: auto;
-  }
 
-  output {
-    min-width: 2.8rem;
-    font-size: var(--text-s);
-    text-align: center;
-  }
-}
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.9rem;
+      height: 1.75rem;
+      padding: 0;
+      color: var(--dim);
 
-.round {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.9rem;
-  height: 1.75rem;
-  padding: 0;
-  color: var(--dim);
+      &:hover:enabled {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+    }
 
-  &:hover:enabled {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-
-  svg {
-    display: block;
+    output {
+      min-width: 2.8rem;
+      font-size: var(--text-s);
+      text-align: center;
+    }
   }
 }
 
-.panel.strip .boardchip {
-  background: var(--strip);
+.panel[data-strip] {
+  position: relative;
+
+  .chip {
+    background: var(--strip);
+  }
+
+  &[data-absent] {
+    > :not(summary, header) {
+      visibility: hidden;
+    }
+
+    > header > :is(button, small) {
+      position: absolute;
+      top: 55%;
+      left: 50%;
+      max-width: calc(100% - 3rem);
+      text-align: center;
+      transform: translate(-50%, -50%);
+    }
+  }
 }
 
-.panel.stripout > :not(summary):not(.panelhead) {
-  visibility: hidden;
-}
-
-.sides {
+#sides {
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 1rem;
 
-  > .side {
+  &[data-mono-first] > #sideB {
+    order: -1;
+  }
+
+  > section {
     display: flex;
     flex: var(--room) 1 0;
     flex-direction: column;
@@ -89,28 +95,24 @@
     }
   }
 
-  h3[hidden] {
-    display: none;
-  }
-
-  &[data-mono-first] > #sideB {
-    order: -1;
-  }
-
   h3 {
     display: flex;
     align-items: baseline;
     gap: .5rem;
     margin: 0 0 .5rem;
-    font: 600 var(--text-m) var(--font);
+    font-size: var(--text-m);
     white-space: nowrap;
+
+    &[hidden] {
+      display: none;
+    }
 
     small {
       min-width: 0;
       overflow: hidden;
+      color: var(--dim);
       font-size: var(--text-s);
       font-weight: 400;
-      color: var(--dim);
       white-space: nowrap;
       text-overflow: ellipsis;
     }

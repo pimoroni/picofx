@@ -33,7 +33,7 @@ export function renderWiringRun(where, run) {
     }
     last.lamps.push({lamp: lamp, at: at});
   });
-  replace(box, h("ol", {class: "wiringrun"}, groups.map(function (group) {
+  replace(box, h("ol", {}, groups.map(function (group) {
     return h("li", {"data-out": group.out, "data-whole": group.whole},
       crossing(group.out, group.whole),
       h("ol", {}, group.lamps.map(function (one) {
@@ -110,7 +110,7 @@ function paintWiringFace(face, lit) {
 }
 
 function showKin(out, on) {
-  document.querySelectorAll(".wiringrun > li[data-out='" + out + "']").forEach(function (group) {
+  document.querySelectorAll("#sides [id$=Run] > ol > li[data-out='" + out + "']").forEach(function (group) {
     group.toggleAttribute("data-kin", on);
   });
 }
@@ -119,7 +119,7 @@ function crossing(out, whole) {
   if (!canEdit("outPanel") || OUTPUTS[out].mono || !OUTPUTS[out].breaks) return null;
   var says = whole ? "split " + outputSaid(out) + " into three mono lights"
                    : "rejoin " + outputSaid(out) + " as one colour light";
-  return h("button", {type: "button", class: "cross", title: says, "aria-label": says,
+  return h("button", {type: "button", title: says, "aria-label": says,
                       onclick: function (event) {
                         event.stopPropagation();
                         if (whole) breakOut(out); else rejoin(out);
@@ -144,7 +144,7 @@ function wiredSide() {
 }
 
 function lampsShown() {
-  return Array.prototype.slice.call(document.querySelectorAll(".wiringrun li[data-key]"));
+  return Array.prototype.slice.call(document.querySelectorAll("#sides [id$=Run] li[data-key]"));
 }
 
 function lampNode(key) {
@@ -181,7 +181,7 @@ function renderConnectors() {
     var node = lampNode(lamp.key);
     if (node) node.dataset.astray = "";
   });
-  var connectors = h("ol", {class: "connectors"}, wiring.map(function (one, out) {
+  var connectors = h("ol", {}, wiring.map(function (one, out) {
     var single = OUTPUTS[out].mono;
     var keys = placesOf(out).map(lampKey);
     return h("li", {title: outputSaid(out) + (one.broken && !single ? ", broken out into three" : ""),
@@ -209,7 +209,7 @@ function drawLines() {
   var from = panel.getBoundingClientRect();
   var paths = wiredLamps().map(function (lamp) {
     var node = lampNode(lamp.key);
-    var pin = panel.querySelector(".connectors i[data-key='" + lamp.key + "']");
+    var pin = panel.querySelector("#wiringRow i[data-key='" + lamp.key + "']");
     if (!node || !pin) return null;
     var top = node.getBoundingClientRect();
     var bottom = pin.getBoundingClientRect();
@@ -222,7 +222,7 @@ function drawLines() {
                           style: {stroke: lamp.channel === null || OUTPUTS[lamp.out].mono
                                     ? "var(--boardOuts)" : CHANNEL_INKS[lamp.channel]}});
   });
-  panel.appendChild(h("svg:svg", {id: "wiringLines", class: "wirelines"}, paths));
+  panel.appendChild(h("svg:svg", {id: "wiringLines"}, paths));
 }
 
 function moveLamp(move) {

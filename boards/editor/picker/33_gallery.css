@@ -54,18 +54,17 @@
     list-style: none;
   }
 
-  .card {
+  li > button {
     display: block;
     width: 100%;
     padding: 0;
     overflow: hidden;
     border: 2px solid var(--line);
-    border-radius: 11px;
+    border-radius: var(--radius-l);
     background: var(--panel);
     color: var(--ink);
     font: inherit;
     text-align: left;
-    cursor: pointer;
     transition: transform .12s;
 
     &:hover {
@@ -74,10 +73,7 @@
 
     &[aria-pressed=true] {
       border-color: var(--accent);
-
-      .name {
-        color: var(--accent);
-      }
+      color: var(--accent);
     }
 
     &[aria-disabled] {
@@ -88,39 +84,35 @@
         transform: none;
       }
     }
-  }
 
-  .face {
-    display: flex;
-    height: 2.9rem;
-    background: var(--dark);
+    > span {
+      display: flex;
+      height: 2.9rem;
+      background: var(--dark);
 
-    i {
-      flex: 1;
+      i {
+        flex: 1;
+      }
     }
-  }
 
-  .name {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-height: 2.1rem;
-    padding: .3rem .65rem;
-    font: 600 var(--text-m) var(--font);
+    > strong {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 2.1rem;
+      padding: .3rem .65rem;
+      font-size: var(--text-m);
 
-    svg {
-      flex: none;
-      width: 20px;
-      height: 20px;
-      fill: #b8b1a6;
-
-      .hole {
-        fill: var(--panel);
+      svg {
+        flex: none;
+        width: 20px;
+        height: 20px;
+        fill: #b8b1a6;
       }
     }
   }
 
-  .nothing {
+  > button {
     position: absolute;
     top: -.3rem;
     right: 0;
@@ -130,21 +122,13 @@
     padding: 0 .65rem 0 0;
     overflow: hidden;
     border: 2px solid var(--line);
-    border-radius: 9px;
-    background: var(--panel);
-    color: var(--ink);
+    border-radius: var(--radius);
     font: 600 var(--text-m) var(--font);
-    cursor: pointer;
 
-    .face {
+    > span {
       width: 2.4rem;
       height: 1.7rem;
-      background: repeating-linear-gradient(45deg, #f0eeea, #f0eeea 7px, #e4e0d9 7px, #e4e0d9 14px);
-    }
-
-    &[aria-pressed=true] {
-      border-color: var(--accent);
-      color: var(--accent);
+      background: var(--hatch);
     }
   }
 }

@@ -12,7 +12,7 @@ var ZOOM_IN = "<circle cx='7.2' cy='7.2' r='4.9'/><path d='M10.9 10.9 L14.4 14.4
 var ZOOM_STEP = 1.6;
 
 function iconButton(drawing, says, off, done) {
-  return h("button", {type: "button", class: "round", title: says, "aria-label": says, disabled: off,
+  return h("button", {type: "button", title: says, "aria-label": says, disabled: off,
                       onclick: done},
     h("svg:svg", {viewBox: "0 0 17 17", width: 15, height: 15, fill: "none", stroke: "currentColor",
                   "stroke-width": 1.5, "stroke-linecap": "round", "stroke-linejoin": "round",
@@ -27,7 +27,7 @@ export function panelTools(run) {
     iconButton(ZOOM_IN, "Zoom in", zoomOf(run) >= 23.9,
                function () { zoomTo(run, zoomOf(run) * ZOOM_STEP, middleOfView(run)); })
   ] : [];
-  return h("span", {class: "tools"}, zoom,
+  return h("span", {role: "group", "aria-label": "Steps"}, zoom,
     iconButton(UNDO, "Undo", !(run.was && run.was.length), function () { stepBack(run); }),
     iconButton(REDO, "Redo", !(run.undone && run.undone.length), function () { stepOn(run); }));
 }
@@ -55,11 +55,11 @@ export function renderSides() {
   var after = document.getElementById("outPanel");
   BOARD.strips.forEach(function (strip) {
     var id = strip.name;
-    var panel = h("details", {class: "panel strip", id: id + "Panel", open: true,
+    var panel = h("details", {class: "panel", "data-strip": true, id: id + "Panel", open: true,
                               style: {"--strip": strip.colour}},
       h("summary", {}, strip.label.charAt(0).toUpperCase() + strip.label.slice(1),
         h("span", {class: "says"}, strip.says)),
-      h("header", {class: "panelhead", id: id + "Leds"}),
+      h("header", {id: id + "Leds"}),
       h("div", {id: id + "Bar"}),
       h("div", {id: id + "Chosen"}));
     after.parentNode.insertBefore(panel, after.nextSibling);

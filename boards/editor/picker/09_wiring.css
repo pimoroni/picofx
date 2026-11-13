@@ -1,11 +1,9 @@
-body:not(.setupall) .sides > .side > .run {
+body:not(.setupall) #sides [id$=Run] {
   display: none;
 }
 
-.sides {
-  align-items: stretch;
-
-  > .side > .run {
+#sides {
+  [id$=Run] {
     flex: 1 0 auto;
     width: 100%;
     margin-bottom: .7rem;
@@ -15,12 +13,12 @@ body:not(.setupall) .sides > .side > .run {
     background: var(--panel);
   }
 
-  &[data-unnamed] > .side > .run {
+  &[data-unnamed] [id$=Run] {
     margin-top: 0;
   }
 }
 
-.wiringrun {
+[id$=Run] > ol {
   display: flex;
   flex-wrap: wrap;
   margin: 0;
@@ -44,8 +42,8 @@ body:not(.setupall) .sides > .side > .run {
     display: flex;
     margin-right: .5rem;
 
-    &:hover .cross,
-    &[data-kin] .cross {
+    &:hover > button,
+    &[data-kin] > button {
       display: inline-flex;
     }
 
@@ -154,7 +152,7 @@ body:not(.setupall) .sides > .side > .run {
     outline-offset: -1px;
   }
 
-  .cross {
+  li:not([data-key]) > button {
     position: absolute;
     top: -.45rem;
     right: -.3rem;
@@ -180,13 +178,13 @@ body:not(.setupall) .sides > .side > .run {
     }
   }
 
-  #sideB & .cross,
-  [data-mono-first] #sideA & .cross {
+  #sideB & > li > button,
+  [data-mono-first] #sideA & > li > button {
     right: auto;
     left: -.3rem;
   }
 
-  [data-mono-first] #sideB & .cross {
+  [data-mono-first] #sideB & > li > button {
     right: -.3rem;
     left: auto;
   }
@@ -207,7 +205,7 @@ body:not(.setupall) .sides > .side > .run {
 }
 
 #wiringRow {
-  .connectors {
+  > ol {
     position: relative;
     z-index: 1;
     display: flex;
@@ -275,7 +273,7 @@ body:not(.setupall) .sides > .side > .run {
   }
 }
 
-.wirelines {
+#wiringLines {
   position: absolute;
   inset: 0;
   z-index: 2;

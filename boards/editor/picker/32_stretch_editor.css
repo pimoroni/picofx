@@ -3,7 +3,7 @@
   margin-top: -2px;
   padding: .7rem .8rem .8rem;
   border: 2px solid var(--accent);
-  border-radius: 10px;
+  border-radius: var(--radius-l);
   background: var(--panel);
 
   &[data-notch-start] {
@@ -15,24 +15,19 @@
   }
 
   > header {
-    position: static;
     display: flex;
-    flex-wrap: nowrap;
     align-items: center;
     gap: .6rem;
     margin-bottom: .6rem;
-    padding: 0;
-    border: 0;
-    background: none;
 
     h3 {
       margin: 0 auto 0 0;
       font-size: var(--text-xl);
 
       small {
+        color: var(--dim);
         font-size: var(--text-m);
         font-weight: 400;
-        color: var(--dim);
       }
     }
 
@@ -41,237 +36,176 @@
       align-items: center;
       gap: .35rem;
       padding: .22rem .55rem;
-      border: 1.5px solid var(--line);
-      border-radius: 8px;
-      background: var(--panel);
+      border-width: 1.5px;
       color: var(--accent);
       font: 600 var(--text-s) var(--font);
-      cursor: pointer;
     }
 
-    .reverse {
+    button[aria-pressed] {
       color: var(--ink);
-
-      svg {
-        rect {
-          fill: currentColor;
-        }
-
-        path {
-          fill: none;
-          stroke: currentColor;
-          stroke-width: 1.8;
-          stroke-linecap: round;
-          stroke-linejoin: round;
-        }
-      }
 
       &[aria-pressed=true] {
         border-color: var(--accent);
-        color: var(--accent);
         background: color-mix(in srgb, var(--accent) 8%, transparent);
+        color: var(--accent);
       }
 
-      &:disabled {
-        color: var(--dim);
-        opacity: .4;
-        cursor: default;
+      svg {
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+
+        rect {
+          fill: currentColor;
+        }
       }
     }
   }
 
   > p {
     margin: 0 0 .6rem;
-    font-size: var(--text-m);
     color: var(--dim);
+    font-size: var(--text-m);
   }
 
   &[data-picking] #looks {
     margin: 1rem 0 0;
   }
-}
 
-.editor .colours {
-  margin: 0 0 .6rem;
+  > fieldset {
+    margin-bottom: .6rem;
 
-  .blinks {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: .3rem;
-    margin-bottom: .1rem;
-    font-size: var(--text-m);
-    color: var(--dim);
-
-    ol {
+    > div {
       display: flex;
-      gap: .3rem;
-      margin: 0 0 0 .2rem;
-      padding: 0;
-      list-style: none;
-    }
-
-    li {
-      display: flex;
+      flex-wrap: wrap;
       align-items: center;
-    }
-
-    li > button:first-child {
-      width: 1.6rem;
-      height: 1.6rem;
-      padding: 0;
-      border: 2px solid var(--line);
-      border-radius: 5px;
-      background: var(--chip);
-      cursor: pointer;
-
-      &[aria-pressed=true] {
-        border-color: var(--accent);
-        box-shadow: 0 0 0 2px rgba(15, 138, 114, .25);
-      }
-    }
-
-    .drop {
-      padding: 0 .3rem 0 .1rem;
-      border: 0;
-      background: none;
+      gap: .3rem;
+      margin-bottom: .1rem;
       color: var(--dim);
       font-size: var(--text-m);
-      line-height: 1;
-      cursor: pointer;
-    }
 
-    .more {
-      margin-left: .3rem;
-      padding: .15rem .5rem;
-      border: 1px dashed var(--line);
-      border-radius: 5px;
-      background: none;
-      color: var(--ink);
-      font-size: var(--text-s);
-      cursor: pointer;
+      ol {
+        display: flex;
+        gap: .3rem;
+        margin: 0 0 0 .2rem;
+        padding: 0;
+        list-style: none;
+      }
+
+      li {
+        display: flex;
+        align-items: center;
+      }
+
+      li > button:first-child {
+        width: 1.6rem;
+        height: 1.6rem;
+        padding: 0;
+        border: 2px solid var(--line);
+        border-radius: var(--radius-s);
+        background: var(--chip);
+
+        &[aria-pressed=true] {
+          border-color: var(--accent);
+          box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+      }
+
+      li > button + button {
+        padding: 0 .3rem 0 .1rem;
+        border: 0;
+        background: none;
+        color: var(--dim);
+        line-height: 1;
+      }
+
+      > button {
+        margin-left: .3rem;
+        padding: .15rem .5rem;
+        border-style: dashed;
+        border-radius: var(--radius-s);
+        background: none;
+        color: var(--ink);
+        font-size: var(--text-s);
+      }
     }
   }
 
-}
-
-.editor .sliders {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: .25rem .7rem;
-
-  &[data-figures] {
-    grid-template-columns: auto 1fr auto auto auto;
-  }
-
-  label {
-    display: inline-flex;
+  > [role=group] {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
     align-items: center;
-    gap: .4rem;
-    font-size: var(--text-m);
-    color: var(--dim);
-    white-space: nowrap;
+    gap: .25rem .7rem;
 
-    svg {
-      flex: none;
-      width: 14px;
-      height: 14px;
-      fill: none;
-      stroke: currentColor;
-      stroke-width: 1.4;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-
-      .filled {
-        fill: currentColor;
-        stroke: none;
-      }
+    &[data-figures] {
+      grid-template-columns: auto 1fr auto auto auto;
     }
 
-    .signal {
-      width: auto;
-      height: 21.6px;
-      stroke: none;
-
-      .flashing {
-        animation: signalflash 1s steps(2, jump-none) infinite;
-      }
-    }
-  }
-
-  input[type=range] {
-    width: 100%;
-    accent-color: var(--accent);
-  }
-
-  input[type=text] {
-    box-sizing: content-box;
-    justify-self: end;
-    height: calc(1.2rem - 2px);
-    padding: 0 .35rem;
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    font: 600 var(--text-s) var(--font);
-    line-height: calc(1.2rem - 2px);
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-  }
-
-  input[type=text] + span {
-    font-size: var(--text-s);
-    color: var(--dim);
-  }
-
-  .palette {
-    display: inline-flex;
-    grid-column: span 2;
-    gap: 2px;
-
-    i {
-      width: 1.1rem;
-      height: .9rem;
-      border: 1px solid var(--line);
-      border-radius: 3px;
-    }
-  }
-
-  &:not([data-figures]) {
-    input[type=text],
-    input[type=text] + span,
-    .palette,
-    input[type=range] + span,
-    input[type=range] + span + span {
+    &:not([data-figures]) :is(input[type=text], input[type=text] + span, output, input[type=range] + span, input[type=range] + span + span) {
       display: none;
     }
-  }
 
-  .drawer {
-    grid-row: 1 / span var(--rows);
-    grid-column: -2;
-    align-self: stretch;
-    width: 1.5rem;
-    padding: 0;
-    border: 1px solid var(--line);
-    border-radius: 6px;
-    background: var(--panel);
-    color: var(--dim);
-    font: 600 var(--text-xl)/1 var(--font);
-    cursor: pointer;
+    label {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      color: var(--dim);
+      font-size: var(--text-m);
+      white-space: nowrap;
 
-    &:hover {
-      border-color: var(--dim);
-      color: var(--ink);
+      svg {
+        flex: none;
+      }
     }
-  }
-}
 
-@keyframes signalflash {
-  from {
-    opacity: 1;
-  }
+    input[type=range] {
+      width: 100%;
+    }
 
-  to {
-    opacity: .2;
+    input[type=text] {
+      box-sizing: content-box;
+      justify-self: end;
+      height: calc(1.2rem - 2px);
+      padding: 0 .35rem;
+      font: 600 var(--text-s) var(--font);
+      line-height: calc(1.2rem - 2px);
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    input[type=text] + span {
+      color: var(--dim);
+      font-size: var(--text-s);
+    }
+
+    output {
+      display: inline-flex;
+      grid-column: span 2;
+      gap: 2px;
+
+      i {
+        width: 1.1rem;
+        height: .9rem;
+        border: 1px solid var(--line);
+        border-radius: 3px;
+      }
+    }
+
+    > button {
+      grid-row: 1 / span var(--rows);
+      grid-column: -2;
+      align-self: stretch;
+      width: 1.5rem;
+      padding: 0;
+      color: var(--dim);
+      font: 600 var(--text-xl)/1 var(--font);
+
+      &:hover {
+        border-color: var(--dim);
+        color: var(--ink);
+      }
+    }
   }
 }

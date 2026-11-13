@@ -88,7 +88,7 @@ def test_reverse_is_a_toggle(mighty):
 
 def test_brightness_figure_is_typed(mighty):
     mighty.get_by_role("button", name="show values").click()
-    box = mighty.locator(".sliders input[type=text]").first
+    box = mighty.get_by_role("group", name="Settings").get_by_role("textbox").first
     box.fill("40")
     box.press("Enter")
     assert "level=40%" in saved(mighty)
