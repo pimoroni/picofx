@@ -1,0 +1,66 @@
+.soundoffer {
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--panel);
+
+  &:hover {
+    border-color: var(--dim);
+  }
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 3.6rem;
+    border-bottom: 1px solid var(--line);
+    fill: none;
+    stroke: #c9c3b9;
+    stroke-width: 2;
+  }
+
+  b {
+    display: block;
+    padding: .3rem .5rem 0;
+    overflow: hidden;
+    font: 600 .74rem/1.5 system-ui, sans-serif;
+    color: var(--ink);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  small {
+    display: block;
+    padding: 0 .5rem .35rem;
+    font-size: .68rem;
+    color: var(--dim);
+  }
+
+  [data-hear] {
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.3rem;
+    height: 1.3rem;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--bg);
+    color: var(--dim);
+    font-size: .6rem;
+
+    &:hover {
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+
+    &[aria-pressed=true] {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+  }
+}

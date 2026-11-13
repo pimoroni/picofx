@@ -1,22 +1,14 @@
+import {h, replace} from "../00_dom.js";
 import {quoted} from "../01_looks.js";
 import {draw, drawSteps} from "../03_runs.js";
-import {allBodies, bodyParts, driveParts, frozen, state} from "../04_scenes.js";
+import {allBodies, bodyParts, driveParts, state} from "../04_scenes.js";
 import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches} from "../11_tabs.js";
 import {banner} from "../18_drive.js";
-import {OWN_GROUP, foldHead} from "../22_program.js";
+import {OWN_GROUP} from "../22_program.js";
 import {
   adderTile, binButton, exampleGroups, groupOpen, groupsOpen, isExampleMedia, nameShown
 } from "../26_drive_files.js";
 import {entryParts, unquoted} from "../27_readback.js";
-
-// ---- a Sound tab ----------------------------------------------------------------------------
-// One wav at a time, chosen from a row of tiles each showing its shape and how long it runs,
-// with whether it loops, its volume and silence on a line above them.
-//
-// The drawing asks of its page the sounds on the drive, and each scene keeping its own sound.
-// The board takes one per scene, and the one in the always-on tab plays in any scene that
-// brings none of its own. Nothing about the sound is the board's, so setting up leaves it
-// standing back.
 
 state.sound = null;
 state.soundLoop = false;
@@ -24,199 +16,49 @@ state.soundVolume = 100;
 state.soundKept = null;
 state.sounds = [];
 state.soundInfo = {};
-// Whether the scene silences the speaker with `audio: none`, which only a scene needs, where
-// Always on has a sound to silence
 state.soundOff = false;
 
-// The sound Always on plays in the scene being edited, where the scene has none of its own. It is
-// null on the Always on tab, in a scene with its own sound or silence and where Always on has none
+var SOUND_SAMPLES = 96;
+
+export var soundHooks = {tileSteps: [], examplesBar: null};
+
 function soundUnder() {
   if (state.at < 0 || state.sound || state.soundKept || state.soundOff) return null;
   return state.always.body.sound || null;
 }
 
-// Whether the scene being edited can silence Always on's sound, there being one to silence
 function canSilence() { return state.at >= 0 && !!state.always.body.sound; }
 
-// The Sound tab's row of sounds and its setting, which renderSound below puts in the page's style
-function renderSoundTab() {
-  var box = document.getElementById("sound");
-  box.textContent = "";
-  var under = soundUnder();
-  document.getElementById("soundSays").textContent = under
-    ? "Always on's " + nameShown(under) + " plays on through this scene. Choose a sound to " +
-      "give this scene its own, or Silence to quieten it"
-    : state.soundOff
-    ? "this scene is silent. Always on's " + nameShown(state.always.body.sound) + " stops while " +
-      "it shows"
-    : !state.fileHandle
-    ? "open the FX drive to see the sounds on it"
-    : !state.scanned
-      ? "reading the drive..."
-    : !(state.sounds.length || state.sound || state.soundKept)
-      ? "no sounds on the drive yet. Drop a WAV file onto it"
-    : !state.scenes.length
-      ? "one WAV file, playing alongside the lights"
-    : state.at < 0
-      ? "plays in any scene without its own sound"
-      : "plays while this scene shows, resuming where it left off";
-
-  // How the sound is played rather than which one it is, so it sits above them,
-  // where a screen keeps its settings
-  var again = document.createElement("button");
-  again.className = "again" + (state.soundLoop && state.sound ? " on" : "");
-  again.textContent = "on repeat";
-  again.disabled = !state.sound;
-  again.title = state.sound
-    ? "Loop the sound instead of playing it once"
-    : "No sound chosen";
-  again.onclick = function () { state.soundLoop = !state.soundLoop; draw(); };
-  var above = document.createElement("div");
-  above.style.margin = "0 0 .7rem";
-  above.appendChild(again);
-  above.appendChild(volumeSlider());
-  box.appendChild(above);
-
-  var row = document.createElement("div");
-  row.className = "sounds";
-  // A sound the file names that the drive does not hold still gets its tile, since
-  // the board may find it on its own storage
-  var names = state.sounds.slice();
-  if (state.sound && names.indexOf(state.sound) < 0) names.unshift(state.sound);
-  if (state.soundKept) row.appendChild(soundKeptTile());
-  row.appendChild(soundTile(null));
-  // Grouped once the drive is open, the user's own always first
-  var grouped = !!state.fileHandle;
-  var files = names.map(function (name) { return {name: name}; });
-  var groups = [[OWN_GROUP, "your own sounds", files.filter(function (one) {
-    return !isExampleMedia(one.name);
-  }), false]];
-  groups = groups.concat(exampleGroups("sounds", files));
-  groups.forEach(function (group, at) {
-    if (at && !group[2].length) return;
-    // Kept apart from the Screens tab's groups, the user's own sharing its name
-    var kept = ["sound:" + group[0]].concat(group.slice(1));
-    var open = groupOpen(kept);
-    if (grouped) {
-      row.appendChild(foldHead(group[0], group[1], open, function () {
-        groupsOpen[kept[0]] = !open;
-      }));
-    }
-    if (grouped && !open) return;
-    group[2].forEach(function (one) { row.appendChild(soundTile(one.name)); });
-    if (at) return;
-    if (state.fileHandle)
-      row.appendChild(adderTile("add sounds",
-        {description: "Sounds the board can play", accept: {"audio/wav": [".wav"]}},
-        "sounds", /\.wav$/i));
-  });
-  box.appendChild(row);
+function chooseSound(name) {
+  state.sound = name;
+  state.soundOff = false;
+  state.soundKept = null;
+  draw();
 }
 
-// The volume the board plays the sound at, a percentage in steps of five
-function volumeSlider() {
-  var slider = document.createElement("input");
-  slider.type = "range";
-  slider.min = 0;
-  slider.max = 100;
-  slider.step = 5;
-  // A scene playing Always on's sound shows Always on's volume, greyed, as a screen its backlight
-  var under = soundUnder();
-  slider.value = under ? state.always.body.soundVolume : state.soundVolume;
-  slider.disabled = !state.sound;
-  var figure = document.createElement("span");
-  figure.className = "lightfigure";
-  figure.textContent = slider.value + "%";
-  slider.oninput = function () { figure.textContent = slider.value + "%"; };
-  slider.onchange = function () {
-    state.soundVolume = Number(slider.value);
-    // A sound being heard here follows the slider
-    if (hearing.audio && hearing.name === state.sound) {
-      hearing.audio.volume = state.soundVolume / 100;
-    }
-    draw();
-  };
-  var volume = document.createElement("label");
-  volume.className = "opt soundvolume";
-  volume.appendChild(document.createTextNode("volume"));
-  volume.appendChild(slider);
-  volume.appendChild(figure);
-  volume.title = state.sound ? "How loud the board plays the sound" : "No sound chosen";
-  if (under) frozen(volume);
-  return volume;
+function chooseNothing() {
+  state.sound = null;
+  state.soundOff = false;
+  state.soundLoop = false;
+  state.soundVolume = 100;
+  state.soundKept = null;
+  draw();
 }
 
-function soundKeptTile() {
-  var tile = document.createElement("button");
-  tile.className = "sound" + (state.sound ? "" : " picked");
-  tile.title = state.soundKept;
-  tile.innerHTML = "<svg viewBox='0 0 104 30' preserveAspectRatio='none'><rect x='0' " +
-                   "y='14' width='104' height='2' rx='1' fill='#c9c3b9'/></svg>";
-  var title = document.createElement("b");
-  title.textContent = "Keep as is";
-  tile.appendChild(title);
-  var says = document.createElement("small");
-  says.textContent = state.soundKept.slice(0, 40);
-  tile.appendChild(says);
-  tile.onclick = function () {
-    state.sound = null;
-    state.soundLoop = false;
-    state.soundVolume = 100;
-    draw();
-  };
-  return tile;
+function chooseSilence() {
+  state.sound = null;
+  state.soundKept = null;
+  state.soundLoop = false;
+  state.soundVolume = 100;
+  state.soundOff = true;
+  draw();
 }
 
-// A sound's tile, which soundTile below draws the sound on. Always on's sound, playing in a scene
-// with none of its own, wears the striped frame a screen showing Always on's picture wears
-function plainSoundTile(name) {
-  var picked = name === null ? !state.sound && !state.soundKept && !state.soundOff
-                             : state.sound === name;
-  var info = name ? state.soundInfo[name] : null;
-  var tile = document.createElement("button");
-  var under = name !== null && name === soundUnder();
-  tile.className = "sound" + (picked ? " picked" : "") + (name ? "" : " quiet") +
-                   (under ? " under" : "");
-  var colour = picked ? "#0f8a72" : "#c9c3b9";
-  if (name && info && info.bars) {
-    var cells = [];
-    info.bars.forEach(function (tall, i) {
-      var high = Math.max(2, tall * 26);
-      cells.push("<rect x='" + (i * 4) + "' y='" + ((30 - high) / 2) + "' width='2.6' " +
-                 "height='" + high + "' rx='1.3' fill='" + colour + "'/>");
-    });
-    tile.innerHTML = "<svg viewBox='0 0 104 30' preserveAspectRatio='none'>" +
-                     cells.join("") + "</svg>";
-  } else {
-    tile.innerHTML = "<svg viewBox='0 0 104 30' preserveAspectRatio='none'><rect x='0' " +
-                     "y='14' width='104' height='2' rx='1' fill='" + colour + "'/></svg>";
-  }
-  var title = document.createElement("b");
-  title.textContent = name ? nameShown(name) : "Silence";
-  tile.appendChild(title);
-  var says = document.createElement("small");
-  says.textContent = !name ? "nothing plays"
-                   : info && info.seconds ? info.seconds + "s" +
-                     (picked && state.soundLoop ? ", on repeat" : "")
-                   : state.sounds.indexOf(name) < 0 ? "not on the drive" : "";
-  tile.appendChild(says);
-  tile.onclick = function () {
-    state.sound = name;
-    state.soundOff = false;
-    if (name) state.soundKept = null;
-    if (!name) {
-      state.soundLoop = false;
-      state.soundVolume = 100;
-      state.soundKept = null;
-    }
-    draw();
-  };
-  // An example keeps no bin here, as flashing the board's examples again brings it back. Where the
-  // board's examples can be discovered, discover/29_discover_sound.js gives it one
-  if (name && state.sounds.indexOf(name) >= 0 && !isExampleMedia(name)) {
-    tile.appendChild(binButton(name, "wav"));
-  }
-  return tile;
+function keepAsIs() {
+  state.sound = null;
+  state.soundLoop = false;
+  state.soundVolume = 100;
+  draw();
 }
 
 function soundLine(body) {
@@ -227,12 +69,6 @@ function soundLine(body) {
            (body.soundVolume < 100 ? " volume=" + body.soundVolume + "%" : "");
   return body.soundKept;
 }
-
-// How many points a sound's outline is drawn from, enough for it to look smooth at the
-// pictures' size
-var SOUND_SAMPLES = 96;
-
-// ---- each scene keeps its own sound -------------------------------------------------------------
 
 bodyParts.push({
   capture: function (body) {
@@ -263,7 +99,6 @@ bodyParts.push({
          : body.soundOff ? ["sound", "Silence"] : null;
   },
   named: function (body) { return body.sound ? [nameShown(body.sound)] : []; },
-  // A scene's sound is its first line
   entries: function (body, lines) {
     var sound = "sound" in body ? soundLine(body) : null;
     if (sound) lines.unshift(sound);
@@ -272,12 +107,10 @@ bodyParts.push({
   read: readSound
 });
 
-// Try each kept line of each body as a sound, moving the one that writes back exactly
 function readSound(bodies) {
   bodies.forEach(function (body) {
     body.kept = body.kept.filter(function (one) {
       var parts = entryParts(one.text);
-      // A scene's silence is read as itself
       if (parts && parts.selector === "audio" && one.text === "audio: none" && !body.sound &&
           !body.soundOff) {
         body.soundOff = true;
@@ -290,8 +123,6 @@ function readSound(bodies) {
           })) {
         return true;
       }
-      // A volume written any other way than the slider writes it fails the match below, and
-      // its line is kept as it is
       var percent = /^(\d+)%$/.exec(parts.right.volume || "");
       var sounding = {sound: unquoted(parts.right.file), soundLoop: parts.right.loop === "true",
                       soundVolume: percent ? Number(percent[1]) : 100, soundKept: null};
@@ -304,8 +135,6 @@ function readSound(bodies) {
     });
   });
 }
-
-// ---- the sounds on the drive --------------------------------------------------------------------
 
 var soundsFound = [];
 
@@ -334,7 +163,11 @@ driveParts.push({
   }
 });
 
-// A wav's length and outline, the outline read at SOUND_SAMPLES points
+var RIFF_CHUNK = 0x52494646;
+var WAVE_FORM = 0x57415645;
+var FORMAT_CHUNK = 0x666d7420;
+var DATA_CHUNK = 0x64617461;
+
 async function profileSound(name, handle) {
   soundHandles[name] = handle;
   if (state.soundInfo[name] !== undefined) return;
@@ -342,7 +175,7 @@ async function profileSound(name, handle) {
   try {
     var file = await handle.getFile();
     var head = new DataView(await file.slice(0, 8192).arrayBuffer());
-    if (head.getUint32(0) !== 0x52494646 || head.getUint32(8) !== 0x57415645)
+    if (head.getUint32(0) !== RIFF_CHUNK || head.getUint32(8) !== WAVE_FORM)
       throw new Error("not a WAV file");
     var at = 12;
     var byteRate = 0;
@@ -352,10 +185,10 @@ async function profileSound(name, handle) {
     while (at + 8 <= head.byteLength) {
       var id = head.getUint32(at);
       var size = head.getUint32(at + 4, true);
-      if (id === 0x666d7420) {                       // "fmt "
+      if (id === FORMAT_CHUNK) {
         byteRate = head.getUint32(at + 16, true);
         bits = head.getUint16(at + 22, true);
-      } else if (id === 0x64617461) {                // "data"
+      } else if (id === DATA_CHUNK) {
         dataAt = at + 8;
         dataSize = Math.min(size, file.size - dataAt);
         break;
@@ -388,10 +221,6 @@ async function profileSound(name, handle) {
   }
 }
 
-// ---- hearing a sound --------------------------------------------------------------------------
-// Each sound on the drive has a play button in its tile's corner, so it can be heard as well as
-// seen. One plays at a time, and pressing it again, or playing another, stops it
-
 var soundHandles = {};
 export var hearing = {name: null, audio: null, url: null};
 
@@ -399,6 +228,10 @@ export function stopHearing() {
   if (hearing.audio) hearing.audio.pause();
   if (hearing.url) URL.revokeObjectURL(hearing.url);
   hearing = {name: null, audio: null, url: null};
+}
+
+export function startHearing(name, audio, url) {
+  hearing = {name: name, audio: audio, url: url};
 }
 
 async function hear(name) {
@@ -412,9 +245,8 @@ async function hear(name) {
   try {
     var url = URL.createObjectURL(await soundHandles[name].getFile());
     audio = new Audio(url);
-    // The chosen sound is heard at its volume, any other as recorded
     if (name === state.sound) audio.volume = state.soundVolume / 100;
-    hearing = {name: name, audio: audio, url: url};
+    startHearing(name, audio, url);
     audio.onended = function () {
       if (hearing.audio === audio) stopHearing();
       draw();
@@ -422,7 +254,6 @@ async function hear(name) {
     draw();
     await audio.play();
   } catch (e) {
-    // A sound stopped or replaced before it began is cancelled with AbortError, which is no fault
     if (e.name === "AbortError" && hearing.audio !== audio) return;
     if (hearing.audio === audio) stopHearing();
     banner("Could not play " + nameShown(name) + ": " + e.name + ".", true);
@@ -430,46 +261,36 @@ async function hear(name) {
   }
 }
 
-// A sound's tile with a way to hear it here, where the open drive holds it
-function withHearButton(tile, name) {
-  if (!name || !soundHandles[name]) return tile;
+export function hearButton(name, words, onclick) {
   var playing = hearing.name === name;
-  // A tile is a button already, so this is a plain element taking the click, as its cross is
-  var button = document.createElement("span");
-  button.className = "hear" + (playing ? " playing" : "");
-  button.setAttribute("role", "button");
-  button.textContent = playing ? "\u25a0" : "\u25b6";
-  button.title = (playing ? "Stop " : "Play ") + nameShown(name) + " here";
-  button.onclick = function (event) {
-    event.stopPropagation();
-    hear(name);
-  };
-  tile.appendChild(button);
-  return tile;
+  return h("button", {type: "button", "data-hear": true, "aria-pressed": String(playing),
+                      "aria-label": "Hear " + words,
+                      title: (playing ? "Stop " : "Play ") + words + " here",
+                      onclick: function (event) {
+                        event.stopPropagation();
+                        onclick();
+                      }},
+           playing ? "\u25a0" : "\u25b6");
 }
 
-// ---- drawing the tab ---------------------------------------------------------------------------
-
-// A sound's outline, filled edge to edge and mirrored about the middle. Each moment of it is
-// coloured by how loud it is, blue when quiet through violet and pink to red when loud, the
-// violet keeping the middle of the run clear where blue straight to red goes muddy
 var LOUDNESS = ["#3a6fd8", "#8a4fd0", "#d0449a", "#e5443a"];
 var outlinesMade = 0;
 
-// The colour for a loudness from 0 to 1, between the two nearest of LOUDNESS
 function loudnessInk(loud) {
   var at = Math.max(0, Math.min(1, loud)) * (LOUDNESS.length - 1);
-  var low = Math.floor(at), high = Math.min(LOUDNESS.length - 1, low + 1), part = at - low;
-  function parts(hex) {
+  var low = Math.floor(at);
+  var high = Math.min(LOUDNESS.length - 1, low + 1);
+  var part = at - low;
+  function channels(hex) {
     return [1, 3, 5].map(function (from) { return parseInt(hex.substr(from, 2), 16); });
   }
-  var from = parts(LOUDNESS[low]), to = parts(LOUDNESS[high]);
+  var from = channels(LOUDNESS[low]);
+  var to = channels(LOUDNESS[high]);
   return "rgb(" + from.map(function (value, channel) {
     return Math.round(value + (to[channel] - value) * part);
   }).join(",") + ")";
 }
 
-// The bars of a sound with nothing in it, a thin band in the quietest colour
 function silentBars() {
   var bars = [];
   for (var i = 0; i < SOUND_SAMPLES; i++) bars.push(0.04);
@@ -477,181 +298,231 @@ function silentBars() {
 }
 
 function soundOutline(bars) {
-  var wide = 100, high = 40, middle = high / 2, last = bars.length - 1;
+  var wide = 100;
+  var high = 40;
+  var middle = high / 2;
+  var last = bars.length - 1;
   var id = "loudness" + (outlinesMade++);
   function across(at) { return (at / last) * wide; }
   var above = bars.map(function (tall, at) { return across(at) + "," + (middle - tall * middle); });
   var below = bars.map(function (tall, at) { return across(at) + "," + (middle + tall * middle); });
-  var outline = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  outline.setAttribute("viewBox", "0 0 " + wide + " " + high);
-  outline.setAttribute("preserveAspectRatio", "none");
-  outline.setAttribute("class", "soundoutline");
-  outline.innerHTML = "<defs><linearGradient id='" + id + "' x1='0' x2='1'>" +
-    bars.map(function (tall, at) {
-      return "<stop offset='" + at / last + "' stop-color='" + loudnessInk(tall) + "'/>";
-    }).join("") + "</linearGradient></defs>" +
-    "<polygon points='" + above.concat(below.reverse()).join(" ") + "' fill='url(#" + id + ")'/>";
-  return outline;
+  return h("svg:svg", {viewBox: "0 0 " + wide + " " + high, preserveAspectRatio: "none",
+                       "aria-hidden": "true"},
+    h("svg:defs", {},
+      h("svg:linearGradient", {id: id, x1: 0, x2: 1}, bars.map(function (tall, at) {
+        return h("svg:stop", {offset: at / last, "stop-color": loudnessInk(tall)});
+      }))),
+    h("svg:polygon", {points: above.concat(below.reverse()).join(" "), fill: "url(#" + id + ")"}));
 }
 
-// The Sound section's tiles draw their sound the same way, each with a way to hear it here
+function flatSound() {
+  return h("svg:svg", {viewBox: "0 0 104 30", preserveAspectRatio: "none", "aria-hidden": "true"},
+    h("svg:rect", {x: 0, y: 14, width: 104, height: 2, rx: 1}));
+}
+
+function soundSentence(under) {
+  if (under)
+    return "Always on's " + nameShown(under) + " plays on through this scene. Choose a sound to " +
+           "give this scene its own, or Silence to quieten it";
+  if (state.soundOff)
+    return "this scene is silent. Always on's " + nameShown(state.always.body.sound) +
+           " stops while it shows";
+  if (!state.fileHandle) return "open the FX drive to see the sounds on it";
+  if (!state.scanned) return "reading the drive...";
+  if (!(state.sounds.length || state.sound || state.soundKept))
+    return "no sounds on the drive yet. Drop a WAV file onto it";
+  if (!state.scenes.length) return "one WAV file, playing alongside the lights";
+  if (state.at < 0) return "plays in any scene without its own sound";
+  return "plays while this scene shows, resuming where it left off";
+}
+
+function loopToggle(under) {
+  var looping = under ? !!state.always.body.soundLoop : !!(state.soundLoop && state.sound);
+  return h("button", {type: "button", "aria-pressed": String(looping), disabled: !state.sound,
+                      title: under ? "Set on the Always on tab"
+                           : state.sound ? "Loop the sound instead of playing it once"
+                           : "No sound chosen",
+                      onclick: function () {
+                        state.soundLoop = !state.soundLoop;
+                        draw();
+                      }},
+           h("span", {"aria-hidden": "true"}, "\u21bb"), " Loop");
+}
+
+function volumeSlider(under) {
+  var shown = h("output");
+  var slider = h("input", {type: "range", min: 0, max: 100, step: 5,
+                           value: under ? state.always.body.soundVolume : state.soundVolume,
+                           disabled: !state.sound,
+                           oninput: function () { shown.value = slider.value + "%"; },
+                           onchange: function () {
+                             state.soundVolume = Number(slider.value);
+                             if (hearing.audio && hearing.name === state.sound) {
+                               hearing.audio.volume = state.soundVolume / 100;
+                             }
+                             draw();
+                           }});
+  shown.value = slider.value + "%";
+  return h("label", {title: under ? "Set on the Always on tab"
+                          : state.sound ? "How loud the board plays the sound" : "No sound chosen"},
+           "volume", slider, shown);
+}
+
+function nothingChoice() {
+  var picked = !state.sound && !state.soundKept && !state.soundOff;
+  return h("button", {type: "button", "aria-pressed": String(picked),
+                      title: canSilence() ? "Play nothing of this scene's own" : "Play no sound",
+                      onclick: chooseNothing},
+           h("i"), h("b", {}, "Nothing"));
+}
+
+function silenceChoice() {
+  return h("button", {type: "button", "aria-pressed": String(state.soundOff),
+                      "data-unseen": !canSilence(), title: "Play no sound in this scene",
+                      onclick: chooseSilence},
+           h("i", {}, soundOutline(silentBars())), h("b", {}, "Silence"));
+}
+
+function playingLine(under) {
+  return h("div", {},
+    h("fieldset", {disabled: !!under, title: under ? "Set on the Always on tab" : null},
+      h("legend", {}, "How it plays"),
+      loopToggle(under),
+      volumeSlider(under)),
+    nothingChoice());
+}
+
+function soundLength(name, info, picked) {
+  if (info && info.seconds) return info.seconds + "s" + (picked && state.soundLoop ? ", on repeat" : "");
+  return state.sounds.indexOf(name) < 0 ? "not on the drive" : "";
+}
+
 function soundTile(name) {
-  var tile = plainSoundTile(name);
-  var info = name ? state.soundInfo[name] : null;
-  var drawn = tile.querySelector("svg");
-  if (info && info.bars && drawn) tile.replaceChild(soundOutline(info.bars), drawn);
-  // Silence wears the stripes that nothing playing wears everywhere else on the page
-  if (name === null && drawn) {
-    var nothing = document.createElement("span");
-    nothing.className = "nothingface";
-    tile.replaceChild(nothing, drawn);
+  var info = state.soundInfo[name];
+  var picked = state.sound === name;
+  var onDrive = state.sounds.indexOf(name) >= 0;
+  var tile = h("li", {"data-under": name === soundUnder()},
+    h("button", {type: "button", "aria-pressed": String(picked),
+                 onclick: function () { chooseSound(name); }},
+      info && info.bars ? soundOutline(info.bars) : flatSound(),
+      h("b", {}, nameShown(name)),
+      h("small", {}, soundLength(name, info, picked))),
+    soundHandles[name] ? hearButton(name, nameShown(name), function () { hear(name); }) : null,
+    onDrive && !isExampleMedia(name) ? binButton(name, "wav") : null);
+  soundHooks.tileSteps.forEach(function (step) { step(tile, name); });
+  return tile;
+}
+
+function keptTile() {
+  return h("li", {},
+    h("button", {type: "button", "aria-pressed": String(!state.sound), title: state.soundKept,
+                 onclick: keepAsIs},
+      flatSound(),
+      h("b", {}, "Keep as is"),
+      h("small", {}, state.soundKept.slice(0, 40))));
+}
+
+function addSoundsTile() {
+  return h("li", {}, adderTile("add sounds",
+    {description: "Sounds the board can play", accept: {"audio/wav": [".wav"]}},
+    "sounds", /\.wav$/i));
+}
+
+function soundList(tiles, tip) {
+  return tiles.length ? h("ul", {title: tip}, tiles) : null;
+}
+
+function groupHeading(group, key, open) {
+  return h("h3", {},
+    h("button", {type: "button", "aria-expanded": String(open),
+                 onclick: function () {
+                   groupsOpen[key] = !open;
+                   draw();
+                 }},
+      group[0], group[1] ? h("small", {}, group[1]) : null));
+}
+
+function soundGroups(tip) {
+  var names = state.sounds.slice();
+  if (state.sound && names.indexOf(state.sound) < 0) names.unshift(state.sound);
+  var files = names.map(function (name) { return {name: name}; });
+  var groups = [[OWN_GROUP, "your own sounds", files.filter(function (one) {
+    return !isExampleMedia(one.name);
+  }), false]].concat(exampleGroups("sounds", files));
+  var kept = state.soundKept ? [keptTile()] : [];
+
+  if (!state.fileHandle) {
+    var tiles = kept.slice();
+    groups.forEach(function (group) {
+      group[2].forEach(function (one) { tiles.push(soundTile(one.name)); });
+    });
+    return h("section", {}, h("div", {}, silenceChoice()), soundList(tiles, tip));
   }
-  soundTileSteps.forEach(function (step) { step(tile, name); });
-  return withHearButton(tile, name);
+
+  var sections = [];
+  groups.forEach(function (group, at) {
+    if (at && !group[2].length) return;
+    var key = "sound:" + group[0];
+    var open = groupOpen([key].concat(group.slice(1)));
+    var tiles = at ? [] : kept.slice();
+    if (open) group[2].forEach(function (one) { tiles.push(soundTile(one.name)); });
+    if (open && !at) tiles.push(addSoundsTile());
+    sections.push(h("section", {},
+      h("div", {}, groupHeading(group, key, open), at ? null : silenceChoice()),
+      soundList(tiles, tip)));
+    if (!at && soundHooks.examplesBar) sections.push(soundHooks.examplesBar());
+  });
+  return sections;
 }
 
-// What the parts after this one add to each sound's tile, each given the tile and its sound's
-// name, null for silence
-export var soundTileSteps = [];
+var soundTab = h("section", {class: "soundtab", "aria-label": "Sound"});
 
-// The tab in the page's style. What the scene does with its sound is the row's tip, no other
-// tab opening on a sentence; the sentence stays only where there are no sounds to show, since
-// it is then all there is. Repeat is a toggle with its icon, as the screens' Loop is, the
-// volume a slider beside it, and silence the small card Nothing is in the gallery, at the end
-// of that line
 function renderSound() {
-  renderSoundTab();
-  soundSteps.forEach(function (step) { step(); });
-  var box = document.getElementById("sound");
-  var says = document.getElementById("soundSays");
-  var row = box.querySelector(".sounds");
-  var explains = /^(one WAV|plays)/.test(says.textContent);
-  if (row && explains) row.title = says.textContent.charAt(0).toUpperCase() +
-                                   says.textContent.slice(1);
-  // With scenes, a sentence one tab shows and another does not keeps its place unseen, so the tab
-  // does not move between them
-  says.hidden = explains && !state.scenes.length;
-  says.style.visibility = explains ? "hidden" : "";
-
-  var again = box.querySelector("button.again");
-  var head = again && again.parentNode;
-  if (!head) return;
-  head.removeAttribute("style");
-  head.className = "soundhead";
-  // The screens' toggle, drawn here as well since not every page has the screens
-  var loop = document.createElement("button");
-  loop.type = "button";
-  // A scene playing Always on's sound shows Always on's loop, greyed
   var under = soundUnder();
-  var looping = under ? state.always.body.soundLoop : state.soundLoop && state.sound;
-  loop.className = "stoggle" + (looping ? " on" : "") + (under ? " frozen" : "");
-  loop.innerHTML = "<span aria-hidden='true'>&#8635;</span> Loop";
-  loop.title = under ? "Set on the Always on tab" : again.title;
-  loop.disabled = !state.sound;
-  loop.onclick = function () {
-    state.soundLoop = !state.soundLoop;
-    draw();
-  };
-  head.replaceChild(loop, again);
-
-  var quiet = row && row.querySelector(".sound.quiet");
-  if (!quiet) return;
-  // Nothing writes no sound for the scene, so Always on's plays through where it has one, as
-  // Nothing does on the lights
-  var nothing = document.createElement("div");
-  nothing.className = "card nothing small" + (quiet.classList.contains("picked") ? " picked" : "");
-  nothing.title = canSilence() ? "Play nothing of this scene's own" : "Play no sound";
-  nothing.innerHTML = "<div class='face'></div><div class='name'>Nothing</div>";
-  nothing.onclick = quiet.onclick;
-  head.appendChild(nothing);
-  row.removeChild(quiet);
-
-  // Silence, `audio: none`, is the scene choosing no sound over Always on's. It is a small card at
-  // the end of the first heading, as Off is in the screens' gallery, or on a line of its own where
-  // there are no headings. Where there is nothing to silence it keeps its place unseen, so the tab
-  // does not move between scenes
-  var silence = document.createElement("div");
-  if (!canSilence()) silence.style.visibility = "hidden";
-  silence.className = "card nothing small" + (state.soundOff ? " picked" : "");
-  silence.title = "Play no sound in this scene";
-  // Its face is a sound with nothing in it, drawn as a tile draws a near-silent file
-  silence.innerHTML = "<div class='face silenceface'></div><div class='name'>Silence</div>";
-  silence.querySelector(".face").appendChild(soundOutline(silentBars()));
-  silence.onclick = function () {
-    state.sound = null;
-    state.soundKept = null;
-    state.soundLoop = false;
-    state.soundVolume = 100;
-    state.soundOff = true;
-    draw();
-  };
-  var line = document.createElement("div");
-  line.className = "offhead";
-  var first = row.querySelector(".foldhead");
-  if (first) row.insertBefore(line, first);
-  else row.insertBefore(line, row.firstChild);
-  if (first) line.appendChild(first);
-  line.appendChild(silence);
+  var sentence = soundSentence(under);
+  var explains = /^(one WAV|plays)/.test(sentence);
+  var tip = explains ? sentence.charAt(0).toUpperCase() + sentence.slice(1) : null;
+  replace(soundTab,
+    h("p", {hidden: explains && !state.scenes.length, "data-unseen": explains}, sentence),
+    playingLine(under),
+    soundGroups(tip));
 }
 
-// What the parts after this one add to the Sound tab once its tiles are made
-export var soundSteps = [];
+function repeatMark() {
+  return h("svg:svg", {viewBox: "0 0 16 16", "aria-hidden": "true"},
+    h("svg:path", {d: "M3 7a5 5 0 0 1 9-3M13 9a5 5 0 0 1-9 3"}),
+    h("svg:path", {d: "M12 1v3.5H8.5M4 15v-3.5h3.5"}));
+}
 
-// The tab's swatch is the shape of the sound playing, or silence
 tabSwatches.soundPanel = function (swatch) {
-  swatch.textContent = "";
   swatch.className = "accswatch soundswatch";
   var under = soundUnder();
-  // The scene's Silence is the flat line its card shows
-  if (state.soundOff) {
-    swatch.appendChild(soundOutline(silentBars()));
-    swatch.title = "silence";
-    return;
-  }
   var info = state.sound ? state.soundInfo[state.sound] : under ? state.soundInfo[under] : null;
-  if (!info) {
-    swatch.classList.add("silent");
+  if (state.soundOff) {
+    replace(swatch, soundOutline(silentBars()));
+    swatch.title = "silence";
+  } else if (!info) {
+    replace(swatch);
+    swatch.dataset.shows = "nothing";
     swatch.title = under ? "Always on's " + nameShown(under) : "nothing";
-    return;
-  }
-  // Always on's sound is drawn faded, as its looks are on the lamps
-  if (under) {
-    swatch.appendChild(soundOutline(info.bars));
-    swatch.classList.add("under");
+  } else if (under) {
+    replace(swatch, soundOutline(info.bars));
+    swatch.dataset.shows = "under";
     swatch.title = "Always on's " + nameShown(under);
-    return;
+  } else {
+    replace(swatch, soundOutline(info.bars), state.soundLoop ? repeatMark() : null);
+    swatch.title = nameShown(state.sound) + (state.soundLoop ? ", on repeat" : "") +
+                   (state.soundVolume < 100 ? ", " + state.soundVolume + "% volume" : "");
   }
-  swatch.appendChild(soundOutline(info.bars));
-  // On repeat, the Sound section's one setting, as a loop in the preview's corner
-  if (state.soundLoop) {
-    var mark = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    mark.setAttribute("viewBox", "0 0 16 16");
-    mark.setAttribute("class", "repeatmark");
-    mark.innerHTML = "<path d='M3 7a5 5 0 0 1 9-3M13 9a5 5 0 0 1-9 3' fill='none' " +
-                     "stroke='currentColor' stroke-width='2' stroke-linecap='round'/>" +
-                     "<path d='M12 1v3.5H8.5M4 15v-3.5h3.5' fill='none' stroke='currentColor' " +
-                     "stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/>";
-    swatch.appendChild(mark);
-    swatch.classList.add("repeats");
-  }
-  swatch.title = nameShown(state.sound) + (state.soundLoop ? ", on repeat" : "") +
-                 (state.soundVolume < 100 ? ", " + state.soundVolume + "% volume" : "");
 };
 
-// Under the tab's name, the kind of sound playing, which a tone will join once the board
-// plays one. The file's name is the Sound section's to say
 function kindUnderName() {
   var tab = document.querySelector("#ledTabs .ledtab[data-panel=soundPanel]");
   if (!tab || tab.querySelector(".tabname")) return;
-  var named = document.createElement("span");
-  named.className = "tabname";
-  named.appendChild(tab.querySelector("b"));
-  var kind = document.createElement("small");
-  kind.className = "tabunder";
-  kind.textContent = state.sound || state.soundKept ? "wav" : state.soundOff ? "silence"
-                   : soundUnder() ? "Always on" : "nothing";
-  named.appendChild(kind);
-  tab.insertBefore(named, tab.firstChild);
+  var kind = state.sound || state.soundKept ? "wav" : state.soundOff ? "silence"
+           : soundUnder() ? "Always on" : "nothing";
+  tab.prepend(h("span", {class: "tabname"}, tab.querySelector("b"),
+                h("small", {class: "tabunder"}, kind)));
 }
 
 drawSteps.after.push(function () {
@@ -659,17 +530,8 @@ drawSteps.after.push(function () {
   renderSound();
 });
 
-(function () {
-  var panel = document.createElement("details");
-  panel.className = "panel";
-  panel.id = "soundPanel";
-  panel.open = true;
-  panel.innerHTML = "<summary>Sound</summary>" +
-                    "<p class='says soundsays' id='soundSays'></p>" +
-                    "<div id='sound'></div>";
-  var after = document.getElementById(TAB_PANELS[TAB_PANELS.length - 1]);
-  after.parentNode.insertBefore(panel, after.nextSibling);
-}());
+document.getElementById(TAB_PANELS[TAB_PANELS.length - 1]).after(
+  h("details", {class: "panel", id: "soundPanel", open: true}, h("summary", {}, "Sound"), soundTab));
 
 TAB_NAMES.soundPanel = "Sound";
 TAB_PANELS.push("soundPanel");
