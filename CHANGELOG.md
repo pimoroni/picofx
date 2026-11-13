@@ -28,6 +28,7 @@
 * Add `sensor=`, taking `ANALOG`, `PIR` or `IR` from the new `sensor` module, and `sensor` handing back what it built
 * Add `boot_taps()`, counting presses caught by interrupt so a quick tap is not missed
 * Add the `timing` module, with `Pacer` holding a loop to a rate and `Roller` saying when something is next due
+* Add `volume` to the WAV player, for tones and 16-bit WAVs
 * The WAV player fades tones and 16-bit WAVs in and out, resumes from `position()`, and turns the amplifier off while silent
 * The multi sensor stick's accelerometer and the QwSTPad are frozen into the firmware
 * A board that fails partway through being built hands back what it had claimed
