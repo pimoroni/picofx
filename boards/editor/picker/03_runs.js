@@ -5,9 +5,8 @@ import {lampUnder, namesOf} from "./04_scenes.js";
 import {
   START_MOODS, livePlay, sectionLines, spoken, startColour, stretchWash, stripSelector, targetFor
 } from "./05_effects.js";
-import {lampsMovable} from "./07_board.js";
-import {canEdit, heldOutput, noArrow, setupOn} from "./08_setup.js";
-import {breakOut, bringForward, moveLamp, rejoin} from "./09_wiring.js";
+import {heldOutput, setupOn} from "./08_setup.js";
+import {renderWiringRun} from "./09_wiring.js";
 import {renderPreview} from "./18_drive.js";
 import {keptLights, keptNow} from "./27_readback.js";
 import {renderStretches} from "./31_stretch_bar.js";
@@ -38,10 +37,6 @@ export var OUTPUTS = BOARD.outputs.map(function (output) {
 export var MONO_FIRST = OUTPUTS.length > 0 && OUTPUTS[0].mono;
 // The corner cut into a broken-out lamp, saying which of an output's three drives it
 export var CHANNEL_INKS = ["#d63a2a", "#23a55a", "#2f76d9"];
-
-// Every lamp on the page, by the output it belongs to, so pointing at one reaches the
-// others without the page being drawn again
-var kinOf = {};
 
 // A colour output is one lamp or three, and nothing between: the adapter brings all three
 // channels out or it is not fitted. Two channels playing the same thing are two lamps in
@@ -81,7 +76,7 @@ export function placesOf(out) {
   return CHANNELS.map(function (letter, c) { return {out: out, channel: c}; });
 }
 
-function sameLamp(a, b) { return a.out === b.out && a.channel === b.channel; }
+export function sameLamp(a, b) { return a.out === b.out && a.channel === b.channel; }
 
 function placeOf(lamp) {
   for (var i = 0; i < order.length; i++) {
@@ -115,7 +110,7 @@ export function widthOf(section) { return section.to - section.from + 1; }
 export function isChannel(lamp) { return !lamp.colour && !OUTPUTS[lamp.out].mono; }
 
 // What one lamp is called, in the words the file uses
-function selectorFor(lamp) {
+export function selectorFor(lamp) {
   if (lamp.run) return lamp.run.name + (lamp.at + 1);
   var name = OUTPUTS[lamp.out].name;
   return isChannel(lamp) ? name + "." + CHANNELS[lamp.channel] : name;
@@ -664,7 +659,7 @@ function litUnder(run, which, lamp) {
 }
 
 // What a lamp's tip says after its name where the scene plays nothing on it
-function underSaid(run, which) {
+export function underSaid(run, which) {
   var under = lampUnder(run.name, which);
   if (under && under.always) return ", playing " + lookNamed(under.always.look).name +
                                     " from Always on";
@@ -721,8 +716,6 @@ export function inkAt(lit) {
 // ---- the gallery, played on the chosen stretch --------------------------------------------
 
 export var MIDDLING = {pace: 0.5, mood: 0.5, colour: "#ffffff"};
-var carrying_lamp = null;
-
 // A look given to a stretch. A line kept as written that already plays some of its lights is
 // asked about first, since the board refuses a light set twice: agreed, the kept lines go;
 // declined, nothing changes. A strip not fitted takes no look, and a new look starts in its
@@ -804,140 +797,10 @@ export function stretchFor(run, isMono) {
 
 // ---- the run: lamps left to right, an output's own kept together --------------------------
 
-function renderRun(where, run) {
-  var box = document.getElementById(where);
-  box.textContent = "";
-  var lamps = document.createElement("div");
-  lamps.className = "lamps";
-  var faces = [];
-  var group = null;
-  var groupOut = -1;
-
-  run.lamps.forEach(function (lamp, at) {
-    // An output's lamps stay together, so the connector they share is still one thing.
-    // Its number and, where there is one, the arrow it crosses on sit in a column of
-    // their own, so neither ever comes between two lamps
-    if (lamp.out !== groupOut) {
-      group = outputGroup(lamp);
-      lamps.appendChild(group);
-      groupOut = lamp.out;
-    }
-    var mine = sectionAt(run, at);
-    var one = document.createElement("div");
-    // A mono output's lamp is one light, with no channel's corner and no kin
-    one.className = "lamp" + (run === active && mine === run.picked ? " ringed" : "") +
-                    (lamp.colour ? " colourlamp" : isChannel(lamp) ? " chan" : " chan single");
-    if (!lamp.colour && isChannel(lamp)) {
-      one.style.setProperty("--chan", CHANNEL_INKS[lamp.channel]);
-      // Which three would gather if this output were put back to one colour lamp, which
-      // is the question being asked whenever one of them is pointed at
-      (kinOf[lamp.out] = kinOf[lamp.out] || []).push(one);
-      one.onmouseenter = function () { showKin(lamp.out, true); };
-      one.onmouseleave = function () { showKin(lamp.out, false); };
-    }
-    var playing = lookNamed(run.sections[mine].look);
-    one.title = selectorFor(lamp) + (playing ? ", playing " + playing.name : underSaid(run, at));
-    one.onclick = function () {
-      pick(run, mine);
-      draw();
-    };
-    takesPlace(one, lamp);
-    var face = document.createElement("i");
-    one.appendChild(face);
-    var said = document.createElement("b");
-    said.textContent = shortName(lamp);
-    one.appendChild(said);
-    faces.push(face);
-    group.appendChild(one);
-  });
-
-  box.appendChild(lamps);
-  paintsFaces(run, faces);
-}
-
-function paintsFaces(run, faces) {
-  painters.push({run: run, paint: function (all) {
-    faces.forEach(function (face, at) {
-      var one = all[at] || {level: 0, ink: "#e4e0d9"};
-      face.style.background = one.nothing ? "#2a2d30" : inkAt(one);
-      face.parentNode.classList.toggle("unset", !!one.unset);
-      face.style.boxShadow = one.level > 0.05
-        ? "inset 0 0 0 1px rgba(0,0,0,.2), 0 0 " + (3 + one.level * 8).toFixed(1) +
-          "px rgba(255,217,160," + (one.level * 0.5).toFixed(2) + ")"
-        : "inset 0 0 0 1px rgba(0,0,0,.2)";
-    });
-  }});
-}
-
-// One output's lamps, kept together. Every lamp already says which output and channel
-// it is, so the group carries no number of its own: it is a space in the run and the
-// place the arrow appears when the output is pointed at
-function outputGroup(lamp) {
-  var group = document.createElement("div");
-  group.className = "outgroup" + (lamp.colour ? " whole" : "");
-  group.appendChild(crossing(lamp.out, lamp.colour));
-  return group;
-}
-
-// A lamp is dragged to where it sits on the build. A colour output is one lamp so it
-// moves whole; a broken-out one moves a channel at a time, since its three LEDs are
-// three separate things once the adapter is on
-function takesPlace(node, lamp) {
-  var me = {out: lamp.out, channel: lamp.colour ? null : lamp.channel};
-  node.draggable = true;
-  node.addEventListener("dragstart", function (event) {
-    carrying_lamp = me;
-    event.dataTransfer.effectAllowed = "move";
-    event.dataTransfer.setData("text/plain", shortName(lamp));
-    node.classList.add("carried");
-  });
-  node.addEventListener("dragend", function () {
-    carrying_lamp = null;
-    draw();
-  });
-  // Put down on a lamp's right half, the carried one goes after it, which is the only way
-  // to reach the far end of the run
-  function after(event) {
-    var box = node.getBoundingClientRect();
-    return event.clientX > box.left + box.width / 2;
-  }
-  node.addEventListener("dragover", function (event) {
-    if (!carrying_lamp || sameLamp(carrying_lamp, me)) return;
-    event.preventDefault();
-    node.classList.add("landing");
-    node.classList.toggle("after", after(event));
-  });
-  node.addEventListener("dragleave", function () { node.classList.remove("landing", "after"); });
-  node.addEventListener("drop", function (event) {
-    event.preventDefault();
-    node.classList.remove("landing", "after");
-    if (!carrying_lamp || sameLamp(carrying_lamp, me)) return;
-    var carried = carrying_lamp;
-    carrying_lamp = null;
-    moveLamp({from: carried, to: me, after: after(event)});
-  });
-  if (!lampsMovable()) node.draggable = false;
-  // Every lamp can be found by what it is, which is what the lines and the slide go by
-  var key = lampKey(me);
-  node.dataset.key = key;
-  node.addEventListener("mouseenter", function () { bringForward([key], true); });
-  node.addEventListener("mouseleave", function () { bringForward([key], false); });
-}
-
 // A lamp put down beside another, before it or after it, taking that place in the build
 export function placeLamp(move) {
   var moved = order.splice(placeOf(move.from), 1)[0];
   order.splice(placeOf(move.to) + (move.after ? 1 : 0), 0, moved);
-}
-
-// Lighting an output's three channels, each at its own edge and in its own colour. The
-// arrow that gathers them shows on every group holding one of the three, so what would
-// come back is visible before anything is pressed
-function showKin(out, on) {
-  (kinOf[out] || []).forEach(function (node) {
-    node.classList.toggle("kin", on);
-    if (node.parentNode) node.parentNode.classList.toggle("kin", on);
-  });
 }
 
 // ---- the bar: one cell per stretch, cut between them --------------------------------------
@@ -949,31 +812,6 @@ export function washFor(run, section, look) {
 }
 
 // ---- crossing from one side to the other ---------------------------------------------------
-
-var RIGHT = "<path d='M3 8 H12'/><path d='M8.5 4.5 L12 8 L8.5 11.5'/>";
-var LEFT = "<path d='M13 8 H4'/><path d='M7.5 4.5 L4 8 L7.5 11.5'/>";
-
-// The one act there is, said as a direction: a colour output crosses to the mono side and
-// becomes three mono lights, and those three cross back as one colour output. It shows only
-// where the wiring can be changed, in the board's colour, and only on an output that breaks out
-function crossing(out, colour) {
-  if (!canEdit("outPanel") || OUTPUTS[out].mono || !OUTPUTS[out].breaks) return noArrow();
-  var made = document.createElement("button");
-  made.className = "cross boardarrow";
-  var says = colour
-    ? "split " + outputSaid(out) + " into three mono lights"
-    : "rejoin " + outputSaid(out) + " as one colour light";
-  made.title = says;
-  made.setAttribute("aria-label", says);
-  made.innerHTML = "<svg viewBox='0 0 16 16' width='12' height='12' fill='none' " +
-                   "stroke='currentColor' stroke-width='1.7' stroke-linecap='round' " +
-                   "stroke-linejoin='round'>" + (colour === MONO_FIRST ? LEFT : RIGHT) + "</svg>";
-  made.onclick = function (event) {
-    event.stopPropagation();
-    if (colour) breakOut(out); else rejoin(out);
-  };
-  return made;
-}
 
 // ---- the rows around the bar ---------------------------------------------------------------
 
@@ -1035,11 +873,10 @@ export function draw() {
   drawSteps.before.forEach(function (step) { step(); });
 
   painters = [];
-  kinOf = {};
   renderGallery();
-  renderRun("outRun", outs);
+  renderWiringRun("outRun", outs);
   renderStretches("outBar", outs);
-  renderRun("monoRun", mono);
+  renderWiringRun("monoRun", mono);
   renderStretches("monoBar", mono);
 
   // Both sides are in the one panel, so one set of settings serves whichever was last worked
@@ -1048,7 +885,6 @@ export function draw() {
   renderEditor("outChosen", active);
 
   renderPreview();
-  levelSides();
   paintAll();
 
   drawSteps.after.forEach(function (step) { step(); });
@@ -1103,19 +939,6 @@ function refocus(place) {
       // A field made as another type has no caret to place
     }
   }
-}
-
-// Each side stacks its own rows, so a run whose lamps wrap onto a second row pushes its
-// cutting and its bar below the other side's. Both runs take the height of the taller, so
-// the two sides read across whatever either is holding
-function levelSides() {
-  var both = [document.getElementById("outRun"), document.getElementById("monoRun")];
-  both.forEach(function (box) { box.style.minHeight = ""; });
-  var tallest = 0;
-  both.forEach(function (box) {
-    tallest = Math.max(tallest, box.getBoundingClientRect().height);
-  });
-  both.forEach(function (box) { box.style.minHeight = tallest + "px"; });
 }
 
 export function paintAll() {

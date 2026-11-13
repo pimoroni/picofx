@@ -64,7 +64,6 @@ main{width:100%;max-width:60rem;margin:1.4rem auto;padding:0 1.4rem;flex-grow:1}
 .frozen button,.frozen input{cursor:default}
 .holder.under{border:1px dashed #a9a49b;border-radius:8px;
  background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
-body:not(.setupall) #outRun,body:not(.setupall) #monoRun{display:none}
 
 .tools{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:.8rem 0 0;
  font-size:.85rem;color:var(--dim)}
@@ -72,21 +71,6 @@ body:not(.setupall) #outRun,body:not(.setupall) #monoRun{display:none}
  border-radius:7px;font:inherit;font-size:.85rem;text-align:center}
 .tools .gap{flex:1}
 
-.run{background:var(--panel);border:1px solid var(--line);border-radius:10px;
- padding:.8rem .7rem;margin-top:.7rem}
-.lamps{display:flex;gap:.4rem;justify-content:flex-start;flex-wrap:wrap}
-.lamp{padding:.25rem .25rem .1rem;border:1px solid var(--line);border-radius:8px;
- background:var(--panel);line-height:1;cursor:grab}
-.lamp{cursor:pointer}
-.lamp.ringed{box-shadow:0 0 0 2px var(--accent)}
-.lamp.carried{opacity:.35}
-.lamp.landing{border-color:var(--accent);box-shadow:-2px 0 0 var(--accent)}
-.lamp i{display:block;width:1.5rem;height:1.5rem;border-radius:50%;
- box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
-.lamp.unset{border-style:dashed;border-color:#a9a49b;
- background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
-.lamp b{display:block;font:400 .66rem/1.6 system-ui,sans-serif;color:var(--dim);
- text-align:center}
 
 .gallery-head{display:flex;align-items:baseline;gap:.6rem;margin:1.5rem 0 .5rem;
  font:600 1.02rem system-ui,sans-serif}
@@ -135,24 +119,8 @@ footer nav a:hover{border-color:var(--accent);color:var(--accent)}
 footer .company{margin:.9rem 0 0;padding-top:.75rem;border-top:1px solid #eeeae3;
  font-size:.75rem;line-height:1.6}
 
-.lamp.colourlamp i{background:#2a2d30}
-.lamp.chan b{font-size:.6rem}
 
-.lamp.chan{position:relative;overflow:hidden}
-.lamp.chan::before{content:"";position:absolute;top:0;left:0;width:0;height:0;
- border-width:.4rem;border-style:solid;
- border-color:var(--chan) transparent transparent var(--chan)}
 
-.lamp.chan.kin{outline:2px solid var(--chan);outline-offset:-1px}
-.outgroup.kin .cross{display:inline-flex}
-.outgroup{display:flex;align-items:stretch;gap:.15rem;position:relative;
- margin-right:.5rem}
-.lamps{gap:0}
-body.setupall .lamp{cursor:grab}
-body.setupall .lamp:active{cursor:grabbing}
-.lamp.carried{opacity:.35}
-.lamp.landing{box-shadow:-3px 0 0 var(--accent)}
-.lamp.landing.after{box-shadow:3px 0 0 var(--accent)}
 
 .tabs{display:flex;align-items:baseline;gap:.4rem;margin:1.4rem 0 .5rem}
 .tabs .of{font:600 1.02rem system-ui,sans-serif;margin-right:.3rem}
@@ -174,30 +142,8 @@ body.setupall .lamp:active{cursor:grabbing}
 .card.cannot{opacity:.35;cursor:default}
 .card.cannot:hover{transform:none}
 
-#sideA .lamps{justify-content:flex-start}
-#sideB .lamps{justify-content:flex-end}
-#sideB .outgroup{margin-right:0;margin-left:.15rem}
 
 
-.cross{position:absolute;top:-.45rem;width:1.2rem;height:1.2rem;padding:0;
- border-radius:50%;display:none;align-items:center;justify-content:center;z-index:2;
- color:var(--rgbout);border-color:#d9c8f5;background:var(--panel);
- box-shadow:0 1px 3px rgba(0,0,0,.12)}
-.outgroup:hover .cross{display:inline-flex}
-#sideA .cross{right:-.3rem}
-#sideB .cross{left:-.3rem}
-.cross:hover:enabled{border-color:var(--rgbout);background:#f6f1ff}
-.cross svg{display:block}
-#sides[data-mono-first] #sideB{order:-1}
-#sides[data-mono-first] #sideA{min-width:12rem}
-#sides[data-mono-first] #sideA .lamps{justify-content:flex-end}
-#sides[data-mono-first] #sideB .lamps{justify-content:flex-start}
-#sides[data-mono-first] #sideA .outgroup{margin-right:0;margin-left:.15rem}
-#sides[data-mono-first] #sideB .outgroup{margin-right:.15rem;margin-left:0}
-#sides[data-mono-first] #sideA .cross{left:-.3rem;right:auto}
-#sides[data-mono-first] #sideB .cross{right:-.3rem;left:auto}
-.lamp.chan.single::before{display:none}
-.lamp.chan.single.kin{outline:none}
 
 .tabbar{--cardheight:4.75rem;display:grid;gap:.45rem;margin:.4rem 0 .5rem;
  grid-template-columns:repeat(auto-fill,minmax(8.4rem,1fr))}
@@ -445,7 +391,6 @@ th{font-weight:600;color:var(--dim);font-size:.76rem}
 body[data-pageway] #looks>.tabs:empty{display:none}
 body[data-pageway] #looks>.shelf.bare{margin-top:0}
 
-.strip .lamps{gap:.18rem}
 
 
 .keptlines{margin:.6rem 0;padding:.5rem .7rem;border:1px dashed var(--line);border-radius:8px;
@@ -863,8 +808,6 @@ body.scenesintab #looks>.shelf{margin-top:0}
  background:rgba(255,255,255,.15);color:#fff;font:inherit;font-weight:400;
  font-size:.78rem;padding:.1rem .25rem}
 .boardchip select option{color:var(--ink)}
-.cross.boardarrow{color:var(--boardOuts);border-color:var(--boardOuts)}
-#sides.unnamed .run{margin-top:0}
 
 body.setupall #tabs,body.setupall #sceneTabRow,
 body.setupall #looks,body.setupall [id$=Cut],body.setupall [id$=Bar],
@@ -880,40 +823,7 @@ body.setupall #soundPanel{opacity:.35;pointer-events:none}
  background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 3px,#e0dbd2 3px,#e0dbd2 6px)}
 .soundsays{margin:0 0 .8rem}
 
-#outPanel.wired{position:relative}
-#outPanel.wired .sides{position:relative;z-index:1}
-#outPanel.wired #outCut,#outPanel.wired #outBar,#outPanel.wired #monoCut,
-#outPanel.wired #monoBar{display:none}
-.wireconnectors{display:flex;justify-content:space-between;gap:.5rem;margin:2.8rem 0 0;
- position:relative;z-index:1;background:#2b3036;border-radius:6px;
- padding:.35rem .45rem .2rem}
-.wireconnector{padding:0 .3rem;cursor:default}
-.wirepins{display:flex;gap:.35rem;justify-content:center}
-.wirepin{display:block;width:.8rem;height:.45rem;border-radius:2px}
-.wirepin.whole{width:2.9rem;background:#cfc8bc}
-.wirepin.single{width:1.4rem;background:#cfc8bc}
-.wireconnector b{display:block;text-align:center;color:#a7a197;
- font:600 .66rem/1.4 system-ui,sans-serif}
-.wireconnector:hover b{color:#fff}
-svg.wirelines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
- overflow:visible;z-index:2}
-svg.wirelines path{fill:none;stroke-width:1.6;opacity:.16}
-svg.wirelines path.wirehot{opacity:1;stroke-width:2.4}
-#outPanel .lamp.wirehot{outline:2px solid var(--ink);outline-offset:1px}
-.wirepin.wirehot{outline:2px solid #fff;outline-offset:1px}
-.wiresay{font-size:.78rem;color:var(--dim);margin:.8rem 0 0}
-.wiresay b{color:var(--ink)}
-body.setupall #outPanel .lamp.astray b{font-weight:700;color:var(--ink)}
-#outPanel .lamp.moving{z-index:3;position:relative;box-shadow:0 6px 16px rgba(0,0,0,.18)}
 
-#outPanel.buildorder #sides{display:none}
-#buildHolder{position:relative;z-index:1}
-#buildHolder .buildhead{font:600 .9rem system-ui,sans-serif;display:flex;
- align-items:baseline;gap:.6rem;margin:.2rem 0 .5rem}
-#buildRun{border:1px solid var(--line);border-radius:10px;padding:.7rem .8rem;
- background:var(--panel)}
-#buildRun .lamps{justify-content:center}
-#buildRun .outgroup .cross{right:-.3rem;left:auto}
 
 .accswatch{display:inline-flex;width:8rem;height:.55rem;border-radius:3px;overflow:hidden;
  align-self:center;margin-left:.2rem;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
@@ -1363,7 +1273,6 @@ body.discovermodal{overflow:hidden}
 .discoverfootsays b{font-weight:600}
 .discoverfootsays .discovernotice{margin:0}
 .discoversheetfoot .discoverprimary{padding:.55rem 1.4rem;font-size:.95rem}
-.lamp.keptlamp{outline:2px dashed var(--dim);outline-offset:2px}
 .panelhead {
   display: flex;
   align-items: center;
@@ -1485,6 +1394,303 @@ body.discovermodal{overflow:hidden}
   #outBar,
   #monoBar {
     margin-top: auto;
+  }
+}
+body:not(.setupall) .sides > .side > .run {
+  display: none;
+}
+
+.sides {
+  align-items: stretch;
+
+  > .side > .run {
+    flex: 1 0 auto;
+    width: 100%;
+    margin-bottom: .7rem;
+    padding: .8rem .7rem;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--panel);
+  }
+
+  &[data-unnamed] > .side > .run {
+    margin-top: 0;
+  }
+}
+
+.wiringrun {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  #sideB & {
+    justify-content: flex-end;
+  }
+
+  [data-mono-first] #sideA & {
+    justify-content: flex-end;
+  }
+
+  [data-mono-first] #sideB & {
+    justify-content: flex-start;
+  }
+
+  > li {
+    position: relative;
+    display: flex;
+    margin-right: .5rem;
+
+    &:hover .cross,
+    &[data-kin] .cross {
+      display: inline-flex;
+    }
+
+    > ol {
+      display: flex;
+      align-items: stretch;
+      gap: .15rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+  }
+
+  #sideB & > li,
+  [data-mono-first] #sideA & > li {
+    margin-right: 0;
+    margin-left: .15rem;
+  }
+
+  li[data-key] {
+    position: relative;
+    overflow: hidden;
+    padding: .25rem .25rem .1rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    line-height: 1;
+    cursor: grab;
+
+    &:active {
+      cursor: grabbing;
+    }
+
+    i {
+      display: block;
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+      background: #2a2d30;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2);
+    }
+
+    small {
+      display: block;
+      font: 400 .66rem/1.6 system-ui, sans-serif;
+      color: var(--dim);
+      text-align: center;
+    }
+
+    &[data-channel] {
+      small {
+        font-size: .6rem;
+      }
+
+      &::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        border: .4rem solid;
+        border-color: var(--chan) transparent transparent var(--chan);
+      }
+    }
+
+    &[data-unset] {
+      border-style: dashed;
+      border-color: #a9a49b;
+      background: repeating-linear-gradient(45deg, #f0eeea, #f0eeea 6px, #e4e0d9 6px, #e4e0d9 12px);
+    }
+
+    &[data-carried] {
+      opacity: .35;
+    }
+
+    &[data-landing=before] {
+      box-shadow: -3px 0 0 var(--accent);
+    }
+
+    &[data-landing=after] {
+      box-shadow: 3px 0 0 var(--accent);
+    }
+
+    &[data-hot] {
+      outline: 2px solid var(--ink);
+      outline-offset: 1px;
+    }
+
+    &[data-astray] small {
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    &[data-moving] {
+      z-index: 3;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, .18);
+    }
+
+    &[data-kept] {
+      outline: 2px dashed var(--dim);
+      outline-offset: 2px;
+    }
+  }
+
+  [data-kin] li[data-channel] {
+    outline: 2px solid var(--chan);
+    outline-offset: -1px;
+  }
+
+  .cross {
+    position: absolute;
+    top: -.45rem;
+    right: -.3rem;
+    z-index: 2;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.2rem;
+    height: 1.2rem;
+    padding: 0;
+    border-color: var(--boardOuts);
+    border-radius: 50%;
+    background: var(--panel);
+    color: var(--boardOuts);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .12);
+
+    &:hover:enabled {
+      background: #f6f1ff;
+    }
+
+    svg {
+      display: block;
+    }
+  }
+
+  #sideB & .cross,
+  [data-mono-first] #sideA & .cross {
+    right: auto;
+    left: -.3rem;
+  }
+
+  [data-mono-first] #sideB & .cross {
+    right: -.3rem;
+    left: auto;
+  }
+}
+
+#outPanel[data-wired] {
+  position: relative;
+
+  .sides {
+    position: relative;
+    z-index: 1;
+  }
+
+  #outBar,
+  #monoBar {
+    display: none;
+  }
+}
+
+#wiringRow {
+  .connectors {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: space-between;
+    gap: .5rem;
+    margin: calc(2.8rem + var(--reach, 0px)) 0 0;
+    padding: .35rem .45rem .2rem;
+    border-radius: 6px;
+    background: #2b3036;
+    list-style: none;
+
+    li {
+      padding: 0 .3rem;
+      cursor: default;
+
+      &:hover small {
+        color: #fff;
+      }
+    }
+
+    span {
+      display: flex;
+      justify-content: center;
+      gap: .35rem;
+    }
+
+    i {
+      display: block;
+      width: .8rem;
+      height: .45rem;
+      border-radius: 2px;
+
+      &[data-shape=whole] {
+        width: 2.9rem;
+        background: #cfc8bc;
+      }
+
+      &[data-shape=single] {
+        width: 1.4rem;
+        background: #cfc8bc;
+      }
+
+      &[data-hot] {
+        outline: 2px solid #fff;
+        outline-offset: 1px;
+      }
+    }
+
+    small {
+      display: block;
+      color: #a7a197;
+      font: 600 .66rem/1.4 system-ui, sans-serif;
+      text-align: center;
+    }
+  }
+
+  p {
+    margin: .8rem 0;
+    font-size: .78rem;
+    color: var(--dim);
+
+    b {
+      color: var(--ink);
+    }
+  }
+}
+
+.wirelines {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+
+  path {
+    fill: none;
+    stroke-width: 1.6;
+    opacity: .16;
+
+    &[data-hot] {
+      opacity: 1;
+      stroke-width: 2.4;
+    }
   }
 }
 .stretchview {
@@ -3305,10 +3511,6 @@ var MONO_FIRST = OUTPUTS.length > 0 && OUTPUTS[0].mono;
 // The corner cut into a broken-out lamp, saying which of an output's three drives it
 var CHANNEL_INKS = ["#d63a2a", "#23a55a", "#2f76d9"];
 
-// Every lamp on the page, by the output it belongs to, so pointing at one reaches the
-// others without the page being drawn again
-var kinOf = {};
-
 // A colour output is one lamp or three, and nothing between: the adapter brings all three
 // channels out or it is not fitted. Two channels playing the same thing are two lamps in
 // one stretch, which is sectioning and not wiring. A mono output is held as broken out for good
@@ -3987,8 +4189,6 @@ function inkAt(lit) {
 // ---- the gallery, played on the chosen stretch --------------------------------------------
 
 var MIDDLING = {pace: 0.5, mood: 0.5, colour: "#ffffff"};
-var carrying_lamp = null;
-
 // A look given to a stretch. A line kept as written that already plays some of its lights is
 // asked about first, since the board refuses a light set twice: agreed, the kept lines go;
 // declined, nothing changes. A strip not fitted takes no look, and a new look starts in its
@@ -4070,140 +4270,10 @@ function stretchFor(run, isMono) {
 
 // ---- the run: lamps left to right, an output's own kept together --------------------------
 
-function renderRun(where, run) {
-  var box = document.getElementById(where);
-  box.textContent = "";
-  var lamps = document.createElement("div");
-  lamps.className = "lamps";
-  var faces = [];
-  var group = null;
-  var groupOut = -1;
-
-  run.lamps.forEach(function (lamp, at) {
-    // An output's lamps stay together, so the connector they share is still one thing.
-    // Its number and, where there is one, the arrow it crosses on sit in a column of
-    // their own, so neither ever comes between two lamps
-    if (lamp.out !== groupOut) {
-      group = outputGroup(lamp);
-      lamps.appendChild(group);
-      groupOut = lamp.out;
-    }
-    var mine = sectionAt(run, at);
-    var one = document.createElement("div");
-    // A mono output's lamp is one light, with no channel's corner and no kin
-    one.className = "lamp" + (run === active && mine === run.picked ? " ringed" : "") +
-                    (lamp.colour ? " colourlamp" : isChannel(lamp) ? " chan" : " chan single");
-    if (!lamp.colour && isChannel(lamp)) {
-      one.style.setProperty("--chan", CHANNEL_INKS[lamp.channel]);
-      // Which three would gather if this output were put back to one colour lamp, which
-      // is the question being asked whenever one of them is pointed at
-      (kinOf[lamp.out] = kinOf[lamp.out] || []).push(one);
-      one.onmouseenter = function () { showKin(lamp.out, true); };
-      one.onmouseleave = function () { showKin(lamp.out, false); };
-    }
-    var playing = lookNamed(run.sections[mine].look);
-    one.title = selectorFor(lamp) + (playing ? ", playing " + playing.name : underSaid(run, at));
-    one.onclick = function () {
-      pick(run, mine);
-      draw();
-    };
-    takesPlace(one, lamp);
-    var face = document.createElement("i");
-    one.appendChild(face);
-    var said = document.createElement("b");
-    said.textContent = shortName(lamp);
-    one.appendChild(said);
-    faces.push(face);
-    group.appendChild(one);
-  });
-
-  box.appendChild(lamps);
-  paintsFaces(run, faces);
-}
-
-function paintsFaces(run, faces) {
-  painters.push({run: run, paint: function (all) {
-    faces.forEach(function (face, at) {
-      var one = all[at] || {level: 0, ink: "#e4e0d9"};
-      face.style.background = one.nothing ? "#2a2d30" : inkAt(one);
-      face.parentNode.classList.toggle("unset", !!one.unset);
-      face.style.boxShadow = one.level > 0.05
-        ? "inset 0 0 0 1px rgba(0,0,0,.2), 0 0 " + (3 + one.level * 8).toFixed(1) +
-          "px rgba(255,217,160," + (one.level * 0.5).toFixed(2) + ")"
-        : "inset 0 0 0 1px rgba(0,0,0,.2)";
-    });
-  }});
-}
-
-// One output's lamps, kept together. Every lamp already says which output and channel
-// it is, so the group carries no number of its own: it is a space in the run and the
-// place the arrow appears when the output is pointed at
-function outputGroup(lamp) {
-  var group = document.createElement("div");
-  group.className = "outgroup" + (lamp.colour ? " whole" : "");
-  group.appendChild(crossing(lamp.out, lamp.colour));
-  return group;
-}
-
-// A lamp is dragged to where it sits on the build. A colour output is one lamp so it
-// moves whole; a broken-out one moves a channel at a time, since its three LEDs are
-// three separate things once the adapter is on
-function takesPlace(node, lamp) {
-  var me = {out: lamp.out, channel: lamp.colour ? null : lamp.channel};
-  node.draggable = true;
-  node.addEventListener("dragstart", function (event) {
-    carrying_lamp = me;
-    event.dataTransfer.effectAllowed = "move";
-    event.dataTransfer.setData("text/plain", shortName(lamp));
-    node.classList.add("carried");
-  });
-  node.addEventListener("dragend", function () {
-    carrying_lamp = null;
-    draw();
-  });
-  // Put down on a lamp's right half, the carried one goes after it, which is the only way
-  // to reach the far end of the run
-  function after(event) {
-    var box = node.getBoundingClientRect();
-    return event.clientX > box.left + box.width / 2;
-  }
-  node.addEventListener("dragover", function (event) {
-    if (!carrying_lamp || sameLamp(carrying_lamp, me)) return;
-    event.preventDefault();
-    node.classList.add("landing");
-    node.classList.toggle("after", after(event));
-  });
-  node.addEventListener("dragleave", function () { node.classList.remove("landing", "after"); });
-  node.addEventListener("drop", function (event) {
-    event.preventDefault();
-    node.classList.remove("landing", "after");
-    if (!carrying_lamp || sameLamp(carrying_lamp, me)) return;
-    var carried = carrying_lamp;
-    carrying_lamp = null;
-    moveLamp({from: carried, to: me, after: after(event)});
-  });
-  if (!lampsMovable()) node.draggable = false;
-  // Every lamp can be found by what it is, which is what the lines and the slide go by
-  var key = lampKey(me);
-  node.dataset.key = key;
-  node.addEventListener("mouseenter", function () { bringForward([key], true); });
-  node.addEventListener("mouseleave", function () { bringForward([key], false); });
-}
-
 // A lamp put down beside another, before it or after it, taking that place in the build
 function placeLamp(move) {
   var moved = order.splice(placeOf(move.from), 1)[0];
   order.splice(placeOf(move.to) + (move.after ? 1 : 0), 0, moved);
-}
-
-// Lighting an output's three channels, each at its own edge and in its own colour. The
-// arrow that gathers them shows on every group holding one of the three, so what would
-// come back is visible before anything is pressed
-function showKin(out, on) {
-  (kinOf[out] || []).forEach(function (node) {
-    node.classList.toggle("kin", on);
-    if (node.parentNode) node.parentNode.classList.toggle("kin", on);
-  });
 }
 
 // ---- the bar: one cell per stretch, cut between them --------------------------------------
@@ -4215,31 +4285,6 @@ function washFor(run, section, look) {
 }
 
 // ---- crossing from one side to the other ---------------------------------------------------
-
-var RIGHT = "<path d='M3 8 H12'/><path d='M8.5 4.5 L12 8 L8.5 11.5'/>";
-var LEFT = "<path d='M13 8 H4'/><path d='M7.5 4.5 L4 8 L7.5 11.5'/>";
-
-// The one act there is, said as a direction: a colour output crosses to the mono side and
-// becomes three mono lights, and those three cross back as one colour output. It shows only
-// where the wiring can be changed, in the board's colour, and only on an output that breaks out
-function crossing(out, colour) {
-  if (!canEdit("outPanel") || OUTPUTS[out].mono || !OUTPUTS[out].breaks) return noArrow();
-  var made = document.createElement("button");
-  made.className = "cross boardarrow";
-  var says = colour
-    ? "split " + outputSaid(out) + " into three mono lights"
-    : "rejoin " + outputSaid(out) + " as one colour light";
-  made.title = says;
-  made.setAttribute("aria-label", says);
-  made.innerHTML = "<svg viewBox='0 0 16 16' width='12' height='12' fill='none' " +
-                   "stroke='currentColor' stroke-width='1.7' stroke-linecap='round' " +
-                   "stroke-linejoin='round'>" + (colour === MONO_FIRST ? LEFT : RIGHT) + "</svg>";
-  made.onclick = function (event) {
-    event.stopPropagation();
-    if (colour) breakOut(out); else rejoin(out);
-  };
-  return made;
-}
 
 // ---- the rows around the bar ---------------------------------------------------------------
 
@@ -4301,11 +4346,10 @@ function draw() {
   drawSteps.before.forEach(function (step) { step(); });
 
   painters = [];
-  kinOf = {};
   renderGallery();
-  renderRun("outRun", outs);
+  renderWiringRun("outRun", outs);
   renderStretches("outBar", outs);
-  renderRun("monoRun", mono);
+  renderWiringRun("monoRun", mono);
   renderStretches("monoBar", mono);
 
   // Both sides are in the one panel, so one set of settings serves whichever was last worked
@@ -4314,7 +4358,6 @@ function draw() {
   renderEditor("outChosen", active);
 
   renderPreview();
-  levelSides();
   paintAll();
 
   drawSteps.after.forEach(function (step) { step(); });
@@ -4369,19 +4412,6 @@ function refocus(place) {
       // A field made as another type has no caret to place
     }
   }
-}
-
-// Each side stacks its own rows, so a run whose lamps wrap onto a second row pushes its
-// cutting and its bar below the other side's. Both runs take the height of the taller, so
-// the two sides read across whatever either is holding
-function levelSides() {
-  var both = [document.getElementById("outRun"), document.getElementById("monoRun")];
-  both.forEach(function (box) { box.style.minHeight = ""; });
-  var tallest = 0;
-  both.forEach(function (box) {
-    tallest = Math.max(tallest, box.getBoundingClientRect().height);
-  });
-  both.forEach(function (box) { box.style.minHeight = tallest + "px"; });
 }
 
 function paintAll() {
@@ -6758,14 +6788,6 @@ function boardIcon() {
 
 // ---- the facts, in place --------------------------------------------------------------------
 
-// Where the wiring cannot be changed an output's arrow is left out. What stands in its place
-// takes no room, as the arrow does, or each output's lamps would sit further apart outside setup
-function noArrow() {
-  var none = document.createElement("span");
-  none.style.position = "absolute";
-  return none;
-}
-
 function renderOutFacts() {
   var box = document.getElementById("outFacts");
   box.textContent = "";
@@ -6914,23 +6936,127 @@ drawSteps.after.push(function () {
   paintAll();
 });
 
-// ---- the wiring, while the board is set up ------------------------------------------------
-// In the outputs' own panel and only while the board is set up, the board's connectors along the
-// bottom, each colour output one pin and each broken-out one three, a faint line from every pin to
-// the lamp it feeds, brought forward by pointing at the lamp or the connector, a moved lamp sliding
-// to its new place, and the lamps out of the order they are wired in with their numbers in bold.
-
 var SLIDE_MS = 420;
+var RIGHT = "<path d='M3 8 H12'/><path d='M8.5 4.5 L12 8 L8.5 11.5'/>";
+var LEFT = "<path d='M13 8 H4'/><path d='M7.5 4.5 L4 8 L7.5 11.5'/>";
 
-// The connectors sit under both sides of the outputs, before their settings
+var carrying = null;
+var sliding = null;
+var unwiredSpan = null;
+
 (function () {
-  var row = document.createElement("div");
-  row.id = "wiringRow";
   var sides = document.getElementById("sides");
-  sides.parentNode.insertBefore(row, sides.nextSibling);
+  sides.parentNode.insertBefore(h("div", {id: "wiringRow"}), sides.nextSibling);
 }());
 
-// Every lamp in the order the board wires them: an output's own lamp, or its three channels
+function renderWiringRun(where, run) {
+  var box = document.getElementById(where);
+  var faces = [];
+  var groups = [];
+  run.lamps.forEach(function (lamp, at) {
+    var last = groups[groups.length - 1];
+    if (!last || last.out !== lamp.out) {
+      last = {out: lamp.out, whole: lamp.colour, lamps: []};
+      groups.push(last);
+    }
+    last.lamps.push({lamp: lamp, at: at});
+  });
+  replace(box, h("ol", {class: "wiringrun"}, groups.map(function (group) {
+    return h("li", {"data-out": group.out, "data-whole": group.whole},
+      crossing(group.out, group.whole),
+      h("ol", {}, group.lamps.map(function (one) {
+        var face = h("i");
+        faces.push(face);
+        return wiringLamp(run, one.lamp, one.at, face);
+      })));
+  })));
+  painters.push({run: run, paint: function (all) {
+    faces.forEach(function (face, at) { paintWiringFace(face, all[at]); });
+  }});
+}
+
+function wiringLamp(run, lamp, at, face) {
+  var place = {out: lamp.out, channel: lamp.colour ? null : lamp.channel};
+  var key = lampKey(place);
+  var section = run.sections[sectionAt(run, at)];
+  var playing = lookNamed(section.look);
+  var channel = !lamp.colour && isChannel(lamp);
+  var node = h("li", {"data-key": key, draggable: lampsMovable(),
+                      "data-channel": channel ? CHANNELS[lamp.channel] : null,
+                      "data-single": !lamp.colour && !channel,
+                      style: {"--chan": channel ? CHANNEL_INKS[lamp.channel] : null},
+                      title: selectorFor(lamp) + (playing ? ", playing " + playing.name : underSaid(run, at)),
+                      onmouseenter: function () {
+                        bringForward([key], true);
+                        if (channel) showKin(lamp.out, true);
+                      },
+                      onmouseleave: function () {
+                        bringForward([key], false);
+                        if (channel) showKin(lamp.out, false);
+                      },
+                      ondragstart: function (event) {
+                        carrying = place;
+                        event.dataTransfer.effectAllowed = "move";
+                        event.dataTransfer.setData("text/plain", shortName(lamp));
+                        node.dataset.carried = "";
+                      },
+                      ondragend: function () {
+                        carrying = null;
+                        draw();
+                      },
+                      ondragover: function (event) {
+                        if (!carrying || sameLamp(carrying, place)) return;
+                        event.preventDefault();
+                        node.dataset.landing = after(event) ? "after" : "before";
+                      },
+                      ondragleave: function () { delete node.dataset.landing; },
+                      ondrop: function (event) {
+                        event.preventDefault();
+                        delete node.dataset.landing;
+                        if (!carrying || sameLamp(carrying, place)) return;
+                        var carried = carrying;
+                        carrying = null;
+                        moveLamp({from: carried, to: place, after: after(event)});
+                      }},
+    face, h("small", {}, shortName(lamp)));
+
+  function after(event) {
+    var box = node.getBoundingClientRect();
+    return event.clientX > box.left + box.width / 2;
+  }
+  return node;
+}
+
+function paintWiringFace(face, lit) {
+  var one = lit || {level: 0, ink: "#e4e0d9"};
+  face.style.background = one.nothing ? "#2a2d30" : inkAt(one);
+  face.parentNode.toggleAttribute("data-unset", !!one.unset);
+  face.style.boxShadow = one.level > 0.05
+    ? "inset 0 0 0 1px rgba(0,0,0,.2), 0 0 " + (3 + one.level * 8).toFixed(1) +
+      "px rgba(255,217,160," + (one.level * 0.5).toFixed(2) + ")"
+    : "inset 0 0 0 1px rgba(0,0,0,.2)";
+}
+
+function showKin(out, on) {
+  document.querySelectorAll(".wiringrun > li[data-out='" + out + "']").forEach(function (group) {
+    group.toggleAttribute("data-kin", on);
+  });
+}
+
+function crossing(out, whole) {
+  if (!canEdit("outPanel") || OUTPUTS[out].mono || !OUTPUTS[out].breaks) return null;
+  var says = whole ? "split " + outputSaid(out) + " into three mono lights"
+                   : "rejoin " + outputSaid(out) + " as one colour light";
+  return h("button", {type: "button", class: "cross", title: says, "aria-label": says,
+                      onclick: function (event) {
+                        event.stopPropagation();
+                        if (whole) breakOut(out); else rejoin(out);
+                      }},
+    h("svg:svg", {viewBox: "0 0 16 16", width: 12, height: 12, fill: "none", stroke: "currentColor",
+                  "stroke-width": 1.7, "stroke-linecap": "round", "stroke-linejoin": "round",
+                  html: whole === MONO_FIRST ? LEFT : RIGHT}));
+}
+
 function wiredLamps() {
   var lamps = [];
   wiring.forEach(function (one, out) { lamps = lamps.concat(placesOf(out)); });
@@ -6938,8 +7064,6 @@ function wiredLamps() {
   return lamps;
 }
 
-// The board as the out-of-order rule reads it, a side of the same lamps
-// in wired order and in build order
 function wiredSide() {
   var wired = wiredLamps();
   var byKey = {};
@@ -6947,28 +7071,21 @@ function wiredSide() {
   return {wiring: wired, order: order.map(function (place) { return byKey[lampKey(place)]; })};
 }
 
-// The lamps on show
 function lampsShown() {
-  return Array.prototype.slice.call(document.querySelectorAll(
-    "#outRun .lamp[data-key], #monoRun .lamp[data-key]"));
+  return Array.prototype.slice.call(document.querySelectorAll(".wiringrun li[data-key]"));
 }
 
 function lampNode(key) {
   return lampsShown().filter(function (node) { return node.dataset.key === key; })[0] || null;
 }
 
-// A line, its lamp and its pin brought forward, or let go
 function bringForward(keys, on) {
   keys.forEach(function (key) {
     document.querySelectorAll("#outPanel [data-key='" + key + "']").forEach(function (node) {
-      node.classList.toggle("wirehot", on);
+      node.toggleAttribute("data-hot", on);
     });
   });
 }
-
-// How far the sides and what follows them run outside setup, the cutting and the bar
-// included, so the connectors can take up the same room while setting up
-var unwiredSpan = null;
 
 function sidesSpan() {
   return document.getElementById("outChosen").getBoundingClientRect().top -
@@ -6977,119 +7094,76 @@ function sidesSpan() {
 
 function renderConnectors() {
   var box = document.getElementById("wiringRow");
-  box.textContent = "";
   var old = document.getElementById("wiringLines");
-  if (old) old.parentNode.removeChild(old);
-  // A board whose outputs are its own LEDs has no wiring to show
-  document.getElementById("outPanel").classList.toggle("wired", setupOn && BOARD.wiring_order);
-  if (!setupOn || !BOARD.wiring_order) {
+  if (old) old.remove();
+  var wired = setupOn && BOARD.wiring_order;
+  document.getElementById("outPanel").toggleAttribute("data-wired", wired);
+  if (!wired) {
+    replace(box);
     unwiredSpan = sidesSpan();
     return;
   }
-
-  var row = document.createElement("div");
-  row.className = "wireconnectors";
-  wiring.forEach(function (one, out) {
-    var block = document.createElement("div");
-    block.className = "wireconnector";
-    var pins = document.createElement("div");
-    pins.className = "wirepins";
-    var keys = [];
-    // A mono output is one light on one pin, with no channel to mark
-    var single = OUTPUTS[out].mono;
-    placesOf(out).forEach(function (place) {
-      var pin = document.createElement("span");
-      var key = lampKey(place);
-      pin.className = "wirepin" + (place.channel === null ? " whole" : single ? " single" : "");
-      pin.dataset.key = key;
-      if (place.channel !== null && !single) pin.style.background = CHANNEL_INKS[place.channel];
-      pins.appendChild(pin);
-      keys.push(key);
-    });
-    block.appendChild(pins);
-    var name = document.createElement("b");
-    name.textContent = shortName({out: out, colour: true});
-    block.appendChild(name);
-    block.title = outputSaid(out) + (one.broken && !single ? ", broken out into three" : "");
-    // A pin is too small to aim at, so the connector is what is pointed at
-    block.addEventListener("mouseenter", function () { bringForward(keys, true); });
-    block.addEventListener("mouseleave", function () { bringForward(keys, false); });
-    row.appendChild(block);
-  });
-  box.appendChild(row);
-
   var side = wiredSide();
   var astray = astrayOf(side);
   astray.forEach(function (lamp) {
     var node = lampNode(lamp.key);
-    if (node) node.classList.add("astray");
+    if (node) node.dataset.astray = "";
   });
-  var said = document.createElement("p");
-  said.className = "wiresay";
-  said.innerHTML = astray.length
-    ? "<b>" + astray.length + " of " + side.order.length + "</b> lights are out of wiring " +
-      "order, numbered in bold. Hover over a light or connector to highlight its wire."
-    : "All lights are in wiring order. Hover over a light or connector to highlight its wire.";
-  box.appendChild(said);
-  // The connectors sit lower by whatever the cutting and the bar took beyond them, the
-  // lines running on down, so setting up leaves the section its size
-  row.style.marginTop = "";
+  var connectors = h("ol", {class: "connectors"}, wiring.map(function (one, out) {
+    var single = OUTPUTS[out].mono;
+    var keys = placesOf(out).map(lampKey);
+    return h("li", {title: outputSaid(out) + (one.broken && !single ? ", broken out into three" : ""),
+                    onmouseenter: function () { bringForward(keys, true); },
+                    onmouseleave: function () { bringForward(keys, false); }},
+      h("span", {}, placesOf(out).map(function (place) {
+        return h("i", {"data-key": lampKey(place),
+                       "data-shape": place.channel === null ? "whole" : single ? "single" : "channel",
+                       style: {background: place.channel !== null && !single ? CHANNEL_INKS[place.channel] : null}});
+      })),
+      h("small", {}, shortName({out: out, colour: true})));
+  }));
+  replace(box, connectors,
+    h("p", {}, astray.length
+      ? [h("b", {}, astray.length + " of " + side.order.length), " lights are out of wiring order, " +
+         "numbered in bold. Hover over a light or connector to highlight its wire."]
+      : "All lights are in wiring order. Hover over a light or connector to highlight its wire."));
   var short = unwiredSpan === null ? 0 : unwiredSpan - sidesSpan();
-  if (short > 0) row.style.marginTop = (parseFloat(getComputedStyle(row).marginTop) + short) + "px";
+  connectors.style.setProperty("--reach", Math.max(0, short) + "px");
   drawLines();
 }
 
-// Faint lines, never none: with no line at all, the lamps over a connector read as the ones
-// it feeds, which a rearranged build is not
 function drawLines() {
   var panel = document.getElementById("outPanel");
   var from = panel.getBoundingClientRect();
-  var lines = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  lines.id = "wiringLines";
-  lines.setAttribute("class", "wirelines");
-  wiredLamps().forEach(function (lamp) {
+  var paths = wiredLamps().map(function (lamp) {
     var node = lampNode(lamp.key);
-    var pin = panel.querySelector(".wirepin[data-key='" + lamp.key + "']");
-    if (!node || !pin) return;
+    var pin = panel.querySelector(".connectors i[data-key='" + lamp.key + "']");
+    if (!node || !pin) return null;
     var top = node.getBoundingClientRect();
     var bottom = pin.getBoundingClientRect();
     var start = {x: bottom.left + bottom.width / 2 - from.left, y: bottom.top - from.top};
     var end = {x: top.left + top.width / 2 - from.left, y: top.bottom - from.top};
     var rise = (start.y - end.y) / 2;
-    var path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", "M" + start.x + " " + start.y + " C" + start.x + " " +
-                      (start.y - rise) + " " + end.x + " " + (end.y + rise) + " " + end.x +
-                      " " + end.y);
-    path.dataset.key = lamp.key;
-    path.style.stroke = lamp.channel === null || OUTPUTS[lamp.out].mono ? "var(--boardOuts)"
-                                                                        : CHANNEL_INKS[lamp.channel];
-    lines.appendChild(path);
+    return h("svg:path", {"data-key": lamp.key,
+                          d: "M" + start.x + " " + start.y + " C" + start.x + " " + (start.y - rise) +
+                             " " + end.x + " " + (end.y + rise) + " " + end.x + " " + end.y,
+                          style: {stroke: lamp.channel === null || OUTPUTS[lamp.out].mono
+                                    ? "var(--boardOuts)" : CHANNEL_INKS[lamp.channel]}});
   });
-  panel.appendChild(lines);
+  panel.appendChild(h("svg:svg", {id: "wiringLines", class: "wirelines"}, paths));
 }
-
-// ---- the move shown ------------------------------------------------------------------------
-// Every lamp measured before a move and played back from its old place to its new one, the
-// one carried lifted above the rest. The drag ending draws the page again straight after
-// the drop, which would replace the lamps mid-slide, so every draw until the page is next
-// idle plays the slide from the same starting places
-
-var sliding = null;
 
 function moveLamp(move) {
   slideFrom(lampKey(move.from));
   moveLampInScenes(move);
 }
 
-// Where a lamp is within the outputs' panel. The page may scroll straight after a draw to
-// hold a section still, and a place measured within the panel moves with it
 function placeInPanel(node) {
   var box = node.getBoundingClientRect();
   var panel = document.getElementById("outPanel").getBoundingClientRect();
   return {left: box.left - panel.left, top: box.top - panel.top};
 }
 
-// Every lamp's place now, for the next draw to slide each from, the one carried lifted
 function slideFrom(carried) {
   var was = {};
   lampsShown().forEach(function (node) { was[node.dataset.key] = placeInPanel(node); });
@@ -7108,22 +7182,19 @@ function playSlide() {
     var dx = from.left - to.left;
     var dy = from.top - to.top;
     if (!dx && !dy) return;
-    if (node.dataset.key === carried) node.classList.add("moving");
+    if (node.dataset.key === carried) node.dataset.moving = "";
     node.style.transition = "none";
     node.style.transform = "translate(" + dx + "px," + dy + "px)";
     node.getBoundingClientRect();
     node.style.transition = "transform " + SLIDE_MS + "ms cubic-bezier(.2,.7,.2,1)";
     node.style.transform = "";
     window.setTimeout(function () {
-      node.classList.remove("moving");
+      delete node.dataset.moving;
       node.style.transition = "";
     }, SLIDE_MS + 40);
   });
 }
 
-// Breaking an output out, its three lamps open out of where its one stood, each sliding
-// from there to its own place; putting one back, the lamp it becomes closes in from the
-// middle of the three. The other lamps make way as they do for a move
 function breakOut(out) {
   slideFrom(null);
   var whole = sliding.was[lampKey({out: out, channel: null})];
@@ -7154,7 +7225,6 @@ drawSteps.after.push(function () {
   playSlide();
 });
 
-// The lines run between things the page has laid out, so they follow the layout
 window.addEventListener("resize", function () { if (setupOn) draw(); });
 
 // ---- the LED sections, for a page that shows one at a time ----------------------------------
@@ -13886,9 +13956,9 @@ function keptLights(run) {
 function markKeptLights() {
   [outs, mono].forEach(function (run) {
     var named = keptLights(run);
-    document.querySelectorAll("#" + (run === outs ? "out" : "mono") + "Run .lamp").forEach(function (lamp, at) {
+    document.querySelectorAll("#" + (run === outs ? "out" : "mono") + "Run li[data-key]").forEach(function (lamp, at) {
       if (!named[at]) return;
-      lamp.classList.add("keptlamp");
+      lamp.dataset.kept = "";
       lamp.title = "used by a line the picker cannot edit: " + named[at][0].text;
     });
   });

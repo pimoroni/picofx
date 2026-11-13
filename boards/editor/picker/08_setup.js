@@ -107,14 +107,6 @@ export function boardIcon() {
 
 // ---- the facts, in place --------------------------------------------------------------------
 
-// Where the wiring cannot be changed an output's arrow is left out. What stands in its place
-// takes no room, as the arrow does, or each output's lamps would sit further apart outside setup
-export function noArrow() {
-  var none = document.createElement("span");
-  none.style.position = "absolute";
-  return none;
-}
-
 function renderOutFacts() {
   var box = document.getElementById("outFacts");
   box.textContent = "";

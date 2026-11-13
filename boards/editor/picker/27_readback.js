@@ -918,9 +918,9 @@ export function keptLights(run) {
 function markKeptLights() {
   [outs, mono].forEach(function (run) {
     var named = keptLights(run);
-    document.querySelectorAll("#" + (run === outs ? "out" : "mono") + "Run .lamp").forEach(function (lamp, at) {
+    document.querySelectorAll("#" + (run === outs ? "out" : "mono") + "Run li[data-key]").forEach(function (lamp, at) {
       if (!named[at]) return;
-      lamp.classList.add("keptlamp");
+      lamp.dataset.kept = "";
       lamp.title = "used by a line the picker cannot edit: " + named[at][0].text;
     });
   });
