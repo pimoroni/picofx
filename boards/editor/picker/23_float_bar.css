@@ -74,11 +74,20 @@
   }
 
   @media (width < 40rem) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: .4rem .8rem;
     padding-inline: .8rem;
 
-    strong,
-    .where small {
+    strong {
       display: none;
+    }
+
+    .slot {
+      grid-column: 1 / -1;
+    }
+
+    .drive {
+      flex-wrap: nowrap;
     }
   }
 }

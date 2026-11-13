@@ -49,7 +49,7 @@ part fills in `screenHooks` and `discover/screens` adds to `discoverKinds`.
 
 ## Styles
 
-Nested CSS, one block per component, using the tokens in `00_page.css`'s `:root`.
+Nested CSS, one block per component, using the tokens in `00_base.css`'s `:root`.
 `00_page.css` is the old stylesheet, emptied as each region moves to its own part.
 
 ## Tests

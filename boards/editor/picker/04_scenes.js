@@ -8,11 +8,6 @@ import {TAB_NAMES} from "./11_tabs.js";
 import {renderSceneSettings} from "./20_scene_row.js";
 import {featureIcon} from "./22_program.js";
 
-// ---- scenes ---------------------------------------------------------------------------
-// The scene tabs, adding, removing and reordering them, and a scene's own settings. A scene's
-// body is how the outputs are wired and placed, and every run's cuts, what each stretch plays
-// and its steps to undo.
-
 export var state = {at: -1, always: {body: null}, scenes: []};
 
 // What each output was carried from where a stand-in took its place, which is the
@@ -339,8 +334,6 @@ function freeSceneName() {
   }
 }
 
-// What a scene's card says under its name: its time, or that it waits. The scene after is named
-// only where it is chosen, the next in order being what a time implies
 function sceneTurn(scene) {
   var after = sceneAfter(scene);
   var inOrder = state.scenes[(state.scenes.indexOf(scene) + 1) % state.scenes.length];
@@ -349,10 +342,6 @@ function sceneTurn(scene) {
                                                     : ", then " + after.name);
   return turn + (sceneRestarts(scene) && !sceneLoops(scene) ? ", from the start" : "");
 }
-
-// ---- each scene's colour and the parts it sets ----------------------------------------------
-// Each scene has a colour of its own, its tab's band and tint and its name wherever the page names
-// it, so what the page says about a scene leads back to its tab. Always on has a neutral grey
 
 // The colours of the Aye Arr Remote's number buttons, 1 to 9, from its artwork, and the rainbow
 // round its 0. Scene 1 takes button 1, so a scene's colour is the button that goes to it. Scene

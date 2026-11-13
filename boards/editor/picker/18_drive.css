@@ -53,6 +53,14 @@
       border-bottom-left-radius: 0;
     }
   }
+
+  @media (width < 40rem) {
+    gap: .4rem;
+
+    button {
+      padding-inline: .6rem;
+    }
+  }
 }
 
 .banner {
