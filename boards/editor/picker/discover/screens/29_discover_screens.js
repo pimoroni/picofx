@@ -1,11 +1,9 @@
-import {h} from "../../00_dom.js";
-import {escapeHtml} from "../../03_runs.js";
+import {h, replace} from "../../00_dom.js";
 import {OTHER_EXAMPLES, exampleSections, isExampleMedia} from "../../26_drive_files.js";
 import {openingString} from "../../26_drive_programs.js";
 import {
-  discoverBin, discoverBinBeside, discoverDivider, discoverDrawings, discoverElement,
-  discoverKinds, discoverPictureSaid, discoverPill, discoverPlaceBar, discoverThumbImage,
-  discoverThumbs
+  discoverBar, discoverBin, discoverBinBeside, discoverDivider, discoverDrawings, discoverKinds,
+  discoverPictureSaid, discoverPill, discoverThumbImage, discoverThumbs
 } from "../28_discover.js";
 import {galleryExamples, mediaNamed} from "../../screens/12_screens.js";
 import {copyDrawing, drawingInk, drawingSaid} from "../../screens/16_screen_settings.js";
@@ -17,8 +15,6 @@ import {copyDrawing, drawingInk, drawingSaid} from "../../screens/16_screen_sett
 // the rest. A board without screens has no Screens tab to add them to.
 
 galleryExamples.offer = function (groupTitles) {
-  var holder = h("div");
-  discoverPlaceBar(holder, "drawing");
   function firstOf(kind) {
     var groups = (exampleSections[kind] || []).map(function (one) { return one[0]; })
       .concat([OTHER_EXAMPLES[kind]]);
@@ -31,7 +27,7 @@ galleryExamples.offer = function (groupTitles) {
     dividers[drawings] = discoverDivider("Drawings", true);
     dividers[pictures] = discoverDivider("Pictures", true);
   }
-  return {bar: holder.firstChild, dividers: dividers};
+  return {bar: discoverBar("drawing"), dividers: dividers};
 };
 
 galleryExamples.addToTile = function (tile, name) {
@@ -42,21 +38,19 @@ galleryExamples.addToTile = function (tile, name) {
   if (pill) tile.appendChild(pill);
 };
 
-// A drawing as the Screens tab shows it, its thumbnail whole, or its icon or initial on its colour
-// where it has none, in a face the shape of a program card's, so every card in a row is one height
+function discoverOfferFigure(face, title, said, hint) {
+  return h("figure", {title: hint || null}, face,
+    h("figcaption", {}, h("strong", {}, title), h("small", {}, said || "")));
+}
+
 function discoverDrawingFace(path) {
   if (discoverDrawings[path].kind === "picture") return discoverPictureFace(path);
   var drawing = discoverDrawings[path].drawing;
-  var card = discoverElement("div", "asset discoveroffer");
-  card.title = drawing.description || "";
-  var face = discoverElement("div", "face");
-  // Its icon or initial on its colour, where it has no thumbnail or the thumbnail will not load
+  var face = h("div");
   function made() {
-    face.className = "face drawingface";
-    face.style.background = drawingInk(drawing, path);
-    face.innerHTML = drawing.icon
-      ? "<span class='drawingicon'>" + escapeHtml(drawing.icon) + "</span>"
-      : "<span class='drawingletter'>" + escapeHtml(drawing.title[0]) + "</span>";
+    face.dataset.drawn = "";
+    face.style.setProperty("--ink", drawingInk(drawing, path));
+    replace(face, h("b", {}, drawing.icon || drawing.title[0]));
   }
   if (discoverThumbs[path]) {
     var picture = discoverThumbImage(path);
@@ -65,25 +59,15 @@ function discoverDrawingFace(path) {
   } else {
     made();
   }
-  card.appendChild(face);
-  // Its name and what it does under the picture, as a program card has them
-  card.appendChild(discoverElement("span", "progname", drawing.title));
-  card.appendChild(discoverElement("span", "discoverdoes", drawing.description || ""));
-  return card;
+  return discoverOfferFigure(face, drawing.title, drawing.description, drawing.description);
 }
 
-// A picture as a drawing's card has it, the picture itself in the face, a GIF playing, a slideshow
-// by its first picture and tagged as one, its file or folder name and what it is under it
 function discoverPictureFace(path) {
   var picture = discoverDrawings[path].picture;
-  var card = discoverElement("div", "asset discoveroffer");
-  var face = discoverElement("div", "face");
-  if (discoverThumbs[path]) face.appendChild(discoverThumbImage(path));
-  if (picture.slideshow) face.appendChild(discoverElement("span", "discoverkind", "slideshow"));
-  card.appendChild(face);
-  card.appendChild(discoverElement("span", "progname", picture.title));
-  card.appendChild(discoverElement("span", "discoverdoes", discoverPictureSaid(picture)));
-  return card;
+  return discoverOfferFigure(
+    h("div", {}, discoverThumbs[path] ? discoverThumbImage(path) : null,
+      picture.slideshow ? h("small", {}, "slideshow") : null),
+    picture.title, discoverPictureSaid(picture));
 }
 
 discoverKinds.drawing = {

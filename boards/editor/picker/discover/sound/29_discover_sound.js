@@ -3,7 +3,7 @@ import {draw} from "../../03_runs.js";
 import {state} from "../../04_scenes.js";
 import {isExampleMedia, nameShown} from "../../26_drive_files.js";
 import {
-  discoverBin, discoverKinds, discoverPill, discoverPlaceBar, discoverSay, discoverSounds
+  discoverBar, discoverBin, discoverKinds, discoverPill, discoverSay, discoverSounds
 } from "../28_discover.js";
 import {hearButton, hearing, soundHooks, startHearing, stopHearing} from "../../sound/13_sound.js";
 
@@ -14,11 +14,7 @@ soundHooks.tileSteps.push(function (tile, name) {
   if (pill) tile.append(pill);
 });
 
-soundHooks.examplesBar = function () {
-  var holder = h("div");
-  discoverPlaceBar(holder, "sound");
-  return holder.firstChild;
-};
+soundHooks.examplesBar = function () { return discoverBar("sound"); };
 
 function stillWave() {
   return h("svg:svg", {viewBox: "0 0 104 30", preserveAspectRatio: "none", "aria-hidden": "true"},

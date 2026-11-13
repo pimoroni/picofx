@@ -495,10 +495,6 @@ function discoverIcon(name) {
   return h("svg:svg", {viewBox: "0 0 24 24", "aria-hidden": "true", html: DISCOVER_ICONS[name]});
 }
 
-export function discoverElement(tag, className, text) {
-  return h(tag, {class: className || null, text: text || null});
-}
-
 function discoverFound(kind) {
   var listed = discoverListedOn(kind);
   return {
@@ -540,7 +536,7 @@ export function discoverDivider(words, minor) {
 
 var DISCOVER_INK = {program: "var(--board)", drawing: "var(--accent)", sound: "var(--accent)"};
 
-function discoverBar(kind) {
+export function discoverBar(kind) {
   var check = discover[kind];
   var found = check.status === "done" ? discoverFound(kind) : null;
   return h("section", {class: "discoverbar", "aria-label": "Examples",
@@ -550,13 +546,6 @@ function discoverBar(kind) {
       discoverIcon("get"), "Discover " + discoverAsked(kind),
       found && found.waiting.length ? h("span", {}, String(found.waiting.length)) : null),
     discoverUpdateRow(kind, check, found));
-}
-
-export function discoverPlaceBar(box, kind) {
-  var bar = discoverBar(kind);
-  var heads = box.querySelectorAll(".foldhead");
-  if (heads.length > 1) box.insertBefore(bar, heads[1]);
-  else box.appendChild(bar);
 }
 
 function discoverRowSays(check, found) {

@@ -3087,12 +3087,6 @@ header:has(> #headSwitch) {
 }
 
 #assets > :is(.discoverbar, .discoverdivide),
-.sounds > .discoverbar {
-  grid-column: 1 / -1;
-  flex-basis: 100%;
-  width: 100%;
-}
-
 :is(.discoverbar, .discover) {
   p[data-tone] {
     display: flex;
@@ -3256,14 +3250,6 @@ header:has(> #headSwitch) {
   right: calc(2.9rem + 2px);
 }
 
-.asset:hover > .discoverpill {
-  right: 2.9rem;
-}
-
-.sound:hover > .discoverpill {
-  right: 1.6rem;
-}
-
 body:has(> dialog.discover[open]) {
   overflow: hidden;
 }
@@ -3422,11 +3408,80 @@ body:has(> dialog.discover[open]) {
     }
   }
 
-  .programcard > span > span {
-    bottom: 4px;
+  li > figure {
+    position: relative;
+    margin: 0;
+    overflow: hidden;
+    border: 2px solid var(--line);
+    border-radius: var(--radius-l);
+    background: var(--panel);
+
+    > div {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 3.6rem;
+      overflow: hidden;
+      background: linear-gradient(135deg, #efece6, #e3dfd6);
+      color: var(--dim);
+      font-size: var(--text-xs);
+
+      img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      &[data-drawn] {
+        background: var(--ink);
+      }
+
+      b {
+        color: #fff;
+        font: 800 var(--text-display)/1 var(--font);
+        font-variant-emoji: text;
+      }
+
+      small {
+        position: absolute;
+        bottom: 4px;
+        left: 4px;
+        z-index: 2;
+        padding: 0 .35rem;
+        border-radius: 4px;
+        background: rgba(25, 27, 29, .75);
+        color: #fff;
+        font-size: var(--text-xs);
+      }
+    }
+
+    strong {
+      display: block;
+      padding: .35rem .55rem;
+      overflow: hidden;
+      font-size: var(--text-m);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    figcaption small {
+      display: -webkit-box;
+      height: 2.6em;
+      margin: -.2rem .55rem .5rem;
+      overflow: hidden;
+      color: var(--dim);
+      font-size: var(--text-s);
+      line-height: 1.3;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
   }
 
-  ul[data-kind=drawing] .asset .face {
+  ul[data-kind=drawing] li > figure > div:not([data-drawn]) {
     height: auto;
     aspect-ratio: 4 / 3;
     background: #111;
@@ -3436,51 +3491,12 @@ body:has(> dialog.discover[open]) {
     }
   }
 
-  .asset :is(.kind, .label, .drawingtitle) {
-    display: none;
+  li:hover > figure ~ .discoverpill {
+    right: 2.9rem;
   }
 
-  .progname {
-    display: block;
-    padding: .35rem .55rem;
-    overflow: hidden;
-    font-size: var(--text-m);
-    font-weight: 600;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  .discoverdoes {
-    display: -webkit-box;
-    height: 2.6em;
-    margin: -.2rem .55rem .5rem;
-    overflow: hidden;
-    color: var(--dim);
-    font-size: var(--text-s);
-    line-height: 1.3;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-  }
-
-  .discoverkind {
-    position: absolute;
+  .programcard > span > span {
     bottom: 4px;
-    left: 4px;
-    z-index: 2;
-    padding: 0 .35rem;
-    border-radius: 4px;
-    background: rgba(25, 27, 29, .75);
-    color: #fff;
-    font-size: var(--text-xs);
-  }
-
-  ul[data-kind=sound] .sound {
-    width: auto;
-
-    .hear {
-      z-index: 3;
-    }
   }
 
   > footer {
@@ -14394,10 +14410,6 @@ function discoverIcon(name) {
   return h("svg:svg", {viewBox: "0 0 24 24", "aria-hidden": "true", html: DISCOVER_ICONS[name]});
 }
 
-function discoverElement(tag, className, text) {
-  return h(tag, {class: className || null, text: text || null});
-}
-
 function discoverFound(kind) {
   var listed = discoverListedOn(kind);
   return {
@@ -14449,13 +14461,6 @@ function discoverBar(kind) {
       discoverIcon("get"), "Discover " + discoverAsked(kind),
       found && found.waiting.length ? h("span", {}, String(found.waiting.length)) : null),
     discoverUpdateRow(kind, check, found));
-}
-
-function discoverPlaceBar(box, kind) {
-  var bar = discoverBar(kind);
-  var heads = box.querySelectorAll(".foldhead");
-  if (heads.length > 1) box.insertBefore(bar, heads[1]);
-  else box.appendChild(bar);
 }
 
 function discoverRowSays(check, found) {
@@ -14953,11 +14958,7 @@ soundHooks.tileSteps.push(function (tile, name) {
   if (pill) tile.append(pill);
 });
 
-soundHooks.examplesBar = function () {
-  var holder = h("div");
-  discoverPlaceBar(holder, "sound");
-  return holder.firstChild;
-};
+soundHooks.examplesBar = function () { return discoverBar("sound"); };
 
 function stillWave() {
   return h("svg:svg", {viewBox: "0 0 104 30", preserveAspectRatio: "none", "aria-hidden": "true"},
