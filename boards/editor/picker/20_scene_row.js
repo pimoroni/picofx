@@ -1,15 +1,16 @@
 import {h, replace} from "./00_dom.js";
-import {draw} from "./00_draw.js";
+import {draw, drawSteps} from "./00_draw.js";
+import {renderSceneTray, sceneBand, sceneEdge} from "./04_scene_tray.js";
 import {
-  removeScene, renderSceneTray, sceneAfter, sceneBand, sceneEdge, sceneHooks, sceneLoops,
-  sceneMark, sceneMarked, sceneNameProblem, sceneRestarts, sceneShowsAgain, state, unreachedScenes
+  removeScene, sceneAfter, sceneHooks, sceneLoops, sceneMark, sceneMarked, sceneNameProblem,
+  sceneRestarts, sceneShowsAgain, state, unreachedScenes
 } from "./04_scenes.js";
 import {renderPreview} from "./18_drive.js";
 
 var sceneRow = document.getElementById("sceneTabRow");
 var scenePlaceLine = null;
 
-export function renderSceneSettings() {
+function renderSceneSettings() {
   sceneRow.hidden = !state.scenes.length;
   if (!state.scenes.length) {
     replace(sceneRow);
@@ -143,3 +144,8 @@ function restartToggle(scene) {
                       }},
     h("span", {"aria-hidden": "true"}, "\u21b6"), " Restart");
 }
+
+drawSteps.after.push(function () {
+  renderSceneTray();
+  renderSceneSettings();
+});

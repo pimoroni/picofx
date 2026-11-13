@@ -11,13 +11,14 @@ import {
 } from "./03_reading.js";
 import {blank, mono, outs, runs, settle} from "./03_runs.js";
 import {
-  allBodies, apply, blankBody, bodyParts, capture, fileHead, sceneMark, settleLoneScene, state
+  allBodies, apply, blankBody, bodyParts, capture, sceneMark, settleLoneScene, state
 } from "./04_scenes.js";
 import {STRIPS, readStripTail, stripNamed, stripSet} from "./05_strips.js";
 import {
   NOT_FITTED, SCREEN_PORTS, boardLineSteps, notFittedLine, notFittedRead, saidNotFitted,
   setNotFittedRead, stripDescribed
 } from "./07_board.js";
+import {fileHead} from "./07_writing.js";
 import {dropStrip} from "./08_setup.js";
 import {WROTE_KEY, connectSteps, drive} from "./18_drive.js";
 import {argsWritten, boardSet, programNamed} from "./19_board_settings.js";

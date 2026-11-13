@@ -1,5 +1,5 @@
 import {hexRgb} from "../01_colours.js";
-import {REMOTE_RAINBOW} from "../04_scenes.js";
+import {REMOTE_RAINBOW} from "../04_scene_tray.js";
 
 export var REMOTE_BUTTONS = [
   ["ANTICLOCK", 0, 320, "turn"], ["UP", 1, 320, "up"], ["CLOCKWISE", 2, 320, "turn"],

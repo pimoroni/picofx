@@ -1,7 +1,8 @@
 import {h, replace} from "./00_dom.js";
 import {draw} from "./00_draw.js";
 import {escapeHtml, paintLine} from "./03_runs.js";
-import {currentText, state} from "./04_scenes.js";
+import {state} from "./04_scenes.js";
+import {currentText} from "./07_writing.js";
 import {nameShown} from "./26_drive_files.js";
 
 var SPOT_STEP_MS = 120;

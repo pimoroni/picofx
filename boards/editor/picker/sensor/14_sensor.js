@@ -3,9 +3,9 @@ import {draw, drawSteps} from "../00_draw.js";
 import {filterResidue} from "../03_kept.js";
 import {boardTokens, unquoted} from "../03_reading.js";
 import {canEdit} from "../03_runs.js";
+import {PART_DRAWINGS, REMOTE_COLOURS} from "../04_scene_tray.js";
 import {
-  PART_DRAWINGS, REMOTE_COLOURS, addScene, bodyParts, sceneHooks, sceneMark, sceneMarked,
-  sceneRestarts, state
+  addScene, bodyParts, sceneHooks, sceneMark, sceneMarked, sceneRestarts, state
 } from "../04_scenes.js";
 import {boardLineSteps} from "../07_board.js";
 import {BOARD_CHIP_COLOURS, boardBox, small} from "../08_setup.js";
