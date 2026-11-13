@@ -1,7 +1,7 @@
 import {
-  active, blank, draw, drawSteps, lampKey, outputSaid, paintAll, pick, pickOutput, runs, sectionAt,
-  zoomAndSteps
+  active, blank, draw, drawSteps, lampKey, outputSaid, paintAll, pick, pickOutput, runs, sectionAt
 } from "./03_runs.js";
+import {panelTools} from "./04_led_panels.js";
 import {allBodies, apply, slotAt, state, store} from "./04_scenes.js";
 import {STRIPS, renderStripChip, stripChipShown, stripSet} from "./05_effects.js";
 import {breakingOutputs, brokenSaid} from "./07_board.js";
@@ -130,7 +130,7 @@ function renderOutFacts() {
     hint.title = hint.textContent;
     box.appendChild(hint);
   }
-  if (!setupOn) zoomAndSteps(box, active.strip ? lastOutputRun : active);
+  if (!setupOn) box.appendChild(panelTools(active.strip ? lastOutputRun : active));
 }
 
 // What a strip is built as, its length and what follows it on the board line

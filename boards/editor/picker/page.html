@@ -33,20 +33,18 @@ __STYLES__
 
  <details class="panel" id="outPanel" open>
   <summary>The outputs<span class="says"></span></summary>
-  <div class="facts" id="outFacts"></div>
+  <header class="panelhead" id="outFacts"></header>
   <div class="sides" id="sides">
-   <div class="side" id="sideA">
-    <div class="sidehead" id="headA"></div>
+   <section class="side" id="sideA" aria-labelledby="headA">
+    <h3 id="headA"></h3>
     <div class="run" id="outRun"></div>
-    <div class="head" id="outCut"></div>
     <div id="outBar"></div>
-   </div>
-   <div class="side" id="sideB">
-    <div class="sidehead" id="headB"></div>
+   </section>
+   <section class="side" id="sideB" aria-labelledby="headB">
+    <h3 id="headB"></h3>
     <div class="run" id="monoRun"></div>
-    <div class="head" id="monoCut"></div>
     <div id="monoBar"></div>
-   </div>
+   </section>
   </div>
   <div id="outChosen"></div>
  </details>

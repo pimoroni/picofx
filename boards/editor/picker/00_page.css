@@ -44,24 +44,11 @@ main{width:100%;max-width:60rem;margin:1.4rem auto;padding:0 1.4rem;flex-grow:1}
  padding:0 .1rem;opacity:.8}
 .chip .drop:hover{opacity:1}
 .panel.strip{position:relative}
-.panel.strip .leds .chip{box-sizing:border-box;min-height:33px}
-.panel.stripout > :not(summary):not(.leds){visibility:hidden}
 .panel.stripout .addstrip,.panel.stripout .stripblocked{position:absolute;left:50%;top:55%;
  transform:translate(-50%,-50%)}
 .panel.stripout .stripblocked{width:max-content;max-width:calc(100% - 3rem);text-align:center}
 .ledtab.blocked{opacity:.45}
-.head{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.2rem}
-.head .gap{flex:1}
-.head.cutting{margin-top:.9rem;min-height:1.75rem}
-.head.cutting:empty{display:none}
 
-.head.cutting button{position:relative;z-index:1}
-.howfar{font-size:.78rem;color:var(--dim);min-width:2.8rem;text-align:center;
- font-variant-numeric:tabular-nums}
-button.round{width:1.9rem;height:1.75rem;padding:0;display:inline-flex;
- align-items:center;justify-content:center;color:var(--ink)}
-button.round:hover:enabled{border-color:var(--accent);color:var(--accent)}
-button.round svg{display:block}
 
 :root{--through:repeating-linear-gradient(45deg,rgba(240,238,234,.75),rgba(240,238,234,.75) 6px,
  transparent 6px,transparent 12px)}
@@ -179,23 +166,10 @@ body.setupall .lamp:active{cursor:grabbing}
 .card.cannot{opacity:.35;cursor:default}
 .card.cannot:hover{transform:none}
 
-.sides{display:flex;align-items:flex-start;gap:1rem}
-.side{min-width:8.5rem;display:flex;flex-direction:column}
-.side.empty .run,.side.empty .head.cutting,.side.empty>div[id$="Bar"]{display:none}
-.side .run{width:100%}
 #sideA .lamps{justify-content:flex-start}
 #sideB .lamps{justify-content:flex-end}
 #sideB .outgroup{margin-right:0;margin-left:.15rem}
-#sideB .sidehead{flex-direction:row-reverse}
 
-#sideB .head.cutting{justify-content:flex-end}
-#sideB .head.cutting .gap{order:-1}
-.sidehead{display:flex;align-items:baseline;gap:.5rem;font:600 .82rem system-ui,sans-serif;
- margin:0 0 .35rem;flex-wrap:nowrap;white-space:nowrap;min-width:0;height:1.35rem}
-.sidehead span{font-weight:400;font-size:.75rem;color:var(--dim);min-width:0;
- overflow:hidden;text-overflow:ellipsis}
-.side.nothing{font-size:.8rem;color:var(--dim);padding:1.2rem .4rem;text-align:center;
- border:1px dashed var(--line);border-radius:11px;background:#fcfbf9}
 
 .cross{position:absolute;top:-.45rem;width:1.2rem;height:1.2rem;padding:0;
  border-radius:50%;display:none;align-items:center;justify-content:center;z-index:2;
@@ -206,20 +180,14 @@ body.setupall .lamp:active{cursor:grabbing}
 #sideB .cross{left:-.3rem}
 .cross:hover:enabled{border-color:var(--rgbout);background:#f6f1ff}
 .cross svg{display:block}
-#sides.monofirst #sideB{order:-1}
-#sides.monofirst #sideA{min-width:12rem}
-#sides.monofirst #sideA .lamps{justify-content:flex-end}
-#sides.monofirst #sideB .lamps{justify-content:flex-start}
-#sides.monofirst #sideA .outgroup{margin-right:0;margin-left:.15rem}
-#sides.monofirst #sideB .outgroup{margin-right:.15rem;margin-left:0}
-#sides.monofirst #sideA .sidehead{flex-direction:row-reverse}
-#sides.monofirst #sideB .sidehead{flex-direction:row}
-#sides.monofirst #sideA .head.cutting{justify-content:flex-end}
-#sides.monofirst #sideA .head.cutting .gap{order:-1}
-#sides.monofirst #sideB .head.cutting{justify-content:flex-start}
-#sides.monofirst #sideB .head.cutting .gap{order:0}
-#sides.monofirst #sideA .cross{left:-.3rem;right:auto}
-#sides.monofirst #sideB .cross{right:-.3rem;left:auto}
+#sides[data-mono-first] #sideB{order:-1}
+#sides[data-mono-first] #sideA{min-width:12rem}
+#sides[data-mono-first] #sideA .lamps{justify-content:flex-end}
+#sides[data-mono-first] #sideB .lamps{justify-content:flex-start}
+#sides[data-mono-first] #sideA .outgroup{margin-right:0;margin-left:.15rem}
+#sides[data-mono-first] #sideB .outgroup{margin-right:.15rem;margin-left:0}
+#sides[data-mono-first] #sideA .cross{left:-.3rem;right:auto}
+#sides[data-mono-first] #sideB .cross{right:-.3rem;left:auto}
 .lamp.chan.single::before{display:none}
 .lamp.chan.single.kin{outline:none}
 
@@ -469,14 +437,8 @@ th{font-weight:600;color:var(--dim);font-size:.76rem}
 body[data-pageway] #looks>.tabs:empty{display:none}
 body[data-pageway] #looks>.shelf.bare{margin-top:0}
 
-.strip .head{margin-bottom:.3rem}
 .strip .lamps{gap:.18rem}
 
-.leds{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--dim);
- margin:0 0 .7rem}
-.leds input{font:inherit;font-size:.8rem;width:4.5rem;padding:.24rem .4rem;
- border-radius:7px;border:1px solid var(--line);background:var(--bg);color:inherit}
-.leds .says{margin-left:.2rem}
 
 .keptlines{margin:.6rem 0;padding:.5rem .7rem;border:1px dashed var(--line);border-radius:8px;
  font-size:.8rem;color:var(--dim)}
@@ -894,14 +856,7 @@ body.scenesintab #looks>.shelf{margin-top:0}
  font-size:.78rem;padding:.1rem .25rem}
 .boardchip select option{color:var(--ink)}
 .cross.boardarrow{color:var(--boardOuts);border-color:var(--boardOuts)}
-.facts .hint{font-size:.76rem;color:var(--dim);margin-left:.6rem}
-#outFacts{display:flex;align-items:center;margin-top:0}
-#outFacts .chip{flex:0 0 auto;white-space:nowrap}
-#outFacts .gap{flex:1}
-#outFacts .round{margin-left:.35rem}
 #sides.unnamed .run{margin-top:0}
-#outFacts .hint{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
- flex:1 1 0;width:0}
 
 body.setupall #tabs,body.setupall #sceneTabRow,
 body.setupall #looks,body.setupall [id$=Cut],body.setupall [id$=Bar],

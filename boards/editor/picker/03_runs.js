@@ -1,5 +1,6 @@
 import {BOARD, canPlay, lookNamed, rangify} from "./01_looks.js";
 import {FRAME, beat, previewingStrip} from "./02_preview.js";
+import {renderSides} from "./04_led_panels.js";
 import {lampUnder, namesOf} from "./04_scenes.js";
 import {
   START_MOODS, livePlay, sectionLines, spoken, startColour, stretchWash, stripSelector, targetFor
@@ -35,9 +36,6 @@ export var OUTPUTS = BOARD.outputs.map(function (output) {
 // Whether the mono side comes first, as on a board whose outputs start with its mono ones. The
 // file names the lamps in the same order
 export var MONO_FIRST = OUTPUTS.length > 0 && OUTPUTS[0].mono;
-document.getElementById("sides").classList.toggle("monofirst", MONO_FIRST);
-document.querySelector("#outPanel > summary .says").textContent = BOARD.output_words.panel;
-
 // The corner cut into a broken-out lamp, saying which of an output's three drives it
 export var CHANNEL_INKS = ["#d63a2a", "#23a55a", "#2f76d9"];
 
@@ -979,81 +977,6 @@ function crossing(out, colour) {
 
 // ---- the rows around the bar ---------------------------------------------------------------
 
-export function zoomAndSteps(row, run) {
-  var space = document.createElement("span");
-  space.className = "gap";
-  row.appendChild(space);
-  row.appendChild(iconButton(BACK, "Undo", !run.was.length,
-                             function () { stepBack(run); }));
-  row.appendChild(iconButton(ON, "Redo", !run.undone.length,
-                             function () { stepOn(run); }));
-}
-
-export var BACK = "<path d='M6.5 4.5 L2.5 8 L6.5 11.5'/>" +
-           "<path d='M2.5 8 H9.5 A4 4 0 0 1 9.5 15'/>";
-export var ON = "<path d='M9.5 4.5 L13.5 8 L9.5 11.5'/>" +
-         "<path d='M13.5 8 H6.5 A4 4 0 0 0 6.5 15'/>";
-
-export function iconButton(drawing, says, off, done) {
-  var made = document.createElement("button");
-  made.className = "round";
-  made.title = says;
-  made.setAttribute("aria-label", says);
-  made.disabled = off;
-  made.innerHTML = "<svg viewBox='0 0 17 17' width='15' height='15' fill='none' " +
-                   "stroke='currentColor' stroke-width='1.5' stroke-linecap='round' " +
-                   "stroke-linejoin='round'>" + drawing + "</svg>";
-  made.onclick = done;
-  return made;
-}
-
-export function renderCutting(where, run) {
-  var box = document.getElementById(where);
-  if (!box) return;
-  box.textContent = "";
-  box.className = "head cutting";
-}
-
-// The two sides: each as wide as what it holds, so the divide between them moves as
-// outputs are broken out and put back
-function renderSides() {
-  var words = BOARD.output_words;
-  [{run: outs, side: "sideA", head: "headA", title: words.colour, says: words.colour_says},
-   {run: mono, side: "sideB", head: "headB", title: words.mono,
-    says: words.mono_says}].forEach(function (set) {
-    var box = document.getElementById(set.side);
-    var count = set.run.lamps.length;
-    var groups = {};
-    set.run.lamps.forEach(function (lamp) { groups[lamp.out] = true; });
-    // Each output is a space in the run as well as its lamps, so the spaces are counted
-    // too or the last output wraps onto a row of its own
-    var room = count + Object.keys(groups).length;
-    // A side with nothing on it is not there at all: an output comes back from the arrow
-    // on one of its channels, so nothing is reached by keeping an empty column open, and
-    // the side that holds every lamp gets the whole width
-    box.style.display = count ? "" : "none";
-    box.style.flex = room + " 1 0";
-    box.className = "side";
-
-    var head = document.getElementById(set.head);
-    head.textContent = "";
-    head.appendChild(document.createTextNode(set.title));
-    var says = document.createElement("span");
-    // A side with nothing in it has no count to give, and no room to give one in
-    says.textContent = count
-      ? count + (count === 1 ? " light, " : " lights, ") + set.says
-      : "";
-    head.appendChild(says);
-  });
-  // A side is named only while there are two, telling the colour lamps from the mono ones.
-  // With every output one colour lamp, the board's box says so already
-  var two = mono.lamps.length > 0;
-  ["headA", "headB"].forEach(function (id) {
-    document.getElementById(id).style.display = two ? "" : "none";
-  });
-  document.getElementById("sides").classList.toggle("unnamed", !two);
-}
-
 // ---- the file, painted -----------------------------------------------------------------------
 
 export function escapeHtml(text) {
@@ -1115,9 +1038,7 @@ export function draw() {
   kinOf = {};
   renderGallery();
   renderRun("outRun", outs);
-  renderCutting("outCut", outs);
   renderStretches("outBar", outs);
-  renderCutting("monoCut", mono);
   renderRun("monoRun", mono);
   renderStretches("monoBar", mono);
 

@@ -1,0 +1,123 @@
+.panelhead {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  min-height: 33px;
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: .8rem;
+  color: var(--dim);
+
+  .chip {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  .hint {
+    flex: 1 1 0;
+    width: 0;
+    min-width: 0;
+    margin-left: .6rem;
+    overflow: hidden;
+    font-size: .76rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  input {
+    width: 4.5rem;
+    padding: .24rem .4rem;
+    font: inherit;
+  }
+
+  .tools {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    margin-left: auto;
+  }
+
+  output {
+    min-width: 2.8rem;
+    font-size: .78rem;
+    text-align: center;
+  }
+}
+
+.round {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.75rem;
+  padding: 0;
+  color: var(--dim);
+
+  &:hover:enabled {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  svg {
+    display: block;
+  }
+}
+
+.panel.strip .boardchip {
+  background: var(--strip);
+}
+
+.panel.stripout > :not(summary):not(.panelhead) {
+  visibility: hidden;
+}
+
+.sides {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+
+  > .side {
+    display: flex;
+    flex: var(--room) 1 0;
+    flex-direction: column;
+    min-width: 8.5rem;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  h3[hidden] {
+    display: none;
+  }
+
+  &[data-mono-first] > #sideB {
+    order: -1;
+  }
+
+  h3 {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    margin: 0 0 .5rem;
+    font: 600 .82rem system-ui, sans-serif;
+    white-space: nowrap;
+
+    small {
+      min-width: 0;
+      overflow: hidden;
+      font-size: .75rem;
+      font-weight: 400;
+      color: var(--dim);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+  }
+
+  #outBar,
+  #monoBar {
+    margin-top: auto;
+  }
+}

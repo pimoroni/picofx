@@ -52,24 +52,11 @@ main{width:100%;max-width:60rem;margin:1.4rem auto;padding:0 1.4rem;flex-grow:1}
  padding:0 .1rem;opacity:.8}
 .chip .drop:hover{opacity:1}
 .panel.strip{position:relative}
-.panel.strip .leds .chip{box-sizing:border-box;min-height:33px}
-.panel.stripout > :not(summary):not(.leds){visibility:hidden}
 .panel.stripout .addstrip,.panel.stripout .stripblocked{position:absolute;left:50%;top:55%;
  transform:translate(-50%,-50%)}
 .panel.stripout .stripblocked{width:max-content;max-width:calc(100% - 3rem);text-align:center}
 .ledtab.blocked{opacity:.45}
-.head{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.2rem}
-.head .gap{flex:1}
-.head.cutting{margin-top:.9rem;min-height:1.75rem}
-.head.cutting:empty{display:none}
 
-.head.cutting button{position:relative;z-index:1}
-.howfar{font-size:.78rem;color:var(--dim);min-width:2.8rem;text-align:center;
- font-variant-numeric:tabular-nums}
-button.round{width:1.9rem;height:1.75rem;padding:0;display:inline-flex;
- align-items:center;justify-content:center;color:var(--ink)}
-button.round:hover:enabled{border-color:var(--accent);color:var(--accent)}
-button.round svg{display:block}
 
 :root{--through:repeating-linear-gradient(45deg,rgba(240,238,234,.75),rgba(240,238,234,.75) 6px,
  transparent 6px,transparent 12px)}
@@ -187,23 +174,10 @@ body.setupall .lamp:active{cursor:grabbing}
 .card.cannot{opacity:.35;cursor:default}
 .card.cannot:hover{transform:none}
 
-.sides{display:flex;align-items:flex-start;gap:1rem}
-.side{min-width:8.5rem;display:flex;flex-direction:column}
-.side.empty .run,.side.empty .head.cutting,.side.empty>div[id$="Bar"]{display:none}
-.side .run{width:100%}
 #sideA .lamps{justify-content:flex-start}
 #sideB .lamps{justify-content:flex-end}
 #sideB .outgroup{margin-right:0;margin-left:.15rem}
-#sideB .sidehead{flex-direction:row-reverse}
 
-#sideB .head.cutting{justify-content:flex-end}
-#sideB .head.cutting .gap{order:-1}
-.sidehead{display:flex;align-items:baseline;gap:.5rem;font:600 .82rem system-ui,sans-serif;
- margin:0 0 .35rem;flex-wrap:nowrap;white-space:nowrap;min-width:0;height:1.35rem}
-.sidehead span{font-weight:400;font-size:.75rem;color:var(--dim);min-width:0;
- overflow:hidden;text-overflow:ellipsis}
-.side.nothing{font-size:.8rem;color:var(--dim);padding:1.2rem .4rem;text-align:center;
- border:1px dashed var(--line);border-radius:11px;background:#fcfbf9}
 
 .cross{position:absolute;top:-.45rem;width:1.2rem;height:1.2rem;padding:0;
  border-radius:50%;display:none;align-items:center;justify-content:center;z-index:2;
@@ -214,20 +188,14 @@ body.setupall .lamp:active{cursor:grabbing}
 #sideB .cross{left:-.3rem}
 .cross:hover:enabled{border-color:var(--rgbout);background:#f6f1ff}
 .cross svg{display:block}
-#sides.monofirst #sideB{order:-1}
-#sides.monofirst #sideA{min-width:12rem}
-#sides.monofirst #sideA .lamps{justify-content:flex-end}
-#sides.monofirst #sideB .lamps{justify-content:flex-start}
-#sides.monofirst #sideA .outgroup{margin-right:0;margin-left:.15rem}
-#sides.monofirst #sideB .outgroup{margin-right:.15rem;margin-left:0}
-#sides.monofirst #sideA .sidehead{flex-direction:row-reverse}
-#sides.monofirst #sideB .sidehead{flex-direction:row}
-#sides.monofirst #sideA .head.cutting{justify-content:flex-end}
-#sides.monofirst #sideA .head.cutting .gap{order:-1}
-#sides.monofirst #sideB .head.cutting{justify-content:flex-start}
-#sides.monofirst #sideB .head.cutting .gap{order:0}
-#sides.monofirst #sideA .cross{left:-.3rem;right:auto}
-#sides.monofirst #sideB .cross{right:-.3rem;left:auto}
+#sides[data-mono-first] #sideB{order:-1}
+#sides[data-mono-first] #sideA{min-width:12rem}
+#sides[data-mono-first] #sideA .lamps{justify-content:flex-end}
+#sides[data-mono-first] #sideB .lamps{justify-content:flex-start}
+#sides[data-mono-first] #sideA .outgroup{margin-right:0;margin-left:.15rem}
+#sides[data-mono-first] #sideB .outgroup{margin-right:.15rem;margin-left:0}
+#sides[data-mono-first] #sideA .cross{left:-.3rem;right:auto}
+#sides[data-mono-first] #sideB .cross{right:-.3rem;left:auto}
 .lamp.chan.single::before{display:none}
 .lamp.chan.single.kin{outline:none}
 
@@ -477,14 +445,8 @@ th{font-weight:600;color:var(--dim);font-size:.76rem}
 body[data-pageway] #looks>.tabs:empty{display:none}
 body[data-pageway] #looks>.shelf.bare{margin-top:0}
 
-.strip .head{margin-bottom:.3rem}
 .strip .lamps{gap:.18rem}
 
-.leds{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--dim);
- margin:0 0 .7rem}
-.leds input{font:inherit;font-size:.8rem;width:4.5rem;padding:.24rem .4rem;
- border-radius:7px;border:1px solid var(--line);background:var(--bg);color:inherit}
-.leds .says{margin-left:.2rem}
 
 .keptlines{margin:.6rem 0;padding:.5rem .7rem;border:1px dashed var(--line);border-radius:8px;
  font-size:.8rem;color:var(--dim)}
@@ -902,14 +864,7 @@ body.scenesintab #looks>.shelf{margin-top:0}
  font-size:.78rem;padding:.1rem .25rem}
 .boardchip select option{color:var(--ink)}
 .cross.boardarrow{color:var(--boardOuts);border-color:var(--boardOuts)}
-.facts .hint{font-size:.76rem;color:var(--dim);margin-left:.6rem}
-#outFacts{display:flex;align-items:center;margin-top:0}
-#outFacts .chip{flex:0 0 auto;white-space:nowrap}
-#outFacts .gap{flex:1}
-#outFacts .round{margin-left:.35rem}
 #sides.unnamed .run{margin-top:0}
-#outFacts .hint{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
- flex:1 1 0;width:0}
 
 body.setupall #tabs,body.setupall #sceneTabRow,
 body.setupall #looks,body.setupall [id$=Cut],body.setupall [id$=Bar],
@@ -1409,6 +1364,129 @@ body.discovermodal{overflow:hidden}
 .discoverfootsays .discovernotice{margin:0}
 .discoversheetfoot .discoverprimary{padding:.55rem 1.4rem;font-size:.95rem}
 .lamp.keptlamp{outline:2px dashed var(--dim);outline-offset:2px}
+.panelhead {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  min-height: 33px;
+  margin: 0 0 1rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: .8rem;
+  color: var(--dim);
+
+  .chip {
+    flex: none;
+    white-space: nowrap;
+  }
+
+  .hint {
+    flex: 1 1 0;
+    width: 0;
+    min-width: 0;
+    margin-left: .6rem;
+    overflow: hidden;
+    font-size: .76rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  input {
+    width: 4.5rem;
+    padding: .24rem .4rem;
+    font: inherit;
+  }
+
+  .tools {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    margin-left: auto;
+  }
+
+  output {
+    min-width: 2.8rem;
+    font-size: .78rem;
+    text-align: center;
+  }
+}
+
+.round {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.75rem;
+  padding: 0;
+  color: var(--dim);
+
+  &:hover:enabled {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  svg {
+    display: block;
+  }
+}
+
+.panel.strip .boardchip {
+  background: var(--strip);
+}
+
+.panel.stripout > :not(summary):not(.panelhead) {
+  visibility: hidden;
+}
+
+.sides {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+
+  > .side {
+    display: flex;
+    flex: var(--room) 1 0;
+    flex-direction: column;
+    min-width: 8.5rem;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  h3[hidden] {
+    display: none;
+  }
+
+  &[data-mono-first] > #sideB {
+    order: -1;
+  }
+
+  h3 {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    margin: 0 0 .5rem;
+    font: 600 .82rem system-ui, sans-serif;
+    white-space: nowrap;
+
+    small {
+      min-width: 0;
+      overflow: hidden;
+      font-size: .75rem;
+      font-weight: 400;
+      color: var(--dim);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+  }
+
+  #outBar,
+  #monoBar {
+    margin-top: auto;
+  }
+}
 .stretchview {
   overflow: hidden;
   padding-top: 1.2rem;
@@ -2321,20 +2399,18 @@ body.discovermodal{overflow:hidden}
 
  <details class="panel" id="outPanel" open>
   <summary>The outputs<span class="says"></span></summary>
-  <div class="facts" id="outFacts"></div>
+  <header class="panelhead" id="outFacts"></header>
   <div class="sides" id="sides">
-   <div class="side" id="sideA">
-    <div class="sidehead" id="headA"></div>
+   <section class="side" id="sideA" aria-labelledby="headA">
+    <h3 id="headA"></h3>
     <div class="run" id="outRun"></div>
-    <div class="head" id="outCut"></div>
     <div id="outBar"></div>
-   </div>
-   <div class="side" id="sideB">
-    <div class="sidehead" id="headB"></div>
+   </section>
+   <section class="side" id="sideB" aria-labelledby="headB">
+    <h3 id="headB"></h3>
     <div class="run" id="monoRun"></div>
-    <div class="head" id="monoCut"></div>
     <div id="monoBar"></div>
-   </div>
+   </section>
   </div>
   <div id="outChosen"></div>
  </details>
@@ -3226,9 +3302,6 @@ var OUTPUTS = BOARD.outputs.map(function (output) {
 // Whether the mono side comes first, as on a board whose outputs start with its mono ones. The
 // file names the lamps in the same order
 var MONO_FIRST = OUTPUTS.length > 0 && OUTPUTS[0].mono;
-document.getElementById("sides").classList.toggle("monofirst", MONO_FIRST);
-document.querySelector("#outPanel > summary .says").textContent = BOARD.output_words.panel;
-
 // The corner cut into a broken-out lamp, saying which of an output's three drives it
 var CHANNEL_INKS = ["#d63a2a", "#23a55a", "#2f76d9"];
 
@@ -4170,81 +4243,6 @@ function crossing(out, colour) {
 
 // ---- the rows around the bar ---------------------------------------------------------------
 
-function zoomAndSteps(row, run) {
-  var space = document.createElement("span");
-  space.className = "gap";
-  row.appendChild(space);
-  row.appendChild(iconButton(BACK, "Undo", !run.was.length,
-                             function () { stepBack(run); }));
-  row.appendChild(iconButton(ON, "Redo", !run.undone.length,
-                             function () { stepOn(run); }));
-}
-
-var BACK = "<path d='M6.5 4.5 L2.5 8 L6.5 11.5'/>" +
-           "<path d='M2.5 8 H9.5 A4 4 0 0 1 9.5 15'/>";
-var ON = "<path d='M9.5 4.5 L13.5 8 L9.5 11.5'/>" +
-         "<path d='M13.5 8 H6.5 A4 4 0 0 0 6.5 15'/>";
-
-function iconButton(drawing, says, off, done) {
-  var made = document.createElement("button");
-  made.className = "round";
-  made.title = says;
-  made.setAttribute("aria-label", says);
-  made.disabled = off;
-  made.innerHTML = "<svg viewBox='0 0 17 17' width='15' height='15' fill='none' " +
-                   "stroke='currentColor' stroke-width='1.5' stroke-linecap='round' " +
-                   "stroke-linejoin='round'>" + drawing + "</svg>";
-  made.onclick = done;
-  return made;
-}
-
-function renderCutting(where, run) {
-  var box = document.getElementById(where);
-  if (!box) return;
-  box.textContent = "";
-  box.className = "head cutting";
-}
-
-// The two sides: each as wide as what it holds, so the divide between them moves as
-// outputs are broken out and put back
-function renderSides() {
-  var words = BOARD.output_words;
-  [{run: outs, side: "sideA", head: "headA", title: words.colour, says: words.colour_says},
-   {run: mono, side: "sideB", head: "headB", title: words.mono,
-    says: words.mono_says}].forEach(function (set) {
-    var box = document.getElementById(set.side);
-    var count = set.run.lamps.length;
-    var groups = {};
-    set.run.lamps.forEach(function (lamp) { groups[lamp.out] = true; });
-    // Each output is a space in the run as well as its lamps, so the spaces are counted
-    // too or the last output wraps onto a row of its own
-    var room = count + Object.keys(groups).length;
-    // A side with nothing on it is not there at all: an output comes back from the arrow
-    // on one of its channels, so nothing is reached by keeping an empty column open, and
-    // the side that holds every lamp gets the whole width
-    box.style.display = count ? "" : "none";
-    box.style.flex = room + " 1 0";
-    box.className = "side";
-
-    var head = document.getElementById(set.head);
-    head.textContent = "";
-    head.appendChild(document.createTextNode(set.title));
-    var says = document.createElement("span");
-    // A side with nothing in it has no count to give, and no room to give one in
-    says.textContent = count
-      ? count + (count === 1 ? " light, " : " lights, ") + set.says
-      : "";
-    head.appendChild(says);
-  });
-  // A side is named only while there are two, telling the colour lamps from the mono ones.
-  // With every output one colour lamp, the board's box says so already
-  var two = mono.lamps.length > 0;
-  ["headA", "headB"].forEach(function (id) {
-    document.getElementById(id).style.display = two ? "" : "none";
-  });
-  document.getElementById("sides").classList.toggle("unnamed", !two);
-}
-
 // ---- the file, painted -----------------------------------------------------------------------
 
 function escapeHtml(text) {
@@ -4306,9 +4304,7 @@ function draw() {
   kinOf = {};
   renderGallery();
   renderRun("outRun", outs);
-  renderCutting("outCut", outs);
   renderStretches("outBar", outs);
-  renderCutting("monoCut", mono);
   renderRun("monoRun", mono);
   renderStretches("monoBar", mono);
 
@@ -4402,6 +4398,72 @@ function step() {
 }
 
 settle();
+
+var UNDO = "<path d='M6.5 4.5 L2.5 8 L6.5 11.5'/><path d='M2.5 8 H9.5 A4 4 0 0 1 9.5 15'/>";
+var REDO = "<path d='M9.5 4.5 L13.5 8 L9.5 11.5'/><path d='M13.5 8 H6.5 A4 4 0 0 0 6.5 15'/>";
+var ZOOM_OUT = "<circle cx='7.2' cy='7.2' r='4.9'/><path d='M10.9 10.9 L14.4 14.4'/>" +
+               "<path d='M5 7.2 L9.4 7.2'/>";
+var ZOOM_IN = "<circle cx='7.2' cy='7.2' r='4.9'/><path d='M10.9 10.9 L14.4 14.4'/>" +
+              "<path d='M5 7.2 L9.4 7.2 M7.2 5 L7.2 9.4'/>";
+var ZOOM_STEP = 1.6;
+
+function iconButton(drawing, says, off, done) {
+  return h("button", {type: "button", class: "round", title: says, "aria-label": says, disabled: off,
+                      onclick: done},
+    h("svg:svg", {viewBox: "0 0 17 17", width: 15, height: 15, fill: "none", stroke: "currentColor",
+                  "stroke-width": 1.5, "stroke-linecap": "round", "stroke-linejoin": "round",
+                  html: drawing}));
+}
+
+function panelTools(run) {
+  var zoom = zooms(run) ? [
+    iconButton(ZOOM_OUT, "Zoom out", zoomOf(run) <= 1.001,
+               function () { zoomTo(run, zoomOf(run) / ZOOM_STEP, middleOfView(run)); }),
+    h("output", {}, Math.round(zoomOf(run) * 100) + "%"),
+    iconButton(ZOOM_IN, "Zoom in", zoomOf(run) >= 23.9,
+               function () { zoomTo(run, zoomOf(run) * ZOOM_STEP, middleOfView(run)); })
+  ] : [];
+  return h("span", {class: "tools"}, zoom,
+    iconButton(UNDO, "Undo", !(run.was && run.was.length), function () { stepBack(run); }),
+    iconButton(REDO, "Redo", !(run.undone && run.undone.length), function () { stepOn(run); }));
+}
+
+function renderSides() {
+  var words = BOARD.output_words;
+  var two = mono.lamps.length > 0;
+  [{run: outs, side: "sideA", head: "headA", title: words.colour, says: words.colour_says},
+   {run: mono, side: "sideB", head: "headB", title: words.mono, says: words.mono_says}]
+    .forEach(function (set) {
+      var box = document.getElementById(set.side);
+      var count = set.run.lamps.length;
+      box.hidden = !count;
+      var outputs = new Set(set.run.lamps.map(function (lamp) { return lamp.out; }));
+      box.style.setProperty("--room", count + outputs.size);
+      var head = document.getElementById(set.head);
+      head.hidden = !two;
+      replace(head, set.title, " ",
+              count ? h("small", {}, count + (count === 1 ? " light, " : " lights, ") + set.says) : null);
+    });
+  document.getElementById("sides").toggleAttribute("data-unnamed", !two);
+}
+
+(function () {
+  var after = document.getElementById("outPanel");
+  BOARD.strips.forEach(function (strip) {
+    var id = strip.name;
+    var panel = h("details", {class: "panel strip", id: id + "Panel", open: true,
+                              style: {"--strip": strip.colour}},
+      h("summary", {}, strip.label.charAt(0).toUpperCase() + strip.label.slice(1),
+        h("span", {class: "says"}, strip.says)),
+      h("header", {class: "panelhead", id: id + "Leds"}),
+      h("div", {id: id + "Bar"}),
+      h("div", {id: id + "Chosen"}));
+    after.parentNode.insertBefore(panel, after.nextSibling);
+    after = panel;
+  });
+  document.getElementById("sides").toggleAttribute("data-mono-first", MONO_FIRST);
+  document.querySelector("#outPanel > summary .says").textContent = BOARD.output_words.panel;
+}());
 
 // ---- scenes ---------------------------------------------------------------------------
 // The scene tabs, adding, removing and reordering them, and a scene's own settings. A scene's
@@ -5584,36 +5646,6 @@ function stripSelector(run, section) {
     : (section.from + 1) + "-" + (section.to + 1));
 }
 
-var GLASS_OUT = "<circle cx='7.2' cy='7.2' r='4.9'/><path d='M10.9 10.9 L14.4 14.4'/>" +
-                "<path d='M5 7.2 L9.4 7.2'/>";
-
-var GLASS_IN = "<circle cx='7.2' cy='7.2' r='4.9'/><path d='M10.9 10.9 L14.4 14.4'/>" +
-               "<path d='M5 7.2 L9.4 7.2 M7.2 5 L7.2 9.4'/>";
-
-function stripZoomAndSteps(row, run) {
-  var space = document.createElement("span");
-  space.className = "gap";
-  row.appendChild(space);
-  if (zooms(run)) {
-    row.appendChild(iconButton(GLASS_OUT, "Zoom out", zoomOf(run) <= 1.001,
-                               function () {
-                                 zoomTo(run, zoomOf(run) / 1.6, middleOfView(run));
-                               }));
-    var said = document.createElement("span");
-    said.className = "howfar";
-    said.textContent = Math.round(zoomOf(run) * 100) + "%";
-    row.appendChild(said);
-    row.appendChild(iconButton(GLASS_IN, "Zoom in", zoomOf(run) >= 23.9,
-                               function () {
-                                 zoomTo(run, zoomOf(run) * 1.6, middleOfView(run));
-                               }));
-  }
-  row.appendChild(iconButton(BACK, "Undo", !(run.was && run.was.length),
-                             function () { stepBack(run); }));
-  row.appendChild(iconButton(ON, "Redo", !(run.undone && run.undone.length),
-                             function () { stepOn(run); }));
-}
-
 function hexOf(rgb) {
   return rgb.map(function (v) {
     return ("0" + Math.round(v).toString(16)).slice(-2);
@@ -5811,27 +5843,6 @@ function renderStripChip(where, run) {
 
 // Each strip has a panel after the outputs', in the board's order, and its board box takes the
 // strip's own colour
-(function () {
-  var colours = document.createElement("style");
-  var after = document.getElementById("outPanel");
-  BOARD.strips.forEach(function (strip) {
-    var id = strip.name;
-    var panel = document.createElement("details");
-    panel.className = "panel strip";
-    panel.id = id + "Panel";
-    panel.open = true;
-    panel.innerHTML = "<summary>" + strip.label.charAt(0).toUpperCase() + strip.label.slice(1) +
-                      "<span class='says'>" + strip.says + "</span></summary>" +
-                      "<div class='leds' id='" + id + "Leds'></div>" +
-                      "<div class='head' id='" + id + "Cut'></div>" +
-                      "<div id='" + id + "Bar'></div>" +
-                      "<div id='" + id + "Chosen'></div>";
-    after.parentNode.insertBefore(panel, after.nextSibling);
-    after = panel;
-    colours.textContent += ".boardchip." + id + "{background:" + strip.colour + "}\n";
-  });
-  document.head.appendChild(colours);
-}());
 
 // The strips are runs of the page below from here on. Each scene keeps its own cutting of
 // them in its body, which captures every run
@@ -5848,10 +5859,7 @@ drawSteps.after.push(function () {
   }
   runs.filter(function (run) { return run.strip; }).forEach(function (run) {
     renderLeds(run.id + "Leds", run);
-    // The count of stretches, then the zoom and the steps beside it, all the drawing's own, so
-    // the bar scrolls when zoomed in
-    renderCutting(run.id + "Cut", run);
-    stripZoomAndSteps(document.getElementById(run.id + "Cut"), run);
+    if (run.there) document.getElementById(run.id + "Leds").appendChild(panelTools(run));
     renderStretches(run.id + "Bar", run);
     document.getElementById(run.id + "Chosen").textContent = "";
     if (run === active) {
@@ -6773,7 +6781,7 @@ function renderOutFacts() {
     hint.title = hint.textContent;
     box.appendChild(hint);
   }
-  if (!setupOn) zoomAndSteps(box, active.strip ? lastOutputRun : active);
+  if (!setupOn) box.appendChild(panelTools(active.strip ? lastOutputRun : active));
 }
 
 // What a strip is built as, its length and what follows it on the board line

@@ -1,16 +1,16 @@
 import {BOARD, LOOKS, canPlay, keyOf, lerp, lookLines, lookNamed, nameSet, r2} from "./01_looks.js";
 import {COLOURED, lampTarget, lookLit} from "./02_preview.js";
 import {
-  BACK, CHANNELS, CHANNEL_WORDS, MIDDLING, ON, OUTPUTS, Run, active, blank, copyBlinks, copyExact,
-  draw, drawSteps, forwardTargetFor, iconButton, isChannel, joinedItems, levelled, mono,
-  nextOutput, outputSaid, outs, paintAll, pickOutput, rangeItem, renderCutting, runs, sectionAt,
-  settle, stepBack, stepOn, wiring
+  CHANNELS, CHANNEL_WORDS, MIDDLING, OUTPUTS, Run, active, blank, copyBlinks, copyExact, draw,
+  drawSteps, forwardTargetFor, isChannel, joinedItems, levelled, mono, nextOutput, outputSaid,
+  outs, paintAll, pickOutput, rangeItem, runs, sectionAt, settle, wiring
 } from "./03_runs.js";
+import {panelTools} from "./04_led_panels.js";
 import {carried} from "./04_scenes.js";
 import {BLINK, blinkList, blinkWord} from "./06_blink.js";
 import {renderLeds} from "./08_setup.js";
 import {exactNow, withExact} from "./25_figures.js";
-import {middleOfView, renderStretches, zoomOf, zoomTo, zooms} from "./31_stretch_bar.js";
+import {renderStretches} from "./31_stretch_bar.js";
 import {renderEditor} from "./32_stretch_editor.js";
 
 // The board opens as it ships, every colour output one colour lamp, each side whole and playing
@@ -324,36 +324,6 @@ export function stripSelector(run, section) {
     : (section.from + 1) + "-" + (section.to + 1));
 }
 
-var GLASS_OUT = "<circle cx='7.2' cy='7.2' r='4.9'/><path d='M10.9 10.9 L14.4 14.4'/>" +
-                "<path d='M5 7.2 L9.4 7.2'/>";
-
-var GLASS_IN = "<circle cx='7.2' cy='7.2' r='4.9'/><path d='M10.9 10.9 L14.4 14.4'/>" +
-               "<path d='M5 7.2 L9.4 7.2 M7.2 5 L7.2 9.4'/>";
-
-function stripZoomAndSteps(row, run) {
-  var space = document.createElement("span");
-  space.className = "gap";
-  row.appendChild(space);
-  if (zooms(run)) {
-    row.appendChild(iconButton(GLASS_OUT, "Zoom out", zoomOf(run) <= 1.001,
-                               function () {
-                                 zoomTo(run, zoomOf(run) / 1.6, middleOfView(run));
-                               }));
-    var said = document.createElement("span");
-    said.className = "howfar";
-    said.textContent = Math.round(zoomOf(run) * 100) + "%";
-    row.appendChild(said);
-    row.appendChild(iconButton(GLASS_IN, "Zoom in", zoomOf(run) >= 23.9,
-                               function () {
-                                 zoomTo(run, zoomOf(run) * 1.6, middleOfView(run));
-                               }));
-  }
-  row.appendChild(iconButton(BACK, "Undo", !(run.was && run.was.length),
-                             function () { stepBack(run); }));
-  row.appendChild(iconButton(ON, "Redo", !(run.undone && run.undone.length),
-                             function () { stepOn(run); }));
-}
-
 export function hexOf(rgb) {
   return rgb.map(function (v) {
     return ("0" + Math.round(v).toString(16)).slice(-2);
@@ -551,27 +521,6 @@ export function renderStripChip(where, run) {
 
 // Each strip has a panel after the outputs', in the board's order, and its board box takes the
 // strip's own colour
-(function () {
-  var colours = document.createElement("style");
-  var after = document.getElementById("outPanel");
-  BOARD.strips.forEach(function (strip) {
-    var id = strip.name;
-    var panel = document.createElement("details");
-    panel.className = "panel strip";
-    panel.id = id + "Panel";
-    panel.open = true;
-    panel.innerHTML = "<summary>" + strip.label.charAt(0).toUpperCase() + strip.label.slice(1) +
-                      "<span class='says'>" + strip.says + "</span></summary>" +
-                      "<div class='leds' id='" + id + "Leds'></div>" +
-                      "<div class='head' id='" + id + "Cut'></div>" +
-                      "<div id='" + id + "Bar'></div>" +
-                      "<div id='" + id + "Chosen'></div>";
-    after.parentNode.insertBefore(panel, after.nextSibling);
-    after = panel;
-    colours.textContent += ".boardchip." + id + "{background:" + strip.colour + "}\n";
-  });
-  document.head.appendChild(colours);
-}());
 
 // The strips are runs of the page below from here on. Each scene keeps its own cutting of
 // them in its body, which captures every run
@@ -588,10 +537,7 @@ drawSteps.after.push(function () {
   }
   runs.filter(function (run) { return run.strip; }).forEach(function (run) {
     renderLeds(run.id + "Leds", run);
-    // The count of stretches, then the zoom and the steps beside it, all the drawing's own, so
-    // the bar scrolls when zoomed in
-    renderCutting(run.id + "Cut", run);
-    stripZoomAndSteps(document.getElementById(run.id + "Cut"), run);
+    if (run.there) document.getElementById(run.id + "Leds").appendChild(panelTools(run));
     renderStretches(run.id + "Bar", run);
     document.getElementById(run.id + "Chosen").textContent = "";
     if (run === active) {
