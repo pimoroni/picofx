@@ -1,0 +1,317 @@
+.hubswitch {
+  display: inline-flex;
+  align-items: stretch;
+  justify-self: start;
+  align-self: start;
+  overflow: hidden;
+  border-radius: 9px;
+  background: var(--panel);
+  box-shadow: inset 0 0 0 1.5px var(--screen-a);
+  font: 600 .82rem system-ui, sans-serif;
+
+  > span {
+    display: flex;
+    align-items: center;
+    padding: 0 .1rem 0 .55rem;
+
+    .boardicon {
+      color: var(--screen-a);
+    }
+
+    &:has(+ [aria-pressed=true]) {
+      background: var(--screen-a);
+
+      .boardicon {
+        color: #fff;
+      }
+    }
+  }
+
+  button {
+    padding: .3rem .55rem;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    color: var(--screen-a);
+    font: inherit;
+    line-height: 1.3;
+
+    &[aria-pressed=true] {
+      background: var(--screen-a);
+      color: #fff;
+    }
+
+    &:enabled:not([aria-pressed=true]):hover {
+      background: rgba(31, 111, 235, .1);
+    }
+  }
+
+  &:has(button:disabled) {
+    box-shadow: inset 0 0 0 1px var(--line);
+
+    button {
+      color: var(--dim);
+      opacity: .7;
+
+      &[aria-pressed=true] {
+        color: #fff;
+        opacity: 1;
+      }
+    }
+
+    > span:not(:has(+ [aria-pressed=true])) .boardicon {
+      color: var(--dim);
+      opacity: .7;
+    }
+  }
+}
+
+.screenhub {
+  display: flex;
+  flex-direction: column;
+  gap: .7rem;
+  padding: 0 .9rem .8rem;
+  border: 2px solid var(--tint);
+  border-radius: 10px;
+  overflow: hidden;
+
+  > div:first-child {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    margin: 0 -.9rem;
+    padding: .4rem .9rem;
+    background: var(--tint);
+    color: #fff;
+    font-size: .9rem;
+
+    h3 {
+      margin: 0;
+      font-size: inherit;
+    }
+
+    label {
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      margin-left: .4rem;
+    }
+
+    .boardicon {
+      color: #fff;
+      opacity: .9;
+    }
+
+    select {
+      padding: .1rem .25rem;
+      border: 1px solid rgba(255, 255, 255, .55);
+      border-radius: 6px;
+      background: rgba(255, 255, 255, .15);
+      color: #fff;
+      font: inherit;
+      font-size: .78rem;
+
+      option {
+        color: var(--ink);
+      }
+    }
+
+    small {
+      margin-left: .3rem;
+      font-weight: 400;
+      opacity: .85;
+    }
+  }
+
+  > ol {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: .5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    > li {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .25rem;
+      min-width: 0;
+      padding: .3rem .2rem .35rem;
+      border: 2px solid transparent;
+      border-radius: 9px;
+      cursor: pointer;
+
+      &:hover {
+        background: color-mix(in srgb, var(--tint) 6%, transparent);
+      }
+
+      &[data-grouped] {
+        border-color: var(--group);
+      }
+
+      &[aria-current] {
+        border-color: var(--group, var(--tint));
+        background: color-mix(in srgb, var(--group, var(--tint)) 13%, transparent);
+
+        &:hover {
+          background: color-mix(in srgb, var(--group, var(--tint)) 18%, transparent);
+        }
+      }
+
+      &[data-empty] {
+        cursor: default;
+
+        &:hover {
+          background: none;
+        }
+
+        > span {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          aspect-ratio: 1;
+          margin-top: 1.75rem;
+          border-radius: 6px;
+          background: var(--cross) transparent;
+          outline: 1px dashed #a9a49b;
+          outline-offset: -1px;
+          color: var(--dim);
+          font-size: .72rem;
+        }
+
+        > button {
+          position: absolute;
+          bottom: 2.1rem;
+          padding: .15rem .5rem;
+          border: 1.5px solid var(--tint);
+          border-radius: 7px;
+          color: var(--tint);
+          font: 600 .74rem system-ui, sans-serif;
+        }
+      }
+
+      > b,
+      > button:first-child {
+        position: absolute;
+        top: .35rem;
+        left: .5rem;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: var(--group, var(--tint));
+        font: 700 .85rem/1.3rem system-ui, sans-serif;
+      }
+
+      > label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 1.5rem;
+
+        .boardicon {
+          margin-right: .2rem;
+          color: var(--tint);
+        }
+      }
+
+      select {
+        padding: .05rem .15rem;
+        border-radius: 5px;
+        font-size: .72rem;
+
+        &:disabled {
+          padding: .05rem 0;
+          border-color: transparent;
+          background: transparent;
+          color: var(--ink);
+          opacity: .75;
+          appearance: none;
+        }
+      }
+
+      > button[aria-label^="No panel"] {
+        position: absolute;
+        top: .3rem;
+        right: .2rem;
+        width: 1.3rem;
+        height: 1.3rem;
+        padding: 0;
+        border: 0;
+        border-radius: 5px;
+        background: var(--tint);
+        color: #fff;
+        font-size: .95rem;
+        line-height: 1;
+      }
+
+      .screenmodule {
+        width: 115.5px;
+      }
+
+      > output,
+      > small {
+        max-width: 100%;
+        overflow: hidden;
+        color: var(--dim);
+        font-size: .7rem;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      &[data-grouped] > small {
+        color: var(--group);
+      }
+
+      > [role=group] {
+        display: inline-flex;
+        margin-top: .1rem;
+        overflow: hidden;
+        border: 1.5px solid var(--line);
+        border-radius: 7px;
+
+        &:has(button:disabled):not(:has(button:enabled)) {
+          opacity: .45;
+        }
+
+        button {
+          padding: .16rem .5rem;
+          border: 0;
+          border-right: 1px solid var(--line);
+          border-radius: 0;
+          color: var(--ink);
+          font: 700 .74rem system-ui, sans-serif;
+
+          &:last-child {
+            border-right: 0;
+          }
+
+          &[aria-pressed=true] {
+            background: var(--tint);
+            color: #fff;
+          }
+
+          &:disabled {
+            opacity: .35;
+          }
+        }
+      }
+    }
+  }
+
+  > p {
+    margin: 0;
+    padding: .45rem .7rem;
+    border-left: 3px solid var(--tint);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--tint) 7%, transparent);
+    color: var(--ink);
+    font-size: .82rem;
+
+    &:empty {
+      display: none;
+    }
+  }
+}

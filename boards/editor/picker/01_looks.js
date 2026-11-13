@@ -112,7 +112,7 @@ function withoutColour(line) {
 }
 
 // Anything on or off, as a toggle with its icon, greyed where playback would refuse it
-export function toggle(icon, words, on, flip, title, refused) {
+function toggle(icon, words, on, flip, title, refused) {
   var button = document.createElement("button");
   button.type = "button";
   button.className = "stoggle" + (on && !refused ? " on" : "");

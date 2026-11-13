@@ -132,7 +132,7 @@ export function otherScenes() {
 export function namesOf(scenes) { return scenes.map(function (scene) { return scene.name; }); }
 
 // Grey out settings that show Always on's values in a scene, which are set on the Always on tab
-export function frozen(node) {
+function frozen(node) {
   node.classList.add("frozen");
   node.title = "Set on the Always on tab";
   node.querySelectorAll("button, input, select").forEach(function (control) {

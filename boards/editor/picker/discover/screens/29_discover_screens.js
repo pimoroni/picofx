@@ -1,5 +1,5 @@
+import {h} from "../../00_dom.js";
 import {escapeHtml} from "../../03_runs.js";
-import {state} from "../../04_scenes.js";
 import {OTHER_EXAMPLES, exampleSections, isExampleMedia} from "../../26_drive_files.js";
 import {openingString} from "../../26_drive_programs.js";
 import {
@@ -7,7 +7,7 @@ import {
   discoverKinds, discoverPictureSaid, discoverPill, discoverPlaceBar, discoverThumbImage,
   discoverThumbs
 } from "../28_discover.js";
-import {assetSteps, mediaNamed} from "../../screens/12_screens.js";
+import {galleryExamples, mediaNamed} from "../../screens/12_screens.js";
 import {copyDrawing, drawingInk, drawingSaid} from "../../screens/16_screen_settings.js";
 
 // ---- examples to discover, on the Screens tab ---------------------------------------------------
@@ -16,33 +16,31 @@ import {copyDrawing, drawingInk, drawingSaid} from "../../screens/16_screen_sett
 // downloaded again, and carries its mark, Update or the firmware it needs. 28_discover.js does
 // the rest. A board without screens has no Screens tab to add them to.
 
-assetSteps.push(function () {
-  var box = document.getElementById("assets");
-  if (!state.fileHandle) return;
-  discoverPlaceBar(box, "drawing");
-  // The user's own group heads the gallery and is neither kind
-  var heads = Array.from(box.querySelectorAll(".foldhead")).slice(1);
+galleryExamples.offer = function (groupTitles) {
+  var holder = h("div");
+  discoverPlaceBar(holder, "drawing");
   function firstOf(kind) {
     var groups = (exampleSections[kind] || []).map(function (one) { return one[0]; })
       .concat([OTHER_EXAMPLES[kind]]);
-    return heads.filter(function (head) {
-      return groups.indexOf(head.firstChild.textContent) >= 0;
-    })[0];
+    return groupTitles.filter(function (title) { return groups.indexOf(title) >= 0; })[0];
   }
-  var drawings = firstOf("drawings"), pictures = firstOf("pictures");
+  var drawings = firstOf("drawings");
+  var pictures = firstOf("pictures");
+  var dividers = {};
   if (drawings && pictures) {
-    box.insertBefore(discoverDivider("Drawings", true), drawings);
-    box.insertBefore(discoverDivider("Pictures", true), pictures);
+    dividers[drawings] = discoverDivider("Drawings", true);
+    dividers[pictures] = discoverDivider("Pictures", true);
   }
-  box.querySelectorAll(".asset").forEach(function (cell) {
-    var name = cell.dataset.name;
-    var media = mediaNamed(name);
-    if (media && isExampleMedia(name))
-      discoverBinBeside(cell, discoverBin(name, media.kind === "drawing" ? "drawing" : "picture"));
-    var pill = discoverPill(name);
-    if (pill) cell.appendChild(pill);
-  });
-});
+  return {bar: holder.firstChild, dividers: dividers};
+};
+
+galleryExamples.addToTile = function (tile, name) {
+  var media = mediaNamed(name);
+  if (media && isExampleMedia(name))
+    discoverBinBeside(tile, discoverBin(name, media.kind === "drawing" ? "drawing" : "picture"));
+  var pill = discoverPill(name);
+  if (pill) tile.appendChild(pill);
+};
 
 // A drawing as the Screens tab shows it, its thumbnail whole, or its icon or initial on its colour
 // where it has none, in a face the shape of a program card's, so every card in a row is one height
