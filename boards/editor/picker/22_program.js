@@ -469,7 +469,7 @@ var programView = null;
 export var onProgramPage = false;
 
 export function copyTile(example, file, folder, copy) {
-  return h("span", {class: "bin copytile" + (example ? " alone" : ""),
+  return h("span", {class: "bin", "data-copy": example ? "alone" : "",
                     title: (example ? "Customise a copy of " : "Duplicate ") + file + " in the " +
                            folder + " folder",
                     onclick: function (event) {

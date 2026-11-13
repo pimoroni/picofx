@@ -349,10 +349,10 @@ html {
     background: var(--warn);
   }
 
-  &.copytile {
+  &[data-copy] {
     right: 1.6rem;
 
-    &.alone {
+    &[data-copy=alone] {
       right: 2px;
     }
 
@@ -1244,7 +1244,7 @@ body:not([data-setup]) #sides [id$=Run] {
 :where(.liveswatch) {
   background: var(--hatch);
 
-  &.absent {
+  &[data-absent] {
     background: transparent;
     outline: 1px dashed var(--dashed);
     outline-offset: -1px;
@@ -3680,7 +3680,7 @@ body:has(> dialog.discover[open]) {
   gap: .8rem;
   margin-top: .55rem;
 
-  .field {
+  > div:first-child {
     position: relative;
     flex: 1;
     height: 6.5rem;
@@ -10380,7 +10380,7 @@ function liveSwatch(swatch, panel) {
   swatch.className = "accswatch liveswatch";
   // A strip not fitted is crossed through, as a screen not fitted is, its lamps playing nothing
   var absent = runsOfPanel(panel).every(function (run) { return run.strip && run.there === false; });
-  if (absent) swatch.classList.add("absent");
+  swatch.toggleAttribute("data-absent", absent);
   runsOfPanel(panel).forEach(function (run) {
     var cells = run.lamps.map(function () {
       var cell = document.createElement("span");
@@ -11599,7 +11599,7 @@ var programView = null;
 var onProgramPage = false;
 
 function copyTile(example, file, folder, copy) {
-  return h("span", {class: "bin copytile" + (example ? " alone" : ""),
+  return h("span", {class: "bin", "data-copy": example ? "alone" : "",
                     title: (example ? "Customise a copy of " : "Duplicate ") + file + " in the " +
                            folder + " folder",
                     onclick: function (event) {
@@ -14946,8 +14946,8 @@ async function discoverDelete(path, kind) {
 }
 
 function discoverBinBeside(card, bin) {
-  var copy = card.querySelector(".copytile");
-  if (copy) copy.classList.remove("alone");
+  var copy = card.querySelector("[data-copy]");
+  if (copy) copy.dataset.copy = "";
   card.appendChild(bin);
 }
 
@@ -15044,7 +15044,7 @@ function colourField(options) {
     show(Object.assign({hue: across * 360, sat: 1 - down}, options.pick(across * 360, 1 - down)));
   }
 
-  var field = h("div", {class: "field", role: "presentation",
+  var field = h("div", {role: "presentation",
                         onpointerdown: function (event) {
                           field.setPointerCapture(event.pointerId);
                           pointing(event);

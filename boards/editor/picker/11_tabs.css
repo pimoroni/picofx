@@ -116,7 +116,7 @@
 :where(.liveswatch) {
   background: var(--hatch);
 
-  &.absent {
+  &[data-absent] {
     background: transparent;
     outline: 1px dashed var(--dashed);
     outline-offset: -1px;

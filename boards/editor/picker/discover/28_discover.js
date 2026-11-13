@@ -1031,7 +1031,7 @@ async function discoverDelete(path, kind) {
 }
 
 export function discoverBinBeside(card, bin) {
-  var copy = card.querySelector(".copytile");
-  if (copy) copy.classList.remove("alone");
+  var copy = card.querySelector("[data-copy]");
+  if (copy) copy.dataset.copy = "";
   card.appendChild(bin);
 }

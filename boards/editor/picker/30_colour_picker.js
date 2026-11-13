@@ -43,7 +43,7 @@ export function colourField(options) {
     show(Object.assign({hue: across * 360, sat: 1 - down}, options.pick(across * 360, 1 - down)));
   }
 
-  var field = h("div", {class: "field", role: "presentation",
+  var field = h("div", {role: "presentation",
                         onpointerdown: function (event) {
                           field.setPointerCapture(event.pointerId);
                           pointing(event);

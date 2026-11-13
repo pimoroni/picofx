@@ -86,10 +86,10 @@ html {
     background: var(--warn);
   }
 
-  &.copytile {
+  &[data-copy] {
     right: 1.6rem;
 
-    &.alone {
+    &[data-copy=alone] {
       right: 2px;
     }
 

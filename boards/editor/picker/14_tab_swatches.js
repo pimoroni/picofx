@@ -12,7 +12,7 @@ function liveSwatch(swatch, panel) {
   swatch.className = "accswatch liveswatch";
   // A strip not fitted is crossed through, as a screen not fitted is, its lamps playing nothing
   var absent = runsOfPanel(panel).every(function (run) { return run.strip && run.there === false; });
-  if (absent) swatch.classList.add("absent");
+  swatch.toggleAttribute("data-absent", absent);
   runsOfPanel(panel).forEach(function (run) {
     var cells = run.lamps.map(function () {
       var cell = document.createElement("span");
