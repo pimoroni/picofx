@@ -3,6 +3,7 @@ import os
 
 import pytest
 from conftest import BOARDS, HERE
+
 UPDATING = os.environ.get("PICKER_GOLDEN") == "update"
 
 SCENARIOS = {
