@@ -446,12 +446,6 @@ th{font-weight:600;color:var(--dim);font-size:.76rem}
 .scustom .hexline input{width:5.2rem}
 .scustomside{display:flex;flex-direction:column;gap:.4rem;align-self:stretch}
 .scustompreview{flex:1;border-radius:8px;border:1px solid var(--line);min-height:3rem}
-.groupedlooks .gallery-head,.programview .gallery-head{margin:1rem 0 .4rem;font-size:.92rem}
-.groupedlooks .gallery-head:first-child{margin-top:0}
-.groupedlooks .lookshead>.foldhead{display:flex;align-items:baseline;gap:.6rem;margin:0;
- font:inherit}
-.groupedlooks .gallery-head .says,.programview .gallery-head .says{font:400 .8rem system-ui,sans-serif;
- color:var(--dim)}
 .card.nothing.small{margin-left:auto;align-self:center;display:flex;align-items:stretch;
  border-radius:9px;cursor:pointer}
 .card.nothing.small .face{width:2.4rem;height:auto;min-height:1.7rem}

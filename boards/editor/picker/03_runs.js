@@ -1,18 +1,17 @@
-import {BOARD, LOOKS, canPlay, lookNamed, rangify, whyNot} from "./01_looks.js";
+import {BOARD, canPlay, lookNamed, rangify} from "./01_looks.js";
 import {FRAME, beat, previewingStrip} from "./02_preview.js";
-import {lampUnder, namesOf, state} from "./04_scenes.js";
+import {lampUnder, namesOf} from "./04_scenes.js";
 import {
-  START_MOODS, isBanked, livePlay, paletteMark, sectionLines, spoken, startColour, stretchWash,
-  stripSelector, takesColour, targetFor
+  START_MOODS, livePlay, sectionLines, spoken, startColour, stretchWash, stripSelector, targetFor
 } from "./05_effects.js";
 import {lampsMovable} from "./07_board.js";
 import {canEdit, heldOutput, noArrow, setupOn} from "./08_setup.js";
 import {breakOut, bringForward, moveLamp, rejoin} from "./09_wiring.js";
 import {renderPreview} from "./18_drive.js";
-import {groupGallery} from "./24_gallery_groups.js";
 import {keptLights, keptNow} from "./27_readback.js";
 import {renderStretches} from "./31_stretch_bar.js";
 import {renderEditor} from "./32_stretch_editor.js";
+import {paintCards, renderGallery} from "./33_gallery.js";
 
 // ---- the board's outputs, inside the sections system ------------------------------------
 // A colour output is three PWM channels behind one lamp. Where the board lets an adapter tell
@@ -723,17 +722,14 @@ export function inkAt(lit) {
 
 // ---- the gallery, played on the chosen stretch --------------------------------------------
 
-var CARD_LIGHTS = 12;
 export var MIDDLING = {pace: 0.5, mood: 0.5, colour: "#ffffff"};
-var cardFaces = [];
-var cardWalks = {};
 var carrying_lamp = null;
 
 // A look given to a stretch. A line kept as written that already plays some of its lights is
 // asked about first, since the board refuses a light set twice: agreed, the kept lines go;
 // declined, nothing changes. A strip not fitted takes no look, and a new look starts in its
 // own colour, its second setting afresh
-function landLook(run, at, name) {
+export function landLook(run, at, name) {
   var section = run.sections[at];
   if (section && name) {
     var named = keptLights(run);
@@ -770,46 +766,9 @@ function landLook(run, at, name) {
   draw();
 }
 
-function lookCard(isMono, look, on) {
-  var card = document.createElement("div");
-  card.className = "card" + (on ? " picked" : "") + (look.name ? "" : " nothing");
-  var face = document.createElement("div");
-  face.className = "face";
-  if (look.name) {
-    var cells = [];
-    for (var i = 0; i < CARD_LIGHTS; i++) {
-      var cell = document.createElement("span");
-      face.appendChild(cell);
-      cells.push(cell);
-    }
-    cardFaces.push({cells: cells, look: look, mono: isMono,
-                    key: (isMono ? "m" : "c") + "-" + look.name});
-  }
-  card.appendChild(face);
-  var name = document.createElement("div");
-  name.className = "name";
-  name.textContent = look.name || "Nothing";
-  card.appendChild(name);
-
-  // In a scene, a stretch playing nothing shows Always on's look or goes dark as the board decides,
-  // so Nothing there is not the same as off
-  card.title = look.name ? look.name + ": apply it to the selected stretch"
-             : state.at >= 0 ? "Play nothing of this scene's own on the selected stretch"
-             : "turn a stretch off";
-  card.onclick = function () {
-    var run = galleryRun(isMono);
-    landLook(run, stretchFor(run, isMono), look.name);
-  };
-  if (!isMono && takesColour(lookNamed(look.name))) {
-    card.appendChild(paletteMark());
-    card.title += ". You can choose its colour";
-  }
-  return card;
-}
-
 // The run the cards are for. A run of another kind, a strip say, is its own kind and is
 // worked on while it is the one picked; otherwise the cards follow the colour or mono side
-function galleryRun(isMono) {
+export function galleryRun(isMono) {
   if (active && active.strip) return active;
   return isMono ? mono : outs;
 }
@@ -829,7 +788,12 @@ function haveKind(isMono) {
   });
 }
 
-function stretchFor(run, isMono) {
+export function lookKind() {
+  if (!haveKind(showing) && haveKind(!showing)) showing = !showing;
+  return showing;
+}
+
+export function stretchFor(run, isMono) {
   var section = run.sections[run.picked];
   var lamp = section && run.lamps[section.from];
   if (lamp && lamp.colour === !isMono) return run.picked;
@@ -838,69 +802,6 @@ function stretchFor(run, isMono) {
     if (first && first.colour === !isMono) return i;
   }
   return run.picked;
-}
-
-// The cards follow whatever stretch was last picked, so the gallery is a shelf of what that
-// stretch can play
-function renderGalleries() {
-  // A kind the board has none of cannot be worked on, so the set goes back to the one it
-  // has. Without this the cards would be for lights that are not there
-  if (!haveKind(showing) && haveKind(!showing)) showing = !showing;
-
-  var box = document.getElementById("looks");
-  box.textContent = "";
-
-  var tabs = document.createElement("div");
-  tabs.className = "tabs sides";
-  box.appendChild(tabs);
-
-  var run = galleryRun(showing);
-  var section = run.sections[run === active ? run.picked : stretchFor(run, showing)];
-  var lamp = section && run.lamps[section.from];
-  box.hidden = !!(section && lookNamed(section.look)) && !(choosingLook && run === active);
-
-  // What the stretch being worked on could actually be given. A look shaped to several
-  // lamps has nothing to say on a stretch of one, and the model would clear it the moment
-  // it landed: better to say so on the card than to take it and quietly drop it
-  var target = section ? targetFor(run, section) : null;
-
-  var shelf = document.createElement("div");
-  shelf.className = "shelf bare";
-  box.appendChild(shelf);
-
-  var looks = document.createElement("div");
-  looks.className = "gallery";
-  spanning().concat([{name: null}]).forEach(function (look) {
-    var can = !look.name || !target || canPlay(look, target);
-    var on = can && lamp && lamp.colour === !showing && section.look === look.name;
-    var card = lookCard(showing, look, on);
-    if (!can) {
-      card.className += " cannot";
-      card.onclick = null;
-      card.title = whyNot(look, target);
-    }
-    looks.appendChild(card);
-  });
-  shelf.appendChild(looks);
-  groupGallery();
-}
-
-// The looks a run of several lamps can play, a banked one dealing its banks along it
-function spanning() {
-  return LOOKS.filter(function (look) { return look.spans || isBanked(look); });
-}
-
-function paintCards() {
-  cardFaces.forEach(function (one) {
-    var store = cardWalks[one.key] || (cardWalks[one.key] = {});
-    one.cells.forEach(function (cell, i) {
-      var walk = store[i] || (store[i] = {});
-      var lit = livePlay(one.look, MIDDLING, beat, i, CARD_LIGHTS, walk);
-      cell.style.background = lit
-        ? inkAt({level: lit.level, ink: one.mono ? "#ffd9a0" : lit.ink})
-        : "#3a3f44";
-    });
-  });
 }
 
 // ---- the run: lamps left to right, an output's own kept together --------------------------
@@ -1211,9 +1112,8 @@ export function draw() {
   drawSteps.before.forEach(function (step) { step(); });
 
   painters = [];
-  cardFaces = [];
   kinOf = {};
-  renderGalleries();
+  renderGallery();
   renderRun("outRun", outs);
   renderCutting("outCut", outs);
   renderStretches("outBar", outs);

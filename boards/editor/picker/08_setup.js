@@ -59,8 +59,11 @@ export function setSetup(on) {
 // Nothing looks picked while setup is on: the marks are drawn by the pages below, so they
 // are taken off once drawn
 function unmark() {
-  document.querySelectorAll(".lamp.ringed, .card.picked").forEach(function (one) {
-    one.classList.remove("ringed", "picked");
+  document.querySelectorAll(".lamp.ringed").forEach(function (one) {
+    one.classList.remove("ringed");
+  });
+  document.querySelectorAll(".looks [aria-pressed=true]").forEach(function (one) {
+    one.setAttribute("aria-pressed", "false");
   });
   document.querySelectorAll(".stretches > li[aria-current]").forEach(function (one) {
     one.removeAttribute("aria-current");

@@ -891,21 +891,6 @@ function stripLines(look, target, pace, mood) {
   return lines;
 }
 
-// A card carries a painter's palette where its look takes a colour, and the stretch being
-// worked on can be given one
-export function paletteMark() {
-  var palette = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  palette.setAttribute("viewBox", "0 0 16 16");
-  palette.setAttribute("class", "tint palette");
-  palette.innerHTML =
-    "<path fill='currentColor' d='M8 1.2a6.8 6.8 0 0 0 0 13.6c1.1 0 1.7-.6 1.7-1.4 " +
-    "0-.9-.7-1.1-.7-1.9 0-.8.6-1.3 1.4-1.3h1.8a3 3 0 0 0 3-3C15.2 3.8 12 1.2 8 1.2Z'/>" +
-    [[4.6, 8], [5.6, 4.6], [9, 3.6], [12, 5.6]].map(function (at) {
-      return "<circle cx='" + at[0] + "' cy='" + at[1] + "' r='1.2' fill='var(--panel)'/>";
-    }).join("");
-  return palette;
-}
-
 export function startColour(run, section, look) {
   if (!takesColour(look)) return;
   var own = look.solid ? SOLID_COLOUR : ownColour(look, run, section);

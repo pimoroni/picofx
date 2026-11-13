@@ -454,12 +454,6 @@ th{font-weight:600;color:var(--dim);font-size:.76rem}
 .scustom .hexline input{width:5.2rem}
 .scustomside{display:flex;flex-direction:column;gap:.4rem;align-self:stretch}
 .scustompreview{flex:1;border-radius:8px;border:1px solid var(--line);min-height:3rem}
-.groupedlooks .gallery-head,.programview .gallery-head{margin:1rem 0 .4rem;font-size:.92rem}
-.groupedlooks .gallery-head:first-child{margin-top:0}
-.groupedlooks .lookshead>.foldhead{display:flex;align-items:baseline;gap:.6rem;margin:0;
- font:inherit}
-.groupedlooks .gallery-head .says,.programview .gallery-head .says{font:400 .8rem system-ui,sans-serif;
- color:var(--dim)}
 .card.nothing.small{margin-left:auto;align-self:center;display:flex;align-items:stretch;
  border-radius:9px;cursor:pointer}
 .card.nothing.small .face{width:2.4rem;height:auto;min-height:1.7rem}
@@ -2151,6 +2145,156 @@ body.discovermodal{overflow:hidden}
     opacity: .2;
   }
 }
+.looks {
+  position: relative;
+
+  details + details {
+    margin-top: .9rem;
+  }
+
+  summary {
+    display: flex;
+    align-items: baseline;
+    gap: .6rem;
+    margin-bottom: .4rem;
+    color: var(--ink);
+    font-weight: 400;
+    cursor: pointer;
+    list-style: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &::before {
+      content: "";
+      align-self: center;
+      width: .45rem;
+      height: .45rem;
+      border: solid var(--dim);
+      border-width: 0 1.6px 1.6px 0;
+      transform: rotate(-45deg);
+      transition: transform .12s;
+    }
+
+    h4 {
+      margin: 0;
+      font-size: .92rem;
+    }
+
+    small {
+      font-size: .8rem;
+      color: var(--dim);
+    }
+  }
+
+  details[open] > summary::before {
+    transform: rotate(45deg) translate(-2px, -2px);
+  }
+
+  ul {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9.4rem, 1fr));
+    gap: .7rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .card {
+    display: block;
+    width: 100%;
+    padding: 0;
+    overflow: hidden;
+    border: 2px solid var(--line);
+    border-radius: 11px;
+    background: var(--panel);
+    color: var(--ink);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: transform .12s;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+
+    &[aria-pressed=true] {
+      border-color: var(--accent);
+
+      .name {
+        color: var(--accent);
+      }
+    }
+
+    &[aria-disabled] {
+      opacity: .35;
+      cursor: default;
+
+      &:hover {
+        transform: none;
+      }
+    }
+  }
+
+  .face {
+    display: flex;
+    height: 2.9rem;
+    background: var(--dark);
+
+    i {
+      flex: 1;
+    }
+  }
+
+  .name {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 2.1rem;
+    padding: .3rem .65rem;
+    font: 600 .85rem system-ui, sans-serif;
+
+    svg {
+      flex: none;
+      width: 20px;
+      height: 20px;
+      fill: #b8b1a6;
+
+      .hole {
+        fill: var(--panel);
+      }
+    }
+  }
+
+  .nothing {
+    position: absolute;
+    top: -.3rem;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    padding: 0 .65rem 0 0;
+    overflow: hidden;
+    border: 2px solid var(--line);
+    border-radius: 9px;
+    background: var(--panel);
+    color: var(--ink);
+    font: 600 .8rem system-ui, sans-serif;
+    cursor: pointer;
+
+    .face {
+      width: 2.4rem;
+      height: 1.7rem;
+      background: repeating-linear-gradient(45deg, #f0eeea, #f0eeea 7px, #e4e0d9 7px, #e4e0d9 14px);
+    }
+
+    &[aria-pressed=true] {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+  }
+}
 </style>
 </head>
 <body>
@@ -3769,10 +3913,7 @@ function inkAt(lit) {
 
 // ---- the gallery, played on the chosen stretch --------------------------------------------
 
-var CARD_LIGHTS = 12;
 var MIDDLING = {pace: 0.5, mood: 0.5, colour: "#ffffff"};
-var cardFaces = [];
-var cardWalks = {};
 var carrying_lamp = null;
 
 // A look given to a stretch. A line kept as written that already plays some of its lights is
@@ -3816,43 +3957,6 @@ function landLook(run, at, name) {
   draw();
 }
 
-function lookCard(isMono, look, on) {
-  var card = document.createElement("div");
-  card.className = "card" + (on ? " picked" : "") + (look.name ? "" : " nothing");
-  var face = document.createElement("div");
-  face.className = "face";
-  if (look.name) {
-    var cells = [];
-    for (var i = 0; i < CARD_LIGHTS; i++) {
-      var cell = document.createElement("span");
-      face.appendChild(cell);
-      cells.push(cell);
-    }
-    cardFaces.push({cells: cells, look: look, mono: isMono,
-                    key: (isMono ? "m" : "c") + "-" + look.name});
-  }
-  card.appendChild(face);
-  var name = document.createElement("div");
-  name.className = "name";
-  name.textContent = look.name || "Nothing";
-  card.appendChild(name);
-
-  // In a scene, a stretch playing nothing shows Always on's look or goes dark as the board decides,
-  // so Nothing there is not the same as off
-  card.title = look.name ? look.name + ": apply it to the selected stretch"
-             : state.at >= 0 ? "Play nothing of this scene's own on the selected stretch"
-             : "turn a stretch off";
-  card.onclick = function () {
-    var run = galleryRun(isMono);
-    landLook(run, stretchFor(run, isMono), look.name);
-  };
-  if (!isMono && takesColour(lookNamed(look.name))) {
-    card.appendChild(paletteMark());
-    card.title += ". You can choose its colour";
-  }
-  return card;
-}
-
 // The run the cards are for. A run of another kind, a strip say, is its own kind and is
 // worked on while it is the one picked; otherwise the cards follow the colour or mono side
 function galleryRun(isMono) {
@@ -3875,6 +3979,11 @@ function haveKind(isMono) {
   });
 }
 
+function lookKind() {
+  if (!haveKind(showing) && haveKind(!showing)) showing = !showing;
+  return showing;
+}
+
 function stretchFor(run, isMono) {
   var section = run.sections[run.picked];
   var lamp = section && run.lamps[section.from];
@@ -3884,69 +3993,6 @@ function stretchFor(run, isMono) {
     if (first && first.colour === !isMono) return i;
   }
   return run.picked;
-}
-
-// The cards follow whatever stretch was last picked, so the gallery is a shelf of what that
-// stretch can play
-function renderGalleries() {
-  // A kind the board has none of cannot be worked on, so the set goes back to the one it
-  // has. Without this the cards would be for lights that are not there
-  if (!haveKind(showing) && haveKind(!showing)) showing = !showing;
-
-  var box = document.getElementById("looks");
-  box.textContent = "";
-
-  var tabs = document.createElement("div");
-  tabs.className = "tabs sides";
-  box.appendChild(tabs);
-
-  var run = galleryRun(showing);
-  var section = run.sections[run === active ? run.picked : stretchFor(run, showing)];
-  var lamp = section && run.lamps[section.from];
-  box.hidden = !!(section && lookNamed(section.look)) && !(choosingLook && run === active);
-
-  // What the stretch being worked on could actually be given. A look shaped to several
-  // lamps has nothing to say on a stretch of one, and the model would clear it the moment
-  // it landed: better to say so on the card than to take it and quietly drop it
-  var target = section ? targetFor(run, section) : null;
-
-  var shelf = document.createElement("div");
-  shelf.className = "shelf bare";
-  box.appendChild(shelf);
-
-  var looks = document.createElement("div");
-  looks.className = "gallery";
-  spanning().concat([{name: null}]).forEach(function (look) {
-    var can = !look.name || !target || canPlay(look, target);
-    var on = can && lamp && lamp.colour === !showing && section.look === look.name;
-    var card = lookCard(showing, look, on);
-    if (!can) {
-      card.className += " cannot";
-      card.onclick = null;
-      card.title = whyNot(look, target);
-    }
-    looks.appendChild(card);
-  });
-  shelf.appendChild(looks);
-  groupGallery();
-}
-
-// The looks a run of several lamps can play, a banked one dealing its banks along it
-function spanning() {
-  return LOOKS.filter(function (look) { return look.spans || isBanked(look); });
-}
-
-function paintCards() {
-  cardFaces.forEach(function (one) {
-    var store = cardWalks[one.key] || (cardWalks[one.key] = {});
-    one.cells.forEach(function (cell, i) {
-      var walk = store[i] || (store[i] = {});
-      var lit = livePlay(one.look, MIDDLING, beat, i, CARD_LIGHTS, walk);
-      cell.style.background = lit
-        ? inkAt({level: lit.level, ink: one.mono ? "#ffd9a0" : lit.ink})
-        : "#3a3f44";
-    });
-  });
 }
 
 // ---- the run: lamps left to right, an output's own kept together --------------------------
@@ -4257,9 +4303,8 @@ function draw() {
   drawSteps.before.forEach(function (step) { step(); });
 
   painters = [];
-  cardFaces = [];
   kinOf = {};
-  renderGalleries();
+  renderGallery();
   renderRun("outRun", outs);
   renderCutting("outCut", outs);
   renderStretches("outBar", outs);
@@ -6106,21 +6151,6 @@ function stripLines(look, target, pace, mood) {
   return lines;
 }
 
-// A card carries a painter's palette where its look takes a colour, and the stretch being
-// worked on can be given one
-function paletteMark() {
-  var palette = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  palette.setAttribute("viewBox", "0 0 16 16");
-  palette.setAttribute("class", "tint palette");
-  palette.innerHTML =
-    "<path fill='currentColor' d='M8 1.2a6.8 6.8 0 0 0 0 13.6c1.1 0 1.7-.6 1.7-1.4 " +
-    "0-.9-.7-1.1-.7-1.9 0-.8.6-1.3 1.4-1.3h1.8a3 3 0 0 0 3-3C15.2 3.8 12 1.2 8 1.2Z'/>" +
-    [[4.6, 8], [5.6, 4.6], [9, 3.6], [12, 5.6]].map(function (at) {
-      return "<circle cx='" + at[0] + "' cy='" + at[1] + "' r='1.2' fill='var(--panel)'/>";
-    }).join("");
-  return palette;
-}
-
 function startColour(run, section, look) {
   if (!takesColour(look)) return;
   var own = look.solid ? SOLID_COLOUR : ownColour(look, run, section);
@@ -6672,8 +6702,11 @@ function setSetup(on) {
 // Nothing looks picked while setup is on: the marks are drawn by the pages below, so they
 // are taken off once drawn
 function unmark() {
-  document.querySelectorAll(".lamp.ringed, .card.picked").forEach(function (one) {
-    one.classList.remove("ringed", "picked");
+  document.querySelectorAll(".lamp.ringed").forEach(function (one) {
+    one.classList.remove("ringed");
+  });
+  document.querySelectorAll(".looks [aria-pressed=true]").forEach(function (one) {
+    one.setAttribute("aria-pressed", "false");
   });
   document.querySelectorAll(".stretches > li[aria-current]").forEach(function (one) {
     one.removeAttribute("aria-current");
@@ -11981,83 +12014,6 @@ bannerSteps.push(function (text, warn) {
   }
 });
 
-// ---- the looks in groups ------------------------------------------------------------------
-// The gallery grouped by how the lights play together, each group a row of at most five, the
-// width a row of cards has. The showiest come first: the travelling looks, Rainbow among them
-// being what the board opens playing, then the ready-made ones, each a base look specialised
-// or several of them together, then the plainest and the most specialised. The cards are the
-// flat gallery's own, moved into their groups with everything they do, so a look no group
-// names still shows, in a group of its own at the end. Nothing is no look of any group, so it
-// is a card made small at the end of the first heading, where there is always room for it.
-
-var LOOK_GROUPS = [
-  {name: "Along the lights", says: "travelling from one end to the other",
-   looks: ["Rainbow", "Wave", "Scanner", "Chase", "Marquee"]},
-  {name: "Ready-made", says: "combinations of other looks",
-   looks: ["Campfire", "Emergency", "Party"]},
-  {name: "All together", says: "every light shows the same",
-   looks: ["Solid", "Colour cycle", "Colour steps", "Breathe", "Blink"]},
-  {name: "Individual", says: "each light plays its own part",
-   looks: ["Sparkle", "Counter", "Traffic light", "Pelican crossing"]}
-];
-
-// The gallery's cards gathered under the groups' headings, in the groups' order
-function groupGallery() {
-  var flat = document.querySelector("#looks .gallery");
-  if (!flat) return;
-  var cards = {};
-  var order = [];
-  var nothing = null;
-  Array.prototype.slice.call(flat.children).forEach(function (card) {
-    if (card.classList.contains("nothing")) {
-      nothing = card;
-      return;
-    }
-    var name = card.querySelector(".name").textContent;
-    cards[name] = card;
-    order.push(name);
-  });
-
-  var named = [].concat.apply([], LOOK_GROUPS.map(function (group) { return group.looks; }));
-  var groups = LOOK_GROUPS.map(function (group) {
-    return {name: group.name, says: group.says,
-            looks: group.looks.filter(function (name) { return cards[name]; })};
-  });
-  var rest = order.filter(function (name) { return named.indexOf(name) < 0; });
-  if (rest.length) groups.push({name: "More", says: "", looks: rest});
-  groups = groups.filter(function (group) { return group.looks.length; });
-
-  var holder = document.createElement("div");
-  holder.className = "groupedlooks";
-  groups.forEach(function (group, at) {
-    // Each heading folds its group, all starting open. Nothing sits beside the first heading
-    // and not in it, so it is never folded away
-    var head = document.createElement("div");
-    head.className = "gallery-head lookshead";
-    var key = "looks:" + group.name;
-    var open = groupOpen([key, "", [], false]);
-    var fold = foldHead(group.name, group.says, open, function () {
-      groupsOpen[key] = !open;
-    });
-    // The row is the heading here, the button only its part that folds
-    fold.classList.remove("gallery-head");
-    head.appendChild(fold);
-    if (at === 0 && nothing) {
-      nothing.classList.add("small");
-      head.appendChild(nothing);
-    }
-    holder.appendChild(head);
-    if (!open) return;
-    var row = document.createElement("div");
-    row.className = "gallery";
-    row.dataset.group = group.name;
-    group.looks.forEach(function (name) { row.appendChild(cards[name]); });
-    holder.appendChild(row);
-  });
-  flat.parentNode.replaceChild(holder, flat);
-}
-
-
 // ---- the figure beside each slider --------------------------------------------------------
 // Each slider can show beside it the value the file writes, with its unit, in a box that takes
 // one typed in. Typed within the slider's reach, the slider moves to it; typed past an end,
@@ -14704,6 +14660,110 @@ drawSteps.after.push(function () {
   notchEditors();
 });
 window.addEventListener("resize", notchEditors);
+
+var LOOK_GROUPS = [
+  {name: "Along the lights", says: "travelling from one end to the other",
+   looks: ["Rainbow", "Wave", "Scanner", "Chase", "Marquee"]},
+  {name: "Ready-made", says: "combinations of other looks",
+   looks: ["Campfire", "Emergency", "Party"]},
+  {name: "All together", says: "every light shows the same",
+   looks: ["Solid", "Colour cycle", "Colour steps", "Breathe", "Blink"]},
+  {name: "Individual", says: "each light plays its own part",
+   looks: ["Sparkle", "Counter", "Traffic light", "Pelican crossing"]}
+];
+var CARD_LIGHTS = 12;
+var PALETTE = "<path d='M8 1.2a6.8 6.8 0 0 0 0 13.6c1.1 0 1.7-.6 1.7-1.4 0-.9-.7-1.1-.7-1.9 " +
+              "0-.8.6-1.3 1.4-1.3h1.8a3 3 0 0 0 3-3C15.2 3.8 12 1.2 8 1.2Z'/>" +
+              [[4.6, 8], [5.6, 4.6], [9, 3.6], [12, 5.6]].map(function (at) {
+                return "<circle cx='" + at[0] + "' cy='" + at[1] + "' r='1.2' class='hole'/>";
+              }).join("");
+
+var cardFaces = [];
+var cardWalks = {};
+
+function spanning() {
+  return LOOKS.filter(function (look) { return look.spans || isBanked(look); });
+}
+
+function grouped(looks) {
+  var named = [].concat.apply([], LOOK_GROUPS.map(function (group) { return group.looks; }));
+  var groups = LOOK_GROUPS.map(function (group) {
+    return {name: group.name, says: group.says, looks: group.looks.map(lookNamed).filter(function (look) {
+      return looks.indexOf(look) >= 0;
+    })};
+  });
+  var rest = looks.filter(function (look) { return named.indexOf(look.name) < 0; });
+  if (rest.length) groups.push({name: "More", says: "", looks: rest});
+  return groups.filter(function (group) { return group.looks.length; });
+}
+
+function renderGallery() {
+  var box = document.getElementById("looks");
+  cardFaces = [];
+  var mono = lookKind();
+  var run = galleryRun(mono);
+  var section = run.sections[run === active ? run.picked : stretchFor(run, mono)];
+  var lamp = section && run.lamps[section.from];
+  box.hidden = !!(section && lookNamed(section.look)) && !(choosingLook && run === active);
+  var target = section ? targetFor(run, section) : null;
+  var playing = lamp && lamp.colour === !mono ? section.look : undefined;
+
+  function choose(name) {
+    var into = galleryRun(mono);
+    landLook(into, stretchFor(into, mono), name);
+  }
+
+  replace(box, h("div", {class: "looks"},
+    nothingCard(playing === null, choose),
+    grouped(spanning()).map(function (group) {
+      var key = "looks:" + group.name;
+      var details = h("details", {open: groupsOpen[key] !== false,
+                                  ontoggle: function () { groupsOpen[key] = details.open; }},
+        h("summary", {}, h("h4", {}, group.name), group.says ? h("small", {}, group.says) : null),
+        h("ul", {}, group.looks.map(function (look) {
+          return h("li", {}, lookCard(look, mono, target, playing === look.name, choose));
+        })));
+      return details;
+    })));
+}
+
+function lookCard(look, mono, target, on, choose) {
+  var can = !target || canPlay(look, target);
+  var coloured = !mono && takesColour(look);
+  var cells = [];
+  for (var i = 0; i < CARD_LIGHTS; i++) cells.push(h("i"));
+  cardFaces.push({cells: cells, look: look, mono: mono, key: (mono ? "m" : "c") + "-" + look.name});
+  return h("button", {type: "button", class: "card", "aria-pressed": can && on ? "true" : "false",
+                      "aria-disabled": can ? null : "true",
+                      title: can ? look.name + ": apply it to the selected stretch" +
+                                   (coloured ? ". You can choose its colour" : "")
+                                 : whyNot(look, target),
+                      onclick: function () { if (can) choose(look.name); }},
+    h("span", {class: "face"}, cells),
+    h("span", {class: "name"}, look.name,
+      coloured ? h("svg:svg", {viewBox: "0 0 16 16", "aria-hidden": "true", html: PALETTE}) : null));
+}
+
+function nothingCard(on, choose) {
+  return h("button", {type: "button", class: "nothing", "aria-pressed": on ? "true" : "false",
+                      title: state.at >= 0 ? "Play nothing of this scene's own on the selected stretch"
+                                           : "turn a stretch off",
+                      onclick: function () { choose(null); }},
+    h("span", {class: "face"}), "Nothing");
+}
+
+function paintCards() {
+  cardFaces.forEach(function (one) {
+    var store = cardWalks[one.key] || (cardWalks[one.key] = {});
+    one.cells.forEach(function (cell, i) {
+      var walk = store[i] || (store[i] = {});
+      var lit = livePlay(one.look, MIDDLING, beat, i, CARD_LIGHTS, walk);
+      cell.style.background = lit
+        ? inkAt({level: lit.level, ink: one.mono ? "#ffd9a0" : lit.ink})
+        : "#3a3f44";
+    });
+  });
+}
 
 // ---- the page, started ---------------------------------------------------------------------------
 // Every part is in place, so the always-on tab takes what they hold and the page is drawn once,
