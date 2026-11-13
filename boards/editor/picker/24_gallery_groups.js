@@ -146,7 +146,7 @@ function seatLooks() {
 function tabTheChosen() {
   document.querySelectorAll(".panel .chosen").forEach(function (wrap) {
     var panel = wrap.closest(".panel");
-    var cell = panel.querySelector(".bar > .sec.picked");
+    var cell = panel.querySelector(".stretches > li[aria-current]");
     if (!cell) {
       wrap.style.removeProperty("--tabw");
       return;

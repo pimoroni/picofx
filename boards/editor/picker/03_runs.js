@@ -11,6 +11,7 @@ import {breakOut, bringForward, moveLamp, rejoin} from "./09_wiring.js";
 import {renderPreview} from "./18_drive.js";
 import {groupGallery, renderPicking} from "./24_gallery_groups.js";
 import {keptLights, keptNow} from "./27_readback.js";
+import {renderStretches} from "./31_stretch_bar.js";
 
 // ---- the board's outputs, inside the sections system ------------------------------------
 // A colour output is three PWM channels behind one lamp. Where the board lets an adapter tell
@@ -421,7 +422,7 @@ function pickingLook(run) {
   return !!section && (!lookNamed(section.look) || (choosingLook && run === active));
 }
 
-function cutAt(run, after) {
+export function cutAt(run, after) {
   if (after < 0 || after >= run.lamps.length - 1) return;
   var at = sectionAt(run, after);
   var section = run.sections[at];
@@ -454,7 +455,7 @@ export function uncut(run, which) {
 
 // Moving a cut takes lamps from the stretch on one side and gives them to the other. A
 // stretch squeezed to nothing is gone, which is how a drag joins two
-function moveEdge(run, which, to) {
+export function moveEdge(run, which, to) {
   var left = run.sections[which];
   var right = run.sections[which + 1];
   if (!right) return;
@@ -727,39 +728,8 @@ var cardFaces = [];
 var cardWalks = {};
 var carrying_lamp = null;
 
-// The cut being dragged, and whether the pointer moved far enough for the release to be
-// the end of a drag rather than a click
-export var holding = null;
-var dragged = false;
 
-document.addEventListener("mousemove", function (event) {
-  if (!holding) return;
-  var bar = document.getElementById(holding.where).querySelector(".bar");
-  if (!bar) return;
-  var box = bar.getBoundingClientRect();
-  if (!box.width) return;
-  var across = (event.clientX - box.left) / box.width;
-  var lamp = Math.round(across * holding.run.lamps.length) - 1;
-  var left = holding.run.sections[holding.which];
-  if (!left || left.to === lamp) return;
-  dragged = true;
-  moveEdge(holding.run, holding.which, lamp);
-  settle();
-  pick(holding.run, holding.which);
-  draw();
-  // A drag that swallowed a stretch has done the one thing a drag can do. Letting it
-  // carry on would eat the rest of the run in the same few pixels
-  if (holding.run.sections.length !== holding.had) holding = null;
-});
 
-document.addEventListener("mouseup", function () {
-  // End a drag at any release, including one that swallowed a stretch and let go of its cut
-  // already. Otherwise every later click on the bar is taken for the end of a drag
-  if (dragged) window.setTimeout(function () { dragged = false; }, 0);
-  if (!holding) return;
-  holding = null;
-  draw();
-});
 
 // A look given to a stretch. A line kept as written that already plays some of its lights is
 // asked about first, since the board refuses a light set twice: agreed, the kept lines go;
@@ -1081,163 +1051,11 @@ export function washFor(run, section, look) {
   return stretchWash(look, section, run, !!first && !first.colour);
 }
 
-// A stretch's coloured band. One the scene plays nothing on keeps the stripes of nothing, over a
-// window onto Always on's own band where Always on plays there and over dark where it is off
-export function washOf(run, section, look, under) {
-  var wash = document.createElement("span");
-  if (look || !under) {
-    wash.className = "lit" + (look ? "" : " nothing");
-    if (look) wash.style.background = washFor(run, section, look);
-    return wash;
-  }
-  wash.className = "lit through";
-  // Each run of lamps that show one thing is one pane
-  var wide = under.lamps.length;
-  var start = 0;
-  while (start < wide) {
-    var end = start + 1;
-    while (end < wide && sameShowing(under.lamps[end], under.lamps[start])) end++;
-    wash.appendChild(paneOnto(run, under.lamps[start], start, end, wide));
-    start = end;
-  }
-  return wash;
-}
 
-// Whether two lamps show the same thing under a scene: nothing, off, or one Always on stretch
-function sameShowing(one, other) {
-  return one === other ||
-         !!(one && other && one.section && other.section && one.section === other.section);
-}
 
-// A pane over lamps start to end of a stretch wide lamps across. Over Always on's stretch it holds
-// that stretch's whole band, moved so the lamps under the pane line up with their own part of it
-function paneOnto(run, shows, start, end, wide) {
-  var pane = document.createElement("span");
-  pane.style.left = (start * 100 / wide) + "%";
-  pane.style.width = ((end - start) * 100 / wide) + "%";
-  if (!shows) pane.className = "empty";
-  else if (shows === "off") pane.className = "off";
-  else {
-    var band = document.createElement("span");
-    band.style.width = (widthOf(shows.section) * 100 / (end - start)) + "%";
-    band.style.left = (-shows.at * 100 / (end - start)) + "%";
-    band.style.background = washFor(run, shows.section, lookNamed(shows.section.look));
-    pane.appendChild(band);
-  }
-  return pane;
-}
 
-// The note under a cell's "Nothing" saying what shows through from Always on, or nothing where
-// the stretch shows nothing at all
-export function beneath(under) {
-  return under ? "<span class='beneath'>" + escapeHtml(under.note) + "</span>" : "";
-}
 
-function renderBar(where, run) {
-  var box = document.getElementById(where);
-  box.textContent = "";
-  var scroller = document.createElement("div");
-  scroller.className = "scroller";
-  var bar = document.createElement("div");
-  bar.className = "bar";
-  var faces = [];
 
-  run.sections.forEach(function (section, at) {
-    var cell = document.createElement("button");
-    cell.className = "sec withlamps" + (run === active && run.picked === at ? " picked" : "");
-    cell.style.flex = widthOf(section) + " 1 0";
-    var first = run.lamps[section.from];
-    cell.title = (first && first.colour ? "colour" : "mono") + ", " +
-                 targetFor(run, section).selector;
-
-    var lamps = document.createElement("span");
-    lamps.className = "seclamps";
-    for (var lamp = section.from; lamp <= section.to; lamp++) {
-      var one = document.createElement("span");
-      one.className = "seclamp";
-      var face = document.createElement("i");
-      one.appendChild(face);
-      var said = document.createElement("b");
-      said.textContent = shortName(run.lamps[lamp]);
-      one.appendChild(said);
-      faces.push(face);
-      lamps.appendChild(one);
-    }
-    cell.appendChild(lamps);
-
-    var look = lookNamed(section.look);
-    var under = look ? null : stretchUnder(run, section);
-    cell.appendChild(washOf(run, section, look, under));
-    if (under) cell.title = under.tip;
-
-    var says = document.createElement("span");
-    says.className = "says";
-    says.innerHTML = (look ? look.name : "Nothing") + " <em>" + widthOf(section) + "</em>" +
-                     beneath(under);
-    cell.appendChild(says);
-
-    // Where this stretch can be cut, one place between two lamps
-    var inside = document.createElement("span");
-    inside.className = "cuts";
-    for (var i = section.from; i < section.to; i++) {
-      inside.appendChild(cutPoint(run, i, widthOf(section), section.from));
-    }
-    cell.appendChild(inside);
-
-    cell.onclick = function () {
-      if (dragged) return;
-      pick(run, at);
-      draw();
-    };
-    bar.appendChild(cell);
-
-    if (at < run.sections.length - 1) {
-      var edge = document.createElement("div");
-      edge.className = "edge";
-      edge.title = "drag to move this cut, or click \u00d7 to remove it";
-      edge.onmousedown = function (event) {
-        event.preventDefault();
-        remember(run);
-        // The stretch being resized is the one being worked on, whichever side it is on
-        pick(run, at);
-        // The bar is rebuilt on every move, so what is held onto is where the bar lives
-        // and not the bar itself, which would be a node already thrown away
-        holding = {run: run, which: at, where: where, had: run.sections.length};
-        edge.classList.add("holding");
-      };
-      // Taking the cut out is its own target, so it is never confused with moving it
-      var drop = document.createElement("button");
-      drop.className = "drop";
-      drop.textContent = "\u00d7";
-      drop.title = "remove this cut and join the two stretches";
-      drop.onmousedown = function (event) { event.stopPropagation(); };
-      drop.onclick = function (event) {
-        event.stopPropagation();
-        uncut(run, at);
-      };
-      edge.appendChild(drop);
-      bar.appendChild(edge);
-    }
-  });
-  scroller.appendChild(bar);
-  box.appendChild(scroller);
-  paintsFaces(run, faces);
-}
-
-export function cutPoint(run, after, wide, from) {
-  var snip = document.createElement("i");
-  snip.className = "cut";
-  snip.style.left = ((after - from + 1) / wide * 100) + "%";
-  snip.style.width = "min(11px, " + (55 / wide) + "%)";
-  snip.dataset.says = shortName(run.lamps[after]) + " | " +
-                      shortName(run.lamps[after + 1]);
-  snip.title = "cut between " + snip.dataset.says.replace(" | ", " and ");
-  snip.onclick = function (event) {
-    event.stopPropagation();
-    cutAt(run, after);
-  };
-  return snip;
-}
 
 // ---- crossing from one side to the other ---------------------------------------------------
 
@@ -1471,10 +1289,10 @@ export function draw() {
   renderGalleries();
   renderRun("outRun", outs);
   renderCutting("outCut", outs);
-  renderBar("outBar", outs);
+  renderStretches("outBar", outs);
   renderCutting("monoCut", mono);
   renderRun("monoRun", mono);
-  renderBar("monoBar", mono);
+  renderStretches("monoBar", mono);
 
   // Both sides are in the one panel, so one set of settings serves whichever was last worked
   // on rather than a set under each

@@ -172,7 +172,7 @@ def check_release_branch(page):
                      found.group(1), RELEASE_BRANCH))
 
 
-def board_parts(picker_folders, board):
+def board_parts(picker_folders, board, kind="js"):
     """The board's numbered parts in number order, from the shared parts and any of its own, a
     feature folder's only where it has it. A part of the board's own adds to the shared ones."""
     folders = []
@@ -190,7 +190,7 @@ def board_parts(picker_folders, board):
 
     for folder in picker_folders:
         take(folder)
-    parts = [part for where in folders for part in glob.glob(os.path.join(where, "[0-9][0-9]_*.js"))]
+    parts = [part for where in folders for part in glob.glob(os.path.join(where, "[0-9][0-9]_*." + kind))]
     names = [os.path.basename(part) for part in parts]
     twice = sorted({name for name in names if names.count(name) > 1})
     if twice:
@@ -242,7 +242,13 @@ def picker(board_dir, repo_dir, version):
     own = os.path.join(board_dir, "editor", "picker")
     with open(os.path.join(shared, "page.html"), encoding="utf-8") as f:
         text = f.read()
-    text += "<script>\n" + bundle(board_parts([shared] + ([own] if os.path.isdir(own) else []), board))
+    folders = [shared] + ([own] if os.path.isdir(own) else [])
+    styles = ""
+    for part in board_parts(folders, board, "css"):
+        with open(part, encoding="utf-8") as f:
+            styles += f.read()
+    text = text.replace("__STYLES__\n", styles)
+    text += "<script>\n" + bundle(board_parts(folders, board))
     text = text.replace("__BOARD_NAME__", board["name"])
     text = text.replace("__VERSION__", version)
     text = text.replace("__BOARD__", json.dumps(board, indent=1))

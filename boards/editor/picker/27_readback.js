@@ -1,7 +1,7 @@
 import {HEADER, LOOKS, canPlay, keyOf} from "./01_looks.js";
 import {
-  CHANNELS, OUTPUTS, blank, draw, drawSteps, joinedItems, order, outs, placesOf, runs, settle,
-  wiring
+  CHANNELS, OUTPUTS, blank, draw, drawSteps, joinedItems, mono, order, outs, placesOf, runs,
+  settle, wiring
 } from "./03_runs.js";
 import {
   allBodies, apply, blankBody, bodyParts, capture, fileHead, sceneMark, settleLoneScene, state
@@ -915,33 +915,13 @@ export function keptLights(run) {
   return named;
 }
 
-// Lights a kept line plays are taken, marked on the run and on a strip's bar
 function markKeptLights() {
-  runs.forEach(function (run) {
+  [outs, mono].forEach(function (run) {
     var named = keptLights(run);
-    if (run.strip) {
-      var bar = document.getElementById(run.id + "Bar");
-      if (!bar) return;
-      bar.querySelectorAll(".sec").forEach(function (cell, at) {
-        var section = run.sections[at];
-        if (!section) return;
-        for (var lamp = section.from; lamp <= section.to; lamp++) {
-          if (named[lamp]) {
-            cell.classList.add("keptlamp");
-            cell.title = "used by a line the picker cannot edit: " + named[lamp][0].text;
-            return;
-          }
-        }
-      });
-      return;
-    }
-    var side = run === outs ? "out" : "mono";
-    ["#" + side + "Run .lamp", "#" + side + "Bar .seclamp"].forEach(function (shown) {
-      document.querySelectorAll(shown).forEach(function (lamp, at) {
-        if (!named[at]) return;
-        lamp.classList.add("keptlamp");
-        lamp.title = "used by a line the picker cannot edit: " + named[at][0].text;
-      });
+    document.querySelectorAll("#" + (run === outs ? "out" : "mono") + "Run .lamp").forEach(function (lamp, at) {
+      if (!named[at]) return;
+      lamp.classList.add("keptlamp");
+      lamp.title = "used by a line the picker cannot edit: " + named[at][0].text;
     });
   });
 }
