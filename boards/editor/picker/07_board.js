@@ -1,9 +1,7 @@
 import {draw, holdDrawing} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
-import {
-  OUTPUTS, acrossWiring, breakOutWiring, order, outputSaid, placeLamp, rejoinWiring, runs,
-  setLayout, wiring
-} from "./03_runs.js";
+import {OUTPUTS, order, outputSaid, placeLamp, setLayout, wiring} from "./03_outputs.js";
+import {acrossWiring, breakOutWiring, rejoinWiring, runs} from "./03_runs.js";
 import {apply, capture, slotAt, state, store} from "./04_scenes.js";
 import {changeWiring, stripLengthTail} from "./05_effects.js";
 import {canEdit} from "./08_setup.js";

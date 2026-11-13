@@ -1,5 +1,5 @@
 import {h} from "./00_dom.js";
-import {WORDS, rgbInk} from "./05_effects.js";
+import {WORDS, rgbInk} from "./01_colours.js";
 
 export function swatchRow(options) {
   return h("ul", {class: "swatches", role: "radiogroup", "aria-label": options.label},

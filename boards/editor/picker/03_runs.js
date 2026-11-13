@@ -1,28 +1,12 @@
 import {draw, drawSteps, paintSteps} from "./00_draw.js";
-import {BOARD, canPlay, lookNamed, rangify} from "./01_looks.js";
+import {canPlay, lookNamed} from "./01_looks.js";
 import {beat, setPreviewingStrip} from "./02_preview.js";
+import {MONO_FIRST, OUTPUTS, order, placeOf, widthOf, wiring} from "./03_outputs.js";
+import {START_MOODS, sectionLines, spoken, startColour, targetFor} from "./04_lines.js";
 import {lampUnder, namesOf} from "./04_scenes.js";
-import {
-  START_MOODS, livePlay, sectionLines, spoken, startColour, stretchWash, stripSelector, targetFor
-} from "./05_effects.js";
+import {livePlay, stretchWash} from "./05_effects.js";
 import {holdOutput, setupOn} from "./08_setup.js";
 import {filterKept, keptLights} from "./27_readback.js";
-
-var OUTS = BOARD.outputs.length;
-export var CHANNELS = ["r", "g", "b"];
-export var CHANNEL_WORDS = {r: "red", g: "green", b: "blue"};
-
-export var OUTPUTS = BOARD.outputs.map(function (output) {
-  var named = output.name.match(/^([a-z]+)(\d*)$/);
-  return {name: output.name, prefix: named[1], number: named[2] ? Number(named[2]) : null,
-          mono: output.kind === "mono", breaks: !!output.breaks_out};
-});
-
-export var MONO_FIRST = OUTPUTS.length > 0 && OUTPUTS[0].mono;
-export var CHANNEL_INKS = ["#d63a2a", "#23a55a", "#2f76d9"];
-
-export var wiring = [];
-for (var n = 0; n < OUTS; n++) wiring.push({broken: OUTPUTS[n].mono});
 
 export function Run(name, mono) {
   return {name: name, mono: mono, lamps: [], sections: [], picked: 0,
@@ -41,29 +25,6 @@ export function activate(run) {
 
 var showing = MONO_FIRST;
 
-export var order = [];
-for (var m = 0; m < OUTS; m++) order = order.concat(placesOf(m));
-
-export function setLayout(wired, ordered) {
-  wiring = wired;
-  order = ordered;
-}
-
-export function placesOf(out) {
-  if (OUTPUTS[out].mono) return [{out: out, channel: 0}];
-  if (!wiring[out].broken) return [{out: out, channel: null}];
-  return CHANNELS.map(function (letter, c) { return {out: out, channel: c}; });
-}
-
-export function sameLamp(a, b) { return a.out === b.out && a.channel === b.channel; }
-
-function placeOf(lamp) {
-  for (var i = 0; i < order.length; i++) {
-    if (sameLamp(order[i], lamp)) return i;
-  }
-  return -1;
-}
-
 function lampsFor(run) {
   var found = [];
   if (run.strip) {
@@ -78,86 +39,6 @@ function lampsFor(run) {
     found.push({out: place.out, colour: colour, channel: place.channel});
   });
   return found;
-}
-
-export function widthOf(section) { return section.to - section.from + 1; }
-
-export function isChannel(lamp) { return !lamp.colour && !OUTPUTS[lamp.out].mono; }
-
-export function selectorFor(lamp) {
-  if (lamp.run) return lamp.run.name + (lamp.at + 1);
-  var name = OUTPUTS[lamp.out].name;
-  return isChannel(lamp) ? name + "." + CHANNELS[lamp.channel] : name;
-}
-
-export function nextOutput(out, step) {
-  var here = OUTPUTS[out], there = OUTPUTS[out + step];
-  return !!there && here.number !== null && there.prefix === here.prefix &&
-         there.number === here.number + step;
-}
-
-export function joinedItems(items) {
-  var prefix = null;
-  return items.map(function (item) {
-    var output = OUTPUTS[item.out];
-    var said = output.number === null ? output.name + item.rest
-             : (output.prefix === prefix ? "" : output.prefix) + item.rest;
-    prefix = output.prefix;
-    return said;
-  }).join(",");
-}
-
-export function rangeItem(first, last, suffix) {
-  var from = OUTPUTS[first].number, to = OUTPUTS[last].number;
-  return {out: first,
-          rest: (from === null ? "" : first === last ? String(from) : from + "-" + to) +
-                (suffix ? "." + suffix : "")};
-}
-
-function nameThese(lamps) {
-  function allThree(at) {
-    return at + 2 < lamps.length && isChannel(lamps[at]) &&
-           lamps[at].channel === 0 && lamps[at + 1].channel === 1 &&
-           lamps[at + 2].channel === 2 && lamps[at + 1].out === lamps[at].out &&
-           lamps[at + 2].out === lamps[at].out;
-  }
-
-  var items = [];
-  var at = 0;
-  while (at < lamps.length) {
-    if (!isChannel(lamps[at])) {
-      var last = at;
-      while (last + 1 < lamps.length && !isChannel(lamps[last + 1]) &&
-             lamps[last + 1].colour === lamps[at].colour &&
-             lamps[last + 1].out === lamps[last].out + 1 && nextOutput(lamps[last].out, 1)) {
-        last++;
-      }
-      items.push(rangeItem(lamps[at].out, lamps[last].out, null));
-      at = last + 1;
-    } else if (allThree(at)) {
-      var end = at;
-      var highest = lamps[at].out;
-      while (allThree(end + 3) && lamps[end + 3].out === highest + 1 && nextOutput(highest, 1)) {
-        end += 3;
-        highest++;
-      }
-      items.push(rangeItem(lamps[at].out, highest, "*"));
-      at = end + 3;
-    } else {
-      items.push(rangeItem(lamps[at].out, lamps[at].out, CHANNELS[lamps[at].channel]));
-      at++;
-    }
-  }
-  return joinedItems(items);
-}
-
-export function shortName(lamp) {
-  if (lamp.run) return String(lamp.at + 1);
-  var output = OUTPUTS[lamp.out];
-  if (output.number === null) {
-    return isChannel(lamp) ? CHANNELS[lamp.channel].toUpperCase() : output.name.toUpperCase();
-  }
-  return isChannel(lamp) ? output.number + CHANNELS[lamp.channel] : String(output.number);
 }
 
 export function sectionAt(run, which) {
@@ -438,75 +319,6 @@ export function rejoinWiring(out) {
   draw();
 }
 
-function outputsNamed(places) {
-  var items = [];
-  var at = 0;
-  while (at < places.length) {
-    var output = OUTPUTS[places[at] - 1];
-    var last = at;
-    while (output.number !== null && last + 1 < places.length &&
-           OUTPUTS[places[last + 1] - 1].number !== null &&
-           OUTPUTS[places[last + 1] - 1].prefix === output.prefix) last++;
-    var numbers = places.slice(at, last + 1).map(function (place) {
-      return OUTPUTS[place - 1].number;
-    });
-    items.push({out: places[at] - 1, rest: output.number === null ? "" : rangify(numbers)});
-    at = last + 1;
-  }
-  return joinedItems(items);
-}
-
-export function outputSaid(out) {
-  var output = OUTPUTS[out];
-  return output.number === null ? "the " + output.name.toUpperCase() + " output"
-                                : "output " + output.number;
-}
-
-function colourOutputsSaid() {
-  var colour = [];
-  OUTPUTS.forEach(function (output, out) { if (!output.mono) colour.push(out); });
-  return colour.length === 1 ? outputSaid(colour[0]) : "the colour lights";
-}
-
-export function forwardTargetFor(run, section) {
-  if (run.strip) {
-    var lights = [];
-    for (var at = section.from; at <= section.to; at++) lights.push(at + 1);
-    return {kind: "run", id: run.id, name: run.name, label: run.label, colour: true,
-            selector: stripSelector(run, section), count: widthOf(section), playing: [],
-            lights: lights};
-  }
-  var first = run.lamps[section.from];
-  if (!first) return {kind: "outputs", colour: false, selector: "out1", count: 1,
-                      label: "nothing", playing: []};
-  var mine = [];
-  for (var i = section.from; i <= section.to; i++) mine.push(run.lamps[i]);
-  var target = {kind: first.colour && widthOf(section) === 1 ? "single" : "outputs",
-                name: "out", colour: first.colour, selector: nameThese(mine),
-                count: widthOf(section), playing: [],
-                label: first.colour ? colourOutputsSaid() : "the mono lights"};
-  if (first.colour) {
-    target.playing = mine.map(function (lamp) { return lamp.out + 1; });
-    target.nameSet = outputsNamed;
-  } else {
-    target.playing = mine.map(function (lamp, at) { return at; });
-    target.nameSet = function (set) {
-      return nameThese(set.map(function (at) { return mine[at]; }));
-    };
-  }
-  return target;
-}
-
-export function levelled(lines, level) {
-  if (level === undefined || level >= 1) return lines;
-  var said = " level=" + Math.round(level * 100) + "%";
-  return lines.map(function (line) {
-    var at = line.indexOf(":");
-    if (at < 0 || /:\s*none\s*$/.test(line)) return line;
-    return line.slice(0, at) + said + line.slice(at);
-  });
-}
-
 export function lampLines() {
   var lines = [];
   runs.forEach(function (run) {
@@ -691,11 +503,6 @@ export function stretchFor(run, isMono) {
     if (first && first.colour === !isMono) return i;
   }
   return run.picked;
-}
-
-export function placeLamp(move) {
-  var moved = order.splice(placeOf(move.from), 1)[0];
-  order.splice(placeOf(move.to) + (move.after ? 1 : 0), 0, moved);
 }
 
 export function washFor(run, section, look) {

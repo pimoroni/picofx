@@ -1,7 +1,7 @@
 import {h} from "../00_dom.js";
 import {draw, drawSteps} from "../00_draw.js";
+import {spoken} from "../04_lines.js";
 import {bodyParts, namesOf, state} from "../04_scenes.js";
-import {spoken} from "../05_effects.js";
 import {
   HUB_PLACES, hubInk, pickPlace, placePicked, placeThere, placeTurnForChosen, placeUnder,
   placesSaid, placesThere

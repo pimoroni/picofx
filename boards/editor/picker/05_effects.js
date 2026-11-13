@@ -1,18 +1,19 @@
 import {h} from "./00_dom.js";
 import {draw, drawSteps, paintAll} from "./00_draw.js";
-import {
-  BOARD, blinkDuty, blinkSpeed, canPlay, isBanked, keyOf, lookLines, lookNamed, withSection
-} from "./01_looks.js";
+import {BOARD, blinkDuty, blinkSpeed, canPlay, keyOf, lookNamed, withSection} from "./01_looks.js";
+import {BLINK, blinkWord} from "./02_blink.js";
 import {COLOURED, lampTarget, lookLit} from "./02_preview.js";
+import {wiring} from "./03_outputs.js";
 import {
-  CHANNELS, CHANNEL_WORDS, MIDDLING, OUTPUTS, Run, active, blank, copyBlinks, copyExact,
-  forwardTargetFor, isChannel, joinedItems, levelled, mono, nextOutput, outputSaid, outs,
-  pickOutput, rangeItem, runs, sectionAt, settle, wiring
+  MIDDLING, Run, active, blank, copyBlinks, copyExact, mono, outs, pickOutput, runs, sectionAt,
+  settle
 } from "./03_runs.js";
+import {
+  SOLID_COLOUR, START_MOODS, coloursWritten, ownColourFor, runsAWay, startColour, takesColour,
+  targetFor, withExact
+} from "./04_lines.js";
 import {carried} from "./04_scenes.js";
-import {BLINK, blinkList, blinkWord} from "./06_blink.js";
 import {renderLeds} from "./08_setup.js";
-import {exactNow, withExact} from "./25_figures.js";
 import {renderStretches} from "./31_stretch_bar.js";
 import {renderEditor} from "./32_stretch_editor.js";
 
@@ -64,83 +65,6 @@ export function stripSet(run, values) {
   Object.keys(values).forEach(function (key) {
     one[key] = values[key];
     run[key] = values[key];
-  });
-}
-
-export function stripSelector(run, section) {
-  if (section.from === 0 && section.to === run.lamps.length - 1) return run.name;
-  return run.name + (section.from === section.to
-    ? String(section.from + 1)
-    : (section.from + 1) + "-" + (section.to + 1));
-}
-
-export function hexOf(rgb) {
-  return rgb.map(function (v) {
-    return ("0" + Math.round(v).toString(16)).slice(-2);
-  }).join("");
-}
-
-function hueRgb(deg) {
-  var h = ((deg % 360) + 360) % 360 / 60;
-  var x = 255 * (1 - Math.abs((h % 2) - 1));
-  var table = [[255, x, 0], [x, 255, 0], [0, 255, x],
-               [0, x, 255], [x, 0, 255], [255, 0, x]];
-  return table[Math.floor(h) % 6].map(Math.round);
-}
-
-function hueOf(rgb) {
-  var top = Math.max.apply(null, rgb);
-  var low = Math.min.apply(null, rgb);
-  if (top === low || low > 0) return null;
-  var span = top - low;
-  var deg;
-  if (top === rgb[0]) deg = ((rgb[1] - rgb[2]) / span) % 6;
-  else if (top === rgb[1]) deg = (rgb[2] - rgb[0]) / span + 2;
-  else deg = (rgb[0] - rgb[1]) / span + 4;
-  deg *= 60;
-  return (deg + 360) % 360;
-}
-
-export function takeApart(rgb) {
-  var top = Math.max.apply(null, rgb) / 255;
-  var low = Math.min.apply(null, rgb) / 255;
-  return {hue: hueOf(rgb.map(function (v) {
-            return top === low ? 0 : Math.round((v / 255 - low) / (top - low) * 255);
-          })) || 0,
-          sat: top ? (top - low) / top : 0,
-          value: top};
-}
-
-export function hexRgb(hex) {
-  return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16),
-          parseInt(hex.slice(5, 7), 16)];
-}
-
-export function astrayOf(side) {
-  var wired = side.order.map(function (lamp) { return side.wiring.indexOf(lamp); });
-  var count = wired.length;
-  var upTo = [];
-  var onFrom = [];
-  for (var at = 0; at < count; at++) {
-    upTo[at] = 1;
-    for (var earlier = 0; earlier < at; earlier++) {
-      if (wired[earlier] < wired[at]) upTo[at] = Math.max(upTo[at], upTo[earlier] + 1);
-    }
-  }
-  for (var back = count - 1; back >= 0; back--) {
-    onFrom[back] = 1;
-    for (var later = back + 1; later < count; later++) {
-      if (wired[later] > wired[back]) onFrom[back] = Math.max(onFrom[back], onFrom[later] + 1);
-    }
-  }
-  var longest = Math.max.apply(null, upTo.concat([0]));
-  var atStep = {};
-  upTo.forEach(function (steps, place) {
-    if (steps + onFrom[place] - 1 === longest) atStep[steps] = (atStep[steps] || 0) + 1;
-  });
-  return side.order.filter(function (lamp, place) {
-    var onOne = upTo[place] + onFrom[place] - 1 === longest;
-    return !(onOne && atStep[upTo[place]] === 1);
   });
 }
 
@@ -307,56 +231,7 @@ export function changeWiring(change, toColour) {
   };
 }
 
-export var WORDS = {
-  red: [255, 0, 0], orange: [255, 128, 0], yellow: [255, 255, 0], green: [0, 255, 0],
-  cyan: [0, 255, 255], blue: [0, 0, 255], purple: [128, 0, 255], magenta: [255, 0, 255],
-  pink: [255, 128, 128], warm: [255, 192, 96], white: [255, 255, 255],
-  cool: [96, 192, 255], black: [0, 0, 0]
-};
-
-export var SWATCHES = ["red", "orange", "yellow", "green", "cyan", "blue", "purple", "magenta",
-                "pink", "warm", "white", "cool"];
-
-export function swatchesFor(run, section) {
-  var first = run && run.lamps[section.from];
-  if (section.look === BLINK && section.blinks && section.blinks.colours.length > 1 &&
-      first && first.colour) return ["black"].concat(SWATCHES);
-  return SWATCHES;
-}
-
-export function rgbInk(rgb) { return "rgb(" + rgb.join(",") + ")"; }
-
-export function wordFor(hex) {
-  var lower = hex.replace("#", "").toLowerCase();
-  return SWATCHES.filter(function (name) { return hexOf(WORDS[name]) === lower; })[0] || null;
-}
-
-var SET_LOOKS = ["Party"];
-
-var FIXED_COLOUR_LOOKS = ["Wave", "Blink", "Marquee", "Scanner", "Chase"];
-
-export function takesColour(look) {
-  if (!look || SET_LOOKS.indexOf(look.name) >= 0) return false;
-  return look.solid || look.mood === "Colour" || FIXED_COLOUR_LOOKS.indexOf(look.name) >= 0;
-}
-
 var MONO_WASH = "#f3c98b";
-
-function coloursWritten(look, section, run) {
-  var colours = blinkList(run, section);
-  if (colours) return colours.map(function (hex) { return rgbInk(hexRgb(hex)); });
-  var target = targetFor(run, section);
-  var found = [];
-  linesFor(look, target, section.pace, section.mood, section.colour).forEach(function (line) {
-    var said = line.match(/colour=([^\s:]+)/);
-    if (!said) return;
-    var value = said[1].toLowerCase();
-    var ink = WORDS[value] ? rgbInk(WORDS[value])
-            : /^[0-9a-f]{6}$/.test(value) ? "#" + value : null;
-    if (ink && found.indexOf(ink) < 0) found.push(ink);
-  });
-  return found;
-}
 
 export function stretchWash(look, section, run, mono) {
   if (mono) return MONO_WASH;
@@ -366,27 +241,7 @@ export function stretchWash(look, section, run, mono) {
   return inks[0] || "rgba(138,131,120,0.16)";
 }
 
-function ownColourFor(look, target, pace, mood, colour) {
-  var lines = target.count === 1 && look.alone
-    ? look.alone(target, pace, mood, colour)
-    : look.entries(target, pace, mood, colour);
-  var said = (lines[0] || "").match(/colour=([^\s:]+)/);
-  if (!said) return null;
-  var value = said[1].toLowerCase();
-  return WORDS[value] ? "#" + hexOf(WORDS[value]) : /^[0-9a-f]{6}$/.test(value) ? "#" + value : null;
-}
-
-function ownColour(look, run, section) {
-  return ownColourFor(look, targetFor(run, section), section.pace, section.mood,
-                      section.colour);
-}
-
 var cardSettings = {};
-
-export var START_MOODS = {"Solid": 1, "Colour cycle": 1, "Colour steps": 1 / 3,
-                   "Pelican crossing": 0.1, "Traffic light": 0.1, "Marquee": 0.25};
-
-var SOLID_COLOUR = "#" + hexOf(WORDS.yellow);
 
 function cardLit(look, holder, t, slot, count, sim) {
   if (holder === MIDDLING && look && look.solid) {
@@ -411,214 +266,12 @@ function cardLit(look, holder, t, slot, count, sim) {
   return sectionLit(look, holder, t, slot, count, sim);
 }
 
-var SIGNAL_LAMPS = {"Traffic light": 3, "Pelican crossing": 5};
-
-function bankedLines(look, target, pace, mood, colour) {
-  if (!(target.kind === "run" || target.strip) || !isBanked(look) || target.count === 1)
-    return lookLines(look, target, pace, mood, colour);
-  return stripLines(look, target, pace, mood);
-}
-
-function stripLines(look, target, pace, mood) {
-  function dealt(playing) {
-    return Object.assign({}, target, {kind: "outputs", playing: playing});
-  }
-  var parts = SIGNAL_LAMPS[look.name];
-  if (!parts) return look.entries(dealt(target.lights), pace, mood);
-  var blocks = [];
-  var from = 0;
-  for (var part = 0; part < parts; part++) {
-    var size = Math.floor(target.lights.length / parts) +
-               (part < target.lights.length % parts ? 1 : 0);
-    if (size) blocks.push(target.lights.slice(from, from + size));
-    from += size;
-  }
-  var lines = [];
-  for (var place = 0; place < blocks[0].length; place++) {
-    var lights = blocks.filter(function (block) { return place < block.length; })
-                       .map(function (block) { return block[place]; });
-    lines.push(look.entries(dealt(lights), pace, mood)[0]);
-  }
-  return lines;
-}
-
-export function startColour(run, section, look) {
-  if (!takesColour(look)) return;
-  var own = look.solid ? SOLID_COLOUR : ownColour(look, run, section);
-  if (own) {
-    section.colour = own;
-    section.custom = false;
-  }
-}
-
 [outs, mono].forEach(function (run) {
   run.sections.forEach(function (section) {
     var look = lookNamed(section.look);
     if (look) startColour(run, section, look);
   });
 });
-
-export function fieldColour(hue, sat) {
-  return hueRgb(hue).map(function (v) { return Math.round(v + (255 - v) * (1 - sat)); });
-}
-
-export var FAINTEST = 0.05;
-
-export function atBrightness(hex, level) {
-  if (!(level < 1)) return hex;
-  return "#" + hexOf(hexRgb(hex).map(function (v) { return Math.round(v * level); }));
-}
-
-function coloursItself(run, section, look) {
-  var first = run.lamps[section.from];
-  var custom = section.custom || !wordFor(section.colour || "#ffffff");
-  return takesColour(look) && !!first && first.colour && custom;
-}
-
-export function sectionLines(run, section, look) {
-  return withExact(section.exact, function () {
-    var colours = blinkList(run, section);
-    if (colours) {
-      var line = targetFor(run, section).selector + ": rgb_blink colour=" +
-                 colours.map(blinkWord).join("|") + " speed=" + blinkSpeed(section.pace) +
-                 " duty=" + blinkDuty(section.mood);
-      return levelled([line], section.level);
-    }
-    if (coloursItself(run, section, look) && section.level < 1) {
-      return linesFor(look, targetFor(run, section), section.pace, section.mood,
-                      atBrightness(section.colour || "#ffffff", section.level));
-    }
-    return withSection(section, function () {
-      return levelled(linesFor(look, targetFor(run, section), section.pace, section.mood,
-                               section.colour), section.level);
-    });
-  });
-}
-
-export function linesFor(look, target, pace, mood, colour) {
-  var lines;
-  if (look && look.solid) {
-    lines = bankedLines(look, target, pace, 1, colour).map(function (line) {
-      return line.replace(/ brightness=1(?=\s|$)/, "");
-    });
-  } else {
-    lines = bankedLines(look, target, pace, mood, colour);
-  }
-
-  if (takesColour(look) && target.colour && colour) {
-    var said = wordFor(colour) || colour.replace("#", "").toLowerCase();
-    lines = lines.map(function (line) { return line.replace(/colour=[^\s:]+/, "colour=" + said); });
-  }
-
-  lines = lines.map(function (line) {
-    var effect = (line.split(":")[1] || "").trim().split(/\s+/)[0];
-    if (WAVES.indexOf(effect) < 0) return line;
-    return line.replace(/ speed=(\d)/, " speed=-$1");
-  });
-
-  if (!exactNow) return lines;
-  Object.keys(exactNow).forEach(function (slider) {
-    var typed = exactNow[slider];
-    if (!typed) return;
-    if (typed.key === "fade") {
-      lines = lines.map(function (line) {
-        return line.replace(/(\sfade=[\d.]+\|)[\d.]+/, "$1" + typed.value);
-      });
-      return;
-    }
-    var setting = new RegExp("(^|\\s)" + typed.key + "=(-?)[\\d.]+");
-    lines = lines.map(function (line) {
-      return line.replace(setting, function (all, space, sign) {
-        return space + typed.key + "=" + sign + typed.value;
-      });
-    });
-  });
-  return lines;
-}
-
-var TRAVELLING = ["rainbow_wave", "pulse_wave", "blink_wave", "flash_sequence", "sweep",
-                  "binary_counter", "pelican_crossing", "traffic_light", "clock"];
-
-var WAVES = ["rainbow_wave", "pulse_wave", "blink_wave", "flash_sequence"];
-
-(function (party) {
-  var partyLines = party.entries;
-  party.entries = function (target, pace, mood) {
-    return partyLines(target, pace, mood).map(function (line) {
-      return line.replace(/ phase=0\.(33|67)\b/, function (all, third) {
-        return " phase=0." + (third === "33" ? "67" : "33");
-      });
-    });
-  };
-}(lookNamed("Party")));
-
-export function runsAWay(look, target, section) {
-  if (!look || target.count < 2) return false;
-  var lines = linesFor(look, target, section.pace, section.mood, section.colour);
-  if (lines.length > 1) return true;
-  return lines.some(function (line) {
-    var effect = (line.split(":")[1] || "").trim().split(/\s+/)[0];
-    return TRAVELLING.indexOf(effect) >= 0 || / length=/.test(line);
-  });
-}
-
-function wholeOutputsDown(lamps, at) {
-  var count = 0;
-  while (at + 3 * count + 2 < lamps.length) {
-    var three = lamps.slice(at + 3 * count, at + 3 * count + 3);
-    var out = lamps[at].out - count;
-    var whole = three.every(function (lamp, i) {
-      return isChannel(lamp) && lamp.out === out && lamp.channel === 2 - i;
-    });
-    if (!whole || (count && !nextOutput(out + 1, -1))) break;
-    count++;
-  }
-  return count;
-}
-
-function nameBackwards(lamps) {
-  var items = [];
-  var at = 0;
-  while (at < lamps.length) {
-    var outputs = wholeOutputsDown(lamps, at);
-    if (outputs >= 2) {
-      items.push(rangeItem(lamps[at].out, lamps[at].out - outputs + 1, "*"));
-      at += 3 * outputs;
-      continue;
-    }
-    var last = at;
-    while (!isChannel(lamps[at]) && last + 1 < lamps.length && !isChannel(lamps[last + 1]) &&
-           lamps[last + 1].colour === lamps[at].colour &&
-           lamps[last + 1].out === lamps[last].out - 1 && nextOutput(lamps[last].out, -1)) last++;
-    items.push(rangeItem(lamps[at].out, lamps[last].out,
-                         isChannel(lamps[at]) ? CHANNELS[lamps[at].channel] : null));
-    at = last + 1;
-  }
-  return joinedItems(items);
-}
-
-export function targetFor(run, section) {
-  var target = forwardTargetFor(run, section);
-  if (!section.reversed || !runsAWay(lookNamed(section.look), target, section)) return target;
-  if (run.strip) {
-    var whole = section.from === 0 && section.to === run.lamps.length - 1;
-    return Object.assign(target, {
-      selector: run.name + (whole ? run.lamps.length + "-1"
-                                  : (section.to + 1) + "-" + (section.from + 1)),
-      lights: target.lights.slice().reverse(), reversed: true});
-  }
-  var mine = run.lamps.slice(section.from, section.to + 1).reverse();
-  target.selector = nameBackwards(mine);
-  target.reversed = true;
-  if (target.colour) {
-    target.playing = mine.map(function (lamp) { return lamp.out + 1; });
-  } else {
-    target.nameSet = function (set) {
-      return nameBackwards(set.map(function (at) { return mine[at]; }));
-    };
-  }
-  return target;
-}
 
 export function livePlay(look, holder, t, slot, count, sim) {
   var exact = holder && holder !== MIDDLING ? holder.exact : null;
@@ -637,64 +290,4 @@ export function livePlay(look, holder, t, slot, count, sim) {
     if (!lit || !holder || holder === MIDDLING || !(holder.level < 1)) return lit;
     return Object.assign({}, lit, {level: lit.level * holder.level});
   });
-}
-
-export function spoken(items) {
-  if (items.length < 2) return items.join("");
-  return items.slice(0, -1).join(", ") + " and " + items[items.length - 1];
-}
-
-function numbersSaid(numbers) {
-  var said = [];
-  var at = 0;
-  while (at < numbers.length) {
-    var last = at;
-    var step = numbers[at + 1] - numbers[at];
-    if (step === 1 || step === -1) {
-      while (last + 1 < numbers.length && numbers[last + 1] - numbers[last] === step) last++;
-    }
-    if (last - at >= 2) {
-      said.push(numbers[at] + " to " + numbers[last]);
-    } else {
-      said = said.concat(numbers.slice(at, last + 1).map(String));
-    }
-    at = last + 1;
-  }
-  return spoken(said);
-}
-
-export function wherePlays(run, section, reversed) {
-  var lamps = run.lamps.slice(section.from, section.to + 1);
-  if (reversed) lamps.reverse();
-  if (run.strip) {
-    var from = section.from + 1, to = section.to + 1;
-    if (reversed) {
-      var swap = from;
-      from = to;
-      to = swap;
-    }
-    return (from === to ? "LED " + from : "LEDs " + from + " to " + to) + " of " + run.label;
-  }
-  var groups = [];
-  lamps.forEach(function (lamp) {
-    var last = groups[groups.length - 1];
-    var numbered = !isChannel(lamp) && OUTPUTS[lamp.out].number !== null;
-    if (numbered && last && last.numbers) last.numbers.push(OUTPUTS[lamp.out].number);
-    else if (numbered) groups.push({numbers: [OUTPUTS[lamp.out].number]});
-    else if (!isChannel(lamp)) groups.push({said: outputSaid(lamp.out)});
-    else if (last && last.out === lamp.out) last.channels.push(lamp.channel);
-    else groups.push({out: lamp.out, channels: [lamp.channel]});
-  });
-  return spoken(groups.map(function (group) {
-    if (group.numbers) {
-      return (group.numbers.length === 1 ? "output " : "outputs ") + numbersSaid(group.numbers);
-    }
-    if (group.said) return group.said;
-    var output = OUTPUTS[group.out];
-    var whose = output.number === null ? "the " + output.name.toUpperCase()
-                                       : "output " + output.number;
-    return whose + "'s " + spoken(group.channels.map(function (channel) {
-      return CHANNEL_WORDS[CHANNELS[channel]];
-    }));
-  }));
 }

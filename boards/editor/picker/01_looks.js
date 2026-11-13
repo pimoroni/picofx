@@ -499,3 +499,14 @@ var BANKED_LOOKS = ["Emergency", "Traffic light", "Pelican crossing"];
 export function isBanked(look) {
   return !!look && BANKED_LOOKS.indexOf(look.name) >= 0;
 }
+
+(function (party) {
+  var partyLines = party.entries;
+  party.entries = function (target, pace, mood) {
+    return partyLines(target, pace, mood).map(function (line) {
+      return line.replace(/ phase=0\.(33|67)\b/, function (all, third) {
+        return " phase=0." + (third === "33" ? "67" : "33");
+      });
+    });
+  };
+}(lookNamed("Party")));

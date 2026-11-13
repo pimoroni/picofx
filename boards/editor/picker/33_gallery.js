@@ -5,8 +5,9 @@ import {beat} from "./02_preview.js";
 import {
   MIDDLING, active, choosingLook, galleryRun, inkAt, landLook, lookKind, stretchFor
 } from "./03_runs.js";
+import {takesColour, targetFor} from "./04_lines.js";
 import {state} from "./04_scenes.js";
-import {livePlay, takesColour, targetFor} from "./05_effects.js";
+import {livePlay} from "./05_effects.js";
 import {groupsOpen} from "./26_drive_files.js";
 
 var LOOK_GROUPS = [

@@ -1,11 +1,11 @@
 import {h, replace} from "./00_dom.js";
 import {draw} from "./00_draw.js";
 import {lookNamed} from "./01_looks.js";
+import {shortName, widthOf} from "./03_outputs.js";
 import {
-  active, cutAt, inkAt, moveEdge, painters, pick, remember, settle, shortName, stretchUnder, uncut,
-  washFor, widthOf
+  active, cutAt, inkAt, moveEdge, painters, pick, remember, settle, stretchUnder, uncut, washFor
 } from "./03_runs.js";
-import {targetFor, wherePlays} from "./05_effects.js";
+import {targetFor, wherePlays} from "./04_lines.js";
 import {keptLights} from "./27_readback.js";
 
 var ZOOMS_OVER = 12;

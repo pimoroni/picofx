@@ -1,11 +1,12 @@
 import {h, replace} from "./00_dom.js";
 import {draw, drawSteps} from "./00_draw.js";
+import {astrayOf} from "./01_colours.js";
 import {BOARD, lookNamed} from "./01_looks.js";
 import {
-  CHANNELS, CHANNEL_INKS, MONO_FIRST, OUTPUTS, inkAt, isChannel, lampKey, order, outputSaid,
-  painters, placesOf, sameLamp, sectionAt, selectorFor, shortName, underSaid, wiring
-} from "./03_runs.js";
-import {astrayOf} from "./05_effects.js";
+  CHANNELS, CHANNEL_INKS, MONO_FIRST, OUTPUTS, isChannel, order, outputSaid, placesOf, sameLamp,
+  selectorFor, shortName, wiring
+} from "./03_outputs.js";
+import {inkAt, lampKey, painters, sectionAt, underSaid} from "./03_runs.js";
 import {breakOutInScenes, lampsMovable, moveLampInScenes, rejoinInScenes} from "./07_board.js";
 import {canEdit, setupOn} from "./08_setup.js";
 

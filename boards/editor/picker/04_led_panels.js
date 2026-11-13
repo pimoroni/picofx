@@ -1,6 +1,7 @@
 import {h, replace} from "./00_dom.js";
 import {BOARD} from "./01_looks.js";
-import {MONO_FIRST, mono, outs, stepBack, stepOn} from "./03_runs.js";
+import {MONO_FIRST} from "./03_outputs.js";
+import {mono, outs, stepBack, stepOn} from "./03_runs.js";
 import {middleOfView, zoomOf, zoomTo, zooms} from "./31_stretch_bar.js";
 
 var UNDO = "<path d='M6.5 4.5 L2.5 8 L6.5 11.5'/><path d='M2.5 8 H9.5 A4 4 0 0 1 9.5 15'/>";

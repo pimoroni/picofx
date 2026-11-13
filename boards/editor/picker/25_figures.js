@@ -1,4 +1,4 @@
-import {sectionLines} from "./05_effects.js";
+import {sectionLines} from "./04_lines.js";
 
 var FIGURE_KEYS = {
   pace: ["speed", "interval", "green_interval", "bright_max"],
@@ -26,18 +26,6 @@ export function figureWay(key, look) {
   if (key === "ease" || key === "fade") return same("s");
   if (["sat", "dimness", "duty"].indexOf(key) >= 0) return percent;
   return same("");
-}
-
-export var exactNow = null;
-
-export function withExact(exact, write) {
-  var had = exactNow;
-  exactNow = exact || null;
-  try {
-    return write();
-  } finally {
-    exactNow = had;
-  }
 }
 
 export function settingIn(lines, key) {
@@ -84,4 +72,3 @@ export function placeFor(run, section, look, slider, key, value) {
   }
   return {place: best, off: nearest};
 }
-

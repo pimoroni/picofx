@@ -1,9 +1,9 @@
 import {h, replace} from "../00_dom.js";
 import {draw, drawSteps} from "../00_draw.js";
+import {WORDS, hexOf} from "../01_colours.js";
 import {
   allBodies, apply, bodyParts, capture, driveParts, slotAt, state, store
 } from "../04_scenes.js";
-import {WORDS, hexOf} from "../05_effects.js";
 import {
   boardLineSteps, notFittedRead, notFittedSteps, saidNotFitted, screenHooks, screensFitted
 } from "../07_board.js";

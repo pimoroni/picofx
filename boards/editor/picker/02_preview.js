@@ -1,5 +1,5 @@
 import {paintAll} from "./00_draw.js";
-import {linesFor} from "./05_effects.js";
+import {linesFor} from "./04_lines.js";
 
 var NAMED = {
   black: "#000000", blue: "#2b5cff", cool: "#cfe4ff", cyan: "#28e0e0",

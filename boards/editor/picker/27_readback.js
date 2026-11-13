@@ -1,17 +1,15 @@
 import {h, replace} from "./00_dom.js";
 import {draw, drawSteps} from "./00_draw.js";
+import {WORDS, hexOf, wordFor} from "./01_colours.js";
 import {HEADER, LOOKS, SIGNAL_TIMINGS, canPlay, keyOf} from "./01_looks.js";
-import {
-  CHANNELS, OUTPUTS, blank, joinedItems, mono, order, outs, placesOf, runs, setLayout, settle,
-  wiring
-} from "./03_runs.js";
+import {BLINK} from "./02_blink.js";
+import {CHANNELS, OUTPUTS, joinedItems, order, placesOf, setLayout, wiring} from "./03_outputs.js";
+import {blank, mono, outs, runs, settle} from "./03_runs.js";
+import {sectionLines, targetFor} from "./04_lines.js";
 import {
   allBodies, apply, blankBody, bodyParts, capture, fileHead, sceneMark, settleLoneScene, state
 } from "./04_scenes.js";
-import {
-  STRIPS, WORDS, hexOf, readStripTail, sectionLines, stripNamed, stripSet, targetFor, wordFor
-} from "./05_effects.js";
-import {BLINK} from "./06_blink.js";
+import {STRIPS, readStripTail, stripNamed, stripSet} from "./05_effects.js";
 import {
   NOT_FITTED, SCREEN_PORTS, boardLineSteps, notFittedLine, notFittedRead, saidNotFitted,
   setNotFittedRead, stripDescribed

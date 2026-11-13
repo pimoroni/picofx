@@ -1,4 +1,4 @@
-import {wordFor} from "./05_effects.js";
+import {SWATCHES, wordFor} from "./01_colours.js";
 
 export var BLINK = "Blink";
 
@@ -17,3 +17,9 @@ export function blinkWord(hex) {
   return blinkNamed(hex) || hex.replace("#", "").toLowerCase();
 }
 
+export function swatchesFor(run, section) {
+  var first = run && run.lamps[section.from];
+  if (section.look === BLINK && section.blinks && section.blinks.colours.length > 1 &&
+      first && first.colour) return ["black"].concat(SWATCHES);
+  return SWATCHES;
+}
