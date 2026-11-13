@@ -8,7 +8,6 @@ import {
 import {hearButton, hearing, soundHooks, startHearing, stopHearing} from "../../sound/13_sound.js";
 
 soundHooks.tileSteps.push(function (tile, name) {
-  tile.dataset.name = name;
   if (isExampleMedia(name) && state.sounds.indexOf(name) >= 0)
     tile.append(discoverBin(name, "sound"));
   var pill = discoverPill(name);

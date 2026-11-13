@@ -10523,13 +10523,6 @@ TAB_NAMES.sensorPanel = "Sensor";
 TAB_PANELS.push("sensorPanel");
 keptOpen("sensorPanel");
 
-// ---- the Aye Arr Remote, drawn from its artwork -----------------------------------------------
-// The remote as its artwork draws it, in the artwork's own units, one element a line, for the
-// Sensor tab to lay its buttons' rows beside. Its three bitmaps, the rotate buttons' rainbows and
-// the 0 button's ring, are drawn as arcs in their places, which stay sharp at any size.
-
-// Every button: its name as aye_arr's PimoroniRemote names it, its column, its row in the
-// remote's own layout, and what its face is
 var REMOTE_BUTTONS = [
   ["ANTICLOCK", 0, 320, "turn"], ["UP", 1, 320, "up"], ["CLOCKWISE", 2, 320, "turn"],
   ["LEFT", 0, 630, "side"], ["OK_STOP", 1, 630, "stop"], ["RIGHT", 2, 630, "side"],
@@ -10541,7 +10534,6 @@ var REMOTE_BUTTONS = [
   ["RECORD", 0, 2176, "record"], ["0_RAINBOW", 1, 2176, "rainbow"],
   ["PLAY_PAUSE", 2, 2176, "play"]];
 
-// An annulus's slice from one angle to another, in degrees clockwise from the top
 function remoteArc(x, y, inner, outer, from, to) {
   function at(radius, degrees) {
     var turn = (degrees - 90) * Math.PI / 180;
@@ -10553,7 +10545,6 @@ function remoteArc(x, y, inner, outer, from, to) {
          " 0 " + at(inner, from) + "Z'";
 }
 
-// A run of colours around a ring, each slice overlapping the next by a degree so no seam shows
 function remoteRainbow(x, y, inner, outer, from, to, colours) {
   var step = (to - from) / colours.length;
   return colours.map(function (colour, at) {
@@ -10730,15 +10721,11 @@ var REMOTE_ART = [
   "<path fill='#fff' d='M99.213,106.845c-2.735,0-4.961,2.225-4.961,4.961s2.225,4.96,4.961,4.96,4.96-2.225,4.96-4.96-2.225-4.961-4.96-4.961Z'/>",
   "<path d='M96.917,113.16v-.017c0-.723.332-1.148.961-1.438-.459-.281-.757-.664-.757-1.302v-.017c0-.91.833-1.633,2.093-1.633s2.092.715,2.092,1.633v.017c0,.638-.297,1.021-.757,1.302.604.315.961.698.961,1.404v.017c0,1.106-.979,1.752-2.297,1.752s-2.297-.68-2.297-1.718ZM100.243,113.058v-.017c0-.459-.434-.731-1.029-.731s-1.029.272-1.029.731v.017c0,.408.383.74,1.029.74s1.029-.323,1.029-.74ZM100.064,110.548v-.017c0-.366-.315-.698-.851-.698s-.851.323-.851.689v.017c0,.417.332.732.851.732s.851-.306.851-.723Z'/>"
 ];
-// Where each button sits in the art, by the rows and columns of REMOTE_BUTTONS
 var REMOTE_ART_COLUMNS = [83.268, 99.213, 115.157];
 var REMOTE_ART_ROWS = {320: 40.287, 630: 54.591, 940: 68.895, 1248: 83.198, 1557: 97.502,
                        1866: 111.806, 2176: 126.109};
 var REMOTE_ART_RADIUS = 6.378;
 
-// Each button's row beside the remote, and its height in the art, as the labelled artwork sets
-// them out. A middle button's row sits half a row off its own, so its leader runs between the
-// buttons beside it
 var REMOTE_ROWS = [
   ["ANTICLOCK", "left", 40.287], ["UP", "left", 47.439], ["LEFT", "left", 54.591],
   ["OK_STOP", "left", 61.743], ["RETURN_UNDO", "left", 68.895], ["1_RED", "left", 83.198],
@@ -10749,13 +10736,11 @@ var REMOTE_ROWS = [
   ["6_YELLOW", "right", 97.502], ["9_COOL", "right", 111.806], ["0_RAINBOW", "right", 118.958],
   ["PLAY_PAUSE", "right", 126.109]];
 
-// A button's centre in the art
 function remoteArtAt(name) {
   var button = REMOTE_BUTTONS.filter(function (one) { return one[0] === name; })[0];
   return {x: REMOTE_ART_COLUMNS[button[1]], y: REMOTE_ART_ROWS[button[2]]};
 }
 
-// The rainbow blended across this many slices, so a ring sweeps where ten colours would band
 function remoteBlend(steps, closed) {
   var ends = closed ? REMOTE_RAINBOW.concat([REMOTE_RAINBOW[0]]) : REMOTE_RAINBOW;
   var blended = [];
@@ -10770,7 +10755,6 @@ function remoteBlend(steps, closed) {
   return blended;
 }
 
-// The rotate buttons' rainbows, under the faces and the pad the art lays over them
 function remoteArtTurns() {
   var anticlock = remoteArtAt("ANTICLOCK"), clockwise = remoteArtAt("CLOCKWISE");
   return remoteRainbow(anticlock.x, anticlock.y, 4, REMOTE_ART_RADIUS, 225, 420,
@@ -10779,28 +10763,22 @@ function remoteArtTurns() {
                        remoteBlend(40, false));
 }
 
-// The 0 button's ring, which has to follow the numbers' pad or the pad hides it
 function remoteArtZero() {
   var zero = remoteArtAt("0_RAINBOW");
   return remoteRainbow(zero.x, zero.y, 4.5, REMOTE_ART_RADIUS, 0, 360, remoteBlend(72, true));
 }
 
-// The joins the art runs between numbers, found by where each path starts, and the two buttons
-// each joins
 var REMOTE_ART_JOINS = [["M88.548,86.774", "1_RED", "4_CYAN"],
                         ["M104.493,86.774", "2_GREEN", "5_MAGENTA"],
                         ["M120.438,86.774", "3_BLUE", "6_YELLOW"],
                         ["M91.24,115.386", "7_WARM", "8_WHITE"],
                         ["M107.185,108.225", "8_WHITE", "9_COOL"]];
 
-// A join's own outline, which a clip can take without any of the pad around it
 function remoteArtJoin(start) {
   var line = REMOTE_ART.filter(function (one) { return one.indexOf("d='" + start) >= 0; })[0];
   return line.match(/d='([^']*)'/)[1];
 }
 
-// The art as svg markup, each rainbow where the artwork has its bitmap: the rotate buttons' after
-// the remote's body, the 0 ring after the 9 button's ring
 function remoteArt() {
   var body = REMOTE_ART.indexOf("</g>") + 1;
   var nine = remoteArtAt("9_COOL");
@@ -10812,15 +10790,8 @@ function remoteArt() {
          REMOTE_ART.slice(afterNine).join("");
 }
 
-
-// ---- the PIR Stick, drawn from its artwork ------------------------------------------------------
-// The PIR Stick as its artwork draws it, in the artwork's own units, 22.692 across and 77.102
-// high, one element a line. The page shows through the board's mounting hole. The artwork's style
-// classes are written as fills, as a style in the page would reach every drawing on it
 var PIR_ART = [
-  // The board, with its mounting hole
   "<path d='M19.85,0H2.842C1.277,0,.008,1.269.008,2.835v71.008c-.117,1.683,1.152,3.142,2.835,3.26,0,0,17.008,0,17.008,0,1.683-.117,2.952-1.577,2.835-3.26,0,0,0-71.008,0-71.008,0-1.565-1.269-2.835-2.835-2.835ZM11.346,35.291c-1.957,0-3.543-1.586-3.543-3.543s1.586-3.543,3.543-3.543,3.543,1.586,3.543,3.543-1.586,3.543-3.543,3.543Z'/>",
-  // The silkscreen: minus, plus, OUT, the adjuster's arc and the arrows under the sensor
   "<rect fill='#fff' x='18.802' y='57.835' width='1.417' height='4.11' transform='translate(79.4 40.38) rotate(90)'/>",
   "<polygon fill='#fff' points='5.266 59.181 3.92 59.181 3.92 57.835 2.502 57.835 2.502 59.181 1.156 59.181 1.156 60.599 2.502 60.599 2.502 61.945 3.92 61.945 3.92 60.599 5.266 60.599 5.266 59.181'/>",
   "<path fill='#fff' d='M8.347,54.892c-.824,0-1.297.517-1.297,1.417v1.553c0,.896.473,1.411,1.297,1.411s1.292-.515,1.292-1.411v-1.553c0-.9-.471-1.417-1.292-1.417ZM7.731,56.309c0-.496.207-.748.615-.748.405,0,.61.252.61.748v1.553c0,.492-.206.742-.61.742-.408,0-.615-.25-.615-.742v-1.553Z'/>",
@@ -10829,26 +10800,22 @@ var PIR_ART = [
   "<path fill='#fff' d='M21.164,41.895c-1.534-3.508-5.583-5.664-9.857-5.256-3.546.344-6.764,2.686-8.198,5.965-.028.065-.042.133-.042.199,0,.191.111.373.297.454.064.028.132.042.198.042.191,0,.374-.111.455-.298,1.276-2.919,4.156-4.805,7.337-4.805s6.061,1.886,7.337,4.805c.053.122.153.218.277.265.124.048.261.043.383-.011l1.562-.709c.247-.112.358-.402.25-.651Z'/>",
   "<path fill='#fff' d='M5.402,25.439h-1.044v-.684c0-.208-.252-.312-.399-.165l-.849.849h-.594v-.685c0-.208-.252-.312-.399-.165l-1.182,1.182c-.091.091-.091.239,0,.33l1.182,1.182c.147.147.399.043.399-.165v-.686h.591l.853.853c.147.147.399.043.399-.165v-.687h1.044c.274,0,.496-.222.496-.496s-.222-.496-.496-.496Z'/>",
   "<path fill='#fff' d='M21.775,25.77l-1.182-1.182c-.147-.147-.399-.043-.399.165v.687h-.591l-.852-.852c-.147-.147-.399-.043-.399.165v.687h-1.044c-.274,0-.496.222-.496.496s.222.496.496.496h1.044v.684c0,.208.252.312.399.165l.849-.849h.594v.684c0,.208.252.312.399.165l1.182-1.182c.091-.091.091-.239,0-.33Z'/>",
-  // The connector, its pins and its pads
   "<path fill='#e8a000' d='M9.344,64.688h-1.647c-.085,0-.155-.07-.155-.155v-3.773c0-.085.07-.155.155-.155h1.647c.085,0,.155.07.155.155v3.773c0,.085-.07.155-.155.155Z'/>",
   "<path fill='#e8a000' d='M12.179,64.688h-1.647c-.085,0-.155-.07-.155-.155v-3.773c0-.085.07-.155.155-.155h1.647c.085,0,.155.07.155.155v3.773c0,.085-.07.155-.155.155Z'/>",
   "<path fill='#e8a000' d='M15.013,64.688h-1.647c-.085,0-.155-.07-.155-.155v-3.773c0-.085.07-.155.155-.155h1.647c.085,0,.155.07.155.155v3.773c0,.085-.07.155-.155.155Z'/>",
   "<path fill='#e8a000' d='M6.531,76.037h-3.39c-.08,0-.145-.065-.145-.146v-5.657c0-.08.065-.146.145-.146h3.39c.08,0,.145.065.145.146v5.657c0,.08-.065.146-.145.146Z'/>",
   "<path fill='#e8a000' d='M19.57,76.037h-3.391c-.08,0-.144-.065-.144-.146v-5.657c0-.08.064-.146.144-.146h3.391c.08,0,.145.065.145.146v5.657c0,.08-.065.146-.145.146Z'/>",
   "<rect fill='#ffebad' x='4.268' y='63.638' width='14.173' height='12.047'/>",
-  // The part on the left edge, on its pads
   "<path fill='#e8a000' d='M4.127,45.354v2.551c0,.078-.064.142-.143.142H1.151c-.078,0-.143-.063-.143-.142v-2.551c0-.078.064-.142.143-.142h2.834c.078,0,.143.063.143.142Z'/>",
   "<path fill='#e8a000' d='M4.127,50.173v2.551c0,.078-.064.142-.143.142H1.151c-.078,0-.143-.063-.143-.142v-2.551c0-.078.064-.142.143-.142h2.834c.078,0,.143.063.143.142Z'/>",
   "<rect fill='#6b523b' x='1.434' y='46.772' width='2.268' height='4.535'/>",
   "<rect fill='#999' x='1.434' y='50.173' width='2.268' height='1.134'/>",
   "<rect fill='#999' x='1.434' y='46.772' width='2.268' height='1.134'/>",
-  // The part on the right edge, on its pads
   "<path fill='#e8a000' d='M21.702,45.354v2.551c0,.078-.064.142-.143.142h-2.834c-.078,0-.143-.063-.143-.142v-2.551c0-.078.064-.142.143-.142h2.834c.078,0,.143.063.143.142Z'/>",
   "<path fill='#e8a000' d='M21.702,50.173v2.551c0,.078-.064.142-.143.142h-2.834c-.078,0-.143-.063-.143-.142v-2.551c0-.078.064-.142.143-.142h2.834c.078,0,.143.063.143.142Z'/>",
   "<rect fill='#575757' x='19.008' y='46.773' width='2.268' height='4.535'/>",
   "<rect fill='#999' x='19.009' y='50.173' width='2.268' height='1.134'/>",
   "<rect fill='#999' x='19.009' y='46.772' width='2.268' height='1.134'/>",
-  // The sensor, on its pads
   "<path fill='#e8a000' d='M15.475.858h4.217c.083,0,.15.067.15.15v6.77c0,.083-.067.15-.15.15h-4.218c-.083,0-.15-.067-.15-.15V1.01c0-.084.068-.151.151-.151Z'/>",
   "<path fill='#e8a000' d='M9.238.858h4.217c.083,0,.15.067.15.15v6.77c0,.083-.067.15-.15.15h-4.218c-.083,0-.15-.067-.15-.15V1.01c0-.084.068-.151.151-.151Z'/>",
   "<path fill='#e8a000' d='M3.002.858h4.217c.083,0,.15.067.15.15v6.77c0,.083-.067.15-.15.15H3.001c-.083,0-.15-.067-.15-.15V1.01c0-.084.068-.151.151-.151Z'/>",
@@ -10859,7 +10826,6 @@ var PIR_ART = [
   "<path fill='#444' d='M16.294,1.82c2.813,0,5.102,2.289,5.102,5.102v9.921c0,2.813-2.289,5.102-5.102,5.102H6.372c-2.813,0-5.102-2.289-5.102-5.102V6.922C1.27,4.109,3.559,1.82,6.372,1.82h9.921M16.294,1.253H6.372C3.241,1.253.703,3.791.703,6.922v9.921c0,3.131,2.538,5.669,5.669,5.669h9.921c3.131,0,5.669-2.538,5.669-5.669V6.922c0-3.131-2.538-5.669-5.669-5.669h0Z'/>",
   "<path fill='#222' d='M6.372,2.953h9.921c2.19,0,3.969,1.778,3.969,3.969v9.922c0,2.19-1.778,3.968-3.968,3.968H6.373c-2.19,0-3.969-1.778-3.969-3.969V6.921c0-2.19,1.778-3.968,3.968-3.968Z'/>",
   "<path fill='#444' d='M16.294,3.237c2.032,0,3.685,1.653,3.685,3.685v9.921c0,2.032-1.653,3.685-3.685,3.685H6.372c-2.032,0-3.685-1.653-3.685-3.685V6.922c0-2.032,1.653-3.685,3.685-3.685h9.921M16.294,2.67H6.372c-2.348,0-4.252,1.904-4.252,4.252v9.921c0,2.348,1.904,4.252,4.252,4.252h9.921c2.348,0,4.252-1.904,4.252-4.252V6.922c0-2.348-1.904-4.252-4.252-4.252h0Z'/>",
-  // The adjuster, on its pads
   "<rect fill='#e8a000' x='8.945' y='39.835' width='4.802' height='4.52' rx='.15' ry='.15'/>",
   "<path fill='#e8a000' d='M6.817,49.467h3.389c.08,0,.145.065.145.145v3.392c0,.08-.065.145-.145.145h-3.39c-.08,0-.145-.065-.145-.145v-3.391c0-.08.065-.146.146-.146Z'/>",
   "<path fill='#e8a000' d='M12.487,49.467h3.389c.08,0,.145.065.145.145v3.392c0,.08-.065.145-.145.145h-3.39c-.08,0-.145-.065-.145-.145v-3.391c0-.08.065-.146.146-.146Z'/>",
@@ -19227,7 +19193,6 @@ discoverKinds.drawing = {
 discoverKinds.picture = discoverKinds.drawing;
 
 soundHooks.tileSteps.push(function (tile, name) {
-  tile.dataset.name = name;
   if (isExampleMedia(name) && state.sounds.indexOf(name) >= 0)
     tile.append(discoverBin(name, "sound"));
   var pill = discoverPill(name);
