@@ -1,9 +1,10 @@
+import {banner} from "../00_banner.js";
 import {h, replace} from "../00_dom.js";
 import {draw, drawSteps} from "../00_draw.js";
 import {BOARD} from "../01_looks.js";
 import {apply, driveParts, slotAt, state, store} from "../04_scenes.js";
 import {SCREEN_PORTS} from "../07_board.js";
-import {banner, drive, driveTrouble} from "../18_drive.js";
+import {drive, driveTrouble, nameShown} from "../18_drive.js";
 import {
   PROGRAMS, boardSet, programNamed, programsElsewhere, setPrograms
 } from "../19_board_settings.js";
@@ -11,9 +12,7 @@ import {
   CHIPLESS, FEATURES, featureFilter, loadThumbs, passesFilter, programCardFace, programHooks,
   programTitle, programUsesSaid, unhad, usesOf
 } from "../22_program.js";
-import {
-  OTHER_EXAMPLES, exampleSections, isExampleMedia, nameShown, scanMedia
-} from "../26_drive_files.js";
+import {OTHER_EXAMPLES, exampleSections, isExampleMedia, scanMedia} from "../26_drive_files.js";
 import {
   EXAMPLES_ROOT, PICTURES, SECTIONS, copyProgram, folderAt, forgetMissingPrograms, programFrom
 } from "../26_drive_programs.js";

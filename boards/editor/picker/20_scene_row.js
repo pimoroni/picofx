@@ -5,7 +5,7 @@ import {
   removeScene, sceneAfter, sceneHooks, sceneLoops, sceneMark, sceneMarked, sceneNameProblem,
   sceneRestarts, sceneShowsAgain, state, unreachedScenes
 } from "./04_scenes.js";
-import {renderPreview} from "./18_drive.js";
+import {renderPreview} from "./18_file_preview.js";
 
 var sceneRow = document.getElementById("sceneTabRow");
 var scenePlaceLine = null;

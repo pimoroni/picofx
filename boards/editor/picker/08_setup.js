@@ -2,17 +2,14 @@ import {h, replace} from "./00_dom.js";
 import {draw, drawSteps, paintAll} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
 import {outputSaid} from "./03_outputs.js";
-import {active, blank, canEdit, runs, setSetupMode, settle, setupOn} from "./03_runs.js";
+import {active, canEdit, lastOutputRun, settle, setupOn} from "./03_runs.js";
 import {panelTools} from "./04_led_panels.js";
-import {allBodies, apply, slotAt, state, store} from "./04_scenes.js";
 import {
-  STRIP_BRIGHTNESSES, STRIP_FEWEST, STRIP_MOST, STRIP_ORDERS, stripChipShown, stripPercent,
-  stripSet
+  STRIP_BRIGHTNESSES, STRIP_FEWEST, STRIP_MOST, STRIP_ORDERS, dropStrip, stripBlockedBy,
+  stripChipShown, stripPercent, stripSet, stripThere
 } from "./05_strips.js";
 import {breakingOutputs, brokenSaid} from "./07_board.js";
 import {workOn} from "./10_led_sections.js";
-import {lastOutputRun, showChosen} from "./11_tabs.js";
-import {forgetKeptFor} from "./27_readback.js";
 
 export var BOARD_CHIP_COLOURS = {outPanel: "var(--boardOuts)"};
 BOARD.strips.forEach(function (strip) { BOARD_CHIP_COLOURS[strip.name + "Panel"] = strip.colour; });
@@ -66,43 +63,6 @@ function stripBuilt(run) {
   return run.leds + " LEDs, " + stripChipShown(run);
 }
 
-function stripThere(run, there) { stripSet(run, {there: there}); }
-
-function capitalised(text) { return text.charAt(0).toUpperCase() + text.slice(1); }
-
-export function stripBlockedBy(run) {
-  if (run.there) return "";
-  var fitted = runs.filter(function (one) {
-    return one.strip && one.there && run.takes.indexOf(one.name) >= 0;
-  });
-  if (fitted.length) {
-    return capitalised(run.label) + " takes " + run.connector + ", so it cannot be fitted beside " +
-           fitted.map(function (one) { return one.label; }).join(" and ") + ". Remove " +
-           (fitted.length > 1 ? "them" : "it") + " to fit one here.";
-  }
-  var taking = runs.filter(function (one) {
-    return one.strip && one.there && one.takes.indexOf(run.name) >= 0;
-  })[0];
-  return taking ? capitalised(taking.label) + " uses " + taking.connector +
-                  ". Remove it to fit a strip here." : "";
-}
-
-export function dropStrip(run) {
-  forgetKeptFor(run);
-  store();
-  allBodies().forEach(function (held) {
-    var kept = held.runs[run.name];
-    if (!kept) return;
-    kept.sections = [blank(0, run.leds - 1, run)];
-    kept.picked = 0;
-    kept.was = [];
-    kept.undone = [];
-  });
-  stripThere(run, false);
-  apply(slotAt(state.at).body);
-  draw();
-}
-
 function stripOut(run, panel) {
   var blocked = stripBlockedBy(run);
   return [boardBox(panel, ["Strip", small("not fitted")]),
@@ -138,11 +98,6 @@ drawSteps.after.push(function () {
   if (setupOn) unmark();
   paintAll();
 });
-
-export function setSetup(on) {
-  setSetupMode(on);
-  showChosen();
-}
 
 function stripChipChoice(run) {
   if (run.made === null) {

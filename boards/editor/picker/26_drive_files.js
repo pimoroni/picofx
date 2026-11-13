@@ -1,8 +1,9 @@
+import {banner} from "./00_banner.js";
 import {draw} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
 import {apply, driveParts, slotAt, state, store} from "./04_scenes.js";
 import {screenHooks} from "./07_board.js";
-import {CAN_REACH_A_DRIVE, banner, connectSteps, drive, driveTrouble} from "./18_drive.js";
+import {CAN_REACH_A_DRIVE, connectSteps, drive, driveTrouble} from "./18_drive.js";
 import {OWN_FOLDER, folderAt, removePictures, sectionsFrom} from "./26_drive_programs.js";
 
 state.fileHandle = null;
@@ -36,10 +37,6 @@ function exampleSectionsFrom(text, root, kind) {
 
 export function isExampleMedia(name) {
   return name.indexOf("examples/") === 0;
-}
-
-export function nameShown(name) {
-  return name.slice(name.lastIndexOf("/") + 1);
 }
 
 export var OTHER_EXAMPLES = {drawings: "Example drawings", pictures: "Example pictures",

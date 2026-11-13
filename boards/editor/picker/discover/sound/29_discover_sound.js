@@ -1,7 +1,8 @@
 import {h} from "../../00_dom.js";
 import {draw} from "../../00_draw.js";
 import {state} from "../../04_scenes.js";
-import {isExampleMedia, nameShown} from "../../26_drive_files.js";
+import {nameShown} from "../../18_drive.js";
+import {isExampleMedia} from "../../26_drive_files.js";
 import {
   discoverBar, discoverBin, discoverKinds, discoverPill, discoverSay, discoverSounds
 } from "../28_discover.js";

@@ -3,7 +3,7 @@ import {draw, drawSteps} from "./00_draw.js";
 import {WORDS, hexOf, wordFor} from "./01_colours.js";
 import {HEADER, LOOKS, SIGNAL_TIMINGS, canPlay, keyOf} from "./01_looks.js";
 import {BLINK} from "./02_blink.js";
-import {boardResidue, copyKept, filterKept, filterResidue, keptLights, keptNow} from "./03_kept.js";
+import {boardResidue, copyKept, filterResidue, keptLights, keptNow} from "./03_kept.js";
 import {sectionLines, targetFor} from "./03_lines.js";
 import {CHANNELS, OUTPUTS, joinedItems, order, placesOf, setLayout, wiring} from "./03_outputs.js";
 import {
@@ -11,15 +11,14 @@ import {
 } from "./03_reading.js";
 import {blank, mono, outs, runs, settle} from "./03_runs.js";
 import {
-  allBodies, apply, blankBody, bodyParts, capture, sceneMark, settleLoneScene, state
+  apply, blankBody, bodyParts, capture, sceneMark, settleLoneScene, state
 } from "./04_scenes.js";
-import {STRIPS, readStripTail, stripNamed, stripSet} from "./05_strips.js";
+import {STRIPS, dropStrip, readStripTail, stripNamed, stripSet} from "./05_strips.js";
 import {
   NOT_FITTED, SCREEN_PORTS, boardLineSteps, notFittedLine, notFittedRead, saidNotFitted,
   setNotFittedRead, stripDescribed
 } from "./07_board.js";
 import {fileHead} from "./07_writing.js";
-import {dropStrip} from "./08_setup.js";
 import {WROTE_KEY, connectSteps, drive} from "./18_drive.js";
 import {argsWritten, boardSet, programNamed} from "./19_board_settings.js";
 import {onProgramPage, setProgramPage} from "./22_program.js";
@@ -537,12 +536,6 @@ bodyParts.push({
   }
 });
 
-function stripOfToken(token) {
-  var named = token.match(/^(\w+)=/);
-  var name = named && named[1].toLowerCase();
-  return STRIPS.some(function (strip) { return strip.name === name; }) ? name : null;
-}
-
 function heldOfToken(token) {
   var named = token.match(/^(\w+)=/);
   var name = named && named[1].toLowerCase();
@@ -613,17 +606,6 @@ drawSteps.after.push(function () {
   renderKept();
   markKeptLights();
 });
-
-export function forgetKeptFor(run) {
-  function elsewhere(one) {
-    var parts = entryParts(one.text);
-    var lamps = parts && lampsNamed(run, parts.selector);
-    return !(lamps && lamps.length);
-  }
-  filterKept(elsewhere);
-  allBodies().forEach(function (held) { held.kept = (held.kept || []).filter(elsewhere); });
-  filterResidue(function (token) { return stripOfToken(token) !== run.name; });
-}
 
 connectSteps.push(async function () {
   var text = await (await drive.fileHandle.getFile()).text();

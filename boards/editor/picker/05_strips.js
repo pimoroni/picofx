@@ -1,5 +1,9 @@
+import {draw} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
-import {Run, runs, settle} from "./03_runs.js";
+import {filterKept, filterResidue} from "./03_kept.js";
+import {entryParts, lampsNamed} from "./03_reading.js";
+import {Run, blank, runs, settle} from "./03_runs.js";
+import {allBodies, apply, slotAt, state, store} from "./04_scenes.js";
 
 export var STRIPS = BOARD.strips.map(function (strip) {
   var brightness = strip.brightness === undefined ? null : strip.brightness;
@@ -72,3 +76,56 @@ export function readStripTail(run, tail) {
 runs.push.apply(runs, STRIPS.map(stripRun));
 settle();
 
+function stripOfToken(token) {
+  var named = token.match(/^(\w+)=/);
+  var name = named && named[1].toLowerCase();
+  return STRIPS.some(function (strip) { return strip.name === name; }) ? name : null;
+}
+
+function forgetKeptFor(run) {
+  function elsewhere(one) {
+    var parts = entryParts(one.text);
+    var lamps = parts && lampsNamed(run, parts.selector);
+    return !(lamps && lamps.length);
+  }
+  filterKept(elsewhere);
+  allBodies().forEach(function (held) { held.kept = (held.kept || []).filter(elsewhere); });
+  filterResidue(function (token) { return stripOfToken(token) !== run.name; });
+}
+
+export function stripThere(run, there) { stripSet(run, {there: there}); }
+
+function capitalised(text) { return text.charAt(0).toUpperCase() + text.slice(1); }
+
+export function stripBlockedBy(run) {
+  if (run.there) return "";
+  var fitted = runs.filter(function (one) {
+    return one.strip && one.there && run.takes.indexOf(one.name) >= 0;
+  });
+  if (fitted.length) {
+    return capitalised(run.label) + " takes " + run.connector + ", so it cannot be fitted beside " +
+           fitted.map(function (one) { return one.label; }).join(" and ") + ". Remove " +
+           (fitted.length > 1 ? "them" : "it") + " to fit one here.";
+  }
+  var taking = runs.filter(function (one) {
+    return one.strip && one.there && one.takes.indexOf(run.name) >= 0;
+  })[0];
+  return taking ? capitalised(taking.label) + " uses " + taking.connector +
+                  ". Remove it to fit a strip here." : "";
+}
+
+export function dropStrip(run) {
+  forgetKeptFor(run);
+  store();
+  allBodies().forEach(function (held) {
+    var kept = held.runs[run.name];
+    if (!kept) return;
+    kept.sections = [blank(0, run.leds - 1, run)];
+    kept.picked = 0;
+    kept.was = [];
+    kept.undone = [];
+  });
+  stripThere(run, false);
+  apply(slotAt(state.at).body);
+  draw();
+}

@@ -14,7 +14,7 @@ import {chooseLook, pickingLook, remember} from "./03_runs.js";
 import {stretchUnder} from "./04_scenes.js";
 import {standingIn} from "./07_board.js";
 import {chosenTab} from "./11_tabs.js";
-import {renderPreview} from "./18_drive.js";
+import {renderPreview} from "./18_file_preview.js";
 import {figureKey, figureSaid, figureWay, linesAt, placeFor, settingIn} from "./25_figures.js";
 import {colourField, swatchRow} from "./30_colour_picker.js";
 import {stretchCells, washFor} from "./31_stretch_bar.js";

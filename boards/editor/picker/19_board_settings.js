@@ -3,7 +3,7 @@ import {draw, drawSteps} from "./00_draw.js";
 import {state} from "./04_scenes.js";
 import {SCREEN_SIZES, boardLineSteps} from "./07_board.js";
 import {boardIcon} from "./08_setup.js";
-import {renderPreview} from "./18_drive.js";
+import {renderPreview} from "./18_file_preview.js";
 
 export var boardSet = {reload: true, driveHidden: false, program: null, args: {}};
 

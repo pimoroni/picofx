@@ -1,12 +1,13 @@
+import {banner} from "../00_banner.js";
 import {h} from "../00_dom.js";
 import {draw} from "../00_draw.js";
 import {SWATCHES, WORDS, fieldColour, hexOf, hexRgb, rgbInk, takeApart} from "../01_colours.js";
 import {quoted} from "../01_looks.js";
 import {spoken} from "../03_lines.js";
 import {bodyParts, namesOf, state} from "../04_scenes.js";
-import {banner, driveTrouble} from "../18_drive.js";
+import {driveTrouble, nameShown} from "../18_drive.js";
 import {copyTile} from "../22_program.js";
-import {isExampleMedia, mediaHome, nameShown, scanMedia} from "../26_drive_files.js";
+import {isExampleMedia, mediaHome, scanMedia} from "../26_drive_files.js";
 import {argumentFrom, copyToOwn, folderAt} from "../26_drive_programs.js";
 import {colourField, swatchRow} from "../30_colour_picker.js";
 import {

@@ -5577,6 +5577,46 @@ body:has(> dialog.discover[open]) {
  <p><small>Pimoroni Ltd., Unit 1, Parkway Business Park, Parkway Drive, Sheffield, S9 4WN, United Kingdom. Registered in England and Wales. Company No. 07510759. VAT Reg No. GB 140 8707 21</small></p>
 </footer>
 <script>
+
+var SPOT_STEP_MS = 120;
+
+var SPOT_COUNT = 7;
+
+var spotTimer = null;
+
+function stopSpots() {
+  if (spotTimer !== null) clearInterval(spotTimer);
+  spotTimer = null;
+}
+
+function saving(text) {
+  var spots = [];
+  for (var made = 0; made < SPOT_COUNT; made++) spots.push(h("i"));
+  showBanner(text, "hold", null, h("span", {"aria-hidden": "true"}, spots));
+  var lit = 0;
+  spotTimer = setInterval(function () {
+    spots.forEach(function (spot, at) { spot.toggleAttribute("data-lit", at === lit); });
+    lit = (lit + 1) % spots.length;
+  }, SPOT_STEP_MS);
+}
+
+var bannerSteps = [];
+
+function banner(text, warn, detail) {
+  showBanner(text, warn, detail, null);
+}
+
+function showBanner(text, warn, detail, spots) {
+  stopSpots();
+  bannerSteps.forEach(function (step) { step(text, warn); });
+  var box = document.getElementById("banner");
+  box.dataset.tone = warn === "hold" ? "hold" : warn ? "warn" : "";
+  if (!text) {
+    replace(box);
+    return;
+  }
+  replace(box, h("p", {}, text, spots), detail ? h("pre", {text: detail}) : null);
+}
 function h(tag, props, ...children) {
   var element = tag.indexOf("svg:") === 0
     ? document.createElementNS("http://www.w3.org/2000/svg", tag.slice(4))
@@ -7521,6 +7561,12 @@ var runs = MONO_FIRST ? [mono, outs] : [outs, mono];
 
 var active = MONO_FIRST ? mono : outs;
 
+var lastOutputRun = outs;
+
+drawSteps.before.push(function () {
+  if (!active.strip) lastOutputRun = active;
+});
+
 function activate(run) {
   active = run;
 }
@@ -7910,39 +7956,6 @@ function stretchFor(run, isMono) {
     if (first && first.colour === !isMono) return i;
   }
   return run.picked;
-}
-
-function escapeHtml(text) {
-  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-function paintLine(line) {
-  var plain = escapeHtml(line);
-  if (line.charAt(0) === "[") return "<span data-s='scene'>" + plain + "</span>";
-  if (/^\s*#/.test(line)) return "<span data-s='comment'>" + plain + "</span>";
-  var at = line.indexOf(":");
-  if (at < 0) return plain;
-  function settings(text) {
-    return (text.match(/"[^"]*"|\S+|\s+/g) || []).map(function (token) {
-      var pair = token.match(/^([^=\s]+)(=)(.*)$/);
-      if (!pair) return escapeHtml(token);
-      return "<span data-s='name'>" + escapeHtml(pair[1]) + "</span>" +
-             "<span data-s='punc'>=</span>" +
-             "<span data-s='value'>" + escapeHtml(pair[3]) + "</span>";
-    }).join("");
-  }
-  var left = line.slice(0, at), right = line.slice(at + 1);
-  var selector = left.match(/^(\s*)(\S+)(.*)$/);
-  var head = selector
-    ? escapeHtml(selector[1]) + "<span data-s='target'>" + escapeHtml(selector[2]) +
-      "</span>" + settings(selector[3])
-    : escapeHtml(left);
-  var effect = right.match(/^(\s*)(\S+)(.*)$/);
-  var tail = effect
-    ? escapeHtml(effect[1]) + "<span data-s='effect'>" + escapeHtml(effect[2]) +
-      "</span>" + settings(effect[3])
-    : escapeHtml(right);
-  return head + "<span data-s='colon'>:</span>" + tail;
 }
 
 settle();
@@ -8678,6 +8691,59 @@ function readStripTail(run, tail) {
 runs.push.apply(runs, STRIPS.map(stripRun));
 settle();
 
+function stripOfToken(token) {
+  var named = token.match(/^(\w+)=/);
+  var name = named && named[1].toLowerCase();
+  return STRIPS.some(function (strip) { return strip.name === name; }) ? name : null;
+}
+
+function forgetKeptFor(run) {
+  function elsewhere(one) {
+    var parts = entryParts(one.text);
+    var lamps = parts && lampsNamed(run, parts.selector);
+    return !(lamps && lamps.length);
+  }
+  filterKept(elsewhere);
+  allBodies().forEach(function (held) { held.kept = (held.kept || []).filter(elsewhere); });
+  filterResidue(function (token) { return stripOfToken(token) !== run.name; });
+}
+
+function stripThere(run, there) { stripSet(run, {there: there}); }
+
+function capitalised(text) { return text.charAt(0).toUpperCase() + text.slice(1); }
+
+function stripBlockedBy(run) {
+  if (run.there) return "";
+  var fitted = runs.filter(function (one) {
+    return one.strip && one.there && run.takes.indexOf(one.name) >= 0;
+  });
+  if (fitted.length) {
+    return capitalised(run.label) + " takes " + run.connector + ", so it cannot be fitted beside " +
+           fitted.map(function (one) { return one.label; }).join(" and ") + ". Remove " +
+           (fitted.length > 1 ? "them" : "it") + " to fit one here.";
+  }
+  var taking = runs.filter(function (one) {
+    return one.strip && one.there && one.takes.indexOf(run.name) >= 0;
+  })[0];
+  return taking ? capitalised(taking.label) + " uses " + taking.connector +
+                  ". Remove it to fit a strip here." : "";
+}
+
+function dropStrip(run) {
+  forgetKeptFor(run);
+  store();
+  allBodies().forEach(function (held) {
+    var kept = held.runs[run.name];
+    if (!kept) return;
+    kept.sections = [blank(0, run.leds - 1, run)];
+    kept.picked = 0;
+    kept.was = [];
+    kept.undone = [];
+  });
+  stripThere(run, false);
+  apply(slotAt(state.at).body);
+  draw();
+}
 
 var screenHooks = {mediaNamed: function () { return null; }, panelPreview: null};
 
@@ -8982,43 +9048,6 @@ function stripBuilt(run) {
   return run.leds + " LEDs, " + stripChipShown(run);
 }
 
-function stripThere(run, there) { stripSet(run, {there: there}); }
-
-function capitalised(text) { return text.charAt(0).toUpperCase() + text.slice(1); }
-
-function stripBlockedBy(run) {
-  if (run.there) return "";
-  var fitted = runs.filter(function (one) {
-    return one.strip && one.there && run.takes.indexOf(one.name) >= 0;
-  });
-  if (fitted.length) {
-    return capitalised(run.label) + " takes " + run.connector + ", so it cannot be fitted beside " +
-           fitted.map(function (one) { return one.label; }).join(" and ") + ". Remove " +
-           (fitted.length > 1 ? "them" : "it") + " to fit one here.";
-  }
-  var taking = runs.filter(function (one) {
-    return one.strip && one.there && one.takes.indexOf(run.name) >= 0;
-  })[0];
-  return taking ? capitalised(taking.label) + " uses " + taking.connector +
-                  ". Remove it to fit a strip here." : "";
-}
-
-function dropStrip(run) {
-  forgetKeptFor(run);
-  store();
-  allBodies().forEach(function (held) {
-    var kept = held.runs[run.name];
-    if (!kept) return;
-    kept.sections = [blank(0, run.leds - 1, run)];
-    kept.picked = 0;
-    kept.was = [];
-    kept.undone = [];
-  });
-  stripThere(run, false);
-  apply(slotAt(state.at).body);
-  draw();
-}
-
 function stripOut(run, panel) {
   var blocked = stripBlockedBy(run);
   return [boardBox(panel, ["Strip", small("not fitted")]),
@@ -9054,11 +9083,6 @@ drawSteps.after.push(function () {
   if (setupOn) unmark();
   paintAll();
 });
-
-function setSetup(on) {
-  setSetupMode(on);
-  showChosen();
-}
 
 function stripChipChoice(run) {
   if (run.made === null) {
@@ -9500,18 +9524,7 @@ function keptOpen(panel) {
 
 LED_PANELS.forEach(keptOpen);
 
-var lastOutputRun = outs;
-
-drawSteps.after.push(function () {
-  if (!active.strip) lastOutputRun = active;
-  if (active.strip) {
-    renderEditor("outChosen", lastOutputRun);
-  }
-  runs.filter(function (run) { return run.strip && run !== active; }).forEach(function (run) {
-    renderEditor(run.id + "Chosen", run);
-  });
-  renderLedTabs();
-});
+drawSteps.after.push(renderLedTabs);
 
 (function () {
   var first = document.getElementById("outPanel");
@@ -9526,6 +9539,11 @@ drawSteps.after.push(function () {
     document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
   }
 }());
+
+function setSetup(on) {
+  setSetupMode(on);
+  showChosen();
+}
 
 var SCREEN_NAMES = {};
 var SCREENS = CATALOGUE.screen_ports.map(function (name, index) {
@@ -13884,47 +13902,7 @@ function readPairedScreens(bodies) {
   }
 }
 
-var SPOT_STEP_MS = 120;
-
-var SPOT_COUNT = 7;
-
 var SAVING_TAIL_MS = 920;
-
-var spotTimer = null;
-
-function stopSpots() {
-  if (spotTimer !== null) clearInterval(spotTimer);
-  spotTimer = null;
-}
-
-function saving(text) {
-  var spots = [];
-  for (var made = 0; made < SPOT_COUNT; made++) spots.push(h("i"));
-  showBanner(text, "hold", null, h("span", {"aria-hidden": "true"}, spots));
-  var lit = 0;
-  spotTimer = setInterval(function () {
-    spots.forEach(function (spot, at) { spot.toggleAttribute("data-lit", at === lit); });
-    lit = (lit + 1) % spots.length;
-  }, SPOT_STEP_MS);
-}
-
-var bannerSteps = [];
-
-function banner(text, warn, detail) {
-  showBanner(text, warn, detail, null);
-}
-
-function showBanner(text, warn, detail, spots) {
-  stopSpots();
-  bannerSteps.forEach(function (step) { step(text, warn); });
-  var box = document.getElementById("banner");
-  box.dataset.tone = warn === "hold" ? "hold" : warn ? "warn" : "";
-  if (!text) {
-    replace(box);
-    return;
-  }
-  replace(box, h("p", {}, text, spots), detail ? h("pre", {text: detail}) : null);
-}
 
 function rememberDrive(handle) {
   try {
@@ -14091,8 +14069,6 @@ var CAN_REACH_A_DRIVE = typeof window.showDirectoryPicker === "function";
 
 var drive = {dirHandle: null, fileHandle: null};
 
-var answered = {said: null, about: null};
-
 var WROTE_KEY = "fx-picker-wrote";
 
 function overwriteQuestion() {
@@ -14129,50 +14105,6 @@ async function connect(fresh) {
   saveButton.disabled = false;
   draw();
   for (var at = 0; at < connectSteps.length; at++) await connectSteps[at]();
-}
-
-function problemsIn(said) {
-  var found = {};
-  var at = null;
-  (said || "").split("\n").forEach(function (line) {
-    var named = line.match(/^line (\d+): ?(.*)$/);
-    if (named) {
-      at = Number(named[1]);
-      (found[at] = found[at] || []).push(named[2]);
-    } else if (at !== null && line.trim()) {
-      found[at].push(line.trim());
-    }
-  });
-  return found;
-}
-
-function takeAnswer(said, about) {
-  answered = {said: said || null, about: about};
-  renderPreview();
-}
-
-function renderPreview() {
-  var problems = problemsIn(answered.said);
-  var lines = currentText().split("\n");
-  var read = (answered.about || "").split("\n");
-  var changedSince = 0;
-  var painted = lines.map(function (line, at) {
-    var said = problems[at + 1];
-    if (!said) return paintLine(line);
-    if (read[at] !== line) {
-      changedSince++;
-      return paintLine(line);
-    }
-    return "<mark>" + paintLine(line) + "</mark><em>  " + escapeHtml(said.join(" ")) + "</em>";
-  });
-  Object.keys(problems).forEach(function (at) {
-    if (Number(at) > lines.length) changedSince++;
-  });
-  document.getElementById("preview").innerHTML = painted.join("\n");
-  var note = document.getElementById("previewNote");
-  note.hidden = !changedSince;
-  note.textContent = changedSince === 1 ? "One reported line has since changed."
-                                        : changedSince + " reported lines have since changed.";
 }
 
 document.getElementById("save").onclick = async function () {
@@ -14274,6 +14206,89 @@ document.getElementById("open").onclick = function () { openDrive(false); };
 if (!CAN_REACH_A_DRIVE) {
   document.getElementById("open").disabled = true;
   banner("This page needs Chrome or Edge to reach the drive.");
+}
+
+function nameShown(name) {
+  return name.slice(name.lastIndexOf("/") + 1);
+}
+
+function escapeHtml(text) {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function paintLine(line) {
+  var plain = escapeHtml(line);
+  if (line.charAt(0) === "[") return "<span data-s='scene'>" + plain + "</span>";
+  if (/^\s*#/.test(line)) return "<span data-s='comment'>" + plain + "</span>";
+  var at = line.indexOf(":");
+  if (at < 0) return plain;
+  function settings(text) {
+    return (text.match(/"[^"]*"|\S+|\s+/g) || []).map(function (token) {
+      var pair = token.match(/^([^=\s]+)(=)(.*)$/);
+      if (!pair) return escapeHtml(token);
+      return "<span data-s='name'>" + escapeHtml(pair[1]) + "</span>" +
+             "<span data-s='punc'>=</span>" +
+             "<span data-s='value'>" + escapeHtml(pair[3]) + "</span>";
+    }).join("");
+  }
+  var left = line.slice(0, at), right = line.slice(at + 1);
+  var selector = left.match(/^(\s*)(\S+)(.*)$/);
+  var head = selector
+    ? escapeHtml(selector[1]) + "<span data-s='target'>" + escapeHtml(selector[2]) +
+      "</span>" + settings(selector[3])
+    : escapeHtml(left);
+  var effect = right.match(/^(\s*)(\S+)(.*)$/);
+  var tail = effect
+    ? escapeHtml(effect[1]) + "<span data-s='effect'>" + escapeHtml(effect[2]) +
+      "</span>" + settings(effect[3])
+    : escapeHtml(right);
+  return head + "<span data-s='colon'>:</span>" + tail;
+}
+
+var answered = {said: null, about: null};
+
+function problemsIn(said) {
+  var found = {};
+  var at = null;
+  (said || "").split("\n").forEach(function (line) {
+    var named = line.match(/^line (\d+): ?(.*)$/);
+    if (named) {
+      at = Number(named[1]);
+      (found[at] = found[at] || []).push(named[2]);
+    } else if (at !== null && line.trim()) {
+      found[at].push(line.trim());
+    }
+  });
+  return found;
+}
+
+function takeAnswer(said, about) {
+  answered = {said: said || null, about: about};
+  renderPreview();
+}
+
+function renderPreview() {
+  var problems = problemsIn(answered.said);
+  var lines = currentText().split("\n");
+  var read = (answered.about || "").split("\n");
+  var changedSince = 0;
+  var painted = lines.map(function (line, at) {
+    var said = problems[at + 1];
+    if (!said) return paintLine(line);
+    if (read[at] !== line) {
+      changedSince++;
+      return paintLine(line);
+    }
+    return "<mark>" + paintLine(line) + "</mark><em>  " + escapeHtml(said.join(" ")) + "</em>";
+  });
+  Object.keys(problems).forEach(function (at) {
+    if (Number(at) > lines.length) changedSince++;
+  });
+  document.getElementById("preview").innerHTML = painted.join("\n");
+  var note = document.getElementById("previewNote");
+  note.hidden = !changedSince;
+  note.textContent = changedSince === 1 ? "One reported line has since changed."
+                                        : changedSince + " reported lines have since changed.";
 }
 
 var boardSet = {reload: true, driveHidden: false, program: null, args: {}};
@@ -15604,10 +15619,6 @@ function isExampleMedia(name) {
   return name.indexOf("examples/") === 0;
 }
 
-function nameShown(name) {
-  return name.slice(name.lastIndexOf("/") + 1);
-}
-
 var OTHER_EXAMPLES = {drawings: "Example drawings", pictures: "Example pictures",
                       sounds: "Example sounds"};
 
@@ -16804,12 +16815,6 @@ bodyParts.push({
   }
 });
 
-function stripOfToken(token) {
-  var named = token.match(/^(\w+)=/);
-  var name = named && named[1].toLowerCase();
-  return STRIPS.some(function (strip) { return strip.name === name; }) ? name : null;
-}
-
 function heldOfToken(token) {
   var named = token.match(/^(\w+)=/);
   var name = named && named[1].toLowerCase();
@@ -16880,17 +16885,6 @@ drawSteps.after.push(function () {
   renderKept();
   markKeptLights();
 });
-
-function forgetKeptFor(run) {
-  function elsewhere(one) {
-    var parts = entryParts(one.text);
-    var lamps = parts && lampsNamed(run, parts.selector);
-    return !(lamps && lamps.length);
-  }
-  filterKept(elsewhere);
-  allBodies().forEach(function (held) { held.kept = (held.kept || []).filter(elsewhere); });
-  filterResidue(function (token) { return stripOfToken(token) !== run.name; });
-}
 
 connectSteps.push(async function () {
   var text = await (await drive.fileHandle.getFile()).text();
@@ -18920,19 +18914,13 @@ drawSteps.during.push(
   function () { renderWiringRun("monoRun", mono); },
   function () { renderStretches("monoBar", mono); },
   renderSides,
-  function () { renderEditor("outChosen", active); },
+  function () { renderEditor("outChosen", active.strip ? lastOutputRun : active); },
   renderPreview,
   function () {
-    if (active.strip) {
-      document.getElementById("outChosen").textContent = "";
-    }
     runs.filter(function (run) { return run.strip; }).forEach(function (run) {
       renderLeds(run.id + "Leds", run);
       renderStretches(run.id + "Bar", run);
-      document.getElementById(run.id + "Chosen").textContent = "";
-      if (run === active) {
-        renderEditor(run.id + "Chosen", run);
-      }
+      renderEditor(run.id + "Chosen", run);
     });
   },
   paintAll

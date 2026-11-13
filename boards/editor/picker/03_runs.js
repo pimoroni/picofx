@@ -1,4 +1,4 @@
-import {draw} from "./00_draw.js";
+import {draw, drawSteps} from "./00_draw.js";
 import {BOARD, canPlay, lookNamed} from "./01_looks.js";
 import {filterKept, keptLights} from "./03_kept.js";
 import {START_MOODS, sectionLines, startColour, targetFor} from "./03_lines.js";
@@ -14,6 +14,12 @@ export var mono = Run("mono", true);
 export var runs = MONO_FIRST ? [mono, outs] : [outs, mono];
 
 export var active = MONO_FIRST ? mono : outs;
+
+export var lastOutputRun = outs;
+
+drawSteps.before.push(function () {
+  if (!active.strip) lastOutputRun = active;
+});
 
 export function activate(run) {
   active = run;
@@ -404,39 +410,6 @@ export function stretchFor(run, isMono) {
     if (first && first.colour === !isMono) return i;
   }
   return run.picked;
-}
-
-export function escapeHtml(text) {
-  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
-export function paintLine(line) {
-  var plain = escapeHtml(line);
-  if (line.charAt(0) === "[") return "<span data-s='scene'>" + plain + "</span>";
-  if (/^\s*#/.test(line)) return "<span data-s='comment'>" + plain + "</span>";
-  var at = line.indexOf(":");
-  if (at < 0) return plain;
-  function settings(text) {
-    return (text.match(/"[^"]*"|\S+|\s+/g) || []).map(function (token) {
-      var pair = token.match(/^([^=\s]+)(=)(.*)$/);
-      if (!pair) return escapeHtml(token);
-      return "<span data-s='name'>" + escapeHtml(pair[1]) + "</span>" +
-             "<span data-s='punc'>=</span>" +
-             "<span data-s='value'>" + escapeHtml(pair[3]) + "</span>";
-    }).join("");
-  }
-  var left = line.slice(0, at), right = line.slice(at + 1);
-  var selector = left.match(/^(\s*)(\S+)(.*)$/);
-  var head = selector
-    ? escapeHtml(selector[1]) + "<span data-s='target'>" + escapeHtml(selector[2]) +
-      "</span>" + settings(selector[3])
-    : escapeHtml(left);
-  var effect = right.match(/^(\s*)(\S+)(.*)$/);
-  var tail = effect
-    ? escapeHtml(effect[1]) + "<span data-s='effect'>" + escapeHtml(effect[2]) +
-      "</span>" + settings(effect[3])
-    : escapeHtml(right);
-  return head + "<span data-s='colon'>:</span>" + tail;
 }
 
 settle();

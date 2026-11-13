@@ -1,3 +1,4 @@
+import {banner} from "./00_banner.js";
 import {h, replace} from "./00_dom.js";
 import {draw, drawSteps, paintAll} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
@@ -5,7 +6,7 @@ import {spoken} from "./03_lines.js";
 import {state} from "./04_scenes.js";
 import {SCREEN_PORTS, screenHooks} from "./07_board.js";
 import {tabSwatch} from "./11_tabs.js";
-import {CAN_REACH_A_DRIVE, banner, drive, driveTrouble} from "./18_drive.js";
+import {CAN_REACH_A_DRIVE, drive, driveTrouble} from "./18_drive.js";
 import {
   PROGRAMS, boardSet, programArguments, programNamed, programNote, setPrograms
 } from "./19_board_settings.js";

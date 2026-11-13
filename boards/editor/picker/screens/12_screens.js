@@ -13,10 +13,11 @@ import {
 import {boardIcon} from "../08_setup.js";
 import {LED_PANELS} from "../10_led_sections.js";
 import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches, tabUnder} from "../11_tabs.js";
+import {nameShown} from "../18_drive.js";
 import {OWN_GROUP, foldHead} from "../22_program.js";
 import {
   adderTile, binButton, exampleGroups, groupOpen, groupsOpen, isExampleMedia, isHiddenName,
-  mediaHome, nameShown
+  mediaHome
 } from "../26_drive_files.js";
 import {openingString} from "../26_drive_programs.js";
 import {

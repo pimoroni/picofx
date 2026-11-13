@@ -1,7 +1,7 @@
+import {bannerSteps} from "./00_banner.js";
 import {h, replace} from "./00_dom.js";
 import {drawSteps} from "./00_draw.js";
 import {state} from "./04_scenes.js";
-import {bannerSteps} from "./18_drive.js";
 import {boardSet} from "./19_board_settings.js";
 import {closeSaveMenu} from "./21_save_menu.js";
 import {onProgramPage, programTitle} from "./22_program.js";

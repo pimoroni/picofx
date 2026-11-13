@@ -1,11 +1,10 @@
 import {h, replace} from "./00_dom.js";
 import {draw, drawSteps} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
-import {active, outs, runs, setupOn} from "./03_runs.js";
-import {STRIPS} from "./05_strips.js";
-import {setSetup, setupButton, stripBlockedBy} from "./08_setup.js";
+import {setSetupMode, setupOn} from "./03_runs.js";
+import {STRIPS, stripBlockedBy} from "./05_strips.js";
+import {setupButton} from "./08_setup.js";
 import {LED_PANELS, runsOfPanel, workOn} from "./10_led_sections.js";
-import {renderEditor} from "./32_stretch_editor.js";
 
 export var TAB_NAMES = {outPanel: BOARD.output_words.tab};
 BOARD.strips.forEach(function (strip) { TAB_NAMES[strip.name + "Panel"] = strip.tab; });
@@ -104,18 +103,7 @@ export function keptOpen(panel) {
 
 LED_PANELS.forEach(keptOpen);
 
-export var lastOutputRun = outs;
-
-drawSteps.after.push(function () {
-  if (!active.strip) lastOutputRun = active;
-  if (active.strip) {
-    renderEditor("outChosen", lastOutputRun);
-  }
-  runs.filter(function (run) { return run.strip && run !== active; }).forEach(function (run) {
-    renderEditor(run.id + "Chosen", run);
-  });
-  renderLedTabs();
-});
+drawSteps.after.push(renderLedTabs);
 
 (function () {
   var first = document.getElementById("outPanel");
@@ -130,3 +118,8 @@ drawSteps.after.push(function () {
     document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
   }
 }());
+
+function setSetup(on) {
+  setSetupMode(on);
+  showChosen();
+}

@@ -1,51 +1,10 @@
-import {h, replace} from "./00_dom.js";
+import {banner, saving} from "./00_banner.js";
 import {draw} from "./00_draw.js";
-import {escapeHtml, paintLine} from "./03_runs.js";
 import {state} from "./04_scenes.js";
 import {currentText} from "./07_writing.js";
-import {nameShown} from "./26_drive_files.js";
-
-var SPOT_STEP_MS = 120;
-
-var SPOT_COUNT = 7;
+import {takeAnswer} from "./18_file_preview.js";
 
 var SAVING_TAIL_MS = 920;
-
-var spotTimer = null;
-
-function stopSpots() {
-  if (spotTimer !== null) clearInterval(spotTimer);
-  spotTimer = null;
-}
-
-function saving(text) {
-  var spots = [];
-  for (var made = 0; made < SPOT_COUNT; made++) spots.push(h("i"));
-  showBanner(text, "hold", null, h("span", {"aria-hidden": "true"}, spots));
-  var lit = 0;
-  spotTimer = setInterval(function () {
-    spots.forEach(function (spot, at) { spot.toggleAttribute("data-lit", at === lit); });
-    lit = (lit + 1) % spots.length;
-  }, SPOT_STEP_MS);
-}
-
-export var bannerSteps = [];
-
-export function banner(text, warn, detail) {
-  showBanner(text, warn, detail, null);
-}
-
-function showBanner(text, warn, detail, spots) {
-  stopSpots();
-  bannerSteps.forEach(function (step) { step(text, warn); });
-  var box = document.getElementById("banner");
-  box.dataset.tone = warn === "hold" ? "hold" : warn ? "warn" : "";
-  if (!text) {
-    replace(box);
-    return;
-  }
-  replace(box, h("p", {}, text, spots), detail ? h("pre", {text: detail}) : null);
-}
 
 function rememberDrive(handle) {
   try {
@@ -212,8 +171,6 @@ export var CAN_REACH_A_DRIVE = typeof window.showDirectoryPicker === "function";
 
 export var drive = {dirHandle: null, fileHandle: null};
 
-var answered = {said: null, about: null};
-
 export var WROTE_KEY = "fx-picker-wrote";
 
 function overwriteQuestion() {
@@ -250,50 +207,6 @@ async function connect(fresh) {
   saveButton.disabled = false;
   draw();
   for (var at = 0; at < connectSteps.length; at++) await connectSteps[at]();
-}
-
-function problemsIn(said) {
-  var found = {};
-  var at = null;
-  (said || "").split("\n").forEach(function (line) {
-    var named = line.match(/^line (\d+): ?(.*)$/);
-    if (named) {
-      at = Number(named[1]);
-      (found[at] = found[at] || []).push(named[2]);
-    } else if (at !== null && line.trim()) {
-      found[at].push(line.trim());
-    }
-  });
-  return found;
-}
-
-function takeAnswer(said, about) {
-  answered = {said: said || null, about: about};
-  renderPreview();
-}
-
-export function renderPreview() {
-  var problems = problemsIn(answered.said);
-  var lines = currentText().split("\n");
-  var read = (answered.about || "").split("\n");
-  var changedSince = 0;
-  var painted = lines.map(function (line, at) {
-    var said = problems[at + 1];
-    if (!said) return paintLine(line);
-    if (read[at] !== line) {
-      changedSince++;
-      return paintLine(line);
-    }
-    return "<mark>" + paintLine(line) + "</mark><em>  " + escapeHtml(said.join(" ")) + "</em>";
-  });
-  Object.keys(problems).forEach(function (at) {
-    if (Number(at) > lines.length) changedSince++;
-  });
-  document.getElementById("preview").innerHTML = painted.join("\n");
-  var note = document.getElementById("previewNote");
-  note.hidden = !changedSince;
-  note.textContent = changedSince === 1 ? "One reported line has since changed."
-                                        : changedSince + " reported lines have since changed.";
 }
 
 document.getElementById("save").onclick = async function () {
@@ -395,4 +308,8 @@ document.getElementById("open").onclick = function () { openDrive(false); };
 if (!CAN_REACH_A_DRIVE) {
   document.getElementById("open").disabled = true;
   banner("This page needs Chrome or Edge to reach the drive.");
+}
+
+export function nameShown(name) {
+  return name.slice(name.lastIndexOf("/") + 1);
 }
