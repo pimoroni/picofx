@@ -10,6 +10,11 @@ The name is everything before the `:` and can be anything, including spaces. The
 time is in seconds, `30s`, or minutes, `10m`. Scenes play in the order written,
 then repeat.
 
+Each scene needs a name of its own. A heading with no name, or with a name
+another scene already has, even in different capitals, is reported in
+`errors.txt`. The picker also keeps the name "Always on" for the entries before
+the first heading.
+
 Entries before the first heading are always on, whichever scene is playing, so
 put anything that should never change there:
 
@@ -17,13 +22,40 @@ put anything that should never change there:
 __ONE_OUTPUT__: static brightness=0.2
 ```
 
-While a scene plays, an __OUTPUT__ it does not name goes dark if another scene
-uses it, and is left alone otherwise. A scene can name an always-on __OUTPUT__ and
-takes it over while the scene plays.
+While a scene plays, an __OUTPUT__ it does not name plays its always-on entry.
+Where there is none, it goes dark if another scene uses it, and is left alone
+otherwise. A scene can name an always-on __OUTPUT__ and takes it over while the
+scene plays, and `none` turns it off for that scene:
+
+```entry
+[Night: 10m]
+__ONE_OUTPUT__: none
+```
 
 <!-- if screens -->
-Screens behave the same way: the picture stays, but the backlight turns off
-while another scene plays, and comes back when its own scene returns.
+Screens behave the same way. A screen the scene does not name shows its
+always-on picture, even where the always-on entry names both screens, as
+`screenA,B`, and the scene takes only one. Where there is none, the picture
+stays but the backlight turns off while another scene plays, and comes back
+when its own scene returns.
+`none` turns a screen off for a scene, showing black, or its `background`
+colour, at the backlight set before the colon:
+
+```entry
+[Night: 10m]
+__SCREEN__ backlight=0%: none
+```
+<!-- end -->
+<!-- if hub -->
+
+A Screen Hub position takes `none` the same way, such as `hubB: none`. A
+scene that takes one position of an always-on entry for several, such as
+`hubA-C`, leaves the rest playing it.
+<!-- end -->
+<!-- if sound -->
+
+A scene with no `audio` entry lets the always-on sound play on, as
+[Sound](#sound) explains. `audio: none` silences it while the scene shows.
 <!-- end -->
 
 Add `restart` to a heading to restart that scene's effects each time it
@@ -34,9 +66,30 @@ plays, instead of resuming where they left off:
 __THREE_OUTPUTS__: flash_sequence flashes=3
 ```
 
-The board entry goes before any scene heading. A single scene with no time plays
-forever, and every reload, whether from a save, an eject or a press of **Boot**,
-starts again from the first scene.
+A scene hands over to the next one in order. The picker can choose another,
+which it writes after `then` at the end of the heading. `then` ends the
+heading's settings, so everything after it is the next scene's name, spaces and
+all, and `restart` goes before it:
+
+```entry
+[Night: 45s restart then Day]
+```
+
+A scene can also go back to itself, to begin its effects again each time its
+time is up. That needs `restart`, as does a file's only scene when it has a
+time, since otherwise nothing changes when the time is up, and `errors.txt`
+says so:
+
+```entry
+[Storm: 30s restart then Storm]
+```
+
+The board entry goes before any scene heading. A scene with no time, such as
+`[Welcome]`, waits, and the board stays on it. Put one last to play the scenes
+before it once and then hold, such as an opening effect after the board starts.
+A scene that no other scene goes on to never shows, and `errors.txt` says so.
+Every reload, whether from a save, an eject or a press of **Boot**, starts again
+from the first scene.
 <!-- if sensor -->
 
 ### Changing scenes with a remote or motion

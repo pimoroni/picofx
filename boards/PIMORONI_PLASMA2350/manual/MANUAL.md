@@ -150,19 +150,54 @@ button to delete it from the drive.
 ### Scenes: Playing one after another
 
 Press [[+ split into scenes]] to have the board play one setup after another.
-Each scene gets its own tab, with a name, how many seconds it shows for and
-everything it plays. [[+ another scene]] adds one, the cross on a tab removes
-it, and you can drag the tabs to change the order. [[Restart]] makes a scene
-start its effects from the beginning each time it plays, instead of carrying on
-where they left off.
+What you've set up so far becomes Scene 1, and a tray of cards appears above
+the tabs, one for each scene. A card shows the scene's name, an icon for each
+part of the board it sets, and how it ends, such as "10s" or "45s, then Day".
+Click a card to work on that scene, and drag it by the grip beside its name to
+change the order. [[+ another scene]] adds one, and when the cards fill their
+last row it becomes a thin bar under them.
 
 ```picker
 pages: *Effects, Programs
 scenes: Always on, *Scene 1 10s
 ```
 
-Anything on the **Always on** tab plays under every scene. A scene that plays on
-the same part of the board takes over from it while that scene shows.
+Each scene takes the colour of its place, matching the number buttons on the
+Aye Arr Remote, so the first scene is red like button 1 and the tenth takes the
+rainbow of button 0. A scene you move takes the colour of its new place.
+
+Everything below the tray sits in a frame of the chosen scene's colour, with the
+scene's settings on a tab at its top left: its name, whether it "shows for" a
+number of seconds or "waits", and the scene after it. That's the next scene
+unless you choose another, or "itself" to repeat it. Tick "restart each time" to
+have a scene start its effects from the beginning each time it plays, instead of
+carrying on where they left off. A scene that goes back to itself always
+restarts, so its tick stays on. With only one scene, "shows for" repeats it
+after that many seconds, and "waits" keeps it showing.
+
+Beside the tab, the page says where the scene comes, such as "Scene 2 of 4, then
+Day", and [[Remove scene]] takes it away.
+
+Each scene needs a name of its own. While its name is empty, "Always on" or
+another scene's, the name is outlined and the words beside the tab say why.
+Leave it that way and the scene goes back to its last name that worked.
+
+### Scenes: Playing over Always on
+
+The first card, **Always on**, runs down the left of the tray. Anything on it
+plays under every scene. A scene that plays on the same part of the board takes
+over from it while that scene shows.
+
+With a scene chosen, the page shows what the board plays where the scene sets
+nothing. Those lights play Always on's look, on tiles striped inside a dashed
+outline. A light that only another scene uses is dark, as the board turns it
+off, and the bar names the scene that lights it. In a scene, [[Nothing]] means
+the scene sets nothing of its own there, so Always on can still play.
+
+A screen the scene leaves to Always on shows Always on's picture in the same
+striped frame, with its settings greyed, as they're set on Always on. To turn a
+screen off in a scene, press its button on the small black [[Off]] card at the
+end of the first heading on **Screens**. The screen then shows black.
 
 ### Programs: Running a program
 
@@ -695,6 +730,11 @@ The name is everything before the `:` and can be anything, including spaces. The
 time is in seconds, `30s`, or minutes, `10m`. Scenes play in the order written,
 then repeat.
 
+Each scene needs a name of its own. A heading with no name, or with a name
+another scene already has, even in different capitals, is reported in
+`errors.txt`. The picker also keeps the name "Always on" for the entries before
+the first heading.
+
 Entries before the first heading are always on, whichever scene is playing, so
 put anything that should never change there:
 
@@ -702,12 +742,28 @@ put anything that should never change there:
 rgb: static brightness=0.2
 ```
 
-While a scene plays, an LED it does not name goes dark if another scene
-uses it, and is left alone otherwise. A scene can name an always-on LED and
-takes it over while the scene plays.
+While a scene plays, an LED it does not name plays its always-on entry.
+Where there is none, it goes dark if another scene uses it, and is left alone
+otherwise. A scene can name an always-on LED and takes it over while the
+scene plays, and `none` turns it off for that scene:
 
-Screens behave the same way: the picture stays, but the backlight turns off
-while another scene plays, and comes back when its own scene returns.
+```entry
+[Night: 10m]
+rgb: none
+```
+
+Screens behave the same way. A screen the scene does not name shows its
+always-on picture, even where the always-on entry names both screens, as
+`screenA,B`, and the scene takes only one. Where there is none, the picture
+stays but the backlight turns off while another scene plays, and comes back
+when its own scene returns.
+`none` turns a screen off for a scene, showing black, or its `background`
+colour, at the backlight set before the colon:
+
+```entry
+[Night: 10m]
+screen backlight=0%: none
+```
 
 Add `restart` to a heading to restart that scene's effects each time it
 plays, instead of resuming where they left off:
@@ -717,9 +773,30 @@ plays, instead of resuming where they left off:
 stripDat1-3: flash_sequence flashes=3
 ```
 
-The board entry goes before any scene heading. A single scene with no time plays
-forever, and every reload, whether from a save, an eject or a press of **Boot**,
-starts again from the first scene.
+A scene hands over to the next one in order. The picker can choose another,
+which it writes after `then` at the end of the heading. `then` ends the
+heading's settings, so everything after it is the next scene's name, spaces and
+all, and `restart` goes before it:
+
+```entry
+[Night: 45s restart then Day]
+```
+
+A scene can also go back to itself, to begin its effects again each time its
+time is up. That needs `restart`, as does a file's only scene when it has a
+time, since otherwise nothing changes when the time is up, and `errors.txt`
+says so:
+
+```entry
+[Storm: 30s restart then Storm]
+```
+
+The board entry goes before any scene heading. A scene with no time, such as
+`[Welcome]`, waits, and the board stays on it. Put one last to play the scenes
+before it once and then hold, such as an opening effect after the board starts.
+A scene that no other scene goes on to never shows, and `errors.txt` says so.
+Every reload, whether from a save, an eject or a press of **Boot**, starts again
+from the first scene.
 
 ## The board
 

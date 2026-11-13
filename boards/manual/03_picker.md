@@ -124,10 +124,10 @@ pictures: acrylic_lixie=1, skyline.png, gold_macaw_card.png, medscan.gif
 ### Sound: Choosing a sound
 
 Once the drive is open, the **Sound** tab lists the WAV files on it. Choose one
-to play alongside the lights, or [[Silence]] for none. [[Loop]] repeats it
-instead of playing it once, and the volume slider sets how loud the board plays
-it. To add your own, drop a WAV file onto the tab and the picker copies it onto
-the drive.
+to play alongside the lights, or [[Silence]] for none. [[on repeat]] plays it
+over and over instead of once, and the volume slider sets how loud the board
+plays it. To add your own, drop a WAV file onto the tab and the picker copies it
+onto the drive.
 
 ```picker
 sounds: *rain.wav, doorbell.wav, Silence
@@ -137,19 +137,62 @@ sounds: *rain.wav, doorbell.wav, Silence
 ### Scenes: Playing one after another
 
 Press [[+ split into scenes]] to have the board play one setup after another.
-Each scene gets its own tab, with a name, how many seconds it shows for and
-everything it plays. [[+ another scene]] adds one, the cross on a tab removes
-it, and you can drag the tabs to change the order. [[Restart]] makes a scene
-start its effects from the beginning each time it plays, instead of carrying on
-where they left off.
+What you've set up so far becomes Scene 1, and a tray of cards appears above
+the tabs, one for each scene. A card shows the scene's name, an icon for each
+part of the board it sets, and how it ends, such as "10s" or "45s, then Day".
+Click a card to work on that scene, and drag it by the grip beside its name to
+change the order. [[+ another scene]] adds one, and when the cards fill their
+last row it becomes a thin bar under them.
 
 ```picker
 pages: *Effects, Programs
 scenes: Always on, *Scene 1 10s
 ```
 
-Anything on the **Always on** tab plays under every scene. A scene that plays on
-the same part of the board takes over from it while that scene shows.
+Each scene takes the colour of its place, matching the number buttons on the
+Aye Arr Remote, so the first scene is red like button 1 and the tenth takes the
+rainbow of button 0. A scene you move takes the colour of its new place.
+
+Everything below the tray sits in a frame of the chosen scene's colour, with the
+scene's settings on a tab at its top left: its name, whether it "shows for" a
+number of seconds or "waits", and the scene after it. That's the next scene
+unless you choose another, or "itself" to repeat it. Tick "restart each time" to
+have a scene start its effects from the beginning each time it plays, instead of
+carrying on where they left off. A scene that goes back to itself always
+restarts, so its tick stays on. With only one scene, "shows for" repeats it
+after that many seconds, and "waits" keeps it showing.
+
+Beside the tab, the page says where the scene comes, such as "Scene 2 of 4, then
+Day", and [[Remove scene]] takes it away.
+
+Each scene needs a name of its own. While its name is empty, "Always on" or
+another scene's, the name is outlined and the words beside the tab say why.
+Leave it that way and the scene goes back to its last name that worked.
+
+### Scenes: Playing over Always on
+
+The first card, **Always on**, runs down the left of the tray. Anything on it
+plays under every scene. A scene that plays on the same part of the board takes
+over from it while that scene shows.
+
+With a scene chosen, the page shows what the board plays where the scene sets
+nothing. Those lights play Always on's look, on tiles striped inside a dashed
+outline. A light that only another scene uses is dark, as the board turns it
+off, and the bar names the scene that lights it. In a scene, [[Nothing]] means
+the scene sets nothing of its own there, so Always on can still play.
+<!-- if screens -->
+
+A screen the scene leaves to Always on shows Always on's picture in the same
+striped frame, with its settings greyed, as they're set on Always on. To turn a
+screen off in a scene, press its button on the small black [[Off]] card at the
+end of the first heading on **Screens**. The screen then shows black.
+<!-- end -->
+<!-- if sound -->
+
+On **Sound**, Always on's sound wears the same stripes in a scene with none of
+its own, and its [[on repeat]] and volume are greyed. Choose [[Silence]] to
+quieten it while the scene shows.
+<!-- end -->
 <!-- if sensor -->
 
 ### Sensor: Changing scenes with a remote or motion
@@ -173,8 +216,9 @@ padlock. OK / Stop puts the board in standby and wakes it, so there's always a
 way to stop it, and Play / Pause holds the effects where they stand.
 
 Going to a scene starts its time again, and starts its effects again if its
-[[Restart]] is on. To begin a scene again whatever its [[Restart]] says, choose
-"from the start" on its own row, or "Restart the scene showing" on Always on.
+"restart each time" is ticked. To begin a scene again whatever its tick says,
+choose "from the start" on its own row, or "Restart the scene showing" on
+Always on.
 
 A PIR Stick's rows can wait before they act. Set the seconds after "after", then
 choose what happens if the motion changes back first. "cancel this" drops the

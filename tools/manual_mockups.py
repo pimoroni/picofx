@@ -282,24 +282,38 @@ def mockup_scenes(text):
     always_picked = any(selected for item, selected in items if item == "Always on")
     cards = []
     tab = ""
+    named = [item.rpartition(" ")[0] or item for item, _ in scenes]
     for at, (item, selected) in enumerate(scenes):
         name, _, seconds = item.rpartition(" ")
         if not (seconds.endswith("s") and seconds[:-1].isdigit()):
             name, seconds = item, ""
         colour = SCENE_COLOURS[at % len(SCENE_COLOURS)]
+        # The only scene with a time goes back to itself, which the picker says on its card and
+        # tab, and it always restarts, so its tick is on
+        lone = len(scenes) == 1
+        turn = seconds + (", again" if lone else "") if seconds else "waits"
         cards.append('<span class="scenecard{}" style="--scene:{}"><b>{}{}</b><span class="parts">{}'
                      '</span><small>{}</small></span>'.format(
                          " picked" if selected else "", colour, html.escape(name), GRIP_ICON,
-                         LIGHTS_ICON, html.escape(seconds or "waits")))
+                         LIGHTS_ICON, html.escape(turn)))
         if selected:
-            ending = ('<span class="field">{}</span><span class="dim">s, then</span><span class="field'
-                      '">the next scene</span>'.format(seconds[:-1]) if seconds else "")
+            if not seconds:
+                ending, place = "", "waits forever"
+            elif lone:
+                ending = ('<span class="field">{}</span><span class="dim">s, then itself</span>'
+                          .format(seconds[:-1]))
+                place = "then itself"
+            else:
+                ending = ('<span class="field">{}</span><span class="dim">s, then</span><span '
+                          'class="field">the next scene</span>'.format(seconds[:-1]))
+                place = "then " + named[(at + 1) % len(scenes)]
+            tick = "&#9745;" if lone and seconds else "&#9744;"
             tab = ('<div class="scenefold" style="--scene:{}"><div class="scenetab"><span class="field '
-                   'wide">{}</span><span class="dim">{}</span>{}<span class="button">&#8630; Restart'
-                   '</span></div><span class="dim small">Scene {} of {}</span><span class="button">'
-                   'Remove scene</span></div>').format(colour, html.escape(name),
-                                                       "shows for" if seconds else "waits", ending,
-                                                       at + 1, len(scenes))
+                   'wide">{}</span><span class="dim">{}</span>{}<span class="dim">{} restart each '
+                   'time</span></div><span class="dim small">Scene {} of {}, {}</span><span '
+                   'class="button">Remove scene</span></div>').format(
+                       colour, html.escape(name), "shows for" if seconds else "waits", ending, tick,
+                       at + 1, len(scenes), html.escape(place))
     if always_picked:
         tab = ('<div class="scenefold" style="--scene:#8f8a82"><div class="scenetab"><span class="dim">'
                'Always on plays under every scene. A scene that uses the same lights, screen or '
@@ -685,14 +699,14 @@ def mockup_pictures(text, letters, targets):
 
 
 def mockup_sounds(text, looping):
-    """The sounds on the drive, written as their names with Nothing among them, the selected one
-    marked with a *. Loop and Nothing sit on one line above the sounds, as the picker has them
-    before there are scenes, and Silence is read as Nothing."""
+    """The sounds on the drive, written as their names with Silence among them, the selected one
+    marked with a *. On repeat and the volume sit on one line above the sounds, and Silence is
+    the first tile, as the picker has them. Nothing is read as Silence."""
     cards = []
-    nothing = False
+    silent = False
     for name, selected in selected_items(text):
         if name in ("Nothing", "Silence"):
-            nothing = selected
+            silent = selected
             continue
         # A sound's preview is its outline, loud peaks red over a quiet blue line
         heights = [95, 70, 100, 60, 90, 80, 100, 65, 95, 85, 100, 70, 90, 75, 100, 60, 85, 95]
@@ -701,15 +715,16 @@ def mockup_sounds(text, looping):
                      '</span><span class="soundfoot"><span class="dim">1s</span><span class="play">'
                      '&#9654;</span></span></span>'.format(" picked" if selected else "", face,
                                                          html.escape(name)))
+    # Silence's tile is the quiet blue line alone
+    cards.insert(0, '<span class="sound{}"><span class="wave">{}</span><span class="name">Silence'
+                    '</span><span class="soundfoot"><span class="dim">nothing plays</span></span>'
+                    '</span>'.format(" picked" if silent else "", "<b></b>" * 18))
     cards.append('<span class="addtile"><b>+</b>add sounds</span>')
-    return ('<div class="soundhead"><span class="button{}">&#8635; Loop</span><span class="soundvolume">'
+    return ('<div class="soundhead"><span class="button{}">on repeat</span><span class="soundvolume">'
             '<span class="dim">volume</span><span class="slider"><i style="width:100%"></i></span>'
-            '<span>100%</span></span><span class="nothingcard{}">'
-            '<i class="{}"></i>Nothing</span></div><div class="galleryhead"><span class="fold">'
+            '<span>100%</span></span></div><div class="galleryhead"><span class="fold">'
             '&#8963;</span>On the drive<span class="dim">your own sounds</span></div>'
-            '<div class="sounds">{}</div>').format(" on" if looping else "",
-                                                   " picked" if nothing else "", HATCH,
-                                                   "".join(cards))
+            '<div class="sounds">{}</div>').format(" on" if looping else "", "".join(cards))
 
 
 def mockup_note(text):
