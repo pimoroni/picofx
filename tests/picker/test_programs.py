@@ -3,7 +3,7 @@ import os
 import re
 
 import pytest
-from conftest import REPO, picker_url
+from conftest import REPO, open_picker
 
 EXAMPLES = {"PIMORONI_MIGHTYFX": "mighty_fx", "PIMORONI_TINYFX": "tiny_fx",
             "PIMORONI_PLASMA2350": "plasma"}
@@ -148,8 +148,7 @@ def open_drive(browser, board, files, online=True):
         serve_github(page, board)
     else:
         page.route(GITHUB, lambda route: route.abort())
-    page.goto(picker_url(board))
-    page.wait_for_function("typeof currentText === 'function'")
+    open_picker(page, board)
     if files is not None:
         drive = {"effects.txt": "board:\n"}
         drive.update(files)

@@ -1,13 +1,10 @@
 import os
 import shutil
-import sys
 
 import pytest
+from build_editor import unpacked
 from conftest import BOARDS, REPO
 from playwright.sync_api import expect
-
-sys.path.insert(0, os.path.join(REPO, "tools"))
-from build_editor import unpacked  # noqa: E402
 
 
 @pytest.mark.parametrize("board", BOARDS)

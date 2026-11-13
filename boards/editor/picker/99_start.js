@@ -16,6 +16,10 @@ import {renderStretches} from "./31_stretch_bar.js";
 import {renderEditor} from "./32_stretch_editor.js";
 import {renderGallery} from "./33_gallery.js";
 
+import "./14_tab_swatches.js";
+import "./23_float_bar.js";
+import "./27_readback.js";
+
 drawSteps.during.push(
   renderGallery,
   function () { renderWiringRun("outRun", outs); },

@@ -10,8 +10,9 @@
   python3 -m http.server 8765
   ```
 
-  then open `http://127.0.0.1:8765/boards/PIMORONI_MIGHTYFX/editor/picker.html`. Every module's
-  exports are on `window` there, for the console and the tests.
+  then open `http://127.0.0.1:8765/boards/PIMORONI_MIGHTYFX/editor/picker.html`. The page loads
+  only the parts nothing else imports: each feature's top part and `99_start.js`, which imports
+  the rest of core.
 - The page the FX drive carries, packed into `fx_libs/fx_editor.py`: one file, with the
   stylesheets and modules bundled and minified by esbuild.
 
@@ -29,6 +30,7 @@ npm ci --prefix tools/picker
   by a board with that feature. Nested, as `discover/screens/`, it needs both.
 - A part's stylesheet shares its name: `31_stretch_bar.js` and `31_stretch_bar.css`.
 - `99_start.js` starts the page: it lists what a draw renders, in order, and draws.
+  A core part that only registers hooks is imported from here, as `import "./27_readback.js";`.
 
 ## Modules
 
@@ -99,4 +101,5 @@ pytest tests/picker
 
 Every board's picker reads the manual's entries and some scripted edits, and must write the
 same file as `tests/picker/golden/`. `PICKER_GOLDEN=update` rewrites the goldens, only for a
-change that is meant to alter the file. `test_shipped.py` runs the minified page from the module.
+change that is meant to alter the file. The tests put every module's exports on `window` to
+drive the page. `test_shipped.py` runs the minified page from the module.

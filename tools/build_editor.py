@@ -196,7 +196,7 @@ def board_parts(picker_folders, board, kind="js"):
     return sorted(parts, key=os.path.basename)
 
 
-IMPORT = re.compile(r'^import \{([^}]*)\} from "([^"]+)";\n', re.MULTILINE)
+IMPORT = re.compile(r'^import (?:\{[^}]*\} from )?"([^"]+)";\n', re.MULTILINE)
 EXPORTED = re.compile(r"^export (?:async )?(?:function\*? |var |let |const |class )([A-Za-z_$][\w$]*)",
                       re.MULTILINE)
 
@@ -213,7 +213,7 @@ def script_order(parts):
         with open(part, encoding="utf-8") as f:
             text = f.read()
         imports[part] = []
-        for names, source in IMPORT.findall(text):
+        for source in IMPORT.findall(text):
             source = os.path.normpath(os.path.join(os.path.dirname(part), source))
             if source not in parts:
                 sys.exit("{} imports {}, which this board does not take".format(part, source))
@@ -231,6 +231,16 @@ def script_order(parts):
                      ", ".join(part for part in parts if part not in order))
         order.append(ready[0])
     return order
+
+
+def entry_parts(scripts):
+    """The parts no other part imports, in load order: each feature's top part and the start."""
+    imported = set()
+    for part in scripts:
+        with open(part, encoding="utf-8") as f:
+            for source in IMPORT.findall(f.read()):
+                imported.add(os.path.normpath(os.path.join(os.path.dirname(part), source)))
+    return [part for part in scripts if part not in imported]
 
 
 def esbuild(repo_dir, text, *options):
@@ -262,28 +272,22 @@ def picker_pages(board_dir, repo_dir, version):
     page = page.replace("__BUILD__", json.dumps({"board": board, "version": version}, indent=1))
     styles = [os.path.normpath(part) for part in board_parts(folders, board, "css")]
     scripts = script_order([os.path.normpath(part) for part in board_parts(folders, board)])
+    entries = entry_parts(scripts)
 
     def href(part):
         return os.path.relpath(part, editor_dir).replace(os.sep, "/")
 
     links = "".join('<link rel="stylesheet" href="{}">\n'.format(href(part)) for part in styles)
-    loads = "".join('import * as part{} from "{}";\n'.format(at, href(part))
-                    for at, part in enumerate(scripts))
-    exposed = ("for (const part of [{}]) {{\n"
-               "  for (const name of Object.keys(part)) {{\n"
-               "    if ([window, Window.prototype, EventTarget.prototype].some(holder => Object.hasOwn(holder, name))) continue;\n"
-               "    Object.defineProperty(window, name, {{get: () => part[name]}});\n"
-               "  }}\n"
-               "}}\n").format(", ".join("part{}".format(at) for at in range(len(scripts))))
-    kept = (page.replace("__STYLES__\n", links) +
-            '<script type="module">\n' + loads + exposed + "</script>\n</body>\n</html>\n")
+    loads = "".join('<script type="module" src="{}"></script>\n'.format(href(part))
+                    for part in entries)
+    kept = page.replace("__STYLES__\n", links) + loads + "</body>\n</html>\n"
 
     css = ""
     for part in styles:
         with open(part, encoding="utf-8") as f:
             css += f.read()
     entry = "".join('import "./{}";\n'.format(os.path.relpath(part, repo_dir).replace(os.sep, "/"))
-                    for part in scripts)
+                    for part in entries)
     script = esbuild(repo_dir, entry, "--bundle", "--format=iife", "--minify",
                      "--sourcefile=picker.js")
     style = esbuild(repo_dir, css, "--loader=css", "--minify")
