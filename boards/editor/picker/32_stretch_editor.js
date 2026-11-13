@@ -1,14 +1,13 @@
 import {h, replace} from "./00_dom.js";
 import {draw, drawSteps} from "./00_draw.js";
-import {lookNamed} from "./01_looks.js";
+import {SIGNAL_TIMINGS, lookNamed, timingOf, withSection} from "./01_looks.js";
 import {inkOf} from "./02_preview.js";
 import {
   chooseLook, forwardTargetFor, pickingLook, remember, stretchUnder, washFor, widthOf
 } from "./03_runs.js";
 import {
-  FAINTEST, SIGNAL_TIMINGS, WORDS, atBrightness, fieldColour, hexOf, hexRgb, rgbInk, runsAWay,
-  sectionLines, standingIn, swatchesFor, takeApart, takesColour, targetFor, timingOf, wherePlays,
-  withSection
+  FAINTEST, WORDS, atBrightness, fieldColour, hexOf, hexRgb, rgbInk, runsAWay, sectionLines,
+  standingIn, swatchesFor, takeApart, takesColour, targetFor, wherePlays
 } from "./05_effects.js";
 import {BLINK, blinkNamed} from "./06_blink.js";
 import {chosenTab} from "./11_tabs.js";

@@ -1,6 +1,6 @@
 import {h, replace} from "./00_dom.js";
 import {draw, drawSteps} from "./00_draw.js";
-import {HEADER, LOOKS, canPlay, keyOf} from "./01_looks.js";
+import {HEADER, LOOKS, SIGNAL_TIMINGS, canPlay, keyOf} from "./01_looks.js";
 import {
   CHANNELS, OUTPUTS, blank, joinedItems, mono, order, outs, placesOf, runs, setLayout, settle,
   wiring
@@ -9,8 +9,7 @@ import {
   allBodies, apply, blankBody, bodyParts, capture, fileHead, sceneMark, settleLoneScene, state
 } from "./04_scenes.js";
 import {
-  SIGNAL_TIMINGS, STRIPS, WORDS, hexOf, readStripTail, sectionLines, stripNamed, stripSet,
-  targetFor, wordFor
+  STRIPS, WORDS, hexOf, readStripTail, sectionLines, stripNamed, stripSet, targetFor, wordFor
 } from "./05_effects.js";
 import {BLINK} from "./06_blink.js";
 import {
