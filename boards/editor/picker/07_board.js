@@ -17,8 +17,6 @@ SCREEN_PORTS = SCREEN_PORTS.filter(function (port) {
 });
 export var SCREEN_SIZES = (SCREEN_PORTS.length ? CATALOGUE.board_settings[SCREEN_PORTS[0].id] : [])
   .filter(function (inches) { return inches !== "hub"; });
-export var screensFitted = {};
-SCREEN_PORTS.forEach(function (port) { screensFitted[port.id] = ""; });
 
 function acrossScenes(change) {
   return function (out) {
@@ -84,14 +82,24 @@ export function brokenSaid() {
   return said.join(" and ") + (broken.length === 1 ? " is" : " are") + " broken out";
 }
 
-export var boardLineSteps = {before: [], after: []};
+function noWords() {
+  return [];
+}
+
+export var boardWords = {program: noWords, screens: noWords, sensor: noWords, kept: noWords};
+
+var BOARD_LINE_ORDER = ["program", "screens", "strips", "sensor", "kept"];
 
 export function boardLine() {
-  boardLineSteps.before.forEach(function (step) { step(); });
   var tokens = [];
-  SCREEN_PORTS.forEach(function (port) {
-    if (screensFitted[port.id]) tokens.push(port.id + "=" + screensFitted[port.id]);
+  BOARD_LINE_ORDER.forEach(function (words) {
+    tokens = tokens.concat(words === "strips" ? stripWords() : boardWords[words](tokens));
   });
+  return tokens.length ? "board: " + tokens.join(" ") : "";
+}
+
+function stripWords() {
+  var tokens = [];
   var bodies = [state.always.body].concat(state.scenes.map(function (scene) {
     return scene.body;
   }));
@@ -102,9 +110,7 @@ export function boardLine() {
     });
     if (used) tokens.push(run.name + "=" + run.leds + stripLengthTail(run));
   });
-  var line = tokens.length ? "board: " + tokens.join(" ") : "";
-  boardLineSteps.after.forEach(function (step) { line = step(line); });
-  return line;
+  return tokens;
 }
 
 export var NOT_FITTED = "# Not fitted: ";

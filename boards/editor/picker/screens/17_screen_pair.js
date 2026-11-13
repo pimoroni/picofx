@@ -20,7 +20,7 @@ function settlePair() {
   PAIR_SHARED_LOOK.forEach(function (key) { to.look[key] = from.look[key]; });
 }
 
-drawSteps.before.push(settlePair);
+drawSteps.settle.push(settlePair);
 
 function togglePair() {
   state.screensPaired = !state.screensPaired;

@@ -1,7 +1,7 @@
 import {boardResidue, filterResidue} from "../03_kept.js";
 import {entryParts} from "../03_reading.js";
 import {bodyParts, state} from "../04_scenes.js";
-import {SCREEN_SIZES, boardLineSteps} from "../07_board.js";
+import {SCREEN_SIZES, boardWords} from "../07_board.js";
 import {HUB_PLACES, hubInk, pickPlace, placePicked, placesPart, placesThere} from "./15_hub.js";
 import {
   GROUP_NUMBERS, breakingUp, differences, listSaid, plainness, sendTargets
@@ -79,6 +79,7 @@ function offHubEntries(body) {
 }
 
 bodyParts.push({
+  writes: "hub",
   entries: function (body, lines) {
     if (!state.hub.on) return lines;
     placeGroups(body).forEach(function (group) { lines.push(hubEntry(group)); });
@@ -87,9 +88,10 @@ bodyParts.push({
   }
 });
 
-boardLineSteps.after.push(function (line) {
-  if (!state.hub.on) return line;
-  var rest = line.replace(/^board: ?/, "").replace(/\bscreen[ab]=\S+ ?/g, "").trim();
+var screensWithoutHub = boardWords.screens;
+
+boardWords.screens = function (written) {
+  if (!state.hub.on) return screensWithoutHub(written);
   var tokens = ["screen" + state.hub.port + "=hub"];
   SCREEN_SIZES.forEach(function (inches) {
     var places = placesThere().filter(function (place) {
@@ -97,8 +99,8 @@ boardLineSteps.after.push(function (line) {
     });
     if (places.length) tokens.push("hub" + placesSaid(places) + "=" + inches);
   });
-  return "board: " + tokens.join(" ") + (rest ? " " + rest : "");
-});
+  return tokens;
+};
 
 function hubPlacesNamed(selector) {
   var match = selector.match(/^hub([a-f](?:-[a-f])?(?:,[a-f](?:-[a-f])?)*)$/i);

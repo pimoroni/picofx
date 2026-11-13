@@ -7,7 +7,7 @@ import {PART_DRAWINGS, REMOTE_COLOURS} from "../04_scene_tray.js";
 import {
   addScene, bodyParts, sceneHooks, sceneMark, sceneMarked, sceneRestarts, state
 } from "../04_scenes.js";
-import {boardLineSteps} from "../07_board.js";
+import {boardWords} from "../07_board.js";
 import {BOARD_CHIP_COLOURS, boardBox, small} from "../08_setup.js";
 import {TAB_NAMES, TAB_PANELS, addTab, keptOpen, tabSwatches, tabUnder} from "../11_tabs.js";
 import {
@@ -247,10 +247,9 @@ function remoteChoiceRead(button, said) {
   return "scene:" + sceneMark(scene);
 }
 
-boardLineSteps.after.push(function (line) {
-  if (state.sensorKind === "none") return line;
-  return (line || "board:") + " sensor=" + state.sensorKind;
-});
+boardWords.sensor = function () {
+  return state.sensorKind === "none" ? [] : ["sensor=" + state.sensorKind];
+};
 
 function readSensorBoard() {
   state.sensorKind = "none";
@@ -337,6 +336,7 @@ bodyParts.push({
     var changed = body.remote && Object.keys(body.remote).length;
     return always || changed ? [pirFitted() ? "pir" : "remote", "Sensor"] : null;
   },
+  writes: "sensor",
   entries: function (body, lines) {
     if (!body.remote) return lines;
     var timings = body.motionTiming || {};
@@ -717,9 +717,7 @@ tabSwatches.sensorPanel = function (swatch) {
 
 tabUnder.sensorPanel = function () { return sensorFacts()[2]; };
 
-drawSteps.after.push(function () {
-  renderSensor();
-});
+drawSteps.render.push(renderSensor);
 
 document.getElementById(TAB_PANELS[TAB_PANELS.length - 1]).after(
   h("details", {class: "panel", id: "sensorPanel", open: true}, h("summary", {}, "Sensor"), sensorTab));

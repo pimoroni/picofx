@@ -1,5 +1,5 @@
 import {h, replace} from "./00_dom.js";
-import {draw, drawSteps} from "./00_draw.js";
+import {draw} from "./00_draw.js";
 import {boardSet, driveMeansSomething} from "./19_board_settings.js";
 
 var saveMenu = document.getElementById("saveMenu");
@@ -15,7 +15,7 @@ function saveChoice(words, hint, on, flip, refused) {
     h("span", {}, words, h("small", {}, refused || hint)));
 }
 
-function renderSaveMenu() {
+export function renderSaveMenu() {
   replace(saveMenu,
     saveChoice("Play saves without an eject",
                boardSet.program ? "saving restarts the board and runs the program"
@@ -50,4 +50,3 @@ document.addEventListener("keydown", function (event) {
   saveArrow.focus();
 });
 
-drawSteps.after.push(renderSaveMenu);

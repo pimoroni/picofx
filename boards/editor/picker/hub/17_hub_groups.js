@@ -110,7 +110,7 @@ function settleGroups() {
   });
 }
 
-drawSteps.before.push(settleGroups);
+drawSteps.settle.push(settleGroups);
 
 function splitsOverAlways(places) {
   var always = state.at >= 0 && state.always.body.places;

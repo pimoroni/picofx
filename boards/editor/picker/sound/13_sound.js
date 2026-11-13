@@ -100,6 +100,7 @@ bodyParts.push({
          : body.soundOff ? ["sound", "Silence"] : null;
   },
   named: function (body) { return body.sound ? [nameShown(body.sound)] : []; },
+  writes: "sound",
   entries: function (body, lines) {
     var sound = "sound" in body ? soundLine(body) : null;
     if (sound) lines.unshift(sound);
@@ -522,9 +523,7 @@ tabUnder.soundPanel = function () {
        : soundUnder() ? "Always on" : "nothing";
 };
 
-drawSteps.after.push(function () {
-  renderSound();
-});
+drawSteps.render.push(renderSound);
 
 document.getElementById(TAB_PANELS[TAB_PANELS.length - 1]).after(
   h("details", {class: "panel", id: "soundPanel", open: true}, h("summary", {}, "Sound"), soundTab));

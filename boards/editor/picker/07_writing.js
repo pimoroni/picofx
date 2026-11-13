@@ -3,10 +3,16 @@ import {lampLines} from "./03_runs.js";
 import {apply, bodyParts, sceneAfter, sceneRestarts, slotAt, state, store} from "./04_scenes.js";
 import {boardLine} from "./07_board.js";
 
+var WRITTEN_IN_ORDER = ["sound", "screens", "sensor", "hub", "kept"];
+
 function entriesOf(body) {
   apply(body);
   var lines = lampLines().filter(function (line) { return line.trim(); });
-  bodyParts.forEach(function (part) { if (part.entries) lines = part.entries(body, lines); });
+  WRITTEN_IN_ORDER.forEach(function (writes) {
+    bodyParts.forEach(function (part) {
+      if (part.writes === writes) lines = part.entries(body, lines);
+    });
+  });
   return lines;
 }
 

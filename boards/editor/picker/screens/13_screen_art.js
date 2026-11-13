@@ -148,7 +148,7 @@ var pictureReading = null;
 
 var shownThisDraw = null;
 
-drawSteps.before.push(function () { shownThisDraw = null; });
+drawSteps.settle.push(function () { shownThisDraw = null; });
 
 function picturesShown() {
   if (shownThisDraw) return shownThisDraw;

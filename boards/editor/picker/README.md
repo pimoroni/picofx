@@ -29,8 +29,9 @@ npm ci --prefix tools/picker
 - A folder named after a feature (`screens`, `hub`, `sound`, `sensor`, `discover`) is taken only
   by a board with that feature. Nested, as `discover/screens/`, it needs both.
 - A part's stylesheet shares its name: `31_stretch_bar.js` and `31_stretch_bar.css`.
-- `99_start.js` starts the page: it lists what a draw renders, in order, and draws.
-  A core part that only registers hooks is imported from here, as `import "./27_readback.js";`.
+- `99_start.js` is where core is put together: the draw sequence (settle, render, finish), the
+  steps run on opening a drive, and the first draw once every part has loaded. A core part that
+  only registers hooks is imported from here, as `import "./27_readback.js";`.
 
 ## Modules
 
@@ -56,8 +57,14 @@ build refuses parts that import each other in a circle, so a lower layer never r
 - `02_preview` and the views above it draw from those. None of them is imported by the model.
 
 A lower part that needs something done by a higher one offers a hook and the higher part
-registers with it: `drawSteps`, `paintSteps`, `bodyParts`, `connectSteps`, `programsReadSteps`,
-`sceneHooks`, `screenHooks`, `addTab`. A part's state is written only by that part; others call
+registers with it: `drawSteps`, `paintSteps`, `bodyParts`, `boardWords`, `programsReadSteps`,
+`sceneHooks`, `screenHooks`, `addTab`.
+
+Nothing may depend on the order two independent parts load in. Where order matters it is
+stated: the start's draw and connect sequences, `WRITTEN_IN_ORDER` for a scene's lines,
+`BOARD_LINE_ORDER` for the board line, `PART_ORDER` for a scene tab's icons, `FEATURE_TABS`.
+CI runs the tests again with `PICKER_REVERSE_TIES=1`, which loads independent parts the other
+way round. A part's state is written only by that part; others call
 its setter (`activate`, `setLayout`, `setPrograms`).
 
 A core part never imports a feature part. Features layer the same way, as `screens/` does from

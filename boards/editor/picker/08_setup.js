@@ -1,5 +1,5 @@
 import {h, replace} from "./00_dom.js";
-import {draw, drawSteps, paintAll} from "./00_draw.js";
+import {draw} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
 import {outputSaid} from "./03_outputs.js";
 import {active, canEdit, lastOutputRun, settle, setupOn} from "./03_runs.js";
@@ -92,12 +92,11 @@ export function setupButton(label, on, act) {
                       onclick: act}, boardIcon(), label);
 }
 
-drawSteps.after.push(function () {
+export function drawSetupState() {
   renderOutFacts();
   document.body.toggleAttribute("data-setup", setupOn);
   if (setupOn) unmark();
-  paintAll();
-});
+}
 
 function stripChipChoice(run) {
   if (run.made === null) {

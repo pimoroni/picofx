@@ -1,4 +1,3 @@
-import {drawSteps, paintAll} from "./00_draw.js";
 import {painters} from "./02_preview.js";
 import {inkAt} from "./03_runs.js";
 import {LED_PANELS, runsOfPanel} from "./10_led_sections.js";
@@ -28,4 +27,3 @@ function liveSwatch(swatch, panel) {
 
 LED_PANELS.forEach(function (panel) { tabSwatches[panel] = liveSwatch; });
 
-drawSteps.after.push(paintAll);

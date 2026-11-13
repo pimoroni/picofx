@@ -1,5 +1,5 @@
 import {h, replace} from "./00_dom.js";
-import {draw, drawSteps} from "./00_draw.js";
+import {draw} from "./00_draw.js";
 import {
   FAINTEST, WORDS, atBrightness, fieldColour, hexOf, hexRgb, rgbInk, takeApart
 } from "./01_colours.js";
@@ -469,7 +469,7 @@ function signalFace(name, key) {
          "fill='#1c1f22'/>" + head + figures + "</svg>";
 }
 
-function parkLooks() {
+export function parkLooks() {
   var looks = document.getElementById("looks");
   var editor = looks && looks.closest(".editor");
   if (editor) editor.closest(".panel").appendChild(looks);
@@ -492,9 +492,8 @@ function notchEditors() {
   });
 }
 
-drawSteps.before.push(parkLooks);
-drawSteps.after.push(function () {
+export function placeLooks() {
   seatLooks();
   notchEditors();
-});
+}
 window.addEventListener("resize", notchEditors);

@@ -1,6 +1,6 @@
 import {banner} from "./00_banner.js";
 import {h, replace} from "./00_dom.js";
-import {draw, drawSteps, paintAll} from "./00_draw.js";
+import {draw} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
 import {spoken} from "./03_lines.js";
 import {state} from "./04_scenes.js";
@@ -769,18 +769,17 @@ function renderPageSwitch() {
   body.parentNode.insertBefore(programView, body.nextSibling);
 }());
 
-drawSteps.before.push(function () {
+export function markProgramPage() {
   document.body.toggleAttribute("data-program-page", onProgramPage);
-});
+}
 
-drawSteps.after.push(function () {
+export function drawProgramPage() {
   document.body.dataset.pageway = "headsplit";
   renderPageSwitch();
   renderProgramView();
   scenesInTheTab();
   headerOnOneLine();
-  paintAll();
-});
+}
 
 var COLUMN_REM = 57.2;
 

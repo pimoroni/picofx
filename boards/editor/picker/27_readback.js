@@ -1,5 +1,5 @@
 import {h, replace} from "./00_dom.js";
-import {draw, drawSteps} from "./00_draw.js";
+import {draw} from "./00_draw.js";
 import {WORDS, hexOf, wordFor} from "./01_colours.js";
 import {HEADER, LOOKS, SIGNAL_TIMINGS, canPlay, keyOf} from "./01_looks.js";
 import {BLINK} from "./02_blink.js";
@@ -17,11 +17,11 @@ import {
 } from "./04_scenes.js";
 import {STRIPS, dropStrip, readStripTail, stripNamed, stripSet} from "./05_strips.js";
 import {
-  NOT_FITTED, SCREEN_PORTS, boardLineSteps, notFittedLine, notFittedRead, saidNotFitted,
+  NOT_FITTED, SCREEN_PORTS, boardWords, notFittedLine, notFittedRead, saidNotFitted,
   setNotFittedRead, stripDescribed
 } from "./07_board.js";
 import {fileHead} from "./07_writing.js";
-import {WROTE_KEY, connectSteps, drive} from "./18_drive.js";
+import {WROTE_KEY, drive} from "./18_drive.js";
 import {
   argsWritten, boardSet, onProgramPage, programNamed, setProgramPage
 } from "./19_board_settings.js";
@@ -524,6 +524,7 @@ bodyParts.push({
     body.kept = [];
     body.notes = {};
   },
+  writes: "kept",
   entries: function (body, written) {
     var notes = body.notes || {};
     var lines = [];
@@ -547,15 +548,13 @@ function heldOfToken(token) {
   return held.indexOf(name) >= 0 ? name : null;
 }
 
-boardLineSteps.after.push(function (line) {
-  var lower = (line || "").toLowerCase();
-  var kept = boardResidue.filter(function (token) {
+boardWords.kept = function (written) {
+  var lower = written.join(" ").toLowerCase();
+  return boardResidue.filter(function (token) {
     var name = heldOfToken(token);
     return !name || !new RegExp("\\b" + name + "=").test(lower);
   });
-  if (kept.length) line = (line || "board:") + " " + kept.join(" ");
-  return line;
-});
+};
 
 fileHead.under.push(function () {
   var wired = wiringLine();
@@ -605,12 +604,12 @@ function markKeptLights() {
   });
 }
 
-drawSteps.after.push(function () {
+export function drawKept() {
   renderKept();
   markKeptLights();
-});
+}
 
-connectSteps.push(async function () {
+export async function openEffectsFile() {
   var text = await (await drive.fileHandle.getFile()).text();
   if (!text.trim()) return;
 
@@ -629,7 +628,7 @@ connectSteps.push(async function () {
   }
   absorbFile(text);
   rememberRead(text);
-});
+}
 
 function rememberRead(text) {
   try { localStorage.setItem(WROTE_KEY, text); } catch (e) {}

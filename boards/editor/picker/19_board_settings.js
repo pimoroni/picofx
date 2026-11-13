@@ -1,7 +1,7 @@
 import {h, replace} from "./00_dom.js";
-import {draw, drawSteps} from "./00_draw.js";
+import {draw} from "./00_draw.js";
 import {state} from "./04_scenes.js";
-import {SCREEN_SIZES, boardLineSteps} from "./07_board.js";
+import {SCREEN_SIZES, boardWords} from "./07_board.js";
 import {boardIcon} from "./08_setup.js";
 import {renderPreview} from "./18_file_preview.js";
 
@@ -36,7 +36,7 @@ export function argsWritten(path) {
 
 export function driveMeansSomething() { return !boardSet.program; }
 
-boardLineSteps.after.push(function (line) {
+boardWords.program = function () {
   var tokens = [];
   if (boardSet.program) {
     tokens.push("program=" + boardSet.program);
@@ -45,10 +45,8 @@ boardLineSteps.after.push(function (line) {
   }
   if (boardSet.driveHidden) tokens.push("drive=manual");
   if (!boardSet.reload) tokens.push("reload=manual");
-  if (!tokens.length) return line;
-  var rest = line.replace(/^board: ?/, "");
-  return "board: " + tokens.join(" ") + (rest ? " " + rest : "");
-});
+  return tokens;
+};
 
 function sizeOffered(argument) {
   var screen = state.screens && state.screens.A;
@@ -141,10 +139,10 @@ function effectsNote() {
     "program is missing or stops, with the reason in errors.txt."));
 }
 
-drawSteps.after.push(function () {
+export function drawBoardSettings() {
   document.body.toggleAttribute("data-programmed", !!boardSet.program);
   effectsNote();
-});
+}
 
 export var onProgramPage = false;
 

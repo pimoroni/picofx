@@ -3,9 +3,7 @@ import {quoted} from "../01_looks.js";
 import {boardResidue} from "../03_kept.js";
 import {entryParts, unquoted} from "../03_reading.js";
 import {allBodies, bodyParts, driveParts, state} from "../04_scenes.js";
-import {
-  boardLineSteps, notFittedRead, notFittedSteps, saidNotFitted, screensFitted
-} from "../07_board.js";
+import {boardWords, notFittedRead, notFittedSteps, saidNotFitted} from "../07_board.js";
 import {isHiddenName, nameShown} from "../18_drive.js";
 import {isExampleMedia, mediaHome} from "../26_drive_files.js";
 import {openingString} from "../26_drive_programs.js";
@@ -312,6 +310,7 @@ bodyParts.push({
       .filter(function (shows) { return shows && shows !== "keep"; })
       .map(pictureSaid);
   },
+  writes: "screens",
   entries: function (body, lines) {
     SCREENS.forEach(function (letter) {
       var entry = body.screens && screenEntry(letter, body);
@@ -322,18 +321,19 @@ bodyParts.push({
   read: readScreens
 });
 
-boardLineSteps.before.push(function () {
+boardWords.screens = function () {
   var bodies = [state.always.body].concat(state.scenes.map(function (scene) {
     return scene.body;
   }));
-  SCREENS.forEach(function (letter) {
+  return SCREENS.filter(function (letter) {
     var screen = state.screens[letter];
-    var used = screen.there && bodies.some(function (body) {
+    return screen.there && bodies.some(function (body) {
       return body && body.screens && (body.screens[letter].shows || body.screens[letter].off);
     });
-    screensFitted[SCREEN_NAMES[letter].toLowerCase()] = used ? screen.size : "";
+  }).map(function (letter) {
+    return SCREEN_NAMES[letter].toLowerCase() + "=" + state.screens[letter].size;
   });
-});
+};
 
 notFittedSteps.push(function () {
   if (state.hub.on) return [];

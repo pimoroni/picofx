@@ -1,4 +1,10 @@
-export var drawSteps = {before: [], during: [], after: []};
+export var drawSteps = {settle: [], render: []};
+
+var startSteps = {settle: [], render: [], finish: []};
+
+export function drawWith(steps) {
+  startSteps = steps;
+}
 
 export var paintSteps = [];
 
@@ -13,9 +19,8 @@ export function draw() {
   var across = window.scrollX;
   var down = window.scrollY;
   var focused = focusPlace();
-  drawSteps.before.forEach(function (step) { step(); });
-  drawSteps.during.forEach(function (step) { step(); });
-  drawSteps.after.forEach(function (step) { step(); });
+  startSteps.settle.concat(drawSteps.settle, startSteps.render, drawSteps.render, startSteps.finish)
+    .forEach(function (step) { step(); });
   refocus(focused);
   if (window.scrollX !== across || window.scrollY !== down) window.scrollTo(across, down);
 }

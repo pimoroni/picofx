@@ -63,6 +63,8 @@ var PART_FEATURES = {lights: "outputs", strip: "strip", screens: "screen", hub: 
 
 export var PART_DRAWINGS = {};
 
+var PART_ORDER = ["lights", "strip", "screens", "sound", "pir", "remote", "hub"];
+
 function partIcon(key) {
   if (PART_FEATURES[key]) return featureIcon(PART_FEATURES[key]);
   return h("svg:svg", {viewBox: "0 0 24 24", width: 18, height: 18, fill: "none", stroke: "currentColor",
@@ -90,7 +92,7 @@ function partsSet(body, always) {
     var set = part.sets && part.sets(body, always);
     if (set) parts.push(set);
   });
-  return parts;
+  return parts.sort(function (a, b) { return PART_ORDER.indexOf(a[0]) - PART_ORDER.indexOf(b[0]); });
 }
 
 function alwaysSays(body) {
@@ -102,7 +104,9 @@ function alwaysSays(body) {
       if (look) add(look.name);
     });
   });
-  bodyParts.forEach(function (part) { if (part.named) part.named(body).forEach(add); });
+  ["screens", "sound"].forEach(function (writes) {
+    bodyParts.forEach(function (part) { if (part.writes === writes && part.named) part.named(body).forEach(add); });
+  });
   if (!names.length) return "";
   return names.length <= 2 ? names.join(", ") : names[0] + " and " + (names.length - 1) + " more";
 }

@@ -256,9 +256,7 @@ tabUnder.screensPanel = function () {
     : "no screens";
 };
 
-drawSteps.after.push(function () {
-  renderScreensTab();
-});
+drawSteps.render.push(renderScreensTab);
 
 (function () {
   var after = document.getElementById(LED_PANELS[LED_PANELS.length - 1]);

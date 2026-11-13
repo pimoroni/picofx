@@ -1,4 +1,4 @@
-import {drawSteps, paintAll, paintSteps} from "./00_draw.js";
+import {paintAll, paintSteps} from "./00_draw.js";
 import {blinkDuty, blinkSpeed, keyOf, lookNamed, withSection} from "./01_looks.js";
 import {BLINK, blinkWord} from "./02_blink.js";
 import {
@@ -321,9 +321,9 @@ export function step() {
 
 export var painters = [];
 
-drawSteps.before.push(function () {
+export function forgetPainters() {
   painters = [];
-});
+}
 
 paintSteps.push(function () {
   var lit = {};

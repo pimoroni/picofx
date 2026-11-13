@@ -40,3 +40,12 @@ jobs:
 
     - name: Test Each Board's Picker
       run: pytest -v tests/picker
+
+    - name: Test Each Board's Picker With Independent Parts Loaded In Reverse
+      env:
+        PICKER_REVERSE_TIES: 1
+      run: |
+        for description in boards/*/editor/fx_board.json; do
+          python3 tools/build_editor.py "${description%/editor/fx_board.json}"
+        done
+        pytest -q tests/picker

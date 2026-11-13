@@ -1,7 +1,7 @@
 import {banner} from "./00_banner.js";
 import {draw} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
-import {connectSteps, drive, driveTrouble, isHiddenName} from "./18_drive.js";
+import {drive, driveTrouble, isHiddenName} from "./18_drive.js";
 import {PROGRAMS, boardSet, programNamed, setPrograms} from "./19_board_settings.js";
 
 export var EXAMPLES_ROOT = BOARD.examples ? "examples/programs/" : "";
@@ -330,11 +330,11 @@ export var programsKnown = false;
 
 export var programsReadSteps = [];
 
-connectSteps.push(async function () {
+export async function openDrivePrograms() {
   programsKnown = false;
   await readNamedProgram();
   readDrivePrograms();
-});
+}
 
 async function readNamedProgram() {
   try {

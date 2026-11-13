@@ -515,4 +515,4 @@ function drawingDoubled(drawing) {
 
 export function turnForChosen(letter) { chosenAfresh(state.screens[letter]); }
 
-drawSteps.before.push(function () { SCREENS.forEach(turnForChosen); });
+drawSteps.settle.push(function () { SCREENS.forEach(turnForChosen); });

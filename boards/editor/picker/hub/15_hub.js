@@ -67,7 +67,7 @@ driveParts.push({
   }
 });
 
-drawSteps.before.push(function () { HUB_PLACES.forEach(placeTurnForChosen); });
+drawSteps.settle.push(function () { HUB_PLACES.forEach(placeTurnForChosen); });
 
 export var placesPart = {
   capture: function (body) {

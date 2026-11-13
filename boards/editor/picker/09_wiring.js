@@ -1,5 +1,5 @@
 import {h, replace} from "./00_dom.js";
-import {draw, drawSteps} from "./00_draw.js";
+import {draw} from "./00_draw.js";
 import {astrayOf} from "./01_colours.js";
 import {BOARD, lookNamed} from "./01_looks.js";
 import {painters} from "./02_preview.js";
@@ -295,9 +295,9 @@ function rejoin(out) {
   rejoinInScenes(out);
 }
 
-drawSteps.after.push(function () {
+export function drawConnectors() {
   renderConnectors();
   playSlide();
-});
+}
 
 window.addEventListener("resize", function () { if (setupOn) draw(); });

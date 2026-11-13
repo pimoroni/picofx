@@ -1,6 +1,5 @@
 import {bannerSteps} from "./00_banner.js";
 import {h, replace} from "./00_dom.js";
-import {drawSteps} from "./00_draw.js";
 import {state} from "./04_scenes.js";
 import {boardSet, onProgramPage} from "./19_board_settings.js";
 import {closeSaveMenu} from "./21_save_menu.js";
@@ -48,13 +47,13 @@ function floatHeader(away) {
   floatBar.inert = !away;
 }
 
-drawSteps.after.push(function () {
+export function drawFloatBar() {
   var shown = onProgramPage ? (boardSet.program ? programTitle(boardSet.program) : "")
             : !state.scenes.length ? ""
             : state.at < 0 ? "Always on" : state.scenes[state.at].name;
   replace(floatWhere, h("b", {}, onProgramPage ? "Programs" : "Effects"),
           shown ? h("small", {}, shown) : null);
-});
+}
 
 bannerSteps.push(function (text, warn) {
   clearTimeout(floatSaidTimer);

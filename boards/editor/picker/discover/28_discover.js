@@ -701,7 +701,7 @@ async function discoverDownloadChosen(kind) {
   draw();
 }
 
-drawSteps.after.push(discoverRenderBrowser);
+drawSteps.render.push(discoverRenderBrowser);
 
 function discoverSheetDialog() {
   if (discoverDialog) return discoverDialog;

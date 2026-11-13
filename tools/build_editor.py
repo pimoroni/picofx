@@ -205,7 +205,8 @@ ESBUILD = os.path.join("tools", "picker", "node_modules", ".bin", "esbuild")
 
 def script_order(parts):
     """The board's script parts in the order they load: by number, except that a part always
-    comes after every part it imports. Refuses an import of a part the board does not take, and
+    comes after every part it imports. PICKER_REVERSE_TIES loads independent parts the other
+    way round, which CI uses to check nothing depends on their order. Refuses an import of a part the board does not take, and
     two parts exporting one name."""
     imports = {}
     owners = {}
@@ -229,7 +230,7 @@ def script_order(parts):
         if not ready:
             sys.exit("the picker's parts import each other in a circle: " +
                      ", ".join(part for part in parts if part not in order))
-        order.append(ready[0])
+        order.append(ready[-1] if os.environ.get("PICKER_REVERSE_TIES") else ready[0])
     return order
 
 

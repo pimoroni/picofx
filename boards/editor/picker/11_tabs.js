@@ -1,5 +1,5 @@
 import {h, replace} from "./00_dom.js";
-import {draw, drawSteps} from "./00_draw.js";
+import {draw} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
 import {setSetupMode, setupOn} from "./03_runs.js";
 import {STRIPS, stripBlockedBy} from "./05_strips.js";
@@ -30,9 +30,9 @@ function chosenTakesLooks() {
          runsOfPanel(chosenTab).every(function (run) { return run.there !== false; });
 }
 
-drawSteps.before.push(function () {
+export function followChosenTab() {
   if (!setupOn && chosenTakesLooks()) workOn(chosenTab);
-});
+}
 
 export function showChosen() {
   TAB_PANELS.forEach(function (panel) {
@@ -89,7 +89,7 @@ function sectionTab(panel) {
     swatch);
 }
 
-function renderLedTabs() {
+export function renderLedTabs() {
   var bar = document.getElementById("ledTabs");
   replace(bar,
     h("div", {role: "tablist", "aria-label": "Parts of the board"}, TAB_PANELS.map(sectionTab)),
@@ -110,7 +110,6 @@ export function keptOpen(panel) {
 
 LED_PANELS.forEach(keptOpen);
 
-drawSteps.after.push(renderLedTabs);
 
 (function () {
   var first = document.getElementById("outPanel");

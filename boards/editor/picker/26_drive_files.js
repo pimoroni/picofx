@@ -3,7 +3,7 @@ import {draw} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
 import {apply, driveParts, slotAt, state, store} from "./04_scenes.js";
 import {screenHooks} from "./07_board.js";
-import {CAN_REACH_A_DRIVE, connectSteps, drive, driveTrouble, isHiddenName} from "./18_drive.js";
+import {CAN_REACH_A_DRIVE, drive, driveTrouble, isHiddenName} from "./18_drive.js";
 import {OWN_FOLDER, folderAt, removePictures, sectionsFrom} from "./26_drive_programs.js";
 
 state.fileHandle = null;
@@ -337,7 +337,7 @@ async function scanNamed(dir, text) {
   driveParts.forEach(function (part) { if (part.land) part.land(); });
 }
 
-connectSteps.push(async function () {
+export async function openDriveFiles() {
   state.fileHandle = drive.fileHandle;
   draw();
   try {
@@ -346,6 +346,6 @@ connectSteps.push(async function () {
   }
   draw();
   scanMedia(drive.dirHandle).then(draw, function () {});
-});
+}
 
 setInterval(rescanMedia, 5000);

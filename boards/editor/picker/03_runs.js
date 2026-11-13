@@ -1,4 +1,4 @@
-import {draw, drawSteps} from "./00_draw.js";
+import {draw} from "./00_draw.js";
 import {BOARD, canPlay, lookNamed} from "./01_looks.js";
 import {filterKept, keptLights} from "./03_kept.js";
 import {START_MOODS, sectionLines, startColour, targetFor} from "./03_lines.js";
@@ -17,9 +17,9 @@ export var active = MONO_FIRST ? mono : outs;
 
 export var lastOutputRun = outs;
 
-drawSteps.before.push(function () {
+export function noteOutputRun() {
   if (!active.strip) lastOutputRun = active;
-});
+}
 
 export function activate(run) {
   active = run;
