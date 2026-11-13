@@ -1,5 +1,6 @@
 import {draw} from "./03_runs.js";
 import {isBanked} from "./05_effects.js";
+import {banner} from "./18_drive.js";
 
 // The FX picker, a page for choosing what the board plays and saving it as effects.txt. It is
 // the numbered parts in this folder and any of the board's own, joined in number order, those in
@@ -18,9 +19,8 @@ if (typeof CATALOGUE === "undefined") {
                       strips: BOARD.strips.map(function (strip) { return strip.name; })};
   assumedPorts.forEach(function (id) { CATALOGUE.board_settings[id] = ["2.8", "1.54"]; });
   document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById("banner").innerHTML =
-      "<div class='banner warn'>catalogue.js is missing from this folder, so the " +
-      "board's ports are assumed. Run tools/build_editor.py to write it.</div>";
+    banner("catalogue.js is missing from this folder, so the board's ports are assumed. " +
+           "Run tools/build_editor.py to write it.", true);
   });
 }
 

@@ -4166,9 +4166,8 @@ if (typeof CATALOGUE === "undefined") {
                       strips: BOARD.strips.map(function (strip) { return strip.name; })};
   assumedPorts.forEach(function (id) { CATALOGUE.board_settings[id] = ["2.8", "1.54"]; });
   document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById("banner").innerHTML =
-      "<div class='banner warn'>catalogue.js is missing from this folder, so the " +
-      "board's ports are assumed. Run tools/build_editor.py to write it.</div>";
+    banner("catalogue.js is missing from this folder, so the board's ports are assumed. " +
+           "Run tools/build_editor.py to write it.", true);
   });
 }
 
