@@ -1,29 +1,26 @@
-import {h} from "../00_dom.js";
-import {draw, drawSteps} from "../00_draw.js";
-import {spoken} from "../03_lines.js";
-import {bodyParts, namesOf, state} from "../04_scenes.js";
+import {drawSteps} from "../00_draw.js";
+import {bodyParts, state} from "../04_scenes.js";
 import {
-  HUB_PLACES, hubInk, pickPlace, placePicked, placeThere, placeTurnForChosen, placeUnder,
-  placesSaid, placesThere
+  HUB_PLACES, pickPlace, placePicked, placeThere, placeTurnForChosen, placeUnder, placesThere
 } from "./15_hub.js";
 import {LOOK_START, freshLook, kindOf} from "../screens/12_screens.js";
 import {ANCHOR_NAMES, groundSaid, playingTokens} from "../screens/14_screen_text.js";
 import {backlightSetting} from "../screens/16_screen_settings.js";
 
 export var GROUP_NUMBERS = ["1", "2", "3"];
-var GROUP_INKS = {"1": "#d98a1a", "2": "#2f9e6a", "3": "#d0508a"};
+export var GROUP_INKS = {"1": "#d98a1a", "2": "#2f9e6a", "3": "#d0508a"};
 
 HUB_PLACES.forEach(function (place) { state.places[place].group = place; });
 
-function groupOf(place) { return state.places[place].group; }
+export function groupOf(place) { return state.places[place].group; }
 
 export function inNumberedGroup(place) { return GROUP_NUMBERS.indexOf(groupOf(place)) >= 0; }
 
-function membersOf(place) {
+export function membersOf(place) {
   return placesThere().filter(function (other) { return groupOf(other) === groupOf(place); });
 }
 
-function membersOfGroup(number) {
+export function membersOfGroup(number) {
   return placesThere().filter(function (place) { return groupOf(place) === number; });
 }
 
@@ -74,12 +71,12 @@ bodyParts.push({
   }
 });
 
-function sizeFits(place, number) {
+export function sizeFits(place, number) {
   var others = membersOfGroup(number).filter(function (other) { return other !== place; });
   return !others.length || state.hub.sizes[others[0]] === state.hub.sizes[place];
 }
 
-function joinOrLeave(place, number) {
+export function joinOrLeave(place, number) {
   if (groupOf(place) === number) {
     state.places[place].group = place;
     pickPlace(place);
@@ -126,43 +123,6 @@ export function breakingUp(places) {
   });
 }
 
-export function hubPictureTargets(name) {
-  var targets = sendTargets().map(function (target) {
-    var shown = target.places.every(function (place) {
-      return state.places[place].shows === name;
-    });
-    return {label: target.name, pressed: shown, colour: target.ink || hubInk(),
-            title: target.ink ? "Group " + target.name + ", " + placesSaid(target.places)
-                              : target.name + ", on its own",
-            press: function () {
-              pickPlace(target.places[0]);
-              var breaking = shown ? breakingUp(target.places) : [];
-              state.places[placePicked].shows = shown ? null : name;
-              state.places[placePicked].off = false;
-              breaking.forEach(function (place) {
-                state.places[place].shows = null;
-                state.places[place].group = place;
-              });
-            }};
-  });
-  var everywhere = placesThere().length && placesThere().every(function (place) {
-    return state.places[place].shows === name;
-  });
-  targets.push({label: "all", all: true, pressed: everywhere, colour: hubInk(),
-                disabled: !placesThere().length,
-                title: everywhere ? "Off every position"
-                                  : "On every group and every position on its own, keeping the groups",
-                press: function () {
-                  var breaking = everywhere ? breakingUp(placesThere()) : [];
-                  placesThere().forEach(function (place) {
-                    state.places[place].shows = everywhere ? null : name;
-                    state.places[place].off = false;
-                  });
-                  breaking.forEach(function (place) { state.places[place].group = place; });
-                }});
-  return targets;
-}
-
 export function hubBacklight() {
   var mine = placesThere().some(function (place) {
     return state.places[place].shows || state.places[place].off;
@@ -185,55 +145,7 @@ export function pickedGroupInk() { return placeThere(placePicked) ? placeGroupIn
 
 export function pickedPlaces() { return placeThere(placePicked) ? membersOf(placePicked) : []; }
 
-export function placeGroupControls(place, sentWith) {
-  var ink = placeGroupInk(place);
-  var under = placeUnder(place);
-  var frozen = !!(under && under.always) && !ink;
-  var others = membersOf(place).filter(function (other) { return other !== place; });
-  var matching = (sentWith[place] || []).filter(function (other) { return other !== place; });
-  var said = frozen ? "from Always on"
-           : under && under.off ? "lit only in " + spoken(namesOf(under.off))
-           : ink ? (others.length ? "grouped with " + placesSaid(others)
-                                  : "alone in group " + groupOf(place))
-           : matching.length ? "matches " + placesSaid(matching) : "on its own";
-  return [
-    h("span", {role: "group", "aria-label": "Position " + place + " group",
-               title: frozen ? "Set on the Always on tab" : null},
-      GROUP_NUMBERS.map(function (number) {
-        var inIt = groupOf(place) === number;
-        var fits = sizeFits(place, number);
-        var members = membersOfGroup(number);
-        return h("button", {type: "button", "aria-pressed": String(inIt), disabled: !fits || frozen,
-                            style: {"--tint": GROUP_INKS[number]},
-                            title: !fits ? "Group " + number + " holds " +
-                                           state.hub.sizes[members[0]] + "\" panels, and " +
-                                           place + " is " + state.hub.sizes[place] + "\""
-                                 : inIt ? "Remove " + place + " from group " + number +
-                                          ", keeping what it shows"
-                                 : "Put " + place + " in group " + number +
-                                   (!members.length ? ""
-                                    : state.places[members[0]].shows ? ", to show what the group shows"
-                                    : state.places[place].shows ? ", taking what " + place + " shows"
-                                    : ""),
-                            onclick: function (event) {
-                              event.stopPropagation();
-                              joinOrLeave(place, number);
-                              draw();
-                            }}, number);
-      })),
-    h("small", {title: said}, said)
-  ];
-}
-
-function screensBold(places) { return "<b>" + placesSaid(places) + "</b>"; }
-
-export function namesSaid(sends) {
-  var names = sends.map(function (send) { return screensBold(send.places); });
-  return names.length > 1 ? names.slice(0, -1).join(", ") + " and " + names[names.length - 1]
-                          : names[0];
-}
-
-function differences(send, from) {
+export function differences(send, from) {
   var one = send.playing;
   var other = from.playing;
   var look = one.look || LOOK_START;
@@ -272,42 +184,12 @@ function differences(send, from) {
   return words;
 }
 
-function listSaid(words) {
+export function listSaid(words) {
   return words.length > 1 ? words.slice(0, -1).join(", ") + " and " + words[words.length - 1]
                           : words[0];
 }
 
-function plainness(send) {
+export function plainness(send) {
   return differences(send, {places: send.places,
                             playing: {turn: 0, pingpong: false, hold: "", look: LOOK_START}}).length;
-}
-
-export function apartSaid(sends) {
-  var byPicture = {};
-  sends.forEach(function (send) {
-    (byPicture[send.playing.shows] = byPicture[send.playing.shows] || []).push(send);
-  });
-  var told = [];
-  var bases = [];
-  Object.keys(byPicture).forEach(function (picture) {
-    var group = byPicture[picture];
-    if (group.length < 2) return;
-    var base = group.slice().sort(function (a, b) {
-      return plainness(a) - plainness(b) || b.places.length - a.places.length;
-    })[0];
-    group.forEach(function (send) {
-      if (send === base) return;
-      var words = differences(send, base);
-      if (words.length)
-        told.push(screensBold(send.places) + (send.places.length > 1 ? " are " : " is ") +
-                  listSaid(words));
-    });
-    bases.push(screensBold(base.places));
-  });
-  if (!told.length) return "";
-  var several = told.length > 1 || sends.some(function (send) {
-    return told[0].indexOf(screensBold(send.places) + " are ") === 0;
-  });
-  return listSaid(told) + ", so " + (told.length > 1 ? "each is" : several ? "they are" : "it is") +
-         " sent apart from " + listSaid(bases) + ".";
 }
