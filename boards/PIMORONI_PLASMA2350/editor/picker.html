@@ -6,23 +6,359 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 31.181 31.181'%3E%3Crect fill='%23fff' width='31.181' height='31.181' rx='4.252' ry='4.252'/%3E%3Cpath d='M12.732,4.036H2.361c-.235,0-.425.19-.425.425v22.258c0,.235.19.425.425.425h1.875c.235,0,.425-.19.425-.425v-10.361h7.514c.235,0,.425-.19.425-.425v-1.684c0-.235-.19-.425-.425-.425h-7.514v-7.254h8.071c.235,0,.425-.19.425-.425v-1.684c0-.235-.19-.425-.425-.425Z'/%3E%3Cpath d='M29.199,26.526l-5.675-11.158,5.296-10.719c.065-.132.058-.288-.02-.413-.078-.125-.214-.201-.361-.201h-1.875c-.161,0-.309.091-.38.235l-4.129,8.273-4.074-8.271c-.071-.145-.219-.237-.381-.237h-1.992c-.147,0-.283.076-.361.201-.078.125-.085.28-.021.412l5.268,10.72-5.646,11.159c-.067.132-.06.289.017.415.078.126.214.203.362.203h1.875c.16,0,.307-.09.379-.233l4.484-8.824,4.484,8.824c.072.143.219.233.379.233h1.992c.148,0,.285-.077.362-.203.078-.126.083-.283.017-.415Z'/%3E%3C/svg%3E">
 <script src="catalogue.js"></script>
 <style>
-:root{
- --bg:#f5f3ef; --panel:#fff; --ink:#26221e; --dim:#8a8378; --line:#e2ddd4;
- --accent:#00857d; --accent-ink:#fff; --strip:#1f6feb; --mono:#c2570f; --dark:#191b1d;
+:root {
+  --bg: #f5f3ef;
+  --panel: #fff;
+  --ink: #26221e;
+  --dim: #8a8378;
+  --line: #e2ddd4;
+  --accent: #00857d;
+  --accent-ink: #fff;
+  --strip: #1f6feb;
+  --mono: #c2570f;
+  --dark: #191b1d;
+  --warn: #b33;
+  --warn-bg: #fbeaea;
+  --hold: #8a6415;
+  --hold-bg: #fdf3e0;
+  --board: #56708f;
+  --boardOuts: #3f5a6b;
+  --screenA: #1f6feb;
+  --mark: 20px;
+  --namerow: 2.1rem;
+  --column: 57.2rem;
+  --through: repeating-linear-gradient(45deg, rgba(240, 238, 234, .75), rgba(240, 238, 234, .75) 6px,
+                                       transparent 6px, transparent 12px);
+  --cross: linear-gradient(to top right, transparent calc(50% - .7px), #c9c3b9 calc(50% - .7px),
+                           #c9c3b9 calc(50% + .7px), transparent calc(50% + .7px));
 }
-*{box-sizing:border-box}
-body{font:16px/1.5 system-ui,sans-serif;margin:0;background:var(--bg);color:var(--ink);
- min-height:100vh;display:flex;flex-direction:column}
-header{display:flex;align-items:center;gap:.8rem;padding:.8rem 1.4rem;background:var(--panel);
- border-bottom:1px solid var(--line);position:relative;flex-wrap:wrap}
-header h1{font-size:1.1rem;margin:0 auto 0 0}
-header h1 .version{font-size:.8rem;font-weight:400;color:var(--dim)}
-button{font:inherit;padding:.4rem .75rem;border:1px solid var(--line);border-radius:8px;
- background:var(--panel);cursor:pointer;font-size:.85rem}
-button:disabled{opacity:.4;cursor:default}
-button.on{border-color:var(--accent);color:var(--accent);font-weight:600}
-main{width:100%;max-width:60rem;margin:1.4rem auto;padding:0 1.4rem;flex-grow:1}
 
+* {
+  box-sizing: border-box;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.5 system-ui, sans-serif;
+}
+
+button {
+  padding: .4rem .75rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  font: inherit;
+  font-size: .85rem;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: .4;
+    cursor: default;
+  }
+
+  &.on {
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 600;
+  }
+}
+
+details {
+  margin: 1.2rem 0;
+}
+
+summary {
+  color: var(--dim);
+  font-size: .9rem;
+  cursor: pointer;
+}
+
+body > header {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .8rem;
+  padding: .8rem 1.4rem 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+
+  h1 {
+    margin: 0 auto 0 0;
+    font-size: 1.1rem;
+
+    small {
+      color: var(--dim);
+      font-size: .8rem;
+      font-weight: 400;
+    }
+  }
+
+  .headactions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .8rem;
+    margin-left: auto;
+  }
+
+  [data-standin] {
+    display: inline-block;
+    visibility: hidden;
+  }
+
+  .headswitch {
+    order: 10;
+    display: flex;
+    flex: 1 0 100%;
+    gap: .25rem;
+    margin: 0 0 -1px;
+    padding: 0 max(0px, calc((100% - var(--column)) / 2));
+
+    &:empty {
+      display: none;
+    }
+  }
+
+  .cover {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: .5rem;
+    min-width: 0;
+    height: var(--tabheight, 3.1rem);
+    padding: 0 .35rem;
+    border: 1.5px solid var(--line);
+    border-bottom: 0;
+    border-radius: 10px 10px 0 0;
+    background: #ece8e1;
+    color: var(--dim);
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      background: #f1eee9;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+
+    &.on {
+      --band: var(--accent);
+      border-top-color: transparent;
+      background: linear-gradient(var(--band), var(--band)) 0 0 / 100% 3px no-repeat border-box,
+                  var(--bg);
+      color: var(--ink);
+    }
+
+    &[data-page=program].on {
+      --band: var(--board);
+
+      b {
+        color: var(--board);
+      }
+    }
+
+    .coverface {
+      flex: none;
+      width: calc((var(--tabheight, 3.1rem) - .6rem) * 4 / 3);
+      height: calc(var(--tabheight, 3.1rem) - .6rem);
+      border-radius: 5px;
+    }
+
+    > span {
+      display: flex;
+      align-items: baseline;
+      gap: .55rem;
+      min-width: 0;
+    }
+
+    b {
+      display: block;
+      font-size: .95rem;
+      line-height: 1.15;
+      white-space: nowrap;
+    }
+
+    small {
+      display: block;
+      overflow: hidden;
+      color: var(--dim);
+      font-size: .8rem;
+      line-height: 1.2;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .plus {
+      flex: none;
+      margin-left: auto;
+    }
+
+    &:not(.on) .plus {
+      display: none;
+    }
+  }
+
+  .effectsface {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 .25rem;
+    background: #1c1f22;
+
+    .accswatch {
+      width: 100%;
+      height: .5rem;
+      margin: 0;
+    }
+  }
+
+  &.oneline {
+    flex-wrap: nowrap;
+    align-items: flex-end;
+
+    h1 {
+      flex: 1 1 0;
+      margin: 0 0 var(--headgap, .8rem);
+      line-height: var(--buttonheight, 2.3rem);
+      white-space: nowrap;
+    }
+
+    .headactions {
+      flex: 1 1 0;
+      flex-wrap: nowrap;
+      margin: 0 0 var(--headgap, .8rem);
+    }
+
+    .headswitch {
+      order: 0;
+      flex: 0 0 var(--column);
+      padding: 0;
+    }
+  }
+
+  @media (width < 40rem) {
+    padding-inline: .8rem;
+
+    .cover {
+      height: auto;
+      min-height: 2.6rem;
+      padding-block: .3rem;
+
+      .coverface {
+        width: 2.6rem;
+        height: 1.95rem;
+      }
+
+      > span {
+        flex-direction: column;
+        gap: 0;
+      }
+    }
+  }
+}
+
+main {
+  flex-grow: 1;
+  width: 100%;
+  max-width: 60rem;
+  margin: 1.4rem auto;
+  padding: 0 1.4rem;
+}
+
+body > footer {
+  margin-top: 2.5rem;
+  padding: 1.1rem 1.4rem 1.25rem;
+  border-top: 1px solid var(--line);
+  background: var(--panel);
+  color: #6b655c;
+  font-size: .8125rem;
+
+  > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem 1.5rem;
+
+    > p {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin: 0;
+
+      > svg {
+        flex: none;
+        width: 2.75rem;
+        height: 2.75rem;
+      }
+
+      span svg {
+        width: .75rem;
+        height: .7rem;
+        vertical-align: -1px;
+      }
+    }
+  }
+
+  strong {
+    display: block;
+    color: var(--ink);
+    font-size: .94rem;
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .8rem;
+
+    a {
+      padding: .42rem .85rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--ink);
+      font-size: .88rem;
+      text-decoration: none;
+      white-space: nowrap;
+
+      &:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+    }
+  }
+
+  > p {
+    margin: .9rem 0 0;
+    padding-top: .75rem;
+    border-top: 1px solid #eeeae3;
+    font-size: .75rem;
+    line-height: 1.6;
+
+    small {
+      font-size: inherit;
+    }
+  }
+}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;
  padding:1.1rem 1.4rem;margin:1.2rem 0}
 .panel h2{font-size:1rem;margin:0 0 .7rem;display:flex;align-items:baseline;gap:.6rem}
@@ -58,8 +394,6 @@ main{width:100%;max-width:60rem;margin:1.4rem auto;padding:0 1.4rem;flex-grow:1}
 .ledtab.blocked{opacity:.45}
 
 
-:root{--through:repeating-linear-gradient(45deg,rgba(240,238,234,.75),rgba(240,238,234,.75) 6px,
- transparent 6px,transparent 12px)}
 .frozen{opacity:.45}
 .frozen button,.frozen input{cursor:default}
 .holder.under{border:1px dashed #a9a49b;border-radius:8px;
@@ -89,8 +423,6 @@ main{width:100%;max-width:60rem;margin:1.4rem auto;padding:0 1.4rem;flex-grow:1}
 .card.picked .name{color:var(--accent)}
 
 
-pre.file{font:.85rem/1.5 ui-monospace,Consolas,monospace;background:var(--panel);
- border:1px solid var(--line);border-radius:10px;padding:1rem;white-space:pre-wrap}
 .s-target{color:#1f6feb}
 .s-effect{color:#0a7f78;font-weight:600}
 .s-value{color:#a8500a}
@@ -98,26 +430,9 @@ pre.file{font:.85rem/1.5 ui-monospace,Consolas,monospace;background:var(--panel)
 .s-punc{color:#5d656e}
 .s-colon{color:var(--ink);font-weight:700}
 .s-comment{color:#8a8378;font-style:italic}
-details{margin:1.2rem 0}
-summary{cursor:pointer;color:var(--dim);font-size:.9rem}
+
 .note{background:#e7f2f1;border-radius:10px;padding:.7rem 1.1rem;margin:1rem 0 0;
  font-size:.85rem}
-footer{margin-top:2.5rem;padding:1.1rem 1.4rem 1.25rem;background:var(--panel);
- border-top:1px solid var(--line);color:#6b655c;font-size:.8125rem}
-footer .maker{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;
- gap:.75rem 1.5rem}
-footer .brand{display:flex;align-items:center;gap:.75rem}
-footer .brand>svg{flex:none;width:2.75rem;height:2.75rem}
-footer .brand b{display:block;color:var(--ink);font-size:.94rem}
-footer .heart{width:.75rem;height:.7rem;vertical-align:-1px}
-footer .brand b a{color:var(--accent);text-decoration:none}
-footer .brand b a:hover{text-decoration:underline}
-footer nav{display:flex;flex-wrap:wrap;gap:.8rem}
-footer nav a{font-size:.88rem;padding:.42rem .85rem;border:1px solid var(--line);border-radius:8px;
- background:var(--panel);color:var(--ink);text-decoration:none;white-space:nowrap}
-footer nav a:hover{border-color:var(--accent);color:var(--accent)}
-footer .company{margin:.9rem 0 0;padding-top:.75rem;border-top:1px solid #eeeae3;
- font-size:.75rem;line-height:1.6}
 
 
 
@@ -144,100 +459,6 @@ footer .company{margin:.9rem 0 0;padding-top:.75rem;border-top:1px solid #eeeae3
 
 
 
-
-.tabbar{--cardheight:4.75rem;display:grid;gap:.45rem;margin:.4rem 0 .5rem;
- grid-template-columns:repeat(auto-fill,minmax(8.4rem,1fr))}
-.tabbar.tray{padding:.45rem;background:#e6e3de;border:1px solid #cfc9bf;border-radius:12px}
-.tabbar.tray:has(.always.on){border-color:#6f6a62;
- box-shadow:0 0 0 1px #6f6a62,0 0 0 4px rgba(111,106,98,.2)}
-.tab{--band:linear-gradient(var(--scene),var(--scene));--tall:4px;
- --tint:color-mix(in srgb,var(--scene) 16%,#fbfaf8);position:relative;
- display:flex;flex-direction:column;justify-content:center;gap:.3rem;
- padding:.4rem .55rem;border:1px solid var(--line);border-top-color:transparent;
- border-radius:9px;cursor:pointer;text-align:left;min-height:var(--cardheight);overflow:hidden;
- background:var(--band) 0 0 / 100% var(--tall) no-repeat border-box,var(--tint)}
-.tab b,.tab small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tab:hover{border-color:var(--dim);border-top-color:transparent}
-.tab.on,.tab.on:hover{--tint:color-mix(in srgb,var(--scene) 7%,#fff);
- border-color:var(--scene);border-top-color:transparent;
- box-shadow:0 0 0 1px var(--scene),0 0 0 4px color-mix(in srgb,var(--scene) 22%,transparent)}
-.tab.always,.tab.always:hover,.tab.always.on{grid-column:1;min-height:0;background:none;
- justify-content:flex-start;align-items:flex-start;gap:.2rem;padding:.4rem .55rem .4rem .3rem;
- border:0;border-right:1px dashed #bdb7ad;border-radius:0;box-shadow:none}
-.tab.always .role{font-size:.64rem}
-.tab.always .says{color:var(--ink);white-space:normal;line-height:1.3}
-.tab.pale{--edge:color-mix(in srgb,var(--scene) 72%,#2b2a28);
- background:var(--band) 0 0 / 100% var(--tall) no-repeat border-box,
-            linear-gradient(var(--edge),var(--edge)) 0 0 / 100% calc(var(--tall) + 1px) no-repeat
-            border-box,var(--tint)}
-.tab.pale.on{border-color:var(--edge);border-top-color:transparent;
- box-shadow:0 0 0 1px var(--edge),0 0 0 4px color-mix(in srgb,var(--edge) 22%,transparent)}
-.tabbar .plus.wide{min-height:0;padding:.3rem .7rem}
-.tabbar .plus{margin:0;width:100%;min-height:var(--cardheight);align-self:stretch;box-sizing:border-box;
- justify-content:center;border-style:dashed}
-.tab b{display:flex;align-items:center;gap:.4rem;
- font:600 .78rem/1.3 system-ui,sans-serif;color:var(--ink)}
-.tab .cardname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tab .grip{width:8px;height:12px;flex:none;margin-left:auto;fill:var(--dim);opacity:.55;cursor:grab}
-.tab:hover .grip{opacity:1}
-.partsset{display:inline-flex;gap:.3rem;flex-shrink:0}
-.partsset .featureicon{width:18px;height:18px}
-.tab small{font-size:.68rem;color:var(--dim)}
-.irbadge{display:inline-flex;align-items:center;justify-content:center;flex:none;
- width:1.15rem;height:1.15rem;border-radius:50%;background:#fff;box-sizing:border-box;
- border:2.5px solid var(--ring);font:800 .62rem/1 system-ui,sans-serif;color:#000}
-.irbadge.zero{border:2.5px solid transparent;background:linear-gradient(#fff,#fff) padding-box,
- conic-gradient(#ed1c24,#f7941d,#fff200,#8dc63f,#00a651,#00aeef,#0072bc,#2e3192,#92278f,
-                #ec008c,#ed1c24) border-box}
-.tab .cardparts{display:flex;align-items:center;min-height:18px}
-.tab .cardturn{display:flex;align-items:center;gap:.4rem;min-height:1.15rem}
-.tab .cardturn small{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.tab .irbadges{display:flex;gap:.15rem;margin-left:auto}
-.tab.carried{opacity:.4}
-.tab.landing{box-shadow:-2px 0 0 var(--accent)}
-.plus{margin-left:auto;align-self:center;display:flex;align-items:center;gap:.35rem;
- padding:.42rem .7rem;border:1px solid rgba(15,138,114,.4);border-radius:9px;
- background:rgba(15,138,114,.08);color:var(--accent);cursor:pointer;
- font:600 .78rem system-ui,sans-serif}
-.plus:hover{background:rgba(15,138,114,.16);border-color:var(--accent)}
-.plus svg{display:block}
-
-.scenetabrow{display:flex;align-items:flex-end;gap:.8rem}
-.scenetabrow[hidden]{display:none}
-.scenetab{position:relative;z-index:1;flex:none;width:40rem;max-width:75%;height:3rem;
- box-sizing:border-box;display:flex;align-items:center;margin-bottom:-1.5px;
- padding:.35rem .9rem .2rem;border:1.5px solid var(--frame);border-bottom:0;
- border-top-color:transparent;border-radius:9px 9px 0 0;
- background:var(--frameband) 0 0 / 100% 4px no-repeat border-box,var(--panel)}
-.scenetab #sceneSettings{width:100%}
-.sceneaside{flex:1;min-width:0;height:2.6rem;box-sizing:border-box;display:flex;
- align-items:center;gap:.5rem;padding-bottom:.3rem}
-.sceneplace{margin-right:auto;font-size:.72rem;color:var(--dim);
- white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sceneplace.warn{color:var(--warn);white-space:normal;line-height:1.2;max-height:2.4em}
-.sceneset input.invalid,.sceneset input.invalid:focus{border-color:var(--warn);
- outline:2px solid var(--warn-bg)}
-.sceneremove{flex:none;white-space:nowrap;font:600 .75rem system-ui,sans-serif;border:1px solid var(--line);
- background:var(--panel);border-radius:7px;padding:.3rem .65rem;color:var(--ink);cursor:pointer}
-.sceneremove:hover{border-color:#b4443a;color:#b4443a}
-
-.scenebody{border:1px solid transparent;border-radius:12px;padding:0}
-.scenebody.framed{border:1.5px solid var(--frame);border-top-left-radius:0;
- background:var(--panel);padding:.9rem 1rem 1.1rem;margin-bottom:1rem}
-.scenebody.framed .panel{background:#faf9f7}
-
-.sceneset{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;
- margin:0 0 .9rem;font-size:.82rem;color:var(--dim)}
-.sceneset input{border:1px solid var(--line);border-radius:7px;background:#fff;
- padding:.32rem .5rem;font:inherit;color:var(--ink)}
-.sceneset input:focus{outline:2px solid rgba(15,138,114,.35);outline-offset:1px;
- border-color:var(--accent)}
-.sceneset input[type=text]{width:10rem;font-weight:600}
-.sceneset input[type=number]{width:4.2rem;text-align:center}
-.sceneset label{display:flex;align-items:center;gap:.35rem;cursor:pointer;
- padding:.3rem .55rem;border:1px solid var(--line);border-radius:7px;
- background:var(--panel)}
-.sceneset label:hover{border-color:var(--dim)}
 
 .way{background:var(--panel);border:1px solid var(--line);border-radius:14px;
  padding:1.1rem 1.4rem;margin:1.2rem 0}
@@ -331,14 +552,12 @@ th,td{text-align:left;padding:.3rem .5rem;border-bottom:1px solid var(--line);
  vertical-align:top}
 th{font-weight:600;color:var(--dim);font-size:.76rem}
 
-.scenebody.framed{margin-left:-1rem;margin-right:-1rem}
-.tabbar,.scenetabrow{margin-left:-1rem;margin-right:-1rem}
 .s-scene{color:#7b3fb8;font-weight:600}
 
 
 
 .card{position:relative}
-:root{--mark:20px;--namerow:2.1rem}
+
 .card .tint{position:absolute;right:calc((var(--namerow) - var(--mark)) / 2);
  bottom:calc((var(--namerow) - var(--mark)) / 2);width:var(--mark);height:var(--mark);
  display:block;color:#b5aea3}
@@ -377,17 +596,10 @@ th{font-weight:600;color:var(--dim);font-size:.76rem}
  color:var(--dim)}
 .soundvolume input[type=range]{flex:1;min-width:4rem;accent-color:var(--accent)}
 .soundvolume input:disabled{opacity:.35}
-.sceneset{min-height:2rem}
-.scenetab .sceneset{margin:0;flex-wrap:nowrap}
-.scenetab .sceneset input[type=text]{width:10rem}
-.sceneset select{border:1px solid var(--line);border-radius:7px;background:#fff;
- padding:.3rem .35rem;font:inherit;color:var(--ink);min-width:0}
-.sceneset select.scenethen{max-width:9rem;font-weight:600}
-.sceneset.alwaysnote{display:flex;align-items:center;font-size:.74rem;line-height:1.35;
- color:var(--dim)}
+
 .repeatchip{width:1.1rem;height:.9rem;border-radius:3px;border:1px solid var(--line)}
 #tabStack > *{min-width:0}
-.sceneset,#sound{--hub:var(--accent)}
+#sound{--hub:var(--accent)}
 body[data-pageway] #looks>.tabs:empty{display:none}
 body[data-pageway] #looks>.shelf.bare{margin-top:0}
 
@@ -521,17 +733,6 @@ select{font:inherit;font-size:.85rem;padding:.25rem .3rem;border:1px solid var(-
 .again:hover:enabled{border-color:var(--dim);color:var(--ink)}
 .again:disabled{opacity:.45;cursor:default}
 .again.on{border-color:var(--accent);color:var(--accent);font-weight:600}
-#status{font-size:.85rem;color:var(--dim)}
-.banner{padding:.8rem 1.1rem;border-radius:10px;margin:1rem 0;background:#e7f2f1}
-.banner.warn{background:var(--warn-bg);color:var(--warn)}
-.banner.hold{background:#fdf3e0;color:#8a6415}
-.banner pre{margin:.4rem 0 0;white-space:pre-wrap;font-size:.85rem}
-.spots{display:inline-flex;gap:.3rem;margin-left:.7rem;vertical-align:middle}
-.spots i{display:block;width:.85rem;height:.85rem;border-radius:3px;border:1px solid rgba(138,100,21,.45);
- background:rgba(138,100,21,.12)}
-.spots i.lit{background:#fff;border-color:#8a6415;box-shadow:0 0 6px 1px rgba(255,255,255,.9)}
-
-:root{--board:#56708f}
 
 .facts{margin:.1rem 0 .7rem}
 
@@ -545,38 +746,6 @@ select{font:inherit;font-size:.85rem;padding:.25rem .3rem;border:1px solid var(-
 .setupbutton .boardicon{color:currentColor}
 .setupbutton.on{background:var(--boardOuts);color:#fff}
 .setupbutton.on:hover{background:#34505f}
-
-:root{--warn:#b33;--warn-bg:#fbeaea}
-header #status{margin-left:auto}
-header button,.floatbar button{font:inherit;font-size:.88rem;padding:.42rem .85rem;
- border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);
- cursor:pointer}
-header button.primary,.floatbar button.primary{background:var(--accent);color:#fff;
- border-color:var(--accent);font-weight:600}
-header button:disabled,.floatbar button:disabled{opacity:.4;cursor:default}
-.floatbar{position:fixed;top:0;left:0;right:0;z-index:20;display:grid;
- grid-template-columns:1fr auto 1fr;align-items:center;gap:.8rem;padding:.45rem 1.4rem;
- background:var(--panel);border-bottom:1px solid var(--line);
- box-shadow:0 2px 10px rgba(0,0,0,.08);transform:translateY(-100%);visibility:hidden;
- transition:transform .15s,visibility .15s}
-.floatbar.shown{transform:none;visibility:visible}
-.floatname{font-weight:600;font-size:.95rem;white-space:nowrap}
-.floatsaid{flex:1;min-width:0;font-size:.85rem;color:var(--dim);white-space:nowrap;
- overflow:hidden;text-overflow:ellipsis;cursor:pointer}
-.floatsaid.warn{color:var(--warn)}
-.floatsaid.hold{color:#8a6415}
-.floatleft{display:flex;align-items:center;gap:.8rem;min-width:0}
-.floatwhere{white-space:nowrap;font-size:.9rem}
-.floatwhere small{margin-left:.45rem;color:var(--dim);font-size:.85rem}
-.floatbuttons{display:flex;align-items:center;gap:.8rem;justify-self:end;position:relative}
-.floatstand{display:inline-block;visibility:hidden}
-.floatstand[data-stands-for=saveMenu]{display:none}
-@media (max-width:40rem){.floatname,.floatwhere small{display:none}}
-
-.file .s-problem{background:var(--warn-bg);box-shadow:0 0 0 2px var(--warn-bg);
- border-radius:2px}
-.file .s-said{color:var(--warn);font-style:italic}
-.previewnote{margin:.2rem 0 .5rem;font-size:.8rem;color:var(--dim)}
 
 .boardrows{display:grid;gap:0}
 .boardrow{display:grid;grid-template-columns:6rem 1fr;align-items:center;gap:.25rem .7rem;
@@ -626,14 +795,6 @@ header button:disabled,.floatbar button:disabled{opacity:.4;cursor:default}
 body.programmed #looks,body.programmed #tabs,body.programmed #sceneTabRow,
 body.programmed #tabStack>.panel:not(#boardPanel){opacity:.3}
 
-header .savearrow,.floatbar .savearrow{padding:.42rem .45rem;margin-left:-.7rem;
- border-top-left-radius:0;border-bottom-left-radius:0}
-.savemenu{position:absolute;right:1rem;top:100%;z-index:6;width:19rem;background:#fff;
- border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 22px rgba(0,0,0,.12);
- padding:.5rem .7rem}
-.savechoice{display:flex;gap:.5rem;align-items:flex-start;padding:.3rem 0;font-size:.86rem}
-.savechoice small{display:block;font-size:.76rem;color:var(--dim)}
-.savechoice.refused{color:var(--dim)}
 .runsrow{margin:0 0 .8rem}
 .runsline{display:flex;align-items:center;gap:.6rem;font-size:.86rem;color:var(--dim)}
 .runsrow .sseg button.on{background:var(--board);color:#fff}
@@ -713,92 +874,10 @@ canvas.progthumb{display:block;background:#222}
 .featureclear{border:0;padding:0 .15rem;background:none;color:var(--board);font:inherit;font-size:.78rem;
  text-decoration:underline;cursor:pointer}
 .prognone{font-size:.86rem;color:var(--dim)}
-.effectsface{display:flex;align-items:center;justify-content:center;background:#1c1f22;
- padding:0 .45rem;border-radius:8px}
-.effectsface .accswatch{width:100%;height:.8rem;margin:0}
 
-.cover{display:flex;align-items:center;gap:.9rem;padding:.55rem .8rem;border:2px solid var(--line);
- border-radius:14px;background:#fff;text-align:left;cursor:pointer;font:inherit;color:var(--ink);
- opacity:.7}
-.cover:hover{opacity:1}
-.cover.on{opacity:1;border-color:var(--accent);box-shadow:0 3px 12px rgba(0,0,0,.08)}
-.cover[data-page=program].on{border-color:var(--board)}
-.cover .coverface{width:5.6rem;height:4.2rem;flex:none;border-radius:8px}
-.cover b{display:block;font-size:1rem}
-.cover small{display:block;font-size:.8rem;color:var(--dim)}
-
-body[data-pageway^=head] header .says{display:none}
-.headswitch{display:flex;gap:.45rem;margin-right:auto}
-header h1+.headswitch{margin-left:.6rem}
-body[data-pageway^=head] header h1{margin-right:0}
-.headswitch:empty{display:none}
-@media (max-width:1180px){
- header .headswitch{order:10;flex:1 0 100%;margin:0}
- header h1+.headswitch{margin-left:0}
- header .headswitch .cover{flex:1;padding:.2rem .6rem .2rem .25rem}
- header .headswitch .cover .coverface{width:2.1rem;height:1.55rem}
- body[data-pageway^=head] header h1{margin-right:auto}
-}
-
-.headswitch.headtabs{align-self:flex-end;margin-bottom:-1px;gap:.25rem}
-.headswitch.headtabs .cover{border:1.5px solid var(--line);border-bottom:0;
- border-radius:10px 10px 0 0;background:#ece8e1;opacity:1;color:var(--dim);
- padding:.3rem .8rem .35rem .35rem}
-.headswitch.headtabs .cover.on{color:var(--ink);border-top-color:transparent;--band:var(--accent);
- background:linear-gradient(var(--band),var(--band)) 0 0 / 100% 3px no-repeat border-box,
-            var(--bg)}
-.headswitch.headtabs .cover[data-page=program].on{--band:var(--board)}
-.headswitch.headtabs .cover[data-page=program].on b{color:var(--board)}
-@media (max-width:1180px){
- .headswitch.headtabs{margin-top:.5rem}
-}
-
-.headswitch.headsplit{order:10;flex:1 0 100%;margin:0 0 -1px;align-self:auto;
- box-sizing:border-box;padding:0 max(0px, calc((100% - 57.2rem) / 2))}
-body[data-pageway=headsplit] header{flex-wrap:wrap;padding-bottom:0}
-body[data-pageway=headsplit] header h1{margin-right:auto}
-.headswitch.headsplit .cover{flex:1;padding-right:.35rem}
-@media (max-width:1180px){
- header .headswitch.headsplit{margin:0 0 -1px}
- header .headswitch.headsplit .cover{padding:.3rem .35rem .35rem .35rem}
- header .headswitch.headsplit .cover .coverface{width:2.6rem;height:1.95rem}
-}
-.headactions{display:flex;align-items:center;gap:.8rem;margin-left:auto;flex-wrap:wrap;
- justify-content:flex-end}
-header.oneline{flex-wrap:nowrap;align-items:flex-end}
-header.oneline h1{flex:1 1 0;margin:0 0 var(--headgap,.8rem);white-space:nowrap;
- line-height:var(--buttonheight,2.3rem)}
-header.oneline .headactions{flex:1 1 0;margin:0 0 var(--headgap,.8rem);flex-wrap:nowrap}
-.headactions button{white-space:nowrap}
-header.oneline .headswitch.headsplit{order:0;flex:0 0 57.2rem;padding:0;margin:0 0 -1px}
-header .headswitch.headsplit .cover{height:var(--tabheight,3.1rem);padding-top:0;
- padding-bottom:0}
-header .headswitch.headsplit .cover .coverface{height:calc(var(--tabheight,3.1rem) - .6rem);
- width:calc((var(--tabheight,3.1rem) - .6rem) * 4 / 3)}
-.headswitch.headsplit .cover>span{display:flex;align-items:baseline;gap:.55rem;min-width:0}
-.headswitch.headsplit .cover b{font-size:.95rem}
-.headswitch.headsplit .cover small{font-size:.8rem;max-width:none;white-space:nowrap;
- overflow:hidden;text-overflow:ellipsis}
-
-body.scenesintab #tabs{display:none}
 body.scenesintab #looks>.tabs.sides:empty{display:none}
 body.scenesintab #looks>.shelf{margin-top:0}
-.headswitch .cover .plus{margin-left:auto;flex:none;opacity:1}
-.headswitch .cover:not(.on) .plus{display:none}
 
-.headswitch .cover{gap:.5rem;padding:.25rem .6rem .25rem .3rem;border-radius:10px;
- box-shadow:none}
-.headswitch .cover .coverface{width:2.6rem;height:1.95rem;border-radius:5px}
-.headswitch .cover b{font-size:.84rem;line-height:1.15}
-.headswitch .cover small{font-size:.72rem;line-height:1.2;max-width:8.5rem;white-space:nowrap;
- overflow:hidden;text-overflow:ellipsis}
-.headswitch .cover b{white-space:nowrap}
-.headswitch .effectsface{padding:0 .25rem}
-.headswitch .effectsface .accswatch{height:.5rem}
-
-.setuphead{margin-left:auto}
-
-:root{--boardOuts:#3f5a6b;--screenA:#1f6feb}
 .chip.boardchip{display:inline-flex;align-items:center;gap:.45rem;padding:.3rem .55rem;
  border-radius:9px;color:#fff;font:600 .82rem system-ui,sans-serif}
 .boardchip .boardicon{color:#fff;opacity:.9}
@@ -950,8 +1029,7 @@ html{scrollbar-gutter:stable}
  box-shadow:inset 0 0 0 1px var(--line)}
 .screencell.a{--cell:#1f6feb}
 .screencell.b{--cell:#a44ad0}
-:root{--cross:linear-gradient(to top right,transparent calc(50% - .7px),#c9c3b9 calc(50% - .7px),
- #c9c3b9 calc(50% + .7px),transparent calc(50% + .7px))}
+
 .screencell.absent,.ledtab[data-panel=screensPanel] .screencell.absent{
  background:var(--cross) transparent;box-shadow:none;outline:1px dashed #a9a49b;outline-offset:-1px}
 .accswatch.liveswatch.absent{background:transparent;box-shadow:none;
@@ -1396,6 +1474,259 @@ body.discovermodal{overflow:hidden}
     margin-top: auto;
   }
 }
+.plus {
+  display: flex;
+  align-items: center;
+  align-self: center;
+  gap: .35rem;
+  margin-left: auto;
+  padding: .42rem .7rem;
+  border: 1px solid rgba(15, 138, 114, .4);
+  border-radius: 9px;
+  background: rgba(15, 138, 114, .08);
+  color: var(--accent);
+  font: 600 .78rem system-ui, sans-serif;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--accent);
+    background: rgba(15, 138, 114, .16);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  svg {
+    display: block;
+  }
+}
+
+.scenetray {
+  --cardheight: 4.75rem;
+  margin: .4rem -1rem .5rem;
+
+  &:empty {
+    display: none;
+  }
+
+  &[role=tablist] {
+    display: grid;
+    grid-template-columns: minmax(7rem, 9.5rem) 1fr;
+    padding: .45rem;
+    border: 1px solid #cfc9bf;
+    border-radius: 12px;
+    background: #e6e3de;
+
+    &:has([data-always][aria-selected=true]) {
+      border-color: #6f6a62;
+      box-shadow: 0 0 0 1px #6f6a62, 0 0 0 4px rgba(111, 106, 98, .2);
+    }
+  }
+
+  > div {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(8.4rem, 1fr));
+    gap: .45rem;
+    padding-left: .45rem;
+  }
+
+  [role=tab] {
+    --band: linear-gradient(var(--scene), var(--scene));
+    --tint: color-mix(in srgb, var(--scene) 16%, #fbfaf8);
+    --edge: var(--scene);
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "name grip" "parts parts" "turn remote";
+    align-content: center;
+    align-items: center;
+    gap: .3rem .4rem;
+    min-width: 0;
+    min-height: var(--cardheight);
+    padding: .4rem .55rem;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-top-color: transparent;
+    border-radius: 9px;
+    background: var(--band) 0 0 / 100% 4px no-repeat border-box, var(--tint);
+    color: var(--ink);
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--dim);
+      border-top-color: transparent;
+
+      .grip {
+        opacity: 1;
+      }
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    &[data-pale] {
+      --edge: color-mix(in srgb, var(--scene) 72%, #2b2a28);
+      background: var(--band) 0 0 / 100% 4px no-repeat border-box,
+                  linear-gradient(var(--edge), var(--edge)) 0 0 / 100% 5px no-repeat border-box,
+                  var(--tint);
+    }
+
+    &[aria-selected=true] {
+      --tint: color-mix(in srgb, var(--scene) 7%, #fff);
+      border-color: var(--edge);
+      border-top-color: transparent;
+      box-shadow: 0 0 0 1px var(--edge), 0 0 0 4px color-mix(in srgb, var(--edge) 22%, transparent);
+    }
+
+    &[data-carried] {
+      opacity: .4;
+    }
+
+    &[data-landing] {
+      box-shadow: -2px 0 0 var(--accent);
+    }
+  }
+
+  strong {
+    grid-area: name;
+    overflow: hidden;
+    font: 600 .78rem/1.3 system-ui, sans-serif;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  small {
+    grid-area: turn;
+    min-width: 0;
+    overflow: hidden;
+    color: var(--dim);
+    font-size: .68rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .grip {
+    grid-area: grip;
+    width: 8px;
+    height: 12px;
+    background: radial-gradient(circle, var(--dim) 1.1px, transparent 1.4px) 0 0 / 4px 4px;
+    opacity: .55;
+    cursor: grab;
+  }
+
+  .parts {
+    grid-area: parts;
+    display: flex;
+    gap: .3rem;
+    min-height: 18px;
+
+    svg {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  .remote {
+    grid-area: remote;
+    display: flex;
+    gap: .15rem;
+  }
+
+  kbd {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.15rem;
+    height: 1.15rem;
+    border: 2.5px solid var(--ring);
+    border-radius: 50%;
+    background: #fff;
+    color: #000;
+    font: 800 .62rem/1 system-ui, sans-serif;
+
+    &[data-rainbow] {
+      border-color: transparent;
+      background: linear-gradient(#fff, #fff) padding-box,
+                  conic-gradient(#ed1c24, #f7941d, #fff200, #8dc63f, #00a651, #00aeef, #0072bc,
+                                 #2e3192, #92278f, #ec008c, #ed1c24) border-box;
+    }
+  }
+
+  [data-always] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: none;
+    align-content: start;
+    gap: .2rem;
+    min-height: 0;
+    padding: .4rem .55rem .4rem .3rem;
+    border: 0;
+    border-right: 1px dashed #bdb7ad;
+    border-radius: 0;
+    background: none;
+
+    &,
+    &:hover,
+    &[aria-selected=true] {
+      border: 0;
+      border-right: 1px dashed #bdb7ad;
+      box-shadow: none;
+    }
+
+    > * {
+      grid-area: auto;
+    }
+
+    small {
+      font-size: .64rem;
+    }
+
+    small + small {
+      color: var(--ink);
+      font-size: .68rem;
+      line-height: 1.3;
+      white-space: normal;
+    }
+  }
+
+  .plus {
+    justify-content: center;
+    width: 100%;
+    min-height: var(--cardheight);
+    margin: 0;
+    align-self: stretch;
+    border-style: dashed;
+
+    &[data-wide] {
+      grid-column: 1 / -1;
+      min-height: 0;
+      padding: .3rem .7rem;
+    }
+  }
+
+  @media (width < 40rem) {
+    margin-inline: 0;
+
+    &[role=tablist] {
+      grid-template-columns: 1fr;
+    }
+
+    > div {
+      padding: .45rem 0 0;
+    }
+
+    [data-always],
+    [data-always]:hover,
+    [data-always][aria-selected=true] {
+      border-right: 0;
+      border-bottom: 1px dashed #bdb7ad;
+    }
+  }
+}
 body:not(.setupall) .sides > .side > .run {
   display: none;
 }
@@ -1690,6 +2021,459 @@ body:not(.setupall) .sides > .side > .run {
     &[data-hot] {
       opacity: 1;
       stroke-width: 2.4;
+    }
+  }
+}
+.drive {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .8rem;
+
+  button {
+    padding: .42rem .85rem;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--ink);
+    font: inherit;
+    font-size: .88rem;
+    white-space: nowrap;
+
+    &:hover:enabled {
+      border-color: var(--dim);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    &[data-primary] {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--accent-ink);
+      font-weight: 600;
+
+      &:hover:enabled {
+        border-color: var(--accent);
+        filter: brightness(1.08);
+      }
+    }
+  }
+
+  > span {
+    position: relative;
+    display: inline-flex;
+
+    > button:first-child {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+
+    > button + button {
+      margin-left: -1px;
+      padding-inline: .45rem;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+  }
+
+  @media (width < 40rem) {
+    gap: .4rem;
+
+    button {
+      padding-inline: .6rem;
+    }
+  }
+}
+
+.banner {
+  margin: 1rem 0;
+  padding: .8rem 1.1rem;
+  border-radius: 10px;
+  background: #e7f2f1;
+
+  &:empty {
+    display: none;
+  }
+
+  &[data-tone=warn] {
+    background: var(--warn-bg);
+    color: var(--warn);
+  }
+
+  &[data-tone=hold] {
+    background: var(--hold-bg);
+    color: var(--hold);
+  }
+
+  p {
+    margin: 0;
+  }
+
+  pre {
+    margin: .4rem 0 0;
+    font-size: .85rem;
+    white-space: pre-wrap;
+  }
+
+  p > span {
+    display: inline-flex;
+    gap: .3rem;
+    margin-left: .7rem;
+    vertical-align: middle;
+  }
+
+  i {
+    display: block;
+    width: .85rem;
+    height: .85rem;
+    border: 1px solid rgba(138, 100, 21, .45);
+    border-radius: 3px;
+    background: rgba(138, 100, 21, .12);
+
+    &[data-lit] {
+      border-color: var(--hold);
+      background: #fff;
+      box-shadow: 0 0 6px 1px rgba(255, 255, 255, .9);
+    }
+  }
+}
+
+.filepreview {
+  margin: 1.2rem 0;
+
+  summary {
+    color: var(--dim);
+    font-size: .9rem;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--ink);
+    }
+  }
+
+  p {
+    margin: .2rem 0 .5rem;
+    color: var(--dim);
+    font-size: .8rem;
+  }
+
+  pre {
+    padding: 1rem;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--panel);
+    font: .85rem/1.5 ui-monospace, Consolas, monospace;
+    white-space: pre-wrap;
+  }
+
+  mark {
+    border-radius: 2px;
+    background: var(--warn-bg);
+    box-shadow: 0 0 0 2px var(--warn-bg);
+    color: inherit;
+  }
+
+  em {
+    color: var(--warn);
+  }
+}
+.sceneset {
+  display: flex;
+  flex-wrap: wrap-reverse;
+  align-items: flex-start;
+  gap: .3rem .8rem;
+  margin: 0 -1rem;
+  color: var(--dim);
+  font-size: .82rem;
+
+  &[hidden] {
+    display: none;
+  }
+
+  > :first-child {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 0 1 40rem;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+    min-width: 0;
+    min-height: 3rem;
+    margin: 0 0 -1.5px;
+    padding: .45rem .9rem .3rem;
+    border: 1.5px solid var(--frame);
+    border-top-color: transparent;
+    border-bottom: 0;
+    border-radius: 9px 9px 0 0;
+    background: var(--band) 0 0 / 100% 4px no-repeat border-box, var(--panel);
+  }
+
+  > p:first-child {
+    font-size: .74rem;
+    line-height: 1.35;
+  }
+
+  > p:not(:first-child) {
+    flex: 1 1 8rem;
+    min-width: 0;
+    margin: 0 auto .7rem 0;
+    overflow: hidden;
+    font-size: .72rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    &[data-warn] {
+      max-height: 2.4em;
+      color: var(--warn);
+      line-height: 1.2;
+      white-space: normal;
+    }
+  }
+
+  > button {
+    flex: none;
+    margin-bottom: .55rem;
+    padding: .3rem .65rem;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--panel);
+    color: var(--ink);
+    font: 600 .75rem system-ui, sans-serif;
+    white-space: nowrap;
+
+    &:hover {
+      border-color: #b4443a;
+      color: #b4443a;
+    }
+  }
+
+  input,
+  select {
+    min-width: 0;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: #fff;
+    color: var(--ink);
+    font: inherit;
+
+    &:focus {
+      border-color: var(--accent);
+      outline: 2px solid rgba(15, 138, 114, .35);
+      outline-offset: 1px;
+    }
+
+    &[aria-invalid=true] {
+      border-color: var(--warn);
+      outline: 2px solid var(--warn-bg);
+    }
+  }
+
+  input {
+    padding: .32rem .5rem;
+  }
+
+  select {
+    padding: .3rem .35rem;
+  }
+
+  input[type=text] {
+    width: 10rem;
+    font-weight: 600;
+  }
+
+  input[type=number] {
+    width: 4.2rem;
+    text-align: center;
+  }
+
+  select:nth-of-type(2) {
+    max-width: 9rem;
+    font-weight: 600;
+  }
+
+  [aria-pressed] {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .28rem .55rem;
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--ink);
+    font: 600 .76rem system-ui, sans-serif;
+
+    &[aria-pressed=true] {
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
+      color: var(--accent);
+    }
+  }
+
+  @media (width < 40rem) {
+    margin-inline: 0;
+  }
+}
+
+.scenebody {
+  border: 1px solid transparent;
+  border-radius: 12px;
+
+  &[data-framed] {
+    margin: 0 -1rem 1rem;
+    padding: .9rem 1rem 1.1rem;
+    border: 1.5px solid var(--frame);
+    border-top-left-radius: 0;
+    background: var(--panel);
+
+    .panel {
+      background: #faf9f7;
+    }
+  }
+
+  @media (width < 40rem) {
+    &[data-framed] {
+      margin-inline: 0;
+      padding-inline: .6rem;
+    }
+  }
+}
+.savemenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 6;
+  width: 19rem;
+  padding: .5rem .7rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .12);
+  text-align: left;
+
+  &[hidden] {
+    display: none;
+  }
+
+  label {
+    display: flex;
+    align-items: flex-start;
+    gap: .5rem;
+    padding: .3rem 0;
+    font-size: .86rem;
+    cursor: pointer;
+
+    &:has(:disabled) {
+      color: var(--dim);
+      cursor: default;
+    }
+  }
+
+  input {
+    margin-top: .25rem;
+    accent-color: var(--accent);
+  }
+
+  small {
+    display: block;
+    color: var(--dim);
+    font-size: .76rem;
+  }
+}
+.floatbar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: .8rem;
+  padding: .45rem 1.4rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .08);
+  transform: translateY(-100%);
+  visibility: hidden;
+  transition: transform .15s, visibility .15s;
+
+  &[data-shown] {
+    transform: none;
+    visibility: visible;
+  }
+
+  p {
+    margin: 0;
+    white-space: nowrap;
+  }
+
+  > p:first-child {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    min-width: 0;
+  }
+
+  strong {
+    font-size: .95rem;
+  }
+
+  .said {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    background: none;
+    color: var(--dim);
+    font-size: .85rem;
+    text-align: left;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+
+    &[data-tone=warn] {
+      color: var(--warn);
+    }
+
+    &[data-tone=hold] {
+      color: var(--hold);
+    }
+  }
+
+  .where {
+    font-size: .9rem;
+
+    small {
+      margin-left: .45rem;
+      color: var(--dim);
+      font-size: .85rem;
+    }
+  }
+
+  .slot {
+    justify-self: end;
+  }
+
+  @media (width < 40rem) {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: .4rem .8rem;
+    padding-inline: .8rem;
+
+    strong {
+      display: none;
+    }
+
+    .slot {
+      grid-column: 1 / -1;
+    }
+
+    .drive {
+      flex-wrap: nowrap;
     }
   }
 }
@@ -2583,26 +3367,22 @@ body:not(.setupall) .sides > .side > .run {
 </head>
 <body>
 <header>
- <h1>Plasma 2350 Picker <span class="version">1.1.3 preview</span></h1>
- <span class="setuphead" id="setupHead"></span>
- <span id="status"></span>
- <button id="open" class="primary">Open FX drive</button>
- <button id="save" disabled>Save to board</button>
- <button id="check" disabled>Check board</button>
+ <h1>Plasma 2350 Picker <small>1.1.3 preview</small></h1>
+ <div class="drive" id="drive" role="group" aria-label="FX drive">
+  <button type="button" id="open" data-primary>Open FX drive</button>
+  <span>
+   <button type="button" id="save" disabled>Save to board</button><button type="button" id="saveArrow" title="Save settings" aria-label="Save settings" aria-haspopup="true" aria-expanded="false" aria-controls="saveMenu">&#9662;</button>
+   <div class="savemenu" id="saveMenu" role="group" aria-label="Save settings" hidden></div>
+  </span>
+  <button type="button" id="check" disabled>Check board</button>
+ </div>
 </header>
 <main>
-
-<div id="banner"></div>
-<div class="tabbar" id="tabs"></div>
-<div class="scenetabrow" id="sceneTabRow" hidden>
- <div class="scenetab"><div id="sceneSettings"></div></div>
- <div class="sceneaside" id="sceneAside"></div>
-</div>
+<div class="banner" id="banner" role="status" aria-live="polite"></div>
+<div class="scenetray" id="tabs"></div>
+<div class="sceneset" id="sceneTabRow" hidden></div>
 <div class="scenebody" id="sceneBody">
-
-
  <div id="looks"></div>
-
  <details class="panel" id="outPanel" open>
   <summary>The outputs<span class="says"></span></summary>
   <header class="panelhead" id="outFacts"></header>
@@ -2620,25 +3400,22 @@ body:not(.setupall) .sides > .side > .run {
   </div>
   <div id="outChosen"></div>
  </details>
-
 </div>
-
-<details open>
+<details class="filepreview">
  <summary>The file to be saved</summary>
- <p class="previewnote" id="previewNote" hidden></p>
- <pre class="file" id="preview"></pre>
+ <p id="previewNote" hidden></p>
+ <pre id="preview"></pre>
 </details>
-
 </main>
 <footer>
- <div class="maker">
-  <div class="brand">
+ <div>
+  <p>
    <svg viewBox="0 0 134.36 134.36" role="img" aria-label="Pimoroni"><circle cx="67.18" cy="67.18" r="66.4" fill="#fff" stroke="#e2ddd4" stroke-width="2.4"/><path fill="#26221e" d="M101.42,36.32c-.91,.01-1.8,.09-2.68,.21-1.53-10.4-10.37-19.59-22.59-22.25-11.59-2.52-22.86,1.57-28.86,9.52-1.99-.59-4.1-.9-6.29-.87-11.64,.14-20.96,9.69-20.82,21.33,.11,8.84,4.8,16.31,12.15,19.34,3.14,8.28-19.15,27.98,3.79,47.05,.58,.48,1.64,.11,1.57-.43-.15-1.26,.71-2.87,1.21-3.93,.77-1.62,3.12-1.62,3.78,.03,2.4,5.99,11.48,11.99,17.51,14.36,1.1,.43,1.74-.11,1.45-.82-.52-1.27-.59-2.94-.43-4.4,.17-1.57,2.13-2.68,3.97-1.25,4.26,3.31,11.73,5.01,19.05,3.93,.49-.07,1.05-.67,.59-1.22-1.15-1.4-1.55-3.03-.93-4.18,.58-1.08,1.3-1.25,2.82-1.72,3.51-1.1,8.46-6.45,8.86-11.94,.02-.28,.28-.46,.54-.37,1.16,.39,1.9,2.24,2.5,1.59,1.94-2.11,3.1-10.19,2.67-13.4-.05-.41,.46-.65,.72-.33,.93,1.15,2.08,1.65,2.36,1.19,1.86-2.52,2.32-6.48,2.36-9.92,9.29-2.3,16.13-10.72,16-20.7-.14-11.64-9.69-20.96-21.33-20.82Zm-42.01-4.09c1.31-5.05,7.37-7.84,13.54-6.23,6.17,1.6,10.11,7,8.79,12.04-.87,3.36-3.86,5.72-7.58,6.45l-.66,2.54c-.69,2.35-2.31,2.58-4.39,2.15,.1-.11,.18-.24,.21-.39l.73-3.59c.09-.44-.2-.87-.64-.96-.44-.09-.87,.19-.96,.64l-.73,3.6c-.03,.13-.02,.26,.02,.38-.34-.09-.7-.2-1.05-.3-.63-.18-1.23-.37-1.78-.58v-.03l1.1-3.5c.13-.43-.11-.89-.54-1.02-.43-.13-.89,.11-1.02,.54l-1.03,3.33c-1.37-.8-2.08-1.92-1.51-3.88l.59-2.2c-2.63-2.42-3.92-5.77-3.08-8.97Zm11.31,60.55c-.75,1.7-2.78,2.96-4.71,3.72l-.05-1.66c-.04-1.38-1.33-2.51-2.88-2.53-1.55-.02-2.78,1.08-2.74,2.45l.08,2.55c-1.67-.09-4.32-.66-6.05-1.31-6.34-2.39-10.45-8.13-8.56-12.42,.88-1.99,3.36-1.41,5.15-.67l-.84,2.03c-.52,1.27,.23,2.73,1.69,3.24,1.46,.52,3.07-.1,3.59-1.37l.53-1.28c.99,.51,2.49,1.1,3.98,1.36,6.67,1.15,12.04,1.8,10.79,5.87Zm9.51-4.37c-5.62-.58-8.1-9.69-19.54-6.19-9.01-10.38-16.84-5.02-23.94-5.39,3.5-7.17,5.89-16.28,4.9-21.56,3.56-1.56,15.09-5.53,24.76,4.87,7.17-2.11,15.5-2.57,25.09,6.8,.09,9.45-4.9,22.13-11.26,21.48Zm-26.63-25.51c-2.18-.61-4.45,.66-5.06,2.84-.61,2.18,.66,4.44,2.84,5.06,2.18,.61,4.45-.66,5.06-2.84,.61-2.18-.66-4.44-2.84-5.06Zm20.29,4.79c-2.18-.61-4.45,.66-5.06,2.84-.61,2.18,.66,4.45,2.84,5.06,2.18,.61,4.45-.66,5.06-2.84,.61-2.18-.66-4.44-2.84-5.06Zm-8.09-28.81c1.75,.2,3.32-1.06,3.53-2.8,.2-1.75-1.06-3.33-2.8-3.53-1.75-.2-3.33,1.05-3.53,2.8-.2,1.75,1.05,3.33,2.8,3.53Zm7.6,1.58c1.75,.2,3.33-1.06,3.53-2.8,.2-1.75-1.05-3.33-2.8-3.53-1.75-.2-3.32,1.05-3.53,2.8-.2,1.75,1.06,3.33,2.8,3.53Z"/></svg>
-   <div><b>Plasma 2350 by <a href="https://pimoroni.com" target="_blank">Pimoroni</a></b>Made with <svg class="heart" viewBox="0 0 24 22" role="img" aria-label="love"><path fill="#c8382e" d="M12 21.6 10.3 20C4.2 14.5 0 10.7 0 6.3 0 2.7 2.8 0 6.4 0c2 0 4 .9 5.6 2.4C13.6.9 15.6 0 17.6 0 21.2 0 24 2.7 24 6.3c0 4.4-4.2 8.2-10.3 13.7Z"/></svg> in Sheffield, UK.</div>
-  </div>
+   <span><strong>Plasma 2350 by <a href="https://pimoroni.com" target="_blank">Pimoroni</a></strong> Made with <svg viewBox="0 0 24 22" role="img" aria-label="love"><path fill="#c8382e" d="M12 21.6 10.3 20C4.2 14.5 0 10.7 0 6.3 0 2.7 2.8 0 6.4 0c2 0 4 .9 5.6 2.4C13.6.9 15.6 0 17.6 0 21.2 0 24 2.7 24 6.3c0 4.4-4.2 8.2-10.3 13.7Z"/></svg> in Sheffield, UK.</span>
+  </p>
   <nav aria-label="More pages"><a href="EDITOR.html" target="_blank">Editor</a><a href="MANUAL.html" target="_blank">Manual</a></nav>
  </div>
- <p class="company">Pimoroni Ltd., Unit 1, Parkway Business Park, Parkway Drive, Sheffield, S9 4WN, United Kingdom. Registered in England and Wales. Company No. 07510759. VAT Reg No. GB 140 8707 21</p>
+ <p><small>Pimoroni Ltd., Unit 1, Parkway Business Park, Parkway Drive, Sheffield, S9 4WN, United Kingdom. Registered in England and Wales. Company No. 07510759. VAT Reg No. GB 140 8707 21</small></p>
 </footer>
 <script>
 function h(tag, props, ...children) {
@@ -4495,11 +5272,6 @@ function renderSides() {
   document.querySelector("#outPanel > summary .says").textContent = BOARD.output_words.panel;
 }());
 
-// ---- scenes ---------------------------------------------------------------------------
-// The scene tabs, adding, removing and reordering them, and a scene's own settings. A scene's
-// body is how the outputs are wired and placed, and every run's cuts, what each stretch plays
-// and its steps to undo.
-
 var state = {at: -1, always: {body: null}, scenes: []};
 
 // What each output was carried from where a stand-in took its place, which is the
@@ -4705,114 +5477,6 @@ function removeScene(which) {
 
 function copyBody(body) { return JSON.parse(JSON.stringify(body)); }
 
-function renderScenes() {
-  var box = document.getElementById("tabs");
-  box.textContent = "";
-
-  // One scene is what a file has before anyone asks for more, and a bar of one tab
-  // says nothing, so it is not drawn until there is a choice to make
-  if (state.scenes.length) {
-    // Always on is the tray the scenes' cards sit in, its own card the tray's first column
-    box.appendChild(sceneTab(-1, state.always, "Always on", ""));
-    state.scenes.forEach(function (scene, i) {
-      box.appendChild(sceneTab(i, scene, scene.name, sceneTurn(scene)));
-    });
-  }
-
-  var plus = document.createElement("button");
-  plus.className = "plus";
-  plus.innerHTML = "<svg width='11' height='11' viewBox='0 0 11 11'><path d='M5.5 1 " +
-                   "L5.5 10 M1 5.5 L10 5.5' stroke='currentColor' stroke-width='1.8' " +
-                   "stroke-linecap='round'/></svg>" +
-                   (state.scenes.length ? "another scene" : "split into scenes");
-  plus.title = state.scenes.length ? "Add another scene"
-                                   : "Split into scenes that play one after another";
-  plus.onclick = addScene;
-  box.appendChild(plus);
-  box.classList.toggle("tray", state.scenes.length > 0);
-  spanTray();
-
-  // The frame is what says these belong to the picked card, so it appears with the cards, in
-  // the picked card's colour. Its tab holds the scene's settings, beside what the page says
-  // about the scene
-  var frame = document.getElementById("sceneBody");
-  frame.className = "scenebody" + (state.scenes.length ? " framed" : "");
-  var tabRow = document.getElementById("sceneTabRow");
-  tabRow.hidden = !state.scenes.length;
-  var picked = state.at < 0 ? null : state.scenes[state.at];
-  [frame, tabRow].forEach(function (node) {
-    node.style.setProperty("--frame", sceneEdge(picked));
-    node.style.setProperty("--frameband", sceneBand(picked));
-  });
-  renderSceneAside();
-}
-
-// Stretch Always on's card down every row the scenes' cards and the add button wrap into, as
-// many as the tray's width leaves room for. Where the scenes fill their last row, the add button
-// is a thin bar the width of the tray under them, so it never takes a row as a lone card
-function spanTray() {
-  var box = document.getElementById("tabs");
-  var always = box.querySelector(".tab.always");
-  if (!always) return;
-  var plus = box.querySelector(".plus");
-  plus.classList.remove("wide");
-  plus.style.gridColumn = "";
-  always.style.gridRow = "1";
-  var columns = getComputedStyle(box).gridTemplateColumns.split(" ").length;
-  var perRow = Math.max(1, columns - 1);
-  var scenes = box.querySelectorAll(".tab:not(.always)").length;
-  if (scenes % perRow === 0) {
-    plus.classList.add("wide");
-    plus.style.gridColumn = "2 / -1";
-  }
-  always.style.gridRow = "1 / span " + Math.ceil((scenes + 1) / perRow);
-}
-window.addEventListener("resize", spanTray);
-
-// Beside the frame's tab, where the picked scene comes in the turns and the way to remove it,
-// or for Always on how many scenes it plays under
-function renderSceneAside() {
-  var aside = document.getElementById("sceneAside");
-  aside.textContent = "";
-  if (!state.scenes.length) return;
-  var where = document.createElement("span");
-  where.className = "sceneplace";
-  var count = state.scenes.length;
-  if (state.at < 0) {
-    where.textContent = "Under " + count + (count === 1 ? " scene" : " scenes");
-    aside.appendChild(where);
-    return;
-  }
-  var picked = state.scenes[state.at];
-  var after = sceneAfter(picked);
-  // While the name being typed breaks a rule, the place says why instead, as it does for a scene
-  // that never shows
-  var problem = sceneNameProblem(picked, picked.name);
-  var unreached = unreachedScenes();
-  if (!problem && unreached.scenes.indexOf(picked) >= 0) {
-    problem = unreached.stopper ? "Never shows, as " + unreached.stopper.name.trim() +
-                                  " waits forever before it"
-                                : "Never shows, as no scene goes on to it";
-  }
-  where.classList.toggle("warn", !!problem);
-  var ends = picked.waits ? "waits " + (sceneCanWait() ? "for " + sceneWaitsFor() : "forever")
-           : after === picked ? "then itself" : after ? "then " + after.name : "on its own";
-  where.textContent = problem || "Scene " + (state.at + 1) + " of " + count + ", " + ends;
-  where.title = where.textContent;
-  aside.appendChild(where);
-  var remove = document.createElement("button");
-  remove.type = "button";
-  remove.className = "sceneremove";
-  remove.textContent = "Remove scene";
-  remove.title = "Remove this scene";
-  var which = state.at;
-  remove.onclick = function () { removeScene(which); };
-  aside.appendChild(remove);
-}
-
-// A slot's body, read from the page for the one being edited, whose stored body is out of date
-function bodyAt(which) { return state.at === which ? capture() : slotAt(which).body; }
-
 // ---- how a scene ends ---------------------------------------------------------------------------
 // A scene either shows for its time and then goes to the scene after it, or waits until a button
 // changes it. The scene after is the next in order unless the scene names another with then=, so
@@ -4934,8 +5598,6 @@ function freeSceneName() {
   }
 }
 
-// What a scene's card says under its name: its time, or that it waits. The scene after is named
-// only where it is chosen, the next in order being what a time implies
 function sceneTurn(scene) {
   var after = sceneAfter(scene);
   var inOrder = state.scenes[(state.scenes.indexOf(scene) + 1) % state.scenes.length];
@@ -4944,10 +5606,6 @@ function sceneTurn(scene) {
                                                     : ", then " + after.name);
   return turn + (sceneRestarts(scene) && !sceneLoops(scene) ? ", from the start" : "");
 }
-
-// ---- each scene's colour and the parts it sets ----------------------------------------------
-// Each scene has a colour of its own, its tab's band and tint and its name wherever the page names
-// it, so what the page says about a scene leads back to its tab. Always on has a neutral grey
 
 // The colours of the Aye Arr Remote's number buttons, 1 to 9, from its artwork, and the rainbow
 // round its 0. Scene 1 takes button 1, so a scene's colour is the button that goes to it. Scene
@@ -5000,12 +5658,6 @@ function sceneShade(scene) {
   return "color-mix(in srgb, " + sceneColour(scene) + " 65%, #2b2a28)";
 }
 
-// A scene's name in its colour, for a sentence the page writes as markup
-function sceneNameHtml(scene) {
-  return "<b class='scenename' style='color:" + sceneShade(scene) + "'>" +
-         escapeHtml(scene.name) + "</b>";
-}
-
 // Each part's icon, the drawing the programs page gives the same thing, so the two pages agree.
 // A part the programs page has no drawing for gives its own in PART_DRAWINGS, on the same grid
 var PART_FEATURES = {lights: "outputs", strip: "strip", screens: "screen", hub: "hub",
@@ -5014,12 +5666,8 @@ var PART_DRAWINGS = {};
 
 function partIcon(key) {
   if (PART_FEATURES[key]) return featureIcon(PART_FEATURES[key]);
-  var icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  icon.setAttribute("viewBox", "0 0 24 24");
-  icon.setAttribute("class", "featureicon");
-  icon.setAttribute("aria-hidden", "true");
-  icon.innerHTML = PART_DRAWINGS[key];
-  return icon;
+  return h("svg:svg", {viewBox: "0 0 24 24", class: "featureicon", "aria-hidden": "true",
+                       html: PART_DRAWINGS[key]});
 }
 
 // The parts of the board a slot's body sets itself, each as [icon, name]. A body's parts add
@@ -5064,239 +5712,152 @@ function alwaysSays(body) {
   return names.length <= 2 ? names.join(", ") : names[0] + " and " + (names.length - 1) + " more";
 }
 
-function sceneTab(which, slot, name, says) {
-  var here = state.at === which;
-  var body = here ? capture() : slot.body;
-  var tab = document.createElement("button");
-  tab.className = "tab" + (here ? " on" : "") + (which < 0 ? " always" : "");
-  tab.draggable = which >= 0;
-  // The scene's colour is its tab's band and tint, and the selected tab is ringed as the page
-  // rings anything chosen
-  var scene = which < 0 ? null : slot;
-  tab.style.setProperty("--scene", sceneColour(scene));
-  if (which >= 0) {
-    tab.style.setProperty("--band", sceneBand(scene));
-    if (sceneIsPale(scene)) tab.classList.add("pale");
+function renderSceneTray() {
+  var tray = document.getElementById("tabs");
+  var addButton = h("button", {type: "button", class: "plus",
+                               title: state.scenes.length ? "Add another scene"
+                                                          : "Split into scenes that play one after another",
+                               onclick: addScene},
+    h("svg:svg", {width: 11, height: 11, viewBox: "0 0 11 11", "aria-hidden": "true"},
+      h("svg:path", {d: "M5.5 1 L5.5 10 M1 5.5 L10 5.5", stroke: "currentColor", "stroke-width": 1.8,
+                     "stroke-linecap": "round"})),
+    state.scenes.length ? "another scene" : "split into scenes");
+  var body = document.getElementById("sceneBody");
+  if (!state.scenes.length) {
+    tray.removeAttribute("role");
+    tray.removeAttribute("aria-label");
+    replace(tray, addButton);
+    body.removeAttribute("role");
+    body.removeAttribute("aria-labelledby");
+    body.removeAttribute("data-framed");
+    return;
   }
-  if (which < 0) says = alwaysSays(body);
+  tray.setAttribute("role", "tablist");
+  tray.setAttribute("aria-label", "Scenes");
+  replace(tray, alwaysTab(),
+          h("div", {role: "none"}, state.scenes.map(sceneTab), addButton));
+  widenAddButton();
+  var picked = state.at < 0 ? null : state.scenes[state.at];
+  body.setAttribute("role", "tabpanel");
+  body.setAttribute("aria-labelledby", sceneTabId(state.at));
+  body.toggleAttribute("data-framed", true);
+  body.style.setProperty("--frame", sceneEdge(picked));
+}
 
-  // A scene's card is three rows: its name, what it sets, and how it ends beside its remote
-  // number. Always on's is its name, what it is for and what it plays, then what it sets
-  var title = document.createElement("b");
-  // The name is cut short where it is long, and the whole of it is in the card's tip
-  var named = document.createElement("span");
-  named.className = "cardname";
-  named.textContent = name;
-  title.appendChild(named);
-  tab.title = name;
-  // A scene's card is moved by dragging it, which a grip at the end of its name says
-  if (which >= 0) {
-    title.insertAdjacentHTML("beforeend", "<svg class='grip' viewBox='0 0 8 12' aria-hidden='true'>" +
-      "<circle cx='2' cy='2' r='1.1'/><circle cx='6' cy='2' r='1.1'/><circle cx='2' cy='6' r='1.1'/>" +
-      "<circle cx='6' cy='6' r='1.1'/><circle cx='2' cy='10' r='1.1'/><circle cx='6' cy='10' r='1.1'/>" +
-      "</svg>");
-    title.lastChild.insertAdjacentHTML("afterbegin", "<title>Drag to move this scene</title>");
-  }
-  tab.appendChild(title);
-  // An icon for each part the scene sets itself, in a shade of its colour
-  var icons = document.createElement("span");
-  icons.className = "partsset";
-  icons.style.color = sceneShade(scene);
-  partsSet(body, which < 0).forEach(function (part) {
-    var icon = partIcon(part[0]);
-    icon.insertAdjacentHTML("afterbegin", "<title>" + escapeHtml(part[1]) + "</title>");
-    icons.appendChild(icon);
-  });
+function widenAddButton() {
+  var grid = document.querySelector("#tabs > div");
+  if (!grid) return;
+  var columns = getComputedStyle(grid).gridTemplateColumns.split(" ").length;
+  grid.lastChild.toggleAttribute("data-wide", state.scenes.length % columns === 0);
+}
+window.addEventListener("resize", widenAddButton);
 
-  var parts = document.createElement("span");
-  parts.className = "cardparts";
-  parts.appendChild(icons);
-  var under = document.createElement("small");
-  under.className = "says";
-  under.textContent = says;
+function sceneTabId(which) {
+  return which < 0 ? "sceneTabAlways" : "sceneTab" + which;
+}
 
-  if (which < 0) {
-    var role = document.createElement("small");
-    role.className = "role";
-    role.textContent = "Plays under every scene";
-    tab.appendChild(role);
-    if (says) tab.appendChild(under);
-    tab.appendChild(parts);
-  } else {
-    tab.appendChild(parts);
-    var turn = document.createElement("span");
-    turn.className = "cardturn";
-    turn.appendChild(under);
-    // Each of the remote's number buttons that goes to the scene, drawn as the remote draws it
-    var numbers = sceneNumbers(scene);
-    if (numbers.length) {
-      var badges = document.createElement("span");
-      badges.className = "irbadges";
-      numbers.forEach(function (number) {
-        var badge = document.createElement("span");
-        badge.className = "irbadge" + (number ? "" : " zero");
-        badge.textContent = String(number);
-        badge.title = "Press " + number + " on the remote for this scene";
-        // The white button's ring is drawn in a light grey, which shows on a card
-        if (number) badge.style.setProperty("--ring", number === 8 ? "#cfccc6" : REMOTE_COLOURS[number - 1]);
-        badges.appendChild(badge);
-      });
-      turn.appendChild(badges);
-    }
-    tab.appendChild(turn);
-  }
+function tabProps(which, title) {
+  var selected = state.at === which;
+  return {type: "button", role: "tab", id: sceneTabId(which), title: title,
+          "aria-selected": selected ? "true" : "false", "aria-controls": "sceneBody",
+          tabindex: selected ? "0" : "-1",
+          onclick: function () { if (state.at !== which) switchTo(which); },
+          onkeydown: function (event) { stepTabs(event, which); }};
+}
 
-  tab.onclick = function () { if (state.at !== which) switchTo(which); };
+function stepTabs(event, which) {
+  var last = state.scenes.length - 1;
+  var goTo = {ArrowRight: Math.min(last, which + 1), ArrowDown: Math.min(last, which + 1),
+              ArrowLeft: Math.max(-1, which - 1), ArrowUp: Math.max(-1, which - 1),
+              Home: -1, End: last}[event.key];
+  if (goTo === undefined) return;
+  event.preventDefault();
+  if (goTo !== state.at) switchTo(goTo);
+  document.getElementById(sceneTabId(state.at)).focus();
+}
 
-  if (which >= 0) {
-    tab.ondragstart = function (e) {
-      carriedTab = which;
-      tab.classList.add("carried");
-      e.dataTransfer.effectAllowed = "move";
-      e.dataTransfer.setData("text/plain", String(which));
-    };
-    tab.ondragend = function () { carriedTab = null; draw(); };
-    tab.ondragover = function (e) {
-      if (carriedTab === null || carriedTab === which) return;
-      e.preventDefault();
-      tab.classList.add("landing");
-    };
-    tab.ondragleave = function () { tab.classList.remove("landing"); };
-    tab.ondrop = function (e) {
-      e.preventDefault();
-      if (carriedTab === null || carriedTab === which) return;
-      store();
-      // The scene being edited is followed by identity, since moving any tab shifts
-      // the numbers of the ones it passes
-      var editing = state.at >= 0 ? state.scenes[state.at] : null;
-      var moved = state.scenes.splice(carriedTab, 1)[0];
-      state.scenes.splice(which, 0, moved);
-      state.at = editing ? state.scenes.indexOf(editing) : -1;
-      carriedTab = null;
-      draw();
-    };
-  }
-  return tab;
+function partIcons(body, always, scene) {
+  return h("span", {class: "parts", style: {color: sceneShade(scene)}},
+    partsSet(body, always).map(function (part) {
+      var icon = partIcon(part[0]);
+      icon.prepend(h("svg:title", {text: part[1]}));
+      return icon;
+    }));
+}
+
+function alwaysTab() {
+  var body = state.at < 0 ? capture() : state.always.body;
+  var says = alwaysSays(body);
+  var props = tabProps(-1, "Always on");
+  props["data-always"] = true;
+  props.style = {"--scene": sceneColour(null)};
+  return h("button", props,
+    h("strong", {}, "Always on"),
+    h("small", {}, "Plays under every scene"),
+    says ? h("small", {}, says) : null,
+    partIcons(body, true, null));
+}
+
+function sceneTab(scene, which) {
+  var body = state.at === which ? capture() : scene.body;
+  var props = tabProps(which, scene.name);
+  props.draggable = "true";
+  props["data-pale"] = sceneIsPale(scene);
+  props.style = {"--scene": sceneColour(scene), "--band": sceneBand(scene)};
+  props.ondragstart = function (event) {
+    carriedTab = which;
+    event.currentTarget.toggleAttribute("data-carried", true);
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", String(which));
+  };
+  props.ondragend = function () {
+    carriedTab = null;
+    draw();
+  };
+  props.ondragover = function (event) {
+    if (carriedTab === null || carriedTab === which) return;
+    event.preventDefault();
+    event.currentTarget.toggleAttribute("data-landing", true);
+  };
+  props.ondragleave = function (event) {
+    event.currentTarget.removeAttribute("data-landing");
+  };
+  props.ondrop = function (event) {
+    event.preventDefault();
+    if (carriedTab === null || carriedTab === which) return;
+    moveScene(carriedTab, which);
+    carriedTab = null;
+    draw();
+  };
+  return h("button", props,
+    h("strong", {}, scene.name),
+    h("span", {class: "grip", title: "Drag to move this scene", "aria-hidden": "true"}),
+    partIcons(body, false, scene),
+    h("small", {}, sceneTurn(scene)),
+    remoteBadges(scene));
+}
+
+function remoteBadges(scene) {
+  var numbers = sceneNumbers(scene);
+  if (!numbers.length) return null;
+  return h("span", {class: "remote"}, numbers.map(function (number) {
+    return h("kbd", {title: "Press " + number + " on the remote for this scene",
+                     "data-rainbow": number === 0,
+                     style: {"--ring": number === 0 ? null
+                                     : number === 8 ? "#cfccc6" : REMOTE_COLOURS[number - 1]}},
+             String(number));
+  }));
+}
+
+function moveScene(from, to) {
+  store();
+  var editing = state.at >= 0 ? state.scenes[state.at] : null;
+  var moved = state.scenes.splice(from, 1)[0];
+  state.scenes.splice(to, 0, moved);
+  state.at = editing ? state.scenes.indexOf(editing) : -1;
 }
 
 var carriedTab = null;
-
-// A scene's row of settings, its time and whether it starts afresh. The scene row part
-// restyles it and speaks for the always-on tab
-function renderSceneRow() {
-  var box = document.getElementById("sceneSettings");
-  box.textContent = "";
-  if (state.at < 0) return;
-  var scene = state.scenes[state.at];
-
-  var row = document.createElement("div");
-  row.className = "sceneset";
-
-  var name = document.createElement("input");
-  name.type = "text";
-  name.value = scene.name;
-  name.title = "Scene name";
-  name.dataset.focus = "scene-name";
-  // The last name left in the field that broke no rule, which the scene goes back to if it is
-  // left with one that does. It is kept with the scene, as a draw makes the field afresh while it
-  // is being typed in, and a name half typed is not taken for it
-  if (scene.goodName === undefined && !sceneNameProblem(scene, scene.name)) scene.goodName = scene.name;
-  function marked() {
-    var problem = sceneNameProblem(scene, scene.name);
-    name.classList.toggle("invalid", !!problem);
-    name.title = problem || "Scene name";
-  }
-  name.oninput = function () {
-    // The brackets and the colon are the heading's own punctuation
-    scene.name = name.value.replace(/[\[\]:]/g, "");
-    if (name.value !== scene.name) name.value = scene.name;
-    marked();
-    renderScenes();
-    renderPreview();
-  };
-  name.onchange = function () {
-    scene.name = scene.name.trim();
-    if (!sceneNameProblem(scene, scene.name)) scene.goodName = scene.name;
-    else if (scene.goodName) scene.name = scene.goodName;
-    draw();
-  };
-  marked();
-  row.appendChild(name);
-
-  // How the scene ends. A waiting scene has no time and no scene after
-  var lone = state.scenes.length === 1;
-  var ends = document.createElement("select");
-  ends.className = "sceneends";
-  [["shows", "shows for"], ["waits", "waits"]].forEach(function (way) {
-    var option = document.createElement("option");
-    option.value = way[0];
-    option.textContent = way[1];
-    ends.appendChild(option);
-  });
-  ends.value = scene.waits ? "waits" : "shows";
-  ends.onchange = function () {
-    scene.waits = ends.value === "waits";
-    draw();
-  };
-  row.appendChild(ends);
-
-  if (!scene.waits) {
-    var seconds = document.createElement("input");
-    seconds.type = "number";
-    seconds.min = 1;
-    seconds.value = scene.seconds;
-    seconds.dataset.focus = "scene-seconds";
-    seconds.onchange = function () {
-      scene.seconds = Math.max(1, Number(seconds.value) || 1);
-      draw();
-    };
-    row.appendChild(seconds);
-
-    var unit = document.createElement("span");
-    unit.className = "sunit";
-    unit.textContent = lone ? "s, then itself" : "s, then";
-    row.appendChild(unit);
-  }
-
-  // The scene after, the next in order unless another is chosen, which can be this one again
-  if (!scene.waits && !lone) {
-    var then = document.createElement("select");
-    then.className = "scenethen";
-    var inOrder = state.scenes[(state.at + 1) % state.scenes.length];
-    var first = document.createElement("option");
-    first.value = "";
-    first.textContent = "the next scene";
-    then.appendChild(first);
-    state.scenes.forEach(function (other) {
-      if (other === inOrder) return;
-      var option = document.createElement("option");
-      option.value = sceneMark(other);
-      option.textContent = other === scene ? "itself" : other.name;
-      then.appendChild(option);
-    });
-    then.value = scene.then && sceneMarked(scene.then) && sceneMarked(scene.then) !== inOrder
-               ? scene.then : "";
-    then.title = "The scene after this one, the next in order unless another is chosen";
-    then.onchange = function () {
-      scene.then = then.value || null;
-      draw();
-    };
-    row.appendChild(then);
-  }
-
-  var again = document.createElement("label");
-  var tick = document.createElement("input");
-  tick.type = "checkbox";
-  tick.checked = sceneRestarts(scene);
-  tick.onchange = function () { scene.restart = tick.checked; draw(); };
-  again.appendChild(tick);
-  again.appendChild(document.createTextNode("restart each time"));
-  again.title = "Restart this scene's effects each time it plays";
-  row.appendChild(again);
-
-  box.appendChild(row);
-}
-
 
 // ---- what the whole file says now -------------------------------------------------------
 
@@ -5361,7 +5922,7 @@ function currentText() {
 }
 
 drawSteps.after.push(function () {
-  renderScenes();
+  renderSceneTray();
   renderSceneSettings();
 });
 
@@ -10128,13 +10689,9 @@ function readPairedScreens(bodies) {
   }
 }
 
-// ---- the drive, and what the board says back ------------------------------------------------
-// Saving and the read-back of errors.txt: the banner and the saving lights, remembering the
-// drive, and waiting on the board. Opening a drive takes its handles, the read-back part
-// reading its effects.txt into the page. Chrome and Edge only, where a page can be handed a
-// folder to write to.
-
 var SPOT_STEP_MS = 120;
+
+var SPOT_COUNT = 7;
 
 var SAVING_TAIL_MS = 920;
 
@@ -10146,38 +10703,32 @@ function stopSpots() {
 }
 
 function saving(text) {
-  banner(text, "hold");
-  var row = document.createElement("span");
-  row.className = "spots";
-  for (var i = 0; i < 7; i++) row.appendChild(document.createElement("i"));
-  document.getElementById("banner").firstChild.appendChild(row);
-  var at = 0;
+  var spots = [];
+  for (var made = 0; made < SPOT_COUNT; made++) spots.push(h("i"));
+  showBanner(text, "hold", null, h("span", {"aria-hidden": "true"}, spots));
+  var lit = 0;
   spotTimer = setInterval(function () {
-    for (var i = 0; i < row.children.length; i++)
-      row.children[i].className = i === at ? "lit" : "";
-    at = (at + 1) % row.children.length;
+    spots.forEach(function (spot, at) { spot.toggleAttribute("data-lit", at === lit); });
+    lit = (lit + 1) % spots.length;
   }, SPOT_STEP_MS);
 }
 
-// The parts that also show what banner() says, each given its text and warn as banner() is
 var bannerSteps = [];
 
 function banner(text, warn, detail) {
+  showBanner(text, warn, detail, null);
+}
+
+function showBanner(text, warn, detail, spots) {
   stopSpots();
   bannerSteps.forEach(function (step) { step(text, warn); });
   var box = document.getElementById("banner");
-  box.textContent = "";
-  if (!text) return;
-  var note = document.createElement("div");
-  // warn may also be "hold", the amber of a check still running
-  note.className = warn === "hold" ? "banner hold" : warn ? "banner warn" : "banner";
-  note.textContent = text;
-  if (detail) {
-    var pre = document.createElement("pre");
-    pre.textContent = detail;
-    note.appendChild(pre);
+  box.dataset.tone = warn === "hold" ? "hold" : warn ? "warn" : "";
+  if (!text) {
+    replace(box);
+    return;
   }
-  box.appendChild(note);
+  replace(box, h("p", {}, text, spots), detail ? h("pre", {text: detail}) : null);
 }
 
 function rememberDrive(handle) {
@@ -10385,18 +10936,15 @@ async function connect(fresh) {
   // The wait on the board reads the drive through the page's state
   state.dirHandle = dir;
   document.getElementById("check").disabled = false;
-  // Open, the drive button goes quiet and narrower, saying in its tip which drive is open, and
-  // saving takes the colour as the next thing to do
   var openButton = document.getElementById("open");
-  openButton.className = "";
+  openButton.removeAttribute("data-primary");
   openButton.textContent = "Change drive";
   openButton.title = "Connected to " + (dir.name && dir.name.length > 1 ? dir.name : "the FX drive") +
                      ". Open a different one";
   openButton.onclick = openFresh;
   var saveButton = document.getElementById("save");
-  saveButton.className = "primary";
+  saveButton.toggleAttribute("data-primary", true);
   saveButton.disabled = false;
-  // The header's buttons have changed width, which decides whether it keeps one line
   draw();
   for (var at = 0; at < connectSteps.length; at++) await connectSteps[at]();
 }
@@ -10418,39 +10966,33 @@ function problemsIn(said) {
   return found;
 }
 
-// Takes the board's answer and the file it read, then marks the lines it named
 function takeAnswer(said, about) {
   answered = {said: said || null, about: about};
   renderPreview();
 }
 
-// The file as the page writes it. A line the board named is marked where the page still writes
-// it as the board read it, the board's words after it
 function renderPreview() {
   var problems = problemsIn(answered.said);
   var lines = currentText().split("\n");
   var read = (answered.about || "").split("\n");
-  var stale = 0;
+  var changedSince = 0;
   var painted = lines.map(function (line, at) {
     var said = problems[at + 1];
     if (!said) return paintLine(line);
     if (read[at] !== line) {
-      stale++;
+      changedSince++;
       return paintLine(line);
     }
-    return "<span class='s-problem'>" + paintLine(line) + "</span>" +
-           "<span class='s-said'>  " + escapeHtml(said.join(" ")) + "</span>";
+    return "<mark>" + paintLine(line) + "</mark><em>  " + escapeHtml(said.join(" ")) + "</em>";
   });
   Object.keys(problems).forEach(function (at) {
-    if (Number(at) > lines.length) stale++;
+    if (Number(at) > lines.length) changedSince++;
   });
   document.getElementById("preview").innerHTML = painted.join("\n");
   var note = document.getElementById("previewNote");
-  if (note) {
-    note.hidden = !stale;
-    note.textContent = stale === 1 ? "One reported line has since changed."
-                                   : stale + " reported lines have since changed.";
-  }
+  note.hidden = !changedSince;
+  note.textContent = changedSince === 1 ? "One reported line has since changed."
+                                        : changedSince + " reported lines have since changed.";
 }
 
 document.getElementById("save").onclick = async function () {
@@ -10750,106 +11292,193 @@ drawSteps.after.push(function () {
   programNote();
 });
 
-// ---- a scene's own settings, in the screens' style ---------------------------------------
-// Whether the scene's effects begin again each time it comes round is a toggle with its icon, as
-// the screens' Loop and Ping pong are. It is called Restart, the heading's own word, as each of
-// theirs is the file's.
+var sceneRow = document.getElementById("sceneTabRow");
+var scenePlaceLine = null;
 
 function renderSceneSettings() {
-  renderSceneRow();
-  // Always on has no settings of its own, so its row says what it is for, the gallery staying
-  // where it was as the tabs are switched. Only once there are scenes for it to be under
-  if (state.at < 0 && state.scenes.length) {
-    var note = document.createElement("div");
-    note.className = "sceneset alwaysnote";
-    note.textContent = "Always on plays under every scene. A scene that uses the " +
-                       "same lights, screen or sound overrides it while showing.";
-    document.getElementById("sceneSettings").appendChild(note);
+  sceneRow.hidden = !state.scenes.length;
+  if (!state.scenes.length) {
+    replace(sceneRow);
     return;
   }
-  var row = document.querySelector("#sceneSettings .sceneset");
-  if (!row || state.at < 0) return;
-  var scene = state.scenes[state.at];
-  var ticked = row.querySelector("label");
-  if (!ticked) return;
-  // A scene going back to itself always restarts, so its toggle is held on. A scene that never
-  // shows again starts once, so its toggle is greyed
+  var picked = state.at < 0 ? null : state.scenes[state.at];
+  sceneRow.style.setProperty("--frame", sceneEdge(picked));
+  sceneRow.style.setProperty("--band", sceneBand(picked));
+  scenePlaceLine = h("p", {});
+  replace(sceneRow,
+    picked ? sceneControls(picked)
+           : h("p", {}, "Always on plays under every scene. A scene that uses the same lights, " +
+                        "screen or sound overrides it while showing."),
+    scenePlaceLine,
+    picked ? h("button", {type: "button", title: "Remove this scene",
+                          onclick: removeSceneShown}, "Remove scene")
+           : null);
+  renderScenePlace();
+}
+
+function removeSceneShown() {
+  removeScene(state.at);
+}
+
+function renderScenePlace() {
+  var count = state.scenes.length;
+  if (state.at < 0) {
+    scenePlaceLine.textContent = "Under " + count + (count === 1 ? " scene" : " scenes");
+    scenePlaceLine.removeAttribute("data-warn");
+    scenePlaceLine.removeAttribute("title");
+    return;
+  }
+  var picked = state.scenes[state.at];
+  var after = sceneAfter(picked);
+  var problem = sceneNameProblem(picked, picked.name);
+  var unreached = unreachedScenes();
+  if (!problem && unreached.scenes.indexOf(picked) >= 0) {
+    problem = unreached.stopper ? "Never shows, as " + unreached.stopper.name.trim() +
+                                  " waits forever before it"
+                                : "Never shows, as no scene goes on to it";
+  }
+  var ends = picked.waits ? "waits " + (sceneCanWait() ? "for " + sceneWaitsFor() : "forever")
+           : after === picked ? "then itself" : after ? "then " + after.name : "on its own";
+  scenePlaceLine.textContent = problem || "Scene " + (state.at + 1) + " of " + count + ", " + ends;
+  scenePlaceLine.title = scenePlaceLine.textContent;
+  scenePlaceLine.toggleAttribute("data-warn", !!problem);
+}
+
+function sceneControls(scene) {
+  var lone = state.scenes.length === 1;
+  return h("fieldset", {"aria-label": "Scene settings"},
+    sceneNameField(scene),
+    h("select", {"aria-label": "How the scene ends",
+                 onchange: function (event) {
+                   scene.waits = event.target.value === "waits";
+                   draw();
+                 }},
+      h("option", {value: "shows", selected: !scene.waits}, "shows for"),
+      h("option", {value: "waits", selected: scene.waits}, "waits")),
+    scene.waits ? null : [
+      h("input", {type: "number", min: 1, value: scene.seconds, "aria-label": "Seconds",
+                  "data-focus": "scene-seconds",
+                  onchange: function (event) {
+                    scene.seconds = Math.max(1, Number(event.target.value) || 1);
+                    draw();
+                  }}),
+      h("span", {}, lone ? "s, then itself" : "s, then"),
+      lone ? null : sceneThenChoice(scene)
+    ],
+    restartToggle(scene));
+}
+
+function sceneNameField(scene) {
+  if (scene.goodName === undefined && !sceneNameProblem(scene, scene.name)) scene.goodName = scene.name;
+  var field = h("input", {type: "text", value: scene.name, "aria-label": "Scene name",
+                          "data-focus": "scene-name",
+                          oninput: function () {
+                            scene.name = field.value.replace(/[\[\]:]/g, "");
+                            if (field.value !== scene.name) field.value = scene.name;
+                            markName();
+                            renderSceneTray();
+                            renderScenePlace();
+                            renderPreview();
+                          },
+                          onchange: function () {
+                            scene.name = scene.name.trim();
+                            if (!sceneNameProblem(scene, scene.name)) scene.goodName = scene.name;
+                            else if (scene.goodName) scene.name = scene.goodName;
+                            draw();
+                          }});
+  function markName() {
+    var problem = sceneNameProblem(scene, scene.name);
+    field.setAttribute("aria-invalid", problem ? "true" : "false");
+    field.title = problem || "Scene name";
+  }
+  markName();
+  return field;
+}
+
+function sceneThenChoice(scene) {
+  var inOrder = state.scenes[(state.at + 1) % state.scenes.length];
+  var chosen = scene.then && sceneMarked(scene.then) && sceneMarked(scene.then) !== inOrder
+             ? scene.then : "";
+  return h("select", {"aria-label": "Scene after",
+                      title: "The scene after this one, the next in order unless another is chosen",
+                      onchange: function (event) {
+                        scene.then = event.target.value || null;
+                        draw();
+                      }},
+    h("option", {value: "", selected: chosen === ""}, "the next scene"),
+    state.scenes.filter(function (other) { return other !== inOrder; }).map(function (other) {
+      var mark = sceneMark(other);
+      return h("option", {value: mark, selected: chosen === mark},
+               other === scene ? "itself" : other.name);
+    }));
+}
+
+function restartToggle(scene) {
   var loops = sceneLoops(scene);
   var once = !sceneShowsAgain(scene);
-  var restart = toggle("&#8630;", "Restart", sceneRestarts(scene),
-                       function (on) { scene.restart = on; },
-                       loops ? "A scene that goes back to itself always restarts"
-                       : once ? "This scene shows only once, so it has nothing to restart"
-                       : "Restart this scene's effects each time it plays, instead of " +
-                         "resuming where they left off", once);
-  restart.disabled = loops || once;
-  row.replaceChild(restart, ticked);
+  var on = sceneRestarts(scene);
+  return h("button", {type: "button", "aria-pressed": on && !once ? "true" : "false",
+                      disabled: loops || once,
+                      title: loops ? "A scene that goes back to itself always restarts"
+                           : once ? "This scene shows only once, so it has nothing to restart"
+                           : "Restart this scene's effects each time it plays, instead of " +
+                             "resuming where they left off",
+                      onclick: function () {
+                        scene.restart = !on;
+                        draw();
+                      }},
+    h("span", {"aria-hidden": "true"}, "\u21b6"), " Restart");
 }
 
-// ---- how the board takes a save, on the save button ----------------------------------------------
-// Whether a save plays without an eject, and whether the drive stays hidden at start, are about
-// saving, so they are set where the drive is saved to: a menu on a small arrow joined to the save
-// button. Neither waits for Edit board, neither being how the board is built
+var saveMenu = document.getElementById("saveMenu");
+var saveArrow = document.getElementById("saveArrow");
 
-function saveMenu() {
-  var menu = document.getElementById("saveMenu");
-  menu.textContent = "";
-  function choice(words, hint, on, flip, refused) {
-    var label = document.createElement("label");
-    label.className = "savechoice" + (refused ? " refused" : "");
-    var box = document.createElement("input");
-    box.type = "checkbox";
-    box.checked = on;
-    box.disabled = !!refused;
-    box.onchange = function () {
-      flip(box.checked);
-      draw();
-    };
-    label.appendChild(box);
-    var said = document.createElement("span");
-    said.innerHTML = words + "<small>" + (refused || hint) + "</small>";
-    label.appendChild(said);
-    menu.appendChild(label);
-  }
-  choice("Play saves without an eject",
-         boardSet.program ? "saving restarts the board and runs the program"
-                          : "the first save after turning this on still needs an eject",
-         boardSet.reload, function (on) { boardSet.reload = on; }, null);
-  choice("Keep the drive hidden at start", "double-press Boot to show it",
-         boardSet.driveHidden, function (on) { boardSet.driveHidden = on; },
-         driveMeansSomething() ? null : "always shown while a program runs");
+function saveChoice(words, hint, on, flip, refused) {
+  return h("label", {},
+    h("input", {type: "checkbox", checked: on, disabled: !!refused,
+                onchange: function (event) {
+                  flip(event.target.checked);
+                  draw();
+                }}),
+    h("span", {}, words, h("small", {}, refused || hint)));
 }
 
-(function () {
-  var save = document.getElementById("save");
-  var arrow = document.createElement("button");
-  arrow.type = "button";
-  arrow.id = "saveArrow";
-  arrow.className = "savearrow";
-  arrow.textContent = "\u25be";
-  arrow.title = "Save settings";
-  save.parentNode.insertBefore(arrow, save.nextSibling);
-  var menu = document.createElement("div");
-  menu.id = "saveMenu";
-  menu.className = "savemenu";
-  menu.hidden = true;
-  document.querySelector("header").appendChild(menu);
-  // Opened under its own arrow, its right edge at the arrow's, wherever the header has put it
-  arrow.onclick = function () {
-    menu.hidden = !menu.hidden;
-    if (menu.hidden) return;
-    var within = menu.offsetParent.getBoundingClientRect();
-    var under = arrow.getBoundingClientRect();
-    menu.style.left = "auto";
-    menu.style.right = (within.right - under.right) + "px";
-    menu.style.top = (under.bottom - within.top + 6) + "px";
-  };
-  document.addEventListener("click", function (event) {
-    if (!menu.hidden && !menu.contains(event.target) && event.target !== arrow) menu.hidden = true;
-  });
-}());
+function renderSaveMenu() {
+  replace(saveMenu,
+    saveChoice("Play saves without an eject",
+               boardSet.program ? "saving restarts the board and runs the program"
+                                : "the first save after turning this on still needs an eject",
+               boardSet.reload, function (on) { boardSet.reload = on; }, null),
+    saveChoice("Keep the drive hidden at start", "double-press Boot to show it",
+               boardSet.driveHidden, function (on) { boardSet.driveHidden = on; },
+               driveMeansSomething() ? null : "always shown while a program runs"));
+}
 
-drawSteps.after.push(saveMenu);
+function showSaveMenu(shown) {
+  saveMenu.hidden = !shown;
+  saveArrow.setAttribute("aria-expanded", shown ? "true" : "false");
+}
+
+function closeSaveMenu() {
+  showSaveMenu(false);
+}
+
+saveArrow.addEventListener("click", function () {
+  showSaveMenu(saveMenu.hidden);
+});
+
+document.addEventListener("click", function (event) {
+  if (saveMenu.hidden || saveMenu.contains(event.target) || saveArrow.contains(event.target)) return;
+  closeSaveMenu();
+});
+
+document.addEventListener("keydown", function (event) {
+  if (event.key !== "Escape" || saveMenu.hidden) return;
+  closeSaveMenu();
+  saveArrow.focus();
+});
+
+drawSteps.after.push(renderSaveMenu);
 
 // ---- the effects page, or a program page ------------------------------------------------------
 // Only program= and args= reach a program, which takes the whole board, so the page is one of
@@ -11898,101 +12527,66 @@ function scenesInTheTab() {
   into.appendChild(plus);
 }
 
-// ---- the bar along the top ----------------------------------------------------------------------
-// Once the header has scrolled out of view a slim bar takes its place along the top, holding the
-// page's name, the drive, save and check buttons, the latest thing the page said and where the
-// page is. The buttons themselves move into it and back, each leaving a stand-in of its size in
-// the header, so their state stays one and nothing in the header moves
-
-// The header's parts the bar takes, in the order the bar shows them
-var FLOAT_MOVED = ["open", "save", "saveArrow", "check", "saveMenu"];
-
-var floatBar = null;
-
-// Whether the bar is showing, the header being out of view
-var floatShown = false;
-
-var floatSaidTimer = null;
-
-// How long a plain note stays in the bar, a warning staying until the next
 var FLOAT_SAID_MS = 8000;
 
-(function () {
-  floatBar = document.createElement("div");
-  floatBar.className = "floatbar";
-  floatBar.setAttribute("aria-hidden", "true");
-  // The name and what the page said on the left, the page and scene in the middle, the buttons
-  // on the right
-  var left = document.createElement("span");
-  left.className = "floatleft";
-  var name = document.createElement("span");
-  name.className = "floatname";
-  name.textContent = document.querySelector("header h1").firstChild.textContent.trim();
-  var said = document.createElement("span");
-  said.className = "floatsaid";
-  // The whole of it, details and all, is the banner's at the top of the page
-  said.onclick = function () { window.scrollTo({top: 0, behavior: "smooth"}); };
-  left.appendChild(name);
-  left.appendChild(said);
-  var where = document.createElement("span");
-  where.className = "floatwhere";
-  var buttons = document.createElement("span");
-  buttons.className = "floatbuttons";
-  floatBar.appendChild(left);
-  floatBar.appendChild(where);
-  floatBar.appendChild(buttons);
-  document.body.appendChild(floatBar);
-  new IntersectionObserver(function (seen) {
-    floatHeader(!seen[seen.length - 1].isIntersecting);
-  }).observe(document.querySelector("header"));
-}());
+var driveButtons = document.getElementById("drive");
+var driveStandIn = h("span", {"data-standin": true, "aria-hidden": "true"});
+var floatShown = false;
+var floatSaidTimer = null;
 
-// Move the buttons into the bar as the header leaves the view, and back as it returns
+var floatSaid = h("button", {type: "button", class: "said", hidden: true,
+                             title: "Show at the top of the page",
+                             onclick: function () { window.scrollTo({top: 0, behavior: "smooth"}); }});
+var floatWhere = h("p", {class: "where"});
+var floatSlot = h("div", {class: "slot"});
+var floatBar = h("div", {class: "floatbar", "aria-hidden": "true", inert: true},
+  h("p", {},
+    h("strong", {}, document.querySelector("header h1").firstChild.textContent.trim()),
+    floatSaid),
+  floatWhere,
+  floatSlot);
+document.body.appendChild(floatBar);
+
+new IntersectionObserver(function (seen) {
+  floatHeader(!seen[seen.length - 1].isIntersecting);
+}).observe(document.querySelector("header"));
+
 function floatHeader(away) {
   if (away === floatShown) return;
   floatShown = away;
-  var buttons = floatBar.querySelector(".floatbuttons");
-  // The save menu is placed under its arrow as it opens, so one open is closed for the move
-  document.getElementById("saveMenu").hidden = true;
-  FLOAT_MOVED.forEach(function (id) {
-    var one = document.getElementById(id);
-    if (away) {
-      var stand = document.createElement("span");
-      stand.className = "floatstand";
-      stand.dataset.standsFor = id;
-      var box = one.getBoundingClientRect();
-      stand.style.width = box.width + "px";
-      stand.style.height = box.height + "px";
-      one.parentNode.replaceChild(stand, one);
-      buttons.appendChild(one);
-    } else {
-      var held = document.querySelector("[data-stands-for='" + id + "']");
-      held.parentNode.replaceChild(one, held);
-    }
-  });
-  floatBar.classList.toggle("shown", away);
+  closeSaveMenu();
+  if (away) {
+    var size = driveButtons.getBoundingClientRect();
+    driveStandIn.style.width = size.width + "px";
+    driveStandIn.style.height = size.height + "px";
+    driveButtons.replaceWith(driveStandIn);
+    floatSlot.appendChild(driveButtons);
+  } else {
+    driveStandIn.replaceWith(driveButtons);
+  }
+  floatBar.toggleAttribute("data-shown", away);
   floatBar.setAttribute("aria-hidden", away ? "false" : "true");
+  floatBar.inert = !away;
 }
 
-// The page in the middle as the header's tabs name it, with the scene or the program chosen
 drawSteps.after.push(function () {
   var shown = onProgramPage ? (boardSet.program ? programTitle(boardSet.program) : "")
             : !state.scenes.length ? ""
             : state.at < 0 ? "Always on" : state.scenes[state.at].name;
-  floatBar.querySelector(".floatwhere").innerHTML =
-    "<b>" + (onProgramPage ? "Programs" : "Effects") + "</b>" +
-    (shown ? "<small>" + escapeHtml(shown) + "</small>" : "");
+  replace(floatWhere, h("b", {}, onProgramPage ? "Programs" : "Effects"),
+          shown ? h("small", {}, shown) : null);
 });
 
-// What the page says goes in the bar too, so a save from far down the page is answered there
 bannerSteps.push(function (text, warn) {
-  var said = floatBar.querySelector(".floatsaid");
   clearTimeout(floatSaidTimer);
-  said.textContent = text || "";
-  said.title = text ? "Show at the top of the page" : "";
-  said.className = "floatsaid" + (warn === "hold" ? " hold" : warn ? " warn" : "");
+  floatSaid.textContent = text || "";
+  floatSaid.hidden = !text;
+  floatSaid.dataset.tone = warn === "hold" ? "hold" : warn ? "warn" : "";
   if (text && !warn) {
-    floatSaidTimer = setTimeout(function () { said.textContent = ""; }, FLOAT_SAID_MS);
+    floatSaidTimer = setTimeout(function () {
+      floatSaid.textContent = "";
+      floatSaid.hidden = true;
+    }, FLOAT_SAID_MS);
   }
 });
 

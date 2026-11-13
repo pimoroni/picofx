@@ -1,67 +1,53 @@
+import {h, replace} from "./00_dom.js";
 import {draw, drawSteps} from "./03_runs.js";
 import {boardSet, driveMeansSomething} from "./19_board_settings.js";
 
-// ---- how the board takes a save, on the save button ----------------------------------------------
-// Whether a save plays without an eject, and whether the drive stays hidden at start, are about
-// saving, so they are set where the drive is saved to: a menu on a small arrow joined to the save
-// button. Neither waits for Edit board, neither being how the board is built
+var saveMenu = document.getElementById("saveMenu");
+var saveArrow = document.getElementById("saveArrow");
 
-function saveMenu() {
-  var menu = document.getElementById("saveMenu");
-  menu.textContent = "";
-  function choice(words, hint, on, flip, refused) {
-    var label = document.createElement("label");
-    label.className = "savechoice" + (refused ? " refused" : "");
-    var box = document.createElement("input");
-    box.type = "checkbox";
-    box.checked = on;
-    box.disabled = !!refused;
-    box.onchange = function () {
-      flip(box.checked);
-      draw();
-    };
-    label.appendChild(box);
-    var said = document.createElement("span");
-    said.innerHTML = words + "<small>" + (refused || hint) + "</small>";
-    label.appendChild(said);
-    menu.appendChild(label);
-  }
-  choice("Play saves without an eject",
-         boardSet.program ? "saving restarts the board and runs the program"
-                          : "the first save after turning this on still needs an eject",
-         boardSet.reload, function (on) { boardSet.reload = on; }, null);
-  choice("Keep the drive hidden at start", "double-press Boot to show it",
-         boardSet.driveHidden, function (on) { boardSet.driveHidden = on; },
-         driveMeansSomething() ? null : "always shown while a program runs");
+function saveChoice(words, hint, on, flip, refused) {
+  return h("label", {},
+    h("input", {type: "checkbox", checked: on, disabled: !!refused,
+                onchange: function (event) {
+                  flip(event.target.checked);
+                  draw();
+                }}),
+    h("span", {}, words, h("small", {}, refused || hint)));
 }
 
-(function () {
-  var save = document.getElementById("save");
-  var arrow = document.createElement("button");
-  arrow.type = "button";
-  arrow.id = "saveArrow";
-  arrow.className = "savearrow";
-  arrow.textContent = "\u25be";
-  arrow.title = "Save settings";
-  save.parentNode.insertBefore(arrow, save.nextSibling);
-  var menu = document.createElement("div");
-  menu.id = "saveMenu";
-  menu.className = "savemenu";
-  menu.hidden = true;
-  document.querySelector("header").appendChild(menu);
-  // Opened under its own arrow, its right edge at the arrow's, wherever the header has put it
-  arrow.onclick = function () {
-    menu.hidden = !menu.hidden;
-    if (menu.hidden) return;
-    var within = menu.offsetParent.getBoundingClientRect();
-    var under = arrow.getBoundingClientRect();
-    menu.style.left = "auto";
-    menu.style.right = (within.right - under.right) + "px";
-    menu.style.top = (under.bottom - within.top + 6) + "px";
-  };
-  document.addEventListener("click", function (event) {
-    if (!menu.hidden && !menu.contains(event.target) && event.target !== arrow) menu.hidden = true;
-  });
-}());
+function renderSaveMenu() {
+  replace(saveMenu,
+    saveChoice("Play saves without an eject",
+               boardSet.program ? "saving restarts the board and runs the program"
+                                : "the first save after turning this on still needs an eject",
+               boardSet.reload, function (on) { boardSet.reload = on; }, null),
+    saveChoice("Keep the drive hidden at start", "double-press Boot to show it",
+               boardSet.driveHidden, function (on) { boardSet.driveHidden = on; },
+               driveMeansSomething() ? null : "always shown while a program runs"));
+}
 
-drawSteps.after.push(saveMenu);
+function showSaveMenu(shown) {
+  saveMenu.hidden = !shown;
+  saveArrow.setAttribute("aria-expanded", shown ? "true" : "false");
+}
+
+export function closeSaveMenu() {
+  showSaveMenu(false);
+}
+
+saveArrow.addEventListener("click", function () {
+  showSaveMenu(saveMenu.hidden);
+});
+
+document.addEventListener("click", function (event) {
+  if (saveMenu.hidden || saveMenu.contains(event.target) || saveArrow.contains(event.target)) return;
+  closeSaveMenu();
+});
+
+document.addEventListener("keydown", function (event) {
+  if (event.key !== "Escape" || saveMenu.hidden) return;
+  closeSaveMenu();
+  saveArrow.focus();
+});
+
+drawSteps.after.push(renderSaveMenu);
