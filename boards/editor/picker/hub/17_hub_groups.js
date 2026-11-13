@@ -6,10 +6,9 @@ import {
   HUB_PLACES, hubInk, pickPlace, placePicked, placeThere, placeTurnForChosen, placeUnder,
   placesSaid, placesThere
 } from "./15_hub.js";
-import {kindOf} from "../screens/12_screens.js";
-import {
-  ANCHOR_NAMES, LOOK_START, backlightSetting, freshLook, groundSaid, playingTokens
-} from "../screens/16_screen_settings.js";
+import {LOOK_START, freshLook, kindOf} from "../screens/12_screens.js";
+import {ANCHOR_NAMES, groundSaid, playingTokens} from "../screens/14_screen_text.js";
+import {backlightSetting} from "../screens/16_screen_settings.js";
 
 export var GROUP_NUMBERS = ["1", "2", "3"];
 var GROUP_INKS = {"1": "#d98a1a", "2": "#2f9e6a", "3": "#d0508a"};

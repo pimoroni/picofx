@@ -14,13 +14,14 @@ import {
   namesSaid, pickedGroupInk, pickedPlaces, placeGroupControls, placeGroupInk, sendTargets
 } from "./17_hub_groups.js";
 import {
-  kindOf, mediaArt, offEntry, pictureTargeting, screenInk, screenPlaying, screensTabHooks,
-  swatchCell
+  LOOK_START, freshLook, kindOf, pictureTargeting, screenInk, screensTabHooks
 } from "../screens/12_screens.js";
+import {mediaArt, panelPreview, pictureOffset} from "../screens/13_screen_art.js";
 import {
-  LOOK_START, chosenAfresh, freshLook, lookEntry, lookSettings, panelPreview, pictureOffset,
-  pictureSaid, placingTokens, playingTokens
-} from "../screens/16_screen_settings.js";
+  lookEntry, offEntry, pictureSaid, placingTokens, playingTokens, screenPlaying
+} from "../screens/14_screen_text.js";
+import {chosenAfresh, lookSettings} from "../screens/16_screen_settings.js";
+import {swatchCell} from "../screens/18_screens_tab.js";
 
 export var HUB_PLACES = ["A", "B", "C", "D", "E", "F"];
 

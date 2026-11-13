@@ -6,7 +6,8 @@ import {
   discoverPictureSaid, discoverPill, discoverThumbImage, discoverThumbs
 } from "../28_discover.js";
 import {galleryExamples, mediaNamed} from "../../screens/12_screens.js";
-import {copyDrawing, drawingInk, drawingSaid} from "../../screens/16_screen_settings.js";
+import {drawingInk, drawingSaid} from "../../screens/13_screen_art.js";
+import {copyDrawing} from "../../screens/16_screen_settings.js";
 
 galleryExamples.offer = function (groupTitles) {
   function firstOf(kind) {
