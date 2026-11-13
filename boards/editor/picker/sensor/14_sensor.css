@@ -1,13 +1,13 @@
 .sensortab {
   > p {
-    margin: .1rem 0 .7rem;
+    margin: var(--space-1) 0 var(--space-5);
 
     .chip {
       min-height: 33px;
     }
 
     > small {
-      margin-left: .6rem;
+      margin-left: var(--space-4);
       font-size: var(--text-s);
       color: var(--dim);
     }
@@ -17,7 +17,7 @@
     display: grid;
     grid-template-columns: 1fr var(--middle) 1fr;
     height: var(--height);
-    margin-top: .6rem;
+    margin-top: var(--space-4);
 
     > svg {
       display: block;
@@ -48,7 +48,7 @@
 
   :is(li, fieldset)[data-button] {
     border: 1px solid var(--line);
-    border-radius: 7px;
+    border-radius: var(--radius);
     background: var(--panel);
 
     select {
@@ -96,10 +96,10 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: .5rem;
+    gap: var(--space-4);
     width: min(16rem, 100%);
     height: 27px;
-    padding: 0 .3rem 0 .55rem;
+    padding: 0 var(--space-3) 0 var(--space-4);
     overflow: hidden;
     font-size: var(--text-m);
     white-space: nowrap;
@@ -122,8 +122,8 @@
     output {
       display: flex;
       align-items: center;
-      gap: .3rem;
-      padding: 0 4px;
+      gap: var(--space-3);
+      padding: 0 var(--space-2);
       overflow: hidden;
       font: 600 var(--text-s) var(--font);
       text-overflow: ellipsis;
@@ -146,7 +146,7 @@
 
   [data-side=left] > li[data-button] {
     flex-direction: row-reverse;
-    padding: 0 .55rem 0 .3rem;
+    padding: 0 var(--space-4) 0 var(--space-3);
   }
 
   path[data-button] {
@@ -174,16 +174,16 @@
 
   [data-kind=pir] li {
     width: min(20rem, 100%);
-    padding-top: calc(34px + .35rem);
+    padding-top: calc(34px + var(--space-3));
   }
 
   fieldset {
     display: flex;
     flex-direction: column;
-    gap: .35rem;
+    gap: var(--space-3);
     min-width: 0;
     margin: 0;
-    padding: .45rem .6rem .5rem;
+    padding: var(--space-4) var(--space-4) var(--space-4);
 
     legend {
       position: absolute;
@@ -193,9 +193,9 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: .45rem;
+      gap: var(--space-4);
       height: 34px;
-      padding: 0 .3rem;
+      padding: 0 var(--space-3);
       font: 600 var(--text-m) var(--font);
       color: var(--ink);
 
@@ -215,7 +215,7 @@
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: .35rem;
+      gap: var(--space-3);
       margin: 0;
       font: 400 var(--text-s)/1.6rem var(--font);
       color: var(--dim);
@@ -239,9 +239,9 @@
     input[type=number] {
       width: 3.4rem;
       height: 1.6rem;
-      padding: 0 .35rem;
+      padding: 0 var(--space-3);
       border: 1px solid var(--line);
-      border-radius: 6px;
+      border-radius: var(--radius-s);
       background: #fff;
       color: var(--ink);
       font: inherit;
@@ -254,11 +254,11 @@
 
   > div:last-child {
     max-width: 40rem;
-    margin: .8rem auto 0;
+    margin: var(--space-5) auto 0;
     text-align: center;
 
     p {
-      margin: .3rem 0;
+      margin: var(--space-3) 0;
       font-size: var(--text-m);
     }
 
@@ -273,10 +273,10 @@
     button {
       display: flex;
       align-items: center;
-      margin: .5rem auto 0;
-      padding: .42rem .7rem;
+      margin: var(--space-4) auto 0;
+      padding: var(--space-3) var(--space-5);
       border: 1px solid rgba(15, 138, 114, .4);
-      border-radius: 9px;
+      border-radius: var(--radius);
       background: rgba(15, 138, 114, .08);
       color: var(--accent);
       font: 600 var(--text-s) var(--font);

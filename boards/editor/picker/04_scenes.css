@@ -2,11 +2,11 @@
   display: flex;
   align-items: center;
   align-self: center;
-  gap: .35rem;
+  gap: var(--space-3);
   margin-left: auto;
-  padding: .42rem .7rem;
+  padding: var(--space-3) var(--space-5);
   border: 1px solid rgba(15, 138, 114, .4);
-  border-radius: 9px;
+  border-radius: var(--radius);
   background: rgba(15, 138, 114, .08);
   color: var(--accent);
   font: 600 var(--text-s) var(--font);
@@ -29,7 +29,7 @@
 
 #tabs {
   --cardheight: 4.75rem;
-  margin: .4rem -1rem .5rem;
+  margin: var(--space-3) calc(-1 * var(--space-6)) var(--space-4);
 
   &:empty {
     display: none;
@@ -38,9 +38,9 @@
   &[role=tablist] {
     display: grid;
     grid-template-columns: minmax(7rem, 9.5rem) 1fr;
-    padding: .45rem;
+    padding: var(--space-4);
     border: 1px solid #cfc9bf;
-    border-radius: 12px;
+    border-radius: var(--radius-l);
     background: #e6e3de;
 
     &:has([data-always][aria-selected=true]) {
@@ -52,8 +52,8 @@
   > div {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(8.4rem, 1fr));
-    gap: .45rem;
-    padding-left: .45rem;
+    gap: var(--space-4);
+    padding-left: var(--space-4);
   }
 
   [role=tab] {
@@ -66,14 +66,14 @@
     grid-template-areas: "name grip" "parts parts" "turn remote";
     align-content: center;
     align-items: center;
-    gap: .3rem .4rem;
+    gap: var(--space-3) var(--space-3);
     min-width: 0;
     min-height: var(--cardheight);
-    padding: .4rem .55rem;
+    padding: var(--space-3) var(--space-4);
     overflow: hidden;
     border: 1px solid var(--line);
     border-top-color: transparent;
-    border-radius: 9px;
+    border-radius: var(--radius);
     background: var(--band) 0 0 / 100% 4px no-repeat border-box, var(--tint);
     color: var(--ink);
     text-align: left;
@@ -146,7 +146,7 @@
   [role=tab] > span:has(> svg) {
     grid-area: parts;
     display: flex;
-    gap: .3rem;
+    gap: var(--space-3);
     min-height: 18px;
 
     svg {
@@ -158,7 +158,7 @@
   [role=tab] > span:has(> kbd) {
     grid-area: remote;
     display: flex;
-    gap: .15rem;
+    gap: var(--space-1);
   }
 
   kbd {
@@ -185,9 +185,9 @@
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas: none;
     align-content: start;
-    gap: .2rem;
+    gap: var(--space-2);
     min-height: 0;
-    padding: .4rem .55rem .4rem .3rem;
+    padding: var(--space-3) var(--space-4) var(--space-3) var(--space-3);
     border: 0;
     border-right: 1px dashed #bdb7ad;
     border-radius: 0;
@@ -207,6 +207,7 @@
 
     small {
       font-size: var(--text-xs);
+      white-space: normal;
     }
 
     small + small {
@@ -228,7 +229,7 @@
     &[data-wide] {
       grid-column: 1 / -1;
       min-height: 0;
-      padding: .3rem .7rem;
+      padding: var(--space-3) var(--space-5);
     }
   }
 
@@ -240,7 +241,7 @@
     }
 
     > div {
-      padding: .45rem 0 0;
+      padding: var(--space-4) 0 0;
     }
 
     [data-always],

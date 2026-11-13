@@ -3,12 +3,12 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: .8rem;
+  gap: var(--space-5);
 
   button {
-    padding: .42rem .85rem;
+    padding: var(--space-3) var(--space-5);
     border: 1px solid var(--line);
-    border-radius: 8px;
+    border-radius: var(--radius);
     background: var(--panel);
     color: var(--ink);
     font: inherit;
@@ -48,25 +48,25 @@
 
     > button + button {
       margin-left: -1px;
-      padding-inline: .45rem;
+      padding-inline: var(--space-4);
       border-top-left-radius: 0;
       border-bottom-left-radius: 0;
     }
   }
 
   @media (width < 40rem) {
-    gap: .4rem;
+    gap: var(--space-3);
 
     button {
-      padding-inline: .6rem;
+      padding-inline: var(--space-4);
     }
   }
 }
 
 #banner {
-  margin: 1rem 0;
-  padding: .8rem 1.1rem;
-  border-radius: 10px;
+  margin: var(--space-6) 0;
+  padding: var(--space-5) var(--space-6);
+  border-radius: var(--radius-l);
   background: #e7f2f1;
 
   &:empty {
@@ -88,15 +88,15 @@
   }
 
   pre {
-    margin: .4rem 0 0;
+    margin: var(--space-3) 0 0;
     font-size: var(--text-m);
     white-space: pre-wrap;
   }
 
   p > span {
     display: inline-flex;
-    gap: .3rem;
-    margin-left: .7rem;
+    gap: var(--space-3);
+    margin-left: var(--space-5);
     vertical-align: middle;
   }
 
@@ -105,7 +105,7 @@
     width: .85rem;
     height: .85rem;
     border: 1px solid rgba(138, 100, 21, .45);
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
     background: rgba(138, 100, 21, .12);
 
     &[data-lit] {
@@ -117,7 +117,7 @@
 }
 
 #filePreview {
-  margin: 1.2rem 0;
+  margin: var(--space-6) 0;
 
   summary {
     color: var(--dim);
@@ -130,22 +130,22 @@
   }
 
   p {
-    margin: .2rem 0 .5rem;
+    margin: var(--space-2) 0 var(--space-4);
     color: var(--dim);
     font-size: var(--text-m);
   }
 
   pre {
-    padding: 1rem;
+    padding: var(--space-6);
     border: 1px solid var(--line);
-    border-radius: 10px;
+    border-radius: var(--radius-l);
     background: var(--panel);
     font: .85rem/1.5 ui-monospace, Consolas, monospace;
     white-space: pre-wrap;
   }
 
   mark {
-    border-radius: 2px;
+    border-radius: var(--radius-xs);
     background: var(--warn-bg);
     box-shadow: 0 0 0 2px var(--warn-bg);
     color: inherit;

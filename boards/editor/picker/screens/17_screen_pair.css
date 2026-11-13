@@ -2,12 +2,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: .15rem;
+  gap: var(--space-1);
 
   button {
-    padding: .16rem .5rem;
+    padding: var(--space-1) var(--space-4);
     border: 1.5px solid var(--line);
-    border-radius: 7px;
+    border-radius: var(--radius);
     color: var(--ink);
     font: 700 var(--text-s) var(--font);
 

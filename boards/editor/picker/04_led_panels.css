@@ -1,9 +1,9 @@
 .panel > header {
   display: flex;
   align-items: center;
-  gap: .5rem;
+  gap: var(--space-4);
   min-height: 33px;
-  margin: 0 0 .2rem;
+  margin: 0 0 var(--space-2);
   color: var(--dim);
   font-size: var(--text-m);
 
@@ -16,7 +16,7 @@
     flex: 1 1 0;
     width: 0;
     min-width: 0;
-    margin-left: .6rem;
+    margin-left: var(--space-4);
     overflow: hidden;
     font-size: var(--text-s);
     white-space: nowrap;
@@ -26,7 +26,7 @@
   > [role=group] {
     display: flex;
     align-items: center;
-    gap: .35rem;
+    gap: var(--space-3);
     margin-left: auto;
 
     button {
@@ -74,7 +74,7 @@
 #sides {
   display: flex;
   align-items: stretch;
-  gap: 1rem;
+  gap: var(--space-6);
 
   &[data-mono-first] > #sideB {
     order: -1;
@@ -94,8 +94,8 @@
   h3 {
     display: flex;
     align-items: baseline;
-    gap: .5rem;
-    margin: 0 0 .5rem;
+    gap: var(--space-4);
+    margin: 0 0 var(--space-4);
     font-size: var(--text-m);
     white-space: nowrap;
 

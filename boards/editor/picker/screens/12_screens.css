@@ -7,7 +7,7 @@
 .screenstab {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem 1.2rem;
+  gap: var(--space-6) var(--space-6);
 
   > :not(.screenbox) {
     grid-column: 1 / -1;
@@ -34,19 +34,19 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: .7rem;
-  padding: 0 .9rem .8rem;
+  gap: var(--space-5);
+  padding: 0 var(--space-6) var(--space-5);
   border: 2px solid var(--tint);
-  border-radius: 10px;
+  border-radius: var(--radius-l);
   overflow: hidden;
 
   > div:first-child {
     display: flex;
     align-items: center;
-    gap: .4rem;
+    gap: var(--space-3);
     align-self: stretch;
-    margin: 0 -.9rem;
-    padding: .4rem .9rem;
+    margin: 0 calc(-1 * var(--space-6));
+    padding: var(--space-3) var(--space-6);
     background: var(--tint);
     color: #fff;
     font-size: var(--text-m);
@@ -59,8 +59,8 @@
     label {
       display: inline-flex;
       align-items: center;
-      gap: .3rem;
-      margin-left: .4rem;
+      gap: var(--space-3);
+      margin-left: var(--space-3);
     }
 
     .boardicon {
@@ -69,9 +69,9 @@
     }
 
     select {
-      padding: .1rem .25rem;
+      padding: var(--space-1) var(--space-2);
       border: 1px solid rgba(255, 255, 255, .55);
-      border-radius: 6px;
+      border-radius: var(--radius-s);
       background: rgba(255, 255, 255, .15);
       color: #fff;
       font: inherit;
@@ -89,7 +89,7 @@
 
     button {
       margin-left: auto;
-      padding: 0 .2rem;
+      padding: 0 var(--space-2);
       border: 0;
       background: none;
       color: #fff;
@@ -108,18 +108,18 @@
   }
 
   > button:not([aria-pressed]) {
-    margin: .7rem 0 .6rem;
+    margin: var(--space-5) 0 var(--space-4);
   }
 
   > button[aria-pressed] {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
-    gap: .5rem;
+    gap: var(--space-4);
     align-self: stretch;
-    padding: .35rem .55rem;
+    padding: var(--space-3) var(--space-4);
     border: 2px solid var(--line);
-    border-radius: 8px;
+    border-radius: var(--radius);
     font-size: var(--text-s);
     text-align: left;
 
@@ -138,7 +138,7 @@
 
   > output {
     width: 100%;
-    margin: -.2rem 0 .1rem;
+    margin: calc(-1 * var(--space-2)) 0 var(--space-1);
     color: var(--dim);
     font-size: var(--text-m);
     text-align: center;
@@ -192,7 +192,7 @@
 
   &[data-under] {
     border: 1px dashed #a9a49b;
-    border-radius: 8px;
+    border-radius: var(--radius);
     background: var(--unlit);
   }
 }
@@ -201,8 +201,8 @@
   > div:first-child {
     display: flex;
     align-items: center;
-    gap: .6rem;
-    margin: 1rem 0 .5rem;
+    gap: var(--space-4);
+    margin: var(--space-6) 0 var(--space-4);
 
     &:first-child {
       margin-top: 0;
@@ -224,7 +224,7 @@
       flex-shrink: 0;
       margin-left: auto;
       border: 2px solid var(--line);
-      border-radius: 9px;
+      border-radius: var(--radius);
       overflow: hidden;
       background: var(--panel);
 
@@ -235,14 +235,14 @@
       > span {
         display: flex;
         align-items: center;
-        padding: 0 .7rem;
+        padding: 0 var(--space-5);
         background: #000;
         color: #c8cdd0;
         font: 600 var(--text-m) var(--font);
       }
 
       button {
-        padding: .3rem .55rem;
+        padding: var(--space-3) var(--space-4);
         border: 0;
         border-left: 1px solid var(--line);
         border-radius: 0;
@@ -256,7 +256,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
     align-items: end;
-    gap: .7rem;
+    gap: var(--space-5);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -265,7 +265,7 @@
       position: relative;
       overflow: hidden;
       border: 2px solid var(--line);
-      border-radius: 10px;
+      border-radius: var(--radius-l);
       background: var(--panel);
 
       &[data-shown] {
@@ -301,7 +301,7 @@
 
         button {
           flex: 1;
-          padding: .2rem 0;
+          padding: var(--space-2) 0;
           border: 0;
           border-radius: 0;
           color: var(--dim);
@@ -374,8 +374,8 @@
       top: 2px;
       left: 2px;
       z-index: 1;
-      padding: 0 .3rem;
-      border-radius: 4px;
+      padding: 0 var(--space-3);
+      border-radius: var(--radius-xs);
       background: rgba(20, 20, 22, .7);
       color: #fff;
       font-size: var(--text-xs);
@@ -387,7 +387,7 @@
       bottom: 0;
       left: 0;
       z-index: 3;
-      padding: .25rem .4rem;
+      padding: var(--space-2) var(--space-3);
       overflow: hidden;
       background: rgba(20, 20, 22, .82);
       color: #fff;
@@ -408,7 +408,7 @@
       background: var(--colour);
 
       > span {
-        margin-bottom: .9rem;
+        margin-bottom: var(--space-6);
         color: #fff;
         font-size: var(--text-display);
         line-height: 1;
@@ -424,7 +424,7 @@
         right: 0;
         bottom: 0;
         left: 0;
-        padding: .3rem .45rem;
+        padding: var(--space-3) var(--space-4);
         background: linear-gradient(to top, rgba(0, 0, 0, .5), transparent);
         color: #fff;
         font: 700 var(--text-m) var(--font);
@@ -434,19 +434,19 @@
   }
 
   > .discoverbar {
-    margin-top: 1.5rem;
+    margin-top: var(--space-7);
   }
 }
 
 .screenswatch {
-  gap: .3rem;
+  gap: var(--space-3);
   width: auto;
   height: 2.15rem;
   box-shadow: none;
 
   > span {
     flex: 0 0 2.15rem;
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
     background: #2a2f33 center / cover no-repeat;
 
     &[data-shows=picture] {
@@ -481,12 +481,12 @@
     display: grid;
     grid-template-columns: repeat(3, 1rem);
     grid-auto-rows: 1rem;
-    gap: .15rem;
+    gap: var(--space-1);
 
     > span {
       width: 1rem;
       height: 1rem;
-      border-radius: 2px;
+      border-radius: var(--radius-xs);
     }
   }
 }

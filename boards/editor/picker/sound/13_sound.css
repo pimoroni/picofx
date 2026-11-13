@@ -7,7 +7,7 @@ body[data-setup] #soundPanel {
   --stripes: repeating-linear-gradient(45deg, #f0eeea, #f0eeea 7px, #e4e0d9 7px, #e4e0d9 14px);
 
   > p {
-    margin: 0 0 .8rem;
+    margin: 0 0 var(--space-5);
     font-size: var(--text-m);
     color: var(--dim);
   }
@@ -19,7 +19,7 @@ body[data-setup] #soundPanel {
   > div:has(> fieldset) {
     display: flex;
     align-items: center;
-    margin: 0 0 .7rem;
+    margin: 0 0 var(--space-5);
   }
 
   fieldset {
@@ -47,10 +47,10 @@ body[data-setup] #soundPanel {
     > button {
       display: inline-flex;
       align-items: center;
-      gap: .35rem;
-      padding: .28rem .55rem;
+      gap: var(--space-3);
+      padding: var(--space-2) var(--space-4);
       border: 1.5px solid var(--line);
-      border-radius: 8px;
+      border-radius: var(--radius);
       background: var(--panel);
       font: 600 var(--text-s) var(--font);
       color: var(--ink);
@@ -66,8 +66,8 @@ body[data-setup] #soundPanel {
       display: flex;
       flex: 1;
       align-items: center;
-      gap: .5rem;
-      margin: 0 .9rem;
+      gap: var(--space-4);
+      margin: 0 var(--space-6);
       font-size: var(--text-m);
       color: var(--dim);
     }
@@ -99,7 +99,7 @@ body[data-setup] #soundPanel {
     padding: 0;
     overflow: hidden;
     border: 2px solid var(--line);
-    border-radius: 9px;
+    border-radius: var(--radius);
     background: var(--panel);
     transition: transform .08s, border-color .12s;
 
@@ -137,31 +137,31 @@ body[data-setup] #soundPanel {
 
     b {
       align-self: center;
-      padding: .3rem .65rem;
+      padding: var(--space-3) var(--space-5);
       font: 600 var(--text-m) var(--font);
       white-space: nowrap;
     }
   }
 
   > .discoverbar {
-    margin: 1.5rem 0 0;
+    margin: var(--space-7) 0 0;
   }
 
   > section {
-    margin-top: 1.1rem;
+    margin-top: var(--space-6);
 
     &:first-of-type {
       margin-top: 0;
     }
 
     .discoverbar + & {
-      margin-top: 1.5rem;
+      margin-top: var(--space-7);
     }
 
     > div {
       display: flex;
       align-items: center;
-      gap: .6rem;
+      gap: var(--space-4);
     }
   }
 
@@ -171,7 +171,7 @@ body[data-setup] #soundPanel {
     button {
       display: flex;
       align-items: baseline;
-      gap: .6rem;
+      gap: var(--space-4);
       padding: 0;
       border: 0;
       border-radius: 0;
@@ -209,8 +209,8 @@ body[data-setup] #soundPanel {
   ul {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: .7rem;
-    margin: .4rem 0 0;
+    gap: var(--space-5);
+    margin: var(--space-3) 0 0;
     padding: 0;
     list-style: none;
   }
@@ -226,7 +226,7 @@ body[data-setup] #soundPanel {
       padding: 0;
       overflow: hidden;
       border: 2px solid var(--line);
-      border-radius: 10px;
+      border-radius: var(--radius-l);
       background: var(--panel);
       text-align: left;
 
@@ -252,7 +252,7 @@ body[data-setup] #soundPanel {
 
       b {
         display: block;
-        padding: .3rem .5rem 0;
+        padding: var(--space-3) var(--space-4) 0;
         overflow: hidden;
         font: 600 var(--text-s)/1.5 var(--font);
         color: var(--ink);
@@ -262,7 +262,7 @@ body[data-setup] #soundPanel {
 
       small {
         display: block;
-        padding: 0 .5rem .35rem;
+        padding: 0 var(--space-4) var(--space-3);
         font-size: var(--text-xs);
         color: var(--dim);
       }
@@ -325,7 +325,7 @@ body[data-setup] #soundPanel {
   height: 2.15rem;
   padding: 0;
   overflow: hidden;
-  border-radius: 3px;
+  border-radius: var(--radius-xs);
   background: #fff;
   box-shadow: inset 0 0 0 1px var(--line);
 

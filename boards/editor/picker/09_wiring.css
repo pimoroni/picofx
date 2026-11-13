@@ -6,10 +6,10 @@ body:not([data-setup]) #sides [id$=Run] {
   [id$=Run] {
     flex: 1 0 auto;
     width: 100%;
-    margin-bottom: .7rem;
-    padding: .8rem .7rem;
+    margin-bottom: var(--space-5);
+    padding: var(--space-5) var(--space-5);
     border: 1px solid var(--line);
-    border-radius: 10px;
+    border-radius: var(--radius-l);
     background: var(--panel);
   }
 
@@ -40,7 +40,7 @@ body:not([data-setup]) #sides [id$=Run] {
   > li {
     position: relative;
     display: flex;
-    margin-right: .5rem;
+    margin-right: var(--space-4);
 
     &:hover > button,
     &[data-kin] > button {
@@ -50,7 +50,7 @@ body:not([data-setup]) #sides [id$=Run] {
     > ol {
       display: flex;
       align-items: stretch;
-      gap: .15rem;
+      gap: var(--space-1);
       margin: 0;
       padding: 0;
       list-style: none;
@@ -60,15 +60,15 @@ body:not([data-setup]) #sides [id$=Run] {
   #sideB & > li,
   [data-mono-first] #sideA & > li {
     margin-right: 0;
-    margin-left: .15rem;
+    margin-left: var(--space-1);
   }
 
   li[data-key] {
     position: relative;
     overflow: hidden;
-    padding: .25rem .25rem .1rem;
+    padding: var(--space-2) var(--space-2) var(--space-1);
     border: 1px solid var(--line);
-    border-radius: 8px;
+    border-radius: var(--radius);
     background: var(--panel);
     line-height: 1;
     cursor: grab;
@@ -210,15 +210,15 @@ body:not([data-setup]) #sides [id$=Run] {
     z-index: 1;
     display: flex;
     justify-content: space-between;
-    gap: .5rem;
+    gap: var(--space-4);
     margin: calc(2.8rem + var(--reach, 0px)) 0 0;
-    padding: .35rem .45rem .2rem;
-    border-radius: 6px;
+    padding: var(--space-3) var(--space-4) var(--space-2);
+    border-radius: var(--radius-s);
     background: #2b3036;
     list-style: none;
 
     li {
-      padding: 0 .3rem;
+      padding: 0 var(--space-3);
       cursor: default;
 
       &:hover small {
@@ -229,14 +229,14 @@ body:not([data-setup]) #sides [id$=Run] {
     span {
       display: flex;
       justify-content: center;
-      gap: .35rem;
+      gap: var(--space-3);
     }
 
     i {
       display: block;
       width: .8rem;
       height: .45rem;
-      border-radius: 2px;
+      border-radius: var(--radius-xs);
 
       &[data-shape=whole] {
         width: 2.9rem;
@@ -263,7 +263,7 @@ body:not([data-setup]) #sides [id$=Run] {
   }
 
   p {
-    margin: .8rem 0;
+    margin: var(--space-5) 0;
     font-size: var(--text-s);
     color: var(--dim);
 

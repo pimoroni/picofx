@@ -1,17 +1,17 @@
 .programnote {
   display: flex;
   align-items: flex-start;
-  gap: .45rem;
-  margin: .4rem 0 .8rem;
-  padding: .55rem .75rem;
+  gap: var(--space-4);
+  margin: var(--space-3) 0 var(--space-5);
+  padding: var(--space-4) var(--space-5);
   border: 1.5px dashed var(--board);
-  border-radius: 10px;
+  border-radius: var(--radius-l);
   background: #eef2f7;
   color: var(--board);
   font-size: var(--text-m);
 
   .boardicon {
-    margin-top: .2rem;
+    margin-top: var(--space-2);
   }
 
   > span {
@@ -20,9 +20,9 @@
 
   button {
     flex: none;
-    padding: .2rem .6rem;
+    padding: var(--space-2) var(--space-4);
     border: 1px solid var(--board);
-    border-radius: 7px;
+    border-radius: var(--radius);
     background: #fff;
     color: var(--board);
     font: inherit;
@@ -38,9 +38,9 @@ body[data-programmed] :is(#looks, #tabs, #sceneTabRow, #tabStack > .panel:not(#b
 .programargs {
   display: flex;
   flex-wrap: wrap;
-  gap: .4rem 1rem;
+  gap: var(--space-3) var(--space-6);
   min-width: 0;
-  margin: .6rem 0 0;
+  margin: var(--space-4) 0 0;
   padding: 0;
   border: 0;
   color: var(--dim);
@@ -59,15 +59,15 @@ body[data-programmed] :is(#looks, #tabs, #sceneTabRow, #tabStack > .panel:not(#b
   label {
     display: flex;
     align-items: center;
-    gap: .4rem;
+    gap: var(--space-3);
   }
 
   input,
   select {
     width: 9rem;
-    padding: .22rem .4rem;
+    padding: var(--space-2) var(--space-3);
     border: 1px solid var(--line);
-    border-radius: 6px;
+    border-radius: var(--radius-s);
     background: #fff;
     color: var(--ink);
     font: inherit;
@@ -79,9 +79,9 @@ body[data-programmed] :is(#looks, #tabs, #sceneTabRow, #tabStack > .panel:not(#b
   }
 
   > div > button {
-    padding: .15rem .4rem;
+    padding: var(--space-1) var(--space-3);
     border: 1px solid var(--line);
-    border-radius: 6px;
+    border-radius: var(--radius-s);
     background: #fff;
     color: var(--dim);
     font: inherit;
@@ -96,9 +96,9 @@ body[data-programmed] :is(#looks, #tabs, #sceneTabRow, #tabStack > .panel:not(#b
   }
 
   > button {
-    padding: .2rem .55rem;
+    padding: var(--space-2) var(--space-4);
     border: 1px dashed var(--board);
-    border-radius: 7px;
+    border-radius: var(--radius);
     background: none;
     color: var(--board);
     font: inherit;

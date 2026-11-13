@@ -23,14 +23,14 @@ header:has(> #headSwitch) {
 
     h1 {
       flex: 1 1 0;
-      margin: 0 0 var(--headgap, .8rem);
+      margin: 0 0 var(--headgap, var(--space-5));
       white-space: nowrap;
       line-height: var(--buttonheight, 2.3rem);
     }
 
     #headActions {
       flex: 1 1 0;
-      margin: 0 0 var(--headgap, .8rem);
+      margin: 0 0 var(--headgap, var(--space-5));
       flex-wrap: nowrap;
     }
 
@@ -47,7 +47,7 @@ header:has(> #headSwitch) {
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: .8rem;
+  gap: var(--space-5);
   margin-left: auto;
 
   button {
@@ -64,7 +64,7 @@ header:has(> #headSwitch) {
 
   ul {
     display: flex;
-    gap: .25rem;
+    gap: var(--space-2);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -75,13 +75,13 @@ header:has(> #headSwitch) {
     display: flex;
     flex: 1;
     align-items: center;
-    gap: .5rem;
+    gap: var(--space-4);
     min-width: 0;
     height: var(--tabheight, 3.1rem);
-    padding: 0 .35rem;
+    padding: 0 var(--space-3);
     border: 1.5px solid var(--line);
     border-bottom: 0;
-    border-radius: 10px 10px 0 0;
+    border-radius: var(--radius-l) var(--radius-l) 0 0;
     background: #ece8e1;
     color: var(--dim);
 
@@ -115,7 +115,7 @@ header:has(> #headSwitch) {
     display: flex;
     flex: 1;
     align-items: center;
-    gap: .5rem;
+    gap: var(--space-4);
     min-width: 0;
     height: 100%;
     padding: 0;
@@ -130,7 +130,7 @@ header:has(> #headSwitch) {
       flex: none;
       width: calc(var(--face) * 4 / 3);
       height: var(--face);
-      border-radius: 5px;
+      border-radius: var(--radius-s);
     }
 
     > canvas {
@@ -142,7 +142,7 @@ header:has(> #headSwitch) {
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 0 .25rem;
+      padding: 0 var(--space-2);
       background: #1c1f22;
 
       .accswatch {
@@ -155,7 +155,7 @@ header:has(> #headSwitch) {
     > span:last-child {
       display: flex;
       align-items: baseline;
-      gap: .55rem;
+      gap: var(--space-4);
       min-width: 0;
     }
 
@@ -180,22 +180,22 @@ header:has(> #headSwitch) {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: .25rem;
-  margin: .2rem 0;
+  gap: var(--space-2);
+  margin: var(--space-2) 0;
   color: var(--dim);
   font-size: var(--text-m);
 
   > span:first-child {
-    margin-right: .2rem;
+    margin-right: var(--space-2);
   }
 
   > button {
     display: inline-flex;
     align-items: center;
-    gap: .25rem;
-    padding: .15rem .45rem .15rem .3rem;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-4) var(--space-1) var(--space-3);
     border: 1.5px solid var(--line);
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     background: #fff;
     color: var(--ink);
     font: inherit;
@@ -215,10 +215,10 @@ header:has(> #headSwitch) {
 
   > span:last-child {
     display: flex;
-    gap: .25rem;
+    gap: var(--space-2);
 
     button {
-      padding: 0 .15rem;
+      padding: 0 var(--space-1);
       border: 0;
       background: none;
       color: var(--board);
@@ -235,7 +235,7 @@ header:has(> #headSwitch) {
   padding: 0;
   overflow: hidden;
   border: 2px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius-l);
   background: #fff;
   color: var(--ink);
   font: inherit;
@@ -276,14 +276,14 @@ header:has(> #headSwitch) {
     width: 22px;
     height: 22px;
     padding: 2px;
-    border-radius: 4px;
+    border-radius: var(--radius-xs);
     background: rgba(20, 20, 22, .7);
     color: #fff;
   }
 
   strong {
     display: block;
-    padding: .35rem .55rem;
+    padding: var(--space-3) var(--space-4);
     overflow: hidden;
     font-size: var(--text-m);
     font-weight: 600;
@@ -294,7 +294,7 @@ header:has(> #headSwitch) {
   small {
     display: -webkit-box;
     height: 2.6em;
-    margin: -.2rem .55rem .5rem;
+    margin: calc(-1 * var(--space-2)) var(--space-4) var(--space-4);
     overflow: hidden;
     color: var(--dim);
     font-size: var(--text-s);
@@ -319,10 +319,10 @@ header:has(> #headSwitch) {
   > article {
     display: flex;
     flex-direction: column;
-    margin: .8rem 0 1.1rem;
+    margin: var(--space-5) 0 var(--space-6);
     overflow: hidden;
     border: 1.5px solid var(--board);
-    border-radius: 14px;
+    border-radius: var(--radius-xl);
     background: #fff;
 
     &:not([data-chosen]) {
@@ -341,8 +341,8 @@ header:has(> #headSwitch) {
     > div {
       display: flex;
       align-items: flex-start;
-      gap: 1.1rem;
-      padding: .8rem;
+      gap: var(--space-6);
+      padding: var(--space-5);
 
       > div {
         min-width: 0;
@@ -351,12 +351,12 @@ header:has(> #headSwitch) {
 
     > div > div {
       h2 {
-        margin: .1rem 0 .3rem;
+        margin: var(--space-1) 0 var(--space-3);
         font-size: var(--text-xl);
       }
 
       p {
-        margin: 0 0 .45rem;
+        margin: 0 0 var(--space-4);
         font-size: var(--text-m);
       }
 
@@ -372,8 +372,8 @@ header:has(> #headSwitch) {
       ul {
         display: flex;
         flex-wrap: wrap;
-        gap: .3rem .9rem;
-        margin: .1rem 0 .4rem;
+        gap: var(--space-3) var(--space-6);
+        margin: var(--space-1) 0 var(--space-3);
         padding: 0;
         list-style: none;
         font-size: var(--text-m);
@@ -382,7 +382,7 @@ header:has(> #headSwitch) {
       li {
         display: inline-flex;
         align-items: center;
-        gap: .35rem;
+        gap: var(--space-3);
         color: var(--board);
       }
     }
@@ -392,7 +392,7 @@ header:has(> #headSwitch) {
       flex: none;
       align-items: center;
       justify-content: center;
-      gap: .3rem;
+      gap: var(--space-3);
       width: 16rem;
       height: 210px;
       margin: 0;
@@ -402,7 +402,7 @@ header:has(> #headSwitch) {
         flex: none;
         width: 16rem;
         height: 12rem;
-        border-radius: 8px;
+        border-radius: var(--radius);
         background: #222;
       }
 
@@ -414,13 +414,13 @@ header:has(> #headSwitch) {
   }
 
   > section > h2 {
-    margin: 1rem 0 .4rem;
+    margin: var(--space-6) 0 var(--space-3);
     font: 600 var(--text-l) var(--font);
 
     button {
       display: flex;
       align-items: baseline;
-      gap: .6rem;
+      gap: var(--space-4);
       padding: 0;
       border: 0;
       border-radius: 0;
@@ -458,7 +458,7 @@ header:has(> #headSwitch) {
   > section > ul {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: .6rem;
+    gap: var(--space-4);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -476,7 +476,7 @@ header:has(> #headSwitch) {
         right: 4px;
         z-index: 2;
         display: flex;
-        gap: 4px;
+        gap: var(--space-2);
       }
 
       > span > button {
@@ -484,7 +484,7 @@ header:has(> #headSwitch) {
         height: 1.2rem;
         padding: 0;
         border: 0;
-        border-radius: 5px;
+        border-radius: var(--radius-s);
         background: rgba(20, 20, 22, .7);
         color: #fff;
         font-size: var(--text-m);

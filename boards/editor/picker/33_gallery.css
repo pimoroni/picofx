@@ -2,14 +2,14 @@
   position: relative;
 
   details + details {
-    margin-top: .9rem;
+    margin-top: var(--space-6);
   }
 
   summary {
     display: flex;
     align-items: baseline;
-    gap: .6rem;
-    margin-bottom: .4rem;
+    gap: var(--space-4);
+    margin-bottom: var(--space-3);
     color: var(--ink);
     font-weight: 400;
     cursor: pointer;
@@ -48,7 +48,7 @@
   ul {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(9.4rem, 1fr));
-    gap: .7rem;
+    gap: var(--space-5);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -100,7 +100,7 @@
       align-items: center;
       justify-content: space-between;
       min-height: 2.1rem;
-      padding: .3rem .65rem;
+      padding: var(--space-3) var(--space-5);
       font-size: var(--text-m);
 
       svg {
@@ -118,8 +118,8 @@
     right: 0;
     display: flex;
     align-items: center;
-    gap: .65rem;
-    padding: 0 .65rem 0 0;
+    gap: var(--space-5);
+    padding: 0 var(--space-5) 0 0;
     overflow: hidden;
     border: 2px solid var(--line);
     border-radius: var(--radius);
@@ -134,10 +134,10 @@
 }
 
 #looks {
-  margin-bottom: 1.4rem;
+  margin-bottom: var(--space-7);
 
   body[data-looks-below] & {
-    margin: 1.2rem 0 0;
+    margin: var(--space-6) 0 0;
   }
 
   body[data-no-looks] & {

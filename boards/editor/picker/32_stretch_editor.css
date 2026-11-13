@@ -1,7 +1,7 @@
 .editor {
   position: relative;
   margin-top: -2px;
-  padding: .7rem .8rem .8rem;
+  padding: var(--space-5) var(--space-5) var(--space-5);
   border: 2px solid var(--accent);
   border-radius: var(--radius-l);
   background: var(--panel);
@@ -17,8 +17,8 @@
   > header {
     display: flex;
     align-items: center;
-    gap: .6rem;
-    margin-bottom: .6rem;
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
 
     h3 {
       margin: 0 auto 0 0;
@@ -34,8 +34,8 @@
     button {
       display: inline-flex;
       align-items: center;
-      gap: .35rem;
-      padding: .22rem .55rem;
+      gap: var(--space-3);
+      padding: var(--space-2) var(--space-4);
       border-width: 1.5px;
       color: var(--accent);
       font: 600 var(--text-s) var(--font);
@@ -65,31 +65,31 @@
   }
 
   > p {
-    margin: 0 0 .6rem;
+    margin: 0 0 var(--space-4);
     color: var(--dim);
     font-size: var(--text-m);
   }
 
   &[data-picking] #looks {
-    margin: 1rem 0 0;
+    margin: var(--space-6) 0 0;
   }
 
   > fieldset {
-    margin-bottom: .6rem;
+    margin-bottom: var(--space-4);
 
     > div {
       display: flex;
       flex-wrap: wrap;
       align-items: center;
-      gap: .3rem;
-      margin-bottom: .1rem;
+      gap: var(--space-3);
+      margin-bottom: var(--space-1);
       color: var(--dim);
       font-size: var(--text-m);
 
       ol {
         display: flex;
-        gap: .3rem;
-        margin: 0 0 0 .2rem;
+        gap: var(--space-3);
+        margin: 0 0 0 var(--space-2);
         padding: 0;
         list-style: none;
       }
@@ -114,7 +114,7 @@
       }
 
       li > button + button {
-        padding: 0 .3rem 0 .1rem;
+        padding: 0 var(--space-3) 0 var(--space-1);
         border: 0;
         background: none;
         color: var(--dim);
@@ -122,8 +122,8 @@
       }
 
       > button {
-        margin-left: .3rem;
-        padding: .15rem .5rem;
+        margin-left: var(--space-3);
+        padding: var(--space-1) var(--space-4);
         border-style: dashed;
         border-radius: var(--radius-s);
         background: none;
@@ -137,7 +137,7 @@
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
-    gap: .25rem .7rem;
+    gap: var(--space-2) var(--space-5);
 
     &[data-figures] {
       grid-template-columns: auto 1fr auto auto auto;
@@ -150,7 +150,7 @@
     label {
       display: inline-flex;
       align-items: center;
-      gap: .4rem;
+      gap: var(--space-3);
       color: var(--dim);
       font-size: var(--text-m);
       white-space: nowrap;
@@ -168,7 +168,7 @@
       box-sizing: content-box;
       justify-self: end;
       height: calc(1.2rem - 2px);
-      padding: 0 .35rem;
+      padding: 0 var(--space-3);
       font: 600 var(--text-s) var(--font);
       line-height: calc(1.2rem - 2px);
       text-align: right;
@@ -189,7 +189,7 @@
         width: 1.1rem;
         height: .9rem;
         border: 1px solid var(--line);
-        border-radius: 3px;
+        border-radius: var(--radius-xs);
       }
     }
 

@@ -1,13 +1,13 @@
 #keptLines {
-  margin: .6rem 0;
-  padding: .5rem .7rem;
+  margin: var(--space-4) 0;
+  padding: var(--space-4) var(--space-5);
   border: 1px dashed var(--line);
   border-radius: var(--radius);
   color: var(--dim);
   font-size: var(--text-m);
 
   p {
-    margin: 0 0 .3rem;
+    margin: 0 0 var(--space-3);
   }
 
   ul {
@@ -19,8 +19,8 @@
   li {
     display: flex;
     align-items: flex-start;
-    gap: .4rem;
-    margin: .15rem 0;
+    gap: var(--space-3);
+    margin: var(--space-1) 0;
   }
 
   code {
@@ -30,7 +30,7 @@
   }
 
   button {
-    padding: 0 .2rem;
+    padding: 0 var(--space-2);
     border: 0;
     background: none;
     color: var(--dim);

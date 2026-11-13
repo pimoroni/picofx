@@ -2,8 +2,8 @@
   display: flex;
   flex-wrap: wrap-reverse;
   align-items: flex-start;
-  gap: .3rem .8rem;
-  margin: 0 -1rem;
+  gap: var(--space-3) var(--space-5);
+  margin: 0 calc(-1 * var(--space-6));
   color: var(--dim);
   font-size: var(--text-m);
 
@@ -18,15 +18,15 @@
     flex: 0 1 40rem;
     flex-wrap: wrap;
     align-items: center;
-    gap: .5rem;
+    gap: var(--space-4);
     min-width: 0;
     min-height: 3rem;
     margin: 0 0 -1.5px;
-    padding: .45rem .9rem .3rem;
+    padding: var(--space-4) var(--space-6) var(--space-3);
     border: 1.5px solid var(--frame);
     border-top-color: transparent;
     border-bottom: 0;
-    border-radius: 9px 9px 0 0;
+    border-radius: var(--radius) var(--radius) 0 0;
     background: var(--band) 0 0 / 100% 4px no-repeat border-box, var(--panel);
   }
 
@@ -38,7 +38,7 @@
   > p:not(:first-child) {
     flex: 1 1 8rem;
     min-width: 0;
-    margin: 0 auto .7rem 0;
+    margin: 0 auto var(--space-5) 0;
     overflow: hidden;
     font-size: var(--text-xs);
     white-space: nowrap;
@@ -54,10 +54,10 @@
 
   > button {
     flex: none;
-    margin-bottom: .55rem;
-    padding: .3rem .65rem;
+    margin-bottom: var(--space-4);
+    padding: var(--space-3) var(--space-5);
     border: 1px solid var(--line);
-    border-radius: 7px;
+    border-radius: var(--radius);
     background: var(--panel);
     color: var(--ink);
     font: 600 var(--text-s) var(--font);
@@ -73,7 +73,7 @@
   select {
     min-width: 0;
     border: 1px solid var(--line);
-    border-radius: 7px;
+    border-radius: var(--radius);
     background: #fff;
     color: var(--ink);
     font: inherit;
@@ -91,11 +91,11 @@
   }
 
   input {
-    padding: .32rem .5rem;
+    padding: var(--space-3) var(--space-4);
   }
 
   select {
-    padding: .3rem .35rem;
+    padding: var(--space-3) var(--space-3);
   }
 
   input[type=text] {
@@ -116,10 +116,10 @@
   [aria-pressed] {
     display: inline-flex;
     align-items: center;
-    gap: .35rem;
-    padding: .28rem .55rem;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-4);
     border: 1.5px solid var(--line);
-    border-radius: 8px;
+    border-radius: var(--radius);
     background: var(--panel);
     color: var(--ink);
     font: 600 var(--text-s) var(--font);
@@ -138,11 +138,11 @@
 
 #sceneBody {
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: var(--radius-l);
 
   &[data-framed] {
-    margin: 0 -1rem 1rem;
-    padding: .9rem 1rem 1.1rem;
+    margin: 0 calc(-1 * var(--space-6)) var(--space-6);
+    padding: var(--space-6) var(--space-6) var(--space-6);
     border: 1.5px solid var(--frame);
     border-top-left-radius: 0;
     background: var(--panel);
@@ -155,7 +155,7 @@
   @media (width < 40rem) {
     &[data-framed] {
       margin-inline: 0;
-      padding-inline: .6rem;
+      padding-inline: var(--space-4);
     }
   }
 }

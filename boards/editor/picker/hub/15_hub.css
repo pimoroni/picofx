@@ -4,7 +4,7 @@
   justify-self: start;
   align-self: start;
   overflow: hidden;
-  border-radius: 9px;
+  border-radius: var(--radius);
   background: var(--panel);
   box-shadow: inset 0 0 0 1.5px var(--screen-a);
   font: 600 var(--text-m) var(--font);
@@ -12,7 +12,7 @@
   > span {
     display: flex;
     align-items: center;
-    padding: 0 .1rem 0 .55rem;
+    padding: 0 var(--space-1) 0 var(--space-4);
 
     .boardicon {
       color: var(--screen-a);
@@ -28,7 +28,7 @@
   }
 
   button {
-    padding: .3rem .55rem;
+    padding: var(--space-3) var(--space-4);
     border: 0;
     border-radius: 0;
     background: none;
@@ -69,18 +69,18 @@
 .screenhub {
   display: flex;
   flex-direction: column;
-  gap: .7rem;
-  padding: 0 .9rem .8rem;
+  gap: var(--space-5);
+  padding: 0 var(--space-6) var(--space-5);
   border: 2px solid var(--tint);
-  border-radius: 10px;
+  border-radius: var(--radius-l);
   overflow: hidden;
 
   > div:first-child {
     display: flex;
     align-items: center;
-    gap: .4rem;
-    margin: 0 -.9rem;
-    padding: .4rem .9rem;
+    gap: var(--space-3);
+    margin: 0 calc(-1 * var(--space-6));
+    padding: var(--space-3) var(--space-6);
     background: var(--tint);
     color: #fff;
     font-size: var(--text-m);
@@ -93,8 +93,8 @@
     label {
       display: inline-flex;
       align-items: center;
-      gap: .3rem;
-      margin-left: .4rem;
+      gap: var(--space-3);
+      margin-left: var(--space-3);
     }
 
     .boardicon {
@@ -103,9 +103,9 @@
     }
 
     select {
-      padding: .1rem .25rem;
+      padding: var(--space-1) var(--space-2);
       border: 1px solid rgba(255, 255, 255, .55);
-      border-radius: 6px;
+      border-radius: var(--radius-s);
       background: rgba(255, 255, 255, .15);
       color: #fff;
       font: inherit;
@@ -117,7 +117,7 @@
     }
 
     small {
-      margin-left: .3rem;
+      margin-left: var(--space-3);
       font-weight: 400;
       opacity: .85;
     }
@@ -126,7 +126,7 @@
   > ol {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: .5rem;
+    gap: var(--space-4);
     margin: 0;
     padding: 0;
     list-style: none;
@@ -136,11 +136,11 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: .25rem;
+      gap: var(--space-2);
       min-width: 0;
-      padding: .3rem .2rem .35rem;
+      padding: var(--space-3) var(--space-2) var(--space-3);
       border: 2px solid transparent;
-      border-radius: 9px;
+      border-radius: var(--radius);
       cursor: pointer;
 
       &:hover {
@@ -173,8 +173,8 @@
           justify-content: center;
           width: 100%;
           aspect-ratio: 1;
-          margin-top: 1.75rem;
-          border-radius: 6px;
+          margin-top: var(--space-7);
+          border-radius: var(--radius-s);
           background: var(--cross) transparent;
           outline: 1px dashed #a9a49b;
           outline-offset: -1px;
@@ -185,9 +185,9 @@
         > button {
           position: absolute;
           bottom: 2.1rem;
-          padding: .15rem .5rem;
+          padding: var(--space-1) var(--space-4);
           border: 1.5px solid var(--tint);
-          border-radius: 7px;
+          border-radius: var(--radius);
           color: var(--tint);
           font: 600 var(--text-s) var(--font);
         }
@@ -212,18 +212,18 @@
         min-height: 1.5rem;
 
         .boardicon {
-          margin-right: .2rem;
+          margin-right: var(--space-2);
           color: var(--tint);
         }
       }
 
       select {
-        padding: .05rem .15rem;
-        border-radius: 5px;
+        padding: var(--space-1) var(--space-1);
+        border-radius: var(--radius-s);
         font-size: var(--text-xs);
 
         &:disabled {
-          padding: .05rem 0;
+          padding: var(--space-1) 0;
           border-color: transparent;
           background: transparent;
           color: var(--ink);
@@ -240,7 +240,7 @@
         height: 1.3rem;
         padding: 0;
         border: 0;
-        border-radius: 5px;
+        border-radius: var(--radius-s);
         background: var(--tint);
         color: #fff;
         font-size: var(--text-l);
@@ -267,17 +267,17 @@
 
       > [role=group] {
         display: inline-flex;
-        margin-top: .1rem;
+        margin-top: var(--space-1);
         overflow: hidden;
         border: 1.5px solid var(--line);
-        border-radius: 7px;
+        border-radius: var(--radius);
 
         &:has(button:disabled):not(:has(button:enabled)) {
           opacity: .45;
         }
 
         button {
-          padding: .16rem .5rem;
+          padding: var(--space-1) var(--space-4);
           border: 0;
           border-right: 1px solid var(--line);
           border-radius: 0;
@@ -303,9 +303,9 @@
 
   > p {
     margin: 0;
-    padding: .45rem .7rem;
+    padding: var(--space-4) var(--space-5);
     border-left: 3px solid var(--tint);
-    border-radius: 8px;
+    border-radius: var(--radius);
     background: color-mix(in srgb, var(--tint) 7%, transparent);
     color: var(--ink);
     font-size: var(--text-m);

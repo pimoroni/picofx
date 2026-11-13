@@ -4,9 +4,9 @@
   right: 0;
   z-index: 6;
   width: 19rem;
-  padding: .5rem .7rem;
+  padding: var(--space-4) var(--space-5);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--radius-l);
   background: #fff;
   box-shadow: 0 8px 22px rgba(0, 0, 0, .12);
   text-align: left;
@@ -18,8 +18,8 @@
   label {
     display: flex;
     align-items: flex-start;
-    gap: .5rem;
-    padding: .3rem 0;
+    gap: var(--space-4);
+    padding: var(--space-3) 0;
     font-size: var(--text-m);
     cursor: pointer;
 
@@ -30,7 +30,7 @@
   }
 
   input {
-    margin-top: .25rem;
+    margin-top: var(--space-2);
     accent-color: var(--accent);
   }
 

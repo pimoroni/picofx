@@ -27,10 +27,19 @@
   --text-l: 1rem;
   --text-xl: 1.25rem;
   --text-display: 3rem;
-  --radius-s: 5px;
+  --space-1: .125rem;
+  --space-2: .25rem;
+  --space-3: .375rem;
+  --space-4: .5rem;
+  --space-5: .75rem;
+  --space-6: 1rem;
+  --space-7: 1.5rem;
+  --radius-xs: 4px;
+  --radius-s: 6px;
   --radius: 8px;
-  --radius-l: 10px;
-  --radius-xl: 14px;
+  --radius-l: 12px;
+  --radius-xl: 16px;
+  --radius-round: 999px;
   --accent-glow: rgba(15, 138, 114, .25);
   --unlit: #2a2d30;
   --dashed: #a9a49b;
@@ -59,9 +68,9 @@ body {
 }
 
 button {
-  padding: .4rem .75rem;
+  padding: var(--space-3) var(--space-5);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--panel);
   font: inherit;
   font-size: var(--text-m);
@@ -82,7 +91,7 @@ button {
 input[type=text],
 input[type=number],
 select {
-  padding: .25rem .45rem;
+  padding: var(--space-2) var(--space-4);
   border: 1px solid var(--line);
   border-radius: var(--radius-s);
   background: var(--panel);
@@ -112,7 +121,7 @@ fieldset {
 }
 
 details {
-  margin: 1.2rem 0;
+  margin: var(--space-6) 0;
 }
 
 summary {
@@ -126,8 +135,8 @@ body > header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: .8rem;
-  padding: .8rem 1.4rem 0;
+  gap: var(--space-5);
+  padding: var(--space-5) var(--space-7) 0;
   border-bottom: 1px solid var(--line);
   background: var(--panel);
 
@@ -147,7 +156,7 @@ body > header {
     flex-wrap: wrap;
     align-items: center;
     justify-content: flex-end;
-    gap: .8rem;
+    gap: var(--space-5);
     margin-left: auto;
   }
 
@@ -157,7 +166,7 @@ body > header {
   }
 
   @media (width < 40rem) {
-    padding-inline: .8rem;
+    padding-inline: var(--space-5);
   }
 }
 
@@ -165,13 +174,13 @@ main {
   flex-grow: 1;
   width: 100%;
   max-width: 60rem;
-  margin: 1.4rem auto;
-  padding: 0 1.4rem;
+  margin: var(--space-7) auto;
+  padding: 0 var(--space-7);
 }
 
 body > footer {
   margin-top: 2.5rem;
-  padding: 1.1rem 1.4rem 1.25rem;
+  padding: var(--space-6) var(--space-7) var(--space-6);
   border-top: 1px solid var(--line);
   background: var(--panel);
   color: #6b655c;
@@ -182,12 +191,12 @@ body > footer {
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: .75rem 1.5rem;
+    gap: var(--space-5) var(--space-7);
 
     > p {
       display: flex;
       align-items: center;
-      gap: .75rem;
+      gap: var(--space-5);
       margin: 0;
 
       > svg {
@@ -222,12 +231,12 @@ body > footer {
   nav {
     display: flex;
     flex-wrap: wrap;
-    gap: .8rem;
+    gap: var(--space-5);
 
     a {
-      padding: .42rem .85rem;
+      padding: var(--space-3) var(--space-5);
       border: 1px solid var(--line);
-      border-radius: 8px;
+      border-radius: var(--radius);
       background: var(--panel);
       color: var(--ink);
       font-size: var(--text-m);
@@ -242,8 +251,8 @@ body > footer {
   }
 
   > p {
-    margin: .9rem 0 0;
-    padding-top: .75rem;
+    margin: var(--space-6) 0 0;
+    padding-top: var(--space-5);
     border-top: 1px solid #eeeae3;
     font-size: var(--text-s);
     line-height: 1.6;

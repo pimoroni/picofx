@@ -4,12 +4,12 @@
   position: relative;
   z-index: 1;
   overflow: hidden;
-  margin-top: -.1rem;
-  padding-top: 1.2rem;
+  margin-top: calc(-1 * var(--space-1));
+  padding-top: var(--space-6);
 
   &[data-zoomed] {
     overflow-x: auto;
-    padding-bottom: .4rem;
+    padding-bottom: var(--space-3);
   }
 
   &::-webkit-scrollbar {
@@ -17,12 +17,12 @@
   }
 
   &::-webkit-scrollbar-thumb {
-    border-radius: 99px;
+    border-radius: var(--radius-round);
     background: #cfc9bf;
   }
 
   &::-webkit-scrollbar-track {
-    border-radius: 99px;
+    border-radius: var(--radius-round);
     background: #f0eeea;
   }
 
@@ -92,7 +92,7 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: .15rem;
+        gap: var(--space-1);
         min-width: 0;
       }
 
@@ -160,7 +160,7 @@
 
     > strong {
       display: block;
-      padding: 0 .3rem;
+      padding: 0 var(--space-3);
       overflow: hidden;
       color: var(--ink);
       font-size: var(--text-xs);
@@ -192,7 +192,7 @@
       max-width: 1.1rem;
       height: .7rem;
       aspect-ratio: auto;
-      border-radius: 2px;
+      border-radius: var(--radius-xs);
 
       &[data-unset] {
         outline-offset: 0;
@@ -243,8 +243,8 @@
       bottom: 100%;
       left: 50%;
       z-index: 3;
-      margin-bottom: 4px;
-      padding: .05rem .35rem;
+      margin-bottom: var(--space-2);
+      padding: var(--space-1) var(--space-3);
       border-radius: var(--radius-s);
       background: var(--ink);
       color: #fff;
@@ -279,7 +279,7 @@
     left: -5px;
     z-index: 2;
     width: 6px;
-    border-radius: 3px;
+    border-radius: var(--radius-xs);
     cursor: col-resize;
 
     &:hover,
