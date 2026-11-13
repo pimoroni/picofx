@@ -142,7 +142,7 @@ body > header {
     }
   }
 
-  .headactions {
+  #headActions {
     display: flex;
     flex-wrap: wrap;
     align-items: center;

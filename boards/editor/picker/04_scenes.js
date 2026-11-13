@@ -393,7 +393,9 @@ export var PART_DRAWINGS = {};
 
 function partIcon(key) {
   if (PART_FEATURES[key]) return featureIcon(PART_FEATURES[key]);
-  return h("svg:svg", {viewBox: "0 0 24 24", class: "featureicon", "aria-hidden": "true",
+  return h("svg:svg", {viewBox: "0 0 24 24", width: 18, height: 18, fill: "none", stroke: "currentColor",
+                       "stroke-width": 1.8, "stroke-linecap": "round", "stroke-linejoin": "round",
+                       "aria-hidden": "true",
                        html: PART_DRAWINGS[key]});
 }
 
@@ -441,7 +443,7 @@ function alwaysSays(body) {
 
 export function renderSceneTray() {
   var tray = document.getElementById("tabs");
-  var addButton = h("button", {type: "button", class: "plus",
+  var addButton = h("button", {type: "button", id: "addScene",
                                title: state.scenes.length ? "Add another scene"
                                                           : "Split into scenes that play one after another",
                                onclick: addScene},

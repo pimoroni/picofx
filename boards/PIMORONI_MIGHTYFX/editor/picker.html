@@ -150,7 +150,7 @@ body > header {
     }
   }
 
-  .headactions {
+  #headActions {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -574,7 +574,7 @@ html {
     margin-top: auto;
   }
 }
-.plus {
+#addScene {
   display: flex;
   align-items: center;
   align-self: center;
@@ -793,7 +793,7 @@ html {
     }
   }
 
-  .plus {
+  #addScene {
     justify-content: center;
     width: 100%;
     min-height: var(--cardheight);
@@ -3517,25 +3517,14 @@ body[data-scenes-in-tab] {
     display: none;
   }
 
-  #looks > .tabs.sides:empty {
-    display: none;
-  }
-
-  #looks > .shelf {
-    margin-top: 0;
-  }
 }
 
-header:has(> .pageswitch) {
+header:has(> #headSwitch) {
   flex-wrap: wrap;
   padding-bottom: 0;
 
   h1 {
     margin-right: auto;
-  }
-
-  .says {
-    display: none;
   }
 
   &[data-oneline] {
@@ -3549,13 +3538,13 @@ header:has(> .pageswitch) {
       line-height: var(--buttonheight, 2.3rem);
     }
 
-    .headactions {
+    #headActions {
       flex: 1 1 0;
       margin: 0 0 var(--headgap, .8rem);
       flex-wrap: nowrap;
     }
 
-    .pageswitch {
+    #headSwitch {
       order: 0;
       flex: 0 0 57.2rem;
       padding: 0;
@@ -3563,7 +3552,7 @@ header:has(> .pageswitch) {
   }
 }
 
-.headactions {
+#headActions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -3576,7 +3565,7 @@ header:has(> .pageswitch) {
   }
 }
 
-.pageswitch {
+#headSwitch {
   --face: calc(var(--tabheight, 3.1rem) - .6rem);
   order: 10;
   flex: 1 0 100%;
@@ -3621,13 +3610,13 @@ header:has(> .pageswitch) {
       color: var(--board);
     }
 
-    .plus {
+    #addScene {
       flex: none;
       margin-left: auto;
       opacity: 1;
     }
 
-    &:not(:has(> [aria-current])) .plus {
+    &:not(:has(> [aria-current])) #addScene {
       display: none;
     }
   }
@@ -3694,26 +3683,6 @@ header:has(> .pageswitch) {
       white-space: nowrap;
       text-overflow: ellipsis;
     }
-  }
-}
-
-.featureicon {
-  flex: none;
-  width: 18px;
-  height: 18px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-
-  .f {
-    fill: currentColor;
-    stroke: none;
-  }
-
-  .fs {
-    fill: currentColor;
   }
 }
 
@@ -3813,7 +3782,7 @@ header:has(> .pageswitch) {
     gap: 2px;
   }
 
-  .featureicon {
+  svg {
     width: 22px;
     height: 22px;
     padding: 2px;
@@ -3846,7 +3815,7 @@ header:has(> .pageswitch) {
   }
 }
 
-.programs {
+#programView {
   &[hidden] {
     display: none;
   }
@@ -4378,12 +4347,12 @@ header:has(> .pageswitch) {
   }
 }
 
-.programs li > .discoverpill {
+#programView li > .discoverpill {
   top: 6px;
   right: 6px;
 }
 
-.programs li:hover > .discoverpill {
+#programView li:hover > .discoverpill {
   right: calc(2.9rem + 2px);
 }
 
@@ -7854,7 +7823,9 @@ var PART_DRAWINGS = {};
 
 function partIcon(key) {
   if (PART_FEATURES[key]) return featureIcon(PART_FEATURES[key]);
-  return h("svg:svg", {viewBox: "0 0 24 24", class: "featureicon", "aria-hidden": "true",
+  return h("svg:svg", {viewBox: "0 0 24 24", width: 18, height: 18, fill: "none", stroke: "currentColor",
+                       "stroke-width": 1.8, "stroke-linecap": "round", "stroke-linejoin": "round",
+                       "aria-hidden": "true",
                        html: PART_DRAWINGS[key]});
 }
 
@@ -7902,7 +7873,7 @@ function alwaysSays(body) {
 
 function renderSceneTray() {
   var tray = document.getElementById("tabs");
-  var addButton = h("button", {type: "button", class: "plus",
+  var addButton = h("button", {type: "button", id: "addScene",
                                title: state.scenes.length ? "Add another scene"
                                                           : "Split into scenes that play one after another",
                                onclick: addScene},
@@ -15535,56 +15506,56 @@ function holes(points, radius) {
 
 var FEATURES = [
   ["outputs", "the outputs", "outputs",
-   "<circle class='f' cx='3.8' cy='10' r='3'/><circle class='f' cx='12' cy='10' r='3'/>" +
-   "<circle class='f' cx='20.2' cy='10' r='3'/><path d='M1.5 18h21' stroke-width='2.2'/>"],
+   "<circle fill='currentColor' stroke='none' cx='3.8' cy='10' r='3'/><circle fill='currentColor' stroke='none' cx='12' cy='10' r='3'/>" +
+   "<circle fill='currentColor' stroke='none' cx='20.2' cy='10' r='3'/><path d='M1.5 18h21' stroke-width='2.2'/>"],
   ["rgb", "the RGB output", "RGB",
-   "<circle class='f' cx='12' cy='8' r='5'/><circle cx='8' cy='15' r='5' stroke-width='2'/>" +
+   "<circle fill='currentColor' stroke='none' cx='12' cy='8' r='5'/><circle cx='8' cy='15' r='5' stroke-width='2'/>" +
    "<circle cx='16' cy='15' r='5' stroke-width='2'/>"],
-  ["screen", "a screen", "screen", "<rect class='f' x='3' y='5' width='18' height='14' rx='2'/>"],
+  ["screen", "a screen", "screen", "<rect fill='currentColor' stroke='none' x='3' y='5' width='18' height='14' rx='2'/>"],
   ["either", "one screen or two", "1 or 2 screens",
-   "<rect class='f' x='0.5' y='6' width='9.5' height='12' rx='1.6'/>" +
+   "<rect fill='currentColor' stroke='none' x='0.5' y='6' width='9.5' height='12' rx='1.6'/>" +
    "<rect x='15' y='7' width='7.5' height='10' rx='1.2' stroke-width='2'/>"],
   ["pair", "two screens", "2 screens",
-   "<rect class='f' x='0.5' y='6' width='9.5' height='12' rx='1.6'/>" +
-   "<rect class='f' x='14' y='6' width='9.5' height='12' rx='1.6'/>"],
+   "<rect fill='currentColor' stroke='none' x='0.5' y='6' width='9.5' height='12' rx='1.6'/>" +
+   "<rect fill='currentColor' stroke='none' x='14' y='6' width='9.5' height='12' rx='1.6'/>"],
   ["hub", "a screen hub", "hub",
-   "<rect class='f' x='1' y='4' width='6.3' height='7' rx='1.2'/>" +
-   "<rect class='f' x='8.85' y='4' width='6.3' height='7' rx='1.2'/>" +
-   "<rect class='f' x='16.7' y='4' width='6.3' height='7' rx='1.2'/>" +
-   "<rect class='f' x='1' y='13' width='6.3' height='7' rx='1.2'/>" +
-   "<rect class='f' x='8.85' y='13' width='6.3' height='7' rx='1.2'/>" +
-   "<rect class='f' x='16.7' y='13' width='6.3' height='7' rx='1.2'/>"],
+   "<rect fill='currentColor' stroke='none' x='1' y='4' width='6.3' height='7' rx='1.2'/>" +
+   "<rect fill='currentColor' stroke='none' x='8.85' y='4' width='6.3' height='7' rx='1.2'/>" +
+   "<rect fill='currentColor' stroke='none' x='16.7' y='4' width='6.3' height='7' rx='1.2'/>" +
+   "<rect fill='currentColor' stroke='none' x='1' y='13' width='6.3' height='7' rx='1.2'/>" +
+   "<rect fill='currentColor' stroke='none' x='8.85' y='13' width='6.3' height='7' rx='1.2'/>" +
+   "<rect fill='currentColor' stroke='none' x='16.7' y='13' width='6.3' height='7' rx='1.2'/>"],
   ["strip", "an LED strip", "strip",
-   "<path class='f' fill-rule='evenodd' d='M1 2.5H17.5A6 6 0 0 1 17.5 14.5H6.5A1 1 0 0 0 6.5 " +
+   "<path fill='currentColor' stroke='none' fill-rule='evenodd' d='M1 2.5H17.5A6 6 0 0 1 17.5 14.5H6.5A1 1 0 0 0 6.5 " +
    "16.5H23V21.5H6.5A6 6 0 0 1 6.5 9.5H17.5A1 1 0 0 0 17.5 7.5H1Z" +
    holes([[4.5, 5], [9, 5], [13.5, 5], [9.5, 12], [14, 12], [10.5, 19], [15, 19], [19.5, 19]],
          1.35) + "'/>"],
   ["sound", "a speaker", "speaker",
-   "<g transform='scale(1.5)' stroke-width='1.2'><path class='fs' d='M2 6h3l4-3v10l-4-3H2z'/>" +
+   "<g transform='scale(1.5)' stroke-width='1.2'><path fill='currentColor' d='M2 6h3l4-3v10l-4-3H2z'/>" +
    "<path d='M11 5.5q2 2.5 0 5M12.8 3.8q3.4 4.2 0 8.4'/></g>"],
   ["remote", "the IR remote", "remote",
-   "<g transform='rotate(-35 12 12)'><path class='f' fill-rule='evenodd' d='M9.5 7h5a2.5 2.5 0 " +
+   "<g transform='rotate(-35 12 12)'><path fill='currentColor' stroke='none' fill-rule='evenodd' d='M9.5 7h5a2.5 2.5 0 " +
    "0 1 2.5 2.5v11a2.5 2.5 0 0 1-2.5 2.5h-5A2.5 2.5 0 0 1 7 20.5v-11A2.5 2.5 0 0 1 9.5 7z" +
    holes([[12, 11]], 1.6) + "'/><path d='M9 4q3-2 6 0M7 1.2q5-3 10 0' stroke-width='2'/></g>"],
   ["qwst", "a Qw/ST sensor", "Qw/ST",
-   "<path class='f' fill-rule='evenodd' d='M5 2h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 " +
+   "<path fill='currentColor' stroke='none' fill-rule='evenodd' d='M5 2h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 " +
    "1-2-2V4a2 2 0 0 1 2-2zM5 5.5h2v8H5zM9 5.5h2v8H9zM13 5.5h2v8h-2zM17 5.5h2v8h-2z'/>" +
-   "<rect class='f' x='10' y='17' width='4' height='5.5'/>"],
+   "<rect fill='currentColor' stroke='none' x='10' y='17' width='4' height='5.5'/>"],
   ["analog", "an analog sensor", "analog",
-   "<path d='M3 12h18' stroke-width='2.4'/><rect class='f' x='12' y='6' width='5.5' " +
+   "<path d='M3 12h18' stroke-width='2.4'/><rect fill='currentColor' stroke='none' x='12' y='6' width='5.5' " +
    "height='12' rx='1.4'/>"],
   ["motor", "motors", "motors",
-   "<rect class='f' x='1.5' y='5' width='15' height='14' rx='3.5'/>" +
-   "<rect class='f' x='16.5' y='10.5' width='6' height='3' rx='1'/>"],
+   "<rect fill='currentColor' stroke='none' x='1.5' y='5' width='15' height='14' rx='3.5'/>" +
+   "<rect fill='currentColor' stroke='none' x='16.5' y='10.5' width='6' height='3' rx='1'/>"],
   ["servo", "servos", "servos",
-   "<rect class='f' x='4' y='10' width='16' height='11' rx='1.5'/>" +
-   "<rect class='f' x='1' y='13' width='22' height='3' rx='1'/>" +
-   "<rect class='f' x='7' y='6.5' width='4' height='4'/><path d='M9 5.5H17.5' stroke-width='3.2'/>"],
+   "<rect fill='currentColor' stroke='none' x='4' y='10' width='16' height='11' rx='1.5'/>" +
+   "<rect fill='currentColor' stroke='none' x='1' y='13' width='22' height='3' rx='1'/>" +
+   "<rect fill='currentColor' stroke='none' x='7' y='6.5' width='4' height='4'/><path d='M9 5.5H17.5' stroke-width='3.2'/>"],
   ["wifi", "Wi-Fi", "Wi-Fi",
    "<g transform='scale(1.5)' stroke-width='1.2'><path d='M1.5 6.5a9 9 0 0 1 13 0M4 9a5.5 5.5 0 " +
-   "0 1 8 0'/><circle class='fs' cx='8' cy='12' r='1.4'/></g>"],
+   "0 1 8 0'/><circle fill='currentColor' cx='8' cy='12' r='1.4'/></g>"],
   ["button", "the Boot button", "Boot button",
-   "<rect x='3' y='3' width='18' height='18' rx='3'/><circle class='f' cx='12' cy='12' r='4.5'/>"]
+   "<rect x='3' y='3' width='18' height='18' rx='3'/><circle fill='currentColor' stroke='none' cx='12' cy='12' r='4.5'/>"]
 ];
 
 function featureNamed(key) {
@@ -15592,7 +15563,9 @@ function featureNamed(key) {
 }
 
 function featureIcon(key) {
-  return h("svg:svg", {viewBox: "0 0 24 24", class: "featureicon", "aria-hidden": "true",
+  return h("svg:svg", {viewBox: "0 0 24 24", width: 18, height: 18, fill: "none", stroke: "currentColor",
+                       "stroke-width": 1.8, "stroke-linecap": "round", "stroke-linejoin": "round",
+                       "aria-hidden": "true",
                        html: featureNamed(key)[3]});
 }
 
@@ -16223,12 +16196,12 @@ function renderPageSwitch() {
 
 (function () {
   var named = document.querySelector("header h1");
-  var actions = h("span", {id: "headActions", class: "headactions"});
+  var actions = h("span", {id: "headActions"});
   while (named.nextSibling) actions.appendChild(named.nextSibling);
-  pageSwitch = h("nav", {id: "headSwitch", class: "pageswitch", "aria-label": "Pages"});
+  pageSwitch = h("nav", {id: "headSwitch", "aria-label": "Pages"});
   named.parentNode.appendChild(pageSwitch);
   named.parentNode.appendChild(actions);
-  programView = h("section", {id: "programView", class: "programs", "aria-label": "Programs",
+  programView = h("section", {id: "programView", "aria-label": "Programs",
                               hidden: true});
   var body = document.getElementById("sceneBody");
   body.parentNode.insertBefore(programView, body.nextSibling);
@@ -16294,7 +16267,7 @@ function scenesInTheTab() {
              pageSwitch.querySelector("li[data-page=effects]");
   document.body.toggleAttribute("data-scenes-in-tab", !!into);
   if (!into) return;
-  var plus = document.querySelector("#tabs .plus");
+  var plus = document.getElementById("addScene");
   if (plus) into.appendChild(plus);
 }
 

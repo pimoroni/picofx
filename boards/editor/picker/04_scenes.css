@@ -1,4 +1,4 @@
-.plus {
+#addScene {
   display: flex;
   align-items: center;
   align-self: center;
@@ -217,7 +217,7 @@
     }
   }
 
-  .plus {
+  #addScene {
     justify-content: center;
     width: 100%;
     min-height: var(--cardheight);

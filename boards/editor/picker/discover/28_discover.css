@@ -189,12 +189,12 @@
   }
 }
 
-.programs li > .discoverpill {
+#programView li > .discoverpill {
   top: 6px;
   right: 6px;
 }
 
-.programs li:hover > .discoverpill {
+#programView li:hover > .discoverpill {
   right: calc(2.9rem + 2px);
 }
 
