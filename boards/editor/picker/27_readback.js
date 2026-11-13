@@ -912,12 +912,13 @@ function markKeptLights() {
       });
       return;
     }
-    var box = document.getElementById(run === outs ? "outRun" : "monoRun");
-    if (!box) return;
-    box.querySelectorAll(".lamp").forEach(function (lamp, at) {
-      if (!named[at]) return;
-      lamp.classList.add("keptlamp");
-      lamp.title = "used by a line the picker cannot edit: " + named[at][0].text;
+    var side = run === outs ? "out" : "mono";
+    ["#" + side + "Run .lamp", "#" + side + "Bar .seclamp"].forEach(function (shown) {
+      document.querySelectorAll(shown).forEach(function (lamp, at) {
+        if (!named[at]) return;
+        lamp.classList.add("keptlamp");
+        lamp.title = "used by a line the picker cannot edit: " + named[at][0].text;
+      });
     });
   });
 }

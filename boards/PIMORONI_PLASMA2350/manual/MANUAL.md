@@ -55,8 +55,8 @@ of the row.
 
 ### Lights: Choosing a look
 
-On a strip's tab or **LED** you'll see your lights, and below them a bar showing what each
-stretch of them plays.
+On a strip's tab or **LED** you'll see a bar of your lights, cut into stretches, each one
+named for the look it plays.
 
 When your board is new, the picker opens on **DAT strip** with all 66 LEDs as one
 stretch, playing nothing yet. The board's own LED, on the **LED** tab, plays
@@ -65,13 +65,20 @@ Rainbow.
 ```picker
 badge strip: Strip, 66 LEDs, GRB
 strip: *Nothing 66
-tools:
-settings: Nothing, on LEDs 1 to 66 of the strip on DAT
+choose: LEDs 1 to 66 of the strip on DAT
 cards Along the lights: Rainbow, Wave, Scanner, Chase, Marquee, *Nothing
 ```
 
-Click the bar, or any light, to select that stretch. Then click a card in the
-gallery to play that look there.
+Click a stretch to select it. A stretch that plays a look shows its settings.
+Every look has a brightness, and most also have a speed and a setting of their
+own. A look that takes a colour shows a row of colours to choose from, with
+[[custom]] for any other. [[Reverse]] changes which end a travelling look starts
+from. If you want an exact figure, the arrow at the right of the sliders opens a
+drawer to type it in.
+
+Press [[Change look]] to choose another look, or [[Keep]] to leave it as it is. A
+stretch playing nothing shows the gallery straight away. Click a card to play
+that look there.
 
 The cards are grouped by how they play. **Along the lights** travel from one end
 to the other, **Ready-made** looks combine several others, **All together** shows
@@ -79,37 +86,24 @@ the same on every light, and **Individual** gives each light its own part. Cards
 with a small palette let you choose the colour, and [[Nothing]] turns the stretch
 off.
 
-The selected stretch's settings sit just above the gallery. Every look has a
-brightness, and most also have a speed and a setting of their own. A look that
-takes a colour shows a row of colours to choose from, with [[custom]] for any
-other. [[Reverse]] changes which end a travelling look starts from. If you want
-an exact figure, the arrow at the right of the sliders opens a drawer to type it
-in.
-
 ### Lights: Cutting into stretches
 
 To play more than one look, cut the bar into stretches. Hover over the bar where
 you want a cut, between two lights, and click.
 
 Choose Rainbow first, then try a cut about halfway along. You'll have two
-stretches, both playing Rainbow. Click the right-hand one and choose Scanner, and
-a light starts sweeping along that half.
+stretches, both playing Rainbow. Click the right-hand one, press Change look and
+choose Scanner, and a light starts sweeping along that half.
 
 ```picker
 badge strip: Strip, 66 LEDs, GRB
-strip: Rainbow 33, *Scanner 33
-tools:
-settings: Scanner, on LEDs 34 to 66 of the strip on DAT, colour red, Brightness 100, Speed 50
-cards Along the lights: Rainbow, Wave, *Scanner, Chase, Marquee
+strip: Rainbow 33, *Rainbow 33
+choose: LEDs 34 to 66 of the strip on DAT, Rainbow
+cards Along the lights: *Rainbow, Wave, Scanner, Chase, Marquee
 ```
 
-Drag a cut to move it, or click the cross on it to remove it.
-
-The tools under the bar do the same in one go. [[Split into]] cuts the selected
-stretch into a number of equal [[stretches]], or into stretches of so many
-[[lights each]]. [[Join all]] puts the bar back to one stretch. [[Repeat]] takes
-the number of stretches you set, starting with the selected one, and repeats
-them to the end. The arrows above the bar undo and redo.
+Drag a cut to move it, or click the cross on it to remove it. The arrows above
+the bar undo and redo.
 On a long strip, the magnifier buttons zoom in so each LED is easier to reach.
 
 ### Board: Setting up your hardware

@@ -9,7 +9,6 @@ as the one the picture shows selected.
     ```picker
     tabs: *Outputs=Rainbow, Left strip, Right strip, Screens=2.8" 1.54", Sound
     colour: Rainbow 4, *Solid 3
-    tools:
     settings: Solid, on outputs 5 to 7, Brightness 100
     cards Along the lights: Rainbow, Wave, Scanner, Chase, Marquee
     ```
@@ -332,6 +331,9 @@ def mockup_badge(text, kind):
     label, _, hint = text.partition("|")
     name, _, note = label.partition(",")
     said = '<span class="hint">{}</span>'.format(html.escape(hint.strip())) if hint else ""
+    if not hint and kind != "strip":
+        said = '<span class="steps"><span class="round">{}</span><span class="round">{}</span></span>'.format(
+            UNDO_ICON, REDO_ICON)
     return '<div class="badgerow"><span class="badge {}">{}<b>{}</b> {}</span>{}</div>'.format(
         kind, CHIP_ICON, html.escape(name.strip()), html.escape(note.strip()), said)
 
@@ -404,13 +406,12 @@ def strip_drawing(colours, ringed):
 
 
 def mockup_run(kind, label, text):
-    """One run of lights in its white box, then the bar of its stretches, written as
-    "Rainbow 4, *Solid 3".
+    """The bar of a run's stretches, written as "Rainbow 4, *Solid 3". A strip's LEDs are drawn
+    small in their white box above it, and each stretch of outputs holds its own lights.
 
-    A light is numbered along the run unless label names every light in it, and a strip's LEDs
-    are drawn small and carry no number.
+    A light is numbered along the run unless label names every light in it.
     """
-    lights = []
+    count = 0
     strip_colours = []
     ringed = None
     sections = []
@@ -422,9 +423,12 @@ def mockup_run(kind, label, text):
             if selected:
                 ringed = (len(strip_colours), len(strip_colours) + length - 1)
             strip_colours.extend(colours)
-        else:
+        lights = ""
+        if kind != "strip":
             for colour in colours:
-                lights.append(lamp(colour or UNLIT_LIGHT, label or str(len(lights) + 1), selected))
+                count += 1
+                lights += lamp(colour or UNLIT_LIGHT, label or str(count))
+            lights = '<span class="seclamps">{}</span>'.format(lights)
 
         if colours[0]:
             if length > BAR_BLEND_LIMIT:
@@ -432,38 +436,25 @@ def mockup_run(kind, label, text):
             lit = '<span class="lit" style="background:{}"></span>'.format(gradient(colours))
         else:
             lit = '<span class="lit {}"></span>'.format(HATCH)
-        sections.append('<span class="sec{}" style="flex:{} 1 0">{}<span class="says">{} '
+        sections.append('<span class="sec{}" style="flex:{} 1 0">{}{}<span class="says">{} '
                         '<em>{}</em></span></span>'.format(" picked" if selected else "", length,
-                                                           lit, html.escape(name), length))
+                                                           lights, lit, html.escape(name), length))
 
-    stretches = len(sections)
+    drawn = ""
     if kind == "strip":
-        drawn = strip_drawing(strip_colours, ringed)
-        zoom = ('<span class="round">&#8722;</span><span class="dim">100%</span>'
-                '<span class="round">+</span>')
-    else:
-        drawn = "".join(lights)
-        zoom = ""
-    return ('<div class="run" style="flex:{} 1 0"><div class="lightbox {}">{}</div>'
-            '<div class="cutrow"><span class="dim">Cut into {} stretch{}</span>{}'
-            '<span class="round">{}</span><span class="round">{}</span></div>'
-            '<div class="bar">{}</div></div>').format(
-                len(strip_colours) or len(lights), "strip" if kind == "strip" else "lamps", drawn,
-                stretches, "" if stretches == 1 else "es", zoom, UNDO_ICON, REDO_ICON,
-                "".join(sections))
+        drawn = ('<div class="lightbox strip">{}</div><div class="cutrow"><span class="round">&#8722;'
+                 '</span><span class="dim">100%</span><span class="round">+</span><span class="round">'
+                 '{}</span><span class="round">{}</span></div>').format(
+                     strip_drawing(strip_colours, ringed), UNDO_ICON, REDO_ICON)
+    return '<div class="run" style="flex:{} 1 0">{}<div class="bar">{}</div></div>'.format(
+        len(strip_colours) or count, drawn, "".join(sections))
 
 
-def mockup_tools(text):
-    """The tools under a stretch bar, written as the number Split into offers and the number
-    Repeat takes, "3, 2"."""
-    counts = [count.strip() for count in text.split(",") if count.strip()] or ["3", "2"]
-    split, repeat = (counts + ["2"])[:2]
-    return ('<div class="tools"><span class="toolset"><span class="toolsays">&#9986; Split into'
-            '<span class="field">{}</span></span><span class="toolact">stretches</span>'
-            '<span class="toolact">lights each</span></span><span class="toolset off">'
-            '<span class="toolsays">&#10231; Join all</span></span><span class="toolset">'
-            '<span class="toolsays">&#8649; Repeat<span class="field">{}</span></span>'
-            '<span class="toolact off">to the end</span></span></div>').format(split, repeat)
+def mockup_choose(text):
+    where, _, kept = (part.strip() for part in text.partition(","))
+    keep = '<span class="button change">Keep {}</span>'.format(html.escape(kept)) if kept else ""
+    return ('<div class="settings"><div class="sethead"><b>Choose a look</b> <span class="dim">for {}'
+            '</span>{}</div></div>').format(html.escape(where), keep)
 
 
 def mockup_settings(text):
@@ -490,8 +481,9 @@ def mockup_settings(text):
                         icon, html.escape(name), int(value)))
     sliders = ('<div class="sliders"><div class="setgrid">{}</div><span class="drawer">&#8249;</span>'
                '</div>').format("".join(rows)) if rows else ""
-    return ('<div class="settings"><div class="sethead"><b>{}</b> <span class="dim">{}</span>{}</div>'
-            '{}{}</div>').format(html.escape(look), html.escape(where), reverse, swatches, sliders)
+    return ('<div class="settings"><div class="sethead"><b>{}</b> <span class="dim">{}</span>'
+            '<span class="button change">Change look</span>{}</div>{}{}</div>').format(
+                html.escape(look), html.escape(where), reverse, swatches, sliders)
 
 
 def mockup_cards(text, mono, group):
@@ -820,8 +812,8 @@ def picker_mockup(body):
             parts.append(mockup_tabs(text, rest == ["editing"]))
         elif kind == "badge":
             parts.append(mockup_badge(text, " ".join(rest)))
-        elif kind == "tools":
-            parts.append(mockup_tools(text))
+        elif kind == "choose":
+            parts.append(mockup_choose(text))
         elif kind == "settings":
             parts.append(mockup_settings(text))
         elif kind == "cards":

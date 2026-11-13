@@ -20,23 +20,21 @@ Rainbow.
 ```picker
 badge strip: Strip, 66 LEDs, GRB
 strip: *Nothing 66
-tools:
-settings: Nothing, on LEDs 1 to 66 of the strip on DAT
+choose: LEDs 1 to 66 of the strip on DAT
 cards Along the lights: Rainbow, Wave, Scanner, Chase, Marquee, *Nothing
 ```
 
 <!-- block picker_first_cut -->
 
 Choose Rainbow first, then try a cut about halfway along. You'll have two
-stretches, both playing Rainbow. Click the right-hand one and choose Scanner, and
-a light starts sweeping along that half.
+stretches, both playing Rainbow. Click the right-hand one, press Change look and
+choose Scanner, and a light starts sweeping along that half.
 
 ```picker
 badge strip: Strip, 66 LEDs, GRB
-strip: Rainbow 33, *Scanner 33
-tools:
-settings: Scanner, on LEDs 34 to 66 of the strip on DAT, colour red, Brightness 100, Speed 50
-cards Along the lights: Rainbow, Wave, *Scanner, Chase, Marquee
+strip: Rainbow 33, *Rainbow 33
+choose: LEDs 34 to 66 of the strip on DAT, Rainbow
+cards Along the lights: *Rainbow, Wave, Scanner, Chase, Marquee
 ```
 
 <!-- block picker_board -->

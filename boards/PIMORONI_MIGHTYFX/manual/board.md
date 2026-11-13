@@ -19,22 +19,19 @@ one stretch, playing Rainbow.
 ```picker
 badge: Wiring, every output is one colour light
 colour: *Rainbow 7
-tools:
 settings: Rainbow, on outputs 1 to 7, Brightness 100, Speed 45, Spread 50
-cards Along the lights: *Rainbow, Wave, Scanner, Chase, Marquee
 ```
 
 <!-- block picker_first_cut -->
 
 Try it between lights 4 and 5. You'll have two stretches, both still playing
-Rainbow. Click the right-hand one and choose Solid, and lights 5 to 7 turn
-yellow.
+Rainbow. Click the right-hand one, press Change look and choose Solid, and lights
+5 to 7 turn yellow.
 
 ```picker
-colour: Rainbow 4, *Solid 3
-tools:
-settings: Solid, on outputs 5 to 7, colour yellow, Brightness 100
-cards All together: *Solid, Colour cycle, Colour steps, Breathe, Blink
+colour: Rainbow 4, *Rainbow 3
+choose: outputs 5 to 7, Rainbow
+cards All together: Solid, Colour cycle, Colour steps, Breathe, Blink
 ```
 
 <!-- block picker_board -->

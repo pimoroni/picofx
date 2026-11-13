@@ -474,45 +474,6 @@ var GLASS_IN = "<circle cx='7.2' cy='7.2' r='4.9'/><path d='M10.9 10.9 L14.4 14.
 
 function zoomOf(run) { return run.zoom || 1; }
 
-// The picked stretch cut into a number of stretches as near equal as its lamps allow
-function splitSection(run, ways) {
-  var section = run.sections[run.picked];
-  if (!section || ways < 2 || widthOf(section) < ways) return;
-  remember(run);
-  var made = [];
-  var edges = [];
-  for (var i = 0; i <= ways; i++) {
-    edges.push(section.from + Math.round(widthOf(section) * i / ways));
-  }
-  for (var g = 0; g < ways; g++) {
-    made.push({from: edges[g], to: edges[g + 1] - 1, look: section.look,
-               pace: section.pace, mood: section.mood, colour: section.colour});
-  }
-  run.sections.splice.apply(run.sections, [run.picked, 1].concat(made));
-  draw();
-}
-
-// The run's stretches after the picked one and the many after it made again, those many
-// repeated to the run's end
-function repeatSections(run, many) {
-  var pattern = run.sections.slice(run.picked, run.picked + many);
-  if (!pattern.length) return;
-  remember(run);
-  var kept = run.sections.slice(0, run.picked + many);
-  var at = pattern[pattern.length - 1].to + 1;
-  var i = 0;
-  while (at < run.count) {
-    var from = pattern[i % pattern.length];
-    var wide = widthOf(from);
-    kept.push({from: at, to: Math.min(run.count - 1, at + wide - 1), look: from.look,
-               pace: from.pace, mood: from.mood, colour: from.colour});
-    at += wide;
-    i++;
-  }
-  run.sections = kept;
-  draw();
-}
-
 function renderStripBar(where, run) {
   var box = document.getElementById(where);
   var was = box.querySelector(".scroller");
@@ -889,190 +850,11 @@ function zoomTo(run, want, at, from) {
   run.scrolled = scroller.scrollLeft;
 }
 
-// ---- what a stretch plays, carried through the tools -----------------------------------------
-// Everything a stretch holds besides where it is, copied, so splitting, filling and joining it
-// all back keep what it played. The drawing's own split and fill copy only its look, pace,
-// setting and colour, and its join makes one stretch playing nothing
-function playsOf(section) {
-  return {look: section.look, pace: section.pace, mood: section.mood, colour: section.colour,
-          custom: section.custom, reversed: section.reversed, level: section.level,
-          blinks: copyBlinks(section.blinks), exact: copyExact(section.exact),
-          timings: copyExact(section.timings)};
-}
-
-function divide(run, ways) {
-  var section = run.sections[run.picked];
-  if (!section) return;
-  var had = playsOf(section);
-  var at = run.picked, count = run.sections.length;
-  splitSection(run, ways);
-  for (var made = at; made < at + run.sections.length - count + 1; made++) {
-    Object.assign(run.sections[made], playsOf(had));
-  }
-  draw();
-}
-
-function fill(run, many) {
-  // It runs to the run's count, which the outputs do not keep
-  run.count = run.lamps.length;
-  var pattern = run.sections.slice(run.picked, run.picked + many).map(playsOf);
-  var kept = run.picked + many;
-  repeatSections(run, many);
-  for (var made = kept; made < run.sections.length; made++) {
-    Object.assign(run.sections[made], playsOf(pattern[(made - kept) % pattern.length]));
-  }
-  draw();
-}
-
-// ---- the tools under a run -------------------------------------------------------------------
-// One row for the outputs, the mono lights and the strips alike, in the screens' button style:
-// split the stretch picked, into a number of parts or into lengths of a number of lights, join
-// them all back, and repeat the stretches from the picked one to the end of the run. Each is
-// one outlined group read as a sentence, its words first, then its number, then the buttons
-// that act, so a number is never apart from what it is for.
-
-// The picked stretch cut every so many lights from its start, a shorter one last where they
-// do not divide it evenly
-function divideLengths(run, each) {
-  var section = run.sections[run.picked];
-  if (!section || each < 1 || each >= widthOf(section)) return;
-  remember(run);
-  var had = playsOf(section);
-  var made = [];
-  for (var from = section.from; from <= section.to; from += each) {
-    made.push(Object.assign({from: from, to: Math.min(section.to, from + each - 1)},
-                            playsOf(had)));
-  }
-  run.sections.splice.apply(run.sections, [run.picked, 1].concat(made));
-  settle();
-  draw();
-}
-
-function toolButton(icon, words, off, act, title) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "stoggle";
-  button.innerHTML = "<span aria-hidden='true'>" + icon + "</span> " + words;
-  button.disabled = off;
-  button.title = title;
-  button.dataset.act = act;
-  return button;
-}
-
-function toolNumber(value, low, high, focus, change) {
-  var box = document.createElement("input");
-  box.type = "number";
-  box.min = low;
-  box.max = high;
-  box.value = value;
-  box.dataset.focus = focus;
-  box.onchange = function () {
-    change(Math.max(low, Math.min(high, Number(box.value) || low)));
-    draw();
-  };
-  return box;
-}
-
-function renderTools(where, run) {
-  var box = document.getElementById(where);
-  if (!box) return;
-  box.textContent = "";
-  var section = run.sections[run.picked];
-  var wide = section ? widthOf(section) : 1;
-  var row = document.createElement("div");
-  row.className = "tools stretchtools";
-
-  var ways = run.ways || 3;
-  var split = toolGroup("&#9986;", "Split into");
-  split.appendChild(toolNumber(ways, 1, Math.max(2, wide), where + "-ways",
-                               function (value) { run.ways = value; }));
-  var parts = toolAct("stretches", wide < 2 || ways < 2, "split",
-                      "split the selected stretch into " + ways + " equal parts");
-  parts.onclick = function () { divide(run, Math.min(ways, wide)); };
-  split.appendChild(parts);
-  var lengths = toolAct("lights each", ways >= wide, "lengths",
-                        "split the selected stretch every " + ways +
-                        (ways === 1 ? " light" : " lights") + ", with a " +
-                        "shorter last stretch if it does not divide evenly");
-  lengths.onclick = function () { divideLengths(run, ways); };
-  split.appendChild(lengths);
-  row.appendChild(split);
-
-  var join = toolButton("&#10231;", "Join all", run.sections.length < 2, "join",
-                        "merge into one stretch, keeping the selected stretch's look");
-  join.onclick = function () { joinAll(run); };
-  row.appendChild(join);
-
-  var many = run.pattern || 2;
-  var repeat = toolGroup("&#8649;", "Repeat");
-  repeat.appendChild(toolNumber(many, 1, 8, where + "-pattern",
-                                function (value) { run.pattern = value; }));
-  // What it copies, a swatch for each stretch of the pattern, since a result that looks like
-  // what was there says nothing of what was taken
-  var pattern = run.sections.slice(run.picked, run.picked + many);
-  var chips = document.createElement("span");
-  chips.className = "repeatchips";
-  pattern.forEach(function (section) {
-    var look = lookNamed(section.look);
-    var chip = document.createElement("span");
-    chip.className = "repeatchip" + (look ? "" : " nothing");
-    if (look) chip.style.background = washFor(run, section, look);
-    chip.title = look ? look.name : "Nothing";
-    chips.appendChild(chip);
-  });
-  repeat.appendChild(chips);
-  var along = toolAct("to the end", run.picked + many > run.sections.length, "repeat",
-                      "the selected stretch" + (many === 1 ? "" : many === 2
-                        ? " and the one after it" : " and the " + (many - 1) + " after it") +
-                      ", repeated to the end of the run, replacing what is there");
-  along.onclick = function () { fill(run, many); };
-  repeat.appendChild(along);
-  // Pointed at, the bar outlines what it copies and fades what it would replace
-  function marking(on) {
-    barCells(run).forEach(function (cell, at) {
-      cell.classList.toggle("repeatfrom", on && at >= run.picked && at < run.picked + many);
-      cell.classList.toggle("repeatover", on && at >= run.picked + many);
-    });
-  }
-  repeat.onmouseenter = function () { marking(true); };
-  repeat.onmouseleave = function () { marking(false); };
-  repeat.addEventListener("focusin", function () { marking(true); });
-  repeat.addEventListener("focusout", function () { marking(false); });
-  row.appendChild(repeat);
-
-  box.appendChild(row);
-}
-
 // A run's stretches as its bar draws them, in order
 function barCells(run) {
   var bar = run.strip ? run.id + "Bar" : run === mono ? "monoBar" : "outBar";
   return Array.prototype.slice.call(document.querySelectorAll("#" + bar + " .bar > .sec"));
 }
-
-// One outlined group: its icon and words, then what is put inside it
-function toolGroup(icon, words) {
-  var group = document.createElement("span");
-  group.className = "toolset";
-  var said = document.createElement("span");
-  said.className = "toolsays";
-  said.innerHTML = "<span aria-hidden='true'>" + icon + "</span> " + words;
-  group.appendChild(said);
-  return group;
-}
-
-// A button inside a group that does what the group says
-function toolAct(words, off, act, title) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "toolact";
-  button.textContent = words;
-  button.disabled = off;
-  button.title = title;
-  button.dataset.act = act;
-  return button;
-}
-
-// The strips' row and the outputs' are one
 
 // ---- joining them to the page below -----------------------------------------------------
 
@@ -1093,7 +875,6 @@ function toolAct(words, off, act, title) {
                       "<div class='run striprun' id='" + id + "Run'></div>" +
                       "<div class='head' id='" + id + "Cut'></div>" +
                       "<div id='" + id + "Bar'></div>" +
-                      "<div id='" + id + "Tools'></div>" +
                       "<div id='" + id + "Chosen'></div>";
     after.parentNode.insertBefore(panel, after.nextSibling);
     after = panel;
@@ -1110,10 +891,9 @@ settle();
 // ---- drawing the page -------------------------------------------------------------------
 
 drawSteps.after.push(function () {
-  // The outputs' tools and settings are for the stretch being worked on, which while a
-  // strip is picked is under that strip instead
+  // The outputs' settings are for the stretch being worked on, which while a strip is picked
+  // is under that strip instead
   if (active.strip) {
-    document.getElementById("outTools").textContent = "";
     document.getElementById("outChosen").textContent = "";
   }
   runs.filter(function (run) { return run.strip; }).forEach(function (run) {
@@ -1129,10 +909,8 @@ drawSteps.after.push(function () {
     renderCutting(run.id + "Cut", run);
     stripZoomAndSteps(document.getElementById(run.id + "Cut"), run);
     renderStripBar(run.id + "Bar", run);
-    document.getElementById(run.id + "Tools").textContent = "";
     document.getElementById(run.id + "Chosen").textContent = "";
     if (run === active) {
-      renderTools(run.id + "Tools", run);
       renderChosen(run.id + "Chosen", run);
     }
   });

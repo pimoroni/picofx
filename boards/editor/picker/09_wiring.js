@@ -7,7 +7,7 @@
 
 var SLIDE_MS = 420;
 
-// The connectors sit under both sides of the outputs, before their tools and settings
+// The connectors sit under both sides of the outputs, before their settings
 (function () {
   var row = document.createElement("div");
   row.id = "wiringRow";
@@ -56,7 +56,7 @@ function bringForward(keys, on) {
 var unwiredSpan = null;
 
 function sidesSpan() {
-  return document.getElementById("outTools").getBoundingClientRect().top -
+  return document.getElementById("outChosen").getBoundingClientRect().top -
          document.getElementById("sides").getBoundingClientRect().top;
 }
 

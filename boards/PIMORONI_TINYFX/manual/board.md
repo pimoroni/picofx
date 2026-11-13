@@ -20,23 +20,20 @@ Rainbow.
 badge: Wiring, the RGB output is one colour light
 mono: *Wave 6
 colour RGB: Rainbow 1
-tools:
 settings: Wave, on outputs 1 to 6, Brightness 100, Speed 45, Spread 50
-cards mono Along the lights: *Wave, Scanner, Chase, Marquee
 ```
 
 <!-- block picker_first_cut -->
 
 Try it between mono lights 3 and 4. You'll have two stretches, both still playing
-Wave. Click the right-hand one and choose Sparkle, and lights 4 to 6 start to
-twinkle.
+Wave. Click the right-hand one, press Change look and choose Sparkle, and lights
+4 to 6 start to twinkle.
 
 ```picker
-mono: Wave 3, *Sparkle 3
+mono: Wave 3, *Wave 3
 colour RGB: Rainbow 1
-tools:
-settings: Sparkle, on outputs 4 to 6, Brightness 100
-cards mono Individual: *Sparkle, Counter, Traffic light, Pelican crossing
+choose: outputs 4 to 6, Wave
+cards mono Individual: Sparkle, Counter, Traffic light, Pelican crossing
 ```
 
 <!-- block picker_board -->

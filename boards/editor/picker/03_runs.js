@@ -389,13 +389,22 @@ function settle() {
 }
 
 // The one stretch being worked on. Everything that changes it comes through here, so
-// the mark, the tools and the set of looks can never end up about different things.
+// the mark, the settings and the set of looks can never end up about different things.
 // Setting up the board gives no stretch a look, so nothing is picked while it is on
 function pick(run, at) {
   if (setupOn) return;
+  var was = active === run ? run.picked : -1;
   active = run;
   run.picked = Math.max(0, Math.min(at, run.sections.length - 1));
+  if (run.picked !== was) choosingLook = false;
   showing = kindAt(run, run.picked);
+}
+
+var choosingLook = false;
+
+function pickingLook(run) {
+  var section = run && run.sections[run.picked];
+  return !!section && (!lookNamed(section.look) || (choosingLook && run === active));
 }
 
 function cutAt(run, after) {
@@ -440,22 +449,6 @@ function moveEdge(run, which, to) {
   right.from = to + 1;
   run.sections = run.sections.filter(function (one) { return one.to >= one.from; });
   run.picked = Math.min(run.picked, run.sections.length - 1);
-}
-
-// Joined back into one, the run plays what the stretch picked was playing
-function joinAll(run) {
-  var section = run.sections[run.picked];
-  var had = section && playsOf(section);
-  remember(run);
-  run.sections = [blank(0, run.lamps.length - 1, run)];
-  settle();
-  pick(run, 0);
-  draw();
-  if (had && run.sections.length === 1) {
-    Object.assign(run.sections[0], had);
-    settle();
-    draw();
-  }
 }
 
 // ---- the wiring itself -------------------------------------------------------------------
@@ -791,6 +784,7 @@ function landLook(run, at, name) {
   }
   settle();
   pick(run, at);
+  choosingLook = false;
   draw();
 }
 
@@ -881,6 +875,7 @@ function renderGalleries() {
   var run = galleryRun(showing);
   var section = run.sections[run === active ? run.picked : stretchFor(run, showing)];
   var lamp = section && run.lamps[section.from];
+  box.hidden = !!(section && lookNamed(section.look)) && !(choosingLook && run === active);
 
   // What the stretch being worked on could actually be given. A look shaped to several
   // lamps has nothing to say on a stretch of one, and the model would clear it the moment
@@ -976,6 +971,10 @@ function renderRun(where, run) {
   });
 
   box.appendChild(lamps);
+  paintsFaces(run, faces);
+}
+
+function paintsFaces(run, faces) {
   painters.push({run: run, paint: function (all) {
     faces.forEach(function (face, at) {
       var one = all[at] || {level: 0, ink: "#e4e0d9"};
@@ -1127,14 +1126,30 @@ function renderBar(where, run) {
   scroller.className = "scroller";
   var bar = document.createElement("div");
   bar.className = "bar";
+  var faces = [];
 
   run.sections.forEach(function (section, at) {
     var cell = document.createElement("button");
-    cell.className = "sec" + (run === active && run.picked === at ? " picked" : "");
+    cell.className = "sec withlamps" + (run === active && run.picked === at ? " picked" : "");
     cell.style.flex = widthOf(section) + " 1 0";
     var first = run.lamps[section.from];
     cell.title = (first && first.colour ? "colour" : "mono") + ", " +
                  targetFor(run, section).selector;
+
+    var lamps = document.createElement("span");
+    lamps.className = "seclamps";
+    for (var lamp = section.from; lamp <= section.to; lamp++) {
+      var one = document.createElement("span");
+      one.className = "seclamp";
+      var face = document.createElement("i");
+      one.appendChild(face);
+      var said = document.createElement("b");
+      said.textContent = shortName(run.lamps[lamp]);
+      one.appendChild(said);
+      faces.push(face);
+      lamps.appendChild(one);
+    }
+    cell.appendChild(lamps);
 
     var look = lookNamed(section.look);
     var under = look ? null : stretchUnder(run, section);
@@ -1192,6 +1207,7 @@ function renderBar(where, run) {
   });
   scroller.appendChild(bar);
   box.appendChild(scroller);
+  paintsFaces(run, faces);
 }
 
 function cutPoint(run, after, wide, from) {
@@ -1271,16 +1287,6 @@ function renderCutting(where, run) {
   if (!box) return;
   box.textContent = "";
   box.className = "head cutting";
-  var says = document.createElement("span");
-  says.className = "what";
-  says.textContent = "Cut into " + run.sections.length +
-                     (run.sections.length === 1 ? " stretch" : " stretches");
-  box.appendChild(says);
-  // The steps the two sides share go on the cutting row of the side at the right, as a strip
-  // keeps its own on its cutting row. That is the second side while it has lamps
-  var first = MONO_FIRST ? mono : outs, second = MONO_FIRST ? outs : mono;
-  var right = second.lamps.length ? second : first;
-  if (where === (right === mono ? "monoCut" : "outCut")) zoomAndSteps(box, active);
 }
 
 // The chosen stretch's panel. The parts below add to it, each after the one before, whatever the
@@ -1288,6 +1294,10 @@ function renderCutting(where, run) {
 var chosenSteps = [];
 
 function renderChosen(where, run) {
+  if (pickingLook(run)) {
+    renderPicking(where, run);
+    return;
+  }
   renderChosenPanel(where, run);
   chosenSteps.forEach(function (step) { step(where, run); });
 }
@@ -1452,10 +1462,9 @@ function draw() {
   renderRun("monoRun", mono);
   renderBar("monoBar", mono);
 
-  // Both sides are in the one panel, so one set of tools serves whichever was last worked
+  // Both sides are in the one panel, so one set of settings serves whichever was last worked
   // on rather than a set under each
   renderSides();
-  renderTools("outTools", active);
   renderChosen("outChosen", active);
 
   renderPreview();

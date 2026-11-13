@@ -117,6 +117,7 @@ function renderOutFacts() {
     hint.title = hint.textContent;
     box.appendChild(hint);
   }
+  if (!setupOn) zoomAndSteps(box, active.strip ? lastOutputRun : active);
 }
 
 // What a strip is built as, its length and what follows it on the board line

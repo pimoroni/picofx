@@ -15,26 +15,27 @@ them are two large tabs. **Effects** is where you'll spend most of your time, an
 
 ### Lights: Choosing a look
 
-__LIGHTS_TABS__ you'll see your lights, and below them a bar showing what each
-stretch of them plays.
+__LIGHTS_TABS__ you'll see a bar of your lights, cut into stretches, each one
+named for the look it plays.
 
 <!-- board picker_first_look -->
 
-Click the bar, or any light, to select that stretch. Then click a card in the
-gallery to play that look there.
+Click a stretch to select it. A stretch that plays a look shows its settings.
+Every look has a brightness, and most also have a speed and a setting of their
+own. A look that takes a colour shows a row of colours to choose from, with
+[[custom]] for any other. [[Reverse]] changes which end a travelling look starts
+from. If you want an exact figure, the arrow at the right of the sliders opens a
+drawer to type it in.
+
+Press [[Change look]] to choose another look, or [[Keep]] to leave it as it is. A
+stretch playing nothing shows the gallery straight away. Click a card to play
+that look there.
 
 The cards are grouped by how they play. **Along the lights** travel from one end
 to the other, **Ready-made** looks combine several others, **All together** shows
 the same on every light, and **Individual** gives each light its own part. Cards
 with a small palette let you choose the colour, and [[Nothing]] turns the stretch
 off.
-
-The selected stretch's settings sit just above the gallery. Every look has a
-brightness, and most also have a speed and a setting of their own. A look that
-takes a colour shows a row of colours to choose from, with [[custom]] for any
-other. [[Reverse]] changes which end a travelling look starts from. If you want
-an exact figure, the arrow at the right of the sliders opens a drawer to type it
-in.
 
 ### Lights: Cutting into stretches
 
@@ -43,13 +44,8 @@ you want a cut, between two lights, and click.
 
 <!-- board picker_first_cut -->
 
-Drag a cut to move it, or click the cross on it to remove it.
-
-The tools under the bar do the same in one go. [[Split into]] cuts the selected
-stretch into a number of equal [[stretches]], or into stretches of so many
-[[lights each]]. [[Join all]] puts the bar back to one stretch. [[Repeat]] takes
-the number of stretches you set, starting with the selected one, and repeats
-them to the end. The arrows above the bar undo and redo.
+Drag a cut to move it, or click the cross on it to remove it. The arrows above
+the bar undo and redo.
 <!-- if strips -->
 On a long strip, the magnifier buttons zoom in so each LED is easier to reach.
 <!-- end -->

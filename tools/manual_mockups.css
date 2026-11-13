@@ -264,6 +264,7 @@
 .mockup .badge.strip { background: #c2570f; }
 .mockup .badge .field { border-color: rgba(255, 255, 255, 0.5); background: transparent; color: #fff; }
 .mockup .badgerow .hint { font-size: 0.75rem; color: var(--dim); }
+.mockup .badgerow .steps { display: flex; gap: 0.35rem; margin-left: auto; }
 
 /* A run of lights, its box, and the bar of its stretches */
 .mockup .runs { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0 1rem; margin-top: 0.8rem; }
@@ -305,8 +306,7 @@
 
 .mockup .lamp b { display: block; font-size: 0.66rem; font-weight: 400; line-height: 1.6; color: var(--dim); text-align: center; }
 
-.mockup .cutrow { display: flex; align-items: center; gap: 0.35rem; margin: 0.7rem 0 0.9rem; font-size: 0.78rem; }
-.mockup .cutrow > .dim:first-child { margin-right: auto; }
+.mockup .cutrow { display: flex; justify-content: flex-end; align-items: center; gap: 0.35rem; margin: 0.7rem 0 0.9rem; font-size: 0.78rem; }
 
 .mockup .round {
   display: inline-flex;
@@ -331,7 +331,10 @@
 }
 
 .mockup .sec.picked { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(0, 133, 125, 0.16); }
-.mockup .sec .lit { display: block; height: 1.5rem; }
+.mockup .sec .lit { display: block; height: 0.4rem; }
+.mockup .sec .seclamps { display: flex; padding: 0.35rem 0 0.25rem; }
+.mockup .seclamps .lamp { flex: 1 1 0; min-width: 0; padding: 0; border: 0; background: none; }
+.mockup .seclamps .lamp i { margin: 0 auto; }
 .mockup .sec .says { display: block; font-size: 0.68rem; font-weight: 600; text-align: center; white-space: nowrap; }
 .mockup .says em { font-style: normal; font-weight: 400; color: var(--dim); }
 
@@ -348,32 +351,13 @@
 .mockup .plug::before { content: ""; display: block; height: 0.3rem; border-radius: 2px; background: #e4e0d9; }
 .mockup .plug b { font-size: 0.66rem; font-weight: 400; color: #e4e0d9; }
 
-/* The tools under a bar */
-.mockup .tools { display: flex; flex-wrap: wrap; gap: 0.5rem 0.8rem; margin-top: 0.8rem; }
-
-.mockup .toolset {
-  display: inline-flex;
-  align-items: stretch;
-  border: 1.5px solid var(--line);
-  border-radius: 8px;
-  overflow: hidden;
-  background: #fff;
-  font-size: 0.76rem;
-  font-weight: 600;
-}
-
-.mockup .toolset.off { opacity: 0.5; }
-.mockup .toolsays { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.22rem 0.45rem 0.22rem 0.55rem; color: var(--dim); }
-.mockup .toolsays .field { min-width: 2.2rem; padding: 0 0.3rem; font-weight: 400; color: var(--ink); }
-.mockup .toolact { display: inline-flex; align-items: center; padding: 0 0.55rem; border-left: 1px solid var(--line); color: var(--accent); }
-.mockup .toolact.off { color: var(--dim); opacity: 0.6; }
-
 /* The selected stretch's settings */
 .mockup .settings { margin-top: 0.9rem; padding: 0.6rem 0.8rem; background: #fff; border: 1px solid var(--line); border-radius: 10px; }
 .mockup .sethead { display: flex; align-items: baseline; gap: 0.35rem; margin-bottom: 0.4rem; }
 .mockup .sethead b { font-size: 0.95rem; }
-.mockup .sethead .reverse { margin-left: auto; display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; }
+.mockup .sethead .reverse { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; }
 .mockup .reverse.off { opacity: 0.4; }
+.mockup .sethead .change { margin-left: auto; font-size: 0.75rem; color: var(--accent); }
 .mockup .sliders { display: flex; gap: 0.6rem; align-items: stretch; }
 .mockup .setgrid { flex: 1; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 0.25rem 0.9rem; }
 .mockup .setname { display: inline-flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--dim); }
