@@ -8,12 +8,6 @@ import {
 import {galleryExamples, mediaNamed} from "../../screens/12_screens.js";
 import {copyDrawing, drawingInk, drawingSaid} from "../../screens/16_screen_settings.js";
 
-// ---- examples to discover, on the Screens tab ---------------------------------------------------
-// The Screens tab's examples line, where its example drawings and pictures start, and the rules
-// naming each kind where the drive has both. An example on the drive can be deleted, as it can be
-// downloaded again, and carries its mark, Update or the firmware it needs. 28_discover.js does
-// the rest. A board without screens has no Screens tab to add them to.
-
 galleryExamples.offer = function (groupTitles) {
   function firstOf(kind) {
     var groups = (exampleSections[kind] || []).map(function (one) { return one[0]; })

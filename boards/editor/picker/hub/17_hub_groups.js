@@ -11,30 +11,15 @@ import {
   ANCHOR_NAMES, LOOK_START, backlightSetting, freshLook, groundSaid, playingTokens
 } from "../screens/16_screen_settings.js";
 
-// ---- the hub's positions in groups -----------------------------------------------------------
-// With a look beside every picture, two positions showing the same picture could differ in a
-// setting no drawing makes plain, and so be sent apart. So positions are put in groups, and a
-// group is set as one: one picture, one turn, one look, sent once to all of it. A group is the
-// scene's, as what it shows is, so each scene can group the hub its own way.
-//
-// Groups are numbered 1 to 3, six positions holding at most three groups of two or more, and
-// each has its colour. Under every position are the three numbers and which group it is in:
-// pressing a number puts the position in that group, taking what the group shows, and pressing
-// it again leaves the position on its own, keeping what it shows. Pressing a position picks its
-// group for the strip, and a picture goes to a group or a position on its own, never to one
-// member of a group. A group holds one panel size only, the two sizes being sent apart.
-
 export var GROUP_NUMBERS = ["1", "2", "3"];
 var GROUP_INKS = {"1": "#d98a1a", "2": "#2f9e6a", "3": "#d0508a"};
 
-// A position on its own is its own group, named by its letter
 HUB_PLACES.forEach(function (place) { state.places[place].group = place; });
 
 function groupOf(place) { return state.places[place].group; }
 
 export function inNumberedGroup(place) { return GROUP_NUMBERS.indexOf(groupOf(place)) >= 0; }
 
-// The positions in a position's group, in the hub's order
 function membersOf(place) {
   return placesThere().filter(function (other) { return groupOf(other) === groupOf(place); });
 }
@@ -43,8 +28,6 @@ function membersOfGroup(number) {
   return placesThere().filter(function (place) { return groupOf(place) === number; });
 }
 
-// What a picture or the strip is sent to: each group with a member, in number order, then each
-// position on its own, in the hub's order
 export function sendTargets() {
   var targets = GROUP_NUMBERS.filter(function (number) {
     return membersOfGroup(number).length;
@@ -57,12 +40,9 @@ export function sendTargets() {
   return targets;
 }
 
-// ---- each scene keeps its positions' looks and the hub's light --------------------------------
-
 HUB_PLACES.forEach(function (place) { state.places[place].look = freshLook(); });
 state.hubLight = 1;
 
-// Each position keeps one look object for good, as a screen does
 var placeLookHomes = {};
 HUB_PLACES.forEach(function (place) { placeLookHomes[place] = state.places[place].look; });
 
@@ -83,8 +63,6 @@ bodyParts.push({
   }
 });
 
-// ---- each scene keeps its groups ---------------------------------------------------------------
-
 bodyParts.push({
   capture: function (body) {
     HUB_PLACES.forEach(function (place) { body.places[place].group = groupOf(place); });
@@ -97,16 +75,11 @@ bodyParts.push({
   }
 });
 
-// ---- joining, leaving, and a group set as one --------------------------------------------------
-
-// Whether a position can join a group, which holds one panel size
 function sizeFits(place, number) {
   var others = membersOfGroup(number).filter(function (other) { return other !== place; });
   return !others.length || state.hub.sizes[others[0]] === state.hub.sizes[place];
 }
 
-// Joining takes what the group shows, and leaving keeps what it shows. A group showing nothing
-// takes what the joining position shows instead, so joining never loses a picture
 function joinOrLeave(place, number) {
   if (groupOf(place) === number) {
     state.places[place].group = place;
@@ -119,17 +92,12 @@ function joinOrLeave(place, number) {
   placePicked = others.length && (groupShows || !state.places[place].shows) ? others[0] : place;
 }
 
-// What the picked position was given goes to the rest of its group before anything is drawn
-// or written. Only the picked position's settings are shown, so it is the one changed
 function settleGroups() {
-  // A position of another size than its group's first leaves it for its own
   placesThere().forEach(function (place) {
     var first = membersOf(place)[0];
     if (state.hub.sizes[place] !== state.hub.sizes[first]) state.places[place].group = place;
   });
   if (!placeThere(placePicked)) return;
-  // The picked position takes its starting turn for a new picture first, and the rest take
-  // that turn with the picture, so none recalls a turn of its own from before it was grouped
   placeTurnForChosen(placePicked);
   var from = state.places[placePicked];
   membersOf(placePicked).forEach(function (place) {
@@ -148,17 +116,11 @@ function settleGroups() {
 
 drawSteps.before.push(settleGroups);
 
-// ---- pictures go to groups ---------------------------------------------------------------------
-
-// Whether a group of the scene being edited, left showing nothing, would show different things on
-// its members, Always on showing on some of them. A group showing nothing writes nothing, so only
-// such a group is broken up when it is emptied, and elsewhere it is kept for its next picture
 function splitsOverAlways(places) {
   var always = state.at >= 0 && state.always.body.places;
   return !!always && places.some(function (place) { return always[place] && always[place].shows; });
 }
 
-// The positions of numbered groups among those given that splitsOverAlways() breaks up
 export function breakingUp(places) {
   return places.filter(function (place) {
     return inNumberedGroup(place) && splitsOverAlways(membersOf(place));
@@ -264,12 +226,6 @@ export function placeGroupControls(place, sentWith) {
   ];
 }
 
-// How fast the hub plays what it shows. A still picture is sent once and costs nothing after, so
-// only the animations share the frames between them: one plays as fast as a single screen,
-// sent at once to every screen of its group, and several share the speed, each slower than
-// it would be alone. A group showing nothing costs nothing and is not named
-// Screens named in the note are bold, so "A plays" reads as the screen and not as a word. The
-// letters and their commas and dashes are all the markup holds
 function screensBold(places) { return "<b>" + placesSaid(places) + "</b>"; }
 
 export function namesSaid(sends) {
@@ -278,8 +234,6 @@ export function namesSaid(sends) {
                           : names[0];
 }
 
-// What makes a send differ from another showing the same picture, in the words the settings
-// use, so it is plain why they are sent apart
 function differences(send, from) {
   var one = send.playing;
   var other = from.playing;
@@ -296,7 +250,6 @@ function differences(send, from) {
                ? "placed " + ANCHOR_NAMES[look.anchor]
                : "placed at " + (look.x === "" ? "centre" : look.x) + ", " +
                  (look.y === "" ? "centre" : look.y));
-  // Tiling said for the sides it fills: across, down, or both
   var across = look.tile;
   var down = look.tileDown || "off";
   if (across !== base.tile || down !== (base.tileDown || "off")) {
@@ -306,7 +259,6 @@ function differences(send, from) {
   }
   if (look.double !== base.double) words.push(look.double ? "pixel doubled" : "not doubled");
   if (look.bg !== base.bg) words.push("on " + groundSaid(look.bg));
-  // Playback as the file writes it, which a still picture takes none of
   var kind = kindOf(one.shows);
   var played = playingTokens(one, look, kind, state.hub.sizes[send.places[0]]);
   var basePlayed = playingTokens(other, base, kind, state.hub.sizes[from.places[0]]);
@@ -326,9 +278,6 @@ function listSaid(words) {
                           : words[0];
 }
 
-// Where one picture goes out in several sends, which happens when some of its screens are set
-// differently, a sentence naming how, against the plainest of them: the one least changed from
-// how a screen starts, the one on most screens where that is a tie
 function plainness(send) {
   return differences(send, {places: send.places,
                             playing: {turn: 0, pingpong: false, hold: "", look: LOOK_START}}).length;

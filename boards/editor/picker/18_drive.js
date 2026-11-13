@@ -109,8 +109,6 @@ function playsItself(text) {
   return !/\breload\s*=\s*manual\b/i.test(text);
 }
 
-// The marker a save writes into errors.txt for the board to clear. It must match the editor's, as
-// either page reads the marker the other wrote
 var CHECKING = "The board has not loaded the file yet.";
 
 async function markChecking() {
@@ -134,10 +132,6 @@ async function driveAnswers() {
   }
 }
 
-// The reason a change to the drive failed, as a sentence to follow one saying what failed. The
-// drive may be full, or gone, such as when the board is unplugged while the page holds it, or the
-// file named may be gone from a drive still showing. Any other error is given as the browser
-// words it
 export async function driveTrouble(e, name) {
   if (e.name === "QuotaExceededError")
     return "The FX drive is full. Delete something from it and try again.";
@@ -214,22 +208,16 @@ function openFresh() { openDrive(true); }
 
 export var CAN_REACH_A_DRIVE = typeof window.showDirectoryPicker === "function";
 
-
 export var drive = {dirHandle: null, fileHandle: null};
 
-// The board's answer as this page shows it: what errors.txt said, and the file it was about,
-// so a line is marked only while the page still writes it the same
 var answered = {said: null, about: null};
 
-// What this page last wrote or read
 export var WROTE_KEY = "fx-picker-wrote";
 
-// What a save asks where the file on the board has changed since this page read it
 function overwriteQuestion() {
   return "The file on the board has changed since it was opened here. Overwrite those changes?";
 }
 
-// What the parts below read off a drive once it is open, each awaited in the order the parts come
 export var connectSteps = [];
 
 async function connect(fresh) {
@@ -247,7 +235,6 @@ async function connect(fresh) {
   }
   drive.dirHandle = dir;
   drive.fileHandle = file;
-  // The wait on the board reads the drive through the page's state
   state.dirHandle = dir;
   document.getElementById("check").disabled = false;
   var openButton = document.getElementById("open");
@@ -263,8 +250,6 @@ async function connect(fresh) {
   for (var at = 0; at < connectSteps.length; at++) await connectSteps[at]();
 }
 
-// errors.txt read into the lines it names. autofx begins each problem "line N:", and anything
-// after it up to the next is that problem's, such as a program's traceback
 function problemsIn(said) {
   var found = {};
   var at = null;
@@ -335,20 +320,15 @@ document.getElementById("save").onclick = async function () {
       throw differs;
     }
     try { localStorage.setItem(WROTE_KEY, text); } catch (e) {}
-    // The marks were about the file the board had, which this one replaces
     takeAnswer(null, text);
     await new Promise(function (settle) { setTimeout(settle, SAVING_TAIL_MS); });
-    // Said once, where this save is the first to hide the drive
     var hides = /\bdrive=manual\b/.test(text) && !/\bdrive=manual\b/.test(onBoard)
       ? " The drive will be hidden next time the board starts. Double-press Boot to show it."
       : "";
-    // A program running keeps the board busy, so neither an eject nor a press reaches it
     if (/\bprogram=/.test(onBoard)) {
       banner("Saved. The board is running a program, so press Reset to play this change." + hides);
       return;
     }
-    // A board saving on its own that is given a program restarts to run it, so there is no
-    // answer to wait for
     if (errorsBefore !== undefined && /\bprogram=/.test(text)) {
       banner("Saved. The board is restarting to run the program." +
              hides);
@@ -389,7 +369,6 @@ document.getElementById("save").onclick = async function () {
   }
 };
 
-// The answer and the file it is about are read together, the board having finished with both
 document.getElementById("check").onclick = async function () {
   banner("Checking...", "hold");
   await new Promise(function (settle) { setTimeout(settle, 350); });

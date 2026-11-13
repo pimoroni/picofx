@@ -1,14 +1,5 @@
 import {linesFor} from "./05_effects.js";
 
-// ---- the lamps, lit by the line the look writes ---------------------------------------
-// A card can say what a look is made of; only a lamp actually running it can say what it
-// looks like. A lamp here plays the entry its look would write, read back and run through
-// the same shapes picofx uses, so the page cannot show one thing and save another. A look
-// whose effect the board does not have yet falls back to its palette, drawn still.
-
-// The colour words an entry may use, as the page has to draw them. These are the words
-// autofx names, drawn a little softer than their constants so a screen full of them is
-// not glaring
 var NAMED = {
   black: "#000000", blue: "#2b5cff", cool: "#cfe4ff", cyan: "#28e0e0",
   green: "#22c65a", magenta: "#ff36c8", orange: "#ff9022", pink: "#ff9a9a",
@@ -16,7 +7,7 @@ var NAMED = {
   yellow: "#ffd21f"
 };
 
-var UNLIT = "#ffd9a0";   // what a lamp is drawn in where its entry names no colour
+var UNLIT = "#ffd9a0";
 
 export function inkOf(word) {
   if (!word) return UNLIT;
@@ -24,10 +15,6 @@ export function inkOf(word) {
   return NAMED[word] || ("#" + word);
 }
 
-// ---- reading an entry back ------------------------------------------------------------
-
-// The lights a selector names, as numbers. A name carries ranges and single numbers,
-// "out1-3,7", and a bare name is the whole run
 function lightsOf(selector, count) {
   var parts = /^([a-z_]+)(.*)$/.exec(selector.trim());
   if (!parts) return [];
@@ -51,8 +38,6 @@ function lightsOf(selector, count) {
   return lights;
 }
 
-// The settings of one half of an entry, as numbers where they read as numbers. A value
-// that is not a number stays a string, which is what carries a colour
 function settingsOf(words) {
   var found = {};
   words.forEach(function (word) {
@@ -64,7 +49,6 @@ function settingsOf(words) {
   return found;
 }
 
-// One entry, split where the colon divides the channel from the effect it plays
 function parseEntry(line, count) {
   var at = line.indexOf(":");
   if (at < 0) return null;
@@ -74,15 +58,8 @@ function parseEntry(line, count) {
           effect: right.shift(), settings: settingsOf(right)};
 }
 
-// ---- the effects, at the settings the entry carries ------------------------------------
-// Each is picofx's own shape at the same settings. The board steps its cycle in whole
-// milliseconds and wraps at a thousand, which the page does not reproduce: an effect slow
-// enough that a frame adds nothing stands still there and drifts on here.
-
 var TAU = Math.PI * 2;
 
-// Where in its cycle an effect is. A cycle running below zero wraps back into one, as picofx's
-// modulo does, or a blink or a flash would read a negative point in its beat as lit
 function offsetOf(t, settings) {
   var at = ((t * num(settings.speed, 1)) + num(settings.phase, 0)) % 1;
   return at < 0 ? at + 1 : at;
@@ -92,8 +69,6 @@ function num(value, fallback) {
   return typeof value === "number" ? value : fallback;
 }
 
-// A value kept for a while, then a new one. Named per effect, so two of them on one lamp
-// do not take each other's turn
 function renewed(sim, where, dt, hold, then) {
   var walk = sim[where] || (sim[where] = {});
   walk.left = (walk.left === undefined ? 0 : walk.left) - dt;
@@ -109,7 +84,6 @@ function betweenAt(low, high) {
 }
 
 var EFFECTS = {
-
   none: function () { return 0; },
 
   static: function (t, s) { return num(s.brightness, 1); },
@@ -140,21 +114,18 @@ var EFFECTS = {
     return flashing(offsetOf(t, s) + pos / num(s.length, 1), s);
   },
 
-  // A light sweeping the run and bouncing back, one pass out and one back to a cycle
   sweep: function (t, s, pos) {
     var swing = (t * num(s.speed, 1)) % 2;
     var head = (swing < 1 ? swing : 2 - swing) * (num(s.length, 1) - 1);
     return Math.max(0, 1 - Math.abs(pos - head) / num(s.extent, 1));
   },
 
-  // The run read as a binary number, counting up from where the entry starts it
   binary_counter: function (t, s, pos) {
     var counter = num(s.count, 0) +
                   Math.floor(t / Math.max(0.001, num(s.interval, 0.1))) * num(s.step, 1);
     return (Math.floor(counter / Math.pow(2, pos)) % 2) ? 1 : 0;
   },
 
-  // The guttering of a flame, held bright for a while and dim for a while
   flicker: function (t, s, pos, sim) {
     var bright = num(s.brightness, 1);
     var dim = bright * (1 - num(s.dimness, 0.5));
@@ -192,12 +163,9 @@ var EFFECTS = {
   }
 };
 
-// A preview keeps a walk for each light, so these two already play each light its own way,
-// which is what the _each effects do on the board
 EFFECTS.flicker_each = EFFECTS.flicker;
 EFFECTS.random_each = EFFECTS.random;
 
-// Flash's window and its count of flashes within it, shared by the two that use it
 function flashing(at, s) {
   var offset = at % 1;
   var window = num(s.window, 1);
@@ -205,12 +173,8 @@ function flashing(at, s) {
   return ((offset * num(s.flashes, 1)) / window) % 1 < num(s.duty, 0.5) ? 1 : 0;
 }
 
-// The phases a crossing steps through, and how long each lasts. A real crossing is long
-// enough that a page showing it truthfully would look broken, so the whole sequence is
-// shown in SEQUENCE seconds with its phases kept in proportion. Only the drawing is
-// hurried; the entry keeps the intervals the sliders set
 var SEQUENCE = 8;
-var FLASHING_CYCLE = 0.25;   // the amber and the figure, which flash at their real rate
+var FLASHING_CYCLE = 0.25;
 
 function phasing(t, pos, states, flashes) {
   var whole = states.reduce(function (sum, one) { return sum + one[1]; }, 0);
@@ -219,15 +183,12 @@ function phasing(t, pos, states, flashes) {
     if (at < states[i][1]) {
       var lit = states[i][0][pos];
       if (i !== flashes || !lit) return lit === undefined ? 0 : lit;
-      // Both flash off one clock, so the amber and the figure are never out of step
       return (t % FLASHING_CYCLE) < FLASHING_CYCLE / 2 ? 1 : 0;
     }
     at -= states[i][1];
   }
   return 0;
 }
-
-// ---- the effects that bring their own colour -------------------------------------------
 
 function hueInk(hue, sat, val) {
   var c = num(val, 1) * num(sat, 1);
@@ -242,12 +203,10 @@ function hueInk(hue, sat, val) {
 }
 
 export var COLOURED = {
-
   rainbow: function (t, s) {
     return {level: 1, ink: hueInk(((t * num(s.speed, 1)) % 1) * 360, s.sat, s.val)};
   },
 
-  // Wrapped as offsetOf is, or a hue would go out of range
   rainbow_wave: function (t, s, pos) {
     var at = ((t * num(s.speed, 1)) + pos / num(s.length, 1)) % 1;
     return {level: 1, ink: hueInk((at < 0 ? at + 1 : at) * 360, s.sat, s.val)};
@@ -259,7 +218,6 @@ export var COLOURED = {
     return {level: 1, ink: hueInk(which / steps * 360, s.sat, s.val)};
   },
 
-  // Given several colours, it moves to its next each time its beat comes round
   rgb_blink: function (t, s) {
     var colours = String(s.colour || "red").split("|");
     var beats = Math.floor(t * num(s.speed, 1) + num(s.phase, 0));
@@ -267,12 +225,6 @@ export var COLOURED = {
     return {level: EFFECTS.blink(t, s), ink: inkOf(colours[which])};
   }
 };
-
-// ---- the curve a channel follows --------------------------------------------------------
-// fade crosses at a steady rate and ease settles in as a bulb does, both of them the
-// seconds a change takes to arrive. What they leave behind is the trail under anything
-// travelling a run. A split fade or ease, rise|fall, goes up at its rise and comes down at its
-// fall, and one number is both
 
 function curved(sim, given, channel) {
   function parts(value) {
@@ -296,14 +248,8 @@ function curved(sim, given, channel) {
   return sim.curve;
 }
 
-// ---- what one lamp of a target is doing at time t ----------------------------------------
-
-// Whether a strip's stretches are being played, so the looks take the strip's form
 export var previewingStrip = false;
 
-// The target a look writes for, built from what the lamp knows. Colour is always asked
-// for, so an entry naming one says what to draw the lamp in; a caller showing mono lamps
-// draws it its own way. The preview plays a stretch as that many lamps of its own
 export function lampTarget(count) {
   var playing = [];
   for (var i = 1; i <= count; i++) playing.push(i);
@@ -314,8 +260,6 @@ export function lampTarget(count) {
   return target;
 }
 
-// What a look's entries light at slot, which lamp this is counted from zero, of count playing.
-// The effects part plays a stretch through this as the board will
 export function lookLit(look, holder, t, slot, count, sim) {
   if (!look || !look.entries) return null;
   var lines;
@@ -325,8 +269,6 @@ export function lookLit(look, holder, t, slot, count, sim) {
     return null;
   }
 
-  // The entry that names this lamp, the last one winning where two do, as the board
-  // reads them in order
   var mine = null, place = 0;
   lines.forEach(function (line) {
     var entry = parseEntry(line, count);
@@ -344,13 +286,10 @@ export function lookLit(look, holder, t, slot, count, sim) {
 
   var effect = EFFECTS[mine.effect];
   if (!effect) return null;
-  // A colour list gives each light of the entry its own, in order
   var colours = String(mine.channel.colour || "").split(",");
   return {level: curved(sim, effect(t, mine.settings, place, sim), mine.channel),
           ink: inkOf(colours[Math.min(place, colours.length - 1)])};
 }
-
-// ---- painting them, forty times a second ---------------------------------------------
 
 export var FRAME = 1 / 40;
 export var beat = 0;

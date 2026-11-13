@@ -24,20 +24,6 @@ import {
 } from "./16_screen_settings.js";
 import {pairControl, pairEntry, pairWritten, screenUnder, screensPaired} from "./17_screen_pair.js";
 
-// ---- a Screens tab ------------------------------------------------------------------------
-// The tab asks of its page the board's two screens, the pictures on the drive, and each
-// scene keeping what its screens show. The size and whether a screen is fitted are the board's,
-// so they are changed while the board is set up, the band being the screen's coloured box;
-// what a screen shows is the scene's, and chosen at any time.
-//
-// Which way up a picture is drawn goes with the picture a scene shows, depending on how the
-// screen is mounted, how the picture was made, and what the scene wants of it: a picture
-// made symmetric can be turned from one scene to the next. So it is the scene's, kept with
-// what the screen shows. A picture newly chosen starts at the turn it was last given on
-// that screen, which saves setting it again and binds nothing.
-
-// The picker keeps each screen port by a letter, A then B. A file writes it as the board names
-// it: screenA and screenB on a board with two, or screen on a board with one
 export var SCREEN_NAMES = {};
 export var SCREENS = CATALOGUE.screen_ports.map(function (name, index) {
   var letter = "AB".charAt(index);
@@ -45,7 +31,6 @@ export var SCREENS = CATALOGUE.screen_ports.map(function (name, index) {
   return letter;
 });
 
-// The letter a screen port is kept by, from the name a file writes it as, or null
 export function screenLetter(name) {
   for (var i = 0; i < SCREENS.length; i++) {
     if (SCREEN_NAMES[SCREENS[i]].toLowerCase() === name.toLowerCase()) return SCREENS[i];
@@ -53,32 +38,25 @@ export function screenLetter(name) {
   return null;
 }
 
-// A screen as the page shows it: by its letter where there are two, and plainly where there is one
 export function screenShown(letter) {
   return SCREENS.length > 1 ? "Screen " + letter : "Screen";
 }
 
-// The button under a picture that puts it on a screen: which screen where there are two, and with
-// one, only whether it is shown
 export function screenButton(letter) {
   return SCREENS.length > 1 ? letter : "Show";
 }
 
 state.screens = {};
 SCREENS.forEach(function (letter) {
-  // off= is a scene turning the screen off with `none`, showing black in place of a picture
   state.screens[letter] = {there: true, size: letter === "A" ? "2.8" : "1.54", turn: 0,
                            carried: "", pingpong: false, hold: "", fps: 5, shows: null,
                            kept: null, turns: {}, lastShows: null, off: false, pictureTurn: 0};
 });
 
-// A picture newly chosen on a screen starts as chosenAfresh says. What the screen showed when
-// last looked at says whether it is newly chosen, a scene coming round bringing its own turn
 export function turnForChosen(letter) { chosenAfresh(state.screens[letter]); }
 state.media = [];
 state.art = {};
 
-// Whether the screens come through a Screen Hub, which none do until one is set up
 state.hub = {on: false};
 
 var BOARD_INK = "#0a0a0a";
@@ -116,7 +94,6 @@ var PRINTED = {
 };
 
 export var PANEL_PX = {"2.8": [240, 320], "1.54": [240, 240]};
-
 
 function tabPath(x0, x1, near, far, radius) {
   var edge = far < near ? far + radius : far - radius;
@@ -449,12 +426,10 @@ function pictureFace(media) {
     tag, h("img", {src: art.url, alt: ""}), h("figcaption", {}, caption));
 }
 
-
 export function mediaNamed(name) {
   return state.media.filter(function (m) { return m.name === name; })[0] || null;
 }
 
-// A picture's kind, from the drive or its name
 export function kindOf(shows) {
   var media = mediaNamed(shows);
   return media ? media.kind
@@ -462,9 +437,6 @@ export function kindOf(shows) {
        : /\.(png|jpe?g)$/i.test(shows) ? "image" : "folder";
 }
 
-// What a screen's entry says in a scene: its look, or the line kept as the file had it. A hub
-// writes its positions' entries in place of the screens', and a pair writes one entry for both
-// where the first screen's would go
 function screenEntry(letter, body) {
   if (state.hub.on) return null;
   if (pairWritten(body)) return letter === SCREENS[0] ? pairEntry(body) : null;
@@ -478,13 +450,10 @@ function screenEntry(letter, body) {
   return lookEntry(SCREEN_NAMES[letter], playing, look, look.backlight, screen.size);
 }
 
-// The line that turns a screen or hub positions off in a scene, showing black at the backlight given
 export function offEntry(selector, backlight) {
   return selector + (backlight < 1 ? " backlight=" + Math.round(backlight * 100) + "%" : "") +
          ": none";
 }
-
-// ---- each scene keeps what its screens show ---------------------------------------------------
 
 bodyParts.push({
   capture: function (body) {
@@ -529,7 +498,6 @@ bodyParts.push({
       .filter(function (shows) { return shows && shows !== "keep"; })
       .map(pictureSaid);
   },
-  // A scene's screens are written after its lamps
   entries: function (body, lines) {
     SCREENS.forEach(function (letter) {
       var entry = body.screens && screenEntry(letter, body);
@@ -540,9 +508,6 @@ bodyParts.push({
   read: readScreens
 });
 
-// The board line gives a screen's size only where some scene shows something on it. The board
-// reserves for a pair wherever two screens are named, which
-// slows the one in use
 boardLineSteps.before.push(function () {
   var bodies = [state.always.body].concat(state.scenes.map(function (scene) {
     return scene.body;
@@ -556,25 +521,18 @@ boardLineSteps.before.push(function () {
   });
 });
 
-// A screen taken off in Edit board, for the page's comment on what is not fitted. On a Screen Hub
-// the ports are the hub's, so neither is listed
 notFittedSteps.push(function () {
   if (state.hub.on) return [];
   return SCREENS.filter(function (letter) { return !state.screens[letter].there; }).map(screenShown);
 });
 
-// ---- reading the file back ----------------------------------------------------------------------
-
-// A screen's line as the settings of the screen it names, or null where one is not understood
 export function screenPlaying(parts, body, letter) {
   var playing = Object.assign({}, body.screens[letter]);
   var look = playing.look = freshLook();
-  // A line says all its screen does, so nothing is left from what the screen held before
   playing.turn = 0;
   playing.pingpong = false;
   playing.hold = "";
   playing.off = false;
-  // none turns the screen off, taking only a backlight
   if (parts.effect === "none") {
     var known = Object.keys(parts.left).every(function (key) { return key === "backlight"; }) &&
                 !Object.keys(parts.right).length;
@@ -628,15 +586,11 @@ export function screenPlaying(parts, body, letter) {
     } else if (key === "style") look.style = value;
     else understood = false;
   });
-  // A drawing doubled with no size given has the half-size canvas the board gives it
   if (parts.effect === "drawing" && look.double && look.canvas !== "set") look.canvas = "half";
   return understood ? playing : null;
 }
 
-// Try each kept line of each body as a screen, moving those that write back exactly
 function readScreens(bodies) {
-  // A file listing what was taken off has the screens it names off and the others fitted. A line
-  // read for a screen below fits it again
   if (notFittedRead) {
     SCREENS.forEach(function (letter) {
       state.screens[letter].there = !saidNotFitted(screenShown(letter));
@@ -677,15 +631,10 @@ function readScreens(bodies) {
     });
   });
 
-  // A screen read is fitted at its size, which the page writes itself from here
   Object.keys(readOn).forEach(function (letter) {
     boardResidue.splice(boardResidue.indexOf(sizes[letter].token), 1);
   });
 }
-
-// ---- the pictures on the drive ------------------------------------------------------------------
-// What a screen can show: gifs and stills, PNG or JPEG, folders of them, which play as a
-// slideshow, and drawings
 
 var mediaFound = [];
 
@@ -695,7 +644,6 @@ driveParts.push({
     if (/\.gif$/i.test(name)) mediaFound.push({ name: name, kind: "gif", handle: handle });
     else if (/\.(png|jpe?g)$/i.test(name)) mediaFound.push({ name: name, kind: "image", handle: handle });
     else if (/\.py$/i.test(name)) {
-      // A Python file is a drawing only where its opening string says so
       var drawing = null;
       try {
         drawing = drawingSaid(openingString(await (await handle.getFile()).text()));
@@ -718,10 +666,6 @@ driveParts.push({
   },
   land: function () {
     mediaFound.sort(function (a, b) { return a.name < b.name ? -1 : 1; });
-    // A drawing's thumbnail is the PNG of its name beside it, as a program's is, and is no picture
-    // of its own. Each of its other styles may have one too, its name with a dash and the style
-    // word added, such as rings-blue-wide.png. Only in a drawings folder, a PNG at the top of the
-    // drive being a picture
     function inDrawings(one) {
       return isExampleMedia(one.name) || (mediaHome[one.name] || {}).name === "drawings";
     }
@@ -748,8 +692,6 @@ driveParts.push({
     Object.keys(state.art).forEach(function (key) {
       if (state.art[key].gone) delete state.art[key];
     });
-    // A drawing given its face before its thumbnail was found, a read catching it part way
-    // through being copied, takes the thumbnail now
     mediaFound.forEach(function (one) {
       if (one.kind !== "drawing" || !one.thumbHandle || !(state.art[one.name] || {}).face) return;
       delete state.art[one.name];
@@ -757,8 +699,6 @@ driveParts.push({
         if (key.indexOf(one.name + "|") === 0) delete drawingArts[key];
       });
     });
-    // A drawing cannot run in the page, so one without a thumbnail is shown by a face made from
-    // its opening string
     mediaFound.forEach(function (one) {
       if (one.kind === "drawing" && !one.thumbHandle) madeDrawing(one.name);
     });
@@ -772,8 +712,6 @@ driveParts.push({
         if (body.screens[letter].shows === name) body.screens[letter].shows = null;
       });
     });
-    // Everything drawn from it goes too, its styles' thumbnails and its previews, so a new file
-    // given its name starts afresh
     Object.keys(state.art).forEach(function (key) {
       if (key === name || key.indexOf(name + "#") === 0) delete state.art[key];
     });
@@ -784,14 +722,9 @@ driveParts.push({
   }
 });
 
-// ---- pictures, read off the drive in turn ------------------------------------------------------
-// The drive is slow to read, so pictures come off it one at a time, those a screen or hub position
-// shows in any scene first and the rest of the gallery after them
-
 var pictureQueue = [];
 var pictureReading = null;
 
-// The pictures any scene puts on a screen or a hub position, worked out once a draw
 var shownThisDraw = null;
 
 drawSteps.before.push(function () { shownThisDraw = null; });
@@ -831,13 +764,10 @@ function readNextPicture() {
                                 ratio: probe.naturalWidth / probe.naturalHeight};
         settle();
       };
-      // One that will not load stays held empty, so it is not asked for again
       probe.onerror = function () { settle(); };
       probe.src = url;
     });
   }, function () {
-    // The file is gone, deleted while still listed, so it is asked for again once the drive is
-    // next read, where one that would not load is not
     if (state.art[next.name]) state.art[next.name].gone = true;
   }).then(function () {
     pictureReading = null;
@@ -848,17 +778,13 @@ function readNextPicture() {
 
 export function mediaArt(name, style) {
   var media = mediaNamed(name);
-  // A drawing in a style with a thumbnail of its own is shown by that, held under its name and style
   style = styleNamed(media, style);
   var styled = style && media && media.styleThumbs ? media.styleThumbs[style] : null;
   var key = styled ? name + "#" + style : name;
   var held = state.art[key];
-  // The drawing's own thumbnail stands in while a style's loads, so the screen keeps a picture
   if (held) return held.ratio ? held : styled ? mediaArt(name) : null;
-  // A slideshow and a drawing are shown by a thumbnail, a picture by itself
   var handle = styled || (media && (media.thumbHandle || media.handle));
   if (!handle) return null;
-  // Held empty while it waits, so each is asked for once
   state.art[key] = {url: null, ratio: 0};
   pictureQueue.push({name: key, handle: handle});
   setTimeout(readNextPicture, 0);

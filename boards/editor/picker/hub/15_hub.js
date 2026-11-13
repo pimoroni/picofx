@@ -20,54 +20,28 @@ import {
   pictureSaid, placingTokens, playingTokens
 } from "../screens/16_screen_settings.js";
 
-// ---- a Screen Hub in the Screens tab ----------------------------------------------------------
-// A hub takes both connectors: one carries the screens' SPI and the other gives its five pins
-// up as chip selects, so one hub reaches six panels, lettered A to F as on the hub itself.
-// The hub is drawn for its SPI on A and its selects on B, but nothing stops it being wired
-// the other way round. Whether the board has two screens or a hub, which way the hub is wired,
-// and which panel is at each position are the board's, set while editing the board. What each
-// position shows, and which way up, is the scene's, as it is for a screen.
-//
-// Positions of one size showing the same picture are sent it once, together, so a wall of one
-// picture plays as fast as a single screen. Anything else goes to each position in turn, so
-// the tab says when moving pictures will slow for it. The positions share one backlight, which
-// the board lights for them all.
-//
-// The file names a position by the hub's own letter, as outputs are named by number: hubB, or
-// hubA-C,E for several, with the hub and its panels declared on the board line.
-
 export var HUB_PLACES = ["A", "B", "C", "D", "E", "F"];
 
-// A position taken out keeps the size it had, for if it is put back
 state.hub = {on: false, port: "A", sizes: {}, was: {}};
 state.places = {};
 HUB_PLACES.forEach(function (place) {
   state.hub.sizes[place] = "2.8";
-  // off= is a scene turning the position off with `none`, as a screen's is
   state.places[place] = {shows: null, turn: 0, pingpong: false, hold: "", fps: 5,
                          turns: {}, lastShows: null, off: false, pictureTurn: 0};
 });
 
-// The position whose settings are shown under the hub
 export var placePicked = "A";
 
-// Whether a position has a panel to show on, its size being "" where it has none
 export function placeThere(place) { return state.hub.on && !!state.hub.sizes[place]; }
 
 export function placesThere() { return HUB_PLACES.filter(placeThere); }
 
-// A position shown as a screen of its panel's size, which is what the module drawing asks for,
-// with its look and the hub's shared light
 function asScreen(place) {
   var held = state.places[place];
   return {size: state.hub.sizes[place], turn: held.turn, shows: held.shows, off: held.off,
           look: Object.assign({}, held.look, {backlight: state.hubLight})};
 }
 
-// What the board shows on a position the scene being edited shows nothing on. The result holds
-// always=, Always on's settings for the position, which plays on there even where the scene
-// takes another position of its group, or off=, every other scene that shows there where Always
-// on does not. It is null where nothing shows, and on the Always on tab
 export function placeUnder(place) {
   var mine = state.places[place];
   if (state.at < 0 || !state.hub.on || mine.shows || mine.off) return null;
@@ -81,7 +55,6 @@ export function placeUnder(place) {
   return by.length ? {off: by} : null;
 }
 
-// A position shown as a screen in Always on's settings and light, for one the scene leaves to it
 function asAlwaysScreen(place, held) {
   return {size: state.hub.sizes[place], turn: held.turn || 0, shows: held.shows,
           look: Object.assign({}, held.look, {backlight: state.always.body.hubLight})};
@@ -89,10 +62,7 @@ function asAlwaysScreen(place, held) {
 
 export function hubInk() { return screenInk(state.hub.port); }
 
-// A picture newly chosen on a position starts as chosenAfresh says
 export function placeTurnForChosen(place) { chosenAfresh(state.places[place]); }
-
-// ---- each scene keeps what the hub's positions show ------------------------------------------
 
 bodyParts.push({
   capture: function (body) {
@@ -131,14 +101,10 @@ bodyParts.push({
     });
     return set ? ["hub", "Screen Hub"] : null;
   },
-  // The hub is read off the board line before any screen's line, a screen through it writing none
   readBoard: readHubBoard,
   read: readHubLines
 });
 
-// ---- what the file says ----------------------------------------------------------------------
-
-// Positions as the file names them, a run of neighbours as a range: "A-C,E"
 export function placesSaid(places) {
   var said = [];
   var at = 0;
@@ -152,13 +118,6 @@ export function placesSaid(places) {
   return said.join(",");
 }
 
-// What a position plays, as a key: positions with the same key are one entry, and one stream.
-// Panels of different sizes are sent apart, so the size is part of it. They are one send where
-// the file would say the same for them, so a setting a picture does not take, such as a still's
-// pace, or one the page only remembers, such as the last custom colour, never splits them.
-//
-// One entry plays one drawing on every position it names, where entries of their own each run
-// it afresh, so a drawing joins others only in a numbered group
 function playingKey(playing, place) {
   var look = playing.look || LOOK_START;
   var size = state.hub.sizes[place];
@@ -169,7 +128,6 @@ function playingKey(playing, place) {
     .concat(playingTokens(playing, look, kind, size)).join("|");
 }
 
-// The positions of one scene, gathered into what each different picture is sent to
 function placeGroups(body) {
   var groups = [];
   var byKey = {};
@@ -186,15 +144,12 @@ function placeGroups(body) {
   return groups;
 }
 
-// A group's entry. Every position is lit by the hub's one light, so each entry carries it
 function hubEntry(group) {
   return lookEntry("hub" + placesSaid(group.places), group.playing,
                    group.playing.look || freshLook(), state.hubLight,
                    state.hub.sizes[group.places[0]]);
 }
 
-// The lines turning hub positions off in a scene, one for each group and one for each position on
-// its own, so the groups read back as they were written
 function offHubEntries(body) {
   var byGroup = {};
   var groups = [];
@@ -225,7 +180,6 @@ bodyParts.push({
 boardLineSteps.after.push(function (line) {
   if (!state.hub.on) return line;
   var rest = line.replace(/^board: ?/, "").replace(/\bscreen[ab]=\S+ ?/g, "").trim();
-  // The connector the screens come through, then each size fitted and where: hubA-D=2.8
   var tokens = ["screen" + state.hub.port + "=hub"];
   SCREEN_SIZES.forEach(function (inches) {
     var places = placesThere().filter(function (place) {
@@ -236,9 +190,6 @@ boardLineSteps.after.push(function (line) {
   return "board: " + tokens.join(" ") + (rest ? " " + rest : "");
 });
 
-// ---- reading the file back --------------------------------------------------------------------
-
-// Hub positions as a file names them, hubA-C,E, or null where the item is not one
 function hubPlacesNamed(selector) {
   var match = selector.match(/^hub([a-f](?:-[a-f])?(?:,[a-f](?:-[a-f])?)*)$/i);
   if (!match) return null;
@@ -253,8 +204,6 @@ function hubPlacesNamed(selector) {
   return places;
 }
 
-// The hub the board line declares, read into the page, which writes those tokens itself from
-// then on. Turned off where the line declares none
 function readHubBoard() {
   var port = null;
   var sizes = {};
@@ -279,11 +228,9 @@ function readHubBoard() {
   boardResidue = boardResidue.filter(function (token) { return taken.indexOf(token) < 0; });
 }
 
-// Try each kept line of each body as a hub entry, moving those the hub's own writer gives back
 function readHubLines(bodies) {
   if (!state.hub.on) return;
 
-  // Each scene lights the hub its own way, the first of its lines to be read deciding
   bodies.forEach(function (body) {
     var numbered = 0;
     var lightSet = false;
@@ -333,11 +280,7 @@ function readHubLines(bodies) {
   });
 }
 
-// ---- a picture deleted from the drive ---------------------------------------------------------
-
 driveParts.push({
-  // A picture still listed did not go, the drive saying so. One that did is also taken off
-  // every hub position showing it
   gone: function (name) {
     if (state.media.some(function (one) { return one.name === name; })) return;
     store();
@@ -350,8 +293,6 @@ driveParts.push({
     draw();
   }
 });
-
-// ---- drawing the hub -------------------------------------------------------------------------
 
 function hubSwitch() {
   return h("div", {class: "hubswitch", role: "group", "aria-label": "Screens connected as",

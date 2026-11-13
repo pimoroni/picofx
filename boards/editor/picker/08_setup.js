@@ -11,26 +11,12 @@ import {workOn} from "./10_led_sections.js";
 import {lastOutputRun, showChosen} from "./11_tabs.js";
 import {forgetKeptFor} from "./27_readback.js";
 
-// ---- where the board is set up ----------------------------------------------------------
-// Every fact about the board stays beside what it is about: the wiring on the outputs, a
-// strip's length on the strip, a screen's type on the screen. Each reads as a box in its
-// section's own colour, and the whole board is set up at once in a setup mode.
-
-// Whether the whole page is in its setup mode
 export var setupOn = false;
 
-// The panels that hold a board fact, and the colour each one's box takes
 export var BOARD_CHIP_COLOURS = {outPanel: "var(--boardOuts)"};
 BOARD.strips.forEach(function (strip) { BOARD_CHIP_COLOURS[strip.name + "Panel"] = strip.colour; });
 
-// Whether the board facts in this panel can be changed just now
 export function canEdit(panel) { return setupOn; }
-
-// ---- selection waits while the board is set up ------------------------------------------------
-// A stretch is picked to give it a look, which setup does not do, so a tap there picks
-// nothing and nothing looks picked. What was picked is held by its lamp, the wiring
-// being free to move it, and is picked again when setup ends; an output broken out or
-// put back meanwhile is picked instead, as it would have been outside setup
 
 var heldPick = null;
 export var heldOutput = null;
@@ -58,8 +44,6 @@ export function setSetup(on) {
   showChosen();
 }
 
-// Nothing looks picked while setup is on: the marks are drawn by the pages below, so they
-// are taken off once drawn
 function unmark() {
   document.querySelectorAll(".lamp.ringed").forEach(function (one) {
     one.classList.remove("ringed");
@@ -90,8 +74,6 @@ export function boardIcon() {
                              "stroke='currentColor' stroke-width='1.3' stroke-linecap='round'/>"});
 }
 
-// ---- the facts, in place --------------------------------------------------------------------
-
 function renderOutFacts() {
   var hint = null;
   if (canEdit("outPanel")) {
@@ -107,18 +89,14 @@ function renderOutFacts() {
           setupOn ? null : panelTools(active.strip ? lastOutputRun : active));
 }
 
-// What a strip is built as, its length and what follows it on the board line
 function stripBuilt(run) {
   return run.leds + " LEDs, " + stripChipShown(run);
 }
 
-// Whether a strip is there, on the run and on the entry a fresh run is made from
 function stripThere(run, there) { stripSet(run, {there: there}); }
 
 function capitalised(text) { return text.charAt(0).toUpperCase() + text.slice(1); }
 
-// Why a strip cannot be fitted just now, or nothing where it can: a strip taking other strips'
-// terminals cannot be fitted beside them, nor they beside it
 export function stripBlockedBy(run) {
   if (run.there) return "";
   var fitted = runs.filter(function (one) {
@@ -136,8 +114,6 @@ export function stripBlockedBy(run) {
                   ". Remove it to fit a strip here." : "";
 }
 
-// Taking a strip out clears what it plays in every scene, the lines kept from a file
-// included, which leaves its length unwritten and its connector off
 export function dropStrip(run) {
   forgetKeptFor(run);
   store();
@@ -153,7 +129,6 @@ export function dropStrip(run) {
   apply(slotAt(state.at).body);
   draw();
 }
-
 
 function stripOut(run, panel) {
   var blocked = stripBlockedBy(run);
@@ -179,8 +154,6 @@ export function renderLeds(where, run) {
   replace(document.getElementById(where), chip, run.there && !setupOn ? panelTools(run) : null);
 }
 
-// ---- turning setup on ------------------------------------------------------------------------
-
 export function setupButton(label, on, act) {
   return h("button", {type: "button", class: "setupbutton", "aria-pressed": on ? "true" : "false",
                       onclick: act}, boardIcon(), label);
@@ -188,7 +161,6 @@ export function setupButton(label, on, act) {
 
 drawSteps.after.push(function () {
   renderOutFacts();
-  // What is not the board stands back while it is set up
   document.body.toggleAttribute("data-setup", setupOn);
   if (setupOn) unmark();
   paintAll();

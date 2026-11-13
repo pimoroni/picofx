@@ -10,38 +10,21 @@ import {
   canvasPixels, freshLook, panelPixels, pictureOffset, placingTokens, playingTokens
 } from "./16_screen_settings.js";
 
-// ---- the two screens paired -------------------------------------------------------------------
-// Two screens paired in a scene show one picture or drawing, played once and sent to both in
-// step, each placed by its own turn and look. Screen B shows what Screen A shows, at A's pace
-// and in A's style, so B's box offers only its placing. A pair is the scene's, as what its
-// screens show is, so each scene can pair them or not.
-//
-// The file writes a pair as one entry naming both, screenA,B. A setting the two screens differ
-// in is given for each, A's then B's, separated by a comma, and one they agree in is given once.
-// Two screens showing the same GIF, slideshow or still played the same way are written as a pair
-// too, without being paired, as a hub joins its positions, each screen keeping its own placing.
-
 state.screensPaired = false;
 
-// Whether this scene's two screens are paired, which takes both to be fitted
 export function screensPaired() {
   return state.screensPaired && SCREENS.length > 1 && !state.hub.on &&
          state.screens[SCREENS[0]].there && state.screens[SCREENS[1]].there;
 }
 
-// What a pair shares of what a screen shows
 var PAIR_SHARED = ["pingpong", "hold", "fps"];
-// And of its look, everything else being each screen's own placing
 var PAIR_SHARED_LOOK = ["pace", "every", "loop", "whole", "holdBack", "canvas", "canvasW",
                         "canvasH", "style"];
 
-// Give Screen B what Screen A shows, before anything is drawn or written. B takes its own
-// starting turn for a picture new to it, then A's pace and style over what that start set
 function settlePair() {
   if (!screensPaired()) return;
   var from = state.screens[SCREENS[0]];
   var to = state.screens[SCREENS[1]];
-  // Does A show a line kept from the file? B cannot show that, so it keeps its own
   if (from.shows === "keep") return;
   to.shows = from.shows;
   turnForChosen(SCREENS[1]);
@@ -51,9 +34,6 @@ function settlePair() {
 
 drawSteps.before.push(settlePair);
 
-// Pair or part the two screens. Pairing gives B what A shows, or gives A what B shows where A
-// shows nothing, A taking its own starting turn and then B's pace and style. Parting leaves B
-// showing what it shows, now its own
 function togglePair() {
   state.screensPaired = !state.screensPaired;
   if (!state.screensPaired) return;
@@ -66,8 +46,6 @@ function togglePair() {
     PAIR_SHARED_LOOK.forEach(function (key) { first.look[key] = second.look[key]; });
   }
 }
-
-// ---- each scene keeps whether its screens are paired ------------------------------------------
 
 bodyParts.push({
   capture: function (body) { body.screensPaired = state.screensPaired; },
@@ -101,17 +79,9 @@ export function pairControl(letter) {
     h("small", {}, said));
 }
 
-// ---- what the file says ------------------------------------------------------------------------
-
-// Each setting before the colon as a pair writes it, in the order placingTokens() gives them,
-// with what a screen that leaves it out has
 var PAIR_UNSET = {rotation: "0", backlight: "100%", mirror: "false", offset: "*|*",
                   bg: "black", pixel_double: "false", tile: "off"};
 
-// Whether two screens show the same picture played the same way, a GIF, slideshow or still,
-// which looks the same sent as one entry or two. A pair takes each screen's own placing, so only
-// the settings after the file have to agree. A drawing can run differently on each screen, so it
-// is only ever paired by hand
 function picturesMatch(first, second) {
   if (!first.shows || first.shows === "keep" || second.shows !== first.shows) return false;
   var kind = kindOf(first.shows);
@@ -120,8 +90,6 @@ function picturesMatch(first, second) {
          playingTokens(second, second.look || freshLook(), kind, null).join(" ");
 }
 
-// Whether a scene's screens are written as a pair: paired by hand and showing a picture of the
-// page's, or showing the same picture played the same way
 export function pairWritten(body) {
   if (SCREENS.length < 2 || state.hub.on) return false;
   if (!state.screens[SCREENS[0]].there || !state.screens[SCREENS[1]].there) return false;
@@ -131,10 +99,6 @@ export function pairWritten(body) {
   return !!first.shows && first.shows !== "keep" && second.shows === first.shows;
 }
 
-// What the board shows on a screen the scene being edited shows nothing on. The result holds
-// always=, Always on's picture, which plays on there even where the scene takes the other screen
-// of Always on's pair, or off=, every other scene that shows on it where Always on does not. It
-// is null where nothing shows there, on the Always on tab and on a hub
 export function screenUnder(letter) {
   if (state.at < 0 || state.hub.on || state.screens[letter].off) return null;
   var always = state.always.body;
@@ -146,8 +110,6 @@ export function screenUnder(letter) {
   return by.length ? {off: by} : null;
 }
 
-// Of a pair's two screens, the one whose canvas is larger after its own turn and pixel_double,
-// as the board sizes a drawing shown on both, the first screen winning a tie
 function pairLarger(playings) {
   var areas = SCREENS.map(function (letter, at) {
     var panel = panelPixels(state.screens[letter].size, playings[at].turn);
@@ -157,8 +119,6 @@ function pairLarger(playings) {
   return areas[1] > areas[0] ? 1 : 0;
 }
 
-// A paired drawing as the larger screen sizes its canvas: Screen A's playing, which the pair
-// shares, at the larger screen's turn and pixel_double, and that screen's size
 function pairSized(playings) {
   var larger = pairLarger(playings);
   var look = Object.assign({}, playings[0].look || freshLook(),
@@ -167,14 +127,11 @@ function pairSized(playings) {
           size: state.screens[SCREENS[larger]].size};
 }
 
-// The canvas a paired drawing is drawn on
 export function pairCanvas(playings) {
   var sized = pairSized(playings);
   return canvasPixels(sized.look, sized.size, sized.playing.turn);
 }
 
-// A pair's one entry: both screens named, each setting given once or once for each screen,
-// and what plays as Screen A plays it, a drawing's canvas sized by the larger screen
 export function pairEntry(body) {
   var said = SCREENS.map(function (letter) {
     var playing = body.screens[letter];
@@ -213,14 +170,10 @@ export function pairEntry(body) {
     .concat(playingTokens(playing, look, kind, size)).join(" ");
 }
 
-// ---- reading the file back ---------------------------------------------------------------------
-
-// Try each kept line naming both screens as a pair, moving those a pair writes back exactly
 function readPairedScreens(bodies) {
   if (SCREENS.length < 2 || state.hub.on) return;
   var selector = (SCREEN_NAMES[SCREENS[0]] + "," + SCREENS[1]).toLowerCase();
 
-  // A screen's size comes from the board line, unless one of its own lines took it already
   var sizes = {};
   boardResidue.forEach(function (token) {
     var named = token.match(/^(screen[ab]?)=(2\.8|1\.54)$/i);
@@ -240,7 +193,6 @@ function readPairedScreens(bodies) {
       if (!parts || parts.selector !== selector) return true;
       if (body.screens[SCREENS[0]].shows || body.screens[SCREENS[1]].shows) return true;
 
-      // Each screen's own settings, leaving out any at the value a screen without it has
       var lefts = [{}, {}];
       var understood = true;
       Object.keys(parts.left).forEach(function (key) {
@@ -265,8 +217,6 @@ function readPairedScreens(bodies) {
         state.screens[letter].there = true;
         state.screens[letter].size = sizes[letter].size;
       });
-      // Does a drawing give no size of its own? Its canvas is then the larger screen's, halved
-      // where that screen is doubled, the screens' sizes being the file's by now
       if (parts.effect === "drawing" && !parts.right.width && !parts.right.height) {
         var doubled = playings[pairLarger(playings)].look.double;
         playings.forEach(function (playing) { playing.look.canvas = doubled ? "half" : "whole"; });
@@ -281,8 +231,6 @@ function readPairedScreens(bodies) {
         return true;
       }
 
-      // A drawing read as a pair was paired by hand, where a picture pairs by matching and so
-      // stays free to change on one screen alone
       SCREENS.forEach(function (letter, at) { body.screens[letter] = playings[at]; });
       body.screensPaired = kindOf(playings[0].shows) === "drawing";
       readOn = true;
@@ -291,7 +239,6 @@ function readPairedScreens(bodies) {
     });
   });
 
-  // A pair read fits both screens at their sizes, which the page writes itself from here
   if (readOn) {
     SCREENS.forEach(function (letter) {
       var token = sizes[letter].token;

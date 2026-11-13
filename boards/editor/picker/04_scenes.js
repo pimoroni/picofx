@@ -10,8 +10,6 @@ import {featureIcon} from "./22_program.js";
 
 export var state = {at: -1, always: {body: null}, scenes: []};
 
-// What each output was carried from where a stand-in took its place, which is the
-// scene's, so it is held in the body with the stretches it is about
 export var carried = {};
 
 function copyRun(run) {
@@ -25,9 +23,6 @@ function copyRun(run) {
           picked: run.picked, was: run.was.slice(), undone: run.undone.slice()};
 }
 
-// The look that plays on most of the outputs' lamps, which is what a tab's swatch shows. A board
-// whose strips are what it is for shows what the first fitted strip playing anything plays, and
-// its outputs' look only where none does
 function mostPlayed() {
   if (BOARD.strips_first) {
     var strips = runs.filter(function (run) { return run.strip && run.there; });
@@ -39,7 +34,6 @@ function mostPlayed() {
   return mostPlayedOn([outs, mono]);
 }
 
-// The look that plays on most of the lamps of the runs given
 function mostPlayedOn(among) {
   var counted = {};
   var most = null;
@@ -53,19 +47,8 @@ function mostPlayedOn(among) {
   return most;
 }
 
-// A scene holds every run's cutting and looks. The wiring, where each lamp sits and a strip's
-// length are the board's, so they sit outside the body and are not captured. The parts below
-// keep their own share of a scene in the body too, each registering how it captures, applies
-// and blanks that share, whether the share has content, how it adds to the scene's lines, how
-// it reads them back from a file's board line and kept lines, the names of what it plays, and
-// the icon and name its scene tab shows where the scene sets it. Each runs after the runs' own,
-// in the order the parts come
 export var bodyParts = [];
 
-// The parts that keep files on the FX drive, each registering how a walk of the drive finds
-// them (begin, then file or folder for each entry, then land), what it found as text to tell
-// one walk from the next, and how the scenes let go of a deleted file before the drive is walked
-// again (forget) and after it (gone)
 export var driveParts = [];
 
 export function capture() {
@@ -90,8 +73,6 @@ export function apply(body) {
   bodyParts.forEach(function (part) { if (part.apply) part.apply(body); });
 }
 
-// A scene with nothing playing in it, cut as the board is now, which is what the always-on
-// tab is left holding once its content has been carried into the first
 export function blankBody() {
   var body = capture();
   Object.keys(body.runs).forEach(function (name) {
@@ -118,21 +99,12 @@ export function allBodies() {
   return [state.always.body].concat(state.scenes.map(function (scene) { return scene.body; }));
 }
 
-// ---- what a scene leaves to Always on -------------------------------------------------------
-// The board plays Always on under every scene. Where a scene plays nothing of its own on a lamp,
-// the board plays Always on's look there, and where Always on plays nothing either, it turns the
-// lamp off if another scene plays on it. A scene tab shows the same, so its lamps look as the
-// board will light them
-
-// The scenes other than the one being edited, whose bodies are as they were last stored
 export function otherScenes() {
   return state.scenes.filter(function (scene, at) { return at !== state.at; });
 }
 
 export function namesOf(scenes) { return scenes.map(function (scene) { return scene.name; }); }
 
-// The stretch of a stored body's run that covers one lamp and plays a look, or null. A look
-// this page does not offer writes no line, so its stretch plays nothing
 function stretchPlaying(body, runName, at) {
   var run = body && body.runs[runName];
   if (!run) return null;
@@ -143,9 +115,6 @@ function stretchPlaying(body, runName, at) {
   return null;
 }
 
-// What the board plays on a lamp the scene being edited plays nothing on. The result holds
-// always=, Always on's stretch over the lamp, or off=, every other scene that plays on it where
-// Always on does not. It is null where nothing plays on the lamp, and on the Always on tab
 export function lampUnder(runName, at) {
   if (state.at < 0) return null;
   var section = stretchPlaying(state.always.body, runName, at);
@@ -168,19 +137,14 @@ function switchTo(which) {
 export function addScene() {
   store();
   var made;
-  // Where scenes can wait for a button, a new one does, as one made for a remote mostly stands
-  // alone. The first waits, as a time would only bring it back to itself
   if (!state.scenes.length) {
     made = {name: "Scene 1", seconds: 10, restart: false, waits: true, body: capture()};
     state.always.body = blankBody();
-    // What a part keeps with Always on rather than carrying into the first scene, such as what
-    // the sensor's triggers do, which is meant for every scene
     bodyParts.forEach(function (part) { if (part.split) part.split(state.always.body, made.body); });
   } else {
     var before = state.scenes[state.scenes.length - 1];
     made = {name: freeSceneName(), seconds: before.seconds,
             restart: before.restart, waits: sceneCanWait(), body: copyBody(before.body)};
-    // A scene that stayed alone takes its time again, without a sensor to move it on
     if (state.scenes.length === 1 && !sceneCanWait()) before.waits = false;
   }
   state.scenes.push(made);
@@ -192,8 +156,6 @@ export function addScene() {
 export function removeScene(which) {
   store();
   var gone = state.scenes.splice(which, 1)[0];
-  // Taking the last scene away leaves nothing playing, so its content comes back to
-  // the tab that plays all the way through, which is where the page started
   if (!state.scenes.length && !hasContent(state.always.body))
     state.always.body = gone.body;
   state.at = state.scenes.length ? Math.min(which, state.scenes.length - 1) : -1;
@@ -204,13 +166,6 @@ export function removeScene(which) {
 
 function copyBody(body) { return JSON.parse(JSON.stringify(body)); }
 
-// ---- how a scene ends ---------------------------------------------------------------------------
-// A scene either shows for its time and then goes to the scene after it, or waits until a button
-// changes it. The scene after is the next in order unless the scene names another with then=, so
-// a timed run of scenes need not follow the order the remote's numbers take
-
-// A scene's mark, given once and kept while the scene is moved or renamed, by which another
-// part names it
 var sceneMarks = 0;
 export function sceneMark(scene) {
   if (!scene.mark) scene.mark = "s" + (++sceneMarks);
@@ -221,18 +176,12 @@ export function sceneMarked(mark) {
   return state.scenes.filter(function (scene) { return sceneMark(scene) === mark; })[0] || null;
 }
 
-// Whether something fitted can change scenes, so a scene can wait for it, which a board's sensor
-// part answers. Without it a waiting scene waits forever
 export var sceneCanWait = function () { return false; };
 
-// The places of the scenes a scene in place `at` goes to on a button or motion, which the sensor
-// part gives for what is fitted
 export var sceneTriggerLeads = function (at) { return []; };
 
-// What a waiting scene waits for, in words, which the sensor part says for what is fitted
 export var sceneWaitsFor = function () { return "a button"; };
 
-// The scene a timed scene goes to when its time is up, or null for one that waits
 export function sceneAfter(scene) {
   if (scene.waits) return null;
   var named = scene.then ? sceneMarked(scene.then) : null;
@@ -241,26 +190,20 @@ export function sceneAfter(scene) {
   return state.scenes[(at + 1) % state.scenes.length];
 }
 
-// Whether a scene's time leads back to itself. Nothing would change then unless it restarts, so
-// such a scene always does
 export function sceneLoops(scene) {
   return !scene.waits && sceneAfter(scene) === scene;
 }
 
-// Whether a scene's effects begin again each time it starts, as its heading says. A scene that
-// never shows again starts once, so it has nothing to restart
 export function sceneRestarts(scene) {
   if (!sceneShowsAgain(scene)) return false;
   return scene.restart || sceneLoops(scene);
 }
 
-// The places of the scenes the scene in place `at` goes on to, by its time and by what is fitted
 function sceneLeads(at) {
   var after = sceneAfter(state.scenes[at]);
   return sceneTriggerLeads(at).concat(after ? [state.scenes.indexOf(after)] : []);
 }
 
-// Which scenes can show from the places in `starts`, by place, those included
 function scenesReachedFrom(starts) {
   var reached = state.scenes.map(function () { return false; });
   var waiting = [];
@@ -274,14 +217,11 @@ function scenesReachedFrom(starts) {
   return reached;
 }
 
-// Whether a scene can show again after it has shown, as it lies on a way back to itself
 export function sceneShowsAgain(scene) {
   var at = state.scenes.indexOf(scene);
   return at >= 0 && scenesReachedFrom(sceneLeads(at))[at];
 }
 
-// Make the only scene stay where its time would change nothing, as the board reports a lone
-// scene with a time and no restart
 export function settleLoneScene() {
   if (state.scenes.length !== 1) return;
   var only = state.scenes[0];
@@ -289,14 +229,11 @@ export function settleLoneScene() {
   if (!only.waits && !only.restart && !namesItself) only.waits = true;
 }
 
-// The scenes nothing leads to from the first, as the board reports them, and the scene that
-// waits forever before them where that is what leaves them out, or null
 export function unreachedScenes() {
   var reached = scenesReachedFrom(state.scenes.length ? [0] : []);
   var unreached = state.scenes.filter(function (scene, at) { return !reached[at]; });
   if (!unreached.length || sceneCanWait()) return {scenes: unreached, stopper: null};
 
-  // Without a sensor the turns are one line from the first scene, which a waiting scene ends
   var stop = state.scenes[0];
   var seen = [];
   while (!stop.waits && seen.indexOf(stop) < 0) {
@@ -306,8 +243,6 @@ export function unreachedScenes() {
   return {scenes: unreached, stopper: stop.waits ? stop : null};
 }
 
-// What is wrong with a name for a scene, or "" where nothing is. A scene needs a name of its own,
-// as another scene's heading can name it after "then", and Always on's is taken
 export function sceneNameProblem(scene, name) {
   var wanted = name.trim().toLowerCase();
   if (!wanted) return "A scene needs a name";
@@ -318,7 +253,6 @@ export function sceneNameProblem(scene, name) {
   return other ? "Another scene is called " + other.name.trim() : "";
 }
 
-// The first of Scene 1, Scene 2 and so on that no scene is called
 function freeSceneName() {
   for (var number = 1; ; number++) {
     if (!sceneNameProblem(null, "Scene " + number)) return "Scene " + number;
@@ -334,9 +268,6 @@ function sceneTurn(scene) {
   return turn + (sceneRestarts(scene) && !sceneLoops(scene) ? ", from the start" : "");
 }
 
-// The colours of the Aye Arr Remote's number buttons, 1 to 9, from its artwork, and the rainbow
-// round its 0. Scene 1 takes button 1, so a scene's colour is the button that goes to it. Scene
-// 10 takes 0, and a later scene has no button and a neutral colour
 export var REMOTE_COLOURS = ["#ed1c24", "#00a651", "#2e3192", "#00aeef", "#ec008c", "#fff200",
                       "#fbad5d", "#ffffff", "#84c1ff"];
 export var REMOTE_RAINBOW = ["#ed1c24", "#f7941d", "#fff200", "#8dc63f", "#00a651", "#00aeef",
@@ -344,19 +275,14 @@ export var REMOTE_RAINBOW = ["#ed1c24", "#f7941d", "#fff200", "#8dc63f", "#00a65
 var ALWAYS_COLOUR = "#8f8a82";
 var UNNUMBERED_COLOUR = "#b9b3a9";
 
-// The remote's number buttons that go to a scene, which its card wears. None on a board with no
-// sensor part, which replaces this with its own
 export var sceneNumbers = function (scene) { return []; };
 
-// A scene's colour, its number button's, which moves with the scene's place in the order
 function sceneColour(scene) {
   if (!scene) return ALWAYS_COLOUR;
   var at = state.scenes.indexOf(scene);
   return at < 9 ? REMOTE_COLOURS[at] : UNNUMBERED_COLOUR;
 }
 
-// A scene's band, the background along the top of its card and its frame's tab. The remote's
-// white is a light grey, since white does not show on the page, and button 0's is its rainbow
 export function sceneBand(scene) {
   if (scene && state.scenes.indexOf(scene) === 9)
     return "linear-gradient(90deg, " + REMOTE_RAINBOW.join(", ") + ")";
@@ -364,14 +290,11 @@ export function sceneBand(scene) {
   return "linear-gradient(" + colour + ", " + colour + ")";
 }
 
-// A scene's outline colour, a darker shade where its colour is too pale to show on the page
 export function sceneEdge(scene) {
   return scene && sceneIsPale(scene)
     ? "color-mix(in srgb, " + sceneColour(scene) + " 72%, #2b2a28)" : sceneColour(scene);
 }
 
-// Check if a scene's colour is too pale to show against the page, as the remote's white and
-// yellow are, by its luma
 function sceneIsPale(scene) {
   var hex = sceneColour(scene).replace("#", "");
   var red = parseInt(hex.slice(0, 2), 16);
@@ -380,13 +303,10 @@ function sceneIsPale(scene) {
   return 0.299 * red + 0.587 * green + 0.114 * blue > 200;
 }
 
-// A dark shade of a scene's colour, which reads on its tint and on the page
 function sceneShade(scene) {
   return "color-mix(in srgb, " + sceneColour(scene) + " 65%, #2b2a28)";
 }
 
-// Each part's icon, the drawing the programs page gives the same thing, so the two pages agree.
-// A part the programs page has no drawing for gives its own in PART_DRAWINGS, on the same grid
 var PART_FEATURES = {lights: "outputs", strip: "strip", screens: "screen", hub: "hub",
                      sound: "sound", remote: "remote"};
 export var PART_DRAWINGS = {};
@@ -399,9 +319,6 @@ function partIcon(key) {
                        html: PART_DRAWINGS[key]});
 }
 
-// The parts of the board a slot's body sets itself, each as [icon, name]. A body's parts add
-// their own, each saying from its share of the body whether it is set. always= is whether the
-// body is Always on's
 function partsSet(body, always) {
   var parts = [];
   function plays(list) {
@@ -411,7 +328,6 @@ function partsSet(body, always) {
   }
   var outputs = runs.filter(function (run) { return !run.strip && run.lamps.length; });
   if (outputs.length && plays(outputs)) parts.push(["lights", BOARD.output_words.tab]);
-  // One icon for the strips, as nothing in it could say which, its tip naming those that play
   var strips = runs.filter(function (run) { return run.strip && run.there && plays([run]); });
   if (strips.length) {
     parts.push(["strip", strips.map(function (run) {
@@ -425,8 +341,6 @@ function partsSet(body, always) {
   return parts;
 }
 
-// What the Always on tab says it plays, its looks, pictures and sounds by name, which is empty
-// where it plays nothing yet
 function alwaysSays(body) {
   var names = [];
   function add(name) { if (name && names.indexOf(name) < 0) names.push(name); }
@@ -588,10 +502,6 @@ function moveScene(from, to) {
 
 var carriedTab = null;
 
-// ---- what the whole file says now -------------------------------------------------------
-
-// The lamps' lines are written from the runs as they stand, so each scene's body is applied in
-// turn, which keeps one writer for all of them
 function entriesOf(body) {
   apply(body);
   var lines = lampLines().filter(function (line) { return line.trim(); });
@@ -599,16 +509,11 @@ function entriesOf(body) {
   return lines;
 }
 
-// A scene's heading. One read from a file with no time waits, and is written back without one.
-// A heading read from a file is written back as it was while the scene still says the same
 function sceneHeading(scene) {
-  // A scene after other than the next in order is named after "then", a proposed word autofx does
-  // not read yet. "then" comes last, as the rest of the heading after it is the name
   var after = sceneAfter(scene);
   var inOrder = state.scenes[(state.scenes.indexOf(scene) + 1) % state.scenes.length];
   var named = after && after !== inOrder ? after.name.trim() || "Scene" : null;
   var read = scene.read;
-  // A scene after that the file names but no scene is called keeps its heading as written
   var sameAfter = read && (read.after === named || (read.after && !scene.then &&
     !state.scenes.some(function (other) { return other.name === read.after; })));
   if (read && read.written && scene.name === read.name && sceneRestarts(scene) === read.restart &&
@@ -616,7 +521,6 @@ function sceneHeading(scene) {
                                           : !scene.waits && scene.seconds === read.seconds)) {
     return read.written;
   }
-  // A scene going back to itself is written with restart, which the board needs to change anything
   var settings = (scene.waits ? [] : [scene.seconds + "s"])
     .concat(sceneRestarts(scene) ? ["restart"] : [])
     .concat(named !== null ? ["then " + named] : []);
@@ -624,8 +528,6 @@ function sceneHeading(scene) {
          "]";
 }
 
-// What the parts below write above the scenes: lines straight under the file's header, then,
-// after a blank line, lines above the board line. Each is a list of functions giving lines
 export var fileHead = {under: [], above: []};
 
 export function currentText() {
@@ -633,7 +535,6 @@ export function currentText() {
   var lines = entriesOf(state.always.body);
   state.scenes.forEach(function (scene) {
     lines.push("");
-    // Comments a file had above the heading, where it was read from one
     lines = lines.concat(scene.comments || []);
     lines.push(sceneHeading(scene));
     lines = lines.concat(entriesOf(scene.body));

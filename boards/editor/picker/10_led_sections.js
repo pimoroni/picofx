@@ -1,11 +1,6 @@
 import {MONO_FIRST, active, mono, outs, pick, runs} from "./03_runs.js";
 import {STRIPS} from "./05_effects.js";
 
-// ---- the LED sections, for a page that shows one at a time ----------------------------------
-// The outputs and each strip, which the gallery can give a look to, as against the screens,
-// which it cannot. A page showing one at a time makes the one shown the one worked on, so
-// the gallery is for it, and says of the others in a small swatch what they play.
-
 export var LED_PANELS = ["outPanel"].concat(STRIPS.map(function (strip) { return strip.id + "Panel"; }));
 
 export function runsOfPanel(panel) {
@@ -13,7 +8,6 @@ export function runsOfPanel(panel) {
   return runs.filter(function (run) { return run.strip && run.id + "Panel" === panel; });
 }
 
-// The section shown becomes the run worked on, keeping its own picked stretch
 export function workOn(panel) {
   var mine = runsOfPanel(panel);
   if (mine.indexOf(active) >= 0) return;

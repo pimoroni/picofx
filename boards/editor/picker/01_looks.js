@@ -1,17 +1,8 @@
 import {isBanked} from "./05_effects.js";
 import {banner} from "./18_drive.js";
 
-// The FX picker, a page for choosing what the board plays and saving it as effects.txt. It is
-// the numbered parts in this folder and any of the board's own, joined in number order, those in
-// the screens, hub and sound folders only for a board that has them. This first part holds the
-// looks.
-
-// The board the page is for, from its editor/fx_board.json: its outputs, strips, screen ports,
-// whether it has a hub, sound and the network looks, and the examples it offers
 export var BOARD = __BOARD__;
 
-// The catalogue is generated beside this page; without it the screen sizes and ports
-// cannot be known, so say so instead of failing silently
 if (typeof CATALOGUE === "undefined") {
   var assumedPorts = BOARD.screens ? BOARD.screens.ports.map(function (port) { return port.id; }) : [];
   window.CATALOGUE = {board_settings: {}, screen_ports: assumedPorts,
@@ -26,19 +17,13 @@ if (typeof CATALOGUE === "undefined") {
 export var HEADER = "# Written by the FX picker. Everything here can be edited by hand;\n" +
              "# MANUAL.html on this drive explains every line.\n";
 
-// ---- helpers -------------------------------------------------------------------
-
 export function r2(n) { return Math.round(n * 100) / 100; }
 export function lerp(a, b, t) { return r2(a + (b - a) * t); }
 
-// Each look picks from a palette of its own, so the middle of the slider is the
-// colour its card shows and moving it stays within what suits that look
 function tone(palette, t) {
   return palette[Math.min(palette.length - 1, Math.floor(t * palette.length))];
 }
 
-// A travelling effect's length scales with the run so the wave keeps its
-// proportion whatever the light count
 function span(count, mood) {
   return Math.max(2, Math.round(count * lerp(2, 0.6, mood)));
 }
@@ -47,8 +32,6 @@ export function quoted(name) {
   return name.indexOf(" ") >= 0 ? '"' + name + '"' : name;
 }
 
-// A run of numbers as the file writes them: climbing or falling by one closes up
-// into a range, a pair stays a pair, and anything else is listed
 export function rangify(list) {
   var parts = [];
   var i = 0;
@@ -68,14 +51,10 @@ export function rangify(list) {
   return parts.join(",");
 }
 
-// Some of a target's playing lamps as the file names them. A target whose lamps are not
-// numbered outputs, such as mono channels, names its own sets
 export function nameSet(target, set) {
   return target.nameSet ? target.nameSet(set) : target.name + rangify(set);
 }
 
-// The playing outputs split round-robin into up to three groups, which is how a
-// three-colour look lands one colour per light in turn
 function roundRobin(playing, ways) {
   var groups = [];
   playing.forEach(function (which, i) {
@@ -85,11 +64,7 @@ function roundRobin(playing, ways) {
   return groups;
 }
 
-// A run cut into up to three contiguous parts, as selectors, low end first or high
-// end first to match how it is wired
 function runThirds(name, count, reversed, ways, lights) {
-  // Places along the stretch, numbered by the run's own lights where the stretch has them, so
-  // a stretch partway along a strip names its own lights
   function light(place) { return lights ? lights[place - 1] : place; }
   var edges = [];
   for (var i = 0; i <= ways; i++) edges.push(Math.round(count * i / ways));
@@ -104,16 +79,9 @@ function runThirds(name, count, reversed, ways, lights) {
   return parts;
 }
 
-// A mono output has no colour to be given, so the setting comes back off the line
-// before it is written. What is left is the same effect, in whatever the lamp is
 function withoutColour(line) {
   return line.replace(/\s+colour=[^\s:]+/g, "");
 }
-
-// ---- the looks -----------------------------------------------------------------
-// Each look writes real entries for whatever target it is handed: a bank of outputs
-// in the order they are to play, or a run of any length. alone() is the form it
-// takes on a target of one light, and false where it has no such form.
 
 var BREATHE_TONES = ["blue", "cool", "cyan", "green", "warm"];
 var SPARKLE_TONES = ["cyan", "cool", "white", "warm", "yellow"];
@@ -126,10 +94,6 @@ var PARTY_THIRD = ["blue", "green", "cyan", "white", "magenta"];
 
 export var LOOKS = [
   {
-    // The one look with nothing moving in it. A scene that wants a lamp to sit at one
-    // colour has no effect to reach for otherwise, and on a board whose only light of
-    // its own is a single LED that is most of what it is for. The colour is chosen
-    // rather than slid to, so this is the one look whose settings are not two sliders
     name: "Solid", mood: "Brightness", spans: true, onMono: true, solid: true,
     strip: ["#d94a3d", "#e0a03a", "#3fa672", "#3a7fd9", "#8a4ad0", "#d94a9e", "#e8e2d6"],
     entries: function (target, pace, mood, colour) {
@@ -226,9 +190,6 @@ export var LOOKS = [
     }
   },
   {
-    // Two banks flashing against each other with a quiet gap between, landed on the
-    // playing outputs in their order, so a lightbar of any width works. The slider sets the
-    // flashes in each burst, one to five, three in the middle
     name: "Emergency", mood: "Flashes", detents: 5, spans: false, onMono: true,
     strip: ["#dd2222", "#2222dd", "#dd2222", "#111111", "#2222dd", "#dd2222", "#2222dd"],
     entries: function (target, pace, mood) {
@@ -251,8 +212,6 @@ export var LOOKS = [
     }
   },
   {
-    // Five lamps in the crossing's own colours, landed on the first five playing
-    // outputs; any beyond them are told to stay dark, and fewer take fewer lamps
     name: "Pelican crossing", mood: "Fade", spans: false, onMono: true,
     strip: ["#ff0000", "#ff7800", "#00d28c", "#ff0000", "#00d28c", "#111111", "#111111"],
     entries: function (target, pace, mood) {
@@ -273,9 +232,6 @@ export var LOOKS = [
     alone: false
   },
   {
-    // Three colours chase each other across whatever plays it: the lights split into
-    // three sets, each flashing in its own colour a third of a beat apart. The slider picks
-    // one of five sets of three colours, stopping at each
     name: "Party", mood: "Palette", detents: 5, spans: true, onMono: true,
     strip: ["#ff00ff", "#ffff00", "#00ffff", "#ff00ff", "#ffff00", "#00ffff", "#ff00ff"],
     entries: function (target, pace, mood) {
@@ -284,8 +240,6 @@ export var LOOKS = [
                      tone(PARTY_THIRD, mood)];
       var groups;
       if (target.kind === "outputs") {
-        // A target whose lamps are not whole outputs, broken-out channels say, names its
-        // own sets of them
         groups = roundRobin(target.playing, Math.min(3, target.playing.length))
                  .map(function (group) {
                    return nameSet(target, group);
@@ -313,12 +267,8 @@ export function lookNamed(id) {
   return LOOKS.filter(function (l) { return (l.id || l.name) === id; })[0] || null;
 }
 
-// What a look is kept as, which is its own id where it has one and its name otherwise
 export function keyOf(look) { return look.id || look.name; }
 
-// Whether a look has anything to give a target: a colour look cannot land on a mono lamp, a
-// look that does not span cannot land on a run, and some have no single-light form. A banked
-// look deals its banks along a run, so it needs more than one lamp or a single-light form
 export function canPlay(look, target) {
   if (!look) return true;
   if (target.kind === "run" && isBanked(look)) return target.count > 1 || look.alone !== false;
@@ -328,7 +278,6 @@ export function canPlay(look, target) {
   return true;
 }
 
-// Why not, in the words of the thing that cannot happen
 export function whyNot(look, target) {
   if (!target.colour && !look.onMono) return "this look needs colour, and " +
                                              target.label.toLowerCase() + " is mono";
@@ -338,8 +287,6 @@ export function whyNot(look, target) {
   return "play this on " + target.label.toLowerCase();
 }
 
-// The lines one look's own entries write for one target, in the form that target can take. The
-// effects part writes a stretch through this as the board will play it
 export function lookLines(look, target, pace, mood, colour) {
   if (!look || !canPlay(look, target)) return [];
   var lines = (target.count === 1 && look.alone)
