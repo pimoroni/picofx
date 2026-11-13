@@ -1136,6 +1136,7 @@ download:
 | `examples/programs/wireless` | colours fetched over WiFi |
 | `examples/programs/comms` | several boards working together |
 | `examples/programs/showcase` | larger builds that put several of these together |
+| `examples/drawings` | drawings for the screens, each beside a picture of it, to show with a `drawing` entry |
 
 Three to start with:
 
