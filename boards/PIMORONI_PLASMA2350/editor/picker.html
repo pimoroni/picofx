@@ -77,7 +77,6 @@ button.round svg{display:block}
 .frozen button,.frozen input{cursor:default}
 .holder.under{border:1px dashed #a9a49b;border-radius:8px;
  background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
-.chosen .underhint{font-size:.8rem;color:var(--dim);margin:.25rem 0 0}
 body:not(.setupall) #outRun,body:not(.setupall) #monoRun{display:none}
 
 .tools{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:.8rem 0 0;
@@ -102,9 +101,6 @@ body:not(.setupall) #outRun,body:not(.setupall) #monoRun{display:none}
 .lamp b{display:block;font:400 .66rem/1.6 system-ui,sans-serif;color:var(--dim);
  text-align:center}
 
-.chosen{margin-top:.9rem;border:1px solid var(--line);border-radius:10px;padding:.6rem .8rem}
-.chosen .who{font-size:.82rem;color:var(--dim);margin-bottom:.45rem}
-.chosen .who b{color:var(--ink);font-size:.92rem}
 .gallery-head{display:flex;align-items:baseline;gap:.6rem;margin:1.5rem 0 .5rem;
  font:600 1.02rem system-ui,sans-serif}
 .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(9.4rem,1fr));
@@ -121,11 +117,6 @@ body:not(.setupall) #outRun,body:not(.setupall) #monoRun{display:none}
  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card.picked .name{color:var(--accent)}
 
-.tuning{display:grid;grid-template-columns:auto 1fr;gap:.25rem .7rem;align-items:center}
-.tuning label{font-size:.8rem;color:var(--dim);white-space:nowrap}
-.tuning input[type=range]{width:100%;accent-color:var(--accent)}
-.tuning input[type=color]{width:2.8rem;height:1.4rem;padding:1px;border:1px solid var(--line);
- border-radius:6px;background:var(--panel);cursor:pointer;justify-self:start}
 
 pre.file{font:.85rem/1.5 ui-monospace,Consolas,monospace;background:var(--panel);
  border:1px solid var(--line);border-radius:10px;padding:1rem;white-space:pre-wrap}
@@ -430,30 +421,7 @@ th{font-weight:600;color:var(--dim);font-size:.76rem}
 .tabbar,.scenetabrow{margin-left:-1rem;margin-right:-1rem}
 .s-scene{color:#7b3fb8;font-weight:600}
 
-.chosen .who.withway{display:flex;align-items:center;gap:.6rem}
-.chosen .direction{margin-left:auto;border:1.5px solid var(--line);border-radius:8px;
- background:var(--panel);padding:.22rem .55rem;font:600 .76rem system-ui,sans-serif;
- color:var(--ink);display:inline-flex;align-items:center;gap:.35rem;cursor:pointer}
-.chosen .direction.on{border-color:var(--accent);color:var(--accent);
- background:color-mix(in srgb,var(--accent) 8%,transparent)}
-.chosen .direction svg path{fill:none;stroke:currentColor;stroke-width:1.8;
- stroke-linecap:round;stroke-linejoin:round}
-.chosen .direction:disabled{color:var(--dim);opacity:.4;cursor:default}
-.panel .chosen{position:relative;margin-top:0;border:2px solid var(--accent);background:var(--tabbg)}
-.panel .chosen::before{content:"";position:absolute;top:-2px;left:var(--tabl,0);width:var(--tabw,0);
- height:2px;background:var(--tabbg)}
-.panel .chosen .who b{font-size:1.05rem}
-.panel .chosen .who{margin-bottom:.6rem}
-.chosen #looks{margin:0}
-.chosen #looks > .tabs:empty{display:none}
-.chosen #looks > .shelf.bare{margin:0}
-.chosen #looks .groupedlooks .gallery-head:first-child{margin-top:.2rem}
-.chosen .changelook{margin-left:auto;border:1.5px solid var(--line);border-radius:8px;
- background:var(--panel);padding:.22rem .55rem;font:600 .76rem system-ui,sans-serif;
- color:var(--accent);cursor:pointer}
-.chosen .changelook + .direction{margin-left:0}
 
-.chosen .standin{margin-top:.5rem;font-size:.85rem;color:var(--dim)}
 
 .card{position:relative}
 :root{--mark:20px;--namerow:2.1rem}
@@ -461,7 +429,6 @@ th{font-weight:600;color:var(--dim);font-size:.76rem}
  bottom:calc((var(--namerow) - var(--mark)) / 2);width:var(--mark);height:var(--mark);
  display:block;color:#b5aea3}
 
-.chosen .colourpick{margin-top:.6rem}
 .groundpick{container-type:inline-size}
 .sswatches{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,2.1rem);
  justify-content:space-between;gap:.25rem;margin-top:.45rem}
@@ -487,7 +454,6 @@ th{font-weight:600;color:var(--dim);font-size:.76rem}
 .scustom .hexline input{width:5.2rem}
 .scustomside{display:flex;flex-direction:column;gap:.4rem;align-self:stretch}
 .scustompreview{flex:1;border-radius:8px;border:1px solid var(--line);min-height:3rem}
-.chosen .colourpick + .tuning{margin-top:.6rem}
 .groupedlooks .gallery-head,.programview .gallery-head{margin:1rem 0 .4rem;font-size:.92rem}
 .groupedlooks .gallery-head:first-child{margin-top:0}
 .groupedlooks .lookshead>.foldhead{display:flex;align-items:baseline;gap:.6rem;margin:0;
@@ -513,43 +479,9 @@ th{font-weight:600;color:var(--dim);font-size:.76rem}
  color:var(--dim)}
 .repeatchip{width:1.1rem;height:.9rem;border-radius:3px;border:1px solid var(--line)}
 #tabStack > *{min-width:0}
-.chosen .tuning label.withicon{display:inline-flex;align-items:center;gap:.4rem}
-.settingicon{width:14px;height:14px;flex:none;fill:none;stroke:currentColor;stroke-width:1.4;
- stroke-linecap:round;stroke-linejoin:round}
-.settingicon .filled{fill:currentColor;stroke:none}
-.chosen .tuning label.signalstate{display:inline-flex;align-items:center;gap:.4rem}
-.signalface{display:block;flex:none}
-.signalface .flashing{animation:signalflash 1s steps(2,jump-none) infinite}
-@keyframes signalflash{from{opacity:1}to{opacity:.2}}
-body.figures .chosen .tuning{grid-template-columns:auto 1fr auto}
-body.figures .chosen .tuning.figuresopen{grid-template-columns:auto 1fr auto auto auto}
-.chosen .tuning:not(.figuresopen) .figurebox,
-.chosen .tuning:not(.figuresopen) .figureunit{display:none}
-.figurebox{box-sizing:content-box;justify-self:end;padding:0 .35rem;height:calc(1.2rem - 2px);
- line-height:calc(1.2rem - 2px);
- border:1px solid var(--line);border-radius:6px;font:600 .76rem system-ui,sans-serif;
- text-align:right;font-variant-numeric:tabular-nums}
-span.figurebox{border:0}
-.figurebox.paletteswatches{display:inline-flex;gap:2px;padding:0;justify-self:start}
-.chosen .tuning:not(.figuresopen) .paletteswatches{display:none}
-.figureunit{font-size:.74rem;color:var(--dim)}
-.figurehandle{grid-column:-2;align-self:stretch;width:1.5rem;padding:0;border:1px solid var(--line);
- border-radius:6px;background:var(--panel);color:var(--dim);font:600 1.35rem/1 system-ui,sans-serif;
- cursor:pointer}
-.figurehandle:hover{color:var(--ink);border-color:var(--dim)}
 .sceneset,#sound{--hub:var(--accent)}
 body[data-pageway] #looks>.tabs:empty{display:none}
 body[data-pageway] #looks>.shelf.bare{margin-top:0}
-.blinklist{display:flex;align-items:center;flex-wrap:wrap;gap:.3rem;margin-bottom:.1rem;
- font-size:.82rem;color:var(--dim)}
-.blinksay{margin-right:.2rem}
-.blinkchip{width:1.6rem;height:1.6rem;padding:0;border:2px solid var(--line);border-radius:5px;
- background:var(--chip);cursor:pointer}
-.blinkchip.on{border-color:var(--accent);box-shadow:0 0 0 2px rgba(15,138,114,.25)}
-.blinkdrop{border:none;background:none;padding:0 .3rem 0 0;margin-left:-.2rem;color:var(--dim);
- cursor:pointer;font-size:.9rem;line-height:1}
-.blinkmore{margin-left:.3rem;padding:.15rem .5rem;border:1px dashed var(--line);border-radius:5px;
- background:none;color:var(--ink);font-size:.78rem;cursor:pointer}
 
 .strip .head{margin-bottom:.3rem}
 .strip .lamps{gap:.18rem}
@@ -1797,6 +1729,426 @@ body.discovermodal{overflow:hidden}
     button:hover {
       opacity: 1;
     }
+  }
+}
+.editor {
+  position: relative;
+  padding: .7rem .8rem .8rem;
+  border: 2px solid var(--accent);
+  border-radius: 10px;
+  background: var(--notch-ground, var(--panel));
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: -2px;
+    left: var(--notch-left, 0);
+    width: var(--notch-width, 0);
+    height: 2px;
+    background: var(--notch-ground, var(--panel));
+  }
+
+  &[data-notch-start] {
+    border-top-left-radius: 0;
+  }
+
+  &[data-notch-end] {
+    border-top-right-radius: 0;
+  }
+
+  > header {
+    position: static;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: .6rem;
+    margin-bottom: .6rem;
+    padding: 0;
+    border: 0;
+    background: none;
+
+    h3 {
+      margin: 0 auto 0 0;
+      font-size: 1.05rem;
+
+      small {
+        font-size: .82rem;
+        font-weight: 400;
+        color: var(--dim);
+      }
+    }
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      padding: .22rem .55rem;
+      border: 1.5px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--accent);
+      font: 600 .76rem system-ui, sans-serif;
+      cursor: pointer;
+    }
+
+    .reverse {
+      color: var(--ink);
+
+      svg {
+        rect {
+          fill: currentColor;
+        }
+
+        path {
+          fill: none;
+          stroke: currentColor;
+          stroke-width: 1.8;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+        }
+      }
+
+      &[aria-pressed=true] {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 8%, transparent);
+      }
+
+      &:disabled {
+        color: var(--dim);
+        opacity: .4;
+        cursor: default;
+      }
+    }
+  }
+
+  > p {
+    margin: 0 0 .6rem;
+    font-size: .82rem;
+    color: var(--dim);
+  }
+
+  &[data-picking] #looks {
+    margin: 1rem 0 0;
+  }
+}
+
+.editor .colours {
+  container-type: inline-size;
+  margin: 0 0 .6rem;
+  padding: 0;
+  border: 0;
+
+  legend {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .blinks {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .3rem;
+    margin-bottom: .1rem;
+    font-size: .82rem;
+    color: var(--dim);
+
+    ol {
+      display: flex;
+      gap: .3rem;
+      margin: 0 0 0 .2rem;
+      padding: 0;
+      list-style: none;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+    }
+
+    li > button:first-child {
+      width: 1.6rem;
+      height: 1.6rem;
+      padding: 0;
+      border: 2px solid var(--line);
+      border-radius: 5px;
+      background: var(--chip);
+      cursor: pointer;
+
+      &[aria-pressed=true] {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(15, 138, 114, .25);
+      }
+    }
+
+    .drop {
+      padding: 0 .3rem 0 .1rem;
+      border: 0;
+      background: none;
+      color: var(--dim);
+      font-size: .9rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .more {
+      margin-left: .3rem;
+      padding: .15rem .5rem;
+      border: 1px dashed var(--line);
+      border-radius: 5px;
+      background: none;
+      color: var(--ink);
+      font-size: .78rem;
+      cursor: pointer;
+    }
+  }
+
+  .swatches {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 2.1rem);
+    justify-content: space-between;
+    gap: .25rem;
+    margin: .45rem 0 0;
+    padding: 0;
+    list-style: none;
+
+    button {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1;
+      padding: 0;
+      border: 2px solid var(--line);
+      border-radius: 5px;
+      background: var(--swatch);
+      cursor: pointer;
+
+      &[aria-checked=true] {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(15, 138, 114, .25);
+      }
+
+      span {
+        display: none;
+        position: absolute;
+        top: calc(100% + 2px);
+        left: 50%;
+        transform: translateX(-50%);
+        font: 400 .6rem/1 system-ui, sans-serif;
+        color: var(--dim);
+        white-space: nowrap;
+        pointer-events: none;
+      }
+    }
+
+    [data-custom] {
+      background: conic-gradient(#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+
+      &::after {
+        content: "";
+        position: absolute;
+        inset: 24%;
+        border-radius: 50%;
+        background: var(--picked, repeating-linear-gradient(45deg, #f4f1ec, #f4f1ec 2px, #a9a194 2px, #a9a194 3.5px));
+        box-shadow: 0 0 0 1px rgba(0, 0, 0, .2);
+      }
+    }
+  }
+
+  @container (min-width: 34rem) {
+    .swatches {
+      margin-bottom: .9rem;
+
+      button span {
+        display: block;
+      }
+    }
+  }
+
+  .custom {
+    display: flex;
+    align-items: flex-start;
+    gap: .8rem;
+    margin-top: .55rem;
+
+    > div:last-child {
+      display: flex;
+      flex-direction: column;
+      gap: .4rem;
+      align-self: stretch;
+    }
+
+    label {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .8rem;
+      color: var(--dim);
+    }
+
+    input {
+      width: 5.2rem;
+      padding: .25rem .45rem;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel);
+      color: inherit;
+      font: .82rem ui-monospace, Menlo, Consolas, monospace;
+    }
+
+    output {
+      flex: 1;
+      min-height: 3rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+  }
+
+  .field {
+    position: relative;
+    flex: 1;
+    height: 6.5rem;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff),
+                linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+    cursor: crosshair;
+    touch-action: none;
+
+    span {
+      position: absolute;
+      width: .85rem;
+      height: .85rem;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, .45);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+  }
+}
+
+.editor .sliders {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: .25rem .7rem;
+
+  &[data-figures] {
+    grid-template-columns: auto 1fr auto auto auto;
+  }
+
+  label {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .8rem;
+    color: var(--dim);
+    white-space: nowrap;
+
+    svg {
+      flex: none;
+      width: 14px;
+      height: 14px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+
+      .filled {
+        fill: currentColor;
+        stroke: none;
+      }
+    }
+
+    .signal {
+      width: auto;
+      height: 21.6px;
+      stroke: none;
+
+      .flashing {
+        animation: signalflash 1s steps(2, jump-none) infinite;
+      }
+    }
+  }
+
+  input[type=range] {
+    width: 100%;
+    accent-color: var(--accent);
+  }
+
+  input[type=text] {
+    box-sizing: content-box;
+    justify-self: end;
+    height: calc(1.2rem - 2px);
+    padding: 0 .35rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font: 600 .76rem system-ui, sans-serif;
+    line-height: calc(1.2rem - 2px);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  input[type=text] + span {
+    font-size: .74rem;
+    color: var(--dim);
+  }
+
+  .palette {
+    display: inline-flex;
+    grid-column: span 2;
+    gap: 2px;
+
+    i {
+      width: 1.1rem;
+      height: .9rem;
+      border: 1px solid var(--line);
+      border-radius: 3px;
+    }
+  }
+
+  &:not([data-figures]) {
+    input[type=text],
+    input[type=text] + span,
+    .palette,
+    input[type=range] + span,
+    input[type=range] + span + span {
+      display: none;
+    }
+  }
+
+  .drawer {
+    grid-row: 1 / span var(--rows);
+    grid-column: -2;
+    align-self: stretch;
+    width: 1.5rem;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: var(--panel);
+    color: var(--dim);
+    font: 600 1.35rem/1 system-ui, sans-serif;
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--dim);
+      color: var(--ink);
+    }
+  }
+}
+
+@keyframes signalflash {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: .2;
   }
 }
 </style>
@@ -3423,9 +3775,6 @@ var cardFaces = [];
 var cardWalks = {};
 var carrying_lamp = null;
 
-
-
-
 // A look given to a stretch. A line kept as written that already plays some of its lights is
 // asked about first, since the board refuses a light set twice: agreed, the kept lines go;
 // declined, nothing changes. A strip not fitted takes no look, and a new look starts in its
@@ -3746,12 +4095,6 @@ function washFor(run, section, look) {
   return stretchWash(look, section, run, !!first && !first.colour);
 }
 
-
-
-
-
-
-
 // ---- crossing from one side to the other ---------------------------------------------------
 
 var RIGHT = "<path d='M3 8 H12'/><path d='M8.5 4.5 L12 8 L8.5 11.5'/>";
@@ -3814,71 +4157,6 @@ function renderCutting(where, run) {
   if (!box) return;
   box.textContent = "";
   box.className = "head cutting";
-}
-
-// The chosen stretch's panel. The parts below add to it, each after the one before, whatever the
-// panel drew
-var chosenSteps = [];
-
-function renderChosen(where, run) {
-  if (pickingLook(run)) {
-    renderPicking(where, run);
-    return;
-  }
-  renderChosenPanel(where, run);
-  chosenSteps.forEach(function (step) { step(where, run); });
-}
-
-function renderChosenPanel(where, run) {
-  var box = document.getElementById(where);
-  if (!box) return;
-  box.textContent = "";
-  var section = run.sections[run.picked];
-  if (!section) return;
-  var wrap = document.createElement("div");
-  wrap.className = "chosen";
-  var who = document.createElement("div");
-  who.className = "who";
-  var first = run.lamps[section.from];
-  who.innerHTML = "<b>" + targetFor(run, section).selector + "</b>, " +
-                  widthOf(section) + (widthOf(section) === 1 ? " light" : " lights") +
-                  ", " + (first && first.colour ? "colour" : "mono");
-  wrap.appendChild(who);
-
-  var look = lookNamed(section.look);
-  if (look) {
-    var tuning = document.createElement("div");
-    tuning.className = "tuning";
-    tuning.appendChild(labelled(look.solid ? "Brightness" : "Speed"));
-    tuning.appendChild(slider(look.solid ? "mood" : "pace"));
-    if (!look.solid) {
-      tuning.appendChild(labelled(look.mood));
-      tuning.appendChild(slider("mood"));
-    }
-    wrap.appendChild(tuning);
-  }
-  box.appendChild(wrap);
-
-  function labelled(words) {
-    var label = document.createElement("label");
-    label.textContent = words;
-    return label;
-  }
-  function slider(key) {
-    var range = document.createElement("input");
-    range.type = "range";
-    range.min = 0;
-    range.max = 1;
-    range.step = 0.01;
-    range.value = section[key];
-    range.dataset.focus = where + "-" + key;
-    // Through the run, as a page that makes the stretches afresh leaves this one behind
-    range.oninput = function () {
-      run.sections[run.picked][key] = Number(range.value);
-      renderPreview();
-    };
-    return range;
-  }
 }
 
 // The two sides: each as wide as what it holds, so the divide between them moves as
@@ -3992,7 +4270,7 @@ function draw() {
   // Both sides are in the one panel, so one set of settings serves whichever was last worked
   // on rather than a set under each
   renderSides();
-  renderChosen("outChosen", active);
+  renderEditor("outChosen", active);
 
   renderPreview();
   levelSides();
@@ -5267,7 +5545,6 @@ var GLASS_OUT = "<circle cx='7.2' cy='7.2' r='4.9'/><path d='M10.9 10.9 L14.4 14
 var GLASS_IN = "<circle cx='7.2' cy='7.2' r='4.9'/><path d='M10.9 10.9 L14.4 14.4'/>" +
                "<path d='M5 7.2 L9.4 7.2 M7.2 5 L7.2 9.4'/>";
 
-
 function stripZoomAndSteps(row, run) {
   var space = document.createElement("span");
   space.className = "gap";
@@ -5364,8 +5641,6 @@ function astrayOf(side) {
     return !(onOne && atStep[upTo[place]] === 1);
   });
 }
-
-
 
 // ---- how many lights are on one ------------------------------------------------------------
 // The chip the drawing keeps its count in. A strip's length is a fact about the
@@ -5487,10 +5762,6 @@ function renderStripChip(where, run) {
 // The drawing finds a bar by which of two runs it is for. Here a bar is found by the strip's
 // own id, so these stand in for those two
 
-
-
-
-
 // ---- joining them to the page below -----------------------------------------------------
 
 // Each strip has a panel after the outputs', in the board's order, and its board box takes the
@@ -5539,14 +5810,13 @@ drawSteps.after.push(function () {
     renderStretches(run.id + "Bar", run);
     document.getElementById(run.id + "Chosen").textContent = "";
     if (run === active) {
-      renderChosen(run.id + "Chosen", run);
+      renderEditor(run.id + "Chosen", run);
     }
   });
   // The page painted what it drew before these were made, so a fresh bead would hold the
   // default fill until the next frame and show black
   paintAll();
 });
-
 
 // ---- what an output's lamps play when its wiring changes ----------------------------------
 // The new lamps are carried what the output played, both ways: broken out into three mono
@@ -5868,238 +6138,10 @@ function startColour(run, section, look) {
   });
 });
 
-// Every draw settles the model and settling makes the stretches afresh, so a handler
-// that kept the stretch it was made with would write onto one the run no longer holds.
-// Each reaches the live one through the run when it fires
-// The last custom colour of each stretch and its own brightness, by its run and first lamp,
-// kept while a swatch is chosen so custom comes back to both, as a screen's background does.
-// Kept here, the stretches being made afresh on every draw
-var customColours = {};
-
-// The picker is the one a screen's background has: one row of swatches spanning the stretch's
-// width, named under them when there is room, the custom field under the row with the hex
-// beside it over the colour itself
-function renderColourPick(box, run) {
-  var section = run.sections[run.picked];
-  function live() { return run.sections[run.picked]; }
-  var remembered = run.id + ":" + section.from;
-  var wrap = document.createElement("div");
-  wrap.className = "colourpick groundpick";
-
-  var swatches = document.createElement("div");
-  swatches.className = "sswatches";
-  var offered = swatchesFor(run, section);
-  var chosenHex = (section.colour || "#ffffff").replace("#", "").toLowerCase();
-  var chosenWord = offered.filter(function (name) {
-    return hexOf(WORDS[name]) === chosenHex;
-  })[0] || null;
-  offered.forEach(function (name) {
-    var swatch = document.createElement("button");
-    swatch.type = "button";
-    swatch.className = "swatch" + (chosenWord === name ? " on" : "");
-    swatch.style.background = rgbInk(WORDS[name]);
-    swatch.title = name;
-    var tag = document.createElement("b");
-    tag.textContent = name;
-    swatch.appendChild(tag);
-    swatch.onclick = function () {
-      live().colour = "#" + hexOf(WORDS[name]);
-      live().custom = false;
-      draw();
-    };
-    swatches.appendChild(swatch);
-  });
-
-  // The last one is not a colour but the way to every other one
-  var custom = document.createElement("button");
-  custom.type = "button";
-  custom.className = "swatch custom" + (section.custom || !chosenWord ? " on" : "");
-  // Its middle is the custom colour at its own brightness, kept while a swatch is chosen, and
-  // empty until there is one
-  if (section.custom || !chosenWord) {
-    customColours[remembered] = {colour: section.colour || "#ffffff",
-                                 level: section.level === undefined ? 1 : section.level};
-  }
-  var kept = customColours[remembered];
-  if (kept) custom.style.setProperty("--picked", atBrightness(kept.colour, kept.level));
-  custom.title = "any hue and saturation, with its own brightness";
-  var ctag = document.createElement("b");
-  ctag.textContent = "custom";
-  custom.appendChild(ctag);
-  // A swatch keeps the brightness already set, and custom comes back at its own
-  custom.onclick = function () {
-    live().custom = true;
-    if (kept) {
-      live().colour = kept.colour;
-      live().level = kept.level;
-    }
-    draw();
-  };
-  swatches.appendChild(custom);
-  wrap.appendChild(swatches);
-
-  // The field, open only while custom is the choice. Hue across and saturation down, at
-  // full value throughout, so a colour means the same thing at any brightness
-  var holds = document.createElement("div");
-  var open = section.custom || !chosenWord;
-  holds.className = "customholds scustom";
-  holds.style.display = open ? "" : "none";
-  var parts = takeApart(hexRgb(section.colour || "#ffffff"));
-  var field = document.createElement("div");
-  field.className = "field";
-  var at = document.createElement("div");
-  at.className = "at";
-  at.style.left = (parts.hue / 360 * 100) + "%";
-  at.style.top = ((1 - parts.sat) * 100) + "%";
-  at.style.background = rgbInk(fieldColour(parts.hue, parts.sat));
-  field.appendChild(at);
-
-  // Held down and dragged. Only the mark and the box move while the pointer is down, so
-  // the field is never rebuilt under it
-  function pointingAt(event) {
-    var box2 = field.getBoundingClientRect();
-    var across = Math.max(0, Math.min(1, (event.clientX - box2.left) / box2.width));
-    var down = Math.max(0, Math.min(1, (event.clientY - box2.top) / box2.height));
-    var rgb = fieldColour(across * 360, 1 - down);
-    live().colour = "#" + hexOf(rgb);
-    live().custom = true;
-    at.style.left = (across * 100) + "%";
-    at.style.top = (down * 100) + "%";
-    at.style.background = rgbInk(rgb);
-    hex.value = atBrightness(live().colour, live().level);
-    preview.style.background = hex.value;
-    renderPreview();
-  }
-  field.onpointerdown = function (event) {
-    field.setPointerCapture(event.pointerId);
-    pointingAt(event);
-  };
-  field.onpointermove = function (event) {
-    if (field.hasPointerCapture(event.pointerId)) pointingAt(event);
-  };
-  field.onpointerup = function () { draw(); };
-  holds.appendChild(field);
-
-  // A hex is how a colour arrives from somewhere else, so it is typed rather than hunted
-  // for. It is the colour as written, at the stretch's brightness, as a screen's background
-  // has it: one typed in sets the colour and the brightness both
-  var typed = document.createElement("div");
-  typed.className = "hexline";
-  var label = document.createElement("label");
-  label.textContent = "Hex";
-  typed.appendChild(label);
-  var hex = document.createElement("input");
-  hex.type = "text";
-  hex.maxLength = 7;
-  hex.spellcheck = false;
-  hex.value = atBrightness(section.colour || "#ffffff", section.level);
-  hex.title = "the colour as written, at its brightness. Paste a colour " +
-              "in to set the hue, saturation and brightness below";
-  hex.oninput = function () {
-    var said = hex.value.replace("#", "").trim();
-    if (!/^[0-9a-fA-F]{6}$/.test(said)) return;
-    var typedRgb = hexRgb("#" + said.toLowerCase());
-    var got = takeApart(typedRgb);
-    var rgb = fieldColour(got.hue, got.sat);
-    live().colour = "#" + hexOf(rgb);
-    live().level = Math.max(FAINTEST, Math.max.apply(null, typedRgb) / 255);
-    live().custom = true;
-    at.style.left = (got.hue / 360 * 100) + "%";
-    at.style.top = ((1 - got.sat) * 100) + "%";
-    at.style.background = rgbInk(rgb);
-    preview.style.background = "#" + said.toLowerCase();
-    renderPreview();
-  };
-  hex.onblur = function () { draw(); };
-  typed.appendChild(hex);
-
-  // Beside the field, the hex over the colour itself, as large as the room allows, as a
-  // screen's custom background has it
-  var side = document.createElement("div");
-  side.className = "scustomside";
-  side.appendChild(typed);
-  var preview = document.createElement("div");
-  preview.className = "scustompreview";
-  preview.style.background = atBrightness(section.colour || "#ffffff", section.level);
-  preview.title = "The colour as written, at its brightness";
-  side.appendChild(preview);
-  holds.appendChild(side);
-  wrap.appendChild(holds);
-
-  box.appendChild(wrap);
-}
-
 // A hue at full value, brought toward white by how far the saturation is from full
 function fieldColour(hue, sat) {
   return hueRgb(hue).map(function (v) { return Math.round(v + (255 - v) * (1 - sat)); });
 }
-
-// A second setting that is a count, such as Emergency's flashes, stops only at its values,
-// with a tick at each while there are few enough to tell apart
-var MOST_TICKS = 16;
-
-function detented(box, where, count) {
-  var range = box.querySelector("input[data-focus='" + where + "-mood']");
-  if (!range || count < 2) return;
-  range.step = 1 / (count - 1);
-  if (count > MOST_TICKS) return;
-  var ticks = document.createElement("datalist");
-  ticks.id = where + "-detents";
-  for (var at = 0; at < count; at++) {
-    var tick = document.createElement("option");
-    tick.value = at / (count - 1);
-    ticks.appendChild(tick);
-  }
-  range.parentNode.appendChild(ticks);
-  range.setAttribute("list", ticks.id);
-}
-
-// The stretch's settings, with the colour choice in place of a slider that stepped tones
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var section = run && run.sections[run.picked];
-  var look = section && lookNamed(section.look);
-  var memo = box && section && standingIn(run, section);
-  if (memo) {
-    var note = document.createElement("div");
-    note.className = "standin";
-    note.textContent = look.name + ", replacing " + memo.look + ", " +
-                       "which mono lights cannot play. Rejoin to restore " + memo.look + ".";
-    box.querySelector(".chosen").appendChild(note);
-  }
-  // A count of stops may depend on the stretch, as Spread's lengths do on its lights
-  if (box && look && look.detents) {
-    detented(box, where, typeof look.detents === "function"
-      ? look.detents(targetFor(run, section)) : look.detents);
-  }
-  var wrap = box && box.querySelector(".chosen");
-  if (!wrap || !look) return;
-  var tuning = wrap.querySelector(".tuning");
-  if (!tuning) {
-    tuning = document.createElement("div");
-    tuning.className = "tuning";
-    wrap.appendChild(tuning);
-  }
-  // Solid's own slider was its brightness, which the one every look has now is
-  if (look.solid) tuning.textContent = "";
-  // A mono lamp has no colour to be given
-  var first = run.lamps[section.from];
-  var coloured = takesColour(look) && !!first && first.colour;
-  // The second slider stepped a table of tones for these looks, and the swatches take
-  // its place. On mono lights it has nothing to set, a mono light having no colour
-  var mono = !!first && !first.colour;
-  var toneless = look.mood === "Colour" || (mono && look.mood === "Palette");
-  if ((coloured || mono) && toneless && tuning.children.length >= 4) {
-    tuning.removeChild(tuning.children[3]);
-    tuning.removeChild(tuning.children[2]);
-  }
-  brightnessSlider(tuning, run, where);
-  // The colour leads and the sliders follow it, brightness the first of them
-  if (coloured) {
-    renderColourPick(wrap, run);
-    wrap.appendChild(tuning);
-  }
-});
 
 // ---- how bright a stretch is -------------------------------------------------------------
 // Every look has a brightness, the first slider in the list, written only below full. A look
@@ -6140,28 +6182,6 @@ function sectionLines(run, section, look) {
                                section.colour), section.level);
     });
   });
-}
-
-function brightnessSlider(tuning, run, where) {
-  var section = run.sections[run.picked];
-  var ahead = tuning.firstChild;
-  var label = document.createElement("label");
-  label.textContent = "Brightness";
-  tuning.insertBefore(label, ahead);
-  var range = document.createElement("input");
-  range.type = "range";
-  range.min = FAINTEST;
-  range.max = 1;
-  range.step = 0.01;
-  range.value = section.level === undefined ? 1 : section.level;
-  range.dataset.focus = where + "-level";
-  range.oninput = function () {
-    run.sections[run.picked].level = Number(range.value);
-    renderPreview();
-  };
-  // A colour's hex and its preview show the brightness, so they are drawn again once it is set
-  range.onchange = function () { draw(); };
-  tuning.insertBefore(range, ahead);
 }
 
 // The lines a look writes for a target, as the board will play them
@@ -6340,39 +6360,6 @@ function livePlay(look, holder, t, slot, count, sim) {
   });
 }
 
-// A light at the end the stretch starts from and an arrow the way it runs
-// A toggle in the screens' style, its word and its pressed state as Loop's and Restart's are,
-// the light in its icon at the end the stretch starts from
-function directionToggle(run, section) {
-  var button = document.createElement("button");
-  button.type = "button";
-  var look = lookNamed(section.look);
-  var moves = runsAWay(look, forwardTargetFor(run, section), section);
-  button.className = "stoggle direction" + (section.reversed ? " reversed" : "") +
-                     (section.reversed && moves ? " on" : "");
-  button.setAttribute("aria-pressed", section.reversed && moves ? "true" : "false");
-  button.disabled = !moves;
-  button.title = !moves ? (!look ? "Which end it starts from, for looks that travel"
-                                 : widthOf(section) < 2 ? "One light has no direction"
-                                 : look.name + " looks the same from either end")
-               : section.reversed ? "Travels from the far end"
-                                  : "Travels from the near end";
-  button.innerHTML = "<svg width='28' height='13' viewBox='0 0 28 13' aria-hidden='true'>" +
-    (section.reversed
-      ? "<rect x='19' y='2.5' width='8' height='8' rx='2' fill='currentColor'/>" +
-        "<path d='M17 6.5 L11.5 6.5 M14 3.5 L11 6.5 L14 9.5'/>"
-      : "<rect x='1' y='2.5' width='8' height='8' rx='2' fill='currentColor'/>" +
-        "<path d='M11 6.5 L16.5 6.5 M14 3.5 L17 6.5 L14 9.5'/>") + "</svg> Reverse";
-  // Through the run, as a page that makes the stretches afresh leaves this one behind
-  button.onclick = function () {
-    remember(run);
-    var live = run.sections[run.picked];
-    live.reversed = !live.reversed;
-    draw();
-  };
-  return button;
-}
-
 // ---- what heads a stretch's settings ------------------------------------------------------------
 // The look's name, the panel being its settings, then where it plays in words: outputs
 // 1 to 7, LEDs 11 to 20 of the left strip, output 3's red and green. The file's selector is the
@@ -6444,201 +6431,6 @@ function wherePlays(run, section, reversed) {
   }));
 }
 
-// ---- a signal's states, drawn ----------------------------------------------------------------
-// Each timing is named by the state it holds, drawn as the signal shows it: a head of three
-// lamps, red, amber and green top to bottom, with those lit in their colour, and for a
-// crossing the two figures beside it, the red one standing and the green one walking. Its
-// slider takes the state's colour. The word stays beside the drawing
-var SIGNAL_INK = {red: "#e8392c", amber: "#f5a623", green: "#20b35c", dark: "#3b3f44"};
-
-// The lamps each state lights: 1 lit, 0 dark, "f" flashing
-var SIGNAL_STATES = {
-  "Traffic light": {red_interval: [1, 0, 0], red_amber_interval: [1, 1, 0],
-                    green_interval: [0, 0, 1], amber_interval: [0, 1, 0]},
-  "Pelican crossing": {red_interval: [1, 0, 0, 0, 1], flashing_interval: [0, "f", 0, 0, "f"],
-                       green_interval: [0, 0, 1, 1, 0], amber_interval: [0, 1, 0, 1, 0]}
-};
-
-// A slider's tint, amber and green a shade deeper than the lamps: a browser gives a light
-// accent a dark track, which read as a slider filled to its end
-var SIGNAL_TINT = {red_interval: SIGNAL_INK.red, red_amber_interval: "#a86600",
-                   green_interval: "#16894a", amber_interval: "#a86600",
-                   flashing_interval: "#a86600"};
-
-function signalFace(name, key) {
-  var lit = SIGNAL_STATES[name][key];
-  function lamp(state, ink) {
-    if (!state) return SIGNAL_INK.dark;
-    return ink;
-  }
-  function flashing(state) { return state === "f" ? " class='flashing'" : ""; }
-  var head = [SIGNAL_INK.red, SIGNAL_INK.amber, SIGNAL_INK.green].map(function (ink, at) {
-    return "<circle cx='6' cy='" + (4.5 + at * 6.5) + "' r='2.6' fill='" + lamp(lit[at], ink) +
-           "'" + flashing(lit[at]) + "/>";
-  }).join("");
-  var wide = 12;
-  var figures = "";
-  // A crossing's pedestrian lights are drawn as its figures, the red one standing and the
-  // green one walking, so they read as figures and not as a second head of lamps
-  if (lit.length > 3) {
-    wide = 22;
-    var stand = lamp(lit[3], SIGNAL_INK.red), walk = lamp(lit[4], SIGNAL_INK.green);
-    figures = "<rect x='12.5' y='1' width='9' height='22' rx='2' fill='#1c1f22'/>" +
-      "<g fill='none' stroke-width='1.3' stroke-linecap='round' stroke='" + stand + "'" +
-      flashing(lit[3]) + "><circle cx='17' cy='3.6' r='1.1' fill='" + stand + "' stroke='none'/>" +
-      "<path d='M17 5.2 V8.6 M15.6 6.4 H18.4 M16.3 8.6 V11 M17.7 8.6 V11'/></g>" +
-      "<g fill='none' stroke-width='1.3' stroke-linecap='round' stroke='" + walk + "'" +
-      flashing(lit[4]) + "><circle cx='17.4' cy='13.6' r='1.1' fill='" + walk + "' stroke='none'/>" +
-      "<path d='M17.2 15.2 L16.8 18.3 M15.6 16.8 L18.6 16 M16.8 18.3 L15.4 21 M16.8 18.3 " +
-      "L18.6 20.8'/></g>";
-  }
-  return "<svg class='signalface' viewBox='0 0 " + wide + " 24' width='" + wide * 0.9 +
-         "' height='21.6' aria-hidden='true'><rect x='1' y='0' width='10' height='24' rx='3' " +
-         "fill='#1c1f22'/>" + head + figures + "</svg>";
-}
-
-// A signal's timings take Speed's place, each a slider in seconds under its own name
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var section = run && run.sections[run.picked];
-  var look = section && lookNamed(section.look);
-  var tuning = box && box.querySelector(".chosen .tuning");
-  if (!tuning || !look || !SIGNAL_TIMINGS[look.name]) return;
-  var speed = tuning.querySelector("input[data-focus='" + where + "-pace']");
-  var after = speed ? speed.nextSibling : null;
-  if (speed) {
-    tuning.removeChild(speed.previousElementSibling);
-    tuning.removeChild(speed);
-  }
-  // Ease is about every state, so it comes before them, after Brightness
-  var ease = tuning.querySelector("input[data-focus='" + where + "-mood']");
-  if (ease) {
-    var easeLabel = ease.previousElementSibling;
-    if (after === easeLabel) after = ease.nextSibling;
-    tuning.insertBefore(easeLabel, after);
-    tuning.insertBefore(ease, after);
-    after = ease.nextSibling;
-  }
-  SIGNAL_TIMINGS[look.name].forEach(function (part) {
-    var label = document.createElement("label");
-    label.className = "signalstate";
-    label.innerHTML = signalFace(look.name, part[0]) + "<span>" + part[1] + "</span>";
-    var range = document.createElement("input");
-    range.style.accentColor = SIGNAL_TINT[part[0]];
-    range.type = "range";
-    range.min = part[3];
-    range.max = part[4];
-    range.step = 0.5;
-    range.value = withSection(section, function () { return timingOf(look.name, part[0]); });
-    range.dataset.focus = where + "-timing-" + part[0];
-    range.dataset.timing = part[0];
-    range.title = "seconds, " + part[1].toLowerCase();
-    range.oninput = function () {
-      var mine = run.sections[run.picked];
-      mine.timings = Object.assign({}, mine.timings);
-      mine.timings[part[0]] = Number(range.value);
-      renderPreview();
-    };
-    tuning.insertBefore(label, after);
-    tuning.insertBefore(range, after);
-  });
-});
-
-// ---- an icon for each setting ------------------------------------------------------------------
-// Each slider's name has a small line drawing before it, in the name's own grey, as the toggles
-// have theirs, so a panel reads at a glance. A signal's states keep their coloured
-// drawings, colour being what they are about. The word stays, the icon only hinting
-var SETTING_ICONS = {
-  "Brightness": "<circle cx='8' cy='8' r='2.8'/><path d='M8 1.5v1.8M8 12.7v1.8M1.5 8h1.8" +
-                "M12.7 8h1.8M3.4 3.4l1.3 1.3M11.3 11.3l1.3 1.3M3.4 12.6l1.3-1.3M11.3 4.7l1.3-1.3'/>",
-  "Speed": "<path d='M2.4 12A6 6 0 1 1 13.6 12'/><path d='M8 10.2L11 5.6'/>" +
-           "<circle cx='8' cy='10.4' r='1' class='filled'/>",
-  "Fade": "<path d='M5.6 10.4C4 9.3 3.6 7.9 3.6 6.8a4.4 4.4 0 0 1 8.8 0c0 1.1-.4 2.5-2 3.6'/>" +
-          "<path d='M6 12.4h4M6.6 14.4h2.8'/><path d='M6.4 6.8c.5-1 1.1-1.5 1.6-1.5'/>",
-  "Spread": "<path d='M1.5 8h13M4 5.5L1.5 8 4 10.5M12 5.5L14.5 8 12 10.5'/>",
-  "Steps": "<path d='M2 13.5h3v-3h3v-3h3v-3h3'/>",
-  "Trail": "<circle cx='12.4' cy='8' r='2.2' class='filled'/><path d='M1.6 8h6.8M3.2 5.2h5.2" +
-           "M3.2 10.8h5.2'/>",
-  "Flashes": "<path d='M9.2 1.6L4.2 9h3.9l-1.3 5.4L11.8 7H7.9z'/>",
-  "On time": "<circle cx='8' cy='8' r='5.8'/><path d='M8 2.2a5.8 5.8 0 0 1 0 11.6z' class='filled'/>",
-  "Spacing": "<circle cx='2.6' cy='8' r='1.4' class='filled'/><circle cx='8' cy='8' r='1.4'/>" +
-             "<circle cx='13.4' cy='8' r='1.4' class='filled'/>",
-  "Saturation": "<path d='M8 1.8C8 1.8 3.6 7.2 3.6 10a4.4 4.4 0 0 0 8.8 0C12.4 7.2 8 1.8 8 1.8z'/>",
-  "Intensity": "<path d='M8 1.6c1.5 2.7 4.5 4.3 4.5 7.8a4.5 4.5 0 0 1-9 0c0-2 1.4-3 2-4.4" +
-               "c.9 1.4 1.4 1.9 1.9 1.9 0-2 .1-3.5.6-5.3z'/>",
-  "Palette": "<path d='M8 1.6a6.4 6.4 0 0 0 0 12.8c1 0 1.6-.6 1.6-1.3 0-.9-.7-1.1-.7-1.8 0-.8.6-1.2" +
-             " 1.3-1.2h1.7a2.8 2.8 0 0 0 2.8-2.8C14.7 4 11.8 1.6 8 1.6z'/>" +
-             "<circle cx='4.9' cy='7.6' r='.9' class='filled'/><circle cx='6.2' cy='4.7' r='.9' " +
-             "class='filled'/><circle cx='9.3' cy='4' r='.9' class='filled'/>"
-};
-
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var tuning = box && box.querySelector(".chosen .tuning");
-  if (!tuning) return;
-  // Every slider keeps the picked stretch's colours on the bar with it as it moves, a slider
-  // that picks colours as Palette does changing them, and redraws the panel once let go. The
-  // sliders only played the preview as they moved, so the bar kept what was there before
-  var section = run && run.sections[run.picked];
-  var look = section && lookNamed(section.look);
-  Array.prototype.forEach.call(tuning.querySelectorAll("input[type=range]"), function (range) {
-    var moved = range.oninput;
-    range.oninput = function () {
-      if (moved) moved.call(range);
-      var live = run.sections[run.picked];
-      var cell = stretchCells(run)[run.picked];
-      var wash = cell && cell.querySelector(".band");
-      if (wash && look) wash.style.setProperty("--wash", washFor(run, live, look));
-    };
-    if (!range.onchange) range.onchange = function () { draw(); };
-  });
-  Array.prototype.forEach.call(tuning.querySelectorAll(":scope > label"), function (label) {
-    var drawn = SETTING_ICONS[label.textContent];
-    if (!drawn || label.querySelector(".settingicon")) return;
-    if (label.textContent === "Fade") {
-      label.title = "how long each light takes to fade on and off, eased so it slows at the end";
-    }
-    label.classList.add("withicon");
-    label.insertAdjacentHTML("afterbegin", "<svg class='settingicon' viewBox='0 0 16 16' " +
-                                           "aria-hidden='true'>" + drawn + "</svg>");
-  });
-});
-
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var who = box && box.querySelector(".chosen .who");
-  var section = run && run.sections[run.picked];
-  if (!who || !section) return;
-  var look = lookNamed(section.look);
-  var under = look ? null : stretchUnder(run, section);
-  who.innerHTML = "";
-  var named = document.createElement("b");
-  named.textContent = look ? look.name : "Nothing";
-  who.appendChild(named);
-  var reversed = section.reversed && runsAWay(look, forwardTargetFor(run, section), section);
-  who.appendChild(document.createTextNode(" on " + wherePlays(run, section, reversed)));
-  who.title = targetFor(run, section).selector;
-  // A stretch the scene leaves empty says what the board plays there, and how to change it
-  if (under) {
-    var hint = document.createElement("div");
-    hint.className = "underhint";
-    hint.textContent = under.tip + " Choose a look to give this scene its own.";
-    who.parentNode.insertBefore(hint, who.nextSibling);
-  }
-});
-
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var section = run && run.sections[run.picked];
-  var who = box && box.querySelector(".chosen .who");
-  if (!section || !who) return;
-  // The name and its count stay one piece of text, the toggle set apart at the end
-  var named = document.createElement("span");
-  while (who.firstChild) named.appendChild(who.firstChild);
-  who.appendChild(named);
-  who.classList.add("withway");
-  who.appendChild(directionToggle(run, section));
-});
 
 // ---- blinking through several colours -----------------------------------------------------
 // Blink takes one colour or several. With several it blinks through them in turn, one a beat,
@@ -6666,77 +6458,6 @@ function blinkWord(hex) {
   return blinkNamed(hex) || hex.replace("#", "").toLowerCase();
 }
 
-// Above the swatches, the colours it blinks through, each a chip that the picker changes
-// while it is chosen, with a way to add another and to take one away
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var section = run && run.sections[run.picked];
-  var pick = box && box.querySelector(".chosen .colourpick");
-  var first = section && run.lamps[section.from];
-  if (!pick || section.look !== BLINK || !first || !first.colour) return;
-  function live() { return run.sections[run.picked]; }
-  var blinks = section.blinks || {colours: [section.colour || "#ff0000"], at: 0};
-  blinks.colours[blinks.at] = section.colour;
-  section.blinks = blinks;
-
-  function choose(at) {
-    var mine = live();
-    mine.blinks.at = at;
-    mine.colour = mine.blinks.colours[at];
-    mine.custom = !blinkNamed(mine.colour);
-    draw();
-  }
-
-  var row = document.createElement("div");
-  row.className = "blinklist";
-  var said = document.createElement("span");
-  said.className = "blinksay";
-  said.textContent = blinks.colours.length > 1 ? "Blinks through" : "Blinks in";
-  row.appendChild(said);
-  blinks.colours.forEach(function (hex, at) {
-    var chip = document.createElement("button");
-    chip.type = "button";
-    chip.className = "blinkchip" + (at === blinks.at ? " on" : "");
-    chip.style.setProperty("--chip", hex);
-    chip.title = (at === blinks.at ? "the colour being edited below, " : "change ") +
-                 (blinkNamed(hex) || hex);
-    chip.onclick = function () { choose(at); };
-    row.appendChild(chip);
-    if (blinks.colours.length > 1) {
-      var drop = document.createElement("button");
-      drop.type = "button";
-      drop.className = "blinkdrop";
-      drop.textContent = "\u00d7";
-      drop.title = "stop blinking in " + (blinkNamed(hex) || hex);
-      drop.onclick = function () {
-        var mine = live();
-        mine.blinks.colours.splice(at, 1);
-        var left = mine.blinks.colours;
-        mine.blinks.at = Math.min(mine.blinks.at, left.length - 1);
-        mine.colour = left[mine.blinks.at];
-        mine.custom = !blinkNamed(mine.colour);
-        if (left.length === 1) mine.blinks = undefined;
-        draw();
-      };
-      row.appendChild(drop);
-    }
-  });
-  var more = document.createElement("button");
-  more.type = "button";
-  more.className = "blinkmore";
-  more.textContent = "+ another colour";
-  more.title = "blink through several colours, one per blink";
-  // The colour added is a copy of the last, a custom one included, to be changed from there
-  more.onclick = function () {
-    var mine = live();
-    if (!mine.blinks) mine.blinks = {colours: [mine.colour], at: 0};
-    var colours = mine.blinks.colours;
-    colours.push(colours[colours.length - 1]);
-    choose(colours.length - 1);
-  };
-  row.appendChild(more);
-  pick.insertBefore(row, pick.firstChild);
-});
 
 // ---- the board, the same in every scene ------------------------------------------------
 // How the board is built is the same in every scene: which outputs have an adapter
@@ -7568,10 +7289,10 @@ var lastOutputRun = outs;
 drawSteps.after.push(function () {
   if (!active.strip) lastOutputRun = active;
   if (active.strip) {
-    renderChosen("outChosen", lastOutputRun);
+    renderEditor("outChosen", lastOutputRun);
   }
   runs.filter(function (run) { return run.strip && run !== active; }).forEach(function (run) {
-    renderChosen(run.id + "Chosen", run);
+    renderEditor(run.id + "Chosen", run);
   });
   renderLedTabs();
 });
@@ -12336,92 +12057,6 @@ function groupGallery() {
   flat.parentNode.replaceChild(holder, flat);
 }
 
-function lookButton(words, choosing) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "changelook";
-  button.textContent = words;
-  button.onclick = function () {
-    choosingLook = choosing;
-    draw();
-  };
-  return button;
-}
-
-function renderPicking(where, run) {
-  var box = document.getElementById(where);
-  if (!box) return;
-  box.textContent = "";
-  var section = run.sections[run.picked];
-  if (!section) return;
-  var look = lookNamed(section.look);
-  var wrap = document.createElement("div");
-  wrap.className = "chosen picking";
-  var who = document.createElement("div");
-  who.className = "who withway";
-  var named = document.createElement("span");
-  var choose = document.createElement("b");
-  choose.textContent = "Choose a look";
-  named.appendChild(choose);
-  named.appendChild(document.createTextNode(" for " + wherePlays(run, section, false)));
-  who.appendChild(named);
-  who.title = targetFor(run, section).selector;
-  if (look) who.appendChild(lookButton("Keep " + look.name, false));
-  wrap.appendChild(who);
-  var under = look ? null : stretchUnder(run, section);
-  if (under) {
-    var hint = document.createElement("div");
-    hint.className = "underhint";
-    hint.textContent = under.tip + " Choose a look to give this scene its own.";
-    wrap.appendChild(hint);
-  }
-  box.appendChild(wrap);
-}
-
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var who = box && box.querySelector(".chosen .who");
-  if (!who) return;
-  who.insertBefore(lookButton("Change look", true), who.querySelector(".direction"));
-});
-
-function parkLooks() {
-  var looks = document.getElementById("looks");
-  var wrap = looks && looks.closest(".chosen");
-  if (wrap) wrap.closest(".panel").appendChild(looks);
-}
-
-function seatLooks() {
-  var looks = document.getElementById("looks");
-  if (!looks || looks.hidden || !document.body.classList.contains("looksbelow")) return;
-  var wrap = document.querySelector("#" + chosenTab + " .chosen.picking");
-  if (wrap) wrap.appendChild(looks);
-}
-
-function tabTheChosen() {
-  document.querySelectorAll(".panel .chosen").forEach(function (wrap) {
-    var panel = wrap.closest(".panel");
-    var cell = panel.querySelector(".stretches > li[aria-current]");
-    if (!cell) {
-      wrap.style.removeProperty("--tabw");
-      return;
-    }
-    var outer = wrap.getBoundingClientRect();
-    var tab = cell.getBoundingClientRect();
-    var left = Math.max(0, tab.left - outer.left);
-    var right = Math.min(outer.width - 4, tab.right - outer.left - 4);
-    wrap.style.setProperty("--tabl", left + "px");
-    wrap.style.setProperty("--tabw", Math.max(0, right - left) + "px");
-    wrap.style.setProperty("--tabbg", getComputedStyle(panel).backgroundColor);
-  });
-}
-
-drawSteps.before.push(parkLooks);
-drawSteps.after.push(function () {
-  seatLooks();
-  tabTheChosen();
-});
-window.addEventListener("resize", tabTheChosen);
 
 // ---- the figure beside each slider --------------------------------------------------------
 // Each slider can show beside it the value the file writes, with its unit, in a box that takes
@@ -12435,8 +12070,6 @@ window.addEventListener("resize", tabTheChosen);
 // it runs against a real one. A slider moving several settings shows the first of its keys it
 // changes, the rest following it. A wave's speed is shown without its sign, which way it runs
 // being Reverse's to say.
-
-document.body.classList.add("figures");
 
 // The settings a slider may be shown by, in the order they are looked for
 var FIGURE_KEYS = {
@@ -12467,15 +12100,6 @@ function figureWay(key, look) {
   if (key === "ease" || key === "fade") return same("s");
   if (["sat", "dimness", "duty"].indexOf(key) >= 0) return percent;
   return same("");
-}
-
-// Whether the drawer is open, which a viewer's page keeps between visits
-var FIGURES_KEPT = "fx-picker-figures-open";
-var figuresOpen = false;
-try {
-  figuresOpen = window.localStorage.getItem(FIGURES_KEPT) === "1";
-} catch (e) {
-  figuresOpen = false;
 }
 
 // The typed values of the stretch whose lines are being written, which linesFor applies
@@ -12543,166 +12167,6 @@ function placeFor(run, section, look, slider, key, value) {
   return {place: best, off: nearest};
 }
 
-// A palette's colours, a swatch for each its lines name, drawn afresh as its slider moves
-function paintPalette(swatches, lines) {
-  swatches.textContent = "";
-  (lines.join(" ").match(/colour=[^\s:]+/g) || []).forEach(function (said) {
-    var chip = document.createElement("span");
-    chip.className = "repeatchip";
-    chip.style.background = inkOf(said.slice(7));
-    chip.title = said.slice(7);
-    swatches.appendChild(chip);
-  });
-}
-
-// The box a figure is typed in and its unit, each a cell of the sliders' grid
-function figureCells(said, unit, title, take) {
-  var box = document.createElement("input");
-  box.type = "text";
-  box.inputMode = "decimal";
-  box.className = "figurebox";
-  box.value = said;
-  box.title = title;
-  box.onchange = function () {
-    var typed = parseFloat(box.value.replace(",", "."));
-    if (!(typed > 0)) {
-      box.value = said;
-      return;
-    }
-    take(typed);
-    draw();
-  };
-  var units = document.createElement("span");
-  units.className = "figureunit";
-  units.textContent = unit;
-  return [box, units];
-}
-
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var section = run && run.sections[run.picked];
-  var look = section && lookNamed(section.look);
-  var tuning = box && box.querySelector(".chosen .tuning");
-  if (!tuning || !look) return;
-  function live() { return run.sections[run.picked]; }
-  tuning.classList.toggle("figuresopen", figuresOpen);
-
-  var ranges = Array.prototype.slice.call(tuning.querySelectorAll("input[type=range]"));
-  var boxes = [];
-  ranges.forEach(function (range) {
-    var slider = (range.dataset.focus || "").split("-").pop();
-    var cells, way = null, key = null, widest = 3;
-    var timing = range.dataset.timing;
-    if (timing) {
-      // A signal's timing is its seconds already, typed past the slider's ends as it is
-      widest = Math.max(String(range.min).length, String(range.max).length) + 2;
-      cells = figureCells(figureSaid(Number(range.value)), "s",
-                          "seconds, typed exactly, beyond the slider's range if needed", function (typed) {
-        var mine = live();
-        mine.timings = Object.assign({}, mine.timings);
-        mine.timings[timing] = Math.round(typed * 100) / 100;
-      });
-    } else if (slider === "mood" && look.mood === "Palette") {
-      // A palette is its colours, not a number, so its slot shows them
-      var swatches = document.createElement("span");
-      swatches.className = "figurebox paletteswatches";
-      paintPalette(swatches, sectionLines(run, section, look));
-      // Across the box and unit columns, from where the boxes start, being wider than a box
-      swatches.style.gridColumn = "span 2";
-      cells = [swatches, null];
-    } else if (slider === "level") {
-      var bright = section.level === undefined ? 1 : section.level;
-      cells = figureCells(String(Math.round(bright * 100)), "%",
-                          "brightness, typed as a percentage", function (typed) {
-        live().level = Math.max(0.01, Math.min(1, typed / 100));
-      });
-    } else if (slider === "pace" || slider === "mood") {
-      key = figureKey(run, section, look, slider);
-      if (key) {
-        way = figureWay(key, look);
-        // As wide as the widest figure the slider can reach, so dragging it never resizes its
-        // column and with it the slider
-        [0, 0.5, 1].forEach(function (place) {
-          var reach = figureSaid(way.show(settingIn(linesAt(run, section, look, slider, place),
-                                                   key)));
-          widest = Math.max(widest, reach.length);
-        });
-        var typedHere = section.exact && section.exact[slider];
-        var value = typedHere ? typedHere.value : settingIn(sectionLines(run, section, look), key);
-        cells = figureCells(figureSaid(way.show(value)), way.unit,
-                            "the file's " + key + ", typed exactly, beyond the slider's range if needed",
-                            function (typed) {
-          var wanted = way.take(typed);
-          var mine = live();
-          var found = placeFor(run, mine, look, slider, key, wanted);
-          mine[slider] = found.place;
-          mine.exact = Object.assign({}, mine.exact);
-          if (found.off > 1e-6) {
-            mine.exact[slider] = {key: key, value: Math.round(wanted * 1000) / 1000};
-          } else {
-            delete mine.exact[slider];
-          }
-        });
-      }
-    } else {
-      return;
-    }
-    // A slider with no one figure keeps its row's cells, empty, so the columns stay whole
-    if (!cells) {
-      cells = [document.createElement("span"), document.createElement("span")];
-      cells[0].className = "figurebox";
-      cells[1].className = "figureunit";
-    }
-    // A figure typed past the slider's end, wider than any it reaches, widens it to fit
-    if (cells[0].tagName === "INPUT") {
-      boxes.push({box: cells[0], chars: Math.max(widest, String(cells[0].value || "").length)});
-    }
-    if (cells[1]) range.parentNode.insertBefore(cells[1], range.nextSibling);
-    range.parentNode.insertBefore(cells[0], range.nextSibling);
-
-    // Moved, the slider is the setting again, and its figure follows it
-    var moved = range.oninput;
-    range.oninput = function () {
-      var mine = live();
-      if (mine.exact && mine.exact[slider]) {
-        mine.exact = Object.assign({}, mine.exact);
-        delete mine.exact[slider];
-      }
-      if (moved) moved.call(range);
-      if (cells[0].classList.contains("paletteswatches")) {
-        paintPalette(cells[0], sectionLines(run, mine, look));
-        return;
-      }
-      if (cells[0].tagName !== "INPUT") return;
-      if (timing) cells[0].value = figureSaid(Number(range.value));
-      else if (slider === "level") cells[0].value = String(Math.round(Number(range.value) * 100));
-      else cells[0].value = figureSaid(way.show(settingIn(sectionLines(run, mine, look), key)));
-    };
-  });
-
-  // Every box in the panel as wide as the widest, so they line up and none moves as it changes
-  var chars = boxes.reduce(function (most, one) { return Math.max(most, one.chars); }, 3);
-  boxes.forEach(function (one) { one.box.style.width = (chars + 0.5) + "ch"; });
-
-  // The drawer's handle, down the right of the sliders, which opens and shuts every figure
-  var handle = document.createElement("button");
-  handle.type = "button";
-  handle.className = "figurehandle";
-  handle.textContent = figuresOpen ? "\u203a" : "\u2039";
-  handle.title = figuresOpen ? "hide values" : "show values";
-  handle.setAttribute("aria-expanded", figuresOpen ? "true" : "false");
-  handle.style.gridRow = "1 / span " + ranges.length;
-  handle.onclick = function () {
-    figuresOpen = !figuresOpen;
-    try {
-      window.localStorage.setItem(FIGURES_KEPT, figuresOpen ? "1" : "0");
-    } catch (e) {
-      // Kept only for this visit where the page may not keep anything
-    }
-    draw();
-  };
-  tuning.appendChild(handle);
-});
 
 // ---- the drive's files ---------------------------------------------------------------------------
 // The files on the FX drive: a walk of the drive that each part's own files are found in, adding
@@ -14716,6 +14180,530 @@ document.addEventListener("mouseup", function () {
   dragging = null;
   draw();
 });
+
+var FIGURES_KEPT = "fx-picker-figures-open";
+var MOST_DETENT_TICKS = 16;
+var SIGNAL_INK = {red: "#e8392c", amber: "#f5a623", green: "#20b35c", dark: "#3b3f44"};
+var SIGNAL_TINT = {red_interval: SIGNAL_INK.red, red_amber_interval: "#a86600",
+                   green_interval: "#16894a", amber_interval: "#a86600",
+                   flashing_interval: "#a86600"};
+var SIGNAL_STATES = {
+  "Traffic light": {red_interval: [1, 0, 0], red_amber_interval: [1, 1, 0],
+                    green_interval: [0, 0, 1], amber_interval: [0, 1, 0]},
+  "Pelican crossing": {red_interval: [1, 0, 0, 0, 1], flashing_interval: [0, "f", 0, 0, "f"],
+                       green_interval: [0, 0, 1, 1, 0], amber_interval: [0, 1, 0, 1, 0]}
+};
+var SETTING_ICONS = {
+  "Brightness": "<circle cx='8' cy='8' r='2.8'/><path d='M8 1.5v1.8M8 12.7v1.8M1.5 8h1.8" +
+                "M12.7 8h1.8M3.4 3.4l1.3 1.3M11.3 11.3l1.3 1.3M3.4 12.6l1.3-1.3M11.3 4.7l1.3-1.3'/>",
+  "Speed": "<path d='M2.4 12A6 6 0 1 1 13.6 12'/><path d='M8 10.2L11 5.6'/>" +
+           "<circle cx='8' cy='10.4' r='1' class='filled'/>",
+  "Fade": "<path d='M5.6 10.4C4 9.3 3.6 7.9 3.6 6.8a4.4 4.4 0 0 1 8.8 0c0 1.1-.4 2.5-2 3.6'/>" +
+          "<path d='M6 12.4h4M6.6 14.4h2.8'/><path d='M6.4 6.8c.5-1 1.1-1.5 1.6-1.5'/>",
+  "Spread": "<path d='M1.5 8h13M4 5.5L1.5 8 4 10.5M12 5.5L14.5 8 12 10.5'/>",
+  "Steps": "<path d='M2 13.5h3v-3h3v-3h3v-3h3'/>",
+  "Trail": "<circle cx='12.4' cy='8' r='2.2' class='filled'/><path d='M1.6 8h6.8M3.2 5.2h5.2" +
+           "M3.2 10.8h5.2'/>",
+  "Flashes": "<path d='M9.2 1.6L4.2 9h3.9l-1.3 5.4L11.8 7H7.9z'/>",
+  "On time": "<circle cx='8' cy='8' r='5.8'/><path d='M8 2.2a5.8 5.8 0 0 1 0 11.6z' class='filled'/>",
+  "Spacing": "<circle cx='2.6' cy='8' r='1.4' class='filled'/><circle cx='8' cy='8' r='1.4'/>" +
+             "<circle cx='13.4' cy='8' r='1.4' class='filled'/>",
+  "Saturation": "<path d='M8 1.8C8 1.8 3.6 7.2 3.6 10a4.4 4.4 0 0 0 8.8 0C12.4 7.2 8 1.8 8 1.8z'/>",
+  "Intensity": "<path d='M8 1.6c1.5 2.7 4.5 4.3 4.5 7.8a4.5 4.5 0 0 1-9 0c0-2 1.4-3 2-4.4" +
+               "c.9 1.4 1.4 1.9 1.9 1.9 0-2 .1-3.5.6-5.3z'/>",
+  "Palette": "<path d='M8 1.6a6.4 6.4 0 0 0 0 12.8c1 0 1.6-.6 1.6-1.3 0-.9-.7-1.1-.7-1.8 0-.8.6-1.2" +
+             " 1.3-1.2h1.7a2.8 2.8 0 0 0 2.8-2.8C14.7 4 11.8 1.6 8 1.6z'/>" +
+             "<circle cx='4.9' cy='7.6' r='.9' class='filled'/><circle cx='6.2' cy='4.7' r='.9' " +
+             "class='filled'/><circle cx='9.3' cy='4' r='.9' class='filled'/>"
+};
+var SETTING_TITLES = {
+  "Fade": "how long each light takes to fade on and off, eased so it slows at the end"
+};
+
+var figuresOpen = false;
+try {
+  figuresOpen = window.localStorage.getItem(FIGURES_KEPT) === "1";
+} catch (e) {
+  figuresOpen = false;
+}
+
+var customColours = {};
+
+function keepFigures() {
+  try {
+    window.localStorage.setItem(FIGURES_KEPT, figuresOpen ? "1" : "0");
+  } catch (e) {
+    return;
+  }
+}
+
+function renderEditor(where, run) {
+  var box = document.getElementById(where);
+  if (!box) return;
+  var section = run && run.sections[run.picked];
+  if (!section) {
+    replace(box);
+    return;
+  }
+  var look = lookNamed(section.look);
+  var picking = pickingLook(run);
+  var first = run.lamps[section.from];
+  var coloured = !picking && takesColour(look) && !!first && first.colour;
+  replace(box, h("section", {class: "editor", "data-picking": picking,
+                             "aria-label": picking ? "Choose a look" : look.name + " settings"},
+    picking ? pickingHeader(run, section, look) : settingsHeader(run, section, look),
+    notes(run, section, look, picking),
+    coloured ? colourPicker(run, where) : null,
+    picking ? null : sliders(run, section, look, where)));
+}
+
+function settingsHeader(run, section, look) {
+  var reversed = section.reversed && runsAWay(look, forwardTargetFor(run, section), section);
+  return h("header", {title: targetFor(run, section).selector},
+    h("h3", {}, look.name, " ", h("small", {}, "on " + wherePlays(run, section, reversed))),
+    lookButton("Change look", true),
+    reverseToggle(run, section, look));
+}
+
+function pickingHeader(run, section, look) {
+  return h("header", {title: targetFor(run, section).selector},
+    h("h3", {}, "Choose a look", " ", h("small", {}, "for " + wherePlays(run, section, false))),
+    look ? lookButton("Keep " + look.name, false) : null);
+}
+
+function lookButton(words, choosing) {
+  return h("button", {type: "button", onclick: function () {
+    choosingLook = choosing;
+    draw();
+  }}, words);
+}
+
+function reverseToggle(run, section, look) {
+  var moves = runsAWay(look, forwardTargetFor(run, section), section);
+  var on = section.reversed && moves;
+  return h("button", {type: "button", class: "reverse", "aria-pressed": on ? "true" : "false",
+                      disabled: !moves,
+                      title: !moves ? (widthOf(section) < 2 ? "One light has no direction"
+                                                            : look.name + " looks the same from either end")
+                           : section.reversed ? "Travels from the far end" : "Travels from the near end",
+                      onclick: function () {
+                        remember(run);
+                        var live = run.sections[run.picked];
+                        live.reversed = !live.reversed;
+                        draw();
+                      },
+                      html: "<svg width='28' height='13' viewBox='0 0 28 13' aria-hidden='true'>" +
+                            (section.reversed
+                              ? "<rect x='19' y='2.5' width='8' height='8' rx='2'/>" +
+                                "<path d='M17 6.5 L11.5 6.5 M14 3.5 L11 6.5 L14 9.5'/>"
+                              : "<rect x='1' y='2.5' width='8' height='8' rx='2'/>" +
+                                "<path d='M11 6.5 L16.5 6.5 M14 3.5 L17 6.5 L14 9.5'/>") +
+                            "</svg> Reverse"});
+}
+
+function notes(run, section, look, picking) {
+  var said = [];
+  var memo = look && standingIn(run, section);
+  if (memo && !picking) {
+    said.push(look.name + ", replacing " + memo.look + ", which mono lights cannot play. " +
+              "Rejoin to restore " + memo.look + ".");
+  }
+  var under = look ? null : stretchUnder(run, section);
+  if (under) said.push(under.tip + " Choose a look to give this scene its own.");
+  return said.map(function (words) { return h("p", {}, words); });
+}
+
+function colourPicker(run, where) {
+  var section = run.sections[run.picked];
+  function live() { return run.sections[run.picked]; }
+  var offered = swatchesFor(run, section);
+  var chosenHex = (section.colour || "#ffffff").replace("#", "").toLowerCase();
+  var chosenWord = offered.filter(function (name) { return hexOf(WORDS[name]) === chosenHex; })[0] || null;
+  var custom = section.custom || !chosenWord;
+  var remembered = run.id + ":" + section.from;
+  if (custom) {
+    customColours[remembered] = {colour: section.colour || "#ffffff",
+                                 level: section.level === undefined ? 1 : section.level};
+  }
+  var kept = customColours[remembered];
+
+  var swatches = h("ul", {class: "swatches", role: "radiogroup", "aria-label": "Colour"},
+    offered.map(function (name) {
+      return h("li", {}, h("button", {type: "button", role: "radio",
+                                      "aria-checked": chosenWord === name && !section.custom ? "true" : "false",
+                                      title: name, style: {"--swatch": rgbInk(WORDS[name])},
+                                      onclick: function () {
+                                        live().colour = "#" + hexOf(WORDS[name]);
+                                        live().custom = false;
+                                        draw();
+                                      }}, h("span", {}, name)));
+    }),
+    h("li", {}, h("button", {type: "button", role: "radio", "data-custom": true,
+                             "aria-checked": custom ? "true" : "false",
+                             title: "any hue and saturation, with its own brightness",
+                             style: {"--picked": kept ? atBrightness(kept.colour, kept.level) : null},
+                             onclick: function () {
+                               live().custom = true;
+                               if (kept) {
+                                 live().colour = kept.colour;
+                                 live().level = kept.level;
+                               }
+                               draw();
+                             }}, h("span", {}, "custom"))));
+
+  return h("fieldset", {class: "colours"},
+    h("legend", {}, "Colour"),
+    section.look === BLINK ? blinkChips(run) : null,
+    swatches,
+    custom ? customField(run, live) : null);
+}
+
+function blinkChips(run) {
+  var section = run.sections[run.picked];
+  function live() { return run.sections[run.picked]; }
+  var blinks = section.blinks || {colours: [section.colour || "#ff0000"], at: 0};
+  blinks.colours[blinks.at] = section.colour;
+  section.blinks = blinks;
+
+  function choose(at) {
+    var mine = live();
+    mine.blinks.at = at;
+    mine.colour = mine.blinks.colours[at];
+    mine.custom = !blinkNamed(mine.colour);
+    draw();
+  }
+
+  function drop(at) {
+    var mine = live();
+    mine.blinks.colours.splice(at, 1);
+    var left = mine.blinks.colours;
+    mine.blinks.at = Math.min(mine.blinks.at, left.length - 1);
+    mine.colour = left[mine.blinks.at];
+    mine.custom = !blinkNamed(mine.colour);
+    if (left.length === 1) mine.blinks = undefined;
+    draw();
+  }
+
+  function another() {
+    var mine = live();
+    if (!mine.blinks) mine.blinks = {colours: [mine.colour], at: 0};
+    var colours = mine.blinks.colours;
+    colours.push(colours[colours.length - 1]);
+    choose(colours.length - 1);
+  }
+
+  var several = blinks.colours.length > 1;
+  return h("div", {class: "blinks"},
+    h("span", {}, several ? "Blinks through" : "Blinks in"),
+    h("ol", {}, blinks.colours.map(function (hex, at) {
+      var named = blinkNamed(hex) || hex;
+      return h("li", {},
+        h("button", {type: "button", "aria-pressed": at === blinks.at ? "true" : "false",
+                     style: {"--chip": hex},
+                     title: (at === blinks.at ? "the colour being edited below, " : "change ") + named,
+                     onclick: function () { choose(at); }}),
+        several ? h("button", {type: "button", class: "drop", title: "stop blinking in " + named,
+                               onclick: function () { drop(at); }}, "\u00d7") : null);
+    })),
+    h("button", {type: "button", class: "more", title: "blink through several colours, one per blink",
+                 onclick: another}, "+ another colour"));
+}
+
+function customField(run, live) {
+  var section = run.sections[run.picked];
+  var parts = takeApart(hexRgb(section.colour || "#ffffff"));
+  var mark = h("span", {style: {left: (parts.hue / 360 * 100) + "%", top: ((1 - parts.sat) * 100) + "%",
+                                background: rgbInk(fieldColour(parts.hue, parts.sat))}});
+  var shown = h("output", {title: "The colour as written, at its brightness",
+                           style: {background: atBrightness(section.colour || "#ffffff", section.level)}});
+  var hex = h("input", {type: "text", maxLength: 7, spellcheck: false,
+                        value: atBrightness(section.colour || "#ffffff", section.level),
+                        title: "the colour as written, at its brightness. Paste a colour in to set " +
+                               "the hue, saturation and brightness below",
+                        oninput: typed, onblur: function () { draw(); }});
+
+  function place(hue, sat, rgb) {
+    mark.style.left = (hue / 360 * 100) + "%";
+    mark.style.top = ((1 - sat) * 100) + "%";
+    mark.style.background = rgbInk(rgb);
+  }
+
+  function pointing(event) {
+    var box = field.getBoundingClientRect();
+    var across = Math.max(0, Math.min(1, (event.clientX - box.left) / box.width));
+    var down = Math.max(0, Math.min(1, (event.clientY - box.top) / box.height));
+    var rgb = fieldColour(across * 360, 1 - down);
+    live().colour = "#" + hexOf(rgb);
+    live().custom = true;
+    place(across * 360, 1 - down, rgb);
+    hex.value = atBrightness(live().colour, live().level);
+    shown.style.background = hex.value;
+    renderPreview();
+  }
+
+  function typed() {
+    var said = hex.value.replace("#", "").trim();
+    if (!/^[0-9a-fA-F]{6}$/.test(said)) return;
+    var typedRgb = hexRgb("#" + said.toLowerCase());
+    var got = takeApart(typedRgb);
+    var rgb = fieldColour(got.hue, got.sat);
+    live().colour = "#" + hexOf(rgb);
+    live().level = Math.max(FAINTEST, Math.max.apply(null, typedRgb) / 255);
+    live().custom = true;
+    place(got.hue, got.sat, rgb);
+    shown.style.background = "#" + said.toLowerCase();
+    renderPreview();
+  }
+
+  var field = h("div", {class: "field", role: "presentation",
+                        onpointerdown: function (event) {
+                          field.setPointerCapture(event.pointerId);
+                          pointing(event);
+                        },
+                        onpointermove: function (event) {
+                          if (field.hasPointerCapture(event.pointerId)) pointing(event);
+                        },
+                        onpointerup: function () { draw(); }}, mark);
+
+  return h("div", {class: "custom"}, field,
+    h("div", {}, h("label", {}, "Hex ", hex), shown));
+}
+
+function sliderRows(run, section, look, where) {
+  var rows = [{slider: "level", label: "Brightness", min: FAINTEST, max: 1, step: 0.01,
+               value: section.level === undefined ? 1 : section.level}];
+  if (look.solid) return rows;
+  var first = run.lamps[section.from];
+  var coloured = takesColour(look) && !!first && first.colour;
+  var mono = !!first && !first.colour;
+  var toneless = look.mood === "Colour" || (mono && look.mood === "Palette");
+  var signal = SIGNAL_TIMINGS[look.name];
+  if (!signal) rows.push({slider: "pace", label: "Speed", min: 0, max: 1, step: 0.01, value: section.pace});
+  if (!((coloured || mono) && toneless)) {
+    var count = typeof look.detents === "function" ? look.detents(targetFor(run, section)) : look.detents;
+    rows.push({slider: "mood", label: look.mood, min: 0, max: 1, step: count >= 2 ? 1 / (count - 1) : 0.01,
+               value: section.mood, detents: count >= 2 && count <= MOST_DETENT_TICKS ? count : 0});
+  }
+  (signal || []).forEach(function (part) {
+    rows.push({timing: part[0], label: part[1], min: part[3], max: part[4], step: 0.5,
+               value: withSection(section, function () { return timingOf(look.name, part[0]); }),
+               face: signalFace(look.name, part[0]), tint: SIGNAL_TINT[part[0]]});
+  });
+  rows.forEach(function (row) {
+    row.focus = where + "-" + (row.timing ? "timing-" + row.timing : row.slider);
+  });
+  return rows;
+}
+
+function sliders(run, section, look, where) {
+  function live() { return run.sections[run.picked]; }
+  var rows = sliderRows(run, section, look, where);
+  var widest = 3;
+  var built = rows.map(function (row) {
+    var figure = figureFor(run, section, look, row, live);
+    if (figure.chars) widest = Math.max(widest, figure.chars);
+    var range = h("input", {type: "range", id: row.focus, min: row.min, max: row.max, step: row.step,
+                            value: row.value, "data-focus": row.focus,
+                            list: row.detents ? row.focus + "-detents" : null,
+                            style: {"accent-color": row.tint || null},
+                            title: row.timing ? "seconds, " + row.label.toLowerCase() : null,
+                            oninput: function () {
+                              moved(run, look, row, Number(range.value));
+                              figure.follow();
+                            },
+                            onchange: function () { draw(); }});
+    return [label(row, look), range, figure.cells,
+            row.detents ? detentList(row) : null];
+  });
+  var boxes = built.map(function (cells) { return cells[2][0]; })
+    .filter(function (cell) { return cell && cell.tagName === "INPUT"; });
+  boxes.forEach(function (box) { box.style.width = (Math.max(widest, box.value.length) + 0.5) + "ch"; });
+  return h("div", {class: "sliders", "data-figures": figuresOpen, style: {"--rows": rows.length}},
+    built,
+    h("button", {type: "button", class: "drawer", "aria-expanded": figuresOpen ? "true" : "false",
+                 title: figuresOpen ? "hide values" : "show values",
+                 onclick: function () {
+                   figuresOpen = !figuresOpen;
+                   keepFigures();
+                   draw();
+                 }}, figuresOpen ? "\u203a" : "\u2039"));
+}
+
+function label(row, look) {
+  if (row.face) return h("label", {for: row.focus, html: row.face}, h("span", {}, row.label));
+  var drawn = SETTING_ICONS[row.label];
+  return h("label", {for: row.focus, title: SETTING_TITLES[row.label] || null},
+    drawn ? h("svg:svg", {viewBox: "0 0 16 16", "aria-hidden": "true", html: drawn}) : null,
+    row.label);
+}
+
+function detentList(row) {
+  var stops = [];
+  for (var at = 0; at < row.detents; at++) stops.push(h("option", {value: at / (row.detents - 1)}));
+  return h("datalist", {id: row.focus + "-detents"}, stops);
+}
+
+function moved(run, look, row, value) {
+  var mine = run.sections[run.picked];
+  var slider = row.timing || row.slider;
+  if (mine.exact && mine.exact[slider]) {
+    mine.exact = Object.assign({}, mine.exact);
+    delete mine.exact[slider];
+  }
+  if (row.timing) {
+    mine.timings = Object.assign({}, mine.timings);
+    mine.timings[row.timing] = value;
+  } else {
+    mine[row.slider] = value;
+  }
+  renderPreview();
+  var cell = stretchCells(run)[run.picked];
+  var band = cell && cell.querySelector(".band");
+  if (band && look) band.style.setProperty("--wash", washFor(run, mine, look));
+}
+
+function figureFor(run, section, look, row, live) {
+  function typedBox(said, unit, title, take) {
+    var box = h("input", {type: "text", inputMode: "decimal", value: said, title: title,
+                          onchange: function () {
+                            var typed = parseFloat(box.value.replace(",", "."));
+                            if (!(typed > 0)) {
+                              box.value = said;
+                              return;
+                            }
+                            take(typed);
+                            draw();
+                          }});
+    return [box, h("span", {}, unit)];
+  }
+  var none = {cells: [h("span"), h("span")], chars: 0, follow: function () {}};
+
+  if (row.timing) {
+    var cells = typedBox(figureSaid(row.value), "s", "seconds, typed exactly, beyond the slider's range if needed",
+                         function (typed) {
+                           var mine = live();
+                           mine.timings = Object.assign({}, mine.timings);
+                           mine.timings[row.timing] = Math.round(typed * 100) / 100;
+                         });
+    return {cells: cells, chars: Math.max(String(row.min).length, String(row.max).length) + 2,
+            follow: function () { cells[0].value = figureSaid(Number(document.getElementById(row.focus).value)); }};
+  }
+  if (row.slider === "level") {
+    var level = typedBox(String(Math.round(row.value * 100)), "%", "brightness, typed as a percentage",
+                         function (typed) { live().level = Math.max(0.01, Math.min(1, typed / 100)); });
+    return {cells: level, chars: 3,
+            follow: function () { level[0].value = String(Math.round(live().level * 100)); }};
+  }
+  if (row.slider === "mood" && look.mood === "Palette") {
+    var chips = h("span", {class: "palette"});
+    paintPalette(chips, sectionLines(run, section, look));
+    return {cells: [chips, null], chars: 0,
+            follow: function () { paintPalette(chips, sectionLines(run, live(), look)); }};
+  }
+  var key = figureKey(run, section, look, row.slider);
+  if (!key) return none;
+  var way = figureWay(key, look);
+  var widest = 3;
+  [0, 0.5, 1].forEach(function (place) {
+    var reach = figureSaid(way.show(settingIn(linesAt(run, section, look, row.slider, place), key)));
+    widest = Math.max(widest, reach.length);
+  });
+  var typedHere = section.exact && section.exact[row.slider];
+  var value = typedHere ? typedHere.value : settingIn(sectionLines(run, section, look), key);
+  var figure = typedBox(figureSaid(way.show(value)), way.unit,
+                        "the file's " + key + ", typed exactly, beyond the slider's range if needed",
+                        function (typed) {
+                          var wanted = way.take(typed);
+                          var mine = live();
+                          var found = placeFor(run, mine, look, row.slider, key, wanted);
+                          mine[row.slider] = found.place;
+                          mine.exact = Object.assign({}, mine.exact);
+                          if (found.off > 1e-6) {
+                            mine.exact[row.slider] = {key: key, value: Math.round(wanted * 1000) / 1000};
+                          } else {
+                            delete mine.exact[row.slider];
+                          }
+                        });
+  return {cells: figure, chars: widest,
+          follow: function () {
+            figure[0].value = figureSaid(way.show(settingIn(sectionLines(run, live(), look), key)));
+          }};
+}
+
+function paintPalette(chips, lines) {
+  replace(chips, (lines.join(" ").match(/colour=[^\s:]+/g) || []).map(function (said) {
+    return h("i", {title: said.slice(7), style: {background: inkOf(said.slice(7))}});
+  }));
+}
+
+function signalFace(name, key) {
+  var lit = SIGNAL_STATES[name][key];
+  function lamp(state, ink) { return state ? ink : SIGNAL_INK.dark; }
+  function flashing(state) { return state === "f" ? " class='flashing'" : ""; }
+  var head = [SIGNAL_INK.red, SIGNAL_INK.amber, SIGNAL_INK.green].map(function (ink, at) {
+    return "<circle cx='6' cy='" + (4.5 + at * 6.5) + "' r='2.6' fill='" + lamp(lit[at], ink) +
+           "'" + flashing(lit[at]) + "/>";
+  }).join("");
+  var wide = 12;
+  var figures = "";
+  if (lit.length > 3) {
+    wide = 22;
+    var stand = lamp(lit[3], SIGNAL_INK.red), walk = lamp(lit[4], SIGNAL_INK.green);
+    figures = "<rect x='12.5' y='1' width='9' height='22' rx='2' fill='#1c1f22'/>" +
+      "<g fill='none' stroke-width='1.3' stroke-linecap='round' stroke='" + stand + "'" +
+      flashing(lit[3]) + "><circle cx='17' cy='3.6' r='1.1' fill='" + stand + "' stroke='none'/>" +
+      "<path d='M17 5.2 V8.6 M15.6 6.4 H18.4 M16.3 8.6 V11 M17.7 8.6 V11'/></g>" +
+      "<g fill='none' stroke-width='1.3' stroke-linecap='round' stroke='" + walk + "'" +
+      flashing(lit[4]) + "><circle cx='17.4' cy='13.6' r='1.1' fill='" + walk + "' stroke='none'/>" +
+      "<path d='M17.2 15.2 L16.8 18.3 M15.6 16.8 L18.6 16 M16.8 18.3 L15.4 21 M16.8 18.3 " +
+      "L18.6 20.8'/></g>";
+  }
+  return "<svg class='signal' viewBox='0 0 " + wide + " 24' width='" + wide * 0.9 +
+         "' height='21.6' aria-hidden='true'><rect x='1' y='0' width='10' height='24' rx='3' " +
+         "fill='#1c1f22'/>" + head + figures + "</svg>";
+}
+
+function parkLooks() {
+  var looks = document.getElementById("looks");
+  var editor = looks && looks.closest(".editor");
+  if (editor) editor.closest(".panel").appendChild(looks);
+}
+
+function seatLooks() {
+  var looks = document.getElementById("looks");
+  if (!looks || looks.hidden || !document.body.classList.contains("looksbelow")) return;
+  var editor = document.querySelector("#" + chosenTab + " .editor[data-picking]");
+  if (editor) editor.appendChild(looks);
+}
+
+function notchEditors() {
+  document.querySelectorAll(".panel .editor").forEach(function (editor) {
+    var panel = editor.closest(".panel");
+    var cell = panel.querySelector(".stretches > li[aria-current] .stretch");
+    if (!cell) {
+      editor.style.removeProperty("--notch-width");
+      editor.removeAttribute("data-notch-start");
+      editor.removeAttribute("data-notch-end");
+      return;
+    }
+    var outer = editor.getBoundingClientRect();
+    var tab = cell.getBoundingClientRect();
+    var left = Math.max(0, tab.left - outer.left);
+    var right = Math.min(outer.width - 4, tab.right - outer.left - 4);
+    editor.style.setProperty("--notch-left", left + "px");
+    editor.style.setProperty("--notch-width", Math.max(0, right - left) + "px");
+    editor.toggleAttribute("data-notch-start", tab.left - outer.left < 12);
+    editor.toggleAttribute("data-notch-end", outer.right - tab.right < 12);
+    editor.style.setProperty("--notch-ground", getComputedStyle(panel).backgroundColor);
+  });
+}
+
+drawSteps.before.push(parkLooks);
+drawSteps.after.push(function () {
+  seatLooks();
+  notchEditors();
+});
+window.addEventListener("resize", notchEditors);
 
 // ---- the page, started ---------------------------------------------------------------------------
 // Every part is in place, so the always-on tab takes what they hold and the page is drawn once,

@@ -69,7 +69,6 @@ button.round svg{display:block}
 .frozen button,.frozen input{cursor:default}
 .holder.under{border:1px dashed #a9a49b;border-radius:8px;
  background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
-.chosen .underhint{font-size:.8rem;color:var(--dim);margin:.25rem 0 0}
 body:not(.setupall) #outRun,body:not(.setupall) #monoRun{display:none}
 
 .tools{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:.8rem 0 0;
@@ -94,9 +93,6 @@ body:not(.setupall) #outRun,body:not(.setupall) #monoRun{display:none}
 .lamp b{display:block;font:400 .66rem/1.6 system-ui,sans-serif;color:var(--dim);
  text-align:center}
 
-.chosen{margin-top:.9rem;border:1px solid var(--line);border-radius:10px;padding:.6rem .8rem}
-.chosen .who{font-size:.82rem;color:var(--dim);margin-bottom:.45rem}
-.chosen .who b{color:var(--ink);font-size:.92rem}
 .gallery-head{display:flex;align-items:baseline;gap:.6rem;margin:1.5rem 0 .5rem;
  font:600 1.02rem system-ui,sans-serif}
 .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(9.4rem,1fr));
@@ -113,11 +109,6 @@ body:not(.setupall) #outRun,body:not(.setupall) #monoRun{display:none}
  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card.picked .name{color:var(--accent)}
 
-.tuning{display:grid;grid-template-columns:auto 1fr;gap:.25rem .7rem;align-items:center}
-.tuning label{font-size:.8rem;color:var(--dim);white-space:nowrap}
-.tuning input[type=range]{width:100%;accent-color:var(--accent)}
-.tuning input[type=color]{width:2.8rem;height:1.4rem;padding:1px;border:1px solid var(--line);
- border-radius:6px;background:var(--panel);cursor:pointer;justify-self:start}
 
 pre.file{font:.85rem/1.5 ui-monospace,Consolas,monospace;background:var(--panel);
  border:1px solid var(--line);border-radius:10px;padding:1rem;white-space:pre-wrap}
@@ -422,30 +413,7 @@ th{font-weight:600;color:var(--dim);font-size:.76rem}
 .tabbar,.scenetabrow{margin-left:-1rem;margin-right:-1rem}
 .s-scene{color:#7b3fb8;font-weight:600}
 
-.chosen .who.withway{display:flex;align-items:center;gap:.6rem}
-.chosen .direction{margin-left:auto;border:1.5px solid var(--line);border-radius:8px;
- background:var(--panel);padding:.22rem .55rem;font:600 .76rem system-ui,sans-serif;
- color:var(--ink);display:inline-flex;align-items:center;gap:.35rem;cursor:pointer}
-.chosen .direction.on{border-color:var(--accent);color:var(--accent);
- background:color-mix(in srgb,var(--accent) 8%,transparent)}
-.chosen .direction svg path{fill:none;stroke:currentColor;stroke-width:1.8;
- stroke-linecap:round;stroke-linejoin:round}
-.chosen .direction:disabled{color:var(--dim);opacity:.4;cursor:default}
-.panel .chosen{position:relative;margin-top:0;border:2px solid var(--accent);background:var(--tabbg)}
-.panel .chosen::before{content:"";position:absolute;top:-2px;left:var(--tabl,0);width:var(--tabw,0);
- height:2px;background:var(--tabbg)}
-.panel .chosen .who b{font-size:1.05rem}
-.panel .chosen .who{margin-bottom:.6rem}
-.chosen #looks{margin:0}
-.chosen #looks > .tabs:empty{display:none}
-.chosen #looks > .shelf.bare{margin:0}
-.chosen #looks .groupedlooks .gallery-head:first-child{margin-top:.2rem}
-.chosen .changelook{margin-left:auto;border:1.5px solid var(--line);border-radius:8px;
- background:var(--panel);padding:.22rem .55rem;font:600 .76rem system-ui,sans-serif;
- color:var(--accent);cursor:pointer}
-.chosen .changelook + .direction{margin-left:0}
 
-.chosen .standin{margin-top:.5rem;font-size:.85rem;color:var(--dim)}
 
 .card{position:relative}
 :root{--mark:20px;--namerow:2.1rem}
@@ -453,7 +421,6 @@ th{font-weight:600;color:var(--dim);font-size:.76rem}
  bottom:calc((var(--namerow) - var(--mark)) / 2);width:var(--mark);height:var(--mark);
  display:block;color:#b5aea3}
 
-.chosen .colourpick{margin-top:.6rem}
 .groundpick{container-type:inline-size}
 .sswatches{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,2.1rem);
  justify-content:space-between;gap:.25rem;margin-top:.45rem}
@@ -479,7 +446,6 @@ th{font-weight:600;color:var(--dim);font-size:.76rem}
 .scustom .hexline input{width:5.2rem}
 .scustomside{display:flex;flex-direction:column;gap:.4rem;align-self:stretch}
 .scustompreview{flex:1;border-radius:8px;border:1px solid var(--line);min-height:3rem}
-.chosen .colourpick + .tuning{margin-top:.6rem}
 .groupedlooks .gallery-head,.programview .gallery-head{margin:1rem 0 .4rem;font-size:.92rem}
 .groupedlooks .gallery-head:first-child{margin-top:0}
 .groupedlooks .lookshead>.foldhead{display:flex;align-items:baseline;gap:.6rem;margin:0;
@@ -505,43 +471,9 @@ th{font-weight:600;color:var(--dim);font-size:.76rem}
  color:var(--dim)}
 .repeatchip{width:1.1rem;height:.9rem;border-radius:3px;border:1px solid var(--line)}
 #tabStack > *{min-width:0}
-.chosen .tuning label.withicon{display:inline-flex;align-items:center;gap:.4rem}
-.settingicon{width:14px;height:14px;flex:none;fill:none;stroke:currentColor;stroke-width:1.4;
- stroke-linecap:round;stroke-linejoin:round}
-.settingicon .filled{fill:currentColor;stroke:none}
-.chosen .tuning label.signalstate{display:inline-flex;align-items:center;gap:.4rem}
-.signalface{display:block;flex:none}
-.signalface .flashing{animation:signalflash 1s steps(2,jump-none) infinite}
-@keyframes signalflash{from{opacity:1}to{opacity:.2}}
-body.figures .chosen .tuning{grid-template-columns:auto 1fr auto}
-body.figures .chosen .tuning.figuresopen{grid-template-columns:auto 1fr auto auto auto}
-.chosen .tuning:not(.figuresopen) .figurebox,
-.chosen .tuning:not(.figuresopen) .figureunit{display:none}
-.figurebox{box-sizing:content-box;justify-self:end;padding:0 .35rem;height:calc(1.2rem - 2px);
- line-height:calc(1.2rem - 2px);
- border:1px solid var(--line);border-radius:6px;font:600 .76rem system-ui,sans-serif;
- text-align:right;font-variant-numeric:tabular-nums}
-span.figurebox{border:0}
-.figurebox.paletteswatches{display:inline-flex;gap:2px;padding:0;justify-self:start}
-.chosen .tuning:not(.figuresopen) .paletteswatches{display:none}
-.figureunit{font-size:.74rem;color:var(--dim)}
-.figurehandle{grid-column:-2;align-self:stretch;width:1.5rem;padding:0;border:1px solid var(--line);
- border-radius:6px;background:var(--panel);color:var(--dim);font:600 1.35rem/1 system-ui,sans-serif;
- cursor:pointer}
-.figurehandle:hover{color:var(--ink);border-color:var(--dim)}
 .sceneset,#sound{--hub:var(--accent)}
 body[data-pageway] #looks>.tabs:empty{display:none}
 body[data-pageway] #looks>.shelf.bare{margin-top:0}
-.blinklist{display:flex;align-items:center;flex-wrap:wrap;gap:.3rem;margin-bottom:.1rem;
- font-size:.82rem;color:var(--dim)}
-.blinksay{margin-right:.2rem}
-.blinkchip{width:1.6rem;height:1.6rem;padding:0;border:2px solid var(--line);border-radius:5px;
- background:var(--chip);cursor:pointer}
-.blinkchip.on{border-color:var(--accent);box-shadow:0 0 0 2px rgba(15,138,114,.25)}
-.blinkdrop{border:none;background:none;padding:0 .3rem 0 0;margin-left:-.2rem;color:var(--dim);
- cursor:pointer;font-size:.9rem;line-height:1}
-.blinkmore{margin-left:.3rem;padding:.15rem .5rem;border:1px dashed var(--line);border-radius:5px;
- background:none;color:var(--ink);font-size:.78rem;cursor:pointer}
 
 .strip .head{margin-bottom:.3rem}
 .strip .lamps{gap:.18rem}

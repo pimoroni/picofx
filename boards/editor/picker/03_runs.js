@@ -9,9 +9,10 @@ import {lampsMovable} from "./07_board.js";
 import {canEdit, heldOutput, noArrow, setupOn} from "./08_setup.js";
 import {breakOut, bringForward, moveLamp, rejoin} from "./09_wiring.js";
 import {renderPreview} from "./18_drive.js";
-import {groupGallery, renderPicking} from "./24_gallery_groups.js";
+import {groupGallery} from "./24_gallery_groups.js";
 import {keptLights, keptNow} from "./27_readback.js";
 import {renderStretches} from "./31_stretch_bar.js";
+import {renderEditor} from "./32_stretch_editor.js";
 
 // ---- the board's outputs, inside the sections system ------------------------------------
 // A colour output is three PWM channels behind one lamp. Where the board lets an adapter tell
@@ -417,7 +418,7 @@ export function pick(run, at) {
 
 export var choosingLook = false;
 
-function pickingLook(run) {
+export function pickingLook(run) {
   var section = run && run.sections[run.picked];
   return !!section && (!lookNamed(section.look) || (choosingLook && run === active));
 }
@@ -727,9 +728,6 @@ export var MIDDLING = {pace: 0.5, mood: 0.5, colour: "#ffffff"};
 var cardFaces = [];
 var cardWalks = {};
 var carrying_lamp = null;
-
-
-
 
 // A look given to a stretch. A line kept as written that already plays some of its lights is
 // asked about first, since the board refuses a light set twice: agreed, the kept lines go;
@@ -1051,12 +1049,6 @@ export function washFor(run, section, look) {
   return stretchWash(look, section, run, !!first && !first.colour);
 }
 
-
-
-
-
-
-
 // ---- crossing from one side to the other ---------------------------------------------------
 
 var RIGHT = "<path d='M3 8 H12'/><path d='M8.5 4.5 L12 8 L8.5 11.5'/>";
@@ -1119,71 +1111,6 @@ export function renderCutting(where, run) {
   if (!box) return;
   box.textContent = "";
   box.className = "head cutting";
-}
-
-// The chosen stretch's panel. The parts below add to it, each after the one before, whatever the
-// panel drew
-export var chosenSteps = [];
-
-export function renderChosen(where, run) {
-  if (pickingLook(run)) {
-    renderPicking(where, run);
-    return;
-  }
-  renderChosenPanel(where, run);
-  chosenSteps.forEach(function (step) { step(where, run); });
-}
-
-function renderChosenPanel(where, run) {
-  var box = document.getElementById(where);
-  if (!box) return;
-  box.textContent = "";
-  var section = run.sections[run.picked];
-  if (!section) return;
-  var wrap = document.createElement("div");
-  wrap.className = "chosen";
-  var who = document.createElement("div");
-  who.className = "who";
-  var first = run.lamps[section.from];
-  who.innerHTML = "<b>" + targetFor(run, section).selector + "</b>, " +
-                  widthOf(section) + (widthOf(section) === 1 ? " light" : " lights") +
-                  ", " + (first && first.colour ? "colour" : "mono");
-  wrap.appendChild(who);
-
-  var look = lookNamed(section.look);
-  if (look) {
-    var tuning = document.createElement("div");
-    tuning.className = "tuning";
-    tuning.appendChild(labelled(look.solid ? "Brightness" : "Speed"));
-    tuning.appendChild(slider(look.solid ? "mood" : "pace"));
-    if (!look.solid) {
-      tuning.appendChild(labelled(look.mood));
-      tuning.appendChild(slider("mood"));
-    }
-    wrap.appendChild(tuning);
-  }
-  box.appendChild(wrap);
-
-  function labelled(words) {
-    var label = document.createElement("label");
-    label.textContent = words;
-    return label;
-  }
-  function slider(key) {
-    var range = document.createElement("input");
-    range.type = "range";
-    range.min = 0;
-    range.max = 1;
-    range.step = 0.01;
-    range.value = section[key];
-    range.dataset.focus = where + "-" + key;
-    // Through the run, as a page that makes the stretches afresh leaves this one behind
-    range.oninput = function () {
-      run.sections[run.picked][key] = Number(range.value);
-      renderPreview();
-    };
-    return range;
-  }
 }
 
 // The two sides: each as wide as what it holds, so the divide between them moves as
@@ -1297,7 +1224,7 @@ export function draw() {
   // Both sides are in the one panel, so one set of settings serves whichever was last worked
   // on rather than a set under each
   renderSides();
-  renderChosen("outChosen", active);
+  renderEditor("outChosen", active);
 
   renderPreview();
   levelSides();

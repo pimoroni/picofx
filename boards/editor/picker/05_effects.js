@@ -1,20 +1,17 @@
 import {BOARD, LOOKS, canPlay, keyOf, lerp, lookLines, lookNamed, nameSet, r2} from "./01_looks.js";
 import {COLOURED, lampTarget, lookLit} from "./02_preview.js";
 import {
-  BACK, CHANNELS, CHANNEL_WORDS, MIDDLING, ON, OUTPUTS, Run, active, blank, chosenSteps,
-  copyBlinks, copyExact, draw, drawSteps, forwardTargetFor, iconButton, isChannel, joinedItems,
-  levelled, mono, nextOutput, outputSaid, outs, paintAll, pickOutput, rangeItem, remember,
-  renderChosen, renderCutting, runs, sectionAt, settle, stepBack, stepOn, stretchUnder, washFor,
-  widthOf, wiring
+  BACK, CHANNELS, CHANNEL_WORDS, MIDDLING, ON, OUTPUTS, Run, active, blank, copyBlinks, copyExact,
+  draw, drawSteps, forwardTargetFor, iconButton, isChannel, joinedItems, levelled, mono,
+  nextOutput, outputSaid, outs, paintAll, pickOutput, rangeItem, renderCutting, runs, sectionAt,
+  settle, stepBack, stepOn, wiring
 } from "./03_runs.js";
 import {carried} from "./04_scenes.js";
 import {BLINK, blinkList, blinkWord} from "./06_blink.js";
 import {renderLeds} from "./08_setup.js";
-import {renderPreview} from "./18_drive.js";
 import {exactNow, withExact} from "./25_figures.js";
-import {
-  middleOfView, renderStretches, stretchCells, zoomOf, zoomTo, zooms
-} from "./31_stretch_bar.js";
+import {middleOfView, renderStretches, zoomOf, zoomTo, zooms} from "./31_stretch_bar.js";
+import {renderEditor} from "./32_stretch_editor.js";
 
 // The board opens as it ships, every colour output one colour lamp, each side whole and playing
 // the look the board's description opens it with. The strips play nothing, what is wired to them
@@ -188,7 +185,7 @@ export var SIGNAL_TIMINGS = {
 // than a look is handed
 var sectionNow = null;
 
-function withSection(section, write) {
+export function withSection(section, write) {
   var had = sectionNow;
   sectionNow = section;
   try {
@@ -205,7 +202,7 @@ function sectionLit(look, holder, t, slot, count, sim) {
   });
 }
 
-function timingOf(name, key) {
+export function timingOf(name, key) {
   var own = sectionNow && sectionNow.timings;
   if (own && own[key] !== undefined) return own[key];
   return SIGNAL_TIMINGS[name].filter(function (part) { return part[0] === key; })[0][2];
@@ -333,7 +330,6 @@ var GLASS_OUT = "<circle cx='7.2' cy='7.2' r='4.9'/><path d='M10.9 10.9 L14.4 14
 var GLASS_IN = "<circle cx='7.2' cy='7.2' r='4.9'/><path d='M10.9 10.9 L14.4 14.4'/>" +
                "<path d='M5 7.2 L9.4 7.2 M7.2 5 L7.2 9.4'/>";
 
-
 function stripZoomAndSteps(row, run) {
   var space = document.createElement("span");
   space.className = "gap";
@@ -430,8 +426,6 @@ export function astrayOf(side) {
     return !(onOne && atStep[upTo[place]] === 1);
   });
 }
-
-
 
 // ---- how many lights are on one ------------------------------------------------------------
 // The chip the drawing keeps its count in. A strip's length is a fact about the
@@ -553,10 +547,6 @@ export function renderStripChip(where, run) {
 // The drawing finds a bar by which of two runs it is for. Here a bar is found by the strip's
 // own id, so these stand in for those two
 
-
-
-
-
 // ---- joining them to the page below -----------------------------------------------------
 
 // Each strip has a panel after the outputs', in the board's order, and its board box takes the
@@ -605,14 +595,13 @@ drawSteps.after.push(function () {
     renderStretches(run.id + "Bar", run);
     document.getElementById(run.id + "Chosen").textContent = "";
     if (run === active) {
-      renderChosen(run.id + "Chosen", run);
+      renderEditor(run.id + "Chosen", run);
     }
   });
   // The page painted what it drew before these were made, so a fresh bead would hold the
   // default fill until the next frame and show black
   paintAll();
 });
-
 
 // ---- what an output's lamps play when its wiring changes ----------------------------------
 // The new lamps are carried what the output played, both ways: broken out into three mono
@@ -652,7 +641,7 @@ var STAND_INS = {"Rainbow": "Wave"};
 function carriedFrom() { return carried; }
 
 // The stand-in a stretch is playing, and what for, where it is one
-function standingIn(run, section) {
+export function standingIn(run, section) {
   var memo = null;
   run.lamps.slice(section.from, section.to + 1).forEach(function (lamp) {
     var had = carriedFrom()[lamp.out];
@@ -726,7 +715,7 @@ export var SWATCHES = ["red", "orange", "yellow", "green", "cyan", "blue", "purp
 
 // The swatches a stretch offers. A blink through several colours offers black too, as a turn
 // with the light off
-function swatchesFor(run, section) {
+export function swatchesFor(run, section) {
   var first = run && run.lamps[section.from];
   if (section.look === BLINK && section.blinks && section.blinks.colours.length > 1 &&
       first && first.colour) return ["black"].concat(SWATCHES);
@@ -934,247 +923,19 @@ export function startColour(run, section, look) {
   });
 });
 
-// Every draw settles the model and settling makes the stretches afresh, so a handler
-// that kept the stretch it was made with would write onto one the run no longer holds.
-// Each reaches the live one through the run when it fires
-// The last custom colour of each stretch and its own brightness, by its run and first lamp,
-// kept while a swatch is chosen so custom comes back to both, as a screen's background does.
-// Kept here, the stretches being made afresh on every draw
-var customColours = {};
-
-// The picker is the one a screen's background has: one row of swatches spanning the stretch's
-// width, named under them when there is room, the custom field under the row with the hex
-// beside it over the colour itself
-function renderColourPick(box, run) {
-  var section = run.sections[run.picked];
-  function live() { return run.sections[run.picked]; }
-  var remembered = run.id + ":" + section.from;
-  var wrap = document.createElement("div");
-  wrap.className = "colourpick groundpick";
-
-  var swatches = document.createElement("div");
-  swatches.className = "sswatches";
-  var offered = swatchesFor(run, section);
-  var chosenHex = (section.colour || "#ffffff").replace("#", "").toLowerCase();
-  var chosenWord = offered.filter(function (name) {
-    return hexOf(WORDS[name]) === chosenHex;
-  })[0] || null;
-  offered.forEach(function (name) {
-    var swatch = document.createElement("button");
-    swatch.type = "button";
-    swatch.className = "swatch" + (chosenWord === name ? " on" : "");
-    swatch.style.background = rgbInk(WORDS[name]);
-    swatch.title = name;
-    var tag = document.createElement("b");
-    tag.textContent = name;
-    swatch.appendChild(tag);
-    swatch.onclick = function () {
-      live().colour = "#" + hexOf(WORDS[name]);
-      live().custom = false;
-      draw();
-    };
-    swatches.appendChild(swatch);
-  });
-
-  // The last one is not a colour but the way to every other one
-  var custom = document.createElement("button");
-  custom.type = "button";
-  custom.className = "swatch custom" + (section.custom || !chosenWord ? " on" : "");
-  // Its middle is the custom colour at its own brightness, kept while a swatch is chosen, and
-  // empty until there is one
-  if (section.custom || !chosenWord) {
-    customColours[remembered] = {colour: section.colour || "#ffffff",
-                                 level: section.level === undefined ? 1 : section.level};
-  }
-  var kept = customColours[remembered];
-  if (kept) custom.style.setProperty("--picked", atBrightness(kept.colour, kept.level));
-  custom.title = "any hue and saturation, with its own brightness";
-  var ctag = document.createElement("b");
-  ctag.textContent = "custom";
-  custom.appendChild(ctag);
-  // A swatch keeps the brightness already set, and custom comes back at its own
-  custom.onclick = function () {
-    live().custom = true;
-    if (kept) {
-      live().colour = kept.colour;
-      live().level = kept.level;
-    }
-    draw();
-  };
-  swatches.appendChild(custom);
-  wrap.appendChild(swatches);
-
-  // The field, open only while custom is the choice. Hue across and saturation down, at
-  // full value throughout, so a colour means the same thing at any brightness
-  var holds = document.createElement("div");
-  var open = section.custom || !chosenWord;
-  holds.className = "customholds scustom";
-  holds.style.display = open ? "" : "none";
-  var parts = takeApart(hexRgb(section.colour || "#ffffff"));
-  var field = document.createElement("div");
-  field.className = "field";
-  var at = document.createElement("div");
-  at.className = "at";
-  at.style.left = (parts.hue / 360 * 100) + "%";
-  at.style.top = ((1 - parts.sat) * 100) + "%";
-  at.style.background = rgbInk(fieldColour(parts.hue, parts.sat));
-  field.appendChild(at);
-
-  // Held down and dragged. Only the mark and the box move while the pointer is down, so
-  // the field is never rebuilt under it
-  function pointingAt(event) {
-    var box2 = field.getBoundingClientRect();
-    var across = Math.max(0, Math.min(1, (event.clientX - box2.left) / box2.width));
-    var down = Math.max(0, Math.min(1, (event.clientY - box2.top) / box2.height));
-    var rgb = fieldColour(across * 360, 1 - down);
-    live().colour = "#" + hexOf(rgb);
-    live().custom = true;
-    at.style.left = (across * 100) + "%";
-    at.style.top = (down * 100) + "%";
-    at.style.background = rgbInk(rgb);
-    hex.value = atBrightness(live().colour, live().level);
-    preview.style.background = hex.value;
-    renderPreview();
-  }
-  field.onpointerdown = function (event) {
-    field.setPointerCapture(event.pointerId);
-    pointingAt(event);
-  };
-  field.onpointermove = function (event) {
-    if (field.hasPointerCapture(event.pointerId)) pointingAt(event);
-  };
-  field.onpointerup = function () { draw(); };
-  holds.appendChild(field);
-
-  // A hex is how a colour arrives from somewhere else, so it is typed rather than hunted
-  // for. It is the colour as written, at the stretch's brightness, as a screen's background
-  // has it: one typed in sets the colour and the brightness both
-  var typed = document.createElement("div");
-  typed.className = "hexline";
-  var label = document.createElement("label");
-  label.textContent = "Hex";
-  typed.appendChild(label);
-  var hex = document.createElement("input");
-  hex.type = "text";
-  hex.maxLength = 7;
-  hex.spellcheck = false;
-  hex.value = atBrightness(section.colour || "#ffffff", section.level);
-  hex.title = "the colour as written, at its brightness. Paste a colour " +
-              "in to set the hue, saturation and brightness below";
-  hex.oninput = function () {
-    var said = hex.value.replace("#", "").trim();
-    if (!/^[0-9a-fA-F]{6}$/.test(said)) return;
-    var typedRgb = hexRgb("#" + said.toLowerCase());
-    var got = takeApart(typedRgb);
-    var rgb = fieldColour(got.hue, got.sat);
-    live().colour = "#" + hexOf(rgb);
-    live().level = Math.max(FAINTEST, Math.max.apply(null, typedRgb) / 255);
-    live().custom = true;
-    at.style.left = (got.hue / 360 * 100) + "%";
-    at.style.top = ((1 - got.sat) * 100) + "%";
-    at.style.background = rgbInk(rgb);
-    preview.style.background = "#" + said.toLowerCase();
-    renderPreview();
-  };
-  hex.onblur = function () { draw(); };
-  typed.appendChild(hex);
-
-  // Beside the field, the hex over the colour itself, as large as the room allows, as a
-  // screen's custom background has it
-  var side = document.createElement("div");
-  side.className = "scustomside";
-  side.appendChild(typed);
-  var preview = document.createElement("div");
-  preview.className = "scustompreview";
-  preview.style.background = atBrightness(section.colour || "#ffffff", section.level);
-  preview.title = "The colour as written, at its brightness";
-  side.appendChild(preview);
-  holds.appendChild(side);
-  wrap.appendChild(holds);
-
-  box.appendChild(wrap);
-}
-
 // A hue at full value, brought toward white by how far the saturation is from full
 export function fieldColour(hue, sat) {
   return hueRgb(hue).map(function (v) { return Math.round(v + (255 - v) * (1 - sat)); });
 }
-
-// A second setting that is a count, such as Emergency's flashes, stops only at its values,
-// with a tick at each while there are few enough to tell apart
-var MOST_TICKS = 16;
-
-function detented(box, where, count) {
-  var range = box.querySelector("input[data-focus='" + where + "-mood']");
-  if (!range || count < 2) return;
-  range.step = 1 / (count - 1);
-  if (count > MOST_TICKS) return;
-  var ticks = document.createElement("datalist");
-  ticks.id = where + "-detents";
-  for (var at = 0; at < count; at++) {
-    var tick = document.createElement("option");
-    tick.value = at / (count - 1);
-    ticks.appendChild(tick);
-  }
-  range.parentNode.appendChild(ticks);
-  range.setAttribute("list", ticks.id);
-}
-
-// The stretch's settings, with the colour choice in place of a slider that stepped tones
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var section = run && run.sections[run.picked];
-  var look = section && lookNamed(section.look);
-  var memo = box && section && standingIn(run, section);
-  if (memo) {
-    var note = document.createElement("div");
-    note.className = "standin";
-    note.textContent = look.name + ", replacing " + memo.look + ", " +
-                       "which mono lights cannot play. Rejoin to restore " + memo.look + ".";
-    box.querySelector(".chosen").appendChild(note);
-  }
-  // A count of stops may depend on the stretch, as Spread's lengths do on its lights
-  if (box && look && look.detents) {
-    detented(box, where, typeof look.detents === "function"
-      ? look.detents(targetFor(run, section)) : look.detents);
-  }
-  var wrap = box && box.querySelector(".chosen");
-  if (!wrap || !look) return;
-  var tuning = wrap.querySelector(".tuning");
-  if (!tuning) {
-    tuning = document.createElement("div");
-    tuning.className = "tuning";
-    wrap.appendChild(tuning);
-  }
-  // Solid's own slider was its brightness, which the one every look has now is
-  if (look.solid) tuning.textContent = "";
-  // A mono lamp has no colour to be given
-  var first = run.lamps[section.from];
-  var coloured = takesColour(look) && !!first && first.colour;
-  // The second slider stepped a table of tones for these looks, and the swatches take
-  // its place. On mono lights it has nothing to set, a mono light having no colour
-  var mono = !!first && !first.colour;
-  var toneless = look.mood === "Colour" || (mono && look.mood === "Palette");
-  if ((coloured || mono) && toneless && tuning.children.length >= 4) {
-    tuning.removeChild(tuning.children[3]);
-    tuning.removeChild(tuning.children[2]);
-  }
-  brightnessSlider(tuning, run, where);
-  // The colour leads and the sliders follow it, brightness the first of them
-  if (coloured) {
-    renderColourPick(wrap, run);
-    wrap.appendChild(tuning);
-  }
-});
 
 // ---- how bright a stretch is -------------------------------------------------------------
 // Every look has a brightness, the first slider in the list, written only below full. A look
 // given a custom colour writes it in that colour's hex, dimmed, as a screen's background is.
 // Any other, a swatch's word included, writes it as the stretch's level=, which scales
 // whatever the look plays
-var FAINTEST = 0.05;
+export var FAINTEST = 0.05;
 
-function atBrightness(hex, level) {
+export function atBrightness(hex, level) {
   if (!(level < 1)) return hex;
   return "#" + hexOf(hexRgb(hex).map(function (v) { return Math.round(v * level); }));
 }
@@ -1206,28 +967,6 @@ export function sectionLines(run, section, look) {
                                section.colour), section.level);
     });
   });
-}
-
-function brightnessSlider(tuning, run, where) {
-  var section = run.sections[run.picked];
-  var ahead = tuning.firstChild;
-  var label = document.createElement("label");
-  label.textContent = "Brightness";
-  tuning.insertBefore(label, ahead);
-  var range = document.createElement("input");
-  range.type = "range";
-  range.min = FAINTEST;
-  range.max = 1;
-  range.step = 0.01;
-  range.value = section.level === undefined ? 1 : section.level;
-  range.dataset.focus = where + "-level";
-  range.oninput = function () {
-    run.sections[run.picked].level = Number(range.value);
-    renderPreview();
-  };
-  // A colour's hex and its preview show the brightness, so they are drawn again once it is set
-  range.onchange = function () { draw(); };
-  tuning.insertBefore(range, ahead);
 }
 
 // The lines a look writes for a target, as the board will play them
@@ -1309,7 +1048,7 @@ var WAVES = ["rainbow_wave", "pulse_wave", "blink_wave", "flash_sequence"];
 }(lookNamed("Party")));
 
 // Whether reversing this stretch would change what it plays, judged from its lines as written
-function runsAWay(look, target, section) {
+export function runsAWay(look, target, section) {
   if (!look || target.count < 2) return false;
   var lines = linesFor(look, target, section.pace, section.mood, section.colour);
   // A look that deals the stretch out, as Party and Emergency do, deals from the start
@@ -1406,39 +1145,6 @@ export function livePlay(look, holder, t, slot, count, sim) {
   });
 }
 
-// A light at the end the stretch starts from and an arrow the way it runs
-// A toggle in the screens' style, its word and its pressed state as Loop's and Restart's are,
-// the light in its icon at the end the stretch starts from
-function directionToggle(run, section) {
-  var button = document.createElement("button");
-  button.type = "button";
-  var look = lookNamed(section.look);
-  var moves = runsAWay(look, forwardTargetFor(run, section), section);
-  button.className = "stoggle direction" + (section.reversed ? " reversed" : "") +
-                     (section.reversed && moves ? " on" : "");
-  button.setAttribute("aria-pressed", section.reversed && moves ? "true" : "false");
-  button.disabled = !moves;
-  button.title = !moves ? (!look ? "Which end it starts from, for looks that travel"
-                                 : widthOf(section) < 2 ? "One light has no direction"
-                                 : look.name + " looks the same from either end")
-               : section.reversed ? "Travels from the far end"
-                                  : "Travels from the near end";
-  button.innerHTML = "<svg width='28' height='13' viewBox='0 0 28 13' aria-hidden='true'>" +
-    (section.reversed
-      ? "<rect x='19' y='2.5' width='8' height='8' rx='2' fill='currentColor'/>" +
-        "<path d='M17 6.5 L11.5 6.5 M14 3.5 L11 6.5 L14 9.5'/>"
-      : "<rect x='1' y='2.5' width='8' height='8' rx='2' fill='currentColor'/>" +
-        "<path d='M11 6.5 L16.5 6.5 M14 3.5 L17 6.5 L14 9.5'/>") + "</svg> Reverse";
-  // Through the run, as a page that makes the stretches afresh leaves this one behind
-  button.onclick = function () {
-    remember(run);
-    var live = run.sections[run.picked];
-    live.reversed = !live.reversed;
-    draw();
-  };
-  return button;
-}
-
 // ---- what heads a stretch's settings ------------------------------------------------------------
 // The look's name, the panel being its settings, then where it plays in words: outputs
 // 1 to 7, LEDs 11 to 20 of the left strip, output 3's red and green. The file's selector is the
@@ -1510,198 +1216,3 @@ export function wherePlays(run, section, reversed) {
   }));
 }
 
-// ---- a signal's states, drawn ----------------------------------------------------------------
-// Each timing is named by the state it holds, drawn as the signal shows it: a head of three
-// lamps, red, amber and green top to bottom, with those lit in their colour, and for a
-// crossing the two figures beside it, the red one standing and the green one walking. Its
-// slider takes the state's colour. The word stays beside the drawing
-var SIGNAL_INK = {red: "#e8392c", amber: "#f5a623", green: "#20b35c", dark: "#3b3f44"};
-
-// The lamps each state lights: 1 lit, 0 dark, "f" flashing
-var SIGNAL_STATES = {
-  "Traffic light": {red_interval: [1, 0, 0], red_amber_interval: [1, 1, 0],
-                    green_interval: [0, 0, 1], amber_interval: [0, 1, 0]},
-  "Pelican crossing": {red_interval: [1, 0, 0, 0, 1], flashing_interval: [0, "f", 0, 0, "f"],
-                       green_interval: [0, 0, 1, 1, 0], amber_interval: [0, 1, 0, 1, 0]}
-};
-
-// A slider's tint, amber and green a shade deeper than the lamps: a browser gives a light
-// accent a dark track, which read as a slider filled to its end
-var SIGNAL_TINT = {red_interval: SIGNAL_INK.red, red_amber_interval: "#a86600",
-                   green_interval: "#16894a", amber_interval: "#a86600",
-                   flashing_interval: "#a86600"};
-
-function signalFace(name, key) {
-  var lit = SIGNAL_STATES[name][key];
-  function lamp(state, ink) {
-    if (!state) return SIGNAL_INK.dark;
-    return ink;
-  }
-  function flashing(state) { return state === "f" ? " class='flashing'" : ""; }
-  var head = [SIGNAL_INK.red, SIGNAL_INK.amber, SIGNAL_INK.green].map(function (ink, at) {
-    return "<circle cx='6' cy='" + (4.5 + at * 6.5) + "' r='2.6' fill='" + lamp(lit[at], ink) +
-           "'" + flashing(lit[at]) + "/>";
-  }).join("");
-  var wide = 12;
-  var figures = "";
-  // A crossing's pedestrian lights are drawn as its figures, the red one standing and the
-  // green one walking, so they read as figures and not as a second head of lamps
-  if (lit.length > 3) {
-    wide = 22;
-    var stand = lamp(lit[3], SIGNAL_INK.red), walk = lamp(lit[4], SIGNAL_INK.green);
-    figures = "<rect x='12.5' y='1' width='9' height='22' rx='2' fill='#1c1f22'/>" +
-      "<g fill='none' stroke-width='1.3' stroke-linecap='round' stroke='" + stand + "'" +
-      flashing(lit[3]) + "><circle cx='17' cy='3.6' r='1.1' fill='" + stand + "' stroke='none'/>" +
-      "<path d='M17 5.2 V8.6 M15.6 6.4 H18.4 M16.3 8.6 V11 M17.7 8.6 V11'/></g>" +
-      "<g fill='none' stroke-width='1.3' stroke-linecap='round' stroke='" + walk + "'" +
-      flashing(lit[4]) + "><circle cx='17.4' cy='13.6' r='1.1' fill='" + walk + "' stroke='none'/>" +
-      "<path d='M17.2 15.2 L16.8 18.3 M15.6 16.8 L18.6 16 M16.8 18.3 L15.4 21 M16.8 18.3 " +
-      "L18.6 20.8'/></g>";
-  }
-  return "<svg class='signalface' viewBox='0 0 " + wide + " 24' width='" + wide * 0.9 +
-         "' height='21.6' aria-hidden='true'><rect x='1' y='0' width='10' height='24' rx='3' " +
-         "fill='#1c1f22'/>" + head + figures + "</svg>";
-}
-
-// A signal's timings take Speed's place, each a slider in seconds under its own name
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var section = run && run.sections[run.picked];
-  var look = section && lookNamed(section.look);
-  var tuning = box && box.querySelector(".chosen .tuning");
-  if (!tuning || !look || !SIGNAL_TIMINGS[look.name]) return;
-  var speed = tuning.querySelector("input[data-focus='" + where + "-pace']");
-  var after = speed ? speed.nextSibling : null;
-  if (speed) {
-    tuning.removeChild(speed.previousElementSibling);
-    tuning.removeChild(speed);
-  }
-  // Ease is about every state, so it comes before them, after Brightness
-  var ease = tuning.querySelector("input[data-focus='" + where + "-mood']");
-  if (ease) {
-    var easeLabel = ease.previousElementSibling;
-    if (after === easeLabel) after = ease.nextSibling;
-    tuning.insertBefore(easeLabel, after);
-    tuning.insertBefore(ease, after);
-    after = ease.nextSibling;
-  }
-  SIGNAL_TIMINGS[look.name].forEach(function (part) {
-    var label = document.createElement("label");
-    label.className = "signalstate";
-    label.innerHTML = signalFace(look.name, part[0]) + "<span>" + part[1] + "</span>";
-    var range = document.createElement("input");
-    range.style.accentColor = SIGNAL_TINT[part[0]];
-    range.type = "range";
-    range.min = part[3];
-    range.max = part[4];
-    range.step = 0.5;
-    range.value = withSection(section, function () { return timingOf(look.name, part[0]); });
-    range.dataset.focus = where + "-timing-" + part[0];
-    range.dataset.timing = part[0];
-    range.title = "seconds, " + part[1].toLowerCase();
-    range.oninput = function () {
-      var mine = run.sections[run.picked];
-      mine.timings = Object.assign({}, mine.timings);
-      mine.timings[part[0]] = Number(range.value);
-      renderPreview();
-    };
-    tuning.insertBefore(label, after);
-    tuning.insertBefore(range, after);
-  });
-});
-
-// ---- an icon for each setting ------------------------------------------------------------------
-// Each slider's name has a small line drawing before it, in the name's own grey, as the toggles
-// have theirs, so a panel reads at a glance. A signal's states keep their coloured
-// drawings, colour being what they are about. The word stays, the icon only hinting
-var SETTING_ICONS = {
-  "Brightness": "<circle cx='8' cy='8' r='2.8'/><path d='M8 1.5v1.8M8 12.7v1.8M1.5 8h1.8" +
-                "M12.7 8h1.8M3.4 3.4l1.3 1.3M11.3 11.3l1.3 1.3M3.4 12.6l1.3-1.3M11.3 4.7l1.3-1.3'/>",
-  "Speed": "<path d='M2.4 12A6 6 0 1 1 13.6 12'/><path d='M8 10.2L11 5.6'/>" +
-           "<circle cx='8' cy='10.4' r='1' class='filled'/>",
-  "Fade": "<path d='M5.6 10.4C4 9.3 3.6 7.9 3.6 6.8a4.4 4.4 0 0 1 8.8 0c0 1.1-.4 2.5-2 3.6'/>" +
-          "<path d='M6 12.4h4M6.6 14.4h2.8'/><path d='M6.4 6.8c.5-1 1.1-1.5 1.6-1.5'/>",
-  "Spread": "<path d='M1.5 8h13M4 5.5L1.5 8 4 10.5M12 5.5L14.5 8 12 10.5'/>",
-  "Steps": "<path d='M2 13.5h3v-3h3v-3h3v-3h3'/>",
-  "Trail": "<circle cx='12.4' cy='8' r='2.2' class='filled'/><path d='M1.6 8h6.8M3.2 5.2h5.2" +
-           "M3.2 10.8h5.2'/>",
-  "Flashes": "<path d='M9.2 1.6L4.2 9h3.9l-1.3 5.4L11.8 7H7.9z'/>",
-  "On time": "<circle cx='8' cy='8' r='5.8'/><path d='M8 2.2a5.8 5.8 0 0 1 0 11.6z' class='filled'/>",
-  "Spacing": "<circle cx='2.6' cy='8' r='1.4' class='filled'/><circle cx='8' cy='8' r='1.4'/>" +
-             "<circle cx='13.4' cy='8' r='1.4' class='filled'/>",
-  "Saturation": "<path d='M8 1.8C8 1.8 3.6 7.2 3.6 10a4.4 4.4 0 0 0 8.8 0C12.4 7.2 8 1.8 8 1.8z'/>",
-  "Intensity": "<path d='M8 1.6c1.5 2.7 4.5 4.3 4.5 7.8a4.5 4.5 0 0 1-9 0c0-2 1.4-3 2-4.4" +
-               "c.9 1.4 1.4 1.9 1.9 1.9 0-2 .1-3.5.6-5.3z'/>",
-  "Palette": "<path d='M8 1.6a6.4 6.4 0 0 0 0 12.8c1 0 1.6-.6 1.6-1.3 0-.9-.7-1.1-.7-1.8 0-.8.6-1.2" +
-             " 1.3-1.2h1.7a2.8 2.8 0 0 0 2.8-2.8C14.7 4 11.8 1.6 8 1.6z'/>" +
-             "<circle cx='4.9' cy='7.6' r='.9' class='filled'/><circle cx='6.2' cy='4.7' r='.9' " +
-             "class='filled'/><circle cx='9.3' cy='4' r='.9' class='filled'/>"
-};
-
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var tuning = box && box.querySelector(".chosen .tuning");
-  if (!tuning) return;
-  // Every slider keeps the picked stretch's colours on the bar with it as it moves, a slider
-  // that picks colours as Palette does changing them, and redraws the panel once let go. The
-  // sliders only played the preview as they moved, so the bar kept what was there before
-  var section = run && run.sections[run.picked];
-  var look = section && lookNamed(section.look);
-  Array.prototype.forEach.call(tuning.querySelectorAll("input[type=range]"), function (range) {
-    var moved = range.oninput;
-    range.oninput = function () {
-      if (moved) moved.call(range);
-      var live = run.sections[run.picked];
-      var cell = stretchCells(run)[run.picked];
-      var wash = cell && cell.querySelector(".band");
-      if (wash && look) wash.style.setProperty("--wash", washFor(run, live, look));
-    };
-    if (!range.onchange) range.onchange = function () { draw(); };
-  });
-  Array.prototype.forEach.call(tuning.querySelectorAll(":scope > label"), function (label) {
-    var drawn = SETTING_ICONS[label.textContent];
-    if (!drawn || label.querySelector(".settingicon")) return;
-    if (label.textContent === "Fade") {
-      label.title = "how long each light takes to fade on and off, eased so it slows at the end";
-    }
-    label.classList.add("withicon");
-    label.insertAdjacentHTML("afterbegin", "<svg class='settingicon' viewBox='0 0 16 16' " +
-                                           "aria-hidden='true'>" + drawn + "</svg>");
-  });
-});
-
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var who = box && box.querySelector(".chosen .who");
-  var section = run && run.sections[run.picked];
-  if (!who || !section) return;
-  var look = lookNamed(section.look);
-  var under = look ? null : stretchUnder(run, section);
-  who.innerHTML = "";
-  var named = document.createElement("b");
-  named.textContent = look ? look.name : "Nothing";
-  who.appendChild(named);
-  var reversed = section.reversed && runsAWay(look, forwardTargetFor(run, section), section);
-  who.appendChild(document.createTextNode(" on " + wherePlays(run, section, reversed)));
-  who.title = targetFor(run, section).selector;
-  // A stretch the scene leaves empty says what the board plays there, and how to change it
-  if (under) {
-    var hint = document.createElement("div");
-    hint.className = "underhint";
-    hint.textContent = under.tip + " Choose a look to give this scene its own.";
-    who.parentNode.insertBefore(hint, who.nextSibling);
-  }
-});
-
-chosenSteps.push(function (where, run) {
-  var box = document.getElementById(where);
-  var section = run && run.sections[run.picked];
-  var who = box && box.querySelector(".chosen .who");
-  if (!section || !who) return;
-  // The name and its count stay one piece of text, the toggle set apart at the end
-  var named = document.createElement("span");
-  while (who.firstChild) named.appendChild(who.firstChild);
-  who.appendChild(named);
-  who.classList.add("withway");
-  who.appendChild(directionToggle(run, section));
-});

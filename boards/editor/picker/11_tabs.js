@@ -1,8 +1,9 @@
 import {BOARD} from "./01_looks.js";
-import {active, draw, drawSteps, outs, renderChosen, runs} from "./03_runs.js";
+import {active, draw, drawSteps, outs, runs} from "./03_runs.js";
 import {STRIPS} from "./05_effects.js";
 import {setSetup, setupButton, setupOn, stripBlockedBy} from "./08_setup.js";
 import {LED_PANELS, runsOfPanel, workOn} from "./10_led_sections.js";
+import {renderEditor} from "./32_stretch_editor.js";
 
 // ---- the LED sections as tabs -----------------------------------------------------------
 // The outputs and each strip as tabs, one section shown at a time, so the one being worked on
@@ -157,10 +158,10 @@ export var lastOutputRun = outs;
 drawSteps.after.push(function () {
   if (!active.strip) lastOutputRun = active;
   if (active.strip) {
-    renderChosen("outChosen", lastOutputRun);
+    renderEditor("outChosen", lastOutputRun);
   }
   runs.filter(function (run) { return run.strip && run !== active; }).forEach(function (run) {
-    renderChosen(run.id + "Chosen", run);
+    renderEditor(run.id + "Chosen", run);
   });
   renderLedTabs();
 });
