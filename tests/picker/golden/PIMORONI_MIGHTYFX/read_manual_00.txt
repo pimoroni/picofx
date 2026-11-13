@@ -1,0 +1,5 @@
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+
+out1-7: rainbow_wave speed=0.3
+out3 level=50%: pulse speed=0.6

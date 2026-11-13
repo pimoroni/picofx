@@ -1,0 +1,2 @@
+out1-7: rainbow_wave speed=0.3
+out3 level=50%: pulse speed=0.6

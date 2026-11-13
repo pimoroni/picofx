@@ -1,0 +1,3 @@
+screen rotation=90: gif file="clock.gif"
+screen offset=*|20 bg=black: image file=logo.png
+screen tile=repeat: image file=bricks.png

@@ -1,0 +1,6 @@
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+
+out1-6 level=50%: pulse
+rgb colour=warm: flicker
+out1-6 ease=0.4: blink speed=0.5

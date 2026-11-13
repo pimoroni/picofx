@@ -1,0 +1,7 @@
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+# Not fitted: Right strip
+
+board: stripL=60
+
+stripL: rainbow_wave speed=0.3

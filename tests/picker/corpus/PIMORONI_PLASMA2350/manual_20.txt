@@ -1,0 +1,2 @@
+[Night: 10m]
+screen backlight=0%: none

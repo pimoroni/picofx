@@ -1,0 +1,5 @@
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+
+out1-3: rainbow_wave speed=-0.39 length=4
+out4-7 colour=yellow: static

@@ -1,0 +1,7 @@
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+
+rgb colour=ff8040: static
+stripDat level=50%: pulse
+stripDat1-30 colour=warm: flicker
+stripDat ease=0.4: blink speed=0.5

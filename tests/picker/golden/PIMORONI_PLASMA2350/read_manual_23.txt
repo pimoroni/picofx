@@ -1,0 +1,5 @@
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+
+
+[Storm: 30s restart]

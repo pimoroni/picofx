@@ -1,0 +1,1 @@
+rgb: rgb_blink colour=red|warm|ff8040 speed=0.5

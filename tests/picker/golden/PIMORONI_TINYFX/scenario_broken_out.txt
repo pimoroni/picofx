@@ -1,0 +1,5 @@
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+
+out1-6: random_each interval=0.15 brightness_min=0 brightness_max=1
+rgb.*: pulse_wave speed=-0.51 length=4

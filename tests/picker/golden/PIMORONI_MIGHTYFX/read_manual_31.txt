@@ -1,0 +1,6 @@
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+
+board: program=examples/programs/screens/playback/animated_gif.py program=examples/programs/showcase/retro_displays/flip_dot_sign.py program=examples/programs/effects/colour/sweep_trail.py
+
+# Nothing is playing yet.

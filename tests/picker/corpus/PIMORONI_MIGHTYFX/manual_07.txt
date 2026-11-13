@@ -1,0 +1,1 @@
+out1-7 ease=0.4: sweep speed=1 extent=1 hold=1

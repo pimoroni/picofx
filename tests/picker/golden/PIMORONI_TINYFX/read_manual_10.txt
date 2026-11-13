@@ -1,0 +1,11 @@
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+
+
+[Evening: 30s]
+rgb: rainbow speed=0.2
+out1-6: pulse_wave speed=0.3
+
+[Night: 10s]
+out1-6: flicker_each
+rgb colour=warm: pulse

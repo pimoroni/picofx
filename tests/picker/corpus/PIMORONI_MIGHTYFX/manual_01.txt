@@ -1,0 +1,5 @@
+out1-7 level=50%: pulse
+out1-3 colour=warm: flicker
+out4 colour=ff8040: static
+out1 level=0.5, 2 level=0.8, 3-7: pulse_wave
+out1-7 ease=0.4: blink speed=0.5

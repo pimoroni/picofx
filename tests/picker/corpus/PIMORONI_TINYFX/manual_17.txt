@@ -1,0 +1,9 @@
+board: sensor=pir
+motion: starts=scene Visitor after=2s
+
+[Idle]
+out1: pulse
+
+[Visitor]
+out1: flash
+motion: stops=first after=10s

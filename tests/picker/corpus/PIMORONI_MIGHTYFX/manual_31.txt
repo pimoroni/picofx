@@ -1,0 +1,3 @@
+board: program=examples/programs/effects/colour/sweep_trail.py
+board: program=examples/programs/screens/playback/animated_gif.py
+board: program=examples/programs/showcase/retro_displays/flip_dot_sign.py

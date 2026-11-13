@@ -1,0 +1,1 @@
+out1-5 ease=0.3: pelican_crossing green_interval=20 red_interval=8

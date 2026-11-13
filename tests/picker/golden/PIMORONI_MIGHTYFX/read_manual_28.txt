@@ -1,0 +1,13 @@
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+
+board: sensor=pir
+
+motion: starts=scene Visitor after=2s
+
+[Idle]
+out1: pulse
+
+[Visitor]
+motion: stops=first after=10s
+out1: flash

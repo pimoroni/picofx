@@ -1,0 +1,2 @@
+audio: wav file=chimes.wav
+audio: wav file=ambience.wav loop=yes

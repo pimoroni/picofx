@@ -1,0 +1,2 @@
+screen: gif file="wave.gif" ping_pong=yes hold=1
+screen: gif file="wave.gif" ping_pong=yes hold=1.5|0.5

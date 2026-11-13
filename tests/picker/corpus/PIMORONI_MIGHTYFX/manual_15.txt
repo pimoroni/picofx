@@ -1,0 +1,3 @@
+screenA: gif file="clock.gif"
+screenA: image file=logo.png
+screenA: sequence folder=photos interval=30

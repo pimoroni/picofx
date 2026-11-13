@@ -1,0 +1,2 @@
+[Beacon: 5s restart]
+out1-3: flash_sequence flashes=3

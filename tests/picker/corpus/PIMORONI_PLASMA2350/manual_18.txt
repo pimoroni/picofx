@@ -1,0 +1,1 @@
+rgb: static brightness=0.2

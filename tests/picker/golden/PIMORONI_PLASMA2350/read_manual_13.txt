@@ -1,0 +1,6 @@
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+
+screen: gif file="clock.gif"
+screen: image file=logo.png
+screen: sequence folder=photos interval=30

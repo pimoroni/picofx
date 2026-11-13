@@ -1,0 +1,2 @@
+out1-7 fade=0.8: blink speed=0.5
+out1-3 ease=0.05|1.2: blink speed=1

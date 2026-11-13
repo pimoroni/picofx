@@ -1,0 +1,5 @@
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+
+audio: wav file=chimes.wav
+audio: wav file=ambience.wav loop=yes

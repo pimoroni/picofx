@@ -1,0 +1,2 @@
+[Beacon: 5s restart]
+stripDat1-3: flash_sequence flashes=3

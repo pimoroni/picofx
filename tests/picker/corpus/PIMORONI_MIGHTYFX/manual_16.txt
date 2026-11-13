@@ -1,0 +1,1 @@
+screenA: gif file="coin.gif" ping_pong=yes first_as_last=yes

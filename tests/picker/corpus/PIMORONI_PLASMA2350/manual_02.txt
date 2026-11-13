@@ -1,0 +1,4 @@
+stripDat level=50%: pulse
+stripDat1-30 colour=warm: flicker
+rgb colour=ff8040: static
+stripDat ease=0.4: blink speed=0.5

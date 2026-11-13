@@ -1,0 +1,6 @@
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+
+out1 colour=red: flash speed=1.46 flashes=4 window=0.5
+out2-5 colour=red fade=0.09|1.08: sweep speed=1.07 length=4 extent=1
+out6-7 colour=warm: blink_wave speed=-0.79 length=3 duty=0.33

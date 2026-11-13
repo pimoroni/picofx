@@ -1,0 +1,1 @@
+screenA,B rotation=90,270 mirror=false,true: drawing file=creature_eyes.py style=goat

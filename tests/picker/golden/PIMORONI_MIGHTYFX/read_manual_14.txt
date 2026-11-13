@@ -1,0 +1,4 @@
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+
+screenA rotation=90 screenB rotation=270 mirror=true: drawing file=creature_eyes.py style=goat

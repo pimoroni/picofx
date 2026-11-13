@@ -1,0 +1,3 @@
+board: screenA=hub hubA-D,F=2.8 hubE=1.54
+hubA-C: gif file=flames.gif
+hubD,F: image file=badge.png

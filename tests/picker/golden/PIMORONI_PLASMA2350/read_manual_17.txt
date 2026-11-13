@@ -1,0 +1,9 @@
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+
+
+[Daytime: 30s]
+stripDat: rainbow_wave speed=0.3
+
+[Night: 2m]
+stripDat colour=ff5a00: flicker_each

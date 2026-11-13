@@ -1,0 +1,6 @@
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+
+
+[Beacon: 5s restart]
+out1-3: flash_sequence flashes=3

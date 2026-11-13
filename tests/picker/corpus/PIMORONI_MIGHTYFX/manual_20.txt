@@ -1,0 +1,5 @@
+[Evening: 30s]
+out1-7: rainbow_wave speed=0.3
+
+[Night: 10s]
+out1-7 colour=warm: pulse

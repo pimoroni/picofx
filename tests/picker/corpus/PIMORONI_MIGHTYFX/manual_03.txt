@@ -1,0 +1,1 @@
+out1-7 colour=ff5a00: flicker_each dimness=0.6

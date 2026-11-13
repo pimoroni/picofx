@@ -1,0 +1,6 @@
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+
+board: drive=manual program=fireplace.py
+
+# Nothing is playing yet.

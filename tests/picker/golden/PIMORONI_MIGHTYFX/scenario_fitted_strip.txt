@@ -1,0 +1,7 @@
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+
+board: stripl=20
+
+out1-7: rainbow_wave speed=-0.39 length=9
+stripl11-20 colour=red fade=0.03|1.08 level=75%: sweep speed=1.07 length=10 extent=1

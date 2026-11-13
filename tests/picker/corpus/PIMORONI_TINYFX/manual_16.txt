@@ -1,0 +1,2 @@
+board: sensor=ir
+remote: menu_action=first record=restart

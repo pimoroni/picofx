@@ -1,0 +1,6 @@
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+
+board: program=examples/programs/effects/colour/rainbow.py program=examples/programs/showcase/ship_thrusters.py program=examples/programs/effects/mono/sweep_trail.py
+
+# Nothing is playing yet.

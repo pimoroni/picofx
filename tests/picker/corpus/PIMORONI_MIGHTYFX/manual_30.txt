@@ -1,0 +1,2 @@
+board: program=slideshow.py args=posters|3
+board: program=clock.py args="07:30"

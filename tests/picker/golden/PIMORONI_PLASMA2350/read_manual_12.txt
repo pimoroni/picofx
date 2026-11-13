@@ -1,0 +1,6 @@
+# Written by the FX picker. Everything here can be edited by hand;
+# MANUAL.html on this drive explains every line.
+
+screen rotation=90: gif file="clock.gif"
+screen offset=*|20 bg=black: image file=logo.png
+screen tile=repeat: image file=bricks.png
