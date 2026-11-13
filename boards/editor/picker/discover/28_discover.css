@@ -54,7 +54,7 @@
     color: #a8740f;
   }
 
-  p[data-tone=warn] {
+  p:is([data-tone=warn], [data-failed]) {
     color: #b4443a;
   }
 
@@ -189,7 +189,16 @@
   }
 }
 
-:is(.programs li, .asset):hover > .discoverpill {
+.programs li > .discoverpill {
+  top: 6px;
+  right: 6px;
+}
+
+.programs li:hover > .discoverpill {
+  right: calc(2.9rem + 2px);
+}
+
+.asset:hover > .discoverpill {
   right: 2.9rem;
 }
 

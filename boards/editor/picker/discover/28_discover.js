@@ -562,7 +562,7 @@ export function discoverPlaceBar(box, kind) {
 function discoverRowSays(check, found) {
   if (check.status === "idle") return h("p", {}, "Check the examples on the drive for newer versions.");
   if (check.status === "checking") return h("p", {}, "Checking for updates...");
-  if (check.status === "failed") return h("p", {"data-tone": "warn"}, check.error || DISCOVER_OFFLINE);
+  if (check.status === "failed") return h("p", {"data-failed": true}, check.error || DISCOVER_OFFLINE);
   return discoverNotice(check) || h("p", {}, found.updates.length
     ? discoverCount(found.updates.length, "update", "updates") + " for examples on the drive."
     : "The examples on the drive are up to date.");

@@ -493,7 +493,6 @@ export function programCardFace(path) {
 
 function programCard(path) {
   var program = programNamed(path) || {};
-  var file = path.split("/").pop();
   var extras = programHooks.extras.map(function (extra) { return extra(path); }).filter(Boolean);
   var remove = program.example
     ? extras.map(function (extra) { return extra.remove; }).filter(Boolean)[0]
@@ -506,15 +505,22 @@ function programCard(path) {
                    draw();
                  }},
       programCardFace(path)),
-    drive.dirHandle || remove ? h("span", {},
-      drive.dirHandle ? h("button", {type: "button", "data-action": "copy",
-                                     title: (program.example ? "Customise a copy of " : "Duplicate ") +
-                                            file + " in the " + OWN_FOLDER + " folder",
-                                     onclick: function () { copyOwnProgram(path); }}, "\u29c9") : null,
-      remove ? h("button", {type: "button", "data-action": "delete",
-                            title: "Delete " + file + " from the FX drive",
-                            onclick: remove}, "\u00d7") : null) : null,
+    programCardActions(path, program, remove),
     extras.map(function (extra) { return extra.badge; }));
+}
+
+function programCardActions(path, program, remove) {
+  if (!drive.dirHandle && !remove) return null;
+  var file = path.split("/").pop();
+  var copySaid = (program.example ? "Customise a copy of " : "Duplicate ") + file + " in the " +
+                 OWN_FOLDER + " folder";
+  var removeSaid = "Delete " + file + " from the FX drive";
+  return h("span", {},
+    drive.dirHandle ? h("button", {type: "button", "data-action": "copy", title: copySaid,
+                                   "aria-label": copySaid,
+                                   onclick: function () { copyOwnProgram(path); }}, "\u29c9") : null,
+    remove ? h("button", {type: "button", "data-action": "delete", title: removeSaid,
+                          "aria-label": removeSaid, onclick: remove}, "\u00d7") : null);
 }
 
 async function copyOwnProgram(path) {
