@@ -83,7 +83,7 @@
       border-color: var(--dim);
       border-top-color: transparent;
 
-      .grip {
+      > span[aria-hidden] {
         opacity: 1;
       }
     }
@@ -134,7 +134,7 @@
     text-overflow: ellipsis;
   }
 
-  .grip {
+  [role=tab] > span[aria-hidden] {
     grid-area: grip;
     width: 8px;
     height: 12px;
@@ -143,7 +143,7 @@
     cursor: grab;
   }
 
-  .parts {
+  [role=tab] > span:has(> svg) {
     grid-area: parts;
     display: flex;
     gap: .3rem;
@@ -155,7 +155,7 @@
     }
   }
 
-  .remote {
+  [role=tab] > span:has(> kbd) {
     grid-area: remote;
     display: flex;
     gap: .15rem;

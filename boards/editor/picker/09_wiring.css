@@ -193,7 +193,7 @@ body:not([data-setup]) #sides [id$=Run] {
 #outPanel[data-wired] {
   position: relative;
 
-  .sides {
+  #sides {
     position: relative;
     z-index: 1;
   }

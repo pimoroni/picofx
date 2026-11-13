@@ -506,7 +506,7 @@ function stepTabs(event, which) {
 }
 
 function partIcons(body, always, scene) {
-  return h("span", {class: "parts", style: {color: sceneShade(scene)}},
+  return h("span", {style: {color: sceneShade(scene)}},
     partsSet(body, always).map(function (part) {
       var icon = partIcon(part[0]);
       icon.prepend(h("svg:title", {text: part[1]}));
@@ -560,7 +560,7 @@ function sceneTab(scene, which) {
   };
   return h("button", props,
     h("strong", {}, scene.name),
-    h("span", {class: "grip", title: "Drag to move this scene", "aria-hidden": "true"}),
+    h("span", {title: "Drag to move this scene", "aria-hidden": "true"}),
     partIcons(body, false, scene),
     h("small", {}, sceneTurn(scene)),
     remoteBadges(scene));
@@ -569,7 +569,7 @@ function sceneTab(scene, which) {
 function remoteBadges(scene) {
   var numbers = sceneNumbers(scene);
   if (!numbers.length) return null;
-  return h("span", {class: "remote"}, numbers.map(function (number) {
+  return h("span", {}, numbers.map(function (number) {
     return h("kbd", {title: "Press " + number + " on the remote for this scene",
                      "data-rainbow": number === 0,
                      style: {"--ring": number === 0 ? null
