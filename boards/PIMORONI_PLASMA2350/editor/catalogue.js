@@ -337,10 +337,6 @@ var CATALOGUE = {
   ],
   "program": null,
   "args": null,
-  "sensor": [
-   "ir",
-   "pir"
-  ],
   "screen": [
    "2.8",
    "1.54"
@@ -349,6 +345,22 @@ var CATALOGUE = {
   "stripclk": null,
   "stripapa": null
  },
+ "triggers": {},
+ "triggers_fixed": [
+  "ok_stop",
+  "play_pause"
+ ],
+ "trigger_steps": [
+  "nothing",
+  "next",
+  "previous",
+  "first",
+  "restart"
+ ],
+ "trigger_timing": [
+  "after",
+  "cancel"
+ ],
  "board": {
   "outputs": [
    [

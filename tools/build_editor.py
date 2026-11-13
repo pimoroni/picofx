@@ -333,6 +333,11 @@ def catalogue(repo_dir, board_dir, board, offer_screens=True):
     sizes = autofx.SCREEN_SIZES + ((autofx.HUB,) if board_hub(declared) else ())
     board_settings = dict(autofx.BOARD_SETTINGS, **dict.fromkeys(screens, sizes),
                           **dict.fromkeys(strips))
+    # A board with no sensor connector has nothing to say sensor= about, and no triggers
+    sensor = bool(board.get("sensor"))
+    if not sensor:
+        board_settings.pop("sensor", None)
+    vocabulary = autofx.vocabulary
 
     # The board's own parts for the text editor's targets and hints: its outputs with their kind,
     # and each strip and screen port as a file writes it, with the connector its description names
@@ -366,6 +371,11 @@ def catalogue(repo_dir, board_dir, board, offer_screens=True):
         "tiling": list(autofx.TILING),
         "board_settings": {key: (list(value) if isinstance(value, tuple) else value)
                            for key, value in board_settings.items()},
+        "triggers": {name: list(triggers) for name, triggers in vocabulary.TRIGGERS.items()}
+                    if sensor else {},
+        "triggers_fixed": list(vocabulary.TRIGGERS_FIXED),
+        "trigger_steps": list(vocabulary.TRIGGER_STEPS),
+        "trigger_timing": list(vocabulary.TRIGGER_TIMING),
         "board": own,
     }
     return ("// Generated from the autofx tables. Do not edit.\n"

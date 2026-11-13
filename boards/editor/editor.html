@@ -183,6 +183,14 @@ if (OWN.hub)
   TARGETS.push(["hubA", "a Screen Hub position, hubA to hubF, or a range such as hubA-C"]);
 OWN.strips.forEach(function (strip) { TARGETS.push([strip[0], "an LED strip on " + strip[1]]); });
 if (OWN.sound) TARGETS.push([CATALOGUE.audio, "a sound to play alongside the effects"]);
+
+// The entries that say what a sensor's triggers do, remote: for the Aye Arr Remote's buttons and
+// motion: for a PIR Stick, each with the triggers it can name. Empty on a board without a sensor
+var TRIGGERS = CATALOGUE && CATALOGUE.triggers || {};
+if (TRIGGERS.remote)
+  TARGETS.push(["remote", "what the Aye Arr Remote's buttons do, with sensor=ir on the board line"]);
+if (TRIGGERS.motion)
+  TARGETS.push(["motion", "what motion starting and stopping does, with sensor=pir on the board line"]);
 TARGETS.push(["board", "board settings"],
              ["[", "a scene heading such as [Name: 10s]. Entries above the first heading are always on"]);
 
@@ -192,6 +200,26 @@ var BOARD_HINTS = {
   program: "a Python file to run instead of the effects",
   args: "arguments for that program, separated by |"
 };
+if (CATALOGUE && CATALOGUE.board_settings.sensor)
+  BOARD_HINTS.sensor = "what is on the sensor connector, ir for the Aye Arr Remote's IR Receiver " +
+                       "Stick or pir for a PIR Stick";
+
+// What a trigger's setting is for, by name, a remote's buttons being described by their kind
+var TRIGGER_HINTS = {
+  starts: "what motion starting does",
+  stops: "what motion stopping does",
+  after: "seconds to wait before doing it, such as 3s",
+  cancel: "no to finish the wait even if the motion changes back first"
+};
+
+// The settings a trigger entry takes: the triggers its sensor has, less the buttons that do the
+// same in every scene, and for motion a delay
+function triggerSettings(target) {
+  var names = (TRIGGERS[target.toLowerCase()] || []).filter(function (name) {
+    return CATALOGUE.triggers_fixed.indexOf(name) < 0;
+  });
+  return target.toLowerCase() === "motion" ? names.concat(CATALOGUE.trigger_timing) : names;
+}
 OWN.screens.forEach(function (port) {
   BOARD_HINTS[port[0].toLowerCase()] = "the size of the screen on " + port[1] +
                                        (OWN.hub ? ", or hub for a Screen Hub" : "");
@@ -218,6 +246,7 @@ function targetKind(word) {
   var lowered = word.toLowerCase();
   if (lowered === "board") return "board";
   if (CATALOGUE && lowered === CATALOGUE.audio) return "audio";
+  if (TRIGGERS[lowered]) return "trigger";
   if (lowered.slice(0, 6) === "screen" || lowered.slice(0, 3) === "hub") return "screen";
   if (lowered.slice(0, 5) === "strip") return "strip";
   return "output";
@@ -225,8 +254,8 @@ function targetKind(word) {
 
 function channelSettings(kind) {
   // A sound answers to none of the channel settings, autofx saying so where one
-  // is written
-  if (!CATALOGUE || kind === "board" || kind === "audio") return [];
+  // is written, and nor does a trigger entry
+  if (!CATALOGUE || kind === "board" || kind === "audio" || kind === "trigger") return [];
   if (kind === "screen") return CATALOGUE.screen_settings || [];
   return CATALOGUE.output_settings || [];
 }
@@ -256,6 +285,11 @@ function settingType(name, kind) {
 function valuesFor(name, kind) {
   if (!CATALOGUE) return null;
   var lowered = name.toLowerCase();
+  if (kind === "trigger") {
+    if (lowered === "after") return null;
+    if (lowered === "cancel") return ["no", "yes"];
+    return CATALOGUE.trigger_steps.concat(["scene"]);
+  }
   if (kind === "board") {
     // A hub position takes the sizes a screen does, less the hub itself
     if (OWN.hub && HUB_PLACES.test(lowered))
@@ -316,6 +350,7 @@ function validSelector(word) {
   if (bare === "board" || ownPart(bare, OWN.screens, /^$/)) return true;
   if (OWN.hub && HUB_PLACES.test(bare)) return true;
   if (OWN.sound && bare === CATALOGUE.audio) return true;
+  if (TRIGGERS[bare]) return true;
   if (ownPart(bare, OWN.strips, /^([0-9][0-9,\-]*)?$/)) return true;
   if (NUMBERED.length && /^out[0-9][0-9,\-.rgb*]*$/.test(bare)) return true;
   if (ownPart(bare, NAMED, /^(\.(r|g|b|\*))?$/)) return true;
@@ -334,7 +369,7 @@ function checkedSetting(word, allowed, pattern) {
   return fits ? marked : badWrap(marked);
 }
 
-function highlightLine(line, continuation, context, inScene) {
+function highlightLine(line, continuation, context) {
   var hash = line.indexOf("#");
   var body = hash < 0 ? line : line.slice(0, hash);
   var comment = hash < 0 ? "" : mark("s-comment", esc(line.slice(hash)));
@@ -347,7 +382,9 @@ function highlightLine(line, continuation, context, inScene) {
   if (at < 0) {
     // A continuation line carries only settings; anything else continues nothing
     if (!continuation) return badWrap(esc(body)) + comment;
-    var allowed = context && CATALOGUE && context.effect
+    var allowed = context && CATALOGUE && context.kind === "trigger"
+                ? triggerSettings(context.target)
+                : context && CATALOGUE && context.effect
                 ? effectTakes(context.effect, context.kind) : null;
     return tokens(esc(body), function (word) {
       return word.indexOf("=") >= 0 ? checkedSetting(word, allowed) : word;
@@ -356,8 +393,6 @@ function highlightLine(line, continuation, context, inScene) {
 
   var opening = body.slice(0, at).match(/^\s*([^\s]+)/);
   var kind = opening ? targetKind(opening[1]) : "output";
-  // Sound does not follow scenes, so its entry belongs above every heading
-  var misplaced = kind === "audio" && inScene;
   var leftAllowed = CATALOGUE
                   ? (kind === "board" ? [] : channelSettings(kind)) : null;
 
@@ -366,8 +401,21 @@ function highlightLine(line, continuation, context, inScene) {
     if (word.indexOf("=") >= 0) return checkedSetting(word, leftAllowed);
     if (kind === "output" && word.indexOf(".") >= 0) mono = true;
     var marked = mark("s-target", word);
-    return validSelector(word) && !misplaced ? marked : badWrap(marked);
+    return validSelector(word) ? marked : badWrap(marked);
   });
+
+  // A trigger entry is settings the whole way, and a bare word after scene carries the scene's
+  // name on, as Night does in starts=scene Night
+  if (kind === "trigger") {
+    var allowed = CATALOGUE ? triggerSettings(opening[1]) : null;
+    var naming = false;
+    var settings = tokens(esc(body.slice(at + 1)), function (word) {
+      if (word.indexOf("=") < 0) return naming ? mark("s-value", word) : badWrap(mark("s-effect", word));
+      naming = word.split("=")[1].toLowerCase() === "scene";
+      return checkedSetting(word, allowed);
+    });
+    return left + mark("s-colon", ":") + settings + comment;
+  }
 
   // The first bare word names the effect; a board entry is settings the whole way
   var named = false;
@@ -394,12 +442,10 @@ function highlightLine(line, continuation, context, inScene) {
 
 function paint(text) {
   var open = null;
-  var inScene = false;
   var painted = text.split("\n").map(function (line) {
     var body = line.split("#")[0];
     var context = open;
     var at = body.indexOf(":");
-    if (body.replace(/^\s+/, "").slice(0, 1) === "[") inScene = true;
     if (!body.trim() || body.replace(/^\s+/, "").slice(0, 1) === "[") {
       open = null;
       context = null;
@@ -410,10 +456,11 @@ function paint(text) {
         if (word && word.indexOf("=") < 0 && !effect)
           effect = word.replace(/,+$/, "");
       });
-      open = {kind: opening ? targetKind(opening[1]) : "output", effect: effect};
+      open = {kind: opening ? targetKind(opening[1]) : "output", effect: effect,
+              target: opening ? opening[1] : ""};
       context = null;
     }
-    return highlightLine(line, !!context, context, inScene);
+    return highlightLine(line, !!context, context);
   });
   return painted.join("\n") + "\n";
 }
@@ -490,6 +537,7 @@ function sceneScope(text, caret) {
 function selectorStart(word) {
   var lowered = word.toLowerCase();
   if (lowered.slice(0, 5) === "board") return true;
+  if (TRIGGERS[lowered]) return true;
   if (NUMBERED.length && /^out[0-9]/.test(lowered)) return true;
   if (OWN.hub && /^hub[a-f]/.test(lowered)) return true;
   return ownPart(lowered, OWN.screens.concat(OWN.strips, NAMED), /^/);
@@ -544,9 +592,10 @@ function contextAt(text, caret) {
     // writer's to number, so nothing is offered and the hint line explains
     found.mode = found.comma ? "more" : before.trim() ? "channel" : "target";
   } else {
-    found.mode = found.kind === "board" ? "setting" : "effect";
+    var settled = found.kind === "board" || found.kind === "trigger";
+    found.mode = settled ? "setting" : "effect";
     before.slice(colon + 1).split(/\s+/).forEach(function (word) {
-      if (word && word.indexOf("=") < 0 && !found.effect) {
+      if (!settled && word && word.indexOf("=") < 0 && !found.effect) {
         found.effect = word.replace(/,+$/, "");
         found.mode = "setting";
       }
@@ -618,6 +667,12 @@ function offers(found) {
   }
 
   function settingOffers() {
+    if (found.kind === "trigger") {
+      triggerSettings(found.target).forEach(function (name) {
+        if (unused(name)) offer(name + "=", TRIGGER_HINTS[name] || "what this button does");
+      });
+      return;
+    }
     var takes = found.kind === "board"
               ? (CATALOGUE ? Object.keys(CATALOGUE.board_settings) : [])
               : found.effect ? effectTakes(found.effect, found.kind) : null;
@@ -657,7 +712,7 @@ function offers(found) {
     } else if (ownPart(found.prefix, NAMED, /^$/)) {
       offer(found.prefix + ".", "a single colour channel, .r .g or .b, or .* for all three separately");
       offer(found.prefix + ": ", "then the effect");
-    } else if (/^(board|audio)$/i.test(found.prefix) ||
+    } else if (/^(board|audio)$/i.test(found.prefix) || TRIGGERS[found.prefix.toLowerCase()] ||
                ownPart(found.prefix, OWN.screens.concat(OWN.strips), /^$/) ||
                HUB_PLACES.test(found.prefix.toLowerCase())) {
       offer(found.prefix + ": ", "then the effect");
@@ -716,7 +771,7 @@ function offers(found) {
 
   } else if (found.mode === "value") {
     (valuesFor(found.setting, found.kind) || []).forEach(function (value) {
-      offer(value);
+      offer(value, found.kind === "trigger" && value === "scene" ? "then the scene's name" : "");
     });
     // A pipe joins the parts of a value that has them; a comma after a value on
     // the left starts the next output group
@@ -756,6 +811,9 @@ function hintFor(found) {
   if (found.mode === "value" || (found.mode === "setting" && found.prefix)) {
     var name = found.mode === "value" ? found.setting : found.prefix;
     if (found.kind === "board") return BOARD_HINTS[name.toLowerCase()] || "";
+    if (found.kind === "trigger")
+      return TRIGGER_HINTS[name.toLowerCase()] ||
+             "a step, " + CATALOGUE.trigger_steps.join(", ") + ", or scene and a scene's name";
     // A drawing names a Python file, which belongs in a Python editor
     if (found.effect === "drawing" && name.toLowerCase().indexOf("file") === 0)
       return "a Python file with a draw() function, written in Thonny or VS Code";
@@ -768,7 +826,12 @@ function hintFor(found) {
     if (takes) return found.effect + " takes: " + takes.join(", ");
   }
   if (found.kind === "audio")
-    return "one sound plays at a time. Put its entry above the first scene heading";
+    return "one sound plays at a time. A scene's own takes over from the always-on one, " +
+           "and none silences it";
+  if (found.kind === "trigger")
+    return found.target.toLowerCase() === "motion"
+         ? "starts= and stops=, each with a step or a scene, and after= to wait first"
+         : "a button and what it does, a step or a scene. Under a heading it applies to that scene";
   if (found.mode === "channel")
     return "settings before the colon apply to the " +
            (found.kind === "screen" ? "screen" : "lights");

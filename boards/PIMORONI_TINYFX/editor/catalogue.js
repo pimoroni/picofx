@@ -336,6 +336,50 @@ var CATALOGUE = {
    "pir"
   ]
  },
+ "triggers": {
+  "remote": [
+   "anticlock",
+   "up",
+   "clockwise",
+   "left",
+   "ok_stop",
+   "right",
+   "return_undo",
+   "down",
+   "menu_action",
+   "1_red",
+   "2_green",
+   "3_blue",
+   "4_cyan",
+   "5_magenta",
+   "6_yellow",
+   "7_warm",
+   "8_white",
+   "9_cool",
+   "record",
+   "0_rainbow",
+   "play_pause"
+  ],
+  "motion": [
+   "starts",
+   "stops"
+  ]
+ },
+ "triggers_fixed": [
+  "ok_stop",
+  "play_pause"
+ ],
+ "trigger_steps": [
+  "nothing",
+  "next",
+  "previous",
+  "first",
+  "restart"
+ ],
+ "trigger_timing": [
+  "after",
+  "cancel"
+ ],
  "board": {
   "outputs": [
    [
