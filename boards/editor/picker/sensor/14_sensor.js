@@ -9,7 +9,7 @@ import {
 } from "../04_scenes.js";
 import {boardLineSteps} from "../07_board.js";
 import {BOARD_CHIP_COLOURS, boardBox, small} from "../08_setup.js";
-import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches, tabUnder} from "../11_tabs.js";
+import {TAB_NAMES, TAB_PANELS, addTab, keptOpen, tabSwatches, tabUnder} from "../11_tabs.js";
 import {
   PIR_ART, REMOTE_ART_JOINS, REMOTE_ART_RADIUS, REMOTE_BUTTONS, REMOTE_ROWS, remoteArt,
   remoteArtAt, remoteArtJoin
@@ -725,5 +725,5 @@ document.getElementById(TAB_PANELS[TAB_PANELS.length - 1]).after(
   h("details", {class: "panel", id: "sensorPanel", open: true}, h("summary", {}, "Sensor"), sensorTab));
 
 TAB_NAMES.sensorPanel = "Sensor";
-TAB_PANELS.push("sensorPanel");
+addTab("sensorPanel");
 keptOpen("sensorPanel");

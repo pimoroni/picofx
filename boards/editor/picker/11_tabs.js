@@ -12,6 +12,13 @@ BOARD.strips.forEach(function (strip) { TAB_NAMES[strip.name + "Panel"] = strip.
 export var TAB_PANELS = LED_PANELS.slice();
 if (BOARD.strips_first) TAB_PANELS.push(TAB_PANELS.shift());
 
+var FEATURE_TABS = ["screensPanel", "soundPanel", "sensorPanel"];
+
+export function addTab(panel) {
+  TAB_PANELS.push(panel);
+  TAB_PANELS.sort(function (a, b) { return FEATURE_TABS.indexOf(a) - FEATURE_TABS.indexOf(b); });
+}
+
 export var chosenTab = "outPanel";
 if (BOARD.strips_first) {
   var firstFitted = STRIPS.filter(function (strip) { return strip.there; })[0];
@@ -119,7 +126,7 @@ drawSteps.after.push(renderLedTabs);
   }
 }());
 
-function setSetup(on) {
+export function setSetup(on) {
   setSetupMode(on);
   showChosen();
 }

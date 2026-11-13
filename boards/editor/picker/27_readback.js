@@ -3,7 +3,9 @@ import {draw, drawSteps} from "./00_draw.js";
 import {WORDS, hexOf, wordFor} from "./01_colours.js";
 import {HEADER, LOOKS, SIGNAL_TIMINGS, canPlay, keyOf} from "./01_looks.js";
 import {BLINK} from "./02_blink.js";
-import {boardResidue, copyKept, filterResidue, keptLights, keptNow} from "./03_kept.js";
+import {
+  boardResidue, copyKept, filterResidue, keptLights, keptNow, setKept, setResidue
+} from "./03_kept.js";
 import {sectionLines, targetFor} from "./03_lines.js";
 import {CHANNELS, OUTPUTS, joinedItems, order, placesOf, setLayout, wiring} from "./03_outputs.js";
 import {
@@ -147,14 +149,14 @@ function readWaitingProgram() {
   if (!boardSet.program) setProgramPage(page);
 }
 
-function absorbFile(text) {
+export function absorbFile(text) {
   var parsed = readEffects(text);
   wiringRead = parsed.wiring || null;
   setNotFittedRead(parsed.notFitted || null);
 
   boardSet.reload = true;
   boardSet.driveHidden = false;
-  boardResidue = [];
+  setResidue([]);
   var named = null, argued = null;
   parsed.tokens.forEach(function (token) {
     var lowered = token.toLowerCase();
@@ -515,7 +517,7 @@ bodyParts.push({
     body.notes = JSON.parse(JSON.stringify(notesNow));
   },
   apply: function (body) {
-    keptNow = copyKept(body.kept);
+    setKept(copyKept(body.kept));
     notesNow = JSON.parse(JSON.stringify(body.notes || {}));
   },
   blank: function (body) {

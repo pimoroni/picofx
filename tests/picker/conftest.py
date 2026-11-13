@@ -1,4 +1,7 @@
+import functools
+import http.server
 import os
+import threading
 
 import pytest
 
@@ -9,8 +12,21 @@ REPO = os.path.dirname(os.path.dirname(HERE))
 BOARDS = ("PIMORONI_MIGHTYFX", "PIMORONI_TINYFX", "PIMORONI_PLASMA2350")
 
 
-def picker_path(board):
-    return os.path.join(REPO, "boards", board, "editor", "picker.html")
+class QuietHandler(http.server.SimpleHTTPRequestHandler):
+    def log_message(self, *args):
+        pass
+
+
+@functools.cache
+def server_root():
+    handler = functools.partial(QuietHandler, directory=REPO)
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    return "http://127.0.0.1:{}/".format(server.server_address[1])
+
+
+def picker_url(board):
+    return server_root() + "boards/{}/editor/picker.html".format(board)
 
 
 @pytest.fixture(scope="session")
@@ -31,7 +47,7 @@ def opened(browser):
         page.errors = []
         page.on("pageerror", lambda error: page.errors.append(str(error)))
         page.on("console", lambda message: message.type == "error" and page.errors.append(message.text))
-        page.goto("file://" + picker_path(board))
+        page.goto(picker_url(board))
         page.wait_for_function("typeof currentText === 'function'")
         pages.append(page)
         return page

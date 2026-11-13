@@ -4,7 +4,7 @@ import {setupOn} from "../03_runs.js";
 import {allBodies, apply, slotAt, state, store} from "../04_scenes.js";
 import {boardIcon} from "../08_setup.js";
 import {LED_PANELS} from "../10_led_sections.js";
-import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches, tabUnder} from "../11_tabs.js";
+import {TAB_NAMES, addTab, keptOpen, tabSwatches, tabUnder} from "../11_tabs.js";
 import {nameShown} from "../18_drive.js";
 import {OWN_GROUP, foldHead} from "../22_program.js";
 import {
@@ -268,7 +268,7 @@ drawSteps.after.push(function () {
 
 if (SCREENS.length) {
   TAB_NAMES.screensPanel = "Screens";
-  TAB_PANELS.push("screensPanel");
+  addTab("screensPanel");
   keptOpen("screensPanel");
 } else {
   document.getElementById("screensPanel").hidden = true;

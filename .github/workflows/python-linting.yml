@@ -45,6 +45,14 @@ jobs:
           git diff --exit-code -- "$board/manual/MANUAL.md" "$board/fx_libs/fx_manual.py"
         done
 
+    - name: Install Node
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version: '22'
+
+    - name: Install The Picker's Build Tools
+      run: npm ci --prefix tools/picker
+
     - name: Check Each Board's Editor Is Rebuilt
       shell: bash
       run: |

@@ -25,14 +25,16 @@ function parse(text) {
 const parts = partsUnder(root);
 const modules = {};
 for (const file of parts) {
-  const text = fs.readFileSync(file, "utf8").replace(IMPORTS, "").replace(/^export (?=(async )?function|var |let |const |class )/gm, "");
+  const original = fs.readFileSync(file, "utf8");
+  const exportedBefore = new Set([...original.matchAll(/^export (?:async )?(?:function\*? |var |let |const |class )([\w$]+)/gm)].map(found => found[1]));
+  const text = original.replace(IMPORTS, "").replace(/^export (?=(async )?function|var |let |const |class )/gm, "");
   const {ast, moduleScope} = parse(text);
   const top = {};
   for (const node of ast.body) {
     if (node.type === "FunctionDeclaration" || node.type === "ClassDeclaration") top[node.id.name] = node;
     if (node.type === "VariableDeclaration") node.declarations.forEach(one => { top[one.id.name] = node; });
   }
-  modules[file] = {text, top, declared: new Set(moduleScope.variables.map(one => one.name)),
+  modules[file] = {text, top, exportedBefore, declared: new Set(moduleScope.variables.map(one => one.name)),
                    free: new Set(moduleScope.through.map(reference => reference.identifier.name))};
 }
 
@@ -74,6 +76,19 @@ function importBlock(file, imports) {
     rows.push(row.replace(/,$/, ""));
     return "import {\n" + rows.join("\n") + "\n} from \"" + source + "\";";
   }).join("\n");
+}
+
+const testsDir = path.join(__dirname, "..", "..", "tests", "picker");
+const tested = new Set(fs.readdirSync(testsDir).filter(name => name.endsWith(".py"))
+  .flatMap(name => fs.readFileSync(path.join(testsDir, name), "utf8").match(/[A-Za-z_$][\w$]*/g) || []));
+for (const [file, one] of Object.entries(modules)) {
+  for (const node of Object.values(one.top)) {
+    if (node.type !== "FunctionDeclaration" && node.type !== "VariableDeclaration") continue;
+    const names = node.id ? [node.id.name] : node.declarations.map(declared => declared.id.name);
+    if (names.some(name => tested.has(name) && one.exportedBefore.has(name))) {
+      (wanted[file] = wanted[file] || new Set()).add(names[0]);
+    }
+  }
 }
 
 let changed = 0;

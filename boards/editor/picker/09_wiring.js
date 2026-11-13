@@ -270,7 +270,7 @@ function playSlide() {
   });
 }
 
-function breakOut(out) {
+export function breakOut(out) {
   slideFrom(null);
   var whole = sliding.was[lampKey({out: out, channel: null})];
   if (whole) {

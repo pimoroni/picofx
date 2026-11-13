@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Turns a board's editor pages into the frozen module the FX drive carries.
 
-Assembles a board's editor/picker.html from the parts every board shares in
-boards/editor/picker/, any of its own in its editor/picker/ and its description in
-editor/fx_board.json. A part in one of the feature folders
-goes in only for a board with that feature. Generates catalogue.js from the live autofx tables
+Assembles a board's picker from the parts every board shares in boards/editor/picker/, any of
+its own in its editor/picker/ and its description in editor/fx_board.json. A part in one of the
+feature folders goes in only for a board with that feature. editor/picker.html links the parts as
+they are; the drive's copy has them bundled and minified by esbuild, which
+npm ci --prefix tools/picker installs. Generates catalogue.js from the live autofx tables
 so a page always offers what the firmware it ships with provides, its strips and screen ports
 from the board's class or, where the class is not in this repository, from its description. It
 writes the picker, the text editor every board shares in boards/editor/editor.html and the
@@ -34,6 +35,7 @@ import hashlib
 import json
 import os
 import re
+import subprocess
 import sys
 import types
 import zlib
@@ -131,9 +133,6 @@ FEATURE_FOLDERS = {
     "discover": lambda board: "examples_index" in board,
 }
 
-# The picker's parts are its script, so the page closes after the last of them
-PICKER_END = "</script>\n</body>\n</html>\n"
-
 # The module that holds picofx's version, from the repository's root
 VERSION_SOURCE = os.path.join("picofx", "__init__.py")
 
@@ -159,17 +158,16 @@ DISCOVER_BRANCH = re.compile(r'^var DISCOVER_BRANCH = "([^"]*)";$', re.MULTILINE
 RELEASE_BRANCH = "main"
 
 
-def check_release_branch(page):
+def check_release_branch(repo_dir):
     """Refuse a release whose picker fetches its examples from a branch other than main."""
-    if "DISCOVER_BRANCH" not in page:
-        return
-    found = DISCOVER_BRANCH.search(page)
+    source = os.path.join(repo_dir, SHARED_PARTS, "discover", "28_discover.js")
+    with open(source, encoding="utf-8") as f:
+        found = DISCOVER_BRANCH.search(f.read())
     if not found:
-        sys.exit("picker.html has Discover, but its DISCOVER_BRANCH line could not be read")
+        sys.exit("the DISCOVER_BRANCH line of {} could not be read".format(source))
     if found.group(1) != RELEASE_BRANCH:
         sys.exit("Discover fetches examples from {}, and a release takes them from {}. Set "
-                 "DISCOVER_BRANCH in boards/editor/picker/discover/28_discover.js".format(
-                     found.group(1), RELEASE_BRANCH))
+                 "DISCOVER_BRANCH in {}".format(found.group(1), RELEASE_BRANCH, source))
 
 
 def board_parts(picker_folders, board, kind="js"):
@@ -199,64 +197,104 @@ def board_parts(picker_folders, board, kind="js"):
 
 
 IMPORT = re.compile(r'^import \{([^}]*)\} from "([^"]+)";\n', re.MULTILINE)
-EXPORT = re.compile(r"^export (?=(?:async )?function|var |let |const |class )", re.MULTILINE)
-DECLARED = re.compile(r"^(export )?(?:async )?(?:function\*? |var |let |const |class )([A-Za-z_$][\w$]*)",
+EXPORTED = re.compile(r"^export (?:async )?(?:function\*? |var |let |const |class )([A-Za-z_$][\w$]*)",
                       re.MULTILINE)
 
+ESBUILD = os.path.join("tools", "picker", "node_modules", ".bin", "esbuild")
 
-def bundle(parts):
-    texts = {}
+
+def script_order(parts):
+    """The board's script parts in the order they load: by number, except that a part always
+    comes after every part it imports. Refuses an import of a part the board does not take, and
+    two parts exporting one name."""
+    imports = {}
+    owners = {}
     for part in parts:
         with open(part, encoding="utf-8") as f:
-            texts[os.path.normpath(part)] = f.read()
-    exports = {}
-    owners = {}
-    for part, text in texts.items():
-        exports[part] = set()
-        for exported, name in DECLARED.findall(text):
-            if name in owners:
-                sys.exit("{} and {} both declare {}".format(owners[name], part, name))
-            owners[name] = part
-            if exported:
-                exports[part].add(name)
-    script = ""
-    for part, text in texts.items():
+            text = f.read()
+        imports[part] = []
         for names, source in IMPORT.findall(text):
             source = os.path.normpath(os.path.join(os.path.dirname(part), source))
-            if source not in texts:
+            if source not in parts:
                 sys.exit("{} imports {}, which this board does not take".format(part, source))
-            for name in (name.strip() for name in names.split(",")):
-                if name and name not in exports[source]:
-                    sys.exit("{} imports {} from {}, which does not export it".format(part, name, source))
-        script += EXPORT.sub("", IMPORT.sub("", text))
-    return script
+            imports[part].append(source)
+        for name in EXPORTED.findall(text):
+            if name in owners:
+                sys.exit("{} and {} both export {}".format(owners[name], part, name))
+            owners[name] = part
+    order = []
+    while len(order) < len(parts):
+        ready = [part for part in parts if part not in order and
+                 all(source in order for source in imports[part])]
+        if not ready:
+            sys.exit("the picker's parts import each other in a circle: " +
+                     ", ".join(part for part in parts if part not in order))
+        order.append(ready[0])
+    return order
 
 
-def picker(board_dir, repo_dir, version):
-    """picker.html, from page.html and the numbered parts after it, with the board and the
-    version filled in."""
+def esbuild(repo_dir, text, *options):
+    """text run through the picker's pinned esbuild."""
+    tool = os.path.join(repo_dir, ESBUILD)
+    if not os.path.exists(tool):
+        sys.exit("esbuild is missing: npm ci --prefix tools/picker")
+    done = subprocess.run([tool, "--log-level=warning", "--charset=ascii"] + list(options),
+                          input=text.encode("utf-8"), capture_output=True, cwd=repo_dir)
+    if done.returncode:
+        sys.exit(done.stderr.decode("utf-8", "replace"))
+    return done.stdout.decode("ascii")
+
+
+def picker_pages(board_dir, repo_dir, version):
+    """The board's picker twice from page.html and the parts: the page the repository keeps,
+    which loads the parts as they are, and the page the drive carries, every part minified into
+    it."""
     with open(os.path.join(board_dir, "editor", DESCRIPTION_NAME), encoding="utf-8") as f:
         board = json.load(f)
     check_board(board_dir, board)
     shared = os.path.join(repo_dir, SHARED_PARTS)
     own = os.path.join(board_dir, "editor", "picker")
+    editor_dir = os.path.join(board_dir, "editor")
     with open(os.path.join(shared, "page.html"), encoding="utf-8") as f:
-        text = f.read()
+        page = f.read()
     folders = [shared] + ([own] if os.path.isdir(own) else [])
-    styles = ""
-    for part in board_parts(folders, board, "css"):
+    page = page.replace("__BOARD_NAME__", board["name"]).replace("__VERSION__", version)
+    page = page.replace("__BUILD__", json.dumps({"board": board, "version": version}, indent=1))
+    styles = [os.path.normpath(part) for part in board_parts(folders, board, "css")]
+    scripts = script_order([os.path.normpath(part) for part in board_parts(folders, board)])
+
+    def href(part):
+        return os.path.relpath(part, editor_dir).replace(os.sep, "/")
+
+    links = "".join('<link rel="stylesheet" href="{}">\n'.format(href(part)) for part in styles)
+    loads = "".join('import * as part{} from "{}";\n'.format(at, href(part))
+                    for at, part in enumerate(scripts))
+    exposed = ("for (const part of [{}]) {{\n"
+               "  for (const name of Object.keys(part)) {{\n"
+               "    if ([window, Window.prototype, EventTarget.prototype].some(holder => Object.hasOwn(holder, name))) continue;\n"
+               "    Object.defineProperty(window, name, {{get: () => part[name]}});\n"
+               "  }}\n"
+               "}}\n").format(", ".join("part{}".format(at) for at in range(len(scripts))))
+    kept = (page.replace("__STYLES__\n", links) +
+            '<script type="module">\n' + loads + exposed + "</script>\n</body>\n</html>\n")
+
+    css = ""
+    for part in styles:
         with open(part, encoding="utf-8") as f:
-            styles += f.read()
-    text = text.replace("__STYLES__\n", styles)
-    text += "<script>\n" + bundle(board_parts(folders, board))
-    text = text.replace("__BOARD_NAME__", board["name"])
-    text = text.replace("__VERSION__", version)
-    text = text.replace("__BOARD__", json.dumps(board, indent=1))
-    text += PICKER_END
-    left = sorted(set(re.findall(r"__[A-Z_]+__", text)))
-    if left:
-        sys.exit("picker.html has {} unfilled".format(", ".join(left)))
-    return text
+            css += f.read()
+    entry = "".join('import "./{}";\n'.format(os.path.relpath(part, repo_dir).replace(os.sep, "/"))
+                    for part in scripts)
+    script = esbuild(repo_dir, entry, "--bundle", "--format=iife", "--minify",
+                     "--sourcefile=picker.js")
+    style = esbuild(repo_dir, css, "--loader=css", "--minify")
+    shipped = (page.replace("__STYLES__\n", "<style>" + style.strip() + "</style>\n") +
+               "<script>" + script.strip() + "</script>\n</body>\n</html>\n")
+
+    for text in (kept, shipped):
+        left = sorted(set(re.findall(r"__[A-Z_]+__", text)))
+        if left:
+            sys.exit("picker.html has {} unfilled".format(", ".join(left)))
+    return kept, shipped
 
 
 # The tables a board's class declares its connectors in, each a tuple
@@ -547,10 +585,11 @@ def main():
     with open(os.path.join(editor_dir, DESCRIPTION_NAME), encoding="utf-8") as f:
         board = json.load(f)
     catalogue_path = os.path.join(editor_dir, "catalogue.js")
-    generated = {os.path.join(editor_dir, "picker.html"): picker(args.board_dir, repo_dir, version),
+    kept, shipped = picker_pages(args.board_dir, repo_dir, version)
+    generated = {os.path.join(editor_dir, "picker.html"): kept,
                  catalogue_path: catalogue(repo_dir, args.board_dir, board)}
     if args.release:
-        check_release_branch(generated[os.path.join(editor_dir, "picker.html")])
+        check_release_branch(repo_dir)
 
     # A board with no FX drive modules carries no FX drive, so it takes the pages alone
     if not os.path.isdir(os.path.dirname(module)):
@@ -558,7 +597,7 @@ def main():
         return
 
     sources = {"CATALOGUE": generated[catalogue_path],
-               "PICKER": generated[os.path.join(editor_dir, "picker.html")]}
+               "PICKER": shipped}
     with open(os.path.join(repo_dir, SHARED_EDITOR), encoding="utf-8", newline="") as f:
         sources["EDITOR"] = f.read().replace("__BOARD_NAME__", board["name"]).replace(
             "__VERSION__", version)

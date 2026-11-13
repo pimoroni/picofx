@@ -1,4 +1,8 @@
-export var BOARD = __BOARD__;
+var BUILD = JSON.parse(document.getElementById("build").textContent);
+
+export var BOARD = BUILD.board;
+
+export var VERSION = BUILD.version;
 
 export var CATALOGUE_ASSUMED = typeof CATALOGUE === "undefined";
 

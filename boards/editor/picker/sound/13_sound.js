@@ -4,7 +4,7 @@ import {draw, drawSteps} from "../00_draw.js";
 import {quoted} from "../01_looks.js";
 import {entryParts, unquoted} from "../03_reading.js";
 import {allBodies, bodyParts, driveParts, state} from "../04_scenes.js";
-import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches, tabUnder} from "../11_tabs.js";
+import {TAB_NAMES, TAB_PANELS, addTab, keptOpen, tabSwatches, tabUnder} from "../11_tabs.js";
 import {nameShown} from "../18_drive.js";
 import {OWN_GROUP} from "../22_program.js";
 import {
@@ -222,7 +222,7 @@ async function profileSound(name, handle) {
   }
 }
 
-var soundHandles = {};
+export var soundHandles = {};
 export var hearing = {name: null, audio: null, url: null};
 
 export function stopHearing() {
@@ -530,5 +530,5 @@ document.getElementById(TAB_PANELS[TAB_PANELS.length - 1]).after(
   h("details", {class: "panel", id: "soundPanel", open: true}, h("summary", {}, "Sound"), soundTab));
 
 TAB_NAMES.soundPanel = "Sound";
-TAB_PANELS.push("soundPanel");
+addTab("soundPanel");
 keptOpen("soundPanel");

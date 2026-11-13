@@ -10,12 +10,20 @@ export function h(tag, props, ...children) {
     });
     else if (key === "text") element.textContent = value;
     else if (key === "html") element.innerHTML = value;
-    else if (key in element && typeof element[key] !== "function" && !(element instanceof SVGElement))
-      element[key] = value;
+    else if (settable(element, key)) element[key] = value;
     else element.setAttribute(key, value === true ? "" : value);
   });
   append(element, children);
   return element;
+}
+
+function settable(element, key) {
+  if (element instanceof SVGElement || !(key in element) || typeof element[key] === "function") return false;
+  for (var holder = element; holder; holder = Object.getPrototypeOf(holder)) {
+    var described = Object.getOwnPropertyDescriptor(holder, key);
+    if (described) return !!described.set || !!described.writable;
+  }
+  return false;
 }
 
 function append(element, children) {

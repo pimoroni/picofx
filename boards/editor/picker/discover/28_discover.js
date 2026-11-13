@@ -1,7 +1,7 @@
 import {banner} from "../00_banner.js";
 import {h, replace} from "../00_dom.js";
 import {draw, drawSteps} from "../00_draw.js";
-import {BOARD} from "../01_looks.js";
+import {BOARD, VERSION} from "../01_looks.js";
 import {apply, driveParts, slotAt, state, store} from "../04_scenes.js";
 import {SCREEN_PORTS} from "../07_board.js";
 import {drive, driveTrouble, nameShown} from "../18_drive.js";
@@ -30,7 +30,7 @@ function discoverFileUrl(path) {
   return DISCOVER_SOURCE + index.slice(0, index.lastIndexOf("/") + 1) + path;
 }
 
-var DISCOVER_FIRMWARE = "__VERSION__".split(" ")[0];
+var DISCOVER_FIRMWARE = VERSION.split(" ")[0];
 
 function discoverFreshCheck() {
   return {status: "idle", progress: null, refreshing: null, updating: null, error: null,
@@ -58,7 +58,7 @@ export function discoverSay(kind, text, warn) {
 
 var DISCOVER_NOTICE_MS = 8000;
 
-var discover = {
+export var discover = {
   program: discoverFreshCheck(),
   sound: discoverFreshCheck(),
   drawing: discoverFreshCheck(),

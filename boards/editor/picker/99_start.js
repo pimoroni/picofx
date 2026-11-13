@@ -4,12 +4,14 @@ import {CATALOGUE_ASSUMED} from "./01_looks.js";
 import {HOLDING_STILL, setBeat, step} from "./02_preview.js";
 import {active, lastOutputRun, mono, outs, runs} from "./03_runs.js";
 import {renderSides} from "./04_led_panels.js";
+import {renderSceneTray} from "./04_scene_tray.js";
 import {capture, state} from "./04_scenes.js";
 import {renderLeds} from "./08_setup.js";
 import {renderWiringRun} from "./09_wiring.js";
 import {workOn} from "./10_led_sections.js";
 import {chosenTab, showChosen} from "./11_tabs.js";
 import {renderPreview} from "./18_file_preview.js";
+import {renderSceneSettings} from "./20_scene_row.js";
 import {renderStretches} from "./31_stretch_bar.js";
 import {renderEditor} from "./32_stretch_editor.js";
 import {renderGallery} from "./33_gallery.js";
@@ -30,7 +32,9 @@ drawSteps.during.push(
       renderEditor(run.id + "Chosen", run);
     });
   },
-  paintAll
+  paintAll,
+  renderSceneTray,
+  renderSceneSettings
 );
 
 state.always.body = capture();

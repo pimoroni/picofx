@@ -2,11 +2,19 @@ import {entryParts, lampsNamed} from "./03_reading.js";
 
 export var boardResidue = [];
 
+export function setResidue(tokens) {
+  boardResidue = tokens;
+}
+
 export function filterResidue(keep) {
   boardResidue = boardResidue.filter(keep);
 }
 
 export var keptNow = [];
+
+export function setKept(lines) {
+  keptNow = lines;
+}
 
 export function filterKept(keep) {
   keptNow = keptNow.filter(keep);

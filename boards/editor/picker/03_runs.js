@@ -2,7 +2,7 @@ import {draw, drawSteps} from "./00_draw.js";
 import {BOARD, canPlay, lookNamed} from "./01_looks.js";
 import {filterKept, keptLights} from "./03_kept.js";
 import {START_MOODS, sectionLines, startColour, targetFor} from "./03_lines.js";
-import {MONO_FIRST, OUTPUTS, order, placeOf, wiring} from "./03_outputs.js";
+import {MONO_FIRST, OUTPUTS, order, placeOf, setLayout, wiring} from "./03_outputs.js";
 
 export function Run(name, mono) {
   return {name: name, mono: mono, lamps: [], sections: [], picked: 0,
@@ -310,11 +310,11 @@ export function rejoinWiring(out) {
   acrossWiring(function () {
     wiring[out] = {broken: false};
     var first = -1;
-    order = order.filter(function (place) {
+    setLayout(wiring, order.filter(function (place) {
       if (place.out !== out) return true;
       if (first < 0) first = placeOf(place);
       return false;
-    });
+    }));
     order.splice(Math.max(0, first), 0, {out: out, channel: null});
   });
   pickOutput(out);

@@ -8,7 +8,8 @@ import {SCREEN_PORTS, screenHooks} from "./07_board.js";
 import {tabSwatch} from "./11_tabs.js";
 import {CAN_REACH_A_DRIVE, drive, driveTrouble} from "./18_drive.js";
 import {
-  PROGRAMS, boardSet, onProgramPage, programArguments, programNamed, programNote, setPrograms
+  PROGRAMS, boardSet, onProgramPage, programArguments, programNamed, programNote, setProgramPage,
+  setPrograms
 } from "./19_board_settings.js";
 import {
   OWN_FOLDER, PICTURES, SECTIONS, copyProgram, driveHasCredentials, drivePrograms, programsKnown,
@@ -720,13 +721,13 @@ export function featureFilter(features, choices) {
 }
 
 function toEffects() {
-  onProgramPage = false;
+  setProgramPage(false);
   boardSet.program = null;
   draw();
 }
 
 function toProgram() {
-  onProgramPage = true;
+  setProgramPage(true);
   draw();
 }
 

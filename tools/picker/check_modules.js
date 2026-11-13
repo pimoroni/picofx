@@ -61,7 +61,10 @@ for (const [file, one] of Object.entries(modules)) {
   }
 }
 for (const [file, one] of Object.entries(modules)) for (const name of one.unused) say(file, name + " is declared and never used");
-for (const [file, one] of Object.entries(modules)) for (const name of one.exported) if (!imported.has(file + ":" + name)) say(file, "exports " + name + ", which no part imports");
+const testsDir = path.join(__dirname, "..", "..", "tests", "picker");
+const tested = new Set(fs.readdirSync(testsDir).filter(name => name.endsWith(".py"))
+  .flatMap(name => fs.readFileSync(path.join(testsDir, name), "utf8").match(/[A-Za-z_$][\w$]*/g) || []));
+for (const [file, one] of Object.entries(modules)) for (const name of one.exported) if (!imported.has(file + ":" + name) && !tested.has(name)) say(file, "exports " + name + ", which no part or test uses");
 if (problems.length) {
   console.log(problems.join("\n"));
   process.exit(1);

@@ -32,5 +32,11 @@ jobs:
         pip install playwright pytest
         playwright install --with-deps chromium
 
+    - name: Check Each Board's Picker Is Rebuilt
+      run: |
+        for description in boards/*/editor/fx_board.json; do
+          python3 tools/build_editor.py --check "${description%/editor/fx_board.json}"
+        done
+
     - name: Test Each Board's Picker
       run: pytest -v tests/picker

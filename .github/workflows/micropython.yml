@@ -68,6 +68,16 @@ jobs:
         submodules: true
         path: ${{ env.CI_PROJECT_ROOT }}
 
+    - name: "Release: Install Node"
+      if: github.event_name == 'release'
+      uses: actions/setup-node@v7
+      with:
+        node-version: '22'
+
+    - name: "Release: Install the picker's build tools"
+      if: github.event_name == 'release'
+      run: npm ci --prefix $CI_PROJECT_ROOT/tools/picker
+
     # A release rebuilds the editor pages and manual, dropping the "preview" the committed pages show
     # after the version
     - name: "Release: Editor pages and manual"
