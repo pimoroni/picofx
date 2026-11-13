@@ -6,7 +6,7 @@ import {
 import {SCREEN_SIZES, boardLineSteps} from "../07_board.js";
 import {boardIcon, setupOn} from "../08_setup.js";
 import {tabSwatches, tabUnder} from "../11_tabs.js";
-import {boardResidue, entryParts} from "../27_readback.js";
+import {boardResidue, entryParts, filterResidue} from "../27_readback.js";
 import {
   GROUP_NUMBERS, apartSaid, breakingUp, hubBacklight, hubPictureTargets, inNumberedGroup,
   namesSaid, pickedGroupInk, pickedPlaces, placeGroupControls, placeGroupInk, sendTargets
@@ -31,6 +31,10 @@ HUB_PLACES.forEach(function (place) {
 });
 
 export var placePicked = "A";
+
+export function pickPlace(place) {
+  placePicked = place;
+}
 
 export function placeThere(place) { return state.hub.on && !!state.hub.sizes[place]; }
 
@@ -225,7 +229,7 @@ function readHubBoard() {
   state.hub.on = true;
   state.hub.port = port;
   HUB_PLACES.forEach(function (place) { state.hub.sizes[place] = sizes[place] || ""; });
-  boardResidue = boardResidue.filter(function (token) { return taken.indexOf(token) < 0; });
+  filterResidue(function (token) { return taken.indexOf(token) < 0; });
 }
 
 function readHubLines(bodies) {
@@ -343,7 +347,7 @@ function placeTile(place, sentWith, picked) {
   return h("li", {"aria-current": picked.indexOf(place) >= 0 ? "true" : null,
                   "data-grouped": !!ink, style: {"--group": ink},
                   onclick: function () {
-                    placePicked = place;
+                    pickPlace(place);
                     draw();
                   }},
     h("button", {type: "button", "aria-label": "Position " + place}, place),
@@ -457,7 +461,7 @@ pictureTargeting.hub = {
               title: target.ink ? "Group " + target.name + ", " + placesSaid(target.places)
                                 : target.name + ", on its own",
               press: function () {
-                placePicked = target.places[0];
+                pickPlace(target.places[0]);
                 turnPlaces(target.places, !off);
               }};
     });

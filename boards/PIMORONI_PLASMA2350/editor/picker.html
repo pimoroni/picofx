@@ -4701,6 +4701,10 @@ function curved(sim, given, channel) {
 
 var previewingStrip = false;
 
+function setPreviewingStrip(on) {
+  previewingStrip = on;
+}
+
 function lampTarget(count) {
   var playing = [];
   for (var i = 1; i <= count; i++) playing.push(i);
@@ -4745,6 +4749,10 @@ function lookLit(look, holder, t, slot, count, sim) {
 var FRAME = 1 / 40;
 var beat = 0;
 
+function setBeat(at) {
+  beat = at;
+}
+
 var HOLDING_STILL = window.matchMedia &&
                     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -4775,10 +4783,19 @@ var runs = MONO_FIRST ? [mono, outs] : [outs, mono];
 
 var active = MONO_FIRST ? mono : outs;
 
+function activate(run) {
+  active = run;
+}
+
 var showing = MONO_FIRST;
 
 var order = [];
 for (var m = 0; m < OUTS; m++) order = order.concat(placesOf(m));
+
+function setLayout(wired, ordered) {
+  wiring = wired;
+  order = ordered;
+}
 
 function placesOf(out) {
   if (OUTPUTS[out].mono) return [{out: out, channel: 0}];
@@ -5073,6 +5090,10 @@ function pick(run, at) {
 
 var choosingLook = false;
 
+function chooseLook(on) {
+  choosingLook = on;
+}
+
 function pickingLook(run) {
   var section = run && run.sections[run.picked];
   return !!section && (!lookNamed(section.look) || (choosingLook && run === active));
@@ -5137,7 +5158,7 @@ function breakOutWiring(out) {
 
 function pickOutput(out) {
   if (setupOn) {
-    heldOutput = out;
+    holdOutput(out);
     return;
   }
   runs.some(function (run) {
@@ -5252,7 +5273,7 @@ var walks = {};
 function litRun(run) {
   var out = [];
   var store = walks[run.name] || (walks[run.name] = {});
-  previewingStrip = !!run.strip;
+  setPreviewingStrip(!!run.strip);
   try {
     run.sections.forEach(function (section) {
       var look = lookNamed(section.look);
@@ -5270,7 +5291,7 @@ function litRun(run) {
       }
     });
   } finally {
-    previewingStrip = false;
+    setPreviewingStrip(false);
   }
   return out;
 }
@@ -5357,7 +5378,7 @@ function landLook(run, at, name) {
                     "edit already use some of these lights:") + "\n\n" + lines + "\n\nRemove " +
                    (clashing.length === 1 ? "it" : "them") + " from the file and play " +
                    name + " instead?")) return;
-      keptNow = keptNow.filter(function (one) { return clashing.indexOf(one) < 0; });
+      filterKept(function (one) { return clashing.indexOf(one) < 0; });
     }
   }
   if (run.strip && !run.there) return;
@@ -5457,6 +5478,10 @@ var drawSteps = {before: [], after: []};
 
 var drawHeld = false;
 
+function holdDrawing(on) {
+  drawHeld = on;
+}
+
 function draw() {
   if (drawHeld) return;
   var across = window.scrollX;
@@ -5529,7 +5554,7 @@ function paintAll() {
 }
 
 function step() {
-  beat += FRAME;
+  setBeat(beat + FRAME);
   paintAll();
   window.setTimeout(step, FRAME * 1000);
 }
@@ -5662,7 +5687,7 @@ function apply(body) {
     run.was = was.was;
     run.undone = was.undone;
   });
-  active = runs.filter(function (run) { return run.name === body.active; })[0] || outs;
+  activate(runs.filter(function (run) { return run.name === body.active; })[0] || outs);
   settle();
   bodyParts.forEach(function (part) { if (part.apply) part.apply(body); });
 }
@@ -5738,8 +5763,8 @@ function addScene() {
   } else {
     var before = state.scenes[state.scenes.length - 1];
     made = {name: freeSceneName(), seconds: before.seconds,
-            restart: before.restart, waits: sceneCanWait(), body: copyBody(before.body)};
-    if (state.scenes.length === 1 && !sceneCanWait()) before.waits = false;
+            restart: before.restart, waits: sceneHooks.canWait(), body: copyBody(before.body)};
+    if (state.scenes.length === 1 && !sceneHooks.canWait()) before.waits = false;
   }
   state.scenes.push(made);
   state.at = state.scenes.length - 1;
@@ -5770,11 +5795,14 @@ function sceneMarked(mark) {
   return state.scenes.filter(function (scene) { return sceneMark(scene) === mark; })[0] || null;
 }
 
-var sceneCanWait = function () { return false; };
+var sceneHooks = {
+  canWait: function () { return false; },
+  triggerLeads: function (at) { return []; },
+  waitsFor: function () { return "a button"; },
+  numbers: function (scene) { return []; }
+};
 
-var sceneTriggerLeads = function (at) { return []; };
 
-var sceneWaitsFor = function () { return "a button"; };
 
 function sceneAfter(scene) {
   if (scene.waits) return null;
@@ -5795,7 +5823,7 @@ function sceneRestarts(scene) {
 
 function sceneLeads(at) {
   var after = sceneAfter(state.scenes[at]);
-  return sceneTriggerLeads(at).concat(after ? [state.scenes.indexOf(after)] : []);
+  return sceneHooks.triggerLeads(at).concat(after ? [state.scenes.indexOf(after)] : []);
 }
 
 function scenesReachedFrom(starts) {
@@ -5826,7 +5854,7 @@ function settleLoneScene() {
 function unreachedScenes() {
   var reached = scenesReachedFrom(state.scenes.length ? [0] : []);
   var unreached = state.scenes.filter(function (scene, at) { return !reached[at]; });
-  if (!unreached.length || sceneCanWait()) return {scenes: unreached, stopper: null};
+  if (!unreached.length || sceneHooks.canWait()) return {scenes: unreached, stopper: null};
 
   var stop = state.scenes[0];
   var seen = [];
@@ -5869,7 +5897,6 @@ var REMOTE_RAINBOW = ["#ed1c24", "#f7941d", "#fff200", "#8dc63f", "#00a651", "#0
 var ALWAYS_COLOUR = "#8f8a82";
 var UNNUMBERED_COLOUR = "#b9b3a9";
 
-var sceneNumbers = function (scene) { return []; };
 
 function sceneColour(scene) {
   if (!scene) return ALWAYS_COLOUR;
@@ -6075,7 +6102,7 @@ function sceneTab(scene, which) {
 }
 
 function remoteBadges(scene) {
-  var numbers = sceneNumbers(scene);
+  var numbers = sceneHooks.numbers(scene);
   if (!numbers.length) return null;
   return h("span", {}, numbers.map(function (number) {
     return h("kbd", {title: "Press " + number + " on the remote for this scene",
@@ -6550,7 +6577,7 @@ function readStripTail(run, tail) {
   return brightness >= 0 && brightness <= 1 ? {brightness: brightness} : null;
 }
 
-runs = runs.concat(STRIPS.map(stripRun));
+runs.push.apply(runs, STRIPS.map(stripRun));
 settle();
 
 drawSteps.after.push(function () {
@@ -7075,11 +7102,10 @@ function acrossScenes(change) {
     store();
     var editing = state.at;
     var before = {wiring: JSON.stringify(wiring), order: JSON.stringify(order)};
-    drawHeld = true;
+    holdDrawing(true);
     try {
       [state.always].concat(state.scenes).forEach(function (slot) {
-        wiring = JSON.parse(before.wiring);
-        order = JSON.parse(before.order);
+        setLayout(JSON.parse(before.wiring), JSON.parse(before.order));
         apply(slot.body);
         change(out);
         runs.forEach(function (run) {
@@ -7089,7 +7115,7 @@ function acrossScenes(change) {
         slot.body = capture();
       });
     } finally {
-      drawHeld = false;
+      holdDrawing(false);
     }
     state.at = editing;
     apply(slotAt(editing).body);
@@ -7162,6 +7188,10 @@ var NOT_FITTED = "# Not fitted: ";
 
 var notFittedRead = null;
 
+function setNotFittedRead(names) {
+  notFittedRead = names;
+}
+
 var notFittedSteps = [];
 
 function stripDescribed(run) {
@@ -7193,6 +7223,10 @@ function canEdit(panel) { return setupOn; }
 
 var heldPick = null;
 var heldOutput = null;
+
+function holdOutput(out) {
+  heldOutput = out;
+}
 
 function setSetup(on) {
   if (on && !setupOn) {
@@ -10178,6 +10212,10 @@ var boardSet = {reload: true, driveHidden: false, program: null, args: {}};
 
 var PROGRAMS = [];
 
+function setPrograms(list) {
+  PROGRAMS = list;
+}
+
 var programsElsewhere = [];
 
 function programNamed(path) {
@@ -10356,7 +10394,7 @@ function renderScenePlace() {
                                   " waits forever before it"
                                 : "Never shows, as no scene goes on to it";
   }
-  var ends = picked.waits ? "waits " + (sceneCanWait() ? "for " + sceneWaitsFor() : "forever")
+  var ends = picked.waits ? "waits " + (sceneHooks.canWait() ? "for " + sceneHooks.waitsFor() : "forever")
            : after === picked ? "then itself" : after ? "then " + after.name : "on its own";
   scenePlaceLine.textContent = problem || "Scene " + (state.at + 1) + " of " + count + ", " + ends;
   scenePlaceLine.title = scenePlaceLine.textContent;
@@ -10953,6 +10991,10 @@ var programView = null;
 
 var onProgramPage = false;
 
+function setProgramPage(on) {
+  onProgramPage = on;
+}
+
 function copyTile(example, file, folder, copy) {
   return h("span", {class: "bin", "data-copy": example ? "alone" : "",
                     title: (example ? "Customise a copy of " : "Duplicate ") + file + " in the " +
@@ -11013,7 +11055,7 @@ function programCardActions(path, program, remove) {
 async function copyOwnProgram(path) {
   try {
     var copy = await copyProgram(path);
-    PROGRAMS = await drivePrograms(drive.dirHandle, true);
+    setPrograms(await drivePrograms(drive.dirHandle, true));
     if (boardSet.program === path) boardSet.program = copy;
     banner("Copied to " + copy + " on the FX drive. Open it in Thonny or another editor to " +
            "change it.");
@@ -12070,7 +12112,7 @@ async function rescanPrograms() {
   programsBusy = true;
   try {
     if (await ownState(drive.dirHandle) !== ownSeen) {
-      PROGRAMS = await drivePrograms(drive.dirHandle, true);
+      setPrograms(await drivePrograms(drive.dirHandle, true));
       forgetMissingPrograms();
       draw();
     }
@@ -12138,7 +12180,7 @@ async function removeProgram(path) {
     banner("Could not delete " + name + ". " + await driveTrouble(e, name), true);
     return;
   }
-  PROGRAMS = await drivePrograms(drive.dirHandle, true);
+  setPrograms(await drivePrograms(drive.dirHandle, true));
   forgetMissingPrograms();
   draw();
 }
@@ -12164,7 +12206,7 @@ async function readNamedProgram() {
     var below = isExample(path) ? path.slice(EXAMPLES_ROOT.length) : "";
     var program = programFrom(path, below.slice(0, Math.max(below.lastIndexOf("/"), 0)), source);
     if (!program) return;
-    PROGRAMS = [program];
+    setPrograms([program]);
     var beside = parts.length ? parts.join("/") + "/" : "";
     var stem = name.replace(/\.py$/i, "");
     var pictures = {};
@@ -12184,7 +12226,7 @@ async function readNamedProgram() {
 }
 
 async function readDrivePrograms() {
-  PROGRAMS = await drivePrograms(drive.dirHandle);
+  setPrograms(await drivePrograms(drive.dirHandle));
   programsKnown = true;
   forgetMissingPrograms();
   readWaitingProgram();
@@ -12194,9 +12236,17 @@ async function readDrivePrograms() {
 var PAGE_LINES = HEADER.split("\n").filter(Boolean).concat(["# Nothing is playing yet."]);
 
 var boardResidue = [];
+
+function filterResidue(keep) {
+  boardResidue = boardResidue.filter(keep);
+}
 var boardComments = [];
 
 var keptNow = [];
+
+function filterKept(keep) {
+  keptNow = keptNow.filter(keep);
+}
 var notesNow = {};
 
 function unquotedColon(line) {
@@ -12346,10 +12396,10 @@ function readProgram(named, argued) {
   boardSet.args[path] = given;
   if (programNamed(path) && argsWritten(path) === (argued ? argued.slice("args=".length) : "")) {
     boardSet.program = path;
-    onProgramPage = true;
+    setProgramPage(true);
     return;
   }
-  onProgramPage = false;
+  setProgramPage(false);
   boardSet.args[path] = kept;
   boardResidue.push(named);
   if (argued) boardResidue.push(argued);
@@ -12362,18 +12412,18 @@ function readWaitingProgram() {
   var named = programWaiting[0], argued = programWaiting[1];
   programWaiting = null;
   if (boardSet.program) return;
-  boardResidue = boardResidue.filter(function (token) {
+  filterResidue(function (token) {
     return token !== named && token !== argued;
   });
   var page = onProgramPage;
   readProgram(named, argued);
-  if (!boardSet.program) onProgramPage = page;
+  if (!boardSet.program) setProgramPage(page);
 }
 
 function absorbFile(text) {
   var parsed = readEffects(text);
   wiringRead = parsed.wiring || null;
-  notFittedRead = parsed.notFitted || null;
+  setNotFittedRead(parsed.notFitted || null);
 
   boardSet.reload = true;
   boardSet.driveHidden = false;
@@ -12552,10 +12602,9 @@ function outputsBrokenOut(bodies) {
 }
 
 function wireAsRead(broken) {
-  wiring = wiring.map(function (one, out) {
+  setLayout(wiring.map(function (one, out) {
     return {broken: OUTPUTS[out].mono || !!broken[out]};
-  });
-  order = plainOrder();
+  }), plainOrder());
 }
 
 function plainOrder() {
@@ -12791,16 +12840,15 @@ function readLights(bodies) {
   bodies.forEach(function (body) {
     apply(body);
     if (said) {
-      wiring = wiring.map(function (one, out) {
+      setLayout(wiring.map(function (one, out) {
         return {broken: said.some(function (place) {
           return place.out === out && place.channel !== null;
         })};
-      });
-      order = said.map(function (place) { return {out: place.out, channel: place.channel}; });
+      }), said.map(function (place) { return {out: place.out, channel: place.channel}; }));
     } else {
       wireAsRead(broken);
       var implied = !Object.keys(broken).length && orderImplied(bodies);
-      if (implied) order = implied;
+      if (implied) setLayout(wiring, implied);
     }
     runs.forEach(function (run) { run.sections = []; });
     settle();
@@ -12971,9 +13019,9 @@ function forgetKeptFor(run) {
     var lamps = parts && lampsNamed(run, parts.selector);
     return !(lamps && lamps.length);
   }
-  keptNow = keptNow.filter(elsewhere);
+  filterKept(elsewhere);
   allBodies().forEach(function (held) { held.kept = (held.kept || []).filter(elsewhere); });
-  boardResidue = boardResidue.filter(function (token) { return stripOfToken(token) !== run.name; });
+  filterResidue(function (token) { return stripOfToken(token) !== run.name; });
 }
 
 connectSteps.push(async function () {
@@ -13353,7 +13401,7 @@ function pickingHeader(run, section, look) {
 
 function lookButton(words, choosing) {
   return h("button", {type: "button", onclick: function () {
-    choosingLook = choosing;
+    chooseLook(choosing);
     draw();
   }}, words);
 }
@@ -13849,7 +13897,7 @@ state.always.body = capture();
 workOn(chosenTab);
 showChosen();
 draw();
-if (HOLDING_STILL) { beat = 0.37; paintAll(); } else { step(); }
+if (HOLDING_STILL) { setBeat(0.37); paintAll(); } else { step(); }
 </script>
 </body>
 </html>

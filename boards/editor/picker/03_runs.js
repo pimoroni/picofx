@@ -1,14 +1,14 @@
 import {BOARD, canPlay, lookNamed, rangify} from "./01_looks.js";
-import {FRAME, beat, previewingStrip} from "./02_preview.js";
+import {FRAME, beat, setBeat, setPreviewingStrip} from "./02_preview.js";
 import {renderSides} from "./04_led_panels.js";
 import {lampUnder, namesOf} from "./04_scenes.js";
 import {
   START_MOODS, livePlay, sectionLines, spoken, startColour, stretchWash, stripSelector, targetFor
 } from "./05_effects.js";
-import {heldOutput, setupOn} from "./08_setup.js";
+import {holdOutput, setupOn} from "./08_setup.js";
 import {renderWiringRun} from "./09_wiring.js";
 import {renderPreview} from "./18_drive.js";
-import {keptLights, keptNow} from "./27_readback.js";
+import {filterKept, keptLights} from "./27_readback.js";
 import {renderStretches} from "./31_stretch_bar.js";
 import {renderEditor} from "./32_stretch_editor.js";
 import {paintCards, renderGallery} from "./33_gallery.js";
@@ -40,10 +40,19 @@ export var runs = MONO_FIRST ? [mono, outs] : [outs, mono];
 
 export var active = MONO_FIRST ? mono : outs;
 
+export function activate(run) {
+  active = run;
+}
+
 var showing = MONO_FIRST;
 
 export var order = [];
 for (var m = 0; m < OUTS; m++) order = order.concat(placesOf(m));
+
+export function setLayout(wired, ordered) {
+  wiring = wired;
+  order = ordered;
+}
 
 export function placesOf(out) {
   if (OUTPUTS[out].mono) return [{out: out, channel: 0}];
@@ -338,6 +347,10 @@ export function pick(run, at) {
 
 export var choosingLook = false;
 
+export function chooseLook(on) {
+  choosingLook = on;
+}
+
 export function pickingLook(run) {
   var section = run && run.sections[run.picked];
   return !!section && (!lookNamed(section.look) || (choosingLook && run === active));
@@ -402,7 +415,7 @@ export function breakOutWiring(out) {
 
 export function pickOutput(out) {
   if (setupOn) {
-    heldOutput = out;
+    holdOutput(out);
     return;
   }
   runs.some(function (run) {
@@ -517,7 +530,7 @@ var walks = {};
 function litRun(run) {
   var out = [];
   var store = walks[run.name] || (walks[run.name] = {});
-  previewingStrip = !!run.strip;
+  setPreviewingStrip(!!run.strip);
   try {
     run.sections.forEach(function (section) {
       var look = lookNamed(section.look);
@@ -535,7 +548,7 @@ function litRun(run) {
       }
     });
   } finally {
-    previewingStrip = false;
+    setPreviewingStrip(false);
   }
   return out;
 }
@@ -622,7 +635,7 @@ export function landLook(run, at, name) {
                     "edit already use some of these lights:") + "\n\n" + lines + "\n\nRemove " +
                    (clashing.length === 1 ? "it" : "them") + " from the file and play " +
                    name + " instead?")) return;
-      keptNow = keptNow.filter(function (one) { return clashing.indexOf(one) < 0; });
+      filterKept(function (one) { return clashing.indexOf(one) < 0; });
     }
   }
   if (run.strip && !run.there) return;
@@ -720,7 +733,11 @@ export function paintLine(line) {
 
 export var drawSteps = {before: [], after: []};
 
-export var drawHeld = false;
+var drawHeld = false;
+
+export function holdDrawing(on) {
+  drawHeld = on;
+}
 
 export function draw() {
   if (drawHeld) return;
@@ -794,7 +811,7 @@ export function paintAll() {
 }
 
 export function step() {
-  beat += FRAME;
+  setBeat(beat + FRAME);
   paintAll();
   window.setTimeout(step, FRAME * 1000);
 }

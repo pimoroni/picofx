@@ -1,7 +1,7 @@
 import {BOARD} from "./01_looks.js";
 import {
-  OUTPUTS, acrossWiring, breakOutWiring, draw, drawHeld, order, outputSaid, placeLamp,
-  rejoinWiring, runs, wiring
+  OUTPUTS, acrossWiring, breakOutWiring, draw, holdDrawing, order, outputSaid, placeLamp,
+  rejoinWiring, runs, setLayout, wiring
 } from "./03_runs.js";
 import {apply, capture, slotAt, state, store} from "./04_scenes.js";
 import {changeWiring, stripLengthTail} from "./05_effects.js";
@@ -23,11 +23,10 @@ function acrossScenes(change) {
     store();
     var editing = state.at;
     var before = {wiring: JSON.stringify(wiring), order: JSON.stringify(order)};
-    drawHeld = true;
+    holdDrawing(true);
     try {
       [state.always].concat(state.scenes).forEach(function (slot) {
-        wiring = JSON.parse(before.wiring);
-        order = JSON.parse(before.order);
+        setLayout(JSON.parse(before.wiring), JSON.parse(before.order));
         apply(slot.body);
         change(out);
         runs.forEach(function (run) {
@@ -37,7 +36,7 @@ function acrossScenes(change) {
         slot.body = capture();
       });
     } finally {
-      drawHeld = false;
+      holdDrawing(false);
     }
     state.at = editing;
     apply(slotAt(editing).body);
@@ -109,6 +108,10 @@ export function boardLine() {
 export var NOT_FITTED = "# Not fitted: ";
 
 export var notFittedRead = null;
+
+export function setNotFittedRead(names) {
+  notFittedRead = names;
+}
 
 export var notFittedSteps = [];
 

@@ -4,7 +4,9 @@ import {draw, drawSteps} from "../03_runs.js";
 import {apply, driveParts, slotAt, state, store} from "../04_scenes.js";
 import {SCREEN_PORTS} from "../07_board.js";
 import {banner, drive, driveTrouble} from "../18_drive.js";
-import {PROGRAMS, boardSet, programNamed, programsElsewhere} from "../19_board_settings.js";
+import {
+  PROGRAMS, boardSet, programNamed, programsElsewhere, setPrograms
+} from "../19_board_settings.js";
 import {
   CHIPLESS, FEATURES, featureFilter, loadThumbs, passesFilter, programCardFace, programHooks,
   programTitle, programUsesSaid, unhad, usesOf
@@ -414,7 +416,7 @@ async function discoverListed(entry, written, fresh, was) {
           .getFileHandle(nameShown(path))).getFile()).text();
     var folder = path.slice(EXAMPLES_ROOT.length, path.lastIndexOf("/"));
     var program = programFrom(path, folder, source);
-    PROGRAMS = PROGRAMS.filter(function (one) { return one.path !== path && one.path !== was; });
+    setPrograms(PROGRAMS.filter(function (one) { return one.path !== path && one.path !== was; }));
     if (program) PROGRAMS.push(program);
     delete discoverPrograms[path];
     var shown = [stem + ".png", stem + "-2.png"].filter(function (name) { return written[name]; })
@@ -1009,7 +1011,7 @@ async function discoverDelete(path, kind) {
     return;
   }
   if (kind === "program") {
-    PROGRAMS = PROGRAMS.filter(function (program) { return program.path !== path; });
+    setPrograms(PROGRAMS.filter(function (program) { return program.path !== path; }));
     delete PICTURES[path];
     forgetMissingPrograms();
   } else {

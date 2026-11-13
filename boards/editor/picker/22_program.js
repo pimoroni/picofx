@@ -7,7 +7,7 @@ import {SCREEN_PORTS, screenHooks} from "./07_board.js";
 import {tabSwatch} from "./11_tabs.js";
 import {CAN_REACH_A_DRIVE, banner, drive, driveTrouble} from "./18_drive.js";
 import {
-  PROGRAMS, boardSet, programArguments, programNamed, programNote
+  PROGRAMS, boardSet, programArguments, programNamed, programNote, setPrograms
 } from "./19_board_settings.js";
 import {
   OWN_FOLDER, PICTURES, SECTIONS, copyProgram, driveHasCredentials, drivePrograms, programsKnown,
@@ -468,6 +468,10 @@ var programView = null;
 
 export var onProgramPage = false;
 
+export function setProgramPage(on) {
+  onProgramPage = on;
+}
+
 export function copyTile(example, file, folder, copy) {
   return h("span", {class: "bin", "data-copy": example ? "alone" : "",
                     title: (example ? "Customise a copy of " : "Duplicate ") + file + " in the " +
@@ -528,7 +532,7 @@ function programCardActions(path, program, remove) {
 async function copyOwnProgram(path) {
   try {
     var copy = await copyProgram(path);
-    PROGRAMS = await drivePrograms(drive.dirHandle, true);
+    setPrograms(await drivePrograms(drive.dirHandle, true));
     if (boardSet.program === path) boardSet.program = copy;
     banner("Copied to " + copy + " on the FX drive. Open it in Thonny or another editor to " +
            "change it.");

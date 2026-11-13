@@ -1,9 +1,8 @@
 import {h, replace} from "./00_dom.js";
 import {draw} from "./03_runs.js";
 import {
-  removeScene, renderSceneTray, sceneAfter, sceneBand, sceneCanWait, sceneEdge, sceneLoops,
-  sceneMark, sceneMarked, sceneNameProblem, sceneRestarts, sceneShowsAgain, sceneWaitsFor, state,
-  unreachedScenes
+  removeScene, renderSceneTray, sceneAfter, sceneBand, sceneEdge, sceneHooks, sceneLoops,
+  sceneMark, sceneMarked, sceneNameProblem, sceneRestarts, sceneShowsAgain, state, unreachedScenes
 } from "./04_scenes.js";
 import {renderPreview} from "./18_drive.js";
 
@@ -52,7 +51,7 @@ function renderScenePlace() {
                                   " waits forever before it"
                                 : "Never shows, as no scene goes on to it";
   }
-  var ends = picked.waits ? "waits " + (sceneCanWait() ? "for " + sceneWaitsFor() : "forever")
+  var ends = picked.waits ? "waits " + (sceneHooks.canWait() ? "for " + sceneHooks.waitsFor() : "forever")
            : after === picked ? "then itself" : after ? "then " + after.name : "on its own";
   scenePlaceLine.textContent = problem || "Scene " + (state.at + 1) + " of " + count + ", " + ends;
   scenePlaceLine.title = scenePlaceLine.textContent;

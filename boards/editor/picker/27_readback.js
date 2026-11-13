@@ -2,7 +2,7 @@ import {h, replace} from "./00_dom.js";
 import {HEADER, LOOKS, canPlay, keyOf} from "./01_looks.js";
 import {
   CHANNELS, OUTPUTS, blank, draw, drawSteps, joinedItems, mono, order, outs, placesOf, runs,
-  settle, wiring
+  setLayout, settle, wiring
 } from "./03_runs.js";
 import {
   allBodies, apply, blankBody, bodyParts, capture, fileHead, sceneMark, settleLoneScene, state
@@ -14,21 +14,29 @@ import {
 import {BLINK} from "./06_blink.js";
 import {
   NOT_FITTED, SCREEN_PORTS, boardLineSteps, notFittedLine, notFittedRead, saidNotFitted,
-  stripDescribed
+  setNotFittedRead, stripDescribed
 } from "./07_board.js";
 import {dropStrip} from "./08_setup.js";
 import {WROTE_KEY, connectSteps, drive} from "./18_drive.js";
 import {argsWritten, boardSet, programNamed} from "./19_board_settings.js";
-import {onProgramPage} from "./22_program.js";
+import {onProgramPage, setProgramPage} from "./22_program.js";
 import {figureKey, placeFor, settingIn} from "./25_figures.js";
 import {programsKnown} from "./26_drive_programs.js";
 
 var PAGE_LINES = HEADER.split("\n").filter(Boolean).concat(["# Nothing is playing yet."]);
 
 export var boardResidue = [];
+
+export function filterResidue(keep) {
+  boardResidue = boardResidue.filter(keep);
+}
 var boardComments = [];
 
-export var keptNow = [];
+var keptNow = [];
+
+export function filterKept(keep) {
+  keptNow = keptNow.filter(keep);
+}
 var notesNow = {};
 
 function unquotedColon(line) {
@@ -178,10 +186,10 @@ function readProgram(named, argued) {
   boardSet.args[path] = given;
   if (programNamed(path) && argsWritten(path) === (argued ? argued.slice("args=".length) : "")) {
     boardSet.program = path;
-    onProgramPage = true;
+    setProgramPage(true);
     return;
   }
-  onProgramPage = false;
+  setProgramPage(false);
   boardSet.args[path] = kept;
   boardResidue.push(named);
   if (argued) boardResidue.push(argued);
@@ -194,18 +202,18 @@ export function readWaitingProgram() {
   var named = programWaiting[0], argued = programWaiting[1];
   programWaiting = null;
   if (boardSet.program) return;
-  boardResidue = boardResidue.filter(function (token) {
+  filterResidue(function (token) {
     return token !== named && token !== argued;
   });
   var page = onProgramPage;
   readProgram(named, argued);
-  if (!boardSet.program) onProgramPage = page;
+  if (!boardSet.program) setProgramPage(page);
 }
 
 function absorbFile(text) {
   var parsed = readEffects(text);
   wiringRead = parsed.wiring || null;
-  notFittedRead = parsed.notFitted || null;
+  setNotFittedRead(parsed.notFitted || null);
 
   boardSet.reload = true;
   boardSet.driveHidden = false;
@@ -384,10 +392,9 @@ function outputsBrokenOut(bodies) {
 }
 
 function wireAsRead(broken) {
-  wiring = wiring.map(function (one, out) {
+  setLayout(wiring.map(function (one, out) {
     return {broken: OUTPUTS[out].mono || !!broken[out]};
-  });
-  order = plainOrder();
+  }), plainOrder());
 }
 
 function plainOrder() {
@@ -623,16 +630,15 @@ function readLights(bodies) {
   bodies.forEach(function (body) {
     apply(body);
     if (said) {
-      wiring = wiring.map(function (one, out) {
+      setLayout(wiring.map(function (one, out) {
         return {broken: said.some(function (place) {
           return place.out === out && place.channel !== null;
         })};
-      });
-      order = said.map(function (place) { return {out: place.out, channel: place.channel}; });
+      }), said.map(function (place) { return {out: place.out, channel: place.channel}; }));
     } else {
       wireAsRead(broken);
       var implied = !Object.keys(broken).length && orderImplied(bodies);
-      if (implied) order = implied;
+      if (implied) setLayout(wiring, implied);
     }
     runs.forEach(function (run) { run.sections = []; });
     settle();
@@ -803,9 +809,9 @@ export function forgetKeptFor(run) {
     var lamps = parts && lampsNamed(run, parts.selector);
     return !(lamps && lamps.length);
   }
-  keptNow = keptNow.filter(elsewhere);
+  filterKept(elsewhere);
   allBodies().forEach(function (held) { held.kept = (held.kept || []).filter(elsewhere); });
-  boardResidue = boardResidue.filter(function (token) { return stripOfToken(token) !== run.name; });
+  filterResidue(function (token) { return stripOfToken(token) !== run.name; });
 }
 
 connectSteps.push(async function () {

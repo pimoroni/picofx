@@ -1,7 +1,8 @@
 import {h, replace} from "./00_dom.js";
 import {BOARD, HEADER, lookNamed} from "./01_looks.js";
 import {
-  active, copyBlinks, copyExact, draw, drawSteps, lampLines, mono, outs, runs, settle, widthOf
+  activate, active, copyBlinks, copyExact, draw, drawSteps, lampLines, mono, outs, runs, settle,
+  widthOf
 } from "./03_runs.js";
 import {boardLine} from "./07_board.js";
 import {TAB_NAMES} from "./11_tabs.js";
@@ -68,7 +69,7 @@ export function apply(body) {
     run.was = was.was;
     run.undone = was.undone;
   });
-  active = runs.filter(function (run) { return run.name === body.active; })[0] || outs;
+  activate(runs.filter(function (run) { return run.name === body.active; })[0] || outs);
   settle();
   bodyParts.forEach(function (part) { if (part.apply) part.apply(body); });
 }
@@ -144,8 +145,8 @@ export function addScene() {
   } else {
     var before = state.scenes[state.scenes.length - 1];
     made = {name: freeSceneName(), seconds: before.seconds,
-            restart: before.restart, waits: sceneCanWait(), body: copyBody(before.body)};
-    if (state.scenes.length === 1 && !sceneCanWait()) before.waits = false;
+            restart: before.restart, waits: sceneHooks.canWait(), body: copyBody(before.body)};
+    if (state.scenes.length === 1 && !sceneHooks.canWait()) before.waits = false;
   }
   state.scenes.push(made);
   state.at = state.scenes.length - 1;
@@ -176,11 +177,14 @@ export function sceneMarked(mark) {
   return state.scenes.filter(function (scene) { return sceneMark(scene) === mark; })[0] || null;
 }
 
-export var sceneCanWait = function () { return false; };
+export var sceneHooks = {
+  canWait: function () { return false; },
+  triggerLeads: function (at) { return []; },
+  waitsFor: function () { return "a button"; },
+  numbers: function (scene) { return []; }
+};
 
-export var sceneTriggerLeads = function (at) { return []; };
 
-export var sceneWaitsFor = function () { return "a button"; };
 
 export function sceneAfter(scene) {
   if (scene.waits) return null;
@@ -201,7 +205,7 @@ export function sceneRestarts(scene) {
 
 function sceneLeads(at) {
   var after = sceneAfter(state.scenes[at]);
-  return sceneTriggerLeads(at).concat(after ? [state.scenes.indexOf(after)] : []);
+  return sceneHooks.triggerLeads(at).concat(after ? [state.scenes.indexOf(after)] : []);
 }
 
 function scenesReachedFrom(starts) {
@@ -232,7 +236,7 @@ export function settleLoneScene() {
 export function unreachedScenes() {
   var reached = scenesReachedFrom(state.scenes.length ? [0] : []);
   var unreached = state.scenes.filter(function (scene, at) { return !reached[at]; });
-  if (!unreached.length || sceneCanWait()) return {scenes: unreached, stopper: null};
+  if (!unreached.length || sceneHooks.canWait()) return {scenes: unreached, stopper: null};
 
   var stop = state.scenes[0];
   var seen = [];
@@ -275,7 +279,6 @@ export var REMOTE_RAINBOW = ["#ed1c24", "#f7941d", "#fff200", "#8dc63f", "#00a65
 var ALWAYS_COLOUR = "#8f8a82";
 var UNNUMBERED_COLOUR = "#b9b3a9";
 
-export var sceneNumbers = function (scene) { return []; };
 
 function sceneColour(scene) {
   if (!scene) return ALWAYS_COLOUR;
@@ -481,7 +484,7 @@ function sceneTab(scene, which) {
 }
 
 function remoteBadges(scene) {
-  var numbers = sceneNumbers(scene);
+  var numbers = sceneHooks.numbers(scene);
   if (!numbers.length) return null;
   return h("span", {}, numbers.map(function (number) {
     return h("kbd", {title: "Press " + number + " on the remote for this scene",

@@ -2,7 +2,7 @@ import {h, replace} from "./00_dom.js";
 import {lookNamed} from "./01_looks.js";
 import {inkOf} from "./02_preview.js";
 import {
-  choosingLook, draw, drawSteps, forwardTargetFor, pickingLook, remember, stretchUnder, washFor,
+  chooseLook, draw, drawSteps, forwardTargetFor, pickingLook, remember, stretchUnder, washFor,
   widthOf
 } from "./03_runs.js";
 import {
@@ -109,7 +109,7 @@ function pickingHeader(run, section, look) {
 
 function lookButton(words, choosing) {
   return h("button", {type: "button", onclick: function () {
-    choosingLook = choosing;
+    chooseLook(choosing);
     draw();
   }}, words);
 }

@@ -3,8 +3,8 @@ import {draw, drawSteps} from "../03_runs.js";
 import {bodyParts, namesOf, state} from "../04_scenes.js";
 import {spoken} from "../05_effects.js";
 import {
-  HUB_PLACES, hubInk, placePicked, placeThere, placeTurnForChosen, placeUnder, placesSaid,
-  placesThere
+  HUB_PLACES, hubInk, pickPlace, placePicked, placeThere, placeTurnForChosen, placeUnder,
+  placesSaid, placesThere
 } from "./15_hub.js";
 import {kindOf} from "../screens/12_screens.js";
 import {
@@ -83,13 +83,13 @@ function sizeFits(place, number) {
 function joinOrLeave(place, number) {
   if (groupOf(place) === number) {
     state.places[place].group = place;
-    placePicked = place;
+    pickPlace(place);
     return;
   }
   var others = membersOfGroup(number).filter(function (other) { return other !== place; });
   state.places[place].group = number;
   var groupShows = others.length && state.places[others[0]].shows;
-  placePicked = others.length && (groupShows || !state.places[place].shows) ? others[0] : place;
+  pickPlace(others.length && (groupShows || !state.places[place].shows) ? others[0] : place);
 }
 
 function settleGroups() {
@@ -136,7 +136,7 @@ export function hubPictureTargets(name) {
             title: target.ink ? "Group " + target.name + ", " + placesSaid(target.places)
                               : target.name + ", on its own",
             press: function () {
-              placePicked = target.places[0];
+              pickPlace(target.places[0]);
               var breaking = shown ? breakingUp(target.places) : [];
               state.places[placePicked].shows = shown ? null : name;
               state.places[placePicked].off = false;

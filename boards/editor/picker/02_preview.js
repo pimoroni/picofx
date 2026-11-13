@@ -248,7 +248,11 @@ function curved(sim, given, channel) {
   return sim.curve;
 }
 
-export var previewingStrip = false;
+var previewingStrip = false;
+
+export function setPreviewingStrip(on) {
+  previewingStrip = on;
+}
 
 export function lampTarget(count) {
   var playing = [];
@@ -293,6 +297,10 @@ export function lookLit(look, holder, t, slot, count, sim) {
 
 export var FRAME = 1 / 40;
 export var beat = 0;
+
+export function setBeat(at) {
+  beat = at;
+}
 
 export var HOLDING_STILL = window.matchMedia &&
                     window.matchMedia("(prefers-reduced-motion: reduce)").matches;

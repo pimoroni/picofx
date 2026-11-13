@@ -413,7 +413,7 @@ export function readStripTail(run, tail) {
   return brightness >= 0 && brightness <= 1 ? {brightness: brightness} : null;
 }
 
-runs = runs.concat(STRIPS.map(stripRun));
+runs.push.apply(runs, STRIPS.map(stripRun));
 settle();
 
 drawSteps.after.push(function () {

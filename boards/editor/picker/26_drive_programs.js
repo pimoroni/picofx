@@ -1,7 +1,7 @@
 import {BOARD} from "./01_looks.js";
 import {draw} from "./03_runs.js";
 import {banner, connectSteps, drive, driveTrouble} from "./18_drive.js";
-import {PROGRAMS, boardSet, programNamed} from "./19_board_settings.js";
+import {PROGRAMS, boardSet, programNamed, setPrograms} from "./19_board_settings.js";
 import {loadThumbs, renderProgramView} from "./22_program.js";
 import {isHiddenName} from "./26_drive_files.js";
 import {readWaitingProgram} from "./27_readback.js";
@@ -255,7 +255,7 @@ async function rescanPrograms() {
   programsBusy = true;
   try {
     if (await ownState(drive.dirHandle) !== ownSeen) {
-      PROGRAMS = await drivePrograms(drive.dirHandle, true);
+      setPrograms(await drivePrograms(drive.dirHandle, true));
       forgetMissingPrograms();
       draw();
     }
@@ -323,7 +323,7 @@ export async function removeProgram(path) {
     banner("Could not delete " + name + ". " + await driveTrouble(e, name), true);
     return;
   }
-  PROGRAMS = await drivePrograms(drive.dirHandle, true);
+  setPrograms(await drivePrograms(drive.dirHandle, true));
   forgetMissingPrograms();
   draw();
 }
@@ -349,7 +349,7 @@ async function readNamedProgram() {
     var below = isExample(path) ? path.slice(EXAMPLES_ROOT.length) : "";
     var program = programFrom(path, below.slice(0, Math.max(below.lastIndexOf("/"), 0)), source);
     if (!program) return;
-    PROGRAMS = [program];
+    setPrograms([program]);
     var beside = parts.length ? parts.join("/") + "/" : "";
     var stem = name.replace(/\.py$/i, "");
     var pictures = {};
@@ -369,7 +369,7 @@ async function readNamedProgram() {
 }
 
 async function readDrivePrograms() {
-  PROGRAMS = await drivePrograms(drive.dirHandle);
+  setPrograms(await drivePrograms(drive.dirHandle));
   programsKnown = true;
   forgetMissingPrograms();
   readWaitingProgram();

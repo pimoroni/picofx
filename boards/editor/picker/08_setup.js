@@ -19,7 +19,11 @@ BOARD.strips.forEach(function (strip) { BOARD_CHIP_COLOURS[strip.name + "Panel"]
 export function canEdit(panel) { return setupOn; }
 
 var heldPick = null;
-export var heldOutput = null;
+var heldOutput = null;
+
+export function holdOutput(out) {
+  heldOutput = out;
+}
 
 export function setSetup(on) {
   if (on && !setupOn) {

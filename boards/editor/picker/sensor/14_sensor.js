@@ -1,13 +1,13 @@
 import {h, replace} from "../00_dom.js";
 import {draw, drawSteps} from "../03_runs.js";
 import {
-  PART_DRAWINGS, REMOTE_COLOURS, addScene, bodyParts, sceneCanWait, sceneMark, sceneMarked,
-  sceneNumbers, sceneRestarts, sceneTriggerLeads, sceneWaitsFor, state
+  PART_DRAWINGS, REMOTE_COLOURS, addScene, bodyParts, sceneHooks, sceneMark, sceneMarked,
+  sceneRestarts, state
 } from "../04_scenes.js";
 import {boardLineSteps} from "../07_board.js";
 import {BOARD_CHIP_COLOURS, boardBox, canEdit, small} from "../08_setup.js";
 import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches, tabUnder} from "../11_tabs.js";
-import {boardResidue, boardTokens, unquoted} from "../27_readback.js";
+import {boardTokens, filterResidue, unquoted} from "../27_readback.js";
 import {
   PIR_ART, REMOTE_ART_JOINS, REMOTE_ART_RADIUS, REMOTE_BUTTONS, REMOTE_ROWS, remoteArt,
   remoteArtAt, remoteArtJoin
@@ -47,10 +47,10 @@ function isNumber(button) { return /^\d_/.test(button); }
 var REMOTE_FIXED = {OK_STOP: ["standby", "Standby and wake, in every scene"],
                     PLAY_PAUSE: ["pause", "Pause the effects where they stand, in every scene"]};
 
-sceneCanWait = function () { return remoteFitted() || pirFitted(); };
-sceneWaitsFor = function () { return pirFitted() ? "motion" : "a button"; };
+sceneHooks.canWait = function () { return remoteFitted() || pirFitted(); };
+sceneHooks.waitsFor = function () { return pirFitted() ? "motion" : "a button"; };
 
-sceneTriggerLeads = function (at) {
+sceneHooks.triggerLeads = function (at) {
   var count = state.scenes.length;
   var always = state.at < 0 ? state.remote : state.always.body && state.always.body.remote || {};
   var body = state.scenes[at].body;
@@ -126,7 +126,7 @@ function remoteDoes(button) {
   return triggerFitted(button) && remoteSays(remoteResolved(button).choice, button) !== "";
 }
 
-sceneNumbers = function (scene) {
+sceneHooks.numbers = function (scene) {
   var at = state.scenes.indexOf(scene);
   if (!remoteFitted() || at > 9) return [];
   var button = REMOTE_BUTTONS.filter(function (one) {
@@ -252,7 +252,7 @@ boardLineSteps.after.push(function (line) {
 
 function readSensorBoard() {
   state.sensorKind = "none";
-  boardResidue = boardResidue.filter(function (token) {
+  filterResidue(function (token) {
     var fitted = /^sensor=(ir|pir)$/i.exec(token);
     if (fitted) state.sensorKind = fitted[1].toLowerCase();
     return !fitted;

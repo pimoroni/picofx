@@ -9,6 +9,10 @@ export var boardSet = {reload: true, driveHidden: false, program: null, args: {}
 
 export var PROGRAMS = [];
 
+export function setPrograms(list) {
+  PROGRAMS = list;
+}
+
 export var programsElsewhere = [];
 
 export function programNamed(path) {
