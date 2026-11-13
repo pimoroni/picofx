@@ -331,100 +331,37 @@ def mockup_badge(text, kind):
     label, _, hint = text.partition("|")
     name, _, note = label.partition(",")
     said = '<span class="hint">{}</span>'.format(html.escape(hint.strip())) if hint else ""
-    if not hint and kind != "strip":
-        said = '<span class="steps"><span class="round">{}</span><span class="round">{}</span></span>'.format(
-            UNDO_ICON, REDO_ICON)
+    if not hint:
+        zoom = ('<span class="round">&#8722;</span><span class="dim">100%</span><span class="round">+</span>'
+                if kind == "strip" else "")
+        said = '<span class="steps">{}<span class="round">{}</span><span class="round">{}</span></span>'.format(
+            zoom, UNDO_ICON, REDO_ICON)
     return '<div class="badgerow"><span class="badge {}">{}<b>{}</b> {}</span>{}</div>'.format(
         kind, CHIP_ICON, html.escape(name.strip()), html.escape(note.strip()), said)
 
 
-def strip_drawing(colours, ringed):
-    """A strip drawn as the picker's wireRun draws it, its LEDs as beads on a wire that snakes
-    back and forth thirty to a row, with a block at the lead and a ring at the tail. Each of
-    colours is one LED's, or None where it is unlit, and ringed is the first and last LED of
-    the selected stretch, or None."""
-    size, gap, per_row, edge, tail, room = 11, 2.5, 30, 10, 6, 4
-    count = len(colours)
-    rows = -(-count // per_row)
-    across = min(count, per_row)
-    wide = across * size + (across - 1) * gap
-    pitch = size + gap * 2
-    high = rows * pitch - gap * 2 + 2
-    full = edge * 2 + wide
-    wire = 'fill="none" stroke="#c9c3b9" stroke-width="1.8"'
-
-    def place(led):
-        row, column = divmod(led, per_row)
-        # Every other row runs back the way the one before it came
-        if row % 2:
-            column = per_row - 1 - column
-        return edge + column * (size + gap), row * pitch + 1, row
-
-    def middle(row):
-        return row * pitch + 1 + size / 2
-
-    parts = []
-    for row in range(rows - 1):
-        x = edge + wide if row % 2 == 0 else edge
-        bulge = x + edge if row % 2 == 0 else x - edge
-        parts.append('<path d="M{0:g} {1:g} C{2:g} {1:g} {2:g} {3:g} {0:g} {3:g}" {4}/>'.format(
-            x, middle(row), bulge, middle(row + 1), wire))
-    for row in range(rows):
-        xs = [place(led)[0] for led in range(row * per_row, min(count, (row + 1) * per_row))]
-        parts.append('<path d="M{:g} {:g} L{:g} {:g}" {}/>'.format(
-            min(xs), middle(row), max(xs) + size, middle(row), wire))
-    parts.append('<path d="M0 {0:g} L{1:g} {0:g}" {2}/><rect x="0" y="{3:g}" width="4.6" height="6.8" '
-                 'rx="1.4" fill="#8f8a81"/>'.format(middle(0), place(0)[0], wire, middle(0) - 3.4))
-    for led, colour in enumerate(colours):
-        x, y, _ = place(led)
-        parts.append('<rect x="{:g}" y="{:g}" width="{}" height="{}" rx="2.4" fill="{}" '
-                     'stroke="rgba(0,0,0,.12)" stroke-width="0.6"/>'.format(
-                         x, y, size, size, colour or UNLIT_LED))
-
-    # The selected stretch is outlined row by row, as it wraps
-    if ringed:
-        spans = {}
-        for led in range(ringed[0], ringed[1] + 1):
-            x, y, row = place(led)
-            low, high_x, _ = spans.get(row, (x, x, y))
-            spans[row] = (min(low, x), max(high_x, x), y)
-        for low, high_x, y in spans.values():
-            parts.append('<rect class="ringed" x="{:g}" y="{:g}" width="{:g}" height="{:g}" '
-                         'rx="4"/>'.format(low - gap / 2, y - 2.2, high_x - low + size + gap,
-                                           size + 4.4))
-
-    last_x, _, last_row = place(count - 1)
-    rightward = last_row % 2 == 0
-    start = last_x + size if rightward else last_x
-    end = start + (tail if rightward else -tail)
-    parts.append('<path d="M{0:g} {1:g} L{2:g} {1:g}" {3}/><circle cx="{2:g}" cy="{1:g}" r="2.4" '
-                 'fill="#fff" stroke="#a9a49b" stroke-width="1.6"/>'.format(
-                     start, middle(last_row), end, wire))
-    return ('<svg class="stripdrawing" viewBox="{:g} {:g} {:g} {:g}" preserveAspectRatio="xMinYMid '
-            'meet" aria-hidden="true">{}</svg>').format(-room, -room, full + room * 2,
-                                                       high + room * 2, "".join(parts))
+def strip_pixels(colours):
+    return '<span class="pixels">{}</span>'.format("".join(
+        '<i style="background:{}"></i>'.format(colour or UNLIT_LIGHT) for colour in colours))
 
 
 def mockup_run(kind, label, text):
-    """The bar of a run's stretches, written as "Rainbow 4, *Solid 3". A strip's LEDs are drawn
-    small in their white box above it, and each stretch of outputs holds its own lights.
+    """The bar of a run's stretches, written as "Rainbow 4, *Solid 3". Each stretch holds its own
+    lights, a strip's drawn small.
 
     A light is numbered along the run unless label names every light in it.
     """
     count = 0
-    strip_colours = []
-    ringed = None
     sections = []
     for item, selected in selected_items(text):
         name, _, length = item.rpartition(" ")
         length = int(length)
         colours = look_colours(name, length, kind == "mono")
         if kind == "strip":
-            if selected:
-                ringed = (len(strip_colours), len(strip_colours) + length - 1)
-            strip_colours.extend(colours)
-        lights = ""
-        if kind != "strip":
+            count += length
+            lights = strip_pixels(colours)
+        else:
+            lights = ""
             for colour in colours:
                 count += 1
                 lights += lamp(colour or UNLIT_LIGHT, label or str(count))
@@ -440,14 +377,8 @@ def mockup_run(kind, label, text):
                         '<em>{}</em></span></span>'.format(" picked" if selected else "", length,
                                                            lights, lit, html.escape(name), length))
 
-    drawn = ""
-    if kind == "strip":
-        drawn = ('<div class="lightbox strip">{}</div><div class="cutrow"><span class="round">&#8722;'
-                 '</span><span class="dim">100%</span><span class="round">+</span><span class="round">'
-                 '{}</span><span class="round">{}</span></div>').format(
-                     strip_drawing(strip_colours, ringed), UNDO_ICON, REDO_ICON)
-    return '<div class="run" style="flex:{} 1 0">{}<div class="bar">{}</div></div>'.format(
-        len(strip_colours) or count, drawn, "".join(sections))
+    return '<div class="run" style="flex:{} 1 0"><div class="bar">{}</div></div>'.format(
+        count, "".join(sections))
 
 
 def mockup_choose(text):
@@ -537,12 +468,13 @@ def mockup_wiring(text, look):
 
 def mockup_strip_setup(text):
     """A strip's settings while the board is set up, written as its number of LEDs, and the
-    strip's LEDs under them."""
+    strip's LEDs in the bar under them."""
     count = int(text.strip())
     return ('<div class="badgerow"><span class="badge strip">{}<b>Strip</b><span class="field">{}'
             '</span> LEDs <span class="field">GRB (most strips) &#9662;</span> &#215;</span></div>'
-            '<div class="lightbox strip">{}</div>').format(
-                CHIP_ICON, count, strip_drawing([None] * count, None))
+            '<div class="bar"><span class="sec" style="flex:1 1 0">{}<span class="lit {}"></span>'
+            '<span class="says">Nothing <em>{}</em></span></span></div>').format(
+                CHIP_ICON, count, strip_pixels([None] * count), HATCH, count)
 
 
 def mockup_screen_mode(text):
@@ -779,6 +711,7 @@ def picker_mockup(body):
     # A hub's positions are given on their own line and drawn with the hub's box
     places = [hub_places(line.partition(":")[2]) for line in body if line.startswith("places:")]
     places = places[0] if places else []
+    choosing = False
     for line in body:
         if not line.strip():
             continue
@@ -813,7 +746,8 @@ def picker_mockup(body):
         elif kind == "badge":
             parts.append(mockup_badge(text, " ".join(rest)))
         elif kind == "choose":
-            parts.append(mockup_choose(text))
+            parts.append(mockup_choose(text)[:-len("</div>")])
+            choosing = True
         elif kind == "settings":
             parts.append(mockup_settings(text))
         elif kind == "cards":
@@ -845,6 +779,8 @@ def picker_mockup(body):
         parts.append('<div class="runs">{}</div>'.format("".join(runs)))
     if screens:
         parts.append('<div class="screens">{}</div>'.format("".join(screens)))
+    if choosing:
+        parts.append("</div>")
 
     return '<div class="mockup" role="img" aria-label="Part of the picker">\n{}\n</div>'.format(
         "\n".join(parts))

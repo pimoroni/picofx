@@ -280,9 +280,6 @@
   border-radius: 10px;
 }
 
-.mockup .lightbox.strip { display: block; }
-.mockup .stripdrawing { display: block; width: 100%; height: auto; }
-.mockup .stripdrawing .ringed { fill: none; stroke: var(--accent); stroke-width: 1.4; opacity: 0.9; }
 .mockup .lightbox.wiring { justify-content: space-between; }
 .mockup .lampgroup { display: flex; flex-wrap: wrap; gap: 0.4rem; }
 
@@ -335,6 +332,8 @@
 .mockup .sec .seclamps { display: flex; padding: 0.35rem 0 0.25rem; }
 .mockup .seclamps .lamp { flex: 1 1 0; min-width: 0; padding: 0; border: 0; background: none; }
 .mockup .seclamps .lamp i { margin: 0 auto; }
+.mockup .pixels { display: flex; gap: 1px; padding: 3px 3px 0; }
+.mockup .pixels i { flex: 1; max-width: 1.1rem; height: 0.7rem; border-radius: 2px; }
 .mockup .sec .says { display: block; font-size: 0.68rem; font-weight: 600; text-align: center; white-space: nowrap; }
 .mockup .says em { font-style: normal; font-weight: 400; color: var(--dim); }
 
@@ -352,7 +351,10 @@
 .mockup .plug b { font-size: 0.66rem; font-weight: 400; color: #e4e0d9; }
 
 /* The selected stretch's settings */
-.mockup .settings { margin-top: 0.9rem; padding: 0.6rem 0.8rem; background: #fff; border: 1px solid var(--line); border-radius: 10px; }
+.mockup .settings { margin-top: 0.9rem; padding: 0.6rem 0.8rem; background: #fff; border: 2px solid var(--accent); border-radius: 10px; }
+.mockup .runs + .settings { margin-top: 0; }
+.mockup .runs .sec.picked { position: relative; z-index: 1; margin-bottom: -2px; border-bottom-color: transparent; border-radius: 8px 8px 0 0; box-shadow: none; }
+.mockup .settings .galleryhead:first-of-type { margin-top: 0.9rem; }
 .mockup .sethead { display: flex; align-items: baseline; gap: 0.35rem; margin-bottom: 0.4rem; }
 .mockup .sethead b { font-size: 0.95rem; }
 .mockup .sethead .reverse { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; }
