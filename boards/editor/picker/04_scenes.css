@@ -9,7 +9,7 @@
   border-radius: 9px;
   background: rgba(15, 138, 114, .08);
   color: var(--accent);
-  font: 600 .78rem system-ui, sans-serif;
+  font: 600 var(--text-s) var(--font);
   cursor: pointer;
 
   &:hover {
@@ -119,7 +119,7 @@
   strong {
     grid-area: name;
     overflow: hidden;
-    font: 600 .78rem/1.3 system-ui, sans-serif;
+    font: 600 var(--text-s)/1.3 var(--font);
     white-space: nowrap;
     text-overflow: ellipsis;
   }
@@ -129,7 +129,7 @@
     min-width: 0;
     overflow: hidden;
     color: var(--dim);
-    font-size: .68rem;
+    font-size: var(--text-xs);
     white-space: nowrap;
     text-overflow: ellipsis;
   }
@@ -171,7 +171,7 @@
     border-radius: 50%;
     background: #fff;
     color: #000;
-    font: 800 .62rem/1 system-ui, sans-serif;
+    font: 800 var(--text-xs)/1 var(--font);
 
     &[data-rainbow] {
       border-color: transparent;
@@ -206,12 +206,12 @@
     }
 
     small {
-      font-size: .64rem;
+      font-size: var(--text-xs);
     }
 
     small + small {
       color: var(--ink);
-      font-size: .68rem;
+      font-size: var(--text-xs);
       line-height: 1.3;
       white-space: normal;
     }

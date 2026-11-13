@@ -9,7 +9,7 @@
     border: 1.5px solid var(--line);
     border-radius: 7px;
     color: var(--ink);
-    font: 700 .74rem system-ui, sans-serif;
+    font: 700 var(--text-s) var(--font);
 
     &[aria-pressed=true] {
       border-color: transparent;
@@ -20,6 +20,6 @@
 
   small {
     color: var(--dim);
-    font-size: .7rem;
+    font-size: var(--text-xs);
   }
 }

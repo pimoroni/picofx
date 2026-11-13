@@ -19,6 +19,25 @@
   --mark: 20px;
   --namerow: 2.1rem;
   --column: 57.2rem;
+  --font: system-ui, sans-serif;
+  --font-mono: ui-monospace, Menlo, Consolas, monospace;
+  --text-xs: .68rem;
+  --text-s: .78rem;
+  --text-m: .85rem;
+  --text-l: 1rem;
+  --text-xl: 1.15rem;
+  --text-display: 3rem;
+  --radius-s: 5px;
+  --radius: 8px;
+  --radius-l: 10px;
+  --radius-xl: 14px;
+  --accent-glow: rgba(15, 138, 114, .25);
+  --unlit: #2a2d30;
+  --dashed: #a9a49b;
+  --hues: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+  --hue-wheel: conic-gradient(#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
+  --hatch: repeating-linear-gradient(45deg, #f0eeea, #f0eeea 6px, #e4e0d9 6px, #e4e0d9 12px);
+  --hatch-fine: repeating-linear-gradient(45deg, #f4f1ec, #f4f1ec 2px, #a9a194 2px, #a9a194 3.5px);
   --through: repeating-linear-gradient(45deg, rgba(240, 238, 234, .75), rgba(240, 238, 234, .75) 6px,
                                        transparent 6px, transparent 12px);
   --cross: linear-gradient(to top right, transparent calc(50% - .7px), #c9c3b9 calc(50% - .7px),
@@ -36,7 +55,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--ink);
-  font: 16px/1.5 system-ui, sans-serif;
+  font: 16px/1.5 var(--font);
 }
 
 button {
@@ -45,7 +64,7 @@ button {
   border-radius: 8px;
   background: var(--panel);
   font: inherit;
-  font-size: .85rem;
+  font-size: var(--text-m);
   cursor: pointer;
 
   &:disabled {
@@ -53,11 +72,44 @@ button {
     cursor: default;
   }
 
-  &.on {
+  &.on,
+  &[aria-pressed=true] {
     border-color: var(--accent);
     color: var(--accent);
     font-weight: 600;
   }
+}
+
+input[type=text],
+input[type=number],
+select {
+  padding: .25rem .45rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  background: var(--panel);
+  color: inherit;
+  font: inherit;
+  font-size: var(--text-m);
+}
+
+input[type=range] {
+  accent-color: var(--accent);
+}
+
+fieldset {
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 details {
@@ -66,7 +118,7 @@ details {
 
 summary {
   color: var(--dim);
-  font-size: .9rem;
+  font-size: var(--text-m);
   cursor: pointer;
 }
 
@@ -82,11 +134,11 @@ body > header {
 
   h1 {
     margin: 0 auto 0 0;
-    font-size: 1.1rem;
+    font-size: var(--text-xl);
 
     small {
       color: var(--dim);
-      font-size: .8rem;
+      font-size: var(--text-m);
       font-weight: 400;
     }
   }
@@ -105,157 +157,8 @@ body > header {
     visibility: hidden;
   }
 
-  .headswitch {
-    order: 10;
-    display: flex;
-    flex: 1 0 100%;
-    gap: .25rem;
-    margin: 0 0 -1px;
-    padding: 0 max(0px, calc((100% - var(--column)) / 2));
-
-    &:empty {
-      display: none;
-    }
-  }
-
-  .cover {
-    display: flex;
-    flex: 1;
-    align-items: center;
-    gap: .5rem;
-    min-width: 0;
-    height: var(--tabheight, 3.1rem);
-    padding: 0 .35rem;
-    border: 1.5px solid var(--line);
-    border-bottom: 0;
-    border-radius: 10px 10px 0 0;
-    background: #ece8e1;
-    color: var(--dim);
-    text-align: left;
-    cursor: pointer;
-
-    &:hover {
-      background: #f1eee9;
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: -2px;
-    }
-
-    &.on {
-      --band: var(--accent);
-      border-top-color: transparent;
-      background: linear-gradient(var(--band), var(--band)) 0 0 / 100% 3px no-repeat border-box,
-                  var(--bg);
-      color: var(--ink);
-    }
-
-    &[data-page=program].on {
-      --band: var(--board);
-
-      b {
-        color: var(--board);
-      }
-    }
-
-    .coverface {
-      flex: none;
-      width: calc((var(--tabheight, 3.1rem) - .6rem) * 4 / 3);
-      height: calc(var(--tabheight, 3.1rem) - .6rem);
-      border-radius: 5px;
-    }
-
-    > span {
-      display: flex;
-      align-items: baseline;
-      gap: .55rem;
-      min-width: 0;
-    }
-
-    b {
-      display: block;
-      font-size: .95rem;
-      line-height: 1.15;
-      white-space: nowrap;
-    }
-
-    small {
-      display: block;
-      overflow: hidden;
-      color: var(--dim);
-      font-size: .8rem;
-      line-height: 1.2;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-
-    .plus {
-      flex: none;
-      margin-left: auto;
-    }
-
-    &:not(.on) .plus {
-      display: none;
-    }
-  }
-
-  .effectsface {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 .25rem;
-    background: #1c1f22;
-
-    .accswatch {
-      width: 100%;
-      height: .5rem;
-      margin: 0;
-    }
-  }
-
-  &.oneline {
-    flex-wrap: nowrap;
-    align-items: flex-end;
-
-    h1 {
-      flex: 1 1 0;
-      margin: 0 0 var(--headgap, .8rem);
-      line-height: var(--buttonheight, 2.3rem);
-      white-space: nowrap;
-    }
-
-    .headactions {
-      flex: 1 1 0;
-      flex-wrap: nowrap;
-      margin: 0 0 var(--headgap, .8rem);
-    }
-
-    .headswitch {
-      order: 0;
-      flex: 0 0 var(--column);
-      padding: 0;
-    }
-  }
-
   @media (width < 40rem) {
     padding-inline: .8rem;
-
-    .cover {
-      height: auto;
-      min-height: 2.6rem;
-      padding-block: .3rem;
-
-      .coverface {
-        width: 2.6rem;
-        height: 1.95rem;
-      }
-
-      > span {
-        flex-direction: column;
-        gap: 0;
-      }
-    }
   }
 }
 
@@ -273,7 +176,7 @@ body > footer {
   border-top: 1px solid var(--line);
   background: var(--panel);
   color: #6b655c;
-  font-size: .8125rem;
+  font-size: var(--text-m);
 
   > div {
     display: flex;
@@ -305,7 +208,7 @@ body > footer {
   strong {
     display: block;
     color: var(--ink);
-    font-size: .94rem;
+    font-size: var(--text-l);
 
     a {
       color: var(--accent);
@@ -328,7 +231,7 @@ body > footer {
       border-radius: 8px;
       background: var(--panel);
       color: var(--ink);
-      font-size: .88rem;
+      font-size: var(--text-m);
       text-decoration: none;
       white-space: nowrap;
 
@@ -343,7 +246,7 @@ body > footer {
     margin: .9rem 0 0;
     padding-top: .75rem;
     border-top: 1px solid #eeeae3;
-    font-size: .75rem;
+    font-size: var(--text-s);
     line-height: 1.6;
 
     small {

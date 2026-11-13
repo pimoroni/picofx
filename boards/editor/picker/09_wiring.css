@@ -90,14 +90,14 @@ body:not(.setupall) .sides > .side > .run {
 
     small {
       display: block;
-      font: 400 .66rem/1.6 system-ui, sans-serif;
+      font: 400 var(--text-xs)/1.6 var(--font);
       color: var(--dim);
       text-align: center;
     }
 
     &[data-channel] {
       small {
-        font-size: .6rem;
+        font-size: var(--text-xs);
       }
 
       &::before {
@@ -259,14 +259,14 @@ body:not(.setupall) .sides > .side > .run {
     small {
       display: block;
       color: #a7a197;
-      font: 600 .66rem/1.4 system-ui, sans-serif;
+      font: 600 var(--text-xs)/1.4 var(--font);
       text-align: center;
     }
   }
 
   p {
     margin: .8rem 0;
-    font-size: .78rem;
+    font-size: var(--text-s);
     color: var(--dim);
 
     b {

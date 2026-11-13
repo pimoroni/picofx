@@ -22,7 +22,7 @@
     display: block;
     padding: .3rem .5rem 0;
     overflow: hidden;
-    font: 600 .74rem/1.5 system-ui, sans-serif;
+    font: 600 var(--text-s)/1.5 var(--font);
     color: var(--ink);
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -31,7 +31,7 @@
   small {
     display: block;
     padding: 0 .5rem .35rem;
-    font-size: .68rem;
+    font-size: var(--text-xs);
     color: var(--dim);
   }
 
@@ -50,7 +50,7 @@
     border-radius: 50%;
     background: var(--bg);
     color: var(--dim);
-    font-size: .6rem;
+    font-size: var(--text-xs);
 
     &:hover {
       border-color: var(--ink);

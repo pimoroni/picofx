@@ -16,7 +16,7 @@
 
     > small {
       margin-left: .6rem;
-      font-size: .76rem;
+      font-size: var(--text-s);
       color: var(--dim);
     }
   }
@@ -64,7 +64,7 @@
       padding: 0;
       border: 0;
       background: none;
-      font: 600 .78rem system-ui, sans-serif;
+      font: 600 var(--text-s) var(--font);
       color: var(--ink);
       text-overflow: ellipsis;
       cursor: pointer;
@@ -109,7 +109,7 @@
     height: 27px;
     padding: 0 .3rem 0 .55rem;
     overflow: hidden;
-    font-size: .8rem;
+    font-size: var(--text-m);
     white-space: nowrap;
 
     label {
@@ -118,7 +118,7 @@
 
     span {
       flex: none;
-      font-size: .72rem;
+      font-size: var(--text-xs);
       color: var(--dim);
     }
 
@@ -133,7 +133,7 @@
       gap: .3rem;
       padding: 0 4px;
       overflow: hidden;
-      font: 600 .78rem system-ui, sans-serif;
+      font: 600 var(--text-s) var(--font);
       text-overflow: ellipsis;
     }
 
@@ -204,7 +204,7 @@
       gap: .45rem;
       height: 34px;
       padding: 0 .3rem;
-      font: 600 .9rem system-ui, sans-serif;
+      font: 600 var(--text-m) var(--font);
       color: var(--ink);
 
       svg {
@@ -225,7 +225,7 @@
       align-items: center;
       gap: .35rem;
       margin: 0;
-      font: 400 .78rem/1.6rem system-ui, sans-serif;
+      font: 400 var(--text-s)/1.6rem var(--font);
       color: var(--dim);
       white-space: nowrap;
 
@@ -267,7 +267,7 @@
 
     p {
       margin: .3rem 0;
-      font-size: .82rem;
+      font-size: var(--text-m);
     }
 
     [data-tone=dim] {
@@ -287,7 +287,7 @@
       border-radius: 9px;
       background: rgba(15, 138, 114, .08);
       color: var(--accent);
-      font: 600 .78rem system-ui, sans-serif;
+      font: 600 var(--text-s) var(--font);
 
       &:hover {
         border-color: var(--accent);

@@ -1,19 +1,10 @@
 .editor {
   position: relative;
+  margin-top: -2px;
   padding: .7rem .8rem .8rem;
   border: 2px solid var(--accent);
   border-radius: 10px;
-  background: var(--notch-ground, var(--panel));
-
-  &::before {
-    content: "";
-    position: absolute;
-    top: -2px;
-    left: var(--notch-left, 0);
-    width: var(--notch-width, 0);
-    height: 2px;
-    background: var(--notch-ground, var(--panel));
-  }
+  background: var(--panel);
 
   &[data-notch-start] {
     border-top-left-radius: 0;
@@ -36,10 +27,10 @@
 
     h3 {
       margin: 0 auto 0 0;
-      font-size: 1.05rem;
+      font-size: var(--text-xl);
 
       small {
-        font-size: .82rem;
+        font-size: var(--text-m);
         font-weight: 400;
         color: var(--dim);
       }
@@ -54,7 +45,7 @@
       border-radius: 8px;
       background: var(--panel);
       color: var(--accent);
-      font: 600 .76rem system-ui, sans-serif;
+      font: 600 var(--text-s) var(--font);
       cursor: pointer;
     }
 
@@ -91,7 +82,7 @@
 
   > p {
     margin: 0 0 .6rem;
-    font-size: .82rem;
+    font-size: var(--text-m);
     color: var(--dim);
   }
 
@@ -101,18 +92,7 @@
 }
 
 .editor .colours {
-  container-type: inline-size;
   margin: 0 0 .6rem;
-  padding: 0;
-  border: 0;
-
-  legend {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-  }
 
   .blinks {
     display: flex;
@@ -120,7 +100,7 @@
     align-items: center;
     gap: .3rem;
     margin-bottom: .1rem;
-    font-size: .82rem;
+    font-size: var(--text-m);
     color: var(--dim);
 
     ol {
@@ -156,7 +136,7 @@
       border: 0;
       background: none;
       color: var(--dim);
-      font-size: .9rem;
+      font-size: var(--text-m);
       line-height: 1;
       cursor: pointer;
     }
@@ -168,134 +148,11 @@
       border-radius: 5px;
       background: none;
       color: var(--ink);
-      font-size: .78rem;
+      font-size: var(--text-s);
       cursor: pointer;
     }
   }
 
-  .swatches {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(0, 2.1rem);
-    justify-content: space-between;
-    gap: .25rem;
-    margin: .45rem 0 0;
-    padding: 0;
-    list-style: none;
-
-    button {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 1;
-      padding: 0;
-      border: 2px solid var(--line);
-      border-radius: 5px;
-      background: var(--swatch);
-      cursor: pointer;
-
-      &[aria-checked=true] {
-        border-color: var(--accent);
-        box-shadow: 0 0 0 2px rgba(15, 138, 114, .25);
-      }
-
-      span {
-        display: none;
-        position: absolute;
-        top: calc(100% + 2px);
-        left: 50%;
-        transform: translateX(-50%);
-        font: 400 .6rem/1 system-ui, sans-serif;
-        color: var(--dim);
-        white-space: nowrap;
-        pointer-events: none;
-      }
-    }
-
-    [data-custom] {
-      background: conic-gradient(#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
-
-      &::after {
-        content: "";
-        position: absolute;
-        inset: 24%;
-        border-radius: 50%;
-        background: var(--picked, repeating-linear-gradient(45deg, #f4f1ec, #f4f1ec 2px, #a9a194 2px, #a9a194 3.5px));
-        box-shadow: 0 0 0 1px rgba(0, 0, 0, .2);
-      }
-    }
-  }
-
-  @container (min-width: 34rem) {
-    .swatches {
-      margin-bottom: .9rem;
-
-      button span {
-        display: block;
-      }
-    }
-  }
-
-  .custom {
-    display: flex;
-    align-items: flex-start;
-    gap: .8rem;
-    margin-top: .55rem;
-
-    > div:last-child {
-      display: flex;
-      flex-direction: column;
-      gap: .4rem;
-      align-self: stretch;
-    }
-
-    label {
-      display: flex;
-      align-items: center;
-      gap: .4rem;
-      font-size: .8rem;
-      color: var(--dim);
-    }
-
-    input {
-      width: 5.2rem;
-      padding: .25rem .45rem;
-      border: 1px solid var(--line);
-      border-radius: 7px;
-      background: var(--panel);
-      color: inherit;
-      font: .82rem ui-monospace, Menlo, Consolas, monospace;
-    }
-
-    output {
-      flex: 1;
-      min-height: 3rem;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-    }
-  }
-
-  .field {
-    position: relative;
-    flex: 1;
-    height: 6.5rem;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #fff),
-                linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
-    cursor: crosshair;
-    touch-action: none;
-
-    span {
-      position: absolute;
-      width: .85rem;
-      height: .85rem;
-      border: 2px solid #fff;
-      border-radius: 50%;
-      box-shadow: 0 0 0 1px rgba(0, 0, 0, .45);
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-    }
-  }
 }
 
 .editor .sliders {
@@ -312,7 +169,7 @@
     display: inline-flex;
     align-items: center;
     gap: .4rem;
-    font-size: .8rem;
+    font-size: var(--text-m);
     color: var(--dim);
     white-space: nowrap;
 
@@ -355,14 +212,14 @@
     padding: 0 .35rem;
     border: 1px solid var(--line);
     border-radius: 6px;
-    font: 600 .76rem system-ui, sans-serif;
+    font: 600 var(--text-s) var(--font);
     line-height: calc(1.2rem - 2px);
     text-align: right;
     font-variant-numeric: tabular-nums;
   }
 
   input[type=text] + span {
-    font-size: .74rem;
+    font-size: var(--text-s);
     color: var(--dim);
   }
 
@@ -399,7 +256,7 @@
     border-radius: 6px;
     background: var(--panel);
     color: var(--dim);
-    font: 600 1.35rem/1 system-ui, sans-serif;
+    font: 600 var(--text-xl)/1 var(--font);
     cursor: pointer;
 
     &:hover {

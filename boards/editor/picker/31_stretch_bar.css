@@ -1,4 +1,6 @@
 .stretchview {
+  position: relative;
+  z-index: 1;
   overflow: hidden;
   padding-top: 1.2rem;
   margin-top: -.1rem;
@@ -25,6 +27,7 @@
 
 .stretches {
   --lights: 2.7rem;
+  --join: 6px;
   display: flex;
   gap: 2px;
   width: calc(var(--zoom, 1) * 100%);
@@ -44,6 +47,7 @@
   > li {
     position: relative;
     display: flex;
+    padding-bottom: var(--join);
     flex: var(--width) 1 0;
     min-width: 0;
   }
@@ -61,9 +65,14 @@
     cursor: pointer;
   }
 
+  > li[aria-current] {
+    padding-bottom: 0;
+  }
+
   [aria-current] .stretch {
+    padding-bottom: var(--join);
     border-color: var(--accent);
-    border-bottom-color: transparent;
+    border-bottom: 0;
     border-radius: 8px 8px 0 0;
   }
 
@@ -94,7 +103,7 @@
     }
 
     small {
-      font: 400 .6rem/1 system-ui, sans-serif;
+      font: 400 var(--text-xs)/1 var(--font);
       color: var(--dim);
     }
 
@@ -171,7 +180,7 @@
     display: block;
     padding: 0 .3rem;
     overflow: hidden;
-    font: 600 .68rem/1.5 system-ui, sans-serif;
+    font: 600 var(--text-xs)/1.5 var(--font);
     color: var(--ink);
     text-align: center;
     white-space: nowrap;
@@ -191,7 +200,7 @@
   }
 
   [data-narrow] .name {
-    font-size: .6rem;
+    font-size: var(--text-xs);
   }
 
   .cut {
@@ -238,7 +247,7 @@
       border-radius: 5px;
       background: var(--ink);
       color: #fff;
-      font: 600 .62rem/1.6 system-ui, sans-serif;
+      font: 600 var(--text-xs)/1.6 var(--font);
       white-space: nowrap;
       transform: translateX(-50%);
       opacity: 0;
@@ -296,7 +305,7 @@
       border-radius: 50%;
       background: var(--panel);
       color: var(--dim);
-      font: 600 .7rem/1 system-ui, sans-serif;
+      font: 600 var(--text-xs)/1 var(--font);
       transform: translateX(-50%);
       opacity: 0;
       transition: opacity .1s;

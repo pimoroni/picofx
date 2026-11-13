@@ -12,7 +12,7 @@
     background: var(--panel);
     color: var(--ink);
     font: inherit;
-    font-size: .88rem;
+    font-size: var(--text-m);
     white-space: nowrap;
 
     &:hover:enabled {
@@ -89,7 +89,7 @@
 
   pre {
     margin: .4rem 0 0;
-    font-size: .85rem;
+    font-size: var(--text-m);
     white-space: pre-wrap;
   }
 
@@ -121,7 +121,7 @@
 
   summary {
     color: var(--dim);
-    font-size: .9rem;
+    font-size: var(--text-m);
     cursor: pointer;
 
     &:hover {
@@ -132,7 +132,7 @@
   p {
     margin: .2rem 0 .5rem;
     color: var(--dim);
-    font-size: .8rem;
+    font-size: var(--text-m);
   }
 
   pre {

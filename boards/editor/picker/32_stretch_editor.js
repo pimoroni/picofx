@@ -14,6 +14,7 @@ import {BLINK, blinkNamed} from "./06_blink.js";
 import {chosenTab} from "./11_tabs.js";
 import {renderPreview} from "./18_drive.js";
 import {figureKey, figureSaid, figureWay, linesAt, placeFor, settingIn} from "./25_figures.js";
+import {colourField, swatchRow} from "./30_colour_picker.js";
 import {stretchCells} from "./31_stretch_bar.js";
 
 var FIGURES_KEPT = "fx-picker-figures-open";
@@ -88,7 +89,7 @@ export function renderEditor(where, run) {
                              "aria-label": picking ? "Choose a look" : look.name + " settings"},
     picking ? pickingHeader(run, section, look) : settingsHeader(run, section, look),
     notes(run, section, look, picking),
-    coloured ? colourPicker(run, where) : null,
+    coloured ? colourPicker(run) : null,
     picking ? null : sliders(run, section, look, where)));
 }
 
@@ -148,49 +149,39 @@ function notes(run, section, look, picking) {
   return said.map(function (words) { return h("p", {}, words); });
 }
 
-function colourPicker(run, where) {
+function colourPicker(run) {
   var section = run.sections[run.picked];
   function live() { return run.sections[run.picked]; }
   var offered = swatchesFor(run, section);
   var chosenHex = (section.colour || "#ffffff").replace("#", "").toLowerCase();
   var chosenWord = offered.filter(function (name) { return hexOf(WORDS[name]) === chosenHex; })[0] || null;
-  var custom = section.custom || !chosenWord;
+  var custom = !!section.custom || !chosenWord;
   var remembered = run.id + ":" + section.from;
   if (custom) {
     customColours[remembered] = {colour: section.colour || "#ffffff",
                                  level: section.level === undefined ? 1 : section.level};
   }
   var kept = customColours[remembered];
-
-  var swatches = h("ul", {class: "swatches", role: "radiogroup", "aria-label": "Colour"},
-    offered.map(function (name) {
-      return h("li", {}, h("button", {type: "button", role: "radio",
-                                      "aria-checked": chosenWord === name && !section.custom ? "true" : "false",
-                                      title: name, style: {"--swatch": rgbInk(WORDS[name])},
-                                      onclick: function () {
-                                        live().colour = "#" + hexOf(WORDS[name]);
-                                        live().custom = false;
-                                        draw();
-                                      }}, h("span", {}, name)));
-    }),
-    h("li", {}, h("button", {type: "button", role: "radio", "data-custom": true,
-                             "aria-checked": custom ? "true" : "false",
-                             title: "any hue and saturation, with its own brightness",
-                             style: {"--picked": kept ? atBrightness(kept.colour, kept.level) : null},
-                             onclick: function () {
-                               live().custom = true;
-                               if (kept) {
-                                 live().colour = kept.colour;
-                                 live().level = kept.level;
-                               }
-                               draw();
-                             }}, h("span", {}, "custom"))));
-
   return h("fieldset", {class: "colours"},
-    h("legend", {}, "Colour"),
+    h("legend", {class: "hidden"}, "Colour"),
     section.look === BLINK ? blinkChips(run) : null,
-    swatches,
-    custom ? customField(run, live) : null);
+    swatchRow({label: "Colour", names: offered, chosen: chosenWord, custom: custom,
+               picked: kept ? atBrightness(kept.colour, kept.level) : null,
+               customTitle: "any hue and saturation, with its own brightness",
+               onSwatch: function (name) {
+                 live().colour = "#" + hexOf(WORDS[name]);
+                 live().custom = false;
+                 draw();
+               },
+               onCustom: function () {
+                 live().custom = true;
+                 if (kept) {
+                   live().colour = kept.colour;
+                   live().level = kept.level;
+                 }
+                 draw();
+               }}),
+    custom ? customField(live) : null);
 }
 
 function blinkChips(run) {
@@ -244,64 +235,37 @@ function blinkChips(run) {
                  onclick: another}, "+ another colour"));
 }
 
-function customField(run, live) {
-  var section = run.sections[run.picked];
+function customField(live) {
+  var section = live();
   var parts = takeApart(hexRgb(section.colour || "#ffffff"));
-  var mark = h("span", {style: {left: (parts.hue / 360 * 100) + "%", top: ((1 - parts.sat) * 100) + "%",
-                                background: rgbInk(fieldColour(parts.hue, parts.sat))}});
-  var shown = h("output", {title: "The colour as written, at its brightness",
-                           style: {background: atBrightness(section.colour || "#ffffff", section.level)}});
-  var hex = h("input", {type: "text", maxLength: 7, spellcheck: false,
-                        value: atBrightness(section.colour || "#ffffff", section.level),
-                        title: "the colour as written, at its brightness. Paste a colour in to set " +
-                               "the hue, saturation and brightness below",
-                        oninput: typed, onblur: function () { draw(); }});
-
-  function place(hue, sat, rgb) {
-    mark.style.left = (hue / 360 * 100) + "%";
-    mark.style.top = ((1 - sat) * 100) + "%";
-    mark.style.background = rgbInk(rgb);
-  }
-
-  function pointing(event) {
-    var box = field.getBoundingClientRect();
-    var across = Math.max(0, Math.min(1, (event.clientX - box.left) / box.width));
-    var down = Math.max(0, Math.min(1, (event.clientY - box.top) / box.height));
-    var rgb = fieldColour(across * 360, 1 - down);
-    live().colour = "#" + hexOf(rgb);
-    live().custom = true;
-    place(across * 360, 1 - down, rgb);
-    hex.value = atBrightness(live().colour, live().level);
-    shown.style.background = hex.value;
-    renderPreview();
-  }
-
-  function typed() {
-    var said = hex.value.replace("#", "").trim();
-    if (!/^[0-9a-fA-F]{6}$/.test(said)) return;
-    var typedRgb = hexRgb("#" + said.toLowerCase());
-    var got = takeApart(typedRgb);
-    var rgb = fieldColour(got.hue, got.sat);
-    live().colour = "#" + hexOf(rgb);
-    live().level = Math.max(FAINTEST, Math.max.apply(null, typedRgb) / 255);
-    live().custom = true;
-    place(got.hue, got.sat, rgb);
-    shown.style.background = "#" + said.toLowerCase();
-    renderPreview();
-  }
-
-  var field = h("div", {class: "field", role: "presentation",
-                        onpointerdown: function (event) {
-                          field.setPointerCapture(event.pointerId);
-                          pointing(event);
-                        },
-                        onpointermove: function (event) {
-                          if (field.hasPointerCapture(event.pointerId)) pointing(event);
-                        },
-                        onpointerup: function () { draw(); }}, mark);
-
-  return h("div", {class: "custom"}, field,
-    h("div", {}, h("label", {}, "Hex ", hex), shown));
+  var shown = atBrightness(section.colour || "#ffffff", section.level);
+  return colourField({
+    at: {hue: parts.hue, sat: parts.sat, colour: rgbInk(fieldColour(parts.hue, parts.sat)), preview: shown},
+    hex: shown,
+    hexTitle: "the colour as written, at its brightness. Paste a colour in to set the hue, " +
+              "saturation and brightness below",
+    previewTitle: "The colour as written, at its brightness",
+    pick: function (hue, sat) {
+      var rgb = fieldColour(hue, sat);
+      live().colour = "#" + hexOf(rgb);
+      live().custom = true;
+      renderPreview();
+      var written = atBrightness(live().colour, live().level);
+      return {colour: rgbInk(rgb), preview: written, hex: written};
+    },
+    typed: function (said) {
+      if (!/^[0-9a-f]{6}$/.test(said)) return null;
+      var typedRgb = hexRgb("#" + said);
+      var got = takeApart(typedRgb);
+      var rgb = fieldColour(got.hue, got.sat);
+      live().colour = "#" + hexOf(rgb);
+      live().level = Math.max(FAINTEST, Math.max.apply(null, typedRgb) / 255);
+      live().custom = true;
+      renderPreview();
+      return {hue: got.hue, sat: got.sat, colour: rgbInk(rgb), preview: "#" + said};
+    },
+    done: function () { draw(); }
+  });
 }
 
 function sliderRows(run, section, look, where) {
@@ -513,23 +477,11 @@ function seatLooks() {
 
 function notchEditors() {
   document.querySelectorAll(".panel .editor").forEach(function (editor) {
-    var panel = editor.closest(".panel");
-    var cell = panel.querySelector(".stretches > li[aria-current] .stretch");
-    if (!cell) {
-      editor.style.removeProperty("--notch-width");
-      editor.removeAttribute("data-notch-start");
-      editor.removeAttribute("data-notch-end");
-      return;
-    }
+    var cell = editor.closest(".panel").querySelector(".stretches > li[aria-current] .stretch");
     var outer = editor.getBoundingClientRect();
-    var tab = cell.getBoundingClientRect();
-    var left = Math.max(0, tab.left - outer.left);
-    var right = Math.min(outer.width - 4, tab.right - outer.left - 4);
-    editor.style.setProperty("--notch-left", left + "px");
-    editor.style.setProperty("--notch-width", Math.max(0, right - left) + "px");
-    editor.toggleAttribute("data-notch-start", tab.left - outer.left < 12);
-    editor.toggleAttribute("data-notch-end", outer.right - tab.right < 12);
-    editor.style.setProperty("--notch-ground", getComputedStyle(panel).backgroundColor);
+    var tab = cell && cell.getBoundingClientRect();
+    editor.toggleAttribute("data-notch-start", !!tab && tab.left - outer.left < 12);
+    editor.toggleAttribute("data-notch-end", !!tab && outer.right - tab.right < 12);
   });
 }
 

@@ -7,7 +7,7 @@
   border-radius: 9px;
   background: var(--panel);
   box-shadow: inset 0 0 0 1.5px var(--screen-a);
-  font: 600 .82rem system-ui, sans-serif;
+  font: 600 var(--text-m) var(--font);
 
   > span {
     display: flex;
@@ -83,7 +83,7 @@
     padding: .4rem .9rem;
     background: var(--tint);
     color: #fff;
-    font-size: .9rem;
+    font-size: var(--text-m);
 
     h3 {
       margin: 0;
@@ -109,7 +109,7 @@
       background: rgba(255, 255, 255, .15);
       color: #fff;
       font: inherit;
-      font-size: .78rem;
+      font-size: var(--text-s);
 
       option {
         color: var(--ink);
@@ -179,7 +179,7 @@
           outline: 1px dashed #a9a49b;
           outline-offset: -1px;
           color: var(--dim);
-          font-size: .72rem;
+          font-size: var(--text-xs);
         }
 
         > button {
@@ -189,7 +189,7 @@
           border: 1.5px solid var(--tint);
           border-radius: 7px;
           color: var(--tint);
-          font: 600 .74rem system-ui, sans-serif;
+          font: 600 var(--text-s) var(--font);
         }
       }
 
@@ -202,7 +202,7 @@
         border: 0;
         background: none;
         color: var(--group, var(--tint));
-        font: 700 .85rem/1.3rem system-ui, sans-serif;
+        font: 700 var(--text-m)/1.3rem var(--font);
       }
 
       > label {
@@ -220,7 +220,7 @@
       select {
         padding: .05rem .15rem;
         border-radius: 5px;
-        font-size: .72rem;
+        font-size: var(--text-xs);
 
         &:disabled {
           padding: .05rem 0;
@@ -243,7 +243,7 @@
         border-radius: 5px;
         background: var(--tint);
         color: #fff;
-        font-size: .95rem;
+        font-size: var(--text-l);
         line-height: 1;
       }
 
@@ -256,7 +256,7 @@
         max-width: 100%;
         overflow: hidden;
         color: var(--dim);
-        font-size: .7rem;
+        font-size: var(--text-xs);
         text-overflow: ellipsis;
         white-space: nowrap;
       }
@@ -282,7 +282,7 @@
           border-right: 1px solid var(--line);
           border-radius: 0;
           color: var(--ink);
-          font: 700 .74rem system-ui, sans-serif;
+          font: 700 var(--text-s) var(--font);
 
           &:last-child {
             border-right: 0;
@@ -308,7 +308,7 @@
     border-radius: 8px;
     background: color-mix(in srgb, var(--tint) 7%, transparent);
     color: var(--ink);
-    font-size: .82rem;
+    font-size: var(--text-m);
 
     &:empty {
       display: none;

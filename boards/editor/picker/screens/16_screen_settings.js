@@ -9,6 +9,7 @@ import {banner, driveTrouble} from "../18_drive.js";
 import {copyTile} from "../22_program.js";
 import {isExampleMedia, mediaHome, nameShown, scanMedia} from "../26_drive_files.js";
 import {argumentFrom, copyToOwn, folderAt} from "../26_drive_programs.js";
+import {colourField, swatchRow} from "../30_colour_picker.js";
 import {
   PANEL_PX, SCREENS, kindOf, mediaArt, mediaNamed, panelDrawing, screenButton
 } from "./12_screens.js";
@@ -645,24 +646,19 @@ function backgroundFold(key, held) {
   })[0];
   var open = groundCustom[key] || !chosen;
   if (open) look.customBg = look.bg;
-  var swatches = h("p", {role: "group", "aria-label": "Background colour"},
-    names.map(function (name) {
-      return h("button", {type: "button", title: name, "aria-pressed": String(!open && chosen === name),
-                          style: {"--swatch": rgbInk(WORDS[name])},
-                          onclick: function () {
-                            look.bg = groundHex(WORDS[name], parts.value);
-                            groundCustom[key] = false;
-                            draw();
-                          }}, h("span", {}, name));
-    }),
-    h("button", {type: "button", "aria-pressed": String(open), "data-custom": true,
-                 "data-picked": !!look.customBg, style: {"--picked": look.customBg || null},
-                 title: "custom: pick a colour or type a hex code",
-                 onclick: function () {
-                   groundCustom[key] = true;
-                   if (look.customBg) look.bg = look.customBg;
-                   draw();
-                 }}, h("span", {}, "custom")));
+  var swatches = swatchRow({label: "Background colour", names: names, chosen: chosen, custom: open,
+                            picked: look.customBg || null,
+                            customTitle: "custom: pick a colour or type a hex code",
+                            onSwatch: function (name) {
+                              look.bg = groundHex(WORDS[name], parts.value);
+                              groundCustom[key] = false;
+                              draw();
+                            },
+                            onCustom: function () {
+                              groundCustom[key] = true;
+                              if (look.customBg) look.bg = look.customBg;
+                              draw();
+                            }});
   return settingFold(key, "Background", groundSaid(look.bg),
     swatches,
     open ? customGround(look, parts) : null,
@@ -675,36 +671,23 @@ function backgroundFold(key, held) {
 
 function customGround(look, parts) {
   var place = takeApart(parts.full);
-  var marker = h("span", {style: {"--x": (place.hue / 360 * 100) + "%",
-                                  "--y": ((1 - place.sat) * 100) + "%",
-                                  "--colour": rgbInk(parts.full)}});
-  var hex = h("input", {type: "text", maxLength: 7, value: look.bg,
-                        title: "Use the background colour exactly as typed, including dark colours",
-                        onchange: function () {
-                          var said = hex.value.replace("#", "").trim().toLowerCase();
-                          if (/^[0-9a-f]{6}$/.test(said)) look.bg = "#" + said;
-                          draw();
-                        }});
-  hex.spellcheck = false;
-  var preview = h("span", {title: "How the background will look", style: {"--colour": look.bg}});
-  function pointingAt(event) {
-    var bounds = field.getBoundingClientRect();
-    var across = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width));
-    var down = Math.max(0, Math.min(1, (event.clientY - bounds.top) / bounds.height));
-    look.bg = groundHex(fieldColour(across * 360, 1 - down), parts.value);
-    marker.style.setProperty("--x", (across * 100) + "%");
-    marker.style.setProperty("--y", (down * 100) + "%");
-    marker.style.setProperty("--colour", look.bg);
-    hex.value = look.bg;
-    preview.style.setProperty("--colour", look.bg);
-  }
-  var field = h("div", {"aria-label": "Colour", onpointerdown: function (event) {
-    field.setPointerCapture(event.pointerId);
-    pointingAt(event);
-  }, onpointermove: function (event) {
-    if (field.hasPointerCapture(event.pointerId)) pointingAt(event);
-  }, onpointerup: function () { draw(); }}, marker);
-  return h("div", {class: "custom"}, field, h("div", {}, h("label", {}, "Hex", hex), preview));
+  return colourField({
+    at: {hue: place.hue, sat: place.sat, colour: rgbInk(parts.full), preview: look.bg},
+    hex: look.bg,
+    hexTitle: "Use the background colour exactly as typed, including dark colours",
+    previewTitle: "How the background will look",
+    pick: function (hue, sat) {
+      look.bg = groundHex(fieldColour(hue, sat), parts.value);
+      return {colour: look.bg, preview: look.bg, hex: look.bg};
+    },
+    typed: function (said) {
+      if (!/^[0-9a-f]{6}$/.test(said)) return null;
+      look.bg = "#" + said;
+      var got = takeApart(hexRgb(look.bg));
+      return {hue: got.hue, sat: got.sat, colour: look.bg, preview: look.bg};
+    },
+    done: function () { draw(); }
+  });
 }
 
 function playbackSaid(held, look) {

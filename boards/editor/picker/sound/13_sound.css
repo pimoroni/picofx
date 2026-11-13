@@ -8,7 +8,7 @@ body.setupall #soundPanel {
 
   > p {
     margin: 0 0 .8rem;
-    font-size: .85rem;
+    font-size: var(--text-m);
     color: var(--dim);
   }
 
@@ -52,7 +52,7 @@ body.setupall #soundPanel {
       border: 1.5px solid var(--line);
       border-radius: 8px;
       background: var(--panel);
-      font: 600 .76rem system-ui, sans-serif;
+      font: 600 var(--text-s) var(--font);
       color: var(--ink);
 
       &[aria-pressed=true] {
@@ -68,7 +68,7 @@ body.setupall #soundPanel {
       align-items: center;
       gap: .5rem;
       margin: 0 .9rem;
-      font-size: .82rem;
+      font-size: var(--text-m);
       color: var(--dim);
     }
 
@@ -138,7 +138,7 @@ body.setupall #soundPanel {
     b {
       align-self: center;
       padding: .3rem .65rem;
-      font: 600 .8rem system-ui, sans-serif;
+      font: 600 var(--text-m) var(--font);
       white-space: nowrap;
     }
   }
@@ -177,7 +177,7 @@ body.setupall #soundPanel {
       border-radius: 0;
       background: none;
       color: var(--ink);
-      font: 600 .92rem system-ui, sans-serif;
+      font: 600 var(--text-l) var(--font);
       text-align: left;
 
       &::before {
@@ -201,7 +201,7 @@ body.setupall #soundPanel {
     }
 
     small {
-      font: 400 .8rem system-ui, sans-serif;
+      font: 400 var(--text-m) var(--font);
       color: var(--dim);
     }
   }
@@ -254,7 +254,7 @@ body.setupall #soundPanel {
         display: block;
         padding: .3rem .5rem 0;
         overflow: hidden;
-        font: 600 .74rem/1.5 system-ui, sans-serif;
+        font: 600 var(--text-s)/1.5 var(--font);
         color: var(--ink);
         white-space: nowrap;
         text-overflow: ellipsis;
@@ -263,7 +263,7 @@ body.setupall #soundPanel {
       small {
         display: block;
         padding: 0 .5rem .35rem;
-        font-size: .68rem;
+        font-size: var(--text-xs);
         color: var(--dim);
       }
     }
@@ -303,7 +303,7 @@ body.setupall #soundPanel {
     border-radius: 50%;
     background: var(--bg);
     color: var(--dim);
-    font-size: .6rem;
+    font-size: var(--text-xs);
 
     &:hover {
       border-color: var(--ink);

@@ -171,7 +171,7 @@ header:has(> .pageswitch) {
     }
 
     b {
-      font-size: .95rem;
+      font-size: var(--text-l);
       line-height: 1.15;
       white-space: nowrap;
     }
@@ -179,7 +179,7 @@ header:has(> .pageswitch) {
     small {
       overflow: hidden;
       color: var(--dim);
-      font-size: .8rem;
+      font-size: var(--text-m);
       line-height: 1.2;
       white-space: nowrap;
       text-overflow: ellipsis;
@@ -214,7 +214,7 @@ header:has(> .pageswitch) {
   gap: .25rem;
   margin: .2rem 0;
   color: var(--dim);
-  font-size: .8rem;
+  font-size: var(--text-m);
 
   > span:first-child {
     margin-right: .2rem;
@@ -230,7 +230,7 @@ header:has(> .pageswitch) {
     background: #fff;
     color: var(--ink);
     font: inherit;
-    font-size: .78rem;
+    font-size: var(--text-s);
 
     &:hover {
       border-color: var(--board);
@@ -254,7 +254,7 @@ header:has(> .pageswitch) {
       background: none;
       color: var(--board);
       font: inherit;
-      font-size: .78rem;
+      font-size: var(--text-s);
       text-decoration: underline;
     }
   }
@@ -316,7 +316,7 @@ header:has(> .pageswitch) {
     display: block;
     padding: .35rem .55rem;
     overflow: hidden;
-    font-size: .85rem;
+    font-size: var(--text-m);
     font-weight: 600;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -328,7 +328,7 @@ header:has(> .pageswitch) {
     margin: -.2rem .55rem .5rem;
     overflow: hidden;
     color: var(--dim);
-    font-size: .76rem;
+    font-size: var(--text-s);
     line-height: 1.3;
     -webkit-line-clamp: 2;
     line-clamp: 2;
@@ -344,7 +344,7 @@ header:has(> .pageswitch) {
   > p,
   > section > p {
     color: var(--dim);
-    font-size: .86rem;
+    font-size: var(--text-m);
   }
 
   > article {
@@ -383,17 +383,17 @@ header:has(> .pageswitch) {
     > div > div {
       h2 {
         margin: .1rem 0 .3rem;
-        font-size: 1.15rem;
+        font-size: var(--text-xl);
       }
 
       p {
         margin: 0 0 .45rem;
-        font-size: .9rem;
+        font-size: var(--text-m);
       }
 
       p:has(> small) {
         color: var(--dim);
-        font-size: .8rem;
+        font-size: var(--text-m);
       }
 
       small {
@@ -407,7 +407,7 @@ header:has(> .pageswitch) {
         margin: .1rem 0 .4rem;
         padding: 0;
         list-style: none;
-        font-size: .84rem;
+        font-size: var(--text-m);
       }
 
       li {
@@ -446,7 +446,7 @@ header:has(> .pageswitch) {
 
   > section > h2 {
     margin: 1rem 0 .4rem;
-    font: 600 .92rem system-ui, sans-serif;
+    font: 600 var(--text-l) var(--font);
 
     button {
       display: flex;
@@ -482,7 +482,7 @@ header:has(> .pageswitch) {
 
     small {
       color: var(--dim);
-      font: 400 .8rem system-ui, sans-serif;
+      font: 400 var(--text-m) var(--font);
     }
   }
 
@@ -518,7 +518,7 @@ header:has(> .pageswitch) {
         border-radius: 5px;
         background: rgba(20, 20, 22, .7);
         color: #fff;
-        font-size: .8rem;
+        font-size: var(--text-m);
         line-height: 1.2rem;
         text-align: center;
         opacity: 0;

@@ -1,0 +1,121 @@
+.swatches {
+  container-type: inline-size;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 2.1rem);
+  justify-content: space-between;
+  gap: .25rem;
+  margin: .45rem 0 0;
+  padding: 0;
+  list-style: none;
+
+  button {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    padding: 0;
+    border: 2px solid var(--line);
+    border-radius: var(--radius-s);
+    background: var(--swatch);
+
+    &[aria-checked=true] {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-glow);
+    }
+
+    span {
+      position: absolute;
+      top: calc(100% + 2px);
+      left: 50%;
+      display: none;
+      color: var(--dim);
+      font: 400 var(--text-xs)/1 var(--font);
+      white-space: nowrap;
+      transform: translateX(-50%);
+      pointer-events: none;
+    }
+  }
+
+  [data-custom] {
+    background: var(--hue-wheel);
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 24%;
+      border-radius: 50%;
+      background: var(--picked, var(--hatch-fine));
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, .2);
+    }
+  }
+}
+
+@container (min-width: 34rem) {
+  .swatches li {
+    padding-bottom: .9rem;
+  }
+
+  .swatches button span {
+    display: block;
+  }
+}
+
+.colourfield {
+  display: flex;
+  align-items: flex-start;
+  gap: .8rem;
+  margin-top: .55rem;
+
+  .field {
+    position: relative;
+    flex: 1;
+    height: 6.5rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-l);
+    background: linear-gradient(to bottom, transparent, #fff), var(--hues);
+    cursor: crosshair;
+    touch-action: none;
+
+    span {
+      position: absolute;
+      top: var(--y);
+      left: var(--x);
+      width: .85rem;
+      height: .85rem;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      background: var(--colour);
+      box-shadow: 0 0 0 1px rgba(0, 0, 0, .45);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+  }
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    align-self: stretch;
+    gap: .4rem;
+  }
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    color: var(--dim);
+    font-size: var(--text-m);
+  }
+
+  input {
+    width: 5.2rem;
+    font-family: var(--font-mono);
+  }
+
+  output {
+    flex: 1;
+    min-height: 3rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--colour);
+  }
+}

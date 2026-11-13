@@ -34,7 +34,7 @@
   }
 
   strong {
-    font-size: .95rem;
+    font-size: var(--text-l);
   }
 
   .said {
@@ -45,7 +45,7 @@
     border: 0;
     background: none;
     color: var(--dim);
-    font-size: .85rem;
+    font-size: var(--text-m);
     text-align: left;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -60,12 +60,12 @@
   }
 
   .where {
-    font-size: .9rem;
+    font-size: var(--text-m);
 
     small {
       margin-left: .45rem;
       color: var(--dim);
-      font-size: .85rem;
+      font-size: var(--text-m);
     }
   }
 
