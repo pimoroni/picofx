@@ -1,11 +1,11 @@
 import {drawSteps, paintAll, paintSteps} from "./00_draw.js";
 import {blinkDuty, blinkSpeed, keyOf, lookNamed, withSection} from "./01_looks.js";
 import {BLINK, blinkWord} from "./02_blink.js";
-import {widthOf} from "./03_outputs.js";
-import {MIDDLING, runs} from "./03_runs.js";
 import {
   SOLID_COLOUR, START_MOODS, linesFor, ownColourFor, runsAWay, takesColour, withExact
-} from "./04_lines.js";
+} from "./03_lines.js";
+import {widthOf} from "./03_outputs.js";
+import {MIDDLING, runs} from "./03_runs.js";
 import {lampUnder} from "./04_scenes.js";
 
 var NAMED = {

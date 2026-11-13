@@ -1,9 +1,10 @@
 import {draw, drawSteps, paintAll} from "./00_draw.js";
 import {CATALOGUE_ASSUMED} from "./01_looks.js";
 import {HOLDING_STILL, setBeat, step} from "./02_preview.js";
-import {active, mono, outs} from "./03_runs.js";
+import {active, mono, outs, runs} from "./03_runs.js";
 import {renderSides} from "./04_led_panels.js";
 import {capture, state} from "./04_scenes.js";
+import {renderLeds} from "./08_setup.js";
 import {renderWiringRun} from "./09_wiring.js";
 import {workOn} from "./10_led_sections.js";
 import {chosenTab, showChosen} from "./11_tabs.js";
@@ -21,6 +22,19 @@ drawSteps.during.push(
   renderSides,
   function () { renderEditor("outChosen", active); },
   renderPreview,
+  function () {
+    if (active.strip) {
+      document.getElementById("outChosen").textContent = "";
+    }
+    runs.filter(function (run) { return run.strip; }).forEach(function (run) {
+      renderLeds(run.id + "Leds", run);
+      renderStretches(run.id + "Bar", run);
+      document.getElementById(run.id + "Chosen").textContent = "";
+      if (run === active) {
+        renderEditor(run.id + "Chosen", run);
+      }
+    });
+  },
   paintAll
 );
 

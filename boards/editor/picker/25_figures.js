@@ -1,4 +1,4 @@
-import {sectionLines} from "./04_lines.js";
+import {sectionLines} from "./03_lines.js";
 
 var FIGURE_KEYS = {
   pace: ["speed", "interval", "green_interval", "bright_max"],

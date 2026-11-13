@@ -4,16 +4,16 @@ import {WORDS, hexOf, wordFor} from "./01_colours.js";
 import {HEADER, LOOKS, SIGNAL_TIMINGS, canPlay, keyOf} from "./01_looks.js";
 import {BLINK} from "./02_blink.js";
 import {boardResidue, copyKept, filterKept, filterResidue, keptLights, keptNow} from "./03_kept.js";
+import {sectionLines, targetFor} from "./03_lines.js";
 import {CHANNELS, OUTPUTS, joinedItems, order, placesOf, setLayout, wiring} from "./03_outputs.js";
 import {
   argsRead, boardTokens, entryParts, itemsNamed, lampsNamed, placesNamed, spanOf, unquotedColon
 } from "./03_reading.js";
 import {blank, mono, outs, runs, settle} from "./03_runs.js";
-import {sectionLines, targetFor} from "./04_lines.js";
 import {
   allBodies, apply, blankBody, bodyParts, capture, fileHead, sceneMark, settleLoneScene, state
 } from "./04_scenes.js";
-import {STRIPS, readStripTail, stripNamed, stripSet} from "./05_effects.js";
+import {STRIPS, readStripTail, stripNamed, stripSet} from "./05_strips.js";
 import {
   NOT_FITTED, SCREEN_PORTS, boardLineSteps, notFittedLine, notFittedRead, saidNotFitted,
   setNotFittedRead, stripDescribed

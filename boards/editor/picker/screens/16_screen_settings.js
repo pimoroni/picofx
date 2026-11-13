@@ -2,7 +2,7 @@ import {h} from "../00_dom.js";
 import {draw} from "../00_draw.js";
 import {SWATCHES, WORDS, fieldColour, hexOf, hexRgb, rgbInk, takeApart} from "../01_colours.js";
 import {quoted} from "../01_looks.js";
-import {spoken} from "../04_lines.js";
+import {spoken} from "../03_lines.js";
 import {bodyParts, namesOf, state} from "../04_scenes.js";
 import {banner, driveTrouble} from "../18_drive.js";
 import {copyTile} from "../22_program.js";

@@ -2,10 +2,13 @@ import {h, replace} from "./00_dom.js";
 import {draw, drawSteps, paintAll} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
 import {outputSaid} from "./03_outputs.js";
-import {active, blank, canEdit, runs, setSetupMode, setupOn} from "./03_runs.js";
+import {active, blank, canEdit, runs, setSetupMode, settle, setupOn} from "./03_runs.js";
 import {panelTools} from "./04_led_panels.js";
 import {allBodies, apply, slotAt, state, store} from "./04_scenes.js";
-import {stripChipChoice, stripChipShown, stripLengthField, stripSet} from "./05_effects.js";
+import {
+  STRIP_BRIGHTNESSES, STRIP_FEWEST, STRIP_MOST, STRIP_ORDERS, stripChipShown, stripPercent,
+  stripSet
+} from "./05_strips.js";
 import {breakingOutputs, brokenSaid} from "./07_board.js";
 import {workOn} from "./10_led_sections.js";
 import {lastOutputRun, showChosen} from "./11_tabs.js";
@@ -139,4 +142,42 @@ drawSteps.after.push(function () {
 export function setSetup(on) {
   setSetupMode(on);
   showChosen();
+}
+
+function stripChipChoice(run) {
+  if (run.made === null) {
+    return h("select", {title: "The strip's colour order. Change it if red shows as another colour",
+                        onchange: function (event) {
+                          stripSet(run, {order: event.target.value});
+                          draw();
+                        }},
+      STRIP_ORDERS.map(function (pair) {
+        return h("option", {value: pair[0], selected: (run.order || "") === pair[0]}, pair[1]);
+      }));
+  }
+  var offered = STRIP_BRIGHTNESSES.indexOf(run.brightness) < 0
+    ? STRIP_BRIGHTNESSES.concat([run.brightness]).sort(function (a, b) { return a - b; })
+    : STRIP_BRIGHTNESSES;
+  return h("select", {title: "Overall strip brightness, applied on top of each stretch's level",
+                      onchange: function (event) {
+                        stripSet(run, {brightness: Number(event.target.value)});
+                        draw();
+                      }},
+    offered.map(function (brightness) {
+      return h("option", {value: brightness, selected: brightness === run.brightness},
+               stripPercent(brightness) + (brightness === run.made ? " (default)" : ""));
+    }));
+}
+
+function stripLengthField(run) {
+  return h("input", {type: "number", min: STRIP_FEWEST, max: STRIP_MOST, value: run.leds,
+                     "aria-label": "LEDs on " + run.label,
+                     onchange: function (event) {
+                       var want = Math.max(STRIP_FEWEST, Math.min(STRIP_MOST,
+                                           parseInt(event.target.value, 10) || STRIP_FEWEST));
+                       if (want === run.leds) return;
+                       stripSet(run, {leds: want});
+                       settle();
+                       draw();
+                     }});
 }

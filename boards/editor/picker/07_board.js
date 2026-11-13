@@ -1,9 +1,13 @@
 import {draw, holdDrawing} from "./00_draw.js";
-import {BOARD} from "./01_looks.js";
+import {BOARD, canPlay, keyOf, lookNamed} from "./01_looks.js";
+import {targetFor} from "./03_lines.js";
 import {OUTPUTS, order, outputSaid, placeLamp, setLayout, wiring} from "./03_outputs.js";
-import {acrossWiring, breakOutWiring, canEdit, rejoinWiring, runs} from "./03_runs.js";
-import {apply, capture, slotAt, state, store} from "./04_scenes.js";
-import {changeWiring, stripLengthTail} from "./05_effects.js";
+import {
+  acrossWiring, breakOutWiring, canEdit, copyBlinks, copyExact, pickOutput, rejoinWiring, runs,
+  sectionAt, settle
+} from "./03_runs.js";
+import {apply, capture, carried, slotAt, state, store} from "./04_scenes.js";
+import {stripLengthTail} from "./05_strips.js";
 
 export var screenHooks = {mediaNamed: function () { return null; }, panelPreview: null};
 
@@ -131,4 +135,78 @@ export function notFittedLine() {
 
 export function saidNotFitted(name) {
   return notFittedRead.indexOf(name.toLowerCase()) >= 0;
+}
+
+function playedBy(out) {
+  var lamps = [];
+  runs.forEach(function (run) {
+    run.lamps.forEach(function (lamp, at) {
+      if (lamp.out === out) lamps.push({channel: lamp.channel || 0,
+                                        section: run.sections[sectionAt(run, at)]});
+    });
+  });
+  lamps.sort(function (a, b) { return a.channel - b.channel; });
+  var counted = [];
+  lamps.forEach(function (one) {
+    var seen = counted.filter(function (had) { return had.look === one.section.look; })[0];
+    if (seen) seen.many++;
+    else counted.push({look: one.section.look, section: one.section, many: 1});
+  });
+  var most = counted[0];
+  counted.forEach(function (one) { if (one.many > most.many) most = one; });
+  return most ? most.section : null;
+}
+
+var STAND_INS = {"Rainbow": "Wave"};
+
+function carriedFrom() { return carried; }
+
+export function standingIn(run, section) {
+  var memo = null;
+  run.lamps.slice(section.from, section.to + 1).forEach(function (lamp) {
+    var had = carriedFrom()[lamp.out];
+    if (had && had.as === section.look) memo = had;
+  });
+  return memo;
+}
+
+function changeWiring(change, toColour) {
+  return function (out) {
+    if (!!wiring[out].broken !== toColour) return;
+    var played = playedBy(out);
+    played = played && {look: played.look, pace: played.pace, mood: played.mood,
+                        colour: played.colour, level: played.level,
+                        blinks: copyBlinks(played.blinks), exact: copyExact(played.exact),
+                        timings: copyExact(played.timings)};
+    var memo = carriedFrom()[out];
+    delete carriedFrom()[out];
+    change(out);
+    runs.some(function (run) {
+      var mine = run.sections.filter(function (section) {
+        return run.lamps.slice(section.from, section.to + 1).every(function (lamp) {
+          return lamp.out === out;
+        });
+      })[0];
+      if (!mine) return false;
+      if (played) {
+        var look = lookNamed(played.look);
+        var target = targetFor(run, mine);
+        var standIn = lookNamed(STAND_INS[played.look]);
+        if (toColour && memo && played.look === memo.as) {
+          Object.assign(mine, {look: memo.look, pace: played.pace, mood: memo.mood,
+                               colour: memo.colour, level: played.level});
+        } else if (look && canPlay(look, target)) {
+          Object.assign(mine, played);
+        } else if (standIn && canPlay(standIn, target)) {
+          Object.assign(mine, played, {look: keyOf(standIn)});
+          carriedFrom()[out] = {as: keyOf(standIn), look: played.look, mood: played.mood,
+                                colour: played.colour};
+        }
+      }
+      return true;
+    });
+    settle();
+    pickOutput(out);
+    draw();
+  };
 }

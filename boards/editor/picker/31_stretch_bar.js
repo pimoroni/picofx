@@ -3,9 +3,9 @@ import {draw} from "./00_draw.js";
 import {lookNamed} from "./01_looks.js";
 import {painters} from "./02_preview.js";
 import {keptLights} from "./03_kept.js";
+import {coloursWritten, takesColour, targetFor, wherePlays} from "./03_lines.js";
 import {shortName, widthOf} from "./03_outputs.js";
 import {active, cutAt, inkAt, moveEdge, pick, remember, settle, uncut} from "./03_runs.js";
-import {coloursWritten, takesColour, targetFor, wherePlays} from "./04_lines.js";
 import {stretchUnder} from "./04_scenes.js";
 
 var ZOOMS_OVER = 12;

@@ -1,8 +1,8 @@
 import {draw} from "./00_draw.js";
-import {canPlay, lookNamed} from "./01_looks.js";
+import {BOARD, canPlay, lookNamed} from "./01_looks.js";
 import {filterKept, keptLights} from "./03_kept.js";
+import {START_MOODS, sectionLines, startColour, targetFor} from "./03_lines.js";
 import {MONO_FIRST, OUTPUTS, order, placeOf, wiring} from "./03_outputs.js";
-import {START_MOODS, sectionLines, startColour, targetFor} from "./04_lines.js";
 
 export function Run(name, mono) {
   return {name: name, mono: mono, lamps: [], sections: [], picked: 0,
@@ -474,3 +474,23 @@ export function setSetupMode(on) {
     heldOutput = null;
   }
 }
+
+var OPENING_LOOK = BOARD.opening.colour;
+
+outs.sections = [blank(0, outs.lamps.length - 1)];
+
+outs.sections[0].look = OPENING_LOOK;
+
+if (mono.lamps.length && BOARD.opening.mono) {
+  mono.sections = [blank(0, mono.lamps.length - 1)];
+  mono.sections[0].look = BOARD.opening.mono;
+}
+
+settle();
+
+[outs, mono].forEach(function (run) {
+  run.sections.forEach(function (section) {
+    var look = lookNamed(section.look);
+    if (look) startColour(run, section, look);
+  });
+});

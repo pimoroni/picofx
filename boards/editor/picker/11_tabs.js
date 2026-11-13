@@ -2,7 +2,7 @@ import {h, replace} from "./00_dom.js";
 import {draw, drawSteps} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
 import {active, outs, runs, setupOn} from "./03_runs.js";
-import {STRIPS} from "./05_effects.js";
+import {STRIPS} from "./05_strips.js";
 import {setSetup, setupButton, stripBlockedBy} from "./08_setup.js";
 import {LED_PANELS, runsOfPanel, workOn} from "./10_led_sections.js";
 import {renderEditor} from "./32_stretch_editor.js";

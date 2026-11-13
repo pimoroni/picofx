@@ -6,13 +6,13 @@ import {
 import {SIGNAL_TIMINGS, lookNamed, timingOf, withSection} from "./01_looks.js";
 import {BLINK, blinkNamed, swatchesFor} from "./02_blink.js";
 import {inkOf} from "./02_preview.js";
-import {widthOf} from "./03_outputs.js";
-import {chooseLook, pickingLook, remember} from "./03_runs.js";
 import {
   forwardTargetFor, runsAWay, sectionLines, takesColour, targetFor, wherePlays
-} from "./04_lines.js";
+} from "./03_lines.js";
+import {widthOf} from "./03_outputs.js";
+import {chooseLook, pickingLook, remember} from "./03_runs.js";
 import {stretchUnder} from "./04_scenes.js";
-import {standingIn} from "./05_effects.js";
+import {standingIn} from "./07_board.js";
 import {chosenTab} from "./11_tabs.js";
 import {renderPreview} from "./18_drive.js";
 import {figureKey, figureSaid, figureWay, linesAt, placeFor, settingIn} from "./25_figures.js";

@@ -1,11 +1,11 @@
 import {h, replace} from "./00_dom.js";
 import {draw, drawSteps} from "./00_draw.js";
 import {BOARD, HEADER, lookNamed} from "./01_looks.js";
+import {spoken} from "./03_lines.js";
 import {widthOf} from "./03_outputs.js";
 import {
   activate, active, copyBlinks, copyExact, lampLines, mono, outs, runs, settle
 } from "./03_runs.js";
-import {spoken} from "./04_lines.js";
 import {boardLine} from "./07_board.js";
 import {TAB_NAMES} from "./11_tabs.js";
 import {renderSceneSettings} from "./20_scene_row.js";
