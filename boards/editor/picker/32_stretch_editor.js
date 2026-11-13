@@ -356,7 +356,7 @@ function sliders(run, section, look, where) {
   return h("div", {class: "sliders", "data-figures": figuresOpen, style: {"--rows": rows.length}},
     built,
     h("button", {type: "button", class: "drawer", "aria-expanded": figuresOpen ? "true" : "false",
-                 title: figuresOpen ? "hide values" : "show values",
+                 "aria-label": figuresOpen ? "hide values" : "show values",
                  onclick: function () {
                    figuresOpen = !figuresOpen;
                    keepFigures();

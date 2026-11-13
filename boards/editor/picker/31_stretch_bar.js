@@ -4,7 +4,7 @@ import {
   active, cutAt, draw, inkAt, moveEdge, painters, pick, remember, settle, shortName, stretchUnder,
   uncut, washFor, widthOf
 } from "./03_runs.js";
-import {targetFor} from "./05_effects.js";
+import {targetFor, wherePlays} from "./05_effects.js";
 import {keptLights} from "./27_readback.js";
 
 var ZOOMS_OVER = 12;
@@ -78,6 +78,7 @@ function stretch(run, section, at, faces, kept) {
                   style: {"--width": wide}},
     at > 0 ? edge(run, at - 1) : null,
     h("button", {type: "button", class: "stretch",
+                 "aria-label": (look ? look.name : "Nothing") + " on " + wherePlays(run, section, false),
                  title: firstClaim ? "used by a line the picker cannot edit: " + firstClaim[0].text
                       : under ? under.tip : targetFor(run, section).selector,
                  onclick: function () {
