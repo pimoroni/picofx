@@ -1,37 +1,22 @@
+import {h, replace} from "./00_dom.js";
 import {draw, drawSteps} from "./03_runs.js";
 import {state} from "./04_scenes.js";
 import {SCREEN_SIZES, boardLineSteps} from "./07_board.js";
 import {boardIcon} from "./08_setup.js";
 import {renderPreview} from "./18_drive.js";
 
-// ---- the board's own settings -----------------------------------------------------------------
-// Three settings belong to the board and to no section: whether a save plays without an eject,
-// which reload=manual turns off, whether the drive stays hidden at start (drive=manual), and a
-// program run in place of the effects (program= and args=). They are the board's, so no scene
-// keeps them. The pages built on this one each put them somewhere different, using what is here.
-
-// Saving without an eject starts on
 export var boardSet = {reload: true, driveHidden: false, program: null, args: {}};
 
-// The programs on the drive, read once a drive is open, its own and the examples alike: each one's
-// path, name, what it does, the arguments it takes, its section and thumbnail, and what it uses and
-// needs. drivePrograms() in 26_drive_programs.js reads them
 export var PROGRAMS = [];
 
-// Lookups for programs the page shows that the drive does not hold, each given a path and
-// returning its program or null
 export var programsElsewhere = [];
 
-// The program at a path, or null where neither the drive nor a lookup holds one there
 export function programNamed(path) {
   var found = PROGRAMS.filter(function (one) { return one.path === path; })[0];
   for (var at = 0; !found && at < programsElsewhere.length; at++) found = programsElsewhere[at](path);
   return found || null;
 }
 
-// A program's arguments as the file takes them, each one quoted where a space or a colon would
-// otherwise divide it, and an empty one left out. A pipe divides them, so none can carry one. A
-// program given only what it would take anyway is given nothing, so its line stays as short
 export function argsWritten(path) {
   var program = programNamed(path);
   if (program && program.args && program.args.length && program.args.every(function (argument, at) {
@@ -45,7 +30,6 @@ export function argsWritten(path) {
               .join("|");
 }
 
-// Whether keeping the drive hidden means anything, a program having it shown while it runs
 export function driveMeansSomething() { return !boardSet.program; }
 
 boardLineSteps.after.push(function (line) {
@@ -62,127 +46,91 @@ boardLineSteps.after.push(function (line) {
   return "board: " + tokens.join(" ") + (rest ? " " + rest : "");
 });
 
-// ---- a program's arguments --------------------------------------------------------------------
-
-// The screen size a program is first given: the size set for screen A, else the program's own
 function sizeOffered(argument) {
   var screen = state.screens && state.screens.A;
   return screen && screen.there && screen.size ? screen.size : argument.default;
 }
 
-// The choices an argument of each offered kind gives, as [value, how it is shown]. A rotation
-// offers the four, or those its Args line names
 var ARGUMENT_CHOICES = {
   size: function () {
     return SCREEN_SIZES.map(function (inches) { return [inches, inches + "\""]; });
   },
   rotation: function (argument) {
     return (argument.choices || ["0", "90", "180", "270"]).map(function (turn) {
-      return [turn, turn + "&deg;"];
+      return [turn, turn + "\u00b0"];
     });
   }
 };
 
-// The picked program's arguments: a box for each it names, a screen size chosen from those the
-// firmware knows and a rotation from the four, or where it names none but reads sys.argv, plain
-// boxes to add and take away
-export function argsFor(path, locked) {
+export function programArguments(path, locked) {
   var program = programNamed(path);
   var given = boardSet.args[path] || (boardSet.args[path] = []);
-  var box = document.createElement("div");
-  box.className = "progargs";
   var named = !!program.args;
   var taken = program.args || given.map(function (arg, at) {
     return {name: "Argument " + (at + 1), kind: "text"};
   });
-  taken.forEach(function (argument, at) {
-    var label = document.createElement("label");
-    label.textContent = argument.name;
-    if (ARGUMENT_CHOICES[argument.kind]) {
-      var choices = ARGUMENT_CHOICES[argument.kind](argument);
-      if (given[at] === undefined) {
-        given[at] = argument.kind === "size" ? sizeOffered(argument)
-                                             : argument.default || choices[0][0];
-      }
-      var choice = document.createElement("select");
-      choice.disabled = !!locked;
-      choices.forEach(function (offered) {
-        var option = document.createElement("option");
-        option.value = offered[0];
-        option.innerHTML = offered[1];
-        option.selected = given[at] === offered[0];
-        choice.appendChild(option);
-      });
-      choice.onchange = function () {
-        given[at] = choice.value;
-        draw();
-      };
-      label.appendChild(choice);
-      box.appendChild(label);
-      return;
-    }
-    if (given[at] === undefined && "default" in argument) given[at] = argument.default;
-    var field = document.createElement("input");
-    field.value = given[at] || "";
-    field.disabled = !!locked;
-    field.oninput = function () {
-      given[at] = field.value;
-      renderPreview();
-    };
-    field.onchange = function () { draw(); };
-    label.appendChild(field);
-    // An argument added by hand can be taken away again, the rest moving up
-    if (!named) {
-      var gone = document.createElement("button");
-      gone.type = "button";
-      gone.className = "progless";
-      gone.innerHTML = "&times;";
-      gone.title = "Remove this argument";
-      gone.disabled = !!locked;
-      gone.onclick = function () {
-        given.splice(at, 1);
-        draw();
-      };
-      label.appendChild(gone);
-    }
-    box.appendChild(label);
-  });
-  if (!named) {
-    var more = document.createElement("button");
-    more.type = "button";
-    more.className = "progmore";
-    more.textContent = "+ an argument";
-    more.disabled = !!locked;
-    more.title = "Passed to the program in sys.argv";
-    more.onclick = function () {
-      given.push("");
-      draw();
-    };
-    box.appendChild(more);
-  }
-  return box;
+  return h("fieldset", {class: "programargs", disabled: !!locked},
+    h("legend", {}, "Arguments"),
+    taken.map(function (argument, at) {
+      return ARGUMENT_CHOICES[argument.kind] ? chosenArgument(argument, given, at)
+                                              : typedArgument(argument, given, at, !named);
+    }),
+    named ? null : h("button", {type: "button", title: "Passed to the program in sys.argv",
+                                onclick: function () {
+                                  given.push("");
+                                  draw();
+                                }}, "+ an argument"));
 }
 
-// ---- the effects, while a program runs --------------------------------------------------------
-// The board runs a program in their place, so they stand back with a note saying what runs
-// instead. They are kept, and run again if the program is missing or stops
+function chosenArgument(argument, given, at) {
+  var choices = ARGUMENT_CHOICES[argument.kind](argument);
+  if (given[at] === undefined) {
+    given[at] = argument.kind === "size" ? sizeOffered(argument) : argument.default || choices[0][0];
+  }
+  return h("div", {},
+    h("label", {}, argument.name,
+      h("select", {onchange: function (event) {
+                     given[at] = event.currentTarget.value;
+                     draw();
+                   }},
+        choices.map(function (offered) {
+          return h("option", {value: offered[0], selected: given[at] === offered[0]}, offered[1]);
+        }))));
+}
 
-function programNote() {
+function typedArgument(argument, given, at, removable) {
+  if (given[at] === undefined && "default" in argument) given[at] = argument.default;
+  return h("div", {},
+    h("label", {}, argument.name,
+      h("input", {value: given[at] || "",
+                  oninput: function (event) {
+                    given[at] = event.currentTarget.value;
+                    renderPreview();
+                  },
+                  onchange: function () { draw(); }})),
+    removable ? h("button", {type: "button", title: "Remove this argument",
+                             "aria-label": "Remove " + argument.name,
+                             onclick: function () {
+                               given.splice(at, 1);
+                               draw();
+                             }}, "\u00d7") : null);
+}
+
+export function programNote(said, ...after) {
+  return h("p", {class: "programnote"}, boardIcon(), h("span", {}, said), after);
+}
+
+function effectsNote() {
   var note = document.getElementById("programNote");
   if (!note) {
-    note = document.createElement("div");
-    note.id = "programNote";
-    note.className = "programnote";
-    // Above the gallery, or above what a page has stacked it in
+    note = h("div", {id: "programNote"});
     var looks = document.getElementById("looksStack") || document.getElementById("looks");
     looks.parentNode.insertBefore(note, looks);
   }
   note.hidden = !boardSet.program;
   if (!boardSet.program) return;
   var program = programNamed(boardSet.program);
-  note.textContent = "";
-  note.appendChild(boardIcon());
-  note.appendChild(document.createTextNode(
+  replace(note, programNote(
     "The board runs " + (program && program.name ? program.name + " (" + boardSet.program + ")"
                                                  : boardSet.program) +
     " instead of the effects. The effects are kept, and play if the " +
@@ -190,6 +138,6 @@ function programNote() {
 }
 
 drawSteps.after.push(function () {
-  document.body.classList.toggle("programmed", !!boardSet.program);
-  programNote();
+  document.body.toggleAttribute("data-programmed", !!boardSet.program);
+  effectsNote();
 });

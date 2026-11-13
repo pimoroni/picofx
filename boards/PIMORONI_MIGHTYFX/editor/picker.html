@@ -488,11 +488,11 @@ th{font-weight:600;color:var(--dim);font-size:.76rem}
 .scustomside{display:flex;flex-direction:column;gap:.4rem;align-self:stretch}
 .scustompreview{flex:1;border-radius:8px;border:1px solid var(--line);min-height:3rem}
 .chosen .colourpick + .tuning{margin-top:.6rem}
-.groupedlooks .gallery-head,.programview .gallery-head{margin:1rem 0 .4rem;font-size:.92rem}
+.groupedlooks .gallery-head{margin:1rem 0 .4rem;font-size:.92rem}
 .groupedlooks .gallery-head:first-child{margin-top:0}
 .groupedlooks .lookshead>.foldhead{display:flex;align-items:baseline;gap:.6rem;margin:0;
  font:inherit}
-.groupedlooks .gallery-head .says,.programview .gallery-head .says{font:400 .8rem system-ui,sans-serif;
+.groupedlooks .gallery-head .says{font:400 .8rem system-ui,sans-serif;
  color:var(--dim)}
 .card.nothing.small{margin-left:auto;align-self:center;display:flex;align-items:stretch;
  border-radius:9px;cursor:pointer}
@@ -626,8 +626,7 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
 .bin{position:absolute;top:2px;right:2px;z-index:2;width:1.2rem;height:1.2rem;
  border-radius:5px;background:rgba(20,20,22,.7);color:#fff;line-height:1.2rem;
  text-align:center;font-size:.8rem;cursor:pointer;opacity:0;transition:opacity .12s}
-.asset:hover .bin,.asset:focus-within .bin,.sound:hover .bin,.progcard:hover .bin,
-.progcard:focus-within .bin{opacity:1}
+.asset:hover .bin,.asset:focus-within .bin,.sound:hover .bin{opacity:1}
 .bin:hover{background:#b4443a}
 .copytile{right:1.6rem}
 .copytile.alone{right:2px}
@@ -757,41 +756,7 @@ header button:disabled,.floatbar button:disabled{opacity:.4;cursor:default}
 .boardrows .sseg button:disabled:not(.on){color:var(--dim)}
 .boardrows .sseg button.on:disabled{background:#a9b6c6}
 
-.chooser{border-top:1px solid #dfe5ec;padding-top:.5rem}
-.progheading{font:700 .72rem system-ui,sans-serif;color:var(--dim);text-transform:uppercase;
- letter-spacing:.04em;margin:.5rem 0 .3rem}
-.progrow{display:grid;grid-template-columns:auto auto 1fr;gap:.05rem .5rem;align-items:baseline;
- width:100%;text-align:left;padding:.4rem .6rem;margin:0 0 .3rem;border:1.5px solid var(--line);
- border-radius:8px;background:#fff;color:var(--ink);font:inherit;font-size:.86rem;cursor:pointer}
-.progrow:hover:not(:disabled){border-color:var(--board)}
-.progrow.on{border-color:var(--board);background:#eef2f7}
-.progrow:disabled{cursor:default}
-.progrow em{font-style:normal;font-size:.74rem;color:var(--dim)}
-.progrow small{grid-column:1/4;font-size:.78rem;color:var(--dim)}
-.progargs{display:flex;flex-wrap:wrap;gap:.4rem 1rem;margin:-.1rem 0 .5rem .8rem;
- font-size:.82rem;color:var(--dim)}
-.progargs label{display:flex;align-items:center;gap:.4rem}
-.progargs input,.progargs select{font:inherit;font-size:.82rem;width:9rem;padding:.22rem .4rem;
- border:1px solid var(--line);border-radius:6px;color:var(--ink);background:#fff}
-.progargs select{width:auto}
-.progless{font:inherit;font-size:.9rem;line-height:1;padding:.15rem .4rem;border:1px solid var(--line);
- border-radius:6px;background:#fff;color:var(--dim);cursor:pointer}
-.progless:hover{border-color:var(--warn);color:var(--warn)}
-.progmore{font:inherit;font-size:.8rem;padding:.2rem .55rem;border:1px dashed var(--board);
- border-radius:7px;background:none;color:var(--board);cursor:pointer}
-.progfolder{margin:0 0 .25rem}
-.progfolder summary{font-size:.86rem;cursor:pointer;padding:.15rem 0}
-.progfolder summary small{color:var(--dim)}
-.progfolder[open]{padding-left:.6rem}
-.progfolder .progrow,.progfolder .progargs{margin-left:.6rem;width:calc(100% - .6rem)}
 
-.programnote{display:flex;align-items:flex-start;gap:.45rem;margin:.4rem 0 .8rem;
- padding:.55rem .75rem;border:1.5px dashed var(--board);border-radius:10px;background:#eef2f7;
- color:var(--board);font-size:.85rem}
-.programnote .boardicon{margin-top:.2rem}
-.programnote[hidden]{display:none}
-body.programmed #looks,body.programmed #tabs,body.programmed #sceneTabRow,
-body.programmed #tabStack>.panel:not(#boardPanel){opacity:.3}
 
 header .savearrow,.floatbar .savearrow{padding:.42rem .45rem;margin-left:-.7rem;
  border-top-left-radius:0;border-bottom-left-radius:0}
@@ -801,11 +766,6 @@ header .savearrow,.floatbar .savearrow{padding:.42rem .45rem;margin-left:-.7rem;
 .savechoice{display:flex;gap:.5rem;align-items:flex-start;padding:.3rem 0;font-size:.86rem}
 .savechoice small{display:block;font-size:.76rem;color:var(--dim)}
 .savechoice.refused{color:var(--dim)}
-.runsrow{margin:0 0 .8rem}
-.runsline{display:flex;align-items:center;gap:.6rem;font-size:.86rem;color:var(--dim)}
-.runsrow .sseg button.on{background:var(--board);color:#fff}
-.runsrow .chooser{margin-top:.5rem;border-top:0;padding:.4rem .8rem .5rem;
- border:1.5px solid var(--board);border-radius:12px;background:#fff}
 
 .looksstack{display:grid}
 .looksstack>#looks,.looksstack>.boardbox{grid-area:1/1}
@@ -826,142 +786,6 @@ header .boardchip .boardicon{color:currentColor}
 .ledtab .accswatch.boardswatch{display:none}
 .boardsays{margin:0 0 .5rem;font-size:.85rem;color:var(--dim)}
 
-.programview{display:none}
-body.programpage .programview{display:block}
-body.programpage #tabs,body.programpage #sceneTabRow,body.programpage #sceneBody,
-body.programpage #programNote{display:none}
-canvas.progthumb{display:block;background:#222}
-.proghero{display:flex;flex-direction:column;margin:.8rem 0 1.1rem;background:#fff;
- border:1.5px solid var(--board);border-radius:14px;overflow:hidden}
-.proghero.unchosen{border-style:dashed}
-.proghero .programnote{margin:0;border:0;border-bottom:1.5px dashed var(--board);border-radius:0;
- align-items:center;box-sizing:border-box;min-height:calc(2 * 1.5 * .85rem + 1.1rem)}
-.proghero .programnote span{flex:1}
-.progchoosenone{flex:none;font:inherit;font-size:.8rem;padding:.2rem .6rem;
- border:1px solid var(--board);border-radius:7px;background:#fff;color:var(--board);cursor:pointer}
-.herobody{display:flex;gap:1.1rem;align-items:flex-start;padding:.8rem}
-.progpicture{flex:none;width:16rem;height:210px;display:flex;align-items:center;
- justify-content:center}
-.proghero .progthumb.big{width:16rem;height:12rem;border-radius:8px;flex:none}
-.twopanels{display:flex;gap:.3rem;align-items:center}
-.twopanels .holder{zoom:.6}
-.progwords{min-width:0}
-.progwords h3{margin:.1rem 0 .3rem;font-size:1.15rem}
-.progwords p{margin:0 0 .45rem;font-size:.9rem}
-.progwords .progwhere{font-size:.8rem;color:var(--dim)}
-.progwords .progargs{margin:.6rem 0 0}
-.proggrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.6rem}
-.progcard{position:relative;display:block;padding:0;border:2px solid var(--line);
- border-radius:10px;overflow:hidden;background:#fff;text-align:left;cursor:pointer;font:inherit;
- color:var(--ink)}
-.progcard:hover{border-color:#b9c4d2}
-.progcard .progthumb{width:100%;height:auto;aspect-ratio:4/3}
-.progcard.picked{border-color:var(--board);box-shadow:0 0 0 2px var(--board)}
-.progname{display:block;padding:.35rem .55rem;font-size:.85rem;font-weight:600;
- white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.featureicon{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;
- stroke-linecap:round;stroke-linejoin:round}
-.featureicon .f{fill:currentColor;stroke:none}
-.featureicon .fs{fill:currentColor}
-.proguses{position:absolute;right:4px;top:calc(100% - 2.1rem - 26px);display:flex;gap:2px}
-.proguses .featureicon{width:22px;height:22px;padding:2px;border-radius:4px;color:#fff;
- background:rgba(20,20,22,.7)}
-.herouses{display:flex;flex-wrap:wrap;gap:.3rem .9rem;margin:.1rem 0 .4rem;font-size:.84rem}
-.herouses span{display:inline-flex;align-items:center;gap:.35rem;color:var(--board)}
-.featurefilter{display:flex;flex-wrap:wrap;align-items:center;gap:.25rem;margin:.2rem 0 .2rem;
- font-size:.8rem;color:var(--dim)}
-.featurefilter>span{margin-right:.2rem}
-.featurechip{display:inline-flex;align-items:center;gap:.25rem;padding:.15rem .45rem .15rem .3rem;
- border:1.5px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);
- font:inherit;font-size:.78rem;cursor:pointer}
-.featurechip:hover{border-color:var(--board)}
-.featurechip.on{background:var(--board);border-color:var(--board);color:#fff}
-.featureclears{display:flex;gap:.25rem}
-.featureclear{border:0;padding:0 .15rem;background:none;color:var(--board);font:inherit;font-size:.78rem;
- text-decoration:underline;cursor:pointer}
-.prognone{font-size:.86rem;color:var(--dim)}
-.effectsface{display:flex;align-items:center;justify-content:center;background:#1c1f22;
- padding:0 .45rem;border-radius:8px}
-.effectsface .accswatch{width:100%;height:.8rem;margin:0}
-
-.cover{display:flex;align-items:center;gap:.9rem;padding:.55rem .8rem;border:2px solid var(--line);
- border-radius:14px;background:#fff;text-align:left;cursor:pointer;font:inherit;color:var(--ink);
- opacity:.7}
-.cover:hover{opacity:1}
-.cover.on{opacity:1;border-color:var(--accent);box-shadow:0 3px 12px rgba(0,0,0,.08)}
-.cover[data-page=program].on{border-color:var(--board)}
-.cover .coverface{width:5.6rem;height:4.2rem;flex:none;border-radius:8px}
-.cover b{display:block;font-size:1rem}
-.cover small{display:block;font-size:.8rem;color:var(--dim)}
-
-body[data-pageway^=head] header .says{display:none}
-.headswitch{display:flex;gap:.45rem;margin-right:auto}
-header h1+.headswitch{margin-left:.6rem}
-body[data-pageway^=head] header h1{margin-right:0}
-.headswitch:empty{display:none}
-@media (max-width:1180px){
- header .headswitch{order:10;flex:1 0 100%;margin:0}
- header h1+.headswitch{margin-left:0}
- header .headswitch .cover{flex:1;padding:.2rem .6rem .2rem .25rem}
- header .headswitch .cover .coverface{width:2.1rem;height:1.55rem}
- body[data-pageway^=head] header h1{margin-right:auto}
-}
-
-.headswitch.headtabs{align-self:flex-end;margin-bottom:-1px;gap:.25rem}
-.headswitch.headtabs .cover{border:1.5px solid var(--line);border-bottom:0;
- border-radius:10px 10px 0 0;background:#ece8e1;opacity:1;color:var(--dim);
- padding:.3rem .8rem .35rem .35rem}
-.headswitch.headtabs .cover.on{color:var(--ink);border-top-color:transparent;--band:var(--accent);
- background:linear-gradient(var(--band),var(--band)) 0 0 / 100% 3px no-repeat border-box,
-            var(--bg)}
-.headswitch.headtabs .cover[data-page=program].on{--band:var(--board)}
-.headswitch.headtabs .cover[data-page=program].on b{color:var(--board)}
-@media (max-width:1180px){
- .headswitch.headtabs{margin-top:.5rem}
-}
-
-.headswitch.headsplit{order:10;flex:1 0 100%;margin:0 0 -1px;align-self:auto;
- box-sizing:border-box;padding:0 max(0px, calc((100% - 57.2rem) / 2))}
-body[data-pageway=headsplit] header{flex-wrap:wrap;padding-bottom:0}
-body[data-pageway=headsplit] header h1{margin-right:auto}
-.headswitch.headsplit .cover{flex:1;padding-right:.35rem}
-@media (max-width:1180px){
- header .headswitch.headsplit{margin:0 0 -1px}
- header .headswitch.headsplit .cover{padding:.3rem .35rem .35rem .35rem}
- header .headswitch.headsplit .cover .coverface{width:2.6rem;height:1.95rem}
-}
-.headactions{display:flex;align-items:center;gap:.8rem;margin-left:auto;flex-wrap:wrap;
- justify-content:flex-end}
-header.oneline{flex-wrap:nowrap;align-items:flex-end}
-header.oneline h1{flex:1 1 0;margin:0 0 var(--headgap,.8rem);white-space:nowrap;
- line-height:var(--buttonheight,2.3rem)}
-header.oneline .headactions{flex:1 1 0;margin:0 0 var(--headgap,.8rem);flex-wrap:nowrap}
-.headactions button{white-space:nowrap}
-header.oneline .headswitch.headsplit{order:0;flex:0 0 57.2rem;padding:0;margin:0 0 -1px}
-header .headswitch.headsplit .cover{height:var(--tabheight,3.1rem);padding-top:0;
- padding-bottom:0}
-header .headswitch.headsplit .cover .coverface{height:calc(var(--tabheight,3.1rem) - .6rem);
- width:calc((var(--tabheight,3.1rem) - .6rem) * 4 / 3)}
-.headswitch.headsplit .cover>span{display:flex;align-items:baseline;gap:.55rem;min-width:0}
-.headswitch.headsplit .cover b{font-size:.95rem}
-.headswitch.headsplit .cover small{font-size:.8rem;max-width:none;white-space:nowrap;
- overflow:hidden;text-overflow:ellipsis}
-
-body.scenesintab #tabs{display:none}
-body.scenesintab #looks>.tabs.sides:empty{display:none}
-body.scenesintab #looks>.shelf{margin-top:0}
-.headswitch .cover .plus{margin-left:auto;flex:none;opacity:1}
-.headswitch .cover:not(.on) .plus{display:none}
-
-.headswitch .cover{gap:.5rem;padding:.25rem .6rem .25rem .3rem;border-radius:10px;
- box-shadow:none}
-.headswitch .cover .coverface{width:2.6rem;height:1.95rem;border-radius:5px}
-.headswitch .cover b{font-size:.84rem;line-height:1.15}
-.headswitch .cover small{font-size:.72rem;line-height:1.2;max-width:8.5rem;white-space:nowrap;
- overflow:hidden;text-overflow:ellipsis}
-.headswitch .cover b{white-space:nowrap}
-.headswitch .effectsface{padding:0 .25rem}
-.headswitch .effectsface .accswatch{height:.5rem}
 
 .setuphead{margin-left:auto}
 
@@ -1385,104 +1209,1122 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
 .ledtabs .gap{flex:1}
 .ledtabs .setupbutton{align-self:center}
 
-.discoverbar{margin:.8rem 0 .4rem}
-#assets>.discoverbar,#assets>.discoverdivide{grid-column:1/-1;width:100%;flex-basis:100%}
-.sounds>.discoverbar{grid-column:1/-1;flex-basis:100%;width:100%}
-.discoverprimary{background:var(--discover,var(--accent));border-color:var(--discover,var(--accent));
- color:var(--accent-ink);font-weight:600}
-.discoverprimary:hover:not(:disabled){filter:brightness(1.08)}
-.discoverprogress{height:4px;border-radius:2px;background:rgba(0,0,0,.09);overflow:hidden;
- margin:.45rem 0 .1rem;max-width:22rem}
-.discoverprogress>span{display:block;height:100%;background:var(--discover,var(--accent));
- transition:width .3s ease}
-.discovernotice{display:flex;align-items:center;gap:.35rem;margin-top:.35rem;font-size:.84rem;
- color:var(--accent)}
-.discovernotice.hold{color:#a8740f}
-.discovernotice.warn,.discoverwarn{color:#b4443a}
-.discovermark{display:inline-flex;width:1rem;height:1rem;flex:none}
-.discovermark svg{width:100%;height:100%}
-.discoverdivide{display:flex;align-items:center;gap:.7rem;margin:.7rem 0 .1rem;color:var(--dim);
- font-size:.72rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase}
-.discoverdivide::before,.discoverdivide::after{content:"";flex:1;border-top:1px solid var(--line)}
-.discoverdivide.minor{margin-top:.6rem;font-size:.66rem;font-weight:600;opacity:.8}
-.discoverdivide.minor::before{display:none}
-.discoverbar>.discoverdivide{margin:0 0 .7rem}
-.discoverwide{display:flex;align-items:center;justify-content:center;gap:.55rem;width:100%;
- padding:.75rem 1rem;border:0;border-radius:10px;background:var(--discover,var(--accent));
- color:#fff;font-size:.98rem;font-weight:600}
-.discoverwide:hover{filter:brightness(1.08)}
-.discoverwideicon{display:inline-flex;width:1.35rem;height:1.35rem}
-.discoverwideicon svg{width:100%;height:100%}
-.discovercountchip{background:rgba(255,255,255,.25);border-radius:999px;padding:0 .5rem;
- font-size:.8rem}
-.discoverupdaterow{display:grid;grid-template-columns:minmax(0,1fr) minmax(6rem,12rem) auto auto;
- align-items:center;gap:.8rem;height:2.4rem;margin-top:.55rem;font-size:.86rem;color:var(--dim)}
-.discoverrowsaid{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
-.discoverupdaterow>.discovernotice{margin:0}
-.discoverupdaterow>.discoverprogress{margin:0;max-width:none}
-.discoverupdaterow>.discoverprogress.discoveridle{visibility:hidden}
-.discoverupdaterow button{padding:.25rem .65rem;font-size:.8rem;white-space:nowrap}
-.discoverbusy{opacity:.6}
-.discoverpill{position:absolute;top:4px;right:4px;z-index:3;display:flex;align-items:center;
- gap:.2rem;padding:.05rem .4rem;border-radius:999px;background:rgba(25,27,29,.78);color:#fff;
- font-size:.66rem;line-height:1.4;pointer-events:none;transition:right .12s}
-.discoverpill.update{background:var(--accent);pointer-events:auto;cursor:pointer}
-.discoverpill.update:hover{filter:brightness(1.1)}
-.discoverpill.newer{background:#8a8378}
-.progcard:hover>.discoverpill,.asset:hover>.discoverpill{right:2.9rem}
-.sound:hover>.discoverpill{right:1.6rem}
-.discovershade .discoveroffer:hover>.discoverpill{right:4px}
-body.discovermodal{overflow:hidden}
-.discovershade{position:fixed;inset:0;z-index:100;background:rgba(25,27,29,.55);
- display:flex;align-items:center;justify-content:center;padding:2vh 1rem}
-.discoversheet{display:flex;flex-direction:column;width:100%;max-width:60rem;height:100%;
- max-height:56rem;background:var(--bg);border-radius:14px;overflow:hidden;
- box-shadow:0 10px 40px rgba(0,0,0,.25)}
-.discoversheethead{display:flex;align-items:center;gap:.8rem;padding:.9rem 1.2rem;
- background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
-.discoversheethead h2{font-size:1.05rem;margin:0 auto 0 0}
-.discoverfilter{font:inherit;font-size:.88rem;padding:.35rem .6rem;border:1px solid var(--line);
- border-radius:8px;background:var(--panel);min-width:13rem}
-.discoverchips{padding:.55rem 1.2rem;margin:0;background:var(--panel);
- border-bottom:1px solid var(--line)}
-.discoverscroll{flex:1;min-height:0;overflow:auto;padding:.4rem 1.2rem 1.2rem}
-.discoverwaiting{min-height:100%;display:flex;flex-direction:column;align-items:center;
- justify-content:center;gap:.4rem;color:var(--dim);font-size:.92rem;text-align:center}
-.discoverwaiting p{margin:0}
-.discoverwaiting .discoverprogress{width:18rem;max-width:80%}
-.discoverhead{font-size:.95rem;margin:1rem 0 .55rem;color:var(--ink)}
-.discovergrid{margin-top:.8rem}
-.discoverhead+.discovergrid{margin-top:0}
-.discoveroffer{position:relative;cursor:pointer;user-select:none}
-.discoveroffer:focus-visible{outline:2px solid var(--discover);outline-offset:2px}
-.discoveroffer.picked{border-color:var(--discover);box-shadow:0 0 0 2px var(--discover)}
-.discoveroffer.newer{opacity:.5;cursor:default}
-.discovertick{position:absolute;top:.4rem;left:.4rem;z-index:4;width:1.15rem;height:1.15rem;
- margin:0;accent-color:var(--discover);cursor:pointer;opacity:0;transition:opacity .15s}
-.discoveroffer:hover .discovertick,.discoveroffer.picked .discovertick,
-.discovertick:focus-visible{opacity:1}
-.discoverthumbwrap{position:relative}
-.discoverthumbwrap .proguses{top:auto;bottom:4px}
-.discoverdrawings .asset .face{height:auto;aspect-ratio:4/3;background:#111}
-.discoverdrawings .asset .face img{object-fit:contain}
-.discovershade .asset .kind,.discovershade .asset .label,
-.discovershade .asset .drawingtitle{display:none}
-.discovershade .asset .progname{display:block}
-.discoverkind{position:absolute;left:4px;bottom:4px;z-index:2;font-size:.62rem;padding:0 .35rem;
- border-radius:4px;background:rgba(25,27,29,.75);color:#fff}
-.discoversounds .sound{width:auto}
-.discoversounds .sound .hear{z-index:3}
-.discoverdoes{display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;
- overflow:hidden;height:2.6em;line-height:1.3;margin:-.2rem .55rem .5rem;font-size:.76rem;
- color:var(--dim)}
-.discoverhint{color:var(--dim);font-size:.88rem}
-.discoversheetfoot{display:flex;align-items:center;gap:1rem;padding:.8rem 1.2rem;
- background:var(--panel);border-top:1px solid var(--line)}
-.discoverfootsays{flex:1;min-width:0}
-.discoverfootsays b{font-weight:600}
-.discoverfootsays .discovernotice{margin:0}
-.discoversheetfoot .discoverprimary{padding:.55rem 1.4rem;font-size:.95rem}
 .lamp.keptlamp{outline:2px dashed var(--dim);outline-offset:2px}
+.programnote {
+  display: flex;
+  align-items: flex-start;
+  gap: .45rem;
+  margin: .4rem 0 .8rem;
+  padding: .55rem .75rem;
+  border: 1.5px dashed var(--board);
+  border-radius: 10px;
+  background: #eef2f7;
+  color: var(--board);
+  font-size: .85rem;
+
+  .boardicon {
+    margin-top: .2rem;
+  }
+
+  > span {
+    flex: 1;
+  }
+
+  button {
+    flex: none;
+    padding: .2rem .6rem;
+    border: 1px solid var(--board);
+    border-radius: 7px;
+    background: #fff;
+    color: var(--board);
+    font: inherit;
+    font-size: .8rem;
+    cursor: pointer;
+  }
+}
+
+body[data-programmed] :is(#looks, #tabs, #sceneTabRow, #tabStack > .panel:not(#boardPanel)) {
+  opacity: .3;
+}
+
+.programargs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem 1rem;
+  min-width: 0;
+  margin: .6rem 0 0;
+  padding: 0;
+  border: 0;
+  color: var(--dim);
+  font-size: .82rem;
+
+  legend {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  > div,
+  label {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+  }
+
+  input,
+  select {
+    width: 9rem;
+    padding: .22rem .4rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--ink);
+    font: inherit;
+    font-size: .82rem;
+  }
+
+  select {
+    width: auto;
+  }
+
+  > div > button {
+    padding: .15rem .4rem;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #fff;
+    color: var(--dim);
+    font: inherit;
+    font-size: .9rem;
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--warn);
+      color: var(--warn);
+    }
+  }
+
+  > button {
+    padding: .2rem .55rem;
+    border: 1px dashed var(--board);
+    border-radius: 7px;
+    background: none;
+    color: var(--board);
+    font: inherit;
+    font-size: .8rem;
+    cursor: pointer;
+  }
+}
+body[data-program-page] :is(#tabs, #sceneTabRow, #sceneBody, #programNote) {
+  display: none;
+}
+
+body[data-scenes-in-tab] {
+  #tabs {
+    display: none;
+  }
+
+  #looks > .tabs.sides:empty {
+    display: none;
+  }
+
+  #looks > .shelf {
+    margin-top: 0;
+  }
+}
+
+header:has(> .pageswitch) {
+  flex-wrap: wrap;
+  padding-bottom: 0;
+
+  h1 {
+    margin-right: auto;
+  }
+
+  .says {
+    display: none;
+  }
+
+  &[data-oneline] {
+    flex-wrap: nowrap;
+    align-items: flex-end;
+
+    h1 {
+      flex: 1 1 0;
+      margin: 0 0 var(--headgap, .8rem);
+      white-space: nowrap;
+      line-height: var(--buttonheight, 2.3rem);
+    }
+
+    .headactions {
+      flex: 1 1 0;
+      margin: 0 0 var(--headgap, .8rem);
+      flex-wrap: nowrap;
+    }
+
+    .pageswitch {
+      order: 0;
+      flex: 0 0 57.2rem;
+      padding: 0;
+    }
+  }
+}
+
+.headactions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .8rem;
+  margin-left: auto;
+
+  button {
+    white-space: nowrap;
+  }
+}
+
+.pageswitch {
+  --face: calc(var(--tabheight, 3.1rem) - .6rem);
+  order: 10;
+  flex: 1 0 100%;
+  margin: 0 0 -1px;
+  padding: 0 max(0px, calc((100% - 57.2rem) / 2));
+
+  ul {
+    display: flex;
+    gap: .25rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    --band: var(--accent);
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: .5rem;
+    min-width: 0;
+    height: var(--tabheight, 3.1rem);
+    padding: 0 .35rem;
+    border: 1.5px solid var(--line);
+    border-bottom: 0;
+    border-radius: 10px 10px 0 0;
+    background: #ece8e1;
+    color: var(--dim);
+
+    &[data-page=program] {
+      --band: var(--board);
+    }
+
+    &:has(> [aria-current]) {
+      border-top-color: transparent;
+      background: linear-gradient(var(--band), var(--band)) 0 0 / 100% 3px no-repeat border-box,
+                  var(--bg);
+      color: var(--ink);
+    }
+
+    &[data-page=program]:has(> [aria-current]) b {
+      color: var(--board);
+    }
+
+    .plus {
+      flex: none;
+      margin-left: auto;
+      opacity: 1;
+    }
+
+    &:not(:has(> [aria-current])) .plus {
+      display: none;
+    }
+  }
+
+  li > button:first-child {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: .5rem;
+    min-width: 0;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+
+    > :first-child {
+      flex: none;
+      width: calc(var(--face) * 4 / 3);
+      height: var(--face);
+      border-radius: 5px;
+    }
+
+    > canvas {
+      display: block;
+      background: #222;
+    }
+
+    > span:first-child {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 .25rem;
+      background: #1c1f22;
+
+      .accswatch {
+        width: 100%;
+        height: .5rem;
+        margin: 0;
+      }
+    }
+
+    > span:last-child {
+      display: flex;
+      align-items: baseline;
+      gap: .55rem;
+      min-width: 0;
+    }
+
+    b {
+      font-size: .95rem;
+      line-height: 1.15;
+      white-space: nowrap;
+    }
+
+    small {
+      overflow: hidden;
+      color: var(--dim);
+      font-size: .8rem;
+      line-height: 1.2;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+  }
+}
+
+.featureicon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  .f {
+    fill: currentColor;
+    stroke: none;
+  }
+
+  .fs {
+    fill: currentColor;
+  }
+}
+
+.featurefilter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .25rem;
+  margin: .2rem 0;
+  color: var(--dim);
+  font-size: .8rem;
+
+  > span:first-child {
+    margin-right: .2rem;
+  }
+
+  > button {
+    display: inline-flex;
+    align-items: center;
+    gap: .25rem;
+    padding: .15rem .45rem .15rem .3rem;
+    border: 1.5px solid var(--line);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--ink);
+    font: inherit;
+    font-size: .78rem;
+
+    &:hover {
+      border-color: var(--board);
+    }
+
+    &[aria-pressed=true] {
+      border-color: var(--board);
+      background: var(--board);
+      color: #fff;
+      font-weight: 600;
+    }
+  }
+
+  > span:last-child {
+    display: flex;
+    gap: .25rem;
+
+    button {
+      padding: 0 .15rem;
+      border: 0;
+      background: none;
+      color: var(--board);
+      font: inherit;
+      font-size: .78rem;
+      text-decoration: underline;
+    }
+  }
+}
+
+.programcard {
+  display: block;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:hover {
+    border-color: #b9c4d2;
+  }
+
+  &[aria-pressed=true] {
+    border-color: var(--board);
+    box-shadow: 0 0 0 2px var(--board);
+  }
+
+  > span {
+    position: relative;
+    display: block;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    background: #222;
+  }
+
+  > span > span {
+    position: absolute;
+    right: 4px;
+    bottom: 6px;
+    display: flex;
+    gap: 2px;
+  }
+
+  .featureicon {
+    width: 22px;
+    height: 22px;
+    padding: 2px;
+    border-radius: 4px;
+    background: rgba(20, 20, 22, .7);
+    color: #fff;
+  }
+
+  strong {
+    display: block;
+    padding: .35rem .55rem;
+    overflow: hidden;
+    font-size: .85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  small {
+    display: -webkit-box;
+    height: 2.6em;
+    margin: -.2rem .55rem .5rem;
+    overflow: hidden;
+    color: var(--dim);
+    font-size: .76rem;
+    line-height: 1.3;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+}
+
+.programs {
+  &[hidden] {
+    display: none;
+  }
+
+  > p,
+  > section > p {
+    color: var(--dim);
+    font-size: .86rem;
+  }
+
+  > article {
+    display: flex;
+    flex-direction: column;
+    margin: .8rem 0 1.1rem;
+    overflow: hidden;
+    border: 1.5px solid var(--board);
+    border-radius: 14px;
+    background: #fff;
+
+    &:not([data-chosen]) {
+      border-style: dashed;
+    }
+
+    > .programnote {
+      align-items: center;
+      min-height: calc(2 * 1.5 * .85rem + 1.1rem);
+      margin: 0;
+      border: 0;
+      border-bottom: 1.5px dashed var(--board);
+      border-radius: 0;
+    }
+
+    > div {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.1rem;
+      padding: .8rem;
+
+      > div {
+        min-width: 0;
+      }
+    }
+
+    > div > div {
+      h2 {
+        margin: .1rem 0 .3rem;
+        font-size: 1.15rem;
+      }
+
+      p {
+        margin: 0 0 .45rem;
+        font-size: .9rem;
+      }
+
+      p:has(> small) {
+        color: var(--dim);
+        font-size: .8rem;
+      }
+
+      small {
+        font-size: inherit;
+      }
+
+      ul {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .3rem .9rem;
+        margin: .1rem 0 .4rem;
+        padding: 0;
+        list-style: none;
+        font-size: .84rem;
+      }
+
+      li {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        color: var(--board);
+      }
+    }
+
+    figure {
+      display: flex;
+      flex: none;
+      align-items: center;
+      justify-content: center;
+      gap: .3rem;
+      width: 16rem;
+      height: 210px;
+      margin: 0;
+
+      > canvas {
+        display: block;
+        flex: none;
+        width: 16rem;
+        height: 12rem;
+        border-radius: 8px;
+        background: #222;
+      }
+
+      &[data-panels="2"] > * {
+        zoom: .6;
+      }
+    }
+
+  }
+
+  > section > h2 {
+    margin: 1rem 0 .4rem;
+    font: 600 .92rem system-ui, sans-serif;
+
+    button {
+      display: flex;
+      align-items: baseline;
+      gap: .6rem;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: none;
+      color: var(--ink);
+      font: inherit;
+      text-align: left;
+
+      &::before {
+        content: "";
+        flex-shrink: 0;
+        width: .42rem;
+        height: .42rem;
+        border-right: 2px solid var(--dim);
+        border-bottom: 2px solid var(--dim);
+        transform: rotate(45deg) translate(-1px, -1px);
+        transition: transform .12s;
+      }
+
+      &[aria-expanded=true]::before {
+        transform: rotate(-135deg) translate(-2px, -2px);
+      }
+
+      &:hover::before {
+        border-color: var(--accent);
+      }
+    }
+
+    small {
+      color: var(--dim);
+      font: 400 .8rem system-ui, sans-serif;
+    }
+  }
+
+  > section > ul {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: .6rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    > li {
+      position: relative;
+
+      &[data-busy] {
+        opacity: .6;
+      }
+
+      > span {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        z-index: 2;
+        display: flex;
+        gap: 4px;
+      }
+
+      > span > button {
+        width: 1.2rem;
+        height: 1.2rem;
+        padding: 0;
+        border: 0;
+        border-radius: 5px;
+        background: rgba(20, 20, 22, .7);
+        color: #fff;
+        font-size: .8rem;
+        line-height: 1.2rem;
+        text-align: center;
+        opacity: 0;
+        transition: opacity .12s;
+
+        &[data-action=copy]:hover {
+          background: var(--accent);
+        }
+
+        &[data-action=delete]:hover {
+          background: #b4443a;
+        }
+      }
+
+      &:hover > span > button,
+      &:focus-within > span > button {
+        opacity: 1;
+      }
+    }
+  }
+}
+.discoverdivide {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  margin: .7rem 0 .1rem;
+  color: var(--dim);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    border-top: 1px solid var(--line);
+  }
+
+  &[data-minor] {
+    margin-top: .6rem;
+    font-size: .66rem;
+    font-weight: 600;
+    opacity: .8;
+
+    &::before {
+      display: none;
+    }
+  }
+}
+
+#assets > :is(.discoverbar, .discoverdivide),
+.sounds > .discoverbar {
+  grid-column: 1 / -1;
+  flex-basis: 100%;
+  width: 100%;
+}
+
+:is(.discoverbar, .discover) {
+  p[data-tone] {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    color: var(--accent);
+    font-size: .84rem;
+
+    svg {
+      flex: none;
+      width: 1rem;
+      height: 1rem;
+    }
+  }
+
+  p[data-tone=hold] {
+    color: #a8740f;
+  }
+
+  p[data-tone=warn] {
+    color: #b4443a;
+  }
+
+  progress {
+    display: block;
+    width: 100%;
+    height: 4px;
+    border: 0;
+    border-radius: 2px;
+    overflow: hidden;
+    appearance: none;
+
+    &::-webkit-progress-bar {
+      background: rgba(0, 0, 0, .09);
+    }
+
+    &::-webkit-progress-value {
+      background: var(--discover, var(--accent));
+      transition: width .3s ease;
+    }
+
+    &[data-idle] {
+      visibility: hidden;
+    }
+  }
+}
+
+.discoverbar {
+  margin: .8rem 0 .4rem;
+
+  > .discoverdivide {
+    margin: 0 0 .7rem;
+  }
+
+  > button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .55rem;
+    width: 100%;
+    padding: .75rem 1rem;
+    border: 0;
+    border-radius: 10px;
+    background: var(--discover, var(--accent));
+    color: #fff;
+    font-size: .98rem;
+    font-weight: 600;
+
+    &:hover {
+      filter: brightness(1.08);
+    }
+
+    svg {
+      width: 1.35rem;
+      height: 1.35rem;
+    }
+
+    span {
+      padding: 0 .5rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .25);
+      font-size: .8rem;
+    }
+  }
+
+  > div:last-child {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(6rem, 12rem) auto auto;
+    align-items: center;
+    gap: .8rem;
+    height: 2.4rem;
+    margin-top: .55rem;
+    color: var(--dim);
+    font-size: .86rem;
+
+    > p {
+      min-width: 0;
+      margin: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    button {
+      padding: .25rem .65rem;
+      font-size: .8rem;
+      white-space: nowrap;
+    }
+
+    button:first-of-type {
+      border-color: var(--discover, var(--accent));
+      background: var(--discover, var(--accent));
+      color: var(--accent-ink);
+      font-weight: 600;
+
+      &:hover:not(:disabled) {
+        filter: brightness(1.08);
+      }
+    }
+  }
+}
+
+.discoverpill {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: .2rem;
+  padding: .05rem .4rem;
+  border-radius: 999px;
+  background: rgba(25, 27, 29, .78);
+  color: #fff;
+  font-size: .66rem;
+  line-height: 1.4;
+  pointer-events: none;
+  transition: right .12s;
+
+  &[data-state=update] {
+    background: var(--accent);
+    pointer-events: auto;
+    cursor: pointer;
+
+    &:hover {
+      filter: brightness(1.1);
+    }
+  }
+
+  &[data-state=newer] {
+    background: #8a8378;
+  }
+}
+
+:is(.programs li, .asset):hover > .discoverpill {
+  right: 2.9rem;
+}
+
+.sound:hover > .discoverpill {
+  right: 1.6rem;
+}
+
+body:has(> dialog.discover[open]) {
+  overflow: hidden;
+}
+
+.discover {
+  width: min(60rem, 100% - 2rem);
+  max-width: none;
+  height: min(56rem, 96vh);
+  max-height: none;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--ink);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .25);
+
+  &[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &::backdrop {
+    background: rgba(25, 27, 29, .55);
+  }
+
+  > header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .8rem;
+    padding: .9rem 1.2rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+
+    h2 {
+      margin: 0 auto 0 0;
+      font-size: 1.05rem;
+    }
+
+    button {
+      padding: .4rem .75rem;
+      font-size: .85rem;
+    }
+
+    select {
+      min-width: 13rem;
+      padding: .35rem .6rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      font: inherit;
+      font-size: .88rem;
+    }
+  }
+
+  > .featurefilter {
+    margin: 0;
+    padding: .55rem 1.2rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+  }
+
+  > div:last-of-type {
+    flex: 1;
+    min-height: 0;
+    padding: .4rem 1.2rem 1.2rem;
+    overflow: auto;
+  }
+
+  [role=status] {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-height: 100%;
+    color: var(--dim);
+    font-size: .92rem;
+    text-align: center;
+
+    p {
+      margin: 0;
+    }
+
+    progress {
+      width: 18rem;
+      max-width: 80%;
+    }
+  }
+
+  h3 {
+    margin: 1rem 0 .55rem;
+    color: var(--ink);
+    font-size: .95rem;
+  }
+
+  ul {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: .6rem;
+    margin: .8rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  h3 + ul {
+    margin-top: 0;
+  }
+
+  li {
+    position: relative;
+
+    &[data-newer] {
+      opacity: .5;
+    }
+
+    > :first-child {
+      position: relative;
+      cursor: pointer;
+      user-select: none;
+
+      &:focus-visible {
+        outline: 2px solid var(--discover);
+        outline-offset: 2px;
+      }
+
+      &[aria-pressed=true] {
+        border-color: var(--discover);
+        box-shadow: 0 0 0 2px var(--discover);
+      }
+    }
+
+    &[data-newer] > :first-child {
+      cursor: default;
+    }
+
+    > input {
+      position: absolute;
+      top: .4rem;
+      left: .4rem;
+      z-index: 4;
+      width: 1.15rem;
+      height: 1.15rem;
+      margin: 0;
+      accent-color: var(--discover);
+      opacity: 0;
+      transition: opacity .15s;
+      cursor: pointer;
+    }
+
+    &:hover > input,
+    &:has(> [aria-pressed=true]) > input,
+    > input:focus-visible {
+      opacity: 1;
+    }
+  }
+
+  .programcard > span > span {
+    bottom: 4px;
+  }
+
+  ul[data-kind=drawing] .asset .face {
+    height: auto;
+    aspect-ratio: 4 / 3;
+    background: #111;
+
+    img {
+      object-fit: contain;
+    }
+  }
+
+  .asset :is(.kind, .label, .drawingtitle) {
+    display: none;
+  }
+
+  .progname {
+    display: block;
+    padding: .35rem .55rem;
+    overflow: hidden;
+    font-size: .85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .discoverdoes {
+    display: -webkit-box;
+    height: 2.6em;
+    margin: -.2rem .55rem .5rem;
+    overflow: hidden;
+    color: var(--dim);
+    font-size: .76rem;
+    line-height: 1.3;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .discoverkind {
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    z-index: 2;
+    padding: 0 .35rem;
+    border-radius: 4px;
+    background: rgba(25, 27, 29, .75);
+    color: #fff;
+    font-size: .62rem;
+  }
+
+  ul[data-kind=sound] .sound {
+    width: auto;
+
+    .hear {
+      z-index: 3;
+    }
+  }
+
+  > footer {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 0;
+    padding: .8rem 1.2rem;
+    border-top: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    font-size: 1rem;
+
+    > div {
+      flex: 1;
+      min-width: 0;
+    }
+
+    p {
+      margin: 0;
+      color: var(--dim);
+      font-size: .88rem;
+    }
+
+    strong {
+      color: var(--ink);
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    progress {
+      max-width: 22rem;
+      margin: .45rem 0 .1rem;
+    }
+
+    button:last-child {
+      padding: .55rem 1.4rem;
+      border-color: var(--discover, var(--accent));
+      background: var(--discover, var(--accent));
+      color: var(--accent-ink);
+      font-size: .95rem;
+      font-weight: 600;
+
+      &:hover:not(:disabled) {
+        filter: brightness(1.08);
+      }
+    }
+  }
+}
 .stretchview {
   overflow: hidden;
   padding-top: 1.2rem;
@@ -13941,34 +14783,18 @@ if (!CAN_REACH_A_DRIVE) {
   banner("This page needs Chrome or Edge to reach the drive.");
 }
 
-// ---- the board's own settings -----------------------------------------------------------------
-// Three settings belong to the board and to no section: whether a save plays without an eject,
-// which reload=manual turns off, whether the drive stays hidden at start (drive=manual), and a
-// program run in place of the effects (program= and args=). They are the board's, so no scene
-// keeps them. The pages built on this one each put them somewhere different, using what is here.
-
-// Saving without an eject starts on
 var boardSet = {reload: true, driveHidden: false, program: null, args: {}};
 
-// The programs on the drive, read once a drive is open, its own and the examples alike: each one's
-// path, name, what it does, the arguments it takes, its section and thumbnail, and what it uses and
-// needs. drivePrograms() in 26_drive_programs.js reads them
 var PROGRAMS = [];
 
-// Lookups for programs the page shows that the drive does not hold, each given a path and
-// returning its program or null
 var programsElsewhere = [];
 
-// The program at a path, or null where neither the drive nor a lookup holds one there
 function programNamed(path) {
   var found = PROGRAMS.filter(function (one) { return one.path === path; })[0];
   for (var at = 0; !found && at < programsElsewhere.length; at++) found = programsElsewhere[at](path);
   return found || null;
 }
 
-// A program's arguments as the file takes them, each one quoted where a space or a colon would
-// otherwise divide it, and an empty one left out. A pipe divides them, so none can carry one. A
-// program given only what it would take anyway is given nothing, so its line stays as short
 function argsWritten(path) {
   var program = programNamed(path);
   if (program && program.args && program.args.length && program.args.every(function (argument, at) {
@@ -13982,7 +14808,6 @@ function argsWritten(path) {
               .join("|");
 }
 
-// Whether keeping the drive hidden means anything, a program having it shown while it runs
 function driveMeansSomething() { return !boardSet.program; }
 
 boardLineSteps.after.push(function (line) {
@@ -13999,127 +14824,91 @@ boardLineSteps.after.push(function (line) {
   return "board: " + tokens.join(" ") + (rest ? " " + rest : "");
 });
 
-// ---- a program's arguments --------------------------------------------------------------------
-
-// The screen size a program is first given: the size set for screen A, else the program's own
 function sizeOffered(argument) {
   var screen = state.screens && state.screens.A;
   return screen && screen.there && screen.size ? screen.size : argument.default;
 }
 
-// The choices an argument of each offered kind gives, as [value, how it is shown]. A rotation
-// offers the four, or those its Args line names
 var ARGUMENT_CHOICES = {
   size: function () {
     return SCREEN_SIZES.map(function (inches) { return [inches, inches + "\""]; });
   },
   rotation: function (argument) {
     return (argument.choices || ["0", "90", "180", "270"]).map(function (turn) {
-      return [turn, turn + "&deg;"];
+      return [turn, turn + "\u00b0"];
     });
   }
 };
 
-// The picked program's arguments: a box for each it names, a screen size chosen from those the
-// firmware knows and a rotation from the four, or where it names none but reads sys.argv, plain
-// boxes to add and take away
-function argsFor(path, locked) {
+function programArguments(path, locked) {
   var program = programNamed(path);
   var given = boardSet.args[path] || (boardSet.args[path] = []);
-  var box = document.createElement("div");
-  box.className = "progargs";
   var named = !!program.args;
   var taken = program.args || given.map(function (arg, at) {
     return {name: "Argument " + (at + 1), kind: "text"};
   });
-  taken.forEach(function (argument, at) {
-    var label = document.createElement("label");
-    label.textContent = argument.name;
-    if (ARGUMENT_CHOICES[argument.kind]) {
-      var choices = ARGUMENT_CHOICES[argument.kind](argument);
-      if (given[at] === undefined) {
-        given[at] = argument.kind === "size" ? sizeOffered(argument)
-                                             : argument.default || choices[0][0];
-      }
-      var choice = document.createElement("select");
-      choice.disabled = !!locked;
-      choices.forEach(function (offered) {
-        var option = document.createElement("option");
-        option.value = offered[0];
-        option.innerHTML = offered[1];
-        option.selected = given[at] === offered[0];
-        choice.appendChild(option);
-      });
-      choice.onchange = function () {
-        given[at] = choice.value;
-        draw();
-      };
-      label.appendChild(choice);
-      box.appendChild(label);
-      return;
-    }
-    if (given[at] === undefined && "default" in argument) given[at] = argument.default;
-    var field = document.createElement("input");
-    field.value = given[at] || "";
-    field.disabled = !!locked;
-    field.oninput = function () {
-      given[at] = field.value;
-      renderPreview();
-    };
-    field.onchange = function () { draw(); };
-    label.appendChild(field);
-    // An argument added by hand can be taken away again, the rest moving up
-    if (!named) {
-      var gone = document.createElement("button");
-      gone.type = "button";
-      gone.className = "progless";
-      gone.innerHTML = "&times;";
-      gone.title = "Remove this argument";
-      gone.disabled = !!locked;
-      gone.onclick = function () {
-        given.splice(at, 1);
-        draw();
-      };
-      label.appendChild(gone);
-    }
-    box.appendChild(label);
-  });
-  if (!named) {
-    var more = document.createElement("button");
-    more.type = "button";
-    more.className = "progmore";
-    more.textContent = "+ an argument";
-    more.disabled = !!locked;
-    more.title = "Passed to the program in sys.argv";
-    more.onclick = function () {
-      given.push("");
-      draw();
-    };
-    box.appendChild(more);
-  }
-  return box;
+  return h("fieldset", {class: "programargs", disabled: !!locked},
+    h("legend", {}, "Arguments"),
+    taken.map(function (argument, at) {
+      return ARGUMENT_CHOICES[argument.kind] ? chosenArgument(argument, given, at)
+                                              : typedArgument(argument, given, at, !named);
+    }),
+    named ? null : h("button", {type: "button", title: "Passed to the program in sys.argv",
+                                onclick: function () {
+                                  given.push("");
+                                  draw();
+                                }}, "+ an argument"));
 }
 
-// ---- the effects, while a program runs --------------------------------------------------------
-// The board runs a program in their place, so they stand back with a note saying what runs
-// instead. They are kept, and run again if the program is missing or stops
+function chosenArgument(argument, given, at) {
+  var choices = ARGUMENT_CHOICES[argument.kind](argument);
+  if (given[at] === undefined) {
+    given[at] = argument.kind === "size" ? sizeOffered(argument) : argument.default || choices[0][0];
+  }
+  return h("div", {},
+    h("label", {}, argument.name,
+      h("select", {onchange: function (event) {
+                     given[at] = event.currentTarget.value;
+                     draw();
+                   }},
+        choices.map(function (offered) {
+          return h("option", {value: offered[0], selected: given[at] === offered[0]}, offered[1]);
+        }))));
+}
 
-function programNote() {
+function typedArgument(argument, given, at, removable) {
+  if (given[at] === undefined && "default" in argument) given[at] = argument.default;
+  return h("div", {},
+    h("label", {}, argument.name,
+      h("input", {value: given[at] || "",
+                  oninput: function (event) {
+                    given[at] = event.currentTarget.value;
+                    renderPreview();
+                  },
+                  onchange: function () { draw(); }})),
+    removable ? h("button", {type: "button", title: "Remove this argument",
+                             "aria-label": "Remove " + argument.name,
+                             onclick: function () {
+                               given.splice(at, 1);
+                               draw();
+                             }}, "\u00d7") : null);
+}
+
+function programNote(said, ...after) {
+  return h("p", {class: "programnote"}, boardIcon(), h("span", {}, said), after);
+}
+
+function effectsNote() {
   var note = document.getElementById("programNote");
   if (!note) {
-    note = document.createElement("div");
-    note.id = "programNote";
-    note.className = "programnote";
-    // Above the gallery, or above what a page has stacked it in
+    note = h("div", {id: "programNote"});
     var looks = document.getElementById("looksStack") || document.getElementById("looks");
     looks.parentNode.insertBefore(note, looks);
   }
   note.hidden = !boardSet.program;
   if (!boardSet.program) return;
   var program = programNamed(boardSet.program);
-  note.textContent = "";
-  note.appendChild(boardIcon());
-  note.appendChild(document.createTextNode(
+  replace(note, programNote(
     "The board runs " + (program && program.name ? program.name + " (" + boardSet.program + ")"
                                                  : boardSet.program) +
     " instead of the effects. The effects are kept, and play if the " +
@@ -14127,8 +14916,8 @@ function programNote() {
 }
 
 drawSteps.after.push(function () {
-  document.body.classList.toggle("programmed", !!boardSet.program);
-  programNote();
+  document.body.toggleAttribute("data-programmed", !!boardSet.program);
+  effectsNote();
 });
 
 // ---- a scene's own settings, in the screens' style ---------------------------------------
@@ -14232,22 +15021,8 @@ function saveMenu() {
 
 drawSteps.after.push(saveMenu);
 
-// ---- the effects page, or a program page ------------------------------------------------------
-// Only program= and args= reach a program, which takes the whole board, so the page is one of
-// two: the effects, as it opens, or a program run in their place. The program page replaces the
-// effects view whole, scenes and all, since none of it plays while a program runs. Saving and
-// the drive are on the save button's menu.
-//
-// The programs offered are those on the drive that name a section, and those at its top level,
-// which the page learns only once the drive is open, less any going online where the drive holds
-// no WiFi credentials. Each has a small thumbnail at a screen's shape: its picture where one sits
-// beside it, drawn here where there is not.
-
-// The programs at the top of the drive that name no section, the group they make
 var OWN_GROUP = "On the drive";
 
-// The offered programs by group, as [name, paths]: the drive's own, always, then sections.txt's
-// sections in its order, then any other a program names, each group's programs by title
 function offeredGroups() {
   var runnable = PROGRAMS.filter(function (one) {
     return driveHasCredentials || one.uses.indexOf("wifi") < 0;
@@ -14262,7 +15037,6 @@ function offeredGroups() {
   }));
   return groups.map(function (group) {
     var paths = group[1].map(function (one) { return one.path; });
-    // Numbers in titles counted, so name 2 comes before name 10
     paths.sort(function (a, b) {
       return programTitle(a).localeCompare(programTitle(b), undefined, {numeric: true});
     });
@@ -14270,45 +15044,30 @@ function offeredGroups() {
   }).filter(function (group, at) { return !at || group[1].length; });
 }
 
-// What a group's heading says after its name, as the looks' groups do, a section's from
-// sections.txt
 function groupSays(title) {
   if (title === OWN_GROUP) return "your own programs";
   var listed = SECTIONS.filter(function (one) { return one[0] === title; })[0];
   return listed ? listed[1] : "";
 }
 
-// Whether each of the program tab's groups is folded, by name, for those folded or opened
 var programsFolded = {};
 
-// Whether a group is folded, a section sections.txt marks folded starting so and every other open
 function programGroupFolded(title) {
   if (title in programsFolded) return programsFolded[title];
   var listed = SECTIONS.filter(function (one) { return one[0] === title; })[0];
   return !!(listed && listed[2]);
 }
 
-// A group's heading, pressed to fold or open it, its name and what the group holds beside it
 function foldHead(title, says, open, toggle) {
-  var head = document.createElement("button");
-  head.type = "button";
-  head.className = "gallery-head foldhead" + (open ? " open" : "");
-  head.setAttribute("aria-expanded", open);
-  head.appendChild(document.createTextNode(title));
-  if (says) {
-    var said = document.createElement("span");
-    said.className = "says";
-    said.textContent = says;
-    head.appendChild(said);
-  }
-  head.onclick = function () {
-    toggle();
-    draw();
-  };
-  return head;
+  return h("button", {type: "button", class: "gallery-head foldhead" + (open ? " open" : ""),
+                      "aria-expanded": String(open),
+                      onclick: function () {
+                        toggle();
+                        draw();
+                      }},
+    title, says ? h("span", {class: "says"}, says) : null);
 }
 
-// Round holes cut through a filled shape, one at each point, as a path's own subpaths
 function holes(points, radius) {
   return points.map(function (at) {
     return "M" + (at[0] - radius) + " " + at[1] + "a" + radius + " " + radius + " 0 1 0 " +
@@ -14316,18 +15075,13 @@ function holes(points, radius) {
   }).join("");
 }
 
-// What a program can use beyond the board, each with its name, the shorter one its chip in the
-// filter takes, and a drawing on a 24 grid, in the order they are shown. A part classed "f" is
-// filled, "fs" filled and outlined, and the rest outlined, so each reads as a silhouette at 18px
 var FEATURES = [
   ["outputs", "the outputs", "outputs",
    "<circle class='f' cx='3.8' cy='10' r='3'/><circle class='f' cx='12' cy='10' r='3'/>" +
    "<circle class='f' cx='20.2' cy='10' r='3'/><path d='M1.5 18h21' stroke-width='2.2'/>"],
-  // Three lights overlapping, as the three channels of one RGB output
   ["rgb", "the RGB output", "RGB",
    "<circle class='f' cx='12' cy='8' r='5'/><circle cx='8' cy='15' r='5' stroke-width='2'/>" +
    "<circle cx='16' cy='15' r='5' stroke-width='2'/>"],
-  // One panel filled, two apart for a pair, the second outlined where it is optional, six for a hub
   ["screen", "a screen", "screen", "<rect class='f' x='3' y='5' width='18' height='14' rx='2'/>"],
   ["either", "one screen or two", "1 or 2 screens",
    "<rect class='f' x='0.5' y='6' width='9.5' height='12' rx='1.6'/>" +
@@ -14342,8 +15096,6 @@ var FEATURES = [
    "<rect class='f' x='1' y='13' width='6.3' height='7' rx='1.2'/>" +
    "<rect class='f' x='8.85' y='13' width='6.3' height='7' rx='1.2'/>" +
    "<rect class='f' x='16.7' y='13' width='6.3' height='7' rx='1.2'/>"],
-  // The strip folded back on itself, along the top, back along the middle and out along the foot,
-  // as the effects page draws a strip, its LEDs cut out of it
   ["strip", "an LED strip", "strip",
    "<path class='f' fill-rule='evenodd' d='M1 2.5H17.5A6 6 0 0 1 17.5 14.5H6.5A1 1 0 0 0 6.5 " +
    "16.5H23V21.5H6.5A6 6 0 0 1 6.5 9.5H17.5A1 1 0 0 0 17.5 7.5H1Z" +
@@ -14352,24 +15104,20 @@ var FEATURES = [
   ["sound", "a speaker", "speaker",
    "<g transform='scale(1.5)' stroke-width='1.2'><path class='fs' d='M2 6h3l4-3v10l-4-3H2z'/>" +
    "<path d='M11 5.5q2 2.5 0 5M12.8 3.8q3.4 4.2 0 8.4'/></g>"],
-  // The handset tilted, pointing, with its signal leaving the tip
   ["remote", "the IR remote", "remote",
    "<g transform='rotate(-35 12 12)'><path class='f' fill-rule='evenodd' d='M9.5 7h5a2.5 2.5 0 " +
    "0 1 2.5 2.5v11a2.5 2.5 0 0 1-2.5 2.5h-5A2.5 2.5 0 0 1 7 20.5v-11A2.5 2.5 0 0 1 9.5 7z" +
    holes([[12, 11]], 1.6) + "'/><path d='M9 4q3-2 6 0M7 1.2q5-3 10 0' stroke-width='2'/></g>"],
-  // The connector's plug, its four pins and a short stub of cable
   ["qwst", "a Qw/ST sensor", "Qw/ST",
    "<path class='f' fill-rule='evenodd' d='M5 2h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 " +
    "1-2-2V4a2 2 0 0 1 2-2zM5 5.5h2v8H5zM9 5.5h2v8H9zM13 5.5h2v8h-2zM17 5.5h2v8h-2z'/>" +
    "<rect class='f' x='10' y='17' width='4' height='5.5'/>"],
-  // A fader, since a gauge reads as the effects' Speed and a wave as sound
   ["analog", "an analog sensor", "analog",
    "<path d='M3 12h18' stroke-width='2.4'/><rect class='f' x='12' y='6' width='5.5' " +
    "height='12' rx='1.4'/>"],
   ["motor", "motors", "motors",
    "<rect class='f' x='1.5' y='5' width='15' height='14' rx='3.5'/>" +
    "<rect class='f' x='16.5' y='10.5' width='6' height='3' rx='1'/>"],
-  // A servo from the side, its mounting tabs and its arm, the arm no longer than the body
   ["servo", "servos", "servos",
    "<rect class='f' x='4' y='10' width='16' height='11' rx='1.5'/>" +
    "<rect class='f' x='1' y='13' width='22' height='3' rx='1'/>" +
@@ -14386,22 +15134,15 @@ function featureNamed(key) {
 }
 
 function featureIcon(key) {
-  var feature = featureNamed(key);
-  var icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  icon.setAttribute("viewBox", "0 0 24 24");
-  icon.setAttribute("class", "featureicon");
-  icon.setAttribute("aria-hidden", "true");
-  icon.innerHTML = feature[3];
-  return icon;
+  return h("svg:svg", {viewBox: "0 0 24 24", class: "featureicon", "aria-hidden": "true",
+                       html: featureNamed(key)[3]});
 }
 
-// What a program uses, read from its source
 function usesOf(path) {
   var program = programNamed(path);
   return program ? program.uses : [];
 }
 
-// A program's name to show: its own where it gives one, else its file's, in words
 function programTitle(path) {
   var program = programNamed(path);
   if (program && program.name) return program.name;
@@ -14409,23 +15150,15 @@ function programTitle(path) {
   return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
-// ---- thumbnails ----------------------------------------------------------------------------------
-// A thumbnail is a screen's shape at half a 2.8" panel's pixels, drawn or a picture, a captured
-// frame or a drive program's own
-
 var THUMB_W = 160, THUMB_H = 120;
 var thumbImages = {};
 
 function thumbCanvas(kind, seed, uses) {
-  var canvas = document.createElement("canvas");
-  canvas.width = THUMB_W;
-  canvas.height = THUMB_H;
-  canvas.className = "progthumb";
+  var canvas = h("canvas", {width: THUMB_W, height: THUMB_H});
   paintThumb(canvas.getContext("2d"), kind, seed || 1, canvas, uses || []);
   return canvas;
 }
 
-// A lamp's colour on a mono output, a warm white as bright as the colour, an unlit lamp unchanged
 function monoInk(ink) {
   if (ink === "#3a3f44") return ink;
   var level = (parseInt(ink.slice(1, 3), 16) * 0.2126 + parseInt(ink.slice(3, 5), 16) * 0.7152 +
@@ -14435,7 +15168,6 @@ function monoInk(ink) {
          Math.round(160 * level) + ")";
 }
 
-// A rectangle with rounded corners, filled
 function fillRounded(g, x, y, w, h, r) {
   g.beginPath();
   g.moveTo(x + r, y);
@@ -14447,11 +15179,8 @@ function fillRounded(g, x, y, w, h, r) {
   g.fill();
 }
 
-// What marks a machine's motion
 var MOTION = "#ffd21f";
 
-// A turn along part of an ellipse from one angle to another, backwards being anticlockwise, with
-// a head at its end pointing along it
 function drawTurn(g, x, y, rx, ry, from, to, backwards) {
   g.strokeStyle = MOTION;
   g.lineWidth = 2.5;
@@ -14471,7 +15200,6 @@ function drawTurn(g, x, y, rx, ry, from, to, backwards) {
   g.fill();
 }
 
-// A wheel seen edge on, upright and centred on its axle, with its turn beside it to the right
 function drawWheel(g, x, y) {
   g.fillStyle = "#62666e";
   fillRounded(g, x - 7.5, y - 42, 15, 84, 7.5);
@@ -14480,11 +15208,8 @@ function drawWheel(g, x, y) {
   drawTurn(g, x + 17.5, y, 6, 24, Math.PI * 0.34, Math.PI * 2.1, false);
 }
 
-// A servo's colours, its body's translucent blue lighter towards the top, and its white horn
 var BLUE = "#2f62d6", BLUE_DARK = "#1d43a6", BLUE_LIGHT = "#5d8bef", WHITE = "#eef1f5";
 
-// A micro servo from the side, its body's top left corner at (x, y - 4), its spline on top and the
-// wires out of its lower left. Its horn, where it has one, is long to the right of the spline
 function drawServo(g, x, y, horn) {
   g.lineWidth = 3;
   g.lineCap = "round";
@@ -14495,13 +15220,10 @@ function drawServo(g, x, y, horn) {
     g.bezierCurveTo(x - 14, y + 36 + wire[1], x - 22, y + 44 + wire[1], x - 30, y + 58);
     g.stroke();
   });
-  // The mounting tabs, through the body a little above its middle
   g.fillStyle = BLUE_DARK;
   g.fillRect(x - 15, y + 6, 98, 9);
   g.fillStyle = BLUE;
   g.fillRect(x - 15, y + 6, 98, 6);
-  // The body steps in twice towards the top, each step drawn before the one below so it hides its
-  // rounded foot. The upper step is lighter and lit along its top edge
   g.fillStyle = BLUE_LIGHT;
   fillRounded(g, x + 4, y - 22, 26, 14, 4);
   g.fillStyle = "#4677e3";
@@ -14520,24 +15242,19 @@ function drawServo(g, x, y, horn) {
   }
 }
 
-// The servo's sweep, part of a turn round its spline, across the front of its horn
 function drawSweep(g, x, y) {
   drawTurn(g, x + 17, y - 36, 36, 8, Math.PI * 0.95, Math.PI * 0.12, true);
 }
 
-// A gearmotor's colours, its can's silver, the gearbox's brass and the end cap's plastic
 var SILVER = "#c3cad3", SILVER_LIGHT = "#dfe4ea", BRASS = "#d9a93a", BRASS_DARK = "#a77d1f",
     PLASTIC = "#4b5058";
 
-// A micro metal gearmotor from the side at a height, its pins and end cap to the left, then its
-// can, its gearbox and the shaft
 function drawMotor(g, y) {
   g.fillStyle = SILVER;
   g.fillRect(12, y - 13, 10, 3);
   g.fillRect(12, y + 10, 10, 3);
   g.fillStyle = PLASTIC;
   fillRounded(g, 19, y - 20, 13, 40, 3);
-  // The can, lighter along its top, with two slots pressed into its side
   g.fillStyle = SILVER;
   fillRounded(g, 28, y - 22, 56, 44, 5);
   g.fillStyle = SILVER_LIGHT;
@@ -14549,7 +15266,6 @@ function drawMotor(g, y) {
   g.lineCap = "round";
   g.beginPath(); g.moveTo(46, y - 4); g.lineTo(64, y - 4); g.moveTo(46, y + 9); g.lineTo(64, y + 9);
   g.stroke();
-  // The gears between the gearbox's plates, then the rods holding the plates apart
   g.fillStyle = "#6f757e";
   g.fillRect(86, y - 15, 28, 30);
   g.fillStyle = "#a3a9b1";
@@ -14569,7 +15285,6 @@ function drawMotor(g, y) {
   g.fillRect(121, y - 3, 25, 2);
 }
 
-// A repeatable scatter, so a thumbnail is the same every time it is drawn
 function scatter(seed) {
   var state = seed * 9301 + 49297;
   return function () {
@@ -14578,183 +15293,175 @@ function scatter(seed) {
   };
 }
 
-function paintThumb(g, kind, seed, canvas, uses) {
-  var W = canvas.width, H = canvas.height, i;
-  var chance = scatter(seed);
-  function fill(ink) { g.fillStyle = ink; g.fillRect(0, 0, W, H); }
-  function dotRow(ink, top, count, size, gap) {
-    g.fillStyle = ink;
-    for (i = 0; i < count; i++) g.fillRect(3 + i * (size + gap), top, size, size);
+var OUTPUT_INKS = {
+  rainbow: ["#ff2d1a", "#ff9022", "#ffd21f", "#22c65a", "#28e0e0", "#2b5cff", "#9a46ff"],
+  warm: ["#ffb060", "#ffc27a", "#ff9022", "#ffb060", "#ffc27a", "#ff9022", "#ffb060"],
+  mono: ["#ffd9a0", "#3a3f44", "#ffd9a0", "#ffd9a0", "#3a3f44", "#ffd9a0", "#3a3f44"],
+  pulse: ["#ffd9a0", "#c9aa7c", "#8a765a", "#4d4336", "#8a765a", "#c9aa7c", "#ffd9a0"],
+  dusk: ["#ffe6b0", "#ffe6b0", "#ffe6b0", "#c9aa7c", "#8a765a", "#4d4336", "#3a3f44"],
+  level: ["#3a3f44", "#3a3f44", "#22c65a", "#22c65a", "#3a3f44", "#3a3f44", "#3a3f44"],
+  bar: ["#2b5cff", "#28e0e0", "#22c65a", "#ffd21f", "#3a3f44", "#3a3f44", "#3a3f44"],
+  temperature: ["#2b5cff", "#6a45ff", "#a63cff", "#e036e0", "#3a3f44", "#3a3f44", "#3a3f44"],
+  melody: ["#9a46ff", "#3a3f44", "#ff36c8", "#9a46ff", "#3a3f44", "#2b5cff", "#ff36c8"],
+  countdown: ["#ff2d1a", "#ff2d1a", "#ff2d1a", "#22c65a", "#3a3f44", "#3a3f44", "#3a3f44"],
+  solid: ["#ff36c8", "#ff36c8", "#ff36c8", "#ff36c8", "#ff36c8", "#ff36c8", "#ff36c8"],
+  random: ["#e67e22", "#1abc9c", "#9b59b6", "#f1c40f", "#3498db", "#e74c3c", "#2ecc71"],
+  off: ["#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44"]
+};
+
+function thumbImage(src) {
+  var image = thumbImages[src];
+  if (!image) {
+    image = thumbImages[src] = new Image();
+    image.src = src;
   }
-  // A pair's two pictures side by side, each whole in its half, as the two panels stand
-  if (kind.indexOf("pair:") === 0) {
-    fill("#111");
-    PICTURES[kind.slice("pair:".length)].forEach(function (src, side) {
-      var panel = thumbImages[src];
-      if (!panel) {
-        panel = thumbImages[src] = new Image();
-        panel.src = src;
-      }
-      var placed = function () {
-        var half = W / 2 - 1;
-        var fit = Math.min(half / panel.width, H / panel.height);
-        g.imageSmoothingEnabled = true;
-        g.drawImage(panel, side * (half + 2) + (half - panel.width * fit) / 2,
-                    (H - panel.height * fit) / 2, panel.width * fit, panel.height * fit);
-      };
-      if (panel.complete && panel.width) placed();
-      else panel.addEventListener("load", placed);
-    });
-    return;
-  }
-  // A program's picture, read from beside it on the drive
-  if (kind.indexOf("shot:") === 0) {
-    fill("#111");
-    var src = PICTURES[kind.slice("shot:".length)][0];
-    var image = thumbImages[src];
-    if (!image) {
-      image = thumbImages[src] = new Image();
-      image.src = src;
-    }
-    var drawn = function () {
-      // One taller than wide is shown whole, as cropping it to fill would lose its top and foot
-      var upright = image.height > image.width;
-      var scale = (upright ? Math.min : Math.max)(W / image.width, H / image.height);
+  return image;
+}
+
+function whenLoaded(image, paint) {
+  if (image.complete && image.width) paint();
+  else image.addEventListener("load", paint);
+}
+
+function paintPair(g, path, W, H) {
+  g.fillStyle = "#111";
+  g.fillRect(0, 0, W, H);
+  PICTURES[path].forEach(function (src, side) {
+    var panel = thumbImage(src);
+    whenLoaded(panel, function () {
+      var half = W / 2 - 1;
+      var fit = Math.min(half / panel.width, H / panel.height);
       g.imageSmoothingEnabled = true;
-      g.drawImage(image, (W - image.width * scale) / 2, (H - image.height * scale) / 2,
-                  image.width * scale, image.height * scale);
-    };
-    if (image.complete && image.width) drawn();
-    else image.addEventListener("load", drawn);
-    return;
-  }
-  if (kind.indexOf("outputs:") === 0) {
-    // What the outputs do, as a lamp for each on the board's dark, spread across seven lamps' width
-    fill("#16181b");
-    var inks = {rainbow: ["#ff2d1a", "#ff9022", "#ffd21f", "#22c65a", "#28e0e0", "#2b5cff", "#9a46ff"],
-                warm: ["#ffb060", "#ffc27a", "#ff9022", "#ffb060", "#ffc27a", "#ff9022", "#ffb060"],
-                mono: ["#ffd9a0", "#3a3f44", "#ffd9a0", "#ffd9a0", "#3a3f44", "#ffd9a0", "#3a3f44"],
-                pulse: ["#ffd9a0", "#c9aa7c", "#8a765a", "#4d4336", "#8a765a", "#c9aa7c", "#ffd9a0"],
-                dusk: ["#ffe6b0", "#ffe6b0", "#ffe6b0", "#c9aa7c", "#8a765a", "#4d4336", "#3a3f44"],
-                level: ["#3a3f44", "#3a3f44", "#22c65a", "#22c65a", "#3a3f44", "#3a3f44", "#3a3f44"],
-                bar: ["#2b5cff", "#28e0e0", "#22c65a", "#ffd21f", "#3a3f44", "#3a3f44", "#3a3f44"],
-                temperature: ["#2b5cff", "#6a45ff", "#a63cff", "#e036e0", "#3a3f44", "#3a3f44", "#3a3f44"],
-                melody: ["#9a46ff", "#3a3f44", "#ff36c8", "#9a46ff", "#3a3f44", "#2b5cff", "#ff36c8"],
-                countdown: ["#ff2d1a", "#ff2d1a", "#ff2d1a", "#22c65a", "#3a3f44", "#3a3f44", "#3a3f44"],
-                solid: ["#ff36c8", "#ff36c8", "#ff36c8", "#ff36c8", "#ff36c8", "#ff36c8", "#ff36c8"],
-                random: ["#e67e22", "#1abc9c", "#9b59b6", "#f1c40f", "#3498db", "#e74c3c", "#2ecc71"],
-                off: ["#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44", "#3a3f44"]};
-    var row = inks[kind.slice("outputs:".length)] || inks.mono;
-    var lamps = BOARD.outputs;
-    // On a board with mono outputs and a colour one, the colour lamp sits two rows below the rest as
-    // on the board, and a lamp is lit only where the program uses its kind of output
-    var mixed = lamps.some(function (output) { return output.kind === "mono"; }) &&
-                lamps.some(function (output) { return output.kind !== "mono"; });
-    var usesMono = !mixed || uses.indexOf("outputs") >= 0;
-    var usesColour = !mixed || uses.indexOf("rgb") >= 0;
-    lamps.forEach(function (output, at) {
-      var isMono = output.kind === "mono";
-      var ink = row[Math.min(at, row.length - 1)];
-      if (!(isMono ? usesMono : usesColour)) ink = "#3a3f44";
-      // A program lighting only the colour output shows its pattern's first colour there
-      else if (!isMono && !usesMono) ink = row[0];
-      g.fillStyle = isMono ? monoInk(ink) : ink;
-      g.beginPath();
-      g.arc(lamps.length > 1 ? 17 + at * 21 * 6 / (lamps.length - 1) : W / 2,
-            H / 2 + (mixed ? (isMono ? -21 : 21) : 0), 7.5, 0, Math.PI * 2);
-      g.fill();
+      g.drawImage(panel, side * (half + 2) + (half - panel.width * fit) / 2,
+                  (H - panel.height * fit) / 2, panel.width * fit, panel.height * fit);
     });
-    return;
-  }
-  // A servo, sweeping, in a pair or driving a wheel
-  if (/^servo(:|$)/.test(kind)) {
-    fill("#16181b");
-    if (kind === "servo:pair") {
-      // Two sweeping, the second mirrored so its horn and sweep run the other way
-      [1, -1].forEach(function (side) {
-        g.save();
-        g.translate(side > 0 ? 2 : 158, 24);
-        g.scale(0.66 * side, 0.66);
-        drawServo(g, 30, 52, true);
-        drawSweep(g, 30, 52);
-        g.restore();
-      });
-    } else if (kind === "servo:wheel") {
-      // A continuous servo laid on its side, wires below, driving a wheel. The spline's end lands
-      // at (24, 17) once turned, which the whole is lifted by to put the axle level
+  });
+}
+
+function paintShot(g, path, W, H) {
+  g.fillStyle = "#111";
+  g.fillRect(0, 0, W, H);
+  var image = thumbImage(PICTURES[path][0]);
+  whenLoaded(image, function () {
+    var upright = image.height > image.width;
+    var scale = (upright ? Math.min : Math.max)(W / image.width, H / image.height);
+    g.imageSmoothingEnabled = true;
+    g.drawImage(image, (W - image.width * scale) / 2, (H - image.height * scale) / 2,
+                image.width * scale, image.height * scale);
+  });
+}
+
+function paintOutputs(g, pattern, uses, W, H) {
+  g.fillStyle = "#16181b";
+  g.fillRect(0, 0, W, H);
+  var row = OUTPUT_INKS[pattern] || OUTPUT_INKS.mono;
+  var lamps = BOARD.outputs;
+  var mixed = lamps.some(function (output) { return output.kind === "mono"; }) &&
+              lamps.some(function (output) { return output.kind !== "mono"; });
+  var usesMono = !mixed || uses.indexOf("outputs") >= 0;
+  var usesColour = !mixed || uses.indexOf("rgb") >= 0;
+  lamps.forEach(function (output, at) {
+    var isMono = output.kind === "mono";
+    var ink = row[Math.min(at, row.length - 1)];
+    if (!(isMono ? usesMono : usesColour)) ink = "#3a3f44";
+    else if (!isMono && !usesMono) ink = row[0];
+    g.fillStyle = isMono ? monoInk(ink) : ink;
+    g.beginPath();
+    g.arc(lamps.length > 1 ? 17 + at * 21 * 6 / (lamps.length - 1) : W / 2,
+          H / 2 + (mixed ? (isMono ? -21 : 21) : 0), 7.5, 0, Math.PI * 2);
+    g.fill();
+  });
+}
+
+function paintServo(g, kind, W, H) {
+  g.fillStyle = "#16181b";
+  g.fillRect(0, 0, W, H);
+  if (kind === "servo:pair") {
+    [1, -1].forEach(function (side) {
       g.save();
-      g.translate(82, 67);
-      g.scale(0.86, 0.86);
-      g.translate(0, -17);
-      g.save();
-      g.scale(1, -1);
-      g.rotate(Math.PI / 2);
-      drawServo(g, -34, 6, false);
+      g.translate(side > 0 ? 2 : 158, 24);
+      g.scale(0.66 * side, 0.66);
+      drawServo(g, 30, 52, true);
+      drawSweep(g, 30, 52);
       g.restore();
-      drawWheel(g, 31.5, 17);
-      g.restore();
-    } else {
-      drawServo(g, 46, 58, true);
-      if (kind === "servo:sweep") drawSweep(g, 46, 58);
-    }
-    return;
-  }
-  // A gearmotor driving a wheel, or under notes for one that plays
-  if (/^motor(:|$)/.test(kind)) {
-    fill("#16181b");
-    if (kind === "motor:song") {
-      drawMotor(g, 72);
-      g.fillStyle = MOTION;
-      g.strokeStyle = MOTION;
-      g.lineWidth = 2;
-      [[40, 26], [60, 18], [80, 28]].forEach(function (note) {
-        g.beginPath(); g.ellipse(note[0], note[1], 5, 3.6, -0.4, 0, Math.PI * 2); g.fill();
-        g.beginPath(); g.moveTo(note[0] + 4.4, note[1] - 1); g.lineTo(note[0] + 4.4, note[1] - 16);
-        g.stroke();
-      });
-      return;
-    }
-    // Drawn smaller about the card's middle, to leave the wheel and its turn room on the right
+    });
+  } else if (kind === "servo:wheel") {
     g.save();
-    g.translate(72, 60);
-    g.scale(0.94, 0.94);
-    g.translate(-80, -60);
-    drawMotor(g, 60);
-    drawWheel(g, 142, 60);
+    g.translate(82, 67);
+    g.scale(0.86, 0.86);
+    g.translate(0, -17);
+    g.save();
+    g.scale(1, -1);
+    g.rotate(Math.PI / 2);
+    drawServo(g, -34, 6, false);
     g.restore();
-    return;
-  }
-  switch (kind) {
-  case "shot":
-    // A captured frame not yet read from the drive, as the ground it is drawn on
-    fill("#111");
-    break;
-  case "stars":
-    // Stars on a grid of 64 by 48, each a square of it, so the field is as coarse at any size
-    fill("#02030a");
-    var cell = W / 64;
-    for (i = 0; i < 60; i++) {
-      var far = chance();
-      g.fillStyle = far < 0.8 ? "#8a93b8" : "#ffffff";
-      g.fillRect(Math.floor(chance() * 64) * cell, Math.floor(chance() * 48) * cell,
-                 (far < 0.9 ? 1 : 2) * cell, cell);
-    }
-    break;
-  case "drive":
-    // A program of the user's own that names no picture, shown as a prompt waiting for code
-    fill("#1c1f22");
-    g.fillStyle = "#8a93a0";
-    g.font = "bold 40px monospace";
-    g.fillText(">_", 55, 75);
-    break;
-  default:
-    fill("#ddd");
+    drawWheel(g, 31.5, 17);
+    g.restore();
+  } else {
+    drawServo(g, 46, 58, true);
+    if (kind === "servo:sweep") drawSweep(g, 46, 58);
   }
 }
 
+function paintMotor(g, kind, W, H) {
+  g.fillStyle = "#16181b";
+  g.fillRect(0, 0, W, H);
+  if (kind === "motor:song") {
+    drawMotor(g, 72);
+    g.fillStyle = MOTION;
+    g.strokeStyle = MOTION;
+    g.lineWidth = 2;
+    [[40, 26], [60, 18], [80, 28]].forEach(function (note) {
+      g.beginPath(); g.ellipse(note[0], note[1], 5, 3.6, -0.4, 0, Math.PI * 2); g.fill();
+      g.beginPath(); g.moveTo(note[0] + 4.4, note[1] - 1); g.lineTo(note[0] + 4.4, note[1] - 16);
+      g.stroke();
+    });
+    return;
+  }
+  g.save();
+  g.translate(72, 60);
+  g.scale(0.94, 0.94);
+  g.translate(-80, -60);
+  drawMotor(g, 60);
+  drawWheel(g, 142, 60);
+  g.restore();
+}
+
+function paintStars(g, seed, W, H) {
+  var chance = scatter(seed);
+  g.fillStyle = "#02030a";
+  g.fillRect(0, 0, W, H);
+  var cell = W / 64;
+  for (var star = 0; star < 60; star++) {
+    var far = chance();
+    g.fillStyle = far < 0.8 ? "#8a93b8" : "#ffffff";
+    g.fillRect(Math.floor(chance() * 64) * cell, Math.floor(chance() * 48) * cell,
+               (far < 0.9 ? 1 : 2) * cell, cell);
+  }
+}
+
+function paintPrompt(g, W, H) {
+  g.fillStyle = "#1c1f22";
+  g.fillRect(0, 0, W, H);
+  g.fillStyle = "#8a93a0";
+  g.font = "bold 40px monospace";
+  g.fillText(">_", 55, 75);
+}
+
+function paintThumb(g, kind, seed, canvas, uses) {
+  var W = canvas.width, H = canvas.height;
+  if (kind.indexOf("pair:") === 0) return paintPair(g, kind.slice("pair:".length), W, H);
+  if (kind.indexOf("shot:") === 0) return paintShot(g, kind.slice("shot:".length), W, H);
+  if (kind.indexOf("outputs:") === 0) return paintOutputs(g, kind.slice("outputs:".length), uses, W, H);
+  if (/^servo(:|$)/.test(kind)) return paintServo(g, kind, W, H);
+  if (/^motor(:|$)/.test(kind)) return paintMotor(g, kind, W, H);
+  if (kind === "stars") return paintStars(g, seed, W, H);
+  if (kind === "drive") return paintPrompt(g, W, H);
+  g.fillStyle = kind === "shot" ? "#111" : "#ddd";
+  g.fillRect(0, 0, W, H);
+}
+
 function programThumb(path) {
-  // A picture where it has one, else what its Thumbnail line draws, else a plain tile: dark for an
-  // example, whose picture is still to be captured, and a prompt for the drive's own
   var program = programNamed(path) || {};
   var shown = PICTURES[path] || [];
   var kind = shown.length > 1 ? "pair:" + path : shown.length ? "shot:" + path
@@ -14762,91 +15469,74 @@ function programThumb(path) {
   return thumbCanvas(kind, path.length, usesOf(path));
 }
 
-// ---- the program page ------------------------------------------------------------------------
-
 var programView = null;
 
-// Whether the program tab is open. A program is chosen only by picking one, so the tab can be open
-// with none chosen, and the file says program= only once one is
 var onProgramPage = false;
 
-// A tile's copy, in the bin's place on an example, which has none, or beside the bin on the user's
-// own. An example is customised and one of the user's own duplicated, into the folder named
 function copyTile(example, file, folder, copy) {
-  var tile = document.createElement("span");
-  tile.className = "bin copytile" + (example ? " alone" : "");
-  tile.textContent = "\u29c9";
-  tile.title = (example ? "Customise a copy of " : "Duplicate ") + file + " in the " + folder +
-               " folder";
-  tile.onclick = function (e) {
-    e.stopPropagation();
-    copy();
-  };
-  return tile;
+  return h("span", {class: "bin copytile" + (example ? " alone" : ""),
+                    title: (example ? "Customise a copy of " : "Duplicate ") + file + " in the " +
+                           folder + " folder",
+                    onclick: function (event) {
+                      event.stopPropagation();
+                      copy();
+                    }}, "\u29c9");
 }
 
-// A program as a card, as the looks are, its thumbnail over its name, and what it uses as a row
-// of small drawings along the foot of the thumbnail
-function programCard(path) {
-  var card = document.createElement("button");
-  card.type = "button";
-  card.className = "progcard" + (boardSet.program === path ? " picked" : "");
-  card.dataset.path = path;
-  card.appendChild(programThumb(path));
+var programHooks = {examples: null, extras: []};
+
+function programUsesSaid(path) {
   var uses = usesOf(path);
-  if (uses.length) {
-    var row = document.createElement("span");
-    row.className = "proguses";
-    uses.forEach(function (key) { row.appendChild(featureIcon(key)); });
-    card.appendChild(row);
-  }
-  var name = document.createElement("span");
-  name.className = "progname";
-  name.textContent = programTitle(path);
-  card.appendChild(name);
-  card.title = ((programNamed(path) || {}).does || "") + (uses.length ? "\nUses " +
+  return ((programNamed(path) || {}).does || "") + (uses.length ? "\nUses " +
     uses.map(function (key) { return featureNamed(key)[1]; }).join(", ") : "");
-  // Picked again, the program is put back, leaving none chosen
-  card.onclick = function () {
-    boardSet.program = boardSet.program === path ? null : path;
-    draw();
-  };
-  // A copy to change, which takes the original's place where it was chosen
-  var example = !!(programNamed(path) || {}).example;
-  var file = path.split("/").pop();
-  if (drive.dirHandle) card.appendChild(copyTile(example, file, OWN_FOLDER, async function () {
-    try {
-      var copy = await copyProgram(path);
-      PROGRAMS = await drivePrograms(drive.dirHandle, true);
-      if (boardSet.program === path) boardSet.program = copy;
-      banner("Copied to " + copy + " on the FX drive. Open it in Thonny or another editor to " +
-             "change it.");
-    } catch (e) {
-      banner("Could not copy " + path.split("/").pop() + ". " + await driveTrouble(e, path), true);
-    }
-    draw();
-  }));
-  // The user's own can be deleted from the drive, as the effects' pictures and sounds can
-  if (!example) {
-    var bin = document.createElement("span");
-    bin.className = "bin";
-    bin.textContent = "\u00d7";
-    bin.title = "Delete " + path.split("/").pop() + " from the FX drive";
-    bin.onclick = function (e) {
-      e.stopPropagation();
-      removeProgram(path);
-    };
-    card.appendChild(bin);
-  }
-  programCardSteps.forEach(function (step) { step(card, path); });
-  return card;
 }
 
-// What the parts after this one add to each program card, each given the card and its path
-var programCardSteps = [];
+function programCardFace(path) {
+  var uses = usesOf(path);
+  return [h("span", {}, programThumb(path),
+            uses.length ? h("span", {}, uses.map(featureIcon)) : null),
+          h("strong", {}, programTitle(path))];
+}
 
-// The screen size a program is shown on: screen A's, else the program's own default, else a 2.8".
-// Its picture was taken at its defaults, so what it is given changes nothing here
+function programCard(path) {
+  var program = programNamed(path) || {};
+  var file = path.split("/").pop();
+  var extras = programHooks.extras.map(function (extra) { return extra(path); }).filter(Boolean);
+  var remove = program.example
+    ? extras.map(function (extra) { return extra.remove; }).filter(Boolean)[0]
+    : function () { removeProgram(path); };
+  return h("li", {"data-busy": extras.some(function (extra) { return extra.busy; })},
+    h("button", {type: "button", class: "programcard", "aria-pressed": String(boardSet.program === path),
+                 title: programUsesSaid(path),
+                 onclick: function () {
+                   boardSet.program = boardSet.program === path ? null : path;
+                   draw();
+                 }},
+      programCardFace(path)),
+    drive.dirHandle || remove ? h("span", {},
+      drive.dirHandle ? h("button", {type: "button", "data-action": "copy",
+                                     title: (program.example ? "Customise a copy of " : "Duplicate ") +
+                                            file + " in the " + OWN_FOLDER + " folder",
+                                     onclick: function () { copyOwnProgram(path); }}, "\u29c9") : null,
+      remove ? h("button", {type: "button", "data-action": "delete",
+                            title: "Delete " + file + " from the FX drive",
+                            onclick: remove}, "\u00d7") : null) : null,
+    extras.map(function (extra) { return extra.badge; }));
+}
+
+async function copyOwnProgram(path) {
+  try {
+    var copy = await copyProgram(path);
+    PROGRAMS = await drivePrograms(drive.dirHandle, true);
+    if (boardSet.program === path) boardSet.program = copy;
+    banner("Copied to " + copy + " on the FX drive. Open it in Thonny or another editor to " +
+           "change it.");
+  } catch (e) {
+    banner("Could not copy " + path.split("/").pop() + ". " + await driveTrouble(e, path), true);
+  }
+  draw();
+}
+
 function sizeShown(path) {
   var screen = state.screens && state.screens.A;
   if (screen && screen.there && screen.size) return screen.size;
@@ -14856,188 +15546,127 @@ function sizeShown(path) {
   return (size && size.default) || "2.8";
 }
 
-// One captured frame on a module at the program's screen size, turned as the program turns it
 function framedPanel(path, url) {
   var image = thumbImages[url];
   var upright = image && image.height > image.width;
   return screenHooks.panelPreview({size: sizeShown(path), turn: upright ? 0 : 90,
-                       art: {url: url, w: upright ? 240 : 320, h: upright ? 320 : 240,
-                             pixelated: true}});
+                                   art: {url: url, w: upright ? 240 : 320, h: upright ? 320 : 240,
+                                         pixelated: true}});
 }
 
-// The picked program's picture: a screen program's captured frame on the panel it would play on,
-// as the Screens tab draws one, turned as the program turns it, and anything else its thumbnail
-// large. A frame taller than wide was taken from a panel upright
 function programPicture(path) {
   var shown = PICTURES[path] || [];
   var onScreen = usesOf(path).some(function (key) {
     return ["screen", "either", "pair", "hub"].indexOf(key) >= 0;
   });
-  if (onScreen && shown.length) {
-    // A pair's second frame goes on a second panel, the two drawn smaller to stand side by side
-    if (shown.length < 2) return framedPanel(path, shown[0]);
-    var both = document.createElement("div");
-    both.className = "twopanels";
-    both.appendChild(framedPanel(path, shown[0]));
-    both.appendChild(framedPanel(path, shown[1]));
-    return both;
-  }
-  var big = programThumb(path);
-  big.classList.add("big");
-  return big;
+  if (!onScreen || !shown.length) return h("figure", {}, programThumb(path));
+  return h("figure", {"data-panels": shown.length > 1 ? "2" : "1"},
+    shown.slice(0, 2).map(function (url) { return framedPanel(path, url); }));
 }
 
-// The picture before a program is chosen: an empty panel upright, so its words read across, or on
-// a board without screens its lamps unlit
 function emptyPicture() {
-  if (SCREEN_PORTS.length) return screenHooks.panelPreview({size: "2.8", turn: 0});
-  var big = thumbCanvas("outputs:off", 1);
-  big.classList.add("big");
-  return big;
+  if (SCREEN_PORTS.length) {
+    return h("figure", {"data-panels": "1"}, screenHooks.panelPreview({size: "2.8", turn: 0}));
+  }
+  return h("figure", {}, thumbCanvas("outputs:off", 1));
 }
 
-// The line along the preview's top, saying what the board runs, with the way to choose none
 function heroNote(path) {
-  var note = document.createElement("div");
-  note.className = "programnote";
-  note.appendChild(boardIcon());
-  var said = document.createElement("span");
-  said.textContent = path
-    ? "The board runs " + path.split("/").pop() + " instead of the effects. The effects are " +
-      "kept, and play if the program is missing or stops, with the reason in errors.txt."
-    : "No program chosen, so the board plays the effects. Choose one below to run it instead.";
-  note.appendChild(said);
-  if (path) {
-    var none = document.createElement("button");
-    none.type = "button";
-    none.className = "progchoosenone";
-    none.textContent = "Choose none";
-    none.onclick = function () {
+  if (!path) {
+    return programNote("No program chosen, so the board plays the effects. Choose one below to " +
+                       "run it instead.");
+  }
+  return programNote(
+    "The board runs " + path.split("/").pop() + " instead of the effects. The effects are " +
+    "kept, and play if the program is missing or stops, with the reason in errors.txt.",
+    h("button", {type: "button", onclick: function () {
       boardSet.program = null;
       draw();
-    };
-    note.appendChild(none);
-  }
-  return note;
+    }}, "Choose none"));
 }
 
-// The picked program large, with what it does, what it needs and what it takes. With none picked
-// the box keeps its size, an empty panel in the picture's place, so choosing one moves nothing
-function programHero(path) {
-  var hero = document.createElement("div");
-  hero.className = "proghero" + (path ? "" : " unchosen");
-  hero.appendChild(heroNote(path));
-  var body = document.createElement("div");
-  body.className = "herobody";
-  hero.appendChild(body);
-  var picture = document.createElement("div");
-  picture.className = "progpicture";
-  picture.appendChild(path ? programPicture(path) : emptyPicture());
-  body.appendChild(picture);
+function heroWords(path) {
   if (!path) {
-    var waiting = document.createElement("div");
-    waiting.className = "progwords";
     var taken = ["outputs"];
     if (SCREEN_PORTS.length) taken.push(SCREEN_PORTS.length > 1 ? "screens" : "screen");
     if (BOARD.sound) taken.push("sound");
-    waiting.innerHTML = "<h3>Choose a program</h3><p>A program takes over the whole board, its " +
-                        spoken(taken) + ", while it runs.</p>";
-    body.appendChild(waiting);
-    return hero;
+    return h("div", {},
+      h("h2", {}, "Choose a program"),
+      h("p", {}, "A program takes over the whole board, its " + spoken(taken) + ", while it runs."));
   }
-  var words = document.createElement("div");
-  words.className = "progwords";
   var program = programNamed(path) || {};
-  words.innerHTML = "<h3>" + escapeHtml(programTitle(path)) + "</h3>" +
-                    "<p>" + escapeHtml(program.does || "No description.") + "</p>" +
-                    "<p class='progwhere'>" + escapeHtml(path) +
-                    (program.example ? ", built in" : ", on the drive") + "</p>";
-  // What it uses, each drawn and named, as the filter below names them
-  var uses = document.createElement("div");
-  uses.className = "herouses";
-  usesOf(path).forEach(function (key) {
-    var one = document.createElement("span");
-    one.appendChild(featureIcon(key));
-    one.appendChild(document.createTextNode(featureNamed(key)[1]));
-    uses.appendChild(one);
+  var uses = usesOf(path);
+  return h("div", {},
+    h("h2", {}, programTitle(path)),
+    h("p", {}, program.does || "No description."),
+    h("p", {}, h("small", {}, path + (program.example ? ", built in" : ", on the drive"))),
+    uses.length ? h("ul", {}, uses.map(function (key) {
+      return h("li", {}, featureIcon(key), featureNamed(key)[1]);
+    })) : null,
+    programArguments(path, false));
+}
+
+function programHero(path) {
+  return h("article", {"aria-label": "Chosen program", "data-chosen": !!path},
+    heroNote(path),
+    h("div", {}, path ? programPicture(path) : emptyPicture(), heroWords(path)));
+}
+
+function programGroup(title, paths, kept) {
+  var own = title === OWN_GROUP;
+  var open = !programGroupFolded(title);
+  return h("section", {"aria-label": title},
+    h("h2", {},
+      h("button", {type: "button", "aria-expanded": String(open),
+                   onclick: function () {
+                     programsFolded[title] = open;
+                     draw();
+                   }},
+        title, groupSays(title) ? h("small", {}, groupSays(title)) : null)),
+    open && own && !paths.length ? h("p", {}, "None yet. Customise an example to make one.") : null,
+    open && kept.length ? h("ul", {}, kept.map(programCard)) : null);
+}
+
+function programListing() {
+  if (!drive.dirHandle) {
+    return [h("p", {}, CAN_REACH_A_DRIVE ? "Open the FX drive to see the programs on it."
+                                         : "This browser cannot open the FX drive, so programs " +
+                                           "cannot be listed. Use Chrome or Edge.")];
+  }
+  if (programsReading || !programsKnown) {
+    return [h("p", {}, "Reading the Python files on the drive" + (programsReading
+      ? ", " + programsReading[0] + " of " + programsReading[1] + "..." : "..."))];
+  }
+  var groups = [];
+  var listed = 0;
+  offeredGroups().forEach(function (offered) {
+    var title = offered[0], paths = offered[1];
+    var kept = paths.filter(passesFilter);
+    listed += paths.length;
+    if (kept.length || title === OWN_GROUP) groups.push([programGroup(title, paths, kept), kept.length]);
   });
-  if (uses.children.length) words.appendChild(uses);
-  words.appendChild(argsFor(path, false));
-  body.appendChild(words);
-  return hero;
+  var shown = groups.reduce(function (sum, group) { return sum + group[1]; }, 0);
+  var parts = [featureFilter(chipFeatures(), {
+    all: function () { return []; },
+    none: function (keys) { return keys; }
+  })].concat(groups.map(function (group) { return group[0]; }));
+  if (!shown) {
+    parts.push(h("p", {}, listed ? "Every program here needs hardware that is not ticked."
+                                 : "There are no programs on this drive."));
+  }
+  var examples = programHooks.examples && programHooks.examples();
+  if (examples) {
+    if (groups.length > 1) parts.splice(parts.indexOf(groups[1][0]), 0, examples);
+    else parts.push(examples);
+  }
+  return parts;
 }
 
 function renderProgramView() {
-  programView.textContent = "";
-  if (!onProgramPage) return;
-  programView.appendChild(programHero(boardSet.program));
-  // The programs are the drive's, so none is listed until it is open
-  if (!drive.dirHandle) {
-    var closed = document.createElement("p");
-    closed.className = "prognone";
-    closed.textContent = CAN_REACH_A_DRIVE ? "Open the FX drive to see the programs on it."
-                                           : "This browser cannot open the FX drive, so " +
-                                             "programs cannot be listed. Use Chrome or Edge.";
-    programView.appendChild(closed);
-    return;
-  }
-  // Each Python file is read off the drive in turn, which takes a while, so the count is shown
-  // once the files are counted
-  if (programsReading || !programsKnown) {
-    var reading = document.createElement("p");
-    reading.className = "prognone";
-    reading.textContent = "Reading the Python files on the drive" + (programsReading
-      ? ", " + programsReading[0] + " of " + programsReading[1] + "..." : "...");
-    programView.appendChild(reading);
-    return;
-  }
-  programView.appendChild(featureFilter());
-  var shown = 0;
-  var listed = 0;
-  function group(title, paths) {
-    listed += paths.length;
-    var kept = paths.filter(passesFilter);
-    // The user's own is always there, as the effects' are, saying how to start one where empty
-    var own = title === OWN_GROUP;
-    if (!kept.length && !own) return;
-    shown += kept.length;
-    var open = !programGroupFolded(title);
-    programView.appendChild(foldHead(title, groupSays(title), open, function () {
-      programsFolded[title] = open;
-    }));
-    if (!open) return;
-    if (own && !paths.length) {
-      var empty = document.createElement("p");
-      empty.className = "prognone";
-      empty.textContent = "None yet. Customise an example to make one.";
-      programView.appendChild(empty);
-    }
-    if (!kept.length) return;
-    var grid = document.createElement("div");
-    grid.className = "proggrid";
-    kept.forEach(function (path) { grid.appendChild(programCard(path)); });
-    programView.appendChild(grid);
-  }
-  offeredGroups().forEach(function (offered) { group(offered[0], offered[1]); });
-  if (!shown) {
-    var none = document.createElement("p");
-    none.className = "prognone";
-    none.textContent = listed ? "Every program here needs hardware that is not ticked."
-                              : "There are no programs on this drive.";
-    programView.appendChild(none);
-  }
-  programViewSteps.forEach(function (step) { step(); });
+  programView.hidden = !onProgramPage;
+  if (!onProgramPage) return replace(programView);
+  replace(programView, programHero(boardSet.program), programListing());
 }
-
-// What the parts after this one add to the program tab once its programs are listed
-var programViewSteps = [];
-
-// ---- choosing by what is to hand ----------------------------------------------------------------
-// A chip for each thing an offered program can use, all on to begin with. A chip turned off is
-// something not to hand, so every program needing it goes, and a program stays only while all it
-// uses is on. One screen or two is had with either a screen or two, so it has no chip of its own,
-// and every board has its outputs and its Boot button, and an RGB output where it has one, so
-// none of those has one
 
 var CHIPLESS = ["either", "outputs", "rgb", "button"];
 
@@ -15051,7 +15680,6 @@ function passesFilter(path) {
   });
 }
 
-// The things there is a chip for, those some offered program uses
 function chipFeatures() {
   var offered = offeredPaths();
   return FEATURES.filter(function (feature) {
@@ -15067,139 +15695,83 @@ function offeredPaths() {
   return offered;
 }
 
-function featureFilter() {
-  var row = document.createElement("div");
-  row.className = "featurefilter";
-  var said = document.createElement("span");
-  said.textContent = "With:";
-  row.appendChild(said);
-  var chips = chipFeatures();
-  chips.forEach(function (feature) {
-    var chip = document.createElement("button");
-    chip.type = "button";
-    chip.className = "featurechip" + (had(feature[0]) ? " on" : "");
-    chip.dataset.feature = feature[0];
-    chip.title = had(feature[0]) ? "Showing programs that use " + feature[1]
-                                 : "Hiding programs that need " + feature[1];
-    chip.appendChild(featureIcon(feature[0]));
-    chip.appendChild(document.createTextNode(feature[2]));
-    chip.onclick = function () {
-      var at = unhad.indexOf(feature[0]);
-      if (at >= 0) unhad.splice(at, 1);
-      else unhad.push(feature[0]);
-      draw();
-    };
-    row.appendChild(chip);
-  });
-  // Every chip on, or every chip off for ticking what is to hand, the two kept together where the
-  // row wraps
-  var clears = document.createElement("div");
-  clears.className = "featureclears";
-  row.appendChild(clears);
-  [["all", function () { return []; }],
-   ["none", function () { return chips.map(function (feature) { return feature[0]; }); }]]
-    .forEach(function (one) {
-      var choice = document.createElement("button");
-      choice.type = "button";
-      choice.className = "featureclear";
-      choice.textContent = one[0];
-      choice.onclick = function () {
-        unhad = one[1]();
-        draw();
-      };
-      clears.appendChild(choice);
-    });
-  return row;
+function featureFilter(features, choices) {
+  var keys = features.map(function (feature) { return feature[0]; });
+  return h("div", {class: "featurefilter", role: "group", "aria-label": "Show programs using"},
+    h("span", {}, "With:"),
+    features.map(function (feature) {
+      var key = feature[0];
+      return h("button", {type: "button", "aria-pressed": String(had(key)), "data-feature": key,
+                          title: had(key) ? "Showing programs that use " + feature[1]
+                                          : "Hiding programs that need " + feature[1],
+                          onclick: function () {
+                            var at = unhad.indexOf(key);
+                            if (at >= 0) unhad.splice(at, 1);
+                            else unhad.push(key);
+                            draw();
+                          }},
+        featureIcon(key), feature[2]);
+    }),
+    h("span", {},
+      ["all", "none"].map(function (which) {
+        return h("button", {type: "button", onclick: function () {
+          unhad = choices[which](keys);
+          draw();
+        }}, which);
+      })));
 }
 
-// ---- moving between the two pages ---------------------------------------------------------------
-// Two tabs split under the header, the effects tab holding the way into scenes until there are some
-
-// Back to the effects, the file running them again
 function toEffects() {
   onProgramPage = false;
   boardSet.program = null;
   draw();
 }
 
-// Over to the programs with none chosen, until one is picked
 function toProgram() {
   onProgramPage = true;
   draw();
 }
 
-// The effects summed up small: a live swatch of the outputs, as their own tab's is, painted every
-// frame from what the lamps play, so it never stops on whichever frame a redraw caught
+var pageSwitch = null;
+
 function effectsFace() {
-  var face = document.createElement("span");
-  face.className = "effectsface";
-  var swatch = document.createElement("span");
-  swatch.className = "accswatch";
+  var swatch = h("span", {class: "accswatch"});
   tabSwatch(swatch, "outPanel");
-  face.appendChild(swatch);
-  return face;
+  return h("span", {}, swatch);
+}
+
+function pageTab(page, name, said, face, choose) {
+  var current = (page === "program") === onProgramPage;
+  return h("li", {"data-page": page},
+    h("button", {type: "button", "aria-current": current ? "page" : null, onclick: choose},
+      face, h("span", {}, h("b", {}, name), said ? h("small", {}, said) : null)));
 }
 
 function renderPageSwitch() {
-  var inHeader = document.getElementById("headSwitch");
-  inHeader.textContent = "";
   var program = boardSet.program;
-  // Split under the header, the tabs are drawn as the tabs off its foot are
-  inHeader.className = "headswitch headsplit headtabs";
-  // Two tabs, what runs picked, each showing what it would run, small in the header where the
-  // page's name is, taking no room from the page
-  [["effects", "Effects"],
-   ["program", "Programs", program ? programTitle(program) : ""]].forEach(function (one) {
-    // A tab holds the scenes' button, and a button cannot hold another, so a tab is a plain
-    // element taking the click and the keyboard
-    var cover = document.createElement("div");
-    cover.setAttribute("role", "button");
-    cover.tabIndex = 0;
-    cover.onkeydown = function (event) {
-      if (event.key === "Enter" || event.key === " ") cover.onclick();
-    };
-    cover.className = "cover" + ((one[0] === "program") === onProgramPage ? " on" : "");
-    cover.dataset.page = one[0];
-    // With no program chosen its tab shows a starfield, or the lamps lit on a board without screens
-    var face = one[0] === "effects" ? effectsFace()
-             : program ? programThumb(program)
-             : thumbCanvas(SCREEN_PORTS.length ? "stars" : "outputs:rainbow", 3);
-    face.classList.add("coverface");
-    cover.appendChild(face);
-    var words = document.createElement("span");
-    // Only a program's name is said under its tab
-    words.innerHTML = "<b>" + one[1] + "</b>" +
-                      (one[2] ? "<small>" + escapeHtml(one[2]) + "</small>" : "");
-    cover.appendChild(words);
-    cover.onclick = one[0] === "effects" ? toEffects : toProgram;
-    inHeader.appendChild(cover);
-  });
+  replace(pageSwitch, h("ul", {},
+    pageTab("effects", "Effects", "", effectsFace(), toEffects),
+    pageTab("program", "Programs", program ? programTitle(program) : "",
+            program ? programThumb(program)
+                    : thumbCanvas(SCREEN_PORTS.length ? "stars" : "outputs:rainbow", 3),
+            toProgram)));
 }
 
 (function () {
-  // In the header after the page's name. What follows the name is gathered into one group, so a
-  // wide header can set name, tabs and group on a single line
-  var headSwitch = document.createElement("span");
-  headSwitch.id = "headSwitch";
-  headSwitch.className = "headswitch";
   var named = document.querySelector("header h1");
-  var actions = document.createElement("span");
-  actions.id = "headActions";
-  actions.className = "headactions";
+  var actions = h("span", {id: "headActions", class: "headactions"});
   while (named.nextSibling) actions.appendChild(named.nextSibling);
-  named.parentNode.appendChild(headSwitch);
+  pageSwitch = h("nav", {id: "headSwitch", class: "pageswitch", "aria-label": "Pages"});
+  named.parentNode.appendChild(pageSwitch);
   named.parentNode.appendChild(actions);
-  programView = document.createElement("div");
-  programView.id = "programView";
-  programView.className = "programview";
+  programView = h("section", {id: "programView", class: "programs", "aria-label": "Programs",
+                              hidden: true});
   var body = document.getElementById("sceneBody");
   body.parentNode.insertBefore(programView, body.nextSibling);
 }());
 
-// Before anything is drawn, as the effects' parts measure themselves and measure nothing while
-// the program page hides them
 drawSteps.before.push(function () {
-  document.body.classList.toggle("programpage", onProgramPage);
+  document.body.toggleAttribute("data-program-page", onProgramPage);
 });
 
 drawSteps.after.push(function () {
@@ -15208,12 +15780,9 @@ drawSteps.after.push(function () {
   renderProgramView();
   scenesInTheTab();
   headerOnOneLine();
-  // The effects' live swatch in the tabs is made after the page painted, so it is painted now
   paintAll();
 });
 
-// Pictures for thumbnails, decoded ahead of being shown, so a thumbnail is drawn whole the first
-// time and never fills in late. Once all are in, the page is drawn again for any already showing
 function loadThumbs(sources) {
   var waiting = 0;
   sources.forEach(function (src) {
@@ -15228,55 +15797,41 @@ function loadThumbs(sources) {
   });
 }
 
-// Split under the header, the tabs stand over the page's column. Where the window is wide
-// enough for the name to fit left of that column and the rest right of it, all three share one
-// line, measured, since what fits depends on the name and on which buttons show
 var COLUMN_REM = 57.2;
 
 function headerOnOneLine() {
   var header = document.querySelector("header");
-  header.classList.remove("oneline");
+  header.removeAttribute("data-oneline");
   var rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
   var style = getComputedStyle(header);
   var inner = header.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
   var gap = rem;
   var side = (inner - COLUMN_REM * rem) / 2 - gap;
   var name = document.querySelector("header h1").scrollWidth;
-  // The group's width as it sits, first shown to last, so a button joined to another counts once.
-  // What is laid over the page, such as an open menu, takes no room in the line
   var shown = Array.prototype.filter.call(document.getElementById("headActions").children,
     function (one) {
       return one.offsetWidth && getComputedStyle(one).position !== "absolute";
     });
   var rest = shown.length ? shown[shown.length - 1].getBoundingClientRect().right -
                             shown[0].getBoundingClientRect().left : 0;
-  // The space below the buttons matches the header's top padding, measured to its outer edge so
-  // its bottom border counts, and the tabs reach from the buttons' top to that edge. The tabs
-  // keep that height on two rows too, so moving between one and two changes nothing
   var above = parseFloat(style.paddingTop);
   var border = parseFloat(style.borderBottomWidth) || 0;
-  // Its exact height, a whole-pixel one leaving the spacing half a pixel out
   var button = document.getElementById("open").getBoundingClientRect().height;
   header.style.setProperty("--headgap", (above - border) + "px");
   header.style.setProperty("--buttonheight", button + "px");
   header.style.setProperty("--tabheight", (button + above) + "px");
-  // A little to spare, as the group's borders and the arrow's join round up
-  if (name <= side && rest + 8 <= side) header.classList.add("oneline");
+  if (name <= side && rest + 8 <= side) header.setAttribute("data-oneline", "");
 }
 
 window.addEventListener("resize", headerOnOneLine);
 
-// Before there are scenes, the way into them is the effects tab's own, at its end, so no row is
-// kept above the gallery for it. Once there are scenes their cards take that place, as they did
 function scenesInTheTab() {
   var into = !state.scenes.length && !onProgramPage &&
-             document.querySelector("#headSwitch .cover[data-page=effects]");
-  document.body.classList.toggle("scenesintab", !!into);
+             pageSwitch.querySelector("li[data-page=effects]");
+  document.body.toggleAttribute("data-scenes-in-tab", !!into);
   if (!into) return;
   var plus = document.querySelector("#tabs .plus");
-  if (!plus) return;
-  plus.addEventListener("click", function (event) { event.stopPropagation(); });
-  into.appendChild(plus);
+  if (plus) into.appendChild(plus);
 }
 
 // ---- the bar along the top ----------------------------------------------------------------------
@@ -17630,59 +18185,36 @@ function rememberRead(text) {
   try { localStorage.setItem(WROTE_KEY, text); } catch (e) {}
 }
 
-// ---- examples to discover -----------------------------------------------------------------------
-// The Discover button on each tab with examples, and the gallery it opens. Pressed, it fetches the
-// index tools/build_examples_index.py writes and checks the drive against it, offering the examples
-// the drive lacks to download and those it holds an older version of as updates. Each file is
-// checked against the index's hash before it is written, and an example on the drive can be
-// deleted, as it can be downloaded again. build_editor.py takes this folder only for a board whose
-// description names its examples_index.
-
-// The branch the index and the files are fetched from
 var discoverKinds = {};
 
 var DISCOVER_BRANCH = "patch/spidisplay-external-rebased";
 
-// Where the repository's files are served from, at that branch
 var DISCOVER_SOURCE = "https://raw.githubusercontent.com/pimoroni/picofx/refs/heads/" +
                       DISCOVER_BRANCH + "/";
 
-// A file's address, by its path on the drive. The index sits beside the examples folder it lists
 function discoverFileUrl(path) {
   var index = BOARD.examples_index;
   return DISCOVER_SOURCE + index.slice(0, index.lastIndexOf("/") + 1) + path;
 }
 
-// The firmware's version, which an example may need newer than
 var DISCOVER_FIRMWARE = "1.1.3 preview".split(" ")[0];
 
-// A check of one tab's examples
 function discoverFreshCheck() {
-  // status is idle, checking, done or failed. progress is [files read, of] while the drive is read,
-  // refreshing the same while it is read again quietly, updating [updated, of] while Update all
-  // runs, and notice what the last download said, as [text, warn]
   return {status: "idle", progress: null, refreshing: null, updating: null, error: null,
           index: null, notice: null};
 }
 
-// What the page says where the examples cannot be fetched. Where they come from is never named
 var DISCOVER_OFFLINE = "Could not connect. Check this computer is online.";
 
-// What went wrong, in the page's words, in place of the browser's own. fetch() fails with a
-// TypeError where the network cannot reach GitHub, an Error is one this part threw, and anything
-// else is the drive's
 async function discoverTrouble(e) {
   if (e.name === "TypeError") return DISCOVER_OFFLINE;
   if (e.name === "Error") return e.message;
   return await driveTrouble(e);
 }
 
-// Say how a download went, where the gallery's examples start and in the banner at the top of the
-// page
 function discoverSay(kind, text, warn) {
   var notice = discover[kind].notice = [text, warn];
   banner(text, warn);
-  // One saying a download went well gives the line back after a while, and a failure stays
   if (warn) return;
   setTimeout(function () {
     if (discover[kind].notice !== notice) return;
@@ -17691,34 +18223,25 @@ function discoverSay(kind, text, warn) {
   }, DISCOVER_NOTICE_MS);
 }
 
-// How long a notice that a download went well is shown
 var DISCOVER_NOTICE_MS = 8000;
 
 var discover = {
   program: discoverFreshCheck(),
   sound: discoverFreshCheck(),
   drawing: discoverFreshCheck(),
-  // Each example's state by path: missing, current, update, changed or moved
   states: {},
-  // Each file's state by path, as {state: missing, same, old or changed, at: where the drive has it}
   files: {},
-  // The examples needing newer firmware than the board's, by path
   newer: {},
-  // The examples being downloaded, by path
   busy: {},
-  // The path a moved example has now, by the path the drive has it at
   movedTo: {}
 };
 
-// The examples the drive lacks, as the program tab and the galleries list them
 var discoverPrograms = {};
 var discoverDrawings = {};
 var discoverSounds = {};
-// Each missing example's thumbnail, and a second screen's where it has one, as object URLs, by path
 var discoverThumbs = {};
 var discoverSecondThumbs = {};
 
-// Whether version a is older than version b, each as dotted numbers
 function discoverOlder(a, b) {
   var x = a.split("."), y = b.split(".");
   for (var at = 0; at < Math.max(x.length, y.length); at++) {
@@ -17728,7 +18251,6 @@ function discoverOlder(a, b) {
   return false;
 }
 
-// A file's hash, the one git gives its contents, as the index lists it
 async function discoverHash(bytes) {
   var head = new TextEncoder().encode("blob " + bytes.length + "\0");
   var whole = new Uint8Array(head.length + bytes.length);
@@ -17738,7 +18260,6 @@ async function discoverHash(bytes) {
   return Array.from(digest, function (byte) { return byte.toString(16).padStart(2, "0"); }).join("");
 }
 
-// A lambda that finds a file on the drive by path, or null, reading each folder's list once
 function discoverFinder() {
   var folders = {};
   function folder(path) {
@@ -17764,10 +18285,6 @@ function discoverFinder() {
   };
 }
 
-// How a drive file compares with the index's: same, old where it matches an earlier version, or
-// changed. A file that is not text is compared by its size, as reading every picture was most of a
-// check's time, and a text file by its hash, also taken without Windows line endings, as a build
-// from a Windows clone writes them
 async function discoverCompare(file, handle) {
   var got = await handle.getFile();
   if (!/\.(py|txt)$/i.test(file.path)) {
@@ -17785,7 +18302,6 @@ async function discoverCompare(file, handle) {
                                                                                   : "changed";
 }
 
-// Where the drive has a file, at its path or one it was moved from, and how it compares
 async function discoverFileState(file, find) {
   var places = [file.path].concat(file.moved_from || []);
   for (var place of places) {
@@ -17795,7 +18311,6 @@ async function discoverFileState(file, find) {
   return {state: "missing", at: null};
 }
 
-// The index, fetched afresh
 async function discoverIndex() {
   var answer;
   try {
@@ -17807,11 +18322,6 @@ async function discoverIndex() {
   return await answer.json();
 }
 
-// Check every example of one tab against the drive, then fetch what the missing ones need to be
-// shown.
-//
-// With quiet, after a check has been done, only the drive is read again, against the index already
-// fetched, and what the last check found stays shown while it reads, its progress in refreshing
 async function discoverCheck(kind, quiet) {
   var check = discover[kind];
   if (check.status === "checking" || check.refreshing || !drive.dirHandle) return;
@@ -17868,9 +18378,6 @@ async function discoverCheck(kind, quiet) {
   draw();
 }
 
-// An example's state from its files': missing where its own file is, moved where the drive has
-// it where it used to be kept, changed where the user changed any file, an update where any is
-// old or missing, and current where every one is GitHub's
 function discoverStateOf(entry) {
   var own = discover.files[entry.files[0].path];
   if (own.state === "missing") return "missing";
@@ -17882,20 +18389,16 @@ function discoverStateOf(entry) {
   }) ? "current" : "update";
 }
 
-// Fetch each missing example's source and thumbnail, four at a time, so it can be listed. With
-// same, the index being the one the last check read, one it listed is kept as it was
 async function discoverFetchMissing(kind, offered, same) {
   var missing = offered.filter(function (entry) { return discover.states[entry.path] === "missing"; });
   var listed = {};
   var before = same ? discoverListedOn(kind) : {};
   async function one(entry) {
-    // One the last check listed is listed again as it was, without fetching it again
     if (before[entry.path]) {
       listed[entry.path] = before[entry.path];
       return;
     }
     try {
-      // A picture is its own thumbnail, a slideshow its first, and the index names it
       if (entry.kind === "picture") {
         if (!discoverThumbs[entry.path]) {
           discoverThumbs[entry.path] = URL.createObjectURL(
@@ -17906,8 +18409,6 @@ async function discoverFetchMissing(kind, offered, same) {
                                         slideshow: entry.slideshow, count: entry.files.length}};
         return;
       }
-      // A sound is known by its header alone, fetched as its first few bytes, which say how long
-      // it plays. It is heard from GitHub as it is, unfetched
       if (entry.kind === "sound") {
         var head = await (await fetch(discoverFileUrl(entry.path),
                                       {headers: {Range: "bytes=0-4095"}})).arrayBuffer();
@@ -17919,7 +18420,6 @@ async function discoverFetchMissing(kind, offered, same) {
       }
       var source = await (await fetch(discoverFileUrl(entry.path))).text();
       var stem = entry.path.replace(/\.py$/i, "");
-      // Its thumbnail, and a second screen's beside it where it has one
       for (var suffix of [".png", "-2.png"]) {
         var held = suffix === ".png" ? discoverThumbs : discoverSecondThumbs;
         var thumb = entry.files.filter(function (file) { return file.path === stem + suffix; })[0];
@@ -17941,13 +18441,11 @@ async function discoverFetchMissing(kind, offered, same) {
                                            offered: true};
       }
     } catch (e) {
-      // One that will not fetch is left out of this check
     }
   }
   for (var at = 0; at < missing.length; at += 4) await Promise.all(missing.slice(at, at + 4).map(one));
   if (kind === "program") {
     discoverPrograms = listed;
-    // Their thumbnails decoded ahead, as the program tab's are, to be drawn whole the first time
     var urls = [];
     Object.keys(listed).forEach(function (path) { urls = urls.concat(discoverPicturesOf(path)); });
     loadThumbs(urls);
@@ -17958,14 +18456,10 @@ async function discoverFetchMissing(kind, offered, same) {
   }
 }
 
-// A missing program's pictures, as the program tab holds a program's: its own, and a second
-// screen's after it
 function discoverPicturesOf(path) {
   return discoverThumbs[path] ? [discoverThumbs[path]].concat(discoverSecondThumbs[path] || []) : [];
 }
 
-// How many seconds a WAV file plays, from its first bytes and its whole size, as the Sound tab
-// reads a sound on the drive, or 0 where its header does not say
 function discoverWavSeconds(head, size) {
   var view = new DataView(head);
   if (view.byteLength < 12 || view.getUint32(0) !== 0x52494646 || view.getUint32(8) !== 0x57415645)
@@ -17973,25 +18467,21 @@ function discoverWavSeconds(head, size) {
   var at = 12, byteRate = 0;
   while (at + 8 <= view.byteLength) {
     var id = view.getUint32(at), length = view.getUint32(at + 4, true);
-    if (id === 0x666d7420) byteRate = view.getUint32(at + 16, true);  // "fmt "
-    else if (id === 0x64617461)                                         // "data"
+    if (id === 0x666d7420) byteRate = view.getUint32(at + 16, true);
+    else if (id === 0x64617461)
       return byteRate ? Math.max(1, Math.round(Math.min(length, size - at - 8) / byteRate)) : 0;
     at += 8 + length + (length % 2);
   }
   return 0;
 }
 
-// The tab an example is offered on and checked from: a program on the program tab, a sound on the
-// Sound tab, and a drawing or a picture on the Screens tab, as "drawing"
 function discoverTab(entry) {
   return entry.kind === "program" || entry.kind === "sound" ? entry.kind : "drawing";
 }
 
-// Every tab with examples to offer, and what each calls them
 var DISCOVER_TABS = ["program", "drawing", "sound"];
 var DISCOVER_WORDS = {program: "programs", drawing: "pictures and drawings", sound: "sounds"};
 
-// What a tab's examples are called, "more" before them only where the drive holds some already
 function discoverAsked(kind) {
   var held = kind === "program"
     ? PROGRAMS.some(function (program) { return program.example; })
@@ -18000,12 +18490,10 @@ function discoverAsked(kind) {
   return (held ? "more example " : "example ") + DISCOVER_WORDS[kind];
 }
 
-// The examples a tab's last check found missing, by path
 function discoverListedOn(kind) {
   return kind === "program" ? discoverPrograms : kind === "sound" ? discoverSounds : discoverDrawings;
 }
 
-// The index entry at a path, from whichever check last read it
 function discoverEntry(path) {
   var found = null;
   DISCOVER_TABS.forEach(function (kind) {
@@ -18017,12 +18505,10 @@ function discoverEntry(path) {
   return found;
 }
 
-// The example a card stands for, the path it has now for one the drive keeps where it used to be
 function discoverTarget(path) {
   return discover.movedTo[path] || path;
 }
 
-// Write a file to the drive, making its folders
 async function discoverWrite(path, blob) {
   var parts = path.split("/");
   var name = parts.pop();
@@ -18034,7 +18520,6 @@ async function discoverWrite(path, blob) {
   await writable.close();
 }
 
-// Delete a file from the drive, where it is still there
 async function discoverRemove(path) {
   var parts = path.split("/");
   var name = parts.pop();
@@ -18042,10 +18527,6 @@ async function discoverRemove(path) {
   if (folder) await folder.removeEntry(name);
 }
 
-// Download an example, or its update, writing only the files that differ from the index's, and
-// deleting those left where it used to be kept. A program downloaded new is chosen, as a tapped
-// card is. Returns false where it failed, else where the user's changed copy was kept or true.
-// With quiet, one of several, only a failure is said and nothing is chosen
 async function discoverDownload(path, quiet) {
   var entry = discoverEntry(path);
   if (!entry || discover.busy[path] || discover.newer[path]) return false;
@@ -18058,8 +18539,6 @@ async function discoverDownload(path, quiet) {
   var was = own.at;
   var kept = null;
   try {
-    // The user's changes are kept as their own copy, as Customise makes one. A picture or sound
-    // has no Customise, so a changed one is replaced
     if (own.state === "changed" && (entry.kind === "program" || entry.kind === "drawing"))
       kept = entry.kind === "program" ? await copyProgram(was) : "drawings/" + await discoverKinds.drawing.copy(was);
     var written = {};
@@ -18072,7 +18551,6 @@ async function discoverDownload(path, quiet) {
       await discoverWrite(file.path, blob);
       written[file.path] = blob;
     }
-    // What was left where the example used to be kept goes, now it is in its new place
     for (file of entry.files) {
       held = discover.files[file.path];
       if (held.at && held.at !== file.path) await discoverRemove(held.at);
@@ -18096,9 +18574,6 @@ async function discoverDownload(path, quiet) {
   return done;
 }
 
-// List a downloaded example as the drive's own: a program from the source just written, without
-// reading every program again, and a drawing by reading the drive until the gallery has it. A
-// program moved from where it was kept takes its place, chosen where that was
 async function discoverListed(entry, written, fresh, was) {
   var path = entry.path;
   if (entry.kind === "program") {
@@ -18140,7 +18615,6 @@ async function discoverListed(entry, written, fresh, was) {
   }
 }
 
-// Download every update of one kind in turn, counting them in, and stopping at one that fails
 async function discoverUpdateAll(kind) {
   var paths = discoverUpdates(kind);
   var kept = [];
@@ -18172,42 +18646,28 @@ function discoverUpdates(kind) {
   });
 }
 
-// ---- the check's line, where each gallery's examples start ---------------------------------------
-
-function discoverButton(label, press) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.textContent = label;
-  button.onclick = press;
-  return button;
-}
-
 var DISCOVER_ICONS = {
-  get: "<svg viewBox='0 0 24 24' aria-hidden='true'><path d='M7 18.5h-.5a4.5 4.5 0 0 1-.6-8.96 " +
-       "6 6 0 0 1 11.6-1.3A5 5 0 0 1 17.5 18.5H17 M12 11v8 M9 16l3 3 3-3' fill='none' " +
-       "stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg>",
-  done: "<svg viewBox='0 0 24 24' aria-hidden='true'><path d='M5 12.5l4.5 4.5L19 7.5' fill='none' " +
-        "stroke='currentColor' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/></svg>",
-  warn: "<svg viewBox='0 0 24 24' aria-hidden='true'><path d='M12 4v10 M12 19v.5' fill='none' " +
-        "stroke='currentColor' stroke-width='2.4' stroke-linecap='round'/></svg>"
+  get: "<path d='M7 18.5h-.5a4.5 4.5 0 0 1-.6-8.96 6 6 0 0 1 11.6-1.3A5 5 0 0 1 17.5 18.5H17 " +
+       "M12 11v8 M9 16l3 3 3-3' fill='none' stroke='currentColor' stroke-width='1.8' " +
+       "stroke-linecap='round' stroke-linejoin='round'/>",
+  done: "<path d='M5 12.5l4.5 4.5L19 7.5' fill='none' stroke='currentColor' stroke-width='2.2' " +
+        "stroke-linecap='round' stroke-linejoin='round'/>",
+  warn: "<path d='M12 4v10 M12 19v.5' fill='none' stroke='currentColor' stroke-width='2.4' " +
+        "stroke-linecap='round'/>"
 };
 
-function discoverIcon(name, className) {
-  var icon = document.createElement("span");
-  icon.className = className;
-  icon.innerHTML = DISCOVER_ICONS[name];
-  return icon;
+var DISCOVER_ARROW = "<path d='M5.5 1 L5.5 7.5 M2.5 4.8 L5.5 7.8 L8.5 4.8 M1.5 9.8 L9.5 9.8' " +
+                     "stroke='currentColor' stroke-width='1.6' fill='none' stroke-linecap='round' " +
+                     "stroke-linejoin='round'/>";
+
+function discoverIcon(name) {
+  return h("svg:svg", {viewBox: "0 0 24 24", "aria-hidden": "true", html: DISCOVER_ICONS[name]});
 }
 
 function discoverElement(tag, className, text) {
-  var made = document.createElement(tag);
-  made.className = className;
-  if (text) made.textContent = text;
-  return made;
+  return h(tag, {class: className || null, text: text || null});
 }
 
-// What a check found of one kind: the examples to download, the updates, and how many need newer
-// firmware
 function discoverFound(kind) {
   var listed = discoverListedOn(kind);
   return {
@@ -18224,44 +18684,43 @@ function discoverCount(count, one, many) {
   return count + " " + (count === 1 ? one : many);
 }
 
-// A bar filling as far as [done, of] has got
-function discoverProgress(at) {
-  var bar = discoverElement("div", "discoverprogress");
-  var fill = discoverElement("span", "");
-  fill.style.width = (at ? Math.round(100 * at[0] / Math.max(1, at[1])) : 8) + "%";
-  bar.appendChild(fill);
-  return bar;
+function discoverProgress(at, idle) {
+  return h("progress", {max: 100, value: at ? Math.round(100 * at[0] / Math.max(1, at[1])) : 8,
+                        "data-idle": !!idle});
 }
 
-// What the last download said, marked done, under way or failed
 function discoverNotice(check) {
   if (!check.notice) return null;
   var warn = check.notice[1];
-  var notice = discoverElement("div", "discovernotice" + (warn === "hold" ? " hold" : warn ? " warn" : ""));
-  if (warn !== "hold") notice.appendChild(discoverIcon(warn ? "warn" : "done", "discovermark"));
-  notice.appendChild(document.createTextNode(check.notice[0]));
-  return notice;
+  var tone = warn === "hold" ? "hold" : warn ? "warn" : "done";
+  return h("p", {"data-tone": tone}, tone === "hold" ? null : discoverIcon(tone), check.notice[0]);
 }
 
-// A missing example's thumbnail, taken away where it will not load, so its dark ground shows
 function discoverThumbImage(path) {
-  var img = document.createElement("img");
-  img.alt = "";
+  var img = h("img", {alt: ""});
   img.onerror = function () { img.remove(); };
   img.src = discoverThumbs[path];
   return img;
 }
 
-// Where a tab's examples start, a rule naming them, over the Discover button and the line under it
-function discoverBar(kind) {
-  var bar = discoverElement("div", "discoverbar");
-  bar.appendChild(discoverDivider("Examples"));
-  bar.appendChild(discoverPanel(kind));
-  return bar;
+function discoverDivider(words, minor) {
+  return h("div", {class: "discoverdivide", "data-minor": !!minor}, h("span", {}, words));
 }
 
-// Put a tab's examples line where its examples start, after the user's own group, which always
-// heads a tab's groups, or at the end where no example is listed
+var DISCOVER_INK = {program: "var(--board)", drawing: "var(--accent)", sound: "var(--accent)"};
+
+function discoverBar(kind) {
+  var check = discover[kind];
+  var found = check.status === "done" ? discoverFound(kind) : null;
+  return h("section", {class: "discoverbar", "aria-label": "Examples",
+                       style: {"--discover": DISCOVER_INK[kind]}},
+    discoverDivider("Examples"),
+    h("button", {type: "button", onclick: function () { discoverOpenBrowser(kind); }},
+      discoverIcon("get"), "Discover " + discoverAsked(kind),
+      found && found.waiting.length ? h("span", {}, String(found.waiting.length)) : null),
+    discoverUpdateRow(kind, check, found));
+}
+
 function discoverPlaceBar(box, kind) {
   var bar = discoverBar(kind);
   var heads = box.querySelectorAll(".foldhead");
@@ -18269,87 +18728,41 @@ function discoverPlaceBar(box, kind) {
   else box.appendChild(bar);
 }
 
-// ---- the gallery: the examples the drive lacks, over the page ----------------------------------
+function discoverRowSays(check, found) {
+  if (check.status === "idle") return h("p", {}, "Check the examples on the drive for newer versions.");
+  if (check.status === "checking") return h("p", {}, "Checking for updates...");
+  if (check.status === "failed") return h("p", {"data-tone": "warn"}, check.error || DISCOVER_OFFLINE);
+  return discoverNotice(check) || h("p", {}, found.updates.length
+    ? discoverCount(found.updates.length, "update", "updates") + " for examples on the drive."
+    : "The examples on the drive are up to date.");
+}
 
-// The kind of example whose gallery is open, or null, the examples chosen in it, the one a Shift
-// press counts a run from, the section it shows, "" for all of them, and how far downloading the
-// chosen has got, as [downloaded, of], while it runs
+function discoverUpdateRow(kind, check, found) {
+  var running = check.status === "checking" ? check.progress || [0, 1]
+              : check.updating || discoverFetching || check.refreshing;
+  var busy = check.status === "checking" || running ||
+             (check.notice && check.notice[1] === "hold");
+  return h("div", {},
+    discoverRowSays(check, found),
+    discoverProgress(running || null, !running),
+    h("button", {type: "button", disabled: !!(busy || !found || !found.updates.length),
+                 onclick: function () { discoverUpdateAll(kind); }}, "Update all"),
+    h("button", {type: "button", disabled: !!busy,
+                 onclick: function () { discoverCheck(kind); }}, "Check for updates"));
+}
+
 var discoverBrowsing = null;
 var discoverChosen = [];
 var discoverAnchor = null;
 var discoverSection = "";
 var discoverFetching = null;
+var discoverDialog = null;
 
-// The colour of each kind's gallery, its tab's own
-var DISCOVER_INK = {program: "var(--board)", drawing: "var(--accent)", sound: "var(--accent)"};
-
-// The Discover button, the width of the tab, with a count of the examples it holds to download
-// once checked, and the line for updates under it
-function discoverPanel(kind) {
-  var check = discover[kind];
-  var panel = discoverElement("div", "discoverpanel");
-  panel.style.setProperty("--discover", DISCOVER_INK[kind]);
-  var found = check.status === "done" ? discoverFound(kind) : null;
-  var open = discoverElement("button", "discoverwide");
-  open.type = "button";
-  open.appendChild(discoverIcon("get", "discoverwideicon"));
-  open.appendChild(document.createTextNode("Discover " + discoverAsked(kind)));
-  if (found && found.waiting.length)
-    open.appendChild(discoverElement("span", "discovercountchip", String(found.waiting.length)));
-  open.onclick = function () { discoverOpenBrowser(kind); };
-  panel.appendChild(open);
-  panel.appendChild(discoverUpdateRow(kind, check, found));
-  return panel;
-}
-
-// The line under Discover for the examples on the drive, one height whatever it says: what the
-// check found, or what a download says while it runs and a while after, a progress bar right of
-// it while anything runs, and Update all and Check for updates always in place, greyed where they
-// cannot be pressed. The examples on the drive are checked for updates without opening the gallery
-function discoverUpdateRow(kind, check, found) {
-  var row = discoverElement("div", "discoverupdaterow");
-  var said = discoverElement("span", "discoverrowsaid");
-  var running = check.status === "checking" ? check.progress || [0, 1]
-              : check.updating || discoverFetching || check.refreshing;
-  var busy = check.status === "checking" || running ||
-             (check.notice && check.notice[1] === "hold");
-  if (check.status === "idle") {
-    said.textContent = "Check the examples on the drive for newer versions.";
-  } else if (check.status === "checking") {
-    said.textContent = "Checking for updates...";
-  } else if (check.status === "failed") {
-    said.textContent = check.error || DISCOVER_OFFLINE;
-    said.classList.add("discoverwarn");
-  } else {
-    said.textContent = found.updates.length
-      ? discoverCount(found.updates.length, "update", "updates") + " for examples on the drive."
-      : "The examples on the drive are up to date.";
-    var notice = discoverNotice(check);
-    if (notice) said = notice;
-  }
-  said.classList.add("discoverrowsaid");
-  row.appendChild(said);
-  var progress = discoverProgress(running || null);
-  if (!running) progress.classList.add("discoveridle");
-  row.appendChild(progress);
-  var update = discoverButton("Update all", function () { discoverUpdateAll(kind); });
-  update.className = "discoverprimary";
-  update.disabled = busy || !found || !found.updates.length;
-  row.appendChild(update);
-  var again = discoverButton("Check for updates", function () { discoverCheck(kind); });
-  again.disabled = !!busy;
-  row.appendChild(again);
-  return row;
-}
-
-// Open a kind's gallery, checking GitHub first where it has not been
 function discoverOpenBrowser(kind) {
   discoverBrowsing = kind;
   discoverChosen = [];
   discoverAnchor = null;
   discoverSection = "";
-  // Every opening reads the drive again, so an example deleted since is offered, quietly where a
-  // check has been done
   discoverCheck(kind, true);
   draw();
 }
@@ -18359,11 +18772,6 @@ function discoverCloseBrowser() {
   draw();
 }
 
-document.addEventListener("keydown", function (e) {
-  if (e.key === "Escape" && discoverBrowsing) discoverCloseBrowser();
-});
-
-// The examples a gallery offers, as [path, name, what it does, section], in name order
 function discoverOffers(kind) {
   var listed = discoverListedOn(kind);
   return Object.keys(listed).map(function (path) {
@@ -18374,7 +18782,6 @@ function discoverOffers(kind) {
       return [path, held.sound.title, held.sound.seconds ? held.sound.seconds + "s" : "",
               held.sound.section || OTHER_EXAMPLES.sounds, "sound"];
     }
-    // A drawing or picture in no section is in the Screens tab's group for the rest of its kind
     if (held.kind === "picture") {
       return [path, held.picture.title, discoverPictureSaid(held.picture),
               held.picture.section || OTHER_EXAMPLES.pictures, "picture"];
@@ -18382,27 +18789,15 @@ function discoverOffers(kind) {
     return [path, held.drawing.title, held.drawing.description || "",
             held.drawing.section || OTHER_EXAMPLES.drawings, "drawing"];
   }).sort(function (a, b) {
-    // Numbers in names counted, so name 2 comes before name 10, as the program tab sorts them
     return a[1].localeCompare(b[1], undefined, {numeric: true});
   });
 }
 
-// A rule with words in it: "Examples" in its middle where a tab's examples start, and with minor,
-// a kind's name at its left where the Screens tab's drawings or pictures start within them
-function discoverDivider(words, minor) {
-  var rule = discoverElement("div", "discoverdivide" + (minor ? " minor" : ""));
-  rule.appendChild(discoverElement("span", "", words));
-  return rule;
-}
-
-// The kind of example a gallery section holds, "picture" or another, from the offers in it
 function discoverSectionKind(offers, section) {
   return offers.some(function (offer) { return offer[3] === section && offer[4] === "picture"; })
     ? "picture" : "drawing";
 }
 
-// Whether a gallery section is shown under the filter chosen: every section, one section, or
-// with "kind:" every section of one kind
 function discoverShows(offers, section) {
   if (!discoverSection) return true;
   if (discoverSection.indexOf("kind:") === 0)
@@ -18410,14 +18805,11 @@ function discoverShows(offers, section) {
   return section === discoverSection;
 }
 
-// What a picture is, in place of the description a drawing gives
 function discoverPictureSaid(picture) {
   if (picture.slideshow) return "A slideshow of " + picture.count + " pictures.";
   return "A " + picture.title.slice(picture.title.lastIndexOf(".") + 1).toUpperCase() + " picture.";
 }
 
-// The sections the offers fall in, drawings' before pictures', each kind's in the order its
-// sections.txt gives them, then any it does not list by name, and those naming none last, as ""
 function discoverSections(kind, offers) {
   function names(sections) {
     return (sections || []).map(function (one) { return one[0]; });
@@ -18442,10 +18834,6 @@ function discoverSections(kind, offers) {
   });
 }
 
-// Choose an example from a press on its card, as a file manager does. A plain press chooses it
-// alone, or none where it was the only one chosen. Its box, or a press with Ctrl, adds it to those
-// chosen or takes it away. A press with Shift chooses every example from the last one pressed to
-// it, in the order shown
 function discoverChoose(path, e, toggle, shown) {
   e = e || {};
   if (e.shiftKey && discoverAnchor && shown.indexOf(discoverAnchor) >= 0) {
@@ -18467,8 +18855,6 @@ function discoverChoose(path, e, toggle, shown) {
   draw();
 }
 
-// Download every chosen example in turn, choosing none of them on the program tab, unless only one
-// was chosen, and stopping at one that fails
 async function discoverDownloadChosen(kind) {
   var paths = discoverChosen.slice();
   if (paths.length === 1) {
@@ -18495,292 +18881,267 @@ async function discoverDownloadChosen(kind) {
 
 drawSteps.after.push(discoverRenderBrowser);
 
-// The gallery over the page: a way back, the section shown, a card for each example under its
-// section's name, and a bar at its foot saying what is chosen, with Download
+function discoverSheetDialog() {
+  if (discoverDialog) return discoverDialog;
+  discoverDialog = h("dialog", {class: "discover", "aria-labelledby": "discoverTitle",
+                                onclose: function () { if (discoverBrowsing) discoverCloseBrowser(); },
+                                onclick: function (event) {
+                                  if (event.target === discoverDialog) discoverCloseBrowser();
+                                }});
+  document.body.appendChild(discoverDialog);
+  return discoverDialog;
+}
+
+function discoverFocused(dialog) {
+  var focused = document.activeElement;
+  if (!focused || focused === dialog || !dialog.contains(focused)) return null;
+  if (focused.dataset.path)
+    return focused.tagName.toLowerCase() + "[data-path='" + CSS.escape(focused.dataset.path) + "']";
+  if (focused.dataset.feature) return "[data-feature='" + focused.dataset.feature + "']";
+  if (focused.tagName === "SELECT") return "select";
+  return null;
+}
+
 function discoverRenderBrowser() {
-  var old = document.getElementById("discoverbrowser");
-  var scrolled = old ? old.querySelector(".discoverscroll").scrollTop : 0;
-  if (old) old.remove();
-  document.body.classList.toggle("discovermodal", !!discoverBrowsing);
-  if (!discoverBrowsing) return;
+  if (!discoverBrowsing) {
+    if (discoverDialog && discoverDialog.open) {
+      replace(discoverDialog);
+      discoverDialog.close();
+    }
+    return;
+  }
+  var dialog = discoverSheetDialog();
   var kind = discoverBrowsing;
   var check = discover[kind];
-  var shade = discoverElement("div", "discovershade");
-  shade.style.setProperty("--discover", DISCOVER_INK[kind]);
-  shade.id = "discoverbrowser";
-  shade.onclick = function (e) { if (e.target === shade) discoverCloseBrowser(); };
-  var sheet = discoverElement("div", "discoversheet");
-  shade.appendChild(sheet);
-
-  var head = discoverElement("div", "discoversheethead");
-  var back = discoverButton("\u2039 Back", discoverCloseBrowser);
-  head.appendChild(back);
-  var asked = discoverAsked(kind);
-  head.appendChild(discoverElement("h2", "", asked.charAt(0).toUpperCase() + asked.slice(1)));
-  sheet.appendChild(head);
-
+  var oldScroll = dialog.querySelector(":scope > div:last-of-type");
+  var scrolled = oldScroll ? oldScroll.scrollTop : 0;
+  var focused = discoverFocused(dialog);
   var every = check.status === "done" ? discoverOffers(kind) : [];
-  // Programs are shown by what is to hand, as the program tab shows them, its chips repeated here
-  // and changing both
   var offers = kind === "program" ? every.filter(function (offer) {
     return passesFilter(offer[0]);
   }) : every;
-  var chips = kind === "program" ? discoverChips(every) : null;
-  if (chips) sheet.appendChild(chips);
-  var sections = discoverSections(kind, offers).filter(Boolean);
-  // Both kinds offered, the filter groups the sections by kind, each group led by the whole kind
-  var kinds = kind === "program" ? [] : ["drawing", "picture"].filter(function (one) {
-    return sections.some(function (section) { return discoverSectionKind(offers, section) === one; });
-  });
-  var grouped = kinds.length > 1;
-  var choices = grouped ? kinds.map(function (one) { return "kind:" + one; }) : [];
-  if (discoverSection && sections.indexOf(discoverSection) < 0 && choices.indexOf(discoverSection) < 0)
-    discoverSection = "";
+  var kinds = discoverKindsOffered(kind, offers);
+  var choices = kinds.length > 1 ? kinds.map(function (one) { return "kind:" + one; }) : [];
+  if (discoverSection && discoverSections(kind, offers).indexOf(discoverSection) < 0 &&
+      choices.indexOf(discoverSection) < 0) discoverSection = "";
   discoverChosen = discoverChosen.filter(function (path) {
     return offers.some(function (offer) { return offer[0] === path; });
   });
-  var choose = document.createElement("select");
-  choose.className = "discoverfilter";
-  function choice(into, value, words) {
-    var option = document.createElement("option");
-    option.value = value;
-    option.textContent = words + " (" + offers.filter(function (offer) {
+  var scroll = h("div", {}, discoverSheetBody(kind, check, every, offers));
+  dialog.style.setProperty("--discover", DISCOVER_INK[kind]);
+  replace(dialog,
+    discoverSheetHead(kind, offers),
+    kind === "program" ? discoverChips(every) : null,
+    scroll,
+    discoverSheetFoot(kind, check, offers));
+  if (!dialog.open) dialog.showModal();
+  scroll.scrollTop = scrolled;
+  var refocus = focused && dialog.querySelector(focused);
+  if (refocus) refocus.focus();
+}
+
+function discoverSheetHead(kind, offers) {
+  var asked = discoverAsked(kind);
+  return h("header", {},
+    h("button", {type: "button", onclick: discoverCloseBrowser}, "\u2039 Back"),
+    h("h2", {id: "discoverTitle"}, asked.charAt(0).toUpperCase() + asked.slice(1)),
+    offers.length ? discoverSectionChoice(kind, offers) : null);
+}
+
+function discoverKindsOffered(kind, offers) {
+  var sections = discoverSections(kind, offers).filter(Boolean);
+  return kind === "program" ? [] : ["drawing", "picture"].filter(function (one) {
+    return sections.some(function (section) { return discoverSectionKind(offers, section) === one; });
+  });
+}
+
+function discoverSectionChoice(kind, offers) {
+  var sections = discoverSections(kind, offers).filter(Boolean);
+  var kinds = discoverKindsOffered(kind, offers);
+  var grouped = kinds.length > 1;
+  function choice(value, words) {
+    var count = offers.filter(function (offer) {
       return !value || (value.indexOf("kind:") === 0
         ? discoverSectionKind(offers, offer[3]) === value.slice(5) : offer[3] === value);
-    }).length + ")";
-    option.selected = value === discoverSection;
-    into.appendChild(option);
+    }).length;
+    return h("option", {value: value, selected: value === discoverSection}, words + " (" + count + ")");
   }
-  choice(choose, "", "All");
-  if (grouped) {
-    kinds.forEach(function (one) {
-      var group = document.createElement("optgroup");
-      group.label = one === "picture" ? "Pictures" : "Drawings";
-      choice(group, "kind:" + one, one === "picture" ? "All pictures" : "All drawings");
-      sections.forEach(function (section) {
-        if (discoverSectionKind(offers, section) === one) choice(group, section, section);
-      });
-      choose.appendChild(group);
-    });
-  } else {
-    sections.forEach(function (section) { choice(choose, section, section); });
-  }
-  choose.onchange = function () {
-    discoverSection = choose.value;
-    draw();
-  };
-  if (offers.length) head.appendChild(choose);
+  return h("select", {"aria-label": "Section shown",
+                      onchange: function (event) {
+                        discoverSection = event.currentTarget.value;
+                        draw();
+                      }},
+    choice("", "All"),
+    grouped ? kinds.map(function (one) {
+      return h("optgroup", {label: one === "picture" ? "Pictures" : "Drawings"},
+        choice("kind:" + one, one === "picture" ? "All pictures" : "All drawings"),
+        sections.filter(function (section) {
+          return discoverSectionKind(offers, section) === one;
+        }).map(function (section) { return choice(section, section); }));
+    }) : sections.map(function (section) { return choice(section, section); }));
+}
 
-  // The cards scroll in a box of their own, so a long gallery keeps its head and foot in view
-  var scroll = discoverElement("div", "discoverscroll");
-  sheet.appendChild(scroll);
+function discoverSheetBody(kind, check, every, offers) {
   if (check.status !== "done") {
-    // Checking, or failed, said in the middle of the gallery
-    var waiting = discoverElement("div", "discoverwaiting");
-    waiting.appendChild(discoverElement("p", "", check.status === "failed"
-      ? check.error || DISCOVER_OFFLINE : "Checking for examples..."));
-    if (check.status !== "failed") waiting.appendChild(discoverProgress(check.progress));
-    scroll.appendChild(waiting);
-  } else if (!offers.length) {
-    // An index with none of this kind has none to offer yet, as with sounds before any ship
+    return h("div", {role: "status"},
+      h("p", {}, check.status === "failed" ? check.error || DISCOVER_OFFLINE
+                                           : "Checking for examples..."),
+      check.status === "failed" ? null : discoverProgress(check.progress));
+  }
+  if (!offers.length) {
     var any = check.index.examples.some(function (entry) { return discoverTab(entry) === kind; });
-    scroll.appendChild(discoverElement("div", "discoverwaiting", every.length
-      ? "Every example here needs hardware that is not ticked."
-      : any ? "The drive has every example."
-      : "There are no example " + DISCOVER_WORDS[kind] + " yet."));
+    return h("div", {role: "status"},
+      h("p", {}, every.length ? "Every example here needs hardware that is not ticked."
+               : any ? "The drive has every example."
+               : "There are no example " + DISCOVER_WORDS[kind] + " yet."));
   }
   var shown = [];
   var listed = discoverSections(kind, offers).filter(function (section) {
     return discoverShows(offers, section);
   });
-  // Drawings and pictures both shown each start under a rule naming them, as the Screens tab does
   var named = kind !== "program" && listed.some(function (section) {
     return discoverSectionKind(offers, section) === "picture";
   }) && listed.some(function (section) {
     return discoverSectionKind(offers, section) !== "picture";
   });
   var lastKind = null;
-  listed.forEach(function (section) {
-    var held = offers.filter(function (offer) { return offer[3] === section; });
+  return listed.map(function (section) {
     var sectionKind = discoverSectionKind(offers, section);
-    if (named && sectionKind !== lastKind)
-      scroll.appendChild(discoverDivider(sectionKind === "picture" ? "Pictures" : "Drawings", true));
+    var divider = named && sectionKind !== lastKind
+      ? discoverDivider(sectionKind === "picture" ? "Pictures" : "Drawings", true) : null;
     lastKind = sectionKind;
-    // Where more than one section is shown, each is named over its own cards
-    if (listed.length > 1)
-      scroll.appendChild(discoverElement("h3", "discoverhead", section || "Other examples"));
-    // The grid each tab lays its own cards in
-    var grid = discoverElement("div", "discovergrid proggrid" + (kind === "program" ? ""
-      : kind === "sound" ? " discoversounds" : " discoverdrawings"));
-    held.forEach(function (offer) {
-      shown.push(offer[0]);
-      grid.appendChild(discoverOfferCard(offer, shown));
-    });
-    scroll.appendChild(grid);
+    var held = offers.filter(function (offer) { return offer[3] === section; });
+    return [divider,
+            listed.length > 1 ? h("h3", {}, section || "Other examples") : null,
+            h("ul", {"data-kind": kind}, held.map(function (offer) {
+              shown.push(offer[0]);
+              return discoverOfferCard(offer, shown);
+            }))];
   });
+}
 
-  var foot = discoverElement("div", "discoversheetfoot");
-  var footSays = discoverElement("div", "discoverfootsays");
+function discoverFootSays(check, offers, chosen, busy) {
+  var notice = discoverNotice(check);
+  if (notice && (!chosen.length || busy)) return notice;
+  if (chosen.length === 1) return h("p", {}, h("strong", {}, chosen[0][1]));
+  if (chosen.length) {
+    return h("p", {}, h("strong", {}, discoverCount(chosen.length, "example", "examples") + " chosen"));
+  }
+  if (check.refreshing) return h("p", {}, "Checking the drive for changes...");
+  if (offers.length) return h("p", {}, "Choose an example to download. Tick its box to choose more than one.");
+  return null;
+}
+
+function discoverSheetFoot(kind, check, offers) {
   var chosen = offers.filter(function (offer) { return discoverChosen.indexOf(offer[0]) >= 0; });
   var busy = discoverFetching || check.refreshing ||
              chosen.some(function (offer) { return discover.busy[offer[0]]; });
-  var notice = discoverNotice(check);
-  if (notice && (!chosen.length || busy)) footSays.appendChild(notice);
-  else if (chosen.length === 1) footSays.appendChild(discoverElement("b", "", chosen[0][1]));
-  else if (chosen.length) footSays.appendChild(discoverElement("b", "",
-    discoverCount(chosen.length, "example", "examples") + " chosen"));
-  else if (check.refreshing) footSays.appendChild(discoverElement("span", "discoverhint",
-    "Checking the drive for changes..."));
-  else if (offers.length) footSays.appendChild(discoverElement("span", "discoverhint",
-    "Choose an example to download. Tick its box to choose more than one."));
-  if (discoverFetching || check.refreshing)
-    footSays.appendChild(discoverProgress(discoverFetching || check.refreshing));
-  foot.appendChild(footSays);
-  if (chosen.length > 1 && !busy) {
-    foot.appendChild(discoverButton("Clear", function () {
+  var downloading = busy && !check.refreshing;
+  return h("footer", {},
+    h("div", {},
+      discoverFootSays(check, offers, chosen, busy),
+      discoverFetching || check.refreshing ? discoverProgress(discoverFetching || check.refreshing)
+                                           : null),
+    chosen.length > 1 && !busy ? h("button", {type: "button", onclick: function () {
       discoverChosen = [];
       draw();
-    }));
-  }
-  var downloading = busy && !check.refreshing;
-  var get = discoverButton(downloading ? "Downloading..." : chosen.length > 1
-                         ? "Download " + chosen.length : "Download",
-                         function () { discoverDownloadChosen(kind); });
-  get.className = "discoverprimary";
-  get.disabled = !chosen.length || !!busy;
-  foot.appendChild(get);
-  sheet.appendChild(foot);
-  document.body.appendChild(shade);
-  // Only once in the page can the gallery be scrolled back to where it was
-  scroll.scrollTop = scrolled;
+    }}, "Clear") : null,
+    h("button", {type: "button", disabled: !chosen.length || !!busy,
+                 onclick: function () { discoverDownloadChosen(kind); }},
+      downloading ? "Downloading..." : chosen.length > 1 ? "Download " + chosen.length : "Download"));
 }
 
-// A program as its tab shows it, its thumbnail, or both screens' side by side, with what it uses
-// along the thumbnail's foot, over its name, less its tab's buttons. What it does follows its
-// name, since here it is being chosen unseen
 function discoverProgramFace(path) {
-  // The tab's card draws a program's pictures from PICTURES, which holds only the drive's, so the
-  // missing program's are lent to it while it is made
   PICTURES[path] = discoverPicturesOf(path);
-  var tabCard = programCard(path);
+  var face = h("div", {class: "programcard", title: programUsesSaid(path)},
+    programCardFace(path), h("small", {}, (programNamed(path) || {}).does || ""));
   delete PICTURES[path];
-  var card = discoverElement("div", "progcard discoveroffer");
-  var thumb = discoverElement("div", "discoverthumbwrap");
-  card.appendChild(thumb);
-  Array.from(tabCard.childNodes).forEach(function (part) {
-    if (!part.classList || part.classList.contains("copytile") || part.classList.contains("bin"))
-      return;
-    (part.classList.contains("progname") ? card : thumb).appendChild(part);
-  });
-  card.appendChild(discoverElement("span", "discoverdoes", (programNamed(path) || {}).does || ""));
-  card.title = tabCard.title;
-  return card;
+  return face;
 }
 
-// An example as a card in the gallery, looking as it does in its own tab, its box ticked while it
-// is chosen. shown is every card's path in the order shown, a Shift press counting a run along it
 function discoverOfferCard(offer, shown) {
   var path = offer[0];
   var chosen = discoverChosen.indexOf(path) >= 0;
-  var card = discoverBrowsing === "program" ? discoverProgramFace(path)
+  var newer = !!discover.newer[path];
+  var face = discoverBrowsing === "program" ? discoverProgramFace(path)
            : discoverKinds[discoverBrowsing].face(path);
-  if (chosen) card.classList.add("picked");
-  if (discover.newer[path]) card.classList.add("newer");
-  card.dataset.path = path;
-  card.tabIndex = 0;
-  card.setAttribute("role", "button");
-  card.setAttribute("aria-pressed", chosen);
-  if (!discover.newer[path]) {
-    var box = document.createElement("input");
-    box.type = "checkbox";
-    box.className = "discovertick";
-    box.checked = chosen;
-    box.title = "Choose " + offer[1];
-    box.onclick = function (e) {
-      e.stopPropagation();
-      discoverChoose(path, e, true, shown);
-    };
-    card.appendChild(box);
-  }
-  if (discover.newer[path]) {
-    var needs = discoverElement("span", "discoverpill newer", "Needs " + discoverEntry(path).firmware);
-    needs.title = "Needs " + BOARD.name + " firmware " + discoverEntry(path).firmware + " or newer.";
-    card.appendChild(needs);
-  }
-  card.onclick = function (e) {
+  face.dataset.path = path;
+  face.tabIndex = 0;
+  face.setAttribute("role", "button");
+  face.setAttribute("aria-pressed", String(chosen));
+  face.onclick = function (e) {
     if (!discover.newer[path]) discoverChoose(path, e, false, shown);
   };
-  card.onkeydown = function (e) {
+  face.onkeydown = function (e) {
     if (e.key === " " || e.key === "Enter") {
       e.preventDefault();
-      card.onclick(e);
+      face.onclick(e);
     }
   };
-  return card;
+  var firmware = newer ? discoverEntry(path).firmware : null;
+  return h("li", {"data-newer": newer},
+    face,
+    newer ? h("span", {class: "discoverpill", "data-state": "newer",
+                       title: "Needs " + BOARD.name + " firmware " + firmware + " or newer."},
+              "Needs " + firmware)
+          : h("input", {type: "checkbox", checked: chosen, "data-path": path,
+                        title: "Choose " + offer[1], "aria-label": "Choose " + offer[1],
+                        onclick: function (e) {
+                          e.stopPropagation();
+                          discoverChoose(path, e, true, shown);
+                        }}));
 }
 
-// A small mark in a card's corner: a download arrow, Update, or the firmware it needs
 function discoverPill(cardPath) {
   var path = discoverTarget(cardPath);
   var entry = discoverEntry(path);
   if (!entry || discover[discoverTab(entry)].status !== "done") return null;
-  var pill = document.createElement("span");
-  pill.className = "discoverpill";
   if (discover.busy[path]) {
-    pill.textContent = "...";
-    pill.title = "Downloading";
-  } else if (discover.newer[path] && discover.states[path] !== "current") {
-    pill.textContent = "Needs " + entry.firmware;
-    pill.className += " newer";
-    pill.title = "Needs " + BOARD.name + " firmware " + entry.firmware + " or newer.";
-  } else if (discover.states[path] === "missing") {
-    pill.innerHTML = "<svg width='11' height='11' viewBox='0 0 11 11' aria-hidden='true'><path " +
-                     "d='M5.5 1 L5.5 7.5 M2.5 4.8 L5.5 7.8 L8.5 4.8 M1.5 9.8 L9.5 9.8' " +
-                     "stroke='currentColor' stroke-width='1.6' fill='none' " +
-                     "stroke-linecap='round' stroke-linejoin='round'/></svg>";
-    pill.title = "Download";
-  } else if (DISCOVER_UPDATES.indexOf(discover.states[path]) >= 0) {
-    pill.textContent = "Update";
-    pill.className += " update";
-    pill.title = discover.files[entry.files[0].path].state === "changed"
-      ? "Download the newer version. Your changed copy is kept."
-      : "Download the newer version.";
-    pill.onclick = function (e) {
-      e.stopPropagation();
-      discoverDownload(path);
-    };
-  } else {
-    return null;
+    return h("span", {class: "discoverpill", "data-state": "busy", title: "Downloading"}, "...");
   }
-  return pill;
+  if (discover.newer[path] && discover.states[path] !== "current") {
+    return h("span", {class: "discoverpill", "data-state": "newer",
+                      title: "Needs " + BOARD.name + " firmware " + entry.firmware + " or newer."},
+             "Needs " + entry.firmware);
+  }
+  if (discover.states[path] === "missing") {
+    return h("span", {class: "discoverpill", "data-state": "missing", title: "Download"},
+             h("svg:svg", {width: 11, height: 11, viewBox: "0 0 11 11", "aria-hidden": "true",
+                           html: DISCOVER_ARROW}));
+  }
+  if (DISCOVER_UPDATES.indexOf(discover.states[path]) < 0) return null;
+  return h("span", {class: "discoverpill", "data-state": "update", role: "button", tabindex: 0,
+                    title: discover.files[entry.files[0].path].state === "changed"
+                      ? "Download the newer version. Your changed copy is kept."
+                      : "Download the newer version.",
+                    onclick: function (e) {
+                      e.stopPropagation();
+                      discoverDownload(path);
+                    },
+                    onkeydown: function (e) {
+                      if (e.key !== "Enter" && e.key !== " ") return;
+                      e.preventDefault();
+                      e.stopPropagation();
+                      discoverDownload(path);
+                    }},
+           "Update");
 }
 
-// ---- the program tab ----------------------------------------------------------------------------
-
-// A program the gallery offers is known by its path, as the drive's are, for its card and its uses
 programsElsewhere.push(function (path) { return discoverPrograms[path] || null; });
 
-// An example program on the drive can be deleted, as it can be downloaded again, and carries its
-// mark, Update or the firmware it needs. A card the gallery makes is for a program not on the drive
-programCardSteps.push(function (card, path) {
+programHooks.extras.push(function (path) {
   var own = PROGRAMS.filter(function (one) { return one.path === path; })[0];
-  if (!own) return;
-  if (discover.busy[discoverTarget(path)]) card.classList.add("discoverbusy");
-  if (own.example && drive.dirHandle) discoverBinBeside(card, discoverBin(path, "program"));
-  var pill = discoverPill(path);
-  if (pill) card.appendChild(pill);
+  if (!own) return null;
+  return {busy: !!discover.busy[discoverTarget(path)],
+          remove: own.example && drive.dirHandle ? function () { discoverDelete(path, "program"); }
+                                                 : null,
+          badge: discoverPill(path)};
 });
 
-// The examples line goes where the example programs start, once they are listed, on a board whose
-// drive keeps example programs
-programViewSteps.push(function () {
-  if (EXAMPLES_ROOT) discoverPlaceBar(programView, "program");
-});
+programHooks.examples = function () {
+  return EXAMPLES_ROOT ? discoverBar("program") : null;
+};
 
-// ---- what is to hand, in the program gallery ----------------------------------------------------
-
-// The program tab's "With:" chips for the things the gallery's programs use, each turned on or off
-// for both, with all and none beside them
 function discoverChips(offers) {
   var used = FEATURES.filter(function (feature) {
     return CHIPLESS.indexOf(feature[0]) < 0 && offers.some(function (offer) {
@@ -18788,55 +19149,20 @@ function discoverChips(offers) {
     });
   });
   if (!used.length) return null;
-  var row = discoverElement("div", "featurefilter discoverchips");
-  row.appendChild(discoverElement("span", "", "With:"));
-  used.forEach(function (feature) {
-    var chip = discoverElement("button", "featurechip" + (had(feature[0]) ? " on" : ""));
-    chip.type = "button";
-    chip.dataset.feature = feature[0];
-    chip.title = had(feature[0]) ? "Showing programs that use " + feature[1]
-                                 : "Hiding programs that need " + feature[1];
-    chip.appendChild(featureIcon(feature[0]));
-    chip.appendChild(document.createTextNode(feature[2]));
-    chip.onclick = function () {
-      var at = unhad.indexOf(feature[0]);
-      if (at >= 0) unhad.splice(at, 1);
-      else unhad.push(feature[0]);
-      draw();
-    };
-    row.appendChild(chip);
+  return featureFilter(used, {
+    all: function (keys) {
+      return unhad.filter(function (key) { return keys.indexOf(key) < 0; });
+    },
+    none: function (keys) { return unhad.concat(keys); }
   });
-  var clears = discoverElement("div", "featureclears");
-  [["all", function () { return unhad.filter(function (key) {
-     return !used.some(function (feature) { return feature[0] === key; });
-   }); }],
-   ["none", function () { return unhad.concat(used.map(function (feature) { return feature[0]; })); }]]
-    .forEach(function (one) {
-      var choice = discoverButton(one[0], function () {
-        unhad = one[1]();
-        draw();
-      });
-      choice.className = "featureclear";
-      clears.appendChild(choice);
-    });
-  row.appendChild(clears);
-  return row;
 }
 
-// ---- deleting an example ------------------------------------------------------------------------
-// An example can now be downloaded again, so each on the drive has a bin as the user's own do. A
-// Python file goes with the thumbnails named after it, and a slideshow with its folder. Any picture
-// it shares with others is left. The galleries are read again so it is offered at once
-
 function discoverBin(path, kind) {
-  var bin = discoverElement("span", "bin", "\u00d7");
-  bin.setAttribute("role", "button");
-  bin.title = "Delete " + nameShown(path) + " from the FX drive";
-  bin.onclick = function (e) {
-    e.stopPropagation();
-    discoverDelete(path, kind);
-  };
-  return bin;
+  return h("span", {class: "bin", role: "button", title: "Delete " + nameShown(path) + " from the FX drive",
+                    onclick: function (e) {
+                      e.stopPropagation();
+                      discoverDelete(path, kind);
+                    }}, "\u00d7");
 }
 
 async function discoverDelete(path, kind) {
@@ -18867,7 +19193,6 @@ async function discoverDelete(path, kind) {
     delete PICTURES[path];
     forgetMissingPrograms();
   } else {
-    // Whatever showed or played it lets it go, as deleting the user's own does
     store();
     driveParts.forEach(function (part) {
       if (!part.forget) return;
@@ -18885,7 +19210,6 @@ async function discoverDelete(path, kind) {
   draw();
 }
 
-// The copy tile sits in the bin's place on an example, which had none, so it moves beside it
 function discoverBinBeside(card, bin) {
   var copy = card.querySelector(".copytile");
   if (copy) copy.classList.remove("alone");
