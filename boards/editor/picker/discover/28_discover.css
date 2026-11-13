@@ -1,0 +1,474 @@
+.discoverdivide {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  margin: .7rem 0 .1rem;
+  color: var(--dim);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+
+  &::before,
+  &::after {
+    content: "";
+    flex: 1;
+    border-top: 1px solid var(--line);
+  }
+
+  &[data-minor] {
+    margin-top: .6rem;
+    font-size: .66rem;
+    font-weight: 600;
+    opacity: .8;
+
+    &::before {
+      display: none;
+    }
+  }
+}
+
+#assets > :is(.discoverbar, .discoverdivide),
+.sounds > .discoverbar {
+  grid-column: 1 / -1;
+  flex-basis: 100%;
+  width: 100%;
+}
+
+:is(.discoverbar, .discover) {
+  p[data-tone] {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    color: var(--accent);
+    font-size: .84rem;
+
+    svg {
+      flex: none;
+      width: 1rem;
+      height: 1rem;
+    }
+  }
+
+  p[data-tone=hold] {
+    color: #a8740f;
+  }
+
+  p:is([data-tone=warn], [data-failed]) {
+    color: #b4443a;
+  }
+
+  progress {
+    display: block;
+    width: 100%;
+    height: 4px;
+    border: 0;
+    border-radius: 2px;
+    overflow: hidden;
+    appearance: none;
+
+    &::-webkit-progress-bar {
+      background: rgba(0, 0, 0, .09);
+    }
+
+    &::-webkit-progress-value {
+      background: var(--discover, var(--accent));
+      transition: width .3s ease;
+    }
+
+    &[data-idle] {
+      visibility: hidden;
+    }
+  }
+}
+
+.discoverbar {
+  margin: .8rem 0 .4rem;
+
+  > .discoverdivide {
+    margin: 0 0 .7rem;
+  }
+
+  > button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .55rem;
+    width: 100%;
+    padding: .75rem 1rem;
+    border: 0;
+    border-radius: 10px;
+    background: var(--discover, var(--accent));
+    color: #fff;
+    font-size: .98rem;
+    font-weight: 600;
+
+    &:hover {
+      filter: brightness(1.08);
+    }
+
+    svg {
+      width: 1.35rem;
+      height: 1.35rem;
+    }
+
+    span {
+      padding: 0 .5rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .25);
+      font-size: .8rem;
+    }
+  }
+
+  > div:last-child {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(6rem, 12rem) auto auto;
+    align-items: center;
+    gap: .8rem;
+    height: 2.4rem;
+    margin-top: .55rem;
+    color: var(--dim);
+    font-size: .86rem;
+
+    > p {
+      min-width: 0;
+      margin: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    button {
+      padding: .25rem .65rem;
+      font-size: .8rem;
+      white-space: nowrap;
+    }
+
+    button:first-of-type {
+      border-color: var(--discover, var(--accent));
+      background: var(--discover, var(--accent));
+      color: var(--accent-ink);
+      font-weight: 600;
+
+      &:hover:not(:disabled) {
+        filter: brightness(1.08);
+      }
+    }
+  }
+}
+
+.discoverpill {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: .2rem;
+  padding: .05rem .4rem;
+  border-radius: 999px;
+  background: rgba(25, 27, 29, .78);
+  color: #fff;
+  font-size: .66rem;
+  line-height: 1.4;
+  pointer-events: none;
+  transition: right .12s;
+
+  &[data-state=update] {
+    background: var(--accent);
+    pointer-events: auto;
+    cursor: pointer;
+
+    &:hover {
+      filter: brightness(1.1);
+    }
+  }
+
+  &[data-state=newer] {
+    background: #8a8378;
+  }
+}
+
+.programs li > .discoverpill {
+  top: 6px;
+  right: 6px;
+}
+
+.programs li:hover > .discoverpill {
+  right: calc(2.9rem + 2px);
+}
+
+.asset:hover > .discoverpill {
+  right: 2.9rem;
+}
+
+.sound:hover > .discoverpill {
+  right: 1.6rem;
+}
+
+body:has(> dialog.discover[open]) {
+  overflow: hidden;
+}
+
+.discover {
+  width: min(60rem, 100% - 2rem);
+  max-width: none;
+  height: min(56rem, 96vh);
+  max-height: none;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--ink);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .25);
+
+  &[open] {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &::backdrop {
+    background: rgba(25, 27, 29, .55);
+  }
+
+  > header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .8rem;
+    padding: .9rem 1.2rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+
+    h2 {
+      margin: 0 auto 0 0;
+      font-size: 1.05rem;
+    }
+
+    button {
+      padding: .4rem .75rem;
+      font-size: .85rem;
+    }
+
+    select {
+      min-width: 13rem;
+      padding: .35rem .6rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      font: inherit;
+      font-size: .88rem;
+    }
+  }
+
+  > .featurefilter {
+    margin: 0;
+    padding: .55rem 1.2rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel);
+  }
+
+  > div:last-of-type {
+    flex: 1;
+    min-height: 0;
+    padding: .4rem 1.2rem 1.2rem;
+    overflow: auto;
+  }
+
+  [role=status] {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .4rem;
+    min-height: 100%;
+    color: var(--dim);
+    font-size: .92rem;
+    text-align: center;
+
+    p {
+      margin: 0;
+    }
+
+    progress {
+      width: 18rem;
+      max-width: 80%;
+    }
+  }
+
+  h3 {
+    margin: 1rem 0 .55rem;
+    color: var(--ink);
+    font-size: .95rem;
+  }
+
+  ul {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: .6rem;
+    margin: .8rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  h3 + ul {
+    margin-top: 0;
+  }
+
+  li {
+    position: relative;
+
+    &[data-newer] {
+      opacity: .5;
+    }
+
+    > :first-child {
+      position: relative;
+      cursor: pointer;
+      user-select: none;
+
+      &:focus-visible {
+        outline: 2px solid var(--discover);
+        outline-offset: 2px;
+      }
+
+      &[aria-pressed=true] {
+        border-color: var(--discover);
+        box-shadow: 0 0 0 2px var(--discover);
+      }
+    }
+
+    &[data-newer] > :first-child {
+      cursor: default;
+    }
+
+    > input {
+      position: absolute;
+      top: .4rem;
+      left: .4rem;
+      z-index: 4;
+      width: 1.15rem;
+      height: 1.15rem;
+      margin: 0;
+      accent-color: var(--discover);
+      opacity: 0;
+      transition: opacity .15s;
+      cursor: pointer;
+    }
+
+    &:hover > input,
+    &:has(> [aria-pressed=true]) > input,
+    > input:focus-visible {
+      opacity: 1;
+    }
+  }
+
+  .programcard > span > span {
+    bottom: 4px;
+  }
+
+  ul[data-kind=drawing] .asset .face {
+    height: auto;
+    aspect-ratio: 4 / 3;
+    background: #111;
+
+    img {
+      object-fit: contain;
+    }
+  }
+
+  .asset :is(.kind, .label, .drawingtitle) {
+    display: none;
+  }
+
+  .progname {
+    display: block;
+    padding: .35rem .55rem;
+    overflow: hidden;
+    font-size: .85rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .discoverdoes {
+    display: -webkit-box;
+    height: 2.6em;
+    margin: -.2rem .55rem .5rem;
+    overflow: hidden;
+    color: var(--dim);
+    font-size: .76rem;
+    line-height: 1.3;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .discoverkind {
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    z-index: 2;
+    padding: 0 .35rem;
+    border-radius: 4px;
+    background: rgba(25, 27, 29, .75);
+    color: #fff;
+    font-size: .62rem;
+  }
+
+  ul[data-kind=sound] .sound {
+    width: auto;
+
+    .hear {
+      z-index: 3;
+    }
+  }
+
+  > footer {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 0;
+    padding: .8rem 1.2rem;
+    border-top: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    font-size: 1rem;
+
+    > div {
+      flex: 1;
+      min-width: 0;
+    }
+
+    p {
+      margin: 0;
+      color: var(--dim);
+      font-size: .88rem;
+    }
+
+    strong {
+      color: var(--ink);
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    progress {
+      max-width: 22rem;
+      margin: .45rem 0 .1rem;
+    }
+
+    button:last-child {
+      padding: .55rem 1.4rem;
+      border-color: var(--discover, var(--accent));
+      background: var(--discover, var(--accent));
+      color: var(--accent-ink);
+      font-size: .95rem;
+      font-weight: 600;
+
+      &:hover:not(:disabled) {
+        filter: brightness(1.08);
+      }
+    }
+  }
+}
