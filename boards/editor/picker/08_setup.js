@@ -175,7 +175,7 @@ export function renderLeds(where, run) {
                                                             title: "Remove this strip from every scene",
                                                             onclick: function () { dropStrip(run); }}, "\u00d7")])
            : boardBox(panel, ["Strip", small(stripBuilt(run))]);
-  replace(document.getElementById(where), chip, run.there ? panelTools(run) : null);
+  replace(document.getElementById(where), chip, run.there && !setupOn ? panelTools(run) : null);
 }
 
 // ---- turning setup on ------------------------------------------------------------------------
