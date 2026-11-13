@@ -591,15 +591,9 @@ th{font-weight:600;color:var(--dim);font-size:.76rem}
  border-radius:9px;cursor:pointer}
 .card.nothing.small .face{width:2.4rem;height:auto;min-height:1.7rem}
 .card.nothing.small .name{padding:.3rem .65rem;font-size:.8rem;align-self:center}
-.soundhead{display:flex;align-items:center;margin:0 0 .7rem}
-.soundvolume{flex:1;display:flex;align-items:center;gap:.5rem;margin:0 .9rem;font-size:.82rem;
- color:var(--dim)}
-.soundvolume input[type=range]{flex:1;min-width:4rem;accent-color:var(--accent)}
-.soundvolume input:disabled{opacity:.35}
 
 .repeatchip{width:1.1rem;height:.9rem;border-radius:3px;border:1px solid var(--line)}
 #tabStack > *{min-width:0}
-#sound{--hub:var(--accent)}
 body[data-pageway] #looks>.tabs:empty{display:none}
 body[data-pageway] #looks>.shelf.bare{margin-top:0}
 
@@ -613,11 +607,6 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
 .keptlines .keptdrop{border:0;background:none;color:var(--dim);cursor:pointer;font-size:1rem;
  line-height:1;padding:0 .2rem}
 .keptlines .keptdrop:hover{color:var(--ink)}
-.sound .hear{position:absolute;right:4px;bottom:4px;z-index:2;width:1.3rem;height:1.3rem;
- border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.6rem;
- background:var(--bg);border:1px solid var(--line);color:var(--dim);cursor:pointer}
-.sound .hear:hover{color:var(--ink);border-color:var(--ink)}
-.sound .hear.playing{background:var(--accent);border-color:var(--accent);color:#fff}
 .assets{display:grid;grid-template-columns:repeat(auto-fill,minmax(6.2rem,1fr));gap:.7rem}
 .asset{position:relative;border:2px solid var(--line);border-radius:10px;overflow:hidden;
  background:var(--panel);padding:0}
@@ -635,14 +624,11 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
  background:rgba(20,20,22,.82);color:#fff;opacity:0;transition:opacity .12s;
  pointer-events:none;z-index:1}
 .asset:hover .label,.asset:focus-within .label{opacity:1}
-.assets .offhead,.sounds .offhead{grid-column:1/-1;flex-basis:100%;display:flex;
+.assets .offhead{grid-column:1/-1;flex-basis:100%;display:flex;
  align-items:center;gap:.6rem;margin:.4rem 0 -.3rem}
-.assets .offhead:first-child,.sounds .offhead:first-child{margin-top:0}
-.assets .offhead .foldhead,.sounds .offhead .foldhead{margin:0}
+.assets .offhead:first-child{margin-top:0}
+.assets .offhead .foldhead{margin:0}
 .offhead .card.nothing.small{flex-shrink:0}
-.card.nothing .face.silenceface{background:#fff;display:flex;align-items:center;width:7.4rem;
- border-right:1px solid var(--line)}
-.card.nothing .face.silenceface svg{display:block;width:100%;height:1.7rem}
 .offhead .card.nothing.small .name{overflow:visible}
 .card.nothing.small.offasset{cursor:default;flex-shrink:0}
 .card.nothing.small.offasset:hover{transform:none}
@@ -666,18 +652,16 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
  font:600 .74rem system-ui,sans-serif;min-height:5.2rem}
 .adder:hover{background:rgba(15,138,114,.14);border-color:var(--accent)}
 .adder svg{display:block}
-.sounds .adder{width:8.4rem}
 
 .bin{position:absolute;top:2px;right:2px;z-index:2;width:1.2rem;height:1.2rem;
  border-radius:5px;background:rgba(20,20,22,.7);color:#fff;line-height:1.2rem;
  text-align:center;font-size:.8rem;cursor:pointer;opacity:0;transition:opacity .12s}
-.asset:hover .bin,.asset:focus-within .bin,.sound:hover .bin,.progcard:hover .bin,
+.asset:hover .bin,.asset:focus-within .bin,.progcard:hover .bin,
 .progcard:focus-within .bin{opacity:1}
 .bin:hover{background:#b4443a}
 .copytile{right:1.6rem}
 .copytile.alone{right:2px}
 .copytile:hover{background:var(--accent)}
-.sound{position:relative}
 
 .screens-head{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem;margin-bottom:1rem}
 .pairplace{display:flex;flex-direction:column;align-items:center;gap:.15rem}
@@ -714,25 +698,7 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
 select{font:inherit;font-size:.85rem;padding:.25rem .3rem;border:1px solid var(--line);border-radius:6px}
 .showing{font-size:.85rem;color:var(--dim);margin-top:.4rem}
 .showing b{color:var(--ink)}
-.sounds{display:flex;flex-wrap:wrap;gap:.7rem}
-.sound{width:8.4rem;padding:.45rem .5rem .4rem;border:2px solid var(--line);
- border-radius:10px;background:var(--panel);text-align:left;cursor:pointer}
-.sound:hover{border-color:var(--dim)}
-.sound.picked{border-color:var(--accent)}
-.sound.under{border-style:dashed;border-color:#a9a49b;
- background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
-.sound svg{display:block;width:100%;height:1.8rem}
-.sound b{display:block;font:600 .74rem/1.5 system-ui,sans-serif;color:var(--ink);
- white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sound small{color:var(--dim);font-size:.68rem}
-.sound.quiet svg{opacity:.6}
 
-.again{align-self:center;padding:.3rem .6rem;border:1px solid var(--line);
- border-radius:7px;background:var(--panel);font:400 .78rem system-ui,sans-serif;
- color:var(--dim);cursor:pointer}
-.again:hover:enabled{border-color:var(--dim);color:var(--ink)}
-.again:disabled{opacity:.45;cursor:default}
-.again.on{border-color:var(--accent);color:var(--accent);font-weight:600}
 
 .facts{margin:.1rem 0 .7rem}
 
@@ -893,14 +859,6 @@ body.setupall #looks,body.setupall [id$=Cut],body.setupall [id$=Bar],
 body.setupall [id$=Chosen]{opacity:.35;pointer-events:none}
 body.setupall #assets,body.setupall #screensSays,
 body.setupall .screen-box .settings{opacity:.35;pointer-events:none}
-body.setupall #soundPanel{opacity:.35;pointer-events:none}
-
-.accswatch.soundswatch{align-items:center;gap:1px;box-shadow:none;height:.9rem;width:3.2rem}
-.soundswatch span{flex:1;background:var(--accent);border-radius:1px;min-height:2px}
-.soundswatch.silent{height:.2rem;background:#c9c3b9;border-radius:1px}
-.soundswatch.under{border:1px dashed #a9a49b;
- background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 3px,#e0dbd2 3px,#e0dbd2 6px)}
-.soundsays{margin:0 0 .8rem}
 
 
 
@@ -943,14 +901,7 @@ html{scrollbar-gutter:stable}
 .ledtab .tabunder{display:block;font:.68rem/.55rem system-ui,sans-serif;color:var(--dim);
  white-space:nowrap;width:0;overflow:visible}
 .ledtab .tabname{display:flex;flex-direction:column;gap:.35rem}
-.ledtab[data-panel=soundPanel] .soundswatch{position:relative;height:2.15rem;width:4.3rem;
- background:#fff;border-radius:3px;padding:0;box-sizing:border-box;overflow:hidden;
- box-shadow:inset 0 0 0 1px var(--line)}
-.ledtab .soundoutline{display:block;width:100%;height:100%}
-.ledtab[data-panel=soundPanel] .soundswatch.silent{height:2.15rem;border-radius:3px;
- background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 3px,#e0dbd2 3px,#e0dbd2 6px)}
 
-.ledtab[data-panel=sensorPanel] .sensorswatch{display:none}
 #ledTabs:has([data-panel=sensorPanel]){gap:1.1rem}
 #ledTabs:has([data-panel=sensorPanel]) .setupbutton{white-space:nowrap;flex:none}
 #ledTabs:has([data-panel=sensorPanel]) .ledtab:not(:is([data-panel=screensPanel],
@@ -959,69 +910,6 @@ html{scrollbar-gutter:stable}
  [data-panel=soundPanel],[data-panel=sensorPanel]))>.accswatch{width:100%}
 #ledTabs:has([data-panel=sensorPanel]) .ledtab:is([data-panel=screensPanel],[data-panel=soundPanel],
  [data-panel=sensorPanel]){flex:none}
-.boardchip.sensor{background:var(--board)}
-#sensorFacts .chip{box-sizing:border-box;min-height:33px}
-.remotediagram{display:grid;grid-template-columns:1fr var(--middle) 1fr;margin-top:.6rem}
-.remoteside{position:relative}
-.remoterow{position:absolute;display:flex;align-items:center;justify-content:space-between;
- gap:.5rem;width:min(16rem,100%);height:27px;box-sizing:border-box;padding:0 .3rem 0 .55rem;
- border:1px solid var(--line);border-radius:7px;background:var(--panel);font-size:.8rem;
- white-space:nowrap;overflow:hidden}
-.remoteside.left .remoterow{right:0;flex-direction:row-reverse;padding:0 .55rem 0 .3rem}
-.remoteside.right .remoterow{left:0}
-.remoterow small{flex:none;color:var(--dim);font-size:.72rem}
-.remoterow b{display:flex;align-items:center;gap:.3rem;padding:0 4px;
- font:600 .78rem system-ui,sans-serif;overflow:hidden;text-overflow:ellipsis}
-.remoterow select{min-width:0;flex:0 1 auto;max-width:11rem;border:0;background:none;padding:0;
- font:600 .78rem system-ui,sans-serif;color:var(--ink);cursor:pointer;text-overflow:ellipsis}
-.remoterow:not(.lit){border-style:dashed;background:none}
-.remoterow:not(.lit) select,.remoterow:not(.lit) b{font-weight:400;color:var(--dim)}
-.remoterow.under{border:1px dashed #a9a49b;
- background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
-.remoterow.fixed{background:#fbf0cf;border:1px solid #d9b54a}
-.remoterow.fixed b{color:#6b5413}
-.remoterow.fixed .padlock{width:11px;height:11px;flex:none;color:#a07c18}
-.remoterow.hot{border-color:var(--ink)}
-.remoteleader{fill:none;stroke-width:.6;stroke-linejoin:round}
-.remoteleader.hot{stroke-width:1}
-.pirside{position:absolute;display:flex;flex-direction:column;gap:.35rem;width:min(20rem,100%)}
-.remoteside.left .pirside{right:0}
-.remoteside.right .pirside{left:0}
-.pirhead{display:flex;align-items:center;justify-content:space-between;gap:.45rem;height:34px;
- padding:0 .3rem;font:600 .9rem system-ui,sans-serif;color:var(--ink)}
-.remoteside.right .pirhead{flex-direction:row-reverse}
-.pirquestion.idle{opacity:.45}
-.remoterow.pirbox,.remoteside.left .remoterow.pirbox{position:static;height:auto;
- flex-direction:column;align-items:stretch;justify-content:flex-start;gap:.35rem;width:100%;
- padding:.45rem .6rem .5rem;overflow:visible}
-.pirtiming{display:flex;align-items:center;flex-wrap:wrap;gap:.35rem;color:var(--dim);
- white-space:nowrap}
-.pirtiming>*,.pirtiming small{font:400 .78rem/1.6rem system-ui,sans-serif}
-.pirtiming select{height:1.6rem;max-width:9rem;padding:0;border:0;background:none;
- font-weight:600;color:var(--ink);cursor:pointer}
-.pirtiming input[type=number]{width:3.4rem;height:1.6rem;box-sizing:border-box;padding:0 .35rem;
- border:1px solid var(--line);border-radius:6px;color:var(--ink);background:#fff}
-.motionfigure{width:28px;height:28px;flex:none;fill:currentColor;stroke:currentColor;
- stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
-.remotecover{fill:transparent}
-.remotecover.choosable{cursor:pointer}
-.remotecover.hot{fill:rgba(0,0,0,.08)}
-.sensorwords{text-align:center;margin:.8rem auto 0;max-width:40rem}
-.sensorwords p{margin:.3rem 0;font-size:.82rem}
-.sensorwords p.dim{color:var(--dim)}
-.sensorwords p.warn{color:var(--warn)}
-.sensorwords .plus{margin:.5rem auto 0}
-.ledtab .soundswatch .repeatmark{position:absolute;right:2px;bottom:2px;width:.8rem;
- height:.8rem;padding:1px;box-sizing:border-box;color:var(--dim);background:#fff;
- border-radius:50%}
-.sounds{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem}
-.sound{padding:0;overflow:hidden;width:auto}
-.sounds .adder{width:auto;align-self:stretch}
-.sound svg{height:3.6rem;border-bottom:1px solid var(--line)}
-.sound .nothingface{display:block;height:3.6rem;border-bottom:1px solid var(--line);
- background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 7px,#e4e0d9 7px,#e4e0d9 14px)}
-.sound b{padding:.3rem .5rem 0}
-.sound small{display:block;padding:0 .5rem .35rem}
 .ledtab[data-panel=screensPanel] .screencell.nothing{box-shadow:none;
  background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 3px,#e0dbd2 3px,#e0dbd2 6px)}
 .ledtab[data-panel=screensPanel] .screencell.dark{background:#2a2d30;box-shadow:none}
@@ -1192,10 +1080,10 @@ body.setupall .lightrow{opacity:.35;pointer-events:none}
  transform:rotate(45deg) translate(-1px,-1px);transition:transform .12s}
 .foldhead.open::before{transform:rotate(-135deg) translate(-2px,-2px)}
 .foldhead:hover::before{border-color:var(--accent)}
-.assets .foldhead,.sounds .foldhead{grid-column:1/-1;flex-basis:100%;margin:.4rem 0 -.3rem;
+.assets .foldhead{grid-column:1/-1;flex-basis:100%;margin:.4rem 0 -.3rem;
  font-size:.92rem}
-.assets .foldhead:first-child,.sounds .foldhead:first-child{margin-top:0}
-.assets .foldhead .says,.sounds .foldhead .says{font:400 .8rem system-ui,sans-serif;
+.assets .foldhead:first-child{margin-top:0}
+.assets .foldhead .says{font:400 .8rem system-ui,sans-serif;
  color:var(--dim)}
 .asset .face.wholeface{height:auto}
 .asset .face.wholeface img{position:relative;inset:auto;object-fit:fill;flex:none;
@@ -1232,12 +1120,12 @@ body.setupall .galleryslot{opacity:.35;pointer-events:none}
  padding:0 1.4rem 1.1rem;margin:1.2rem 0}
 .tabbox .ledtabs{margin:0 -1.4rem 1rem;padding:0 1.4rem;gap:1.1rem}
 .tabbox .tabstack>.panel{border:0;border-radius:0;background:none;padding:0}
-body.boxedgallery #assets,body.boxedgallery .sounds{display:grid;
+body.boxedgallery #assets{display:grid;
  grid-template-columns:repeat(auto-fill,minmax(9.4rem,1fr));gap:.7rem}
-body.boxedgallery .asset,body.boxedgallery .sound{border-radius:11px}
+body.boxedgallery .asset{border-radius:11px}
 body.boxedgallery .asset .face{height:2.9rem}
 body.boxedgallery .asset .label{display:none}
-body.boxedgallery .asset .name,body.boxedgallery .sound b{display:block;
+body.boxedgallery .asset .name{display:block;
  padding:.42rem .65rem .52rem;font:600 .85rem system-ui,sans-serif;white-space:nowrap;
  overflow:hidden;text-overflow:ellipsis;text-align:left}
 body.boxedgallery .asset{padding-right:0}
@@ -1246,17 +1134,11 @@ body.boxedgallery .asset .pick button{flex:0 0 auto;border:1px solid var(--line)
  border-radius:6px;padding:.05rem .4rem;font-size:.72rem}
 body.boxedgallery .asset .pick button:first-child{border-right:1px solid var(--line)}
 body.boxedgallery .asset .name{padding-right:4.2rem}
-body.boxedgallery .sound{width:auto;padding:0;display:grid;grid-template-columns:1fr auto;
- align-items:center;overflow:hidden;background:var(--panel)}
-body.boxedgallery .sound svg{grid-column:1/-1;display:block;width:100%;height:2.9rem;
- background:var(--dark);padding:.5rem .6rem;box-sizing:border-box}
-body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-size:.72rem}
 .ledtabs .gap{flex:1}
 .ledtabs .setupbutton{align-self:center}
 
 .discoverbar{margin:.8rem 0 .4rem}
 #assets>.discoverbar,#assets>.discoverdivide{grid-column:1/-1;width:100%;flex-basis:100%}
-.sounds>.discoverbar{grid-column:1/-1;flex-basis:100%;width:100%}
 .discoverprimary{background:var(--discover,var(--accent));border-color:var(--discover,var(--accent));
  color:var(--accent-ink);font-weight:600}
 .discoverprimary:hover:not(:disabled){filter:brightness(1.08)}
@@ -1299,7 +1181,6 @@ body.boxedgallery .sound small{padding:0 .65rem .1rem 0;color:var(--dim);font-si
 .discoverpill.update:hover{filter:brightness(1.1)}
 .discoverpill.newer{background:#8a8378}
 .progcard:hover>.discoverpill,.asset:hover>.discoverpill{right:2.9rem}
-.sound:hover>.discoverpill{right:1.6rem}
 .discovershade .discoveroffer:hover>.discoverpill{right:4px}
 body.discovermodal{overflow:hidden}
 .discovershade{position:fixed;inset:0;z-index:100;background:rgba(25,27,29,.55);
@@ -1339,8 +1220,6 @@ body.discovermodal{overflow:hidden}
 .discovershade .asset .progname{display:block}
 .discoverkind{position:absolute;left:4px;bottom:4px;z-index:2;font-size:.62rem;padding:0 .35rem;
  border-radius:4px;background:rgba(25,27,29,.75);color:#fff}
-.discoversounds .sound{width:auto}
-.discoversounds .sound .hear{z-index:3}
 .discoverdoes{display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;
  overflow:hidden;height:2.6em;line-height:1.3;margin:-.2rem .55rem .5rem;font-size:.76rem;
  color:var(--dim)}
@@ -2024,6 +1903,666 @@ body:not(.setupall) .sides > .side > .run {
     }
   }
 }
+body.setupall #soundPanel {
+  opacity: .35;
+  pointer-events: none;
+}
+
+.soundtab {
+  --stripes: repeating-linear-gradient(45deg, #f0eeea, #f0eeea 7px, #e4e0d9 7px, #e4e0d9 14px);
+
+  > p {
+    margin: 0 0 .8rem;
+    font-size: .85rem;
+    color: var(--dim);
+  }
+
+  [data-unseen] {
+    visibility: hidden;
+  }
+
+  > div:has(> fieldset) {
+    display: flex;
+    align-items: center;
+    margin: 0 0 .7rem;
+  }
+
+  fieldset {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+
+    &[disabled] {
+      opacity: .45;
+    }
+
+    legend {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    > button {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      padding: .28rem .55rem;
+      border: 1.5px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      font: 600 .76rem system-ui, sans-serif;
+      color: var(--ink);
+
+      &[aria-pressed=true] {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 8%, transparent);
+      }
+    }
+
+    label {
+      display: flex;
+      flex: 1;
+      align-items: center;
+      gap: .5rem;
+      margin: 0 .9rem;
+      font-size: .82rem;
+      color: var(--dim);
+    }
+
+    input[type=range] {
+      flex: 1;
+      min-width: 4rem;
+      accent-color: var(--accent);
+
+      &:disabled {
+        opacity: .35;
+      }
+    }
+
+    output {
+      min-width: 2.4rem;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  > div:has(> fieldset) > button,
+  > section > div > button {
+    display: flex;
+    flex-shrink: 0;
+    align-items: stretch;
+    align-self: center;
+    margin-left: auto;
+    padding: 0;
+    overflow: hidden;
+    border: 2px solid var(--line);
+    border-radius: 9px;
+    background: var(--panel);
+    transition: transform .08s, border-color .12s;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+
+    &[aria-pressed=true] {
+      border-color: var(--accent);
+
+      b {
+        color: var(--accent);
+      }
+    }
+
+    i {
+      display: flex;
+      align-items: center;
+      width: 2.4rem;
+      min-height: 1.7rem;
+      background: var(--stripes);
+    }
+
+    i:has(svg) {
+      width: 7.4rem;
+      border-right: 1px solid var(--line);
+      background: #fff;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 1.7rem;
+    }
+
+    b {
+      align-self: center;
+      padding: .3rem .65rem;
+      font: 600 .8rem system-ui, sans-serif;
+      white-space: nowrap;
+    }
+  }
+
+  > .discoverbar {
+    margin: 1.5rem 0 0;
+  }
+
+  > section {
+    margin-top: 1.1rem;
+
+    &:first-of-type {
+      margin-top: 0;
+    }
+
+    .discoverbar + & {
+      margin-top: 1.5rem;
+    }
+
+    > div {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+  }
+
+  h3 {
+    margin: 0;
+
+    button {
+      display: flex;
+      align-items: baseline;
+      gap: .6rem;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: none;
+      color: var(--ink);
+      font: 600 .92rem system-ui, sans-serif;
+      text-align: left;
+
+      &::before {
+        content: "";
+        flex-shrink: 0;
+        width: .42rem;
+        height: .42rem;
+        border-right: 2px solid var(--dim);
+        border-bottom: 2px solid var(--dim);
+        transform: rotate(45deg) translate(-1px, -1px);
+        transition: transform .12s;
+      }
+
+      &[aria-expanded=true]::before {
+        transform: rotate(-135deg) translate(-2px, -2px);
+      }
+
+      &:hover::before {
+        border-color: var(--accent);
+      }
+    }
+
+    small {
+      font: 400 .8rem system-ui, sans-serif;
+      color: var(--dim);
+    }
+  }
+
+  ul {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .7rem;
+    margin: .4rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    position: relative;
+    display: flex;
+
+    > button[aria-pressed]:first-child {
+      display: block;
+      flex: 1;
+      min-width: 0;
+      padding: 0;
+      overflow: hidden;
+      border: 2px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel);
+      text-align: left;
+
+      &:hover {
+        border-color: var(--dim);
+      }
+
+      &[aria-pressed=true] {
+        border-color: var(--accent);
+      }
+
+      svg {
+        display: block;
+        width: 100%;
+        height: 3.6rem;
+        border-bottom: 1px solid var(--line);
+        fill: #c9c3b9;
+      }
+
+      &[aria-pressed=true] rect {
+        fill: var(--accent);
+      }
+
+      b {
+        display: block;
+        padding: .3rem .5rem 0;
+        overflow: hidden;
+        font: 600 .74rem/1.5 system-ui, sans-serif;
+        color: var(--ink);
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      small {
+        display: block;
+        padding: 0 .5rem .35rem;
+        font-size: .68rem;
+        color: var(--dim);
+      }
+    }
+
+    &[data-under] > button:first-child {
+      border-style: dashed;
+      border-color: #a9a49b;
+      background: var(--stripes);
+    }
+
+    &:hover .bin,
+    &:focus-within .bin {
+      opacity: 1;
+    }
+
+    &:hover > .discoverpill {
+      right: 1.6rem;
+    }
+
+    > .adder {
+      flex: 1;
+    }
+  }
+
+  [data-hear] {
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.3rem;
+    height: 1.3rem;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--bg);
+    color: var(--dim);
+    font-size: .6rem;
+
+    &:hover {
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+
+    &[aria-pressed=true] {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+  }
+}
+
+.ledtab .soundswatch {
+  position: relative;
+  align-items: center;
+  width: 4.3rem;
+  height: 2.15rem;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--line);
+
+  > svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  > svg + svg {
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    width: .8rem;
+    height: .8rem;
+    padding: 1px;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--dim);
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &[data-shows=nothing] {
+    background: repeating-linear-gradient(45deg, #f0eeea, #f0eeea 3px, #e0dbd2 3px, #e0dbd2 6px);
+  }
+
+  &[data-shows=under] {
+    border: 1px dashed #a9a49b;
+  }
+}
+.ledtab[data-panel=sensorPanel] .accswatch {
+  display: none;
+}
+
+.boardchip.sensor {
+  background: var(--board);
+}
+
+.sensortab {
+  > p {
+    margin: .1rem 0 .7rem;
+
+    .chip {
+      min-height: 33px;
+    }
+
+    > small {
+      margin-left: .6rem;
+      font-size: .76rem;
+      color: var(--dim);
+    }
+  }
+
+  > div[data-kind] {
+    display: grid;
+    grid-template-columns: 1fr var(--middle) 1fr;
+    height: var(--height);
+    margin-top: .6rem;
+
+    > svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  ul {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    > li {
+      position: absolute;
+      top: var(--top);
+    }
+  }
+
+  [data-side=left] > li {
+    right: 0;
+  }
+
+  [data-side=right] > li {
+    left: 0;
+  }
+
+  :is(li, fieldset)[data-button] {
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--panel);
+
+    select {
+      min-width: 0;
+      padding: 0;
+      border: 0;
+      background: none;
+      font: 600 .78rem system-ui, sans-serif;
+      color: var(--ink);
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
+
+    &:not([data-does]) {
+      border-style: dashed;
+      background: none;
+
+      select,
+      output {
+        font-weight: 400;
+        color: var(--dim);
+      }
+    }
+
+    &[data-from=always] {
+      border: 1px dashed #a9a49b;
+      background: repeating-linear-gradient(45deg, #f0eeea, #f0eeea 6px, #e4e0d9 6px, #e4e0d9 12px);
+    }
+
+    &[data-from=fixed] {
+      border: 1px solid #d9b54a;
+      background: #fbf0cf;
+
+      output {
+        color: #6b5413;
+      }
+    }
+
+    &[data-hot] {
+      border-color: var(--ink);
+    }
+  }
+
+  li[data-button] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    width: min(16rem, 100%);
+    height: 27px;
+    padding: 0 .3rem 0 .55rem;
+    overflow: hidden;
+    font-size: .8rem;
+    white-space: nowrap;
+
+    label {
+      display: contents;
+    }
+
+    span {
+      flex: none;
+      font-size: .72rem;
+      color: var(--dim);
+    }
+
+    select {
+      flex: 0 1 auto;
+      max-width: 11rem;
+    }
+
+    output {
+      display: flex;
+      align-items: center;
+      gap: .3rem;
+      padding: 0 4px;
+      overflow: hidden;
+      font: 600 .78rem system-ui, sans-serif;
+      text-overflow: ellipsis;
+    }
+
+    svg {
+      flex: none;
+      width: 11px;
+      height: 11px;
+      color: #a07c18;
+      fill: currentColor;
+
+      path {
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.4;
+      }
+    }
+  }
+
+  [data-side=left] > li[data-button] {
+    flex-direction: row-reverse;
+    padding: 0 .55rem 0 .3rem;
+  }
+
+  path[data-button] {
+    fill: none;
+    stroke: var(--leader);
+    stroke-width: .6;
+    stroke-linejoin: round;
+
+    &[data-hot] {
+      stroke-width: 1;
+    }
+  }
+
+  circle[data-button] {
+    fill: transparent;
+
+    &[data-choosable] {
+      cursor: pointer;
+    }
+
+    &[data-hot] {
+      fill: rgba(0, 0, 0, .08);
+    }
+  }
+
+  [data-kind=pir] li {
+    width: min(20rem, 100%);
+    padding-top: calc(34px + .35rem);
+  }
+
+  fieldset {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+    min-width: 0;
+    margin: 0;
+    padding: .45rem .6rem .5rem;
+
+    legend {
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .45rem;
+      height: 34px;
+      padding: 0 .3rem;
+      font: 600 .9rem system-ui, sans-serif;
+      color: var(--ink);
+
+      svg {
+        flex: none;
+        width: 28px;
+        height: 28px;
+        fill: currentColor;
+        stroke: currentColor;
+        stroke-width: 1.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+    }
+
+    p {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: .35rem;
+      margin: 0;
+      font: 400 .78rem/1.6rem system-ui, sans-serif;
+      color: var(--dim);
+      white-space: nowrap;
+
+      &[data-idle] {
+        opacity: .45;
+      }
+    }
+
+    label {
+      display: contents;
+    }
+
+    select {
+      height: 1.6rem;
+      max-width: 9rem;
+      font-weight: 600;
+    }
+
+    input[type=number] {
+      width: 3.4rem;
+      height: 1.6rem;
+      padding: 0 .35rem;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+    }
+  }
+
+  [data-side=right] legend {
+    flex-direction: row-reverse;
+  }
+
+  > div:last-child {
+    max-width: 40rem;
+    margin: .8rem auto 0;
+    text-align: center;
+
+    p {
+      margin: .3rem 0;
+      font-size: .82rem;
+    }
+
+    [data-tone=dim] {
+      color: var(--dim);
+    }
+
+    [data-tone=warn] {
+      color: var(--warn);
+    }
+
+    button {
+      display: flex;
+      align-items: center;
+      margin: .5rem auto 0;
+      padding: .42rem .7rem;
+      border: 1px solid rgba(15, 138, 114, .4);
+      border-radius: 9px;
+      background: rgba(15, 138, 114, .08);
+      color: var(--accent);
+      font: 600 .78rem system-ui, sans-serif;
+
+      &:hover {
+        border-color: var(--accent);
+        background: rgba(15, 138, 114, .16);
+      }
+    }
+  }
+}
 .drive {
   display: flex;
   flex-wrap: wrap;
@@ -2474,6 +3013,72 @@ body:not(.setupall) .sides > .side > .run {
 
     .drive {
       flex-wrap: nowrap;
+    }
+  }
+}
+.soundoffer {
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--panel);
+
+  &:hover {
+    border-color: var(--dim);
+  }
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 3.6rem;
+    border-bottom: 1px solid var(--line);
+    fill: none;
+    stroke: #c9c3b9;
+    stroke-width: 2;
+  }
+
+  b {
+    display: block;
+    padding: .3rem .5rem 0;
+    overflow: hidden;
+    font: 600 .74rem/1.5 system-ui, sans-serif;
+    color: var(--ink);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  small {
+    display: block;
+    padding: 0 .5rem .35rem;
+    font-size: .68rem;
+    color: var(--dim);
+  }
+
+  [data-hear] {
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.3rem;
+    height: 1.3rem;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--bg);
+    color: var(--dim);
+    font-size: .6rem;
+
+    &:hover {
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+
+    &[aria-pressed=true] {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
     }
   }
 }
@@ -7878,214 +8483,55 @@ drawSteps.after.push(function () {
   }
 }());
 
-// ---- a Sound tab ----------------------------------------------------------------------------
-// One wav at a time, chosen from a row of tiles each showing its shape and how long it runs,
-// with whether it loops, its volume and silence on a line above them.
-//
-// The drawing asks of its page the sounds on the drive, and each scene keeping its own sound.
-// The board takes one per scene, and the one in the always-on tab plays in any scene that
-// brings none of its own. Nothing about the sound is the board's, so setting up leaves it
-// standing back.
-
 state.sound = null;
 state.soundLoop = false;
 state.soundVolume = 100;
 state.soundKept = null;
 state.sounds = [];
 state.soundInfo = {};
-// Whether the scene silences the speaker with `audio: none`, which only a scene needs, where
-// Always on has a sound to silence
 state.soundOff = false;
 
-// The sound Always on plays in the scene being edited, where the scene has none of its own. It is
-// null on the Always on tab, in a scene with its own sound or silence and where Always on has none
+var SOUND_SAMPLES = 96;
+
+var soundHooks = {tileSteps: [], examplesBar: null};
+
 function soundUnder() {
   if (state.at < 0 || state.sound || state.soundKept || state.soundOff) return null;
   return state.always.body.sound || null;
 }
 
-// Whether the scene being edited can silence Always on's sound, there being one to silence
 function canSilence() { return state.at >= 0 && !!state.always.body.sound; }
 
-// The Sound tab's row of sounds and its setting, which renderSound below puts in the page's style
-function renderSoundTab() {
-  var box = document.getElementById("sound");
-  box.textContent = "";
-  var under = soundUnder();
-  document.getElementById("soundSays").textContent = under
-    ? "Always on's " + nameShown(under) + " plays on through this scene. Choose a sound to " +
-      "give this scene its own, or Silence to quieten it"
-    : state.soundOff
-    ? "this scene is silent. Always on's " + nameShown(state.always.body.sound) + " stops while " +
-      "it shows"
-    : !state.fileHandle
-    ? "open the FX drive to see the sounds on it"
-    : !state.scanned
-      ? "reading the drive..."
-    : !(state.sounds.length || state.sound || state.soundKept)
-      ? "no sounds on the drive yet. Drop a WAV file onto it"
-    : !state.scenes.length
-      ? "one WAV file, playing alongside the lights"
-    : state.at < 0
-      ? "plays in any scene without its own sound"
-      : "plays while this scene shows, resuming where it left off";
-
-  // How the sound is played rather than which one it is, so it sits above them,
-  // where a screen keeps its settings
-  var again = document.createElement("button");
-  again.className = "again" + (state.soundLoop && state.sound ? " on" : "");
-  again.textContent = "on repeat";
-  again.disabled = !state.sound;
-  again.title = state.sound
-    ? "Loop the sound instead of playing it once"
-    : "No sound chosen";
-  again.onclick = function () { state.soundLoop = !state.soundLoop; draw(); };
-  var above = document.createElement("div");
-  above.style.margin = "0 0 .7rem";
-  above.appendChild(again);
-  above.appendChild(volumeSlider());
-  box.appendChild(above);
-
-  var row = document.createElement("div");
-  row.className = "sounds";
-  // A sound the file names that the drive does not hold still gets its tile, since
-  // the board may find it on its own storage
-  var names = state.sounds.slice();
-  if (state.sound && names.indexOf(state.sound) < 0) names.unshift(state.sound);
-  if (state.soundKept) row.appendChild(soundKeptTile());
-  row.appendChild(soundTile(null));
-  // Grouped once the drive is open, the user's own always first
-  var grouped = !!state.fileHandle;
-  var files = names.map(function (name) { return {name: name}; });
-  var groups = [[OWN_GROUP, "your own sounds", files.filter(function (one) {
-    return !isExampleMedia(one.name);
-  }), false]];
-  groups = groups.concat(exampleGroups("sounds", files));
-  groups.forEach(function (group, at) {
-    if (at && !group[2].length) return;
-    // Kept apart from the Screens tab's groups, the user's own sharing its name
-    var kept = ["sound:" + group[0]].concat(group.slice(1));
-    var open = groupOpen(kept);
-    if (grouped) {
-      row.appendChild(foldHead(group[0], group[1], open, function () {
-        groupsOpen[kept[0]] = !open;
-      }));
-    }
-    if (grouped && !open) return;
-    group[2].forEach(function (one) { row.appendChild(soundTile(one.name)); });
-    if (at) return;
-    if (state.fileHandle)
-      row.appendChild(adderTile("add sounds",
-        {description: "Sounds the board can play", accept: {"audio/wav": [".wav"]}},
-        "sounds", /\.wav$/i));
-  });
-  box.appendChild(row);
+function chooseSound(name) {
+  state.sound = name;
+  state.soundOff = false;
+  state.soundKept = null;
+  draw();
 }
 
-// The volume the board plays the sound at, a percentage in steps of five
-function volumeSlider() {
-  var slider = document.createElement("input");
-  slider.type = "range";
-  slider.min = 0;
-  slider.max = 100;
-  slider.step = 5;
-  // A scene playing Always on's sound shows Always on's volume, greyed, as a screen its backlight
-  var under = soundUnder();
-  slider.value = under ? state.always.body.soundVolume : state.soundVolume;
-  slider.disabled = !state.sound;
-  var figure = document.createElement("span");
-  figure.className = "lightfigure";
-  figure.textContent = slider.value + "%";
-  slider.oninput = function () { figure.textContent = slider.value + "%"; };
-  slider.onchange = function () {
-    state.soundVolume = Number(slider.value);
-    // A sound being heard here follows the slider
-    if (hearing.audio && hearing.name === state.sound) {
-      hearing.audio.volume = state.soundVolume / 100;
-    }
-    draw();
-  };
-  var volume = document.createElement("label");
-  volume.className = "opt soundvolume";
-  volume.appendChild(document.createTextNode("volume"));
-  volume.appendChild(slider);
-  volume.appendChild(figure);
-  volume.title = state.sound ? "How loud the board plays the sound" : "No sound chosen";
-  if (under) frozen(volume);
-  return volume;
+function chooseNothing() {
+  state.sound = null;
+  state.soundOff = false;
+  state.soundLoop = false;
+  state.soundVolume = 100;
+  state.soundKept = null;
+  draw();
 }
 
-function soundKeptTile() {
-  var tile = document.createElement("button");
-  tile.className = "sound" + (state.sound ? "" : " picked");
-  tile.title = state.soundKept;
-  tile.innerHTML = "<svg viewBox='0 0 104 30' preserveAspectRatio='none'><rect x='0' " +
-                   "y='14' width='104' height='2' rx='1' fill='#c9c3b9'/></svg>";
-  var title = document.createElement("b");
-  title.textContent = "Keep as is";
-  tile.appendChild(title);
-  var says = document.createElement("small");
-  says.textContent = state.soundKept.slice(0, 40);
-  tile.appendChild(says);
-  tile.onclick = function () {
-    state.sound = null;
-    state.soundLoop = false;
-    state.soundVolume = 100;
-    draw();
-  };
-  return tile;
+function chooseSilence() {
+  state.sound = null;
+  state.soundKept = null;
+  state.soundLoop = false;
+  state.soundVolume = 100;
+  state.soundOff = true;
+  draw();
 }
 
-// A sound's tile, which soundTile below draws the sound on. Always on's sound, playing in a scene
-// with none of its own, wears the striped frame a screen showing Always on's picture wears
-function plainSoundTile(name) {
-  var picked = name === null ? !state.sound && !state.soundKept && !state.soundOff
-                             : state.sound === name;
-  var info = name ? state.soundInfo[name] : null;
-  var tile = document.createElement("button");
-  var under = name !== null && name === soundUnder();
-  tile.className = "sound" + (picked ? " picked" : "") + (name ? "" : " quiet") +
-                   (under ? " under" : "");
-  var colour = picked ? "#0f8a72" : "#c9c3b9";
-  if (name && info && info.bars) {
-    var cells = [];
-    info.bars.forEach(function (tall, i) {
-      var high = Math.max(2, tall * 26);
-      cells.push("<rect x='" + (i * 4) + "' y='" + ((30 - high) / 2) + "' width='2.6' " +
-                 "height='" + high + "' rx='1.3' fill='" + colour + "'/>");
-    });
-    tile.innerHTML = "<svg viewBox='0 0 104 30' preserveAspectRatio='none'>" +
-                     cells.join("") + "</svg>";
-  } else {
-    tile.innerHTML = "<svg viewBox='0 0 104 30' preserveAspectRatio='none'><rect x='0' " +
-                     "y='14' width='104' height='2' rx='1' fill='" + colour + "'/></svg>";
-  }
-  var title = document.createElement("b");
-  title.textContent = name ? nameShown(name) : "Silence";
-  tile.appendChild(title);
-  var says = document.createElement("small");
-  says.textContent = !name ? "nothing plays"
-                   : info && info.seconds ? info.seconds + "s" +
-                     (picked && state.soundLoop ? ", on repeat" : "")
-                   : state.sounds.indexOf(name) < 0 ? "not on the drive" : "";
-  tile.appendChild(says);
-  tile.onclick = function () {
-    state.sound = name;
-    state.soundOff = false;
-    if (name) state.soundKept = null;
-    if (!name) {
-      state.soundLoop = false;
-      state.soundVolume = 100;
-      state.soundKept = null;
-    }
-    draw();
-  };
-  // An example keeps no bin here, as flashing the board's examples again brings it back. Where the
-  // board's examples can be discovered, discover/29_discover_sound.js gives it one
-  if (name && state.sounds.indexOf(name) >= 0 && !isExampleMedia(name)) {
-    tile.appendChild(binButton(name, "wav"));
-  }
-  return tile;
+function keepAsIs() {
+  state.sound = null;
+  state.soundLoop = false;
+  state.soundVolume = 100;
+  draw();
 }
 
 function soundLine(body) {
@@ -8096,12 +8542,6 @@ function soundLine(body) {
            (body.soundVolume < 100 ? " volume=" + body.soundVolume + "%" : "");
   return body.soundKept;
 }
-
-// How many points a sound's outline is drawn from, enough for it to look smooth at the
-// pictures' size
-var SOUND_SAMPLES = 96;
-
-// ---- each scene keeps its own sound -------------------------------------------------------------
 
 bodyParts.push({
   capture: function (body) {
@@ -8132,7 +8572,6 @@ bodyParts.push({
          : body.soundOff ? ["sound", "Silence"] : null;
   },
   named: function (body) { return body.sound ? [nameShown(body.sound)] : []; },
-  // A scene's sound is its first line
   entries: function (body, lines) {
     var sound = "sound" in body ? soundLine(body) : null;
     if (sound) lines.unshift(sound);
@@ -8141,12 +8580,10 @@ bodyParts.push({
   read: readSound
 });
 
-// Try each kept line of each body as a sound, moving the one that writes back exactly
 function readSound(bodies) {
   bodies.forEach(function (body) {
     body.kept = body.kept.filter(function (one) {
       var parts = entryParts(one.text);
-      // A scene's silence is read as itself
       if (parts && parts.selector === "audio" && one.text === "audio: none" && !body.sound &&
           !body.soundOff) {
         body.soundOff = true;
@@ -8159,8 +8596,6 @@ function readSound(bodies) {
           })) {
         return true;
       }
-      // A volume written any other way than the slider writes it fails the match below, and
-      // its line is kept as it is
       var percent = /^(\d+)%$/.exec(parts.right.volume || "");
       var sounding = {sound: unquoted(parts.right.file), soundLoop: parts.right.loop === "true",
                       soundVolume: percent ? Number(percent[1]) : 100, soundKept: null};
@@ -8173,8 +8608,6 @@ function readSound(bodies) {
     });
   });
 }
-
-// ---- the sounds on the drive --------------------------------------------------------------------
 
 var soundsFound = [];
 
@@ -8203,7 +8636,11 @@ driveParts.push({
   }
 });
 
-// A wav's length and outline, the outline read at SOUND_SAMPLES points
+var RIFF_CHUNK = 0x52494646;
+var WAVE_FORM = 0x57415645;
+var FORMAT_CHUNK = 0x666d7420;
+var DATA_CHUNK = 0x64617461;
+
 async function profileSound(name, handle) {
   soundHandles[name] = handle;
   if (state.soundInfo[name] !== undefined) return;
@@ -8211,7 +8648,7 @@ async function profileSound(name, handle) {
   try {
     var file = await handle.getFile();
     var head = new DataView(await file.slice(0, 8192).arrayBuffer());
-    if (head.getUint32(0) !== 0x52494646 || head.getUint32(8) !== 0x57415645)
+    if (head.getUint32(0) !== RIFF_CHUNK || head.getUint32(8) !== WAVE_FORM)
       throw new Error("not a WAV file");
     var at = 12;
     var byteRate = 0;
@@ -8221,10 +8658,10 @@ async function profileSound(name, handle) {
     while (at + 8 <= head.byteLength) {
       var id = head.getUint32(at);
       var size = head.getUint32(at + 4, true);
-      if (id === 0x666d7420) {                       // "fmt "
+      if (id === FORMAT_CHUNK) {
         byteRate = head.getUint32(at + 16, true);
         bits = head.getUint16(at + 22, true);
-      } else if (id === 0x64617461) {                // "data"
+      } else if (id === DATA_CHUNK) {
         dataAt = at + 8;
         dataSize = Math.min(size, file.size - dataAt);
         break;
@@ -8257,10 +8694,6 @@ async function profileSound(name, handle) {
   }
 }
 
-// ---- hearing a sound --------------------------------------------------------------------------
-// Each sound on the drive has a play button in its tile's corner, so it can be heard as well as
-// seen. One plays at a time, and pressing it again, or playing another, stops it
-
 var soundHandles = {};
 var hearing = {name: null, audio: null, url: null};
 
@@ -8268,6 +8701,10 @@ function stopHearing() {
   if (hearing.audio) hearing.audio.pause();
   if (hearing.url) URL.revokeObjectURL(hearing.url);
   hearing = {name: null, audio: null, url: null};
+}
+
+function startHearing(name, audio, url) {
+  hearing = {name: name, audio: audio, url: url};
 }
 
 async function hear(name) {
@@ -8281,9 +8718,8 @@ async function hear(name) {
   try {
     var url = URL.createObjectURL(await soundHandles[name].getFile());
     audio = new Audio(url);
-    // The chosen sound is heard at its volume, any other as recorded
     if (name === state.sound) audio.volume = state.soundVolume / 100;
-    hearing = {name: name, audio: audio, url: url};
+    startHearing(name, audio, url);
     audio.onended = function () {
       if (hearing.audio === audio) stopHearing();
       draw();
@@ -8291,7 +8727,6 @@ async function hear(name) {
     draw();
     await audio.play();
   } catch (e) {
-    // A sound stopped or replaced before it began is cancelled with AbortError, which is no fault
     if (e.name === "AbortError" && hearing.audio !== audio) return;
     if (hearing.audio === audio) stopHearing();
     banner("Could not play " + nameShown(name) + ": " + e.name + ".", true);
@@ -8299,46 +8734,36 @@ async function hear(name) {
   }
 }
 
-// A sound's tile with a way to hear it here, where the open drive holds it
-function withHearButton(tile, name) {
-  if (!name || !soundHandles[name]) return tile;
+function hearButton(name, words, onclick) {
   var playing = hearing.name === name;
-  // A tile is a button already, so this is a plain element taking the click, as its cross is
-  var button = document.createElement("span");
-  button.className = "hear" + (playing ? " playing" : "");
-  button.setAttribute("role", "button");
-  button.textContent = playing ? "\u25a0" : "\u25b6";
-  button.title = (playing ? "Stop " : "Play ") + nameShown(name) + " here";
-  button.onclick = function (event) {
-    event.stopPropagation();
-    hear(name);
-  };
-  tile.appendChild(button);
-  return tile;
+  return h("button", {type: "button", "data-hear": true, "aria-pressed": String(playing),
+                      "aria-label": "Hear " + words,
+                      title: (playing ? "Stop " : "Play ") + words + " here",
+                      onclick: function (event) {
+                        event.stopPropagation();
+                        onclick();
+                      }},
+           playing ? "\u25a0" : "\u25b6");
 }
 
-// ---- drawing the tab ---------------------------------------------------------------------------
-
-// A sound's outline, filled edge to edge and mirrored about the middle. Each moment of it is
-// coloured by how loud it is, blue when quiet through violet and pink to red when loud, the
-// violet keeping the middle of the run clear where blue straight to red goes muddy
 var LOUDNESS = ["#3a6fd8", "#8a4fd0", "#d0449a", "#e5443a"];
 var outlinesMade = 0;
 
-// The colour for a loudness from 0 to 1, between the two nearest of LOUDNESS
 function loudnessInk(loud) {
   var at = Math.max(0, Math.min(1, loud)) * (LOUDNESS.length - 1);
-  var low = Math.floor(at), high = Math.min(LOUDNESS.length - 1, low + 1), part = at - low;
-  function parts(hex) {
+  var low = Math.floor(at);
+  var high = Math.min(LOUDNESS.length - 1, low + 1);
+  var part = at - low;
+  function channels(hex) {
     return [1, 3, 5].map(function (from) { return parseInt(hex.substr(from, 2), 16); });
   }
-  var from = parts(LOUDNESS[low]), to = parts(LOUDNESS[high]);
+  var from = channels(LOUDNESS[low]);
+  var to = channels(LOUDNESS[high]);
   return "rgb(" + from.map(function (value, channel) {
     return Math.round(value + (to[channel] - value) * part);
   }).join(",") + ")";
 }
 
-// The bars of a sound with nothing in it, a thin band in the quietest colour
 function silentBars() {
   var bars = [];
   for (var i = 0; i < SOUND_SAMPLES; i++) bars.push(0.04);
@@ -8346,181 +8771,231 @@ function silentBars() {
 }
 
 function soundOutline(bars) {
-  var wide = 100, high = 40, middle = high / 2, last = bars.length - 1;
+  var wide = 100;
+  var high = 40;
+  var middle = high / 2;
+  var last = bars.length - 1;
   var id = "loudness" + (outlinesMade++);
   function across(at) { return (at / last) * wide; }
   var above = bars.map(function (tall, at) { return across(at) + "," + (middle - tall * middle); });
   var below = bars.map(function (tall, at) { return across(at) + "," + (middle + tall * middle); });
-  var outline = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  outline.setAttribute("viewBox", "0 0 " + wide + " " + high);
-  outline.setAttribute("preserveAspectRatio", "none");
-  outline.setAttribute("class", "soundoutline");
-  outline.innerHTML = "<defs><linearGradient id='" + id + "' x1='0' x2='1'>" +
-    bars.map(function (tall, at) {
-      return "<stop offset='" + at / last + "' stop-color='" + loudnessInk(tall) + "'/>";
-    }).join("") + "</linearGradient></defs>" +
-    "<polygon points='" + above.concat(below.reverse()).join(" ") + "' fill='url(#" + id + ")'/>";
-  return outline;
+  return h("svg:svg", {viewBox: "0 0 " + wide + " " + high, preserveAspectRatio: "none",
+                       "aria-hidden": "true"},
+    h("svg:defs", {},
+      h("svg:linearGradient", {id: id, x1: 0, x2: 1}, bars.map(function (tall, at) {
+        return h("svg:stop", {offset: at / last, "stop-color": loudnessInk(tall)});
+      }))),
+    h("svg:polygon", {points: above.concat(below.reverse()).join(" "), fill: "url(#" + id + ")"}));
 }
 
-// The Sound section's tiles draw their sound the same way, each with a way to hear it here
+function flatSound() {
+  return h("svg:svg", {viewBox: "0 0 104 30", preserveAspectRatio: "none", "aria-hidden": "true"},
+    h("svg:rect", {x: 0, y: 14, width: 104, height: 2, rx: 1}));
+}
+
+function soundSentence(under) {
+  if (under)
+    return "Always on's " + nameShown(under) + " plays on through this scene. Choose a sound to " +
+           "give this scene its own, or Silence to quieten it";
+  if (state.soundOff)
+    return "this scene is silent. Always on's " + nameShown(state.always.body.sound) +
+           " stops while it shows";
+  if (!state.fileHandle) return "open the FX drive to see the sounds on it";
+  if (!state.scanned) return "reading the drive...";
+  if (!(state.sounds.length || state.sound || state.soundKept))
+    return "no sounds on the drive yet. Drop a WAV file onto it";
+  if (!state.scenes.length) return "one WAV file, playing alongside the lights";
+  if (state.at < 0) return "plays in any scene without its own sound";
+  return "plays while this scene shows, resuming where it left off";
+}
+
+function loopToggle(under) {
+  var looping = under ? !!state.always.body.soundLoop : !!(state.soundLoop && state.sound);
+  return h("button", {type: "button", "aria-pressed": String(looping), disabled: !state.sound,
+                      title: under ? "Set on the Always on tab"
+                           : state.sound ? "Loop the sound instead of playing it once"
+                           : "No sound chosen",
+                      onclick: function () {
+                        state.soundLoop = !state.soundLoop;
+                        draw();
+                      }},
+           h("span", {"aria-hidden": "true"}, "\u21bb"), " Loop");
+}
+
+function volumeSlider(under) {
+  var shown = h("output");
+  var slider = h("input", {type: "range", min: 0, max: 100, step: 5,
+                           value: under ? state.always.body.soundVolume : state.soundVolume,
+                           disabled: !state.sound,
+                           oninput: function () { shown.value = slider.value + "%"; },
+                           onchange: function () {
+                             state.soundVolume = Number(slider.value);
+                             if (hearing.audio && hearing.name === state.sound) {
+                               hearing.audio.volume = state.soundVolume / 100;
+                             }
+                             draw();
+                           }});
+  shown.value = slider.value + "%";
+  return h("label", {title: under ? "Set on the Always on tab"
+                          : state.sound ? "How loud the board plays the sound" : "No sound chosen"},
+           "volume", slider, shown);
+}
+
+function nothingChoice() {
+  var picked = !state.sound && !state.soundKept && !state.soundOff;
+  return h("button", {type: "button", "aria-pressed": String(picked),
+                      title: canSilence() ? "Play nothing of this scene's own" : "Play no sound",
+                      onclick: chooseNothing},
+           h("i"), h("b", {}, "Nothing"));
+}
+
+function silenceChoice() {
+  return h("button", {type: "button", "aria-pressed": String(state.soundOff),
+                      "data-unseen": !canSilence(), title: "Play no sound in this scene",
+                      onclick: chooseSilence},
+           h("i", {}, soundOutline(silentBars())), h("b", {}, "Silence"));
+}
+
+function playingLine(under) {
+  return h("div", {},
+    h("fieldset", {disabled: !!under, title: under ? "Set on the Always on tab" : null},
+      h("legend", {}, "How it plays"),
+      loopToggle(under),
+      volumeSlider(under)),
+    nothingChoice());
+}
+
+function soundLength(name, info, picked) {
+  if (info && info.seconds) return info.seconds + "s" + (picked && state.soundLoop ? ", on repeat" : "");
+  return state.sounds.indexOf(name) < 0 ? "not on the drive" : "";
+}
+
 function soundTile(name) {
-  var tile = plainSoundTile(name);
-  var info = name ? state.soundInfo[name] : null;
-  var drawn = tile.querySelector("svg");
-  if (info && info.bars && drawn) tile.replaceChild(soundOutline(info.bars), drawn);
-  // Silence wears the stripes that nothing playing wears everywhere else on the page
-  if (name === null && drawn) {
-    var nothing = document.createElement("span");
-    nothing.className = "nothingface";
-    tile.replaceChild(nothing, drawn);
+  var info = state.soundInfo[name];
+  var picked = state.sound === name;
+  var onDrive = state.sounds.indexOf(name) >= 0;
+  var tile = h("li", {"data-under": name === soundUnder()},
+    h("button", {type: "button", "aria-pressed": String(picked),
+                 onclick: function () { chooseSound(name); }},
+      info && info.bars ? soundOutline(info.bars) : flatSound(),
+      h("b", {}, nameShown(name)),
+      h("small", {}, soundLength(name, info, picked))),
+    soundHandles[name] ? hearButton(name, nameShown(name), function () { hear(name); }) : null,
+    onDrive && !isExampleMedia(name) ? binButton(name, "wav") : null);
+  soundHooks.tileSteps.forEach(function (step) { step(tile, name); });
+  return tile;
+}
+
+function keptTile() {
+  return h("li", {},
+    h("button", {type: "button", "aria-pressed": String(!state.sound), title: state.soundKept,
+                 onclick: keepAsIs},
+      flatSound(),
+      h("b", {}, "Keep as is"),
+      h("small", {}, state.soundKept.slice(0, 40))));
+}
+
+function addSoundsTile() {
+  return h("li", {}, adderTile("add sounds",
+    {description: "Sounds the board can play", accept: {"audio/wav": [".wav"]}},
+    "sounds", /\.wav$/i));
+}
+
+function soundList(tiles, tip) {
+  return tiles.length ? h("ul", {title: tip}, tiles) : null;
+}
+
+function groupHeading(group, key, open) {
+  return h("h3", {},
+    h("button", {type: "button", "aria-expanded": String(open),
+                 onclick: function () {
+                   groupsOpen[key] = !open;
+                   draw();
+                 }},
+      group[0], group[1] ? h("small", {}, group[1]) : null));
+}
+
+function soundGroups(tip) {
+  var names = state.sounds.slice();
+  if (state.sound && names.indexOf(state.sound) < 0) names.unshift(state.sound);
+  var files = names.map(function (name) { return {name: name}; });
+  var groups = [[OWN_GROUP, "your own sounds", files.filter(function (one) {
+    return !isExampleMedia(one.name);
+  }), false]].concat(exampleGroups("sounds", files));
+  var kept = state.soundKept ? [keptTile()] : [];
+
+  if (!state.fileHandle) {
+    var tiles = kept.slice();
+    groups.forEach(function (group) {
+      group[2].forEach(function (one) { tiles.push(soundTile(one.name)); });
+    });
+    return h("section", {}, h("div", {}, silenceChoice()), soundList(tiles, tip));
   }
-  soundTileSteps.forEach(function (step) { step(tile, name); });
-  return withHearButton(tile, name);
+
+  var sections = [];
+  groups.forEach(function (group, at) {
+    if (at && !group[2].length) return;
+    var key = "sound:" + group[0];
+    var open = groupOpen([key].concat(group.slice(1)));
+    var tiles = at ? [] : kept.slice();
+    if (open) group[2].forEach(function (one) { tiles.push(soundTile(one.name)); });
+    if (open && !at) tiles.push(addSoundsTile());
+    sections.push(h("section", {},
+      h("div", {}, groupHeading(group, key, open), at ? null : silenceChoice()),
+      soundList(tiles, tip)));
+    if (!at && soundHooks.examplesBar) sections.push(soundHooks.examplesBar());
+  });
+  return sections;
 }
 
-// What the parts after this one add to each sound's tile, each given the tile and its sound's
-// name, null for silence
-var soundTileSteps = [];
+var soundTab = h("section", {class: "soundtab", "aria-label": "Sound"});
 
-// The tab in the page's style. What the scene does with its sound is the row's tip, no other
-// tab opening on a sentence; the sentence stays only where there are no sounds to show, since
-// it is then all there is. Repeat is a toggle with its icon, as the screens' Loop is, the
-// volume a slider beside it, and silence the small card Nothing is in the gallery, at the end
-// of that line
 function renderSound() {
-  renderSoundTab();
-  soundSteps.forEach(function (step) { step(); });
-  var box = document.getElementById("sound");
-  var says = document.getElementById("soundSays");
-  var row = box.querySelector(".sounds");
-  var explains = /^(one WAV|plays)/.test(says.textContent);
-  if (row && explains) row.title = says.textContent.charAt(0).toUpperCase() +
-                                   says.textContent.slice(1);
-  // With scenes, a sentence one tab shows and another does not keeps its place unseen, so the tab
-  // does not move between them
-  says.hidden = explains && !state.scenes.length;
-  says.style.visibility = explains ? "hidden" : "";
-
-  var again = box.querySelector("button.again");
-  var head = again && again.parentNode;
-  if (!head) return;
-  head.removeAttribute("style");
-  head.className = "soundhead";
-  // The screens' toggle, drawn here as well since not every page has the screens
-  var loop = document.createElement("button");
-  loop.type = "button";
-  // A scene playing Always on's sound shows Always on's loop, greyed
   var under = soundUnder();
-  var looping = under ? state.always.body.soundLoop : state.soundLoop && state.sound;
-  loop.className = "stoggle" + (looping ? " on" : "") + (under ? " frozen" : "");
-  loop.innerHTML = "<span aria-hidden='true'>&#8635;</span> Loop";
-  loop.title = under ? "Set on the Always on tab" : again.title;
-  loop.disabled = !state.sound;
-  loop.onclick = function () {
-    state.soundLoop = !state.soundLoop;
-    draw();
-  };
-  head.replaceChild(loop, again);
-
-  var quiet = row && row.querySelector(".sound.quiet");
-  if (!quiet) return;
-  // Nothing writes no sound for the scene, so Always on's plays through where it has one, as
-  // Nothing does on the lights
-  var nothing = document.createElement("div");
-  nothing.className = "card nothing small" + (quiet.classList.contains("picked") ? " picked" : "");
-  nothing.title = canSilence() ? "Play nothing of this scene's own" : "Play no sound";
-  nothing.innerHTML = "<div class='face'></div><div class='name'>Nothing</div>";
-  nothing.onclick = quiet.onclick;
-  head.appendChild(nothing);
-  row.removeChild(quiet);
-
-  // Silence, `audio: none`, is the scene choosing no sound over Always on's. It is a small card at
-  // the end of the first heading, as Off is in the screens' gallery, or on a line of its own where
-  // there are no headings. Where there is nothing to silence it keeps its place unseen, so the tab
-  // does not move between scenes
-  var silence = document.createElement("div");
-  if (!canSilence()) silence.style.visibility = "hidden";
-  silence.className = "card nothing small" + (state.soundOff ? " picked" : "");
-  silence.title = "Play no sound in this scene";
-  // Its face is a sound with nothing in it, drawn as a tile draws a near-silent file
-  silence.innerHTML = "<div class='face silenceface'></div><div class='name'>Silence</div>";
-  silence.querySelector(".face").appendChild(soundOutline(silentBars()));
-  silence.onclick = function () {
-    state.sound = null;
-    state.soundKept = null;
-    state.soundLoop = false;
-    state.soundVolume = 100;
-    state.soundOff = true;
-    draw();
-  };
-  var line = document.createElement("div");
-  line.className = "offhead";
-  var first = row.querySelector(".foldhead");
-  if (first) row.insertBefore(line, first);
-  else row.insertBefore(line, row.firstChild);
-  if (first) line.appendChild(first);
-  line.appendChild(silence);
+  var sentence = soundSentence(under);
+  var explains = /^(one WAV|plays)/.test(sentence);
+  var tip = explains ? sentence.charAt(0).toUpperCase() + sentence.slice(1) : null;
+  replace(soundTab,
+    h("p", {hidden: explains && !state.scenes.length, "data-unseen": explains}, sentence),
+    playingLine(under),
+    soundGroups(tip));
 }
 
-// What the parts after this one add to the Sound tab once its tiles are made
-var soundSteps = [];
+function repeatMark() {
+  return h("svg:svg", {viewBox: "0 0 16 16", "aria-hidden": "true"},
+    h("svg:path", {d: "M3 7a5 5 0 0 1 9-3M13 9a5 5 0 0 1-9 3"}),
+    h("svg:path", {d: "M12 1v3.5H8.5M4 15v-3.5h3.5"}));
+}
 
-// The tab's swatch is the shape of the sound playing, or silence
 tabSwatches.soundPanel = function (swatch) {
-  swatch.textContent = "";
   swatch.className = "accswatch soundswatch";
   var under = soundUnder();
-  // The scene's Silence is the flat line its card shows
-  if (state.soundOff) {
-    swatch.appendChild(soundOutline(silentBars()));
-    swatch.title = "silence";
-    return;
-  }
   var info = state.sound ? state.soundInfo[state.sound] : under ? state.soundInfo[under] : null;
-  if (!info) {
-    swatch.classList.add("silent");
+  if (state.soundOff) {
+    replace(swatch, soundOutline(silentBars()));
+    swatch.title = "silence";
+  } else if (!info) {
+    replace(swatch);
+    swatch.dataset.shows = "nothing";
     swatch.title = under ? "Always on's " + nameShown(under) : "nothing";
-    return;
-  }
-  // Always on's sound is drawn faded, as its looks are on the lamps
-  if (under) {
-    swatch.appendChild(soundOutline(info.bars));
-    swatch.classList.add("under");
+  } else if (under) {
+    replace(swatch, soundOutline(info.bars));
+    swatch.dataset.shows = "under";
     swatch.title = "Always on's " + nameShown(under);
-    return;
+  } else {
+    replace(swatch, soundOutline(info.bars), state.soundLoop ? repeatMark() : null);
+    swatch.title = nameShown(state.sound) + (state.soundLoop ? ", on repeat" : "") +
+                   (state.soundVolume < 100 ? ", " + state.soundVolume + "% volume" : "");
   }
-  swatch.appendChild(soundOutline(info.bars));
-  // On repeat, the Sound section's one setting, as a loop in the preview's corner
-  if (state.soundLoop) {
-    var mark = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    mark.setAttribute("viewBox", "0 0 16 16");
-    mark.setAttribute("class", "repeatmark");
-    mark.innerHTML = "<path d='M3 7a5 5 0 0 1 9-3M13 9a5 5 0 0 1-9 3' fill='none' " +
-                     "stroke='currentColor' stroke-width='2' stroke-linecap='round'/>" +
-                     "<path d='M12 1v3.5H8.5M4 15v-3.5h3.5' fill='none' stroke='currentColor' " +
-                     "stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/>";
-    swatch.appendChild(mark);
-    swatch.classList.add("repeats");
-  }
-  swatch.title = nameShown(state.sound) + (state.soundLoop ? ", on repeat" : "") +
-                 (state.soundVolume < 100 ? ", " + state.soundVolume + "% volume" : "");
 };
 
-// Under the tab's name, the kind of sound playing, which a tone will join once the board
-// plays one. The file's name is the Sound section's to say
 function kindUnderName() {
   var tab = document.querySelector("#ledTabs .ledtab[data-panel=soundPanel]");
   if (!tab || tab.querySelector(".tabname")) return;
-  var named = document.createElement("span");
-  named.className = "tabname";
-  named.appendChild(tab.querySelector("b"));
-  var kind = document.createElement("small");
-  kind.className = "tabunder";
-  kind.textContent = state.sound || state.soundKept ? "wav" : state.soundOff ? "silence"
-                   : soundUnder() ? "Always on" : "nothing";
-  named.appendChild(kind);
-  tab.insertBefore(named, tab.firstChild);
+  var kind = state.sound || state.soundKept ? "wav" : state.soundOff ? "silence"
+           : soundUnder() ? "Always on" : "nothing";
+  tab.prepend(h("span", {class: "tabname"}, tab.querySelector("b"),
+                h("small", {class: "tabunder"}, kind)));
 }
 
 drawSteps.after.push(function () {
@@ -8528,40 +9003,20 @@ drawSteps.after.push(function () {
   renderSound();
 });
 
-(function () {
-  var panel = document.createElement("details");
-  panel.className = "panel";
-  panel.id = "soundPanel";
-  panel.open = true;
-  panel.innerHTML = "<summary>Sound</summary>" +
-                    "<p class='says soundsays' id='soundSays'></p>" +
-                    "<div id='sound'></div>";
-  var after = document.getElementById(TAB_PANELS[TAB_PANELS.length - 1]);
-  after.parentNode.insertBefore(panel, after.nextSibling);
-}());
+document.getElementById(TAB_PANELS[TAB_PANELS.length - 1]).after(
+  h("details", {class: "panel", id: "soundPanel", open: true}, h("summary", {}, "Sound"), soundTab));
 
 TAB_NAMES.soundPanel = "Sound";
 TAB_PANELS.push("soundPanel");
 keptOpen("soundPanel");
 
-// ---- the Sensor tab -----------------------------------------------------------------------------
-// What is on the sensor connector and what it does, as a tab after Sound. Only what is fitted is
-// board setup, chosen in Edit board. What each of a remote's buttons does is set on the Always on
-// tab for every scene, and a scene can change any button while it shows, as it can any light.
-// Two buttons are the board's in every scene: OK / Stop puts it in standby and wakes it, so there
-// is always a way to stop it, and Play / Pause holds the effects where they stand.
-
-// What the sensor connector can have on it: [kind, as the choice says it, under the tab's name,
-// where it sits]
 var SENSOR_KINDS = [["none", "nothing", "none", ""],
                     ["ir", "an Aye Arr Remote", "Aye Arr",
                      "through an IR Receiver Stick on the sensor connector"],
                     ["pir", "a PIR Stick", "PIR Stick", "on the sensor connector"]];
 
 state.sensorKind = "none";
-// The choices of the tab being edited, by button, where it changes what a button does
 state.remote = {};
-// The buttons the file gave twice in the tab being edited, whose second lines are kept as written
 state.remoteRepeats = [];
 
 BOARD_CHIP_CLASSES.sensorPanel = "sensor";
@@ -8573,39 +9028,25 @@ function sensorFacts() {
 function remoteFitted() { return state.sensorKind === "ir"; }
 function pirFitted() { return state.sensorKind === "pir"; }
 
-// A PIR Stick's two triggers, chosen for as a remote's buttons are, and held with them
 var MOTION_TRIGGERS = ["MOTION_STARTS", "MOTION_STOPS"];
 
-// Whether what a trigger belongs to is fitted, a button the remote and motion the PIR Stick
 function triggerFitted(trigger) {
   return MOTION_TRIGGERS.indexOf(trigger) >= 0 ? pirFitted() : remoteFitted();
 }
 
-// The triggers of what is fitted, in the order their lines are written
 function fittedTriggers() {
   return pirFitted() ? MOTION_TRIGGERS
        : remoteFitted() ? REMOTE_BUTTONS.map(function (button) { return button[0]; }) : [];
 }
 
-// ---- what each button does --------------------------------------------------------------------
-// A choice is a word: nothing, order (a number's scene by place), next, previous, first, restart,
-// or scene: and a scene's own mark, which keeps the button on that scene when it moves. The board's
-// own two buttons are standby and pause. A number is bound to the scene in its place, as the
-// scene's colour is its button's, so a number only goes there or does nothing
-
 function isNumber(button) { return /^\d_/.test(button); }
 
-// The buttons that do the same in every scene, and what they do
 var REMOTE_FIXED = {OK_STOP: ["standby", "Standby and wake, in every scene"],
                     PLAY_PAUSE: ["pause", "Pause the effects where they stand, in every scene"]};
 
-// A scene can wait for a button while a remote is fitted
 sceneCanWait = function () { return remoteFitted() || pirFitted(); };
 sceneWaitsFor = function () { return pirFitted() ? "motion" : "a button"; };
 
-// The scenes a scene goes to on what is fitted, from each trigger's choice in that scene: its
-// own, then Always on's, then the trigger's default. The tab being edited holds its choices in
-// state.remote rather than its body
 sceneTriggerLeads = function (at) {
   var count = state.scenes.length;
   var always = state.at < 0 ? state.remote : state.always.body && state.always.body.remote || {};
@@ -8626,9 +9067,6 @@ sceneTriggerLeads = function (at) {
   return leads;
 };
 
-// What a button does where Always on chooses nothing else: a number goes to the scene in its
-// place, 0 to the tenth, and the side arrows step back and on. With no scenes none of them has
-// anywhere to go
 function remoteDefault(button) {
   if (/^\d_/.test(button)) return "order";
   if (!state.scenes.length) return "nothing";
@@ -8637,14 +9075,11 @@ function remoteDefault(button) {
   return "nothing";
 }
 
-// The scene a number goes to in order, 0 being the tenth
 function sceneInOrder(button) {
   var number = Number(button.charAt(0));
   return state.scenes[(number || 10) - 1] || null;
 }
 
-// What a button does on the tab being edited, as {choice, from}. From is own where the tab
-// chooses it, always where a scene leaves it to Always on, and fixed for the board's own buttons
 function remoteResolved(button) {
   if (REMOTE_FIXED[button]) return {choice: REMOTE_FIXED[button][0], from: "fixed"};
   if (state.remote[button] !== undefined) return {choice: state.remote[button], from: "own"};
@@ -8654,8 +9089,6 @@ function remoteResolved(button) {
           from: "always"};
 }
 
-// What a choice does, in the words a row says it, or "" where it does nothing. A scene is said
-// as one, so it is not taken for a step or Standby that a scene's name happens to match
 function remoteSays(choice, button) {
   if (choice === "order") {
     var scene = sceneInOrder(button);
@@ -8665,7 +9098,6 @@ function remoteSays(choice, button) {
     var marked = sceneMarked(choice.slice(6));
     return marked ? "Scene: " + marked.name : "";
   }
-  // Restart begins the scene showing again, or Always on's effects where there are no scenes
   if (choice === "restart") {
     return state.at >= 0 ? "Scene: " + state.scenes[state.at].name + ", from the start"
          : state.scenes.length ? "Restart the scene showing" : "Restart the effects";
@@ -8674,15 +9106,10 @@ function remoteSays(choice, button) {
           standby: "Standby", pause: "Pause"}[choice];
 }
 
-// Whether going to a scene while it shows does something other than begin it again. Going to a
-// scene starts it, which begins its effects again where it restarts, and otherwise starts only
-// its time again. A waiting scene that does not restart has neither to do
 function sceneSelfDiffers(scene) {
   return !scene.waits && !sceneRestarts(scene);
 }
 
-// The trigger in this tab that goes to the scene showing, which waits and does not restart, so
-// does nothing, or null
 function triggerDoingNothing() {
   if (state.at < 0) return null;
   var showing = state.scenes[state.at];
@@ -8692,13 +9119,10 @@ function triggerDoingNothing() {
   })[0] || null;
 }
 
-// Whether a button does anything on the tab being edited
 function remoteDoes(button) {
   return triggerFitted(button) && remoteSays(remoteResolved(button).choice, button) !== "";
 }
 
-// The number button bound to a scene by its place, which its card wears while a remote is fitted
-// and Always on leaves the number going there. None past the tenth scene
 sceneNumbers = function (scene) {
   var at = state.scenes.indexOf(scene);
   if (!remoteFitted() || at > 9) return [];
@@ -8709,7 +9133,6 @@ sceneNumbers = function (scene) {
   return always[button] === "nothing" ? [] : [(at + 1) % 10];
 };
 
-// A button's name as a reader says it, such as "1 Red" or "OK / Stop"
 function remoteWords(name) {
   if (name === "ANTICLOCK") return "Anticlockwise";
   if (name === "MOTION_STARTS") return "Motion starts";
@@ -8721,7 +9144,6 @@ function remoteWords(name) {
   return /^\d_/.test(name) ? words.join(" ") : words.join(" / ");
 }
 
-// The colour of a button's leader while it does something
 function remoteInk(name) {
   if (name === "8_WHITE") return "#a7a9ac";
   if (name === "6_YELLOW") return "#e0cf00";
@@ -8730,338 +9152,13 @@ function remoteInk(name) {
   return number ? REMOTE_COLOURS[Number(number[1]) - 1] : "#808285";
 }
 
-// A row's choice of what its button does. On a scene's tab the first choice leaves it to
-// Always on, saying what that does, its row's stripes saying whose it is
-function remoteRowChoice(row, button) {
-  var resolved = remoteResolved(button);
-  var choice = document.createElement("select");
-  choice.dataset.choice = button;
-  function option(parent, value, words) {
-    var one = document.createElement("option");
-    one.value = value;
-    one.textContent = words;
-    parent.appendChild(one);
-  }
-  var own = choice;
-  if (state.at >= 0) {
-    var always = state.always.body && state.always.body.remote || {};
-    var under = always[button] !== undefined ? always[button] : remoteDefault(button);
-    var kept = document.createElement("optgroup");
-    kept.label = "As Always on";
-    option(kept, "", remoteSays(under, button) || "Nothing");
-    choice.appendChild(kept);
-    own = document.createElement("optgroup");
-    own.label = "In this scene";
-    choice.appendChild(own);
-    row.title = "Striped where it does what Always on sets";
-  }
-  // A number goes to the scene in its place or does nothing
-  if (isNumber(button)) {
-    option(own, "order", "Scene: " + sceneInOrder(button).name);
-    option(own, "nothing", "Nothing");
-  } else if (!state.scenes.length) {
-    // With no scenes there is nothing to go to, only Always on's effects to begin again
-    option(own, "nothing", "Nothing");
-    option(own, "restart", remoteSays("restart", button));
-  } else {
-    option(own, "nothing", "Nothing");
-    var showing = state.at >= 0 ? state.scenes[state.at] : null;
-    // A file's choice of the scene showing where that does nothing is kept, for its note to say why
-    var keptNothing = showing && resolved.from === "own" && !sceneRestarts(showing) &&
-                      !sceneSelfDiffers(showing) && resolved.choice === "scene:" + sceneMark(showing);
-    var scenes = document.createElement("optgroup");
-    scenes.label = "Go to a scene";
-    state.scenes.forEach(function (scene) {
-      // The scene showing is offered from the start, and as itself only where that differs
-      if (scene !== showing || sceneSelfDiffers(scene) || keptNothing) {
-        option(scenes, "scene:" + sceneMark(scene), "Scene: " + scene.name);
-      }
-      if (scene === showing) option(scenes, "restart", remoteSays("restart", button));
-    });
-    choice.appendChild(scenes);
-    var steps = document.createElement("optgroup");
-    steps.label = "Step";
-    [["next", "Next scene"], ["previous", "Previous scene"], ["first", "First scene"]]
-      .concat(showing ? [] : [["restart", remoteSays("restart", button)]])
-      .forEach(function (step) { option(steps, step[0], step[1]); });
-    choice.appendChild(steps);
-  }
-  choice.value = resolved.from === "own" ? resolved.choice : "";
-  // Going to the scene showing where that begins it again reads as from the start
-  if (showing && choice.value === "scene:" + sceneMark(showing) && sceneRestarts(showing)) {
-    choice.value = "restart";
-  }
-  // The whole choice, which a narrow row can cut short
-  if (choice.selectedOptions.length) choice.title = choice.selectedOptions[0].textContent;
-  choice.onchange = function () {
-    var value = choice.value;
-    // Always on choosing a button's default, or a scene choosing Always on's, keeps no choice
-    if (value === "") delete state.motionTiming[button];
-    if (value === "" || (state.at < 0 && value === remoteDefault(button))) delete state.remote[button];
-    else state.remote[button] = value;
-    settleSceneRow(button);
-    draw();
-  };
-  row.appendChild(choice);
-}
-
-// ---- the remote with a row for each button ----------------------------------------------------
-// The remote in the middle, its buttons' rows down either side, each joined to its button by a
-// leader in the button's colour while it does something. The art is drawn at REMOTE_SCALE pixels
-// to its unit, the leaders taking REMOTE_REACH units beyond its body on each side
-
-var REMOTE_SCALE = 4.3;
-var REMOTE_REACH = 16;
-var REMOTE_BODY = {left: 71.26, right: 126.45, top: 23.5, bottom: 146};
-var REMOTE_ROW_PX = 27;
-
-// A leader from a row's edge to its button, level to where it turns, then at 45 degrees onto the
-// button's edge for a middle one
-function remoteLeader(row) {
-  var at = remoteArtAt(row[0]);
-  var left = row[1] === "left";
-  var from = left ? REMOTE_BODY.left - REMOTE_REACH : REMOTE_BODY.right + REMOTE_REACH;
-  var reach = REMOTE_ART_RADIUS;
-  if (Math.abs(row[2] - at.y) < 0.01) return "M" + from + " " + at.y + " H" + (left ? at.x - reach : at.x + reach);
-  var lean = reach * Math.SQRT1_2;
-  var endX = left ? at.x - lean : at.x + lean;
-  var endY = row[2] > at.y ? at.y + lean : at.y - lean;
-  var turn = left ? endX - Math.abs(row[2] - endY) : endX + Math.abs(row[2] - endY);
-  return "M" + from + " " + row[2] + " H" + turn.toFixed(2) + " L" + endX.toFixed(2) + " " +
-         endY.toFixed(2);
-}
-
-// With no remote fitted the whole remote is washed. Fitted, each button doing nothing is darkened
-// and washed, as is a join unless both its ends are in use. The art is drawn twice under two
-// masks that are each other's opposite, so nothing stacks
-var REMOTE_WASHED = " opacity='0.35'";
-var REMOTE_IDLE = " filter='url(#raDark)' opacity='0.5'";
-var REMOTE_MASK = "x='60' y='15' width='80' height='140'";
-
-function remoteMask(id, lit, flipped) {
-  function paint(colour) { return flipped ? (colour === "#fff" ? "#000" : "#fff") : colour; }
-  function circle(name) {
-    var at = remoteArtAt(name);
-    return "<circle cx='" + at.x + "' cy='" + at.y + "' r='" + REMOTE_ART_RADIUS + "'/>";
-  }
-  var idle = REMOTE_BUTTONS.map(function (button) { return button[0]; }).filter(function (name) {
-    return lit.indexOf(name) < 0;
-  });
-  var idleJoins = REMOTE_ART_JOINS.filter(function (one) {
-    return lit.indexOf(one[1]) < 0 || lit.indexOf(one[2]) < 0;
-  });
-  // A join runs up under the buttons at its ends, so the buttons in use go back in after it
-  return "<mask id='" + id + "' maskUnits='userSpaceOnUse' " + REMOTE_MASK + ">" +
-         "<rect " + REMOTE_MASK + " fill='" + paint("#fff") + "'/>" +
-         "<g fill='" + paint("#000") + "'>" + idle.map(circle).join("") +
-         idleJoins.map(function (one) { return "<path d='" + remoteArtJoin(one[0]) + "'/>"; }).join("") +
-         "</g><g fill='" + paint("#fff") + "'>" + lit.map(circle).join("") + "</g></mask>";
-}
-
-function remoteLayers() {
-  var lit = REMOTE_BUTTONS.map(function (button) { return button[0]; }).filter(remoteDoes);
-  // Darkening halves each channel
-  var defs = "<defs><g id='raArt'>" + remoteArt() + "</g>" +
-             "<filter id='raDark'><feComponentTransfer><feFuncR type='linear' slope='0.5'/>" +
-             "<feFuncG type='linear' slope='0.5'/><feFuncB type='linear' slope='0.5'/>" +
-             "</feComponentTransfer></filter>";
-  if (!remoteFitted()) return defs + "</defs><use href='#raArt'" + REMOTE_WASHED + "/>";
-  return defs + remoteMask("raFull", lit, false) + remoteMask("raRest", lit, true) +
-         "</defs><use href='#raArt'" + REMOTE_IDLE + " mask='url(#raRest)'/>" +
-         "<use href='#raArt' mask='url(#raFull)'/>";
-}
-
-function remoteDiagram() {
-  var width = REMOTE_BODY.right - REMOTE_BODY.left + 2 * REMOTE_REACH;
-  var height = REMOTE_BODY.bottom - REMOTE_BODY.top;
-  var diagram = document.createElement("div");
-  diagram.className = "remotediagram";
-  diagram.style.height = Math.round(height * REMOTE_SCALE) + "px";
-  diagram.style.setProperty("--middle", Math.round(width * REMOTE_SCALE) + "px");
-
-  var fitted = remoteFitted();
-  var leaders = "", covers = "";
-  REMOTE_ROWS.forEach(function (row) {
-    leaders += "<path class='remoteleader' data-button='" + row[0] + "' d='" + remoteLeader(row) +
-               "' stroke='" + (remoteDoes(row[0]) ? remoteInk(row[0]) : "#d6d3cd") + "'/>";
-  });
-  // Each button's cover is clear, there to be hovered and clicked to choose for
-  REMOTE_BUTTONS.forEach(function (button) {
-    var at = remoteArtAt(button[0]);
-    covers += "<circle class='remotecover" + (fitted && !REMOTE_FIXED[button[0]] ? " choosable" : "") +
-              "' data-button='" + button[0] + "' cx='" + at.x + "' cy='" + at.y + "' r='" +
-              (REMOTE_ART_RADIUS + 0.2) + "'/>";
-  });
-  var middle = document.createElement("div");
-  middle.className = "remotemiddle";
-  middle.innerHTML = "<svg viewBox='" + (REMOTE_BODY.left - REMOTE_REACH) + " " + REMOTE_BODY.top +
-                     " " + width + " " + height + "' width='100%' height='100%' role='img' " +
-                     "aria-label='The Aye Arr Remote'>" + remoteLayers() + leaders + covers + "</svg>";
-
-  var sides = {left: document.createElement("div"), right: document.createElement("div")};
-  sides.left.className = "remoteside left";
-  sides.right.className = "remoteside right";
-  REMOTE_ROWS.forEach(function (row) {
-    var resolved = remoteResolved(row[0]);
-    var slot = document.createElement("div");
-    // A row a scene leaves to Always on is striped, as the page marks everything Always on plays
-    slot.className = "remoterow" + (remoteDoes(row[0]) ? " lit" : "") +
-                     (fitted && resolved.from === "always" ? " under" : "") +
-                     (resolved.from === "fixed" ? " fixed" : "");
-    slot.dataset.button = row[0];
-    slot.style.top = Math.round((row[2] - REMOTE_BODY.top) * REMOTE_SCALE - REMOTE_ROW_PX / 2) + "px";
-    slot.appendChild(small(remoteWords(row[0])));
-    // A number with no scene in its place has nothing to choose until there is one
-    var unbound = isNumber(row[0]) && !sceneInOrder(row[0]);
-    if (fitted && resolved.from !== "fixed" && !unbound) {
-      remoteRowChoice(slot, row[0]);
-    } else {
-      var said = document.createElement("b");
-      // 0 is bound to the tenth scene
-      said.textContent = !fitted ? "" : unbound ? "No scene " + (Number(row[0].charAt(0)) || 10)
-                                                : remoteSays(resolved.choice, row[0]);
-      slot.appendChild(said);
-      if (resolved.from === "fixed" && fitted) {
-        slot.title = REMOTE_FIXED[row[0]][1];
-        said.insertAdjacentHTML("afterbegin", "<svg class='padlock' viewBox='0 0 12 12' " +
-          "aria-hidden='true'><rect x='2' y='5' width='8' height='6' rx='1.2' fill='currentColor'/>" +
-          "<path d='M4 5V3.6a2 2 0 0 1 4 0V5' fill='none' stroke='currentColor' stroke-width='1.4'/>" +
-          "</svg>");
-      }
-    }
-    sides[row[1]].appendChild(slot);
-  });
-  diagram.appendChild(sides.left);
-  diagram.appendChild(middle);
-  diagram.appendChild(sides.right);
-
-  // A row and its button light together, and clicking a button opens its row's choice. With no
-  // remote fitted there is nothing to choose, so nothing lights
-  if (!fitted) return diagram;
-  function hot(name, on) {
-    diagram.querySelectorAll("[data-button='" + name + "']").forEach(function (one) {
-      one.classList.toggle("hot", on);
-    });
-  }
-  diagram.querySelectorAll("[data-button]").forEach(function (one) {
-    one.addEventListener("mouseenter", function () { hot(one.dataset.button, true); });
-    one.addEventListener("mouseleave", function () { hot(one.dataset.button, false); });
-  });
-  diagram.querySelectorAll(".remotecover.choosable").forEach(function (cover) {
-    cover.addEventListener("click", function () {
-      var chooser = diagram.querySelector("select[data-choice='" + cover.dataset.button + "']");
-      chooser.focus();
-      // Opening the list outright needs a browser that has showPicker
-      try { chooser.showPicker(); } catch (refused) {}
-    });
-  });
-  return diagram;
-}
-
-// ---- the section ---------------------------------------------------------------------------------
-
-function sensorSaid(words, dim) {
-  var said = document.createElement("p");
-  said.textContent = words;
-  if (dim) said.className = "dim";
-  return said;
-}
-
-// The box saying what is on the sensor connector, a choice while the board is being set up
-function sensorBox() {
-  var facts = document.getElementById("sensorFacts");
-  facts.textContent = "";
-  var fitted = sensorFacts();
-  var parts = ["Sensor"];
-  if (canEdit("sensorPanel")) {
-    var choice = document.createElement("select");
-    SENSOR_KINDS.forEach(function (kind) {
-      var option = document.createElement("option");
-      option.value = kind[0];
-      option.textContent = kind[1];
-      choice.appendChild(option);
-    });
-    choice.value = state.sensorKind;
-    choice.onchange = function () {
-      state.sensorKind = choice.value;
-      draw();
-    };
-    parts.push(choice);
-    if (fitted[3]) parts.push(small(fitted[3]));
-  } else {
-    parts.push(small(state.sensorKind === "none" ? "nothing on the sensor connector"
-                                                 : fitted[1] + ", " + fitted[3]));
-  }
-  facts.appendChild(boardBox("sensorPanel", parts));
-  if (!canEdit("sensorPanel") && state.sensorKind === "none") {
-    var hint = document.createElement("span");
-    hint.className = "hint";
-    hint.textContent = "Edit board to fit one.";
-    facts.appendChild(hint);
-  }
-}
-
-// ---- the PIR Stick with a row for each trigger --------------------------------------------------
-// The PIR Stick's artwork in the middle as the remote's is, with a row for motion starting on its
-// left and one for motion stopping on its right, level with its sensor
-
-var PIR_STICK = {width: 22.692, height: 77.102};
-
-var PIR_SCALE = 3.3;
-var PIR_REACH = 14.6;
-// Each trigger's row, motion starting on the left and stopping on the right, both level with the
-// sensor's middle, as [trigger, side, height in the drawing]
-var PIR_ROWS = [["MOTION_STARTS", "left", 11.883], ["MOTION_STOPS", "right", 11.883]];
-// The sensor's outer edges across the drawing, where the leaders end
-var PIR_SENSOR = {left: 0.703, right: 21.989};
-// The height of a trigger's heading, which sits level with its leader
-var PIR_HEAD_PX = 34;
-
-// A figure beside each row's name, someone running with speed streaks behind them for motion
-// starting, and standing still for it stopping, the two built alike. The streaks step left down
-// the runner's back, past the 16 unit square, so the figures' box reaches further left. Each head
-// is classed as a filled part, so a part icon can draw the figure too
-var MOTION_FIGURES = {
-  MOTION_STARTS: "<circle class='f' cx='10' cy='2.6' r='1.9'/><path d='M9.4 5.6 7.8 10.4 6 13.5 " +
-                 "2.8 14.6M7.8 10.4l3.3 1.7 1.2 3.4M9.4 5.6 5.7 7.6 4.4 10M9.4 5.6l2.5 2.8 3 .6' " +
-                 "fill='none'/><path d='M2.8 4h2.6M.3 7.5h2.4M-.2 11h2' fill='none' " +
-                 "stroke-width='1.2'/>",
-  MOTION_STOPS: "<circle class='f' cx='8' cy='2.1' r='1.9'/><path d='M8 5.1v4.6M8 9.7l-1.5 " +
-                "6M8 9.7l1.5 6M8 5.9 4.3 9.8M8 5.9l3.7 3.9' fill='none'/>"
-};
-var MOTION_FIGURE_BOX = "-1.2 -0.6 17.2 17.2";
-
-// The PIR Stick's icon on a scene's card, the figure for motion starting on the part icons' grid,
-// as the Stick reacts to people moving
-PART_DRAWINGS.pir = "<g transform='translate(2.4 1.5) scale(1.27)' stroke-width='1.4'>" +
-                    MOTION_FIGURES.MOTION_STARTS + "</g>";
-
-function motionFigure(trigger) {
-  var figure = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  figure.setAttribute("viewBox", MOTION_FIGURE_BOX);
-  figure.setAttribute("class", "motionfigure");
-  figure.setAttribute("aria-hidden", "true");
-  figure.innerHTML = MOTION_FIGURES[trigger];
-  return figure;
-}
-
-// ---- a delay on motion's triggers ---------------------------------------------------------------
-// Each of motion's triggers can wait seconds before doing what it does, and the opposite edge
-// coming first cancels it unless told not to, so a scare can wait a moment after someone arrives
-// whether or not they stay. A delay belongs to its row, so changing one in a scene makes the row
-// the scene's own. The tab being edited keeps its rows' delays as {after, cancel}
-
 state.motionTiming = {};
 
 var MOTION_TIMING_DEFAULT = {after: 0, cancel: true};
 
-// The question a delay asks of the opposite edge, which "cancel this" or "finish this first"
-// answers
 var MOTION_CANCELLED_BY = {MOTION_STARTS: "If motion stops first?",
                            MOTION_STOPS: "If motion starts again first?"};
 
-// A trigger's delay on the tab being edited: the tab's own where the row is its own, or Always
-// on's where a scene leaves the row to it
 function motionTiming(trigger) {
   var own = state.at < 0 || state.remote[trigger] !== undefined;
   var held = own ? state.motionTiming
@@ -9069,10 +9166,7 @@ function motionTiming(trigger) {
   return held[trigger] || MOTION_TIMING_DEFAULT;
 }
 
-// Change a trigger's delay on the tab being edited, a scene taking the row as its own with what it
-// did as Always on
 function setMotionTiming(trigger, change) {
-  // Read before the scene takes the row, which would hide Always on's delay behind its own
   var timing = JSON.parse(JSON.stringify(motionTiming(trigger)));
   if (state.at >= 0 && state.remote[trigger] === undefined) {
     state.remote[trigger] = remoteResolved(trigger).choice;
@@ -9084,8 +9178,6 @@ function setMotionTiming(trigger, change) {
   draw();
 }
 
-// Hand a scene's row back to Always on where its choice and delay match Always on's, so a row is
-// only a scene's own where it does something different
 function settleSceneRow(trigger) {
   if (state.at < 0 || state.remote[trigger] === undefined) return;
   var always = state.always.body && state.always.body.remote || {};
@@ -9100,169 +9192,8 @@ function settleSceneRow(trigger) {
   delete state.motionTiming[trigger];
 }
 
-// A PIR box's two lines: "Trigger [what it does] after [3] s", then the question of the opposite
-// edge, greyed while there is no wait, so the box keeps its size
-function motionLines(trigger, box) {
-  var timing = motionTiming(trigger);
-  var line = document.createElement("div");
-  line.className = "pirtiming piraction";
-  line.appendChild(small("Trigger"));
-  remoteRowChoice(line, trigger);
-  box.appendChild(line);
-  line.appendChild(small("after"));
-  var seconds = document.createElement("input");
-  seconds.type = "number";
-  seconds.min = 0;
-  seconds.step = 0.5;
-  seconds.value = timing.after;
-  seconds.title = "Seconds to wait before doing it";
-  seconds.onchange = function () {
-    setMotionTiming(trigger, {after: Math.max(0, Number(seconds.value) || 0)});
-  };
-  line.appendChild(seconds);
-  line.appendChild(small("s"));
-  var asked = document.createElement("div");
-  asked.className = "pirtiming pirquestion" + (timing.after > 0 ? "" : " idle");
-  asked.appendChild(small(MOTION_CANCELLED_BY[trigger]));
-  var cancels = document.createElement("select");
-  cancels.className = "pircancel";
-  [["yes", "cancel this"], ["no", "finish this first"]].forEach(function (answer) {
-    var option = document.createElement("option");
-    option.value = answer[0];
-    option.textContent = answer[1];
-    cancels.appendChild(option);
-  });
-  cancels.value = timing.cancel ? "yes" : "no";
-  cancels.disabled = !(timing.after > 0);
-  if (cancels.disabled) asked.title = "Asked once it waits";
-  cancels.onchange = function () { setMotionTiming(trigger, {cancel: cancels.value === "yes"}); };
-  asked.appendChild(cancels);
-  box.appendChild(asked);
-}
-
-function pirDiagram() {
-  var width = PIR_STICK.width + 2 * PIR_REACH;
-  var diagram = document.createElement("div");
-  diagram.className = "remotediagram";
-  diagram.style.height = Math.round(PIR_STICK.height * PIR_SCALE) + "px";
-  diagram.style.setProperty("--middle", Math.round(width * PIR_SCALE) + "px");
-  // Each leader runs from the sensor's edge out to its side's row
-  var leaders = PIR_ROWS.map(function (row) {
-    var path = row[1] === "left"
-      ? "M" + -PIR_REACH + " " + row[2] + " H" + PIR_SENSOR.left
-      : "M" + PIR_SENSOR.right + " " + row[2] + " H" + (PIR_STICK.width + PIR_REACH);
-    return "<path class='remoteleader' data-button='" + row[0] + "' d='" + path + "' stroke='" +
-           (remoteDoes(row[0]) ? "#808285" : "#d6d3cd") + "'/>";
-  }).join("");
-  var middle = document.createElement("div");
-  middle.className = "remotemiddle";
-  middle.innerHTML = "<svg viewBox='" + -PIR_REACH + " 0 " + width + " " + PIR_STICK.height + "' " +
-                     "width='100%' height='100%' role='img' aria-label='The PIR Stick'>" +
-                     PIR_ART.join("") +
-                     leaders + "</svg>";
-  var sides = {left: document.createElement("div"), right: document.createElement("div")};
-  sides.left.className = "remoteside left";
-  sides.right.className = "remoteside right";
-  // Each trigger has a heading across its box, its name by the leader and its figure at the outer
-  // edge, and under it a box holding what it does with its delay, striped where a scene leaves it
-  // to Always on as a remote's row is
-  PIR_ROWS.forEach(function (row) {
-    var resolved = remoteResolved(row[0]);
-    var side = document.createElement("div");
-    side.className = "pirside";
-    side.style.top = Math.round(row[2] * PIR_SCALE - PIR_HEAD_PX / 2) + "px";
-    var head = document.createElement("div");
-    head.className = "pirhead";
-    head.appendChild(motionFigure(row[0]));
-    head.appendChild(document.createTextNode(remoteWords(row[0])));
-    side.appendChild(head);
-    var box = document.createElement("div");
-    box.className = "remoterow pirbox" + (remoteDoes(row[0]) ? " lit" : "") +
-                    (resolved.from === "always" ? " under" : "");
-    box.dataset.button = row[0];
-    motionLines(row[0], box);
-    side.appendChild(box);
-    sides[row[1]].appendChild(side);
-  });
-  diagram.appendChild(sides.left);
-  diagram.appendChild(middle);
-  diagram.appendChild(sides.right);
-  return diagram;
-}
-
-function renderSensor() {
-  sensorBox();
-  var box = document.getElementById("sensor");
-  box.textContent = "";
-  var words = document.createElement("div");
-  words.className = "sensorwords";
-  if (pirFitted()) {
-    box.appendChild(pirDiagram());
-    words.appendChild(sensorSaid(state.at < 0
-      ? "What motion starting and stopping does in every scene. A scene can change either while " +
-        "it shows."
-      : "Striped rows do what Always on sets. Choose one to change it in this scene."));
-    sensorNotes(words);
-    box.appendChild(words);
-    return;
-  }
-  box.appendChild(remoteDiagram());
-  if (!remoteFitted()) {
-    words.appendChild(sensorSaid("The sensor connector takes one thing at a time, such as the " +
-                                 "Aye Arr Remote through an IR Receiver Stick.", true));
-  } else if (state.at < 0) {
-    words.appendChild(sensorSaid("What each button does in every scene. A scene can change any " +
-                                 "of them while it shows."));
-    if (!state.scenes.length) {
-      words.appendChild(sensorSaid("With scenes, the numbers go to them and the arrows step " +
-                                   "through them.", true));
-      var split = document.createElement("button");
-      split.className = "plus";
-      split.textContent = "split into scenes";
-      split.onclick = addScene;
-      words.appendChild(split);
-    }
-  } else {
-    words.appendChild(sensorSaid("Striped buttons do what Always on sets. Choose one to change " +
-                                 "it in this scene."));
-  }
-  sensorNotes(words);
-  box.appendChild(words);
-}
-
-// The warnings under the sensor's diagram, for what the file gave that the page cannot use as it is
-function sensorNotes(words) {
-  // A trigger going to the scene showing, which waits and does not restart
-  var idle = triggerDoingNothing();
-  if (idle) {
-    var showing = state.scenes[state.at].name;
-    var nothing = sensorSaid(remoteWords(idle) + " does nothing here, as " + showing + " is " +
-                             "already showing and waits. Choose \"Scene: " + showing + ", from " +
-                             "the start\" to begin it again.");
-    nothing.className = "warn";
-    words.appendChild(nothing);
-  }
-  // A button the file gave twice in this tab, whose second line is kept as written
-  if (fittedTriggers().length && state.remoteRepeats.length) {
-    var repeated = sensorSaid((state.remoteRepeats.length === 1 ? "" : "Each of ") +
-      state.remoteRepeats.map(remoteWords).join(", ") + " is given twice in the file here. The " +
-      "page uses the first and keeps the second line as it is.");
-    repeated.className = "warn";
-    words.appendChild(repeated);
-  }
-}
-
-// ---- what the file says ---------------------------------------------------------------------------
-// What is fitted is the board line's sensor=ir or sensor=pir. A remote: line holds buttons as the
-// remote names them, each with what it does: nothing, a step, or scene and the scene's name. Like
-// board: lines, remote: lines add up, and a button given twice in one tab is a repeat. The page
-// writes a line for each button, so a name needs no quotes, and reads several to a line, where a
-// name runs on to the next button or is quoted. Always on's lines are above the first heading and a
-// scene's under its own (proposed, which autofx does not read yet)
-
 var REMOTE_STEPS = ["nothing", "next", "previous", "first", "restart"];
 
-// A button's line, or null where the choice names a scene no longer there
 function remoteLine(button, choice) {
   var said = choice;
   var scene = choice === "order" ? sceneInOrder(button)
@@ -9270,24 +9201,19 @@ function remoteLine(button, choice) {
   if (choice.indexOf("scene:") === 0 && !scene) return null;
   if (scene) {
     said = "scene " + scene.name.trim();
-    // A name holding = or a quote is quoted, as it would otherwise read as the next button
     if (/[="']/.test(scene.name)) said = scene.name.indexOf("\"") < 0 ? "\"" + said + "\"" : "'" + said + "'";
   }
-  // A PIR Stick's triggers are motion: starts= and stops=
   var motion = MOTION_TRIGGERS.indexOf(button) >= 0;
   return (motion ? "motion: " + button.slice(7).toLowerCase() : "remote: " + button.toLowerCase()) +
          "=" + said;
 }
 
-// A trigger's whole line, with a motion trigger's delay after it where it has one
 function triggerLine(trigger, choice, timing) {
   var line = remoteLine(trigger, choice);
   if (!line || !timing || !timing.after) return line;
   return line + " after=" + timing.after + "s" + (timing.cancel ? "" : " cancel=no");
 }
 
-// A remote: line's buttons and what each does, as [button, words]. A word with no = carries on
-// the words before it, so an unquoted scene name runs on to the next button
 function remotePairs(text) {
   var pairs = [];
   boardTokens(text).forEach(function (token) {
@@ -9303,11 +9229,9 @@ function remotePairs(text) {
   return pairs.map(function (pair) { return [pair[0], unquoted(pair[1].trim())]; });
 }
 
-// What a line's words choose for its button, or null where the page cannot hold it
 function remoteChoiceRead(button, said) {
   if (REMOTE_FIXED[button]) return null;
   if (REMOTE_STEPS.indexOf(said.toLowerCase()) >= 0) {
-    // A number only goes to its own scene or does nothing
     return isNumber(button) && said.toLowerCase() !== "nothing" ? null : said.toLowerCase();
   }
   var named = /^scene\s+(.+)$/i.exec(said);
@@ -9323,7 +9247,6 @@ boardLineSteps.after.push(function (line) {
   return (line || "board:") + " sensor=" + state.sensorKind;
 });
 
-// Read what is fitted from the board line, the token taken so it is not written twice
 function readSensorBoard() {
   state.sensorKind = "none";
   boardResidue = boardResidue.filter(function (token) {
@@ -9333,10 +9256,6 @@ function readSensorBoard() {
   });
 }
 
-// Take each body's remote: lines, or motion: lines for a PIR Stick, that the page can hold as its
-// choices. A line is taken whole or not at all: one with a trigger the page cannot hold, or one the
-// tab already gave, stays as written, as does every line for what is not fitted. A repeated
-// trigger is noted for the tab
 function readRemoteLines(bodies) {
   var entry = pirFitted() ? /^motion:(.*)$/i : /^remote:(.*)$/i;
   var triggers = fittedTriggers();
@@ -9354,7 +9273,6 @@ function readRemoteLines(bodies) {
       var held = true;
       var last = null;
       remotePairs(line[1]).forEach(function (pair) {
-        // A motion trigger's after= and cancel= are its delay, belonging to the trigger before them
         if (pirFitted() && (pair[0] === "AFTER" || pair[0] === "CANCEL")) {
           var timing = timings[last] || JSON.parse(JSON.stringify(MOTION_TIMING_DEFAULT));
           var seconds = /^(\d+(?:\.\d+)?)s?$/i.exec(pair[1]);
@@ -9381,7 +9299,6 @@ function readRemoteLines(bodies) {
         else choices[button] = choice;
       });
       if (!held) return true;
-      // A line's comments go above the first of the lines it is written back as
       Object.keys(choices).forEach(function (button, at) {
         body.remote[button] = choices[button];
         if (timings[button]) body.motionTiming[button] = timings[button];
@@ -9394,8 +9311,6 @@ function readRemoteLines(bodies) {
   });
 }
 
-// A scene keeps its own choices of what buttons do, as it keeps its looks. A scene's card shows
-// the remote's icon where it changes any button, and Always on's where a remote is fitted
 bodyParts.push({
   capture: function (body) {
     body.remote = JSON.parse(JSON.stringify(state.remote));
@@ -9406,7 +9321,6 @@ bodyParts.push({
     state.remoteRepeats = (body.remoteRepeats || []).slice();
     state.motionTiming = JSON.parse(JSON.stringify(body.motionTiming || {}));
     state.remote = JSON.parse(JSON.stringify(body.remote || {}));
-    // A number only goes to the scene in its place or does nothing
     Object.keys(state.remote).forEach(function (button) {
       if (isNumber(button) && ["order", "nothing"].indexOf(state.remote[button]) < 0) {
         delete state.remote[button];
@@ -9418,8 +9332,6 @@ bodyParts.push({
     var changed = body.remote && Object.keys(body.remote).length;
     return always || changed ? [pirFitted() ? "pir" : "remote", "Sensor"] : null;
   },
-  // A tab's remote: or motion: lines come after its other lines, in the order of the triggers
-  // A trigger with a delay but no choice of its own does what its default does
   entries: function (body, lines) {
     if (!body.remote) return lines;
     var timings = body.motionTiming || {};
@@ -9431,8 +9343,6 @@ bodyParts.push({
     });
     return lines;
   },
-  // Splitting into scenes leaves what the triggers do with Always on, where it holds in every
-  // scene, and the first scene starts with no choices of its own
   split: function (always, first) {
     first.remote = {};
     first.remoteRepeats = [];
@@ -9441,24 +9351,370 @@ bodyParts.push({
   readBoard: readSensorBoard,
   read: readRemoteLines
 });
+var REMOTE_SCALE = 4.3;
+var REMOTE_REACH = 16;
+var REMOTE_BODY = {left: 71.26, right: 126.45, top: 23.5, bottom: 146};
+var REMOTE_ROW_PX = 27;
+var REMOTE_MASK_BOX = {x: 60, y: 15, width: 80, height: 140};
+var LEADER_IDLE = "#d6d3cd";
 
-// The tab has no swatch, its name and what is fitted under it saying all there is
+var PIR_STICK = {width: 22.692, height: 77.102};
+var PIR_SCALE = 3.3;
+var PIR_REACH = 14.6;
+var PIR_ROWS = [["MOTION_STARTS", "left", 11.883], ["MOTION_STOPS", "right", 11.883]];
+var PIR_SENSOR = {left: 0.703, right: 21.989};
+var PIR_HEAD_PX = 34;
+
+var MOTION_FIGURES = {
+  MOTION_STARTS: "<circle class='f' cx='10' cy='2.6' r='1.9'/><path d='M9.4 5.6 7.8 10.4 6 13.5 " +
+                 "2.8 14.6M7.8 10.4l3.3 1.7 1.2 3.4M9.4 5.6 5.7 7.6 4.4 10M9.4 5.6l2.5 2.8 3 .6' " +
+                 "fill='none'/><path d='M2.8 4h2.6M.3 7.5h2.4M-.2 11h2' fill='none' " +
+                 "stroke-width='1.2'/>",
+  MOTION_STOPS: "<circle class='f' cx='8' cy='2.1' r='1.9'/><path d='M8 5.1v4.6M8 9.7l-1.5 " +
+                "6M8 9.7l1.5 6M8 5.9 4.3 9.8M8 5.9l3.7 3.9' fill='none'/>"
+};
+var MOTION_FIGURE_BOX = "-1.2 -0.6 17.2 17.2";
+
+PART_DRAWINGS.pir = "<g transform='translate(2.4 1.5) scale(1.27)' stroke-width='1.4'>" +
+                    MOTION_FIGURES.MOTION_STARTS + "</g>";
+
+var IN_SCENE_TIP = "Striped where it does what Always on sets";
+
+function buttonNames() {
+  return REMOTE_BUTTONS.map(function (button) { return button[0]; });
+}
+
+function option(value, words) {
+  return h("option", {value: value}, words);
+}
+
+function triggerOptions(button, resolved, showing) {
+  if (isNumber(button))
+    return {own: [option("order", "Scene: " + sceneInOrder(button).name), option("nothing", "Nothing")],
+            more: []};
+  if (!state.scenes.length)
+    return {own: [option("nothing", "Nothing"), option("restart", remoteSays("restart", button))],
+            more: []};
+  var keptNothing = showing && resolved.from === "own" && !sceneRestarts(showing) &&
+                    !sceneSelfDiffers(showing) && resolved.choice === "scene:" + sceneMark(showing);
+  var scenes = [];
+  state.scenes.forEach(function (scene) {
+    if (scene !== showing || sceneSelfDiffers(scene) || keptNothing) {
+      scenes.push(option("scene:" + sceneMark(scene), "Scene: " + scene.name));
+    }
+    if (scene === showing) scenes.push(option("restart", remoteSays("restart", button)));
+  });
+  var steps = [["next", "Next scene"], ["previous", "Previous scene"], ["first", "First scene"]]
+    .concat(showing ? [] : [["restart", remoteSays("restart", button)]]);
+  return {own: [option("nothing", "Nothing")],
+          more: [h("optgroup", {label: "Go to a scene"}, scenes),
+                 h("optgroup", {label: "Step"}, steps.map(function (step) {
+                   return option(step[0], step[1]);
+                 }))]};
+}
+
+function triggerChoice(button) {
+  var resolved = remoteResolved(button);
+  var showing = state.at >= 0 ? state.scenes[state.at] : null;
+  var choices = triggerOptions(button, resolved, showing);
+  var options = choices.own.concat(choices.more);
+  if (state.at >= 0) {
+    var always = state.always.body && state.always.body.remote || {};
+    var under = always[button] !== undefined ? always[button] : remoteDefault(button);
+    options = [h("optgroup", {label: "As Always on"}, option("", remoteSays(under, button) || "Nothing")),
+               h("optgroup", {label: "In this scene"}, choices.own)].concat(choices.more);
+  }
+  var choice = h("select", {onchange: function () {
+    var value = choice.value;
+    if (value === "") delete state.motionTiming[button];
+    if (value === "" || (state.at < 0 && value === remoteDefault(button))) delete state.remote[button];
+    else state.remote[button] = value;
+    settleSceneRow(button);
+    draw();
+  }}, options);
+  choice.value = resolved.from === "own" ? resolved.choice : "";
+  if (showing && choice.value === "scene:" + sceneMark(showing) && sceneRestarts(showing)) {
+    choice.value = "restart";
+  }
+  if (choice.selectedOptions.length) choice.title = choice.selectedOptions[0].textContent;
+  return choice;
+}
+
+function remoteLeader(row) {
+  var at = remoteArtAt(row[0]);
+  var left = row[1] === "left";
+  var from = left ? REMOTE_BODY.left - REMOTE_REACH : REMOTE_BODY.right + REMOTE_REACH;
+  var reach = REMOTE_ART_RADIUS;
+  if (Math.abs(row[2] - at.y) < 0.01)
+    return "M" + from + " " + at.y + " H" + (left ? at.x - reach : at.x + reach);
+  var lean = reach * Math.SQRT1_2;
+  var endX = left ? at.x - lean : at.x + lean;
+  var endY = row[2] > at.y ? at.y + lean : at.y - lean;
+  var turn = left ? endX - Math.abs(row[2] - endY) : endX + Math.abs(row[2] - endY);
+  return "M" + from + " " + row[2] + " H" + turn.toFixed(2) + " L" + endX.toFixed(2) + " " +
+         endY.toFixed(2);
+}
+
+function buttonCircle(name, grow) {
+  var at = remoteArtAt(name);
+  return h("svg:circle", {cx: at.x, cy: at.y, r: REMOTE_ART_RADIUS + (grow || 0)});
+}
+
+function remoteMask(id, lit, flipped) {
+  var shown = flipped ? "#000" : "#fff";
+  var hidden = flipped ? "#fff" : "#000";
+  var idle = buttonNames().filter(function (name) { return lit.indexOf(name) < 0; });
+  var idleJoins = REMOTE_ART_JOINS.filter(function (join) {
+    return lit.indexOf(join[1]) < 0 || lit.indexOf(join[2]) < 0;
+  });
+  return h("svg:mask", Object.assign({id: id, maskUnits: "userSpaceOnUse"}, REMOTE_MASK_BOX),
+    h("svg:rect", Object.assign({fill: shown}, REMOTE_MASK_BOX)),
+    h("svg:g", {fill: hidden},
+      idle.map(function (name) { return buttonCircle(name); }),
+      idleJoins.map(function (join) { return h("svg:path", {d: remoteArtJoin(join[0])}); })),
+    h("svg:g", {fill: shown}, lit.map(function (name) { return buttonCircle(name); })));
+}
+
+function remoteLayers() {
+  var art = h("svg:g", {id: "raArt", html: remoteArt()});
+  var darken = h("svg:filter", {id: "raDark"},
+    h("svg:feComponentTransfer", {}, ["R", "G", "B"].map(function (channel) {
+      return h("svg:feFunc" + channel, {type: "linear", slope: 0.5});
+    })));
+  if (!remoteFitted()) return [h("svg:defs", {}, art, darken), h("svg:use", {href: "#raArt", opacity: 0.35})];
+  var lit = buttonNames().filter(remoteDoes);
+  return [h("svg:defs", {}, art, darken, remoteMask("raFull", lit, false), remoteMask("raRest", lit, true)),
+          h("svg:use", {href: "#raArt", filter: "url(#raDark)", opacity: 0.5, mask: "url(#raRest)"}),
+          h("svg:use", {href: "#raArt", mask: "url(#raFull)"})];
+}
+
+function leader(button, path, ink) {
+  return h("svg:path", {"data-button": button, d: path, style: {"--leader": ink}});
+}
+
+function padlock() {
+  return h("svg:svg", {viewBox: "0 0 12 12", "aria-hidden": "true"},
+    h("svg:rect", {x: 2, y: 5, width: 8, height: 6, rx: 1.2}),
+    h("svg:path", {d: "M4 5V3.6a2 2 0 0 1 4 0V5"}));
+}
+
+function remoteRow(row, fitted, choosers) {
+  var button = row[0];
+  var resolved = remoteResolved(button);
+  var fixed = resolved.from === "fixed";
+  var unbound = isNumber(button) && !sceneInOrder(button);
+  var choosable = fitted && !fixed && !unbound;
+  var words = h("span", {}, remoteWords(button));
+  var shown;
+  if (choosable) {
+    choosers[button] = triggerChoice(button);
+    shown = h("label", {}, words, choosers[button]);
+  } else {
+    var said = !fitted ? "" : unbound ? "No scene " + (Number(button.charAt(0)) || 10)
+                                      : remoteSays(resolved.choice, button);
+    shown = [words, h("output", {}, fixed && fitted ? padlock() : null, said)];
+  }
+  return h("li", {"data-button": button, "data-does": remoteDoes(button),
+                  "data-from": fixed ? "fixed" : fitted && resolved.from === "always" ? "always" : null,
+                  title: fixed && fitted ? REMOTE_FIXED[button][1]
+                       : choosable && state.at >= 0 ? IN_SCENE_TIP : null,
+                  style: {"--top": Math.round((row[2] - REMOTE_BODY.top) * REMOTE_SCALE -
+                                              REMOTE_ROW_PX / 2) + "px"}},
+           shown);
+}
+
+function sideList(side, rows, drawRow) {
+  return h("ul", {"data-side": side}, rows.filter(function (row) {
+    return row[1] === side;
+  }).map(drawRow));
+}
+
+function remoteDiagram() {
+  var width = REMOTE_BODY.right - REMOTE_BODY.left + 2 * REMOTE_REACH;
+  var height = REMOTE_BODY.bottom - REMOTE_BODY.top;
+  var fitted = remoteFitted();
+  var choosers = {};
+  var leaders = REMOTE_ROWS.map(function (row) {
+    return leader(row[0], remoteLeader(row), remoteDoes(row[0]) ? remoteInk(row[0]) : LEADER_IDLE);
+  });
+  var covers = REMOTE_BUTTONS.map(function (button) {
+    var cover = buttonCircle(button[0], 0.2);
+    cover.dataset.button = button[0];
+    if (fitted && !REMOTE_FIXED[button[0]]) {
+      cover.dataset.choosable = "";
+      cover.addEventListener("click", function () {
+        var chooser = choosers[button[0]];
+        if (!chooser) return;
+        chooser.focus();
+        try { chooser.showPicker(); } catch (refused) {}
+      });
+    }
+    return cover;
+  });
+  var drawRow = function (row) { return remoteRow(row, fitted, choosers); };
+  var diagram = h("div", {"data-kind": "remote",
+                          style: {"--middle": Math.round(width * REMOTE_SCALE) + "px",
+                                  "--height": Math.round(height * REMOTE_SCALE) + "px"}},
+    sideList("left", REMOTE_ROWS, drawRow),
+    h("svg:svg", {viewBox: (REMOTE_BODY.left - REMOTE_REACH) + " " + REMOTE_BODY.top + " " +
+                           width + " " + height,
+                  role: "img", "aria-label": "The Aye Arr Remote"},
+      remoteLayers(), leaders, covers),
+    sideList("right", REMOTE_ROWS, drawRow));
+  if (fitted) linkHover(diagram);
+  return diagram;
+}
+
+function linkHover(diagram) {
+  var parts = diagram.querySelectorAll("[data-button]");
+  function hot(name, on) {
+    parts.forEach(function (part) {
+      if (part.dataset.button === name) part.toggleAttribute("data-hot", on);
+    });
+  }
+  parts.forEach(function (part) {
+    part.addEventListener("mouseenter", function () { hot(part.dataset.button, true); });
+    part.addEventListener("mouseleave", function () { hot(part.dataset.button, false); });
+  });
+}
+
+function motionFigure(trigger) {
+  return h("svg:svg", {viewBox: MOTION_FIGURE_BOX, "aria-hidden": "true", html: MOTION_FIGURES[trigger]});
+}
+
+function motionLines(trigger) {
+  var timing = motionTiming(trigger);
+  var waits = timing.after > 0;
+  var seconds = h("input", {type: "number", min: 0, step: 0.5, value: timing.after,
+                            title: "Seconds to wait before doing it",
+                            onchange: function () {
+                              setMotionTiming(trigger, {after: Math.max(0, Number(seconds.value) || 0)});
+                            }});
+  var cancels = h("select", {disabled: !waits,
+                             onchange: function () {
+                               setMotionTiming(trigger, {cancel: cancels.value === "yes"});
+                             }},
+                  option("yes", "cancel this"), option("no", "finish this first"));
+  cancels.value = timing.cancel ? "yes" : "no";
+  return [
+    h("p", {title: state.at >= 0 ? IN_SCENE_TIP : null},
+      h("label", {}, "Trigger", triggerChoice(trigger)),
+      h("label", {}, "after", seconds),
+      h("span", {}, "s")),
+    h("p", {"data-idle": !waits, title: waits ? null : "Asked once it waits"},
+      h("label", {}, MOTION_CANCELLED_BY[trigger], cancels))];
+}
+
+function pirTrigger(row) {
+  var trigger = row[0];
+  var resolved = remoteResolved(trigger);
+  return h("li", {style: {"--top": Math.round(row[2] * PIR_SCALE - PIR_HEAD_PX / 2) + "px"}},
+    h("fieldset", {"data-button": trigger, "data-does": remoteDoes(trigger),
+                   "data-from": resolved.from === "always" ? "always" : null},
+      h("legend", {}, motionFigure(trigger), h("span", {}, remoteWords(trigger))),
+      motionLines(trigger)));
+}
+
+function pirDiagram() {
+  var width = PIR_STICK.width + 2 * PIR_REACH;
+  var leaders = PIR_ROWS.map(function (row) {
+    var path = row[1] === "left"
+      ? "M" + -PIR_REACH + " " + row[2] + " H" + PIR_SENSOR.left
+      : "M" + PIR_SENSOR.right + " " + row[2] + " H" + (PIR_STICK.width + PIR_REACH);
+    return leader(row[0], path, remoteDoes(row[0]) ? "#808285" : LEADER_IDLE);
+  });
+  return h("div", {"data-kind": "pir",
+                   style: {"--middle": Math.round(width * PIR_SCALE) + "px",
+                           "--height": Math.round(PIR_STICK.height * PIR_SCALE) + "px"}},
+    sideList("left", PIR_ROWS, pirTrigger),
+    h("svg:svg", {viewBox: -PIR_REACH + " 0 " + width + " " + PIR_STICK.height,
+                  role: "img", "aria-label": "The PIR Stick", html: PIR_ART.join("")},
+      leaders),
+    sideList("right", PIR_ROWS, pirTrigger));
+}
+
+function sensorFitting() {
+  var fitted = sensorFacts();
+  var parts = ["Sensor"];
+  if (canEdit("sensorPanel")) {
+    var choice = h("select", {"aria-label": "Sensor", onchange: function () {
+      state.sensorKind = choice.value;
+      draw();
+    }}, SENSOR_KINDS.map(function (kind) { return option(kind[0], kind[1]); }));
+    choice.value = state.sensorKind;
+    parts.push(choice);
+    if (fitted[3]) parts.push(small(fitted[3]));
+  } else {
+    parts.push(small(state.sensorKind === "none" ? "nothing on the sensor connector"
+                                                 : fitted[1] + ", " + fitted[3]));
+  }
+  return h("p", {}, boardBox("sensorPanel", parts),
+           !canEdit("sensorPanel") && state.sensorKind === "none" ? h("small", {}, "Edit board to fit one.") : null);
+}
+
+function said(words, tone) {
+  return h("p", {"data-tone": tone}, words);
+}
+
+function sensorWords() {
+  var words = [];
+  if (pirFitted()) {
+    words.push(said(state.at < 0
+      ? "What motion starting and stopping does in every scene. A scene can change either while " +
+        "it shows."
+      : "Striped rows do what Always on sets. Choose one to change it in this scene."));
+  } else if (!remoteFitted()) {
+    words.push(said("The sensor connector takes one thing at a time, such as the Aye Arr Remote " +
+                    "through an IR Receiver Stick.", "dim"));
+  } else if (state.at < 0) {
+    words.push(said("What each button does in every scene. A scene can change any of them while " +
+                    "it shows."));
+    if (!state.scenes.length) {
+      words.push(said("With scenes, the numbers go to them and the arrows step through them.", "dim"));
+      words.push(h("button", {type: "button", onclick: addScene}, "split into scenes"));
+    }
+  } else {
+    words.push(said("Striped buttons do what Always on sets. Choose one to change it in this scene."));
+  }
+  return words.concat(sensorWarnings());
+}
+
+function sensorWarnings() {
+  var warnings = [];
+  var idle = triggerDoingNothing();
+  if (idle) {
+    var showing = state.scenes[state.at].name;
+    warnings.push(said(remoteWords(idle) + " does nothing here, as " + showing + " is already " +
+                       "showing and waits. Choose \"Scene: " + showing + ", from the start\" to " +
+                       "begin it again.", "warn"));
+  }
+  if (fittedTriggers().length && state.remoteRepeats.length) {
+    warnings.push(said((state.remoteRepeats.length === 1 ? "" : "Each of ") +
+      state.remoteRepeats.map(remoteWords).join(", ") + " is given twice in the file here. The " +
+      "page uses the first and keeps the second line as it is.", "warn"));
+  }
+  return warnings;
+}
+
+var sensorTab = h("section", {class: "sensortab", "aria-label": "Sensor"});
+
+function renderSensor() {
+  replace(sensorTab,
+    sensorFitting(),
+    pirFitted() ? pirDiagram() : remoteDiagram(),
+    h("div", {}, sensorWords()));
+}
+
 tabSwatches.sensorPanel = function (swatch) {
-  swatch.textContent = "";
-  swatch.className = "accswatch sensorswatch";
+  swatch.className = "accswatch";
+  replace(swatch);
 };
 
 function sensorUnderName() {
   var tab = document.querySelector("#ledTabs .ledtab[data-panel=sensorPanel]");
   if (!tab || tab.querySelector(".tabname")) return;
-  var named = document.createElement("span");
-  named.className = "tabname";
-  named.appendChild(tab.querySelector("b"));
-  var kind = document.createElement("small");
-  kind.className = "tabunder";
-  kind.textContent = sensorFacts()[2];
-  named.appendChild(kind);
-  tab.insertBefore(named, tab.firstChild);
+  tab.prepend(h("span", {class: "tabname"}, tab.querySelector("b"),
+                h("small", {class: "tabunder"}, sensorFacts()[2])));
 }
 
 drawSteps.after.push(function () {
@@ -9466,28 +9722,13 @@ drawSteps.after.push(function () {
   renderSensor();
 });
 
-(function () {
-  var panel = document.createElement("details");
-  panel.className = "panel";
-  panel.id = "sensorPanel";
-  panel.open = true;
-  panel.innerHTML = "<summary>Sensor</summary><div class='facts' id='sensorFacts'></div>" +
-                    "<div id='sensor'></div>";
-  var after = document.getElementById(TAB_PANELS[TAB_PANELS.length - 1]);
-  after.parentNode.insertBefore(panel, after.nextSibling);
-}());
+document.getElementById(TAB_PANELS[TAB_PANELS.length - 1]).after(
+  h("details", {class: "panel", id: "sensorPanel", open: true}, h("summary", {}, "Sensor"), sensorTab));
 
 TAB_NAMES.sensorPanel = "Sensor";
 TAB_PANELS.push("sensorPanel");
 keptOpen("sensorPanel");
 
-// ---- the Aye Arr Remote, drawn from its artwork -----------------------------------------------
-// The remote as its artwork draws it, in the artwork's own units, one element a line, for the
-// Sensor tab to lay its buttons' rows beside. Its three bitmaps, the rotate buttons' rainbows and
-// the 0 button's ring, are drawn as arcs in their places, which stay sharp at any size.
-
-// Every button: its name as aye_arr's PimoroniRemote names it, its column, its row in the
-// remote's own layout, and what its face is
 var REMOTE_BUTTONS = [
   ["ANTICLOCK", 0, 320, "turn"], ["UP", 1, 320, "up"], ["CLOCKWISE", 2, 320, "turn"],
   ["LEFT", 0, 630, "side"], ["OK_STOP", 1, 630, "stop"], ["RIGHT", 2, 630, "side"],
@@ -9499,7 +9740,6 @@ var REMOTE_BUTTONS = [
   ["RECORD", 0, 2176, "record"], ["0_RAINBOW", 1, 2176, "rainbow"],
   ["PLAY_PAUSE", 2, 2176, "play"]];
 
-// An annulus's slice from one angle to another, in degrees clockwise from the top
 function remoteArc(x, y, inner, outer, from, to) {
   function at(radius, degrees) {
     var turn = (degrees - 90) * Math.PI / 180;
@@ -9511,7 +9751,6 @@ function remoteArc(x, y, inner, outer, from, to) {
          " 0 " + at(inner, from) + "Z'";
 }
 
-// A run of colours around a ring, each slice overlapping the next by a degree so no seam shows
 function remoteRainbow(x, y, inner, outer, from, to, colours) {
   var step = (to - from) / colours.length;
   return colours.map(function (colour, at) {
@@ -9688,15 +9927,11 @@ var REMOTE_ART = [
   "<path fill='#fff' d='M99.213,106.845c-2.735,0-4.961,2.225-4.961,4.961s2.225,4.96,4.961,4.96,4.96-2.225,4.96-4.96-2.225-4.961-4.96-4.961Z'/>",
   "<path d='M96.917,113.16v-.017c0-.723.332-1.148.961-1.438-.459-.281-.757-.664-.757-1.302v-.017c0-.91.833-1.633,2.093-1.633s2.092.715,2.092,1.633v.017c0,.638-.297,1.021-.757,1.302.604.315.961.698.961,1.404v.017c0,1.106-.979,1.752-2.297,1.752s-2.297-.68-2.297-1.718ZM100.243,113.058v-.017c0-.459-.434-.731-1.029-.731s-1.029.272-1.029.731v.017c0,.408.383.74,1.029.74s1.029-.323,1.029-.74ZM100.064,110.548v-.017c0-.366-.315-.698-.851-.698s-.851.323-.851.689v.017c0,.417.332.732.851.732s.851-.306.851-.723Z'/>"
 ];
-// Where each button sits in the art, by the rows and columns of REMOTE_BUTTONS
 var REMOTE_ART_COLUMNS = [83.268, 99.213, 115.157];
 var REMOTE_ART_ROWS = {320: 40.287, 630: 54.591, 940: 68.895, 1248: 83.198, 1557: 97.502,
                        1866: 111.806, 2176: 126.109};
 var REMOTE_ART_RADIUS = 6.378;
 
-// Each button's row beside the remote, and its height in the art, as the labelled artwork sets
-// them out. A middle button's row sits half a row off its own, so its leader runs between the
-// buttons beside it
 var REMOTE_ROWS = [
   ["ANTICLOCK", "left", 40.287], ["UP", "left", 47.439], ["LEFT", "left", 54.591],
   ["OK_STOP", "left", 61.743], ["RETURN_UNDO", "left", 68.895], ["1_RED", "left", 83.198],
@@ -9707,13 +9942,11 @@ var REMOTE_ROWS = [
   ["6_YELLOW", "right", 97.502], ["9_COOL", "right", 111.806], ["0_RAINBOW", "right", 118.958],
   ["PLAY_PAUSE", "right", 126.109]];
 
-// A button's centre in the art
 function remoteArtAt(name) {
   var button = REMOTE_BUTTONS.filter(function (one) { return one[0] === name; })[0];
   return {x: REMOTE_ART_COLUMNS[button[1]], y: REMOTE_ART_ROWS[button[2]]};
 }
 
-// The rainbow blended across this many slices, so a ring sweeps where ten colours would band
 function remoteBlend(steps, closed) {
   var ends = closed ? REMOTE_RAINBOW.concat([REMOTE_RAINBOW[0]]) : REMOTE_RAINBOW;
   var blended = [];
@@ -9728,7 +9961,6 @@ function remoteBlend(steps, closed) {
   return blended;
 }
 
-// The rotate buttons' rainbows, under the faces and the pad the art lays over them
 function remoteArtTurns() {
   var anticlock = remoteArtAt("ANTICLOCK"), clockwise = remoteArtAt("CLOCKWISE");
   return remoteRainbow(anticlock.x, anticlock.y, 4, REMOTE_ART_RADIUS, 225, 420,
@@ -9737,28 +9969,22 @@ function remoteArtTurns() {
                        remoteBlend(40, false));
 }
 
-// The 0 button's ring, which has to follow the numbers' pad or the pad hides it
 function remoteArtZero() {
   var zero = remoteArtAt("0_RAINBOW");
   return remoteRainbow(zero.x, zero.y, 4.5, REMOTE_ART_RADIUS, 0, 360, remoteBlend(72, true));
 }
 
-// The joins the art runs between numbers, found by where each path starts, and the two buttons
-// each joins
 var REMOTE_ART_JOINS = [["M88.548,86.774", "1_RED", "4_CYAN"],
                         ["M104.493,86.774", "2_GREEN", "5_MAGENTA"],
                         ["M120.438,86.774", "3_BLUE", "6_YELLOW"],
                         ["M91.24,115.386", "7_WARM", "8_WHITE"],
                         ["M107.185,108.225", "8_WHITE", "9_COOL"]];
 
-// A join's own outline, which a clip can take without any of the pad around it
 function remoteArtJoin(start) {
   var line = REMOTE_ART.filter(function (one) { return one.indexOf("d='" + start) >= 0; })[0];
   return line.match(/d='([^']*)'/)[1];
 }
 
-// The art as svg markup, each rainbow where the artwork has its bitmap: the rotate buttons' after
-// the remote's body, the 0 ring after the 9 button's ring
 function remoteArt() {
   var body = REMOTE_ART.indexOf("</g>") + 1;
   var nine = remoteArtAt("9_COOL");
@@ -9770,15 +9996,8 @@ function remoteArt() {
          REMOTE_ART.slice(afterNine).join("");
 }
 
-
-// ---- the PIR Stick, drawn from its artwork ------------------------------------------------------
-// The PIR Stick as its artwork draws it, in the artwork's own units, 22.692 across and 77.102
-// high, one element a line. The page shows through the board's mounting hole. The artwork's style
-// classes are written as fills, as a style in the page would reach every drawing on it
 var PIR_ART = [
-  // The board, with its mounting hole
   "<path d='M19.85,0H2.842C1.277,0,.008,1.269.008,2.835v71.008c-.117,1.683,1.152,3.142,2.835,3.26,0,0,17.008,0,17.008,0,1.683-.117,2.952-1.577,2.835-3.26,0,0,0-71.008,0-71.008,0-1.565-1.269-2.835-2.835-2.835ZM11.346,35.291c-1.957,0-3.543-1.586-3.543-3.543s1.586-3.543,3.543-3.543,3.543,1.586,3.543,3.543-1.586,3.543-3.543,3.543Z'/>",
-  // The silkscreen: minus, plus, OUT, the adjuster's arc and the arrows under the sensor
   "<rect fill='#fff' x='18.802' y='57.835' width='1.417' height='4.11' transform='translate(79.4 40.38) rotate(90)'/>",
   "<polygon fill='#fff' points='5.266 59.181 3.92 59.181 3.92 57.835 2.502 57.835 2.502 59.181 1.156 59.181 1.156 60.599 2.502 60.599 2.502 61.945 3.92 61.945 3.92 60.599 5.266 60.599 5.266 59.181'/>",
   "<path fill='#fff' d='M8.347,54.892c-.824,0-1.297.517-1.297,1.417v1.553c0,.896.473,1.411,1.297,1.411s1.292-.515,1.292-1.411v-1.553c0-.9-.471-1.417-1.292-1.417ZM7.731,56.309c0-.496.207-.748.615-.748.405,0,.61.252.61.748v1.553c0,.492-.206.742-.61.742-.408,0-.615-.25-.615-.742v-1.553Z'/>",
@@ -9787,26 +10006,22 @@ var PIR_ART = [
   "<path fill='#fff' d='M21.164,41.895c-1.534-3.508-5.583-5.664-9.857-5.256-3.546.344-6.764,2.686-8.198,5.965-.028.065-.042.133-.042.199,0,.191.111.373.297.454.064.028.132.042.198.042.191,0,.374-.111.455-.298,1.276-2.919,4.156-4.805,7.337-4.805s6.061,1.886,7.337,4.805c.053.122.153.218.277.265.124.048.261.043.383-.011l1.562-.709c.247-.112.358-.402.25-.651Z'/>",
   "<path fill='#fff' d='M5.402,25.439h-1.044v-.684c0-.208-.252-.312-.399-.165l-.849.849h-.594v-.685c0-.208-.252-.312-.399-.165l-1.182,1.182c-.091.091-.091.239,0,.33l1.182,1.182c.147.147.399.043.399-.165v-.686h.591l.853.853c.147.147.399.043.399-.165v-.687h1.044c.274,0,.496-.222.496-.496s-.222-.496-.496-.496Z'/>",
   "<path fill='#fff' d='M21.775,25.77l-1.182-1.182c-.147-.147-.399-.043-.399.165v.687h-.591l-.852-.852c-.147-.147-.399-.043-.399.165v.687h-1.044c-.274,0-.496.222-.496.496s.222.496.496.496h1.044v.684c0,.208.252.312.399.165l.849-.849h.594v.684c0,.208.252.312.399.165l1.182-1.182c.091-.091.091-.239,0-.33Z'/>",
-  // The connector, its pins and its pads
   "<path fill='#e8a000' d='M9.344,64.688h-1.647c-.085,0-.155-.07-.155-.155v-3.773c0-.085.07-.155.155-.155h1.647c.085,0,.155.07.155.155v3.773c0,.085-.07.155-.155.155Z'/>",
   "<path fill='#e8a000' d='M12.179,64.688h-1.647c-.085,0-.155-.07-.155-.155v-3.773c0-.085.07-.155.155-.155h1.647c.085,0,.155.07.155.155v3.773c0,.085-.07.155-.155.155Z'/>",
   "<path fill='#e8a000' d='M15.013,64.688h-1.647c-.085,0-.155-.07-.155-.155v-3.773c0-.085.07-.155.155-.155h1.647c.085,0,.155.07.155.155v3.773c0,.085-.07.155-.155.155Z'/>",
   "<path fill='#e8a000' d='M6.531,76.037h-3.39c-.08,0-.145-.065-.145-.146v-5.657c0-.08.065-.146.145-.146h3.39c.08,0,.145.065.145.146v5.657c0,.08-.065.146-.145.146Z'/>",
   "<path fill='#e8a000' d='M19.57,76.037h-3.391c-.08,0-.144-.065-.144-.146v-5.657c0-.08.064-.146.144-.146h3.391c.08,0,.145.065.145.146v5.657c0,.08-.065.146-.145.146Z'/>",
   "<rect fill='#ffebad' x='4.268' y='63.638' width='14.173' height='12.047'/>",
-  // The part on the left edge, on its pads
   "<path fill='#e8a000' d='M4.127,45.354v2.551c0,.078-.064.142-.143.142H1.151c-.078,0-.143-.063-.143-.142v-2.551c0-.078.064-.142.143-.142h2.834c.078,0,.143.063.143.142Z'/>",
   "<path fill='#e8a000' d='M4.127,50.173v2.551c0,.078-.064.142-.143.142H1.151c-.078,0-.143-.063-.143-.142v-2.551c0-.078.064-.142.143-.142h2.834c.078,0,.143.063.143.142Z'/>",
   "<rect fill='#6b523b' x='1.434' y='46.772' width='2.268' height='4.535'/>",
   "<rect fill='#999' x='1.434' y='50.173' width='2.268' height='1.134'/>",
   "<rect fill='#999' x='1.434' y='46.772' width='2.268' height='1.134'/>",
-  // The part on the right edge, on its pads
   "<path fill='#e8a000' d='M21.702,45.354v2.551c0,.078-.064.142-.143.142h-2.834c-.078,0-.143-.063-.143-.142v-2.551c0-.078.064-.142.143-.142h2.834c.078,0,.143.063.143.142Z'/>",
   "<path fill='#e8a000' d='M21.702,50.173v2.551c0,.078-.064.142-.143.142h-2.834c-.078,0-.143-.063-.143-.142v-2.551c0-.078.064-.142.143-.142h2.834c.078,0,.143.063.143.142Z'/>",
   "<rect fill='#575757' x='19.008' y='46.773' width='2.268' height='4.535'/>",
   "<rect fill='#999' x='19.009' y='50.173' width='2.268' height='1.134'/>",
   "<rect fill='#999' x='19.009' y='46.772' width='2.268' height='1.134'/>",
-  // The sensor, on its pads
   "<path fill='#e8a000' d='M15.475.858h4.217c.083,0,.15.067.15.15v6.77c0,.083-.067.15-.15.15h-4.218c-.083,0-.15-.067-.15-.15V1.01c0-.084.068-.151.151-.151Z'/>",
   "<path fill='#e8a000' d='M9.238.858h4.217c.083,0,.15.067.15.15v6.77c0,.083-.067.15-.15.15h-4.218c-.083,0-.15-.067-.15-.15V1.01c0-.084.068-.151.151-.151Z'/>",
   "<path fill='#e8a000' d='M3.002.858h4.217c.083,0,.15.067.15.15v6.77c0,.083-.067.15-.15.15H3.001c-.083,0-.15-.067-.15-.15V1.01c0-.084.068-.151.151-.151Z'/>",
@@ -9817,7 +10032,6 @@ var PIR_ART = [
   "<path fill='#444' d='M16.294,1.82c2.813,0,5.102,2.289,5.102,5.102v9.921c0,2.813-2.289,5.102-5.102,5.102H6.372c-2.813,0-5.102-2.289-5.102-5.102V6.922C1.27,4.109,3.559,1.82,6.372,1.82h9.921M16.294,1.253H6.372C3.241,1.253.703,3.791.703,6.922v9.921c0,3.131,2.538,5.669,5.669,5.669h9.921c3.131,0,5.669-2.538,5.669-5.669V6.922c0-3.131-2.538-5.669-5.669-5.669h0Z'/>",
   "<path fill='#222' d='M6.372,2.953h9.921c2.19,0,3.969,1.778,3.969,3.969v9.922c0,2.19-1.778,3.968-3.968,3.968H6.373c-2.19,0-3.969-1.778-3.969-3.969V6.921c0-2.19,1.778-3.968,3.968-3.968Z'/>",
   "<path fill='#444' d='M16.294,3.237c2.032,0,3.685,1.653,3.685,3.685v9.921c0,2.032-1.653,3.685-3.685,3.685H6.372c-2.032,0-3.685-1.653-3.685-3.685V6.922c0-2.032,1.653-3.685,3.685-3.685h9.921M16.294,2.67H6.372c-2.348,0-4.252,1.904-4.252,4.252v9.921c0,2.348,1.904,4.252,4.252,4.252h9.921c2.348,0,4.252-1.904,4.252-4.252V6.922c0-2.348-1.904-4.252-4.252-4.252h0Z'/>",
-  // The adjuster, on its pads
   "<rect fill='#e8a000' x='8.945' y='39.835' width='4.802' height='4.52' rx='.15' ry='.15'/>",
   "<path fill='#e8a000' d='M6.817,49.467h3.389c.08,0,.145.065.145.145v3.392c0,.08-.065.145-.145.145h-3.39c-.08,0-.145-.065-.145-.145v-3.391c0-.08.065-.146.146-.146Z'/>",
   "<path fill='#e8a000' d='M12.487,49.467h3.389c.08,0,.145.065.145.145v3.392c0,.08-.065.145-.145.145h-3.39c-.08,0-.145-.065-.145-.145v-3.391c0-.08.065-.146.146-.146Z'/>",
@@ -14944,50 +15158,33 @@ function discoverBinBeside(card, bin) {
   card.appendChild(bin);
 }
 
-// ---- examples to discover, on the Sound tab -----------------------------------------------------
-// The Sound tab's examples line, where its example sounds start. An example sound on the drive
-// can be deleted, as it can be downloaded again, and carries its mark, Update or the firmware it
-// needs. 28_discover.js does the rest. A board without sound has no Sound tab to add them to.
-
-soundTileSteps.push(function (tile, name) {
-  if (!name) return;
-  tile.dataset.name = name;
+soundHooks.tileSteps.push(function (tile, name) {
   if (isExampleMedia(name) && state.sounds.indexOf(name) >= 0)
-    tile.appendChild(discoverBin(name, "sound"));
+    tile.append(discoverBin(name, "sound"));
   var pill = discoverPill(name);
-  if (pill) tile.appendChild(pill);
+  if (pill) tile.append(pill);
 });
 
-soundSteps.push(function () {
-  var row = document.querySelector("#sound .sounds");
-  if (row && state.fileHandle) discoverPlaceBar(row, "sound");
-});
+soundHooks.examplesBar = function () {
+  var holder = h("div");
+  discoverPlaceBar(holder, "sound");
+  return holder.firstChild;
+};
 
-// A sound as the Sound tab shows one, its name and how long it plays, with a way to hear it from
-// GitHub before it is downloaded. Its outline is not known until it is, so a still wave stands in
-function discoverSoundFace(path) {
-  var sound = discoverSounds[path].sound;
-  var card = discoverElement("div", "sound discoveroffer");
-  card.innerHTML = "<svg viewBox='0 0 104 30' preserveAspectRatio='none' aria-hidden='true'>" +
-    "<path d='M0 15 Q6.5 3 13 15 T26 15 T39 15 T52 15 T65 15 T78 15 T91 15 T104 15' fill='none' " +
-    "stroke='#c9c3b9' stroke-width='2'/></svg>";
-  card.appendChild(discoverElement("b", "", sound.title));
-  card.appendChild(discoverElement("small", "", sound.seconds ? sound.seconds + "s" : "WAV file"));
-  var playing = hearing.name === path;
-  var listen = discoverElement("span", "hear" + (playing ? " playing" : ""),
-                             playing ? "\u25a0" : "\u25b6");
-  listen.setAttribute("role", "button");
-  listen.title = (playing ? "Stop " : "Play ") + sound.title + " here";
-  listen.onclick = function (e) {
-    e.stopPropagation();
-    discoverHear(path, sound.url);
-  };
-  card.appendChild(listen);
-  return card;
+function stillWave() {
+  return h("svg:svg", {viewBox: "0 0 104 30", preserveAspectRatio: "none", "aria-hidden": "true"},
+    h("svg:path", {d: "M0 15 Q6.5 3 13 15 T26 15 T39 15 T52 15 T65 15 T78 15 T91 15 T104 15"}));
 }
 
-// Play a sound from GitHub, or stop it where it is playing, one sound at a time as the Sound tab
-// plays them
+function discoverSoundFace(path) {
+  var sound = discoverSounds[path].sound;
+  return h("div", {class: "soundoffer discoveroffer"},
+    stillWave(),
+    h("b", {}, sound.title),
+    h("small", {}, sound.seconds ? sound.seconds + "s" : "WAV file"),
+    hearButton(path, sound.title, function () { discoverHear(path, sound.url); }));
+}
+
 async function discoverHear(path, url) {
   var was = hearing.name;
   stopHearing();
@@ -14996,7 +15193,7 @@ async function discoverHear(path, url) {
     return;
   }
   var audio = new Audio(url);
-  hearing = {name: path, audio: audio, url: null};
+  startHearing(path, audio, null);
   audio.onended = function () {
     if (hearing.audio === audio) stopHearing();
     draw();

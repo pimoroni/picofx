@@ -1,0 +1,362 @@
+body.setupall #soundPanel {
+  opacity: .35;
+  pointer-events: none;
+}
+
+.soundtab {
+  --stripes: repeating-linear-gradient(45deg, #f0eeea, #f0eeea 7px, #e4e0d9 7px, #e4e0d9 14px);
+
+  > p {
+    margin: 0 0 .8rem;
+    font-size: .85rem;
+    color: var(--dim);
+  }
+
+  [data-unseen] {
+    visibility: hidden;
+  }
+
+  > div:has(> fieldset) {
+    display: flex;
+    align-items: center;
+    margin: 0 0 .7rem;
+  }
+
+  fieldset {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+
+    &[disabled] {
+      opacity: .45;
+    }
+
+    legend {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+
+    > button {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      padding: .28rem .55rem;
+      border: 1.5px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      font: 600 .76rem system-ui, sans-serif;
+      color: var(--ink);
+
+      &[aria-pressed=true] {
+        border-color: var(--accent);
+        color: var(--accent);
+        background: color-mix(in srgb, var(--accent) 8%, transparent);
+      }
+    }
+
+    label {
+      display: flex;
+      flex: 1;
+      align-items: center;
+      gap: .5rem;
+      margin: 0 .9rem;
+      font-size: .82rem;
+      color: var(--dim);
+    }
+
+    input[type=range] {
+      flex: 1;
+      min-width: 4rem;
+      accent-color: var(--accent);
+
+      &:disabled {
+        opacity: .35;
+      }
+    }
+
+    output {
+      min-width: 2.4rem;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  > div:has(> fieldset) > button,
+  > section > div > button {
+    display: flex;
+    flex-shrink: 0;
+    align-items: stretch;
+    align-self: center;
+    margin-left: auto;
+    padding: 0;
+    overflow: hidden;
+    border: 2px solid var(--line);
+    border-radius: 9px;
+    background: var(--panel);
+    transition: transform .08s, border-color .12s;
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+
+    &[aria-pressed=true] {
+      border-color: var(--accent);
+
+      b {
+        color: var(--accent);
+      }
+    }
+
+    i {
+      display: flex;
+      align-items: center;
+      width: 2.4rem;
+      min-height: 1.7rem;
+      background: var(--stripes);
+    }
+
+    i:has(svg) {
+      width: 7.4rem;
+      border-right: 1px solid var(--line);
+      background: #fff;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 1.7rem;
+    }
+
+    b {
+      align-self: center;
+      padding: .3rem .65rem;
+      font: 600 .8rem system-ui, sans-serif;
+      white-space: nowrap;
+    }
+  }
+
+  > .discoverbar {
+    margin: 1.5rem 0 0;
+  }
+
+  > section {
+    margin-top: 1.1rem;
+
+    &:first-of-type {
+      margin-top: 0;
+    }
+
+    .discoverbar + & {
+      margin-top: 1.5rem;
+    }
+
+    > div {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+  }
+
+  h3 {
+    margin: 0;
+
+    button {
+      display: flex;
+      align-items: baseline;
+      gap: .6rem;
+      padding: 0;
+      border: 0;
+      border-radius: 0;
+      background: none;
+      color: var(--ink);
+      font: 600 .92rem system-ui, sans-serif;
+      text-align: left;
+
+      &::before {
+        content: "";
+        flex-shrink: 0;
+        width: .42rem;
+        height: .42rem;
+        border-right: 2px solid var(--dim);
+        border-bottom: 2px solid var(--dim);
+        transform: rotate(45deg) translate(-1px, -1px);
+        transition: transform .12s;
+      }
+
+      &[aria-expanded=true]::before {
+        transform: rotate(-135deg) translate(-2px, -2px);
+      }
+
+      &:hover::before {
+        border-color: var(--accent);
+      }
+    }
+
+    small {
+      font: 400 .8rem system-ui, sans-serif;
+      color: var(--dim);
+    }
+  }
+
+  ul {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: .7rem;
+    margin: .4rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    position: relative;
+    display: flex;
+
+    > button[aria-pressed]:first-child {
+      display: block;
+      flex: 1;
+      min-width: 0;
+      padding: 0;
+      overflow: hidden;
+      border: 2px solid var(--line);
+      border-radius: 10px;
+      background: var(--panel);
+      text-align: left;
+
+      &:hover {
+        border-color: var(--dim);
+      }
+
+      &[aria-pressed=true] {
+        border-color: var(--accent);
+      }
+
+      svg {
+        display: block;
+        width: 100%;
+        height: 3.6rem;
+        border-bottom: 1px solid var(--line);
+        fill: #c9c3b9;
+      }
+
+      &[aria-pressed=true] rect {
+        fill: var(--accent);
+      }
+
+      b {
+        display: block;
+        padding: .3rem .5rem 0;
+        overflow: hidden;
+        font: 600 .74rem/1.5 system-ui, sans-serif;
+        color: var(--ink);
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      small {
+        display: block;
+        padding: 0 .5rem .35rem;
+        font-size: .68rem;
+        color: var(--dim);
+      }
+    }
+
+    &[data-under] > button:first-child {
+      border-style: dashed;
+      border-color: #a9a49b;
+      background: var(--stripes);
+    }
+
+    &:hover .bin,
+    &:focus-within .bin {
+      opacity: 1;
+    }
+
+    &:hover > .discoverpill {
+      right: 1.6rem;
+    }
+
+    > .adder {
+      flex: 1;
+    }
+  }
+
+  [data-hear] {
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.3rem;
+    height: 1.3rem;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--bg);
+    color: var(--dim);
+    font-size: .6rem;
+
+    &:hover {
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+
+    &[aria-pressed=true] {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+  }
+}
+
+.ledtab .soundswatch {
+  position: relative;
+  align-items: center;
+  width: 4.3rem;
+  height: 2.15rem;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 3px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--line);
+
+  > svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  > svg + svg {
+    position: absolute;
+    right: 2px;
+    bottom: 2px;
+    width: .8rem;
+    height: .8rem;
+    padding: 1px;
+    border-radius: 50%;
+    background: #fff;
+    color: var(--dim);
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &[data-shows=nothing] {
+    background: repeating-linear-gradient(45deg, #f0eeea, #f0eeea 3px, #e0dbd2 3px, #e0dbd2 6px);
+  }
+
+  &[data-shows=under] {
+    border: 1px dashed #a9a49b;
+  }
+}
