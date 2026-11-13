@@ -22,5 +22,6 @@
  "strips": [],
  "screens": null,
  "sound": true,
+ "sensor": true,
  "shell": true
 }
