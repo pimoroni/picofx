@@ -1,0 +1,194 @@
+html {
+  overflow-anchor: none;
+  scrollbar-gutter: stable;
+}
+
+.says {
+  color: var(--dim);
+  font-size: var(--text-m);
+  font-weight: 400;
+}
+
+.foldhead {
+  display: flex;
+  align-items: baseline;
+  gap: .6rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--ink);
+  font: 600 var(--text-l) var(--font);
+  text-align: left;
+
+  &::before {
+    content: "";
+    flex: none;
+    width: .42rem;
+    height: .42rem;
+    border-right: 2px solid var(--dim);
+    border-bottom: 2px solid var(--dim);
+    transform: rotate(45deg) translate(-1px, -1px);
+    transition: transform .12s;
+  }
+
+  &[aria-expanded=true]::before {
+    transform: rotate(-135deg) translate(-2px, -2px);
+  }
+
+  &:hover::before {
+    border-color: var(--accent);
+  }
+}
+
+.adder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .25rem;
+  min-height: 5.2rem;
+  border: 1px dashed color-mix(in srgb, var(--accent) 50%, transparent);
+  border-radius: var(--radius-l);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  color: var(--accent);
+  font: 600 var(--text-s) var(--font);
+
+  &:hover {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+  }
+
+  svg {
+    display: block;
+  }
+}
+
+.bin {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  z-index: 2;
+  width: 1.2rem;
+  height: 1.2rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: rgba(20, 20, 22, .7);
+  color: #fff;
+  font-size: var(--text-m);
+  line-height: 1.2rem;
+  text-align: center;
+  opacity: 0;
+  transition: opacity .12s;
+
+  &:hover {
+    background: var(--warn);
+  }
+
+  &.copytile {
+    right: 1.6rem;
+
+    &.alone {
+      right: 2px;
+    }
+
+    &:hover {
+      background: var(--accent);
+    }
+  }
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .3rem .55rem;
+  border-radius: var(--radius);
+  color: #fff;
+  font: 600 var(--text-m) var(--font);
+
+  small {
+    font-weight: 400;
+    opacity: .85;
+  }
+
+  :is(input, select) {
+    padding: .1rem .3rem;
+    border: 1px solid rgba(255, 255, 255, .55);
+    border-radius: var(--radius-s);
+    background: rgba(255, 255, 255, .16);
+    color: #fff;
+    font: inherit;
+    font-weight: 400;
+  }
+
+  input[type=number] {
+    width: 4.2rem;
+    text-align: center;
+  }
+
+  option {
+    color: var(--ink);
+  }
+
+  .drop {
+    padding: 0 .1rem;
+    border: 0;
+    background: none;
+    color: #fff;
+    font-size: var(--text-xl);
+    line-height: 1;
+    opacity: .8;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  .boardicon {
+    color: #fff;
+    opacity: .9;
+  }
+
+  &.outs {
+    background: var(--boardOuts);
+  }
+}
+
+.boardicon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: -1.5px;
+  color: var(--board);
+}
+
+.setupbutton {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .3rem .6rem;
+  border: 1.5px solid var(--boardOuts);
+  border-radius: var(--radius);
+  background: none;
+  color: var(--boardOuts);
+  font: 600 var(--text-m) var(--font);
+
+  &:hover {
+    background: #eef2f7;
+  }
+
+  .boardicon {
+    color: currentColor;
+  }
+
+  &[aria-pressed=true] {
+    background: var(--boardOuts);
+    color: #fff;
+
+    &:hover {
+      background: #34505f;
+    }
+  }
+}

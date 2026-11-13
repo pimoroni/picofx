@@ -734,7 +734,7 @@ function toProgram() {
 var pageSwitch = null;
 
 function effectsFace() {
-  var swatch = h("span", {class: "accswatch"});
+  var swatch = h("span", {class: "accswatch", "aria-hidden": "true"});
   tabSwatch(swatch, "outPanel");
   return h("span", {}, swatch);
 }

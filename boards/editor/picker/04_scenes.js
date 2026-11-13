@@ -131,15 +131,6 @@ export function otherScenes() {
 
 export function namesOf(scenes) { return scenes.map(function (scene) { return scene.name; }); }
 
-// Grey out settings that show Always on's values in a scene, which are set on the Always on tab
-function frozen(node) {
-  node.classList.add("frozen");
-  node.title = "Set on the Always on tab";
-  node.querySelectorAll("button, input, select").forEach(function (control) {
-    control.disabled = true;
-  });
-}
-
 // The stretch of a stored body's run that covers one lamp and plays a look, or null. A look
 // this page does not offer writes no line, so its stretch plays nothing
 function stretchPlaying(body, runName, at) {

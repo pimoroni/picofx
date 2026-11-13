@@ -262,272 +262,200 @@ body > footer {
     }
   }
 }
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;
- padding:1.1rem 1.4rem;margin:1.2rem 0}
-.panel h2{font-size:var(--text-l);margin:0 0 .7rem;display:flex;align-items:baseline;gap:.6rem}
-.panel>summary{font:600 var(--text-l) var(--font);color:var(--ink);cursor:pointer;
- display:flex;align-items:baseline;gap:.6rem;list-style:none;margin:0}
-.panel>summary::-webkit-details-marker{display:none}
-.panel>summary::before{content:"";width:.42rem;height:.42rem;flex-shrink:0;
- border-right:2px solid var(--dim);border-bottom:2px solid var(--dim);
- transform:rotate(45deg) translate(-1px,-1px);transition:transform .12s}
-.panel[open]>summary::before{transform:rotate(-135deg) translate(-2px,-2px)}
-.panel>summary:hover::before{border-color:var(--accent)}
-.panel[open]>summary{margin-bottom:.7rem}
-.says{font-weight:400;font-size:var(--text-m);color:var(--dim)}
-.chip{display:inline-flex;align-items:center;gap:.45rem;padding:.3rem .55rem;
- border-radius:9px;color:#fff;font:600 var(--text-m) var(--font)}
-.chip.strip{background:var(--strip)}
-.chip.mono{background:var(--mono)}
-.chip input[type=number]{width:4.2rem;padding:.1rem .3rem;text-align:center;
- border:1px solid rgba(255,255,255,.55);border-radius:6px;
- background:rgba(255,255,255,.16);color:#fff;font:inherit;font-weight:400}
-.chip small{font-weight:400;opacity:.85}
-.chip select{border:1px solid rgba(255,255,255,.55);border-radius:6px;
- background:rgba(255,255,255,.16);color:#fff;font:inherit;font-weight:400;padding:.1rem .25rem}
-.chip select option{color:var(--ink)}
-.chip .drop{background:transparent;border:0;color:#fff;font-size:var(--text-xl);line-height:1;
- padding:0 .1rem;opacity:.8}
-.chip .drop:hover{opacity:1}
-.panel.strip{position:relative}
-.panel.stripout .addstrip,.panel.stripout .stripblocked{position:absolute;left:50%;top:55%;
- transform:translate(-50%,-50%)}
-.panel.stripout .stripblocked{width:max-content;max-width:calc(100% - 3rem);text-align:center}
-.ledtab.blocked{opacity:.45}
-.frozen{opacity:.45}
-.frozen button,.frozen input{cursor:default}
-.tools{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin:.8rem 0 0;
- font-size:var(--text-m);color:var(--dim)}
-.tools input[type=number]{width:3.4rem;padding:.25rem .3rem;border:1px solid var(--line);
- border-radius:7px;font:inherit;font-size:var(--text-m);text-align:center}
-.tools .gap{flex:1}
-.gallery-head{display:flex;align-items:baseline;gap:.6rem;margin:1.5rem 0 .5rem;
- font:600 var(--text-xl) var(--font)}
-.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(9.4rem,1fr));
- gap:.7rem;margin:0 0 .3rem}
-.card{border:2px solid var(--line);border-radius:11px;overflow:hidden;cursor:pointer;
- background:var(--panel);transition:transform .08s,border-color .12s}
-.card:hover{transform:translateY(-2px)}
-.card.picked{border-color:var(--accent)}
-.card .face{height:2.9rem;display:flex;background:var(--dark)}
-.card .face span{flex:1}
-.card.nothing .face{background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 7px,
- #e4e0d9 7px,#e4e0d9 14px)}
-.card .name{padding:.42rem .65rem .52rem;font:600 var(--text-m) var(--font);
- white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card.picked .name{color:var(--accent)}
-.s-target{color:#1f6feb}
-.s-effect{color:#0a7f78;font-weight:600}
-.s-value{color:#a8500a}
-.s-name{color:var(--ink)}
-.s-punc{color:#5d656e}
-.s-colon{color:var(--ink);font-weight:700}
-.s-comment{color:#8a8378;font-style:italic}
-.note{background:#e7f2f1;border-radius:10px;padding:.7rem 1.1rem;margin:1rem 0 0;
- font-size:var(--text-m)}
-.tabs{display:flex;align-items:baseline;gap:.4rem;margin:1.4rem 0 .5rem}
-.tabs .of{font:600 var(--text-xl) var(--font);margin-right:.3rem}
-.tabs button{font-size:var(--text-m);padding:.3rem .7rem;border-radius:9px}
-.tabs button.on{border-color:var(--accent);color:var(--accent);font-weight:600;
- background:#f0faf9}
-.tabs .says{margin-left:auto}
-.tabs.sides{justify-content:space-between;gap:0;margin-bottom:0;padding:0 .9rem}
-.tabs.sides button{border-radius:10px 10px 0 0;border-bottom-color:transparent;
- position:relative;top:1px;background:var(--bg)}
-.tabs.sides button.on{background:var(--panel);border-color:var(--line);
- border-bottom-color:var(--panel);color:var(--accent);font-weight:600}
-.tabs.sides button:disabled{opacity:.5}
-.card.cannot{opacity:.35;cursor:default}
-.card.cannot:hover{transform:none}
-.way{background:var(--panel);border:1px solid var(--line);border-radius:14px;
- padding:1.1rem 1.4rem;margin:1.2rem 0}
-.way>h2{font-size:var(--text-l);margin:0 0 .25rem;display:flex;align-items:baseline;gap:.6rem}
-.way>p{margin:0 0 .9rem;font-size:var(--text-m);color:var(--dim);max-width:54rem}
-.playing{display:flex;align-items:center;gap:.4rem;font-size:var(--text-m);color:var(--dim)}
-.playing select{font:inherit;font-size:var(--text-m);padding:.15rem .3rem;border-radius:6px;
- border:1px solid var(--line);background:var(--panel);color:inherit}
-.controls{display:grid;grid-template-columns:auto 1fr;gap:.45rem .8rem;align-items:center;
- max-width:34rem}
-.controls label{font-size:var(--text-m);color:var(--dim);white-space:nowrap}
-.controls input[type=range]{width:100%;accent-color:var(--accent)}
-.controls input[type=color]{width:3rem;height:1.5rem;padding:1px;border-radius:6px;
- border:1px solid var(--line);background:var(--panel)}
-.swatches{display:flex;gap:.35rem;flex-wrap:wrap}
-.swatch{width:2.1rem;height:2.1rem;padding:0;border-radius:9px;border:2px solid var(--line);
- cursor:pointer;position:relative}
-.swatch.on{border-color:var(--accent);box-shadow:0 0 0 2px rgba(0,133,125,.2)}
-.swatch b{position:absolute;left:0;right:0;top:calc(100% + 2px);font:400 var(--text-xs)/1 var(--font);color:var(--dim);text-align:center}
-.hue{position:relative;width:100%;max-width:30rem}
-.hue input[type=range]{position:absolute;left:0;top:0;width:100%;height:1.2rem;margin:0;
- opacity:0;cursor:pointer}
-.wrote{background:var(--dark);color:#e8e4dc;border-radius:10px;padding:.5rem .8rem;
- font:.76rem/1.5 var(--font-mono);margin:.9rem 0 0;
- white-space:pre-wrap;overflow-x:auto}
-.wrote .s-target{color:#7fd4ff}
-.wrote .s-effect{color:#ffd479}
-.wrote .s-name{color:#b7e3a0}
-.wrote .s-value{color:#f2b8c6}
-.wrote .s-punc,.wrote .s-colon{color:#8a8378}
-.swatch.custom{background:conic-gradient(#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
-.swatch.custom::after{content:"";position:absolute;inset:25%;border-radius:50%;
- background:var(--panel)}
-.swatch.custom b{color:var(--ink)}
-.field{position:relative;width:15rem;height:9rem;border-radius:10px;
- border:1px solid var(--line);margin:0 0 1.1rem;cursor:crosshair;touch-action:none;
- background:linear-gradient(to bottom,rgba(255,255,255,0),#fff),
- linear-gradient(to right,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
-.field .at{position:absolute;width:.85rem;height:.85rem;border-radius:50%;
- border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.45);transform:translate(-50%,-50%);
- pointer-events:none}
-.sets{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap;margin:0 0 .8rem}
-.sets label{font-size:var(--text-m);color:var(--dim);margin-right:.2rem}
-.sets button{font-size:var(--text-s);padding:.28rem .6rem;border-radius:8px}
-.sets button.on{border-color:var(--accent);color:var(--accent);font-weight:600;
- background:#f0faf9}
-.sets button.settled::after{content:" \2713";font-weight:600}
-.hexline{display:flex;align-items:center;gap:.6rem;margin:0 0 1.1rem}
-.hexline label{font-size:var(--text-m);color:var(--dim)}
-.hexline input{font:inherit;font-family:var(--font-mono);
- font-size:var(--text-m);width:6.5rem;padding:.25rem .45rem;border-radius:7px;
- border:1px solid var(--line);background:var(--panel);color:inherit}
-.note{margin-top:.9rem;padding:.6rem .8rem;border-radius:10px;background:#eef6f5;
- font-size:var(--text-m);color:#2c5c58}
-.note b{font-weight:600}
-table{border-collapse:collapse;font-size:var(--text-m);margin:.4rem 0 0;width:100%}
-th,td{text-align:left;padding:.3rem .5rem;border-bottom:1px solid var(--line);
- vertical-align:top}
-th{font-weight:600;color:var(--dim);font-size:var(--text-s)}
-.s-scene{color:#7b3fb8;font-weight:600}
-.card{position:relative}
-.card .tint{position:absolute;right:calc((var(--namerow) - var(--mark)) / 2);
- bottom:calc((var(--namerow) - var(--mark)) / 2);width:var(--mark);height:var(--mark);
- display:block;color:#b5aea3}
-.scustom{display:flex;align-items:flex-start;gap:.8rem;margin-top:.55rem}
-.scustom .field{flex:1;width:auto;height:6.5rem;margin:0}
-.scustom .hexline{display:flex;align-items:center;gap:.4rem;margin:0;font-size:var(--text-m);
- color:var(--dim)}
-.scustom .hexline input{width:5.2rem}
-.scustomside{display:flex;flex-direction:column;gap:.4rem;align-self:stretch}
-.scustompreview{flex:1;border-radius:8px;border:1px solid var(--line);min-height:3rem}
-.card.nothing.small{margin-left:auto;align-self:center;display:flex;align-items:stretch;
- border-radius:9px;cursor:pointer}
-.card.nothing.small .face{width:2.4rem;height:auto;min-height:1.7rem}
-.card.nothing.small .name{padding:.3rem .65rem;font-size:var(--text-m);align-self:center}
-#tabStack > *{min-width:0}
-body[data-pageway] #looks>.tabs:empty{display:none}
-.keptlines{margin:.6rem 0;padding:.5rem .7rem;border:1px dashed var(--line);border-radius:8px;
- font-size:var(--text-m);color:var(--dim)}
-.keptlines .keptsay{margin-bottom:.3rem}
-.keptlines .keptrow{display:flex;align-items:flex-start;gap:.4rem;margin:.15rem 0}
-.keptlines code{white-space:pre-wrap;color:var(--ink);flex:1}
-.keptlines .keptdrop{border:0;background:none;color:var(--dim);cursor:pointer;font-size:var(--text-l);
- line-height:1;padding:0 .2rem}
-.keptlines .keptdrop:hover{color:var(--ink)}
-.asset{position:relative;border:2px solid var(--line);border-radius:10px;overflow:hidden;
- background:var(--panel);padding:0}
-.asset .face{position:relative;height:3.6rem;display:flex;align-items:center;
- justify-content:center;overflow:hidden;
- font-size:var(--text-xs);color:var(--dim);background:linear-gradient(135deg,#efece6,#e3dfd6)}
-.asset .face img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.offhead .card.nothing.small{flex-shrink:0}
-.offhead .card.nothing.small .name{overflow:visible}
-.adder{border:1px dashed rgba(15,138,114,.5);border-radius:10px;background:rgba(15,138,114,.06);
- color:var(--accent);cursor:pointer;display:flex;flex-direction:column;
- align-items:center;justify-content:center;gap:.25rem;
- font:600 var(--text-s) var(--font);min-height:5.2rem}
-.adder:hover{background:rgba(15,138,114,.14);border-color:var(--accent)}
-.adder svg{display:block}
-.bin{position:absolute;top:2px;right:2px;z-index:2;width:1.2rem;height:1.2rem;
- border-radius:5px;background:rgba(20,20,22,.7);color:#fff;line-height:1.2rem;
- text-align:center;font-size:var(--text-m);cursor:pointer;opacity:0;transition:opacity .12s}
-.bin:hover{background:#b4443a}
-.copytile{right:1.6rem}
-.copytile.alone{right:2px}
-.copytile:hover{background:var(--accent)}
-select{font:inherit;font-size:var(--text-m);padding:.25rem .3rem;border:1px solid var(--line);border-radius:6px}
-.facts{margin:.1rem 0 .7rem}
-.boardicon{color:var(--board);flex:0 0 auto}
-.boardicon{width:16px;height:16px;margin:-1.5px}
-.setupbutton{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .6rem;
- border-radius:9px;border:1.5px solid var(--boardOuts);background:none;
- color:var(--boardOuts);font:600 var(--text-m) var(--font);cursor:pointer}
-.setupbutton:hover{background:#eef2f7}
-.setupbutton .boardicon{color:currentColor}
-.setupbutton.on{background:var(--boardOuts);color:#fff}
-.setupbutton.on:hover{background:#34505f}
-header .boardchip{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .6rem;
- border:1.5px solid var(--board);border-radius:9px;background:#eef2f7;color:var(--board);
- font:600 var(--text-m) var(--font)}
-header .boardchip.on{background:var(--board);color:#fff}
-header .boardchip .boardicon{color:currentColor}
-.chip.boardchip{display:inline-flex;align-items:center;gap:.45rem;padding:.3rem .55rem;
- border-radius:9px;color:#fff;font:600 var(--text-m) var(--font)}
-.boardchip .boardicon{color:#fff;opacity:.9}
-.boardchip small{font-weight:400;opacity:.85}
-.boardchip.outs{background:var(--boardOuts)}
-.boardchip select{border:1px solid rgba(255,255,255,.55);border-radius:6px;
- background:rgba(255,255,255,.15);color:#fff;font:inherit;font-weight:400;
- font-size:var(--text-s);padding:.1rem .25rem}
-.boardchip select option{color:var(--ink)}
-body.setupall #tabs,body.setupall #sceneTabRow,body.setupall #looks,body.setupall [id$=Cut],body.setupall [id$=Bar],body.setupall [id$=Chosen]{opacity:.35;pointer-events:none}
-.accswatch{display:inline-flex;width:8rem;height:.55rem;border-radius:3px;overflow:hidden;
- align-self:center;margin-left:.2rem;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
-.accswatch span{display:block;height:100%}
-.accswatch .nothing{background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 3px,
- #e0dbd2 3px,#e0dbd2 6px)}
-details[open]>summary .accswatch{display:none}
-.ledtabs{display:flex;gap:1.6rem;border-bottom:1px solid var(--line);margin:0 0 1rem}
-#looks{margin-bottom:1.4rem}
-.ledtab{display:flex;flex-direction:column;align-items:flex-start;gap:.35rem;border:0;
- border-bottom:2px solid transparent;border-radius:0;background:none;
- padding:.15rem .1rem .5rem;margin-bottom:-1px;cursor:pointer;color:var(--dim)}
-.ledtab b{font:600 var(--text-l) var(--font)}
-.ledtab:hover{color:var(--ink)}
-.ledtab.on{color:var(--ink);border-bottom-color:var(--accent)}
-.ledtab .accswatch{margin:0}
-.ledtabs .ledtab{flex:0 1 auto;min-width:0}
-.ledtab b{white-space:nowrap}
-.ledtab .accswatch:not(.screenswatch):not(.soundswatch){max-width:100%}
-html{overflow-anchor:none}
-html{scrollbar-gutter:stable}
-.tabstack{display:grid}
-.tabstack>.panel{grid-area:1/1;margin:0;align-self:start}
-.tabstack>.tabhidden{visibility:hidden;pointer-events:none}
-.panel.tabbed>summary{display:none}
-.accswatch.liveswatch{gap:0;box-shadow:none;height:.55rem;
- background:repeating-linear-gradient(45deg,#f0eeea,#f0eeea 3px,#e0dbd2 3px,#e0dbd2 6px)}
-.liveswatch span{flex:1;border-radius:0}
-.ledtab[data-panel=screensPanel],.ledtab[data-panel=soundPanel]{flex-direction:row;
- align-items:flex-start;gap:.55rem}
-.ledtab .tabunder{display:block;font:.68rem/.55rem var(--font);color:var(--dim);
- white-space:nowrap;width:0;overflow:visible}
-.ledtab .tabname{display:flex;flex-direction:column;gap:.35rem}
-#ledTabs:has([data-panel=sensorPanel]){gap:1.1rem}
-#ledTabs:has([data-panel=sensorPanel]) .setupbutton{white-space:nowrap;flex:none}
-#ledTabs:has([data-panel=sensorPanel]) .ledtab:not(:is([data-panel=screensPanel],[data-panel=soundPanel],[data-panel=sensorPanel])){flex:0 1 8rem}
-#ledTabs:has([data-panel=sensorPanel]) .ledtab:not(:is([data-panel=screensPanel],[data-panel=soundPanel],[data-panel=sensorPanel]))>.accswatch{width:100%}
-#ledTabs:has([data-panel=sensorPanel]) .ledtab:is([data-panel=screensPanel],[data-panel=soundPanel],[data-panel=sensorPanel]){flex:none}
-.accswatch.liveswatch.absent{background:transparent;box-shadow:none;
- outline:1px dashed #a9a49b;outline-offset:-1px}
-.stoggle{border:1.5px solid var(--line);border-radius:8px;background:var(--panel);
- padding:.28rem .55rem;font:600 var(--text-s) var(--font);color:var(--ink);display:inline-flex;
- align-items:center;gap:.35rem;cursor:pointer}
-.stoggle.on{border-color:var(--hub,#1f6feb);color:var(--hub,#1f6feb);
- background:color-mix(in srgb,var(--hub,#1f6feb) 8%,transparent)}
-.stoggle:disabled{opacity:.4;cursor:default}
-.foldhead{padding:0;border:0;border-radius:0;background:none;color:var(--ink);text-align:left}
-.foldhead::before{content:"";width:.42rem;height:.42rem;flex-shrink:0;
- border-right:2px solid var(--dim);border-bottom:2px solid var(--dim);
- transform:rotate(45deg) translate(-1px,-1px);transition:transform .12s}
-.foldhead.open::before{transform:rotate(-135deg) translate(-2px,-2px)}
-.foldhead:hover::before{border-color:var(--accent)}
-.asset .face.drawingface{flex-direction:column;justify-content:center}
-.drawingicon{font-size:var(--text-display);line-height:1;color:#fff;font-variant-emoji:text;margin-bottom:.9rem}
-.drawingletter{font:800 var(--text-display)/1 var(--font);color:#fff;margin-bottom:.9rem}
-body.nolooks #looks{opacity:.3;pointer-events:none}
-body.looksbelow #looks{margin:1.2rem 0 0}
-.ledtabs .gap{flex:1}
-.ledtabs .setupbutton{align-self:center}
+html {
+  overflow-anchor: none;
+  scrollbar-gutter: stable;
+}
+
+.says {
+  color: var(--dim);
+  font-size: var(--text-m);
+  font-weight: 400;
+}
+
+.foldhead {
+  display: flex;
+  align-items: baseline;
+  gap: .6rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--ink);
+  font: 600 var(--text-l) var(--font);
+  text-align: left;
+
+  &::before {
+    content: "";
+    flex: none;
+    width: .42rem;
+    height: .42rem;
+    border-right: 2px solid var(--dim);
+    border-bottom: 2px solid var(--dim);
+    transform: rotate(45deg) translate(-1px, -1px);
+    transition: transform .12s;
+  }
+
+  &[aria-expanded=true]::before {
+    transform: rotate(-135deg) translate(-2px, -2px);
+  }
+
+  &:hover::before {
+    border-color: var(--accent);
+  }
+}
+
+.adder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .25rem;
+  min-height: 5.2rem;
+  border: 1px dashed color-mix(in srgb, var(--accent) 50%, transparent);
+  border-radius: var(--radius-l);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+  color: var(--accent);
+  font: 600 var(--text-s) var(--font);
+
+  &:hover {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+  }
+
+  svg {
+    display: block;
+  }
+}
+
+.bin {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  z-index: 2;
+  width: 1.2rem;
+  height: 1.2rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-s);
+  background: rgba(20, 20, 22, .7);
+  color: #fff;
+  font-size: var(--text-m);
+  line-height: 1.2rem;
+  text-align: center;
+  opacity: 0;
+  transition: opacity .12s;
+
+  &:hover {
+    background: var(--warn);
+  }
+
+  &.copytile {
+    right: 1.6rem;
+
+    &.alone {
+      right: 2px;
+    }
+
+    &:hover {
+      background: var(--accent);
+    }
+  }
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .3rem .55rem;
+  border-radius: var(--radius);
+  color: #fff;
+  font: 600 var(--text-m) var(--font);
+
+  small {
+    font-weight: 400;
+    opacity: .85;
+  }
+
+  :is(input, select) {
+    padding: .1rem .3rem;
+    border: 1px solid rgba(255, 255, 255, .55);
+    border-radius: var(--radius-s);
+    background: rgba(255, 255, 255, .16);
+    color: #fff;
+    font: inherit;
+    font-weight: 400;
+  }
+
+  input[type=number] {
+    width: 4.2rem;
+    text-align: center;
+  }
+
+  option {
+    color: var(--ink);
+  }
+
+  .drop {
+    padding: 0 .1rem;
+    border: 0;
+    background: none;
+    color: #fff;
+    font-size: var(--text-xl);
+    line-height: 1;
+    opacity: .8;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
+
+  .boardicon {
+    color: #fff;
+    opacity: .9;
+  }
+
+  &.outs {
+    background: var(--boardOuts);
+  }
+}
+
+.boardicon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: -1.5px;
+  color: var(--board);
+}
+
+.setupbutton {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .3rem .6rem;
+  border: 1.5px solid var(--boardOuts);
+  border-radius: var(--radius);
+  background: none;
+  color: var(--boardOuts);
+  font: 600 var(--text-m) var(--font);
+
+  &:hover {
+    background: #eef2f7;
+  }
+
+  .boardicon {
+    color: currentColor;
+  }
+
+  &[aria-pressed=true] {
+    background: var(--boardOuts);
+    color: #fff;
+
+    &:hover {
+      background: #34505f;
+    }
+  }
+}
 .panelhead {
   display: flex;
   align-items: center;
@@ -904,6 +832,27 @@ body.looksbelow #looks{margin:1.2rem 0 0}
     }
   }
 }
+body.setupall :is(#tabs, #sceneTabRow, #looks, [id$=Bar], [id$=Chosen]) {
+  opacity: .35;
+  pointer-events: none;
+}
+
+.panel.strip {
+  position: relative;
+}
+
+.panel.stripout :is(.addstrip, .stripblocked) {
+  position: absolute;
+  top: 55%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.panel.stripout .stripblocked {
+  width: max-content;
+  max-width: calc(100% - 3rem);
+  text-align: center;
+}
 body:not(.setupall) .sides > .side > .run {
   display: none;
 }
@@ -1199,6 +1148,130 @@ body:not(.setupall) .sides > .side > .run {
       opacity: 1;
       stroke-width: 2.4;
     }
+  }
+}
+.sectiontabs {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 0 1rem;
+  border-bottom: 1px solid var(--line);
+
+  [role=tablist] {
+    display: flex;
+    flex: 1;
+    gap: .25rem;
+    min-width: 0;
+  }
+
+  [role=tab] {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    min-width: 0;
+    margin-bottom: -1px;
+    padding: .45rem .8rem .55rem;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: var(--radius) var(--radius) 0 0;
+    background: none;
+    color: var(--dim);
+    text-align: left;
+
+    &:hover {
+      background: color-mix(in srgb, var(--ink) 4%, transparent);
+      color: var(--ink);
+    }
+
+    &[aria-selected=true] {
+      border-bottom-color: var(--accent);
+      color: var(--ink);
+    }
+
+    &[aria-disabled] {
+      opacity: .45;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+
+    &:has(.accswatch:not(.liveswatch):not(:empty)) {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: .6rem;
+    }
+
+    > span:first-child {
+      display: flex;
+      flex-direction: column;
+      gap: .1rem;
+    }
+
+    b {
+      font: 600 var(--text-l) var(--font);
+      white-space: nowrap;
+    }
+
+    small {
+      font-size: var(--text-xs);
+      white-space: nowrap;
+    }
+  }
+
+  .setupbutton {
+    flex: none;
+    white-space: nowrap;
+  }
+}
+
+.tabstack {
+  min-width: 0;
+
+  > .panel {
+    min-width: 0;
+    margin: 0;
+  }
+}
+
+.panel {
+  padding: 1.1rem 1.4rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  background: var(--panel);
+
+  > summary {
+    display: none;
+  }
+}
+
+:where(.accswatch) {
+  display: flex;
+  width: 7rem;
+  max-width: 100%;
+  height: .55rem;
+  overflow: hidden;
+  border-radius: 3px;
+
+  &:empty {
+    display: none;
+  }
+
+  span {
+    display: block;
+    flex: 1;
+    height: 100%;
+  }
+}
+
+:where(.liveswatch) {
+  background: var(--hatch);
+
+  &.absent {
+    background: transparent;
+    outline: 1px dashed var(--dashed);
+    outline-offset: -1px;
   }
 }
 :root {
@@ -2140,6 +2213,42 @@ body:not(.setupall) .sides > .side > .run {
   em {
     color: var(--warn);
   }
+}
+
+.s-target {
+  color: #1f6feb;
+}
+
+.s-effect {
+  color: #0a7f78;
+  font-weight: 600;
+}
+
+.s-value {
+  color: #a8500a;
+}
+
+.s-name {
+  color: var(--ink);
+}
+
+.s-punc {
+  color: #5d656e;
+}
+
+.s-colon {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.s-comment {
+  color: var(--dim);
+  font-style: italic;
+}
+
+.s-scene {
+  color: #7b3fb8;
+  font-weight: 600;
 }
 .programnote {
   display: flex;
@@ -3087,6 +3196,44 @@ header:has(> .pageswitch) {
     }
   }
 }
+.keptlines {
+  margin: .6rem 0;
+  padding: .5rem .7rem;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  color: var(--dim);
+  font-size: var(--text-m);
+
+  .keptsay {
+    margin-bottom: .3rem;
+  }
+
+  .keptrow {
+    display: flex;
+    align-items: flex-start;
+    gap: .4rem;
+    margin: .15rem 0;
+  }
+
+  code {
+    flex: 1;
+    color: var(--ink);
+    white-space: pre-wrap;
+  }
+
+  .keptdrop {
+    padding: 0 .2rem;
+    border: 0;
+    background: none;
+    color: var(--dim);
+    font-size: var(--text-l);
+    line-height: 1;
+
+    &:hover {
+      color: var(--ink);
+    }
+  }
+}
 .swatches {
   container-type: inline-size;
   display: grid;
@@ -3208,12 +3355,14 @@ header:has(> .pageswitch) {
     background: var(--colour);
   }
 }
-.stretchview {
+.stretches {
+  --lights: 2.7rem;
+  --join: 6px;
   position: relative;
   z-index: 1;
   overflow: hidden;
-  padding-top: 1.2rem;
   margin-top: -.1rem;
+  padding-top: 1.2rem;
 
   &[data-zoomed] {
     overflow-x: auto;
@@ -3225,195 +3374,194 @@ header:has(> .pageswitch) {
   }
 
   &::-webkit-scrollbar-thumb {
-    background: #cfc9bf;
     border-radius: 99px;
+    background: #cfc9bf;
   }
 
   &::-webkit-scrollbar-track {
-    background: #f0eeea;
     border-radius: 99px;
+    background: #f0eeea;
   }
-}
 
-.stretches {
-  --lights: 2.7rem;
-  --join: 6px;
-  display: flex;
-  gap: 2px;
-  width: calc(var(--zoom, 1) * 100%);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  user-select: none;
+  > ol {
+    display: flex;
+    gap: 2px;
+    width: calc(var(--zoom, 1) * 100%);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    user-select: none;
 
-  &[data-kind=strip] {
-    --lights: 1.5rem;
+    &[data-kind=strip] {
+      --lights: 1.5rem;
 
-    &:not([data-labelled]) {
-      --lights: 1.1rem;
+      &:not([data-labelled]) {
+        --lights: 1.1rem;
+      }
     }
   }
 
-  > li {
+  li {
     position: relative;
     display: flex;
-    padding-bottom: var(--join);
     flex: var(--width) 1 0;
     min-width: 0;
+    padding-bottom: var(--join);
+
+    &[aria-current] {
+      padding-bottom: 0;
+
+      > button:not([data-says]) {
+        padding-bottom: calc(var(--join) + 2px);
+        border-color: var(--accent);
+        border-bottom: 0;
+        border-radius: var(--radius) var(--radius) 0 0;
+      }
+    }
+
+    &[data-nothing] > button > i {
+      background: var(--hatch);
+    }
+
+    &:hover > button[data-says]::before {
+      opacity: .85;
+    }
   }
 
-  .stretch {
+  li > button:not([data-says]) {
     display: flex;
-    flex-direction: column;
     flex: 1;
+    flex-direction: column;
     min-width: 0;
     padding: 0;
     border: 2px solid var(--line);
-    border-radius: 8px;
+    border-radius: var(--radius);
     background: var(--panel);
     font: inherit;
-    cursor: pointer;
-  }
-
-  > li[aria-current] {
-    padding-bottom: 0;
-  }
-
-  [aria-current] .stretch {
-    padding-bottom: var(--join);
-    border-color: var(--accent);
-    border-bottom: 0;
-    border-radius: 8px 8px 0 0;
-  }
-
-  .lights {
-    display: flex;
-    height: var(--lights);
 
     > span {
       display: flex;
-      flex: 1 1 0;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: .15rem;
-      min-width: 0;
+      height: var(--lights);
+
+      > span {
+        display: flex;
+        flex: 1 1 0;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: .15rem;
+        min-width: 0;
+      }
+
+      i {
+        display: block;
+        width: min(1.5rem, 80%);
+        aspect-ratio: 1;
+        border-radius: 50%;
+
+        &[data-unset] {
+          outline: 1px dashed var(--dashed);
+          outline-offset: 2px;
+        }
+      }
+
+      small {
+        color: var(--dim);
+        font-size: var(--text-xs);
+        line-height: 1;
+      }
+
+      [data-kept] i {
+        outline: 2px dashed var(--dim);
+        outline-offset: 2px;
+      }
     }
 
-    i {
+    > i {
+      position: relative;
       display: block;
-      width: min(1.5rem, 80%);
-      aspect-ratio: 1;
-      border-radius: 50%;
+      height: .4rem;
+      overflow: hidden;
+      background: var(--wash, transparent);
+
+      &[data-through] {
+        > span {
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          overflow: hidden;
+
+          > span {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+          }
+        }
+
+        > [data-shows=off] {
+          background: var(--unlit);
+        }
+
+        > [data-shows=empty] {
+          background: #e4e0d9;
+        }
+
+        &::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: var(--through);
+        }
+      }
     }
 
-    i[data-unset] {
-      outline: 1px dashed #a9a49b;
-      outline-offset: 2px;
-    }
+    > strong {
+      display: block;
+      padding: 0 .3rem;
+      overflow: hidden;
+      color: var(--ink);
+      font-size: var(--text-xs);
+      line-height: 1.5;
+      text-align: center;
+      white-space: nowrap;
+      text-overflow: ellipsis;
 
-    small {
-      font: 400 var(--text-xs)/1 var(--font);
-      color: var(--dim);
-    }
+      small {
+        color: var(--dim);
+        font-size: inherit;
+        font-weight: 400;
+      }
 
-    [data-kept] i {
-      outline: 2px dashed var(--dim);
-      outline-offset: 2px;
+      small + small {
+        margin-left: .45em;
+        padding-left: .45em;
+        border-left: 1px solid #c9c3b9;
+      }
     }
   }
 
-  &[data-kind=strip] .lights {
+  [data-kind=strip] li > button:not([data-says]) > span {
     gap: 1px;
     padding: 3px 3px 0;
 
     i {
       width: 100%;
       max-width: 1.1rem;
-      aspect-ratio: auto;
       height: .7rem;
+      aspect-ratio: auto;
       border-radius: 2px;
-    }
 
-    i[data-unset] {
-      outline-offset: 0;
+      &[data-unset] {
+        outline-offset: 0;
+      }
     }
   }
 
-  &[data-kind=strip]:not([data-labelled]) .lights small {
+  [data-kind=strip]:not([data-labelled]) li > button > span small {
     display: none;
   }
 
-  .band {
-    position: relative;
-    display: block;
-    height: .4rem;
-    overflow: hidden;
-    background: var(--wash, transparent);
-  }
-
-  [data-nothing] .band:not([data-through]) {
-    background: repeating-linear-gradient(45deg, #f0eeea, #f0eeea 6px, #e4e0d9 6px, #e4e0d9 12px);
-  }
-
-  .band[data-through] {
-    > span {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      overflow: hidden;
-
-      > span {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-      }
-    }
-
-    > [data-shows=off] {
-      background: #2a2d30;
-    }
-
-    > [data-shows=empty] {
-      background: #e4e0d9;
-    }
-
-    &::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: var(--through);
-    }
-  }
-
-  .name {
-    display: block;
-    padding: 0 .3rem;
-    overflow: hidden;
-    font: 600 var(--text-xs)/1.5 var(--font);
-    color: var(--ink);
-    text-align: center;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-
-    small {
-      font-size: inherit;
-      font-weight: 400;
-      color: var(--dim);
-    }
-
-    .beneath {
-      margin-left: .45em;
-      padding-left: .45em;
-      border-left: 1px solid #c9c3b9;
-    }
-  }
-
-  [data-narrow] .name {
-    font-size: var(--text-xs);
-  }
-
-  .cut {
+  li > button[data-says] {
     position: absolute;
     top: 2px;
     left: var(--at);
@@ -3440,10 +3588,10 @@ header:has(> .pageswitch) {
     }
 
     &:hover::before {
-      opacity: 1;
       width: 2px;
       margin-left: -1px;
       background: var(--accent);
+      opacity: 1;
     }
 
     &::after {
@@ -3454,7 +3602,7 @@ header:has(> .pageswitch) {
       z-index: 3;
       margin-bottom: 4px;
       padding: .05rem .35rem;
-      border-radius: 5px;
+      border-radius: var(--radius-s);
       background: var(--ink);
       color: #fff;
       font: 600 var(--text-xs)/1.6 var(--font);
@@ -3475,17 +3623,13 @@ header:has(> .pageswitch) {
     }
 
     &[data-near=end]::after {
-      left: auto;
       right: 0;
+      left: auto;
       transform: none;
     }
   }
 
-  li:hover .cut::before {
-    opacity: .85;
-  }
-
-  .edge {
+  [role=separator] {
     position: absolute;
     top: 0;
     bottom: 0;
@@ -3519,7 +3663,6 @@ header:has(> .pageswitch) {
       transform: translateX(-50%);
       opacity: 0;
       transition: opacity .1s;
-      cursor: pointer;
 
       &:hover {
         border-color: var(--warn);
@@ -3960,6 +4103,19 @@ header:has(> .pageswitch) {
     }
   }
 }
+
+#looks {
+  margin-bottom: 1.4rem;
+
+  body.looksbelow & {
+    margin: 1.2rem 0 0;
+  }
+
+  body.nolooks & {
+    opacity: .3;
+    pointer-events: none;
+  }
+}
 </style>
 </head>
 <body>
@@ -4229,19 +4385,6 @@ function withoutColour(line) {
   return line.replace(/\s+colour=[^\s:]+/g, "");
 }
 
-// Anything on or off, as a toggle with its icon, greyed where playback would refuse it
-function toggle(icon, words, on, flip, title, refused) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "stoggle" + (on && !refused ? " on" : "");
-  button.dataset.words = words;
-  button.innerHTML = "<span aria-hidden='true'>" + icon + "</span> " + words;
-  button.title = title;
-  button.disabled = !!refused;
-  button.onclick = function () { flip(!on); draw(); };
-  return button;
-}
-
 // ---- the looks -----------------------------------------------------------------
 // Each look writes real entries for whatever target it is handed: a bank of outputs
 // in the order they are to play, or a run of any length. alone() is the form it
@@ -4447,27 +4590,6 @@ function lookNamed(id) {
 
 // What a look is kept as, which is its own id where it has one and its name otherwise
 function keyOf(look) { return look.id || look.name; }
-
-function luminance(colour) {
-  var hex = colour.replace("#", "");
-  return (0.299 * parseInt(hex.slice(0, 2), 16) + 0.587 * parseInt(hex.slice(2, 4), 16) +
-          0.114 * parseInt(hex.slice(4, 6), 16)) / 255;
-}
-
-// The brightest a look ever asks for, which is the lamp a mono run drives at full
-function peakOf(look) {
-  if (!look || !look.strip.length) return 1;
-  return Math.max.apply(null, look.strip.map(luminance)) || 1;
-}
-
-// What a colour comes to on a lamp that has none: the brightness it would drive, in
-// the warm white a mono output actually lights. Scaled against the look's own
-// brightest, so a look made of deep colours is not drawn as a row of dark lamps
-function asMono(colour, peak) {
-  var lit = Math.min(1, luminance(colour) / (peak || 1));
-  return "rgb(" + Math.round(255 * lit) + "," + Math.round(226 * lit) + "," +
-         Math.round(178 * lit) + ")";
-}
 
 // Whether a look has anything to give a target: a colour look cannot land on a mono lamp, a
 // look that does not span cannot land on a run, and some have no single-light form. A banked
@@ -5990,15 +6112,6 @@ function otherScenes() {
 }
 
 function namesOf(scenes) { return scenes.map(function (scene) { return scene.name; }); }
-
-// Grey out settings that show Always on's values in a scene, which are set on the Always on tab
-function frozen(node) {
-  node.classList.add("frozen");
-  node.title = "Set on the Always on tab";
-  node.querySelectorAll("button, input, select").forEach(function (control) {
-    control.disabled = true;
-  });
-}
 
 // The stretch of a stored body's run that covers one lamp and plays a look, or null. A look
 // this page does not offer writes no line, so its stretch plays nothing
@@ -7870,7 +7983,7 @@ function unmark() {
   document.querySelectorAll(".looks [aria-pressed=true]").forEach(function (one) {
     one.setAttribute("aria-pressed", "false");
   });
-  document.querySelectorAll(".stretches > li[aria-current]").forEach(function (one) {
+  document.querySelectorAll(".stretches li[aria-current]").forEach(function (one) {
     one.removeAttribute("aria-current");
   });
 }
@@ -8308,24 +8421,9 @@ function workOn(panel) {
   if (run) pick(run, run.picked);
 }
 
-// ---- the LED sections as tabs -----------------------------------------------------------
-// The outputs and each strip as tabs, one section shown at a time, so the one being worked on
-// is never a scroll away. Choosing a tab makes it the one worked on, and the gallery goes in
-// its box, as the screens' pictures and the programs sit under what they are for. Each tab
-// says in a small swatch what its section plays. ?above on the page's address keeps the
-// gallery above the tabs.
-//
-// The tabs sit in the scene's body and not with the scene tabs, and are drawn as a row of
-// names with a line under the chosen one, so they read as parts of one board and not as
-// another row of scenes. Setting up the board is one button at the end of the tabs, and
-// keeps to them: the whole board is being set up, a section at a time, and the tabs stay
-// live to move between sections while it is.
-
 var TAB_NAMES = {outPanel: BOARD.output_words.tab};
 BOARD.strips.forEach(function (strip) { TAB_NAMES[strip.name + "Panel"] = strip.tab; });
 
-// The sections with a tab, the LED ones and any other a page adds. A board whose strips are what it
-// is for has their tabs first and opens on the first one fitted
 var TAB_PANELS = LED_PANELS.slice();
 if (BOARD.strips_first) TAB_PANELS.push(TAB_PANELS.shift());
 
@@ -8335,115 +8433,82 @@ if (BOARD.strips_first) {
   if (firstFitted) chosenTab = firstFitted.id + "Panel";
 }
 
-// Whether the section shown is one the gallery can give a look to, which a strip not fitted is not
 function chosenTakesLooks() {
   return LED_PANELS.indexOf(chosenTab) >= 0 &&
          runsOfPanel(chosenTab).every(function (run) { return run.there !== false; });
 }
 
-// A look goes to the stretch being worked on, so that stays in the section shown. Pressing Done in
-// Edit board and changing scene each put back a stretch of their own, which can be another tab's
 drawSteps.before.push(function () {
   if (!setupOn && chosenTakesLooks()) workOn(chosenTab);
 });
 
-// Every tab's section stays laid out in one shared place, only the chosen one seen, so the
-// place is as tall as the tallest and choosing a tab never moves what is below it
 function showChosen() {
   TAB_PANELS.forEach(function (panel) {
     var node = document.getElementById(panel);
     node.open = true;
-    node.hidden = false;
-    node.classList.toggle("tabhidden", panel !== chosenTab);
-    node.classList.add("tabbed");
+    node.hidden = panel !== chosenTab;
+    node.setAttribute("role", "tabpanel");
+    node.setAttribute("aria-labelledby", "tab-" + panel);
   });
-  // The looks stay where they are and stand back, so the tabs do not move under the
-  // pointer, where the section shown is one they mean nothing for
   document.body.classList.toggle("nolooks", !chosenTakesLooks());
-  // Under the sections, the looks go in the box of the one they are for, as a screen's pictures do
   if (document.body.classList.contains("looksbelow") && chosenTakesLooks()) {
     document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
   }
 }
 
-// With the looks in the box of the section they are for, the shared place is held at the tallest
-// box with the looks counted in, whichever box has them, so choosing a tab still moves nothing.
-// Run after every part has drawn, the boxes then being their full height
-function holdTabsPlace() {
-  if (!document.body.classList.contains("looksbelow")) return;
-  var stack = document.getElementById("tabStack");
-  var looks = document.getElementById("looks");
-  // What the looks add to a box, measured as the box with them less the box without, as the
-  // margins either side of them count too
-  var holder = looks.parentNode;
-  var withLooks = holder.getBoundingClientRect().height;
-  var after = looks.nextSibling;
-  holder.removeChild(looks);
-  var extra = withLooks - holder.getBoundingClientRect().height;
-  holder.insertBefore(looks, after);
-  stack.style.minHeight = "";
-  var tallest = 0;
-  TAB_PANELS.forEach(function (panel) {
-    var node = document.getElementById(panel);
-    var high = node.getBoundingClientRect().height;
-    if (LED_PANELS.indexOf(panel) >= 0 && !node.contains(looks)) high += extra;
-    tallest = Math.max(tallest, high);
-  });
-  stack.style.minHeight = tallest + "px";
-}
-
-// A tab's swatch, drawn by whichever part has that panel
 var tabSwatches = {};
+var tabUnder = {};
 
 function tabSwatch(swatch, panel) { tabSwatches[panel](swatch, panel); }
 
-// Why a tab's section cannot be used just now, or nothing where it can. Its tab greys and
-// still opens, so the section can say why
 function tabBlocked(panel) {
   var run = runsOfPanel(panel)[0];
   return run && run.strip ? stripBlockedBy(run) : "";
 }
 
-function renderLedTabs() {
-  var bar = document.getElementById("ledTabs");
-  bar.textContent = "";
-  TAB_PANELS.forEach(function (panel) {
-    var tab = document.createElement("button");
-    tab.type = "button";
-    var blocked = tabBlocked(panel);
-    tab.className = "ledtab" + (panel === chosenTab ? " on" : "") + (blocked ? " blocked" : "");
-    if (blocked) tab.title = blocked;
-    tab.dataset.panel = panel;
-    var name = document.createElement("b");
-    name.textContent = TAB_NAMES[panel];
-    tab.appendChild(name);
-    var swatch = document.createElement("span");
-    swatch.className = "accswatch";
-    tabSwatch(swatch, panel);
-    tab.appendChild(swatch);
-    tab.addEventListener("click", function () {
-      chosenTab = panel;
-      if (chosenTakesLooks()) workOn(panel);
-      showChosen();
-      draw();
-    });
-    bar.appendChild(tab);
-  });
-
-  var gap = document.createElement("span");
-  gap.className = "gap";
-  bar.appendChild(gap);
-  // The tabs grow and shrink as setting up opens and closes, so they are held where they
-  // were on the screen
-  bar.appendChild(setupButton(setupOn ? "Done" : "Edit board", setupOn, function () {
-    var was = bar.getBoundingClientRect().top;
-    setSetup(!setupOn);
-    draw();
-    window.scrollBy(0, document.getElementById("ledTabs").getBoundingClientRect().top - was);
-  }));
+function choose(panel) {
+  chosenTab = panel;
+  if (chosenTakesLooks()) workOn(panel);
+  showChosen();
+  draw();
+  document.getElementById("tab-" + panel).focus();
 }
 
-// A section shown as a tab is not folded away, the tab being how it is left
+function sectionTab(panel) {
+  var blocked = tabBlocked(panel);
+  var under = tabUnder[panel] ? tabUnder[panel]() : "";
+  var swatch = h("span", {class: "accswatch", "aria-hidden": "true"});
+  tabSwatch(swatch, panel);
+  return h("button", {type: "button", role: "tab", id: "tab-" + panel, "data-panel": panel,
+                      "aria-selected": String(panel === chosenTab), "aria-controls": panel,
+                      tabindex: panel === chosenTab ? 0 : -1,
+                      "aria-disabled": blocked ? "true" : null, title: blocked || null,
+                      onclick: function () { choose(panel); },
+                      onkeydown: function (event) {
+                        var step = {ArrowRight: 1, ArrowLeft: -1}[event.key];
+                        var at = TAB_PANELS.indexOf(panel);
+                        var to = event.key === "Home" ? 0 : event.key === "End" ? TAB_PANELS.length - 1
+                               : step ? (at + step + TAB_PANELS.length) % TAB_PANELS.length : -1;
+                        if (to < 0) return;
+                        event.preventDefault();
+                        choose(TAB_PANELS[to]);
+                      }},
+    h("span", {}, h("b", {}, TAB_NAMES[panel]), under ? h("small", {}, under) : null),
+    swatch);
+}
+
+function renderLedTabs() {
+  var bar = document.getElementById("ledTabs");
+  replace(bar,
+    h("div", {role: "tablist", "aria-label": "Parts of the board"}, TAB_PANELS.map(sectionTab)),
+    setupButton(setupOn ? "Done" : "Edit board", setupOn, function () {
+      var was = bar.getBoundingClientRect().top;
+      setSetup(!setupOn);
+      draw();
+      window.scrollBy(0, bar.getBoundingClientRect().top - was);
+    }));
+}
+
 function keptOpen(panel) {
   var node = document.getElementById(panel);
   node.addEventListener("toggle", function () {
@@ -8453,9 +8518,6 @@ function keptOpen(panel) {
 
 LED_PANELS.forEach(keptOpen);
 
-// Each section is only ever seen on its own here, so each keeps its own settings
-// whichever is worked on, and none changes height when another tab is chosen. The outputs'
-// are for whichever of their two sides was last worked on
 var lastOutputRun = outs;
 
 drawSteps.after.push(function () {
@@ -8470,23 +8532,13 @@ drawSteps.after.push(function () {
 });
 
 (function () {
-  var bar = document.createElement("div");
-  bar.className = "ledtabs";
-  bar.id = "ledTabs";
   var first = document.getElementById("outPanel");
-  first.parentNode.insertBefore(bar, first);
-
-  // The one place every tab's section is laid out in. A section a page adds after one of
-  // these lands in it too
-  var stack = document.createElement("div");
-  stack.className = "tabstack";
-  stack.id = "tabStack";
+  first.parentNode.insertBefore(h("nav", {class: "sectiontabs", id: "ledTabs"}), first);
+  var stack = h("div", {class: "tabstack", id: "tabStack"});
   first.parentNode.insertBefore(stack, first);
   LED_PANELS.forEach(function (panel) {
     stack.appendChild(document.getElementById(panel));
   });
-
-  // The looks go in the box of the chosen section, unless the page's address asks for them above
   if (!/[?&]above\b/.test(location.search)) {
     document.body.classList.add("looksbelow");
     document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
@@ -9370,22 +9422,18 @@ tabSwatches.screensPanel = function (swatch) {
   }).join(", ");
 };
 
-function sizesUnderName() {
-  var tab = document.querySelector("#ledTabs .ledtab[data-panel=screensPanel]");
-  if (!tab || tab.querySelector(".tabname")) return;
+tabUnder.screensPanel = function () {
   var fitted = SCREENS.map(function (letter) {
     return state.screens[letter].there ? state.screens[letter].size : "";
   });
-  tab.insertBefore(h("span", {class: "tabname"}, tab.querySelector("b"),
-    h("small", {class: "tabunder"}, fitted.some(Boolean)
-      ? fitted.map(function (size) { return size ? size + "\"" : "none"; }).join(", ")
-      : "no screens")), tab.firstChild);
-}
+  return fitted.some(Boolean)
+    ? fitted.map(function (size) { return size ? size + "\"" : "none"; }).join(", ")
+    : "no screens";
+};
 
 drawSteps.before.push(function () { SCREENS.forEach(turnForChosen); });
 
 drawSteps.after.push(function () {
-  sizesUnderName();
   renderScreensTab();
 });
 
@@ -12223,7 +12271,7 @@ function toProgram() {
 var pageSwitch = null;
 
 function effectsFace() {
-  var swatch = h("span", {class: "accswatch"});
+  var swatch = h("span", {class: "accswatch", "aria-hidden": "true"});
   tabSwatch(swatch, "outPanel");
   return h("span", {}, swatch);
 }
@@ -14370,7 +14418,7 @@ function zoomOf(run) { return run.zoom || 1; }
 function zooms(run) { return !!run.strip && run.lamps.length > ZOOMS_OVER; }
 
 function viewOf(run) {
-  return document.querySelector("[data-stretches='" + run.name + "'] .stretchview");
+  return document.querySelector("[data-stretches='" + run.name + "'] .stretches");
 }
 
 function middleOfView(run) {
@@ -14401,13 +14449,13 @@ function renderStretches(where, run) {
   box.dataset.stretches = run.name;
   var faces = [];
   var kept = keptLights(run);
-  var list = h("ol", {class: "stretches", "data-kind": run.strip ? "strip" : "lamps",
+  var list = h("ol", {"data-kind": run.strip ? "strip" : "lamps",
                       "data-labelled": !run.strip || run.lamps.length <= ZOOMS_OVER,
                       style: {"--zoom": zoomOf(run)}},
                run.sections.map(function (section, at) {
                  return stretch(run, section, at, faces, kept);
                }));
-  var view = h("div", {class: "stretchview", "data-zoomed": zoomOf(run) > 1,
+  var view = h("div", {class: "stretches", "data-zoomed": zoomOf(run) > 1,
                        onscroll: function () { run.scrolled = view.scrollLeft; },
                        onwheel: function (event) { wheel(run, view, event); }}, list);
   replace(box, view);
@@ -14429,7 +14477,7 @@ function stretch(run, section, at, faces, kept) {
                   "data-nothing": !look, "data-narrow": wide * 40 < run.lamps.length * 8,
                   style: {"--width": wide}},
     at > 0 ? edge(run, at - 1) : null,
-    h("button", {type: "button", class: "stretch",
+    h("button", {type: "button",
                  "aria-label": (look ? look.name : "Nothing") + " on " + wherePlays(run, section, false),
                  title: firstClaim ? "used by a line the picker cannot edit: " + firstClaim[0].text
                       : under ? under.tip : targetFor(run, section).selector,
@@ -14438,22 +14486,22 @@ function stretch(run, section, at, faces, kept) {
                    pick(run, at);
                    draw();
                  }},
-      h("span", {class: "lights"}, lamps.map(function (lamp, i) {
+      h("span", {}, lamps.map(function (lamp, i) {
         var face = h("i");
         faces.push(face);
         return h("span", {"data-kept": !!claimed[i]}, face, h("small", {}, shortName(lamp)));
       })),
       band(run, section, look, under),
-      h("span", {class: "name"}, look ? look.name : "Nothing", " ", h("small", {}, wide),
-        under ? h("small", {class: "beneath"}, under.note) : null)),
+      h("strong", {}, look ? look.name : "Nothing", " ", h("small", {}, wide),
+        under ? h("small", {}, under.note) : null)),
     lamps.slice(1).map(function (lamp, i) {
       return cut(run, section.from + i, i + 1, wide);
     }));
 }
 
 function band(run, section, look, under) {
-  if (look) return h("span", {class: "band", style: {"--wash": washFor(run, section, look)}});
-  if (!under) return h("span", {class: "band"});
+  if (look) return h("i", {style: {"--wash": washFor(run, section, look)}});
+  if (!under) return h("i");
   var panes = [];
   var start = 0;
   while (start < under.lamps.length) {
@@ -14462,7 +14510,7 @@ function band(run, section, look, under) {
     panes.push(pane(run, under.lamps[start], start, end, under.lamps.length));
     start = end;
   }
-  return h("span", {class: "band", "data-through": true}, panes);
+  return h("i", {"data-through": true}, panes);
 }
 
 function sameShowing(one, other) {
@@ -14482,7 +14530,7 @@ function pane(run, shows, start, end, wide) {
 
 function cut(run, after, place, wide) {
   var says = shortName(run.lamps[after]) + " | " + shortName(run.lamps[after + 1]);
-  return h("button", {type: "button", class: "cut", "data-says": says,
+  return h("button", {type: "button", "data-says": says,
                       "aria-label": "cut between " + says.replace(" | ", " and "),
                       style: {"--at": (place / wide * 100) + "%",
                               "--reach": "min(11px, " + (55 / wide) + "%)"},
@@ -14490,7 +14538,7 @@ function cut(run, after, place, wide) {
 }
 
 function edge(run, which) {
-  return h("span", {class: "edge", role: "separator",
+  return h("span", {role: "separator",
                     title: "drag to move this cut, or click \u00d7 to remove it",
                     onmousedown: function (event) {
                       event.preventDefault();
@@ -14517,7 +14565,7 @@ function wheel(run, view, event) {
 
 function turnLabelsInward(list) {
   var edges = list.getBoundingClientRect();
-  list.querySelectorAll(".cut").forEach(function (one) {
+  list.querySelectorAll("button[data-says]").forEach(function (one) {
     var at = one.getBoundingClientRect();
     var middle = (at.left + at.right) / 2;
     one.dataset.near = middle - edges.left < 40 ? "start" : edges.right - middle < 40 ? "end" : "";
@@ -14537,12 +14585,12 @@ function paintFace(face, lit, glows) {
 
 function stretchCells(run) {
   return Array.prototype.slice.call(
-    document.querySelectorAll("[data-stretches='" + run.name + "'] .stretches > li"));
+    document.querySelectorAll("[data-stretches='" + run.name + "'] ol > li"));
 }
 
 document.addEventListener("mousemove", function (event) {
   if (!dragging) return;
-  var list = document.querySelector("[data-stretches='" + dragging.run.name + "'] .stretches");
+  var list = document.querySelector("[data-stretches='" + dragging.run.name + "'] ol");
   if (!list) return;
   var box = list.getBoundingClientRect();
   if (!box.width) return;
@@ -14904,7 +14952,7 @@ function moved(run, look, row, value) {
   }
   renderPreview();
   var cell = stretchCells(run)[run.picked];
-  var band = cell && cell.querySelector(".band");
+  var band = cell && cell.querySelector(":scope > button > i");
   if (band && look) band.style.setProperty("--wash", washFor(run, mine, look));
 }
 
@@ -15024,7 +15072,7 @@ function seatLooks() {
 
 function notchEditors() {
   document.querySelectorAll(".panel .editor").forEach(function (editor) {
-    var cell = editor.closest(".panel").querySelector(".stretches > li[aria-current] .stretch");
+    var cell = editor.closest(".panel").querySelector(".stretches li[aria-current] > button:not([data-says])");
     var outer = editor.getBoundingClientRect();
     var tab = cell && cell.getBoundingClientRect();
     editor.toggleAttribute("data-notch-start", !!tab && tab.left - outer.left < 12);
@@ -15142,13 +15190,6 @@ function paintCards() {
     });
   });
 }
-
-// ---- the page, started ---------------------------------------------------------------------------
-// Every part is in place, so the always-on tab takes what they hold and the page is drawn once,
-// then the lights are set going, or held on one frame where motion is turned down
-
-// Last of the draw's steps, every part having drawn
-drawSteps.after.push(holdTabsPlace);
 
 state.always.body = capture();
 workOn(chosenTab);

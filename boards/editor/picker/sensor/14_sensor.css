@@ -1,7 +1,3 @@
-.ledtab[data-panel=sensorPanel] .accswatch {
-  display: none;
-}
-
 .boardchip.sensor {
   background: var(--board);
 }

@@ -318,7 +318,7 @@ body.setupall #soundPanel {
   }
 }
 
-.ledtab .soundswatch {
+.soundswatch {
   position: relative;
   align-items: center;
   width: 4.3rem;

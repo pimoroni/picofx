@@ -357,7 +357,7 @@ function moved(run, look, row, value) {
   }
   renderPreview();
   var cell = stretchCells(run)[run.picked];
-  var band = cell && cell.querySelector(".band");
+  var band = cell && cell.querySelector(":scope > button > i");
   if (band && look) band.style.setProperty("--wash", washFor(run, mine, look));
 }
 
@@ -477,7 +477,7 @@ function seatLooks() {
 
 function notchEditors() {
   document.querySelectorAll(".panel .editor").forEach(function (editor) {
-    var cell = editor.closest(".panel").querySelector(".stretches > li[aria-current] .stretch");
+    var cell = editor.closest(".panel").querySelector(".stretches li[aria-current] > button:not([data-says])");
     var outer = editor.getBoundingClientRect();
     var tab = cell && cell.getBoundingClientRect();
     editor.toggleAttribute("data-notch-start", !!tab && tab.left - outer.left < 12);

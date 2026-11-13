@@ -18,7 +18,7 @@ def stretch(page, name):
 
 
 def pick(page, name):
-    stretch(page, name).locator(".name").click()
+    stretch(page, name).locator("strong").click()
 
 
 @pytest.fixture
@@ -113,7 +113,7 @@ def test_strip_shows_its_leds_in_the_bar(opened):
     page = opened("PIMORONI_PLASMA2350")
     name = page.evaluate("(function () { var strip = runs.filter(function (run) { return run.strip; })[0];"
                          " cutAt(strip, 32); return strip.name; })()")
-    bar = page.locator("[data-stretches={}] .stretches".format(name))
+    bar = page.locator("[data-stretches={}] ol".format(name))
     assert bar.locator("> li").count() == 2
-    assert bar.locator(".lights i").count() == 66
+    assert bar.locator("li > button > span i").count() == 66
     assert page.errors == []

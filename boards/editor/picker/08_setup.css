@@ -1,0 +1,21 @@
+body.setupall :is(#tabs, #sceneTabRow, #looks, [id$=Bar], [id$=Chosen]) {
+  opacity: .35;
+  pointer-events: none;
+}
+
+.panel.strip {
+  position: relative;
+}
+
+.panel.stripout :is(.addstrip, .stripblocked) {
+  position: absolute;
+  top: 55%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.panel.stripout .stripblocked {
+  width: max-content;
+  max-width: calc(100% - 3rem);
+  text-align: center;
+}

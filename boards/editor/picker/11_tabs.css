@@ -1,0 +1,124 @@
+.sectiontabs {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 0 1rem;
+  border-bottom: 1px solid var(--line);
+
+  [role=tablist] {
+    display: flex;
+    flex: 1;
+    gap: .25rem;
+    min-width: 0;
+  }
+
+  [role=tab] {
+    display: flex;
+    flex-direction: column;
+    gap: .4rem;
+    min-width: 0;
+    margin-bottom: -1px;
+    padding: .45rem .8rem .55rem;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: var(--radius) var(--radius) 0 0;
+    background: none;
+    color: var(--dim);
+    text-align: left;
+
+    &:hover {
+      background: color-mix(in srgb, var(--ink) 4%, transparent);
+      color: var(--ink);
+    }
+
+    &[aria-selected=true] {
+      border-bottom-color: var(--accent);
+      color: var(--ink);
+    }
+
+    &[aria-disabled] {
+      opacity: .45;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+
+    &:has(.accswatch:not(.liveswatch):not(:empty)) {
+      flex-direction: row;
+      align-items: flex-start;
+      gap: .6rem;
+    }
+
+    > span:first-child {
+      display: flex;
+      flex-direction: column;
+      gap: .1rem;
+    }
+
+    b {
+      font: 600 var(--text-l) var(--font);
+      white-space: nowrap;
+    }
+
+    small {
+      font-size: var(--text-xs);
+      white-space: nowrap;
+    }
+  }
+
+  .setupbutton {
+    flex: none;
+    white-space: nowrap;
+  }
+}
+
+.tabstack {
+  min-width: 0;
+
+  > .panel {
+    min-width: 0;
+    margin: 0;
+  }
+}
+
+.panel {
+  padding: 1.1rem 1.4rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  background: var(--panel);
+
+  > summary {
+    display: none;
+  }
+}
+
+:where(.accswatch) {
+  display: flex;
+  width: 7rem;
+  max-width: 100%;
+  height: .55rem;
+  overflow: hidden;
+  border-radius: 3px;
+
+  &:empty {
+    display: none;
+  }
+
+  span {
+    display: block;
+    flex: 1;
+    height: 100%;
+  }
+}
+
+:where(.liveswatch) {
+  background: var(--hatch);
+
+  &.absent {
+    background: transparent;
+    outline: 1px dashed var(--dashed);
+    outline-offset: -1px;
+  }
+}

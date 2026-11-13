@@ -1,9 +1,11 @@
-.stretchview {
+.stretches {
+  --lights: 2.7rem;
+  --join: 6px;
   position: relative;
   z-index: 1;
   overflow: hidden;
-  padding-top: 1.2rem;
   margin-top: -.1rem;
+  padding-top: 1.2rem;
 
   &[data-zoomed] {
     overflow-x: auto;
@@ -15,195 +17,194 @@
   }
 
   &::-webkit-scrollbar-thumb {
-    background: #cfc9bf;
     border-radius: 99px;
+    background: #cfc9bf;
   }
 
   &::-webkit-scrollbar-track {
-    background: #f0eeea;
     border-radius: 99px;
+    background: #f0eeea;
   }
-}
 
-.stretches {
-  --lights: 2.7rem;
-  --join: 6px;
-  display: flex;
-  gap: 2px;
-  width: calc(var(--zoom, 1) * 100%);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  user-select: none;
+  > ol {
+    display: flex;
+    gap: 2px;
+    width: calc(var(--zoom, 1) * 100%);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    user-select: none;
 
-  &[data-kind=strip] {
-    --lights: 1.5rem;
+    &[data-kind=strip] {
+      --lights: 1.5rem;
 
-    &:not([data-labelled]) {
-      --lights: 1.1rem;
+      &:not([data-labelled]) {
+        --lights: 1.1rem;
+      }
     }
   }
 
-  > li {
+  li {
     position: relative;
     display: flex;
-    padding-bottom: var(--join);
     flex: var(--width) 1 0;
     min-width: 0;
+    padding-bottom: var(--join);
+
+    &[aria-current] {
+      padding-bottom: 0;
+
+      > button:not([data-says]) {
+        padding-bottom: calc(var(--join) + 2px);
+        border-color: var(--accent);
+        border-bottom: 0;
+        border-radius: var(--radius) var(--radius) 0 0;
+      }
+    }
+
+    &[data-nothing] > button > i {
+      background: var(--hatch);
+    }
+
+    &:hover > button[data-says]::before {
+      opacity: .85;
+    }
   }
 
-  .stretch {
+  li > button:not([data-says]) {
     display: flex;
-    flex-direction: column;
     flex: 1;
+    flex-direction: column;
     min-width: 0;
     padding: 0;
     border: 2px solid var(--line);
-    border-radius: 8px;
+    border-radius: var(--radius);
     background: var(--panel);
     font: inherit;
-    cursor: pointer;
-  }
-
-  > li[aria-current] {
-    padding-bottom: 0;
-  }
-
-  [aria-current] .stretch {
-    padding-bottom: var(--join);
-    border-color: var(--accent);
-    border-bottom: 0;
-    border-radius: 8px 8px 0 0;
-  }
-
-  .lights {
-    display: flex;
-    height: var(--lights);
 
     > span {
       display: flex;
-      flex: 1 1 0;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: .15rem;
-      min-width: 0;
+      height: var(--lights);
+
+      > span {
+        display: flex;
+        flex: 1 1 0;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: .15rem;
+        min-width: 0;
+      }
+
+      i {
+        display: block;
+        width: min(1.5rem, 80%);
+        aspect-ratio: 1;
+        border-radius: 50%;
+
+        &[data-unset] {
+          outline: 1px dashed var(--dashed);
+          outline-offset: 2px;
+        }
+      }
+
+      small {
+        color: var(--dim);
+        font-size: var(--text-xs);
+        line-height: 1;
+      }
+
+      [data-kept] i {
+        outline: 2px dashed var(--dim);
+        outline-offset: 2px;
+      }
     }
 
-    i {
+    > i {
+      position: relative;
       display: block;
-      width: min(1.5rem, 80%);
-      aspect-ratio: 1;
-      border-radius: 50%;
+      height: .4rem;
+      overflow: hidden;
+      background: var(--wash, transparent);
+
+      &[data-through] {
+        > span {
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          overflow: hidden;
+
+          > span {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+          }
+        }
+
+        > [data-shows=off] {
+          background: var(--unlit);
+        }
+
+        > [data-shows=empty] {
+          background: #e4e0d9;
+        }
+
+        &::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: var(--through);
+        }
+      }
     }
 
-    i[data-unset] {
-      outline: 1px dashed #a9a49b;
-      outline-offset: 2px;
-    }
+    > strong {
+      display: block;
+      padding: 0 .3rem;
+      overflow: hidden;
+      color: var(--ink);
+      font-size: var(--text-xs);
+      line-height: 1.5;
+      text-align: center;
+      white-space: nowrap;
+      text-overflow: ellipsis;
 
-    small {
-      font: 400 var(--text-xs)/1 var(--font);
-      color: var(--dim);
-    }
+      small {
+        color: var(--dim);
+        font-size: inherit;
+        font-weight: 400;
+      }
 
-    [data-kept] i {
-      outline: 2px dashed var(--dim);
-      outline-offset: 2px;
+      small + small {
+        margin-left: .45em;
+        padding-left: .45em;
+        border-left: 1px solid #c9c3b9;
+      }
     }
   }
 
-  &[data-kind=strip] .lights {
+  [data-kind=strip] li > button:not([data-says]) > span {
     gap: 1px;
     padding: 3px 3px 0;
 
     i {
       width: 100%;
       max-width: 1.1rem;
-      aspect-ratio: auto;
       height: .7rem;
+      aspect-ratio: auto;
       border-radius: 2px;
-    }
 
-    i[data-unset] {
-      outline-offset: 0;
+      &[data-unset] {
+        outline-offset: 0;
+      }
     }
   }
 
-  &[data-kind=strip]:not([data-labelled]) .lights small {
+  [data-kind=strip]:not([data-labelled]) li > button > span small {
     display: none;
   }
 
-  .band {
-    position: relative;
-    display: block;
-    height: .4rem;
-    overflow: hidden;
-    background: var(--wash, transparent);
-  }
-
-  [data-nothing] .band:not([data-through]) {
-    background: repeating-linear-gradient(45deg, #f0eeea, #f0eeea 6px, #e4e0d9 6px, #e4e0d9 12px);
-  }
-
-  .band[data-through] {
-    > span {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      overflow: hidden;
-
-      > span {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-      }
-    }
-
-    > [data-shows=off] {
-      background: #2a2d30;
-    }
-
-    > [data-shows=empty] {
-      background: #e4e0d9;
-    }
-
-    &::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: var(--through);
-    }
-  }
-
-  .name {
-    display: block;
-    padding: 0 .3rem;
-    overflow: hidden;
-    font: 600 var(--text-xs)/1.5 var(--font);
-    color: var(--ink);
-    text-align: center;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-
-    small {
-      font-size: inherit;
-      font-weight: 400;
-      color: var(--dim);
-    }
-
-    .beneath {
-      margin-left: .45em;
-      padding-left: .45em;
-      border-left: 1px solid #c9c3b9;
-    }
-  }
-
-  [data-narrow] .name {
-    font-size: var(--text-xs);
-  }
-
-  .cut {
+  li > button[data-says] {
     position: absolute;
     top: 2px;
     left: var(--at);
@@ -230,10 +231,10 @@
     }
 
     &:hover::before {
-      opacity: 1;
       width: 2px;
       margin-left: -1px;
       background: var(--accent);
+      opacity: 1;
     }
 
     &::after {
@@ -244,7 +245,7 @@
       z-index: 3;
       margin-bottom: 4px;
       padding: .05rem .35rem;
-      border-radius: 5px;
+      border-radius: var(--radius-s);
       background: var(--ink);
       color: #fff;
       font: 600 var(--text-xs)/1.6 var(--font);
@@ -265,17 +266,13 @@
     }
 
     &[data-near=end]::after {
-      left: auto;
       right: 0;
+      left: auto;
       transform: none;
     }
   }
 
-  li:hover .cut::before {
-    opacity: .85;
-  }
-
-  .edge {
+  [role=separator] {
     position: absolute;
     top: 0;
     bottom: 0;
@@ -309,7 +306,6 @@
       transform: translateX(-50%);
       opacity: 0;
       transition: opacity .1s;
-      cursor: pointer;
 
       &:hover {
         border-color: var(--warn);

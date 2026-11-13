@@ -5,7 +5,7 @@ import {
 } from "../04_scenes.js";
 import {SCREEN_SIZES, boardLineSteps} from "../07_board.js";
 import {boardIcon, setupOn} from "../08_setup.js";
-import {tabSwatches} from "../11_tabs.js";
+import {tabSwatches, tabUnder} from "../11_tabs.js";
 import {boardResidue, entryParts} from "../27_readback.js";
 import {
   GROUP_NUMBERS, apartSaid, breakingUp, hubBacklight, hubPictureTargets, inNumberedGroup,
@@ -561,12 +561,11 @@ tabSwatches.screensPanel = function (swatch) {
 
 drawSteps.before.push(function () { HUB_PLACES.forEach(placeTurnForChosen); });
 
-drawSteps.after.push(function () {
-  var under = document.querySelector("#ledTabs .ledtab[data-panel=screensPanel] .tabunder");
-  if (!under || !state.hub.on) return;
+var screensUnder = tabUnder.screensPanel;
+tabUnder.screensPanel = function () {
+  if (!state.hub.on) return screensUnder();
   var sizes = SCREEN_SIZES.filter(function (inches) {
     return placesThere().some(function (place) { return state.hub.sizes[place] === inches; });
   });
-  under.textContent = !sizes.length ? "hub, empty"
-                    : sizes.length > 1 ? "hub, mixed" : "hub, " + sizes[0] + "\"";
-});
+  return !sizes.length ? "hub, empty" : sizes.length > 1 ? "hub, mixed" : "hub, " + sizes[0] + "\"";
+};

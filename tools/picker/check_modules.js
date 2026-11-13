@@ -36,7 +36,12 @@ function analyse(file) {
   const free = new Set(moduleScope.through.map(reference => reference.identifier.name));
   const used = new Set();
   for (const variable of moduleScope.variables) if (variable.name in imports && variable.references.length) used.add(variable.name);
-  return {imports, declared, exported, free, used};
+  const unused = moduleScope.variables
+    .filter(variable => !(variable.name in imports) && !exported.has(variable.name))
+    .filter(variable => !variable.references.some(reference => !variable.identifiers.includes(reference.identifier) &&
+                                                               !(reference.isWrite() && !reference.isRead())))
+    .map(variable => variable.name);
+  return {imports, declared, exported, free, used, unused};
 }
 
 const parts = partsUnder(root);
@@ -55,6 +60,7 @@ for (const [file, one] of Object.entries(modules)) {
     if (!one.used.has(name)) say(file, "imports " + name + " and never uses it");
   }
 }
+for (const [file, one] of Object.entries(modules)) for (const name of one.unused) say(file, name + " is declared and never used");
 for (const [file, one] of Object.entries(modules)) for (const name of one.exported) if (!imported.has(file + ":" + name)) say(file, "exports " + name + ", which no part imports");
 if (problems.length) {
   console.log(problems.join("\n"));

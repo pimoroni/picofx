@@ -66,7 +66,7 @@ function unmark() {
   document.querySelectorAll(".looks [aria-pressed=true]").forEach(function (one) {
     one.setAttribute("aria-pressed", "false");
   });
-  document.querySelectorAll(".stretches > li[aria-current]").forEach(function (one) {
+  document.querySelectorAll(".stretches li[aria-current]").forEach(function (one) {
     one.removeAttribute("aria-current");
   });
 }

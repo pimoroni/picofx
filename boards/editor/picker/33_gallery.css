@@ -148,3 +148,16 @@
     }
   }
 }
+
+#looks {
+  margin-bottom: 1.4rem;
+
+  body.looksbelow & {
+    margin: 1.2rem 0 0;
+  }
+
+  body.nolooks & {
+    opacity: .3;
+    pointer-events: none;
+  }
+}

@@ -24,7 +24,7 @@ MEDIA = """
 def screens_tab(opened, board):
     page = opened(board)
     page.evaluate(MEDIA)
-    page.get_by_role("button", name=re.compile("^Screens")).click()
+    page.get_by_role("tab", name=re.compile("^Screens")).click()
     return page
 
 

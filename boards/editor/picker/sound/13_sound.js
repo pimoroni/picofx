@@ -2,7 +2,7 @@ import {h, replace} from "../00_dom.js";
 import {quoted} from "../01_looks.js";
 import {draw, drawSteps} from "../03_runs.js";
 import {allBodies, bodyParts, driveParts, state} from "../04_scenes.js";
-import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches} from "../11_tabs.js";
+import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches, tabUnder} from "../11_tabs.js";
 import {banner} from "../18_drive.js";
 import {OWN_GROUP} from "../22_program.js";
 import {
@@ -516,17 +516,12 @@ tabSwatches.soundPanel = function (swatch) {
   }
 };
 
-function kindUnderName() {
-  var tab = document.querySelector("#ledTabs .ledtab[data-panel=soundPanel]");
-  if (!tab || tab.querySelector(".tabname")) return;
-  var kind = state.sound || state.soundKept ? "wav" : state.soundOff ? "silence"
-           : soundUnder() ? "Always on" : "nothing";
-  tab.prepend(h("span", {class: "tabname"}, tab.querySelector("b"),
-                h("small", {class: "tabunder"}, kind)));
-}
+tabUnder.soundPanel = function () {
+  return state.sound || state.soundKept ? "wav" : state.soundOff ? "silence"
+       : soundUnder() ? "Always on" : "nothing";
+};
 
 drawSteps.after.push(function () {
-  kindUnderName();
   renderSound();
 });
 

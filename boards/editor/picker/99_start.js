@@ -1,15 +1,8 @@
 import {HOLDING_STILL, beat} from "./02_preview.js";
-import {draw, drawSteps, paintAll, step} from "./03_runs.js";
+import {draw, paintAll, step} from "./03_runs.js";
 import {capture, state} from "./04_scenes.js";
 import {workOn} from "./10_led_sections.js";
-import {chosenTab, holdTabsPlace, showChosen} from "./11_tabs.js";
-
-// ---- the page, started ---------------------------------------------------------------------------
-// Every part is in place, so the always-on tab takes what they hold and the page is drawn once,
-// then the lights are set going, or held on one frame where motion is turned down
-
-// Last of the draw's steps, every part having drawn
-drawSteps.after.push(holdTabsPlace);
+import {chosenTab, showChosen} from "./11_tabs.js";
 
 state.always.body = capture();
 workOn(chosenTab);

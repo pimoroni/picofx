@@ -155,3 +155,39 @@
     color: var(--warn);
   }
 }
+
+.s-target {
+  color: #1f6feb;
+}
+
+.s-effect {
+  color: #0a7f78;
+  font-weight: 600;
+}
+
+.s-value {
+  color: #a8500a;
+}
+
+.s-name {
+  color: var(--ink);
+}
+
+.s-punc {
+  color: #5d656e;
+}
+
+.s-colon {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.s-comment {
+  color: var(--dim);
+  font-style: italic;
+}
+
+.s-scene {
+  color: #7b3fb8;
+  font-weight: 600;
+}

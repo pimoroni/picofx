@@ -1,4 +1,3 @@
-import {draw} from "./03_runs.js";
 import {isBanked} from "./05_effects.js";
 import {banner} from "./18_drive.js";
 
@@ -109,19 +108,6 @@ function runThirds(name, count, reversed, ways, lights) {
 // before it is written. What is left is the same effect, in whatever the lamp is
 function withoutColour(line) {
   return line.replace(/\s+colour=[^\s:]+/g, "");
-}
-
-// Anything on or off, as a toggle with its icon, greyed where playback would refuse it
-function toggle(icon, words, on, flip, title, refused) {
-  var button = document.createElement("button");
-  button.type = "button";
-  button.className = "stoggle" + (on && !refused ? " on" : "");
-  button.dataset.words = words;
-  button.innerHTML = "<span aria-hidden='true'>" + icon + "</span> " + words;
-  button.title = title;
-  button.disabled = !!refused;
-  button.onclick = function () { flip(!on); draw(); };
-  return button;
 }
 
 // ---- the looks -----------------------------------------------------------------
@@ -329,27 +315,6 @@ export function lookNamed(id) {
 
 // What a look is kept as, which is its own id where it has one and its name otherwise
 export function keyOf(look) { return look.id || look.name; }
-
-function luminance(colour) {
-  var hex = colour.replace("#", "");
-  return (0.299 * parseInt(hex.slice(0, 2), 16) + 0.587 * parseInt(hex.slice(2, 4), 16) +
-          0.114 * parseInt(hex.slice(4, 6), 16)) / 255;
-}
-
-// The brightest a look ever asks for, which is the lamp a mono run drives at full
-function peakOf(look) {
-  if (!look || !look.strip.length) return 1;
-  return Math.max.apply(null, look.strip.map(luminance)) || 1;
-}
-
-// What a colour comes to on a lamp that has none: the brightness it would drive, in
-// the warm white a mono output actually lights. Scaled against the look's own
-// brightest, so a look made of deep colours is not drawn as a row of dark lamps
-function asMono(colour, peak) {
-  var lit = Math.min(1, luminance(colour) / (peak || 1));
-  return "rgb(" + Math.round(255 * lit) + "," + Math.round(226 * lit) + "," +
-         Math.round(178 * lit) + ")";
-}
 
 // Whether a look has anything to give a target: a colour look cannot land on a mono lamp, a
 // look that does not span cannot land on a run, and some have no single-light form. A banked

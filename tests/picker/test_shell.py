@@ -25,7 +25,7 @@ def test_scenes_are_added_switched_and_removed(opened, board):
     page.get_by_role("button", name="another scene").click()
     expect(scene_tabs(page)).to_have_count(3)
     expect(page.get_by_role("tab", name="Scene 2")).to_have_attribute("aria-selected", "true")
-    expect(page.get_by_role("tabpanel")).to_have_attribute("aria-labelledby", "sceneTab1")
+    expect(page.locator("#sceneBody")).to_have_attribute("aria-labelledby", "sceneTab1")
 
     page.get_by_role("tab", name="Always on").click()
     expect(page.get_by_role("tab", name="Always on")).to_have_attribute("aria-selected", "true")
@@ -205,6 +205,7 @@ def test_save_menu_opens_and_closes(opened, board):
 def test_float_bar_takes_the_drive_buttons_on_scroll(opened, board):
     page = opened(board)
     split_into_scenes(page)
+    page.set_viewport_size({"width": 1280, "height": 480})
     bar = page.locator(".floatbar")
     expect(bar).to_have_attribute("aria-hidden", "true")
     page.mouse.wheel(0, 2000)

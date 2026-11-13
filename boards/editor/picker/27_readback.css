@@ -1,0 +1,38 @@
+.keptlines {
+  margin: .6rem 0;
+  padding: .5rem .7rem;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  color: var(--dim);
+  font-size: var(--text-m);
+
+  .keptsay {
+    margin-bottom: .3rem;
+  }
+
+  .keptrow {
+    display: flex;
+    align-items: flex-start;
+    gap: .4rem;
+    margin: .15rem 0;
+  }
+
+  code {
+    flex: 1;
+    color: var(--ink);
+    white-space: pre-wrap;
+  }
+
+  .keptdrop {
+    padding: 0 .2rem;
+    border: 0;
+    background: none;
+    color: var(--dim);
+    font-size: var(--text-l);
+    line-height: 1;
+
+    &:hover {
+      color: var(--ink);
+    }
+  }
+}

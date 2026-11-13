@@ -18,7 +18,7 @@ export function zoomOf(run) { return run.zoom || 1; }
 export function zooms(run) { return !!run.strip && run.lamps.length > ZOOMS_OVER; }
 
 function viewOf(run) {
-  return document.querySelector("[data-stretches='" + run.name + "'] .stretchview");
+  return document.querySelector("[data-stretches='" + run.name + "'] .stretches");
 }
 
 export function middleOfView(run) {
@@ -49,13 +49,13 @@ export function renderStretches(where, run) {
   box.dataset.stretches = run.name;
   var faces = [];
   var kept = keptLights(run);
-  var list = h("ol", {class: "stretches", "data-kind": run.strip ? "strip" : "lamps",
+  var list = h("ol", {"data-kind": run.strip ? "strip" : "lamps",
                       "data-labelled": !run.strip || run.lamps.length <= ZOOMS_OVER,
                       style: {"--zoom": zoomOf(run)}},
                run.sections.map(function (section, at) {
                  return stretch(run, section, at, faces, kept);
                }));
-  var view = h("div", {class: "stretchview", "data-zoomed": zoomOf(run) > 1,
+  var view = h("div", {class: "stretches", "data-zoomed": zoomOf(run) > 1,
                        onscroll: function () { run.scrolled = view.scrollLeft; },
                        onwheel: function (event) { wheel(run, view, event); }}, list);
   replace(box, view);
@@ -77,7 +77,7 @@ function stretch(run, section, at, faces, kept) {
                   "data-nothing": !look, "data-narrow": wide * 40 < run.lamps.length * 8,
                   style: {"--width": wide}},
     at > 0 ? edge(run, at - 1) : null,
-    h("button", {type: "button", class: "stretch",
+    h("button", {type: "button",
                  "aria-label": (look ? look.name : "Nothing") + " on " + wherePlays(run, section, false),
                  title: firstClaim ? "used by a line the picker cannot edit: " + firstClaim[0].text
                       : under ? under.tip : targetFor(run, section).selector,
@@ -86,22 +86,22 @@ function stretch(run, section, at, faces, kept) {
                    pick(run, at);
                    draw();
                  }},
-      h("span", {class: "lights"}, lamps.map(function (lamp, i) {
+      h("span", {}, lamps.map(function (lamp, i) {
         var face = h("i");
         faces.push(face);
         return h("span", {"data-kept": !!claimed[i]}, face, h("small", {}, shortName(lamp)));
       })),
       band(run, section, look, under),
-      h("span", {class: "name"}, look ? look.name : "Nothing", " ", h("small", {}, wide),
-        under ? h("small", {class: "beneath"}, under.note) : null)),
+      h("strong", {}, look ? look.name : "Nothing", " ", h("small", {}, wide),
+        under ? h("small", {}, under.note) : null)),
     lamps.slice(1).map(function (lamp, i) {
       return cut(run, section.from + i, i + 1, wide);
     }));
 }
 
 function band(run, section, look, under) {
-  if (look) return h("span", {class: "band", style: {"--wash": washFor(run, section, look)}});
-  if (!under) return h("span", {class: "band"});
+  if (look) return h("i", {style: {"--wash": washFor(run, section, look)}});
+  if (!under) return h("i");
   var panes = [];
   var start = 0;
   while (start < under.lamps.length) {
@@ -110,7 +110,7 @@ function band(run, section, look, under) {
     panes.push(pane(run, under.lamps[start], start, end, under.lamps.length));
     start = end;
   }
-  return h("span", {class: "band", "data-through": true}, panes);
+  return h("i", {"data-through": true}, panes);
 }
 
 function sameShowing(one, other) {
@@ -130,7 +130,7 @@ function pane(run, shows, start, end, wide) {
 
 function cut(run, after, place, wide) {
   var says = shortName(run.lamps[after]) + " | " + shortName(run.lamps[after + 1]);
-  return h("button", {type: "button", class: "cut", "data-says": says,
+  return h("button", {type: "button", "data-says": says,
                       "aria-label": "cut between " + says.replace(" | ", " and "),
                       style: {"--at": (place / wide * 100) + "%",
                               "--reach": "min(11px, " + (55 / wide) + "%)"},
@@ -138,7 +138,7 @@ function cut(run, after, place, wide) {
 }
 
 function edge(run, which) {
-  return h("span", {class: "edge", role: "separator",
+  return h("span", {role: "separator",
                     title: "drag to move this cut, or click \u00d7 to remove it",
                     onmousedown: function (event) {
                       event.preventDefault();
@@ -165,7 +165,7 @@ function wheel(run, view, event) {
 
 function turnLabelsInward(list) {
   var edges = list.getBoundingClientRect();
-  list.querySelectorAll(".cut").forEach(function (one) {
+  list.querySelectorAll("button[data-says]").forEach(function (one) {
     var at = one.getBoundingClientRect();
     var middle = (at.left + at.right) / 2;
     one.dataset.near = middle - edges.left < 40 ? "start" : edges.right - middle < 40 ? "end" : "";
@@ -185,12 +185,12 @@ function paintFace(face, lit, glows) {
 
 export function stretchCells(run) {
   return Array.prototype.slice.call(
-    document.querySelectorAll("[data-stretches='" + run.name + "'] .stretches > li"));
+    document.querySelectorAll("[data-stretches='" + run.name + "'] ol > li"));
 }
 
 document.addEventListener("mousemove", function (event) {
   if (!dragging) return;
-  var list = document.querySelector("[data-stretches='" + dragging.run.name + "'] .stretches");
+  var list = document.querySelector("[data-stretches='" + dragging.run.name + "'] ol");
   if (!list) return;
   var box = list.getBoundingClientRect();
   if (!box.width) return;

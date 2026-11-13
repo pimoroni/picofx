@@ -6,7 +6,7 @@ import {
 } from "../04_scenes.js";
 import {boardLineSteps} from "../07_board.js";
 import {BOARD_CHIP_CLASSES, boardBox, canEdit, small} from "../08_setup.js";
-import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches} from "../11_tabs.js";
+import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches, tabUnder} from "../11_tabs.js";
 import {boardResidue, boardTokens, unquoted} from "../27_readback.js";
 import {
   PIR_ART, REMOTE_ART_JOINS, REMOTE_ART_RADIUS, REMOTE_BUTTONS, REMOTE_ROWS, remoteArt,
@@ -713,15 +713,9 @@ tabSwatches.sensorPanel = function (swatch) {
   replace(swatch);
 };
 
-function sensorUnderName() {
-  var tab = document.querySelector("#ledTabs .ledtab[data-panel=sensorPanel]");
-  if (!tab || tab.querySelector(".tabname")) return;
-  tab.prepend(h("span", {class: "tabname"}, tab.querySelector("b"),
-                h("small", {class: "tabunder"}, sensorFacts()[2])));
-}
+tabUnder.sensorPanel = function () { return sensorFacts()[2]; };
 
 drawSteps.after.push(function () {
-  sensorUnderName();
   renderSensor();
 });
 

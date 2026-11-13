@@ -9,7 +9,7 @@ import {
 } from "../07_board.js";
 import {boardIcon, setupOn} from "../08_setup.js";
 import {LED_PANELS} from "../10_led_sections.js";
-import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches} from "../11_tabs.js";
+import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches, tabUnder} from "../11_tabs.js";
 import {OWN_GROUP, foldHead} from "../22_program.js";
 import {
   adderTile, binButton, exampleGroups, groupOpen, groupsOpen, isExampleMedia, isHiddenName,
@@ -901,22 +901,18 @@ tabSwatches.screensPanel = function (swatch) {
   }).join(", ");
 };
 
-function sizesUnderName() {
-  var tab = document.querySelector("#ledTabs .ledtab[data-panel=screensPanel]");
-  if (!tab || tab.querySelector(".tabname")) return;
+tabUnder.screensPanel = function () {
   var fitted = SCREENS.map(function (letter) {
     return state.screens[letter].there ? state.screens[letter].size : "";
   });
-  tab.insertBefore(h("span", {class: "tabname"}, tab.querySelector("b"),
-    h("small", {class: "tabunder"}, fitted.some(Boolean)
-      ? fitted.map(function (size) { return size ? size + "\"" : "none"; }).join(", ")
-      : "no screens")), tab.firstChild);
-}
+  return fitted.some(Boolean)
+    ? fitted.map(function (size) { return size ? size + "\"" : "none"; }).join(", ")
+    : "no screens";
+};
 
 drawSteps.before.push(function () { SCREENS.forEach(turnForChosen); });
 
 drawSteps.after.push(function () {
-  sizesUnderName();
   renderScreensTab();
 });
 
