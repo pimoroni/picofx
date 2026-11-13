@@ -21,11 +21,11 @@
   --column: 57.2rem;
   --font: system-ui, sans-serif;
   --font-mono: ui-monospace, Menlo, Consolas, monospace;
-  --text-xs: .68rem;
-  --text-s: .78rem;
-  --text-m: .85rem;
+  --text-xs: .75rem;
+  --text-s: .8125rem;
+  --text-m: .875rem;
   --text-l: 1rem;
-  --text-xl: 1.15rem;
+  --text-xl: 1.25rem;
   --text-display: 3rem;
   --radius-s: 5px;
   --radius: 8px;
