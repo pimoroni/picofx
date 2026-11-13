@@ -20,10 +20,11 @@ import {
 } from "./07_board.js";
 import {fileHead} from "./07_writing.js";
 import {WROTE_KEY, connectSteps, drive} from "./18_drive.js";
-import {argsWritten, boardSet, programNamed} from "./19_board_settings.js";
-import {onProgramPage, setProgramPage} from "./22_program.js";
+import {
+  argsWritten, boardSet, onProgramPage, programNamed, setProgramPage
+} from "./19_board_settings.js";
 import {figureKey, placeFor, settingIn} from "./25_figures.js";
-import {programsKnown} from "./26_drive_programs.js";
+import {programsKnown, programsReadSteps} from "./26_drive_programs.js";
 
 var PAGE_LINES = HEADER.split("\n").filter(Boolean).concat(["# Nothing is playing yet."]);
 
@@ -133,7 +134,7 @@ function readProgram(named, argued) {
 
 var programWaiting = null;
 
-export function readWaitingProgram() {
+function readWaitingProgram() {
   if (!programWaiting) return;
   var named = programWaiting[0], argued = programWaiting[1];
   programWaiting = null;
@@ -631,3 +632,5 @@ connectSteps.push(async function () {
 function rememberRead(text) {
   try { localStorage.setItem(WROTE_KEY, text); } catch (e) {}
 }
+
+programsReadSteps.push(readWaitingProgram);

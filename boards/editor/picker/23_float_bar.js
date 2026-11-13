@@ -2,9 +2,9 @@ import {bannerSteps} from "./00_banner.js";
 import {h, replace} from "./00_dom.js";
 import {drawSteps} from "./00_draw.js";
 import {state} from "./04_scenes.js";
-import {boardSet} from "./19_board_settings.js";
+import {boardSet, onProgramPage} from "./19_board_settings.js";
 import {closeSaveMenu} from "./21_save_menu.js";
-import {onProgramPage, programTitle} from "./22_program.js";
+import {programTitle} from "./22_program.js";
 
 var FLOAT_SAID_MS = 8000;
 

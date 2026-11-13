@@ -1,11 +1,8 @@
 import {banner} from "./00_banner.js";
 import {draw} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
-import {connectSteps, drive, driveTrouble} from "./18_drive.js";
+import {connectSteps, drive, driveTrouble, isHiddenName} from "./18_drive.js";
 import {PROGRAMS, boardSet, programNamed, setPrograms} from "./19_board_settings.js";
-import {loadThumbs, renderProgramView} from "./22_program.js";
-import {isHiddenName} from "./26_drive_files.js";
-import {readWaitingProgram} from "./27_readback.js";
 
 export var EXAMPLES_ROOT = BOARD.examples ? "examples/programs/" : "";
 
@@ -198,7 +195,7 @@ export async function drivePrograms(dir, ownOnly) {
                                  : null;
     if (examples) await filesIn(examples, EXAMPLES_ROOT, "", true, files, pictures);
     programsReading = [0, files.length];
-    renderProgramView();
+    draw();
   }
   for (var i = 0; i < files.length; i++) {
     try {
@@ -213,7 +210,7 @@ export async function drivePrograms(dir, ownOnly) {
     }
     if (programsReading) {
       programsReading[0] = i + 1;
-      if (i % 8 === 7) renderProgramView();
+      if (i % 8 === 7) draw();
     }
   }
   if (!ownOnly) programsReading = null;
@@ -331,6 +328,8 @@ export async function removeProgram(path) {
 
 export var programsKnown = false;
 
+export var programsReadSteps = [];
+
 connectSteps.push(async function () {
   programsKnown = false;
   await readNamedProgram();
@@ -373,6 +372,22 @@ async function readDrivePrograms() {
   setPrograms(await drivePrograms(drive.dirHandle));
   programsKnown = true;
   forgetMissingPrograms();
-  readWaitingProgram();
+  programsReadSteps.forEach(function (step) { step(); });
   draw();
+}
+
+export var thumbImages = {};
+
+export function loadThumbs(sources) {
+  var waiting = 0;
+  sources.forEach(function (src) {
+    if (thumbImages[src]) return;
+    var image = thumbImages[src] = new Image();
+    waiting++;
+    image.onload = image.onerror = function () {
+      waiting--;
+      if (!waiting) draw();
+    };
+    image.src = src;
+  });
 }

@@ -9,12 +9,13 @@ import {
   PROGRAMS, boardSet, programNamed, programsElsewhere, setPrograms
 } from "../19_board_settings.js";
 import {
-  CHIPLESS, FEATURES, featureFilter, loadThumbs, passesFilter, programCardFace, programHooks,
-  programTitle, programUsesSaid, unhad, usesOf
+  CHIPLESS, FEATURES, featureFilter, passesFilter, programCardFace, programHooks, programTitle,
+  programUsesSaid, unhad, usesOf
 } from "../22_program.js";
 import {OTHER_EXAMPLES, exampleSections, isExampleMedia, scanMedia} from "../26_drive_files.js";
 import {
-  EXAMPLES_ROOT, PICTURES, SECTIONS, copyProgram, folderAt, forgetMissingPrograms, programFrom
+  EXAMPLES_ROOT, PICTURES, SECTIONS, copyProgram, folderAt, forgetMissingPrograms, loadThumbs,
+  programFrom
 } from "../26_drive_programs.js";
 
 export var discoverKinds = {};

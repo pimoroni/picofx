@@ -14212,6 +14212,10 @@ function nameShown(name) {
   return name.slice(name.lastIndexOf("/") + 1);
 }
 
+function isHiddenName(name) {
+  return name.charAt(0) === ".";
+}
+
 function escapeHtml(text) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
@@ -14431,6 +14435,12 @@ drawSteps.after.push(function () {
   document.body.toggleAttribute("data-programmed", !!boardSet.program);
   effectsNote();
 });
+
+var onProgramPage = false;
+
+function setProgramPage(on) {
+  onProgramPage = on;
+}
 
 var sceneRow = document.getElementById("sceneTabRow");
 var scenePlaceLine = null;
@@ -14757,8 +14767,6 @@ function programTitle(path) {
 }
 
 var THUMB_W = 160, THUMB_H = 120;
-var thumbImages = {};
-
 function thumbCanvas(kind, seed, uses) {
   var canvas = h("canvas", {width: THUMB_W, height: THUMB_H});
   paintThumb(canvas.getContext("2d"), kind, seed || 1, canvas, uses || []);
@@ -15077,12 +15085,6 @@ function programThumb(path) {
 
 var programView = null;
 
-var onProgramPage = false;
-
-function setProgramPage(on) {
-  onProgramPage = on;
-}
-
 function copyTile(example, file, folder, copy) {
   return h("span", {class: "bin", "data-copy": example ? "alone" : "",
                     title: (example ? "Customise a copy of " : "Duplicate ") + file + " in the " +
@@ -15399,20 +15401,6 @@ drawSteps.after.push(function () {
   paintAll();
 });
 
-function loadThumbs(sources) {
-  var waiting = 0;
-  sources.forEach(function (src) {
-    if (thumbImages[src]) return;
-    var image = thumbImages[src] = new Image();
-    waiting++;
-    image.onload = image.onerror = function () {
-      waiting--;
-      if (!waiting) draw();
-    };
-    image.src = src;
-  });
-}
-
 var COLUMN_REM = 57.2;
 
 function headerOnOneLine() {
@@ -15592,10 +15580,6 @@ state.scanned = false;
 var scanBusy = false;
 
 var MEDIA_FOLDERS = {pictures: /\.(gif|png|jpe?g)$/i, drawings: /\.py$/i, sounds: /\.wav$/i};
-
-function isHiddenName(name) {
-  return name.charAt(0) === ".";
-}
 
 var EXAMPLE_FOLDERS = BOARD.examples ? ["drawings", "pictures", "sounds"] : [];
 
@@ -16125,7 +16109,7 @@ async function drivePrograms(dir, ownOnly) {
                                  : null;
     if (examples) await filesIn(examples, EXAMPLES_ROOT, "", true, files, pictures);
     programsReading = [0, files.length];
-    renderProgramView();
+    draw();
   }
   for (var i = 0; i < files.length; i++) {
     try {
@@ -16140,7 +16124,7 @@ async function drivePrograms(dir, ownOnly) {
     }
     if (programsReading) {
       programsReading[0] = i + 1;
-      if (i % 8 === 7) renderProgramView();
+      if (i % 8 === 7) draw();
     }
   }
   if (!ownOnly) programsReading = null;
@@ -16258,6 +16242,8 @@ async function removeProgram(path) {
 
 var programsKnown = false;
 
+var programsReadSteps = [];
+
 connectSteps.push(async function () {
   programsKnown = false;
   await readNamedProgram();
@@ -16300,8 +16286,24 @@ async function readDrivePrograms() {
   setPrograms(await drivePrograms(drive.dirHandle));
   programsKnown = true;
   forgetMissingPrograms();
-  readWaitingProgram();
+  programsReadSteps.forEach(function (step) { step(); });
   draw();
+}
+
+var thumbImages = {};
+
+function loadThumbs(sources) {
+  var waiting = 0;
+  sources.forEach(function (src) {
+    if (thumbImages[src]) return;
+    var image = thumbImages[src] = new Image();
+    waiting++;
+    image.onload = image.onerror = function () {
+      waiting--;
+      if (!waiting) draw();
+    };
+    image.src = src;
+  });
 }
 
 var PAGE_LINES = HEADER.split("\n").filter(Boolean).concat(["# Nothing is playing yet."]);
@@ -16910,6 +16912,8 @@ connectSteps.push(async function () {
 function rememberRead(text) {
   try { localStorage.setItem(WROTE_KEY, text); } catch (e) {}
 }
+
+programsReadSteps.push(readWaitingProgram);
 
 var discoverKinds = {};
 

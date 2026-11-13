@@ -145,3 +145,9 @@ drawSteps.after.push(function () {
   document.body.toggleAttribute("data-programmed", !!boardSet.program);
   effectsNote();
 });
+
+export var onProgramPage = false;
+
+export function setProgramPage(on) {
+  onProgramPage = on;
+}

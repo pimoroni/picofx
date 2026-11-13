@@ -313,3 +313,7 @@ if (!CAN_REACH_A_DRIVE) {
 export function nameShown(name) {
   return name.slice(name.lastIndexOf("/") + 1);
 }
+
+export function isHiddenName(name) {
+  return name.charAt(0) === ".";
+}

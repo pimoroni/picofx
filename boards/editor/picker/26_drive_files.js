@@ -3,7 +3,7 @@ import {draw} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
 import {apply, driveParts, slotAt, state, store} from "./04_scenes.js";
 import {screenHooks} from "./07_board.js";
-import {CAN_REACH_A_DRIVE, connectSteps, drive, driveTrouble} from "./18_drive.js";
+import {CAN_REACH_A_DRIVE, connectSteps, drive, driveTrouble, isHiddenName} from "./18_drive.js";
 import {OWN_FOLDER, folderAt, removePictures, sectionsFrom} from "./26_drive_programs.js";
 
 state.fileHandle = null;
@@ -12,10 +12,6 @@ state.scanned = false;
 var scanBusy = false;
 
 var MEDIA_FOLDERS = {pictures: /\.(gif|png|jpe?g)$/i, drawings: /\.py$/i, sounds: /\.wav$/i};
-
-export function isHiddenName(name) {
-  return name.charAt(0) === ".";
-}
 
 var EXAMPLE_FOLDERS = BOARD.examples ? ["drawings", "pictures", "sounds"] : [];
 

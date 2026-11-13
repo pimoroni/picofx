@@ -8,11 +8,11 @@ import {SCREEN_PORTS, screenHooks} from "./07_board.js";
 import {tabSwatch} from "./11_tabs.js";
 import {CAN_REACH_A_DRIVE, drive, driveTrouble} from "./18_drive.js";
 import {
-  PROGRAMS, boardSet, programArguments, programNamed, programNote, setPrograms
+  PROGRAMS, boardSet, onProgramPage, programArguments, programNamed, programNote, setPrograms
 } from "./19_board_settings.js";
 import {
   OWN_FOLDER, PICTURES, SECTIONS, copyProgram, driveHasCredentials, drivePrograms, programsKnown,
-  programsReading, removeProgram
+  programsReading, removeProgram, thumbImages
 } from "./26_drive_programs.js";
 
 export var OWN_GROUP = "On the drive";
@@ -147,8 +147,6 @@ export function programTitle(path) {
 }
 
 var THUMB_W = 160, THUMB_H = 120;
-var thumbImages = {};
-
 function thumbCanvas(kind, seed, uses) {
   var canvas = h("canvas", {width: THUMB_W, height: THUMB_H});
   paintThumb(canvas.getContext("2d"), kind, seed || 1, canvas, uses || []);
@@ -467,12 +465,6 @@ function programThumb(path) {
 
 var programView = null;
 
-export var onProgramPage = false;
-
-export function setProgramPage(on) {
-  onProgramPage = on;
-}
-
 export function copyTile(example, file, folder, copy) {
   return h("span", {class: "bin", "data-copy": example ? "alone" : "",
                     title: (example ? "Customise a copy of " : "Duplicate ") + file + " in the " +
@@ -668,7 +660,7 @@ function programListing() {
   return parts;
 }
 
-export function renderProgramView() {
+function renderProgramView() {
   programView.hidden = !onProgramPage;
   if (!onProgramPage) return replace(programView);
   replace(programView, programHero(boardSet.program), programListing());
@@ -788,20 +780,6 @@ drawSteps.after.push(function () {
   headerOnOneLine();
   paintAll();
 });
-
-export function loadThumbs(sources) {
-  var waiting = 0;
-  sources.forEach(function (src) {
-    if (thumbImages[src]) return;
-    var image = thumbImages[src] = new Image();
-    waiting++;
-    image.onload = image.onerror = function () {
-      waiting--;
-      if (!waiting) draw();
-    };
-    image.src = src;
-  });
-}
 
 var COLUMN_REM = 57.2;
 
