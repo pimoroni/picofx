@@ -72,7 +72,6 @@ button {
     cursor: default;
   }
 
-  &.on,
   &[aria-pressed=true] {
     border-color: var(--accent);
     color: var(--accent);

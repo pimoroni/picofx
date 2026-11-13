@@ -1,10 +1,11 @@
 import {h, replace} from "./00_dom.js";
+import {BOARD} from "./01_looks.js";
 import {
   active, blank, draw, drawSteps, lampKey, outputSaid, paintAll, pick, pickOutput, runs, sectionAt
 } from "./03_runs.js";
 import {panelTools} from "./04_led_panels.js";
 import {allBodies, apply, slotAt, state, store} from "./04_scenes.js";
-import {STRIPS, stripChipChoice, stripChipShown, stripLengthField, stripSet} from "./05_effects.js";
+import {stripChipChoice, stripChipShown, stripLengthField, stripSet} from "./05_effects.js";
 import {breakingOutputs, brokenSaid} from "./07_board.js";
 import {workOn} from "./10_led_sections.js";
 import {lastOutputRun, showChosen} from "./11_tabs.js";
@@ -19,8 +20,8 @@ import {forgetKeptFor} from "./27_readback.js";
 export var setupOn = false;
 
 // The panels that hold a board fact, and the colour each one's box takes
-export var BOARD_CHIP_CLASSES = {outPanel: "outs"};
-STRIPS.forEach(function (strip) { BOARD_CHIP_CLASSES[strip.id + "Panel"] = strip.id; });
+export var BOARD_CHIP_COLOURS = {outPanel: "var(--boardOuts)"};
+BOARD.strips.forEach(function (strip) { BOARD_CHIP_COLOURS[strip.name + "Panel"] = strip.colour; });
 
 // Whether the board facts in this panel can be changed just now
 export function canEdit(panel) { return setupOn; }
@@ -72,7 +73,7 @@ function unmark() {
 }
 
 export function boardBox(panel, parts) {
-  return h("span", {class: "chip boardchip " + BOARD_CHIP_CLASSES[panel],
+  return h("span", {class: "chip", style: {"--chip": BOARD_CHIP_COLOURS[panel]},
                     title: "Board setup, shared by every scene"}, boardIcon(), parts);
 }
 
@@ -171,7 +172,7 @@ export function renderLeds(where, run) {
   document.getElementById(panel).toggleAttribute("data-absent", !run.there);
   var chip = !run.there ? stripOut(run, panel)
            : canEdit(panel) ? boardBox(panel, ["Strip", stripLengthField(run), small("LEDs"), stripChipChoice(run),
-                                               h("button", {type: "button", class: "drop",
+                                               h("button", {type: "button",
                                                             title: "Remove this strip from every scene",
                                                             onclick: function () { dropStrip(run); }}, "\u00d7")])
            : boardBox(panel, ["Strip", small(stripBuilt(run))]);
@@ -181,14 +182,14 @@ export function renderLeds(where, run) {
 // ---- turning setup on ------------------------------------------------------------------------
 
 export function setupButton(label, on, act) {
-  return h("button", {type: "button", class: "setupbutton" + (on ? " on" : ""), "aria-pressed": on ? "true" : "false",
+  return h("button", {type: "button", class: "setupbutton", "aria-pressed": on ? "true" : "false",
                       onclick: act}, boardIcon(), label);
 }
 
 drawSteps.after.push(function () {
   renderOutFacts();
   // What is not the board stands back while it is set up
-  document.body.classList.toggle("setupall", setupOn);
+  document.body.toggleAttribute("data-setup", setupOn);
   if (setupOn) unmark();
   paintAll();
 });

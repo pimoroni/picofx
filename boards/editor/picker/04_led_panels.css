@@ -55,10 +55,6 @@
 .panel[data-strip] {
   position: relative;
 
-  .chip {
-    background: var(--strip);
-  }
-
   &[data-absent] {
     > :not(summary, header) {
       visibility: hidden;

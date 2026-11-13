@@ -12,20 +12,20 @@ __STYLES__
 <body>
 <header>
  <h1>__BOARD_NAME__ Picker <small>__VERSION__</small></h1>
- <div class="drive" id="drive" role="group" aria-label="FX drive">
+ <div id="drive" role="group" aria-label="FX drive">
   <button type="button" id="open" data-primary>Open FX drive</button>
   <span>
    <button type="button" id="save" disabled>Save to board</button><button type="button" id="saveArrow" title="Save settings" aria-label="Save settings" aria-haspopup="true" aria-expanded="false" aria-controls="saveMenu">&#9662;</button>
-   <div class="savemenu" id="saveMenu" role="group" aria-label="Save settings" hidden></div>
+   <div id="saveMenu" role="group" aria-label="Save settings" hidden></div>
   </span>
   <button type="button" id="check" disabled>Check board</button>
  </div>
 </header>
 <main>
-<div class="banner" id="banner" role="status" aria-live="polite"></div>
-<div class="scenetray" id="tabs"></div>
-<div class="sceneset" id="sceneTabRow" hidden></div>
-<div class="scenebody" id="sceneBody">
+<div id="banner" role="status" aria-live="polite"></div>
+<div id="tabs"></div>
+<div id="sceneTabRow" hidden></div>
+<div id="sceneBody">
  <div id="looks"></div>
  <details class="panel" id="outPanel" open>
   <summary>The outputs<span class="says"></span></summary>
@@ -45,7 +45,7 @@ __STYLES__
   <div id="outChosen"></div>
  </details>
 </div>
-<details class="filepreview">
+<details id="filePreview">
  <summary>The file to be saved</summary>
  <p id="previewNote" hidden></p>
  <pre id="preview"></pre>

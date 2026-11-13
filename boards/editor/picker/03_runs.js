@@ -825,31 +825,31 @@ export function paintLine(line) {
   var plain = escapeHtml(line);
   // A scene heading carries a colon, which would read as the one dividing a channel from its
   // effect, so headings are taken first
-  if (line.charAt(0) === "[") return "<span class='s-scene'>" + plain + "</span>";
-  if (/^\s*#/.test(line)) return "<span class='s-comment'>" + plain + "</span>";
+  if (line.charAt(0) === "[") return "<span data-s='scene'>" + plain + "</span>";
+  if (/^\s*#/.test(line)) return "<span data-s='comment'>" + plain + "</span>";
   var at = line.indexOf(":");
   if (at < 0) return plain;
   function settings(text) {
     return (text.match(/"[^"]*"|\S+|\s+/g) || []).map(function (token) {
       var pair = token.match(/^([^=\s]+)(=)(.*)$/);
       if (!pair) return escapeHtml(token);
-      return "<span class='s-name'>" + escapeHtml(pair[1]) + "</span>" +
-             "<span class='s-punc'>=</span>" +
-             "<span class='s-value'>" + escapeHtml(pair[3]) + "</span>";
+      return "<span data-s='name'>" + escapeHtml(pair[1]) + "</span>" +
+             "<span data-s='punc'>=</span>" +
+             "<span data-s='value'>" + escapeHtml(pair[3]) + "</span>";
     }).join("");
   }
   var left = line.slice(0, at), right = line.slice(at + 1);
   var selector = left.match(/^(\s*)(\S+)(.*)$/);
   var head = selector
-    ? escapeHtml(selector[1]) + "<span class='s-target'>" + escapeHtml(selector[2]) +
+    ? escapeHtml(selector[1]) + "<span data-s='target'>" + escapeHtml(selector[2]) +
       "</span>" + settings(selector[3])
     : escapeHtml(left);
   var effect = right.match(/^(\s*)(\S+)(.*)$/);
   var tail = effect
-    ? escapeHtml(effect[1]) + "<span class='s-effect'>" + escapeHtml(effect[2]) +
+    ? escapeHtml(effect[1]) + "<span data-s='effect'>" + escapeHtml(effect[2]) +
       "</span>" + settings(effect[3])
     : escapeHtml(right);
-  return head + "<span class='s-colon'>:</span>" + tail;
+  return head + "<span data-s='colon'>:</span>" + tail;
 }
 
 // ---- drawing --------------------------------------------------------------------------------

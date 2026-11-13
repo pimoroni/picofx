@@ -1,4 +1,4 @@
-.keptlines {
+#keptLines {
   margin: .6rem 0;
   padding: .5rem .7rem;
   border: 1px dashed var(--line);
@@ -6,11 +6,17 @@
   color: var(--dim);
   font-size: var(--text-m);
 
-  .keptsay {
-    margin-bottom: .3rem;
+  p {
+    margin: 0 0 .3rem;
   }
 
-  .keptrow {
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
     display: flex;
     align-items: flex-start;
     gap: .4rem;
@@ -23,7 +29,7 @@
     white-space: pre-wrap;
   }
 
-  .keptdrop {
+  button {
     padding: 0 .2rem;
     border: 0;
     background: none;

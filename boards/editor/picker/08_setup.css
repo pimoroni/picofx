@@ -1,4 +1,4 @@
-body.setupall :is(#tabs, #sceneTabRow, #looks, [id$=Bar], [id$=Chosen]) {
+body[data-setup] :is(#tabs, #sceneTabRow, #looks, [id$=Bar], [id$=Chosen]) {
   opacity: .35;
   pointer-events: none;
 }

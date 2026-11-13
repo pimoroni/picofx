@@ -1,4 +1,4 @@
-body.setupall #soundPanel {
+body[data-setup] #soundPanel {
   opacity: .35;
   pointer-events: none;
 }

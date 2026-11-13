@@ -1,4 +1,4 @@
-.drive {
+#drive {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -63,7 +63,7 @@
   }
 }
 
-.banner {
+#banner {
   margin: 1rem 0;
   padding: .8rem 1.1rem;
   border-radius: 10px;
@@ -116,7 +116,7 @@
   }
 }
 
-.filepreview {
+#filePreview {
   margin: 1.2rem 0;
 
   summary {
@@ -156,38 +156,40 @@
   }
 }
 
-.s-target {
-  color: #1f6feb;
-}
+#preview [data-s] {
+  &[data-s=target] {
+    color: #1f6feb;
+  }
 
-.s-effect {
-  color: #0a7f78;
-  font-weight: 600;
-}
+  &[data-s=effect] {
+    color: #0a7f78;
+    font-weight: 600;
+  }
 
-.s-value {
-  color: #a8500a;
-}
+  &[data-s=value] {
+    color: #a8500a;
+  }
 
-.s-name {
-  color: var(--ink);
-}
+  &[data-s=name] {
+    color: var(--ink);
+  }
 
-.s-punc {
-  color: #5d656e;
-}
+  &[data-s=punc] {
+    color: #5d656e;
+  }
 
-.s-colon {
-  color: var(--ink);
-  font-weight: 700;
-}
+  &[data-s=colon] {
+    color: var(--ink);
+    font-weight: 700;
+  }
 
-.s-comment {
-  color: var(--dim);
-  font-style: italic;
-}
+  &[data-s=comment] {
+    color: var(--dim);
+    font-style: italic;
+  }
 
-.s-scene {
-  color: #7b3fb8;
-  font-weight: 600;
+  &[data-s=scene] {
+    color: #7b3fb8;
+    font-weight: 600;
+  }
 }

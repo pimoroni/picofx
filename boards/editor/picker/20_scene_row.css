@@ -1,4 +1,4 @@
-.sceneset {
+#sceneTabRow {
   display: flex;
   flex-wrap: wrap-reverse;
   align-items: flex-start;
@@ -136,7 +136,7 @@
   }
 }
 
-.scenebody {
+#sceneBody {
   border: 1px solid transparent;
   border-radius: 12px;
 

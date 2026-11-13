@@ -5,7 +5,7 @@ import {
   sceneNumbers, sceneRestarts, sceneTriggerLeads, sceneWaitsFor, state
 } from "../04_scenes.js";
 import {boardLineSteps} from "../07_board.js";
-import {BOARD_CHIP_CLASSES, boardBox, canEdit, small} from "../08_setup.js";
+import {BOARD_CHIP_COLOURS, boardBox, canEdit, small} from "../08_setup.js";
 import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches, tabUnder} from "../11_tabs.js";
 import {boardResidue, boardTokens, unquoted} from "../27_readback.js";
 import {
@@ -22,7 +22,7 @@ state.sensorKind = "none";
 state.remote = {};
 state.remoteRepeats = [];
 
-BOARD_CHIP_CLASSES.sensorPanel = "sensor";
+BOARD_CHIP_COLOURS.sensorPanel = "var(--board)";
 
 function sensorFacts() {
   return SENSOR_KINDS.filter(function (one) { return one[0] === state.sensorKind; })[0];

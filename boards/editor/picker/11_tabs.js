@@ -35,8 +35,8 @@ export function showChosen() {
     node.setAttribute("role", "tabpanel");
     node.setAttribute("aria-labelledby", "tab-" + panel);
   });
-  document.body.classList.toggle("nolooks", !chosenTakesLooks());
-  if (document.body.classList.contains("looksbelow") && chosenTakesLooks()) {
+  document.body.toggleAttribute("data-no-looks", !chosenTakesLooks());
+  if (document.body.hasAttribute("data-looks-below") && chosenTakesLooks()) {
     document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
   }
 }
@@ -125,7 +125,7 @@ drawSteps.after.push(function () {
     stack.appendChild(document.getElementById(panel));
   });
   if (!/[?&]above\b/.test(location.search)) {
-    document.body.classList.add("looksbelow");
+    document.body.setAttribute("data-looks-below", "");
     document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
   }
 }());

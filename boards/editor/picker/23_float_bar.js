@@ -13,12 +13,12 @@ var driveStandIn = h("span", {"data-standin": true, "aria-hidden": "true"});
 var floatShown = false;
 var floatSaidTimer = null;
 
-var floatSaid = h("button", {type: "button", class: "said", hidden: true,
+var floatSaid = h("button", {type: "button", hidden: true,
                              title: "Show at the top of the page",
                              onclick: function () { window.scrollTo({top: 0, behavior: "smooth"}); }});
-var floatWhere = h("p", {class: "where"});
-var floatSlot = h("div", {class: "slot"});
-var floatBar = h("div", {class: "floatbar", "aria-hidden": "true", inert: true},
+var floatWhere = h("p", {});
+var floatSlot = h("div", {});
+var floatBar = h("div", {id: "floatBar", "aria-hidden": "true", inert: true},
   h("p", {},
     h("strong", {}, document.querySelector("header h1").firstChild.textContent.trim()),
     floatSaid),

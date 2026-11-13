@@ -1,7 +1,3 @@
-.boardchip.sensor {
-  background: var(--board);
-}
-
 .sensortab {
   > p {
     margin: .1rem 0 .7rem;

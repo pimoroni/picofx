@@ -124,10 +124,10 @@ def test_page_tabs_switch_between_effects_and_programs(opened, board):
     page = opened(board)
     page.get_by_role("button", name="Programs", exact=True).click()
     expect(page.locator("#sceneBody")).to_be_hidden()
-    expect(page.locator(".floatbar .where")).to_have_text("Programs")
+    expect(page.locator("#floatBar > p + p")).to_have_text("Programs")
     page.get_by_role("button", name=re.compile("^Effects")).click()
     expect(page.locator("#sceneBody")).to_be_visible()
-    expect(page.locator(".floatbar .where")).to_have_text("Effects")
+    expect(page.locator("#floatBar > p + p")).to_have_text("Effects")
     assert page.errors == []
 
 
@@ -169,10 +169,10 @@ def test_banner_says_what_the_page_says(opened):
     expect(status).to_have_attribute("data-tone", "warn")
     expect(status.locator("p")).to_have_text("The board reported problems:")
     expect(status.locator("pre")).to_have_text("line 3: nope")
-    expect(page.locator(".floatbar .said")).to_have_text("The board reported problems:")
+    expect(page.locator("#floatBar > p > button")).to_have_text("The board reported problems:")
     page.evaluate("banner('')")
     expect(status).to_be_hidden()
-    expect(page.locator(".floatbar .said")).to_be_hidden()
+    expect(page.locator("#floatBar > p > button")).to_be_hidden()
     assert page.errors == []
 
 
@@ -206,12 +206,12 @@ def test_float_bar_takes_the_drive_buttons_on_scroll(opened, board):
     page = opened(board)
     split_into_scenes(page)
     page.set_viewport_size({"width": 1280, "height": 480})
-    bar = page.locator(".floatbar")
+    bar = page.locator("#floatBar")
     expect(bar).to_have_attribute("aria-hidden", "true")
     page.mouse.wheel(0, 2000)
     expect(bar).to_have_attribute("data-shown", "")
     expect(bar.get_by_role("button", name="Open FX drive")).to_be_visible()
-    expect(bar.locator(".where")).to_have_text("EffectsScene 1")
+    expect(page.locator("#floatBar > p + p")).to_have_text("EffectsScene 1")
     expect(page.locator("header [data-standin]")).to_have_count(1)
     page.evaluate("window.scrollTo(0, 0)")
     expect(bar).to_have_attribute("aria-hidden", "true")

@@ -80,7 +80,6 @@ button {
     cursor: default;
   }
 
-  &.on,
   &[aria-pressed=true] {
     border-color: var(--accent);
     color: var(--accent);
@@ -369,6 +368,7 @@ html {
   gap: .45rem;
   padding: .3rem .55rem;
   border-radius: var(--radius);
+  background: var(--chip, var(--board));
   color: #fff;
   font: 600 var(--text-m) var(--font);
 
@@ -396,7 +396,7 @@ html {
     color: var(--ink);
   }
 
-  .drop {
+  button {
     padding: 0 .1rem;
     border: 0;
     background: none;
@@ -415,9 +415,6 @@ html {
     opacity: .9;
   }
 
-  &.outs {
-    background: var(--boardOuts);
-  }
 }
 
 .boardicon {
@@ -513,10 +510,6 @@ html {
 .panel[data-strip] {
   position: relative;
 
-  .chip {
-    background: var(--strip);
-  }
-
   &[data-absent] {
     > :not(summary, header) {
       visibility: hidden;
@@ -610,7 +603,7 @@ html {
   }
 }
 
-.scenetray {
+#tabs {
   --cardheight: 4.75rem;
   margin: .4rem -1rem .5rem;
 
@@ -834,11 +827,11 @@ html {
     }
   }
 }
-body.setupall :is(#tabs, #sceneTabRow, #looks, [id$=Bar], [id$=Chosen]) {
+body[data-setup] :is(#tabs, #sceneTabRow, #looks, [id$=Bar], [id$=Chosen]) {
   opacity: .35;
   pointer-events: none;
 }
-body:not(.setupall) #sides [id$=Run] {
+body:not([data-setup]) #sides [id$=Run] {
   display: none;
 }
 
@@ -1749,7 +1742,7 @@ body:not(.setupall) #sides [id$=Run] {
     }
   }
 }
-body.setupall #soundPanel {
+body[data-setup] #soundPanel {
   opacity: .35;
   pointer-events: none;
 }
@@ -2111,10 +2104,6 @@ body.setupall #soundPanel {
     border: 1px dashed #a9a49b;
   }
 }
-.boardchip.sensor {
-  background: var(--board);
-}
-
 .sensortab {
   > p {
     margin: .1rem 0 .7rem;
@@ -3013,7 +3002,7 @@ body.setupall #soundPanel {
     font-size: var(--text-xs);
   }
 }
-.drive {
+#drive {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -3078,7 +3067,7 @@ body.setupall #soundPanel {
   }
 }
 
-.banner {
+#banner {
   margin: 1rem 0;
   padding: .8rem 1.1rem;
   border-radius: 10px;
@@ -3131,7 +3120,7 @@ body.setupall #soundPanel {
   }
 }
 
-.filepreview {
+#filePreview {
   margin: 1.2rem 0;
 
   summary {
@@ -3171,40 +3160,42 @@ body.setupall #soundPanel {
   }
 }
 
-.s-target {
-  color: #1f6feb;
-}
+#preview [data-s] {
+  &[data-s=target] {
+    color: #1f6feb;
+  }
 
-.s-effect {
-  color: #0a7f78;
-  font-weight: 600;
-}
+  &[data-s=effect] {
+    color: #0a7f78;
+    font-weight: 600;
+  }
 
-.s-value {
-  color: #a8500a;
-}
+  &[data-s=value] {
+    color: #a8500a;
+  }
 
-.s-name {
-  color: var(--ink);
-}
+  &[data-s=name] {
+    color: var(--ink);
+  }
 
-.s-punc {
-  color: #5d656e;
-}
+  &[data-s=punc] {
+    color: #5d656e;
+  }
 
-.s-colon {
-  color: var(--ink);
-  font-weight: 700;
-}
+  &[data-s=colon] {
+    color: var(--ink);
+    font-weight: 700;
+  }
 
-.s-comment {
-  color: var(--dim);
-  font-style: italic;
-}
+  &[data-s=comment] {
+    color: var(--dim);
+    font-style: italic;
+  }
 
-.s-scene {
-  color: #7b3fb8;
-  font-weight: 600;
+  &[data-s=scene] {
+    color: #7b3fb8;
+    font-weight: 600;
+  }
 }
 .programnote {
   display: flex;
@@ -3314,7 +3305,7 @@ body[data-programmed] :is(#looks, #tabs, #sceneTabRow, #tabStack > .panel:not(#b
     cursor: pointer;
   }
 }
-.sceneset {
+#sceneTabRow {
   display: flex;
   flex-wrap: wrap-reverse;
   align-items: flex-start;
@@ -3452,7 +3443,7 @@ body[data-programmed] :is(#looks, #tabs, #sceneTabRow, #tabStack > .panel:not(#b
   }
 }
 
-.scenebody {
+#sceneBody {
   border: 1px solid transparent;
   border-radius: 12px;
 
@@ -3475,7 +3466,7 @@ body[data-programmed] :is(#looks, #tabs, #sceneTabRow, #tabStack > .panel:not(#b
     }
   }
 }
-.savemenu {
+#saveMenu {
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
@@ -4059,7 +4050,7 @@ header:has(> .pageswitch) {
     }
   }
 }
-.floatbar {
+#floatBar {
   position: fixed;
   top: 0;
   right: 0;
@@ -4098,7 +4089,7 @@ header:has(> .pageswitch) {
     font-size: var(--text-l);
   }
 
-  .said {
+  > p > button {
     flex: 1;
     min-width: 0;
     padding: 0;
@@ -4120,7 +4111,7 @@ header:has(> .pageswitch) {
     }
   }
 
-  .where {
+  > p + p {
     font-size: var(--text-m);
 
     small {
@@ -4130,7 +4121,7 @@ header:has(> .pageswitch) {
     }
   }
 
-  .slot {
+  > div {
     justify-self: end;
   }
 
@@ -4143,16 +4134,16 @@ header:has(> .pageswitch) {
       display: none;
     }
 
-    .slot {
+    > div {
       grid-column: 1 / -1;
     }
 
-    .drive {
+    #drive {
       flex-wrap: nowrap;
     }
   }
 }
-.keptlines {
+#keptLines {
   margin: .6rem 0;
   padding: .5rem .7rem;
   border: 1px dashed var(--line);
@@ -4160,11 +4151,17 @@ header:has(> .pageswitch) {
   color: var(--dim);
   font-size: var(--text-m);
 
-  .keptsay {
-    margin-bottom: .3rem;
+  p {
+    margin: 0 0 .3rem;
   }
 
-  .keptrow {
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
     display: flex;
     align-items: flex-start;
     gap: .4rem;
@@ -4177,7 +4174,7 @@ header:has(> .pageswitch) {
     white-space: pre-wrap;
   }
 
-  .keptdrop {
+  button {
     padding: 0 .2rem;
     border: 0;
     background: none;
@@ -5568,11 +5565,11 @@ body:has(> dialog.discover[open]) {
 #looks {
   margin-bottom: 1.4rem;
 
-  body.looksbelow & {
+  body[data-looks-below] & {
     margin: 1.2rem 0 0;
   }
 
-  body.nolooks & {
+  body[data-no-looks] & {
     opacity: .3;
     pointer-events: none;
   }
@@ -5582,20 +5579,20 @@ body:has(> dialog.discover[open]) {
 <body>
 <header>
  <h1>Mighty FX Picker <small>1.1.3 preview</small></h1>
- <div class="drive" id="drive" role="group" aria-label="FX drive">
+ <div id="drive" role="group" aria-label="FX drive">
   <button type="button" id="open" data-primary>Open FX drive</button>
   <span>
    <button type="button" id="save" disabled>Save to board</button><button type="button" id="saveArrow" title="Save settings" aria-label="Save settings" aria-haspopup="true" aria-expanded="false" aria-controls="saveMenu">&#9662;</button>
-   <div class="savemenu" id="saveMenu" role="group" aria-label="Save settings" hidden></div>
+   <div id="saveMenu" role="group" aria-label="Save settings" hidden></div>
   </span>
   <button type="button" id="check" disabled>Check board</button>
  </div>
 </header>
 <main>
-<div class="banner" id="banner" role="status" aria-live="polite"></div>
-<div class="scenetray" id="tabs"></div>
-<div class="sceneset" id="sceneTabRow" hidden></div>
-<div class="scenebody" id="sceneBody">
+<div id="banner" role="status" aria-live="polite"></div>
+<div id="tabs"></div>
+<div id="sceneTabRow" hidden></div>
+<div id="sceneBody">
  <div id="looks"></div>
  <details class="panel" id="outPanel" open>
   <summary>The outputs<span class="says"></span></summary>
@@ -5615,7 +5612,7 @@ body:has(> dialog.discover[open]) {
   <div id="outChosen"></div>
  </details>
 </div>
-<details class="filepreview">
+<details id="filePreview">
  <summary>The file to be saved</summary>
  <p id="previewNote" hidden></p>
  <pre id="preview"></pre>
@@ -7275,31 +7272,31 @@ function paintLine(line) {
   var plain = escapeHtml(line);
   // A scene heading carries a colon, which would read as the one dividing a channel from its
   // effect, so headings are taken first
-  if (line.charAt(0) === "[") return "<span class='s-scene'>" + plain + "</span>";
-  if (/^\s*#/.test(line)) return "<span class='s-comment'>" + plain + "</span>";
+  if (line.charAt(0) === "[") return "<span data-s='scene'>" + plain + "</span>";
+  if (/^\s*#/.test(line)) return "<span data-s='comment'>" + plain + "</span>";
   var at = line.indexOf(":");
   if (at < 0) return plain;
   function settings(text) {
     return (text.match(/"[^"]*"|\S+|\s+/g) || []).map(function (token) {
       var pair = token.match(/^([^=\s]+)(=)(.*)$/);
       if (!pair) return escapeHtml(token);
-      return "<span class='s-name'>" + escapeHtml(pair[1]) + "</span>" +
-             "<span class='s-punc'>=</span>" +
-             "<span class='s-value'>" + escapeHtml(pair[3]) + "</span>";
+      return "<span data-s='name'>" + escapeHtml(pair[1]) + "</span>" +
+             "<span data-s='punc'>=</span>" +
+             "<span data-s='value'>" + escapeHtml(pair[3]) + "</span>";
     }).join("");
   }
   var left = line.slice(0, at), right = line.slice(at + 1);
   var selector = left.match(/^(\s*)(\S+)(.*)$/);
   var head = selector
-    ? escapeHtml(selector[1]) + "<span class='s-target'>" + escapeHtml(selector[2]) +
+    ? escapeHtml(selector[1]) + "<span data-s='target'>" + escapeHtml(selector[2]) +
       "</span>" + settings(selector[3])
     : escapeHtml(left);
   var effect = right.match(/^(\s*)(\S+)(.*)$/);
   var tail = effect
-    ? escapeHtml(effect[1]) + "<span class='s-effect'>" + escapeHtml(effect[2]) +
+    ? escapeHtml(effect[1]) + "<span data-s='effect'>" + escapeHtml(effect[2]) +
       "</span>" + settings(effect[3])
     : escapeHtml(right);
-  return head + "<span class='s-colon'>:</span>" + tail;
+  return head + "<span data-s='colon'>:</span>" + tail;
 }
 
 // ---- drawing --------------------------------------------------------------------------------
@@ -9418,8 +9415,8 @@ function saidNotFitted(name) {
 var setupOn = false;
 
 // The panels that hold a board fact, and the colour each one's box takes
-var BOARD_CHIP_CLASSES = {outPanel: "outs"};
-STRIPS.forEach(function (strip) { BOARD_CHIP_CLASSES[strip.id + "Panel"] = strip.id; });
+var BOARD_CHIP_COLOURS = {outPanel: "var(--boardOuts)"};
+BOARD.strips.forEach(function (strip) { BOARD_CHIP_COLOURS[strip.name + "Panel"] = strip.colour; });
 
 // Whether the board facts in this panel can be changed just now
 function canEdit(panel) { return setupOn; }
@@ -9471,7 +9468,7 @@ function unmark() {
 }
 
 function boardBox(panel, parts) {
-  return h("span", {class: "chip boardchip " + BOARD_CHIP_CLASSES[panel],
+  return h("span", {class: "chip", style: {"--chip": BOARD_CHIP_COLOURS[panel]},
                     title: "Board setup, shared by every scene"}, boardIcon(), parts);
 }
 
@@ -9570,7 +9567,7 @@ function renderLeds(where, run) {
   document.getElementById(panel).toggleAttribute("data-absent", !run.there);
   var chip = !run.there ? stripOut(run, panel)
            : canEdit(panel) ? boardBox(panel, ["Strip", stripLengthField(run), small("LEDs"), stripChipChoice(run),
-                                               h("button", {type: "button", class: "drop",
+                                               h("button", {type: "button",
                                                             title: "Remove this strip from every scene",
                                                             onclick: function () { dropStrip(run); }}, "\u00d7")])
            : boardBox(panel, ["Strip", small(stripBuilt(run))]);
@@ -9580,14 +9577,14 @@ function renderLeds(where, run) {
 // ---- turning setup on ------------------------------------------------------------------------
 
 function setupButton(label, on, act) {
-  return h("button", {type: "button", class: "setupbutton" + (on ? " on" : ""), "aria-pressed": on ? "true" : "false",
+  return h("button", {type: "button", class: "setupbutton", "aria-pressed": on ? "true" : "false",
                       onclick: act}, boardIcon(), label);
 }
 
 drawSteps.after.push(function () {
   renderOutFacts();
   // What is not the board stands back while it is set up
-  document.body.classList.toggle("setupall", setupOn);
+  document.body.toggleAttribute("data-setup", setupOn);
   if (setupOn) unmark();
   paintAll();
 });
@@ -9932,8 +9929,8 @@ function showChosen() {
     node.setAttribute("role", "tabpanel");
     node.setAttribute("aria-labelledby", "tab-" + panel);
   });
-  document.body.classList.toggle("nolooks", !chosenTakesLooks());
-  if (document.body.classList.contains("looksbelow") && chosenTakesLooks()) {
+  document.body.toggleAttribute("data-no-looks", !chosenTakesLooks());
+  if (document.body.hasAttribute("data-looks-below") && chosenTakesLooks()) {
     document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
   }
 }
@@ -10022,7 +10019,7 @@ drawSteps.after.push(function () {
     stack.appendChild(document.getElementById(panel));
   });
   if (!/[?&]above\b/.test(location.search)) {
-    document.body.classList.add("looksbelow");
+    document.body.setAttribute("data-looks-below", "");
     document.getElementById(chosenTab).appendChild(document.getElementById("looks"));
   }
 }());
@@ -11467,7 +11464,7 @@ state.sensorKind = "none";
 state.remote = {};
 state.remoteRepeats = [];
 
-BOARD_CHIP_CLASSES.sensorPanel = "sensor";
+BOARD_CHIP_COLOURS.sensorPanel = "var(--board)";
 
 function sensorFacts() {
   return SENSOR_KINDS.filter(function (one) { return one[0] === state.sensorKind; })[0];
@@ -16308,12 +16305,12 @@ var driveStandIn = h("span", {"data-standin": true, "aria-hidden": "true"});
 var floatShown = false;
 var floatSaidTimer = null;
 
-var floatSaid = h("button", {type: "button", class: "said", hidden: true,
+var floatSaid = h("button", {type: "button", hidden: true,
                              title: "Show at the top of the page",
                              onclick: function () { window.scrollTo({top: 0, behavior: "smooth"}); }});
-var floatWhere = h("p", {class: "where"});
-var floatSlot = h("div", {class: "slot"});
-var floatBar = h("div", {class: "floatbar", "aria-hidden": "true", inert: true},
+var floatWhere = h("p", {});
+var floatSlot = h("div", {});
+var floatBar = h("div", {id: "floatBar", "aria-hidden": "true", inert: true},
   h("p", {},
     h("strong", {}, document.querySelector("header h1").firstChild.textContent.trim()),
     floatSaid),
@@ -18171,47 +18168,31 @@ fileHead.under.push(function () {
 });
 fileHead.above.push(function () { return boardComments; });
 
-// ---- showing them -----------------------------------------------------------------------------
-
 function renderKept() {
   var box = document.getElementById("keptLines");
   if (!box) {
-    box = document.createElement("div");
-    box.id = "keptLines";
-    box.className = "keptlines";
-    // Above the file's own box, so the lines show while the file is folded
+    box = h("section", {id: "keptLines", "aria-label": "Lines kept as written"});
     var preview = document.getElementById("preview");
     var file = preview.closest("details") || preview;
     file.parentNode.insertBefore(box, file);
   }
   var shown = keptNow.filter(function (one) { return one.text !== null; });
   box.hidden = !shown.length;
-  box.textContent = "";
-  if (!shown.length) return;
-
-  var head = document.createElement("div");
-  head.className = "keptsay";
-  head.textContent = "Lines " + (state.scenes.length ? "in this scene" : "in the file") +
-                     " the picker cannot edit:";
-  box.appendChild(head);
-  keptNow.forEach(function (one, at) {
-    if (one.text === null) return;
-    var row = document.createElement("div");
-    row.className = "keptrow";
-    var code = document.createElement("code");
-    code.textContent = one.text;
-    row.appendChild(code);
-    var drop = document.createElement("button");
-    drop.className = "keptdrop";
-    drop.textContent = "\u00d7";
-    drop.title = "Remove this line from the file";
-    drop.onclick = function () {
-      keptNow.splice(at, 1);
-      draw();
-    };
-    row.appendChild(drop);
-    box.appendChild(row);
-  });
+  if (!shown.length) {
+    replace(box);
+    return;
+  }
+  replace(box,
+    h("p", {}, "Lines " + (state.scenes.length ? "in this scene" : "in the file") + " the picker cannot edit:"),
+    h("ul", {}, keptNow.map(function (one, at) {
+      if (one.text === null) return null;
+      return h("li", {}, h("code", {}, one.text),
+        h("button", {type: "button", title: "Remove this line from the file",
+                     onclick: function () {
+                       keptNow.splice(at, 1);
+                       draw();
+                     }}, "\u00d7"));
+    })));
 }
 
 // The lights of a run the scene's kept lines name, as places in the run, with the lines naming each
@@ -20171,7 +20152,7 @@ function parkLooks() {
 
 function seatLooks() {
   var looks = document.getElementById("looks");
-  if (!looks || looks.hidden || !document.body.classList.contains("looksbelow")) return;
+  if (!looks || looks.hidden || !document.body.hasAttribute("data-looks-below")) return;
   var editor = document.querySelector("#" + chosenTab + " .editor[data-picking]");
   if (editor) editor.appendChild(looks);
 }

@@ -475,7 +475,7 @@ function parkLooks() {
 
 function seatLooks() {
   var looks = document.getElementById("looks");
-  if (!looks || looks.hidden || !document.body.classList.contains("looksbelow")) return;
+  if (!looks || looks.hidden || !document.body.hasAttribute("data-looks-below")) return;
   var editor = document.querySelector("#" + chosenTab + " .editor[data-picking]");
   if (editor) editor.appendChild(looks);
 }

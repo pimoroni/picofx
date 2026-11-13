@@ -105,6 +105,7 @@ html {
   gap: .45rem;
   padding: .3rem .55rem;
   border-radius: var(--radius);
+  background: var(--chip, var(--board));
   color: #fff;
   font: 600 var(--text-m) var(--font);
 
@@ -132,7 +133,7 @@ html {
     color: var(--ink);
   }
 
-  .drop {
+  button {
     padding: 0 .1rem;
     border: 0;
     background: none;
@@ -151,9 +152,6 @@ html {
     opacity: .9;
   }
 
-  &.outs {
-    background: var(--boardOuts);
-  }
 }
 
 .boardicon {

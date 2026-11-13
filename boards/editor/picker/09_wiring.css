@@ -1,4 +1,4 @@
-body:not(.setupall) #sides [id$=Run] {
+body:not([data-setup]) #sides [id$=Run] {
   display: none;
 }
 
