@@ -1,6 +1,7 @@
+import {h, replace} from "../00_dom.js";
 import {draw, drawSteps} from "../03_runs.js";
 import {
-  allBodies, apply, bodyParts, capture, driveParts, frozen, slotAt, state, store
+  allBodies, apply, bodyParts, capture, driveParts, slotAt, state, store
 } from "../04_scenes.js";
 import {WORDS, hexOf} from "../05_effects.js";
 import {
@@ -17,18 +18,14 @@ import {
 import {openingString} from "../26_drive_programs.js";
 import {boardResidue, entryParts, unquoted} from "../27_readback.js";
 import {
-  chosenAfresh, drawingArts, drawingCopyTile, drawingSaid, freshLook, lightRow, lookEntry,
-  lookSections, madeDrawing, panelPreview, pictureSaid, renderScreensTab, showingLine, shownBefore,
+  backlightSetting, chosenAfresh, drawingArts, drawingCopyTile, drawingInk, drawingSaid, freshLook,
+  lookEntry, lookSettings, madeDrawing, panelPreview, pictureSaid, showingLine, shownBefore,
   styleNamed, styleWords
 } from "./16_screen_settings.js";
-import {pairEntry, pairWritten, screenUnder, screensPaired} from "./17_screen_pair.js";
+import {pairControl, pairEntry, pairWritten, screenUnder, screensPaired} from "./17_screen_pair.js";
 
 // ---- a Screens tab ------------------------------------------------------------------------
-// The two screen boxes, A in blue and B in purple, each with its panel size in the coloured
-// band, the module as it is mounted and which way up it is turned, and under them one set of
-// pictures, each able to go to A, to B, or to both.
-//
-// The drawing asks of its page the board's two screens, the pictures on the drive, and each
+// The tab asks of its page the board's two screens, the pictures on the drive, and each
 // scene keeping what its screens show. The size and whether a screen is fitted are the board's,
 // so they are changed while the board is set up, the band being the screen's coloured box;
 // what a screen shows is the scene's, and chosen at any time.
@@ -120,13 +117,6 @@ var PRINTED = {
 
 export var PANEL_PX = {"2.8": [240, 320], "1.54": [240, 240]};
 
-var DRAWN = 210;
-
-function svgTag(name, attrs, inner) {
-  var out = "<" + name;
-  Object.keys(attrs).forEach(function (key) { out += " " + key + "='" + attrs[key] + "'"; });
-  return inner === undefined ? out + "/>" : out + ">" + inner + "</" + name + ">";
-}
 
 function tabPath(x0, x1, near, far, radius) {
   var edge = far < near ? far + radius : far - radius;
@@ -138,9 +128,21 @@ function tabPath(x0, x1, near, far, radius) {
          " L" + x1 + " " + near + " Z";
 }
 
-// A screen module drawn with the picture it shows as it stands. panelPreview draws the picture
-// composed with its look
-export function panelDrawing(screen) {
+function moduleWords(x, y, ink, words) {
+  return h("svg:text", {x: x, y: y, "text-anchor": "middle", fill: ink, "font-size": 4,
+                        "font-family": "system-ui"}, words);
+}
+
+function moduleSaid(screen, art) {
+  var size = (MODULE[screen.size] ? screen.size : "2.8") + " inch screen";
+  if (screen.shows === "keep") return size + ", as it is";
+  if (art) return size + ", showing a picture";
+  if (screen.shows) return size + ", showing a picture on the board";
+  if (screen.off) return size + ", off";
+  return size + ", no picture";
+}
+
+export function panelDrawing(screen, under) {
   var made = MODULE[screen.size] || MODULE["2.8"];
   var turn = Number(screen.turn || 0);
   var quarter = turn % 180 === 90;
@@ -152,248 +154,155 @@ export function panelDrawing(screen) {
   var bottom = (extent - boardH) / 2;
   function up(y) { return extent - bottom - y; }
 
-  var parts = [];
-
-  parts.push(svgTag("rect", {x: left, y: up(made.body[1]), width: boardW,
-                             height: made.body[1] - made.body[0], fill: BOARD_INK}));
-  parts.push(svgTag("path", {d: tabPath(left + made.tab[0], left + made.tab[1],
-                                        up(made.body[1]), up(made.tab[2]), made.tabRadius),
-                             fill: BOARD_INK}));
-  parts.push(svgTag("path", {d: tabPath(left + made.tab[0], left + made.tab[1],
-                                        up(made.body[0]), up(boardH - made.tab[2]),
-                                        made.tabRadius), fill: BOARD_INK}));
-
+  var holes = [];
   [[8, 5], [16, 3.2], [24, 5], [32, 3.2], [40, 5]].forEach(function (hole) {
-    if (hole[0] > boardW - 4) return;      // the small panel has three, not five
+    if (hole[0] > boardW - 4) return;
     [4, boardH - 4].forEach(function (y) {
-      parts.push(svgTag("circle", {cx: left + hole[0], cy: up(y), r: hole[1] / 2,
-                                   fill: HOLE_INK, stroke: HOLE_EDGE,
-                                   "stroke-width": 0.3}));
+      holes.push(h("svg:circle", {cx: left + hole[0], cy: up(y), r: hole[1] / 2, fill: HOLE_INK,
+                                  stroke: HOLE_EDGE, "stroke-width": 0.3}));
     });
   });
-
-  parts.push(svgTag("rect", {x: left + made.panel[0], y: up(made.panel[3]),
-                             width: made.panel[2] - made.panel[0],
-                             height: made.panel[3] - made.panel[1], fill: PANEL_INK,
-                             stroke: FRAME_INK, "stroke-width": FRAME_WIDE}));
 
   var litW = made.lit[0];
   var litH = made.lit[1];
   var litX = left + boardW / 2 - litW / 2;
   var litY = up(boardH / 2) - litH / 2;
-  // A screen may be handed its picture outright, as the program page's preview is
   var art = screen.art || (screen.shows && screen.shows !== "keep" ? mediaArt(screen.shows) : null);
-
-  parts.push(svgTag("rect", {x: litX, y: litY, width: litW, height: litH,
-                             fill: art ? GROUND_INK : screen.off ? "#000000" : EMPTY_INK}));
-  parts.push(svgTag("rect", {x: litX - 0.4, y: litY + litH, width: litW + 0.8,
-                             height: Math.max(0, up(made.panel[1]) - (litY + litH) - 0.4),
-                             fill: CHIN_INK}));
-
-  if (screen.shows === "keep") {
-    parts.push(svgTag("text", {x: litX + litW / 2, y: litY + litH / 2 + 1.4,
-                               "text-anchor": "middle", fill: "#8b959b",
-                               "font-size": 4, "font-family": "system-ui"}, "as it is"));
-  } else if (art) {
-    // Drawn over the module as a plain img, since the browser plays every kind of
-    // gif properly there where an image inside svg drops delta frames
-  } else if (screen.shows) {
-    parts.push(svgTag("text", {x: litX + litW / 2, y: litY + litH / 2 + 1.4,
-                               "text-anchor": "middle", fill: "#8b959b",
-                               "font-size": 4, "font-family": "system-ui"},
-                      "on the board"));
-  } else if (screen.off) {
-    parts.push(svgTag("text", {x: litX + litW / 2, y: litY + litH / 2 + 1.4,
-                               "text-anchor": "middle", fill: "#5d666c",
-                               "font-size": 4, "font-family": "system-ui"}, "off"));
-  } else {
-    parts.push(svgTag("text", {x: litX + litW / 2, y: litY + litH / 2 + 1.4,
-                               "text-anchor": "middle", fill: "#8b959b",
-                               "font-size": 4, "font-family": "system-ui"}, "no picture"));
-  }
-
+  var middleX = litX + litW / 2;
+  var middleY = litY + litH / 2 + 1.4;
+  var words = screen.shows === "keep" ? moduleWords(middleX, middleY, "#8b959b", "as it is")
+            : art ? null
+            : screen.shows ? moduleWords(middleX, middleY, "#8b959b", "on the board")
+            : screen.off ? moduleWords(middleX, middleY, "#5d666c", "off")
+            : moduleWords(middleX, middleY, "#8b959b", "no picture");
   var name = PRINTED[screen.size] || PRINTED["2.8"];
-  parts.push("<g transform='translate(" + (left - name.x / PER_MM) + " " +
-             (extent - bottom - name.y / PER_MM) + ") scale(" + (1 / PER_MM) + ")' " +
-             "fill='" + NAME_INK + "'>" + svgTag("path", {d: name.d}) + "</g>");
 
-  var holder = document.createElement("div");
-  holder.className = "holder";
-  holder.innerHTML =
-    "<svg width='" + DRAWN + "' height='" + DRAWN + "' viewBox='0 0 " + extent + " " + extent +
-    "'><g transform='rotate(" + turn + " " + (extent / 2) + " " + (extent / 2) + ")'>" +
-    parts.join("") + "</g></svg>";
+  var drawing = h("svg:svg", {viewBox: "0 0 " + extent + " " + extent, "aria-hidden": "true"},
+    h("svg:g", {transform: "rotate(" + turn + " " + (extent / 2) + " " + (extent / 2) + ")"},
+      h("svg:rect", {x: left, y: up(made.body[1]), width: boardW, height: made.body[1] - made.body[0],
+                     fill: BOARD_INK}),
+      h("svg:path", {d: tabPath(left + made.tab[0], left + made.tab[1], up(made.body[1]),
+                                up(made.tab[2]), made.tabRadius), fill: BOARD_INK}),
+      h("svg:path", {d: tabPath(left + made.tab[0], left + made.tab[1], up(made.body[0]),
+                                up(boardH - made.tab[2]), made.tabRadius), fill: BOARD_INK}),
+      holes,
+      h("svg:rect", {x: left + made.panel[0], y: up(made.panel[3]),
+                     width: made.panel[2] - made.panel[0], height: made.panel[3] - made.panel[1],
+                     fill: PANEL_INK, stroke: FRAME_INK, "stroke-width": FRAME_WIDE}),
+      h("svg:rect", {x: litX, y: litY, width: litW, height: litH,
+                     fill: art ? GROUND_INK : screen.off ? "#000000" : EMPTY_INK}),
+      h("svg:rect", {x: litX - 0.4, y: litY + litH, width: litW + 0.8,
+                     height: Math.max(0, up(made.panel[1]) - (litY + litH) - 0.4), fill: CHIN_INK}),
+      words,
+      h("svg:g", {transform: "translate(" + (left - name.x / PER_MM) + " " +
+                             (extent - bottom - name.y / PER_MM) + ") scale(" + (1 / PER_MM) + ")",
+                  fill: NAME_INK},
+        h("svg:path", {d: name.d}))));
 
-  // The picture as the board will draw it: its own pixels, centred, cropped by the
-  // lit window, black around it. The window sits on the drawing's exact centre, so
-  // a turned module swaps its width and height and nothing else moves; the picture
-  // itself stays upright, which is what a viewer of a mounted screen sees
+  var picture = null;
   if (art) {
     var px = PANEL_PX[screen.size] || PANEL_PX["2.8"];
-    var scale = (DRAWN / extent) * (litW / px[0]);
-    var windowW = (quarter ? litH : litW) * (DRAWN / extent);
-    var windowH = (quarter ? litW : litH) * (DRAWN / extent);
-    var pane = document.createElement("div");
-    pane.style.cssText = "position:absolute;overflow:hidden;" +
-      "left:" + ((DRAWN - windowW) / 2) + "px;top:" + ((DRAWN - windowH) / 2) + "px;" +
-      "width:" + windowW + "px;height:" + windowH + "px;" +
-      "display:flex;align-items:center;justify-content:center";
-    var img = document.createElement("img");
-    img.src = art.url;
-    img.style.cssText = "flex:none;width:" + (art.w * scale) + "px;height:" +
-                        (art.h * scale) + "px" + (art.pixelated ? ";image-rendering:pixelated" : "");
-    pane.appendChild(img);
-    holder.style.position = "relative";
-    holder.appendChild(pane);
+    var windowW = quarter ? litH : litW;
+    var windowH = quarter ? litW : litH;
+    var perPixel = litW / px[0];
+    picture = h("div", {style: {"--left": ((extent - windowW) / 2 / extent * 100) + "%",
+                                "--top": ((extent - windowH) / 2 / extent * 100) + "%",
+                                "--wide": (windowW / extent * 100) + "%",
+                                "--high": (windowH / extent * 100) + "%"}},
+      h("img", {src: art.url, alt: "", "data-pixelated": !!art.pixelated,
+                style: {"--w": (art.w * perPixel / windowW * 100) + "%",
+                        "--h": (art.h * perPixel / windowH * 100) + "%"}}));
   }
-  return holder;
+  return h("div", {class: "screenmodule", role: "img", "aria-label": moduleSaid(screen, art),
+                   "data-under": !!under, title: under || null},
+    drawing, picture);
 }
 
-// The Screens tab's head, a box for each screen. A part that draws the head another way
-// registers on instead, saying whether it did, and one that adds to either on after
-export var screensHeadSteps = {instead: [], after: []};
+var SCREEN_INKS = {A: "var(--screen-a)", B: "var(--screen-b)"};
 
-function renderScreensHead() {
-  if (!screensHeadSteps.instead.some(function (step) { return step(); })) {
-    document.getElementById("screensHead").classList.remove("hubbed");
-    renderScreenBoxes();
-  }
-  screensHeadSteps.after.forEach(function (step) { step(); });
-}
+export function screenInk(letter) { return SCREEN_INKS[letter]; }
 
-// A box for each screen port. A screen's box has the backlight across its top, what it shows
-// straight under the module, and its look's sections under that
-function renderScreenBoxes() {
-  var box = document.getElementById("screensHead");
-  box.textContent = "";
-  SCREENS.forEach(function (letter) {
-    var screen = state.screens[letter];
-    var side = document.createElement("div");
-    side.className = "screen-box " + letter.toLowerCase();
-    var head = document.createElement("h3");
-    head.appendChild(document.createTextNode(screenShown(letter)));
-    side.appendChild(head);
+export var screensTabHooks = {above: null, head: null};
 
-    var body = document.createElement("div");
-    body.className = "body";
-    side.appendChild(body);
-
-    if (!screen.there) {
-      body.className = "body adding";
-      var add = document.createElement("button");
-      add.textContent = "add this screen";
-      add.onclick = function () {
+function screenBox(letter) {
+  var screen = state.screens[letter];
+  var named = screenShown(letter);
+  var setup = h("label", {title: "Board setup, shared by every scene"}, boardIcon(),
+                screen.there ? sizeChoice(letter) : null);
+  var box = h("section", {class: "screenbox", "aria-label": named,
+                          style: {"--tint": SCREEN_INKS[letter]}});
+  if (!screen.there) {
+    return replace(box, h("div", {}, h("h3", {}, named), setup),
+      h("button", {type: "button", disabled: !setupOn, onclick: function () {
         screen.there = true;
         screen.shows = null;
         screen.kept = null;
         draw();
-      };
-      body.appendChild(add);
-      box.appendChild(side);
-      return;
-    }
-
-    // Taking the screen out is the only way to have none: a screen showing
-    // nothing says the same thing twice
-    var drop = document.createElement("button");
-    drop.className = "drop";
-    drop.textContent = "\u00d7";
-    drop.title = "Remove this screen from every scene";
-    drop.onclick = function () {
-      screen.there = false;
-      // Every scene's choice for it goes too, since nothing is left to show them
-      store();
-      allBodies().forEach(function (held) {
-        held.screens[letter].shows = null;
-        held.screens[letter].kept = null;
-      });
-      apply(slotAt(state.at).body);
-      draw();
-    };
-    head.appendChild(drop);
-
-    var size = document.createElement("select");
-    // The sizes a panel can be, the catalogue's hub being no panel size
-    var offered = (CATALOGUE.board_settings[SCREEN_NAMES[letter].toLowerCase()] || ["2.8", "1.54"])
-      .filter(function (inches) { return inches !== "hub"; });
-    if (!screen.size) {
-      var quiet = document.createElement("option");
-      quiet.value = "";
-      quiet.textContent = "fitted size";
-      quiet.selected = true;
-      size.appendChild(quiet);
-    }
-    offered.forEach(function (inches) {
-      var option = document.createElement("option");
-      option.value = inches;
-      option.textContent = inches + " inch";
-      if (screen.size === inches) option.selected = true;
-      size.appendChild(option);
-    });
-    size.onchange = function () {
-      if (size.value) screen.size = size.value;
-      draw();
-    };
-    size.className = "inband";
-    size.title = "Panel fitted, shared by every scene";
-    head.insertBefore(size, drop);
-
-    body.appendChild(previewInScene(screen, letter));
-
-    // The look's sections, what it shows above them, and its backlight across the top. A screen
-    // showing Always on's picture plays it in Always on's settings, so it shows those, greyed
-    var under = screen.shows ? null : screenUnder(letter);
-    var held = screen;
-    if (under && under.always) {
-      var always = state.always.body.screens[letter];
-      held = Object.assign({}, screen, {shows: null, turn: always.turn || 0,
-                                        look: always.look || screen.look});
-    }
-    var sections = lookSections("screen" + letter, held, screen.size);
-    var light = lightRow(held.look.backlight, function (value) {
-      screen.look.backlight = value;
-    }, "backlight", "Backlight brightness for " + screenShown(letter).replace("Screen", "screen") + " in this scene");
-    if (held !== screen) {
-      frozen(sections);
-      frozen(light);
-    }
-    body.appendChild(sections);
-    body.insertBefore(showingLine(screen, letter), body.querySelector(".looksettings"));
-    body.insertBefore(light, body.firstChild);
-
-    // What the file already says for this screen, where the picker did not write it
-    // and no picture can stand for it. It is a line of its own under the settings
-    if (screen.kept) {
-      var keep = document.createElement("button");
-      keep.className = "keep" + (screen.shows === "keep" ? " picked" : "");
-      keep.title = screen.kept;
-      keep.innerHTML = "<b>Keep as is</b><code>" + screen.kept + "</code>";
-      keep.onclick = function () { screen.shows = "keep"; draw(); };
-      side.appendChild(keep);
-    }
-    box.appendChild(side);
-  });
+      }}, "add this screen"));
+  }
+  var under = screen.shows ? null : screenUnder(letter);
+  var held = screen;
+  if (under && under.always) {
+    var always = state.always.body.screens[letter];
+    held = Object.assign({}, screen, {shows: null, turn: always.turn || 0,
+                                      look: always.look || screen.look});
+  }
+  var frozen = held !== screen;
+  return replace(box,
+    h("div", {}, h("h3", {}, named), setup,
+      h("button", {type: "button", "aria-label": "Remove " + named,
+                   title: "Remove this screen from every scene", disabled: !setupOn,
+                   onclick: function () { dropScreen(letter); }}, "\u00d7")),
+    backlightSetting(held.look.backlight, function (value) { screen.look.backlight = value; },
+                     "backlight", "Backlight brightness for " +
+                     named.replace("Screen", "screen") + " in this scene", frozen),
+    previewInScene(screen, letter),
+    pairControl(letter),
+    showingLine(screen, letter),
+    lookSettings("screen" + letter, held, screen.size, frozen),
+    screen.kept ? h("button", {type: "button", "aria-pressed": String(screen.shows === "keep"),
+                               title: screen.kept,
+                               onclick: function () { screen.shows = "keep"; draw(); }},
+                    h("b", {}, "Keep as is"), h("code", {}, screen.kept)) : null);
 }
 
-// A screen's preview. One the scene shows nothing on shows Always on's picture faded where the board
-// plays it there, in Always on's own settings
+function sizeChoice(letter) {
+  var screen = state.screens[letter];
+  var offered = (CATALOGUE.board_settings[SCREEN_NAMES[letter].toLowerCase()] || ["2.8", "1.54"])
+    .filter(function (inches) { return inches !== "hub"; });
+  var choice = h("select", {"aria-label": screenShown(letter) + " panel size",
+                            title: "Panel fitted, shared by every scene", disabled: !setupOn,
+                            onchange: function () {
+                              if (choice.value) screen.size = choice.value;
+                              draw();
+                            }},
+    screen.size ? null : h("option", {value: "", selected: true}, "fitted size"),
+    offered.map(function (inches) {
+      return h("option", {value: inches, selected: screen.size === inches}, inches + " inch");
+    }));
+  return choice;
+}
+
+function dropScreen(letter) {
+  state.screens[letter].there = false;
+  store();
+  allBodies().forEach(function (held) {
+    held.screens[letter].shows = null;
+    held.screens[letter].kept = null;
+  });
+  apply(slotAt(state.at).body);
+  draw();
+}
+
 function previewInScene(screen, letter) {
   var under = screen.shows ? null : screenUnder(letter);
   if (!under || !under.always) return panelPreview(screen);
   var always = state.always.body.screens[letter];
-  var drawing = panelPreview(Object.assign({}, screen, {shows: always.shows, turn: always.turn || 0,
-                                                        look: always.look || screen.look}));
-  drawing.classList.add("under");
-  drawing.title = "Always on's picture, which shows here in this scene";
-  return drawing;
+  return panelPreview(Object.assign({}, screen, {shows: always.shows, turn: always.turn || 0,
+                                                 look: always.look || screen.look}),
+                      "Always on's picture, which shows here in this scene");
 }
 
-// The pictures on the drive, each with what it is on. The parts below add to them, each after the
-// one before: the hub's positions, the whole pictures, the hub's groups
-export var assetSteps = [];
-
-// The gallery's pictures by group: the user's own, then the example drawings' groups and the
-// example pictures'
 function mediaGroups() {
   var groups = [[OWN_GROUP, "your own pictures and drawings", state.media.filter(function (media) {
     return !isExampleMedia(media.name);
@@ -401,155 +310,145 @@ function mediaGroups() {
   ["drawings", "pictures"].forEach(function (kind) {
     groups = groups.concat(exampleGroups(kind, state.media));
   });
-  // The user's own group stays where it is empty, being where pictures are added
   return groups.filter(function (group, at) { return !at || group[2].length; });
 }
 
-function renderAssets() {
-  var box = document.getElementById("assets");
-  box.textContent = "";
-  document.getElementById("screensSays").textContent = !state.fileHandle
-    ? "open the FX drive to see its pictures and drawings"
-    : !state.scanned
-      ? "reading the drive..."
-      : state.media.length
-        ? "one set of pictures, each shown on A, B or both"
-        : "no pictures on the drive yet. Drop a GIF, PNG, JPEG or drawing onto it";
-  // Grouped once the drive is open, the user's own always heading the gallery
+function gallerySaid() {
+  return !state.fileHandle ? "open the FX drive to see its pictures and drawings"
+       : !state.scanned ? "reading the drive..."
+       : state.media.length ? "one set of pictures, each shown on A, B or both"
+       : "no pictures on the drive yet. Drop a GIF, PNG, JPEG or drawing onto it";
+}
+
+export var pictureTargeting = {
+  hub: null,
+  screens: {
+    picture: function (name) {
+      return SCREENS.map(function (letter) {
+        var screen = state.screens[letter];
+        return {label: screenButton(letter), pressed: screen.there && screen.shows === name,
+                colour: SCREEN_INKS[letter], disabled: !screen.there, press: function () {
+                  var shown = state.screens[screensPaired() ? SCREENS[0] : letter];
+                  shown.shows = shown.shows !== name ? name : shown.kept ? "keep" : null;
+                  shown.off = false;
+                }};
+      });
+    },
+    off: function () {
+      return {title: "Turn a screen off in this scene", targets: SCREENS.map(function (letter) {
+        var screen = state.screens[letter];
+        return {label: screenButton(letter), pressed: screen.off, colour: SCREEN_INKS[letter],
+                disabled: !screen.there, press: function () {
+                  screen.off = !screen.off;
+                  if (screen.off) screen.shows = null;
+                }};
+      })};
+    },
+    shown: function (name) {
+      var on = SCREENS.filter(function (letter) {
+        return state.screens[letter].there && state.screens[letter].shows === name;
+      });
+      return on.length > 1 ? "var(--accent)" : on.length ? SCREEN_INKS[on[0]] : null;
+    }
+  }
+};
+
+function targeting() {
+  return state.hub.on && pictureTargeting.hub ? pictureTargeting.hub : pictureTargeting.screens;
+}
+
+export var galleryExamples = {offer: null, addToTile: null};
+
+function targetButton(target) {
+  return h("button", {type: "button", "aria-pressed": String(!!target.pressed),
+                      disabled: !!target.disabled, title: target.title, "data-all": !!target.all,
+                      style: {"--tint": target.colour},
+                      onclick: function () {
+                        target.press();
+                        draw();
+                      }}, target.label);
+}
+
+function offCard() {
+  var off = targeting().off();
+  return h("div", {role: "group", "aria-label": "Off", title: off.title, inert: state.at < 0},
+    h("span", {"aria-hidden": "true"}, "Off"), off.targets.map(targetButton));
+}
+
+function picturesGallery() {
   var grouped = !!state.fileHandle;
   var groups = grouped ? mediaGroups() : [[OWN_GROUP, "", state.media, false]];
-  // In a scene, Off is a card made small at the end of the first heading, as Nothing is in the
-  // looks, so it is never folded away. Without headings it has a line of its own. On the Always
-  // on tab it keeps its place unseen, so the gallery does not move between tabs
-  if (!grouped) {
-    var alone = document.createElement("div");
-    alone.className = "offhead";
-    alone.appendChild(offCard());
-    box.appendChild(alone);
-  }
+  var examples = grouped && galleryExamples.offer
+    ? galleryExamples.offer(groups.slice(1).map(function (group) { return group[0]; })) : null;
+  var parts = [];
   groups.forEach(function (group, at) {
     var open = groupOpen(group);
-    if (grouped) {
-      var fold = foldHead(group[0], group[1], open, function () {
-        groupsOpen[group[0]] = !open;
-      });
-      if (at === 0) {
-        var head = document.createElement("div");
-        head.className = "offhead";
-        head.appendChild(fold);
-        head.appendChild(offCard());
-        box.appendChild(head);
-      } else {
-        box.appendChild(fold);
-      }
+    if (examples && at === 1) parts.push(examples.bar);
+    if (examples && examples.dividers[group[0]]) parts.push(examples.dividers[group[0]]);
+    if (grouped || !at) {
+      parts.push(h("div", {class: "grouphead"},
+        grouped ? foldHead(group[0], group[1], open, function () { groupsOpen[group[0]] = !open; })
+                : null,
+        at ? null : offCard()));
     }
     if (grouped && !open) return;
-    group[2].forEach(assetTile);
-    if (group[0] === OWN_GROUP) adder();
+    parts.push(h("ul", {}, group[2].map(pictureTile),
+      group[0] === OWN_GROUP && state.fileHandle
+        ? h("li", {}, adderTile("add pictures or drawings",
+            {description: "Pictures and drawings the board can play",
+             accept: {"image/png": [".gif", ".png", ".jpg", ".jpeg"], "text/x-python": [".py"]}},
+            "pictures", /\.(gif|png|jpe?g|py)$/i))
+        : null));
   });
-  assetSteps.forEach(function (step) { step(); });
-
-  // The small Off card, black, whose buttons turn a screen off in this scene. A hub gives it its
-  // positions' buttons in place of these
-  function offCard() {
-    var cell = document.createElement("div");
-    cell.className = "card nothing small offasset";
-    cell.title = "Turn a screen off in this scene";
-    if (state.at < 0) cell.style.visibility = "hidden";
-    cell.innerHTML = "<div class='face'>Off</div>";
-    var pick = document.createElement("div");
-    pick.className = "pick";
-    SCREENS.forEach(function (letter) {
-      var screen = state.screens[letter];
-      var button = document.createElement("button");
-      button.textContent = screenButton(letter);
-      button.className = screen.off ? "lit" + (letter === "B" ? " b" : "") : "";
-      button.disabled = !screen.there;
-      button.onclick = function () {
-        screen.off = !screen.off;
-        if (screen.off) screen.shows = null;
-        draw();
-      };
-      pick.appendChild(button);
-    });
-    cell.appendChild(pick);
-    return cell;
-  }
-
-  function adder() {
-    if (state.fileHandle)
-      box.appendChild(adderTile("add pictures or drawings",
-        {description: "Pictures and drawings the board can play",
-         accept: {"image/png": [".gif", ".png", ".jpg", ".jpeg"], "text/x-python": [".py"]}},
-        "pictures", /\.(gif|png|jpe?g|py)$/i));
-  }
-
-  function assetTile(media) {
-    var name = media.name;
-    var on = {};
-    SCREENS.forEach(function (l) {
-      on[l] = state.screens[l].there && state.screens[l].shows === name;
-    });
-    var cell = document.createElement("div");
-    cell.className = "asset" + (on.A && on.B ? " onAB" : on.A ? " onA" : on.B ? " onB" : "");
-    cell.dataset.name = name;
-    var face = document.createElement("div");
-    face.className = "face";
-    var art = mediaArt(name);
-    if (art) {
-      face.style.background =
-        "repeating-conic-gradient(#e8e4dc 0% 25%, #cbc5bb 0% 50%) 0 0/12px 12px";
-      var img = document.createElement("img");
-      img.src = art.url;
-      face.appendChild(img);
-    } else {
-      // The extension stands in only until the picture arrives
-      face.textContent = name.split(".").pop();
-    }
-    if (media.kind !== "image") {
-      var kind = document.createElement("span");
-      kind.className = "kind";
-      kind.textContent = media.kind === "folder" ? "slideshow"
-                       : media.kind === "drawing" ? "drawing" : "gif";
-      face.appendChild(kind);
-    }
-    cell.appendChild(face);
-    cell.title = name;
-    var label = document.createElement("div");
-    label.className = "label";
-    label.textContent = nameShown(name);
-    face.appendChild(label);
-    var pick = document.createElement("div");
-    pick.className = "pick";
-    SCREENS.forEach(function (letter) {
-      var button = document.createElement("button");
-      button.textContent = screenButton(letter);
-      var lit = on[letter];
-      button.className = lit ? "lit" + (letter === "B" ? " b" : "") : "";
-      button.disabled = !state.screens[letter].there;
-      if (button.disabled) button.style.opacity = ".3";
-      button.onclick = function () {
-        // Tapping the lit one again takes the picture off this scene's screen,
-        // falling back to what the file said where there is something to go back
-        // to. A scene showing nothing on a screen leaves it as the scene before
-        // left it, which the cross in the header cannot say for one scene alone. A pair's
-        // second screen shows what its first does, so either button changes the first
-        var screen = state.screens[screensPaired() ? SCREENS[0] : letter];
-        screen.shows = screen.shows !== name ? name
-                     : screen.kept ? "keep" : null;
-        screen.off = false;
-        draw();
-      };
-      pick.appendChild(button);
-    });
-    cell.appendChild(pick);
-    // An example keeps no bin here, as flashing the board's examples again brings it back. Where
-    // the board's examples can be discovered, discover/29_discover_screens.js gives it one
-    if (!isExampleMedia(name)) cell.appendChild(binButton(name, media.kind));
-    if (media.kind === "drawing" && state.fileHandle) cell.appendChild(drawingCopyTile(name));
-    box.appendChild(cell);
-  }
+  if (examples && groups.length === 1) parts.push(examples.bar);
+  return h("section", {class: "screenpictures", "aria-label": "Pictures"}, parts);
 }
+
+function pictureTile(media) {
+  var name = media.name;
+  var colour = targeting().shown(name);
+  var description = media.kind === "drawing" && media.drawing.description;
+  var tile = h("li", {title: description || name, "data-shown": !!colour,
+                      style: {"--shown": colour}},
+    pictureFace(media),
+    h("div", {role: "group", "aria-label": "Show " + pictureSaid(name)},
+      targeting().picture(name).map(targetButton)),
+    isExampleMedia(name) ? null : binButton(name, media.kind),
+    media.kind === "drawing" && state.fileHandle ? drawingCopyTile(name) : null);
+  if (galleryExamples.addToTile) galleryExamples.addToTile(tile, name);
+  return tile;
+}
+
+function pictureFace(media) {
+  var name = media.name;
+  var kind = {gif: "gif", folder: "slideshow", drawing: "drawing"}[media.kind];
+  var tag = kind ? h("small", {}, kind) : null;
+  if (media.kind === "drawing" && !media.thumbHandle) {
+    var drawing = media.drawing;
+    return h("figure", {"data-made": true, style: {"--colour": drawingInk(drawing, name)}},
+      tag,
+      h("span", {"aria-hidden": "true", "data-letter": !drawing.icon},
+        drawing.icon || drawing.title[0]),
+      h("b", {}, drawing.title),
+      h("figcaption", {}, h("b", {}, drawing.title)));
+  }
+  var art = mediaArt(name);
+  if (!art || !art.w) {
+    return h("figure", {}, tag, h("span", {}, name.split(".").pop()),
+             h("figcaption", {}, nameShown(name)));
+  }
+  var file = nameShown(name);
+  var dot = file.lastIndexOf(".");
+  var caption = media.kind === "drawing" ? h("b", {}, media.drawing.title) : [
+    h("b", {}, media.kind === "folder" ? pictureSaid(name) : dot > 0 ? file.slice(0, dot) : file),
+    h("br"),
+    [media.kind === "image" && dot > 0 ? file.slice(dot + 1) : null, art.w + " \u00d7 " + art.h]
+      .filter(Boolean).join(" \u00b7 ")
+  ];
+  return h("figure", {"data-fill": media.kind === "drawing", style: {"--w": art.w, "--h": art.h}},
+    tag, h("img", {src: art.url, alt: ""}), h("figcaption", {}, caption));
+}
+
 
 export function mediaNamed(name) {
   return state.media.filter(function (m) { return m.name === name; })[0] || null;
@@ -966,50 +865,33 @@ export function mediaArt(name, style) {
   return styled ? mediaArt(name) : null;
 }
 
-// ---- drawing the tab -------------------------------------------------------------------------
+var screensTab = h("div", {class: "screenstab"});
 
-// The tab's head and its pictures. renderScreensTab puts the board's chips beside what is the
-// board's
-export function renderScreensParts() {
-  renderScreensHead();
-  renderAssets();
-  var head = document.getElementById("screensHead");
-  // The band is the screen's coloured box, so it wears the board's chip like the others
-  head.querySelectorAll(".screen-box h3").forEach(function (band) {
-    band.insertBefore(boardIcon(), band.firstChild);
-    band.title = "Board setup, shared by every scene";
-  });
-  // Whether a screen is fitted and its size are the board's
-  if (!setupOn) {
-    head.querySelectorAll(".screen-box h3 select, .screen-box h3 .drop, .body.adding button")
-      .forEach(function (control) { control.disabled = true; });
-  }
+function renderScreensTab() {
+  var above = screensTabHooks.above ? screensTabHooks.above() : h("p", {}, gallerySaid());
+  var hubbed = screensTabHooks.head ? screensTabHooks.head() : null;
+  replace(screensTab, above, hubbed || SCREENS.map(screenBox), picturesGallery());
+  screensTab.toggleAttribute("data-setup", setupOn);
 }
 
-// The tab's swatch is the two screens, each showing what its screen shows
+export function swatchCell(shows, art, under) {
+  return h("span", {"data-shows": shows,
+                    style: {"--picture": art ? (under ? "var(--through), " : "") +
+                                               "url(" + art.url + ")" : null}});
+}
+
 tabSwatches.screensPanel = function (swatch) {
-  swatch.textContent = "";
   swatch.className = "accswatch screenswatch";
-  SCREENS.forEach(function (letter) {
+  replace(swatch, SCREENS.map(function (letter) {
     var screen = state.screens[letter];
-    var cell = document.createElement("span");
-    cell.className = "screencell " + letter.toLowerCase();
-    // A screen the scene turns off is black, and one showing Always on's picture shows it in the
-    // broken line the lamps and previews wear
     var under = screen.there && !screen.shows ? screenUnder(letter) : null;
     var shown = screen.shows || (under && under.always) || null;
     var art = screen.there && shown && shown !== "keep"
               ? mediaArt(shown, screen.look && screen.look.style) : null;
-    // Always on's picture wears the stripes of nothing over it
-    if (art) cell.style.backgroundImage = (under && under.always ? "var(--through), " : "") +
-                                          "url(" + art.url + ")";
-    if (!screen.there) cell.classList.add("absent");
-    else if (screen.off) cell.classList.add("off");
-    // A picture with no thumbnail yet is a white tile, its screen showing something
-    else if (!art) cell.classList.add(shown ? "blank"
-                                      : under && under.off ? "dark" : "nothing");
-    swatch.appendChild(cell);
-  });
+    var shows = !screen.there ? "absent" : screen.off ? "off" : art ? "picture"
+              : shown ? "blank" : under && under.off ? "dark" : "nothing";
+    return swatchCell(shows, art, under && under.always);
+  }));
   swatch.title = SCREENS.map(function (letter) {
     var screen = state.screens[letter];
     var under = screen.there && !screen.shows ? screenUnder(letter) : null;
@@ -1019,28 +901,18 @@ tabSwatches.screensPanel = function (swatch) {
   }).join(", ");
 };
 
-// Under the tab's name, where the others have their swatch, the size fitted to each screen,
-// A then B, the pictures beside it no longer saying which is which
 function sizesUnderName() {
   var tab = document.querySelector("#ledTabs .ledtab[data-panel=screensPanel]");
   if (!tab || tab.querySelector(".tabname")) return;
-  var named = document.createElement("span");
-  named.className = "tabname";
-  named.appendChild(tab.querySelector("b"));
-  var sizes = document.createElement("small");
-  sizes.className = "tabunder";
   var fitted = SCREENS.map(function (letter) {
     return state.screens[letter].there ? state.screens[letter].size : "";
   });
-  sizes.textContent = fitted.some(Boolean)
-    ? fitted.map(function (size) { return size ? size + "\"" : "none"; }).join(", ")
-    : "no screens";
-  named.appendChild(sizes);
-  tab.insertBefore(named, tab.firstChild);
+  tab.insertBefore(h("span", {class: "tabname"}, tab.querySelector("b"),
+    h("small", {class: "tabunder"}, fitted.some(Boolean)
+      ? fitted.map(function (size) { return size ? size + "\"" : "none"; }).join(", ")
+      : "no screens")), tab.firstChild);
 }
 
-// A picture newly chosen is given its starting turn before anything else is drawn, since
-// writing the file applies every scene in turn and would take it as already chosen
 drawSteps.before.push(function () { SCREENS.forEach(turnForChosen); });
 
 drawSteps.after.push(function () {
@@ -1049,20 +921,11 @@ drawSteps.after.push(function () {
 });
 
 (function () {
-  var panel = document.createElement("details");
-  panel.className = "panel";
-  panel.id = "screensPanel";
-  panel.open = true;
-  panel.innerHTML = "<summary>Screens</summary>" +
-                    "<p class='says screenssays' id='screensSays'></p>" +
-                    "<div class='screens-head' id='screensHead'></div>" +
-                    "<div class='assets' id='assets'></div>";
   var after = document.getElementById(LED_PANELS[LED_PANELS.length - 1]);
-  after.parentNode.insertBefore(panel, after.nextSibling);
+  after.after(h("details", {class: "panel", id: "screensPanel", open: true},
+    h("summary", {}, "Screens"), screensTab));
 }());
 
-// A board that finds it has no screen ports keeps the panel out of sight, for the parts that draw
-// into it
 if (SCREENS.length) {
   TAB_NAMES.screensPanel = "Screens";
   TAB_PANELS.push("screensPanel");

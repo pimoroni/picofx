@@ -1,10 +1,10 @@
+import {h} from "../00_dom.js";
 import {quoted} from "../01_looks.js";
 import {draw, drawSteps} from "../03_runs.js";
 import {bodyParts, otherScenes, state} from "../04_scenes.js";
 import {boardResidue, entryParts} from "../27_readback.js";
 import {
-  SCREENS, SCREEN_NAMES, kindOf, screenLetter, screenPlaying, screenShown, screensHeadSteps,
-  turnForChosen
+  SCREENS, SCREEN_NAMES, kindOf, screenLetter, screenPlaying, screenShown, turnForChosen
 } from "./12_screens.js";
 import {
   canvasPixels, freshLook, panelPixels, pictureOffset, placingTokens, playingTokens
@@ -76,60 +76,30 @@ bodyParts.push({
   read: readPairedScreens
 });
 
-// ---- the toggle, under each screen ---------------------------------------------------------------
-// Under each screen's panel, where a hub position has its group's numbers, is a toggle and a line
-// saying which screen it is paired with. The two toggles always show the same
-
-screensHeadSteps.after.push(function () {
-  if (SCREENS.length < 2 || state.hub.on) return;
-  var fitted = SCREENS.every(function (letter) { return state.screens[letter].there; });
-  if (!fitted) return;
-  // A scene pairs only its own pictures, so while either screen shows Always on's the toggles stay
-  // in place but cannot be pressed
-  var fromAlways = SCREENS.filter(function (letter) {
-    var under = state.screens[letter].shows ? null : screenUnder(letter);
+export function pairControl(letter) {
+  if (SCREENS.length < 2 || state.hub.on) return null;
+  if (!SCREENS.every(function (one) { return state.screens[one].there; })) return null;
+  var fromAlways = SCREENS.filter(function (one) {
+    var under = state.screens[one].shows ? null : screenUnder(one);
     return under && under.always;
   });
-  SCREENS.forEach(function (letter) {
-    var body = document.querySelector("#screensHead .screen-box." + letter.toLowerCase() + " .body");
-    if (!body) return;
-    var other = SCREENS.filter(function (one) { return one !== letter; })[0];
-    var place = document.createElement("div");
-    place.className = "pairplace";
-
-    var segment = document.createElement("span");
-    segment.className = "groupseg";
-    var button = document.createElement("button");
-    button.type = "button";
-    button.textContent = "Paired";
-    button.className = screensPaired() ? "on pairon" : "";
-    button.title = "Show Screen A's picture or drawing on both screens in step.";
-    button.onclick = function () {
-      togglePair();
-      draw();
-    };
-    if (fromAlways.length) {
-      button.disabled = true;
-      button.className = "";
-      button.title = "Pairs this scene's own pictures on both screens";
-    }
-    segment.appendChild(button);
-    place.appendChild(segment);
-
-    // A pair by hand says so, and two screens showing the same picture the same way say they
-    // match, being sent as a pair until a setting after the file differs
-    var said = document.createElement("small");
-    said.className = "groupsaid";
-    // The screen showing Always on's picture already says so in its own line below
-    said.textContent = fromAlways.indexOf(letter) >= 0 ? "not available"
-                     : fromAlways.length ? screenShown(fromAlways[0]) + " from Always on"
-                     : screensPaired() ? "paired with " + screenShown(other)
-                     : picturesMatch(state.screens[letter], state.screens[other])
-                       ? "matches " + screenShown(other) : "on its own";
-    place.appendChild(said);
-    body.insertBefore(place, body.querySelector(".sshowing") || body.querySelector(".looksettings"));
-  });
-});
+  var other = SCREENS.filter(function (one) { return one !== letter; })[0];
+  var said = fromAlways.indexOf(letter) >= 0 ? "not available"
+           : fromAlways.length ? screenShown(fromAlways[0]) + " from Always on"
+           : screensPaired() ? "paired with " + screenShown(other)
+           : picturesMatch(state.screens[letter], state.screens[other])
+             ? "matches " + screenShown(other) : "on its own";
+  return h("div", {class: "pairing"},
+    h("button", {type: "button", "aria-pressed": String(screensPaired() && !fromAlways.length),
+                 disabled: !!fromAlways.length,
+                 title: fromAlways.length ? "Pairs this scene's own pictures on both screens"
+                                          : "Show Screen A's picture or drawing on both screens in step.",
+                 onclick: function () {
+                   togglePair();
+                   draw();
+                 }}, "Paired"),
+    h("small", {}, said));
+}
 
 // ---- what the file says ------------------------------------------------------------------------
 

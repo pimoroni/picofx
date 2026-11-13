@@ -1,0 +1,25 @@
+.pairing {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .15rem;
+
+  button {
+    padding: .16rem .5rem;
+    border: 1.5px solid var(--line);
+    border-radius: 7px;
+    color: var(--ink);
+    font: 700 .74rem system-ui, sans-serif;
+
+    &[aria-pressed=true] {
+      border-color: transparent;
+      background: linear-gradient(90deg, var(--screen-a), var(--screen-b));
+      color: #fff;
+    }
+  }
+
+  small {
+    color: var(--dim);
+    font-size: .7rem;
+  }
+}
