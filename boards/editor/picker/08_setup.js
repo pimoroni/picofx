@@ -1,8 +1,7 @@
 import {h, replace} from "./00_dom.js";
+import {draw, drawSteps, paintAll} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
-import {
-  active, blank, draw, drawSteps, lampKey, outputSaid, paintAll, pick, pickOutput, runs, sectionAt
-} from "./03_runs.js";
+import {active, blank, lampKey, outputSaid, pick, pickOutput, runs, sectionAt} from "./03_runs.js";
 import {panelTools} from "./04_led_panels.js";
 import {allBodies, apply, slotAt, state, store} from "./04_scenes.js";
 import {stripChipChoice, stripChipShown, stripLengthField, stripSet} from "./05_effects.js";

@@ -4084,6 +4084,70 @@ function replace(element, ...children) {
   element.replaceChildren();
   return append(element, children);
 }
+var drawSteps = {before: [], during: [], after: []};
+
+var paintSteps = [];
+
+var drawHeld = false;
+
+function holdDrawing(on) {
+  drawHeld = on;
+}
+
+function draw() {
+  if (drawHeld) return;
+  var across = window.scrollX;
+  var down = window.scrollY;
+  var focused = focusPlace();
+  drawSteps.before.forEach(function (step) { step(); });
+  drawSteps.during.forEach(function (step) { step(); });
+  drawSteps.after.forEach(function (step) { step(); });
+  refocus(focused);
+  if (window.scrollX !== across || window.scrollY !== down) window.scrollTo(across, down);
+}
+
+function paintAll() {
+  paintSteps.forEach(function (step) { step(); });
+}
+
+var FIELDS = "input, select, textarea";
+
+function focusPlace() {
+  var field = document.activeElement;
+  if (!field || field === document.body || !field.matches(FIELDS)) return null;
+  var place = {field: field, key: field.dataset.focus || null, box: null, index: -1, caret: null};
+  if (!place.key) {
+    var box = field.parentElement ? field.parentElement.closest("[id]") : null;
+    if (!box) return null;
+    place.box = box.id;
+    place.index = Array.prototype.indexOf.call(box.querySelectorAll(FIELDS), field);
+  }
+  try {
+    if (typeof field.selectionStart === "number") place.caret = [field.selectionStart, field.selectionEnd];
+  } catch (e) {
+    place.caret = null;
+  }
+  return place;
+}
+
+function refocus(place) {
+  if (!place || place.field.isConnected || document.activeElement !== document.body) return;
+  var field = null;
+  if (place.key) {
+    field = document.querySelector("[data-focus='" + place.key + "']");
+  } else {
+    var box = document.getElementById(place.box);
+    field = box ? box.querySelectorAll(FIELDS)[place.index] || null : null;
+  }
+  if (!field || field.disabled) return;
+  field.focus({preventScroll: true});
+  if (place.caret) {
+    try {
+      field.setSelectionRange(place.caret[0], place.caret[1]);
+    } catch (e) {
+    }
+  }
+}
 
 var BOARD = {
  "name": "Plasma 2350",
@@ -4756,6 +4820,12 @@ function setBeat(at) {
 var HOLDING_STILL = window.matchMedia &&
                     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+function step() {
+  setBeat(beat + FRAME);
+  paintAll();
+  window.setTimeout(step, FRAME * 1000);
+}
+
 var OUTS = BOARD.outputs.length;
 var CHANNELS = ["r", "g", "b"];
 var CHANNEL_WORDS = {r: "red", g: "green", b: "blue"};
@@ -5268,6 +5338,16 @@ function lampLines() {
 }
 
 var painters = [];
+
+drawSteps.before.push(function () {
+  painters = [];
+});
+
+paintSteps.push(function () {
+  var lit = {};
+  runs.forEach(function (run) { lit[run.name] = litRun(run); });
+  painters.forEach(function (one) { one.paint(lit[one.run.name]); });
+});
 var walks = {};
 
 function litRun(run) {
@@ -5472,91 +5552,6 @@ function paintLine(line) {
       "</span>" + settings(effect[3])
     : escapeHtml(right);
   return head + "<span data-s='colon'>:</span>" + tail;
-}
-
-var drawSteps = {before: [], after: []};
-
-var drawHeld = false;
-
-function holdDrawing(on) {
-  drawHeld = on;
-}
-
-function draw() {
-  if (drawHeld) return;
-  var across = window.scrollX;
-  var down = window.scrollY;
-  var focused = focusPlace();
-  drawSteps.before.forEach(function (step) { step(); });
-
-  painters = [];
-  renderGallery();
-  renderWiringRun("outRun", outs);
-  renderStretches("outBar", outs);
-  renderWiringRun("monoRun", mono);
-  renderStretches("monoBar", mono);
-
-  renderSides();
-  renderEditor("outChosen", active);
-
-  renderPreview();
-  paintAll();
-
-  drawSteps.after.forEach(function (step) { step(); });
-  refocus(focused);
-  if (window.scrollX !== across || window.scrollY !== down) window.scrollTo(across, down);
-}
-
-var FIELDS = "input, select, textarea";
-
-function focusPlace() {
-  var field = document.activeElement;
-  if (!field || field === document.body || !field.matches(FIELDS)) return null;
-  var place = {field: field, key: field.dataset.focus || null, box: null, index: -1, caret: null};
-  if (!place.key) {
-    var box = field.parentElement ? field.parentElement.closest("[id]") : null;
-    if (!box) return null;
-    place.box = box.id;
-    place.index = Array.prototype.indexOf.call(box.querySelectorAll(FIELDS), field);
-  }
-  try {
-    if (typeof field.selectionStart === "number") place.caret = [field.selectionStart, field.selectionEnd];
-  } catch (e) {
-    place.caret = null;
-  }
-  return place;
-}
-
-function refocus(place) {
-  if (!place || place.field.isConnected || document.activeElement !== document.body) return;
-  var field = null;
-  if (place.key) {
-    field = document.querySelector("[data-focus='" + place.key + "']");
-  } else {
-    var box = document.getElementById(place.box);
-    field = box ? box.querySelectorAll(FIELDS)[place.index] || null : null;
-  }
-  if (!field || field.disabled) return;
-  field.focus({preventScroll: true});
-  if (place.caret) {
-    try {
-      field.setSelectionRange(place.caret[0], place.caret[1]);
-    } catch (e) {
-    }
-  }
-}
-
-function paintAll() {
-  var lit = {};
-  runs.forEach(function (run) { lit[run.name] = litRun(run); });
-  painters.forEach(function (one) { one.paint(lit[one.run.name]); });
-  paintCards();
-}
-
-function step() {
-  setBeat(beat + FRAME);
-  paintAll();
-  window.setTimeout(step, FRAME * 1000);
 }
 
 settle();
@@ -13892,6 +13887,20 @@ function paintCards() {
     });
   });
 }
+
+paintSteps.push(paintCards);
+
+drawSteps.during.push(
+  renderGallery,
+  function () { renderWiringRun("outRun", outs); },
+  function () { renderStretches("outBar", outs); },
+  function () { renderWiringRun("monoRun", mono); },
+  function () { renderStretches("monoBar", mono); },
+  renderSides,
+  function () { renderEditor("outChosen", active); },
+  renderPreview,
+  paintAll
+);
 
 state.always.body = capture();
 workOn(chosenTab);

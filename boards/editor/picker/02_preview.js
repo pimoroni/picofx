@@ -1,3 +1,4 @@
+import {paintAll} from "./00_draw.js";
 import {linesFor} from "./05_effects.js";
 
 var NAMED = {
@@ -295,7 +296,7 @@ export function lookLit(look, holder, t, slot, count, sim) {
           ink: inkOf(colours[Math.min(place, colours.length - 1)])};
 }
 
-export var FRAME = 1 / 40;
+var FRAME = 1 / 40;
 export var beat = 0;
 
 export function setBeat(at) {
@@ -304,3 +305,9 @@ export function setBeat(at) {
 
 export var HOLDING_STILL = window.matchMedia &&
                     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+export function step() {
+  setBeat(beat + FRAME);
+  paintAll();
+  window.setTimeout(step, FRAME * 1000);
+}

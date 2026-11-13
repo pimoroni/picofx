@@ -1,9 +1,9 @@
 import {h, replace} from "./00_dom.js";
+import {draw, drawSteps} from "./00_draw.js";
 import {lookNamed} from "./01_looks.js";
 import {inkOf} from "./02_preview.js";
 import {
-  chooseLook, draw, drawSteps, forwardTargetFor, pickingLook, remember, stretchUnder, washFor,
-  widthOf
+  chooseLook, forwardTargetFor, pickingLook, remember, stretchUnder, washFor, widthOf
 } from "./03_runs.js";
 import {
   FAINTEST, SIGNAL_TIMINGS, WORDS, atBrightness, fieldColour, hexOf, hexRgb, rgbInk, runsAWay,

@@ -1,8 +1,9 @@
 import {h, replace} from "./00_dom.js";
+import {draw, drawSteps} from "./00_draw.js";
 import {BOARD, lookNamed} from "./01_looks.js";
 import {
-  CHANNELS, CHANNEL_INKS, MONO_FIRST, OUTPUTS, draw, drawSteps, inkAt, isChannel, lampKey, order,
-  outputSaid, painters, placesOf, sameLamp, sectionAt, selectorFor, shortName, underSaid, wiring
+  CHANNELS, CHANNEL_INKS, MONO_FIRST, OUTPUTS, inkAt, isChannel, lampKey, order, outputSaid,
+  painters, placesOf, sameLamp, sectionAt, selectorFor, shortName, underSaid, wiring
 } from "./03_runs.js";
 import {astrayOf} from "./05_effects.js";
 import {breakOutInScenes, lampsMovable, moveLampInScenes, rejoinInScenes} from "./07_board.js";

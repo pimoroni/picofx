@@ -1,6 +1,6 @@
 import {h} from "../00_dom.js";
+import {draw, drawSteps} from "../00_draw.js";
 import {quoted} from "../01_looks.js";
-import {draw, drawSteps} from "../03_runs.js";
 import {bodyParts, otherScenes, state} from "../04_scenes.js";
 import {boardResidue, entryParts} from "../27_readback.js";
 import {

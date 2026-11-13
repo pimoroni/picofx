@@ -1,5 +1,5 @@
 import {h, replace} from "../00_dom.js";
-import {draw, drawSteps} from "../03_runs.js";
+import {draw, drawSteps} from "../00_draw.js";
 import {
   allBodies, apply, bodyParts, capture, driveParts, slotAt, state, store
 } from "../04_scenes.js";

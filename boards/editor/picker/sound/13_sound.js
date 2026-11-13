@@ -1,6 +1,6 @@
 import {h, replace} from "../00_dom.js";
+import {draw, drawSteps} from "../00_draw.js";
 import {quoted} from "../01_looks.js";
-import {draw, drawSteps} from "../03_runs.js";
 import {allBodies, bodyParts, driveParts, state} from "../04_scenes.js";
 import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches, tabUnder} from "../11_tabs.js";
 import {banner} from "../18_drive.js";

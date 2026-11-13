@@ -1,8 +1,9 @@
 import {h, replace} from "./00_dom.js";
+import {draw} from "./00_draw.js";
 import {lookNamed} from "./01_looks.js";
 import {
-  active, cutAt, draw, inkAt, moveEdge, painters, pick, remember, settle, shortName, stretchUnder,
-  uncut, washFor, widthOf
+  active, cutAt, inkAt, moveEdge, painters, pick, remember, settle, shortName, stretchUnder, uncut,
+  washFor, widthOf
 } from "./03_runs.js";
 import {targetFor, wherePlays} from "./05_effects.js";
 import {keptLights} from "./27_readback.js";

@@ -1,8 +1,9 @@
 import {h, replace} from "./00_dom.js";
+import {draw, drawSteps} from "./00_draw.js";
 import {HEADER, LOOKS, canPlay, keyOf} from "./01_looks.js";
 import {
-  CHANNELS, OUTPUTS, blank, draw, drawSteps, joinedItems, mono, order, outs, placesOf, runs,
-  setLayout, settle, wiring
+  CHANNELS, OUTPUTS, blank, joinedItems, mono, order, outs, placesOf, runs, setLayout, settle,
+  wiring
 } from "./03_runs.js";
 import {
   allBodies, apply, blankBody, bodyParts, capture, fileHead, sceneMark, settleLoneScene, state

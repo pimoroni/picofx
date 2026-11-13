@@ -1,6 +1,6 @@
 import {h} from "../00_dom.js";
+import {draw} from "../00_draw.js";
 import {quoted} from "../01_looks.js";
-import {draw} from "../03_runs.js";
 import {bodyParts, namesOf, state} from "../04_scenes.js";
 import {
   SWATCHES, WORDS, fieldColour, hexOf, hexRgb, rgbInk, spoken, takeApart

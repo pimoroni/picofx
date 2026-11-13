@@ -1,10 +1,11 @@
 import {h} from "./00_dom.js";
+import {draw, drawSteps, paintAll} from "./00_draw.js";
 import {BOARD, LOOKS, canPlay, keyOf, lerp, lookLines, lookNamed, nameSet, r2} from "./01_looks.js";
 import {COLOURED, lampTarget, lookLit} from "./02_preview.js";
 import {
-  CHANNELS, CHANNEL_WORDS, MIDDLING, OUTPUTS, Run, active, blank, copyBlinks, copyExact, draw,
-  drawSteps, forwardTargetFor, isChannel, joinedItems, levelled, mono, nextOutput, outputSaid,
-  outs, paintAll, pickOutput, rangeItem, runs, sectionAt, settle, wiring
+  CHANNELS, CHANNEL_WORDS, MIDDLING, OUTPUTS, Run, active, blank, copyBlinks, copyExact,
+  forwardTargetFor, isChannel, joinedItems, levelled, mono, nextOutput, outputSaid, outs,
+  pickOutput, rangeItem, runs, sectionAt, settle, wiring
 } from "./03_runs.js";
 import {carried} from "./04_scenes.js";
 import {BLINK, blinkList, blinkWord} from "./06_blink.js";

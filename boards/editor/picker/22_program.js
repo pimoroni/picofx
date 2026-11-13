@@ -1,6 +1,6 @@
 import {h, replace} from "./00_dom.js";
+import {draw, drawSteps, paintAll} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
-import {draw, drawSteps, paintAll} from "./03_runs.js";
 import {state} from "./04_scenes.js";
 import {spoken} from "./05_effects.js";
 import {SCREEN_PORTS, screenHooks} from "./07_board.js";

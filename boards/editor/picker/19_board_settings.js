@@ -1,5 +1,5 @@
 import {h, replace} from "./00_dom.js";
-import {draw, drawSteps} from "./03_runs.js";
+import {draw, drawSteps} from "./00_draw.js";
 import {state} from "./04_scenes.js";
 import {SCREEN_SIZES, boardLineSteps} from "./07_board.js";
 import {boardIcon} from "./08_setup.js";

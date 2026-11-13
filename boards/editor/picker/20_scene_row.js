@@ -1,5 +1,5 @@
 import {h, replace} from "./00_dom.js";
-import {draw} from "./03_runs.js";
+import {draw} from "./00_draw.js";
 import {
   removeScene, renderSceneTray, sceneAfter, sceneBand, sceneEdge, sceneHooks, sceneLoops,
   sceneMark, sceneMarked, sceneNameProblem, sceneRestarts, sceneShowsAgain, state, unreachedScenes

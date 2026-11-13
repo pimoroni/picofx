@@ -1,17 +1,12 @@
+import {draw, drawSteps, paintSteps} from "./00_draw.js";
 import {BOARD, canPlay, lookNamed, rangify} from "./01_looks.js";
-import {FRAME, beat, setBeat, setPreviewingStrip} from "./02_preview.js";
-import {renderSides} from "./04_led_panels.js";
+import {beat, setPreviewingStrip} from "./02_preview.js";
 import {lampUnder, namesOf} from "./04_scenes.js";
 import {
   START_MOODS, livePlay, sectionLines, spoken, startColour, stretchWash, stripSelector, targetFor
 } from "./05_effects.js";
 import {holdOutput, setupOn} from "./08_setup.js";
-import {renderWiringRun} from "./09_wiring.js";
-import {renderPreview} from "./18_drive.js";
 import {filterKept, keptLights} from "./27_readback.js";
-import {renderStretches} from "./31_stretch_bar.js";
-import {renderEditor} from "./32_stretch_editor.js";
-import {paintCards, renderGallery} from "./33_gallery.js";
 
 var OUTS = BOARD.outputs.length;
 export var CHANNELS = ["r", "g", "b"];
@@ -525,6 +520,16 @@ export function lampLines() {
 }
 
 export var painters = [];
+
+drawSteps.before.push(function () {
+  painters = [];
+});
+
+paintSteps.push(function () {
+  var lit = {};
+  runs.forEach(function (run) { lit[run.name] = litRun(run); });
+  painters.forEach(function (one) { one.paint(lit[one.run.name]); });
+});
 var walks = {};
 
 function litRun(run) {
@@ -729,91 +734,6 @@ export function paintLine(line) {
       "</span>" + settings(effect[3])
     : escapeHtml(right);
   return head + "<span data-s='colon'>:</span>" + tail;
-}
-
-export var drawSteps = {before: [], after: []};
-
-var drawHeld = false;
-
-export function holdDrawing(on) {
-  drawHeld = on;
-}
-
-export function draw() {
-  if (drawHeld) return;
-  var across = window.scrollX;
-  var down = window.scrollY;
-  var focused = focusPlace();
-  drawSteps.before.forEach(function (step) { step(); });
-
-  painters = [];
-  renderGallery();
-  renderWiringRun("outRun", outs);
-  renderStretches("outBar", outs);
-  renderWiringRun("monoRun", mono);
-  renderStretches("monoBar", mono);
-
-  renderSides();
-  renderEditor("outChosen", active);
-
-  renderPreview();
-  paintAll();
-
-  drawSteps.after.forEach(function (step) { step(); });
-  refocus(focused);
-  if (window.scrollX !== across || window.scrollY !== down) window.scrollTo(across, down);
-}
-
-var FIELDS = "input, select, textarea";
-
-function focusPlace() {
-  var field = document.activeElement;
-  if (!field || field === document.body || !field.matches(FIELDS)) return null;
-  var place = {field: field, key: field.dataset.focus || null, box: null, index: -1, caret: null};
-  if (!place.key) {
-    var box = field.parentElement ? field.parentElement.closest("[id]") : null;
-    if (!box) return null;
-    place.box = box.id;
-    place.index = Array.prototype.indexOf.call(box.querySelectorAll(FIELDS), field);
-  }
-  try {
-    if (typeof field.selectionStart === "number") place.caret = [field.selectionStart, field.selectionEnd];
-  } catch (e) {
-    place.caret = null;
-  }
-  return place;
-}
-
-function refocus(place) {
-  if (!place || place.field.isConnected || document.activeElement !== document.body) return;
-  var field = null;
-  if (place.key) {
-    field = document.querySelector("[data-focus='" + place.key + "']");
-  } else {
-    var box = document.getElementById(place.box);
-    field = box ? box.querySelectorAll(FIELDS)[place.index] || null : null;
-  }
-  if (!field || field.disabled) return;
-  field.focus({preventScroll: true});
-  if (place.caret) {
-    try {
-      field.setSelectionRange(place.caret[0], place.caret[1]);
-    } catch (e) {
-    }
-  }
-}
-
-export function paintAll() {
-  var lit = {};
-  runs.forEach(function (run) { lit[run.name] = litRun(run); });
-  painters.forEach(function (one) { one.paint(lit[one.run.name]); });
-  paintCards();
-}
-
-export function step() {
-  setBeat(beat + FRAME);
-  paintAll();
-  window.setTimeout(step, FRAME * 1000);
 }
 
 settle();

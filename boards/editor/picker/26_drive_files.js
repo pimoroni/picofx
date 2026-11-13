@@ -1,5 +1,5 @@
+import {draw} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
-import {draw} from "./03_runs.js";
 import {apply, driveParts, slotAt, state, store} from "./04_scenes.js";
 import {screenHooks} from "./07_board.js";
 import {CAN_REACH_A_DRIVE, banner, connectSteps, drive, driveTrouble} from "./18_drive.js";

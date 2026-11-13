@@ -1,4 +1,5 @@
 import {h, replace} from "./00_dom.js";
+import {paintSteps} from "./00_draw.js";
 import {LOOKS, canPlay, lookNamed, whyNot} from "./01_looks.js";
 import {beat} from "./02_preview.js";
 import {
@@ -99,7 +100,7 @@ function nothingCard(on, choose) {
     h("span"), "Nothing");
 }
 
-export function paintCards() {
+function paintCards() {
   cardFaces.forEach(function (one) {
     var store = cardWalks[one.key] || (cardWalks[one.key] = {});
     one.cells.forEach(function (cell, i) {
@@ -111,3 +112,5 @@ export function paintCards() {
     });
   });
 }
+
+paintSteps.push(paintCards);

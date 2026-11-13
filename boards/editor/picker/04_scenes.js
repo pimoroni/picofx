@@ -1,8 +1,8 @@
 import {h, replace} from "./00_dom.js";
+import {draw, drawSteps} from "./00_draw.js";
 import {BOARD, HEADER, lookNamed} from "./01_looks.js";
 import {
-  activate, active, copyBlinks, copyExact, draw, drawSteps, lampLines, mono, outs, runs, settle,
-  widthOf
+  activate, active, copyBlinks, copyExact, lampLines, mono, outs, runs, settle, widthOf
 } from "./03_runs.js";
 import {boardLine} from "./07_board.js";
 import {TAB_NAMES} from "./11_tabs.js";

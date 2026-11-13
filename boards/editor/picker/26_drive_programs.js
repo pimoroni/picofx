@@ -1,5 +1,5 @@
+import {draw} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
-import {draw} from "./03_runs.js";
 import {banner, connectSteps, drive, driveTrouble} from "./18_drive.js";
 import {PROGRAMS, boardSet, programNamed, setPrograms} from "./19_board_settings.js";
 import {loadThumbs, renderProgramView} from "./22_program.js";
