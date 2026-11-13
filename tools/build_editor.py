@@ -160,7 +160,7 @@ RELEASE_BRANCH = "main"
 
 def check_release_branch(repo_dir):
     """Refuse a release whose picker fetches its examples from a branch other than main."""
-    source = os.path.join(repo_dir, SHARED_PARTS, "discover", "28_discover.js")
+    source = os.path.join(repo_dir, SHARED_PARTS, "discover", "discover.js")
     with open(source, encoding="utf-8") as f:
         found = DISCOVER_BRANCH.search(f.read())
     if not found:
@@ -171,7 +171,7 @@ def check_release_branch(repo_dir):
 
 
 def board_parts(picker_folders, board, kind="js"):
-    """The board's numbered parts in number order, from the shared parts and any of its own, a
+    """The board's parts in name order, from the shared parts and any of its own, a
     feature folder's only where it has it. A part of the board's own adds to the shared ones."""
     folders = []
 
@@ -188,7 +188,7 @@ def board_parts(picker_folders, board, kind="js"):
 
     for folder in picker_folders:
         take(folder)
-    parts = [part for where in folders for part in glob.glob(os.path.join(where, "[0-9][0-9]_*." + kind))]
+    parts = [part for where in folders for part in glob.glob(os.path.join(where, "*." + kind))]
     names = [os.path.basename(part) for part in parts]
     twice = sorted({name for name in names if names.count(name) > 1})
     if twice:
@@ -203,10 +203,10 @@ EXPORTED = re.compile(r"^export (?:async )?(?:function\*? |var |let |const |clas
 ESBUILD = os.path.join("tools", "picker", "node_modules", ".bin", "esbuild")
 
 
-def script_order(parts):
-    """The board's script parts in the order they load: by number, except that a part always
-    comes after every part it imports. PICKER_REVERSE_TIES loads independent parts the other
-    way round, which CI uses to check nothing depends on their order. Refuses an import of a part the board does not take, and
+def script_order(parts, reverse_ties=False):
+    """The board's script parts in the order they load: a part after every part it imports, and
+    otherwise by name, or with reverse_ties the other way round, which CI uses to check nothing
+    depends on the order independent parts load in. Refuses an import of a part the board does not take, and
     two parts exporting one name."""
     imports = {}
     owners = {}
@@ -230,8 +230,19 @@ def script_order(parts):
         if not ready:
             sys.exit("the picker's parts import each other in a circle: " +
                      ", ".join(part for part in parts if part not in order))
-        order.append(ready[-1] if os.environ.get("PICKER_REVERSE_TIES") else ready[0])
+        order.append(ready[-1] if reverse_ties else ready[0])
     return order
+
+
+def style_order(styles, scripts):
+    """The stylesheets in the order their parts load, after those that belong to no part."""
+    stems = [os.path.splitext(part)[0] for part in scripts]
+
+    def place(style):
+        stem = os.path.splitext(style)[0]
+        return stems.index(stem) if stem in stems else -1
+
+    return sorted(styles, key=lambda style: (place(style), os.path.basename(style)))
 
 
 def entry_parts(scripts):
@@ -271,8 +282,10 @@ def picker_pages(board_dir, repo_dir, version):
     folders = [shared] + ([own] if os.path.isdir(own) else [])
     page = page.replace("__BOARD_NAME__", board["name"]).replace("__VERSION__", version)
     page = page.replace("__BUILD__", json.dumps({"board": board, "version": version}, indent=1))
-    styles = [os.path.normpath(part) for part in board_parts(folders, board, "css")]
-    scripts = script_order([os.path.normpath(part) for part in board_parts(folders, board)])
+    found = [os.path.normpath(part) for part in board_parts(folders, board)]
+    scripts = script_order(found, bool(os.environ.get("PICKER_REVERSE_TIES")))
+    styles = style_order([os.path.normpath(part) for part in board_parts(folders, board, "css")],
+                         script_order(found))
     entries = entry_parts(scripts)
 
     def href(part):

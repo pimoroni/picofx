@@ -4,7 +4,7 @@ const acorn = require("acorn");
 const eslintScope = require("eslint-scope");
 
 const root = process.argv[2] || path.join(__dirname, "..", "..", "boards", "editor", "picker");
-const PART = /^\d\d_.*\.js$/;
+const PART = /\.js$/;
 const IMPORT = /^import \{([^}]*)\} from "([^"]+)";\n/gm;
 
 function partsUnder(dir) {
