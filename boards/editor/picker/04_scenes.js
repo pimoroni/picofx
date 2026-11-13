@@ -1,11 +1,10 @@
+import {h, replace} from "./00_dom.js";
 import {BOARD, HEADER, lookNamed} from "./01_looks.js";
 import {
-  active, copyBlinks, copyExact, draw, drawSteps, escapeHtml, lampLines, mono, outs, runs, settle,
-  widthOf
+  active, copyBlinks, copyExact, draw, drawSteps, lampLines, mono, outs, runs, settle, widthOf
 } from "./03_runs.js";
 import {boardLine} from "./07_board.js";
 import {TAB_NAMES} from "./11_tabs.js";
-import {renderPreview} from "./18_drive.js";
 import {renderSceneSettings} from "./20_scene_row.js";
 import {featureIcon} from "./22_program.js";
 
@@ -204,7 +203,7 @@ export function addScene() {
   draw();
 }
 
-function removeScene(which) {
+export function removeScene(which) {
   store();
   var gone = state.scenes.splice(which, 1)[0];
   // Taking the last scene away leaves nothing playing, so its content comes back to
@@ -218,114 +217,6 @@ function removeScene(which) {
 }
 
 function copyBody(body) { return JSON.parse(JSON.stringify(body)); }
-
-function renderScenes() {
-  var box = document.getElementById("tabs");
-  box.textContent = "";
-
-  // One scene is what a file has before anyone asks for more, and a bar of one tab
-  // says nothing, so it is not drawn until there is a choice to make
-  if (state.scenes.length) {
-    // Always on is the tray the scenes' cards sit in, its own card the tray's first column
-    box.appendChild(sceneTab(-1, state.always, "Always on", ""));
-    state.scenes.forEach(function (scene, i) {
-      box.appendChild(sceneTab(i, scene, scene.name, sceneTurn(scene)));
-    });
-  }
-
-  var plus = document.createElement("button");
-  plus.className = "plus";
-  plus.innerHTML = "<svg width='11' height='11' viewBox='0 0 11 11'><path d='M5.5 1 " +
-                   "L5.5 10 M1 5.5 L10 5.5' stroke='currentColor' stroke-width='1.8' " +
-                   "stroke-linecap='round'/></svg>" +
-                   (state.scenes.length ? "another scene" : "split into scenes");
-  plus.title = state.scenes.length ? "Add another scene"
-                                   : "Split into scenes that play one after another";
-  plus.onclick = addScene;
-  box.appendChild(plus);
-  box.classList.toggle("tray", state.scenes.length > 0);
-  spanTray();
-
-  // The frame is what says these belong to the picked card, so it appears with the cards, in
-  // the picked card's colour. Its tab holds the scene's settings, beside what the page says
-  // about the scene
-  var frame = document.getElementById("sceneBody");
-  frame.className = "scenebody" + (state.scenes.length ? " framed" : "");
-  var tabRow = document.getElementById("sceneTabRow");
-  tabRow.hidden = !state.scenes.length;
-  var picked = state.at < 0 ? null : state.scenes[state.at];
-  [frame, tabRow].forEach(function (node) {
-    node.style.setProperty("--frame", sceneEdge(picked));
-    node.style.setProperty("--frameband", sceneBand(picked));
-  });
-  renderSceneAside();
-}
-
-// Stretch Always on's card down every row the scenes' cards and the add button wrap into, as
-// many as the tray's width leaves room for. Where the scenes fill their last row, the add button
-// is a thin bar the width of the tray under them, so it never takes a row as a lone card
-function spanTray() {
-  var box = document.getElementById("tabs");
-  var always = box.querySelector(".tab.always");
-  if (!always) return;
-  var plus = box.querySelector(".plus");
-  plus.classList.remove("wide");
-  plus.style.gridColumn = "";
-  always.style.gridRow = "1";
-  var columns = getComputedStyle(box).gridTemplateColumns.split(" ").length;
-  var perRow = Math.max(1, columns - 1);
-  var scenes = box.querySelectorAll(".tab:not(.always)").length;
-  if (scenes % perRow === 0) {
-    plus.classList.add("wide");
-    plus.style.gridColumn = "2 / -1";
-  }
-  always.style.gridRow = "1 / span " + Math.ceil((scenes + 1) / perRow);
-}
-window.addEventListener("resize", spanTray);
-
-// Beside the frame's tab, where the picked scene comes in the turns and the way to remove it,
-// or for Always on how many scenes it plays under
-function renderSceneAside() {
-  var aside = document.getElementById("sceneAside");
-  aside.textContent = "";
-  if (!state.scenes.length) return;
-  var where = document.createElement("span");
-  where.className = "sceneplace";
-  var count = state.scenes.length;
-  if (state.at < 0) {
-    where.textContent = "Under " + count + (count === 1 ? " scene" : " scenes");
-    aside.appendChild(where);
-    return;
-  }
-  var picked = state.scenes[state.at];
-  var after = sceneAfter(picked);
-  // While the name being typed breaks a rule, the place says why instead, as it does for a scene
-  // that never shows
-  var problem = sceneNameProblem(picked, picked.name);
-  var unreached = unreachedScenes();
-  if (!problem && unreached.scenes.indexOf(picked) >= 0) {
-    problem = unreached.stopper ? "Never shows, as " + unreached.stopper.name.trim() +
-                                  " waits forever before it"
-                                : "Never shows, as no scene goes on to it";
-  }
-  where.classList.toggle("warn", !!problem);
-  var ends = picked.waits ? "waits " + (sceneCanWait() ? "for " + sceneWaitsFor() : "forever")
-           : after === picked ? "then itself" : after ? "then " + after.name : "on its own";
-  where.textContent = problem || "Scene " + (state.at + 1) + " of " + count + ", " + ends;
-  where.title = where.textContent;
-  aside.appendChild(where);
-  var remove = document.createElement("button");
-  remove.type = "button";
-  remove.className = "sceneremove";
-  remove.textContent = "Remove scene";
-  remove.title = "Remove this scene";
-  var which = state.at;
-  remove.onclick = function () { removeScene(which); };
-  aside.appendChild(remove);
-}
-
-// A slot's body, read from the page for the one being edited, whose stored body is out of date
-function bodyAt(which) { return state.at === which ? capture() : slotAt(which).body; }
 
 // ---- how a scene ends ---------------------------------------------------------------------------
 // A scene either shows for its time and then goes to the scene after it, or waits until a button
@@ -356,7 +247,7 @@ export var sceneTriggerLeads = function (at) { return []; };
 export var sceneWaitsFor = function () { return "a button"; };
 
 // The scene a timed scene goes to when its time is up, or null for one that waits
-function sceneAfter(scene) {
+export function sceneAfter(scene) {
   if (scene.waits) return null;
   var named = scene.then ? sceneMarked(scene.then) : null;
   if (named) return named;
@@ -414,7 +305,7 @@ export function settleLoneScene() {
 
 // The scenes nothing leads to from the first, as the board reports them, and the scene that
 // waits forever before them where that is what leaves them out, or null
-function unreachedScenes() {
+export function unreachedScenes() {
   var reached = scenesReachedFrom(state.scenes.length ? [0] : []);
   var unreached = state.scenes.filter(function (scene, at) { return !reached[at]; });
   if (!unreached.length || sceneCanWait()) return {scenes: unreached, stopper: null};
@@ -431,7 +322,7 @@ function unreachedScenes() {
 
 // What is wrong with a name for a scene, or "" where nothing is. A scene needs a name of its own,
 // as another scene's heading can name it after "then", and Always on's is taken
-function sceneNameProblem(scene, name) {
+export function sceneNameProblem(scene, name) {
   var wanted = name.trim().toLowerCase();
   if (!wanted) return "A scene needs a name";
   if (wanted === "always on") return "That name is Always on's";
@@ -486,7 +377,7 @@ function sceneColour(scene) {
 
 // A scene's band, the background along the top of its card and its frame's tab. The remote's
 // white is a light grey, since white does not show on the page, and button 0's is its rainbow
-function sceneBand(scene) {
+export function sceneBand(scene) {
   if (scene && state.scenes.indexOf(scene) === 9)
     return "linear-gradient(90deg, " + REMOTE_RAINBOW.join(", ") + ")";
   var colour = sceneColour(scene) === "#ffffff" ? "#d9d6d0" : sceneColour(scene);
@@ -494,7 +385,7 @@ function sceneBand(scene) {
 }
 
 // A scene's outline colour, a darker shade where its colour is too pale to show on the page
-function sceneEdge(scene) {
+export function sceneEdge(scene) {
   return scene && sceneIsPale(scene)
     ? "color-mix(in srgb, " + sceneColour(scene) + " 72%, #2b2a28)" : sceneColour(scene);
 }
@@ -514,12 +405,6 @@ function sceneShade(scene) {
   return "color-mix(in srgb, " + sceneColour(scene) + " 65%, #2b2a28)";
 }
 
-// A scene's name in its colour, for a sentence the page writes as markup
-function sceneNameHtml(scene) {
-  return "<b class='scenename' style='color:" + sceneShade(scene) + "'>" +
-         escapeHtml(scene.name) + "</b>";
-}
-
 // Each part's icon, the drawing the programs page gives the same thing, so the two pages agree.
 // A part the programs page has no drawing for gives its own in PART_DRAWINGS, on the same grid
 var PART_FEATURES = {lights: "outputs", strip: "strip", screens: "screen", hub: "hub",
@@ -528,12 +413,8 @@ export var PART_DRAWINGS = {};
 
 function partIcon(key) {
   if (PART_FEATURES[key]) return featureIcon(PART_FEATURES[key]);
-  var icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  icon.setAttribute("viewBox", "0 0 24 24");
-  icon.setAttribute("class", "featureicon");
-  icon.setAttribute("aria-hidden", "true");
-  icon.innerHTML = PART_DRAWINGS[key];
-  return icon;
+  return h("svg:svg", {viewBox: "0 0 24 24", class: "featureicon", "aria-hidden": "true",
+                       html: PART_DRAWINGS[key]});
 }
 
 // The parts of the board a slot's body sets itself, each as [icon, name]. A body's parts add
@@ -578,239 +459,152 @@ function alwaysSays(body) {
   return names.length <= 2 ? names.join(", ") : names[0] + " and " + (names.length - 1) + " more";
 }
 
-function sceneTab(which, slot, name, says) {
-  var here = state.at === which;
-  var body = here ? capture() : slot.body;
-  var tab = document.createElement("button");
-  tab.className = "tab" + (here ? " on" : "") + (which < 0 ? " always" : "");
-  tab.draggable = which >= 0;
-  // The scene's colour is its tab's band and tint, and the selected tab is ringed as the page
-  // rings anything chosen
-  var scene = which < 0 ? null : slot;
-  tab.style.setProperty("--scene", sceneColour(scene));
-  if (which >= 0) {
-    tab.style.setProperty("--band", sceneBand(scene));
-    if (sceneIsPale(scene)) tab.classList.add("pale");
+export function renderSceneTray() {
+  var tray = document.getElementById("tabs");
+  var addButton = h("button", {type: "button", class: "plus",
+                               title: state.scenes.length ? "Add another scene"
+                                                          : "Split into scenes that play one after another",
+                               onclick: addScene},
+    h("svg:svg", {width: 11, height: 11, viewBox: "0 0 11 11", "aria-hidden": "true"},
+      h("svg:path", {d: "M5.5 1 L5.5 10 M1 5.5 L10 5.5", stroke: "currentColor", "stroke-width": 1.8,
+                     "stroke-linecap": "round"})),
+    state.scenes.length ? "another scene" : "split into scenes");
+  var body = document.getElementById("sceneBody");
+  if (!state.scenes.length) {
+    tray.removeAttribute("role");
+    tray.removeAttribute("aria-label");
+    replace(tray, addButton);
+    body.removeAttribute("role");
+    body.removeAttribute("aria-labelledby");
+    body.removeAttribute("data-framed");
+    return;
   }
-  if (which < 0) says = alwaysSays(body);
+  tray.setAttribute("role", "tablist");
+  tray.setAttribute("aria-label", "Scenes");
+  replace(tray, alwaysTab(),
+          h("div", {role: "none"}, state.scenes.map(sceneTab), addButton));
+  widenAddButton();
+  var picked = state.at < 0 ? null : state.scenes[state.at];
+  body.setAttribute("role", "tabpanel");
+  body.setAttribute("aria-labelledby", sceneTabId(state.at));
+  body.toggleAttribute("data-framed", true);
+  body.style.setProperty("--frame", sceneEdge(picked));
+}
 
-  // A scene's card is three rows: its name, what it sets, and how it ends beside its remote
-  // number. Always on's is its name, what it is for and what it plays, then what it sets
-  var title = document.createElement("b");
-  // The name is cut short where it is long, and the whole of it is in the card's tip
-  var named = document.createElement("span");
-  named.className = "cardname";
-  named.textContent = name;
-  title.appendChild(named);
-  tab.title = name;
-  // A scene's card is moved by dragging it, which a grip at the end of its name says
-  if (which >= 0) {
-    title.insertAdjacentHTML("beforeend", "<svg class='grip' viewBox='0 0 8 12' aria-hidden='true'>" +
-      "<circle cx='2' cy='2' r='1.1'/><circle cx='6' cy='2' r='1.1'/><circle cx='2' cy='6' r='1.1'/>" +
-      "<circle cx='6' cy='6' r='1.1'/><circle cx='2' cy='10' r='1.1'/><circle cx='6' cy='10' r='1.1'/>" +
-      "</svg>");
-    title.lastChild.insertAdjacentHTML("afterbegin", "<title>Drag to move this scene</title>");
-  }
-  tab.appendChild(title);
-  // An icon for each part the scene sets itself, in a shade of its colour
-  var icons = document.createElement("span");
-  icons.className = "partsset";
-  icons.style.color = sceneShade(scene);
-  partsSet(body, which < 0).forEach(function (part) {
-    var icon = partIcon(part[0]);
-    icon.insertAdjacentHTML("afterbegin", "<title>" + escapeHtml(part[1]) + "</title>");
-    icons.appendChild(icon);
-  });
+function widenAddButton() {
+  var grid = document.querySelector("#tabs > div");
+  if (!grid) return;
+  var columns = getComputedStyle(grid).gridTemplateColumns.split(" ").length;
+  grid.lastChild.toggleAttribute("data-wide", state.scenes.length % columns === 0);
+}
+window.addEventListener("resize", widenAddButton);
 
-  var parts = document.createElement("span");
-  parts.className = "cardparts";
-  parts.appendChild(icons);
-  var under = document.createElement("small");
-  under.className = "says";
-  under.textContent = says;
+function sceneTabId(which) {
+  return which < 0 ? "sceneTabAlways" : "sceneTab" + which;
+}
 
-  if (which < 0) {
-    var role = document.createElement("small");
-    role.className = "role";
-    role.textContent = "Plays under every scene";
-    tab.appendChild(role);
-    if (says) tab.appendChild(under);
-    tab.appendChild(parts);
-  } else {
-    tab.appendChild(parts);
-    var turn = document.createElement("span");
-    turn.className = "cardturn";
-    turn.appendChild(under);
-    // Each of the remote's number buttons that goes to the scene, drawn as the remote draws it
-    var numbers = sceneNumbers(scene);
-    if (numbers.length) {
-      var badges = document.createElement("span");
-      badges.className = "irbadges";
-      numbers.forEach(function (number) {
-        var badge = document.createElement("span");
-        badge.className = "irbadge" + (number ? "" : " zero");
-        badge.textContent = String(number);
-        badge.title = "Press " + number + " on the remote for this scene";
-        // The white button's ring is drawn in a light grey, which shows on a card
-        if (number) badge.style.setProperty("--ring", number === 8 ? "#cfccc6" : REMOTE_COLOURS[number - 1]);
-        badges.appendChild(badge);
-      });
-      turn.appendChild(badges);
-    }
-    tab.appendChild(turn);
-  }
+function tabProps(which, title) {
+  var selected = state.at === which;
+  return {type: "button", role: "tab", id: sceneTabId(which), title: title,
+          "aria-selected": selected ? "true" : "false", "aria-controls": "sceneBody",
+          tabindex: selected ? "0" : "-1",
+          onclick: function () { if (state.at !== which) switchTo(which); },
+          onkeydown: function (event) { stepTabs(event, which); }};
+}
 
-  tab.onclick = function () { if (state.at !== which) switchTo(which); };
+function stepTabs(event, which) {
+  var last = state.scenes.length - 1;
+  var goTo = {ArrowRight: Math.min(last, which + 1), ArrowDown: Math.min(last, which + 1),
+              ArrowLeft: Math.max(-1, which - 1), ArrowUp: Math.max(-1, which - 1),
+              Home: -1, End: last}[event.key];
+  if (goTo === undefined) return;
+  event.preventDefault();
+  if (goTo !== state.at) switchTo(goTo);
+  document.getElementById(sceneTabId(state.at)).focus();
+}
 
-  if (which >= 0) {
-    tab.ondragstart = function (e) {
-      carriedTab = which;
-      tab.classList.add("carried");
-      e.dataTransfer.effectAllowed = "move";
-      e.dataTransfer.setData("text/plain", String(which));
-    };
-    tab.ondragend = function () { carriedTab = null; draw(); };
-    tab.ondragover = function (e) {
-      if (carriedTab === null || carriedTab === which) return;
-      e.preventDefault();
-      tab.classList.add("landing");
-    };
-    tab.ondragleave = function () { tab.classList.remove("landing"); };
-    tab.ondrop = function (e) {
-      e.preventDefault();
-      if (carriedTab === null || carriedTab === which) return;
-      store();
-      // The scene being edited is followed by identity, since moving any tab shifts
-      // the numbers of the ones it passes
-      var editing = state.at >= 0 ? state.scenes[state.at] : null;
-      var moved = state.scenes.splice(carriedTab, 1)[0];
-      state.scenes.splice(which, 0, moved);
-      state.at = editing ? state.scenes.indexOf(editing) : -1;
-      carriedTab = null;
-      draw();
-    };
-  }
-  return tab;
+function partIcons(body, always, scene) {
+  return h("span", {class: "parts", style: {color: sceneShade(scene)}},
+    partsSet(body, always).map(function (part) {
+      var icon = partIcon(part[0]);
+      icon.prepend(h("svg:title", {text: part[1]}));
+      return icon;
+    }));
+}
+
+function alwaysTab() {
+  var body = state.at < 0 ? capture() : state.always.body;
+  var says = alwaysSays(body);
+  var props = tabProps(-1, "Always on");
+  props["data-always"] = true;
+  props.style = {"--scene": sceneColour(null)};
+  return h("button", props,
+    h("strong", {}, "Always on"),
+    h("small", {}, "Plays under every scene"),
+    says ? h("small", {}, says) : null,
+    partIcons(body, true, null));
+}
+
+function sceneTab(scene, which) {
+  var body = state.at === which ? capture() : scene.body;
+  var props = tabProps(which, scene.name);
+  props.draggable = "true";
+  props["data-pale"] = sceneIsPale(scene);
+  props.style = {"--scene": sceneColour(scene), "--band": sceneBand(scene)};
+  props.ondragstart = function (event) {
+    carriedTab = which;
+    event.currentTarget.toggleAttribute("data-carried", true);
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", String(which));
+  };
+  props.ondragend = function () {
+    carriedTab = null;
+    draw();
+  };
+  props.ondragover = function (event) {
+    if (carriedTab === null || carriedTab === which) return;
+    event.preventDefault();
+    event.currentTarget.toggleAttribute("data-landing", true);
+  };
+  props.ondragleave = function (event) {
+    event.currentTarget.removeAttribute("data-landing");
+  };
+  props.ondrop = function (event) {
+    event.preventDefault();
+    if (carriedTab === null || carriedTab === which) return;
+    moveScene(carriedTab, which);
+    carriedTab = null;
+    draw();
+  };
+  return h("button", props,
+    h("strong", {}, scene.name),
+    h("span", {class: "grip", title: "Drag to move this scene", "aria-hidden": "true"}),
+    partIcons(body, false, scene),
+    h("small", {}, sceneTurn(scene)),
+    remoteBadges(scene));
+}
+
+function remoteBadges(scene) {
+  var numbers = sceneNumbers(scene);
+  if (!numbers.length) return null;
+  return h("span", {class: "remote"}, numbers.map(function (number) {
+    return h("kbd", {title: "Press " + number + " on the remote for this scene",
+                     "data-rainbow": number === 0,
+                     style: {"--ring": number === 0 ? null
+                                     : number === 8 ? "#cfccc6" : REMOTE_COLOURS[number - 1]}},
+             String(number));
+  }));
+}
+
+function moveScene(from, to) {
+  store();
+  var editing = state.at >= 0 ? state.scenes[state.at] : null;
+  var moved = state.scenes.splice(from, 1)[0];
+  state.scenes.splice(to, 0, moved);
+  state.at = editing ? state.scenes.indexOf(editing) : -1;
 }
 
 var carriedTab = null;
-
-// A scene's row of settings, its time and whether it starts afresh. The scene row part
-// restyles it and speaks for the always-on tab
-export function renderSceneRow() {
-  var box = document.getElementById("sceneSettings");
-  box.textContent = "";
-  if (state.at < 0) return;
-  var scene = state.scenes[state.at];
-
-  var row = document.createElement("div");
-  row.className = "sceneset";
-
-  var name = document.createElement("input");
-  name.type = "text";
-  name.value = scene.name;
-  name.title = "Scene name";
-  name.dataset.focus = "scene-name";
-  // The last name left in the field that broke no rule, which the scene goes back to if it is
-  // left with one that does. It is kept with the scene, as a draw makes the field afresh while it
-  // is being typed in, and a name half typed is not taken for it
-  if (scene.goodName === undefined && !sceneNameProblem(scene, scene.name)) scene.goodName = scene.name;
-  function marked() {
-    var problem = sceneNameProblem(scene, scene.name);
-    name.classList.toggle("invalid", !!problem);
-    name.title = problem || "Scene name";
-  }
-  name.oninput = function () {
-    // The brackets and the colon are the heading's own punctuation
-    scene.name = name.value.replace(/[\[\]:]/g, "");
-    if (name.value !== scene.name) name.value = scene.name;
-    marked();
-    renderScenes();
-    renderPreview();
-  };
-  name.onchange = function () {
-    scene.name = scene.name.trim();
-    if (!sceneNameProblem(scene, scene.name)) scene.goodName = scene.name;
-    else if (scene.goodName) scene.name = scene.goodName;
-    draw();
-  };
-  marked();
-  row.appendChild(name);
-
-  // How the scene ends. A waiting scene has no time and no scene after
-  var lone = state.scenes.length === 1;
-  var ends = document.createElement("select");
-  ends.className = "sceneends";
-  [["shows", "shows for"], ["waits", "waits"]].forEach(function (way) {
-    var option = document.createElement("option");
-    option.value = way[0];
-    option.textContent = way[1];
-    ends.appendChild(option);
-  });
-  ends.value = scene.waits ? "waits" : "shows";
-  ends.onchange = function () {
-    scene.waits = ends.value === "waits";
-    draw();
-  };
-  row.appendChild(ends);
-
-  if (!scene.waits) {
-    var seconds = document.createElement("input");
-    seconds.type = "number";
-    seconds.min = 1;
-    seconds.value = scene.seconds;
-    seconds.dataset.focus = "scene-seconds";
-    seconds.onchange = function () {
-      scene.seconds = Math.max(1, Number(seconds.value) || 1);
-      draw();
-    };
-    row.appendChild(seconds);
-
-    var unit = document.createElement("span");
-    unit.className = "sunit";
-    unit.textContent = lone ? "s, then itself" : "s, then";
-    row.appendChild(unit);
-  }
-
-  // The scene after, the next in order unless another is chosen, which can be this one again
-  if (!scene.waits && !lone) {
-    var then = document.createElement("select");
-    then.className = "scenethen";
-    var inOrder = state.scenes[(state.at + 1) % state.scenes.length];
-    var first = document.createElement("option");
-    first.value = "";
-    first.textContent = "the next scene";
-    then.appendChild(first);
-    state.scenes.forEach(function (other) {
-      if (other === inOrder) return;
-      var option = document.createElement("option");
-      option.value = sceneMark(other);
-      option.textContent = other === scene ? "itself" : other.name;
-      then.appendChild(option);
-    });
-    then.value = scene.then && sceneMarked(scene.then) && sceneMarked(scene.then) !== inOrder
-               ? scene.then : "";
-    then.title = "The scene after this one, the next in order unless another is chosen";
-    then.onchange = function () {
-      scene.then = then.value || null;
-      draw();
-    };
-    row.appendChild(then);
-  }
-
-  var again = document.createElement("label");
-  var tick = document.createElement("input");
-  tick.type = "checkbox";
-  tick.checked = sceneRestarts(scene);
-  tick.onchange = function () { scene.restart = tick.checked; draw(); };
-  again.appendChild(tick);
-  again.appendChild(document.createTextNode("restart each time"));
-  again.title = "Restart this scene's effects each time it plays";
-  row.appendChild(again);
-
-  box.appendChild(row);
-}
-
 
 // ---- what the whole file says now -------------------------------------------------------
 
@@ -875,6 +669,6 @@ export function currentText() {
 }
 
 drawSteps.after.push(function () {
-  renderScenes();
+  renderSceneTray();
   renderSceneSettings();
 });

@@ -1,0 +1,353 @@
+:root {
+  --bg: #f5f3ef;
+  --panel: #fff;
+  --ink: #26221e;
+  --dim: #8a8378;
+  --line: #e2ddd4;
+  --accent: #00857d;
+  --accent-ink: #fff;
+  --strip: #1f6feb;
+  --mono: #c2570f;
+  --dark: #191b1d;
+  --warn: #b33;
+  --warn-bg: #fbeaea;
+  --hold: #8a6415;
+  --hold-bg: #fdf3e0;
+  --board: #56708f;
+  --boardOuts: #3f5a6b;
+  --screenA: #1f6feb;
+  --mark: 20px;
+  --namerow: 2.1rem;
+  --column: 57.2rem;
+  --through: repeating-linear-gradient(45deg, rgba(240, 238, 234, .75), rgba(240, 238, 234, .75) 6px,
+                                       transparent 6px, transparent 12px);
+  --cross: linear-gradient(to top right, transparent calc(50% - .7px), #c9c3b9 calc(50% - .7px),
+                           #c9c3b9 calc(50% + .7px), transparent calc(50% + .7px));
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.5 system-ui, sans-serif;
+}
+
+button {
+  padding: .4rem .75rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  font: inherit;
+  font-size: .85rem;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: .4;
+    cursor: default;
+  }
+
+  &.on {
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 600;
+  }
+}
+
+details {
+  margin: 1.2rem 0;
+}
+
+summary {
+  color: var(--dim);
+  font-size: .9rem;
+  cursor: pointer;
+}
+
+body > header {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .8rem;
+  padding: .8rem 1.4rem 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+
+  h1 {
+    margin: 0 auto 0 0;
+    font-size: 1.1rem;
+
+    small {
+      color: var(--dim);
+      font-size: .8rem;
+      font-weight: 400;
+    }
+  }
+
+  .headactions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .8rem;
+    margin-left: auto;
+  }
+
+  [data-standin] {
+    display: inline-block;
+    visibility: hidden;
+  }
+
+  .headswitch {
+    order: 10;
+    display: flex;
+    flex: 1 0 100%;
+    gap: .25rem;
+    margin: 0 0 -1px;
+    padding: 0 max(0px, calc((100% - var(--column)) / 2));
+
+    &:empty {
+      display: none;
+    }
+  }
+
+  .cover {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: .5rem;
+    min-width: 0;
+    height: var(--tabheight, 3.1rem);
+    padding: 0 .35rem;
+    border: 1.5px solid var(--line);
+    border-bottom: 0;
+    border-radius: 10px 10px 0 0;
+    background: #ece8e1;
+    color: var(--dim);
+    text-align: left;
+    cursor: pointer;
+
+    &:hover {
+      background: #f1eee9;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+    }
+
+    &.on {
+      --band: var(--accent);
+      border-top-color: transparent;
+      background: linear-gradient(var(--band), var(--band)) 0 0 / 100% 3px no-repeat border-box,
+                  var(--bg);
+      color: var(--ink);
+    }
+
+    &[data-page=program].on {
+      --band: var(--board);
+
+      b {
+        color: var(--board);
+      }
+    }
+
+    .coverface {
+      flex: none;
+      width: calc((var(--tabheight, 3.1rem) - .6rem) * 4 / 3);
+      height: calc(var(--tabheight, 3.1rem) - .6rem);
+      border-radius: 5px;
+    }
+
+    > span {
+      display: flex;
+      align-items: baseline;
+      gap: .55rem;
+      min-width: 0;
+    }
+
+    b {
+      display: block;
+      font-size: .95rem;
+      line-height: 1.15;
+      white-space: nowrap;
+    }
+
+    small {
+      display: block;
+      overflow: hidden;
+      color: var(--dim);
+      font-size: .8rem;
+      line-height: 1.2;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .plus {
+      flex: none;
+      margin-left: auto;
+    }
+
+    &:not(.on) .plus {
+      display: none;
+    }
+  }
+
+  .effectsface {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 .25rem;
+    background: #1c1f22;
+
+    .accswatch {
+      width: 100%;
+      height: .5rem;
+      margin: 0;
+    }
+  }
+
+  &.oneline {
+    flex-wrap: nowrap;
+    align-items: flex-end;
+
+    h1 {
+      flex: 1 1 0;
+      margin: 0 0 var(--headgap, .8rem);
+      line-height: var(--buttonheight, 2.3rem);
+      white-space: nowrap;
+    }
+
+    .headactions {
+      flex: 1 1 0;
+      flex-wrap: nowrap;
+      margin: 0 0 var(--headgap, .8rem);
+    }
+
+    .headswitch {
+      order: 0;
+      flex: 0 0 var(--column);
+      padding: 0;
+    }
+  }
+
+  @media (width < 40rem) {
+    padding-inline: .8rem;
+
+    .cover {
+      height: auto;
+      min-height: 2.6rem;
+      padding-block: .3rem;
+
+      .coverface {
+        width: 2.6rem;
+        height: 1.95rem;
+      }
+
+      > span {
+        flex-direction: column;
+        gap: 0;
+      }
+    }
+  }
+}
+
+main {
+  flex-grow: 1;
+  width: 100%;
+  max-width: 60rem;
+  margin: 1.4rem auto;
+  padding: 0 1.4rem;
+}
+
+body > footer {
+  margin-top: 2.5rem;
+  padding: 1.1rem 1.4rem 1.25rem;
+  border-top: 1px solid var(--line);
+  background: var(--panel);
+  color: #6b655c;
+  font-size: .8125rem;
+
+  > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem 1.5rem;
+
+    > p {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin: 0;
+
+      > svg {
+        flex: none;
+        width: 2.75rem;
+        height: 2.75rem;
+      }
+
+      span svg {
+        width: .75rem;
+        height: .7rem;
+        vertical-align: -1px;
+      }
+    }
+  }
+
+  strong {
+    display: block;
+    color: var(--ink);
+    font-size: .94rem;
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .8rem;
+
+    a {
+      padding: .42rem .85rem;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--ink);
+      font-size: .88rem;
+      text-decoration: none;
+      white-space: nowrap;
+
+      &:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+    }
+  }
+
+  > p {
+    margin: .9rem 0 0;
+    padding-top: .75rem;
+    border-top: 1px solid #eeeae3;
+    font-size: .75rem;
+    line-height: 1.6;
+
+    small {
+      font-size: inherit;
+    }
+  }
+}

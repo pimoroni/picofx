@@ -1,14 +1,11 @@
+import {h, replace} from "./00_dom.js";
 import {draw, escapeHtml, paintLine} from "./03_runs.js";
 import {currentText, state} from "./04_scenes.js";
 import {nameShown} from "./26_drive_files.js";
 
-// ---- the drive, and what the board says back ------------------------------------------------
-// Saving and the read-back of errors.txt: the banner and the saving lights, remembering the
-// drive, and waiting on the board. Opening a drive takes its handles, the read-back part
-// reading its effects.txt into the page. Chrome and Edge only, where a page can be handed a
-// folder to write to.
-
 var SPOT_STEP_MS = 120;
+
+var SPOT_COUNT = 7;
 
 var SAVING_TAIL_MS = 920;
 
@@ -20,38 +17,32 @@ function stopSpots() {
 }
 
 function saving(text) {
-  banner(text, "hold");
-  var row = document.createElement("span");
-  row.className = "spots";
-  for (var i = 0; i < 7; i++) row.appendChild(document.createElement("i"));
-  document.getElementById("banner").firstChild.appendChild(row);
-  var at = 0;
+  var spots = [];
+  for (var made = 0; made < SPOT_COUNT; made++) spots.push(h("i"));
+  showBanner(text, "hold", null, h("span", {"aria-hidden": "true"}, spots));
+  var lit = 0;
   spotTimer = setInterval(function () {
-    for (var i = 0; i < row.children.length; i++)
-      row.children[i].className = i === at ? "lit" : "";
-    at = (at + 1) % row.children.length;
+    spots.forEach(function (spot, at) { spot.toggleAttribute("data-lit", at === lit); });
+    lit = (lit + 1) % spots.length;
   }, SPOT_STEP_MS);
 }
 
-// The parts that also show what banner() says, each given its text and warn as banner() is
 export var bannerSteps = [];
 
 export function banner(text, warn, detail) {
+  showBanner(text, warn, detail, null);
+}
+
+function showBanner(text, warn, detail, spots) {
   stopSpots();
   bannerSteps.forEach(function (step) { step(text, warn); });
   var box = document.getElementById("banner");
-  box.textContent = "";
-  if (!text) return;
-  var note = document.createElement("div");
-  // warn may also be "hold", the amber of a check still running
-  note.className = warn === "hold" ? "banner hold" : warn ? "banner warn" : "banner";
-  note.textContent = text;
-  if (detail) {
-    var pre = document.createElement("pre");
-    pre.textContent = detail;
-    note.appendChild(pre);
+  box.dataset.tone = warn === "hold" ? "hold" : warn ? "warn" : "";
+  if (!text) {
+    replace(box);
+    return;
   }
-  box.appendChild(note);
+  replace(box, h("p", {}, text, spots), detail ? h("pre", {text: detail}) : null);
 }
 
 function rememberDrive(handle) {
@@ -259,18 +250,15 @@ async function connect(fresh) {
   // The wait on the board reads the drive through the page's state
   state.dirHandle = dir;
   document.getElementById("check").disabled = false;
-  // Open, the drive button goes quiet and narrower, saying in its tip which drive is open, and
-  // saving takes the colour as the next thing to do
   var openButton = document.getElementById("open");
-  openButton.className = "";
+  openButton.removeAttribute("data-primary");
   openButton.textContent = "Change drive";
   openButton.title = "Connected to " + (dir.name && dir.name.length > 1 ? dir.name : "the FX drive") +
                      ". Open a different one";
   openButton.onclick = openFresh;
   var saveButton = document.getElementById("save");
-  saveButton.className = "primary";
+  saveButton.toggleAttribute("data-primary", true);
   saveButton.disabled = false;
-  // The header's buttons have changed width, which decides whether it keeps one line
   draw();
   for (var at = 0; at < connectSteps.length; at++) await connectSteps[at]();
 }
@@ -292,39 +280,33 @@ function problemsIn(said) {
   return found;
 }
 
-// Takes the board's answer and the file it read, then marks the lines it named
 function takeAnswer(said, about) {
   answered = {said: said || null, about: about};
   renderPreview();
 }
 
-// The file as the page writes it. A line the board named is marked where the page still writes
-// it as the board read it, the board's words after it
 export function renderPreview() {
   var problems = problemsIn(answered.said);
   var lines = currentText().split("\n");
   var read = (answered.about || "").split("\n");
-  var stale = 0;
+  var changedSince = 0;
   var painted = lines.map(function (line, at) {
     var said = problems[at + 1];
     if (!said) return paintLine(line);
     if (read[at] !== line) {
-      stale++;
+      changedSince++;
       return paintLine(line);
     }
-    return "<span class='s-problem'>" + paintLine(line) + "</span>" +
-           "<span class='s-said'>  " + escapeHtml(said.join(" ")) + "</span>";
+    return "<mark>" + paintLine(line) + "</mark><em>  " + escapeHtml(said.join(" ")) + "</em>";
   });
   Object.keys(problems).forEach(function (at) {
-    if (Number(at) > lines.length) stale++;
+    if (Number(at) > lines.length) changedSince++;
   });
   document.getElementById("preview").innerHTML = painted.join("\n");
   var note = document.getElementById("previewNote");
-  if (note) {
-    note.hidden = !stale;
-    note.textContent = stale === 1 ? "One reported line has since changed."
-                                   : stale + " reported lines have since changed.";
-  }
+  note.hidden = !changedSince;
+  note.textContent = changedSince === 1 ? "One reported line has since changed."
+                                        : changedSince + " reported lines have since changed.";
 }
 
 document.getElementById("save").onclick = async function () {
