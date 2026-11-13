@@ -1,3 +1,5 @@
+import {linesFor} from "./05_effects.js";
+
 // ---- the lamps, lit by the line the look writes ---------------------------------------
 // A card can say what a look is made of; only a lamp actually running it can say what it
 // looks like. A lamp here plays the entry its look would write, read back and run through
@@ -16,7 +18,7 @@ var NAMED = {
 
 var UNLIT = "#ffd9a0";   // what a lamp is drawn in where its entry names no colour
 
-function inkOf(word) {
+export function inkOf(word) {
   if (!word) return UNLIT;
   if (word.charAt(0) === "#") return word;
   return NAMED[word] || ("#" + word);
@@ -239,7 +241,7 @@ function hueInk(hue, sat, val) {
   }).join("");
 }
 
-var COLOURED = {
+export var COLOURED = {
 
   rainbow: function (t, s) {
     return {level: 1, ink: hueInk(((t * num(s.speed, 1)) % 1) * 360, s.sat, s.val)};
@@ -297,12 +299,12 @@ function curved(sim, given, channel) {
 // ---- what one lamp of a target is doing at time t ----------------------------------------
 
 // Whether a strip's stretches are being played, so the looks take the strip's form
-var previewingStrip = false;
+export var previewingStrip = false;
 
 // The target a look writes for, built from what the lamp knows. Colour is always asked
 // for, so an entry naming one says what to draw the lamp in; a caller showing mono lamps
 // draws it its own way. The preview plays a stretch as that many lamps of its own
-function lampTarget(count) {
+export function lampTarget(count) {
   var playing = [];
   for (var i = 1; i <= count; i++) playing.push(i);
   var target = {kind: count === 1 ? "one" : "outputs", id: "outputs", name: "out",
@@ -314,7 +316,7 @@ function lampTarget(count) {
 
 // What a look's entries light at slot, which lamp this is counted from zero, of count playing.
 // The effects part plays a stretch through this as the board will
-function lookLit(look, holder, t, slot, count, sim) {
+export function lookLit(look, holder, t, slot, count, sim) {
   if (!look || !look.entries) return null;
   var lines;
   try {
@@ -350,8 +352,8 @@ function lookLit(look, holder, t, slot, count, sim) {
 
 // ---- painting them, forty times a second ---------------------------------------------
 
-var FRAME = 1 / 40;
-var beat = 0;
+export var FRAME = 1 / 40;
+export var beat = 0;
 
-var HOLDING_STILL = window.matchMedia &&
+export var HOLDING_STILL = window.matchMedia &&
                     window.matchMedia("(prefers-reduced-motion: reduce)").matches;

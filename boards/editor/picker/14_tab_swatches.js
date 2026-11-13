@@ -1,3 +1,6 @@
+import {drawSteps, inkAt, paintAll, painters} from "./03_runs.js";
+import {LED_PANELS, runsOfPanel} from "./10_led_sections.js";
+import {tabSwatches} from "./11_tabs.js";
 
 // ---- the LED tabs' swatches, live ------------------------------------------------------------
 // Each LED tab's swatch a small copy of its section's lamps, painted every frame from the

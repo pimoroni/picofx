@@ -1,3 +1,9 @@
+import {lookNamed} from "./01_looks.js";
+import {choosingLook, chosenSteps, draw, drawSteps, stretchUnder} from "./03_runs.js";
+import {targetFor, wherePlays} from "./05_effects.js";
+import {chosenTab} from "./11_tabs.js";
+import {foldHead} from "./22_program.js";
+import {groupOpen, groupsOpen} from "./26_drive_files.js";
 
 // ---- the looks in groups ------------------------------------------------------------------
 // The gallery grouped by how the lights play together, each group a row of at most five, the
@@ -20,7 +26,7 @@ var LOOK_GROUPS = [
 ];
 
 // The gallery's cards gathered under the groups' headings, in the groups' order
-function groupGallery() {
+export function groupGallery() {
   var flat = document.querySelector("#looks .gallery");
   if (!flat) return;
   var cards = {};
@@ -87,7 +93,7 @@ function lookButton(words, choosing) {
   return button;
 }
 
-function renderPicking(where, run) {
+export function renderPicking(where, run) {
   var box = document.getElementById(where);
   if (!box) return;
   box.textContent = "";

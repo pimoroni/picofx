@@ -1,3 +1,13 @@
+import {
+  active, blank, draw, drawSteps, lampKey, outputSaid, paintAll, pick, pickOutput, runs, sectionAt,
+  zoomAndSteps
+} from "./03_runs.js";
+import {allBodies, apply, slotAt, state, store} from "./04_scenes.js";
+import {STRIPS, renderStripChip, stripChipShown, stripSet} from "./05_effects.js";
+import {breakingOutputs, brokenSaid} from "./07_board.js";
+import {workOn} from "./10_led_sections.js";
+import {lastOutputRun, showChosen} from "./11_tabs.js";
+import {forgetKeptFor} from "./27_readback.js";
 
 // ---- where the board is set up ----------------------------------------------------------
 // Every fact about the board stays beside what it is about: the wiring on the outputs, a
@@ -5,14 +15,14 @@
 // section's own colour, and the whole board is set up at once in a setup mode.
 
 // Whether the whole page is in its setup mode
-var setupOn = false;
+export var setupOn = false;
 
 // The panels that hold a board fact, and the colour each one's box takes
-var BOARD_CHIP_CLASSES = {outPanel: "outs"};
+export var BOARD_CHIP_CLASSES = {outPanel: "outs"};
 STRIPS.forEach(function (strip) { BOARD_CHIP_CLASSES[strip.id + "Panel"] = strip.id; });
 
 // Whether the board facts in this panel can be changed just now
-function canEdit(panel) { return setupOn; }
+export function canEdit(panel) { return setupOn; }
 
 // ---- selection waits while the board is set up ------------------------------------------------
 // A stretch is picked to give it a look, which setup does not do, so a tap there picks
@@ -21,9 +31,9 @@ function canEdit(panel) { return setupOn; }
 // put back meanwhile is picked instead, as it would have been outside setup
 
 var heldPick = null;
-var heldOutput = null;
+export var heldOutput = null;
 
-function setSetup(on) {
+export function setSetup(on) {
   if (on && !setupOn) {
     var section = active.sections[active.picked];
     heldPick = section ? lampKey(active.lamps[section.from]) : null;
@@ -58,7 +68,7 @@ function unmark() {
 }
 
 // A section's coloured box, the chip icon inside it with whatever the fact says
-function boardBox(panel, parts) {
+export function boardBox(panel, parts) {
   var box = document.createElement("span");
   box.className = "chip boardchip " + BOARD_CHIP_CLASSES[panel];
   box.title = "Board setup, shared by every scene";
@@ -69,7 +79,7 @@ function boardBox(panel, parts) {
   return box;
 }
 
-function small(words) {
+export function small(words) {
   var said = document.createElement("small");
   said.textContent = words;
   return said;
@@ -77,7 +87,7 @@ function small(words) {
 
 // The board's chip, three legs a side, set three apart as the smallest spacing that still
 // reads as legs at 16px
-function boardIcon() {
+export function boardIcon() {
   var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("viewBox", "0 0 14 14");
   svg.setAttribute("width", "13");
@@ -96,7 +106,7 @@ function boardIcon() {
 
 // Where the wiring cannot be changed an output's arrow is left out. What stands in its place
 // takes no room, as the arrow does, or each output's lamps would sit further apart outside setup
-function noArrow() {
+export function noArrow() {
   var none = document.createElement("span");
   none.style.position = "absolute";
   return none;
@@ -132,7 +142,7 @@ function capitalised(text) { return text.charAt(0).toUpperCase() + text.slice(1)
 
 // Why a strip cannot be fitted just now, or nothing where it can: a strip taking other strips'
 // terminals cannot be fitted beside them, nor they beside it
-function stripBlockedBy(run) {
+export function stripBlockedBy(run) {
   if (run.there) return "";
   var fitted = runs.filter(function (one) {
     return one.strip && one.there && run.takes.indexOf(one.name) >= 0;
@@ -151,7 +161,7 @@ function stripBlockedBy(run) {
 
 // Taking a strip out clears what it plays in every scene, the lines kept from a file
 // included, which leaves its length unwritten and its connector off
-function dropStrip(run) {
+export function dropStrip(run) {
   forgetKeptFor(run);
   store();
   allBodies().forEach(function (held) {
@@ -204,7 +214,7 @@ function renderStripOut(box, run, panel) {
   box.appendChild(add);
 }
 
-function renderLeds(where, run) {
+export function renderLeds(where, run) {
   var box = document.getElementById(where);
   var panel = run.id + "Panel";
   document.getElementById(panel).classList.toggle("stripout", !run.there);
@@ -231,7 +241,7 @@ function renderLeds(where, run) {
 
 // ---- turning setup on ------------------------------------------------------------------------
 
-function setupButton(label, on, act) {
+export function setupButton(label, on, act) {
   var button = document.createElement("button");
   button.type = "button";
   button.className = "setupbutton" + (on ? " on" : "");

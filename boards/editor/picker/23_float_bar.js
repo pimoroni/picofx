@@ -1,3 +1,9 @@
+import {drawSteps, escapeHtml} from "./03_runs.js";
+import {state} from "./04_scenes.js";
+import {bannerSteps} from "./18_drive.js";
+import {boardSet} from "./19_board_settings.js";
+import {onProgramPage, programTitle} from "./22_program.js";
+
 // ---- the bar along the top ----------------------------------------------------------------------
 // Once the header has scrolled out of view a slim bar takes its place along the top, holding the
 // page's name, the drive, save and check buttons, the latest thing the page said and where the

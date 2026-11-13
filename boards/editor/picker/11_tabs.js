@@ -1,3 +1,8 @@
+import {BOARD} from "./01_looks.js";
+import {active, draw, drawSteps, outs, renderChosen, runs} from "./03_runs.js";
+import {STRIPS} from "./05_effects.js";
+import {setSetup, setupButton, setupOn, stripBlockedBy} from "./08_setup.js";
+import {LED_PANELS, runsOfPanel, workOn} from "./10_led_sections.js";
 
 // ---- the LED sections as tabs -----------------------------------------------------------
 // The outputs and each strip as tabs, one section shown at a time, so the one being worked on
@@ -12,15 +17,15 @@
 // keeps to them: the whole board is being set up, a section at a time, and the tabs stay
 // live to move between sections while it is.
 
-var TAB_NAMES = {outPanel: BOARD.output_words.tab};
+export var TAB_NAMES = {outPanel: BOARD.output_words.tab};
 BOARD.strips.forEach(function (strip) { TAB_NAMES[strip.name + "Panel"] = strip.tab; });
 
 // The sections with a tab, the LED ones and any other a page adds. A board whose strips are what it
 // is for has their tabs first and opens on the first one fitted
-var TAB_PANELS = LED_PANELS.slice();
+export var TAB_PANELS = LED_PANELS.slice();
 if (BOARD.strips_first) TAB_PANELS.push(TAB_PANELS.shift());
 
-var chosenTab = "outPanel";
+export var chosenTab = "outPanel";
 if (BOARD.strips_first) {
   var firstFitted = STRIPS.filter(function (strip) { return strip.there; })[0];
   if (firstFitted) chosenTab = firstFitted.id + "Panel";
@@ -40,7 +45,7 @@ drawSteps.before.push(function () {
 
 // Every tab's section stays laid out in one shared place, only the chosen one seen, so the
 // place is as tall as the tallest and choosing a tab never moves what is below it
-function showChosen() {
+export function showChosen() {
   TAB_PANELS.forEach(function (panel) {
     var node = document.getElementById(panel);
     node.open = true;
@@ -60,7 +65,7 @@ function showChosen() {
 // With the looks in the box of the section they are for, the shared place is held at the tallest
 // box with the looks counted in, whichever box has them, so choosing a tab still moves nothing.
 // Run after every part has drawn, the boxes then being their full height
-function holdTabsPlace() {
+export function holdTabsPlace() {
   if (!document.body.classList.contains("looksbelow")) return;
   var stack = document.getElementById("tabStack");
   var looks = document.getElementById("looks");
@@ -84,9 +89,9 @@ function holdTabsPlace() {
 }
 
 // A tab's swatch, drawn by whichever part has that panel
-var tabSwatches = {};
+export var tabSwatches = {};
 
-function tabSwatch(swatch, panel) { tabSwatches[panel](swatch, panel); }
+export function tabSwatch(swatch, panel) { tabSwatches[panel](swatch, panel); }
 
 // Why a tab's section cannot be used just now, or nothing where it can. Its tab greys and
 // still opens, so the section can say why
@@ -135,7 +140,7 @@ function renderLedTabs() {
 }
 
 // A section shown as a tab is not folded away, the tab being how it is left
-function keptOpen(panel) {
+export function keptOpen(panel) {
   var node = document.getElementById(panel);
   node.addEventListener("toggle", function () {
     if (!node.open) node.open = true;
@@ -147,7 +152,7 @@ LED_PANELS.forEach(keptOpen);
 // Each section is only ever seen on its own here, so each keeps its own settings
 // whichever is worked on, and none changes height when another tab is chosen. The outputs'
 // are for whichever of their two sides was last worked on
-var lastOutputRun = outs;
+export var lastOutputRun = outs;
 
 drawSteps.after.push(function () {
   if (!active.strip) lastOutputRun = active;

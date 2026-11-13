@@ -1,10 +1,12 @@
+import {toggle} from "./01_looks.js";
+import {renderSceneRow, sceneLoops, sceneRestarts, sceneShowsAgain, state} from "./04_scenes.js";
 
 // ---- a scene's own settings, in the screens' style ---------------------------------------
 // Whether the scene's effects begin again each time it comes round is a toggle with its icon, as
 // the screens' Loop and Ping pong are. It is called Restart, the heading's own word, as each of
 // theirs is the file's.
 
-function renderSceneSettings() {
+export function renderSceneSettings() {
   renderSceneRow();
   // Always on has no settings of its own, so its row says what it is for, the gallery staying
   // where it was as the tabs are switched. Only once there are scenes for it to be under

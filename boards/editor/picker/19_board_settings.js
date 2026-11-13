@@ -1,3 +1,8 @@
+import {draw, drawSteps} from "./03_runs.js";
+import {state} from "./04_scenes.js";
+import {SCREEN_SIZES, boardLineSteps} from "./07_board.js";
+import {boardIcon} from "./08_setup.js";
+import {renderPreview} from "./18_drive.js";
 
 // ---- the board's own settings -----------------------------------------------------------------
 // Three settings belong to the board and to no section: whether a save plays without an eject,
@@ -6,19 +11,19 @@
 // keeps them. The pages built on this one each put them somewhere different, using what is here.
 
 // Saving without an eject starts on
-var boardSet = {reload: true, driveHidden: false, program: null, args: {}};
+export var boardSet = {reload: true, driveHidden: false, program: null, args: {}};
 
 // The programs on the drive, read once a drive is open, its own and the examples alike: each one's
 // path, name, what it does, the arguments it takes, its section and thumbnail, and what it uses and
 // needs. drivePrograms() in 26_drive_programs.js reads them
-var PROGRAMS = [];
+export var PROGRAMS = [];
 
 // Lookups for programs the page shows that the drive does not hold, each given a path and
 // returning its program or null
-var programsElsewhere = [];
+export var programsElsewhere = [];
 
 // The program at a path, or null where neither the drive nor a lookup holds one there
-function programNamed(path) {
+export function programNamed(path) {
   var found = PROGRAMS.filter(function (one) { return one.path === path; })[0];
   for (var at = 0; !found && at < programsElsewhere.length; at++) found = programsElsewhere[at](path);
   return found || null;
@@ -27,7 +32,7 @@ function programNamed(path) {
 // A program's arguments as the file takes them, each one quoted where a space or a colon would
 // otherwise divide it, and an empty one left out. A pipe divides them, so none can carry one. A
 // program given only what it would take anyway is given nothing, so its line stays as short
-function argsWritten(path) {
+export function argsWritten(path) {
   var program = programNamed(path);
   if (program && program.args && program.args.length && program.args.every(function (argument, at) {
     var value = (boardSet.args[path] || [])[at];
@@ -41,7 +46,7 @@ function argsWritten(path) {
 }
 
 // Whether keeping the drive hidden means anything, a program having it shown while it runs
-function driveMeansSomething() { return !boardSet.program; }
+export function driveMeansSomething() { return !boardSet.program; }
 
 boardLineSteps.after.push(function (line) {
   var tokens = [];
@@ -81,7 +86,7 @@ var ARGUMENT_CHOICES = {
 // The picked program's arguments: a box for each it names, a screen size chosen from those the
 // firmware knows and a rotation from the four, or where it names none but reads sys.argv, plain
 // boxes to add and take away
-function argsFor(path, locked) {
+export function argsFor(path, locked) {
   var program = programNamed(path);
   var given = boardSet.args[path] || (boardSet.args[path] = []);
   var box = document.createElement("div");

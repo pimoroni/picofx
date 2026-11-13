@@ -1,3 +1,14 @@
+import {quoted} from "../01_looks.js";
+import {draw, drawSteps} from "../03_runs.js";
+import {bodyParts, otherScenes, state} from "../04_scenes.js";
+import {boardResidue, entryParts} from "../27_readback.js";
+import {
+  SCREENS, SCREEN_NAMES, kindOf, screenLetter, screenPlaying, screenShown, screensHeadSteps,
+  turnForChosen
+} from "./12_screens.js";
+import {
+  canvasPixels, freshLook, panelPixels, pictureOffset, placingTokens, playingTokens
+} from "./16_screen_settings.js";
 
 // ---- the two screens paired -------------------------------------------------------------------
 // Two screens paired in a scene show one picture or drawing, played once and sent to both in
@@ -13,7 +24,7 @@
 state.screensPaired = false;
 
 // Whether this scene's two screens are paired, which takes both to be fitted
-function screensPaired() {
+export function screensPaired() {
   return state.screensPaired && SCREENS.length > 1 && !state.hub.on &&
          state.screens[SCREENS[0]].there && state.screens[SCREENS[1]].there;
 }
@@ -141,7 +152,7 @@ function picturesMatch(first, second) {
 
 // Whether a scene's screens are written as a pair: paired by hand and showing a picture of the
 // page's, or showing the same picture played the same way
-function pairWritten(body) {
+export function pairWritten(body) {
   if (SCREENS.length < 2 || state.hub.on) return false;
   if (!state.screens[SCREENS[0]].there || !state.screens[SCREENS[1]].there) return false;
   var first = body.screens[SCREENS[0]];
@@ -154,7 +165,7 @@ function pairWritten(body) {
 // always=, Always on's picture, which plays on there even where the scene takes the other screen
 // of Always on's pair, or off=, every other scene that shows on it where Always on does not. It
 // is null where nothing shows there, on the Always on tab and on a hub
-function screenUnder(letter) {
+export function screenUnder(letter) {
   if (state.at < 0 || state.hub.on || state.screens[letter].off) return null;
   var always = state.always.body;
   var shown = always.screens && always.screens[letter].shows;
@@ -187,14 +198,14 @@ function pairSized(playings) {
 }
 
 // The canvas a paired drawing is drawn on
-function pairCanvas(playings) {
+export function pairCanvas(playings) {
   var sized = pairSized(playings);
   return canvasPixels(sized.look, sized.size, sized.playing.turn);
 }
 
 // A pair's one entry: both screens named, each setting given once or once for each screen,
 // and what plays as Screen A plays it, a drawing's canvas sized by the larger screen
-function pairEntry(body) {
+export function pairEntry(body) {
   var said = SCREENS.map(function (letter) {
     var playing = body.screens[letter];
     var look = playing.look || freshLook();

@@ -176,7 +176,8 @@ def board_parts(picker_folders, board):
     """The board's numbered parts in number order, from the shared parts and any of its own, a
     feature folder's only where it has it. A part of the board's own adds to the shared ones."""
     folders = []
-    for folder in picker_folders:
+
+    def take(folder):
         folders.append(folder)
         for name in sorted(os.listdir(folder)):
             if not os.path.isdir(os.path.join(folder, name)):
@@ -185,13 +186,50 @@ def board_parts(picker_folders, board):
                 sys.exit("{} is not a feature folder the build knows".format(
                     os.path.join(folder, name)))
             if FEATURE_FOLDERS[name](board):
-                folders.append(os.path.join(folder, name))
+                take(os.path.join(folder, name))
+
+    for folder in picker_folders:
+        take(folder)
     parts = [part for where in folders for part in glob.glob(os.path.join(where, "[0-9][0-9]_*.js"))]
     names = [os.path.basename(part) for part in parts]
     twice = sorted({name for name in names if names.count(name) > 1})
     if twice:
         sys.exit("{} is both a shared part and the board's own".format(", ".join(twice)))
     return sorted(parts, key=os.path.basename)
+
+
+IMPORT = re.compile(r'^import \{([^}]*)\} from "([^"]+)";\n', re.MULTILINE)
+EXPORT = re.compile(r"^export (?=(?:async )?function|var |let |const |class )", re.MULTILINE)
+DECLARED = re.compile(r"^(export )?(?:async )?(?:function\*? |var |let |const |class )([A-Za-z_$][\w$]*)",
+                      re.MULTILINE)
+
+
+def bundle(parts):
+    texts = {}
+    for part in parts:
+        with open(part, encoding="utf-8") as f:
+            texts[os.path.normpath(part)] = f.read()
+    exports = {}
+    owners = {}
+    for part, text in texts.items():
+        exports[part] = set()
+        for exported, name in DECLARED.findall(text):
+            if name in owners:
+                sys.exit("{} and {} both declare {}".format(owners[name], part, name))
+            owners[name] = part
+            if exported:
+                exports[part].add(name)
+    script = ""
+    for part, text in texts.items():
+        for names, source in IMPORT.findall(text):
+            source = os.path.normpath(os.path.join(os.path.dirname(part), source))
+            if source not in texts:
+                sys.exit("{} imports {}, which this board does not take".format(part, source))
+            for name in (name.strip() for name in names.split(",")):
+                if name and name not in exports[source]:
+                    sys.exit("{} imports {} from {}, which does not export it".format(part, name, source))
+        script += EXPORT.sub("", IMPORT.sub("", text))
+    return script
 
 
 def picker(board_dir, repo_dir, version):
@@ -204,9 +242,7 @@ def picker(board_dir, repo_dir, version):
     own = os.path.join(board_dir, "editor", "picker")
     with open(os.path.join(shared, "page.html"), encoding="utf-8") as f:
         text = f.read()
-    for part in board_parts([shared] + ([own] if os.path.isdir(own) else []), board):
-        with open(part, encoding="utf-8") as f:
-            text += f.read()
+    text += "<script>\n" + bundle(board_parts([shared] + ([own] if os.path.isdir(own) else []), board))
     text = text.replace("__BOARD_NAME__", board["name"])
     text = text.replace("__VERSION__", version)
     text = text.replace("__BOARD__", json.dumps(board, indent=1))

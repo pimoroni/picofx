@@ -1,3 +1,13 @@
+import {quoted} from "../01_looks.js";
+import {draw, drawSteps} from "../03_runs.js";
+import {allBodies, bodyParts, driveParts, frozen, state} from "../04_scenes.js";
+import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches} from "../11_tabs.js";
+import {banner} from "../18_drive.js";
+import {OWN_GROUP, foldHead} from "../22_program.js";
+import {
+  adderTile, binButton, exampleGroups, groupOpen, groupsOpen, isExampleMedia, nameShown
+} from "../26_drive_files.js";
+import {entryParts, unquoted} from "../27_readback.js";
 
 // ---- a Sound tab ----------------------------------------------------------------------------
 // One wav at a time, chosen from a row of tiles each showing its shape and how long it runs,
@@ -383,9 +393,9 @@ async function profileSound(name, handle) {
 // seen. One plays at a time, and pressing it again, or playing another, stops it
 
 var soundHandles = {};
-var hearing = {name: null, audio: null, url: null};
+export var hearing = {name: null, audio: null, url: null};
 
-function stopHearing() {
+export function stopHearing() {
   if (hearing.audio) hearing.audio.pause();
   if (hearing.url) URL.revokeObjectURL(hearing.url);
   hearing = {name: null, audio: null, url: null};
@@ -502,7 +512,7 @@ function soundTile(name) {
 
 // What the parts after this one add to each sound's tile, each given the tile and its sound's
 // name, null for silence
-var soundTileSteps = [];
+export var soundTileSteps = [];
 
 // The tab in the page's style. What the scene does with its sound is the row's tip, no other
 // tab opening on a sentence; the sentence stays only where there are no sounds to show, since
@@ -585,7 +595,7 @@ function renderSound() {
 }
 
 // What the parts after this one add to the Sound tab once its tiles are made
-var soundSteps = [];
+export var soundSteps = [];
 
 // The tab's swatch is the shape of the sound playing, or silence
 tabSwatches.soundPanel = function (swatch) {

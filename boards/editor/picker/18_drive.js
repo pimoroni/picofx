@@ -1,3 +1,6 @@
+import {draw, escapeHtml, paintLine} from "./03_runs.js";
+import {currentText, state} from "./04_scenes.js";
+import {nameShown} from "./26_drive_files.js";
 
 // ---- the drive, and what the board says back ------------------------------------------------
 // Saving and the read-back of errors.txt: the banner and the saving lights, remembering the
@@ -31,9 +34,9 @@ function saving(text) {
 }
 
 // The parts that also show what banner() says, each given its text and warn as banner() is
-var bannerSteps = [];
+export var bannerSteps = [];
 
-function banner(text, warn, detail) {
+export function banner(text, warn, detail) {
   stopSpots();
   bannerSteps.forEach(function (step) { step(text, warn); });
   var box = document.getElementById("banner");
@@ -144,7 +147,7 @@ async function driveAnswers() {
 // drive may be full, or gone, such as when the board is unplugged while the page holds it, or the
 // file named may be gone from a drive still showing. Any other error is given as the browser
 // words it
-async function driveTrouble(e, name) {
+export async function driveTrouble(e, name) {
   if (e.name === "QuotaExceededError")
     return "The FX drive is full. Delete something from it and try again.";
   if (!await driveAnswers())
@@ -218,17 +221,17 @@ async function openDrive(fresh) {
 
 function openFresh() { openDrive(true); }
 
-var CAN_REACH_A_DRIVE = typeof window.showDirectoryPicker === "function";
+export var CAN_REACH_A_DRIVE = typeof window.showDirectoryPicker === "function";
 
 
-var drive = {dirHandle: null, fileHandle: null};
+export var drive = {dirHandle: null, fileHandle: null};
 
 // The board's answer as this page shows it: what errors.txt said, and the file it was about,
 // so a line is marked only while the page still writes it the same
 var answered = {said: null, about: null};
 
 // What this page last wrote or read
-var WROTE_KEY = "fx-picker-wrote";
+export var WROTE_KEY = "fx-picker-wrote";
 
 // What a save asks where the file on the board has changed since this page read it
 function overwriteQuestion() {
@@ -236,7 +239,7 @@ function overwriteQuestion() {
 }
 
 // What the parts below read off a drive once it is open, each awaited in the order the parts come
-var connectSteps = [];
+export var connectSteps = [];
 
 async function connect(fresh) {
   var dir = await pickDrive(fresh);
@@ -297,7 +300,7 @@ function takeAnswer(said, about) {
 
 // The file as the page writes it. A line the board named is marked where the page still writes
 // it as the board read it, the board's words after it
-function renderPreview() {
+export function renderPreview() {
   var problems = problemsIn(answered.said);
   var lines = currentText().split("\n");
   var read = (answered.about || "").split("\n");

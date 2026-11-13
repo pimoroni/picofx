@@ -1,3 +1,19 @@
+import {quoted, toggle} from "../01_looks.js";
+import {draw, escapeHtml} from "../03_runs.js";
+import {bodyParts, namesOf, state} from "../04_scenes.js";
+import {
+  SWATCHES, WORDS, fieldColour, hexOf, hexRgb, rgbInk, spoken, takeApart
+} from "../05_effects.js";
+import {boardIcon} from "../08_setup.js";
+import {banner, driveTrouble} from "../18_drive.js";
+import {copyTile} from "../22_program.js";
+import {isExampleMedia, mediaHome, nameShown, scanMedia} from "../26_drive_files.js";
+import {argumentFrom, copyToOwn, folderAt} from "../26_drive_programs.js";
+import {
+  PANEL_PX, SCREENS, assetSteps, kindOf, mediaArt, mediaNamed, panelDrawing, renderScreensParts,
+  screenButton
+} from "./12_screens.js";
+import {pairCanvas, screenUnder, screensPaired} from "./17_screen_pair.js";
 
 // ---- every setting a screen takes -------------------------------------------------------------
 // A screen takes more than its picture and turn: how brightly it is lit, where
@@ -19,12 +35,12 @@
 // "off", "repeat" or "mirror". customBg is the last custom background, kept while a swatch is
 // chosen so custom comes back to it. canvas is a drawing's: "whole", "half" or "set", its size
 // then canvasW by canvasH
-var LOOK_START = {backlight: 1, mirror: false, anchor: 4, x: "", y: "", bg: "#000000",
+export var LOOK_START = {backlight: 1, mirror: false, anchor: 4, x: "", y: "", bg: "#000000",
                   customBg: "", double: false, tile: "off", tileDown: "off", pace: "saved",
                   every: 5, loop: true, whole: false, holdBack: "", canvas: "whole",
                   canvasW: 120, canvasH: 120, style: ""};
 
-function freshLook() { return Object.assign({}, LOOK_START); }
+export function freshLook() { return Object.assign({}, LOOK_START); }
 
 SCREENS.forEach(function (letter) { state.screens[letter].look = freshLook(); });
 
@@ -37,16 +53,16 @@ Object.keys(WORDS).forEach(function (name) { BG_NAMES["#" + hexOf(WORDS[name])] 
 // as it is drawn, and written as the pixels the file takes. A picture of another size put in the
 // same file later sits where those pixels say, not at the edge chosen
 
-var ANCHOR_NAMES = ["top left", "top", "top right", "left", "centred", "right", "bottom left",
+export var ANCHOR_NAMES = ["top left", "top", "top right", "left", "centred", "right", "bottom left",
                     "bottom", "bottom right"];
 
-function panelPixels(size, turn) {
+export function panelPixels(size, turn) {
   var panel = PANEL_PX[size] || PANEL_PX["2.8"];
   return Number(turn || 0) % 180 === 90 ? [panel[1], panel[0]] : [panel[0], panel[1]];
 }
 
 // A drawing's canvas in pixels: the screen's as it is turned, half that, or a size set by hand
-function canvasPixels(look, size, turn) {
+export function canvasPixels(look, size, turn) {
   var panel = panelPixels(size, turn);
   if (look.canvas === "set") return [Number(look.canvasW), Number(look.canvasH)];
   if (look.canvas === "half") return [Math.floor(panel[0] / 2), Math.floor(panel[1] / 2)];
@@ -68,7 +84,7 @@ function picturePixels(shows, look, size, turn) {
 }
 
 // The offset a look writes, each side "" where centred
-function pictureOffset(look, shows, size, turn) {
+export function pictureOffset(look, shows, size, turn) {
   if (look.anchor === null || look.anchor === undefined) return {x: look.x, y: look.y};
   var picture = picturePixels(shows, look, size, turn);
   var panel = panelPixels(size, turn);
@@ -110,7 +126,7 @@ var DRAWING_LINE = /^\s*(Drawing|Icon|Colour|Section|Defaults|Styles|Firmware):\
 // What an opening string says of a drawing, or null for a file that is not one. Its defaults are
 // the Defaults: line's settings by name, written as a program's Args: line is, such as "Rotation =
 // 90 or 270, Pixel double = true"
-function drawingSaid(docstring) {
+export function drawingSaid(docstring) {
   var said = {title: "", description: "", icon: "", colour: "", section: "", defaults: {},
               styles: []};
   var rest = docstring.split("\n").filter(function (line) {
@@ -137,14 +153,14 @@ function drawingSaid(docstring) {
 }
 
 // A drawing's colour as a CSS colour: a word the board knows, a hex, or one from its name
-function drawingInk(drawing, name) {
+export function drawingInk(drawing, name) {
   var word = WORDS[drawing.colour.toLowerCase()];
   if (word) return rgbInk(word);
   if (/^#?[0-9a-f]{6}$/i.test(drawing.colour)) return "#" + drawing.colour.replace("#", "");
   return "hsl(" + nameHue(name) + ",60%,45%)";
 }
 
-var drawingArts = {};
+export var drawingArts = {};
 
 // A drawing's face at a canvas's size, for where a picture's pixels are drawn: its colour filling
 // the canvas and its icon or initial in the middle, the canvas the size the drawing draws at
@@ -192,7 +208,7 @@ function drawingArt(name, wide, high, style) {
 
 // Its face as a square, for the tab's swatch. Made afresh each time the drive is read, since the
 // opening string it comes from may have changed
-function madeDrawing(name) {
+export function madeDrawing(name) {
   Object.keys(drawingArts).forEach(function (key) {
     if (key.indexOf(name + "|") === 0) delete drawingArts[key];
   });
@@ -342,10 +358,10 @@ function nextGifFrame(playing, gif) {
 }
 
 // What each file last showed on a screen, composed with its look, by name
-var shownBefore = {};
+export var shownBefore = {};
 
 // A screen module drawn with its picture composed with its look, a gif playing in it
-function panelPreview(screen) {
+export function panelPreview(screen) {
   var style = screen.look ? screen.look.style : "";
   var art = screen.look && screen.shows && screen.shows !== "keep" ? mediaArt(screen.shows, style)
                                                                      : null;
@@ -393,7 +409,7 @@ bodyParts.push({
 // ---- what the file says -----------------------------------------------------------------------
 
 // The settings before the colon: how the screen is turned and lit, and how its picture is placed
-function placingTokens(turn, look, light, where) {
+export function placingTokens(turn, look, light, where) {
   var tokens = [];
   if (Number(turn)) tokens.push("rotation=" + turn);
   if (light < 1) tokens.push("backlight=" + Math.round(light * 100) + "%");
@@ -419,7 +435,7 @@ function firstAsLastAllowed(playing, look) { return playing.pingpong || !look.lo
 
 // The settings after the file: how a moving picture is paced, looped and held, leaving out
 // whatever playback would refuse
-function playingTokens(playing, look, kind, size) {
+export function playingTokens(playing, look, kind, size) {
   if (kind === "image") return [];
   var tokens = [];
   if (look.pace === "fps") tokens.push("fps=" + look.every);
@@ -444,7 +460,7 @@ function playingTokens(playing, look, kind, size) {
   return tokens;
 }
 
-function lookEntry(selector, playing, look, light, size) {
+export function lookEntry(selector, playing, look, light, size) {
   var kind = kindOf(playing.shows);
   var where = pictureOffset(look, playing.shows, size, playing.turn);
   var left = [selector].concat(placingTokens(playing.turn, look, light, where)).join(" ");
@@ -687,7 +703,7 @@ function groundHex(full, value) {
   return "#" + hexOf(full.map(function (v) { return Math.round(v * value); }));
 }
 
-function groundSaid(bg) {
+export function groundSaid(bg) {
   var parts = groundParts(bg);
   var name = BG_NAMES["#" + hexOf(parts.full)];
   if (!name) return bg;
@@ -1006,7 +1022,7 @@ function halfSizeLine() {
 // A drawing's tile can copy it to the user's own drawings folder, to change in an editor, where it
 // takes the original's place on any screen or hub position showing it in this scene. An example is
 // customised, and one of the user's own duplicated
-function drawingCopyTile(name) {
+export function drawingCopyTile(name) {
   return copyTile(isExampleMedia(name), nameShown(name), "drawings", async function () {
     try {
       var copy = await copyDrawing(name);
@@ -1032,7 +1048,7 @@ function drawingCopyTile(name) {
 
 // Copy a drawing into the drawings folder, its thumbnails with it, and read the drive again so the
 // copy is listed. Returns the copy's name
-async function copyDrawing(name) {
+export async function copyDrawing(name) {
   var dir = state.dirHandle;
   var example = isExampleMedia(name);
   var from = example ? await folderAt(dir, name.split("/").slice(0, -1)) : mediaHome[name] || dir;
@@ -1109,7 +1125,7 @@ function playbackFold(key, held, media) {
 
 // A picture's name as a person reads it, a slideshow being a folder named as a path from the
 // drive's top
-function pictureSaid(name) {
+export function pictureSaid(name) {
   var media = mediaNamed(name);
   if (media && media.kind === "drawing") return media.drawing.title;
   // A slideshow of the user's own is a path from the drive's top, an example plainly its name
@@ -1117,7 +1133,7 @@ function pictureSaid(name) {
   return media && media.kind === "folder" ? "/" + name : name;
 }
 
-function showingLine(held, letter) {
+export function showingLine(held, letter) {
   var line = document.createElement("div");
   line.className = "sshowing";
   var picture = held.shows && held.shows !== "keep" ? held.shows : null;
@@ -1169,7 +1185,7 @@ function showingLine(held, letter) {
 
 // The four sections for a screen or position, with nothing to set until a picture is showing
 // but its orientation, which is how the screen is mounted
-function lookSections(key, held, size) {
+export function lookSections(key, held, size) {
   var sections = document.createElement("div");
   sections.className = "settings looksettings";
   sections.appendChild(orientationFold(key, held));
@@ -1187,7 +1203,7 @@ function lookSections(key, held, size) {
 
 
 // A backlight as a row of its own across the top of a screen's or the hub's box
-function lightRow(value, change, words, title) {
+export function lightRow(value, change, words, title) {
   var row = document.createElement("div");
   row.className = "lightrow";
   var light = lightSlider(value, change, title);
@@ -1198,7 +1214,7 @@ function lightRow(value, change, words, title) {
 
 // The chip goes beside what is the board's and not before a box's name: a screen's panel size in
 // its band, and on the hub which way it is wired, in its band, and each position's panel size
-function renderScreensTab() {
+export function renderScreensTab() {
   renderScreensParts();
   if (state.hub.on) {
     document.querySelectorAll("#screensHead .hubbox .place .placesize").forEach(function (size) {
@@ -1226,7 +1242,7 @@ function renderScreensTab() {
 // screen before anything is put on it. A drawing never turned here starts at the turn its
 // Defaults: line gives. A slideshow newly chosen plays at five a second unless its names say
 // their own
-function chosenAfresh(held) {
+export function chosenAfresh(held) {
   if (held.shows === held.lastShows) return;
   var wasDrawing = !!held.lastShows && kindOf(held.lastShows) === "drawing";
   // The turn the screen has for pictures, which a drawing's own turn leaves alone. A file gives a
@@ -1326,7 +1342,7 @@ function styleWord(drawing, choices) {
 }
 
 // Every style word a drawing could be drawn in but its first, each one a thumbnail can be named for
-function styleWords(drawing) {
+export function styleWords(drawing) {
   var words = [[]];
   drawing.styles.forEach(function (line) {
     var grown = [];
@@ -1343,7 +1359,7 @@ function styleWords(drawing) {
 // The style word of the thumbnail nearest a style, whatever order its choices were written in. A
 // style without a thumbnail of its own drops its last choice until one has, so ember-bare-oval
 // is shown by ember-bare's or ember's, and by the drawing's own where none has one
-function styleNamed(media, style) {
+export function styleNamed(media, style) {
   if (!style || !media || !media.drawing) return style;
   var choices = styleWord(media.drawing, styleChoices(media.drawing, style)).split("-");
   var thumbs = media.styleThumbs || {};

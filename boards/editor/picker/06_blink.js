@@ -1,3 +1,5 @@
+import {chosenSteps, draw} from "./03_runs.js";
+import {wordFor} from "./05_effects.js";
 
 // ---- blinking through several colours -----------------------------------------------------
 // Blink takes one colour or several. With several it blinks through them in turn, one a beat,
@@ -6,10 +8,10 @@
 // A list is written with the words and hexes at full and the stretch's brightness as level=,
 // rgb_blink taking one level for all of them.
 
-var BLINK = "Blink";
+export var BLINK = "Blink";
 
 // The colours a stretch blinks through, where it has more than one and plays them in colour
-function blinkList(run, section) {
+export function blinkList(run, section) {
   var first = run && run.lamps[section.from];
   if (section.look !== BLINK || !section.blinks || section.blinks.colours.length < 2 ||
       !first || !first.colour) return null;
@@ -21,7 +23,7 @@ function blinkNamed(hex) {
   return hex.replace("#", "").toLowerCase() === "000000" ? "black" : wordFor(hex);
 }
 
-function blinkWord(hex) {
+export function blinkWord(hex) {
   return blinkNamed(hex) || hex.replace("#", "").toLowerCase();
 }
 

@@ -2031,6 +2031,7 @@ body.discovermodal{overflow:hidden}
  <p class="company">Pimoroni Ltd., Unit 1, Parkway Business Park, Parkway Drive, Sheffield, S9 4WN, United Kingdom. Registered in England and Wales. Company No. 07510759. VAT Reg No. GB 140 8707 21</p>
 </footer>
 <script>
+
 // The FX picker, a page for choosing what the board plays and saving it as effects.txt. It is
 // the numbered parts in this folder and any of the board's own, joined in number order, those in
 // the screens, hub and sound folders only for a board that has them. This first part holds the
@@ -2484,6 +2485,7 @@ function lookLines(look, target, pace, mood, colour) {
     : look.entries(target, pace, mood, colour);
   return target.colour ? lines : lines.map(withoutColour);
 }
+
 // ---- the lamps, lit by the line the look writes ---------------------------------------
 // A card can say what a look is made of; only a lamp actually running it can say what it
 // looks like. A lamp here plays the entry its look would write, read back and run through
@@ -2841,6 +2843,7 @@ var beat = 0;
 
 var HOLDING_STILL = window.matchMedia &&
                     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
 // ---- the board's outputs, inside the sections system ------------------------------------
 // A colour output is three PWM channels behind one lamp. Where the board lets an adapter tell
 // those three apart, the output is either one colour lamp or three mono ones, and a board is
@@ -7405,6 +7408,8 @@ chosenSteps.push(function (where, run) {
 
 // Which panel is plugged into each screen port, or none. Only the size is the board's:
 // which way up it is mounted is left for when screens are settled
+var screenHooks = {mediaNamed: function () { return null; }, panelPreview: null};
+
 var SCREEN_PORTS = BOARD.screens ? BOARD.screens.ports : [];
 // The catalogue is the board's own, so a board that finds it has no screen ports offers none
 SCREEN_PORTS = SCREEN_PORTS.filter(function (port) {
@@ -9305,6 +9310,9 @@ if (SCREENS.length) {
 } else {
   document.getElementById("screensPanel").hidden = true;
 }
+
+screenHooks.mediaNamed = mediaNamed;
+screenHooks.panelPreview = panelPreview;
 
 // ---- the LED tabs' swatches, live ------------------------------------------------------------
 // Each LED tab's swatch a small copy of its section's lamps, painted every frame from the
@@ -12398,7 +12406,7 @@ function sizeShown(path) {
 function framedPanel(path, url) {
   var image = thumbImages[url];
   var upright = image && image.height > image.width;
-  return panelPreview({size: sizeShown(path), turn: upright ? 0 : 90,
+  return screenHooks.panelPreview({size: sizeShown(path), turn: upright ? 0 : 90,
                        art: {url: url, w: upright ? 240 : 320, h: upright ? 320 : 240,
                              pixelated: true}});
 }
@@ -12428,7 +12436,7 @@ function programPicture(path) {
 // The picture before a program is chosen: an empty panel upright, so its words read across, or on
 // a board without screens its lamps unlit
 function emptyPicture() {
-  if (SCREEN_PORTS.length) return panelPreview({size: "2.8", turn: 0});
+  if (SCREEN_PORTS.length) return screenHooks.panelPreview({size: "2.8", turn: 0});
   var big = thumbCanvas("outputs:off", 1);
   big.classList.add("big");
   return big;
@@ -12816,6 +12824,7 @@ function scenesInTheTab() {
   plus.addEventListener("click", function (event) { event.stopPropagation(); });
   into.appendChild(plus);
 }
+
 // ---- the bar along the top ----------------------------------------------------------------------
 // Once the header has scrolled out of view a slim bar takes its place along the top, holding the
 // page's name, the drive, save and check buttons, the latest thing the page said and where the
@@ -13638,7 +13647,7 @@ async function addFiles(kinds, what, takes) {
   try { await scanMedia(state.dirHandle); } catch (e) {}
   // A Python file is offered only where its opening string makes it a drawing
   var unoffered = arrived.filter(function (name) {
-    return /\.py$/i.test(name) && !mediaNamed(name);
+    return /\.py$/i.test(name) && !screenHooks.mediaNamed(name);
   });
   var reason = trouble ? ". " + await driveTrouble(trouble) : "";
   if (refused.length && landed)
@@ -13656,7 +13665,7 @@ async function addFiles(kinds, what, takes) {
 async function removeFromDrive(name, kind) {
   // A drawing in the drawings folder takes its thumbnails with it, its own and each style's, as a
   // program in the programs folder takes its pictures. Left, they would be listed as pictures
-  var media = kind === "drawing" ? mediaNamed(name) : null;
+  var media = kind === "drawing" ? screenHooks.mediaNamed(name) : null;
   var thumbs = [];
   if (media && media.thumbHandle) {
     var stem = name.replace(/\.py$/i, "");

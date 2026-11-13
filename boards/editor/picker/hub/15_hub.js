@@ -1,3 +1,21 @@
+import {draw, drawSteps} from "../03_runs.js";
+import {
+  allBodies, apply, bodyParts, capture, driveParts, frozen, otherScenes, slotAt, state, store
+} from "../04_scenes.js";
+import {SCREEN_SIZES, boardLineSteps} from "../07_board.js";
+import {boardIcon, setupOn} from "../08_setup.js";
+import {tabSwatches} from "../11_tabs.js";
+import {boardResidue, entryParts} from "../27_readback.js";
+import {
+  GROUP_NUMBERS, apartSaid, breakingUp, inNumberedGroup, namesSaid, sendTargets
+} from "./17_hub_groups.js";
+import {
+  assetSteps, kindOf, mediaArt, offEntry, screenPlaying, screensHeadSteps
+} from "../screens/12_screens.js";
+import {
+  LOOK_START, chosenAfresh, freshLook, lookEntry, lookSections, panelPreview, pictureOffset,
+  pictureSaid, placingTokens, playingTokens
+} from "../screens/16_screen_settings.js";
 
 // ---- a Screen Hub in the Screens tab ----------------------------------------------------------
 // A hub takes both connectors: one carries the screens' SPI and the other gives its five pins
@@ -15,7 +33,7 @@
 // The file names a position by the hub's own letter, as outputs are named by number: hubB, or
 // hubA-C,E for several, with the hub and its panels declared on the board line.
 
-var HUB_PLACES = ["A", "B", "C", "D", "E", "F"];
+export var HUB_PLACES = ["A", "B", "C", "D", "E", "F"];
 
 // A position taken out keeps the size it had, for if it is put back
 state.hub = {on: false, port: "A", sizes: {}, was: {}};
@@ -28,12 +46,12 @@ HUB_PLACES.forEach(function (place) {
 });
 
 // The position whose settings are shown under the hub
-var placePicked = "A";
+export var placePicked = "A";
 
 // Whether a position has a panel to show on, its size being "" where it has none
-function placeThere(place) { return state.hub.on && !!state.hub.sizes[place]; }
+export function placeThere(place) { return state.hub.on && !!state.hub.sizes[place]; }
 
-function placesThere() { return HUB_PLACES.filter(placeThere); }
+export function placesThere() { return HUB_PLACES.filter(placeThere); }
 
 // A position shown as a screen of its panel's size, which is what the module drawing asks for,
 // with its look and the hub's shared light
@@ -47,7 +65,7 @@ function asScreen(place) {
 // always=, Always on's settings for the position, which plays on there even where the scene
 // takes another position of its group, or off=, every other scene that shows there where Always
 // on does not. It is null where nothing shows, and on the Always on tab
-function placeUnder(place) {
+export function placeUnder(place) {
   var mine = state.places[place];
   if (state.at < 0 || !state.hub.on || mine.shows || mine.off) return null;
   var always = state.always.body;
@@ -71,7 +89,7 @@ function asAlwaysScreen(place, held) {
 function hubInk() { return state.hub.port === "A" ? "a" : "b"; }
 
 // A picture newly chosen on a position starts as chosenAfresh says
-function placeTurnForChosen(place) { chosenAfresh(state.places[place]); }
+export function placeTurnForChosen(place) { chosenAfresh(state.places[place]); }
 
 // ---- each scene keeps what the hub's positions show ------------------------------------------
 
@@ -120,7 +138,7 @@ bodyParts.push({
 // ---- what the file says ----------------------------------------------------------------------
 
 // Positions as the file names them, a run of neighbours as a range: "A-C,E"
-function placesSaid(places) {
+export function placesSaid(places) {
   var said = [];
   var at = 0;
   while (at < places.length) {
@@ -151,7 +169,7 @@ function playingKey(playing, place) {
 }
 
 // The positions of one scene, gathered into what each different picture is sent to
-function placeGroups(body) {
+export function placeGroups(body) {
   var groups = [];
   var byKey = {};
   placesThere().forEach(function (place) {
@@ -502,7 +520,7 @@ function hubPace() {
 
 // The hub's box, in place of the screens'. The parts below add to it, each after the one before:
 // the hub's light, its groups
-var hubHeadSteps = [];
+export var hubHeadSteps = [];
 
 function renderHubHead() {
   var box = document.getElementById("screensHead");

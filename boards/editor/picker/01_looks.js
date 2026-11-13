@@ -1,4 +1,6 @@
-<script>
+import {draw} from "./03_runs.js";
+import {isBanked} from "./05_effects.js";
+
 // The FX picker, a page for choosing what the board plays and saving it as effects.txt. It is
 // the numbered parts in this folder and any of the board's own, joined in number order, those in
 // the screens, hub and sound folders only for a board that has them. This first part holds the
@@ -6,7 +8,7 @@
 
 // The board the page is for, from its editor/fx_board.json: its outputs, strips, screen ports,
 // whether it has a hub, sound and the network looks, and the examples it offers
-var BOARD = __BOARD__;
+export var BOARD = __BOARD__;
 
 // The catalogue is generated beside this page; without it the screen sizes and ports
 // cannot be known, so say so instead of failing silently
@@ -22,13 +24,13 @@ if (typeof CATALOGUE === "undefined") {
   });
 }
 
-var HEADER = "# Written by the FX picker. Everything here can be edited by hand;\n" +
+export var HEADER = "# Written by the FX picker. Everything here can be edited by hand;\n" +
              "# MANUAL.html on this drive explains every line.\n";
 
 // ---- helpers -------------------------------------------------------------------
 
-function r2(n) { return Math.round(n * 100) / 100; }
-function lerp(a, b, t) { return r2(a + (b - a) * t); }
+export function r2(n) { return Math.round(n * 100) / 100; }
+export function lerp(a, b, t) { return r2(a + (b - a) * t); }
 
 // Each look picks from a palette of its own, so the middle of the slider is the
 // colour its card shows and moving it stays within what suits that look
@@ -42,13 +44,13 @@ function span(count, mood) {
   return Math.max(2, Math.round(count * lerp(2, 0.6, mood)));
 }
 
-function quoted(name) {
+export function quoted(name) {
   return name.indexOf(" ") >= 0 ? '"' + name + '"' : name;
 }
 
 // A run of numbers as the file writes them: climbing or falling by one closes up
 // into a range, a pair stays a pair, and anything else is listed
-function rangify(list) {
+export function rangify(list) {
   var parts = [];
   var i = 0;
   while (i < list.length) {
@@ -69,7 +71,7 @@ function rangify(list) {
 
 // Some of a target's playing lamps as the file names them. A target whose lamps are not
 // numbered outputs, such as mono channels, names its own sets
-function nameSet(target, set) {
+export function nameSet(target, set) {
   return target.nameSet ? target.nameSet(set) : target.name + rangify(set);
 }
 
@@ -110,7 +112,7 @@ function withoutColour(line) {
 }
 
 // Anything on or off, as a toggle with its icon, greyed where playback would refuse it
-function toggle(icon, words, on, flip, title, refused) {
+export function toggle(icon, words, on, flip, title, refused) {
   var button = document.createElement("button");
   button.type = "button";
   button.className = "stoggle" + (on && !refused ? " on" : "");
@@ -136,7 +138,7 @@ var PARTY_FIRST = ["red", "blue", "magenta", "cyan", "white"];
 var PARTY_SECOND = ["green", "white", "yellow", "warm", "red"];
 var PARTY_THIRD = ["blue", "green", "cyan", "white", "magenta"];
 
-var LOOKS = [
+export var LOOKS = [
   {
     // The one look with nothing moving in it. A scene that wants a lamp to sit at one
     // colour has no effect to reach for otherwise, and on a board whose only light of
@@ -321,12 +323,12 @@ var LOOKS = [
   }
 ];
 
-function lookNamed(id) {
+export function lookNamed(id) {
   return LOOKS.filter(function (l) { return (l.id || l.name) === id; })[0] || null;
 }
 
 // What a look is kept as, which is its own id where it has one and its name otherwise
-function keyOf(look) { return look.id || look.name; }
+export function keyOf(look) { return look.id || look.name; }
 
 function luminance(colour) {
   var hex = colour.replace("#", "");
@@ -352,7 +354,7 @@ function asMono(colour, peak) {
 // Whether a look has anything to give a target: a colour look cannot land on a mono lamp, a
 // look that does not span cannot land on a run, and some have no single-light form. A banked
 // look deals its banks along a run, so it needs more than one lamp or a single-light form
-function canPlay(look, target) {
+export function canPlay(look, target) {
   if (!look) return true;
   if (target.kind === "run" && isBanked(look)) return target.count > 1 || look.alone !== false;
   if (!target.colour && !look.onMono) return false;
@@ -362,7 +364,7 @@ function canPlay(look, target) {
 }
 
 // Why not, in the words of the thing that cannot happen
-function whyNot(look, target) {
+export function whyNot(look, target) {
   if (!target.colour && !look.onMono) return "this look needs colour, and " +
                                              target.label.toLowerCase() + " is mono";
   if (target.count === 1 && look.alone === false)
@@ -373,7 +375,7 @@ function whyNot(look, target) {
 
 // The lines one look's own entries write for one target, in the form that target can take. The
 // effects part writes a stretch through this as the board will play it
-function lookLines(look, target, pace, mood, colour) {
+export function lookLines(look, target, pace, mood, colour) {
   if (!look || !canPlay(look, target)) return [];
   var lines = (target.count === 1 && look.alone)
     ? look.alone(target, pace, mood, colour)

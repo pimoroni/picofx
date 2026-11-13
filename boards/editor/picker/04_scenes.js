@@ -1,14 +1,24 @@
+import {BOARD, HEADER, lookNamed} from "./01_looks.js";
+import {
+  active, copyBlinks, copyExact, draw, drawSteps, escapeHtml, lampLines, mono, outs, runs, settle,
+  widthOf
+} from "./03_runs.js";
+import {boardLine} from "./07_board.js";
+import {TAB_NAMES} from "./11_tabs.js";
+import {renderPreview} from "./18_drive.js";
+import {renderSceneSettings} from "./20_scene_row.js";
+import {featureIcon} from "./22_program.js";
 
 // ---- scenes ---------------------------------------------------------------------------
 // The scene tabs, adding, removing and reordering them, and a scene's own settings. A scene's
 // body is how the outputs are wired and placed, and every run's cuts, what each stretch plays
 // and its steps to undo.
 
-var state = {at: -1, always: {body: null}, scenes: []};
+export var state = {at: -1, always: {body: null}, scenes: []};
 
 // What each output was carried from where a stand-in took its place, which is the
 // scene's, so it is held in the body with the stretches it is about
-var carried = {};
+export var carried = {};
 
 function copyRun(run) {
   return {sections: run.sections.map(function (section) {
@@ -56,15 +66,15 @@ function mostPlayedOn(among) {
 // it reads them back from a file's board line and kept lines, the names of what it plays, and
 // the icon and name its scene tab shows where the scene sets it. Each runs after the runs' own,
 // in the order the parts come
-var bodyParts = [];
+export var bodyParts = [];
 
 // The parts that keep files on the FX drive, each registering how a walk of the drive finds
 // them (begin, then file or folder for each entry, then land), what it found as text to tell
 // one walk from the next, and how the scenes let go of a deleted file before the drive is walked
 // again (forget) and after it (gone)
-var driveParts = [];
+export var driveParts = [];
 
-function capture() {
+export function capture() {
   var body = {look: mostPlayed(), active: active.name, runs: {},
               carried: JSON.parse(JSON.stringify(carried))};
   runs.forEach(function (run) { body.runs[run.name] = copyRun(run); });
@@ -72,7 +82,7 @@ function capture() {
   return body;
 }
 
-function apply(body) {
+export function apply(body) {
   carried = JSON.parse(JSON.stringify(body.carried));
   runs.forEach(function (run) {
     var was = copyRun(body.runs[run.name]);
@@ -88,7 +98,7 @@ function apply(body) {
 
 // A scene with nothing playing in it, cut as the board is now, which is what the always-on
 // tab is left holding once its content has been carried into the first
-function blankBody() {
+export function blankBody() {
   var body = capture();
   Object.keys(body.runs).forEach(function (name) {
     var run = body.runs[name];
@@ -108,9 +118,9 @@ function hasContent(body) {
   }) || bodyParts.some(function (part) { return part.hasContent && part.hasContent(body); });
 }
 
-function slotAt(which) { return which < 0 ? state.always : state.scenes[which]; }
+export function slotAt(which) { return which < 0 ? state.always : state.scenes[which]; }
 
-function allBodies() {
+export function allBodies() {
   return [state.always.body].concat(state.scenes.map(function (scene) { return scene.body; }));
 }
 
@@ -121,14 +131,14 @@ function allBodies() {
 // board will light them
 
 // The scenes other than the one being edited, whose bodies are as they were last stored
-function otherScenes() {
+export function otherScenes() {
   return state.scenes.filter(function (scene, at) { return at !== state.at; });
 }
 
-function namesOf(scenes) { return scenes.map(function (scene) { return scene.name; }); }
+export function namesOf(scenes) { return scenes.map(function (scene) { return scene.name; }); }
 
 // Grey out settings that show Always on's values in a scene, which are set on the Always on tab
-function frozen(node) {
+export function frozen(node) {
   node.classList.add("frozen");
   node.title = "Set on the Always on tab";
   node.querySelectorAll("button, input, select").forEach(function (control) {
@@ -151,7 +161,7 @@ function stretchPlaying(body, runName, at) {
 // What the board plays on a lamp the scene being edited plays nothing on. The result holds
 // always=, Always on's stretch over the lamp, or off=, every other scene that plays on it where
 // Always on does not. It is null where nothing plays on the lamp, and on the Always on tab
-function lampUnder(runName, at) {
+export function lampUnder(runName, at) {
   if (state.at < 0) return null;
   var section = stretchPlaying(state.always.body, runName, at);
   if (section) return {always: section};
@@ -161,7 +171,7 @@ function lampUnder(runName, at) {
   return by.length ? {off: by} : null;
 }
 
-function store() { slotAt(state.at).body = capture(); }
+export function store() { slotAt(state.at).body = capture(); }
 
 function switchTo(which) {
   store();
@@ -170,7 +180,7 @@ function switchTo(which) {
   draw();
 }
 
-function addScene() {
+export function addScene() {
   store();
   var made;
   // Where scenes can wait for a button, a new one does, as one made for a remote mostly stands
@@ -325,25 +335,25 @@ function bodyAt(which) { return state.at === which ? capture() : slotAt(which).b
 // A scene's mark, given once and kept while the scene is moved or renamed, by which another
 // part names it
 var sceneMarks = 0;
-function sceneMark(scene) {
+export function sceneMark(scene) {
   if (!scene.mark) scene.mark = "s" + (++sceneMarks);
   return scene.mark;
 }
 
-function sceneMarked(mark) {
+export function sceneMarked(mark) {
   return state.scenes.filter(function (scene) { return sceneMark(scene) === mark; })[0] || null;
 }
 
 // Whether something fitted can change scenes, so a scene can wait for it, which a board's sensor
 // part answers. Without it a waiting scene waits forever
-var sceneCanWait = function () { return false; };
+export var sceneCanWait = function () { return false; };
 
 // The places of the scenes a scene in place `at` goes to on a button or motion, which the sensor
 // part gives for what is fitted
-var sceneTriggerLeads = function (at) { return []; };
+export var sceneTriggerLeads = function (at) { return []; };
 
 // What a waiting scene waits for, in words, which the sensor part says for what is fitted
-var sceneWaitsFor = function () { return "a button"; };
+export var sceneWaitsFor = function () { return "a button"; };
 
 // The scene a timed scene goes to when its time is up, or null for one that waits
 function sceneAfter(scene) {
@@ -356,13 +366,13 @@ function sceneAfter(scene) {
 
 // Whether a scene's time leads back to itself. Nothing would change then unless it restarts, so
 // such a scene always does
-function sceneLoops(scene) {
+export function sceneLoops(scene) {
   return !scene.waits && sceneAfter(scene) === scene;
 }
 
 // Whether a scene's effects begin again each time it starts, as its heading says. A scene that
 // never shows again starts once, so it has nothing to restart
-function sceneRestarts(scene) {
+export function sceneRestarts(scene) {
   if (!sceneShowsAgain(scene)) return false;
   return scene.restart || sceneLoops(scene);
 }
@@ -388,14 +398,14 @@ function scenesReachedFrom(starts) {
 }
 
 // Whether a scene can show again after it has shown, as it lies on a way back to itself
-function sceneShowsAgain(scene) {
+export function sceneShowsAgain(scene) {
   var at = state.scenes.indexOf(scene);
   return at >= 0 && scenesReachedFrom(sceneLeads(at))[at];
 }
 
 // Make the only scene stay where its time would change nothing, as the board reports a lone
 // scene with a time and no restart
-function settleLoneScene() {
+export function settleLoneScene() {
   if (state.scenes.length !== 1) return;
   var only = state.scenes[0];
   var namesItself = only.then && sceneMarked(only.then) === only;
@@ -456,16 +466,16 @@ function sceneTurn(scene) {
 // The colours of the Aye Arr Remote's number buttons, 1 to 9, from its artwork, and the rainbow
 // round its 0. Scene 1 takes button 1, so a scene's colour is the button that goes to it. Scene
 // 10 takes 0, and a later scene has no button and a neutral colour
-var REMOTE_COLOURS = ["#ed1c24", "#00a651", "#2e3192", "#00aeef", "#ec008c", "#fff200",
+export var REMOTE_COLOURS = ["#ed1c24", "#00a651", "#2e3192", "#00aeef", "#ec008c", "#fff200",
                       "#fbad5d", "#ffffff", "#84c1ff"];
-var REMOTE_RAINBOW = ["#ed1c24", "#f7941d", "#fff200", "#8dc63f", "#00a651", "#00aeef",
+export var REMOTE_RAINBOW = ["#ed1c24", "#f7941d", "#fff200", "#8dc63f", "#00a651", "#00aeef",
                       "#0072bc", "#2e3192", "#92278f", "#ec008c"];
 var ALWAYS_COLOUR = "#8f8a82";
 var UNNUMBERED_COLOUR = "#b9b3a9";
 
 // The remote's number buttons that go to a scene, which its card wears. None on a board with no
 // sensor part, which replaces this with its own
-var sceneNumbers = function (scene) { return []; };
+export var sceneNumbers = function (scene) { return []; };
 
 // A scene's colour, its number button's, which moves with the scene's place in the order
 function sceneColour(scene) {
@@ -514,7 +524,7 @@ function sceneNameHtml(scene) {
 // A part the programs page has no drawing for gives its own in PART_DRAWINGS, on the same grid
 var PART_FEATURES = {lights: "outputs", strip: "strip", screens: "screen", hub: "hub",
                      sound: "sound", remote: "remote"};
-var PART_DRAWINGS = {};
+export var PART_DRAWINGS = {};
 
 function partIcon(key) {
   if (PART_FEATURES[key]) return featureIcon(PART_FEATURES[key]);
@@ -687,7 +697,7 @@ var carriedTab = null;
 
 // A scene's row of settings, its time and whether it starts afresh. The scene row part
 // restyles it and speaks for the always-on tab
-function renderSceneRow() {
+export function renderSceneRow() {
   var box = document.getElementById("sceneSettings");
   box.textContent = "";
   if (state.at < 0) return;
@@ -840,9 +850,9 @@ function sceneHeading(scene) {
 
 // What the parts below write above the scenes: lines straight under the file's header, then,
 // after a blank line, lines above the board line. Each is a list of functions giving lines
-var fileHead = {under: [], above: []};
+export var fileHead = {under: [], above: []};
 
-function currentText() {
+export function currentText() {
   store();
   var lines = entriesOf(state.always.body);
   state.scenes.forEach(function (scene) {

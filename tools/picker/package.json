@@ -1,0 +1,8 @@
+{
+ "name": "picker-checks",
+ "private": true,
+ "dependencies": {
+  "acorn": "8.14.0",
+  "eslint-scope": "8.2.0"
+ }
+}

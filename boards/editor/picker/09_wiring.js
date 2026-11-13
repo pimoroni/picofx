@@ -1,3 +1,10 @@
+import {BOARD} from "./01_looks.js";
+import {
+  CHANNEL_INKS, OUTPUTS, draw, drawSteps, lampKey, order, outputSaid, placesOf, shortName, wiring
+} from "./03_runs.js";
+import {astrayOf} from "./05_effects.js";
+import {breakOutInScenes, moveLampInScenes, rejoinInScenes} from "./07_board.js";
+import {setupOn} from "./08_setup.js";
 
 // ---- the wiring, while the board is set up ------------------------------------------------
 // In the outputs' own panel and only while the board is set up, the board's connectors along the
@@ -43,7 +50,7 @@ function lampNode(key) {
 }
 
 // A line, its lamp and its pin brought forward, or let go
-function bringForward(keys, on) {
+export function bringForward(keys, on) {
   keys.forEach(function (key) {
     document.querySelectorAll("#outPanel [data-key='" + key + "']").forEach(function (node) {
       node.classList.toggle("wirehot", on);
@@ -161,7 +168,7 @@ function drawLines() {
 
 var sliding = null;
 
-function moveLamp(move) {
+export function moveLamp(move) {
   slideFrom(lampKey(move.from));
   moveLampInScenes(move);
 }
@@ -209,7 +216,7 @@ function playSlide() {
 // Breaking an output out, its three lamps open out of where its one stood, each sliding
 // from there to its own place; putting one back, the lamp it becomes closes in from the
 // middle of the three. The other lamps make way as they do for a move
-function breakOut(out) {
+export function breakOut(out) {
   slideFrom(null);
   var whole = sliding.was[lampKey({out: out, channel: null})];
   if (whole) {
@@ -220,7 +227,7 @@ function breakOut(out) {
   breakOutInScenes(out);
 }
 
-function rejoin(out) {
+export function rejoin(out) {
   slideFrom(null);
   var three = [0, 1, 2].map(function (channel) {
     return sliding.was[lampKey({out: out, channel: channel})];

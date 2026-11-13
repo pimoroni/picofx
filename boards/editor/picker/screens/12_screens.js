@@ -1,3 +1,27 @@
+import {draw, drawSteps} from "../03_runs.js";
+import {
+  allBodies, apply, bodyParts, capture, driveParts, frozen, slotAt, state, store
+} from "../04_scenes.js";
+import {WORDS, hexOf} from "../05_effects.js";
+import {
+  boardLineSteps, notFittedRead, notFittedSteps, saidNotFitted, screenHooks, screensFitted
+} from "../07_board.js";
+import {boardIcon, setupOn} from "../08_setup.js";
+import {LED_PANELS} from "../10_led_sections.js";
+import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches} from "../11_tabs.js";
+import {OWN_GROUP, foldHead} from "../22_program.js";
+import {
+  adderTile, binButton, exampleGroups, groupOpen, groupsOpen, isExampleMedia, isHiddenName,
+  mediaHome, nameShown
+} from "../26_drive_files.js";
+import {openingString} from "../26_drive_programs.js";
+import {boardResidue, entryParts, unquoted} from "../27_readback.js";
+import {
+  chosenAfresh, drawingArts, drawingCopyTile, drawingSaid, freshLook, lightRow, lookEntry,
+  lookSections, madeDrawing, panelPreview, pictureSaid, renderScreensTab, showingLine, shownBefore,
+  styleNamed, styleWords
+} from "./16_screen_settings.js";
+import {pairEntry, pairWritten, screenUnder, screensPaired} from "./17_screen_pair.js";
 
 // ---- a Screens tab ------------------------------------------------------------------------
 // The two screen boxes, A in blue and B in purple, each with its panel size in the coloured
@@ -17,15 +41,15 @@
 
 // The picker keeps each screen port by a letter, A then B. A file writes it as the board names
 // it: screenA and screenB on a board with two, or screen on a board with one
-var SCREEN_NAMES = {};
-var SCREENS = CATALOGUE.screen_ports.map(function (name, index) {
+export var SCREEN_NAMES = {};
+export var SCREENS = CATALOGUE.screen_ports.map(function (name, index) {
   var letter = "AB".charAt(index);
   SCREEN_NAMES[letter] = "screen" + name.slice("screen".length).toUpperCase();
   return letter;
 });
 
 // The letter a screen port is kept by, from the name a file writes it as, or null
-function screenLetter(name) {
+export function screenLetter(name) {
   for (var i = 0; i < SCREENS.length; i++) {
     if (SCREEN_NAMES[SCREENS[i]].toLowerCase() === name.toLowerCase()) return SCREENS[i];
   }
@@ -33,13 +57,13 @@ function screenLetter(name) {
 }
 
 // A screen as the page shows it: by its letter where there are two, and plainly where there is one
-function screenShown(letter) {
+export function screenShown(letter) {
   return SCREENS.length > 1 ? "Screen " + letter : "Screen";
 }
 
 // The button under a picture that puts it on a screen: which screen where there are two, and with
 // one, only whether it is shown
-function screenButton(letter) {
+export function screenButton(letter) {
   return SCREENS.length > 1 ? letter : "Show";
 }
 
@@ -53,7 +77,7 @@ SCREENS.forEach(function (letter) {
 
 // A picture newly chosen on a screen starts as chosenAfresh says. What the screen showed when
 // last looked at says whether it is newly chosen, a scene coming round bringing its own turn
-function turnForChosen(letter) { chosenAfresh(state.screens[letter]); }
+export function turnForChosen(letter) { chosenAfresh(state.screens[letter]); }
 state.media = [];
 state.art = {};
 
@@ -94,7 +118,7 @@ var PRINTED = {
   "1.54": {d: 'M44.498,23.459v6.942h-1.904v-5.366h-1.319v-1.576h3.224Z M48.109,29.32c0,.685-.525,1.181-1.259,1.181s-1.26-.496-1.26-1.181.526-1.181,1.26-1.181,1.259.496,1.259,1.181Z M54.24,28.06c0,1.418-1.15,2.44-2.737,2.44-1.448,0-2.559-.942-2.648-2.252h1.904c.089.348.377.605.744.605.426,0,.793-.357.793-.923,0-.525-.328-.883-.793-.883-.327,0-.585.179-.724.546h-1.795l.595-4.136h4.324v1.576h-3.025l-.159,1.27c.327-.356.813-.564,1.438-.564,1.319,0,2.083.972,2.083,2.32Z M60.947,29.053h-1.051v1.349h-1.904v-1.349h-2.985v-1.389l2.608-4.205h2.281v4.017h1.051v1.577ZM56.801,27.475h1.19l.01-1.944-1.2,1.944Z M64.073,23.459l-1.061,2.886h-1.438l.437-2.886h2.063ZM66.761,23.459l-1.062,2.886h-1.438l.437-2.886h2.063Z M75.71,28.616v1.785h-4.761v-6.942h2.023v5.157h2.738Z M79.649,30.501c-2.132,0-3.67-1.498-3.67-3.571s1.538-3.57,3.67-3.57c1.934,0,3.392,1.229,3.61,3.016h-2.073c-.178-.675-.753-1.161-1.537-1.161-.942,0-1.607.715-1.607,1.706,0,1.002.665,1.726,1.607,1.726.773,0,1.349-.485,1.537-1.16h2.073c-.218,1.775-1.676,3.016-3.61,3.016Z M90.482,26.929c0,2.014-1.498,3.472-3.57,3.472h-2.767v-6.942h2.767c2.073,0,3.57,1.458,3.57,3.471ZM88.419,26.92c0-.972-.645-1.676-1.527-1.676h-.724v3.372h.724c.883,0,1.527-.714,1.527-1.696Z', x: 20.48, y: 159.09400000000002}
 };
 
-var PANEL_PX = {"2.8": [240, 320], "1.54": [240, 240]};
+export var PANEL_PX = {"2.8": [240, 320], "1.54": [240, 240]};
 
 var DRAWN = 210;
 
@@ -116,7 +140,7 @@ function tabPath(x0, x1, near, far, radius) {
 
 // A screen module drawn with the picture it shows as it stands. panelPreview draws the picture
 // composed with its look
-function panelDrawing(screen) {
+export function panelDrawing(screen) {
   var made = MODULE[screen.size] || MODULE["2.8"];
   var turn = Number(screen.turn || 0);
   var quarter = turn % 180 === 90;
@@ -227,7 +251,7 @@ function panelDrawing(screen) {
 
 // The Screens tab's head, a box for each screen. A part that draws the head another way
 // registers on instead, saying whether it did, and one that adds to either on after
-var screensHeadSteps = {instead: [], after: []};
+export var screensHeadSteps = {instead: [], after: []};
 
 function renderScreensHead() {
   if (!screensHeadSteps.instead.some(function (step) { return step(); })) {
@@ -366,7 +390,7 @@ function previewInScene(screen, letter) {
 
 // The pictures on the drive, each with what it is on. The parts below add to them, each after the
 // one before: the hub's positions, the whole pictures, the hub's groups
-var assetSteps = [];
+export var assetSteps = [];
 
 // The gallery's pictures by group: the user's own, then the example drawings' groups and the
 // example pictures'
@@ -527,12 +551,12 @@ function renderAssets() {
   }
 }
 
-function mediaNamed(name) {
+export function mediaNamed(name) {
   return state.media.filter(function (m) { return m.name === name; })[0] || null;
 }
 
 // A picture's kind, from the drive or its name
-function kindOf(shows) {
+export function kindOf(shows) {
   var media = mediaNamed(shows);
   return media ? media.kind
        : /\.gif$/i.test(shows) ? "gif"
@@ -556,7 +580,7 @@ function screenEntry(letter, body) {
 }
 
 // The line that turns a screen or hub positions off in a scene, showing black at the backlight given
-function offEntry(selector, backlight) {
+export function offEntry(selector, backlight) {
   return selector + (backlight < 1 ? " backlight=" + Math.round(backlight * 100) + "%" : "") +
          ": none";
 }
@@ -643,7 +667,7 @@ notFittedSteps.push(function () {
 // ---- reading the file back ----------------------------------------------------------------------
 
 // A screen's line as the settings of the screen it names, or null where one is not understood
-function screenPlaying(parts, body, letter) {
+export function screenPlaying(parts, body, letter) {
   var playing = Object.assign({}, body.screens[letter]);
   var look = playing.look = freshLook();
   // A line says all its screen does, so nothing is left from what the screen held before
@@ -923,7 +947,7 @@ function readNextPicture() {
   });
 }
 
-function mediaArt(name, style) {
+export function mediaArt(name, style) {
   var media = mediaNamed(name);
   // A drawing in a style with a thumbnail of its own is shown by that, held under its name and style
   style = styleNamed(media, style);
@@ -946,7 +970,7 @@ function mediaArt(name, style) {
 
 // The tab's head and its pictures. renderScreensTab puts the board's chips beside what is the
 // board's
-function renderScreensParts() {
+export function renderScreensParts() {
   renderScreensHead();
   renderAssets();
   var head = document.getElementById("screensHead");
@@ -1046,3 +1070,6 @@ if (SCREENS.length) {
 } else {
   document.getElementById("screensPanel").hidden = true;
 }
+
+screenHooks.mediaNamed = mediaNamed;
+screenHooks.panelPreview = panelPreview;

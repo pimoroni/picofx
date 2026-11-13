@@ -1,3 +1,14 @@
+import {draw, drawSteps} from "../03_runs.js";
+import {bodyParts, capture, frozen, namesOf, state} from "../04_scenes.js";
+import {spoken} from "../05_effects.js";
+import {
+  HUB_PLACES, hubHeadSteps, placeGroups, placePicked, placeThere, placeTurnForChosen, placeUnder,
+  placesSaid, placesThere
+} from "./15_hub.js";
+import {assetSteps, kindOf} from "../screens/12_screens.js";
+import {
+  ANCHOR_NAMES, LOOK_START, freshLook, groundSaid, lightRow, pictureSaid, playingTokens
+} from "../screens/16_screen_settings.js";
 
 // ---- the hub's positions in groups -----------------------------------------------------------
 // With a look beside every picture, two positions showing the same picture could differ in a
@@ -12,7 +23,7 @@
 // group for the strip, and a picture goes to a group or a position on its own, never to one
 // member of a group. A group holds one panel size only, the two sizes being sent apart.
 
-var GROUP_NUMBERS = ["1", "2", "3"];
+export var GROUP_NUMBERS = ["1", "2", "3"];
 var GROUP_INKS = {"1": "#d98a1a", "2": "#2f9e6a", "3": "#d0508a"};
 
 // A position on its own is its own group, named by its letter
@@ -20,7 +31,7 @@ HUB_PLACES.forEach(function (place) { state.places[place].group = place; });
 
 function groupOf(place) { return state.places[place].group; }
 
-function inNumberedGroup(place) { return GROUP_NUMBERS.indexOf(groupOf(place)) >= 0; }
+export function inNumberedGroup(place) { return GROUP_NUMBERS.indexOf(groupOf(place)) >= 0; }
 
 // The positions in a position's group, in the hub's order
 function membersOf(place) {
@@ -33,7 +44,7 @@ function membersOfGroup(number) {
 
 // What a picture or the strip is sent to: each group with a member, in number order, then each
 // position on its own, in the hub's order
-function sendTargets() {
+export function sendTargets() {
   var targets = GROUP_NUMBERS.filter(function (number) {
     return membersOfGroup(number).length;
   }).map(function (number) {
@@ -147,7 +158,7 @@ function splitsOverAlways(places) {
 }
 
 // The positions of numbered groups among those given that splitsOverAlways() breaks up
-function breakingUp(places) {
+export function breakingUp(places) {
   return places.filter(function (place) {
     return inNumberedGroup(place) && splitsOverAlways(membersOf(place));
   });
@@ -336,7 +347,7 @@ hubHeadSteps.push(function () {
 // letters and their commas and dashes are all the markup holds
 function screensBold(places) { return "<b>" + placesSaid(places) + "</b>"; }
 
-function namesSaid(sends) {
+export function namesSaid(sends) {
   var names = sends.map(function (send) { return screensBold(send.places); });
   return names.length > 1 ? names.slice(0, -1).join(", ") + " and " + names[names.length - 1]
                           : names[0];
@@ -398,7 +409,7 @@ function plainness(send) {
                             playing: {turn: 0, pingpong: false, hold: "", look: LOOK_START}}).length;
 }
 
-function apartSaid(sends) {
+export function apartSaid(sends) {
   var byPicture = {};
   sends.forEach(function (send) {
     (byPicture[send.playing.shows] = byPicture[send.playing.shows] || []).push(send);

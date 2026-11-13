@@ -1,3 +1,26 @@
+import {HEADER, LOOKS, canPlay, keyOf} from "./01_looks.js";
+import {
+  CHANNELS, OUTPUTS, blank, draw, drawSteps, joinedItems, order, outs, placesOf, runs, settle,
+  wiring
+} from "./03_runs.js";
+import {
+  allBodies, apply, blankBody, bodyParts, capture, fileHead, sceneMark, settleLoneScene, state
+} from "./04_scenes.js";
+import {
+  SIGNAL_TIMINGS, STRIPS, WORDS, hexOf, readStripTail, sectionLines, stripNamed, stripSet,
+  targetFor, wordFor
+} from "./05_effects.js";
+import {BLINK} from "./06_blink.js";
+import {
+  NOT_FITTED, SCREEN_PORTS, boardLineSteps, notFittedLine, notFittedRead, saidNotFitted,
+  stripDescribed
+} from "./07_board.js";
+import {dropStrip} from "./08_setup.js";
+import {WROTE_KEY, connectSteps, drive} from "./18_drive.js";
+import {argsWritten, boardSet, programNamed} from "./19_board_settings.js";
+import {onProgramPage} from "./22_program.js";
+import {figureKey, placeFor, settingIn} from "./25_figures.js";
+import {programsKnown} from "./26_drive_programs.js";
 
 // ---- reading the board's file back ----------------------------------------------------------
 // Opening the drive reads effects.txt into the page. Every line is either read into the page's
@@ -9,13 +32,13 @@
 var PAGE_LINES = HEADER.split("\n").filter(Boolean).concat(["# Nothing is playing yet."]);
 
 // The tokens on the board line that this page does not hold itself, kept as written
-var boardResidue = [];
+export var boardResidue = [];
 // The comments written above the board line
 var boardComments = [];
 
 // The kept entries of the scene on show, each its text and the comments written above it, and
 // the comments of the lines it read, by the line they sit above
-var keptNow = [];
+export var keptNow = [];
 var notesNow = {};
 
 // Where a quote does not hide it, the first colon, which divides an entry's lights from its effect
@@ -35,7 +58,7 @@ function unquotedColon(line) {
 }
 
 // A board line's settings, divided at spaces a quote does not hold
-function boardTokens(text) {
+export function boardTokens(text) {
   var tokens = [];
   var word = "";
   var quote = null;
@@ -196,7 +219,7 @@ var programWaiting = null;
 
 // Read the waiting program as readProgram() would have, once the programs are known, unless one
 // was chosen in the meantime. Still unknown, it stays on the board line and the page where it is
-function readWaitingProgram() {
+export function readWaitingProgram() {
   if (!programWaiting) return;
   var named = programWaiting[0], argued = programWaiting[1];
   programWaiting = null;
@@ -277,7 +300,7 @@ function absorbFile(text) {
 // changed. A read line's comments are written above it again while it says the same
 
 // An entry's two sides, the lights and their settings before the colon, the effect and its after
-function entryParts(text) {
+export function entryParts(text) {
   if (text === null || text.indexOf("\n") >= 0) return null;
   var colon = unquotedColon(text);
   if (colon < 0) return null;
@@ -297,7 +320,7 @@ function entryParts(text) {
           right: settings(right.slice(1))};
 }
 
-function unquoted(value) {
+export function unquoted(value) {
   return value && /^(["']).*\1$/.test(value) ? value.slice(1, -1) : value;
 }
 
@@ -882,7 +905,7 @@ function renderKept() {
 }
 
 // The lights of a run the scene's kept lines name, as places in the run, with the lines naming each
-function keptLights(run) {
+export function keptLights(run) {
   var named = {};
   keptNow.forEach(function (one) {
     var parts = entryParts(one.text);
@@ -930,7 +953,7 @@ drawSteps.after.push(function () {
 
 // A strip removed takes with it every scene's kept lines that play on it, and its length
 // as written, or they would keep its connector on
-function forgetKeptFor(run) {
+export function forgetKeptFor(run) {
   function elsewhere(one) {
     var parts = entryParts(one.text);
     var lamps = parts && lampsNamed(run, parts.selector);

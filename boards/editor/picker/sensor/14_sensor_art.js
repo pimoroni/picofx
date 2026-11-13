@@ -1,3 +1,5 @@
+import {REMOTE_RAINBOW} from "../04_scenes.js";
+import {hexRgb} from "../05_effects.js";
 
 // ---- the Aye Arr Remote, drawn from its artwork -----------------------------------------------
 // The remote as its artwork draws it, in the artwork's own units, one element a line, for the
@@ -6,7 +8,7 @@
 
 // Every button: its name as aye_arr's PimoroniRemote names it, its column, its row in the
 // remote's own layout, and what its face is
-var REMOTE_BUTTONS = [
+export var REMOTE_BUTTONS = [
   ["ANTICLOCK", 0, 320, "turn"], ["UP", 1, 320, "up"], ["CLOCKWISE", 2, 320, "turn"],
   ["LEFT", 0, 630, "side"], ["OK_STOP", 1, 630, "stop"], ["RIGHT", 2, 630, "side"],
   ["RETURN_UNDO", 0, 940, "undo"], ["DOWN", 1, 940, "down"], ["MENU_ACTION", 2, 940, "menu"],
@@ -210,12 +212,12 @@ var REMOTE_ART = [
 var REMOTE_ART_COLUMNS = [83.268, 99.213, 115.157];
 var REMOTE_ART_ROWS = {320: 40.287, 630: 54.591, 940: 68.895, 1248: 83.198, 1557: 97.502,
                        1866: 111.806, 2176: 126.109};
-var REMOTE_ART_RADIUS = 6.378;
+export var REMOTE_ART_RADIUS = 6.378;
 
 // Each button's row beside the remote, and its height in the art, as the labelled artwork sets
 // them out. A middle button's row sits half a row off its own, so its leader runs between the
 // buttons beside it
-var REMOTE_ROWS = [
+export var REMOTE_ROWS = [
   ["ANTICLOCK", "left", 40.287], ["UP", "left", 47.439], ["LEFT", "left", 54.591],
   ["OK_STOP", "left", 61.743], ["RETURN_UNDO", "left", 68.895], ["1_RED", "left", 83.198],
   ["2_GREEN", "left", 90.35], ["4_CYAN", "left", 97.502], ["7_WARM", "left", 111.806],
@@ -226,7 +228,7 @@ var REMOTE_ROWS = [
   ["PLAY_PAUSE", "right", 126.109]];
 
 // A button's centre in the art
-function remoteArtAt(name) {
+export function remoteArtAt(name) {
   var button = REMOTE_BUTTONS.filter(function (one) { return one[0] === name; })[0];
   return {x: REMOTE_ART_COLUMNS[button[1]], y: REMOTE_ART_ROWS[button[2]]};
 }
@@ -263,21 +265,21 @@ function remoteArtZero() {
 
 // The joins the art runs between numbers, found by where each path starts, and the two buttons
 // each joins
-var REMOTE_ART_JOINS = [["M88.548,86.774", "1_RED", "4_CYAN"],
+export var REMOTE_ART_JOINS = [["M88.548,86.774", "1_RED", "4_CYAN"],
                         ["M104.493,86.774", "2_GREEN", "5_MAGENTA"],
                         ["M120.438,86.774", "3_BLUE", "6_YELLOW"],
                         ["M91.24,115.386", "7_WARM", "8_WHITE"],
                         ["M107.185,108.225", "8_WHITE", "9_COOL"]];
 
 // A join's own outline, which a clip can take without any of the pad around it
-function remoteArtJoin(start) {
+export function remoteArtJoin(start) {
   var line = REMOTE_ART.filter(function (one) { return one.indexOf("d='" + start) >= 0; })[0];
   return line.match(/d='([^']*)'/)[1];
 }
 
 // The art as svg markup, each rainbow where the artwork has its bitmap: the rotate buttons' after
 // the remote's body, the 0 ring after the 9 button's ring
-function remoteArt() {
+export function remoteArt() {
   var body = REMOTE_ART.indexOf("</g>") + 1;
   var nine = remoteArtAt("9_COOL");
   var afterNine = REMOTE_ART.map(function (line) {
@@ -293,7 +295,7 @@ function remoteArt() {
 // The PIR Stick as its artwork draws it, in the artwork's own units, 22.692 across and 77.102
 // high, one element a line. The page shows through the board's mounting hole. The artwork's style
 // classes are written as fills, as a style in the page would reach every drawing on it
-var PIR_ART = [
+export var PIR_ART = [
   // The board, with its mounting hole
   "<path d='M19.85,0H2.842C1.277,0,.008,1.269.008,2.835v71.008c-.117,1.683,1.152,3.142,2.835,3.26,0,0,17.008,0,17.008,0,1.683-.117,2.952-1.577,2.835-3.26,0,0,0-71.008,0-71.008,0-1.565-1.269-2.835-2.835-2.835ZM11.346,35.291c-1.957,0-3.543-1.586-3.543-3.543s1.586-3.543,3.543-3.543,3.543,1.586,3.543,3.543-1.586,3.543-3.543,3.543Z'/>",
   // The silkscreen: minus, plus, OUT, the adjuster's arc and the arrows under the sensor

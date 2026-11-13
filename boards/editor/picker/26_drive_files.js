@@ -1,3 +1,9 @@
+import {BOARD} from "./01_looks.js";
+import {draw} from "./03_runs.js";
+import {apply, driveParts, slotAt, state, store} from "./04_scenes.js";
+import {screenHooks} from "./07_board.js";
+import {CAN_REACH_A_DRIVE, banner, connectSteps, drive, driveTrouble} from "./18_drive.js";
+import {OWN_FOLDER, folderAt, removePictures, sectionsFrom} from "./26_drive_programs.js";
 
 // ---- the drive's files ---------------------------------------------------------------------------
 // The files on the FX drive: a walk of the drive that each part's own files are found in, adding
@@ -14,7 +20,7 @@ var MEDIA_FOLDERS = {pictures: /\.(gif|png|jpe?g)$/i, drawings: /\.py$/i, sounds
 
 // Whether a name on the drive is hidden, such as the ._ file macOS writes beside each file it
 // copies, or its .Trashes and .fseventsd. A walk of the drive passes these by
-function isHiddenName(name) {
+export function isHiddenName(name) {
   return name.charAt(0) === ".";
 }
 
@@ -27,10 +33,10 @@ var EXAMPLE_FOLDERS = BOARD.examples ? ["drawings", "pictures", "sounds"] : [];
 // a drawing section starts folded where sections.txt marks it so. A picture or a sound is a member
 // by path, a file or a slideshow's folder, or folder/* for each file in that folder on its own,
 // and its section starts folded
-var exampleSections = {};
+export var exampleSections = {};
 
 // The folder each file or slideshow the walk found sits in, so it is deleted from there
-var mediaHome = {};
+export var mediaHome = {};
 
 // The sections an example folder's sections.txt lists, a line each as its name, a | and what it
 // holds. After another | a drawing section may say "folded", and a section of pictures or sounds
@@ -48,32 +54,32 @@ function exampleSectionsFrom(text, root, kind) {
 }
 
 // Whether a file or folder is one of the drive's examples
-function isExampleMedia(name) {
+export function isExampleMedia(name) {
   return name.indexOf("examples/") === 0;
 }
 
 // A file's name as the page shows it, without the folders it sits in
-function nameShown(name) {
+export function nameShown(name) {
   return name.slice(name.lastIndexOf("/") + 1);
 }
 
 // The group for whatever each example folder's sections do not name
-var OTHER_EXAMPLES = {drawings: "Example drawings", pictures: "Example pictures",
+export var OTHER_EXAMPLES = {drawings: "Example drawings", pictures: "Example pictures",
                       sounds: "Example sounds"};
 
 // Whether each group of the drive's files is open, by name, for those folded or opened
-var groupsOpen = {};
+export var groupsOpen = {};
 
 // Whether a group, as [name, what it holds, files, whether it starts folded], is open, each
 // starting as its folder's sections say
-function groupOpen(group) {
+export function groupOpen(group) {
   return group[0] in groupsOpen ? groupsOpen[group[0]] : !group[3];
 }
 
 // An example folder's files by group, as [name, what it holds, files, whether it starts folded]:
 // its sections in its sections.txt's order, any other a drawing names, and those none of them
 // holds. Each file is as the walk lists it, with its name and, for a drawing, what it says
-function exampleGroups(kind, files) {
+export function exampleGroups(kind, files) {
   var root = "examples/" + kind + "/";
   var left = files.filter(function (one) { return one.name.indexOf(root) === 0; });
   var sections = (exampleSections[kind] || []).slice();
@@ -108,7 +114,7 @@ function mediaFolderFor(name) {
   })[0] || null;
 }
 
-async function scanMedia(dir) {
+export async function scanMedia(dir) {
   // One walk at a time, built aside and landed whole, so a redraw mid-scan never sees half a
   // drive and two walks can never lace their findings together
   if (scanBusy) return;
@@ -201,7 +207,7 @@ async function rescanMedia() {
   if (driveSaid() !== was) draw();
 }
 
-function adderTile(label, kinds, what, takes) {
+export function adderTile(label, kinds, what, takes) {
   var tile = document.createElement("button");
   tile.className = "adder";
   tile.innerHTML = "<svg width='13' height='13' viewBox='0 0 11 11'><path d='M5.5 1 " +
@@ -212,7 +218,7 @@ function adderTile(label, kinds, what, takes) {
   return tile;
 }
 
-function binButton(name, kind) {
+export function binButton(name, kind) {
   if (!CAN_REACH_A_DRIVE) return document.createTextNode("");
   var bin = document.createElement("span");
   bin.className = "bin";
@@ -279,7 +285,7 @@ async function addFiles(kinds, what, takes) {
   try { await scanMedia(state.dirHandle); } catch (e) {}
   // A Python file is offered only where its opening string makes it a drawing
   var unoffered = arrived.filter(function (name) {
-    return /\.py$/i.test(name) && !mediaNamed(name);
+    return /\.py$/i.test(name) && !screenHooks.mediaNamed(name);
   });
   var reason = trouble ? ". " + await driveTrouble(trouble) : "";
   if (refused.length && landed)
@@ -297,7 +303,7 @@ async function addFiles(kinds, what, takes) {
 async function removeFromDrive(name, kind) {
   // A drawing in the drawings folder takes its thumbnails with it, its own and each style's, as a
   // program in the programs folder takes its pictures. Left, they would be listed as pictures
-  var media = kind === "drawing" ? mediaNamed(name) : null;
+  var media = kind === "drawing" ? screenHooks.mediaNamed(name) : null;
   var thumbs = [];
   if (media && media.thumbHandle) {
     var stem = name.replace(/\.py$/i, "");

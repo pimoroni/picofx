@@ -1,3 +1,7 @@
+import {lookNamed} from "./01_looks.js";
+import {inkOf} from "./02_preview.js";
+import {chosenSteps, draw} from "./03_runs.js";
+import {sectionLines} from "./05_effects.js";
 
 // ---- the figure beside each slider --------------------------------------------------------
 // Each slider can show beside it the value the file writes, with its unit, in a box that takes
@@ -55,10 +59,10 @@ try {
 }
 
 // The typed values of the stretch whose lines are being written, which linesFor applies
-var exactNow = null;
+export var exactNow = null;
 
 // Both ways a stretch's lines are asked for carry its typed values: the file and the preview
-function withExact(exact, write) {
+export function withExact(exact, write) {
   var had = exactNow;
   exactNow = exact || null;
   try {
@@ -70,7 +74,7 @@ function withExact(exact, write) {
 
 // A setting's value in a stretch's lines, without its sign, or null where none names it. A
 // fade is read as its fall, the part after its bar, which is what a trail is
-function settingIn(lines, key) {
+export function settingIn(lines, key) {
   var setting = new RegExp("(^|\\s)" + key + "=(?:[\\d.]+\\|)?(-?[\\d.]+)");
   for (var at = 0; at < lines.length; at++) {
     var found = lines[at].match(setting);
@@ -87,7 +91,7 @@ function linesAt(run, section, look, slider, value) {
 }
 
 // The setting a slider moves, the first of its keys whose value it changes
-function figureKey(run, section, look, slider) {
+export function figureKey(run, section, look, slider) {
   var low = linesAt(run, section, look, slider, 0);
   var high = linesAt(run, section, look, slider, 1);
   return FIGURE_KEYS[slider].filter(function (key) {
@@ -101,7 +105,7 @@ function figureSaid(value) {
 
 // The slider's place that writes nearest a value, looked for along its whole reach. Past its
 // reach the slider sits at the nearer end, not at the first place that rounds to it
-function placeFor(run, section, look, slider, key, value) {
+export function placeFor(run, section, look, slider, key, value) {
   var best = 0, nearest = Infinity;
   for (var step = 0; step <= 200; step++) {
     var place = step / 200;

@@ -1,3 +1,10 @@
+import {BOARD} from "./01_looks.js";
+import {draw} from "./03_runs.js";
+import {banner, connectSteps, drive, driveTrouble} from "./18_drive.js";
+import {PROGRAMS, boardSet, programNamed} from "./19_board_settings.js";
+import {loadThumbs, renderProgramView} from "./22_program.js";
+import {isHiddenName} from "./26_drive_files.js";
+import {readWaitingProgram} from "./27_readback.js";
 
 // ---- the programs on the drive ------------------------------------------------------------------
 // Opening the drive reads the programs it holds, every Python file at its top level, in OWN_FOLDER
@@ -15,24 +22,24 @@
 // the sections and says what each holds.
 
 // Where the drive keeps its examples, on a board that carries them
-var EXAMPLES_ROOT = BOARD.examples ? "examples/programs/" : "";
+export var EXAMPLES_ROOT = BOARD.examples ? "examples/programs/" : "";
 
 // The folder at the top of the drive for the user's own programs, where a customised example goes
-var OWN_FOLDER = "programs";
+export var OWN_FOLDER = "programs";
 
 // The program tab's sections, as [name, what it holds, whether it starts folded], in sections.txt's
 // order
-var SECTIONS = [];
+export var SECTIONS = [];
 
 // Each program's pictures as object URLs, by its path: its own, and a second screen's after it
-var PICTURES = {};
+export var PICTURES = {};
 
 // How far reading the programs has got, as [read, of], while it is under way, else null
-var programsReading = null;
+export var programsReading = null;
 
 // Whether the drive holds the WiFi credentials, which a board with a wireless module keeps at its
 // top level, so the programs that go online are offered
-var driveHasCredentials = false;
+export var driveHasCredentials = false;
 
 // What each examples folder needs attached, as the manual says
 var EXAMPLE_NEEDS = {screens: "a screen", audio: "a speaker", motors: "motors", servos: "a servo",
@@ -97,7 +104,7 @@ function usesInSource(source) {
 
 // One argument an Args line names, "Name", "Name = default" or "Name = default or other", the
 // default given unless it is told, and the choices where it names more than one
-function argumentFrom(text) {
+export function argumentFrom(text) {
   var split = text.indexOf("=");
   var name = (split < 0 ? text : text.slice(0, split)).trim();
   var argument = {name: name, kind: ARGUMENT_KINDS[name] || "text"};
@@ -110,14 +117,14 @@ function argumentFrom(text) {
 }
 
 // A Python file's opening string, the first one written in triple quotes, or "" where it has none
-function openingString(source) {
+export function openingString(source) {
   var found = source.match(/("""|''')([\s\S]*?)\1/);
   return found ? found[2].trim() : "";
 }
 
 // One program as the page describes it, from its path, its folder under EXAMPLES_ROOT ("" for one
 // at the top of the drive) and its source, or null for a drawing
-function programFrom(path, folder, source) {
+export function programFrom(path, folder, source) {
   var opening = openingString(source);
   if (/^\s*Drawing:/m.test(opening)) return null;
   var program = {path: path, folder: folder,
@@ -143,7 +150,7 @@ function programFrom(path, folder, source) {
 }
 
 // The sections sections.txt lists, a line each as its name, a |, and what it holds
-function sectionsFrom(text) {
+export function sectionsFrom(text) {
   return text.split("\n").map(function (line) { return line.trim(); }).filter(function (line) {
     return line && line.charAt(0) !== "#";
   }).map(function (line) {
@@ -153,7 +160,7 @@ function sectionsFrom(text) {
 }
 
 // The folder a path's parts lead to on the drive, or null where one of them is not there
-async function folderAt(dir, parts) {
+export async function folderAt(dir, parts) {
   for (var i = 0; i < parts.length; i++) {
     try {
       dir = await dir.getDirectoryHandle(parts[i]);
@@ -222,7 +229,7 @@ function isExample(path) {
 
 // Every program on the drive, the program tab counting them in as they are read. With ownOnly
 // only the user's own are read again and the examples kept as they were
-async function drivePrograms(dir, ownOnly) {
+export async function drivePrograms(dir, ownOnly) {
   var files = [], pictures = {}, found = [];
   driveHasCredentials = false;
   // The pictures read now, landed whole at the end, so those showing stay until replaced
@@ -296,7 +303,7 @@ async function ownState(dir) {
 }
 
 // Forget a chosen program the drive no longer holds, as it is no longer there to run
-function forgetMissingPrograms() {
+export function forgetMissingPrograms() {
   if (boardSet.program && !programNamed(boardSet.program)) boardSet.program = null;
 }
 
@@ -326,7 +333,7 @@ setInterval(rescanPrograms, 5000);
 // always takes a new one, its number counted on, so name_2 duplicates as the first of name_3,
 // name_4 and on that is free. Its Section line is dropped so the copy is listed as the user's own.
 // Returns the copy's file name
-async function copyToOwn(from, name, into, own, suffixes) {
+export async function copyToOwn(from, name, into, own, suffixes) {
   var stem = name.replace(/\.py$/i, "");
   var base = own ? stem.replace(/_\d+$/, "") : stem;
   var source = await (await (await from.getFileHandle(name)).getFile()).text();
@@ -353,7 +360,7 @@ async function copyToOwn(from, name, into, own, suffixes) {
 
 // Copy a program into OWN_FOLDER for the user to change, its pictures with it. Returns the copy's
 // path
-async function copyProgram(path) {
+export async function copyProgram(path) {
   var parts = path.split("/");
   var name = parts.pop();
   var from = await folderAt(drive.dirHandle, parts);
@@ -363,7 +370,7 @@ async function copyProgram(path) {
 }
 
 // Delete the pictures beside a file, skipping any it does not have
-async function removePictures(dir, names) {
+export async function removePictures(dir, names) {
   for (var picture of names) {
     try {
       await dir.removeEntry(picture);
@@ -375,7 +382,7 @@ async function removePictures(dir, names) {
 
 // Delete one of the user's own programs from the drive, once asked. In OWN_FOLDER its pictures go
 // with it, while at the top of the drive they are left, as the effects may show them too
-async function removeProgram(path) {
+export async function removeProgram(path) {
   var parts = path.split("/");
   var name = parts.pop();
   if (!confirm("Delete " + name + " from the FX drive?")) return;
@@ -396,7 +403,7 @@ async function removeProgram(path) {
 }
 
 // Whether the open drive's programs have been read, which takes a while as each file is read whole
-var programsKnown = false;
+export var programsKnown = false;
 
 // The program effects.txt names is read first, so the file is read back with it known, and the rest
 // without holding up the steps after

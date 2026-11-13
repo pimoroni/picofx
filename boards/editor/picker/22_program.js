@@ -1,3 +1,16 @@
+import {BOARD} from "./01_looks.js";
+import {draw, drawSteps, escapeHtml, paintAll} from "./03_runs.js";
+import {state} from "./04_scenes.js";
+import {spoken} from "./05_effects.js";
+import {SCREEN_PORTS, screenHooks} from "./07_board.js";
+import {boardIcon} from "./08_setup.js";
+import {tabSwatch} from "./11_tabs.js";
+import {CAN_REACH_A_DRIVE, banner, drive, driveTrouble} from "./18_drive.js";
+import {PROGRAMS, argsFor, boardSet, programNamed} from "./19_board_settings.js";
+import {
+  OWN_FOLDER, PICTURES, SECTIONS, copyProgram, driveHasCredentials, drivePrograms, programsKnown,
+  programsReading, removeProgram
+} from "./26_drive_programs.js";
 
 // ---- the effects page, or a program page ------------------------------------------------------
 // Only program= and args= reach a program, which takes the whole board, so the page is one of
@@ -11,7 +24,7 @@
 // beside it, drawn here where there is not.
 
 // The programs at the top of the drive that name no section, the group they make
-var OWN_GROUP = "On the drive";
+export var OWN_GROUP = "On the drive";
 
 // The offered programs by group, as [name, paths]: the drive's own, always, then sections.txt's
 // sections in its order, then any other a program names, each group's programs by title
@@ -56,7 +69,7 @@ function programGroupFolded(title) {
 }
 
 // A group's heading, pressed to fold or open it, its name and what the group holds beside it
-function foldHead(title, says, open, toggle) {
+export function foldHead(title, says, open, toggle) {
   var head = document.createElement("button");
   head.type = "button";
   head.className = "gallery-head foldhead" + (open ? " open" : "");
@@ -86,7 +99,7 @@ function holes(points, radius) {
 // What a program can use beyond the board, each with its name, the shorter one its chip in the
 // filter takes, and a drawing on a 24 grid, in the order they are shown. A part classed "f" is
 // filled, "fs" filled and outlined, and the rest outlined, so each reads as a silhouette at 18px
-var FEATURES = [
+export var FEATURES = [
   ["outputs", "the outputs", "outputs",
    "<circle class='f' cx='3.8' cy='10' r='3'/><circle class='f' cx='12' cy='10' r='3'/>" +
    "<circle class='f' cx='20.2' cy='10' r='3'/><path d='M1.5 18h21' stroke-width='2.2'/>"],
@@ -152,7 +165,7 @@ function featureNamed(key) {
   return FEATURES.filter(function (one) { return one[0] === key; })[0];
 }
 
-function featureIcon(key) {
+export function featureIcon(key) {
   var feature = featureNamed(key);
   var icon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   icon.setAttribute("viewBox", "0 0 24 24");
@@ -163,13 +176,13 @@ function featureIcon(key) {
 }
 
 // What a program uses, read from its source
-function usesOf(path) {
+export function usesOf(path) {
   var program = programNamed(path);
   return program ? program.uses : [];
 }
 
 // A program's name to show: its own where it gives one, else its file's, in words
-function programTitle(path) {
+export function programTitle(path) {
   var program = programNamed(path);
   if (program && program.name) return program.name;
   var words = path.split("/").pop().replace(/\.py$/, "").split("_").join(" ");
@@ -531,15 +544,15 @@ function programThumb(path) {
 
 // ---- the program page ------------------------------------------------------------------------
 
-var programView = null;
+export var programView = null;
 
 // Whether the program tab is open. A program is chosen only by picking one, so the tab can be open
 // with none chosen, and the file says program= only once one is
-var onProgramPage = false;
+export var onProgramPage = false;
 
 // A tile's copy, in the bin's place on an example, which has none, or beside the bin on the user's
 // own. An example is customised and one of the user's own duplicated, into the folder named
-function copyTile(example, file, folder, copy) {
+export function copyTile(example, file, folder, copy) {
   var tile = document.createElement("span");
   tile.className = "bin copytile" + (example ? " alone" : "");
   tile.textContent = "\u29c9";
@@ -554,7 +567,7 @@ function copyTile(example, file, folder, copy) {
 
 // A program as a card, as the looks are, its thumbnail over its name, and what it uses as a row
 // of small drawings along the foot of the thumbnail
-function programCard(path) {
+export function programCard(path) {
   var card = document.createElement("button");
   card.type = "button";
   card.className = "progcard" + (boardSet.program === path ? " picked" : "");
@@ -610,7 +623,7 @@ function programCard(path) {
 }
 
 // What the parts after this one add to each program card, each given the card and its path
-var programCardSteps = [];
+export var programCardSteps = [];
 
 // The screen size a program is shown on: screen A's, else the program's own default, else a 2.8".
 // Its picture was taken at its defaults, so what it is given changes nothing here
@@ -627,7 +640,7 @@ function sizeShown(path) {
 function framedPanel(path, url) {
   var image = thumbImages[url];
   var upright = image && image.height > image.width;
-  return panelPreview({size: sizeShown(path), turn: upright ? 0 : 90,
+  return screenHooks.panelPreview({size: sizeShown(path), turn: upright ? 0 : 90,
                        art: {url: url, w: upright ? 240 : 320, h: upright ? 320 : 240,
                              pixelated: true}});
 }
@@ -657,7 +670,7 @@ function programPicture(path) {
 // The picture before a program is chosen: an empty panel upright, so its words read across, or on
 // a board without screens its lamps unlit
 function emptyPicture() {
-  if (SCREEN_PORTS.length) return panelPreview({size: "2.8", turn: 0});
+  if (SCREEN_PORTS.length) return screenHooks.panelPreview({size: "2.8", turn: 0});
   var big = thumbCanvas("outputs:off", 1);
   big.classList.add("big");
   return big;
@@ -734,7 +747,7 @@ function programHero(path) {
   return hero;
 }
 
-function renderProgramView() {
+export function renderProgramView() {
   programView.textContent = "";
   if (!onProgramPage) return;
   programView.appendChild(programHero(boardSet.program));
@@ -797,7 +810,7 @@ function renderProgramView() {
 }
 
 // What the parts after this one add to the program tab once its programs are listed
-var programViewSteps = [];
+export var programViewSteps = [];
 
 // ---- choosing by what is to hand ----------------------------------------------------------------
 // A chip for each thing an offered program can use, all on to begin with. A chip turned off is
@@ -806,13 +819,13 @@ var programViewSteps = [];
 // and every board has its outputs and its Boot button, and an RGB output where it has one, so
 // none of those has one
 
-var CHIPLESS = ["either", "outputs", "rgb", "button"];
+export var CHIPLESS = ["either", "outputs", "rgb", "button"];
 
-var unhad = [];
+export var unhad = [];
 
-function had(key) { return unhad.indexOf(key) < 0; }
+export function had(key) { return unhad.indexOf(key) < 0; }
 
-function passesFilter(path) {
+export function passesFilter(path) {
   return usesOf(path).every(function (key) {
     return key === "either" ? had("screen") || had("pair") : had(key);
   });
@@ -981,7 +994,7 @@ drawSteps.after.push(function () {
 
 // Pictures for thumbnails, decoded ahead of being shown, so a thumbnail is drawn whole the first
 // time and never fills in late. Once all are in, the page is drawn again for any already showing
-function loadThumbs(sources) {
+export function loadThumbs(sources) {
   var waiting = 0;
   sources.forEach(function (src) {
     if (thumbImages[src]) return;

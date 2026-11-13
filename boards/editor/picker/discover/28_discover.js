@@ -1,3 +1,19 @@
+import {BOARD} from "../01_looks.js";
+import {draw, drawSteps} from "../03_runs.js";
+import {apply, driveParts, slotAt, state, store} from "../04_scenes.js";
+import {SCREEN_PORTS} from "../07_board.js";
+import {banner, drive, driveTrouble} from "../18_drive.js";
+import {PROGRAMS, boardSet, programNamed, programsElsewhere} from "../19_board_settings.js";
+import {
+  CHIPLESS, FEATURES, featureIcon, had, loadThumbs, passesFilter, programCard, programCardSteps,
+  programTitle, programView, programViewSteps, unhad, usesOf
+} from "../22_program.js";
+import {
+  OTHER_EXAMPLES, exampleSections, isExampleMedia, nameShown, scanMedia
+} from "../26_drive_files.js";
+import {
+  EXAMPLES_ROOT, PICTURES, SECTIONS, copyProgram, folderAt, forgetMissingPrograms, programFrom
+} from "../26_drive_programs.js";
 
 // ---- examples to discover -----------------------------------------------------------------------
 // The Discover button on each tab with examples, and the gallery it opens. Pressed, it fetches the
@@ -8,6 +24,8 @@
 // description names its examples_index.
 
 // The branch the index and the files are fetched from
+export var discoverKinds = {};
+
 var DISCOVER_BRANCH = "patch/spidisplay-external-rebased";
 
 // Where the repository's files are served from, at that branch
@@ -46,7 +64,7 @@ async function discoverTrouble(e) {
 
 // Say how a download went, where the gallery's examples start and in the banner at the top of the
 // page
-function discoverSay(kind, text, warn) {
+export function discoverSay(kind, text, warn) {
   var notice = discover[kind].notice = [text, warn];
   banner(text, warn);
   // One saying a download went well gives the line back after a while, and a failure stays
@@ -79,10 +97,10 @@ var discover = {
 
 // The examples the drive lacks, as the program tab and the galleries list them
 var discoverPrograms = {};
-var discoverDrawings = {};
-var discoverSounds = {};
+export var discoverDrawings = {};
+export var discoverSounds = {};
 // Each missing example's thumbnail, and a second screen's where it has one, as object URLs, by path
-var discoverThumbs = {};
+export var discoverThumbs = {};
 var discoverSecondThumbs = {};
 
 // Whether version a is older than version b, each as dotted numbers
@@ -303,7 +321,7 @@ async function discoverFetchMissing(kind, offered, same) {
           listed[entry.path] = program;
         }
       } else {
-        var drawing = drawingSaid(openingString(source));
+        var drawing = discoverKinds.drawing && discoverKinds.drawing.said(source);
         if (drawing) listed[entry.path] = {name: entry.path, kind: "drawing", drawing: drawing,
                                            offered: true};
       }
@@ -428,7 +446,7 @@ async function discoverDownload(path, quiet) {
     // The user's changes are kept as their own copy, as Customise makes one. A picture or sound
     // has no Customise, so a changed one is replaced
     if (own.state === "changed" && (entry.kind === "program" || entry.kind === "drawing"))
-      kept = entry.kind === "program" ? await copyProgram(was) : "drawings/" + await copyDrawing(was);
+      kept = entry.kind === "program" ? await copyProgram(was) : "drawings/" + await discoverKinds.drawing.copy(was);
     var written = {};
     for (var file of entry.files) {
       var held = discover.files[file.path];
@@ -502,7 +520,7 @@ async function discoverListed(entry, written, fresh, was) {
   delete state.art[path];
   for (var tries = 0; tries < 20; tries++) {
     await scanMedia(state.dirHandle);
-    if (entry.kind === "sound" ? state.sounds.indexOf(path) >= 0 : mediaNamed(path)) return;
+    if (discoverKinds[entry.kind].onDrive(path)) return;
     await new Promise(function (settle) { setTimeout(settle, 100); });
   }
 }
@@ -566,7 +584,7 @@ function discoverIcon(name, className) {
   return icon;
 }
 
-function discoverElement(tag, className, text) {
+export function discoverElement(tag, className, text) {
   var made = document.createElement(tag);
   made.className = className;
   if (text) made.textContent = text;
@@ -611,7 +629,7 @@ function discoverNotice(check) {
 }
 
 // A missing example's thumbnail, taken away where it will not load, so its dark ground shows
-function discoverThumbImage(path) {
+export function discoverThumbImage(path) {
   var img = document.createElement("img");
   img.alt = "";
   img.onerror = function () { img.remove(); };
@@ -629,7 +647,7 @@ function discoverBar(kind) {
 
 // Put a tab's examples line where its examples start, after the user's own group, which always
 // heads a tab's groups, or at the end where no example is listed
-function discoverPlaceBar(box, kind) {
+export function discoverPlaceBar(box, kind) {
   var bar = discoverBar(kind);
   var heads = box.querySelectorAll(".foldhead");
   if (heads.length > 1) box.insertBefore(bar, heads[1]);
@@ -756,7 +774,7 @@ function discoverOffers(kind) {
 
 // A rule with words in it: "Examples" in its middle where a tab's examples start, and with minor,
 // a kind's name at its left where the Screens tab's drawings or pictures start within them
-function discoverDivider(words, minor) {
+export function discoverDivider(words, minor) {
   var rule = discoverElement("div", "discoverdivide" + (minor ? " minor" : ""));
   rule.appendChild(discoverElement("span", "", words));
   return rule;
@@ -778,7 +796,7 @@ function discoverShows(offers, section) {
 }
 
 // What a picture is, in place of the description a drawing gives
-function discoverPictureSaid(picture) {
+export function discoverPictureSaid(picture) {
   if (picture.slideshow) return "A slideshow of " + picture.count + " pictures.";
   return "A " + picture.title.slice(picture.title.lastIndexOf(".") + 1).toUpperCase() + " picture.";
 }
@@ -1044,105 +1062,13 @@ function discoverProgramFace(path) {
   return card;
 }
 
-// A drawing as the Screens tab shows it, its thumbnail whole, or its icon or initial on its colour
-// where it has none, in a face the shape of a program card's, so every card in a row is one height
-function discoverDrawingFace(path) {
-  if (discoverDrawings[path].kind === "picture") return discoverPictureFace(path);
-  var drawing = discoverDrawings[path].drawing;
-  var card = discoverElement("div", "asset discoveroffer");
-  card.title = drawing.description || "";
-  var face = discoverElement("div", "face");
-  // Its icon or initial on its colour, where it has no thumbnail or the thumbnail will not load
-  function made() {
-    face.className = "face drawingface";
-    face.style.background = drawingInk(drawing, path);
-    face.innerHTML = drawing.icon
-      ? "<span class='drawingicon'>" + escapeHtml(drawing.icon) + "</span>"
-      : "<span class='drawingletter'>" + escapeHtml(drawing.title[0]) + "</span>";
-  }
-  if (discoverThumbs[path]) {
-    var picture = discoverThumbImage(path);
-    picture.onerror = made;
-    face.appendChild(picture);
-  } else {
-    made();
-  }
-  card.appendChild(face);
-  // Its name and what it does under the picture, as a program card has them
-  card.appendChild(discoverElement("span", "progname", drawing.title));
-  card.appendChild(discoverElement("span", "discoverdoes", drawing.description || ""));
-  return card;
-}
-
-// A picture as a drawing's card has it, the picture itself in the face, a GIF playing, a slideshow
-// by its first picture and tagged as one, its file or folder name and what it is under it
-function discoverPictureFace(path) {
-  var picture = discoverDrawings[path].picture;
-  var card = discoverElement("div", "asset discoveroffer");
-  var face = discoverElement("div", "face");
-  if (discoverThumbs[path]) face.appendChild(discoverThumbImage(path));
-  if (picture.slideshow) face.appendChild(discoverElement("span", "discoverkind", "slideshow"));
-  card.appendChild(face);
-  card.appendChild(discoverElement("span", "progname", picture.title));
-  card.appendChild(discoverElement("span", "discoverdoes", discoverPictureSaid(picture)));
-  return card;
-}
-
-// A sound as the Sound tab shows one, its name and how long it plays, with a way to hear it from
-// GitHub before it is downloaded. Its outline is not known until it is, so a still wave stands in
-function discoverSoundFace(path) {
-  var sound = discoverSounds[path].sound;
-  var card = discoverElement("div", "sound discoveroffer");
-  card.innerHTML = "<svg viewBox='0 0 104 30' preserveAspectRatio='none' aria-hidden='true'>" +
-    "<path d='M0 15 Q6.5 3 13 15 T26 15 T39 15 T52 15 T65 15 T78 15 T91 15 T104 15' fill='none' " +
-    "stroke='#c9c3b9' stroke-width='2'/></svg>";
-  card.appendChild(discoverElement("b", "", sound.title));
-  card.appendChild(discoverElement("small", "", sound.seconds ? sound.seconds + "s" : "WAV file"));
-  var playing = hearing.name === path;
-  var listen = discoverElement("span", "hear" + (playing ? " playing" : ""),
-                             playing ? "\u25a0" : "\u25b6");
-  listen.setAttribute("role", "button");
-  listen.title = (playing ? "Stop " : "Play ") + sound.title + " here";
-  listen.onclick = function (e) {
-    e.stopPropagation();
-    discoverHear(path, sound.url);
-  };
-  card.appendChild(listen);
-  return card;
-}
-
-// Play a sound from GitHub, or stop it where it is playing, one sound at a time as the Sound tab
-// plays them
-async function discoverHear(path, url) {
-  var was = hearing.name;
-  stopHearing();
-  if (was === path) {
-    draw();
-    return;
-  }
-  var audio = new Audio(url);
-  hearing = {name: path, audio: audio, url: null};
-  audio.onended = function () {
-    if (hearing.audio === audio) stopHearing();
-    draw();
-  };
-  draw();
-  try {
-    await audio.play();
-  } catch (e) {
-    if (hearing.audio === audio) stopHearing();
-    if (e.name !== "AbortError") discoverSay("sound", "Could not play " + nameShown(path) + ".", true);
-    draw();
-  }
-}
-
 // An example as a card in the gallery, looking as it does in its own tab, its box ticked while it
 // is chosen. shown is every card's path in the order shown, a Shift press counting a run along it
 function discoverOfferCard(offer, shown) {
   var path = offer[0];
   var chosen = discoverChosen.indexOf(path) >= 0;
   var card = discoverBrowsing === "program" ? discoverProgramFace(path)
-           : discoverBrowsing === "sound" ? discoverSoundFace(path) : discoverDrawingFace(path);
+           : discoverKinds[discoverBrowsing].face(path);
   if (chosen) card.classList.add("picked");
   if (discover.newer[path]) card.classList.add("newer");
   card.dataset.path = path;
@@ -1179,7 +1105,7 @@ function discoverOfferCard(offer, shown) {
 }
 
 // A small mark in a card's corner: a download arrow, Update, or the firmware it needs
-function discoverPill(cardPath) {
+export function discoverPill(cardPath) {
   var path = discoverTarget(cardPath);
   var entry = discoverEntry(path);
   if (!entry || discover[discoverTab(entry)].status !== "done") return null;
@@ -1287,7 +1213,7 @@ function discoverChips(offers) {
 // Python file goes with the thumbnails named after it, and a slideshow with its folder. Any picture
 // it shares with others is left. The galleries are read again so it is offered at once
 
-function discoverBin(path, kind) {
+export function discoverBin(path, kind) {
   var bin = discoverElement("span", "bin", "\u00d7");
   bin.setAttribute("role", "button");
   bin.title = "Delete " + nameShown(path) + " from the FX drive";
@@ -1335,7 +1261,7 @@ async function discoverDelete(path, kind) {
     });
     for (var tries = 0; tries < 20; tries++) {
       await scanMedia(state.dirHandle);
-      if (kind === "sound" ? state.sounds.indexOf(path) < 0 : !mediaNamed(path)) break;
+      if (!discoverKinds[kind].onDrive(path)) break;
       await new Promise(function (settle) { setTimeout(settle, 100); });
     }
   }
@@ -1345,7 +1271,7 @@ async function discoverDelete(path, kind) {
 }
 
 // The copy tile sits in the bin's place on an example, which had none, so it moves beside it
-function discoverBinBeside(card, bin) {
+export function discoverBinBeside(card, bin) {
   var copy = card.querySelector(".copytile");
   if (copy) copy.classList.remove("alone");
   card.appendChild(bin);

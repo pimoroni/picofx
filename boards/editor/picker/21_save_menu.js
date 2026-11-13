@@ -1,3 +1,5 @@
+import {draw, drawSteps} from "./03_runs.js";
+import {boardSet, driveMeansSomething} from "./19_board_settings.js";
 
 // ---- how the board takes a save, on the save button ----------------------------------------------
 // Whether a save plays without an eject, and whether the drive stays hidden at start, are about
