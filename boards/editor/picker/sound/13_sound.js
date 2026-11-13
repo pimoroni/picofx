@@ -1,6 +1,7 @@
 import {h, replace} from "../00_dom.js";
 import {draw, drawSteps} from "../00_draw.js";
 import {quoted} from "../01_looks.js";
+import {entryParts, unquoted} from "../03_reading.js";
 import {allBodies, bodyParts, driveParts, state} from "../04_scenes.js";
 import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches, tabUnder} from "../11_tabs.js";
 import {banner} from "../18_drive.js";
@@ -8,7 +9,6 @@ import {OWN_GROUP} from "../22_program.js";
 import {
   adderTile, binButton, exampleGroups, groupOpen, groupsOpen, isExampleMedia, nameShown
 } from "../26_drive_files.js";
-import {entryParts, unquoted} from "../27_readback.js";
 
 state.sound = null;
 state.soundLoop = false;

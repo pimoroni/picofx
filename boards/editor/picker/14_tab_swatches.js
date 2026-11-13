@@ -1,5 +1,6 @@
 import {drawSteps, paintAll} from "./00_draw.js";
-import {inkAt, painters} from "./03_runs.js";
+import {painters} from "./02_preview.js";
+import {inkAt} from "./03_runs.js";
 import {LED_PANELS, runsOfPanel} from "./10_led_sections.js";
 import {tabSwatches} from "./11_tabs.js";
 

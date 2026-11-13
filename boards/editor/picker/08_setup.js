@@ -2,7 +2,7 @@ import {h, replace} from "./00_dom.js";
 import {draw, drawSteps, paintAll} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
 import {outputSaid} from "./03_outputs.js";
-import {active, blank, lampKey, pick, pickOutput, runs, sectionAt} from "./03_runs.js";
+import {active, blank, canEdit, runs, setSetupMode, setupOn} from "./03_runs.js";
 import {panelTools} from "./04_led_panels.js";
 import {allBodies, apply, slotAt, state, store} from "./04_scenes.js";
 import {stripChipChoice, stripChipShown, stripLengthField, stripSet} from "./05_effects.js";
@@ -11,42 +11,8 @@ import {workOn} from "./10_led_sections.js";
 import {lastOutputRun, showChosen} from "./11_tabs.js";
 import {forgetKeptFor} from "./27_readback.js";
 
-export var setupOn = false;
-
 export var BOARD_CHIP_COLOURS = {outPanel: "var(--boardOuts)"};
 BOARD.strips.forEach(function (strip) { BOARD_CHIP_COLOURS[strip.name + "Panel"] = strip.colour; });
-
-export function canEdit(panel) { return setupOn; }
-
-var heldPick = null;
-var heldOutput = null;
-
-export function holdOutput(out) {
-  heldOutput = out;
-}
-
-export function setSetup(on) {
-  if (on && !setupOn) {
-    var section = active.sections[active.picked];
-    heldPick = section ? lampKey(active.lamps[section.from]) : null;
-    heldOutput = null;
-  }
-  setupOn = on;
-  if (!on) {
-    if (heldOutput !== null) {
-      pickOutput(heldOutput);
-    } else if (heldPick) {
-      runs.some(function (run) {
-        var at = run.lamps.map(lampKey).indexOf(heldPick);
-        if (at >= 0) pick(run, sectionAt(run, at));
-        return at >= 0;
-      });
-    }
-    heldPick = null;
-    heldOutput = null;
-  }
-  showChosen();
-}
 
 function unmark() {
   document.querySelectorAll(".lamp.ringed").forEach(function (one) {
@@ -169,3 +135,8 @@ drawSteps.after.push(function () {
   if (setupOn) unmark();
   paintAll();
 });
+
+export function setSetup(on) {
+  setSetupMode(on);
+  showChosen();
+}

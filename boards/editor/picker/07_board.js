@@ -1,10 +1,9 @@
 import {draw, holdDrawing} from "./00_draw.js";
 import {BOARD} from "./01_looks.js";
 import {OUTPUTS, order, outputSaid, placeLamp, setLayout, wiring} from "./03_outputs.js";
-import {acrossWiring, breakOutWiring, rejoinWiring, runs} from "./03_runs.js";
+import {acrossWiring, breakOutWiring, canEdit, rejoinWiring, runs} from "./03_runs.js";
 import {apply, capture, slotAt, state, store} from "./04_scenes.js";
 import {changeWiring, stripLengthTail} from "./05_effects.js";
-import {canEdit} from "./08_setup.js";
 
 export var screenHooks = {mediaNamed: function () { return null; }, panelPreview: null};
 

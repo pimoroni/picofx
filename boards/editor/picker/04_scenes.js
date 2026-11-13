@@ -5,6 +5,7 @@ import {widthOf} from "./03_outputs.js";
 import {
   activate, active, copyBlinks, copyExact, lampLines, mono, outs, runs, settle
 } from "./03_runs.js";
+import {spoken} from "./04_lines.js";
 import {boardLine} from "./07_board.js";
 import {TAB_NAMES} from "./11_tabs.js";
 import {renderSceneSettings} from "./20_scene_row.js";
@@ -559,3 +560,45 @@ drawSteps.after.push(function () {
   renderSceneTray();
   renderSceneSettings();
 });
+
+export function underSaid(run, which) {
+  var under = lampUnder(run.name, which);
+  if (under && under.always) return ", playing " + lookNamed(under.always.look).name +
+                                    " from Always on";
+  if (under && under.off) return ", off here and lit only in " + spoken(namesOf(under.off));
+  return ", playing Nothing";
+}
+
+export function stretchUnder(run, section) {
+  var looks = [], scenes = [], lamps = [], played = 0;
+  for (var at = section.from; at <= section.to; at++) {
+    var under = lampUnder(run.name, at);
+    lamps.push(!under ? null : under.off ? "off"
+             : {section: under.always, at: at - under.always.from});
+    if (!under) continue;
+    played++;
+    if (under.always) {
+      var name = lookNamed(under.always.look).name;
+      if (looks.indexOf(name) < 0) looks.push(name);
+    } else {
+      namesOf(under.off).forEach(function (name) {
+        if (scenes.indexOf(name) < 0) scenes.push(name);
+      });
+    }
+  }
+  if (!played) return null;
+  var whole = played === widthOf(section);
+  var showing = lamps.filter(function (one) { return one && one !== "off"; }).length;
+  var notes = [];
+  if (looks.length) notes.push("Always on's " + spoken(looks) +
+                               (showing < widthOf(section) ? " on " + showing : ""));
+  if (scenes.length) notes.push((looks.length || !whole ? (played - showing) + " off" : "off") +
+                                ", lit only in " + spoken(scenes));
+  var tips = [];
+  if (looks.length) tips.push("Always on's " + spoken(looks) + " plays " +
+                              (whole && !scenes.length ? "here" : "on some of these lights") +
+                              " in this scene.");
+  if (scenes.length) tips.push((looks.length ? "The rest is off here" : "Off here") +
+                               " and lit only in " + spoken(scenes) + ".");
+  return {note: notes.join(" and "), tip: tips.join(" "), lamps: lamps};
+}

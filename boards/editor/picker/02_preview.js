@@ -1,5 +1,12 @@
-import {paintAll} from "./00_draw.js";
-import {linesFor} from "./04_lines.js";
+import {drawSteps, paintAll, paintSteps} from "./00_draw.js";
+import {blinkDuty, blinkSpeed, keyOf, lookNamed, withSection} from "./01_looks.js";
+import {BLINK, blinkWord} from "./02_blink.js";
+import {widthOf} from "./03_outputs.js";
+import {MIDDLING, runs} from "./03_runs.js";
+import {
+  SOLID_COLOUR, START_MOODS, linesFor, ownColourFor, runsAWay, takesColour, withExact
+} from "./04_lines.js";
+import {lampUnder} from "./04_scenes.js";
 
 var NAMED = {
   black: "#000000", blue: "#2b5cff", cool: "#cfe4ff", cyan: "#28e0e0",
@@ -203,7 +210,7 @@ function hueInk(hue, sat, val) {
   }).join("");
 }
 
-export var COLOURED = {
+var COLOURED = {
   rainbow: function (t, s) {
     return {level: 1, ink: hueInk(((t * num(s.speed, 1)) % 1) * 360, s.sat, s.val)};
   },
@@ -251,11 +258,11 @@ function curved(sim, given, channel) {
 
 var previewingStrip = false;
 
-export function setPreviewingStrip(on) {
+function setPreviewingStrip(on) {
   previewingStrip = on;
 }
 
-export function lampTarget(count) {
+function lampTarget(count) {
   var playing = [];
   for (var i = 1; i <= count; i++) playing.push(i);
   var target = {kind: count === 1 ? "one" : "outputs", id: "outputs", name: "out",
@@ -265,7 +272,7 @@ export function lampTarget(count) {
   return target;
 }
 
-export function lookLit(look, holder, t, slot, count, sim) {
+function lookLit(look, holder, t, slot, count, sim) {
   if (!look || !look.entries) return null;
   var lines;
   try {
@@ -310,4 +317,108 @@ export function step() {
   setBeat(beat + FRAME);
   paintAll();
   window.setTimeout(step, FRAME * 1000);
+}
+
+export var painters = [];
+
+drawSteps.before.push(function () {
+  painters = [];
+});
+
+paintSteps.push(function () {
+  var lit = {};
+  runs.forEach(function (run) { lit[run.name] = litRun(run); });
+  painters.forEach(function (one) { one.paint(lit[one.run.name]); });
+});
+
+var walks = {};
+
+function litRun(run) {
+  var out = [];
+  var store = walks[run.name] || (walks[run.name] = {});
+  setPreviewingStrip(!!run.strip);
+  try {
+    run.sections.forEach(function (section) {
+      var look = lookNamed(section.look);
+      var wide = widthOf(section);
+      for (var i = 0; i < wide; i++) {
+        var which = section.from + i;
+        var lamp = run.lamps[which];
+        if (!lamp) continue;
+        var walk = store[which] || (store[which] = {});
+        var lit = look ? livePlay(look, section, beat, i, wide, walk) : null;
+        out[which] = lit
+          ? {level: Math.max(0, Math.min(1, lit.level)),
+             ink: lamp.colour ? lit.ink : "#ffd9a0"}
+          : litUnder(run, which, lamp);
+      }
+    });
+  } finally {
+    setPreviewingStrip(false);
+  }
+  return out;
+}
+
+function litUnder(run, which, lamp) {
+  var under = lampUnder(run.name, which);
+  if (under && under.always) {
+    var section = under.always;
+    var store = walks["always " + run.name] || (walks["always " + run.name] = {});
+    var walk = store[which] || (store[which] = {});
+    var lit = livePlay(lookNamed(section.look), section, beat, which - section.from,
+                       widthOf(section), walk);
+    return {level: Math.max(0, Math.min(1, lit.level)), ink: lamp.colour ? lit.ink : "#ffd9a0",
+            always: true, unset: true};
+  }
+  return {level: 0, ink: "#3a3f44", nothing: true, off: !!(under && under.off), unset: true};
+}
+
+function sectionLit(look, holder, t, slot, count, sim) {
+  return withSection(holder && holder !== MIDDLING ? holder : null, function () {
+    return lookLit(look, holder, t, slot, count, sim);
+  });
+}
+
+var cardSettings = {};
+
+function cardLit(look, holder, t, slot, count, sim) {
+  if (holder === MIDDLING && look && look.solid) {
+    var solid = sectionLit(look, {pace: MIDDLING.pace, mood: START_MOODS.Solid,
+                                  colour: SOLID_COLOUR}, t, slot, count, sim);
+    return solid && {level: solid.level, ink: SOLID_COLOUR};
+  } else if (holder === MIDDLING && look && START_MOODS[look.name] !== undefined) {
+    var mood = START_MOODS[look.name];
+    var start = takesColour(look) &&
+                ownColourFor(look, lampTarget(count), MIDDLING.pace, mood, MIDDLING.colour);
+    holder = {pace: MIDDLING.pace, mood: mood, colour: start || MIDDLING.colour};
+  } else if (holder === MIDDLING && takesColour(look)) {
+    var key = keyOf(look);
+    if (!cardSettings[key]) {
+      var own = ownColourFor(look, lampTarget(count), MIDDLING.pace, MIDDLING.mood,
+                             MIDDLING.colour);
+      cardSettings[key] = {pace: MIDDLING.pace, mood: MIDDLING.mood,
+                           colour: own || MIDDLING.colour};
+    }
+    holder = cardSettings[key];
+  }
+  return sectionLit(look, holder, t, slot, count, sim);
+}
+
+export function livePlay(look, holder, t, slot, count, sim) {
+  var exact = holder && holder !== MIDDLING ? holder.exact : null;
+  return withExact(exact, function () {
+    var colours = holder && holder !== MIDDLING && look && look.name === BLINK &&
+                  holder.blinks && holder.blinks.colours.length > 1 ? holder.blinks.colours : null;
+    if (colours) {
+      var blinked = COLOURED.rgb_blink(t, {colour: colours.map(blinkWord).join("|"),
+                                           speed: blinkSpeed(holder.pace),
+                                           duty: blinkDuty(holder.mood)});
+      return {level: blinked.level * (holder.level < 1 ? holder.level : 1), ink: blinked.ink};
+    }
+    var backwards = holder && holder.reversed && count > 1 &&
+                    runsAWay(look, lampTarget(count), holder);
+    var lit = cardLit(look, holder, t, backwards ? count - 1 - slot : slot, count, sim);
+    if (!lit || !holder || holder === MIDDLING || !(holder.level < 1)) return lit;
+    return Object.assign({}, lit, {level: lit.level * holder.level});
+  });
 }

@@ -1,13 +1,12 @@
 import {h, replace} from "./00_dom.js";
 import {paintSteps} from "./00_draw.js";
 import {LOOKS, canPlay, isBanked, lookNamed, whyNot} from "./01_looks.js";
-import {beat} from "./02_preview.js";
+import {beat, livePlay} from "./02_preview.js";
 import {
   MIDDLING, active, choosingLook, galleryRun, inkAt, landLook, lookKind, stretchFor
 } from "./03_runs.js";
 import {takesColour, targetFor} from "./04_lines.js";
 import {state} from "./04_scenes.js";
-import {livePlay} from "./05_effects.js";
 import {groupsOpen} from "./26_drive_files.js";
 
 var LOOK_GROUPS = [

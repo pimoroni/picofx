@@ -1,12 +1,8 @@
-import {draw, drawSteps, paintSteps} from "./00_draw.js";
+import {draw} from "./00_draw.js";
 import {canPlay, lookNamed} from "./01_looks.js";
-import {beat, setPreviewingStrip} from "./02_preview.js";
-import {MONO_FIRST, OUTPUTS, order, placeOf, widthOf, wiring} from "./03_outputs.js";
-import {START_MOODS, sectionLines, spoken, startColour, targetFor} from "./04_lines.js";
-import {lampUnder, namesOf} from "./04_scenes.js";
-import {livePlay, stretchWash} from "./05_effects.js";
-import {holdOutput, setupOn} from "./08_setup.js";
-import {filterKept, keptLights} from "./27_readback.js";
+import {filterKept, keptLights} from "./03_kept.js";
+import {MONO_FIRST, OUTPUTS, order, placeOf, wiring} from "./03_outputs.js";
+import {START_MOODS, sectionLines, startColour, targetFor} from "./04_lines.js";
 
 export function Run(name, mono) {
   return {name: name, mono: mono, lamps: [], sections: [], picked: 0,
@@ -331,101 +327,6 @@ export function lampLines() {
   return lines;
 }
 
-export var painters = [];
-
-drawSteps.before.push(function () {
-  painters = [];
-});
-
-paintSteps.push(function () {
-  var lit = {};
-  runs.forEach(function (run) { lit[run.name] = litRun(run); });
-  painters.forEach(function (one) { one.paint(lit[one.run.name]); });
-});
-var walks = {};
-
-function litRun(run) {
-  var out = [];
-  var store = walks[run.name] || (walks[run.name] = {});
-  setPreviewingStrip(!!run.strip);
-  try {
-    run.sections.forEach(function (section) {
-      var look = lookNamed(section.look);
-      var wide = widthOf(section);
-      for (var i = 0; i < wide; i++) {
-        var which = section.from + i;
-        var lamp = run.lamps[which];
-        if (!lamp) continue;
-        var walk = store[which] || (store[which] = {});
-        var lit = look ? livePlay(look, section, beat, i, wide, walk) : null;
-        out[which] = lit
-          ? {level: Math.max(0, Math.min(1, lit.level)),
-             ink: lamp.colour ? lit.ink : "#ffd9a0"}
-          : litUnder(run, which, lamp);
-      }
-    });
-  } finally {
-    setPreviewingStrip(false);
-  }
-  return out;
-}
-
-function litUnder(run, which, lamp) {
-  var under = lampUnder(run.name, which);
-  if (under && under.always) {
-    var section = under.always;
-    var store = walks["always " + run.name] || (walks["always " + run.name] = {});
-    var walk = store[which] || (store[which] = {});
-    var lit = livePlay(lookNamed(section.look), section, beat, which - section.from,
-                       widthOf(section), walk);
-    return {level: Math.max(0, Math.min(1, lit.level)), ink: lamp.colour ? lit.ink : "#ffd9a0",
-            always: true, unset: true};
-  }
-  return {level: 0, ink: "#3a3f44", nothing: true, off: !!(under && under.off), unset: true};
-}
-
-export function underSaid(run, which) {
-  var under = lampUnder(run.name, which);
-  if (under && under.always) return ", playing " + lookNamed(under.always.look).name +
-                                    " from Always on";
-  if (under && under.off) return ", off here and lit only in " + spoken(namesOf(under.off));
-  return ", playing Nothing";
-}
-
-export function stretchUnder(run, section) {
-  var looks = [], scenes = [], lamps = [], played = 0;
-  for (var at = section.from; at <= section.to; at++) {
-    var under = lampUnder(run.name, at);
-    lamps.push(!under ? null : under.off ? "off"
-             : {section: under.always, at: at - under.always.from});
-    if (!under) continue;
-    played++;
-    if (under.always) {
-      var name = lookNamed(under.always.look).name;
-      if (looks.indexOf(name) < 0) looks.push(name);
-    } else {
-      namesOf(under.off).forEach(function (name) {
-        if (scenes.indexOf(name) < 0) scenes.push(name);
-      });
-    }
-  }
-  if (!played) return null;
-  var whole = played === widthOf(section);
-  var showing = lamps.filter(function (one) { return one && one !== "off"; }).length;
-  var notes = [];
-  if (looks.length) notes.push("Always on's " + spoken(looks) +
-                               (showing < widthOf(section) ? " on " + showing : ""));
-  if (scenes.length) notes.push((looks.length || !whole ? (played - showing) + " off" : "off") +
-                                ", lit only in " + spoken(scenes));
-  var tips = [];
-  if (looks.length) tips.push("Always on's " + spoken(looks) + " plays " +
-                              (whole && !scenes.length ? "here" : "on some of these lights") +
-                              " in this scene.");
-  if (scenes.length) tips.push((looks.length ? "The rest is off here" : "Off here") +
-                               " and lit only in " + spoken(scenes) + ".");
-  return {note: notes.join(" and "), tip: tips.join(" "), lamps: lamps};
-}
-
 export function inkAt(lit) {
   var hex = (lit.ink || "#ffd9a0").replace("#", "");
   var mix = 0.1 + lit.level * 0.9;
@@ -505,11 +406,6 @@ export function stretchFor(run, isMono) {
   return run.picked;
 }
 
-export function washFor(run, section, look) {
-  var first = run.lamps[section.from];
-  return stretchWash(look, section, run, !!first && !first.colour);
-}
-
 export function escapeHtml(text) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
@@ -544,3 +440,37 @@ export function paintLine(line) {
 }
 
 settle();
+
+export var setupOn = false;
+
+export function canEdit(panel) { return setupOn; }
+
+var heldPick = null;
+
+var heldOutput = null;
+
+function holdOutput(out) {
+  heldOutput = out;
+}
+
+export function setSetupMode(on) {
+  if (on && !setupOn) {
+    var section = active.sections[active.picked];
+    heldPick = section ? lampKey(active.lamps[section.from]) : null;
+    heldOutput = null;
+  }
+  setupOn = on;
+  if (!on) {
+    if (heldOutput !== null) {
+      pickOutput(heldOutput);
+    } else if (heldPick) {
+      runs.some(function (run) {
+        var at = run.lamps.map(lampKey).indexOf(heldPick);
+        if (at >= 0) pick(run, sectionAt(run, at));
+        return at >= 0;
+      });
+    }
+    heldPick = null;
+    heldOutput = null;
+  }
+}

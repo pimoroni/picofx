@@ -1,13 +1,16 @@
 import {h, replace} from "../00_dom.js";
 import {draw, drawSteps} from "../00_draw.js";
 import {WORDS, hexOf} from "../01_colours.js";
+import {boardResidue} from "../03_kept.js";
+import {entryParts, unquoted} from "../03_reading.js";
+import {setupOn} from "../03_runs.js";
 import {
   allBodies, apply, bodyParts, capture, driveParts, slotAt, state, store
 } from "../04_scenes.js";
 import {
   boardLineSteps, notFittedRead, notFittedSteps, saidNotFitted, screenHooks, screensFitted
 } from "../07_board.js";
-import {boardIcon, setupOn} from "../08_setup.js";
+import {boardIcon} from "../08_setup.js";
 import {LED_PANELS} from "../10_led_sections.js";
 import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches, tabUnder} from "../11_tabs.js";
 import {OWN_GROUP, foldHead} from "../22_program.js";
@@ -16,7 +19,6 @@ import {
   mediaHome, nameShown
 } from "../26_drive_files.js";
 import {openingString} from "../26_drive_programs.js";
-import {boardResidue, entryParts, unquoted} from "../27_readback.js";
 import {
   backlightSetting, chosenAfresh, drawingArts, drawingCopyTile, drawingInk, drawingSaid, freshLook,
   lookEntry, lookSettings, madeDrawing, panelPreview, pictureSaid, showingLine, shownBefore,

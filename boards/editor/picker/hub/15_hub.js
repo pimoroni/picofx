@@ -1,12 +1,14 @@
 import {h, replace} from "../00_dom.js";
 import {draw, drawSteps} from "../00_draw.js";
+import {boardResidue, filterResidue} from "../03_kept.js";
+import {entryParts} from "../03_reading.js";
+import {setupOn} from "../03_runs.js";
 import {
   allBodies, apply, bodyParts, capture, driveParts, otherScenes, slotAt, state, store
 } from "../04_scenes.js";
 import {SCREEN_SIZES, boardLineSteps} from "../07_board.js";
-import {boardIcon, setupOn} from "../08_setup.js";
+import {boardIcon} from "../08_setup.js";
 import {tabSwatches, tabUnder} from "../11_tabs.js";
-import {boardResidue, entryParts, filterResidue} from "../27_readback.js";
 import {
   GROUP_NUMBERS, apartSaid, breakingUp, hubBacklight, hubPictureTargets, inNumberedGroup,
   namesSaid, pickedGroupInk, pickedPlaces, placeGroupControls, placeGroupInk, sendTargets

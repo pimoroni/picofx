@@ -7,16 +7,17 @@ import {SIGNAL_TIMINGS, lookNamed, timingOf, withSection} from "./01_looks.js";
 import {BLINK, blinkNamed, swatchesFor} from "./02_blink.js";
 import {inkOf} from "./02_preview.js";
 import {widthOf} from "./03_outputs.js";
-import {chooseLook, pickingLook, remember, stretchUnder, washFor} from "./03_runs.js";
+import {chooseLook, pickingLook, remember} from "./03_runs.js";
 import {
   forwardTargetFor, runsAWay, sectionLines, takesColour, targetFor, wherePlays
 } from "./04_lines.js";
+import {stretchUnder} from "./04_scenes.js";
 import {standingIn} from "./05_effects.js";
 import {chosenTab} from "./11_tabs.js";
 import {renderPreview} from "./18_drive.js";
 import {figureKey, figureSaid, figureWay, linesAt, placeFor, settingIn} from "./25_figures.js";
 import {colourField, swatchRow} from "./30_colour_picker.js";
-import {stretchCells} from "./31_stretch_bar.js";
+import {stretchCells, washFor} from "./31_stretch_bar.js";
 
 var FIGURES_KEPT = "fx-picker-figures-open";
 var MOST_DETENT_TICKS = 16;

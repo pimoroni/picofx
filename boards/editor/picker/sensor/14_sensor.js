@@ -1,13 +1,15 @@
 import {h, replace} from "../00_dom.js";
 import {draw, drawSteps} from "../00_draw.js";
+import {filterResidue} from "../03_kept.js";
+import {boardTokens, unquoted} from "../03_reading.js";
+import {canEdit} from "../03_runs.js";
 import {
   PART_DRAWINGS, REMOTE_COLOURS, addScene, bodyParts, sceneHooks, sceneMark, sceneMarked,
   sceneRestarts, state
 } from "../04_scenes.js";
 import {boardLineSteps} from "../07_board.js";
-import {BOARD_CHIP_COLOURS, boardBox, canEdit, small} from "../08_setup.js";
+import {BOARD_CHIP_COLOURS, boardBox, small} from "../08_setup.js";
 import {TAB_NAMES, TAB_PANELS, keptOpen, tabSwatches, tabUnder} from "../11_tabs.js";
-import {boardTokens, filterResidue, unquoted} from "../27_readback.js";
 import {
   PIR_ART, REMOTE_ART_JOINS, REMOTE_ART_RADIUS, REMOTE_BUTTONS, REMOTE_ROWS, remoteArt,
   remoteArtAt, remoteArtJoin

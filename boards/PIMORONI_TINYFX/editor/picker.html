@@ -5577,6 +5577,138 @@ function step() {
   window.setTimeout(step, FRAME * 1000);
 }
 
+var painters = [];
+
+drawSteps.before.push(function () {
+  painters = [];
+});
+
+paintSteps.push(function () {
+  var lit = {};
+  runs.forEach(function (run) { lit[run.name] = litRun(run); });
+  painters.forEach(function (one) { one.paint(lit[one.run.name]); });
+});
+
+var walks = {};
+
+function litRun(run) {
+  var out = [];
+  var store = walks[run.name] || (walks[run.name] = {});
+  setPreviewingStrip(!!run.strip);
+  try {
+    run.sections.forEach(function (section) {
+      var look = lookNamed(section.look);
+      var wide = widthOf(section);
+      for (var i = 0; i < wide; i++) {
+        var which = section.from + i;
+        var lamp = run.lamps[which];
+        if (!lamp) continue;
+        var walk = store[which] || (store[which] = {});
+        var lit = look ? livePlay(look, section, beat, i, wide, walk) : null;
+        out[which] = lit
+          ? {level: Math.max(0, Math.min(1, lit.level)),
+             ink: lamp.colour ? lit.ink : "#ffd9a0"}
+          : litUnder(run, which, lamp);
+      }
+    });
+  } finally {
+    setPreviewingStrip(false);
+  }
+  return out;
+}
+
+function litUnder(run, which, lamp) {
+  var under = lampUnder(run.name, which);
+  if (under && under.always) {
+    var section = under.always;
+    var store = walks["always " + run.name] || (walks["always " + run.name] = {});
+    var walk = store[which] || (store[which] = {});
+    var lit = livePlay(lookNamed(section.look), section, beat, which - section.from,
+                       widthOf(section), walk);
+    return {level: Math.max(0, Math.min(1, lit.level)), ink: lamp.colour ? lit.ink : "#ffd9a0",
+            always: true, unset: true};
+  }
+  return {level: 0, ink: "#3a3f44", nothing: true, off: !!(under && under.off), unset: true};
+}
+
+function sectionLit(look, holder, t, slot, count, sim) {
+  return withSection(holder && holder !== MIDDLING ? holder : null, function () {
+    return lookLit(look, holder, t, slot, count, sim);
+  });
+}
+
+var cardSettings = {};
+
+function cardLit(look, holder, t, slot, count, sim) {
+  if (holder === MIDDLING && look && look.solid) {
+    var solid = sectionLit(look, {pace: MIDDLING.pace, mood: START_MOODS.Solid,
+                                  colour: SOLID_COLOUR}, t, slot, count, sim);
+    return solid && {level: solid.level, ink: SOLID_COLOUR};
+  } else if (holder === MIDDLING && look && START_MOODS[look.name] !== undefined) {
+    var mood = START_MOODS[look.name];
+    var start = takesColour(look) &&
+                ownColourFor(look, lampTarget(count), MIDDLING.pace, mood, MIDDLING.colour);
+    holder = {pace: MIDDLING.pace, mood: mood, colour: start || MIDDLING.colour};
+  } else if (holder === MIDDLING && takesColour(look)) {
+    var key = keyOf(look);
+    if (!cardSettings[key]) {
+      var own = ownColourFor(look, lampTarget(count), MIDDLING.pace, MIDDLING.mood,
+                             MIDDLING.colour);
+      cardSettings[key] = {pace: MIDDLING.pace, mood: MIDDLING.mood,
+                           colour: own || MIDDLING.colour};
+    }
+    holder = cardSettings[key];
+  }
+  return sectionLit(look, holder, t, slot, count, sim);
+}
+
+function livePlay(look, holder, t, slot, count, sim) {
+  var exact = holder && holder !== MIDDLING ? holder.exact : null;
+  return withExact(exact, function () {
+    var colours = holder && holder !== MIDDLING && look && look.name === BLINK &&
+                  holder.blinks && holder.blinks.colours.length > 1 ? holder.blinks.colours : null;
+    if (colours) {
+      var blinked = COLOURED.rgb_blink(t, {colour: colours.map(blinkWord).join("|"),
+                                           speed: blinkSpeed(holder.pace),
+                                           duty: blinkDuty(holder.mood)});
+      return {level: blinked.level * (holder.level < 1 ? holder.level : 1), ink: blinked.ink};
+    }
+    var backwards = holder && holder.reversed && count > 1 &&
+                    runsAWay(look, lampTarget(count), holder);
+    var lit = cardLit(look, holder, t, backwards ? count - 1 - slot : slot, count, sim);
+    if (!lit || !holder || holder === MIDDLING || !(holder.level < 1)) return lit;
+    return Object.assign({}, lit, {level: lit.level * holder.level});
+  });
+}
+
+var boardResidue = [];
+
+function filterResidue(keep) {
+  boardResidue = boardResidue.filter(keep);
+}
+
+var keptNow = [];
+
+function filterKept(keep) {
+  keptNow = keptNow.filter(keep);
+}
+
+function copyKept(kept) {
+  return (kept || []).map(function (one) {
+    return {text: one.text, comments: one.comments.slice()};
+  });
+}
+
+function keptLights(run) {
+  var named = {};
+  keptNow.forEach(function (one) {
+    var parts = entryParts(one.text);
+    var lamps = parts && lampsNamed(run, parts.selector);
+    (lamps || []).forEach(function (at) { (named[at] = named[at] || []).push(one); });
+  });
+  return named;
+}
+
 var OUTS = BOARD.outputs.length;
 
 var CHANNELS = ["r", "g", "b"];
@@ -5740,6 +5872,172 @@ function stripSelector(run, section) {
   return run.name + (section.from === section.to
     ? String(section.from + 1)
     : (section.from + 1) + "-" + (section.to + 1));
+}
+
+function unquotedColon(line) {
+  var quote = null;
+  for (var at = 0; at < line.length; at++) {
+    var one = line.charAt(at);
+    if (quote) {
+      if (one === quote) quote = null;
+    } else if (one === "\"" || one === "'") {
+      quote = one;
+    } else if (one === ":") {
+      return at;
+    }
+  }
+  return -1;
+}
+
+function boardTokens(text) {
+  var tokens = [];
+  var word = "";
+  var quote = null;
+  text.split("").forEach(function (one) {
+    if (quote) {
+      word += one;
+      if (one === quote) quote = null;
+    } else if (one === "\"" || one === "'") {
+      word += one;
+      quote = one;
+    } else if (/\s/.test(one)) {
+      if (word) tokens.push(word);
+      word = "";
+    } else {
+      word += one;
+    }
+  });
+  if (word) tokens.push(word);
+  return tokens;
+}
+
+function argsRead(value) {
+  var parts = [], part = "", quoted = false;
+  value.split("").forEach(function (one) {
+    if (one === "\"") quoted = !quoted;
+    else if (one === "|" && !quoted) {
+      parts.push(part);
+      part = "";
+    } else part += one;
+  });
+  parts.push(part);
+  return parts;
+}
+
+function entryParts(text) {
+  if (text === null || text.indexOf("\n") >= 0) return null;
+  var colon = unquotedColon(text);
+  if (colon < 0) return null;
+  var left = boardTokens(text.slice(0, colon));
+  var right = boardTokens(text.slice(colon + 1));
+  if (!left.length || !right.length) return null;
+  function settings(tokens) {
+    var held = {};
+    tokens.forEach(function (token) {
+      var equals = token.indexOf("=");
+      if (equals < 0) held[""] = token;
+      else held[token.slice(0, equals).toLowerCase()] = token.slice(equals + 1);
+    });
+    return held;
+  }
+  return {selector: left[0].toLowerCase(), left: settings(left.slice(1)), effect: right[0].toLowerCase(),
+          right: settings(right.slice(1))};
+}
+
+function unquoted(value) {
+  return value && /^(["']).*\1$/.test(value) ? value.slice(1, -1) : value;
+}
+
+function lampsNamed(run, selector) {
+  var match;
+  if (run.strip) {
+    if (selector.toLowerCase() === run.name) {
+      return run.lamps.map(function (lamp, at) { return at; });
+    }
+    match = selector.match(new RegExp("^" + run.name + "(\\d[\\d,\\-]*)$", "i"));
+    if (!match) return null;
+    var named = [];
+    var pieces = match[1].split(",");
+    for (var p = 0; p < pieces.length; p++) {
+      var bounds = pieces[p].match(/^(\d+)(?:-(\d+))?$/);
+      if (!bounds) return null;
+      var first = Number(bounds[1]);
+      var last = bounds[2] === undefined ? first : Number(bounds[2]);
+      var step = last >= first ? 1 : -1;
+      for (var led = first; led !== last + step; led += step) {
+        if (led < 1 || led > run.lamps.length) return null;
+        named.push(led - 1);
+      }
+    }
+    return named;
+  }
+  var places = placesNamed(selector);
+  if (!places) return null;
+  var lamps = [];
+  for (var j = 0; j < places.length; j++) {
+    var place = -1;
+    run.lamps.forEach(function (lamp, at) {
+      if (lamp.out === places[j].out && lamp.colour === (places[j].channel === null) &&
+          (lamp.colour || lamp.channel === places[j].channel)) place = at;
+    });
+    if (place < 0) return null;
+    lamps.push(place);
+  }
+  return lamps;
+}
+
+function itemsNamed(selector) {
+  var prefix = null;
+  return selector.toLowerCase().split(",").map(function (text) {
+    var item = text.match(/^([a-z]*)(\d+)?(?:-(\d+))?(?:\.([rgb*]))?$/);
+    if (!item || (!item[1] && !prefix) || (item[3] !== undefined && item[2] === undefined)) {
+      return null;
+    }
+    prefix = item[1] || prefix;
+    var outs = [];
+    if (item[2] === undefined) {
+      outs = OUTPUTS.map(function (output, out) { return output.name === prefix ? out : -1; })
+        .filter(function (out) { return out >= 0; });
+    } else {
+      var from = Number(item[2]);
+      var to = item[3] === undefined ? from : Number(item[3]);
+      var step = to >= from ? 1 : -1;
+      for (var number = from; number !== to + step; number += step) {
+        var found = OUTPUTS.map(function (output, out) {
+          return output.prefix === prefix && output.number === number ? out : -1;
+        }).filter(function (out) { return out >= 0; });
+        if (!found.length) return null;
+        outs.push(found[0]);
+      }
+    }
+    if (!outs.length) return null;
+    var channels = item[4] === undefined ? [null]
+                 : item[4] === "*" ? (step < 0 ? [2, 1, 0] : [0, 1, 2])
+                 : [CHANNELS.indexOf(item[4])];
+    var places = [];
+    for (var at = 0; at < outs.length; at++) {
+      var mono = OUTPUTS[outs[at]].mono;
+      if (mono && item[4] !== undefined) return null;
+      for (var c = 0; c < channels.length; c++) {
+        places.push({out: outs[at], channel: mono ? 0 : channels[c]});
+      }
+    }
+    return places;
+  });
+}
+
+function placesNamed(selector) {
+  var items = itemsNamed(selector);
+  if (items.some(function (places) { return !places; })) return null;
+  return [].concat.apply([], items);
+}
+
+function spanOf(lamps) {
+  var sorted = lamps.slice().sort(function (a, b) { return a - b; });
+  for (var i = 1; i < sorted.length; i++) {
+    if (sorted[i] !== sorted[i - 1] + 1) return null;
+  }
+  return {from: sorted[0], to: sorted[sorted.length - 1]};
 }
 
 function Run(name, mono) {
@@ -6065,101 +6363,6 @@ function lampLines() {
   return lines;
 }
 
-var painters = [];
-
-drawSteps.before.push(function () {
-  painters = [];
-});
-
-paintSteps.push(function () {
-  var lit = {};
-  runs.forEach(function (run) { lit[run.name] = litRun(run); });
-  painters.forEach(function (one) { one.paint(lit[one.run.name]); });
-});
-var walks = {};
-
-function litRun(run) {
-  var out = [];
-  var store = walks[run.name] || (walks[run.name] = {});
-  setPreviewingStrip(!!run.strip);
-  try {
-    run.sections.forEach(function (section) {
-      var look = lookNamed(section.look);
-      var wide = widthOf(section);
-      for (var i = 0; i < wide; i++) {
-        var which = section.from + i;
-        var lamp = run.lamps[which];
-        if (!lamp) continue;
-        var walk = store[which] || (store[which] = {});
-        var lit = look ? livePlay(look, section, beat, i, wide, walk) : null;
-        out[which] = lit
-          ? {level: Math.max(0, Math.min(1, lit.level)),
-             ink: lamp.colour ? lit.ink : "#ffd9a0"}
-          : litUnder(run, which, lamp);
-      }
-    });
-  } finally {
-    setPreviewingStrip(false);
-  }
-  return out;
-}
-
-function litUnder(run, which, lamp) {
-  var under = lampUnder(run.name, which);
-  if (under && under.always) {
-    var section = under.always;
-    var store = walks["always " + run.name] || (walks["always " + run.name] = {});
-    var walk = store[which] || (store[which] = {});
-    var lit = livePlay(lookNamed(section.look), section, beat, which - section.from,
-                       widthOf(section), walk);
-    return {level: Math.max(0, Math.min(1, lit.level)), ink: lamp.colour ? lit.ink : "#ffd9a0",
-            always: true, unset: true};
-  }
-  return {level: 0, ink: "#3a3f44", nothing: true, off: !!(under && under.off), unset: true};
-}
-
-function underSaid(run, which) {
-  var under = lampUnder(run.name, which);
-  if (under && under.always) return ", playing " + lookNamed(under.always.look).name +
-                                    " from Always on";
-  if (under && under.off) return ", off here and lit only in " + spoken(namesOf(under.off));
-  return ", playing Nothing";
-}
-
-function stretchUnder(run, section) {
-  var looks = [], scenes = [], lamps = [], played = 0;
-  for (var at = section.from; at <= section.to; at++) {
-    var under = lampUnder(run.name, at);
-    lamps.push(!under ? null : under.off ? "off"
-             : {section: under.always, at: at - under.always.from});
-    if (!under) continue;
-    played++;
-    if (under.always) {
-      var name = lookNamed(under.always.look).name;
-      if (looks.indexOf(name) < 0) looks.push(name);
-    } else {
-      namesOf(under.off).forEach(function (name) {
-        if (scenes.indexOf(name) < 0) scenes.push(name);
-      });
-    }
-  }
-  if (!played) return null;
-  var whole = played === widthOf(section);
-  var showing = lamps.filter(function (one) { return one && one !== "off"; }).length;
-  var notes = [];
-  if (looks.length) notes.push("Always on's " + spoken(looks) +
-                               (showing < widthOf(section) ? " on " + showing : ""));
-  if (scenes.length) notes.push((looks.length || !whole ? (played - showing) + " off" : "off") +
-                                ", lit only in " + spoken(scenes));
-  var tips = [];
-  if (looks.length) tips.push("Always on's " + spoken(looks) + " plays " +
-                              (whole && !scenes.length ? "here" : "on some of these lights") +
-                              " in this scene.");
-  if (scenes.length) tips.push((looks.length ? "The rest is off here" : "Off here") +
-                               " and lit only in " + spoken(scenes) + ".");
-  return {note: notes.join(" and "), tip: tips.join(" "), lamps: lamps};
-}
-
 function inkAt(lit) {
   var hex = (lit.ink || "#ffd9a0").replace("#", "");
   var mix = 0.1 + lit.level * 0.9;
@@ -6239,11 +6442,6 @@ function stretchFor(run, isMono) {
   return run.picked;
 }
 
-function washFor(run, section, look) {
-  var first = run.lamps[section.from];
-  return stretchWash(look, section, run, !!first && !first.colour);
-}
-
 function escapeHtml(text) {
   return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
@@ -6278,6 +6476,40 @@ function paintLine(line) {
 }
 
 settle();
+
+var setupOn = false;
+
+function canEdit(panel) { return setupOn; }
+
+var heldPick = null;
+
+var heldOutput = null;
+
+function holdOutput(out) {
+  heldOutput = out;
+}
+
+function setSetupMode(on) {
+  if (on && !setupOn) {
+    var section = active.sections[active.picked];
+    heldPick = section ? lampKey(active.lamps[section.from]) : null;
+    heldOutput = null;
+  }
+  setupOn = on;
+  if (!on) {
+    if (heldOutput !== null) {
+      pickOutput(heldOutput);
+    } else if (heldPick) {
+      runs.some(function (run) {
+        var at = run.lamps.map(lampKey).indexOf(heldPick);
+        if (at >= 0) pick(run, sectionAt(run, at));
+        return at >= 0;
+      });
+    }
+    heldPick = null;
+    heldOutput = null;
+  }
+}
 
 var UNDO = "<path d='M6.5 4.5 L2.5 8 L6.5 11.5'/><path d='M2.5 8 H9.5 A4 4 0 0 1 9.5 15'/>";
 var REDO = "<path d='M9.5 4.5 L13.5 8 L9.5 11.5'/><path d='M13.5 8 H6.5 A4 4 0 0 0 6.5 15'/>";
@@ -7231,13 +7463,49 @@ drawSteps.after.push(function () {
   renderSceneSettings();
 });
 
-var OPENING_LOOK = BOARD.opening.colour;
-
-function sectionLit(look, holder, t, slot, count, sim) {
-  return withSection(holder && holder !== MIDDLING ? holder : null, function () {
-    return lookLit(look, holder, t, slot, count, sim);
-  });
+function underSaid(run, which) {
+  var under = lampUnder(run.name, which);
+  if (under && under.always) return ", playing " + lookNamed(under.always.look).name +
+                                    " from Always on";
+  if (under && under.off) return ", off here and lit only in " + spoken(namesOf(under.off));
+  return ", playing Nothing";
 }
+
+function stretchUnder(run, section) {
+  var looks = [], scenes = [], lamps = [], played = 0;
+  for (var at = section.from; at <= section.to; at++) {
+    var under = lampUnder(run.name, at);
+    lamps.push(!under ? null : under.off ? "off"
+             : {section: under.always, at: at - under.always.from});
+    if (!under) continue;
+    played++;
+    if (under.always) {
+      var name = lookNamed(under.always.look).name;
+      if (looks.indexOf(name) < 0) looks.push(name);
+    } else {
+      namesOf(under.off).forEach(function (name) {
+        if (scenes.indexOf(name) < 0) scenes.push(name);
+      });
+    }
+  }
+  if (!played) return null;
+  var whole = played === widthOf(section);
+  var showing = lamps.filter(function (one) { return one && one !== "off"; }).length;
+  var notes = [];
+  if (looks.length) notes.push("Always on's " + spoken(looks) +
+                               (showing < widthOf(section) ? " on " + showing : ""));
+  if (scenes.length) notes.push((looks.length || !whole ? (played - showing) + " off" : "off") +
+                                ", lit only in " + spoken(scenes));
+  var tips = [];
+  if (looks.length) tips.push("Always on's " + spoken(looks) + " plays " +
+                              (whole && !scenes.length ? "here" : "on some of these lights") +
+                              " in this scene.");
+  if (scenes.length) tips.push((looks.length ? "The rest is off here" : "Off here") +
+                               " and lit only in " + spoken(scenes) + ".");
+  return {note: notes.join(" and "), tip: tips.join(" "), lamps: lamps};
+}
+
+var OPENING_LOOK = BOARD.opening.colour;
 
 outs.sections = [blank(0, outs.lamps.length - 1)];
 outs.sections[0].look = OPENING_LOOK;
@@ -7445,66 +7713,12 @@ function changeWiring(change, toColour) {
   };
 }
 
-var MONO_WASH = "#f3c98b";
-
-function stretchWash(look, section, run, mono) {
-  if (mono) return MONO_WASH;
-  var inks = run && section ? coloursWritten(look, section, run) : [];
-  if (!takesColour(look) && inks.length < 2) inks = look.strip || [];
-  if (inks.length > 1) return "linear-gradient(90deg," + inks.join(",") + ")";
-  return inks[0] || "rgba(138,131,120,0.16)";
-}
-
-var cardSettings = {};
-
-function cardLit(look, holder, t, slot, count, sim) {
-  if (holder === MIDDLING && look && look.solid) {
-    var solid = sectionLit(look, {pace: MIDDLING.pace, mood: START_MOODS.Solid,
-                                  colour: SOLID_COLOUR}, t, slot, count, sim);
-    return solid && {level: solid.level, ink: SOLID_COLOUR};
-  } else if (holder === MIDDLING && look && START_MOODS[look.name] !== undefined) {
-    var mood = START_MOODS[look.name];
-    var start = takesColour(look) &&
-                ownColourFor(look, lampTarget(count), MIDDLING.pace, mood, MIDDLING.colour);
-    holder = {pace: MIDDLING.pace, mood: mood, colour: start || MIDDLING.colour};
-  } else if (holder === MIDDLING && takesColour(look)) {
-    var key = keyOf(look);
-    if (!cardSettings[key]) {
-      var own = ownColourFor(look, lampTarget(count), MIDDLING.pace, MIDDLING.mood,
-                             MIDDLING.colour);
-      cardSettings[key] = {pace: MIDDLING.pace, mood: MIDDLING.mood,
-                           colour: own || MIDDLING.colour};
-    }
-    holder = cardSettings[key];
-  }
-  return sectionLit(look, holder, t, slot, count, sim);
-}
-
 [outs, mono].forEach(function (run) {
   run.sections.forEach(function (section) {
     var look = lookNamed(section.look);
     if (look) startColour(run, section, look);
   });
 });
-
-function livePlay(look, holder, t, slot, count, sim) {
-  var exact = holder && holder !== MIDDLING ? holder.exact : null;
-  return withExact(exact, function () {
-    var colours = holder && holder !== MIDDLING && look && look.name === BLINK &&
-                  holder.blinks && holder.blinks.colours.length > 1 ? holder.blinks.colours : null;
-    if (colours) {
-      var blinked = COLOURED.rgb_blink(t, {colour: colours.map(blinkWord).join("|"),
-                                           speed: blinkSpeed(holder.pace),
-                                           duty: blinkDuty(holder.mood)});
-      return {level: blinked.level * (holder.level < 1 ? holder.level : 1), ink: blinked.ink};
-    }
-    var backwards = holder && holder.reversed && count > 1 &&
-                    runsAWay(look, lampTarget(count), holder);
-    var lit = cardLit(look, holder, t, backwards ? count - 1 - slot : slot, count, sim);
-    if (!lit || !holder || holder === MIDDLING || !(holder.level < 1)) return lit;
-    return Object.assign({}, lit, {level: lit.level * holder.level});
-  });
-}
 
 var screenHooks = {mediaNamed: function () { return null; }, panelPreview: null};
 
@@ -7634,42 +7848,8 @@ function saidNotFitted(name) {
   return notFittedRead.indexOf(name.toLowerCase()) >= 0;
 }
 
-var setupOn = false;
-
 var BOARD_CHIP_COLOURS = {outPanel: "var(--boardOuts)"};
 BOARD.strips.forEach(function (strip) { BOARD_CHIP_COLOURS[strip.name + "Panel"] = strip.colour; });
-
-function canEdit(panel) { return setupOn; }
-
-var heldPick = null;
-var heldOutput = null;
-
-function holdOutput(out) {
-  heldOutput = out;
-}
-
-function setSetup(on) {
-  if (on && !setupOn) {
-    var section = active.sections[active.picked];
-    heldPick = section ? lampKey(active.lamps[section.from]) : null;
-    heldOutput = null;
-  }
-  setupOn = on;
-  if (!on) {
-    if (heldOutput !== null) {
-      pickOutput(heldOutput);
-    } else if (heldPick) {
-      runs.some(function (run) {
-        var at = run.lamps.map(lampKey).indexOf(heldPick);
-        if (at >= 0) pick(run, sectionAt(run, at));
-        return at >= 0;
-      });
-    }
-    heldPick = null;
-    heldOutput = null;
-  }
-  showChosen();
-}
 
 function unmark() {
   document.querySelectorAll(".lamp.ringed").forEach(function (one) {
@@ -7792,6 +7972,11 @@ drawSteps.after.push(function () {
   if (setupOn) unmark();
   paintAll();
 });
+
+function setSetup(on) {
+  setSetupMode(on);
+  showChosen();
+}
 
 var SLIDE_MS = 420;
 var RIGHT = "<path d='M3 8 H12'/><path d='M8.5 4.5 L12 8 L8.5 11.5'/>";
@@ -12200,56 +12385,9 @@ async function readDrivePrograms() {
 
 var PAGE_LINES = HEADER.split("\n").filter(Boolean).concat(["# Nothing is playing yet."]);
 
-var boardResidue = [];
-
-function filterResidue(keep) {
-  boardResidue = boardResidue.filter(keep);
-}
 var boardComments = [];
 
-var keptNow = [];
-
-function filterKept(keep) {
-  keptNow = keptNow.filter(keep);
-}
 var notesNow = {};
-
-function unquotedColon(line) {
-  var quote = null;
-  for (var at = 0; at < line.length; at++) {
-    var one = line.charAt(at);
-    if (quote) {
-      if (one === quote) quote = null;
-    } else if (one === "\"" || one === "'") {
-      quote = one;
-    } else if (one === ":") {
-      return at;
-    }
-  }
-  return -1;
-}
-
-function boardTokens(text) {
-  var tokens = [];
-  var word = "";
-  var quote = null;
-  text.split("").forEach(function (one) {
-    if (quote) {
-      word += one;
-      if (one === quote) quote = null;
-    } else if (one === "\"" || one === "'") {
-      word += one;
-      quote = one;
-    } else if (/\s/.test(one)) {
-      if (word) tokens.push(word);
-      word = "";
-    } else {
-      word += one;
-    }
-  });
-  if (word) tokens.push(word);
-  return tokens;
-}
 
 function readHeading(line) {
   var inner = line.slice(1, -1);
@@ -12328,25 +12466,6 @@ function readEffects(text) {
     parsed.slots[parsed.slots.length - 1].kept.push({text: null, comments: comments});
   }
   return parsed;
-}
-
-function copyKept(kept) {
-  return (kept || []).map(function (one) {
-    return {text: one.text, comments: one.comments.slice()};
-  });
-}
-
-function argsRead(value) {
-  var parts = [], part = "", quoted = false;
-  value.split("").forEach(function (one) {
-    if (one === "\"") quoted = !quoted;
-    else if (one === "|" && !quoted) {
-      parts.push(part);
-      part = "";
-    } else part += one;
-  });
-  parts.push(part);
-  return parts;
 }
 
 function readProgram(named, argued) {
@@ -12442,114 +12561,6 @@ function absorbFile(text) {
   draw();
 }
 
-function entryParts(text) {
-  if (text === null || text.indexOf("\n") >= 0) return null;
-  var colon = unquotedColon(text);
-  if (colon < 0) return null;
-  var left = boardTokens(text.slice(0, colon));
-  var right = boardTokens(text.slice(colon + 1));
-  if (!left.length || !right.length) return null;
-  function settings(tokens) {
-    var held = {};
-    tokens.forEach(function (token) {
-      var equals = token.indexOf("=");
-      if (equals < 0) held[""] = token;
-      else held[token.slice(0, equals).toLowerCase()] = token.slice(equals + 1);
-    });
-    return held;
-  }
-  return {selector: left[0].toLowerCase(), left: settings(left.slice(1)), effect: right[0].toLowerCase(),
-          right: settings(right.slice(1))};
-}
-
-function unquoted(value) {
-  return value && /^(["']).*\1$/.test(value) ? value.slice(1, -1) : value;
-}
-
-function lampsNamed(run, selector) {
-  var match;
-  if (run.strip) {
-    if (selector.toLowerCase() === run.name) {
-      return run.lamps.map(function (lamp, at) { return at; });
-    }
-    match = selector.match(new RegExp("^" + run.name + "(\\d[\\d,\\-]*)$", "i"));
-    if (!match) return null;
-    var named = [];
-    var pieces = match[1].split(",");
-    for (var p = 0; p < pieces.length; p++) {
-      var bounds = pieces[p].match(/^(\d+)(?:-(\d+))?$/);
-      if (!bounds) return null;
-      var first = Number(bounds[1]);
-      var last = bounds[2] === undefined ? first : Number(bounds[2]);
-      var step = last >= first ? 1 : -1;
-      for (var led = first; led !== last + step; led += step) {
-        if (led < 1 || led > run.lamps.length) return null;
-        named.push(led - 1);
-      }
-    }
-    return named;
-  }
-  var places = placesNamed(selector);
-  if (!places) return null;
-  var lamps = [];
-  for (var j = 0; j < places.length; j++) {
-    var place = -1;
-    run.lamps.forEach(function (lamp, at) {
-      if (lamp.out === places[j].out && lamp.colour === (places[j].channel === null) &&
-          (lamp.colour || lamp.channel === places[j].channel)) place = at;
-    });
-    if (place < 0) return null;
-    lamps.push(place);
-  }
-  return lamps;
-}
-
-function itemsNamed(selector) {
-  var prefix = null;
-  return selector.toLowerCase().split(",").map(function (text) {
-    var item = text.match(/^([a-z]*)(\d+)?(?:-(\d+))?(?:\.([rgb*]))?$/);
-    if (!item || (!item[1] && !prefix) || (item[3] !== undefined && item[2] === undefined)) {
-      return null;
-    }
-    prefix = item[1] || prefix;
-    var outs = [];
-    if (item[2] === undefined) {
-      outs = OUTPUTS.map(function (output, out) { return output.name === prefix ? out : -1; })
-        .filter(function (out) { return out >= 0; });
-    } else {
-      var from = Number(item[2]);
-      var to = item[3] === undefined ? from : Number(item[3]);
-      var step = to >= from ? 1 : -1;
-      for (var number = from; number !== to + step; number += step) {
-        var found = OUTPUTS.map(function (output, out) {
-          return output.prefix === prefix && output.number === number ? out : -1;
-        }).filter(function (out) { return out >= 0; });
-        if (!found.length) return null;
-        outs.push(found[0]);
-      }
-    }
-    if (!outs.length) return null;
-    var channels = item[4] === undefined ? [null]
-                 : item[4] === "*" ? (step < 0 ? [2, 1, 0] : [0, 1, 2])
-                 : [CHANNELS.indexOf(item[4])];
-    var places = [];
-    for (var at = 0; at < outs.length; at++) {
-      var mono = OUTPUTS[outs[at]].mono;
-      if (mono && item[4] !== undefined) return null;
-      for (var c = 0; c < channels.length; c++) {
-        places.push({out: outs[at], channel: mono ? 0 : channels[c]});
-      }
-    }
-    return places;
-  });
-}
-
-function placesNamed(selector) {
-  var items = itemsNamed(selector);
-  if (items.some(function (places) { return !places; })) return null;
-  return [].concat.apply([], items);
-}
-
 function outputsBrokenOut(bodies) {
   var broken = {};
   bodies.forEach(function (body) {
@@ -12641,14 +12652,6 @@ function orderImplied(bodies) {
   return named.map(function (out) {
     return {out: out - 1, channel: OUTPUTS[out - 1].mono ? 0 : null};
   });
-}
-
-function spanOf(lamps) {
-  var sorted = lamps.slice().sort(function (a, b) { return a - b; });
-  for (var i = 1; i < sorted.length; i++) {
-    if (sorted[i] !== sorted[i - 1] + 1) return null;
-  }
-  return {from: sorted[0], to: sorted[sorted.length - 1]};
 }
 
 function stretchWriting(run, texts, span) {
@@ -12950,16 +12953,6 @@ function renderKept() {
                        draw();
                      }}, "\u00d7"));
     })));
-}
-
-function keptLights(run) {
-  var named = {};
-  keptNow.forEach(function (one) {
-    var parts = entryParts(one.text);
-    var lamps = parts && lampsNamed(run, parts.selector);
-    (lamps || []).forEach(function (at) { (named[at] = named[at] || []).push(one); });
-  });
-  return named;
 }
 
 function markKeptLights() {
@@ -14344,6 +14337,21 @@ document.addEventListener("mouseup", function () {
   dragging = null;
   draw();
 });
+
+function washFor(run, section, look) {
+  var first = run.lamps[section.from];
+  return stretchWash(look, section, run, !!first && !first.colour);
+}
+
+var MONO_WASH = "#f3c98b";
+
+function stretchWash(look, section, run, mono) {
+  if (mono) return MONO_WASH;
+  var inks = run && section ? coloursWritten(look, section, run) : [];
+  if (!takesColour(look) && inks.length < 2) inks = look.strip || [];
+  if (inks.length > 1) return "linear-gradient(90deg," + inks.join(",") + ")";
+  return inks[0] || "rgba(138,131,120,0.16)";
+}
 
 var FIGURES_KEPT = "fx-picker-figures-open";
 var MOST_DETENT_TICKS = 16;

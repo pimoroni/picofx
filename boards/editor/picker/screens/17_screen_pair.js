@@ -1,8 +1,9 @@
 import {h} from "../00_dom.js";
 import {draw, drawSteps} from "../00_draw.js";
 import {quoted} from "../01_looks.js";
+import {boardResidue} from "../03_kept.js";
+import {entryParts} from "../03_reading.js";
 import {bodyParts, otherScenes, state} from "../04_scenes.js";
-import {boardResidue, entryParts} from "../27_readback.js";
 import {
   SCREENS, SCREEN_NAMES, kindOf, screenLetter, screenPlaying, screenShown, turnForChosen
 } from "./12_screens.js";

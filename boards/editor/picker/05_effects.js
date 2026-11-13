@@ -1,29 +1,17 @@
 import {h} from "./00_dom.js";
 import {draw, drawSteps, paintAll} from "./00_draw.js";
-import {BOARD, blinkDuty, blinkSpeed, canPlay, keyOf, lookNamed, withSection} from "./01_looks.js";
-import {BLINK, blinkWord} from "./02_blink.js";
-import {COLOURED, lampTarget, lookLit} from "./02_preview.js";
+import {BOARD, canPlay, keyOf, lookNamed} from "./01_looks.js";
 import {wiring} from "./03_outputs.js";
 import {
-  MIDDLING, Run, active, blank, copyBlinks, copyExact, mono, outs, pickOutput, runs, sectionAt,
-  settle
+  Run, active, blank, copyBlinks, copyExact, mono, outs, pickOutput, runs, sectionAt, settle
 } from "./03_runs.js";
-import {
-  SOLID_COLOUR, START_MOODS, coloursWritten, ownColourFor, runsAWay, startColour, takesColour,
-  targetFor, withExact
-} from "./04_lines.js";
+import {startColour, targetFor} from "./04_lines.js";
 import {carried} from "./04_scenes.js";
 import {renderLeds} from "./08_setup.js";
 import {renderStretches} from "./31_stretch_bar.js";
 import {renderEditor} from "./32_stretch_editor.js";
 
 var OPENING_LOOK = BOARD.opening.colour;
-
-function sectionLit(look, holder, t, slot, count, sim) {
-  return withSection(holder && holder !== MIDDLING ? holder : null, function () {
-    return lookLit(look, holder, t, slot, count, sim);
-  });
-}
 
 outs.sections = [blank(0, outs.lamps.length - 1)];
 outs.sections[0].look = OPENING_LOOK;
@@ -231,63 +219,9 @@ export function changeWiring(change, toColour) {
   };
 }
 
-var MONO_WASH = "#f3c98b";
-
-export function stretchWash(look, section, run, mono) {
-  if (mono) return MONO_WASH;
-  var inks = run && section ? coloursWritten(look, section, run) : [];
-  if (!takesColour(look) && inks.length < 2) inks = look.strip || [];
-  if (inks.length > 1) return "linear-gradient(90deg," + inks.join(",") + ")";
-  return inks[0] || "rgba(138,131,120,0.16)";
-}
-
-var cardSettings = {};
-
-function cardLit(look, holder, t, slot, count, sim) {
-  if (holder === MIDDLING && look && look.solid) {
-    var solid = sectionLit(look, {pace: MIDDLING.pace, mood: START_MOODS.Solid,
-                                  colour: SOLID_COLOUR}, t, slot, count, sim);
-    return solid && {level: solid.level, ink: SOLID_COLOUR};
-  } else if (holder === MIDDLING && look && START_MOODS[look.name] !== undefined) {
-    var mood = START_MOODS[look.name];
-    var start = takesColour(look) &&
-                ownColourFor(look, lampTarget(count), MIDDLING.pace, mood, MIDDLING.colour);
-    holder = {pace: MIDDLING.pace, mood: mood, colour: start || MIDDLING.colour};
-  } else if (holder === MIDDLING && takesColour(look)) {
-    var key = keyOf(look);
-    if (!cardSettings[key]) {
-      var own = ownColourFor(look, lampTarget(count), MIDDLING.pace, MIDDLING.mood,
-                             MIDDLING.colour);
-      cardSettings[key] = {pace: MIDDLING.pace, mood: MIDDLING.mood,
-                           colour: own || MIDDLING.colour};
-    }
-    holder = cardSettings[key];
-  }
-  return sectionLit(look, holder, t, slot, count, sim);
-}
-
 [outs, mono].forEach(function (run) {
   run.sections.forEach(function (section) {
     var look = lookNamed(section.look);
     if (look) startColour(run, section, look);
   });
 });
-
-export function livePlay(look, holder, t, slot, count, sim) {
-  var exact = holder && holder !== MIDDLING ? holder.exact : null;
-  return withExact(exact, function () {
-    var colours = holder && holder !== MIDDLING && look && look.name === BLINK &&
-                  holder.blinks && holder.blinks.colours.length > 1 ? holder.blinks.colours : null;
-    if (colours) {
-      var blinked = COLOURED.rgb_blink(t, {colour: colours.map(blinkWord).join("|"),
-                                           speed: blinkSpeed(holder.pace),
-                                           duty: blinkDuty(holder.mood)});
-      return {level: blinked.level * (holder.level < 1 ? holder.level : 1), ink: blinked.ink};
-    }
-    var backwards = holder && holder.reversed && count > 1 &&
-                    runsAWay(look, lampTarget(count), holder);
-    var lit = cardLit(look, holder, t, backwards ? count - 1 - slot : slot, count, sim);
-    if (!lit || !holder || holder === MIDDLING || !(holder.level < 1)) return lit;
-    return Object.assign({}, lit, {level: lit.level * holder.level});
-  });
-}

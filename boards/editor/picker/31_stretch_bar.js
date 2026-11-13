@@ -1,12 +1,12 @@
 import {h, replace} from "./00_dom.js";
 import {draw} from "./00_draw.js";
 import {lookNamed} from "./01_looks.js";
+import {painters} from "./02_preview.js";
+import {keptLights} from "./03_kept.js";
 import {shortName, widthOf} from "./03_outputs.js";
-import {
-  active, cutAt, inkAt, moveEdge, painters, pick, remember, settle, stretchUnder, uncut, washFor
-} from "./03_runs.js";
-import {targetFor, wherePlays} from "./04_lines.js";
-import {keptLights} from "./27_readback.js";
+import {active, cutAt, inkAt, moveEdge, pick, remember, settle, uncut} from "./03_runs.js";
+import {coloursWritten, takesColour, targetFor, wherePlays} from "./04_lines.js";
+import {stretchUnder} from "./04_scenes.js";
 
 var ZOOMS_OVER = 12;
 var MOST_ZOOM = 24;
@@ -212,3 +212,18 @@ document.addEventListener("mouseup", function () {
   dragging = null;
   draw();
 });
+
+export function washFor(run, section, look) {
+  var first = run.lamps[section.from];
+  return stretchWash(look, section, run, !!first && !first.colour);
+}
+
+var MONO_WASH = "#f3c98b";
+
+function stretchWash(look, section, run, mono) {
+  if (mono) return MONO_WASH;
+  var inks = run && section ? coloursWritten(look, section, run) : [];
+  if (!takesColour(look) && inks.length < 2) inks = look.strip || [];
+  if (inks.length > 1) return "linear-gradient(90deg," + inks.join(",") + ")";
+  return inks[0] || "rgba(138,131,120,0.16)";
+}
