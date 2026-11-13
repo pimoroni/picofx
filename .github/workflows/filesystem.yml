@@ -7,7 +7,7 @@ on:
     types: [published]
 
 env:
-  PIMORONI_AYE_ARR_VERSION: v1.0.1
+  PIMORONI_AYE_ARR_VERSION: patch/receive-by-dma
 
 jobs:
   build:
