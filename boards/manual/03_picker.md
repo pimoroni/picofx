@@ -150,6 +150,42 @@ scenes: Always on, *Scene 1 10s
 
 Anything on the **Always on** tab plays under every scene. A scene that plays on
 the same part of the board takes over from it while that scene shows.
+<!-- if sensor -->
+
+### Sensor: Changing scenes with a remote or motion
+
+Press [[Edit board]] and choose what's on the sensor connector, an Aye Arr
+Remote through an IR Receiver Stick, or a PIR Stick. That's the only board
+setting for it. The **Sensor** tab then shows the remote with a row for each
+button, or the Stick with a row for when motion starts and one for when it
+stops.
+
+On **Always on**, choose what each does in every scene. To begin with, each
+number goes to the scene in its place, 0 to the tenth, and Left and Right step
+back and on through the scenes. With a scene chosen, the rows Always on sets are
+striped, and choosing one changes it while that scene shows. A number only goes
+to the scene in its place or does nothing, so to give a scene another number,
+drag its card to that place. While a remote is fitted, each card shows its
+number in the corner, unless Always on sets that number to do nothing.
+
+OK / Stop and Play / Pause do the same in every scene, so they're gold with a
+padlock. OK / Stop puts the board in standby and wakes it, so there's always a
+way to stop it, and Play / Pause holds the effects where they stand.
+
+Going to a scene starts its time again, and starts its effects again if its
+[[Restart]] is on. To begin a scene again whatever its [[Restart]] says, choose
+"from the start" on its own row, or "Restart the scene showing" on Always on.
+
+A PIR Stick's rows can wait before they act. Set the seconds after "after", then
+choose what happens if the motion changes back first. "cancel this" drops the
+wait, and "finish this first" acts when the wait is over, then does what the
+change back asks for.
+
+With a sensor fitted, a scene can wait instead of showing for a time. Choose
+"waits" in place of "shows for" on its card, and the scene stays until a button
+or motion changes it. A new scene waits to begin with. Without a sensor nothing
+can move a waiting scene on, and the picker warns you.
+<!-- end -->
 
 ### Programs: Running a program
 

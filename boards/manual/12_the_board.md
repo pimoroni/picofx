@@ -15,6 +15,11 @@ board: drive=manual program=fireplace.py
 
 The picker's save settings write the first two. "Keep the drive hidden at start"
 is `drive=manual`, and unticking "Play saves without an eject" is `reload=manual`.
+<!-- if sensor -->
+`sensor` says what's on the sensor connector, `ir` or `pir`, as
+[Changing scenes with a remote or motion](#changing-scenes-with-a-remote-or-motion)
+explains.
+<!-- end -->
 <!-- if screens -->
 <!-- board screen_settings -->
 <!-- end -->

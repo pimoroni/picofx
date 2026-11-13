@@ -62,6 +62,7 @@ FEATURES = {
     "two_screens": lambda board: bool(board["screens"]) and len(board["screens"]["ports"]) > 1,
     "hub": lambda board: bool(board["screens"] and board["screens"]["hub"]),
     "sound": lambda board: bool(board["sound"]),
+    "sensor": lambda board: bool(board.get("sensor")),
     "examples": lambda board: bool(board["examples"]),
 }
 
@@ -163,15 +164,20 @@ def highlight(line, shape=False):
                    else mark("s-target", word)
                    for word in re.split(r"(\s+)", before))
 
-    # The first word names the effect, unless it carries a value: a board entry is
-    # settings the whole way and has no effect to name
+    # The first word names the effect, unless it carries a value. A board, remote or
+    # motion entry is settings the whole way and has no effect to name, and a bare word
+    # after a setting carries its value on, as Night does in starts=scene Night
     right = []
     named = False
+    valued = False
     for word in re.split(r"(\s+)", after):
         if not word.strip():
             right.append(word)
         elif named or "=" in word:
             right.append(setting(word))
+            valued = valued or "=" in word
+        elif valued:
+            right.append(mark("s-value", word))
         else:
             right.append(mark("s-effect", word))
             named = True

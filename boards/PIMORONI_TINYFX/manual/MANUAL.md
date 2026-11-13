@@ -165,6 +165,40 @@ scenes: Always on, *Scene 1 10s
 Anything on the **Always on** tab plays under every scene. A scene that plays on
 the same part of the board takes over from it while that scene shows.
 
+### Sensor: Changing scenes with a remote or motion
+
+Press [[Edit board]] and choose what's on the sensor connector, an Aye Arr
+Remote through an IR Receiver Stick, or a PIR Stick. That's the only board
+setting for it. The **Sensor** tab then shows the remote with a row for each
+button, or the Stick with a row for when motion starts and one for when it
+stops.
+
+On **Always on**, choose what each does in every scene. To begin with, each
+number goes to the scene in its place, 0 to the tenth, and Left and Right step
+back and on through the scenes. With a scene chosen, the rows Always on sets are
+striped, and choosing one changes it while that scene shows. A number only goes
+to the scene in its place or does nothing, so to give a scene another number,
+drag its card to that place. While a remote is fitted, each card shows its
+number in the corner, unless Always on sets that number to do nothing.
+
+OK / Stop and Play / Pause do the same in every scene, so they're gold with a
+padlock. OK / Stop puts the board in standby and wakes it, so there's always a
+way to stop it, and Play / Pause holds the effects where they stand.
+
+Going to a scene starts its time again, and starts its effects again if its
+[[Restart]] is on. To begin a scene again whatever its [[Restart]] says, choose
+"from the start" on its own row, or "Restart the scene showing" on Always on.
+
+A PIR Stick's rows can wait before they act. Set the seconds after "after", then
+choose what happens if the motion changes back first. "cancel this" drops the
+wait, and "finish this first" acts when the wait is over, then does what the
+change back asks for.
+
+With a sensor fitted, a scene can wait instead of showing for a time. Choose
+"waits" in place of "shows for" on its card, and the scene stays until a button
+or motion changes it. A new scene waits to begin with. Without a sensor nothing
+can move a waiting scene on, and the picker warns you.
+
 ### Programs: Running a program
 
 **Programs** lists the board's programs, what a remote, a sensor or a speaker brings, and any of
@@ -529,6 +563,56 @@ The board entry goes before any scene heading. A single scene with no time plays
 forever, and every reload, whether from a save, an eject or a press of **Boot**,
 starts again from the first scene.
 
+### Changing scenes with a remote or motion
+
+With an Aye Arr Remote or a PIR Stick on the sensor connector, a button press or
+motion can change the scene. Say which one is fitted in the board entry,
+`sensor=ir` for the remote's IR Receiver Stick or `sensor=pir` for a PIR Stick:
+
+```entry
+board: sensor=ir
+remote: menu_action=first record=restart
+```
+
+A `remote:` entry gives buttons something to do, each named as on the remote:
+`1_red`, `2_green`, `3_blue`, `4_cyan`, `5_magenta`, `6_yellow`, `7_warm`,
+`8_white`, `9_cool`, `0_rainbow`, `anticlock`, `up`, `clockwise`, `left`,
+`right`, `down`, `return_undo`, `menu_action` and `record`. Each can go to a
+scene, such as `scene Night`, or take a step: `next`, `previous`, `first`,
+`restart` to begin the scene showing again, or `nothing`. Entries before the
+first heading set what a button does in every scene, and an entry under a
+heading changes it while that scene plays.
+
+Without an entry, each number goes to the scene in its place, `0_rainbow` to the
+tenth, and `left` and `right` step back and on. `ok_stop` always puts the board
+in standby and wakes it, and `play_pause` always holds the effects where they
+stand and lets them carry on.
+
+Going to a scene starts its time again, and starts its effects again if its
+heading has `restart`. `previous` goes back through the scenes shown, up to the
+last ten.
+
+A PIR Stick's entry is `motion:`, with `starts` and `stops`:
+
+```entry
+board: sensor=pir
+motion: starts=scene Visitor after=2s
+
+[Idle]
+out1: pulse
+
+[Visitor]
+out1: flash
+motion: stops=first after=10s
+```
+
+`after=` waits before acting, and motion changing back first cancels the wait.
+Add `cancel=no` to finish the wait first instead, after which the board does
+what the change back asks for.
+
+A heading with no time, such as `[Visitor]`, waits until a button press or
+motion changes the scene.
+
 ## The board
 
 One entry sets up the board itself, and names no output:
@@ -546,6 +630,9 @@ board: drive=manual program=fireplace.py
 
 The picker's save settings write the first two. "Keep the drive hidden at start"
 is `drive=manual`, and unticking "Play saves without an eject" is `reload=manual`.
+`sensor` says what's on the sensor connector, `ir` or `pir`, as
+[Changing scenes with a remote or motion](#changing-scenes-with-a-remote-or-motion)
+explains.
 
 Saving `effects.txt` is all it takes: the board detects the save, briefly takes
 the drive back, and plays the new effects, just as a single press of **Boot**
