@@ -158,7 +158,7 @@
 
 #preview [data-s] {
   &[data-s=target] {
-    color: #1f6feb;
+    color: var(--screenA);
   }
 
   &[data-s=effect] {
@@ -175,7 +175,7 @@
   }
 
   &[data-s=punc] {
-    color: #5d656e;
+    color: var(--dim-strong);
   }
 
   &[data-s=colon] {

@@ -1,9 +1,3 @@
-:root {
-  --screen-a: #1f6feb;
-  --screen-b: #a44ad0;
-  --unlit: repeating-linear-gradient(45deg, #f0eeea, #f0eeea 6px, #e4e0d9 6px, #e4e0d9 12px);
-}
-
 .screenstab {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -191,9 +185,9 @@
   }
 
   &[data-under] {
-    border: 1px dashed #a9a49b;
+    border: 1px dashed var(--dashed);
     border-radius: var(--radius);
-    background: var(--unlit);
+    background: var(--hatch);
   }
 }
 
@@ -336,13 +330,13 @@
     min-height: 3.6rem;
     margin: 0;
     overflow: hidden;
-    background: linear-gradient(135deg, #efece6, #e3dfd6);
+    background: linear-gradient(135deg, var(--surface-2), var(--line));
     color: var(--dim);
     font-size: var(--text-xs);
 
     &:has(img) {
       min-height: 0;
-      background: repeating-conic-gradient(#e8e4dc 0% 25%, #cbc5bb 0% 50%) 0 0 / 12px 12px;
+      background: repeating-conic-gradient(var(--line) 0% 25%, var(--line-strong) 0% 50%) 0 0 / 12px 12px;
 
       &::before {
         content: "";
@@ -376,7 +370,7 @@
       z-index: 1;
       padding: 0 var(--space-3);
       border-radius: var(--radius-xs);
-      background: rgba(20, 20, 22, .7);
+      background: var(--overlay);
       color: #fff;
       font-size: var(--text-xs);
     }
@@ -389,7 +383,7 @@
       z-index: 3;
       padding: var(--space-2) var(--space-3);
       overflow: hidden;
-      background: rgba(20, 20, 22, .82);
+      background: var(--overlay);
       color: #fff;
       font-size: var(--text-xs);
       line-height: 1.3;
@@ -447,18 +441,18 @@
   > span {
     flex: 0 0 2.15rem;
     border-radius: var(--radius-xs);
-    background: #2a2f33 center / cover no-repeat;
+    background: var(--unlit) center / cover no-repeat;
 
     &[data-shows=picture] {
       background-image: var(--picture);
     }
 
     &[data-shows=nothing] {
-      background: repeating-linear-gradient(45deg, #f0eeea, #f0eeea 3px, #e0dbd2 3px, #e0dbd2 6px);
+      background: repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 3px, var(--line) 3px, var(--line) 6px);
     }
 
     &[data-shows=dark] {
-      background: #2a2d30;
+      background: var(--unlit);
     }
 
     &[data-shows=blank] {
@@ -472,7 +466,7 @@
 
     &[data-shows=absent] {
       background: var(--cross) transparent;
-      outline: 1px dashed #a9a49b;
+      outline: 1px dashed var(--dashed);
       outline-offset: -1px;
     }
   }

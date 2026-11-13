@@ -18,12 +18,12 @@
 
   &::-webkit-scrollbar-thumb {
     border-radius: var(--radius-round);
-    background: #cfc9bf;
+    background: var(--line-strong);
   }
 
   &::-webkit-scrollbar-track {
     border-radius: var(--radius-round);
-    background: #f0eeea;
+    background: var(--surface-2);
   }
 
   > ol {
@@ -146,7 +146,7 @@
         }
 
         > [data-shows=empty] {
-          background: #e4e0d9;
+          background: var(--line);
         }
 
         &::after {
@@ -178,7 +178,7 @@
       small + small {
         margin-left: .45em;
         padding-left: .45em;
-        border-left: 1px solid #c9c3b9;
+        border-left: 1px solid var(--line-strong);
       }
     }
   }

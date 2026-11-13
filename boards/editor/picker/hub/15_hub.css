@@ -6,7 +6,7 @@
   overflow: hidden;
   border-radius: var(--radius);
   background: var(--panel);
-  box-shadow: inset 0 0 0 1.5px var(--screen-a);
+  box-shadow: inset 0 0 0 1.5px var(--screenA);
   font: 600 var(--text-m) var(--font);
 
   > span {
@@ -15,11 +15,11 @@
     padding: 0 var(--space-1) 0 var(--space-4);
 
     .boardicon {
-      color: var(--screen-a);
+      color: var(--screenA);
     }
 
     &:has(+ [aria-pressed=true]) {
-      background: var(--screen-a);
+      background: var(--screenA);
 
       .boardicon {
         color: #fff;
@@ -32,12 +32,12 @@
     border: 0;
     border-radius: 0;
     background: none;
-    color: var(--screen-a);
+    color: var(--screenA);
     font: inherit;
     line-height: 1.3;
 
     &[aria-pressed=true] {
-      background: var(--screen-a);
+      background: var(--screenA);
       color: #fff;
     }
 
@@ -176,7 +176,7 @@
           margin-top: var(--space-7);
           border-radius: var(--radius-s);
           background: var(--cross) transparent;
-          outline: 1px dashed #a9a49b;
+          outline: 1px dashed var(--dashed);
           outline-offset: -1px;
           color: var(--dim);
           font-size: var(--text-xs);

@@ -13,7 +13,7 @@
 
     &[aria-pressed=true] {
       border-color: transparent;
-      background: linear-gradient(90deg, var(--screen-a), var(--screen-b));
+      background: linear-gradient(90deg, var(--screenA), var(--screenB));
       color: #fff;
     }
   }

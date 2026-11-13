@@ -107,7 +107,7 @@
         flex: none;
         width: 20px;
         height: 20px;
-        fill: #b8b1a6;
+        fill: var(--line-strong);
       }
     }
   }

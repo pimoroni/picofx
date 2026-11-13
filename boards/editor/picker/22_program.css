@@ -82,7 +82,7 @@ header:has(> #headSwitch) {
     border: 1.5px solid var(--line);
     border-bottom: 0;
     border-radius: var(--radius-l) var(--radius-l) 0 0;
-    background: #ece8e1;
+    background: var(--surface-2);
     color: var(--dim);
 
     &[data-page=program] {
@@ -135,7 +135,7 @@ header:has(> #headSwitch) {
 
     > canvas {
       display: block;
-      background: #222;
+      background: var(--dark);
     }
 
     > span:first-child {
@@ -143,7 +143,7 @@ header:has(> #headSwitch) {
       align-items: center;
       justify-content: center;
       padding: 0 var(--space-2);
-      background: #1c1f22;
+      background: var(--dark);
 
       .accswatch {
         width: 100%;
@@ -261,7 +261,7 @@ header:has(> #headSwitch) {
     width: 100%;
     height: auto;
     aspect-ratio: 4 / 3;
-    background: #222;
+    background: var(--dark);
   }
 
   > span > span {
@@ -277,7 +277,7 @@ header:has(> #headSwitch) {
     height: 22px;
     padding: 2px;
     border-radius: var(--radius-xs);
-    background: rgba(20, 20, 22, .7);
+    background: var(--overlay);
     color: #fff;
   }
 
@@ -403,7 +403,7 @@ header:has(> #headSwitch) {
         width: 16rem;
         height: 12rem;
         border-radius: var(--radius);
-        background: #222;
+        background: var(--dark);
       }
 
       &[data-panels="2"] > * {
@@ -485,7 +485,7 @@ header:has(> #headSwitch) {
         padding: 0;
         border: 0;
         border-radius: var(--radius-s);
-        background: rgba(20, 20, 22, .7);
+        background: var(--overlay);
         color: #fff;
         font-size: var(--text-m);
         line-height: 1.2rem;
@@ -498,7 +498,7 @@ header:has(> #headSwitch) {
         }
 
         &[data-action=delete]:hover {
-          background: #b4443a;
+          background: var(--warn);
         }
       }
 

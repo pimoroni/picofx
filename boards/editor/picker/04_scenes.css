@@ -5,16 +5,16 @@
   gap: var(--space-3);
   margin-left: auto;
   padding: var(--space-3) var(--space-5);
-  border: 1px solid rgba(15, 138, 114, .4);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
   border-radius: var(--radius);
-  background: rgba(15, 138, 114, .08);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
   color: var(--accent);
   font: 600 var(--text-s) var(--font);
   cursor: pointer;
 
   &:hover {
     border-color: var(--accent);
-    background: rgba(15, 138, 114, .16);
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
   }
 
   &:focus-visible {
@@ -39,13 +39,13 @@
     display: grid;
     grid-template-columns: minmax(7rem, 9.5rem) 1fr;
     padding: var(--space-4);
-    border: 1px solid #cfc9bf;
+    border: 1px solid var(--line-strong);
     border-radius: var(--radius-l);
-    background: #e6e3de;
+    background: var(--line);
 
     &:has([data-always][aria-selected=true]) {
-      border-color: #6f6a62;
-      box-shadow: 0 0 0 1px #6f6a62, 0 0 0 4px rgba(111, 106, 98, .2);
+      border-color: var(--dim-strong);
+      box-shadow: 0 0 0 1px var(--dim-strong), 0 0 0 4px rgba(111, 106, 98, .2);
     }
   }
 
@@ -58,7 +58,7 @@
 
   [role=tab] {
     --band: linear-gradient(var(--scene), var(--scene));
-    --tint: color-mix(in srgb, var(--scene) 16%, #fbfaf8);
+    --tint: color-mix(in srgb, var(--scene) 16%, var(--surface));
     --edge: var(--scene);
     position: relative;
     display: grid;
@@ -189,7 +189,7 @@
     min-height: 0;
     padding: var(--space-3) var(--space-4) var(--space-3) var(--space-3);
     border: 0;
-    border-right: 1px dashed #bdb7ad;
+    border-right: 1px dashed var(--line-strong);
     border-radius: 0;
     background: none;
 
@@ -197,7 +197,7 @@
     &:hover,
     &[aria-selected=true] {
       border: 0;
-      border-right: 1px dashed #bdb7ad;
+      border-right: 1px dashed var(--line-strong);
       box-shadow: none;
     }
 
@@ -248,7 +248,7 @@
     [data-always]:hover,
     [data-always][aria-selected=true] {
       border-right: 0;
-      border-bottom: 1px dashed #bdb7ad;
+      border-bottom: 1px dashed var(--line-strong);
     }
   }
 }

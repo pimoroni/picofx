@@ -167,7 +167,7 @@
       }
 
       &[aria-pressed=true] {
-        background: var(--tint, var(--screen-a));
+        background: var(--tint, var(--screenA));
         color: #fff;
       }
     }
@@ -192,9 +192,9 @@
     font: 600 var(--text-s) var(--font);
 
     &[aria-pressed=true] {
-      border-color: var(--tint, var(--screen-a));
-      background: color-mix(in srgb, var(--tint, var(--screen-a)) 8%, transparent);
-      color: var(--tint, var(--screen-a));
+      border-color: var(--tint, var(--screenA));
+      background: color-mix(in srgb, var(--tint, var(--screenA)) 8%, transparent);
+      color: var(--tint, var(--screenA));
     }
   }
 
@@ -213,11 +213,11 @@
       background: var(--line);
 
       &:hover {
-        background: #cfc8bc;
+        background: var(--line-strong);
       }
 
       &[aria-pressed=true] {
-        background: var(--tint, var(--screen-a));
+        background: var(--tint, var(--screenA));
       }
     }
   }

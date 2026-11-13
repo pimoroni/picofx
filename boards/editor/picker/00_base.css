@@ -9,6 +9,12 @@
   --strip: #1f6feb;
   --mono: #c2570f;
   --dark: #191b1d;
+  --surface: #fbfaf8;
+  --surface-2: #f0eeea;
+  --line-strong: #c9c3b9;
+  --dim-strong: #6b655c;
+  --overlay: rgba(20, 20, 22, .72);
+  --screenB: #a44ad0;
   --warn: #b33;
   --warn-bg: #fbeaea;
   --hold: #8a6415;
@@ -45,7 +51,7 @@
   --dashed: #a9a49b;
   --hues: linear-gradient(to right, #f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
   --hue-wheel: conic-gradient(#f00, #ff0, #0f0, #0ff, #00f, #f0f, #f00);
-  --hatch: repeating-linear-gradient(45deg, #f0eeea, #f0eeea 6px, #e4e0d9 6px, #e4e0d9 12px);
+  --hatch: repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 6px, #e4e0d9 6px, #e4e0d9 12px);
   --hatch-fine: repeating-linear-gradient(45deg, #f4f1ec, #f4f1ec 2px, #a9a194 2px, #a9a194 3.5px);
   --through: repeating-linear-gradient(45deg, rgba(240, 238, 234, .75), rgba(240, 238, 234, .75) 6px,
                                        transparent 6px, transparent 12px);
@@ -183,7 +189,7 @@ body > footer {
   padding: var(--space-6) var(--space-7) var(--space-6);
   border-top: 1px solid var(--line);
   background: var(--panel);
-  color: #6b655c;
+  color: var(--dim-strong);
   font-size: var(--text-m);
 
   > div {
@@ -253,7 +259,7 @@ body > footer {
   > p {
     margin: var(--space-6) 0 0;
     padding-top: var(--space-5);
-    border-top: 1px solid #eeeae3;
+    border-top: 1px solid var(--surface-2);
     font-size: var(--text-s);
     line-height: 1.6;
 

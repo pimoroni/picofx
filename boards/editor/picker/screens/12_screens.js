@@ -218,7 +218,7 @@ export function panelDrawing(screen, under) {
     drawing, picture);
 }
 
-var SCREEN_INKS = {A: "var(--screen-a)", B: "var(--screen-b)"};
+var SCREEN_INKS = {A: "var(--screenA)", B: "var(--screenB)"};
 
 export function screenInk(letter) { return SCREEN_INKS[letter]; }
 

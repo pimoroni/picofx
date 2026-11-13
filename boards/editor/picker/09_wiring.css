@@ -82,7 +82,7 @@ body:not([data-setup]) #sides [id$=Run] {
       width: 1.5rem;
       height: 1.5rem;
       border-radius: 50%;
-      background: #2a2d30;
+      background: var(--unlit);
       box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2);
     }
 
@@ -110,8 +110,8 @@ body:not([data-setup]) #sides [id$=Run] {
 
     &[data-unset] {
       border-style: dashed;
-      border-color: #a9a49b;
-      background: repeating-linear-gradient(45deg, #f0eeea, #f0eeea 6px, #e4e0d9 6px, #e4e0d9 12px);
+      border-color: var(--dashed);
+      background: repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 6px, var(--line) 6px, var(--line) 12px);
     }
 
     &[data-carried] {
@@ -214,7 +214,7 @@ body:not([data-setup]) #sides [id$=Run] {
     margin: calc(2.8rem + var(--reach, 0px)) 0 0;
     padding: var(--space-3) var(--space-4) var(--space-2);
     border-radius: var(--radius-s);
-    background: #2b3036;
+    background: var(--unlit);
     list-style: none;
 
     li {
@@ -240,12 +240,12 @@ body:not([data-setup]) #sides [id$=Run] {
 
       &[data-shape=whole] {
         width: 2.9rem;
-        background: #cfc8bc;
+        background: var(--line-strong);
       }
 
       &[data-shape=single] {
         width: 1.4rem;
-        background: #cfc8bc;
+        background: var(--line-strong);
       }
 
       &[data-hot] {
@@ -256,7 +256,7 @@ body:not([data-setup]) #sides [id$=Run] {
 
     small {
       display: block;
-      color: #a7a197;
+      color: var(--dashed);
       font: 600 var(--text-xs)/1.4 var(--font);
       text-align: center;
     }

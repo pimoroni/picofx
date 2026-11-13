@@ -14,7 +14,7 @@
     height: 3.6rem;
     border-bottom: 1px solid var(--line);
     fill: none;
-    stroke: #c9c3b9;
+    stroke: var(--line-strong);
     stroke-width: 2;
   }
 

@@ -49,7 +49,7 @@
   }
 
   p:is([data-tone=warn], [data-failed]) {
-    color: #b4443a;
+    color: var(--warn);
   }
 
   progress {
@@ -161,7 +161,7 @@
   gap: var(--space-2);
   padding: var(--space-1) var(--space-3);
   border-radius: var(--radius-round);
-  background: rgba(25, 27, 29, .78);
+  background: var(--overlay);
   color: #fff;
   font-size: var(--text-xs);
   line-height: 1.4;
@@ -179,7 +179,7 @@
   }
 
   &[data-state=newer] {
-    background: #8a8378;
+    background: var(--dim);
   }
 }
 
@@ -365,7 +365,7 @@ body:has(> dialog.discover[open]) {
       justify-content: center;
       height: 3.6rem;
       overflow: hidden;
-      background: linear-gradient(135deg, #efece6, #e3dfd6);
+      background: linear-gradient(135deg, var(--surface-2), var(--line));
       color: var(--dim);
       font-size: var(--text-xs);
 
@@ -394,7 +394,7 @@ body:has(> dialog.discover[open]) {
         z-index: 2;
         padding: 0 var(--space-3);
         border-radius: var(--radius-xs);
-        background: rgba(25, 27, 29, .75);
+        background: var(--overlay);
         color: #fff;
         font-size: var(--text-xs);
       }
@@ -426,7 +426,7 @@ body:has(> dialog.discover[open]) {
   ul[data-kind=drawing] li > figure > div:not([data-drawn]) {
     height: auto;
     aspect-ratio: 4 / 3;
-    background: #111;
+    background: var(--dark);
 
     img {
       object-fit: contain;

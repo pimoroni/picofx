@@ -74,7 +74,7 @@ html {
   padding: 0;
   border: 0;
   border-radius: var(--radius-s);
-  background: rgba(20, 20, 22, .7);
+  background: var(--overlay);
   color: #fff;
   font-size: var(--text-m);
   line-height: 1.2rem;

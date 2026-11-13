@@ -74,8 +74,8 @@
     }
 
     &[data-from=always] {
-      border: 1px dashed #a9a49b;
-      background: repeating-linear-gradient(45deg, #f0eeea, #f0eeea 6px, #e4e0d9 6px, #e4e0d9 12px);
+      border: 1px dashed var(--dashed);
+      background: repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 6px, var(--line) 6px, var(--line) 12px);
     }
 
     &[data-from=fixed] {
@@ -275,15 +275,15 @@
       align-items: center;
       margin: var(--space-4) auto 0;
       padding: var(--space-3) var(--space-5);
-      border: 1px solid rgba(15, 138, 114, .4);
+      border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
       border-radius: var(--radius);
-      background: rgba(15, 138, 114, .08);
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
       color: var(--accent);
       font: 600 var(--text-s) var(--font);
 
       &:hover {
         border-color: var(--accent);
-        background: rgba(15, 138, 114, .16);
+        background: color-mix(in srgb, var(--accent) 16%, transparent);
       }
     }
   }

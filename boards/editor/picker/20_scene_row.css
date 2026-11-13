@@ -64,8 +64,8 @@
     white-space: nowrap;
 
     &:hover {
-      border-color: #b4443a;
-      color: #b4443a;
+      border-color: var(--warn);
+      color: var(--warn);
     }
   }
 
@@ -80,7 +80,7 @@
 
     &:focus {
       border-color: var(--accent);
-      outline: 2px solid rgba(15, 138, 114, .35);
+      outline: 2px solid color-mix(in srgb, var(--accent) 35%, transparent);
       outline-offset: 1px;
     }
 
@@ -148,7 +148,7 @@
     background: var(--panel);
 
     .panel {
-      background: #faf9f7;
+      background: var(--surface);
     }
   }
 
