@@ -910,9 +910,9 @@ function markKeptLights() {
       });
       return;
     }
-    var box = document.getElementById(run === outs ? "outRun" : "monoRun");
+    var box = document.getElementById(run === outs ? "outBar" : "monoBar");
     if (!box) return;
-    box.querySelectorAll(".lamp").forEach(function (lamp, at) {
+    box.querySelectorAll(".cardlamp").forEach(function (lamp, at) {
       if (!named[at]) return;
       lamp.classList.add("keptlamp");
       lamp.title = "used by a line the picker cannot edit: " + named[at][0].text;

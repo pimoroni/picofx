@@ -924,77 +924,20 @@ function paintCards() {
   });
 }
 
-// ---- the run, lamps left to right, an output's own kept together --------------------------
+// ---- the lamps, lit and put in place -------------------------------------------------------
 
-function renderRun(where, run) {
-  var box = document.getElementById(where);
-  box.textContent = "";
-  var lamps = document.createElement("div");
-  lamps.className = "lamps";
-  var faces = [];
-  var group = null;
-  var groupOut = -1;
-
-  run.lamps.forEach(function (lamp, at) {
-    // An output's lamps stay together, so the connector they share is still one thing.
-    // Its number and, where there is one, the arrow it crosses on sit in a column of
-    // their own, so neither ever comes between two lamps
-    if (lamp.out !== groupOut) {
-      group = outputGroup(lamp);
-      lamps.appendChild(group);
-      groupOut = lamp.out;
-    }
-    var mine = sectionAt(run, at);
-    var one = document.createElement("div");
-    // A mono output's lamp is one light, with no channel's corner and no kin
-    one.className = "lamp" + (run === active && mine === run.picked ? " ringed" : "") +
-                    (lamp.colour ? " colourlamp" : isChannel(lamp) ? " chan" : " chan single");
-    if (!lamp.colour && isChannel(lamp)) {
-      one.style.setProperty("--chan", CHANNEL_INKS[lamp.channel]);
-      // Which three would gather if this output were put back to one colour lamp, which
-      // is the question being asked whenever one of them is pointed at
-      (kinOf[lamp.out] = kinOf[lamp.out] || []).push(one);
-      one.onmouseenter = function () { showKin(lamp.out, true); };
-      one.onmouseleave = function () { showKin(lamp.out, false); };
-    }
-    var playing = lookNamed(run.sections[mine].look);
-    one.title = selectorFor(lamp) + (playing ? ", playing " + playing.name : underSaid(run, at));
-    one.onclick = function () {
-      pick(run, mine);
-      draw();
-    };
-    takesPlace(one, lamp);
-    var face = document.createElement("i");
-    one.appendChild(face);
-    var said = document.createElement("b");
-    said.textContent = shortName(lamp);
-    one.appendChild(said);
-    faces.push(face);
-    group.appendChild(one);
+// Light each lamp's face as it plays, faces[at] being the face of the run's lamp at `at`. A lamp
+// playing nothing of its own is marked unset, which its holder shows
+function paintFaces(faces, all) {
+  faces.forEach(function (face, at) {
+    var one = all[at] || {level: 0, ink: "#e4e0d9"};
+    face.style.background = one.nothing ? "#2a2d30" : inkAt(one);
+    face.parentNode.classList.toggle("unset", !!one.unset);
+    face.style.boxShadow = one.level > 0.05
+      ? "inset 0 0 0 1px rgba(0,0,0,.2), 0 0 " + (3 + one.level * 8).toFixed(1) +
+        "px rgba(255,217,160," + (one.level * 0.5).toFixed(2) + ")"
+      : "inset 0 0 0 1px rgba(0,0,0,.2)";
   });
-
-  box.appendChild(lamps);
-  painters.push({run: run, paint: function (all) {
-    faces.forEach(function (face, at) {
-      var one = all[at] || {level: 0, ink: "#e4e0d9"};
-      face.style.background = one.nothing ? "#2a2d30" : inkAt(one);
-      face.parentNode.classList.toggle("unset", !!one.unset);
-      face.style.boxShadow = one.level > 0.05
-        ? "inset 0 0 0 1px rgba(0,0,0,.2), 0 0 " + (3 + one.level * 8).toFixed(1) +
-          "px rgba(255,217,160," + (one.level * 0.5).toFixed(2) + ")"
-        : "inset 0 0 0 1px rgba(0,0,0,.2)";
-    });
-  }});
-}
-
-// One output's lamps, kept together. Every lamp already says which output and channel
-// it is, so the group carries no number of its own. It is a space in the run and the
-// place the arrow appears when the output is pointed at
-function outputGroup(lamp) {
-  var group = document.createElement("div");
-  group.className = "outgroup" + (lamp.colour ? " whole" : "");
-  group.appendChild(crossing(lamp.out, lamp.colour));
-  return group;
 }
 
 // A lamp is dragged to where it sits on the build. A colour output is one lamp so it
@@ -1048,14 +991,10 @@ function placeLamp(move) {
   order.splice(placeOf(move.to) + (move.after ? 1 : 0), 0, moved);
 }
 
-// Lighting an output's three channels, each at its own edge and in its own colour. The
-// arrow that gathers them shows on every group holding one of the three, so what would
-// come back is visible before anything is pressed
+// Light an output's three channels, each at its own edge and in its own colour, so what the
+// arrow would rejoin is visible before it is pressed
 function showKin(out, on) {
-  (kinOf[out] || []).forEach(function (node) {
-    node.classList.toggle("kin", on);
-    if (node.parentNode) node.parentNode.classList.toggle("kin", on);
-  });
+  (kinOf[out] || []).forEach(function (node) { node.classList.toggle("kin", on); });
 }
 
 // ---- the bar, one cell per stretch, cut between them --------------------------------------
@@ -1118,21 +1057,69 @@ function beneath(under) {
   return under ? "<span class='beneath'>" + escapeHtml(under.note) + "</span>" : "";
 }
 
+// Whether a run's lamps sit inside its stretches' cards. The outputs' do, in Edit board too, so
+// setting up the wiring never moves them. A strip keeps its LEDs drawn on their wire above the bar
+function carded(run) {
+  return !run.strip;
+}
+
+// A stretch's lamps, one for each light it holds, each face kept in faces by the lamp's place
+// in the run so it can be lit as the run plays. While the wiring is set up, each lamp is a tile
+// to drag to its place on the build, and an output that breaks out has its arrow on its tiles
+function cardLamps(run, section, faces) {
+  var row = document.createElement("span");
+  row.className = "cardlamps";
+  var wiring = canEdit("outPanel");
+  for (var at = section.from; at <= section.to; at++) {
+    var lamp = run.lamps[at];
+    var one = document.createElement("span");
+    var channel = !lamp.colour && isChannel(lamp);
+    // A broken-out channel is marked in its channel's colour
+    one.className = "cardlamp" + (channel ? " chan" : "");
+    if (channel) one.style.setProperty("--chan", CHANNEL_INKS[lamp.channel]);
+    var playing = lookNamed(section.look);
+    one.title = selectorFor(lamp) + (playing ? ", playing " + playing.name : underSaid(run, at));
+    var face = document.createElement("i");
+    one.appendChild(face);
+    var said = document.createElement("b");
+    said.textContent = shortName(lamp);
+    one.appendChild(said);
+    faces[at] = face;
+    if (wiring) setUpLamp(one, lamp, channel);
+    row.appendChild(one);
+  }
+  return row;
+}
+
+// Make a card's lamp a tile of the wiring, dragged to its place and split or rejoined by its
+// arrow. Pointing at one channel shows the other two of its output
+function setUpLamp(one, lamp, channel) {
+  takesPlace(one, lamp);
+  one.appendChild(crossing(lamp.out, lamp.colour));
+  if (!channel) return;
+  (kinOf[lamp.out] = kinOf[lamp.out] || []).push(one);
+  one.addEventListener("mouseenter", function () { showKin(lamp.out, true); });
+  one.addEventListener("mouseleave", function () { showKin(lamp.out, false); });
+}
+
 function renderBar(where, run) {
   var box = document.getElementById(where);
   box.textContent = "";
   var scroller = document.createElement("div");
   scroller.className = "scroller";
   var bar = document.createElement("div");
-  bar.className = "bar";
+  bar.className = "bar" + (carded(run) ? " carded" : "");
+  var faces = [];
 
   run.sections.forEach(function (section, at) {
-    var cell = document.createElement("button");
+    // A lamp is dragged out of its card while the wiring is set up, which a button would not let go
+    var cell = document.createElement(carded(run) && canEdit("outPanel") ? "div" : "button");
     cell.className = "sec" + (run === active && run.picked === at ? " picked" : "");
     cell.style.flex = widthOf(section) + " 1 0";
     var first = run.lamps[section.from];
     cell.title = (first && first.colour ? "colour" : "mono") + ", " +
                  targetFor(run, section).selector;
+    if (carded(run)) cell.appendChild(cardLamps(run, section, faces));
 
     var look = lookNamed(section.look);
     var under = look ? null : stretchUnder(run, section);
@@ -1190,6 +1177,7 @@ function renderBar(where, run) {
   });
   scroller.appendChild(bar);
   box.appendChild(scroller);
+  if (carded(run)) painters.push({run: run, paint: function (all) { paintFaces(faces, all); }});
 }
 
 function cutPoint(run, after, wide, from) {
@@ -1461,11 +1449,7 @@ function draw() {
   cardFaces = [];
   kinOf = {};
   renderGalleries();
-  renderRun("outRun", outs);
-  renderCutting("outCut", outs);
   renderBar("outBar", outs);
-  renderCutting("monoCut", mono);
-  renderRun("monoRun", mono);
   renderBar("monoBar", mono);
 
   // Both sides are in the one panel, so one set of tools serves whichever was last worked
@@ -1475,7 +1459,6 @@ function draw() {
   renderChosen("outChosen", active);
 
   renderPreview();
-  levelSides();
   paintAll();
 
   drawSteps.after.forEach(function (step) { step(); });
@@ -1530,19 +1513,6 @@ function refocus(place) {
       // A field made as another type has no caret to place
     }
   }
-}
-
-// Each side stacks its own rows, so a run whose lamps wrap onto a second row pushes its
-// cutting and its bar below the other side's. Both runs take the height of the taller, so
-// the two sides read across whatever either is holding
-function levelSides() {
-  var both = [document.getElementById("outRun"), document.getElementById("monoRun")];
-  both.forEach(function (box) { box.style.minHeight = ""; });
-  var tallest = 0;
-  both.forEach(function (box) {
-    tallest = Math.max(tallest, box.getBoundingClientRect().height);
-  });
-  both.forEach(function (box) { box.style.minHeight = tallest + "px"; });
 }
 
 function paintAll() {

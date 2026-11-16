@@ -49,8 +49,8 @@ function setSetup(on) {
 // Nothing looks picked while setup is on. The marks are drawn by the pages below, so they
 // are taken off once drawn
 function unmark() {
-  document.querySelectorAll(".lamp.ringed, .sec.picked, .card.picked").forEach(function (one) {
-    one.classList.remove("ringed", "picked");
+  document.querySelectorAll(".sec.picked, .card.picked").forEach(function (one) {
+    one.classList.remove("picked");
   });
   document.querySelectorAll(".run svg rect.ringed").forEach(function (ring) {
     ring.parentNode.removeChild(ring);

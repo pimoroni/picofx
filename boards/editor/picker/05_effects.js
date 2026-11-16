@@ -948,6 +948,9 @@ function renderTools(where, run) {
   var box = document.getElementById(where);
   if (!box) return;
   box.textContent = "";
+  // Splitting and repeating earn their place along a strip's many LEDs. The outputs are few,
+  // and are cut one at a time between their lamps
+  if (!run.strip) return;
   var section = run.sections[run.picked];
   var wide = section ? widthOf(section) : 1;
   var row = document.createElement("div");

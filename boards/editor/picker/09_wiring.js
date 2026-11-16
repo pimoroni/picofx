@@ -35,7 +35,7 @@ function wiredSide() {
 // The lamps on show
 function lampsShown() {
   return Array.prototype.slice.call(document.querySelectorAll(
-    "#outRun .lamp[data-key], #monoRun .lamp[data-key]"));
+    "#outBar .cardlamp[data-key], #monoBar .cardlamp[data-key]"));
 }
 
 function lampNode(key) {
@@ -51,26 +51,27 @@ function bringForward(keys, on) {
   });
 }
 
-// How far the sides and what follows them run outside setup, the cutting and the bar
-// included, so the connectors can take up the same room while setting up
-var unwiredSpan = null;
-
-function sidesSpan() {
-  return document.getElementById("outTools").getBoundingClientRect().top -
-         document.getElementById("sides").getBoundingClientRect().top;
+// Lay the connectors over the stretch's tools and settings, which stand back while setting up,
+// so entering and leaving Edit board moves nothing below them. The connectors cover the whole
+// of the settings, and the panel only grows by what they need beyond that room
+function overlapBelow(box) {
+  var settings = document.getElementById("outChosen").getBoundingClientRect().bottom -
+                 box.getBoundingClientRect().bottom;
+  if (settings <= 0) return;
+  box.style.minHeight = Math.max(box.getBoundingClientRect().height, settings) + "px";
+  box.style.marginBottom = -settings + "px";
 }
 
 function renderConnectors() {
   var box = document.getElementById("wiringRow");
   box.textContent = "";
+  box.style.marginBottom = "";
+  box.style.minHeight = "";
   var old = document.getElementById("wiringLines");
   if (old) old.parentNode.removeChild(old);
   // A board whose outputs are its own LEDs has no wiring to show
   document.getElementById("outPanel").classList.toggle("wired", setupOn && BOARD.wiring_order);
-  if (!setupOn || !BOARD.wiring_order) {
-    unwiredSpan = sidesSpan();
-    return;
-  }
+  if (!setupOn || !BOARD.wiring_order) return;
 
   var row = document.createElement("div");
   row.className = "wireconnectors";
@@ -116,11 +117,7 @@ function renderConnectors() {
       "order, numbered in bold. Hover over a light or connector to highlight its wire."
     : "All lights are in wiring order. Hover over a light or connector to highlight its wire.";
   box.appendChild(said);
-  // The connectors sit lower by whatever the cutting and the bar took beyond them, and the
-  // lines run on down to them, so setting up leaves the section its size
-  row.style.marginTop = "";
-  var short = unwiredSpan === null ? 0 : unwiredSpan - sidesSpan();
-  if (short > 0) row.style.marginTop = (parseFloat(getComputedStyle(row).marginTop) + short) + "px";
+  overlapBelow(box);
   drawLines();
 }
 
