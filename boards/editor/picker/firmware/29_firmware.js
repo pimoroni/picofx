@@ -1,3 +1,8 @@
+import {BOARD} from "../01_looks.js";
+import {draw, drawSteps} from "../03_runs.js";
+import {firmwareHooks} from "../07_board.js";
+import {connectSteps} from "../18_drive.js";
+
 // ---- firmware updates ----------------------------------------------------------------------------
 // The Update available button beside the version in the page's header, and the sheet it opens. Once
 // an FX drive is open, the page asks GitHub for the latest release and shows the button where the
@@ -67,6 +72,7 @@ function firmwareCovers(version) {
   if (firmware.status !== "done" || !firmware.latest) return null;
   return firmwareBehind(firmware.latest) && !firmwareOlder(firmware.latest.version, version);
 }
+firmwareHooks.covers = firmwareCovers;
 
 // What localStorage holds under FIRMWARE_STORE, or an empty object where it cannot be read
 function firmwareStored() {

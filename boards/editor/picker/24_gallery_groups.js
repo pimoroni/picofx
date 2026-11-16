@@ -1,3 +1,5 @@
+import {foldHead} from "./22_program.js";
+import {groupOpen, groupsOpen} from "./26_drive_files.js";
 
 // ---- the looks in groups ------------------------------------------------------------------
 // The gallery grouped by how the lights play together, each group a row of at most five, the
@@ -20,7 +22,7 @@ var LOOK_GROUPS = [
 ];
 
 // Gather the gallery's cards under the groups' headings, in the groups' order
-function groupGallery() {
+export function groupGallery() {
   var flat = document.querySelector("#looks .gallery");
   if (!flat) return;
   var cards = {};

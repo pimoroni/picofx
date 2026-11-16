@@ -1,3 +1,17 @@
+import {BOARD, LOOKS, canPlay, keyOf, lerp, lookLines, lookNamed, nameSet, r2} from "./01_looks.js";
+import {COLOURED, lampTarget, lookLit} from "./02_preview.js";
+import {
+  CHANNELS, CHANNEL_WORDS, MIDDLING, OUTPUTS, Run, active, beneath, blank, chosenSteps, copyBlinks,
+  copyExact, cutPoint, draw, drawSteps, forwardTargetFor, holding, inkAt, isChannel, joinedItems,
+  levelled, mono, nextOutput, outputSaid, outs, paintAll, painters, pick, pickOutput, rangeItem,
+  remember, renderChosen, runs, sectionAt, settle, stretchUnder, uncut, washFor, washOf, widthOf,
+  wiring
+} from "./03_runs.js";
+import {carried} from "./04_scenes.js";
+import {BLINK, blinkList, blinkWord} from "./06_blink.js";
+import {renderLeds} from "./08_setup.js";
+import {renderPreview} from "./18_drive.js";
+import {exactNow, withExact} from "./25_figures.js";
 
 // The board opens as it ships, every colour output one colour lamp, each side whole and playing
 // the look the board's description opens it with. The strips play nothing, since what is wired
@@ -155,7 +169,7 @@ LOOKS.forEach(function (look) {
 // starting at a real signal's. They are the stretch's timings, which the lines read through the
 // stretch being written or played. Each part is its setting, its name, where it starts and the
 // slider's two ends, in seconds
-var SIGNAL_TIMINGS = {
+export var SIGNAL_TIMINGS = {
   "Traffic light": [["red_interval", "Red", 12, 2, 60],
                     ["red_amber_interval", "Red and amber", 2, 1, 10],
                     ["green_interval", "Green", 12, 2, 60],
@@ -265,7 +279,7 @@ settle();
 // and one the description says takes other strips takes their terminals. A strip given a
 // brightness by the description takes that after its length in place of an order, and the
 // description's brightness is the board's own
-var STRIPS = BOARD.strips.map(function (strip) {
+export var STRIPS = BOARD.strips.map(function (strip) {
   var brightness = strip.brightness === undefined ? null : strip.brightness;
   return {id: strip.name, name: strip.name, label: strip.label, leds: strip.leds, order: "",
           there: strip.fitted, brightness: brightness, made: brightness,
@@ -288,13 +302,13 @@ function stripRun(one) {
 }
 
 // The strip run a file names, or null where this board has no strip by that name
-function stripNamed(name) {
+export function stripNamed(name) {
   var lower = name.toLowerCase();
   return runs.filter(function (run) { return run.strip && run.name === lower; })[0] || null;
 }
 
 // The strip's entry, which a fresh run is made from, and the run itself, given the same values
-function stripSet(run, values) {
+export function stripSet(run, values) {
   var one = STRIPS.filter(function (strip) { return strip.id === run.id; })[0];
   Object.keys(values).forEach(function (key) {
     one[key] = values[key];
@@ -303,20 +317,20 @@ function stripSet(run, values) {
 }
 
 // A stretch of a strip is a range of its lights, and the whole of it is the bare name
-function stripSelector(run, section) {
+export function stripSelector(run, section) {
   if (section.from === 0 && section.to === run.lamps.length - 1) return run.name;
   return run.name + (section.from === section.to
     ? String(section.from + 1)
     : (section.from + 1) + "-" + (section.to + 1));
 }
 
-var GLASS_OUT = "<circle cx='7.2' cy='7.2' r='4.9'/><path d='M10.9 10.9 L14.4 14.4'/>" +
+export var GLASS_OUT = "<circle cx='7.2' cy='7.2' r='4.9'/><path d='M10.9 10.9 L14.4 14.4'/>" +
                 "<path d='M5 7.2 L9.4 7.2'/>";
 
-var GLASS_IN = "<circle cx='7.2' cy='7.2' r='4.9'/><path d='M10.9 10.9 L14.4 14.4'/>" +
+export var GLASS_IN = "<circle cx='7.2' cy='7.2' r='4.9'/><path d='M10.9 10.9 L14.4 14.4'/>" +
                "<path d='M5 7.2 L9.4 7.2 M7.2 5 L7.2 9.4'/>";
 
-function zoomOf(run) { return run.zoom || 1; }
+export function zoomOf(run) { return run.zoom || 1; }
 
 // The picked stretch cut into a number of stretches as near equal as its lamps allow
 function splitSection(run, ways) {
@@ -526,7 +540,7 @@ function renderStripBar(where, run) {
   };
 }
 
-function hexOf(rgb) {
+export function hexOf(rgb) {
   return rgb.map(function (v) {
     return ("0" + Math.round(v).toString(16)).slice(-2);
   }).join("");
@@ -553,7 +567,7 @@ function hueOf(rgb) {
   return (deg + 360) % 360;
 }
 
-function takeApart(rgb) {
+export function takeApart(rgb) {
   var top = Math.max.apply(null, rgb) / 255;
   var low = Math.min.apply(null, rgb) / 255;
   return {hue: hueOf(rgb.map(function (v) {
@@ -563,12 +577,12 @@ function takeApart(rgb) {
           value: top};
 }
 
-function hexRgb(hex) {
+export function hexRgb(hex) {
   return [parseInt(hex.slice(1, 3), 16), parseInt(hex.slice(3, 5), 16),
           parseInt(hex.slice(5, 7), 16)];
 }
 
-function astrayOf(side) {
+export function astrayOf(side) {
   var wired = side.order.map(function (lamp) { return side.wiring.indexOf(lamp); });
   var count = wired.length;
   // The longest run in wired order ending at each lamp, and starting at it
@@ -661,20 +675,20 @@ function stripChipChoice(run) {
 }
 
 // The same as words, where the chip cannot be changed
-function stripChipShown(run) {
+export function stripChipShown(run) {
   return run.made === null ? (run.order || "grb").toUpperCase()
                            : stripPercent(run.brightness) + " brightness";
 }
 
 // The same as the file writes it after the length, nothing for the board's own
-function stripLengthTail(run) {
+export function stripLengthTail(run) {
   if (run.made === null) return run.order ? "|" + run.order : "";
   return run.brightness === run.made ? "" : "|" + stripPercent(run.brightness);
 }
 
 // The same read back from the file, as the values to set, or null for one the page does not
 // offer, which stays as written for the board to answer
-function readStripTail(run, tail) {
+export function readStripTail(run, tail) {
   if (run.made === null) {
     var order = tail.toLowerCase();
     if (order === "grb") order = "";
@@ -688,7 +702,7 @@ function readStripTail(run, tail) {
 }
 
 // A strip's chip, its length and its order or brightness to set, shown while the board is set up
-function renderStripChip(where, run) {
+export function renderStripChip(where, run) {
   var box = document.getElementById(where);
   box.textContent = "";
   var chip = document.createElement("div");
@@ -723,9 +737,9 @@ function renderStripChip(where, run) {
 // A strip's bar is found by the strip's own id
 
 // The most lights a strip can have and not be zoomed, which the zoom buttons are hidden at
-var ZOOMS_OVER = 12;
+export var ZOOMS_OVER = 12;
 
-function middleOfView(run) {
+export function middleOfView(run) {
   var scroller = document.querySelector("#" + run.id + "Bar .scroller");
   if (!scroller) return 0.5;
   var bar = scroller.querySelector(".bar");
@@ -734,7 +748,7 @@ function middleOfView(run) {
 
 // Zooming keeps whatever was under the pointer under the pointer, which is the only way a
 // zoom on a long run is any use, as otherwise the thing being aimed at runs away
-function zoomTo(run, want, at, from) {
+export function zoomTo(run, want, at, from) {
   // Held to three places, and to exactly 1 near it, since the buttons step by 1.6 each way and
   // coming back out leaves 1.0000000000000002, a bar a hair wider than its box that scrolls
   want = Math.round(want * 1000) / 1000;
@@ -753,7 +767,7 @@ function zoomTo(run, want, at, from) {
 // Everything a stretch holds besides where it is, copied, so splitting it keeps what it played.
 // splitSection() copies only its look, pace, setting and colour, and joinAll() starts from one
 // stretch playing nothing
-function playsOf(section) {
+export function playsOf(section) {
   return {look: section.look, pace: section.pace, mood: section.mood, colour: section.colour,
           custom: section.custom, reversed: section.reversed, level: section.level,
           blinks: copyBlinks(section.blinks), exact: copyExact(section.exact),
@@ -794,7 +808,7 @@ function divideLengths(run, each) {
   draw();
 }
 
-function toolButton(icon, words, off, act, title) {
+export function toolButton(icon, words, off, act, title) {
   var button = document.createElement("button");
   button.type = "button";
   button.className = "stoggle";
@@ -996,7 +1010,7 @@ function standingIn(run, section) {
   return memo;
 }
 
-function changeWiring(change, toColour) {
+export function changeWiring(change, toColour) {
   return function (out) {
     if (!!wiring[out].broken !== toColour) return;
     var played = playedBy(out);
@@ -1046,7 +1060,7 @@ function changeWiring(change, toColour) {
 
 // The words the file names and their values, which are picofx's own. A swatch is drawn in
 // its true value, since the round trip from a written word to a swatch is the point of them
-var WORDS = {
+export var WORDS = {
   red: [255, 0, 0], orange: [255, 128, 0], yellow: [255, 255, 0], green: [0, 255, 0],
   cyan: [0, 255, 255], blue: [0, 0, 255], purple: [128, 0, 255], magenta: [255, 0, 255],
   pink: [255, 128, 128], warm: [255, 192, 96], white: [255, 255, 255],
@@ -1055,7 +1069,7 @@ var WORDS = {
 
 // Eight hues thirty or sixty degrees apart, then the white axis with pink on it. Black is
 // left out, since brightness and Nothing say a lamp is off better
-var SWATCHES = ["red", "orange", "yellow", "green", "cyan", "blue", "purple", "magenta",
+export var SWATCHES = ["red", "orange", "yellow", "green", "cyan", "blue", "purple", "magenta",
                 "pink", "warm", "white", "cool"];
 
 // The swatches a stretch offers. A blink through several colours offers black too, as a turn
@@ -1067,10 +1081,10 @@ function swatchesFor(run, section) {
   return SWATCHES;
 }
 
-function rgbInk(rgb) { return "rgb(" + rgb.join(",") + ")"; }
+export function rgbInk(rgb) { return "rgb(" + rgb.join(",") + ")"; }
 
 // The word for a colour where it is one of the swatches, else null
-function wordFor(hex) {
+export function wordFor(hex) {
   var lower = hex.replace("#", "").toLowerCase();
   return SWATCHES.filter(function (name) { return hexOf(WORDS[name]) === lower; })[0] || null;
 }
@@ -1086,7 +1100,7 @@ var FIXED_COLOUR_LOOKS = ["Wave", "Blink", "Marquee", "Scanner", "Chase"];
 // Whether a look is given its colour here. Solid takes one already, the looks whose second
 // slider steps a table of tones take one instead of that slider, and the fixed colour
 // ones take one as well
-function takesColour(look) {
+export function takesColour(look) {
   if (!look || SET_LOOKS.indexOf(look.name) >= 0) return false;
   return look.solid || look.mood === "Colour" || FIXED_COLOUR_LOOKS.indexOf(look.name) >= 0;
 }
@@ -1120,7 +1134,7 @@ function coloursWritten(look, section, run) {
 // A look given a colour is drawn in it, and one playing several, as Party does, in those.
 // Any other look is drawn in its card's colours, since one colour in its line is no picture
 // of what it plays. Campfire's single flame colour is not the flicker its card shows
-function stretchWash(look, section, run, mono) {
+export function stretchWash(look, section, run, mono) {
   if (mono) return MONO_WASH;
   var inks = run && section ? coloursWritten(look, section, run) : [];
   if (!takesColour(look) && inks.length < 2) inks = look.strip || [];
@@ -1156,7 +1170,7 @@ var cardSettings = {};
 // does not suit it. Solid starts at full brightness, Colour cycle at full saturation, Colour
 // steps at picofx's six, and the signals' lamps fade in about a tenth of a second, as a real
 // signal's do. Marquee starts with every third light lit
-var START_MOODS = {"Solid": 1, "Colour cycle": 1, "Colour steps": 1 / 3,
+export var START_MOODS = {"Solid": 1, "Colour cycle": 1, "Colour steps": 1 / 3,
                    "Pelican crossing": 0.1, "Traffic light": 0.1, "Marquee": 0.25};
 
 // Solid's own colour, which a stretch given it starts in and its card shows, still and at full
@@ -1196,7 +1210,7 @@ var BANKED_LOOKS = ["Emergency", "Traffic light", "Pelican crossing"];
 // The lamps a signal is built from, which a strip's stretch is cut into blocks of
 var SIGNAL_LAMPS = {"Traffic light": 3, "Pelican crossing": 5};
 
-function isBanked(look) {
+export function isBanked(look) {
   return !!look && BANKED_LOOKS.indexOf(look.name) >= 0;
 }
 
@@ -1237,7 +1251,7 @@ function stripLines(look, target, pace, mood) {
 
 // A card carries a painter's palette where its look takes a colour, and the stretch being
 // worked on can be given one
-function paletteMark() {
+export function paletteMark() {
   var palette = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   palette.setAttribute("viewBox", "0 0 16 16");
   palette.setAttribute("class", "tint palette");
@@ -1250,7 +1264,7 @@ function paletteMark() {
   return palette;
 }
 
-function startColour(run, section, look) {
+export function startColour(run, section, look) {
   if (!takesColour(look)) return;
   var own = look.solid ? SOLID_COLOUR : ownColour(look, run, section);
   if (own) {
@@ -1429,7 +1443,7 @@ function renderColourPick(box, run) {
 }
 
 // A hue at full value, brought toward white by how far the saturation is from full
-function fieldColour(hue, sat) {
+export function fieldColour(hue, sat) {
   return hueRgb(hue).map(function (v) { return Math.round(v + (255 - v) * (1 - sat)); });
 }
 
@@ -1521,7 +1535,7 @@ function coloursItself(run, section, look) {
 
 // What one stretch writes, at its brightness and with its typed values. A blink through several
 // colours is written as its list, and a custom colour carries its brightness in its hex
-function sectionLines(run, section, look) {
+export function sectionLines(run, section, look) {
   return withExact(section.exact, function () {
     var colours = blinkList(run, section);
     if (colours) {
@@ -1564,7 +1578,7 @@ function brightnessSlider(tuning, run, where) {
 }
 
 // The lines a look writes for a target, as the board will play them
-function linesFor(look, target, pace, mood, colour) {
+export function linesFor(look, target, pace, mood, colour) {
   var lines;
   if (look && look.solid) {
     // Solid is written at full, since its brightness is the stretch's own
@@ -1694,7 +1708,7 @@ function nameBackwards(lamps) {
 
 // What a stretch plays on, counting its lights down where it starts from its far end and its
 // look shows which way it runs
-function targetFor(run, section) {
+export function targetFor(run, section) {
   var target = forwardTargetFor(run, section);
   if (!section.reversed || !runsAWay(lookNamed(section.look), target, section)) return target;
   if (run.strip) {
@@ -1720,7 +1734,7 @@ function targetFor(run, section) {
 // What a look lights at slot of count lamps playing, as the board will play it. That is with the
 // stretch's typed values, a blink through several colours as its list, a reversed stretch from
 // its far end, and a stretch at its brightness. A card plays at full
-function livePlay(look, holder, t, slot, count, sim) {
+export function livePlay(look, holder, t, slot, count, sim) {
   var exact = holder && holder !== MIDDLING ? holder.exact : null;
   return withExact(exact, function () {
     var colours = holder && holder !== MIDDLING && look && look.name === BLINK &&
@@ -1777,7 +1791,7 @@ function directionToggle(run, section) {
 // selector is the file view's to show, and whether the lights are colour or mono the tab's
 
 // A list said as English does, such as "one, two and three"
-function spoken(items) {
+export function spoken(items) {
   if (items.length < 2) return items.join("");
   return items.slice(0, -1).join(", ") + " and " + items[items.length - 1];
 }

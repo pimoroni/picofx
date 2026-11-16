@@ -1,19 +1,36 @@
+import {BOARD} from "./01_looks.js";
+import {
+  OUTPUTS, acrossWiring, breakOutWiring, draw, drawHeld, mono, order, outputSaid, outs, placeLamp,
+  rejoinWiring, runs, wiring
+} from "./03_runs.js";
+import {apply, capture, slotAt, state, store} from "./04_scenes.js";
+import {changeWiring, playsOf, stripLengthTail} from "./05_effects.js";
+import {canEdit} from "./08_setup.js";
+import {plainOrder} from "./27_readback.js";
 
 // ---- the board, the same in every scene ------------------------------------------------
 // How the board is built is the same in every scene, which outputs have an adapter
 // fitted, how long each strip is, and which screen is plugged into each port. The pages
 // built on this one differ only in where those are shown and when they can be changed.
 
+// What the screens parts lend the parts every board takes, filled in by screens/ where the board
+// has screens. Without them no drive file is a picture or drawing, and no panel is drawn
+export var screenHooks = {mediaNamed: function () { return null; }, panelPreview: null};
+
+// What the firmware part lends the others, filled in by firmware/ where the board has a release to
+// check against. Without it, whether the latest release brings a version is unknown
+export var firmwareHooks = {covers: function () { return null; }};
+
 // Which panel is plugged into each screen port, or none. Only the panel's size is the board's
-var SCREEN_PORTS = BOARD.screens ? BOARD.screens.ports : [];
+export var SCREEN_PORTS = BOARD.screens ? BOARD.screens.ports : [];
 // The catalogue is the board's own, so a board that finds it has no screen ports offers none
 SCREEN_PORTS = SCREEN_PORTS.filter(function (port) {
   return CATALOGUE.screen_ports.indexOf(port.id) >= 0;
 });
 // The sizes a panel can be, as the firmware takes them. The catalogue's hub is not a panel size
-var SCREEN_SIZES = (SCREEN_PORTS.length ? CATALOGUE.board_settings[SCREEN_PORTS[0].id] : [])
+export var SCREEN_SIZES = (SCREEN_PORTS.length ? CATALOGUE.board_settings[SCREEN_PORTS[0].id] : [])
   .filter(function (inches) { return inches !== "hub"; });
-var screensFitted = {};
+export var screensFitted = {};
 SCREEN_PORTS.forEach(function (port) { screensFitted[port.id] = ""; });
 
 // Breaking an output out, or putting it back, is done to every scene in turn, each carrying
@@ -48,13 +65,13 @@ function acrossScenes(change) {
   };
 }
 
-var breakOutInScenes = acrossScenes(changeWiring(breakOutWiring, false));
-var rejoinInScenes = acrossScenes(changeWiring(rejoinWiring, true));
+export var breakOutInScenes = acrossScenes(changeWiring(breakOutWiring, false));
+export var rejoinInScenes = acrossScenes(changeWiring(rejoinWiring, true));
 
 // Where a lamp sits is the build's as well. Moving one keeps every scene's looks on the
 // lamps they were on, the way breaking out does, so a stretch the move takes apart
 // becomes two playing the same
-var moveLampInScenes = acrossScenes(function (move) {
+export var moveLampInScenes = acrossScenes(function (move) {
   acrossWiring(function () { placeLamp(move); });
 });
 
@@ -63,7 +80,7 @@ var moveLampInScenes = acrossScenes(function (move) {
 // neighbouring stretches left playing the same, as moves and splits leave them, become one
 var rejoinOne = changeWiring(rejoinWiring, true);
 
-var resetWiringInScenes = acrossScenes(function () {
+export var resetWiringInScenes = acrossScenes(function () {
   breakingOutputs().forEach(rejoinOne);
   acrossWiring(function () { order = plainOrder(); });
   [outs, mono].forEach(joinAlike);
@@ -85,23 +102,23 @@ function joinAlike(run) {
 }
 
 // Whether the wiring differs from how the board comes, a lamp out of order or an output broken out
-function wiringChanged(astray) {
+export function wiringChanged(astray) {
   return astray.length > 0 || breakingOutputs().some(function (out) { return wiring[out].broken; });
 }
 
 // Whether a lamp can be dragged to where it sits just now. Where a lamp sits is changed with
 // the wiring, so only where that can be
-function lampsMovable() { return canEdit("outPanel"); }
+export function lampsMovable() { return canEdit("outPanel"); }
 
 // The colour outputs that break out, by place
-function breakingOutputs() {
+export function breakingOutputs() {
   var found = [];
   OUTPUTS.forEach(function (output, out) { if (!output.mono && output.breaks) found.push(out); });
   return found;
 }
 
 // The outputs broken out, as a person would say it
-function brokenSaid() {
+export function brokenSaid() {
   var breaking = breakingOutputs();
   var broken = breaking.filter(function (out) { return wiring[out].broken; });
   if (!broken.length) {
@@ -130,9 +147,9 @@ function brokenSaid() {
 // The parts below add their own steps to the board line, what each readies before it is
 // written and what each makes of the line written so far, both in the order the parts come
 
-var boardLineSteps = {before: [], after: []};
+export var boardLineSteps = {before: [], after: []};
 
-function boardLine() {
+export function boardLine() {
   boardLineSteps.before.forEach(function (step) { step(); });
   var tokens = [];
   SCREEN_PORTS.forEach(function (port) {
@@ -160,16 +177,16 @@ function boardLine() {
 // by default has been taken off, the page lists it by the name its tab or box shows in a comment
 // of its own, which autofx passes over, and reads it back so a reload does not fit it again
 
-var NOT_FITTED = "# Not fitted: ";
+export var NOT_FITTED = "# Not fitted: ";
 
 // The names the file listed as not fitted, in lower case, or null where it had no such comment
-var notFittedRead = null;
+export var notFittedRead = null;
 
 // The names of what the board fits by default and has been taken off, as a step from each part
-var notFittedSteps = [];
+export var notFittedSteps = [];
 
 // A strip as the board describes it, with its tab's name and whether it is fitted by default
-function stripDescribed(run) {
+export function stripDescribed(run) {
   return BOARD.strips.filter(function (strip) { return strip.name === run.name; })[0];
 }
 
@@ -179,13 +196,13 @@ notFittedSteps.push(function () {
   }).map(function (run) { return stripDescribed(run).tab; });
 });
 
-function notFittedLine() {
+export function notFittedLine() {
   var names = [];
   notFittedSteps.forEach(function (step) { names = names.concat(step()); });
   return names.length ? NOT_FITTED + names.join(", ") : null;
 }
 
 // Whether the file listed a strip or screen as not fitted, by the name its tab or box shows
-function saidNotFitted(name) {
+export function saidNotFitted(name) {
   return notFittedRead.indexOf(name.toLowerCase()) >= 0;
 }

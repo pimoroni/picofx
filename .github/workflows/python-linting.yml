@@ -50,10 +50,15 @@ jobs:
       with:
         node-version: '22'
 
-    # The drive's picker and editor are minified by the esbuild pinned in tools/picker
-    - name: Install esbuild
+    # The drive's picker and editor are minified by the esbuild pinned in tools/picker, beside the
+    # parsers the module check reads the picker's parts with
+    - name: Install the Picker's Build Tools
       shell: bash
       run: npm ci --prefix tools/picker
+
+    - name: Check the Picker's Imports and Exports
+      shell: bash
+      run: node tools/picker/check_modules.js
 
     - name: Check Each Board's Editor Is Rebuilt
       shell: bash

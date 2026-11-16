@@ -2,6 +2,9 @@
  "name": "picker-build",
  "private": true,
  "dependencies": {
-  "esbuild": "0.28.2"
+  "acorn": "8.15.0",
+  "acorn-walk": "8.3.4",
+  "esbuild": "0.28.2",
+  "eslint-scope": "8.2.0"
  }
 }
