@@ -192,22 +192,6 @@ button.round svg{display:block}
 /* Room under the bar for the crosses to sit in */
 .bar{padding-bottom:1.4rem}
 
-/* How many lights are in a run, ticked off under it while there are few enough to see */
-.ticks{display:flex;gap:2px;margin-bottom:.15rem}
-.ticks span{flex:1;text-align:center;font:400 .6rem/1.4 system-ui,sans-serif;
- color:var(--dim);min-width:0;overflow:hidden}
-
-
-/* The run itself, above the bar it is cut by */
-.run{background:var(--panel);border:1px solid var(--line);border-radius:10px;
- padding:.8rem .7rem;margin-top:.7rem}
-.run svg{display:block;width:100%;height:auto}
-.run svg .ringed{fill:none;stroke:var(--accent);stroke-width:1.4;opacity:.9;
- pointer-events:none}
-/* The whole span a stretch covers takes the click, not only the lights along it */
-.run svg .span{fill:transparent;cursor:pointer}
-.run svg .span:hover{fill:rgba(0,133,125,.07)}
-
 /* What the picked section is playing */
 .chosen{margin-top:.9rem;border:1px solid var(--line);border-radius:10px;padding:.6rem .8rem;
  background:var(--panel)}
@@ -287,7 +271,7 @@ body.setupall .cardlamp{cursor:grab;background:var(--panel);border-style:solid;
 body.setupall .cardlamp:active{cursor:grabbing}
 body.setupall .bar.carded .sec{pointer-events:none}
 body.setupall .bar.carded .cardlamp{pointer-events:auto}
-body.setupall .bar.carded .sec>:not(.cardlamps),
+body.setupall .bar.carded .sec>:not(.cardlamps):not(.stripbeads),
 body.setupall .bar.carded .edge{opacity:.3;pointer-events:none}
 /* Cutting is the scene's, so no place to cut is offered while the board is set up. A place takes
    the pointer of its own, which the card's standing back does not take from it */
@@ -695,11 +679,46 @@ body[data-pageway] #looks>.shelf.bare{margin-top:0}
 .blinkmore{margin-left:.3rem;padding:.15rem .5rem;border:1px dashed var(--line);border-radius:5px;
  background:none;color:var(--ink);font-size:.78rem;cursor:pointer}
 
-/* A strip is a run like the outputs, drawn as wire and beads. The wire runs between the
-   lights as well as around the turns, so where it begins and ends is readable */
-.striprun{overflow-x:auto;padding:.2rem 0 .1rem}
-.striprun svg{display:block}
-.strip .lamps{gap:.18rem}
+/* A strip's LEDs are beads on a wire in its stretches' cards. Each card draws the wire behind its
+   own beads, over its background, and the bar's wire joins the cards from the lead block to the
+   ring. --bead, --gap, --gapdrawn, --fill and --apart are set for the room each LED has, --apart
+   running from 1 for beads apart at full size to 0 for one continuous strip. --beadtall, --wire,
+   --end and --wiremiddle stay the same */
+.stripcards{position:relative}
+.stripcards > .sec{z-index:1}
+.stripwire{position:absolute;background:#c9c3b9;pointer-events:none}
+.wireend{flex:0 0 auto;width:max(8px,calc(var(--end) * .8));position:relative;align-self:stretch;
+ z-index:1}
+.wireend .lead{position:absolute;left:2px;top:calc(var(--wiremiddle) - var(--end) * .31);
+ width:calc(var(--end) * .42);height:calc(var(--end) * .62);border-radius:calc(var(--end) * .13);
+ background:#8f8a81}
+.wireend .tail{position:absolute;right:2px;top:calc(var(--wiremiddle) - var(--end) * .29);
+ width:calc(var(--end) * .58);height:calc(var(--end) * .58);box-sizing:border-box;
+ border:max(1.2px,calc(var(--end) * .14)) solid #a9a49b;border-radius:50%;background:#fff}
+.stripbeads{display:flex;align-items:center;margin:.45rem 3px .3rem;padding:3px 0;border-radius:7px;
+ background:linear-gradient(#c9c3b9,#c9c3b9) center/100% var(--wire) no-repeat}
+/* A stretch set to Nothing. Its beads sit on the stripes Nothing wears elsewhere, inside a broken
+   line, and show what the board does there */
+.stripbeads.unset{outline:1.4px dashed #a9a49b;outline-offset:-1px;
+ background:linear-gradient(#c9c3b9,#c9c3b9) center/100% var(--wire) no-repeat,
+ repeating-linear-gradient(45deg,#f0eeea,#f0eeea 6px,#e4e0d9 6px,#e4e0d9 12px)}
+/* The places a stretch can be cut are spread across the same width as its beads */
+.stripcards .sec .cuts{left:3px;right:3px}
+.stripbeads i{flex:1 1 0;min-width:0;display:flex;justify-content:center}
+/* A bead narrows with its room but keeps its height, so the cards never change height on a zoom.
+   It takes its own room less the gap, so beads join exactly where the gap closes. Its corners and
+   edge close up with the gap, so the joined strip is square and even.
+   A gap under a pixel is drawn as a whole pixel, which a browser draws evenly, and is filled
+   with the beads' own colour, which deepens as --fill rises from 0 to 1 while the gap closes. The
+   fill is the bead drawn again half a gap and half a pixel to either side, in its colour as
+   painted, overlapping its neighbours so no seam is left where they meet */
+.stripbeads b{--filled:color-mix(in srgb,currentColor calc(var(--fill) * 100%),transparent);
+ display:block;width:min(var(--beadtall),calc(100% - var(--gapdrawn)));
+ height:var(--beadtall);border-radius:calc(min(5px,var(--bead) * .22) * var(--apart));
+ background:#2a2d30;color:#2a2d30;
+ box-shadow:inset 0 0 0 calc(1px * var(--apart)) rgba(0,0,0,.12),
+ calc(var(--gapdrawn) / 2 + .5px) 0 0 0 var(--filled),
+ calc(var(--gapdrawn) / -2 - .5px) 0 0 0 var(--filled)}
 
 /* How many lights are on a strip, which is a fact about the board and not the scene */
 .leds{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--dim);
@@ -1177,9 +1196,10 @@ body.scenesintab #looks>.shelf{margin-top:0}
 .headsteps .stoggle:disabled{opacity:.4;cursor:default}
 
 /* While the board is set up from a section, the scenes, the looks and every run's cutting
-   stand back, and every section's board settings open at once */
+   stand back, and every section's board settings open at once. A run's cards stand back around
+   its lights, which are the board's */
 body.setupall #tabs,body.setupall #sceneTabRow,
-body.setupall #looks,body.setupall [id$=Bar]:not(.sides *),body.setupall [id$=Chosen],
+body.setupall #looks,body.setupall [id$=Chosen],
 body.setupall .headsteps,body.setupall .stretchcount{opacity:.35;pointer-events:none}
 /* On the Screens tab, what each scene shows stands back. That is the pictures, which one is
    showing and which way up it is drawn. The bands, the screens' own boxes, stay */

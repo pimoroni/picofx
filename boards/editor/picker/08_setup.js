@@ -52,9 +52,6 @@ function unmark() {
   document.querySelectorAll(".sec.picked, .card.picked").forEach(function (one) {
     one.classList.remove("picked");
   });
-  document.querySelectorAll(".run svg rect.ringed").forEach(function (ring) {
-    ring.parentNode.removeChild(ring);
-  });
 }
 
 // A section's coloured box, the chip icon inside it with whatever the fact says
