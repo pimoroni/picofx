@@ -1,3 +1,4 @@
+import {h} from "./dom.js";
 import {DRAW_AFTER, addStep, draw, drawSteps, paintAll} from "./draw.js";
 import {filterKept, filterResidue} from "./kept.js";
 import {renderChosen} from "./led_panels.js";
@@ -314,13 +315,8 @@ export function dropStrip(run) {
 
 // The cross on a strip's chip while the board is edited, as a screen has on its own
 export function stripDrop(run) {
-  var drop = document.createElement("button");
-  drop.type = "button";
-  drop.className = "drop";
-  drop.textContent = "\u00d7";
-  drop.title = "Remove this strip from every scene";
-  drop.onclick = function () { dropStrip(run); };
-  return drop;
+  return h("button", {type: "button", className: "drop", title: "Remove this strip from every scene",
+                      onclick: function () { dropStrip(run); }}, "\u00d7");
 }
 
 // ---- writing them back ------------------------------------------------------------------------

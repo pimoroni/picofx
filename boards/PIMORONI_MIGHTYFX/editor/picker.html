@@ -2196,8 +2196,8 @@ function hexOf(rgb) {
   }).join("");
 }
 function hueRgb(deg) {
-  var h = (deg % 360 + 360) % 360 / 60;
-  var x = 255 * (1 - Math.abs(h % 2 - 1));
+  var h2 = (deg % 360 + 360) % 360 / 60;
+  var x = 255 * (1 - Math.abs(h2 % 2 - 1));
   var table = [
     [255, x, 0],
     [x, 255, 0],
@@ -2206,7 +2206,7 @@ function hueRgb(deg) {
     [x, 0, 255],
     [255, 0, x]
   ];
-  return table[Math.floor(h) % 6].map(Math.round);
+  return table[Math.floor(h2) % 6].map(Math.round);
 }
 function hueOf(rgb) {
   var top = Math.max.apply(null, rgb);
@@ -2351,6 +2351,43 @@ function blinkNamed(hex) {
 }
 function blinkWord(hex) {
   return blinkNamed(hex) || hex.replace("#", "").toLowerCase();
+}
+
+// boards/editor/picker/dom.js
+function h(tag, props, ...children) {
+  var element = tag.indexOf("svg:") === 0 ? document.createElementNS("http://www.w3.org/2000/svg", tag.slice(4)) : document.createElement(tag);
+  Object.entries(props || {}).forEach(function([key, value]) {
+    if (value === null || value === void 0 || value === false) return;
+    if (key.indexOf("on") === 0) element[key] = value;
+    else if (key === "style") Object.entries(value).forEach(function([name, set]) {
+      if (set !== null && set !== void 0) element.style.setProperty(name, set);
+    });
+    else if (key === "text") element.textContent = value;
+    else if (key === "html") element.innerHTML = value;
+    else if (settable(element, key)) element[key] = value;
+    else element.setAttribute(key, value === true ? "" : value);
+  });
+  append(element, children);
+  return element;
+}
+function settable(element, key) {
+  if (element instanceof SVGElement || !(key in element) || typeof element[key] === "function") return false;
+  for (var holder = element; holder; holder = Object.getPrototypeOf(holder)) {
+    var described = Object.getOwnPropertyDescriptor(holder, key);
+    if (described) return !!described.set || !!described.writable;
+  }
+  return false;
+}
+function append(element, children) {
+  children.flat(Infinity).forEach(function(child) {
+    if (child === null || child === void 0 || child === false) return;
+    element.appendChild(child instanceof Node ? child : document.createTextNode(String(child)));
+  });
+  return element;
+}
+function replace(element, ...children) {
+  element.replaceChildren();
+  return append(element, children);
 }
 
 // boards/editor/picker/draw.js
@@ -5813,15 +5850,14 @@ function dropStrip(run) {
   draw();
 }
 function stripDrop(run) {
-  var drop = document.createElement("button");
-  drop.type = "button";
-  drop.className = "drop";
-  drop.textContent = "\xD7";
-  drop.title = "Remove this strip from every scene";
-  drop.onclick = function() {
-    dropStrip(run);
-  };
-  return drop;
+  return h("button", {
+    type: "button",
+    className: "drop",
+    title: "Remove this strip from every scene",
+    onclick: function() {
+      dropStrip(run);
+    }
+  }, "\xD7");
 }
 function stripOfToken(token) {
   var named2 = token.match(/^(\w+)=/);
@@ -7911,37 +7947,35 @@ function noArrow() {
 
 // boards/editor/picker/setup.js
 function stripChipChoice(run) {
-  var choice = document.createElement("select");
+  var choice;
   if (run.made === null) {
-    STRIP_ORDERS.forEach(function(pair) {
-      var option = document.createElement("option");
-      option.value = pair[0];
-      option.textContent = pair[1];
-      if ((run.order || "") === pair[0]) option.selected = true;
-      choice.appendChild(option);
-    });
-    choice.title = "The strip's colour order. Change it if red shows as another colour";
-    choice.onchange = function() {
-      stripSet(run, { order: choice.value });
-      draw();
-    };
+    choice = h("select", {
+      title: "The strip's colour order. Change it if red shows as another colour",
+      onchange: function() {
+        stripSet(run, { order: choice.value });
+        draw();
+      }
+    }, STRIP_ORDERS.map(function(pair) {
+      return h("option", { value: pair[0], selected: (run.order || "") === pair[0] }, pair[1]);
+    }));
     return choice;
   }
   var offered = STRIP_BRIGHTNESSES.indexOf(run.brightness) < 0 ? STRIP_BRIGHTNESSES.concat([run.brightness]).sort(function(a, b) {
     return a - b;
   }) : STRIP_BRIGHTNESSES;
-  offered.forEach(function(brightness) {
-    var option = document.createElement("option");
-    option.value = brightness;
-    option.textContent = stripPercent(brightness) + (brightness === run.made ? " (default)" : "");
-    if (brightness === run.brightness) option.selected = true;
-    choice.appendChild(option);
-  });
-  choice.title = "Overall strip brightness, applied on top of each stretch's level";
-  choice.onchange = function() {
-    stripSet(run, { brightness: Number(choice.value) });
-    draw();
-  };
+  choice = h("select", {
+    title: "Overall strip brightness, applied on top of each stretch's level",
+    onchange: function() {
+      stripSet(run, { brightness: Number(choice.value) });
+      draw();
+    }
+  }, offered.map(function(brightness) {
+    return h(
+      "option",
+      { value: brightness, selected: brightness === run.brightness },
+      stripPercent(brightness) + (brightness === run.made ? " (default)" : "")
+    );
+  }));
   return choice;
 }
 STRIPS.forEach(function(strip) {
@@ -7953,42 +7987,33 @@ function unmark() {
   });
 }
 function boardBox(panel, parts) {
-  var box = document.createElement("span");
-  box.className = "chip boardchip " + BOARD_CHIP_CLASSES[panel];
-  box.title = "Board setup, shared by every scene";
-  box.appendChild(boardIcon());
-  parts.forEach(function(part) {
-    box.appendChild(typeof part === "string" ? document.createTextNode(part) : part);
-  });
-  return box;
+  return h("span", {
+    className: "chip boardchip " + BOARD_CHIP_CLASSES[panel],
+    title: "Board setup, shared by every scene"
+  }, boardIcon(), parts);
 }
 function small(words) {
-  var said = document.createElement("small");
-  said.textContent = words;
-  return said;
+  return h("small", {}, words);
 }
 function boardIcon() {
-  var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  svg.setAttribute("viewBox", "0 0 14 14");
-  svg.setAttribute("width", "13");
-  svg.setAttribute("height", "13");
-  svg.setAttribute("class", "boardicon");
-  svg.setAttribute("aria-hidden", "true");
-  svg.innerHTML = "<rect x='3' y='3' width='8' height='8' rx='1' fill='none' stroke='currentColor' stroke-width='1.3'/><path d='M4 0.8V3M7 0.8V3M10 0.8V3M4 11v2.2M7 11v2.2M10 11v2.2M0.8 4H3M0.8 7H3M0.8 10H3M11 4h2.2M11 7h2.2M11 10h2.2' stroke='currentColor' stroke-width='1.3' stroke-linecap='round'/>";
-  return svg;
+  return h("svg:svg", {
+    viewBox: "0 0 14 14",
+    width: "13",
+    height: "13",
+    class: "boardicon",
+    "aria-hidden": "true",
+    html: "<rect x='3' y='3' width='8' height='8' rx='1' fill='none' stroke='currentColor' stroke-width='1.3'/><path d='M4 0.8V3M7 0.8V3M10 0.8V3M4 11v2.2M7 11v2.2M10 11v2.2M0.8 4H3M0.8 7H3M0.8 10H3M11 4h2.2M11 7h2.2M11 10h2.2' stroke='currentColor' stroke-width='1.3' stroke-linecap='round'/>"
+  });
 }
 function renderOutFacts() {
   var box = document.getElementById("outFacts");
-  box.textContent = "";
-  box.appendChild(boardBox("outPanel", ["Wiring", small(brokenSaid())]));
+  var hint = null;
   if (canEdit("outPanel")) {
-    var hint = document.createElement("span");
-    hint.className = "hint";
     var breaking = breakingOutputs();
-    hint.textContent = "Drag lights to match your build." + (breaking.length > 1 ? " Arrows split or rejoin an output's three lights." : breaking.length ? " The arrow on " + outputSaid(breaking[0]) + " splits or rejoins it." : "");
-    hint.title = hint.textContent;
-    box.appendChild(hint);
+    var said = "Drag lights to match your build." + (breaking.length > 1 ? " Arrows split or rejoin an output's three lights." : breaking.length ? " The arrow on " + outputSaid(breaking[0]) + " splits or rejoins it." : "");
+    hint = h("span", { className: "hint", title: said }, said);
   }
+  replace(box, boardBox("outPanel", ["Wiring", small(brokenSaid())]), hint);
   headSteps(box, active.strip ? lastOutputRun : active);
 }
 function stripBuilt(run) {
@@ -8012,8 +8037,7 @@ function renderLeds(where, run) {
     chip.insertBefore(boardIcon(), chip.firstChild);
     chip.appendChild(stripDrop(run));
   } else {
-    box.textContent = "";
-    box.appendChild(boardBox(panel, ["Strip", small(stripBuilt(run))]));
+    replace(box, boardBox(panel, ["Strip", small(stripBuilt(run))]));
   }
   box.appendChild(stretchCount(run));
   headSteps(box, run);
@@ -8026,56 +8050,41 @@ addStep(drawSteps.after, DRAW_AFTER, "setup", function() {
   paintAll();
 });
 function renderStripChip(where, run) {
-  var box = document.getElementById(where);
-  box.textContent = "";
-  var chip = document.createElement("div");
-  chip.className = "chip strip";
-  chip.appendChild(document.createTextNode("Strip"));
-  var count = document.createElement("input");
-  count.type = "number";
-  count.min = STRIP_FEWEST;
-  count.max = STRIP_MOST;
-  count.value = run.leds;
-  count.onchange = function() {
-    var want = Math.max(STRIP_FEWEST, Math.min(STRIP_MOST, parseInt(count.value, 10) || STRIP_FEWEST));
-    if (want === run.leds) return;
-    stripSet(run, { leds: want });
-    settle();
-    draw();
-  };
-  chip.appendChild(count);
-  var unit2 = document.createElement("small");
-  unit2.textContent = "LEDs";
-  chip.appendChild(unit2);
-  chip.appendChild(stripChipChoice(run));
-  box.appendChild(chip);
-  var says = document.createElement("span");
-  says.className = "says";
-  says.textContent = "shared by every scene";
-  box.appendChild(says);
+  var count = h("input", {
+    type: "number",
+    min: STRIP_FEWEST,
+    max: STRIP_MOST,
+    value: run.leds,
+    onchange: function() {
+      var want = Math.max(STRIP_FEWEST, Math.min(STRIP_MOST, parseInt(count.value, 10) || STRIP_FEWEST));
+      if (want === run.leds) return;
+      stripSet(run, { leds: want });
+      settle();
+      draw();
+    }
+  });
+  replace(
+    document.getElementById(where),
+    h("div", { className: "chip strip" }, "Strip", count, small("LEDs"), stripChipChoice(run)),
+    h("span", { className: "says" }, "shared by every scene")
+  );
 }
 function renderStripOut(box, run, panel) {
-  box.textContent = "";
-  box.appendChild(boardBox(panel, ["Strip", small("not fitted")]));
   var blocked = stripBlockedBy(run);
-  if (blocked) {
-    var why = document.createElement("span");
-    why.className = "stripblocked says";
-    why.textContent = blocked;
-    box.appendChild(why);
-    return;
-  }
-  var add = document.createElement("button");
-  add.type = "button";
-  add.className = "addstrip";
-  add.textContent = "add this strip";
-  add.disabled = !canEdit(panel);
-  add.onclick = function() {
-    stripThere(run, true);
-    workOn(panel);
-    draw();
-  };
-  box.appendChild(add);
+  replace(
+    box,
+    boardBox(panel, ["Strip", small("not fitted")]),
+    blocked ? h("span", { className: "stripblocked says" }, blocked) : h("button", {
+      type: "button",
+      className: "addstrip",
+      disabled: !canEdit(panel),
+      onclick: function() {
+        stripThere(run, true);
+        workOn(panel);
+        draw();
+      }
+    }, "add this strip")
+  );
 }
 var lastOutputRun = outs;
 function setLastOutputRun(run) {
@@ -10446,12 +10455,12 @@ function monoInk(ink) {
   level = Math.max(0.3, level);
   return "rgb(" + Math.round(255 * level) + "," + Math.round(217 * level) + "," + Math.round(160 * level) + ")";
 }
-function fillRounded(g, x, y, w, h, r) {
+function fillRounded(g, x, y, w, h2, r) {
   g.beginPath();
   g.moveTo(x + r, y);
-  g.arcTo(x + w, y, x + w, y + h, r);
-  g.arcTo(x + w, y + h, x, y + h, r);
-  g.arcTo(x, y + h, x, y, r);
+  g.arcTo(x + w, y, x + w, y + h2, r);
+  g.arcTo(x + w, y + h2, x, y + h2, r);
+  g.arcTo(x, y + h2, x, y, r);
   g.arcTo(x, y, x + w, y, r);
   g.closePath();
   g.fill();
