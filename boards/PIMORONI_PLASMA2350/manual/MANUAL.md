@@ -169,11 +169,12 @@ rainbow of button 0. A scene you move takes the colour of its new place.
 Everything below the tray sits in a frame of the chosen scene's colour, with the
 scene's settings on a tab at its top left: its name, whether it "shows for" a
 number of seconds or "waits", and the scene after it. That's the next scene
-unless you choose another, or "itself" to repeat it. Tick "restart each time" to
-have a scene start its effects from the beginning each time it plays, instead of
-carrying on where they left off. A scene that goes back to itself always
-restarts, so its tick stays on. With only one scene, "shows for" repeats it
-after that many seconds, and "waits" keeps it showing.
+unless you choose another, or "itself" to repeat it. [[Restart]] makes a scene
+start its effects from the beginning each time it plays, instead of carrying on
+where they left off. A scene that goes back to itself always restarts, so its
+[[Restart]] stays on, and one that only shows once has it greyed. With only one
+scene, "shows for" repeats it after that many seconds, and "waits" keeps it
+showing.
 
 Beside the tab, the page says where the scene comes, such as "Scene 2 of 4, then
 Day", and [[Remove scene]] takes it away.
