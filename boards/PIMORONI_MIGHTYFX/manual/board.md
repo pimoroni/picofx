@@ -3,12 +3,12 @@
 ```picker
 header: Mighty FX Picker
 pages: *Effects, Programs
-tabs: *Outputs=Rainbow, Left strip, Right strip, Screens=2.8" 1.54", Sound
+tabs: *Outputs=Rainbow, Left strip, Right strip, Screens=2.8" 1.54", Sound, Sensor
 ```
 
 Under **Effects** you'll find a tab for each part of the board. **Outputs**,
-**Left strip** and **Right strip** are for the lights, followed by **Screens** and
-**Sound**. Each tab shows a small preview of what it's playing, and [[Edit board]]
+**Left strip** and **Right strip** are for the lights, followed by **Screens**,
+**Sound** and **Sensor**. Each tab shows a small preview of what it's playing, and [[Edit board]]
 sits at the end of the row.
 
 <!-- block picker_first_look -->
@@ -19,7 +19,6 @@ one stretch, playing Rainbow.
 ```picker
 badge: Wiring, every output is one colour light
 colour: *Rainbow 7
-tools:
 settings: Rainbow, on outputs 1 to 7, Brightness 100, Speed 45, Spread 50
 cards Along the lights: *Rainbow, Wave, Scanner, Chase, Marquee
 ```
@@ -31,8 +30,8 @@ Rainbow. Click the right-hand one and choose Solid, and lights 5 to 7 turn
 yellow.
 
 ```picker
+badge: Wiring, every output is one colour light
 colour: Rainbow 4, *Solid 3
-tools:
 settings: Solid, on outputs 5 to 7, colour yellow, Brightness 100
 cards All together: *Solid, Colour cycle, Colour steps, Breathe, Blink
 ```
@@ -40,21 +39,22 @@ cards All together: *Solid, Colour cycle, Colour steps, Breathe, Blink
 <!-- block picker_board -->
 
 ```picker
-tabs editing: *Outputs=Rainbow, Left strip, Right strip, Screens=2.8" 1.54", Sound
-badge: Wiring, every output is one colour light | Drag each light to match its position in your build. Arrows split an output into three mono lights, or rejoin them.
+tabs editing: *Outputs=Rainbow, Left strip, Right strip, Screens=2.8" 1.54", Sound, Sensor
+badge: Wiring, every output is one colour light | Drag lights to match your build. Arrows split or rejoin an output's three lights.
 wiring Rainbow: 1, 2, 3, 4, 5, 6, 7
 ```
 
 On **Outputs**, drag each light to match where it sits in your build, so a look
 that travels moves the right way. The arrows split an output into three mono
-lights, or join them back into one colour light.
+lights, or join them back into one colour light. [[Reset wiring]], under the
+connectors, puts every light back in wiring order and rejoins every output.
 
 On **Left strip** and **Right strip**, set how many LEDs each strip has and its
 colour order, which needs changing if red shows as another colour. The cross
 removes a strip you haven't fitted.
 
 ```picker
-tabs editing: Outputs=Rainbow, *Left strip, Right strip, Screens=2.8" 1.54", Sound
+tabs editing: Outputs=Rainbow, *Left strip, Right strip, Screens=2.8" 1.54", Sound, Sensor
 stripsetup: 30
 ```
 

@@ -55,8 +55,8 @@ of the row.
 
 ### Lights: Choosing a look
 
-On a strip's tab or **LED** you'll see your lights, and below them a bar showing what each
-stretch of them plays.
+On a strip's tab or **LED** you'll see your lights in stretches. Each stretch is a card
+holding its lights, over a band of the look it plays.
 
 When your board is new, the picker opens on **DAT strip** with all 66 LEDs as one
 stretch, playing nothing yet. The board's own LED, on the **LED** tab, plays
@@ -65,13 +65,12 @@ Rainbow.
 ```picker
 badge strip: Strip, 66 LEDs, GRB
 strip: *Nothing 66
-tools:
 settings: Nothing, on LEDs 1 to 66 of the strip on DAT
 cards Along the lights: Rainbow, Wave, Scanner, Chase, Marquee, *Nothing
 ```
 
-Click the bar, or any light, to select that stretch. Then click a card in the
-gallery to play that look there.
+Click a stretch to select it. Then click a card in the gallery to play that look
+there.
 
 The cards are grouped by how they play. **Along the lights** travel from one end
 to the other, **Ready-made** looks combine several others, **All together** shows
@@ -79,7 +78,8 @@ the same on every light, and **Individual** gives each light its own part. Cards
 with a small palette let you choose the colour, and [[Nothing]] turns the stretch
 off.
 
-The selected stretch's settings sit just above the gallery. Every look has a
+The selected stretch's settings sit just above the gallery, pointing up at their
+stretch. Every look has a
 brightness, and most also have a speed and a setting of their own. A look that
 takes a colour shows a row of colours to choose from, with [[custom]] for any
 other. [[Reverse]] changes which end a travelling look starts from. If you want
@@ -88,8 +88,8 @@ in.
 
 ### Lights: Cutting into stretches
 
-To play more than one look, cut the bar into stretches. Hover over the bar where
-you want a cut, between two lights, and click.
+To play more than one look, cut the lights into stretches. Hover over a stretch
+where you want a cut, between two lights, and click.
 
 Choose Rainbow first, then try a cut about halfway along. You'll have two
 stretches, both playing Rainbow. Click the right-hand one and choose Scanner, and
@@ -98,19 +98,19 @@ a light starts sweeping along that half.
 ```picker
 badge strip: Strip, 66 LEDs, GRB
 strip: Rainbow 33, *Scanner 33
-tools:
 settings: Scanner, on LEDs 34 to 66 of the strip on DAT, colour red, Brightness 100, Speed 50
 cards Along the lights: Rainbow, Wave, *Scanner, Chase, Marquee
 ```
 
-Drag a cut to move it, or click the cross on it to remove it.
+Drag a cut to move it, or click the cross on it to remove it. [[Join all]], at the
+right of the row above, puts the lights back to one stretch, and the arrows
+beside it undo and redo.
 
-The tools under the bar do the same in one go. [[Split into]] cuts the selected
-stretch into a number of equal [[stretches]], or into stretches of so many
-[[lights each]]. [[Join all]] puts the bar back to one stretch. [[Repeat]] takes
-the number of stretches you set, starting with the selected one, and repeats
-them to the end. The arrows above the bar undo and redo.
-On a long strip, the magnifier buttons zoom in so each LED is easier to reach.
+On a strip, [[Split into]] beside [[Reverse]] cuts the selected stretch in one go,
+into a number of equal [[stretches]] or into stretches of so many
+[[lights each]]. On a long strip, the magnifier buttons zoom in so each LED is
+easier to reach. Zoomed out, the LEDs close up until they run together as one
+strip.
 
 ### Board: Setting up your hardware
 
@@ -192,7 +192,7 @@ over from it while that scene shows.
 With a scene chosen, the page shows what the board plays where the scene sets
 nothing. Those lights play Always on's look, on tiles striped inside a dashed
 outline. A light that only another scene uses is dark, as the board turns it
-off, and the bar names the scene that lights it. In a scene, [[Nothing]] means
+off, and its stretch names the scene that lights it. In a scene, [[Nothing]] means
 the scene sets nothing of its own there, so Always on can still play.
 
 A screen the scene leaves to Always on shows Always on's picture in the same
