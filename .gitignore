@@ -5,3 +5,4 @@ dist/
 .tox/
 __pycache__/
 boards/*/manual/MANUAL.html
+boards/*/editor/picker.dev.html

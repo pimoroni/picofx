@@ -1,6 +1,6 @@
 import {banner} from "../00_banner.js";
 import {DRAW_AFTER, addStep, draw, drawSteps} from "../00_draw.js";
-import {BOARD} from "../01_looks.js";
+import {BOARD, VERSION} from "../01_looks.js";
 import {apply, driveParts, slotAt, state, store} from "../04_scenes.js";
 import {SCREEN_PORTS, firmwareHooks} from "../07_board.js";
 import {drive, driveTrouble, nameShown} from "../18_drive.js";
@@ -39,7 +39,7 @@ function discoverFileUrl(path) {
 }
 
 // The firmware's version, which an example may need newer than
-var DISCOVER_FIRMWARE = "__VERSION__".split(" ")[0];
+var DISCOVER_FIRMWARE = VERSION.split(" ")[0];
 
 // A check of one tab's examples
 function discoverFreshCheck() {

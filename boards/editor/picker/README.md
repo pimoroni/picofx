@@ -1,12 +1,13 @@
 # Picker
 
-`tools/build_editor.py` builds each board's picker from this folder, twice:
+`tools/build_editor.py` builds each board's picker from this folder. The parts are modules, which
+esbuild bundles into:
 
-- `boards/<BOARD>/editor/picker.html`, kept in the repository. It is one whole, readable page,
-  so it opens straight from disk with no server. Put the board's `catalogue.js` beside it, as
-  the build does.
+- `boards/<BOARD>/editor/picker.html`, kept in the repository. It holds the parts as one
+  readable script, so it opens straight from disk with no server. Put the board's
+  `catalogue.js` beside it, as the build does.
 - The page the FX drive carries, packed into the board's `fx_libs/fx_editor.py`. It is the same
-  page with its style and script minified by esbuild.
+  page with its style and script minified.
 
 Rebuild after changing a part, `page.html`, the board's `editor/fx_board.json` or anything the
 catalogue reads:
@@ -20,11 +21,23 @@ python3 tools/build_editor.py boards/PIMORONI_MIGHTYFX
 the module scripts use. CI runs the module check, then the build with `--check` for every board,
 and fails if a committed page or module is stale.
 
+To work on the parts, `--dev` also writes `editor/picker.dev.html`, which loads them as modules,
+so a change shows on reload. Modules load only from a server:
+
+```sh
+python3 tools/build_editor.py --dev boards/PIMORONI_MIGHTYFX
+python3 -m http.server 8765
+```
+
+then open `http://127.0.0.1:8765/boards/PIMORONI_MIGHTYFX/editor/picker.dev.html`. The page is not
+committed.
+
 ## Layout
 
 - `page.html` is the page's head, stylesheet and markup. The build fills in `__BOARD_NAME__`,
-  `__VERSION__` and `__BOARD__`, the board's description, which `01_looks.js` reads.
-- Every other file is a part: a numbered script added to the page in number order, as
+  `__VERSION__` and `__BUILD__`, the board's description and the version, which `01_looks.js`
+  reads.
+- Every other file is a part: a numbered module, which runs after the parts it imports, as
   `05_strips.js` after `04_scenes.js`.
 - A folder named after a feature (`screens`, `hub`, `sound`, `sensor`, `discover`, `firmware`) is
   taken only by a board whose description has that feature. Inside another, as
@@ -46,10 +59,9 @@ export function renderStripBar(where, run) { ... }
 ```
 
 The build checks every import names a part the board takes and something that part exports, and
-refuses parts that import each other in a circle. It then joins the parts into one script,
-without the import and export lines, each part after every part it imports and otherwise in
-number order, with `99_start.js` last. A part's top-level statements run in that order, so a
-statement may only use what the parts it imports have made.
+refuses parts that import each other in a circle. It then bundles the parts, each after every
+part it imports and otherwise in number order, with `99_start.js` last. A part's top-level
+statements run in that order, so a statement may only use what the parts it imports have made.
 
 Nothing may depend on the order two independent parts run in. A list that parts add steps to
 keeps them in an order its owner states, through `addStep()` in `00_draw.js`, such as

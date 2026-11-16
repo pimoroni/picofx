@@ -4,9 +4,15 @@ import {draw} from "./00_draw.js";
 // the numbered parts in this folder and any of the board's own, joined in number order, those in
 // a feature folder only for a board with that feature. This part holds the board and the looks.
 
+// What the build wrote into the page: the board's description and picofx's version
+var BUILD = JSON.parse(document.getElementById("build").textContent);
+
 // The board the page is for, from its editor/fx_board.json. It holds the board's outputs, strips
 // and screen ports, whether it has a hub, sound and the network looks, and the examples it offers
-export var BOARD = __BOARD__;
+export var BOARD = BUILD.board;
+
+// picofx's version, with "preview" after it in a page built for no release
+export var VERSION = BUILD.version;
 
 // The catalogue is generated beside this page. Without it the screen sizes and ports cannot
 // be known, so the page says so in a banner and assumes the ports the board describes

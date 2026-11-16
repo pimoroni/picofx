@@ -1,5 +1,5 @@
 import {DRAW_AFTER, DRAW_BEFORE, addStep, draw, drawSteps} from "../00_draw.js";
-import {BOARD} from "../01_looks.js";
+import {BOARD, VERSION} from "../01_looks.js";
 import {firmwareHooks} from "../07_board.js";
 import {CONNECT_ORDER, connectSteps} from "../18_drive.js";
 
@@ -38,7 +38,7 @@ var FIRMWARE_FRESH_MS = 24 * 60 * 60 * 1000;
 
 // The firmware the board runs, since the drive carries the picker made with it. A preview build is
 // older than the release of its own number
-var FIRMWARE_SHOWN = "__VERSION__";
+var FIRMWARE_SHOWN = VERSION;
 var FIRMWARE_RUNNING = FIRMWARE_SHOWN.split(" ")[0];
 var FIRMWARE_PREVIEW = / preview$/.test(FIRMWARE_SHOWN);
 

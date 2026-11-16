@@ -13,12 +13,14 @@ catalogue.js alone. The parts and pages are
 committed and the module is generated, so run this after editing a part, a page, the
 description or anything the catalogue reads.
 
-editor/picker.html is kept whole and readable, so it opens from disk as it is. The drive's copies
-of the picker and the text editor have their style and script minified by the esbuild pinned in
-tools/picker, which npm ci --prefix tools/picker installs.
+The parts are modules, bundled by the esbuild pinned in tools/picker, which
+npm ci --prefix tools/picker installs. editor/picker.html holds them as one readable script, so it
+opens from disk as it is. The drive's copies of the picker and the text editor have their style and
+script minified. --dev also writes editor/picker.dev.html, which loads the parts as modules.
 
     python3 tools/build_editor.py boards/PIMORONI_MIGHTYFX
     python3 tools/build_editor.py --check boards/PIMORONI_MIGHTYFX
+    python3 tools/build_editor.py --dev boards/PIMORONI_MIGHTYFX
 
 --check writes nothing and fails if a generated file is stale. It compares the module's
 pages once inflated, since two zlib builds need not compress the same text to the same bytes.
@@ -211,7 +213,6 @@ def board_parts(picker_folders, board):
 
 
 IMPORT = re.compile(r'^import \{([^}]*)\} from "([^"]+)";\n', re.MULTILINE)
-EXPORT = re.compile(r"^export (?=(?:async )?function|var |let |const |class )", re.MULTILINE)
 DECLARED = re.compile(r"^(export )?(?:async )?(?:function\*? |var |let |const |class )([A-Za-z_$][\w$]*)",
                       re.MULTILINE)
 
@@ -219,12 +220,16 @@ DECLARED = re.compile(r"^(export )?(?:async )?(?:function\*? |var |let |const |c
 # The part that draws the page once every other part is in place, which runs last
 START_PART = "99_start.js"
 
+# The page --dev writes beside picker.html, loading the parts as modules so a change to one shows
+# on reload. Modules load only from a server, as python3 -m http.server at the repository's root
+# gives, and the page is not committed
+DEV_PAGE = "picker.dev.html"
 
-def joined(parts):
+
+def ordered_parts(parts):
     """
-    The parts as one script in script_order(), without their import lines and export keywords,
-    after checking each import names a part the board takes and something that part exports, and
-    that no parts import each other in a circle.
+    The parts in script_order(), after checking each import names a part the board takes and
+    something that part exports, and that no parts import each other in a circle.
     """
     texts = {}
     for part in parts:
@@ -253,8 +258,7 @@ def joined(parts):
                         part, name, source))
             sources[part].append(source)
     check_no_circle(sources)
-    order = script_order(list(texts), sources, bool(os.environ.get("PICKER_REVERSE_TIES")))
-    return "".join(EXPORT.sub("", IMPORT.sub("", texts[part])) for part in order)
+    return script_order(list(texts), sources, bool(os.environ.get("PICKER_REVERSE_TIES")))
 
 
 def script_order(parts, sources, reverse_ties=False):
@@ -294,24 +298,52 @@ def check_no_circle(sources):
 
 
 def picker(board_dir, repo_dir, version):
-    """picker.html, from page.html and the numbered parts after it, with the board and the
-    version filled in."""
+    """
+    The board's picker three times, from page.html with the board and the version filled in and
+    the numbered parts: picker.html, with the parts bundled into one readable script whose names
+    stay global, so it opens from disk; the drive's page, the parts bundled into a function for
+    minified() to shorten; and the page that loads the parts as modules, for working on them.
+    """
     with open(os.path.join(board_dir, "editor", DESCRIPTION_NAME), encoding="utf-8") as f:
         board = json.load(f)
     check_board(board_dir, board)
     shared = os.path.join(repo_dir, SHARED_PARTS)
     own = os.path.join(board_dir, "editor", "picker")
     with open(os.path.join(shared, "page.html"), encoding="utf-8") as f:
-        text = f.read()
-    text += PICKER_START + joined(board_parts([shared] + ([own] if os.path.isdir(own) else []), board))
-    text = text.replace("__BOARD_NAME__", board["name"])
-    text = text.replace("__VERSION__", version)
-    text = text.replace("__BOARD__", json.dumps(board, indent=1))
-    text += PICKER_END
-    left = sorted(set(re.findall(r"__[A-Z_]+__", text)))
+        page = f.read()
+    page = page.replace("__BOARD_NAME__", board["name"])
+    page = page.replace("__VERSION__", version)
+    # Written into a script block, so "</" is escaped where a string would end the block
+    build = json.dumps({"board": board, "version": version}, indent=1).replace("</", "<\\/")
+    page = page.replace("__BUILD__", build)
+    left = sorted(set(re.findall(r"__[A-Z_]+__", page)))
     if left:
         sys.exit("picker.html has {} unfilled".format(", ".join(left)))
-    return text
+    order = ordered_parts(board_parts([shared] + ([own] if os.path.isdir(own) else []), board))
+    # Every part is kept in the readable page, as a part may be used only from the console
+    kept = page + PICKER_START + bundled(repo_dir, order, "--format=esm", "--tree-shaking=false")
+    drive = page + PICKER_START + bundled(repo_dir, order, "--format=iife")
+    editor_dir = os.path.join(board_dir, "editor")
+    loads = "".join('import "{}";\n'.format(os.path.relpath(part, editor_dir).replace(os.sep, "/"))
+                    for part in order)
+    modules = page + '<script type="module">\n' + loads + PICKER_END
+    return kept + PICKER_END, drive + PICKER_END, modules
+
+
+def bundled(repo_dir, order, *options):
+    """The parts in order as one script, bundled by the pinned esbuild with the options given. An
+    entry importing every part in order runs them in that order, as each part's imports come
+    before it."""
+    tool = esbuild_path(repo_dir)
+    entry = "".join('import "./{}";\n'.format(os.path.relpath(part, repo_dir).replace(os.sep, "/"))
+                    for part in order)
+    done = subprocess.run([tool, "--bundle", "--sourcefile=picker.js", "--charset=ascii",
+                           "--target=" + BROWSERS, "--log-level=warning"] + list(options),
+                          input=entry, capture_output=True, text=True, encoding="utf-8",
+                          cwd=repo_dir)
+    if done.returncode:
+        sys.exit("esbuild could not bundle the picker's parts:\n" + done.stderr)
+    return done.stdout
 
 
 # The esbuild the drive's picker and editor are minified with, pinned in tools/picker/package.json
@@ -325,12 +357,19 @@ BROWSERS = "chrome100,edge100,firefox100,safari15"
 INLINE = re.compile(r"(<(style|script)>)(.*?)(</\2>)", re.DOTALL)
 
 
-def minified(repo_dir, page):
-    """The drive's copy of a page, its style and script minified by the pinned esbuild. Names at
-    the top of the script are kept, since the parts share them as globals."""
+def esbuild_path(repo_dir):
+    """The pinned esbuild, which npm ci --prefix tools/picker installs."""
     tool = os.path.join(repo_dir, ESBUILD)
     if not os.path.exists(tool):
         sys.exit("esbuild is missing, so install it with: npm ci --prefix tools/picker")
+    return tool
+
+
+def minified(repo_dir, page):
+    """The drive's copy of a page, its style and script minified by the pinned esbuild. Names at
+    the top of a script are kept, as a page's own script shares them as globals, but those inside
+    a function, as the picker's bundle is, are shortened."""
+    tool = esbuild_path(repo_dir)
 
     def minify(block):
         loader = "css" if block.group(2) == "style" else "js"
@@ -628,6 +667,8 @@ def main():
                         help="write nothing, and fail if a generated file is stale")
     parser.add_argument("--release", metavar="VERSION",
                         help="the release being built, which must be picofx's version")
+    parser.add_argument("--dev", action="store_true",
+                        help="also write editor/picker.dev.html, which loads the parts as they are")
     parser.add_argument("board_dir", help="a board directory holding editor/")
     args = parser.parse_args()
 
@@ -641,8 +682,12 @@ def main():
     with open(os.path.join(editor_dir, DESCRIPTION_NAME), encoding="utf-8") as f:
         board = json.load(f)
     catalogue_path = os.path.join(editor_dir, "catalogue.js")
-    generated = {os.path.join(editor_dir, "picker.html"): picker(args.board_dir, repo_dir, version),
+    kept, drive, modules = picker(args.board_dir, repo_dir, version)
+    generated = {os.path.join(editor_dir, "picker.html"): kept,
                  catalogue_path: catalogue(repo_dir, args.board_dir, board)}
+    if args.dev and not args.check:
+        with open(os.path.join(editor_dir, DEV_PAGE), "w", encoding="utf-8", newline="\n") as f:
+            f.write(modules)
     if args.release:
         check_release_branch(generated[os.path.join(editor_dir, "picker.html")])
 
@@ -652,7 +697,7 @@ def main():
         return
 
     sources = {"CATALOGUE": generated[catalogue_path],
-               "PICKER": minified(repo_dir, generated[os.path.join(editor_dir, "picker.html")])}
+               "PICKER": minified(repo_dir, drive)}
     with open(os.path.join(repo_dir, SHARED_EDITOR), encoding="utf-8", newline="") as f:
         sources["EDITOR"] = minified(repo_dir, f.read().replace("__BOARD_NAME__", board["name"])
                                      .replace("__VERSION__", version))
