@@ -18,7 +18,7 @@ from .vocabulary import (CURVES, EFFECTS, ERRORS_PATH, FOLDERS, HUB, HUB_POSITIO
 from .hardware import (BOARD_HUB, BOARD_SCREENS, BUILT_HUB, BUILT_PAIR, BUILT_SCREENS, hub_example,
                        hub_port, hub_shown, port_classes, screen_kinds, screen_port, screen_shown)
 from .parser import value_shown
-from .checks import check_settings, find_file, REFUSED
+from .checks import check_settings, find_file, read_fault, REFUSED
 
 # Where a problem found after the file was read is written, which run() sets to
 # whatever it was told to report to. A drawing or a sound can stop long after load,
@@ -1524,7 +1524,8 @@ def build_shows(entries, fx, board, problems, build=True):
                                 "give it a pace, such as fps=10 or interval=0.5".format(
                                     at, target))
             else:
-                problems.append("line {}: {} could not be played: {}".format(at, target, e))
+                problems.append("line {}: {} could not be played: {}".format(
+                    at, target, read_fault(e)))
             continue
 
         built.update((entry.scene, place) for place in places)

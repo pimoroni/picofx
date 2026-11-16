@@ -75,6 +75,23 @@ def find_file(name, line, problems, folder=None):
     return found[0]
 
 
+def read_fault(error):
+    """
+    What went wrong reading a file, saying what to do where the drive failed to read it.
+    Any other error keeps its own text.
+    """
+    if not isinstance(error, OSError):
+        return str(error)
+
+    # An open or read gives a number, and picovector ends its own text with one
+    code = getattr(error, "errno", None)
+    if not isinstance(code, int):
+        last = str(error).rsplit(" ", 1)[-1]
+        code = int(last) if last.isdigit() else None
+    return "the drive could not read it{}. Copy it onto the drive again".format(
+        " (error {})".format(code) if code else "")
+
+
 def check_board(entry, has_strips, problems, lines):
     """
     The board settings the entry carries, with anything it cannot use dropped. A
